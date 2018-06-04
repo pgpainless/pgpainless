@@ -1,5 +1,6 @@
 package de.vanitasvitae.crypto.pgpainless.encryption_signing;
 
+import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.util.Set;
@@ -9,6 +10,7 @@ import de.vanitasvitae.crypto.pgpainless.SecretKeyNotFoundException;
 import de.vanitasvitae.crypto.pgpainless.algorithm.CompressionAlgorithm;
 import de.vanitasvitae.crypto.pgpainless.algorithm.HashAlgorithm;
 import de.vanitasvitae.crypto.pgpainless.algorithm.SymmetricKeyAlgorithm;
+import org.bouncycastle.openpgp.PGPException;
 import org.bouncycastle.openpgp.PGPPublicKey;
 import org.bouncycastle.openpgp.PGPPublicKeyRing;
 import org.bouncycastle.openpgp.PGPPublicKeyRingCollection;
@@ -48,13 +50,15 @@ public interface EncryptionBuilderInterface {
 
     interface SignWith {
 
-        Armor signWith(PGPSecretKey key);
+        Armor signWith(PGPSecretKey key, SecretKeyRingDecryptor decryptor);
 
-        Armor signWith(Set<PGPSecretKey> keys);
+        Armor signWith(Set<PGPSecretKey> keys, SecretKeyRingDecryptor decryptor);
 
-        Armor signWith(Set<Long> keyIds, Set<PGPSecretKeyRing> keyRings) throws SecretKeyNotFoundException;
+        Armor signWith(Set<Long> keyIds, Set<PGPSecretKeyRing> keyRings, SecretKeyRingDecryptor decryptor)
+                throws SecretKeyNotFoundException;
 
-        Armor signWith(Set<Long> keyIds, PGPSecretKeyRingCollection keys) throws SecretKeyNotFoundException;
+        Armor signWith(Set<Long> keyIds, PGPSecretKeyRingCollection keys, SecretKeyRingDecryptor decryptor)
+                throws SecretKeyNotFoundException;
 
         Armor doNotSign();
 
@@ -62,9 +66,9 @@ public interface EncryptionBuilderInterface {
 
     interface Armor {
 
-        OutputStream asciiArmor();
+        OutputStream asciiArmor() throws IOException, PGPException;
 
-        OutputStream noArmor();
+        OutputStream noArmor() throws IOException, PGPException;
 
     }
 

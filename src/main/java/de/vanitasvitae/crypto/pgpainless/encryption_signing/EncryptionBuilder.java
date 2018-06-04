@@ -1,5 +1,6 @@
 package de.vanitasvitae.crypto.pgpainless.encryption_signing;
 
+import java.io.IOException;
 import java.io.OutputStream;
 import java.util.HashSet;
 import java.util.Iterator;
@@ -10,6 +11,8 @@ import de.vanitasvitae.crypto.pgpainless.SecretKeyNotFoundException;
 import de.vanitasvitae.crypto.pgpainless.algorithm.CompressionAlgorithm;
 import de.vanitasvitae.crypto.pgpainless.algorithm.HashAlgorithm;
 import de.vanitasvitae.crypto.pgpainless.algorithm.SymmetricKeyAlgorithm;
+import org.bouncycastle.openpgp.PGPException;
+import org.bouncycastle.openpgp.PGPPrivateKey;
 import org.bouncycastle.openpgp.PGPPublicKey;
 import org.bouncycastle.openpgp.PGPPublicKeyRing;
 import org.bouncycastle.openpgp.PGPPublicKeyRingCollection;
@@ -22,9 +25,10 @@ public class EncryptionBuilder implements EncryptionBuilderInterface {
     private OutputStream outputStream;
     private final Set<PGPPublicKey> encryptionKeys = new HashSet<>();
     private final Set<PGPSecretKey> signingKeys = new HashSet<>();
-    private SymmetricKeyAlgorithm symmetricKeyAlgorithm;
-    private HashAlgorithm hashAlgorithm;
-    private CompressionAlgorithm compressionAlgorithm;
+    private SecretKeyRingDecryptor signingKeysDecryptor;
+    private SymmetricKeyAlgorithm symmetricKeyAlgorithm = SymmetricKeyAlgorithm.AES_128;
+    private HashAlgorithm hashAlgorithm = HashAlgorithm.SHA256;
+    private CompressionAlgorithm compressionAlgorithm = CompressionAlgorithm.UNCOMPRESSED;
     private boolean asciiArmor = false;
 
     @Override
@@ -115,19 +119,21 @@ public class EncryptionBuilder implements EncryptionBuilderInterface {
     class SignWithImpl implements SignWith {
 
         @Override
-        public Armor signWith(PGPSecretKey key) {
+        public Armor signWith(PGPSecretKey key, SecretKeyRingDecryptor decryptor) {
             EncryptionBuilder.this.signingKeys.add(key);
+            EncryptionBuilder.this.signingKeysDecryptor = decryptor;
             return new ArmorImpl();
         }
 
         @Override
-        public Armor signWith(Set<PGPSecretKey> keys) {
+        public Armor signWith(Set<PGPSecretKey> keys, SecretKeyRingDecryptor decryptor) {
             EncryptionBuilder.this.signingKeys.addAll(keys);
+            EncryptionBuilder.this.signingKeysDecryptor = decryptor;
             return new ArmorImpl();
         }
 
         @Override
-        public Armor signWith(Set<Long> keyIds, Set<PGPSecretKeyRing> keyRings)
+        public Armor signWith(Set<Long> keyIds, Set<PGPSecretKeyRing> keyRings, SecretKeyRingDecryptor decryptor)
                 throws SecretKeyNotFoundException {
             Set<PGPSecretKey> keys = new HashSet<>();
 
@@ -148,11 +154,11 @@ public class EncryptionBuilder implements EncryptionBuilderInterface {
 
                 keys.add(key);
             }
-            return signWith(keys);
+            return signWith(keys, decryptor);
         }
 
         @Override
-        public Armor signWith(Set<Long> keyIds, PGPSecretKeyRingCollection keys)
+        public Armor signWith(Set<Long> keyIds, PGPSecretKeyRingCollection keys, SecretKeyRingDecryptor decryptor)
                 throws SecretKeyNotFoundException {
 
             Set<PGPSecretKeyRing> rings = new HashSet<>();
@@ -160,7 +166,7 @@ public class EncryptionBuilder implements EncryptionBuilderInterface {
             for (Iterator<PGPSecretKeyRing> i = keys.getKeyRings(); i.hasNext();) {
                 rings.add(i.next());
             }
-            return signWith(keyIds, rings);
+            return signWith(keyIds, rings, decryptor);
         }
 
         @Override
@@ -172,22 +178,28 @@ public class EncryptionBuilder implements EncryptionBuilderInterface {
     class ArmorImpl implements Armor {
 
         @Override
-        public OutputStream asciiArmor() {
+        public OutputStream asciiArmor() throws IOException, PGPException {
             EncryptionBuilder.this.asciiArmor = true;
             return build();
         }
 
         @Override
-        public OutputStream noArmor() {
+        public OutputStream noArmor() throws IOException, PGPException {
             EncryptionBuilder.this.asciiArmor = false;
             return build();
         }
 
-        private OutputStream build() {
+        private OutputStream build() throws IOException, PGPException {
+
+            Set<PGPPrivateKey> privateKeys = new HashSet<>();
+            for (PGPSecretKey secretKey : signingKeys) {
+                privateKeys.add(secretKey.extractPrivateKey(signingKeysDecryptor.getDecryptor(secretKey.getKeyID())));
+            }
+
             return EncryptionStream.create(
                     EncryptionBuilder.this.outputStream,
                     EncryptionBuilder.this.encryptionKeys,
-                    EncryptionBuilder.this.signingKeys,
+                    privateKeys,
                     EncryptionBuilder.this.symmetricKeyAlgorithm,
                     EncryptionBuilder.this.hashAlgorithm,
                     EncryptionBuilder.this.compressionAlgorithm,
