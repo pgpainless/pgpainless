@@ -30,7 +30,7 @@ public class KeySpec {
         return inheritedSubPackets;
     }
 
-    public static KeySpecBuilder getBuilder() {
-        return new KeySpecBuilder();
+    public static KeySpecBuilder getBuilder(KeyType type) {
+        return new KeySpecBuilder(type);
     }
 }

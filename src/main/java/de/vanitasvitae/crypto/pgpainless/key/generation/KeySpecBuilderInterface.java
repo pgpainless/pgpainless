@@ -5,20 +5,14 @@ import de.vanitasvitae.crypto.pgpainless.algorithm.Feature;
 import de.vanitasvitae.crypto.pgpainless.algorithm.HashAlgorithm;
 import de.vanitasvitae.crypto.pgpainless.algorithm.KeyFlag;
 import de.vanitasvitae.crypto.pgpainless.algorithm.SymmetricKeyAlgorithm;
-import de.vanitasvitae.crypto.pgpainless.key.generation.type.KeyType;
 
 public interface KeySpecBuilderInterface {
 
-    WithKeyFlags ofType(KeyType type);
+    WithDetailedConfiguration withKeyFlags(KeyFlag... flags);
 
-    interface WithKeyFlags {
+    WithDetailedConfiguration withDefaultKeyFlags();
 
-        WithDetailedConfiguration withKeyFlags(KeyFlag... flags);
-
-        WithDetailedConfiguration withDefaultKeyFlags();
-
-        KeySpec withInheritedSubPackets();
-    }
+    KeySpec withInheritedSubPackets();
 
     interface WithDetailedConfiguration {
 

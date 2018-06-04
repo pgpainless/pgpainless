@@ -1,7 +1,5 @@
 package de.vanitasvitae.crypto.pgpainless.key.generation;
 
-import java.util.Arrays;
-
 import de.vanitasvitae.crypto.pgpainless.algorithm.AlgorithmSuite;
 import de.vanitasvitae.crypto.pgpainless.algorithm.CompressionAlgorithm;
 import de.vanitasvitae.crypto.pgpainless.algorithm.Feature;
@@ -17,38 +15,33 @@ public class KeySpecBuilder implements KeySpecBuilderInterface {
     private KeyType type;
     private PGPSignatureSubpacketGenerator hashedSubPackets = new PGPSignatureSubpacketGenerator();
 
-    @Override
-    public WithKeyFlags ofType(KeyType type) {
-        KeySpecBuilder.this.type = type;
-        return new WithKeyFlagsImpl();
+    KeySpecBuilder(KeyType type) {
+        this.type = type;
     }
 
-    class WithKeyFlagsImpl implements WithKeyFlags {
-
-        @Override
-        public WithDetailedConfiguration withKeyFlags(KeyFlag... flags) {
-            int val = 0;
-            for (KeyFlag f : flags) {
-                val |= f.getFlag();
-            }
-            KeySpecBuilder.this.hashedSubPackets.setKeyFlags(false, val);
-            return new WithDetailedConfigurationImpl();
+    @Override
+    public WithDetailedConfiguration withKeyFlags(KeyFlag... flags) {
+        int val = 0;
+        for (KeyFlag f : flags) {
+            val |= f.getFlag();
         }
+        this.hashedSubPackets.setKeyFlags(false, val);
+        return new WithDetailedConfigurationImpl();
+    }
 
-        @Override
-        public WithDetailedConfiguration withDefaultKeyFlags() {
-            return withKeyFlags(
-                    KeyFlag.CERTIFY_OTHER,
-                    KeyFlag.SIGN_DATA,
-                    KeyFlag.ENCRYPT_COMMS,
-                    KeyFlag.ENCRYPT_STORAGE,
-                    KeyFlag.AUTHENTICATION);
-        }
+    @Override
+    public WithDetailedConfiguration withDefaultKeyFlags() {
+        return withKeyFlags(
+                KeyFlag.CERTIFY_OTHER,
+                KeyFlag.SIGN_DATA,
+                KeyFlag.ENCRYPT_COMMS,
+                KeyFlag.ENCRYPT_STORAGE,
+                KeyFlag.AUTHENTICATION);
+    }
 
-        @Override
-        public KeySpec withInheritedSubPackets() {
-            return new KeySpec(type, null, true);
-        }
+    @Override
+    public KeySpec withInheritedSubPackets() {
+        return new KeySpec(type, null, true);
     }
 
     class WithDetailedConfigurationImpl implements WithDetailedConfiguration {

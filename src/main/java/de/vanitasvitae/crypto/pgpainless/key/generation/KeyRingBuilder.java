@@ -44,11 +44,21 @@ public class KeyRingBuilder implements KeyRingBuilderInterface {
     private String userId;
     private char[] passphrase;
 
+    /**
+     * Creates a simple RSA KeyPair of length {@code length} with user-id {@code userId}.
+     *
+     * @param userId user id.
+     * @param length length in bits.
+     * @return {@link PGPSecretKeyRing} containing the KeyPair.
+     * @throws PGPException
+     * @throws NoSuchAlgorithmException
+     * @throws NoSuchProviderException
+     * @throws InvalidAlgorithmParameterException
+     */
     public PGPSecretKeyRing simpleRsaKeyRing(String userId, RsaLength length)
             throws PGPException, NoSuchAlgorithmException, NoSuchProviderException, InvalidAlgorithmParameterException {
         return withMasterKey(
-                        KeySpec.getBuilder()
-                                .ofType(RSA_GENERAL.withLength(length))
+                        KeySpec.getBuilder(RSA_GENERAL.withLength(length))
                                 .withDefaultKeyFlags()
                                 .withDefaultAlgorithms())
                 .withPrimaryUserId(userId)
@@ -59,13 +69,11 @@ public class KeyRingBuilder implements KeyRingBuilderInterface {
     public PGPSecretKeyRing simpleEcKeyRing(String userId)
             throws PGPException, NoSuchAlgorithmException, NoSuchProviderException, InvalidAlgorithmParameterException {
         return withSubKey(
-                        KeySpec.getBuilder()
-                                .ofType(ECDH.fromCurve(EllipticCurve._P256))
+                        KeySpec.getBuilder(ECDH.fromCurve(EllipticCurve._P256))
                                 .withKeyFlags(KeyFlag.ENCRYPT_STORAGE, KeyFlag.ENCRYPT_COMMS)
                                 .withDefaultAlgorithms())
                 .withMasterKey(
-                        KeySpec.getBuilder()
-                                .ofType(ECDSA.fromCurve(EllipticCurve._P256))
+                        KeySpec.getBuilder(ECDSA.fromCurve(EllipticCurve._P256))
                                 .withKeyFlags(KeyFlag.AUTHENTICATION, KeyFlag.CERTIFY_OTHER, KeyFlag.SIGN_DATA)
                                 .withDefaultAlgorithms())
                 .withPrimaryUserId(userId)
