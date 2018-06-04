@@ -2,6 +2,7 @@ package de.vanitasvitae.crypto.pgpainless.key.generation;
 
 
 import java.nio.charset.Charset;
+import java.security.InvalidAlgorithmParameterException;
 import java.security.KeyPair;
 import java.security.KeyPairGenerator;
 import java.security.NoSuchAlgorithmException;
@@ -10,9 +11,15 @@ import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
 
-import de.vanitasvitae.crypto.pgpainless.key.algorithm.KeyFlag;
+import de.vanitasvitae.crypto.pgpainless.algorithm.KeyFlag;
+import de.vanitasvitae.crypto.pgpainless.key.generation.type.ECDH;
+import de.vanitasvitae.crypto.pgpainless.key.generation.type.ECDSA;
 import de.vanitasvitae.crypto.pgpainless.key.generation.type.KeyType;
+import de.vanitasvitae.crypto.pgpainless.key.generation.type.RSA_GENERAL;
+import de.vanitasvitae.crypto.pgpainless.key.generation.type.curve.EllipticCurve;
+import de.vanitasvitae.crypto.pgpainless.key.generation.type.length.RsaLength;
 import org.bouncycastle.bcpg.HashAlgorithmTags;
+import org.bouncycastle.bcpg.sig.KeyFlags;
 import org.bouncycastle.jce.provider.BouncyCastleProvider;
 import org.bouncycastle.openpgp.PGPEncryptedData;
 import org.bouncycastle.openpgp.PGPException;
@@ -20,7 +27,7 @@ import org.bouncycastle.openpgp.PGPKeyPair;
 import org.bouncycastle.openpgp.PGPKeyRingGenerator;
 import org.bouncycastle.openpgp.PGPSecretKeyRing;
 import org.bouncycastle.openpgp.PGPSignature;
-import org.bouncycastle.openpgp.PGPSignatureSubpacketGenerator;
+import org.bouncycastle.openpgp.PGPSignatureSubpacketVector;
 import org.bouncycastle.openpgp.operator.PBESecretKeyEncryptor;
 import org.bouncycastle.openpgp.operator.PGPContentSignerBuilder;
 import org.bouncycastle.openpgp.operator.PGPDigestCalculator;
@@ -34,77 +41,64 @@ public class KeyRingBuilder implements KeyRingBuilderInterface {
     private final Charset UTF8 = Charset.forName("UTF-8");
 
     private List<KeySpec> keySpecs = new ArrayList<>();
-    private List<String> userIds = new ArrayList<>();
+    private String userId;
     private char[] passphrase;
 
-    @Override
-    public WithSubKeyType generateCompositeKeyRing() {
-        return new WithSubKeyTypeImpl();
+    public PGPSecretKeyRing simpleRsaKeyRing(String userId, RsaLength length)
+            throws PGPException, NoSuchAlgorithmException, NoSuchProviderException, InvalidAlgorithmParameterException {
+        return withMasterKey(
+                        KeySpec.getBuilder()
+                                .ofType(RSA_GENERAL.withLength(length))
+                                .withDefaultKeyFlags()
+                                .withDefaultAlgorithms())
+                .withPrimaryUserId(userId)
+                .withoutPassphrase()
+                .build();
+    }
+
+    public PGPSecretKeyRing simpleEcKeyRing(String userId)
+            throws PGPException, NoSuchAlgorithmException, NoSuchProviderException, InvalidAlgorithmParameterException {
+        return withSubKey(
+                        KeySpec.getBuilder()
+                                .ofType(ECDH.fromCurve(EllipticCurve._P256))
+                                .withKeyFlags(KeyFlag.ENCRYPT_STORAGE, KeyFlag.ENCRYPT_COMMS)
+                                .withDefaultAlgorithms())
+                .withMasterKey(
+                        KeySpec.getBuilder()
+                                .ofType(ECDSA.fromCurve(EllipticCurve._P256))
+                                .withKeyFlags(KeyFlag.AUTHENTICATION, KeyFlag.CERTIFY_OTHER, KeyFlag.SIGN_DATA)
+                                .withDefaultAlgorithms())
+                .withPrimaryUserId(userId)
+                .withoutPassphrase()
+                .build();
     }
 
     @Override
-    public WithCertificationKeyType generateSingleKeyKeyRing() {
-        return new WithCertificationKeyTypeImpl();
+    public KeyRingBuilderInterface withSubKey(KeySpec type) {
+        KeyRingBuilder.this.keySpecs.add(type);
+        return this;
     }
 
-    class WithSubKeyTypeImpl implements WithSubKeyType {
-
-        @Override
-        public WithSubKeyType withSubKey(KeySpec type) {
-            KeyRingBuilder.this.keySpecs.add(type);
-            return this;
+    @Override
+    public WithPrimaryUserId withMasterKey(KeySpec spec) {
+        if ((spec.getSubpackets().getKeyFlags() & KeyFlags.CERTIFY_OTHER) == 0) {
+            throw new IllegalArgumentException("Certification Key MUST have KeyFlag CERTIFY_OTHER");
         }
-
-        @Override
-        public WithCertificationKeyType done() {
-            return new WithCertificationKeyTypeImpl();
-        }
-    }
-
-    class WithCertificationKeyTypeImpl implements WithCertificationKeyType {
-
-        @Override
-        public WithPrimaryUserId withCertificationKeyType(KeySpec spec) {
-            if ((spec.getKeyFlags() & KeyFlag.CERTIFY_OTHER.getFlag()) == 0) {
-                throw new IllegalArgumentException("Certification Key MUST have KeyFlag CERTIFY_OTHER");
-            }
-            KeyRingBuilder.this.keySpecs.add(spec);
-            return new WithPrimaryUserIdImpl();
-        }
+        KeyRingBuilder.this.keySpecs.add(0, spec);
+        return new WithPrimaryUserIdImpl();
     }
 
     class WithPrimaryUserIdImpl implements WithPrimaryUserId {
 
         @Override
-        public WithAdditionalUserIds withPrimaryUserId(String userId) {
-            KeyRingBuilder.this.userIds.add(userId);
-            return new WithAdditionalUserIdsImpl();
-        }
-
-        @Override
-        public WithAdditionalUserIds withPrimaryUserId(byte[] userId) {
-            return withPrimaryUserId(new String(userId, UTF8));
-        }
-    }
-
-    class WithAdditionalUserIdsImpl implements WithAdditionalUserIds {
-
-        @Deprecated
-        @Override
-        public WithAdditionalUserIds withAdditionalUserId(String userId) {
-            KeyRingBuilder.this.userIds.add(userId);
-            return this;
-        }
-
-        @Deprecated
-        @Override
-        public WithAdditionalUserIds withAdditionalUserId(byte[] userId) {
-            return withAdditionalUserId(new String(userId, UTF8));
-        }
-
-        @Override
-        public WithPassphrase done() {
+        public WithPassphrase withPrimaryUserId(String userId) {
+            KeyRingBuilder.this.userId = userId;
             return new WithPassphraseImpl();
+        }
+
+        @Override
+        public WithPassphrase withPrimaryUserId(byte[] userId) {
+            return withPrimaryUserId(new String(userId, UTF8));
         }
     }
 
@@ -130,7 +124,8 @@ public class KeyRingBuilder implements KeyRingBuilderInterface {
         class BuildImpl implements Build {
 
             @Override
-            public PGPSecretKeyRing build() throws NoSuchAlgorithmException, PGPException, NoSuchProviderException {
+            public PGPSecretKeyRing build() throws NoSuchAlgorithmException, PGPException, NoSuchProviderException,
+                    InvalidAlgorithmParameterException {
 
                 // Hash Calculator
                 PGPDigestCalculator calculator = new JcaPGPDigestCalculatorProviderBuilder()
@@ -147,64 +142,51 @@ public class KeyRingBuilder implements KeyRingBuilderInterface {
 
                 // First key is the Master Key
                 KeySpec certKeySpec = keySpecs.get(0);
-                KeyType certKeyType = certKeySpec.getKeyType();
-                keySpecs.remove(0); // Remove master key, so that we later only add sub keys.
+                // Remove master key, so that we later only add sub keys.
+                keySpecs.remove(0);
 
                 // Generate Master Key
                 PGPKeyPair certKey = generateKeyPair(certKeySpec);
 
                 // Signer for creating self-signature
                 PGPContentSignerBuilder signer = new JcaPGPContentSignerBuilder(
-                        certKey.getPublicKey().getAlgorithm(), HashAlgorithmTags.SHA256);
+                        certKey.getPublicKey().getAlgorithm(), HashAlgorithmTags.SHA512)
+                        .setProvider(BouncyCastleProvider.PROVIDER_NAME);
 
-                // Mimic GnuPGs signature sub packets
-                PGPSignatureSubpacketGenerator hashedSubPackets = new PGPSignatureSubpacketGenerator();
-
-                // Key flags
-                hashedSubPackets.setKeyFlags(true, certKeySpec.getKeyFlags());
-
-                // Encryption Algorithms
-                hashedSubPackets.setPreferredSymmetricAlgorithms(true,
-                        certKeySpec.getPreferredAlgorithms().getSymmetricKeyAlgorithmIds());
-
-                // Hash Algorithms
-                hashedSubPackets.setPreferredHashAlgorithms(true,
-                        certKeySpec.getPreferredAlgorithms().getHashAlgorithmIds());
-
-                // Compression Algorithms
-                hashedSubPackets.setPreferredCompressionAlgorithms(true,
-                        certKeySpec.getPreferredAlgorithms().getCompressionAlgorithmIds());
-
-                // Modification Detection
-                hashedSubPackets.setFeature(true, certKeySpec.getFeatures());
+                PGPSignatureSubpacketVector hashedSubPackets = certKeySpec.getSubpackets();
 
                 // Generator which the user can get the key pair from
                 PGPKeyRingGenerator ringGenerator = new PGPKeyRingGenerator(
                         PGPSignature.POSITIVE_CERTIFICATION, certKey,
-                        userIds.get(0), calculator,
-                        hashedSubPackets.generate(), null, signer, encryptor);
+                        userId, calculator,
+                        hashedSubPackets, null, signer, encryptor);
 
                 for (KeySpec subKeySpec : keySpecs) {
                     PGPKeyPair subKey = generateKeyPair(subKeySpec);
-                    ringGenerator.addSubKey(subKey);
+                    if (subKeySpec.isInheritedSubPackets()) {
+                        ringGenerator.addSubKey(subKey);
+                    } else {
+                        ringGenerator.addSubKey(subKey, subKeySpec.getSubpackets(), null);
+                    }
                 }
 
                 return ringGenerator.generateSecretKeyRing();
             }
 
             private PGPKeyPair generateKeyPair(KeySpec spec)
-                    throws NoSuchProviderException, NoSuchAlgorithmException, PGPException {
+                    throws NoSuchProviderException, NoSuchAlgorithmException, PGPException,
+                    InvalidAlgorithmParameterException {
                 KeyType type = spec.getKeyType();
                 KeyPairGenerator certKeyGenerator = KeyPairGenerator.getInstance(
                         type.getName(), BouncyCastleProvider.PROVIDER_NAME);
-                certKeyGenerator.initialize(type.getLength());
+                certKeyGenerator.initialize(type.getAlgorithmSpec());
 
                 // Create raw Key Pair
-                KeyPair rawKeyPair = certKeyGenerator.generateKeyPair();
+                KeyPair keyPair = certKeyGenerator.generateKeyPair();
 
                 // Form PGP key pair
                 PGPKeyPair pgpKeyPair = new JcaPGPKeyPair(type.getAlgorithm().getAlgorithmId(),
-                        rawKeyPair, new Date());
+                        keyPair, new Date());
 
                 return pgpKeyPair;
             }

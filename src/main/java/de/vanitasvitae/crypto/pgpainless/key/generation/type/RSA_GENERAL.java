@@ -1,27 +1,21 @@
 package de.vanitasvitae.crypto.pgpainless.key.generation.type;
 
-import de.vanitasvitae.crypto.pgpainless.key.algorithm.PublicKeyAlgorithm;
+import java.security.spec.AlgorithmParameterSpec;
+import java.security.spec.RSAKeyGenParameterSpec;
 
-public enum RSA_GENERAL implements KeyType {
+import de.vanitasvitae.crypto.pgpainless.algorithm.PublicKeyAlgorithm;
+import de.vanitasvitae.crypto.pgpainless.key.generation.type.length.RsaLength;
 
-    @Deprecated
-    _1024(1024),
-    @Deprecated
-    _2048(2048),
-    _3072(3072),
-    _4096(4096),
-    _8192(8192),
-    ;
+public class RSA_GENERAL implements KeyType {
 
-    private final int length;
+    private final RsaLength length;
 
-    RSA_GENERAL(int length) {
+    RSA_GENERAL(RsaLength length) {
         this.length = length;
     }
 
-    @Override
-    public int getLength() {
-        return length;
+    public static RSA_GENERAL withLength(RsaLength length) {
+        return new RSA_GENERAL(length);
     }
 
     @Override
@@ -32,5 +26,10 @@ public enum RSA_GENERAL implements KeyType {
     @Override
     public PublicKeyAlgorithm getAlgorithm() {
         return PublicKeyAlgorithm.RSA_GENERAL;
+    }
+
+    @Override
+    public AlgorithmParameterSpec getAlgorithmSpec() {
+        return new RSAKeyGenParameterSpec(length.getLength(), RSAKeyGenParameterSpec.F4);
     }
 }

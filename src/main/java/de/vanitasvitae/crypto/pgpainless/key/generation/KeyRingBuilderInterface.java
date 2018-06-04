@@ -1,5 +1,6 @@
 package de.vanitasvitae.crypto.pgpainless.key.generation;
 
+import java.security.InvalidAlgorithmParameterException;
 import java.security.NoSuchAlgorithmException;
 import java.security.NoSuchProviderException;
 
@@ -8,36 +9,15 @@ import org.bouncycastle.openpgp.PGPSecretKeyRing;
 
 public interface KeyRingBuilderInterface {
 
-    WithSubKeyType generateCompositeKeyRing();
+    KeyRingBuilderInterface withSubKey(KeySpec keySpec);
 
-    WithCertificationKeyType generateSingleKeyKeyRing();
-
-    interface WithSubKeyType {
-
-        WithSubKeyType withSubKey(KeySpec keySpec);
-
-        WithCertificationKeyType done();
-    }
-
-    interface WithCertificationKeyType {
-        WithPrimaryUserId withCertificationKeyType(KeySpec keySpec);
-    }
+    WithPrimaryUserId withMasterKey(KeySpec keySpec);
 
     interface WithPrimaryUserId {
 
-        WithAdditionalUserIds withPrimaryUserId(String userId);
+        WithPassphrase withPrimaryUserId(String userId);
 
-        WithAdditionalUserIds withPrimaryUserId(byte[] userId);
-
-    }
-
-    interface WithAdditionalUserIds {
-
-        WithAdditionalUserIds withAdditionalUserId(String userId);
-
-        WithAdditionalUserIds withAdditionalUserId(byte[] userId);
-
-        WithPassphrase done();
+        WithPassphrase withPrimaryUserId(byte[] userId);
 
     }
 
@@ -52,7 +32,8 @@ public interface KeyRingBuilderInterface {
 
     interface Build {
 
-        PGPSecretKeyRing build() throws NoSuchAlgorithmException, PGPException, NoSuchProviderException;
+        PGPSecretKeyRing build() throws NoSuchAlgorithmException, PGPException, NoSuchProviderException,
+                InvalidAlgorithmParameterException;
 
     }
 }

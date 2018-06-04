@@ -1,11 +1,9 @@
-package de.vanitasvitae.crypto.pgpainless.key.algorithm;
+package de.vanitasvitae.crypto.pgpainless.algorithm;
 
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
-
-import com.sun.istack.internal.NotNull;
 
 public class AlgorithmSuite {
 
@@ -18,8 +16,7 @@ public class AlgorithmSuite {
                     HashAlgorithm.SHA512,
                     HashAlgorithm.SHA384,
                     HashAlgorithm.SHA256,
-                    HashAlgorithm.SHA224,
-                    HashAlgorithm.SHA1),
+                    HashAlgorithm.SHA224),
             Arrays.asList(
                     CompressionAlgorithm.ZLIB,
                     CompressionAlgorithm.BZIP2,
@@ -31,15 +28,15 @@ public class AlgorithmSuite {
     private List<HashAlgorithm> hashAlgorithms;
     private List<CompressionAlgorithm> compressionAlgorithms;
 
-    public AlgorithmSuite(@NotNull List<SymmetricKeyAlgorithm> symmetricKeyAlgorithms,
-                          @NotNull List<HashAlgorithm> hashAlgorithms,
-                          @NotNull List<CompressionAlgorithm> compressionAlgorithms) {
+    public AlgorithmSuite(List<SymmetricKeyAlgorithm> symmetricKeyAlgorithms,
+                          List<HashAlgorithm> hashAlgorithms,
+                          List<CompressionAlgorithm> compressionAlgorithms) {
         this.symmetricKeyAlgorithms = Collections.unmodifiableList(symmetricKeyAlgorithms);
         this.hashAlgorithms = Collections.unmodifiableList(hashAlgorithms);
         this.compressionAlgorithms = Collections.unmodifiableList(compressionAlgorithms);
     }
 
-    public void setSymmetricKeyAlgorithms(@NotNull List<SymmetricKeyAlgorithm> symmetricKeyAlgorithms) {
+    public void setSymmetricKeyAlgorithms(List<SymmetricKeyAlgorithm> symmetricKeyAlgorithms) {
         this.symmetricKeyAlgorithms = symmetricKeyAlgorithms;
     }
 
@@ -55,7 +52,7 @@ public class AlgorithmSuite {
         return array;
     }
 
-    public void setHashAlgorithms(@NotNull List<HashAlgorithm> hashAlgorithms) {
+    public void setHashAlgorithms(List<HashAlgorithm> hashAlgorithms) {
         this.hashAlgorithms = hashAlgorithms;
     }
 
@@ -71,7 +68,7 @@ public class AlgorithmSuite {
         return array;
     }
 
-    public void setCompressionAlgorithms(@NotNull List<CompressionAlgorithm> compressionAlgorithms) {
+    public void setCompressionAlgorithms(List<CompressionAlgorithm> compressionAlgorithms) {
         this.compressionAlgorithms = compressionAlgorithms;
     }
 

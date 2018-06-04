@@ -1,12 +1,14 @@
 package de.vanitasvitae.crypto.pgpainless.key.generation.type;
 
-import de.vanitasvitae.crypto.pgpainless.key.algorithm.PublicKeyAlgorithm;
+import java.security.spec.AlgorithmParameterSpec;
+
+import de.vanitasvitae.crypto.pgpainless.algorithm.PublicKeyAlgorithm;
 
 public interface KeyType {
-
-    int getLength();
 
     String getName();
 
     PublicKeyAlgorithm getAlgorithm();
+
+    AlgorithmParameterSpec getAlgorithmSpec();
 }

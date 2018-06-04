@@ -1,4 +1,4 @@
-package de.vanitasvitae.crypto.pgpainless.key.algorithm;
+package de.vanitasvitae.crypto.pgpainless.algorithm;
 
 import java.util.HashMap;
 import java.util.Map;

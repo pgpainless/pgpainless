@@ -1,23 +1,21 @@
 package de.vanitasvitae.crypto.pgpainless.key.generation;
 
 import java.util.Arrays;
-import java.util.HashSet;
-import java.util.Set;
 
-import de.vanitasvitae.crypto.pgpainless.key.algorithm.AlgorithmSuite;
-import de.vanitasvitae.crypto.pgpainless.key.algorithm.CompressionAlgorithm;
-import de.vanitasvitae.crypto.pgpainless.key.algorithm.Feature;
-import de.vanitasvitae.crypto.pgpainless.key.algorithm.HashAlgorithm;
-import de.vanitasvitae.crypto.pgpainless.key.algorithm.KeyFlag;
-import de.vanitasvitae.crypto.pgpainless.key.algorithm.SymmetricKeyAlgorithm;
+import de.vanitasvitae.crypto.pgpainless.algorithm.AlgorithmSuite;
+import de.vanitasvitae.crypto.pgpainless.algorithm.CompressionAlgorithm;
+import de.vanitasvitae.crypto.pgpainless.algorithm.Feature;
+import de.vanitasvitae.crypto.pgpainless.algorithm.HashAlgorithm;
+import de.vanitasvitae.crypto.pgpainless.algorithm.KeyFlag;
+import de.vanitasvitae.crypto.pgpainless.algorithm.SymmetricKeyAlgorithm;
 import de.vanitasvitae.crypto.pgpainless.key.generation.type.KeyType;
+import org.bouncycastle.bcpg.sig.Features;
+import org.bouncycastle.openpgp.PGPSignatureSubpacketGenerator;
 
 public class KeySpecBuilder implements KeySpecBuilderInterface {
 
     private KeyType type;
-    private int keyFlags;
-    private AlgorithmSuite algorithmSuite = AlgorithmSuite.getDefaultAlgorithmSuite();
-    private Set<Feature> features = new HashSet<>();
+    private PGPSignatureSubpacketGenerator hashedSubPackets = new PGPSignatureSubpacketGenerator();
 
     @Override
     public WithKeyFlags ofType(KeyType type) {
@@ -33,7 +31,7 @@ public class KeySpecBuilder implements KeySpecBuilderInterface {
             for (KeyFlag f : flags) {
                 val |= f.getFlag();
             }
-            KeySpecBuilder.this.keyFlags = val;
+            KeySpecBuilder.this.hashedSubPackets.setKeyFlags(false, val);
             return new WithDetailedConfigurationImpl();
         }
 
@@ -46,6 +44,11 @@ public class KeySpecBuilder implements KeySpecBuilderInterface {
                     KeyFlag.ENCRYPT_STORAGE,
                     KeyFlag.AUTHENTICATION);
         }
+
+        @Override
+        public KeySpec withInheritedSubPackets() {
+            return new KeySpec(type, null, true);
+        }
     }
 
     class WithDetailedConfigurationImpl implements WithDetailedConfiguration {
@@ -57,12 +60,16 @@ public class KeySpecBuilder implements KeySpecBuilderInterface {
         }
 
         @Override
-        public KeySpec withStandardConfiguration() {
+        public KeySpec withDefaultAlgorithms() {
+            AlgorithmSuite defaultSuite = AlgorithmSuite.getDefaultAlgorithmSuite();
+            hashedSubPackets.setPreferredCompressionAlgorithms(false, defaultSuite.getCompressionAlgorithmIds());
+            hashedSubPackets.setPreferredSymmetricAlgorithms(false, defaultSuite.getSymmetricKeyAlgorithmIds());
+            hashedSubPackets.setPreferredHashAlgorithms(false, defaultSuite.getHashAlgorithmIds());
+            hashedSubPackets.setFeature(false, Features.FEATURE_MODIFICATION_DETECTION);
             return new KeySpec(
                     KeySpecBuilder.this.type,
-                    KeySpecBuilder.this.keyFlags,
-                    KeySpecBuilder.this.algorithmSuite,
-                    KeySpecBuilder.this.features);
+                    KeySpecBuilder.this.hashedSubPackets,
+                    false);
         }
     }
 
@@ -70,20 +77,29 @@ public class KeySpecBuilder implements KeySpecBuilderInterface {
 
         @Override
         public WithPreferredHashAlgorithms withPreferredSymmetricAlgorithms(SymmetricKeyAlgorithm... algorithms) {
-            KeySpecBuilder.this.algorithmSuite.setSymmetricKeyAlgorithms(Arrays.asList(algorithms));
+            int[] ids = new int[algorithms.length];
+            for (int i = 0; i < ids.length; i++) {
+                ids[i] = algorithms[i].getAlgorithmId();
+            }
+            KeySpecBuilder.this.hashedSubPackets.setPreferredSymmetricAlgorithms(false, ids);
             return new WithPreferredHashAlgorithmsImpl();
         }
 
         @Override
         public WithPreferredHashAlgorithms withDefaultSymmetricAlgorithms() {
-            KeySpecBuilder.this.algorithmSuite.setSymmetricKeyAlgorithms(
-                    AlgorithmSuite.getDefaultAlgorithmSuite().getSymmetricKeyAlgorithms());
+            KeySpecBuilder.this.hashedSubPackets.setPreferredSymmetricAlgorithms(false,
+                    AlgorithmSuite.getDefaultAlgorithmSuite().getSymmetricKeyAlgorithmIds());
             return new WithPreferredHashAlgorithmsImpl();
         }
 
         @Override
         public WithFeatures withDefaultAlgorithms() {
-            KeySpecBuilder.this.algorithmSuite = AlgorithmSuite.getDefaultAlgorithmSuite();
+            hashedSubPackets.setPreferredSymmetricAlgorithms(false,
+                    AlgorithmSuite.getDefaultAlgorithmSuite().getSymmetricKeyAlgorithmIds());
+            hashedSubPackets.setPreferredCompressionAlgorithms(false,
+                    AlgorithmSuite.getDefaultAlgorithmSuite().getCompressionAlgorithmIds());
+            hashedSubPackets.setPreferredHashAlgorithms(false,
+                    AlgorithmSuite.getDefaultAlgorithmSuite().getHashAlgorithmIds());
             return new WithFeaturesImpl();
         }
     }
@@ -92,14 +108,18 @@ public class KeySpecBuilder implements KeySpecBuilderInterface {
 
         @Override
         public WithPreferredCompressionAlgorithms withPreferredHashAlgorithms(HashAlgorithm... algorithms) {
-            KeySpecBuilder.this.algorithmSuite.setHashAlgorithms(Arrays.asList(algorithms));
+            int[] ids = new int[algorithms.length];
+            for (int i = 0; i < ids.length; i++) {
+                ids[i] = algorithms[i].getAlgorithmId();
+            }
+            KeySpecBuilder.this.hashedSubPackets.setPreferredHashAlgorithms(false, ids);
             return new WithPreferredCompressionAlgorithmsImpl();
         }
 
         @Override
         public WithPreferredCompressionAlgorithms withDefaultHashAlgorithms() {
-            KeySpecBuilder.this.algorithmSuite.setHashAlgorithms(
-                    AlgorithmSuite.getDefaultAlgorithmSuite().getHashAlgorithms());
+            KeySpecBuilder.this.hashedSubPackets.setPreferredHashAlgorithms(false,
+                    AlgorithmSuite.getDefaultAlgorithmSuite().getHashAlgorithmIds());
             return new WithPreferredCompressionAlgorithmsImpl();
         }
     }
@@ -108,14 +128,18 @@ public class KeySpecBuilder implements KeySpecBuilderInterface {
 
         @Override
         public WithFeatures withPreferredCompressionAlgorithms(CompressionAlgorithm... algorithms) {
-            KeySpecBuilder.this.algorithmSuite.setCompressionAlgorithms(Arrays.asList(algorithms));
+            int[] ids = new int[algorithms.length];
+            for (int i = 0; i < ids.length; i++) {
+                ids[i] = algorithms[i].getAlgorithmId();
+            }
+            KeySpecBuilder.this.hashedSubPackets.setPreferredCompressionAlgorithms(false, ids);
             return new WithFeaturesImpl();
         }
 
         @Override
         public WithFeatures withDefaultCompressionAlgorithms() {
-            KeySpecBuilder.this.algorithmSuite.setCompressionAlgorithms(
-                    AlgorithmSuite.getDefaultAlgorithmSuite().getCompressionAlgorithms());
+            KeySpecBuilder.this.hashedSubPackets.setPreferredCompressionAlgorithms(false,
+                    AlgorithmSuite.getDefaultAlgorithmSuite().getCompressionAlgorithmIds());
             return new WithFeaturesImpl();
         }
     }
@@ -124,7 +148,7 @@ public class KeySpecBuilder implements KeySpecBuilderInterface {
 
         @Override
         public WithFeatures withFeature(Feature feature) {
-            KeySpecBuilder.this.features.add(feature);
+            KeySpecBuilder.this.hashedSubPackets.setFeature(false, feature.getFeatureId());
             return this;
         }
 
@@ -132,9 +156,8 @@ public class KeySpecBuilder implements KeySpecBuilderInterface {
         public KeySpec done() {
             return new KeySpec(
                     KeySpecBuilder.this.type,
-                    KeySpecBuilder.this.keyFlags,
-                    KeySpecBuilder.this.algorithmSuite,
-                    KeySpecBuilder.this.features);
+                    hashedSubPackets,
+                    false);
         }
     }
 }

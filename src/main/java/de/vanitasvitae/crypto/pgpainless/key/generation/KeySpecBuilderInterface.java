@@ -1,11 +1,10 @@
 package de.vanitasvitae.crypto.pgpainless.key.generation;
 
-import de.vanitasvitae.crypto.pgpainless.key.algorithm.AlgorithmSuite;
-import de.vanitasvitae.crypto.pgpainless.key.algorithm.CompressionAlgorithm;
-import de.vanitasvitae.crypto.pgpainless.key.algorithm.Feature;
-import de.vanitasvitae.crypto.pgpainless.key.algorithm.HashAlgorithm;
-import de.vanitasvitae.crypto.pgpainless.key.algorithm.KeyFlag;
-import de.vanitasvitae.crypto.pgpainless.key.algorithm.SymmetricKeyAlgorithm;
+import de.vanitasvitae.crypto.pgpainless.algorithm.CompressionAlgorithm;
+import de.vanitasvitae.crypto.pgpainless.algorithm.Feature;
+import de.vanitasvitae.crypto.pgpainless.algorithm.HashAlgorithm;
+import de.vanitasvitae.crypto.pgpainless.algorithm.KeyFlag;
+import de.vanitasvitae.crypto.pgpainless.algorithm.SymmetricKeyAlgorithm;
 import de.vanitasvitae.crypto.pgpainless.key.generation.type.KeyType;
 
 public interface KeySpecBuilderInterface {
@@ -17,13 +16,15 @@ public interface KeySpecBuilderInterface {
         WithDetailedConfiguration withKeyFlags(KeyFlag... flags);
 
         WithDetailedConfiguration withDefaultKeyFlags();
+
+        KeySpec withInheritedSubPackets();
     }
 
     interface WithDetailedConfiguration {
 
         WithPreferredSymmetricAlgorithms withDetailedConfiguration();
 
-        KeySpec withStandardConfiguration();
+        KeySpec withDefaultAlgorithms();
     }
 
     interface WithPreferredSymmetricAlgorithms {

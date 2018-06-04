@@ -1,16 +1,16 @@
 package de.vanitasvitae.crypto.pgpainless.key.generation.type;
 
 import de.vanitasvitae.crypto.pgpainless.algorithm.PublicKeyAlgorithm;
-import de.vanitasvitae.crypto.pgpainless.key.generation.type.length.ElGamalLength;
+import de.vanitasvitae.crypto.pgpainless.key.generation.type.length.RsaLength;
 
-public class ElGamal_ENCRYPT extends ElGamal_GENERAL {
+public class RSA_ENCRYPT extends RSA_GENERAL {
 
-    ElGamal_ENCRYPT(ElGamalLength length) {
+    RSA_ENCRYPT(RsaLength length) {
         super(length);
     }
 
     @Override
     public PublicKeyAlgorithm getAlgorithm() {
-        return PublicKeyAlgorithm.ELGAMAL_ENCRYPT;
+        return PublicKeyAlgorithm.RSA_ENCRYPT;
     }
 }

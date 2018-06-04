@@ -1,46 +1,33 @@
 package de.vanitasvitae.crypto.pgpainless.key.generation;
 
-import java.util.Set;
-
-import de.vanitasvitae.crypto.pgpainless.key.algorithm.AlgorithmSuite;
-import de.vanitasvitae.crypto.pgpainless.key.algorithm.Feature;
 import de.vanitasvitae.crypto.pgpainless.key.generation.type.KeyType;
+import org.bouncycastle.openpgp.PGPSignatureSubpacketGenerator;
+import org.bouncycastle.openpgp.PGPSignatureSubpacketVector;
 
 public class KeySpec {
 
     private final KeyType keyType;
-    private final int keyFlags;
-    private final AlgorithmSuite algorithmSuite;
-    private final Set<Feature> features;
+    private final PGPSignatureSubpacketGenerator subpacketGenerator;
+    private final boolean inheritedSubPackets;
 
     KeySpec(KeyType type,
-                   int keyFlags,
-                   AlgorithmSuite preferredAlgorithms,
-                   Set<Feature> features) {
+            PGPSignatureSubpacketGenerator subpacketGenerator,
+            boolean inheritedSubPackets) {
         this.keyType = type;
-        this.keyFlags = keyFlags;
-        this.algorithmSuite = preferredAlgorithms;
-        this.features = features;
+        this.subpacketGenerator = subpacketGenerator;
+        this.inheritedSubPackets = inheritedSubPackets;
     }
 
     KeyType getKeyType() {
         return keyType;
     }
 
-    int getKeyFlags() {
-        return keyFlags;
+    PGPSignatureSubpacketVector getSubpackets() {
+        return subpacketGenerator.generate();
     }
 
-    AlgorithmSuite getPreferredAlgorithms() {
-        return algorithmSuite;
-    }
-
-    byte getFeatures() {
-        byte val = 0;
-        for (Feature f : features) {
-            val |= f.getFeatureId();
-        }
-        return val;
+    boolean isInheritedSubPackets() {
+        return inheritedSubPackets;
     }
 
     public static KeySpecBuilder getBuilder() {
