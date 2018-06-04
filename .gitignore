@@ -2,6 +2,7 @@
 .gradle
 
 out/
+build/
 
 *.iws
 *.iml
