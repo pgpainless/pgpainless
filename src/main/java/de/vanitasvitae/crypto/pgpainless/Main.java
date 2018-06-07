@@ -15,21 +15,16 @@ import java.util.Collections;
 import de.vanitasvitae.crypto.pgpainless.algorithm.CompressionAlgorithm;
 import de.vanitasvitae.crypto.pgpainless.algorithm.HashAlgorithm;
 import de.vanitasvitae.crypto.pgpainless.algorithm.SymmetricKeyAlgorithm;
-import de.vanitasvitae.crypto.pgpainless.encryption_signing.SecretKeyRingDecryptor;
+import de.vanitasvitae.crypto.pgpainless.key.SecretKeyRingProtector;
 import de.vanitasvitae.crypto.pgpainless.key.generation.type.length.RsaLength;
 import org.bouncycastle.jce.provider.BouncyCastleProvider;
-import org.bouncycastle.openpgp.PGPEncryptedDataList;
 import org.bouncycastle.openpgp.PGPException;
-import org.bouncycastle.openpgp.PGPObjectFactory;
-import org.bouncycastle.openpgp.PGPPublicKeyEncryptedData;
 import org.bouncycastle.openpgp.PGPPublicKeyRing;
 import org.bouncycastle.openpgp.PGPSecretKeyRing;
 import org.bouncycastle.openpgp.PGPSecretKeyRingCollection;
-import org.bouncycastle.openpgp.jcajce.JcaPGPObjectFactory;
 import org.bouncycastle.openpgp.operator.PBESecretKeyDecryptor;
 import org.bouncycastle.openpgp.operator.PBESecretKeyEncryptor;
 import org.bouncycastle.openpgp.operator.bc.BcKeyFingerprintCalculator;
-import org.bouncycastle.util.encoders.Base64;
 import org.bouncycastle.util.io.Streams;
 
 public class Main {
@@ -43,7 +38,7 @@ public class Main {
         PGPSecretKeyRing a = PGPainless.generateKeyRing().simpleRsaKeyRing("a@b.c", RsaLength._2048);
         PGPSecretKeyRing b = PGPainless.generateKeyRing().simpleRsaKeyRing("b@c.d", RsaLength._2048);
 
-        SecretKeyRingDecryptor secretKeyRingDecryptor = new SecretKeyRingDecryptor() {
+        SecretKeyRingProtector secretKeyRingDecryptor = new SecretKeyRingProtector() {
             @Override
             public PBESecretKeyDecryptor getDecryptor(Long keyId) {
                 return null;
@@ -62,7 +57,7 @@ public class Main {
         OutputStream encryptor = PGPainless.createEncryptor().onOutputStream(toEncrypted)
                 .toRecipient(b.getPublicKey())
                 .usingAlgorithms(SymmetricKeyAlgorithm.AES_256, HashAlgorithm.SHA512, CompressionAlgorithm.UNCOMPRESSED)
-                .signWith(a.getSecretKey(), secretKeyRingDecryptor)
+                .signWith(a, secretKeyRingDecryptor)
                 .asciiArmor();
 
         Streams.pipeAll(fromPlain, encryptor);
@@ -94,7 +89,7 @@ public class Main {
         System.out.println(new String(toPlain.toByteArray()));
     }
 
-    private static void gpg(PGPSecretKeyRing a, PGPSecretKeyRing b, SecretKeyRingDecryptor secretKeyRingDecryptor)
+    private static void gpg(PGPSecretKeyRing a, PGPSecretKeyRing b, SecretKeyRingProtector secretKeyRingDecryptor)
             throws IOException, PGPException {
         String gpg = "-----BEGIN PGP MESSAGE-----\n" +
                 "\n" +
@@ -132,7 +127,7 @@ public class Main {
 
     }
 
-    public static void symm(PGPSecretKeyRing a, PGPSecretKeyRing b, SecretKeyRingDecryptor secretKeyRingDecryptor)
+    public static void symm(PGPSecretKeyRing a, PGPSecretKeyRing b, SecretKeyRingProtector secretKeyRingDecryptor)
             throws IOException, PGPException {
         byte[] bytes = "Diese Nachricht ist streng geheim!!!".getBytes(Charset.forName("UTF-8"));
         ByteArrayInputStream fromPlain = new ByteArrayInputStream(bytes);
@@ -142,7 +137,7 @@ public class Main {
                 .onOutputStream(toEncrypted)
                 .toRecipient(b.getPublicKey())
                 .usingAlgorithms(SymmetricKeyAlgorithm.AES_256, HashAlgorithm.SHA512, CompressionAlgorithm.UNCOMPRESSED)
-                .signWith(a.getSecretKey(), secretKeyRingDecryptor)
+                .signWith(a, secretKeyRingDecryptor)
                 .noArmor();
 
         Streams.pipeAll(fromPlain, encryptor);

@@ -5,7 +5,7 @@ import java.io.InputStream;
 import java.util.Set;
 
 import de.vanitasvitae.crypto.pgpainless.PainlessResult;
-import de.vanitasvitae.crypto.pgpainless.encryption_signing.SecretKeyRingDecryptor;
+import de.vanitasvitae.crypto.pgpainless.key.SecretKeyRingProtector;
 import org.bouncycastle.openpgp.PGPException;
 import org.bouncycastle.openpgp.PGPPublicKeyRing;
 import org.bouncycastle.openpgp.PGPPublicKeyRingCollection;
@@ -17,7 +17,7 @@ public interface DecryptionBuilderInterface {
 
     interface DecryptWith {
 
-        VerifyWith decryptWith(PGPSecretKeyRingCollection secretKeyRings, SecretKeyRingDecryptor decryptor);
+        VerifyWith decryptWith(PGPSecretKeyRingCollection secretKeyRings, SecretKeyRingProtector decryptor);
 
         VerifyWith doNotDecrypt();
 

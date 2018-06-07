@@ -1,7 +1,6 @@
 package de.vanitasvitae.crypto.pgpainless.encryption_signing;
 
 import java.io.IOException;
-import java.io.InputStream;
 import java.io.OutputStream;
 import java.util.Set;
 
@@ -10,11 +9,11 @@ import de.vanitasvitae.crypto.pgpainless.SecretKeyNotFoundException;
 import de.vanitasvitae.crypto.pgpainless.algorithm.CompressionAlgorithm;
 import de.vanitasvitae.crypto.pgpainless.algorithm.HashAlgorithm;
 import de.vanitasvitae.crypto.pgpainless.algorithm.SymmetricKeyAlgorithm;
+import de.vanitasvitae.crypto.pgpainless.key.SecretKeyRingProtector;
 import org.bouncycastle.openpgp.PGPException;
 import org.bouncycastle.openpgp.PGPPublicKey;
 import org.bouncycastle.openpgp.PGPPublicKeyRing;
 import org.bouncycastle.openpgp.PGPPublicKeyRingCollection;
-import org.bouncycastle.openpgp.PGPSecretKey;
 import org.bouncycastle.openpgp.PGPSecretKeyRing;
 import org.bouncycastle.openpgp.PGPSecretKeyRingCollection;
 
@@ -26,12 +25,9 @@ public interface EncryptionBuilderInterface {
 
         WithAlgorithms toRecipient(PGPPublicKey key);
 
-        WithAlgorithms toRecipients(Set<PGPPublicKey> keys);
+        WithAlgorithms toRecipients(Set<PGPPublicKeyRing> keys);
 
-        WithAlgorithms toRecipients(Set<Long> keyIds, Set<PGPPublicKeyRing> keyRings)
-                throws PublicKeyNotFoundException;
-
-        WithAlgorithms toRecipients(Set<Long> keyIds, PGPPublicKeyRingCollection keys)
+        WithAlgorithms toRecipients(Set<Long> keyIds, Set<PGPPublicKeyRingCollection> keys)
                 throws PublicKeyNotFoundException;
 
         SignWith doNotEncrypt();
@@ -40,24 +36,26 @@ public interface EncryptionBuilderInterface {
 
     interface WithAlgorithms {
 
-        WithAlgorithms andToSelf(Set<PGPPublicKey> keys);
+        WithAlgorithms andToSelf(PGPPublicKey key);
+
+        WithAlgorithms andToSelf(Set<PGPPublicKeyRing> keys);
 
         SignWith usingAlgorithms(SymmetricKeyAlgorithm symmetricKeyAlgorithm,
                                  HashAlgorithm hashAlgorithm,
                                  CompressionAlgorithm compressionAlgorithm);
 
+        SignWith usingSecureAlgorithms();
+
     }
 
     interface SignWith {
 
-        Armor signWith(PGPSecretKey key, SecretKeyRingDecryptor decryptor);
+        Armor signWith(PGPSecretKeyRing key, SecretKeyRingProtector decryptor);
 
-        Armor signWith(Set<PGPSecretKey> keys, SecretKeyRingDecryptor decryptor);
-
-        Armor signWith(Set<Long> keyIds, Set<PGPSecretKeyRing> keyRings, SecretKeyRingDecryptor decryptor)
+        Armor signWith(Set<PGPSecretKeyRing> keyRings, SecretKeyRingProtector decryptor)
                 throws SecretKeyNotFoundException;
 
-        Armor signWith(Set<Long> keyIds, PGPSecretKeyRingCollection keys, SecretKeyRingDecryptor decryptor)
+        Armor signWith(Set<Long> keyIds, Set<PGPSecretKeyRingCollection> keys, SecretKeyRingProtector decryptor)
                 throws SecretKeyNotFoundException;
 
         Armor doNotSign();

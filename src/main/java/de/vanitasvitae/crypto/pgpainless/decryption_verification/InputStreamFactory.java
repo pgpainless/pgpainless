@@ -13,7 +13,7 @@ import de.vanitasvitae.crypto.pgpainless.PainlessResult;
 import de.vanitasvitae.crypto.pgpainless.PainlessStream;
 import de.vanitasvitae.crypto.pgpainless.algorithm.CompressionAlgorithm;
 import de.vanitasvitae.crypto.pgpainless.algorithm.SymmetricKeyAlgorithm;
-import de.vanitasvitae.crypto.pgpainless.encryption_signing.SecretKeyRingDecryptor;
+import de.vanitasvitae.crypto.pgpainless.key.SecretKeyRingProtector;
 import org.bouncycastle.openpgp.PGPCompressedData;
 import org.bouncycastle.openpgp.PGPEncryptedDataList;
 import org.bouncycastle.openpgp.PGPException;
@@ -40,7 +40,7 @@ public class InputStreamFactory {
     private InputStream inputStream;
 
     private final PGPSecretKeyRingCollection decryptionKeys;
-    private final SecretKeyRingDecryptor decryptionKeyDecryptor;
+    private final SecretKeyRingProtector decryptionKeyDecryptor;
     private final Set<PGPPublicKeyRing> verificationKeys = new HashSet<>();
     private final Set<Long> trustedKeyIds = new HashSet<>();
     private final MissingPublicKeyCallback missingPublicKeyCallback;
@@ -50,7 +50,7 @@ public class InputStreamFactory {
     private final Map<Long, PGPOnePassSignature> verifiableOnePassSignatures = new HashMap<>();
 
     private InputStreamFactory(PGPSecretKeyRingCollection decryptionKeys,
-                               SecretKeyRingDecryptor decryptor,
+                               SecretKeyRingProtector decryptor,
                                Set<PGPPublicKeyRing> verificationKeys,
                                Set<Long> trustedKeyIds,
                                MissingPublicKeyCallback missingPublicKeyCallback)
@@ -64,7 +64,7 @@ public class InputStreamFactory {
 
     public static PainlessResult.ResultAndInputStream create(InputStream inputStream,
                                                              PGPSecretKeyRingCollection decryptionKeys,
-                                                             SecretKeyRingDecryptor decryptor,
+                                                             SecretKeyRingProtector decryptor,
                                                              Set<PGPPublicKeyRing> verificationKeys,
                                                              Set<Long> trustedKeyIds,
                                                              MissingPublicKeyCallback missingPublicKeyCallback)
