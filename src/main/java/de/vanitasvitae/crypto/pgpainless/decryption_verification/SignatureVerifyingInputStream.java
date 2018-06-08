@@ -49,11 +49,12 @@ public class SignatureVerifyingInputStream extends FilterInputStream {
 
         try {
             PGPSignatureList signatureList = null;
-            Iterator objectIterator = objectFactory.iterator();
-            while (objectIterator.hasNext() && signatureList == null) {
-                Object object = objectIterator.next();
-                if (object instanceof PGPSignatureList) {
-                    signatureList = (PGPSignatureList) object;
+            Object obj = objectFactory.nextObject();
+            while (obj !=  null && signatureList == null) {
+                if (obj instanceof PGPSignatureList) {
+                    signatureList = (PGPSignatureList) obj;
+                } else {
+                    obj = objectFactory.nextObject();
                 }
             }
 
@@ -70,6 +71,7 @@ public class SignatureVerifyingInputStream extends FilterInputStream {
                     throw new SignatureException("Bad Signature of key " + signature.getKeyID());
                 } else {
                     resultBuilder.addVerifiedSignatureKeyId(signature.getKeyID());
+                    onePassSignatures.remove(signature.getKeyID());
                 }
             }
         } catch (PGPException | SignatureException e) {

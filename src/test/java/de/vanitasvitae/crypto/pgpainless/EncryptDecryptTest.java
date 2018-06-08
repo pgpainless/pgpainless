@@ -8,6 +8,7 @@ import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
+import java.nio.charset.Charset;
 import java.security.Security;
 import java.util.Arrays;
 import java.util.Collections;
@@ -15,7 +16,6 @@ import java.util.Collections;
 import de.vanitasvitae.crypto.pgpainless.key.UnprotectedKeysProtector;
 import org.bouncycastle.jce.provider.BouncyCastleProvider;
 import org.bouncycastle.openpgp.PGPException;
-import org.bouncycastle.openpgp.PGPPublicKey;
 import org.bouncycastle.openpgp.PGPPublicKeyRing;
 import org.bouncycastle.openpgp.PGPSecretKeyRing;
 import org.bouncycastle.openpgp.PGPSecretKeyRingCollection;
@@ -38,7 +38,8 @@ public class EncryptDecryptTest {
     }
 
     @Test
-    public void test() throws IOException, PGPException {
+    public void test() throws Exception {
+        Security.addProvider(new BouncyCastleProvider());
         PGPPublicKeyRing jPub = new PGPPublicKeyRing(PGPUtil.getDecoderStream(new ByteArrayInputStream(TestKeys.JULIET_PUB.getBytes())), new BcKeyFingerprintCalculator());
 
         ByteArrayOutputStream toEncrypted = new ByteArrayOutputStream();
@@ -66,7 +67,8 @@ public class EncryptDecryptTest {
                 .onInputStream(fromEncrypted)
                 .decryptWith(new PGPSecretKeyRingCollection(Collections.singleton(juliet)),
                         new UnprotectedKeysProtector())
-                .doNotVerify()
+                .verifyWith(Collections.singleton(jPub.getPublicKey().getKeyID()), Collections.singleton(jPub))
+                .ignoreMissingPublicKeys()
                 .build();
 
         InputStream decryptor = resultAndInputStream.getInputStream();
@@ -79,14 +81,8 @@ public class EncryptDecryptTest {
         assertTrue(Arrays.equals(message.getBytes(), toPlain.toByteArray()));
     }
 
-    public static void main(String[] args) throws IOException, PGPException {
-        Security.addProvider(new BouncyCastleProvider());
-        EncryptDecryptTest test = new EncryptDecryptTest();
-        test.decryptVerifyTest();
-    }
-
     @Test
-    public void decryptVerifyTest() throws IOException, PGPException {
+    public void decryptVerifyTest() throws Exception {
         String encryptedMessage = "-----BEGIN PGP MESSAGE-----\n" +
                 "\n" +
                 "hQGMAwAAAAAAAAAAAQwAoJtfpcBPCwhUzzHuVIcBzBLyfIWT/EJ527neb46lN56S\n" +
@@ -137,6 +133,9 @@ public class EncryptDecryptTest {
         decryptor.close();
         toPlain.close();
 
-        assertTrue(Arrays.equals("This message is encrypted".getBytes(), toPlain.toByteArray()));
+        byte[] expected = "This message is encrypted\n".getBytes(Charset.forName("UTF-8"));
+        byte[] actual = toPlain.toByteArray();
+
+        assertTrue(Arrays.equals(expected, actual));
     }
 }

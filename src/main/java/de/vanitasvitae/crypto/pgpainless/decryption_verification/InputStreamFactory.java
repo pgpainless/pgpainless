@@ -37,8 +37,6 @@ import org.bouncycastle.openpgp.operator.bc.BcPublicKeyDataDecryptorFactory;
 
 public class InputStreamFactory {
 
-    private InputStream inputStream;
-
     private final PGPSecretKeyRingCollection decryptionKeys;
     private final SecretKeyRingProtector decryptionKeyDecryptor;
     private final Set<PGPPublicKeyRing> verificationKeys = new HashSet<>();
@@ -47,6 +45,7 @@ public class InputStreamFactory {
 
     private final PainlessResult.Builder resultBuilder = PainlessResult.getBuilder();
     private final PGPContentVerifierBuilderProvider verifierBuilderProvider = new BcPGPContentVerifierBuilderProvider();
+    private final KeyFingerPrintCalculator fingerCalc = new BcKeyFingerprintCalculator();
     private final Map<Long, PGPOnePassSignature> verifiableOnePassSignatures = new HashMap<>();
 
     private InputStreamFactory(PGPSecretKeyRingCollection decryptionKeys,
@@ -85,9 +84,8 @@ public class InputStreamFactory {
     }
 
     private InputStream wrap(PGPObjectFactory objectFactory) throws IOException, PGPException {
-        KeyFingerPrintCalculator fingerCalc = new BcKeyFingerprintCalculator();
 
-        Object pgpObj = null;
+        Object pgpObj;
         while ((pgpObj = objectFactory.nextObject()) != null) {
 
             if (pgpObj instanceof PGPEncryptedDataList) {
@@ -107,7 +105,8 @@ public class InputStreamFactory {
 
             if (pgpObj instanceof PGPOnePassSignatureList) {
                 PGPOnePassSignatureList onePassSignatures = (PGPOnePassSignatureList) pgpObj;
-                verify(onePassSignatures);
+                initOnePassSignatures(onePassSignatures);
+                return wrap(objectFactory);
             }
 
             if (pgpObj instanceof PGPLiteralData) {
@@ -166,7 +165,7 @@ public class InputStreamFactory {
         return decryptionStream;
     }
 
-    private void verify(PGPOnePassSignatureList onePassSignatureList) throws PGPException {
+    private void initOnePassSignatures(PGPOnePassSignatureList onePassSignatureList) throws PGPException {
         Iterator<PGPOnePassSignature> iterator = onePassSignatureList.iterator();
         if (!iterator.hasNext()) {
             throw new PGPException("Verification failed - No OnePassSignatures found!");
