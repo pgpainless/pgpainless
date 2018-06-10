@@ -6,7 +6,6 @@ import java.util.HashSet;
 import java.util.Iterator;
 import java.util.Set;
 
-import de.vanitasvitae.crypto.pgpainless.PainlessResult;
 import de.vanitasvitae.crypto.pgpainless.key.SecretKeyRingProtector;
 import org.bouncycastle.openpgp.PGPException;
 import org.bouncycastle.openpgp.PGPPublicKeyRing;
@@ -89,7 +88,7 @@ public class DecryptionBuilder implements DecryptionBuilderInterface {
     class BuildImpl implements Build {
 
         @Override
-        public PainlessResult.ResultAndInputStream build() throws IOException, PGPException {
+        public DecryptionStream build() throws IOException, PGPException {
             return DecryptionStreamFactory.create(inputStream,
                     decryptionKeys, decryptionKeyDecryptor, verificationKeys, trustedKeyIds, missingPublicKeyCallback);
         }

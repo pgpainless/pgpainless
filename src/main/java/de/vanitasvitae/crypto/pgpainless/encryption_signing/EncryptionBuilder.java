@@ -3,16 +3,25 @@ package de.vanitasvitae.crypto.pgpainless.encryption_signing;
 import java.io.IOException;
 import java.io.OutputStream;
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.Set;
 
-import de.vanitasvitae.crypto.pgpainless.PublicKeyNotFoundException;
 import de.vanitasvitae.crypto.pgpainless.SecretKeyNotFoundException;
 import de.vanitasvitae.crypto.pgpainless.algorithm.CompressionAlgorithm;
 import de.vanitasvitae.crypto.pgpainless.algorithm.HashAlgorithm;
 import de.vanitasvitae.crypto.pgpainless.algorithm.SymmetricKeyAlgorithm;
 import de.vanitasvitae.crypto.pgpainless.key.SecretKeyRingProtector;
+import de.vanitasvitae.crypto.pgpainless.key.selection.key.PublicKeySelectionStrategy;
+import de.vanitasvitae.crypto.pgpainless.key.selection.key.SecretKeySelectionStrategy;
+import de.vanitasvitae.crypto.pgpainless.key.selection.key.impl.And;
+import de.vanitasvitae.crypto.pgpainless.key.selection.key.impl.EncryptionKeySelectionStrategy;
+import de.vanitasvitae.crypto.pgpainless.key.selection.key.impl.NoRevocation;
+import de.vanitasvitae.crypto.pgpainless.key.selection.key.impl.SignatureKeySelectionStrategy;
+import de.vanitasvitae.crypto.pgpainless.key.selection.keyring.PublicKeyRingSelectionStrategy;
+import de.vanitasvitae.crypto.pgpainless.key.selection.keyring.SecretKeyRingSelectionStrategy;
+import de.vanitasvitae.crypto.pgpainless.util.MultiMap;
 import org.bouncycastle.openpgp.PGPException;
 import org.bouncycastle.openpgp.PGPPrivateKey;
 import org.bouncycastle.openpgp.PGPPublicKey;
@@ -42,19 +51,22 @@ public class EncryptionBuilder implements EncryptionBuilderInterface {
     class ToRecipientsImpl implements ToRecipients {
 
         @Override
-        public WithAlgorithms toRecipient(PGPPublicKey key) {
-            if (!key.isEncryptionKey()) {
-                throw new IllegalStateException("Public Key " + Long.toHexString(key.getKeyID()) + " is not capable of encryption.");
+        public WithAlgorithms toRecipients(PGPPublicKey... keys) {
+            for (PGPPublicKey k : keys) {
+                if (encryptionKeySelector().accept(null, k)) {
+                    EncryptionBuilder.this.encryptionKeys.add(k);
+                } else {
+                    throw new IllegalArgumentException("Key " + k.getKeyID() + " is not a valid encryption key.");
+                }
             }
-            EncryptionBuilder.this.encryptionKeys.add(key);
             return new WithAlgorithmsImpl();
         }
 
         @Override
-        public WithAlgorithms toRecipients(Set<PGPPublicKeyRing> keys) {
+        public WithAlgorithms toRecipients(PGPPublicKeyRing... keys) {
             for (PGPPublicKeyRing ring : keys) {
                 for (PGPPublicKey k : ring) {
-                    if (k.isEncryptionKey()) {
+                    if (encryptionKeySelector().accept(null, k)) {
                         EncryptionBuilder.this.encryptionKeys.add(k);
                     }
                 }
@@ -63,25 +75,20 @@ public class EncryptionBuilder implements EncryptionBuilderInterface {
         }
 
         @Override
-        public WithAlgorithms toRecipients(Set<Long> keyIds, Set<PGPPublicKeyRingCollection> keys)
-                throws PublicKeyNotFoundException {
-            Set<PGPPublicKeyRing> rings = new HashSet<>();
-
-            for (PGPPublicKeyRingCollection collection : keys) {
-                for (long keyId : keyIds) {
-                    try {
-                        PGPPublicKeyRing ring = collection.getPublicKeyRing(keyId);
-                        if (ring != null) {
-                            rings.add(ring);
-                            keyIds.remove(keyId);
+        public <O>WithAlgorithms toRecipients(PublicKeyRingSelectionStrategy<O> ringSelectionStrategy,
+                                              MultiMap<O, PGPPublicKeyRingCollection> keys) {
+            MultiMap<O, PGPPublicKeyRing> acceptedKeyRings = ringSelectionStrategy.selectKeyRingsFromCollections(keys);
+            for (O identifier : acceptedKeyRings.keySet()) {
+                Set<PGPPublicKeyRing> acceptedSet = acceptedKeyRings.get(identifier);
+                for (PGPPublicKeyRing ring : acceptedSet) {
+                    for (PGPPublicKey k : ring) {
+                        if (encryptionKeySelector().accept(null, k)) {
+                            EncryptionBuilder.this.encryptionKeys.add(k);
                         }
-                    } catch (PGPException e) {
-                        throw new PublicKeyNotFoundException(e);
                     }
                 }
             }
-
-            return toRecipients(rings);
+            return new WithAlgorithmsImpl();
         }
 
         @Override
@@ -93,18 +100,42 @@ public class EncryptionBuilder implements EncryptionBuilderInterface {
     class WithAlgorithmsImpl implements WithAlgorithms {
 
         @Override
-        public WithAlgorithms andToSelf(PGPPublicKey key) {
-            EncryptionBuilder.this.encryptionKeys.add(key);
+        public WithAlgorithms andToSelf(PGPPublicKey... keys) {
+            for (PGPPublicKey k : keys) {
+                if (encryptionKeySelector().accept(null, k)) {
+                    EncryptionBuilder.this.encryptionKeys.add(k);
+                } else {
+                    throw new IllegalArgumentException("Key " + k.getKeyID() + " is not a valid encryption key.");
+                }
+            }
             return this;
         }
 
         @Override
-        public WithAlgorithms andToSelf(Set<PGPPublicKeyRing> keyRings) {
+        public WithAlgorithms andToSelf(PGPPublicKeyRing... keyRings) {
             for (PGPPublicKeyRing ring : keyRings) {
                 for (Iterator<PGPPublicKey> i = ring.getPublicKeys(); i.hasNext(); ) {
                     PGPPublicKey key = i.next();
-                    if (key.isEncryptionKey()) {
+                    if (encryptionKeySelector().accept(null, key)) {
                         EncryptionBuilder.this.encryptionKeys.add(key);
+                    }
+                }
+            }
+            return this;
+        }
+
+        public <O>WithAlgorithms andToSelf(PublicKeyRingSelectionStrategy<O> ringSelectionStrategy,
+                                           MultiMap<O, PGPPublicKeyRingCollection> keyRingCollections) {
+            MultiMap<O, PGPPublicKeyRing> acceptedKeyRings =
+                    ringSelectionStrategy.selectKeyRingsFromCollections(keyRingCollections);
+            for (O identifier : acceptedKeyRings.keySet()) {
+                Set<PGPPublicKeyRing> acceptedSet = acceptedKeyRings.get(identifier);
+                for (PGPPublicKeyRing k : acceptedSet) {
+                    for (Iterator<PGPPublicKey> i = k.getPublicKeys(); i.hasNext(); ) {
+                        PGPPublicKey key = i.next();
+                        if (encryptionKeySelector().accept(null, key)) {
+                            EncryptionBuilder.this.encryptionKeys.add(key);
+                        }
                     }
                 }
             }
@@ -136,16 +167,24 @@ public class EncryptionBuilder implements EncryptionBuilderInterface {
     class SignWithImpl implements SignWith {
 
         @Override
-        public Armor signWith(PGPSecretKeyRing key, SecretKeyRingProtector decryptor) {
-            return signWith(Collections.singleton(key), decryptor);
+        public <O> Armor signWith(SecretKeyRingProtector decryptor, PGPSecretKey... keys) {
+            for (PGPSecretKey s : keys) {
+                if (EncryptionBuilder.this.<O>signingKeySelector().accept(null, s)) {
+                    signingKeys.add(s);
+                } else {
+                    throw new IllegalArgumentException("Key " + s.getKeyID() + " is not a valid signing key.");
+                }
+            }
+            EncryptionBuilder.this.signingKeysDecryptor = decryptor;
+            return new ArmorImpl();
         }
 
         @Override
-        public Armor signWith(Set<PGPSecretKeyRing> keys, SecretKeyRingProtector decryptor) {
+        public <O> Armor signWith(SecretKeyRingProtector decryptor, PGPSecretKeyRing... keys) {
             for (PGPSecretKeyRing key : keys) {
                 for (Iterator<PGPSecretKey> i = key.getSecretKeys(); i.hasNext(); ) {
                     PGPSecretKey s = i.next();
-                    if (s.isSigningKey()) {
+                    if (EncryptionBuilder.this.<O>signingKeySelector().accept(null, s)) {
                         EncryptionBuilder.this.signingKeys.add(s);
                     }
                 }
@@ -155,23 +194,23 @@ public class EncryptionBuilder implements EncryptionBuilderInterface {
         }
 
         @Override
-        public Armor signWith(Set<Long> keyIds, Set<PGPSecretKeyRingCollection> keyRings, SecretKeyRingProtector decryptor)
-                throws SecretKeyNotFoundException {
-            Set<PGPSecretKeyRing> rings = new HashSet<>();
-            for (PGPSecretKeyRingCollection collection : keyRings) {
-                for (long keyId : keyIds) {
-                    try {
-                        PGPSecretKeyRing ring = collection.getSecretKeyRing(keyId);
-                        if (ring != null) {
-                            rings.add(ring);
-                            keyIds.remove(keyId);
+        public <O>Armor signWith(SecretKeyRingSelectionStrategy<O> ringSelectionStrategy,
+                                 SecretKeyRingProtector decryptor,
+                                 MultiMap<O, PGPSecretKeyRingCollection> keyRingCollections) {
+            MultiMap<O, PGPSecretKeyRing> acceptedKeyRings =
+                    ringSelectionStrategy.selectKeyRingsFromCollections(keyRingCollections);
+            for (O identifier : acceptedKeyRings.keySet()) {
+                Set<PGPSecretKeyRing> acceptedSet = acceptedKeyRings.get(identifier);
+                for (PGPSecretKeyRing k : acceptedSet) {
+                    for (Iterator<PGPSecretKey> i = k.getSecretKeys(); i.hasNext(); ) {
+                        PGPSecretKey s = i.next();
+                        if (EncryptionBuilder.this.<O>signingKeySelector().accept(null, s)) {
+                            EncryptionBuilder.this.signingKeys.add(s);
                         }
-                    } catch (PGPException e) {
-                        throw new SecretKeyNotFoundException(keyId);
                     }
                 }
             }
-            return signWith(rings, decryptor);
+            return new ArmorImpl();
         }
 
         @Override
@@ -210,5 +249,17 @@ public class EncryptionBuilder implements EncryptionBuilderInterface {
                     EncryptionBuilder.this.compressionAlgorithm,
                     EncryptionBuilder.this.asciiArmor);
         }
+    }
+
+    <O> PublicKeySelectionStrategy<O> encryptionKeySelector() {
+        return new And.PubKeySelectionStrategy<>(
+                new NoRevocation.PubKeySelectionStrategy<>(),
+                new EncryptionKeySelectionStrategy<>());
+    }
+
+    <O> SecretKeySelectionStrategy<O> signingKeySelector() {
+        return new And.SecKeySelectionStrategy<>(
+                new NoRevocation.SecKeySelectionStrategy<>(),
+                new SignatureKeySelectionStrategy<>());
     }
 }

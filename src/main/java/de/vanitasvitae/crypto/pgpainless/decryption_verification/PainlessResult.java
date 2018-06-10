@@ -1,4 +1,4 @@
-package de.vanitasvitae.crypto.pgpainless;
+package de.vanitasvitae.crypto.pgpainless.decryption_verification;
 
 import java.util.Collections;
 import java.util.HashSet;
@@ -86,11 +86,11 @@ public class PainlessResult {
         return false;
     }
 
-    public static Builder getBuilder() {
+    static Builder getBuilder() {
         return new Builder();
     }
 
-    public static class Builder {
+    static class Builder {
 
         private final Set<Long> recipientKeyIds = new HashSet<>();
         private Long decryptionKeyId;
@@ -137,27 +137,6 @@ public class PainlessResult {
 
         public PainlessResult build() {
             return new PainlessResult(recipientKeyIds, decryptionKeyId, symmetricKeyAlgorithm, compressionAlgorithm, integrityProtected, signatureKeyIds, verifiedSignatureKeyIds);
-        }
-    }
-
-    public static class ResultAndInputStream {
-        private final PainlessResult.Builder resultBuilder;
-        private final PainlessStream.In inputStream;
-
-        public ResultAndInputStream(PainlessResult.Builder resultBuilder, PainlessStream.In inputStream) {
-            this.resultBuilder = resultBuilder;
-            this.inputStream = inputStream;
-        }
-
-        public PainlessResult getResult() {
-            if (!inputStream.isClosed()) {
-                throw new IllegalStateException("InputStream must be closed before the PainlessResult can be accessed.");
-            }
-            return resultBuilder.build();
-        }
-
-        public PainlessStream.In getInputStream() {
-            return inputStream;
         }
     }
 }

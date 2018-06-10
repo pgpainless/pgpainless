@@ -4,7 +4,6 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.util.Set;
 
-import de.vanitasvitae.crypto.pgpainless.PainlessResult;
 import de.vanitasvitae.crypto.pgpainless.key.SecretKeyRingProtector;
 import org.bouncycastle.openpgp.PGPException;
 import org.bouncycastle.openpgp.PGPPublicKeyRing;
@@ -42,7 +41,7 @@ public interface DecryptionBuilderInterface {
 
     interface Build {
 
-        PainlessResult.ResultAndInputStream build() throws IOException, PGPException;
+        DecryptionStream build() throws IOException, PGPException;
 
     }
 

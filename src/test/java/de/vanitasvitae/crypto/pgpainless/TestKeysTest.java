@@ -6,11 +6,11 @@ import static junit.framework.TestCase.assertTrue;
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
-import java.io.InputStream;
 import java.nio.charset.Charset;
 import java.util.Arrays;
 import java.util.Collections;
 
+import de.vanitasvitae.crypto.pgpainless.decryption_verification.DecryptionStream;
 import de.vanitasvitae.crypto.pgpainless.key.UnprotectedKeysProtector;
 import de.vanitasvitae.crypto.pgpainless.util.BCUtil;
 import org.bouncycastle.openpgp.PGPException;
@@ -39,7 +39,7 @@ public class TestKeysTest extends AbstractPGPainlessTest {
     public void decryptVerifyTest() throws Exception {
         String encryptedMessage = TestKeys.TEST_MESSAGE_01;
 
-        PainlessResult.ResultAndInputStream resultAndInputStream = PGPainless.createDecryptor()
+        DecryptionStream decryptor = PGPainless.createDecryptor()
                 .onInputStream(new ByteArrayInputStream(encryptedMessage.getBytes()))
                 .decryptWith(new PGPSecretKeyRingCollection(Collections.singleton(juliet)), new UnprotectedKeysProtector())
                 .verifyWith(
@@ -48,7 +48,6 @@ public class TestKeysTest extends AbstractPGPainlessTest {
                 .ignoreMissingPublicKeys()
                 .build();
 
-        InputStream decryptor = resultAndInputStream.getInputStream();
         ByteArrayOutputStream toPlain = new ByteArrayOutputStream();
         Streams.pipeAll(decryptor, toPlain);
         decryptor.close();

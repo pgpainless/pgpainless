@@ -5,7 +5,6 @@ import static junit.framework.TestCase.assertTrue;
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
-import java.io.InputStream;
 import java.io.OutputStream;
 import java.nio.charset.Charset;
 import java.security.InvalidAlgorithmParameterException;
@@ -16,6 +15,8 @@ import java.util.Collections;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
+import de.vanitasvitae.crypto.pgpainless.decryption_verification.DecryptionStream;
+import de.vanitasvitae.crypto.pgpainless.decryption_verification.PainlessResult;
 import de.vanitasvitae.crypto.pgpainless.key.SecretKeyRingProtector;
 import de.vanitasvitae.crypto.pgpainless.key.UnprotectedKeysProtector;
 import de.vanitasvitae.crypto.pgpainless.key.generation.type.length.RsaLength;
@@ -90,9 +91,9 @@ public class EncryptDecryptTest extends AbstractPGPainlessTest {
 
         OutputStream encryptor = PGPainless.createEncryptor()
                 .onOutputStream(envelope)
-                .toRecipients(Collections.singleton(recipientPub))
+                .toRecipients(recipientPub)
                 .usingSecureAlgorithms()
-                .signWith(sender, keyDecryptor)
+                .signWith(keyDecryptor, sender)
                 .noArmor();
 
         Streams.pipeAll(new ByteArrayInputStream(secretMessage), encryptor);
@@ -102,21 +103,20 @@ public class EncryptDecryptTest extends AbstractPGPainlessTest {
         // Juliet trieth to comprehend Romeos words
 
         ByteArrayInputStream envelopeIn = new ByteArrayInputStream(encryptedSecretMessage);
-        PainlessResult.ResultAndInputStream resultAndInputStream = PGPainless.createDecryptor()
+        DecryptionStream decryptor = PGPainless.createDecryptor()
                 .onInputStream(envelopeIn)
                 .decryptWith(BCUtil.keyRingsToKeyRingCollection(recipient), keyDecryptor)
                 .verifyWith(Collections.singleton(TestKeys.ROMEO_KEY_ID), BCUtil.keyRingsToKeyRingCollection(senderPub))
                 .ignoreMissingPublicKeys()
                 .build();
 
-        InputStream decryptor = resultAndInputStream.getInputStream();
         OutputStream decryptedSecretMessage = new ByteArrayOutputStream();
 
         Streams.pipeAll(decryptor, decryptedSecretMessage);
         decryptor.close();
 
         assertTrue(Arrays.equals(secretMessage, ((ByteArrayOutputStream) decryptedSecretMessage).toByteArray()));
-        PainlessResult result = resultAndInputStream.getResult();
+        PainlessResult result = decryptor.getResult();
         assertTrue(result.containsVerifiedSignatureFrom(senderPub));
         assertTrue(result.isIntegrityProtected());
         assertTrue(result.isSigned());

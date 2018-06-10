@@ -9,7 +9,6 @@ import java.util.Iterator;
 import java.util.Map;
 import java.util.Set;
 
-import de.vanitasvitae.crypto.pgpainless.PainlessResult;
 import de.vanitasvitae.crypto.pgpainless.PainlessStream;
 import de.vanitasvitae.crypto.pgpainless.algorithm.CompressionAlgorithm;
 import de.vanitasvitae.crypto.pgpainless.algorithm.SymmetricKeyAlgorithm;
@@ -60,12 +59,12 @@ public class DecryptionStreamFactory {
         this.missingPublicKeyCallback = missingPublicKeyCallback;
     }
 
-    public static PainlessResult.ResultAndInputStream create(InputStream inputStream,
-                                                             PGPSecretKeyRingCollection decryptionKeys,
-                                                             SecretKeyRingProtector decryptor,
-                                                             Set<PGPPublicKeyRing> verificationKeys,
-                                                             Set<Long> trustedKeyIds,
-                                                             MissingPublicKeyCallback missingPublicKeyCallback)
+    public static DecryptionStream create(InputStream inputStream,
+                                          PGPSecretKeyRingCollection decryptionKeys,
+                                          SecretKeyRingProtector decryptor,
+                                          Set<PGPPublicKeyRing> verificationKeys,
+                                          Set<Long> trustedKeyIds,
+                                          MissingPublicKeyCallback missingPublicKeyCallback)
             throws IOException, PGPException {
 
         DecryptionStreamFactory factory =  new DecryptionStreamFactory(decryptionKeys,
@@ -77,9 +76,7 @@ public class DecryptionStreamFactory {
         PGPObjectFactory objectFactory = new PGPObjectFactory(
                 PGPUtil.getDecoderStream(inputStream), new BcKeyFingerprintCalculator());
 
-        return new PainlessResult.ResultAndInputStream(
-                factory.resultBuilder,
-                new PainlessStream.In(factory.wrap(objectFactory)));
+        return new DecryptionStream(factory.wrap(objectFactory), factory.resultBuilder);
     }
 
     private InputStream wrap(PGPObjectFactory objectFactory) throws IOException, PGPException {

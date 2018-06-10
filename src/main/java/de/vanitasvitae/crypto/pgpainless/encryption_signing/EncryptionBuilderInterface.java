@@ -10,10 +10,14 @@ import de.vanitasvitae.crypto.pgpainless.algorithm.CompressionAlgorithm;
 import de.vanitasvitae.crypto.pgpainless.algorithm.HashAlgorithm;
 import de.vanitasvitae.crypto.pgpainless.algorithm.SymmetricKeyAlgorithm;
 import de.vanitasvitae.crypto.pgpainless.key.SecretKeyRingProtector;
+import de.vanitasvitae.crypto.pgpainless.key.selection.keyring.PublicKeyRingSelectionStrategy;
+import de.vanitasvitae.crypto.pgpainless.key.selection.keyring.SecretKeyRingSelectionStrategy;
+import de.vanitasvitae.crypto.pgpainless.util.MultiMap;
 import org.bouncycastle.openpgp.PGPException;
 import org.bouncycastle.openpgp.PGPPublicKey;
 import org.bouncycastle.openpgp.PGPPublicKeyRing;
 import org.bouncycastle.openpgp.PGPPublicKeyRingCollection;
+import org.bouncycastle.openpgp.PGPSecretKey;
 import org.bouncycastle.openpgp.PGPSecretKeyRing;
 import org.bouncycastle.openpgp.PGPSecretKeyRingCollection;
 
@@ -23,12 +27,12 @@ public interface EncryptionBuilderInterface {
 
     interface ToRecipients {
 
-        WithAlgorithms toRecipient(PGPPublicKey key);
+        WithAlgorithms toRecipients(PGPPublicKey... keys);
 
-        WithAlgorithms toRecipients(Set<PGPPublicKeyRing> keys);
+        WithAlgorithms toRecipients(PGPPublicKeyRing... keys);
 
-        WithAlgorithms toRecipients(Set<Long> keyIds, Set<PGPPublicKeyRingCollection> keys)
-                throws PublicKeyNotFoundException;
+        <O> WithAlgorithms toRecipients(PublicKeyRingSelectionStrategy<O> selectionStrategy,
+                                       MultiMap<O, PGPPublicKeyRingCollection> keys);
 
         SignWith doNotEncrypt();
 
@@ -36,9 +40,12 @@ public interface EncryptionBuilderInterface {
 
     interface WithAlgorithms {
 
-        WithAlgorithms andToSelf(PGPPublicKey key);
+        WithAlgorithms andToSelf(PGPPublicKey... keys);
 
-        WithAlgorithms andToSelf(Set<PGPPublicKeyRing> keys);
+        WithAlgorithms andToSelf(PGPPublicKeyRing... keys);
+
+        <O> WithAlgorithms andToSelf(PublicKeyRingSelectionStrategy<O> selectionStrategy,
+                                    MultiMap<O, PGPPublicKeyRingCollection> keys);
 
         SignWith usingAlgorithms(SymmetricKeyAlgorithm symmetricKeyAlgorithm,
                                  HashAlgorithm hashAlgorithm,
@@ -50,12 +57,13 @@ public interface EncryptionBuilderInterface {
 
     interface SignWith {
 
-        Armor signWith(PGPSecretKeyRing key, SecretKeyRingProtector decryptor);
+        <O> Armor signWith(SecretKeyRingProtector decryptor, PGPSecretKey... keys);
 
-        Armor signWith(Set<PGPSecretKeyRing> keyRings, SecretKeyRingProtector decryptor)
-                throws SecretKeyNotFoundException;
+        <O> Armor signWith(SecretKeyRingProtector decryptor, PGPSecretKeyRing... keyRings);
 
-        Armor signWith(Set<Long> keyIds, Set<PGPSecretKeyRingCollection> keys, SecretKeyRingProtector decryptor)
+        <O> Armor signWith(SecretKeyRingSelectionStrategy<O> selectionStrategy,
+                          SecretKeyRingProtector decryptor,
+                          MultiMap<O, PGPSecretKeyRingCollection> keys)
                 throws SecretKeyNotFoundException;
 
         Armor doNotSign();
