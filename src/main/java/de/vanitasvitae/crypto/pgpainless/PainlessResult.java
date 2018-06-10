@@ -6,6 +6,8 @@ import java.util.Set;
 
 import de.vanitasvitae.crypto.pgpainless.algorithm.CompressionAlgorithm;
 import de.vanitasvitae.crypto.pgpainless.algorithm.SymmetricKeyAlgorithm;
+import org.bouncycastle.openpgp.PGPPublicKey;
+import org.bouncycastle.openpgp.PGPPublicKeyRing;
 
 public class PainlessResult {
 
@@ -38,6 +40,10 @@ public class PainlessResult {
         return recipientKeyIds;
     }
 
+    public boolean isEncrypted() {
+        return !getRecipientKeyIds().isEmpty();
+    }
+
     public Long getDecryptionKeyId() {
         return decryptionKeyId;
     }
@@ -54,12 +60,30 @@ public class PainlessResult {
         return integrityProtected;
     }
 
-    public Set<Long> getSignatureKeyIds() {
+    public Set<Long> getAllSignatureKeyIds() {
         return signatureKeyIds;
+    }
+
+    public boolean isSigned() {
+        return !signatureKeyIds.isEmpty();
     }
 
     public Set<Long> getVerifiedSignatureKeyIds() {
         return verifiedSignatureKeyIds;
+    }
+
+    public boolean isVerified() {
+        return !verifiedSignatureKeyIds.isEmpty();
+    }
+
+    public boolean containsVerifiedSignatureFrom(PGPPublicKeyRing publicKeys) {
+        for (PGPPublicKey key : publicKeys) {
+            long id = key.getKeyID();
+            if (verifiedSignatureKeyIds.contains(id)) {
+                return true;
+            }
+        }
+        return false;
     }
 
     public static Builder getBuilder() {

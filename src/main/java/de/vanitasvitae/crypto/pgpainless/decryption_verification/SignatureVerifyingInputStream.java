@@ -6,6 +6,8 @@ import java.io.InputStream;
 import java.security.SignatureException;
 import java.util.Iterator;
 import java.util.Map;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 import de.vanitasvitae.crypto.pgpainless.PainlessResult;
 import org.bouncycastle.openpgp.PGPException;
@@ -15,6 +17,8 @@ import org.bouncycastle.openpgp.PGPSignature;
 import org.bouncycastle.openpgp.PGPSignatureList;
 
 public class SignatureVerifyingInputStream extends FilterInputStream {
+
+    private static final Logger LOGGER = Logger.getLogger(SignatureVerifyingInputStream.class.getName());
 
     private final PGPObjectFactory objectFactory;
     private final Map<Long, PGPOnePassSignature> onePassSignatures;
@@ -44,6 +48,7 @@ public class SignatureVerifyingInputStream extends FilterInputStream {
 
     private void validateOnePassSignatures() throws IOException {
         if (onePassSignatures.isEmpty()) {
+            LOGGER.log(Level.FINE, "No One-Pass-Signatures found -> No validation.");
             return;
         }
 

@@ -16,9 +16,33 @@
  */
 package de.vanitasvitae.crypto.pgpainless;
 
+import java.io.ByteArrayInputStream;
+import java.io.IOException;
+
+import org.bouncycastle.openpgp.PGPException;
+import org.bouncycastle.openpgp.PGPPublicKeyRing;
+import org.bouncycastle.openpgp.PGPPublicKeyRingCollection;
+import org.bouncycastle.openpgp.PGPSecretKeyRing;
+import org.bouncycastle.openpgp.PGPSecretKeyRingCollection;
+import org.bouncycastle.openpgp.PGPUtil;
+import org.bouncycastle.openpgp.operator.KeyFingerPrintCalculator;
+import org.bouncycastle.openpgp.operator.bc.BcKeyFingerprintCalculator;
+
 public class TestKeys {
 
+    private static final KeyFingerPrintCalculator calc = new BcKeyFingerprintCalculator();
+    private static PGPSecretKeyRing julietSecretKeyRing = null;
+    private static PGPPublicKeyRing julietPublicKeyRing = null;
+    private static PGPSecretKeyRing romeoSecretKeyRing = null;
+    private static PGPPublicKeyRing romeoPublicKeyRing = null;
+
+    private static PGPSecretKeyRingCollection julietSecretKeyRingCollection = null;
+    private static PGPPublicKeyRingCollection julietPublicKeyRingCollection = null;
+    private static PGPSecretKeyRingCollection romeoSecretKeyRingCollection = null;
+    private static PGPPublicKeyRingCollection romeoPublicKeyRingCollection = null;
+
     public static final String JULIET_UID = "xmpp:juliet@capulet.lit";
+    public static final long JULIET_KEY_ID = -5425419407118114754L;
 
     /**
      * Public key of xmpp:juliet@capulet.lit.
@@ -46,7 +70,7 @@ public class TestKeys {
     /**
      * Private key of xmpp:juliet@capulet.lit.
      */
-    public static final String JULIET_PRIV = "" +
+    public static final String JULIET_SEC = "" +
             "-----BEGIN PGP PRIVATE KEY BLOCK-----\n" +
             "\n" +
             "lQOYBFrxov4BCAChZwPrBxxIlwzpieR5T2pnaOZLWH0WqSON6rVjvfbJHWdDi3Th\n" +
@@ -80,6 +104,7 @@ public class TestKeys {
             "-----END PGP PRIVATE KEY BLOCK-----";
 
     public static final String ROMEO_UID = "xmpp:romeo@montague.lit";
+    public static final long ROMEO_KEY_ID = 334147643349279223L;
 
     /**
      * Public key of xmpp:romeo@montague.lit.
@@ -107,7 +132,7 @@ public class TestKeys {
     /**
      * Private key of xmpp:romeo@montague.lit.
      */
-    public static final String ROMEO_PRIV = "" +
+    public static final String ROMEO_SEC = "" +
             "-----BEGIN PGP PRIVATE KEY BLOCK-----\n" +
             "\n" +
             "lQOYBFrxopkBCADiYg/+mEObXgxuMW6/LFKpEyaJK9pBMgutuxnYZ9PXWZmOhDIT\n" +
@@ -139,4 +164,105 @@ public class TestKeys {
             "qFTwYFYxAf/RA6tuhIQEoCnpCytFMvrRKMb3Bx5vYRDVmE3jeg==\n" +
             "=LZ1b\n" +
             "-----END PGP PRIVATE KEY BLOCK-----";
+
+    public static PGPSecretKeyRing getJulietSecretKeyRing() throws IOException, PGPException {
+        if (julietSecretKeyRing == null) {
+            julietSecretKeyRing = new PGPSecretKeyRing(
+                    PGPUtil.getDecoderStream(new ByteArrayInputStream(JULIET_SEC.getBytes())), calc);
+        }
+        return julietSecretKeyRing;
+    }
+
+    public static PGPSecretKeyRingCollection getJulietSecretKeyRingCollection() throws IOException, PGPException {
+        if (julietSecretKeyRingCollection == null) {
+            julietSecretKeyRingCollection = new PGPSecretKeyRingCollection(
+                    PGPUtil.getDecoderStream(new ByteArrayInputStream(JULIET_SEC.getBytes())), calc);
+        }
+        return julietSecretKeyRingCollection;
+    }
+
+    public static PGPPublicKeyRing getJulietPublicKeyRing() throws IOException {
+        if (julietPublicKeyRing == null) {
+            julietPublicKeyRing = new PGPPublicKeyRing(
+                    PGPUtil.getDecoderStream(new ByteArrayInputStream(JULIET_PUB.getBytes())), calc);
+        }
+        return julietPublicKeyRing;
+    }
+
+    public static PGPPublicKeyRingCollection getJulietPublicKeyRingCollection() throws IOException, PGPException {
+        if (julietPublicKeyRingCollection == null) {
+            julietPublicKeyRingCollection = new PGPPublicKeyRingCollection(
+                    PGPUtil.getDecoderStream(new ByteArrayInputStream(JULIET_PUB.getBytes())), calc);
+        }
+        return julietPublicKeyRingCollection;
+    }
+
+    public static PGPSecretKeyRing getRomeoSecretKeyRing() throws IOException, PGPException {
+        if (romeoSecretKeyRing == null) {
+            romeoSecretKeyRing = new PGPSecretKeyRing(
+                    PGPUtil.getDecoderStream(new ByteArrayInputStream(ROMEO_SEC.getBytes())), calc);
+        }
+        return romeoSecretKeyRing;
+    }
+
+    public static PGPSecretKeyRingCollection getRomeoSecretKeyRingCollection() throws IOException, PGPException {
+        if (romeoSecretKeyRingCollection == null) {
+            romeoSecretKeyRingCollection = new PGPSecretKeyRingCollection(
+                    PGPUtil.getDecoderStream(new ByteArrayInputStream(ROMEO_SEC.getBytes())), calc);
+        }
+        return romeoSecretKeyRingCollection;
+    }
+
+    public static PGPPublicKeyRing getRomeoPublicKeyRing() throws IOException {
+        if (romeoPublicKeyRing == null) {
+            romeoPublicKeyRing = new PGPPublicKeyRing(
+                    PGPUtil.getDecoderStream(new ByteArrayInputStream(ROMEO_PUB.getBytes())), calc);
+        }
+        return romeoPublicKeyRing;
+    }
+
+    public static PGPPublicKeyRingCollection getRomeoPublicKeyRingCollection() throws IOException, PGPException {
+        if (romeoPublicKeyRingCollection == null) {
+            romeoPublicKeyRingCollection = new PGPPublicKeyRingCollection(
+                    PGPUtil.getDecoderStream(new ByteArrayInputStream(ROMEO_PUB.getBytes())), calc);
+        }
+        return romeoPublicKeyRingCollection;
+    }
+
+    public static final String TEST_MESSAGE_01_PLAIN = "This message is encrypted\n";
+
+    /**
+     * Test Message signed with {@link #JULIET_SEC} and encrypted for {@link #JULIET_PUB}.
+     */
+    public static final String TEST_MESSAGE_01 = "-----BEGIN PGP MESSAGE-----\n" +
+            "\n" +
+            "hQGMAwAAAAAAAAAAAQwAoJtfpcBPCwhUzzHuVIcBzBLyfIWT/EJ527neb46lN56S\n" +
+            "B05BTIRudIeCsPYz81jwiFi/k0MBecRfozZ1xCPByo8ohSvRgzEHEkCNgObQ1bz0\n" +
+            "iB+Xb76OEzFOCPUebTaVscLNf8ak/GSzaW7jDc+5vnvDf7cV0x26pe4odpS/U5Tr\n" +
+            "cO3wb/47K+sJ1cxJmPtcD41O02xu3QisQKPrimM0Kue6ziGeKyw1RkSowv9U47TK\n" +
+            "wppPCHOTli2Nf+gZizF1oyQZzPGst4fjujygcIoajplfW9nZvxsbmYRSLSdmV9m6\n" +
+            "k1jQbPDUhVs0gstH92C6hPpoBWxoxkHcwz8gy36nCyB6cYGyq3oN1UnGU4afPyD5\n" +
+            "SmmEjELBd2i2Ll/DYk2x06SnKZMQuWrSCZzWgl/9HsPo5ydVb97OjuEpWtW9xDMA\n" +
+            "KlYPNWEq+b+akOEstNraC3pfVKvypz6ZzaMAS1gWWNYg8dlwBJOUVMSo7iLaUQkK\n" +
+            "yp4uH1DlsyVu1atCUc8thQIMAwAAAAAAAAAAAQ/5AdiZ/sG859Y/rGR7U/8MzGg0\n" +
+            "j3f2vrgDF/0NRRk5aqd1lb4CaZvrztcYqW3cEK7iF9rKwImZZiWIptjJ9Mz6f1Zl\n" +
+            "FbODObSVRZAcZqYGswEEfsQvpQFlwG6Qx48OaQaDPr147raFI3C3kEU9Nb2VBg8+\n" +
+            "MevJaXJft5PXwUTG2Qvfxqr/3hfGAwB4/zHwA8vFd1np3spryfrC9Dq8UXUoRXIS\n" +
+            "xaFPiLEYt8rLef8f11OypEpmknIibu9jjJtuVZo+SjP6jgLHDwM7rqCZFITM2Qra\n" +
+            "2iBCt8YVcIiTK137t+EfsdVN/KHiRbc++e9zUbGMEextbtNbdoFOU4dnKBm6Su8l\n" +
+            "Z5UerNbR8D7+xJKfAEabdi0qI7QFmhTZ/4H/22yrvoD9jMFSBXUTE9ENIX9Hfqom\n" +
+            "UdsHfuE+5PC0JjkZkhchDO1M7XBX++lBCFsq2abfdpmaX+roVX0iTGboxr5Ag1Cf\n" +
+            "T2zWyRX/XKnvmdeGICV5qjy/ThuSWvAclazyFxWLamMztJq5BRpfAzKNQRDqlmKw\n" +
+            "eePtKW2EWUIjFQ5/UAM6Edu/K34ksFxb0w6YGLzQSskGr7gGAipLmpek6vcUSUA1\n" +
+            "oc9XJGdpx93GDRcqDjKDt/ej06VxG33/pW65ntf5QM/+LScGqaLhAHyEOsBzVIXY\n" +
+            "BONcadSgzkTrlbSMGAmFAQwDtLUJy1k24D4BB/0brqR0UN1LtO+Lc/vN6X/Um2CZ\n" +
+            "CM6MRhPnXP63Q9HHkGJ2S8zGWvQLwWL9Y14CFCgm6rACLBSIyPbihhC2OC8afhSy\n" +
+            "apGkdHtdghS2egs2U8qlJ2Y32IAG9CcUtNkRjxp+/RWSrmZeuL4l7DXCyH5lUadx\n" +
+            "5bPZhAHqW9408q2rQd9dBg2o7ciGXTJSKVahjuiB/O0gchOnbqnlYJbKbCkntXUo\n" +
+            "c7h4w1e8MutisSJorh7kbxgxUJSboZzEkiUfnoacPTz6bL+re9tmnpvlee70sIyM\n" +
+            "BiYRCyPw7Ice4R3XyWtsMTjT/wjZ//whMpWdy2drcJSyhh+GQMbekTVsNWod0lQB\n" +
+            "JTPUfti2VU7PMB3LjJA+l/T9iWPPx8lirnLhXOOerWKH9I5Wo4Kqv/47aJhfMO6+\n" +
+            "jmLekAOylq+9DizrslW/EUgQyjIbcWfmyMiV6E2RwbI93tE=\n" +
+            "=GAhR\n" +
+            "-----END PGP MESSAGE-----";
 }
