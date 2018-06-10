@@ -35,7 +35,7 @@ import org.bouncycastle.openpgp.operator.bc.BcKeyFingerprintCalculator;
 import org.bouncycastle.openpgp.operator.bc.BcPGPContentVerifierBuilderProvider;
 import org.bouncycastle.openpgp.operator.bc.BcPublicKeyDataDecryptorFactory;
 
-public class InputStreamFactory {
+public class DecryptionStreamFactory {
 
     private final PGPSecretKeyRingCollection decryptionKeys;
     private final SecretKeyRingProtector decryptionKeyDecryptor;
@@ -48,12 +48,11 @@ public class InputStreamFactory {
     private final KeyFingerPrintCalculator fingerCalc = new BcKeyFingerprintCalculator();
     private final Map<Long, PGPOnePassSignature> verifiableOnePassSignatures = new HashMap<>();
 
-    private InputStreamFactory(PGPSecretKeyRingCollection decryptionKeys,
-                               SecretKeyRingProtector decryptor,
-                               Set<PGPPublicKeyRing> verificationKeys,
-                               Set<Long> trustedKeyIds,
-                               MissingPublicKeyCallback missingPublicKeyCallback)
-            throws IOException {
+    private DecryptionStreamFactory(PGPSecretKeyRingCollection decryptionKeys,
+                                    SecretKeyRingProtector decryptor,
+                                    Set<PGPPublicKeyRing> verificationKeys,
+                                    Set<Long> trustedKeyIds,
+                                    MissingPublicKeyCallback missingPublicKeyCallback) {
         this.decryptionKeys = decryptionKeys;
         this.decryptionKeyDecryptor = decryptor;
         this.verificationKeys.addAll(verificationKeys != null ? verificationKeys : Collections.emptyList());
@@ -69,7 +68,7 @@ public class InputStreamFactory {
                                                              MissingPublicKeyCallback missingPublicKeyCallback)
             throws IOException, PGPException {
 
-        InputStreamFactory factory =  new InputStreamFactory(decryptionKeys,
+        DecryptionStreamFactory factory =  new DecryptionStreamFactory(decryptionKeys,
                 decryptor,
                 verificationKeys,
                 trustedKeyIds,

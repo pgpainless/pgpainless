@@ -90,7 +90,7 @@ public class DecryptionBuilder implements DecryptionBuilderInterface {
 
         @Override
         public PainlessResult.ResultAndInputStream build() throws IOException, PGPException {
-            return InputStreamFactory.create(inputStream,
+            return DecryptionStreamFactory.create(inputStream,
                     decryptionKeys, decryptionKeyDecryptor, verificationKeys, trustedKeyIds, missingPublicKeyCallback);
         }
     }
