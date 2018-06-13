@@ -1,12 +1,31 @@
+/*
+ * Copyright 2018 Paul Schaub.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
 package de.vanitasvitae.crypto.pgpainless;
 
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
 
+import de.vanitasvitae.crypto.pgpainless.algorithm.CompressionAlgorithm;
+import de.vanitasvitae.crypto.pgpainless.algorithm.SymmetricKeyAlgorithm;
 import de.vanitasvitae.crypto.pgpainless.decryption_verification.DecryptionBuilder;
 import de.vanitasvitae.crypto.pgpainless.encryption_signing.EncryptionBuilder;
 import de.vanitasvitae.crypto.pgpainless.key.generation.KeyRingBuilder;
+import de.vanitasvitae.crypto.pgpainless.symmetric_encryption.SymmetricEncryptorDecryptor;
 import org.bouncycastle.bcpg.ArmoredInputStream;
+import org.bouncycastle.openpgp.PGPException;
 import org.bouncycastle.openpgp.PGPPublicKeyRing;
 import org.bouncycastle.openpgp.operator.bc.BcKeyFingerprintCalculator;
 
@@ -26,5 +45,34 @@ public class PGPainless {
 
     public static PGPPublicKeyRing publicKeyRingFromBytes(byte[] bytes) throws IOException {
         return new PGPPublicKeyRing(new ArmoredInputStream(new ByteArrayInputStream(bytes)), new BcKeyFingerprintCalculator());
+    }
+
+    /**
+     * Encrypt some data symmetrically using OpenPGP and a password.
+     * The resulting data will be uncompressed and integrity protected.
+     *
+     * @param data input data.
+     * @param password password.
+     * @return symmetrically OpenPGP encrypted data.
+     * @throws IOException IO is dangerous.
+     * @throws PGPException PGP is brittle.
+     */
+    public static byte[] encryptWithPassword(byte[] data, char[] password, SymmetricKeyAlgorithm algorithm) throws IOException, PGPException {
+        return SymmetricEncryptorDecryptor.symmetricallyEncrypt(data, password,
+                algorithm, CompressionAlgorithm.UNCOMPRESSED);
+    }
+
+    /**
+     * Decrypt some symmetrically encrypted data using a password.
+     * The data is suspected to be integrity protected.
+     *
+     * @param data symmetrically OpenPGP encrypted data.
+     * @param password password.
+     * @return decrypted data.
+     * @throws IOException IO is dangerous.
+     * @throws PGPException PGP is brittle.
+     */
+    public static byte[] decryptWithPassword(byte[] data, char[] password) throws IOException, PGPException {
+        return SymmetricEncryptorDecryptor.symmetricallyDecrypt(data, password);
     }
 }
