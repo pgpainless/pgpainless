@@ -20,6 +20,8 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.security.SignatureException;
 import java.util.Map;
+import java.util.logging.ConsoleHandler;
+import java.util.logging.Handler;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -32,10 +34,13 @@ import org.bouncycastle.openpgp.PGPSignatureList;
 public class SignatureVerifyingInputStream extends FilterInputStream {
 
     private static final Logger LOGGER = Logger.getLogger(SignatureVerifyingInputStream.class.getName());
+    private static final Level LEVEL = Level.INFO;
 
     private final PGPObjectFactory objectFactory;
     private final Map<Long, PGPOnePassSignature> onePassSignatures;
     private final PainlessResult.Builder resultBuilder;
+
+    private boolean validated = false;
 
     protected SignatureVerifyingInputStream(InputStream inputStream,
                                             PGPObjectFactory objectFactory,
@@ -45,6 +50,8 @@ public class SignatureVerifyingInputStream extends FilterInputStream {
         this.objectFactory = objectFactory;
         this.resultBuilder = resultBuilder;
         this.onePassSignatures = onePassSignatures;
+
+        LOGGER.log(LEVEL, "Begin verifying OnePassSignatures");
     }
 
     private void updateOnePassSignatures(byte data) {
@@ -60,8 +67,16 @@ public class SignatureVerifyingInputStream extends FilterInputStream {
     }
 
     private void validateOnePassSignatures() throws IOException {
+
+        if (validated) {
+            LOGGER.log(LEVEL, "Validated signatures already. Skip");
+            return;
+        }
+
+        validated = true;
+
         if (onePassSignatures.isEmpty()) {
-            LOGGER.log(Level.FINE, "No One-Pass-Signatures found -> No validation.");
+            LOGGER.log(LEVEL, "No One-Pass-Signatures found -> No validation");
             return;
         }
 
@@ -77,19 +92,20 @@ public class SignatureVerifyingInputStream extends FilterInputStream {
             }
 
             if (signatureList == null || signatureList.isEmpty()) {
-                throw new IOException("Verification failed - No Signatures found!");
+                throw new IOException("Verification failed - No Signatures found");
             }
 
             for (PGPSignature signature : signatureList) {
                 PGPOnePassSignature onePassSignature = onePassSignatures.get(signature.getKeyID());
                 if (onePassSignature == null) {
+                    LOGGER.log(LEVEL, "Found Signature without respective OnePassSignature packet -> skip");
                     continue;
                 }
                 if (!onePassSignature.verify(signature)) {
                     throw new SignatureException("Bad Signature of key " + signature.getKeyID());
                 } else {
+                    LOGGER.log(LEVEL, "Verified signature of key " + Long.toHexString(signature.getKeyID()));
                     resultBuilder.addVerifiedSignatureKeyId(signature.getKeyID());
-                    onePassSignatures.remove(signature.getKeyID());
                 }
             }
         } catch (PGPException | SignatureException e) {
@@ -130,17 +146,17 @@ public class SignatureVerifyingInputStream extends FilterInputStream {
 
     @Override
     public long skip(long n) {
-        throw new UnsupportedOperationException("skip() is not supported.");
+        throw new UnsupportedOperationException("skip() is not supported");
     }
 
     @Override
     public synchronized void mark(int readlimit) {
-        throw new UnsupportedOperationException("mark() not supported.");
+        throw new UnsupportedOperationException("mark() not supported");
     }
 
     @Override
     public synchronized void reset() {
-        throw new UnsupportedOperationException("reset() is not supported.");
+        throw new UnsupportedOperationException("reset() is not supported");
     }
 
     @Override

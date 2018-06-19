@@ -46,7 +46,7 @@ public enum SymmetricKeyAlgorithm {
         }
     }
 
-    public static SymmetricKeyAlgorithm forId(int id) {
+    public static SymmetricKeyAlgorithm fromId(int id) {
         return MAP.get(id);
     }
 

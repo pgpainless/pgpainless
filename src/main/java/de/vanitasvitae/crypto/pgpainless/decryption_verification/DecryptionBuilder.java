@@ -33,7 +33,6 @@ public class DecryptionBuilder implements DecryptionBuilderInterface {
     private PGPSecretKeyRingCollection decryptionKeys;
     private SecretKeyRingProtector decryptionKeyDecryptor;
     private Set<PGPPublicKeyRing> verificationKeys = new HashSet<>();
-    private Set<Long> trustedKeyIds = new HashSet<>();
     private MissingPublicKeyCallback missingPublicKeyCallback = null;
 
     @Override
@@ -66,22 +65,23 @@ public class DecryptionBuilder implements DecryptionBuilderInterface {
                                                    PGPPublicKeyRingCollection publicKeyRingCollection) {
             Set<PGPPublicKeyRing> publicKeyRings = new HashSet<>();
             for (Iterator<PGPPublicKeyRing> i = publicKeyRingCollection.getKeyRings(); i.hasNext(); ) {
-                publicKeyRings.add(i.next());
+                PGPPublicKeyRing p = i.next();
+                if (trustedKeyIds.contains(p.getPublicKey().getKeyID())) {
+                    publicKeyRings.add(p);
+                }
             }
-            return verifyWith(trustedKeyIds, publicKeyRings);
+            return verifyWith(publicKeyRings);
         }
 
         @Override
-        public MissingPublicKeyFeedback verifyWith(Set<Long> trustedKeyIds, Set<PGPPublicKeyRing> publicKeyRings) {
+        public MissingPublicKeyFeedback verifyWith(Set<PGPPublicKeyRing> publicKeyRings) {
             DecryptionBuilder.this.verificationKeys = publicKeyRings;
-            DecryptionBuilder.this.trustedKeyIds = trustedKeyIds;
             return new MissingPublicKeyFeedbackImpl();
         }
 
         @Override
         public Build doNotVerify() {
             DecryptionBuilder.this.verificationKeys = null;
-            DecryptionBuilder.this.trustedKeyIds = null;
             return new BuildImpl();
         }
     }
@@ -105,7 +105,7 @@ public class DecryptionBuilder implements DecryptionBuilderInterface {
         @Override
         public DecryptionStream build() throws IOException, PGPException {
             return DecryptionStreamFactory.create(inputStream,
-                    decryptionKeys, decryptionKeyDecryptor, verificationKeys, trustedKeyIds, missingPublicKeyCallback);
+                    decryptionKeys, decryptionKeyDecryptor, verificationKeys, missingPublicKeyCallback);
         }
     }
 }

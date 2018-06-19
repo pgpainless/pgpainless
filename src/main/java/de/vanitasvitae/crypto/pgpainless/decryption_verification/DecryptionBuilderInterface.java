@@ -41,7 +41,7 @@ public interface DecryptionBuilderInterface {
 
         MissingPublicKeyFeedback verifyWith(Set<Long> trustedFingerprints, PGPPublicKeyRingCollection publicKeyRings);
 
-        MissingPublicKeyFeedback verifyWith(Set<Long> trustedFingerprints, Set<PGPPublicKeyRing> publicKeyRings);
+        MissingPublicKeyFeedback verifyWith(Set<PGPPublicKeyRing> publicKeyRings);
 
         Build doNotVerify();
 
