@@ -15,6 +15,9 @@
  */
 package de.vanitasvitae.crypto.pgpainless.algorithm;
 
+import java.util.ArrayList;
+import java.util.List;
+
 import org.bouncycastle.bcpg.sig.KeyFlags;
 
 public enum KeyFlag {
@@ -36,5 +39,15 @@ public enum KeyFlag {
 
     public int getFlag() {
         return flag;
+    }
+
+    public static KeyFlag[] fromInteger(int bitmask) {
+        List<KeyFlag> flags = new ArrayList<>();
+        for (KeyFlag f : KeyFlag.values()) {
+            if ((bitmask & f.flag) != 0) {
+                flags.add(f);
+            }
+        }
+        return flags.toArray(new KeyFlag[]{});
     }
 }
