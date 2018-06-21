@@ -22,36 +22,73 @@ import java.security.InvalidAlgorithmParameterException;
 import java.security.NoSuchAlgorithmException;
 import java.security.NoSuchProviderException;
 import java.util.Iterator;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 import de.vanitasvitae.crypto.pgpainless.util.BCUtil;
 import org.bouncycastle.openpgp.PGPException;
 import org.bouncycastle.openpgp.PGPPublicKey;
 import org.bouncycastle.openpgp.PGPPublicKeyRing;
+import org.bouncycastle.openpgp.PGPPublicKeyRingCollection;
 import org.bouncycastle.openpgp.PGPSecretKeyRing;
+import org.bouncycastle.openpgp.PGPSecretKeyRingCollection;
 import org.junit.Test;
 
 public class BCUtilTest extends AbstractPGPainlessTest {
 
+    private static final Logger LOGGER = Logger.getLogger(BCUtil.class.getName());
+
     @Test
     public void test()
-            throws PGPException, NoSuchAlgorithmException, NoSuchProviderException, InvalidAlgorithmParameterException {
+            throws PGPException, NoSuchAlgorithmException, NoSuchProviderException, InvalidAlgorithmParameterException,
+            IOException {
         PGPSecretKeyRing sec = PGPainless.generateKeyRing().simpleEcKeyRing("donald@duck.tails");
         PGPPublicKeyRing pub = BCUtil.publicKeyRingFromSecretKeyRing(sec);
+
+        LOGGER.log(Level.INFO, "Main ID: " + sec.getPublicKey().getKeyID() + " " + pub.getPublicKey().getKeyID());
 
         int secSize = 0;
         Iterator<PGPPublicKey> secPubIt = sec.getPublicKeys();
         while (secPubIt.hasNext()) {
-            secPubIt.next();
+            PGPPublicKey k = secPubIt.next();
+            LOGGER.log(Level.INFO, "" + k.getKeyID() + " " + k.isEncryptionKey() + " " + k.isMasterKey());
             secSize++;
         }
 
+        LOGGER.log(Level.INFO, "After BCUtil.publickKeyRingFromSecretKeyRing()");
         int pubSize = 0;
         Iterator<PGPPublicKey> pubPubIt = pub.getPublicKeys();
         while (pubPubIt.hasNext()) {
-            pubPubIt.next();
+            PGPPublicKey k = pubPubIt.next();
+            LOGGER.log(Level.INFO, "" + k.getKeyID() + " " + k.isEncryptionKey() + " " + k.isMasterKey());
             pubSize++;
         }
 
+        LOGGER.log(Level.INFO, " Pub: " + pubSize + " Sec: " + secSize);
         assertEquals(secSize, pubSize);
+
+        PGPSecretKeyRingCollection secCol = BCUtil.keyRingsToKeyRingCollection(sec);
+
+        int secColSize = 0;
+        Iterator<PGPSecretKeyRing> secColIt = secCol.getKeyRings();
+        while (secColIt.hasNext()) {
+            PGPSecretKeyRing r = secColIt.next();
+            LOGGER.log(Level.INFO, "" + r.getPublicKey().getKeyID());
+            secColSize++;
+        }
+
+        LOGGER.log(Level.INFO, "SecCol: " + secColSize);
+
+        PGPPublicKeyRingCollection pubCol = BCUtil.keyRingsToKeyRingCollection(pub);
+
+        int pubColSize = 0;
+        Iterator<PGPPublicKeyRing> pubColIt = pubCol.getKeyRings();
+        while (pubColIt.hasNext()) {
+            PGPPublicKeyRing r = pubColIt.next();
+            LOGGER.log(Level.INFO, "" + r.getPublicKey().getKeyID());
+            pubColSize++;
+        }
+
+        LOGGER.log(Level.INFO, "PubCol: " + pubColSize);
     }
 }
