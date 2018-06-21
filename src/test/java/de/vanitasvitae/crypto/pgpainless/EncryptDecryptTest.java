@@ -64,8 +64,8 @@ public class EncryptDecryptTest extends AbstractPGPainlessTest {
     public void freshKeysRsaToRsaTest()
             throws PGPException, NoSuchAlgorithmException, NoSuchProviderException, InvalidAlgorithmParameterException,
             IOException {
-        PGPSecretKeyRing sender = PGPainless.generateKeyRing().simpleRsaKeyRing("hatter@wonderland.lit", RsaLength._4096);
-        PGPSecretKeyRing recipient = PGPainless.generateKeyRing().simpleRsaKeyRing("alice@wonderland.lit", RsaLength._4096);
+        PGPSecretKeyRing sender = PGPainless.generateKeyRing().simpleRsaKeyRing("romeo@montague.lit", RsaLength._4096);
+        PGPSecretKeyRing recipient = PGPainless.generateKeyRing().simpleRsaKeyRing("juliet@capulet.lit", RsaLength._4096);
 
         encryptDecryptForSecretKeyRings(sender, recipient);
     }
@@ -73,8 +73,8 @@ public class EncryptDecryptTest extends AbstractPGPainlessTest {
     @Test
     public void freshKeysEcToEcTest() throws IOException, PGPException, NoSuchAlgorithmException, NoSuchProviderException,
             InvalidAlgorithmParameterException {
-        PGPSecretKeyRing sender = PGPainless.generateKeyRing().simpleEcKeyRing("hatter@wonderland.lit");
-        PGPSecretKeyRing recipient = PGPainless.generateKeyRing().simpleEcKeyRing("alice@wonderland.lit");
+        PGPSecretKeyRing sender = PGPainless.generateKeyRing().simpleEcKeyRing("romeo@montague.lit");
+        PGPSecretKeyRing recipient = PGPainless.generateKeyRing().simpleEcKeyRing("juliet@capulet.lit");
 
         encryptDecryptForSecretKeyRings(sender, recipient);
     }
@@ -83,8 +83,8 @@ public class EncryptDecryptTest extends AbstractPGPainlessTest {
     public void freshKeysEcToRsaTest()
             throws PGPException, NoSuchAlgorithmException, NoSuchProviderException, InvalidAlgorithmParameterException,
             IOException {
-        PGPSecretKeyRing sender = PGPainless.generateKeyRing().simpleEcKeyRing("hatter@wonderland.lit");
-        PGPSecretKeyRing recipient = PGPainless.generateKeyRing().simpleRsaKeyRing("alice@wonderland.lit", RsaLength._4096);
+        PGPSecretKeyRing sender = PGPainless.generateKeyRing().simpleEcKeyRing("romeo@montague.lit");
+        PGPSecretKeyRing recipient = PGPainless.generateKeyRing().simpleRsaKeyRing("juliet@capulet.lit", RsaLength._4096);
 
         encryptDecryptForSecretKeyRings(sender, recipient);
     }
@@ -93,8 +93,8 @@ public class EncryptDecryptTest extends AbstractPGPainlessTest {
     public void freshKeysRsaToEcTest()
             throws PGPException, NoSuchAlgorithmException, NoSuchProviderException, InvalidAlgorithmParameterException,
             IOException {
-        PGPSecretKeyRing sender = PGPainless.generateKeyRing().simpleRsaKeyRing("hatter@wonderland.lit", RsaLength._4096);
-        PGPSecretKeyRing recipient = PGPainless.generateKeyRing().simpleEcKeyRing("alice@wonderland.lit");
+        PGPSecretKeyRing sender = PGPainless.generateKeyRing().simpleRsaKeyRing("romeo@montague.lit", RsaLength._4096);
+        PGPSecretKeyRing recipient = PGPainless.generateKeyRing().simpleEcKeyRing("juliet@capulet.lit");
 
         encryptDecryptForSecretKeyRings(sender, recipient);
     }
@@ -108,7 +108,7 @@ public class EncryptDecryptTest extends AbstractPGPainlessTest {
 
         SecretKeyRingProtector keyDecryptor = new UnprotectedKeysProtector();
 
-        byte[] secretMessage = (testMessage).getBytes(UTF8);
+        byte[] secretMessage = testMessage.getBytes(UTF8);
 
         ByteArrayOutputStream envelope = new ByteArrayOutputStream();
 
@@ -133,16 +133,17 @@ public class EncryptDecryptTest extends AbstractPGPainlessTest {
         DecryptionStream decryptor = PGPainless.createDecryptor()
                 .onInputStream(envelopeIn)
                 .decryptWith(BCUtil.keyRingsToKeyRingCollection(recipient), keyDecryptor)
-                .verifyWith(Collections.singleton(senderPub.getPublicKey().getKeyID()), BCUtil.keyRingsToKeyRingCollection(senderPub))
+                .verifyWith(Collections.singleton(senderPub.getPublicKey().getKeyID()),
+                        BCUtil.keyRingsToKeyRingCollection(senderPub))
                 .ignoreMissingPublicKeys()
                 .build();
 
-        OutputStream decryptedSecretMessage = new ByteArrayOutputStream();
+        ByteArrayOutputStream decryptedSecretMessage = new ByteArrayOutputStream();
 
         Streams.pipeAll(decryptor, decryptedSecretMessage);
         decryptor.close();
 
-        assertTrue(Arrays.equals(secretMessage, ((ByteArrayOutputStream) decryptedSecretMessage).toByteArray()));
+        assertTrue(Arrays.equals(secretMessage, decryptedSecretMessage.toByteArray()));
         PainlessResult result = decryptor.getResult();
         assertTrue(result.containsVerifiedSignatureFrom(senderPub));
         assertTrue(result.isIntegrityProtected());
