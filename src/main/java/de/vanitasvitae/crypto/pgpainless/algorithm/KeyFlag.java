@@ -41,13 +41,13 @@ public enum KeyFlag {
         return flag;
     }
 
-    public static KeyFlag[] fromInteger(int bitmask) {
+    public static List<KeyFlag> fromInteger(int bitmask) {
         List<KeyFlag> flags = new ArrayList<>();
         for (KeyFlag f : KeyFlag.values()) {
             if ((bitmask & f.flag) != 0) {
                 flags.add(f);
             }
         }
-        return flags.toArray(new KeyFlag[]{});
+        return flags;
     }
 }
