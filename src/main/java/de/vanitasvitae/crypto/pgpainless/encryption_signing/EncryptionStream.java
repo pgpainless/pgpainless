@@ -21,6 +21,8 @@ import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
 import java.util.Set;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 import de.vanitasvitae.crypto.pgpainless.algorithm.CompressionAlgorithm;
 import de.vanitasvitae.crypto.pgpainless.algorithm.HashAlgorithm;
@@ -45,6 +47,9 @@ import org.bouncycastle.openpgp.operator.bc.BcPublicKeyKeyEncryptionMethodGenera
  * @see <a href="https://github.com/neuhalje/bouncy-gpg/blob/master/src/main/java/name/neuhalfen/projects/crypto/bouncycastle/openpgp/encrypting/PGPEncryptingStream.java">Source</a>
  */
 public class EncryptionStream extends OutputStream {
+
+    private static final Logger LOGGER = Logger.getLogger(EncryptionStream.class.getName());
+    private static final Level LEVEL = Level.FINE;
 
     private static final int BUFFER_SIZE = 1 << 8;
 
@@ -77,23 +82,28 @@ public class EncryptionStream extends OutputStream {
         // Currently outermost Stream
         OutputStream outerMostStream;
         if (asciiArmor) {
+            LOGGER.log(LEVEL, "Wrap encryption output in ASCII armor");
             armorOutputStream = new ArmoredOutputStream(targetOutputStream);
             outerMostStream = armorOutputStream;
         } else {
+            LOGGER.log(LEVEL, "Encryption output will be binary");
             outerMostStream = targetOutputStream;
         }
 
         // If we want to encrypt
         if (!encryptionKeys.isEmpty()) {
+            LOGGER.log(LEVEL, "At least one encryption key is available -> encrypt using " + symmetricKeyAlgorithm);
             BcPGPDataEncryptorBuilder dataEncryptorBuilder =
                     new BcPGPDataEncryptorBuilder(symmetricKeyAlgorithm.getAlgorithmId());
 
+            LOGGER.log(LEVEL, "Integrity protection enabled");
             dataEncryptorBuilder.setWithIntegrityPacket(true);
 
             PGPEncryptedDataGenerator encryptedDataGenerator =
                     new PGPEncryptedDataGenerator(dataEncryptorBuilder);
 
             for (PGPPublicKey key : encryptionKeys) {
+                LOGGER.log(LEVEL, "Encrypt for key " + Long.toHexString(key.getKeyID()));
                 encryptedDataGenerator.addMethod(new BcPublicKeyKeyEncryptionMethodGenerator(key));
             }
 
@@ -103,8 +113,9 @@ public class EncryptionStream extends OutputStream {
 
         // If we want to sign, prepare for signing
         if (!signingKeys.isEmpty()) {
+            LOGGER.log(LEVEL, "At least one signing key is available -> sign " + hashAlgorithm + " hash of message");
             for (PGPPrivateKey privateKey : signingKeys) {
-
+                LOGGER.log(LEVEL, "Sign using key " + Long.toHexString(privateKey.getKeyID()));
                 BcPGPContentSignerBuilder contentSignerBuilder = new BcPGPContentSignerBuilder(
                         privateKey.getPublicKeyPacket().getAlgorithm(), hashAlgorithm.getAlgorithmId());
 
@@ -114,6 +125,7 @@ public class EncryptionStream extends OutputStream {
             }
         }
 
+        LOGGER.log(LEVEL, "Compress using " + compressionAlgorithm);
         // Compression
         compressedDataGenerator = new PGPCompressedDataGenerator(
                 compressionAlgorithm.getAlgorithmId());

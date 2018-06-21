@@ -54,7 +54,7 @@ import org.bouncycastle.openpgp.operator.bc.BcPublicKeyDataDecryptorFactory;
 public class DecryptionStreamFactory {
 
     private static final Logger LOGGER = Logger.getLogger(DecryptionStreamFactory.class.getName());
-    private static final Level LEVEL = Level.INFO;
+    private static final Level LEVEL = Level.FINE;
 
     private final PGPSecretKeyRingCollection decryptionKeys;
     private final SecretKeyRingProtector decryptionKeyDecryptor;
@@ -125,7 +125,7 @@ public class DecryptionStreamFactory {
             }
 
             if (pgpObj instanceof PGPLiteralData) {
-                LOGGER.log(LEVEL, "Encountered PGPLiteralData");
+                LOGGER.log(LEVEL, "Found PGPLiteralData");
                 PGPLiteralData literalData = (PGPLiteralData) pgpObj;
                 InputStream literalDataInputStream = literalData.getInputStream();
 

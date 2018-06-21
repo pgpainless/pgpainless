@@ -133,7 +133,7 @@ public class EncryptDecryptTest extends AbstractPGPainlessTest {
         DecryptionStream decryptor = PGPainless.createDecryptor()
                 .onInputStream(envelopeIn)
                 .decryptWith(BCUtil.keyRingsToKeyRingCollection(recipient), keyDecryptor)
-                .verifyWith(Collections.singleton(TestKeys.ROMEO_KEY_ID), BCUtil.keyRingsToKeyRingCollection(senderPub))
+                .verifyWith(Collections.singleton(senderPub.getPublicKey().getKeyID()), BCUtil.keyRingsToKeyRingCollection(senderPub))
                 .ignoreMissingPublicKeys()
                 .build();
 
