@@ -15,7 +15,10 @@
  */
 package de.vanitasvitae.crypto.pgpainless.util;
 
+import java.io.ByteArrayInputStream;
+import java.io.ByteArrayOutputStream;
 import java.io.IOException;
+import java.io.InputStream;
 import java.lang.reflect.Constructor;
 import java.lang.reflect.InvocationTargetException;
 import java.util.ArrayList;
@@ -39,6 +42,8 @@ import org.bouncycastle.openpgp.PGPSecretKeyRingCollection;
 import org.bouncycastle.openpgp.PGPSignature;
 import org.bouncycastle.openpgp.PGPSignatureSubpacketGenerator;
 import org.bouncycastle.openpgp.PGPSignatureSubpacketVector;
+import org.bouncycastle.openpgp.PGPUtil;
+import org.bouncycastle.util.io.Streams;
 
 public class BCUtil {
 
@@ -111,6 +116,26 @@ public class BCUtil {
     public static PGPPublicKeyRing getKeyRingFromCollection(PGPPublicKeyRingCollection collection, Long id)
             throws PGPException {
         return removeUnsignedKeysFromKeyRing(collection.getPublicKeyRing(id), id);
+    }
+
+    public static InputStream getPgpDecoderInputStream(byte[] bytes) throws IOException {
+        return getPgpDecoderInputStream(new ByteArrayInputStream(bytes));
+    }
+
+    public static InputStream getPgpDecoderInputStream(InputStream inputStream) throws IOException {
+        return PGPUtil.getDecoderStream(inputStream);
+    }
+
+    public static byte[] getDecodedBytes(byte[] bytes) throws IOException {
+        ByteArrayOutputStream buffer = new ByteArrayOutputStream();
+        Streams.pipeAll(getPgpDecoderInputStream(bytes), buffer);
+        return buffer.toByteArray();
+    }
+
+    public static byte[] getDecodedBytes(InputStream inputStream) throws IOException {
+        ByteArrayOutputStream buffer = new ByteArrayOutputStream();
+        Streams.pipeAll(inputStream, buffer);
+        return getDecodedBytes(buffer.toByteArray());
     }
 
     public static PGPPublicKeyRing removeUnsignedKeysFromKeyRing(PGPPublicKeyRing ring, Long masterKeyId) {
