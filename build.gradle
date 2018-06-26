@@ -25,6 +25,6 @@ repositories {
 
 dependencies {
     testCompile group: 'junit', name: 'junit', version: '4.12'
-    compile 'org.bouncycastle:bcprov-jdk15on:1.59'
+    compile 'org.bouncycastle:bcprov-debug-jdk15on:1.59'
     compile 'org.bouncycastle:bcpg-jdk15on:1.59'
 }

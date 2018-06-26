@@ -152,18 +152,16 @@ public class DecryptionStreamFactory {
         PGPPrivateKey decryptionKey = null;
         PGPPublicKeyEncryptedData encryptedSessionKey = null;
         while (iterator.hasNext()) {
-            encryptedSessionKey = (PGPPublicKeyEncryptedData) iterator.next();
-            long keyId = encryptedSessionKey.getKeyID();
+            PGPPublicKeyEncryptedData encryptedData = (PGPPublicKeyEncryptedData) iterator.next();
+            long keyId = encryptedData.getKeyID();
 
             resultBuilder.addRecipientKeyId(keyId);
             LOGGER.log(LEVEL, "PGPEncryptedData is encrypted for key " + Long.toHexString(keyId));
-            if (decryptionKey != null) {
-                continue;
-            }
 
             PGPSecretKey secretKey = decryptionKeys.getSecretKey(keyId);
             if (secretKey != null) {
                 LOGGER.log(LEVEL, "Found respective secret key " + Long.toHexString(keyId));
+                encryptedSessionKey = encryptedData;
                 decryptionKey = secretKey.extractPrivateKey(decryptionKeyDecryptor.getDecryptor(keyId));
                 resultBuilder.setDecryptionKeyId(keyId);
             }
