@@ -4,7 +4,7 @@ PGPainless aims to make using OpenPGP in Java projects as simple as possible.
 It does so by introducing an intuitive Builder structure, which allows easy 
 setup of encryption / decrytion operations, as well as straight forward key generation.
 
-PGPainless is based around the Bouncycastle java library.
+PGPainless is based around the Bouncycastle java library and can be used on Android down to API level 9.
 
 ### NOTE: PGPainless is in a *very* early state of development and should under no circumstances be used for serious production usage yet.
 
