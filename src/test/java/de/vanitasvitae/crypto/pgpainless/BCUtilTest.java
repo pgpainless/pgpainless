@@ -55,7 +55,7 @@ public class BCUtilTest extends AbstractPGPainlessTest {
             secSize++;
         }
 
-        LOGGER.log(Level.INFO, "After BCUtil.publickKeyRingFromSecretKeyRing()");
+        LOGGER.log(Level.INFO, "After BCUtil.publicKeyRingFromSecretKeyRing()");
         int pubSize = 0;
         Iterator<PGPPublicKey> pubPubIt = pub.getPublicKeys();
         while (pubPubIt.hasNext()) {
