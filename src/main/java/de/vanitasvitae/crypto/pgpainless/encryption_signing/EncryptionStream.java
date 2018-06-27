@@ -18,6 +18,7 @@ package de.vanitasvitae.crypto.pgpainless.encryption_signing;
 import java.io.IOException;
 import java.io.OutputStream;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.Date;
 import java.util.HashSet;
 import java.util.List;
@@ -160,7 +161,7 @@ public class EncryptionStream extends OutputStream {
         this.result = new PainlessResult(recipientKeyIds,
                 null, symmetricKeyAlgorithm,
                 compressionAlgorithm, true,
-                signingKeyIds, null);
+                signingKeyIds, Collections.emptySet());
     }
 
     static EncryptionStream create(OutputStream outputStream,

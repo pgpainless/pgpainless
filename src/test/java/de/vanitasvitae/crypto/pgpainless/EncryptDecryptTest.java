@@ -15,12 +15,13 @@
  */
 package de.vanitasvitae.crypto.pgpainless;
 
+import static junit.framework.TestCase.assertEquals;
+import static junit.framework.TestCase.assertFalse;
 import static junit.framework.TestCase.assertTrue;
 
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
-import java.io.OutputStream;
 import java.nio.charset.Charset;
 import java.security.InvalidAlgorithmParameterException;
 import java.security.NoSuchAlgorithmException;
@@ -31,8 +32,10 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import de.vanitasvitae.crypto.pgpainless.algorithm.PublicKeyAlgorithm;
+import de.vanitasvitae.crypto.pgpainless.algorithm.SymmetricKeyAlgorithm;
 import de.vanitasvitae.crypto.pgpainless.decryption_verification.DecryptionStream;
 import de.vanitasvitae.crypto.pgpainless.decryption_verification.PainlessResult;
+import de.vanitasvitae.crypto.pgpainless.encryption_signing.EncryptionStream;
 import de.vanitasvitae.crypto.pgpainless.key.SecretKeyRingProtector;
 import de.vanitasvitae.crypto.pgpainless.key.UnprotectedKeysProtector;
 import de.vanitasvitae.crypto.pgpainless.key.generation.type.length.RsaLength;
@@ -112,12 +115,26 @@ public class EncryptDecryptTest extends AbstractPGPainlessTest {
 
         ByteArrayOutputStream envelope = new ByteArrayOutputStream();
 
-        OutputStream encryptor = PGPainless.createEncryptor()
+        EncryptionStream encryptor = PGPainless.createEncryptor()
                 .onOutputStream(envelope)
                 .toRecipients(recipientPub)
                 .usingSecureAlgorithms()
                 .signWith(keyDecryptor, sender)
                 .noArmor();
+
+        PainlessResult encryptionResult = encryptor.getResult();
+
+        assertFalse(encryptionResult.getAllSignatureKeyIds().isEmpty());
+        for (long keyId : encryptionResult.getAllSignatureKeyIds()) {
+            assertTrue(BCUtil.keyRingContainsKeyWithId(sender, keyId));
+        }
+
+        assertFalse(encryptionResult.getRecipientKeyIds().isEmpty());
+        for (long keyId : encryptionResult.getRecipientKeyIds()) {
+            assertTrue(BCUtil.keyRingContainsKeyWithId(recipient, keyId));
+        }
+
+        assertEquals(SymmetricKeyAlgorithm.AES_256, encryptionResult.getSymmetricKeyAlgorithm());
 
         Streams.pipeAll(new ByteArrayInputStream(secretMessage), encryptor);
         encryptor.close();

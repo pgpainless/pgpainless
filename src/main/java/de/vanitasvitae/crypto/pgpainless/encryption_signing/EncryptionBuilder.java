@@ -264,18 +264,18 @@ public class EncryptionBuilder implements EncryptionBuilderInterface {
     class ArmorImpl implements Armor {
 
         @Override
-        public OutputStream asciiArmor() throws IOException, PGPException {
+        public EncryptionStream asciiArmor() throws IOException, PGPException {
             EncryptionBuilder.this.asciiArmor = true;
             return build();
         }
 
         @Override
-        public OutputStream noArmor() throws IOException, PGPException {
+        public EncryptionStream noArmor() throws IOException, PGPException {
             EncryptionBuilder.this.asciiArmor = false;
             return build();
         }
 
-        private OutputStream build() throws IOException, PGPException {
+        private EncryptionStream build() throws IOException, PGPException {
 
             Set<PGPPrivateKey> privateKeys = new HashSet<>();
             for (PGPSecretKey secretKey : signingKeys) {

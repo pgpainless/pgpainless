@@ -211,4 +211,22 @@ public class BCUtil {
         }
         return ids;
     }
+
+    public static boolean keyRingContainsKeyWithId(PGPPublicKeyRing ring, long keyId) {
+        Iterator<PGPPublicKey> keys = ring.getPublicKeys();
+        while (keys.hasNext()) {
+            PGPPublicKey key = keys.next();
+            if (key.getKeyID() == keyId) return true;
+        }
+        return false;
+    }
+
+    public static boolean keyRingContainsKeyWithId(PGPSecretKeyRing ring, long keyId) {
+        Iterator<PGPPublicKey> keys = ring.getPublicKeys();
+        while (keys.hasNext()) {
+            PGPPublicKey key = keys.next();
+            if (key.getKeyID() == keyId) return true;
+        }
+        return false;
+    }
 }

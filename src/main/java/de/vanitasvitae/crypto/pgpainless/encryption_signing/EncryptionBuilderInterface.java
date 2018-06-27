@@ -87,9 +87,9 @@ public interface EncryptionBuilderInterface {
 
     interface Armor {
 
-        OutputStream asciiArmor() throws IOException, PGPException;
+        EncryptionStream asciiArmor() throws IOException, PGPException;
 
-        OutputStream noArmor() throws IOException, PGPException;
+        EncryptionStream noArmor() throws IOException, PGPException;
 
     }
 
