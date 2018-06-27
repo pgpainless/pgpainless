@@ -67,6 +67,9 @@ public class EncryptionBuilder implements EncryptionBuilderInterface {
 
         @Override
         public WithAlgorithms toRecipients(PGPPublicKey... keys) {
+            if (keys.length == 0) {
+                throw new IllegalArgumentException("Recipient list MUST NOT be empty.");
+            }
             for (PGPPublicKey k : keys) {
                 if (encryptionKeySelector().accept(null, k)) {
                     EncryptionBuilder.this.encryptionKeys.add(k);
@@ -79,6 +82,9 @@ public class EncryptionBuilder implements EncryptionBuilderInterface {
 
         @Override
         public WithAlgorithms toRecipients(PGPPublicKeyRing... keys) {
+            if (keys.length == 0) {
+                throw new IllegalArgumentException("Recipient list MUST NOT be empty.");
+            }
             for (PGPPublicKeyRing ring : keys) {
                 for (PGPPublicKey k : ring) {
                     if (encryptionKeySelector().accept(null, k)) {
@@ -92,6 +98,9 @@ public class EncryptionBuilder implements EncryptionBuilderInterface {
         @Override
         public <O>WithAlgorithms toRecipients(PublicKeyRingSelectionStrategy<O> ringSelectionStrategy,
                                               MultiMap<O, PGPPublicKeyRingCollection> keys) {
+            if (keys.isEmpty()) {
+                throw new IllegalArgumentException("Recipient map MUST NOT be empty.");
+            }
             MultiMap<O, PGPPublicKeyRing> acceptedKeyRings = ringSelectionStrategy.selectKeyRingsFromCollections(keys);
             for (O identifier : acceptedKeyRings.keySet()) {
                 Set<PGPPublicKeyRing> acceptedSet = acceptedKeyRings.get(identifier);
@@ -116,6 +125,9 @@ public class EncryptionBuilder implements EncryptionBuilderInterface {
 
         @Override
         public WithAlgorithms andToSelf(PGPPublicKey... keys) {
+            if (keys.length == 0) {
+                throw new IllegalArgumentException("Recipient list MUST NOT be empty.");
+            }
             for (PGPPublicKey k : keys) {
                 if (encryptionKeySelector().accept(null, k)) {
                     EncryptionBuilder.this.encryptionKeys.add(k);
@@ -127,8 +139,11 @@ public class EncryptionBuilder implements EncryptionBuilderInterface {
         }
 
         @Override
-        public WithAlgorithms andToSelf(PGPPublicKeyRing... keyRings) {
-            for (PGPPublicKeyRing ring : keyRings) {
+        public WithAlgorithms andToSelf(PGPPublicKeyRing... keys) {
+            if (keys.length == 0) {
+                throw new IllegalArgumentException("Recipient list MUST NOT be empty.");
+            }
+            for (PGPPublicKeyRing ring : keys) {
                 for (Iterator<PGPPublicKey> i = ring.getPublicKeys(); i.hasNext(); ) {
                     PGPPublicKey key = i.next();
                     if (encryptionKeySelector().accept(null, key)) {
@@ -140,9 +155,12 @@ public class EncryptionBuilder implements EncryptionBuilderInterface {
         }
 
         public <O>WithAlgorithms andToSelf(PublicKeyRingSelectionStrategy<O> ringSelectionStrategy,
-                                           MultiMap<O, PGPPublicKeyRingCollection> keyRingCollections) {
+                                           MultiMap<O, PGPPublicKeyRingCollection> keys) {
+            if (keys.isEmpty()) {
+                throw new IllegalArgumentException("Recipient list MUST NOT be empty.");
+            }
             MultiMap<O, PGPPublicKeyRing> acceptedKeyRings =
-                    ringSelectionStrategy.selectKeyRingsFromCollections(keyRingCollections);
+                    ringSelectionStrategy.selectKeyRingsFromCollections(keys);
             for (O identifier : acceptedKeyRings.keySet()) {
                 Set<PGPPublicKeyRing> acceptedSet = acceptedKeyRings.get(identifier);
                 for (PGPPublicKeyRing k : acceptedSet) {
@@ -183,6 +201,9 @@ public class EncryptionBuilder implements EncryptionBuilderInterface {
 
         @Override
         public <O> Armor signWith(SecretKeyRingProtector decryptor, PGPSecretKey... keys) {
+            if (keys.length == 0) {
+                throw new IllegalArgumentException("Recipient list MUST NOT be empty.");
+            }
             for (PGPSecretKey s : keys) {
                 if (EncryptionBuilder.this.<O>signingKeySelector().accept(null, s)) {
                     signingKeys.add(s);
@@ -196,6 +217,9 @@ public class EncryptionBuilder implements EncryptionBuilderInterface {
 
         @Override
         public <O> Armor signWith(SecretKeyRingProtector decryptor, PGPSecretKeyRing... keys) {
+            if (keys.length == 0) {
+                throw new IllegalArgumentException("Recipient list MUST NOT be empty.");
+            }
             for (PGPSecretKeyRing key : keys) {
                 for (Iterator<PGPSecretKey> i = key.getSecretKeys(); i.hasNext(); ) {
                     PGPSecretKey s = i.next();
@@ -211,9 +235,12 @@ public class EncryptionBuilder implements EncryptionBuilderInterface {
         @Override
         public <O>Armor signWith(SecretKeyRingSelectionStrategy<O> ringSelectionStrategy,
                                  SecretKeyRingProtector decryptor,
-                                 MultiMap<O, PGPSecretKeyRingCollection> keyRingCollections) {
+                                 MultiMap<O, PGPSecretKeyRingCollection> keys) {
+            if (keys.isEmpty()) {
+                throw new IllegalArgumentException("Recipient list MUST NOT be empty.");
+            }
             MultiMap<O, PGPSecretKeyRing> acceptedKeyRings =
-                    ringSelectionStrategy.selectKeyRingsFromCollections(keyRingCollections);
+                    ringSelectionStrategy.selectKeyRingsFromCollections(keys);
             for (O identifier : acceptedKeyRings.keySet()) {
                 Set<PGPSecretKeyRing> acceptedSet = acceptedKeyRings.get(identifier);
                 for (PGPSecretKeyRing k : acceptedSet) {

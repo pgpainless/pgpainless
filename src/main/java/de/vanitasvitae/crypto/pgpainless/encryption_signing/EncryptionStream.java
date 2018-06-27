@@ -19,6 +19,7 @@ import java.io.IOException;
 import java.io.OutputStream;
 import java.util.ArrayList;
 import java.util.Date;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 import java.util.logging.Level;
@@ -27,6 +28,7 @@ import java.util.logging.Logger;
 import de.vanitasvitae.crypto.pgpainless.algorithm.CompressionAlgorithm;
 import de.vanitasvitae.crypto.pgpainless.algorithm.HashAlgorithm;
 import de.vanitasvitae.crypto.pgpainless.algorithm.SymmetricKeyAlgorithm;
+import de.vanitasvitae.crypto.pgpainless.decryption_verification.PainlessResult;
 import org.bouncycastle.bcpg.ArmoredOutputStream;
 import org.bouncycastle.bcpg.BCPGOutputStream;
 import org.bouncycastle.openpgp.PGPCompressedDataGenerator;
@@ -36,6 +38,7 @@ import org.bouncycastle.openpgp.PGPLiteralData;
 import org.bouncycastle.openpgp.PGPLiteralDataGenerator;
 import org.bouncycastle.openpgp.PGPPrivateKey;
 import org.bouncycastle.openpgp.PGPPublicKey;
+import org.bouncycastle.openpgp.PGPPublicKeyRing;
 import org.bouncycastle.openpgp.PGPSignature;
 import org.bouncycastle.openpgp.PGPSignatureGenerator;
 import org.bouncycastle.openpgp.operator.bc.BcPGPContentSignerBuilder;
@@ -52,6 +55,8 @@ public class EncryptionStream extends OutputStream {
     private static final Level LEVEL = Level.FINE;
 
     private static final int BUFFER_SIZE = 1 << 8;
+
+    private final PainlessResult result;
 
     private List<PGPSignatureGenerator> signatureGenerators = new ArrayList<>();
     private boolean closed = false;
@@ -139,6 +144,23 @@ public class EncryptionStream extends OutputStream {
         literalDataGenerator = new PGPLiteralDataGenerator();
         literalDataStream = literalDataGenerator.open(basicCompressionStream,
                 PGPLiteralData.BINARY, PGPLiteralData.CONSOLE, new Date(), new byte[BUFFER_SIZE]);
+
+        // Prepare result
+        Set<Long> recipientKeyIds = new HashSet<>();
+        for (PGPPublicKey recipient : encryptionKeys) {
+            recipientKeyIds.add(recipient.getKeyID());
+        }
+
+        Set<Long> signingKeyIds = new HashSet<>();
+        for (PGPPrivateKey signer : signingKeys) {
+            signingKeyIds.add(signer.getKeyID());
+        }
+
+
+        this.result = new PainlessResult(recipientKeyIds,
+                null, symmetricKeyAlgorithm,
+                compressionAlgorithm, true,
+                signingKeyIds, null);
     }
 
     static EncryptionStream create(OutputStream outputStream,
@@ -235,5 +257,9 @@ public class EncryptionStream extends OutputStream {
         if (o == null) {
             throw new IllegalArgumentException("Argument '" + name + "' MUST NOT be null.");
         }
+    }
+
+    public PainlessResult getResult() {
+        return result;
     }
 }
