@@ -47,7 +47,7 @@ public class DecryptionBuilder implements DecryptionBuilderInterface {
     class DecryptWithImpl implements DecryptWith {
 
         @Override
-        public VerifyWith decryptWith(PGPSecretKeyRingCollection secretKeyRings, SecretKeyRingProtector decryptor) {
+        public VerifyWith decryptWith(SecretKeyRingProtector decryptor, PGPSecretKeyRingCollection secretKeyRings) {
             DecryptionBuilder.this.decryptionKeys = secretKeyRings;
             DecryptionBuilder.this.decryptionKeyDecryptor = decryptor;
             return new VerifyWithImpl();

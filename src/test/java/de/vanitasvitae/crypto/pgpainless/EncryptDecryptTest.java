@@ -149,7 +149,7 @@ public class EncryptDecryptTest extends AbstractPGPainlessTest {
         ByteArrayInputStream envelopeIn = new ByteArrayInputStream(encryptedSecretMessage);
         DecryptionStream decryptor = PGPainless.createDecryptor()
                 .onInputStream(envelopeIn)
-                .decryptWith(BCUtil.keyRingsToKeyRingCollection(recipient), keyDecryptor)
+                .decryptWith(keyDecryptor, BCUtil.keyRingsToKeyRingCollection(recipient))
                 .verifyWith(Collections.singleton(senderPub.getPublicKey().getKeyID()),
                         BCUtil.keyRingsToKeyRingCollection(senderPub))
                 .ignoreMissingPublicKeys()

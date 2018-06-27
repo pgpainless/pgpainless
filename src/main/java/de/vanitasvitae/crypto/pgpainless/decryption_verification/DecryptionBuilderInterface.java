@@ -31,7 +31,7 @@ public interface DecryptionBuilderInterface {
 
     interface DecryptWith {
 
-        VerifyWith decryptWith(PGPSecretKeyRingCollection secretKeyRings, SecretKeyRingProtector decryptor);
+        VerifyWith decryptWith(SecretKeyRingProtector decryptor, PGPSecretKeyRingCollection secretKeyRings);
 
         VerifyWith doNotDecrypt();
 
