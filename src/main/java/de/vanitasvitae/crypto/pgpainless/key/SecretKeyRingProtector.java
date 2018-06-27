@@ -15,13 +15,27 @@
  */
 package de.vanitasvitae.crypto.pgpainless.key;
 
+import org.bouncycastle.openpgp.PGPException;
 import org.bouncycastle.openpgp.operator.PBESecretKeyDecryptor;
 import org.bouncycastle.openpgp.operator.PBESecretKeyEncryptor;
 
 public interface SecretKeyRingProtector {
 
+    /**
+     * Return a decryptor for the key of id {@code keyId}.
+     *
+     * @param keyId id of the key
+     * @return decryptor for the key
+     */
     PBESecretKeyDecryptor getDecryptor(Long keyId);
 
-    PBESecretKeyEncryptor getEncryptor(Long keyId);
+    /**
+     * Return an encryptor for the key of id {@code keyId}.
+     *
+     * @param keyId id of the key
+     * @return encryptor for the key
+     * @throws PGPException if the encryptor cannot be created for some reason
+     */
+    PBESecretKeyEncryptor getEncryptor(Long keyId) throws PGPException;
 
 }
