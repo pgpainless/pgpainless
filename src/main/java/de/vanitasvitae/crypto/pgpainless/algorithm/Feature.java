@@ -21,6 +21,13 @@ import java.util.Map;
 import org.bouncycastle.bcpg.sig.Features;
 
 public enum Feature {
+
+    /**
+     * Add modification detection package.
+     *
+     * @see <a href="https://tools.ietf.org/html/rfc4880#section-5.14">
+     *     RFC-4880 §5.14: Modification Detection Code Packet</a>
+     */
     MODIFICATION_DETECTION(Features.FEATURE_MODIFICATION_DETECTION),
     ;
 
