@@ -16,7 +16,7 @@ animalsniffer {
     sourceSets = [sourceSets.main]
 }
 
-group 'de.vanitasvitae.crypto'
+group 'org.pgpainless'
 version '0.1-SNAPSHOT'
 
 sourceCompatibility = 1.8
