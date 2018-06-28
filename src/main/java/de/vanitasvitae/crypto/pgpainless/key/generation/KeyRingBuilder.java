@@ -62,6 +62,7 @@ public class KeyRingBuilder implements KeyRingBuilderInterface {
 
     /**
      * Creates a simple RSA KeyPair of length {@code length} with user-id {@code userId}.
+     * The KeyPair consists of a single RSA master key which is used for signing, encryption and certification.
      *
      * @param userId user id.
      * @param length length in bits.
@@ -82,6 +83,18 @@ public class KeyRingBuilder implements KeyRingBuilderInterface {
                 .build();
     }
 
+    /**
+     * Creates a key ring consisting of an ECDSA master key and an ECDH sub-key.
+     * The ECDSA master key is used for signing messages and certifying the sub key.
+     * The ECDH sub-key is used for encryption of messages.
+     *
+     * @param userId user-id
+     * @return {@link PGPSecretKeyRing} containing the key pairs.
+     * @throws PGPException
+     * @throws NoSuchAlgorithmException
+     * @throws NoSuchProviderException
+     * @throws InvalidAlgorithmParameterException
+     */
     public PGPSecretKeyRing simpleEcKeyRing(String userId)
             throws PGPException, NoSuchAlgorithmException, NoSuchProviderException, InvalidAlgorithmParameterException {
         return withSubKey(
