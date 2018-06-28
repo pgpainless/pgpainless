@@ -16,6 +16,8 @@
 package de.vanitasvitae.crypto.pgpainless;
 
 import static junit.framework.TestCase.assertEquals;
+import static junit.framework.TestCase.assertNotNull;
+import static junit.framework.TestCase.assertNull;
 
 import java.io.IOException;
 import java.security.InvalidAlgorithmParameterException;
@@ -25,11 +27,13 @@ import java.util.Iterator;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
+import de.vanitasvitae.crypto.pgpainless.key.generation.type.length.RsaLength;
 import de.vanitasvitae.crypto.pgpainless.util.BCUtil;
 import org.bouncycastle.openpgp.PGPException;
 import org.bouncycastle.openpgp.PGPPublicKey;
 import org.bouncycastle.openpgp.PGPPublicKeyRing;
 import org.bouncycastle.openpgp.PGPPublicKeyRingCollection;
+import org.bouncycastle.openpgp.PGPSecretKey;
 import org.bouncycastle.openpgp.PGPSecretKeyRing;
 import org.bouncycastle.openpgp.PGPSecretKeyRingCollection;
 import org.junit.Test;
@@ -39,7 +43,7 @@ public class BCUtilTest extends AbstractPGPainlessTest {
     private static final Logger LOGGER = Logger.getLogger(BCUtil.class.getName());
 
     @Test
-    public void test()
+    public void keyRingToCollectionTest()
             throws PGPException, NoSuchAlgorithmException, NoSuchProviderException, InvalidAlgorithmParameterException,
             IOException {
         PGPSecretKeyRing sec = PGPainless.generateKeyRing().simpleEcKeyRing("donald@duck.tails");
@@ -90,5 +94,32 @@ public class BCUtilTest extends AbstractPGPainlessTest {
         }
 
         LOGGER.log(Level.INFO, "PubCol: " + pubColSize);
+    }
+
+    @Test
+    public void removeUnsignedKeysTest()
+            throws PGPException, NoSuchAlgorithmException, NoSuchProviderException, InvalidAlgorithmParameterException {
+        PGPSecretKeyRing alice = PGPainless.generateKeyRing().simpleRsaKeyRing("alice@wonderland.lit", RsaLength._1024);
+        PGPSecretKeyRing mallory = PGPainless.generateKeyRing().simpleEcKeyRing("mallory@mall.ory");
+
+        PGPSecretKey subKey = null;
+        Iterator<PGPSecretKey> sit = mallory.getSecretKeys();
+        while (sit.hasNext()) {
+            PGPSecretKey s = sit.next();
+            if (!s.isMasterKey()) {
+                subKey = s;
+                break;
+            }
+        }
+
+        assertNotNull(subKey);
+
+        PGPSecretKeyRing alice_mallory = PGPSecretKeyRing.insertSecretKey(alice, subKey);
+
+        // Check, if alice_mallory contains mallory's key
+        assertNotNull(alice_mallory.getSecretKey(subKey.getKeyID()));
+
+        PGPSecretKeyRing cleaned = BCUtil.removeUnsignedKeysFromKeyRing(alice_mallory, alice.getPublicKey().getKeyID());
+        assertNull(cleaned.getSecretKey(subKey.getKeyID()));
     }
 }

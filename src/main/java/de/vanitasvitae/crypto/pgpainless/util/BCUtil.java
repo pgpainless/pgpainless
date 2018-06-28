@@ -160,6 +160,27 @@ public class BCUtil {
         return cleaned;
     }
 
+    public static PGPSecretKeyRing removeUnsignedKeysFromKeyRing(PGPSecretKeyRing ring, Long masterKeyId) {
+        Set<Long> signedKeyIds = new HashSet<>();
+        signedKeyIds.add(masterKeyId);
+        Iterator<PGPPublicKey> signedKeys = ring.getKeysWithSignaturesBy(masterKeyId);
+        while (signedKeys.hasNext()) {
+            signedKeyIds.add(signedKeys.next().getKeyID());
+        }
+
+        PGPSecretKeyRing cleaned = ring;
+
+        Iterator<PGPSecretKey> secretKeys = ring.getSecretKeys();
+        while (secretKeys.hasNext()) {
+            PGPSecretKey secretKey = secretKeys.next();
+            if (!signedKeyIds.contains(secretKey.getKeyID())) {
+                cleaned = PGPSecretKeyRing.removeSecretKey(cleaned, secretKey);
+            }
+        }
+
+        return cleaned;
+    }
+
     public static PGPPublicKey getMasterKeyFrom(PGPPublicKeyRing ring) {
         Iterator<PGPPublicKey> it = ring.getPublicKeys();
         while (it.hasNext()) {
