@@ -18,7 +18,7 @@ The first thing you probably want to do is generate you some nice tasty Key Pair
 
 ```
         PGPSecretKeyRing keyRing = PGPainless.generateKeyRing()
-                .simpleRsaKeyRing("Juliet &lt;juliet@montague.lit&gt;", RsaLength._4096);
+                .simpleRsaKeyRing("Juliet <juliet@montague.lit>", RsaLength._4096);
 ```
 
 but feel free to explore the API further. PGPainless allows you to create Key Pairs consisting of a master key plus several sub keys, even with different algorithms at the same time!
