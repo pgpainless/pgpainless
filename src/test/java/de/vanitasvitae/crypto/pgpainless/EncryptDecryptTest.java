@@ -31,6 +31,7 @@ import java.util.Collections;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
+import de.vanitasvitae.crypto.pgpainless.algorithm.KeyFlag;
 import de.vanitasvitae.crypto.pgpainless.algorithm.PublicKeyAlgorithm;
 import de.vanitasvitae.crypto.pgpainless.algorithm.SymmetricKeyAlgorithm;
 import de.vanitasvitae.crypto.pgpainless.decryption_verification.DecryptionStream;
@@ -38,6 +39,10 @@ import de.vanitasvitae.crypto.pgpainless.decryption_verification.PainlessResult;
 import de.vanitasvitae.crypto.pgpainless.encryption_signing.EncryptionStream;
 import de.vanitasvitae.crypto.pgpainless.key.SecretKeyRingProtector;
 import de.vanitasvitae.crypto.pgpainless.key.UnprotectedKeysProtector;
+import de.vanitasvitae.crypto.pgpainless.key.generation.KeySpec;
+import de.vanitasvitae.crypto.pgpainless.key.generation.type.ElGamal_GENERAL;
+import de.vanitasvitae.crypto.pgpainless.key.generation.type.RSA_GENERAL;
+import de.vanitasvitae.crypto.pgpainless.key.generation.type.length.ElGamalLength;
 import de.vanitasvitae.crypto.pgpainless.key.generation.type.length.RsaLength;
 import de.vanitasvitae.crypto.pgpainless.util.BCUtil;
 import org.bouncycastle.openpgp.PGPException;
@@ -61,6 +66,19 @@ public class EncryptDecryptTest extends AbstractPGPainlessTest {
 
     public EncryptDecryptTest() {
         LOGGER.log(Level.INFO, "Plain Length: " + testMessage.getBytes(UTF8).length);
+    }
+
+    @Test
+    public void freshKeysRsaToElGamalTest()
+            throws PGPException, NoSuchAlgorithmException, NoSuchProviderException, InvalidAlgorithmParameterException,
+            IOException {
+        PGPSecretKeyRing sender = PGPainless.generateKeyRing().simpleRsaKeyRing("romeo@montague.lit", RsaLength._3072);
+        PGPSecretKeyRing recipient = PGPainless.generateKeyRing()
+                .withSubKey(KeySpec.getBuilder(ElGamal_GENERAL.withLength(ElGamalLength._3072)).withKeyFlags(KeyFlag.ENCRYPT_STORAGE, KeyFlag.ENCRYPT_COMMS).withDefaultAlgorithms())
+                .withMasterKey(KeySpec.getBuilder(RSA_GENERAL.withLength(RsaLength._4096)).withKeyFlags(KeyFlag.SIGN_DATA, KeyFlag.CERTIFY_OTHER).withDefaultAlgorithms())
+                .withPrimaryUserId("juliet@capulet.lit").withoutPassphrase().build();
+
+        encryptDecryptForSecretKeyRings(sender, recipient);
     }
 
     @Test

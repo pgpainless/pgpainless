@@ -20,6 +20,7 @@ import java.security.spec.AlgorithmParameterSpec;
 import de.vanitasvitae.crypto.pgpainless.algorithm.PublicKeyAlgorithm;
 import de.vanitasvitae.crypto.pgpainless.key.generation.type.length.ElGamalLength;
 import org.bouncycastle.jce.spec.ElGamalGenParameterSpec;
+import org.bouncycastle.jce.spec.ElGamalParameterSpec;
 
 public class ElGamal_GENERAL implements KeyType {
 
@@ -45,6 +46,6 @@ public class ElGamal_GENERAL implements KeyType {
 
     @Override
     public AlgorithmParameterSpec getAlgorithmSpec() {
-        return new ElGamalGenParameterSpec(length.getLength());
+        return new ElGamalParameterSpec(length.getP(), length.getG());
     }
 }
