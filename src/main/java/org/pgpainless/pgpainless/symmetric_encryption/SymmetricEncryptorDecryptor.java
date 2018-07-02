@@ -48,9 +48,22 @@ import org.pgpainless.pgpainless.algorithm.SymmetricKeyAlgorithm;
  */
 public class SymmetricEncryptorDecryptor {
 
+    /**
+     * Encrypt some {@code data} symmetrically using an {@code encryptionAlgorithm} and a given {@code password}.
+     * The input data will be compressed using the given {@code compressionAlgorithm} and packed in a modification
+     * detection package, which is then encrypted.
+     *
+     * @param data bytes that will be encrypted
+     * @param password password that will be used to encrypt the data
+     * @param encryptionAlgorithm symmetric algorithm that will be used to encrypt the data
+     * @param compressionAlgorithm compression algorithm that will be used to compress the data
+     * @return encrypted data
+     * @throws IOException IO is dangerous
+     * @throws PGPException OpenPGP is brittle
+     */
     public static byte[] symmetricallyEncrypt(byte[] data,
                                               char[] password,
-                                              SymmetricKeyAlgorithm algorithm,
+                                              SymmetricKeyAlgorithm encryptionAlgorithm,
                                               CompressionAlgorithm compressionAlgorithm)
             throws IOException, PGPException {
 
@@ -59,7 +72,7 @@ public class SymmetricEncryptorDecryptor {
         ByteArrayOutputStream bOut = new ByteArrayOutputStream();
 
         PGPEncryptedDataGenerator encGen = new PGPEncryptedDataGenerator(
-                new JcePGPDataEncryptorBuilder(algorithm.getAlgorithmId())
+                new JcePGPDataEncryptorBuilder(encryptionAlgorithm.getAlgorithmId())
                         .setWithIntegrityPacket(true)
                         .setSecureRandom(new SecureRandom())
                         .setProvider("BC"));
@@ -74,6 +87,17 @@ public class SymmetricEncryptorDecryptor {
         return bOut.toByteArray();
     }
 
+    /**
+     * Decrypt and decompress some symmetrically encrypted data using a password.
+     * Note, that decryption will fail if the given data is not integrity protected with a modification detection
+     * package.
+     *
+     * @param data encrypted data
+     * @param password password to decrypt the data
+     * @return decrypted data
+     * @throws IOException IO is dangerous
+     * @throws PGPException OpenPGP is brittle
+     */
     public static byte[] symmetricallyDecrypt(byte[] data, char[] password) throws IOException, PGPException {
         InputStream in = new BufferedInputStream(new ByteArrayInputStream(data));
         in = PGPUtil.getDecoderStream(in);
@@ -123,6 +147,14 @@ public class SymmetricEncryptorDecryptor {
         return outputStream.toByteArray();
     }
 
+    /**
+     * Wrap some data in an OpenPGP compressed data package.
+     *
+     * @param clearData uncompressed data
+     * @param algorithm compression algorithm
+     * @return compressed data
+     * @throws IOException IO is dangerous
+     */
     private static byte[] compress(byte[] clearData, int algorithm) throws IOException
     {
         ByteArrayOutputStream bOut = new ByteArrayOutputStream();
