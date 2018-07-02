@@ -1,0 +1,233 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE module PUBLIC
+        "-//Puppy Crawl//DTD Check Configuration 1.3//EN"
+        "http://www.puppycrawl.com/dtds/configuration_1_3.dtd">
+<module name="Checker">
+
+    <!-- Suppressions -->
+    <module name="SuppressionFilter">
+        <property name="file" value="config/suppressions.xml"/>
+    </module>
+
+    <!-- License Header -->
+    <module name="Header">
+        <property name="headerFile" value="config/checkstyleLicenseHeader.txt"/>
+        <property name="ignoreLines" value="2"/>
+        <property name="fileExtensions" value="java"/>
+    </module>
+
+    <module name="NewlineAtEndOfFile">
+        <property name="lineSeparator" value="lf"/>
+    </module>
+
+    <module name="RegexpSingleline">
+        <!--
+            Matches StringBuilder.append(String) calls where the
+            argument is a String of length one. Those should be replaced
+            with append(char) for performance reasons.
+
+            TODO: This could be more advanced in order to match also
+            - .append("\u1234")
+        -->
+        <property name="format" value="\.append\(&quot;(.|\\.)&quot;\)"/>
+        <property name="message" value="Don&apos;t use StringBuilder.append(String) when you can use StringBuilder.append(char). Solution: Replace double quotes of append&apos;s argument with single quotes."/>
+    </module>
+
+    <!-- Whitespace only lines -->
+    <module name="RegexpSingleline">
+        <property name="format" value="^\s+$"/>
+        <property name="message" value="Line containing only whitespace character(s)"/>
+    </module>
+
+    <!-- Mixed spaces/tabs -->
+    <module name="RegexpSingleline">
+        <!-- We use {2,} instead of + here to address the typical case where a file was written
+           with tabs but javadoc is causing '\t *' -->
+        <property name="format" value="^\t+ {2,}"/>
+        <property name="message" value="Line containing space(s) after tab(s)"/>
+    </module>
+
+    <!-- Trailing whitespaces -->
+    <module name="RegexpSingleline">
+        <!--
+            Explaining the following Regex
+
+                       \s+   $
+                        |    +- End of Line (2)
+                        +- At least one whitespace (1)
+
+            Rationale:
+            Matches trailing whitespace (2) in lines containing at least one (1) non-whitespace character
+        -->
+        <property name="format" value="\s+$"/>
+        <property name="message" value="Line containing trailing whitespace character(s)"/>
+    </module>
+
+    <!-- <module name="RegexpSingleline"> -->
+    <!--   <property name="format" value="fqdn"/> -->
+    <!-- </module> -->
+
+    <!-- Space after // -->
+    <module name="RegexpSingleline">
+        <property name="format" value="^\s*//[^\s]"/>
+        <property name="message" value="Comment start ('//') followed by non-space character. You would not continue after a punctuation without a space, would you?"/>
+    </module>
+
+    <module name="JavadocPackage">
+    </module>
+
+    <module name="TreeWalker">
+        <module name="SuppressionCommentFilter"/>
+        <module name="FinalClass"/>
+        <module name="UnusedImports">
+            <property name="processJavadoc" value="true"/>
+        </module>
+        <module name="AvoidStarImport"/>
+        <module name="IllegalImport"/>
+        <module name="RedundantImport"/>
+        <module name="RedundantModifier"/>
+        <module name="ModifierOrder"/>
+        <module name="UpperEll"/>
+        <module name="ArrayTypeStyle"/>
+        <module name="GenericWhitespace"/>
+        <module name="EmptyStatement"/>
+        <module name="PackageDeclaration"/>
+        <module name="LeftCurly"/>
+
+        <!-- printStackTrace -->
+        <module name="RegexpSinglelineJava">
+            <property name="format" value="printStackTrace"/>
+            <property name="message" value="Usage of printStackTrace. Either rethrow exception, or log using Logger."/>
+            <property name="ignoreComments" value="true"/>
+        </module>
+
+        <!-- println -->
+        <module name="RegexpSinglelineJava">
+            <property name="format" value="println"/>
+            <property name="message" value="Usage of println"/>
+            <property name="ignoreComments" value="true"/>
+        </module>
+
+        <!-- Spaces instead of Tabs -->
+        <module name="RegexpSinglelineJava">
+            <property name="format" value="^\t+"/>
+            <property name="message" value="Indent must not use tab characters. Use space instead."/>
+        </module>
+
+        <module name="JavadocMethod">
+            <!-- TODO stricten those checks -->
+            <property name="scope" value="public"/>
+            <property name="allowUndeclaredRTE" value="true"/>
+            <property name="allowMissingParamTags" value="true"/>
+            <property name="allowMissingThrowsTags" value="true"/>
+            <property name="allowMissingReturnTag" value="true"/>
+            <property name="allowMissingJavadoc" value="true"/>
+            <property name="suppressLoadErrors" value="true"/>
+        </module>
+
+        <module name="JavadocStyle">
+            <property name="scope" value="public"/>
+            <property name="checkEmptyJavadoc" value="true"/>
+            <property name="checkHtml" value="false"/>
+        </module>
+
+        <module name="ParenPad">
+        </module>
+
+        <!-- Whitespace after key tokens -->
+        <module name="NoWhitespaceAfter">
+            <property name="tokens" value="INC
+										 , DEC
+										 , UNARY_MINUS
+										 , UNARY_PLUS
+										 , BNOT, LNOT
+										 , DOT
+										 , ARRAY_DECLARATOR
+										 , INDEX_OP
+										 "/>
+        </module>
+
+        <!-- Whitespace after key words -->
+        <module name="WhitespaceAfter">
+            <property name="tokens" value="TYPECAST
+										 , LITERAL_IF
+										 , LITERAL_ELSE
+										 , LITERAL_WHILE
+										 , LITERAL_DO
+										 , LITERAL_FOR
+										 , DO_WHILE
+										 "/>
+        </module>
+
+        <module name="WhitespaceAround">
+            <property
+                    name="ignoreEnhancedForColon"
+                    value="false"
+            />
+            <!-- Currently disabled tokens: LCURLY, RCURLY, WILDCARD_TYPE, GENERIC_START, GENERIC_END -->
+            <property
+                    name="tokens"
+                    value="ASSIGN
+					 , ARRAY_INIT
+					 , BAND
+					 , BAND_ASSIGN
+					 , BOR
+					 , BOR_ASSIGN
+					 , BSR
+					 , BSR_ASSIGN
+					 , BXOR
+					 , BXOR_ASSIGN
+					 , COLON
+					 , DIV
+					 , DIV_ASSIGN
+					 , DO_WHILE
+					 , EQUAL
+					 , GE
+					 , GT
+					 , LAMBDA
+					 , LAND
+					 , LE
+					 , LITERAL_CATCH
+					 , LITERAL_DO
+					 , LITERAL_ELSE
+					 , LITERAL_FINALLY
+					 , LITERAL_FOR
+					 , LITERAL_IF
+					 , LITERAL_RETURN
+					 , LITERAL_SWITCH
+					 , LITERAL_SYNCHRONIZED
+					 , LITERAL_TRY
+					 , LITERAL_WHILE
+					 , LOR
+					 , LT
+					 , MINUS
+					 , MINUS_ASSIGN
+					 , MOD
+					 , MOD_ASSIGN
+					 , NOT_EQUAL
+					 , PLUS
+					 , PLUS_ASSIGN
+					 , QUESTION
+					 , SL
+					 , SLIST
+					 , SL_ASSIGN
+					 , SR
+					 , SR_ASSIGN
+					 , STAR
+					 , STAR_ASSIGN
+					 , LITERAL_ASSERT
+					 , TYPE_EXTENSION_AND
+					 "/>
+        </module>
+
+        <!--
+        <module name="CustomImportOrder">
+            <property name="customImportOrderRules"
+                      value="STATIC###STANDARD_JAVA_PACKAGE###SPECIAL_IMPORTS###THIRD_PARTY_PACKAGE"/>
+            <property name="specialImportsRegExp" value="^org\.pgpainless\.pgpainless"/>
+            <property name="sortImportsInGroupAlphabetically" value="true"/>
+            <property name="separateLineBetweenGroups" value="true"/>
+        </module>
+        -->
+    </module>
+</module>

@@ -155,8 +155,7 @@ public class SymmetricEncryptorDecryptor {
      * @return compressed data
      * @throws IOException IO is dangerous
      */
-    private static byte[] compress(byte[] clearData, int algorithm) throws IOException
-    {
+    private static byte[] compress(byte[] clearData, int algorithm) throws IOException {
         ByteArrayOutputStream bOut = new ByteArrayOutputStream();
         PGPCompressedDataGenerator comData = new PGPCompressedDataGenerator(algorithm);
         OutputStream cos = comData.open(bOut);

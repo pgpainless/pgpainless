@@ -22,10 +22,10 @@ import org.bouncycastle.bcpg.CompressionAlgorithmTags;
 
 public enum CompressionAlgorithm {
 
-    UNCOMPRESSED(   CompressionAlgorithmTags.UNCOMPRESSED),
-    ZIP(            CompressionAlgorithmTags.ZIP),
-    ZLIB(           CompressionAlgorithmTags.ZLIB),
-    BZIP2(          CompressionAlgorithmTags.BZIP2),
+    UNCOMPRESSED   (CompressionAlgorithmTags.UNCOMPRESSED),
+    ZIP            (CompressionAlgorithmTags.ZIP),
+    ZLIB           (CompressionAlgorithmTags.ZLIB),
+    BZIP2          (CompressionAlgorithmTags.BZIP2),
     ;
 
     private static final Map<Integer, CompressionAlgorithm> MAP = new HashMap<>();

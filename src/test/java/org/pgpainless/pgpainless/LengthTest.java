@@ -43,7 +43,7 @@ public class LengthTest extends AbstractPGPainlessTest {
 
     private static final Logger LOGGER = Logger.getLogger(LengthTest.class.getName());
 
-    //@Test
+    // @Test
     public void ecEc()
             throws PGPException, NoSuchAlgorithmException, NoSuchProviderException, InvalidAlgorithmParameterException,
             IOException {
@@ -54,7 +54,7 @@ public class LengthTest extends AbstractPGPainlessTest {
     }
 
 
-    //@Test
+    // @Test
     public void RsaRsa()
             throws PGPException, NoSuchAlgorithmException, NoSuchProviderException, InvalidAlgorithmParameterException,
             IOException {
@@ -64,7 +64,7 @@ public class LengthTest extends AbstractPGPainlessTest {
         encryptDecryptForSecretKeyRings(sender, recipient);
     }
 
-    //@Test
+    // @Test
     public void RsaRsa4096()
             throws PGPException, NoSuchAlgorithmException, NoSuchProviderException, InvalidAlgorithmParameterException,
             IOException {
@@ -74,7 +74,7 @@ public class LengthTest extends AbstractPGPainlessTest {
         encryptDecryptForSecretKeyRings(sender, recipient);
     }
 
-    //@Test
+    // @Test
     public void rsaEc() throws PGPException, IOException, InvalidAlgorithmParameterException, NoSuchAlgorithmException,
             NoSuchProviderException {
         LOGGER.log(Level.INFO, "\nRSA-2048 -> EC");
@@ -83,7 +83,7 @@ public class LengthTest extends AbstractPGPainlessTest {
         encryptDecryptForSecretKeyRings(sender, recipient);
     }
 
-    //@Test
+    // @Test
     public void ecRsa()
             throws PGPException, NoSuchAlgorithmException, NoSuchProviderException, InvalidAlgorithmParameterException,
             IOException {
@@ -111,7 +111,7 @@ public class LengthTest extends AbstractPGPainlessTest {
             OutputStream encryptor = PGPainless.createEncryptor()
                     .onOutputStream(envelope)
                     .toRecipients(recipientPub)
-                    //.doNotEncrypt()
+                    // .doNotEncrypt()
                     .usingSecureAlgorithms()
                     .signWith(keyDecryptor, sender)
                     .noArmor();

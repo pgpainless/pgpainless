@@ -93,7 +93,7 @@ public class EncryptionBuilder implements EncryptionBuilderInterface {
         }
 
         @Override
-        public <O>WithAlgorithms toRecipients(PublicKeyRingSelectionStrategy<O> ringSelectionStrategy,
+        public <O> WithAlgorithms toRecipients(PublicKeyRingSelectionStrategy<O> ringSelectionStrategy,
                                               MultiMap<O, PGPPublicKeyRingCollection> keys) {
             if (keys.isEmpty()) {
                 throw new IllegalArgumentException("Recipient map MUST NOT be empty.");
@@ -151,7 +151,7 @@ public class EncryptionBuilder implements EncryptionBuilderInterface {
             return this;
         }
 
-        public <O>WithAlgorithms andToSelf(PublicKeyRingSelectionStrategy<O> ringSelectionStrategy,
+        public <O> WithAlgorithms andToSelf(PublicKeyRingSelectionStrategy<O> ringSelectionStrategy,
                                            MultiMap<O, PGPPublicKeyRingCollection> keys) {
             if (keys.isEmpty()) {
                 throw new IllegalArgumentException("Recipient list MUST NOT be empty.");
@@ -230,7 +230,7 @@ public class EncryptionBuilder implements EncryptionBuilderInterface {
         }
 
         @Override
-        public <O>Armor signWith(SecretKeyRingSelectionStrategy<O> ringSelectionStrategy,
+        public <O> Armor signWith(SecretKeyRingSelectionStrategy<O> ringSelectionStrategy,
                                  SecretKeyRingProtector decryptor,
                                  MultiMap<O, PGPSecretKeyRingCollection> keys) {
             if (keys.isEmpty()) {

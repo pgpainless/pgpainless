@@ -64,7 +64,11 @@ public class MultiMap<K, V> {
     }
 
     public void put(K k, V v) {
-        Set<V> values = map.computeIfAbsent(k, k1 -> new HashSet<>());
+        Set<V> values = map.get(k);
+        if (values == null) {
+            values = new HashSet<>();
+            map.put(k, values);
+        }
         values.add(v);
     }
 

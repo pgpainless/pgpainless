@@ -20,6 +20,8 @@ import static junit.framework.TestCase.assertTrue;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.util.Arrays;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 import org.bouncycastle.bcpg.ArmoredOutputStream;
 import org.bouncycastle.openpgp.PGPException;
@@ -27,6 +29,8 @@ import org.junit.Test;
 import org.pgpainless.pgpainless.algorithm.SymmetricKeyAlgorithm;
 
 public class SymmetricTest extends AbstractPGPainlessTest {
+
+    private static final Logger LOGGER = Logger.getLogger(SymmetricTest.class.getName());
 
     private static final String message = "I grew up with the understanding that the world " +
             "I lived in was one where people enjoyed a sort of freedom " +
@@ -49,7 +53,7 @@ public class SymmetricTest extends AbstractPGPainlessTest {
         armor.close();
 
         // Print cipher text for validation with GnuPG.
-        System.out.println(new String(out.toByteArray()));
+        LOGGER.log(Level.INFO, new String(out.toByteArray()));
 
         byte[] plain2 = PGPainless.decryptWithPassword(enc, "choose_a_better_password_please".toCharArray());
         assertTrue(Arrays.equals(plain, plain2));

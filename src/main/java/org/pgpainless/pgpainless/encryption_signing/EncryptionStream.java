@@ -49,7 +49,7 @@ import org.pgpainless.pgpainless.decryption_verification.PainlessResult;
  * This class is based upon Jens Neuhalfen's Bouncy-GPG PGPEncryptingStream.
  * @see <a href="https://github.com/neuhalje/bouncy-gpg/blob/master/src/main/java/name/neuhalfen/projects/crypto/bouncycastle/openpgp/encrypting/PGPEncryptingStream.java">Source</a>
  */
-public class EncryptionStream extends OutputStream {
+public final class EncryptionStream extends OutputStream {
 
     private static final Logger LOGGER = Logger.getLogger(EncryptionStream.class.getName());
     private static final Level LEVEL = Level.FINE;

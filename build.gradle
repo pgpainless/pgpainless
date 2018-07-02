@@ -16,6 +16,13 @@ animalsniffer {
     sourceSets = [sourceSets.main]
 }
 
+apply plugin: 'checkstyle'
+
+checkstyle {
+    configFile = 'config/checkstyle.xml' as File
+    toolVersion = '8.10'
+}
+
 group 'org.pgpainless'
 version '0.1-SNAPSHOT'
 

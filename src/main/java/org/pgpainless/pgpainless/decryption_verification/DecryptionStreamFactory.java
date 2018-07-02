@@ -50,7 +50,7 @@ import org.pgpainless.pgpainless.algorithm.CompressionAlgorithm;
 import org.pgpainless.pgpainless.algorithm.SymmetricKeyAlgorithm;
 import org.pgpainless.pgpainless.key.SecretKeyRingProtector;
 
-public class DecryptionStreamFactory {
+public final class DecryptionStreamFactory {
 
     private static final Logger LOGGER = Logger.getLogger(DecryptionStreamFactory.class.getName());
     private static final Level LEVEL = Level.FINE;
