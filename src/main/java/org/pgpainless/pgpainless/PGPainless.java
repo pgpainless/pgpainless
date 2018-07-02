@@ -15,17 +15,14 @@
  */
 package org.pgpainless.pgpainless;
 
-import java.io.ByteArrayInputStream;
 import java.io.IOException;
 
-import org.bouncycastle.bcpg.ArmoredInputStream;
 import org.bouncycastle.openpgp.PGPException;
-import org.bouncycastle.openpgp.PGPPublicKeyRing;
-import org.bouncycastle.openpgp.operator.bc.BcKeyFingerprintCalculator;
 import org.pgpainless.pgpainless.algorithm.CompressionAlgorithm;
 import org.pgpainless.pgpainless.algorithm.SymmetricKeyAlgorithm;
 import org.pgpainless.pgpainless.decryption_verification.DecryptionBuilder;
 import org.pgpainless.pgpainless.encryption_signing.EncryptionBuilder;
+import org.pgpainless.pgpainless.key.KeyRingReader;
 import org.pgpainless.pgpainless.key.generation.KeyRingBuilder;
 import org.pgpainless.pgpainless.symmetric_encryption.SymmetricEncryptorDecryptor;
 
@@ -43,8 +40,13 @@ public class PGPainless {
         return new DecryptionBuilder();
     }
 
-    public static PGPPublicKeyRing publicKeyRingFromBytes(byte[] bytes) throws IOException {
-        return new PGPPublicKeyRing(new ArmoredInputStream(new ByteArrayInputStream(bytes)), new BcKeyFingerprintCalculator());
+    /**
+     * Read some existing OpenPGP key ring.
+     *
+     * @return KeyRingReader which offers reading operations
+     */
+    public static KeyRingReader readKeyRing() {
+        return new KeyRingReader();
     }
 
     /**
