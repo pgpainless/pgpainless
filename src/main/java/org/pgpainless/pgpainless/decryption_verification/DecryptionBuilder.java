@@ -33,7 +33,7 @@ public class DecryptionBuilder implements DecryptionBuilderInterface {
     private PGPSecretKeyRingCollection decryptionKeys;
     private SecretKeyRingProtector decryptionKeyDecryptor;
     private Set<PGPPublicKeyRing> verificationKeys = new HashSet<>();
-    private MissingPublicKeyCallback missingPublicKeyCallback = null;
+    private org.pgpainless.pgpainless.decryption_verification.MissingPublicKeyCallback missingPublicKeyCallback = null;
 
     @Override
     public DecryptWith onInputStream(InputStream inputStream) {
@@ -61,8 +61,8 @@ public class DecryptionBuilder implements DecryptionBuilderInterface {
     class VerifyWithImpl implements VerifyWith {
 
         @Override
-        public MissingPublicKeyFeedback verifyWith(Set<Long> trustedKeyIds,
-                                                   PGPPublicKeyRingCollection publicKeyRingCollection) {
+        public HandleMissingPublicKeys verifyWith(Set<Long> trustedKeyIds,
+                                                  PGPPublicKeyRingCollection publicKeyRingCollection) {
             Set<PGPPublicKeyRing> publicKeyRings = new HashSet<>();
             for (Iterator<PGPPublicKeyRing> i = publicKeyRingCollection.getKeyRings(); i.hasNext(); ) {
                 PGPPublicKeyRing p = i.next();
@@ -74,9 +74,9 @@ public class DecryptionBuilder implements DecryptionBuilderInterface {
         }
 
         @Override
-        public MissingPublicKeyFeedback verifyWith(Set<PGPPublicKeyRing> publicKeyRings) {
+        public HandleMissingPublicKeys verifyWith(Set<PGPPublicKeyRing> publicKeyRings) {
             DecryptionBuilder.this.verificationKeys = publicKeyRings;
-            return new MissingPublicKeyFeedbackImpl();
+            return new HandleMissingPublicKeysImpl();
         }
 
         @Override
@@ -86,16 +86,17 @@ public class DecryptionBuilder implements DecryptionBuilderInterface {
         }
     }
 
-    class MissingPublicKeyFeedbackImpl implements MissingPublicKeyFeedback {
+    class HandleMissingPublicKeysImpl implements HandleMissingPublicKeys {
 
         @Override
-        public Build handleMissingPublicKeysWith(MissingPublicKeyCallback callback) {
+        public Build handleMissingPublicKeysWith(org.pgpainless.pgpainless.decryption_verification.MissingPublicKeyCallback callback) {
             DecryptionBuilder.this.missingPublicKeyCallback = callback;
             return new BuildImpl();
         }
 
         @Override
         public Build ignoreMissingPublicKeys() {
+            DecryptionBuilder.this.missingPublicKeyCallback = null;
             return new BuildImpl();
         }
     }

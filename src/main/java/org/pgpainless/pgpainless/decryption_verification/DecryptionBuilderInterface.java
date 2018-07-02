@@ -39,17 +39,17 @@ public interface DecryptionBuilderInterface {
 
     interface VerifyWith {
 
-        MissingPublicKeyFeedback verifyWith(Set<Long> trustedFingerprints, PGPPublicKeyRingCollection publicKeyRings);
+        HandleMissingPublicKeys verifyWith(Set<Long> trustedFingerprints, PGPPublicKeyRingCollection publicKeyRings);
 
-        MissingPublicKeyFeedback verifyWith(Set<PGPPublicKeyRing> publicKeyRings);
+        HandleMissingPublicKeys verifyWith(Set<PGPPublicKeyRing> publicKeyRings);
 
         Build doNotVerify();
 
     }
 
-    interface MissingPublicKeyFeedback {
+    interface HandleMissingPublicKeys {
 
-        Build handleMissingPublicKeysWith(MissingPublicKeyCallback callback);
+        Build handleMissingPublicKeysWith(org.pgpainless.pgpainless.decryption_verification.MissingPublicKeyCallback callback);
 
         Build ignoreMissingPublicKeys();
     }

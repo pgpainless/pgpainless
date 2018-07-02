@@ -15,8 +15,10 @@
  */
 package org.pgpainless.pgpainless.decryption_verification;
 
+import org.bouncycastle.openpgp.PGPPublicKey;
+
 public interface MissingPublicKeyCallback {
 
-    void onMissingPublicKeyEncountered(Long keyId);
+    PGPPublicKey onMissingPublicKeyEncountered(Long keyId);
 
 }

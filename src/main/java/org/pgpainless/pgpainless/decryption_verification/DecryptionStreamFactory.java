@@ -197,7 +197,7 @@ public class DecryptionStreamFactory {
 
         while (iterator.hasNext()) {
             PGPOnePassSignature signature = iterator.next();
-            long keyId = signature.getKeyID();
+            final long keyId = signature.getKeyID();
             resultBuilder.addSignatureKeyId(keyId);
 
             LOGGER.log(LEVEL, "Message contains OnePassSignature from " + Long.toHexString(keyId));
@@ -212,10 +212,31 @@ public class DecryptionStreamFactory {
                 }
             }
 
-            if (verificationKey != null) {
-                signature.init(verifierBuilderProvider, verificationKey);
-                verifiableOnePassSignatures.put(signature.getKeyID(), signature);
+            if (verificationKey == null) {
+                LOGGER.log(Level.INFO, "No public key for signature of " + Long.toHexString(keyId) + " found.");
+
+                if (missingPublicKeyCallback == null) {
+                    LOGGER.log(Level.INFO, "Skip signature of " + Long.toHexString(keyId));
+                    continue;
+                }
+
+                PGPPublicKey missingPublicKey = missingPublicKeyCallback.onMissingPublicKeyEncountered(keyId);
+                if (missingPublicKey == null) {
+                    LOGGER.log(Level.INFO, "Skip signature of " + Long.toHexString(keyId));
+                    continue;
+                }
+
+                if (missingPublicKey.getKeyID() != keyId) {
+                    throw new IllegalArgumentException("KeyID of the provided public key differs from the signatures keyId. " +
+                            "The signature was created from " + Long.toHexString(keyId) + " while the provided key has ID " +
+                            Long.toHexString(missingPublicKey.getKeyID()));
+                }
+
+                verificationKey = missingPublicKey;
             }
+
+            signature.init(verifierBuilderProvider, verificationKey);
+            verifiableOnePassSignatures.put(keyId, signature);
         }
     }
 }
