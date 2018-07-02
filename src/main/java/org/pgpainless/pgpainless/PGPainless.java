@@ -15,38 +15,51 @@
  */
 package org.pgpainless.pgpainless;
 
-import java.io.IOException;
-
 import org.bouncycastle.openpgp.PGPException;
 import org.pgpainless.pgpainless.algorithm.CompressionAlgorithm;
 import org.pgpainless.pgpainless.algorithm.SymmetricKeyAlgorithm;
 import org.pgpainless.pgpainless.decryption_verification.DecryptionBuilder;
+import org.pgpainless.pgpainless.decryption_verification.DecryptionStream;
 import org.pgpainless.pgpainless.encryption_signing.EncryptionBuilder;
+import org.pgpainless.pgpainless.encryption_signing.EncryptionStream;
 import org.pgpainless.pgpainless.key.KeyRingReader;
 import org.pgpainless.pgpainless.key.generation.KeyRingBuilder;
 import org.pgpainless.pgpainless.symmetric_encryption.SymmetricEncryptorDecryptor;
 
+import java.io.IOException;
+
 public class PGPainless {
 
+    /**
+     * Generate a new OpenPGP key ring.
+     * @return builder
+     */
     public static KeyRingBuilder generateKeyRing() {
         return new KeyRingBuilder();
     }
 
+    /**
+     * Read an existing OpenPGP key ring.
+     * @return builder
+     */
+    public static KeyRingReader readKeyRing() {
+        return new KeyRingReader();
+    }
+
+    /**
+     * Create an {@link EncryptionStream}, which can be used to encrypt and/or sign data using OpenPGP.
+     * @return builder
+     */
     public static EncryptionBuilder createEncryptor() {
         return new EncryptionBuilder();
     }
 
+    /**
+     * Create a {@link DecryptionStream}, which can be used to decrypt and/or verify data using OpenPGP.
+     * @return builder
+     */
     public static DecryptionBuilder createDecryptor() {
         return new DecryptionBuilder();
-    }
-
-    /**
-     * Read some existing OpenPGP key ring.
-     *
-     * @return KeyRingReader which offers reading operations
-     */
-    public static KeyRingReader readKeyRing() {
-        return new KeyRingReader();
     }
 
     /**
