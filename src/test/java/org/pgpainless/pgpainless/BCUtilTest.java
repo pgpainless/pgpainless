@@ -119,7 +119,7 @@ public class BCUtilTest extends AbstractPGPainlessTest {
         // Check, if alice_mallory contains mallory's key
         assertNotNull(alice_mallory.getSecretKey(subKey.getKeyID()));
 
-        PGPSecretKeyRing cleaned = BCUtil.removeUnsignedKeysFromKeyRing(alice_mallory, alice.getPublicKey().getKeyID());
+        PGPSecretKeyRing cleaned = BCUtil.removeUnassociatedKeysFromKeyRing(alice_mallory, alice.getPublicKey().getKeyID());
         assertNull(cleaned.getSecretKey(subKey.getKeyID()));
     }
 }

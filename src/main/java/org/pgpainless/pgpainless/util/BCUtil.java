@@ -42,6 +42,10 @@ import org.bouncycastle.openpgp.PGPSignatureSubpacketVector;
 import org.bouncycastle.openpgp.PGPUtil;
 import org.bouncycastle.util.io.Streams;
 import org.pgpainless.pgpainless.algorithm.KeyFlag;
+import org.pgpainless.pgpainless.key.selection.key.PublicKeySelectionStrategy;
+import org.pgpainless.pgpainless.key.selection.key.impl.And;
+import org.pgpainless.pgpainless.key.selection.key.impl.NoRevocation;
+import org.pgpainless.pgpainless.key.selection.key.impl.SignedByMasterKey;
 
 public class BCUtil {
 
@@ -113,7 +117,7 @@ public class BCUtil {
 
     public static PGPPublicKeyRing getKeyRingFromCollection(PGPPublicKeyRingCollection collection, Long id)
             throws PGPException {
-        return removeUnsignedKeysFromKeyRing(collection.getPublicKeyRing(id), id);
+        return removeUnassociatedKeysFromKeyRing(collection.getPublicKeyRing(id), id);
     }
 
     public static InputStream getPgpDecoderInputStream(byte[] bytes) throws IOException {
@@ -136,21 +140,27 @@ public class BCUtil {
         return getDecodedBytes(buffer.toByteArray());
     }
 
-    public static PGPPublicKeyRing removeUnsignedKeysFromKeyRing(PGPPublicKeyRing ring, Long masterKeyId) {
+    /**
+     * Remove all keys from the key ring, are either not having a subkey signature from the master key
+     * (identified by {@code masterKeyId}), or are revoked ("normal" key revocation, as well as subkey revocation).
+     *
+     * @param ring key ring
+     * @param masterKeyId id of the master key
+     * @return "cleaned" key ring
+     */
+    public static PGPPublicKeyRing removeUnassociatedKeysFromKeyRing(PGPPublicKeyRing ring, Long masterKeyId) {
 
-        Set<Long> signedKeyIds = new HashSet<>();
-        signedKeyIds.add(masterKeyId);
-        Iterator<PGPPublicKey> signedKeys = ring.getKeysWithSignaturesBy(masterKeyId);
-        while (signedKeys.hasNext()) {
-            signedKeyIds.add(signedKeys.next().getKeyID());
-        }
+        // Only select keys which are signed by the master key and not revoked.
+        PublicKeySelectionStrategy<Long> selector = new And.PubKeySelectionStrategy<>(
+                new SignedByMasterKey.PubkeySelectionStrategy(),
+                new NoRevocation.PubKeySelectionStrategy<>());
 
         PGPPublicKeyRing cleaned = ring;
 
         Iterator<PGPPublicKey> publicKeys = ring.getPublicKeys();
         while (publicKeys.hasNext()) {
             PGPPublicKey publicKey = publicKeys.next();
-            if (!signedKeyIds.contains(publicKey.getKeyID())) {
+            if (!selector.accept(masterKeyId, publicKey)) {
                 cleaned = PGPPublicKeyRing.removePublicKey(cleaned, publicKey);
             }
         }
@@ -158,20 +168,27 @@ public class BCUtil {
         return cleaned;
     }
 
-    public static PGPSecretKeyRing removeUnsignedKeysFromKeyRing(PGPSecretKeyRing ring, Long masterKeyId) {
-        Set<Long> signedKeyIds = new HashSet<>();
-        signedKeyIds.add(masterKeyId);
-        Iterator<PGPPublicKey> signedKeys = ring.getKeysWithSignaturesBy(masterKeyId);
-        while (signedKeys.hasNext()) {
-            signedKeyIds.add(signedKeys.next().getKeyID());
-        }
+    /**
+     * Remove all keys from the key ring, are either not having a subkey signature from the master key
+     * (identified by {@code masterKeyId}), or are revoked ("normal" key revocation, as well as subkey revocation).
+     *
+     * @param ring key ring
+     * @param masterKeyId id of the master key
+     * @return "cleaned" key ring
+     */
+    public static PGPSecretKeyRing removeUnassociatedKeysFromKeyRing(PGPSecretKeyRing ring, Long masterKeyId) {
+
+        // Only select keys which are signed by the master key and not revoked.
+        PublicKeySelectionStrategy<Long> selector = new And.PubKeySelectionStrategy<>(
+                new SignedByMasterKey.PubkeySelectionStrategy(),
+                new NoRevocation.PubKeySelectionStrategy<>());
 
         PGPSecretKeyRing cleaned = ring;
 
         Iterator<PGPSecretKey> secretKeys = ring.getSecretKeys();
         while (secretKeys.hasNext()) {
             PGPSecretKey secretKey = secretKeys.next();
-            if (!signedKeyIds.contains(secretKey.getKeyID())) {
+            if (!selector.accept(masterKeyId, secretKey.getPublicKey())) {
                 cleaned = PGPSecretKeyRing.removeSecretKey(cleaned, secretKey);
             }
         }
@@ -179,11 +196,18 @@ public class BCUtil {
         return cleaned;
     }
 
+    /**
+     * Return the {@link PGPPublicKey} which is the master key of the key ring.
+     *
+     * @param ring key ring
+     * @return master key
+     */
     public static PGPPublicKey getMasterKeyFrom(PGPPublicKeyRing ring) {
         Iterator<PGPPublicKey> it = ring.getPublicKeys();
         while (it.hasNext()) {
             PGPPublicKey k = it.next();
             if (k.isMasterKey()) {
+                // There can only be one master key, so we can immediately return
                 return k;
             }
         }
@@ -232,20 +256,10 @@ public class BCUtil {
     }
 
     public static boolean keyRingContainsKeyWithId(PGPPublicKeyRing ring, long keyId) {
-        Iterator<PGPPublicKey> keys = ring.getPublicKeys();
-        while (keys.hasNext()) {
-            PGPPublicKey key = keys.next();
-            if (key.getKeyID() == keyId) return true;
-        }
-        return false;
+        return ring.getPublicKey(keyId) != null;
     }
 
     public static boolean keyRingContainsKeyWithId(PGPSecretKeyRing ring, long keyId) {
-        Iterator<PGPPublicKey> keys = ring.getPublicKeys();
-        while (keys.hasNext()) {
-            PGPPublicKey key = keys.next();
-            if (key.getKeyID() == keyId) return true;
-        }
-        return false;
+        return ring.getSecretKey(keyId) != null;
     }
 }
