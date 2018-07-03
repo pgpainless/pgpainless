@@ -25,7 +25,7 @@ import org.bouncycastle.openpgp.PGPPublicKeyRingCollection;
 import org.bouncycastle.openpgp.PGPSecretKey;
 import org.bouncycastle.openpgp.PGPSecretKeyRing;
 import org.bouncycastle.openpgp.PGPSecretKeyRingCollection;
-import org.pgpainless.pgpainless.SecretKeyNotFoundException;
+import org.pgpainless.pgpainless.exception.SecretKeyNotFoundException;
 import org.pgpainless.pgpainless.algorithm.CompressionAlgorithm;
 import org.pgpainless.pgpainless.algorithm.HashAlgorithm;
 import org.pgpainless.pgpainless.algorithm.SymmetricKeyAlgorithm;
