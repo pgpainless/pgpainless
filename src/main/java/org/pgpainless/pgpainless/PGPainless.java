@@ -22,7 +22,7 @@ import org.pgpainless.pgpainless.decryption_verification.DecryptionBuilder;
 import org.pgpainless.pgpainless.decryption_verification.DecryptionStream;
 import org.pgpainless.pgpainless.encryption_signing.EncryptionBuilder;
 import org.pgpainless.pgpainless.encryption_signing.EncryptionStream;
-import org.pgpainless.pgpainless.key.KeyRingReader;
+import org.pgpainless.pgpainless.key.parsing.KeyRingReader;
 import org.pgpainless.pgpainless.key.generation.KeyRingBuilder;
 import org.pgpainless.pgpainless.symmetric_encryption.SymmetricEncryptorDecryptor;
 

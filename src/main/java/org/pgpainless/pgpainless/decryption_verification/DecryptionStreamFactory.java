@@ -48,7 +48,7 @@ import org.bouncycastle.openpgp.operator.bc.BcPGPContentVerifierBuilderProvider;
 import org.bouncycastle.openpgp.operator.bc.BcPublicKeyDataDecryptorFactory;
 import org.pgpainless.pgpainless.algorithm.CompressionAlgorithm;
 import org.pgpainless.pgpainless.algorithm.SymmetricKeyAlgorithm;
-import org.pgpainless.pgpainless.key.SecretKeyRingProtector;
+import org.pgpainless.pgpainless.key.protection.SecretKeyRingProtector;
 
 public final class DecryptionStreamFactory {
 

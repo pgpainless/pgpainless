@@ -25,7 +25,7 @@ import org.bouncycastle.openpgp.PGPException;
 import org.bouncycastle.openpgp.PGPPublicKeyRing;
 import org.bouncycastle.openpgp.PGPPublicKeyRingCollection;
 import org.bouncycastle.openpgp.PGPSecretKeyRingCollection;
-import org.pgpainless.pgpainless.key.SecretKeyRingProtector;
+import org.pgpainless.pgpainless.key.protection.SecretKeyRingProtector;
 
 public class DecryptionBuilder implements DecryptionBuilderInterface {
 

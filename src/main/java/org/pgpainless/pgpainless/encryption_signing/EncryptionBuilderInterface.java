@@ -29,7 +29,7 @@ import org.pgpainless.pgpainless.SecretKeyNotFoundException;
 import org.pgpainless.pgpainless.algorithm.CompressionAlgorithm;
 import org.pgpainless.pgpainless.algorithm.HashAlgorithm;
 import org.pgpainless.pgpainless.algorithm.SymmetricKeyAlgorithm;
-import org.pgpainless.pgpainless.key.SecretKeyRingProtector;
+import org.pgpainless.pgpainless.key.protection.SecretKeyRingProtector;
 import org.pgpainless.pgpainless.key.selection.keyring.PublicKeyRingSelectionStrategy;
 import org.pgpainless.pgpainless.key.selection.keyring.SecretKeyRingSelectionStrategy;
 import org.pgpainless.pgpainless.util.MultiMap;

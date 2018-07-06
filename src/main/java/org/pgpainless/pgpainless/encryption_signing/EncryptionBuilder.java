@@ -32,7 +32,7 @@ import org.bouncycastle.openpgp.PGPSecretKeyRingCollection;
 import org.pgpainless.pgpainless.algorithm.CompressionAlgorithm;
 import org.pgpainless.pgpainless.algorithm.HashAlgorithm;
 import org.pgpainless.pgpainless.algorithm.SymmetricKeyAlgorithm;
-import org.pgpainless.pgpainless.key.SecretKeyRingProtector;
+import org.pgpainless.pgpainless.key.protection.SecretKeyRingProtector;
 import org.pgpainless.pgpainless.key.selection.key.PublicKeySelectionStrategy;
 import org.pgpainless.pgpainless.key.selection.key.SecretKeySelectionStrategy;
 import org.pgpainless.pgpainless.key.selection.key.impl.And;

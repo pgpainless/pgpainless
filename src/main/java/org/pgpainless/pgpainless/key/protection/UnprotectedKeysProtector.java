@@ -13,29 +13,22 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.pgpainless.pgpainless.key;
+package org.pgpainless.pgpainless.key.protection;
 
-import org.bouncycastle.openpgp.PGPException;
 import org.bouncycastle.openpgp.operator.PBESecretKeyDecryptor;
 import org.bouncycastle.openpgp.operator.PBESecretKeyEncryptor;
 
-public interface SecretKeyRingProtector {
+/**
+ * Implementation of the {@link SecretKeyRingProtector} which assumes that all handled keys are not password protected.
+ */
+public class UnprotectedKeysProtector implements SecretKeyRingProtector {
+    @Override
+    public PBESecretKeyDecryptor getDecryptor(Long keyId) {
+        return null;
+    }
 
-    /**
-     * Return a decryptor for the key of id {@code keyId}.
-     *
-     * @param keyId id of the key
-     * @return decryptor for the key
-     */
-    PBESecretKeyDecryptor getDecryptor(Long keyId);
-
-    /**
-     * Return an encryptor for the key of id {@code keyId}.
-     *
-     * @param keyId id of the key
-     * @return encryptor for the key
-     * @throws PGPException if the encryptor cannot be created for some reason
-     */
-    PBESecretKeyEncryptor getEncryptor(Long keyId) throws PGPException;
-
+    @Override
+    public PBESecretKeyEncryptor getEncryptor(Long keyId) {
+        return null;
+    }
 }

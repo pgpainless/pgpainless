@@ -13,7 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.pgpainless.pgpainless.key;
+package org.pgpainless.pgpainless.key.protection;
 
 import org.pgpainless.pgpainless.algorithm.HashAlgorithm;
 import org.pgpainless.pgpainless.algorithm.SymmetricKeyAlgorithm;

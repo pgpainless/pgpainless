@@ -31,7 +31,7 @@ import org.bouncycastle.openpgp.PGPSecretKeyRingCollection;
 import org.bouncycastle.util.io.Streams;
 import org.junit.Test;
 import org.pgpainless.pgpainless.decryption_verification.DecryptionStream;
-import org.pgpainless.pgpainless.key.UnprotectedKeysProtector;
+import org.pgpainless.pgpainless.key.protection.UnprotectedKeysProtector;
 import org.pgpainless.pgpainless.util.BCUtil;
 
 public class TestKeysTest extends AbstractPGPainlessTest {

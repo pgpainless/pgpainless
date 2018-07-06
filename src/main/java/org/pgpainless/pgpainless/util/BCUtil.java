@@ -30,7 +30,12 @@ import java.util.Set;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
+import org.bouncycastle.bcpg.S2K;
+import org.bouncycastle.bcpg.SecretKeyPacket;
+import org.bouncycastle.bcpg.SecretSubkeyPacket;
+import org.bouncycastle.bcpg.SymmetricKeyAlgorithmTags;
 import org.bouncycastle.openpgp.PGPException;
+import org.bouncycastle.openpgp.PGPKeyRing;
 import org.bouncycastle.openpgp.PGPPublicKey;
 import org.bouncycastle.openpgp.PGPPublicKeyRing;
 import org.bouncycastle.openpgp.PGPPublicKeyRingCollection;
@@ -214,6 +219,18 @@ public class BCUtil {
         return null;
     }
 
+    public static PGPPublicKey getMasterKeyFrom(PGPKeyRing ring) {
+        Iterator<PGPPublicKey> it = ring.getPublicKeys();
+        while (it.hasNext()) {
+            PGPPublicKey k = it.next();
+            if (k.isMasterKey()) {
+                // There can only be one master key, so we can immediately return
+                return k;
+            }
+        }
+        return null;
+    }
+
     public static Set<Long> signingKeyIds(PGPSecretKeyRing ring) {
         Set<Long> ids = new HashSet<>();
         Iterator<PGPPublicKey> it = ring.getPublicKeys();
@@ -262,4 +279,54 @@ public class BCUtil {
     public static boolean keyRingContainsKeyWithId(PGPSecretKeyRing ring, long keyId) {
         return ring.getSecretKey(keyId) != null;
     }
+
+    /*
+    public static PGPKeyRing merge(PGPKeyRing one, PGPKeyRing other) {
+
+        PGPPublicKey masterOne = getMasterKeyFrom(one);
+        if (masterOne == null) {
+            throw new IllegalArgumentException("First KeyRing has no master key");
+        }
+
+        PGPPublicKey masterOther = getMasterKeyFrom(other);
+        if (masterOther == null) {
+            throw new IllegalArgumentException("Other KeyRing has no master key");
+        }
+
+        if (masterOne.getKeyID() != masterOther.getKeyID() ||
+                Arrays.equals(masterOne.getFingerprint(), masterOther.getFingerprint())) {
+            throw new IllegalArgumentException("Keys are not the same.");
+        }
+
+        PGPKeyRing merged = one;
+
+        boolean mergedIsSecret = (merged instanceof PGPSecretKeyRing);
+        boolean otherIsSecret = (other instanceof PGPSecretKeyRing);
+
+        for (Iterator it = other.getPublicKeys(); it.hasNext(); ) {
+
+            PGPPublicKey nextPublicKey = (PGPPublicKey) it.next();
+            PGPPublicKey pendant = merged.getPublicKey(nextPublicKey.getKeyID());
+
+            if (pendant == null) {
+                if (mergedIsSecret && otherIsSecret) {
+                    // Add secret key
+                    PGPSecretKey secretKey = ((PGPSecretKeyRing) other).getSecretKey(nextPublicKey.getKeyID());
+                    merged = PGPSecretKeyRing.insertSecretKey((PGPSecretKeyRing) merged, secretKey);
+                } else {
+                    if (mergedIsSecret) {
+                        PGPSecretKeyRing mergedAsSecret = (PGPSecretKeyRing) merged;
+                        PGPSecretKey secretKey = mergedAsSecret.getSecretKey(nextPublicKey.getKeyID());
+                        if (secretKey == null) {
+                            PGPPublicKeyRing mergedAsPublic = publicKeyRingFromSecretKeyRing((PGPSecretKeyRing) merged);
+                            mergedAsPublic = PGPPublicKeyRing.insertPublicKey(mergedAsPublic, nextPublicKey);
+                            mergedAsSecret = PGPSecretKeyRing.replacePublicKeys(mergedAsSecret, mergedAsPublic);
+                            merged = mergedAsSecret;
+                        }
+                    }
+                }
+            }
+        }
+    }
+    */
 }
