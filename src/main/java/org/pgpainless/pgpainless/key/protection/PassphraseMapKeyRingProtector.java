@@ -25,6 +25,7 @@ import org.bouncycastle.openpgp.operator.PGPDigestCalculatorProvider;
 import org.bouncycastle.openpgp.operator.bc.BcPBESecretKeyDecryptorBuilder;
 import org.bouncycastle.openpgp.operator.bc.BcPBESecretKeyEncryptorBuilder;
 import org.bouncycastle.openpgp.operator.bc.BcPGPDigestCalculatorProvider;
+import org.pgpainless.pgpainless.util.Passphrase;
 
 /**
  * Implementation of the {@link SecretKeyRingProtector} which holds a map of key ids and their passwords.
@@ -33,38 +34,38 @@ public class PassphraseMapKeyRingProtector implements SecretKeyRingProtector {
 
     private static final PGPDigestCalculatorProvider calculatorProvider = new BcPGPDigestCalculatorProvider();
 
-    private final Map<Long, char[]> passphrases = new HashMap<>();
+    private final Map<Long, Passphrase> passphrases = new HashMap<>();
     private final KeyRingProtectionSettings protectionSettings;
 
-    public PassphraseMapKeyRingProtector(Map<Long, char[]> passphrases, KeyRingProtectionSettings protectionSettings) {
+    public PassphraseMapKeyRingProtector(Map<Long, Passphrase> passphrases, KeyRingProtectionSettings protectionSettings) {
         this.passphrases.putAll(passphrases);
         this.protectionSettings = protectionSettings;
     }
 
-    public void addPassphrase(Long keyId, char[] passphrase) {
+    public void addPassphrase(Long keyId, Passphrase passphrase) {
         this.passphrases.put(keyId, passphrase);
     }
 
     public void forgetPassphrase(Long keyId) {
-        char[] passphrase = passphrases.get(keyId);
-        // Overwrite the passphrase in memory with zeros
-        for (int i = 0; i < passphrase.length; i++) {
-            passphrase[i] = '0';
-        }
+        Passphrase passphrase = passphrases.get(keyId);
+        passphrase.clear();
         passphrases.remove(keyId);
     }
 
     @Override
     public PBESecretKeyDecryptor getDecryptor(Long keyId) {
-        return new BcPBESecretKeyDecryptorBuilder(calculatorProvider).build(passphrases.get(keyId));
+        Passphrase passphrase = passphrases.get(keyId);
+        return new BcPBESecretKeyDecryptorBuilder(calculatorProvider)
+                .build(passphrase != null ? passphrase.getChars() : null);
     }
 
     @Override
     public PBESecretKeyEncryptor getEncryptor(Long keyId) throws PGPException {
+        Passphrase passphrase = passphrases.get(keyId);
         return new BcPBESecretKeyEncryptorBuilder(
                 protectionSettings.getEncryptionAlgorithm().getAlgorithmId(),
                 calculatorProvider.get(protectionSettings.getHashAlgorithm().getAlgorithmId()),
                 protectionSettings.getS2kCount())
-                .build(passphrases.get(keyId));
+                .build(passphrase != null ? passphrase.getChars() : null);
     }
 }
