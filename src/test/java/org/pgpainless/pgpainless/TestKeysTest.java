@@ -57,9 +57,7 @@ public class TestKeysTest extends AbstractPGPainlessTest {
         DecryptionStream decryptor = PGPainless.createDecryptor()
                 .onInputStream(new ByteArrayInputStream(encryptedMessage.getBytes()))
                 .decryptWith(new UnprotectedKeysProtector(), new PGPSecretKeyRingCollection(Collections.singleton(juliet)))
-                .verifyWith(
-                        Collections.singleton(juliet.getPublicKey().getKeyID()),
-                        BCUtil.keyRingsToKeyRingCollection(BCUtil.publicKeyRingFromSecretKeyRing(juliet)))
+                .verifyWith(BCUtil.keyRingsToKeyRingCollection(BCUtil.publicKeyRingFromSecretKeyRing(juliet)))
                 .ignoreMissingPublicKeys()
                 .build();
 

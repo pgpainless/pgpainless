@@ -48,6 +48,7 @@ import org.bouncycastle.openpgp.operator.bc.BcPGPContentVerifierBuilderProvider;
 import org.bouncycastle.openpgp.operator.bc.BcPublicKeyDataDecryptorFactory;
 import org.pgpainless.pgpainless.algorithm.CompressionAlgorithm;
 import org.pgpainless.pgpainless.algorithm.SymmetricKeyAlgorithm;
+import org.pgpainless.pgpainless.key.OpenPgpV4Fingerprint;
 import org.pgpainless.pgpainless.key.protection.SecretKeyRingProtector;
 
 public final class DecryptionStreamFactory {
@@ -63,7 +64,7 @@ public final class DecryptionStreamFactory {
     private final PainlessResult.Builder resultBuilder = PainlessResult.getBuilder();
     private final PGPContentVerifierBuilderProvider verifierBuilderProvider = new BcPGPContentVerifierBuilderProvider();
     private final KeyFingerPrintCalculator fingerCalc = new BcKeyFingerprintCalculator();
-    private final Map<Long, PGPOnePassSignature> verifiableOnePassSignatures = new HashMap<>();
+    private final Map<OpenPgpV4Fingerprint, PGPOnePassSignature> verifiableOnePassSignatures = new HashMap<>();
 
     private DecryptionStreamFactory(PGPSecretKeyRingCollection decryptionKeys,
                                     SecretKeyRingProtector decryptor,
@@ -162,7 +163,7 @@ public final class DecryptionStreamFactory {
                 LOGGER.log(LEVEL, "Found respective secret key " + Long.toHexString(keyId));
                 encryptedSessionKey = encryptedData;
                 decryptionKey = secretKey.extractPrivateKey(decryptionKeyDecryptor.getDecryptor(keyId));
-                resultBuilder.setDecryptionKeyId(keyId);
+                resultBuilder.setDecryptionFingerprint(new OpenPgpV4Fingerprint(secretKey));
             }
         }
 
@@ -198,7 +199,7 @@ public final class DecryptionStreamFactory {
         while (iterator.hasNext()) {
             PGPOnePassSignature signature = iterator.next();
             final long keyId = signature.getKeyID();
-            resultBuilder.addSignatureKeyId(keyId);
+            resultBuilder.addUnverifiedSignatureKeyId(keyId);
 
             LOGGER.log(LEVEL, "Message contains OnePassSignature from " + Long.toHexString(keyId));
 
@@ -236,7 +237,7 @@ public final class DecryptionStreamFactory {
             }
 
             signature.init(verifierBuilderProvider, verificationKey);
-            verifiableOnePassSignatures.put(keyId, signature);
+            verifiableOnePassSignatures.put(new OpenPgpV4Fingerprint(verificationKey), signature);
         }
     }
 }

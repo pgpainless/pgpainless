@@ -27,7 +27,6 @@ import java.security.InvalidAlgorithmParameterException;
 import java.security.NoSuchAlgorithmException;
 import java.security.NoSuchProviderException;
 import java.util.Arrays;
-import java.util.Collections;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -43,13 +42,13 @@ import org.pgpainless.pgpainless.algorithm.SymmetricKeyAlgorithm;
 import org.pgpainless.pgpainless.decryption_verification.DecryptionStream;
 import org.pgpainless.pgpainless.decryption_verification.PainlessResult;
 import org.pgpainless.pgpainless.encryption_signing.EncryptionStream;
-import org.pgpainless.pgpainless.key.protection.SecretKeyRingProtector;
-import org.pgpainless.pgpainless.key.protection.UnprotectedKeysProtector;
 import org.pgpainless.pgpainless.key.generation.KeySpec;
 import org.pgpainless.pgpainless.key.generation.type.ElGamal_GENERAL;
 import org.pgpainless.pgpainless.key.generation.type.RSA_GENERAL;
 import org.pgpainless.pgpainless.key.generation.type.length.ElGamalLength;
 import org.pgpainless.pgpainless.key.generation.type.length.RsaLength;
+import org.pgpainless.pgpainless.key.protection.SecretKeyRingProtector;
+import org.pgpainless.pgpainless.key.protection.UnprotectedKeysProtector;
 import org.pgpainless.pgpainless.util.BCUtil;
 
 public class EncryptDecryptTest extends AbstractPGPainlessTest {
@@ -142,8 +141,8 @@ public class EncryptDecryptTest extends AbstractPGPainlessTest {
 
         PainlessResult encryptionResult = encryptor.getResult();
 
-        assertFalse(encryptionResult.getAllSignatureKeyIds().isEmpty());
-        for (long keyId : encryptionResult.getAllSignatureKeyIds()) {
+        assertFalse(encryptionResult.getAllSignatureKeyFingerprints().isEmpty());
+        for (long keyId : encryptionResult.getAllSignatureKeyFingerprints()) {
             assertTrue(BCUtil.keyRingContainsKeyWithId(sender, keyId));
         }
 
@@ -168,8 +167,7 @@ public class EncryptDecryptTest extends AbstractPGPainlessTest {
         DecryptionStream decryptor = PGPainless.createDecryptor()
                 .onInputStream(envelopeIn)
                 .decryptWith(keyDecryptor, BCUtil.keyRingsToKeyRingCollection(recipient))
-                .verifyWith(Collections.singleton(senderPub.getPublicKey().getKeyID()),
-                        BCUtil.keyRingsToKeyRingCollection(senderPub))
+                .verifyWith(BCUtil.keyRingsToKeyRingCollection(senderPub))
                 .ignoreMissingPublicKeys()
                 .build();
 

@@ -28,6 +28,7 @@ import org.bouncycastle.openpgp.PGPObjectFactory;
 import org.bouncycastle.openpgp.PGPOnePassSignature;
 import org.bouncycastle.openpgp.PGPSignature;
 import org.bouncycastle.openpgp.PGPSignatureList;
+import org.pgpainless.pgpainless.key.OpenPgpV4Fingerprint;
 
 public class SignatureVerifyingInputStream extends FilterInputStream {
 
@@ -35,14 +36,14 @@ public class SignatureVerifyingInputStream extends FilterInputStream {
     private static final Level LEVEL = Level.INFO;
 
     private final PGPObjectFactory objectFactory;
-    private final Map<Long, PGPOnePassSignature> onePassSignatures;
+    private final Map<OpenPgpV4Fingerprint, PGPOnePassSignature> onePassSignatures;
     private final PainlessResult.Builder resultBuilder;
 
     private boolean validated = false;
 
     protected SignatureVerifyingInputStream(InputStream inputStream,
                                             PGPObjectFactory objectFactory,
-                                            Map<Long, PGPOnePassSignature> onePassSignatures,
+                                            Map<OpenPgpV4Fingerprint, PGPOnePassSignature> onePassSignatures,
                                             PainlessResult.Builder resultBuilder) {
         super(inputStream);
         this.objectFactory = objectFactory;
@@ -94,16 +95,25 @@ public class SignatureVerifyingInputStream extends FilterInputStream {
             }
 
             for (PGPSignature signature : signatureList) {
-                PGPOnePassSignature onePassSignature = onePassSignatures.get(signature.getKeyID());
-                if (onePassSignature == null) {
+                OpenPgpV4Fingerprint fingerprint = null;
+                for (OpenPgpV4Fingerprint f : onePassSignatures.keySet()) {
+                    if (f.getKeyId() == signature.getKeyID()) {
+                        fingerprint = f;
+                        break;
+                    }
+                }
+
+                PGPOnePassSignature onePassSignature;
+                if (fingerprint == null || (onePassSignature = onePassSignatures.get(fingerprint)) == null) {
                     LOGGER.log(LEVEL, "Found Signature without respective OnePassSignature packet -> skip");
                     continue;
                 }
+
                 if (!onePassSignature.verify(signature)) {
                     throw new SignatureException("Bad Signature of key " + signature.getKeyID());
                 } else {
                     LOGGER.log(LEVEL, "Verified signature of key " + Long.toHexString(signature.getKeyID()));
-                    resultBuilder.addVerifiedSignatureKeyId(signature.getKeyID());
+                    resultBuilder.addVerifiedSignatureFingerprint(fingerprint);
                 }
             }
         } catch (PGPException | SignatureException e) {

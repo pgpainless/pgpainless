@@ -19,36 +19,39 @@ import java.util.Collections;
 import java.util.HashSet;
 import java.util.Set;
 
+import org.bouncycastle.openpgp.PGPException;
 import org.bouncycastle.openpgp.PGPPublicKey;
 import org.bouncycastle.openpgp.PGPPublicKeyRing;
 import org.pgpainless.pgpainless.algorithm.CompressionAlgorithm;
 import org.pgpainless.pgpainless.algorithm.SymmetricKeyAlgorithm;
+import org.pgpainless.pgpainless.key.OpenPgpV4Fingerprint;
 
 public class PainlessResult {
 
     private final Set<Long> recipientKeyIds;
-    private final Long decryptionKeyId;
+    private final OpenPgpV4Fingerprint decryptionFingerprint;
+    private final Set<Long> unverifiedSignatureKeyIds;
+    private final Set<OpenPgpV4Fingerprint> verifiedSignaturesFingerprints;
+
     private final SymmetricKeyAlgorithm symmetricKeyAlgorithm;
     private final CompressionAlgorithm compressionAlgorithm;
     private final boolean integrityProtected;
-    private final Set<Long> signatureKeyIds;
-    private final Set<Long> verifiedSignatureKeyIds;
 
     public PainlessResult(Set<Long> recipientKeyIds,
-                          Long decryptionKeyId,
+                          OpenPgpV4Fingerprint decryptionFingerprint,
                           SymmetricKeyAlgorithm symmetricKeyAlgorithm,
                           CompressionAlgorithm algorithm,
                           boolean integrityProtected,
-                          Set<Long> signatureKeyIds,
-                          Set<Long> verifiedSignatureKeyIds) {
+                          Set<Long> unverifiedSignatureKeyIds,
+                          Set<OpenPgpV4Fingerprint> verifiedSignaturesFingerprints) {
 
         this.recipientKeyIds = Collections.unmodifiableSet(recipientKeyIds);
-        this.decryptionKeyId = decryptionKeyId;
+        this.decryptionFingerprint = decryptionFingerprint;
         this.symmetricKeyAlgorithm = symmetricKeyAlgorithm;
         this.compressionAlgorithm = algorithm;
         this.integrityProtected = integrityProtected;
-        this.signatureKeyIds = Collections.unmodifiableSet(signatureKeyIds);
-        this.verifiedSignatureKeyIds = Collections.unmodifiableSet(verifiedSignatureKeyIds);
+        this.unverifiedSignatureKeyIds = Collections.unmodifiableSet(unverifiedSignatureKeyIds);
+        this.verifiedSignaturesFingerprints = Collections.unmodifiableSet(verifiedSignaturesFingerprints);
     }
 
     public Set<Long> getRecipientKeyIds() {
@@ -59,8 +62,8 @@ public class PainlessResult {
         return !getRecipientKeyIds().isEmpty();
     }
 
-    public Long getDecryptionKeyId() {
-        return decryptionKeyId;
+    public OpenPgpV4Fingerprint getDecryptionFingerprint() {
+        return decryptionFingerprint;
     }
 
     public SymmetricKeyAlgorithm getSymmetricKeyAlgorithm() {
@@ -75,26 +78,26 @@ public class PainlessResult {
         return integrityProtected;
     }
 
-    public Set<Long> getAllSignatureKeyIds() {
-        return signatureKeyIds;
+    public Set<Long> getAllSignatureKeyFingerprints() {
+        return unverifiedSignatureKeyIds;
     }
 
     public boolean isSigned() {
-        return !signatureKeyIds.isEmpty();
+        return !unverifiedSignatureKeyIds.isEmpty();
     }
 
-    public Set<Long> getVerifiedSignatureKeyIds() {
-        return verifiedSignatureKeyIds;
+    public Set<OpenPgpV4Fingerprint> getVerifiedSignaturesFingerprints() {
+        return verifiedSignaturesFingerprints;
     }
 
     public boolean isVerified() {
-        return !verifiedSignatureKeyIds.isEmpty();
+        return !verifiedSignaturesFingerprints.isEmpty();
     }
 
-    public boolean containsVerifiedSignatureFrom(PGPPublicKeyRing publicKeys) {
+    public boolean containsVerifiedSignatureFrom(PGPPublicKeyRing publicKeys) throws PGPException {
         for (PGPPublicKey key : publicKeys) {
-            long id = key.getKeyID();
-            if (verifiedSignatureKeyIds.contains(id)) {
+            OpenPgpV4Fingerprint fingerprint = new OpenPgpV4Fingerprint(key);
+            if (verifiedSignaturesFingerprints.contains(fingerprint)) {
                 return true;
             }
         }
@@ -107,21 +110,21 @@ public class PainlessResult {
 
     static class Builder {
 
-        private final Set<Long> recipientKeyIds = new HashSet<>();
-        private Long decryptionKeyId;
+        private final Set<Long> recipientFingerprints = new HashSet<>();
+        private OpenPgpV4Fingerprint decryptionFingerprint;
+        private final Set<Long> unverifiedSignatureKeyIds = new HashSet<>();
+        private final Set<OpenPgpV4Fingerprint> verifiedSignatureFingerprints = new HashSet<>();
         private SymmetricKeyAlgorithm symmetricKeyAlgorithm = SymmetricKeyAlgorithm.NULL;
         private CompressionAlgorithm compressionAlgorithm = CompressionAlgorithm.UNCOMPRESSED;
         private boolean integrityProtected = false;
-        private final Set<Long> signatureKeyIds = new HashSet<>();
-        private final Set<Long> verifiedSignatureKeyIds = new HashSet<>();
 
-        public Builder addRecipientKeyId(long id) {
-            this.recipientKeyIds.add(id);
+        public Builder addRecipientKeyId(Long keyId) {
+            this.recipientFingerprints.add(keyId);
             return this;
         }
 
-        public Builder setDecryptionKeyId(long id) {
-            this.decryptionKeyId = id;
+        public Builder setDecryptionFingerprint(OpenPgpV4Fingerprint fingerprint) {
+            this.decryptionFingerprint = fingerprint;
             return this;
         }
 
@@ -130,13 +133,13 @@ public class PainlessResult {
             return this;
         }
 
-        public Builder addSignatureKeyId(long id) {
-            this.signatureKeyIds.add(id);
+        public Builder addUnverifiedSignatureKeyId(Long keyId) {
+            this.unverifiedSignatureKeyIds.add(keyId);
             return this;
         }
 
-        public Builder addVerifiedSignatureKeyId(long id) {
-            this.verifiedSignatureKeyIds.add(id);
+        public Builder addVerifiedSignatureFingerprint(OpenPgpV4Fingerprint fingerprint) {
+            this.verifiedSignatureFingerprints.add(fingerprint);
             return this;
         }
 
@@ -151,7 +154,7 @@ public class PainlessResult {
         }
 
         public PainlessResult build() {
-            return new PainlessResult(recipientKeyIds, decryptionKeyId, symmetricKeyAlgorithm, compressionAlgorithm, integrityProtected, signatureKeyIds, verifiedSignatureKeyIds);
+            return new PainlessResult(recipientFingerprints, decryptionFingerprint, symmetricKeyAlgorithm, compressionAlgorithm, integrityProtected, unverifiedSignatureKeyIds, verifiedSignatureFingerprints);
         }
     }
 }

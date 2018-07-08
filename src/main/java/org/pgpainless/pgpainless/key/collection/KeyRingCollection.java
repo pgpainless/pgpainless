@@ -15,14 +15,19 @@
  */
 package org.pgpainless.pgpainless.key.collection;
 
-import java.util.Objects;
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.IOException;
+import java.io.InputStream;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
+import org.bouncycastle.openpgp.PGPException;
 import org.bouncycastle.openpgp.PGPPublicKeyRing;
 import org.bouncycastle.openpgp.PGPPublicKeyRingCollection;
 import org.bouncycastle.openpgp.PGPSecretKeyRing;
 import org.bouncycastle.openpgp.PGPSecretKeyRingCollection;
+import org.pgpainless.pgpainless.PGPainless;
 
 public class KeyRingCollection {
 
@@ -36,6 +41,20 @@ public class KeyRingCollection {
         this.secretKeys = secretKeyRings;
     }
 
+    public KeyRingCollection(File pubRingFile, File secRingFile) throws IOException, PGPException {
+        if (pubRingFile != null) {
+            InputStream pubRingIn = new FileInputStream(pubRingFile);
+            this.publicKeys = PGPainless.readKeyRing().publicKeyRingCollection(pubRingIn);
+            pubRingIn.close();
+        }
+
+        if (secRingFile != null) {
+            InputStream secRingIn = new FileInputStream(secRingFile);
+            this.secretKeys = PGPainless.readKeyRing().secretKeyRingCollection(secRingIn);
+            secRingIn.close();
+        }
+    }
+
     public KeyRingCollection(PGPPublicKeyRingCollection publicKeyRings) {
         this(publicKeyRings, null);
     }
@@ -45,7 +64,12 @@ public class KeyRingCollection {
     }
 
     public void importPublicKeys(PGPPublicKeyRingCollection publicKeyRings) {
-        for (PGPPublicKeyRing keyRing : Objects.requireNonNull(publicKeyRings)) {
+        if (this.publicKeys == null) {
+            this.publicKeys = publicKeyRings;
+            return;
+        }
+
+        for (PGPPublicKeyRing keyRing : publicKeyRings) {
             try {
                 this.publicKeys = PGPPublicKeyRingCollection.addPublicKeyRing(this.publicKeys, keyRing);
             } catch (IllegalArgumentException e) {
@@ -57,7 +81,12 @@ public class KeyRingCollection {
     }
 
     public void importSecretKeys(PGPSecretKeyRingCollection secretKeyRings) {
-        for (PGPSecretKeyRing keyRing : Objects.requireNonNull(secretKeyRings)) {
+        if (this.secretKeys == null) {
+            this.secretKeys = secretKeyRings;
+            return;
+        }
+
+        for (PGPSecretKeyRing keyRing : secretKeyRings) {
             try {
                 this.secretKeys = PGPSecretKeyRingCollection.addSecretKeyRing(this.secretKeys, keyRing);
             } catch (IllegalArgumentException e) {
