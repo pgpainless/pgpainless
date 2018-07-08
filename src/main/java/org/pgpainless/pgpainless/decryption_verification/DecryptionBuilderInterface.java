@@ -23,6 +23,7 @@ import org.bouncycastle.openpgp.PGPException;
 import org.bouncycastle.openpgp.PGPPublicKeyRing;
 import org.bouncycastle.openpgp.PGPPublicKeyRingCollection;
 import org.bouncycastle.openpgp.PGPSecretKeyRingCollection;
+import org.pgpainless.pgpainless.key.OpenPgpV4Fingerprint;
 import org.pgpainless.pgpainless.key.protection.SecretKeyRingProtector;
 
 public interface DecryptionBuilderInterface {
@@ -39,7 +40,7 @@ public interface DecryptionBuilderInterface {
 
     interface VerifyWith {
 
-        HandleMissingPublicKeys verifyWith(Set<Long> trustedFingerprints, PGPPublicKeyRingCollection publicKeyRings);
+        HandleMissingPublicKeys verifyWith(Set<OpenPgpV4Fingerprint> trustedFingerprints, PGPPublicKeyRingCollection publicKeyRings);
 
         HandleMissingPublicKeys verifyWith(Set<PGPPublicKeyRing> publicKeyRings);
 
@@ -49,7 +50,7 @@ public interface DecryptionBuilderInterface {
 
     interface HandleMissingPublicKeys {
 
-        Build handleMissingPublicKeysWith(org.pgpainless.pgpainless.decryption_verification.MissingPublicKeyCallback callback);
+        Build handleMissingPublicKeysWith(MissingPublicKeyCallback callback);
 
         Build ignoreMissingPublicKeys();
     }

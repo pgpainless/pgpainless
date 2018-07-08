@@ -14,17 +14,18 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.jivesoftware.smackx.ox;
+package org.pgpainless.pgpainless.key;
 
 import javax.xml.bind.DatatypeConverter;
 import java.nio.ByteBuffer;
 import java.nio.charset.Charset;
 import java.util.Arrays;
 
-import org.jivesoftware.smack.util.Objects;
-
 import org.bouncycastle.openpgp.PGPException;
 import org.bouncycastle.openpgp.PGPPublicKey;
+import org.bouncycastle.openpgp.PGPPublicKeyRing;
+import org.bouncycastle.openpgp.PGPSecretKey;
+import org.bouncycastle.openpgp.PGPSecretKeyRing;
 import org.bouncycastle.util.encoders.Hex;
 
 /**
@@ -41,9 +42,10 @@ public class OpenPgpV4Fingerprint implements CharSequence, Comparable<OpenPgpV4F
      * @param fingerprint hexadecimal representation of the fingerprint.
      */
     public OpenPgpV4Fingerprint(String fingerprint) throws PGPException {
-        String fp = Objects.requireNonNull(fingerprint)
-                .trim()
-                .toUpperCase();
+        if (fingerprint == null) {
+            throw new NullPointerException("Fingerprint MUST NOT be null.");
+        }
+        String fp = fingerprint.trim().toUpperCase();
         if (!isValid(fp)) {
             throw new PGPException("Fingerprint " + fingerprint +
                     " does not appear to be a valid OpenPGP v4 fingerprint.");
@@ -57,6 +59,21 @@ public class OpenPgpV4Fingerprint implements CharSequence, Comparable<OpenPgpV4F
 
     public OpenPgpV4Fingerprint(PGPPublicKey key) throws PGPException {
         this(Hex.encode(key.getFingerprint()));
+        if (key.getVersion() != 4) {
+            throw new PGPException("Key is not a v4 OpenPgp key.");
+        }
+    }
+
+    public OpenPgpV4Fingerprint(PGPSecretKey key) throws PGPException {
+        this(key.getPublicKey());
+    }
+
+    public OpenPgpV4Fingerprint(PGPPublicKeyRing ring) throws PGPException {
+        this(ring.getPublicKey());
+    }
+
+    public OpenPgpV4Fingerprint(PGPSecretKeyRing ring) throws PGPException {
+        this(ring.getPublicKey());
     }
 
     /**

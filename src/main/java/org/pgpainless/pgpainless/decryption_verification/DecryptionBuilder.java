@@ -25,6 +25,7 @@ import org.bouncycastle.openpgp.PGPException;
 import org.bouncycastle.openpgp.PGPPublicKeyRing;
 import org.bouncycastle.openpgp.PGPPublicKeyRingCollection;
 import org.bouncycastle.openpgp.PGPSecretKeyRingCollection;
+import org.pgpainless.pgpainless.key.OpenPgpV4Fingerprint;
 import org.pgpainless.pgpainless.key.protection.SecretKeyRingProtector;
 
 public class DecryptionBuilder implements DecryptionBuilderInterface {
@@ -61,12 +62,18 @@ public class DecryptionBuilder implements DecryptionBuilderInterface {
     class VerifyWithImpl implements VerifyWith {
 
         @Override
-        public HandleMissingPublicKeys verifyWith(Set<Long> trustedKeyIds,
+        public HandleMissingPublicKeys verifyWith(Set<OpenPgpV4Fingerprint> trustedKeyIds,
                                                   PGPPublicKeyRingCollection publicKeyRingCollection) {
             Set<PGPPublicKeyRing> publicKeyRings = new HashSet<>();
             for (Iterator<PGPPublicKeyRing> i = publicKeyRingCollection.getKeyRings(); i.hasNext(); ) {
                 PGPPublicKeyRing p = i.next();
-                if (trustedKeyIds.contains(p.getPublicKey().getKeyID())) {
+                OpenPgpV4Fingerprint fingerprint;
+                try {
+                    fingerprint = new OpenPgpV4Fingerprint(p);
+                } catch (PGPException e) {
+                    throw new IllegalArgumentException(e);
+                }
+                if (trustedKeyIds.contains(fingerprint)) {
                     publicKeyRings.add(p);
                 }
             }
@@ -89,7 +96,7 @@ public class DecryptionBuilder implements DecryptionBuilderInterface {
     class HandleMissingPublicKeysImpl implements HandleMissingPublicKeys {
 
         @Override
-        public Build handleMissingPublicKeysWith(org.pgpainless.pgpainless.decryption_verification.MissingPublicKeyCallback callback) {
+        public Build handleMissingPublicKeysWith(MissingPublicKeyCallback callback) {
             DecryptionBuilder.this.missingPublicKeyCallback = callback;
             return new BuildImpl();
         }
