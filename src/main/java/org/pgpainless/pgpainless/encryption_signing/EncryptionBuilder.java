@@ -64,9 +64,6 @@ public class EncryptionBuilder implements EncryptionBuilderInterface {
 
         @Override
         public WithAlgorithms toRecipients(PGPPublicKey... keys) {
-            if (keys.length == 0) {
-                throw new IllegalArgumentException("Recipient list MUST NOT be empty.");
-            }
             for (PGPPublicKey k : keys) {
                 if (encryptionKeySelector().accept(null, k)) {
                     EncryptionBuilder.this.encryptionKeys.add(k);
@@ -74,14 +71,16 @@ public class EncryptionBuilder implements EncryptionBuilderInterface {
                     throw new IllegalArgumentException("Key " + k.getKeyID() + " is not a valid encryption key.");
                 }
             }
+
+            if (EncryptionBuilder.this.encryptionKeys.isEmpty()) {
+                throw new IllegalStateException("No valid encryption keys found!");
+            }
+
             return new WithAlgorithmsImpl();
         }
 
         @Override
         public WithAlgorithms toRecipients(PGPPublicKeyRing... keys) {
-            if (keys.length == 0) {
-                throw new IllegalArgumentException("Recipient list MUST NOT be empty.");
-            }
             for (PGPPublicKeyRing ring : keys) {
                 for (PGPPublicKey k : ring) {
                     if (encryptionKeySelector().accept(null, k)) {
@@ -89,6 +88,30 @@ public class EncryptionBuilder implements EncryptionBuilderInterface {
                     }
                 }
             }
+
+            if (EncryptionBuilder.this.encryptionKeys.isEmpty()) {
+                throw new IllegalStateException("No valid encryption keys found!");
+            }
+
+            return new WithAlgorithmsImpl();
+        }
+
+        @Override
+        public WithAlgorithms toRecipients(PGPPublicKeyRingCollection... keys) {
+            for (PGPPublicKeyRingCollection collection : keys) {
+                for (PGPPublicKeyRing ring : collection) {
+                    for (PGPPublicKey k : ring) {
+                        if (encryptionKeySelector().accept(null, k)) {
+                            EncryptionBuilder.this.encryptionKeys.add(k);
+                        }
+                    }
+                }
+            }
+
+            if (EncryptionBuilder.this.encryptionKeys.isEmpty()) {
+                throw new IllegalStateException("No valid encryption keys found!");
+            }
+
             return new WithAlgorithmsImpl();
         }
 
@@ -109,6 +132,11 @@ public class EncryptionBuilder implements EncryptionBuilderInterface {
                     }
                 }
             }
+
+            if (EncryptionBuilder.this.encryptionKeys.isEmpty()) {
+                throw new IllegalStateException("No valid encryption keys found!");
+            }
+
             return new WithAlgorithmsImpl();
         }
 

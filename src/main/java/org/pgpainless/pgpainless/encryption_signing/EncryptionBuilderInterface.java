@@ -44,6 +44,8 @@ public interface EncryptionBuilderInterface {
 
         WithAlgorithms toRecipients(PGPPublicKeyRing... keys);
 
+        WithAlgorithms toRecipients(PGPPublicKeyRingCollection... keys);
+
         <O> WithAlgorithms toRecipients(PublicKeyRingSelectionStrategy<O> selectionStrategy,
                                        MultiMap<O, PGPPublicKeyRingCollection> keys);
 
