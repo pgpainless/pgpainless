@@ -62,6 +62,15 @@ public class DecryptionBuilder implements DecryptionBuilderInterface {
     class VerifyWithImpl implements VerifyWith {
 
         @Override
+        public HandleMissingPublicKeys verifyWith(PGPPublicKeyRingCollection publicKeyRingCollection) {
+            Set<PGPPublicKeyRing> publicKeyRings = new HashSet<>();
+            for (Iterator<PGPPublicKeyRing> i = publicKeyRingCollection.getKeyRings(); i.hasNext(); ) {
+                publicKeyRings.add(i.next());
+            }
+            return verifyWith(publicKeyRings);
+        }
+
+        @Override
         public HandleMissingPublicKeys verifyWith(Set<OpenPgpV4Fingerprint> trustedKeyIds,
                                                   PGPPublicKeyRingCollection publicKeyRingCollection) {
             Set<PGPPublicKeyRing> publicKeyRings = new HashSet<>();

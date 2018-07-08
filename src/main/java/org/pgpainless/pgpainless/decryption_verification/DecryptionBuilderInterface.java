@@ -40,6 +40,8 @@ public interface DecryptionBuilderInterface {
 
     interface VerifyWith {
 
+        HandleMissingPublicKeys verifyWith(PGPPublicKeyRingCollection publicKeyRings);
+
         HandleMissingPublicKeys verifyWith(Set<OpenPgpV4Fingerprint> trustedFingerprints, PGPPublicKeyRingCollection publicKeyRings);
 
         HandleMissingPublicKeys verifyWith(Set<PGPPublicKeyRing> publicKeyRings);
