@@ -59,6 +59,8 @@ public interface EncryptionBuilderInterface {
 
         WithAlgorithms andToSelf(PGPPublicKeyRing... keys);
 
+        WithAlgorithms andToSelf(PGPPublicKeyRingCollection keys);
+
         <O> WithAlgorithms andToSelf(PublicKeyRingSelectionStrategy<O> selectionStrategy,
                                     MultiMap<O, PGPPublicKeyRingCollection> keys);
 

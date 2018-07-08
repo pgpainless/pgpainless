@@ -179,6 +179,19 @@ public class EncryptionBuilder implements EncryptionBuilderInterface {
             return this;
         }
 
+        @Override
+        public WithAlgorithms andToSelf(PGPPublicKeyRingCollection keys) {
+            for (PGPPublicKeyRing ring : keys) {
+                for (Iterator<PGPPublicKey> i = ring.getPublicKeys(); i.hasNext(); ) {
+                    PGPPublicKey key = i.next();
+                    if (encryptionKeySelector().accept(null, key)) {
+                        EncryptionBuilder.this.encryptionKeys.add(key);
+                    }
+                }
+            }
+            return this;
+        }
+
         public <O> WithAlgorithms andToSelf(PublicKeyRingSelectionStrategy<O> ringSelectionStrategy,
                                            MultiMap<O, PGPPublicKeyRingCollection> keys) {
             if (keys.isEmpty()) {
