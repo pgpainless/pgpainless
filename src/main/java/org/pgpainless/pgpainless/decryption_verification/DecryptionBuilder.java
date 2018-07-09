@@ -76,12 +76,7 @@ public class DecryptionBuilder implements DecryptionBuilderInterface {
             Set<PGPPublicKeyRing> publicKeyRings = new HashSet<>();
             for (Iterator<PGPPublicKeyRing> i = publicKeyRingCollection.getKeyRings(); i.hasNext(); ) {
                 PGPPublicKeyRing p = i.next();
-                OpenPgpV4Fingerprint fingerprint;
-                try {
-                    fingerprint = new OpenPgpV4Fingerprint(p);
-                } catch (PGPException e) {
-                    throw new IllegalArgumentException(e);
-                }
+                OpenPgpV4Fingerprint fingerprint = new OpenPgpV4Fingerprint(p);
                 if (trustedKeyIds.contains(fingerprint)) {
                     publicKeyRings.add(p);
                 }

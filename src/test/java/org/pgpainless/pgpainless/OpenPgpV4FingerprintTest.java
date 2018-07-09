@@ -19,47 +19,46 @@ import static junit.framework.TestCase.assertEquals;
 
 import java.io.IOException;
 
-import org.bouncycastle.openpgp.PGPException;
 import org.bouncycastle.openpgp.PGPPublicKey;
 import org.junit.Test;
 import org.pgpainless.pgpainless.key.OpenPgpV4Fingerprint;
 
 public class OpenPgpV4FingerprintTest {
 
-    @Test(expected = PGPException.class)
-    public void fpTooShort() throws PGPException {
+    @Test(expected = IllegalArgumentException.class)
+    public void fpTooShort() {
         String fp = "484f57414c495645"; // Asking Mark
         new OpenPgpV4Fingerprint(fp);
     }
 
-    @Test(expected = PGPException.class)
-    public void invalidHexTest() throws PGPException {
+    @Test(expected = IllegalArgumentException.class)
+    public void invalidHexTest() {
         String fp = "UNFORTUNATELYTHISISNOVALIDHEXADECIMALDOH";
         new OpenPgpV4Fingerprint(fp);
     }
 
     @Test
-    public void validFingerprintTest() throws PGPException {
+    public void validFingerprintTest() {
         String fp = "4A4F48414E4E53454E2049532041204E45524421";
         OpenPgpV4Fingerprint finger = new OpenPgpV4Fingerprint(fp);
         assertEquals(fp, finger.toString());
     }
 
     @Test
-    public void convertsToUpperCaseTest() throws PGPException {
+    public void convertsToUpperCaseTest() {
         String fp = "444f4e5420552048415645204120484f4242593f";
         OpenPgpV4Fingerprint finger = new OpenPgpV4Fingerprint(fp);
         assertEquals("444F4E5420552048415645204120484F4242593F", finger.toString());
     }
 
     @Test
-    public void equalsOtherFingerprintTest() throws PGPException {
+    public void equalsOtherFingerprintTest() {
         OpenPgpV4Fingerprint finger = new OpenPgpV4Fingerprint("5448452043414b452049532041204c4945212121");
         assertEquals(finger, new OpenPgpV4Fingerprint("5448452043414B452049532041204C4945212121"));
     }
 
     @Test
-    public void keyIdTest() throws IOException, PGPException {
+    public void keyIdTest() throws IOException {
         PGPPublicKey key = TestKeys.getJulietPublicKeyRing().getPublicKey();
         long keyId = key.getKeyID();
 

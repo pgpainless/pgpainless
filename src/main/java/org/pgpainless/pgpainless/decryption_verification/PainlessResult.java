@@ -19,7 +19,6 @@ import java.util.Collections;
 import java.util.HashSet;
 import java.util.Set;
 
-import org.bouncycastle.openpgp.PGPException;
 import org.bouncycastle.openpgp.PGPPublicKey;
 import org.bouncycastle.openpgp.PGPPublicKeyRing;
 import org.pgpainless.pgpainless.algorithm.CompressionAlgorithm;
@@ -94,7 +93,7 @@ public class PainlessResult {
         return !verifiedSignaturesFingerprints.isEmpty();
     }
 
-    public boolean containsVerifiedSignatureFrom(PGPPublicKeyRing publicKeys) throws PGPException {
+    public boolean containsVerifiedSignatureFrom(PGPPublicKeyRing publicKeys) {
         for (PGPPublicKey key : publicKeys) {
             OpenPgpV4Fingerprint fingerprint = new OpenPgpV4Fingerprint(key);
             if (verifiedSignaturesFingerprints.contains(fingerprint)) {

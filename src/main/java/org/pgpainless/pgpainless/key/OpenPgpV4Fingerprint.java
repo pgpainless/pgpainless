@@ -20,7 +20,6 @@ import java.nio.ByteBuffer;
 import java.nio.charset.Charset;
 import java.util.Arrays;
 
-import org.bouncycastle.openpgp.PGPException;
 import org.bouncycastle.openpgp.PGPPublicKey;
 import org.bouncycastle.openpgp.PGPPublicKeyRing;
 import org.bouncycastle.openpgp.PGPSecretKey;
@@ -40,38 +39,38 @@ public class OpenPgpV4Fingerprint implements CharSequence, Comparable<OpenPgpV4F
      *     XEP-0373 §4.1: The OpenPGP Public-Key Data Node about how to obtain the fingerprint</a>
      * @param fingerprint hexadecimal representation of the fingerprint.
      */
-    public OpenPgpV4Fingerprint(String fingerprint) throws PGPException {
+    public OpenPgpV4Fingerprint(String fingerprint) {
         if (fingerprint == null) {
             throw new NullPointerException("Fingerprint MUST NOT be null.");
         }
         String fp = fingerprint.trim().toUpperCase();
         if (!isValid(fp)) {
-            throw new PGPException("Fingerprint " + fingerprint +
+            throw new IllegalArgumentException("Fingerprint " + fingerprint +
                     " does not appear to be a valid OpenPGP v4 fingerprint.");
         }
         this.fingerprint = fp;
     }
 
-    public OpenPgpV4Fingerprint(byte[] bytes) throws PGPException {
+    public OpenPgpV4Fingerprint(byte[] bytes) {
         this(new String(bytes, Charset.forName("UTF-8")));
     }
 
-    public OpenPgpV4Fingerprint(PGPPublicKey key) throws PGPException {
+    public OpenPgpV4Fingerprint(PGPPublicKey key) {
         this(Hex.encode(key.getFingerprint()));
         if (key.getVersion() != 4) {
-            throw new PGPException("Key is not a v4 OpenPgp key.");
+            throw new IllegalArgumentException("Key is not a v4 OpenPgp key.");
         }
     }
 
-    public OpenPgpV4Fingerprint(PGPSecretKey key) throws PGPException {
+    public OpenPgpV4Fingerprint(PGPSecretKey key) {
         this(key.getPublicKey());
     }
 
-    public OpenPgpV4Fingerprint(PGPPublicKeyRing ring) throws PGPException {
+    public OpenPgpV4Fingerprint(PGPPublicKeyRing ring) {
         this(ring.getPublicKey());
     }
 
-    public OpenPgpV4Fingerprint(PGPSecretKeyRing ring) throws PGPException {
+    public OpenPgpV4Fingerprint(PGPSecretKeyRing ring) {
         this(ring.getPublicKey());
     }
 
