@@ -76,16 +76,7 @@ public class BCUtil {
             list.add(k);
         }
 
-        // TODO: Change to simply using the List constructor once BC 1.60 gets released.
-        try {
-            Constructor<PGPPublicKeyRing> constructor;
-            constructor = PGPPublicKeyRing.class.getDeclaredConstructor(List.class);
-            constructor.setAccessible(true);
-            PGPPublicKeyRing pubring = constructor.newInstance(list);
-            return pubring;
-        } catch (NoSuchMethodException | IllegalAccessException | InstantiationException | InvocationTargetException e) {
-            throw new AssertionError(e);
-        }
+        return new PGPPublicKeyRing(list);
     }
 
     /*
