@@ -15,6 +15,8 @@
  */
 package org.pgpainless.pgpainless.key.selection.key.impl;
 
+import java.io.IOException;
+import java.util.Arrays;
 import java.util.Iterator;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -22,25 +24,32 @@ import java.util.logging.Logger;
 import org.bouncycastle.openpgp.PGPException;
 import org.bouncycastle.openpgp.PGPPublicKey;
 import org.bouncycastle.openpgp.PGPSignature;
+import org.bouncycastle.openpgp.operator.bc.BcPGPContentVerifierBuilderProvider;
 import org.pgpainless.pgpainless.key.selection.key.PublicKeySelectionStrategy;
 
 public class SignedByMasterKey {
 
     private static final Logger LOGGER = Logger.getLogger(SignedByMasterKey.class.getName());
 
-    public static class PubkeySelectionStrategy extends PublicKeySelectionStrategy<Long> {
+    public static class PubkeySelectionStrategy extends PublicKeySelectionStrategy<PGPPublicKey> {
 
         @Override
-        public boolean accept(Long identifier, PGPPublicKey key) {
-            Iterator<PGPSignature> signatures = key.getSignaturesForKeyID(identifier);
+        public boolean accept(PGPPublicKey masterKey, PGPPublicKey key) {
+            // Same key -> accept
+            if (Arrays.equals(masterKey.getFingerprint(), key.getFingerprint())) {
+                return true;
+            }
+
+            Iterator<PGPSignature> signatures = key.getSignaturesForKeyID(masterKey.getKeyID());
             while (signatures.hasNext()) {
                 PGPSignature signature = signatures.next();
                 if (signature.getSignatureType() == PGPSignature.SUBKEY_BINDING) {
                     try {
-                        return signature.verify();
+                        signature.init(new BcPGPContentVerifierBuilderProvider(), masterKey);
+                        return signature.verifyCertification(masterKey, key);
                     } catch (PGPException e) {
                         LOGGER.log(Level.WARNING, "Could not verify subkey signature of key " +
-                                Long.toHexString(signature.getKeyID()) + " on key " + Long.toHexString(key.getKeyID()));
+                                Long.toHexString(masterKey.getKeyID()) + " on key " + Long.toHexString(key.getKeyID()));
 
                         return false;
                     }

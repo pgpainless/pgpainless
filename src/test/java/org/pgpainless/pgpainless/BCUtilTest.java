@@ -18,11 +18,13 @@ package org.pgpainless.pgpainless;
 import static junit.framework.TestCase.assertEquals;
 import static junit.framework.TestCase.assertNotNull;
 import static junit.framework.TestCase.assertNull;
+import static junit.framework.TestCase.assertTrue;
 
 import java.io.IOException;
 import java.security.InvalidAlgorithmParameterException;
 import java.security.NoSuchAlgorithmException;
 import java.security.NoSuchProviderException;
+import java.util.Arrays;
 import java.util.Iterator;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -119,7 +121,18 @@ public class BCUtilTest extends AbstractPGPainlessTest {
         // Check, if alice_mallory contains mallory's key
         assertNotNull(alice_mallory.getSecretKey(subKey.getKeyID()));
 
-        PGPSecretKeyRing cleaned = BCUtil.removeUnassociatedKeysFromKeyRing(alice_mallory, alice.getPublicKey().getKeyID());
+        PGPSecretKeyRing cleaned = BCUtil.removeUnassociatedKeysFromKeyRing(alice_mallory, alice.getPublicKey());
         assertNull(cleaned.getSecretKey(subKey.getKeyID()));
+    }
+
+    @Test
+    public void removeUnsignedKeysECTest()
+            throws PGPException, NoSuchAlgorithmException, NoSuchProviderException, InvalidAlgorithmParameterException,
+            IOException {
+        PGPSecretKeyRing alice = PGPainless.generateKeyRing().simpleEcKeyRing("alice@wonderland.lit");
+
+        PGPSecretKeyRing after = BCUtil.removeUnassociatedKeysFromKeyRing(alice, alice.getPublicKey());
+
+        assertTrue(Arrays.equals(alice.getEncoded(), after.getEncoded()));
     }
 }

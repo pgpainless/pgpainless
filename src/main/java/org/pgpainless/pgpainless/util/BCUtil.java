@@ -107,7 +107,8 @@ public class BCUtil {
 
     public static PGPPublicKeyRing getKeyRingFromCollection(PGPPublicKeyRingCollection collection, Long id)
             throws PGPException {
-        return removeUnassociatedKeysFromKeyRing(collection.getPublicKeyRing(id), id);
+        PGPPublicKey key = collection.getPublicKey(id);
+        return removeUnassociatedKeysFromKeyRing(collection.getPublicKeyRing(id), key);
     }
 
     public static InputStream getPgpDecoderInputStream(byte[] bytes) throws IOException {
@@ -135,13 +136,15 @@ public class BCUtil {
      * (identified by {@code masterKeyId}), or are revoked ("normal" key revocation, as well as subkey revocation).
      *
      * @param ring key ring
-     * @param masterKeyId id of the master key
+     * @param masterKey master key
      * @return "cleaned" key ring
      */
-    public static PGPPublicKeyRing removeUnassociatedKeysFromKeyRing(PGPPublicKeyRing ring, Long masterKeyId) {
-
+    public static PGPPublicKeyRing removeUnassociatedKeysFromKeyRing(PGPPublicKeyRing ring, PGPPublicKey masterKey) {
+        if (!masterKey.isMasterKey()) {
+            throw new IllegalArgumentException("Given key is not a master key.");
+        }
         // Only select keys which are signed by the master key and not revoked.
-        PublicKeySelectionStrategy<Long> selector = new And.PubKeySelectionStrategy<>(
+        PublicKeySelectionStrategy<PGPPublicKey> selector = new And.PubKeySelectionStrategy<>(
                 new SignedByMasterKey.PubkeySelectionStrategy(),
                 new NoRevocation.PubKeySelectionStrategy<>());
 
@@ -150,7 +153,7 @@ public class BCUtil {
         Iterator<PGPPublicKey> publicKeys = ring.getPublicKeys();
         while (publicKeys.hasNext()) {
             PGPPublicKey publicKey = publicKeys.next();
-            if (!selector.accept(masterKeyId, publicKey)) {
+            if (!selector.accept(masterKey, publicKey)) {
                 cleaned = PGPPublicKeyRing.removePublicKey(cleaned, publicKey);
             }
         }
@@ -163,13 +166,15 @@ public class BCUtil {
      * (identified by {@code masterKeyId}), or are revoked ("normal" key revocation, as well as subkey revocation).
      *
      * @param ring key ring
-     * @param masterKeyId id of the master key
+     * @param masterKey master key
      * @return "cleaned" key ring
      */
-    public static PGPSecretKeyRing removeUnassociatedKeysFromKeyRing(PGPSecretKeyRing ring, Long masterKeyId) {
-
+    public static PGPSecretKeyRing removeUnassociatedKeysFromKeyRing(PGPSecretKeyRing ring, PGPPublicKey masterKey) {
+        if (!masterKey.isMasterKey()) {
+            throw new IllegalArgumentException("Given key is not a master key.");
+        }
         // Only select keys which are signed by the master key and not revoked.
-        PublicKeySelectionStrategy<Long> selector = new And.PubKeySelectionStrategy<>(
+        PublicKeySelectionStrategy<PGPPublicKey> selector = new And.PubKeySelectionStrategy<>(
                 new SignedByMasterKey.PubkeySelectionStrategy(),
                 new NoRevocation.PubKeySelectionStrategy<>());
 
@@ -178,7 +183,7 @@ public class BCUtil {
         Iterator<PGPSecretKey> secretKeys = ring.getSecretKeys();
         while (secretKeys.hasNext()) {
             PGPSecretKey secretKey = secretKeys.next();
-            if (!selector.accept(masterKeyId, secretKey.getPublicKey())) {
+            if (!selector.accept(masterKey, secretKey.getPublicKey())) {
                 cleaned = PGPSecretKeyRing.removeSecretKey(cleaned, secretKey);
             }
         }
