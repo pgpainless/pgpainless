@@ -15,7 +15,6 @@
  */
 package org.pgpainless.pgpainless.key.selection.key.impl;
 
-import java.io.IOException;
 import java.util.Arrays;
 import java.util.Iterator;
 import java.util.logging.Level;

@@ -129,10 +129,15 @@ public class BCUtilTest extends AbstractPGPainlessTest {
     public void removeUnsignedKeysECTest()
             throws PGPException, NoSuchAlgorithmException, NoSuchProviderException, InvalidAlgorithmParameterException,
             IOException {
-        PGPSecretKeyRing alice = PGPainless.generateKeyRing().simpleEcKeyRing("alice@wonderland.lit");
+        PGPSecretKeyRing secretKeys = PGPainless.generateKeyRing().simpleEcKeyRing("alice@wonderland.lit");
+        PGPSecretKeyRing secCleaned = BCUtil.removeUnassociatedKeysFromKeyRing(secretKeys, secretKeys.getPublicKey());
 
-        PGPSecretKeyRing after = BCUtil.removeUnassociatedKeysFromKeyRing(alice, alice.getPublicKey());
+        assertTrue(Arrays.equals(secretKeys.getEncoded(), secCleaned.getEncoded()));
 
-        assertTrue(Arrays.equals(alice.getEncoded(), after.getEncoded()));
+        PGPPublicKeyRing publicKeys = BCUtil.publicKeyRingFromSecretKeyRing(secretKeys);
+        PGPPublicKeyRing pubCleaned = BCUtil.removeUnassociatedKeysFromKeyRing(publicKeys, publicKeys.getPublicKey());
+
+        assertTrue(Arrays.equals(publicKeys.getEncoded(), pubCleaned.getEncoded()));
+
     }
 }
