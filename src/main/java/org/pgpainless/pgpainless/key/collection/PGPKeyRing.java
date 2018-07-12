@@ -15,8 +15,10 @@
  */
 package org.pgpainless.pgpainless.key.collection;
 
+import org.bouncycastle.openpgp.PGPPublicKey;
 import org.bouncycastle.openpgp.PGPPublicKeyRing;
 import org.bouncycastle.openpgp.PGPSecretKeyRing;
+import org.pgpainless.pgpainless.key.OpenPgpV4Fingerprint;
 
 public class PGPKeyRing {
 
@@ -24,8 +26,38 @@ public class PGPKeyRing {
     private PGPSecretKeyRing secretKeys;
 
     public PGPKeyRing(PGPPublicKeyRing publicKeys, PGPSecretKeyRing secretKeys) {
+        if (secretKeys == null && publicKeys == null) {
+            throw new IllegalArgumentException("publicKeys and secretKeys MUST NOT be both null.");
+        }
+
+        if (publicKeys != null && secretKeys != null) {
+            if (publicKeys.getPublicKey().getKeyID() != secretKeys.getPublicKey().getKeyID()) {
+                throw new IllegalArgumentException("publicKeys and secretKeys must have the same master key.");
+            }
+        }
+
         this.publicKeys = publicKeys;
         this.secretKeys = secretKeys;
+    }
+
+    public long getKeyId() {
+        return getMasterKey().getKeyID();
+    }
+
+    public PGPPublicKey getMasterKey() {
+        PGPPublicKey publicKey = hasSecretKeys() ? secretKeys.getPublicKey() : publicKeys.getPublicKey();
+        if (!publicKey.isMasterKey()) {
+            throw new IllegalStateException("Expected master key is not a master key");
+        }
+        return publicKey;
+    }
+
+    public OpenPgpV4Fingerprint getV4Fingerprint() {
+        return new OpenPgpV4Fingerprint(getMasterKey());
+    }
+
+    public boolean hasSecretKeys() {
+        return secretKeys != null;
     }
 
     public PGPPublicKeyRing getPublicKeys() {
@@ -35,6 +67,4 @@ public class PGPKeyRing {
     public PGPSecretKeyRing getSecretKeys() {
         return secretKeys;
     }
-
-
 }
