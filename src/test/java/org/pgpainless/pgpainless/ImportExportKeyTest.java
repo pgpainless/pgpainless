@@ -23,14 +23,16 @@ import java.security.NoSuchAlgorithmException;
 import java.security.NoSuchProviderException;
 import java.security.Security;
 import java.util.Arrays;
+import java.util.Iterator;
 
 import org.bouncycastle.jce.provider.BouncyCastleProvider;
 import org.bouncycastle.openpgp.PGPException;
+import org.bouncycastle.openpgp.PGPPublicKey;
 import org.bouncycastle.openpgp.PGPPublicKeyRing;
 import org.bouncycastle.openpgp.PGPSecretKeyRing;
 import org.bouncycastle.openpgp.operator.bc.BcKeyFingerprintCalculator;
 import org.junit.Test;
-import org.pgpainless.pgpainless.util.BCUtil;
+import org.pgpainless.pgpainless.key.collection.PGPKeyRing;
 
 public class ImportExportKeyTest {
 
@@ -50,12 +52,18 @@ public class ImportExportKeyTest {
     public void test()
             throws PGPException, NoSuchAlgorithmException, NoSuchProviderException, InvalidAlgorithmParameterException,
             IOException {
-        PGPSecretKeyRing secretKeys = PGPainless.generateKeyRing().simpleEcKeyRing("alice@bla.blub");
-        PGPPublicKeyRing publicKeys = BCUtil.publicKeyRingFromSecretKeyRing(secretKeys);
+        PGPKeyRing keyRing = PGPainless.generateKeyRing().simpleEcKeyRing("alice@bla.blub");
+        PGPSecretKeyRing secretKeys = keyRing.getSecretKeys();
+        PGPPublicKeyRing publicKeys = keyRing.getPublicKeys();
 
         BcKeyFingerprintCalculator calc = new BcKeyFingerprintCalculator();
         byte[] bytes = publicKeys.getEncoded();
         PGPPublicKeyRing parsed = new PGPPublicKeyRing(bytes, calc);
         assertTrue(Arrays.equals(publicKeys.getEncoded(), parsed.getEncoded()));
+
+        Iterator<PGPPublicKey> it = secretKeys.getPublicKeys();
+        assertTrue(it.hasNext());
+        it.next();
+        assertTrue(it.hasNext());
     }
 }

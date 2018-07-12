@@ -13,25 +13,28 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.pgpainless.pgpainless.key.selection.key;
+package org.pgpainless.pgpainless.key.collection;
 
-import java.util.Set;
+import org.bouncycastle.openpgp.PGPPublicKeyRing;
+import org.bouncycastle.openpgp.PGPSecretKeyRing;
 
-import org.pgpainless.pgpainless.util.MultiMap;
+public class PGPKeyRing {
 
+    private PGPPublicKeyRing publicKeys;
+    private PGPSecretKeyRing secretKeys;
 
-/**
- * Interface that describes a selection strategy for OpenPGP keys.
- * @param <K> Type of the Key
- * @param <R> Type of the PGPKeyRing
- * @param <O> Type that describes the owner of this key
- */
-public interface KeySelectionStrategy<K, R, O> {
+    public PGPKeyRing(PGPPublicKeyRing publicKeys, PGPSecretKeyRing secretKeys) {
+        this.publicKeys = publicKeys;
+        this.secretKeys = secretKeys;
+    }
 
-    boolean accept(O identifier, K key);
+    public PGPPublicKeyRing getPublicKeys() {
+        return publicKeys;
+    }
 
-    Set<K> selectKeysFromKeyRing(O identifier, R ring);
+    public PGPSecretKeyRing getSecretKeys() {
+        return secretKeys;
+    }
 
-    MultiMap<O, K> selectKeysFromKeyRings(MultiMap<O, R> rings);
 
 }

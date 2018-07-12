@@ -42,6 +42,7 @@ import org.pgpainless.pgpainless.algorithm.SymmetricKeyAlgorithm;
 import org.pgpainless.pgpainless.decryption_verification.DecryptionStream;
 import org.pgpainless.pgpainless.decryption_verification.PainlessResult;
 import org.pgpainless.pgpainless.encryption_signing.EncryptionStream;
+import org.pgpainless.pgpainless.key.collection.PGPKeyRing;
 import org.pgpainless.pgpainless.key.generation.KeySpec;
 import org.pgpainless.pgpainless.key.generation.type.ElGamal_GENERAL;
 import org.pgpainless.pgpainless.key.generation.type.RSA_GENERAL;
@@ -71,8 +72,8 @@ public class EncryptDecryptTest extends AbstractPGPainlessTest {
     public void freshKeysRsaToElGamalTest()
             throws PGPException, NoSuchAlgorithmException, NoSuchProviderException, InvalidAlgorithmParameterException,
             IOException {
-        PGPSecretKeyRing sender = PGPainless.generateKeyRing().simpleRsaKeyRing("romeo@montague.lit", RsaLength._3072);
-        PGPSecretKeyRing recipient = PGPainless.generateKeyRing()
+        PGPKeyRing sender = PGPainless.generateKeyRing().simpleRsaKeyRing("romeo@montague.lit", RsaLength._3072);
+        PGPKeyRing recipient = PGPainless.generateKeyRing()
                 .withSubKey(KeySpec.getBuilder(ElGamal_GENERAL.withLength(ElGamalLength._3072)).withKeyFlags(KeyFlag.ENCRYPT_STORAGE, KeyFlag.ENCRYPT_COMMS).withDefaultAlgorithms())
                 .withMasterKey(KeySpec.getBuilder(RSA_GENERAL.withLength(RsaLength._4096)).withKeyFlags(KeyFlag.SIGN_DATA, KeyFlag.CERTIFY_OTHER).withDefaultAlgorithms())
                 .withPrimaryUserId("juliet@capulet.lit").withoutPassphrase().build();
@@ -84,8 +85,8 @@ public class EncryptDecryptTest extends AbstractPGPainlessTest {
     public void freshKeysRsaToRsaTest()
             throws PGPException, NoSuchAlgorithmException, NoSuchProviderException, InvalidAlgorithmParameterException,
             IOException {
-        PGPSecretKeyRing sender = PGPainless.generateKeyRing().simpleRsaKeyRing("romeo@montague.lit", RsaLength._4096);
-        PGPSecretKeyRing recipient = PGPainless.generateKeyRing().simpleRsaKeyRing("juliet@capulet.lit", RsaLength._4096);
+        PGPKeyRing sender = PGPainless.generateKeyRing().simpleRsaKeyRing("romeo@montague.lit", RsaLength._4096);
+        PGPKeyRing recipient = PGPainless.generateKeyRing().simpleRsaKeyRing("juliet@capulet.lit", RsaLength._4096);
 
         encryptDecryptForSecretKeyRings(sender, recipient);
     }
@@ -93,8 +94,8 @@ public class EncryptDecryptTest extends AbstractPGPainlessTest {
     @Test
     public void freshKeysEcToEcTest() throws IOException, PGPException, NoSuchAlgorithmException, NoSuchProviderException,
             InvalidAlgorithmParameterException {
-        PGPSecretKeyRing sender = PGPainless.generateKeyRing().simpleEcKeyRing("romeo@montague.lit");
-        PGPSecretKeyRing recipient = PGPainless.generateKeyRing().simpleEcKeyRing("juliet@capulet.lit");
+        PGPKeyRing sender = PGPainless.generateKeyRing().simpleEcKeyRing("romeo@montague.lit");
+        PGPKeyRing recipient = PGPainless.generateKeyRing().simpleEcKeyRing("juliet@capulet.lit");
 
         encryptDecryptForSecretKeyRings(sender, recipient);
     }
@@ -103,8 +104,8 @@ public class EncryptDecryptTest extends AbstractPGPainlessTest {
     public void freshKeysEcToRsaTest()
             throws PGPException, NoSuchAlgorithmException, NoSuchProviderException, InvalidAlgorithmParameterException,
             IOException {
-        PGPSecretKeyRing sender = PGPainless.generateKeyRing().simpleEcKeyRing("romeo@montague.lit");
-        PGPSecretKeyRing recipient = PGPainless.generateKeyRing().simpleRsaKeyRing("juliet@capulet.lit", RsaLength._4096);
+        PGPKeyRing sender = PGPainless.generateKeyRing().simpleEcKeyRing("romeo@montague.lit");
+        PGPKeyRing recipient = PGPainless.generateKeyRing().simpleRsaKeyRing("juliet@capulet.lit", RsaLength._4096);
 
         encryptDecryptForSecretKeyRings(sender, recipient);
     }
@@ -113,18 +114,20 @@ public class EncryptDecryptTest extends AbstractPGPainlessTest {
     public void freshKeysRsaToEcTest()
             throws PGPException, NoSuchAlgorithmException, NoSuchProviderException, InvalidAlgorithmParameterException,
             IOException {
-        PGPSecretKeyRing sender = PGPainless.generateKeyRing().simpleRsaKeyRing("romeo@montague.lit", RsaLength._4096);
-        PGPSecretKeyRing recipient = PGPainless.generateKeyRing().simpleEcKeyRing("juliet@capulet.lit");
+        PGPKeyRing sender = PGPainless.generateKeyRing().simpleRsaKeyRing("romeo@montague.lit", RsaLength._4096);
+        PGPKeyRing recipient = PGPainless.generateKeyRing().simpleEcKeyRing("juliet@capulet.lit");
 
         encryptDecryptForSecretKeyRings(sender, recipient);
     }
 
     @Ignore
-    private void encryptDecryptForSecretKeyRings(PGPSecretKeyRing sender, PGPSecretKeyRing recipient)
+    private void encryptDecryptForSecretKeyRings(PGPKeyRing sender, PGPKeyRing recipient)
             throws PGPException,
             IOException {
-        PGPPublicKeyRing recipientPub = BCUtil.publicKeyRingFromSecretKeyRing(recipient);
-        PGPPublicKeyRing senderPub = BCUtil.publicKeyRingFromSecretKeyRing(sender);
+        PGPSecretKeyRing recipientSec = recipient.getSecretKeys();
+        PGPSecretKeyRing senderSec = sender.getSecretKeys();
+        PGPPublicKeyRing recipientPub = recipient.getPublicKeys();
+        PGPPublicKeyRing senderPub = sender.getPublicKeys();
 
         SecretKeyRingProtector keyDecryptor = new UnprotectedKeysProtector();
 
@@ -136,19 +139,19 @@ public class EncryptDecryptTest extends AbstractPGPainlessTest {
                 .onOutputStream(envelope)
                 .toRecipients(recipientPub)
                 .usingSecureAlgorithms()
-                .signWith(keyDecryptor, sender)
+                .signWith(keyDecryptor, senderSec)
                 .noArmor();
 
         PainlessResult encryptionResult = encryptor.getResult();
 
         assertFalse(encryptionResult.getAllSignatureKeyFingerprints().isEmpty());
         for (long keyId : encryptionResult.getAllSignatureKeyFingerprints()) {
-            assertTrue(BCUtil.keyRingContainsKeyWithId(sender, keyId));
+            assertTrue(BCUtil.keyRingContainsKeyWithId(senderPub, keyId));
         }
 
         assertFalse(encryptionResult.getRecipientKeyIds().isEmpty());
         for (long keyId : encryptionResult.getRecipientKeyIds()) {
-            assertTrue(BCUtil.keyRingContainsKeyWithId(recipient, keyId));
+            assertTrue(BCUtil.keyRingContainsKeyWithId(recipientPub, keyId));
         }
 
         assertEquals(SymmetricKeyAlgorithm.AES_256, encryptionResult.getSymmetricKeyAlgorithm());
@@ -157,8 +160,8 @@ public class EncryptDecryptTest extends AbstractPGPainlessTest {
         encryptor.close();
         byte[] encryptedSecretMessage = envelope.toByteArray();
 
-        LOGGER.log(Level.INFO, "Sender: " + PublicKeyAlgorithm.fromId(sender.getPublicKey().getAlgorithm()) +
-        " Receiver: " + PublicKeyAlgorithm.fromId(recipient.getPublicKey().getAlgorithm()) +
+        LOGGER.log(Level.INFO, "Sender: " + PublicKeyAlgorithm.fromId(senderPub.getPublicKey().getAlgorithm()) +
+        " Receiver: " + PublicKeyAlgorithm.fromId(recipientPub.getPublicKey().getAlgorithm()) +
         " Encrypted Length: " + encryptedSecretMessage.length);
 
         // Juliet trieth to comprehend Romeos words
@@ -166,7 +169,7 @@ public class EncryptDecryptTest extends AbstractPGPainlessTest {
         ByteArrayInputStream envelopeIn = new ByteArrayInputStream(encryptedSecretMessage);
         DecryptionStream decryptor = PGPainless.createDecryptor()
                 .onInputStream(envelopeIn)
-                .decryptWith(keyDecryptor, BCUtil.keyRingsToKeyRingCollection(recipient))
+                .decryptWith(keyDecryptor, BCUtil.keyRingsToKeyRingCollection(recipientSec))
                 .verifyWith(BCUtil.keyRingsToKeyRingCollection(senderPub))
                 .ignoreMissingPublicKeys()
                 .build();

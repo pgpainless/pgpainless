@@ -26,13 +26,13 @@ import java.util.Arrays;
 import java.util.Collections;
 
 import org.bouncycastle.openpgp.PGPException;
+import org.bouncycastle.openpgp.PGPPublicKeyRing;
 import org.bouncycastle.openpgp.PGPSecretKeyRing;
 import org.bouncycastle.openpgp.PGPSecretKeyRingCollection;
 import org.bouncycastle.util.io.Streams;
 import org.junit.Test;
 import org.pgpainless.pgpainless.decryption_verification.DecryptionStream;
 import org.pgpainless.pgpainless.key.protection.UnprotectedKeysProtector;
-import org.pgpainless.pgpainless.util.BCUtil;
 
 public class TestKeysTest extends AbstractPGPainlessTest {
 
@@ -57,7 +57,7 @@ public class TestKeysTest extends AbstractPGPainlessTest {
         DecryptionStream decryptor = PGPainless.createDecryptor()
                 .onInputStream(new ByteArrayInputStream(encryptedMessage.getBytes()))
                 .decryptWith(new UnprotectedKeysProtector(), new PGPSecretKeyRingCollection(Collections.singleton(juliet)))
-                .verifyWith(BCUtil.keyRingsToKeyRingCollection(BCUtil.publicKeyRingFromSecretKeyRing(juliet)))
+                .verifyWith(Collections.singleton(new PGPPublicKeyRing(Collections.singletonList(juliet.getPublicKey()))))
                 .ignoreMissingPublicKeys()
                 .build();
 

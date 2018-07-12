@@ -33,6 +33,7 @@ import org.bouncycastle.openpgp.PGPEncryptedData;
 import org.bouncycastle.openpgp.PGPException;
 import org.bouncycastle.openpgp.PGPKeyPair;
 import org.bouncycastle.openpgp.PGPKeyRingGenerator;
+import org.bouncycastle.openpgp.PGPPublicKeyRing;
 import org.bouncycastle.openpgp.PGPSecretKeyRing;
 import org.bouncycastle.openpgp.PGPSignature;
 import org.bouncycastle.openpgp.PGPSignatureSubpacketVector;
@@ -44,6 +45,7 @@ import org.bouncycastle.openpgp.operator.jcajce.JcaPGPDigestCalculatorProviderBu
 import org.bouncycastle.openpgp.operator.jcajce.JcaPGPKeyPair;
 import org.bouncycastle.openpgp.operator.jcajce.JcePBESecretKeyEncryptorBuilder;
 import org.pgpainless.pgpainless.algorithm.KeyFlag;
+import org.pgpainless.pgpainless.key.collection.PGPKeyRing;
 import org.pgpainless.pgpainless.key.generation.type.ECDH;
 import org.pgpainless.pgpainless.key.generation.type.ECDSA;
 import org.pgpainless.pgpainless.key.generation.type.KeyType;
@@ -71,7 +73,7 @@ public class KeyRingBuilder implements KeyRingBuilderInterface {
      * @throws NoSuchProviderException
      * @throws InvalidAlgorithmParameterException
      */
-    public PGPSecretKeyRing simpleRsaKeyRing(String userId, RsaLength length)
+    public PGPKeyRing simpleRsaKeyRing(String userId, RsaLength length)
             throws PGPException, NoSuchAlgorithmException, NoSuchProviderException, InvalidAlgorithmParameterException {
         return withMasterKey(
                         KeySpec.getBuilder(RSA_GENERAL.withLength(length))
@@ -94,7 +96,7 @@ public class KeyRingBuilder implements KeyRingBuilderInterface {
      * @throws NoSuchProviderException
      * @throws InvalidAlgorithmParameterException
      */
-    public PGPSecretKeyRing simpleEcKeyRing(String userId)
+    public PGPKeyRing simpleEcKeyRing(String userId)
             throws PGPException, NoSuchAlgorithmException, NoSuchProviderException, InvalidAlgorithmParameterException {
         return withSubKey(
                         KeySpec.getBuilder(ECDH.fromCurve(EllipticCurve._P256))
@@ -160,7 +162,7 @@ public class KeyRingBuilder implements KeyRingBuilderInterface {
         class BuildImpl implements Build {
 
             @Override
-            public PGPSecretKeyRing build() throws NoSuchAlgorithmException, PGPException, NoSuchProviderException,
+            public PGPKeyRing build() throws NoSuchAlgorithmException, PGPException, NoSuchProviderException,
                     InvalidAlgorithmParameterException {
 
                 // Hash Calculator
@@ -206,7 +208,9 @@ public class KeyRingBuilder implements KeyRingBuilderInterface {
                     }
                 }
 
-                return ringGenerator.generateSecretKeyRing();
+                PGPPublicKeyRing publicKeys = ringGenerator.generatePublicKeyRing();
+                PGPSecretKeyRing secretKeys = ringGenerator.generateSecretKeyRing();
+                return new PGPKeyRing(publicKeys, secretKeys);
             }
 
             private PGPKeyPair generateKeyPair(KeySpec spec)

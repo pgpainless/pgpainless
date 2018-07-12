@@ -20,7 +20,7 @@ import java.security.NoSuchAlgorithmException;
 import java.security.NoSuchProviderException;
 
 import org.bouncycastle.openpgp.PGPException;
-import org.bouncycastle.openpgp.PGPSecretKeyRing;
+import org.pgpainless.pgpainless.key.collection.PGPKeyRing;
 
 public interface KeyRingBuilderInterface {
 
@@ -47,7 +47,7 @@ public interface KeyRingBuilderInterface {
 
     interface Build {
 
-        PGPSecretKeyRing build() throws NoSuchAlgorithmException, PGPException, NoSuchProviderException,
+        PGPKeyRing build() throws NoSuchAlgorithmException, PGPException, NoSuchProviderException,
                 InvalidAlgorithmParameterException;
 
     }

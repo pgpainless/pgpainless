@@ -19,11 +19,9 @@ import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
-import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashSet;
 import java.util.Iterator;
-import java.util.List;
 import java.util.Set;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -64,32 +62,17 @@ public class BCUtil {
     }
 
     /*
-    PGPSecretKeyRing -> PGPPublicKeyRing
-     */
-
-    public static PGPPublicKeyRing publicKeyRingFromSecretKeyRing(PGPSecretKeyRing secring) {
-        List<PGPPublicKey> list = new ArrayList<>();
-        for (Iterator<PGPPublicKey> i = secring.getPublicKeys(); i.hasNext(); ) {
-            PGPPublicKey k = i.next();
-            list.add(k);
-        }
-
-        return new PGPPublicKeyRing(list);
-    }
-
-    /*
     PGPXxxKeyRingCollection -> PGPXxxKeyRing
      */
 
     public static PGPSecretKeyRing getKeyRingFromCollection(PGPSecretKeyRingCollection collection, Long id)
-            throws PGPException {
+            throws PGPException, IOException {
         PGPSecretKeyRing uncleanedRing = collection.getSecretKeyRing(id);
-        PGPPublicKeyRing publicKeys = publicKeyRingFromSecretKeyRing(uncleanedRing);
 
         // Determine ids of signed keys
         Set<Long> signedKeyIds = new HashSet<>();
         signedKeyIds.add(id); // Add the signing key itself
-        Iterator<PGPPublicKey> signedPubKeys = publicKeys.getKeysWithSignaturesBy(id);
+        Iterator<PGPPublicKey> signedPubKeys = uncleanedRing.getKeysWithSignaturesBy(id);
         while (signedPubKeys.hasNext()) {
             signedKeyIds.add(signedPubKeys.next().getKeyID());
         }
@@ -275,12 +258,12 @@ public class BCUtil {
 
         PGPPublicKey masterOne = getMasterKeyFrom(one);
         if (masterOne == null) {
-            throw new IllegalArgumentException("First KeyRing has no master key");
+            throw new IllegalArgumentException("First PGPKeyRing has no master key");
         }
 
         PGPPublicKey masterOther = getMasterKeyFrom(other);
         if (masterOther == null) {
-            throw new IllegalArgumentException("Other KeyRing has no master key");
+            throw new IllegalArgumentException("Other PGPKeyRing has no master key");
         }
 
         if (masterOne.getKeyID() != masterOther.getKeyID() ||
