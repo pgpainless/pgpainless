@@ -41,6 +41,7 @@ import org.bouncycastle.openpgp.operator.jcajce.JcePGPDataEncryptorBuilder;
 import org.bouncycastle.util.io.Streams;
 import org.pgpainless.pgpainless.algorithm.CompressionAlgorithm;
 import org.pgpainless.pgpainless.algorithm.SymmetricKeyAlgorithm;
+import org.pgpainless.pgpainless.util.Passphrase;
 
 /**
  * Stolen from <a href="https://github.com/bcgit/bc-java/blob/master/pg/src/main/java/org/bouncycastle/openpgp/examples/PBEFileProcessor.java">
@@ -62,7 +63,7 @@ public class SymmetricEncryptorDecryptor {
      * @throws PGPException OpenPGP is brittle
      */
     public static byte[] symmetricallyEncrypt(byte[] data,
-                                              char[] password,
+                                              Passphrase password,
                                               SymmetricKeyAlgorithm encryptionAlgorithm,
                                               CompressionAlgorithm compressionAlgorithm)
             throws IOException, PGPException {
@@ -77,7 +78,7 @@ public class SymmetricEncryptorDecryptor {
                         .setSecureRandom(new SecureRandom())
                         .setProvider("BC"));
 
-        encGen.addMethod(new JcePBEKeyEncryptionMethodGenerator(password).setProvider("BC"));
+        encGen.addMethod(new JcePBEKeyEncryptionMethodGenerator(password.getChars()).setProvider("BC"));
 
         OutputStream encOut = encGen.open(bOut, compressedData.length);
 
@@ -98,7 +99,7 @@ public class SymmetricEncryptorDecryptor {
      * @throws IOException IO is dangerous
      * @throws PGPException OpenPGP is brittle
      */
-    public static byte[] symmetricallyDecrypt(byte[] data, char[] password) throws IOException, PGPException {
+    public static byte[] symmetricallyDecrypt(byte[] data, Passphrase password) throws IOException, PGPException {
         InputStream in = new BufferedInputStream(new ByteArrayInputStream(data));
         in = PGPUtil.getDecoderStream(in);
 
@@ -115,7 +116,7 @@ public class SymmetricEncryptorDecryptor {
         PGPPBEEncryptedData pbe = (PGPPBEEncryptedData) enc.get(0);
 
         InputStream clear = pbe.getDataStream(new BcPBEDataDecryptorFactory(
-                password, new BcPGPDigestCalculatorProvider()));
+                password.getChars(), new BcPGPDigestCalculatorProvider()));
 
 
         BcPGPObjectFactory pgpFact = new BcPGPObjectFactory(clear);

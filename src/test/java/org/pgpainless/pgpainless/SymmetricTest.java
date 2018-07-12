@@ -27,6 +27,7 @@ import org.bouncycastle.bcpg.ArmoredOutputStream;
 import org.bouncycastle.openpgp.PGPException;
 import org.junit.Test;
 import org.pgpainless.pgpainless.algorithm.SymmetricKeyAlgorithm;
+import org.pgpainless.pgpainless.util.Passphrase;
 
 public class SymmetricTest extends AbstractPGPainlessTest {
 
@@ -45,7 +46,8 @@ public class SymmetricTest extends AbstractPGPainlessTest {
     @Test
     public void testSymmetricEncryptionDecryption() throws IOException, PGPException {
         byte[] plain = message.getBytes();
-        byte[] enc = PGPainless.encryptWithPassword(plain, "choose_a_better_password_please".toCharArray(), SymmetricKeyAlgorithm.AES_128);
+        Passphrase passphrase = new Passphrase("choose_a_better_password_please".toCharArray());
+        byte[] enc = PGPainless.encryptWithPassword(plain, passphrase, SymmetricKeyAlgorithm.AES_128);
         ByteArrayOutputStream out = new ByteArrayOutputStream();
         ArmoredOutputStream armor = new ArmoredOutputStream(out);
         armor.write(enc);
@@ -55,7 +57,7 @@ public class SymmetricTest extends AbstractPGPainlessTest {
         // Print cipher text for validation with GnuPG.
         LOGGER.log(Level.INFO, new String(out.toByteArray()));
 
-        byte[] plain2 = PGPainless.decryptWithPassword(enc, "choose_a_better_password_please".toCharArray());
+        byte[] plain2 = PGPainless.decryptWithPassword(enc, passphrase);
         assertTrue(Arrays.equals(plain, plain2));
     }
 }
