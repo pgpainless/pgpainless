@@ -52,6 +52,7 @@ import org.pgpainless.pgpainless.key.generation.type.KeyType;
 import org.pgpainless.pgpainless.key.generation.type.RSA_GENERAL;
 import org.pgpainless.pgpainless.key.generation.type.curve.EllipticCurve;
 import org.pgpainless.pgpainless.key.generation.type.length.RsaLength;
+import org.pgpainless.pgpainless.util.Passphrase;
 
 public class KeyRingBuilder implements KeyRingBuilderInterface {
 
@@ -59,7 +60,7 @@ public class KeyRingBuilder implements KeyRingBuilderInterface {
 
     private List<KeySpec> keySpecs = new ArrayList<>();
     private String userId;
-    private char[] passphrase;
+    private Passphrase passphrase;
 
     /**
      * Creates a simple RSA KeyPair of length {@code length} with user-id {@code userId}.
@@ -143,12 +144,7 @@ public class KeyRingBuilder implements KeyRingBuilderInterface {
     class WithPassphraseImpl implements WithPassphrase {
 
         @Override
-        public Build withPassphrase(String passphrase) {
-            return withPassphrase(passphrase.toCharArray());
-        }
-
-        @Override
-        public Build withPassphrase(char[] passphrase) {
+        public Build withPassphrase(Passphrase passphrase) {
             KeyRingBuilder.this.passphrase = passphrase;
             return new BuildImpl();
         }
@@ -176,7 +172,11 @@ public class KeyRingBuilder implements KeyRingBuilderInterface {
                         null : // unencrypted key pair, otherwise AES-256 encrypted
                         new JcePBESecretKeyEncryptorBuilder(PGPEncryptedData.AES_256, calculator)
                                 .setProvider(BouncyCastleProvider.PROVIDER_NAME)
-                                .build(passphrase);
+                                .build(passphrase != null ? passphrase.getChars() : null);
+
+                if (passphrase != null) {
+                    passphrase.clear();
+                }
 
                 // First key is the Master Key
                 KeySpec certKeySpec = keySpecs.get(0);

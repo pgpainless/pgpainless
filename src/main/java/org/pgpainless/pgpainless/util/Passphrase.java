@@ -39,6 +39,8 @@ public class Passphrase {
     }
 
     public char[] getChars() {
-        return chars;
+        char[] copy = new char[chars.length];
+        System.arraycopy(chars, 0, copy, 0, chars.length);
+        return copy;
     }
 }

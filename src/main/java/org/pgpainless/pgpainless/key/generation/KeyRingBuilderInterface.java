@@ -21,6 +21,7 @@ import java.security.NoSuchProviderException;
 
 import org.bouncycastle.openpgp.PGPException;
 import org.pgpainless.pgpainless.key.collection.PGPKeyRing;
+import org.pgpainless.pgpainless.util.Passphrase;
 
 public interface KeyRingBuilderInterface {
 
@@ -38,9 +39,7 @@ public interface KeyRingBuilderInterface {
 
     interface WithPassphrase {
 
-        Build withPassphrase(String passphrase);
-
-        Build withPassphrase(char[] passphrase);
+        Build withPassphrase(Passphrase passphrase);
 
         Build withoutPassphrase();
     }
