@@ -27,6 +27,7 @@ import org.bouncycastle.openpgp.PGPSecretKeyRing;
 import org.bouncycastle.openpgp.PGPSecretKeyRingCollection;
 import org.bouncycastle.openpgp.PGPUtil;
 import org.bouncycastle.openpgp.operator.bc.BcKeyFingerprintCalculator;
+import org.pgpainless.pgpainless.key.collection.PGPKeyRing;
 
 public class KeyRingReader {
 
@@ -82,6 +83,24 @@ public class KeyRingReader {
         return secretKeyRingCollection(asciiArmored.getBytes(UTF8));
     }
 
+    public PGPKeyRing keyRing(InputStream publicIn, InputStream secretIn) throws IOException, PGPException {
+        return readKeyRing(publicIn, secretIn);
+    }
+
+    public PGPKeyRing keyRing(byte[] publicBytes, byte[] secretBytes) throws IOException, PGPException {
+        return keyRing(
+                publicBytes != null ? new ByteArrayInputStream(publicBytes) : null,
+                secretBytes != null ? new ByteArrayInputStream(secretBytes) : null
+        );
+    }
+
+    public PGPKeyRing keyRing(String asciiPublic, String asciiSecret) throws IOException, PGPException {
+        return keyRing(
+                asciiPublic != null ? asciiPublic.getBytes(UTF8) : null,
+                asciiSecret != null ? asciiSecret.getBytes(UTF8) : null
+        );
+    }
+
     /*
     STATIC METHODS
      */
@@ -110,5 +129,17 @@ public class KeyRingReader {
         return new PGPSecretKeyRingCollection(
                 PGPUtil.getDecoderStream(inputStream),
                 new BcKeyFingerprintCalculator());
+    }
+
+    public static PGPKeyRing readKeyRing(InputStream publicIn, InputStream secretIn) throws IOException, PGPException {
+        PGPPublicKeyRing publicKeys = null;
+        if (publicIn != null) {
+            publicKeys = readPublicKeyRing(publicIn);
+        }
+        PGPSecretKeyRing secretKeys = null;
+        if (secretIn != null) {
+            secretKeys = readSecretKeyRing(secretIn);
+        }
+        return new PGPKeyRing(publicKeys, secretKeys);
     }
 }
