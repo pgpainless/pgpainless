@@ -60,17 +60,24 @@ public class KeyRingSubKeyFix {
                                                        PBESecretKeyDecryptor decryptor,
                                                        PBESecretKeyEncryptor encryptor)
             throws PGPException {
-        List<PGPSecretKey> _secretKeys = new ArrayList<>();
-        Iterator<PGPSecretKey> secretKeyIterator = secretKeys.iterator();
-        _secretKeys.add(secretKeyIterator.next());
 
         PGPDigestCalculator calculator = new BcPGPDigestCalculatorProvider().get(HashAlgorithmTags.SHA1);
 
+        List<PGPSecretKey> _secretKeys = new ArrayList<>();
+        Iterator<PGPSecretKey> secretKeyIterator = secretKeys.iterator();
         try {
 
             while (secretKeyIterator.hasNext()) {
-                PGPSecretKey subKey = secretKeyIterator.next();
-                PGPPublicKey pubSubKey = subKey.getPublicKey();
+                PGPSecretKey key = secretKeyIterator.next();
+
+                if (key.isMasterKey()) {
+                    LOGGER.log(Level.INFO, Long.toHexString(key.getKeyID()) + " is master key. Skip.");
+                    _secretKeys.add(key);
+                    continue;
+                }
+
+                PGPSecretKey secSubKey = key;
+                PGPPublicKey pubSubKey = secSubKey.getPublicKey();
 
                 // check for public key packet type
 
@@ -80,15 +87,16 @@ public class KeyRingSubKeyFix {
 
                 if (keyPacket instanceof PublicSubkeyPacket) {
                     // Sub key is already sub key
+                    _secretKeys.add(secSubKey);
                     continue;
                 }
 
                 // Sub key is normal key -> fix
-                LOGGER.log(Level.INFO, "Subkey " + Long.toHexString(subKey.getKeyID()) + " does not have a subkey key packet. Convert it...");
+                LOGGER.log(Level.INFO, "Subkey " + Long.toHexString(secSubKey.getKeyID()) + " does not have a subkey key packet. Convert it...");
                 keyPacket = new PublicSubkeyPacket(pubSubKey.getAlgorithm(), pubSubKey.getCreationTime(), keyPacket.getKey());
                 publicPk.set(pubSubKey, keyPacket);
 
-                PGPPrivateKey privateKey = subKey.extractPrivateKey(decryptor);
+                PGPPrivateKey privateKey = secSubKey.extractPrivateKey(decryptor);
 
                 PGPSecretKey secretKey = new PGPSecretKey(privateKey, pubSubKey, calculator, false, encryptor);
                 _secretKeys.add(secretKey);

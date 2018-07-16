@@ -37,6 +37,7 @@ import org.bouncycastle.openpgp.PGPSecretKeyRingCollection;
 import org.bouncycastle.openpgp.PGPSignature;
 import org.bouncycastle.openpgp.PGPSignatureSubpacketVector;
 import org.bouncycastle.openpgp.PGPUtil;
+import org.bouncycastle.openpgp.operator.bc.BcKeyFingerprintCalculator;
 import org.bouncycastle.util.io.Streams;
 import org.pgpainless.pgpainless.algorithm.KeyFlag;
 import org.pgpainless.pgpainless.key.selection.key.PublicKeySelectionStrategy;
@@ -59,6 +60,21 @@ public class BCUtil {
     public static PGPSecretKeyRingCollection keyRingsToKeyRingCollection(PGPSecretKeyRing... rings)
             throws IOException, PGPException {
         return new PGPSecretKeyRingCollection(Arrays.asList(rings));
+    }
+
+    public static PGPPublicKeyRing publicKeyRingFromSecretKeyRing(PGPSecretKeyRing secretKeys)
+            throws PGPException, IOException {
+        PGPSecretKeyRing fixedSecretKeys = KeyRingSubKeyFix.repairSubkeyPackets(secretKeys, null, null);
+
+        ByteArrayOutputStream buffer = new ByteArrayOutputStream(512);
+        for (PGPSecretKey secretKey : fixedSecretKeys) {
+            PGPPublicKey publicKey = secretKey.getPublicKey();
+            if (publicKey != null) {
+                publicKey.encode(buffer, false);
+            }
+        }
+
+        return new PGPPublicKeyRing(buffer.toByteArray(), new BcKeyFingerprintCalculator());
     }
 
     /*

@@ -17,7 +17,6 @@ package org.pgpainless.pgpainless;
 
 import static junit.framework.TestCase.assertTrue;
 
-import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.security.InvalidAlgorithmParameterException;
 import java.security.NoSuchAlgorithmException;
@@ -27,13 +26,11 @@ import java.util.Arrays;
 
 import org.bouncycastle.jce.provider.BouncyCastleProvider;
 import org.bouncycastle.openpgp.PGPException;
-import org.bouncycastle.openpgp.PGPPublicKey;
 import org.bouncycastle.openpgp.PGPPublicKeyRing;
-import org.bouncycastle.openpgp.PGPSecretKey;
 import org.bouncycastle.openpgp.PGPSecretKeyRing;
-import org.bouncycastle.openpgp.operator.bc.BcKeyFingerprintCalculator;
 import org.junit.Test;
 import org.pgpainless.pgpainless.key.collection.PGPKeyRing;
+import org.pgpainless.pgpainless.util.BCUtil;
 import org.pgpainless.pgpainless.util.KeyRingSubKeyFix;
 
 public class KeyRingSubKeyFixTest {
@@ -51,20 +48,11 @@ public class KeyRingSubKeyFixTest {
         PGPPublicKeyRing publicKeys = ring.getPublicKeys();
 
         PGPSecretKeyRing fixed = KeyRingSubKeyFix.repairSubkeyPackets(secretKeys, null, null);
-        PGPPublicKeyRing fixedPub = publicKeyRing(fixed);
+
+        assertTrue(Arrays.equals(secretKeys.getEncoded(), fixed.getEncoded()));
+
+        PGPPublicKeyRing fixedPub = BCUtil.publicKeyRingFromSecretKeyRing(fixed);
 
         assertTrue(Arrays.equals(publicKeys.getEncoded(), fixedPub.getEncoded()));
-    }
-
-    private PGPPublicKeyRing publicKeyRing(PGPSecretKeyRing secretKeys) throws IOException {
-        ByteArrayOutputStream buffer = new ByteArrayOutputStream(2048);
-        for (PGPSecretKey s : secretKeys) {
-            PGPPublicKey p = s.getPublicKey();
-            if (p != null) {
-                p.encode(buffer);
-            }
-        }
-
-        return new PGPPublicKeyRing(buffer.toByteArray(), new BcKeyFingerprintCalculator());
     }
 }
