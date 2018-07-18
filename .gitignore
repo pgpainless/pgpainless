@@ -11,5 +11,5 @@ build/
 *.log
 *.jar
 
-
+gradle.properties
 !gradle-wrapper.jar
