@@ -1,43 +1,109 @@
-plugins {
-    id 'java'
-    id 'maven'
-    id 'maven-publish'
-    id 'ru.vyarus.animalsniffer' version '1.4.3'
+buildscript {
+
+    repositories {
+
+        maven {
+            url "https://plugins.gradle.org/m2/"
+        }
+
+        jcenter()
+        mavenLocal()
+        mavenCentral()
+    }
 }
 
-apply plugin: 'eclipse'
+apply from: 'version.gradle'
 
-apply plugin: 'ru.vyarus.animalsniffer'
-dependencies {
-    signature "net.sf.androidscents.signature:android-api-level-9:2.3.1_r2@signature"
+allprojects {
+
+    apply from: 'plugins.gradle'
+
+    group 'org.pgpainless'
+    description = "Simple to use OpenPGP API for Java based on Bouncycastle"
+    version = shortVersion
+
+    sourceCompatibility = javaSourceCompatibility
+
+    repositories {
+        mavenCentral()
+    }
 }
 
-animalsniffer {
-    sourceSets = [sourceSets.main]
+subprojects {
+    apply plugin: 'maven'
+    apply plugin: 'signing'
+
+    task sourcesJar(type: Jar, dependsOn: classes) {
+        classifier = 'sources'
+        from sourceSets.main.allSource
+    }
+    task javadocJar(type: Jar, dependsOn: javadoc) {
+        classifier = 'javadoc'
+        from javadoc.destinationDir
+    }
+    task testJar(type: Jar, dependsOn: testClasses) {
+        classifier = 'tests'
+        from sourceSets.test.output
+    }
+
+    artifacts {
+        archives sourcesJar
+        archives javadocJar
+        archives testJar
+    }
+
+    uploadArchives {
+        repositories {
+            mavenDeployer {
+                if (signingRequired) {
+                    beforeDeployment { MavenDeployment deployment -> signing.signPom(deployment) }
+                }
+                repository(url: project.sonatypeStagingUrl) {
+                    if (sonatypeCredentialsAvailable) {
+                        authentication(userName: sonatypeUsername, password: sonatypePassword)
+                    }
+                }
+                snapshotRepository(url: project.sonatypeSnapshotUrl) {
+                    if (sonatypeCredentialsAvailable) {
+                        authentication(userName: sonatypeUsername, password: sonatypePassword)
+                    }
+                }
+
+                pom.project {
+                    name 'PGPainless'
+                    description 'Simple to use OpenPGP API for Java based on Bouncycastle'
+                    url 'https://github.com/pgpainless/pgpainless'
+                    inceptionYear '2018'
+
+                    scm {
+                        url 'https://github.com/pgpainless/pgpainless'
+                        connection 'scm:https://github.com/pgpainless/pgpainless'
+                        developerConnection 'scm:git://github.com/pgpainless/pgpainless.git'
+                    }
+
+                    licenses {
+                        license {
+                            name 'The Apache Software License, Version 2.0'
+                            url 'http://www.apache.org/licenses/LICENSE-2.0.txt'
+                            distribution 'repo'
+                        }
+                    }
+
+                    developers {
+                        developer {
+                            id 'vanitasvitae'
+                            name 'Paul Schaub'
+                            email 'vanitasvitae@fsfe.org'
+                        }
+                    }
+                }
+            }
+        }
+    }
+
+    signing {
+        required { signingRequired }
+        sign configurations.archives
+    }
 }
 
-apply plugin: 'checkstyle'
-
-checkstyle {
-    configFile = 'config/checkstyle.xml' as File
-    toolVersion = '8.10'
-}
-
-group 'org.pgpainless'
-version '0.1-SNAPSHOT'
-
-sourceCompatibility = 1.8
-
-repositories {
-    mavenCentral()
-}
-
-dependencies {
-    testCompile group: 'junit', name: 'junit', version: '4.12'
-    /*
-    compile 'org.bouncycastle:bcprov-debug-jdk15on:1.60'
-    /*/
-    compile 'org.bouncycastle:bcprov-jdk15on:1.60'
-    //*/
-    compile 'org.bouncycastle:bcpg-jdk15on:1.60'
-}

@@ -1,0 +1,27 @@
+plugins {
+    id 'java'
+
+    id 'idea'
+    id 'eclipse'
+
+    id 'maven'
+    id 'maven-publish'
+
+    id 'ru.vyarus.animalsniffer' version '1.4.3'
+
+    id 'checkstyle'
+}
+
+// animalsniffer
+dependencies {
+    signature "net.sf.androidscents.signature:android-api-level-${pgpainlessMinAndroidSdk}:2.3.1_r2@signature"
+}
+animalsniffer {
+    sourceSets = [sourceSets.main]
+}
+
+// checkstyle
+checkstyle {
+    configFile = 'config/checkstyle.xml' as File
+    toolVersion = '8.10'
+}

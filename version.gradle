@@ -1,0 +1,9 @@
+
+allprojects {
+    ext {
+        shortVersion = '0.0.1'
+        isSnapshot = true
+        pgpainlessMinAndroidSdk = 9
+        javaSourceCompatibility = 1.7
+    }
+}
