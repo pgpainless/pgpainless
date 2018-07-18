@@ -44,6 +44,7 @@ import org.bouncycastle.openpgp.operator.jcajce.JcaPGPContentSignerBuilder;
 import org.bouncycastle.openpgp.operator.jcajce.JcaPGPDigestCalculatorProviderBuilder;
 import org.bouncycastle.openpgp.operator.jcajce.JcaPGPKeyPair;
 import org.bouncycastle.openpgp.operator.jcajce.JcePBESecretKeyEncryptorBuilder;
+import org.pgpainless.pgpainless.algorithm.HashAlgorithm;
 import org.pgpainless.pgpainless.algorithm.KeyFlag;
 import org.pgpainless.pgpainless.key.collection.PGPKeyRing;
 import org.pgpainless.pgpainless.key.generation.type.ECDH;
@@ -166,7 +167,7 @@ public class KeyRingBuilder implements KeyRingBuilderInterface {
                 PGPDigestCalculator calculator = new JcaPGPDigestCalculatorProviderBuilder()
                         .setProvider(BouncyCastleProvider.PROVIDER_NAME)
                         .build()
-                        .get(HashAlgorithmTags.SHA1);
+                        .get(HashAlgorithm.SHA1.getAlgorithmId());
 
                 // Encryptor for encrypting secret keys
                 PBESecretKeyEncryptor encryptor = passphrase == null ?
@@ -189,7 +190,7 @@ public class KeyRingBuilder implements KeyRingBuilderInterface {
 
                 // Signer for creating self-signature
                 PGPContentSignerBuilder signer = new JcaPGPContentSignerBuilder(
-                        certKey.getPublicKey().getAlgorithm(), HashAlgorithmTags.SHA512)
+                        certKey.getPublicKey().getAlgorithm(), HashAlgorithm.SHA512.getAlgorithmId())
                         .setProvider(BouncyCastleProvider.PROVIDER_NAME);
 
                 PGPSignatureSubpacketVector hashedSubPackets = certKeySpec.getSubpackets();
