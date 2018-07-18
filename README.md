@@ -114,3 +114,13 @@ but ultimately I decided to create my own OpenPGP library which better fits my n
 
 However, PGPainless is heavily influenced by Bouncy-GPG and  I would definitely recommend you to
 use it instead of PGPainless if you want a more mature, better tested code base.
+
+To reach out to the development team, feel free to send a mail: info@pgpainless.org
+
+## Development
+PGPainless is developed in - and accepts contributions from - the following places:
+
+* [Github](https://github.com/pgpainless/pgpainless)
+* [Teahub](https://teahub.io/PGPainless/pgpainless)
+
+Please follow the [code of conduct](CODE_OF_CONDUCT.md) if you want to be part of the project.
