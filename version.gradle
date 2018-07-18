@@ -4,6 +4,6 @@ allprojects {
         shortVersion = '0.0.1'
         isSnapshot = true
         pgpainlessMinAndroidSdk = 9
-        javaSourceCompatibility = 1.7
+        javaSourceCompatibility = 1.8
     }
 }

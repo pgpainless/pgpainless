@@ -1,3 +1,5 @@
+import java.text.SimpleDateFormat
+
 buildscript {
 
     repositories {
@@ -12,11 +14,43 @@ buildscript {
     }
 }
 
+plugins {
+    id 'java'
+
+    id 'idea'
+    id 'eclipse'
+
+    id 'maven'
+    id 'maven-publish'
+
+    id 'ru.vyarus.animalsniffer' version '1.4.3'
+
+    id 'checkstyle'
+}
+
 apply from: 'version.gradle'
 
 allprojects {
 
-    apply from: 'plugins.gradle'
+    apply plugin: 'java'
+    apply plugin: 'idea'
+    apply plugin: 'eclipse'
+    apply plugin: 'checkstyle'
+
+    // animalsniffer
+    apply plugin: 'ru.vyarus.animalsniffer'
+    dependencies {
+        signature "net.sf.androidscents.signature:android-api-level-${pgpainlessMinAndroidSdk}:2.3.1_r2@signature"
+    }
+    animalsniffer {
+        sourceSets = [sourceSets.main]
+    }
+
+    // checkstyle
+    checkstyle {
+        configFile = 'config/checkstyle.xml' as File
+        toolVersion = '8.10'
+    }
 
     group 'org.pgpainless'
     description = "Simple to use OpenPGP API for Java based on Bouncycastle"
@@ -27,6 +61,33 @@ allprojects {
     repositories {
         mavenCentral()
     }
+
+    ext {
+        junitVersion = 4.12
+        androidBootClasspath = getAndroidRuntimeJar(pgpainlessMinAndroidSdk)
+        rootConfigDir = new File(rootDir, 'config')
+        gitCommit = getGitCommit()
+        builtDate = (new SimpleDateFormat("yyyy-MM-dd")).format(new Date())
+        isReleaseVersion = !isSnapshot
+        signingRequired = isReleaseVersion
+        sonatypeCredentialsAvailable = project.hasProperty('sonatypeUsername') && project.hasProperty('sonatypePassword')
+        sonatypeSnapshotUrl = 'https://oss.sonatype.org/content/repositories/snapshots'
+        sonatypeStagingUrl = 'https://oss.sonatype.org/service/local/staging/deploy/maven2'
+    }
+
+    if (isSnapshot) {
+        version = version + '-SNAPSHOT'
+    }
+
+    if (!ext.isSnapshot && !'git describe --exact-match HEAD'.execute().text.trim().equals(ext.shortVersion)) {
+        throw new InvalidUserDataException('Untagged version detected! Please tag every release.')
+    }
+    if (!version.endsWith('-SNAPSHOT') && version != 'git tag --points-at HEAD'.execute().text.trim()) {
+        throw new InvalidUserDataException(
+                'Tag mismatch detected, version is ' + version + ' but should be ' +
+                        'git tag --points-at HEAD'.execute().text.trim())
+    }
+
 }
 
 subprojects {
@@ -107,3 +168,60 @@ subprojects {
     }
 }
 
+def getAndroidRuntimeJar(androidSdkApiLevel) {
+    def androidHome = getAndroidHome()
+    def androidJar = new File("$androidHome/platforms/android-$androidSdkApiLevel/android.jar")
+    if (androidJar.isFile()) {
+        return androidJar
+    } else {
+        throw new Exception("Can't find android.jar for API level $androidSdkApiLevel at $androidHome/platforms/android-$androidSdkApiLevel/android.jar. Please install corresponding SDK platform package")
+    }
+}
+
+def getAndroidHome() {
+    def androidHomeEnv = System.getenv("ANDROID_HOME")
+    if (androidHomeEnv == null) {
+        throw new Exception("ANDROID_HOME environment variable is not set")
+    }
+    def androidHome = new File(androidHomeEnv)
+    if (!androidHome.isDirectory()) throw new Exception("Environment variable ANDROID_HOME is not pointing to a directory")
+    return androidHome
+}
+
+def getGitCommit() {
+    def dotGit = new File("$projectDir/.git")
+    if (!dotGit.isDirectory()) return 'non-git build'
+
+    def cmd = 'git describe --always --tags --dirty=+'
+    def proc = cmd.execute()
+    def gitCommit = proc.text.trim()
+    assert !gitCommit.isEmpty()
+
+    def srCmd = 'git symbolic-ref --short HEAD'
+    def srProc = srCmd.execute()
+    srProc.waitForOrKill(10 * 1000)
+    if (srProc.exitValue() == 0) {
+        // Only add the information if the git command was
+        // successful. There may be no symbolic reference for HEAD if
+        // e.g. in detached mode.
+        def symbolicReference = srProc.text.trim()
+        assert !symbolicReference.isEmpty()
+        gitCommit += "-$symbolicReference"
+    }
+
+    gitCommit
+}
+
+task javadocAll(type: Javadoc) {
+    source subprojects.collect {project ->
+        project.sourceSets.main.allJava }
+    destinationDir = new File(buildDir, 'javadoc')
+    // Might need a classpath
+    classpath = files(subprojects.collect {project ->
+        project.sourceSets.main.compileClasspath})
+    options.linkSource = true
+    options.use = true
+    options.links = [
+            "https://docs.oracle.com/javase/${sourceCompatibility.getMajorVersion()}/docs/api/",
+    ] as String[]
+}
