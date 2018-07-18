@@ -1,4 +1,4 @@
 rootProject.name = 'PGPainless'
 
-include 'painless-core'
+include 'pgpainless-core'
 

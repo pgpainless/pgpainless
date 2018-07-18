@@ -7,31 +7,18 @@ buildscript {
         maven {
             url "https://plugins.gradle.org/m2/"
         }
-
-        jcenter()
         mavenLocal()
         mavenCentral()
     }
 }
 
 plugins {
-    id 'java'
-
-    id 'idea'
-    id 'eclipse'
-
-    id 'maven'
-    id 'maven-publish'
-
     id 'ru.vyarus.animalsniffer' version '1.4.3'
-
-    id 'checkstyle'
 }
 
 apply from: 'version.gradle'
 
 allprojects {
-
     apply plugin: 'java'
     apply plugin: 'idea'
     apply plugin: 'eclipse'
