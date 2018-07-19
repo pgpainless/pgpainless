@@ -82,7 +82,7 @@ public class BCUtil {
      */
 
     public static PGPSecretKeyRing getKeyRingFromCollection(PGPSecretKeyRingCollection collection, Long id)
-            throws PGPException, IOException {
+            throws PGPException {
         PGPSecretKeyRing uncleanedRing = collection.getSecretKeyRing(id);
 
         // Determine ids of signed keys

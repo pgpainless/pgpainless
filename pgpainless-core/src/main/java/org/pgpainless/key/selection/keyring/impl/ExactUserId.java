@@ -21,7 +21,6 @@ import org.bouncycastle.openpgp.PGPPublicKeyRing;
 import org.bouncycastle.openpgp.PGPSecretKeyRing;
 import org.pgpainless.key.selection.keyring.PublicKeyRingSelectionStrategy;
 import org.pgpainless.key.selection.keyring.SecretKeyRingSelectionStrategy;
-import org.pgpainless.key.selection.keyring.PublicKeyRingSelectionStrategy;
 
 public class ExactUserId {
 

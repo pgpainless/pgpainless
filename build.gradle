@@ -35,7 +35,7 @@ allprojects {
 
     // checkstyle
     checkstyle {
-        configFile = 'config/checkstyle.xml' as File
+        configFile = "${project.rootDir}/config/checkstyle.xml" as File
         toolVersion = '8.10'
     }
 
