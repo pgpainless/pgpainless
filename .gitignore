@@ -13,3 +13,12 @@ build/
 
 gradle.properties
 !gradle-wrapper.jar
+
+.classpath
+.project
+.settings/
+
+pgpainless-core/.classpath
+pgpainless-core/.project
+pgpainless-core/.settings/
+
