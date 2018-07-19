@@ -8,6 +8,21 @@ PGPainless is based around the Bouncycastle java library and can be used on Andr
 
 ### NOTE: PGPainless is in a *very* early state of development and should under no circumstances be used for serious production usage yet.
 
+## Include PGPainless in your Project
+
+PGPainless is available on maven central. In order to include it in your project, just add the 
+maven central repository and add PGPainless as a dependency.
+
+```
+repositories {
+	mavenCentral()
+}
+
+dependencies {
+	compile 'org.pgpainless:pgpainless-core:0.0.1-alpha1'
+}
+```
+
 ## How to use PGPainless
 
 The entry point to the API is the `PGPainless` class. Here you can find methods for a quick start :)
