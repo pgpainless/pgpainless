@@ -21,51 +21,68 @@ import java.util.Map;
 import org.bouncycastle.openpgp.PGPException;
 import org.bouncycastle.openpgp.operator.PBESecretKeyDecryptor;
 import org.bouncycastle.openpgp.operator.PBESecretKeyEncryptor;
-import org.bouncycastle.openpgp.operator.PGPDigestCalculatorProvider;
-import org.bouncycastle.openpgp.operator.bc.BcPBESecretKeyDecryptorBuilder;
-import org.bouncycastle.openpgp.operator.bc.BcPBESecretKeyEncryptorBuilder;
-import org.bouncycastle.openpgp.operator.bc.BcPGPDigestCalculatorProvider;
 import org.pgpainless.util.Passphrase;
 
 /**
  * Implementation of the {@link SecretKeyRingProtector} which holds a map of key ids and their passwords.
+ * In case the needed passphrase is not contained in the map, the {@code missingPassphraseCallback} will be consulted,
+ * and the passphrase is added to the map.
  */
-public class PassphraseMapKeyRingProtector implements SecretKeyRingProtector {
+public class PassphraseMapKeyRingProtector implements SecretKeyRingProtector, SecretKeyPassphraseProvider {
 
-    private static final PGPDigestCalculatorProvider calculatorProvider = new BcPGPDigestCalculatorProvider();
+    private final Map<Long, Passphrase> cache = new HashMap<>();
+    private final SecretKeyRingProtector protector;
+    private final SecretKeyPassphraseProvider provider;
 
-    private final Map<Long, Passphrase> passphrases = new HashMap<>();
-    private final KeyRingProtectionSettings protectionSettings;
-
-    public PassphraseMapKeyRingProtector(Map<Long, Passphrase> passphrases, KeyRingProtectionSettings protectionSettings) {
-        this.passphrases.putAll(passphrases);
-        this.protectionSettings = protectionSettings;
+    public PassphraseMapKeyRingProtector(Map<Long, Passphrase> passphrases,
+                                         KeyRingProtectionSettings protectionSettings,
+                                         SecretKeyPassphraseProvider missingPassphraseCallback) {
+        this.cache.putAll(passphrases);
+        this.protector = new PasswordBasedSecretKeyRingProtector(protectionSettings, this);
+        this.provider = missingPassphraseCallback;
     }
 
+    /**
+     * Add a passphrase to the cache.
+     *
+     * @param keyId id of the key
+     * @param passphrase passphrase
+     */
     public void addPassphrase(Long keyId, Passphrase passphrase) {
-        this.passphrases.put(keyId, passphrase);
+        this.cache.put(keyId, passphrase);
     }
 
+    /**
+     * Remove a passphrase from the cache.
+     * The passphrase will be cleared and then removed.
+     *
+     * @param keyId id of the key
+     */
     public void forgetPassphrase(Long keyId) {
-        Passphrase passphrase = passphrases.get(keyId);
+        Passphrase passphrase = cache.get(keyId);
         passphrase.clear();
-        passphrases.remove(keyId);
+        cache.remove(keyId);
+    }
+
+    @Override
+    public Passphrase getPassphraseFor(Long keyId) {
+        Passphrase passphrase = cache.get(keyId);
+        if (passphrase == null || !passphrase.isValid()) {
+            passphrase = provider.getPassphraseFor(keyId);
+            if (passphrase != null) {
+                cache.put(keyId, passphrase);
+            }
+        }
+        return passphrase;
     }
 
     @Override
     public PBESecretKeyDecryptor getDecryptor(Long keyId) {
-        Passphrase passphrase = passphrases.get(keyId);
-        return new BcPBESecretKeyDecryptorBuilder(calculatorProvider)
-                .build(passphrase != null ? passphrase.getChars() : null);
+        return protector.getDecryptor(keyId);
     }
 
     @Override
     public PBESecretKeyEncryptor getEncryptor(Long keyId) throws PGPException {
-        Passphrase passphrase = passphrases.get(keyId);
-        return new BcPBESecretKeyEncryptorBuilder(
-                protectionSettings.getEncryptionAlgorithm().getAlgorithmId(),
-                calculatorProvider.get(protectionSettings.getHashAlgorithm().getAlgorithmId()),
-                protectionSettings.getS2kCount())
-                .build(passphrase != null ? passphrase.getChars() : null);
+        return protector.getEncryptor(keyId);
     }
 }
