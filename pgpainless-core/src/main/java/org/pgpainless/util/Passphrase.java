@@ -19,28 +19,74 @@ import java.util.Arrays;
 
 public class Passphrase {
 
-    private final char[] chars;
+    private final Object lock = new Object();
 
+    private final char[] chars;
+    private boolean valid = true;
+
+    /**
+     * Passphrase for keys etc.
+     *
+     * @param chars may be null for empty passwords.
+     */
     public Passphrase(char[] chars) {
-        if (chars == null) {
-            throw new NullPointerException("chars MUST NOT be null.");
-        }
         this.chars = chars;
     }
 
+    /**
+     * Overwrite the char array with spaces and mark the {@link Passphrase} as invalidated.
+     */
     public void clear() {
-        Arrays.fill(chars, ' ');
+        synchronized (lock) {
+            if (chars != null) {
+                Arrays.fill(chars, ' ');
+            }
+            valid = false;
+        }
     }
 
+    /**
+     * Call {@link #clear()} to make sure the memory is overwritten.
+     *
+     * @throws Throwable bad things might happen in {@link Object#finalize()}.
+     */
     @Override
     protected void finalize() throws Throwable {
         clear();
         super.finalize();
     }
 
+    /**
+     * Return a copy of the underlying char array.
+     *
+     * @return passphrase chars.
+     *
+     * @throws IllegalStateException in case the password has been cleared at this point.
+     */
     public char[] getChars() {
-        char[] copy = new char[chars.length];
-        System.arraycopy(chars, 0, copy, 0, chars.length);
-        return copy;
+        synchronized (lock) {
+            if (!valid) {
+                throw new IllegalStateException("Passphrase has been cleared.");
+            }
+
+            if (chars == null) {
+                return null;
+            }
+
+            char[] copy = new char[chars.length];
+            System.arraycopy(chars, 0, copy, 0, chars.length);
+            return copy;
+        }
+    }
+
+    /**
+     * Return true if the passphrase has not yet been cleared.
+     *
+     * @return valid
+     */
+    public boolean isValid() {
+        synchronized (lock) {
+            return valid;
+        }
     }
 }
