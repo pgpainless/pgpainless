@@ -25,7 +25,7 @@ import org.pgpainless.algorithm.CompressionAlgorithm;
 import org.pgpainless.algorithm.SymmetricKeyAlgorithm;
 import org.pgpainless.key.OpenPgpV4Fingerprint;
 
-public class PainlessResult {
+public class OpenPgpMetadata {
 
     private final Set<Long> recipientKeyIds;
     private final OpenPgpV4Fingerprint decryptionFingerprint;
@@ -36,13 +36,13 @@ public class PainlessResult {
     private final CompressionAlgorithm compressionAlgorithm;
     private final boolean integrityProtected;
 
-    public PainlessResult(Set<Long> recipientKeyIds,
-                          OpenPgpV4Fingerprint decryptionFingerprint,
-                          SymmetricKeyAlgorithm symmetricKeyAlgorithm,
-                          CompressionAlgorithm algorithm,
-                          boolean integrityProtected,
-                          Set<Long> unverifiedSignatureKeyIds,
-                          Set<OpenPgpV4Fingerprint> verifiedSignaturesFingerprints) {
+    public OpenPgpMetadata(Set<Long> recipientKeyIds,
+                           OpenPgpV4Fingerprint decryptionFingerprint,
+                           SymmetricKeyAlgorithm symmetricKeyAlgorithm,
+                           CompressionAlgorithm algorithm,
+                           boolean integrityProtected,
+                           Set<Long> unverifiedSignatureKeyIds,
+                           Set<OpenPgpV4Fingerprint> verifiedSignaturesFingerprints) {
 
         this.recipientKeyIds = Collections.unmodifiableSet(recipientKeyIds);
         this.decryptionFingerprint = decryptionFingerprint;
@@ -152,8 +152,8 @@ public class PainlessResult {
             return this;
         }
 
-        public PainlessResult build() {
-            return new PainlessResult(recipientFingerprints, decryptionFingerprint, symmetricKeyAlgorithm, compressionAlgorithm, integrityProtected, unverifiedSignatureKeyIds, verifiedSignatureFingerprints);
+        public OpenPgpMetadata build() {
+            return new OpenPgpMetadata(recipientFingerprints, decryptionFingerprint, symmetricKeyAlgorithm, compressionAlgorithm, integrityProtected, unverifiedSignatureKeyIds, verifiedSignatureFingerprints);
         }
     }
 }

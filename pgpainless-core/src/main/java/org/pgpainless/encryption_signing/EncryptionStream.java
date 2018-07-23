@@ -43,7 +43,7 @@ import org.bouncycastle.openpgp.operator.bc.BcPublicKeyKeyEncryptionMethodGenera
 import org.pgpainless.algorithm.CompressionAlgorithm;
 import org.pgpainless.algorithm.HashAlgorithm;
 import org.pgpainless.algorithm.SymmetricKeyAlgorithm;
-import org.pgpainless.decryption_verification.PainlessResult;
+import org.pgpainless.decryption_verification.OpenPgpMetadata;
 
 /**
  * This class is based upon Jens Neuhalfen's Bouncy-GPG PGPEncryptingStream.
@@ -56,7 +56,7 @@ public final class EncryptionStream extends OutputStream {
 
     private static final int BUFFER_SIZE = 1 << 8;
 
-    private final PainlessResult result;
+    private final OpenPgpMetadata result;
 
     private List<PGPSignatureGenerator> signatureGenerators = new ArrayList<>();
     private boolean closed = false;
@@ -157,7 +157,7 @@ public final class EncryptionStream extends OutputStream {
         }
 
 
-        this.result = new PainlessResult(recipientKeyIds,
+        this.result = new OpenPgpMetadata(recipientKeyIds,
                 null, symmetricKeyAlgorithm,
                 compressionAlgorithm, true,
                 signingKeyIds, Collections.emptySet());
@@ -259,7 +259,7 @@ public final class EncryptionStream extends OutputStream {
         }
     }
 
-    public PainlessResult getResult() {
+    public OpenPgpMetadata getResult() {
         return result;
     }
 }

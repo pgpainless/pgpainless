@@ -21,10 +21,10 @@ import java.io.InputStream;
 public class DecryptionStream extends InputStream {
 
     private final InputStream inputStream;
-    private final PainlessResult.Builder resultBuilder;
+    private final OpenPgpMetadata.Builder resultBuilder;
     private boolean isClosed = false;
 
-    DecryptionStream(InputStream wrapped, PainlessResult.Builder resultBuilder) {
+    DecryptionStream(InputStream wrapped, OpenPgpMetadata.Builder resultBuilder) {
 
         if (wrapped == null) {
             throw new NullPointerException("Wrapped InputStream MUST NOT be null!");
@@ -45,7 +45,7 @@ public class DecryptionStream extends InputStream {
         this.isClosed = true;
     }
 
-    public PainlessResult getResult() {
+    public OpenPgpMetadata getResult() {
         if (!isClosed) {
             throw new IllegalStateException("DecryptionStream MUST be closed before the result can be accessed.");
         }

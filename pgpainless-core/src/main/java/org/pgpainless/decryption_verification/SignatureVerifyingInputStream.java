@@ -37,14 +37,14 @@ public class SignatureVerifyingInputStream extends FilterInputStream {
 
     private final PGPObjectFactory objectFactory;
     private final Map<OpenPgpV4Fingerprint, PGPOnePassSignature> onePassSignatures;
-    private final PainlessResult.Builder resultBuilder;
+    private final OpenPgpMetadata.Builder resultBuilder;
 
     private boolean validated = false;
 
     protected SignatureVerifyingInputStream(InputStream inputStream,
                                             PGPObjectFactory objectFactory,
                                             Map<OpenPgpV4Fingerprint, PGPOnePassSignature> onePassSignatures,
-                                            PainlessResult.Builder resultBuilder) {
+                                            OpenPgpMetadata.Builder resultBuilder) {
         super(inputStream);
         this.objectFactory = objectFactory;
         this.resultBuilder = resultBuilder;

@@ -40,7 +40,7 @@ import org.pgpainless.algorithm.KeyFlag;
 import org.pgpainless.algorithm.PublicKeyAlgorithm;
 import org.pgpainless.algorithm.SymmetricKeyAlgorithm;
 import org.pgpainless.decryption_verification.DecryptionStream;
-import org.pgpainless.decryption_verification.PainlessResult;
+import org.pgpainless.decryption_verification.OpenPgpMetadata;
 import org.pgpainless.encryption_signing.EncryptionStream;
 import org.pgpainless.key.collection.PGPKeyRing;
 import org.pgpainless.key.generation.KeySpec;
@@ -142,7 +142,7 @@ public class EncryptDecryptTest extends AbstractPGPainlessTest {
                 .signWith(keyDecryptor, senderSec)
                 .noArmor();
 
-        PainlessResult encryptionResult = encryptor.getResult();
+        OpenPgpMetadata encryptionResult = encryptor.getResult();
 
         assertFalse(encryptionResult.getAllSignatureKeyFingerprints().isEmpty());
         for (long keyId : encryptionResult.getAllSignatureKeyFingerprints()) {
@@ -180,7 +180,7 @@ public class EncryptDecryptTest extends AbstractPGPainlessTest {
         decryptor.close();
 
         assertTrue(Arrays.equals(secretMessage, decryptedSecretMessage.toByteArray()));
-        PainlessResult result = decryptor.getResult();
+        OpenPgpMetadata result = decryptor.getResult();
         assertTrue(result.containsVerifiedSignatureFrom(senderPub));
         assertTrue(result.isIntegrityProtected());
         assertTrue(result.isSigned());

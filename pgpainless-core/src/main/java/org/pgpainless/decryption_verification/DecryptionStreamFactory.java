@@ -61,7 +61,7 @@ public final class DecryptionStreamFactory {
     private final Set<PGPPublicKeyRing> verificationKeys = new HashSet<>();
     private final MissingPublicKeyCallback missingPublicKeyCallback;
 
-    private final PainlessResult.Builder resultBuilder = PainlessResult.getBuilder();
+    private final OpenPgpMetadata.Builder resultBuilder = OpenPgpMetadata.getBuilder();
     private final PGPContentVerifierBuilderProvider verifierBuilderProvider = new BcPGPContentVerifierBuilderProvider();
     private final KeyFingerPrintCalculator fingerCalc = new BcKeyFingerprintCalculator();
     private final Map<OpenPgpV4Fingerprint, PGPOnePassSignature> verifiableOnePassSignatures = new HashMap<>();
