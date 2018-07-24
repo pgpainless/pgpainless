@@ -209,9 +209,9 @@ public class BCUtil {
     }
 
     public static PGPPublicKey getMasterKeyFrom(PGPKeyRing ring) {
-        Iterator<PGPPublicKey> it = ring.getPublicKeys();
+        Iterator it = ring.getPublicKeys();
         while (it.hasNext()) {
-            PGPPublicKey k = it.next();
+            PGPPublicKey k = (PGPPublicKey) it.next();
             if (k.isMasterKey()) {
                 // There can only be one master key, so we can immediately return
                 return k;
