@@ -221,8 +221,12 @@ coveralls {
 	sourceDirs = files(subprojects.sourceSets.main.allSource.srcDirs).files.absolutePath
 }
 
-/*
+
 task jacocoRootReport(type: JacocoReport) {
+    dependsOn = subprojects.jacocoTestReport
+    sourceDirectories = files(subprojects.sourceSets.main.allSource.srcDirs)
+    classDirectories = files(subprojects.sourceSets.main.output)
+    executionData = files(subprojects.jacocoTestReport.executionData)
     reports {
         xml.enabled true
         xml.destination file("${buildDir}/reports/jacoco/test/jacocoTestReport.xml")
@@ -233,7 +237,7 @@ task jacocoRootReport(type: JacocoReport) {
     // in there).
     setOnlyIf { true }
 }
-*/
+
 
 task javadocAll(type: Javadoc) {
     source subprojects.collect {project ->

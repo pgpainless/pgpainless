@@ -21,6 +21,5 @@ script: gradle check --stacktrace
 after_success:
   - JAVAC_VERSION=$((javac -version) 2>&1)
   # Only run jacocoRootReport in the Java 8 build
-  #  - if [[ "$JAVAC_VERSION" = javac\ 1.8.* ]]; then gradle jacocoRootReport coveralls; fi
-  - if [[ "$JAVAC_VERSION" = javac\ 1.8.* ]]; then gradle jacocoTestReport coveralls; fi
+  - if [[ "$JAVAC_VERSION" = javac\ 1.8.* ]]; then gradle jacocoRootReport coveralls; fi
 
