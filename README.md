@@ -1,4 +1,11 @@
-# PGPainless - Use OpenPGP Painlessly!
+PGPainless - Use OpenPGP Painlessly!
+====================================
+
+[![Travis (.org)](https://travis-ci.org/pgpainless/pgpainless.svg)](https://travis-ci.org/pgpainless/pgpainless)
+[![Git Tag](https://badgen.now.sh/github/tag/pgpainless/pgpainless)](https://github.com/pgpainless/pgpainless/tags)
+
+About
+-----
 
 PGPainless aims to make using OpenPGP in Java projects as simple as possible.
 It does so by introducing an intuitive Builder structure, which allows easy 
