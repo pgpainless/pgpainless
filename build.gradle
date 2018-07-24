@@ -22,6 +22,7 @@ allprojects {
     apply plugin: 'java'
     apply plugin: 'idea'
     apply plugin: 'eclipse'
+    apply plugin: 'jacoco'
     apply plugin: 'checkstyle'
 
     // animalsniffer
@@ -73,6 +74,19 @@ allprojects {
         throw new InvalidUserDataException(
                 'Tag mismatch detected, version is ' + version + ' but should be ' +
                         'git tag --points-at HEAD'.execute().text.trim())
+    }
+
+    jacoco {
+        toolVersion = "0.8.1"
+    }
+
+    jacocoTestReport {
+        dependsOn test
+        sourceDirectories = project.files(sourceSets.main.allSource.srcDirs)
+        classDirectories =  project.files(sourceSets.main.output)
+        reports {
+            xml.enabled true
+        }
     }
 
 }
@@ -198,6 +212,20 @@ def getGitCommit() {
 
     gitCommit
 }
+
+/*
+task jacocoRootReport(type: JacocoReport) {
+    reports {
+        xml.enabled true
+        xml.destination file("${buildDir}/reports/jacoco/test/jacocoTestReport.xml")
+    }
+    // We could remove the following setOnlyIf line, but then
+    // jacocoRootReport would silently be SKIPPED if something with
+    // the projectsWithUnitTests is wrong (e.g. a project is missing
+    // in there).
+    setOnlyIf { true }
+}
+*/
 
 task javadocAll(type: Javadoc) {
     source subprojects.collect {project ->
