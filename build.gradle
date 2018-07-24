@@ -50,7 +50,7 @@ allprojects {
         mavenCentral()
     }
 
-    ext {
+    project.ext {
         junitVersion = 4.12
         androidBootClasspath = getAndroidRuntimeJar(pgpainlessMinAndroidSdk)
         rootConfigDir = new File(rootDir, 'config')
@@ -67,7 +67,7 @@ allprojects {
         version = version + '-SNAPSHOT'
     }
 
-    if (!ext.isSnapshot && !'git describe --exact-match HEAD'.execute().text.trim().equals(ext.shortVersion)) {
+    if (!project.ext.isSnapshot && !'git describe --exact-match HEAD'.execute().text.trim().equals(ext.shortVersion)) {
         throw new InvalidUserDataException('Untagged version detected! Please tag every release.')
     }
     if (!version.endsWith('-SNAPSHOT') && version != 'git tag --points-at HEAD'.execute().text.trim()) {

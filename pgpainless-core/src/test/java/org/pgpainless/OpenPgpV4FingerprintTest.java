@@ -16,6 +16,7 @@
 package org.pgpainless;
 
 import static junit.framework.TestCase.assertEquals;
+import static org.junit.Assert.assertNotEquals;
 
 import java.io.IOException;
 
@@ -42,6 +43,11 @@ public class OpenPgpV4FingerprintTest {
         String fp = "4A4F48414E4E53454E2049532041204E45524421";
         OpenPgpV4Fingerprint finger = new OpenPgpV4Fingerprint(fp);
         assertEquals(fp, finger.toString());
+        assertEquals(fp.length(), finger.length());
+        for (int i = 0; i < finger.length(); i++) {
+            assertEquals(fp.charAt(i), finger.charAt(i));
+        }
+        assertEquals("4A4F", finger.subSequence(0, 4));
     }
 
     @Test
@@ -55,6 +61,10 @@ public class OpenPgpV4FingerprintTest {
     public void equalsOtherFingerprintTest() {
         OpenPgpV4Fingerprint finger = new OpenPgpV4Fingerprint("5448452043414b452049532041204c4945212121");
         assertEquals(finger, new OpenPgpV4Fingerprint("5448452043414B452049532041204C4945212121"));
+        assertEquals(0, finger.compareTo(new OpenPgpV4Fingerprint("5448452043414B452049532041204C4945212121")));
+        assertNotEquals(finger, new OpenPgpV4Fingerprint("0000000000000000000000000000000000000000"));
+        assertNotEquals(finger, null);
+        assertNotEquals(finger, new Object());
     }
 
     @Test
