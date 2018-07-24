@@ -3,6 +3,7 @@ PGPainless - Use OpenPGP Painlessly!
 
 [![Travis (.org)](https://travis-ci.org/pgpainless/pgpainless.svg)](https://travis-ci.org/pgpainless/pgpainless)
 [![Git Tag](https://badgen.now.sh/github/tag/pgpainless/pgpainless)](https://github.com/pgpainless/pgpainless/tags)
+[![Coverage Status](https://coveralls.io/repos/github/pgpainless/pgpainless/badge.svg?branch=master)](https://coveralls.io/github/pgpainless/pgpainless?branch=master)
 
 About
 -----
