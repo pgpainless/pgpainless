@@ -19,6 +19,16 @@ import org.bouncycastle.openpgp.PGPPublicKey;
 
 public interface MissingPublicKeyCallback {
 
+    /**
+     * This method gets called if we encounter a signature of an unknown key.
+     *
+     * Note: It would be super cool to provide the OpenPgp fingerprint here, but unfortunately signatures only contain
+     * the key id (see https://tools.ietf.org/html/rfc4880#section-5.2.3.5)
+     *
+     * @param keyId ID of the missing key
+     *
+     * @return the key or null
+     */
     PGPPublicKey onMissingPublicKeyEncountered(Long keyId);
 
 }
