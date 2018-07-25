@@ -21,10 +21,8 @@ import java.io.IOException;
 import java.security.InvalidAlgorithmParameterException;
 import java.security.NoSuchAlgorithmException;
 import java.security.NoSuchProviderException;
-import java.security.Security;
 import java.util.Arrays;
 
-import org.bouncycastle.jce.provider.BouncyCastleProvider;
 import org.bouncycastle.openpgp.PGPException;
 import org.bouncycastle.openpgp.PGPPublicKeyRing;
 import org.bouncycastle.openpgp.PGPSecretKeyRing;
@@ -33,11 +31,7 @@ import org.pgpainless.key.collection.PGPKeyRing;
 import org.pgpainless.util.BCUtil;
 import org.pgpainless.util.KeyRingSubKeyFix;
 
-public class KeyRingSubKeyFixTest {
-
-    static {
-        Security.addProvider(new BouncyCastleProvider());
-    }
+public class KeyRingSubKeyFixTest extends AbstractPGPainlessTest {
 
     @Test
     public void test()

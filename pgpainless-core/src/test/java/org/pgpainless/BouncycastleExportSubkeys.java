@@ -15,13 +15,11 @@
  */
 package org.pgpainless;
 
-import java.io.IOException;
 import java.security.InvalidAlgorithmParameterException;
 import java.security.KeyPair;
 import java.security.KeyPairGenerator;
 import java.security.NoSuchAlgorithmException;
 import java.security.NoSuchProviderException;
-import java.security.Security;
 import java.util.Date;
 
 import org.bouncycastle.bcpg.CompressionAlgorithmTags;
@@ -46,12 +44,10 @@ import org.bouncycastle.openpgp.operator.jcajce.JcaPGPDigestCalculatorProviderBu
 import org.bouncycastle.openpgp.operator.jcajce.JcaPGPKeyPair;
 import org.junit.Test;
 
-public class BouncycastleExportSubkeys {
+public class BouncycastleExportSubkeys extends AbstractPGPainlessTest {
 
     @Test
-    public void testExportImport() throws NoSuchAlgorithmException, NoSuchProviderException, InvalidAlgorithmParameterException, PGPException, IOException {
-        Security.addProvider(new BouncyCastleProvider());
-
+    public void testExportImport() throws NoSuchAlgorithmException, NoSuchProviderException, InvalidAlgorithmParameterException, PGPException {
         KeyPairGenerator generator;
         KeyPair pair;
 

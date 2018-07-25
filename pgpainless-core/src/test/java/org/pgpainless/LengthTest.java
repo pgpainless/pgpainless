@@ -66,11 +66,11 @@ public class LengthTest extends AbstractPGPainlessTest {
 
     // @Test
     public void RsaRsa4096()
-            throws PGPException, NoSuchAlgorithmException, NoSuchProviderException, InvalidAlgorithmParameterException,
+            throws PGPException,
             IOException {
         LOGGER.log(Level.INFO, "\nRSA-4096 -> RSA-4096");
-        PGPKeyRing sender = PGPainless.generateKeyRing().simpleRsaKeyRing("simplejid@server.tld", RsaLength._4096);
-        PGPKeyRing recipient = PGPainless.generateKeyRing().simpleRsaKeyRing("otherjid@other.srv", RsaLength._4096);
+        PGPKeyRing sender = PGPainless.readKeyRing().keyRing(TestKeys.JULIET_PUB, TestKeys.JULIET_SEC);
+        PGPKeyRing recipient = PGPainless.readKeyRing().keyRing(TestKeys.ROMEO_PUB, TestKeys.ROMEO_SEC);
         encryptDecryptForSecretKeyRings(sender, recipient);
     }
 

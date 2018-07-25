@@ -21,11 +21,9 @@ import java.io.IOException;
 import java.security.InvalidAlgorithmParameterException;
 import java.security.NoSuchAlgorithmException;
 import java.security.NoSuchProviderException;
-import java.security.Security;
 import java.util.Arrays;
 import java.util.Iterator;
 
-import org.bouncycastle.jce.provider.BouncyCastleProvider;
 import org.bouncycastle.openpgp.PGPException;
 import org.bouncycastle.openpgp.PGPPublicKey;
 import org.bouncycastle.openpgp.PGPPublicKeyRing;
@@ -34,14 +32,10 @@ import org.bouncycastle.openpgp.operator.bc.BcKeyFingerprintCalculator;
 import org.junit.Test;
 import org.pgpainless.key.collection.PGPKeyRing;
 
-public class ImportExportKeyTest {
-
-    static {
-        Security.addProvider(new BouncyCastleProvider());
-    }
+public class ImportExportKeyTest extends AbstractPGPainlessTest {
 
     /**
-     * This test is failing. Not sure if a bug in BC or in my code...
+     * Test the export and import of a key ring with sub keys.
      * @throws PGPException very
      * @throws NoSuchAlgorithmException much
      * @throws NoSuchProviderException some
