@@ -96,11 +96,15 @@ public class OpenPgpMetadata {
     public boolean containsVerifiedSignatureFrom(PGPPublicKeyRing publicKeys) {
         for (PGPPublicKey key : publicKeys) {
             OpenPgpV4Fingerprint fingerprint = new OpenPgpV4Fingerprint(key);
-            if (verifiedSignaturesFingerprints.contains(fingerprint)) {
+            if (containsVerifiedSignatureFrom(fingerprint)) {
                 return true;
             }
         }
         return false;
+    }
+
+    public boolean containsVerifiedSignatureFrom(OpenPgpV4Fingerprint fingerprint) {
+        return verifiedSignaturesFingerprints.contains(fingerprint);
     }
 
     static Builder getBuilder() {
