@@ -1,5 +1,3 @@
-# PGPainless - Simple to use OpenPGP library for Java and Android
-
 PGPainless is a wrapper around [Bouncycastle](https://www.bouncycastle.org/), which provides an easy to use, intuitive, but also powerful API for OpenPGP. Its main functionality is encrypting, signing, decrypting and verifying data, as well as generating encryption keys.
 
 Note, that the project is still in alpha phase.
