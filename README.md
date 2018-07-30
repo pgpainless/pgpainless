@@ -21,7 +21,7 @@ PGPainless is based around the Bouncycastle java library and can be used on Andr
 PGPainless is available on maven central. In order to include it in your project, just add the 
 maven central repository and add PGPainless as a dependency.
 
-```
+```gradle
 repositories {
 	mavenCentral()
 }
@@ -39,7 +39,7 @@ The entry point to the API is the `PGPainless` class. Here you can find methods 
 
 The first thing you probably want to do is generate you some nice tasty Key Pairs. The most straight forward way to do so is by calling
 
-```
+```java
         PGPSecretKeyRing keyRing = PGPainless.generateKeyRing()
                 .simpleRsaKeyRing("Juliet <juliet@montague.lit>", RsaLength._4096);
 ```
@@ -47,7 +47,7 @@ The first thing you probably want to do is generate you some nice tasty Key Pair
 but feel free to explore the API further. PGPainless allows you to create Key Pairs consisting of a master key plus several sub keys, even with different algorithms at the same time!
 Take for example a look at this delicious key:
 
-```
+```java
         PGPSecretKeyRing keyRing = PGPainless.generateKeyRing()
                 .withSubKey(
                         KeySpec.getBuilder(ECDSA.fromCurve(EllipticCurve._P256))
@@ -74,7 +74,7 @@ Take for example a look at this delicious key:
 ### Encrypt / Sign Data
 
 Encrypting and signing data is pretty straight forward as well.
-```
+```java
         EncryptionStream encryptor = PGPainless.createEncryptor()
                 .onOutputStream(targetOuputStream)
                 .toRecipients(publicKeyRings)
@@ -85,7 +85,7 @@ Encrypting and signing data is pretty straight forward as well.
 
 The resulting `EncryptionStream` can then be used to encrypt data like follows:
 
-```
+```java
         Streams.pipeAll(sourceInputStream, encryptor);
         sourceInputStream.close();
         encryptor.close();
@@ -95,7 +95,7 @@ The encrypted data will be written to the provided `targetOutputStream`.
 
 Additionally you can get information about the encrypted data by calling
 
-```
+```java
         PainlessResult result = encryptor.getResult();
 ```
 
@@ -105,7 +105,7 @@ That object will contain information like to which keys the message is encrypted
 
 To process incoming encrypted / signed data, just do the following:
 
-```
+```java
         DecryptionStream decryptor = PGPainless.createDecryptor()
                 .onInputStream(sourceInputStream) // insert encrypted data here
                 .decryptWith(secretKeyDecryptor, secretKey)
@@ -116,7 +116,7 @@ To process incoming encrypted / signed data, just do the following:
 
 Again, the resulting `DecryptionStream` can be used like a normal stream.
 
-```
+```java
         Streams.pipeAll(decryptor, targetOutputStream);
         decryptor.close();
 ```
@@ -124,7 +124,7 @@ Again, the resulting `DecryptionStream` can be used like a normal stream.
 *After* the `DecryptionStream` was closed, you can get metadata about the processed data by retrieving the `PainlessResult`.
 Again, this object will contain information about how the message was encrypted, who signed it and so on.
 
-```
+```java
         PainlessResult result = decryptor.getResult();
 ```
 
