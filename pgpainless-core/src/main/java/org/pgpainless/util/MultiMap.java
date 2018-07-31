@@ -15,6 +15,7 @@
  */
 package org.pgpainless.util;
 
+import javax.annotation.Nonnull;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -29,14 +30,14 @@ public class MultiMap<K, V> {
         map = new HashMap<>();
     }
 
-    public MultiMap(MultiMap<K, V> other) {
+    public MultiMap(@Nonnull MultiMap<K, V> other) {
         this.map = new HashMap<>();
         for (K k : other.map.keySet()) {
             map.put(k, new HashSet<>(other.map.get(k)));
         }
     }
 
-    public MultiMap(Map<K, Set<V>> content) {
+    public MultiMap(@Nonnull Map<K, Set<V>> content) {
         this.map = new HashMap<>(content);
     }
 
@@ -48,18 +49,18 @@ public class MultiMap<K, V> {
         return map.isEmpty();
     }
 
-    public boolean containsKey(Object o) {
+    public boolean containsKey(K o) {
         return map.containsKey(o);
     }
 
-    public boolean containsValue(Object o) {
+    public boolean containsValue(V o) {
         for (Set<V> values : map.values()) {
             if (values.contains(o)) return true;
         }
         return false;
     }
 
-    public Set<V> get(Object o) {
+    public Set<V> get(K o) {
         return map.get(o);
     }
 
@@ -78,7 +79,7 @@ public class MultiMap<K, V> {
         }
     }
 
-    public void remove(Object o) {
+    public void remove(K o) {
         for (Set<V> values : map.values()) {
             values.remove(o);
         }

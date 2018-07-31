@@ -15,6 +15,7 @@
  */
 package org.pgpainless.key.generation.type;
 
+import javax.annotation.Nonnull;
 import java.security.spec.AlgorithmParameterSpec;
 import java.security.spec.RSAKeyGenParameterSpec;
 
@@ -25,11 +26,11 @@ public class RSA_GENERAL implements KeyType {
 
     private final RsaLength length;
 
-    RSA_GENERAL(RsaLength length) {
+    RSA_GENERAL(@Nonnull RsaLength length) {
         this.length = length;
     }
 
-    public static RSA_GENERAL withLength(RsaLength length) {
+    public static RSA_GENERAL withLength(@Nonnull RsaLength length) {
         return new RSA_GENERAL(length);
     }
 

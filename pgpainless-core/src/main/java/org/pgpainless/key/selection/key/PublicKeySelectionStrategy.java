@@ -15,6 +15,7 @@
  */
 package org.pgpainless.key.selection.key;
 
+import javax.annotation.Nonnull;
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.Set;
@@ -32,7 +33,7 @@ import org.pgpainless.util.MultiMap;
 public abstract class PublicKeySelectionStrategy<O> implements KeySelectionStrategy<PGPPublicKey, PGPPublicKeyRing, O> {
 
     @Override
-    public Set<PGPPublicKey> selectKeysFromKeyRing(O identifier, PGPPublicKeyRing ring) {
+    public Set<PGPPublicKey> selectKeysFromKeyRing(O identifier, @Nonnull PGPPublicKeyRing ring) {
         Set<PGPPublicKey> keys = new HashSet<>();
         for (Iterator<PGPPublicKey> i = ring.getPublicKeys(); i.hasNext(); ) {
             PGPPublicKey key = i.next();
@@ -42,7 +43,7 @@ public abstract class PublicKeySelectionStrategy<O> implements KeySelectionStrat
     }
 
     @Override
-    public MultiMap<O, PGPPublicKey> selectKeysFromKeyRings(MultiMap<O, PGPPublicKeyRing> keyRings) {
+    public MultiMap<O, PGPPublicKey> selectKeysFromKeyRings(@Nonnull MultiMap<O, PGPPublicKeyRing> keyRings) {
         MultiMap<O, PGPPublicKey> keys = new MultiMap<>();
         for (O identifier : keyRings.keySet()) {
             for (PGPPublicKeyRing ring : keyRings.get(identifier)) {

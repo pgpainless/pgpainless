@@ -15,6 +15,7 @@
  */
 package org.pgpainless.key.selection.keyring;
 
+import javax.annotation.Nonnull;
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.Set;
@@ -25,7 +26,7 @@ import org.pgpainless.util.MultiMap;
 
 public abstract class SecretKeyRingSelectionStrategy<O> implements KeyRingSelectionStrategy<PGPSecretKeyRing, PGPSecretKeyRingCollection, O> {
     @Override
-    public Set<PGPSecretKeyRing> selectKeyRingsFromCollection(O identifier, PGPSecretKeyRingCollection keyRingCollection) {
+    public Set<PGPSecretKeyRing> selectKeyRingsFromCollection(O identifier, @Nonnull PGPSecretKeyRingCollection keyRingCollection) {
         Set<PGPSecretKeyRing> accepted = new HashSet<>();
         for (Iterator<PGPSecretKeyRing> i = keyRingCollection.getKeyRings(); i.hasNext(); ) {
             PGPSecretKeyRing ring = i.next();
@@ -35,7 +36,7 @@ public abstract class SecretKeyRingSelectionStrategy<O> implements KeyRingSelect
     }
 
     @Override
-    public MultiMap<O, PGPSecretKeyRing> selectKeyRingsFromCollections(MultiMap<O, PGPSecretKeyRingCollection> keyRingCollections) {
+    public MultiMap<O, PGPSecretKeyRing> selectKeyRingsFromCollections(@Nonnull MultiMap<O, PGPSecretKeyRingCollection> keyRingCollections) {
         MultiMap<O, PGPSecretKeyRing> keyRings = new MultiMap<>();
         for (O identifier : keyRingCollections.keySet()) {
             for (PGPSecretKeyRingCollection collection : keyRingCollections.get(identifier)) {

@@ -15,6 +15,8 @@
  */
 package org.pgpainless.key.generation;
 
+import javax.annotation.Nonnull;
+
 import org.pgpainless.algorithm.CompressionAlgorithm;
 import org.pgpainless.algorithm.Feature;
 import org.pgpainless.algorithm.HashAlgorithm;
@@ -23,7 +25,7 @@ import org.pgpainless.algorithm.SymmetricKeyAlgorithm;
 
 public interface KeySpecBuilderInterface {
 
-    WithDetailedConfiguration withKeyFlags(KeyFlag... flags);
+    WithDetailedConfiguration withKeyFlags(@Nonnull KeyFlag... flags);
 
     WithDetailedConfiguration withDefaultKeyFlags();
 
@@ -38,7 +40,7 @@ public interface KeySpecBuilderInterface {
 
     interface WithPreferredSymmetricAlgorithms {
 
-        WithPreferredHashAlgorithms withPreferredSymmetricAlgorithms(SymmetricKeyAlgorithm... algorithms);
+        WithPreferredHashAlgorithms withPreferredSymmetricAlgorithms(@Nonnull SymmetricKeyAlgorithm... algorithms);
 
         WithPreferredHashAlgorithms withDefaultSymmetricAlgorithms();
 
@@ -48,7 +50,7 @@ public interface KeySpecBuilderInterface {
 
     interface WithPreferredHashAlgorithms {
 
-        WithPreferredCompressionAlgorithms withPreferredHashAlgorithms(HashAlgorithm... algorithms);
+        WithPreferredCompressionAlgorithms withPreferredHashAlgorithms(@Nonnull HashAlgorithm... algorithms);
 
         WithPreferredCompressionAlgorithms withDefaultHashAlgorithms();
 
@@ -56,7 +58,7 @@ public interface KeySpecBuilderInterface {
 
     interface WithPreferredCompressionAlgorithms {
 
-        WithFeatures withPreferredCompressionAlgorithms(CompressionAlgorithm... algorithms);
+        WithFeatures withPreferredCompressionAlgorithms(@Nonnull CompressionAlgorithm... algorithms);
 
         WithFeatures withDefaultCompressionAlgorithms();
 
@@ -64,7 +66,7 @@ public interface KeySpecBuilderInterface {
 
     interface WithFeatures {
 
-        WithFeatures withFeature(Feature feature);
+        WithFeatures withFeature(@Nonnull Feature feature);
 
         KeySpec done();
     }

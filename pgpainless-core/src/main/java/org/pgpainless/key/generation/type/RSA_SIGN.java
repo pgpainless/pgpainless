@@ -15,12 +15,14 @@
  */
 package org.pgpainless.key.generation.type;
 
+import javax.annotation.Nonnull;
+
 import org.pgpainless.algorithm.PublicKeyAlgorithm;
 import org.pgpainless.key.generation.type.length.RsaLength;
 
 public class RSA_SIGN extends RSA_GENERAL {
 
-    RSA_SIGN(RsaLength length) {
+    RSA_SIGN(@Nonnull RsaLength length) {
         super(length);
     }
 

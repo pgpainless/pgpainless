@@ -15,6 +15,7 @@
  */
 package org.pgpainless.encryption_signing;
 
+import javax.annotation.Nonnull;
 import java.io.IOException;
 import java.io.OutputStream;
 import java.util.ArrayList;
@@ -75,13 +76,13 @@ public final class EncryptionStream extends OutputStream {
     private PGPLiteralDataGenerator literalDataGenerator;
     private OutputStream literalDataStream;
 
-    private EncryptionStream(OutputStream targetOutputStream,
-                            Set<PGPPublicKey> encryptionKeys,
-                            Set<PGPPrivateKey> signingKeys,
-                            SymmetricKeyAlgorithm symmetricKeyAlgorithm,
-                            HashAlgorithm hashAlgorithm,
-                            CompressionAlgorithm compressionAlgorithm,
-                            boolean asciiArmor)
+    EncryptionStream(@Nonnull OutputStream targetOutputStream,
+                     @Nonnull Set<PGPPublicKey> encryptionKeys,
+                     @Nonnull Set<PGPPrivateKey> signingKeys,
+                     @Nonnull SymmetricKeyAlgorithm symmetricKeyAlgorithm,
+                     @Nonnull HashAlgorithm hashAlgorithm,
+                     @Nonnull CompressionAlgorithm compressionAlgorithm,
+                     boolean asciiArmor)
             throws IOException, PGPException {
 
         // Currently outermost Stream
@@ -163,31 +164,6 @@ public final class EncryptionStream extends OutputStream {
                 signingKeyIds, Collections.emptySet());
     }
 
-    static EncryptionStream create(OutputStream outputStream,
-                                   Set<PGPPublicKey> encryptionKeys,
-                                   Set<PGPPrivateKey> signingKeys,
-                                   SymmetricKeyAlgorithm symmetricKeyAlgorithm,
-                                   HashAlgorithm hashAlgorithm,
-                                   CompressionAlgorithm compressionAlgorithm,
-                                   boolean asciiArmor)
-            throws IOException, PGPException {
-
-        requireNonNull(outputStream, "targetOutputStream");
-        requireNonNull(encryptionKeys, "encryptionKeys");
-        requireNonNull(signingKeys, "signingKeys");
-        requireNonNull(symmetricKeyAlgorithm, "symmetricKeyAlgorithm");
-        requireNonNull(hashAlgorithm, "hashAlgorithm");
-        requireNonNull(compressionAlgorithm, "compressionAlgorithm");
-
-        return new EncryptionStream(outputStream,
-                encryptionKeys,
-                signingKeys,
-                symmetricKeyAlgorithm,
-                hashAlgorithm,
-                compressionAlgorithm,
-                asciiArmor);
-    }
-
     @Override
     public void write(int data) throws IOException {
         literalDataStream.write(data);
@@ -250,12 +226,6 @@ public final class EncryptionStream extends OutputStream {
                 armorOutputStream.close();
             }
             closed = true;
-        }
-    }
-
-    private static void requireNonNull(Object o, String name) {
-        if (o == null) {
-            throw new IllegalArgumentException("Argument '" + name + "' MUST NOT be null.");
         }
     }
 

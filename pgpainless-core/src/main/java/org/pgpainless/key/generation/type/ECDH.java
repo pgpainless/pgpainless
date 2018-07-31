@@ -15,6 +15,7 @@
  */
 package org.pgpainless.key.generation.type;
 
+import javax.annotation.Nonnull;
 import java.security.spec.AlgorithmParameterSpec;
 
 import org.bouncycastle.jce.spec.ECNamedCurveGenParameterSpec;
@@ -29,7 +30,7 @@ public class ECDH implements KeyType {
         this.curve = curve;
     }
 
-    public static ECDH fromCurve(EllipticCurve curve) {
+    public static ECDH fromCurve(@Nonnull EllipticCurve curve) {
         return new ECDH(curve);
     }
 

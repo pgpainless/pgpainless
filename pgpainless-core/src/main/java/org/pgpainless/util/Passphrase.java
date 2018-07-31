@@ -15,6 +15,7 @@
  */
 package org.pgpainless.util;
 
+import javax.annotation.Nullable;
 import java.util.Arrays;
 
 public class Passphrase {
@@ -29,7 +30,7 @@ public class Passphrase {
      *
      * @param chars may be null for empty passwords.
      */
-    public Passphrase(char[] chars) {
+    public Passphrase(@Nullable char[] chars) {
         this.chars = chars;
     }
 
@@ -58,12 +59,13 @@ public class Passphrase {
 
     /**
      * Return a copy of the underlying char array.
+     * A return value of {@code null} represents no password.
      *
      * @return passphrase chars.
      *
      * @throws IllegalStateException in case the password has been cleared at this point.
      */
-    public char[] getChars() {
+    public @Nullable char[] getChars() {
         synchronized (lock) {
             if (!valid) {
                 throw new IllegalStateException("Passphrase has been cleared.");
@@ -88,5 +90,14 @@ public class Passphrase {
         synchronized (lock) {
             return valid;
         }
+    }
+
+    /**
+     * Represents a {@link Passphrase} instance that represents no password.
+     *
+     * @return empty passphrase
+     */
+    public static Passphrase emptyPassphrase() {
+        return new Passphrase(null);
     }
 }

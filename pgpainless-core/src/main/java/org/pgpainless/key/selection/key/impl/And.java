@@ -15,6 +15,8 @@
  */
 package org.pgpainless.key.selection.key.impl;
 
+import javax.annotation.Nonnull;
+
 import org.bouncycastle.openpgp.PGPPublicKey;
 import org.bouncycastle.openpgp.PGPSecretKey;
 import org.pgpainless.key.selection.key.PublicKeySelectionStrategy;
@@ -27,8 +29,8 @@ public class And {
         private final PublicKeySelectionStrategy<O> left;
         private final PublicKeySelectionStrategy<O> right;
 
-        public PubKeySelectionStrategy(PublicKeySelectionStrategy<O> left,
-                                       PublicKeySelectionStrategy<O> right) {
+        public PubKeySelectionStrategy(@Nonnull PublicKeySelectionStrategy<O> left,
+                                       @Nonnull PublicKeySelectionStrategy<O> right) {
             this.left = left;
             this.right = right;
         }
@@ -44,8 +46,8 @@ public class And {
         private final SecretKeySelectionStrategy<O> left;
         private final SecretKeySelectionStrategy<O> right;
 
-        public SecKeySelectionStrategy(SecretKeySelectionStrategy<O> left,
-                                       SecretKeySelectionStrategy<O> right) {
+        public SecKeySelectionStrategy(@Nonnull SecretKeySelectionStrategy<O> left,
+                                       @Nonnull SecretKeySelectionStrategy<O> right) {
             this.left = left;
             this.right = right;
         }

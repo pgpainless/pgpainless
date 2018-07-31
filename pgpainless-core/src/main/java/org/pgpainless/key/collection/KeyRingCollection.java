@@ -15,6 +15,7 @@
  */
 package org.pgpainless.key.collection;
 
+import javax.annotation.Nonnull;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
@@ -36,12 +37,17 @@ public class KeyRingCollection {
     private PGPPublicKeyRingCollection publicKeys;
     private PGPSecretKeyRingCollection secretKeys;
 
-    public KeyRingCollection(PGPPublicKeyRingCollection publicKeyRings, PGPSecretKeyRingCollection secretKeyRings) {
+    public KeyRingCollection(@Nonnull PGPPublicKeyRingCollection publicKeyRings, @Nonnull PGPSecretKeyRingCollection secretKeyRings) {
         this.publicKeys = publicKeyRings;
         this.secretKeys = secretKeyRings;
     }
 
     public KeyRingCollection(File pubRingFile, File secRingFile) throws IOException, PGPException {
+
+        if (pubRingFile == null && secRingFile == null) {
+            throw new NullPointerException("pubRingFile and secRingFile cannot BOTH be null.");
+        }
+
         if (pubRingFile != null) {
             InputStream pubRingIn = new FileInputStream(pubRingFile);
             this.publicKeys = PGPainless.readKeyRing().publicKeyRingCollection(pubRingIn);
@@ -55,15 +61,15 @@ public class KeyRingCollection {
         }
     }
 
-    public KeyRingCollection(PGPPublicKeyRingCollection publicKeyRings) {
-        this(publicKeyRings, null);
+    public KeyRingCollection(@Nonnull PGPPublicKeyRingCollection publicKeyRings) {
+        this.publicKeys = publicKeyRings;
     }
 
-    public KeyRingCollection(PGPSecretKeyRingCollection secretKeyRings) {
-        this(null, secretKeyRings);
+    public KeyRingCollection(@Nonnull PGPSecretKeyRingCollection secretKeyRings) {
+        this.secretKeys = secretKeyRings;
     }
 
-    public void importPublicKeys(PGPPublicKeyRingCollection publicKeyRings) {
+    public void importPublicKeys(@Nonnull PGPPublicKeyRingCollection publicKeyRings) {
         if (this.publicKeys == null) {
             this.publicKeys = publicKeyRings;
             return;
@@ -80,7 +86,7 @@ public class KeyRingCollection {
         }
     }
 
-    public void importSecretKeys(PGPSecretKeyRingCollection secretKeyRings) {
+    public void importSecretKeys(@Nonnull PGPSecretKeyRingCollection secretKeyRings) {
         if (this.secretKeys == null) {
             this.secretKeys = secretKeyRings;
             return;

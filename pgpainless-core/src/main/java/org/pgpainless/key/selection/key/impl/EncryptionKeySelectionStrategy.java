@@ -15,6 +15,8 @@
  */
 package org.pgpainless.key.selection.key.impl;
 
+import javax.annotation.Nonnull;
+
 import org.bouncycastle.openpgp.PGPPublicKey;
 import org.pgpainless.key.selection.key.PublicKeySelectionStrategy;
 
@@ -26,7 +28,7 @@ import org.pgpainless.key.selection.key.PublicKeySelectionStrategy;
 public class EncryptionKeySelectionStrategy<O> extends PublicKeySelectionStrategy<O> {
 
     @Override
-    public boolean accept(O identifier, PGPPublicKey key) {
+    public boolean accept(O identifier, @Nonnull PGPPublicKey key) {
         return key.isEncryptionKey();
     }
 }

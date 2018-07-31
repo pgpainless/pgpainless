@@ -15,6 +15,7 @@
  */
 package org.pgpainless.key.generation.type;
 
+import javax.annotation.Nonnull;
 import java.security.spec.AlgorithmParameterSpec;
 
 import org.bouncycastle.jce.spec.ElGamalParameterSpec;
@@ -25,11 +26,11 @@ public class ElGamal_GENERAL implements KeyType {
 
     private final ElGamalLength length;
 
-    ElGamal_GENERAL(ElGamalLength length) {
+    ElGamal_GENERAL(@Nonnull ElGamalLength length) {
         this.length = length;
     }
 
-    public static ElGamal_GENERAL withLength(ElGamalLength length) {
+    public static ElGamal_GENERAL withLength(@Nonnull ElGamalLength length) {
         return new ElGamal_GENERAL(length);
     }
 

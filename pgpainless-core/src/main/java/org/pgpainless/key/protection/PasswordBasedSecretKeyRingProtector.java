@@ -15,6 +15,9 @@
  */
 package org.pgpainless.key.protection;
 
+import javax.annotation.Nonnull;
+import javax.annotation.Nullable;
+
 import org.bouncycastle.openpgp.PGPException;
 import org.bouncycastle.openpgp.operator.PBESecretKeyDecryptor;
 import org.bouncycastle.openpgp.operator.PBESecretKeyEncryptor;
@@ -43,12 +46,13 @@ public class PasswordBasedSecretKeyRingProtector implements SecretKeyRingProtect
      * @param settings S2K settings etc.
      * @param passphraseProvider provider which provides passphrases.
      */
-    public PasswordBasedSecretKeyRingProtector(KeyRingProtectionSettings settings, SecretKeyPassphraseProvider passphraseProvider) {
+    public PasswordBasedSecretKeyRingProtector(@Nonnull KeyRingProtectionSettings settings, @Nonnull SecretKeyPassphraseProvider passphraseProvider) {
         this.protectionSettings = settings;
         this.passphraseProvider = passphraseProvider;
     }
 
     @Override
+    @Nullable
     public PBESecretKeyDecryptor getDecryptor(Long keyId) {
         Passphrase passphrase = passphraseProvider.getPassphraseFor(keyId);
         return new BcPBESecretKeyDecryptorBuilder(calculatorProvider)
@@ -56,6 +60,7 @@ public class PasswordBasedSecretKeyRingProtector implements SecretKeyRingProtect
     }
 
     @Override
+    @Nullable
     public PBESecretKeyEncryptor getEncryptor(Long keyId) throws PGPException {
         Passphrase passphrase = passphraseProvider.getPassphraseFor(keyId);
         return new BcPBESecretKeyEncryptorBuilder(

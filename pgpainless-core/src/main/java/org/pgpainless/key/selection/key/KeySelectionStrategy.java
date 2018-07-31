@@ -15,6 +15,7 @@
  */
 package org.pgpainless.key.selection.key;
 
+import javax.annotation.Nonnull;
 import java.util.Set;
 
 import org.pgpainless.util.MultiMap;
@@ -30,7 +31,7 @@ public interface KeySelectionStrategy<K, R, O> {
 
     boolean accept(O identifier, K key);
 
-    Set<K> selectKeysFromKeyRing(O identifier, R ring);
+    Set<K> selectKeysFromKeyRing(O identifier, @Nonnull R ring);
 
     MultiMap<O, K> selectKeysFromKeyRings(MultiMap<O, R> rings);
 

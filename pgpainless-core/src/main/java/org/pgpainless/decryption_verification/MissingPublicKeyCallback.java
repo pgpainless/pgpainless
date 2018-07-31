@@ -15,6 +15,8 @@
  */
 package org.pgpainless.decryption_verification;
 
+import javax.annotation.Nonnull;
+
 import org.bouncycastle.openpgp.PGPPublicKey;
 
 public interface MissingPublicKeyCallback {
@@ -29,6 +31,6 @@ public interface MissingPublicKeyCallback {
      *
      * @return the key or null
      */
-    PGPPublicKey onMissingPublicKeyEncountered(Long keyId);
+    PGPPublicKey onMissingPublicKeyEncountered(@Nonnull Long keyId);
 
 }

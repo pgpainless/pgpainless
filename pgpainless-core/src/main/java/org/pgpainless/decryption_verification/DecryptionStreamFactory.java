@@ -15,6 +15,8 @@
  */
 package org.pgpainless.decryption_verification;
 
+import javax.annotation.Nonnull;
+import javax.annotation.Nullable;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.Collections;
@@ -66,21 +68,21 @@ public final class DecryptionStreamFactory {
     private final KeyFingerPrintCalculator fingerCalc = new BcKeyFingerprintCalculator();
     private final Map<OpenPgpV4Fingerprint, PGPOnePassSignature> verifiableOnePassSignatures = new HashMap<>();
 
-    private DecryptionStreamFactory(PGPSecretKeyRingCollection decryptionKeys,
-                                    SecretKeyRingProtector decryptor,
-                                    Set<PGPPublicKeyRing> verificationKeys,
-                                    MissingPublicKeyCallback missingPublicKeyCallback) {
+    private DecryptionStreamFactory(@Nullable PGPSecretKeyRingCollection decryptionKeys,
+                                    @Nullable SecretKeyRingProtector decryptor,
+                                    @Nullable Set<PGPPublicKeyRing> verificationKeys,
+                                    @Nullable MissingPublicKeyCallback missingPublicKeyCallback) {
         this.decryptionKeys = decryptionKeys;
         this.decryptionKeyDecryptor = decryptor;
         this.verificationKeys.addAll(verificationKeys != null ? verificationKeys : Collections.emptyList());
         this.missingPublicKeyCallback = missingPublicKeyCallback;
     }
 
-    public static DecryptionStream create(InputStream inputStream,
-                                          PGPSecretKeyRingCollection decryptionKeys,
-                                          SecretKeyRingProtector decryptor,
-                                          Set<PGPPublicKeyRing> verificationKeys,
-                                          MissingPublicKeyCallback missingPublicKeyCallback)
+    public static DecryptionStream create(@Nonnull InputStream inputStream,
+                                          @Nullable PGPSecretKeyRingCollection decryptionKeys,
+                                          @Nullable SecretKeyRingProtector decryptor,
+                                          @Nullable Set<PGPPublicKeyRing> verificationKeys,
+                                          @Nullable MissingPublicKeyCallback missingPublicKeyCallback)
             throws IOException, PGPException {
 
         DecryptionStreamFactory factory =  new DecryptionStreamFactory(decryptionKeys,
@@ -94,7 +96,7 @@ public final class DecryptionStreamFactory {
         return new DecryptionStream(factory.wrap(objectFactory), factory.resultBuilder);
     }
 
-    private InputStream wrap(PGPObjectFactory objectFactory) throws IOException, PGPException {
+    private InputStream wrap(@Nonnull PGPObjectFactory objectFactory) throws IOException, PGPException {
 
         Object pgpObj;
         while ((pgpObj = objectFactory.nextObject()) != null) {
@@ -142,7 +144,7 @@ public final class DecryptionStreamFactory {
         throw new PGPException("No Literal Data Packet found");
     }
 
-    private InputStream decrypt(PGPEncryptedDataList encryptedDataList)
+    private InputStream decrypt(@Nonnull PGPEncryptedDataList encryptedDataList)
             throws PGPException {
         Iterator<?> iterator = encryptedDataList.getEncryptedDataObjects();
         if (!iterator.hasNext()) {
@@ -190,7 +192,7 @@ public final class DecryptionStreamFactory {
         return decryptionStream;
     }
 
-    private void initOnePassSignatures(PGPOnePassSignatureList onePassSignatureList) throws PGPException {
+    private void initOnePassSignatures(@Nonnull PGPOnePassSignatureList onePassSignatureList) throws PGPException {
         Iterator<PGPOnePassSignature> iterator = onePassSignatureList.iterator();
         if (!iterator.hasNext()) {
             throw new PGPException("Verification failed - No OnePassSignatures found");

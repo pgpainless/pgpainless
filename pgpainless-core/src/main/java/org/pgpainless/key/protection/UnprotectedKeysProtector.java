@@ -15,6 +15,8 @@
  */
 package org.pgpainless.key.protection;
 
+import javax.annotation.Nullable;
+
 import org.bouncycastle.openpgp.operator.PBESecretKeyDecryptor;
 import org.bouncycastle.openpgp.operator.PBESecretKeyEncryptor;
 
@@ -22,12 +24,15 @@ import org.bouncycastle.openpgp.operator.PBESecretKeyEncryptor;
  * Implementation of the {@link SecretKeyRingProtector} which assumes that all handled keys are not password protected.
  */
 public class UnprotectedKeysProtector implements SecretKeyRingProtector {
+
     @Override
+    @Nullable
     public PBESecretKeyDecryptor getDecryptor(Long keyId) {
         return null;
     }
 
     @Override
+    @Nullable
     public PBESecretKeyEncryptor getEncryptor(Long keyId) {
         return null;
     }

@@ -15,6 +15,7 @@
  */
 package org.pgpainless.key.selection.keyring.impl;
 
+import javax.annotation.Nonnull;
 import java.util.Iterator;
 
 import org.bouncycastle.openpgp.PGPPublicKey;
@@ -27,7 +28,7 @@ public class PartialUserId {
     public static class PubRingSelectionStrategy extends PublicKeySelectionStrategy<String> {
 
         @Override
-        public boolean accept(String identifier, PGPPublicKey key) {
+        public boolean accept(String identifier, @Nonnull PGPPublicKey key) {
             for (Iterator<String> userIds = key.getUserIDs(); userIds.hasNext(); ) {
                 String userId = userIds.next();
                 if (userId.contains(identifier)) {
@@ -41,7 +42,7 @@ public class PartialUserId {
     public static class SecRingSelectionStrategy extends SecretKeySelectionStrategy<String> {
 
         @Override
-        public boolean accept(String identifier, PGPSecretKey key) {
+        public boolean accept(String identifier, @Nonnull PGPSecretKey key) {
             for (Iterator userIds = key.getUserIDs(); userIds.hasNext(); ) {
                 String userId = (String) userIds.next();
                 if (userId.contains(identifier)) {

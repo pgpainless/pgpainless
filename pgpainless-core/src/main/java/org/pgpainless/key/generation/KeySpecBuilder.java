@@ -15,6 +15,8 @@
  */
 package org.pgpainless.key.generation;
 
+import javax.annotation.Nonnull;
+
 import org.bouncycastle.bcpg.sig.Features;
 import org.bouncycastle.openpgp.PGPSignatureSubpacketGenerator;
 import org.pgpainless.algorithm.AlgorithmSuite;
@@ -30,12 +32,12 @@ public class KeySpecBuilder implements KeySpecBuilderInterface {
     private KeyType type;
     private PGPSignatureSubpacketGenerator hashedSubPackets = new PGPSignatureSubpacketGenerator();
 
-    KeySpecBuilder(KeyType type) {
+    KeySpecBuilder(@Nonnull KeyType type) {
         this.type = type;
     }
 
     @Override
-    public WithDetailedConfiguration withKeyFlags(KeyFlag... flags) {
+    public WithDetailedConfiguration withKeyFlags(@Nonnull KeyFlag... flags) {
         int val = 0;
         for (KeyFlag f : flags) {
             val |= f.getFlag();
@@ -74,6 +76,7 @@ public class KeySpecBuilder implements KeySpecBuilderInterface {
             hashedSubPackets.setPreferredSymmetricAlgorithms(false, defaultSuite.getSymmetricKeyAlgorithmIds());
             hashedSubPackets.setPreferredHashAlgorithms(false, defaultSuite.getHashAlgorithmIds());
             hashedSubPackets.setFeature(false, Features.FEATURE_MODIFICATION_DETECTION);
+
             return new KeySpec(
                     KeySpecBuilder.this.type,
                     KeySpecBuilder.this.hashedSubPackets,
@@ -84,7 +87,7 @@ public class KeySpecBuilder implements KeySpecBuilderInterface {
     class WithPreferredSymmetricAlgorithmsImpl implements WithPreferredSymmetricAlgorithms {
 
         @Override
-        public WithPreferredHashAlgorithms withPreferredSymmetricAlgorithms(SymmetricKeyAlgorithm... algorithms) {
+        public WithPreferredHashAlgorithms withPreferredSymmetricAlgorithms(@Nonnull SymmetricKeyAlgorithm... algorithms) {
             int[] ids = new int[algorithms.length];
             for (int i = 0; i < ids.length; i++) {
                 ids[i] = algorithms[i].getAlgorithmId();
@@ -115,7 +118,7 @@ public class KeySpecBuilder implements KeySpecBuilderInterface {
     class WithPreferredHashAlgorithmsImpl implements WithPreferredHashAlgorithms {
 
         @Override
-        public WithPreferredCompressionAlgorithms withPreferredHashAlgorithms(HashAlgorithm... algorithms) {
+        public WithPreferredCompressionAlgorithms withPreferredHashAlgorithms(@Nonnull HashAlgorithm... algorithms) {
             int[] ids = new int[algorithms.length];
             for (int i = 0; i < ids.length; i++) {
                 ids[i] = algorithms[i].getAlgorithmId();
@@ -135,7 +138,7 @@ public class KeySpecBuilder implements KeySpecBuilderInterface {
     class WithPreferredCompressionAlgorithmsImpl implements WithPreferredCompressionAlgorithms {
 
         @Override
-        public WithFeatures withPreferredCompressionAlgorithms(CompressionAlgorithm... algorithms) {
+        public WithFeatures withPreferredCompressionAlgorithms(@Nonnull CompressionAlgorithm... algorithms) {
             int[] ids = new int[algorithms.length];
             for (int i = 0; i < ids.length; i++) {
                 ids[i] = algorithms[i].getAlgorithmId();
@@ -155,7 +158,7 @@ public class KeySpecBuilder implements KeySpecBuilderInterface {
     class WithFeaturesImpl implements WithFeatures {
 
         @Override
-        public WithFeatures withFeature(Feature feature) {
+        public WithFeatures withFeature(@Nonnull Feature feature) {
             KeySpecBuilder.this.hashedSubPackets.setFeature(false, feature.getFeatureId());
             return this;
         }

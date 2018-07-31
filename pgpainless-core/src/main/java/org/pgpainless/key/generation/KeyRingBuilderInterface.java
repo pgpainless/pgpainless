@@ -15,6 +15,7 @@
  */
 package org.pgpainless.key.generation;
 
+import javax.annotation.Nonnull;
 import java.security.InvalidAlgorithmParameterException;
 import java.security.NoSuchAlgorithmException;
 import java.security.NoSuchProviderException;
@@ -25,21 +26,21 @@ import org.pgpainless.util.Passphrase;
 
 public interface KeyRingBuilderInterface {
 
-    KeyRingBuilderInterface withSubKey(KeySpec keySpec);
+    KeyRingBuilderInterface withSubKey(@Nonnull KeySpec keySpec);
 
-    WithPrimaryUserId withMasterKey(KeySpec keySpec);
+    WithPrimaryUserId withMasterKey(@Nonnull KeySpec keySpec);
 
     interface WithPrimaryUserId {
 
-        WithPassphrase withPrimaryUserId(String userId);
+        WithPassphrase withPrimaryUserId(@Nonnull String userId);
 
-        WithPassphrase withPrimaryUserId(byte[] userId);
+        WithPassphrase withPrimaryUserId(@Nonnull byte[] userId);
 
     }
 
     interface WithPassphrase {
 
-        Build withPassphrase(Passphrase passphrase);
+        Build withPassphrase(@Nonnull Passphrase passphrase);
 
         Build withoutPassphrase();
     }

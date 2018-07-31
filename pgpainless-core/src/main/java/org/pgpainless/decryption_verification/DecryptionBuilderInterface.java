@@ -15,6 +15,7 @@
  */
 package org.pgpainless.decryption_verification;
 
+import javax.annotation.Nonnull;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.Set;
@@ -32,7 +33,7 @@ public interface DecryptionBuilderInterface {
 
     interface DecryptWith {
 
-        VerifyWith decryptWith(SecretKeyRingProtector decryptor, PGPSecretKeyRingCollection secretKeyRings);
+        VerifyWith decryptWith(@Nonnull SecretKeyRingProtector decryptor, @Nonnull PGPSecretKeyRingCollection secretKeyRings);
 
         VerifyWith doNotDecrypt();
 
@@ -40,11 +41,11 @@ public interface DecryptionBuilderInterface {
 
     interface VerifyWith {
 
-        HandleMissingPublicKeys verifyWith(PGPPublicKeyRingCollection publicKeyRings);
+        HandleMissingPublicKeys verifyWith(@Nonnull PGPPublicKeyRingCollection publicKeyRings);
 
-        HandleMissingPublicKeys verifyWith(Set<OpenPgpV4Fingerprint> trustedFingerprints, PGPPublicKeyRingCollection publicKeyRings);
+        HandleMissingPublicKeys verifyWith(@Nonnull Set<OpenPgpV4Fingerprint> trustedFingerprints, @Nonnull PGPPublicKeyRingCollection publicKeyRings);
 
-        HandleMissingPublicKeys verifyWith(Set<PGPPublicKeyRing> publicKeyRings);
+        HandleMissingPublicKeys verifyWith(@Nonnull Set<PGPPublicKeyRing> publicKeyRings);
 
         Build doNotVerify();
 
@@ -52,7 +53,7 @@ public interface DecryptionBuilderInterface {
 
     interface HandleMissingPublicKeys {
 
-        Build handleMissingPublicKeysWith(MissingPublicKeyCallback callback);
+        Build handleMissingPublicKeysWith(@Nonnull MissingPublicKeyCallback callback);
 
         Build ignoreMissingPublicKeys();
     }

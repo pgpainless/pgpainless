@@ -15,6 +15,8 @@
  */
 package org.pgpainless.key.parsing;
 
+import javax.annotation.Nonnull;
+import javax.annotation.Nullable;
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.io.InputStream;
@@ -33,68 +35,68 @@ public class KeyRingReader {
 
     public static final Charset UTF8 = Charset.forName("UTF-8");
 
-    public PGPPublicKeyRing publicKeyRing(InputStream inputStream) throws IOException {
+    public @Nonnull PGPPublicKeyRing publicKeyRing(@Nonnull InputStream inputStream) throws IOException {
         return readPublicKeyRing(inputStream);
     }
 
-    public PGPPublicKeyRing publicKeyRing(byte[] bytes) throws IOException {
+    public PGPPublicKeyRing publicKeyRing(@Nonnull byte[] bytes) throws IOException {
         return publicKeyRing(new ByteArrayInputStream(bytes));
     }
 
-    public PGPPublicKeyRing publicKeyRing(String asciiArmored) throws IOException {
+    public PGPPublicKeyRing publicKeyRing(@Nonnull String asciiArmored) throws IOException {
         return publicKeyRing(asciiArmored.getBytes(UTF8));
     }
 
-    public PGPPublicKeyRingCollection publicKeyRingCollection(InputStream inputStream)
+    public PGPPublicKeyRingCollection publicKeyRingCollection(@Nonnull InputStream inputStream)
             throws IOException, PGPException {
         return readPublicKeyRingCollection(inputStream);
     }
 
-    public PGPPublicKeyRingCollection publicKeyRingCollection(byte[] bytes) throws IOException, PGPException {
+    public PGPPublicKeyRingCollection publicKeyRingCollection(@Nonnull byte[] bytes) throws IOException, PGPException {
         return publicKeyRingCollection(new ByteArrayInputStream(bytes));
     }
 
-    public PGPPublicKeyRingCollection publicKeyRingCollection(String asciiArmored) throws IOException, PGPException {
+    public PGPPublicKeyRingCollection publicKeyRingCollection(@Nonnull String asciiArmored) throws IOException, PGPException {
         return publicKeyRingCollection(asciiArmored.getBytes(UTF8));
     }
 
-    public PGPSecretKeyRing secretKeyRing(InputStream inputStream) throws IOException, PGPException {
+    public PGPSecretKeyRing secretKeyRing(@Nonnull InputStream inputStream) throws IOException, PGPException {
         return readSecretKeyRing(inputStream);
     }
 
-    public PGPSecretKeyRing secretKeyRing(byte[] bytes) throws IOException, PGPException {
+    public PGPSecretKeyRing secretKeyRing(@Nonnull byte[] bytes) throws IOException, PGPException {
         return secretKeyRing(new ByteArrayInputStream(bytes));
     }
 
-    public PGPSecretKeyRing secretKeyRing(String asciiArmored) throws IOException, PGPException {
+    public PGPSecretKeyRing secretKeyRing(@Nonnull String asciiArmored) throws IOException, PGPException {
         return secretKeyRing(asciiArmored.getBytes(UTF8));
     }
 
-    public PGPSecretKeyRingCollection secretKeyRingCollection(InputStream inputStream)
+    public PGPSecretKeyRingCollection secretKeyRingCollection(@Nonnull InputStream inputStream)
             throws IOException, PGPException {
         return readSecretKeyRingCollection(inputStream);
     }
 
-    public PGPSecretKeyRingCollection secretKeyRingCollection(byte[] bytes) throws IOException, PGPException {
+    public PGPSecretKeyRingCollection secretKeyRingCollection(@Nonnull byte[] bytes) throws IOException, PGPException {
         return secretKeyRingCollection(new ByteArrayInputStream(bytes));
     }
 
-    public PGPSecretKeyRingCollection secretKeyRingCollection(String asciiArmored) throws IOException, PGPException {
+    public PGPSecretKeyRingCollection secretKeyRingCollection(@Nonnull String asciiArmored) throws IOException, PGPException {
         return secretKeyRingCollection(asciiArmored.getBytes(UTF8));
     }
 
-    public PGPKeyRing keyRing(InputStream publicIn, InputStream secretIn) throws IOException, PGPException {
+    public PGPKeyRing keyRing(@Nullable InputStream publicIn, @Nullable InputStream secretIn) throws IOException, PGPException {
         return readKeyRing(publicIn, secretIn);
     }
 
-    public PGPKeyRing keyRing(byte[] publicBytes, byte[] secretBytes) throws IOException, PGPException {
+    public PGPKeyRing keyRing(@Nullable byte[] publicBytes, @Nullable byte[] secretBytes) throws IOException, PGPException {
         return keyRing(
                 publicBytes != null ? new ByteArrayInputStream(publicBytes) : null,
                 secretBytes != null ? new ByteArrayInputStream(secretBytes) : null
         );
     }
 
-    public PGPKeyRing keyRing(String asciiPublic, String asciiSecret) throws IOException, PGPException {
+    public PGPKeyRing keyRing(@Nullable String asciiPublic, @Nullable String asciiSecret) throws IOException, PGPException {
         return keyRing(
                 asciiPublic != null ? asciiPublic.getBytes(UTF8) : null,
                 asciiSecret != null ? asciiSecret.getBytes(UTF8) : null
@@ -105,33 +107,38 @@ public class KeyRingReader {
     STATIC METHODS
      */
 
-    public static PGPPublicKeyRing readPublicKeyRing(InputStream inputStream) throws IOException {
+    public static PGPPublicKeyRing readPublicKeyRing(@Nonnull InputStream inputStream) throws IOException {
         return new PGPPublicKeyRing(
                 PGPUtil.getDecoderStream(inputStream),
                 new BcKeyFingerprintCalculator());
     }
 
-    public static PGPPublicKeyRingCollection readPublicKeyRingCollection(InputStream inputStream)
+    public static PGPPublicKeyRingCollection readPublicKeyRingCollection(@Nonnull InputStream inputStream)
             throws IOException, PGPException {
         return new PGPPublicKeyRingCollection(
                 PGPUtil.getDecoderStream(inputStream),
                 new BcKeyFingerprintCalculator());
     }
 
-    public static PGPSecretKeyRing readSecretKeyRing(InputStream inputStream) throws IOException, PGPException {
+    public static PGPSecretKeyRing readSecretKeyRing(@Nonnull InputStream inputStream) throws IOException, PGPException {
         return new PGPSecretKeyRing(
                 PGPUtil.getDecoderStream(inputStream),
                 new BcKeyFingerprintCalculator());
     }
 
-    public static PGPSecretKeyRingCollection readSecretKeyRingCollection(InputStream inputStream)
+    public static PGPSecretKeyRingCollection readSecretKeyRingCollection(@Nonnull InputStream inputStream)
             throws IOException, PGPException {
         return new PGPSecretKeyRingCollection(
                 PGPUtil.getDecoderStream(inputStream),
                 new BcKeyFingerprintCalculator());
     }
 
-    public static PGPKeyRing readKeyRing(InputStream publicIn, InputStream secretIn) throws IOException, PGPException {
+    public static PGPKeyRing readKeyRing(@Nullable InputStream publicIn, @Nullable InputStream secretIn) throws IOException, PGPException {
+
+        if (publicIn == null && secretIn == null) {
+            throw new NullPointerException("publicIn and secretIn cannot be BOTH null.");
+        }
+
         PGPPublicKeyRing publicKeys = null;
         if (publicIn != null) {
             publicKeys = readPublicKeyRing(publicIn);
@@ -140,6 +147,15 @@ public class KeyRingReader {
         if (secretIn != null) {
             secretKeys = readSecretKeyRing(secretIn);
         }
+
+        if (secretKeys == null) {
+            return new PGPKeyRing(publicKeys);
+        }
+
+        if (publicKeys == null) {
+            return new PGPKeyRing(secretKeys);
+        }
+
         return new PGPKeyRing(publicKeys, secretKeys);
     }
 }

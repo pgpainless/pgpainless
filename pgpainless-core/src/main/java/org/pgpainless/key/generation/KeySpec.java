@@ -15,6 +15,9 @@
  */
 package org.pgpainless.key.generation;
 
+import javax.annotation.Nonnull;
+import javax.annotation.Nullable;
+
 import org.bouncycastle.openpgp.PGPSignatureSubpacketGenerator;
 import org.bouncycastle.openpgp.PGPSignatureSubpacketVector;
 import org.pgpainless.key.generation.type.KeyType;
@@ -25,20 +28,22 @@ public class KeySpec {
     private final PGPSignatureSubpacketGenerator subpacketGenerator;
     private final boolean inheritedSubPackets;
 
-    KeySpec(KeyType type,
-            PGPSignatureSubpacketGenerator subpacketGenerator,
+    KeySpec(@Nonnull KeyType type,
+            @Nullable PGPSignatureSubpacketGenerator subpacketGenerator,
             boolean inheritedSubPackets) {
         this.keyType = type;
         this.subpacketGenerator = subpacketGenerator;
         this.inheritedSubPackets = inheritedSubPackets;
     }
 
+    @Nonnull
     KeyType getKeyType() {
         return keyType;
     }
 
+    @Nullable
     PGPSignatureSubpacketVector getSubpackets() {
-        return subpacketGenerator.generate();
+        return subpacketGenerator != null ? subpacketGenerator.generate() : null;
     }
 
     boolean isInheritedSubPackets() {

@@ -15,6 +15,8 @@
  */
 package org.pgpainless.key.protection;
 
+import javax.annotation.Nonnull;
+import javax.annotation.Nullable;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -34,9 +36,9 @@ public class PassphraseMapKeyRingProtector implements SecretKeyRingProtector, Se
     private final SecretKeyRingProtector protector;
     private final SecretKeyPassphraseProvider provider;
 
-    public PassphraseMapKeyRingProtector(Map<Long, Passphrase> passphrases,
-                                         KeyRingProtectionSettings protectionSettings,
-                                         SecretKeyPassphraseProvider missingPassphraseCallback) {
+    public PassphraseMapKeyRingProtector(@Nonnull Map<Long, Passphrase> passphrases,
+                                         @Nonnull KeyRingProtectionSettings protectionSettings,
+                                         @Nullable SecretKeyPassphraseProvider missingPassphraseCallback) {
         this.cache.putAll(passphrases);
         this.protector = new PasswordBasedSecretKeyRingProtector(protectionSettings, this);
         this.provider = missingPassphraseCallback;
@@ -48,7 +50,7 @@ public class PassphraseMapKeyRingProtector implements SecretKeyRingProtector, Se
      * @param keyId id of the key
      * @param passphrase passphrase
      */
-    public void addPassphrase(Long keyId, Passphrase passphrase) {
+    public void addPassphrase(@Nonnull Long keyId, @Nullable Passphrase passphrase) {
         this.cache.put(keyId, passphrase);
     }
 
@@ -58,14 +60,15 @@ public class PassphraseMapKeyRingProtector implements SecretKeyRingProtector, Se
      *
      * @param keyId id of the key
      */
-    public void forgetPassphrase(Long keyId) {
+    public void forgetPassphrase(@Nonnull Long keyId) {
         Passphrase passphrase = cache.get(keyId);
         passphrase.clear();
         cache.remove(keyId);
     }
 
     @Override
-    public Passphrase getPassphraseFor(Long keyId) {
+    @Nullable
+    public Passphrase getPassphraseFor(@Nonnull Long keyId) {
         Passphrase passphrase = cache.get(keyId);
         if (passphrase == null || !passphrase.isValid()) {
             passphrase = provider.getPassphraseFor(keyId);
@@ -77,12 +80,14 @@ public class PassphraseMapKeyRingProtector implements SecretKeyRingProtector, Se
     }
 
     @Override
-    public PBESecretKeyDecryptor getDecryptor(Long keyId) {
+    @Nullable
+    public PBESecretKeyDecryptor getDecryptor(@Nonnull Long keyId) {
         return protector.getDecryptor(keyId);
     }
 
     @Override
-    public PBESecretKeyEncryptor getEncryptor(Long keyId) throws PGPException {
+    @Nullable
+    public PBESecretKeyEncryptor getEncryptor(@Nonnull Long keyId) throws PGPException {
         return protector.getEncryptor(keyId);
     }
 }

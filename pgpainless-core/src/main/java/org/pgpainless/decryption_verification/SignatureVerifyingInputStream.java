@@ -15,6 +15,7 @@
  */
 package org.pgpainless.decryption_verification;
 
+import javax.annotation.Nonnull;
 import java.io.FilterInputStream;
 import java.io.IOException;
 import java.io.InputStream;
@@ -41,10 +42,10 @@ public class SignatureVerifyingInputStream extends FilterInputStream {
 
     private boolean validated = false;
 
-    protected SignatureVerifyingInputStream(InputStream inputStream,
-                                            PGPObjectFactory objectFactory,
-                                            Map<OpenPgpV4Fingerprint, PGPOnePassSignature> onePassSignatures,
-                                            OpenPgpMetadata.Builder resultBuilder) {
+    protected SignatureVerifyingInputStream(@Nonnull InputStream inputStream,
+                                            @Nonnull PGPObjectFactory objectFactory,
+                                            @Nonnull Map<OpenPgpV4Fingerprint, PGPOnePassSignature> onePassSignatures,
+                                            @Nonnull OpenPgpMetadata.Builder resultBuilder) {
         super(inputStream);
         this.objectFactory = objectFactory;
         this.resultBuilder = resultBuilder;

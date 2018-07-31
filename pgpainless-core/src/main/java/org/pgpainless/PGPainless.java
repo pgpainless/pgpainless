@@ -15,6 +15,9 @@
  */
 package org.pgpainless;
 
+import javax.annotation.Nonnull;
+import java.io.IOException;
+
 import org.bouncycastle.openpgp.PGPException;
 import org.pgpainless.algorithm.CompressionAlgorithm;
 import org.pgpainless.algorithm.SymmetricKeyAlgorithm;
@@ -26,8 +29,6 @@ import org.pgpainless.key.generation.KeyRingBuilder;
 import org.pgpainless.key.parsing.KeyRingReader;
 import org.pgpainless.symmetric_encryption.SymmetricEncryptorDecryptor;
 import org.pgpainless.util.Passphrase;
-
-import java.io.IOException;
 
 public class PGPainless {
 
@@ -73,7 +74,7 @@ public class PGPainless {
      * @throws IOException IO is dangerous.
      * @throws PGPException PGP is brittle.
      */
-    public static byte[] encryptWithPassword(byte[] data, Passphrase password, SymmetricKeyAlgorithm algorithm) throws IOException, PGPException {
+    public static byte[] encryptWithPassword(@Nonnull byte[] data, @Nonnull Passphrase password, @Nonnull SymmetricKeyAlgorithm algorithm) throws IOException, PGPException {
         return SymmetricEncryptorDecryptor.symmetricallyEncrypt(data, password,
                 algorithm, CompressionAlgorithm.UNCOMPRESSED);
     }
@@ -88,7 +89,7 @@ public class PGPainless {
      * @throws IOException IO is dangerous.
      * @throws PGPException PGP is brittle.
      */
-    public static byte[] decryptWithPassword(byte[] data, Passphrase password) throws IOException, PGPException {
+    public static byte[] decryptWithPassword(@Nonnull byte[] data, @Nonnull Passphrase password) throws IOException, PGPException {
         return SymmetricEncryptorDecryptor.symmetricallyDecrypt(data, password);
     }
 }

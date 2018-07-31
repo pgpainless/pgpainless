@@ -16,6 +16,7 @@
 package org.pgpainless.key.generation;
 
 
+import javax.annotation.Nonnull;
 import java.nio.charset.Charset;
 import java.security.InvalidAlgorithmParameterException;
 import java.security.KeyPair;
@@ -75,7 +76,7 @@ public class KeyRingBuilder implements KeyRingBuilderInterface {
      * @throws NoSuchProviderException
      * @throws InvalidAlgorithmParameterException
      */
-    public PGPKeyRing simpleRsaKeyRing(String userId, RsaLength length)
+    public PGPKeyRing simpleRsaKeyRing(@Nonnull String userId, @Nonnull RsaLength length)
             throws PGPException, NoSuchAlgorithmException, NoSuchProviderException, InvalidAlgorithmParameterException {
         return withMasterKey(
                         KeySpec.getBuilder(RSA_GENERAL.withLength(length))
@@ -98,7 +99,7 @@ public class KeyRingBuilder implements KeyRingBuilderInterface {
      * @throws NoSuchProviderException
      * @throws InvalidAlgorithmParameterException
      */
-    public PGPKeyRing simpleEcKeyRing(String userId)
+    public PGPKeyRing simpleEcKeyRing(@Nonnull String userId)
             throws PGPException, NoSuchAlgorithmException, NoSuchProviderException, InvalidAlgorithmParameterException {
         return withSubKey(
                         KeySpec.getBuilder(ECDH.fromCurve(EllipticCurve._P256))
@@ -114,13 +115,13 @@ public class KeyRingBuilder implements KeyRingBuilderInterface {
     }
 
     @Override
-    public KeyRingBuilderInterface withSubKey(KeySpec type) {
+    public KeyRingBuilderInterface withSubKey(@Nonnull KeySpec type) {
         KeyRingBuilder.this.keySpecs.add(type);
         return this;
     }
 
     @Override
-    public WithPrimaryUserId withMasterKey(KeySpec spec) {
+    public WithPrimaryUserId withMasterKey(@Nonnull KeySpec spec) {
         if ((spec.getSubpackets().getKeyFlags() & KeyFlags.CERTIFY_OTHER) == 0) {
             throw new IllegalArgumentException("Certification Key MUST have KeyFlag CERTIFY_OTHER");
         }
@@ -131,13 +132,13 @@ public class KeyRingBuilder implements KeyRingBuilderInterface {
     class WithPrimaryUserIdImpl implements WithPrimaryUserId {
 
         @Override
-        public WithPassphrase withPrimaryUserId(String userId) {
+        public WithPassphrase withPrimaryUserId(@Nonnull String userId) {
             KeyRingBuilder.this.userId = userId;
             return new WithPassphraseImpl();
         }
 
         @Override
-        public WithPassphrase withPrimaryUserId(byte[] userId) {
+        public WithPassphrase withPrimaryUserId(@Nonnull byte[] userId) {
             return withPrimaryUserId(new String(userId, UTF8));
         }
     }
@@ -145,7 +146,7 @@ public class KeyRingBuilder implements KeyRingBuilderInterface {
     class WithPassphraseImpl implements WithPassphrase {
 
         @Override
-        public Build withPassphrase(Passphrase passphrase) {
+        public Build withPassphrase(@Nonnull Passphrase passphrase) {
             KeyRingBuilder.this.passphrase = passphrase;
             return new BuildImpl();
         }

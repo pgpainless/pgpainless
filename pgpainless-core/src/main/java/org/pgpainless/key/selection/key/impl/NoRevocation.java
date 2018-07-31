@@ -15,6 +15,8 @@
  */
 package org.pgpainless.key.selection.key.impl;
 
+import javax.annotation.Nonnull;
+
 import org.bouncycastle.openpgp.PGPPublicKey;
 import org.bouncycastle.openpgp.PGPSecretKey;
 import org.pgpainless.key.selection.key.PublicKeySelectionStrategy;
@@ -33,7 +35,7 @@ public class NoRevocation {
     public static class PubKeySelectionStrategy<O> extends PublicKeySelectionStrategy<O> {
 
         @Override
-        public boolean accept(O identifier, PGPPublicKey key) {
+        public boolean accept(O identifier, @Nonnull PGPPublicKey key) {
             return !key.hasRevocation();
         }
     }
@@ -46,7 +48,7 @@ public class NoRevocation {
     public static class SecKeySelectionStrategy<O> extends SecretKeySelectionStrategy<O> {
 
         @Override
-        public boolean accept(O identifier, PGPSecretKey key) {
+        public boolean accept(O identifier, @Nonnull PGPSecretKey key) {
             return !key.getPublicKey().hasRevocation();
         }
     }

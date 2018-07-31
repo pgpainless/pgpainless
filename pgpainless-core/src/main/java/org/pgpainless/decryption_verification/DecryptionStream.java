@@ -15,6 +15,7 @@
  */
 package org.pgpainless.decryption_verification;
 
+import javax.annotation.Nonnull;
 import java.io.IOException;
 import java.io.InputStream;
 
@@ -24,12 +25,7 @@ public class DecryptionStream extends InputStream {
     private final OpenPgpMetadata.Builder resultBuilder;
     private boolean isClosed = false;
 
-    DecryptionStream(InputStream wrapped, OpenPgpMetadata.Builder resultBuilder) {
-
-        if (wrapped == null) {
-            throw new NullPointerException("Wrapped InputStream MUST NOT be null!");
-        }
-
+    DecryptionStream(@Nonnull InputStream wrapped, @Nonnull OpenPgpMetadata.Builder resultBuilder) {
         this.inputStream = wrapped;
         this.resultBuilder = resultBuilder;
     }

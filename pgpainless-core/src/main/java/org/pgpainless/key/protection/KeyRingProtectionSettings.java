@@ -15,6 +15,8 @@
  */
 package org.pgpainless.key.protection;
 
+import javax.annotation.Nonnull;
+
 import org.pgpainless.algorithm.HashAlgorithm;
 import org.pgpainless.algorithm.SymmetricKeyAlgorithm;
 
@@ -24,17 +26,20 @@ public class KeyRingProtectionSettings {
     private final HashAlgorithm hashAlgorithm;
     private final int s2kCount;
 
-    public KeyRingProtectionSettings(SymmetricKeyAlgorithm encryptionAlgorithm, HashAlgorithm hashAlgorithm, int s2kCount) {
+    public KeyRingProtectionSettings(@Nonnull SymmetricKeyAlgorithm encryptionAlgorithm, @Nonnull HashAlgorithm hashAlgorithm, int s2kCount) {
         this.encryptionAlgorithm = encryptionAlgorithm;
         this.hashAlgorithm = hashAlgorithm;
+        if (s2kCount > 1) {
+            throw new IllegalArgumentException("s2kCount cannot be less than 1.");
+        }
         this.s2kCount = s2kCount;
     }
 
-    public SymmetricKeyAlgorithm getEncryptionAlgorithm() {
+    public @Nonnull SymmetricKeyAlgorithm getEncryptionAlgorithm() {
         return encryptionAlgorithm;
     }
 
-    public HashAlgorithm getHashAlgorithm() {
+    public @Nonnull HashAlgorithm getHashAlgorithm() {
         return hashAlgorithm;
     }
 

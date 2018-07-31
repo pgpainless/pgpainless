@@ -15,6 +15,7 @@
  */
 package org.pgpainless.key.selection.key.impl;
 
+import javax.annotation.Nonnull;
 import java.util.Arrays;
 import java.util.Iterator;
 import java.util.logging.Level;
@@ -33,7 +34,7 @@ public class SignedByMasterKey {
     public static class PubkeySelectionStrategy extends PublicKeySelectionStrategy<PGPPublicKey> {
 
         @Override
-        public boolean accept(PGPPublicKey masterKey, PGPPublicKey key) {
+        public boolean accept(PGPPublicKey masterKey, @Nonnull PGPPublicKey key) {
             // Same key -> accept
             if (Arrays.equals(masterKey.getFingerprint(), key.getFingerprint())) {
                 return true;

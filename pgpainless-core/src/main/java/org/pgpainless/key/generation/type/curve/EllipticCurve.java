@@ -15,13 +15,15 @@
  */
 package org.pgpainless.key.generation.type.curve;
 
+import javax.annotation.Nonnull;
+
 public enum EllipticCurve {
     _P256("P-256"),
     ;
 
     private final String name;
 
-    EllipticCurve(String name) {
+    EllipticCurve(@Nonnull String name) {
         this.name = name;
     }
 

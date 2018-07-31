@@ -15,6 +15,7 @@
  */
 package org.pgpainless.key;
 
+import javax.annotation.Nonnull;
 import java.math.BigInteger;
 import java.nio.ByteBuffer;
 import java.nio.charset.Charset;
@@ -39,10 +40,7 @@ public class OpenPgpV4Fingerprint implements CharSequence, Comparable<OpenPgpV4F
      *     XEP-0373 §4.1: The OpenPGP Public-Key Data Node about how to obtain the fingerprint</a>
      * @param fingerprint hexadecimal representation of the fingerprint.
      */
-    public OpenPgpV4Fingerprint(String fingerprint) {
-        if (fingerprint == null) {
-            throw new NullPointerException("Fingerprint MUST NOT be null.");
-        }
+    public OpenPgpV4Fingerprint(@Nonnull String fingerprint) {
         String fp = fingerprint.trim().toUpperCase();
         if (!isValid(fp)) {
             throw new IllegalArgumentException("Fingerprint " + fingerprint +
@@ -51,26 +49,26 @@ public class OpenPgpV4Fingerprint implements CharSequence, Comparable<OpenPgpV4F
         this.fingerprint = fp;
     }
 
-    public OpenPgpV4Fingerprint(byte[] bytes) {
+    public OpenPgpV4Fingerprint(@Nonnull byte[] bytes) {
         this(new String(bytes, Charset.forName("UTF-8")));
     }
 
-    public OpenPgpV4Fingerprint(PGPPublicKey key) {
+    public OpenPgpV4Fingerprint(@Nonnull PGPPublicKey key) {
         this(Hex.encode(key.getFingerprint()));
         if (key.getVersion() != 4) {
             throw new IllegalArgumentException("Key is not a v4 OpenPgp key.");
         }
     }
 
-    public OpenPgpV4Fingerprint(PGPSecretKey key) {
+    public OpenPgpV4Fingerprint(@Nonnull PGPSecretKey key) {
         this(key.getPublicKey());
     }
 
-    public OpenPgpV4Fingerprint(PGPPublicKeyRing ring) {
+    public OpenPgpV4Fingerprint(@Nonnull PGPPublicKeyRing ring) {
         this(ring.getPublicKey());
     }
 
-    public OpenPgpV4Fingerprint(PGPSecretKeyRing ring) {
+    public OpenPgpV4Fingerprint(@Nonnull PGPSecretKeyRing ring) {
         this(ring.getPublicKey());
     }
 
@@ -79,7 +77,7 @@ public class OpenPgpV4Fingerprint implements CharSequence, Comparable<OpenPgpV4F
      * @param fp fingerprint to check.
      * @return true if fingerprint is valid.
      */
-    private boolean isValid(String fp) {
+    private static boolean isValid(@Nonnull String fp) {
         return fp.matches("[0-9A-F]{40}");
     }
 
@@ -143,7 +141,7 @@ public class OpenPgpV4Fingerprint implements CharSequence, Comparable<OpenPgpV4F
     }
 
     @Override
-    public int compareTo(OpenPgpV4Fingerprint openPgpV4Fingerprint) {
+    public int compareTo(@Nonnull OpenPgpV4Fingerprint openPgpV4Fingerprint) {
         return fingerprint.compareTo(openPgpV4Fingerprint.fingerprint);
     }
 }

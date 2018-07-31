@@ -15,6 +15,8 @@
  */
 package org.pgpainless.key.selection.key.impl;
 
+import javax.annotation.Nonnull;
+
 import org.bouncycastle.openpgp.PGPSecretKey;
 import org.pgpainless.key.selection.key.SecretKeySelectionStrategy;
 
@@ -26,7 +28,7 @@ import org.pgpainless.key.selection.key.SecretKeySelectionStrategy;
 public class SignatureKeySelectionStrategy<O> extends SecretKeySelectionStrategy<O> {
 
     @Override
-    public boolean accept(O identifier, PGPSecretKey key) {
+    public boolean accept(O identifier, @Nonnull PGPSecretKey key) {
         return key.isSigningKey();
     }
 

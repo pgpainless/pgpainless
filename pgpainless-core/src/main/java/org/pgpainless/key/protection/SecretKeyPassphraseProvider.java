@@ -15,6 +15,8 @@
  */
 package org.pgpainless.key.protection;
 
+import javax.annotation.Nullable;
+
 import org.pgpainless.util.Passphrase;
 
 /**
@@ -23,10 +25,12 @@ import org.pgpainless.util.Passphrase;
 public interface SecretKeyPassphraseProvider {
 
     /**
-     * Return a passphrase for the given key.
+     * Return a passphrase for the given key. If no record has been found, return null.
+     * Note: In case of an unprotected secret key, this method must may not return null, but a {@link Passphrase} with
+     * a content of null.
      *
      * @param keyId id of the key
-     * @return passphrase
+     * @return passphrase or null, if no passphrase record has been found.
      */
-    Passphrase getPassphraseFor(Long keyId);
+    @Nullable Passphrase getPassphraseFor(Long keyId);
 }

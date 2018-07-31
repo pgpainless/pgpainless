@@ -15,12 +15,14 @@
  */
 package org.pgpainless.key.generation.type;
 
+import javax.annotation.Nonnull;
+
 import org.pgpainless.algorithm.PublicKeyAlgorithm;
 import org.pgpainless.key.generation.type.length.ElGamalLength;
 
 public class ElGamal_ENCRYPT extends ElGamal_GENERAL {
 
-    ElGamal_ENCRYPT(ElGamalLength length) {
+    ElGamal_ENCRYPT(@Nonnull ElGamalLength length) {
         super(length);
     }
 

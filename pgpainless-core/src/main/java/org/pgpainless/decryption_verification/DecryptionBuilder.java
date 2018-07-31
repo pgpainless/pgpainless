@@ -15,6 +15,7 @@
  */
 package org.pgpainless.decryption_verification;
 
+import javax.annotation.Nonnull;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.HashSet;
@@ -45,7 +46,7 @@ public class DecryptionBuilder implements DecryptionBuilderInterface {
     class DecryptWithImpl implements DecryptWith {
 
         @Override
-        public VerifyWith decryptWith(SecretKeyRingProtector decryptor, PGPSecretKeyRingCollection secretKeyRings) {
+        public VerifyWith decryptWith(@Nonnull SecretKeyRingProtector decryptor, @Nonnull PGPSecretKeyRingCollection secretKeyRings) {
             DecryptionBuilder.this.decryptionKeys = secretKeyRings;
             DecryptionBuilder.this.decryptionKeyDecryptor = decryptor;
             return new VerifyWithImpl();
@@ -62,7 +63,7 @@ public class DecryptionBuilder implements DecryptionBuilderInterface {
     class VerifyWithImpl implements VerifyWith {
 
         @Override
-        public HandleMissingPublicKeys verifyWith(PGPPublicKeyRingCollection publicKeyRingCollection) {
+        public HandleMissingPublicKeys verifyWith(@Nonnull PGPPublicKeyRingCollection publicKeyRingCollection) {
             Set<PGPPublicKeyRing> publicKeyRings = new HashSet<>();
             for (Iterator<PGPPublicKeyRing> i = publicKeyRingCollection.getKeyRings(); i.hasNext(); ) {
                 publicKeyRings.add(i.next());
@@ -71,8 +72,8 @@ public class DecryptionBuilder implements DecryptionBuilderInterface {
         }
 
         @Override
-        public HandleMissingPublicKeys verifyWith(Set<OpenPgpV4Fingerprint> trustedKeyIds,
-                                                  PGPPublicKeyRingCollection publicKeyRingCollection) {
+        public HandleMissingPublicKeys verifyWith(@Nonnull Set<OpenPgpV4Fingerprint> trustedKeyIds,
+                                                  @Nonnull PGPPublicKeyRingCollection publicKeyRingCollection) {
             Set<PGPPublicKeyRing> publicKeyRings = new HashSet<>();
             for (Iterator<PGPPublicKeyRing> i = publicKeyRingCollection.getKeyRings(); i.hasNext(); ) {
                 PGPPublicKeyRing p = i.next();
@@ -85,7 +86,7 @@ public class DecryptionBuilder implements DecryptionBuilderInterface {
         }
 
         @Override
-        public HandleMissingPublicKeys verifyWith(Set<PGPPublicKeyRing> publicKeyRings) {
+        public HandleMissingPublicKeys verifyWith(@Nonnull Set<PGPPublicKeyRing> publicKeyRings) {
             DecryptionBuilder.this.verificationKeys = publicKeyRings;
             return new HandleMissingPublicKeysImpl();
         }
@@ -100,7 +101,7 @@ public class DecryptionBuilder implements DecryptionBuilderInterface {
     class HandleMissingPublicKeysImpl implements HandleMissingPublicKeys {
 
         @Override
-        public Build handleMissingPublicKeysWith(MissingPublicKeyCallback callback) {
+        public Build handleMissingPublicKeysWith(@Nonnull MissingPublicKeyCallback callback) {
             DecryptionBuilder.this.missingPublicKeyCallback = callback;
             return new BuildImpl();
         }

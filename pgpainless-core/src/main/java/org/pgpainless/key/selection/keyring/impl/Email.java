@@ -15,6 +15,8 @@
  */
 package org.pgpainless.key.selection.keyring.impl;
 
+import javax.annotation.Nonnull;
+
 import org.bouncycastle.openpgp.PGPPublicKey;
 import org.bouncycastle.openpgp.PGPSecretKey;
 
@@ -23,7 +25,7 @@ public class Email {
     public static class PubRingSelectionStrategy extends PartialUserId.PubRingSelectionStrategy {
 
         @Override
-        public boolean accept(String email, PGPPublicKey key) {
+        public boolean accept(@Nonnull String email, @Nonnull PGPPublicKey key) {
             // Ensure, that email address is encapsulated in "<",">"
             if (!email.matches("^<.+>$")) {
                 email = "<" + email + ">";

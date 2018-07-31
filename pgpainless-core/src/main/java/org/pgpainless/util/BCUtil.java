@@ -15,6 +15,7 @@
  */
 package org.pgpainless.util;
 
+import javax.annotation.Nonnull;
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
@@ -52,17 +53,17 @@ public class BCUtil {
     /*
     PGPXxxKeyRing -> PGPXxxKeyRingCollection
      */
-    public static PGPPublicKeyRingCollection keyRingsToKeyRingCollection(PGPPublicKeyRing... rings)
+    public static PGPPublicKeyRingCollection keyRingsToKeyRingCollection(@Nonnull PGPPublicKeyRing... rings)
             throws IOException, PGPException {
         return new PGPPublicKeyRingCollection(Arrays.asList(rings));
     }
 
-    public static PGPSecretKeyRingCollection keyRingsToKeyRingCollection(PGPSecretKeyRing... rings)
+    public static PGPSecretKeyRingCollection keyRingsToKeyRingCollection(@Nonnull PGPSecretKeyRing... rings)
             throws IOException, PGPException {
         return new PGPSecretKeyRingCollection(Arrays.asList(rings));
     }
 
-    public static PGPPublicKeyRing publicKeyRingFromSecretKeyRing(PGPSecretKeyRing secretKeys)
+    public static PGPPublicKeyRing publicKeyRingFromSecretKeyRing(@Nonnull PGPSecretKeyRing secretKeys)
             throws PGPException, IOException {
         PGPSecretKeyRing fixedSecretKeys = KeyRingSubKeyFix.repairSubkeyPackets(secretKeys, null, null);
 
@@ -81,7 +82,8 @@ public class BCUtil {
     PGPXxxKeyRingCollection -> PGPXxxKeyRing
      */
 
-    public static PGPSecretKeyRing getKeyRingFromCollection(PGPSecretKeyRingCollection collection, Long id)
+    public static PGPSecretKeyRing getKeyRingFromCollection(@Nonnull PGPSecretKeyRingCollection collection,
+                                                            @Nonnull Long id)
             throws PGPException {
         PGPSecretKeyRing uncleanedRing = collection.getSecretKeyRing(id);
 
@@ -104,27 +106,32 @@ public class BCUtil {
         return cleanedRing;
     }
 
-    public static PGPPublicKeyRing getKeyRingFromCollection(PGPPublicKeyRingCollection collection, Long id)
+    public static PGPPublicKeyRing getKeyRingFromCollection(@Nonnull PGPPublicKeyRingCollection collection,
+                                                            @Nonnull Long id)
             throws PGPException {
         PGPPublicKey key = collection.getPublicKey(id);
         return removeUnassociatedKeysFromKeyRing(collection.getPublicKeyRing(id), key);
     }
 
-    public static InputStream getPgpDecoderInputStream(byte[] bytes) throws IOException {
+    public static InputStream getPgpDecoderInputStream(@Nonnull byte[] bytes)
+            throws IOException {
         return getPgpDecoderInputStream(new ByteArrayInputStream(bytes));
     }
 
-    public static InputStream getPgpDecoderInputStream(InputStream inputStream) throws IOException {
+    public static InputStream getPgpDecoderInputStream(@Nonnull InputStream inputStream)
+            throws IOException {
         return PGPUtil.getDecoderStream(inputStream);
     }
 
-    public static byte[] getDecodedBytes(byte[] bytes) throws IOException {
+    public static byte[] getDecodedBytes(@Nonnull byte[] bytes)
+            throws IOException {
         ByteArrayOutputStream buffer = new ByteArrayOutputStream();
         Streams.pipeAll(getPgpDecoderInputStream(bytes), buffer);
         return buffer.toByteArray();
     }
 
-    public static byte[] getDecodedBytes(InputStream inputStream) throws IOException {
+    public static byte[] getDecodedBytes(@Nonnull InputStream inputStream)
+            throws IOException {
         ByteArrayOutputStream buffer = new ByteArrayOutputStream();
         Streams.pipeAll(inputStream, buffer);
         return getDecodedBytes(buffer.toByteArray());
@@ -138,7 +145,8 @@ public class BCUtil {
      * @param masterKey master key
      * @return "cleaned" key ring
      */
-    public static PGPPublicKeyRing removeUnassociatedKeysFromKeyRing(PGPPublicKeyRing ring, PGPPublicKey masterKey) {
+    public static PGPPublicKeyRing removeUnassociatedKeysFromKeyRing(@Nonnull PGPPublicKeyRing ring,
+                                                                     @Nonnull PGPPublicKey masterKey) {
         if (!masterKey.isMasterKey()) {
             throw new IllegalArgumentException("Given key is not a master key.");
         }
@@ -168,7 +176,8 @@ public class BCUtil {
      * @param masterKey master key
      * @return "cleaned" key ring
      */
-    public static PGPSecretKeyRing removeUnassociatedKeysFromKeyRing(PGPSecretKeyRing ring, PGPPublicKey masterKey) {
+    public static PGPSecretKeyRing removeUnassociatedKeysFromKeyRing(@Nonnull PGPSecretKeyRing ring,
+                                                                     @Nonnull PGPPublicKey masterKey) {
         if (!masterKey.isMasterKey()) {
             throw new IllegalArgumentException("Given key is not a master key.");
         }
@@ -196,7 +205,7 @@ public class BCUtil {
      * @param ring key ring
      * @return master key
      */
-    public static PGPPublicKey getMasterKeyFrom(PGPPublicKeyRing ring) {
+    public static PGPPublicKey getMasterKeyFrom(@Nonnull PGPPublicKeyRing ring) {
         Iterator<PGPPublicKey> it = ring.getPublicKeys();
         while (it.hasNext()) {
             PGPPublicKey k = it.next();
@@ -208,7 +217,7 @@ public class BCUtil {
         return null;
     }
 
-    public static PGPPublicKey getMasterKeyFrom(PGPKeyRing ring) {
+    public static PGPPublicKey getMasterKeyFrom(@Nonnull PGPKeyRing ring) {
         Iterator it = ring.getPublicKeys();
         while (it.hasNext()) {
             PGPPublicKey k = (PGPPublicKey) it.next();
@@ -220,7 +229,7 @@ public class BCUtil {
         return null;
     }
 
-    public static Set<Long> signingKeyIds(PGPSecretKeyRing ring) {
+    public static Set<Long> signingKeyIds(@Nonnull PGPSecretKeyRing ring) {
         Set<Long> ids = new HashSet<>();
         Iterator<PGPPublicKey> it = ring.getPublicKeys();
         while (it.hasNext()) {
@@ -261,61 +270,13 @@ public class BCUtil {
         return ids;
     }
 
-    public static boolean keyRingContainsKeyWithId(PGPPublicKeyRing ring, long keyId) {
+    public static boolean keyRingContainsKeyWithId(@Nonnull PGPPublicKeyRing ring,
+                                                   long keyId) {
         return ring.getPublicKey(keyId) != null;
     }
 
-    public static boolean keyRingContainsKeyWithId(PGPSecretKeyRing ring, long keyId) {
+    public static boolean keyRingContainsKeyWithId(@Nonnull PGPSecretKeyRing ring,
+                                                   long keyId) {
         return ring.getSecretKey(keyId) != null;
     }
-
-    /*
-    public static PGPKeyRing merge(PGPKeyRing one, PGPKeyRing other) {
-
-        PGPPublicKey masterOne = getMasterKeyFrom(one);
-        if (masterOne == null) {
-            throw new IllegalArgumentException("First PGPKeyRing has no master key");
-        }
-
-        PGPPublicKey masterOther = getMasterKeyFrom(other);
-        if (masterOther == null) {
-            throw new IllegalArgumentException("Other PGPKeyRing has no master key");
-        }
-
-        if (masterOne.getKeyID() != masterOther.getKeyID() ||
-                Arrays.equals(masterOne.getFingerprint(), masterOther.getFingerprint())) {
-            throw new IllegalArgumentException("Keys are not the same.");
-        }
-
-        PGPKeyRing merged = one;
-
-        boolean mergedIsSecret = (merged instanceof PGPSecretKeyRing);
-        boolean otherIsSecret = (other instanceof PGPSecretKeyRing);
-
-        for (Iterator it = other.getPublicKeys(); it.hasNext(); ) {
-
-            PGPPublicKey nextPublicKey = (PGPPublicKey) it.next();
-            PGPPublicKey pendant = merged.getPublicKey(nextPublicKey.getKeyID());
-
-            if (pendant == null) {
-                if (mergedIsSecret && otherIsSecret) {
-                    // Add secret key
-                    PGPSecretKey secretKey = ((PGPSecretKeyRing) other).getSecretKey(nextPublicKey.getKeyID());
-                    merged = PGPSecretKeyRing.insertSecretKey((PGPSecretKeyRing) merged, secretKey);
-                } else {
-                    if (mergedIsSecret) {
-                        PGPSecretKeyRing mergedAsSecret = (PGPSecretKeyRing) merged;
-                        PGPSecretKey secretKey = mergedAsSecret.getSecretKey(nextPublicKey.getKeyID());
-                        if (secretKey == null) {
-                            PGPPublicKeyRing mergedAsPublic = publicKeyRingFromSecretKeyRing((PGPSecretKeyRing) merged);
-                            mergedAsPublic = PGPPublicKeyRing.insertPublicKey(mergedAsPublic, nextPublicKey);
-                            mergedAsSecret = PGPSecretKeyRing.replacePublicKeys(mergedAsSecret, mergedAsPublic);
-                            merged = mergedAsSecret;
-                        }
-                    }
-                }
-            }
-        }
-    }
-    */
 }

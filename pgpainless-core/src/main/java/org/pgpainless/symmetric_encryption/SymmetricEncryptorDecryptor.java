@@ -15,6 +15,7 @@
  */
 package org.pgpainless.symmetric_encryption;
 
+import javax.annotation.Nonnull;
 import java.io.BufferedInputStream;
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
@@ -62,10 +63,10 @@ public class SymmetricEncryptorDecryptor {
      * @throws IOException IO is dangerous
      * @throws PGPException OpenPGP is brittle
      */
-    public static byte[] symmetricallyEncrypt(byte[] data,
-                                              Passphrase password,
-                                              SymmetricKeyAlgorithm encryptionAlgorithm,
-                                              CompressionAlgorithm compressionAlgorithm)
+    public static byte[] symmetricallyEncrypt(@Nonnull byte[] data,
+                                              @Nonnull Passphrase password,
+                                              @Nonnull SymmetricKeyAlgorithm encryptionAlgorithm,
+                                              @Nonnull CompressionAlgorithm compressionAlgorithm)
             throws IOException, PGPException {
 
         byte[] compressedData = compress(data, compressionAlgorithm.getAlgorithmId());
@@ -99,7 +100,8 @@ public class SymmetricEncryptorDecryptor {
      * @throws IOException IO is dangerous
      * @throws PGPException OpenPGP is brittle
      */
-    public static byte[] symmetricallyDecrypt(byte[] data, Passphrase password) throws IOException, PGPException {
+    public static byte[] symmetricallyDecrypt(@Nonnull byte[] data, @Nonnull Passphrase password)
+            throws IOException, PGPException {
         InputStream in = new BufferedInputStream(new ByteArrayInputStream(data));
         in = PGPUtil.getDecoderStream(in);
 
@@ -156,7 +158,7 @@ public class SymmetricEncryptorDecryptor {
      * @return compressed data
      * @throws IOException IO is dangerous
      */
-    private static byte[] compress(byte[] clearData, int algorithm) throws IOException {
+    private static byte[] compress(@Nonnull byte[] clearData, int algorithm) throws IOException {
         ByteArrayOutputStream bOut = new ByteArrayOutputStream();
         PGPCompressedDataGenerator comData = new PGPCompressedDataGenerator(algorithm);
         OutputStream cos = comData.open(bOut);

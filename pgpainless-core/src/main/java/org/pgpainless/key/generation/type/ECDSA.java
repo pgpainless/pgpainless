@@ -16,16 +16,18 @@
 package org.pgpainless.key.generation.type;
 
 
+import javax.annotation.Nonnull;
+
 import org.pgpainless.algorithm.PublicKeyAlgorithm;
 import org.pgpainless.key.generation.type.curve.EllipticCurve;
 
 public class ECDSA extends ECDH {
 
-    ECDSA(EllipticCurve curve) {
+    ECDSA(@Nonnull EllipticCurve curve) {
         super(curve);
     }
 
-    public static ECDSA fromCurve(EllipticCurve curve) {
+    public static ECDSA fromCurve(@Nonnull EllipticCurve curve) {
         return new ECDSA(curve);
     }
 

@@ -15,6 +15,8 @@
  */
 package org.pgpainless.util;
 
+import javax.annotation.Nonnull;
+import javax.annotation.Nullable;
 import java.lang.reflect.Field;
 import java.util.ArrayList;
 import java.util.Iterator;
@@ -56,9 +58,9 @@ public class KeyRingSubKeyFix {
      *
      * @throws PGPException in case we cannot dismantle or reassemble the key.
      */
-    public static PGPSecretKeyRing repairSubkeyPackets(PGPSecretKeyRing secretKeys,
-                                                       PBESecretKeyDecryptor decryptor,
-                                                       PBESecretKeyEncryptor encryptor)
+    public static PGPSecretKeyRing repairSubkeyPackets(@Nonnull PGPSecretKeyRing secretKeys,
+                                                       @Nullable PBESecretKeyDecryptor decryptor,
+                                                       @Nullable PBESecretKeyEncryptor encryptor)
             throws PGPException {
 
         PGPDigestCalculator calculator = new BcPGPDigestCalculatorProvider().get(HashAlgorithmTags.SHA1);
@@ -68,15 +70,14 @@ public class KeyRingSubKeyFix {
         try {
 
             while (secretKeyIterator.hasNext()) {
-                PGPSecretKey key = secretKeyIterator.next();
+                PGPSecretKey secSubKey = secretKeyIterator.next();
 
-                if (key.isMasterKey()) {
-                    LOGGER.log(Level.INFO, Long.toHexString(key.getKeyID()) + " is master key. Skip.");
-                    _secretKeys.add(key);
+                if (secSubKey.isMasterKey()) {
+                    LOGGER.log(Level.INFO, Long.toHexString(secSubKey.getKeyID()) + " is master key. Skip.");
+                    _secretKeys.add(secSubKey);
                     continue;
                 }
 
-                PGPSecretKey secSubKey = key;
                 PGPPublicKey pubSubKey = secSubKey.getPublicKey();
 
                 // check for public key packet type
