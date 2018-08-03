@@ -42,7 +42,7 @@ import org.bouncycastle.openpgp.operator.bc.BcKeyFingerprintCalculator;
 import org.bouncycastle.util.io.Streams;
 import org.pgpainless.algorithm.KeyFlag;
 import org.pgpainless.key.selection.key.PublicKeySelectionStrategy;
-import org.pgpainless.key.selection.key.impl.And;
+import org.pgpainless.key.selection.key.util.And;
 import org.pgpainless.key.selection.key.impl.NoRevocation;
 import org.pgpainless.key.selection.key.impl.SignedByMasterKey;
 

@@ -13,7 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.pgpainless.key.selection.key.impl;
+package org.pgpainless.key.selection.key.util;
 
 import javax.annotation.Nonnull;
 

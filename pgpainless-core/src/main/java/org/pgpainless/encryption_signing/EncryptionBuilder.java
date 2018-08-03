@@ -36,7 +36,7 @@ import org.pgpainless.algorithm.SymmetricKeyAlgorithm;
 import org.pgpainless.key.protection.SecretKeyRingProtector;
 import org.pgpainless.key.selection.key.PublicKeySelectionStrategy;
 import org.pgpainless.key.selection.key.SecretKeySelectionStrategy;
-import org.pgpainless.key.selection.key.impl.And;
+import org.pgpainless.key.selection.key.util.And;
 import org.pgpainless.key.selection.key.impl.EncryptionKeySelectionStrategy;
 import org.pgpainless.key.selection.key.impl.NoRevocation;
 import org.pgpainless.key.selection.key.impl.SignatureKeySelectionStrategy;
