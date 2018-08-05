@@ -102,42 +102,51 @@ public class SymmetricEncryptorDecryptor {
      */
     public static byte[] symmetricallyDecrypt(@Nonnull byte[] data, @Nonnull Passphrase password)
             throws IOException, PGPException {
-        InputStream in = new BufferedInputStream(new ByteArrayInputStream(data));
-        in = PGPUtil.getDecoderStream(in);
+        PGPPBEEncryptedData pbe;
+        ByteArrayOutputStream outputStream = null;
+        BufferedInputStream bis = new BufferedInputStream(new ByteArrayInputStream(data));
+        InputStream in = PGPUtil.getDecoderStream(bis);
 
-        BcPGPObjectFactory pgpF = new BcPGPObjectFactory(in);
-        PGPEncryptedDataList enc;
-        Object o = pgpF.nextObject();
+        try {
+            BcPGPObjectFactory pgpF = new BcPGPObjectFactory(in);
+            PGPEncryptedDataList enc;
+            Object o = pgpF.nextObject();
 
-        if (o instanceof PGPEncryptedDataList) {
-            enc = (PGPEncryptedDataList) o;
-        } else {
-            enc = (PGPEncryptedDataList) pgpF.nextObject();
-        }
+            if (o instanceof PGPEncryptedDataList) {
+                enc = (PGPEncryptedDataList) o;
+            } else {
+                enc = (PGPEncryptedDataList) pgpF.nextObject();
+            }
 
-        PGPPBEEncryptedData pbe = (PGPPBEEncryptedData) enc.get(0);
+            pbe = (PGPPBEEncryptedData) enc.get(0);
 
-        InputStream clear = pbe.getDataStream(new BcPBEDataDecryptorFactory(
-                password.getChars(), new BcPGPDigestCalculatorProvider()));
+            InputStream clear = pbe.getDataStream(
+                    new BcPBEDataDecryptorFactory(password.getChars(), new BcPGPDigestCalculatorProvider()));
 
+            BcPGPObjectFactory pgpFact = new BcPGPObjectFactory(clear);
 
-        BcPGPObjectFactory pgpFact = new BcPGPObjectFactory(clear);
-
-        o = pgpFact.nextObject();
-        if (o instanceof PGPCompressedData) {
-            PGPCompressedData   cData = (PGPCompressedData) o;
-            pgpFact = new BcPGPObjectFactory(cData.getDataStream());
             o = pgpFact.nextObject();
+            if (o instanceof PGPCompressedData) {
+                PGPCompressedData cData = (PGPCompressedData) o;
+                pgpFact = new BcPGPObjectFactory(cData.getDataStream());
+                o = pgpFact.nextObject();
+            }
+
+            PGPLiteralData ld = (PGPLiteralData) o;
+            InputStream unc = ld.getInputStream();
+
+            try {
+                outputStream = new ByteArrayOutputStream();
+
+                Streams.pipeAll(unc, outputStream);
+            } finally {
+                if (outputStream != null) {
+                    outputStream.close();
+                }
+            }
+        } finally {
+            in.close();
         }
-
-        PGPLiteralData ld = (PGPLiteralData) o;
-        InputStream unc = ld.getInputStream();
-
-        ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
-
-        Streams.pipeAll(unc, outputStream);
-
-        outputStream.close();
 
         if (pbe.isIntegrityProtected()) {
             if (!pbe.verify()) {
