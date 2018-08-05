@@ -106,6 +106,7 @@ public class BCUtilTest extends AbstractPGPainlessTest {
     @Test
     public void removeUnsignedKeysTest()
             throws PGPException, NoSuchAlgorithmException, NoSuchProviderException, InvalidAlgorithmParameterException {
+        @SuppressWarnings("deprecation")
         PGPKeyRing alice = PGPainless.generateKeyRing().simpleRsaKeyRing("alice@wonderland.lit", RsaLength._1024);
         PGPKeyRing mallory = PGPainless.generateKeyRing().simpleEcKeyRing("mallory@mall.ory");
 
