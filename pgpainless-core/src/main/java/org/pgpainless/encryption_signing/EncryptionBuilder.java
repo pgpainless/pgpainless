@@ -193,6 +193,7 @@ public class EncryptionBuilder implements EncryptionBuilderInterface {
             return this;
         }
 
+        @Override
         public <O> WithAlgorithms andToSelf(@Nonnull PublicKeyRingSelectionStrategy<O> ringSelectionStrategy,
                                             @Nonnull MultiMap<O, PGPPublicKeyRingCollection> keys) {
             if (keys.isEmpty()) {
