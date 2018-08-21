@@ -79,10 +79,14 @@ public class MultiMap<K, V> {
         }
     }
 
-    public void remove(K o) {
-        for (Set<V> values : map.values()) {
-            values.remove(o);
-        }
+    public void removeAll(K o) {
+        map.remove(o);
+    }
+
+    public void remove(K o, V v) {
+        Set<V> vs = map.get(o);
+        if (vs == null) return;
+        vs.remove(v);
     }
 
     public void putAll(Map<? extends K, ? extends Set<V>> _map) {
