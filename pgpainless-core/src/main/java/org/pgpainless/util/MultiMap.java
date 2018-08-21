@@ -89,14 +89,9 @@ public class MultiMap<K, V> {
         vs.remove(v);
     }
 
-    public void putAll(Map<? extends K, ? extends Set<V>> _map) {
-        for (K key : _map.keySet()) {
-            Set<V> vs = this.map.get(key);
-            if (vs == null) {
-                vs = new HashSet<>();
-                this.map.put(key, vs);
-            }
-            vs.addAll(_map.get(key));
+    public void putAll(MultiMap<K, V> other) {
+        for (K key : other.keySet()) {
+            put(key, other.get(key));
         }
     }
 
