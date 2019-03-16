@@ -34,7 +34,7 @@ import org.pgpainless.key.OpenPgpV4Fingerprint;
 public class SignatureVerifyingInputStream extends FilterInputStream {
 
     private static final Logger LOGGER = Logger.getLogger(SignatureVerifyingInputStream.class.getName());
-    private static final Level LEVEL = Level.INFO;
+    private static final Level LEVEL = Level.FINE;
 
     private final PGPObjectFactory objectFactory;
     private final Map<OpenPgpV4Fingerprint, PGPOnePassSignature> onePassSignatures;
