@@ -40,6 +40,9 @@ The entry point to the API is the `PGPainless` class. Here you can find methods 
 The first thing you probably want to do is generate you some nice tasty Key Pairs. The most straight forward way to do so is by calling
 
 ```java
+        // Add a suitable cryptographic provider
+        Security.insertProviderAt(new BouncyCastleProvider(), 1);
+
         PGPSecretKeyRing keyRing = PGPainless.generateKeyRing()
                 .simpleRsaKeyRing("Juliet <juliet@montague.lit>", RsaLength._4096);
 ```

@@ -1,12 +1,16 @@
+ext {
+    bcVersion = "1.60"
+}
+
 
 dependencies {
     testCompile group: 'junit', name: 'junit', version: '4.12'
     /*
-    compile 'org.bouncycastle:bcprov-debug-jdk15on:1.60'
+    compile "org.bouncycastle:bcprov-debug-jdk15on:$bcVersion"
     /*/
-    compile 'org.bouncycastle:bcprov-jdk15on:1.60'
+    compile "org.bouncycastle:bcprov-jdk15on:$bcVersion"
     //*/
-    compile 'org.bouncycastle:bcpg-jdk15on:1.60'
+    compile "org.bouncycastle:bcpg-jdk15on:$bcVersion"
 
     // https://mvnrepository.com/artifact/com.google.code.findbugs/jsr305
     compile group: 'com.google.code.findbugs', name: 'jsr305', version: '3.0.2'

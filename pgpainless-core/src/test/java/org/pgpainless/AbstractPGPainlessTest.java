@@ -24,6 +24,6 @@ public abstract class AbstractPGPainlessTest {
 
     @BeforeClass
     public static void registerProvider() {
-        Security.addProvider(new BouncyCastleProvider());
+        Security.insertProviderAt(new BouncyCastleProvider(), 1);
     }
 }

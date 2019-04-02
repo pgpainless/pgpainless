@@ -18,7 +18,6 @@ package org.pgpainless.key.generation;
 import javax.annotation.Nonnull;
 import java.security.InvalidAlgorithmParameterException;
 import java.security.NoSuchAlgorithmException;
-import java.security.NoSuchProviderException;
 
 import org.bouncycastle.openpgp.PGPException;
 import org.pgpainless.key.collection.PGPKeyRing;
@@ -47,7 +46,7 @@ public interface KeyRingBuilderInterface {
 
     interface Build {
 
-        PGPKeyRing build() throws NoSuchAlgorithmException, PGPException, NoSuchProviderException,
+        PGPKeyRing build() throws NoSuchAlgorithmException, PGPException,
                 InvalidAlgorithmParameterException;
 
     }

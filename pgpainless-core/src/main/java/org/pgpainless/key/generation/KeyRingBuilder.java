@@ -22,13 +22,11 @@ import java.security.InvalidAlgorithmParameterException;
 import java.security.KeyPair;
 import java.security.KeyPairGenerator;
 import java.security.NoSuchAlgorithmException;
-import java.security.NoSuchProviderException;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
 
 import org.bouncycastle.bcpg.sig.KeyFlags;
-import org.bouncycastle.jce.provider.BouncyCastleProvider;
 import org.bouncycastle.openpgp.PGPEncryptedData;
 import org.bouncycastle.openpgp.PGPException;
 import org.bouncycastle.openpgp.PGPKeyPair;
@@ -73,11 +71,10 @@ public class KeyRingBuilder implements KeyRingBuilderInterface {
      * @return {@link PGPSecretKeyRing} containing the KeyPair.
      * @throws PGPException
      * @throws NoSuchAlgorithmException
-     * @throws NoSuchProviderException
      * @throws InvalidAlgorithmParameterException
      */
     public PGPKeyRing simpleRsaKeyRing(@Nonnull String userId, @Nonnull RsaLength length)
-            throws PGPException, NoSuchAlgorithmException, NoSuchProviderException, InvalidAlgorithmParameterException {
+            throws PGPException, NoSuchAlgorithmException, InvalidAlgorithmParameterException {
         return withMasterKey(
                         KeySpec.getBuilder(RSA_GENERAL.withLength(length))
                                 .withDefaultKeyFlags()
@@ -96,11 +93,10 @@ public class KeyRingBuilder implements KeyRingBuilderInterface {
      * @return {@link PGPSecretKeyRing} containing the key pairs.
      * @throws PGPException
      * @throws NoSuchAlgorithmException
-     * @throws NoSuchProviderException
      * @throws InvalidAlgorithmParameterException
      */
     public PGPKeyRing simpleEcKeyRing(@Nonnull String userId)
-            throws PGPException, NoSuchAlgorithmException, NoSuchProviderException, InvalidAlgorithmParameterException {
+            throws PGPException, NoSuchAlgorithmException, InvalidAlgorithmParameterException {
         return withSubKey(
                         KeySpec.getBuilder(ECDH.fromCurve(EllipticCurve._P256))
                                 .withKeyFlags(KeyFlag.ENCRYPT_STORAGE, KeyFlag.ENCRYPT_COMMS)
@@ -160,12 +156,11 @@ public class KeyRingBuilder implements KeyRingBuilderInterface {
         class BuildImpl implements Build {
 
             @Override
-            public PGPKeyRing build() throws NoSuchAlgorithmException, PGPException, NoSuchProviderException,
+            public PGPKeyRing build() throws NoSuchAlgorithmException, PGPException,
                     InvalidAlgorithmParameterException {
 
                 // Hash Calculator
                 PGPDigestCalculator calculator = new JcaPGPDigestCalculatorProviderBuilder()
-                        .setProvider(BouncyCastleProvider.PROVIDER_NAME)
                         .build()
                         .get(HashAlgorithm.SHA1.getAlgorithmId());
 
@@ -173,7 +168,6 @@ public class KeyRingBuilder implements KeyRingBuilderInterface {
                 PBESecretKeyEncryptor encryptor = passphrase == null ?
                         null : // unencrypted key pair, otherwise AES-256 encrypted
                         new JcePBESecretKeyEncryptorBuilder(PGPEncryptedData.AES_256, calculator)
-                                .setProvider(BouncyCastleProvider.PROVIDER_NAME)
                                 .build(passphrase != null ? passphrase.getChars() : null);
 
                 if (passphrase != null) {
@@ -190,8 +184,7 @@ public class KeyRingBuilder implements KeyRingBuilderInterface {
 
                 // Signer for creating self-signature
                 PGPContentSignerBuilder signer = new JcaPGPContentSignerBuilder(
-                        certKey.getPublicKey().getAlgorithm(), HashAlgorithm.SHA512.getAlgorithmId())
-                        .setProvider(BouncyCastleProvider.PROVIDER_NAME);
+                        certKey.getPublicKey().getAlgorithm(), HashAlgorithm.SHA512.getAlgorithmId());
 
                 PGPSignatureSubpacketVector hashedSubPackets = certKeySpec.getSubpackets();
 
@@ -220,11 +213,10 @@ public class KeyRingBuilder implements KeyRingBuilderInterface {
             }
 
             private PGPKeyPair generateKeyPair(KeySpec spec)
-                    throws NoSuchProviderException, NoSuchAlgorithmException, PGPException,
+                    throws NoSuchAlgorithmException, PGPException,
                     InvalidAlgorithmParameterException {
                 KeyType type = spec.getKeyType();
-                KeyPairGenerator certKeyGenerator = KeyPairGenerator.getInstance(
-                        type.getName(), BouncyCastleProvider.PROVIDER_NAME);
+                KeyPairGenerator certKeyGenerator = KeyPairGenerator.getInstance(type.getName());
                 certKeyGenerator.initialize(type.getAlgorithmSpec());
 
                 // Create raw Key Pair
