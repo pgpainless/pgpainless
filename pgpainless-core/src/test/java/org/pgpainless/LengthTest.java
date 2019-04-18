@@ -47,7 +47,7 @@ public class LengthTest extends AbstractPGPainlessTest {
     public void ecEc()
             throws PGPException, NoSuchAlgorithmException, NoSuchProviderException, InvalidAlgorithmParameterException,
             IOException {
-        LOGGER.log(Level.INFO, "\nEC -> EC");
+        LOGGER.log(Level.FINER, "\nEC -> EC");
         PGPKeyRing sender = PGPainless.generateKeyRing().simpleEcKeyRing("simplejid@server.tld");
         PGPKeyRing recipient = PGPainless.generateKeyRing().simpleEcKeyRing("otherjid@other.srv");
         encryptDecryptForSecretKeyRings(sender, recipient);
@@ -58,7 +58,7 @@ public class LengthTest extends AbstractPGPainlessTest {
     public void RsaRsa()
             throws PGPException, NoSuchAlgorithmException, NoSuchProviderException, InvalidAlgorithmParameterException,
             IOException {
-        LOGGER.log(Level.INFO, "\nRSA-2048 -> RSA-2048");
+        LOGGER.log(Level.FINER, "\nRSA-2048 -> RSA-2048");
         @SuppressWarnings("deprecation")
         PGPKeyRing sender = PGPainless.generateKeyRing().simpleRsaKeyRing("simplejid@server.tld", RsaLength._2048);
         @SuppressWarnings("deprecation")
@@ -70,7 +70,7 @@ public class LengthTest extends AbstractPGPainlessTest {
     public void RsaRsa4096()
             throws PGPException,
             IOException {
-        LOGGER.log(Level.INFO, "\nRSA-4096 -> RSA-4096");
+        LOGGER.log(Level.FINER, "\nRSA-4096 -> RSA-4096");
         PGPKeyRing sender = PGPainless.readKeyRing().keyRing(TestKeys.JULIET_PUB, TestKeys.JULIET_SEC);
         PGPKeyRing recipient = PGPainless.readKeyRing().keyRing(TestKeys.ROMEO_PUB, TestKeys.ROMEO_SEC);
         encryptDecryptForSecretKeyRings(sender, recipient);
@@ -79,7 +79,7 @@ public class LengthTest extends AbstractPGPainlessTest {
     // @Test
     public void rsaEc() throws PGPException, IOException, InvalidAlgorithmParameterException, NoSuchAlgorithmException,
             NoSuchProviderException {
-        LOGGER.log(Level.INFO, "\nRSA-2048 -> EC");
+        LOGGER.log(Level.FINER, "\nRSA-2048 -> EC");
         @SuppressWarnings("deprecation")
         PGPKeyRing sender = PGPainless.generateKeyRing().simpleRsaKeyRing("simplejid@server.tld", RsaLength._2048);
         PGPKeyRing recipient = PGPainless.generateKeyRing().simpleEcKeyRing("otherjid@other.srv");
@@ -90,7 +90,7 @@ public class LengthTest extends AbstractPGPainlessTest {
     public void ecRsa()
             throws PGPException, NoSuchAlgorithmException, NoSuchProviderException, InvalidAlgorithmParameterException,
             IOException {
-        LOGGER.log(Level.INFO, "\nEC -> RSA-2048");
+        LOGGER.log(Level.FINER, "\nEC -> RSA-2048");
         PGPKeyRing sender = PGPainless.generateKeyRing().simpleEcKeyRing("simplejid@server.tld");
         @SuppressWarnings("deprecation")
         PGPKeyRing recipient = PGPainless.generateKeyRing().simpleRsaKeyRing("otherjid@other.srv", RsaLength._2048);
@@ -126,7 +126,7 @@ public class LengthTest extends AbstractPGPainlessTest {
             encryptor.close();
             byte[] encryptedSecretMessage = envelope.toByteArray();
 
-            LOGGER.log(Level.INFO,"\n" + encryptedSecretMessage.length);
+            LOGGER.log(Level.FINER,"\n" + encryptedSecretMessage.length);
         }
     }
 }

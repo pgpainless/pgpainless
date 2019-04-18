@@ -216,16 +216,16 @@ public final class DecryptionStreamFactory {
             }
 
             if (verificationKey == null) {
-                LOGGER.log(Level.INFO, "No public key for signature of " + Long.toHexString(keyId) + " found.");
+                LOGGER.log(Level.FINER, "No public key for signature of " + Long.toHexString(keyId) + " found.");
 
                 if (missingPublicKeyCallback == null) {
-                    LOGGER.log(Level.INFO, "Skip signature of " + Long.toHexString(keyId));
+                    LOGGER.log(Level.FINER, "Skip signature of " + Long.toHexString(keyId));
                     continue;
                 }
 
                 PGPPublicKey missingPublicKey = missingPublicKeyCallback.onMissingPublicKeyEncountered(keyId);
                 if (missingPublicKey == null) {
-                    LOGGER.log(Level.INFO, "Skip signature of " + Long.toHexString(keyId));
+                    LOGGER.log(Level.FINER, "Skip signature of " + Long.toHexString(keyId));
                     continue;
                 }
 

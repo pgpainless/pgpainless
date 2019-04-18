@@ -57,22 +57,22 @@ public class BCUtilTest extends AbstractPGPainlessTest {
         PGPSecretKeyRing sec = ring.getSecretKeys();
         PGPPublicKeyRing pub = ring.getPublicKeys();
 
-        LOGGER.log(Level.INFO, "Main ID: " + sec.getPublicKey().getKeyID() + " " + pub.getPublicKey().getKeyID());
+        LOGGER.log(Level.FINER, "Main ID: " + sec.getPublicKey().getKeyID() + " " + pub.getPublicKey().getKeyID());
 
         int secSize = 1;
         Iterator<PGPPublicKey> secPubIt = sec.getPublicKeys();
         while (secPubIt.hasNext()) {
             PGPPublicKey k = secPubIt.next();
-            LOGGER.log(Level.INFO, secSize + " " + k.getKeyID() + " " + k.isEncryptionKey() + " " + k.isMasterKey());
+            LOGGER.log(Level.FINER, secSize + " " + k.getKeyID() + " " + k.isEncryptionKey() + " " + k.isMasterKey());
             secSize++;
         }
 
-        LOGGER.log(Level.INFO, "After BCUtil.publicKeyRingFromSecretKeyRing()");
+        LOGGER.log(Level.FINER, "After BCUtil.publicKeyRingFromSecretKeyRing()");
         int pubSize = 1;
         Iterator<PGPPublicKey> pubPubIt = pub.getPublicKeys();
         while (pubPubIt.hasNext()) {
             PGPPublicKey k = pubPubIt.next();
-            LOGGER.log(Level.INFO, pubSize + " " + k.getKeyID() + " " + k.isEncryptionKey() + " " + k.isMasterKey());
+            LOGGER.log(Level.FINER, pubSize + " " + k.getKeyID() + " " + k.isEncryptionKey() + " " + k.isMasterKey());
             pubSize++;
         }
 
@@ -84,11 +84,11 @@ public class BCUtilTest extends AbstractPGPainlessTest {
         Iterator<PGPSecretKeyRing> secColIt = secCol.getKeyRings();
         while (secColIt.hasNext()) {
             PGPSecretKeyRing r = secColIt.next();
-            LOGGER.log(Level.INFO, "" + r.getPublicKey().getKeyID());
+            LOGGER.log(Level.FINER, "" + r.getPublicKey().getKeyID());
             secColSize++;
         }
 
-        LOGGER.log(Level.INFO, "SecCol: " + secColSize);
+        LOGGER.log(Level.FINER, "SecCol: " + secColSize);
 
         PGPPublicKeyRingCollection pubCol = BCUtil.keyRingsToKeyRingCollection(pub);
 
@@ -96,11 +96,11 @@ public class BCUtilTest extends AbstractPGPainlessTest {
         Iterator<PGPPublicKeyRing> pubColIt = pubCol.getKeyRings();
         while (pubColIt.hasNext()) {
             PGPPublicKeyRing r = pubColIt.next();
-            LOGGER.log(Level.INFO, "" + r.getPublicKey().getKeyID());
+            LOGGER.log(Level.FINER, "" + r.getPublicKey().getKeyID());
             pubColSize++;
         }
 
-        LOGGER.log(Level.INFO, "PubCol: " + pubColSize);
+        LOGGER.log(Level.FINER, "PubCol: " + pubColSize);
     }
 
     @Test

@@ -73,7 +73,7 @@ public class KeyRingSubKeyFix {
                 PGPSecretKey secSubKey = secretKeyIterator.next();
 
                 if (secSubKey.isMasterKey()) {
-                    LOGGER.log(Level.INFO, Long.toHexString(secSubKey.getKeyID()) + " is master key. Skip.");
+                    LOGGER.log(Level.FINER, Long.toHexString(secSubKey.getKeyID()) + " is master key. Skip.");
                     _secretKeys.add(secSubKey);
                     continue;
                 }
@@ -93,7 +93,7 @@ public class KeyRingSubKeyFix {
                 }
 
                 // Sub key is normal key -> fix
-                LOGGER.log(Level.INFO, "Subkey " + Long.toHexString(secSubKey.getKeyID()) + " does not have a subkey key packet. Convert it...");
+                LOGGER.log(Level.FINER, "Subkey " + Long.toHexString(secSubKey.getKeyID()) + " does not have a subkey key packet. Convert it...");
                 keyPacket = new PublicSubkeyPacket(pubSubKey.getAlgorithm(), pubSubKey.getCreationTime(), keyPacket.getKey());
                 publicPk.set(pubSubKey, keyPacket);
 
