@@ -5,5 +5,6 @@ allprojects {
         isSnapshot = true
         pgpainlessMinAndroidSdk = 9
         javaSourceCompatibility = 1.8
+        bouncyCastleVersion = '1.62'
     }
 }
