@@ -3,6 +3,7 @@
 
 out/
 build/
+bin/
 
 *.iws
 *.iml
