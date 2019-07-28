@@ -51,7 +51,6 @@ import org.pgpainless.key.generation.type.KeyType;
 import org.pgpainless.key.generation.type.RSA_GENERAL;
 import org.pgpainless.key.generation.type.curve.EllipticCurve;
 import org.pgpainless.key.generation.type.length.RsaLength;
-import org.pgpainless.util.KeyRingSubKeyFix;
 import org.pgpainless.util.Passphrase;
 
 public class KeyRingBuilder implements KeyRingBuilderInterface {
@@ -205,9 +204,6 @@ public class KeyRingBuilder implements KeyRingBuilderInterface {
 
                 PGPPublicKeyRing publicKeys = ringGenerator.generatePublicKeyRing();
                 PGPSecretKeyRing secretKeys = ringGenerator.generateSecretKeyRing();
-
-                // TODO: Remove once BC 1.61 is released
-                secretKeys = KeyRingSubKeyFix.repairSubkeyPackets(secretKeys, null, null);
 
                 return new PGPKeyRing(publicKeys, secretKeys);
             }

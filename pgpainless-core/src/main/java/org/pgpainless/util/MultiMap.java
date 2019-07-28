@@ -125,7 +125,7 @@ public class MultiMap<K, V> {
             return true;
         }
 
-        return map.equals(((MultiMap) o).map);
+        return map.equals(((MultiMap<?, ?>) o).map);
     }
 
     @Override
