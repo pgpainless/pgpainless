@@ -65,10 +65,8 @@ public class BCUtil {
 
     public static PGPPublicKeyRing publicKeyRingFromSecretKeyRing(@Nonnull PGPSecretKeyRing secretKeys)
             throws PGPException, IOException {
-        PGPSecretKeyRing fixedSecretKeys = KeyRingSubKeyFix.repairSubkeyPackets(secretKeys, null, null);
-
         ByteArrayOutputStream buffer = new ByteArrayOutputStream(512);
-        for (PGPSecretKey secretKey : fixedSecretKeys) {
+        for (PGPSecretKey secretKey : secretKeys) {
             PGPPublicKey publicKey = secretKey.getPublicKey();
             if (publicKey != null) {
                 publicKey.encode(buffer, false);
