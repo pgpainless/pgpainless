@@ -43,8 +43,8 @@ public class PartialUserId {
 
         @Override
         public boolean accept(String identifier, @Nonnull PGPSecretKey key) {
-            for (Iterator userIds = key.getUserIDs(); userIds.hasNext(); ) {
-                String userId = (String) userIds.next();
+            for (Iterator<String> userIds = key.getUserIDs(); userIds.hasNext(); ) {
+                String userId = userIds.next();
                 if (userId.contains(identifier)) {
                     return true;
                 }

@@ -216,9 +216,9 @@ public class BCUtil {
     }
 
     public static PGPPublicKey getMasterKeyFrom(@Nonnull PGPKeyRing ring) {
-        Iterator it = ring.getPublicKeys();
+        Iterator<PGPPublicKey> it = ring.getPublicKeys();
         while (it.hasNext()) {
-            PGPPublicKey k = (PGPPublicKey) it.next();
+            PGPPublicKey k = it.next();
             if (k.isMasterKey()) {
                 // There can only be one master key, so we can immediately return
                 return k;
@@ -235,7 +235,7 @@ public class BCUtil {
 
             boolean signingKey = false;
 
-            Iterator sit = k.getSignatures();
+            Iterator<?> sit = k.getSignatures();
             while (sit.hasNext()) {
                 Object n = sit.next();
                 if (!(n instanceof PGPSignature)) {
