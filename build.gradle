@@ -39,8 +39,7 @@ allprojects {
 
     // checkstyle
     checkstyle {
-        configFile = "${project.rootDir}/config/checkstyle.xml" as File
-        toolVersion = '8.10'
+        toolVersion = '8.18'
     }
 
     group 'org.pgpainless'

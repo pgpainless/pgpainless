@@ -6,12 +6,12 @@
 
     <!-- Suppressions -->
     <module name="SuppressionFilter">
-        <property name="file" value="config/suppressions.xml"/>
+        <property name="file" value="${config_loc}/suppressions.xml"/>
     </module>
 
     <!-- License Header -->
     <module name="Header">
-        <property name="headerFile" value="config/checkstyleLicenseHeader.txt"/>
+        <property name="headerFile" value="${config_loc}/checkstyleLicenseHeader.txt"/>
         <property name="ignoreLines" value="2"/>
         <property name="fileExtensions" value="java"/>
     </module>
@@ -117,7 +117,7 @@
         <module name="JavadocMethod">
             <!-- TODO stricten those checks -->
             <property name="scope" value="public"/>
-            <property name="allowUndeclaredRTE" value="true"/>
+            <!--<property name="allowUndeclaredRTE" value="true"/>-->
             <property name="allowMissingParamTags" value="true"/>
             <property name="allowMissingThrowsTags" value="true"/>
             <property name="allowMissingReturnTag" value="true"/>
