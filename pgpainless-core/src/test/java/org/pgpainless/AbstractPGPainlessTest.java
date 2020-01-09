@@ -17,13 +17,13 @@ package org.pgpainless;
 
 import java.security.Security;
 
-import org.bouncycastle.jce.provider.BouncyCastleProvider;
 import org.junit.BeforeClass;
+import org.pgpainless.provider.ProviderFactory;
 
 public abstract class AbstractPGPainlessTest {
 
     @BeforeClass
     public static void registerProvider() {
-        Security.insertProviderAt(new BouncyCastleProvider(), 1);
+        Security.insertProviderAt(ProviderFactory.getProvider(), 1);
     }
 }

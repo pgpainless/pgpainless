@@ -42,6 +42,7 @@ import org.bouncycastle.openpgp.operator.jcajce.JcePGPDataEncryptorBuilder;
 import org.bouncycastle.util.io.Streams;
 import org.pgpainless.algorithm.CompressionAlgorithm;
 import org.pgpainless.algorithm.SymmetricKeyAlgorithm;
+import org.pgpainless.provider.ProviderFactory;
 import org.pgpainless.util.Passphrase;
 
 /**
@@ -77,9 +78,9 @@ public class SymmetricEncryptorDecryptor {
                 new JcePGPDataEncryptorBuilder(encryptionAlgorithm.getAlgorithmId())
                         .setWithIntegrityPacket(true)
                         .setSecureRandom(new SecureRandom())
-                        .setProvider("BC"));
+                        .setProvider(ProviderFactory.getProvider()));
 
-        encGen.addMethod(new JcePBEKeyEncryptionMethodGenerator(password.getChars()).setProvider("BC"));
+        encGen.addMethod(new JcePBEKeyEncryptionMethodGenerator(password.getChars()).setProvider(ProviderFactory.getProvider()));
 
         OutputStream encOut = encGen.open(bOut, compressedData.length);
 
