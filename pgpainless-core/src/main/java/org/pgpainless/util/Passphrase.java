@@ -47,17 +47,6 @@ public class Passphrase {
     }
 
     /**
-     * Call {@link #clear()} to make sure the memory is overwritten.
-     *
-     * @throws Throwable bad things might happen in {@link Object#finalize()}.
-     */
-    @Override
-    protected void finalize() throws Throwable {
-        clear();
-        super.finalize();
-    }
-
-    /**
      * Return a copy of the underlying char array.
      * A return value of {@code null} represents no password.
      *
