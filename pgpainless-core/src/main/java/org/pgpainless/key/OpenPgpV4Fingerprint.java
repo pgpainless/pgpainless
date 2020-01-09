@@ -129,6 +129,7 @@ public class OpenPgpV4Fingerprint implements CharSequence, Comparable<OpenPgpV4F
     }
 
     @Override
+    @Nonnull
     public String toString() {
         return fingerprint;
     }
