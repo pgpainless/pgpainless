@@ -18,6 +18,7 @@ package org.pgpainless.key;
 import javax.annotation.Nonnull;
 import java.nio.ByteBuffer;
 import java.nio.charset.Charset;
+import java.nio.charset.StandardCharsets;
 
 import org.bouncycastle.openpgp.PGPPublicKey;
 import org.bouncycastle.openpgp.PGPPublicKeyRing;
@@ -48,7 +49,7 @@ public class OpenPgpV4Fingerprint implements CharSequence, Comparable<OpenPgpV4F
     }
 
     public OpenPgpV4Fingerprint(@Nonnull byte[] bytes) {
-        this(new String(bytes, Charset.forName("UTF-8")));
+        this(new String(bytes, StandardCharsets.UTF_8));
     }
 
     public OpenPgpV4Fingerprint(@Nonnull PGPPublicKey key) {
@@ -87,7 +88,7 @@ public class OpenPgpV4Fingerprint implements CharSequence, Comparable<OpenPgpV4F
      * @return key id
      */
     public long getKeyId() {
-        byte[] bytes = Hex.decode(toString().getBytes(Charset.forName("UTF-8")));
+        byte[] bytes = Hex.decode(toString().getBytes(StandardCharsets.UTF_8));
         ByteBuffer buf = ByteBuffer.wrap(bytes);
         buf.position(12);
         return buf.getLong();
