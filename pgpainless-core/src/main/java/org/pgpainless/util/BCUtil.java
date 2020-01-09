@@ -255,7 +255,7 @@ public class BCUtil {
                 }
 
                 PGPSignatureSubpacketVector hashed = s.getHashedSubPackets();
-                if (KeyFlag.fromInteger(hashed.getKeyFlags()).contains(KeyFlag.SIGN_DATA)) {
+                if (KeyFlag.fromBitmask(hashed.getKeyFlags()).contains(KeyFlag.SIGN_DATA)) {
                     signingKey = true;
                     break;
                 }
