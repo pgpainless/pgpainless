@@ -22,7 +22,7 @@ import org.pgpainless.key.selection.keyring.SecretKeyRingSelectionStrategy;
 
 public class Wildcard {
 
-    public class PubRingSelectionStrategy<O> extends PublicKeyRingSelectionStrategy<O> {
+    public static class PubRingSelectionStrategy<O> extends PublicKeyRingSelectionStrategy<O> {
 
         @Override
         public boolean accept(O identifier, PGPPublicKeyRing keyRing) {
@@ -30,7 +30,7 @@ public class Wildcard {
         }
     }
 
-    public class SecRingSelectionStrategy<O> extends SecretKeyRingSelectionStrategy<O> {
+    public static class SecRingSelectionStrategy<O> extends SecretKeyRingSelectionStrategy<O> {
 
         @Override
         public boolean accept(O identifier, PGPSecretKeyRing keyRing) {
