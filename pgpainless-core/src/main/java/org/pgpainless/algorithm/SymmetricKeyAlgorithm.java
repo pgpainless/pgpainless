@@ -15,8 +15,8 @@
  */
 package org.pgpainless.algorithm;
 
-import java.util.HashMap;
 import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
 
 import org.bouncycastle.bcpg.SymmetricKeyAlgorithmTags;
 
@@ -42,7 +42,7 @@ public enum SymmetricKeyAlgorithm {
     CAMELLIA_256    (SymmetricKeyAlgorithmTags.CAMELLIA_256),
     ;
 
-    private static final Map<Integer, SymmetricKeyAlgorithm> MAP = new HashMap<>();
+    private static final Map<Integer, SymmetricKeyAlgorithm> MAP = new ConcurrentHashMap<>();
 
     static {
         for (SymmetricKeyAlgorithm s : SymmetricKeyAlgorithm.values()) {

@@ -15,8 +15,8 @@
  */
 package org.pgpainless.algorithm;
 
-import java.util.HashMap;
 import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
 
 import org.bouncycastle.bcpg.HashAlgorithmTags;
 
@@ -34,8 +34,8 @@ public enum HashAlgorithm {
     SHA512     (HashAlgorithmTags.SHA512),
     SHA224     (HashAlgorithmTags.SHA224),
     ;
-    //                                                         Coincidence? I don't this so...
-    private static final Map<Integer, HashAlgorithm> MAP = new HashMap<>();
+
+    private static final Map<Integer, HashAlgorithm> MAP = new ConcurrentHashMap<>();
 
     static {
         for (HashAlgorithm h : HashAlgorithm.values()) {

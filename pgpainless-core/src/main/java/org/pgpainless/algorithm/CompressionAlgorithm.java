@@ -15,8 +15,8 @@
  */
 package org.pgpainless.algorithm;
 
-import java.util.HashMap;
 import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
 
 import org.bouncycastle.bcpg.CompressionAlgorithmTags;
 
@@ -28,7 +28,7 @@ public enum CompressionAlgorithm {
     BZIP2          (CompressionAlgorithmTags.BZIP2),
     ;
 
-    private static final Map<Integer, CompressionAlgorithm> MAP = new HashMap<>();
+    private static final Map<Integer, CompressionAlgorithm> MAP = new ConcurrentHashMap<>();
 
     static {
         for (CompressionAlgorithm c : CompressionAlgorithm.values()) {

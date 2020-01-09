@@ -15,8 +15,8 @@
  */
 package org.pgpainless.algorithm;
 
-import java.util.HashMap;
 import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
 
 import org.bouncycastle.bcpg.sig.Features;
 
@@ -31,7 +31,7 @@ public enum Feature {
     MODIFICATION_DETECTION(Features.FEATURE_MODIFICATION_DETECTION),
     ;
 
-    private static final Map<Byte, Feature> MAP = new HashMap<>();
+    private static final Map<Byte, Feature> MAP = new ConcurrentHashMap<>();
 
     static {
         for (Feature f : Feature.values()) {

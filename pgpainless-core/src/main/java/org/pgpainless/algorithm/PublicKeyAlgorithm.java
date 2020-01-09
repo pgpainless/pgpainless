@@ -15,8 +15,8 @@
  */
 package org.pgpainless.algorithm;
 
-import java.util.HashMap;
 import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
 
 import org.bouncycastle.bcpg.PublicKeyAlgorithmTags;
 
@@ -38,7 +38,7 @@ public enum PublicKeyAlgorithm {
     DIFFIE_HELLMAN  (PublicKeyAlgorithmTags.DIFFIE_HELLMAN),
     ;
 
-    private static final Map<Integer, PublicKeyAlgorithm> MAP = new HashMap<>();
+    private static final Map<Integer, PublicKeyAlgorithm> MAP = new ConcurrentHashMap<>();
 
     static {
         for (PublicKeyAlgorithm p : PublicKeyAlgorithm.values()) {
