@@ -24,7 +24,7 @@ import org.bouncycastle.openpgp.PGPPublicKey;
 import org.junit.Test;
 import org.pgpainless.key.OpenPgpV4Fingerprint;
 
-public class OpenPgpV4FingerprintTest extends AbstractPGPainlessTest {
+public class OpenPgpV4FingerprintTest {
 
     @Test(expected = IllegalArgumentException.class)
     public void fpTooShort() {

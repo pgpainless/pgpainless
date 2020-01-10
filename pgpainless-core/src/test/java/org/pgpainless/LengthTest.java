@@ -39,7 +39,7 @@ import org.pgpainless.key.protection.UnprotectedKeysProtector;
 /**
  * Class used to determine the length of cipher-text depending on used algorithms.
  */
-public class LengthTest extends AbstractPGPainlessTest {
+public class LengthTest {
 
     private static final Logger LOGGER = Logger.getLogger(LengthTest.class.getName());
 

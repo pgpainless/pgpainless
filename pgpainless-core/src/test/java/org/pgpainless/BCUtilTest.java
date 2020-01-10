@@ -42,7 +42,7 @@ import org.pgpainless.key.generation.type.RSA_GENERAL;
 import org.pgpainless.key.generation.type.length.RsaLength;
 import org.pgpainless.util.BCUtil;
 
-public class BCUtilTest extends AbstractPGPainlessTest {
+public class BCUtilTest {
 
     private static final Logger LOGGER = Logger.getLogger(BCUtil.class.getName());
 

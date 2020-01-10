@@ -41,8 +41,9 @@ import org.bouncycastle.openpgp.operator.jcajce.JcaPGPContentSignerBuilder;
 import org.bouncycastle.openpgp.operator.jcajce.JcaPGPDigestCalculatorProviderBuilder;
 import org.bouncycastle.openpgp.operator.jcajce.JcaPGPKeyPair;
 import org.junit.Test;
+import org.pgpainless.provider.ProviderFactory;
 
-public class BouncycastleExportSubkeys extends AbstractPGPainlessTest {
+public class BouncycastleExportSubkeys {
 
     @Test
     public void testExportImport() throws NoSuchAlgorithmException, InvalidAlgorithmParameterException, PGPException {
@@ -51,7 +52,7 @@ public class BouncycastleExportSubkeys extends AbstractPGPainlessTest {
 
         // Generate master key
 
-        generator = KeyPairGenerator.getInstance("ECDSA");
+        generator = KeyPairGenerator.getInstance("ECDSA", ProviderFactory.getProvider());
         generator.initialize(new ECNamedCurveGenParameterSpec("P-256"));
 
         pair = generator.generateKeyPair();
@@ -77,7 +78,7 @@ public class BouncycastleExportSubkeys extends AbstractPGPainlessTest {
 
         // Generate sub key
 
-        generator = KeyPairGenerator.getInstance("ECDH");
+        generator = KeyPairGenerator.getInstance("ECDH", ProviderFactory.getProvider());
         generator.initialize(new ECNamedCurveGenParameterSpec("P-256"));
 
         pair = generator.generateKeyPair();
@@ -86,11 +87,13 @@ public class BouncycastleExportSubkeys extends AbstractPGPainlessTest {
         // Assemble key
 
         PGPDigestCalculator calculator = new JcaPGPDigestCalculatorProviderBuilder()
+                .setProvider(ProviderFactory.getProvider())
                 .build()
                 .get(HashAlgorithmTags.SHA1);
 
         PGPContentSignerBuilder signerBuilder = new JcaPGPContentSignerBuilder(
-                pgpMasterKey.getPublicKey().getAlgorithm(), HashAlgorithmTags.SHA512);
+                pgpMasterKey.getPublicKey().getAlgorithm(), HashAlgorithmTags.SHA512)
+                .setProvider(ProviderFactory.getProvider());
 
         PGPKeyRingGenerator pgpGenerator = new PGPKeyRingGenerator(PGPSignature.POSITIVE_CERTIFICATION,
                 pgpMasterKey, "alice@wonderland.lit", calculator, subPackets.generate(), null,

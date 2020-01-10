@@ -32,7 +32,7 @@ import org.bouncycastle.openpgp.operator.bc.BcKeyFingerprintCalculator;
 import org.junit.Test;
 import org.pgpainless.key.collection.PGPKeyRing;
 
-public class ImportExportKeyTest extends AbstractPGPainlessTest {
+public class ImportExportKeyTest {
 
     /**
      * Test the export and import of a key ring with sub keys.

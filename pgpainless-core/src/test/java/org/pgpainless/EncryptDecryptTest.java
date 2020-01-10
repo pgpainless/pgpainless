@@ -52,7 +52,7 @@ import org.pgpainless.key.protection.SecretKeyRingProtector;
 import org.pgpainless.key.protection.UnprotectedKeysProtector;
 import org.pgpainless.util.BCUtil;
 
-public class EncryptDecryptTest extends AbstractPGPainlessTest {
+public class EncryptDecryptTest {
 
     private static final Logger LOGGER = Logger.getLogger(EncryptDecryptTest.class.getName());
     private static final Charset UTF8 = Charset.forName("UTF-8");

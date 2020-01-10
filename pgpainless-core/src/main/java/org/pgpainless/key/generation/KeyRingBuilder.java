@@ -51,6 +51,7 @@ import org.pgpainless.key.generation.type.KeyType;
 import org.pgpainless.key.generation.type.RSA_GENERAL;
 import org.pgpainless.key.generation.type.curve.EllipticCurve;
 import org.pgpainless.key.generation.type.length.RsaLength;
+import org.pgpainless.provider.ProviderFactory;
 import org.pgpainless.util.Passphrase;
 
 public class KeyRingBuilder implements KeyRingBuilderInterface {
@@ -160,6 +161,7 @@ public class KeyRingBuilder implements KeyRingBuilderInterface {
 
                 // Hash Calculator
                 PGPDigestCalculator calculator = new JcaPGPDigestCalculatorProviderBuilder()
+                        .setProvider(ProviderFactory.getProvider())
                         .build()
                         .get(HashAlgorithm.SHA1.getAlgorithmId());
 
@@ -183,7 +185,8 @@ public class KeyRingBuilder implements KeyRingBuilderInterface {
 
                 // Signer for creating self-signature
                 PGPContentSignerBuilder signer = new JcaPGPContentSignerBuilder(
-                        certKey.getPublicKey().getAlgorithm(), HashAlgorithm.SHA512.getAlgorithmId());
+                        certKey.getPublicKey().getAlgorithm(), HashAlgorithm.SHA512.getAlgorithmId())
+                        .setProvider(ProviderFactory.getProvider());
 
                 PGPSignatureSubpacketVector hashedSubPackets = certKeySpec.getSubpackets();
 
@@ -212,7 +215,7 @@ public class KeyRingBuilder implements KeyRingBuilderInterface {
                     throws NoSuchAlgorithmException, PGPException,
                     InvalidAlgorithmParameterException {
                 KeyType type = spec.getKeyType();
-                KeyPairGenerator certKeyGenerator = KeyPairGenerator.getInstance(type.getName());
+                KeyPairGenerator certKeyGenerator = KeyPairGenerator.getInstance(type.getName(), ProviderFactory.getProvider());
                 certKeyGenerator.initialize(type.getAlgorithmSpec());
 
                 // Create raw Key Pair

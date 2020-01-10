@@ -28,7 +28,7 @@ import org.bouncycastle.openpgp.operator.KeyFingerPrintCalculator;
 import org.bouncycastle.openpgp.operator.bc.BcKeyFingerprintCalculator;
 import org.pgpainless.key.OpenPgpV4Fingerprint;
 
-public class TestKeys extends AbstractPGPainlessTest {
+public class TestKeys {
 
     private static final KeyFingerPrintCalculator calc = new BcKeyFingerprintCalculator();
     private static PGPSecretKeyRing julietSecretKeyRing = null;

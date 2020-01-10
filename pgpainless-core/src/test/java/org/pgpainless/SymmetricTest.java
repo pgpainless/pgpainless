@@ -29,7 +29,7 @@ import org.junit.Test;
 import org.pgpainless.algorithm.SymmetricKeyAlgorithm;
 import org.pgpainless.util.Passphrase;
 
-public class SymmetricTest extends AbstractPGPainlessTest {
+public class SymmetricTest {
 
     private static final Logger LOGGER = Logger.getLogger(SymmetricTest.class.getName());
 

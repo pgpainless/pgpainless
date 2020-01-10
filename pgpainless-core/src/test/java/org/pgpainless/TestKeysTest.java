@@ -38,7 +38,7 @@ import org.pgpainless.decryption_verification.OpenPgpMetadata;
 import org.pgpainless.key.OpenPgpV4Fingerprint;
 import org.pgpainless.key.protection.UnprotectedKeysProtector;
 
-public class TestKeysTest extends AbstractPGPainlessTest {
+public class TestKeysTest {
 
     private final PGPSecretKeyRing juliet;
     private final PGPSecretKeyRing romeo;
