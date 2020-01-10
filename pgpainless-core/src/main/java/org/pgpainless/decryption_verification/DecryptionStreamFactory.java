@@ -65,7 +65,7 @@ public final class DecryptionStreamFactory {
 
     private final OpenPgpMetadata.Builder resultBuilder = OpenPgpMetadata.getBuilder();
     private final PGPContentVerifierBuilderProvider verifierBuilderProvider = new BcPGPContentVerifierBuilderProvider();
-    private final KeyFingerPrintCalculator fingerCalc = new BcKeyFingerprintCalculator();
+    private final KeyFingerPrintCalculator keyFingerprintCalculator = new BcKeyFingerprintCalculator();
     private final Map<OpenPgpV4Fingerprint, PGPOnePassSignature> verifiableOnePassSignatures = new HashMap<>();
 
     private DecryptionStreamFactory(@Nullable PGPSecretKeyRingCollection decryptionKeys,
@@ -85,76 +85,86 @@ public final class DecryptionStreamFactory {
                                           @Nullable MissingPublicKeyCallback missingPublicKeyCallback)
             throws IOException, PGPException {
 
-        DecryptionStreamFactory factory =  new DecryptionStreamFactory(decryptionKeys,
-                decryptor,
-                verificationKeys,
+        DecryptionStreamFactory factory =  new DecryptionStreamFactory(decryptionKeys, decryptor, verificationKeys,
                 missingPublicKeyCallback);
 
         PGPObjectFactory objectFactory = new PGPObjectFactory(
                 PGPUtil.getDecoderStream(inputStream), new BcKeyFingerprintCalculator());
 
-        return new DecryptionStream(factory.wrap(objectFactory), factory.resultBuilder);
+        return new DecryptionStream(factory.processPGPPackets(objectFactory), factory.resultBuilder);
     }
 
-    private InputStream wrap(@Nonnull PGPObjectFactory objectFactory) throws IOException, PGPException {
+    private InputStream processPGPPackets(@Nonnull PGPObjectFactory objectFactory) throws IOException, PGPException {
 
-        Object pgpObj;
-        while ((pgpObj = objectFactory.nextObject()) != null) {
-
-            if (pgpObj instanceof PGPEncryptedDataList) {
-                LOGGER.log(LEVEL, "Encountered PGPEncryptedDataList");
-                PGPEncryptedDataList encDataList = (PGPEncryptedDataList) pgpObj;
-                InputStream nextStream = decrypt(encDataList);
-                objectFactory = new PGPObjectFactory(PGPUtil.getDecoderStream(nextStream), fingerCalc);
-                return wrap(objectFactory);
+        Object nextPgpObject;
+        while ((nextPgpObject = objectFactory.nextObject()) != null) {
+            if (nextPgpObject instanceof PGPEncryptedDataList) {
+                return processPGPEncryptedDataList((PGPEncryptedDataList) nextPgpObject);
             }
-
-            if (pgpObj instanceof PGPCompressedData) {
-                PGPCompressedData compressedData = (PGPCompressedData) pgpObj;
-                InputStream nextStream = compressedData.getDataStream();
-                resultBuilder.setCompressionAlgorithm(CompressionAlgorithm.fromId(compressedData.getAlgorithm()));
-                objectFactory = new PGPObjectFactory(PGPUtil.getDecoderStream(nextStream), fingerCalc);
-                LOGGER.log(LEVEL, "Encountered PGPCompressedData: " +
-                        CompressionAlgorithm.fromId(compressedData.getAlgorithm()));
-                return wrap(objectFactory);
+            if (nextPgpObject instanceof PGPCompressedData) {
+                return processPGPCompressedData((PGPCompressedData) nextPgpObject);
             }
-
-            if (pgpObj instanceof PGPOnePassSignatureList) {
-                PGPOnePassSignatureList onePassSignatures = (PGPOnePassSignatureList) pgpObj;
-                LOGGER.log(LEVEL, "Encountered PGPOnePassSignatureList of size " + onePassSignatures.size());
-                initOnePassSignatures(onePassSignatures);
-                return wrap(objectFactory);
+            if (nextPgpObject instanceof PGPOnePassSignatureList) {
+                return processOnePassSignatureList(objectFactory, (PGPOnePassSignatureList) nextPgpObject);
             }
-
-            if (pgpObj instanceof PGPLiteralData) {
-                LOGGER.log(LEVEL, "Found PGPLiteralData");
-                PGPLiteralData literalData = (PGPLiteralData) pgpObj;
-                InputStream literalDataInputStream = literalData.getInputStream();
-
-                if (verifiableOnePassSignatures.isEmpty()) {
-                    LOGGER.log(LEVEL, "No OnePassSignatures found -> We are done");
-                    return literalDataInputStream;
-                }
-
-                return new SignatureVerifyingInputStream(literalDataInputStream,
-                        objectFactory, verifiableOnePassSignatures, resultBuilder);
+            if (nextPgpObject instanceof PGPLiteralData) {
+                return processPGPLiteralData(objectFactory, (PGPLiteralData) nextPgpObject);
             }
         }
 
         throw new PGPException("No Literal Data Packet found");
     }
 
+    private InputStream processPGPEncryptedDataList(PGPEncryptedDataList pgpEncryptedDataList)
+            throws PGPException, IOException {
+        LOGGER.log(LEVEL, "Encountered PGPEncryptedDataList");
+        InputStream decryptedDataStream = decrypt(pgpEncryptedDataList);
+        return processPGPPackets(new PGPObjectFactory(PGPUtil.getDecoderStream(decryptedDataStream), keyFingerprintCalculator));
+    }
+
+    private InputStream processPGPCompressedData(PGPCompressedData pgpCompressedData)
+            throws PGPException, IOException {
+        CompressionAlgorithm compressionAlgorithm = CompressionAlgorithm.fromId(pgpCompressedData.getAlgorithm());
+        LOGGER.log(LEVEL, "Encountered PGPCompressedData: " + compressionAlgorithm);
+        resultBuilder.setCompressionAlgorithm(compressionAlgorithm);
+
+        InputStream dataStream = pgpCompressedData.getDataStream();
+        PGPObjectFactory objectFactory = new PGPObjectFactory(PGPUtil.getDecoderStream(dataStream), keyFingerprintCalculator);
+
+        return processPGPPackets(objectFactory);
+    }
+
+    private InputStream processOnePassSignatureList(@Nonnull PGPObjectFactory objectFactory, PGPOnePassSignatureList onePassSignatures)
+            throws PGPException, IOException {
+        LOGGER.log(LEVEL, "Encountered PGPOnePassSignatureList of size " + onePassSignatures.size());
+        initOnePassSignatures(onePassSignatures);
+        return processPGPPackets(objectFactory);
+    }
+
+    private InputStream processPGPLiteralData(@Nonnull PGPObjectFactory objectFactory, PGPLiteralData pgpLiteralData) {
+        LOGGER.log(LEVEL, "Found PGPLiteralData");
+        InputStream literalDataInputStream = pgpLiteralData.getInputStream();
+
+        if (verifiableOnePassSignatures.isEmpty()) {
+            LOGGER.log(LEVEL, "No OnePassSignatures found -> We are done");
+            return literalDataInputStream;
+        }
+
+        return new SignatureVerifyingInputStream(literalDataInputStream,
+                objectFactory, verifiableOnePassSignatures, resultBuilder);
+    }
+
     private InputStream decrypt(@Nonnull PGPEncryptedDataList encryptedDataList)
             throws PGPException {
-        Iterator<?> iterator = encryptedDataList.getEncryptedDataObjects();
-        if (!iterator.hasNext()) {
+        Iterator<?> encryptedDataIterator = encryptedDataList.getEncryptedDataObjects();
+        if (!encryptedDataIterator.hasNext()) {
             throw new PGPException("Decryption failed - EncryptedDataList has no items");
         }
 
         PGPPrivateKey decryptionKey = null;
         PGPPublicKeyEncryptedData encryptedSessionKey = null;
-        while (iterator.hasNext()) {
-            PGPPublicKeyEncryptedData encryptedData = (PGPPublicKeyEncryptedData) iterator.next();
+        while (encryptedDataIterator.hasNext()) {
+            PGPPublicKeyEncryptedData encryptedData = (PGPPublicKeyEncryptedData) encryptedDataIterator.next();
             long keyId = encryptedData.getKeyID();
 
             resultBuilder.addRecipientKeyId(keyId);
@@ -187,9 +197,8 @@ public final class DecryptionStreamFactory {
             LOGGER.log(LEVEL, "Message is not integrity protected");
             resultBuilder.setIntegrityProtected(false);
         }
-        InputStream decryptionStream = encryptedSessionKey.getDataStream(keyDecryptor);
 
-        return decryptionStream;
+        return encryptedSessionKey.getDataStream(keyDecryptor);
     }
 
     private void initOnePassSignatures(@Nonnull PGPOnePassSignatureList onePassSignatureList) throws PGPException {
@@ -204,46 +213,65 @@ public final class DecryptionStreamFactory {
     private void processOnePassSignatures(Iterator<PGPOnePassSignature> signatures) throws PGPException {
         while (signatures.hasNext()) {
             PGPOnePassSignature signature = signatures.next();
-            final long keyId = signature.getKeyID();
-            resultBuilder.addUnverifiedSignatureKeyId(keyId);
-
-            LOGGER.log(LEVEL, "Message contains OnePassSignature from " + Long.toHexString(keyId));
-
-            // Find public key
-            PGPPublicKey verificationKey = null;
-            for (PGPPublicKeyRing publicKeyRing : verificationKeys) {
-                verificationKey = publicKeyRing.getPublicKey(keyId);
-                if (verificationKey != null) {
-                    LOGGER.log(LEVEL, "Found respective public key " + Long.toHexString(keyId));
-                    break;
-                }
-            }
-
-            if (verificationKey == null) {
-                LOGGER.log(Level.FINER, "No public key for signature of " + Long.toHexString(keyId) + " found.");
-
-                if (missingPublicKeyCallback == null) {
-                    LOGGER.log(Level.FINER, "Skip signature of " + Long.toHexString(keyId));
-                    continue;
-                }
-
-                PGPPublicKey missingPublicKey = missingPublicKeyCallback.onMissingPublicKeyEncountered(keyId);
-                if (missingPublicKey == null) {
-                    LOGGER.log(Level.FINER, "Skip signature of " + Long.toHexString(keyId));
-                    continue;
-                }
-
-                if (missingPublicKey.getKeyID() != keyId) {
-                    throw new IllegalArgumentException("KeyID of the provided public key differs from the signatures keyId. " +
-                            "The signature was created from " + Long.toHexString(keyId) + " while the provided key has ID " +
-                            Long.toHexString(missingPublicKey.getKeyID()));
-                }
-
-                verificationKey = missingPublicKey;
-            }
-
-            signature.init(verifierBuilderProvider, verificationKey);
-            verifiableOnePassSignatures.put(new OpenPgpV4Fingerprint(verificationKey), signature);
+            processOnePassSignature(signature);
         }
+    }
+
+    private void processOnePassSignature(PGPOnePassSignature signature) throws PGPException {
+        final long keyId = signature.getKeyID();
+        resultBuilder.addUnverifiedSignatureKeyId(keyId);
+
+        LOGGER.log(LEVEL, "Message contains OnePassSignature from " + Long.toHexString(keyId));
+
+        // Find public key
+        PGPPublicKey verificationKey = findSignatureVerificationKey(keyId);
+        if (verificationKey == null) {
+            return;
+        }
+
+        signature.init(verifierBuilderProvider, verificationKey);
+        verifiableOnePassSignatures.put(new OpenPgpV4Fingerprint(verificationKey), signature);
+    }
+
+    private PGPPublicKey findSignatureVerificationKey(long keyId) {
+        PGPPublicKey verificationKey = null;
+        for (PGPPublicKeyRing publicKeyRing : verificationKeys) {
+            verificationKey = publicKeyRing.getPublicKey(keyId);
+            if (verificationKey != null) {
+                LOGGER.log(LEVEL, "Found public key " + Long.toHexString(keyId) + " for signature verification");
+                break;
+            }
+        }
+
+        if (verificationKey == null) {
+            verificationKey = handleMissingVerificationKey(keyId);
+        }
+
+        return verificationKey;
+    }
+
+    private PGPPublicKey handleMissingVerificationKey(long keyId) {
+        LOGGER.log(Level.FINER, "No public key found for signature of " + Long.toHexString(keyId));
+
+        if (missingPublicKeyCallback == null) {
+            LOGGER.log(Level.FINER, "No MissingPublicKeyCallback registered. " +
+                    "Skip signature of " + Long.toHexString(keyId));
+            return null;
+        }
+
+        PGPPublicKey missingPublicKey = missingPublicKeyCallback.onMissingPublicKeyEncountered(keyId);
+        if (missingPublicKey == null) {
+            LOGGER.log(Level.FINER, "MissingPublicKeyCallback did not provider key. " +
+                    "Skip signature of " + Long.toHexString(keyId));
+            return null;
+        }
+
+        if (missingPublicKey.getKeyID() != keyId) {
+            throw new IllegalArgumentException("KeyID of the provided public key differs from the signatures keyId. " +
+                    "The signature was created from " + Long.toHexString(keyId) + " while the provided key has ID " +
+                    Long.toHexString(missingPublicKey.getKeyID()));
+        }
+
+        return missingPublicKey;
     }
 }
