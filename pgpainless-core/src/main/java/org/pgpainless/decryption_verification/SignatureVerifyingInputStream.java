@@ -67,12 +67,9 @@ public class SignatureVerifyingInputStream extends FilterInputStream {
     }
 
     private void validateOnePassSignatures() throws IOException {
-
         if (validated) {
-            LOGGER.log(LEVEL, "Validated signatures already. Skip");
             return;
         }
-
         validated = true;
 
         if (onePassSignatures.isEmpty()) {
@@ -80,49 +77,71 @@ public class SignatureVerifyingInputStream extends FilterInputStream {
             return;
         }
 
+        PGPSignatureList signatureList = findPgpSignatureList();
+
         try {
-            PGPSignatureList signatureList = null;
-            Object obj = objectFactory.nextObject();
-            while (obj !=  null && signatureList == null) {
-                if (obj instanceof PGPSignatureList) {
-                    signatureList = (PGPSignatureList) obj;
-                } else {
-                    obj = objectFactory.nextObject();
-                }
-            }
-
-            if (signatureList == null || signatureList.isEmpty()) {
-                throw new IOException("Verification failed - No Signatures found");
-            }
-
             for (PGPSignature signature : signatureList) {
                 resultBuilder.addSignature(signature);
-                OpenPgpV4Fingerprint fingerprint = null;
-                for (OpenPgpV4Fingerprint f : onePassSignatures.keySet()) {
-                    if (f.getKeyId() == signature.getKeyID()) {
-                        fingerprint = f;
-                        break;
-                    }
-                }
 
-                PGPOnePassSignature onePassSignature;
-                if (fingerprint == null || (onePassSignature = onePassSignatures.get(fingerprint)) == null) {
+                OpenPgpV4Fingerprint fingerprint = findFingerprintForSignature(signature);
+                PGPOnePassSignature onePassSignature = findOnePassSignature(fingerprint);
+                if (onePassSignature == null) {
                     LOGGER.log(LEVEL, "Found Signature without respective OnePassSignature packet -> skip");
                     continue;
                 }
 
-                if (!onePassSignature.verify(signature)) {
-                    throw new SignatureException("Bad Signature of key " + signature.getKeyID());
-                } else {
-                    LOGGER.log(LEVEL, "Verified signature of key " + Long.toHexString(signature.getKeyID()));
-                    resultBuilder.putVerifiedSignature(fingerprint, signature);
-                    resultBuilder.addVerifiedSignatureFingerprint(fingerprint);
-                }
+                verifySignatureOrThrowSignatureException(signature, fingerprint, onePassSignature);
             }
         } catch (PGPException | SignatureException e) {
             throw new IOException(e.getMessage(), e);
         }
 
+    }
+
+    private void verifySignatureOrThrowSignatureException(PGPSignature signature, OpenPgpV4Fingerprint fingerprint, PGPOnePassSignature onePassSignature) throws PGPException, SignatureException {
+        if (onePassSignature.verify(signature)) {
+            LOGGER.log(LEVEL, "Verified signature of key " + Long.toHexString(signature.getKeyID()));
+            resultBuilder.putVerifiedSignature(fingerprint, signature);
+            resultBuilder.addVerifiedSignatureFingerprint(fingerprint);
+        } else {
+            throw new SignatureException("Bad Signature of key " + signature.getKeyID());
+        }
+    }
+
+    private PGPOnePassSignature findOnePassSignature(OpenPgpV4Fingerprint fingerprint) {
+        if (fingerprint != null) {
+            return onePassSignatures.get(fingerprint);
+        }
+        return null;
+    }
+
+    private PGPSignatureList findPgpSignatureList() throws IOException {
+        PGPSignatureList signatureList = null;
+        Object pgpObject = objectFactory.nextObject();
+        while (pgpObject !=  null && signatureList == null) {
+            if (pgpObject instanceof PGPSignatureList) {
+                signatureList = (PGPSignatureList) pgpObject;
+            } else {
+                pgpObject = objectFactory.nextObject();
+            }
+        }
+
+        if (signatureList == null || signatureList.isEmpty()) {
+            throw new IOException("Verification failed - No Signatures found");
+        }
+
+        return signatureList;
+    }
+
+    private OpenPgpV4Fingerprint findFingerprintForSignature(PGPSignature signature) {
+        OpenPgpV4Fingerprint fingerprint = null;
+        for (OpenPgpV4Fingerprint f : onePassSignatures.keySet()) {
+            if (f.getKeyId() == signature.getKeyID()) {
+                fingerprint = f;
+                break;
+            }
+        }
+        return fingerprint;
     }
 
     @Override
