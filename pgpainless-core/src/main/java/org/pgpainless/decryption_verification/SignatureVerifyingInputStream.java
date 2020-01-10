@@ -66,17 +66,23 @@ public class SignatureVerifyingInputStream extends FilterInputStream {
         }
     }
 
-    private void validateOnePassSignatures() throws IOException {
+    private void validateOnePassSignaturesIfNeeded() throws IOException {
         if (validated) {
             return;
         }
         validated = true;
+        validateOnePassSignaturesIfAny();
+    }
 
+    private void validateOnePassSignaturesIfAny() throws IOException {
         if (onePassSignatures.isEmpty()) {
             LOGGER.log(LEVEL, "No One-Pass-Signatures found -> No validation");
             return;
         }
+        validateOnePassSignatures();
+    }
 
+    private void validateOnePassSignatures() throws IOException {
         PGPSignatureList signatureList = findPgpSignatureList();
 
         try {
@@ -95,7 +101,6 @@ public class SignatureVerifyingInputStream extends FilterInputStream {
         } catch (PGPException | SignatureException e) {
             throw new IOException(e.getMessage(), e);
         }
-
     }
 
     private void verifySignatureOrThrowSignatureException(PGPSignature signature, OpenPgpV4Fingerprint fingerprint, PGPOnePassSignature onePassSignature) throws PGPException, SignatureException {
@@ -149,7 +154,7 @@ public class SignatureVerifyingInputStream extends FilterInputStream {
         final int data = super.read();
         final boolean endOfStream = data == -1;
         if (endOfStream) {
-            validateOnePassSignatures();
+            validateOnePassSignaturesIfNeeded();
         } else {
             updateOnePassSignatures((byte) data);
         }
@@ -167,7 +172,7 @@ public class SignatureVerifyingInputStream extends FilterInputStream {
 
         final boolean endOfStream = read == -1;
         if (endOfStream) {
-            validateOnePassSignatures();
+            validateOnePassSignaturesIfNeeded();
         } else {
             updateOnePassSignatures(b, off, read);
         }
