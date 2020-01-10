@@ -21,7 +21,6 @@ import java.io.OutputStream;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Date;
-import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 import java.util.logging.Level;
@@ -57,22 +56,26 @@ public final class EncryptionStream extends OutputStream {
 
     private static final int BUFFER_SIZE = 1 << 8;
 
+    private final SymmetricKeyAlgorithm symmetricKeyAlgorithm;
+    private final HashAlgorithm hashAlgorithm;
+    private final CompressionAlgorithm compressionAlgorithm;
+    private final Set<PGPPublicKey> encryptionKeys;
+    private final Set<PGPPrivateKey> signingKeys;
+    private final boolean asciiArmor;
+
     private final OpenPgpMetadata.Builder resultBuilder = OpenPgpMetadata.getBuilder();
 
     private List<PGPSignatureGenerator> signatureGenerators = new ArrayList<>();
     private boolean closed = false;
 
-    // ASCII Armor
-    private ArmoredOutputStream armorOutputStream = null;
+    OutputStream outermostStream = null;
 
-    // Public Key Encryption of Symmetric Session Key
+    private ArmoredOutputStream armorOutputStream = null;
     private OutputStream publicKeyEncryptedStream = null;
 
-    // Data Compression
     private PGPCompressedDataGenerator compressedDataGenerator;
     private BCPGOutputStream basicCompressionStream;
 
-    // Literal Data
     private PGPLiteralDataGenerator literalDataGenerator;
     private OutputStream literalDataStream;
 
@@ -85,68 +88,93 @@ public final class EncryptionStream extends OutputStream {
                      boolean asciiArmor)
             throws IOException, PGPException {
 
-        // Currently outermost Stream
-        OutputStream outerMostStream;
-        if (asciiArmor) {
-            LOGGER.log(LEVEL, "Wrap encryption output in ASCII armor");
-            armorOutputStream = new ArmoredOutputStream(targetOutputStream);
-            outerMostStream = armorOutputStream;
-        } else {
+        this.symmetricKeyAlgorithm = symmetricKeyAlgorithm;
+        this.hashAlgorithm = hashAlgorithm;
+        this.compressionAlgorithm = compressionAlgorithm;
+        this.encryptionKeys = Collections.unmodifiableSet(encryptionKeys);
+        this.signingKeys = Collections.unmodifiableSet(signingKeys);
+        this.asciiArmor = asciiArmor;
+
+        outermostStream = targetOutputStream;
+        prepareArmor();
+        prepareEncryption();
+        prepareSigning();
+        prepareCompression();
+        prepareOnePassSignatures();
+        prepareLiteralDataProcessing();
+        prepareResultBuilder();
+    }
+
+    private void prepareArmor() {
+        if (!asciiArmor) {
             LOGGER.log(LEVEL, "Encryption output will be binary");
-            outerMostStream = targetOutputStream;
+            return;
         }
 
-        // If we want to encrypt
-        if (!encryptionKeys.isEmpty()) {
-            LOGGER.log(LEVEL, "At least one encryption key is available -> encrypt using " + symmetricKeyAlgorithm);
-            BcPGPDataEncryptorBuilder dataEncryptorBuilder =
-                    new BcPGPDataEncryptorBuilder(symmetricKeyAlgorithm.getAlgorithmId());
+        LOGGER.log(LEVEL, "Wrap encryption output in ASCII armor");
+        armorOutputStream = new ArmoredOutputStream(outermostStream);
+        outermostStream = armorOutputStream;
+    }
 
-            LOGGER.log(LEVEL, "Integrity protection enabled");
-            dataEncryptorBuilder.setWithIntegrityPacket(true);
-
-            PGPEncryptedDataGenerator encryptedDataGenerator =
-                    new PGPEncryptedDataGenerator(dataEncryptorBuilder);
-
-            for (PGPPublicKey key : encryptionKeys) {
-                LOGGER.log(LEVEL, "Encrypt for key " + Long.toHexString(key.getKeyID()));
-                encryptedDataGenerator.addMethod(new BcPublicKeyKeyEncryptionMethodGenerator(key));
-            }
-
-            publicKeyEncryptedStream = encryptedDataGenerator.open(outerMostStream, new byte[BUFFER_SIZE]);
-            outerMostStream = publicKeyEncryptedStream;
+    private void prepareEncryption() throws IOException, PGPException {
+        if (encryptionKeys.isEmpty()) {
+            return;
         }
 
-        // If we want to sign, prepare for signing
-        if (!signingKeys.isEmpty()) {
-            LOGGER.log(LEVEL, "At least one signing key is available -> sign " + hashAlgorithm + " hash of message");
-            for (PGPPrivateKey privateKey : signingKeys) {
-                LOGGER.log(LEVEL, "Sign using key " + Long.toHexString(privateKey.getKeyID()));
-                BcPGPContentSignerBuilder contentSignerBuilder = new BcPGPContentSignerBuilder(
-                        privateKey.getPublicKeyPacket().getAlgorithm(), hashAlgorithm.getAlgorithmId());
+        LOGGER.log(LEVEL, "At least one encryption key is available -> encrypt using " + symmetricKeyAlgorithm);
+        BcPGPDataEncryptorBuilder dataEncryptorBuilder =
+                new BcPGPDataEncryptorBuilder(symmetricKeyAlgorithm.getAlgorithmId());
 
-                PGPSignatureGenerator signatureGenerator = new PGPSignatureGenerator(contentSignerBuilder);
-                signatureGenerator.init(PGPSignature.BINARY_DOCUMENT, privateKey);
-                signatureGenerators.add(signatureGenerator);
-            }
+        dataEncryptorBuilder.setWithIntegrityPacket(true);
+        PGPEncryptedDataGenerator encryptedDataGenerator =
+                new PGPEncryptedDataGenerator(dataEncryptorBuilder);
+
+        for (PGPPublicKey key : encryptionKeys) {
+            LOGGER.log(LEVEL, "Encrypt for key " + Long.toHexString(key.getKeyID()));
+            encryptedDataGenerator.addMethod(new BcPublicKeyKeyEncryptionMethodGenerator(key));
         }
 
+        publicKeyEncryptedStream = encryptedDataGenerator.open(outermostStream, new byte[BUFFER_SIZE]);
+        outermostStream = publicKeyEncryptedStream;
+    }
+
+    private void prepareSigning() throws PGPException {
+        if (signingKeys.isEmpty()) {
+            return;
+        }
+
+        LOGGER.log(LEVEL, "At least one signing key is available -> sign " + hashAlgorithm + " hash of message");
+        for (PGPPrivateKey privateKey : signingKeys) {
+            LOGGER.log(LEVEL, "Sign using key " + Long.toHexString(privateKey.getKeyID()));
+            BcPGPContentSignerBuilder contentSignerBuilder = new BcPGPContentSignerBuilder(
+                    privateKey.getPublicKeyPacket().getAlgorithm(), hashAlgorithm.getAlgorithmId());
+
+            PGPSignatureGenerator signatureGenerator = new PGPSignatureGenerator(contentSignerBuilder);
+            signatureGenerator.init(PGPSignature.BINARY_DOCUMENT, privateKey);
+            signatureGenerators.add(signatureGenerator);
+        }
+    }
+
+    private void prepareCompression() throws IOException {
         LOGGER.log(LEVEL, "Compress using " + compressionAlgorithm);
-        // Compression
         compressedDataGenerator = new PGPCompressedDataGenerator(
                 compressionAlgorithm.getAlgorithmId());
-        basicCompressionStream = new BCPGOutputStream(compressedDataGenerator.open(outerMostStream));
+        basicCompressionStream = new BCPGOutputStream(compressedDataGenerator.open(outermostStream));
+    }
 
-        // If we want to sign, sign!
+    private void prepareOnePassSignatures() throws IOException, PGPException {
         for (PGPSignatureGenerator signatureGenerator : signatureGenerators) {
             signatureGenerator.generateOnePassVersion(false).encode(basicCompressionStream);
         }
+    }
 
+    private void prepareLiteralDataProcessing() throws IOException {
         literalDataGenerator = new PGPLiteralDataGenerator();
         literalDataStream = literalDataGenerator.open(basicCompressionStream,
                 PGPLiteralData.BINARY, PGPLiteralData.CONSOLE, new Date(), new byte[BUFFER_SIZE]);
+    }
 
-        // Prepare result
+    private void prepareResultBuilder() {
         for (PGPPublicKey recipient : encryptionKeys) {
             resultBuilder.addRecipientKeyId(recipient.getKeyID());
         }
@@ -185,40 +213,44 @@ public final class EncryptionStream extends OutputStream {
 
     @Override
     public void close() throws IOException {
-        if (!closed) {
+        if (closed) {
+            return;
+        }
 
-            // Literal Data
-            literalDataStream.flush();
-            literalDataStream.close();
-            literalDataGenerator.close();
+        // Literal Data
+        literalDataStream.flush();
+        literalDataStream.close();
+        literalDataGenerator.close();
 
-            // Signing
-            for (PGPSignatureGenerator signatureGenerator : signatureGenerators) {
-                try {
-                    PGPSignature signature = signatureGenerator.generate();
-                    signature.encode(basicCompressionStream);
-                    resultBuilder.addSignature(signature);
-                    resultBuilder.addUnverifiedSignatureKeyId(signature.getKeyID());
-                } catch (PGPException e) {
-                    throw new IOException(e);
-                }
+        writeSignatures();
+
+        // Compressed Data
+        compressedDataGenerator.close();
+
+        // Public Key Encryption
+        if (publicKeyEncryptedStream != null) {
+            publicKeyEncryptedStream.flush();
+            publicKeyEncryptedStream.close();
+        }
+
+        // Armor
+        if (armorOutputStream != null) {
+            armorOutputStream.flush();
+            armorOutputStream.close();
+        }
+        closed = true;
+    }
+
+    private void writeSignatures() throws IOException {
+        for (PGPSignatureGenerator signatureGenerator : signatureGenerators) {
+            try {
+                PGPSignature signature = signatureGenerator.generate();
+                signature.encode(basicCompressionStream);
+                resultBuilder.addSignature(signature);
+                resultBuilder.addUnverifiedSignatureKeyId(signature.getKeyID());
+            } catch (PGPException e) {
+                throw new IOException(e);
             }
-
-            // Compressed Data
-            compressedDataGenerator.close();
-
-            // Public Key Encryption
-            if (publicKeyEncryptedStream != null) {
-                publicKeyEncryptedStream.flush();
-                publicKeyEncryptedStream.close();
-            }
-
-            // Armor
-            if (armorOutputStream != null) {
-                armorOutputStream.flush();
-                armorOutputStream.close();
-            }
-            closed = true;
         }
     }
 
