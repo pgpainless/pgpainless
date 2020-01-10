@@ -40,9 +40,6 @@ The entry point to the API is the `PGPainless` class. Here you can find methods 
 The first thing you probably want to do is generate you some nice tasty Key Pairs. The most straight forward way to do so is by calling
 
 ```java
-        // Add a suitable cryptographic provider
-        Security.insertProviderAt(new BouncyCastleProvider(), 1);
-
         PGPSecretKeyRing keyRing = PGPainless.generateKeyRing()
                 .simpleRsaKeyRing("Juliet <juliet@montague.lit>", RsaLength._4096);
 ```
@@ -132,7 +129,7 @@ Again, this object will contain information about how the message was encrypted,
 ```
 
 ## About
-PGPainless is a by-product of my [Summer of Code 2018 project](https://vanitasvitae.github.io/GSOC2018/).
+PGPainless is a by-product of my [Summer of Code 2018 project](https://blog.jabberhead.tk/summer-of-code-2018/).
 For that project I was in need of a simple to use OpenPGP library.
 
 Originally I was going to use [Bouncy-GPG](https://github.com/neuhalje/bouncy-gpg) for my project,
@@ -147,6 +144,6 @@ To reach out to the development team, feel free to send a mail: info@pgpainless.
 PGPainless is developed in - and accepts contributions from - the following places:
 
 * [Github](https://github.com/pgpainless/pgpainless)
-* [Teahub](https://teahub.io/PGPainless/pgpainless)
+* [Codeberg](https://codeberg.org/PGPainless/pgpainless)
 
 Please follow the [code of conduct](CODE_OF_CONDUCT.md) if you want to be part of the project.
