@@ -57,7 +57,7 @@ public final class EncryptionStream extends OutputStream {
 
     private static final int BUFFER_SIZE = 1 << 8;
 
-    private final OpenPgpMetadata result;
+    private final OpenPgpMetadata.Builder resultBuilder = OpenPgpMetadata.getBuilder();
 
     private List<PGPSignatureGenerator> signatureGenerators = new ArrayList<>();
     private boolean closed = false;
@@ -147,21 +147,11 @@ public final class EncryptionStream extends OutputStream {
                 PGPLiteralData.BINARY, PGPLiteralData.CONSOLE, new Date(), new byte[BUFFER_SIZE]);
 
         // Prepare result
-        Set<Long> recipientKeyIds = new HashSet<>();
         for (PGPPublicKey recipient : encryptionKeys) {
-            recipientKeyIds.add(recipient.getKeyID());
+            resultBuilder.addRecipientKeyId(recipient.getKeyID());
         }
-
-        Set<Long> signingKeyIds = new HashSet<>();
-        for (PGPPrivateKey signer : signingKeys) {
-            signingKeyIds.add(signer.getKeyID());
-        }
-
-
-        this.result = new OpenPgpMetadata(recipientKeyIds,
-                null, symmetricKeyAlgorithm,
-                compressionAlgorithm, true,
-                signingKeyIds, Collections.emptySet());
+        resultBuilder.setSymmetricKeyAlgorithm(symmetricKeyAlgorithm);
+        resultBuilder.setCompressionAlgorithm(compressionAlgorithm);
     }
 
     @Override
@@ -205,7 +195,10 @@ public final class EncryptionStream extends OutputStream {
             // Signing
             for (PGPSignatureGenerator signatureGenerator : signatureGenerators) {
                 try {
-                    signatureGenerator.generate().encode(basicCompressionStream);
+                    PGPSignature signature = signatureGenerator.generate();
+                    signature.encode(basicCompressionStream);
+                    resultBuilder.addSignature(signature);
+                    resultBuilder.addUnverifiedSignatureKeyId(signature.getKeyID());
                 } catch (PGPException e) {
                     throw new IOException(e);
                 }
@@ -230,6 +223,9 @@ public final class EncryptionStream extends OutputStream {
     }
 
     public OpenPgpMetadata getResult() {
-        return result;
+        if (!closed) {
+            throw new IllegalStateException("EncryptionStream must be closed before accessing the Result.");
+        }
+        return resultBuilder.build();
     }
 }

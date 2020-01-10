@@ -21,6 +21,7 @@ import java.io.InputStream;
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.Set;
+import java.util.function.Predicate;
 
 import org.bouncycastle.openpgp.PGPException;
 import org.bouncycastle.openpgp.PGPPublicKeyRing;
@@ -74,15 +75,17 @@ public class DecryptionBuilder implements DecryptionBuilderInterface {
         @Override
         public HandleMissingPublicKeys verifyWith(@Nonnull Set<OpenPgpV4Fingerprint> trustedKeyIds,
                                                   @Nonnull PGPPublicKeyRingCollection publicKeyRingCollection) {
+            Set<PGPPublicKeyRing> publicKeyRings = keyRingCollectionToSet(publicKeyRingCollection);
+            publicKeyRings.removeIf(p -> !trustedKeyIds.contains(new OpenPgpV4Fingerprint(p)));
+            return verifyWith(publicKeyRings);
+        }
+
+        private Set<PGPPublicKeyRing> keyRingCollectionToSet(PGPPublicKeyRingCollection publicKeyRingCollection) {
             Set<PGPPublicKeyRing> publicKeyRings = new HashSet<>();
             for (Iterator<PGPPublicKeyRing> i = publicKeyRingCollection.getKeyRings(); i.hasNext(); ) {
-                PGPPublicKeyRing p = i.next();
-                OpenPgpV4Fingerprint fingerprint = new OpenPgpV4Fingerprint(p);
-                if (trustedKeyIds.contains(fingerprint)) {
-                    publicKeyRings.add(p);
-                }
+                publicKeyRings.add(i.next());
             }
-            return verifyWith(publicKeyRings);
+            return publicKeyRings;
         }
 
         @Override

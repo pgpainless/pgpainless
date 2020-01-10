@@ -142,10 +142,18 @@ public class EncryptDecryptTest extends AbstractPGPainlessTest {
                 .signWith(keyDecryptor, senderSec)
                 .noArmor();
 
+        Streams.pipeAll(new ByteArrayInputStream(secretMessage), encryptor);
+        encryptor.close();
+        byte[] encryptedSecretMessage = envelope.toByteArray();
+
+        LOGGER.log(Level.INFO, "Sender: " + PublicKeyAlgorithm.fromId(senderPub.getPublicKey().getAlgorithm()) +
+        " Receiver: " + PublicKeyAlgorithm.fromId(recipientPub.getPublicKey().getAlgorithm()) +
+        " Encrypted Length: " + encryptedSecretMessage.length);
+
         OpenPgpMetadata encryptionResult = encryptor.getResult();
 
-        assertFalse(encryptionResult.getAllSignatureKeyFingerprints().isEmpty());
-        for (long keyId : encryptionResult.getAllSignatureKeyFingerprints()) {
+        assertFalse(encryptionResult.getSignatureKeyIDs().isEmpty());
+        for (long keyId : encryptionResult.getSignatureKeyIDs()) {
             assertTrue(BCUtil.keyRingContainsKeyWithId(senderPub, keyId));
         }
 
@@ -155,14 +163,6 @@ public class EncryptDecryptTest extends AbstractPGPainlessTest {
         }
 
         assertEquals(SymmetricKeyAlgorithm.AES_256, encryptionResult.getSymmetricKeyAlgorithm());
-
-        Streams.pipeAll(new ByteArrayInputStream(secretMessage), encryptor);
-        encryptor.close();
-        byte[] encryptedSecretMessage = envelope.toByteArray();
-
-        LOGGER.log(Level.INFO, "Sender: " + PublicKeyAlgorithm.fromId(senderPub.getPublicKey().getAlgorithm()) +
-        " Receiver: " + PublicKeyAlgorithm.fromId(recipientPub.getPublicKey().getAlgorithm()) +
-        " Encrypted Length: " + encryptedSecretMessage.length);
 
         // Juliet trieth to comprehend Romeos words
 

@@ -198,8 +198,12 @@ public final class DecryptionStreamFactory {
             throw new PGPException("Verification failed - No OnePassSignatures found");
         }
 
-        while (iterator.hasNext()) {
-            PGPOnePassSignature signature = iterator.next();
+        processOnePassSignatures(iterator);
+    }
+
+    private void processOnePassSignatures(Iterator<PGPOnePassSignature> signatures) throws PGPException {
+        while (signatures.hasNext()) {
+            PGPOnePassSignature signature = signatures.next();
             final long keyId = signature.getKeyID();
             resultBuilder.addUnverifiedSignatureKeyId(keyId);
 

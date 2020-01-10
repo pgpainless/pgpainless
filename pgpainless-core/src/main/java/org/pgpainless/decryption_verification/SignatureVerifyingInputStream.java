@@ -96,6 +96,7 @@ public class SignatureVerifyingInputStream extends FilterInputStream {
             }
 
             for (PGPSignature signature : signatureList) {
+                resultBuilder.addSignature(signature);
                 OpenPgpV4Fingerprint fingerprint = null;
                 for (OpenPgpV4Fingerprint f : onePassSignatures.keySet()) {
                     if (f.getKeyId() == signature.getKeyID()) {
@@ -114,6 +115,7 @@ public class SignatureVerifyingInputStream extends FilterInputStream {
                     throw new SignatureException("Bad Signature of key " + signature.getKeyID());
                 } else {
                     LOGGER.log(LEVEL, "Verified signature of key " + Long.toHexString(signature.getKeyID()));
+                    resultBuilder.putVerifiedSignature(fingerprint, signature);
                     resultBuilder.addVerifiedSignatureFingerprint(fingerprint);
                 }
             }
