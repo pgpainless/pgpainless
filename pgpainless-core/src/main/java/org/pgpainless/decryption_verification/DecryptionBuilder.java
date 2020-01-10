@@ -76,8 +76,16 @@ public class DecryptionBuilder implements DecryptionBuilderInterface {
         public HandleMissingPublicKeys verifyWith(@Nonnull Set<OpenPgpV4Fingerprint> trustedKeyIds,
                                                   @Nonnull PGPPublicKeyRingCollection publicKeyRingCollection) {
             Set<PGPPublicKeyRing> publicKeyRings = keyRingCollectionToSet(publicKeyRingCollection);
-            publicKeyRings.removeIf(p -> !trustedKeyIds.contains(new OpenPgpV4Fingerprint(p)));
+            removeUntrustedPublicKeys(publicKeyRings, trustedKeyIds);
             return verifyWith(publicKeyRings);
+        }
+
+        private void removeUntrustedPublicKeys(Set<PGPPublicKeyRing> publicKeyRings, Set<OpenPgpV4Fingerprint> trustedKeyIds) {
+            for (PGPPublicKeyRing p : new HashSet<>(publicKeyRings)) {
+                if (!trustedKeyIds.contains(new OpenPgpV4Fingerprint(p))) {
+                    publicKeyRings.remove(p);
+                }
+            }
         }
 
         private Set<PGPPublicKeyRing> keyRingCollectionToSet(PGPPublicKeyRingCollection publicKeyRingCollection) {
