@@ -40,7 +40,7 @@ public class ProviderFactoryTest {
 
     private ProviderFactory customProviderFactory = new ProviderFactory() {
 
-        Provider provider = new Provider("PL", "0.1", "PGPainlessTestProvider") {
+        Provider provider = new Provider("PL", 1L, "PGPainlessTestProvider") {
 
         };
 
