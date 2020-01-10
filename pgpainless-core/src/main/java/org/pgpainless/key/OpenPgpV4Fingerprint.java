@@ -15,10 +15,9 @@
  */
 package org.pgpainless.key;
 
-import javax.annotation.Nonnull;
 import java.nio.ByteBuffer;
 import java.nio.charset.Charset;
-import java.nio.charset.StandardCharsets;
+import javax.annotation.Nonnull;
 
 import org.bouncycastle.openpgp.PGPPublicKey;
 import org.bouncycastle.openpgp.PGPPublicKeyRing;

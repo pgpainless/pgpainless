@@ -13,17 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.pgpainless;
-
-import static junit.framework.TestCase.assertEquals;
-
-import org.junit.Test;
-import org.pgpainless.provider.ProviderFactory;
-
-public class ProviderFactoryTest {
-
-    @Test
-    public void providerFactoryDefaultIsBouncyCastleTest() {
-        assertEquals("BC", ProviderFactory.getProviderName());
-    }
-}
+/**
+ * Classes that allow setting a custom implementation of {@link java.security.Provider}.
+ */
+package org.pgpainless.provider;
