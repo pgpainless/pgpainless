@@ -191,13 +191,7 @@ public final class DecryptionStreamFactory {
         LOGGER.log(LEVEL, "Message is encrypted using " + symmetricKeyAlgorithm);
         resultBuilder.setSymmetricKeyAlgorithm(symmetricKeyAlgorithm);
 
-        if (encryptedSessionKey.isIntegrityProtected()) {
-            LOGGER.log(LEVEL, "Message is integrity protected");
-            resultBuilder.setIntegrityProtected(true);
-        } else {
-            LOGGER.log(LEVEL, "Message is not integrity protected");
-            resultBuilder.setIntegrityProtected(false);
-        }
+        resultBuilder.setIntegrityProtected(encryptedSessionKey.isIntegrityProtected());
 
         return encryptedSessionKey.getDataStream(keyDecryptor);
     }
