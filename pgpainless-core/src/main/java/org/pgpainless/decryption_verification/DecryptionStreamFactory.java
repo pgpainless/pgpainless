@@ -173,6 +173,7 @@ public final class DecryptionStreamFactory {
             PGPSecretKey secretKey = decryptionKeys.getSecretKey(keyId);
             if (secretKey != null) {
                 LOGGER.log(LEVEL, "Found respective secret key " + Long.toHexString(keyId));
+                // Watch out! This assignment is possibly done multiple times.
                 encryptedSessionKey = encryptedData;
                 decryptionKey = secretKey.extractPrivateKey(decryptionKeyDecryptor.getDecryptor(keyId));
                 resultBuilder.setDecryptionFingerprint(new OpenPgpV4Fingerprint(secretKey));
