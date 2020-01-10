@@ -13,27 +13,28 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.pgpainless;
+package org.pgpainless.encryption_signing;
 
-import static junit.framework.TestCase.assertTrue;
+import static org.junit.Assert.assertArrayEquals;
 
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
-import java.util.Arrays;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import org.bouncycastle.bcpg.ArmoredOutputStream;
 import org.bouncycastle.openpgp.PGPException;
 import org.junit.Test;
+import org.pgpainless.PGPainless;
 import org.pgpainless.algorithm.SymmetricKeyAlgorithm;
 import org.pgpainless.util.Passphrase;
 
-public class SymmetricTest {
+public class SymmetricEncryptionTest {
 
-    private static final Logger LOGGER = Logger.getLogger(SymmetricTest.class.getName());
+    private static final Logger LOGGER = Logger.getLogger(SymmetricEncryptionTest.class.getName());
 
-    private static final String message = "I grew up with the understanding that the world " +
+    private static final String message =
+            "I grew up with the understanding that the world " +
             "I lived in was one where people enjoyed a sort of freedom " +
             "to communicate with each other in privacy, without it " +
             "being monitored, without it being measured or analyzed " +
@@ -58,6 +59,6 @@ public class SymmetricTest {
         LOGGER.log(Level.INFO, new String(out.toByteArray()));
 
         byte[] plain2 = PGPainless.decryptWithPassword(enc, passphrase);
-        assertTrue(Arrays.equals(plain, plain2));
+        assertArrayEquals(plain, plain2);
     }
 }

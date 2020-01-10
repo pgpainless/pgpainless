@@ -18,6 +18,7 @@ package org.pgpainless;
 import static junit.framework.TestCase.assertEquals;
 import static junit.framework.TestCase.assertFalse;
 import static junit.framework.TestCase.assertTrue;
+import static org.junit.Assert.assertArrayEquals;
 
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
@@ -25,8 +26,6 @@ import java.io.IOException;
 import java.nio.charset.Charset;
 import java.security.InvalidAlgorithmParameterException;
 import java.security.NoSuchAlgorithmException;
-import java.security.NoSuchProviderException;
-import java.util.Arrays;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -55,9 +54,11 @@ import org.pgpainless.util.BCUtil;
 public class EncryptDecryptTest {
 
     private static final Logger LOGGER = Logger.getLogger(EncryptDecryptTest.class.getName());
+    // Don't use StandardCharsets.UTF_8 because of Android API level.
     private static final Charset UTF8 = Charset.forName("UTF-8");
 
-    private static final String testMessage = "Ah, Juliet, if the measure of thy joy\n" +
+    private static final String testMessage =
+            "Ah, Juliet, if the measure of thy joy\n" +
             "Be heaped like mine, and that thy skill be more\n" +
             "To blazon it, then sweeten with thy breath\n" +
             "This neighbor air, and let rich music’s tongue\n" +
@@ -68,10 +69,10 @@ public class EncryptDecryptTest {
         LOGGER.log(Level.INFO, "Plain Length: " + testMessage.getBytes(UTF8).length);
     }
 
+    @Ignore
     @Test
     public void freshKeysRsaToElGamalTest()
-            throws PGPException, NoSuchAlgorithmException, NoSuchProviderException, InvalidAlgorithmParameterException,
-            IOException {
+            throws PGPException, NoSuchAlgorithmException, InvalidAlgorithmParameterException, IOException {
         PGPKeyRing sender = PGPainless.generateKeyRing().simpleRsaKeyRing("romeo@montague.lit", RsaLength._3072);
         PGPKeyRing recipient = PGPainless.generateKeyRing()
                 .withSubKey(KeySpec.getBuilder(ElGamal_GENERAL.withLength(ElGamalLength._3072)).withKeyFlags(KeyFlag.ENCRYPT_STORAGE, KeyFlag.ENCRYPT_COMMS).withDefaultAlgorithms())
@@ -81,49 +82,48 @@ public class EncryptDecryptTest {
         encryptDecryptForSecretKeyRings(sender, recipient);
     }
 
+    @Ignore
     @Test
     public void freshKeysRsaToRsaTest()
-            throws PGPException, NoSuchAlgorithmException, NoSuchProviderException, InvalidAlgorithmParameterException,
-            IOException {
+            throws PGPException, NoSuchAlgorithmException, InvalidAlgorithmParameterException, IOException {
         PGPKeyRing sender = PGPainless.generateKeyRing().simpleRsaKeyRing("romeo@montague.lit", RsaLength._4096);
         PGPKeyRing recipient = PGPainless.generateKeyRing().simpleRsaKeyRing("juliet@capulet.lit", RsaLength._4096);
 
         encryptDecryptForSecretKeyRings(sender, recipient);
     }
 
+    @Ignore
     @Test
-    public void freshKeysEcToEcTest() throws IOException, PGPException, NoSuchAlgorithmException, NoSuchProviderException,
-            InvalidAlgorithmParameterException {
+    public void freshKeysEcToEcTest()
+            throws IOException, PGPException, NoSuchAlgorithmException, InvalidAlgorithmParameterException {
         PGPKeyRing sender = PGPainless.generateKeyRing().simpleEcKeyRing("romeo@montague.lit");
-        PGPKeyRing recipient = PGPainless.generateKeyRing().simpleEcKeyRing("juliet@capulet.lit");
-
-        encryptDecryptForSecretKeyRings(sender, recipient);
-    }
-
-    @Test
-    public void freshKeysEcToRsaTest()
-            throws PGPException, NoSuchAlgorithmException, NoSuchProviderException, InvalidAlgorithmParameterException,
-            IOException {
-        PGPKeyRing sender = PGPainless.generateKeyRing().simpleEcKeyRing("romeo@montague.lit");
-        PGPKeyRing recipient = PGPainless.generateKeyRing().simpleRsaKeyRing("juliet@capulet.lit", RsaLength._4096);
-
-        encryptDecryptForSecretKeyRings(sender, recipient);
-    }
-
-    @Test
-    public void freshKeysRsaToEcTest()
-            throws PGPException, NoSuchAlgorithmException, NoSuchProviderException, InvalidAlgorithmParameterException,
-            IOException {
-        PGPKeyRing sender = PGPainless.generateKeyRing().simpleRsaKeyRing("romeo@montague.lit", RsaLength._4096);
         PGPKeyRing recipient = PGPainless.generateKeyRing().simpleEcKeyRing("juliet@capulet.lit");
 
         encryptDecryptForSecretKeyRings(sender, recipient);
     }
 
     @Ignore
+    @Test
+    public void freshKeysEcToRsaTest()
+            throws PGPException, NoSuchAlgorithmException, InvalidAlgorithmParameterException, IOException {
+        PGPKeyRing sender = PGPainless.generateKeyRing().simpleEcKeyRing("romeo@montague.lit");
+        PGPKeyRing recipient = PGPainless.generateKeyRing().simpleRsaKeyRing("juliet@capulet.lit", RsaLength._4096);
+
+        encryptDecryptForSecretKeyRings(sender, recipient);
+    }
+
+    @Ignore
+    @Test
+    public void freshKeysRsaToEcTest()
+            throws PGPException, NoSuchAlgorithmException, InvalidAlgorithmParameterException, IOException {
+        PGPKeyRing sender = PGPainless.generateKeyRing().simpleRsaKeyRing("romeo@montague.lit", RsaLength._4096);
+        PGPKeyRing recipient = PGPainless.generateKeyRing().simpleEcKeyRing("juliet@capulet.lit");
+
+        encryptDecryptForSecretKeyRings(sender, recipient);
+    }
+
     private void encryptDecryptForSecretKeyRings(PGPKeyRing sender, PGPKeyRing recipient)
-            throws PGPException,
-            IOException {
+            throws PGPException, IOException {
         PGPSecretKeyRing recipientSec = recipient.getSecretKeys();
         PGPSecretKeyRing senderSec = sender.getSecretKeys();
         PGPPublicKeyRing recipientPub = recipient.getPublicKeys();
@@ -179,7 +179,7 @@ public class EncryptDecryptTest {
         Streams.pipeAll(decryptor, decryptedSecretMessage);
         decryptor.close();
 
-        assertTrue(Arrays.equals(secretMessage, decryptedSecretMessage.toByteArray()));
+        assertArrayEquals(secretMessage, decryptedSecretMessage.toByteArray());
         OpenPgpMetadata result = decryptor.getResult();
         assertTrue(result.containsVerifiedSignatureFrom(senderPub));
         assertTrue(result.isIntegrityProtected());

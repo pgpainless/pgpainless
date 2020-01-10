@@ -31,6 +31,7 @@ import org.bouncycastle.openpgp.PGPPublicKeyRing;
 import org.bouncycastle.openpgp.PGPSecretKeyRing;
 import org.bouncycastle.util.io.Streams;
 import org.junit.Ignore;
+import org.pgpainless.key.TestKeys;
 import org.pgpainless.key.collection.PGPKeyRing;
 import org.pgpainless.key.generation.type.length.RsaLength;
 import org.pgpainless.key.protection.SecretKeyRingProtector;

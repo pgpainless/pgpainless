@@ -13,7 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.pgpainless;
+package org.pgpainless.key;
 
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
@@ -26,7 +26,6 @@ import org.bouncycastle.openpgp.PGPSecretKeyRingCollection;
 import org.bouncycastle.openpgp.PGPUtil;
 import org.bouncycastle.openpgp.operator.KeyFingerPrintCalculator;
 import org.bouncycastle.openpgp.operator.bc.BcKeyFingerprintCalculator;
-import org.pgpainless.key.OpenPgpV4Fingerprint;
 
 public class TestKeys {
 

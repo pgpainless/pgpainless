@@ -13,7 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.pgpainless;
+package org.pgpainless.util;
 
 import static junit.framework.TestCase.assertEquals;
 import static junit.framework.TestCase.assertFalse;
@@ -21,6 +21,7 @@ import static junit.framework.TestCase.assertNotNull;
 import static junit.framework.TestCase.assertNull;
 import static junit.framework.TestCase.assertTrue;
 import static junit.framework.TestCase.fail;
+import static org.junit.Assert.assertNotEquals;
 
 import java.util.Arrays;
 import java.util.Collections;
@@ -30,7 +31,6 @@ import java.util.Map;
 import java.util.Set;
 
 import org.junit.Test;
-import org.pgpainless.util.MultiMap;
 
 public class MultiMapTest {
 
@@ -79,9 +79,9 @@ public class MultiMapTest {
         }
 
         MultiMap<String, String> empty = new MultiMap<>();
-        assertFalse(multiMap.equals(empty));
+        assertNotEquals(multiMap, empty);
         assertEquals(multiMap, multiMap);
-        assertFalse(multiMap.equals(null));
+        assertNotEquals(null, multiMap);
 
         MultiMap<String, String> map2 = new MultiMap<>();
         map2.put("alice", "schwarzer");
@@ -127,6 +127,6 @@ public class MultiMapTest {
         assertFalse(fromMap.isEmpty());
         assertEquals(fromMap.get("key"), Collections.singleton("value"));
 
-        assertFalse(fromMap.equals(map));
+        assertNotEquals(fromMap, map);
     }
 }

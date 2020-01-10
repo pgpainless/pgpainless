@@ -13,7 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.pgpainless;
+package org.pgpainless.key;
 
 import static junit.framework.TestCase.assertEquals;
 import static org.junit.Assert.assertNotEquals;
@@ -22,7 +22,6 @@ import java.io.IOException;
 
 import org.bouncycastle.openpgp.PGPPublicKey;
 import org.junit.Test;
-import org.pgpainless.key.OpenPgpV4Fingerprint;
 
 public class OpenPgpV4FingerprintTest {
 
@@ -68,7 +67,7 @@ public class OpenPgpV4FingerprintTest {
     }
 
     @Test
-    public void keyIdTest() throws IOException {
+    public void assertFingerprintGetKeyIdEqualsKeyId() throws IOException {
         PGPPublicKey key = TestKeys.getJulietPublicKeyRing().getPublicKey();
         long keyId = key.getKeyID();
 

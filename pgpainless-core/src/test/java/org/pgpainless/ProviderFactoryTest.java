@@ -17,7 +17,10 @@ package org.pgpainless;
 
 import static junit.framework.TestCase.assertEquals;
 
+import java.security.Provider;
+
 import org.junit.Test;
+import org.pgpainless.provider.BouncyCastleProviderFactory;
 import org.pgpainless.provider.ProviderFactory;
 
 public class ProviderFactoryTest {
@@ -26,4 +29,29 @@ public class ProviderFactoryTest {
     public void providerFactoryDefaultIsBouncyCastleTest() {
         assertEquals("BC", ProviderFactory.getProviderName());
     }
+
+    @Test
+    public void setCustomProviderTest() {
+        ProviderFactory.setFactory(customProviderFactory);
+        assertEquals("PL", ProviderFactory.getProviderName());
+        // Reset back to BouncyCastle
+        ProviderFactory.setFactory(new BouncyCastleProviderFactory());
+    }
+
+    private ProviderFactory customProviderFactory = new ProviderFactory() {
+
+        Provider provider = new Provider("PL", "0.1", "PGPainlessTestProvider") {
+
+        };
+
+        @Override
+        protected Provider _getProvider() {
+            return provider;
+        }
+
+        @Override
+        protected String _getProviderName() {
+            return provider.getName();
+        }
+    };
 }
