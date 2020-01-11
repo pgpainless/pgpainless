@@ -13,7 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.pgpainless.encryption_signing;
+package org.pgpainless.symmetric_encryption;
 
 import static org.junit.Assert.assertArrayEquals;
 

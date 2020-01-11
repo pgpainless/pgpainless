@@ -13,15 +13,13 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.pgpainless;
+package org.pgpainless.provider;
 
 import static junit.framework.TestCase.assertEquals;
 
 import java.security.Provider;
 
 import org.junit.Test;
-import org.pgpainless.provider.BouncyCastleProviderFactory;
-import org.pgpainless.provider.ProviderFactory;
 
 public class ProviderFactoryTest {
 
