@@ -13,7 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.pgpainless.key;
+package org.pgpainless.key.generation;
 
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
@@ -22,17 +22,16 @@ import java.security.NoSuchAlgorithmException;
 
 import org.bouncycastle.bcpg.ArmoredOutputStream;
 import org.bouncycastle.openpgp.PGPException;
-import org.junit.Ignore;
 import org.junit.Test;
 import org.pgpainless.PGPainless;
+import org.pgpainless.key.OpenPgpV4Fingerprint;
 import org.pgpainless.key.collection.PGPKeyRing;
 
 public class GenerateKeyTest {
 
     @Test
-    @Ignore
     public void generateKey() throws InvalidAlgorithmParameterException, NoSuchAlgorithmException, PGPException, IOException {
-        PGPKeyRing keyRing = PGPainless.generateKeyRing().simpleEcKeyRing("address@server.tld");
+        PGPKeyRing keyRing = PGPainless.generateKeyRing().simpleEcKeyRing("cryptie@encrypted.key", "password123");
 
         print(keyRing.getPublicKeys().getPublicKey().getUserIDs().next());
         print(new OpenPgpV4Fingerprint(keyRing.getPublicKeys()));
