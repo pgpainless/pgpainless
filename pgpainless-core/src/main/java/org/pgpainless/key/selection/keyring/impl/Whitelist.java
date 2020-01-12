@@ -35,7 +35,7 @@ public class Whitelist {
         }
 
         public PubRingSelectionStrategy(Map<O, Set<Long>> whitelist) {
-            this.whitelist = new MultiMap<>(whitelist);
+            this(new MultiMap<>(whitelist));
         }
 
         @Override
@@ -59,7 +59,7 @@ public class Whitelist {
         }
 
         public SecRingSelectionStrategy(Map<O, Set<Long>> whitelist) {
-            this.whitelist = new MultiMap<>(whitelist);
+            this(new MultiMap<>(whitelist));
         }
 
         @Override
