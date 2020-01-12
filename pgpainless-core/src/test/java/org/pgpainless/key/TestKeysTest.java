@@ -30,14 +30,18 @@ public class TestKeysTest {
 
     private final PGPSecretKeyRing julietSecRing;
     private final PGPSecretKeyRing romeoSecRing;
+    private final PGPSecretKeyRing emilSecRing;
     private final PGPPublicKeyRing julietPubRing;
     private final PGPPublicKeyRing romeoPubRing;
+    private final PGPPublicKeyRing emilPubRing;
 
     public TestKeysTest() throws IOException, PGPException {
         this.julietSecRing = TestKeys.getJulietSecretKeyRing();
         this.romeoSecRing = TestKeys.getRomeoSecretKeyRing();
+        this.emilSecRing = TestKeys.getEmilSecretKeyRing();
         this.julietPubRing = TestKeys.getJulietPublicKeyRing();
         this.romeoPubRing = TestKeys.getRomeoPublicKeyRing();
+        this.emilPubRing = TestKeys.getEmilPublicKeyRing();
     }
 
     @Test
@@ -109,5 +113,39 @@ public class TestKeysTest {
     public void assertRomeosSecretKeyRingHasSamePublicKeyId() throws IOException {
         PGPPublicKeyRing julietsPublicKeys = TestKeys.getJulietPublicKeyRing();
         assertEquals(julietSecRing.getPublicKey().getKeyID(), julietsPublicKeys.getPublicKey().getKeyID());
+    }
+
+    @Test
+    public void assertEmilsPublicKeyIsSameInPubRingAndSecRing() throws IOException {
+        assertArrayEquals(emilSecRing.getPublicKey().getEncoded(), emilPubRing.getPublicKey().getEncoded());
+    }
+
+    @Test
+    public void assertEmilsKeysIdEquals() {
+        assertEquals(TestKeys.EMIL_KEY_ID, emilSecRing.getSecretKey().getKeyID());
+        assertEquals(TestKeys.EMIL_KEY_ID, emilSecRing.getPublicKey().getKeyID());
+        assertEquals(TestKeys.EMIL_KEY_ID, emilPubRing.getPublicKey().getKeyID());
+    }
+
+    @Test
+    public void assertEmilsKeyUIDEquals() {
+        assertEquals(TestKeys.EMIL_UID, emilSecRing.getPublicKey().getUserIDs().next());
+        assertEquals(1, TestUtils.getNumberOfItemsInIterator(emilSecRing.getPublicKey().getUserIDs()));
+    }
+
+    @Test
+    public void assertEmilsKeyRingFingerprintMatches() {
+        assertEquals(TestKeys.EMIL_FINGERPRINT, new OpenPgpV4Fingerprint(emilSecRing));
+    }
+
+    @Test
+    public void assertEmilsPublicKeyFingerprintMatchesHerSecretKeyFingerprint() {
+        assertEquals(new OpenPgpV4Fingerprint(emilSecRing.getPublicKey()), new OpenPgpV4Fingerprint(emilSecRing.getSecretKey()));
+    }
+
+    @Test
+    public void assertEmilsFingerprintGetKeyIdMatches() {
+        assertEquals("calling getKeyId() on emil's fingerprint must return her key id.",
+                TestKeys.EMIL_KEY_ID, TestKeys.EMIL_FINGERPRINT.getKeyId());
     }
 }

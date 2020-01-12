@@ -34,11 +34,15 @@ public class TestKeys {
     private static PGPPublicKeyRing julietPublicKeyRing = null;
     private static PGPSecretKeyRing romeoSecretKeyRing = null;
     private static PGPPublicKeyRing romeoPublicKeyRing = null;
+    private static PGPSecretKeyRing emilSecretKeyRing = null;
+    private static PGPPublicKeyRing emilPublicKeyRing = null;
 
     private static PGPSecretKeyRingCollection julietSecretKeyRingCollection = null;
     private static PGPPublicKeyRingCollection julietPublicKeyRingCollection = null;
     private static PGPSecretKeyRingCollection romeoSecretKeyRingCollection = null;
     private static PGPPublicKeyRingCollection romeoPublicKeyRingCollection = null;
+    private static PGPSecretKeyRingCollection emilSecretKeyRingCollection = null;
+    private static PGPPublicKeyRingCollection emilPublicKeyRingCollection = null;
 
     public static final String JULIET_UID = "xmpp:juliet@capulet.lit";
     public static final long JULIET_KEY_ID = -5425419407118114754L;
@@ -168,6 +172,51 @@ public class TestKeys {
             "=LZ1b\n" +
             "-----END PGP PRIVATE KEY BLOCK-----";
 
+    public static final String EMIL_UID = "<emil@email.user>";
+    public static final long EMIL_KEY_ID = 6284463849526474508L;
+    public static final String EMIL_FINGERPRINT_STRING = "4F665C4DC2C4660BC6425E415736E6931ACF370C";
+    public static final OpenPgpV4Fingerprint EMIL_FINGERPRINT = new OpenPgpV4Fingerprint(EMIL_FINGERPRINT_STRING);
+
+    /**
+     * Public key of <pre><emil@email.user></pre>.
+     */
+    public static final String EMIL_PUB = "" +
+            "-----BEGIN PGP PUBLIC KEY BLOCK-----\n" +
+            "Version: BCPG v1.64\n" +
+            "\n" +
+            "mFIEXhtfCBMIKoZIzj0DAQcCAwTGSFMBUOSLusXS8hdNHbdK3gN8hS7jd4ky7Czl\n" +
+            "mSti+oVyRJUwQAFZJ1NMsg1H8flSJP1/9YbHd9FBU4bHKGKPtBE8ZW1pbEBlbWFp\n" +
+            "bC51c2VyPoh1BBMTCgAdBQJeG18IAhsjBRYCAwEABAsJCAcFFQoJCAsCHgEACgkQ\n" +
+            "VzbmkxrPNwz8rAD/S/VCQc5NJLArgTDkgrt3Q573HiYfrIQo1uk3dwV15WIBAMiq\n" +
+            "oDmRMb8jzOBv6FGW4P5WAubPdnAvDD7XmArD+TSeuFYEXhtfCBIIKoZIzj0DAQcC\n" +
+            "AwTgWDWmHJLQUQ35Qg/rINmUhkUhj1E4O5t6Y2PipbqlGfDufLmIKnX40BoJPS4G\n" +
+            "HW7U0QXfwSaTXa1BAaNsMUomAwEIB4h1BBgTCgAdBQJeG18IAhsMBRYCAwEABAsJ\n" +
+            "CAcFFQoJCAsCHgEACgkQVzbmkxrPNwxOcwEA19Fnhw7XwpQoT61Fqg54vroAwTZ3\n" +
+            "T5A+LOdevAtzNOUA/RWeKfOGk6D+vKYRNpMJyqsHi/vBeKwXoeN0n6HuExVF\n" +
+            "=a1W7\n" +
+            "-----END PGP PUBLIC KEY BLOCK-----";
+
+    /**
+     * Secret key of <pre><emil@email.user></pre>.
+     */
+    public static final String EMIL_SEC = "" +
+            "-----BEGIN PGP PRIVATE KEY BLOCK-----\n" +
+            "Version: BCPG v1.64\n" +
+            "\n" +
+            "lHcEXhtfCBMIKoZIzj0DAQcCAwTGSFMBUOSLusXS8hdNHbdK3gN8hS7jd4ky7Czl\n" +
+            "mSti+oVyRJUwQAFZJ1NMsg1H8flSJP1/9YbHd9FBU4bHKGKPAAD5AdecgJ92sAXP\n" +
+            "l4U4oW6l4KKUb8IT3J5g68Z+Q9WIq6kS5bQRPGVtaWxAZW1haWwudXNlcj6IdQQT\n" +
+            "EwoAHQUCXhtfCAIbIwUWAgMBAAQLCQgHBRUKCQgLAh4BAAoJEFc25pMazzcM/KwA\n" +
+            "/0v1QkHOTSSwK4Ew5IK7d0Oe9x4mH6yEKNbpN3cFdeViAQDIqqA5kTG/I8zgb+hR\n" +
+            "luD+VgLmz3ZwLww+15gKw/k0npx7BF4bXwgSCCqGSM49AwEHAgME4Fg1phyS0FEN\n" +
+            "+UIP6yDZlIZFIY9RODubemNj4qW6pRnw7ny5iCp1+NAaCT0uBh1u1NEF38Emk12t\n" +
+            "QQGjbDFKJgMBCAcAAQCMHcK/wrUR1R8HKvLUFzUB/a5zj1reOzQOsFtoLte3Mg6u\n" +
+            "iHUEGBMKAB0FAl4bXwgCGwwFFgIDAQAECwkIBwUVCgkICwIeAQAKCRBXNuaTGs83\n" +
+            "DE5zAQDX0WeHDtfClChPrUWqDni+ugDBNndPkD4s5168C3M05QD9FZ4p84aToP68\n" +
+            "phE2kwnKqweL+8F4rBeh43Sfoe4TFUU=\n" +
+            "=Pqd/\n" +
+            "-----END PGP PRIVATE KEY BLOCK-----";
+
     public static PGPSecretKeyRing getJulietSecretKeyRing() throws IOException, PGPException {
         if (julietSecretKeyRing == null) {
             julietSecretKeyRing = new PGPSecretKeyRing(
@@ -232,6 +281,38 @@ public class TestKeys {
         return romeoPublicKeyRingCollection;
     }
 
+    public static PGPSecretKeyRing getEmilSecretKeyRing() throws IOException, PGPException {
+        if (emilSecretKeyRing == null) {
+            emilSecretKeyRing = new PGPSecretKeyRing(
+                    PGPUtil.getDecoderStream(new ByteArrayInputStream(EMIL_SEC.getBytes())), calc);
+        }
+        return emilSecretKeyRing;
+    }
+
+    public static PGPSecretKeyRingCollection getEmilSecretKeyRingCollection() throws IOException, PGPException {
+        if (emilSecretKeyRingCollection == null) {
+            emilSecretKeyRingCollection = new PGPSecretKeyRingCollection(
+                    PGPUtil.getDecoderStream(new ByteArrayInputStream(EMIL_SEC.getBytes())), calc);
+        }
+        return emilSecretKeyRingCollection;
+    }
+
+    public static PGPPublicKeyRing getEmilPublicKeyRing() throws IOException {
+        if (emilPublicKeyRing == null) {
+            emilPublicKeyRing = new PGPPublicKeyRing(
+                    PGPUtil.getDecoderStream(new ByteArrayInputStream(EMIL_PUB.getBytes())), calc);
+        }
+        return emilPublicKeyRing;
+    }
+
+    public static PGPPublicKeyRingCollection getEmilPublicKeyRingCollection() throws IOException, PGPException {
+        if (emilPublicKeyRingCollection == null) {
+            emilPublicKeyRingCollection = new PGPPublicKeyRingCollection(
+                    PGPUtil.getDecoderStream(new ByteArrayInputStream(EMIL_PUB.getBytes())), calc);
+        }
+        return emilPublicKeyRingCollection;
+    }
+
     public static final String TEST_MESSAGE_01_PLAIN = "This message is encrypted\n";
 
     /**
@@ -239,22 +320,23 @@ public class TestKeys {
      */
     public static final String MSG_SIGN_CRYPT_JULIET_JULIET =
             "-----BEGIN PGP MESSAGE-----\n" +
-            "\n" +
-            "hQEMA7S1CctZNuA+AQf/SMX7NTOaAynogTVKE9BMWSj5fgK+7sFrCKiLYbungJEu\n" +
-            "RA/fYqaJNfZN3GARqsHcGaGihQDXr0thnx71+37NhV2cHVeFkeMsHmJf/74lRrHk\n" +
-            "QBXDv2ez0LxUwhkE15/d/NTlT/fm8Vzce6rsm7/ZvzQIaWYyDCnpHXyftJplKd+Y\n" +
-            "PW0PaoFRq1wlZKcNUp/1a3xxpbSpvsYkiAxpdGIwvgUIb85KpFN0EWD3aH8C65it\n" +
-            "Iphuv8CEaKqcO0hchQr7kYclEM0qcmm1ukw8+niTV8TFqAzNZh7DF/IWaMeamgfA\n" +
-            "P6pAB1oy7YoWUPQgy7mczD76WzPgJjy8y0hxFd9/f9LA2gEZZ/ClAiX0gHglc4oa\n" +
-            "j5iKIICvtTQzKYL29mW66BUistqMavz6eqHRggoADCBzfgOwuoAQxZMyj33bmrWm\n" +
-            "831LMu+4sZyx6ihLvZ0YcDKMd7C7pQJ3Ucxt+DJUlTmo6KxzGdwGhq7cUcXwCuer\n" +
-            "3MoPIV5YQwXBMbYN9fXV+yQagquz0z7r5igE7AQ1d9SyLJoQ3IHXnsa0xcUVZrIs\n" +
-            "A59LdIXEeRk/Ctjqp34UdTsuUPzervPexY+kNQVSQ2VODhwM5IowzPZFGviPNJYa\n" +
-            "nGt27c4rsQ3sSC/WkdUxdaVY2+m7JktfnklUyVyC5wE1Nw+bO3sni6FeoP/fVSVi\n" +
-            "HmPy7vMj23cQcvcAnuUEd4Qua0lwVrN1MTUggfZOzcH4+9rgMn/uYRAwPH9hdLWQ\n" +
-            "vziQMH5qtJMyWy08m9hIxleoI3+zIGSbra15R+hdWwEaD9+Pak//0Q0thFMeNww7\n" +
-            "Y8gK8CSbUHbUjefUIx0s+JjrDGtXG8xfl63MLBbU7yLLB4Vcx77Sxxi3yt5DTi0n\n" +
-            "GmPGRU4LsOYbpPFy\n" +
-            "=caif\n" +
-            "-----END PGP MESSAGE-----";
+                    "\n" +
+                    "hQEMA7S1CctZNuA+AQf/SMX7NTOaAynogTVKE9BMWSj5fgK+7sFrCKiLYbungJEu\n" +
+                    "RA/fYqaJNfZN3GARqsHcGaGihQDXr0thnx71+37NhV2cHVeFkeMsHmJf/74lRrHk\n" +
+                    "QBXDv2ez0LxUwhkE15/d/NTlT/fm8Vzce6rsm7/ZvzQIaWYyDCnpHXyftJplKd+Y\n" +
+                    "PW0PaoFRq1wlZKcNUp/1a3xxpbSpvsYkiAxpdGIwvgUIb85KpFN0EWD3aH8C65it\n" +
+                    "Iphuv8CEaKqcO0hchQr7kYclEM0qcmm1ukw8+niTV8TFqAzNZh7DF/IWaMeamgfA\n" +
+                    "P6pAB1oy7YoWUPQgy7mczD76WzPgJjy8y0hxFd9/f9LA2gEZZ/ClAiX0gHglc4oa\n" +
+                    "j5iKIICvtTQzKYL29mW66BUistqMavz6eqHRggoADCBzfgOwuoAQxZMyj33bmrWm\n" +
+                    "831LMu+4sZyx6ihLvZ0YcDKMd7C7pQJ3Ucxt+DJUlTmo6KxzGdwGhq7cUcXwCuer\n" +
+                    "3MoPIV5YQwXBMbYN9fXV+yQagquz0z7r5igE7AQ1d9SyLJoQ3IHXnsa0xcUVZrIs\n" +
+                    "A59LdIXEeRk/Ctjqp34UdTsuUPzervPexY+kNQVSQ2VODhwM5IowzPZFGviPNJYa\n" +
+                    "nGt27c4rsQ3sSC/WkdUxdaVY2+m7JktfnklUyVyC5wE1Nw+bO3sni6FeoP/fVSVi\n" +
+                    "HmPy7vMj23cQcvcAnuUEd4Qua0lwVrN1MTUggfZOzcH4+9rgMn/uYRAwPH9hdLWQ\n" +
+                    "vziQMH5qtJMyWy08m9hIxleoI3+zIGSbra15R+hdWwEaD9+Pak//0Q0thFMeNww7\n" +
+                    "Y8gK8CSbUHbUjefUIx0s+JjrDGtXG8xfl63MLBbU7yLLB4Vcx77Sxxi3yt5DTi0n\n" +
+                    "GmPGRU4LsOYbpPFy\n" +
+                    "=caif\n" +
+                    "-----END PGP MESSAGE-----";
+
 }
