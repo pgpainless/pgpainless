@@ -41,6 +41,7 @@ import org.pgpainless.algorithm.PublicKeyAlgorithm;
 import org.pgpainless.algorithm.SymmetricKeyAlgorithm;
 import org.pgpainless.decryption_verification.DecryptionStream;
 import org.pgpainless.decryption_verification.OpenPgpMetadata;
+import org.pgpainless.key.TestKeys;
 import org.pgpainless.key.collection.PGPKeyRing;
 import org.pgpainless.key.generation.KeySpec;
 import org.pgpainless.key.generation.type.ElGamal_GENERAL;
@@ -64,10 +65,6 @@ public class EncryptDecryptTest {
             "This neighbor air, and let rich music’s tongue\n" +
             "Unfold the imagined happiness that both\n" +
             "Receive in either by this dear encounter.";
-
-    public EncryptDecryptTest() {
-        LOGGER.log(Level.INFO, "Plain Length: " + testMessage.getBytes(UTF8).length);
-    }
 
     @Ignore
     @Test
@@ -122,6 +119,14 @@ public class EncryptDecryptTest {
         encryptDecryptForSecretKeyRings(sender, recipient);
     }
 
+    @Test
+    public void existingRsaKeysTest() throws IOException, PGPException {
+        PGPKeyRing sender = new PGPKeyRing(TestKeys.getJulietPublicKeyRing(), TestKeys.getJulietSecretKeyRing());
+        PGPKeyRing recipient = new PGPKeyRing(TestKeys.getRomeoPublicKeyRing(), TestKeys.getRomeoSecretKeyRing());
+
+        encryptDecryptForSecretKeyRings(sender, recipient);
+    }
+
     private void encryptDecryptForSecretKeyRings(PGPKeyRing sender, PGPKeyRing recipient)
             throws PGPException, IOException {
         PGPSecretKeyRing recipientSec = recipient.getSecretKeys();
@@ -145,10 +150,6 @@ public class EncryptDecryptTest {
         Streams.pipeAll(new ByteArrayInputStream(secretMessage), encryptor);
         encryptor.close();
         byte[] encryptedSecretMessage = envelope.toByteArray();
-
-        LOGGER.log(Level.INFO, "Sender: " + PublicKeyAlgorithm.fromId(senderPub.getPublicKey().getAlgorithm()) +
-        " Receiver: " + PublicKeyAlgorithm.fromId(recipientPub.getPublicKey().getAlgorithm()) +
-        " Encrypted Length: " + encryptedSecretMessage.length);
 
         OpenPgpMetadata encryptionResult = encryptor.getResult();
 
