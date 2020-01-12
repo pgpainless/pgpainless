@@ -26,7 +26,6 @@ import org.bouncycastle.openpgp.PGPSecretKeyRingCollection;
 import org.bouncycastle.openpgp.PGPUtil;
 import org.bouncycastle.openpgp.operator.KeyFingerPrintCalculator;
 import org.bouncycastle.openpgp.operator.bc.BcKeyFingerprintCalculator;
-import org.junit.Test;
 
 public class TestKeys {
 
