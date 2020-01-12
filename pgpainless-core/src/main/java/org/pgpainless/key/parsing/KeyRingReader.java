@@ -134,28 +134,41 @@ public class KeyRingReader {
     }
 
     public static PGPKeyRing readKeyRing(@Nullable InputStream publicIn, @Nullable InputStream secretIn) throws IOException, PGPException {
+        validateStreamsNotBothNull(publicIn, secretIn);
 
+        PGPPublicKeyRing publicKeys = maybeReadPublicKeys(publicIn);
+        PGPSecretKeyRing secretKeys = maybeReadSecretKeys(secretIn);
+
+        return asPGPKeyRing(publicKeys, secretKeys);
+    }
+
+    private static void validateStreamsNotBothNull(InputStream publicIn, InputStream secretIn) {
         if (publicIn == null && secretIn == null) {
             throw new NullPointerException("publicIn and secretIn cannot be BOTH null.");
         }
+    }
 
-        PGPPublicKeyRing publicKeys = null;
+    private static PGPPublicKeyRing maybeReadPublicKeys(InputStream publicIn) throws IOException {
         if (publicIn != null) {
-            publicKeys = readPublicKeyRing(publicIn);
+            return readPublicKeyRing(publicIn);
         }
-        PGPSecretKeyRing secretKeys = null;
-        if (secretIn != null) {
-            secretKeys = readSecretKeyRing(secretIn);
-        }
+        return null;
+    }
 
+    private static PGPSecretKeyRing maybeReadSecretKeys(InputStream secretIn) throws IOException, PGPException {
+        if (secretIn != null) {
+            return readSecretKeyRing(secretIn);
+        }
+        return null;
+    }
+
+    private static PGPKeyRing asPGPKeyRing(PGPPublicKeyRing publicKeys, PGPSecretKeyRing secretKeys) {
         if (secretKeys == null) {
             return new PGPKeyRing(publicKeys);
         }
-
         if (publicKeys == null) {
             return new PGPKeyRing(secretKeys);
         }
-
         return new PGPKeyRing(publicKeys, secretKeys);
     }
 }
