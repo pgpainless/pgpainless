@@ -26,7 +26,6 @@ import java.io.IOException;
 import java.nio.charset.Charset;
 import java.security.InvalidAlgorithmParameterException;
 import java.security.NoSuchAlgorithmException;
-import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import org.bouncycastle.openpgp.PGPException;
@@ -37,7 +36,6 @@ import org.junit.Ignore;
 import org.junit.Test;
 import org.pgpainless.PGPainless;
 import org.pgpainless.algorithm.KeyFlag;
-import org.pgpainless.algorithm.PublicKeyAlgorithm;
 import org.pgpainless.algorithm.SymmetricKeyAlgorithm;
 import org.pgpainless.decryption_verification.DecryptionStream;
 import org.pgpainless.decryption_verification.OpenPgpMetadata;
