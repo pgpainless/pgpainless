@@ -24,7 +24,10 @@ public class XMPP {
 
         @Override
         public boolean accept(String jid, PGPPublicKeyRing keyRing) {
-            return super.accept("xmpp:" + jid, keyRing);
+            if (!jid.matches("^xmpp:.+$")) {
+                jid = "xmpp:" + jid;
+            }
+            return super.accept(jid, keyRing);
         }
     }
 
@@ -32,7 +35,10 @@ public class XMPP {
 
         @Override
         public boolean accept(String jid, PGPSecretKeyRing keyRing) {
-            return super.accept("xmpp:" + jid, keyRing);
+            if (!jid.matches("^xmpp:.+$")) {
+                jid = "xmpp:" + jid;
+            }
+            return super.accept(jid, keyRing);
         }
     }
 }
