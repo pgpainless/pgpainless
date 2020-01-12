@@ -16,13 +16,12 @@
 package org.pgpainless.util;
 
 import static junit.framework.TestCase.assertEquals;
-import static junit.framework.TestCase.assertTrue;
+import static org.junit.Assert.assertArrayEquals;
 
 import java.io.IOException;
 import java.security.InvalidAlgorithmParameterException;
 import java.security.NoSuchAlgorithmException;
 import java.security.NoSuchProviderException;
-import java.util.Arrays;
 import java.util.Iterator;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -48,7 +47,7 @@ public class BCUtilTest {
 
     @Test
     public void keyRingToCollectionTest()
-            throws PGPException, NoSuchAlgorithmException, NoSuchProviderException, InvalidAlgorithmParameterException,
+            throws PGPException, NoSuchAlgorithmException, InvalidAlgorithmParameterException,
             IOException {
         PGPKeyRing ring = PGPainless.generateKeyRing()
                 .withSubKey(KeySpec.getBuilder(RSA_GENERAL.withLength(RsaLength._3072)).withDefaultKeyFlags().withDefaultAlgorithms())
@@ -105,7 +104,7 @@ public class BCUtilTest {
 
     @Test
     public void removeUnsignedKeysTest()
-            throws PGPException, NoSuchAlgorithmException, NoSuchProviderException, InvalidAlgorithmParameterException {
+            throws PGPException, NoSuchAlgorithmException, InvalidAlgorithmParameterException {
         @SuppressWarnings("deprecation")
         PGPKeyRing alice = PGPainless.generateKeyRing().simpleRsaKeyRing("alice@wonderland.lit", RsaLength._1024);
         PGPKeyRing mallory = PGPainless.generateKeyRing().simpleEcKeyRing("mallory@mall.ory");
@@ -140,11 +139,11 @@ public class BCUtilTest {
         PGPSecretKeyRing secretKeys = ring.getSecretKeys();
         PGPSecretKeyRing secCleaned = ring.getSecretKeys();
 
-        assertTrue(Arrays.equals(secretKeys.getEncoded(), secCleaned.getEncoded()));
+        assertArrayEquals(secretKeys.getEncoded(), secCleaned.getEncoded());
 
         PGPPublicKeyRing pubCleaned = BCUtil.removeUnassociatedKeysFromKeyRing(publicKeys, publicKeys.getPublicKey());
 
-        assertTrue(Arrays.equals(publicKeys.getEncoded(), pubCleaned.getEncoded()));
+        assertArrayEquals(publicKeys.getEncoded(), pubCleaned.getEncoded());
 
     }
 }
