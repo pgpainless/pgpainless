@@ -51,7 +51,15 @@ public enum KeyFlag {
         return flags;
     }
 
+    public static int toBitmask(KeyFlag... flags) {
+        int mask = 0;
+        for (KeyFlag f : flags) {
+            mask |= f.getFlag();
+        }
+        return mask;
+    }
+
     public static boolean hasKeyFlag(int mask, KeyFlag flag) {
-        return (mask & flag.getFlag()) == 0;
+        return (mask & flag.getFlag()) == flag.getFlag();
     }
 }

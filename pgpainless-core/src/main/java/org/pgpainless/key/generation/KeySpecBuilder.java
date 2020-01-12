@@ -38,11 +38,7 @@ public class KeySpecBuilder implements KeySpecBuilderInterface {
 
     @Override
     public WithDetailedConfiguration withKeyFlags(@Nonnull KeyFlag... flags) {
-        int val = 0;
-        for (KeyFlag f : flags) {
-            val |= f.getFlag();
-        }
-        this.hashedSubPackets.setKeyFlags(false, val);
+        this.hashedSubPackets.setKeyFlags(false, KeyFlag.toBitmask(flags));
         return new WithDetailedConfigurationImpl();
     }
 

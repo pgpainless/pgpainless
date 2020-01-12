@@ -75,7 +75,8 @@ public class KeyRingBuilder implements KeyRingBuilderInterface {
      */
     public PGPKeyRing simpleRsaKeyRing(@Nonnull String userId, @Nonnull RsaLength length)
             throws PGPException, NoSuchAlgorithmException, InvalidAlgorithmParameterException {
-        return withMasterKey(
+        return this
+                .withMasterKey(
                         KeySpec.getBuilder(RSA_GENERAL.withLength(length))
                                 .withDefaultKeyFlags()
                                 .withDefaultAlgorithms())
@@ -98,7 +99,8 @@ public class KeyRingBuilder implements KeyRingBuilderInterface {
      */
     public PGPKeyRing simpleEcKeyRing(@Nonnull String userId)
             throws PGPException, NoSuchAlgorithmException, InvalidAlgorithmParameterException {
-        return withSubKey(
+        return this
+                .withSubKey(
                         KeySpec.getBuilder(ECDH.fromCurve(EllipticCurve._P256))
                                 .withKeyFlags(KeyFlag.ENCRYPT_STORAGE, KeyFlag.ENCRYPT_COMMS)
                                 .withDefaultAlgorithms())
@@ -119,16 +121,21 @@ public class KeyRingBuilder implements KeyRingBuilderInterface {
 
     @Override
     public WithPrimaryUserId withMasterKey(@Nonnull KeySpec spec) {
-        if (canCertifyOthers(spec)) {
-            throw new IllegalArgumentException("Certification Key MUST have KeyFlag CERTIFY_OTHER");
-        }
+        verifyMasterKeyCanCertify(spec);
 
         KeyRingBuilder.this.keySpecs.add(0, spec);
         return new WithPrimaryUserIdImpl();
     }
 
+    private void verifyMasterKeyCanCertify(KeySpec spec) {
+        if (!canCertifyOthers(spec)) {
+            throw new IllegalArgumentException("Certification Key MUST have KeyFlag CERTIFY_OTHER");
+        }
+    }
+
     private boolean canCertifyOthers(KeySpec keySpec) {
-        return KeyFlag.hasKeyFlag(keySpec.getSubpackets().getKeyFlags(), KeyFlag.CERTIFY_OTHER);
+        int flags = keySpec.getSubpackets().getKeyFlags();
+        return KeyFlag.hasKeyFlag(flags, KeyFlag.CERTIFY_OTHER);
     }
 
     class WithPrimaryUserIdImpl implements WithPrimaryUserId {
@@ -189,14 +196,18 @@ public class KeyRingBuilder implements KeyRingBuilderInterface {
                 return new PGPKeyRing(publicKeys, secretKeys);
             }
 
-            private PGPKeyRingGenerator buildRingGenerator(PGPKeyPair certKey, PGPContentSignerBuilder signer, PGPSignatureSubpacketVector hashedSubPackets) throws PGPException {
+            private PGPKeyRingGenerator buildRingGenerator(PGPKeyPair certKey,
+                                                           PGPContentSignerBuilder signer,
+                                                           PGPSignatureSubpacketVector hashedSubPackets)
+                    throws PGPException {
                 return new PGPKeyRingGenerator(
-                                    PGPSignature.POSITIVE_CERTIFICATION, certKey,
-                                    userId, digestCalculator,
-                                    hashedSubPackets, null, signer, secretKeyEncryptor);
+                        PGPSignature.POSITIVE_CERTIFICATION, certKey,
+                        userId, digestCalculator,
+                        hashedSubPackets, null, signer, secretKeyEncryptor);
             }
 
-            private void addSubKeys(PGPKeyRingGenerator ringGenerator) throws NoSuchAlgorithmException, PGPException, InvalidAlgorithmParameterException {
+            private void addSubKeys(PGPKeyRingGenerator ringGenerator)
+                    throws NoSuchAlgorithmException, PGPException, InvalidAlgorithmParameterException {
                 for (KeySpec subKeySpec : keySpecs) {
                     PGPKeyPair subKey = generateKeyPair(subKeySpec);
                     if (subKeySpec.isInheritedSubPackets()) {
@@ -209,8 +220,8 @@ public class KeyRingBuilder implements KeyRingBuilderInterface {
 
             private PGPContentSignerBuilder buildContentSigner(PGPKeyPair certKey) {
                 return new JcaPGPContentSignerBuilder(
-                                    certKey.getPublicKey().getAlgorithm(), HashAlgorithm.SHA512.getAlgorithmId())
-                                    .setProvider(ProviderFactory.getProvider());
+                        certKey.getPublicKey().getAlgorithm(), HashAlgorithm.SHA512.getAlgorithmId())
+                        .setProvider(ProviderFactory.getProvider());
             }
 
             private PBESecretKeyEncryptor buildSecretKeyEncryptor() {
