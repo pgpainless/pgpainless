@@ -26,6 +26,7 @@ import org.bouncycastle.openpgp.PGPSecretKeyRingCollection;
 import org.bouncycastle.openpgp.PGPUtil;
 import org.bouncycastle.openpgp.operator.KeyFingerPrintCalculator;
 import org.bouncycastle.openpgp.operator.bc.BcKeyFingerprintCalculator;
+import org.junit.Test;
 
 public class TestKeys {
 
@@ -36,6 +37,8 @@ public class TestKeys {
     private static PGPPublicKeyRing romeoPublicKeyRing = null;
     private static PGPSecretKeyRing emilSecretKeyRing = null;
     private static PGPPublicKeyRing emilPublicKeyRing = null;
+    private static PGPSecretKeyRing cryptieSecretKeyRing = null;
+    private static PGPPublicKeyRing cryptiePublicKeyRing = null;
 
     private static PGPSecretKeyRingCollection julietSecretKeyRingCollection = null;
     private static PGPPublicKeyRingCollection julietPublicKeyRingCollection = null;
@@ -43,6 +46,8 @@ public class TestKeys {
     private static PGPPublicKeyRingCollection romeoPublicKeyRingCollection = null;
     private static PGPSecretKeyRingCollection emilSecretKeyRingCollection = null;
     private static PGPPublicKeyRingCollection emilPublicKeyRingCollection = null;
+    private static PGPSecretKeyRingCollection cryptieSecretKeyRingCollection = null;
+    private static PGPPublicKeyRingCollection cryptiePublicKeyRingCollection = null;
 
     public static final String JULIET_UID = "xmpp:juliet@capulet.lit";
     public static final long JULIET_KEY_ID = -5425419407118114754L;
@@ -217,6 +222,57 @@ public class TestKeys {
             "=Pqd/\n" +
             "-----END PGP PRIVATE KEY BLOCK-----";
 
+    public static final String CRYPTIE_UID = "cryptie@encrypted.key";
+    public static final String CRYPTIE_PASSWORD = "password123";
+    public static final long CRYPTIE_KEY_ID = -821156605394703576L;
+    public static final String CRYPTIE_FINGERPRINT_STRING = "A395D3BA58CA3FA0DE8F2991F49AAA6B067BAB28";
+    public static final OpenPgpV4Fingerprint CRYPTIE_FINGERPRINT = new OpenPgpV4Fingerprint(CRYPTIE_FINGERPRINT_STRING);
+
+    /**
+     * Public EC key of cryptie@encrypted.key.
+     */
+    public static final String CRYPTIE_PUB = "" +
+            "-----BEGIN PGP PUBLIC KEY BLOCK-----\n" +
+            "Version: BCPG v1.64\n" +
+            "\n" +
+            "mFIEXht1HBMIKoZIzj0DAQcCAwQgSQNsoRMqlb9bm4XmXRxIyJoXhIADAQcqkrkt\n" +
+            "uWvGWeu5m5HLi1LfwVHZWTGff94uq/uK3O3Vg0W4EQjF8qB6tBVjcnlwdGllQGVu\n" +
+            "Y3J5cHRlZC5rZXmIdQQTEwoAHQUCXht1HAIbIwUWAgMBAAQLCQgHBRUKCQgLAh4B\n" +
+            "AAoJEPSaqmsGe6soOWEBAMPW0d/DBVIs9tscIt+jXbg49kwYo57rbbEmp/X05RZS\n" +
+            "AQDHDMOkesBjv9zQToWGGb0FmkWbrDCzA0i10mbyNAe4d7hWBF4bdR0SCCqGSM49\n" +
+            "AwEHAgMENs+3TanqesZgSXn3gtz3QEqu8ZLID2+8U1Jh2KkkiasI1S+48k+CMiFb\n" +
+            "0CclBy6+mX0k8chzj8wCNOgM74DB0AMBCAeIdQQYEwoAHQUCXht1HQIbDAUWAgMB\n" +
+            "AAQLCQgHBRUKCQgLAh4BAAoJEPSaqmsGe6sovOUA/3Zb9qJM/9znjFM9hxMVL0y3\n" +
+            "9wKEqKkSPRj0WVr6O5ybAP9S/Q/tzQ2in19xBg06XzNyd5a1nrwR9n4kjd4VpQWh\n" +
+            "xQ==\n" +
+            "=6SyK\n" +
+            "-----END PGP PUBLIC KEY BLOCK-----";
+
+    /**
+     * Encrypted secret EC key of cryptie@encrypted.key.
+     *
+     * Password: {@link #CRYPTIE_PASSWORD}
+     */
+    public static final String CRYPTIE_SEC = "" +
+            "-----BEGIN PGP PRIVATE KEY BLOCK-----\n" +
+            "Version: BCPG v1.64\n" +
+            "\n" +
+            "lKUEXht1HBMIKoZIzj0DAQcCAwQgSQNsoRMqlb9bm4XmXRxIyJoXhIADAQcqkrkt\n" +
+            "uWvGWeu5m5HLi1LfwVHZWTGff94uq/uK3O3Vg0W4EQjF8qB6/gkDApZ4y1XLA8XH\n" +
+            "YM7ke2XPiiBQfapmHmZD0OUvlsTwSwDeg7wM9caWduXp7GU5j00T0gzr04xE83bw\n" +
+            "pjjMxa1YRaOAJcjm1W/GGXRfXA/vSAO0FWNyeXB0aWVAZW5jcnlwdGVkLmtleYh1\n" +
+            "BBMTCgAdBQJeG3UcAhsjBRYCAwEABAsJCAcFFQoJCAsCHgEACgkQ9JqqawZ7qyg5\n" +
+            "YQEAw9bR38MFUiz22xwi36NduDj2TBijnuttsSan9fTlFlIBAMcMw6R6wGO/3NBO\n" +
+            "hYYZvQWaRZusMLMDSLXSZvI0B7h3nKkEXht1HRIIKoZIzj0DAQcCAwQ2z7dNqep6\n" +
+            "xmBJefeC3PdASq7xksgPb7xTUmHYqSSJqwjVL7jyT4IyIVvQJyUHLr6ZfSTxyHOP\n" +
+            "zAI06AzvgMHQAwEIB/4JAwKWeMtVywPFx2Ci0C0EtcGVxy847rppLWNcaR3FnP/9\n" +
+            "MGxLKDvLdGljC829gxxf5wq/5qUehPqFnQD11L00cFScvlVzs53nO34iUVsJl079\n" +
+            "iHUEGBMKAB0FAl4bdR0CGwwFFgIDAQAECwkIBwUVCgkICwIeAQAKCRD0mqprBnur\n" +
+            "KLzlAP92W/aiTP/c54xTPYcTFS9Mt/cChKipEj0Y9Fla+jucmwD/Uv0P7c0Nop9f\n" +
+            "cQYNOl8zcneWtZ68EfZ+JI3eFaUFocU=\n" +
+            "=1d67\n" +
+            "-----END PGP PRIVATE KEY BLOCK-----";
+
     public static PGPSecretKeyRing getJulietSecretKeyRing() throws IOException, PGPException {
         if (julietSecretKeyRing == null) {
             julietSecretKeyRing = new PGPSecretKeyRing(
@@ -311,6 +367,38 @@ public class TestKeys {
                     PGPUtil.getDecoderStream(new ByteArrayInputStream(EMIL_PUB.getBytes())), calc);
         }
         return emilPublicKeyRingCollection;
+    }
+
+    public static PGPSecretKeyRing getCryptieSecretKeyRing() throws IOException, PGPException {
+        if (cryptieSecretKeyRing == null) {
+            cryptieSecretKeyRing = new PGPSecretKeyRing(
+                    PGPUtil.getDecoderStream(new ByteArrayInputStream(CRYPTIE_SEC.getBytes())), calc);
+        }
+        return cryptieSecretKeyRing;
+    }
+
+    public static PGPSecretKeyRingCollection getCryptieSecretKeyRingCollection() throws IOException, PGPException {
+        if (cryptieSecretKeyRingCollection == null) {
+            cryptieSecretKeyRingCollection = new PGPSecretKeyRingCollection(
+                    PGPUtil.getDecoderStream(new ByteArrayInputStream(CRYPTIE_SEC.getBytes())), calc);
+        }
+        return cryptieSecretKeyRingCollection;
+    }
+
+    public static PGPPublicKeyRing getCryptiePublicKeyRing() throws IOException {
+        if (cryptiePublicKeyRing == null) {
+            cryptiePublicKeyRing = new PGPPublicKeyRing(
+                    PGPUtil.getDecoderStream(new ByteArrayInputStream(CRYPTIE_PUB.getBytes())), calc);
+        }
+        return cryptiePublicKeyRing;
+    }
+
+    public static PGPPublicKeyRingCollection getCryptiePublicKeyRingCollection() throws IOException, PGPException {
+        if (cryptiePublicKeyRingCollection == null) {
+            cryptiePublicKeyRingCollection = new PGPPublicKeyRingCollection(
+                    PGPUtil.getDecoderStream(new ByteArrayInputStream(CRYPTIE_PUB.getBytes())), calc);
+        }
+        return cryptiePublicKeyRingCollection;
     }
 
     public static final String TEST_MESSAGE_01_PLAIN = "This message is encrypted\n";
