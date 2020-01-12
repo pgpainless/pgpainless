@@ -26,7 +26,6 @@ import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
 
-import org.bouncycastle.bcpg.sig.KeyFlags;
 import org.bouncycastle.openpgp.PGPEncryptedData;
 import org.bouncycastle.openpgp.PGPException;
 import org.bouncycastle.openpgp.PGPKeyPair;
@@ -69,6 +68,7 @@ public class KeyRingBuilder implements KeyRingBuilderInterface {
      * @param userId user id.
      * @param length length in bits.
      * @return {@link PGPSecretKeyRing} containing the KeyPair.
+     *
      * @throws PGPException
      * @throws NoSuchAlgorithmException
      * @throws InvalidAlgorithmParameterException
@@ -91,6 +91,7 @@ public class KeyRingBuilder implements KeyRingBuilderInterface {
      *
      * @param userId user-id
      * @return {@link PGPSecretKeyRing} containing the key pairs.
+     *
      * @throws PGPException
      * @throws NoSuchAlgorithmException
      * @throws InvalidAlgorithmParameterException
@@ -118,11 +119,16 @@ public class KeyRingBuilder implements KeyRingBuilderInterface {
 
     @Override
     public WithPrimaryUserId withMasterKey(@Nonnull KeySpec spec) {
-        if ((spec.getSubpackets().getKeyFlags() & KeyFlags.CERTIFY_OTHER) == 0) {
+        if (canCertifyOthers(spec)) {
             throw new IllegalArgumentException("Certification Key MUST have KeyFlag CERTIFY_OTHER");
         }
+
         KeyRingBuilder.this.keySpecs.add(0, spec);
         return new WithPrimaryUserIdImpl();
+    }
+
+    private boolean canCertifyOthers(KeySpec keySpec) {
+        return KeyFlag.hasKeyFlag(keySpec.getSubpackets().getKeyFlags(), KeyFlag.CERTIFY_OTHER);
     }
 
     class WithPrimaryUserIdImpl implements WithPrimaryUserId {
@@ -155,47 +161,42 @@ public class KeyRingBuilder implements KeyRingBuilderInterface {
 
         class BuildImpl implements Build {
 
+            private PGPDigestCalculator digestCalculator;
+            private PBESecretKeyEncryptor secretKeyEncryptor;
+
             @Override
             public PGPKeyRing build() throws NoSuchAlgorithmException, PGPException,
                     InvalidAlgorithmParameterException {
-
-                // Hash Calculator
-                PGPDigestCalculator calculator = new JcaPGPDigestCalculatorProviderBuilder()
-                        .setProvider(ProviderFactory.getProvider())
-                        .build()
-                        .get(HashAlgorithm.SHA1.getAlgorithmId());
-
-                // Encryptor for encrypting secret keys
-                PBESecretKeyEncryptor encryptor = passphrase == null ?
-                        null : // unencrypted key pair, otherwise AES-256 encrypted
-                        new JcePBESecretKeyEncryptorBuilder(PGPEncryptedData.AES_256, calculator)
-                                .build(passphrase != null ? passphrase.getChars() : null);
-
-                if (passphrase != null) {
-                    passphrase.clear();
-                }
+                digestCalculator = buildDigestCalculator();
+                secretKeyEncryptor = buildSecretKeyEncryptor();
 
                 // First key is the Master Key
-                KeySpec certKeySpec = keySpecs.get(0);
-                // Remove master key, so that we later only add sub keys.
-                keySpecs.remove(0);
+                KeySpec certKeySpec = keySpecs.remove(0);
 
                 // Generate Master Key
                 PGPKeyPair certKey = generateKeyPair(certKeySpec);
-
-                // Signer for creating self-signature
-                PGPContentSignerBuilder signer = new JcaPGPContentSignerBuilder(
-                        certKey.getPublicKey().getAlgorithm(), HashAlgorithm.SHA512.getAlgorithmId())
-                        .setProvider(ProviderFactory.getProvider());
-
+                PGPContentSignerBuilder signer = buildContentSigner(certKey);
                 PGPSignatureSubpacketVector hashedSubPackets = certKeySpec.getSubpackets();
 
                 // Generator which the user can get the key pair from
-                PGPKeyRingGenerator ringGenerator = new PGPKeyRingGenerator(
-                        PGPSignature.POSITIVE_CERTIFICATION, certKey,
-                        userId, calculator,
-                        hashedSubPackets, null, signer, encryptor);
+                PGPKeyRingGenerator ringGenerator = buildRingGenerator(certKey, signer, hashedSubPackets);
 
+                addSubKeys(ringGenerator);
+
+                PGPPublicKeyRing publicKeys = ringGenerator.generatePublicKeyRing();
+                PGPSecretKeyRing secretKeys = ringGenerator.generateSecretKeyRing();
+
+                return new PGPKeyRing(publicKeys, secretKeys);
+            }
+
+            private PGPKeyRingGenerator buildRingGenerator(PGPKeyPair certKey, PGPContentSignerBuilder signer, PGPSignatureSubpacketVector hashedSubPackets) throws PGPException {
+                return new PGPKeyRingGenerator(
+                                    PGPSignature.POSITIVE_CERTIFICATION, certKey,
+                                    userId, digestCalculator,
+                                    hashedSubPackets, null, signer, secretKeyEncryptor);
+            }
+
+            private void addSubKeys(PGPKeyRingGenerator ringGenerator) throws NoSuchAlgorithmException, PGPException, InvalidAlgorithmParameterException {
                 for (KeySpec subKeySpec : keySpecs) {
                     PGPKeyPair subKey = generateKeyPair(subKeySpec);
                     if (subKeySpec.isInheritedSubPackets()) {
@@ -204,11 +205,31 @@ public class KeyRingBuilder implements KeyRingBuilderInterface {
                         ringGenerator.addSubKey(subKey, subKeySpec.getSubpackets(), null);
                     }
                 }
+            }
 
-                PGPPublicKeyRing publicKeys = ringGenerator.generatePublicKeyRing();
-                PGPSecretKeyRing secretKeys = ringGenerator.generateSecretKeyRing();
+            private PGPContentSignerBuilder buildContentSigner(PGPKeyPair certKey) {
+                return new JcaPGPContentSignerBuilder(
+                                    certKey.getPublicKey().getAlgorithm(), HashAlgorithm.SHA512.getAlgorithmId())
+                                    .setProvider(ProviderFactory.getProvider());
+            }
 
-                return new PGPKeyRing(publicKeys, secretKeys);
+            private PBESecretKeyEncryptor buildSecretKeyEncryptor() {
+                PBESecretKeyEncryptor encryptor = passphrase == null ?
+                        null : // unencrypted key pair, otherwise AES-256 encrypted
+                        new JcePBESecretKeyEncryptorBuilder(PGPEncryptedData.AES_256, digestCalculator)
+                                .setProvider(ProviderFactory.getProvider())
+                                .build(passphrase.getChars());
+                if (passphrase != null) {
+                    passphrase.clear();
+                }
+                return encryptor;
+            }
+
+            private PGPDigestCalculator buildDigestCalculator() throws PGPException {
+                return new JcaPGPDigestCalculatorProviderBuilder()
+                        .setProvider(ProviderFactory.getProvider())
+                        .build()
+                        .get(HashAlgorithm.SHA1.getAlgorithmId());
             }
 
             private PGPKeyPair generateKeyPair(KeySpec spec)

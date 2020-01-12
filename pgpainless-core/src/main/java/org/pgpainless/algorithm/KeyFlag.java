@@ -50,4 +50,8 @@ public enum KeyFlag {
         }
         return flags;
     }
+
+    public static boolean hasKeyFlag(int mask, KeyFlag flag) {
+        return (mask & flag.getFlag()) == 0;
+    }
 }
