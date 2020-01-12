@@ -16,7 +16,6 @@
 package org.pgpainless.key.generation;
 
 
-import javax.annotation.Nonnull;
 import java.nio.charset.Charset;
 import java.security.InvalidAlgorithmParameterException;
 import java.security.KeyPair;
@@ -25,6 +24,7 @@ import java.security.NoSuchAlgorithmException;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
+import javax.annotation.Nonnull;
 
 import org.bouncycastle.openpgp.PGPEncryptedData;
 import org.bouncycastle.openpgp.PGPException;
@@ -62,11 +62,12 @@ public class KeyRingBuilder implements KeyRingBuilderInterface {
     private Passphrase passphrase;
 
     /**
-     * Creates a simple RSA KeyPair of length {@code length} with user-id {@code userId}.
+     * Creates a simple, unencrypted RSA KeyPair of length {@code length} with user-id {@code userId}.
      * The KeyPair consists of a single RSA master key which is used for signing, encryption and certification.
      *
      * @param userId user id.
      * @param length length in bits.
+     *
      * @return {@link PGPSecretKeyRing} containing the KeyPair.
      *
      * @throws PGPException
@@ -74,15 +75,56 @@ public class KeyRingBuilder implements KeyRingBuilderInterface {
      * @throws InvalidAlgorithmParameterException
      */
     public PGPKeyRing simpleRsaKeyRing(@Nonnull String userId, @Nonnull RsaLength length)
+            throws InvalidAlgorithmParameterException, NoSuchAlgorithmException, PGPException {
+        return simpleRsaKeyRing(userId, length, null);
+    }
+
+    /**
+     * Creates a simple RSA KeyPair of length {@code length} with user-id {@code userId}.
+     * The KeyPair consists of a single RSA master key which is used for signing, encryption and certification.
+     *
+     * @param userId user id.
+     * @param length length in bits.
+     * @param password Password of the key. Can be null for unencrypted keys.
+     *
+     * @return {@link PGPSecretKeyRing} containing the KeyPair.
+     *
+     * @throws PGPException
+     * @throws NoSuchAlgorithmException
+     * @throws InvalidAlgorithmParameterException
+     */
+    public PGPKeyRing simpleRsaKeyRing(@Nonnull String userId, @Nonnull RsaLength length, String password)
             throws PGPException, NoSuchAlgorithmException, InvalidAlgorithmParameterException {
-        return this
+        WithPassphrase builder = this
                 .withMasterKey(
                         KeySpec.getBuilder(RSA_GENERAL.withLength(length))
                                 .withDefaultKeyFlags()
                                 .withDefaultAlgorithms())
-                .withPrimaryUserId(userId)
-                .withoutPassphrase()
-                .build();
+                .withPrimaryUserId(userId);
+
+        if (password == null) {
+            return builder.withoutPassphrase().build();
+        } else {
+            return builder.withPassphrase(new Passphrase(password.toCharArray())).build();
+        }
+    }
+
+    /**
+     * Creates an unencrypted key ring consisting of an ECDSA master key and an ECDH sub-key.
+     * The ECDSA master key is used for signing messages and certifying the sub key.
+     * The ECDH sub-key is used for encryption of messages.
+     *
+     * @param userId user-id
+     *
+     * @return {@link PGPSecretKeyRing} containing the key pairs.
+     *
+     * @throws PGPException
+     * @throws NoSuchAlgorithmException
+     * @throws InvalidAlgorithmParameterException
+     */
+    public PGPKeyRing simpleEcKeyRing(@Nonnull String userId)
+            throws InvalidAlgorithmParameterException, NoSuchAlgorithmException, PGPException {
+        return simpleEcKeyRing(userId, null);
     }
 
     /**
@@ -91,15 +133,17 @@ public class KeyRingBuilder implements KeyRingBuilderInterface {
      * The ECDH sub-key is used for encryption of messages.
      *
      * @param userId user-id
+     * @param password Password of the private key. Can be null for an unencrypted key.
+     *
      * @return {@link PGPSecretKeyRing} containing the key pairs.
      *
      * @throws PGPException
      * @throws NoSuchAlgorithmException
      * @throws InvalidAlgorithmParameterException
      */
-    public PGPKeyRing simpleEcKeyRing(@Nonnull String userId)
+    public PGPKeyRing simpleEcKeyRing(@Nonnull String userId, String password)
             throws PGPException, NoSuchAlgorithmException, InvalidAlgorithmParameterException {
-        return this
+        WithPassphrase builder = this
                 .withSubKey(
                         KeySpec.getBuilder(ECDH.fromCurve(EllipticCurve._P256))
                                 .withKeyFlags(KeyFlag.ENCRYPT_STORAGE, KeyFlag.ENCRYPT_COMMS)
@@ -108,9 +152,13 @@ public class KeyRingBuilder implements KeyRingBuilderInterface {
                         KeySpec.getBuilder(ECDSA.fromCurve(EllipticCurve._P256))
                                 .withKeyFlags(KeyFlag.AUTHENTICATION, KeyFlag.CERTIFY_OTHER, KeyFlag.SIGN_DATA)
                                 .withDefaultAlgorithms())
-                .withPrimaryUserId(userId)
-                .withoutPassphrase()
-                .build();
+                .withPrimaryUserId(userId);
+
+        if (password == null) {
+            return builder.withoutPassphrase().build();
+        } else {
+            return builder.withPassphrase(new Passphrase(password.toCharArray())).build();
+        }
     }
 
     @Override
