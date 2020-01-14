@@ -55,18 +55,20 @@ public class PasswordBasedSecretKeyRingProtector implements SecretKeyRingProtect
     @Nullable
     public PBESecretKeyDecryptor getDecryptor(Long keyId) {
         Passphrase passphrase = passphraseProvider.getPassphraseFor(keyId);
-        return new BcPBESecretKeyDecryptorBuilder(calculatorProvider)
-                .build(passphrase != null ? passphrase.getChars() : null);
+        return passphrase == null ? null :
+                new BcPBESecretKeyDecryptorBuilder(calculatorProvider)
+                        .build(passphrase.getChars());
     }
 
     @Override
     @Nullable
     public PBESecretKeyEncryptor getEncryptor(Long keyId) throws PGPException {
         Passphrase passphrase = passphraseProvider.getPassphraseFor(keyId);
-        return new BcPBESecretKeyEncryptorBuilder(
-                protectionSettings.getEncryptionAlgorithm().getAlgorithmId(),
-                calculatorProvider.get(protectionSettings.getHashAlgorithm().getAlgorithmId()),
-                protectionSettings.getS2kCount())
-                .build(passphrase != null ? passphrase.getChars() : null);
+        return passphrase == null ? null :
+                new BcPBESecretKeyEncryptorBuilder(
+                        protectionSettings.getEncryptionAlgorithm().getAlgorithmId(),
+                        calculatorProvider.get(protectionSettings.getHashAlgorithm().getAlgorithmId()),
+                        protectionSettings.getS2kCount())
+                        .build(passphrase.getChars());
     }
 }
