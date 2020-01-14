@@ -26,10 +26,14 @@ public class KeyRingProtectionSettings {
     private final HashAlgorithm hashAlgorithm;
     private final int s2kCount;
 
+    public KeyRingProtectionSettings(@Nonnull SymmetricKeyAlgorithm encryptionAlgorithm) {
+        this(encryptionAlgorithm, HashAlgorithm.SHA1, 0x60); // Same s2kCount as used in BC.
+    }
+
     public KeyRingProtectionSettings(@Nonnull SymmetricKeyAlgorithm encryptionAlgorithm, @Nonnull HashAlgorithm hashAlgorithm, int s2kCount) {
         this.encryptionAlgorithm = encryptionAlgorithm;
         this.hashAlgorithm = hashAlgorithm;
-        if (s2kCount > 1) {
+        if (s2kCount < 1) {
             throw new IllegalArgumentException("s2kCount cannot be less than 1.");
         }
         this.s2kCount = s2kCount;
