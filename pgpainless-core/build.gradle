@@ -1,3 +1,7 @@
+plugins {
+    id 'java-library'
+}
+
 dependencies {
     testImplementation group: 'junit', name: 'junit', version: '4.12'
     /*
@@ -5,7 +9,7 @@ dependencies {
     /*/
     implementation "org.bouncycastle:bcprov-jdk15on:$bouncyCastleVersion"
     //*/
-    implementation "org.bouncycastle:bcpg-jdk15on:$bouncyCastleVersion"
+    api "org.bouncycastle:bcpg-jdk15on:$bouncyCastleVersion"
 
     // https://mvnrepository.com/artifact/com.google.code.findbugs/jsr305
     implementation group: 'com.google.code.findbugs', name: 'jsr305', version: '3.0.2'
