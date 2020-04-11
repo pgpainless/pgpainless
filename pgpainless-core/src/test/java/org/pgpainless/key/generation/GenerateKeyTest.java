@@ -19,6 +19,8 @@ import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.security.InvalidAlgorithmParameterException;
 import java.security.NoSuchAlgorithmException;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 import org.bouncycastle.bcpg.ArmoredOutputStream;
 import org.bouncycastle.openpgp.PGPException;
@@ -29,30 +31,32 @@ import org.pgpainless.key.collection.PGPKeyRing;
 
 public class GenerateKeyTest {
 
+    private static final Logger LOGGER = Logger.getLogger(GenerateKeyTest.class.getName());
+
     @Test
     public void generateKey() throws InvalidAlgorithmParameterException, NoSuchAlgorithmException, PGPException, IOException {
-        PGPKeyRing keyRing = PGPainless.generateKeyRing().simpleEcKeyRing("cryptie@encrypted.key", "password123");
-
-        print(keyRing.getPublicKeys().getPublicKey().getUserIDs().next());
-        print(new OpenPgpV4Fingerprint(keyRing.getPublicKeys()));
-        print(keyRing.getPublicKeys().getPublicKey().getKeyID());
+        PGPKeyRing keyRing = PGPainless.generateKeyRing().simpleEcKeyRing("fresh@encrypted.key", "password123");
 
         ByteArrayOutputStream bytes = new ByteArrayOutputStream();
         ArmoredOutputStream armor = new ArmoredOutputStream(bytes);
         keyRing.getPublicKeys().encode(armor);
         armor.close();
-        print(new String(bytes.toByteArray()));
+        String publicKey = new String(bytes.toByteArray());
 
         bytes = new ByteArrayOutputStream();
         armor = new ArmoredOutputStream(bytes);
         keyRing.getSecretKeys().encode(armor);
         armor.close();
-        print(new String(bytes.toByteArray()));
-    }
+        String privateKey = new String(bytes.toByteArray());
 
-    public void print(Object obj) {
-        // CHECKSTYLE:OFF
-        System.out.println(obj);
-        // CHECKSTYLE:ON
+        LOGGER.log(Level.INFO, String.format("Generated random fresh EC key ring.\n" +
+                "User-ID: %s\n" +
+                "Fingerprint: %s\n" +
+                "Key-ID: %s\n" +
+                "%s\n" +
+                "%s\n", keyRing.getPublicKeys().getPublicKey().getUserIDs().next(),
+                new OpenPgpV4Fingerprint(keyRing.getPublicKeys()),
+                keyRing.getPublicKeys().getPublicKey().getKeyID(),
+                publicKey, privateKey));
     }
 }

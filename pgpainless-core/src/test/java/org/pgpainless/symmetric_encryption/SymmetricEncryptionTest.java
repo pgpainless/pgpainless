@@ -47,7 +47,8 @@ public class SymmetricEncryptionTest {
     @Test
     public void testSymmetricEncryptionDecryption() throws IOException, PGPException {
         byte[] plain = message.getBytes();
-        Passphrase passphrase = new Passphrase("choose_a_better_password_please".toCharArray());
+        String password = "choose_a_better_password_please";
+        Passphrase passphrase = new Passphrase(password.toCharArray());
         byte[] enc = PGPainless.encryptWithPassword(plain, passphrase, SymmetricKeyAlgorithm.AES_128);
         ByteArrayOutputStream out = new ByteArrayOutputStream();
         ArmoredOutputStream armor = new ArmoredOutputStream(out);
@@ -56,7 +57,8 @@ public class SymmetricEncryptionTest {
         armor.close();
 
         // Print cipher text for validation with GnuPG.
-        LOGGER.log(Level.INFO, new String(out.toByteArray()));
+        LOGGER.log(Level.INFO, String.format("Use ciphertext below for manual validation with GnuPG " +
+                "(passphrase = '%s').\n\n%s", password, new String(out.toByteArray())));
 
         byte[] plain2 = PGPainless.decryptWithPassword(enc, passphrase);
         assertArrayEquals(plain, plain2);

@@ -32,7 +32,6 @@ import org.bouncycastle.openpgp.PGPException;
 import org.bouncycastle.openpgp.PGPPublicKeyRing;
 import org.bouncycastle.openpgp.PGPSecretKeyRing;
 import org.bouncycastle.util.io.Streams;
-import org.junit.Ignore;
 import org.junit.Test;
 import org.pgpainless.PGPainless;
 import org.pgpainless.algorithm.KeyFlag;
@@ -64,7 +63,6 @@ public class EncryptDecryptTest {
             "Unfold the imagined happiness that both\n" +
             "Receive in either by this dear encounter.";
 
-    @Ignore
     @Test
     public void freshKeysRsaToElGamalTest()
             throws PGPException, NoSuchAlgorithmException, InvalidAlgorithmParameterException, IOException {
@@ -77,17 +75,15 @@ public class EncryptDecryptTest {
         encryptDecryptForSecretKeyRings(sender, recipient);
     }
 
-    @Ignore
     @Test
     public void freshKeysRsaToRsaTest()
             throws PGPException, NoSuchAlgorithmException, InvalidAlgorithmParameterException, IOException {
-        PGPKeyRing sender = PGPainless.generateKeyRing().simpleRsaKeyRing("romeo@montague.lit", RsaLength._4096);
-        PGPKeyRing recipient = PGPainless.generateKeyRing().simpleRsaKeyRing("juliet@capulet.lit", RsaLength._4096);
+        PGPKeyRing sender = PGPainless.generateKeyRing().simpleRsaKeyRing("romeo@montague.lit", RsaLength._3072);
+        PGPKeyRing recipient = PGPainless.generateKeyRing().simpleRsaKeyRing("juliet@capulet.lit", RsaLength._3072);
 
         encryptDecryptForSecretKeyRings(sender, recipient);
     }
 
-    @Ignore
     @Test
     public void freshKeysEcToEcTest()
             throws IOException, PGPException, NoSuchAlgorithmException, InvalidAlgorithmParameterException {
@@ -97,21 +93,19 @@ public class EncryptDecryptTest {
         encryptDecryptForSecretKeyRings(sender, recipient);
     }
 
-    @Ignore
     @Test
     public void freshKeysEcToRsaTest()
             throws PGPException, NoSuchAlgorithmException, InvalidAlgorithmParameterException, IOException {
         PGPKeyRing sender = PGPainless.generateKeyRing().simpleEcKeyRing("romeo@montague.lit");
-        PGPKeyRing recipient = PGPainless.generateKeyRing().simpleRsaKeyRing("juliet@capulet.lit", RsaLength._4096);
+        PGPKeyRing recipient = PGPainless.generateKeyRing().simpleRsaKeyRing("juliet@capulet.lit", RsaLength._3072);
 
         encryptDecryptForSecretKeyRings(sender, recipient);
     }
 
-    @Ignore
     @Test
     public void freshKeysRsaToEcTest()
             throws PGPException, NoSuchAlgorithmException, InvalidAlgorithmParameterException, IOException {
-        PGPKeyRing sender = PGPainless.generateKeyRing().simpleRsaKeyRing("romeo@montague.lit", RsaLength._4096);
+        PGPKeyRing sender = PGPainless.generateKeyRing().simpleRsaKeyRing("romeo@montague.lit", RsaLength._3072);
         PGPKeyRing recipient = PGPainless.generateKeyRing().simpleEcKeyRing("juliet@capulet.lit");
 
         encryptDecryptForSecretKeyRings(sender, recipient);
