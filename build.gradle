@@ -60,7 +60,7 @@ allprojects {
         builtDate = (new SimpleDateFormat("yyyy-MM-dd")).format(new Date())
         isContinuousIntegrationEnvironment = Boolean.parseBoolean(System.getenv('CI'))
         isReleaseVersion = !isSnapshot
-        signingRequired = isReleaseVersion
+        signingRequired = !(isSnapshot || isContinuousIntegrationEnvironment)
         sonatypeCredentialsAvailable = project.hasProperty('sonatypeUsername') && project.hasProperty('sonatypePassword')
         sonatypeSnapshotUrl = 'https://oss.sonatype.org/content/repositories/snapshots'
         sonatypeStagingUrl = 'https://oss.sonatype.org/service/local/staging/deploy/maven2'
@@ -162,6 +162,7 @@ subprojects {
     }
 
     signing {
+        useGpgCmd()
         required { signingRequired }
         sign publishing.publications.mavenJava
     }
