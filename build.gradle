@@ -58,8 +58,9 @@ allprojects {
         rootConfigDir = new File(rootDir, 'config')
         gitCommit = getGitCommit()
         builtDate = (new SimpleDateFormat("yyyy-MM-dd")).format(new Date())
+        isContinuousIntegrationEnvironment = Boolean.parseBoolean(System.getenv('CI'))
         isReleaseVersion = !isSnapshot
-        signingRequired = isReleaseVersion
+        signingRequired = !(isSnapshot || isContinuousIntegrationEnvironment)
         sonatypeCredentialsAvailable = project.hasProperty('sonatypeUsername') && project.hasProperty('sonatypePassword')
         sonatypeSnapshotUrl = 'https://oss.sonatype.org/content/repositories/snapshots'
         sonatypeStagingUrl = 'https://oss.sonatype.org/service/local/staging/deploy/maven2'
@@ -94,7 +95,7 @@ allprojects {
 }
 
 subprojects {
-    apply plugin: 'maven'
+    apply plugin: 'maven-publish'
     apply plugin: 'signing'
 
     task sourcesJar(type: Jar, dependsOn: classes) {
@@ -105,60 +106,55 @@ subprojects {
         classifier = 'javadoc'
         from javadoc.destinationDir
     }
-    task testJar(type: Jar, dependsOn: testClasses) {
+    task testsJar(type: Jar, dependsOn: testClasses) {
         classifier = 'tests'
         from sourceSets.test.output
     }
 
-    artifacts {
-        archives sourcesJar
-        archives javadocJar
-        archives testJar
-    }
-
-    uploadArchives {
-        repositories {
-            mavenDeployer {
-                if (signingRequired) {
-                    beforeDeployment { MavenDeployment deployment -> signing.signPom(deployment) }
-                }
-                repository(url: project.sonatypeStagingUrl) {
-                    if (sonatypeCredentialsAvailable) {
-                        authentication(userName: sonatypeUsername, password: sonatypePassword)
-                    }
-                }
-                snapshotRepository(url: project.sonatypeSnapshotUrl) {
-                    if (sonatypeCredentialsAvailable) {
-                        authentication(userName: sonatypeUsername, password: sonatypePassword)
-                    }
-                }
-
-                pom.project {
-                    name 'PGPainless'
+    publishing {
+        publications {
+            mavenJava(MavenPublication) {
+                from components.java
+                artifact sourcesJar
+                artifact javadocJar
+                artifact testsJar
+                pom {
+                    name = 'PGPainless'
                     description 'Simple to use OpenPGP API for Java based on Bouncycastle'
-                    url 'https://github.com/pgpainless/pgpainless'
-                    inceptionYear '2018'
+                    url = 'https://github.com/pgpainless/pgpainless'
+                    inceptionYear = '2018'
 
                     scm {
-                        url 'https://github.com/pgpainless/pgpainless'
-                        connection 'scm:https://github.com/pgpainless/pgpainless'
-                        developerConnection 'scm:git://github.com/pgpainless/pgpainless.git'
+                        url = 'https://github.com/pgpainless/pgpainless'
+                        connection = 'scm:https://github.com/pgpainless/pgpainless'
+                        developerConnection = 'scm:git://github.com/pgpainless/pgpainless.git'
                     }
 
                     licenses {
                         license {
-                            name 'The Apache Software License, Version 2.0'
-                            url 'http://www.apache.org/licenses/LICENSE-2.0.txt'
-                            distribution 'repo'
+                            name = 'The Apache Software License, Version 2.0'
+                            url = 'http://www.apache.org/licenses/LICENSE-2.0.txt'
+                            distribution = 'repo'
                         }
                     }
 
                     developers {
                         developer {
-                            id 'vanitasvitae'
-                            name 'Paul Schaub'
-                            email 'vanitasvitae@fsfe.org'
+                            id = 'vanitasvitae'
+                            name = 'Paul Schaub'
+                            email = 'vanitasvitae@fsfe.org'
                         }
+                    }
+                }
+            }
+        }
+        repositories {
+            if (sonatypeCredentialsAvailable) {
+                maven {
+                    url isSnapshot ? sonatypeSnapshotUrl : sonatypeStagingUrl
+                    credentials {
+                        username = sonatypeUsername
+                        password = sonatypePassword
                     }
                 }
             }
@@ -166,8 +162,9 @@ subprojects {
     }
 
     signing {
+        useGpgCmd()
         required { signingRequired }
-        sign configurations.archives
+        sign publishing.publications.mavenJava
     }
 }
 
