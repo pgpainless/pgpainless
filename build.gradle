@@ -120,7 +120,7 @@ subprojects {
                 artifact testsJar
                 pom {
                     name = 'PGPainless'
-                    description 'Simple to use OpenPGP API for Java based on Bouncycastle'
+                    description = 'Simple to use OpenPGP API for Java based on Bouncycastle'
                     url = 'https://github.com/pgpainless/pgpainless'
                     inceptionYear = '2018'
 
