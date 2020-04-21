@@ -15,6 +15,7 @@
  */
 package org.pgpainless.key;
 
+import java.nio.Buffer;
 import java.nio.ByteBuffer;
 import java.nio.charset.Charset;
 import javax.annotation.Nonnull;
@@ -89,9 +90,12 @@ public class OpenPgpV4Fingerprint implements CharSequence, Comparable<OpenPgpV4F
     public long getKeyId() {
         byte[] bytes = Hex.decode(toString().getBytes(Charset.forName("UTF-8")));
         ByteBuffer buf = ByteBuffer.wrap(bytes);
-        buf.position(12);
-        return buf.getLong();
 
+        // We have to cast here in order to be compatible with java 8
+        // https://github.com/eclipse/jetty.project/issues/3244
+        ((Buffer) buf).position(12);
+
+        return buf.getLong();
     }
 
     @Override
