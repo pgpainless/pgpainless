@@ -1,5 +1,5 @@
 /*
- * Copyright 2018 Paul Schaub.
+ * Copyright 2018-2020 Paul Schaub.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -142,6 +142,13 @@ public class OpenPgpV4Fingerprint implements CharSequence, Comparable<OpenPgpV4F
         return fingerprint;
     }
 
+    /**
+     * Return the fingerprint as an openpgp4fpr {@link URI}.
+     * An example would be 'openpgp4fpr:7F9116FEA90A5983936C7CFAA027DB2F3E1E118A'.
+     *
+     * @return openpgp4fpr fingerprint uri
+     * @see <a href="https://metacode.biz/openpgp/openpgp4fpr">openpgp4fpr URI scheme</a>
+     */
     public URI toUri() {
         try {
             return new URI(SCHEME, toString(), null);
@@ -150,6 +157,13 @@ public class OpenPgpV4Fingerprint implements CharSequence, Comparable<OpenPgpV4F
         }
     }
 
+    /**
+     * Convert a openpgp4fpr URI to an {@link OpenPgpV4Fingerprint}.
+     *
+     * @param uri {@link URI} with scheme 'openpgp4fpr'
+     * @return fingerprint parsed from the uri
+     * @see <a href="https://metacode.biz/openpgp/openpgp4fpr">openpgp4fpr URI scheme</a>
+     */
     public static OpenPgpV4Fingerprint fromUri(URI uri) {
         if (!SCHEME.equals(uri.getScheme())) {
             throw new IllegalArgumentException("URI scheme MUST equal '" + SCHEME + "'");
