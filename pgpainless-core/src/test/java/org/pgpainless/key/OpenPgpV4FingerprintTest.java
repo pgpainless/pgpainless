@@ -19,6 +19,8 @@ import static junit.framework.TestCase.assertEquals;
 import static org.junit.Assert.assertNotEquals;
 
 import java.io.IOException;
+import java.net.URI;
+import java.net.URISyntaxException;
 
 import org.bouncycastle.openpgp.PGPPublicKey;
 import org.junit.Test;
@@ -73,5 +75,22 @@ public class OpenPgpV4FingerprintTest {
 
         OpenPgpV4Fingerprint fingerprint = new OpenPgpV4Fingerprint(key);
         assertEquals(keyId, fingerprint.getKeyId());
+    }
+
+    @Test
+    public void testToUri() {
+        OpenPgpV4Fingerprint fingerprint = new OpenPgpV4Fingerprint("5448452043414B452049532041204C4945212121");
+
+        URI uri = fingerprint.toUri();
+        assertEquals("openpgp4fpr:5448452043414B452049532041204C4945212121", uri.toString());
+
+        OpenPgpV4Fingerprint parsed = OpenPgpV4Fingerprint.fromUri(uri);
+        assertEquals(fingerprint, parsed);
+    }
+
+    @Test(expected = IllegalArgumentException.class)
+    public void testFromUriThrowsIfWrongScheme() throws URISyntaxException {
+        URI uri = new URI(null, "5448452043414B452049532041204C4945212121", null);
+        OpenPgpV4Fingerprint.fromUri(uri);
     }
 }

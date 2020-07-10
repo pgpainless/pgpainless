@@ -15,6 +15,8 @@
  */
 package org.pgpainless.key;
 
+import java.net.URI;
+import java.net.URISyntaxException;
 import java.nio.Buffer;
 import java.nio.ByteBuffer;
 import java.nio.charset.Charset;
@@ -30,6 +32,8 @@ import org.bouncycastle.util.encoders.Hex;
  * This class represents an hex encoded, uppercase OpenPGP v4 fingerprint.
  */
 public class OpenPgpV4Fingerprint implements CharSequence, Comparable<OpenPgpV4Fingerprint> {
+
+    public static final String SCHEME = "openpgp4fpr";
 
     private static final Charset utf8 = Charset.forName("UTF-8");
     private final String fingerprint;
@@ -136,6 +140,21 @@ public class OpenPgpV4Fingerprint implements CharSequence, Comparable<OpenPgpV4F
     @Nonnull
     public String toString() {
         return fingerprint;
+    }
+
+    public URI toUri() {
+        try {
+            return new URI(SCHEME, toString(), null);
+        } catch (URISyntaxException e) {
+            throw new AssertionError(e);
+        }
+    }
+
+    public static OpenPgpV4Fingerprint fromUri(URI uri) {
+        if (!SCHEME.equals(uri.getScheme())) {
+            throw new IllegalArgumentException("URI scheme MUST equal '" + SCHEME + "'");
+        }
+        return new OpenPgpV4Fingerprint(uri.getSchemeSpecificPart());
     }
 
     @Override
