@@ -31,6 +31,7 @@ import org.bouncycastle.util.encoders.Hex;
  */
 public class OpenPgpV4Fingerprint implements CharSequence, Comparable<OpenPgpV4Fingerprint> {
 
+    private static final Charset utf8 = Charset.forName("UTF-8");
     private final String fingerprint;
 
     /**
@@ -49,7 +50,7 @@ public class OpenPgpV4Fingerprint implements CharSequence, Comparable<OpenPgpV4F
     }
 
     public OpenPgpV4Fingerprint(@Nonnull byte[] bytes) {
-        this(new String(bytes, Charset.forName("UTF-8")));
+        this(new String(bytes, utf8));
     }
 
     public OpenPgpV4Fingerprint(@Nonnull PGPPublicKey key) {
@@ -88,7 +89,7 @@ public class OpenPgpV4Fingerprint implements CharSequence, Comparable<OpenPgpV4F
      * @return key id
      */
     public long getKeyId() {
-        byte[] bytes = Hex.decode(toString().getBytes(Charset.forName("UTF-8")));
+        byte[] bytes = Hex.decode(toString().getBytes(utf8));
         ByteBuffer buf = ByteBuffer.wrap(bytes);
 
         // We have to cast here in order to be compatible with java 8
