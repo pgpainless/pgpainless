@@ -69,14 +69,14 @@ allprojects {
     if (isSnapshot) {
         version = version + '-SNAPSHOT'
     }
-
-    if (!project.ext.isSnapshot && !'git describe --exact-match HEAD'.execute().text.trim().equals(ext.shortVersion)) {
+    def projectDirFile = new File("$projectDir")
+    if (!project.ext.isSnapshot && !'git describe --exact-match HEAD'.execute(null, projectDirFile).text.trim().equals(ext.shortVersion)) {
         throw new InvalidUserDataException('Untagged version detected! Please tag every release.')
     }
-    if (!version.endsWith('-SNAPSHOT') && version != 'git tag --points-at HEAD'.execute().text.trim()) {
+    if (!version.endsWith('-SNAPSHOT') && version != 'git tag --points-at HEAD'.execute(null, projectDirFile).text.trim()) {
         throw new InvalidUserDataException(
                 'Tag mismatch detected, version is ' + version + ' but should be ' +
-                        'git tag --points-at HEAD'.execute().text.trim())
+                        'git tag --points-at HEAD'.execute(null, projectDirFile).text.trim())
     }
 
     jacoco {
@@ -189,16 +189,17 @@ def getAndroidHome() {
 }
 
 def getGitCommit() {
+    def projectDirFile = new File("$projectDir")
     def dotGit = new File("$projectDir/.git")
     if (!dotGit.isDirectory()) return 'non-git build'
 
     def cmd = 'git describe --always --tags --dirty=+'
-    def proc = cmd.execute()
+    def proc = cmd.execute(null, projectDirFile)
     def gitCommit = proc.text.trim()
     assert !gitCommit.isEmpty()
 
     def srCmd = 'git symbolic-ref --short HEAD'
-    def srProc = srCmd.execute()
+    def srProc = srCmd.execute(null, projectDirFile)
     srProc.waitForOrKill(10 * 1000)
     if (srProc.exitValue() == 0) {
         // Only add the information if the git command was
