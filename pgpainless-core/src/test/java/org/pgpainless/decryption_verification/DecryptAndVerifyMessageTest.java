@@ -80,7 +80,7 @@ public class DecryptAndVerifyMessageTest {
         assertTrue(metadata.isVerified());
         assertEquals(CompressionAlgorithm.ZLIB, metadata.getCompressionAlgorithm());
         assertEquals(SymmetricKeyAlgorithm.AES_256, metadata.getSymmetricKeyAlgorithm());
-        //assertEquals(1, metadata.getSignatureKeyIDs().size());
+        assertEquals(1, metadata.getSignatures().size());
         assertEquals(1, metadata.getVerifiedSignatureKeyFingerprints().size());
         assertTrue(metadata.containsVerifiedSignatureFrom(TestKeys.JULIET_FINGERPRINT));
         assertEquals(TestKeys.JULIET_FINGERPRINT, metadata.getDecryptionFingerprint());

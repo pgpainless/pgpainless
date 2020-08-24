@@ -1,5 +1,5 @@
 /*
- * Copyright 2018 Paul Schaub.
+ * Copyright 2018-2020 Paul Schaub.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -18,10 +18,14 @@ package org.pgpainless.decryption_verification;
 import javax.annotation.Nonnull;
 import java.io.IOException;
 import java.io.InputStream;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 import org.bouncycastle.openpgp.PGPException;
 
 public class DecryptionStream extends InputStream {
+
+    private static final Logger LOGGER = Logger.getLogger(DecryptionStream.class.getName());
 
     private final InputStream inputStream;
     private final OpenPgpMetadata.Builder resultBuilder;
@@ -59,7 +63,7 @@ public class DecryptionStream extends InputStream {
             try {
                 s.setVerified(s.getSignature().verify());
             } catch (PGPException e) {
-                e.printStackTrace();
+                LOGGER.log(Level.WARNING, "Could not verify signature of key " + s.getFingerprint(), e);
             }
         }
     }

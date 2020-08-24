@@ -15,7 +15,6 @@
  */
 package org.pgpainless.encryption_signing;
 
-import javax.annotation.Nonnull;
 import java.io.IOException;
 import java.io.OutputStream;
 import java.util.HashSet;
@@ -23,6 +22,7 @@ import java.util.Iterator;
 import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
+import javax.annotation.Nonnull;
 
 import org.bouncycastle.openpgp.PGPException;
 import org.bouncycastle.openpgp.PGPPrivateKey;
@@ -32,7 +32,6 @@ import org.bouncycastle.openpgp.PGPPublicKeyRingCollection;
 import org.bouncycastle.openpgp.PGPSecretKey;
 import org.bouncycastle.openpgp.PGPSecretKeyRing;
 import org.bouncycastle.openpgp.PGPSecretKeyRingCollection;
-import org.jetbrains.annotations.NotNull;
 import org.pgpainless.algorithm.CompressionAlgorithm;
 import org.pgpainless.algorithm.HashAlgorithm;
 import org.pgpainless.algorithm.SymmetricKeyAlgorithm;
@@ -41,10 +40,10 @@ import org.pgpainless.key.OpenPgpV4Fingerprint;
 import org.pgpainless.key.protection.SecretKeyRingProtector;
 import org.pgpainless.key.selection.key.PublicKeySelectionStrategy;
 import org.pgpainless.key.selection.key.SecretKeySelectionStrategy;
-import org.pgpainless.key.selection.key.util.And;
 import org.pgpainless.key.selection.key.impl.EncryptionKeySelectionStrategy;
 import org.pgpainless.key.selection.key.impl.NoRevocation;
 import org.pgpainless.key.selection.key.impl.SignatureKeySelectionStrategy;
+import org.pgpainless.key.selection.key.util.And;
 import org.pgpainless.key.selection.keyring.PublicKeyRingSelectionStrategy;
 import org.pgpainless.key.selection.keyring.SecretKeyRingSelectionStrategy;
 import org.pgpainless.util.MultiMap;

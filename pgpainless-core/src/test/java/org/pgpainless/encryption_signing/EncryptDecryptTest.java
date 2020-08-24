@@ -209,7 +209,9 @@ public class EncryptDecryptTest {
         armorOut.close();
         String armorSig = sigOut.toString();
 
+        // CHECKSTYLE:OFF
         System.out.println(armorSig);
+        // CHECKSTYLE:ON
 
         inputStream = new ByteArrayInputStream(testMessage.getBytes());
         DecryptionStream verifier = PGPainless.createDecryptor().onInputStream(inputStream)
