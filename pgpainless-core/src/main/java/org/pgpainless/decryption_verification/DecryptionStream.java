@@ -19,6 +19,8 @@ import javax.annotation.Nonnull;
 import java.io.IOException;
 import java.io.InputStream;
 
+import org.bouncycastle.openpgp.PGPException;
+
 public class DecryptionStream extends InputStream {
 
     private final InputStream inputStream;
@@ -32,13 +34,34 @@ public class DecryptionStream extends InputStream {
 
     @Override
     public int read() throws IOException {
-        return inputStream.read();
+        int r = inputStream.read();
+        maybeUpdateDetachedSignatures(r);
+        return r;
+    }
+
+    private void maybeUpdateDetachedSignatures(int rByte) {
+        for (DetachedSignature s : resultBuilder.getDetachedSignatures()) {
+            if (rByte != -1) {
+                s.getSignature().update((byte) rByte);
+            }
+        }
     }
 
     @Override
     public void close() throws IOException {
         inputStream.close();
+        maybeVerifyDetachedSignatures();
         this.isClosed = true;
+    }
+
+    void maybeVerifyDetachedSignatures() {
+        for (DetachedSignature s : resultBuilder.getDetachedSignatures()) {
+            try {
+                s.setVerified(s.getSignature().verify());
+            } catch (PGPException e) {
+                e.printStackTrace();
+            }
+        }
     }
 
     public OpenPgpMetadata getResult() {

@@ -26,7 +26,6 @@ import java.util.logging.Logger;
 
 import org.bouncycastle.openpgp.PGPException;
 import org.bouncycastle.openpgp.PGPObjectFactory;
-import org.bouncycastle.openpgp.PGPOnePassSignature;
 import org.bouncycastle.openpgp.PGPSignature;
 import org.bouncycastle.openpgp.PGPSignatureList;
 import org.pgpainless.key.OpenPgpV4Fingerprint;
@@ -37,14 +36,14 @@ public class SignatureVerifyingInputStream extends FilterInputStream {
     private static final Level LEVEL = Level.FINE;
 
     private final PGPObjectFactory objectFactory;
-    private final Map<OpenPgpV4Fingerprint, PGPOnePassSignature> onePassSignatures;
+    private final Map<OpenPgpV4Fingerprint, OnePassSignature> onePassSignatures;
     private final OpenPgpMetadata.Builder resultBuilder;
 
     private boolean validated = false;
 
     protected SignatureVerifyingInputStream(@Nonnull InputStream inputStream,
                                             @Nonnull PGPObjectFactory objectFactory,
-                                            @Nonnull Map<OpenPgpV4Fingerprint, PGPOnePassSignature> onePassSignatures,
+                                            @Nonnull Map<OpenPgpV4Fingerprint, OnePassSignature> onePassSignatures,
                                             @Nonnull OpenPgpMetadata.Builder resultBuilder) {
         super(inputStream);
         this.objectFactory = objectFactory;
@@ -55,14 +54,14 @@ public class SignatureVerifyingInputStream extends FilterInputStream {
     }
 
     private void updateOnePassSignatures(byte data) {
-        for (PGPOnePassSignature signature : onePassSignatures.values()) {
-            signature.update(data);
+        for (OnePassSignature signature : onePassSignatures.values()) {
+            signature.getOnePassSignature().update(data);
         }
     }
 
     private void updateOnePassSignatures(byte[] b, int off, int len) {
-        for (PGPOnePassSignature signature : onePassSignatures.values()) {
-            signature.update(b, off, len);
+        for (OnePassSignature signature : onePassSignatures.values()) {
+            signature.getOnePassSignature().update(b, off, len);
         }
     }
 
@@ -87,10 +86,8 @@ public class SignatureVerifyingInputStream extends FilterInputStream {
 
         try {
             for (PGPSignature signature : signatureList) {
-                resultBuilder.addSignature(signature);
-
                 OpenPgpV4Fingerprint fingerprint = findFingerprintForSignature(signature);
-                PGPOnePassSignature onePassSignature = findOnePassSignature(fingerprint);
+                OnePassSignature onePassSignature = findOnePassSignature(fingerprint);
                 if (onePassSignature == null) {
                     LOGGER.log(LEVEL, "Found Signature without respective OnePassSignature packet -> skip");
                     continue;
@@ -103,17 +100,17 @@ public class SignatureVerifyingInputStream extends FilterInputStream {
         }
     }
 
-    private void verifySignatureOrThrowSignatureException(PGPSignature signature, OpenPgpV4Fingerprint fingerprint, PGPOnePassSignature onePassSignature) throws PGPException, SignatureException {
+    private void verifySignatureOrThrowSignatureException(PGPSignature signature, OpenPgpV4Fingerprint fingerprint,
+                                                          OnePassSignature onePassSignature)
+            throws PGPException, SignatureException {
         if (onePassSignature.verify(signature)) {
             LOGGER.log(LEVEL, "Verified signature of key " + Long.toHexString(signature.getKeyID()));
-            resultBuilder.putVerifiedSignature(fingerprint, signature);
-            resultBuilder.addVerifiedSignatureFingerprint(fingerprint);
         } else {
             throw new SignatureException("Bad Signature of key " + signature.getKeyID());
         }
     }
 
-    private PGPOnePassSignature findOnePassSignature(OpenPgpV4Fingerprint fingerprint) {
+    private OnePassSignature findOnePassSignature(OpenPgpV4Fingerprint fingerprint) {
         if (fingerprint != null) {
             return onePassSignatures.get(fingerprint);
         }

@@ -26,11 +26,15 @@ import java.io.IOException;
 import java.nio.charset.Charset;
 import java.security.InvalidAlgorithmParameterException;
 import java.security.NoSuchAlgorithmException;
+import java.util.Collections;
+import java.util.Set;
 import java.util.logging.Logger;
 
+import org.bouncycastle.bcpg.ArmoredOutputStream;
 import org.bouncycastle.openpgp.PGPException;
 import org.bouncycastle.openpgp.PGPPublicKeyRing;
 import org.bouncycastle.openpgp.PGPSecretKeyRing;
+import org.bouncycastle.openpgp.PGPSignature;
 import org.bouncycastle.util.io.Streams;
 import org.junit.Test;
 import org.pgpainless.PGPainless;
@@ -38,6 +42,7 @@ import org.pgpainless.algorithm.KeyFlag;
 import org.pgpainless.algorithm.SymmetricKeyAlgorithm;
 import org.pgpainless.decryption_verification.DecryptionStream;
 import org.pgpainless.decryption_verification.OpenPgpMetadata;
+import org.pgpainless.key.OpenPgpV4Fingerprint;
 import org.pgpainless.key.TestKeys;
 import org.pgpainless.key.collection.PGPKeyRing;
 import org.pgpainless.key.generation.KeySpec;
@@ -145,9 +150,9 @@ public class EncryptDecryptTest {
 
         OpenPgpMetadata encryptionResult = encryptor.getResult();
 
-        assertFalse(encryptionResult.getSignatureKeyIDs().isEmpty());
-        for (long keyId : encryptionResult.getSignatureKeyIDs()) {
-            assertTrue(BCUtil.keyRingContainsKeyWithId(senderPub, keyId));
+        assertFalse(encryptionResult.getSignatures().isEmpty());
+        for (OpenPgpV4Fingerprint fingerprint : encryptionResult.getVerifiedSignatures().keySet()) {
+            assertTrue(BCUtil.keyRingContainsKeyWithId(senderPub, fingerprint.getKeyId()));
         }
 
         assertFalse(encryptionResult.getRecipientKeyIds().isEmpty());
@@ -179,5 +184,45 @@ public class EncryptDecryptTest {
         assertTrue(result.isSigned());
         assertTrue(result.isEncrypted());
         assertTrue(result.isVerified());
+    }
+
+    @Test
+    public void testDetachedSignatureCreationAndVerification() throws IOException, PGPException {
+        PGPKeyRing signingKeys = new PGPKeyRing(TestKeys.getJulietPublicKeyRing(), TestKeys.getJulietSecretKeyRing());
+        SecretKeyRingProtector keyRingProtector = new UnprotectedKeysProtector();
+        byte[] data = testMessage.getBytes();
+        ByteArrayInputStream inputStream = new ByteArrayInputStream(data);
+        ByteArrayOutputStream dummyOut = new ByteArrayOutputStream();
+        EncryptionStream signer = PGPainless.createEncryptor().onOutputStream(dummyOut)
+                .doNotEncrypt()
+                .createDetachedSignature()
+                .signWith(keyRingProtector, signingKeys.getSecretKeys())
+                .noArmor();
+        Streams.pipeAll(inputStream, signer);
+        signer.close();
+        OpenPgpMetadata metadata = signer.getResult();
+
+        Set<PGPSignature> signatureSet = metadata.getSignatures();
+        ByteArrayOutputStream sigOut = new ByteArrayOutputStream();
+        ArmoredOutputStream armorOut = new ArmoredOutputStream(sigOut);
+        signatureSet.iterator().next().encode(armorOut);
+        armorOut.close();
+        String armorSig = sigOut.toString();
+
+        System.out.println(armorSig);
+
+        inputStream = new ByteArrayInputStream(testMessage.getBytes());
+        DecryptionStream verifier = PGPainless.createDecryptor().onInputStream(inputStream)
+                .doNotDecrypt()
+                .verifyDetachedSignature(new ByteArrayInputStream(armorSig.getBytes()))
+                .verifyWith(Collections.singleton(signingKeys.getPublicKeys()))
+                .ignoreMissingPublicKeys()
+                .build();
+        dummyOut = new ByteArrayOutputStream();
+        Streams.pipeAll(verifier, dummyOut);
+        verifier.close();
+
+        metadata = verifier.getResult();
+        assertFalse(metadata.getVerifiedSignatures().isEmpty());
     }
 }

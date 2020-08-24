@@ -18,12 +18,14 @@ package org.pgpainless.decryption_verification;
 import javax.annotation.Nonnull;
 import java.io.IOException;
 import java.io.InputStream;
+import java.util.List;
 import java.util.Set;
 
 import org.bouncycastle.openpgp.PGPException;
 import org.bouncycastle.openpgp.PGPPublicKeyRing;
 import org.bouncycastle.openpgp.PGPPublicKeyRingCollection;
 import org.bouncycastle.openpgp.PGPSecretKeyRingCollection;
+import org.bouncycastle.openpgp.PGPSignature;
 import org.pgpainless.key.OpenPgpV4Fingerprint;
 import org.pgpainless.key.protection.SecretKeyRingProtector;
 
@@ -33,10 +35,19 @@ public interface DecryptionBuilderInterface {
 
     interface DecryptWith {
 
-        VerifyWith decryptWith(@Nonnull SecretKeyRingProtector decryptor, @Nonnull PGPSecretKeyRingCollection secretKeyRings);
+        Verify decryptWith(@Nonnull SecretKeyRingProtector decryptor, @Nonnull PGPSecretKeyRingCollection secretKeyRings);
 
-        VerifyWith doNotDecrypt();
+        Verify doNotDecrypt();
 
+    }
+
+    interface Verify extends VerifyWith {
+
+        VerifyWith verifyDetachedSignature(InputStream inputStream) throws IOException, PGPException;
+
+        VerifyWith verifyDetachedSignatures(List<PGPSignature> signatures);
+
+        Build doNotVerify();
     }
 
     interface VerifyWith {
@@ -47,7 +58,6 @@ public interface DecryptionBuilderInterface {
 
         HandleMissingPublicKeys verifyWith(@Nonnull Set<PGPPublicKeyRing> publicKeyRings);
 
-        Build doNotVerify();
 
     }
 

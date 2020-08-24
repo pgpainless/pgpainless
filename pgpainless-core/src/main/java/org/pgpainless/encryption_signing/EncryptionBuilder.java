@@ -20,7 +20,9 @@ import java.io.IOException;
 import java.io.OutputStream;
 import java.util.HashSet;
 import java.util.Iterator;
+import java.util.Map;
 import java.util.Set;
+import java.util.concurrent.ConcurrentHashMap;
 
 import org.bouncycastle.openpgp.PGPException;
 import org.bouncycastle.openpgp.PGPPrivateKey;
@@ -30,9 +32,12 @@ import org.bouncycastle.openpgp.PGPPublicKeyRingCollection;
 import org.bouncycastle.openpgp.PGPSecretKey;
 import org.bouncycastle.openpgp.PGPSecretKeyRing;
 import org.bouncycastle.openpgp.PGPSecretKeyRingCollection;
+import org.jetbrains.annotations.NotNull;
 import org.pgpainless.algorithm.CompressionAlgorithm;
 import org.pgpainless.algorithm.HashAlgorithm;
 import org.pgpainless.algorithm.SymmetricKeyAlgorithm;
+import org.pgpainless.exception.SecretKeyNotFoundException;
+import org.pgpainless.key.OpenPgpV4Fingerprint;
 import org.pgpainless.key.protection.SecretKeyRingProtector;
 import org.pgpainless.key.selection.key.PublicKeySelectionStrategy;
 import org.pgpainless.key.selection.key.SecretKeySelectionStrategy;
@@ -48,6 +53,7 @@ public class EncryptionBuilder implements EncryptionBuilderInterface {
 
     private OutputStream outputStream;
     private final Set<PGPPublicKey> encryptionKeys = new HashSet<>();
+    private boolean detachedSignature = false;
     private final Set<PGPSecretKey> signingKeys = new HashSet<>();
     private SecretKeyRingProtector signingKeysDecryptor;
     private SymmetricKeyAlgorithm symmetricKeyAlgorithm = SymmetricKeyAlgorithm.AES_128;
@@ -142,8 +148,8 @@ public class EncryptionBuilder implements EncryptionBuilderInterface {
         }
 
         @Override
-        public SignWith doNotEncrypt() {
-            return new SignWithImpl();
+        public DetachedSign doNotEncrypt() {
+            return new DetachedSignImpl();
         }
     }
 
@@ -216,24 +222,53 @@ public class EncryptionBuilder implements EncryptionBuilderInterface {
         }
 
         @Override
-        public SignWith usingAlgorithms(@Nonnull SymmetricKeyAlgorithm symmetricKeyAlgorithm,
-                                        @Nonnull HashAlgorithm hashAlgorithm,
-                                        @Nonnull CompressionAlgorithm compressionAlgorithm) {
+        public DetachedSign usingAlgorithms(@Nonnull SymmetricKeyAlgorithm symmetricKeyAlgorithm,
+                                            @Nonnull HashAlgorithm hashAlgorithm,
+                                            @Nonnull CompressionAlgorithm compressionAlgorithm) {
 
             EncryptionBuilder.this.symmetricKeyAlgorithm = symmetricKeyAlgorithm;
             EncryptionBuilder.this.hashAlgorithm = hashAlgorithm;
             EncryptionBuilder.this.compressionAlgorithm = compressionAlgorithm;
 
-            return new SignWithImpl();
+            return new DetachedSignImpl();
         }
 
         @Override
-        public SignWith usingSecureAlgorithms() {
+        public DetachedSign usingSecureAlgorithms() {
             EncryptionBuilder.this.symmetricKeyAlgorithm = SymmetricKeyAlgorithm.AES_256;
             EncryptionBuilder.this.hashAlgorithm = HashAlgorithm.SHA512;
             EncryptionBuilder.this.compressionAlgorithm = CompressionAlgorithm.UNCOMPRESSED;
 
+            return new DetachedSignImpl();
+        }
+    }
+
+    class DetachedSignImpl implements DetachedSign {
+
+        @Override
+        public SignWith createDetachedSignature() {
+            EncryptionBuilder.this.detachedSignature = true;
             return new SignWithImpl();
+        }
+
+        @Override
+        public Armor doNotSign() {
+            return new ArmorImpl();
+        }
+
+        @Override
+        public <O> Armor signWith(@org.jetbrains.annotations.NotNull SecretKeyRingProtector decryptor, @org.jetbrains.annotations.NotNull PGPSecretKey... keys) {
+            return new SignWithImpl().signWith(decryptor, keys);
+        }
+
+        @Override
+        public <O> Armor signWith(@org.jetbrains.annotations.NotNull SecretKeyRingProtector decryptor, @org.jetbrains.annotations.NotNull PGPSecretKeyRing... keyRings) {
+            return new SignWithImpl().signWith(decryptor, keyRings);
+        }
+
+        @Override
+        public <O> Armor signWith(@org.jetbrains.annotations.NotNull SecretKeyRingSelectionStrategy<O> selectionStrategy, @org.jetbrains.annotations.NotNull SecretKeyRingProtector decryptor, @org.jetbrains.annotations.NotNull MultiMap<O, PGPSecretKeyRingCollection> keys) throws SecretKeyNotFoundException {
+            return new SignWithImpl().signWith(selectionStrategy, decryptor, keys);
         }
     }
 
@@ -296,11 +331,6 @@ public class EncryptionBuilder implements EncryptionBuilderInterface {
             }
             return new ArmorImpl();
         }
-
-        @Override
-        public Armor doNotSign() {
-            return new ArmorImpl();
-        }
     }
 
     class ArmorImpl implements Armor {
@@ -319,14 +349,16 @@ public class EncryptionBuilder implements EncryptionBuilderInterface {
 
         private EncryptionStream build() throws IOException, PGPException {
 
-            Set<PGPPrivateKey> privateKeys = new HashSet<>();
+            Map<OpenPgpV4Fingerprint, PGPPrivateKey> privateKeys = new ConcurrentHashMap<>();
             for (PGPSecretKey secretKey : signingKeys) {
-                privateKeys.add(secretKey.extractPrivateKey(signingKeysDecryptor.getDecryptor(secretKey.getKeyID())));
+                privateKeys.put(new OpenPgpV4Fingerprint(secretKey),
+                        secretKey.extractPrivateKey(signingKeysDecryptor.getDecryptor(secretKey.getKeyID())));
             }
 
             return new EncryptionStream(
                     EncryptionBuilder.this.outputStream,
                     EncryptionBuilder.this.encryptionKeys,
+                    EncryptionBuilder.this.detachedSignature,
                     privateKeys,
                     EncryptionBuilder.this.symmetricKeyAlgorithm,
                     EncryptionBuilder.this.hashAlgorithm,

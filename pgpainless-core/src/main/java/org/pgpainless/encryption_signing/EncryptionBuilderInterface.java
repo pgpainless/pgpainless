@@ -50,7 +50,7 @@ public interface EncryptionBuilderInterface {
         <O> WithAlgorithms toRecipients(@Nonnull PublicKeyRingSelectionStrategy<O> selectionStrategy,
                                        @Nonnull MultiMap<O, PGPPublicKeyRingCollection> keys);
 
-        SignWith doNotEncrypt();
+        DetachedSign doNotEncrypt();
 
     }
 
@@ -65,11 +65,18 @@ public interface EncryptionBuilderInterface {
         <O> WithAlgorithms andToSelf(@Nonnull PublicKeyRingSelectionStrategy<O> selectionStrategy,
                                     @Nonnull MultiMap<O, PGPPublicKeyRingCollection> keys);
 
-        SignWith usingAlgorithms(@Nonnull SymmetricKeyAlgorithm symmetricKeyAlgorithm,
+        DetachedSign usingAlgorithms(@Nonnull SymmetricKeyAlgorithm symmetricKeyAlgorithm,
                                  @Nonnull HashAlgorithm hashAlgorithm,
                                  @Nonnull CompressionAlgorithm compressionAlgorithm);
 
-        SignWith usingSecureAlgorithms();
+        DetachedSign usingSecureAlgorithms();
+
+    }
+
+    interface DetachedSign extends SignWith {
+        SignWith createDetachedSignature();
+
+        Armor doNotSign();
 
     }
 
@@ -83,8 +90,6 @@ public interface EncryptionBuilderInterface {
                           @Nonnull SecretKeyRingProtector decryptor,
                           @Nonnull MultiMap<O, PGPSecretKeyRingCollection> keys)
                 throws SecretKeyNotFoundException;
-
-        Armor doNotSign();
 
     }
 

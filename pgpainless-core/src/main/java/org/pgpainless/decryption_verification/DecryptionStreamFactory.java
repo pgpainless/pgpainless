@@ -23,6 +23,7 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
+import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.logging.Level;
@@ -41,6 +42,7 @@ import org.bouncycastle.openpgp.PGPPublicKeyEncryptedData;
 import org.bouncycastle.openpgp.PGPPublicKeyRing;
 import org.bouncycastle.openpgp.PGPSecretKey;
 import org.bouncycastle.openpgp.PGPSecretKeyRingCollection;
+import org.bouncycastle.openpgp.PGPSignature;
 import org.bouncycastle.openpgp.PGPUtil;
 import org.bouncycastle.openpgp.operator.KeyFingerPrintCalculator;
 import org.bouncycastle.openpgp.operator.PGPContentVerifierBuilderProvider;
@@ -66,7 +68,7 @@ public final class DecryptionStreamFactory {
     private final OpenPgpMetadata.Builder resultBuilder = OpenPgpMetadata.getBuilder();
     private final PGPContentVerifierBuilderProvider verifierBuilderProvider = new BcPGPContentVerifierBuilderProvider();
     private final KeyFingerPrintCalculator keyFingerprintCalculator = new BcKeyFingerprintCalculator();
-    private final Map<OpenPgpV4Fingerprint, PGPOnePassSignature> verifiableOnePassSignatures = new HashMap<>();
+    private final Map<OpenPgpV4Fingerprint, OnePassSignature> verifiableOnePassSignatures = new HashMap<>();
 
     private DecryptionStreamFactory(@Nullable PGPSecretKeyRingCollection decryptionKeys,
                                     @Nullable SecretKeyRingProtector decryptor,
@@ -81,21 +83,31 @@ public final class DecryptionStreamFactory {
     public static DecryptionStream create(@Nonnull InputStream inputStream,
                                           @Nullable PGPSecretKeyRingCollection decryptionKeys,
                                           @Nullable SecretKeyRingProtector decryptor,
+                                          @Nullable List<PGPSignature> detachedSignatures,
                                           @Nullable Set<PGPPublicKeyRing> verificationKeys,
                                           @Nullable MissingPublicKeyCallback missingPublicKeyCallback)
             throws IOException, PGPException {
-
-        DecryptionStreamFactory factory =  new DecryptionStreamFactory(decryptionKeys, decryptor, verificationKeys,
+        InputStream pgpInputStream;
+        DecryptionStreamFactory factory = new DecryptionStreamFactory(decryptionKeys, decryptor, verificationKeys,
                 missingPublicKeyCallback);
 
-        PGPObjectFactory objectFactory = new PGPObjectFactory(
-                PGPUtil.getDecoderStream(inputStream), new BcKeyFingerprintCalculator());
-
-        return new DecryptionStream(factory.processPGPPackets(objectFactory), factory.resultBuilder);
+        if (detachedSignatures != null) {
+            pgpInputStream = inputStream;
+            for (PGPSignature signature : detachedSignatures) {
+                PGPPublicKey signingKey = factory.findSignatureVerificationKey(signature.getKeyID());
+                signature.init(new BcPGPContentVerifierBuilderProvider(), signingKey);
+                factory.resultBuilder.addDetachedSignature(
+                        new DetachedSignature(signature, new OpenPgpV4Fingerprint(signingKey)));
+            }
+        } else {
+            PGPObjectFactory objectFactory = new PGPObjectFactory(
+                    PGPUtil.getDecoderStream(inputStream), new BcKeyFingerprintCalculator());
+            pgpInputStream = factory.processPGPPackets(objectFactory);
+        }
+        return new DecryptionStream(pgpInputStream, factory.resultBuilder);
     }
 
     private InputStream processPGPPackets(@Nonnull PGPObjectFactory objectFactory) throws IOException, PGPException {
-
         Object nextPgpObject;
         while ((nextPgpObject = objectFactory.nextObject()) != null) {
             if (nextPgpObject instanceof PGPEncryptedDataList) {
@@ -214,18 +226,20 @@ public final class DecryptionStreamFactory {
 
     private void processOnePassSignature(PGPOnePassSignature signature) throws PGPException {
         final long keyId = signature.getKeyID();
-        resultBuilder.addUnverifiedSignatureKeyId(keyId);
 
         LOGGER.log(LEVEL, "Message contains OnePassSignature from " + Long.toHexString(keyId));
 
         // Find public key
         PGPPublicKey verificationKey = findSignatureVerificationKey(keyId);
         if (verificationKey == null) {
+            LOGGER.log(LEVEL, "Missing verification key from " + Long.toHexString(keyId));
             return;
         }
 
         signature.init(verifierBuilderProvider, verificationKey);
-        verifiableOnePassSignatures.put(new OpenPgpV4Fingerprint(verificationKey), signature);
+        OnePassSignature onePassSignature = new OnePassSignature(signature, new OpenPgpV4Fingerprint(verificationKey));
+        resultBuilder.addOnePassSignature(onePassSignature);
+        verifiableOnePassSignatures.put(new OpenPgpV4Fingerprint(verificationKey), onePassSignature);
     }
 
     private PGPPublicKey findSignatureVerificationKey(long keyId) {
@@ -269,4 +283,5 @@ public final class DecryptionStreamFactory {
 
         return missingPublicKey;
     }
+
 }

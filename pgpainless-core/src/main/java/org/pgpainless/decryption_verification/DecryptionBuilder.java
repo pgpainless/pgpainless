@@ -17,15 +17,24 @@ package org.pgpainless.decryption_verification;
 
 import java.io.IOException;
 import java.io.InputStream;
+import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.Iterator;
+import java.util.List;
 import java.util.Set;
 import javax.annotation.Nonnull;
 
+import org.bouncycastle.openpgp.PGPCompressedData;
 import org.bouncycastle.openpgp.PGPException;
+import org.bouncycastle.openpgp.PGPObjectFactory;
 import org.bouncycastle.openpgp.PGPPublicKeyRing;
 import org.bouncycastle.openpgp.PGPPublicKeyRingCollection;
 import org.bouncycastle.openpgp.PGPSecretKeyRingCollection;
+import org.bouncycastle.openpgp.PGPSignature;
+import org.bouncycastle.openpgp.PGPSignatureList;
+import org.bouncycastle.openpgp.PGPUtil;
+import org.bouncycastle.openpgp.operator.KeyFingerPrintCalculator;
+import org.bouncycastle.openpgp.operator.bc.BcKeyFingerprintCalculator;
 import org.pgpainless.key.OpenPgpV4Fingerprint;
 import org.pgpainless.key.protection.SecretKeyRingProtector;
 
@@ -34,8 +43,11 @@ public class DecryptionBuilder implements DecryptionBuilderInterface {
     private InputStream inputStream;
     private PGPSecretKeyRingCollection decryptionKeys;
     private SecretKeyRingProtector decryptionKeyDecryptor;
+    private List<PGPSignature> detachedSignatures;
     private Set<PGPPublicKeyRing> verificationKeys = new HashSet<>();
     private MissingPublicKeyCallback missingPublicKeyCallback = null;
+
+    private final KeyFingerPrintCalculator keyFingerPrintCalculator = new BcKeyFingerprintCalculator();
 
     @Override
     public DecryptWith onInputStream(InputStream inputStream) {
@@ -46,17 +58,76 @@ public class DecryptionBuilder implements DecryptionBuilderInterface {
     class DecryptWithImpl implements DecryptWith {
 
         @Override
-        public VerifyWith decryptWith(@Nonnull SecretKeyRingProtector decryptor, @Nonnull PGPSecretKeyRingCollection secretKeyRings) {
+        public Verify decryptWith(@Nonnull SecretKeyRingProtector decryptor, @Nonnull PGPSecretKeyRingCollection secretKeyRings) {
             DecryptionBuilder.this.decryptionKeys = secretKeyRings;
             DecryptionBuilder.this.decryptionKeyDecryptor = decryptor;
+            return new VerifyImpl();
+        }
+
+        @Override
+        public Verify doNotDecrypt() {
+            DecryptionBuilder.this.decryptionKeys = null;
+            DecryptionBuilder.this.decryptionKeyDecryptor = null;
+            return new VerifyImpl();
+        }
+    }
+
+    class VerifyImpl implements Verify {
+
+        @Override
+        public VerifyWith verifyDetachedSignature(InputStream inputStream) throws IOException, PGPException {
+            List<PGPSignature> signatures = new ArrayList<>();
+            InputStream pgpIn = PGPUtil.getDecoderStream(inputStream);
+            PGPObjectFactory objectFactory = new PGPObjectFactory(
+                    pgpIn, keyFingerPrintCalculator);
+            Object nextObject = objectFactory.nextObject();
+            while (nextObject != null) {
+                if (nextObject instanceof PGPCompressedData) {
+                    PGPCompressedData compressedData = (PGPCompressedData) nextObject;
+                    objectFactory = new PGPObjectFactory(compressedData.getDataStream(), keyFingerPrintCalculator);
+                    nextObject = objectFactory.nextObject();
+                    continue;
+                }
+                if (nextObject instanceof PGPSignatureList) {
+                    PGPSignatureList signatureList = (PGPSignatureList) nextObject;
+                    for (PGPSignature s : signatureList) {
+                        signatures.add(s);
+                    }
+                }
+                if (nextObject instanceof PGPSignature) {
+                    signatures.add((PGPSignature) nextObject);
+                }
+                nextObject = objectFactory.nextObject();
+            }
+            pgpIn.close();
+            return verifyDetachedSignatures(signatures);
+        }
+
+        @Override
+        public VerifyWith verifyDetachedSignatures(List<PGPSignature> signatures) {
+            DecryptionBuilder.this.detachedSignatures = signatures;
             return new VerifyWithImpl();
         }
 
         @Override
-        public VerifyWith doNotDecrypt() {
-            DecryptionBuilder.this.decryptionKeys = null;
-            DecryptionBuilder.this.decryptionKeyDecryptor = null;
-            return new VerifyWithImpl();
+        public HandleMissingPublicKeys verifyWith(@org.jetbrains.annotations.NotNull PGPPublicKeyRingCollection publicKeyRings) {
+            return new VerifyWithImpl().verifyWith(publicKeyRings);
+        }
+
+        @Override
+        public HandleMissingPublicKeys verifyWith(@org.jetbrains.annotations.NotNull Set<OpenPgpV4Fingerprint> trustedFingerprints, @org.jetbrains.annotations.NotNull PGPPublicKeyRingCollection publicKeyRings) {
+            return new VerifyWithImpl().verifyWith(trustedFingerprints, publicKeyRings);
+        }
+
+        @Override
+        public HandleMissingPublicKeys verifyWith(@org.jetbrains.annotations.NotNull Set<PGPPublicKeyRing> publicKeyRings) {
+            return new VerifyWithImpl().verifyWith(publicKeyRings);
+        }
+
+        @Override
+        public Build doNotVerify() {
+            DecryptionBuilder.this.verificationKeys = null;
+            return new BuildImpl();
         }
     }
 
@@ -100,12 +171,6 @@ public class DecryptionBuilder implements DecryptionBuilderInterface {
             DecryptionBuilder.this.verificationKeys = publicKeyRings;
             return new HandleMissingPublicKeysImpl();
         }
-
-        @Override
-        public Build doNotVerify() {
-            DecryptionBuilder.this.verificationKeys = null;
-            return new BuildImpl();
-        }
     }
 
     class HandleMissingPublicKeysImpl implements HandleMissingPublicKeys {
@@ -128,7 +193,7 @@ public class DecryptionBuilder implements DecryptionBuilderInterface {
         @Override
         public DecryptionStream build() throws IOException, PGPException {
             return DecryptionStreamFactory.create(inputStream,
-                    decryptionKeys, decryptionKeyDecryptor, verificationKeys, missingPublicKeyCallback);
+                    decryptionKeys, decryptionKeyDecryptor, detachedSignatures, verificationKeys, missingPublicKeyCallback);
         }
     }
 }
