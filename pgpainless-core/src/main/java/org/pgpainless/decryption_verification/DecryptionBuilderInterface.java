@@ -16,6 +16,7 @@
 package org.pgpainless.decryption_verification;
 
 import javax.annotation.Nonnull;
+import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.Collections;
@@ -71,6 +72,39 @@ public interface DecryptionBuilderInterface {
     }
 
     interface Verify extends VerifyWith {
+
+        @Override
+        HandleMissingPublicKeys verifyWith(@Nonnull PGPPublicKeyRingCollection publicKeyRings);
+
+        @Override
+        default HandleMissingPublicKeys verifyWith(@Nonnull OpenPgpV4Fingerprint trustedFingerprint,
+                                                   @Nonnull PGPPublicKeyRingCollection publicKeyRings) {
+            return verifyWith(Collections.singleton(trustedFingerprint), publicKeyRings);
+        }
+
+        @Override
+        HandleMissingPublicKeys verifyWith(@Nonnull Set<OpenPgpV4Fingerprint> trustedFingerprints,
+                                           @Nonnull PGPPublicKeyRingCollection publicKeyRings);
+
+        @Override
+        default HandleMissingPublicKeys verifyWith(@Nonnull PGPPublicKeyRing publicKeyRing) {
+            return verifyWith(Collections.singleton(publicKeyRing));
+        }
+
+        @Override
+        HandleMissingPublicKeys verifyWith(@Nonnull Set<PGPPublicKeyRing> publicKeyRings);
+
+        /**
+         * Pass in one or more detached signatures to verify.
+         *
+         * @param bytes detached signatures (ascii armored or binary).
+         * @return api handle
+         * @throws IOException if some IO error occurs
+         * @throws PGPException if the detached signatures are malformed
+         */
+        default VerifyWith verifyDetachedSignature(@Nonnull byte[] bytes) throws IOException, PGPException {
+            return verifyDetachedSignature(new ByteArrayInputStream(bytes));
+        }
 
         /**
          * Pass in one or more detached signatures to verify.
