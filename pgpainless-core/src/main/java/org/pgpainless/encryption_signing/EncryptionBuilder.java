@@ -257,12 +257,12 @@ public class EncryptionBuilder implements EncryptionBuilderInterface {
         }
 
         @Override
-        public <O> Armor signWith(@org.jetbrains.annotations.NotNull SecretKeyRingProtector decryptor, @org.jetbrains.annotations.NotNull PGPSecretKey... keys) {
+        public Armor signWith(@org.jetbrains.annotations.NotNull SecretKeyRingProtector decryptor, @org.jetbrains.annotations.NotNull PGPSecretKey... keys) {
             return new SignWithImpl().signWith(decryptor, keys);
         }
 
         @Override
-        public <O> Armor signWith(@org.jetbrains.annotations.NotNull SecretKeyRingProtector decryptor, @org.jetbrains.annotations.NotNull PGPSecretKeyRing... keyRings) {
+        public Armor signWith(@org.jetbrains.annotations.NotNull SecretKeyRingProtector decryptor, @org.jetbrains.annotations.NotNull PGPSecretKeyRing... keyRings) {
             return new SignWithImpl().signWith(decryptor, keyRings);
         }
 
@@ -275,13 +275,13 @@ public class EncryptionBuilder implements EncryptionBuilderInterface {
     class SignWithImpl implements SignWith {
 
         @Override
-        public <O> Armor signWith(@Nonnull SecretKeyRingProtector decryptor,
+        public Armor signWith(@Nonnull SecretKeyRingProtector decryptor,
                                   @Nonnull PGPSecretKey... keys) {
             if (keys.length == 0) {
                 throw new IllegalArgumentException("Recipient list MUST NOT be empty.");
             }
             for (PGPSecretKey s : keys) {
-                if (EncryptionBuilder.this.<O>signingKeySelector().accept(null, s)) {
+                if (EncryptionBuilder.this.signingKeySelector().accept(null, s)) {
                     signingKeys.add(s);
                 } else {
                     throw new IllegalArgumentException("Key " + s.getKeyID() + " is not a valid signing key.");
@@ -292,7 +292,7 @@ public class EncryptionBuilder implements EncryptionBuilderInterface {
         }
 
         @Override
-        public <O> Armor signWith(@Nonnull SecretKeyRingProtector decryptor,
+        public Armor signWith(@Nonnull SecretKeyRingProtector decryptor,
                                   @Nonnull PGPSecretKeyRing... keys) {
             if (keys.length == 0) {
                 throw new IllegalArgumentException("Recipient list MUST NOT be empty.");
@@ -300,7 +300,7 @@ public class EncryptionBuilder implements EncryptionBuilderInterface {
             for (PGPSecretKeyRing key : keys) {
                 for (Iterator<PGPSecretKey> i = key.getSecretKeys(); i.hasNext(); ) {
                     PGPSecretKey s = i.next();
-                    if (EncryptionBuilder.this.<O>signingKeySelector().accept(null, s)) {
+                    if (EncryptionBuilder.this.signingKeySelector().accept(null, s)) {
                         EncryptionBuilder.this.signingKeys.add(s);
                     }
                 }

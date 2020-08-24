@@ -29,63 +29,195 @@ import org.bouncycastle.openpgp.PGPSecretKeyRingCollection;
 import org.pgpainless.algorithm.CompressionAlgorithm;
 import org.pgpainless.algorithm.HashAlgorithm;
 import org.pgpainless.algorithm.SymmetricKeyAlgorithm;
+import org.pgpainless.decryption_verification.OpenPgpMetadata;
 import org.pgpainless.exception.SecretKeyNotFoundException;
 import org.pgpainless.key.protection.SecretKeyRingProtector;
+import org.pgpainless.key.protection.UnprotectedKeysProtector;
 import org.pgpainless.key.selection.keyring.PublicKeyRingSelectionStrategy;
 import org.pgpainless.key.selection.keyring.SecretKeyRingSelectionStrategy;
 import org.pgpainless.util.MultiMap;
 
 public interface EncryptionBuilderInterface {
 
+    /**
+     * Create a {@link EncryptionStream} on an {@link OutputStream} that contains the plain data that
+     * shall be encrypted and or signed.
+     *
+     * @param outputStream output stream of the plain data.
+     * @return api handle
+     */
     ToRecipients onOutputStream(@Nonnull OutputStream outputStream);
 
     interface ToRecipients {
 
+        /**
+         * Pass in a list of trusted public keys of the recipients.
+         *
+         * @param keys recipient keys for which the message will be encrypted.
+         * @return api handle
+         */
         WithAlgorithms toRecipients(@Nonnull PGPPublicKey... keys);
 
+        /**
+         * Pass in a list of trusted public key rings of the recipients.
+         *
+         * @param keys recipient keys for which the message will be encrypted.
+         * @return api handle
+         */
         WithAlgorithms toRecipients(@Nonnull PGPPublicKeyRing... keys);
 
+        /**
+         * Pass in a list of trusted public key ring collections of the recipients.
+         *
+         * @param keys recipient keys for which the message will be encrypted.
+         * @return api handle
+         */
         WithAlgorithms toRecipients(@Nonnull PGPPublicKeyRingCollection... keys);
 
+        /**
+         * Pass in a map of recipient key ring collections along with a strategy for key selection.
+         *
+         * @param selectionStrategy selection strategy that is used to select suitable encryption keys.
+         * @param keys public keys
+         * @param <O> selection criteria type (eg. email address) on which the selection strategy is based
+         * @return api handle
+         */
         <O> WithAlgorithms toRecipients(@Nonnull PublicKeyRingSelectionStrategy<O> selectionStrategy,
                                        @Nonnull MultiMap<O, PGPPublicKeyRingCollection> keys);
 
+        /**
+         * Instruct the {@link EncryptionStream} to not encrypt any data.
+         *
+         * @return api handle
+         */
         DetachedSign doNotEncrypt();
 
     }
 
     interface WithAlgorithms {
 
+        /**
+         * Add our own public key to the list of recipient keys.
+         *
+         * @param keys own public keys
+         * @return api handle
+         */
         WithAlgorithms andToSelf(@Nonnull PGPPublicKey... keys);
 
+        /**
+         * Add our own public key to the list of recipient keys.
+         *
+         * @param keys own public keys
+         * @return api handle
+         */
         WithAlgorithms andToSelf(@Nonnull PGPPublicKeyRing... keys);
 
+        /**
+         * Add our own public keys to the list of recipient keys.
+         *
+         * @param keys own public keys
+         * @return api handle
+         */
         WithAlgorithms andToSelf(@Nonnull PGPPublicKeyRingCollection keys);
 
+        /**
+         * Add our own public keys to the list of recipient keys.
+         *
+         * @param selectionStrategy key selection strategy used to determine suitable keys for encryption.
+         * @param keys public keys
+         * @param <O> selection criteria type (eg. email address) used by the selection strategy.
+         * @return api handle
+         */
         <O> WithAlgorithms andToSelf(@Nonnull PublicKeyRingSelectionStrategy<O> selectionStrategy,
                                     @Nonnull MultiMap<O, PGPPublicKeyRingCollection> keys);
 
+        /**
+         * Specify which algorithms should be used for the encryption.
+         *
+         * @param symmetricKeyAlgorithm symmetric algorithm for the session key
+         * @param hashAlgorithm hash algorithm
+         * @param compressionAlgorithm compression algorithm
+         * @return api handle
+         */
         DetachedSign usingAlgorithms(@Nonnull SymmetricKeyAlgorithm symmetricKeyAlgorithm,
                                  @Nonnull HashAlgorithm hashAlgorithm,
                                  @Nonnull CompressionAlgorithm compressionAlgorithm);
 
+        /**
+         * Use a suite of algorithms that are considered secure.
+         *
+         * @return api handle
+         */
         DetachedSign usingSecureAlgorithms();
 
     }
 
     interface DetachedSign extends SignWith {
+
+        /**
+         * Instruct the {@link EncryptionStream} to generate detached signatures instead of One-Pass-Signatures.
+         * Those can be retrieved later via {@link OpenPgpMetadata#getSignatures()}.
+         *
+         * @return api handle
+         */
         SignWith createDetachedSignature();
 
+        /**
+         * Do not sign the plain data at all.
+         *
+         * @return api handle
+         */
         Armor doNotSign();
 
     }
 
     interface SignWith {
 
-        <O> Armor signWith(@Nonnull SecretKeyRingProtector decryptor, @Nonnull PGPSecretKey... keys);
+        /**
+         * Pass in a list of secret keys used for signing.
+         * Those keys are considered unlocked (ie. not password protected).
+         * If you need to use password protected keys instead, use {@link #signWith(SecretKeyRingProtector, PGPSecretKey...)}.
+         *
+         * @param keys secret keys
+         * @return api handle
+         */
+        default Armor signWith(@Nonnull PGPSecretKey... keys) {
+            return signWith(new UnprotectedKeysProtector(), keys);
+        }
 
-        <O> Armor signWith(@Nonnull SecretKeyRingProtector decryptor, @Nonnull PGPSecretKeyRing... keyRings);
+        /**
+         * Pass in a list of secret keys used for signing, along with a {@link SecretKeyRingProtector} used to unlock
+         * the secret keys.
+         *
+         * @param decryptor {@link SecretKeyRingProtector} used to unlock the secret keys
+         * @param keys secret keys used for signing
+         * @return api handle
+         */
+        Armor signWith(@Nonnull SecretKeyRingProtector decryptor, @Nonnull PGPSecretKey... keys);
 
+        /**
+         * Pass in a list of secret keys used for signing, along with a {@link SecretKeyRingProtector} used to unlock
+         * the secret keys.
+         *
+         * @param decryptor {@link SecretKeyRingProtector} used to unlock the secret keys
+         * @param keyRings secret keys used for signing
+         * @return api handle
+         */
+        Armor signWith(@Nonnull SecretKeyRingProtector decryptor, @Nonnull PGPSecretKeyRing... keyRings);
+
+        /**
+         * Pass in a map of secret keys for signing, as well as a {@link org.pgpainless.key.selection.key.SecretKeySelectionStrategy}
+         * that is used to determine suitable secret keys.
+         * If the keys are locked by a password, the provided {@link SecretKeyRingProtector} will be used to unlock the keys.
+         *
+         * @param selectionStrategy key selection strategy
+         * @param decryptor decryptor for unlocking secret keys
+         * @param keys secret keys
+         * @param <O> selection criteria type (eg. email address)
+         * @return api handle
+         *
+         * @throws SecretKeyNotFoundException in case no suitable secret key can be found
+         */
         <O> Armor signWith(@Nonnull SecretKeyRingSelectionStrategy<O> selectionStrategy,
                           @Nonnull SecretKeyRingProtector decryptor,
                           @Nonnull MultiMap<O, PGPSecretKeyRingCollection> keys)
@@ -95,8 +227,23 @@ public interface EncryptionBuilderInterface {
 
     interface Armor {
 
+        /**
+         * Wrap the encrypted/signed output in an ASCII armor.
+         * This can come in handy for sending the encrypted message via eg. email.
+         *
+         * @return encryption stream
+         * @throws IOException in case some I/O error occurs
+         * @throws PGPException in case of some malformed pgp data
+         */
         EncryptionStream asciiArmor() throws IOException, PGPException;
 
+        /**
+         * Do not wrap the output in an ASCII armor.
+         *
+         * @return encryption stream
+         * @throws IOException in case some I/O error occurs
+         * @throws PGPException in case of some malformed pgp data
+         */
         EncryptionStream noArmor() throws IOException, PGPException;
 
     }
