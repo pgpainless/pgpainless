@@ -50,7 +50,7 @@ public class DecryptionBuilder implements DecryptionBuilderInterface {
     private final KeyFingerPrintCalculator keyFingerPrintCalculator = new BcKeyFingerprintCalculator();
 
     @Override
-    public DecryptWith onInputStream(InputStream inputStream) {
+    public DecryptWith onInputStream(@Nonnull InputStream inputStream) {
         this.inputStream = inputStream;
         return new DecryptWithImpl();
     }
@@ -75,7 +75,7 @@ public class DecryptionBuilder implements DecryptionBuilderInterface {
     class VerifyImpl implements Verify {
 
         @Override
-        public VerifyWith verifyDetachedSignature(InputStream inputStream) throws IOException, PGPException {
+        public VerifyWith verifyDetachedSignature(@Nonnull InputStream inputStream) throws IOException, PGPException {
             List<PGPSignature> signatures = new ArrayList<>();
             InputStream pgpIn = PGPUtil.getDecoderStream(inputStream);
             PGPObjectFactory objectFactory = new PGPObjectFactory(
@@ -104,23 +104,24 @@ public class DecryptionBuilder implements DecryptionBuilderInterface {
         }
 
         @Override
-        public VerifyWith verifyDetachedSignatures(List<PGPSignature> signatures) {
+        public VerifyWith verifyDetachedSignatures(@Nonnull List<PGPSignature> signatures) {
             DecryptionBuilder.this.detachedSignatures = signatures;
             return new VerifyWithImpl();
         }
 
         @Override
-        public HandleMissingPublicKeys verifyWith(@org.jetbrains.annotations.NotNull PGPPublicKeyRingCollection publicKeyRings) {
+        public HandleMissingPublicKeys verifyWith(@Nonnull PGPPublicKeyRingCollection publicKeyRings) {
             return new VerifyWithImpl().verifyWith(publicKeyRings);
         }
 
         @Override
-        public HandleMissingPublicKeys verifyWith(@org.jetbrains.annotations.NotNull Set<OpenPgpV4Fingerprint> trustedFingerprints, @org.jetbrains.annotations.NotNull PGPPublicKeyRingCollection publicKeyRings) {
+        public HandleMissingPublicKeys verifyWith(@Nonnull Set<OpenPgpV4Fingerprint> trustedFingerprints,
+                                                  @Nonnull PGPPublicKeyRingCollection publicKeyRings) {
             return new VerifyWithImpl().verifyWith(trustedFingerprints, publicKeyRings);
         }
 
         @Override
-        public HandleMissingPublicKeys verifyWith(@org.jetbrains.annotations.NotNull Set<PGPPublicKeyRing> publicKeyRings) {
+        public HandleMissingPublicKeys verifyWith(@Nonnull Set<PGPPublicKeyRing> publicKeyRings) {
             return new VerifyWithImpl().verifyWith(publicKeyRings);
         }
 

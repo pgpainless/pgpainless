@@ -3,7 +3,6 @@ plugins {
 }
 
 dependencies {
-    implementation 'org.jetbrains:annotations:19.0.0'
     testImplementation group: 'junit', name: 'junit', version: '4.12'
     /*
     implementation "org.bouncycastle:bcprov-debug-jdk15on:$bouncyCastleVersion"

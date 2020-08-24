@@ -256,17 +256,20 @@ public class EncryptionBuilder implements EncryptionBuilderInterface {
         }
 
         @Override
-        public Armor signWith(@org.jetbrains.annotations.NotNull SecretKeyRingProtector decryptor, @org.jetbrains.annotations.NotNull PGPSecretKey... keys) {
+        public Armor signWith(@Nonnull SecretKeyRingProtector decryptor, @Nonnull PGPSecretKey... keys) {
             return new SignWithImpl().signWith(decryptor, keys);
         }
 
         @Override
-        public Armor signWith(@org.jetbrains.annotations.NotNull SecretKeyRingProtector decryptor, @org.jetbrains.annotations.NotNull PGPSecretKeyRing... keyRings) {
+        public Armor signWith(@Nonnull SecretKeyRingProtector decryptor, @Nonnull PGPSecretKeyRing... keyRings) {
             return new SignWithImpl().signWith(decryptor, keyRings);
         }
 
         @Override
-        public <O> Armor signWith(@org.jetbrains.annotations.NotNull SecretKeyRingSelectionStrategy<O> selectionStrategy, @org.jetbrains.annotations.NotNull SecretKeyRingProtector decryptor, @org.jetbrains.annotations.NotNull MultiMap<O, PGPSecretKeyRingCollection> keys) throws SecretKeyNotFoundException {
+        public <O> Armor signWith(@Nonnull SecretKeyRingSelectionStrategy<O> selectionStrategy,
+                                  @Nonnull SecretKeyRingProtector decryptor,
+                                  @Nonnull MultiMap<O, PGPSecretKeyRingCollection> keys)
+                throws SecretKeyNotFoundException {
             return new SignWithImpl().signWith(selectionStrategy, decryptor, keys);
         }
     }
