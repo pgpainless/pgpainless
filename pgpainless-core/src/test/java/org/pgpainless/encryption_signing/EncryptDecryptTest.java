@@ -227,4 +227,36 @@ public class EncryptDecryptTest {
         metadata = verifier.getResult();
         assertFalse(metadata.getVerifiedSignatures().isEmpty());
     }
+
+    @Test
+    public void testOnePassSignatureCreationAndVerification() throws IOException, PGPException {
+        PGPKeyRing signingKeys = new PGPKeyRing(TestKeys.getJulietPublicKeyRing(), TestKeys.getJulietSecretKeyRing());
+        SecretKeyRingProtector keyRingProtector = new UnprotectedKeysProtector();
+        byte[] data = testMessage.getBytes();
+        ByteArrayInputStream inputStream = new ByteArrayInputStream(data);
+        ByteArrayOutputStream signOut = new ByteArrayOutputStream();
+        EncryptionStream signer = PGPainless.createEncryptor().onOutputStream(signOut)
+                .doNotEncrypt()
+                .signWith(keyRingProtector, signingKeys.getSecretKeys())
+                .asciiArmor();
+        Streams.pipeAll(inputStream, signer);
+        signer.close();
+
+        // CHECKSTYLE:OFF
+        System.out.println(signOut.toString());
+        // CHECKSTYLE:ON
+
+        inputStream = new ByteArrayInputStream(signOut.toByteArray());
+        DecryptionStream verifier = PGPainless.createDecryptor().onInputStream(inputStream)
+                .doNotDecrypt()
+                .verifyWith(Collections.singleton(signingKeys.getPublicKeys()))
+                .ignoreMissingPublicKeys()
+                .build();
+        signOut = new ByteArrayOutputStream();
+        Streams.pipeAll(verifier, signOut);
+        verifier.close();
+
+        OpenPgpMetadata metadata = verifier.getResult();
+        assertFalse(metadata.getVerifiedSignatures().isEmpty());
+    }
 }
