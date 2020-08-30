@@ -235,8 +235,11 @@ task jacocoRootReport(type: JacocoReport) {
     setOnlyIf { true }
 }
 
-
 task javadocAll(type: Javadoc) {
+    def currentJavaVersion = JavaVersion.current()
+    if (currentJavaVersion.compareTo(JavaVersion.VERSION_1_9) >= 0) {
+        options.addStringOption("-release", "8");
+    }
     source subprojects.collect {project ->
         project.sourceSets.main.allJava }
     destinationDir = new File(buildDir, 'javadoc')
