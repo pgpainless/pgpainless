@@ -4,6 +4,7 @@ PGPainless - Use OpenPGP Painlessly!
 [![Travis (.org)](https://travis-ci.org/pgpainless/pgpainless.svg)](https://travis-ci.org/pgpainless/pgpainless)
 [![Git Tag](https://badgen.now.sh/github/tag/pgpainless/pgpainless)](https://github.com/pgpainless/pgpainless/tags)
 [![Coverage Status](https://coveralls.io/repos/github/pgpainless/pgpainless/badge.svg?branch=master)](https://coveralls.io/github/pgpainless/pgpainless?branch=master)
+[![JavaDoc](https://badgen.net/badge/javadoc/yes/green)](https://pgpainless.org/releases/latest/javadoc/)
 
 About
 -----
@@ -14,7 +15,7 @@ setup of encryption / decrytion operations, as well as straight forward key gene
 
 PGPainless is based around the Bouncycastle java library and can be used on Android down to API level 9.
 
-### NOTE: PGPainless is in a *very* early state of development and should under no circumstances be used for serious production usage yet.
+### NOTE: PGPainless is in an early state of development. There may be dragons!
 
 ## Include PGPainless in your Project
 
@@ -27,7 +28,7 @@ repositories {
 }
 
 dependencies {
-	compile 'org.pgpainless:pgpainless-core:0.0.1-alpha1'
+	compile 'org.pgpainless:pgpainless-core:0.1.0'
 }
 ```
 
@@ -83,6 +84,8 @@ Encrypting and signing data is pretty straight forward as well.
                 .noArmor();
 ```
 
+Note: Despite the name, the `EncryptionStream` can be used to sign only as well. Simply replace the `.toRecipients()` option with `doNotEncrypt()`.
+
 The resulting `EncryptionStream` can then be used to encrypt data like follows:
 
 ```java
@@ -96,10 +99,10 @@ The encrypted data will be written to the provided `targetOutputStream`.
 Additionally you can get information about the encrypted data by calling
 
 ```java
-        PainlessResult result = encryptor.getResult();
+        OpenPgpMetadata result = encryptor.getResult();
 ```
 
-That object will contain information like to which keys the message is encrypted, which keys were used for signing and so on.
+This object will contain information like to which keys the message is encrypted, which keys were used for signing and so on.
 
 ### Decrypt / Verify Encrypted Data
 
@@ -121,12 +124,14 @@ Again, the resulting `DecryptionStream` can be used like a normal stream.
         decryptor.close();
 ```
 
-*After* the `DecryptionStream` was closed, you can get metadata about the processed data by retrieving the `PainlessResult`.
+*After* the `DecryptionStream` was closed, you can get metadata about the processed data by retrieving the `OpenPgpMetadata`.
 Again, this object will contain information about how the message was encrypted, who signed it and so on.
 
 ```java
-        PainlessResult result = decryptor.getResult();
+        OpenPgpMetadata result = decryptor.getResult();
 ```
+
+For further details you should check out the [javadoc](https://pgpainless.org/releases/latest/javadoc/)!
 
 ## About
 PGPainless is a by-product of my [Summer of Code 2018 project](https://blog.jabberhead.tk/summer-of-code-2018/).
@@ -135,8 +140,7 @@ For that project I was in need of a simple to use OpenPGP library.
 Originally I was going to use [Bouncy-GPG](https://github.com/neuhalje/bouncy-gpg) for my project,
 but ultimately I decided to create my own OpenPGP library which better fits my needs.
 
-However, PGPainless is heavily influenced by Bouncy-GPG and  I would definitely recommend you to
-use it instead of PGPainless if you want a more mature, better tested code base.
+However, PGPainless is heavily influenced by Bouncy-GPG.
 
 To reach out to the development team, feel free to send a mail: info@pgpainless.org
 
