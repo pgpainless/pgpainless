@@ -28,7 +28,7 @@ repositories {
 }
 
 dependencies {
-	compile 'org.pgpainless:pgpainless-core:0.1.0'
+	implementation 'org.pgpainless:pgpainless-core:0.1.0'
 }
 ```
 
