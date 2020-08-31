@@ -35,6 +35,16 @@ public class Passphrase {
     }
 
     /**
+     * Create a {@link Passphrase} from a {@link String}.
+     *
+     * @param password password
+     * @return passphrase
+     */
+    public static Passphrase fromPassword(String password) {
+        return new Passphrase(password.toCharArray());
+    }
+
+    /**
      * Overwrite the char array with spaces and mark the {@link Passphrase} as invalidated.
      */
     public void clear() {

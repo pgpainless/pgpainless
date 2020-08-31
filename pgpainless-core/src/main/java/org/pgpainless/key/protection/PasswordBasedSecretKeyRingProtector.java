@@ -19,12 +19,14 @@ import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
 
 import org.bouncycastle.openpgp.PGPException;
+import org.bouncycastle.openpgp.PGPKeyRing;
 import org.bouncycastle.openpgp.operator.PBESecretKeyDecryptor;
 import org.bouncycastle.openpgp.operator.PBESecretKeyEncryptor;
 import org.bouncycastle.openpgp.operator.PGPDigestCalculatorProvider;
 import org.bouncycastle.openpgp.operator.bc.BcPBESecretKeyDecryptorBuilder;
 import org.bouncycastle.openpgp.operator.bc.BcPBESecretKeyEncryptorBuilder;
 import org.bouncycastle.openpgp.operator.bc.BcPGPDigestCalculatorProvider;
+import org.pgpainless.algorithm.SymmetricKeyAlgorithm;
 import org.pgpainless.util.Passphrase;
 
 /**
@@ -49,6 +51,21 @@ public class PasswordBasedSecretKeyRingProtector implements SecretKeyRingProtect
     public PasswordBasedSecretKeyRingProtector(@Nonnull KeyRingProtectionSettings settings, @Nonnull SecretKeyPassphraseProvider passphraseProvider) {
         this.protectionSettings = settings;
         this.passphraseProvider = passphraseProvider;
+    }
+
+    public static PasswordBasedSecretKeyRingProtector forKey(PGPKeyRing keyRing, Passphrase passphrase) {
+        KeyRingProtectionSettings protectionSettings = new KeyRingProtectionSettings(SymmetricKeyAlgorithm.AES_256);
+        SecretKeyPassphraseProvider passphraseProvider = new SecretKeyPassphraseProvider() {
+            @Override
+            @Nullable
+            public Passphrase getPassphraseFor(Long keyId) {
+                if (keyRing.getPublicKey().getKeyID() == keyId) {
+                    return passphrase;
+                }
+                return null;
+            }
+        };
+        return new PasswordBasedSecretKeyRingProtector(protectionSettings, passphraseProvider);
     }
 
     @Override
