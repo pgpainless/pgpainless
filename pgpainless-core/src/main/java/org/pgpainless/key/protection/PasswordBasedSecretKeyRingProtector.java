@@ -54,7 +54,7 @@ public class PasswordBasedSecretKeyRingProtector implements SecretKeyRingProtect
     }
 
     public static PasswordBasedSecretKeyRingProtector forKey(PGPKeyRing keyRing, Passphrase passphrase) {
-        KeyRingProtectionSettings protectionSettings = new KeyRingProtectionSettings(SymmetricKeyAlgorithm.AES_256);
+        KeyRingProtectionSettings protectionSettings = KeyRingProtectionSettings.secureDefaultSettings();
         SecretKeyPassphraseProvider passphraseProvider = new SecretKeyPassphraseProvider() {
             @Override
             @Nullable

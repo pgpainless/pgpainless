@@ -39,6 +39,10 @@ public class KeyRingProtectionSettings {
         this.s2kCount = s2kCount;
     }
 
+    public static KeyRingProtectionSettings secureDefaultSettings() {
+        return new KeyRingProtectionSettings(SymmetricKeyAlgorithm.AES_256);
+    }
+
     public @Nonnull SymmetricKeyAlgorithm getEncryptionAlgorithm() {
         return encryptionAlgorithm;
     }

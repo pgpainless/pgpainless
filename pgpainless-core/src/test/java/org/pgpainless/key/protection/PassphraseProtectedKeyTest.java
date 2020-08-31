@@ -32,7 +32,7 @@ public class PassphraseProtectedKeyTest {
      * Protector that holds only the password of cryptie.
      */
     private final PasswordBasedSecretKeyRingProtector protector = new PasswordBasedSecretKeyRingProtector(
-            new KeyRingProtectionSettings(SymmetricKeyAlgorithm.AES_256),
+            KeyRingProtectionSettings.secureDefaultSettings(),
             new SecretKeyPassphraseProvider() {
                 @Nullable
                 @Override
