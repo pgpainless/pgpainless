@@ -22,7 +22,6 @@ import javax.annotation.Nullable;
 
 import org.bouncycastle.openpgp.PGPException;
 import org.junit.Test;
-import org.pgpainless.algorithm.SymmetricKeyAlgorithm;
 import org.pgpainless.key.TestKeys;
 import org.pgpainless.util.Passphrase;
 
