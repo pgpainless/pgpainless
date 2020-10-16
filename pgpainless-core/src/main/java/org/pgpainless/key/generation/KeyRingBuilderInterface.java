@@ -31,13 +31,17 @@ public interface KeyRingBuilderInterface {
 
     interface WithPrimaryUserId {
 
-        WithPassphrase withPrimaryUserId(@Nonnull String userId);
+        WithAdditionalUserIdOrPassphrase withPrimaryUserId(@Nonnull String userId);
 
-        WithPassphrase withPrimaryUserId(@Nonnull byte[] userId);
+        WithAdditionalUserIdOrPassphrase withPrimaryUserId(@Nonnull byte[] userId);
 
     }
 
-    interface WithPassphrase {
+    interface WithAdditionalUserIdOrPassphrase {
+
+        WithAdditionalUserIdOrPassphrase withAdditionalUserId(@Nonnull String userId);
+
+        WithAdditionalUserIdOrPassphrase withAdditionalUserId(@Nonnull byte[] userId);
 
         Build withPassphrase(@Nonnull Passphrase passphrase);
 

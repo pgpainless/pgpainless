@@ -23,6 +23,7 @@ import java.security.KeyPairGenerator;
 import java.security.NoSuchAlgorithmException;
 import java.util.ArrayList;
 import java.util.Date;
+import java.util.Iterator;
 import java.util.List;
 import javax.annotation.Nonnull;
 
@@ -30,16 +31,21 @@ import org.bouncycastle.openpgp.PGPEncryptedData;
 import org.bouncycastle.openpgp.PGPException;
 import org.bouncycastle.openpgp.PGPKeyPair;
 import org.bouncycastle.openpgp.PGPKeyRingGenerator;
+import org.bouncycastle.openpgp.PGPPublicKey;
 import org.bouncycastle.openpgp.PGPPublicKeyRing;
+import org.bouncycastle.openpgp.PGPSecretKey;
 import org.bouncycastle.openpgp.PGPSecretKeyRing;
 import org.bouncycastle.openpgp.PGPSignature;
+import org.bouncycastle.openpgp.PGPSignatureGenerator;
 import org.bouncycastle.openpgp.PGPSignatureSubpacketVector;
+import org.bouncycastle.openpgp.operator.PBESecretKeyDecryptor;
 import org.bouncycastle.openpgp.operator.PBESecretKeyEncryptor;
 import org.bouncycastle.openpgp.operator.PGPContentSignerBuilder;
 import org.bouncycastle.openpgp.operator.PGPDigestCalculator;
 import org.bouncycastle.openpgp.operator.jcajce.JcaPGPContentSignerBuilder;
 import org.bouncycastle.openpgp.operator.jcajce.JcaPGPDigestCalculatorProviderBuilder;
 import org.bouncycastle.openpgp.operator.jcajce.JcaPGPKeyPair;
+import org.bouncycastle.openpgp.operator.jcajce.JcePBESecretKeyDecryptorBuilder;
 import org.bouncycastle.openpgp.operator.jcajce.JcePBESecretKeyEncryptorBuilder;
 import org.pgpainless.algorithm.HashAlgorithm;
 import org.pgpainless.algorithm.KeyFlag;
@@ -59,6 +65,7 @@ public class KeyRingBuilder implements KeyRingBuilderInterface {
 
     private List<KeySpec> keySpecs = new ArrayList<>();
     private String userId;
+    private List<String> additionalUserIds = new ArrayList<>();
     private Passphrase passphrase;
 
     /**
@@ -95,7 +102,7 @@ public class KeyRingBuilder implements KeyRingBuilderInterface {
      */
     public PGPKeyRing simpleRsaKeyRing(@Nonnull String userId, @Nonnull RsaLength length, String password)
             throws PGPException, NoSuchAlgorithmException, InvalidAlgorithmParameterException {
-        WithPassphrase builder = this
+        WithAdditionalUserIdOrPassphrase builder = this
                 .withMasterKey(
                         KeySpec.getBuilder(RSA_GENERAL.withLength(length))
                                 .withDefaultKeyFlags()
@@ -143,7 +150,7 @@ public class KeyRingBuilder implements KeyRingBuilderInterface {
      */
     public PGPKeyRing simpleEcKeyRing(@Nonnull String userId, String password)
             throws PGPException, NoSuchAlgorithmException, InvalidAlgorithmParameterException {
-        WithPassphrase builder = this
+        WithAdditionalUserIdOrPassphrase builder = this
                 .withSubKey(
                         KeySpec.getBuilder(ECDH.fromCurve(EllipticCurve._P256))
                                 .withKeyFlags(KeyFlag.ENCRYPT_STORAGE, KeyFlag.ENCRYPT_COMMS)
@@ -189,18 +196,29 @@ public class KeyRingBuilder implements KeyRingBuilderInterface {
     class WithPrimaryUserIdImpl implements WithPrimaryUserId {
 
         @Override
-        public WithPassphrase withPrimaryUserId(@Nonnull String userId) {
+        public WithAdditionalUserIdOrPassphrase withPrimaryUserId(@Nonnull String userId) {
             KeyRingBuilder.this.userId = userId;
-            return new WithPassphraseImpl();
+            return new WithAdditionalUserIdOrPassphraseImpl();
         }
 
         @Override
-        public WithPassphrase withPrimaryUserId(@Nonnull byte[] userId) {
+        public WithAdditionalUserIdOrPassphrase withPrimaryUserId(@Nonnull byte[] userId) {
             return withPrimaryUserId(new String(userId, UTF8));
         }
     }
 
-    class WithPassphraseImpl implements WithPassphrase {
+    class WithAdditionalUserIdOrPassphraseImpl implements WithAdditionalUserIdOrPassphrase {
+
+        @Override
+        public WithAdditionalUserIdOrPassphrase withAdditionalUserId(@Nonnull String userId) {
+            KeyRingBuilder.this.additionalUserIds.add(userId);
+            return this;
+        }
+
+        @Override
+        public WithAdditionalUserIdOrPassphrase withAdditionalUserId(@Nonnull byte[] userId) {
+            return withAdditionalUserId(new String(userId, UTF8));
+        }
 
         @Override
         public Build withPassphrase(@Nonnull Passphrase passphrase) {
@@ -216,6 +234,7 @@ public class KeyRingBuilder implements KeyRingBuilderInterface {
 
         class BuildImpl implements Build {
 
+            private PGPSignatureGenerator signatureGenerator;
             private PGPDigestCalculator digestCalculator;
             private PBESecretKeyEncryptor secretKeyEncryptor;
 
@@ -224,6 +243,11 @@ public class KeyRingBuilder implements KeyRingBuilderInterface {
                     InvalidAlgorithmParameterException {
                 digestCalculator = buildDigestCalculator();
                 secretKeyEncryptor = buildSecretKeyEncryptor();
+                PBESecretKeyDecryptor secretKeyDecryptor = buildSecretKeyDecryptor();
+
+                if (passphrase != null) {
+                    passphrase.clear();
+                }
 
                 // First key is the Master Key
                 KeySpec certKeySpec = keySpecs.remove(0);
@@ -231,6 +255,7 @@ public class KeyRingBuilder implements KeyRingBuilderInterface {
                 // Generate Master Key
                 PGPKeyPair certKey = generateKeyPair(certKeySpec);
                 PGPContentSignerBuilder signer = buildContentSigner(certKey);
+                signatureGenerator = new PGPSignatureGenerator(signer);
                 PGPSignatureSubpacketVector hashedSubPackets = certKeySpec.getSubpackets();
 
                 // Generator which the user can get the key pair from
@@ -238,10 +263,41 @@ public class KeyRingBuilder implements KeyRingBuilderInterface {
 
                 addSubKeys(ringGenerator);
 
-                PGPPublicKeyRing publicKeys = ringGenerator.generatePublicKeyRing();
-                PGPSecretKeyRing secretKeys = ringGenerator.generateSecretKeyRing();
+                // Generate secret key ring with only primary user id
+                PGPSecretKeyRing secretKeyRing = ringGenerator.generateSecretKeyRing();
 
-                return new PGPKeyRing(publicKeys, secretKeys);
+                Iterator<PGPSecretKey> secretKeys = secretKeyRing.getSecretKeys();
+
+                // Attempt to add additional user-ids to the primary public key
+                PGPPublicKey primaryPubKey = secretKeys.next().getPublicKey();
+                for (String additionalUserId : additionalUserIds) {
+                    // This fails :(
+                    PGPSignature additionalUserIdSignature =
+                            signatureGenerator.generateCertification(additionalUserId, primaryPubKey);
+                    primaryPubKey = PGPPublicKey.addCertification(primaryPubKey,
+                            additionalUserId, additionalUserIdSignature);
+                }
+
+                // "reassemble" secret key ring with modified primary key
+                PGPSecretKey primarySecKey = new PGPSecretKey(
+                        secretKeyRing.getSecretKey().extractPrivateKey(secretKeyDecryptor),
+                        primaryPubKey, digestCalculator, true, secretKeyEncryptor);
+                List<PGPSecretKey> secretKeyList = new ArrayList<>();
+                secretKeyList.add(primarySecKey);
+                while (secretKeys.hasNext()) {
+                    secretKeyList.add(secretKeys.next());
+                }
+                secretKeyRing = new PGPSecretKeyRing(secretKeyList);
+
+                // extract public key ring from secret keys
+                List<PGPPublicKey> publicKeyList = new ArrayList<>();
+                Iterator<PGPPublicKey> publicKeys = secretKeyRing.getPublicKeys();
+                while (publicKeys.hasNext()) {
+                    publicKeyList.add(publicKeys.next());
+                }
+                PGPPublicKeyRing publicKeyRing = new PGPPublicKeyRing(publicKeyList);
+
+                return new PGPKeyRing(publicKeyRing, secretKeyRing);
             }
 
             private PGPKeyRingGenerator buildRingGenerator(PGPKeyPair certKey,
@@ -278,10 +334,15 @@ public class KeyRingBuilder implements KeyRingBuilderInterface {
                         new JcePBESecretKeyEncryptorBuilder(PGPEncryptedData.AES_256, digestCalculator)
                                 .setProvider(ProviderFactory.getProvider())
                                 .build(passphrase.getChars());
-                if (passphrase != null) {
-                    passphrase.clear();
-                }
                 return encryptor;
+            }
+
+            private PBESecretKeyDecryptor buildSecretKeyDecryptor() throws PGPException {
+                PBESecretKeyDecryptor decryptor = passphrase == null ?
+                        null :
+                        new JcePBESecretKeyDecryptorBuilder()
+                        .build(passphrase.getChars());
+                return decryptor;
             }
 
             private PGPDigestCalculator buildDigestCalculator() throws PGPException {
