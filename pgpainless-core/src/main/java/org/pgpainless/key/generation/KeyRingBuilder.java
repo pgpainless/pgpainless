@@ -279,7 +279,7 @@ public class KeyRingBuilder implements KeyRingBuilderInterface {
                 PGPPublicKey primaryPubKey = secretKeys.next().getPublicKey();
                 PGPPrivateKey privateKey = secretKeyRing.getSecretKey().extractPrivateKey(secretKeyDecryptor);
                 for (String additionalUserId : additionalUserIds) {
-                    signatureGenerator.init(0x13, privateKey);
+                    signatureGenerator.init(SignatureType.POSITIVE_CERTIFICATION.getCode(), privateKey);
                     PGPSignature additionalUserIdSignature =
                             signatureGenerator.generateCertification(additionalUserId, primaryPubKey);
                     primaryPubKey = PGPPublicKey.addCertification(primaryPubKey,
@@ -313,7 +313,7 @@ public class KeyRingBuilder implements KeyRingBuilderInterface {
                                                            PGPSignatureSubpacketVector hashedSubPackets)
                     throws PGPException {
                 return new PGPKeyRingGenerator(
-                        PGPSignature.POSITIVE_CERTIFICATION, certKey,
+                        SignatureType.POSITIVE_CERTIFICATION.getCode(), certKey,
                         userId, digestCalculator,
                         hashedSubPackets, null, signer, secretKeyEncryptor);
             }
