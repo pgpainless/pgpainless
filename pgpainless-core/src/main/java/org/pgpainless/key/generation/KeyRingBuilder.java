@@ -26,7 +26,6 @@ import java.util.Date;
 import java.util.Iterator;
 import java.util.LinkedHashSet;
 import java.util.List;
-import java.util.Objects;
 import java.util.Set;
 import javax.annotation.Nonnull;
 
@@ -53,6 +52,7 @@ import org.bouncycastle.openpgp.operator.jcajce.JcePBESecretKeyDecryptorBuilder;
 import org.bouncycastle.openpgp.operator.jcajce.JcePBESecretKeyEncryptorBuilder;
 import org.pgpainless.algorithm.HashAlgorithm;
 import org.pgpainless.algorithm.KeyFlag;
+import org.pgpainless.algorithm.SignatureType;
 import org.pgpainless.key.collection.PGPKeyRing;
 import org.pgpainless.key.generation.type.ECDH;
 import org.pgpainless.key.generation.type.ECDSA;
@@ -215,7 +215,7 @@ public class KeyRingBuilder implements KeyRingBuilderInterface {
 
         @Override
         public WithAdditionalUserIdOrPassphrase withAdditionalUserId(@Nonnull String userId) {
-            if (Objects.equals(KeyRingBuilder.this.userId, userId)) {
+            if (KeyRingBuilder.this.userId.equals(userId)) {
                 throw new IllegalArgumentException("Additional user-id MUST NOT be equal to primary user-id.");
             }
             KeyRingBuilder.this.additionalUserIds.add(userId);
