@@ -201,7 +201,7 @@ public class KeyRingBuilder implements KeyRingBuilderInterface {
 
         @Override
         public WithAdditionalUserIdOrPassphrase withPrimaryUserId(@Nonnull String userId) {
-            KeyRingBuilder.this.userId = userId;
+            KeyRingBuilder.this.userId = userId.trim();
             return new WithAdditionalUserIdOrPassphraseImpl();
         }
 
@@ -215,10 +215,11 @@ public class KeyRingBuilder implements KeyRingBuilderInterface {
 
         @Override
         public WithAdditionalUserIdOrPassphrase withAdditionalUserId(@Nonnull String userId) {
-            if (KeyRingBuilder.this.userId.equals(userId)) {
+            String trimmed = userId.trim();
+            if (KeyRingBuilder.this.userId.equals(trimmed)) {
                 throw new IllegalArgumentException("Additional user-id MUST NOT be equal to primary user-id.");
             }
-            KeyRingBuilder.this.additionalUserIds.add(userId);
+            KeyRingBuilder.this.additionalUserIds.add(trimmed);
             return this;
         }
 

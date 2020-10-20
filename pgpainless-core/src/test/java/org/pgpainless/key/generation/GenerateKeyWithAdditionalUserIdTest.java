@@ -43,6 +43,7 @@ public class GenerateKeyWithAdditionalUserIdTest {
                 .withPrimaryUserId("primary@user.id")
                 .withAdditionalUserId("additional@user.id")
                 .withAdditionalUserId("additional2@user.id")
+                .withAdditionalUserId("\ttrimThis@user.id     ")
                 .withoutPassphrase()
                 .build();
 
@@ -50,6 +51,7 @@ public class GenerateKeyWithAdditionalUserIdTest {
         assertEquals("primary@user.id", userIds.next());
         assertEquals("additional@user.id", userIds.next());
         assertEquals("additional2@user.id", userIds.next());
+        assertEquals("trimThis@user.id", userIds.next());
         assertFalse(userIds.hasNext());
 
         ByteArrayOutputStream byteOut = new ByteArrayOutputStream();
