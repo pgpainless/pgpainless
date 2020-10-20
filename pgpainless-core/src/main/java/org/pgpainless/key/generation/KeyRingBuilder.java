@@ -24,11 +24,12 @@ import java.security.NoSuchAlgorithmException;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.Iterator;
+import java.util.LinkedHashSet;
 import java.util.List;
+import java.util.Objects;
+import java.util.Set;
 import javax.annotation.Nonnull;
 
-import org.bouncycastle.asn1.ocsp.Signature;
-import org.bouncycastle.bcpg.SignatureSubpacket;
 import org.bouncycastle.openpgp.PGPEncryptedData;
 import org.bouncycastle.openpgp.PGPException;
 import org.bouncycastle.openpgp.PGPKeyPair;
@@ -45,7 +46,6 @@ import org.bouncycastle.openpgp.operator.PBESecretKeyDecryptor;
 import org.bouncycastle.openpgp.operator.PBESecretKeyEncryptor;
 import org.bouncycastle.openpgp.operator.PGPContentSignerBuilder;
 import org.bouncycastle.openpgp.operator.PGPDigestCalculator;
-import org.bouncycastle.openpgp.operator.bc.BcPGPContentSignerBuilder;
 import org.bouncycastle.openpgp.operator.jcajce.JcaPGPContentSignerBuilder;
 import org.bouncycastle.openpgp.operator.jcajce.JcaPGPDigestCalculatorProviderBuilder;
 import org.bouncycastle.openpgp.operator.jcajce.JcaPGPKeyPair;
@@ -53,7 +53,6 @@ import org.bouncycastle.openpgp.operator.jcajce.JcePBESecretKeyDecryptorBuilder;
 import org.bouncycastle.openpgp.operator.jcajce.JcePBESecretKeyEncryptorBuilder;
 import org.pgpainless.algorithm.HashAlgorithm;
 import org.pgpainless.algorithm.KeyFlag;
-import org.pgpainless.decryption_verification.OpenPgpMetadata;
 import org.pgpainless.key.collection.PGPKeyRing;
 import org.pgpainless.key.generation.type.ECDH;
 import org.pgpainless.key.generation.type.ECDSA;
@@ -70,7 +69,7 @@ public class KeyRingBuilder implements KeyRingBuilderInterface {
 
     private List<KeySpec> keySpecs = new ArrayList<>();
     private String userId;
-    private List<String> additionalUserIds = new ArrayList<>();
+    private Set<String> additionalUserIds = new LinkedHashSet<>();
     private Passphrase passphrase;
 
     /**
@@ -216,6 +215,9 @@ public class KeyRingBuilder implements KeyRingBuilderInterface {
 
         @Override
         public WithAdditionalUserIdOrPassphrase withAdditionalUserId(@Nonnull String userId) {
+            if (Objects.equals(KeyRingBuilder.this.userId, userId)) {
+                throw new IllegalArgumentException("Additional user-id MUST NOT be equal to primary user-id.");
+            }
             KeyRingBuilder.this.additionalUserIds.add(userId);
             return this;
         }

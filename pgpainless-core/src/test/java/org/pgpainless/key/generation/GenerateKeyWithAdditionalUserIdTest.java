@@ -27,12 +27,14 @@ public class GenerateKeyWithAdditionalUserIdTest {
                         .withDefaultAlgorithms())
                 .withPrimaryUserId("primary@user.id")
                 .withAdditionalUserId("additional@user.id")
+                .withAdditionalUserId("additional2@user.id")
                 .withoutPassphrase()
                 .build();
 
         Iterator<String> userIds = keyRing.getPublicKeys().getPublicKey().getUserIDs();
         assertEquals("primary@user.id", userIds.next());
         assertEquals("additional@user.id", userIds.next());
+        assertEquals("additional2@user.id", userIds.next());
         assertFalse(userIds.hasNext());
 
         ByteArrayOutputStream byteOut = new ByteArrayOutputStream();
