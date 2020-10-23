@@ -13,7 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.pgpainless.key.protection;
+package org.pgpainless.key.protection.passphrase_provider;
 
 import javax.annotation.Nullable;
 

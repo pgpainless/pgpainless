@@ -23,6 +23,7 @@ import javax.annotation.Nullable;
 import org.bouncycastle.openpgp.PGPException;
 import org.junit.Test;
 import org.pgpainless.key.TestKeys;
+import org.pgpainless.key.protection.passphrase_provider.SecretKeyPassphraseProvider;
 import org.pgpainless.util.Passphrase;
 
 public class PassphraseProtectedKeyTest {

@@ -15,9 +15,16 @@
  */
 package org.pgpainless.key.modification;
 
+import javax.annotation.Nonnull;
+import javax.annotation.Nullable;
+
+import org.bouncycastle.openpgp.PGPException;
 import org.bouncycastle.openpgp.PGPSecretKeyRing;
 import org.pgpainless.key.OpenPgpV4Fingerprint;
 import org.pgpainless.key.generation.KeySpec;
+import org.pgpainless.key.protection.KeyRingProtectionSettings;
+import org.pgpainless.key.protection.SecretKeyRingProtector;
+import org.pgpainless.util.Passphrase;
 
 public interface KeyRingEditorInterface {
 
@@ -27,7 +34,7 @@ public interface KeyRingEditorInterface {
      * @param userId user-id
      * @return the builder
      */
-    KeyRingEditorInterface addUserId(String userId);
+    KeyRingEditorInterface addUserId(String userId, SecretKeyRingProtector secretKeyRingProtector) throws PGPException;
 
     /**
      * Remove a user-id from the primary key of the key ring.
@@ -35,7 +42,7 @@ public interface KeyRingEditorInterface {
      * @param userId exact user-id to be removed
      * @return the builder
      */
-    KeyRingEditorInterface deleteUserId(String userId);
+    KeyRingEditorInterface deleteUserId(String userId, SecretKeyRingProtector secretKeyRingProtector);
 
     /**
      * Add a subkey to the key ring.
@@ -44,7 +51,7 @@ public interface KeyRingEditorInterface {
      * @param keySpec key specification
      * @return the builder
      */
-    KeyRingEditorInterface addSubKey(KeySpec keySpec);
+    KeyRingEditorInterface addSubKey(KeySpec keySpec, SecretKeyRingProtector secretKeyRingProtector);
 
     /**
      * Delete a subkey from the key ring.
@@ -54,7 +61,7 @@ public interface KeyRingEditorInterface {
      * @param fingerprint fingerprint of the subkey to be removed
      * @return the builder
      */
-    KeyRingEditorInterface deleteSubKey(OpenPgpV4Fingerprint fingerprint);
+    KeyRingEditorInterface deleteSubKey(OpenPgpV4Fingerprint fingerprint, SecretKeyRingProtector secretKeyRingProtector);
 
     /**
      * Delete a subkey from the key ring.
@@ -64,7 +71,7 @@ public interface KeyRingEditorInterface {
      * @param subKeyId id of the subkey
      * @return the builder
      */
-    KeyRingEditorInterface deleteSubKey(long subKeyId);
+    KeyRingEditorInterface deleteSubKey(long subKeyId, SecretKeyRingProtector secretKeyRingProtector);
 
     /**
      * Revoke the subkey binding signature of a subkey.
@@ -74,21 +81,92 @@ public interface KeyRingEditorInterface {
      * @param fingerprint fingerprint of the subkey to be revoked
      * @return the builder
      */
-    KeyRingEditorInterface revokeSubKey(OpenPgpV4Fingerprint fingerprint);
+    KeyRingEditorInterface revokeSubKey(OpenPgpV4Fingerprint fingerprint, SecretKeyRingProtector secretKeyRingProtector);
 
     /**
-     * Revoke the subkey binding sugnature of a subkey.
+     * Revoke the subkey binding signature of a subkey.
      * The subkey with the provided key-id will be revoked.
      * If no suitable subkey is found, q {@link java.util.NoSuchElementException} will be thrown.
      *
      * @param subKeyId id of the subkey
      * @return the builder
      */
-    KeyRingEditorInterface revokeSubKey(long subKeyId);
+    KeyRingEditorInterface revokeSubKey(long subKeyId, SecretKeyRingProtector secretKeyRingProtector);
+
+    /**
+     * Change the passphrase of the whole key ring.
+     *
+     * @param oldPassphrase old passphrase or null, if the key was unprotected
+     * @return next builder step
+     */
+    default WithKeyRingEncryptionSettings changePassphraseFromOldPassphrase(@Nullable Passphrase oldPassphrase) {
+        return changePassphraseFromOldPassphrase(oldPassphrase, KeyRingProtectionSettings.secureDefaultSettings());
+    }
+
+    WithKeyRingEncryptionSettings changePassphraseFromOldPassphrase(@Nullable Passphrase oldPassphrase,
+                                                                    @Nonnull KeyRingProtectionSettings oldProtectionSettings);
+
+    /**
+     * Change the passphrase of a single subkey in the key ring.
+     *
+     * Note: While it is a valid use-case to have different passphrases per subKey,
+     *  this is one of the reasons why OpenPGP sucks in practice.
+     *
+     * @param keyId id of the subkey
+     * @param oldPassphrase old passphrase
+     * @return next builder step
+     */
+    default WithKeyRingEncryptionSettings changeSubKeyPassphraseFromOldPassphrase(@Nonnull Long keyId,
+                                                                                  @Nullable Passphrase oldPassphrase) {
+        return changeSubKeyPassphraseFromOldPassphrase(keyId, oldPassphrase, KeyRingProtectionSettings.secureDefaultSettings());
+    }
+
+    WithKeyRingEncryptionSettings changeSubKeyPassphraseFromOldPassphrase(@Nonnull Long keyId,
+                                                                          @Nullable Passphrase oldPassphrase,
+                                                                          @Nonnull KeyRingProtectionSettings oldProtectionSettings);
+
+    interface WithKeyRingEncryptionSettings {
+
+        /**
+         * Set secure default settings for the symmetric passphrase encryption.
+         * Note that this obviously has no effect if you decide to set {@link WithPassphrase#noPassphrase()}.
+         *
+         * @return next builder step
+         */
+        WithPassphrase withSecureDefaultSettings();
+
+        /**
+         * Set custom settings for the symmetric passphrase encryption.
+         *
+         * @param settings custom settings
+         * @return next builder step
+         */
+        WithPassphrase withCustomSettings(KeyRingProtectionSettings settings);
+
+    }
+
+    interface WithPassphrase {
+
+        /**
+         * Set the passphrase.
+         *
+         * @param passphrase passphrase
+         * @return editor builder
+         */
+        KeyRingEditorInterface toNewPassphrase(Passphrase passphrase);
+
+        /**
+         * Leave the key unprotected.
+         *
+         * @return editor builder
+         */
+        KeyRingEditorInterface noPassphrase();
+    }
 
     /**
      * Return the {@link PGPSecretKeyRing}
      * @return the key
      */
     PGPSecretKeyRing done();
+
 }
