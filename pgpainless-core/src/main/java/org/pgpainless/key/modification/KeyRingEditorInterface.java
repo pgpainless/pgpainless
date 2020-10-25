@@ -164,7 +164,7 @@ public interface KeyRingEditorInterface {
     }
 
     /**
-     * Return the {@link PGPSecretKeyRing}
+     * Return the {@link PGPSecretKeyRing}.
      * @return the key
      */
     PGPSecretKeyRing done();

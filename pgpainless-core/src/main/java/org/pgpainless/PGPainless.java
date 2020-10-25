@@ -15,8 +15,8 @@
  */
 package org.pgpainless;
 
-import javax.annotation.Nonnull;
 import java.io.IOException;
+import javax.annotation.Nonnull;
 
 import org.bouncycastle.openpgp.PGPException;
 import org.bouncycastle.openpgp.PGPSecretKeyRing;
@@ -30,8 +30,6 @@ import org.pgpainless.key.generation.KeyRingBuilder;
 import org.pgpainless.key.modification.KeyRingEditor;
 import org.pgpainless.key.modification.KeyRingEditorInterface;
 import org.pgpainless.key.parsing.KeyRingReader;
-import org.pgpainless.key.protection.passphrase_provider.SecretKeyPassphraseProvider;
-import org.pgpainless.key.protection.passphrase_provider.SolitaryPassphraseProvider;
 import org.pgpainless.symmetric_encryption.SymmetricEncryptorDecryptor;
 import org.pgpainless.util.Passphrase;
 

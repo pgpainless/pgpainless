@@ -20,7 +20,7 @@ import javax.annotation.Nullable;
 import org.pgpainless.util.Passphrase;
 
 /**
- * Interface to allow the user to provide a passphrase for an encrypted OpenPGP secret key.
+ * Interface to allow the user to provide a {@link Passphrase} for an encrypted OpenPGP secret key.
  */
 public interface SecretKeyPassphraseProvider {
 

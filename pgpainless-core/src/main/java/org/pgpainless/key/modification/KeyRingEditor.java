@@ -1,30 +1,44 @@
+/*
+ * Copyright 2020 Paul Schaub.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
 package org.pgpainless.key.modification;
 
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
-
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
 
 import org.bouncycastle.openpgp.PGPException;
 import org.bouncycastle.openpgp.PGPPrivateKey;
 import org.bouncycastle.openpgp.PGPPublicKey;
-import org.bouncycastle.openpgp.PGPPublicKeyRing;
 import org.bouncycastle.openpgp.PGPSecretKey;
 import org.bouncycastle.openpgp.PGPSecretKeyRing;
 import org.bouncycastle.openpgp.PGPSignature;
+import org.bouncycastle.openpgp.PGPSignatureGenerator;
 import org.bouncycastle.openpgp.operator.PBESecretKeyDecryptor;
+import org.bouncycastle.openpgp.operator.PGPDigestCalculator;
+import org.bouncycastle.openpgp.operator.bc.BcPGPContentSignerBuilder;
+import org.bouncycastle.openpgp.operator.bc.BcPGPDigestCalculatorProvider;
+import org.pgpainless.algorithm.HashAlgorithm;
 import org.pgpainless.algorithm.SignatureType;
 import org.pgpainless.key.OpenPgpV4Fingerprint;
-import org.pgpainless.key.collection.PGPKeyRing;
 import org.pgpainless.key.generation.KeySpec;
 import org.pgpainless.key.protection.KeyRingProtectionSettings;
-import org.pgpainless.key.protection.PasswordBasedSecretKeyRingProtector;
-import org.pgpainless.key.protection.passphrase_provider.SecretKeyPassphraseProvider;
 import org.pgpainless.key.protection.SecretKeyRingProtector;
-import org.pgpainless.key.protection.UnprotectedKeysProtector;
-import org.pgpainless.key.protection.passphrase_provider.SolitaryPassphraseProvider;
+import org.pgpainless.key.util.OpenPgpKeyAttributeUtil;
 import org.pgpainless.util.Passphrase;
 
 public class KeyRingEditor implements KeyRingEditorInterface {
@@ -42,18 +56,27 @@ public class KeyRingEditor implements KeyRingEditorInterface {
     public KeyRingEditorInterface addUserId(String userId, SecretKeyRingProtector secretKeyRingProtector) throws PGPException {
         userId = sanitizeUserId(userId);
 
+        Iterator<PGPSecretKey> secretKeys = secretKeyRing.getSecretKeys();
+        PGPSecretKey primarySecKey = secretKeys.next();
         PGPPublicKey primaryPubKey = secretKeyRing.getPublicKey();
-        PGPPrivateKey privateKey = unlockSecretKey(primaryPubKey.getKeyID(), secretKeyRingProtector);
 
+        PGPPrivateKey privateKey = unlockSecretKey(primarySecKey, secretKeyRingProtector);
+
+        PGPSignatureGenerator signatureGenerator = new PGPSignatureGenerator(
+                getPgpContentSignerBuilderForKey(primarySecKey));
         signatureGenerator.init(SignatureType.POSITIVE_CERTIFICATION.getCode(), privateKey);
         PGPSignature userIdSignature = signatureGenerator.generateCertification(userId, primaryPubKey);
         primaryPubKey = PGPPublicKey.addCertification(primaryPubKey,
                 userId, userIdSignature);
 
+        PGPDigestCalculator digestCalculator = new BcPGPDigestCalculatorProvider().get(
+                // TODO: Is SHA1 still a good choice?
+                //  If not, what to use/how to make a proper choice?
+                HashAlgorithm.SHA1.getAlgorithmId());
+
         // "reassemble" secret key ring with modified primary key
-        PGPSecretKey primarySecKey = new PGPSecretKey(
-                privateKey,
-                primaryPubKey, digestCalculator, true, secretKeyRingProtector);
+        primarySecKey = new PGPSecretKey(privateKey, primaryPubKey, digestCalculator, true,
+                secretKeyRingProtector.getEncryptor(primaryPubKey.getKeyID()));
         List<PGPSecretKey> secretKeyList = new ArrayList<>();
         secretKeyList.add(primarySecKey);
         while (secretKeys.hasNext()) {
@@ -61,20 +84,24 @@ public class KeyRingEditor implements KeyRingEditorInterface {
         }
         secretKeyRing = new PGPSecretKeyRing(secretKeyList);
 
-        // extract public key ring from secret keys
-        List<PGPPublicKey> publicKeyList = new ArrayList<>();
-        Iterator<PGPPublicKey> publicKeys = secretKeyRing.getPublicKeys();
-        while (publicKeys.hasNext()) {
-            publicKeyList.add(publicKeys.next());
-        }
-        PGPPublicKeyRing publicKeyRing = new PGPPublicKeyRing(publicKeyList);
-
         return this;
     }
 
-    private PGPPrivateKey unlockSecretKey(long keyId, SecretKeyRingProtector protector) throws PGPException {
-        PGPSecretKey secretKey = secretKeyRing.getSecretKey(keyId);
-        PBESecretKeyDecryptor secretKeyDecryptor = protector.getDecryptor(keyId);
+    private static BcPGPContentSignerBuilder getPgpContentSignerBuilderForKey(PGPSecretKey secretKey) {
+        List<HashAlgorithm> preferredHashAlgorithms = OpenPgpKeyAttributeUtil.getPreferredHashAlgorithms(secretKey.getPublicKey());
+        HashAlgorithm hashAlgorithm = negotiateHashAlgorithm(preferredHashAlgorithms);
+
+        return new BcPGPContentSignerBuilder(secretKey.getPublicKey().getAlgorithm(), hashAlgorithm.getAlgorithmId());
+    }
+
+    private static HashAlgorithm negotiateHashAlgorithm(List<HashAlgorithm> preferredHashAlgorithms) {
+        // TODO: Match our list of supported hash algorithms against the list, to determine the best suitable algo.
+        //  For now we just take the first algorithm in the list and hope that BC has support for it.
+        return preferredHashAlgorithms.get(0);
+    }
+
+    private PGPPrivateKey unlockSecretKey(PGPSecretKey secretKey, SecretKeyRingProtector protector) throws PGPException {
+        PBESecretKeyDecryptor secretKeyDecryptor = protector.getDecryptor(secretKey.getKeyID());
         PGPPrivateKey privateKey = secretKey.extractPrivateKey(secretKeyDecryptor);
         return privateKey;
     }
@@ -87,32 +114,32 @@ public class KeyRingEditor implements KeyRingEditorInterface {
     }
 
     @Override
-    public KeyRingEditorInterface deleteUserId(String userId) {
+    public KeyRingEditorInterface deleteUserId(String userId, SecretKeyRingProtector protector) {
         return this;
     }
 
     @Override
-    public KeyRingEditorInterface addSubKey(KeySpec keySpec) {
+    public KeyRingEditorInterface addSubKey(KeySpec keySpec, SecretKeyRingProtector protector) {
         return this;
     }
 
     @Override
-    public KeyRingEditorInterface deleteSubKey(OpenPgpV4Fingerprint fingerprint) {
+    public KeyRingEditorInterface deleteSubKey(OpenPgpV4Fingerprint fingerprint, SecretKeyRingProtector protector) {
         return this;
     }
 
     @Override
-    public KeyRingEditorInterface deleteSubKey(long subKeyId) {
+    public KeyRingEditorInterface deleteSubKey(long subKeyId, SecretKeyRingProtector protector) {
         return this;
     }
 
     @Override
-    public KeyRingEditorInterface revokeSubKey(OpenPgpV4Fingerprint fingerprint) {
+    public KeyRingEditorInterface revokeSubKey(OpenPgpV4Fingerprint fingerprint, SecretKeyRingProtector protector) {
         return this;
     }
 
     @Override
-    public KeyRingEditorInterface revokeSubKey(long subKeyId) {
+    public KeyRingEditorInterface revokeSubKey(long subKeyId, SecretKeyRingProtector protector) {
         return this;
     }
 
