@@ -18,7 +18,6 @@ package org.pgpainless.key.modification;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 
-import java.io.IOException;
 import java.security.InvalidAlgorithmParameterException;
 import java.security.NoSuchAlgorithmException;
 import java.util.Iterator;
@@ -35,7 +34,7 @@ import org.pgpainless.util.Passphrase;
 public class AddUserIdTest {
 
     @Test
-    public void addUserIdToExistingKeyRing() throws InvalidAlgorithmParameterException, NoSuchAlgorithmException, PGPException, IOException {
+    public void addUserIdToExistingKeyRing() throws InvalidAlgorithmParameterException, NoSuchAlgorithmException, PGPException {
         PGPKeyRing keyRing = PGPainless.generateKeyRing().simpleEcKeyRing("alice@wonderland.lit", "rabb1th0le");
         PGPSecretKeyRing secretKeys = keyRing.getSecretKeys();
 

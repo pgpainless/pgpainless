@@ -153,14 +153,14 @@ public interface KeyRingEditorInterface {
          * @param passphrase passphrase
          * @return editor builder
          */
-        KeyRingEditorInterface toNewPassphrase(Passphrase passphrase);
+        KeyRingEditorInterface toNewPassphrase(Passphrase passphrase) throws PGPException;
 
         /**
          * Leave the key unprotected.
          *
          * @return editor builder
          */
-        KeyRingEditorInterface noPassphrase();
+        KeyRingEditorInterface noPassphrase() throws PGPException;
     }
 
     /**
