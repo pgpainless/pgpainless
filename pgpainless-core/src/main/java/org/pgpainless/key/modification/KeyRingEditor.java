@@ -46,6 +46,7 @@ import org.pgpainless.key.protection.SecretKeyRingProtector;
 import org.pgpainless.key.protection.UnprotectedKeysProtector;
 import org.pgpainless.key.protection.passphrase_provider.SolitaryPassphraseProvider;
 import org.pgpainless.key.util.OpenPgpKeyAttributeUtil;
+import org.pgpainless.util.NotYetImplementedException;
 import org.pgpainless.util.Passphrase;
 
 public class KeyRingEditor implements KeyRingEditorInterface {
@@ -63,27 +64,30 @@ public class KeyRingEditor implements KeyRingEditorInterface {
     public KeyRingEditorInterface addUserId(String userId, SecretKeyRingProtector secretKeyRingProtector) throws PGPException {
         userId = sanitizeUserId(userId);
 
-        Iterator<PGPSecretKey> secretKeys = secretKeyRing.getSecretKeys();
-        PGPSecretKey primarySecKey = secretKeys.next();
-        PGPPublicKey primaryPubKey = secretKeyRing.getPublicKey();
-
-        PGPPrivateKey privateKey = unlockSecretKey(primarySecKey, secretKeyRingProtector);
-
-        PGPSignatureGenerator signatureGenerator = new PGPSignatureGenerator(
-                getPgpContentSignerBuilderForKey(primarySecKey));
-        signatureGenerator.init(SignatureType.POSITIVE_CERTIFICATION.getCode(), privateKey);
-        PGPSignature userIdSignature = signatureGenerator.generateCertification(userId, primaryPubKey);
-        primaryPubKey = PGPPublicKey.addCertification(primaryPubKey,
-                userId, userIdSignature);
-
         PGPDigestCalculator digestCalculator = new BcPGPDigestCalculatorProvider().get(
                 // TODO: Is SHA1 still a good choice?
                 //  If not, what to use/how to make a proper choice?
                 HashAlgorithm.SHA1.getAlgorithmId());
 
-        // "reassemble" secret key ring with modified primary key
+        // Unlock primary secret key
+        Iterator<PGPSecretKey> secretKeys = secretKeyRing.getSecretKeys();
+        PGPSecretKey primarySecKey = secretKeys.next();
+        PGPPrivateKey privateKey = unlockSecretKey(primarySecKey, secretKeyRingProtector);
+
+        // Create signature with new user-id and add it to the public key
+        PGPSignatureGenerator signatureGenerator = new PGPSignatureGenerator(
+                getPgpContentSignerBuilderForKey(primarySecKey));
+        signatureGenerator.init(SignatureType.POSITIVE_CERTIFICATION.getCode(), privateKey);
+        PGPPublicKey primaryPubKey = secretKeyRing.getPublicKey();
+        PGPSignature userIdSignature = signatureGenerator.generateCertification(userId, primaryPubKey);
+        primaryPubKey = PGPPublicKey.addCertification(primaryPubKey,
+                userId, userIdSignature);
+
+        // reunite the modified public key and its secret key
         primarySecKey = new PGPSecretKey(privateKey, primaryPubKey, digestCalculator, true,
                 secretKeyRingProtector.getEncryptor(primaryPubKey.getKeyID()));
+
+        // "reassemble" secret key ring with modified primary key
         List<PGPSecretKey> secretKeyList = new ArrayList<>();
         secretKeyList.add(primarySecKey);
         while (secretKeys.hasNext()) {
@@ -124,32 +128,32 @@ public class KeyRingEditor implements KeyRingEditorInterface {
 
     @Override
     public KeyRingEditorInterface deleteUserId(String userId, SecretKeyRingProtector protector) {
-        return this;
+        throw new NotYetImplementedException();
     }
 
     @Override
     public KeyRingEditorInterface addSubKey(KeySpec keySpec, SecretKeyRingProtector protector) {
-        return this;
+        throw new NotYetImplementedException();
     }
 
     @Override
     public KeyRingEditorInterface deleteSubKey(OpenPgpV4Fingerprint fingerprint, SecretKeyRingProtector protector) {
-        return this;
+        throw new NotYetImplementedException();
     }
 
     @Override
     public KeyRingEditorInterface deleteSubKey(long subKeyId, SecretKeyRingProtector protector) {
-        return this;
+        throw new NotYetImplementedException();
     }
 
     @Override
     public KeyRingEditorInterface revokeSubKey(OpenPgpV4Fingerprint fingerprint, SecretKeyRingProtector protector) {
-        return this;
+        throw new NotYetImplementedException();
     }
 
     @Override
     public KeyRingEditorInterface revokeSubKey(long subKeyId, SecretKeyRingProtector protector) {
-        return this;
+        throw new NotYetImplementedException();
     }
 
     @Override
@@ -184,6 +188,14 @@ public class KeyRingEditor implements KeyRingEditorInterface {
         // Protector to unlock the key with the old passphrase
         private final SecretKeyRingProtector oldProtector;
 
+        /**
+         * Builder for selecting protection settings.
+         *
+         * If the keyId is null, the whole keyRing will get the same new passphrase.
+         *
+         * @param keyId id of the subkey whose passphrase will be changed, or null.
+         * @param oldProtector protector do unlock the key/ring.
+         */
         private WithKeyRingEncryptionSettingsImpl(Long keyId, SecretKeyRingProtector oldProtector) {
             this.keyId = keyId;
             this.oldProtector = oldProtector;
