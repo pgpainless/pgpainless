@@ -47,7 +47,7 @@ import org.pgpainless.key.TestKeys;
 import org.pgpainless.key.collection.PGPKeyRing;
 import org.pgpainless.key.generation.KeySpec;
 import org.pgpainless.key.generation.type.ElGamal_GENERAL;
-import org.pgpainless.key.generation.type.RSA_GENERAL;
+import org.pgpainless.key.generation.type.RSA;
 import org.pgpainless.key.generation.type.length.ElGamalLength;
 import org.pgpainless.key.generation.type.length.RsaLength;
 import org.pgpainless.key.protection.SecretKeyRingProtector;
@@ -74,7 +74,7 @@ public class EncryptDecryptTest {
         PGPKeyRing sender = PGPainless.generateKeyRing().simpleRsaKeyRing("romeo@montague.lit", RsaLength._3072);
         PGPKeyRing recipient = PGPainless.generateKeyRing()
                 .withSubKey(KeySpec.getBuilder(ElGamal_GENERAL.withLength(ElGamalLength._3072)).withKeyFlags(KeyFlag.ENCRYPT_STORAGE, KeyFlag.ENCRYPT_COMMS).withDefaultAlgorithms())
-                .withMasterKey(KeySpec.getBuilder(RSA_GENERAL.withLength(RsaLength._4096)).withKeyFlags(KeyFlag.SIGN_DATA, KeyFlag.CERTIFY_OTHER).withDefaultAlgorithms())
+                .withMasterKey(KeySpec.getBuilder(RSA.withLength(RsaLength._4096)).withKeyFlags(KeyFlag.SIGN_DATA, KeyFlag.CERTIFY_OTHER).withDefaultAlgorithms())
                 .withPrimaryUserId("juliet@capulet.lit").withoutPassphrase().build();
 
         encryptDecryptForSecretKeyRings(sender, recipient);

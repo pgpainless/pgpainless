@@ -64,7 +64,7 @@ Take for example a look at this delicious key:
                         .withKeyFlags(KeyFlag.ENCRYPT_COMMS, KeyFlag.ENCRYPT_STORAGE)
                         .withDefaultAlgorithms())
                 .withMasterKey(
-                        KeySpec.getBuilder(RSA_GENERAL.withLength(RsaLength._8192))
+                        KeySpec.getBuilder(RSA.withLength(RsaLength._8192))
                                 .withKeyFlags(KeyFlag.SIGN_DATA, KeyFlag.CERTIFY_OTHER)
                                 .withDefaultAlgorithms())
                 .withPrimaryUserId("Juliet <juliet@montague.lit>")
