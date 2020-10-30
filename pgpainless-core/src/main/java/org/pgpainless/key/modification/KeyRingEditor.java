@@ -51,6 +51,11 @@ import org.pgpainless.util.Passphrase;
 
 public class KeyRingEditor implements KeyRingEditorInterface {
 
+    // Default algorithm for calculating private key checksums
+    // While I'd like to use something else, eg. SHA256, BC seems to lack support for
+    // calculating secret key checksums with algorithms other than SHA1.
+    private final HashAlgorithm defaultDigestHashAlgorithm = HashAlgorithm.SHA1;
+
     private PGPSecretKeyRing secretKeyRing;
 
     public KeyRingEditor(PGPSecretKeyRing secretKeyRing) {
@@ -64,10 +69,8 @@ public class KeyRingEditor implements KeyRingEditorInterface {
     public KeyRingEditorInterface addUserId(String userId, SecretKeyRingProtector secretKeyRingProtector) throws PGPException {
         userId = sanitizeUserId(userId);
 
-        PGPDigestCalculator digestCalculator = new BcPGPDigestCalculatorProvider().get(
-                // TODO: Is SHA1 still a good choice?
-                //  If not, what to use/how to make a proper choice?
-                HashAlgorithm.SHA1.getAlgorithmId());
+        PGPDigestCalculator digestCalculator = new BcPGPDigestCalculatorProvider()
+                .get(defaultDigestHashAlgorithm.getAlgorithmId());
 
         // Unlock primary secret key
         Iterator<PGPSecretKey> secretKeys = secretKeyRing.getSecretKeys();
@@ -282,8 +285,7 @@ public class KeyRingEditor implements KeyRingEditorInterface {
         // TODO: Move to utility class
         private PGPSecretKey lockPrivateKey(PGPPrivateKey privateKey, PGPPublicKey publicKey, SecretKeyRingProtector protector) throws PGPException {
             PGPDigestCalculator checksumCalculator = new BcPGPDigestCalculatorProvider()
-                    // TODO: Again, SHA1?
-                    .get(HashAlgorithm.SHA1.getAlgorithmId());
+                    .get(defaultDigestHashAlgorithm.getAlgorithmId());
             PBESecretKeyEncryptor encryptor = protector.getEncryptor(publicKey.getKeyID());
             PGPSecretKey secretKey = new PGPSecretKey(privateKey, publicKey, checksumCalculator, publicKey.isMasterKey(), encryptor);
             return secretKey;
