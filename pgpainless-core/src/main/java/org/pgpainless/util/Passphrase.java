@@ -92,6 +92,17 @@ public class Passphrase {
     }
 
     /**
+     * Return true if the passphrase represents no password.
+     *
+     * @return empty
+     */
+    public boolean isEmpty() {
+        synchronized (lock) {
+            return chars == null;
+        }
+    }
+
+    /**
      * Represents a {@link Passphrase} instance that represents no password.
      *
      * @return empty passphrase

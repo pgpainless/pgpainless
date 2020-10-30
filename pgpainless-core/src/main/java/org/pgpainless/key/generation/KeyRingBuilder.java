@@ -338,7 +338,7 @@ public class KeyRingBuilder implements KeyRingBuilderInterface {
             }
 
             private PBESecretKeyEncryptor buildSecretKeyEncryptor() {
-                PBESecretKeyEncryptor encryptor = passphrase == null ?
+                PBESecretKeyEncryptor encryptor = passphrase == null || passphrase.isEmpty() ?
                         null : // unencrypted key pair, otherwise AES-256 encrypted
                         new JcePBESecretKeyEncryptorBuilder(PGPEncryptedData.AES_256, digestCalculator)
                                 .setProvider(ProviderFactory.getProvider())
@@ -347,7 +347,7 @@ public class KeyRingBuilder implements KeyRingBuilderInterface {
             }
 
             private PBESecretKeyDecryptor buildSecretKeyDecryptor() throws PGPException {
-                PBESecretKeyDecryptor decryptor = passphrase == null ?
+                PBESecretKeyDecryptor decryptor = passphrase == null || passphrase.isEmpty() ?
                         null :
                         new JcePBESecretKeyDecryptorBuilder()
                         .build(passphrase.getChars());
