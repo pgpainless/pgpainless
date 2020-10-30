@@ -1,5 +1,5 @@
 /*
- * Copyright 2018 Paul Schaub.
+ * Copyright 2020 Wiktor Kwapisiewicz, 2020 Paul Schaub.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -17,11 +17,9 @@ package org.pgpainless.key.generation;
 
 import static org.junit.Assert.assertNotNull;
 
-import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.security.InvalidAlgorithmParameterException;
 import java.security.NoSuchAlgorithmException;
-import java.util.Iterator;
 
 import org.bouncycastle.openpgp.PGPException;
 import org.junit.Test;
@@ -30,10 +28,17 @@ import org.pgpainless.key.generation.type.RSA;
 import org.pgpainless.key.generation.type.length.RsaLength;
 import org.pgpainless.util.Passphrase;
 
+/**
+ * Reproduce behavior of https://github.com/pgpainless/pgpainless/issues/16
+ * and verify that the fix is working.
+ *
+ * The issue is that the implementation of {@link Passphrase#emptyPassphrase()} would set the underlying
+ * char array to null, which caused an NPE later on.
+ */
 public class GenerateWithEmptyPassphrase {
 
     @Test
-    public void test() throws InvalidAlgorithmParameterException, NoSuchAlgorithmException, PGPException, IOException {
+    public void testGeneratingKeyWithEmptyPassphraseDoesNotThrow() throws InvalidAlgorithmParameterException, NoSuchAlgorithmException, PGPException, IOException {
         assertNotNull(PGPainless.generateKeyRing()
                 .withMasterKey(KeySpec.getBuilder(RSA.withLength(RsaLength._3072))
                         .withDefaultKeyFlags()
