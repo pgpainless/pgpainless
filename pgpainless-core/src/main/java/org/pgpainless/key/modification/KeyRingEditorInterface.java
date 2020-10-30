@@ -129,7 +129,7 @@ public interface KeyRingEditorInterface {
 
         /**
          * Set secure default settings for the symmetric passphrase encryption.
-         * Note that this obviously has no effect if you decide to set {@link WithPassphrase#noPassphrase()}.
+         * Note that this obviously has no effect if you decide to set {@link WithPassphrase#toNoPassphrase()}.
          *
          * @return next builder step
          */
@@ -160,7 +160,7 @@ public interface KeyRingEditorInterface {
          *
          * @return editor builder
          */
-        KeyRingEditorInterface noPassphrase() throws PGPException;
+        KeyRingEditorInterface toNoPassphrase() throws PGPException;
     }
 
     /**

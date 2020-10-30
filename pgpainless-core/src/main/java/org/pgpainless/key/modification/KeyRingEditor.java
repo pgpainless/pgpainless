@@ -239,7 +239,7 @@ public class KeyRingEditor implements KeyRingEditorInterface {
         }
 
         @Override
-        public KeyRingEditorInterface noPassphrase() throws PGPException {
+        public KeyRingEditorInterface toNoPassphrase() throws PGPException {
             SecretKeyRingProtector newProtector = new UnprotectedKeysProtector();
 
             PGPSecretKeyRing secretKeys = changePassphrase(keyId, KeyRingEditor.this.secretKeyRing, oldProtector, newProtector);
