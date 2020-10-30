@@ -32,6 +32,7 @@ import org.bouncycastle.openpgp.PGPPublicKeyRingCollection;
 import org.bouncycastle.openpgp.PGPSecretKey;
 import org.bouncycastle.openpgp.PGPSecretKeyRing;
 import org.bouncycastle.openpgp.PGPSecretKeyRingCollection;
+import org.bouncycastle.openpgp.operator.PBESecretKeyDecryptor;
 import org.pgpainless.algorithm.CompressionAlgorithm;
 import org.pgpainless.algorithm.HashAlgorithm;
 import org.pgpainless.algorithm.SymmetricKeyAlgorithm;
@@ -353,8 +354,9 @@ public class EncryptionBuilder implements EncryptionBuilderInterface {
 
             Map<OpenPgpV4Fingerprint, PGPPrivateKey> privateKeys = new ConcurrentHashMap<>();
             for (PGPSecretKey secretKey : signingKeys) {
-                privateKeys.put(new OpenPgpV4Fingerprint(secretKey),
-                        secretKey.extractPrivateKey(signingKeysDecryptor.getDecryptor(secretKey.getKeyID())));
+                PBESecretKeyDecryptor decryptor = signingKeysDecryptor.getDecryptor(secretKey.getKeyID());
+                PGPPrivateKey privateKey = secretKey.extractPrivateKey(decryptor);
+                privateKeys.put(new OpenPgpV4Fingerprint(secretKey), privateKey);
             }
 
             return new EncryptionStream(
