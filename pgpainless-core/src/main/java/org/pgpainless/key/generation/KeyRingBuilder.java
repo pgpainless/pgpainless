@@ -57,7 +57,7 @@ import org.pgpainless.key.collection.PGPKeyRing;
 import org.pgpainless.key.generation.type.ECDH;
 import org.pgpainless.key.generation.type.ECDSA;
 import org.pgpainless.key.generation.type.KeyType;
-import org.pgpainless.key.generation.type.RSA_GENERAL;
+import org.pgpainless.key.generation.type.RSA;
 import org.pgpainless.key.generation.type.curve.EllipticCurve;
 import org.pgpainless.key.generation.type.length.RsaLength;
 import org.pgpainless.provider.ProviderFactory;
@@ -108,7 +108,7 @@ public class KeyRingBuilder implements KeyRingBuilderInterface {
             throws PGPException, NoSuchAlgorithmException, InvalidAlgorithmParameterException {
         WithAdditionalUserIdOrPassphrase builder = this
                 .withMasterKey(
-                        KeySpec.getBuilder(RSA_GENERAL.withLength(length))
+                        KeySpec.getBuilder(RSA.withLength(length))
                                 .withDefaultKeyFlags()
                                 .withDefaultAlgorithms())
                 .withPrimaryUserId(userId);

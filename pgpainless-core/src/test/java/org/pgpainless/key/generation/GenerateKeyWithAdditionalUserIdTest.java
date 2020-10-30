@@ -29,7 +29,7 @@ import org.bouncycastle.openpgp.PGPException;
 import org.junit.Test;
 import org.pgpainless.PGPainless;
 import org.pgpainless.key.collection.PGPKeyRing;
-import org.pgpainless.key.generation.type.RSA_SIGN;
+import org.pgpainless.key.generation.type.RSA;
 import org.pgpainless.key.generation.type.length.RsaLength;
 
 public class GenerateKeyWithAdditionalUserIdTest {
@@ -37,7 +37,7 @@ public class GenerateKeyWithAdditionalUserIdTest {
     @Test
     public void test() throws InvalidAlgorithmParameterException, NoSuchAlgorithmException, PGPException, IOException {
         PGPKeyRing keyRing = PGPainless.generateKeyRing()
-                .withMasterKey(KeySpec.getBuilder(RSA_SIGN.withLength(RsaLength._3072))
+                .withMasterKey(KeySpec.getBuilder(RSA.withLength(RsaLength._3072))
                         .withDefaultKeyFlags()
                         .withDefaultAlgorithms())
                 .withPrimaryUserId("primary@user.id")
