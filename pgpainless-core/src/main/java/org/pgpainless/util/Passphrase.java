@@ -98,7 +98,7 @@ public class Passphrase {
      */
     public boolean isEmpty() {
         synchronized (lock) {
-            return chars == null;
+            return valid && chars == null;
         }
     }
 
