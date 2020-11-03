@@ -50,6 +50,12 @@ public interface KeyRingEditorInterface {
      */
     KeyRingEditorInterface deleteUserId(String userId, SecretKeyRingProtector secretKeyRingProtector);
 
+    default KeyRingEditorInterface deleteUserId(OpenPgpV4Fingerprint fingerprint, String userId, SecretKeyRingProtector secretKeyRingProtector) {
+        return deleteUserId(fingerprint.getKeyId(), userId, secretKeyRingProtector);
+    }
+
+    KeyRingEditorInterface deleteUserId(long keyId, String userId, SecretKeyRingProtector secretKeyRingProtector);
+
     /**
      * Add a subkey to the key ring.
      * The subkey will be generated from the provided {@link KeySpec}.

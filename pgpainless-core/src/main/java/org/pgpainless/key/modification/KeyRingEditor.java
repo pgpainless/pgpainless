@@ -147,7 +147,42 @@ public class KeyRingEditor implements KeyRingEditorInterface {
 
     @Override
     public KeyRingEditorInterface deleteUserId(String userId, SecretKeyRingProtector protector) {
-        throw new NotYetImplementedException();
+        PGPPublicKey publicKey = secretKeyRing.getPublicKey();
+        return deleteUserId(publicKey.getKeyID(), userId, protector);
+    }
+
+    @Override
+    public KeyRingEditorInterface deleteUserId(long keyId, String userId, SecretKeyRingProtector secretKeyRingProtector) {
+        List<PGPPublicKey> publicKeys = new ArrayList<>();
+        Iterator<PGPPublicKey> publicKeyIterator = secretKeyRing.getPublicKeys();
+        boolean foundKey = false;
+        while (publicKeyIterator.hasNext()) {
+            PGPPublicKey publicKey = publicKeyIterator.next();
+            if (publicKey.getKeyID() == keyId) {
+                foundKey = true;
+                if (!hasUserId(userId, publicKey)) {
+                    throw new NoSuchElementException("Key " + Long.toHexString(keyId) + " does not have a user-id attribute of value '" + userId + "'");
+                }
+                publicKey = PGPPublicKey.removeCertification(publicKey, userId);
+            }
+            publicKeys.add(publicKey);
+        }
+        if (!foundKey) {
+            throw new NoSuchElementException("Cannot find public key with id " + Long.toHexString(keyId));
+        }
+        PGPPublicKeyRing publicKeyRing = new PGPPublicKeyRing(publicKeys);
+        secretKeyRing = PGPSecretKeyRing.replacePublicKeys(secretKeyRing, publicKeyRing);
+        return this;
+    }
+
+    private static boolean hasUserId(String userId, PGPPublicKey publicKey) {
+        boolean hasUserId = false;
+        Iterator<String> userIdIterator = publicKey.getUserIDs();
+        while (userIdIterator.hasNext()) {
+            hasUserId = userId.equals(userIdIterator.next());
+            if (hasUserId) break;
+        }
+        return hasUserId;
     }
 
     @Override
