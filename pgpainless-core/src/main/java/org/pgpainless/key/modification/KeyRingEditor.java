@@ -157,12 +157,23 @@ public class KeyRingEditor implements KeyRingEditorInterface {
 
     @Override
     public KeyRingEditorInterface deleteSubKey(OpenPgpV4Fingerprint fingerprint, SecretKeyRingProtector protector) {
-        throw new NotYetImplementedException();
+        return deleteSubKey(fingerprint.getKeyId(), protector);
     }
 
     @Override
     public KeyRingEditorInterface deleteSubKey(long subKeyId, SecretKeyRingProtector protector) {
-        throw new NotYetImplementedException();
+        if (secretKeyRing.getSecretKey().getKeyID() == subKeyId) {
+            throw new IllegalArgumentException("You cannot delete the primary key of this key ring.");
+        }
+
+        PGPSecretKey deleteMe = secretKeyRing.getSecretKey(subKeyId);
+        if (deleteMe == null) {
+            throw new NoSuchElementException("KeyRing does not contain such a key.");
+        }
+
+        PGPSecretKeyRing newKeyRing = PGPSecretKeyRing.removeSecretKey(secretKeyRing, deleteMe);
+        secretKeyRing = newKeyRing;
+        return this;
     }
 
     @Override
