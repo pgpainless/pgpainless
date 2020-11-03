@@ -20,12 +20,14 @@ import java.util.Collections;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
+import java.util.NoSuchElementException;
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
 
 import org.bouncycastle.openpgp.PGPException;
 import org.bouncycastle.openpgp.PGPPrivateKey;
 import org.bouncycastle.openpgp.PGPPublicKey;
+import org.bouncycastle.openpgp.PGPPublicKeyRing;
 import org.bouncycastle.openpgp.PGPSecretKey;
 import org.bouncycastle.openpgp.PGPSecretKeyRing;
 import org.bouncycastle.openpgp.PGPSignature;
@@ -67,45 +69,59 @@ public class KeyRingEditor implements KeyRingEditorInterface {
 
     @Override
     public KeyRingEditorInterface addUserId(String userId, SecretKeyRingProtector secretKeyRingProtector) throws PGPException {
+        return addUserId(secretKeyRing.getPublicKey().getKeyID(), userId, secretKeyRingProtector);
+    }
+
+    @Override
+    public KeyRingEditorInterface addUserId(long keyId, String userId, SecretKeyRingProtector secretKeyRingProtector) throws PGPException {
         userId = sanitizeUserId(userId);
 
-        PGPDigestCalculator digestCalculator = new BcPGPDigestCalculatorProvider()
-                .get(defaultDigestHashAlgorithm.getAlgorithmId());
-
-        // Unlock primary secret key
-        Iterator<PGPSecretKey> secretKeys = secretKeyRing.getSecretKeys();
-        PGPSecretKey primarySecKey = secretKeys.next();
-        PGPPrivateKey privateKey = unlockSecretKey(primarySecKey, secretKeyRingProtector);
-
-        // Create signature with new user-id and add it to the public key
-        PGPSignatureGenerator signatureGenerator = new PGPSignatureGenerator(
-                getPgpContentSignerBuilderForKey(primarySecKey));
-        signatureGenerator.init(SignatureType.POSITIVE_CERTIFICATION.getCode(), privateKey);
-        PGPPublicKey primaryPubKey = secretKeyRing.getPublicKey();
-        PGPSignature userIdSignature = signatureGenerator.generateCertification(userId, primaryPubKey);
-        primaryPubKey = PGPPublicKey.addCertification(primaryPubKey,
-                userId, userIdSignature);
-
-        // reunite the modified public key and its secret key
-        primarySecKey = new PGPSecretKey(privateKey, primaryPubKey, digestCalculator, true,
-                secretKeyRingProtector.getEncryptor(primaryPubKey.getKeyID()));
-
-        // "reassemble" secret key ring with modified primary key
         List<PGPSecretKey> secretKeyList = new ArrayList<>();
-        secretKeyList.add(primarySecKey);
-        while (secretKeys.hasNext()) {
-            secretKeyList.add(secretKeys.next());
+        Iterator<PGPSecretKey> secretKeyIterator = secretKeyRing.getSecretKeys();
+
+        boolean found = false;
+        while (secretKeyIterator.hasNext()) {
+            PGPSecretKey secretKey = secretKeyIterator.next();
+            if (secretKey.getKeyID() == keyId) {
+                found = true;
+                PGPPublicKey publicKey = secretKey.getPublicKey();
+                PGPPrivateKey privateKey = unlockSecretKey(secretKey, secretKeyRingProtector);
+                publicKey = addUserIdToPubKey(userId, privateKey, publicKey);
+                secretKey = PGPSecretKey.replacePublicKey(secretKey, publicKey);
+            }
+            secretKeyList.add(secretKey);
         }
+
+        if (!found) {
+            throw new NoSuchElementException("Cannot find secret key with id " + Long.toHexString(keyId));
+        }
+
         secretKeyRing = new PGPSecretKeyRing(secretKeyList);
 
         return this;
     }
 
-    private static BcPGPContentSignerBuilder getPgpContentSignerBuilderForKey(PGPSecretKey secretKey) {
-        List<HashAlgorithm> preferredHashAlgorithms = OpenPgpKeyAttributeUtil.getPreferredHashAlgorithms(secretKey.getPublicKey());
+    private static PGPPublicKey addUserIdToPubKey(String userId, PGPPrivateKey privateKey, PGPPublicKey publicKey) throws PGPException {
+        if (privateKey.getKeyID() != publicKey.getKeyID()) {
+            throw new IllegalArgumentException("Key-ID mismatch!");
+        }
+        // Create signature with new user-id and add it to the public key
+        PGPSignatureGenerator signatureGenerator = new PGPSignatureGenerator(
+                getPgpContentSignerBuilderForKey(publicKey));
+        signatureGenerator.init(SignatureType.POSITIVE_CERTIFICATION.getCode(), privateKey);
+
+        PGPSignature userIdSignature = signatureGenerator.generateCertification(userId, publicKey);
+        publicKey = PGPPublicKey.addCertification(publicKey,
+                userId, userIdSignature);
+
+        return publicKey;
+    }
+
+    private static BcPGPContentSignerBuilder getPgpContentSignerBuilderForKey(PGPPublicKey publicKey) {
+        List<HashAlgorithm> preferredHashAlgorithms = OpenPgpKeyAttributeUtil.getPreferredHashAlgorithms(publicKey);
         HashAlgorithm hashAlgorithm = negotiateHashAlgorithm(preferredHashAlgorithms);
 
-        return new BcPGPContentSignerBuilder(secretKey.getPublicKey().getAlgorithm(), hashAlgorithm.getAlgorithmId());
+        return new BcPGPContentSignerBuilder(publicKey.getAlgorithm(), hashAlgorithm.getAlgorithmId());
     }
 
     private static HashAlgorithm negotiateHashAlgorithm(List<HashAlgorithm> preferredHashAlgorithms) {
@@ -115,7 +131,7 @@ public class KeyRingEditor implements KeyRingEditorInterface {
     }
 
     // TODO: Move to utility class
-    private PGPPrivateKey unlockSecretKey(PGPSecretKey secretKey, SecretKeyRingProtector protector) throws PGPException {
+    private static PGPPrivateKey unlockSecretKey(PGPSecretKey secretKey, SecretKeyRingProtector protector) throws PGPException {
         PBESecretKeyDecryptor secretKeyDecryptor = protector.getDecryptor(secretKey.getKeyID());
         PGPPrivateKey privateKey = secretKey.extractPrivateKey(secretKeyDecryptor);
         return privateKey;

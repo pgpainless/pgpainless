@@ -36,6 +36,12 @@ public interface KeyRingEditorInterface {
      */
     KeyRingEditorInterface addUserId(String userId, SecretKeyRingProtector secretKeyRingProtector) throws PGPException;
 
+    default KeyRingEditorInterface addUserId(OpenPgpV4Fingerprint fingerprint, String userId, SecretKeyRingProtector secretKeyRingProtector) throws PGPException {
+        return addUserId(fingerprint.getKeyId(), userId, secretKeyRingProtector);
+    }
+
+    KeyRingEditorInterface addUserId(long keyId, String userId, SecretKeyRingProtector secretKeyRingProtector) throws PGPException;
+
     /**
      * Remove a user-id from the primary key of the key ring.
      *
