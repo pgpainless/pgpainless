@@ -38,7 +38,7 @@ import org.junit.Test;
 import org.pgpainless.PGPainless;
 import org.pgpainless.key.collection.PGPKeyRing;
 import org.pgpainless.key.generation.KeySpec;
-import org.pgpainless.key.generation.type.RSA;
+import org.pgpainless.key.generation.type.KeyType;
 import org.pgpainless.key.generation.type.length.RsaLength;
 
 public class BCUtilTest {
@@ -50,8 +50,8 @@ public class BCUtilTest {
             throws PGPException, NoSuchAlgorithmException, InvalidAlgorithmParameterException,
             IOException {
         PGPKeyRing ring = PGPainless.generateKeyRing()
-                .withSubKey(KeySpec.getBuilder(RSA.withLength(RsaLength._3072)).withDefaultKeyFlags().withDefaultAlgorithms())
-                .withMasterKey(KeySpec.getBuilder(RSA.withLength(RsaLength._3072)).withDefaultKeyFlags().withDefaultAlgorithms())
+                .withSubKey(KeySpec.getBuilder(KeyType.RSA(RsaLength._3072)).withDefaultKeyFlags().withDefaultAlgorithms())
+                .withMasterKey(KeySpec.getBuilder(KeyType.RSA(RsaLength._3072)).withDefaultKeyFlags().withDefaultAlgorithms())
                 .withPrimaryUserId("donald@duck.tails").withoutPassphrase().build();
         PGPSecretKeyRing sec = ring.getSecretKeys();
         PGPPublicKeyRing pub = ring.getPublicKeys();

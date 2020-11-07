@@ -54,10 +54,7 @@ import org.pgpainless.algorithm.HashAlgorithm;
 import org.pgpainless.algorithm.KeyFlag;
 import org.pgpainless.algorithm.SignatureType;
 import org.pgpainless.key.collection.PGPKeyRing;
-import org.pgpainless.key.generation.type.ECDH;
-import org.pgpainless.key.generation.type.ECDSA;
 import org.pgpainless.key.generation.type.KeyType;
-import org.pgpainless.key.generation.type.RSA;
 import org.pgpainless.key.generation.type.curve.EllipticCurve;
 import org.pgpainless.key.generation.type.length.RsaLength;
 import org.pgpainless.provider.ProviderFactory;
@@ -108,7 +105,7 @@ public class KeyRingBuilder implements KeyRingBuilderInterface {
             throws PGPException, NoSuchAlgorithmException, InvalidAlgorithmParameterException {
         WithAdditionalUserIdOrPassphrase builder = this
                 .withMasterKey(
-                        KeySpec.getBuilder(RSA.withLength(length))
+                        KeySpec.getBuilder(KeyType.RSA(length))
                                 .withDefaultKeyFlags()
                                 .withDefaultAlgorithms())
                 .withPrimaryUserId(userId);
@@ -156,11 +153,11 @@ public class KeyRingBuilder implements KeyRingBuilderInterface {
             throws PGPException, NoSuchAlgorithmException, InvalidAlgorithmParameterException {
         WithAdditionalUserIdOrPassphrase builder = this
                 .withSubKey(
-                        KeySpec.getBuilder(ECDH.fromCurve(EllipticCurve._P256))
+                        KeySpec.getBuilder(KeyType.ECDH(EllipticCurve._P256))
                                 .withKeyFlags(KeyFlag.ENCRYPT_STORAGE, KeyFlag.ENCRYPT_COMMS)
                                 .withDefaultAlgorithms())
                 .withMasterKey(
-                        KeySpec.getBuilder(ECDSA.fromCurve(EllipticCurve._P256))
+                        KeySpec.getBuilder(KeyType.ECDSA(EllipticCurve._P256))
                                 .withKeyFlags(KeyFlag.AUTHENTICATION, KeyFlag.CERTIFY_OTHER, KeyFlag.SIGN_DATA)
                                 .withDefaultAlgorithms())
                 .withPrimaryUserId(userId);

@@ -24,7 +24,7 @@ import java.security.NoSuchAlgorithmException;
 import org.bouncycastle.openpgp.PGPException;
 import org.junit.Test;
 import org.pgpainless.PGPainless;
-import org.pgpainless.key.generation.type.RSA;
+import org.pgpainless.key.generation.type.KeyType;
 import org.pgpainless.key.generation.type.length.RsaLength;
 import org.pgpainless.util.Passphrase;
 
@@ -40,7 +40,7 @@ public class GenerateWithEmptyPassphrase {
     @Test
     public void testGeneratingKeyWithEmptyPassphraseDoesNotThrow() throws InvalidAlgorithmParameterException, NoSuchAlgorithmException, PGPException, IOException {
         assertNotNull(PGPainless.generateKeyRing()
-                .withMasterKey(KeySpec.getBuilder(RSA.withLength(RsaLength._3072))
+                .withMasterKey(KeySpec.getBuilder(KeyType.RSA(RsaLength._3072))
                         .withDefaultKeyFlags()
                         .withDefaultAlgorithms())
                 .withPrimaryUserId("primary@user.id")
