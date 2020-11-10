@@ -15,10 +15,13 @@
  */
 package org.pgpainless.key.modification;
 
+import java.security.InvalidAlgorithmParameterException;
+import java.security.NoSuchAlgorithmException;
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
 
 import org.bouncycastle.openpgp.PGPException;
+import org.bouncycastle.openpgp.PGPSecretKey;
 import org.bouncycastle.openpgp.PGPSecretKeyRing;
 import org.pgpainless.key.OpenPgpV4Fingerprint;
 import org.pgpainless.key.generation.KeySpec;
@@ -63,7 +66,13 @@ public interface KeyRingEditorInterface {
      * @param keySpec key specification
      * @return the builder
      */
-    KeyRingEditorInterface addSubKey(KeySpec keySpec, SecretKeyRingProtector secretKeyRingProtector);
+    KeyRingEditorInterface addSubKey(@Nonnull KeySpec keySpec,
+                                     @Nonnull Passphrase subKeyPassphrase,
+                                     SecretKeyRingProtector secretKeyRingProtector)
+            throws InvalidAlgorithmParameterException, NoSuchAlgorithmException, PGPException;
+
+    KeyRingEditorInterface addSubKey(PGPSecretKey subKey, SecretKeyRingProtector subKeyProtector, SecretKeyRingProtector keyRingProtector)
+            throws PGPException;
 
     /**
      * Delete a subkey from the key ring.

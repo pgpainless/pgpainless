@@ -357,23 +357,23 @@ public class KeyRingBuilder implements KeyRingBuilderInterface {
                         .build()
                         .get(HashAlgorithm.SHA1.getAlgorithmId());
             }
-
-            private PGPKeyPair generateKeyPair(KeySpec spec)
-                    throws NoSuchAlgorithmException, PGPException,
-                    InvalidAlgorithmParameterException {
-                KeyType type = spec.getKeyType();
-                KeyPairGenerator certKeyGenerator = KeyPairGenerator.getInstance(type.getName(), ProviderFactory.getProvider());
-                certKeyGenerator.initialize(type.getAlgorithmSpec());
-
-                // Create raw Key Pair
-                KeyPair keyPair = certKeyGenerator.generateKeyPair();
-
-                // Form PGP key pair
-                PGPKeyPair pgpKeyPair = new JcaPGPKeyPair(type.getAlgorithm().getAlgorithmId(),
-                        keyPair, new Date());
-
-                return pgpKeyPair;
-            }
         }
+    }
+
+    public static PGPKeyPair generateKeyPair(KeySpec spec)
+            throws NoSuchAlgorithmException, PGPException,
+            InvalidAlgorithmParameterException {
+        KeyType type = spec.getKeyType();
+        KeyPairGenerator certKeyGenerator = KeyPairGenerator.getInstance(type.getName(), ProviderFactory.getProvider());
+        certKeyGenerator.initialize(type.getAlgorithmSpec());
+
+        // Create raw Key Pair
+        KeyPair keyPair = certKeyGenerator.generateKeyPair();
+
+        // Form PGP key pair
+        PGPKeyPair pgpKeyPair = new JcaPGPKeyPair(type.getAlgorithm().getAlgorithmId(),
+                keyPair, new Date());
+
+        return pgpKeyPair;
     }
 }

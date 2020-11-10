@@ -20,6 +20,7 @@ import javax.annotation.Nullable;
 
 import org.bouncycastle.openpgp.PGPException;
 import org.bouncycastle.openpgp.PGPKeyRing;
+import org.bouncycastle.openpgp.PGPSecretKey;
 import org.bouncycastle.openpgp.operator.PBESecretKeyDecryptor;
 import org.bouncycastle.openpgp.operator.PBESecretKeyEncryptor;
 import org.bouncycastle.openpgp.operator.PGPDigestCalculatorProvider;
@@ -60,6 +61,21 @@ public class PasswordBasedSecretKeyRingProtector implements SecretKeyRingProtect
             @Nullable
             public Passphrase getPassphraseFor(Long keyId) {
                 if (keyRing.getPublicKey().getKeyID() == keyId) {
+                    return passphrase;
+                }
+                return null;
+            }
+        };
+        return new PasswordBasedSecretKeyRingProtector(protectionSettings, passphraseProvider);
+    }
+
+    public static PasswordBasedSecretKeyRingProtector forKey(PGPSecretKey key, Passphrase passphrase) {
+        KeyRingProtectionSettings protectionSettings = KeyRingProtectionSettings.secureDefaultSettings();
+        SecretKeyPassphraseProvider passphraseProvider = new SecretKeyPassphraseProvider() {
+            @Override
+            @Nullable
+            public Passphrase getPassphraseFor(Long keyId) {
+                if (key.getKeyID() == keyId) {
                     return passphrase;
                 }
                 return null;

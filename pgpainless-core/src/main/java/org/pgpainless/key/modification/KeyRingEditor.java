@@ -15,6 +15,8 @@
  */
 package org.pgpainless.key.modification;
 
+import java.security.InvalidAlgorithmParameterException;
+import java.security.NoSuchAlgorithmException;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Iterator;
@@ -25,6 +27,8 @@ import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
 
 import org.bouncycastle.openpgp.PGPException;
+import org.bouncycastle.openpgp.PGPKeyPair;
+import org.bouncycastle.openpgp.PGPKeyRingGenerator;
 import org.bouncycastle.openpgp.PGPPrivateKey;
 import org.bouncycastle.openpgp.PGPPublicKey;
 import org.bouncycastle.openpgp.PGPPublicKeyRing;
@@ -34,12 +38,16 @@ import org.bouncycastle.openpgp.PGPSignature;
 import org.bouncycastle.openpgp.PGPSignatureGenerator;
 import org.bouncycastle.openpgp.operator.PBESecretKeyDecryptor;
 import org.bouncycastle.openpgp.operator.PBESecretKeyEncryptor;
+import org.bouncycastle.openpgp.operator.PGPContentSignerBuilder;
 import org.bouncycastle.openpgp.operator.PGPDigestCalculator;
+import org.bouncycastle.openpgp.operator.bc.BcPBESecretKeyEncryptorBuilder;
 import org.bouncycastle.openpgp.operator.bc.BcPGPContentSignerBuilder;
 import org.bouncycastle.openpgp.operator.bc.BcPGPDigestCalculatorProvider;
 import org.pgpainless.algorithm.HashAlgorithm;
 import org.pgpainless.algorithm.SignatureType;
+import org.pgpainless.algorithm.SymmetricKeyAlgorithm;
 import org.pgpainless.key.OpenPgpV4Fingerprint;
+import org.pgpainless.key.generation.KeyRingBuilder;
 import org.pgpainless.key.generation.KeySpec;
 import org.pgpainless.key.protection.KeyRingProtectionSettings;
 import org.pgpainless.key.protection.PassphraseMapKeyRingProtector;
@@ -186,17 +194,71 @@ public class KeyRingEditor implements KeyRingEditorInterface {
     }
 
     @Override
-    public KeyRingEditorInterface addSubKey(KeySpec keySpec, SecretKeyRingProtector protector) {
-        throw new NotYetImplementedException();
+    public KeyRingEditorInterface addSubKey(@Nonnull KeySpec keySpec,
+                                            @Nonnull Passphrase subKeyPassphrase,
+                                            SecretKeyRingProtector secretKeyRingProtector)
+            throws InvalidAlgorithmParameterException, NoSuchAlgorithmException, PGPException {
+
+        PGPSecretKey secretSubKey = generateSubKey(keySpec, subKeyPassphrase);
+        SecretKeyRingProtector subKeyProtector = PasswordBasedSecretKeyRingProtector
+                .forKey(secretSubKey, subKeyPassphrase);
+
+        return addSubKey(secretSubKey, subKeyProtector, secretKeyRingProtector);
     }
 
     @Override
-    public KeyRingEditorInterface deleteSubKey(OpenPgpV4Fingerprint fingerprint, SecretKeyRingProtector protector) {
+    public KeyRingEditorInterface addSubKey(PGPSecretKey secretSubKey,
+                                            SecretKeyRingProtector subKeyProtector,
+                                            SecretKeyRingProtector keyRingProtector)
+            throws PGPException {
+
+        PGPPublicKey primaryKey = secretKeyRing.getSecretKey().getPublicKey();
+
+        PBESecretKeyDecryptor ringDecryptor = keyRingProtector.getDecryptor(primaryKey.getKeyID());
+        PBESecretKeyEncryptor subKeyEncryptor = subKeyProtector.getEncryptor(secretSubKey.getKeyID());
+
+        PGPDigestCalculator digestCalculator = new BcPGPDigestCalculatorProvider()
+                .get(defaultDigestHashAlgorithm.getAlgorithmId());
+        PGPContentSignerBuilder contentSignerBuilder = new BcPGPContentSignerBuilder(
+                primaryKey.getAlgorithm(), HashAlgorithm.SHA256.getAlgorithmId());
+
+        PGPPrivateKey privateSubKey = unlockSecretKey(secretSubKey, subKeyProtector);
+        PGPKeyPair subKeyPair = new PGPKeyPair(secretSubKey.getPublicKey(), privateSubKey);
+
+        PGPKeyRingGenerator keyRingGenerator = new PGPKeyRingGenerator(
+                secretKeyRing, ringDecryptor, digestCalculator, contentSignerBuilder, subKeyEncryptor);
+
+        keyRingGenerator.addSubKey(subKeyPair);
+        secretKeyRing = keyRingGenerator.generateSecretKeyRing();
+
+        return this;
+    }
+
+    private PGPSecretKey generateSubKey(@Nonnull KeySpec keySpec,
+                                        @Nonnull Passphrase subKeyPassphrase)
+            throws PGPException, InvalidAlgorithmParameterException, NoSuchAlgorithmException {
+        PGPDigestCalculator checksumCalculator = new BcPGPDigestCalculatorProvider()
+                .get(defaultDigestHashAlgorithm.getAlgorithmId());
+
+        PBESecretKeyEncryptor subKeyEncryptor = subKeyPassphrase.isEmpty() ? null :
+                new BcPBESecretKeyEncryptorBuilder(SymmetricKeyAlgorithm.AES_256.getAlgorithmId())
+                        .build(subKeyPassphrase.getChars());
+
+        PGPKeyPair keyPair = KeyRingBuilder.generateKeyPair(keySpec);
+        PGPSecretKey secretKey = new PGPSecretKey(keyPair.getPrivateKey(), keyPair.getPublicKey(),
+                checksumCalculator, false, subKeyEncryptor);
+        return secretKey;
+    }
+
+    @Override
+    public KeyRingEditorInterface deleteSubKey(OpenPgpV4Fingerprint fingerprint,
+                                               SecretKeyRingProtector protector) {
         return deleteSubKey(fingerprint.getKeyId(), protector);
     }
 
     @Override
-    public KeyRingEditorInterface deleteSubKey(long subKeyId, SecretKeyRingProtector protector) {
+    public KeyRingEditorInterface deleteSubKey(long subKeyId,
+                                               SecretKeyRingProtector protector) {
         if (secretKeyRing.getSecretKey().getKeyID() == subKeyId) {
             throw new IllegalArgumentException("You cannot delete the primary key of this key ring.");
         }
@@ -309,48 +371,48 @@ public class KeyRingEditor implements KeyRingEditorInterface {
 
             return KeyRingEditor.this;
         }
+    }
 
-        private PGPSecretKeyRing changePassphrase(Long keyId,
-                                                  PGPSecretKeyRing secretKeys,
-                                                  SecretKeyRingProtector oldProtector,
-                                                  SecretKeyRingProtector newProtector) throws PGPException {
-            if (keyId == null) {
-                // change passphrase of whole key ring
-                List<PGPSecretKey> newlyEncryptedSecretKeys = new ArrayList<>();
-                Iterator<PGPSecretKey> secretKeyIterator = secretKeys.getSecretKeys();
-                while (secretKeyIterator.hasNext()) {
-                    PGPSecretKey secretKey = secretKeyIterator.next();
+    private PGPSecretKeyRing changePassphrase(Long keyId,
+                                              PGPSecretKeyRing secretKeys,
+                                              SecretKeyRingProtector oldProtector,
+                                              SecretKeyRingProtector newProtector) throws PGPException {
+        if (keyId == null) {
+            // change passphrase of whole key ring
+            List<PGPSecretKey> newlyEncryptedSecretKeys = new ArrayList<>();
+            Iterator<PGPSecretKey> secretKeyIterator = secretKeys.getSecretKeys();
+            while (secretKeyIterator.hasNext()) {
+                PGPSecretKey secretKey = secretKeyIterator.next();
+                PGPPrivateKey privateKey = unlockSecretKey(secretKey, oldProtector);
+                secretKey = lockPrivateKey(privateKey, secretKey.getPublicKey(), newProtector);
+                newlyEncryptedSecretKeys.add(secretKey);
+            }
+            return new PGPSecretKeyRing(newlyEncryptedSecretKeys);
+        } else {
+            // change passphrase of selected subkey only
+            List<PGPSecretKey> secretKeyList = new ArrayList<>();
+            Iterator<PGPSecretKey> secretKeyIterator = secretKeys.getSecretKeys();
+            while (secretKeyIterator.hasNext()) {
+                PGPSecretKey secretKey = secretKeyIterator.next();
+
+                if (secretKey.getPublicKey().getKeyID() == keyId) {
+                    // Re-encrypt only the selected subkey
                     PGPPrivateKey privateKey = unlockSecretKey(secretKey, oldProtector);
                     secretKey = lockPrivateKey(privateKey, secretKey.getPublicKey(), newProtector);
-                    newlyEncryptedSecretKeys.add(secretKey);
                 }
-                return new PGPSecretKeyRing(newlyEncryptedSecretKeys);
-            } else {
-                // change passphrase of selected subkey only
-                List<PGPSecretKey> secretKeyList = new ArrayList<>();
-                Iterator<PGPSecretKey> secretKeyIterator = secretKeys.getSecretKeys();
-                while (secretKeyIterator.hasNext()) {
-                    PGPSecretKey secretKey = secretKeyIterator.next();
 
-                    if (secretKey.getPublicKey().getKeyID() == keyId) {
-                        // Re-encrypt only the selected subkey
-                        PGPPrivateKey privateKey = unlockSecretKey(secretKey, oldProtector);
-                        secretKey = lockPrivateKey(privateKey, secretKey.getPublicKey(), newProtector);
-                    }
-
-                    secretKeyList.add(secretKey);
-                }
-                return new PGPSecretKeyRing(secretKeyList);
+                secretKeyList.add(secretKey);
             }
+            return new PGPSecretKeyRing(secretKeyList);
         }
+    }
 
-        // TODO: Move to utility class
-        private PGPSecretKey lockPrivateKey(PGPPrivateKey privateKey, PGPPublicKey publicKey, SecretKeyRingProtector protector) throws PGPException {
-            PGPDigestCalculator checksumCalculator = new BcPGPDigestCalculatorProvider()
-                    .get(defaultDigestHashAlgorithm.getAlgorithmId());
-            PBESecretKeyEncryptor encryptor = protector.getEncryptor(publicKey.getKeyID());
-            PGPSecretKey secretKey = new PGPSecretKey(privateKey, publicKey, checksumCalculator, publicKey.isMasterKey(), encryptor);
-            return secretKey;
-        }
+    // TODO: Move to utility class
+    private PGPSecretKey lockPrivateKey(PGPPrivateKey privateKey, PGPPublicKey publicKey, SecretKeyRingProtector protector) throws PGPException {
+        PGPDigestCalculator checksumCalculator = new BcPGPDigestCalculatorProvider()
+                .get(defaultDigestHashAlgorithm.getAlgorithmId());
+        PBESecretKeyEncryptor encryptor = protector.getEncryptor(publicKey.getKeyID());
+        PGPSecretKey secretKey = new PGPSecretKey(privateKey, publicKey, checksumCalculator, publicKey.isMasterKey(), encryptor);
+        return secretKey;
     }
 }
