@@ -102,7 +102,7 @@ public interface KeyRingEditorInterface {
      * @param fingerprint fingerprint of the subkey to be revoked
      * @return the builder
      */
-    KeyRingEditorInterface revokeSubKey(OpenPgpV4Fingerprint fingerprint, SecretKeyRingProtector secretKeyRingProtector);
+    KeyRingEditorInterface revokeSubKey(OpenPgpV4Fingerprint fingerprint, SecretKeyRingProtector secretKeyRingProtector) throws PGPException;
 
     /**
      * Revoke the subkey binding signature of a subkey.

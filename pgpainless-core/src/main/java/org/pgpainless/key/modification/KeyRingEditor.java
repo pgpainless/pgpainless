@@ -55,6 +55,7 @@ import org.pgpainless.key.protection.PasswordBasedSecretKeyRingProtector;
 import org.pgpainless.key.protection.SecretKeyRingProtector;
 import org.pgpainless.key.protection.UnprotectedKeysProtector;
 import org.pgpainless.key.protection.passphrase_provider.SolitaryPassphraseProvider;
+import org.pgpainless.key.util.KeyRingUtils;
 import org.pgpainless.key.util.OpenPgpKeyAttributeUtil;
 import org.pgpainless.util.NotYetImplementedException;
 import org.pgpainless.util.Passphrase;
@@ -274,8 +275,32 @@ public class KeyRingEditor implements KeyRingEditorInterface {
     }
 
     @Override
-    public KeyRingEditorInterface revokeSubKey(OpenPgpV4Fingerprint fingerprint, SecretKeyRingProtector protector) {
-        throw new NotYetImplementedException();
+    public KeyRingEditorInterface revokeSubKey(OpenPgpV4Fingerprint fingerprint, SecretKeyRingProtector protector)
+            throws PGPException {
+        PGPSecretKey primaryKey = secretKeyRing.getSecretKey();
+        PGPPrivateKey privateKey = primaryKey.extractPrivateKey(protector.getDecryptor(primaryKey.getKeyID()));
+
+        PGPPublicKey revokeeSubKey = secretKeyRing.getPublicKey(fingerprint.getKeyId());
+        if (revokeeSubKey == null) {
+            throw new NoSuchElementException("No subkey with fingerprint " + fingerprint + " found.");
+        }
+
+        PGPContentSignerBuilder contentSignerBuilder = new BcPGPContentSignerBuilder(
+                primaryKey.getPublicKey().getAlgorithm(),
+                defaultDigestHashAlgorithm.getAlgorithmId());
+        PGPSignatureGenerator signatureGenerator = new PGPSignatureGenerator(contentSignerBuilder);
+        signatureGenerator.init(SignatureType.SUBKEY_REVOCATION.getCode(), privateKey);
+
+        // Generate revocation
+        PGPSignature subKeyRevocation = signatureGenerator.generateCertification(primaryKey.getPublicKey(), revokeeSubKey);
+        revokeeSubKey = PGPPublicKey.addCertification(revokeeSubKey, subKeyRevocation);
+
+        // Inject revoked public key into key ring
+        PGPPublicKeyRing publicKeyRing = KeyRingUtils.publicKeyRingFrom(secretKeyRing);
+        publicKeyRing = PGPPublicKeyRing.insertPublicKey(publicKeyRing, revokeeSubKey);
+        secretKeyRing = PGPSecretKeyRing.replacePublicKeys(secretKeyRing, publicKeyRing);
+
+        return this;
     }
 
     @Override
