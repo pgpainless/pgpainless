@@ -15,12 +15,12 @@
  */
 package org.pgpainless.key.protection;
 
-import static org.junit.Assert.assertArrayEquals;
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertTrue;
-import static org.junit.Assert.fail;
+import static org.junit.jupiter.api.Assertions.assertArrayEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 import org.pgpainless.util.Passphrase;
 
 public class PassphraseTest {
@@ -35,11 +35,6 @@ public class PassphraseTest {
         passphrase.clear();
 
         assertFalse(passphrase.isValid());
-        try {
-            passphrase.getChars();
-            fail();
-        } catch (IllegalStateException e) {
-            // expected
-        }
+        assertThrows(IllegalStateException.class, passphrase::getChars);
     }
 }

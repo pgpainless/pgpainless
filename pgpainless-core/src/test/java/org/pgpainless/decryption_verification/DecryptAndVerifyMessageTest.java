@@ -15,9 +15,9 @@
  */
 package org.pgpainless.decryption_verification;
 
-import static junit.framework.TestCase.assertEquals;
-import static junit.framework.TestCase.assertTrue;
-import static org.junit.Assert.assertArrayEquals;
+import static org.junit.jupiter.api.Assertions.assertArrayEquals;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
@@ -30,8 +30,8 @@ import org.bouncycastle.openpgp.PGPPublicKeyRing;
 import org.bouncycastle.openpgp.PGPSecretKeyRing;
 import org.bouncycastle.openpgp.PGPSecretKeyRingCollection;
 import org.bouncycastle.util.io.Streams;
-import org.junit.Before;
-import org.junit.Test;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 import org.pgpainless.PGPainless;
 import org.pgpainless.algorithm.CompressionAlgorithm;
 import org.pgpainless.algorithm.SymmetricKeyAlgorithm;
@@ -46,7 +46,7 @@ public class DecryptAndVerifyMessageTest {
     private PGPSecretKeyRing juliet;
     private PGPSecretKeyRing romeo;
 
-    @Before
+    @BeforeEach
     public void loadKeys() throws IOException, PGPException {
         juliet = TestKeys.getJulietSecretKeyRing();
         romeo = TestKeys.getRomeoSecretKeyRing();

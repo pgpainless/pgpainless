@@ -15,8 +15,9 @@
  */
 package org.pgpainless.key.modification;
 
-import static junit.framework.TestCase.assertEquals;
-import static org.junit.Assert.fail;
+import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
@@ -33,7 +34,7 @@ import org.bouncycastle.openpgp.operator.PGPDigestCalculatorProvider;
 import org.bouncycastle.openpgp.operator.bc.BcPBESecretKeyDecryptorBuilder;
 import org.bouncycastle.openpgp.operator.bc.BcPGPDigestCalculatorProvider;
 import org.bouncycastle.util.io.Streams;
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 import org.pgpainless.PGPainless;
 import org.pgpainless.algorithm.SymmetricKeyAlgorithm;
 import org.pgpainless.encryption_signing.EncryptionStream;
@@ -63,25 +64,16 @@ public class ChangeSecretKeyRingPassphraseTest {
         assertEquals(KeyRingProtectionSettings.secureDefaultSettings().getEncryptionAlgorithm().getAlgorithmId(),
                 changedPassphraseKeyRing.getSecretKeys().getSecretKey().getKeyEncryptionAlgorithm());
 
-        try {
-            signDummyMessageWithKeysAndPassphrase(changedPassphraseKeyRing, Passphrase.emptyPassphrase());
-            fail("Unlocking secret key ring with empty passphrase MUST fail.");
-        } catch (PGPException e) {
-            // yay
-        }
+        assertThrows(PGPException.class, () ->
+                        signDummyMessageWithKeysAndPassphrase(changedPassphraseKeyRing, Passphrase.emptyPassphrase()),
+                "Unlocking secret key ring with empty passphrase MUST fail.");
 
-        try {
-            signDummyMessageWithKeysAndPassphrase(changedPassphraseKeyRing, Passphrase.fromPassword("weakPassphrase"));
-            fail("Unlocking secret key ring with old passphrase MUST fail.");
-        } catch (PGPException e) {
-            // yay
-        }
+        assertThrows(PGPException.class, () ->
+                signDummyMessageWithKeysAndPassphrase(changedPassphraseKeyRing, Passphrase.fromPassword("weakPassphrase")),
+                "Unlocking secret key ring with old passphrase MUST fail.");
 
-        try {
-            signDummyMessageWithKeysAndPassphrase(changedPassphraseKeyRing, Passphrase.fromPassword("1337p455phr453"));
-        } catch (PGPException e) {
-            fail("Unlocking the secret key ring with the new passphrase MUST succeed.");
-        }
+        assertDoesNotThrow(() -> signDummyMessageWithKeysAndPassphrase(changedPassphraseKeyRing, Passphrase.fromPassword("1337p455phr453")),
+                "Unlocking the secret key ring with the new passphrase MUST succeed.");
     }
 
     @Test
@@ -124,19 +116,15 @@ public class ChangeSecretKeyRingPassphraseTest {
         extractPrivateKey(primaryKey, Passphrase.fromPassword("weakPassphrase"));
         extractPrivateKey(subKey, Passphrase.fromPassword("subKeyPassphrase"));
 
-        try {
-            extractPrivateKey(primaryKey, Passphrase.fromPassword("subKeyPassphrase"));
-            fail("Unlocking the primary key with the subkey passphrase must fail.");
-        } catch (PGPException e) {
-            // yay
-        }
+        final PGPSecretKey finalPrimaryKey = primaryKey;
+        assertThrows(PGPException.class,
+                () -> extractPrivateKey(finalPrimaryKey, Passphrase.fromPassword("subKeyPassphrase")),
+                "Unlocking the primary key with the subkey passphrase must fail.");
 
-        try {
-            extractPrivateKey(subKey, Passphrase.fromPassword("weakPassphrase"));
-            fail("Unlocking the subkey with the primary key passphrase must fail.");
-        } catch (PGPException e) {
-            // yay
-        }
+        final PGPSecretKey finalSubKey = subKey;
+        assertThrows(PGPException.class,
+                () -> extractPrivateKey(finalSubKey, Passphrase.fromPassword("weakPassphrase")),
+                "Unlocking the subkey with the primary key passphrase must fail.");
     }
 
     @Test
@@ -158,20 +146,15 @@ public class ChangeSecretKeyRingPassphraseTest {
         extractPrivateKey(primaryKey, Passphrase.emptyPassphrase());
         extractPrivateKey(subKey, Passphrase.fromPassword("weakPassphrase"));
 
-        try {
-            extractPrivateKey(primaryKey, Passphrase.fromPassword("weakPassphrase"));
-            fail("Unlocking the unprotected primary key with the old passphrase must fail.");
-        } catch (PGPException e) {
-            // yay
-        }
+        final PGPSecretKey finalPrimaryKey = primaryKey;
+        assertThrows(PGPException.class,
+                () -> extractPrivateKey(finalPrimaryKey, Passphrase.fromPassword("weakPassphrase")),
+                "Unlocking the unprotected primary key with the old passphrase must fail.");
 
-        try {
-            extractPrivateKey(subKey, Passphrase.emptyPassphrase());
-            fail("Unlocking the still protected subkey with an empty passphrase must fail.");
-        } catch (PGPException e) {
-            // yay
-        }
-
+        final PGPSecretKey finalSubKey = subKey;
+        assertThrows(PGPException.class,
+                () -> extractPrivateKey(finalSubKey, Passphrase.emptyPassphrase()),
+                "Unlocking the still protected subkey with an empty passphrase must fail.");
     }
 
     /**

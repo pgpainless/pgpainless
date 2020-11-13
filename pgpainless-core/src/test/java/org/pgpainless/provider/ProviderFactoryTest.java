@@ -15,11 +15,11 @@
  */
 package org.pgpainless.provider;
 
-import static junit.framework.TestCase.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertEquals;
 
 import java.security.Provider;
 
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 
 public class ProviderFactoryTest {
 

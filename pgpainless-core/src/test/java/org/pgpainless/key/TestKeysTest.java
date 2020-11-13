@@ -15,15 +15,15 @@
  */
 package org.pgpainless.key;
 
-import static junit.framework.TestCase.assertEquals;
-import static org.junit.Assert.assertArrayEquals;
+import static org.junit.jupiter.api.Assertions.assertArrayEquals;
+import static org.junit.jupiter.api.Assertions.assertEquals;
 
 import java.io.IOException;
 
 import org.bouncycastle.openpgp.PGPException;
 import org.bouncycastle.openpgp.PGPPublicKeyRing;
 import org.bouncycastle.openpgp.PGPSecretKeyRing;
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 import org.pgpainless.util.TestUtils;
 
 public class TestKeysTest {
@@ -74,8 +74,8 @@ public class TestKeysTest {
 
     @Test
     public void assertJulietsFingerprintGetKeyIdMatches() {
-        assertEquals("calling getKeyId() on juliet's fingerprint must return her key id.",
-                TestKeys.JULIET_KEY_ID, TestKeys.JULIET_FINGERPRINT.getKeyId());
+        assertEquals(TestKeys.JULIET_KEY_ID, TestKeys.JULIET_FINGERPRINT.getKeyId(),
+                "calling getKeyId() on juliet's fingerprint must return her key id.");
     }
 
     @Test
@@ -85,8 +85,8 @@ public class TestKeysTest {
 
     @Test
     public void assertRomeosKeyIdEquals() {
-        assertEquals("Key ID of Romeo's secret key must match his key id.",
-                TestKeys.ROMEO_KEY_ID, romeoSecRing.getSecretKey().getKeyID());
+        assertEquals(TestKeys.ROMEO_KEY_ID, romeoSecRing.getSecretKey().getKeyID(),
+                "Key ID of Romeo's secret key must match his key id.");
     }
 
     @Test
@@ -145,7 +145,7 @@ public class TestKeysTest {
 
     @Test
     public void assertEmilsFingerprintGetKeyIdMatches() {
-        assertEquals("calling getKeyId() on emil's fingerprint must return her key id.",
-                TestKeys.EMIL_KEY_ID, TestKeys.EMIL_FINGERPRINT.getKeyId());
+        assertEquals(TestKeys.EMIL_KEY_ID, TestKeys.EMIL_FINGERPRINT.getKeyId(),
+                "calling getKeyId() on emil's fingerprint must return her key id.");
     }
 }

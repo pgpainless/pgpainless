@@ -40,7 +40,7 @@ import org.bouncycastle.openpgp.operator.PGPDigestCalculator;
 import org.bouncycastle.openpgp.operator.jcajce.JcaPGPContentSignerBuilder;
 import org.bouncycastle.openpgp.operator.jcajce.JcaPGPDigestCalculatorProviderBuilder;
 import org.bouncycastle.openpgp.operator.jcajce.JcaPGPKeyPair;
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 import org.pgpainless.provider.ProviderFactory;
 
 public class BouncycastleExportSubkeys {

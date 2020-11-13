@@ -15,8 +15,9 @@
  */
 package org.pgpainless.key.modification;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 
 import java.io.IOException;
 import java.security.InvalidAlgorithmParameterException;
@@ -26,7 +27,7 @@ import java.util.NoSuchElementException;
 
 import org.bouncycastle.openpgp.PGPException;
 import org.bouncycastle.openpgp.PGPSecretKeyRing;
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 import org.pgpainless.PGPainless;
 import org.pgpainless.key.TestKeys;
 import org.pgpainless.key.collection.PGPKeyRing;
@@ -65,24 +66,24 @@ public class AddUserIdTest {
         assertFalse(userIds.hasNext());
     }
 
-    @Test(expected = NoSuchElementException.class)
+    @Test
     public void addUserId_NoSuchElementExceptionForMissingKey() throws IOException, PGPException {
         PGPSecretKeyRing secretKeys = TestKeys.getCryptieSecretKeyRing();
-        PGPainless.modifyKeyRing(secretKeys)
-                .addUserId(0L, TestKeys.CRYPTIE_UID, new UnprotectedKeysProtector());
+        assertThrows(NoSuchElementException.class, () -> PGPainless.modifyKeyRing(secretKeys)
+                .addUserId(0L, TestKeys.CRYPTIE_UID, new UnprotectedKeysProtector()));
     }
 
-    @Test(expected = NoSuchElementException.class)
+    @Test
     public void deleteUserId_noSuchElementExceptionForMissingUserId() throws IOException, PGPException {
         PGPSecretKeyRing secretKeys = TestKeys.getCryptieSecretKeyRing();
-        PGPainless.modifyKeyRing(secretKeys)
-                .deleteUserId("invalid@user.id", new UnprotectedKeysProtector());
+        assertThrows(NoSuchElementException.class, () -> PGPainless.modifyKeyRing(secretKeys)
+                .deleteUserId("invalid@user.id", new UnprotectedKeysProtector()));
     }
 
-    @Test(expected = NoSuchElementException.class)
+    @Test
     public void deleteUserId_noSuchElementExceptionForMissingKey() throws IOException, PGPException {
         PGPSecretKeyRing secretKeys = TestKeys.getCryptieSecretKeyRing();
-        PGPainless.modifyKeyRing(secretKeys)
-                .deleteUserId(0L, TestKeys.CRYPTIE_UID, new UnprotectedKeysProtector());
+        assertThrows(NoSuchElementException.class, () -> PGPainless.modifyKeyRing(secretKeys)
+                .deleteUserId(0L, TestKeys.CRYPTIE_UID, new UnprotectedKeysProtector()));
     }
 }

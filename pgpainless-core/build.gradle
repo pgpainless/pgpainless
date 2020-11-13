@@ -3,7 +3,9 @@ plugins {
 }
 
 dependencies {
-    testImplementation group: 'junit', name: 'junit', version: '4.12'
+    testImplementation "org.junit.jupiter:junit-jupiter-api:$junitVersion"
+    testRuntimeOnly "org.junit.jupiter:junit-jupiter-engine:$junitVersion"
+
     /*
     implementation "org.bouncycastle:bcprov-debug-jdk15on:$bouncyCastleVersion"
     /*/

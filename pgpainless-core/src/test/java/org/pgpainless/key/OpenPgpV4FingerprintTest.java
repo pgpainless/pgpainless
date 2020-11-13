@@ -15,28 +15,30 @@
  */
 package org.pgpainless.key;
 
-import static junit.framework.TestCase.assertEquals;
-import static org.junit.Assert.assertNotEquals;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNotEquals;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 
 import java.io.IOException;
 import java.net.URI;
 import java.net.URISyntaxException;
 
 import org.bouncycastle.openpgp.PGPPublicKey;
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
+
 
 public class OpenPgpV4FingerprintTest {
 
-    @Test(expected = IllegalArgumentException.class)
+    @Test
     public void fpTooShort() {
         String fp = "484f57414c495645"; // Asking Mark
-        new OpenPgpV4Fingerprint(fp);
+        assertThrows(IllegalArgumentException.class, () -> new OpenPgpV4Fingerprint(fp));
     }
 
-    @Test(expected = IllegalArgumentException.class)
+    @Test
     public void invalidHexTest() {
         String fp = "UNFORTUNATELYTHISISNOVALIDHEXADECIMALDOH";
-        new OpenPgpV4Fingerprint(fp);
+        assertThrows(IllegalArgumentException.class, () -> new OpenPgpV4Fingerprint(fp));
     }
 
     @Test
@@ -88,9 +90,9 @@ public class OpenPgpV4FingerprintTest {
         assertEquals(fingerprint, parsed);
     }
 
-    @Test(expected = IllegalArgumentException.class)
+    @Test
     public void testFromUriThrowsIfWrongScheme() throws URISyntaxException {
         URI uri = new URI(null, "5448452043414B452049532041204C4945212121", null);
-        OpenPgpV4Fingerprint.fromUri(uri);
+        assertThrows(IllegalArgumentException.class, () -> OpenPgpV4Fingerprint.fromUri(uri));
     }
 }

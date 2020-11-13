@@ -15,12 +15,15 @@
  */
 package org.pgpainless.key.modification;
 
-import org.junit.Test;
+import static org.junit.jupiter.api.Assertions.assertThrows;
+
+import org.junit.jupiter.api.Test;
 
 public class KeyRingEditorTest {
 
-    @Test(expected = NullPointerException.class)
+    @Test
     public void testConstructorThrowsNpeForNull() {
-        new KeyRingEditor(null);
+        assertThrows(NullPointerException.class,
+                () -> new KeyRingEditor(null));
     }
 }
