@@ -15,6 +15,8 @@
  */
 package org.pgpainless.key.modification;
 
+import static org.pgpainless.key.util.KeyUtils.unlockSecretKey;
+
 import java.security.InvalidAlgorithmParameterException;
 import java.security.NoSuchAlgorithmException;
 import java.util.ArrayList;
@@ -56,7 +58,7 @@ import org.pgpainless.key.protection.SecretKeyRingProtector;
 import org.pgpainless.key.protection.UnprotectedKeysProtector;
 import org.pgpainless.key.protection.passphrase_provider.SolitaryPassphraseProvider;
 import org.pgpainless.key.util.KeyRingUtils;
-import org.pgpainless.key.util.OpenPgpKeyAttributeUtil;
+import org.pgpainless.key.util.SignatureUtils;
 import org.pgpainless.util.NotYetImplementedException;
 import org.pgpainless.util.Passphrase;
 
@@ -115,8 +117,7 @@ public class KeyRingEditor implements KeyRingEditorInterface {
             throw new IllegalArgumentException("Key-ID mismatch!");
         }
         // Create signature with new user-id and add it to the public key
-        PGPSignatureGenerator signatureGenerator = new PGPSignatureGenerator(
-                getPgpContentSignerBuilderForKey(publicKey));
+        PGPSignatureGenerator signatureGenerator = SignatureUtils.getSignatureGeneratorFor(publicKey);
         signatureGenerator.init(SignatureType.POSITIVE_CERTIFICATION.getCode(), privateKey);
 
         PGPSignature userIdSignature = signatureGenerator.generateCertification(userId, publicKey);
@@ -124,26 +125,6 @@ public class KeyRingEditor implements KeyRingEditorInterface {
                 userId, userIdSignature);
 
         return publicKey;
-    }
-
-    private static BcPGPContentSignerBuilder getPgpContentSignerBuilderForKey(PGPPublicKey publicKey) {
-        List<HashAlgorithm> preferredHashAlgorithms = OpenPgpKeyAttributeUtil.getPreferredHashAlgorithms(publicKey);
-        HashAlgorithm hashAlgorithm = negotiateHashAlgorithm(preferredHashAlgorithms);
-
-        return new BcPGPContentSignerBuilder(publicKey.getAlgorithm(), hashAlgorithm.getAlgorithmId());
-    }
-
-    private static HashAlgorithm negotiateHashAlgorithm(List<HashAlgorithm> preferredHashAlgorithms) {
-        // TODO: Match our list of supported hash algorithms against the list, to determine the best suitable algo.
-        //  For now we just take the first algorithm in the list and hope that BC has support for it.
-        return preferredHashAlgorithms.get(0);
-    }
-
-    // TODO: Move to utility class
-    private static PGPPrivateKey unlockSecretKey(PGPSecretKey secretKey, SecretKeyRingProtector protector) throws PGPException {
-        PBESecretKeyDecryptor secretKeyDecryptor = protector.getDecryptor(secretKey.getKeyID());
-        PGPPrivateKey privateKey = secretKey.extractPrivateKey(secretKeyDecryptor);
-        return privateKey;
     }
 
     // TODO: Move to utility class?
@@ -266,7 +247,7 @@ public class KeyRingEditor implements KeyRingEditorInterface {
 
         PGPSecretKey deleteMe = secretKeyRing.getSecretKey(subKeyId);
         if (deleteMe == null) {
-            throw new NoSuchElementException("KeyRing does not contain such a key.");
+            throw new NoSuchElementException("KeyRing does not contain a key with keyId " + Long.toHexString(subKeyId));
         }
 
         PGPSecretKeyRing newKeyRing = PGPSecretKeyRing.removeSecretKey(secretKeyRing, deleteMe);
@@ -285,10 +266,7 @@ public class KeyRingEditor implements KeyRingEditorInterface {
             throw new NoSuchElementException("No subkey with fingerprint " + fingerprint + " found.");
         }
 
-        PGPContentSignerBuilder contentSignerBuilder = new BcPGPContentSignerBuilder(
-                primaryKey.getPublicKey().getAlgorithm(),
-                defaultDigestHashAlgorithm.getAlgorithmId());
-        PGPSignatureGenerator signatureGenerator = new PGPSignatureGenerator(contentSignerBuilder);
+        PGPSignatureGenerator signatureGenerator = SignatureUtils.getSignatureGeneratorFor(primaryKey);
         signatureGenerator.init(SignatureType.SUBKEY_REVOCATION.getCode(), privateKey);
 
         // Generate revocation
