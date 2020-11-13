@@ -21,6 +21,7 @@ import java.security.NoSuchAlgorithmException;
 
 import org.bouncycastle.openpgp.PGPException;
 import org.pgpainless.key.collection.PGPKeyRing;
+import org.pgpainless.key.util.UserId;
 import org.pgpainless.util.Passphrase;
 
 public interface KeyRingBuilderInterface {
@@ -31,6 +32,10 @@ public interface KeyRingBuilderInterface {
 
     interface WithPrimaryUserId {
 
+        default WithAdditionalUserIdOrPassphrase withPrimaryUserId(@Nonnull UserId userId) {
+            return withPrimaryUserId(userId.toString());
+        }
+
         WithAdditionalUserIdOrPassphrase withPrimaryUserId(@Nonnull String userId);
 
         WithAdditionalUserIdOrPassphrase withPrimaryUserId(@Nonnull byte[] userId);
@@ -38,6 +43,10 @@ public interface KeyRingBuilderInterface {
     }
 
     interface WithAdditionalUserIdOrPassphrase {
+
+        default WithAdditionalUserIdOrPassphrase withAdditionalUserId(@Nonnull UserId userId) {
+            return withAdditionalUserId(userId.toString());
+        }
 
         WithAdditionalUserIdOrPassphrase withAdditionalUserId(@Nonnull String userId);
 

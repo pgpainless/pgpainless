@@ -57,6 +57,7 @@ import org.pgpainless.key.collection.PGPKeyRing;
 import org.pgpainless.key.generation.type.KeyType;
 import org.pgpainless.key.generation.type.curve.EllipticCurve;
 import org.pgpainless.key.generation.type.length.RsaLength;
+import org.pgpainless.key.util.UserId;
 import org.pgpainless.provider.ProviderFactory;
 import org.pgpainless.util.Passphrase;
 
@@ -68,6 +69,11 @@ public class KeyRingBuilder implements KeyRingBuilderInterface {
     private String userId;
     private Set<String> additionalUserIds = new LinkedHashSet<>();
     private Passphrase passphrase;
+
+    public PGPKeyRing simpleRsaKeyRing(@Nonnull UserId userId, @Nonnull RsaLength length)
+            throws InvalidAlgorithmParameterException, NoSuchAlgorithmException, PGPException {
+        return simpleRsaKeyRing(userId.toString(), length);
+    }
 
     /**
      * Creates a simple, unencrypted RSA KeyPair of length {@code length} with user-id {@code userId}.
@@ -85,6 +91,11 @@ public class KeyRingBuilder implements KeyRingBuilderInterface {
     public PGPKeyRing simpleRsaKeyRing(@Nonnull String userId, @Nonnull RsaLength length)
             throws InvalidAlgorithmParameterException, NoSuchAlgorithmException, PGPException {
         return simpleRsaKeyRing(userId, length, null);
+    }
+
+    public PGPKeyRing simpleRsaKeyRing(@Nonnull UserId userId, @Nonnull RsaLength rsaLength, String password)
+            throws InvalidAlgorithmParameterException, NoSuchAlgorithmException, PGPException {
+        return simpleRsaKeyRing(userId.toString(), rsaLength, password);
     }
 
     /**
@@ -117,6 +128,11 @@ public class KeyRingBuilder implements KeyRingBuilderInterface {
         }
     }
 
+    public PGPKeyRing simpleEcKeyRing(@Nonnull UserId userId)
+            throws InvalidAlgorithmParameterException, NoSuchAlgorithmException, PGPException {
+        return simpleEcKeyRing(userId.toString());
+    }
+
     /**
      * Creates an unencrypted key ring consisting of an ECDSA master key and an ECDH sub-key.
      * The ECDSA master key is used for signing messages and certifying the sub key.
@@ -133,6 +149,11 @@ public class KeyRingBuilder implements KeyRingBuilderInterface {
     public PGPKeyRing simpleEcKeyRing(@Nonnull String userId)
             throws InvalidAlgorithmParameterException, NoSuchAlgorithmException, PGPException {
         return simpleEcKeyRing(userId, null);
+    }
+
+    public PGPKeyRing simpleEcKeyRing(@Nonnull UserId userId, String password)
+            throws InvalidAlgorithmParameterException, NoSuchAlgorithmException, PGPException {
+        return simpleEcKeyRing(userId.toString(), password);
     }
 
     /**
@@ -347,7 +368,7 @@ public class KeyRingBuilder implements KeyRingBuilderInterface {
                 PBESecretKeyDecryptor decryptor = passphrase == null || passphrase.isEmpty() ?
                         null :
                         new JcePBESecretKeyDecryptorBuilder()
-                        .build(passphrase.getChars());
+                                .build(passphrase.getChars());
                 return decryptor;
             }
 

@@ -27,9 +27,14 @@ import org.pgpainless.key.OpenPgpV4Fingerprint;
 import org.pgpainless.key.generation.KeySpec;
 import org.pgpainless.key.protection.KeyRingProtectionSettings;
 import org.pgpainless.key.protection.SecretKeyRingProtector;
+import org.pgpainless.key.util.UserId;
 import org.pgpainless.util.Passphrase;
 
 public interface KeyRingEditorInterface {
+
+    default KeyRingEditorInterface addUserId(UserId userId, SecretKeyRingProtector secretKeyRingProtector) throws PGPException {
+        return addUserId(userId.toString(), secretKeyRingProtector);
+    }
 
     /**
      * Add a user-id to the primary key of the key ring.
@@ -39,8 +44,16 @@ public interface KeyRingEditorInterface {
      */
     KeyRingEditorInterface addUserId(String userId, SecretKeyRingProtector secretKeyRingProtector) throws PGPException;
 
+    default  KeyRingEditorInterface addUserId(OpenPgpV4Fingerprint fingerprint, UserId userId, SecretKeyRingProtector secretKeyRingProtector) throws PGPException {
+        return addUserId(fingerprint, userId.toString(), secretKeyRingProtector);
+    }
+
     default KeyRingEditorInterface addUserId(OpenPgpV4Fingerprint fingerprint, String userId, SecretKeyRingProtector secretKeyRingProtector) throws PGPException {
         return addUserId(fingerprint.getKeyId(), userId, secretKeyRingProtector);
+    }
+
+    default KeyRingEditorInterface addUserId(long keyId, UserId userId, SecretKeyRingProtector secretKeyRingProtector) throws PGPException {
+        return addUserId(keyId, userId.toString(), secretKeyRingProtector);
     }
 
     KeyRingEditorInterface addUserId(long keyId, String userId, SecretKeyRingProtector secretKeyRingProtector) throws PGPException;
