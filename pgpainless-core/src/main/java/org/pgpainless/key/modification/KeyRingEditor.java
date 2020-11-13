@@ -91,7 +91,7 @@ public class KeyRingEditor implements KeyRingEditorInterface {
         Iterator<PGPSecretKey> secretKeyIterator = secretKeyRing.getSecretKeys();
 
         boolean found = false;
-        while (secretKeyIterator.hasNext()) {
+        while (!found && secretKeyIterator.hasNext()) {
             PGPSecretKey secretKey = secretKeyIterator.next();
             if (secretKey.getKeyID() == keyId) {
                 found = true;
