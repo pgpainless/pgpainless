@@ -59,7 +59,6 @@ import org.pgpainless.key.protection.UnprotectedKeysProtector;
 import org.pgpainless.key.protection.passphrase_provider.SolitaryPassphraseProvider;
 import org.pgpainless.key.util.KeyRingUtils;
 import org.pgpainless.key.util.SignatureUtils;
-import org.pgpainless.util.NotYetImplementedException;
 import org.pgpainless.util.Passphrase;
 
 public class KeyRingEditor implements KeyRingEditorInterface {
@@ -258,15 +257,24 @@ public class KeyRingEditor implements KeyRingEditorInterface {
     @Override
     public KeyRingEditorInterface revokeSubKey(OpenPgpV4Fingerprint fingerprint, SecretKeyRingProtector protector)
             throws PGPException {
-        PGPSecretKey primaryKey = secretKeyRing.getSecretKey();
-        PGPPrivateKey privateKey = primaryKey.extractPrivateKey(protector.getDecryptor(primaryKey.getKeyID()));
+        return revokeSubKey(fingerprint.getKeyId(), protector);
+    }
 
-        PGPPublicKey revokeeSubKey = secretKeyRing.getPublicKey(fingerprint.getKeyId());
+    @Override
+    public KeyRingEditorInterface revokeSubKey(long subKeyId, SecretKeyRingProtector protector) throws PGPException {
+        PGPPublicKey revokeeSubKey = secretKeyRing.getPublicKey(subKeyId);
         if (revokeeSubKey == null) {
-            throw new NoSuchElementException("No subkey with fingerprint " + fingerprint + " found.");
+            throw new NoSuchElementException("No subkey with id " + Long.toHexString(subKeyId) + " found.");
         }
 
+        secretKeyRing = revokeSubKey(protector, revokeeSubKey);
+        return this;
+    }
+
+    private PGPSecretKeyRing revokeSubKey(SecretKeyRingProtector protector, PGPPublicKey revokeeSubKey) throws PGPException {
+        PGPSecretKey primaryKey = secretKeyRing.getSecretKey();
         PGPSignatureGenerator signatureGenerator = SignatureUtils.getSignatureGeneratorFor(primaryKey);
+        PGPPrivateKey privateKey = primaryKey.extractPrivateKey(protector.getDecryptor(primaryKey.getKeyID()));
         signatureGenerator.init(SignatureType.SUBKEY_REVOCATION.getCode(), privateKey);
 
         // Generate revocation
@@ -276,14 +284,7 @@ public class KeyRingEditor implements KeyRingEditorInterface {
         // Inject revoked public key into key ring
         PGPPublicKeyRing publicKeyRing = KeyRingUtils.publicKeyRingFrom(secretKeyRing);
         publicKeyRing = PGPPublicKeyRing.insertPublicKey(publicKeyRing, revokeeSubKey);
-        secretKeyRing = PGPSecretKeyRing.replacePublicKeys(secretKeyRing, publicKeyRing);
-
-        return this;
-    }
-
-    @Override
-    public KeyRingEditorInterface revokeSubKey(long subKeyId, SecretKeyRingProtector protector) {
-        throw new NotYetImplementedException();
+        return PGPSecretKeyRing.replacePublicKeys(secretKeyRing, publicKeyRing);
     }
 
     @Override

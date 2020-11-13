@@ -125,7 +125,7 @@ public interface KeyRingEditorInterface {
      * @param subKeyId id of the subkey
      * @return the builder
      */
-    KeyRingEditorInterface revokeSubKey(long subKeyId, SecretKeyRingProtector secretKeyRingProtector);
+    KeyRingEditorInterface revokeSubKey(long subKeyId, SecretKeyRingProtector secretKeyRingProtector) throws PGPException;
 
     /**
      * Change the passphrase of the whole key ring.
