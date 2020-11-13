@@ -15,15 +15,15 @@
  */
 package org.pgpainless.key.selection.keyring;
 
-import static junit.framework.TestCase.assertFalse;
-import static junit.framework.TestCase.assertTrue;
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import java.io.IOException;
 
 import org.bouncycastle.openpgp.PGPException;
 import org.bouncycastle.openpgp.PGPPublicKeyRing;
 import org.bouncycastle.openpgp.PGPSecretKeyRing;
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 import org.pgpainless.key.TestKeys;
 import org.pgpainless.key.selection.keyring.impl.XMPP;
 

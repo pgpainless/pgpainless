@@ -15,13 +15,13 @@
  */
 package org.pgpainless.key.protection;
 
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertNull;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertNull;
 
 import javax.annotation.Nullable;
 
 import org.bouncycastle.openpgp.PGPException;
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 import org.pgpainless.key.TestKeys;
 import org.pgpainless.key.protection.passphrase_provider.SecretKeyPassphraseProvider;
 import org.pgpainless.util.Passphrase;

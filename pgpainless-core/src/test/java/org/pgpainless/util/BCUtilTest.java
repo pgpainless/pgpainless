@@ -15,8 +15,10 @@
  */
 package org.pgpainless.util;
 
-import static junit.framework.TestCase.assertEquals;
-import static org.junit.Assert.assertArrayEquals;
+import static org.junit.jupiter.api.Assertions.assertArrayEquals;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertNull;
 
 import java.io.IOException;
 import java.security.InvalidAlgorithmParameterException;
@@ -26,7 +28,6 @@ import java.util.Iterator;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
-import junit.framework.TestCase;
 import org.bouncycastle.openpgp.PGPException;
 import org.bouncycastle.openpgp.PGPPublicKey;
 import org.bouncycastle.openpgp.PGPPublicKeyRing;
@@ -34,7 +35,7 @@ import org.bouncycastle.openpgp.PGPPublicKeyRingCollection;
 import org.bouncycastle.openpgp.PGPSecretKey;
 import org.bouncycastle.openpgp.PGPSecretKeyRing;
 import org.bouncycastle.openpgp.PGPSecretKeyRingCollection;
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 import org.pgpainless.PGPainless;
 import org.pgpainless.key.collection.PGPKeyRing;
 import org.pgpainless.key.generation.KeySpec;
@@ -119,15 +120,15 @@ public class BCUtilTest {
             }
         }
 
-        TestCase.assertNotNull(subKey);
+        assertNotNull(subKey);
 
         PGPSecretKeyRing alice_mallory = PGPSecretKeyRing.insertSecretKey(alice.getSecretKeys(), subKey);
 
         // Check, if alice_mallory contains mallory's key
-        TestCase.assertNotNull(alice_mallory.getSecretKey(subKey.getKeyID()));
+        assertNotNull(alice_mallory.getSecretKey(subKey.getKeyID()));
 
         PGPSecretKeyRing cleaned = BCUtil.removeUnassociatedKeysFromKeyRing(alice_mallory, alice.getPublicKeys().getPublicKey());
-        TestCase.assertNull(cleaned.getSecretKey(subKey.getKeyID()));
+        assertNull(cleaned.getSecretKey(subKey.getKeyID()));
     }
 
     @Test

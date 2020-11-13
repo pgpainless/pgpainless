@@ -15,29 +15,30 @@
  */
 package org.pgpainless.key;
 
-import static org.junit.Assert.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 import org.pgpainless.key.util.UserId;
 
 public class UserIdTest {
 
-    @Test(expected = IllegalArgumentException.class)
+    @Test
     public void throwForNullName() {
-        UserId.withName(null);
+        assertThrows(IllegalArgumentException.class, () -> UserId.withName(null));
     }
 
-    @Test(expected = IllegalArgumentException.class)
+    @Test
     public void throwForNullComment() {
-        UserId.withName("foo")
-                .withComment(null);
+        assertThrows(IllegalArgumentException.class, () -> UserId.withName("foo")
+                .withComment(null));
     }
 
-    @Test(expected = IllegalArgumentException.class)
+    @Test
     public void throwForNullEmail() {
-        UserId.withName("foo")
+        assertThrows(IllegalArgumentException.class, () -> UserId.withName("foo")
                 .withComment("bar")
-                .withEmail(null);
+                .withEmail(null));
     }
 
     @Test
