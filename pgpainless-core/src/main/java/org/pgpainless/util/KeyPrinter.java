@@ -18,6 +18,7 @@ package org.pgpainless.util;
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
+import java.io.InputStream;
 
 import org.bouncycastle.bcpg.ArmoredOutputStream;
 import org.bouncycastle.openpgp.PGPPublicKeyRing;
@@ -27,20 +28,22 @@ import org.bouncycastle.util.io.Streams;
 public class KeyPrinter {
 
     public static String toAsciiArmoredString(PGPSecretKeyRing secretKeys) throws IOException {
-        ByteArrayOutputStream out = new ByteArrayOutputStream();
-        ArmoredOutputStream armor = new ArmoredOutputStream(out);
-
-        Streams.pipeAll(new ByteArrayInputStream(secretKeys.getEncoded()), armor);
-        armor.close();
-
-        return out.toString();
+        return toAsciiArmoredString(secretKeys.getEncoded());
     }
 
     public static String toAsciiArmoredString(PGPPublicKeyRing publicKeys) throws IOException {
+        return toAsciiArmoredString(publicKeys.getEncoded());
+    }
+
+    public static String toAsciiArmoredString(byte[] bytes) throws IOException {
+        return toAsciiArmoredString(new ByteArrayInputStream(bytes));
+    }
+
+    public static String toAsciiArmoredString(InputStream inputStream) throws IOException {
         ByteArrayOutputStream out = new ByteArrayOutputStream();
         ArmoredOutputStream armor = new ArmoredOutputStream(out);
 
-        Streams.pipeAll(new ByteArrayInputStream(publicKeys.getEncoded()), armor);
+        Streams.pipeAll(inputStream, armor);
         armor.close();
 
         return out.toString();
