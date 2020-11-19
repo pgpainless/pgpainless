@@ -13,7 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.pgpainless.key.modification;
+package org.pgpainless.key.modification.secretkeyring;
 
 import static org.pgpainless.key.util.KeyUtils.unlockSecretKey;
 
@@ -61,7 +61,7 @@ import org.pgpainless.key.util.KeyRingUtils;
 import org.pgpainless.key.util.SignatureUtils;
 import org.pgpainless.util.Passphrase;
 
-public class KeyRingEditor implements KeyRingEditorInterface {
+public class SecretKeyRingEditor implements SecretKeyRingEditorInterface {
 
     // Default algorithm for calculating private key checksums
     // While I'd like to use something else, eg. SHA256, BC seems to lack support for
@@ -70,7 +70,7 @@ public class KeyRingEditor implements KeyRingEditorInterface {
 
     private PGPSecretKeyRing secretKeyRing;
 
-    public KeyRingEditor(PGPSecretKeyRing secretKeyRing) {
+    public SecretKeyRingEditor(PGPSecretKeyRing secretKeyRing) {
         if (secretKeyRing == null) {
             throw new NullPointerException("SecretKeyRing MUST NOT be null.");
         }
@@ -78,12 +78,12 @@ public class KeyRingEditor implements KeyRingEditorInterface {
     }
 
     @Override
-    public KeyRingEditorInterface addUserId(String userId, SecretKeyRingProtector secretKeyRingProtector) throws PGPException {
+    public SecretKeyRingEditorInterface addUserId(String userId, SecretKeyRingProtector secretKeyRingProtector) throws PGPException {
         return addUserId(secretKeyRing.getPublicKey().getKeyID(), userId, secretKeyRingProtector);
     }
 
     @Override
-    public KeyRingEditorInterface addUserId(long keyId, String userId, SecretKeyRingProtector secretKeyRingProtector) throws PGPException {
+    public SecretKeyRingEditorInterface addUserId(long keyId, String userId, SecretKeyRingProtector secretKeyRingProtector) throws PGPException {
         userId = sanitizeUserId(userId);
 
         List<PGPSecretKey> secretKeyList = new ArrayList<>();
@@ -135,13 +135,13 @@ public class KeyRingEditor implements KeyRingEditorInterface {
     }
 
     @Override
-    public KeyRingEditorInterface deleteUserId(String userId, SecretKeyRingProtector protector) {
+    public SecretKeyRingEditorInterface deleteUserId(String userId, SecretKeyRingProtector protector) {
         PGPPublicKey publicKey = secretKeyRing.getPublicKey();
         return deleteUserId(publicKey.getKeyID(), userId, protector);
     }
 
     @Override
-    public KeyRingEditorInterface deleteUserId(long keyId, String userId, SecretKeyRingProtector secretKeyRingProtector) {
+    public SecretKeyRingEditorInterface deleteUserId(long keyId, String userId, SecretKeyRingProtector secretKeyRingProtector) {
         List<PGPPublicKey> publicKeys = new ArrayList<>();
         Iterator<PGPPublicKey> publicKeyIterator = secretKeyRing.getPublicKeys();
         boolean foundKey = false;
@@ -175,9 +175,9 @@ public class KeyRingEditor implements KeyRingEditorInterface {
     }
 
     @Override
-    public KeyRingEditorInterface addSubKey(@Nonnull KeySpec keySpec,
-                                            @Nonnull Passphrase subKeyPassphrase,
-                                            SecretKeyRingProtector secretKeyRingProtector)
+    public SecretKeyRingEditorInterface addSubKey(@Nonnull KeySpec keySpec,
+                                                  @Nonnull Passphrase subKeyPassphrase,
+                                                  SecretKeyRingProtector secretKeyRingProtector)
             throws InvalidAlgorithmParameterException, NoSuchAlgorithmException, PGPException {
 
         PGPSecretKey secretSubKey = generateSubKey(keySpec, subKeyPassphrase);
@@ -188,9 +188,9 @@ public class KeyRingEditor implements KeyRingEditorInterface {
     }
 
     @Override
-    public KeyRingEditorInterface addSubKey(PGPSecretKey secretSubKey,
-                                            SecretKeyRingProtector subKeyProtector,
-                                            SecretKeyRingProtector keyRingProtector)
+    public SecretKeyRingEditorInterface addSubKey(PGPSecretKey secretSubKey,
+                                                  SecretKeyRingProtector subKeyProtector,
+                                                  SecretKeyRingProtector keyRingProtector)
             throws PGPException {
 
         PGPPublicKey primaryKey = secretKeyRing.getSecretKey().getPublicKey();
@@ -232,14 +232,14 @@ public class KeyRingEditor implements KeyRingEditorInterface {
     }
 
     @Override
-    public KeyRingEditorInterface deleteSubKey(OpenPgpV4Fingerprint fingerprint,
-                                               SecretKeyRingProtector protector) {
+    public SecretKeyRingEditorInterface deleteSubKey(OpenPgpV4Fingerprint fingerprint,
+                                                     SecretKeyRingProtector protector) {
         return deleteSubKey(fingerprint.getKeyId(), protector);
     }
 
     @Override
-    public KeyRingEditorInterface deleteSubKey(long subKeyId,
-                                               SecretKeyRingProtector protector) {
+    public SecretKeyRingEditorInterface deleteSubKey(long subKeyId,
+                                                     SecretKeyRingProtector protector) {
         if (secretKeyRing.getSecretKey().getKeyID() == subKeyId) {
             throw new IllegalArgumentException("You cannot delete the primary key of this key ring.");
         }
@@ -255,13 +255,13 @@ public class KeyRingEditor implements KeyRingEditorInterface {
     }
 
     @Override
-    public KeyRingEditorInterface revokeSubKey(OpenPgpV4Fingerprint fingerprint, SecretKeyRingProtector protector)
+    public SecretKeyRingEditorInterface revokeSubKey(OpenPgpV4Fingerprint fingerprint, SecretKeyRingProtector protector)
             throws PGPException {
         return revokeSubKey(fingerprint.getKeyId(), protector);
     }
 
     @Override
-    public KeyRingEditorInterface revokeSubKey(long subKeyId, SecretKeyRingProtector protector) throws PGPException {
+    public SecretKeyRingEditorInterface revokeSubKey(long subKeyId, SecretKeyRingProtector protector) throws PGPException {
         PGPPublicKey revokeeSubKey = secretKeyRing.getPublicKey(subKeyId);
         if (revokeeSubKey == null) {
             throw new NoSuchElementException("No subkey with id " + Long.toHexString(subKeyId) + " found.");
@@ -356,24 +356,24 @@ public class KeyRingEditor implements KeyRingEditorInterface {
         }
 
         @Override
-        public KeyRingEditorInterface toNewPassphrase(Passphrase passphrase) throws PGPException {
+        public SecretKeyRingEditorInterface toNewPassphrase(Passphrase passphrase) throws PGPException {
             SecretKeyRingProtector newProtector = new PasswordBasedSecretKeyRingProtector(
                     newProtectionSettings, new SolitaryPassphraseProvider(passphrase));
 
-            PGPSecretKeyRing secretKeys = changePassphrase(keyId, KeyRingEditor.this.secretKeyRing, oldProtector, newProtector);
-            KeyRingEditor.this.secretKeyRing = secretKeys;
+            PGPSecretKeyRing secretKeys = changePassphrase(keyId, SecretKeyRingEditor.this.secretKeyRing, oldProtector, newProtector);
+            SecretKeyRingEditor.this.secretKeyRing = secretKeys;
 
-            return KeyRingEditor.this;
+            return SecretKeyRingEditor.this;
         }
 
         @Override
-        public KeyRingEditorInterface toNoPassphrase() throws PGPException {
+        public SecretKeyRingEditorInterface toNoPassphrase() throws PGPException {
             SecretKeyRingProtector newProtector = new UnprotectedKeysProtector();
 
-            PGPSecretKeyRing secretKeys = changePassphrase(keyId, KeyRingEditor.this.secretKeyRing, oldProtector, newProtector);
-            KeyRingEditor.this.secretKeyRing = secretKeys;
+            PGPSecretKeyRing secretKeys = changePassphrase(keyId, SecretKeyRingEditor.this.secretKeyRing, oldProtector, newProtector);
+            SecretKeyRingEditor.this.secretKeyRing = secretKeys;
 
-            return KeyRingEditor.this;
+            return SecretKeyRingEditor.this;
         }
     }
 

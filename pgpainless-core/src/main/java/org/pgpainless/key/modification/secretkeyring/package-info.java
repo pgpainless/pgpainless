@@ -13,18 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.pgpainless.key.modification;
-
-import static org.junit.jupiter.api.Assertions.assertThrows;
-
-import org.junit.jupiter.api.Test;
-import org.pgpainless.key.modification.secretkeyring.SecretKeyRingEditor;
-
-public class KeyRingEditorTest {
-
-    @Test
-    public void testConstructorThrowsNpeForNull() {
-        assertThrows(NullPointerException.class,
-                () -> new SecretKeyRingEditor(null));
-    }
-}
+/**
+ * Classes that deal with modifications made to {@link org.bouncycastle.openpgp.PGPSecretKeyRing PGPSecretKeyRings}.
+ */
+package org.pgpainless.key.modification.secretkeyring;

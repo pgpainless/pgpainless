@@ -13,7 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.pgpainless.key.modification;
+package org.pgpainless.key.modification.secretkeyring;
 
 import java.security.InvalidAlgorithmParameterException;
 import java.security.NoSuchAlgorithmException;
@@ -30,9 +30,9 @@ import org.pgpainless.key.protection.SecretKeyRingProtector;
 import org.pgpainless.key.util.UserId;
 import org.pgpainless.util.Passphrase;
 
-public interface KeyRingEditorInterface {
+public interface SecretKeyRingEditorInterface {
 
-    default KeyRingEditorInterface addUserId(UserId userId, SecretKeyRingProtector secretKeyRingProtector) throws PGPException {
+    default SecretKeyRingEditorInterface addUserId(UserId userId, SecretKeyRingProtector secretKeyRingProtector) throws PGPException {
         return addUserId(userId.toString(), secretKeyRingProtector);
     }
 
@@ -42,21 +42,21 @@ public interface KeyRingEditorInterface {
      * @param userId user-id
      * @return the builder
      */
-    KeyRingEditorInterface addUserId(String userId, SecretKeyRingProtector secretKeyRingProtector) throws PGPException;
+    SecretKeyRingEditorInterface addUserId(String userId, SecretKeyRingProtector secretKeyRingProtector) throws PGPException;
 
-    default  KeyRingEditorInterface addUserId(OpenPgpV4Fingerprint fingerprint, UserId userId, SecretKeyRingProtector secretKeyRingProtector) throws PGPException {
+    default SecretKeyRingEditorInterface addUserId(OpenPgpV4Fingerprint fingerprint, UserId userId, SecretKeyRingProtector secretKeyRingProtector) throws PGPException {
         return addUserId(fingerprint, userId.toString(), secretKeyRingProtector);
     }
 
-    default KeyRingEditorInterface addUserId(OpenPgpV4Fingerprint fingerprint, String userId, SecretKeyRingProtector secretKeyRingProtector) throws PGPException {
+    default SecretKeyRingEditorInterface addUserId(OpenPgpV4Fingerprint fingerprint, String userId, SecretKeyRingProtector secretKeyRingProtector) throws PGPException {
         return addUserId(fingerprint.getKeyId(), userId, secretKeyRingProtector);
     }
 
-    default KeyRingEditorInterface addUserId(long keyId, UserId userId, SecretKeyRingProtector secretKeyRingProtector) throws PGPException {
+    default SecretKeyRingEditorInterface addUserId(long keyId, UserId userId, SecretKeyRingProtector secretKeyRingProtector) throws PGPException {
         return addUserId(keyId, userId.toString(), secretKeyRingProtector);
     }
 
-    KeyRingEditorInterface addUserId(long keyId, String userId, SecretKeyRingProtector secretKeyRingProtector) throws PGPException;
+    SecretKeyRingEditorInterface addUserId(long keyId, String userId, SecretKeyRingProtector secretKeyRingProtector) throws PGPException;
 
     /**
      * Remove a user-id from the primary key of the key ring.
@@ -64,13 +64,13 @@ public interface KeyRingEditorInterface {
      * @param userId exact user-id to be removed
      * @return the builder
      */
-    KeyRingEditorInterface deleteUserId(String userId, SecretKeyRingProtector secretKeyRingProtector);
+    SecretKeyRingEditorInterface deleteUserId(String userId, SecretKeyRingProtector secretKeyRingProtector);
 
-    default KeyRingEditorInterface deleteUserId(OpenPgpV4Fingerprint fingerprint, String userId, SecretKeyRingProtector secretKeyRingProtector) {
+    default SecretKeyRingEditorInterface deleteUserId(OpenPgpV4Fingerprint fingerprint, String userId, SecretKeyRingProtector secretKeyRingProtector) {
         return deleteUserId(fingerprint.getKeyId(), userId, secretKeyRingProtector);
     }
 
-    KeyRingEditorInterface deleteUserId(long keyId, String userId, SecretKeyRingProtector secretKeyRingProtector);
+    SecretKeyRingEditorInterface deleteUserId(long keyId, String userId, SecretKeyRingProtector secretKeyRingProtector);
 
     /**
      * Add a subkey to the key ring.
@@ -79,12 +79,12 @@ public interface KeyRingEditorInterface {
      * @param keySpec key specification
      * @return the builder
      */
-    KeyRingEditorInterface addSubKey(@Nonnull KeySpec keySpec,
-                                     @Nonnull Passphrase subKeyPassphrase,
-                                     SecretKeyRingProtector secretKeyRingProtector)
+    SecretKeyRingEditorInterface addSubKey(@Nonnull KeySpec keySpec,
+                                           @Nonnull Passphrase subKeyPassphrase,
+                                           SecretKeyRingProtector secretKeyRingProtector)
             throws InvalidAlgorithmParameterException, NoSuchAlgorithmException, PGPException;
 
-    KeyRingEditorInterface addSubKey(PGPSecretKey subKey, SecretKeyRingProtector subKeyProtector, SecretKeyRingProtector keyRingProtector)
+    SecretKeyRingEditorInterface addSubKey(PGPSecretKey subKey, SecretKeyRingProtector subKeyProtector, SecretKeyRingProtector keyRingProtector)
             throws PGPException;
 
     /**
@@ -95,7 +95,7 @@ public interface KeyRingEditorInterface {
      * @param fingerprint fingerprint of the subkey to be removed
      * @return the builder
      */
-    KeyRingEditorInterface deleteSubKey(OpenPgpV4Fingerprint fingerprint, SecretKeyRingProtector secretKeyRingProtector);
+    SecretKeyRingEditorInterface deleteSubKey(OpenPgpV4Fingerprint fingerprint, SecretKeyRingProtector secretKeyRingProtector);
 
     /**
      * Delete a subkey from the key ring.
@@ -105,7 +105,7 @@ public interface KeyRingEditorInterface {
      * @param subKeyId id of the subkey
      * @return the builder
      */
-    KeyRingEditorInterface deleteSubKey(long subKeyId, SecretKeyRingProtector secretKeyRingProtector);
+    SecretKeyRingEditorInterface deleteSubKey(long subKeyId, SecretKeyRingProtector secretKeyRingProtector);
 
     /**
      * Revoke the subkey binding signature of a subkey.
@@ -115,7 +115,7 @@ public interface KeyRingEditorInterface {
      * @param fingerprint fingerprint of the subkey to be revoked
      * @return the builder
      */
-    KeyRingEditorInterface revokeSubKey(OpenPgpV4Fingerprint fingerprint, SecretKeyRingProtector secretKeyRingProtector) throws PGPException;
+    SecretKeyRingEditorInterface revokeSubKey(OpenPgpV4Fingerprint fingerprint, SecretKeyRingProtector secretKeyRingProtector) throws PGPException;
 
     /**
      * Revoke the subkey binding signature of a subkey.
@@ -125,7 +125,7 @@ public interface KeyRingEditorInterface {
      * @param subKeyId id of the subkey
      * @return the builder
      */
-    KeyRingEditorInterface revokeSubKey(long subKeyId, SecretKeyRingProtector secretKeyRingProtector) throws PGPException;
+    SecretKeyRingEditorInterface revokeSubKey(long subKeyId, SecretKeyRingProtector secretKeyRingProtector) throws PGPException;
 
     /**
      * Change the passphrase of the whole key ring.
@@ -187,14 +187,14 @@ public interface KeyRingEditorInterface {
          * @param passphrase passphrase
          * @return editor builder
          */
-        KeyRingEditorInterface toNewPassphrase(Passphrase passphrase) throws PGPException;
+        SecretKeyRingEditorInterface toNewPassphrase(Passphrase passphrase) throws PGPException;
 
         /**
          * Leave the key unprotected.
          *
          * @return editor builder
          */
-        KeyRingEditorInterface toNoPassphrase() throws PGPException;
+        SecretKeyRingEditorInterface toNoPassphrase() throws PGPException;
     }
 
     /**

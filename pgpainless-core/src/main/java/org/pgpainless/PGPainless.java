@@ -27,8 +27,8 @@ import org.pgpainless.decryption_verification.DecryptionStream;
 import org.pgpainless.encryption_signing.EncryptionBuilder;
 import org.pgpainless.encryption_signing.EncryptionStream;
 import org.pgpainless.key.generation.KeyRingBuilder;
-import org.pgpainless.key.modification.KeyRingEditor;
-import org.pgpainless.key.modification.KeyRingEditorInterface;
+import org.pgpainless.key.modification.secretkeyring.SecretKeyRingEditor;
+import org.pgpainless.key.modification.secretkeyring.SecretKeyRingEditorInterface;
 import org.pgpainless.key.parsing.KeyRingReader;
 import org.pgpainless.symmetric_encryption.SymmetricEncryptorDecryptor;
 import org.pgpainless.util.Passphrase;
@@ -67,8 +67,8 @@ public class PGPainless {
         return new DecryptionBuilder();
     }
 
-    public static KeyRingEditorInterface modifyKeyRing(PGPSecretKeyRing secretKeys) {
-        return new KeyRingEditor(secretKeys);
+    public static SecretKeyRingEditorInterface modifyKeyRing(PGPSecretKeyRing secretKeys) {
+        return new SecretKeyRingEditor(secretKeys);
     }
 
     /**
