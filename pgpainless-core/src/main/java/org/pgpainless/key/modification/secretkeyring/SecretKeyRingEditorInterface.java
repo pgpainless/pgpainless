@@ -23,10 +23,12 @@ import javax.annotation.Nullable;
 import org.bouncycastle.openpgp.PGPException;
 import org.bouncycastle.openpgp.PGPSecretKey;
 import org.bouncycastle.openpgp.PGPSecretKeyRing;
+import org.bouncycastle.openpgp.PGPSignature;
 import org.pgpainless.key.OpenPgpV4Fingerprint;
 import org.pgpainless.key.generation.KeySpec;
 import org.pgpainless.key.protection.KeyRingProtectionSettings;
 import org.pgpainless.key.protection.SecretKeyRingProtector;
+import org.pgpainless.key.util.RevocationAttributes;
 import org.pgpainless.key.util.UserId;
 import org.pgpainless.util.Passphrase;
 
@@ -126,6 +128,16 @@ public interface SecretKeyRingEditorInterface {
      * @return the builder
      */
     SecretKeyRingEditorInterface revokeSubKey(long subKeyId, SecretKeyRingProtector secretKeyRingProtector) throws PGPException;
+
+    PGPSignature createRevocationCertificate(OpenPgpV4Fingerprint fingerprint,
+                                             SecretKeyRingProtector secretKeyRingProtector,
+                                             RevocationAttributes revocationAttributes)
+            throws PGPException;
+
+    PGPSignature createRevocationCertificate(long subKeyId,
+                                             SecretKeyRingProtector secretKeyRingProtector,
+                                             RevocationAttributes revocationAttributes)
+            throws PGPException;
 
     /**
      * Change the passphrase of the whole key ring.

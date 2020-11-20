@@ -38,6 +38,8 @@ import org.bouncycastle.openpgp.PGPSecretKey;
 import org.bouncycastle.openpgp.PGPSecretKeyRing;
 import org.bouncycastle.openpgp.PGPSignature;
 import org.bouncycastle.openpgp.PGPSignatureGenerator;
+import org.bouncycastle.openpgp.PGPSignatureSubpacketGenerator;
+import org.bouncycastle.openpgp.PGPSignatureSubpacketVector;
 import org.bouncycastle.openpgp.operator.PBESecretKeyDecryptor;
 import org.bouncycastle.openpgp.operator.PBESecretKeyEncryptor;
 import org.bouncycastle.openpgp.operator.PGPContentSignerBuilder;
@@ -58,6 +60,7 @@ import org.pgpainless.key.protection.SecretKeyRingProtector;
 import org.pgpainless.key.protection.UnprotectedKeysProtector;
 import org.pgpainless.key.protection.passphrase_provider.SolitaryPassphraseProvider;
 import org.pgpainless.key.util.KeyRingUtils;
+import org.pgpainless.key.util.RevocationAttributes;
 import org.pgpainless.key.util.SignatureUtils;
 import org.pgpainless.util.Passphrase;
 
@@ -271,20 +274,68 @@ public class SecretKeyRingEditor implements SecretKeyRingEditorInterface {
         return this;
     }
 
-    private PGPSecretKeyRing revokeSubKey(SecretKeyRingProtector protector, PGPPublicKey revokeeSubKey) throws PGPException {
-        PGPSecretKey primaryKey = secretKeyRing.getSecretKey();
-        PGPSignatureGenerator signatureGenerator = SignatureUtils.getSignatureGeneratorFor(primaryKey);
-        PGPPrivateKey privateKey = primaryKey.extractPrivateKey(protector.getDecryptor(primaryKey.getKeyID()));
-        signatureGenerator.init(SignatureType.SUBKEY_REVOCATION.getCode(), privateKey);
+    @Override
+    public PGPSignature createRevocationCertificate(OpenPgpV4Fingerprint fingerprint,
+                                                    SecretKeyRingProtector secretKeyRingProtector,
+                                                    RevocationAttributes revocationAttributes)
+            throws PGPException {
+        PGPPublicKey revokeeSubKey = secretKeyRing.getPublicKey(fingerprint.getKeyId());
+        if (revokeeSubKey == null) {
+            throw new NoSuchElementException("No subkey with fingerprint " + fingerprint + " found.");
+        }
 
-        // Generate revocation
-        PGPSignature subKeyRevocation = signatureGenerator.generateCertification(primaryKey.getPublicKey(), revokeeSubKey);
+        PGPSignature revocationCertificate = generateRevocation(secretKeyRingProtector, revokeeSubKey, revocationAttributes);
+        return revocationCertificate;
+    }
+
+    @Override
+    public PGPSignature createRevocationCertificate(long subKeyId,
+                                                    SecretKeyRingProtector secretKeyRingProtector,
+                                                    RevocationAttributes revocationAttributes)
+            throws PGPException {
+        PGPPublicKey revokeeSubKey = secretKeyRing.getPublicKey(subKeyId);
+        if (revokeeSubKey == null) {
+            throw new NoSuchElementException("No subkey with id " + Long.toHexString(subKeyId) + " found.");
+        }
+
+        PGPSignature revocationCertificate = generateRevocation(secretKeyRingProtector, revokeeSubKey, revocationAttributes);
+        return revocationCertificate;
+    }
+
+    private PGPSecretKeyRing revokeSubKey(SecretKeyRingProtector protector, PGPPublicKey revokeeSubKey)
+            throws PGPException {
+        PGPSignature subKeyRevocation = generateRevocation(protector, revokeeSubKey, null);
         revokeeSubKey = PGPPublicKey.addCertification(revokeeSubKey, subKeyRevocation);
 
         // Inject revoked public key into key ring
         PGPPublicKeyRing publicKeyRing = KeyRingUtils.publicKeyRingFrom(secretKeyRing);
         publicKeyRing = PGPPublicKeyRing.insertPublicKey(publicKeyRing, revokeeSubKey);
         return PGPSecretKeyRing.replacePublicKeys(secretKeyRing, publicKeyRing);
+    }
+
+    private PGPSignature generateRevocation(SecretKeyRingProtector protector,
+                                            PGPPublicKey revokeeSubKey,
+                                            RevocationAttributes revocationAttributes)
+            throws PGPException {
+        PGPSecretKey primaryKey = secretKeyRing.getSecretKey();
+        PGPSignatureGenerator signatureGenerator = SignatureUtils.getSignatureGeneratorFor(primaryKey);
+        PGPSignatureSubpacketGenerator subpacketGenerator = new PGPSignatureSubpacketGenerator();
+        subpacketGenerator.setIssuerFingerprint(false, primaryKey);
+
+        if (revocationAttributes != null) {
+            subpacketGenerator.setRevocationReason(false, revocationAttributes.getReason().code(), revocationAttributes.getDescription());
+        }
+
+        PGPSignatureSubpacketVector subPackets = subpacketGenerator.generate();
+        signatureGenerator.setHashedSubpackets(subPackets);
+
+        PGPPrivateKey privateKey = primaryKey.extractPrivateKey(protector.getDecryptor(primaryKey.getKeyID()));
+        SignatureType type = revokeeSubKey.isMasterKey() ? SignatureType.KEY_REVOCATION : SignatureType.SUBKEY_REVOCATION;
+        signatureGenerator.init(type.getCode(), privateKey);
+
+        // Generate revocation
+        PGPSignature subKeyRevocation = signatureGenerator.generateCertification(primaryKey.getPublicKey(), revokeeSubKey);
+        return subKeyRevocation;
     }
 
     @Override

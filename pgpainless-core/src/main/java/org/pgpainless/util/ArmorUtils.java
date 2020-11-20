@@ -25,7 +25,7 @@ import org.bouncycastle.openpgp.PGPPublicKeyRing;
 import org.bouncycastle.openpgp.PGPSecretKeyRing;
 import org.bouncycastle.util.io.Streams;
 
-public class KeyPrinter {
+public class ArmorUtils {
 
     public static String toAsciiArmoredString(PGPSecretKeyRing secretKeys) throws IOException {
         return toAsciiArmoredString(secretKeys.getEncoded());
