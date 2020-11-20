@@ -117,7 +117,26 @@ public interface SecretKeyRingEditorInterface {
      * @param fingerprint fingerprint of the subkey to be revoked
      * @return the builder
      */
-    SecretKeyRingEditorInterface revokeSubKey(OpenPgpV4Fingerprint fingerprint, SecretKeyRingProtector secretKeyRingProtector) throws PGPException;
+    default SecretKeyRingEditorInterface revokeSubKey(OpenPgpV4Fingerprint fingerprint,
+                                                      SecretKeyRingProtector secretKeyRingProtector)
+            throws PGPException {
+        return revokeSubKey(fingerprint, secretKeyRingProtector, null);
+    }
+
+    /**
+     * Revoke the subkey binding signature of a subkey.
+     * The subkey with the provided fingerprint will be revoked.
+     * If no suitable subkey is found, a {@link java.util.NoSuchElementException} will be thrown.
+     *
+     * @param fingerprint fingerprint of the subkey to be revoked
+     * @param secretKeyRingProtector protector to unlock the primary key
+     * @param revocationAttributes reason for the revocation
+     * @return the builder
+     */
+    SecretKeyRingEditorInterface revokeSubKey(OpenPgpV4Fingerprint fingerprint,
+                                              SecretKeyRingProtector secretKeyRingProtector,
+                                              RevocationAttributes revocationAttributes)
+            throws PGPException;
 
     /**
      * Revoke the subkey binding signature of a subkey.
@@ -127,13 +146,48 @@ public interface SecretKeyRingEditorInterface {
      * @param subKeyId id of the subkey
      * @return the builder
      */
-    SecretKeyRingEditorInterface revokeSubKey(long subKeyId, SecretKeyRingProtector secretKeyRingProtector) throws PGPException;
+    default SecretKeyRingEditorInterface revokeSubKey(long subKeyId,
+                                                      SecretKeyRingProtector secretKeyRingProtector)
+            throws PGPException {
+        return revokeSubKey(subKeyId, secretKeyRingProtector, null);
+    }
 
+    /**
+     * Revoke the subkey binding signature of a subkey.
+     * The subkey with the provided key-id will be revoked.
+     * If no suitable subkey is found, q {@link java.util.NoSuchElementException} will be thrown.
+     *
+     * @param subKeyId id of the subkey
+     * @param secretKeyRingProtector protector to unlock the primary key
+     * @param revocationAttributes reason for the revocation
+     * @return the builder
+     */
+    SecretKeyRingEditorInterface revokeSubKey(long subKeyId,
+                                              SecretKeyRingProtector secretKeyRingProtector,
+                                              RevocationAttributes revocationAttributes)
+            throws PGPException;
+
+    /**
+     * Create a detached revocation certificate, which can be used to revoke the specified key.
+     *
+     * @param fingerprint fingerprint of the key to be revoked. Can be primary or sub key.
+     * @param secretKeyRingProtector protector to unlock the primary key.
+     * @param revocationAttributes reason for the revocation
+     * @return revocation certificate
+     */
     PGPSignature createRevocationCertificate(OpenPgpV4Fingerprint fingerprint,
                                              SecretKeyRingProtector secretKeyRingProtector,
                                              RevocationAttributes revocationAttributes)
             throws PGPException;
 
+    /**
+     * Create a detached revocation certificate, which can be used to revoke the specified key.
+     *
+     * @param subKeyId id of the key to be revoked. Can be primary or sub key.
+     * @param secretKeyRingProtector protector to unlock the primary key.
+     * @param revocationAttributes reason for the revocation
+     * @return revocation certificate
+     */
     PGPSignature createRevocationCertificate(long subKeyId,
                                              SecretKeyRingProtector secretKeyRingProtector,
                                              RevocationAttributes revocationAttributes)
@@ -149,6 +203,13 @@ public interface SecretKeyRingEditorInterface {
         return changePassphraseFromOldPassphrase(oldPassphrase, KeyRingProtectionSettings.secureDefaultSettings());
     }
 
+    /**
+     * Change the passphrase of the whole key ring.
+     *
+     * @param oldPassphrase old passphrase or null, if the key was unprotected
+     * @param oldProtectionSettings custom settings for the old passphrase
+     * @return next builder step
+     */
     WithKeyRingEncryptionSettings changePassphraseFromOldPassphrase(@Nullable Passphrase oldPassphrase,
                                                                     @Nonnull KeyRingProtectionSettings oldProtectionSettings);
 

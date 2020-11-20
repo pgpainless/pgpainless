@@ -258,19 +258,24 @@ public class SecretKeyRingEditor implements SecretKeyRingEditorInterface {
     }
 
     @Override
-    public SecretKeyRingEditorInterface revokeSubKey(OpenPgpV4Fingerprint fingerprint, SecretKeyRingProtector protector)
+    public SecretKeyRingEditorInterface revokeSubKey(OpenPgpV4Fingerprint fingerprint,
+                                                     SecretKeyRingProtector protector,
+                                                     RevocationAttributes revocationAttributes)
             throws PGPException {
-        return revokeSubKey(fingerprint.getKeyId(), protector);
+        return revokeSubKey(fingerprint.getKeyId(), protector, revocationAttributes);
     }
 
     @Override
-    public SecretKeyRingEditorInterface revokeSubKey(long subKeyId, SecretKeyRingProtector protector) throws PGPException {
+    public SecretKeyRingEditorInterface revokeSubKey(long subKeyId,
+                                                     SecretKeyRingProtector protector,
+                                                     RevocationAttributes revocationAttributes)
+            throws PGPException {
         PGPPublicKey revokeeSubKey = secretKeyRing.getPublicKey(subKeyId);
         if (revokeeSubKey == null) {
             throw new NoSuchElementException("No subkey with id " + Long.toHexString(subKeyId) + " found.");
         }
 
-        secretKeyRing = revokeSubKey(protector, revokeeSubKey);
+        secretKeyRing = revokeSubKey(protector, revokeeSubKey, revocationAttributes);
         return this;
     }
 
@@ -302,9 +307,11 @@ public class SecretKeyRingEditor implements SecretKeyRingEditorInterface {
         return revocationCertificate;
     }
 
-    private PGPSecretKeyRing revokeSubKey(SecretKeyRingProtector protector, PGPPublicKey revokeeSubKey)
+    private PGPSecretKeyRing revokeSubKey(SecretKeyRingProtector protector,
+                                          PGPPublicKey revokeeSubKey,
+                                          RevocationAttributes revocationAttributes)
             throws PGPException {
-        PGPSignature subKeyRevocation = generateRevocation(protector, revokeeSubKey, null);
+        PGPSignature subKeyRevocation = generateRevocation(protector, revokeeSubKey, revocationAttributes);
         revokeeSubKey = PGPPublicKey.addCertification(revokeeSubKey, subKeyRevocation);
 
         // Inject revoked public key into key ring
