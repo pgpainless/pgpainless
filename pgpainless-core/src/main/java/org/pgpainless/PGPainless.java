@@ -19,6 +19,7 @@ import java.io.IOException;
 import javax.annotation.Nonnull;
 
 import org.bouncycastle.openpgp.PGPException;
+import org.bouncycastle.openpgp.PGPKeyRing;
 import org.bouncycastle.openpgp.PGPSecretKeyRing;
 import org.pgpainless.algorithm.CompressionAlgorithm;
 import org.pgpainless.algorithm.SymmetricKeyAlgorithm;
@@ -27,6 +28,7 @@ import org.pgpainless.decryption_verification.DecryptionStream;
 import org.pgpainless.encryption_signing.EncryptionBuilder;
 import org.pgpainless.encryption_signing.EncryptionStream;
 import org.pgpainless.key.generation.KeyRingBuilder;
+import org.pgpainless.key.info.KeyRingInfo;
 import org.pgpainless.key.modification.secretkeyring.SecretKeyRingEditor;
 import org.pgpainless.key.modification.secretkeyring.SecretKeyRingEditorInterface;
 import org.pgpainless.key.parsing.KeyRingReader;
@@ -69,6 +71,16 @@ public class PGPainless {
 
     public static SecretKeyRingEditorInterface modifyKeyRing(PGPSecretKeyRing secretKeys) {
         return new SecretKeyRingEditor(secretKeys);
+    }
+
+    /**
+     * Quickly access information about a {@link org.bouncycastle.openpgp.PGPPublicKeyRing} / {@link PGPSecretKeyRing}.
+     *
+     * @param keyRing key ring
+     * @return access object
+     */
+    public static KeyRingInfo inspectKeyRing(PGPKeyRing keyRing) {
+        return new KeyRingInfo(keyRing);
     }
 
     /**
