@@ -23,6 +23,7 @@ import org.bouncycastle.openpgp.PGPPublicKeyRing;
 import org.bouncycastle.openpgp.PGPSecretKeyRing;
 import org.pgpainless.key.OpenPgpV4Fingerprint;
 
+@Deprecated
 public class PGPKeyRing {
 
     private PGPPublicKeyRing publicKeys;

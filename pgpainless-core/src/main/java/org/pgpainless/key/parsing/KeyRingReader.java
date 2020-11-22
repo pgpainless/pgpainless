@@ -85,10 +85,12 @@ public class KeyRingReader {
         return secretKeyRingCollection(asciiArmored.getBytes(UTF8));
     }
 
+    @Deprecated
     public PGPKeyRing keyRing(@Nullable InputStream publicIn, @Nullable InputStream secretIn) throws IOException, PGPException {
         return readKeyRing(publicIn, secretIn);
     }
 
+    @Deprecated
     public PGPKeyRing keyRing(@Nullable byte[] publicBytes, @Nullable byte[] secretBytes) throws IOException, PGPException {
         return keyRing(
                 publicBytes != null ? new ByteArrayInputStream(publicBytes) : null,
@@ -96,6 +98,7 @@ public class KeyRingReader {
         );
     }
 
+    @Deprecated
     public PGPKeyRing keyRing(@Nullable String asciiPublic, @Nullable String asciiSecret) throws IOException, PGPException {
         return keyRing(
                 asciiPublic != null ? asciiPublic.getBytes(UTF8) : null,
@@ -133,6 +136,7 @@ public class KeyRingReader {
                 new BcKeyFingerprintCalculator());
     }
 
+    @Deprecated
     public static PGPKeyRing readKeyRing(@Nullable InputStream publicIn, @Nullable InputStream secretIn) throws IOException, PGPException {
         validateStreamsNotBothNull(publicIn, secretIn);
 
@@ -162,6 +166,7 @@ public class KeyRingReader {
         return null;
     }
 
+    @Deprecated
     private static PGPKeyRing asPGPKeyRing(PGPPublicKeyRing publicKeys, PGPSecretKeyRing secretKeys) {
         if (secretKeys == null) {
             return new PGPKeyRing(publicKeys);
