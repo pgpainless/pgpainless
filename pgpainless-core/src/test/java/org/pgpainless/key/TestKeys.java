@@ -17,6 +17,7 @@ package org.pgpainless.key;
 
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
+import java.util.Date;
 
 import org.bouncycastle.openpgp.PGPException;
 import org.bouncycastle.openpgp.PGPPublicKeyRing;
@@ -180,6 +181,7 @@ public class TestKeys {
     public static final long EMIL_KEY_ID = 6284463849526474508L;
     public static final String EMIL_FINGERPRINT_STRING = "4F665C4DC2C4660BC6425E415736E6931ACF370C";
     public static final OpenPgpV4Fingerprint EMIL_FINGERPRINT = new OpenPgpV4Fingerprint(EMIL_FINGERPRINT_STRING);
+    public static final Date EMIL_CREATION_DATE = new Date(1578852104000L);
 
     /**
      * Public key of <pre><emil@email.user></pre>.
