@@ -73,7 +73,7 @@ public class KeyRingInfoTest {
         assertNull(sInfo.getRevocationDate());
         assertNull(pInfo.getRevocationDate());
         Date revocationDate = new Date();
-        PGPSecretKeyRing revoked = PGPainless.modifyKeyRing(secretKeys).revokeSubKey(sInfo.getKeyId(), new UnprotectedKeysProtector()).done();
+        PGPSecretKeyRing revoked = PGPainless.modifyKeyRing(secretKeys).revoke(new UnprotectedKeysProtector()).done();
         KeyRingInfo rInfo = PGPainless.inspectKeyRing(revoked);
         assertNotNull(rInfo.getRevocationDate());
         assertEquals(revocationDate.getTime(), rInfo.getRevocationDate().getTime(), 1000);

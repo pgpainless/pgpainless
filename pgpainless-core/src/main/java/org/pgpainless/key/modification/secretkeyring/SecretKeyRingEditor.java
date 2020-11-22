@@ -258,6 +258,13 @@ public class SecretKeyRingEditor implements SecretKeyRingEditorInterface {
     }
 
     @Override
+    public SecretKeyRingEditorInterface revoke(SecretKeyRingProtector secretKeyRingProtector,
+                                               RevocationAttributes revocationAttributes)
+            throws PGPException {
+        return revokeSubKey(secretKeyRing.getSecretKey().getKeyID(), secretKeyRingProtector, revocationAttributes);
+    }
+
+    @Override
     public SecretKeyRingEditorInterface revokeSubKey(OpenPgpV4Fingerprint fingerprint,
                                                      SecretKeyRingProtector protector,
                                                      RevocationAttributes revocationAttributes)

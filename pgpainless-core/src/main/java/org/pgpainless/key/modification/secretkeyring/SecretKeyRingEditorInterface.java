@@ -110,6 +110,28 @@ public interface SecretKeyRingEditorInterface {
     SecretKeyRingEditorInterface deleteSubKey(long subKeyId, SecretKeyRingProtector secretKeyRingProtector);
 
     /**
+     * Revoke the key ring.
+     *
+     * @param secretKeyRingProtector protector of the primary key
+     * @return the builder
+     */
+    default SecretKeyRingEditorInterface revoke(SecretKeyRingProtector secretKeyRingProtector)
+            throws PGPException {
+        return revoke(secretKeyRingProtector, null);
+    }
+
+    /**
+     * Revoke the key ring.
+     *
+     * @param secretKeyRingProtector protector of the primary key
+     * @param revocationAttributes reason for the revocation
+     * @return the builder
+     */
+    SecretKeyRingEditorInterface revoke(SecretKeyRingProtector secretKeyRingProtector,
+                                        RevocationAttributes revocationAttributes)
+            throws PGPException;
+
+    /**
      * Revoke the subkey binding signature of a subkey.
      * The subkey with the provided fingerprint will be revoked.
      * If no suitable subkey is found, a {@link java.util.NoSuchElementException} will be thrown.
