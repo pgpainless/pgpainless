@@ -210,12 +210,15 @@ public class KeyRingInfo {
     }
 
     /**
-     * Return the date of expiration of the primary key.
+     * Return the date of expiration of the primary key or null if the key has no expiration date.
      *
      * @return expiration date
      */
     public Date getExpirationDate() {
         long validSeconds = getPublicKey().getValidSeconds();
+        if (validSeconds == 0) {
+            return null;
+        }
         return new Date(getCreationDate().getTime() + (1000 * validSeconds));
     }
 
