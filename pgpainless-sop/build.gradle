@@ -1,0 +1,30 @@
+plugins {
+    id 'com.github.johnrengelman.shadow' version '1.2.2'
+}
+
+apply plugin: 'com.github.johnrengelman.shadow'
+
+dependencies {
+    implementation(project(":pgpainless-core"))
+
+    compile 'info.picocli:picocli:3.9.6'
+
+    testImplementation "org.junit.jupiter:junit-jupiter-api:$junitVersion"
+    testRuntimeOnly "org.junit.jupiter:junit-jupiter-engine:$junitVersion"
+
+    /*
+    implementation "org.bouncycastle:bcprov-debug-jdk15on:$bouncyCastleVersion"
+    /*/
+    implementation "org.bouncycastle:bcprov-jdk15on:$bouncyCastleVersion"
+    //*/
+    api "org.bouncycastle:bcpg-jdk15on:$bouncyCastleVersion"
+
+    // https://mvnrepository.com/artifact/com.google.code.findbugs/jsr305
+    implementation group: 'com.google.code.findbugs', name: 'jsr305', version: '3.0.2'
+}
+
+mainClassName = 'org.pgpainless.sop.PGPainlessCLI'
+
+shadowJar {
+    baseName = 'pgpcli'
+}
