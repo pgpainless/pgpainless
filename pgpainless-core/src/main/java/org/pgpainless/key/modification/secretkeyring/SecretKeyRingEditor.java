@@ -21,6 +21,7 @@ import java.security.InvalidAlgorithmParameterException;
 import java.security.NoSuchAlgorithmException;
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.Date;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
@@ -283,6 +284,57 @@ public class SecretKeyRingEditor implements SecretKeyRingEditorInterface {
         }
 
         secretKeyRing = revokeSubKey(protector, revokeeSubKey, revocationAttributes);
+        return this;
+    }
+
+    @Override
+    public SecretKeyRingEditorInterface setExpirationDate(OpenPgpV4Fingerprint fingerprint,
+                                                          Date expiration,
+                                                          SecretKeyRingProtector secretKeyRingProtector)
+            throws PGPException {
+        Iterator<PGPSecretKey> secretKeyIterator = secretKeyRing.getSecretKeys();
+
+        if (!secretKeyIterator.hasNext()) {
+            throw new NoSuchElementException("No secret keys in the ring.");
+        }
+
+        PGPSecretKey secretKey = secretKeyIterator.next();
+        PGPPublicKey publicKey = secretKey.getPublicKey();
+
+        if (!new OpenPgpV4Fingerprint(publicKey).equals(fingerprint)) {
+            throw new IllegalArgumentException("Currently it is possible to adjust expiration date for primary key only.");
+        }
+
+        List<PGPSecretKey> secretKeyList = new ArrayList<>();
+        PGPPrivateKey privateKey = unlockSecretKey(secretKey, secretKeyRingProtector);
+
+        PGPSecretKey primaryKey = secretKeyRing.getSecretKey();
+        PGPSignatureGenerator signatureGenerator = SignatureUtils.getSignatureGeneratorFor(primaryKey);
+        PGPSignatureSubpacketGenerator subpacketGenerator = new PGPSignatureSubpacketGenerator();
+
+        long secondsToExpire = 0; // 0 means "no expiration"
+        if (expiration != null) {
+            secondsToExpire = (expiration.getTime() - primaryKey.getPublicKey().getCreationTime().getTime()) / 1000;
+        }
+        subpacketGenerator.setKeyExpirationTime(false, secondsToExpire);
+
+        PGPSignatureSubpacketVector subPackets = subpacketGenerator.generate();
+        signatureGenerator.setHashedSubpackets(subPackets);
+
+        signatureGenerator.init(PGPSignature.POSITIVE_CERTIFICATION, privateKey);
+
+        Iterator<String> users = publicKey.getUserIDs();
+        while (users.hasNext()) {
+            String user = users.next();
+            PGPSignature signature = signatureGenerator.generateCertification(user, primaryKey.getPublicKey());
+            publicKey = PGPPublicKey.addCertification(publicKey, user, signature);
+        }
+
+        secretKey = PGPSecretKey.replacePublicKey(secretKey, publicKey);
+        secretKeyList.add(secretKey);
+
+        secretKeyRing = new PGPSecretKeyRing(secretKeyList);
+
         return this;
     }
 
