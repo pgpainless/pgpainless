@@ -15,6 +15,7 @@
  */
 package org.pgpainless.key.modification.secretkeyring;
 
+import java.util.Date;
 import java.security.InvalidAlgorithmParameterException;
 import java.security.NoSuchAlgorithmException;
 import javax.annotation.Nonnull;
@@ -187,6 +188,19 @@ public interface SecretKeyRingEditorInterface {
     SecretKeyRingEditorInterface revokeSubKey(long subKeyId,
                                               SecretKeyRingProtector secretKeyRingProtector,
                                               RevocationAttributes revocationAttributes)
+            throws PGPException;
+
+    /**
+     * Set key expiration time.
+     *
+     * @param fingerprint key that will have its expiration date adjusted
+     * @param expiration target expiration time or @{code null} for no expiration
+     * @param secretKeyRingProtector protector to unlock the priary key
+     * @return the builder
+     */
+    SecretKeyRingEditorInterface setExpirationDate(OpenPgpV4Fingerprint fingerprint,
+                                                   Date expiration,
+                                                   SecretKeyRingProtector secretKeyRingProtector)
             throws PGPException;
 
     /**
