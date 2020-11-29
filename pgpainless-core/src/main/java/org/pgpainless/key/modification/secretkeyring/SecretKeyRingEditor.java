@@ -15,7 +15,7 @@
  */
 package org.pgpainless.key.modification.secretkeyring;
 
-import static org.pgpainless.key.util.KeyUtils.unlockSecretKey;
+import static org.pgpainless.key.util.KeyRingUtils.unlockSecretKey;
 
 import java.security.InvalidAlgorithmParameterException;
 import java.security.NoSuchAlgorithmException;

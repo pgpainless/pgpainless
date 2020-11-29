@@ -19,9 +19,14 @@ import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
 
+import org.bouncycastle.openpgp.PGPException;
+import org.bouncycastle.openpgp.PGPPrivateKey;
 import org.bouncycastle.openpgp.PGPPublicKey;
 import org.bouncycastle.openpgp.PGPPublicKeyRing;
+import org.bouncycastle.openpgp.PGPSecretKey;
 import org.bouncycastle.openpgp.PGPSecretKeyRing;
+import org.bouncycastle.openpgp.operator.PBESecretKeyDecryptor;
+import org.pgpainless.key.protection.SecretKeyRingProtector;
 
 public class KeyRingUtils {
 
@@ -33,5 +38,11 @@ public class KeyRingUtils {
         }
         PGPPublicKeyRing publicKeyRing = new PGPPublicKeyRing(publicKeyList);
         return publicKeyRing;
+    }
+
+    public static PGPPrivateKey unlockSecretKey(PGPSecretKey secretKey, SecretKeyRingProtector protector) throws PGPException {
+        PBESecretKeyDecryptor secretKeyDecryptor = protector.getDecryptor(secretKey.getKeyID());
+        PGPPrivateKey privateKey = secretKey.extractPrivateKey(secretKeyDecryptor);
+        return privateKey;
     }
 }
