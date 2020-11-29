@@ -180,7 +180,7 @@ public class ChangeSecretKeyRingPassphraseTest {
     private void signDummyMessageWithKeysAndPassphrase(PGPKeyRing keyRing, Passphrase passphrase) throws IOException, PGPException {
         String dummyMessage = "dummy";
         ByteArrayOutputStream dummy = new ByteArrayOutputStream();
-        EncryptionStream stream = PGPainless.createEncryptor().onOutputStream(dummy)
+        EncryptionStream stream = PGPainless.encryptAndOrSign().onOutputStream(dummy)
                 .doNotEncrypt()
                 .signWith(PasswordBasedSecretKeyRingProtector.forKey(keyRing.getSecretKeys(), passphrase), keyRing.getSecretKeys())
                 .noArmor();

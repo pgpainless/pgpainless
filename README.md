@@ -76,7 +76,7 @@ Take for example a look at this delicious key:
 
 Encrypting and signing data is pretty straight forward as well.
 ```java
-        EncryptionStream encryptor = PGPainless.createEncryptor()
+        EncryptionStream encryptor = PGPainless.encryptAndOrSign()
                 .onOutputStream(targetOuputStream)
                 .toRecipients(publicKeyRings)
                 .usingSecureAlgorithms()
@@ -109,7 +109,7 @@ This object will contain information like to which keys the message is encrypted
 To process incoming encrypted / signed data, just do the following:
 
 ```java
-        DecryptionStream decryptor = PGPainless.createDecryptor()
+        DecryptionStream decryptor = PGPainless.decryptAndOrVerify()
                 .onInputStream(sourceInputStream) // insert encrypted data here
                 .decryptWith(secretKeyDecryptor, secretKey)
                 .verifyWith(trustedKeyIds, senderKeys)

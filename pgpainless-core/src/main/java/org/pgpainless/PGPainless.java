@@ -55,17 +55,38 @@ public class PGPainless {
 
     /**
      * Create an {@link EncryptionStream}, which can be used to encrypt and/or sign data using OpenPGP.
+     *
+     * @deprecated Use {@link #encryptAndOrSign()} instead.
      * @return builder
      */
     public static EncryptionBuilder createEncryptor() {
+        return encryptAndOrSign();
+    }
+
+    /**
+     * Create an {@link EncryptionStream}, which can be used to encrypt and/or sign data using OpenPGP.
+     * @return builder
+     */
+    public static EncryptionBuilder encryptAndOrSign() {
         return new EncryptionBuilder();
+    }
+
+    /**
+     * Create a {@link DecryptionStream}, which can be used to decrypt and/or verify data using OpenPGP.
+     *
+     * @deprecated Use {@link #decryptAndOrVerify()} instead.
+     * @return builder
+     */
+    @Deprecated
+    public static DecryptionBuilder createDecryptor() {
+        return decryptAndOrVerify();
     }
 
     /**
      * Create a {@link DecryptionStream}, which can be used to decrypt and/or verify data using OpenPGP.
      * @return builder
      */
-    public static DecryptionBuilder createDecryptor() {
+    public static DecryptionBuilder decryptAndOrVerify() {
         return new DecryptionBuilder();
     }
 

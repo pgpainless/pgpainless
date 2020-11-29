@@ -137,7 +137,7 @@ public class EncryptDecryptTest {
 
         ByteArrayOutputStream envelope = new ByteArrayOutputStream();
 
-        EncryptionStream encryptor = PGPainless.createEncryptor()
+        EncryptionStream encryptor = PGPainless.encryptAndOrSign()
                 .onOutputStream(envelope)
                 .toRecipients(recipientPub)
                 .usingSecureAlgorithms()
@@ -165,7 +165,7 @@ public class EncryptDecryptTest {
         // Juliet trieth to comprehend Romeos words
 
         ByteArrayInputStream envelopeIn = new ByteArrayInputStream(encryptedSecretMessage);
-        DecryptionStream decryptor = PGPainless.createDecryptor()
+        DecryptionStream decryptor = PGPainless.decryptAndOrVerify()
                 .onInputStream(envelopeIn)
                 .decryptWith(keyDecryptor, BCUtil.keyRingsToKeyRingCollection(recipientSec))
                 .verifyWith(BCUtil.keyRingsToKeyRingCollection(senderPub))
@@ -193,7 +193,7 @@ public class EncryptDecryptTest {
         byte[] data = testMessage.getBytes();
         ByteArrayInputStream inputStream = new ByteArrayInputStream(data);
         ByteArrayOutputStream dummyOut = new ByteArrayOutputStream();
-        EncryptionStream signer = PGPainless.createEncryptor().onOutputStream(dummyOut)
+        EncryptionStream signer = PGPainless.encryptAndOrSign().onOutputStream(dummyOut)
                 .doNotEncrypt()
                 .createDetachedSignature()
                 .signWith(keyRingProtector, signingKeys.getSecretKeys())
@@ -214,7 +214,7 @@ public class EncryptDecryptTest {
         // CHECKSTYLE:ON
 
         inputStream = new ByteArrayInputStream(testMessage.getBytes());
-        DecryptionStream verifier = PGPainless.createDecryptor().onInputStream(inputStream)
+        DecryptionStream verifier = PGPainless.decryptAndOrVerify().onInputStream(inputStream)
                 .doNotDecrypt()
                 .verifyDetachedSignature(new ByteArrayInputStream(armorSig.getBytes()))
                 .verifyWith(Collections.singleton(signingKeys.getPublicKeys()))
@@ -235,7 +235,7 @@ public class EncryptDecryptTest {
         byte[] data = testMessage.getBytes();
         ByteArrayInputStream inputStream = new ByteArrayInputStream(data);
         ByteArrayOutputStream signOut = new ByteArrayOutputStream();
-        EncryptionStream signer = PGPainless.createEncryptor().onOutputStream(signOut)
+        EncryptionStream signer = PGPainless.encryptAndOrSign().onOutputStream(signOut)
                 .doNotEncrypt()
                 .signWith(keyRingProtector, signingKeys.getSecretKeys())
                 .asciiArmor();
@@ -247,7 +247,7 @@ public class EncryptDecryptTest {
         // CHECKSTYLE:ON
 
         inputStream = new ByteArrayInputStream(signOut.toByteArray());
-        DecryptionStream verifier = PGPainless.createDecryptor().onInputStream(inputStream)
+        DecryptionStream verifier = PGPainless.decryptAndOrVerify().onInputStream(inputStream)
                 .doNotDecrypt()
                 .verifyWith(Collections.singleton(signingKeys.getPublicKeys()))
                 .ignoreMissingPublicKeys()

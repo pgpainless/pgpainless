@@ -56,7 +56,7 @@ public class DecryptAndVerifyMessageTest {
     public void decryptMessageAndVerifySignatureTest() throws Exception {
         String encryptedMessage = TestKeys.MSG_SIGN_CRYPT_JULIET_JULIET;
 
-        DecryptionStream decryptor = PGPainless.createDecryptor()
+        DecryptionStream decryptor = PGPainless.decryptAndOrVerify()
                 .onInputStream(new ByteArrayInputStream(encryptedMessage.getBytes()))
                 .decryptWith(new UnprotectedKeysProtector(), new PGPSecretKeyRingCollection(Collections.singleton(juliet)))
                 .verifyWith(Collections.singleton(new PGPPublicKeyRing(Collections.singletonList(juliet.getPublicKey()))))

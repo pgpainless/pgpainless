@@ -116,7 +116,7 @@ public class LengthTest {
 
             ByteArrayOutputStream envelope = new ByteArrayOutputStream();
 
-            OutputStream encryptor = PGPainless.createEncryptor()
+            OutputStream encryptor = PGPainless.encryptAndOrSign()
                     .onOutputStream(envelope)
                     .toRecipients(recipientPub)
                     // .doNotEncrypt()
