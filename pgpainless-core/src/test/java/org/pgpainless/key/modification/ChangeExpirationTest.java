@@ -15,6 +15,10 @@
  */
 package org.pgpainless.key.modification;
 
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertNull;
+
 import org.bouncycastle.openpgp.PGPException;
 import org.bouncycastle.openpgp.PGPSecretKeyRing;
 import org.junit.jupiter.api.Test;
@@ -26,8 +30,6 @@ import org.pgpainless.key.protection.UnprotectedKeysProtector;
 
 import java.io.IOException;
 import java.util.Date;
-
-import static org.junit.jupiter.api.Assertions.*;
 
 public class ChangeExpirationTest {
 
