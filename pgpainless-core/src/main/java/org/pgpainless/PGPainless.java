@@ -59,6 +59,7 @@ public class PGPainless {
      * @deprecated Use {@link #encryptAndOrSign()} instead.
      * @return builder
      */
+    @Deprecated
     public static EncryptionBuilder createEncryptor() {
         return encryptAndOrSign();
     }
