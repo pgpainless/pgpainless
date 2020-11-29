@@ -15,11 +15,15 @@
  */
 package org.pgpainless.key.protection;
 
+import java.util.Map;
 import javax.annotation.Nullable;
 
 import org.bouncycastle.openpgp.PGPException;
+import org.bouncycastle.openpgp.PGPSecretKey;
+import org.bouncycastle.openpgp.PGPSecretKeyRing;
 import org.bouncycastle.openpgp.operator.PBESecretKeyDecryptor;
 import org.bouncycastle.openpgp.operator.PBESecretKeyEncryptor;
+import org.pgpainless.util.Passphrase;
 
 public interface SecretKeyRingProtector {
 
@@ -42,4 +46,19 @@ public interface SecretKeyRingProtector {
      */
     @Nullable PBESecretKeyEncryptor getEncryptor(Long keyId) throws PGPException;
 
+    static SecretKeyRingProtector unlockAllKeysWith(Passphrase passphrase, PGPSecretKeyRing keys) {
+        return PasswordBasedSecretKeyRingProtector.forKey(keys, passphrase);
+    }
+
+    static SecretKeyRingProtector unlockSingleKeyWith(Passphrase passphrase, PGPSecretKey key) {
+        return PasswordBasedSecretKeyRingProtector.forKey(key, passphrase);
+    }
+
+    static SecretKeyRingProtector unprotectedKeys() {
+        return new UnprotectedKeysProtector();
+    }
+
+    static SecretKeyRingProtector fromPassphraseMap(Map<Long, Passphrase> passphraseMap) {
+        return new PassphraseMapKeyRingProtector(passphraseMap, KeyRingProtectionSettings.secureDefaultSettings(), null);
+    }
 }
