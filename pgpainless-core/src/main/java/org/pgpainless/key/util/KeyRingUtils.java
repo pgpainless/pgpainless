@@ -18,8 +18,10 @@ package org.pgpainless.key.util;
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
+import java.util.NoSuchElementException;
 
 import org.bouncycastle.openpgp.PGPException;
+import org.bouncycastle.openpgp.PGPKeyRing;
 import org.bouncycastle.openpgp.PGPPrivateKey;
 import org.bouncycastle.openpgp.PGPPublicKey;
 import org.bouncycastle.openpgp.PGPPublicKeyRing;
@@ -29,6 +31,38 @@ import org.bouncycastle.openpgp.operator.PBESecretKeyDecryptor;
 import org.pgpainless.key.protection.SecretKeyRingProtector;
 
 public class KeyRingUtils {
+
+    public static PGPSecretKey requirePrimarySecretKeyFrom(PGPSecretKeyRing secretKeys) {
+        PGPSecretKey primarySecretKey = getPrimarySecretKeyFrom(secretKeys);
+        if (primarySecretKey == null) {
+            throw new NoSuchElementException("Provided PGPSecretKeyRing has no primary secret key.");
+        }
+        return primarySecretKey;
+    }
+
+    public static PGPSecretKey getPrimarySecretKeyFrom(PGPSecretKeyRing secretKeys) {
+        PGPSecretKey secretKey = secretKeys.getSecretKey();
+        if (secretKey.isMasterKey()) {
+            return secretKey;
+        }
+        return null;
+    }
+
+    public static PGPPublicKey requirePrimaryPublicKeyFrom(PGPKeyRing keyRing) {
+        PGPPublicKey primaryPublicKey = getPrimaryPublicKeyFrom(keyRing);
+        if (primaryPublicKey == null) {
+            throw new NoSuchElementException("Provided PGPKeyRing has no primary public key.");
+        }
+        return primaryPublicKey;
+    }
+
+    public static PGPPublicKey getPrimaryPublicKeyFrom(PGPKeyRing keyRing) {
+        PGPPublicKey primaryPublicKey = keyRing.getPublicKey();
+        if (primaryPublicKey.isMasterKey()) {
+            return primaryPublicKey;
+        }
+        return null;
+    }
 
     public static PGPPublicKeyRing publicKeyRingFrom(PGPSecretKeyRing secretKeys) {
         List<PGPPublicKey> publicKeyList = new ArrayList<>();
