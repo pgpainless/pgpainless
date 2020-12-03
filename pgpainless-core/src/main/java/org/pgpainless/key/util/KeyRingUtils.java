@@ -32,6 +32,13 @@ import org.pgpainless.key.protection.SecretKeyRingProtector;
 
 public class KeyRingUtils {
 
+    /**
+     * Return the primary {@link PGPSecretKey} from the provided {@link PGPSecretKeyRing}.
+     * If it has no primary secret key, throw a {@link NoSuchElementException}.
+     *
+     * @param secretKeys secret keys
+     * @return primary secret key
+     */
     public static PGPSecretKey requirePrimarySecretKeyFrom(PGPSecretKeyRing secretKeys) {
         PGPSecretKey primarySecretKey = getPrimarySecretKeyFrom(secretKeys);
         if (primarySecretKey == null) {
@@ -40,6 +47,12 @@ public class KeyRingUtils {
         return primarySecretKey;
     }
 
+    /**
+     * Return the primary {@link PGPSecretKey} from the provided {@link PGPSecretKeyRing} or null if it has none.
+     *
+     * @param secretKeys secret key ring
+     * @return primary secret key
+     */
     public static PGPSecretKey getPrimarySecretKeyFrom(PGPSecretKeyRing secretKeys) {
         PGPSecretKey secretKey = secretKeys.getSecretKey();
         if (secretKey.isMasterKey()) {
@@ -48,6 +61,13 @@ public class KeyRingUtils {
         return null;
     }
 
+    /**
+     * Return the primary {@link PGPPublicKey} from the provided key ring.
+     * Throws a {@link NoSuchElementException} if the key ring has no primary public key.
+     *
+     * @param keyRing key ring
+     * @return primary public key
+     */
     public static PGPPublicKey requirePrimaryPublicKeyFrom(PGPKeyRing keyRing) {
         PGPPublicKey primaryPublicKey = getPrimaryPublicKeyFrom(keyRing);
         if (primaryPublicKey == null) {
@@ -56,6 +76,12 @@ public class KeyRingUtils {
         return primaryPublicKey;
     }
 
+    /**
+     * Return the primary {@link PGPPublicKey} from the provided key ring or null if it has none.
+     *
+     * @param keyRing key ring
+     * @return primary public key
+     */
     public static PGPPublicKey getPrimaryPublicKeyFrom(PGPKeyRing keyRing) {
         PGPPublicKey primaryPublicKey = keyRing.getPublicKey();
         if (primaryPublicKey.isMasterKey()) {
@@ -64,6 +90,12 @@ public class KeyRingUtils {
         return null;
     }
 
+    /**
+     * Extract a {@link PGPPublicKeyRing} containing all public keys from the provided {@link PGPSecretKeyRing}.
+     *
+     * @param secretKeys secret key ring
+     * @return public key ring
+     */
     public static PGPPublicKeyRing publicKeyRingFrom(PGPSecretKeyRing secretKeys) {
         List<PGPPublicKey> publicKeyList = new ArrayList<>();
         Iterator<PGPPublicKey> publicKeyIterator = secretKeys.getPublicKeys();
@@ -74,6 +106,15 @@ public class KeyRingUtils {
         return publicKeyRing;
     }
 
+    /**
+     * Unlock a {@link PGPSecretKey} and return the resulting {@link PGPPrivateKey}.
+     *
+     * @param secretKey secret key
+     * @param protector protector to unlock the secret key
+     * @return private key
+     * 
+     * @throws PGPException if something goes wrong (eg. wrong passphrase)
+     */
     public static PGPPrivateKey unlockSecretKey(PGPSecretKey secretKey, SecretKeyRingProtector protector) throws PGPException {
         PBESecretKeyDecryptor secretKeyDecryptor = protector.getDecryptor(secretKey.getKeyID());
         PGPPrivateKey privateKey = secretKey.extractPrivateKey(secretKeyDecryptor);
