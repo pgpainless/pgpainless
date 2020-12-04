@@ -43,6 +43,7 @@ public interface SecretKeyRingEditorInterface {
      * Add a user-id to the primary key of the key ring.
      *
      * @param userId user-id
+     * @param secretKeyRingProtector protector to unlock the secret key
      * @return the builder
      */
     SecretKeyRingEditorInterface addUserId(String userId, SecretKeyRingProtector secretKeyRingProtector) throws PGPException;
@@ -65,6 +66,7 @@ public interface SecretKeyRingEditorInterface {
      * Remove a user-id from the primary key of the key ring.
      *
      * @param userId exact user-id to be removed
+     * @param secretKeyRingProtector protector to unlock the secret key
      * @return the builder
      */
     SecretKeyRingEditorInterface deleteUserId(String userId, SecretKeyRingProtector secretKeyRingProtector);
@@ -80,6 +82,8 @@ public interface SecretKeyRingEditorInterface {
      * The subkey will be generated from the provided {@link KeySpec}.
      *
      * @param keySpec key specification
+     * @param subKeyPassphrase passphrase to encrypt the sub key
+     * @param secretKeyRingProtector protector to unlock the secret key of the key ring
      * @return the builder
      */
     SecretKeyRingEditorInterface addSubKey(@Nonnull KeySpec keySpec,
@@ -96,6 +100,7 @@ public interface SecretKeyRingEditorInterface {
      * If no suitable subkey is found, a {@link java.util.NoSuchElementException} will be thrown.
      *
      * @param fingerprint fingerprint of the subkey to be removed
+     * @param secretKeyRingProtector protector to unlock the secret key ring
      * @return the builder
      */
     SecretKeyRingEditorInterface deleteSubKey(OpenPgpV4Fingerprint fingerprint, SecretKeyRingProtector secretKeyRingProtector);
@@ -106,6 +111,7 @@ public interface SecretKeyRingEditorInterface {
      * If no suitable subkey is found, a {@link java.util.NoSuchElementException} will be thrown.
      *
      * @param subKeyId id of the subkey
+     * @param secretKeyRingProtector protector to unlock the secret key ring
      * @return the builder
      */
     SecretKeyRingEditorInterface deleteSubKey(long subKeyId, SecretKeyRingProtector secretKeyRingProtector);
@@ -138,6 +144,7 @@ public interface SecretKeyRingEditorInterface {
      * If no suitable subkey is found, a {@link java.util.NoSuchElementException} will be thrown.
      *
      * @param fingerprint fingerprint of the subkey to be revoked
+     * @param secretKeyRingProtector protector to unlock the secret key ring
      * @return the builder
      */
     default SecretKeyRingEditorInterface revokeSubKey(OpenPgpV4Fingerprint fingerprint,
@@ -167,6 +174,7 @@ public interface SecretKeyRingEditorInterface {
      * If no suitable subkey is found, q {@link java.util.NoSuchElementException} will be thrown.
      *
      * @param subKeyId id of the subkey
+     * @param secretKeyRingProtector protector to unlock the secret key ring
      * @return the builder
      */
     default SecretKeyRingEditorInterface revokeSubKey(long subKeyId,

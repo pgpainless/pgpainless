@@ -111,7 +111,9 @@ public class PGPainless {
      *
      * @param data input data.
      * @param password password.
+     * @param algorithm symmetric encryption algorithm.
      * @return symmetrically OpenPGP encrypted data.
+     *
      * @throws IOException IO is dangerous.
      * @throws PGPException PGP is brittle.
      */

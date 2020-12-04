@@ -83,10 +83,6 @@ public class KeyRingBuilder implements KeyRingBuilderInterface {
      * @param length length in bits.
      *
      * @return {@link PGPSecretKeyRing} containing the KeyPair.
-     *
-     * @throws PGPException
-     * @throws NoSuchAlgorithmException
-     * @throws InvalidAlgorithmParameterException
      */
     public PGPKeyRing simpleRsaKeyRing(@Nonnull String userId, @Nonnull RsaLength length)
             throws InvalidAlgorithmParameterException, NoSuchAlgorithmException, PGPException {
@@ -107,10 +103,6 @@ public class KeyRingBuilder implements KeyRingBuilderInterface {
      * @param password Password of the key. Can be null for unencrypted keys.
      *
      * @return {@link PGPSecretKeyRing} containing the KeyPair.
-     *
-     * @throws PGPException
-     * @throws NoSuchAlgorithmException
-     * @throws InvalidAlgorithmParameterException
      */
     public PGPKeyRing simpleRsaKeyRing(@Nonnull String userId, @Nonnull RsaLength length, String password)
             throws PGPException, NoSuchAlgorithmException, InvalidAlgorithmParameterException {
@@ -141,10 +133,6 @@ public class KeyRingBuilder implements KeyRingBuilderInterface {
      * @param userId user-id
      *
      * @return {@link PGPSecretKeyRing} containing the key pairs.
-     *
-     * @throws PGPException
-     * @throws NoSuchAlgorithmException
-     * @throws InvalidAlgorithmParameterException
      */
     public PGPKeyRing simpleEcKeyRing(@Nonnull String userId)
             throws InvalidAlgorithmParameterException, NoSuchAlgorithmException, PGPException {
@@ -165,10 +153,6 @@ public class KeyRingBuilder implements KeyRingBuilderInterface {
      * @param password Password of the private key. Can be null for an unencrypted key.
      *
      * @return {@link PGPSecretKeyRing} containing the key pairs.
-     *
-     * @throws PGPException
-     * @throws NoSuchAlgorithmException
-     * @throws InvalidAlgorithmParameterException
      */
     public PGPKeyRing simpleEcKeyRing(@Nonnull String userId, String password)
             throws PGPException, NoSuchAlgorithmException, InvalidAlgorithmParameterException {

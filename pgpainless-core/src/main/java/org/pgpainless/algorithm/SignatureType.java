@@ -22,7 +22,7 @@ import java.util.concurrent.ConcurrentHashMap;
  * Enum that enlists all the Signature Types defined in rfc4880 section 5.2.1
  * See {@link org.bouncycastle.openpgp.PGPSignature} for comparison.
  *
- * @see <a href="https://tools.ietf.org/html/rfc4880#section-5.11>rfc4880 §5.2.1. Signature Types</a>
+ * @see <a href="https://tools.ietf.org/html/rfc4880#section-5.11">rfc4880 §5.2.1. Signature Types</a>
  */
 public enum SignatureType {
 
@@ -37,7 +37,7 @@ public enum SignatureType {
      * Signature of a canonical text document.
      * This means the signer owns it, created it, or certifies that it
      * has not been modified.  The signature is calculated over the text
-     * data with its line endings converted to <CR><LF>.
+     * data with its line endings converted to {@code <CR><LF>}.
      */
     CANONICAL_TEXT_DOCUMENT(0x01),
 
