@@ -112,7 +112,7 @@ public class KeyRingUtils {
      * @param secretKey secret key
      * @param protector protector to unlock the secret key
      * @return private key
-     * 
+     *
      * @throws PGPException if something goes wrong (eg. wrong passphrase)
      */
     public static PGPPrivateKey unlockSecretKey(PGPSecretKey secretKey, SecretKeyRingProtector protector) throws PGPException {
