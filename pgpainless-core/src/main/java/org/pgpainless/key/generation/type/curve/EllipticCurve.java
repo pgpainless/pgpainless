@@ -19,6 +19,8 @@ import javax.annotation.Nonnull;
 
 public enum EllipticCurve {
     _P256("P-256"),
+    _P384("P-384"),
+    _P521("P-521"),
     ;
 
     private final String name;

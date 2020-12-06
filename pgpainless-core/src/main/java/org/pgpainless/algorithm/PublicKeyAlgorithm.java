@@ -36,6 +36,7 @@ public enum PublicKeyAlgorithm {
     ECDSA           (PublicKeyAlgorithmTags.ECDSA),
     ELGAMAL_GENERAL (PublicKeyAlgorithmTags.ELGAMAL_GENERAL),
     DIFFIE_HELLMAN  (PublicKeyAlgorithmTags.DIFFIE_HELLMAN),
+    EDDSA           (PublicKeyAlgorithmTags.EDDSA),
     ;
 
     private static final Map<Integer, PublicKeyAlgorithm> MAP = new ConcurrentHashMap<>();
