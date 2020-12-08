@@ -13,7 +13,23 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-/**
- * Classes related to elliptic curve cryptography.
- */
-package org.pgpainless.key.generation.type.curve;
+package org.pgpainless.key.generation.type;
+
+import javax.annotation.Nonnull;
+
+public enum EllipticCurve {
+    _P256("P-256"),
+    _P384("P-384"),
+    _P521("P-521"),
+    ;
+
+    private final String name;
+
+    EllipticCurve(@Nonnull String name) {
+        this.name = name;
+    }
+
+    public String getName() {
+        return name;
+    }
+}

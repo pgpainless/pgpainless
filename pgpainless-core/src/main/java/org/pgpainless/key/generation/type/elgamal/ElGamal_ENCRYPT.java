@@ -13,26 +13,20 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.pgpainless.key.generation.type.length;
+package org.pgpainless.key.generation.type.elgamal;
 
-import org.pgpainless.key.generation.type.KeyLength;
+import javax.annotation.Nonnull;
 
-public enum DiffieHellmanLength implements KeyLength {
+import org.pgpainless.algorithm.PublicKeyAlgorithm;
 
-    _1024(1024),
-    _2048(2048),
-    _3072(3072),
-    ;
+public class ElGamal_ENCRYPT extends ElGamal_GENERAL {
 
-    private final int length;
-
-    DiffieHellmanLength(int length) {
-        this.length = length;
+    ElGamal_ENCRYPT(@Nonnull ElGamalLength length) {
+        super(length);
     }
 
     @Override
-    public int getLength() {
-        return length;
+    public PublicKeyAlgorithm getAlgorithm() {
+        return PublicKeyAlgorithm.ELGAMAL_ENCRYPT;
     }
-
 }

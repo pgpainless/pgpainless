@@ -13,26 +13,9 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.pgpainless.key.generation.type.length;
+package org.pgpainless.key.generation.type;
 
-public enum RsaLength implements KeyLength {
-    @Deprecated
-    _1024(1024),
-    @Deprecated
-    _2048(2048),
-    _3072(3072),
-    _4096(4096),
-    _8192(8192),
-    ;
+public interface KeyLength {
 
-    private final int length;
-
-    RsaLength(int length) {
-        this.length = length;
-    }
-
-    @Override
-    public int getLength() {
-        return length;
-    }
+    int getLength();
 }

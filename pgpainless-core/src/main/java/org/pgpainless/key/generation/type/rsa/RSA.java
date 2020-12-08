@@ -13,39 +13,42 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.pgpainless.key.generation.type;
+package org.pgpainless.key.generation.type.rsa;
 
 import javax.annotation.Nonnull;
 import java.security.spec.AlgorithmParameterSpec;
+import java.security.spec.RSAKeyGenParameterSpec;
 
-import org.bouncycastle.jce.spec.ElGamalParameterSpec;
 import org.pgpainless.algorithm.PublicKeyAlgorithm;
-import org.pgpainless.key.generation.type.length.ElGamalLength;
+import org.pgpainless.key.generation.type.KeyType;
 
-public class ElGamal_GENERAL implements KeyType {
+/**
+ * Key type that specifies the RSA_GENERAL algorithm.
+ */
+public class RSA implements KeyType {
 
-    private final ElGamalLength length;
+    private final RsaLength length;
 
-    ElGamal_GENERAL(@Nonnull ElGamalLength length) {
+    RSA(@Nonnull RsaLength length) {
         this.length = length;
     }
 
-    public static ElGamal_GENERAL withLength(@Nonnull ElGamalLength length) {
-        return new ElGamal_GENERAL(length);
+    public static RSA withLength(@Nonnull RsaLength length) {
+        return new RSA(length);
     }
 
     @Override
     public String getName() {
-        return "ElGamal";
+        return "RSA";
     }
 
     @Override
     public PublicKeyAlgorithm getAlgorithm() {
-        return PublicKeyAlgorithm.ELGAMAL_GENERAL;
+        return PublicKeyAlgorithm.RSA_GENERAL;
     }
 
     @Override
     public AlgorithmParameterSpec getAlgorithmSpec() {
-        return new ElGamalParameterSpec(length.getP(), length.getG());
+        return new RSAKeyGenParameterSpec(length.getLength(), RSAKeyGenParameterSpec.F4);
     }
 }

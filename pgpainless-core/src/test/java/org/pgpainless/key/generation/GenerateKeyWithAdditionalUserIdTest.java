@@ -31,7 +31,7 @@ import org.bouncycastle.openpgp.PGPSecretKeyRing;
 import org.junit.jupiter.api.Test;
 import org.pgpainless.PGPainless;
 import org.pgpainless.key.generation.type.KeyType;
-import org.pgpainless.key.generation.type.length.RsaLength;
+import org.pgpainless.key.generation.type.rsa.RsaLength;
 import org.pgpainless.key.util.KeyRingUtils;
 
 public class GenerateKeyWithAdditionalUserIdTest {

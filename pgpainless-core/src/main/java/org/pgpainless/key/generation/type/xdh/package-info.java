@@ -1,5 +1,5 @@
 /*
- * Copyright 2018 Paul Schaub.
+ * Copyright 2020 Paul Schaub.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -13,9 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.pgpainless.key.generation.type.length;
-
-public interface KeyLength {
-
-    int getLength();
-}
+/**
+ * Classes related to Diffie-Hellman on the X25519 curve.
+ */
+package org.pgpainless.key.generation.type.xdh;

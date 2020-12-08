@@ -34,8 +34,8 @@ import org.pgpainless.PGPainless;
 import org.pgpainless.algorithm.KeyFlag;
 import org.pgpainless.key.TestKeys;
 import org.pgpainless.key.generation.KeySpec;
-import org.pgpainless.key.generation.type.ECDSA;
-import org.pgpainless.key.generation.type.curve.EllipticCurve;
+import org.pgpainless.key.generation.type.ecdsa.ECDSA;
+import org.pgpainless.key.generation.type.EllipticCurve;
 import org.pgpainless.key.protection.PasswordBasedSecretKeyRingProtector;
 import org.pgpainless.util.Passphrase;
 

@@ -18,8 +18,10 @@ package org.pgpainless.key.generation.type;
 import java.security.spec.AlgorithmParameterSpec;
 
 import org.pgpainless.algorithm.PublicKeyAlgorithm;
-import org.pgpainless.key.generation.type.curve.EllipticCurve;
-import org.pgpainless.key.generation.type.length.RsaLength;
+import org.pgpainless.key.generation.type.ecdh.ECDH;
+import org.pgpainless.key.generation.type.ecdsa.ECDSA;
+import org.pgpainless.key.generation.type.rsa.RsaLength;
+import org.pgpainless.key.generation.type.rsa.RSA;
 
 public interface KeyType {
 

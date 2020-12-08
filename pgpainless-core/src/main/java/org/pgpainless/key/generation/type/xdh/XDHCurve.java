@@ -1,5 +1,5 @@
 /*
- * Copyright 2018 Paul Schaub.
+ * Copyright 2020 Paul Schaub.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -13,31 +13,21 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.pgpainless.key.generation.type;
-
+package org.pgpainless.key.generation.type.xdh;
 
 import javax.annotation.Nonnull;
 
-import org.pgpainless.algorithm.PublicKeyAlgorithm;
-import org.pgpainless.key.generation.type.curve.EllipticCurve;
+public enum XDHCurve {
+    _X25519("X25519"),
+    ;
 
-public class ECDSA extends ECDH {
+    final String name;
 
-    ECDSA(@Nonnull EllipticCurve curve) {
-        super(curve);
+    XDHCurve(@Nonnull String name) {
+        this.name = name;
     }
 
-    public static ECDSA fromCurve(@Nonnull EllipticCurve curve) {
-        return new ECDSA(curve);
-    }
-
-    @Override
     public String getName() {
-        return "ECDSA";
-    }
-
-    @Override
-    public PublicKeyAlgorithm getAlgorithm() {
-        return PublicKeyAlgorithm.ECDSA;
+        return name;
     }
 }

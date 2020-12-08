@@ -1,5 +1,5 @@
 /*
- * Copyright 2018 Paul Schaub.
+ * Copyright 2020 Paul Schaub.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -13,26 +13,21 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.pgpainless.key.generation.type.length;
+package org.pgpainless.key.generation.type.eddsa;
 
-import org.pgpainless.key.generation.type.KeyLength;
+import javax.annotation.Nonnull;
 
-public enum DiffieHellmanLength implements KeyLength {
-
-    _1024(1024),
-    _2048(2048),
-    _3072(3072),
+public enum EdDSACurve {
+    _Ed25519("ed25519"),
     ;
 
-    private final int length;
+    final String name;
 
-    DiffieHellmanLength(int length) {
-        this.length = length;
+    EdDSACurve(@Nonnull String curveName) {
+        this.name = curveName;
     }
 
-    @Override
-    public int getLength() {
-        return length;
+    public String getName() {
+        return name;
     }
-
 }

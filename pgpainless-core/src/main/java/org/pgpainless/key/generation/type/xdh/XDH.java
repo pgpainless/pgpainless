@@ -1,5 +1,5 @@
 /*
- * Copyright 2018 Paul Schaub.
+ * Copyright 2020 Paul Schaub.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -13,30 +13,29 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.pgpainless.key.generation.type;
+package org.pgpainless.key.generation.type.xdh;
 
-import javax.annotation.Nonnull;
 import java.security.spec.AlgorithmParameterSpec;
 
 import org.bouncycastle.jce.spec.ECNamedCurveGenParameterSpec;
 import org.pgpainless.algorithm.PublicKeyAlgorithm;
-import org.pgpainless.key.generation.type.curve.EllipticCurve;
+import org.pgpainless.key.generation.type.KeyType;
 
-public class ECDH implements KeyType {
+public final class XDH implements KeyType {
 
-    private final EllipticCurve curve;
+    private final XDHCurve curve;
 
-    ECDH(EllipticCurve curve) {
+    private XDH(XDHCurve curve) {
         this.curve = curve;
     }
 
-    public static ECDH fromCurve(@Nonnull EllipticCurve curve) {
-        return new ECDH(curve);
+    public static XDH fromCurve(XDHCurve curve) {
+        return new XDH(curve);
     }
 
     @Override
     public String getName() {
-        return "ECDH";
+        return "XDH";
     }
 
     @Override

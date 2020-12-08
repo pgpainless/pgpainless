@@ -1,5 +1,5 @@
 /*
- * Copyright 2018 Paul Schaub.
+ * Copyright 2020 Paul Schaub.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -13,42 +13,38 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.pgpainless.key.generation.type;
+package org.pgpainless.key.generation.type.eddsa;
 
-import javax.annotation.Nonnull;
 import java.security.spec.AlgorithmParameterSpec;
-import java.security.spec.RSAKeyGenParameterSpec;
 
+import org.bouncycastle.jce.spec.ECNamedCurveGenParameterSpec;
 import org.pgpainless.algorithm.PublicKeyAlgorithm;
-import org.pgpainless.key.generation.type.length.RsaLength;
+import org.pgpainless.key.generation.type.KeyType;
 
-/**
- * Key type that specifies the RSA_GENERAL algorithm.
- */
-public class RSA implements KeyType {
+public final class EdDSA implements KeyType {
 
-    private final RsaLength length;
+    private final EdDSACurve curve;
 
-    RSA(@Nonnull RsaLength length) {
-        this.length = length;
+    private EdDSA(EdDSACurve curve) {
+        this.curve = curve;
     }
 
-    public static RSA withLength(@Nonnull RsaLength length) {
-        return new RSA(length);
+    public static EdDSA fromCurve(EdDSACurve curve) {
+        return new EdDSA(curve);
     }
 
     @Override
     public String getName() {
-        return "RSA";
+        return "EdDSA";
     }
 
     @Override
     public PublicKeyAlgorithm getAlgorithm() {
-        return PublicKeyAlgorithm.RSA_GENERAL;
+        return PublicKeyAlgorithm.EDDSA;
     }
 
     @Override
     public AlgorithmParameterSpec getAlgorithmSpec() {
-        return new RSAKeyGenParameterSpec(length.getLength(), RSAKeyGenParameterSpec.F4);
+        return new ECNamedCurveGenParameterSpec(curve.getName());
     }
 }

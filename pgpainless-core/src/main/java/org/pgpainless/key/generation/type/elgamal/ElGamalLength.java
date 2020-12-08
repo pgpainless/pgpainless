@@ -13,9 +13,11 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.pgpainless.key.generation.type.length;
+package org.pgpainless.key.generation.type.elgamal;
 
 import java.math.BigInteger;
+
+import org.pgpainless.key.generation.type.KeyLength;
 
 /**
  * The following primes are taken from RFC-3526.

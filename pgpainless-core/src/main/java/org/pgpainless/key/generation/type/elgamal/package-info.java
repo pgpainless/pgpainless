@@ -1,5 +1,5 @@
 /*
- * Copyright 2018 Paul Schaub.
+ * Copyright 2020 Paul Schaub.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -13,21 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.pgpainless.key.generation.type;
-
-import javax.annotation.Nonnull;
-
-import org.pgpainless.algorithm.PublicKeyAlgorithm;
-import org.pgpainless.key.generation.type.length.ElGamalLength;
-
-public class ElGamal_ENCRYPT extends ElGamal_GENERAL {
-
-    ElGamal_ENCRYPT(@Nonnull ElGamalLength length) {
-        super(length);
-    }
-
-    @Override
-    public PublicKeyAlgorithm getAlgorithm() {
-        return PublicKeyAlgorithm.ELGAMAL_ENCRYPT;
-    }
-}
+/**
+ * Classes related to ElGamal.
+ */
+package org.pgpainless.key.generation.type.elgamal;

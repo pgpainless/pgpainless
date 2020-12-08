@@ -1,5 +1,5 @@
 /*
- * Copyright 2018 Paul Schaub.
+ * Copyright 2020 Paul Schaub.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -13,26 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.pgpainless.key.generation.type.length;
-
-import org.pgpainless.key.generation.type.KeyLength;
-
-public enum DiffieHellmanLength implements KeyLength {
-
-    _1024(1024),
-    _2048(2048),
-    _3072(3072),
-    ;
-
-    private final int length;
-
-    DiffieHellmanLength(int length) {
-        this.length = length;
-    }
-
-    @Override
-    public int getLength() {
-        return length;
-    }
-
-}
+/**
+ * Classes related to RSA.
+ */
+package org.pgpainless.key.generation.type.rsa;
