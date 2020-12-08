@@ -30,7 +30,6 @@ import org.bouncycastle.openpgp.PGPSecretKeyRing;
 import org.junit.jupiter.api.Test;
 import org.pgpainless.PGPainless;
 import org.pgpainless.key.TestKeys;
-import org.pgpainless.key.collection.PGPKeyRing;
 import org.pgpainless.key.protection.PasswordBasedSecretKeyRingProtector;
 import org.pgpainless.key.protection.SecretKeyRingProtector;
 import org.pgpainless.key.protection.UnprotectedKeysProtector;
@@ -40,8 +39,7 @@ public class AddUserIdTest {
 
     @Test
     public void addUserIdToExistingKeyRing() throws InvalidAlgorithmParameterException, NoSuchAlgorithmException, PGPException {
-        PGPKeyRing keyRing = PGPainless.generateKeyRing().simpleEcKeyRing("alice@wonderland.lit", "rabb1th0le");
-        PGPSecretKeyRing secretKeys = keyRing.getSecretKeys();
+        PGPSecretKeyRing secretKeys = PGPainless.generateKeyRing().simpleEcKeyRing("alice@wonderland.lit", "rabb1th0le");
 
         Iterator<String> userIds = secretKeys.getSecretKey().getPublicKey().getUserIDs();
         assertEquals("alice@wonderland.lit", userIds.next());

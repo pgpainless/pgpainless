@@ -15,7 +15,6 @@
  */
 package org.pgpainless.util;
 
-import static org.junit.jupiter.api.Assertions.assertArrayEquals;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertNull;
@@ -23,7 +22,6 @@ import static org.junit.jupiter.api.Assertions.assertNull;
 import java.io.IOException;
 import java.security.InvalidAlgorithmParameterException;
 import java.security.NoSuchAlgorithmException;
-import java.security.NoSuchProviderException;
 import java.util.Iterator;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -37,10 +35,10 @@ import org.bouncycastle.openpgp.PGPSecretKeyRing;
 import org.bouncycastle.openpgp.PGPSecretKeyRingCollection;
 import org.junit.jupiter.api.Test;
 import org.pgpainless.PGPainless;
-import org.pgpainless.key.collection.PGPKeyRing;
 import org.pgpainless.key.generation.KeySpec;
 import org.pgpainless.key.generation.type.KeyType;
 import org.pgpainless.key.generation.type.length.RsaLength;
+import org.pgpainless.key.util.KeyRingUtils;
 
 public class BCUtilTest {
 
@@ -50,12 +48,12 @@ public class BCUtilTest {
     public void keyRingToCollectionTest()
             throws PGPException, NoSuchAlgorithmException, InvalidAlgorithmParameterException,
             IOException {
-        PGPKeyRing ring = PGPainless.generateKeyRing()
+        PGPSecretKeyRing sec = PGPainless.generateKeyRing()
                 .withSubKey(KeySpec.getBuilder(KeyType.RSA(RsaLength._3072)).withDefaultKeyFlags().withDefaultAlgorithms())
                 .withMasterKey(KeySpec.getBuilder(KeyType.RSA(RsaLength._3072)).withDefaultKeyFlags().withDefaultAlgorithms())
                 .withPrimaryUserId("donald@duck.tails").withoutPassphrase().build();
-        PGPSecretKeyRing sec = ring.getSecretKeys();
-        PGPPublicKeyRing pub = ring.getPublicKeys();
+
+        PGPPublicKeyRing pub = KeyRingUtils.publicKeyRingFrom(sec);
 
         LOGGER.log(Level.FINER, "Main ID: " + sec.getPublicKey().getKeyID() + " " + pub.getPublicKey().getKeyID());
 
@@ -107,11 +105,11 @@ public class BCUtilTest {
     public void removeUnsignedKeysTest()
             throws PGPException, NoSuchAlgorithmException, InvalidAlgorithmParameterException {
         @SuppressWarnings("deprecation")
-        PGPKeyRing alice = PGPainless.generateKeyRing().simpleRsaKeyRing("alice@wonderland.lit", RsaLength._1024);
-        PGPKeyRing mallory = PGPainless.generateKeyRing().simpleEcKeyRing("mallory@mall.ory");
+        PGPSecretKeyRing alice = PGPainless.generateKeyRing().simpleRsaKeyRing("alice@wonderland.lit", RsaLength._1024);
+        PGPSecretKeyRing mallory = PGPainless.generateKeyRing().simpleEcKeyRing("mallory@mall.ory");
 
         PGPSecretKey subKey = null;
-        Iterator<PGPSecretKey> sit = mallory.getSecretKeys().getSecretKeys();
+        Iterator<PGPSecretKey> sit = mallory.getSecretKeys();
         while (sit.hasNext()) {
             PGPSecretKey s = sit.next();
             if (!s.isMasterKey()) {
@@ -122,29 +120,12 @@ public class BCUtilTest {
 
         assertNotNull(subKey);
 
-        PGPSecretKeyRing alice_mallory = PGPSecretKeyRing.insertSecretKey(alice.getSecretKeys(), subKey);
+        PGPSecretKeyRing alice_mallory = PGPSecretKeyRing.insertSecretKey(alice, subKey);
 
         // Check, if alice_mallory contains mallory's key
         assertNotNull(alice_mallory.getSecretKey(subKey.getKeyID()));
 
-        PGPSecretKeyRing cleaned = BCUtil.removeUnassociatedKeysFromKeyRing(alice_mallory, alice.getPublicKeys().getPublicKey());
+        PGPSecretKeyRing cleaned = BCUtil.removeUnassociatedKeysFromKeyRing(alice_mallory, alice.getPublicKey());
         assertNull(cleaned.getSecretKey(subKey.getKeyID()));
-    }
-
-    @Test
-    public void removeUnsignedKeysECTest()
-            throws PGPException, NoSuchAlgorithmException, NoSuchProviderException, InvalidAlgorithmParameterException,
-            IOException {
-        PGPKeyRing ring = PGPainless.generateKeyRing().simpleEcKeyRing("alice@wonderland.lit");
-        PGPPublicKeyRing publicKeys = ring.getPublicKeys();
-        PGPSecretKeyRing secretKeys = ring.getSecretKeys();
-        PGPSecretKeyRing secCleaned = ring.getSecretKeys();
-
-        assertArrayEquals(secretKeys.getEncoded(), secCleaned.getEncoded());
-
-        PGPPublicKeyRing pubCleaned = BCUtil.removeUnassociatedKeysFromKeyRing(publicKeys, publicKeys.getPublicKey());
-
-        assertArrayEquals(publicKeys.getEncoded(), pubCleaned.getEncoded());
-
     }
 }

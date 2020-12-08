@@ -15,12 +15,11 @@
  */
 package org.pgpainless.key.parsing;
 
-import javax.annotation.Nonnull;
-import javax.annotation.Nullable;
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.nio.charset.Charset;
+import javax.annotation.Nonnull;
 
 import org.bouncycastle.openpgp.PGPException;
 import org.bouncycastle.openpgp.PGPPublicKeyRing;
@@ -29,7 +28,6 @@ import org.bouncycastle.openpgp.PGPSecretKeyRing;
 import org.bouncycastle.openpgp.PGPSecretKeyRingCollection;
 import org.bouncycastle.openpgp.PGPUtil;
 import org.bouncycastle.openpgp.operator.bc.BcKeyFingerprintCalculator;
-import org.pgpainless.key.collection.PGPKeyRing;
 
 public class KeyRingReader {
 
@@ -85,27 +83,6 @@ public class KeyRingReader {
         return secretKeyRingCollection(asciiArmored.getBytes(UTF8));
     }
 
-    @Deprecated
-    public PGPKeyRing keyRing(@Nullable InputStream publicIn, @Nullable InputStream secretIn) throws IOException, PGPException {
-        return readKeyRing(publicIn, secretIn);
-    }
-
-    @Deprecated
-    public PGPKeyRing keyRing(@Nullable byte[] publicBytes, @Nullable byte[] secretBytes) throws IOException, PGPException {
-        return keyRing(
-                publicBytes != null ? new ByteArrayInputStream(publicBytes) : null,
-                secretBytes != null ? new ByteArrayInputStream(secretBytes) : null
-        );
-    }
-
-    @Deprecated
-    public PGPKeyRing keyRing(@Nullable String asciiPublic, @Nullable String asciiSecret) throws IOException, PGPException {
-        return keyRing(
-                asciiPublic != null ? asciiPublic.getBytes(UTF8) : null,
-                asciiSecret != null ? asciiSecret.getBytes(UTF8) : null
-        );
-    }
-
     /*
     STATIC METHODS
      */
@@ -136,16 +113,6 @@ public class KeyRingReader {
                 new BcKeyFingerprintCalculator());
     }
 
-    @Deprecated
-    public static PGPKeyRing readKeyRing(@Nullable InputStream publicIn, @Nullable InputStream secretIn) throws IOException, PGPException {
-        validateStreamsNotBothNull(publicIn, secretIn);
-
-        PGPPublicKeyRing publicKeys = maybeReadPublicKeys(publicIn);
-        PGPSecretKeyRing secretKeys = maybeReadSecretKeys(secretIn);
-
-        return asPGPKeyRing(publicKeys, secretKeys);
-    }
-
     private static void validateStreamsNotBothNull(InputStream publicIn, InputStream secretIn) {
         if (publicIn == null && secretIn == null) {
             throw new NullPointerException("publicIn and secretIn cannot be BOTH null.");
@@ -164,16 +131,5 @@ public class KeyRingReader {
             return readSecretKeyRing(secretIn);
         }
         return null;
-    }
-
-    @Deprecated
-    private static PGPKeyRing asPGPKeyRing(PGPPublicKeyRing publicKeys, PGPSecretKeyRing secretKeys) {
-        if (secretKeys == null) {
-            return new PGPKeyRing(publicKeys);
-        }
-        if (publicKeys == null) {
-            return new PGPKeyRing(secretKeys);
-        }
-        return new PGPKeyRing(publicKeys, secretKeys);
     }
 }

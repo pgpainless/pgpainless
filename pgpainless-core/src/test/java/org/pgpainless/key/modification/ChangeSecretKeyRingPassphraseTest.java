@@ -38,14 +38,13 @@ import org.junit.jupiter.api.Test;
 import org.pgpainless.PGPainless;
 import org.pgpainless.algorithm.SymmetricKeyAlgorithm;
 import org.pgpainless.encryption_signing.EncryptionStream;
-import org.pgpainless.key.collection.PGPKeyRing;
 import org.pgpainless.key.protection.KeyRingProtectionSettings;
 import org.pgpainless.key.protection.PasswordBasedSecretKeyRingProtector;
 import org.pgpainless.util.Passphrase;
 
 public class ChangeSecretKeyRingPassphraseTest {
 
-    private final PGPKeyRing keyRing = PGPainless.generateKeyRing().simpleEcKeyRing("password@encryp.ted", "weakPassphrase");
+    private final PGPSecretKeyRing keyRing = PGPainless.generateKeyRing().simpleEcKeyRing("password@encryp.ted", "weakPassphrase");
 
     public ChangeSecretKeyRingPassphraseTest() throws InvalidAlgorithmParameterException, NoSuchAlgorithmException, PGPException {
     }
@@ -53,16 +52,16 @@ public class ChangeSecretKeyRingPassphraseTest {
     @Test
     public void changePassphraseOfWholeKeyRingTest() throws InvalidAlgorithmParameterException, NoSuchAlgorithmException, PGPException, IOException {
 
-        PGPSecretKeyRing secretKeys = PGPainless.modifyKeyRing(keyRing.getSecretKeys())
+        PGPSecretKeyRing secretKeys = PGPainless.modifyKeyRing(keyRing)
                 .changePassphraseFromOldPassphrase(Passphrase.fromPassword("weakPassphrase"))
                 .withSecureDefaultSettings()
                 .toNewPassphrase(Passphrase.fromPassword("1337p455phr453"))
                 .done();
 
-        PGPKeyRing changedPassphraseKeyRing = new PGPKeyRing(secretKeys);
+        PGPSecretKeyRing changedPassphraseKeyRing = secretKeys;
 
         assertEquals(KeyRingProtectionSettings.secureDefaultSettings().getEncryptionAlgorithm().getAlgorithmId(),
-                changedPassphraseKeyRing.getSecretKeys().getSecretKey().getKeyEncryptionAlgorithm());
+                changedPassphraseKeyRing.getSecretKey().getKeyEncryptionAlgorithm());
 
         assertThrows(PGPException.class, () ->
                         signDummyMessageWithKeysAndPassphrase(changedPassphraseKeyRing, Passphrase.emptyPassphrase()),
@@ -78,16 +77,16 @@ public class ChangeSecretKeyRingPassphraseTest {
 
     @Test
     public void changePassphraseOfWholeKeyRingToEmptyPassphrase() throws PGPException, IOException {
-        PGPSecretKeyRing secretKeys = PGPainless.modifyKeyRing(keyRing.getSecretKeys())
+        PGPSecretKeyRing secretKeys = PGPainless.modifyKeyRing(keyRing)
                 .changePassphraseFromOldPassphrase(Passphrase.fromPassword("weakPassphrase"))
                 .withSecureDefaultSettings()
                 .toNoPassphrase()
                 .done();
 
-        PGPKeyRing changedPassphraseKeyRing = new PGPKeyRing(secretKeys);
+        PGPSecretKeyRing changedPassphraseKeyRing = secretKeys;
 
         assertEquals(SymmetricKeyAlgorithm.NULL.getAlgorithmId(),
-                changedPassphraseKeyRing.getSecretKeys().getSecretKey().getKeyEncryptionAlgorithm());
+                changedPassphraseKeyRing.getSecretKey().getKeyEncryptionAlgorithm());
 
         signDummyMessageWithKeysAndPassphrase(changedPassphraseKeyRing, Passphrase.emptyPassphrase());
     }
@@ -95,14 +94,14 @@ public class ChangeSecretKeyRingPassphraseTest {
     @Test
     public void changePassphraseOfSingleSubkeyToNewPassphrase() throws PGPException {
 
-        Iterator<PGPSecretKey> keys = keyRing.getSecretKeys().getSecretKeys();
+        Iterator<PGPSecretKey> keys = keyRing.getSecretKeys();
         PGPSecretKey primaryKey = keys.next();
         PGPSecretKey subKey = keys.next();
 
         extractPrivateKey(primaryKey, Passphrase.fromPassword("weakPassphrase"));
         extractPrivateKey(subKey, Passphrase.fromPassword("weakPassphrase"));
 
-        PGPSecretKeyRing secretKeys = PGPainless.modifyKeyRing(keyRing.getSecretKeys())
+        PGPSecretKeyRing secretKeys = PGPainless.modifyKeyRing(keyRing)
                 .changeSubKeyPassphraseFromOldPassphrase(subKey.getPublicKey().getKeyID(),
                         Passphrase.fromPassword("weakPassphrase"))
                 .withSecureDefaultSettings()
@@ -129,11 +128,11 @@ public class ChangeSecretKeyRingPassphraseTest {
 
     @Test
     public void changePassphraseOfSingleSubkeyToEmptyPassphrase() throws PGPException {
-        Iterator<PGPSecretKey> keys = keyRing.getSecretKeys().getSecretKeys();
+        Iterator<PGPSecretKey> keys = keyRing.getSecretKeys();
         PGPSecretKey primaryKey = keys.next();
         PGPSecretKey subKey = keys.next();
 
-        PGPSecretKeyRing secretKeys = PGPainless.modifyKeyRing(keyRing.getSecretKeys())
+        PGPSecretKeyRing secretKeys = PGPainless.modifyKeyRing(keyRing)
                 .changeSubKeyPassphraseFromOldPassphrase(primaryKey.getKeyID(), Passphrase.fromPassword("weakPassphrase"))
                 .withSecureDefaultSettings()
                 .toNoPassphrase()
@@ -177,12 +176,12 @@ public class ChangeSecretKeyRingPassphraseTest {
         secretKey.extractPrivateKey(decryptor);
     }
 
-    private void signDummyMessageWithKeysAndPassphrase(PGPKeyRing keyRing, Passphrase passphrase) throws IOException, PGPException {
+    private void signDummyMessageWithKeysAndPassphrase(PGPSecretKeyRing keyRing, Passphrase passphrase) throws IOException, PGPException {
         String dummyMessage = "dummy";
         ByteArrayOutputStream dummy = new ByteArrayOutputStream();
         EncryptionStream stream = PGPainless.encryptAndOrSign().onOutputStream(dummy)
                 .doNotEncrypt()
-                .signWith(PasswordBasedSecretKeyRingProtector.forKey(keyRing.getSecretKeys(), passphrase), keyRing.getSecretKeys())
+                .signWith(PasswordBasedSecretKeyRingProtector.forKey(keyRing, passphrase), keyRing)
                 .noArmor();
 
         Streams.pipeAll(new ByteArrayInputStream(dummyMessage.getBytes()), stream);

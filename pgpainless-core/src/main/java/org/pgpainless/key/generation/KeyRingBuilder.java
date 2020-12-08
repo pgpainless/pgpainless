@@ -35,7 +35,6 @@ import org.bouncycastle.openpgp.PGPKeyPair;
 import org.bouncycastle.openpgp.PGPKeyRingGenerator;
 import org.bouncycastle.openpgp.PGPPrivateKey;
 import org.bouncycastle.openpgp.PGPPublicKey;
-import org.bouncycastle.openpgp.PGPPublicKeyRing;
 import org.bouncycastle.openpgp.PGPSecretKey;
 import org.bouncycastle.openpgp.PGPSecretKeyRing;
 import org.bouncycastle.openpgp.PGPSignature;
@@ -53,7 +52,6 @@ import org.bouncycastle.openpgp.operator.jcajce.JcePBESecretKeyEncryptorBuilder;
 import org.pgpainless.algorithm.HashAlgorithm;
 import org.pgpainless.algorithm.KeyFlag;
 import org.pgpainless.algorithm.SignatureType;
-import org.pgpainless.key.collection.PGPKeyRing;
 import org.pgpainless.key.generation.type.KeyType;
 import org.pgpainless.key.generation.type.curve.EllipticCurve;
 import org.pgpainless.key.generation.type.length.RsaLength;
@@ -70,7 +68,7 @@ public class KeyRingBuilder implements KeyRingBuilderInterface {
     private Set<String> additionalUserIds = new LinkedHashSet<>();
     private Passphrase passphrase;
 
-    public PGPKeyRing simpleRsaKeyRing(@Nonnull UserId userId, @Nonnull RsaLength length)
+    public PGPSecretKeyRing simpleRsaKeyRing(@Nonnull UserId userId, @Nonnull RsaLength length)
             throws InvalidAlgorithmParameterException, NoSuchAlgorithmException, PGPException {
         return simpleRsaKeyRing(userId.toString(), length);
     }
@@ -84,12 +82,12 @@ public class KeyRingBuilder implements KeyRingBuilderInterface {
      *
      * @return {@link PGPSecretKeyRing} containing the KeyPair.
      */
-    public PGPKeyRing simpleRsaKeyRing(@Nonnull String userId, @Nonnull RsaLength length)
+    public PGPSecretKeyRing simpleRsaKeyRing(@Nonnull String userId, @Nonnull RsaLength length)
             throws InvalidAlgorithmParameterException, NoSuchAlgorithmException, PGPException {
         return simpleRsaKeyRing(userId, length, null);
     }
 
-    public PGPKeyRing simpleRsaKeyRing(@Nonnull UserId userId, @Nonnull RsaLength rsaLength, String password)
+    public PGPSecretKeyRing simpleRsaKeyRing(@Nonnull UserId userId, @Nonnull RsaLength rsaLength, String password)
             throws InvalidAlgorithmParameterException, NoSuchAlgorithmException, PGPException {
         return simpleRsaKeyRing(userId.toString(), rsaLength, password);
     }
@@ -104,7 +102,7 @@ public class KeyRingBuilder implements KeyRingBuilderInterface {
      *
      * @return {@link PGPSecretKeyRing} containing the KeyPair.
      */
-    public PGPKeyRing simpleRsaKeyRing(@Nonnull String userId, @Nonnull RsaLength length, String password)
+    public PGPSecretKeyRing simpleRsaKeyRing(@Nonnull String userId, @Nonnull RsaLength length, String password)
             throws PGPException, NoSuchAlgorithmException, InvalidAlgorithmParameterException {
         WithAdditionalUserIdOrPassphrase builder = this
                 .withMasterKey(
@@ -120,7 +118,7 @@ public class KeyRingBuilder implements KeyRingBuilderInterface {
         }
     }
 
-    public PGPKeyRing simpleEcKeyRing(@Nonnull UserId userId)
+    public PGPSecretKeyRing simpleEcKeyRing(@Nonnull UserId userId)
             throws InvalidAlgorithmParameterException, NoSuchAlgorithmException, PGPException {
         return simpleEcKeyRing(userId.toString());
     }
@@ -134,12 +132,12 @@ public class KeyRingBuilder implements KeyRingBuilderInterface {
      *
      * @return {@link PGPSecretKeyRing} containing the key pairs.
      */
-    public PGPKeyRing simpleEcKeyRing(@Nonnull String userId)
+    public PGPSecretKeyRing simpleEcKeyRing(@Nonnull String userId)
             throws InvalidAlgorithmParameterException, NoSuchAlgorithmException, PGPException {
         return simpleEcKeyRing(userId, null);
     }
 
-    public PGPKeyRing simpleEcKeyRing(@Nonnull UserId userId, String password)
+    public PGPSecretKeyRing simpleEcKeyRing(@Nonnull UserId userId, String password)
             throws InvalidAlgorithmParameterException, NoSuchAlgorithmException, PGPException {
         return simpleEcKeyRing(userId.toString(), password);
     }
@@ -154,7 +152,7 @@ public class KeyRingBuilder implements KeyRingBuilderInterface {
      *
      * @return {@link PGPSecretKeyRing} containing the key pairs.
      */
-    public PGPKeyRing simpleEcKeyRing(@Nonnull String userId, String password)
+    public PGPSecretKeyRing simpleEcKeyRing(@Nonnull String userId, String password)
             throws PGPException, NoSuchAlgorithmException, InvalidAlgorithmParameterException {
         WithAdditionalUserIdOrPassphrase builder = this
                 .withSubKey(
@@ -249,7 +247,7 @@ public class KeyRingBuilder implements KeyRingBuilderInterface {
             private PBESecretKeyEncryptor secretKeyEncryptor;
 
             @Override
-            public PGPKeyRing build() throws NoSuchAlgorithmException, PGPException,
+            public PGPSecretKeyRing build() throws NoSuchAlgorithmException, PGPException,
                     InvalidAlgorithmParameterException {
                 digestCalculator = buildDigestCalculator();
                 secretKeyEncryptor = buildSecretKeyEncryptor();
@@ -300,15 +298,7 @@ public class KeyRingBuilder implements KeyRingBuilderInterface {
                 }
                 secretKeyRing = new PGPSecretKeyRing(secretKeyList);
 
-                // extract public key ring from secret keys
-                List<PGPPublicKey> publicKeyList = new ArrayList<>();
-                Iterator<PGPPublicKey> publicKeys = secretKeyRing.getPublicKeys();
-                while (publicKeys.hasNext()) {
-                    publicKeyList.add(publicKeys.next());
-                }
-                PGPPublicKeyRing publicKeyRing = new PGPPublicKeyRing(publicKeyList);
-
-                return new PGPKeyRing(publicKeyRing, secretKeyRing);
+                return secretKeyRing;
             }
 
             private PGPKeyRingGenerator buildRingGenerator(PGPKeyPair certKey,

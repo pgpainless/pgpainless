@@ -33,10 +33,10 @@ import org.bouncycastle.openpgp.PGPSecretKeyRing;
 import org.bouncycastle.util.io.Streams;
 import org.pgpainless.PGPainless;
 import org.pgpainless.key.TestKeys;
-import org.pgpainless.key.collection.PGPKeyRing;
 import org.pgpainless.key.generation.type.length.RsaLength;
 import org.pgpainless.key.protection.SecretKeyRingProtector;
 import org.pgpainless.key.protection.UnprotectedKeysProtector;
+import org.pgpainless.key.util.KeyRingUtils;
 
 /**
  * Class used to determine the length of cipher-text depending on used algorithms.
@@ -50,8 +50,8 @@ public class LengthTest {
             throws PGPException, NoSuchAlgorithmException, NoSuchProviderException, InvalidAlgorithmParameterException,
             IOException {
         LOGGER.log(Level.FINER, "\nEC -> EC");
-        PGPKeyRing sender = PGPainless.generateKeyRing().simpleEcKeyRing("simplejid@server.tld");
-        PGPKeyRing recipient = PGPainless.generateKeyRing().simpleEcKeyRing("otherjid@other.srv");
+        PGPSecretKeyRing sender = PGPainless.generateKeyRing().simpleEcKeyRing("simplejid@server.tld");
+        PGPSecretKeyRing recipient = PGPainless.generateKeyRing().simpleEcKeyRing("otherjid@other.srv");
         encryptDecryptForSecretKeyRings(sender, recipient);
     }
 
@@ -61,10 +61,8 @@ public class LengthTest {
             throws PGPException, NoSuchAlgorithmException, NoSuchProviderException, InvalidAlgorithmParameterException,
             IOException {
         LOGGER.log(Level.FINER, "\nRSA-2048 -> RSA-2048");
-        @SuppressWarnings("deprecation")
-        PGPKeyRing sender = PGPainless.generateKeyRing().simpleRsaKeyRing("simplejid@server.tld", RsaLength._2048);
-        @SuppressWarnings("deprecation")
-        PGPKeyRing recipient = PGPainless.generateKeyRing().simpleRsaKeyRing("otherjid@other.srv", RsaLength._2048);
+        PGPSecretKeyRing sender = PGPainless.generateKeyRing().simpleRsaKeyRing("simplejid@server.tld", RsaLength._2048);
+        PGPSecretKeyRing recipient = PGPainless.generateKeyRing().simpleRsaKeyRing("otherjid@other.srv", RsaLength._2048);
         encryptDecryptForSecretKeyRings(sender, recipient);
     }
 
@@ -73,8 +71,8 @@ public class LengthTest {
             throws PGPException,
             IOException {
         LOGGER.log(Level.FINER, "\nRSA-4096 -> RSA-4096");
-        PGPKeyRing sender = PGPainless.readKeyRing().keyRing(TestKeys.JULIET_PUB, TestKeys.JULIET_SEC);
-        PGPKeyRing recipient = PGPainless.readKeyRing().keyRing(TestKeys.ROMEO_PUB, TestKeys.ROMEO_SEC);
+        PGPSecretKeyRing sender = PGPainless.readKeyRing().secretKeyRing(TestKeys.JULIET_SEC);
+        PGPSecretKeyRing recipient = PGPainless.readKeyRing().secretKeyRing(TestKeys.ROMEO_SEC);
         encryptDecryptForSecretKeyRings(sender, recipient);
     }
 
@@ -82,9 +80,8 @@ public class LengthTest {
     public void rsaEc() throws PGPException, IOException, InvalidAlgorithmParameterException, NoSuchAlgorithmException,
             NoSuchProviderException {
         LOGGER.log(Level.FINER, "\nRSA-2048 -> EC");
-        @SuppressWarnings("deprecation")
-        PGPKeyRing sender = PGPainless.generateKeyRing().simpleRsaKeyRing("simplejid@server.tld", RsaLength._2048);
-        PGPKeyRing recipient = PGPainless.generateKeyRing().simpleEcKeyRing("otherjid@other.srv");
+        PGPSecretKeyRing sender = PGPainless.generateKeyRing().simpleRsaKeyRing("simplejid@server.tld", RsaLength._2048);
+        PGPSecretKeyRing recipient = PGPainless.generateKeyRing().simpleEcKeyRing("otherjid@other.srv");
         encryptDecryptForSecretKeyRings(sender, recipient);
     }
 
@@ -93,20 +90,18 @@ public class LengthTest {
             throws PGPException, NoSuchAlgorithmException, NoSuchProviderException, InvalidAlgorithmParameterException,
             IOException {
         LOGGER.log(Level.FINER, "\nEC -> RSA-2048");
-        PGPKeyRing sender = PGPainless.generateKeyRing().simpleEcKeyRing("simplejid@server.tld");
+        PGPSecretKeyRing sender = PGPainless.generateKeyRing().simpleEcKeyRing("simplejid@server.tld");
         @SuppressWarnings("deprecation")
-        PGPKeyRing recipient = PGPainless.generateKeyRing().simpleRsaKeyRing("otherjid@other.srv", RsaLength._2048);
+        PGPSecretKeyRing recipient = PGPainless.generateKeyRing().simpleRsaKeyRing("otherjid@other.srv", RsaLength._2048);
         encryptDecryptForSecretKeyRings(sender, recipient);
     }
 
     @Ignore
-    private void encryptDecryptForSecretKeyRings(PGPKeyRing sender, PGPKeyRing recipient)
+    private void encryptDecryptForSecretKeyRings(PGPSecretKeyRing senderSec, PGPSecretKeyRing recipientSec)
             throws PGPException,
             IOException {
-        PGPSecretKeyRing recipientSec = recipient.getSecretKeys();
-        PGPSecretKeyRing senderSec = sender.getSecretKeys();
-        PGPPublicKeyRing recipientPub = recipient.getPublicKeys();
-        PGPPublicKeyRing senderPub = sender.getPublicKeys();
+        PGPPublicKeyRing recipientPub = KeyRingUtils.publicKeyRingFrom(recipientSec);
+        PGPPublicKeyRing senderPub = KeyRingUtils.publicKeyRingFrom(senderSec);
 
         SecretKeyRingProtector keyDecryptor = new UnprotectedKeysProtector();
 
