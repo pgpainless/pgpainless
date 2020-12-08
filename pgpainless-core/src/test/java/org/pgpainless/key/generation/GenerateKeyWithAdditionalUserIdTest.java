@@ -26,18 +26,19 @@ import java.util.Iterator;
 
 import org.bouncycastle.bcpg.ArmoredOutputStream;
 import org.bouncycastle.openpgp.PGPException;
-
+import org.bouncycastle.openpgp.PGPPublicKeyRing;
+import org.bouncycastle.openpgp.PGPSecretKeyRing;
 import org.junit.jupiter.api.Test;
 import org.pgpainless.PGPainless;
-import org.pgpainless.key.collection.PGPKeyRing;
 import org.pgpainless.key.generation.type.KeyType;
 import org.pgpainless.key.generation.type.length.RsaLength;
+import org.pgpainless.key.util.KeyRingUtils;
 
 public class GenerateKeyWithAdditionalUserIdTest {
 
     @Test
     public void test() throws InvalidAlgorithmParameterException, NoSuchAlgorithmException, PGPException, IOException {
-        PGPKeyRing keyRing = PGPainless.generateKeyRing()
+        PGPSecretKeyRing secretKeys = PGPainless.generateKeyRing()
                 .withMasterKey(KeySpec.getBuilder(KeyType.RSA(RsaLength._3072))
                         .withDefaultKeyFlags()
                         .withDefaultAlgorithms())
@@ -47,8 +48,9 @@ public class GenerateKeyWithAdditionalUserIdTest {
                 .withAdditionalUserId("\ttrimThis@user.id     ")
                 .withoutPassphrase()
                 .build();
+        PGPPublicKeyRing publicKeys = KeyRingUtils.publicKeyRingFrom(secretKeys);
 
-        Iterator<String> userIds = keyRing.getPublicKeys().getPublicKey().getUserIDs();
+        Iterator<String> userIds = publicKeys.getPublicKey().getUserIDs();
         assertEquals("primary@user.id", userIds.next());
         assertEquals("additional@user.id", userIds.next());
         assertEquals("additional2@user.id", userIds.next());
@@ -57,7 +59,7 @@ public class GenerateKeyWithAdditionalUserIdTest {
 
         ByteArrayOutputStream byteOut = new ByteArrayOutputStream();
         ArmoredOutputStream armor = new ArmoredOutputStream(byteOut);
-        keyRing.getSecretKeys().encode(armor);
+        secretKeys.encode(armor);
         armor.close();
 
         // echo this | gpg --list-packets
