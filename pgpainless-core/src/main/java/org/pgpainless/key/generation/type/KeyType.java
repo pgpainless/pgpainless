@@ -28,12 +28,33 @@ import org.pgpainless.key.generation.type.rsa.RSA;
 
 public interface KeyType {
 
+    /**
+     * Return the encryption algorithm name.
+     *
+     * @return algorithm name.
+     */
     String getName();
 
+    /**
+     * Return the public key algorithm.
+     *
+     * @return public key algorithm
+     */
     PublicKeyAlgorithm getAlgorithm();
 
+    /**
+     * Return an implementation of {@link AlgorithmParameterSpec} that can be used to generate the key.
+     *
+     * @return algorithm parameter spec
+     */
     AlgorithmParameterSpec getAlgorithmSpec();
 
+    /**
+     * Return true if the key that is generated from this type is able to carry the CERTIFY_OTHERS key flag.
+     * See {@link org.pgpainless.algorithm.KeyFlag#CERTIFY_OTHER}.
+     *
+     * @return true if the key is able to certify others
+     */
     boolean canCertify();
 
     static KeyType RSA(RsaLength length) {
