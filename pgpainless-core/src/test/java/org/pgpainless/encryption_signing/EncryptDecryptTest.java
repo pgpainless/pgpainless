@@ -68,6 +68,7 @@ public class EncryptDecryptTest {
             "Unfold the imagined happiness that both\n" +
             "Receive in either by this dear encounter.";
 
+    @SuppressWarnings("deprecation")
     @Test
     public void freshKeysRsaToElGamalTest()
             throws PGPException, NoSuchAlgorithmException, InvalidAlgorithmParameterException, IOException {

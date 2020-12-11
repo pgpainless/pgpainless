@@ -34,6 +34,11 @@ public enum PublicKeyAlgorithm {
     EC              (PublicKeyAlgorithmTags.EC),
     ECDH            (PublicKeyAlgorithmTags.ECDH),
     ECDSA           (PublicKeyAlgorithmTags.ECDSA),
+
+    /**
+     * @deprecated see https://tools.ietf.org/html/rfc4880#section-13.8
+     */
+    @Deprecated
     ELGAMAL_GENERAL (PublicKeyAlgorithmTags.ELGAMAL_GENERAL),
     DIFFIE_HELLMAN  (PublicKeyAlgorithmTags.DIFFIE_HELLMAN),
     EDDSA           (PublicKeyAlgorithmTags.EDDSA),

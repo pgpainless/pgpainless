@@ -22,6 +22,7 @@ import org.bouncycastle.jce.spec.ElGamalParameterSpec;
 import org.pgpainless.algorithm.PublicKeyAlgorithm;
 import org.pgpainless.key.generation.type.KeyType;
 
+@Deprecated
 public class ElGamal_GENERAL implements KeyType {
 
     private final ElGamalLength length;

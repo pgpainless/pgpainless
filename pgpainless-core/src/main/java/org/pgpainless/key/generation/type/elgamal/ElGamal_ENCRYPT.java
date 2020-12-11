@@ -15,18 +15,37 @@
  */
 package org.pgpainless.key.generation.type.elgamal;
 
+import java.security.spec.AlgorithmParameterSpec;
 import javax.annotation.Nonnull;
 
+import org.bouncycastle.jce.spec.ElGamalParameterSpec;
 import org.pgpainless.algorithm.PublicKeyAlgorithm;
+import org.pgpainless.key.generation.type.KeyType;
 
-public class ElGamal_ENCRYPT extends ElGamal_GENERAL {
+public final class ElGamal_ENCRYPT implements KeyType {
 
-    ElGamal_ENCRYPT(@Nonnull ElGamalLength length) {
-        super(length);
+    private final ElGamalLength length;
+
+    private ElGamal_ENCRYPT(@Nonnull ElGamalLength length) {
+        this.length = length;
+    }
+
+    public static ElGamal_ENCRYPT withLength(ElGamalLength length) {
+        return new ElGamal_ENCRYPT(length);
+    }
+
+    @Override
+    public String getName() {
+        return "ElGamal";
     }
 
     @Override
     public PublicKeyAlgorithm getAlgorithm() {
         return PublicKeyAlgorithm.ELGAMAL_ENCRYPT;
+    }
+
+    @Override
+    public AlgorithmParameterSpec getAlgorithmSpec() {
+        return new ElGamalParameterSpec(length.getP(), length.getG());
     }
 }
