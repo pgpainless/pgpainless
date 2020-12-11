@@ -22,35 +22,67 @@ import org.bouncycastle.bcpg.PublicKeyAlgorithmTags;
 
 public enum PublicKeyAlgorithm {
 
+    /**
+     * RSA capable of encryption and signatures.
+     */
     RSA_GENERAL     (PublicKeyAlgorithmTags.RSA_GENERAL),
 
     /**
+     * RSA with usage encryption.
+     *
      * @deprecated see https://tools.ietf.org/html/rfc4880#section-13.5
      */
     RSA_ENCRYPT     (PublicKeyAlgorithmTags.RSA_ENCRYPT),
 
     /**
+     * RSA with usage of creating signatures.
+     *
      * @deprecated see https://tools.ietf.org/html/rfc4880#section-13.5
      */
     RSA_SIGN        (PublicKeyAlgorithmTags.RSA_SIGN),
 
+    /**
+     * ElGamal with usage encryption.
+     */
     ELGAMAL_ENCRYPT (PublicKeyAlgorithmTags.ELGAMAL_ENCRYPT),
 
+    /**
+     * Digital Signature Algorithm.
+     */
     DSA             (PublicKeyAlgorithmTags.DSA),
+
     /**
      * EC is deprecated.
      * @deprecated use {@link #ECDH} instead.
      */
     EC              (PublicKeyAlgorithmTags.EC),
+
+    /**
+     * Elliptic Curve Diffie-Hellman.
+     */
     ECDH            (PublicKeyAlgorithmTags.ECDH),
+
+    /**
+     * Elliptic Curve Digital Signature Algorithm.
+     */
     ECDSA           (PublicKeyAlgorithmTags.ECDSA),
 
     /**
+     * ElGamal General.
+     *
      * @deprecated see https://tools.ietf.org/html/rfc4880#section-13.8
      */
     @Deprecated
     ELGAMAL_GENERAL (PublicKeyAlgorithmTags.ELGAMAL_GENERAL),
+
+    /**
+     * Diffie-Hellman key exchange algorithm.
+     */
     DIFFIE_HELLMAN  (PublicKeyAlgorithmTags.DIFFIE_HELLMAN),
+
+    /**
+     * Digital Signature Algorithm based on twisted Edwards Curves.
+     */
     EDDSA           (PublicKeyAlgorithmTags.EDDSA),
     ;
 
