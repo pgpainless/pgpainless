@@ -23,9 +23,19 @@ import org.bouncycastle.bcpg.PublicKeyAlgorithmTags;
 public enum PublicKeyAlgorithm {
 
     RSA_GENERAL     (PublicKeyAlgorithmTags.RSA_GENERAL),
+
+    /**
+     * @deprecated see https://tools.ietf.org/html/rfc4880#section-13.5
+     */
     RSA_ENCRYPT     (PublicKeyAlgorithmTags.RSA_ENCRYPT),
+
+    /**
+     * @deprecated see https://tools.ietf.org/html/rfc4880#section-13.5
+     */
     RSA_SIGN        (PublicKeyAlgorithmTags.RSA_SIGN),
+
     ELGAMAL_ENCRYPT (PublicKeyAlgorithmTags.ELGAMAL_ENCRYPT),
+
     DSA             (PublicKeyAlgorithmTags.DSA),
     /**
      * EC is deprecated.
