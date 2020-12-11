@@ -21,6 +21,9 @@ import org.bouncycastle.jce.spec.ECNamedCurveGenParameterSpec;
 import org.pgpainless.algorithm.PublicKeyAlgorithm;
 import org.pgpainless.key.generation.type.KeyType;
 
+/**
+ * Edwards-curve Digital Signature Algorithm (EdDSA).
+ */
 public final class EdDSA implements KeyType {
 
     private final EdDSACurve curve;
@@ -46,5 +49,10 @@ public final class EdDSA implements KeyType {
     @Override
     public AlgorithmParameterSpec getAlgorithmSpec() {
         return new ECNamedCurveGenParameterSpec(curve.getName());
+    }
+
+    @Override
+    public boolean canCertify() {
+        return true;
     }
 }

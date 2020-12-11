@@ -47,4 +47,9 @@ public final class XDH implements KeyType {
     public AlgorithmParameterSpec getAlgorithmSpec() {
         return new ECNamedCurveGenParameterSpec(curve.getName());
     }
+
+    @Override
+    public boolean canCertify() {
+        return false;
+    }
 }

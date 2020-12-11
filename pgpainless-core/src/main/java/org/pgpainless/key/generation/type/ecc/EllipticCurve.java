@@ -1,5 +1,5 @@
 /*
- * Copyright 2020 Paul Schaub.
+ * Copyright 2018 Paul Schaub.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -13,7 +13,23 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-/**
- * Classes related to ECDSA.
- */
-package org.pgpainless.key.generation.type.ecdsa;
+package org.pgpainless.key.generation.type.ecc;
+
+import javax.annotation.Nonnull;
+
+public enum EllipticCurve {
+    _P256("P-256"),
+    _P384("P-384"),
+    _P521("P-521"),
+    ;
+
+    private final String name;
+
+    EllipticCurve(@Nonnull String name) {
+        this.name = name;
+    }
+
+    public String getName() {
+        return name;
+    }
+}

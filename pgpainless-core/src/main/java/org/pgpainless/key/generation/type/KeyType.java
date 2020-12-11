@@ -18,8 +18,11 @@ package org.pgpainless.key.generation.type;
 import java.security.spec.AlgorithmParameterSpec;
 
 import org.pgpainless.algorithm.PublicKeyAlgorithm;
-import org.pgpainless.key.generation.type.ecdh.ECDH;
-import org.pgpainless.key.generation.type.ecdsa.ECDSA;
+import org.pgpainless.key.generation.type.ecc.EllipticCurve;
+import org.pgpainless.key.generation.type.ecc.ecdh.ECDH;
+import org.pgpainless.key.generation.type.ecc.ecdsa.ECDSA;
+import org.pgpainless.key.generation.type.eddsa.EdDSA;
+import org.pgpainless.key.generation.type.eddsa.EdDSACurve;
 import org.pgpainless.key.generation.type.rsa.RsaLength;
 import org.pgpainless.key.generation.type.rsa.RSA;
 
@@ -30,6 +33,8 @@ public interface KeyType {
     PublicKeyAlgorithm getAlgorithm();
 
     AlgorithmParameterSpec getAlgorithmSpec();
+
+    boolean canCertify();
 
     static KeyType RSA(RsaLength length) {
         return RSA.withLength(length);
@@ -43,5 +48,7 @@ public interface KeyType {
         return ECDSA.fromCurve(curve);
     }
 
-    // TODO: Decide, if we want to add ElGamal here as well?
+    static KeyType EDDSA(EdDSACurve curve) {
+        return EdDSA.fromCurve(curve);
+    }
 }

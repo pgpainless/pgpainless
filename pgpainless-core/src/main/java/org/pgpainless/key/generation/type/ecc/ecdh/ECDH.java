@@ -13,7 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.pgpainless.key.generation.type.ecdh;
+package org.pgpainless.key.generation.type.ecc.ecdh;
 
 import javax.annotation.Nonnull;
 import java.security.spec.AlgorithmParameterSpec;
@@ -21,7 +21,7 @@ import java.security.spec.AlgorithmParameterSpec;
 import org.bouncycastle.jce.spec.ECNamedCurveGenParameterSpec;
 import org.pgpainless.algorithm.PublicKeyAlgorithm;
 import org.pgpainless.key.generation.type.KeyType;
-import org.pgpainless.key.generation.type.EllipticCurve;
+import org.pgpainless.key.generation.type.ecc.EllipticCurve;
 
 public final class ECDH implements KeyType {
 
@@ -48,5 +48,10 @@ public final class ECDH implements KeyType {
     @Override
     public AlgorithmParameterSpec getAlgorithmSpec() {
         return new ECNamedCurveGenParameterSpec(curve.getName());
+    }
+
+    @Override
+    public boolean canCertify() {
+        return false;
     }
 }

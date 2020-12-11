@@ -1,5 +1,5 @@
 /*
- * Copyright 2018 Paul Schaub.
+ * Copyright 2020 Paul Schaub.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -14,6 +14,6 @@
  * limitations under the License.
  */
 /**
- * Classes describing the lengths of different public key crypto systems.
+ * Classes related to ECDSA.
  */
-package org.pgpainless.key.generation.type.length;
+package org.pgpainless.key.generation.type.ecc.ecdsa;

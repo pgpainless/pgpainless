@@ -48,4 +48,9 @@ public final class ElGamal_ENCRYPT implements KeyType {
     public AlgorithmParameterSpec getAlgorithmSpec() {
         return new ElGamalParameterSpec(length.getP(), length.getG());
     }
+
+    @Override
+    public boolean canCertify() {
+        return false;
+    }
 }

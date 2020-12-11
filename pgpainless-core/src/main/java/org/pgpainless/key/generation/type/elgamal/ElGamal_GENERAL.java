@@ -49,4 +49,9 @@ public class ElGamal_GENERAL implements KeyType {
     public AlgorithmParameterSpec getAlgorithmSpec() {
         return new ElGamalParameterSpec(length.getP(), length.getG());
     }
+
+    @Override
+    public boolean canCertify() {
+        return false;
+    }
 }

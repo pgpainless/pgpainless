@@ -53,7 +53,7 @@ import org.pgpainless.algorithm.HashAlgorithm;
 import org.pgpainless.algorithm.KeyFlag;
 import org.pgpainless.algorithm.SignatureType;
 import org.pgpainless.key.generation.type.KeyType;
-import org.pgpainless.key.generation.type.EllipticCurve;
+import org.pgpainless.key.generation.type.ecc.EllipticCurve;
 import org.pgpainless.key.generation.type.rsa.RsaLength;
 import org.pgpainless.key.util.UserId;
 import org.pgpainless.provider.ProviderFactory;
