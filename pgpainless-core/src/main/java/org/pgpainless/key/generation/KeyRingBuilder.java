@@ -187,14 +187,21 @@ public class KeyRingBuilder implements KeyRingBuilderInterface {
     }
 
     private void verifyMasterKeyCanCertify(KeySpec spec) {
-        if (!canCertifyOthers(spec)) {
+        if (!hasCertifyOthersFlag(spec)) {
             throw new IllegalArgumentException("Certification Key MUST have KeyFlag CERTIFY_OTHER");
+        }
+        if (!keyIsCertificationCapable(spec)) {
+            throw new IllegalArgumentException("Key algorithm " + spec.getKeyType().getName() + " is not capable of creating certifications.");
         }
     }
 
-    private boolean canCertifyOthers(KeySpec keySpec) {
+    private boolean hasCertifyOthersFlag(KeySpec keySpec) {
         int flags = keySpec.getSubpackets().getKeyFlags();
         return KeyFlag.hasKeyFlag(flags, KeyFlag.CERTIFY_OTHER);
+    }
+
+    private boolean keyIsCertificationCapable(KeySpec keySpec) {
+        return keySpec.getKeyType().canCertify();
     }
 
     class WithPrimaryUserIdImpl implements WithPrimaryUserId {
