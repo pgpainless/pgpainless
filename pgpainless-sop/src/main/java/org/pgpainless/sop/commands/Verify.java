@@ -1,3 +1,18 @@
+/*
+ * Copyright 2020 Paul Schaub.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
 package org.pgpainless.sop.commands;
 
 import org.bouncycastle.openpgp.PGPException;
@@ -12,6 +27,7 @@ import picocli.CommandLine;
 
 import java.io.File;
 import java.io.FileInputStream;
+import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.OutputStream;
 import java.text.DateFormat;
@@ -23,8 +39,21 @@ import java.util.HashSet;
 import java.util.Map;
 import java.util.TimeZone;
 
+import static org.pgpainless.sop.Print.err_ln;
+import static org.pgpainless.sop.Print.print_ln;
+
 @CommandLine.Command(name = "verify", description = "Verify a detached signature.\nThe signed data is being read from standard input.")
 public class Verify implements Runnable {
+
+    private static final TimeZone tz = TimeZone.getTimeZone("UTC");
+    private static final DateFormat df = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm'Z'");
+
+    private static final Date beginningOfTime = new Date(0);
+    private static final Date endOfTime = new Date(8640000000000000L);
+
+    static {
+        df.setTimeZone(tz);
+    }
 
     @CommandLine.Parameters(index = "0", description = "Detached signature")
     File signature;
@@ -35,33 +64,27 @@ public class Verify implements Runnable {
     @CommandLine.Option(names = {"--not-before"}, description = "ISO-8601 formatted UTC date (eg. '2020-11-23T16:35Z)\n" +
             "Reject signatures with a creation date not in range.\n" +
             "Defaults to beginning of time (\"-\").")
-            String notBefore = "-";
+    String notBefore = "-";
 
     @CommandLine.Option(names = {"--not-after"}, description = "ISO-8601 formatted UTC date (eg. '2020-11-23T16:35Z)\n" +
             "Reject signatures with a creation date not in range.\n" +
             "Defaults to current system time (\"now\").\n" +
             "Accepts special value \"-\" for end of time.")
-            String notAfter = "now";
-
-    private final TimeZone tz = TimeZone.getTimeZone("UTC");
-    private final DateFormat df = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm'Z'");
-
-    private final Date beginningOfTime = new Date(0);
-    private final Date endOfTime = new Date(8640000000000000L);
+    String notAfter = "now";
 
     @Override
     public void run() {
-        df.setTimeZone(tz);
         Date notBeforeDate = parseNotBefore();
         Date notAfterDate = parseNotAfter();
 
         Map<File, PGPPublicKeyRing> publicKeys = readCertificatesFromFiles();
         if (publicKeys.isEmpty()) {
-            System.out.println("No certificates supplied.");
+            err_ln("No certificates supplied.");
             System.exit(19);
         }
 
-        try(FileInputStream sigIn = new FileInputStream(signature)) {
+        OpenPgpMetadata metadata;
+        try (FileInputStream sigIn = new FileInputStream(signature)) {
             DecryptionStream verifier = PGPainless.decryptAndOrVerify()
                     .onInputStream(System.in)
                     .doNotDecrypt()
@@ -74,26 +97,34 @@ public class Verify implements Runnable {
             Streams.pipeAll(verifier, out);
             verifier.close();
 
-            OpenPgpMetadata metadata = verifier.getResult();
-
-            Map<OpenPgpV4Fingerprint, PGPSignature> signaturesInTimeRange = new HashMap<>();
-            for (OpenPgpV4Fingerprint fingerprint : metadata.getVerifiedSignatures().keySet()) {
-                PGPSignature signature = metadata.getVerifiedSignatures().get(fingerprint);
-                Date creationTime = signature.getCreationTime();
-                if (!creationTime.before(notBeforeDate) && !creationTime.after(notAfterDate)) {
-                    signaturesInTimeRange.put(fingerprint, signature);
-                }
-            }
-
-            if (signaturesInTimeRange.isEmpty()) {
-                System.out.println("Signature validation failed.");
-                System.exit(3);
-            }
-
-            printValidSignatures(signaturesInTimeRange, publicKeys);
+            metadata = verifier.getResult();
+        } catch (FileNotFoundException e) {
+            err_ln("Signature file not found:");
+            err_ln(e.getMessage());
+            System.exit(1);
+            return;
         } catch (IOException | PGPException e) {
-            e.printStackTrace();
+            err_ln("Signature validation failed.");
+            err_ln(e.getMessage());
+            System.exit(1);
+            return;
         }
+
+        Map<OpenPgpV4Fingerprint, PGPSignature> signaturesInTimeRange = new HashMap<>();
+        for (OpenPgpV4Fingerprint fingerprint : metadata.getVerifiedSignatures().keySet()) {
+            PGPSignature signature = metadata.getVerifiedSignatures().get(fingerprint);
+            Date creationTime = signature.getCreationTime();
+            if (!creationTime.before(notBeforeDate) && !creationTime.after(notAfterDate)) {
+                signaturesInTimeRange.put(fingerprint, signature);
+            }
+        }
+
+        if (signaturesInTimeRange.isEmpty()) {
+            err_ln("No valid signatures found.");
+            System.exit(3);
+        }
+
+        printValidSignatures(signaturesInTimeRange, publicKeys);
     }
 
     private void printValidSignatures(Map<OpenPgpV4Fingerprint, PGPSignature> validSignatures, Map<File, PGPPublicKeyRing> publicKeys) {
@@ -108,7 +139,7 @@ public class Verify implements Runnable {
 
                 String utcSigDate = df.format(signature.getCreationTime());
                 OpenPgpV4Fingerprint primaryKeyFp = new OpenPgpV4Fingerprint(publicKeyRing);
-                System.out.println(utcSigDate + " " + sigKeyFp.toString() + " " + primaryKeyFp.toString() +
+                print_ln(utcSigDate + " " + sigKeyFp.toString() + " " + primaryKeyFp.toString() +
                         " signed by " + file.getName());
             }
         }
@@ -117,10 +148,11 @@ public class Verify implements Runnable {
     private Map<File, PGPPublicKeyRing> readCertificatesFromFiles() {
         Map<File, PGPPublicKeyRing> publicKeys = new HashMap<>();
         for (File cert : certificates) {
-            try(FileInputStream in = new FileInputStream(cert)) {
+            try (FileInputStream in = new FileInputStream(cert)) {
                 publicKeys.put(cert, PGPainless.readKeyRing().publicKeyRing(in));
             } catch (IOException e) {
-                e.printStackTrace();
+                err_ln("Cannot read certificate from file " + cert.getAbsolutePath() + ":");
+                err_ln(e.getMessage());
             }
         }
         return publicKeys;
@@ -130,7 +162,7 @@ public class Verify implements Runnable {
         try {
             return notAfter.equals("now") ? new Date() : notAfter.equals("-") ? endOfTime : df.parse(notAfter);
         } catch (ParseException e) {
-            System.out.println("Invalid date string supplied as value of --not-after.");
+            err_ln("Invalid date string supplied as value of --not-after.");
             System.exit(1);
             return null;
         }
@@ -138,9 +170,9 @@ public class Verify implements Runnable {
 
     private Date parseNotBefore() {
         try {
-            return notBefore.equals("now") ? new Date() : notBefore.equals("-") ? beginningOfTime: df.parse(notBefore);
+            return notBefore.equals("now") ? new Date() : notBefore.equals("-") ? beginningOfTime : df.parse(notBefore);
         } catch (ParseException e) {
-            System.out.println("Invalid date string supplied as value of --not-before.");
+            err_ln("Invalid date string supplied as value of --not-before.");
             System.exit(1);
             return null;
         }

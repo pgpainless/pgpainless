@@ -13,31 +13,10 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+/**
+ * PGPainless SOP implementing a Stateless OpenPGP Command Line Interface.
+ * @see <a href="https://tools.ietf.org/html/draft-dkg-openpgp-stateless-cli-01">
+ *     Stateless OpenPGP Command Line Interface
+ *     draft-dkg-openpgp-stateless-cli-01</a>
+ */
 package org.pgpainless.sop;
-
-import java.io.IOException;
-
-import org.pgpainless.util.ArmorUtils;
-
-public class Print {
-
-    public static String toString(byte[] bytes, boolean armor) throws IOException {
-        if (armor) {
-            return ArmorUtils.toAsciiArmoredString(bytes);
-        } else {
-            return new String(bytes, "UTF-8");
-        }
-    }
-
-    public static void print_ln(String msg) {
-        // CHECKSTYLE:OFF
-        System.out.println(msg);
-        // CHECKSTYLE:ON
-    }
-
-    public static void err_ln(String msg) {
-        // CHECKSTYLE:OFF
-        System.err.println(msg);
-        // CHECKSTYLE:ON
-    }
-}

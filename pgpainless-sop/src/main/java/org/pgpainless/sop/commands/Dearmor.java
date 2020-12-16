@@ -15,15 +15,25 @@
  */
 package org.pgpainless.sop.commands;
 
+import org.bouncycastle.bcpg.ArmoredInputStream;
+import org.bouncycastle.util.io.Streams;
 import picocli.CommandLine;
 
-import static org.pgpainless.sop.Print.print_ln;
+import java.io.IOException;
 
-@CommandLine.Command(name = "version", description = "Display version information about the tool")
-public class Version implements Runnable {
+import static org.pgpainless.sop.Print.err_ln;
+
+@CommandLine.Command(name = "dearmor", description = "Remove ASCII Armor")
+public class Dearmor implements Runnable {
 
     @Override
     public void run() {
-        print_ln("PGPainless CLI version 0.0.1");
+        try (ArmoredInputStream in = new ArmoredInputStream(System.in, true)) {
+            Streams.pipeAll(in, System.out);
+        } catch (IOException e) {
+            err_ln("Data cannot be dearmored.");
+            err_ln(e.getMessage());
+            System.exit(1);
+        }
     }
 }

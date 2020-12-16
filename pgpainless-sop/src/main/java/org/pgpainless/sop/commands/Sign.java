@@ -1,3 +1,18 @@
+/*
+ * Copyright 2020 Paul Schaub.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
 package org.pgpainless.sop.commands;
 
 import java.io.ByteArrayOutputStream;
@@ -16,6 +31,9 @@ import org.pgpainless.key.protection.UnprotectedKeysProtector;
 import org.pgpainless.sop.Print;
 import picocli.CommandLine;
 
+import static org.pgpainless.sop.Print.err_ln;
+import static org.pgpainless.sop.Print.print_ln;
+
 @CommandLine.Command(name = "sign")
 public class Sign implements Runnable {
 
@@ -30,7 +48,8 @@ public class Sign implements Runnable {
     @CommandLine.Option(names = {"--no-armor"})
     boolean noArmor = false;
 
-    @CommandLine.Option(names = "--as", description = "Defaults to 'binary'. If '--as=text' and the input data is not valid UTF-8, sign fails with return code 53.")
+    @CommandLine.Option(names = "--as", description = "Defaults to 'binary'. If '--as=text' and the input data is not valid UTF-8, sign fails with return code 53.",
+    paramLabel = "{binary|text}")
     Type type;
 
     @CommandLine.Parameters
@@ -42,9 +61,8 @@ public class Sign implements Runnable {
         try {
             secretKeys = PGPainless.readKeyRing().secretKeyRing(new FileInputStream(secretKeyFile));
         } catch (IOException | PGPException e) {
-            System.err.println("Error reading secret key ring.");
-            System.err.println(e.getMessage());
-
+            err_ln("Error reading secret key ring.");
+            err_ln(e.getMessage());
             System.exit(1);
             return;
         }
@@ -64,11 +82,10 @@ public class Sign implements Runnable {
 
             PGPSignature signature = encryptionStream.getResult().getSignatures().iterator().next();
 
-            System.out.println(Print.toString(signature.getEncoded(), !noArmor));
+            print_ln(Print.toString(signature.getEncoded(), !noArmor));
         } catch (PGPException | IOException e) {
-            System.err.println("Error signing data.");
-            System.err.println(e.getMessage());
-
+            err_ln("Error signing data.");
+            err_ln(e.getMessage());
             System.exit(1);
         }
     }

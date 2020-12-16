@@ -13,17 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+/**
+ * Subcommands of the PGPainless SOP.
+ */
 package org.pgpainless.sop.commands;
-
-import picocli.CommandLine;
-
-import static org.pgpainless.sop.Print.print_ln;
-
-@CommandLine.Command(name = "version", description = "Display version information about the tool")
-public class Version implements Runnable {
-
-    @Override
-    public void run() {
-        print_ln("PGPainless CLI version 0.0.1");
-    }
-}
