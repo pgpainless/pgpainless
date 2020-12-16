@@ -142,6 +142,7 @@ public class EncryptDecryptTest {
                 .toRecipients(recipientPub)
                 .usingSecureAlgorithms()
                 .signWith(keyDecryptor, senderSec)
+                .signBinaryDocument()
                 .noArmor();
 
         Streams.pipeAll(new ByteArrayInputStream(secretMessage), encryptor);
@@ -197,6 +198,7 @@ public class EncryptDecryptTest {
                 .doNotEncrypt()
                 .createDetachedSignature()
                 .signWith(keyRingProtector, signingKeys)
+                .signBinaryDocument()
                 .noArmor();
         Streams.pipeAll(inputStream, signer);
         signer.close();
@@ -238,6 +240,7 @@ public class EncryptDecryptTest {
         EncryptionStream signer = PGPainless.encryptAndOrSign().onOutputStream(signOut)
                 .doNotEncrypt()
                 .signWith(keyRingProtector, signingKeys)
+                .signBinaryDocument()
                 .asciiArmor();
         Streams.pipeAll(inputStream, signer);
         signer.close();

@@ -42,6 +42,7 @@ import org.bouncycastle.openpgp.operator.bc.BcPGPDataEncryptorBuilder;
 import org.bouncycastle.openpgp.operator.bc.BcPublicKeyKeyEncryptionMethodGenerator;
 import org.pgpainless.algorithm.CompressionAlgorithm;
 import org.pgpainless.algorithm.HashAlgorithm;
+import org.pgpainless.algorithm.SignatureType;
 import org.pgpainless.algorithm.SymmetricKeyAlgorithm;
 import org.pgpainless.decryption_verification.DetachedSignature;
 import org.pgpainless.decryption_verification.OpenPgpMetadata;
@@ -63,6 +64,7 @@ public final class EncryptionStream extends OutputStream {
     private final CompressionAlgorithm compressionAlgorithm;
     private final Set<PGPPublicKey> encryptionKeys;
     private final boolean detachedSignature;
+    private final SignatureType signatureType;
     private final Map<OpenPgpV4Fingerprint, PGPPrivateKey> signingKeys;
     private final boolean asciiArmor;
 
@@ -85,6 +87,7 @@ public final class EncryptionStream extends OutputStream {
     EncryptionStream(@Nonnull OutputStream targetOutputStream,
                      @Nonnull Set<PGPPublicKey> encryptionKeys,
                      boolean detachedSignature,
+                     SignatureType signatureType,
                      @Nonnull Map<OpenPgpV4Fingerprint, PGPPrivateKey> signingKeys,
                      @Nonnull SymmetricKeyAlgorithm symmetricKeyAlgorithm,
                      @Nonnull HashAlgorithm hashAlgorithm,
@@ -97,6 +100,7 @@ public final class EncryptionStream extends OutputStream {
         this.compressionAlgorithm = compressionAlgorithm;
         this.encryptionKeys = Collections.unmodifiableSet(encryptionKeys);
         this.detachedSignature = detachedSignature;
+        this.signatureType = signatureType;
         this.signingKeys = Collections.unmodifiableMap(signingKeys);
         this.asciiArmor = asciiArmor;
 
@@ -156,7 +160,7 @@ public final class EncryptionStream extends OutputStream {
                     privateKey.getPublicKeyPacket().getAlgorithm(), hashAlgorithm.getAlgorithmId());
 
             PGPSignatureGenerator signatureGenerator = new PGPSignatureGenerator(contentSignerBuilder);
-            signatureGenerator.init(PGPSignature.BINARY_DOCUMENT, privateKey);
+            signatureGenerator.init(signatureType.getCode(), privateKey);
             signatureGenerators.put(fingerprint, signatureGenerator);
         }
     }

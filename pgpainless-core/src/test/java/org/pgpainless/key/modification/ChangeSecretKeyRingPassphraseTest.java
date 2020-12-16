@@ -182,6 +182,7 @@ public class ChangeSecretKeyRingPassphraseTest {
         EncryptionStream stream = PGPainless.encryptAndOrSign().onOutputStream(dummy)
                 .doNotEncrypt()
                 .signWith(PasswordBasedSecretKeyRingProtector.forKey(keyRing, passphrase), keyRing)
+                .signBinaryDocument()
                 .noArmor();
 
         Streams.pipeAll(new ByteArrayInputStream(dummyMessage.getBytes()), stream);

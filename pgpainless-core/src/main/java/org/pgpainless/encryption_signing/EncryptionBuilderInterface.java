@@ -181,7 +181,7 @@ public interface EncryptionBuilderInterface {
          * @param keys secret keys
          * @return api handle
          */
-        default Armor signWith(@Nonnull PGPSecretKey... keys) {
+        default DocumentType signWith(@Nonnull PGPSecretKey... keys) {
             return signWith(new UnprotectedKeysProtector(), keys);
         }
 
@@ -193,7 +193,7 @@ public interface EncryptionBuilderInterface {
          * @param keys secret keys used for signing
          * @return api handle
          */
-        Armor signWith(@Nonnull SecretKeyRingProtector decryptor, @Nonnull PGPSecretKey... keys);
+        DocumentType signWith(@Nonnull SecretKeyRingProtector decryptor, @Nonnull PGPSecretKey... keys);
 
         /**
          * Pass in a list of secret keys used for signing, along with a {@link SecretKeyRingProtector} used to unlock
@@ -203,7 +203,7 @@ public interface EncryptionBuilderInterface {
          * @param keyRings secret keys used for signing
          * @return api handle
          */
-        Armor signWith(@Nonnull SecretKeyRingProtector decryptor, @Nonnull PGPSecretKeyRing... keyRings);
+        DocumentType signWith(@Nonnull SecretKeyRingProtector decryptor, @Nonnull PGPSecretKeyRing... keyRings);
 
         /**
          * Pass in a map of secret keys for signing, as well as a {@link org.pgpainless.key.selection.key.SecretKeySelectionStrategy}
@@ -218,11 +218,18 @@ public interface EncryptionBuilderInterface {
          *
          * @throws SecretKeyNotFoundException in case no suitable secret key can be found
          */
-        <O> Armor signWith(@Nonnull SecretKeyRingSelectionStrategy<O> selectionStrategy,
+        <O> DocumentType signWith(@Nonnull SecretKeyRingSelectionStrategy<O> selectionStrategy,
                           @Nonnull SecretKeyRingProtector decryptor,
                           @Nonnull MultiMap<O, PGPSecretKeyRingCollection> keys)
                 throws SecretKeyNotFoundException;
 
+    }
+
+    interface DocumentType {
+
+        Armor signBinaryDocument();
+
+        Armor signCanonicalText();
     }
 
     interface Armor {

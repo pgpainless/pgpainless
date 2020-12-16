@@ -35,6 +35,7 @@ import org.bouncycastle.openpgp.PGPSecretKeyRingCollection;
 import org.bouncycastle.openpgp.operator.PBESecretKeyDecryptor;
 import org.pgpainless.algorithm.CompressionAlgorithm;
 import org.pgpainless.algorithm.HashAlgorithm;
+import org.pgpainless.algorithm.SignatureType;
 import org.pgpainless.algorithm.SymmetricKeyAlgorithm;
 import org.pgpainless.exception.SecretKeyNotFoundException;
 import org.pgpainless.key.OpenPgpV4Fingerprint;
@@ -54,6 +55,7 @@ public class EncryptionBuilder implements EncryptionBuilderInterface {
     private OutputStream outputStream;
     private final Set<PGPPublicKey> encryptionKeys = new HashSet<>();
     private boolean detachedSignature = false;
+    private SignatureType signatureType = SignatureType.BINARY_DOCUMENT;
     private final Set<PGPSecretKey> signingKeys = new HashSet<>();
     private SecretKeyRingProtector signingKeysDecryptor;
     private SymmetricKeyAlgorithm symmetricKeyAlgorithm = SymmetricKeyAlgorithm.AES_128;
@@ -257,17 +259,17 @@ public class EncryptionBuilder implements EncryptionBuilderInterface {
         }
 
         @Override
-        public Armor signWith(@Nonnull SecretKeyRingProtector decryptor, @Nonnull PGPSecretKey... keys) {
+        public DocumentType signWith(@Nonnull SecretKeyRingProtector decryptor, @Nonnull PGPSecretKey... keys) {
             return new SignWithImpl().signWith(decryptor, keys);
         }
 
         @Override
-        public Armor signWith(@Nonnull SecretKeyRingProtector decryptor, @Nonnull PGPSecretKeyRing... keyRings) {
+        public DocumentType signWith(@Nonnull SecretKeyRingProtector decryptor, @Nonnull PGPSecretKeyRing... keyRings) {
             return new SignWithImpl().signWith(decryptor, keyRings);
         }
 
         @Override
-        public <O> Armor signWith(@Nonnull SecretKeyRingSelectionStrategy<O> selectionStrategy,
+        public <O> DocumentType signWith(@Nonnull SecretKeyRingSelectionStrategy<O> selectionStrategy,
                                   @Nonnull SecretKeyRingProtector decryptor,
                                   @Nonnull MultiMap<O, PGPSecretKeyRingCollection> keys)
                 throws SecretKeyNotFoundException {
@@ -278,7 +280,7 @@ public class EncryptionBuilder implements EncryptionBuilderInterface {
     class SignWithImpl implements SignWith {
 
         @Override
-        public Armor signWith(@Nonnull SecretKeyRingProtector decryptor,
+        public DocumentType signWith(@Nonnull SecretKeyRingProtector decryptor,
                                   @Nonnull PGPSecretKey... keys) {
             if (keys.length == 0) {
                 throw new IllegalArgumentException("Recipient list MUST NOT be empty.");
@@ -291,11 +293,11 @@ public class EncryptionBuilder implements EncryptionBuilderInterface {
                 }
             }
             EncryptionBuilder.this.signingKeysDecryptor = decryptor;
-            return new ArmorImpl();
+            return new DocumentTypeImpl();
         }
 
         @Override
-        public Armor signWith(@Nonnull SecretKeyRingProtector decryptor,
+        public DocumentType signWith(@Nonnull SecretKeyRingProtector decryptor,
                                   @Nonnull PGPSecretKeyRing... keys) {
             if (keys.length == 0) {
                 throw new IllegalArgumentException("Recipient list MUST NOT be empty.");
@@ -309,11 +311,11 @@ public class EncryptionBuilder implements EncryptionBuilderInterface {
                 }
             }
             EncryptionBuilder.this.signingKeysDecryptor = decryptor;
-            return new ArmorImpl();
+            return new DocumentTypeImpl();
         }
 
         @Override
-        public <O> Armor signWith(@Nonnull SecretKeyRingSelectionStrategy<O> ringSelectionStrategy,
+        public <O> DocumentType signWith(@Nonnull SecretKeyRingSelectionStrategy<O> ringSelectionStrategy,
                                   @Nonnull SecretKeyRingProtector decryptor,
                                   @Nonnull MultiMap<O, PGPSecretKeyRingCollection> keys) {
             if (keys.isEmpty()) {
@@ -332,6 +334,21 @@ public class EncryptionBuilder implements EncryptionBuilderInterface {
                     }
                 }
             }
+            return new DocumentTypeImpl();
+        }
+    }
+
+    class DocumentTypeImpl implements DocumentType {
+
+        @Override
+        public Armor signBinaryDocument() {
+            EncryptionBuilder.this.signatureType = SignatureType.BINARY_DOCUMENT;
+            return new ArmorImpl();
+        }
+
+        @Override
+        public Armor signCanonicalText() {
+            EncryptionBuilder.this.signatureType = SignatureType.CANONICAL_TEXT_DOCUMENT;
             return new ArmorImpl();
         }
     }
@@ -363,6 +380,7 @@ public class EncryptionBuilder implements EncryptionBuilderInterface {
                     EncryptionBuilder.this.outputStream,
                     EncryptionBuilder.this.encryptionKeys,
                     EncryptionBuilder.this.detachedSignature,
+                    signatureType,
                     privateKeys,
                     EncryptionBuilder.this.symmetricKeyAlgorithm,
                     EncryptionBuilder.this.hashAlgorithm,
