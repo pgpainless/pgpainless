@@ -17,10 +17,10 @@ public class GenerateKey implements Runnable {
     @CommandLine.Option(names = {"--armor"}, description = "ASCII Armor the output")
     boolean armor = false;
 
-    @CommandLine.Option(names = {"--no-armor"})
+    @CommandLine.Option(names = {"--no-armor"}, description = "Non-armored, binary output")
     boolean noArmor = false;
 
-    @CommandLine.Parameters
+    @CommandLine.Parameters(description = "User-ID, eg. \"Alice <alice@example.com>\"")
     String userId;
 
     @Override

@@ -2,7 +2,7 @@ package org.pgpainless.sop.commands;
 
 import picocli.CommandLine;
 
-@CommandLine.Command(name = "version")
+@CommandLine.Command(name = "version", description = "Display version information about the tool")
 public class Version implements Runnable {
 
     @Override
