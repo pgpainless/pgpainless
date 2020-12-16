@@ -1,9 +1,6 @@
 package org.pgpainless.sop;
 
-import org.pgpainless.sop.commands.ExtractCert;
-import org.pgpainless.sop.commands.GenerateKey;
-import org.pgpainless.sop.commands.Sign;
-import org.pgpainless.sop.commands.Version;
+import org.pgpainless.sop.commands.*;
 import picocli.CommandLine;
 
 @CommandLine.Command(
@@ -11,7 +8,8 @@ import picocli.CommandLine;
                 Version.class,
                 GenerateKey.class,
                 ExtractCert.class,
-                Sign.class
+                Sign.class,
+                Verify.class
         }
 )
 public class PGPainlessCLI implements Runnable {
