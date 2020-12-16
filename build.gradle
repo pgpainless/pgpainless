@@ -28,13 +28,15 @@ allprojects {
     apply plugin: 'jacoco'
     apply plugin: 'checkstyle'
 
-    // animalsniffer
-    apply plugin: 'ru.vyarus.animalsniffer'
-    dependencies {
-        signature "net.sf.androidscents.signature:android-api-level-${pgpainlessMinAndroidSdk}:2.3.1_r2@signature"
-    }
-    animalsniffer {
-        sourceSets = [sourceSets.main]
+    if (!it.name.equals('pgpainless-sop')) {
+        // animalsniffer
+        apply plugin: 'ru.vyarus.animalsniffer'
+        dependencies {
+            signature "net.sf.androidscents.signature:android-api-level-${pgpainlessMinAndroidSdk}:2.3.1_r2@signature"
+        }
+        animalsniffer {
+            sourceSets = [sourceSets.main]
+        }
     }
 
     // checkstyle
