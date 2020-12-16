@@ -10,6 +10,7 @@ import org.bouncycastle.openpgp.PGPSecretKeyRing;
 import org.bouncycastle.openpgp.PGPSignature;
 import org.bouncycastle.util.io.Streams;
 import org.pgpainless.PGPainless;
+import org.pgpainless.encryption_signing.EncryptionBuilderInterface;
 import org.pgpainless.encryption_signing.EncryptionStream;
 import org.pgpainless.key.protection.UnprotectedKeysProtector;
 import org.pgpainless.sop.Print;
@@ -48,13 +49,15 @@ public class Sign implements Runnable {
             return;
         }
         try {
-        ByteArrayOutputStream out = new ByteArrayOutputStream();
-        EncryptionStream encryptionStream = PGPainless.createEncryptor()
-                .onOutputStream(out)
-                .doNotEncrypt()
-                .createDetachedSignature()
-                .signWith(new UnprotectedKeysProtector(), secretKeys)
-                .noArmor();
+            ByteArrayOutputStream out = new ByteArrayOutputStream();
+            EncryptionBuilderInterface.DocumentType documentType = PGPainless.encryptAndOrSign()
+                    .onOutputStream(out)
+                    .doNotEncrypt()
+                    .createDetachedSignature()
+                    .signWith(new UnprotectedKeysProtector(), secretKeys);
+
+            EncryptionBuilderInterface.Armor armor = type == Type.text ? documentType.signCanonicalText() : documentType.signBinaryDocument();
+            EncryptionStream encryptionStream = noArmor ? armor.noArmor() : armor.asciiArmor();
 
             Streams.pipeAll(System.in, encryptionStream);
             encryptionStream.close();
