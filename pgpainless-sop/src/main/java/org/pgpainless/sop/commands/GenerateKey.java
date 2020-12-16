@@ -26,7 +26,7 @@ public class GenerateKey implements Runnable {
     @Override
     public void run() {
         try {
-            PGPSecretKeyRing secretKeys = PGPainless.generateKeyRing().simpleEcKeyRing(userId).getSecretKeys();
+            PGPSecretKeyRing secretKeys = PGPainless.generateKeyRing().simpleEcKeyRing(userId);
 
             System.out.println(Print.toString(secretKeys.getEncoded(), !noArmor));
 
