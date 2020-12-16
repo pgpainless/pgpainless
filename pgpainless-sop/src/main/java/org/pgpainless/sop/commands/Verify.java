@@ -10,14 +10,18 @@ import org.pgpainless.decryption_verification.OpenPgpMetadata;
 import org.pgpainless.key.OpenPgpV4Fingerprint;
 import picocli.CommandLine;
 
-import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
+import java.io.OutputStream;
 import java.text.DateFormat;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
-import java.util.*;
+import java.util.Date;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.Map;
+import java.util.TimeZone;
 
 @CommandLine.Command(name = "verify", description = "Verify a detached signature.\nThe signed data is being read from standard input.")
 public class Verify implements Runnable {
@@ -66,7 +70,7 @@ public class Verify implements Runnable {
                     .ignoreMissingPublicKeys()
                     .build();
 
-            ByteArrayOutputStream out = new ByteArrayOutputStream();
+            OutputStream out = new NullOutputStream();
             Streams.pipeAll(verifier, out);
             verifier.close();
 
@@ -139,6 +143,14 @@ public class Verify implements Runnable {
             System.out.println("Invalid date string supplied as value of --not-before.");
             System.exit(1);
             return null;
+        }
+    }
+
+    private static class NullOutputStream extends OutputStream {
+
+        @Override
+        public void write(int b) throws IOException {
+            // Nope
         }
     }
 }
