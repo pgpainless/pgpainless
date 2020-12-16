@@ -15,6 +15,8 @@
  */
 package org.pgpainless.algorithm;
 
+import org.bouncycastle.openpgp.PGPSignature;
+
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
@@ -31,7 +33,7 @@ public enum SignatureType {
      * This means the signer owns it, created it, or certifies that it
      * has not been modified.
      */
-    BINARY_DOCUMENT(0x00),
+    BINARY_DOCUMENT(PGPSignature.BINARY_DOCUMENT),
 
     /**
      * Signature of a canonical text document.
@@ -39,7 +41,7 @@ public enum SignatureType {
      * has not been modified.  The signature is calculated over the text
      * data with its line endings converted to {@code <CR><LF>}.
      */
-    CANONICAL_TEXT_DOCUMENT(0x01),
+    CANONICAL_TEXT_DOCUMENT(PGPSignature.CANONICAL_TEXT_DOCUMENT),
 
     /**
      * Standalone signature.
@@ -48,7 +50,7 @@ public enum SignatureType {
      * binary document.  Note that it doesn't make sense to have a V3
      * standalone signature.
      */
-    STANDALONE(0x02),
+    STANDALONE(PGPSignature.STAND_ALONE),
 
     /**
      * Generic certification of a User ID and Public-Key packet.
@@ -56,28 +58,28 @@ public enum SignatureType {
      * assertion as to how well the certifier has checked that the owner
      * of the key is in fact the person described by the User ID.
      */
-    GENERIC_CERTIFICATION(0x10),
+    GENERIC_CERTIFICATION(PGPSignature.DEFAULT_CERTIFICATION),
 
     /**
      * Persona certification of a User ID and Public-Key packet.
      * The issuer of this certification has not done any verification of
      * the claim that the owner of this key is the User ID specified.
      */
-    NO_CERTIFICATION(0x11),
+    NO_CERTIFICATION(PGPSignature.NO_CERTIFICATION),
 
     /**
      * Casual certification of a User ID and Public-Key packet.
      * The issuer of this certification has done some casual
      * verification of the claim of identity.
      */
-    CASUAL_CERTIFICATION(0x12),
+    CASUAL_CERTIFICATION(PGPSignature.CASUAL_CERTIFICATION),
 
     /**
      * Positive certification of a User ID and Public-Key packet.
      * The issuer of this certification has done substantial
      * verification of the claim of identity.
      */
-    POSITIVE_CERTIFICATION(0x13),
+    POSITIVE_CERTIFICATION(PGPSignature.POSITIVE_CERTIFICATION),
 
     /**
      * Subkey Binding Signature.
@@ -89,7 +91,7 @@ public enum SignatureType {
      * contains a {@link #PRIMARYKEY_BINDING} signature made by the
      * signing subkey on the primary key and subkey.
      */
-    SUBKEY_BINDING(0x18),
+    SUBKEY_BINDING(PGPSignature.SUBKEY_BINDING),
 
     /**
      * Primary Key Binding Signature
@@ -99,7 +101,7 @@ public enum SignatureType {
      * directly on the primary key and subkey, and not on any User ID or
      * other packets.
      */
-    PRIMARYKEY_BINDING(0x19),
+    PRIMARYKEY_BINDING(PGPSignature.PRIMARYKEY_BINDING),
 
     /**
      * Signature directly on a key
@@ -111,7 +113,7 @@ public enum SignatureType {
      * about the key itself, rather than the binding between a key and a
      * name.
      */
-    DIRECT_KEY(0x1f),
+    DIRECT_KEY(PGPSignature.DIRECT_KEY),
 
     /**
      * Key revocation signature
@@ -120,7 +122,7 @@ public enum SignatureType {
      * key being revoked, or by an authorized revocation key, should be
      * considered valid revocation signatures.
      */
-    KEY_REVOCATION(0x20),
+    KEY_REVOCATION(PGPSignature.KEY_REVOCATION),
 
     /**
      * Subkey revocation signature
@@ -130,7 +132,7 @@ public enum SignatureType {
      * by an authorized revocation key, should be considered valid
      * revocation signatures.
      */
-    SUBKEY_REVOCATION(0x28),
+    SUBKEY_REVOCATION(PGPSignature.SUBKEY_REVOCATION),
 
     /**
      * Certification revocation signature
@@ -142,14 +144,14 @@ public enum SignatureType {
      * revokes, and should have a later creation date than that
      * certificate.
      */
-    CERTIFICATION_REVOCATION(0x30),
+    CERTIFICATION_REVOCATION(PGPSignature.CERTIFICATION_REVOCATION),
 
     /**
      * Timestamp signature.
      * This signature is only meaningful for the timestamp contained in
      * it.
      */
-    TIMESTAMP(0x40),
+    TIMESTAMP(PGPSignature.TIMESTAMP),
 
     /**
      * Third-Party Confirmation signature.
