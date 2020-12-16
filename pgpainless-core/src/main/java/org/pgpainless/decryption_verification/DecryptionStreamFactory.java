@@ -95,6 +95,9 @@ public final class DecryptionStreamFactory {
             pgpInputStream = inputStream;
             for (PGPSignature signature : detachedSignatures) {
                 PGPPublicKey signingKey = factory.findSignatureVerificationKey(signature.getKeyID());
+                if (signingKey == null) {
+                    continue;
+                }
                 signature.init(new BcPGPContentVerifierBuilderProvider(), signingKey);
                 factory.resultBuilder.addDetachedSignature(
                         new DetachedSignature(signature, new OpenPgpV4Fingerprint(signingKey)));
