@@ -5,7 +5,7 @@ plugins {
 dependencies {
     implementation(project(":pgpainless-core"))
 
-    compile 'info.picocli:picocli:3.9.6'
+    implementation 'info.picocli:picocli:4.5.2'
 
     testImplementation "org.junit.jupiter:junit-jupiter-api:$junitVersion"
     testRuntimeOnly "org.junit.jupiter:junit-jupiter-engine:$junitVersion"
