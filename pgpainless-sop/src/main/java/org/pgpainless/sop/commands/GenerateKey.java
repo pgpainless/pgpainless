@@ -31,11 +31,10 @@ import static org.pgpainless.sop.Print.print_ln;
 @CommandLine.Command(name = "generate-key")
 public class GenerateKey implements Runnable {
 
-    @CommandLine.Option(names = {"--armor"}, description = "ASCII Armor the output")
-    boolean armor = false;
-
-    @CommandLine.Option(names = {"--no-armor"}, description = "Non-armored, binary output")
-    boolean noArmor = false;
+    @CommandLine.Option(names = "--no-armor",
+            description = "ASCII armor the output",
+            negatable = true)
+    boolean armor = true;
 
     @CommandLine.Parameters(description = "User-ID, eg. \"Alice <alice@example.com>\"")
     String userId;
@@ -45,7 +44,7 @@ public class GenerateKey implements Runnable {
         try {
             PGPSecretKeyRing secretKeys = PGPainless.generateKeyRing().simpleEcKeyRing(userId);
 
-            print_ln(Print.toString(secretKeys.getEncoded(), !noArmor));
+            print_ln(Print.toString(secretKeys.getEncoded(), armor));
 
         } catch (InvalidAlgorithmParameterException | NoSuchAlgorithmException | PGPException | IOException e) {
             err_ln("Error creating OpenPGP key:");

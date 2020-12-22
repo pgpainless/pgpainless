@@ -31,11 +31,10 @@ import static org.pgpainless.sop.Print.print_ln;
 @CommandLine.Command(name = "extract-cert")
 public class ExtractCert implements Runnable {
 
-    @CommandLine.Option(names = {"--armor"}, description = "ASCII Armor the output")
-    boolean armor = false;
-
-    @CommandLine.Option(names = {"--no-armor"})
-    boolean noArmor = false;
+    @CommandLine.Option(names = "--no-armor",
+            description = "ASCII armor the output",
+            negatable = true)
+    boolean armor = true;
 
     @Override
     public void run() {
@@ -43,7 +42,7 @@ public class ExtractCert implements Runnable {
             PGPSecretKeyRing secretKeys = PGPainless.readKeyRing().secretKeyRing(System.in);
             PGPPublicKeyRing publicKeys = BCUtil.publicKeyRingFromSecretKeyRing(secretKeys);
 
-            print_ln(Print.toString(publicKeys.getEncoded(), !noArmor));
+            print_ln(Print.toString(publicKeys.getEncoded(), armor));
         } catch (IOException | PGPException e) {
             err_ln("Error extracting certificate from keys;");
             err_ln(e.getMessage());

@@ -42,11 +42,10 @@ public class Sign implements Runnable {
         text
     }
 
-    @CommandLine.Option(names = {"--armor"}, description = "ASCII Armor the output")
-    boolean armor = false;
-
-    @CommandLine.Option(names = {"--no-armor"})
-    boolean noArmor = false;
+    @CommandLine.Option(names = "--no-armor",
+            description = "ASCII armor the output",
+            negatable = true)
+    boolean armor = true;
 
     @CommandLine.Option(names = "--as", description = "Defaults to 'binary'. If '--as=text' and the input data is not valid UTF-8, sign fails with return code 53.",
     paramLabel = "{binary|text}")
@@ -74,15 +73,15 @@ public class Sign implements Runnable {
                     .createDetachedSignature()
                     .signWith(new UnprotectedKeysProtector(), secretKeys);
 
-            EncryptionBuilderInterface.Armor armor = type == Type.text ? documentType.signCanonicalText() : documentType.signBinaryDocument();
-            EncryptionStream encryptionStream = noArmor ? armor.noArmor() : armor.asciiArmor();
+            EncryptionBuilderInterface.Armor builder = type == Type.text ? documentType.signCanonicalText() : documentType.signBinaryDocument();
+            EncryptionStream encryptionStream = armor ? builder.asciiArmor() : builder.noArmor();
 
             Streams.pipeAll(System.in, encryptionStream);
             encryptionStream.close();
 
             PGPSignature signature = encryptionStream.getResult().getSignatures().iterator().next();
 
-            print_ln(Print.toString(signature.getEncoded(), !noArmor));
+            print_ln(Print.toString(signature.getEncoded(), armor));
         } catch (PGPException | IOException e) {
             err_ln("Error signing data.");
             err_ln(e.getMessage());
