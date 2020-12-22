@@ -56,23 +56,30 @@ public class Verify implements Runnable {
         df.setTimeZone(tz);
     }
 
-    @CommandLine.Parameters(index = "0", description = "Detached signature")
+    @CommandLine.Parameters(index = "0",
+            description = "Detached signature",
+            paramLabel = "SIGNATURE")
     File signature;
 
-    @CommandLine.Parameters(index = "1..*", arity = "1..*", description = "Public key certificates")
+    @CommandLine.Parameters(index = "1..*",
+            arity = "1..*",
+            description = "Public key certificates",
+            paramLabel = "CERT")
     File[] certificates;
 
-    @CommandLine.Option(names = {"--not-before"}, description = "ISO-8601 formatted UTC date (eg. '2020-11-23T16:35Z)\n" +
-            "Reject signatures with a creation date not in range.\n" +
-            "Defaults to beginning of time (\"-\").",
-            arity = "0..1")
+    @CommandLine.Option(names = {"--not-before"},
+            description = "ISO-8601 formatted UTC date (eg. '2020-11-23T16:35Z)\n" +
+                    "Reject signatures with a creation date not in range.\n" +
+                    "Defaults to beginning of time (\"-\").",
+            paramLabel = "DATE")
     String notBefore = "-";
 
-    @CommandLine.Option(names = {"--not-after"}, description = "ISO-8601 formatted UTC date (eg. '2020-11-23T16:35Z)\n" +
-            "Reject signatures with a creation date not in range.\n" +
-            "Defaults to current system time (\"now\").\n" +
-            "Accepts special value \"-\" for end of time.",
-            arity = "0..1")
+    @CommandLine.Option(names = {"--not-after"},
+            description = "ISO-8601 formatted UTC date (eg. '2020-11-23T16:35Z)\n" +
+                    "Reject signatures with a creation date not in range.\n" +
+                    "Defaults to current system time (\"now\").\n" +
+                    "Accepts special value \"-\" for end of time.",
+            paramLabel = "DATE")
     String notAfter = "now";
 
     @Override
