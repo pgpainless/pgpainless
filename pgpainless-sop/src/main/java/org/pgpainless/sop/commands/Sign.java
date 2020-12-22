@@ -15,11 +15,6 @@
  */
 package org.pgpainless.sop.commands;
 
-import java.io.ByteArrayOutputStream;
-import java.io.File;
-import java.io.FileInputStream;
-import java.io.IOException;
-
 import org.bouncycastle.openpgp.PGPException;
 import org.bouncycastle.openpgp.PGPSecretKeyRing;
 import org.bouncycastle.openpgp.PGPSignature;
@@ -30,6 +25,11 @@ import org.pgpainless.encryption_signing.EncryptionStream;
 import org.pgpainless.key.protection.UnprotectedKeysProtector;
 import org.pgpainless.sop.Print;
 import picocli.CommandLine;
+
+import java.io.ByteArrayOutputStream;
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.IOException;
 
 import static org.pgpainless.sop.Print.err_ln;
 import static org.pgpainless.sop.Print.print_ln;
@@ -48,22 +48,28 @@ public class Sign implements Runnable {
     boolean armor = true;
 
     @CommandLine.Option(names = "--as", description = "Defaults to 'binary'. If '--as=text' and the input data is not valid UTF-8, sign fails with return code 53.",
-    paramLabel = "{binary|text}")
+            paramLabel = "{binary|text}")
     Type type;
 
-    @CommandLine.Parameters
-    File secretKeyFile;
+    @CommandLine.Parameters(description = "Secret keys used for signing",
+            paramLabel = "KEY",
+            arity = "1..*")
+    File[] secretKeyFile;
 
     @Override
     public void run() {
-        PGPSecretKeyRing secretKeys;
-        try {
-            secretKeys = PGPainless.readKeyRing().secretKeyRing(new FileInputStream(secretKeyFile));
-        } catch (IOException | PGPException e) {
-            err_ln("Error reading secret key ring.");
-            err_ln(e.getMessage());
-            System.exit(1);
-            return;
+        PGPSecretKeyRing[] secretKeys = new PGPSecretKeyRing[secretKeyFile.length];
+        for (int i = 0, secretKeyFileLength = secretKeyFile.length; i < secretKeyFileLength; i++) {
+            File file = secretKeyFile[i];
+            try {
+                PGPSecretKeyRing secretKey = PGPainless.readKeyRing().secretKeyRing(new FileInputStream(file));
+                secretKeys[i] = secretKey;
+            } catch (IOException | PGPException e) {
+                err_ln("Error reading secret key ring " + file.getName());
+                err_ln(e.getMessage());
+                System.exit(1);
+                return;
+            }
         }
         try {
             ByteArrayOutputStream out = new ByteArrayOutputStream();
