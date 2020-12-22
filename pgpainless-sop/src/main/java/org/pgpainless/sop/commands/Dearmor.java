@@ -23,7 +23,8 @@ import java.io.IOException;
 
 import static org.pgpainless.sop.Print.err_ln;
 
-@CommandLine.Command(name = "dearmor", description = "Remove ASCII Armor")
+@CommandLine.Command(name = "dearmor",
+        description = "Remove ASCII Armor from standard input")
 public class Dearmor implements Runnable {
 
     @Override

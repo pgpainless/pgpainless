@@ -34,7 +34,8 @@ import java.io.IOException;
 import static org.pgpainless.sop.Print.err_ln;
 import static org.pgpainless.sop.Print.print_ln;
 
-@CommandLine.Command(name = "sign", description = "Create a detached signature")
+@CommandLine.Command(name = "sign",
+        description = "Create a detached signature on the data from standard input")
 public class Sign implements Runnable {
 
     public enum Type {

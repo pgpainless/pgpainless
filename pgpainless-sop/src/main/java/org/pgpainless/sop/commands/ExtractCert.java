@@ -28,7 +28,8 @@ import picocli.CommandLine;
 import static org.pgpainless.sop.Print.err_ln;
 import static org.pgpainless.sop.Print.print_ln;
 
-@CommandLine.Command(name = "extract-cert", description = "Extract a public key certificate from a secret key")
+@CommandLine.Command(name = "extract-cert",
+        description = "Extract a public key certificate from a secret key from standard input")
 public class ExtractCert implements Runnable {
 
     @CommandLine.Option(names = "--no-armor",

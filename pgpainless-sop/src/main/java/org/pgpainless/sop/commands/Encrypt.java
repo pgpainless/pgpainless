@@ -36,7 +36,8 @@ import java.util.Scanner;
 import static org.pgpainless.sop.Print.err_ln;
 import static org.pgpainless.sop.Print.print_ln;
 
-@CommandLine.Command(name = "encrypt", description = "Encrypt a message")
+@CommandLine.Command(name = "encrypt",
+        description = "Encrypt a message from standard input")
 public class Encrypt implements Runnable {
 
     public enum Type {
