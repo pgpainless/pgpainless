@@ -17,6 +17,8 @@ package org.pgpainless.sop;
 
 import org.pgpainless.sop.commands.Armor;
 import org.pgpainless.sop.commands.Dearmor;
+import org.pgpainless.sop.commands.Decrypt;
+import org.pgpainless.sop.commands.Encrypt;
 import org.pgpainless.sop.commands.ExtractCert;
 import org.pgpainless.sop.commands.GenerateKey;
 import org.pgpainless.sop.commands.Sign;
@@ -26,13 +28,15 @@ import picocli.CommandLine;
 
 @CommandLine.Command(
         subcommands = {
-                Version.class,
-                GenerateKey.class,
+                Armor.class,
+                Dearmor.class,
+                Decrypt.class,
+                Encrypt.class,
                 ExtractCert.class,
+                GenerateKey.class,
                 Sign.class,
                 Verify.class,
-                Armor.class,
-                Dearmor.class
+                Version.class
         }
 )
 public class PGPainlessCLI implements Runnable {
