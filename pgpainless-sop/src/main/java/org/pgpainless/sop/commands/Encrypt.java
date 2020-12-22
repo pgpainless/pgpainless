@@ -15,14 +15,11 @@
  */
 package org.pgpainless.sop.commands;
 
-import org.bouncycastle.bcpg.sig.KeyFlags;
 import org.bouncycastle.openpgp.PGPException;
 import org.bouncycastle.openpgp.PGPPublicKeyRing;
 import org.bouncycastle.openpgp.PGPSecretKey;
 import org.bouncycastle.openpgp.PGPSecretKeyRing;
 import org.bouncycastle.openpgp.PGPSignature;
-import org.bouncycastle.openpgp.operator.PBESecretKeyDecryptor;
-import org.bouncycastle.openpgp.operator.PBESecretKeyEncryptor;
 import org.bouncycastle.util.io.Streams;
 import org.pgpainless.PGPainless;
 import org.pgpainless.algorithm.KeyFlag;
@@ -32,18 +29,13 @@ import org.pgpainless.encryption_signing.EncryptionStream;
 import org.pgpainless.key.OpenPgpV4Fingerprint;
 import org.pgpainless.key.protection.KeyRingProtectionSettings;
 import org.pgpainless.key.protection.PassphraseMapKeyRingProtector;
-import org.pgpainless.key.protection.SecretKeyRingProtector;
-import org.pgpainless.key.protection.passphrase_provider.SecretKeyPassphraseProvider;
 import org.pgpainless.util.Passphrase;
 import picocli.CommandLine;
 
-import javax.annotation.Nullable;
 import java.io.File;
 import java.io.FileInputStream;
-import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStream;
-import java.nio.charset.StandardCharsets;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Scanner;
@@ -106,7 +98,7 @@ public class Encrypt implements Runnable {
         }
         PGPSecretKeyRing[] secretKeys = new PGPSecretKeyRing[signWith.length];
         for (int i = 0; i < signWith.length; i++) {
-            try(FileInputStream fileIn = new FileInputStream(signWith[i])) {
+            try (FileInputStream fileIn = new FileInputStream(signWith[i])) {
                 PGPSecretKeyRing secretKey = PGPainless.readKeyRing().secretKeyRing(fileIn);
                 secretKeys[i] = secretKey;
             } catch (IOException | PGPException e) {
