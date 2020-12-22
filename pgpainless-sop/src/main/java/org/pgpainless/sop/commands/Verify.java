@@ -42,7 +42,7 @@ import java.util.TimeZone;
 import static org.pgpainless.sop.Print.err_ln;
 import static org.pgpainless.sop.Print.print_ln;
 
-@CommandLine.Command(name = "verify", description = "Verify a detached signature.\nThe signed data is being read from standard input.")
+@CommandLine.Command(name = "verify", description = "Verify a detached signature")
 public class Verify implements Runnable {
 
     private static final TimeZone tz = TimeZone.getTimeZone("UTC");

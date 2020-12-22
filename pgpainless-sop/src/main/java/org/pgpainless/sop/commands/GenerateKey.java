@@ -28,7 +28,7 @@ import picocli.CommandLine;
 import static org.pgpainless.sop.Print.err_ln;
 import static org.pgpainless.sop.Print.print_ln;
 
-@CommandLine.Command(name = "generate-key")
+@CommandLine.Command(name = "generate-key", description = "Generate a secret key")
 public class GenerateKey implements Runnable {
 
     @CommandLine.Option(names = "--no-armor",
