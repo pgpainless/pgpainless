@@ -63,13 +63,15 @@ public class Verify implements Runnable {
 
     @CommandLine.Option(names = {"--not-before"}, description = "ISO-8601 formatted UTC date (eg. '2020-11-23T16:35Z)\n" +
             "Reject signatures with a creation date not in range.\n" +
-            "Defaults to beginning of time (\"-\").")
+            "Defaults to beginning of time (\"-\").",
+            arity = "0..1")
     String notBefore = "-";
 
     @CommandLine.Option(names = {"--not-after"}, description = "ISO-8601 formatted UTC date (eg. '2020-11-23T16:35Z)\n" +
             "Reject signatures with a creation date not in range.\n" +
             "Defaults to current system time (\"now\").\n" +
-            "Accepts special value \"-\" for end of time.")
+            "Accepts special value \"-\" for end of time.",
+            arity = "0..1")
     String notAfter = "now";
 
     @Override
