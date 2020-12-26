@@ -37,12 +37,14 @@ import org.bouncycastle.openpgp.operator.KeyFingerPrintCalculator;
 import org.bouncycastle.openpgp.operator.bc.BcKeyFingerprintCalculator;
 import org.pgpainless.key.OpenPgpV4Fingerprint;
 import org.pgpainless.key.protection.SecretKeyRingProtector;
+import org.pgpainless.util.Passphrase;
 
 public class DecryptionBuilder implements DecryptionBuilderInterface {
 
     private InputStream inputStream;
     private PGPSecretKeyRingCollection decryptionKeys;
     private SecretKeyRingProtector decryptionKeyDecryptor;
+    private Passphrase decryptionPassphrase;
     private List<PGPSignature> detachedSignatures;
     private Set<PGPPublicKeyRing> verificationKeys = new HashSet<>();
     private MissingPublicKeyCallback missingPublicKeyCallback = null;
@@ -61,6 +63,15 @@ public class DecryptionBuilder implements DecryptionBuilderInterface {
         public Verify decryptWith(@Nonnull SecretKeyRingProtector decryptor, @Nonnull PGPSecretKeyRingCollection secretKeyRings) {
             DecryptionBuilder.this.decryptionKeys = secretKeyRings;
             DecryptionBuilder.this.decryptionKeyDecryptor = decryptor;
+            return new VerifyImpl();
+        }
+
+        @Override
+        public Verify decryptWith(@Nonnull Passphrase passphrase) {
+            if (passphrase.isEmpty()) {
+                throw new IllegalArgumentException("Passphrase MUST NOT be empty.");
+            }
+            DecryptionBuilder.this.decryptionPassphrase = passphrase;
             return new VerifyImpl();
         }
 
@@ -194,7 +205,7 @@ public class DecryptionBuilder implements DecryptionBuilderInterface {
         @Override
         public DecryptionStream build() throws IOException, PGPException {
             return DecryptionStreamFactory.create(inputStream,
-                    decryptionKeys, decryptionKeyDecryptor, detachedSignatures, verificationKeys, missingPublicKeyCallback);
+                    decryptionKeys, decryptionKeyDecryptor, decryptionPassphrase, detachedSignatures, verificationKeys, missingPublicKeyCallback);
         }
     }
 }

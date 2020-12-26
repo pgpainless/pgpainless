@@ -37,6 +37,7 @@ import org.bouncycastle.openpgp.PGPPrivateKey;
 import org.bouncycastle.openpgp.PGPPublicKey;
 import org.bouncycastle.openpgp.PGPSignature;
 import org.bouncycastle.openpgp.PGPSignatureGenerator;
+import org.bouncycastle.openpgp.operator.bc.BcPBEKeyEncryptionMethodGenerator;
 import org.bouncycastle.openpgp.operator.bc.BcPGPContentSignerBuilder;
 import org.bouncycastle.openpgp.operator.bc.BcPGPDataEncryptorBuilder;
 import org.bouncycastle.openpgp.operator.bc.BcPublicKeyKeyEncryptionMethodGenerator;
@@ -47,6 +48,7 @@ import org.pgpainless.algorithm.SymmetricKeyAlgorithm;
 import org.pgpainless.decryption_verification.DetachedSignature;
 import org.pgpainless.decryption_verification.OpenPgpMetadata;
 import org.pgpainless.key.OpenPgpV4Fingerprint;
+import org.pgpainless.util.Passphrase;
 
 /**
  * This class is based upon Jens Neuhalfen's Bouncy-GPG PGPEncryptingStream.
@@ -63,6 +65,7 @@ public final class EncryptionStream extends OutputStream {
     private final HashAlgorithm hashAlgorithm;
     private final CompressionAlgorithm compressionAlgorithm;
     private final Set<PGPPublicKey> encryptionKeys;
+    private final Set<Passphrase> encryptionPassphrases;
     private final boolean detachedSignature;
     private final SignatureType signatureType;
     private final Map<OpenPgpV4Fingerprint, PGPPrivateKey> signingKeys;
@@ -86,6 +89,7 @@ public final class EncryptionStream extends OutputStream {
 
     EncryptionStream(@Nonnull OutputStream targetOutputStream,
                      @Nonnull Set<PGPPublicKey> encryptionKeys,
+                     @Nonnull Set<Passphrase> encryptionPassphrases,
                      boolean detachedSignature,
                      SignatureType signatureType,
                      @Nonnull Map<OpenPgpV4Fingerprint, PGPPrivateKey> signingKeys,
@@ -99,6 +103,7 @@ public final class EncryptionStream extends OutputStream {
         this.hashAlgorithm = hashAlgorithm;
         this.compressionAlgorithm = compressionAlgorithm;
         this.encryptionKeys = Collections.unmodifiableSet(encryptionKeys);
+        this.encryptionPassphrases = Collections.unmodifiableSet(encryptionPassphrases);
         this.detachedSignature = detachedSignature;
         this.signatureType = signatureType;
         this.signingKeys = Collections.unmodifiableMap(signingKeys);
@@ -126,7 +131,7 @@ public final class EncryptionStream extends OutputStream {
     }
 
     private void prepareEncryption() throws IOException, PGPException {
-        if (encryptionKeys.isEmpty()) {
+        if (encryptionKeys.isEmpty() && encryptionPassphrases.isEmpty()) {
             return;
         }
 
@@ -141,6 +146,10 @@ public final class EncryptionStream extends OutputStream {
         for (PGPPublicKey key : encryptionKeys) {
             LOGGER.log(LEVEL, "Encrypt for key " + Long.toHexString(key.getKeyID()));
             encryptedDataGenerator.addMethod(new BcPublicKeyKeyEncryptionMethodGenerator(key));
+        }
+
+        for (Passphrase passphrase : encryptionPassphrases) {
+            encryptedDataGenerator.addMethod(new BcPBEKeyEncryptionMethodGenerator(passphrase.getChars()));
         }
 
         publicKeyEncryptedStream = encryptedDataGenerator.open(outermostStream, new byte[BUFFER_SIZE]);

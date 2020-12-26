@@ -31,6 +31,7 @@ import org.bouncycastle.openpgp.PGPSignature;
 import org.pgpainless.key.OpenPgpV4Fingerprint;
 import org.pgpainless.key.protection.SecretKeyRingProtector;
 import org.pgpainless.key.protection.UnprotectedKeysProtector;
+import org.pgpainless.util.Passphrase;
 
 public interface DecryptionBuilderInterface {
 
@@ -66,6 +67,15 @@ public interface DecryptionBuilderInterface {
          * @return api handle
          */
         Verify decryptWith(@Nonnull SecretKeyRingProtector decryptor, @Nonnull PGPSecretKeyRingCollection secretKeyRings);
+
+        /**
+         * Decrypt the encrypted data using a passphrase.
+         * Note: The passphrase MUST NOT be empty.
+         *
+         * @param passphrase passphrase
+         * @return api handle
+         */
+        Verify decryptWith(@Nonnull Passphrase passphrase);
 
         Verify doNotDecrypt();
 

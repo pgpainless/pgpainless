@@ -30,12 +30,14 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import org.bouncycastle.openpgp.PGPCompressedData;
+import org.bouncycastle.openpgp.PGPEncryptedData;
 import org.bouncycastle.openpgp.PGPEncryptedDataList;
 import org.bouncycastle.openpgp.PGPException;
 import org.bouncycastle.openpgp.PGPLiteralData;
 import org.bouncycastle.openpgp.PGPObjectFactory;
 import org.bouncycastle.openpgp.PGPOnePassSignature;
 import org.bouncycastle.openpgp.PGPOnePassSignatureList;
+import org.bouncycastle.openpgp.PGPPBEEncryptedData;
 import org.bouncycastle.openpgp.PGPPrivateKey;
 import org.bouncycastle.openpgp.PGPPublicKey;
 import org.bouncycastle.openpgp.PGPPublicKeyEncryptedData;
@@ -45,15 +47,19 @@ import org.bouncycastle.openpgp.PGPSecretKeyRingCollection;
 import org.bouncycastle.openpgp.PGPSignature;
 import org.bouncycastle.openpgp.PGPUtil;
 import org.bouncycastle.openpgp.operator.KeyFingerPrintCalculator;
+import org.bouncycastle.openpgp.operator.PBEDataDecryptorFactory;
 import org.bouncycastle.openpgp.operator.PGPContentVerifierBuilderProvider;
 import org.bouncycastle.openpgp.operator.PublicKeyDataDecryptorFactory;
 import org.bouncycastle.openpgp.operator.bc.BcKeyFingerprintCalculator;
+import org.bouncycastle.openpgp.operator.bc.BcPBEDataDecryptorFactory;
 import org.bouncycastle.openpgp.operator.bc.BcPGPContentVerifierBuilderProvider;
+import org.bouncycastle.openpgp.operator.bc.BcPGPDigestCalculatorProvider;
 import org.bouncycastle.openpgp.operator.bc.BcPublicKeyDataDecryptorFactory;
 import org.pgpainless.algorithm.CompressionAlgorithm;
 import org.pgpainless.algorithm.SymmetricKeyAlgorithm;
 import org.pgpainless.key.OpenPgpV4Fingerprint;
 import org.pgpainless.key.protection.SecretKeyRingProtector;
+import org.pgpainless.util.Passphrase;
 
 public final class DecryptionStreamFactory {
 
@@ -62,6 +68,7 @@ public final class DecryptionStreamFactory {
 
     private final PGPSecretKeyRingCollection decryptionKeys;
     private final SecretKeyRingProtector decryptionKeyDecryptor;
+    private final Passphrase decryptionPassphrase;
     private final Set<PGPPublicKeyRing> verificationKeys = new HashSet<>();
     private final MissingPublicKeyCallback missingPublicKeyCallback;
 
@@ -72,10 +79,12 @@ public final class DecryptionStreamFactory {
 
     private DecryptionStreamFactory(@Nullable PGPSecretKeyRingCollection decryptionKeys,
                                     @Nullable SecretKeyRingProtector decryptor,
+                                    @Nullable Passphrase decryptionPassphrase,
                                     @Nullable Set<PGPPublicKeyRing> verificationKeys,
                                     @Nullable MissingPublicKeyCallback missingPublicKeyCallback) {
         this.decryptionKeys = decryptionKeys;
         this.decryptionKeyDecryptor = decryptor;
+        this.decryptionPassphrase = decryptionPassphrase;
         this.verificationKeys.addAll(verificationKeys != null ? verificationKeys : Collections.emptyList());
         this.missingPublicKeyCallback = missingPublicKeyCallback;
     }
@@ -83,13 +92,14 @@ public final class DecryptionStreamFactory {
     public static DecryptionStream create(@Nonnull InputStream inputStream,
                                           @Nullable PGPSecretKeyRingCollection decryptionKeys,
                                           @Nullable SecretKeyRingProtector decryptor,
+                                          @Nullable Passphrase decryptionPassphrase,
                                           @Nullable List<PGPSignature> detachedSignatures,
                                           @Nullable Set<PGPPublicKeyRing> verificationKeys,
                                           @Nullable MissingPublicKeyCallback missingPublicKeyCallback)
             throws IOException, PGPException {
         InputStream pgpInputStream;
-        DecryptionStreamFactory factory = new DecryptionStreamFactory(decryptionKeys, decryptor, verificationKeys,
-                missingPublicKeyCallback);
+        DecryptionStreamFactory factory = new DecryptionStreamFactory(decryptionKeys, decryptor,
+                decryptionPassphrase, verificationKeys, missingPublicKeyCallback);
 
         if (detachedSignatures != null) {
             pgpInputStream = inputStream;
@@ -171,7 +181,7 @@ public final class DecryptionStreamFactory {
 
     private InputStream decrypt(@Nonnull PGPEncryptedDataList encryptedDataList)
             throws PGPException {
-        Iterator<?> encryptedDataIterator = encryptedDataList.getEncryptedDataObjects();
+        Iterator<PGPEncryptedData> encryptedDataIterator = encryptedDataList.getEncryptedDataObjects();
         if (!encryptedDataIterator.hasNext()) {
             throw new PGPException("Decryption failed - EncryptedDataList has no items");
         }
@@ -179,19 +189,38 @@ public final class DecryptionStreamFactory {
         PGPPrivateKey decryptionKey = null;
         PGPPublicKeyEncryptedData encryptedSessionKey = null;
         while (encryptedDataIterator.hasNext()) {
-            PGPPublicKeyEncryptedData encryptedData = (PGPPublicKeyEncryptedData) encryptedDataIterator.next();
-            long keyId = encryptedData.getKeyID();
+            PGPEncryptedData encryptedData = encryptedDataIterator.next();
 
-            resultBuilder.addRecipientKeyId(keyId);
-            LOGGER.log(LEVEL, "PGPEncryptedData is encrypted for key " + Long.toHexString(keyId));
+            if (encryptedData instanceof PGPPBEEncryptedData) {
 
-            PGPSecretKey secretKey = decryptionKeys.getSecretKey(keyId);
-            if (secretKey != null) {
-                LOGGER.log(LEVEL, "Found respective secret key " + Long.toHexString(keyId));
-                // Watch out! This assignment is possibly done multiple times.
-                encryptedSessionKey = encryptedData;
-                decryptionKey = secretKey.extractPrivateKey(decryptionKeyDecryptor.getDecryptor(keyId));
-                resultBuilder.setDecryptionFingerprint(new OpenPgpV4Fingerprint(secretKey));
+                PGPPBEEncryptedData pbeEncryptedData = (PGPPBEEncryptedData) encryptedData;
+                if (decryptionPassphrase != null) {
+                    PBEDataDecryptorFactory passphraseDecryptor = new BcPBEDataDecryptorFactory(
+                            decryptionPassphrase.getChars(), new BcPGPDigestCalculatorProvider());
+                    SymmetricKeyAlgorithm symmetricKeyAlgorithm = SymmetricKeyAlgorithm.fromId(
+                            pbeEncryptedData.getSymmetricAlgorithm(passphraseDecryptor));
+                    resultBuilder.setSymmetricKeyAlgorithm(symmetricKeyAlgorithm);
+                    resultBuilder.setIntegrityProtected(pbeEncryptedData.isIntegrityProtected());
+                    return pbeEncryptedData.getDataStream(passphraseDecryptor);
+                }
+
+            } else if (encryptedData instanceof PGPPublicKeyEncryptedData) {
+                PGPPublicKeyEncryptedData publicKeyEncryptedData = (PGPPublicKeyEncryptedData) encryptedData;
+                long keyId = publicKeyEncryptedData.getKeyID();
+
+                resultBuilder.addRecipientKeyId(keyId);
+                LOGGER.log(LEVEL, "PGPEncryptedData is encrypted for key " + Long.toHexString(keyId));
+
+                if (decryptionKeys != null) {
+                    PGPSecretKey secretKey = decryptionKeys.getSecretKey(keyId);
+                    if (secretKey != null) {
+                        LOGGER.log(LEVEL, "Found respective secret key " + Long.toHexString(keyId));
+                        // Watch out! This assignment is possibly done multiple times.
+                        encryptedSessionKey = publicKeyEncryptedData;
+                        decryptionKey = secretKey.extractPrivateKey(decryptionKeyDecryptor.getDecryptor(keyId));
+                        resultBuilder.setDecryptionFingerprint(new OpenPgpV4Fingerprint(secretKey));
+                    }
+                }
             }
         }
 
@@ -200,6 +229,7 @@ public final class DecryptionStreamFactory {
         }
 
         PublicKeyDataDecryptorFactory keyDecryptor = new BcPublicKeyDataDecryptorFactory(decryptionKey);
+
         SymmetricKeyAlgorithm symmetricKeyAlgorithm = SymmetricKeyAlgorithm
                 .fromId(encryptedSessionKey.getSymmetricAlgorithm(keyDecryptor));
 

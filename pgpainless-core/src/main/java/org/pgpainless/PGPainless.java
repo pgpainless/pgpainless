@@ -116,7 +116,10 @@ public class PGPainless {
      *
      * @throws IOException IO is dangerous.
      * @throws PGPException PGP is brittle.
+     * @deprecated use {@link #encryptAndOrSign()} instead and provide a passphrase in
+     * {@link org.pgpainless.encryption_signing.EncryptionBuilderInterface.ToRecipients#forPassphrases(Passphrase...)}.
      */
+    @Deprecated
     public static byte[] encryptWithPassword(@Nonnull byte[] data, @Nonnull Passphrase password, @Nonnull SymmetricKeyAlgorithm algorithm) throws IOException, PGPException {
         return SymmetricEncryptorDecryptor.symmetricallyEncrypt(data, password,
                 algorithm, CompressionAlgorithm.UNCOMPRESSED);
@@ -131,7 +134,10 @@ public class PGPainless {
      * @return decrypted data.
      * @throws IOException IO is dangerous.
      * @throws PGPException PGP is brittle.
+     * @deprecated Use {@link #decryptAndOrVerify()} instead and provide the decryption passphrase in
+     * {@link org.pgpainless.decryption_verification.DecryptionBuilder.DecryptWith#decryptWith(Passphrase)}.
      */
+    @Deprecated
     public static byte[] decryptWithPassword(@Nonnull byte[] data, @Nonnull Passphrase password) throws IOException, PGPException {
         return SymmetricEncryptorDecryptor.symmetricallyDecrypt(data, password);
     }

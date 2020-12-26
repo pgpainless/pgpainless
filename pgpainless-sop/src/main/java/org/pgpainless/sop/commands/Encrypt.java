@@ -15,6 +15,17 @@
  */
 package org.pgpainless.sop.commands;
 
+import static org.pgpainless.sop.Print.err_ln;
+import static org.pgpainless.sop.Print.print_ln;
+
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.IOException;
+import java.io.InputStream;
+import java.util.HashMap;
+import java.util.Map;
+import java.util.Scanner;
+
 import org.bouncycastle.openpgp.PGPException;
 import org.bouncycastle.openpgp.PGPPublicKeyRing;
 import org.bouncycastle.openpgp.PGPSecretKey;
@@ -31,17 +42,6 @@ import org.pgpainless.key.protection.KeyRingProtectionSettings;
 import org.pgpainless.key.protection.PassphraseMapKeyRingProtector;
 import org.pgpainless.util.Passphrase;
 import picocli.CommandLine;
-
-import java.io.File;
-import java.io.FileInputStream;
-import java.io.IOException;
-import java.io.InputStream;
-import java.util.HashMap;
-import java.util.Map;
-import java.util.Scanner;
-
-import static org.pgpainless.sop.Print.err_ln;
-import static org.pgpainless.sop.Print.print_ln;
 
 @CommandLine.Command(name = "encrypt",
         description = "Encrypt a message from standard input")
@@ -107,6 +107,11 @@ public class Encrypt implements Runnable {
                 System.exit(1);
             }
         }
+        Passphrase[] passphraseArray = new Passphrase[withPassword.length];
+        for (int i = 0; i < withPassword.length; i++) {
+            String password = withPassword[i];
+            passphraseArray[i] = Passphrase.fromPassword(password);
+        }
 
         Map<Long, Passphrase> passphraseMap = new HashMap<>();
         Scanner scanner = null;
@@ -137,6 +142,8 @@ public class Encrypt implements Runnable {
         EncryptionBuilderInterface.DetachedSign builder = PGPainless.encryptAndOrSign()
                 .onOutputStream(System.out)
                 .toRecipients(publicKeys)
+                .and()
+                .forPassphrases(passphraseArray)
                 .usingSecureAlgorithms();
         EncryptionBuilderInterface.Armor builder_armor;
         if (signWith.length != 0) {
