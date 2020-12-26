@@ -201,7 +201,12 @@ public final class DecryptionStreamFactory {
                             pbeEncryptedData.getSymmetricAlgorithm(passphraseDecryptor));
                     resultBuilder.setSymmetricKeyAlgorithm(symmetricKeyAlgorithm);
                     resultBuilder.setIntegrityProtected(pbeEncryptedData.isIntegrityProtected());
-                    return pbeEncryptedData.getDataStream(passphraseDecryptor);
+
+                    try {
+                        return pbeEncryptedData.getDataStream(passphraseDecryptor);
+                    } catch (PGPException e) {
+                        LOGGER.log(LEVEL, "Probable passphrase mismatch, skip PBE encrypted data block", e);
+                    }
                 }
 
             } else if (encryptedData instanceof PGPPublicKeyEncryptedData) {
@@ -225,7 +230,7 @@ public final class DecryptionStreamFactory {
         }
 
         if (decryptionKey == null) {
-            throw new PGPException("Decryption failed - No suitable decryption key found");
+            throw new PGPException("Decryption failed - No suitable decryption key or passphrase found");
         }
 
         PublicKeyDataDecryptorFactory keyDecryptor = new BcPublicKeyDataDecryptorFactory(decryptionKey);
