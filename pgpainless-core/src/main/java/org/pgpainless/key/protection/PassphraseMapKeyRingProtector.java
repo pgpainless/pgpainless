@@ -15,10 +15,10 @@
  */
 package org.pgpainless.key.protection;
 
-import javax.annotation.Nonnull;
-import javax.annotation.Nullable;
 import java.util.HashMap;
 import java.util.Map;
+import javax.annotation.Nonnull;
+import javax.annotation.Nullable;
 
 import org.bouncycastle.openpgp.PGPException;
 import org.bouncycastle.openpgp.operator.PBESecretKeyDecryptor;
@@ -69,7 +69,7 @@ public class PassphraseMapKeyRingProtector implements SecretKeyRingProtector, Se
 
     @Override
     @Nullable
-    public Passphrase getPassphraseFor(@Nonnull Long keyId) {
+    public Passphrase getPassphraseFor(Long keyId) {
         Passphrase passphrase = cache.get(keyId);
         if (passphrase == null || !passphrase.isValid()) {
             passphrase = provider.getPassphraseFor(keyId);
@@ -82,7 +82,7 @@ public class PassphraseMapKeyRingProtector implements SecretKeyRingProtector, Se
 
     @Override
     @Nullable
-    public PBESecretKeyDecryptor getDecryptor(@Nonnull Long keyId) {
+    public PBESecretKeyDecryptor getDecryptor(@Nonnull Long keyId) throws PGPException {
         return protector.getDecryptor(keyId);
     }
 

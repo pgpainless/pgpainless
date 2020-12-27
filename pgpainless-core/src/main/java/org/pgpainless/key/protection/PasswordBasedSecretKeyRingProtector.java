@@ -23,10 +23,7 @@ import org.bouncycastle.openpgp.PGPKeyRing;
 import org.bouncycastle.openpgp.PGPSecretKey;
 import org.bouncycastle.openpgp.operator.PBESecretKeyDecryptor;
 import org.bouncycastle.openpgp.operator.PBESecretKeyEncryptor;
-import org.bouncycastle.openpgp.operator.PGPDigestCalculatorProvider;
-import org.bouncycastle.openpgp.operator.bc.BcPBESecretKeyDecryptorBuilder;
-import org.bouncycastle.openpgp.operator.bc.BcPBESecretKeyEncryptorBuilder;
-import org.bouncycastle.openpgp.operator.bc.BcPGPDigestCalculatorProvider;
+import org.pgpainless.implementation.ImplementationFactory;
 import org.pgpainless.key.protection.passphrase_provider.SecretKeyPassphraseProvider;
 import org.pgpainless.util.Passphrase;
 
@@ -35,8 +32,6 @@ import org.pgpainless.util.Passphrase;
  * from a {@link SecretKeyPassphraseProvider} and using settings from an {@link KeyRingProtectionSettings}.
  */
 public class PasswordBasedSecretKeyRingProtector implements SecretKeyRingProtector {
-
-    private static final PGPDigestCalculatorProvider calculatorProvider = new BcPGPDigestCalculatorProvider();
 
     protected final KeyRingProtectionSettings protectionSettings;
     protected final SecretKeyPassphraseProvider passphraseProvider;
@@ -86,11 +81,10 @@ public class PasswordBasedSecretKeyRingProtector implements SecretKeyRingProtect
 
     @Override
     @Nullable
-    public PBESecretKeyDecryptor getDecryptor(Long keyId) {
+    public PBESecretKeyDecryptor getDecryptor(Long keyId) throws PGPException {
         Passphrase passphrase = passphraseProvider.getPassphraseFor(keyId);
         return passphrase == null ? null :
-                new BcPBESecretKeyDecryptorBuilder(calculatorProvider)
-                        .build(passphrase.getChars());
+                ImplementationFactory.getInstance().getPBESecretKeyDecryptor(passphrase);
     }
 
     @Override
@@ -98,10 +92,10 @@ public class PasswordBasedSecretKeyRingProtector implements SecretKeyRingProtect
     public PBESecretKeyEncryptor getEncryptor(Long keyId) throws PGPException {
         Passphrase passphrase = passphraseProvider.getPassphraseFor(keyId);
         return passphrase == null ? null :
-                new BcPBESecretKeyEncryptorBuilder(
-                        protectionSettings.getEncryptionAlgorithm().getAlgorithmId(),
-                        calculatorProvider.get(protectionSettings.getHashAlgorithm().getAlgorithmId()),
-                        protectionSettings.getS2kCount())
-                        .build(passphrase.getChars());
+                ImplementationFactory.getInstance().getPBESecretKeyEncryptor(
+                        protectionSettings.getEncryptionAlgorithm(),
+                        protectionSettings.getHashAlgorithm(),
+                        protectionSettings.getS2kCount(),
+                        passphrase);
     }
 }

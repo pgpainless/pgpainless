@@ -45,12 +45,10 @@ import org.bouncycastle.openpgp.operator.PBESecretKeyDecryptor;
 import org.bouncycastle.openpgp.operator.PBESecretKeyEncryptor;
 import org.bouncycastle.openpgp.operator.PGPContentSignerBuilder;
 import org.bouncycastle.openpgp.operator.PGPDigestCalculator;
-import org.bouncycastle.openpgp.operator.bc.BcPBESecretKeyEncryptorBuilder;
-import org.bouncycastle.openpgp.operator.bc.BcPGPContentSignerBuilder;
-import org.bouncycastle.openpgp.operator.bc.BcPGPDigestCalculatorProvider;
 import org.pgpainless.algorithm.HashAlgorithm;
 import org.pgpainless.algorithm.SignatureType;
 import org.pgpainless.algorithm.SymmetricKeyAlgorithm;
+import org.pgpainless.implementation.ImplementationFactory;
 import org.pgpainless.key.OpenPgpV4Fingerprint;
 import org.pgpainless.key.generation.KeyRingBuilder;
 import org.pgpainless.key.generation.KeySpec;
@@ -202,10 +200,13 @@ public class SecretKeyRingEditor implements SecretKeyRingEditorInterface {
         PBESecretKeyDecryptor ringDecryptor = keyRingProtector.getDecryptor(primaryKey.getKeyID());
         PBESecretKeyEncryptor subKeyEncryptor = subKeyProtector.getEncryptor(secretSubKey.getKeyID());
 
-        PGPDigestCalculator digestCalculator = new BcPGPDigestCalculatorProvider()
-                .get(defaultDigestHashAlgorithm.getAlgorithmId());
-        PGPContentSignerBuilder contentSignerBuilder = new BcPGPContentSignerBuilder(
-                primaryKey.getAlgorithm(), HashAlgorithm.SHA256.getAlgorithmId());
+        PGPDigestCalculator digestCalculator =
+                ImplementationFactory.getInstance().getPGPDigestCalculator(defaultDigestHashAlgorithm);
+        PGPContentSignerBuilder contentSignerBuilder = ImplementationFactory.getInstance()
+                .getPGPContentSignerBuilder(
+                        primaryKey.getAlgorithm(),
+                        HashAlgorithm.SHA256.getAlgorithmId() // TODO: Why SHA256?
+                );
 
         PGPPrivateKey privateSubKey = unlockSecretKey(secretSubKey, subKeyProtector);
         PGPKeyPair subKeyPair = new PGPKeyPair(secretSubKey.getPublicKey(), privateSubKey);
@@ -222,12 +223,11 @@ public class SecretKeyRingEditor implements SecretKeyRingEditorInterface {
     private PGPSecretKey generateSubKey(@Nonnull KeySpec keySpec,
                                         @Nonnull Passphrase subKeyPassphrase)
             throws PGPException, InvalidAlgorithmParameterException, NoSuchAlgorithmException {
-        PGPDigestCalculator checksumCalculator = new BcPGPDigestCalculatorProvider()
-                .get(defaultDigestHashAlgorithm.getAlgorithmId());
+        PGPDigestCalculator checksumCalculator = ImplementationFactory.getInstance()
+                .getPGPDigestCalculator(defaultDigestHashAlgorithm);
 
         PBESecretKeyEncryptor subKeyEncryptor = subKeyPassphrase.isEmpty() ? null :
-                new BcPBESecretKeyEncryptorBuilder(SymmetricKeyAlgorithm.AES_256.getAlgorithmId())
-                        .build(subKeyPassphrase.getChars());
+                ImplementationFactory.getInstance().getPBESecretKeyEncryptor(SymmetricKeyAlgorithm.AES_256, subKeyPassphrase);
 
         PGPKeyPair keyPair = KeyRingBuilder.generateKeyPair(keySpec);
         PGPSecretKey secretKey = new PGPSecretKey(keyPair.getPrivateKey(), keyPair.getPublicKey(),
@@ -530,8 +530,8 @@ public class SecretKeyRingEditor implements SecretKeyRingEditorInterface {
 
     // TODO: Move to utility class
     private PGPSecretKey lockPrivateKey(PGPPrivateKey privateKey, PGPPublicKey publicKey, SecretKeyRingProtector protector) throws PGPException {
-        PGPDigestCalculator checksumCalculator = new BcPGPDigestCalculatorProvider()
-                .get(defaultDigestHashAlgorithm.getAlgorithmId());
+        PGPDigestCalculator checksumCalculator = ImplementationFactory.getInstance()
+                .getPGPDigestCalculator(defaultDigestHashAlgorithm);
         PBESecretKeyEncryptor encryptor = protector.getEncryptor(publicKey.getKeyID());
         PGPSecretKey secretKey = new PGPSecretKey(privateKey, publicKey, checksumCalculator, publicKey.isMasterKey(), encryptor);
         return secretKey;

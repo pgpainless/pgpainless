@@ -15,7 +15,6 @@
  */
 package org.pgpainless.util;
 
-import javax.annotation.Nonnull;
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
@@ -26,6 +25,7 @@ import java.util.Iterator;
 import java.util.Set;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+import javax.annotation.Nonnull;
 
 import org.bouncycastle.openpgp.PGPException;
 import org.bouncycastle.openpgp.PGPKeyRing;
@@ -38,13 +38,14 @@ import org.bouncycastle.openpgp.PGPSecretKeyRingCollection;
 import org.bouncycastle.openpgp.PGPSignature;
 import org.bouncycastle.openpgp.PGPSignatureSubpacketVector;
 import org.bouncycastle.openpgp.PGPUtil;
-import org.bouncycastle.openpgp.operator.bc.BcKeyFingerprintCalculator;
+import org.bouncycastle.openpgp.operator.KeyFingerPrintCalculator;
 import org.bouncycastle.util.io.Streams;
 import org.pgpainless.algorithm.KeyFlag;
+import org.pgpainless.implementation.ImplementationFactory;
 import org.pgpainless.key.selection.key.PublicKeySelectionStrategy;
-import org.pgpainless.key.selection.key.util.And;
 import org.pgpainless.key.selection.key.impl.NoRevocation;
 import org.pgpainless.key.selection.key.impl.SignedByMasterKey;
+import org.pgpainless.key.selection.key.util.And;
 
 public class BCUtil {
 
@@ -72,8 +73,9 @@ public class BCUtil {
                 publicKey.encode(buffer, false);
             }
         }
+        KeyFingerPrintCalculator fingerprintCalculator = ImplementationFactory.getInstance().getKeyFingerprintCalculator();
 
-        return new PGPPublicKeyRing(buffer.toByteArray(), new BcKeyFingerprintCalculator());
+        return new PGPPublicKeyRing(buffer.toByteArray(), fingerprintCalculator);
     }
 
     /*

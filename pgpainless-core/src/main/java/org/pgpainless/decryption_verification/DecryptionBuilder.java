@@ -34,7 +34,7 @@ import org.bouncycastle.openpgp.PGPSignature;
 import org.bouncycastle.openpgp.PGPSignatureList;
 import org.bouncycastle.openpgp.PGPUtil;
 import org.bouncycastle.openpgp.operator.KeyFingerPrintCalculator;
-import org.bouncycastle.openpgp.operator.bc.BcKeyFingerprintCalculator;
+import org.pgpainless.implementation.ImplementationFactory;
 import org.pgpainless.key.OpenPgpV4Fingerprint;
 import org.pgpainless.key.protection.SecretKeyRingProtector;
 import org.pgpainless.util.Passphrase;
@@ -49,7 +49,8 @@ public class DecryptionBuilder implements DecryptionBuilderInterface {
     private Set<PGPPublicKeyRing> verificationKeys = new HashSet<>();
     private MissingPublicKeyCallback missingPublicKeyCallback = null;
 
-    private final KeyFingerPrintCalculator keyFingerPrintCalculator = new BcKeyFingerprintCalculator();
+    private final KeyFingerPrintCalculator keyFingerPrintCalculator =
+            ImplementationFactory.getInstance().getKeyFingerprintCalculator();
 
     @Override
     public DecryptWith onInputStream(@Nonnull InputStream inputStream) {

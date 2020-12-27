@@ -15,8 +15,6 @@
  */
 package org.pgpainless.decryption_verification;
 
-import javax.annotation.Nonnull;
-import javax.annotation.Nullable;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.Collections;
@@ -28,6 +26,8 @@ import java.util.Map;
 import java.util.Set;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+import javax.annotation.Nonnull;
+import javax.annotation.Nullable;
 
 import org.bouncycastle.openpgp.PGPCompressedData;
 import org.bouncycastle.openpgp.PGPEncryptedData;
@@ -50,13 +50,9 @@ import org.bouncycastle.openpgp.operator.KeyFingerPrintCalculator;
 import org.bouncycastle.openpgp.operator.PBEDataDecryptorFactory;
 import org.bouncycastle.openpgp.operator.PGPContentVerifierBuilderProvider;
 import org.bouncycastle.openpgp.operator.PublicKeyDataDecryptorFactory;
-import org.bouncycastle.openpgp.operator.bc.BcKeyFingerprintCalculator;
-import org.bouncycastle.openpgp.operator.bc.BcPBEDataDecryptorFactory;
-import org.bouncycastle.openpgp.operator.bc.BcPGPContentVerifierBuilderProvider;
-import org.bouncycastle.openpgp.operator.bc.BcPGPDigestCalculatorProvider;
-import org.bouncycastle.openpgp.operator.bc.BcPublicKeyDataDecryptorFactory;
 import org.pgpainless.algorithm.CompressionAlgorithm;
 import org.pgpainless.algorithm.SymmetricKeyAlgorithm;
+import org.pgpainless.implementation.ImplementationFactory;
 import org.pgpainless.key.OpenPgpV4Fingerprint;
 import org.pgpainless.key.protection.SecretKeyRingProtector;
 import org.pgpainless.util.Passphrase;
@@ -73,8 +69,8 @@ public final class DecryptionStreamFactory {
     private final MissingPublicKeyCallback missingPublicKeyCallback;
 
     private final OpenPgpMetadata.Builder resultBuilder = OpenPgpMetadata.getBuilder();
-    private final PGPContentVerifierBuilderProvider verifierBuilderProvider = new BcPGPContentVerifierBuilderProvider();
-    private final KeyFingerPrintCalculator keyFingerprintCalculator = new BcKeyFingerprintCalculator();
+    private static final PGPContentVerifierBuilderProvider verifierBuilderProvider = ImplementationFactory.getInstance().getPGPContentVerifierBuilderProvider();
+    private static final KeyFingerPrintCalculator keyFingerprintCalculator = ImplementationFactory.getInstance().getKeyFingerprintCalculator();
     private final Map<OpenPgpV4Fingerprint, OnePassSignature> verifiableOnePassSignatures = new HashMap<>();
 
     private DecryptionStreamFactory(@Nullable PGPSecretKeyRingCollection decryptionKeys,
@@ -108,13 +104,13 @@ public final class DecryptionStreamFactory {
                 if (signingKey == null) {
                     continue;
                 }
-                signature.init(new BcPGPContentVerifierBuilderProvider(), signingKey);
+                signature.init(ImplementationFactory.getInstance().getPGPContentVerifierBuilderProvider(), signingKey);
                 factory.resultBuilder.addDetachedSignature(
                         new DetachedSignature(signature, new OpenPgpV4Fingerprint(signingKey)));
             }
         } else {
             PGPObjectFactory objectFactory = new PGPObjectFactory(
-                    PGPUtil.getDecoderStream(inputStream), new BcKeyFingerprintCalculator());
+                    PGPUtil.getDecoderStream(inputStream), keyFingerprintCalculator);
             pgpInputStream = factory.processPGPPackets(objectFactory);
         }
         return new DecryptionStream(pgpInputStream, factory.resultBuilder);
@@ -195,8 +191,8 @@ public final class DecryptionStreamFactory {
 
                 PGPPBEEncryptedData pbeEncryptedData = (PGPPBEEncryptedData) encryptedData;
                 if (decryptionPassphrase != null) {
-                    PBEDataDecryptorFactory passphraseDecryptor = new BcPBEDataDecryptorFactory(
-                            decryptionPassphrase.getChars(), new BcPGPDigestCalculatorProvider());
+                    PBEDataDecryptorFactory passphraseDecryptor = ImplementationFactory.getInstance()
+                            .getPBEDataDecryptorFactory(decryptionPassphrase);
                     SymmetricKeyAlgorithm symmetricKeyAlgorithm = SymmetricKeyAlgorithm.fromId(
                             pbeEncryptedData.getSymmetricAlgorithm(passphraseDecryptor));
                     resultBuilder.setSymmetricKeyAlgorithm(symmetricKeyAlgorithm);
@@ -233,7 +229,8 @@ public final class DecryptionStreamFactory {
             throw new PGPException("Decryption failed - No suitable decryption key or passphrase found");
         }
 
-        PublicKeyDataDecryptorFactory keyDecryptor = new BcPublicKeyDataDecryptorFactory(decryptionKey);
+        PublicKeyDataDecryptorFactory keyDecryptor = ImplementationFactory.getInstance()
+                .getPublicKeyDataDecryptorFactory(decryptionKey);
 
         SymmetricKeyAlgorithm symmetricKeyAlgorithm = SymmetricKeyAlgorithm
                 .fromId(encryptedSessionKey.getSymmetricAlgorithm(keyDecryptor));
@@ -275,9 +272,10 @@ public final class DecryptionStreamFactory {
         }
 
         signature.init(verifierBuilderProvider, verificationKey);
-        OnePassSignature onePassSignature = new OnePassSignature(signature, new OpenPgpV4Fingerprint(verificationKey));
+        OpenPgpV4Fingerprint fingerprint = new OpenPgpV4Fingerprint(verificationKey);
+        OnePassSignature onePassSignature = new OnePassSignature(signature, fingerprint);
         resultBuilder.addOnePassSignature(onePassSignature);
-        verifiableOnePassSignatures.put(new OpenPgpV4Fingerprint(verificationKey), onePassSignature);
+        verifiableOnePassSignatures.put(fingerprint, onePassSignature);
     }
 
     private PGPPublicKey findSignatureVerificationKey(long keyId) {

@@ -15,11 +15,19 @@
  */
 package org.pgpainless.sop.commands;
 
+import org.bouncycastle.openpgp.PGPException;
+import org.bouncycastle.openpgp.PGPSecretKey;
+import org.bouncycastle.openpgp.PGPSecretKeyRing;
+import org.bouncycastle.openpgp.PGPSecretKeyRingCollection;
+import org.pgpainless.PGPainless;
 import picocli.CommandLine;
 
 import java.io.File;
+import java.io.IOException;
+import java.util.List;
 
 import static org.pgpainless.sop.Print.err_ln;
+import static org.pgpainless.sop.SopKeyUtil.loadKeysFromFiles;
 
 @CommandLine.Command(name = "decrypt",
         description = "Decrypt a message from standard input")
@@ -79,5 +87,26 @@ public class Decrypt implements Runnable {
             err_ln("To enable signature verification, both --verify-out and at least one --verify-with argument must be supplied.");
             System.exit(23);
         }
+
+        if (sessionKeyOut != null || withSessionKey != null) {
+            err_ln("session key in and out are not yet supported.");
+            System.exit(1);
+        }
+
+        PGPSecretKeyRingCollection secretKeys;
+        try {
+            List<PGPSecretKeyRing> secretKeyRings = loadKeysFromFiles(keys);
+            secretKeys = new PGPSecretKeyRingCollection(secretKeyRings);
+        } catch (PGPException | IOException e) {
+            err_ln(e.getMessage());
+            System.exit(1);
+            return;
+        }
+
+
+
+        PGPainless.decryptAndOrVerify()
+                .onInputStream(System.in)
+                .decryptWith(secretKeys);
     }
 }

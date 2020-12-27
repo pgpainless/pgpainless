@@ -37,16 +37,19 @@ import org.bouncycastle.openpgp.PGPPrivateKey;
 import org.bouncycastle.openpgp.PGPPublicKey;
 import org.bouncycastle.openpgp.PGPSignature;
 import org.bouncycastle.openpgp.PGPSignatureGenerator;
-import org.bouncycastle.openpgp.operator.bc.BcPBEKeyEncryptionMethodGenerator;
-import org.bouncycastle.openpgp.operator.bc.BcPGPContentSignerBuilder;
+import org.bouncycastle.openpgp.operator.PBEKeyEncryptionMethodGenerator;
+import org.bouncycastle.openpgp.operator.PGPContentSignerBuilder;
+import org.bouncycastle.openpgp.operator.PGPDataEncryptorBuilder;
+import org.bouncycastle.openpgp.operator.PublicKeyKeyEncryptionMethodGenerator;
 import org.bouncycastle.openpgp.operator.bc.BcPGPDataEncryptorBuilder;
-import org.bouncycastle.openpgp.operator.bc.BcPublicKeyKeyEncryptionMethodGenerator;
+import org.bouncycastle.openpgp.operator.jcajce.JcePGPDataEncryptorBuilder;
 import org.pgpainless.algorithm.CompressionAlgorithm;
 import org.pgpainless.algorithm.HashAlgorithm;
 import org.pgpainless.algorithm.SignatureType;
 import org.pgpainless.algorithm.SymmetricKeyAlgorithm;
 import org.pgpainless.decryption_verification.DetachedSignature;
 import org.pgpainless.decryption_verification.OpenPgpMetadata;
+import org.pgpainless.implementation.ImplementationFactory;
 import org.pgpainless.key.OpenPgpV4Fingerprint;
 import org.pgpainless.util.Passphrase;
 
@@ -136,20 +139,30 @@ public final class EncryptionStream extends OutputStream {
         }
 
         LOGGER.log(LEVEL, "At least one encryption key is available -> encrypt using " + symmetricKeyAlgorithm);
-        BcPGPDataEncryptorBuilder dataEncryptorBuilder =
-                new BcPGPDataEncryptorBuilder(symmetricKeyAlgorithm.getAlgorithmId());
+        PGPDataEncryptorBuilder dataEncryptorBuilder =
+                ImplementationFactory.getInstance().getPGPDataEncryptorBuilder(symmetricKeyAlgorithm);
 
-        dataEncryptorBuilder.setWithIntegrityPacket(true);
+        // Simplify once https://github.com/bcgit/bc-java/pull/859 is merged
+        if (dataEncryptorBuilder instanceof BcPGPDataEncryptorBuilder) {
+            ((BcPGPDataEncryptorBuilder) dataEncryptorBuilder).setWithIntegrityPacket(true);
+        } else if (dataEncryptorBuilder instanceof JcePGPDataEncryptorBuilder) {
+            ((JcePGPDataEncryptorBuilder) dataEncryptorBuilder).setWithIntegrityPacket(true);
+        }
+
         PGPEncryptedDataGenerator encryptedDataGenerator =
                 new PGPEncryptedDataGenerator(dataEncryptorBuilder);
 
         for (PGPPublicKey key : encryptionKeys) {
             LOGGER.log(LEVEL, "Encrypt for key " + Long.toHexString(key.getKeyID()));
-            encryptedDataGenerator.addMethod(new BcPublicKeyKeyEncryptionMethodGenerator(key));
+            PublicKeyKeyEncryptionMethodGenerator keyEncryption =
+                    ImplementationFactory.getInstance().getPublicKeyKeyEncryptionMethodGenerator(key);
+            encryptedDataGenerator.addMethod(keyEncryption);
         }
 
         for (Passphrase passphrase : encryptionPassphrases) {
-            encryptedDataGenerator.addMethod(new BcPBEKeyEncryptionMethodGenerator(passphrase.getChars()));
+            PBEKeyEncryptionMethodGenerator passphraseEncryption =
+                    ImplementationFactory.getInstance().getPBEKeyEncryptionMethodGenerator(passphrase);
+            encryptedDataGenerator.addMethod(passphraseEncryption);
         }
 
         publicKeyEncryptedStream = encryptedDataGenerator.open(outermostStream, new byte[BUFFER_SIZE]);
@@ -165,8 +178,10 @@ public final class EncryptionStream extends OutputStream {
         for (OpenPgpV4Fingerprint fingerprint : signingKeys.keySet()) {
             PGPPrivateKey privateKey = signingKeys.get(fingerprint);
             LOGGER.log(LEVEL, "Sign using key " + fingerprint);
-            BcPGPContentSignerBuilder contentSignerBuilder = new BcPGPContentSignerBuilder(
-                    privateKey.getPublicKeyPacket().getAlgorithm(), hashAlgorithm.getAlgorithmId());
+            PGPContentSignerBuilder contentSignerBuilder = ImplementationFactory.getInstance()
+                    .getPGPContentSignerBuilder(
+                            privateKey.getPublicKeyPacket().getAlgorithm(),
+                            hashAlgorithm.getAlgorithmId());
 
             PGPSignatureGenerator signatureGenerator = new PGPSignatureGenerator(contentSignerBuilder);
             signatureGenerator.init(signatureType.getCode(), privateKey);

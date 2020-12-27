@@ -21,6 +21,7 @@ import static org.junit.jupiter.api.Assertions.assertNull;
 import javax.annotation.Nullable;
 
 import org.bouncycastle.openpgp.PGPException;
+import org.bouncycastle.openpgp.PGPSecretKey;
 import org.junit.jupiter.api.Test;
 import org.pgpainless.key.TestKeys;
 import org.pgpainless.key.protection.passphrase_provider.SecretKeyPassphraseProvider;
@@ -37,7 +38,7 @@ public class PassphraseProtectedKeyTest {
                 @Nullable
                 @Override
                 public Passphrase getPassphraseFor(Long keyId) {
-                    if (keyId == TestKeys.CRYPTIE_KEY_ID) {
+                    if (keyId.equals(TestKeys.CRYPTIE_KEY_ID)) {
                         return new Passphrase(TestKeys.CRYPTIE_PASSWORD.toCharArray());
                     } else {
                         return null;
