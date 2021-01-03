@@ -43,16 +43,6 @@ public class KeySpecBuilder implements KeySpecBuilderInterface {
     }
 
     @Override
-    public WithDetailedConfiguration withDefaultKeyFlags() {
-        return withKeyFlags(
-                KeyFlag.CERTIFY_OTHER,
-                KeyFlag.SIGN_DATA,
-                KeyFlag.ENCRYPT_COMMS,
-                KeyFlag.ENCRYPT_STORAGE,
-                KeyFlag.AUTHENTICATION);
-    }
-
-    @Override
     public KeySpec withInheritedSubPackets() {
         return new KeySpec(type, null, true);
     }

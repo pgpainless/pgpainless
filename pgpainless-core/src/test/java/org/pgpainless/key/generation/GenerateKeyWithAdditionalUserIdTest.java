@@ -30,6 +30,7 @@ import org.bouncycastle.openpgp.PGPPublicKeyRing;
 import org.bouncycastle.openpgp.PGPSecretKeyRing;
 import org.junit.jupiter.api.Test;
 import org.pgpainless.PGPainless;
+import org.pgpainless.algorithm.KeyFlag;
 import org.pgpainless.key.generation.type.KeyType;
 import org.pgpainless.key.generation.type.rsa.RsaLength;
 import org.pgpainless.key.util.KeyRingUtils;
@@ -40,7 +41,7 @@ public class GenerateKeyWithAdditionalUserIdTest {
     public void test() throws InvalidAlgorithmParameterException, NoSuchAlgorithmException, PGPException, IOException {
         PGPSecretKeyRing secretKeys = PGPainless.generateKeyRing()
                 .withMasterKey(KeySpec.getBuilder(KeyType.RSA(RsaLength._3072))
-                        .withDefaultKeyFlags()
+                        .withKeyFlags(KeyFlag.CERTIFY_OTHER, KeyFlag.SIGN_DATA, KeyFlag.ENCRYPT_COMMS)
                         .withDefaultAlgorithms())
                 .withPrimaryUserId("primary@user.id")
                 .withAdditionalUserId("additional@user.id")

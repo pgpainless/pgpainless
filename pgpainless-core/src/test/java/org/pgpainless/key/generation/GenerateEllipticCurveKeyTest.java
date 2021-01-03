@@ -23,6 +23,7 @@ import org.bouncycastle.openpgp.PGPException;
 import org.bouncycastle.openpgp.PGPSecretKeyRing;
 import org.junit.jupiter.api.Test;
 import org.pgpainless.PGPainless;
+import org.pgpainless.algorithm.KeyFlag;
 import org.pgpainless.key.generation.type.KeyType;
 import org.pgpainless.key.generation.type.eddsa.EdDSACurve;
 import org.pgpainless.key.generation.type.xdh.XDHCurve;
@@ -35,10 +36,10 @@ public class GenerateEllipticCurveKeyTest {
     public void test() throws InvalidAlgorithmParameterException, NoSuchAlgorithmException, PGPException, IOException {
         PGPSecretKeyRing keyRing = PGPainless.generateKeyRing()
                 .withSubKey(KeySpec.getBuilder(KeyType.XDH(XDHCurve._X25519))
-                        .withDefaultKeyFlags()
+                        .withKeyFlags(KeyFlag.ENCRYPT_COMMS)
                         .withDefaultAlgorithms())
                 .withMasterKey(KeySpec.getBuilder(KeyType.EDDSA(EdDSACurve._Ed25519))
-                        .withDefaultKeyFlags()
+                        .withKeyFlags(KeyFlag.CERTIFY_OTHER, KeyFlag.SIGN_DATA)
                         .withDefaultAlgorithms())
                 .withPrimaryUserId(UserId.onlyEmail("alice@wonderland.lit").toString())
                 .withoutPassphrase()

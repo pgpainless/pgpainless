@@ -19,6 +19,7 @@ import static org.junit.jupiter.api.Assertions.assertThrows;
 
 import org.junit.jupiter.api.Test;
 import org.pgpainless.PGPainless;
+import org.pgpainless.algorithm.KeyFlag;
 import org.pgpainless.key.generation.type.KeyType;
 import org.pgpainless.key.generation.type.ecc.EllipticCurve;
 import org.pgpainless.key.generation.type.xdh.XDHCurve;
@@ -43,7 +44,7 @@ public class CertificationKeyMustBeAbleToCertifyTest {
                     .generateKeyRing()
                     .withMasterKey(KeySpec
                             .getBuilder(type)
-                            .withDefaultKeyFlags()
+                            .withKeyFlags(KeyFlag.CERTIFY_OTHER, KeyFlag.SIGN_DATA)
                             .withDefaultAlgorithms())
                     .withPrimaryUserId("should@throw.ex")
                     .withoutPassphrase().build());

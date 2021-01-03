@@ -103,7 +103,7 @@ public class KeyRingBuilder implements KeyRingBuilderInterface {
         WithAdditionalUserIdOrPassphrase builder = this
                 .withMasterKey(
                         KeySpec.getBuilder(KeyType.RSA(length))
-                                .withDefaultKeyFlags()
+                                .withKeyFlags(KeyFlag.CERTIFY_OTHER, KeyFlag.SIGN_DATA, KeyFlag.ENCRYPT_COMMS)
                                 .withDefaultAlgorithms())
                 .withPrimaryUserId(userId);
 

@@ -35,6 +35,7 @@ import org.bouncycastle.openpgp.PGPSecretKeyRing;
 import org.bouncycastle.openpgp.PGPSecretKeyRingCollection;
 import org.junit.jupiter.api.Test;
 import org.pgpainless.PGPainless;
+import org.pgpainless.algorithm.KeyFlag;
 import org.pgpainless.key.generation.KeySpec;
 import org.pgpainless.key.generation.type.KeyType;
 import org.pgpainless.key.generation.type.rsa.RsaLength;
@@ -49,8 +50,12 @@ public class BCUtilTest {
             throws PGPException, NoSuchAlgorithmException, InvalidAlgorithmParameterException,
             IOException {
         PGPSecretKeyRing sec = PGPainless.generateKeyRing()
-                .withSubKey(KeySpec.getBuilder(KeyType.RSA(RsaLength._3072)).withDefaultKeyFlags().withDefaultAlgorithms())
-                .withMasterKey(KeySpec.getBuilder(KeyType.RSA(RsaLength._3072)).withDefaultKeyFlags().withDefaultAlgorithms())
+                .withSubKey(KeySpec.getBuilder(KeyType.RSA(RsaLength._3072))
+                        .withKeyFlags(KeyFlag.ENCRYPT_COMMS)
+                        .withDefaultAlgorithms())
+                .withMasterKey(KeySpec.getBuilder(KeyType.RSA(RsaLength._3072))
+                        .withKeyFlags(KeyFlag.CERTIFY_OTHER, KeyFlag.SIGN_DATA)
+                        .withDefaultAlgorithms())
                 .withPrimaryUserId("donald@duck.tails").withoutPassphrase().build();
 
         PGPPublicKeyRing pub = KeyRingUtils.publicKeyRingFrom(sec);

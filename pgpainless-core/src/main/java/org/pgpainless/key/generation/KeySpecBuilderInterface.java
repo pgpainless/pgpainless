@@ -27,8 +27,6 @@ public interface KeySpecBuilderInterface {
 
     WithDetailedConfiguration withKeyFlags(@Nonnull KeyFlag... flags);
 
-    WithDetailedConfiguration withDefaultKeyFlags();
-
     KeySpec withInheritedSubPackets();
 
     interface WithDetailedConfiguration {
