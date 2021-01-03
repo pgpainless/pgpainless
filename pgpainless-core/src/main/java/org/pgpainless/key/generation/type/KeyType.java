@@ -52,12 +52,50 @@ public interface KeyType {
     AlgorithmParameterSpec getAlgorithmSpec();
 
     /**
-     * Return true if the key that is generated from this type is able to carry the CERTIFY_OTHERS key flag.
+     * Return true if the key that is generated from this type is able to carry the SIGN_DATA key flag.
+     * See {@link org.pgpainless.algorithm.KeyFlag#SIGN_DATA}.
+     *
+     * @return true if the key can sign.
+     */
+    boolean canSign();
+
+    /**
+     * Return true if the key that is generated from this type is able to carry the CERTIFY_OTHER key flag.
      * See {@link org.pgpainless.algorithm.KeyFlag#CERTIFY_OTHER}.
      *
-     * @return true if the key is able to certify others
+     * @return true if the key is able to certify other keys
      */
-    boolean canCertify();
+    default boolean canCertify() {
+        return canSign();
+    }
+
+    /**
+     * Return true if the key that is generated from this type is able to carry the AUTHENTICATION key flag.
+     * See {@link org.pgpainless.algorithm.KeyFlag#AUTHENTICATION}.
+     *
+     * @return true if the key is able to be used for authentication purposes.
+     */
+    default boolean canAuthenticate() {
+        return canSign();
+    }
+
+    /**
+     * Return true if the key that is generated from this type is able to carry the ENCRYPT_COMMS key flag.
+     * See {@link org.pgpainless.algorithm.KeyFlag#ENCRYPT_COMMS}.
+     *
+     * @return true if the key can encrypt communication
+     */
+    boolean canEncryptCommunication();
+
+    /**
+     * Return true if the key that is generated from this type is able to carry the ENCRYPT_STORAGE key flag.
+     * See {@link org.pgpainless.algorithm.KeyFlag#ENCRYPT_STORAGE}.
+     *
+     * @return true if the key can encrypt for storage
+     */
+    default boolean canEncryptStorage() {
+        return canEncryptCommunication();
+    }
 
     static KeyType RSA(RsaLength length) {
         return RSA.withLength(length);

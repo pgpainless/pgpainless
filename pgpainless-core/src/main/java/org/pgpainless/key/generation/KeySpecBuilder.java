@@ -38,8 +38,33 @@ public class KeySpecBuilder implements KeySpecBuilderInterface {
 
     @Override
     public WithDetailedConfiguration withKeyFlags(@Nonnull KeyFlag... flags) {
+        assureKeyCanCarryFlags(flags);
         this.hashedSubPackets.setKeyFlags(false, KeyFlag.toBitmask(flags));
         return new WithDetailedConfigurationImpl();
+    }
+
+    private void assureKeyCanCarryFlags(KeyFlag... flags) {
+        final int mask = KeyFlag.toBitmask(flags);
+
+        if (!type.canCertify() && KeyFlag.hasKeyFlag(mask, KeyFlag.CERTIFY_OTHER)) {
+            throw new IllegalArgumentException("KeyType " + type.getName() + " cannot carry key flag CERTIFY_OTHER.");
+        }
+
+        if (!type.canSign() && KeyFlag.hasKeyFlag(mask, KeyFlag.SIGN_DATA)) {
+            throw new IllegalArgumentException("KeyType " + type.getName() + " cannot carry key flag SIGN_DATA.");
+        }
+
+        if (!type.canEncryptCommunication() && KeyFlag.hasKeyFlag(mask, KeyFlag.ENCRYPT_COMMS)) {
+            throw new IllegalArgumentException("KeyType " + type.getName() + " cannot carry key flag ENCRYPT_COMMS.");
+        }
+
+        if (!type.canEncryptStorage() && KeyFlag.hasKeyFlag(mask, KeyFlag.ENCRYPT_STORAGE)) {
+            throw new IllegalArgumentException("KeyType " + type.getName() + " cannot carry key flag ENCRYPT_STORAGE.");
+        }
+
+        if (!type.canAuthenticate() && KeyFlag.hasKeyFlag(mask, KeyFlag.AUTHENTICATION)) {
+            throw new IllegalArgumentException("KeyType " + type.getName() + " cannot carry key flag AUTHENTIACTION.");
+        }
     }
 
     @Override

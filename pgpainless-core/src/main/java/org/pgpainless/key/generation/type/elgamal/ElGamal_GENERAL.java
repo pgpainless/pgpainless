@@ -51,7 +51,12 @@ public class ElGamal_GENERAL implements KeyType {
     }
 
     @Override
-    public boolean canCertify() {
-        return false;
+    public boolean canSign() {
+        return true;
+    }
+
+    @Override
+    public boolean canEncryptCommunication() {
+        return true;
     }
 }

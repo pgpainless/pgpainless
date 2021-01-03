@@ -50,7 +50,13 @@ public final class ElGamal_ENCRYPT implements KeyType {
     }
 
     @Override
-    public boolean canCertify() {
+    public boolean canSign() {
         return false;
     }
+
+    @Override
+    public boolean canEncryptCommunication() {
+        return true;
+    }
+
 }

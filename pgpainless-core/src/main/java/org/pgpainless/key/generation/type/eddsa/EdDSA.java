@@ -52,7 +52,12 @@ public final class EdDSA implements KeyType {
     }
 
     @Override
-    public boolean canCertify() {
+    public boolean canSign() {
         return true;
+    }
+
+    @Override
+    public boolean canEncryptCommunication() {
+        return false;
     }
 }

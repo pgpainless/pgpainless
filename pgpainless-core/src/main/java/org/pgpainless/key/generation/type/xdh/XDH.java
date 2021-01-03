@@ -49,7 +49,12 @@ public final class XDH implements KeyType {
     }
 
     @Override
-    public boolean canCertify() {
+    public boolean canSign() {
         return false;
+    }
+
+    @Override
+    public boolean canEncryptCommunication() {
+        return true;
     }
 }

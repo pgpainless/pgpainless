@@ -53,7 +53,12 @@ public class RSA implements KeyType {
     }
 
     @Override
-    public boolean canCertify() {
+    public boolean canSign() {
+        return true;
+    }
+
+    @Override
+    public boolean canEncryptCommunication() {
         return true;
     }
 }
