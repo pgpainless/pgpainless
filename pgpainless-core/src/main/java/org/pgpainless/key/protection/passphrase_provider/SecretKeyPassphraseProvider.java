@@ -17,6 +17,7 @@ package org.pgpainless.key.protection.passphrase_provider;
 
 import javax.annotation.Nullable;
 
+import org.bouncycastle.openpgp.PGPSecretKey;
 import org.pgpainless.util.Passphrase;
 
 /**
@@ -24,12 +25,15 @@ import org.pgpainless.util.Passphrase;
  */
 public interface SecretKeyPassphraseProvider {
 
+    @Nullable default Passphrase getPassphraseFor(PGPSecretKey secretKey) {
+        return getPassphraseFor(secretKey.getKeyID());
+    }
     /**
      * Return a passphrase for the given key. If no record has been found, return null.
      * Note: In case of an unprotected secret key, this method must may not return null, but a {@link Passphrase} with
      * a content of null.
      *
-     * @param keyId id of the key
+     * @param keyId if of the secret key
      * @return passphrase or null, if no passphrase record has been found.
      */
     @Nullable Passphrase getPassphraseFor(Long keyId);

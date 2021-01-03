@@ -36,6 +36,7 @@ import org.pgpainless.key.protection.UnprotectedKeysProtector;
 import org.pgpainless.key.selection.keyring.PublicKeyRingSelectionStrategy;
 import org.pgpainless.key.selection.keyring.SecretKeyRingSelectionStrategy;
 import org.pgpainless.util.MultiMap;
+import org.pgpainless.util.Passphrase;
 
 public interface EncryptionBuilderInterface {
 
@@ -84,6 +85,15 @@ public interface EncryptionBuilderInterface {
          */
         <O> WithAlgorithms toRecipients(@Nonnull PublicKeyRingSelectionStrategy<O> selectionStrategy,
                                        @Nonnull MultiMap<O, PGPPublicKeyRingCollection> keys);
+
+        /**
+         * Encrypt to one or more symmetric passphrases.
+         * Note that the passphrases MUST NOT be empty.
+         *
+         * @param passphrases passphrase
+         * @return api handle
+         */
+        WithAlgorithms forPassphrases(Passphrase... passphrases);
 
         /**
          * Instruct the {@link EncryptionStream} to not encrypt any data.
@@ -149,6 +159,8 @@ public interface EncryptionBuilderInterface {
          * @return api handle
          */
         DetachedSign usingSecureAlgorithms();
+
+        ToRecipients and();
 
     }
 

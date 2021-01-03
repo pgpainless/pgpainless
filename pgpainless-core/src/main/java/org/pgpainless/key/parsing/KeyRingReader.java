@@ -27,7 +27,7 @@ import org.bouncycastle.openpgp.PGPPublicKeyRingCollection;
 import org.bouncycastle.openpgp.PGPSecretKeyRing;
 import org.bouncycastle.openpgp.PGPSecretKeyRingCollection;
 import org.bouncycastle.openpgp.PGPUtil;
-import org.bouncycastle.openpgp.operator.bc.BcKeyFingerprintCalculator;
+import org.pgpainless.implementation.ImplementationFactory;
 
 public class KeyRingReader {
 
@@ -90,27 +90,27 @@ public class KeyRingReader {
     public static PGPPublicKeyRing readPublicKeyRing(@Nonnull InputStream inputStream) throws IOException {
         return new PGPPublicKeyRing(
                 PGPUtil.getDecoderStream(inputStream),
-                new BcKeyFingerprintCalculator());
+                ImplementationFactory.getInstance().getKeyFingerprintCalculator());
     }
 
     public static PGPPublicKeyRingCollection readPublicKeyRingCollection(@Nonnull InputStream inputStream)
             throws IOException, PGPException {
         return new PGPPublicKeyRingCollection(
                 PGPUtil.getDecoderStream(inputStream),
-                new BcKeyFingerprintCalculator());
+                ImplementationFactory.getInstance().getKeyFingerprintCalculator());
     }
 
     public static PGPSecretKeyRing readSecretKeyRing(@Nonnull InputStream inputStream) throws IOException, PGPException {
         return new PGPSecretKeyRing(
                 PGPUtil.getDecoderStream(inputStream),
-                new BcKeyFingerprintCalculator());
+                ImplementationFactory.getInstance().getKeyFingerprintCalculator());
     }
 
     public static PGPSecretKeyRingCollection readSecretKeyRingCollection(@Nonnull InputStream inputStream)
             throws IOException, PGPException {
         return new PGPSecretKeyRingCollection(
                 PGPUtil.getDecoderStream(inputStream),
-                new BcKeyFingerprintCalculator());
+                ImplementationFactory.getInstance().getKeyFingerprintCalculator());
     }
 
     private static void validateStreamsNotBothNull(InputStream publicIn, InputStream secretIn) {

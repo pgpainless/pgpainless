@@ -17,8 +17,10 @@ package org.pgpainless.encryption_signing;
 
 import java.io.IOException;
 import java.io.OutputStream;
+import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.Iterator;
+import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
@@ -49,11 +51,13 @@ import org.pgpainless.key.selection.key.util.And;
 import org.pgpainless.key.selection.keyring.PublicKeyRingSelectionStrategy;
 import org.pgpainless.key.selection.keyring.SecretKeyRingSelectionStrategy;
 import org.pgpainless.util.MultiMap;
+import org.pgpainless.util.Passphrase;
 
 public class EncryptionBuilder implements EncryptionBuilderInterface {
 
     private OutputStream outputStream;
     private final Set<PGPPublicKey> encryptionKeys = new HashSet<>();
+    private final Set<Passphrase> encryptionPassphrases = new HashSet<>();
     private boolean detachedSignature = false;
     private SignatureType signatureType = SignatureType.BINARY_DOCUMENT;
     private final Set<PGPSecretKey> signingKeys = new HashSet<>();
@@ -73,16 +77,20 @@ public class EncryptionBuilder implements EncryptionBuilderInterface {
 
         @Override
         public WithAlgorithms toRecipients(@Nonnull PGPPublicKey... keys) {
-            for (PGPPublicKey k : keys) {
-                if (encryptionKeySelector().accept(null, k)) {
-                    EncryptionBuilder.this.encryptionKeys.add(k);
-                } else {
-                    throw new IllegalArgumentException("Key " + k.getKeyID() + " is not a valid encryption key.");
+            if (keys.length != 0) {
+                List<PGPPublicKey> encryptionKeys = new ArrayList<>();
+                for (PGPPublicKey k : keys) {
+                    if (encryptionKeySelector().accept(null, k)) {
+                        encryptionKeys.add(k);
+                    } else {
+                        throw new IllegalArgumentException("Key " + k.getKeyID() + " is not a valid encryption key.");
+                    }
                 }
-            }
 
-            if (EncryptionBuilder.this.encryptionKeys.isEmpty()) {
-                throw new IllegalStateException("No valid encryption keys found!");
+                if (encryptionKeys.isEmpty()) {
+                    throw new IllegalStateException("No valid encryption keys found!");
+                }
+                EncryptionBuilder.this.encryptionKeys.addAll(encryptionKeys);
             }
 
             return new WithAlgorithmsImpl();
@@ -90,16 +98,19 @@ public class EncryptionBuilder implements EncryptionBuilderInterface {
 
         @Override
         public WithAlgorithms toRecipients(@Nonnull PGPPublicKeyRing... keys) {
-            for (PGPPublicKeyRing ring : keys) {
-                for (PGPPublicKey k : ring) {
-                    if (encryptionKeySelector().accept(null, k)) {
-                        EncryptionBuilder.this.encryptionKeys.add(k);
+            if (keys.length != 0) {
+                List<PGPPublicKey> encryptionKeys = new ArrayList<>();
+                for (PGPPublicKeyRing ring : keys) {
+                    for (PGPPublicKey k : ring) {
+                        if (encryptionKeySelector().accept(null, k)) {
+                            encryptionKeys.add(k);
+                        }
                     }
                 }
-            }
-
-            if (EncryptionBuilder.this.encryptionKeys.isEmpty()) {
-                throw new IllegalStateException("No valid encryption keys found!");
+                if (encryptionKeys.isEmpty()) {
+                    throw new IllegalStateException("No valid encryption keys found!");
+                }
+                EncryptionBuilder.this.encryptionKeys.addAll(encryptionKeys);
             }
 
             return new WithAlgorithmsImpl();
@@ -107,18 +118,23 @@ public class EncryptionBuilder implements EncryptionBuilderInterface {
 
         @Override
         public WithAlgorithms toRecipients(@Nonnull PGPPublicKeyRingCollection... keys) {
-            for (PGPPublicKeyRingCollection collection : keys) {
-                for (PGPPublicKeyRing ring : collection) {
-                    for (PGPPublicKey k : ring) {
-                        if (encryptionKeySelector().accept(null, k)) {
-                            EncryptionBuilder.this.encryptionKeys.add(k);
+            if (keys.length != 0) {
+                List<PGPPublicKey> encryptionKeys = new ArrayList<>();
+                for (PGPPublicKeyRingCollection collection : keys) {
+                    for (PGPPublicKeyRing ring : collection) {
+                        for (PGPPublicKey k : ring) {
+                            if (encryptionKeySelector().accept(null, k)) {
+                                encryptionKeys.add(k);
+                            }
                         }
                     }
                 }
-            }
 
-            if (EncryptionBuilder.this.encryptionKeys.isEmpty()) {
-                throw new IllegalStateException("No valid encryption keys found!");
+                if (encryptionKeys.isEmpty()) {
+                    throw new IllegalStateException("No valid encryption keys found!");
+                }
+
+                EncryptionBuilder.this.encryptionKeys.addAll(encryptionKeys);
             }
 
             return new WithAlgorithmsImpl();
@@ -146,6 +162,19 @@ public class EncryptionBuilder implements EncryptionBuilderInterface {
                 throw new IllegalStateException("No valid encryption keys found!");
             }
 
+            return new WithAlgorithmsImpl();
+        }
+
+        @Override
+        public WithAlgorithms forPassphrases(Passphrase... passphrases) {
+            List<Passphrase> passphraseList = new ArrayList<>();
+            for (Passphrase passphrase : passphrases) {
+                if (passphrase.isEmpty()) {
+                    throw new IllegalArgumentException("Passphrase must not be empty.");
+                }
+                passphraseList.add(passphrase);
+            }
+            EncryptionBuilder.this.encryptionPassphrases.addAll(passphraseList);
             return new WithAlgorithmsImpl();
         }
 
@@ -242,6 +271,11 @@ public class EncryptionBuilder implements EncryptionBuilderInterface {
             EncryptionBuilder.this.compressionAlgorithm = CompressionAlgorithm.UNCOMPRESSED;
 
             return new DetachedSignImpl();
+        }
+
+        @Override
+        public ToRecipients and() {
+            return new ToRecipientsImpl();
         }
     }
 
@@ -379,6 +413,7 @@ public class EncryptionBuilder implements EncryptionBuilderInterface {
             return new EncryptionStream(
                     EncryptionBuilder.this.outputStream,
                     EncryptionBuilder.this.encryptionKeys,
+                    EncryptionBuilder.this.encryptionPassphrases,
                     EncryptionBuilder.this.detachedSignature,
                     signatureType,
                     privateKeys,

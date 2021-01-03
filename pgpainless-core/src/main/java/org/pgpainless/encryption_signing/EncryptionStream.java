@@ -37,16 +37,21 @@ import org.bouncycastle.openpgp.PGPPrivateKey;
 import org.bouncycastle.openpgp.PGPPublicKey;
 import org.bouncycastle.openpgp.PGPSignature;
 import org.bouncycastle.openpgp.PGPSignatureGenerator;
-import org.bouncycastle.openpgp.operator.bc.BcPGPContentSignerBuilder;
+import org.bouncycastle.openpgp.operator.PBEKeyEncryptionMethodGenerator;
+import org.bouncycastle.openpgp.operator.PGPContentSignerBuilder;
+import org.bouncycastle.openpgp.operator.PGPDataEncryptorBuilder;
+import org.bouncycastle.openpgp.operator.PublicKeyKeyEncryptionMethodGenerator;
 import org.bouncycastle.openpgp.operator.bc.BcPGPDataEncryptorBuilder;
-import org.bouncycastle.openpgp.operator.bc.BcPublicKeyKeyEncryptionMethodGenerator;
+import org.bouncycastle.openpgp.operator.jcajce.JcePGPDataEncryptorBuilder;
 import org.pgpainless.algorithm.CompressionAlgorithm;
 import org.pgpainless.algorithm.HashAlgorithm;
 import org.pgpainless.algorithm.SignatureType;
 import org.pgpainless.algorithm.SymmetricKeyAlgorithm;
 import org.pgpainless.decryption_verification.DetachedSignature;
 import org.pgpainless.decryption_verification.OpenPgpMetadata;
+import org.pgpainless.implementation.ImplementationFactory;
 import org.pgpainless.key.OpenPgpV4Fingerprint;
+import org.pgpainless.util.Passphrase;
 
 /**
  * This class is based upon Jens Neuhalfen's Bouncy-GPG PGPEncryptingStream.
@@ -63,6 +68,7 @@ public final class EncryptionStream extends OutputStream {
     private final HashAlgorithm hashAlgorithm;
     private final CompressionAlgorithm compressionAlgorithm;
     private final Set<PGPPublicKey> encryptionKeys;
+    private final Set<Passphrase> encryptionPassphrases;
     private final boolean detachedSignature;
     private final SignatureType signatureType;
     private final Map<OpenPgpV4Fingerprint, PGPPrivateKey> signingKeys;
@@ -86,6 +92,7 @@ public final class EncryptionStream extends OutputStream {
 
     EncryptionStream(@Nonnull OutputStream targetOutputStream,
                      @Nonnull Set<PGPPublicKey> encryptionKeys,
+                     @Nonnull Set<Passphrase> encryptionPassphrases,
                      boolean detachedSignature,
                      SignatureType signatureType,
                      @Nonnull Map<OpenPgpV4Fingerprint, PGPPrivateKey> signingKeys,
@@ -99,6 +106,7 @@ public final class EncryptionStream extends OutputStream {
         this.hashAlgorithm = hashAlgorithm;
         this.compressionAlgorithm = compressionAlgorithm;
         this.encryptionKeys = Collections.unmodifiableSet(encryptionKeys);
+        this.encryptionPassphrases = Collections.unmodifiableSet(encryptionPassphrases);
         this.detachedSignature = detachedSignature;
         this.signatureType = signatureType;
         this.signingKeys = Collections.unmodifiableMap(signingKeys);
@@ -126,21 +134,35 @@ public final class EncryptionStream extends OutputStream {
     }
 
     private void prepareEncryption() throws IOException, PGPException {
-        if (encryptionKeys.isEmpty()) {
+        if (encryptionKeys.isEmpty() && encryptionPassphrases.isEmpty()) {
             return;
         }
 
         LOGGER.log(LEVEL, "At least one encryption key is available -> encrypt using " + symmetricKeyAlgorithm);
-        BcPGPDataEncryptorBuilder dataEncryptorBuilder =
-                new BcPGPDataEncryptorBuilder(symmetricKeyAlgorithm.getAlgorithmId());
+        PGPDataEncryptorBuilder dataEncryptorBuilder =
+                ImplementationFactory.getInstance().getPGPDataEncryptorBuilder(symmetricKeyAlgorithm);
 
-        dataEncryptorBuilder.setWithIntegrityPacket(true);
+        // Simplify once https://github.com/bcgit/bc-java/pull/859 is merged
+        if (dataEncryptorBuilder instanceof BcPGPDataEncryptorBuilder) {
+            ((BcPGPDataEncryptorBuilder) dataEncryptorBuilder).setWithIntegrityPacket(true);
+        } else if (dataEncryptorBuilder instanceof JcePGPDataEncryptorBuilder) {
+            ((JcePGPDataEncryptorBuilder) dataEncryptorBuilder).setWithIntegrityPacket(true);
+        }
+
         PGPEncryptedDataGenerator encryptedDataGenerator =
                 new PGPEncryptedDataGenerator(dataEncryptorBuilder);
 
         for (PGPPublicKey key : encryptionKeys) {
             LOGGER.log(LEVEL, "Encrypt for key " + Long.toHexString(key.getKeyID()));
-            encryptedDataGenerator.addMethod(new BcPublicKeyKeyEncryptionMethodGenerator(key));
+            PublicKeyKeyEncryptionMethodGenerator keyEncryption =
+                    ImplementationFactory.getInstance().getPublicKeyKeyEncryptionMethodGenerator(key);
+            encryptedDataGenerator.addMethod(keyEncryption);
+        }
+
+        for (Passphrase passphrase : encryptionPassphrases) {
+            PBEKeyEncryptionMethodGenerator passphraseEncryption =
+                    ImplementationFactory.getInstance().getPBEKeyEncryptionMethodGenerator(passphrase);
+            encryptedDataGenerator.addMethod(passphraseEncryption);
         }
 
         publicKeyEncryptedStream = encryptedDataGenerator.open(outermostStream, new byte[BUFFER_SIZE]);
@@ -156,8 +178,10 @@ public final class EncryptionStream extends OutputStream {
         for (OpenPgpV4Fingerprint fingerprint : signingKeys.keySet()) {
             PGPPrivateKey privateKey = signingKeys.get(fingerprint);
             LOGGER.log(LEVEL, "Sign using key " + fingerprint);
-            BcPGPContentSignerBuilder contentSignerBuilder = new BcPGPContentSignerBuilder(
-                    privateKey.getPublicKeyPacket().getAlgorithm(), hashAlgorithm.getAlgorithmId());
+            PGPContentSignerBuilder contentSignerBuilder = ImplementationFactory.getInstance()
+                    .getPGPContentSignerBuilder(
+                            privateKey.getPublicKeyPacket().getAlgorithm(),
+                            hashAlgorithm.getAlgorithmId());
 
             PGPSignatureGenerator signatureGenerator = new PGPSignatureGenerator(contentSignerBuilder);
             signatureGenerator.init(signatureType.getCode(), privateKey);

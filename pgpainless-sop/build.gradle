@@ -1,0 +1,39 @@
+plugins {
+    id 'application'
+}
+
+dependencies {
+    implementation(project(":pgpainless-core"))
+
+    implementation 'info.picocli:picocli:4.5.2'
+
+    testImplementation "org.junit.jupiter:junit-jupiter-api:$junitVersion"
+    testRuntimeOnly "org.junit.jupiter:junit-jupiter-engine:$junitVersion"
+
+    /*
+    implementation "org.bouncycastle:bcprov-debug-jdk15on:$bouncyCastleVersion"
+    /*/
+    implementation "org.bouncycastle:bcprov-jdk15on:$bouncyCastleVersion"
+    //*/
+    implementation "org.bouncycastle:bcpg-jdk15on:$bouncyCastleVersion"
+
+    // https://mvnrepository.com/artifact/com.google.code.findbugs/jsr305
+    implementation group: 'com.google.code.findbugs', name: 'jsr305', version: '3.0.2'
+}
+
+mainClassName = 'org.pgpainless.sop.PGPainlessCLI'
+
+jar {
+    manifest {
+        attributes 'Main-Class': "$mainClassName"
+    }
+
+    from {
+        configurations.runtimeClasspath.collect { it.isDirectory() ? it : zipTree(it) }
+    } {
+        exclude "META-INF/*.SF"
+        exclude "META-INF/*.DSA"
+        exclude "META-INF/*.RSA"
+    }
+}
+

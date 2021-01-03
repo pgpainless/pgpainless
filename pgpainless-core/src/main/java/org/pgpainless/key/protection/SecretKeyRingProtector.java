@@ -25,6 +25,11 @@ import org.bouncycastle.openpgp.operator.PBESecretKeyDecryptor;
 import org.bouncycastle.openpgp.operator.PBESecretKeyEncryptor;
 import org.pgpainless.util.Passphrase;
 
+/**
+ * Interface that is used to provide secret key ring encryptors and decryptors.
+ *
+ * @deprecated use {@link SecretKeyRingProtector2} instead.
+ */
 public interface SecretKeyRingProtector {
 
     /**
@@ -34,7 +39,7 @@ public interface SecretKeyRingProtector {
      * @param keyId id of the key
      * @return decryptor for the key
      */
-    @Nullable PBESecretKeyDecryptor getDecryptor(Long keyId);
+    @Nullable PBESecretKeyDecryptor getDecryptor(Long keyId) throws PGPException;
 
     /**
      * Return an encryptor for the key of id {@code keyId}.

@@ -29,7 +29,6 @@ import java.util.List;
 import java.util.Set;
 import javax.annotation.Nonnull;
 
-import org.bouncycastle.openpgp.PGPEncryptedData;
 import org.bouncycastle.openpgp.PGPException;
 import org.bouncycastle.openpgp.PGPKeyPair;
 import org.bouncycastle.openpgp.PGPKeyRingGenerator;
@@ -44,14 +43,11 @@ import org.bouncycastle.openpgp.operator.PBESecretKeyDecryptor;
 import org.bouncycastle.openpgp.operator.PBESecretKeyEncryptor;
 import org.bouncycastle.openpgp.operator.PGPContentSignerBuilder;
 import org.bouncycastle.openpgp.operator.PGPDigestCalculator;
-import org.bouncycastle.openpgp.operator.jcajce.JcaPGPContentSignerBuilder;
-import org.bouncycastle.openpgp.operator.jcajce.JcaPGPDigestCalculatorProviderBuilder;
-import org.bouncycastle.openpgp.operator.jcajce.JcaPGPKeyPair;
-import org.bouncycastle.openpgp.operator.jcajce.JcePBESecretKeyDecryptorBuilder;
-import org.bouncycastle.openpgp.operator.jcajce.JcePBESecretKeyEncryptorBuilder;
 import org.pgpainless.algorithm.HashAlgorithm;
 import org.pgpainless.algorithm.KeyFlag;
 import org.pgpainless.algorithm.SignatureType;
+import org.pgpainless.algorithm.SymmetricKeyAlgorithm;
+import org.pgpainless.implementation.ImplementationFactory;
 import org.pgpainless.key.generation.type.KeyType;
 import org.pgpainless.key.generation.type.ecc.EllipticCurve;
 import org.pgpainless.key.generation.type.rsa.RsaLength;
@@ -331,33 +327,28 @@ public class KeyRingBuilder implements KeyRingBuilderInterface {
             }
 
             private PGPContentSignerBuilder buildContentSigner(PGPKeyPair certKey) {
-                return new JcaPGPContentSignerBuilder(
-                        certKey.getPublicKey().getAlgorithm(), HashAlgorithm.SHA512.getAlgorithmId())
-                        .setProvider(ProviderFactory.getProvider());
+                return ImplementationFactory.getInstance().getPGPContentSignerBuilder(
+                        certKey.getPublicKey().getAlgorithm(),
+                        HashAlgorithm.SHA512.getAlgorithmId());
             }
 
             private PBESecretKeyEncryptor buildSecretKeyEncryptor() {
                 PBESecretKeyEncryptor encryptor = passphrase == null || passphrase.isEmpty() ?
                         null : // unencrypted key pair, otherwise AES-256 encrypted
-                        new JcePBESecretKeyEncryptorBuilder(PGPEncryptedData.AES_256, digestCalculator)
-                                .setProvider(ProviderFactory.getProvider())
-                                .build(passphrase.getChars());
+                        ImplementationFactory.getInstance().getPBESecretKeyEncryptor(
+                                SymmetricKeyAlgorithm.AES_256, digestCalculator, passphrase);
                 return encryptor;
             }
 
             private PBESecretKeyDecryptor buildSecretKeyDecryptor() throws PGPException {
                 PBESecretKeyDecryptor decryptor = passphrase == null || passphrase.isEmpty() ?
                         null :
-                        new JcePBESecretKeyDecryptorBuilder()
-                                .build(passphrase.getChars());
+                        ImplementationFactory.getInstance().getPBESecretKeyDecryptor(passphrase);
                 return decryptor;
             }
 
             private PGPDigestCalculator buildDigestCalculator() throws PGPException {
-                return new JcaPGPDigestCalculatorProviderBuilder()
-                        .setProvider(ProviderFactory.getProvider())
-                        .build()
-                        .get(HashAlgorithm.SHA1.getAlgorithmId());
+                return ImplementationFactory.getInstance().getPGPDigestCalculator(HashAlgorithm.SHA1);
             }
         }
     }
@@ -373,8 +364,7 @@ public class KeyRingBuilder implements KeyRingBuilderInterface {
         KeyPair keyPair = certKeyGenerator.generateKeyPair();
 
         // Form PGP key pair
-        PGPKeyPair pgpKeyPair = new JcaPGPKeyPair(type.getAlgorithm().getAlgorithmId(),
-                keyPair, new Date());
+        PGPKeyPair pgpKeyPair = ImplementationFactory.getInstance().getPGPKeyPair(type.getAlgorithm(), keyPair, new Date());
 
         return pgpKeyPair;
     }
