@@ -15,24 +15,26 @@
  */
 package org.pgpainless.key.generation.type.elgamal;
 
-import javax.annotation.Nonnull;
 import java.security.spec.AlgorithmParameterSpec;
+import javax.annotation.Nonnull;
 
 import org.bouncycastle.jce.spec.ElGamalParameterSpec;
 import org.pgpainless.algorithm.PublicKeyAlgorithm;
 import org.pgpainless.key.generation.type.KeyType;
 
-@Deprecated
-public class ElGamal_GENERAL implements KeyType {
+/**
+ * ElGamal encryption only key type.
+ */
+public final class ElGamal implements KeyType {
 
     private final ElGamalLength length;
 
-    ElGamal_GENERAL(@Nonnull ElGamalLength length) {
+    private ElGamal(@Nonnull ElGamalLength length) {
         this.length = length;
     }
 
-    public static ElGamal_GENERAL withLength(@Nonnull ElGamalLength length) {
-        return new ElGamal_GENERAL(length);
+    public static ElGamal withLength(ElGamalLength length) {
+        return new ElGamal(length);
     }
 
     @Override
@@ -42,7 +44,7 @@ public class ElGamal_GENERAL implements KeyType {
 
     @Override
     public PublicKeyAlgorithm getAlgorithm() {
-        return PublicKeyAlgorithm.ELGAMAL_GENERAL;
+        return PublicKeyAlgorithm.ELGAMAL_ENCRYPT;
     }
 
     @Override
@@ -52,11 +54,12 @@ public class ElGamal_GENERAL implements KeyType {
 
     @Override
     public boolean canSign() {
-        return true;
+        return false;
     }
 
     @Override
     public boolean canEncryptCommunication() {
         return true;
     }
+
 }

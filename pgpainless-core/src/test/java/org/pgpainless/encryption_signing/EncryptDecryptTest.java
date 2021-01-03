@@ -45,7 +45,7 @@ import org.pgpainless.decryption_verification.OpenPgpMetadata;
 import org.pgpainless.key.OpenPgpV4Fingerprint;
 import org.pgpainless.key.TestKeys;
 import org.pgpainless.key.generation.KeySpec;
-import org.pgpainless.key.generation.type.elgamal.ElGamal_GENERAL;
+import org.pgpainless.key.generation.type.elgamal.ElGamal;
 import org.pgpainless.key.generation.type.KeyType;
 import org.pgpainless.key.generation.type.elgamal.ElGamalLength;
 import org.pgpainless.key.generation.type.rsa.RsaLength;
@@ -68,13 +68,12 @@ public class EncryptDecryptTest {
             "Unfold the imagined happiness that both\n" +
             "Receive in either by this dear encounter.";
 
-    @SuppressWarnings("deprecation")
     @Test
     public void freshKeysRsaToElGamalTest()
             throws PGPException, NoSuchAlgorithmException, InvalidAlgorithmParameterException, IOException {
         PGPSecretKeyRing sender = PGPainless.generateKeyRing().simpleRsaKeyRing("romeo@montague.lit", RsaLength._3072);
         PGPSecretKeyRing recipient = PGPainless.generateKeyRing()
-                .withSubKey(KeySpec.getBuilder(ElGamal_GENERAL.withLength(ElGamalLength._3072)).withKeyFlags(KeyFlag.ENCRYPT_STORAGE, KeyFlag.ENCRYPT_COMMS).withDefaultAlgorithms())
+                .withSubKey(KeySpec.getBuilder(ElGamal.withLength(ElGamalLength._3072)).withKeyFlags(KeyFlag.ENCRYPT_STORAGE, KeyFlag.ENCRYPT_COMMS).withDefaultAlgorithms())
                 .withMasterKey(KeySpec.getBuilder(KeyType.RSA(RsaLength._4096)).withKeyFlags(KeyFlag.SIGN_DATA, KeyFlag.CERTIFY_OTHER).withDefaultAlgorithms())
                 .withPrimaryUserId("juliet@capulet.lit").withoutPassphrase().build();
 
