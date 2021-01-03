@@ -18,7 +18,6 @@ package org.pgpainless.key.protection.passphrase_provider;
 import java.util.Map;
 import javax.annotation.Nullable;
 
-import org.bouncycastle.openpgp.PGPSecretKey;
 import org.pgpainless.util.Passphrase;
 
 /**

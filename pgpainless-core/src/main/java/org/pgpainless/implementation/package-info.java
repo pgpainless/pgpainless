@@ -13,16 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.pgpainless.key.protection;
-
-import org.bouncycastle.openpgp.PGPException;
-import org.bouncycastle.openpgp.PGPSecretKey;
-import org.bouncycastle.openpgp.operator.PBESecretKeyDecryptor;
-import org.bouncycastle.openpgp.operator.PBESecretKeyEncryptor;
-
-public interface SecretKeyRingProtector2 {
-
-    PBESecretKeyDecryptor getDecryptor(PGPSecretKey key) throws PGPException;
-
-    PBESecretKeyEncryptor getEncryptor(PGPSecretKey key) throws PGPException;
-}
+/**
+ * Implementation factory classes to be able to switch out the underlying crypto engine implementation.
+ */
+package org.pgpainless.implementation;
