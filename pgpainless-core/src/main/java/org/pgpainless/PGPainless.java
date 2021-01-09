@@ -66,10 +66,24 @@ public class PGPainless {
 
     /**
      * Create an {@link EncryptionStream}, which can be used to encrypt and/or sign data using OpenPGP.
+     * This method assumes that the stream will be used to encrypt data for communication purposes.
+     * If you instead want to encrypt data that will be saved on disk (eg. a backup), use
+     * {@link #encryptAndOrSign(EncryptionStream.Purpose)} and chose an appropriate purpose.
+     *
      * @return builder
      */
     public static EncryptionBuilder encryptAndOrSign() {
         return new EncryptionBuilder();
+    }
+
+    /**
+     * Create an {@link EncryptionStream}, that can be used to encrypt and/or sign data using OpenPGP.
+     *
+     * @param purpose how will the data be used?
+     * @return builder
+     */
+    public static EncryptionBuilder encryptAndOrSign(EncryptionStream.Purpose purpose) {
+        return new EncryptionBuilder(purpose);
     }
 
     /**

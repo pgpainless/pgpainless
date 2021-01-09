@@ -26,11 +26,14 @@ import org.pgpainless.key.selection.key.PublicKeySelectionStrategy;
  */
 public class EncryptionKeySelectionStrategy extends PublicKeySelectionStrategy {
 
-    private static final HasKeyFlagSelectionStrategy.PublicKey HAS_ENCRYPT_COMMS_FLAG =
-            new HasKeyFlagSelectionStrategy.PublicKey(KeyFlag.ENCRYPT_COMMS);
+    private final HasKeyFlagSelectionStrategy.PublicKey keyFlagSelector;
+
+    public EncryptionKeySelectionStrategy(KeyFlag... flags) {
+        this.keyFlagSelector = new HasKeyFlagSelectionStrategy.PublicKey(flags);
+    }
 
     @Override
     public boolean accept(@Nonnull PGPPublicKey key) {
-        return key.isEncryptionKey() && HAS_ENCRYPT_COMMS_FLAG.accept(key);
+        return key.isEncryptionKey() && keyFlagSelector.accept(key);
     }
 }

@@ -37,6 +37,7 @@ import org.bouncycastle.openpgp.PGPSecretKeyRingCollection;
 import org.bouncycastle.openpgp.operator.PBESecretKeyDecryptor;
 import org.pgpainless.algorithm.CompressionAlgorithm;
 import org.pgpainless.algorithm.HashAlgorithm;
+import org.pgpainless.algorithm.KeyFlag;
 import org.pgpainless.algorithm.SignatureType;
 import org.pgpainless.algorithm.SymmetricKeyAlgorithm;
 import org.pgpainless.exception.SecretKeyNotFoundException;
@@ -55,6 +56,7 @@ import org.pgpainless.util.Passphrase;
 
 public class EncryptionBuilder implements EncryptionBuilderInterface {
 
+    private final EncryptionStream.Purpose purpose;
     private OutputStream outputStream;
     private final Set<PGPPublicKey> encryptionKeys = new HashSet<>();
     private final Set<Passphrase> encryptionPassphrases = new HashSet<>();
@@ -66,6 +68,14 @@ public class EncryptionBuilder implements EncryptionBuilderInterface {
     private HashAlgorithm hashAlgorithm = HashAlgorithm.SHA256;
     private CompressionAlgorithm compressionAlgorithm = CompressionAlgorithm.UNCOMPRESSED;
     private boolean asciiArmor = false;
+
+    public EncryptionBuilder() {
+        this.purpose = EncryptionStream.Purpose.COMMUNICATIONS;
+    }
+
+    public EncryptionBuilder(@Nonnull EncryptionStream.Purpose purpose) {
+        this.purpose = purpose;
+    }
 
     @Override
     public ToRecipients onOutputStream(@Nonnull OutputStream outputStream) {
@@ -425,9 +435,28 @@ public class EncryptionBuilder implements EncryptionBuilderInterface {
     }
 
     PublicKeySelectionStrategy encryptionKeySelector() {
+        KeyFlag[] flags = mapPurposeToKeyFlags(purpose);
         return new And.PubKeySelectionStrategy(
                 new NoRevocation.PubKeySelectionStrategy(),
-                new EncryptionKeySelectionStrategy());
+                new EncryptionKeySelectionStrategy(flags));
+    }
+
+    private static KeyFlag[] mapPurposeToKeyFlags(EncryptionStream.Purpose purpose) {
+        KeyFlag[] flags;
+        switch (purpose) {
+            case COMMUNICATIONS:
+                flags = new KeyFlag[] {KeyFlag.ENCRYPT_COMMS};
+                break;
+            case STORAGE:
+                flags = new KeyFlag[] {KeyFlag.ENCRYPT_STORAGE};
+                break;
+            case STORAGE_AND_COMMUNICATIONS:
+                flags = new KeyFlag[] {KeyFlag.ENCRYPT_COMMS, KeyFlag.ENCRYPT_STORAGE};
+                break;
+            default:
+                throw new AssertionError("Illegal purpose enum value encountered.");
+        }
+        return flags;
     }
 
     SecretKeySelectionStrategy signingKeySelector() {
