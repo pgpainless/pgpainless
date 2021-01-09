@@ -80,7 +80,7 @@ public class EncryptionBuilder implements EncryptionBuilderInterface {
             if (keys.length != 0) {
                 List<PGPPublicKey> encryptionKeys = new ArrayList<>();
                 for (PGPPublicKey k : keys) {
-                    if (encryptionKeySelector().accept(null, k)) {
+                    if (encryptionKeySelector().accept(k)) {
                         encryptionKeys.add(k);
                     } else {
                         throw new IllegalArgumentException("Key " + k.getKeyID() + " is not a valid encryption key.");
@@ -102,7 +102,7 @@ public class EncryptionBuilder implements EncryptionBuilderInterface {
                 List<PGPPublicKey> encryptionKeys = new ArrayList<>();
                 for (PGPPublicKeyRing ring : keys) {
                     for (PGPPublicKey k : ring) {
-                        if (encryptionKeySelector().accept(null, k)) {
+                        if (encryptionKeySelector().accept(k)) {
                             encryptionKeys.add(k);
                         }
                     }
@@ -123,7 +123,7 @@ public class EncryptionBuilder implements EncryptionBuilderInterface {
                 for (PGPPublicKeyRingCollection collection : keys) {
                     for (PGPPublicKeyRing ring : collection) {
                         for (PGPPublicKey k : ring) {
-                            if (encryptionKeySelector().accept(null, k)) {
+                            if (encryptionKeySelector().accept(k)) {
                                 encryptionKeys.add(k);
                             }
                         }
@@ -151,7 +151,7 @@ public class EncryptionBuilder implements EncryptionBuilderInterface {
                 Set<PGPPublicKeyRing> acceptedSet = acceptedKeyRings.get(identifier);
                 for (PGPPublicKeyRing ring : acceptedSet) {
                     for (PGPPublicKey k : ring) {
-                        if (encryptionKeySelector().accept(null, k)) {
+                        if (encryptionKeySelector().accept(k)) {
                             EncryptionBuilder.this.encryptionKeys.add(k);
                         }
                     }
@@ -192,7 +192,7 @@ public class EncryptionBuilder implements EncryptionBuilderInterface {
                 throw new IllegalArgumentException("Recipient list MUST NOT be empty.");
             }
             for (PGPPublicKey k : keys) {
-                if (encryptionKeySelector().accept(null, k)) {
+                if (encryptionKeySelector().accept(k)) {
                     EncryptionBuilder.this.encryptionKeys.add(k);
                 } else {
                     throw new IllegalArgumentException("Key " + k.getKeyID() + " is not a valid encryption key.");
@@ -209,7 +209,7 @@ public class EncryptionBuilder implements EncryptionBuilderInterface {
             for (PGPPublicKeyRing ring : keys) {
                 for (Iterator<PGPPublicKey> i = ring.getPublicKeys(); i.hasNext(); ) {
                     PGPPublicKey key = i.next();
-                    if (encryptionKeySelector().accept(null, key)) {
+                    if (encryptionKeySelector().accept(key)) {
                         EncryptionBuilder.this.encryptionKeys.add(key);
                     }
                 }
@@ -222,7 +222,7 @@ public class EncryptionBuilder implements EncryptionBuilderInterface {
             for (PGPPublicKeyRing ring : keys) {
                 for (Iterator<PGPPublicKey> i = ring.getPublicKeys(); i.hasNext(); ) {
                     PGPPublicKey key = i.next();
-                    if (encryptionKeySelector().accept(null, key)) {
+                    if (encryptionKeySelector().accept(key)) {
                         EncryptionBuilder.this.encryptionKeys.add(key);
                     }
                 }
@@ -243,7 +243,7 @@ public class EncryptionBuilder implements EncryptionBuilderInterface {
                 for (PGPPublicKeyRing k : acceptedSet) {
                     for (Iterator<PGPPublicKey> i = k.getPublicKeys(); i.hasNext(); ) {
                         PGPPublicKey key = i.next();
-                        if (encryptionKeySelector().accept(null, key)) {
+                        if (encryptionKeySelector().accept(key)) {
                             EncryptionBuilder.this.encryptionKeys.add(key);
                         }
                     }
@@ -320,7 +320,7 @@ public class EncryptionBuilder implements EncryptionBuilderInterface {
                 throw new IllegalArgumentException("Recipient list MUST NOT be empty.");
             }
             for (PGPSecretKey s : keys) {
-                if (EncryptionBuilder.this.signingKeySelector().accept(null, s)) {
+                if (EncryptionBuilder.this.signingKeySelector().accept(s)) {
                     signingKeys.add(s);
                 } else {
                     throw new IllegalArgumentException("Key " + s.getKeyID() + " is not a valid signing key.");
@@ -339,7 +339,7 @@ public class EncryptionBuilder implements EncryptionBuilderInterface {
             for (PGPSecretKeyRing key : keys) {
                 for (Iterator<PGPSecretKey> i = key.getSecretKeys(); i.hasNext(); ) {
                     PGPSecretKey s = i.next();
-                    if (EncryptionBuilder.this.signingKeySelector().accept(null, s)) {
+                    if (EncryptionBuilder.this.signingKeySelector().accept(s)) {
                         EncryptionBuilder.this.signingKeys.add(s);
                     }
                 }
@@ -362,7 +362,7 @@ public class EncryptionBuilder implements EncryptionBuilderInterface {
                 for (PGPSecretKeyRing k : acceptedSet) {
                     for (Iterator<PGPSecretKey> i = k.getSecretKeys(); i.hasNext(); ) {
                         PGPSecretKey s = i.next();
-                        if (EncryptionBuilder.this.<O>signingKeySelector().accept(null, s)) {
+                        if (EncryptionBuilder.this.<O>signingKeySelector().accept(s)) {
                             EncryptionBuilder.this.signingKeys.add(s);
                         }
                     }
@@ -424,15 +424,15 @@ public class EncryptionBuilder implements EncryptionBuilderInterface {
         }
     }
 
-    <O> PublicKeySelectionStrategy<O> encryptionKeySelector() {
-        return new And.PubKeySelectionStrategy<>(
-                new NoRevocation.PubKeySelectionStrategy<>(),
-                new EncryptionKeySelectionStrategy<>());
+    PublicKeySelectionStrategy encryptionKeySelector() {
+        return new And.PubKeySelectionStrategy(
+                new NoRevocation.PubKeySelectionStrategy(),
+                new EncryptionKeySelectionStrategy());
     }
 
-    <O> SecretKeySelectionStrategy<O> signingKeySelector() {
-        return new And.SecKeySelectionStrategy<>(
-                new NoRevocation.SecKeySelectionStrategy<>(),
-                new SignatureKeySelectionStrategy<>());
+    SecretKeySelectionStrategy signingKeySelector() {
+        return new And.SecKeySelectionStrategy(
+                new NoRevocation.SecKeySelectionStrategy(),
+                new SignatureKeySelectionStrategy());
     }
 }

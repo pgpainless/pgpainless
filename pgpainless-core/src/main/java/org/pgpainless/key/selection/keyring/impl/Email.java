@@ -15,34 +15,18 @@
  */
 package org.pgpainless.key.selection.keyring.impl;
 
-import javax.annotation.Nonnull;
-
-import org.bouncycastle.openpgp.PGPPublicKey;
-import org.bouncycastle.openpgp.PGPSecretKey;
-
 public class Email {
 
     public static class PubRingSelectionStrategy extends PartialUserId.PubRingSelectionStrategy {
 
-        @Override
-        public boolean accept(@Nonnull String email, @Nonnull PGPPublicKey key) {
-            // Ensure, that email address is encapsulated in "<",">"
-            if (!email.matches("^<.+>$")) {
-                email = "<" + email + ">";
-            }
-            return super.accept(email, key);
+        public PubRingSelectionStrategy(String email) {
+            super(email.matches("^<.+>$") ? email : '<' + email + '>');
         }
     }
 
     public static class SecRingSelectionStrategy extends PartialUserId.SecRingSelectionStrategy {
-
-        @Override
-        public boolean accept(String email, PGPSecretKey key) {
-            // Ensure, that email address is encapsulated in "<",">"
-            if (!email.matches("^<.+>$")) {
-                email = "<" + email + ">";
-            }
-            return super.accept(email, key);
+        public SecRingSelectionStrategy(String email) {
+            super(email.matches("^<.+>$") ? email : '<' + email + '>');
         }
     }
 }

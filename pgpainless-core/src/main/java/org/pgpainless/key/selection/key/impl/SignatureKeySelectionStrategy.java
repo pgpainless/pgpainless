@@ -22,13 +22,11 @@ import org.pgpainless.key.selection.key.SecretKeySelectionStrategy;
 
 /**
  * Key Selection Strategy that only accepts {@link PGPSecretKey}s which are capable of signing.
- *
- * @param <O> Type that describes the owner of the key (not used for this decision).
  */
-public class SignatureKeySelectionStrategy<O> extends SecretKeySelectionStrategy<O> {
+public class SignatureKeySelectionStrategy extends SecretKeySelectionStrategy {
 
     @Override
-    public boolean accept(O identifier, @Nonnull PGPSecretKey key) {
+    public boolean accept(@Nonnull PGPSecretKey key) {
         return key.isSigningKey();
     }
 

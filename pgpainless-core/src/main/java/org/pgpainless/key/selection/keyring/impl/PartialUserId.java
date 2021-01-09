@@ -25,10 +25,16 @@ import org.pgpainless.key.selection.key.SecretKeySelectionStrategy;
 
 public class PartialUserId {
 
-    public static class PubRingSelectionStrategy extends PublicKeySelectionStrategy<String> {
+    public static class PubRingSelectionStrategy extends PublicKeySelectionStrategy {
+
+        protected final String identifier;
+
+        public PubRingSelectionStrategy(String identifier) {
+            this.identifier = identifier;
+        }
 
         @Override
-        public boolean accept(String identifier, @Nonnull PGPPublicKey key) {
+        public boolean accept(@Nonnull PGPPublicKey key) {
             for (Iterator<String> userIds = key.getUserIDs(); userIds.hasNext(); ) {
                 String userId = userIds.next();
                 if (userId.contains(identifier)) {
@@ -39,13 +45,19 @@ public class PartialUserId {
         }
     }
 
-    public static class SecRingSelectionStrategy extends SecretKeySelectionStrategy<String> {
+    public static class SecRingSelectionStrategy extends SecretKeySelectionStrategy {
+
+        protected final String partialUserId;
+
+        public SecRingSelectionStrategy(String partialUserId) {
+            this.partialUserId = partialUserId;
+        }
 
         @Override
-        public boolean accept(String identifier, @Nonnull PGPSecretKey key) {
+        public boolean accept(@Nonnull PGPSecretKey key) {
             for (Iterator<String> userIds = key.getUserIDs(); userIds.hasNext(); ) {
                 String userId = userIds.next();
-                if (userId.contains(identifier)) {
+                if (userId.contains(partialUserId)) {
                     return true;
                 }
             }

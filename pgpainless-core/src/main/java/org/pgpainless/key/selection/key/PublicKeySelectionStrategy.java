@@ -15,40 +15,26 @@
  */
 package org.pgpainless.key.selection.key;
 
-import javax.annotation.Nonnull;
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.Set;
+import javax.annotation.Nonnull;
 
 import org.bouncycastle.openpgp.PGPPublicKey;
 import org.bouncycastle.openpgp.PGPPublicKeyRing;
-import org.pgpainless.util.MultiMap;
 
 /**
  * Key Selection Strategy which accepts {@link PGPPublicKey}s that are accepted by the abstract method
- * {@link #accept(Object, Object)}.
- *
- * @param <O> Type that describes the owner of the key.
+ * {@link #accept(Object)}.
  */
-public abstract class PublicKeySelectionStrategy<O> implements KeySelectionStrategy<PGPPublicKey, PGPPublicKeyRing, O> {
+public abstract class PublicKeySelectionStrategy implements KeySelectionStrategy<PGPPublicKey, PGPPublicKeyRing> {
 
     @Override
-    public Set<PGPPublicKey> selectKeysFromKeyRing(O identifier, @Nonnull PGPPublicKeyRing ring) {
+    public Set<PGPPublicKey> selectKeysFromKeyRing(@Nonnull PGPPublicKeyRing ring) {
         Set<PGPPublicKey> keys = new HashSet<>();
         for (Iterator<PGPPublicKey> i = ring.getPublicKeys(); i.hasNext(); ) {
             PGPPublicKey key = i.next();
-            if (accept(identifier, key)) keys.add(key);
-        }
-        return keys;
-    }
-
-    @Override
-    public MultiMap<O, PGPPublicKey> selectKeysFromKeyRings(@Nonnull MultiMap<O, PGPPublicKeyRing> keyRings) {
-        MultiMap<O, PGPPublicKey> keys = new MultiMap<>();
-        for (O identifier : keyRings.keySet()) {
-            for (PGPPublicKeyRing ring : keyRings.get(identifier)) {
-                keys.put(identifier, selectKeysFromKeyRing(identifier, ring));
-            }
+            if (accept(key)) keys.add(key);
         }
         return keys;
     }

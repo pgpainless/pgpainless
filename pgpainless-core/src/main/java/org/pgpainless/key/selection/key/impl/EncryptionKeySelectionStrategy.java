@@ -22,13 +22,11 @@ import org.pgpainless.key.selection.key.PublicKeySelectionStrategy;
 
 /**
  * Key Selection Strategy that only accepts {@link PGPPublicKey}s which are capable of encryption.
- *
- * @param <O> Type that describes the owner of the key (not used for decision).
  */
-public class EncryptionKeySelectionStrategy<O> extends PublicKeySelectionStrategy<O> {
+public class EncryptionKeySelectionStrategy extends PublicKeySelectionStrategy {
 
     @Override
-    public boolean accept(O identifier, @Nonnull PGPPublicKey key) {
+    public boolean accept(@Nonnull PGPPublicKey key) {
         return key.isEncryptionKey();
     }
 }

@@ -29,15 +29,14 @@ import org.pgpainless.key.selection.keyring.impl.Email;
 
 public class EmailKeyRingSelectionStrategyTest {
 
-    Email.PubRingSelectionStrategy pubKeySelectionStrategy = new Email.PubRingSelectionStrategy();
-    Email.SecRingSelectionStrategy secKeySelectionStrategy = new Email.SecRingSelectionStrategy();
-
     @Test
     public void testMatchingEmailUIDAcceptedOnPubKey() throws IOException {
         String uid = "<emil@email.user>";
         PGPPublicKey key = TestKeys.getEmilPublicKeyRing().getPublicKey();
 
-        assertTrue(pubKeySelectionStrategy.accept(uid, key));
+        Email.PubRingSelectionStrategy pubKeySelectionStrategy = new Email.PubRingSelectionStrategy(uid);
+
+        assertTrue(pubKeySelectionStrategy.accept(key));
     }
 
     @Test
@@ -45,14 +44,19 @@ public class EmailKeyRingSelectionStrategyTest {
         String uid = "emil@email.user";
         PGPPublicKey key = TestKeys.getEmilPublicKeyRing().getPublicKey();
 
-        assertTrue(pubKeySelectionStrategy.accept(uid, key));
+        Email.PubRingSelectionStrategy pubKeySelectionStrategy = new Email.PubRingSelectionStrategy(uid);
+
+        assertTrue(pubKeySelectionStrategy.accept(key));
     }
 
     @Test
     public void testPubKeyWithDifferentUIDIsRejected() throws IOException {
         String wrongUid = "emilia@email.user";
         PGPPublicKey key = TestKeys.getEmilPublicKeyRing().getPublicKey();
-        assertFalse(pubKeySelectionStrategy.accept(wrongUid, key));
+
+        Email.PubRingSelectionStrategy pubKeySelectionStrategy = new Email.PubRingSelectionStrategy(wrongUid);
+
+        assertFalse(pubKeySelectionStrategy.accept(key));
     }
 
     @Test
@@ -60,7 +64,9 @@ public class EmailKeyRingSelectionStrategyTest {
         String uid = "<emil@email.user>";
         PGPSecretKey key = TestKeys.getEmilSecretKeyRing().getSecretKey();
 
-        assertTrue(secKeySelectionStrategy.accept(uid, key));
+        Email.SecRingSelectionStrategy secKeySelectionStrategy = new Email.SecRingSelectionStrategy(uid);
+
+        assertTrue(secKeySelectionStrategy.accept(key));
     }
 
     @Test
@@ -68,13 +74,18 @@ public class EmailKeyRingSelectionStrategyTest {
         String uid = "emil@email.user";
         PGPSecretKey key = TestKeys.getEmilSecretKeyRing().getSecretKey();
 
-        assertTrue(secKeySelectionStrategy.accept(uid, key));
+        Email.SecRingSelectionStrategy secKeySelectionStrategy = new Email.SecRingSelectionStrategy(uid);
+
+        assertTrue(secKeySelectionStrategy.accept(key));
     }
 
     @Test
     public void testSecKeyWithDifferentUIDIsRejected() throws IOException, PGPException {
         String wrongUid = "emilia@email.user";
         PGPSecretKey key = TestKeys.getEmilSecretKeyRing().getSecretKey();
-        assertFalse(secKeySelectionStrategy.accept(wrongUid, key));
+
+        Email.SecRingSelectionStrategy secKeySelectionStrategy = new Email.SecRingSelectionStrategy(wrongUid);
+
+        assertFalse(secKeySelectionStrategy.accept(key));
     }
 }

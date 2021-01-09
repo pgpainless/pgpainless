@@ -29,26 +29,22 @@ public class NoRevocation {
 
     /**
      * Key Selection Strategy which only accepts {@link PGPPublicKey}s which have no revocation.
-     *
-     * @param <O> Type that describes the owner of this key (not used for this decision).
      */
-    public static class PubKeySelectionStrategy<O> extends PublicKeySelectionStrategy<O> {
+    public static class PubKeySelectionStrategy extends PublicKeySelectionStrategy {
 
         @Override
-        public boolean accept(O identifier, @Nonnull PGPPublicKey key) {
+        public boolean accept(@Nonnull PGPPublicKey key) {
             return !key.hasRevocation();
         }
     }
 
     /**
      * Key Selection Strategy which only accepts {@link PGPSecretKey}s which have no revocation.
-     *
-     * @param <O> Type that describes the owner of this key (not used for this decision).
      */
-    public static class SecKeySelectionStrategy<O> extends SecretKeySelectionStrategy<O> {
+    public static class SecKeySelectionStrategy extends SecretKeySelectionStrategy {
 
         @Override
-        public boolean accept(O identifier, @Nonnull PGPSecretKey key) {
+        public boolean accept(@Nonnull PGPSecretKey key) {
             return !key.getPublicKey().hasRevocation();
         }
     }

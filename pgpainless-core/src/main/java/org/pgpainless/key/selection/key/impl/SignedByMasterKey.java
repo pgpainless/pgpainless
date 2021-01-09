@@ -31,10 +31,16 @@ public class SignedByMasterKey {
 
     private static final Logger LOGGER = Logger.getLogger(SignedByMasterKey.class.getName());
 
-    public static class PubkeySelectionStrategy extends PublicKeySelectionStrategy<PGPPublicKey> {
+    public static class PubkeySelectionStrategy extends PublicKeySelectionStrategy {
+
+        private final PGPPublicKey masterKey;
+
+        public PubkeySelectionStrategy(PGPPublicKey masterKey) {
+            this.masterKey = masterKey;
+        }
 
         @Override
-        public boolean accept(PGPPublicKey masterKey, @Nonnull PGPPublicKey key) {
+        public boolean accept(@Nonnull PGPPublicKey key) {
             // Same key -> accept
             if (Arrays.equals(masterKey.getFingerprint(), key.getFingerprint())) {
                 return true;

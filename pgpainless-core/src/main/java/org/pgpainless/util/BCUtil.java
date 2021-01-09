@@ -151,16 +151,16 @@ public class BCUtil {
             throw new IllegalArgumentException("Given key is not a master key.");
         }
         // Only select keys which are signed by the master key and not revoked.
-        PublicKeySelectionStrategy<PGPPublicKey> selector = new And.PubKeySelectionStrategy<>(
-                new SignedByMasterKey.PubkeySelectionStrategy(),
-                new NoRevocation.PubKeySelectionStrategy<>());
+        PublicKeySelectionStrategy selector = new And.PubKeySelectionStrategy(
+                new SignedByMasterKey.PubkeySelectionStrategy(masterKey),
+                new NoRevocation.PubKeySelectionStrategy());
 
         PGPPublicKeyRing cleaned = ring;
 
         Iterator<PGPPublicKey> publicKeys = ring.getPublicKeys();
         while (publicKeys.hasNext()) {
             PGPPublicKey publicKey = publicKeys.next();
-            if (!selector.accept(masterKey, publicKey)) {
+            if (!selector.accept(publicKey)) {
                 cleaned = PGPPublicKeyRing.removePublicKey(cleaned, publicKey);
             }
         }
@@ -182,16 +182,16 @@ public class BCUtil {
             throw new IllegalArgumentException("Given key is not a master key.");
         }
         // Only select keys which are signed by the master key and not revoked.
-        PublicKeySelectionStrategy<PGPPublicKey> selector = new And.PubKeySelectionStrategy<>(
-                new SignedByMasterKey.PubkeySelectionStrategy(),
-                new NoRevocation.PubKeySelectionStrategy<>());
+        PublicKeySelectionStrategy selector = new And.PubKeySelectionStrategy(
+                new SignedByMasterKey.PubkeySelectionStrategy(masterKey),
+                new NoRevocation.PubKeySelectionStrategy());
 
         PGPSecretKeyRing cleaned = ring;
 
         Iterator<PGPSecretKey> secretKeys = ring.getSecretKeys();
         while (secretKeys.hasNext()) {
             PGPSecretKey secretKey = secretKeys.next();
-            if (!selector.accept(masterKey, secretKey.getPublicKey())) {
+            if (!selector.accept(secretKey.getPublicKey())) {
                 cleaned = PGPSecretKeyRing.removeSecretKey(cleaned, secretKey);
             }
         }

@@ -15,6 +15,9 @@
  */
 package org.pgpainless.key.selection.key.util;
 
+import java.util.Arrays;
+import java.util.HashSet;
+import java.util.Set;
 import javax.annotation.Nonnull;
 
 import org.bouncycastle.openpgp.PGPPublicKey;
@@ -24,37 +27,39 @@ import org.pgpainless.key.selection.key.SecretKeySelectionStrategy;
 
 public class And {
 
-    public static class PubKeySelectionStrategy<O> extends PublicKeySelectionStrategy<O> {
+    public static class PubKeySelectionStrategy extends PublicKeySelectionStrategy {
 
-        private final PublicKeySelectionStrategy<O> left;
-        private final PublicKeySelectionStrategy<O> right;
+        private final Set<PublicKeySelectionStrategy> strategies = new HashSet<>();
 
-        public PubKeySelectionStrategy(@Nonnull PublicKeySelectionStrategy<O> left,
-                                       @Nonnull PublicKeySelectionStrategy<O> right) {
-            this.left = left;
-            this.right = right;
+        public PubKeySelectionStrategy(@Nonnull PublicKeySelectionStrategy... strategies) {
+            this.strategies.addAll(Arrays.asList(strategies));
         }
 
         @Override
-        public boolean accept(O identifier, PGPPublicKey key) {
-            return left.accept(identifier, key) && right.accept(identifier, key);
+        public boolean accept(PGPPublicKey key) {
+            boolean accept = true;
+            for (PublicKeySelectionStrategy strategy : strategies) {
+                accept &= strategy.accept(key);
+            }
+            return accept;
         }
     }
 
-    public static class SecKeySelectionStrategy<O> extends SecretKeySelectionStrategy<O> {
+    public static class SecKeySelectionStrategy extends SecretKeySelectionStrategy {
 
-        private final SecretKeySelectionStrategy<O> left;
-        private final SecretKeySelectionStrategy<O> right;
+        private final Set<SecretKeySelectionStrategy> strategies = new HashSet<>();
 
-        public SecKeySelectionStrategy(@Nonnull SecretKeySelectionStrategy<O> left,
-                                       @Nonnull SecretKeySelectionStrategy<O> right) {
-            this.left = left;
-            this.right = right;
+        public SecKeySelectionStrategy(@Nonnull SecretKeySelectionStrategy... strategies) {
+            this.strategies.addAll(Arrays.asList(strategies));
         }
 
         @Override
-        public boolean accept(O identifier, PGPSecretKey key) {
-            return left.accept(identifier, key) && right.accept(identifier, key);
+        public boolean accept(PGPSecretKey key) {
+            boolean accept = true;
+            for (SecretKeySelectionStrategy strategy : strategies) {
+                accept &= strategy.accept(key);
+            }
+            return accept;
         }
     }
 
