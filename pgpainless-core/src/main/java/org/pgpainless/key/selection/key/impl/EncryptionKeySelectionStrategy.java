@@ -18,6 +18,7 @@ package org.pgpainless.key.selection.key.impl;
 import javax.annotation.Nonnull;
 
 import org.bouncycastle.openpgp.PGPPublicKey;
+import org.pgpainless.algorithm.KeyFlag;
 import org.pgpainless.key.selection.key.PublicKeySelectionStrategy;
 
 /**
@@ -25,8 +26,11 @@ import org.pgpainless.key.selection.key.PublicKeySelectionStrategy;
  */
 public class EncryptionKeySelectionStrategy extends PublicKeySelectionStrategy {
 
+    private static final HasKeyFlagSelectionStrategy.PublicKey HAS_ENCRYPT_COMMS_FLAG =
+            new HasKeyFlagSelectionStrategy.PublicKey(KeyFlag.ENCRYPT_COMMS);
+
     @Override
     public boolean accept(@Nonnull PGPPublicKey key) {
-        return key.isEncryptionKey();
+        return key.isEncryptionKey() && HAS_ENCRYPT_COMMS_FLAG.accept(key);
     }
 }
