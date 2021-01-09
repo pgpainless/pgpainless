@@ -441,6 +441,12 @@ public class EncryptionBuilder implements EncryptionBuilderInterface {
                 new EncryptionKeySelectionStrategy(flags));
     }
 
+    SecretKeySelectionStrategy signingKeySelector() {
+        return new And.SecKeySelectionStrategy(
+                new NoRevocation.SecKeySelectionStrategy(),
+                new SignatureKeySelectionStrategy());
+    }
+
     private static KeyFlag[] mapPurposeToKeyFlags(EncryptionStream.Purpose purpose) {
         KeyFlag[] flags;
         switch (purpose) {
@@ -457,11 +463,5 @@ public class EncryptionBuilder implements EncryptionBuilderInterface {
                 throw new AssertionError("Illegal purpose enum value encountered.");
         }
         return flags;
-    }
-
-    SecretKeySelectionStrategy signingKeySelector() {
-        return new And.SecKeySelectionStrategy(
-                new NoRevocation.SecKeySelectionStrategy(),
-                new SignatureKeySelectionStrategy());
     }
 }

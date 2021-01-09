@@ -56,6 +56,6 @@ public class TestEncryptCommsStorageFlagsDifferentiated {
                 .onOutputStream(out);
 
         // since the key does not carry the flag ENCRYPT_COMMS, it cannot be used by the stream.
-        assertThrows(IllegalStateException.class, () -> builder.toRecipients(publicKeys));
+        assertThrows(IllegalArgumentException.class, () -> builder.toRecipients(publicKeys));
     }
 }

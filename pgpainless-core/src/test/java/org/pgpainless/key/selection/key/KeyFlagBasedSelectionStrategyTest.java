@@ -34,9 +34,10 @@ import org.pgpainless.key.generation.type.KeyType;
 import org.pgpainless.key.generation.type.ecc.EllipticCurve;
 import org.pgpainless.key.generation.type.eddsa.EdDSACurve;
 import org.pgpainless.key.generation.type.xdh.XDHCurve;
-import org.pgpainless.key.selection.key.impl.HasKeyFlagSelectionStrategy;
+import org.pgpainless.key.selection.key.impl.HasAllKeyFlagSelectionStrategy;
+import org.pgpainless.key.selection.key.impl.HasAnyKeyFlagSelectionStrategy;
 
-public class HasKeyFlagsSelectionStrategyTest {
+public class KeyFlagBasedSelectionStrategyTest {
 
     @Test
     public void testKeyFlagSelectors() throws InvalidAlgorithmParameterException, NoSuchAlgorithmException, PGPException {
@@ -61,12 +62,14 @@ public class HasKeyFlagsSelectionStrategyTest {
         // ENCRYPT_COMMS
         PGPSecretKey s_encryptionKey = iterator.next();
 
-        HasKeyFlagSelectionStrategy.SecretKey s_certifyOther =
-                new HasKeyFlagSelectionStrategy.SecretKey(KeyFlag.CERTIFY_OTHER);
-        HasKeyFlagSelectionStrategy.SecretKey s_encryptComms =
-                new HasKeyFlagSelectionStrategy.SecretKey(KeyFlag.ENCRYPT_COMMS);
-        HasKeyFlagSelectionStrategy.SecretKey s_encryptCommsEncryptStorage =
-                new HasKeyFlagSelectionStrategy.SecretKey(KeyFlag.ENCRYPT_COMMS, KeyFlag.ENCRYPT_STORAGE);
+        HasAllKeyFlagSelectionStrategy.SecretKey s_certifyOther =
+                new HasAllKeyFlagSelectionStrategy.SecretKey(KeyFlag.CERTIFY_OTHER);
+        HasAllKeyFlagSelectionStrategy.SecretKey s_encryptComms =
+                new HasAllKeyFlagSelectionStrategy.SecretKey(KeyFlag.ENCRYPT_COMMS);
+        HasAllKeyFlagSelectionStrategy.SecretKey s_encryptCommsEncryptStorage =
+                new HasAllKeyFlagSelectionStrategy.SecretKey(KeyFlag.ENCRYPT_COMMS, KeyFlag.ENCRYPT_STORAGE);
+        HasAnyKeyFlagSelectionStrategy.SecretKey s_anyEncryptCommsEncryptStorage =
+                new HasAnyKeyFlagSelectionStrategy.SecretKey(KeyFlag.ENCRYPT_COMMS, KeyFlag.ENCRYPT_STORAGE);
 
         assertTrue(s_certifyOther.accept(s_primaryKey));
         assertFalse(s_certifyOther.accept(s_encryptionKey));
@@ -81,16 +84,22 @@ public class HasKeyFlagsSelectionStrategyTest {
         assertFalse(s_encryptCommsEncryptStorage.accept(s_primaryKey));
         assertFalse(s_encryptCommsEncryptStorage.accept(s_signingKey));
 
+        assertTrue(s_anyEncryptCommsEncryptStorage.accept(s_encryptionKey));
+        assertFalse(s_anyEncryptCommsEncryptStorage.accept(s_primaryKey));
+        assertFalse(s_anyEncryptCommsEncryptStorage.accept(s_signingKey));
+
         PGPPublicKey p_primaryKey = s_primaryKey.getPublicKey();
         PGPPublicKey p_encryptionKey = s_encryptionKey.getPublicKey();
         PGPPublicKey p_signingKey = s_signingKey.getPublicKey();
 
-        HasKeyFlagSelectionStrategy.PublicKey p_certifyOther =
-                new HasKeyFlagSelectionStrategy.PublicKey(KeyFlag.CERTIFY_OTHER);
-        HasKeyFlagSelectionStrategy.PublicKey p_encryptComms =
-                new HasKeyFlagSelectionStrategy.PublicKey(KeyFlag.ENCRYPT_COMMS);
-        HasKeyFlagSelectionStrategy.PublicKey p_encryptCommsEncryptStorage =
-                new HasKeyFlagSelectionStrategy.PublicKey(KeyFlag.ENCRYPT_COMMS, KeyFlag.ENCRYPT_STORAGE);
+        HasAllKeyFlagSelectionStrategy.PublicKey p_certifyOther =
+                new HasAllKeyFlagSelectionStrategy.PublicKey(KeyFlag.CERTIFY_OTHER);
+        HasAllKeyFlagSelectionStrategy.PublicKey p_encryptComms =
+                new HasAllKeyFlagSelectionStrategy.PublicKey(KeyFlag.ENCRYPT_COMMS);
+        HasAllKeyFlagSelectionStrategy.PublicKey p_encryptCommsEncryptStorage =
+                new HasAllKeyFlagSelectionStrategy.PublicKey(KeyFlag.ENCRYPT_COMMS, KeyFlag.ENCRYPT_STORAGE);
+        HasAnyKeyFlagSelectionStrategy.PublicKey p_anyEncryptCommsEncryptStorage =
+                new HasAnyKeyFlagSelectionStrategy.PublicKey(KeyFlag.ENCRYPT_COMMS, KeyFlag.ENCRYPT_STORAGE);
 
         assertTrue(p_certifyOther.accept(p_primaryKey));
         assertFalse(p_certifyOther.accept(p_encryptionKey));
@@ -104,5 +113,9 @@ public class HasKeyFlagsSelectionStrategyTest {
                 "Must not accept the key, as it only carries ENCRYPT_COMMS, but not ENCRYPT_STORAGE");
         assertFalse(p_encryptCommsEncryptStorage.accept(p_primaryKey));
         assertFalse(p_encryptCommsEncryptStorage.accept(p_signingKey));
+
+        assertTrue(p_anyEncryptCommsEncryptStorage.accept(p_encryptionKey));
+        assertFalse(p_anyEncryptCommsEncryptStorage.accept(p_primaryKey));
+        assertFalse(p_anyEncryptCommsEncryptStorage.accept(p_signingKey));
     }
 }

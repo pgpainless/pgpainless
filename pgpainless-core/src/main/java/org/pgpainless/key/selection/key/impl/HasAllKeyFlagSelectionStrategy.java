@@ -24,7 +24,10 @@ import org.pgpainless.algorithm.KeyFlag;
 import org.pgpainless.key.selection.key.PublicKeySelectionStrategy;
 import org.pgpainless.key.selection.key.SecretKeySelectionStrategy;
 
-public class HasKeyFlagSelectionStrategy {
+/**
+ * Selection Strategy that accepts a key if it carries all of the specified key flags.
+ */
+public class HasAllKeyFlagSelectionStrategy {
 
     public static class PublicKey extends PublicKeySelectionStrategy {
 
