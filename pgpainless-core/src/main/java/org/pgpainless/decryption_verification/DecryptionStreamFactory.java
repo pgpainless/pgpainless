@@ -33,6 +33,7 @@ import org.bouncycastle.openpgp.PGPCompressedData;
 import org.bouncycastle.openpgp.PGPEncryptedData;
 import org.bouncycastle.openpgp.PGPEncryptedDataList;
 import org.bouncycastle.openpgp.PGPException;
+import org.bouncycastle.openpgp.PGPKeyValidationException;
 import org.bouncycastle.openpgp.PGPLiteralData;
 import org.bouncycastle.openpgp.PGPObjectFactory;
 import org.bouncycastle.openpgp.PGPOnePassSignature;
@@ -43,6 +44,7 @@ import org.bouncycastle.openpgp.PGPPublicKey;
 import org.bouncycastle.openpgp.PGPPublicKeyEncryptedData;
 import org.bouncycastle.openpgp.PGPPublicKeyRing;
 import org.bouncycastle.openpgp.PGPSecretKey;
+import org.bouncycastle.openpgp.PGPSecretKeyRing;
 import org.bouncycastle.openpgp.PGPSecretKeyRingCollection;
 import org.bouncycastle.openpgp.PGPSignature;
 import org.bouncycastle.openpgp.PGPUtil;
@@ -208,18 +210,38 @@ public final class DecryptionStreamFactory {
             } else if (encryptedData instanceof PGPPublicKeyEncryptedData) {
                 PGPPublicKeyEncryptedData publicKeyEncryptedData = (PGPPublicKeyEncryptedData) encryptedData;
                 long keyId = publicKeyEncryptedData.getKeyID();
-
-                resultBuilder.addRecipientKeyId(keyId);
-                LOGGER.log(LEVEL, "PGPEncryptedData is encrypted for key " + Long.toHexString(keyId));
-
                 if (decryptionKeys != null) {
-                    PGPSecretKey secretKey = decryptionKeys.getSecretKey(keyId);
-                    if (secretKey != null) {
-                        LOGGER.log(LEVEL, "Found respective secret key " + Long.toHexString(keyId));
-                        // Watch out! This assignment is possibly done multiple times.
-                        encryptedSessionKey = publicKeyEncryptedData;
-                        decryptionKey = secretKey.extractPrivateKey(decryptionKeyDecryptor.getDecryptor(keyId));
-                        resultBuilder.setDecryptionFingerprint(new OpenPgpV4Fingerprint(secretKey));
+                    // Known key id
+                    if (keyId != 0) {
+                        LOGGER.log(LEVEL, "PGPEncryptedData is encrypted for key " + Long.toHexString(keyId));
+                        resultBuilder.addRecipientKeyId(keyId);
+                        PGPSecretKey secretKey = decryptionKeys.getSecretKey(keyId);
+                        if (secretKey != null) {
+                            LOGGER.log(LEVEL, "Found respective secret key " + Long.toHexString(keyId));
+                            // Watch out! This assignment is possibly done multiple times.
+                            encryptedSessionKey = publicKeyEncryptedData;
+                            decryptionKey = secretKey.extractPrivateKey(decryptionKeyDecryptor.getDecryptor(keyId));
+                            resultBuilder.setDecryptionFingerprint(new OpenPgpV4Fingerprint(secretKey));
+                        }
+                    } else {
+                        // Hidden recipient
+                        LOGGER.log(LEVEL, "Hidden recipient detected. Try to decrypt with all available secret keys.");
+                        outerloop: for (PGPSecretKeyRing ring : decryptionKeys) {
+                            for (PGPSecretKey key : ring) {
+                                PGPPrivateKey privateKey = key.extractPrivateKey(decryptionKeyDecryptor.getDecryptor(key.getKeyID()));
+                                PublicKeyDataDecryptorFactory decryptorFactory = ImplementationFactory.getInstance().getPublicKeyDataDecryptorFactory(privateKey);
+                                try {
+                                    publicKeyEncryptedData.getSymmetricAlgorithm(decryptorFactory); // will only succeed if we have the right secret key
+                                    LOGGER.log(LEVEL, "Found correct key " + Long.toHexString(key.getKeyID()) + " for hidden recipient decryption.");
+                                    decryptionKey = privateKey;
+                                    resultBuilder.setDecryptionFingerprint(new OpenPgpV4Fingerprint(key));
+                                    encryptedSessionKey = publicKeyEncryptedData;
+                                    break outerloop;
+                                } catch (ClassCastException | PGPKeyValidationException e) {
+                                    LOGGER.log(LEVEL, "Skipping wrong key " + Long.toHexString(key.getKeyID()) + " for hidden recipient decryption.", e);
+                                }
+                            }
+                        }
                     }
                 }
             }
