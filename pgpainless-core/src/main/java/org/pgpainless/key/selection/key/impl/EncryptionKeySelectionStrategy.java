@@ -21,6 +21,7 @@ import javax.annotation.Nonnull;
 
 import org.bouncycastle.openpgp.PGPPublicKey;
 import org.pgpainless.algorithm.KeyFlag;
+import org.pgpainless.algorithm.PublicKeyAlgorithm;
 import org.pgpainless.key.selection.key.PublicKeySelectionStrategy;
 
 /**
@@ -38,16 +39,16 @@ public class EncryptionKeySelectionStrategy extends PublicKeySelectionStrategy {
 
     @Override
     public boolean accept(@Nonnull PGPPublicKey key) {
-        boolean isEncryptionKey = key.isEncryptionKey();
-        boolean hasAppropriateKeyFlags = keyFlagSelector.accept(key);
-
-        if (!isEncryptionKey) {
-            LOGGER.log(Level.FINE, "Key algorithm is not suitable of encryption.");
+        if (!key.isEncryptionKey()) {
+            LOGGER.log(Level.FINE, "Rejecting key " + Long.toHexString(key.getKeyID()) + " as its algorithm (" +
+                    PublicKeyAlgorithm.fromId(key.getAlgorithm()) + ") is not suitable of encryption.");
+            return false;
         }
-        if (!hasAppropriateKeyFlags) {
-            LOGGER.log(Level.FINE, "Key " + Long.toHexString(key.getKeyID()) + " does not carry ");
+        if (!keyFlagSelector.accept(key)) {
+            LOGGER.log(Level.FINE, "Rejecting key " + Long.toHexString(key.getKeyID()) + " as it does not the appropriate encryption key flags.");
+            return false;
         }
 
-        return isEncryptionKey && hasAppropriateKeyFlags;
+        return true;
     }
 }

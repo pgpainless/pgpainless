@@ -15,9 +15,13 @@
  */
 package org.pgpainless.key.selection.key.impl;
 
+import java.util.logging.Level;
+import java.util.logging.Logger;
 import javax.annotation.Nonnull;
 
 import org.bouncycastle.openpgp.PGPSecretKey;
+import org.pgpainless.algorithm.KeyFlag;
+import org.pgpainless.algorithm.PublicKeyAlgorithm;
 import org.pgpainless.key.selection.key.SecretKeySelectionStrategy;
 
 /**
@@ -25,9 +29,27 @@ import org.pgpainless.key.selection.key.SecretKeySelectionStrategy;
  */
 public class SignatureKeySelectionStrategy extends SecretKeySelectionStrategy {
 
+    private static final Logger LOGGER = Logger.getLogger(SignatureKeySelectionStrategy.class.getName());
+
+    HasAnyKeyFlagSelectionStrategy.SecretKey flagSelector =
+            new HasAnyKeyFlagSelectionStrategy.SecretKey(KeyFlag.SIGN_DATA);
+
     @Override
     public boolean accept(@Nonnull PGPSecretKey key) {
-        return key.isSigningKey();
+        boolean hasSignDataKeyFlag = flagSelector.accept(key);
+
+        if (!key.isSigningKey()) {
+            LOGGER.log(Level.FINE, "Rejecting key " + Long.toHexString(key.getKeyID()) + " as its algorithm (" +
+                    PublicKeyAlgorithm.fromId(key.getPublicKey().getAlgorithm()) + ") is not capable of signing.");
+            return false;
+        }
+
+        if (!hasSignDataKeyFlag) {
+            LOGGER.log(Level.FINE, "Rejecting key " + Long.toHexString(key.getKeyID()) +
+                    " as it does not carry the key flag SIGN_DATA.");
+            return false;
+        }
+        return true;
     }
 
 }
