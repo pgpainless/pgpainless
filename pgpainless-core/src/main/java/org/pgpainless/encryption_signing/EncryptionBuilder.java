@@ -98,7 +98,7 @@ public class EncryptionBuilder implements EncryptionBuilderInterface {
                 }
 
                 if (encryptionKeys.isEmpty()) {
-                    throw new IllegalStateException("No valid encryption keys found!");
+                    throw new IllegalArgumentException("No valid encryption keys found!");
                 }
                 EncryptionBuilder.this.encryptionKeys.addAll(encryptionKeys);
             }
@@ -118,7 +118,7 @@ public class EncryptionBuilder implements EncryptionBuilderInterface {
                     }
                 }
                 if (encryptionKeys.isEmpty()) {
-                    throw new IllegalStateException("No valid encryption keys found!");
+                    throw new IllegalArgumentException("No valid encryption keys found!");
                 }
                 EncryptionBuilder.this.encryptionKeys.addAll(encryptionKeys);
             }
@@ -141,7 +141,7 @@ public class EncryptionBuilder implements EncryptionBuilderInterface {
                 }
 
                 if (encryptionKeys.isEmpty()) {
-                    throw new IllegalStateException("No valid encryption keys found!");
+                    throw new IllegalArgumentException("No valid encryption keys found!");
                 }
 
                 EncryptionBuilder.this.encryptionKeys.addAll(encryptionKeys);
@@ -169,7 +169,7 @@ public class EncryptionBuilder implements EncryptionBuilderInterface {
             }
 
             if (EncryptionBuilder.this.encryptionKeys.isEmpty()) {
-                throw new IllegalStateException("No valid encryption keys found!");
+                throw new IllegalArgumentException("No valid encryption keys found!");
             }
 
             return new WithAlgorithmsImpl();
