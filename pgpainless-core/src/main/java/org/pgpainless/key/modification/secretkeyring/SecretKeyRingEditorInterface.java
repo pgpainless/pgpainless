@@ -15,9 +15,9 @@
  */
 package org.pgpainless.key.modification.secretkeyring;
 
-import java.util.Date;
 import java.security.InvalidAlgorithmParameterException;
 import java.security.NoSuchAlgorithmException;
+import java.util.Date;
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
 
@@ -196,6 +196,10 @@ public interface SecretKeyRingEditorInterface {
     SecretKeyRingEditorInterface revokeSubKey(long subKeyId,
                                               SecretKeyRingProtector secretKeyRingProtector,
                                               RevocationAttributes revocationAttributes)
+            throws PGPException;
+
+    SecretKeyRingEditorInterface setExpirationDate(Date expiration,
+                                                   SecretKeyRingProtector secretKeyRingProtector)
             throws PGPException;
 
     /**
