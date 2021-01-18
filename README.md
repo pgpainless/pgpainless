@@ -41,7 +41,7 @@ The entry point to the API is the `PGPainless` class. Here you can find methods 
 The first thing you probably want to do is generate you some nice tasty Key Pairs. The most straight forward way to do so is by calling
 
 ```java
-        PGPSecretKeyRing keyRing = PGPainless.generateKeyRing()
+        PGPKeyRing keyRing = PGPainless.generateKeyRing()
                 .simpleRsaKeyRing("Juliet <juliet@montague.lit>", RsaLength._4096);
 ```
 
