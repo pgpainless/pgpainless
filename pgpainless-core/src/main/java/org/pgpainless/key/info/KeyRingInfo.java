@@ -215,7 +215,11 @@ public class KeyRingInfo {
      * @return expiration date
      */
     public Date getExpirationDate() {
-        long validSeconds = getPublicKey().getValidSeconds();
+        return getExpirationDate(new OpenPgpV4Fingerprint(getPublicKey()));
+    }
+
+    public Date getExpirationDate(OpenPgpV4Fingerprint fingerprint) {
+        long validSeconds = keys.getPublicKey(fingerprint.getKeyId()).getValidSeconds();
         if (validSeconds == 0) {
             return null;
         }
