@@ -62,6 +62,7 @@ import org.pgpainless.key.util.KeyRingUtils;
 import org.pgpainless.key.util.RevocationAttributes;
 import org.pgpainless.key.util.SignatureUtils;
 import org.pgpainless.util.Passphrase;
+import org.pgpainless.util.SignatureSubpacketGeneratorUtil;
 
 public class SecretKeyRingEditor implements SecretKeyRingEditorInterface {
 
@@ -288,55 +289,118 @@ public class SecretKeyRingEditor implements SecretKeyRingEditorInterface {
     }
 
     @Override
+    public SecretKeyRingEditorInterface setExpirationDate(Date expiration,
+                                                          SecretKeyRingProtector secretKeyRingProtector)
+            throws PGPException {
+        return setExpirationDate(new OpenPgpV4Fingerprint(secretKeyRing), expiration, secretKeyRingProtector);
+    }
+
+    @Override
     public SecretKeyRingEditorInterface setExpirationDate(OpenPgpV4Fingerprint fingerprint,
                                                           Date expiration,
                                                           SecretKeyRingProtector secretKeyRingProtector)
             throws PGPException {
-        Iterator<PGPSecretKey> secretKeyIterator = secretKeyRing.getSecretKeys();
-
-        if (!secretKeyIterator.hasNext()) {
-            throw new NoSuchElementException("No secret keys in the ring.");
-        }
-
-        PGPSecretKey secretKey = secretKeyIterator.next();
-        PGPPublicKey publicKey = secretKey.getPublicKey();
-
-        if (!new OpenPgpV4Fingerprint(publicKey).equals(fingerprint)) {
-            throw new IllegalArgumentException("Currently it is possible to adjust expiration date for primary key only.");
-        }
 
         List<PGPSecretKey> secretKeyList = new ArrayList<>();
-        PGPPrivateKey privateKey = unlockSecretKey(secretKey, secretKeyRingProtector);
-
         PGPSecretKey primaryKey = secretKeyRing.getSecretKey();
-        PGPSignatureGenerator signatureGenerator = SignatureUtils.getSignatureGeneratorFor(primaryKey);
-        PGPSignatureSubpacketGenerator subpacketGenerator = new PGPSignatureSubpacketGenerator();
-
-        long secondsToExpire = 0; // 0 means "no expiration"
-        if (expiration != null) {
-            secondsToExpire = (expiration.getTime() - primaryKey.getPublicKey().getCreationTime().getTime()) / 1000;
-        }
-        subpacketGenerator.setKeyExpirationTime(false, secondsToExpire);
-
-        PGPSignatureSubpacketVector subPackets = subpacketGenerator.generate();
-        signatureGenerator.setHashedSubpackets(subPackets);
-
-        signatureGenerator.init(PGPSignature.POSITIVE_CERTIFICATION, privateKey);
-
-        Iterator<String> users = publicKey.getUserIDs();
-        while (users.hasNext()) {
-            String user = users.next();
-            PGPSignature signature = signatureGenerator.generateCertification(user, primaryKey.getPublicKey());
-            publicKey = PGPPublicKey.addCertification(publicKey, user, signature);
+        if (!primaryKey.isMasterKey()) {
+            throw new IllegalArgumentException("Key Ring does not appear to contain a primary secret key.");
         }
 
-        secretKey = PGPSecretKey.replacePublicKey(secretKey, publicKey);
-        secretKeyList.add(secretKey);
+        boolean found = false;
+        Iterator<PGPSecretKey> iterator = secretKeyRing.iterator();
+        while (iterator.hasNext()) {
+            PGPSecretKey secretKey = iterator.next();
+
+            // Skip over unaffected subkeys
+            if (secretKey.getKeyID() != fingerprint.getKeyId()) {
+                secretKeyList.add(secretKey);
+                continue;
+            }
+            // We found the target subkey
+            found = true;
+            secretKey = setExpirationDate(primaryKey, secretKey, expiration, secretKeyRingProtector);
+            secretKeyList.add(secretKey);
+        }
+
+        if (!found) {
+            throw new IllegalArgumentException("Key Ring does not contain secret key with fingerprint " + fingerprint);
+        }
 
         secretKeyRing = new PGPSecretKeyRing(secretKeyList);
 
         return this;
     }
+
+    private PGPSecretKey setExpirationDate(PGPSecretKey primaryKey,
+                                           PGPSecretKey subjectKey,
+                                           Date expiration,
+                                           SecretKeyRingProtector secretKeyRingProtector)
+            throws PGPException {
+
+        if (expiration != null && expiration.before(subjectKey.getPublicKey().getCreationTime())) {
+            throw new IllegalArgumentException("Expiration date cannot be before creation date.");
+        }
+
+        PGPPrivateKey privateKey = KeyRingUtils.unlockSecretKey(primaryKey, secretKeyRingProtector);
+        PGPPublicKey subjectPubKey = subjectKey.getPublicKey();
+
+        PGPSignature oldSignature = getPreviousSignature(primaryKey, subjectPubKey);
+
+        PGPSignatureSubpacketVector oldSubpackets = oldSignature.getHashedSubPackets();
+        PGPSignatureSubpacketGenerator subpacketGenerator = new PGPSignatureSubpacketGenerator(oldSubpackets);
+        SignatureSubpacketGeneratorUtil.setSignatureCreationTimeInSubpacketGenerator(new Date(), subpacketGenerator);
+        SignatureSubpacketGeneratorUtil.setExpirationDateInSubpacketGenerator(expiration, subjectPubKey.getCreationTime(), subpacketGenerator);
+
+        PGPSignatureGenerator signatureGenerator = SignatureUtils.getSignatureGeneratorFor(primaryKey);
+        signatureGenerator.setHashedSubpackets(subpacketGenerator.generate());
+
+        if (primaryKey.getKeyID() == subjectKey.getKeyID()) {
+            signatureGenerator.init(PGPSignature.POSITIVE_CERTIFICATION, privateKey);
+
+            for (Iterator<String> it = subjectKey.getUserIDs(); it.hasNext(); ) {
+                String userId = it.next();
+                PGPSignature signature = signatureGenerator.generateCertification(userId, subjectPubKey);
+                subjectPubKey = PGPPublicKey.addCertification(subjectPubKey, userId, signature);
+            }
+        } else {
+            signatureGenerator.init(PGPSignature.SUBKEY_BINDING, privateKey);
+
+            PGPSignature signature = signatureGenerator.generateCertification(primaryKey.getPublicKey(), subjectPubKey);
+            subjectPubKey = PGPPublicKey.addCertification(subjectPubKey, signature);
+        }
+
+        subjectKey = PGPSecretKey.replacePublicKey(subjectKey, subjectPubKey);
+        return subjectKey;
+    }
+
+    private PGPSignature getPreviousSignature(PGPSecretKey primaryKey, PGPPublicKey subjectPubKey) {
+        PGPSignature oldSignature = null;
+        if (primaryKey.getKeyID() == subjectPubKey.getKeyID()) {
+            Iterator<PGPSignature> keySignatures = subjectPubKey.getSignaturesForKeyID(primaryKey.getKeyID());
+            while (keySignatures.hasNext()) {
+                PGPSignature next = keySignatures.next();
+                if (next.getSignatureType() == PGPSignature.POSITIVE_CERTIFICATION) {
+                    oldSignature = next;
+                }
+            }
+            if (oldSignature == null) {
+                throw new IllegalStateException("Key " + new OpenPgpV4Fingerprint(subjectPubKey) + " does not have a previous positive signature.");
+            }
+        } else {
+            Iterator bindingSignatures = subjectPubKey.getSignaturesOfType(SignatureType.SUBKEY_BINDING.getCode());
+            while (bindingSignatures.hasNext()) {
+                oldSignature = (PGPSignature) bindingSignatures.next();
+            }
+        }
+
+        if (oldSignature == null) {
+            throw new IllegalStateException("Key " + new OpenPgpV4Fingerprint(subjectPubKey) + " does not have a previous subkey binding signature.");
+        }
+        return oldSignature;
+    }
+
+
 
     @Override
     public PGPSignature createRevocationCertificate(OpenPgpV4Fingerprint fingerprint,
