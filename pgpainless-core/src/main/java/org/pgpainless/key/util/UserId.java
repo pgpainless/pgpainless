@@ -15,13 +15,13 @@
  */
 package org.pgpainless.key.util;
 
-public class UserId implements CharSequence {
+public final class UserId implements CharSequence {
 
     private final String name;
     private final String comment;
     private final String email;
 
-    public UserId(String name, String comment, String email) {
+    private UserId(String name, String comment, String email) {
         this.name = name;
         this.comment = comment;
         this.email = email;
@@ -47,6 +47,10 @@ public class UserId implements CharSequence {
             throw new IllegalArgumentException("Email must not be null.");
         }
         return new UserId(null, null, email);
+    }
+
+    public static UserId nameAndEmail(String name, String email) {
+        return withName(name).noComment().withEmail(email);
     }
 
     public static WithComment withName(String name) {
