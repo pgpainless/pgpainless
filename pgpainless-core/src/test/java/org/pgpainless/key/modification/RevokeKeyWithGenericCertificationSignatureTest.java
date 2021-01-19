@@ -103,3 +103,4 @@ public class RevokeKeyWithGenericCertificationSignatureTest {
         return new KeyPair(pubOutBytes.toByteArray(), secOutBytes.toByteArray());
     }
 }
+
