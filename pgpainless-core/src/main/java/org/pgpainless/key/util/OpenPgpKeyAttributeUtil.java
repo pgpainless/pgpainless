@@ -38,7 +38,9 @@ public class OpenPgpKeyAttributeUtil {
                 continue;
             }
 
-            if (signature.getSignatureType() == SignatureType.POSITIVE_CERTIFICATION.getCode()) {
+            SignatureType signatureType = SignatureType.valueOf(signature.getSignatureType());
+            if (signatureType == SignatureType.POSITIVE_CERTIFICATION
+                    || signatureType == SignatureType.GENERIC_CERTIFICATION) {
                 int[] hashAlgos = signature.getHashedSubPackets().getPreferredHashAlgorithms();
                 for (int h : hashAlgos) {
                     hashAlgorithms.add(HashAlgorithm.fromId(h));
