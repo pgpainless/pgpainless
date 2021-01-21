@@ -15,15 +15,20 @@
  */
 package org.pgpainless.key.selection.key;
 
+import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import java.security.InvalidAlgorithmParameterException;
 import java.security.NoSuchAlgorithmException;
+import java.util.ArrayList;
 import java.util.Iterator;
+import java.util.List;
+import java.util.Set;
 
 import org.bouncycastle.openpgp.PGPException;
 import org.bouncycastle.openpgp.PGPPublicKey;
+import org.bouncycastle.openpgp.PGPPublicKeyRing;
 import org.bouncycastle.openpgp.PGPSecretKey;
 import org.bouncycastle.openpgp.PGPSecretKeyRing;
 import org.junit.jupiter.api.Test;
@@ -36,6 +41,7 @@ import org.pgpainless.key.generation.type.eddsa.EdDSACurve;
 import org.pgpainless.key.generation.type.xdh.XDHCurve;
 import org.pgpainless.key.selection.key.impl.HasAllKeyFlagSelectionStrategy;
 import org.pgpainless.key.selection.key.impl.HasAnyKeyFlagSelectionStrategy;
+import org.pgpainless.key.util.KeyRingUtils;
 
 public class KeyFlagBasedSelectionStrategyTest {
 
@@ -117,5 +123,47 @@ public class KeyFlagBasedSelectionStrategyTest {
         assertTrue(p_anyEncryptCommsEncryptStorage.accept(p_encryptionKey));
         assertFalse(p_anyEncryptCommsEncryptStorage.accept(p_primaryKey));
         assertFalse(p_anyEncryptCommsEncryptStorage.accept(p_signingKey));
+    }
+
+    @Test
+    public void testSelectKeysFromKeyRing() throws InvalidAlgorithmParameterException, NoSuchAlgorithmException, PGPException {
+        PGPSecretKeyRing secretKeys = PGPainless.generateKeyRing()
+                .withSubKey(KeySpec.getBuilder(KeyType.ECDSA(EllipticCurve._P256))
+                        .withKeyFlags(KeyFlag.SIGN_DATA)
+                        .withDefaultAlgorithms())
+                .withSubKey(KeySpec.getBuilder(KeyType.XDH(XDHCurve._X25519))
+                        .withKeyFlags(KeyFlag.ENCRYPT_COMMS)
+                        .withDefaultAlgorithms())
+                .withMasterKey(KeySpec.getBuilder(KeyType.EDDSA(EdDSACurve._Ed25519))
+                        .withKeyFlags(KeyFlag.CERTIFY_OTHER, KeyFlag.SIGN_DATA, KeyFlag.AUTHENTICATION)
+                        .withDefaultAlgorithms())
+                .withPrimaryUserId("test@test.test")
+                .withoutPassphrase().build();
+
+        HasAnyKeyFlagSelectionStrategy.SecretKey secSelection =
+                new HasAnyKeyFlagSelectionStrategy.SecretKey(KeyFlag.SIGN_DATA);
+
+        Set<PGPSecretKey> secSigningKeys = secSelection.selectKeysFromKeyRing(secretKeys);
+        assertEquals(2, secSigningKeys.size());
+
+        PGPPublicKeyRing publicKeys = KeyRingUtils.publicKeyRingFrom(secretKeys);
+
+        HasAnyKeyFlagSelectionStrategy.PublicKey pubSelection =
+                new HasAnyKeyFlagSelectionStrategy.PublicKey(KeyFlag.SIGN_DATA);
+
+        Set<PGPPublicKey> pubSigningKeys = pubSelection.selectKeysFromKeyRing(publicKeys);
+        assertEquals(2, pubSigningKeys.size());
+
+        List<Long> ids = new ArrayList<>();
+        for (PGPSecretKey secretKey : secSigningKeys) {
+            ids.add(secretKey.getKeyID());
+        }
+
+        for (PGPPublicKey publicKey : pubSigningKeys) {
+            assertTrue(ids.contains(publicKey.getKeyID()));
+        }
+
+        secSelection = new HasAnyKeyFlagSelectionStrategy.SecretKey(KeyFlag.ENCRYPT_STORAGE);
+        assertTrue(secSelection.selectKeysFromKeyRing(secretKeys).isEmpty());
     }
 }
