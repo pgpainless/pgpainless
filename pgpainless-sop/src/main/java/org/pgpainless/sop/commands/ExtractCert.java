@@ -15,18 +15,18 @@
  */
 package org.pgpainless.sop.commands;
 
+import static org.pgpainless.sop.Print.err_ln;
+import static org.pgpainless.sop.Print.print_ln;
+
 import java.io.IOException;
 
 import org.bouncycastle.openpgp.PGPException;
 import org.bouncycastle.openpgp.PGPPublicKeyRing;
 import org.bouncycastle.openpgp.PGPSecretKeyRing;
 import org.pgpainless.PGPainless;
+import org.pgpainless.key.util.KeyRingUtils;
 import org.pgpainless.sop.Print;
-import org.pgpainless.util.BCUtil;
 import picocli.CommandLine;
-
-import static org.pgpainless.sop.Print.err_ln;
-import static org.pgpainless.sop.Print.print_ln;
 
 @CommandLine.Command(name = "extract-cert",
         description = "Extract a public key certificate from a secret key from standard input")
@@ -41,7 +41,7 @@ public class ExtractCert implements Runnable {
     public void run() {
         try {
             PGPSecretKeyRing secretKeys = PGPainless.readKeyRing().secretKeyRing(System.in);
-            PGPPublicKeyRing publicKeys = BCUtil.publicKeyRingFromSecretKeyRing(secretKeys);
+            PGPPublicKeyRing publicKeys = KeyRingUtils.publicKeyRingFrom(secretKeys);
 
             print_ln(Print.toString(publicKeys.getEncoded(), armor));
         } catch (IOException | PGPException e) {

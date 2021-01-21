@@ -64,20 +64,6 @@ public class BCUtil {
         return new PGPSecretKeyRingCollection(Arrays.asList(rings));
     }
 
-    public static PGPPublicKeyRing publicKeyRingFromSecretKeyRing(@Nonnull PGPSecretKeyRing secretKeys)
-            throws PGPException, IOException {
-        ByteArrayOutputStream buffer = new ByteArrayOutputStream(512);
-        for (PGPSecretKey secretKey : secretKeys) {
-            PGPPublicKey publicKey = secretKey.getPublicKey();
-            if (publicKey != null) {
-                publicKey.encode(buffer, false);
-            }
-        }
-        KeyFingerPrintCalculator fingerprintCalculator = ImplementationFactory.getInstance().getKeyFingerprintCalculator();
-
-        return new PGPPublicKeyRing(buffer.toByteArray(), fingerprintCalculator);
-    }
-
     /*
     PGPXxxKeyRingCollection -> PGPXxxKeyRing
      */
