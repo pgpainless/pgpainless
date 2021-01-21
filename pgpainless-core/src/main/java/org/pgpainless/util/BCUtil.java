@@ -38,10 +38,8 @@ import org.bouncycastle.openpgp.PGPSecretKeyRingCollection;
 import org.bouncycastle.openpgp.PGPSignature;
 import org.bouncycastle.openpgp.PGPSignatureSubpacketVector;
 import org.bouncycastle.openpgp.PGPUtil;
-import org.bouncycastle.openpgp.operator.KeyFingerPrintCalculator;
 import org.bouncycastle.util.io.Streams;
 import org.pgpainless.algorithm.KeyFlag;
-import org.pgpainless.implementation.ImplementationFactory;
 import org.pgpainless.key.selection.key.PublicKeySelectionStrategy;
 import org.pgpainless.key.selection.key.impl.NoRevocation;
 import org.pgpainless.key.selection.key.impl.SignedByMasterKey;
@@ -183,24 +181,6 @@ public class BCUtil {
         }
 
         return cleaned;
-    }
-
-    /**
-     * Return the {@link PGPPublicKey} which is the master key of the key ring.
-     *
-     * @param ring key ring
-     * @return master key
-     */
-    public static PGPPublicKey getMasterKeyFrom(@Nonnull PGPPublicKeyRing ring) {
-        Iterator<PGPPublicKey> it = ring.getPublicKeys();
-        while (it.hasNext()) {
-            PGPPublicKey k = it.next();
-            if (k.isMasterKey()) {
-                // There can only be one master key, so we can immediately return
-                return k;
-            }
-        }
-        return null;
     }
 
     public static PGPPublicKey getMasterKeyFrom(@Nonnull PGPKeyRing ring) {

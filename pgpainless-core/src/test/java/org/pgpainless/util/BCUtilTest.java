@@ -36,6 +36,8 @@ import org.bouncycastle.openpgp.PGPSecretKeyRingCollection;
 import org.junit.jupiter.api.Test;
 import org.pgpainless.PGPainless;
 import org.pgpainless.algorithm.KeyFlag;
+import org.pgpainless.key.OpenPgpV4Fingerprint;
+import org.pgpainless.key.TestKeys;
 import org.pgpainless.key.generation.KeySpec;
 import org.pgpainless.key.generation.type.KeyType;
 import org.pgpainless.key.generation.type.rsa.RsaLength;
@@ -132,5 +134,15 @@ public class BCUtilTest {
 
         PGPSecretKeyRing cleaned = BCUtil.removeUnassociatedKeysFromKeyRing(alice_mallory, alice.getPublicKey());
         assertNull(cleaned.getSecretKey(subKey.getKeyID()));
+    }
+
+    @Test
+    public void getMasterKeyFromRingTest() throws IOException, PGPException {
+        PGPSecretKeyRing secretKeys = TestKeys.getCryptieSecretKeyRing();
+
+        PGPPublicKey primaryKey = BCUtil.getMasterKeyFrom(secretKeys);
+
+        assertNotNull(primaryKey);
+        assertEquals(TestKeys.CRYPTIE_FINGERPRINT, new OpenPgpV4Fingerprint(primaryKey));
     }
 }

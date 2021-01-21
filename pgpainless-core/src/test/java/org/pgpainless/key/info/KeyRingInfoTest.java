@@ -33,6 +33,8 @@ import org.pgpainless.PGPainless;
 import org.pgpainless.algorithm.PublicKeyAlgorithm;
 import org.pgpainless.key.TestKeys;
 import org.pgpainless.key.protection.UnprotectedKeysProtector;
+import org.pgpainless.key.util.KeyRingUtils;
+import org.pgpainless.util.Passphrase;
 
 public class KeyRingInfoTest {
 
@@ -78,5 +80,29 @@ public class KeyRingInfoTest {
         assertNotNull(rInfo.getRevocationDate());
         assertEquals(revocationDate.getTime(), rInfo.getRevocationDate().getTime(), 1000);
         assertEquals(revocationDate.getTime(), rInfo.getLastModified().getTime(), 1000);
+    }
+
+    @Test
+    public void testIsFullyDecrypted() throws IOException, PGPException {
+        PGPSecretKeyRing secretKeys = TestKeys.getEmilSecretKeyRing();
+        KeyRingInfo info = PGPainless.inspectKeyRing(secretKeys);
+
+        assertTrue(info.isFullyDecrypted());
+
+        secretKeys = PGPainless.modifyKeyRing(secretKeys)
+                .changePassphraseFromOldPassphrase(null)
+                .withSecureDefaultSettings()
+                .toNewPassphrase(Passphrase.fromPassword("sw0rdf1sh"))
+                .done();
+        info = PGPainless.inspectKeyRing(secretKeys);
+
+        assertFalse(info.isFullyDecrypted());
+    }
+
+    @Test
+    public void testGetSecretKey() throws IOException, PGPException {
+        PGPSecretKeyRing secretKeys = TestKeys.getCryptieSecretKeyRing();
+        PGPPublicKeyRing publicKeys = KeyRingUtils.publicKeyRingFrom(secretKeys);
+
     }
 }
