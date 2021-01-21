@@ -104,5 +104,10 @@ public class KeyRingInfoTest {
         PGPSecretKeyRing secretKeys = TestKeys.getCryptieSecretKeyRing();
         PGPPublicKeyRing publicKeys = KeyRingUtils.publicKeyRingFrom(secretKeys);
 
+        KeyRingInfo info = PGPainless.inspectKeyRing(secretKeys);
+        assertEquals(secretKeys.getSecretKey(), info.getSecretKey());
+
+        info = PGPainless.inspectKeyRing(publicKeys);
+        assertNull(info.getSecretKey());
     }
 }
