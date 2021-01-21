@@ -75,4 +75,15 @@ public class UserIdTest {
                         .withEmail("juliet@capulet.lit")
                         .toString());
     }
+
+    @Test
+    public void throwIfOnlyEmailEmailNull() {
+        assertThrows(IllegalArgumentException.class, () -> UserId.onlyEmail(null));
+    }
+
+    @Test
+    public void testNameAndEmail() {
+        UserId userId = UserId.nameAndEmail("Maurice Moss", "moss.m@reynholm.co.uk");
+        assertEquals("Maurice Moss <moss.m@reynholm.co.uk>", userId.toString());
+    }
 }
