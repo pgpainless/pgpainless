@@ -37,14 +37,18 @@ public class SignatureUtils {
 
     private static BcPGPContentSignerBuilder getPgpContentSignerBuilderForKey(PGPPublicKey publicKey) {
         List<HashAlgorithm> preferredHashAlgorithms = OpenPgpKeyAttributeUtil.getPreferredHashAlgorithms(publicKey);
+        if (preferredHashAlgorithms.isEmpty()) {
+            preferredHashAlgorithms = OpenPgpKeyAttributeUtil.guessPreferredHashAlgorithms(publicKey);
+        }
         HashAlgorithm hashAlgorithm = negotiateHashAlgorithm(preferredHashAlgorithms);
 
         return new BcPGPContentSignerBuilder(publicKey.getAlgorithm(), hashAlgorithm.getAlgorithmId());
     }
 
     private static HashAlgorithm negotiateHashAlgorithm(List<HashAlgorithm> preferredHashAlgorithms) {
-        // TODO: Match our list of supported hash algorithms against the list, to determine the best suitable algo.
-        //  For now we just take the first algorithm in the list and hope that BC has support for it.
+        if (preferredHashAlgorithms.isEmpty()) {
+            return HashAlgorithm.SHA512;
+        }
         return preferredHashAlgorithms.get(0);
     }
 }
