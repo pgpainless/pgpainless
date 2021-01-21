@@ -17,6 +17,7 @@ package org.pgpainless.key.modification;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import java.io.IOException;
@@ -103,5 +104,25 @@ public class RevokeSubKeyTest {
 
         assertEquals(SignatureType.KEY_REVOCATION.getCode(), keyRevocation.getSignatureType());
         assertEquals(SignatureType.SUBKEY_REVOCATION.getCode(), subkeyRevocation.getSignatureType());
+    }
+
+    @Test
+    public void testThrowsIfRevocationReasonTypeMismatch() {
+        // Key revocation cannot have reason type USER_ID_NO_LONGER_VALID
+        assertThrows(IllegalArgumentException.class, () -> RevocationAttributes.createKeyRevocation()
+                .withReason(RevocationAttributes.Reason.USER_ID_NO_LONGER_VALID));
+        // Cert revocations cannot have the reason types KEY_SUPERSEDED, KEY_COMPROMIZED, KEY_RETIRED
+        assertThrows(IllegalArgumentException.class, () -> RevocationAttributes.createCertificateRevocation()
+                .withReason(RevocationAttributes.Reason.KEY_SUPERSEDED));
+        assertThrows(IllegalArgumentException.class, () -> RevocationAttributes.createCertificateRevocation()
+                .withReason(RevocationAttributes.Reason.KEY_COMPROMISED));
+        assertThrows(IllegalArgumentException.class, () -> RevocationAttributes.createCertificateRevocation()
+                .withReason(RevocationAttributes.Reason.KEY_RETIRED));
+    }
+
+    @Test
+    public void testReasonToString() {
+        RevocationAttributes.Reason reason = RevocationAttributes.Reason.KEY_COMPROMISED;
+        assertEquals("2 - KEY_COMPROMISED", reason.toString());
     }
 }
