@@ -105,9 +105,20 @@ public class KeyRingInfoTest {
         PGPPublicKeyRing publicKeys = KeyRingUtils.publicKeyRingFrom(secretKeys);
 
         KeyRingInfo info = PGPainless.inspectKeyRing(secretKeys);
-        assertEquals(secretKeys.getSecretKey(), info.getSecretKey());
+        assertEquals(KeyRingUtils.requirePrimarySecretKeyFrom(secretKeys), info.getSecretKey());
 
         info = PGPainless.inspectKeyRing(publicKeys);
         assertNull(info.getSecretKey());
+    }
+
+    @Test
+    public void testGetPublicKey() throws IOException, PGPException {
+        PGPSecretKeyRing secretKeys = TestKeys.getCryptieSecretKeyRing();
+
+        KeyRingInfo info = PGPainless.inspectKeyRing(secretKeys);
+        assertEquals(KeyRingUtils.requirePrimaryPublicKeyFrom(secretKeys), info.getPublicKey());
+
+        assertEquals(KeyRingUtils.requirePrimarySecretKeyFrom(secretKeys),
+                KeyRingUtils.requireSecretKeyFrom(secretKeys, secretKeys.getPublicKey().getKeyID()));
     }
 }

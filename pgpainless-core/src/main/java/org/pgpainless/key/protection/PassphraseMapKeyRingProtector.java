@@ -72,6 +72,9 @@ public class PassphraseMapKeyRingProtector implements SecretKeyRingProtector, Se
     public Passphrase getPassphraseFor(Long keyId) {
         Passphrase passphrase = cache.get(keyId);
         if (passphrase == null || !passphrase.isValid()) {
+            if (provider == null) {
+                return null;
+            }
             passphrase = provider.getPassphraseFor(keyId);
             if (passphrase != null) {
                 cache.put(keyId, passphrase);

@@ -42,7 +42,7 @@ import org.bouncycastle.util.io.Streams;
 import org.pgpainless.algorithm.KeyFlag;
 import org.pgpainless.key.selection.key.PublicKeySelectionStrategy;
 import org.pgpainless.key.selection.key.impl.NoRevocation;
-import org.pgpainless.key.selection.key.impl.SignedByMasterKey;
+import org.pgpainless.key.selection.key.impl.KeyBelongsToKeyRing;
 import org.pgpainless.key.selection.key.util.And;
 
 public class BCUtil {
@@ -136,7 +136,7 @@ public class BCUtil {
         }
         // Only select keys which are signed by the master key and not revoked.
         PublicKeySelectionStrategy selector = new And.PubKeySelectionStrategy(
-                new SignedByMasterKey.PubkeySelectionStrategy(masterKey),
+                new KeyBelongsToKeyRing.PubkeySelectionStrategy(masterKey),
                 new NoRevocation.PubKeySelectionStrategy());
 
         PGPPublicKeyRing cleaned = ring;
@@ -167,7 +167,7 @@ public class BCUtil {
         }
         // Only select keys which are signed by the master key and not revoked.
         PublicKeySelectionStrategy selector = new And.PubKeySelectionStrategy(
-                new SignedByMasterKey.PubkeySelectionStrategy(masterKey),
+                new KeyBelongsToKeyRing.PubkeySelectionStrategy(masterKey),
                 new NoRevocation.PubKeySelectionStrategy());
 
         PGPSecretKeyRing cleaned = ring;

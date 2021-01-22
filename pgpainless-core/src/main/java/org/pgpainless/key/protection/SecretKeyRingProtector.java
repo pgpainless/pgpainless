@@ -16,6 +16,7 @@
 package org.pgpainless.key.protection;
 
 import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
 import javax.annotation.Nullable;
 
 import org.bouncycastle.openpgp.PGPException;
@@ -52,7 +53,11 @@ public interface SecretKeyRingProtector {
     @Nullable PBESecretKeyEncryptor getEncryptor(Long keyId) throws PGPException;
 
     static SecretKeyRingProtector unlockAllKeysWith(Passphrase passphrase, PGPSecretKeyRing keys) {
-        return PasswordBasedSecretKeyRingProtector.forKey(keys, passphrase);
+        Map<Long, Passphrase> map = new ConcurrentHashMap<>();
+        for (PGPSecretKey secretKey : keys) {
+            map.put(secretKey.getKeyID(), passphrase);
+        }
+        return fromPassphraseMap(map);
     }
 
     static SecretKeyRingProtector unlockSingleKeyWith(Passphrase passphrase, PGPSecretKey key) {

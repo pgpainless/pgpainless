@@ -110,4 +110,27 @@ public class Passphrase {
     public static Passphrase emptyPassphrase() {
         return new Passphrase(null);
     }
+
+    @Override
+    public int hashCode() {
+        if (getChars() == null) {
+            return 0;
+        }
+        return new String(getChars()).hashCode();
+    }
+
+    @Override
+    public boolean equals(Object obj) {
+        if (obj == null) {
+            return false;
+        }
+        if (this == obj) {
+            return true;
+        }
+        if (!(obj instanceof Passphrase)) {
+            return false;
+        }
+        Passphrase other = (Passphrase) obj;
+        return Arrays.equals(getChars(), other.getChars());
+    }
 }

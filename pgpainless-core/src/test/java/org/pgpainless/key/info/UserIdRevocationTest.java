@@ -113,7 +113,6 @@ public class UserIdRevocationTest {
                                 .withReason(RevocationAttributes.Reason.USER_ID_NO_LONGER_VALID)
                                 .withDescription("I lost my mail password"))
                 .done();
-        PGPSignature s = PGPainless.inspectKeyRing(secretKeys).getLatestValidSelfSignatureOnKey();
         PGPSignature signature = SignatureUtils.getLatestSelfSignatureForUserId(secretKeys.getPublicKey(), "secondary@key.id");
         RevocationReason reason = (RevocationReason) signature.getHashedSubPackets()
                 .getSubpacket(SignatureSubpacketTags.REVOCATION_REASON);

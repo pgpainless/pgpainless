@@ -24,12 +24,12 @@ import java.util.logging.Logger;
 import org.bouncycastle.openpgp.PGPException;
 import org.bouncycastle.openpgp.PGPPublicKey;
 import org.bouncycastle.openpgp.PGPSignature;
-import org.bouncycastle.openpgp.operator.bc.BcPGPContentVerifierBuilderProvider;
+import org.pgpainless.implementation.ImplementationFactory;
 import org.pgpainless.key.selection.key.PublicKeySelectionStrategy;
 
-public class SignedByMasterKey {
+public class KeyBelongsToKeyRing {
 
-    private static final Logger LOGGER = Logger.getLogger(SignedByMasterKey.class.getName());
+    private static final Logger LOGGER = Logger.getLogger(KeyBelongsToKeyRing.class.getName());
 
     public static class PubkeySelectionStrategy extends PublicKeySelectionStrategy {
 
@@ -51,7 +51,7 @@ public class SignedByMasterKey {
                 PGPSignature signature = signatures.next();
                 if (signature.getSignatureType() == PGPSignature.SUBKEY_BINDING) {
                     try {
-                        signature.init(new BcPGPContentVerifierBuilderProvider(), masterKey);
+                        signature.init(ImplementationFactory.getInstance().getPGPContentVerifierBuilderProvider(), masterKey);
                         return signature.verifyCertification(masterKey, key);
                     } catch (PGPException e) {
                         LOGGER.log(Level.WARNING, "Could not verify subkey signature of key " +
