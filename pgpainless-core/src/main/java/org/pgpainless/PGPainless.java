@@ -155,4 +155,8 @@ public class PGPainless {
     public static byte[] decryptWithPassword(@Nonnull byte[] data, @Nonnull Passphrase password) throws IOException, PGPException {
         return SymmetricEncryptorDecryptor.symmetricallyDecrypt(data, password);
     }
+
+    public static Policy getPolicy() {
+        return Policy.getInstance();
+    }
 }

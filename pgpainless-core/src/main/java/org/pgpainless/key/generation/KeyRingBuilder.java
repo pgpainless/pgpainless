@@ -43,10 +43,10 @@ import org.bouncycastle.openpgp.operator.PBESecretKeyDecryptor;
 import org.bouncycastle.openpgp.operator.PBESecretKeyEncryptor;
 import org.bouncycastle.openpgp.operator.PGPContentSignerBuilder;
 import org.bouncycastle.openpgp.operator.PGPDigestCalculator;
+import org.pgpainless.PGPainless;
 import org.pgpainless.algorithm.HashAlgorithm;
 import org.pgpainless.algorithm.KeyFlag;
 import org.pgpainless.algorithm.SignatureType;
-import org.pgpainless.algorithm.SymmetricKeyAlgorithm;
 import org.pgpainless.implementation.ImplementationFactory;
 import org.pgpainless.key.generation.type.KeyType;
 import org.pgpainless.key.generation.type.ecc.EllipticCurve;
@@ -329,14 +329,14 @@ public class KeyRingBuilder implements KeyRingBuilderInterface {
             private PGPContentSignerBuilder buildContentSigner(PGPKeyPair certKey) {
                 return ImplementationFactory.getInstance().getPGPContentSignerBuilder(
                         certKey.getPublicKey().getAlgorithm(),
-                        HashAlgorithm.SHA512.getAlgorithmId());
+                        PGPainless.getPolicy().getDefaultSignatureHashAlgorithm().getAlgorithmId());
             }
 
             private PBESecretKeyEncryptor buildSecretKeyEncryptor() {
                 PBESecretKeyEncryptor encryptor = passphrase == null || passphrase.isEmpty() ?
                         null : // unencrypted key pair, otherwise AES-256 encrypted
                         ImplementationFactory.getInstance().getPBESecretKeyEncryptor(
-                                SymmetricKeyAlgorithm.AES_256, digestCalculator, passphrase);
+                                PGPainless.getPolicy().getDefaultSymmetricKeyAlgorithm(), digestCalculator, passphrase);
                 return encryptor;
             }
 
