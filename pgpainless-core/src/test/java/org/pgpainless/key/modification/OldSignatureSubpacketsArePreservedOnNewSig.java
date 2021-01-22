@@ -42,7 +42,7 @@ public class OldSignatureSubpacketsArePreservedOnNewSig {
 
         OpenPgpV4Fingerprint subkeyFingerprint = new OpenPgpV4Fingerprint(PGPainless.inspectKeyRing(secretKeys).getPublicKeys().get(1));
 
-        PGPSignature oldSignature = PGPainless.inspectKeyRing(secretKeys).getLatestValidSelfOrBindingSignature(subkeyFingerprint);
+        PGPSignature oldSignature = PGPainless.inspectKeyRing(secretKeys).getLatestValidSelfOrBindingSignatureOnKey(subkeyFingerprint);
         PGPSignatureSubpacketVector oldPackets = oldSignature.getHashedSubPackets();
 
         assertEquals(0, oldPackets.getKeyExpirationTime());
@@ -51,7 +51,7 @@ public class OldSignatureSubpacketsArePreservedOnNewSig {
         secretKeys = PGPainless.modifyKeyRing(secretKeys)
                 .setExpirationDate(subkeyFingerprint, new Date(), new UnprotectedKeysProtector())
                 .done();
-        PGPSignature newSignature = PGPainless.inspectKeyRing(secretKeys).getLatestValidSelfOrBindingSignature(subkeyFingerprint);
+        PGPSignature newSignature = PGPainless.inspectKeyRing(secretKeys).getLatestValidSelfOrBindingSignatureOnKey(subkeyFingerprint);
         PGPSignatureSubpacketVector newPackets = newSignature.getHashedSubPackets();
 
         assertNotEquals(0, newPackets.getKeyExpirationTime());

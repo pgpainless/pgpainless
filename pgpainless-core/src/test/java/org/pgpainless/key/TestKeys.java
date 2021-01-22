@@ -27,6 +27,7 @@ import org.bouncycastle.openpgp.PGPSecretKeyRingCollection;
 import org.bouncycastle.openpgp.PGPUtil;
 import org.bouncycastle.openpgp.operator.KeyFingerPrintCalculator;
 import org.bouncycastle.openpgp.operator.bc.BcKeyFingerprintCalculator;
+import org.pgpainless.util.Passphrase;
 
 public class TestKeys {
 
@@ -225,6 +226,7 @@ public class TestKeys {
 
     public static final String CRYPTIE_UID = "cryptie@encrypted.key";
     public static final String CRYPTIE_PASSWORD = "password123";
+    public static final Passphrase CRYPTIE_PASSPHRASE = Passphrase.fromPassword(CRYPTIE_PASSWORD);
     public static final long CRYPTIE_KEY_ID = -821156605394703576L;
     public static final String CRYPTIE_FINGERPRINT_STRING = "A395D3BA58CA3FA0DE8F2991F49AAA6B067BAB28";
     public static final OpenPgpV4Fingerprint CRYPTIE_FINGERPRINT = new OpenPgpV4Fingerprint(CRYPTIE_FINGERPRINT_STRING);

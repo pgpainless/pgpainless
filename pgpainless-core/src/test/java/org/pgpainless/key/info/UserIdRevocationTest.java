@@ -17,6 +17,8 @@ package org.pgpainless.key.info;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import java.io.IOException;
@@ -24,23 +26,25 @@ import java.security.InvalidAlgorithmParameterException;
 import java.security.NoSuchAlgorithmException;
 import java.util.Arrays;
 import java.util.List;
+import java.util.NoSuchElementException;
 
+import org.bouncycastle.bcpg.SignatureSubpacketTags;
+import org.bouncycastle.bcpg.sig.RevocationReason;
 import org.bouncycastle.openpgp.PGPException;
-import org.bouncycastle.openpgp.PGPPublicKey;
-import org.bouncycastle.openpgp.PGPPublicKeyRing;
 import org.bouncycastle.openpgp.PGPSecretKeyRing;
 import org.bouncycastle.openpgp.PGPSignature;
-import org.bouncycastle.openpgp.PGPSignatureGenerator;
 import org.junit.jupiter.api.Test;
 import org.pgpainless.PGPainless;
 import org.pgpainless.algorithm.KeyFlag;
-import org.pgpainless.algorithm.SignatureType;
+import org.pgpainless.key.TestKeys;
 import org.pgpainless.key.generation.KeySpec;
 import org.pgpainless.key.generation.type.KeyType;
 import org.pgpainless.key.generation.type.eddsa.EdDSACurve;
 import org.pgpainless.key.generation.type.xdh.XDHCurve;
+import org.pgpainless.key.protection.PasswordBasedSecretKeyRingProtector;
+import org.pgpainless.key.protection.SecretKeyRingProtector;
 import org.pgpainless.key.protection.UnprotectedKeysProtector;
-import org.pgpainless.key.util.KeyRingUtils;
+import org.pgpainless.key.util.RevocationAttributes;
 import org.pgpainless.key.util.SignatureUtils;
 
 public class UserIdRevocationTest {
@@ -59,23 +63,97 @@ public class UserIdRevocationTest {
                 .withoutPassphrase()
                 .build();
 
-        PGPPublicKey publicKey = secretKeys.getPublicKey();
         Thread.sleep(1000);
-        PGPSignatureGenerator generator = SignatureUtils.getSignatureGeneratorFor(secretKeys.getSecretKey());
-        generator.init(SignatureType.CERTIFICATION_REVOCATION.getCode(), secretKeys.getSecretKey().extractPrivateKey(
-                new UnprotectedKeysProtector().getDecryptor(secretKeys.getSecretKey().getKeyID())));
 
-        PGPSignature signature = generator.generateCertification("secondary@key.id", publicKey);
-        publicKey = PGPPublicKey.addCertification(publicKey, "secondary@key.id", signature);
-        PGPPublicKeyRing publicKeys = KeyRingUtils.publicKeyRingFrom(secretKeys);
-        publicKeys = PGPPublicKeyRing.insertPublicKey(publicKeys, publicKey);
-        secretKeys = PGPSecretKeyRing.replacePublicKeys(secretKeys, publicKeys);
+        // make a copy with revoked subkey
+        PGPSecretKeyRing revoked = PGPainless.modifyKeyRing(secretKeys)
+                .revokeUserIdOnAllSubkeys("secondary@key.id", new UnprotectedKeysProtector())
+                .done();
 
-        KeyRingInfo info = PGPainless.inspectKeyRing(secretKeys);
+        KeyRingInfo info = PGPainless.inspectKeyRing(revoked);
         List<String> userIds = info.getUserIds();
         assertEquals(Arrays.asList("primary@key.id", "secondary@key.id"), userIds);
         assertTrue(info.isUserIdValid("primary@key.id"));
         assertFalse(info.isUserIdValid("sedondary@key.id"));
         assertFalse(info.isUserIdValid("tertiary@key.id"));
+
+        info = PGPainless.inspectKeyRing(secretKeys);
+        assertTrue(info.isUserIdValid("secondary@key.id")); // key on original secret key ring is still valid
+
+        revoked = PGPainless.modifyKeyRing(secretKeys)
+                .revokeUserId("secondary@key.id", secretKeys.getSecretKey().getKeyID(), new UnprotectedKeysProtector())
+                .done();
+        info = PGPainless.inspectKeyRing(revoked);
+        userIds = info.getUserIds();
+        assertEquals(Arrays.asList("primary@key.id", "secondary@key.id"), userIds);
+        assertTrue(info.isUserIdValid("primary@key.id"));
+        assertFalse(info.isUserIdValid("sedondary@key.id"));
+        assertFalse(info.isUserIdValid("tertiary@key.id"));
+    }
+
+    @Test
+    public void testRevocationWithRevocationReason() throws InvalidAlgorithmParameterException, NoSuchAlgorithmException, PGPException, InterruptedException {
+        PGPSecretKeyRing secretKeys = PGPainless.generateKeyRing()
+                .withSubKey(KeySpec.getBuilder(KeyType.XDH(XDHCurve._X25519))
+                        .withKeyFlags(KeyFlag.ENCRYPT_COMMS)
+                        .withDefaultAlgorithms())
+                .withMasterKey(KeySpec.getBuilder(KeyType.EDDSA(EdDSACurve._Ed25519))
+                        .withKeyFlags(KeyFlag.SIGN_DATA, KeyFlag.CERTIFY_OTHER)
+                        .withDefaultAlgorithms())
+                .withPrimaryUserId("primary@key.id")
+                .withAdditionalUserId("secondary@key.id")
+                .withoutPassphrase()
+                .build();
+
+        Thread.sleep(1000);
+
+        secretKeys = PGPainless.modifyKeyRing(secretKeys)
+                .revokeUserIdOnAllSubkeys("secondary@key.id", new UnprotectedKeysProtector(),
+                        RevocationAttributes.createCertificateRevocation()
+                                .withReason(RevocationAttributes.Reason.USER_ID_NO_LONGER_VALID)
+                                .withDescription("I lost my mail password"))
+                .done();
+        PGPSignature s = PGPainless.inspectKeyRing(secretKeys).getLatestValidSelfSignatureOnKey();
+        PGPSignature signature = SignatureUtils.getLatestSelfSignatureForUserId(secretKeys.getPublicKey(), "secondary@key.id");
+        RevocationReason reason = (RevocationReason) signature.getHashedSubPackets()
+                .getSubpacket(SignatureSubpacketTags.REVOCATION_REASON);
+        assertNotNull(reason);
+        assertEquals("I lost my mail password", reason.getRevocationDescription());
+    }
+
+    @Test
+    public void unknownKeyThrowsIllegalArgumentException() throws IOException, PGPException {
+        PGPSecretKeyRing secretKeys = TestKeys.getCryptieSecretKeyRing();
+        SecretKeyRingProtector protector = PasswordBasedSecretKeyRingProtector
+                .forKey(secretKeys.getSecretKey(), TestKeys.CRYPTIE_PASSPHRASE);
+
+        assertThrows(IllegalArgumentException.class, () -> PGPainless.modifyKeyRing(secretKeys)
+                .revokeUserId("cryptie@encrypted.key", 1L, protector));
+        assertThrows(IllegalArgumentException.class, () -> PGPainless.modifyKeyRing(secretKeys)
+                .revokeUserId("cryptie@encrypted.key", TestKeys.EMIL_FINGERPRINT, protector));
+    }
+
+    @Test
+    public void unknownUserIdThrowsNoSuchElementException() throws IOException, PGPException {
+        PGPSecretKeyRing secretKeys = TestKeys.getCryptieSecretKeyRing();
+        SecretKeyRingProtector protector = PasswordBasedSecretKeyRingProtector
+                .forKey(secretKeys.getSecretKey(), TestKeys.CRYPTIE_PASSPHRASE);
+
+        assertThrows(NoSuchElementException.class, () -> PGPainless.modifyKeyRing(secretKeys)
+                .revokeUserId("invalid@user.id", TestKeys.CRYPTIE_FINGERPRINT, protector));
+        assertThrows(NoSuchElementException.class, () -> PGPainless.modifyKeyRing(secretKeys)
+                .revokeUserId("invalid@user.id", TestKeys.CRYPTIE_KEY_ID, protector));
+    }
+
+    @Test
+    public void invalidRevocationReasonThrowsIllegalArgumentException() throws IOException, PGPException {
+        PGPSecretKeyRing secretKeys = TestKeys.getCryptieSecretKeyRing();
+        SecretKeyRingProtector protector = PasswordBasedSecretKeyRingProtector
+                .forKey(secretKeys.getSecretKey(), TestKeys.CRYPTIE_PASSPHRASE);
+
+        assertThrows(IllegalArgumentException.class, () -> PGPainless.modifyKeyRing(secretKeys)
+                .revokeUserId("cryptie@encrypted.key", secretKeys.getSecretKey().getKeyID(), protector,
+                        RevocationAttributes.createKeyRevocation().withReason(RevocationAttributes.Reason.KEY_RETIRED)
+                .withDescription("This is not a valid certification revocation reason.")));
     }
 }

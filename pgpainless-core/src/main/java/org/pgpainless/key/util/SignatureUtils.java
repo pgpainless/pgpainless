@@ -116,16 +116,12 @@ public class SignatureUtils {
     }
 
     public static boolean isSelfSignatureValid(PGPSignature signature, PGPPublicKey publicKey) throws PGPException {
-        switch (signature.getSignatureType()) {
-            case PGPSignature.POSITIVE_CERTIFICATION:
-            case PGPSignature.DEFAULT_CERTIFICATION:
-                for (Iterator<String> it = publicKey.getUserIDs(); it.hasNext(); ) {
-                    String userId = it.next();
-                    boolean valid = isSelfSignatureOnUserIdValid(signature, userId, publicKey);
-                    if (valid) {
-                        return true;
-                    }
-                }
+        for (Iterator<String> it = publicKey.getUserIDs(); it.hasNext(); ) {
+            String userId = it.next();
+            boolean valid = isSelfSignatureOnUserIdValid(signature, userId, publicKey);
+            if (valid) {
+                return true;
+            }
         }
         return false;
     }

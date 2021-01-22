@@ -45,6 +45,7 @@ import org.bouncycastle.openpgp.operator.PBESecretKeyDecryptor;
 import org.bouncycastle.openpgp.operator.PBESecretKeyEncryptor;
 import org.bouncycastle.openpgp.operator.PGPContentSignerBuilder;
 import org.bouncycastle.openpgp.operator.PGPDigestCalculator;
+import org.pgpainless.PGPainless;
 import org.pgpainless.algorithm.HashAlgorithm;
 import org.pgpainless.algorithm.SignatureType;
 import org.pgpainless.algorithm.SymmetricKeyAlgorithm;
@@ -52,6 +53,7 @@ import org.pgpainless.implementation.ImplementationFactory;
 import org.pgpainless.key.OpenPgpV4Fingerprint;
 import org.pgpainless.key.generation.KeyRingBuilder;
 import org.pgpainless.key.generation.KeySpec;
+import org.pgpainless.key.info.KeyRingInfo;
 import org.pgpainless.key.protection.KeyRingProtectionSettings;
 import org.pgpainless.key.protection.PassphraseMapKeyRingProtector;
 import org.pgpainless.key.protection.PasswordBasedSecretKeyRingProtector;
@@ -285,6 +287,96 @@ public class SecretKeyRingEditor implements SecretKeyRingEditorInterface {
         }
 
         secretKeyRing = revokeSubKey(protector, revokeeSubKey, revocationAttributes);
+        return this;
+    }
+
+    @Override
+    public SecretKeyRingEditorInterface revokeUserIdOnAllSubkeys(String userId,
+                                                                 SecretKeyRingProtector secretKeyRingProtector,
+                                                                 RevocationAttributes revocationAttributes)
+            throws PGPException {
+        Iterator<PGPPublicKey> iterator = secretKeyRing.getPublicKeys();
+        while (iterator.hasNext()) {
+            PGPPublicKey publicKey = iterator.next();
+            try {
+                revokeUserId(userId, new OpenPgpV4Fingerprint(publicKey), secretKeyRingProtector, revocationAttributes);
+            } catch (IllegalArgumentException | NoSuchElementException e) {
+                // skip
+            }
+        }
+        return this;
+    }
+
+    @Override
+    public SecretKeyRingEditorInterface revokeUserId(String userId,
+                                                     OpenPgpV4Fingerprint subkeyFingerprint,
+                                                     SecretKeyRingProtector secretKeyRingProtector,
+                                                     RevocationAttributes revocationAttributes)
+            throws PGPException {
+        PGPPublicKey publicKey = secretKeyRing.getPublicKey(subkeyFingerprint.getKeyId());
+        if (publicKey == null) {
+            throw new IllegalArgumentException("Key ring does not carry a public key with fingerprint " + subkeyFingerprint);
+        }
+
+        KeyRingInfo info = PGPainless.inspectKeyRing(secretKeyRing);
+        if (!info.getUserIds().contains(userId)) {
+            throw new NoSuchElementException("Key " + subkeyFingerprint + " does not carry userID '" + userId + '\'');
+        }
+
+        return doRevokeUserId(userId, subkeyFingerprint.getKeyId(), secretKeyRingProtector, revocationAttributes);
+    }
+
+    @Override
+    public SecretKeyRingEditorInterface revokeUserId(String userId,
+                                                     long subkeyId,
+                                                     SecretKeyRingProtector secretKeyRingProtector,
+                                                     RevocationAttributes revocationAttributes)
+            throws PGPException {
+        PGPPublicKey publicKey = secretKeyRing.getPublicKey(subkeyId);
+        if (publicKey == null) {
+            throw new IllegalArgumentException("Key ring does not carry a public key with ID " + Long.toHexString(subkeyId));
+        }
+
+        KeyRingInfo info = PGPainless.inspectKeyRing(secretKeyRing);
+        if (!info.getUserIds().contains(userId)) {
+            throw new NoSuchElementException("Key " + Long.toHexString(subkeyId) + " does not carry userID '" + userId + '\'');
+        }
+
+        return doRevokeUserId(userId, subkeyId, secretKeyRingProtector, revocationAttributes);
+    }
+
+    private SecretKeyRingEditorInterface doRevokeUserId(String userId,
+                                                        long subKeyId,
+                                                        SecretKeyRingProtector protector,
+                                                        RevocationAttributes revocationAttributes) throws PGPException {
+        PGPPublicKey publicKey = KeyRingUtils.requirePublicKeyFrom(secretKeyRing, subKeyId);
+        PGPSecretKey primaryKey = secretKeyRing.getSecretKey();
+        PGPPrivateKey privateKey = unlockSecretKey(primaryKey, protector);
+
+        PGPSignatureSubpacketGenerator subpacketGenerator = new PGPSignatureSubpacketGenerator();
+        subpacketGenerator.setSignatureCreationTime(false, new Date());
+        subpacketGenerator.setRevocable(false, false);
+        subpacketGenerator.setIssuerFingerprint(false, primaryKey);
+        if (revocationAttributes != null) {
+            RevocationAttributes.Reason reason = revocationAttributes.getReason();
+            if (reason != RevocationAttributes.Reason.NO_REASON
+                    && reason != RevocationAttributes.Reason.USER_ID_NO_LONGER_VALID) {
+                throw new IllegalArgumentException("Revocation reason must either be NO_REASON or USER_ID_NO_LONGER_VALID");
+            }
+            subpacketGenerator.setRevocationReason(false, revocationAttributes.getReason().code(), revocationAttributes.getDescription());
+        }
+
+        PGPSignatureGenerator signatureGenerator = SignatureUtils.getSignatureGeneratorFor(primaryKey);
+        signatureGenerator.setHashedSubpackets(subpacketGenerator.generate());
+        signatureGenerator.init(SignatureType.CERTIFICATION_REVOCATION.getCode(), privateKey);
+
+        PGPSignature revocationSignature = signatureGenerator.generateCertification(userId, publicKey);
+        publicKey = PGPPublicKey.addCertification(publicKey, userId, revocationSignature);
+
+        PGPPublicKeyRing publicKeyRing = KeyRingUtils.publicKeyRingFrom(secretKeyRing);
+        publicKeyRing = PGPPublicKeyRing.insertPublicKey(publicKeyRing, publicKey);
+        secretKeyRing =  PGPSecretKeyRing.replacePublicKeys(secretKeyRing, publicKeyRing);
+
         return this;
     }
 
