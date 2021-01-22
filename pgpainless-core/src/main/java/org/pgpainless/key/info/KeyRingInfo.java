@@ -15,6 +15,9 @@
  */
 package org.pgpainless.key.info;
 
+import static org.pgpainless.key.util.SignatureUtils.getLatestValidSignature;
+import static org.pgpainless.key.util.SignatureUtils.sortByCreationTimeAscending;
+
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Date;
@@ -23,6 +26,7 @@ import java.util.List;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
+import org.bouncycastle.openpgp.PGPException;
 import org.bouncycastle.openpgp.PGPKeyRing;
 import org.bouncycastle.openpgp.PGPPublicKey;
 import org.bouncycastle.openpgp.PGPPublicKeyRing;
@@ -33,6 +37,8 @@ import org.pgpainless.algorithm.PublicKeyAlgorithm;
 import org.pgpainless.algorithm.SignatureType;
 import org.pgpainless.algorithm.SymmetricKeyAlgorithm;
 import org.pgpainless.key.OpenPgpV4Fingerprint;
+import org.pgpainless.key.util.KeyRingUtils;
+import org.pgpainless.key.util.SignatureUtils;
 
 /**
  * Utility class to quickly extract certain information from a {@link PGPPublicKeyRing}/{@link PGPSecretKeyRing}.
@@ -54,6 +60,18 @@ public class KeyRingInfo {
      */
     public PGPPublicKey getPublicKey() {
         return keys.getPublicKey();
+    }
+
+    public PGPPublicKey getPublicKey(OpenPgpV4Fingerprint fingerprint) {
+        return getPublicKey(fingerprint.getKeyId());
+    }
+
+    public PGPPublicKey getPublicKey(long keyId) {
+        return keys.getPublicKey(keyId);
+    }
+
+    public static PGPPublicKey getPublicKey(PGPKeyRing keyRing, long keyId) {
+        return keyRing.getPublicKey(keyId);
     }
 
     /**
@@ -81,6 +99,17 @@ public class KeyRingInfo {
         if (keys instanceof PGPSecretKeyRing) {
             PGPSecretKeyRing secretKeys = (PGPSecretKeyRing) keys;
             return secretKeys.getSecretKey();
+        }
+        return null;
+    }
+
+    public PGPSecretKey getSecretKey(OpenPgpV4Fingerprint fingerprint) {
+        return getSecretKey(fingerprint.getKeyId());
+    }
+
+    public PGPSecretKey getSecretKey(long keyId) {
+        if (keys instanceof PGPSecretKeyRing) {
+            return ((PGPSecretKeyRing) keys).getSecretKey(keyId);
         }
         return null;
     }
@@ -134,6 +163,25 @@ public class KeyRingInfo {
             userIds.add(iterator.next());
         }
         return userIds;
+    }
+
+    public List<String> getValidUserIds() {
+        List<String> valid = new ArrayList<>();
+        List<String> userIds = getUserIds();
+        for (String userId : userIds) {
+            if (isUserIdValid(userId)) {
+                valid.add(userId);
+            }
+        }
+        return valid;
+    }
+
+    public boolean isUserIdValid(String userId) {
+        try {
+            return SignatureUtils.isUserIdValid(getPublicKey(), userId);
+        } catch (PGPException e) {
+            return false;
+        }
     }
 
     /**
@@ -259,4 +307,77 @@ public class KeyRingInfo {
         }
         return true;
     }
+
+    public List<PGPSignature> getSelfSignatures() {
+        return getSelfSignatures(new OpenPgpV4Fingerprint(getPublicKey()));
+    }
+
+    public List<PGPSignature> getSelfSignatures(OpenPgpV4Fingerprint subkeyFingerprint) {
+        return getSelfSignatures(subkeyFingerprint.getKeyId());
+    }
+
+    public List<PGPSignature> getSelfSignatures(long subkeyId) {
+        PGPPublicKey publicKey = KeyRingUtils.requirePublicKeyFrom(keys, subkeyId);
+        Iterator<PGPSignature> it = publicKey.getSignaturesForKeyID(subkeyId);
+        List<PGPSignature> signatures = new ArrayList<>();
+        while (it.hasNext()) {
+            signatures.add(it.next());
+        }
+        sortByCreationTimeAscending(signatures);
+        return signatures;
+    }
+
+    public PGPSignature getLatestValidSelfSignature() throws PGPException {
+        return getLatestValidSelfSignature(new OpenPgpV4Fingerprint(getPublicKey()));
+    }
+
+    public PGPSignature getLatestValidSelfSignature(OpenPgpV4Fingerprint fingerprint) throws PGPException {
+        return getLatestValidSelfSignature(fingerprint.getKeyId());
+    }
+
+    public PGPSignature getLatestValidSelfSignature(long subkeyId) throws PGPException {
+        PGPPublicKey publicKey = KeyRingUtils.requirePublicKeyFrom(keys, subkeyId);
+        List<PGPSignature> signatures = getSelfSignatures(subkeyId);
+        return getLatestValidSignature(publicKey, signatures, keys);
+    }
+
+    public List<PGPSignature> getBindingSignatures(OpenPgpV4Fingerprint fingerprint) {
+        return getBindingSignatures(fingerprint.getKeyId());
+    }
+
+    public List<PGPSignature> getBindingSignatures(long subkeyId) {
+        if (subkeyId == getKeyId()) {
+            return Collections.emptyList();
+        }
+        PGPPublicKey publicKey = KeyRingUtils.requirePublicKeyFrom(keys, subkeyId);
+        return SignatureUtils.getBindingSignatures(publicKey, getKeyId());
+    }
+
+    public PGPSignature getLatestValidBindingSignature(long subKeyID) throws PGPException {
+        PGPPublicKey publicKey = KeyRingUtils.requirePublicKeyFrom(keys, subKeyID);
+        List<PGPSignature> signatures = getBindingSignatures(subKeyID);
+        return getLatestValidSignature(publicKey, signatures, keys);
+    }
+
+    public PGPSignature getLatestValidSelfOrBindingSignature() throws PGPException {
+        return getLatestValidSelfOrBindingSignature(new OpenPgpV4Fingerprint(getPublicKey()));
+    }
+
+    public PGPSignature getLatestValidSelfOrBindingSignature(OpenPgpV4Fingerprint fingerprint) throws PGPException {
+        return getLatestValidSelfOrBindingSignature(fingerprint.getKeyId());
+    }
+
+    public PGPSignature getLatestValidSelfOrBindingSignature(long subKeyId) throws PGPException {
+        PGPSignature self = getLatestValidSelfSignature(subKeyId);
+        PGPSignature binding = getLatestValidBindingSignature(subKeyId);
+        if (self == null) {
+            return binding;
+        }
+        if (binding == null) {
+            return self;
+        }
+        return self.getCreationTime().after(binding.getCreationTime()) ? self : binding;
+    }
+
+
 }
