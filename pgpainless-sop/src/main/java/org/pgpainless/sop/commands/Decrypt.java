@@ -15,6 +15,20 @@
  */
 package org.pgpainless.sop.commands;
 
+import static org.pgpainless.sop.Print.err_ln;
+import static org.pgpainless.sop.SopKeyUtil.loadKeysFromFiles;
+
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileOutputStream;
+import java.io.IOException;
+import java.io.PrintStream;
+import java.text.DateFormat;
+import java.text.SimpleDateFormat;
+import java.util.ArrayList;
+import java.util.HashSet;
+import java.util.List;
+
 import org.bouncycastle.openpgp.PGPException;
 import org.bouncycastle.openpgp.PGPPublicKeyRing;
 import org.bouncycastle.openpgp.PGPSecretKeyRing;
@@ -27,21 +41,6 @@ import org.pgpainless.decryption_verification.DecryptionStream;
 import org.pgpainless.decryption_verification.OpenPgpMetadata;
 import org.pgpainless.key.OpenPgpV4Fingerprint;
 import picocli.CommandLine;
-
-import java.io.File;
-import java.io.FileInputStream;
-import java.io.FileNotFoundException;
-import java.io.FileOutputStream;
-import java.io.IOException;
-import java.io.PrintStream;
-import java.text.DateFormat;
-import java.text.SimpleDateFormat;
-import java.util.ArrayList;
-import java.util.HashSet;
-import java.util.List;
-
-import static org.pgpainless.sop.Print.err_ln;
-import static org.pgpainless.sop.SopKeyUtil.loadKeysFromFiles;
 
 @CommandLine.Command(name = "decrypt",
         description = "Decrypt a message from standard input")
@@ -125,7 +124,7 @@ public class Decrypt implements Runnable {
                 try {
                     verifyWith.add(PGPainless.readKeyRing().publicKeyRing(new FileInputStream(f)));
                 } catch (IOException e) {
-                    e.printStackTrace();
+
                 }
             }
         }
@@ -152,7 +151,6 @@ public class Decrypt implements Runnable {
             Streams.pipeAll(decryptionStream, System.out);
             decryptionStream.close();
         } catch (IOException e) {
-            e.printStackTrace();
             return;
         }
         if (verifyOut == null) {
@@ -178,10 +176,11 @@ public class Decrypt implements Runnable {
         try {
             verifyOut.createNewFile();
             PrintStream verifyPrinter = new PrintStream(new FileOutputStream(verifyOut));
+            // CHECKSTYLE:OFF
             verifyPrinter.println(sb.toString());
+            // CHECKSTYLE:ON
             verifyPrinter.close();
         } catch (IOException e) {
-            e.printStackTrace();
         }
     }
 }
