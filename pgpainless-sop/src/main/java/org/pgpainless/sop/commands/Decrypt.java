@@ -16,13 +16,28 @@
 package org.pgpainless.sop.commands;
 
 import org.bouncycastle.openpgp.PGPException;
+import org.bouncycastle.openpgp.PGPPublicKeyRing;
 import org.bouncycastle.openpgp.PGPSecretKeyRing;
 import org.bouncycastle.openpgp.PGPSecretKeyRingCollection;
+import org.bouncycastle.openpgp.PGPSignature;
+import org.bouncycastle.util.io.Streams;
 import org.pgpainless.PGPainless;
+import org.pgpainless.decryption_verification.DecryptionBuilderInterface;
+import org.pgpainless.decryption_verification.DecryptionStream;
+import org.pgpainless.decryption_verification.OpenPgpMetadata;
+import org.pgpainless.key.OpenPgpV4Fingerprint;
 import picocli.CommandLine;
 
 import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileNotFoundException;
+import java.io.FileOutputStream;
 import java.io.IOException;
+import java.io.PrintStream;
+import java.text.DateFormat;
+import java.text.SimpleDateFormat;
+import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
 
 import static org.pgpainless.sop.Print.err_ln;
@@ -31,6 +46,8 @@ import static org.pgpainless.sop.SopKeyUtil.loadKeysFromFiles;
 @CommandLine.Command(name = "decrypt",
         description = "Decrypt a message from standard input")
 public class Decrypt implements Runnable {
+
+    private static final DateFormat df = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm'Z'");
 
     @CommandLine.Option(
             names = {"--session-key-out"},
@@ -102,10 +119,69 @@ public class Decrypt implements Runnable {
             return;
         }
 
+        List<PGPPublicKeyRing> verifyWith = new ArrayList<>();
+        if (certs != null) {
+            for (File f : certs) {
+                try {
+                    verifyWith.add(PGPainless.readKeyRing().publicKeyRing(new FileInputStream(f)));
+                } catch (IOException e) {
+                    e.printStackTrace();
+                }
+            }
+        }
 
 
-        PGPainless.decryptAndOrVerify()
+        DecryptionBuilderInterface.Verify builder = PGPainless.decryptAndOrVerify()
                 .onInputStream(System.in)
                 .decryptWith(secretKeys);
+        DecryptionStream decryptionStream = null;
+        try {
+            if (certs != null) {
+                decryptionStream = builder.verifyWith(new HashSet<>(verifyWith))
+                        .ignoreMissingPublicKeys().build();
+            } else {
+                decryptionStream = builder.doNotVerify()
+                        .build();
+            }
+        } catch (IOException | PGPException e) {
+            System.exit(1);
+            return;
+        }
+
+        try {
+            Streams.pipeAll(decryptionStream, System.out);
+            decryptionStream.close();
+        } catch (IOException e) {
+            e.printStackTrace();
+            return;
+        }
+        if (verifyOut == null) {
+            return;
+        }
+
+        OpenPgpMetadata metadata = decryptionStream.getResult();
+        StringBuilder sb = new StringBuilder();
+        for (OpenPgpV4Fingerprint fingerprint : metadata.getVerifiedSignatures().keySet()) {
+            PGPPublicKeyRing verifier = null;
+            for (PGPPublicKeyRing ring : verifyWith) {
+                if (ring.getPublicKey(fingerprint.getKeyId()) != null) {
+                    verifier = ring;
+                    break;
+                }
+            }
+            PGPSignature signature = metadata.getVerifiedSignatures().get(fingerprint);
+            sb.append(df.format(signature.getCreationTime())).append(' ')
+                    .append(fingerprint).append(' ')
+                    .append(new OpenPgpV4Fingerprint(verifier)).append('\n');
+        }
+
+        try {
+            verifyOut.createNewFile();
+            PrintStream verifyPrinter = new PrintStream(new FileOutputStream(verifyOut));
+            verifyPrinter.println(sb.toString());
+            verifyPrinter.close();
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
     }
 }
