@@ -64,8 +64,7 @@ import org.pgpainless.util.Passphrase;
 
 public class JceImplementationFactory extends ImplementationFactory {
 
-    public PBESecretKeyEncryptor getPBESecretKeyEncryptor(PGPSecretKey secretKey, Passphrase passphrase)
-            throws PGPException {
+    public PBESecretKeyEncryptor getPBESecretKeyEncryptor(PGPSecretKey secretKey, Passphrase passphrase) {
         return new JcePBESecretKeyEncryptorBuilder(secretKey.getKeyEncryptionAlgorithm())
                 .setProvider(ProviderFactory.getProvider())
                 .build(passphrase.getChars());

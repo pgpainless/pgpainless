@@ -63,17 +63,13 @@ public abstract class ImplementationFactory {
                 getPGPDigestCalculator(HashAlgorithm.SHA1), passphrase);
     }
 
-    public PBESecretKeyEncryptor getPBESecretKeyEncryptor(PGPSecretKey secretKey, Passphrase passphrase) throws PGPException {
-        return FACTORY_IMPLEMENTATION.getPBESecretKeyEncryptor(secretKey, passphrase);
-    }
+    public abstract PBESecretKeyEncryptor getPBESecretKeyEncryptor(PGPSecretKey secretKey, Passphrase passphrase) throws PGPException;
 
-    public PBESecretKeyEncryptor getPBESecretKeyEncryptor(SymmetricKeyAlgorithm symmetricKeyAlgorithm, PGPDigestCalculator digestCalculator, Passphrase passphrase) {
-        return FACTORY_IMPLEMENTATION.getPBESecretKeyEncryptor(symmetricKeyAlgorithm, digestCalculator, passphrase);
-    }
+    public abstract PBESecretKeyEncryptor getPBESecretKeyEncryptor(SymmetricKeyAlgorithm symmetricKeyAlgorithm,
+                                                          PGPDigestCalculator digestCalculator,
+                                                          Passphrase passphrase);
 
-    public PBESecretKeyDecryptor getPBESecretKeyDecryptor(Passphrase passphrase) throws PGPException {
-        return FACTORY_IMPLEMENTATION.getPBESecretKeyDecryptor(passphrase);
-    }
+    public abstract PBESecretKeyDecryptor getPBESecretKeyDecryptor(Passphrase passphrase) throws PGPException;
 
     public PGPDigestCalculator getPGPDigestCalculator(HashAlgorithm algorithm) throws PGPException {
         return getPGPDigestCalculator(algorithm.getAlgorithmId());
@@ -83,59 +79,38 @@ public abstract class ImplementationFactory {
         return getPGPDigestCalculatorProvider().get(algorithm);
     }
 
-    public PGPDigestCalculatorProvider getPGPDigestCalculatorProvider() throws PGPException {
-        return FACTORY_IMPLEMENTATION.getPGPDigestCalculatorProvider();
-    }
+    public abstract PGPDigestCalculatorProvider getPGPDigestCalculatorProvider() throws PGPException;
 
-    public PGPContentVerifierBuilderProvider getPGPContentVerifierBuilderProvider() {
-        return FACTORY_IMPLEMENTATION.getPGPContentVerifierBuilderProvider();
-    }
+    public abstract PGPContentVerifierBuilderProvider getPGPContentVerifierBuilderProvider();
 
     public PGPContentSignerBuilder getPGPContentSignerBuilder(PublicKeyAlgorithm keyAlgorithm, HashAlgorithm hashAlgorithm) {
         return getPGPContentSignerBuilder(keyAlgorithm.getAlgorithmId(), hashAlgorithm.getAlgorithmId());
     }
 
-    public PGPContentSignerBuilder getPGPContentSignerBuilder(int keyAlgorithm, int hashAlgorithm) {
-        return FACTORY_IMPLEMENTATION.getPGPContentSignerBuilder(keyAlgorithm, hashAlgorithm);
-    }
+    public abstract PGPContentSignerBuilder getPGPContentSignerBuilder(int keyAlgorithm, int hashAlgorithm);
 
-    public KeyFingerPrintCalculator getKeyFingerprintCalculator() {
-        return FACTORY_IMPLEMENTATION.getKeyFingerprintCalculator();
-    }
+    public abstract KeyFingerPrintCalculator getKeyFingerprintCalculator();
 
-    public PBEDataDecryptorFactory getPBEDataDecryptorFactory(Passphrase passphrase) throws PGPException {
-        return FACTORY_IMPLEMENTATION.getPBEDataDecryptorFactory(passphrase);
-    }
+    public abstract PBEDataDecryptorFactory getPBEDataDecryptorFactory(Passphrase passphrase) throws PGPException;
 
-    public PublicKeyDataDecryptorFactory getPublicKeyDataDecryptorFactory(PGPPrivateKey privateKey) {
-        return FACTORY_IMPLEMENTATION.getPublicKeyDataDecryptorFactory(privateKey);
-    }
+    public abstract PublicKeyDataDecryptorFactory getPublicKeyDataDecryptorFactory(PGPPrivateKey privateKey);
 
-    public PublicKeyKeyEncryptionMethodGenerator getPublicKeyKeyEncryptionMethodGenerator(PGPPublicKey key) {
-        return FACTORY_IMPLEMENTATION.getPublicKeyKeyEncryptionMethodGenerator(key);
-    }
+    public abstract PublicKeyKeyEncryptionMethodGenerator getPublicKeyKeyEncryptionMethodGenerator(PGPPublicKey key);
 
-    public PBEKeyEncryptionMethodGenerator getPBEKeyEncryptionMethodGenerator(Passphrase passphrase) {
-        return FACTORY_IMPLEMENTATION.getPBEKeyEncryptionMethodGenerator(passphrase);
-    }
+    public abstract PBEKeyEncryptionMethodGenerator getPBEKeyEncryptionMethodGenerator(Passphrase passphrase);
 
     public PGPDataEncryptorBuilder getPGPDataEncryptorBuilder(SymmetricKeyAlgorithm symmetricKeyAlgorithm) {
         return getPGPDataEncryptorBuilder(symmetricKeyAlgorithm.getAlgorithmId());
     }
 
-    public PGPDataEncryptorBuilder getPGPDataEncryptorBuilder(int symmetricKeyAlgorithm) {
-        return FACTORY_IMPLEMENTATION.getPGPDataEncryptorBuilder(symmetricKeyAlgorithm);
-    }
+    public abstract PGPDataEncryptorBuilder getPGPDataEncryptorBuilder(int symmetricKeyAlgorithm);
 
-    public PGPKeyPair getPGPKeyPair(PublicKeyAlgorithm algorithm, KeyPair keyPair, Date creationDate) throws PGPException {
-        return FACTORY_IMPLEMENTATION.getPGPKeyPair(algorithm, keyPair, creationDate);
-    }
+    public abstract PGPKeyPair getPGPKeyPair(PublicKeyAlgorithm algorithm, KeyPair keyPair, Date creationDate) throws PGPException;
 
-    public PGPKeyPair getPGPKeyPair(PublicKeyAlgorithm algorithm, AsymmetricCipherKeyPair keyPair, Date creationDate) throws PGPException, NoSuchAlgorithmException, IOException, InvalidKeySpecException {
-        return FACTORY_IMPLEMENTATION.getPGPKeyPair(algorithm, keyPair, creationDate);
-    }
+    public abstract PGPKeyPair getPGPKeyPair(PublicKeyAlgorithm algorithm, AsymmetricCipherKeyPair keyPair, Date creationDate)
+            throws PGPException, NoSuchAlgorithmException, IOException, InvalidKeySpecException;
 
-    public PBESecretKeyEncryptor getPBESecretKeyEncryptor(SymmetricKeyAlgorithm encryptionAlgorithm, HashAlgorithm hashAlgorithm, int s2kCount, Passphrase passphrase) throws PGPException {
-        return FACTORY_IMPLEMENTATION.getPBESecretKeyEncryptor(encryptionAlgorithm, hashAlgorithm, s2kCount, passphrase);
-    }
+    public abstract PBESecretKeyEncryptor getPBESecretKeyEncryptor(SymmetricKeyAlgorithm encryptionAlgorithm,
+                                                                   HashAlgorithm hashAlgorithm, int s2kCount,
+                                                                   Passphrase passphrase) throws PGPException;
 }

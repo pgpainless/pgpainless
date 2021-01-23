@@ -357,7 +357,8 @@ public class KeyRingBuilder implements KeyRingBuilderInterface {
             throws NoSuchAlgorithmException, PGPException,
             InvalidAlgorithmParameterException {
         KeyType type = spec.getKeyType();
-        KeyPairGenerator certKeyGenerator = KeyPairGenerator.getInstance(type.getName(), ProviderFactory.getProvider());
+        KeyPairGenerator certKeyGenerator = KeyPairGenerator.getInstance(type.getName(),
+                ProviderFactory.getProvider());
         certKeyGenerator.initialize(type.getAlgorithmSpec());
 
         // Create raw Key Pair
