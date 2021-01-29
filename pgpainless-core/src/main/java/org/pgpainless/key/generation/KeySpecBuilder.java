@@ -34,7 +34,6 @@ public class KeySpecBuilder implements KeySpecBuilderInterface {
 
     KeySpecBuilder(@Nonnull KeyType type) {
         this.type = type;
-        hashedSubPackets.setPrimaryUserID(false, true);
     }
 
     @Override

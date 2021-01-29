@@ -15,18 +15,31 @@
  */
 package org.pgpainless.util;
 
+import java.util.ArrayList;
 import java.util.Date;
-
+import java.util.List;
 import javax.annotation.Nonnull;
 
 import org.bouncycastle.bcpg.SignatureSubpacket;
 import org.bouncycastle.bcpg.SignatureSubpacketTags;
+import org.bouncycastle.bcpg.sig.KeyFlags;
 import org.bouncycastle.openpgp.PGPSignatureSubpacketGenerator;
+import org.pgpainless.algorithm.KeyFlag;
 
 /**
  * Utility class that helps dealing with BCs SignatureSubpacketGenerator class.
  */
 public class SignatureSubpacketGeneratorUtil {
+
+    public static <P extends SignatureSubpacket> List<P> getSubpacketsOfType(org.pgpainless.algorithm.SignatureSubpacket type,
+                                                               PGPSignatureSubpacketGenerator generator) {
+        SignatureSubpacket[] subpackets = generator.getSubpackets(type.getCode());
+        List<P> list = new ArrayList<>();
+        for (SignatureSubpacket p : subpackets) {
+            list.add((P) p);
+        }
+        return list;
+    }
 
     public static void removeAllPacketsOfType(org.pgpainless.algorithm.SignatureSubpacket subpacketType,
                                               PGPSignatureSubpacketGenerator subpacketGenerator) {
@@ -83,5 +96,13 @@ public class SignatureSubpacketGeneratorUtil {
             secondsToExpire = (expirationDate.getTime() - creationTime.getTime()) / 1000;
         }
         return secondsToExpire;
+    }
+
+    public static boolean hasKeyFlag(KeyFlag keyFlag, PGPSignatureSubpacketGenerator generator) {
+        List<KeyFlags> keyFlagPackets = getSubpacketsOfType(org.pgpainless.algorithm.SignatureSubpacket.keyFlags, generator);
+        if (keyFlagPackets.isEmpty()) {
+            return false;
+        }
+        return KeyFlag.hasKeyFlag(keyFlagPackets.get(0).getFlags(), keyFlag);
     }
 }

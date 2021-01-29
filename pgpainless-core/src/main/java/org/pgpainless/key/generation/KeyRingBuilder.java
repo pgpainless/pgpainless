@@ -38,6 +38,7 @@ import org.bouncycastle.openpgp.PGPSecretKey;
 import org.bouncycastle.openpgp.PGPSecretKeyRing;
 import org.bouncycastle.openpgp.PGPSignature;
 import org.bouncycastle.openpgp.PGPSignatureGenerator;
+import org.bouncycastle.openpgp.PGPSignatureSubpacketGenerator;
 import org.bouncycastle.openpgp.PGPSignatureSubpacketVector;
 import org.bouncycastle.openpgp.operator.PBESecretKeyDecryptor;
 import org.bouncycastle.openpgp.operator.PBESecretKeyEncryptor;
@@ -54,6 +55,7 @@ import org.pgpainless.key.generation.type.rsa.RsaLength;
 import org.pgpainless.key.util.UserId;
 import org.pgpainless.provider.ProviderFactory;
 import org.pgpainless.util.Passphrase;
+import org.pgpainless.util.SignatureSubpacketGeneratorUtil;
 
 public class KeyRingBuilder implements KeyRingBuilderInterface {
 
@@ -192,8 +194,7 @@ public class KeyRingBuilder implements KeyRingBuilderInterface {
     }
 
     private boolean hasCertifyOthersFlag(KeySpec keySpec) {
-        int flags = keySpec.getSubpackets().getKeyFlags();
-        return KeyFlag.hasKeyFlag(flags, KeyFlag.CERTIFY_OTHER);
+        return SignatureSubpacketGeneratorUtil.hasKeyFlag(KeyFlag.CERTIFY_OTHER, keySpec.getSubpacketGenerator());
     }
 
     private boolean keyIsCertificationCapable(KeySpec keySpec) {
@@ -267,7 +268,9 @@ public class KeyRingBuilder implements KeyRingBuilderInterface {
                 PGPKeyPair certKey = generateKeyPair(certKeySpec);
                 PGPContentSignerBuilder signer = buildContentSigner(certKey);
                 signatureGenerator = new PGPSignatureGenerator(signer);
-                PGPSignatureSubpacketVector hashedSubPackets = certKeySpec.getSubpackets();
+                PGPSignatureSubpacketGenerator hashedSubPacketGenerator = certKeySpec.getSubpacketGenerator();
+                hashedSubPacketGenerator.setPrimaryUserID(false, true);
+                PGPSignatureSubpacketVector hashedSubPackets = hashedSubPacketGenerator.generate();
 
                 // Generator which the user can get the key pair from
                 PGPKeyRingGenerator ringGenerator = buildRingGenerator(certKey, signer, hashedSubPackets);

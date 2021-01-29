@@ -46,6 +46,10 @@ public class KeySpec {
         return subpacketGenerator != null ? subpacketGenerator.generate() : null;
     }
 
+    PGPSignatureSubpacketGenerator getSubpacketGenerator() {
+        return subpacketGenerator;
+    }
+
     boolean isInheritedSubPackets() {
         return inheritedSubPackets;
     }
