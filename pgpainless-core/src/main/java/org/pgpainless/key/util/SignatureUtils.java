@@ -29,6 +29,7 @@ import org.bouncycastle.openpgp.PGPSecretKey;
 import org.bouncycastle.openpgp.PGPSignature;
 import org.bouncycastle.openpgp.PGPSignatureGenerator;
 import org.bouncycastle.openpgp.operator.bc.BcPGPContentSignerBuilder;
+import org.pgpainless.PGPainless;
 import org.pgpainless.algorithm.HashAlgorithm;
 import org.pgpainless.algorithm.SignatureType;
 import org.pgpainless.implementation.ImplementationFactory;
@@ -57,7 +58,7 @@ public class SignatureUtils {
 
     private static HashAlgorithm negotiateHashAlgorithm(List<HashAlgorithm> preferredHashAlgorithms) {
         if (preferredHashAlgorithms.isEmpty()) {
-            return HashAlgorithm.SHA512;
+            return PGPainless.getPolicy().getDefaultSignatureHashAlgorithm();
         }
         return preferredHashAlgorithms.get(0);
     }
