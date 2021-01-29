@@ -82,11 +82,8 @@ public class KeyRingInfo {
      * @return list of public keys
      */
     public List<PGPPublicKey> getPublicKeys() {
-        List<PGPPublicKey> list = new ArrayList<>();
         Iterator<PGPPublicKey> iterator = keys.getPublicKeys();
-        while (iterator.hasNext()) {
-            list.add(iterator.next());
-        }
+        List<PGPPublicKey> list = iteratorToList(iterator);
         return Collections.unmodifiableList(list);
     }
 
@@ -122,15 +119,12 @@ public class KeyRingInfo {
      * @return list of secret keys
      */
     public List<PGPSecretKey> getSecretKeys() {
-        List<PGPSecretKey> list = new ArrayList<>();
         if (keys instanceof PGPSecretKeyRing) {
             PGPSecretKeyRing secretKeys = (PGPSecretKeyRing) keys;
             Iterator<PGPSecretKey> iterator = secretKeys.getSecretKeys();
-            while (iterator.hasNext()) {
-                list.add(iterator.next());
-            }
+            return Collections.unmodifiableList(iteratorToList(iterator));
         }
-        return Collections.unmodifiableList(list);
+        return Collections.emptyList();
     }
 
     /**
@@ -151,17 +145,25 @@ public class KeyRingInfo {
         return new OpenPgpV4Fingerprint(getPublicKey());
     }
 
+    public String getPrimaryUserId() throws PGPException {
+        List<String> userIds = getValidUserIds();
+        for (String userId : userIds) {
+            PGPSignature signature = getLatestValidSignatureOnUserId(userId);
+            if (signature.getHashedSubPackets().isPrimaryUserID()) {
+                return userId;
+            }
+        }
+        return null;
+    }
+
     /**
      * Return a list of all user-ids of the primary key.
      *
      * @return list of user-ids
      */
     public List<String> getUserIds() {
-        List<String> userIds = new ArrayList<>();
         Iterator<String> iterator = getPublicKey().getUserIDs();
-        while (iterator.hasNext()) {
-            userIds.add(iterator.next());
-        }
+        List<String> userIds = iteratorToList(iterator);
         return userIds;
     }
 
@@ -315,10 +317,7 @@ public class KeyRingInfo {
     public List<PGPSignature> getSelfSignaturesOnKey(long subkeyId) {
         PGPPublicKey publicKey = KeyRingUtils.requirePublicKeyFrom(keys, subkeyId);
         Iterator<PGPSignature> it = publicKey.getSignaturesForKeyID(keys.getPublicKey().getKeyID());
-        List<PGPSignature> signatures = new ArrayList<>();
-        while (it.hasNext()) {
-            signatures.add(it.next());
-        }
+        List<PGPSignature> signatures = iteratorToList(it);
         sortByCreationTimeAscending(signatures);
         return signatures;
     }
@@ -334,6 +333,13 @@ public class KeyRingInfo {
     public PGPSignature getLatestValidSelfSignatureOnKey(long subkeyId) throws PGPException {
         PGPPublicKey publicKey = KeyRingUtils.requirePublicKeyFrom(keys, subkeyId);
         List<PGPSignature> signatures = getSelfSignaturesOnKey(keys.getPublicKey().getKeyID());
+        return getLatestValidSignature(publicKey, signatures, keys);
+    }
+
+    public PGPSignature getLatestValidSignatureOnUserId(String userId) throws PGPException {
+        PGPPublicKey publicKey = KeyRingUtils.requirePrimaryPublicKeyFrom(keys);
+        Iterator<PGPSignature> iterator = publicKey.getSignaturesForID(userId);
+        List<PGPSignature> signatures = iteratorToList(iterator);
         return getLatestValidSignature(publicKey, signatures, keys);
     }
 
@@ -371,5 +377,12 @@ public class KeyRingInfo {
         return self.getCreationTime().after(binding.getCreationTime()) ? self : binding;
     }
 
-
+    private static <I> List<I> iteratorToList(Iterator<I> iterator) {
+        List<I> items = new ArrayList<>();
+        while (iterator.hasNext()) {
+            Object o = iterator.next();
+            items.add((I) o);
+        }
+        return items;
+    }
 }
