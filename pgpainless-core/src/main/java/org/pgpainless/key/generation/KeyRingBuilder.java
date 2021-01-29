@@ -59,9 +59,9 @@ public class KeyRingBuilder implements KeyRingBuilderInterface {
 
     private final Charset UTF8 = Charset.forName("UTF-8");
 
-    private List<KeySpec> keySpecs = new ArrayList<>();
+    private final List<KeySpec> keySpecs = new ArrayList<>();
     private String userId;
-    private Set<String> additionalUserIds = new LinkedHashSet<>();
+    private final Set<String> additionalUserIds = new LinkedHashSet<>();
     private Passphrase passphrase;
 
     public PGPSecretKeyRing simpleRsaKeyRing(@Nonnull UserId userId, @Nonnull RsaLength length)

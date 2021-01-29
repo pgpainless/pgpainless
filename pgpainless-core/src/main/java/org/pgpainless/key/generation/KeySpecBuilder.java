@@ -29,8 +29,8 @@ import org.pgpainless.key.generation.type.KeyType;
 
 public class KeySpecBuilder implements KeySpecBuilderInterface {
 
-    private KeyType type;
-    private PGPSignatureSubpacketGenerator hashedSubPackets = new PGPSignatureSubpacketGenerator();
+    private final KeyType type;
+    private final PGPSignatureSubpacketGenerator hashedSubPackets = new PGPSignatureSubpacketGenerator();
 
     KeySpecBuilder(@Nonnull KeyType type) {
         this.type = type;
