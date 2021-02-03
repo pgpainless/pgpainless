@@ -83,4 +83,39 @@ public abstract class UserIdSelectionStrategy {
     public static UserIdSelectionStrategy containsEmailAddress(String email) {
         return containsSubstring(email.matches("^<.+>$") ? email : '<' + email + '>');
     }
+
+    public static UserIdSelectionStrategy validUserId(PGPKeyRing keyRing) {
+        return new UserIdSelectionStrategy() {
+            @Override
+            protected boolean accept(String userId) {
+                return PGPainless.inspectKeyRing(keyRing).isUserIdValid(userId);
+            }
+        };
+    }
+
+    public static UserIdSelectionStrategy and(UserIdSelectionStrategy... strategies) {
+        return new UserIdSelectionStrategy() {
+            @Override
+            protected boolean accept(String userId) {
+                boolean accept = true;
+                for (UserIdSelectionStrategy strategy : strategies) {
+                    accept &= strategy.accept(userId);
+                }
+                return accept;
+            }
+        };
+    }
+
+    public static UserIdSelectionStrategy or(UserIdSelectionStrategy... strategies) {
+        return new UserIdSelectionStrategy() {
+            @Override
+            protected boolean accept(String userId) {
+                boolean accept = false;
+                for (UserIdSelectionStrategy strategy : strategies) {
+                    accept |= strategy.accept(userId);
+                }
+                return accept;
+            }
+        };
+    }
 }

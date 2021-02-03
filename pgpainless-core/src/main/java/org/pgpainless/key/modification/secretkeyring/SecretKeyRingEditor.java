@@ -16,6 +16,7 @@
 package org.pgpainless.key.modification.secretkeyring;
 
 import static org.pgpainless.key.util.KeyRingUtils.unlockSecretKey;
+import static org.pgpainless.util.CollectionUtils.iteratorToList;
 
 import java.security.InvalidAlgorithmParameterException;
 import java.security.NoSuchAlgorithmException;
@@ -65,6 +66,7 @@ import org.pgpainless.key.util.RevocationAttributes;
 import org.pgpainless.key.util.SignatureUtils;
 import org.pgpainless.util.Passphrase;
 import org.pgpainless.util.SignatureSubpacketGeneratorUtil;
+import org.pgpainless.util.selection.userid.UserIdSelectionStrategy;
 
 public class SecretKeyRingEditor implements SecretKeyRingEditorInterface {
 
@@ -146,7 +148,7 @@ public class SecretKeyRingEditor implements SecretKeyRingEditorInterface {
     }
 
     @Override
-    public SecretKeyRingEditorInterface deleteUserId(long keyId, String userId, SecretKeyRingProtector secretKeyRingProtector) {
+    public SecretKeyRingEditorInterface deleteUserIds(long keyId, UserIdSelectionStrategy selectionStrategy, SecretKeyRingProtector secretKeyRingProtector) {
         List<PGPPublicKey> publicKeys = new ArrayList<>();
         Iterator<PGPPublicKey> publicKeyIterator = secretKeyRing.getPublicKeys();
         boolean foundKey = false;
@@ -154,10 +156,13 @@ public class SecretKeyRingEditor implements SecretKeyRingEditorInterface {
             PGPPublicKey publicKey = publicKeyIterator.next();
             if (publicKey.getKeyID() == keyId) {
                 foundKey = true;
-                if (!hasUserId(userId, publicKey)) {
-                    throw new NoSuchElementException("Key " + Long.toHexString(keyId) + " does not have a user-id attribute of value '" + userId + "'");
+                List<String> matchingUserIds = selectionStrategy.selectUserIds(iteratorToList(publicKey.getUserIDs()));
+                if (matchingUserIds.isEmpty()) {
+                    throw new NoSuchElementException("Key " + Long.toHexString(keyId) + " does not have a matching user-id attribute.");
                 }
-                publicKey = PGPPublicKey.removeCertification(publicKey, userId);
+                for (String userId : matchingUserIds) {
+                    publicKey = PGPPublicKey.removeCertification(publicKey, userId);
+                }
             }
             publicKeys.add(publicKey);
         }

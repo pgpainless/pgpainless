@@ -32,6 +32,7 @@ import org.pgpainless.key.protection.SecretKeyRingProtector;
 import org.pgpainless.key.util.RevocationAttributes;
 import org.pgpainless.key.util.UserId;
 import org.pgpainless.util.Passphrase;
+import org.pgpainless.util.selection.userid.UserIdSelectionStrategy;
 
 public interface SecretKeyRingEditorInterface {
 
@@ -75,7 +76,11 @@ public interface SecretKeyRingEditorInterface {
         return deleteUserId(fingerprint.getKeyId(), userId, secretKeyRingProtector);
     }
 
-    SecretKeyRingEditorInterface deleteUserId(long keyId, String userId, SecretKeyRingProtector secretKeyRingProtector);
+    default SecretKeyRingEditorInterface deleteUserId(long keyId, String userId, SecretKeyRingProtector secretKeyRingProtector) {
+        return deleteUserIds(keyId, UserIdSelectionStrategy.exactMatch(userId), secretKeyRingProtector);
+    }
+
+    SecretKeyRingEditorInterface deleteUserIds(long keyId, UserIdSelectionStrategy selectionStrategy, SecretKeyRingProtector secretKeyRingProtector);
 
     /**
      * Add a subkey to the key ring.
