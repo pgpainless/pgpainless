@@ -66,7 +66,7 @@ import org.pgpainless.key.util.RevocationAttributes;
 import org.pgpainless.key.util.SignatureUtils;
 import org.pgpainless.util.Passphrase;
 import org.pgpainless.util.SignatureSubpacketGeneratorUtil;
-import org.pgpainless.util.selection.userid.UserIdSelectionStrategy;
+import org.pgpainless.util.selection.userid.SelectUserId;
 
 public class SecretKeyRingEditor implements SecretKeyRingEditorInterface {
 
@@ -148,13 +148,13 @@ public class SecretKeyRingEditor implements SecretKeyRingEditorInterface {
     }
 
     @Override
-    public SecretKeyRingEditorInterface deleteUserIds(UserIdSelectionStrategy selectionStrategy, SecretKeyRingProtector secretKeyRingProtector) {
+    public SecretKeyRingEditorInterface deleteUserIds(SelectUserId selectionStrategy, SecretKeyRingProtector secretKeyRingProtector) {
         PGPPublicKey publicKey = secretKeyRing.getPublicKey();
         return deleteUserIds(publicKey.getKeyID(), selectionStrategy, secretKeyRingProtector);
     }
 
     @Override
-    public SecretKeyRingEditorInterface deleteUserIds(long keyId, UserIdSelectionStrategy selectionStrategy, SecretKeyRingProtector secretKeyRingProtector) {
+    public SecretKeyRingEditorInterface deleteUserIds(long keyId, SelectUserId selectionStrategy, SecretKeyRingProtector secretKeyRingProtector) {
         List<PGPPublicKey> publicKeys = new ArrayList<>();
         Iterator<PGPPublicKey> publicKeyIterator = secretKeyRing.getPublicKeys();
         boolean foundKey = false;

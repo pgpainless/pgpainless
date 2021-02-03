@@ -32,7 +32,7 @@ import org.pgpainless.key.protection.SecretKeyRingProtector;
 import org.pgpainless.key.util.RevocationAttributes;
 import org.pgpainless.key.util.UserId;
 import org.pgpainless.util.Passphrase;
-import org.pgpainless.util.selection.userid.UserIdSelectionStrategy;
+import org.pgpainless.util.selection.userid.SelectUserId;
 
 public interface SecretKeyRingEditorInterface {
 
@@ -77,16 +77,16 @@ public interface SecretKeyRingEditorInterface {
     }
 
     default SecretKeyRingEditorInterface deleteUserId(long keyId, String userId, SecretKeyRingProtector secretKeyRingProtector) {
-        return deleteUserIds(keyId, UserIdSelectionStrategy.exactMatch(userId), secretKeyRingProtector);
+        return deleteUserIds(keyId, SelectUserId.exactMatch(userId), secretKeyRingProtector);
     }
 
-    SecretKeyRingEditorInterface deleteUserIds(UserIdSelectionStrategy selectionStrategy, SecretKeyRingProtector secretKeyRingProtector);
+    SecretKeyRingEditorInterface deleteUserIds(SelectUserId selectionStrategy, SecretKeyRingProtector secretKeyRingProtector);
 
-    default SecretKeyRingEditorInterface deleteUserIds(OpenPgpV4Fingerprint fingerprint, UserIdSelectionStrategy selectionStrategy, SecretKeyRingProtector secretKeyRingProtector) {
+    default SecretKeyRingEditorInterface deleteUserIds(OpenPgpV4Fingerprint fingerprint, SelectUserId selectionStrategy, SecretKeyRingProtector secretKeyRingProtector) {
         return deleteUserIds(fingerprint.getKeyId(), selectionStrategy, secretKeyRingProtector);
     }
 
-    SecretKeyRingEditorInterface deleteUserIds(long keyId, UserIdSelectionStrategy selectionStrategy, SecretKeyRingProtector secretKeyRingProtector);
+    SecretKeyRingEditorInterface deleteUserIds(long keyId, SelectUserId selectionStrategy, SecretKeyRingProtector secretKeyRingProtector);
 
     /**
      * Add a subkey to the key ring.

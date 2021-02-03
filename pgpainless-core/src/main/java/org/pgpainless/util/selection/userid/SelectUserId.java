@@ -21,7 +21,7 @@ import java.util.List;
 import org.bouncycastle.openpgp.PGPKeyRing;
 import org.pgpainless.PGPainless;
 
-public abstract class UserIdSelectionStrategy {
+public abstract class SelectUserId {
 
     protected abstract boolean accept(String userId);
 
@@ -53,8 +53,8 @@ public abstract class UserIdSelectionStrategy {
         return null;
     }
 
-    public static UserIdSelectionStrategy containsSubstring(String query) {
-        return new UserIdSelectionStrategy() {
+    public static SelectUserId containsSubstring(String query) {
+        return new SelectUserId() {
             @Override
             protected boolean accept(String userId) {
                 return userId.contains(query);
@@ -62,8 +62,8 @@ public abstract class UserIdSelectionStrategy {
         };
     }
 
-    public static UserIdSelectionStrategy exactMatch(String query) {
-        return new UserIdSelectionStrategy() {
+    public static SelectUserId exactMatch(String query) {
+        return new SelectUserId() {
             @Override
             protected boolean accept(String userId) {
                 return userId.equals(query);
@@ -71,8 +71,8 @@ public abstract class UserIdSelectionStrategy {
         };
     }
 
-    public static UserIdSelectionStrategy startsWith(String substring) {
-        return new UserIdSelectionStrategy() {
+    public static SelectUserId startsWith(String substring) {
+        return new SelectUserId() {
             @Override
             protected boolean accept(String userId) {
                 return userId.startsWith(substring);
@@ -80,12 +80,12 @@ public abstract class UserIdSelectionStrategy {
         };
     }
 
-    public static UserIdSelectionStrategy containsEmailAddress(String email) {
+    public static SelectUserId containsEmailAddress(String email) {
         return containsSubstring(email.matches("^<.+>$") ? email : '<' + email + '>');
     }
 
-    public static UserIdSelectionStrategy validUserId(PGPKeyRing keyRing) {
-        return new UserIdSelectionStrategy() {
+    public static SelectUserId validUserId(PGPKeyRing keyRing) {
+        return new SelectUserId() {
             @Override
             protected boolean accept(String userId) {
                 return PGPainless.inspectKeyRing(keyRing).isUserIdValid(userId);
@@ -93,12 +93,12 @@ public abstract class UserIdSelectionStrategy {
         };
     }
 
-    public static UserIdSelectionStrategy and(UserIdSelectionStrategy... strategies) {
-        return new UserIdSelectionStrategy() {
+    public static SelectUserId and(SelectUserId... strategies) {
+        return new SelectUserId() {
             @Override
             protected boolean accept(String userId) {
                 boolean accept = true;
-                for (UserIdSelectionStrategy strategy : strategies) {
+                for (SelectUserId strategy : strategies) {
                     accept &= strategy.accept(userId);
                 }
                 return accept;
@@ -106,12 +106,12 @@ public abstract class UserIdSelectionStrategy {
         };
     }
 
-    public static UserIdSelectionStrategy or(UserIdSelectionStrategy... strategies) {
-        return new UserIdSelectionStrategy() {
+    public static SelectUserId or(SelectUserId... strategies) {
+        return new SelectUserId() {
             @Override
             protected boolean accept(String userId) {
                 boolean accept = false;
-                for (UserIdSelectionStrategy strategy : strategies) {
+                for (SelectUserId strategy : strategies) {
                     accept |= strategy.accept(userId);
                 }
                 return accept;
