@@ -33,8 +33,8 @@ import org.pgpainless.decryption_verification.OpenPgpMetadata;
 import org.pgpainless.exception.SecretKeyNotFoundException;
 import org.pgpainless.key.protection.SecretKeyRingProtector;
 import org.pgpainless.key.protection.UnprotectedKeysProtector;
-import org.pgpainless.key.selection.keyring.PublicKeyRingSelectionStrategy;
-import org.pgpainless.key.selection.keyring.SecretKeyRingSelectionStrategy;
+import org.pgpainless.util.selection.keyring.PublicKeyRingSelectionStrategy;
+import org.pgpainless.util.selection.keyring.SecretKeyRingSelectionStrategy;
 import org.pgpainless.util.MultiMap;
 import org.pgpainless.util.Passphrase;
 
@@ -218,7 +218,7 @@ public interface EncryptionBuilderInterface {
         DocumentType signWith(@Nonnull SecretKeyRingProtector decryptor, @Nonnull PGPSecretKeyRing... keyRings);
 
         /**
-         * Pass in a map of secret keys for signing, as well as a {@link org.pgpainless.key.selection.key.SecretKeySelectionStrategy}
+         * Pass in a map of secret keys for signing, as well as a {@link org.pgpainless.util.selection.key.SecretKeySelectionStrategy}
          * that is used to determine suitable secret keys.
          * If the keys are locked by a password, the provided {@link SecretKeyRingProtector} will be used to unlock the keys.
          *

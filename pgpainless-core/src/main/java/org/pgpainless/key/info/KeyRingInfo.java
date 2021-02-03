@@ -17,6 +17,7 @@ package org.pgpainless.key.info;
 
 import static org.pgpainless.key.util.SignatureUtils.getLatestValidSignature;
 import static org.pgpainless.key.util.SignatureUtils.sortByCreationTimeAscending;
+import static org.pgpainless.util.CollectionUtils.iteratorToList;
 
 import java.util.ArrayList;
 import java.util.Collections;
@@ -375,14 +376,5 @@ public class KeyRingInfo {
             return self;
         }
         return self.getCreationTime().after(binding.getCreationTime()) ? self : binding;
-    }
-
-    private static <I> List<I> iteratorToList(Iterator<I> iterator) {
-        List<I> items = new ArrayList<>();
-        while (iterator.hasNext()) {
-            Object o = iterator.next();
-            items.add((I) o);
-        }
-        return items;
     }
 }

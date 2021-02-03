@@ -40,10 +40,10 @@ import org.bouncycastle.openpgp.PGPSignatureSubpacketVector;
 import org.bouncycastle.openpgp.PGPUtil;
 import org.bouncycastle.util.io.Streams;
 import org.pgpainless.algorithm.KeyFlag;
-import org.pgpainless.key.selection.key.PublicKeySelectionStrategy;
-import org.pgpainless.key.selection.key.impl.NoRevocation;
-import org.pgpainless.key.selection.key.impl.KeyBelongsToKeyRing;
-import org.pgpainless.key.selection.key.util.And;
+import org.pgpainless.util.selection.key.PublicKeySelectionStrategy;
+import org.pgpainless.util.selection.key.impl.NoRevocation;
+import org.pgpainless.util.selection.key.impl.KeyBelongsToKeyRing;
+import org.pgpainless.util.selection.key.impl.And;
 
 public class BCUtil {
 
