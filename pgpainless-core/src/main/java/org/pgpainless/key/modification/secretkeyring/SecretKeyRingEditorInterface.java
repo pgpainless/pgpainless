@@ -80,6 +80,12 @@ public interface SecretKeyRingEditorInterface {
         return deleteUserIds(keyId, UserIdSelectionStrategy.exactMatch(userId), secretKeyRingProtector);
     }
 
+    SecretKeyRingEditorInterface deleteUserIds(UserIdSelectionStrategy selectionStrategy, SecretKeyRingProtector secretKeyRingProtector);
+
+    default SecretKeyRingEditorInterface deleteUserIds(OpenPgpV4Fingerprint fingerprint, UserIdSelectionStrategy selectionStrategy, SecretKeyRingProtector secretKeyRingProtector) {
+        return deleteUserIds(fingerprint.getKeyId(), selectionStrategy, secretKeyRingProtector);
+    }
+
     SecretKeyRingEditorInterface deleteUserIds(long keyId, UserIdSelectionStrategy selectionStrategy, SecretKeyRingProtector secretKeyRingProtector);
 
     /**

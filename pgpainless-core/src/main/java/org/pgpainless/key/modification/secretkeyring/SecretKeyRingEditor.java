@@ -148,6 +148,12 @@ public class SecretKeyRingEditor implements SecretKeyRingEditorInterface {
     }
 
     @Override
+    public SecretKeyRingEditorInterface deleteUserIds(UserIdSelectionStrategy selectionStrategy, SecretKeyRingProtector secretKeyRingProtector) {
+        PGPPublicKey publicKey = secretKeyRing.getPublicKey();
+        return deleteUserIds(publicKey.getKeyID(), selectionStrategy, secretKeyRingProtector);
+    }
+
+    @Override
     public SecretKeyRingEditorInterface deleteUserIds(long keyId, UserIdSelectionStrategy selectionStrategy, SecretKeyRingProtector secretKeyRingProtector) {
         List<PGPPublicKey> publicKeys = new ArrayList<>();
         Iterator<PGPPublicKey> publicKeyIterator = secretKeyRing.getPublicKeys();
