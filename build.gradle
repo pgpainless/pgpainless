@@ -32,7 +32,7 @@ allprojects {
         // animalsniffer
         apply plugin: 'ru.vyarus.animalsniffer'
         dependencies {
-            signature "net.sf.androidscents.signature:android-api-level-${pgpainlessMinAndroidSdk}:2.3.1_r2@signature"
+            signature "net.sf.androidscents.signature:android-api-level-${pgpainlessMinAndroidSdk}:2.3.3_r2@signature"
         }
         animalsniffer {
             sourceSets = [sourceSets.main]
