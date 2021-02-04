@@ -64,6 +64,7 @@ public class AddUserIdTest {
         assertFalse(userIds.hasNext());
     }
 
+
     @Test
     public void addUserId_NoSuchElementExceptionForMissingKey() throws IOException, PGPException {
         PGPSecretKeyRing secretKeys = TestKeys.getCryptieSecretKeyRing();
@@ -83,5 +84,39 @@ public class AddUserIdTest {
         PGPSecretKeyRing secretKeys = TestKeys.getCryptieSecretKeyRing();
         assertThrows(NoSuchElementException.class, () -> PGPainless.modifyKeyRing(secretKeys)
                 .deleteUserId(0L, TestKeys.CRYPTIE_UID, new UnprotectedKeysProtector()));
+    }
+
+    @Test
+    public void deleteExistingAndAddNewUserIdToExistingKeyRing() throws PGPException, IOException {
+        final String ARMORED_PRIVATE_KEY =
+                "-----BEGIN PGP PRIVATE KEY BLOCK-----\r\n\r\n" +
+                        "xVgEX6UIExYJKwYBBAHaRw8BAQdAMfHf64wPQ2LC9In5AKYU/KT1qWvI7e7a\r\n" +
+                        "Xr+LWeQGUKIAAQCcB3zZlHfepQT26LIwbTDn4lvQ9LuD1fk2hK6i9FXFxxO7\r\n" +
+                        "zRI8dXNlckBleGFtcGxlLmNvbT7CjwQQFgoAIAUCX6UIEwYLCQcIAwIEFQgK\r\n" +
+                        "AgQWAgEAAhkBAhsDAh4BACEJEEoCtcZ3snFuFiEENY1GQZqrKQqgUAXASgK1\r\n" +
+                        "xneycW6P6AEA5iXFK+fWpj0vn3xpKEuFRqvytPKFzhwd4wEvL+IGSPEBALE/\r\n" +
+                        "pZdMzsDoKPENiLFpboDVNVJScwFXIleKmtNaRycFx10EX6UIExIKKwYBBAGX\r\n" +
+                        "VQEFAQEHQBDdeawWVNqYkP8c/ihLEUlVpn8cQw7rmRc/sIhdAXhfAwEIBwAA\r\n" +
+                        "/0Jy7IelcHDjxE3OzagEzSxNrCVw8uPHNRl8s6iP+CQYEfHCeAQYFggACQUC\r\n" +
+                        "X6UIEwIbDAAhCRBKArXGd7JxbhYhBDWNRkGaqykKoFAFwEoCtcZ3snFuWp8B\r\n" +
+                        "AIzRBYJSfZzlvlyyPhrbXJoYSICGNy/5x7noXjp/ByeOAQDnTbQi4XwXJrU4\r\n" +
+                        "A8Nl9eyz16ZWUzEPwfWgahIG1eQDDA==\r\n" +
+                        "=bk4o\r\n" +
+                        "-----END PGP PRIVATE KEY BLOCK-----\r\n";
+
+        PGPSecretKeyRing secretKeys = PGPainless.readKeyRing().secretKeyRing(ARMORED_PRIVATE_KEY);
+        Iterator<String> userIds = secretKeys.getSecretKey().getPublicKey().getUserIDs();
+        assertEquals("<user@example.com>", userIds.next());
+        assertFalse(userIds.hasNext());
+
+        SecretKeyRingProtector protector = new UnprotectedKeysProtector();
+        secretKeys = PGPainless.modifyKeyRing(secretKeys)
+                .deleteUserId("<user@example.com>", protector)
+                .addUserId("cheshirecat@wonderland.lit", protector)
+                .done();
+
+        userIds = secretKeys.getSecretKey().getPublicKey().getUserIDs();
+        assertEquals("cheshirecat@wonderland.lit", userIds.next());
+        assertFalse(userIds.hasNext());
     }
 }
