@@ -91,8 +91,7 @@ public class AddUserIdTest {
     }
 
     @Test
-    public void deleteExistingAndAddNewUserIdToExistingKeyRing()
-            throws InvalidAlgorithmParameterException, NoSuchAlgorithmException, PGPException, IOException {
+    public void deleteExistingAndAddNewUserIdToExistingKeyRing() throws PGPException, IOException {
         final String ARMORED_PRIVATE_KEY =
                 "-----BEGIN PGP PRIVATE KEY BLOCK-----\r\n\r\n" +
                         "xVgEX6UIExYJKwYBBAHaRw8BAQdAMfHf64wPQ2LC9In5AKYU/KT1qWvI7e7a\r\n" +
@@ -109,8 +108,7 @@ public class AddUserIdTest {
                         "=bk4o\r\n" +
                         "-----END PGP PRIVATE KEY BLOCK-----\r\n";
 
-        PGPSecretKeyRing secretKeys = readArmoredPrivateKey(ARMORED_PRIVATE_KEY.getBytes(StandardCharsets.UTF_8));
-
+        PGPSecretKeyRing secretKeys = PGPainless.readKeyRing().secretKeyRing(ARMORED_PRIVATE_KEY);
         Iterator<String> userIds = secretKeys.getSecretKey().getPublicKey().getUserIDs();
         assertEquals("<user@example.com>", userIds.next());
         assertFalse(userIds.hasNext());
@@ -124,18 +122,5 @@ public class AddUserIdTest {
         userIds = secretKeys.getSecretKey().getPublicKey().getUserIDs();
         assertEquals("cheshirecat@wonderland.lit", userIds.next());
         assertFalse(userIds.hasNext());
-    }
-
-    private static PGPSecretKeyRing readArmoredPrivateKey(byte[] data) throws IOException, PGPException {
-        try (ByteArrayInputStream byteIn = new ByteArrayInputStream(data)) {
-            try (ArmoredInputStream armoredIn = new ArmoredInputStream(byteIn)) {
-                JcaPGPSecretKeyRingCollection keyRingCollection = new JcaPGPSecretKeyRingCollection(armoredIn);
-                Iterator<PGPSecretKeyRing> it = keyRingCollection.getKeyRings();
-                if (it.hasNext()) {
-                    return it.next();
-                }
-            }
-        }
-        return null;
     }
 }
