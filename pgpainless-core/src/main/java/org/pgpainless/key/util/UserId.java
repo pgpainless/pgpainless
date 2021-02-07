@@ -37,7 +37,7 @@ public final class UserId implements CharSequence {
             sb.append(" (").append(comment).append(')');
         }
         if (email != null) {
-            sb.append(sb.length() != 0 ? " <" : '<').append(email).append('>');
+            sb.append(sb.length() != 0 ? ' ' : "").append(email);
         }
         return sb.toString();
     }
@@ -98,7 +98,7 @@ public final class UserId implements CharSequence {
             if (email == null) {
                 throw new IllegalArgumentException("Email must not be null.");
             }
-            return new UserId(name, comment, email);
+            return new UserId(name, comment, email.matches("^<.+>$") ? email : '<' + email + '>');
         }
 
         public UserId noEmail() {
