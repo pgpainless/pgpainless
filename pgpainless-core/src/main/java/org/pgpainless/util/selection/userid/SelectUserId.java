@@ -118,4 +118,13 @@ public abstract class SelectUserId {
             }
         };
     }
+
+    public static SelectUserId not(SelectUserId strategy) {
+        return new SelectUserId() {
+            @Override
+            protected boolean accept(String userId) {
+                return !strategy.accept(userId);
+            }
+        };
+    }
 }
