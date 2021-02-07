@@ -28,8 +28,6 @@ import org.pgpainless.util.Passphrase;
 
 /**
  * Interface that is used to provide secret key ring encryptors and decryptors.
- *
- * @deprecated use {@link SecretKeyRingProtector2} instead.
  */
 public interface SecretKeyRingProtector {
 
