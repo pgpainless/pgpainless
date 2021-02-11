@@ -28,7 +28,19 @@ public interface KeyRingBuilderInterface {
 
     KeyRingBuilderInterface withSubKey(@Nonnull KeySpec keySpec);
 
-    WithPrimaryUserId withMasterKey(@Nonnull KeySpec keySpec);
+    /**
+     * Define the primary key spec.
+     *
+     * @deprecated use {@link #withPrimaryKey(KeySpec)} instead.
+     * @param keySpec key spec
+     * @return builder step
+     */
+    @Deprecated
+    default WithPrimaryUserId withMasterKey(@Nonnull KeySpec keySpec) {
+        return withPrimaryKey(keySpec);
+    }
+
+    WithPrimaryUserId withPrimaryKey(@Nonnull KeySpec keySpec);
 
     interface WithPrimaryUserId {
 

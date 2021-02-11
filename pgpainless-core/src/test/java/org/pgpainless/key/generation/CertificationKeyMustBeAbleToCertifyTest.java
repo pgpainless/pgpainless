@@ -42,7 +42,7 @@ public class CertificationKeyMustBeAbleToCertifyTest {
         for (KeyType type : typesIncapableOfCreatingVerifications) {
             assertThrows(IllegalArgumentException.class, () -> PGPainless
                     .generateKeyRing()
-                    .withMasterKey(KeySpec
+                    .withPrimaryKey(KeySpec
                             .getBuilder(type)
                             .withKeyFlags(KeyFlag.CERTIFY_OTHER, KeyFlag.SIGN_DATA)
                             .withDefaultAlgorithms())

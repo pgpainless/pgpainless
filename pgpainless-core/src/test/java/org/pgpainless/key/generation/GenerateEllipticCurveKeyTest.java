@@ -38,7 +38,7 @@ public class GenerateEllipticCurveKeyTest {
                 .withSubKey(KeySpec.getBuilder(KeyType.XDH(XDHCurve._X25519))
                         .withKeyFlags(KeyFlag.ENCRYPT_COMMS)
                         .withDefaultAlgorithms())
-                .withMasterKey(KeySpec.getBuilder(KeyType.EDDSA(EdDSACurve._Ed25519))
+                .withPrimaryKey(KeySpec.getBuilder(KeyType.EDDSA(EdDSACurve._Ed25519))
                         .withKeyFlags(KeyFlag.CERTIFY_OTHER, KeyFlag.SIGN_DATA)
                         .withDefaultAlgorithms())
                 .withPrimaryUserId(UserId.onlyEmail("alice@wonderland.lit").toString())

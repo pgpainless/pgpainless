@@ -55,7 +55,7 @@ public class BCUtilTest {
                 .withSubKey(KeySpec.getBuilder(KeyType.RSA(RsaLength._3072))
                         .withKeyFlags(KeyFlag.ENCRYPT_COMMS)
                         .withDefaultAlgorithms())
-                .withMasterKey(KeySpec.getBuilder(KeyType.RSA(RsaLength._3072))
+                .withPrimaryKey(KeySpec.getBuilder(KeyType.RSA(RsaLength._3072))
                         .withKeyFlags(KeyFlag.CERTIFY_OTHER, KeyFlag.SIGN_DATA)
                         .withDefaultAlgorithms())
                 .withPrimaryUserId("donald@duck.tails").withoutPassphrase().build();

@@ -29,27 +29,27 @@ public class IllegalKeyFlagsTest {
     @Test
     public void testKeyCannotCarryFlagsTest() {
         assertThrows(IllegalArgumentException.class, () -> PGPainless.generateKeyRing()
-                .withMasterKey(KeySpec.getBuilder(KeyType.XDH(XDHCurve._X25519))
+                .withPrimaryKey(KeySpec.getBuilder(KeyType.XDH(XDHCurve._X25519))
                         .withKeyFlags(KeyFlag.SIGN_DATA) // <- should throw
                         .withDefaultAlgorithms()));
 
         assertThrows(IllegalArgumentException.class, () -> PGPainless.generateKeyRing()
-                .withMasterKey(KeySpec.getBuilder(KeyType.XDH(XDHCurve._X25519))
+                .withPrimaryKey(KeySpec.getBuilder(KeyType.XDH(XDHCurve._X25519))
                         .withKeyFlags(KeyFlag.CERTIFY_OTHER) // <- should throw
                         .withDefaultAlgorithms()));
 
         assertThrows(IllegalArgumentException.class, () -> PGPainless.generateKeyRing()
-                .withMasterKey(KeySpec.getBuilder(KeyType.XDH(XDHCurve._X25519))
+                .withPrimaryKey(KeySpec.getBuilder(KeyType.XDH(XDHCurve._X25519))
                         .withKeyFlags(KeyFlag.AUTHENTICATION) // <- should throw
                         .withDefaultAlgorithms()));
 
         assertThrows(IllegalArgumentException.class, () -> PGPainless.generateKeyRing()
-                .withMasterKey(KeySpec.getBuilder(KeyType.EDDSA(EdDSACurve._Ed25519))
+                .withPrimaryKey(KeySpec.getBuilder(KeyType.EDDSA(EdDSACurve._Ed25519))
                         .withKeyFlags(KeyFlag.ENCRYPT_COMMS) // <- should throw
                         .withDefaultAlgorithms()));
 
         assertThrows(IllegalArgumentException.class, () -> PGPainless.generateKeyRing()
-                .withMasterKey(KeySpec.getBuilder(KeyType.EDDSA(EdDSACurve._Ed25519))
+                .withPrimaryKey(KeySpec.getBuilder(KeyType.EDDSA(EdDSACurve._Ed25519))
                         .withKeyFlags(KeyFlag.ENCRYPT_STORAGE) // <- should throw as well
                         .withDefaultAlgorithms()));
     }

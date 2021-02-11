@@ -123,7 +123,7 @@ public class KeyRingBuilder implements KeyRingBuilderInterface {
     public PGPSecretKeyRing simpleRsaKeyRing(@Nonnull String userId, @Nonnull RsaLength length, String password)
             throws PGPException, NoSuchAlgorithmException, InvalidAlgorithmParameterException {
         WithAdditionalUserIdOrPassphrase builder = this
-                .withMasterKey(
+                .withPrimaryKey(
                         KeySpec.getBuilder(KeyType.RSA(length))
                                 .withKeyFlags(KeyFlag.CERTIFY_OTHER, KeyFlag.SIGN_DATA, KeyFlag.ENCRYPT_COMMS)
                                 .withDefaultAlgorithms())
@@ -196,7 +196,7 @@ public class KeyRingBuilder implements KeyRingBuilderInterface {
                         KeySpec.getBuilder(KeyType.XDH(XDHCurve._X25519))
                                 .withKeyFlags(KeyFlag.ENCRYPT_STORAGE, KeyFlag.ENCRYPT_COMMS)
                                 .withDefaultAlgorithms())
-                .withMasterKey(
+                .withPrimaryKey(
                         KeySpec.getBuilder(KeyType.EDDSA(EdDSACurve._Ed25519))
                                 .withKeyFlags(KeyFlag.CERTIFY_OTHER, KeyFlag.SIGN_DATA)
                                 .withDefaultAlgorithms())
@@ -228,7 +228,7 @@ public class KeyRingBuilder implements KeyRingBuilderInterface {
                         KeySpec.getBuilder(KeyType.EDDSA(EdDSACurve._Ed25519))
                                 .withKeyFlags(KeyFlag.SIGN_DATA)
                                 .withDefaultAlgorithms())
-                .withMasterKey(
+                .withPrimaryKey(
                         KeySpec.getBuilder(KeyType.EDDSA(EdDSACurve._Ed25519))
                                 .withKeyFlags(KeyFlag.CERTIFY_OTHER)
                                 .withDefaultAlgorithms())
@@ -248,7 +248,7 @@ public class KeyRingBuilder implements KeyRingBuilderInterface {
     }
 
     @Override
-    public WithPrimaryUserId withMasterKey(@Nonnull KeySpec spec) {
+    public WithPrimaryUserId withPrimaryKey(@Nonnull KeySpec spec) {
         verifyMasterKeyCanCertify(spec);
 
         KeyRingBuilder.this.keySpecs.add(0, spec);

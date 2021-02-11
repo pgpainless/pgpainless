@@ -74,7 +74,7 @@ public class EncryptDecryptTest {
         PGPSecretKeyRing sender = PGPainless.generateKeyRing().simpleRsaKeyRing("romeo@montague.lit", RsaLength._3072);
         PGPSecretKeyRing recipient = PGPainless.generateKeyRing()
                 .withSubKey(KeySpec.getBuilder(ElGamal.withLength(ElGamalLength._3072)).withKeyFlags(KeyFlag.ENCRYPT_STORAGE, KeyFlag.ENCRYPT_COMMS).withDefaultAlgorithms())
-                .withMasterKey(KeySpec.getBuilder(KeyType.RSA(RsaLength._4096)).withKeyFlags(KeyFlag.SIGN_DATA, KeyFlag.CERTIFY_OTHER).withDefaultAlgorithms())
+                .withPrimaryKey(KeySpec.getBuilder(KeyType.RSA(RsaLength._4096)).withKeyFlags(KeyFlag.SIGN_DATA, KeyFlag.CERTIFY_OTHER).withDefaultAlgorithms())
                 .withPrimaryUserId("juliet@capulet.lit").withoutPassphrase().build();
 
         encryptDecryptForSecretKeyRings(sender, recipient);

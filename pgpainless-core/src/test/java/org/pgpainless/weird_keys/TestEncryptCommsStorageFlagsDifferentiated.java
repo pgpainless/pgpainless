@@ -40,7 +40,7 @@ public class TestEncryptCommsStorageFlagsDifferentiated {
     @Test
     public void testThatEncryptionDifferentiatesBetweenPurposeKeyFlags() throws InvalidAlgorithmParameterException, NoSuchAlgorithmException, PGPException, IOException {
         PGPSecretKeyRing secretKeys = PGPainless.generateKeyRing()
-                .withMasterKey(KeySpec.getBuilder(KeyType.RSA(RsaLength._3072))
+                .withPrimaryKey(KeySpec.getBuilder(KeyType.RSA(RsaLength._3072))
                         .withKeyFlags(KeyFlag.CERTIFY_OTHER,
                                 KeyFlag.SIGN_DATA,
                                 KeyFlag.ENCRYPT_STORAGE // no ENCRYPT_COMMS

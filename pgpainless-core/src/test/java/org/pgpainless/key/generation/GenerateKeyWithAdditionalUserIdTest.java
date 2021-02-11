@@ -40,7 +40,7 @@ public class GenerateKeyWithAdditionalUserIdTest {
     @Test
     public void test() throws InvalidAlgorithmParameterException, NoSuchAlgorithmException, PGPException, IOException {
         PGPSecretKeyRing secretKeys = PGPainless.generateKeyRing()
-                .withMasterKey(KeySpec.getBuilder(KeyType.RSA(RsaLength._3072))
+                .withPrimaryKey(KeySpec.getBuilder(KeyType.RSA(RsaLength._3072))
                         .withKeyFlags(KeyFlag.CERTIFY_OTHER, KeyFlag.SIGN_DATA, KeyFlag.ENCRYPT_COMMS)
                         .withDefaultAlgorithms())
                 .withPrimaryUserId("primary@user.id")

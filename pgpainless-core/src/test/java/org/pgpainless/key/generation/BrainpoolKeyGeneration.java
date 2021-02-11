@@ -55,7 +55,7 @@ public class BrainpoolKeyGeneration {
     public PGPSecretKeyRing generateKey(KeySpec primaryKey, KeySpec subKey, String userId) throws InvalidAlgorithmParameterException, NoSuchAlgorithmException, PGPException {
         PGPSecretKeyRing secretKeys = PGPainless.generateKeyRing()
                 .withSubKey(subKey)
-                .withMasterKey(primaryKey)
+                .withPrimaryKey(primaryKey)
                 .withPrimaryUserId(userId)
                 .withoutPassphrase()
                 .build();
