@@ -209,6 +209,38 @@ public class KeyRingBuilder implements KeyRingBuilderInterface {
         }
     }
 
+    /**
+     * Generate a modern PGP key ring consisting of an ed25519 EdDSA primary key which is used to certify
+     * an X25519 XDH encryption subkey and an ed25519 EdDSA signing key.
+     *
+     * @param userId primary user id
+     * @param password passphrase or null if the key should be unprotected.
+     * @return key ring
+     */
+    public PGPSecretKeyRing modernKeyRing(String userId, String password)
+            throws InvalidAlgorithmParameterException, NoSuchAlgorithmException, PGPException {
+        WithAdditionalUserIdOrPassphrase builder = this
+                .withSubKey(
+                        KeySpec.getBuilder(KeyType.XDH(XDHCurve._X25519))
+                                .withKeyFlags(KeyFlag.ENCRYPT_STORAGE, KeyFlag.ENCRYPT_COMMS)
+                                .withDefaultAlgorithms())
+                .withSubKey(
+                        KeySpec.getBuilder(KeyType.EDDSA(EdDSACurve._Ed25519))
+                                .withKeyFlags(KeyFlag.SIGN_DATA)
+                                .withDefaultAlgorithms())
+                .withMasterKey(
+                        KeySpec.getBuilder(KeyType.EDDSA(EdDSACurve._Ed25519))
+                                .withKeyFlags(KeyFlag.CERTIFY_OTHER)
+                                .withDefaultAlgorithms())
+                .withPrimaryUserId(userId);
+
+        if (password == null) {
+            return builder.withoutPassphrase().build();
+        } else {
+            return builder.withPassphrase(new Passphrase(password.toCharArray())).build();
+        }
+    }
+
     @Override
     public KeyRingBuilderInterface withSubKey(@Nonnull KeySpec type) {
         KeyRingBuilder.this.keySpecs.add(type);
