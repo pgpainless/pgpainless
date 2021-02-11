@@ -50,8 +50,9 @@ import org.pgpainless.algorithm.KeyFlag;
 import org.pgpainless.algorithm.SignatureType;
 import org.pgpainless.implementation.ImplementationFactory;
 import org.pgpainless.key.generation.type.KeyType;
-import org.pgpainless.key.generation.type.ecc.EllipticCurve;
+import org.pgpainless.key.generation.type.eddsa.EdDSACurve;
 import org.pgpainless.key.generation.type.rsa.RsaLength;
+import org.pgpainless.key.generation.type.xdh.XDHCurve;
 import org.pgpainless.key.util.UserId;
 import org.pgpainless.provider.ProviderFactory;
 import org.pgpainless.util.Passphrase;
@@ -66,6 +67,15 @@ public class KeyRingBuilder implements KeyRingBuilderInterface {
     private final Set<String> additionalUserIds = new LinkedHashSet<>();
     private Passphrase passphrase;
 
+    /**
+     * Creates a simple, unencrypted RSA KeyPair of length {@code length} with user-id {@code userId}.
+     * The KeyPair consists of a single RSA master key which is used for signing, encryption and certification.
+     *
+     * @param userId user id.
+     * @param length length in bits.
+     *
+     * @return {@link PGPSecretKeyRing} containing the KeyPair.
+     */
     public PGPSecretKeyRing simpleRsaKeyRing(@Nonnull UserId userId, @Nonnull RsaLength length)
             throws InvalidAlgorithmParameterException, NoSuchAlgorithmException, PGPException {
         return simpleRsaKeyRing(userId.toString(), length);
@@ -85,9 +95,19 @@ public class KeyRingBuilder implements KeyRingBuilderInterface {
         return simpleRsaKeyRing(userId, length, null);
     }
 
-    public PGPSecretKeyRing simpleRsaKeyRing(@Nonnull UserId userId, @Nonnull RsaLength rsaLength, String password)
+    /**
+     * Creates a simple RSA KeyPair of length {@code length} with user-id {@code userId}.
+     * The KeyPair consists of a single RSA master key which is used for signing, encryption and certification.
+     *
+     * @param userId user id.
+     * @param length length in bits.
+     * @param password Password of the key. Can be null for unencrypted keys.
+     *
+     * @return {@link PGPSecretKeyRing} containing the KeyPair.
+     */
+    public PGPSecretKeyRing simpleRsaKeyRing(@Nonnull UserId userId, @Nonnull RsaLength length, String password)
             throws InvalidAlgorithmParameterException, NoSuchAlgorithmException, PGPException {
-        return simpleRsaKeyRing(userId.toString(), rsaLength, password);
+        return simpleRsaKeyRing(userId.toString(), length, password);
     }
 
     /**
@@ -116,15 +136,24 @@ public class KeyRingBuilder implements KeyRingBuilderInterface {
         }
     }
 
+    /**
+     * Creates a key ring consisting of an ed25519 EdDSA primary key and a curve25519 XDH subkey.
+     * The EdDSA primary key is used for signing messages and certifying the sub key.
+     * The XDH subkey is used for encryption and decryption of messages.
+     *
+     * @param userId user-id
+     *
+     * @return {@link PGPSecretKeyRing} containing the key pairs.
+     */
     public PGPSecretKeyRing simpleEcKeyRing(@Nonnull UserId userId)
             throws InvalidAlgorithmParameterException, NoSuchAlgorithmException, PGPException {
         return simpleEcKeyRing(userId.toString());
     }
 
     /**
-     * Creates an unencrypted key ring consisting of an ECDSA master key and an ECDH sub-key.
-     * The ECDSA master key is used for signing messages and certifying the sub key.
-     * The ECDH sub-key is used for encryption of messages.
+     * Creates a key ring consisting of an ed25519 EdDSA primary key and a curve25519 XDH subkey.
+     * The EdDSA primary key is used for signing messages and certifying the sub key.
+     * The XDH subkey is used for encryption and decryption of messages.
      *
      * @param userId user-id
      *
@@ -135,15 +164,25 @@ public class KeyRingBuilder implements KeyRingBuilderInterface {
         return simpleEcKeyRing(userId, null);
     }
 
+    /**
+     * Creates a key ring consisting of an ed25519 EdDSA primary key and a curve25519 XDH subkey.
+     * The EdDSA primary key is used for signing messages and certifying the sub key.
+     * The XDH subkey is used for encryption and decryption of messages.
+     *
+     * @param userId user-id
+     * @param password Password of the private key. Can be null for an unencrypted key.
+     *
+     * @return {@link PGPSecretKeyRing} containing the key pairs.
+     */
     public PGPSecretKeyRing simpleEcKeyRing(@Nonnull UserId userId, String password)
             throws InvalidAlgorithmParameterException, NoSuchAlgorithmException, PGPException {
         return simpleEcKeyRing(userId.toString(), password);
     }
 
     /**
-     * Creates a key ring consisting of an ECDSA master key and an ECDH sub-key.
-     * The ECDSA master key is used for signing messages and certifying the sub key.
-     * The ECDH sub-key is used for encryption of messages.
+     * Creates a key ring consisting of an ed25519 EdDSA primary key and a X25519 XDH subkey.
+     * The EdDSA primary key is used for signing messages and certifying the sub key.
+     * The XDH subkey is used for encryption and decryption of messages.
      *
      * @param userId user-id
      * @param password Password of the private key. Can be null for an unencrypted key.
@@ -154,12 +193,12 @@ public class KeyRingBuilder implements KeyRingBuilderInterface {
             throws PGPException, NoSuchAlgorithmException, InvalidAlgorithmParameterException {
         WithAdditionalUserIdOrPassphrase builder = this
                 .withSubKey(
-                        KeySpec.getBuilder(KeyType.ECDH(EllipticCurve._P256))
+                        KeySpec.getBuilder(KeyType.XDH(XDHCurve._X25519))
                                 .withKeyFlags(KeyFlag.ENCRYPT_STORAGE, KeyFlag.ENCRYPT_COMMS)
                                 .withDefaultAlgorithms())
                 .withMasterKey(
-                        KeySpec.getBuilder(KeyType.ECDSA(EllipticCurve._P256))
-                                .withKeyFlags(KeyFlag.AUTHENTICATION, KeyFlag.CERTIFY_OTHER, KeyFlag.SIGN_DATA)
+                        KeySpec.getBuilder(KeyType.EDDSA(EdDSACurve._Ed25519))
+                                .withKeyFlags(KeyFlag.CERTIFY_OTHER, KeyFlag.SIGN_DATA)
                                 .withDefaultAlgorithms())
                 .withPrimaryUserId(userId);
 
