@@ -17,6 +17,7 @@ package org.pgpainless.key.generation;
 
 import java.security.InvalidAlgorithmParameterException;
 import java.security.NoSuchAlgorithmException;
+import java.util.Date;
 import javax.annotation.Nonnull;
 
 import org.bouncycastle.openpgp.PGPException;
@@ -59,6 +60,14 @@ public interface KeyRingBuilderInterface {
         default WithAdditionalUserIdOrPassphrase withAdditionalUserId(@Nonnull UserId userId) {
             return withAdditionalUserId(userId.toString());
         }
+
+        /**
+         * Set an expiration date for the key.
+         *
+         * @param expirationDate date on which the key will expire.
+         * @return builder
+         */
+        WithAdditionalUserIdOrPassphrase setExpirationDate(@Nonnull Date expirationDate);
 
         WithAdditionalUserIdOrPassphrase withAdditionalUserId(@Nonnull String userId);
 

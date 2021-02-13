@@ -66,6 +66,7 @@ public class KeyRingBuilder implements KeyRingBuilderInterface {
     private String userId;
     private final Set<String> additionalUserIds = new LinkedHashSet<>();
     private Passphrase passphrase;
+    private Date expirationDate = null;
 
     /**
      * Creates a simple, unencrypted RSA KeyPair of length {@code length} with user-id {@code userId}.
@@ -289,6 +290,16 @@ public class KeyRingBuilder implements KeyRingBuilderInterface {
     class WithAdditionalUserIdOrPassphraseImpl implements WithAdditionalUserIdOrPassphrase {
 
         @Override
+        public WithAdditionalUserIdOrPassphrase setExpirationDate(@Nonnull Date expirationDate) {
+            Date now = new Date();
+            if (now.after(expirationDate)) {
+                throw new IllegalArgumentException("Expiration date must be in the future.");
+            }
+            KeyRingBuilder.this.expirationDate = expirationDate;
+            return this;
+        }
+
+        @Override
         public WithAdditionalUserIdOrPassphrase withAdditionalUserId(@Nonnull String userId) {
             String trimmed = userId.trim();
             if (KeyRingBuilder.this.userId.equals(trimmed)) {
@@ -341,6 +352,10 @@ public class KeyRingBuilder implements KeyRingBuilderInterface {
                 signatureGenerator = new PGPSignatureGenerator(signer);
                 PGPSignatureSubpacketGenerator hashedSubPacketGenerator = certKeySpec.getSubpacketGenerator();
                 hashedSubPacketGenerator.setPrimaryUserID(false, true);
+                if (expirationDate != null) {
+                    SignatureSubpacketGeneratorUtil.setExpirationDateInSubpacketGenerator(
+                            expirationDate, new Date(), hashedSubPacketGenerator);
+                }
                 PGPSignatureSubpacketVector hashedSubPackets = hashedSubPacketGenerator.generate();
 
                 // Generator which the user can get the key pair from
