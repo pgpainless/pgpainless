@@ -1,0 +1,18 @@
+#!/usr/bin/env bash
+
+# Pretty fancy method to get reliable the absolute path of a shell
+# script, *even if it is sourced*. Credits go to GreenFox on
+# stackoverflow: http://stackoverflow.com/a/12197518/194894
+pushd . > /dev/null
+SCRIPTDIR="${BASH_SOURCE[0]}";
+while([ -h "${SCRIPTDIR}" ]); do
+    cd "`dirname "${SCRIPTDIR}"`"
+    SCRIPTDIR="$(readlink "`basename "${SCRIPTDIR}"`")";
+done
+cd "`dirname "${SCRIPTDIR}"`" > /dev/null
+SCRIPTDIR="`pwd`";
+popd  > /dev/null
+
+BASEDIR="$(cd ${SCRIPTDIR}/.. && pwd)"
+
+exec "${BASEDIR}/gradlew" run --quiet --args="${@}"

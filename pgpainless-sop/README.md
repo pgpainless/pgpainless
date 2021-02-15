@@ -6,16 +6,12 @@ PGPainless-SOP is an implementation of the [Stateless OpenPGP Command Line Inter
 To build an executable, `gradle jar` should be sufficient. The resulting jar file can be found in `pgpainless-sop/build/libs/`.
 
 ## Execute
-You can now use the jar file like described in the stateless OpenPGP cli document.
 
-An example call may look like this:
-```
-java -jar pgpainless-sop-X.X.X.jar generate-key "Alice <alice@wonderland.lit>"
-```
+Simply use the provided `./pgpainless` script to execute PGPainless' Stateless Command Line Interface.
 
 To discover all commands use
 ```
-java -jar pgpainless-sop-X.X.X.jar help
+./pgpainless help
 ```
 
 Enjoy!
