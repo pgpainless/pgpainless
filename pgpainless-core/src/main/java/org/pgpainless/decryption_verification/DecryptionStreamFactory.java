@@ -33,7 +33,6 @@ import org.bouncycastle.openpgp.PGPCompressedData;
 import org.bouncycastle.openpgp.PGPEncryptedData;
 import org.bouncycastle.openpgp.PGPEncryptedDataList;
 import org.bouncycastle.openpgp.PGPException;
-import org.bouncycastle.openpgp.PGPKeyValidationException;
 import org.bouncycastle.openpgp.PGPLiteralData;
 import org.bouncycastle.openpgp.PGPObjectFactory;
 import org.bouncycastle.openpgp.PGPOnePassSignature;
@@ -240,7 +239,7 @@ public final class DecryptionStreamFactory {
                                     resultBuilder.setDecryptionFingerprint(new OpenPgpV4Fingerprint(key));
                                     encryptedSessionKey = publicKeyEncryptedData;
                                     break outerloop;
-                                } catch (ClassCastException | PGPKeyValidationException e) {
+                                } catch (PGPException | ClassCastException e) {
                                     LOGGER.log(LEVEL, "Skipping wrong key " + Long.toHexString(key.getKeyID()) + " for hidden recipient decryption.", e);
                                 }
                             }
