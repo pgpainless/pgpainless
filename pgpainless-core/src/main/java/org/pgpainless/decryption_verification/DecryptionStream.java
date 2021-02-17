@@ -18,10 +18,12 @@ package org.pgpainless.decryption_verification;
 import javax.annotation.Nonnull;
 import java.io.IOException;
 import java.io.InputStream;
+import java.util.List;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import org.bouncycastle.openpgp.PGPException;
+import org.pgpainless.util.IntegrityProtectedInputStream;
 
 public class DecryptionStream extends InputStream {
 
@@ -30,10 +32,13 @@ public class DecryptionStream extends InputStream {
     private final InputStream inputStream;
     private final OpenPgpMetadata.Builder resultBuilder;
     private boolean isClosed = false;
+    private List<IntegrityProtectedInputStream> integrityProtectedInputStreamList;
 
-    DecryptionStream(@Nonnull InputStream wrapped, @Nonnull OpenPgpMetadata.Builder resultBuilder) {
+    DecryptionStream(@Nonnull InputStream wrapped, @Nonnull OpenPgpMetadata.Builder resultBuilder,
+                     List<IntegrityProtectedInputStream> integrityProtectedInputStreamList) {
         this.inputStream = wrapped;
         this.resultBuilder = resultBuilder;
+        this.integrityProtectedInputStreamList = integrityProtectedInputStreamList;
     }
 
     @Override
@@ -55,6 +60,9 @@ public class DecryptionStream extends InputStream {
     public void close() throws IOException {
         inputStream.close();
         maybeVerifyDetachedSignatures();
+        for (IntegrityProtectedInputStream s : integrityProtectedInputStreamList) {
+            s.close();
+        }
         this.isClosed = true;
     }
 

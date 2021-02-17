@@ -17,6 +17,7 @@ package org.pgpainless.decryption_verification;
 
 import java.io.IOException;
 import java.io.InputStream;
+import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -56,6 +57,7 @@ import org.pgpainless.algorithm.SymmetricKeyAlgorithm;
 import org.pgpainless.implementation.ImplementationFactory;
 import org.pgpainless.key.OpenPgpV4Fingerprint;
 import org.pgpainless.key.protection.SecretKeyRingProtector;
+import org.pgpainless.util.IntegrityProtectedInputStream;
 import org.pgpainless.util.Passphrase;
 
 public final class DecryptionStreamFactory {
@@ -73,6 +75,7 @@ public final class DecryptionStreamFactory {
     private static final PGPContentVerifierBuilderProvider verifierBuilderProvider = ImplementationFactory.getInstance().getPGPContentVerifierBuilderProvider();
     private static final KeyFingerPrintCalculator keyFingerprintCalculator = ImplementationFactory.getInstance().getKeyFingerprintCalculator();
     private final Map<OpenPgpV4Fingerprint, OnePassSignature> verifiableOnePassSignatures = new HashMap<>();
+    private final List<IntegrityProtectedInputStream> integrityProtectedStreams = new ArrayList<>();
 
     private DecryptionStreamFactory(@Nullable PGPSecretKeyRingCollection decryptionKeys,
                                     @Nullable SecretKeyRingProtector decryptor,
@@ -114,7 +117,7 @@ public final class DecryptionStreamFactory {
                     PGPUtil.getDecoderStream(inputStream), keyFingerprintCalculator);
             pgpInputStream = factory.processPGPPackets(objectFactory);
         }
-        return new DecryptionStream(pgpInputStream, factory.resultBuilder);
+        return new DecryptionStream(pgpInputStream, factory.resultBuilder, factory.integrityProtectedStreams);
     }
 
     private InputStream processPGPPackets(@Nonnull PGPObjectFactory objectFactory) throws IOException, PGPException {
@@ -253,11 +256,11 @@ public final class DecryptionStreamFactory {
             throw new PGPException("Decryption failed - No suitable decryption key or passphrase found");
         }
 
-        PublicKeyDataDecryptorFactory keyDecryptor = ImplementationFactory.getInstance()
+        PublicKeyDataDecryptorFactory dataDecryptor = ImplementationFactory.getInstance()
                 .getPublicKeyDataDecryptorFactory(decryptionKey);
 
         SymmetricKeyAlgorithm symmetricKeyAlgorithm = SymmetricKeyAlgorithm
-                .fromId(encryptedSessionKey.getSymmetricAlgorithm(keyDecryptor));
+                .fromId(encryptedSessionKey.getSymmetricAlgorithm(dataDecryptor));
         if (symmetricKeyAlgorithm == SymmetricKeyAlgorithm.NULL) {
             throw new PGPException("Data is not encrypted.");
         }
@@ -267,7 +270,13 @@ public final class DecryptionStreamFactory {
 
         resultBuilder.setIntegrityProtected(encryptedSessionKey.isIntegrityProtected());
 
-        return encryptedSessionKey.getDataStream(keyDecryptor);
+        if (encryptedSessionKey.isIntegrityProtected()) {
+            IntegrityProtectedInputStream integrityProtected =
+                    new IntegrityProtectedInputStream(encryptedSessionKey.getDataStream(dataDecryptor), encryptedSessionKey);
+            integrityProtectedStreams.add(integrityProtected);
+            return integrityProtected;
+        }
+        return encryptedSessionKey.getDataStream(dataDecryptor);
     }
 
     private void initOnePassSignatures(@Nonnull PGPOnePassSignatureList onePassSignatureList) throws PGPException {
