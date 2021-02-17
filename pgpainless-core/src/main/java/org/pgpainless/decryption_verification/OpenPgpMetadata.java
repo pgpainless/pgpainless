@@ -62,7 +62,7 @@ public class OpenPgpMetadata {
     }
 
     public boolean isEncrypted() {
-        return !getRecipientKeyIds().isEmpty();
+        return symmetricKeyAlgorithm != SymmetricKeyAlgorithm.NULL && !getRecipientKeyIds().isEmpty();
     }
 
     public OpenPgpV4Fingerprint getDecryptionFingerprint() {

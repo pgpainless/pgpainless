@@ -197,6 +197,9 @@ public final class DecryptionStreamFactory {
                             .getPBEDataDecryptorFactory(decryptionPassphrase);
                     SymmetricKeyAlgorithm symmetricKeyAlgorithm = SymmetricKeyAlgorithm.fromId(
                             pbeEncryptedData.getSymmetricAlgorithm(passphraseDecryptor));
+                    if (symmetricKeyAlgorithm == SymmetricKeyAlgorithm.NULL) {
+                        throw new PGPException("Data is not encrypted.");
+                    }
                     resultBuilder.setSymmetricKeyAlgorithm(symmetricKeyAlgorithm);
                     resultBuilder.setIntegrityProtected(pbeEncryptedData.isIntegrityProtected());
 
@@ -256,6 +259,9 @@ public final class DecryptionStreamFactory {
 
         SymmetricKeyAlgorithm symmetricKeyAlgorithm = SymmetricKeyAlgorithm
                 .fromId(encryptedSessionKey.getSymmetricAlgorithm(keyDecryptor));
+        if (symmetricKeyAlgorithm == SymmetricKeyAlgorithm.NULL) {
+            throw new PGPException("Data is not encrypted.");
+        }
 
         LOGGER.log(LEVEL, "Message is encrypted using " + symmetricKeyAlgorithm);
         resultBuilder.setSymmetricKeyAlgorithm(symmetricKeyAlgorithm);
