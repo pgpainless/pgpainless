@@ -207,22 +207,28 @@ public final class EncryptionStream extends OutputStream {
     }
 
     private void prepareCompression() throws IOException {
-        LOGGER.log(LEVEL, "Compress using " + compressionAlgorithm);
         compressedDataGenerator = new PGPCompressedDataGenerator(
-                compressionAlgorithm.getAlgorithmId());
+            compressionAlgorithm.getAlgorithmId());
+        if (compressionAlgorithm == CompressionAlgorithm.UNCOMPRESSED) {
+            return;
+        }
+
+        LOGGER.log(LEVEL, "Compress using " + compressionAlgorithm);
         basicCompressionStream = new BCPGOutputStream(compressedDataGenerator.open(outermostStream));
+        outermostStream = basicCompressionStream;
     }
 
     private void prepareOnePassSignatures() throws IOException, PGPException {
         for (PGPSignatureGenerator signatureGenerator : signatureGenerators.values()) {
-            signatureGenerator.generateOnePassVersion(false).encode(basicCompressionStream);
+            signatureGenerator.generateOnePassVersion(false).encode(outermostStream);
         }
     }
 
     private void prepareLiteralDataProcessing() throws IOException {
         literalDataGenerator = new PGPLiteralDataGenerator();
-        literalDataStream = literalDataGenerator.open(basicCompressionStream,
+        literalDataStream = literalDataGenerator.open(outermostStream,
                 PGPLiteralData.BINARY, PGPLiteralData.CONSOLE, new Date(), new byte[BUFFER_SIZE]);
+        outermostStream = literalDataStream;
     }
 
     private void prepareResultBuilder() {
@@ -235,7 +241,7 @@ public final class EncryptionStream extends OutputStream {
 
     @Override
     public void write(int data) throws IOException {
-        literalDataStream.write(data);
+        outermostStream.write(data);
 
         for (PGPSignatureGenerator signatureGenerator : signatureGenerators.values()) {
             byte asByte = (byte) (data & 0xff);
@@ -251,7 +257,7 @@ public final class EncryptionStream extends OutputStream {
 
     @Override
     public void write(byte[] buffer, int off, int len) throws IOException {
-        literalDataStream.write(buffer, 0, len);
+        outermostStream.write(buffer, 0, len);
         for (PGPSignatureGenerator signatureGenerator : signatureGenerators.values()) {
             signatureGenerator.update(buffer, 0, len);
         }
@@ -259,7 +265,7 @@ public final class EncryptionStream extends OutputStream {
 
     @Override
     public void flush() throws IOException {
-        literalDataStream.flush();
+        outermostStream.flush();
     }
 
     @Override
@@ -298,7 +304,7 @@ public final class EncryptionStream extends OutputStream {
             try {
                 PGPSignature signature = signatureGenerator.generate();
                 if (!detachedSignature) {
-                    signature.encode(basicCompressionStream);
+                    signature.encode(outermostStream);
                 }
                 resultBuilder.addDetachedSignature(new DetachedSignature(signature, fingerprint));
             } catch (PGPException e) {
