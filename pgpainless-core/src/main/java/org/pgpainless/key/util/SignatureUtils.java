@@ -58,7 +58,7 @@ public class SignatureUtils {
 
     private static HashAlgorithm negotiateHashAlgorithm(List<HashAlgorithm> preferredHashAlgorithms) {
         if (preferredHashAlgorithms.isEmpty()) {
-            return PGPainless.getPolicy().getDefaultSignatureHashAlgorithm();
+            return PGPainless.getPolicy().getSignatureHashAlgorithmPolicy().defaultHashAlgorithm();
         }
         return preferredHashAlgorithms.get(0);
     }
@@ -100,9 +100,10 @@ public class SignatureUtils {
             case CASUAL_CERTIFICATION:
             case POSITIVE_CERTIFICATION:
             case DIRECT_KEY:
+                return isSelfSignatureValid(signature, issuer);
             case KEY_REVOCATION:
             case CERTIFICATION_REVOCATION:
-                return isSelfSignatureValid(signature, issuer);
+                return isRevocationSignatureValid(signature, issuer);
             case SUBKEY_BINDING:
             case PRIMARYKEY_BINDING:
             case SUBKEY_REVOCATION:
@@ -117,6 +118,23 @@ public class SignatureUtils {
     }
 
     public static boolean isSelfSignatureValid(PGPSignature signature, PGPPublicKey publicKey) throws PGPException {
+        if (!PGPainless.getPolicy().getSignatureHashAlgorithmPolicy().isAcceptable(signature.getHashAlgorithm())) {
+            return false;
+        }
+        for (Iterator<String> it = publicKey.getUserIDs(); it.hasNext(); ) {
+            String userId = it.next();
+            boolean valid = isSelfSignatureOnUserIdValid(signature, userId, publicKey);
+            if (valid) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    public static boolean isRevocationSignatureValid(PGPSignature signature, PGPPublicKey publicKey) throws PGPException {
+        if (!PGPainless.getPolicy().getRevocationSignatureHashAlgorithmPolicy().isAcceptable(signature.getHashAlgorithm())) {
+            return false;
+        }
         for (Iterator<String> it = publicKey.getUserIDs(); it.hasNext(); ) {
             String userId = it.next();
             boolean valid = isSelfSignatureOnUserIdValid(signature, userId, publicKey);

@@ -50,6 +50,7 @@ import org.pgpainless.PGPainless;
 import org.pgpainless.algorithm.HashAlgorithm;
 import org.pgpainless.algorithm.KeyFlag;
 import org.pgpainless.algorithm.SignatureType;
+import org.pgpainless.algorithm.SymmetricKeyAlgorithm;
 import org.pgpainless.implementation.ImplementationFactory;
 import org.pgpainless.key.generation.type.KeyType;
 import org.pgpainless.key.generation.type.eddsa.EdDSACurve;
@@ -420,16 +421,19 @@ public class KeyRingBuilder implements KeyRingBuilderInterface {
             }
 
             private PGPContentSignerBuilder buildContentSigner(PGPKeyPair certKey) {
+                HashAlgorithm hashAlgorithm = PGPainless.getPolicy().getSignatureHashAlgorithmPolicy().defaultHashAlgorithm();
                 return ImplementationFactory.getInstance().getPGPContentSignerBuilder(
                         certKey.getPublicKey().getAlgorithm(),
-                        PGPainless.getPolicy().getDefaultSignatureHashAlgorithm().getAlgorithmId());
+                        hashAlgorithm.getAlgorithmId());
             }
 
             private PBESecretKeyEncryptor buildSecretKeyEncryptor() {
+                SymmetricKeyAlgorithm keyEncryptionAlgorithm = PGPainless.getPolicy().getSymmetricKeyAlgorithmPolicy()
+                        .getDefaultSymmetricKeyAlgorithm();
                 PBESecretKeyEncryptor encryptor = passphrase == null || passphrase.isEmpty() ?
                         null : // unencrypted key pair, otherwise AES-256 encrypted
                         ImplementationFactory.getInstance().getPBESecretKeyEncryptor(
-                                PGPainless.getPolicy().getDefaultSymmetricKeyAlgorithm(), digestCalculator, passphrase);
+                                keyEncryptionAlgorithm, digestCalculator, passphrase);
                 return encryptor;
             }
 

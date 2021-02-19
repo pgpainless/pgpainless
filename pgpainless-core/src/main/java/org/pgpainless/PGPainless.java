@@ -32,6 +32,7 @@ import org.pgpainless.key.info.KeyRingInfo;
 import org.pgpainless.key.modification.secretkeyring.SecretKeyRingEditor;
 import org.pgpainless.key.modification.secretkeyring.SecretKeyRingEditorInterface;
 import org.pgpainless.key.parsing.KeyRingReader;
+import org.pgpainless.policy.Policy;
 import org.pgpainless.symmetric_encryption.SymmetricEncryptorDecryptor;
 import org.pgpainless.util.Passphrase;
 
