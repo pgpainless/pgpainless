@@ -64,6 +64,7 @@ public final class DecryptionStreamFactory {
 
     private static final Logger LOGGER = Logger.getLogger(DecryptionStreamFactory.class.getName());
     private static final Level LEVEL = Level.FINE;
+    private static final int MAX_RECURSION_DEPTH = 16;
 
     private final PGPSecretKeyRingCollection decryptionKeys;
     private final SecretKeyRingProtector decryptionKeyDecryptor;
@@ -115,22 +116,25 @@ public final class DecryptionStreamFactory {
         } else {
             PGPObjectFactory objectFactory = new PGPObjectFactory(
                     PGPUtil.getDecoderStream(inputStream), keyFingerprintCalculator);
-            pgpInputStream = factory.processPGPPackets(objectFactory);
+            pgpInputStream = factory.processPGPPackets(objectFactory, 1);
         }
         return new DecryptionStream(pgpInputStream, factory.resultBuilder, factory.integrityProtectedStreams);
     }
 
-    private InputStream processPGPPackets(@Nonnull PGPObjectFactory objectFactory) throws IOException, PGPException {
+    private InputStream processPGPPackets(@Nonnull PGPObjectFactory objectFactory, int depth) throws IOException, PGPException {
+        if (depth >= MAX_RECURSION_DEPTH) {
+            throw new PGPException("Maximum recursion depth of packages exceeded.");
+        }
         Object nextPgpObject;
         while ((nextPgpObject = objectFactory.nextObject()) != null) {
             if (nextPgpObject instanceof PGPEncryptedDataList) {
-                return processPGPEncryptedDataList((PGPEncryptedDataList) nextPgpObject);
+                return processPGPEncryptedDataList((PGPEncryptedDataList) nextPgpObject, depth);
             }
             if (nextPgpObject instanceof PGPCompressedData) {
-                return processPGPCompressedData((PGPCompressedData) nextPgpObject);
+                return processPGPCompressedData((PGPCompressedData) nextPgpObject, depth);
             }
             if (nextPgpObject instanceof PGPOnePassSignatureList) {
-                return processOnePassSignatureList(objectFactory, (PGPOnePassSignatureList) nextPgpObject);
+                return processOnePassSignatureList(objectFactory, (PGPOnePassSignatureList) nextPgpObject, depth);
             }
             if (nextPgpObject instanceof PGPLiteralData) {
                 return processPGPLiteralData(objectFactory, (PGPLiteralData) nextPgpObject);
@@ -140,14 +144,14 @@ public final class DecryptionStreamFactory {
         throw new PGPException("No Literal Data Packet found");
     }
 
-    private InputStream processPGPEncryptedDataList(PGPEncryptedDataList pgpEncryptedDataList)
+    private InputStream processPGPEncryptedDataList(PGPEncryptedDataList pgpEncryptedDataList, int depth)
             throws PGPException, IOException {
         LOGGER.log(LEVEL, "Encountered PGPEncryptedDataList");
         InputStream decryptedDataStream = decrypt(pgpEncryptedDataList);
-        return processPGPPackets(new PGPObjectFactory(PGPUtil.getDecoderStream(decryptedDataStream), keyFingerprintCalculator));
+        return processPGPPackets(new PGPObjectFactory(PGPUtil.getDecoderStream(decryptedDataStream), keyFingerprintCalculator), ++depth);
     }
 
-    private InputStream processPGPCompressedData(PGPCompressedData pgpCompressedData)
+    private InputStream processPGPCompressedData(PGPCompressedData pgpCompressedData, int depth)
             throws PGPException, IOException {
         CompressionAlgorithm compressionAlgorithm = CompressionAlgorithm.fromId(pgpCompressedData.getAlgorithm());
         LOGGER.log(LEVEL, "Encountered PGPCompressedData: " + compressionAlgorithm);
@@ -156,14 +160,14 @@ public final class DecryptionStreamFactory {
         InputStream dataStream = pgpCompressedData.getDataStream();
         PGPObjectFactory objectFactory = new PGPObjectFactory(PGPUtil.getDecoderStream(dataStream), keyFingerprintCalculator);
 
-        return processPGPPackets(objectFactory);
+        return processPGPPackets(objectFactory, ++depth);
     }
 
-    private InputStream processOnePassSignatureList(@Nonnull PGPObjectFactory objectFactory, PGPOnePassSignatureList onePassSignatures)
+    private InputStream processOnePassSignatureList(@Nonnull PGPObjectFactory objectFactory, PGPOnePassSignatureList onePassSignatures, int depth)
             throws PGPException, IOException {
         LOGGER.log(LEVEL, "Encountered PGPOnePassSignatureList of size " + onePassSignatures.size());
         initOnePassSignatures(onePassSignatures);
-        return processPGPPackets(objectFactory);
+        return processPGPPackets(objectFactory, ++depth);
     }
 
     private InputStream processPGPLiteralData(@Nonnull PGPObjectFactory objectFactory, PGPLiteralData pgpLiteralData) {
