@@ -151,7 +151,8 @@ public class Decrypt implements Runnable {
             Streams.pipeAll(decryptionStream, System.out);
             decryptionStream.close();
         } catch (IOException e) {
-            return;
+            err_ln("Unable to decrypt: " + e.getMessage());
+            System.exit(29);
         }
         if (verifyOut == null) {
             return;
