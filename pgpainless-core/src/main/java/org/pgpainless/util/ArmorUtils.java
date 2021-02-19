@@ -41,7 +41,7 @@ public class ArmorUtils {
 
     public static String toAsciiArmoredString(InputStream inputStream) throws IOException {
         ByteArrayOutputStream out = new ByteArrayOutputStream();
-        ArmoredOutputStream armor = new ArmoredOutputStream(out);
+        ArmoredOutputStream armor = ArmoredOutputStreamFactory.get(out);
 
         Streams.pipeAll(inputStream, armor);
         armor.close();

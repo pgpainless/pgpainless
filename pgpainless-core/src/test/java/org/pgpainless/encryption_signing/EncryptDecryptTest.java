@@ -52,6 +52,7 @@ import org.pgpainless.key.generation.type.rsa.RsaLength;
 import org.pgpainless.key.protection.SecretKeyRingProtector;
 import org.pgpainless.key.protection.UnprotectedKeysProtector;
 import org.pgpainless.key.util.KeyRingUtils;
+import org.pgpainless.util.ArmoredOutputStreamFactory;
 import org.pgpainless.util.BCUtil;
 
 public class EncryptDecryptTest {
@@ -205,7 +206,7 @@ public class EncryptDecryptTest {
 
         Set<PGPSignature> signatureSet = metadata.getSignatures();
         ByteArrayOutputStream sigOut = new ByteArrayOutputStream();
-        ArmoredOutputStream armorOut = new ArmoredOutputStream(sigOut);
+        ArmoredOutputStream armorOut = ArmoredOutputStreamFactory.get(sigOut);
         signatureSet.iterator().next().encode(armorOut);
         armorOut.close();
         String armorSig = sigOut.toString();

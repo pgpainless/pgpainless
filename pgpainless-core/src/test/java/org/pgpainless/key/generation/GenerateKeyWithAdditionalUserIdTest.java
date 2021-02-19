@@ -35,6 +35,7 @@ import org.pgpainless.algorithm.KeyFlag;
 import org.pgpainless.key.generation.type.KeyType;
 import org.pgpainless.key.generation.type.rsa.RsaLength;
 import org.pgpainless.key.util.KeyRingUtils;
+import org.pgpainless.util.ArmoredOutputStreamFactory;
 
 public class GenerateKeyWithAdditionalUserIdTest {
 
@@ -65,7 +66,7 @@ public class GenerateKeyWithAdditionalUserIdTest {
         assertFalse(userIds.hasNext());
 
         ByteArrayOutputStream byteOut = new ByteArrayOutputStream();
-        ArmoredOutputStream armor = new ArmoredOutputStream(byteOut);
+        ArmoredOutputStream armor = ArmoredOutputStreamFactory.get(byteOut);
         secretKeys.encode(armor);
         armor.close();
 

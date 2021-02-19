@@ -27,6 +27,7 @@ import org.bouncycastle.openpgp.PGPException;
 import org.junit.jupiter.api.Test;
 import org.pgpainless.PGPainless;
 import org.pgpainless.algorithm.SymmetricKeyAlgorithm;
+import org.pgpainless.util.ArmoredOutputStreamFactory;
 import org.pgpainless.util.Passphrase;
 
 public class LegacySymmetricEncryptionTest {
@@ -52,7 +53,7 @@ public class LegacySymmetricEncryptionTest {
         Passphrase passphrase = new Passphrase(password.toCharArray());
         byte[] enc = PGPainless.encryptWithPassword(plain, passphrase, SymmetricKeyAlgorithm.AES_128);
         ByteArrayOutputStream out = new ByteArrayOutputStream();
-        ArmoredOutputStream armor = new ArmoredOutputStream(out);
+        ArmoredOutputStream armor = ArmoredOutputStreamFactory.get(out);
         armor.write(enc);
         armor.flush();
         armor.close();

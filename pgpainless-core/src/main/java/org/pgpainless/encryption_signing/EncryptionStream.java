@@ -51,6 +51,7 @@ import org.pgpainless.decryption_verification.DetachedSignature;
 import org.pgpainless.decryption_verification.OpenPgpMetadata;
 import org.pgpainless.implementation.ImplementationFactory;
 import org.pgpainless.key.OpenPgpV4Fingerprint;
+import org.pgpainless.util.ArmoredOutputStreamFactory;
 import org.pgpainless.util.Passphrase;
 
 /**
@@ -146,7 +147,7 @@ public final class EncryptionStream extends OutputStream {
         }
 
         LOGGER.log(LEVEL, "Wrap encryption output in ASCII armor");
-        armorOutputStream = new ArmoredOutputStream(outermostStream);
+        armorOutputStream = ArmoredOutputStreamFactory.get(outermostStream);
         outermostStream = armorOutputStream;
     }
 

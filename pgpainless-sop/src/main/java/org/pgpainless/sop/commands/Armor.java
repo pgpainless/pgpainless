@@ -17,6 +17,7 @@ package org.pgpainless.sop.commands;
 
 import org.bouncycastle.bcpg.ArmoredOutputStream;
 import org.bouncycastle.util.io.Streams;
+import org.pgpainless.util.ArmoredOutputStreamFactory;
 import picocli.CommandLine;
 
 import java.io.IOException;
@@ -49,7 +50,7 @@ public class Armor implements Runnable {
     @Override
     public void run() {
 
-        try (PushbackInputStream pbIn = new PushbackInputStream(System.in); ArmoredOutputStream armoredOutputStream = new ArmoredOutputStream(System.out)) {
+        try (PushbackInputStream pbIn = new PushbackInputStream(System.in); ArmoredOutputStream armoredOutputStream = ArmoredOutputStreamFactory.get(System.out)) {
             byte[] start = new byte[14];
             int read = pbIn.read(start);
             pbIn.unread(read);

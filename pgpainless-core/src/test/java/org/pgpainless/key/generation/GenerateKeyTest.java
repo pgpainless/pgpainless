@@ -30,6 +30,7 @@ import org.junit.jupiter.api.Test;
 import org.pgpainless.PGPainless;
 import org.pgpainless.key.OpenPgpV4Fingerprint;
 import org.pgpainless.key.util.KeyRingUtils;
+import org.pgpainless.util.ArmoredOutputStreamFactory;
 
 public class GenerateKeyTest {
 
@@ -41,13 +42,13 @@ public class GenerateKeyTest {
         PGPPublicKeyRing publicKeys = KeyRingUtils.publicKeyRingFrom(secretKeys);
 
         ByteArrayOutputStream bytes = new ByteArrayOutputStream();
-        ArmoredOutputStream armor = new ArmoredOutputStream(bytes);
+        ArmoredOutputStream armor = ArmoredOutputStreamFactory.get(bytes);
         secretKeys.encode(armor);
         armor.close();
         String publicKey = new String(bytes.toByteArray());
 
         bytes = new ByteArrayOutputStream();
-        armor = new ArmoredOutputStream(bytes);
+        armor = ArmoredOutputStreamFactory.get(bytes);
         secretKeys.encode(armor);
         armor.close();
         String privateKey = new String(bytes.toByteArray());

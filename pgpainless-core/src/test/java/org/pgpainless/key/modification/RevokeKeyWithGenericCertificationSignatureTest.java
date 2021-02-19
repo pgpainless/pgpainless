@@ -28,6 +28,7 @@ import org.bouncycastle.openpgp.PGPSecretKeyRing;
 import org.junit.jupiter.api.Test;
 import org.pgpainless.PGPainless;
 import org.pgpainless.key.protection.UnprotectedKeysProtector;
+import org.pgpainless.util.ArmoredOutputStreamFactory;
 
 /**
  * Test that makes sure that PGPainless can deal with keys that carry a key
@@ -88,14 +89,14 @@ public class RevokeKeyWithGenericCertificationSignatureTest {
 
         PGPPublicKey pkr = secretKeyRing.getPublicKeys().next();
         ByteArrayOutputStream pubOutBytes = new ByteArrayOutputStream();
-        try (ArmoredOutputStream pubOut = new ArmoredOutputStream(pubOutBytes)) {
+        try (ArmoredOutputStream pubOut = ArmoredOutputStreamFactory.get(pubOutBytes)) {
             pkr.encode(pubOut);
         }
         pubOutBytes.close();
 
         PGPSecretKey skr = secretKeyRing.getSecretKeys().next();
         ByteArrayOutputStream secOutBytes = new ByteArrayOutputStream();
-        try (ArmoredOutputStream privOut = new ArmoredOutputStream(secOutBytes)) {
+        try (ArmoredOutputStream privOut = ArmoredOutputStreamFactory.get(secOutBytes)) {
             skr.encode(privOut);
         }
         secOutBytes.close();
