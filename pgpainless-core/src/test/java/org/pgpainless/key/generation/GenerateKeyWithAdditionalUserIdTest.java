@@ -29,6 +29,7 @@ import org.bouncycastle.bcpg.ArmoredOutputStream;
 import org.bouncycastle.openpgp.PGPException;
 import org.bouncycastle.openpgp.PGPPublicKeyRing;
 import org.bouncycastle.openpgp.PGPSecretKeyRing;
+import org.junit.JUtils;
 import org.junit.jupiter.api.Test;
 import org.pgpainless.PGPainless;
 import org.pgpainless.algorithm.KeyFlag;
@@ -42,7 +43,7 @@ public class GenerateKeyWithAdditionalUserIdTest {
     @Test
     public void test() throws InvalidAlgorithmParameterException, NoSuchAlgorithmException, PGPException, IOException {
         Date now = new Date();
-        Date expiration = new Date(now.getTime() + 1000 * 5);
+        Date expiration = new Date(now.getTime() + 1000 * 60);
         PGPSecretKeyRing secretKeys = PGPainless.generateKeyRing()
                 .withPrimaryKey(KeySpec.getBuilder(KeyType.RSA(RsaLength._3072))
                         .withKeyFlags(KeyFlag.CERTIFY_OTHER, KeyFlag.SIGN_DATA, KeyFlag.ENCRYPT_COMMS)
@@ -56,7 +57,7 @@ public class GenerateKeyWithAdditionalUserIdTest {
                 .build();
         PGPPublicKeyRing publicKeys = KeyRingUtils.publicKeyRingFrom(secretKeys);
 
-        assertEquals(expiration.getTime(), PGPainless.inspectKeyRing(publicKeys).getExpirationDate().getTime(), 2);
+        JUtils.assertEquals(expiration.getTime(), PGPainless.inspectKeyRing(publicKeys).getExpirationDate().getTime(),2000);
 
         Iterator<String> userIds = publicKeys.getPublicKey().getUserIDs();
         assertEquals("primary@user.id", userIds.next());
