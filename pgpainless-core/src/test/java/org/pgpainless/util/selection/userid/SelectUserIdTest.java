@@ -39,7 +39,8 @@ public class SelectUserIdTest {
                 .simpleEcKeyRing("<alice@wonderland.lit>");
         secretKeys = PGPainless.modifyKeyRing(secretKeys)
                 .addUserId(
-                        UserId.withName("Alice Liddell").noComment().withEmail("crazy@the-rabbit.hole"),
+                        UserId.newBuilder().withName("Alice Liddell").noComment()
+                                .withEmail("crazy@the-rabbit.hole").build(),
                         SecretKeyRingProtector.unprotectedKeys())
                 .done();
 
