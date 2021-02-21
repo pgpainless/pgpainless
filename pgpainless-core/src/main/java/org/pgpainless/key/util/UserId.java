@@ -16,7 +16,6 @@
 
 package org.pgpainless.key.util;
 
-// @SuppressWarnings("unused")
 public final class UserId implements CharSequence {
     public static final class Builder {
         private String name;
@@ -73,7 +72,7 @@ public final class UserId implements CharSequence {
     private final String name;
     private final String comment;
     private final String email;
-    private Integer hash;
+    private long hash = Long.MAX_VALUE;
 
     private UserId(String name, String comment, String email) {
         this.name = name;
@@ -132,6 +131,11 @@ public final class UserId implements CharSequence {
         return asString(false);
     }
 
+    /**
+     * Returns a string representation of the object.
+     * @param ignoreEmptyValues Flag which indicates that empty string values should not be outputted.
+     * @return a string representation of the object.
+     */
     public String asString(boolean ignoreEmptyValues) {
         StringBuilder sb = new StringBuilder();
         if (name != null && (!ignoreEmptyValues || !name.isEmpty())) {
@@ -155,14 +159,15 @@ public final class UserId implements CharSequence {
         if (o == this) return true;
         if (!(o instanceof UserId)) return false;
         final UserId other = (UserId) o;
-        return isEqualComponent(name, other.name, false) && isEqualComponent(comment, other.comment, false)
+        return isEqualComponent(name, other.name, false)
+                && isEqualComponent(comment, other.comment, false)
                 && isEqualComponent(email, other.email, true);
     }
 
     @Override
     public int hashCode() {
-        if (hash != null) {
-            return hash;
+        if (hash != Long.MAX_VALUE) {
+            return (int) hash;
         } else {
             int hash = 7;
             hash = 31 * hash + (name == null ? 0 : name.hashCode());
