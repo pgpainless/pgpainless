@@ -60,9 +60,17 @@ public class BcImplementationFactory extends ImplementationFactory {
     @Override
     public PBESecretKeyEncryptor getPBESecretKeyEncryptor(PGPSecretKey secretKey, Passphrase passphrase)
             throws PGPException {
-        return new BcPBESecretKeyEncryptorBuilder(secretKey.getKeyEncryptionAlgorithm(),
-                getPGPDigestCalculator(secretKey.getS2K().getHashAlgorithm()),
-                (int) secretKey.getS2K().getIterationCount())
+        int keyEncryptionAlgorithm = secretKey.getKeyEncryptionAlgorithm();
+
+        if (secretKey.getS2K() == null) {
+            return getPBESecretKeyEncryptor(SymmetricKeyAlgorithm.fromId(keyEncryptionAlgorithm), passphrase);
+        }
+
+        int hashAlgorithm = secretKey.getS2K().getHashAlgorithm();
+        PGPDigestCalculator digestCalculator = getPGPDigestCalculator(hashAlgorithm);
+        long iterationCount = secretKey.getS2K().getIterationCount();
+
+        return new BcPBESecretKeyEncryptorBuilder(keyEncryptionAlgorithm, digestCalculator, (int) iterationCount)
                 .build(passphrase.getChars());
     }
 
