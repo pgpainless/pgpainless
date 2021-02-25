@@ -50,7 +50,7 @@ public class CallbackBasedKeyringProtector implements SecretKeyRingProtector2 {
     @Override
     public PBESecretKeyEncryptor getEncryptor(PGPSecretKey key) throws PGPException {
         Passphrase passphrase = lookupPassphraseInCache(key);
-        if (passphrase != null) {
+        if (passphrase == null) {
             passphrase = callback.getPassphraseFor(key);
             passphraseCache.put(key.getKeyID(), passphrase);
         }
