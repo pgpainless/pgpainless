@@ -29,8 +29,10 @@ import org.bouncycastle.openpgp.PGPException;
 import org.bouncycastle.openpgp.PGPSecretKeyRing;
 import org.bouncycastle.openpgp.PGPSecretKeyRingCollection;
 import org.bouncycastle.util.io.Streams;
-import org.junit.jupiter.api.Test;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.MethodSource;
 import org.pgpainless.PGPainless;
+import org.pgpainless.implementation.ImplementationFactory;
 import org.pgpainless.key.protection.SecretKeyRingProtector;
 
 public class ModificationDetectionTests {
@@ -118,8 +120,10 @@ public class ModificationDetectionTests {
             "=miES\n" +
             "-----END PGP PRIVATE KEY BLOCK-----\n";
 
-    @Test
-    public void testMissingMDC() throws IOException, PGPException {
+    @ParameterizedTest
+    @MethodSource("org.pgpainless.util.TestUtil#provideImplementationFactories")
+    public void testMissingMDC(ImplementationFactory implementationFactory) throws IOException, PGPException {
+        ImplementationFactory.setFactoryImplementation(implementationFactory);
         String message = "-----BEGIN PGP MESSAGE-----\n" +
                 "\n" +
                 "wcDMA3wvqk35PDeyAQwAnTmchA6ve/aF7cPEnyJSb9Ot61LSIMrU3+RaEdA90qn4\n" +
@@ -151,8 +155,10 @@ public class ModificationDetectionTests {
         });
     }
 
-    @Test
-    public void tamperedCiphertextTest() throws IOException, PGPException {
+    @ParameterizedTest
+    @MethodSource("org.pgpainless.util.TestUtil#provideImplementationFactories")
+    public void tamperedCiphertextTest(ImplementationFactory implementationFactory) throws IOException, PGPException {
+        ImplementationFactory.setFactoryImplementation(implementationFactory);
         String message = "-----BEGIN PGP MESSAGE-----\n" +
                 "\n" +
                 "wcDMA3wvqk35PDeyAQwAnTmchA6ve/aF7cPEnyJSb9Ot61LSIMrU3+RaEdA90qn4\n" +
@@ -180,8 +186,10 @@ public class ModificationDetectionTests {
         assertThrows(IOException.class, decryptionStream::close);
     }
 
-    @Test
-    public void tamperedMDCTest() throws IOException, PGPException {
+    @ParameterizedTest
+    @MethodSource("org.pgpainless.util.TestUtil#provideImplementationFactories")
+    public void tamperedMDCTest(ImplementationFactory implementationFactory) throws IOException, PGPException {
+        ImplementationFactory.setFactoryImplementation(implementationFactory);
         String message = "-----BEGIN PGP MESSAGE-----\n" +
                 "\n" +
                 "wcDMA3wvqk35PDeyAQwAnTmchA6ve/aF7cPEnyJSb9Ot61LSIMrU3+RaEdA90qn4\n" +

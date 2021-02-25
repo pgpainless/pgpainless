@@ -34,13 +34,15 @@ import org.bouncycastle.openpgp.PGPSecretKey;
 import org.bouncycastle.openpgp.PGPSecretKeyRing;
 import org.bouncycastle.openpgp.PGPSecretKeyRingCollection;
 import org.bouncycastle.util.io.Streams;
-import org.junit.jupiter.api.Test;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.MethodSource;
 import org.pgpainless.PGPainless;
 import org.pgpainless.algorithm.CompressionAlgorithm;
 import org.pgpainless.algorithm.HashAlgorithm;
 import org.pgpainless.algorithm.SymmetricKeyAlgorithm;
 import org.pgpainless.decryption_verification.DecryptionStream;
 import org.pgpainless.decryption_verification.OpenPgpMetadata;
+import org.pgpainless.implementation.ImplementationFactory;
 import org.pgpainless.key.OpenPgpV4Fingerprint;
 import org.pgpainless.key.TestKeys;
 import org.pgpainless.key.protection.SecretKeyRingProtector;
@@ -49,8 +51,10 @@ import org.pgpainless.util.selection.key.impl.SignatureKeySelectionStrategy;
 
 public class SigningTest {
 
-    @Test
-    public void testEncryptionAndSignatureVerification() throws IOException, PGPException {
+    @ParameterizedTest
+    @MethodSource("org.pgpainless.util.TestUtil#provideImplementationFactories")
+    public void testEncryptionAndSignatureVerification(ImplementationFactory implementationFactory) throws IOException, PGPException {
+        ImplementationFactory.setFactoryImplementation(implementationFactory);
 
         PGPPublicKeyRing julietKeys = TestKeys.getJulietPublicKeyRing();
         PGPPublicKeyRing romeoKeys = TestKeys.getRomeoPublicKeyRing();

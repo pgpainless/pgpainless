@@ -22,14 +22,18 @@ import java.io.IOException;
 import java.io.OutputStream;
 
 import org.bouncycastle.openpgp.PGPException;
-import org.junit.jupiter.api.Test;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.MethodSource;
 import org.pgpainless.PGPainless;
+import org.pgpainless.implementation.ImplementationFactory;
 import org.pgpainless.util.Passphrase;
 
 public class EncryptionStreamClosedTest {
 
-    @Test
-    public void testStreamHasToBeClosedBeforeGetResultCanBeCalled() throws IOException, PGPException {
+    @ParameterizedTest
+    @MethodSource("org.pgpainless.util.TestUtil#provideImplementationFactories")
+    public void testStreamHasToBeClosedBeforeGetResultCanBeCalled(ImplementationFactory implementationFactory) throws IOException, PGPException {
+        ImplementationFactory.setFactoryImplementation(implementationFactory);
         OutputStream out = new ByteArrayOutputStream();
         EncryptionStream stream = PGPainless.encryptAndOrSign()
                 .onOutputStream(out)

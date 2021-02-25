@@ -25,6 +25,9 @@ import org.bouncycastle.openpgp.PGPPublicKeyRing;
 import org.bouncycastle.openpgp.PGPSecretKeyRing;
 import org.bouncycastle.openpgp.operator.bc.BcKeyFingerprintCalculator;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.MethodSource;
+import org.pgpainless.implementation.ImplementationFactory;
 
 public class ImportExportKeyTest {
 
@@ -32,8 +35,10 @@ public class ImportExportKeyTest {
      * Test the export and import of a key ring with sub keys.
      * @throws IOException in case of a IO error
      */
-    @Test
-    public void testExportImportPublicKeyRing() throws IOException {
+    @ParameterizedTest
+    @MethodSource("org.pgpainless.util.TestUtil#provideImplementationFactories")
+    public void testExportImportPublicKeyRing(ImplementationFactory implementationFactory) throws IOException {
+        ImplementationFactory.setFactoryImplementation(implementationFactory);
         PGPPublicKeyRing publicKeys = TestKeys.getJulietPublicKeyRing();
 
         BcKeyFingerprintCalculator calc = new BcKeyFingerprintCalculator();

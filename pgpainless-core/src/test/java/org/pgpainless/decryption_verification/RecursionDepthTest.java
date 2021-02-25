@@ -27,8 +27,10 @@ import org.bouncycastle.openpgp.PGPException;
 import org.bouncycastle.openpgp.PGPSecretKeyRing;
 import org.bouncycastle.openpgp.PGPSecretKeyRingCollection;
 import org.bouncycastle.util.io.Streams;
-import org.junit.jupiter.api.Test;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.MethodSource;
 import org.pgpainless.PGPainless;
+import org.pgpainless.implementation.ImplementationFactory;
 import org.pgpainless.key.protection.SecretKeyRingProtector;
 
 public class RecursionDepthTest {
@@ -40,8 +42,10 @@ public class RecursionDepthTest {
      * @throws IOException
      * @throws PGPException
      */
-    @Test
-    public void decryptionAbortsWhenMaximumRecursionDepthReachedTest() throws IOException, PGPException {
+    @ParameterizedTest
+    @MethodSource("org.pgpainless.util.TestUtil#provideImplementationFactories")
+    public void decryptionAbortsWhenMaximumRecursionDepthReachedTest(ImplementationFactory implementationFactory) throws IOException, PGPException {
+        ImplementationFactory.setFactoryImplementation(implementationFactory);
         String key = "-----BEGIN PGP PRIVATE KEY BLOCK-----\n" +
                 "Comment: Bob's OpenPGP Transferable Secret Key\n" +
                 "\n" +

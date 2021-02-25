@@ -25,8 +25,10 @@ import java.util.List;
 import org.bouncycastle.openpgp.PGPException;
 import org.bouncycastle.openpgp.PGPSecretKey;
 import org.bouncycastle.openpgp.PGPSecretKeyRing;
-import org.junit.jupiter.api.Test;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.MethodSource;
 import org.pgpainless.PGPainless;
+import org.pgpainless.implementation.ImplementationFactory;
 import org.pgpainless.key.OpenPgpV4Fingerprint;
 import org.pgpainless.key.info.KeyRingInfo;
 import org.pgpainless.key.modification.secretkeyring.SecretKeyRingEditorInterface;
@@ -109,8 +111,10 @@ public class RevokeKeyWithoutPreferredAlgorithmsOnPrimaryKey {
             "=3Zyp\n" +
             "-----END PGP PRIVATE KEY BLOCK-----";
 
-    @Test
-    public void testChangingExpirationTimeWithKeyWithoutPrefAlgos() throws IOException, PGPException {
+    @ParameterizedTest
+    @MethodSource("org.pgpainless.util.TestUtil#provideImplementationFactories")
+    public void testChangingExpirationTimeWithKeyWithoutPrefAlgos(ImplementationFactory implementationFactory) throws IOException, PGPException {
+        ImplementationFactory.setFactoryImplementation(implementationFactory);
         Date expirationDate = new Date();
         PGPSecretKeyRing secretKeys = PGPainless.readKeyRing().secretKeyRing(KEY);
         List<OpenPgpV4Fingerprint> fingerprintList = new ArrayList<>();

@@ -25,8 +25,10 @@ import org.bouncycastle.openpgp.PGPException;
 import org.bouncycastle.openpgp.PGPPublicKey;
 import org.bouncycastle.openpgp.PGPSecretKey;
 import org.bouncycastle.openpgp.PGPSecretKeyRing;
-import org.junit.jupiter.api.Test;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.MethodSource;
 import org.pgpainless.PGPainless;
+import org.pgpainless.implementation.ImplementationFactory;
 import org.pgpainless.key.protection.UnprotectedKeysProtector;
 import org.pgpainless.util.ArmoredOutputStreamFactory;
 
@@ -72,8 +74,10 @@ public class RevokeKeyWithGenericCertificationSignatureTest {
         }
     }
 
-    @Test
-    public void test() throws IOException, PGPException {
+    @ParameterizedTest
+    @MethodSource("org.pgpainless.util.TestUtil#provideImplementationFactories")
+    public void test(ImplementationFactory implementationFactory) throws IOException, PGPException {
+        ImplementationFactory.setFactoryImplementation(implementationFactory);
         revokeKey(SAMPLE_PRIVATE_KEY); // would crash previously
     }
 

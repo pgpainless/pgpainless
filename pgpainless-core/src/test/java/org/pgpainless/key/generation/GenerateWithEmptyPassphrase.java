@@ -22,9 +22,11 @@ import java.security.InvalidAlgorithmParameterException;
 import java.security.NoSuchAlgorithmException;
 
 import org.bouncycastle.openpgp.PGPException;
-import org.junit.jupiter.api.Test;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.MethodSource;
 import org.pgpainless.PGPainless;
 import org.pgpainless.algorithm.KeyFlag;
+import org.pgpainless.implementation.ImplementationFactory;
 import org.pgpainless.key.generation.type.KeyType;
 import org.pgpainless.key.generation.type.rsa.RsaLength;
 import org.pgpainless.util.Passphrase;
@@ -38,8 +40,11 @@ import org.pgpainless.util.Passphrase;
  */
 public class GenerateWithEmptyPassphrase {
 
-    @Test
-    public void testGeneratingKeyWithEmptyPassphraseDoesNotThrow() throws InvalidAlgorithmParameterException, NoSuchAlgorithmException, PGPException, IOException {
+    @ParameterizedTest
+    @MethodSource("org.pgpainless.util.TestUtil#provideImplementationFactories")
+    public void testGeneratingKeyWithEmptyPassphraseDoesNotThrow(ImplementationFactory implementationFactory) throws InvalidAlgorithmParameterException, NoSuchAlgorithmException, PGPException, IOException {
+        ImplementationFactory.setFactoryImplementation(implementationFactory);
+
         assertNotNull(PGPainless.generateKeyRing()
                 .withPrimaryKey(KeySpec.getBuilder(KeyType.RSA(RsaLength._3072))
                         .withKeyFlags(KeyFlag.CERTIFY_OTHER, KeyFlag.SIGN_DATA, KeyFlag.ENCRYPT_COMMS)

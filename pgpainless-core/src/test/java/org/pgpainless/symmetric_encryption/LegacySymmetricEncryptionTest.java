@@ -24,9 +24,11 @@ import java.util.logging.Logger;
 
 import org.bouncycastle.bcpg.ArmoredOutputStream;
 import org.bouncycastle.openpgp.PGPException;
-import org.junit.jupiter.api.Test;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.MethodSource;
 import org.pgpainless.PGPainless;
 import org.pgpainless.algorithm.SymmetricKeyAlgorithm;
+import org.pgpainless.implementation.ImplementationFactory;
 import org.pgpainless.util.ArmoredOutputStreamFactory;
 import org.pgpainless.util.Passphrase;
 
@@ -46,8 +48,10 @@ public class LegacySymmetricEncryptionTest {
             "- Edward Snowden -";
 
     @SuppressWarnings("deprecation")
-    @Test
-    public void testSymmetricEncryptionDecryption() throws IOException, PGPException {
+    @ParameterizedTest
+    @MethodSource("org.pgpainless.util.TestUtil#provideImplementationFactories")
+    public void testSymmetricEncryptionDecryption(ImplementationFactory implementationFactory) throws IOException, PGPException {
+        ImplementationFactory.setFactoryImplementation(implementationFactory);
         byte[] plain = message.getBytes();
         String password = "choose_a_better_password_please";
         Passphrase passphrase = new Passphrase(password.toCharArray());

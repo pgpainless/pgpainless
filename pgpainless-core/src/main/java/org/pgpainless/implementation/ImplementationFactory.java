@@ -46,6 +46,11 @@ import org.pgpainless.util.Passphrase;
 
 public abstract class ImplementationFactory {
 
+    enum FactoryType {
+        bc,
+        jce
+    }
+
     private static ImplementationFactory FACTORY_IMPLEMENTATION = new BcImplementationFactory();
 
     public static void setFactoryImplementation(ImplementationFactory implementation) {

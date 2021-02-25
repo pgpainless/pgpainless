@@ -26,8 +26,10 @@ import org.bouncycastle.bcpg.ArmoredOutputStream;
 import org.bouncycastle.openpgp.PGPException;
 import org.bouncycastle.openpgp.PGPPublicKeyRing;
 import org.bouncycastle.openpgp.PGPSecretKeyRing;
-import org.junit.jupiter.api.Test;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.MethodSource;
 import org.pgpainless.PGPainless;
+import org.pgpainless.implementation.ImplementationFactory;
 import org.pgpainless.key.OpenPgpV4Fingerprint;
 import org.pgpainless.key.util.KeyRingUtils;
 import org.pgpainless.util.ArmoredOutputStreamFactory;
@@ -36,8 +38,11 @@ public class GenerateKeyTest {
 
     private static final Logger LOGGER = Logger.getLogger(GenerateKeyTest.class.getName());
 
-    @Test
-    public void generateKey() throws InvalidAlgorithmParameterException, NoSuchAlgorithmException, PGPException, IOException {
+    @ParameterizedTest
+    @MethodSource("org.pgpainless.util.TestUtil#provideImplementationFactories")
+    public void generateKey(ImplementationFactory implementationFactory) throws InvalidAlgorithmParameterException, NoSuchAlgorithmException, PGPException, IOException {
+        ImplementationFactory.setFactoryImplementation(implementationFactory);
+
         PGPSecretKeyRing secretKeys = PGPainless.generateKeyRing().simpleEcKeyRing("fresh@encrypted.key", "password123");
         PGPPublicKeyRing publicKeys = KeyRingUtils.publicKeyRingFrom(secretKeys);
 

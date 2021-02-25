@@ -22,16 +22,20 @@ import java.nio.charset.StandardCharsets;
 
 import org.bouncycastle.openpgp.PGPException;
 import org.bouncycastle.util.io.Streams;
-import org.junit.jupiter.api.Test;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.MethodSource;
 import org.pgpainless.PGPainless;
 import org.pgpainless.decryption_verification.DecryptionStream;
 import org.pgpainless.encryption_signing.EncryptionStream;
+import org.pgpainless.implementation.ImplementationFactory;
 import org.pgpainless.util.Passphrase;
 
 public class MultiPassphraseSymmetricEncryptionTest {
 
-    @Test
-    public void test() throws IOException, PGPException {
+    @ParameterizedTest
+    @MethodSource("org.pgpainless.util.TestUtil#provideImplementationFactories")
+    public void test(ImplementationFactory implementationFactory) throws IOException, PGPException {
+        ImplementationFactory.setFactoryImplementation(implementationFactory);
         String message = "Here we test if during decryption of a message that was encrypted with two passphrases, " +
                 "the decryptor finds the session key encrypted for the right passphrase.";
         ByteArrayInputStream plaintextIn = new ByteArrayInputStream(message.getBytes(StandardCharsets.UTF_8));

@@ -17,9 +17,11 @@ package org.pgpainless.key.generation;
 
 import static org.junit.jupiter.api.Assertions.assertThrows;
 
-import org.junit.jupiter.api.Test;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.MethodSource;
 import org.pgpainless.PGPainless;
 import org.pgpainless.algorithm.KeyFlag;
+import org.pgpainless.implementation.ImplementationFactory;
 import org.pgpainless.key.generation.type.KeyType;
 import org.pgpainless.key.generation.type.ecc.EllipticCurve;
 import org.pgpainless.key.generation.type.xdh.XDHCurve;
@@ -31,8 +33,10 @@ public class CertificationKeyMustBeAbleToCertifyTest {
      * would result in an invalid key.
      * This test therefore verifies that generating such keys fails.
      */
-    @Test
-    public void testCertificationIncapableKeyTypesThrow() {
+    @ParameterizedTest
+    @MethodSource("org.pgpainless.util.TestUtil#provideImplementationFactories")
+    public void testCertificationIncapableKeyTypesThrow(ImplementationFactory implementationFactory) {
+        ImplementationFactory.setFactoryImplementation(implementationFactory);
         KeyType[] typesIncapableOfCreatingVerifications = new KeyType[] {
                 KeyType.ECDH(EllipticCurve._P256),
                 KeyType.ECDH(EllipticCurve._P384),

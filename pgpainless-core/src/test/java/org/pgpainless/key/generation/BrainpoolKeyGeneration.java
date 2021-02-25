@@ -17,25 +17,30 @@ package org.pgpainless.key.generation;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
-import java.io.IOException;
 import java.security.InvalidAlgorithmParameterException;
 import java.security.NoSuchAlgorithmException;
 
 import org.bouncycastle.openpgp.PGPException;
 import org.bouncycastle.openpgp.PGPPublicKey;
 import org.bouncycastle.openpgp.PGPSecretKeyRing;
-import org.junit.jupiter.api.Test;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.MethodSource;
 import org.pgpainless.PGPainless;
 import org.pgpainless.algorithm.KeyFlag;
 import org.pgpainless.algorithm.PublicKeyAlgorithm;
+import org.pgpainless.implementation.ImplementationFactory;
 import org.pgpainless.key.generation.type.KeyType;
 import org.pgpainless.key.generation.type.ecc.EllipticCurve;
 import org.pgpainless.key.info.KeyInfo;
 
 public class BrainpoolKeyGeneration {
 
-    @Test
-    public void generateEcKeysTest() throws InvalidAlgorithmParameterException, NoSuchAlgorithmException, PGPException, IOException {
+    @ParameterizedTest
+    @MethodSource("org.pgpainless.util.TestUtil#provideImplementationFactories")
+    public void generateEcKeysTest(ImplementationFactory implementationFactory)
+            throws InvalidAlgorithmParameterException, NoSuchAlgorithmException, PGPException {
+        ImplementationFactory.setFactoryImplementation(implementationFactory);
+
         for (EllipticCurve curve : EllipticCurve.values()) {
             PGPSecretKeyRing secretKeys = generateKey(
                     KeySpec.getBuilder(KeyType.ECDSA(curve))
