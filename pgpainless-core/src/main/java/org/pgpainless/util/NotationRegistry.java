@@ -41,6 +41,12 @@ public final class NotationRegistry {
         return INSTANCE;
     }
 
+    /**
+     * Add a known notation name into the registry.
+     * This will cause critical notations with that name to no longer invalidate the signature.
+     *
+     * @param notationName name of the notation
+     */
     public void addKnownNotation(String notationName) {
         if (notationName == null) {
             throw new NullPointerException("Notation name MUST NOT be null.");
@@ -48,7 +54,20 @@ public final class NotationRegistry {
         knownNotations.add(notationName);
     }
 
+    /**
+     * Return true if the notation name is registered in the registry.
+     *
+     * @param notationName name of the notation
+     * @return true if notation is known, false otherwise.
+     */
     public boolean isKnownNotation(String notationName) {
         return knownNotations.contains(notationName);
+    }
+
+    /**
+     * Clear all known notations from the registry.
+     */
+    public void clear() {
+        knownNotations.clear();
     }
 }
