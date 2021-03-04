@@ -16,6 +16,7 @@
 package org.pgpainless.key.generation;
 
 
+import java.io.IOException;
 import java.nio.charset.Charset;
 import java.security.InvalidAlgorithmParameterException;
 import java.security.KeyPair;
@@ -56,6 +57,7 @@ import org.pgpainless.key.generation.type.KeyType;
 import org.pgpainless.key.generation.type.eddsa.EdDSACurve;
 import org.pgpainless.key.generation.type.rsa.RsaLength;
 import org.pgpainless.key.generation.type.xdh.XDHCurve;
+import org.pgpainless.key.util.SignatureUtils;
 import org.pgpainless.key.util.UserId;
 import org.pgpainless.provider.ProviderFactory;
 import org.pgpainless.util.Passphrase;
@@ -366,7 +368,7 @@ public class KeyRingBuilder implements KeyRingBuilderInterface {
                 // Generator which the user can get the key pair from
                 PGPKeyRingGenerator ringGenerator = buildRingGenerator(certKey, signer, hashedSubPackets);
 
-                addSubKeys(ringGenerator);
+                addSubKeys(certKey, ringGenerator);
 
                 // Generate secret key ring with only primary user id
                 PGPSecretKeyRing secretKeyRing = ringGenerator.generateSecretKeyRing();
@@ -408,16 +410,36 @@ public class KeyRingBuilder implements KeyRingBuilderInterface {
                         hashedSubPackets, null, signer, secretKeyEncryptor);
             }
 
-            private void addSubKeys(PGPKeyRingGenerator ringGenerator)
+            private void addSubKeys(PGPKeyPair primaryKey, PGPKeyRingGenerator ringGenerator)
                     throws NoSuchAlgorithmException, PGPException, InvalidAlgorithmParameterException {
                 for (KeySpec subKeySpec : keySpecs) {
                     PGPKeyPair subKey = generateKeyPair(subKeySpec);
                     if (subKeySpec.isInheritedSubPackets()) {
                         ringGenerator.addSubKey(subKey);
                     } else {
-                        ringGenerator.addSubKey(subKey, subKeySpec.getSubpackets(), null);
+                        PGPSignatureSubpacketVector hashedSubpackets = subKeySpec.getSubpackets();
+                        try {
+                            hashedSubpackets = addPrimaryKeyBindingSignatureIfNecessary(primaryKey, subKey, hashedSubpackets);
+                        } catch (IOException e) {
+                            throw new PGPException("Exception while adding primary key binding signature to signing subkey", e);
+                        }
+                        ringGenerator.addSubKey(subKey, hashedSubpackets, null);
                     }
                 }
+            }
+
+            private PGPSignatureSubpacketVector addPrimaryKeyBindingSignatureIfNecessary(PGPKeyPair primaryKey, PGPKeyPair subKey, PGPSignatureSubpacketVector hashedSubpackets) throws PGPException, IOException {
+                int keyFlagMask = hashedSubpackets.getKeyFlags();
+                if (!KeyFlag.hasKeyFlag(keyFlagMask, KeyFlag.SIGN_DATA) && !KeyFlag.hasKeyFlag(keyFlagMask, KeyFlag.CERTIFY_OTHER)) {
+                    return hashedSubpackets;
+                }
+
+                PGPSignatureGenerator signatureGenerator = new PGPSignatureGenerator(buildContentSigner(subKey));
+                signatureGenerator.init(SignatureType.PRIMARYKEY_BINDING.getCode(), subKey.getPrivateKey());
+                PGPSignature primaryKeyBindingSig = signatureGenerator.generateCertification(primaryKey.getPublicKey(), subKey.getPublicKey());
+                PGPSignatureSubpacketGenerator subpacketGenerator = new PGPSignatureSubpacketGenerator(hashedSubpackets);
+                subpacketGenerator.addEmbeddedSignature(false, primaryKeyBindingSig);
+                return subpacketGenerator.generate();
             }
 
             private PGPContentSignerBuilder buildContentSigner(PGPKeyPair certKey) {
