@@ -18,10 +18,20 @@ package org.pgpainless.sop.commands;
 import java.io.IOException;
 import java.security.InvalidAlgorithmParameterException;
 import java.security.NoSuchAlgorithmException;
+import java.util.Calendar;
+import java.util.Date;
+import java.util.List;
+import java.util.TimeZone;
 
 import org.bouncycastle.openpgp.PGPException;
 import org.bouncycastle.openpgp.PGPSecretKeyRing;
 import org.pgpainless.PGPainless;
+import org.pgpainless.algorithm.KeyFlag;
+import org.pgpainless.key.generation.KeyRingBuilderInterface;
+import org.pgpainless.key.generation.KeySpec;
+import org.pgpainless.key.generation.type.KeyType;
+import org.pgpainless.key.generation.type.eddsa.EdDSACurve;
+import org.pgpainless.key.generation.type.xdh.XDHCurve;
 import org.pgpainless.sop.Print;
 import picocli.CommandLine;
 
@@ -37,12 +47,40 @@ public class GenerateKey implements Runnable {
     boolean armor = true;
 
     @CommandLine.Parameters(description = "User-ID, eg. \"Alice <alice@example.com>\"")
-    String userId;
+    List<String> userId;
 
     @Override
     public void run() {
         try {
-            PGPSecretKeyRing secretKeys = PGPainless.generateKeyRing().simpleEcKeyRing(userId);
+            KeyRingBuilderInterface.WithAdditionalUserIdOrPassphrase builder = PGPainless.generateKeyRing()
+                    .withSubKey(KeySpec.getBuilder(KeyType.EDDSA(EdDSACurve._Ed25519))
+                            .withKeyFlags(KeyFlag.SIGN_DATA)
+                            .withDefaultAlgorithms())
+                    .withSubKey(KeySpec.getBuilder(KeyType.XDH(XDHCurve._X25519))
+                            .withKeyFlags(KeyFlag.ENCRYPT_COMMS, KeyFlag.ENCRYPT_STORAGE)
+                            .withDefaultAlgorithms())
+                    .withPrimaryKey(KeySpec.getBuilder(KeyType.EDDSA(EdDSACurve._Ed25519))
+                            .withKeyFlags(KeyFlag.CERTIFY_OTHER)
+                            .withDefaultAlgorithms())
+                    .withPrimaryUserId(userId.get(0));
+
+            if (userId.isEmpty()) {
+                print_ln("At least one user-id expected.");
+                System.exit(1);
+                return;
+            }
+
+            for (int i = 1; i < userId.size(); i++) {
+                builder.withAdditionalUserId(userId.get(i));
+            }
+
+            Calendar calendar = Calendar.getInstance(TimeZone.getTimeZone("UTC"));
+            calendar.add(Calendar.YEAR, 3);
+            Date expiration = calendar.getTime();
+
+            PGPSecretKeyRing secretKeys = builder.setExpirationDate(expiration)
+                    .withoutPassphrase()
+                    .build();
 
             print_ln(Print.toString(secretKeys.getEncoded(), armor));
 
