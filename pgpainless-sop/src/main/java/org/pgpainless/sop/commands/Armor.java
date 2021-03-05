@@ -28,7 +28,8 @@ import java.util.Arrays;
 import static org.pgpainless.sop.Print.err_ln;
 
 @CommandLine.Command(name = "armor",
-        description = "Add ASCII Armor to standard input")
+        description = "Add ASCII Armor to standard input",
+        exitCodeOnInvalidInput = 37)
 public class Armor implements Runnable {
 
     private static final byte[] BEGIN_ARMOR = "-----BEGIN PGP".getBytes(StandardCharsets.UTF_8);

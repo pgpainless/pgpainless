@@ -35,7 +35,8 @@ import static org.pgpainless.sop.Print.err_ln;
 import static org.pgpainless.sop.Print.print_ln;
 
 @CommandLine.Command(name = "sign",
-        description = "Create a detached signature on the data from standard input")
+        description = "Create a detached signature on the data from standard input",
+        exitCodeOnInvalidInput = 37)
 public class Sign implements Runnable {
 
     public enum Type {

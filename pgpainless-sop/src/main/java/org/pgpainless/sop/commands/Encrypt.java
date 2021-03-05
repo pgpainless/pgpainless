@@ -44,7 +44,8 @@ import org.pgpainless.util.Passphrase;
 import picocli.CommandLine;
 
 @CommandLine.Command(name = "encrypt",
-        description = "Encrypt a message from standard input")
+        description = "Encrypt a message from standard input",
+        exitCodeOnInvalidInput = 37)
 public class Encrypt implements Runnable {
 
     public enum Type {

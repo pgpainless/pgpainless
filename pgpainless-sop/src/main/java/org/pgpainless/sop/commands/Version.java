@@ -22,7 +22,8 @@ import java.util.Properties;
 
 import picocli.CommandLine;
 
-@CommandLine.Command(name = "version", description = "Display version information about the tool")
+@CommandLine.Command(name = "version", description = "Display version information about the tool",
+        exitCodeOnInvalidInput = 37)
 public class Version implements Runnable {
 
     @Override

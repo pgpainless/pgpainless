@@ -26,7 +26,7 @@ import org.pgpainless.sop.commands.Verify;
 import org.pgpainless.sop.commands.Version;
 import picocli.CommandLine;
 
-@CommandLine.Command(
+@CommandLine.Command(exitCodeOnInvalidInput = 69,
         subcommands = {
                 Armor.class,
                 Dearmor.class,
@@ -41,8 +41,14 @@ import picocli.CommandLine;
 )
 public class PGPainlessCLI implements Runnable {
 
+    public PGPainlessCLI() {
+
+    }
+
     public static void main(String[] args) {
-        CommandLine.run(new PGPainlessCLI(), args);
+        int code = new CommandLine(new PGPainlessCLI())
+                .execute(args);
+        System.exit(code);
     }
 
     @Override

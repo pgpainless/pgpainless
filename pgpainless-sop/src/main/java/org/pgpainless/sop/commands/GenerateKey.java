@@ -38,7 +38,9 @@ import picocli.CommandLine;
 import static org.pgpainless.sop.Print.err_ln;
 import static org.pgpainless.sop.Print.print_ln;
 
-@CommandLine.Command(name = "generate-key", description = "Generate a secret key")
+@CommandLine.Command(name = "generate-key",
+        description = "Generate a secret key",
+        exitCodeOnInvalidInput = 37)
 public class GenerateKey implements Runnable {
 
     @CommandLine.Option(names = "--no-armor",
@@ -51,6 +53,12 @@ public class GenerateKey implements Runnable {
 
     @Override
     public void run() {
+        if (userId.isEmpty()) {
+            print_ln("At least one user-id expected.");
+            System.exit(1);
+            return;
+        }
+
         try {
             KeyRingBuilderInterface.WithAdditionalUserIdOrPassphrase builder = PGPainless.generateKeyRing()
                     .withSubKey(KeySpec.getBuilder(KeyType.EDDSA(EdDSACurve._Ed25519))
@@ -63,12 +71,6 @@ public class GenerateKey implements Runnable {
                             .withKeyFlags(KeyFlag.CERTIFY_OTHER)
                             .withDefaultAlgorithms())
                     .withPrimaryUserId(userId.get(0));
-
-            if (userId.isEmpty()) {
-                print_ln("At least one user-id expected.");
-                System.exit(1);
-                return;
-            }
 
             for (int i = 1; i < userId.size(); i++) {
                 builder.withAdditionalUserId(userId.get(i));

@@ -43,7 +43,8 @@ import static org.pgpainless.sop.Print.err_ln;
 import static org.pgpainless.sop.Print.print_ln;
 
 @CommandLine.Command(name = "verify",
-        description = "Verify a detached signature over the data from standard input")
+        description = "Verify a detached signature over the data from standard input",
+        exitCodeOnInvalidInput = 37)
 public class Verify implements Runnable {
 
     private static final TimeZone tz = TimeZone.getTimeZone("UTC");

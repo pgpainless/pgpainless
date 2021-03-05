@@ -43,7 +43,8 @@ import org.pgpainless.key.OpenPgpV4Fingerprint;
 import picocli.CommandLine;
 
 @CommandLine.Command(name = "decrypt",
-        description = "Decrypt a message from standard input")
+        description = "Decrypt a message from standard input",
+        exitCodeOnInvalidInput = 37)
 public class Decrypt implements Runnable {
 
     private static final DateFormat df = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm'Z'");

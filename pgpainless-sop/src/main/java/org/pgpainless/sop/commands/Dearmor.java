@@ -24,7 +24,8 @@ import java.io.IOException;
 import static org.pgpainless.sop.Print.err_ln;
 
 @CommandLine.Command(name = "dearmor",
-        description = "Remove ASCII Armor from standard input")
+        description = "Remove ASCII Armor from standard input",
+        exitCodeOnInvalidInput = 37)
 public class Dearmor implements Runnable {
 
     @Override
