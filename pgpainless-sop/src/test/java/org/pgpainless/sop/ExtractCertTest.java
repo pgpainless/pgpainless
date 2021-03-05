@@ -31,6 +31,7 @@ import org.bouncycastle.openpgp.PGPSecretKeyRing;
 import org.junit.jupiter.api.Test;
 import org.pgpainless.PGPainless;
 import org.pgpainless.key.info.KeyRingInfo;
+import picocli.CommandLine;
 
 public class ExtractCertTest {
 
@@ -44,7 +45,7 @@ public class ExtractCertTest {
         ByteArrayOutputStream out = new ByteArrayOutputStream();
         System.setOut(new PrintStream(out));
 
-        PGPainlessCLI.main(new String[] {"extract-cert"});
+        new CommandLine(new PGPainlessCLI()).execute("extract-cert");
         PGPPublicKeyRing publicKeys = PGPainless.readKeyRing().publicKeyRing(out.toByteArray());
         KeyRingInfo info = PGPainless.inspectKeyRing(publicKeys);
         assertFalse(info.isSecretKey());

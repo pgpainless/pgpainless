@@ -16,11 +16,12 @@
 package org.pgpainless.sop;
 
 import org.junit.jupiter.api.Test;
+import picocli.CommandLine;
 
 public class DummyTest {
 
     @Test
     public void dummyTest() {
-        PGPainlessCLI.main(new String[] {"generate-key", "Ed Snowden <citizen4@lavabit.com>"});
+        new CommandLine(new PGPainlessCLI()).execute("generate-key", "Ed Snowden <citizen4@lavabit.com>");
     }
 }

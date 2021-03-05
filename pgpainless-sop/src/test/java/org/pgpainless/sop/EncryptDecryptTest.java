@@ -31,6 +31,7 @@ import java.nio.charset.StandardCharsets;
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
+import picocli.CommandLine;
 
 public class EncryptDecryptTest {
 
@@ -62,27 +63,27 @@ public class EncryptDecryptTest {
 
         OutputStream julietKeyOut = new FileOutputStream(julietKeyFile);
         System.setOut(new PrintStream(julietKeyOut));
-        PGPainlessCLI.main(new String[] {"generate-key", "Juliet Capulet <juliet@capulet.lit>"});
+        new CommandLine(new PGPainlessCLI()).execute("generate-key", "Juliet Capulet <juliet@capulet.lit>");
         julietKeyOut.close();
 
         FileInputStream julietKeyIn = new FileInputStream(julietKeyFile);
         System.setIn(julietKeyIn);
         OutputStream julietCertOut = new FileOutputStream(julietCertFile);
         System.setOut(new PrintStream(julietCertOut));
-        PGPainlessCLI.main(new String[] {"extract-cert"});
+        new CommandLine(new PGPainlessCLI()).execute("extract-cert");
         julietKeyIn.close();
         julietCertOut.close();
 
         OutputStream romeoKeyOut = new FileOutputStream(romeoKeyFile);
         System.setOut(new PrintStream(romeoKeyOut));
-        PGPainlessCLI.main(new String[] {"generate-key", "Romeo Montague <romeo@montague.lit>"});
+        new CommandLine(new PGPainlessCLI()).execute("generate-key", "Romeo Montague <romeo@montague.lit>");
         romeoKeyOut.close();
 
         FileInputStream romeoKeyIn = new FileInputStream(romeoKeyFile);
         System.setIn(romeoKeyIn);
         OutputStream romeoCertOut = new FileOutputStream(romeoCertFile);
         System.setOut(new PrintStream(romeoCertOut));
-        PGPainlessCLI.main(new String[] {"extract-cert"});
+        new CommandLine(new PGPainlessCLI()).execute("extract-cert");
         romeoKeyIn.close();
         romeoCertOut.close();
 
@@ -91,9 +92,9 @@ public class EncryptDecryptTest {
         System.setIn(msgIn);
         OutputStream msgAscOut = new FileOutputStream(msgAscFile);
         System.setOut(new PrintStream(msgAscOut));
-        PGPainlessCLI.main(new String[] {"encrypt",
+        new CommandLine(new PGPainlessCLI()).execute("encrypt",
                 "--sign-with", romeoKeyFile.getAbsolutePath(),
-                julietCertFile.getAbsolutePath()});
+                julietCertFile.getAbsolutePath());
         msgAscOut.close();
 
         File verifyFile = new File(tempDir, "verify.txt");
@@ -103,10 +104,10 @@ public class EncryptDecryptTest {
         System.setIn(msgAscIn);
         ByteArrayOutputStream out = new ByteArrayOutputStream();
         System.setOut(new PrintStream(out));
-        PGPainlessCLI.main(new String[] {"decrypt",
+        new CommandLine(new PGPainlessCLI()).execute("decrypt",
                 "--verify-out", verifyFile.getAbsolutePath(),
                 "--verify-with", romeoCertFile.getAbsolutePath(),
-                julietKeyFile.getAbsolutePath()});
+                julietKeyFile.getAbsolutePath());
         msgAscIn.close();
 
         assertEquals(msg, out.toString());

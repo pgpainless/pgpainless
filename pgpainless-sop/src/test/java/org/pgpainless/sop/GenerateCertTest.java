@@ -32,6 +32,7 @@ import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 import org.pgpainless.PGPainless;
 import org.pgpainless.key.info.KeyRingInfo;
+import picocli.CommandLine;
 
 public class GenerateCertTest {
 
@@ -47,7 +48,7 @@ public class GenerateCertTest {
     public void testKeyGeneration() throws IOException, PGPException {
         ByteArrayOutputStream out = new ByteArrayOutputStream();
         System.setOut(new PrintStream(out));
-        PGPainlessCLI.main(new String[] {"generate-key", "--armor", "Juliet Capulet <juliet@capulet.lit>"});
+        new CommandLine(new PGPainlessCLI()).execute("generate-key", "--armor", "Juliet Capulet <juliet@capulet.lit>");
 
         PGPSecretKeyRing secretKeys = PGPainless.readKeyRing().secretKeyRing(out.toByteArray());
         KeyRingInfo info = PGPainless.inspectKeyRing(secretKeys);
@@ -62,7 +63,7 @@ public class GenerateCertTest {
     public void testNoArmor() {
         ByteArrayOutputStream out = new ByteArrayOutputStream();
         System.setOut(new PrintStream(out));
-        PGPainlessCLI.main(new String[] {"generate-key", "--no-armor", "Test <test@test.test>"});
+        new CommandLine(new PGPainlessCLI()).execute("generate-key", "--no-armor", "Test <test@test.test>");
 
         byte[] outBegin = new byte[37];
         System.arraycopy(out.toByteArray(), 0, outBegin, 0, 37);
