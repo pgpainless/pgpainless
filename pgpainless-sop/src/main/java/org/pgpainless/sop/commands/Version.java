@@ -15,15 +15,27 @@
  */
 package org.pgpainless.sop.commands;
 
-import picocli.CommandLine;
-
 import static org.pgpainless.sop.Print.print_ln;
+
+import java.io.IOException;
+import java.util.Properties;
+
+import picocli.CommandLine;
 
 @CommandLine.Command(name = "version", description = "Display version information about the tool")
 public class Version implements Runnable {
 
     @Override
     public void run() {
-        print_ln("PGPainless CLI version 0.0.1");
+        // See https://stackoverflow.com/a/50119235
+        String version;
+        try {
+            Properties properties = new Properties();
+            properties.load(getClass().getResourceAsStream("/version.properties"));
+            version = properties.getProperty("version");
+        } catch (IOException e) {
+            version = "DEVELOPMENT";
+        }
+        print_ln("PGPainlessCLI " + version);
     }
 }
