@@ -57,7 +57,6 @@ import org.pgpainless.key.generation.type.KeyType;
 import org.pgpainless.key.generation.type.eddsa.EdDSACurve;
 import org.pgpainless.key.generation.type.rsa.RsaLength;
 import org.pgpainless.key.generation.type.xdh.XDHCurve;
-import org.pgpainless.key.util.SignatureUtils;
 import org.pgpainless.key.util.UserId;
 import org.pgpainless.provider.ProviderFactory;
 import org.pgpainless.util.Passphrase;
