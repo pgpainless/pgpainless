@@ -15,11 +15,13 @@
  */
 package org.pgpainless.key.protection;
 
+import java.util.Iterator;
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
 
 import org.bouncycastle.openpgp.PGPException;
 import org.bouncycastle.openpgp.PGPKeyRing;
+import org.bouncycastle.openpgp.PGPPublicKey;
 import org.bouncycastle.openpgp.PGPSecretKey;
 import org.bouncycastle.openpgp.operator.PBESecretKeyDecryptor;
 import org.bouncycastle.openpgp.operator.PBESecretKeyEncryptor;
@@ -55,8 +57,11 @@ public class PasswordBasedSecretKeyRingProtector implements SecretKeyRingProtect
             @Override
             @Nullable
             public Passphrase getPassphraseFor(Long keyId) {
-                if (keyRing.getPublicKey().getKeyID() == keyId) {
-                    return passphrase;
+                for (Iterator<PGPPublicKey> it = keyRing.getPublicKeys(); it.hasNext(); ) {
+                    PGPPublicKey key = it.next();
+                    if (key.getKeyID() == keyId) {
+                        return passphrase;
+                    }
                 }
                 return null;
             }
