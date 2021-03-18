@@ -48,15 +48,15 @@ public class GenerateKeyTest {
 
         ByteArrayOutputStream bytes = new ByteArrayOutputStream();
         ArmoredOutputStream armor = ArmoredOutputStreamFactory.get(bytes);
-        secretKeys.encode(armor);
+        publicKeys.encode(armor);
         armor.close();
-        String publicKey = new String(bytes.toByteArray());
+        String publicKey = bytes.toString();
 
         bytes = new ByteArrayOutputStream();
         armor = ArmoredOutputStreamFactory.get(bytes);
         secretKeys.encode(armor);
         armor.close();
-        String privateKey = new String(bytes.toByteArray());
+        String privateKey = bytes.toString();
 
         LOGGER.log(Level.INFO, String.format("Generated random fresh EC key ring.\n" +
                 "User-ID: %s\n" +
