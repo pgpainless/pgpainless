@@ -1,5 +1,5 @@
 /*
- * Copyright 2018 Paul Schaub.
+ * Copyright 2021 Paul Schaub
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -15,16 +15,13 @@
  */
 package org.pgpainless.key.parsing;
 
-import org.bouncycastle.bcpg.ArmoredInputStream;
-import org.bouncycastle.openpgp.PGPException;
-import org.bouncycastle.openpgp.PGPPublicKeyRing;
-import org.bouncycastle.openpgp.PGPPublicKeyRingCollection;
-import org.bouncycastle.openpgp.PGPSecretKeyRing;
-import org.junit.jupiter.api.Test;
-import org.pgpainless.PGPainless;
-import org.pgpainless.key.util.KeyRingUtils;
+import static org.junit.jupiter.api.Assertions.assertEquals;
 
-import java.io.*;
+import java.io.ByteArrayInputStream;
+import java.io.ByteArrayOutputStream;
+import java.io.File;
+import java.io.IOException;
+import java.io.InputStream;
 import java.net.URISyntaxException;
 import java.net.URL;
 import java.nio.charset.StandardCharsets;
@@ -34,16 +31,34 @@ import java.security.NoSuchAlgorithmException;
 import java.util.ArrayList;
 import java.util.Collection;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertNotEquals;
+import org.bouncycastle.openpgp.PGPException;
+import org.bouncycastle.openpgp.PGPPublicKeyRing;
+import org.bouncycastle.openpgp.PGPPublicKeyRingCollection;
+import org.bouncycastle.openpgp.PGPSecretKeyRing;
+import org.bouncycastle.openpgp.PGPUtil;
+import org.junit.jupiter.api.Test;
+import org.pgpainless.PGPainless;
+import org.pgpainless.implementation.ImplementationFactory;
+import org.pgpainless.key.util.KeyRingUtils;
 
 class KeyRingReaderTest {
+
     @Test
-    void publicKeyRingCollectionFromArmoredStream() throws IOException, PGPException {
+    public void assertThatPGPUtilsDetectAsciiArmoredData() throws IOException, PGPException {
         InputStream inputStream = getClass().getClassLoader().getResourceAsStream("pub_keys_10_pieces.asc");
-        ArmoredInputStream armoredInputStream = new ArmoredInputStream(inputStream);
-        PGPPublicKeyRingCollection rings = PGPainless.readKeyRing().publicKeyRingCollection(armoredInputStream);
-        assertEquals(rings.size(), 10);
+
+        InputStream possiblyArmored = PGPUtil.getDecoderStream(PGPUtil.getDecoderStream(inputStream));
+
+        PGPPublicKeyRingCollection collection = new PGPPublicKeyRingCollection(
+                possiblyArmored, ImplementationFactory.getInstance().getKeyFingerprintCalculator());
+        assertEquals(10, collection.size());
+    }
+
+    @Test
+    void publicKeyRingCollectionFromStream() throws IOException, PGPException {
+        InputStream inputStream = getClass().getClassLoader().getResourceAsStream("pub_keys_10_pieces.asc");
+        PGPPublicKeyRingCollection rings = PGPainless.readKeyRing().publicKeyRingCollection(inputStream);
+        assertEquals(10, rings.size());
     }
 
     @Test
@@ -62,7 +77,7 @@ class KeyRingReaderTest {
 
         ByteArrayInputStream inputStream = new ByteArrayInputStream(out.toByteArray());
         PGPPublicKeyRingCollection parsedRings = PGPainless.readKeyRing().publicKeyRingCollection(inputStream);
-        assertEquals(parsedRings.size(), 10);
+        assertEquals(10, parsedRings.size());
     }
 
     @Test
@@ -70,33 +85,17 @@ class KeyRingReaderTest {
         URL resource = getClass().getClassLoader().getResource("pub_keys_10_pieces.asc");
         String armoredString = new String(Files.readAllBytes(new File(resource.toURI()).toPath()));
         InputStream inputStream = new ByteArrayInputStream(armoredString.getBytes(StandardCharsets.UTF_8));
-        ArmoredInputStream armoredInputStream = new ArmoredInputStream(inputStream);
-        PGPPublicKeyRingCollection rings = PGPainless.readKeyRing().publicKeyRingCollection(armoredInputStream);
-        assertEquals(rings.size(), 10);
-    }
-
-    @Test
-    void publicKeyRingCollectionFromStringFailed() throws IOException, PGPException, URISyntaxException {
-        URL resource = getClass().getClassLoader().getResource("pub_keys_10_pieces.asc");
-        String armoredString = new String(Files.readAllBytes(new File(resource.toURI()).toPath()));
-        PGPPublicKeyRingCollection rings = PGPainless.readKeyRing().publicKeyRingCollection(armoredString);
-        assertNotEquals(rings.size(), 10);
+        PGPPublicKeyRingCollection rings = PGPainless.readKeyRing().publicKeyRingCollection(inputStream);
+        assertEquals(10, rings.size());
     }
 
     @Test
     void publicKeyRingCollectionFromBytes() throws IOException, PGPException, URISyntaxException {
         URL resource = getClass().getClassLoader().getResource("pub_keys_10_pieces.asc");
         byte[] bytes = Files.readAllBytes(new File(resource.toURI()).toPath());
-        InputStream armoredInputStream = new ArmoredInputStream(new ByteArrayInputStream(bytes));
-        PGPPublicKeyRingCollection rings = PGPainless.readKeyRing().publicKeyRingCollection(armoredInputStream);
-        assertEquals(rings.size(), 10);
+        InputStream byteArrayInputStream = new ByteArrayInputStream(bytes);
+        PGPPublicKeyRingCollection rings = PGPainless.readKeyRing().publicKeyRingCollection(byteArrayInputStream);
+        assertEquals(10, rings.size());
     }
 
-    @Test
-    void publicKeyRingCollectionFromBytesFailed() throws IOException, PGPException, URISyntaxException {
-        URL resource = getClass().getClassLoader().getResource("pub_keys_10_pieces.asc");
-        byte[] bytes = Files.readAllBytes(new File(resource.toURI()).toPath());
-        PGPPublicKeyRingCollection rings = PGPainless.readKeyRing().publicKeyRingCollection(bytes);
-        assertNotEquals(rings.size(), 10);
-    }
 }
