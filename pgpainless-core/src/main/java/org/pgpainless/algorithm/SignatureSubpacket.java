@@ -94,7 +94,7 @@ public enum SignatureSubpacket {
     trustSignature(TRUST_SIG),
 
     /**
-     * Used in conjunction with trust Signature packets (of level > 0) to
+     * Used in conjunction with trust Signature packets (of level greater 0) to
      * limit the scope of trust that is extended.  Only signatures by the
      * target key on User IDs that match the regular expression in the body
      * of this packet have trust extended by the trust Signature subpacket.
