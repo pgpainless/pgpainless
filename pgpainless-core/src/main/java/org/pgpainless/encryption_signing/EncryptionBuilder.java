@@ -68,6 +68,8 @@ public class EncryptionBuilder implements EncryptionBuilderInterface {
     private HashAlgorithm hashAlgorithm = HashAlgorithm.SHA256;
     private CompressionAlgorithm compressionAlgorithm = CompressionAlgorithm.UNCOMPRESSED;
     private boolean asciiArmor = false;
+    private String fileName;
+    private boolean forYourEyesOnly;
 
     public EncryptionBuilder() {
         this.purpose = EncryptionStream.Purpose.COMMUNICATIONS;
@@ -78,8 +80,10 @@ public class EncryptionBuilder implements EncryptionBuilderInterface {
     }
 
     @Override
-    public ToRecipients onOutputStream(@Nonnull OutputStream outputStream) {
+    public ToRecipients onOutputStream(@Nonnull OutputStream outputStream, String fileName, boolean forYourEyesOnly) {
         this.outputStream = outputStream;
+        this.fileName = fileName == null ? "" : fileName;
+        this.forYourEyesOnly = forYourEyesOnly;
         return new ToRecipientsImpl();
     }
 
@@ -430,7 +434,9 @@ public class EncryptionBuilder implements EncryptionBuilderInterface {
                     EncryptionBuilder.this.symmetricKeyAlgorithm,
                     EncryptionBuilder.this.hashAlgorithm,
                     EncryptionBuilder.this.compressionAlgorithm,
-                    EncryptionBuilder.this.asciiArmor);
+                    EncryptionBuilder.this.asciiArmor,
+                    fileName,
+                    forYourEyesOnly);
         }
     }
 

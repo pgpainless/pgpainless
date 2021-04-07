@@ -47,7 +47,31 @@ public interface EncryptionBuilderInterface {
      * @param outputStream output stream of the plain data.
      * @return api handle
      */
-    ToRecipients onOutputStream(@Nonnull OutputStream outputStream);
+    default ToRecipients onOutputStream(@Nonnull OutputStream outputStream) {
+        return onOutputStream(outputStream,false);
+    }
+    /**
+     * Create a {@link EncryptionStream} on an {@link OutputStream} that contains the plain data which shall
+     * be encrypted and/or signed.
+     *
+     * @param outputStream outputStream
+     * @param forYourEyesOnly flag indicating that the data is intended for the recipients eyes only
+     * @return api handle
+     */
+    default ToRecipients onOutputStream(@Nonnull OutputStream outputStream, boolean forYourEyesOnly) {
+        return onOutputStream(outputStream, "", forYourEyesOnly);
+    }
+
+    /**
+     * Creates a {@link EncryptionStream} on an {@link OutputStream} that contains the plain data which shall
+     * be encrypted and/or signed.
+     *
+     * @param outputStream outputStream
+     * @param fileName name of the file (or "" if the encrypted data is not a file)
+     * @param forYourEyesOnly flag indicating that the data is intended for the recipients eyes only
+     * @return api handle
+     */
+    ToRecipients onOutputStream(@Nonnull OutputStream outputStream, String fileName, boolean forYourEyesOnly);
 
     interface ToRecipients {
 

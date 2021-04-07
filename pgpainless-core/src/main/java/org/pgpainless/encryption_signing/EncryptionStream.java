@@ -117,7 +117,9 @@ public final class EncryptionStream extends OutputStream {
                      @Nonnull SymmetricKeyAlgorithm symmetricKeyAlgorithm,
                      @Nonnull HashAlgorithm hashAlgorithm,
                      @Nonnull CompressionAlgorithm compressionAlgorithm,
-                     boolean asciiArmor)
+                     boolean asciiArmor,
+                     @Nonnull String fileName,
+                     boolean forYourEyesOnly)
             throws IOException, PGPException {
 
         this.symmetricKeyAlgorithm = symmetricKeyAlgorithm;
@@ -136,7 +138,7 @@ public final class EncryptionStream extends OutputStream {
         prepareSigning();
         prepareCompression();
         prepareOnePassSignatures();
-        prepareLiteralDataProcessing();
+        prepareLiteralDataProcessing(fileName, forYourEyesOnly);
         prepareResultBuilder();
     }
 
@@ -225,10 +227,14 @@ public final class EncryptionStream extends OutputStream {
         }
     }
 
-    private void prepareLiteralDataProcessing() throws IOException {
+    private void prepareLiteralDataProcessing(@Nonnull String fileName, boolean forYourEyesOnly) throws IOException {
         literalDataGenerator = new PGPLiteralDataGenerator();
+        String name = fileName;
+        if (forYourEyesOnly) {
+            name = PGPLiteralData.CONSOLE;
+        }
         literalDataStream = literalDataGenerator.open(outermostStream,
-                PGPLiteralData.BINARY, PGPLiteralData.CONSOLE, new Date(), new byte[BUFFER_SIZE]);
+                PGPLiteralData.BINARY, name, new Date(), new byte[BUFFER_SIZE]);
         outermostStream = literalDataStream;
     }
 
