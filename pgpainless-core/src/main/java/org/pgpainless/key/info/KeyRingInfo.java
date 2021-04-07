@@ -307,7 +307,7 @@ public class KeyRingInfo {
     public boolean isFullyDecrypted() {
         if (isSecretKey()) {
             for (PGPSecretKey secretKey : getSecretKeys()) {
-                if (secretKey.getKeyEncryptionAlgorithm() != SymmetricKeyAlgorithm.NULL.getAlgorithmId()) {
+                if (secretKey.getS2KUsage() != 0) {
                     return false;
                 }
             }
