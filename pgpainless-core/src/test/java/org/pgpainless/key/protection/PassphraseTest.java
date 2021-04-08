@@ -37,4 +37,11 @@ public class PassphraseTest {
         assertFalse(passphrase.isValid());
         assertThrows(IllegalStateException.class, passphrase::getChars);
     }
+
+    @Test
+    public void testFromPasswordNull() {
+        Passphrase passphrase = Passphrase.fromPassword(null);
+        assertArrayEquals(null, passphrase.getChars());
+        assertTrue(passphrase.isValid());
+    }
 }

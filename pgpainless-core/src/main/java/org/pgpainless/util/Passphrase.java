@@ -37,11 +37,11 @@ public class Passphrase {
     /**
      * Create a {@link Passphrase} from a {@link String}.
      *
-     * @param password password
+     * @param password password that may be null
      * @return passphrase
      */
-    public static Passphrase fromPassword(String password) {
-        return new Passphrase(password.toCharArray());
+    public static Passphrase fromPassword(@Nullable String password) {
+        return new Passphrase(password == null ? null : password.toCharArray());
     }
 
     /**
