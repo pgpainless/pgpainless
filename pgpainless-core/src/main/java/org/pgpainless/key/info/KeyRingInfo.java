@@ -36,7 +36,6 @@ import org.bouncycastle.openpgp.PGPSecretKeyRing;
 import org.bouncycastle.openpgp.PGPSignature;
 import org.pgpainless.algorithm.PublicKeyAlgorithm;
 import org.pgpainless.algorithm.SignatureType;
-import org.pgpainless.algorithm.SymmetricKeyAlgorithm;
 import org.pgpainless.key.OpenPgpV4Fingerprint;
 import org.pgpainless.key.util.KeyRingUtils;
 import org.pgpainless.key.util.SignatureUtils;
