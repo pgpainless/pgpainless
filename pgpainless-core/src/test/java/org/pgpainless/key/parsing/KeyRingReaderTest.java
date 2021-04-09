@@ -17,11 +17,7 @@ package org.pgpainless.key.parsing;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
-import java.io.ByteArrayInputStream;
-import java.io.ByteArrayOutputStream;
-import java.io.File;
-import java.io.IOException;
-import java.io.InputStream;
+import java.io.*;
 import java.net.URISyntaxException;
 import java.net.URL;
 import java.nio.charset.StandardCharsets;
@@ -31,11 +27,7 @@ import java.security.NoSuchAlgorithmException;
 import java.util.ArrayList;
 import java.util.Collection;
 
-import org.bouncycastle.openpgp.PGPException;
-import org.bouncycastle.openpgp.PGPPublicKeyRing;
-import org.bouncycastle.openpgp.PGPPublicKeyRingCollection;
-import org.bouncycastle.openpgp.PGPSecretKeyRing;
-import org.bouncycastle.openpgp.PGPUtil;
+import org.bouncycastle.openpgp.*;
 import org.junit.jupiter.api.Test;
 import org.pgpainless.PGPainless;
 import org.pgpainless.implementation.ImplementationFactory;
@@ -98,4 +90,118 @@ class KeyRingReaderTest {
         assertEquals(10, rings.size());
     }
 
+    /**
+     * One armored pub key
+     */
+    @Test
+    void parsePublicKeysSingleArmored() throws IOException, PGPException, URISyntaxException {
+        assertEquals(1, getPgpPublicKeyRingsFromResource("single_pub_key_armored.asc").size());
+    }
+
+    /**
+     * One binary pub key
+     */
+    @Test
+    void parsePublicKeysSingleBinary() throws IOException, PGPException, URISyntaxException {
+        assertEquals(1, getPgpPublicKeyRingsFromResource("single_pub_key_binary.key").size());
+    }
+
+    /**
+     * Many armored pub keys with a single -----BEGIN PGP PUBLIC KEY BLOCK-----...-----END PGP PUBLIC KEY BLOCK-----
+     */
+    @Test
+    void parsePublicKeysMultiplyArmoredSingleHeader() throws IOException, PGPException, URISyntaxException {
+        assertEquals(10, getPgpPublicKeyRingsFromResource("10_pub_keys_armored_single_header.asc").size());
+    }
+
+    /**
+     * Many armored pub keys where each has own -----BEGIN PGP PUBLIC KEY BLOCK-----...-----END PGP PUBLIC KEY BLOCK-----
+     */
+    @Test
+    void parsePublicKeysMultiplyArmoredOwnHeader() throws IOException, PGPException, URISyntaxException {
+        assertEquals(10, getPgpPublicKeyRingsFromResource("10_pub_keys_armored_own_header.asc").size());
+    }
+
+    /**
+     * Many armored pub keys where each has own -----BEGIN PGP PUBLIC KEY BLOCK-----...-----END PGP PUBLIC KEY BLOCK-----.
+     * Each of those blocks can have a different count of keys.
+     */
+    @Test
+    void parsePublicKeysMultiplyArmoredOwnWithSingleHeader() throws IOException, PGPException, URISyntaxException {
+        assertEquals(10, getPgpPublicKeyRingsFromResource("10_pub_keys_armored_own_with_single_header.asc").size());
+    }
+
+    /**
+     * Many binary pub keys
+     */
+    @Test
+    void parsePublicKeysMultiplyBinary() throws IOException, PGPException, URISyntaxException {
+        assertEquals(10, getPgpPublicKeyRingsFromResource("10_pub_keys_binary.key").size());
+    }
+
+    /**
+     * One armored private key
+     */
+    @Test
+    void parseSecretKeysSingleArmored() throws IOException, PGPException, URISyntaxException {
+        assertEquals(1, getPgpSecretKeyRingsFromResource("single_prv_key_armored.asc").size());
+    }
+
+    /**
+     * One binary private key
+     */
+    @Test
+    void parseSecretKeysSingleBinary() throws IOException, PGPException, URISyntaxException {
+        assertEquals(1, getPgpSecretKeyRingsFromResource("single_prv_key_binary.key").size());
+    }
+
+    /**
+     * Many armored private keys with a single
+     * -----BEGIN PGP PRIVATE KEY BLOCK-----...-----END PGP PRIVATE KEY BLOCK-----
+     */
+    @Test
+    void parseSecretKeysMultiplyArmoredSingleHeader() throws IOException, PGPException, URISyntaxException {
+        assertEquals(10, getPgpSecretKeyRingsFromResource("10_prv_keys_armored_single_header.asc").size());
+    }
+
+    /**
+     * Many armored private keys where each has own -----BEGIN PGP PRIVATE KEY BLOCK-----...-----END PGP PRIVATE KEY BLOCK-----
+     */
+    @Test
+    void parseSecretKeysMultiplyArmoredOwnHeader() throws IOException, PGPException, URISyntaxException {
+        assertEquals(10, getPgpSecretKeyRingsFromResource("10_prv_keys_armored_own_header.asc").size());
+    }
+
+    /**
+     * Many armored private keys where each has own -----BEGIN PGP PRIVATE KEY BLOCK-----...-----END PGP PRIVATE KEY BLOCK-----.
+     * Each of those blocks can have a different count of keys.
+     */
+    @Test
+    void parseSecretKeysMultiplyArmoredOwnWithSingleHeader() throws IOException, PGPException, URISyntaxException {
+        assertEquals(10, getPgpSecretKeyRingsFromResource("10_prv_keys_armored_own_with_single_header.asc").size());
+    }
+
+    /**
+     * Many binary private keys
+     */
+    @Test
+    void parseSecretKeysMultiplyBinary() throws IOException, PGPException, URISyntaxException {
+        assertEquals(10, getPgpSecretKeyRingsFromResource("10_prv_keys_binary.key").size());
+    }
+
+    private InputStream getFileInputStreamFromResource(String fileName) throws IOException, URISyntaxException {
+        URL resource = getClass().getClassLoader().getResource(fileName);
+        assert resource != null;
+        return new FileInputStream(new File(resource.toURI()));
+    }
+
+    private PGPPublicKeyRingCollection getPgpPublicKeyRingsFromResource(String fileName)
+            throws IOException, URISyntaxException, PGPException {
+        return PGPainless.readKeyRing().publicKeyRingCollection(getFileInputStreamFromResource(fileName));
+    }
+
+    private PGPSecretKeyRingCollection getPgpSecretKeyRingsFromResource(String fileName)
+            throws IOException, URISyntaxException, PGPException {
+        return PGPainless.readKeyRing().secretKeyRingCollection(getFileInputStreamFromResource(fileName));
+    }
 }
