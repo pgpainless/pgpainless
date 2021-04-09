@@ -15,6 +15,7 @@
  */
 package org.pgpainless.util;
 
+import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
 import java.util.Arrays;
 
@@ -37,11 +38,11 @@ public class Passphrase {
     /**
      * Create a {@link Passphrase} from a {@link String}.
      *
-     * @param password password that may be null
+     * @param password password
      * @return passphrase
      */
-    public static Passphrase fromPassword(@Nullable String password) {
-        return new Passphrase(password == null ? null : password.toCharArray());
+    public static Passphrase fromPassword(@Nonnull String password) {
+        return new Passphrase(password.toCharArray());
     }
 
     /**
