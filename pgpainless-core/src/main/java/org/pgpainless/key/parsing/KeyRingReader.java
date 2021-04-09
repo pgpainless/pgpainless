@@ -29,6 +29,7 @@ import org.bouncycastle.openpgp.PGPSecretKeyRingCollection;
 import org.bouncycastle.openpgp.PGPUtil;
 import org.bouncycastle.openpgp.operator.KeyFingerPrintCalculator;
 import org.pgpainless.implementation.ImplementationFactory;
+import org.pgpainless.key.collection.PGPKeyRingCollection;
 
 public class KeyRingReader {
 
@@ -84,6 +85,19 @@ public class KeyRingReader {
         return secretKeyRingCollection(asciiArmored.getBytes(UTF8));
     }
 
+    public PGPKeyRingCollection keyRingCollection(@Nonnull InputStream inputStream, boolean isSilent)
+            throws IOException, PGPException {
+        return readKeyRingCollection(inputStream, isSilent);
+    }
+
+    public PGPKeyRingCollection keyRingCollection(@Nonnull byte[] bytes, boolean isSilent) throws IOException, PGPException {
+        return keyRingCollection(new ByteArrayInputStream(bytes), isSilent);
+    }
+
+    public PGPKeyRingCollection keyRingCollection(@Nonnull String asciiArmored, boolean isSilent) throws IOException, PGPException {
+        return keyRingCollection(asciiArmored.getBytes(UTF8), isSilent);
+    }
+
     /*
     STATIC METHODS
      */
@@ -112,6 +126,14 @@ public class KeyRingReader {
         return new PGPSecretKeyRingCollection(
                 getDecoderStream(inputStream),
                 ImplementationFactory.getInstance().getKeyFingerprintCalculator());
+    }
+
+    public static PGPKeyRingCollection readKeyRingCollection(@Nonnull InputStream inputStream, boolean isSilent)
+            throws IOException, PGPException {
+        return new PGPKeyRingCollection(
+                getDecoderStream(inputStream),
+                ImplementationFactory.getInstance().getKeyFingerprintCalculator(),
+                isSilent);
     }
 
     private static void validateStreamsNotBothNull(InputStream publicIn, InputStream secretIn) {

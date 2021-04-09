@@ -31,6 +31,7 @@ import org.bouncycastle.openpgp.*;
 import org.junit.jupiter.api.Test;
 import org.pgpainless.PGPainless;
 import org.pgpainless.implementation.ImplementationFactory;
+import org.pgpainless.key.collection.PGPKeyRingCollection;
 import org.pgpainless.key.util.KeyRingUtils;
 
 class KeyRingReaderTest {
@@ -189,10 +190,40 @@ class KeyRingReaderTest {
         assertEquals(10, getPgpSecretKeyRingsFromResource("10_prv_keys_binary.key").size());
     }
 
+    /**
+     * Many armored keys(private or pub) where each has own -----BEGIN PGP ... KEY BLOCK-----...-----END PGP ... KEY BLOCK-----
+     */
+    @Test
+    void parseKeysMultiplyArmoredOwnHeader() throws IOException, PGPException, URISyntaxException {
+        assertEquals(10, getPGPKeyRingsFromResource("10_prv_and_pub_keys_armored_own_header.asc").size());
+    }
+
+    /**
+     * Many armored keys(private or pub) where each has own -----BEGIN PGP ... KEY BLOCK-----...-----END PGP ... KEY BLOCK-----
+     * Each of those blocks can have a different count of keys.
+     */
+    @Test
+    void parseKeysMultiplyArmoredOwnWithSingleHeader() throws IOException, PGPException, URISyntaxException {
+        assertEquals(10, getPGPKeyRingsFromResource("10_prv_and_pub_keys_armored_own_with_single_header.asc").size());
+    }
+
+    /**
+     * Many binary keys(private or pub)
+     */
+    @Test
+    void parseKeysMultiplyBinary() throws IOException, PGPException, URISyntaxException {
+        assertEquals(10, getPGPKeyRingsFromResource("10_prv_and_pub_keys_binary.key").size());
+    }
+
     private InputStream getFileInputStreamFromResource(String fileName) throws IOException, URISyntaxException {
         URL resource = getClass().getClassLoader().getResource(fileName);
         assert resource != null;
         return new FileInputStream(new File(resource.toURI()));
+    }
+
+    private PGPKeyRingCollection getPGPKeyRingsFromResource(String fileName)
+            throws IOException, URISyntaxException, PGPException {
+        return PGPainless.readKeyRing().keyRingCollection(getFileInputStreamFromResource(fileName), true);
     }
 
     private PGPPublicKeyRingCollection getPgpPublicKeyRingsFromResource(String fileName)
