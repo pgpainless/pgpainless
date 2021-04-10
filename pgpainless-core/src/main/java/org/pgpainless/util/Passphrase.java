@@ -15,6 +15,7 @@
  */
 package org.pgpainless.util;
 
+import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
 import java.util.Arrays;
 
@@ -40,7 +41,7 @@ public class Passphrase {
      * @param password password
      * @return passphrase
      */
-    public static Passphrase fromPassword(String password) {
+    public static Passphrase fromPassword(@Nonnull String password) {
         return new Passphrase(password.toCharArray());
     }
 
