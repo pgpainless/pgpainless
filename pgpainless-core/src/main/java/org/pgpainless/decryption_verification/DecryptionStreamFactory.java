@@ -53,6 +53,7 @@ import org.bouncycastle.openpgp.operator.PBEDataDecryptorFactory;
 import org.bouncycastle.openpgp.operator.PGPContentVerifierBuilderProvider;
 import org.bouncycastle.openpgp.operator.PublicKeyDataDecryptorFactory;
 import org.pgpainless.algorithm.CompressionAlgorithm;
+import org.pgpainless.algorithm.StreamEncoding;
 import org.pgpainless.algorithm.SymmetricKeyAlgorithm;
 import org.pgpainless.implementation.ImplementationFactory;
 import org.pgpainless.key.OpenPgpV4Fingerprint;
@@ -173,6 +174,11 @@ public final class DecryptionStreamFactory {
     private InputStream processPGPLiteralData(@Nonnull PGPObjectFactory objectFactory, PGPLiteralData pgpLiteralData) {
         LOGGER.log(LEVEL, "Found PGPLiteralData");
         InputStream literalDataInputStream = pgpLiteralData.getInputStream();
+        OpenPgpMetadata.FileInfo fileInfo = new OpenPgpMetadata.FileInfo(
+                pgpLiteralData.getFileName(),
+                pgpLiteralData.getModificationTime(),
+                StreamEncoding.fromCode(pgpLiteralData.getFormat()));
+        resultBuilder.setFileInfo(fileInfo);
 
         if (verifiableOnePassSignatures.isEmpty()) {
             LOGGER.log(LEVEL, "No OnePassSignatures found -> We are done");

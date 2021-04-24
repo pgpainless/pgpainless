@@ -18,6 +18,7 @@ package org.pgpainless.encryption_signing;
 import javax.annotation.Nonnull;
 import java.io.IOException;
 import java.io.OutputStream;
+import java.util.Date;
 
 import org.bouncycastle.openpgp.PGPException;
 import org.bouncycastle.openpgp.PGPPublicKey;
@@ -28,6 +29,7 @@ import org.bouncycastle.openpgp.PGPSecretKeyRing;
 import org.bouncycastle.openpgp.PGPSecretKeyRingCollection;
 import org.pgpainless.algorithm.CompressionAlgorithm;
 import org.pgpainless.algorithm.HashAlgorithm;
+import org.pgpainless.algorithm.StreamEncoding;
 import org.pgpainless.algorithm.SymmetricKeyAlgorithm;
 import org.pgpainless.decryption_verification.OpenPgpMetadata;
 import org.pgpainless.exception.SecretKeyNotFoundException;
@@ -48,7 +50,7 @@ public interface EncryptionBuilderInterface {
      * @return api handle
      */
     default ToRecipients onOutputStream(@Nonnull OutputStream outputStream) {
-        return onOutputStream(outputStream,false);
+        return onOutputStream(outputStream, OpenPgpMetadata.FileInfo.binaryStream());
     }
     /**
      * Create a {@link EncryptionStream} on an {@link OutputStream} that contains the plain data which shall
@@ -57,9 +59,11 @@ public interface EncryptionBuilderInterface {
      * @param outputStream outputStream
      * @param forYourEyesOnly flag indicating that the data is intended for the recipients eyes only
      * @return api handle
+     *
+     * @deprecated use {@link #onOutputStream(OutputStream, OpenPgpMetadata.FileInfo)} instead.
      */
     default ToRecipients onOutputStream(@Nonnull OutputStream outputStream, boolean forYourEyesOnly) {
-        return onOutputStream(outputStream, "", forYourEyesOnly);
+        return onOutputStream(outputStream, forYourEyesOnly ? OpenPgpMetadata.FileInfo.forYourEyesOnly() : OpenPgpMetadata.FileInfo.binaryStream());
     }
 
     /**
@@ -70,8 +74,22 @@ public interface EncryptionBuilderInterface {
      * @param fileName name of the file (or "" if the encrypted data is not a file)
      * @param forYourEyesOnly flag indicating that the data is intended for the recipients eyes only
      * @return api handle
+     *
+     * @deprecated use {@link #onOutputStream(OutputStream, OpenPgpMetadata.FileInfo)} instead.
      */
-    ToRecipients onOutputStream(@Nonnull OutputStream outputStream, String fileName, boolean forYourEyesOnly);
+    default ToRecipients onOutputStream(@Nonnull OutputStream outputStream, String fileName, boolean forYourEyesOnly) {
+        return onOutputStream(outputStream, new OpenPgpMetadata.FileInfo(forYourEyesOnly ? "_CONSOLE" : fileName, new Date(), StreamEncoding.BINARY));
+    }
+
+    /**
+     * Create an {@link EncryptionStream} on an {@link OutputStream} that contains the plain data which shall
+     * be encrypted and/or signed.
+     *
+     * @param outputStream outputStream
+     * @param fileInfo file information
+     * @return api handle
+     */
+    ToRecipients onOutputStream(@Nonnull OutputStream outputStream, OpenPgpMetadata.FileInfo fileInfo);
 
     interface ToRecipients {
 

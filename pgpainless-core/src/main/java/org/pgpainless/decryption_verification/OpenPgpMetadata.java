@@ -17,16 +17,19 @@ package org.pgpainless.decryption_verification;
 
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.Date;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 
+import org.bouncycastle.openpgp.PGPLiteralData;
 import org.bouncycastle.openpgp.PGPPublicKey;
 import org.bouncycastle.openpgp.PGPPublicKeyRing;
 import org.bouncycastle.openpgp.PGPSignature;
 import org.pgpainless.algorithm.CompressionAlgorithm;
+import org.pgpainless.algorithm.StreamEncoding;
 import org.pgpainless.algorithm.SymmetricKeyAlgorithm;
 import org.pgpainless.key.OpenPgpV4Fingerprint;
 
@@ -39,6 +42,7 @@ public class OpenPgpMetadata {
     private final SymmetricKeyAlgorithm symmetricKeyAlgorithm;
     private final CompressionAlgorithm compressionAlgorithm;
     private final boolean integrityProtected;
+    private final FileInfo fileInfo;
 
     public OpenPgpMetadata(Set<Long> recipientKeyIds,
                            OpenPgpV4Fingerprint decryptionFingerprint,
@@ -46,7 +50,8 @@ public class OpenPgpMetadata {
                            CompressionAlgorithm algorithm,
                            boolean integrityProtected,
                            List<OnePassSignature> onePassSignatures,
-                           List<DetachedSignature> detachedSignatures) {
+                           List<DetachedSignature> detachedSignatures,
+                           FileInfo fileInfo) {
 
         this.recipientKeyIds = Collections.unmodifiableSet(recipientKeyIds);
         this.decryptionFingerprint = decryptionFingerprint;
@@ -55,6 +60,7 @@ public class OpenPgpMetadata {
         this.integrityProtected = integrityProtected;
         this.detachedSignatures = Collections.unmodifiableList(detachedSignatures);
         this.onePassSignatures = Collections.unmodifiableList(onePassSignatures);
+        this.fileInfo = fileInfo;
     }
 
     public Set<Long> getRecipientKeyIds() {
@@ -144,6 +150,89 @@ public class OpenPgpMetadata {
         }
     }
 
+    public FileInfo getFileInfo() {
+        return fileInfo;
+    }
+
+    public static class FileInfo {
+        public static final String FOR_YOUR_EYES_ONLY = PGPLiteralData.CONSOLE;
+
+        protected final String fileName;
+        protected final Date modicationDate;
+        protected final StreamEncoding streamEncoding;
+
+        public FileInfo(String fileName, Date modicationDate, StreamEncoding streamEncoding) {
+            this.fileName = fileName == null ? "" : fileName;
+            this.modicationDate = modicationDate == null ? PGPLiteralData.NOW : modicationDate;
+            this.streamEncoding = streamEncoding;
+        }
+
+        public static FileInfo binaryStream() {
+            return new FileInfo("", null, StreamEncoding.BINARY);
+        }
+
+        public static FileInfo forYourEyesOnly() {
+            return new FileInfo(FOR_YOUR_EYES_ONLY, null, StreamEncoding.BINARY);
+        }
+
+        public String getFileName() {
+            return fileName;
+        }
+
+        public boolean isForYourEyesOnly() {
+            return FOR_YOUR_EYES_ONLY.equals(fileName);
+        }
+
+        public Date getModificationDate() {
+            return modicationDate;
+        }
+
+        public StreamEncoding getStreamFormat() {
+            return streamEncoding;
+        }
+
+        @Override
+        public boolean equals(Object other) {
+            if (other == null) {
+                return false;
+            }
+            if (this == other) {
+                return true;
+            }
+            if (!(other instanceof FileInfo)) {
+                return false;
+            }
+
+            FileInfo o = (FileInfo) other;
+
+            if (getFileName() != null) {
+                if (!getFileName().equals(o.getFileName())) {
+                    return false;
+                }
+            } else {
+                if (o.getFileName() != null) {
+                    return false;
+                }
+            }
+
+            if (getModificationDate() != null) {
+                if (o.getModificationDate() == null) {
+                    return false;
+                }
+                long diff = Math.abs(getModificationDate().getTime() - o.getModificationDate().getTime());
+                if (diff > 1000) {
+                    return false;
+                }
+            } else {
+                if (o.getModificationDate() != null) {
+                    return false;
+                }
+            }
+
+            return getStreamFormat() == o.getStreamFormat();
+        }
+    }
+
     public static Builder getBuilder() {
         return new Builder();
     }
@@ -157,6 +246,7 @@ public class OpenPgpMetadata {
         private SymmetricKeyAlgorithm symmetricKeyAlgorithm = SymmetricKeyAlgorithm.NULL;
         private CompressionAlgorithm compressionAlgorithm = CompressionAlgorithm.UNCOMPRESSED;
         private boolean integrityProtected = false;
+        private FileInfo fileInfo;
 
         public Builder addRecipientKeyId(Long keyId) {
             this.recipientFingerprints.add(keyId);
@@ -195,10 +285,15 @@ public class OpenPgpMetadata {
             this.onePassSignatures.add(onePassSignature);
         }
 
+        public Builder setFileInfo(FileInfo fileInfo) {
+            this.fileInfo = fileInfo;
+            return this;
+        }
+
         public OpenPgpMetadata build() {
             return new OpenPgpMetadata(recipientFingerprints, decryptionFingerprint,
                     symmetricKeyAlgorithm, compressionAlgorithm, integrityProtected,
-                    onePassSignatures, detachedSignatures);
+                    onePassSignatures, detachedSignatures, fileInfo);
         }
     }
 }

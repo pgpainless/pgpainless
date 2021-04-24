@@ -40,6 +40,7 @@ import org.pgpainless.algorithm.HashAlgorithm;
 import org.pgpainless.algorithm.KeyFlag;
 import org.pgpainless.algorithm.SignatureType;
 import org.pgpainless.algorithm.SymmetricKeyAlgorithm;
+import org.pgpainless.decryption_verification.OpenPgpMetadata;
 import org.pgpainless.exception.SecretKeyNotFoundException;
 import org.pgpainless.key.OpenPgpV4Fingerprint;
 import org.pgpainless.key.protection.SecretKeyRingProtector;
@@ -68,8 +69,7 @@ public class EncryptionBuilder implements EncryptionBuilderInterface {
     private HashAlgorithm hashAlgorithm = HashAlgorithm.SHA256;
     private CompressionAlgorithm compressionAlgorithm = CompressionAlgorithm.UNCOMPRESSED;
     private boolean asciiArmor = false;
-    private String fileName;
-    private boolean forYourEyesOnly;
+    private OpenPgpMetadata.FileInfo fileInfo;
 
     public EncryptionBuilder() {
         this.purpose = EncryptionStream.Purpose.COMMUNICATIONS;
@@ -80,10 +80,9 @@ public class EncryptionBuilder implements EncryptionBuilderInterface {
     }
 
     @Override
-    public ToRecipients onOutputStream(@Nonnull OutputStream outputStream, String fileName, boolean forYourEyesOnly) {
+    public ToRecipients onOutputStream(@Nonnull OutputStream outputStream, OpenPgpMetadata.FileInfo fileInfo) {
         this.outputStream = outputStream;
-        this.fileName = fileName == null ? "" : fileName;
-        this.forYourEyesOnly = forYourEyesOnly;
+        this.fileInfo = fileInfo;
         return new ToRecipientsImpl();
     }
 
@@ -435,8 +434,7 @@ public class EncryptionBuilder implements EncryptionBuilderInterface {
                     EncryptionBuilder.this.hashAlgorithm,
                     EncryptionBuilder.this.compressionAlgorithm,
                     EncryptionBuilder.this.asciiArmor,
-                    fileName,
-                    forYourEyesOnly);
+                    fileInfo);
         }
     }
 

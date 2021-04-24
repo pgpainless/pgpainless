@@ -18,7 +18,6 @@ package org.pgpainless.encryption_signing;
 import java.io.IOException;
 import java.io.OutputStream;
 import java.util.Collections;
-import java.util.Date;
 import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
@@ -31,7 +30,6 @@ import org.bouncycastle.bcpg.BCPGOutputStream;
 import org.bouncycastle.openpgp.PGPCompressedDataGenerator;
 import org.bouncycastle.openpgp.PGPEncryptedDataGenerator;
 import org.bouncycastle.openpgp.PGPException;
-import org.bouncycastle.openpgp.PGPLiteralData;
 import org.bouncycastle.openpgp.PGPLiteralDataGenerator;
 import org.bouncycastle.openpgp.PGPPrivateKey;
 import org.bouncycastle.openpgp.PGPPublicKey;
@@ -118,8 +116,7 @@ public final class EncryptionStream extends OutputStream {
                      @Nonnull HashAlgorithm hashAlgorithm,
                      @Nonnull CompressionAlgorithm compressionAlgorithm,
                      boolean asciiArmor,
-                     @Nonnull String fileName,
-                     boolean forYourEyesOnly)
+                     @Nonnull OpenPgpMetadata.FileInfo fileInfo)
             throws IOException, PGPException {
 
         this.symmetricKeyAlgorithm = symmetricKeyAlgorithm;
@@ -138,8 +135,9 @@ public final class EncryptionStream extends OutputStream {
         prepareSigning();
         prepareCompression();
         prepareOnePassSignatures();
-        prepareLiteralDataProcessing(fileName, forYourEyesOnly);
+        prepareLiteralDataProcessing(fileInfo);
         prepareResultBuilder();
+        resultBuilder.setFileInfo(fileInfo);
     }
 
     private void prepareArmor() {
@@ -227,14 +225,13 @@ public final class EncryptionStream extends OutputStream {
         }
     }
 
-    private void prepareLiteralDataProcessing(@Nonnull String fileName, boolean forYourEyesOnly) throws IOException {
+    private void prepareLiteralDataProcessing(@Nonnull OpenPgpMetadata.FileInfo fileInfo) throws IOException {
         literalDataGenerator = new PGPLiteralDataGenerator();
-        String name = fileName;
-        if (forYourEyesOnly) {
-            name = PGPLiteralData.CONSOLE;
-        }
         literalDataStream = literalDataGenerator.open(outermostStream,
-                PGPLiteralData.BINARY, name, new Date(), new byte[BUFFER_SIZE]);
+                fileInfo.getStreamFormat().getCode(),
+                fileInfo.getFileName(),
+                fileInfo.getModificationDate(),
+                new byte[BUFFER_SIZE]);
         outermostStream = literalDataStream;
     }
 
