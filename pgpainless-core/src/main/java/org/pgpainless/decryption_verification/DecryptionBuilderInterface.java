@@ -77,6 +77,12 @@ public interface DecryptionBuilderInterface {
          */
         Verify decryptWith(@Nonnull Passphrase passphrase);
 
+        /**
+         * Do not attempt to decrypt the provided data.
+         * Useful for signature verification of signed-only data.
+         *
+         * @return api handle
+         */
         Verify doNotDecrypt();
 
     }

@@ -25,6 +25,10 @@ import java.util.logging.Logger;
 import org.bouncycastle.openpgp.PGPException;
 import org.pgpainless.util.IntegrityProtectedInputStream;
 
+/**
+ * Decryption Stream that handles updating and verification of detached signatures,
+ * as well as verification of integrity-protected input streams once the stream gets closed.
+ */
 public class DecryptionStream extends InputStream {
 
     private static final Logger LOGGER = Logger.getLogger(DecryptionStream.class.getName());
@@ -66,7 +70,7 @@ public class DecryptionStream extends InputStream {
         this.isClosed = true;
     }
 
-    void maybeVerifyDetachedSignatures() {
+    private void maybeVerifyDetachedSignatures() {
         for (DetachedSignature s : resultBuilder.getDetachedSignatures()) {
             try {
                 s.setVerified(s.getSignature().verify());
@@ -76,6 +80,14 @@ public class DecryptionStream extends InputStream {
         }
     }
 
+    /**
+     * Return the result of the decryption.
+     * The result contains metadata about the decryption, such as signatures, used keys and algorithms, as well as information
+     * about the decrypted file/stream.
+     *
+     * Can only be obtained once the stream got successfully closed ({@link #close()}).
+     * @return metadata
+     */
     public OpenPgpMetadata getResult() {
         if (!isClosed) {
             throw new IllegalStateException("DecryptionStream MUST be closed before the result can be accessed.");
