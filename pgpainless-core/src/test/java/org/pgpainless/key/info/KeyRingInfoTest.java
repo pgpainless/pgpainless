@@ -89,15 +89,33 @@ public class KeyRingInfoTest {
 
         assertTrue(info.isFullyDecrypted());
 
-        secretKeys = PGPainless.modifyKeyRing(secretKeys)
-                .changePassphraseFromOldPassphrase(null)
-                .withSecureDefaultSettings()
-                .toNewPassphrase(Passphrase.fromPassword("sw0rdf1sh"))
-                .done();
+        secretKeys = encryptSecretKeys(secretKeys);
         info = PGPainless.inspectKeyRing(secretKeys);
 
         assertFalse(info.isFullyDecrypted());
     }
+
+    @Test
+    public void testIsFullyEncrypted() throws IOException, PGPException {
+        PGPSecretKeyRing secretKeys = TestKeys.getEmilSecretKeyRing();
+        KeyRingInfo info = PGPainless.inspectKeyRing(secretKeys);
+
+        assertFalse(info.isFullyEncrypted());
+
+        secretKeys = encryptSecretKeys(secretKeys);
+        info = PGPainless.inspectKeyRing(secretKeys);
+
+        assertTrue(info.isFullyEncrypted());
+    }
+
+    private static PGPSecretKeyRing encryptSecretKeys(PGPSecretKeyRing secretKeys) throws PGPException {
+        return PGPainless.modifyKeyRing(secretKeys)
+                .changePassphraseFromOldPassphrase(null)
+                .withSecureDefaultSettings()
+                .toNewPassphrase(Passphrase.fromPassword("sw0rdf1sh"))
+                .done();
+    }
+
 
     @Test
     public void testGetSecretKey() throws IOException, PGPException {

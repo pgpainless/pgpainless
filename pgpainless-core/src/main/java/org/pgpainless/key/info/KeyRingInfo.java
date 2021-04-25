@@ -314,6 +314,25 @@ public class KeyRingInfo {
         return true;
     }
 
+    /**
+     * Returns true when every secret key on the key ring is encrypted.
+     * If there is at least one not encrypted secret key on the ring, return false.
+     * If the ring is a {@link PGPPublicKeyRing}, return false.
+     *
+     * @return true if all secret keys are encrypted.
+     */
+    public boolean isFullyEncrypted() {
+        if (isSecretKey()) {
+            for (PGPSecretKey secretKey : getSecretKeys()) {
+                if (secretKey.getS2KUsage() == 0) {
+                    return false;
+                }
+            }
+            return true;
+        }
+        return false;
+    }
+
     public List<PGPSignature> getSelfSignaturesOnKey(long subkeyId) {
         PGPPublicKey publicKey = KeyRingUtils.requirePublicKeyFrom(keys, subkeyId);
         Iterator<PGPSignature> it = publicKey.getSignaturesForKeyID(keys.getPublicKey().getKeyID());
