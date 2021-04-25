@@ -20,6 +20,11 @@ import java.util.concurrent.ConcurrentHashMap;
 
 import org.bouncycastle.bcpg.PublicKeyAlgorithmTags;
 
+/**
+ * Enumeration of public key algorithms as defined in RFC4880.
+ *
+ * @see <a href="https://tools.ietf.org/html/rfc4880#section-9.1">RFC4880: Public-Key Algorithms</a>
+ */
 public enum PublicKeyAlgorithm {
 
     /**
@@ -32,6 +37,7 @@ public enum PublicKeyAlgorithm {
      *
      * @deprecated see https://tools.ietf.org/html/rfc4880#section-13.5
      */
+    @Deprecated
     RSA_ENCRYPT     (PublicKeyAlgorithmTags.RSA_ENCRYPT),
 
     /**
@@ -39,6 +45,7 @@ public enum PublicKeyAlgorithm {
      *
      * @deprecated see https://tools.ietf.org/html/rfc4880#section-13.5
      */
+    @Deprecated
     RSA_SIGN        (PublicKeyAlgorithmTags.RSA_SIGN),
 
     /**
@@ -55,6 +62,7 @@ public enum PublicKeyAlgorithm {
      * EC is deprecated.
      * @deprecated use {@link #ECDH} instead.
      */
+    @Deprecated
     EC              (PublicKeyAlgorithmTags.EC),
 
     /**
@@ -94,6 +102,13 @@ public enum PublicKeyAlgorithm {
         }
     }
 
+    /**
+     * Return the {@link PublicKeyAlgorithm} that corresponds to the provided algorithm id.
+     * If an invalid id is provided, null is returned.
+     *
+     * @param id numeric algorithm id
+     * @return algorithm
+     */
     public static PublicKeyAlgorithm fromId(int id) {
         return MAP.get(id);
     }
@@ -104,6 +119,11 @@ public enum PublicKeyAlgorithm {
         this.algorithmId = algorithmId;
     }
 
+    /**
+     * Return the numeric identifier of the public key algorithm.
+     *
+     * @return id
+     */
     public int getAlgorithmId() {
         return algorithmId;
     }

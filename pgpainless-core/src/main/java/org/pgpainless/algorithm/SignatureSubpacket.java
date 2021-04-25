@@ -49,6 +49,11 @@ import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
+/**
+ * Enumeration of possible subpackets that might be found in the hashed and unhashed area of an OpenPGP signature.
+ *
+ * @see <a href="https://tools.ietf.org/html/rfc4880#section-5.2.3.1">RFC4880: Signature Subpacket Specification</a>
+ */
 public enum SignatureSubpacket {
 
     /**
@@ -408,10 +413,20 @@ public enum SignatureSubpacket {
         this.code = code;
     }
 
+    /**
+     * Return the numerical identifier of the {@link SignatureSubpacket}.
+     * @return id
+     */
     public int getCode() {
         return code;
     }
 
+    /**
+     * Return the {@link SignatureSubpacket} that corresponds to the provided id.
+     *
+     * @param code id
+     * @return signature subpacket
+     */
     public static SignatureSubpacket fromCode(int code) {
         SignatureSubpacket tag = MAP.get(code);
         if (tag == null) {
@@ -420,6 +435,12 @@ public enum SignatureSubpacket {
         return tag;
     }
 
+    /**
+     * Convert an array of signature subpacket tags into a list of {@link SignatureSubpacket SignatureSubpackets}.
+     *
+     * @param codes array of codes
+     * @return list of subpackets
+     */
     public static List<SignatureSubpacket> fromCodes(int[] codes) {
         List<SignatureSubpacket> tags = new ArrayList<>();
         for (int code : codes) {

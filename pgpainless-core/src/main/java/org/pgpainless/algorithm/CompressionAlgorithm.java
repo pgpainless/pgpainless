@@ -20,6 +20,11 @@ import java.util.concurrent.ConcurrentHashMap;
 
 import org.bouncycastle.bcpg.CompressionAlgorithmTags;
 
+/**
+ * Enumeration of possible compression algorithms.
+ *
+ * @see <a href="https://tools.ietf.org/html/rfc4880#section-9.3">RFC4880: Compression Algorithm Tags</a>
+ */
 public enum CompressionAlgorithm {
 
     UNCOMPRESSED   (CompressionAlgorithmTags.UNCOMPRESSED),
@@ -36,6 +41,13 @@ public enum CompressionAlgorithm {
         }
     }
 
+    /**
+     * Return the {@link CompressionAlgorithm} value that corresponds to the provided numerical id.
+     * If an invalid id is provided, null is returned.
+     *
+     * @param id id
+     * @return compression algorithm
+     */
     public static CompressionAlgorithm fromId(int id) {
         return MAP.get(id);
     }
@@ -46,6 +58,10 @@ public enum CompressionAlgorithm {
         this.algorithmId = id;
     }
 
+    /**
+     * Return the numerical algorithm tag corresponding to this compression algorithm.
+     * @return id
+     */
     public int getAlgorithmId() {
         return algorithmId;
     }

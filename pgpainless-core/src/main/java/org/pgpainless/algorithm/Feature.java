@@ -20,6 +20,11 @@ import java.util.concurrent.ConcurrentHashMap;
 
 import org.bouncycastle.bcpg.sig.Features;
 
+/**
+ * An enumeration of features that may be set in the {@link Features} subpacket.
+ *
+ * @see <a href="https://tools.ietf.org/html/rfc4880#section-5.2.3.24">RFC4880: Features</a>
+ */
 public enum Feature {
 
     /**

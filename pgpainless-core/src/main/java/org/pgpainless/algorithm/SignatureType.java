@@ -173,6 +173,12 @@ public enum SignatureType {
         }
     }
 
+    /**
+     * Convert a numerical id into a {@link SignatureType}.
+     *
+     * @param code numeric id
+     * @return signature type enum
+     */
     public static SignatureType valueOf(int code) {
         SignatureType type = map.get(code);
         if (type != null) {
@@ -187,6 +193,11 @@ public enum SignatureType {
         this.code = code;
     }
 
+    /**
+     * Return the numeric id of the signature type enum.
+     *
+     * @return numeric id
+     */
     public int getCode() {
         return code;
     }

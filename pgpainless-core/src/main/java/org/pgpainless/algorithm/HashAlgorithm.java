@@ -20,8 +20,13 @@ import java.util.concurrent.ConcurrentHashMap;
 
 import org.bouncycastle.bcpg.HashAlgorithmTags;
 
+/**
+ * An enumeration of different hashing algorithms.
+ *
+ * @see <a href="https://tools.ietf.org/html/rfc4880#section-9.4">RFC4880: Hash Algorithms</a>
+ */
 public enum HashAlgorithm {
-
+    @Deprecated
     MD5        (HashAlgorithmTags.MD5),
     SHA1       (HashAlgorithmTags.SHA1),
     RIPEMD160  (HashAlgorithmTags.RIPEMD160),
@@ -43,6 +48,13 @@ public enum HashAlgorithm {
         }
     }
 
+    /**
+     * Return the {@link HashAlgorithm} value that corresponds to the provided algorithm id.
+     * If an invalid algorithm id was provided, null is returned.
+     *
+     * @param id numeric id
+     * @return enum value
+     */
     public static HashAlgorithm fromId(int id) {
         return MAP.get(id);
     }
@@ -53,6 +65,11 @@ public enum HashAlgorithm {
         this.algorithmId = id;
     }
 
+    /**
+     * Return the numeric algorithm id of the hash algorithm.
+     *
+     * @return numeric id
+     */
     public int getAlgorithmId() {
         return algorithmId;
     }
