@@ -40,21 +40,27 @@ public class KeyInfo {
         this.secretKey = null;
     }
 
-    public String getCurveName() { return getCurveName(publicKey); }
+    public String getCurveName() {
+        return getCurveName(publicKey);
+    }
 
     /**
      * Returns indication that a contained secret key is encrypted.
      *
      * @return true if secret key is encrypted, false if secret key is not encrypted or there is public key only.
      */
-    public boolean isEncrypted() { return secretKey != null && isEncrypted(secretKey); }
+    public boolean isEncrypted() {
+        return secretKey != null && isEncrypted(secretKey);
+    }
 
     /**
      * Returns indication that a contained secret key is not encrypted.
      *
      * @return true if secret key is not encrypted or there is public key only, false if secret key is encrypted.
      */
-    public boolean isDecrypted() { return secretKey == null || isDecrypted(secretKey); }
+    public boolean isDecrypted() {
+        return secretKey == null || isDecrypted(secretKey);
+    }
 
     public static String getCurveName(PGPPublicKey publicKey) {
         PublicKeyAlgorithm algorithm = PublicKeyAlgorithm.fromId(publicKey.getAlgorithm());
