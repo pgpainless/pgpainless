@@ -51,13 +51,4 @@ public final class EdDSA implements KeyType {
         return new ECNamedCurveGenParameterSpec(curve.getName());
     }
 
-    @Override
-    public boolean canSign() {
-        return true;
-    }
-
-    @Override
-    public boolean canEncryptCommunication() {
-        return false;
-    }
 }

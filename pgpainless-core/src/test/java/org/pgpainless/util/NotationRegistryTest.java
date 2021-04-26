@@ -15,22 +15,16 @@
  */
 package org.pgpainless.util;
 
-import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.Test;
-
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
-public class NotationRegistryTest {
+import org.junit.jupiter.api.Test;
 
-    @BeforeEach
-    public void setup() {
-        NotationRegistry.getInstance().clear();
-    }
+public class NotationRegistryTest {
 
     @Test
     public void notationIsKnownOnceAddedAndUnknownOnceCleared() {
-        NotationRegistry registry = NotationRegistry.getInstance();
+        NotationRegistry registry = new NotationRegistry();
 
         assertFalse(registry.isKnownNotation("proof@metacode.biz"), "Notation is initially not known.");
         assertFalse(registry.isKnownNotation("unkown@notation.data"));

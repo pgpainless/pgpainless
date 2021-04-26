@@ -63,9 +63,9 @@ import org.pgpainless.key.protection.UnprotectedKeysProtector;
 import org.pgpainless.key.protection.passphrase_provider.SolitaryPassphraseProvider;
 import org.pgpainless.key.util.KeyRingUtils;
 import org.pgpainless.key.util.RevocationAttributes;
-import org.pgpainless.key.util.SignatureUtils;
+import org.pgpainless.signature.SignatureUtils;
 import org.pgpainless.util.Passphrase;
-import org.pgpainless.util.SignatureSubpacketGeneratorUtil;
+import org.pgpainless.signature.subpackets.SignatureSubpacketGeneratorUtil;
 import org.pgpainless.util.selection.userid.SelectUserId;
 
 public class SecretKeyRingEditor implements SecretKeyRingEditorInterface {
@@ -563,12 +563,16 @@ public class SecretKeyRingEditor implements SecretKeyRingEditorInterface {
         signatureGenerator.setHashedSubpackets(subPackets);
 
         PGPPrivateKey privateKey = primaryKey.extractPrivateKey(protector.getDecryptor(primaryKey.getKeyID()));
-        SignatureType type = revokeeSubKey.isMasterKey() ? SignatureType.KEY_REVOCATION : SignatureType.SUBKEY_REVOCATION;
-        signatureGenerator.init(type.getCode(), privateKey);
 
-        // Generate revocation
-        PGPSignature subKeyRevocation = signatureGenerator.generateCertification(primaryKey.getPublicKey(), revokeeSubKey);
-        return subKeyRevocation;
+        PGPSignature revocation;
+        if (revokeeSubKey.isMasterKey()) {
+            signatureGenerator.init(SignatureType.KEY_REVOCATION.getCode(), privateKey);
+            revocation = signatureGenerator.generateCertification(revokeeSubKey);
+        } else {
+            signatureGenerator.init(SignatureType.SUBKEY_REVOCATION.getCode(), privateKey);
+            revocation = signatureGenerator.generateCertification(primaryKey.getPublicKey(), revokeeSubKey);
+        }
+        return revocation;
     }
 
     @Override

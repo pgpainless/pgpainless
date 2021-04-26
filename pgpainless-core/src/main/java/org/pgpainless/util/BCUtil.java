@@ -19,7 +19,9 @@ import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.nio.charset.Charset;
 import java.util.Arrays;
+import java.util.Date;
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.Set;
@@ -29,6 +31,8 @@ import javax.annotation.Nonnull;
 
 import org.bouncycastle.openpgp.PGPException;
 import org.bouncycastle.openpgp.PGPKeyRing;
+import org.bouncycastle.openpgp.PGPMarker;
+import org.bouncycastle.openpgp.PGPObjectFactory;
 import org.bouncycastle.openpgp.PGPPublicKey;
 import org.bouncycastle.openpgp.PGPPublicKeyRing;
 import org.bouncycastle.openpgp.PGPPublicKeyRingCollection;
@@ -36,18 +40,27 @@ import org.bouncycastle.openpgp.PGPSecretKey;
 import org.bouncycastle.openpgp.PGPSecretKeyRing;
 import org.bouncycastle.openpgp.PGPSecretKeyRingCollection;
 import org.bouncycastle.openpgp.PGPSignature;
+import org.bouncycastle.openpgp.PGPSignatureList;
 import org.bouncycastle.openpgp.PGPSignatureSubpacketVector;
 import org.bouncycastle.openpgp.PGPUtil;
 import org.bouncycastle.util.io.Streams;
 import org.pgpainless.algorithm.KeyFlag;
+import org.pgpainless.implementation.ImplementationFactory;
 import org.pgpainless.util.selection.key.PublicKeySelectionStrategy;
-import org.pgpainless.util.selection.key.impl.NoRevocation;
-import org.pgpainless.util.selection.key.impl.KeyBelongsToKeyRing;
 import org.pgpainless.util.selection.key.impl.And;
+import org.pgpainless.util.selection.key.impl.KeyBelongsToKeyRing;
+import org.pgpainless.util.selection.key.impl.NoRevocation;
 
 public class BCUtil {
 
     private static final Logger LOGGER = Logger.getLogger(BCUtil.class.getName());
+
+    public static Date getExpirationDate(Date creationDate, long validSeconds) {
+        if (validSeconds == 0) {
+            return null;
+        }
+        return new Date(creationDate.getTime() + 1000 * validSeconds);
+    }
 
     /*
     PGPXxxKeyRing -> PGPXxxKeyRingCollection
@@ -245,4 +258,18 @@ public class BCUtil {
                                                    long keyId) {
         return ring.getSecretKey(keyId) != null;
     }
+
+    public static PGPSignatureList readSignatures(String encoding) throws IOException {
+        InputStream inputStream = getPgpDecoderInputStream(encoding.getBytes(Charset.forName("UTF8")));
+        PGPObjectFactory objectFactory = new PGPObjectFactory(inputStream, ImplementationFactory.getInstance().getKeyFingerprintCalculator());
+        Object next = objectFactory.nextObject();
+        while (next != null) {
+            if (next instanceof PGPMarker) {
+                next = objectFactory.nextObject();
+                continue;
+            }
+            return (PGPSignatureList) next;
+        }
+        return null;
+    };
 }

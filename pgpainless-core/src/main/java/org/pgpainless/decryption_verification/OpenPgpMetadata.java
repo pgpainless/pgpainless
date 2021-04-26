@@ -32,6 +32,8 @@ import org.pgpainless.algorithm.CompressionAlgorithm;
 import org.pgpainless.algorithm.StreamEncoding;
 import org.pgpainless.algorithm.SymmetricKeyAlgorithm;
 import org.pgpainless.key.OpenPgpV4Fingerprint;
+import org.pgpainless.signature.DetachedSignature;
+import org.pgpainless.signature.OnePassSignature;
 
 public class OpenPgpMetadata {
 

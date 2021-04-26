@@ -34,6 +34,7 @@ import org.pgpainless.algorithm.PublicKeyAlgorithm;
 import org.pgpainless.key.TestKeys;
 import org.pgpainless.key.protection.UnprotectedKeysProtector;
 import org.pgpainless.key.util.KeyRingUtils;
+import org.pgpainless.util.ArmorUtils;
 import org.pgpainless.util.Passphrase;
 
 public class KeyRingInfoTest {
@@ -67,8 +68,8 @@ public class KeyRingInfoTest {
 
         assertEquals(TestKeys.EMIL_CREATION_DATE, sInfo.getCreationDate());
         assertEquals(TestKeys.EMIL_CREATION_DATE, pInfo.getCreationDate());
-        assertNull(sInfo.getExpirationDate());
-        assertNull(pInfo.getExpirationDate());
+        assertNull(sInfo.getPrimaryKeyExpirationDate());
+        assertNull(pInfo.getPrimaryKeyExpirationDate());
         assertEquals(TestKeys.EMIL_CREATION_DATE.getTime(), sInfo.getLastModified().getTime(), 50);
         assertEquals(TestKeys.EMIL_CREATION_DATE.getTime(), pInfo.getLastModified().getTime(), 50);
 
@@ -76,6 +77,9 @@ public class KeyRingInfoTest {
         assertNull(pInfo.getRevocationDate());
         Date revocationDate = new Date();
         PGPSecretKeyRing revoked = PGPainless.modifyKeyRing(secretKeys).revoke(new UnprotectedKeysProtector()).done();
+        // CHECKSTYLE:OFF
+        System.out.println(ArmorUtils.toAsciiArmoredString(revoked));
+        // CHECKSTYLE:ON
         KeyRingInfo rInfo = PGPainless.inspectKeyRing(revoked);
         assertNotNull(rInfo.getRevocationDate());
         assertEquals(revocationDate.getTime(), rInfo.getRevocationDate().getTime(), 1000);

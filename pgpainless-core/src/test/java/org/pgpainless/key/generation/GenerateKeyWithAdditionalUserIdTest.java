@@ -61,7 +61,7 @@ public class GenerateKeyWithAdditionalUserIdTest {
                 .build();
         PGPPublicKeyRing publicKeys = KeyRingUtils.publicKeyRingFrom(secretKeys);
 
-        JUtils.assertEquals(expiration.getTime(), PGPainless.inspectKeyRing(publicKeys).getExpirationDate().getTime(),2000);
+        JUtils.assertEquals(expiration.getTime(), PGPainless.inspectKeyRing(publicKeys).getPrimaryKeyExpirationDate().getTime(),2000);
 
         Iterator<String> userIds = publicKeys.getPublicKey().getUserIDs();
         assertEquals("primary@user.id", userIds.next());

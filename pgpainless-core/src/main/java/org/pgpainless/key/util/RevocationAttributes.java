@@ -15,6 +15,9 @@
  */
 package org.pgpainless.key.util;
 
+import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
+
 public final class RevocationAttributes {
 
     public enum Reason {
@@ -25,6 +28,26 @@ public final class RevocationAttributes {
         USER_ID_NO_LONGER_VALID((byte) 32),
         ;
 
+        private static final Map<Byte, Reason> MAP = new ConcurrentHashMap<>();
+        static {
+            for (Reason r : Reason.values()) {
+                MAP.put(r.reasonCode, r);
+            }
+        }
+
+        public static Reason fromCode(byte code) {
+            Reason reason = MAP.get(code);
+            if (reason == null) {
+                throw new IllegalArgumentException("Invalid revocation reason: " + code);
+            }
+            return reason;
+        }
+
+        public static boolean isHardRevocation(byte code) {
+            Reason reason = MAP.get(code);
+            return reason != KEY_SUPERSEDED && reason != KEY_RETIRED && reason != USER_ID_NO_LONGER_VALID;
+        }
+
         private final byte reasonCode;
 
         Reason(byte reasonCode) {
@@ -34,7 +57,6 @@ public final class RevocationAttributes {
         public byte code() {
             return reasonCode;
         }
-
 
         @Override
         public String toString() {

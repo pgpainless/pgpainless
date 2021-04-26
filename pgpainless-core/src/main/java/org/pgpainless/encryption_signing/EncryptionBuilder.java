@@ -33,37 +33,36 @@ import org.bouncycastle.openpgp.PGPPublicKeyRing;
 import org.bouncycastle.openpgp.PGPPublicKeyRingCollection;
 import org.bouncycastle.openpgp.PGPSecretKey;
 import org.bouncycastle.openpgp.PGPSecretKeyRing;
-import org.bouncycastle.openpgp.PGPSecretKeyRingCollection;
 import org.bouncycastle.openpgp.operator.PBESecretKeyDecryptor;
+import org.pgpainless.PGPainless;
 import org.pgpainless.algorithm.CompressionAlgorithm;
 import org.pgpainless.algorithm.HashAlgorithm;
 import org.pgpainless.algorithm.KeyFlag;
 import org.pgpainless.algorithm.SignatureType;
 import org.pgpainless.algorithm.SymmetricKeyAlgorithm;
 import org.pgpainless.decryption_verification.OpenPgpMetadata;
-import org.pgpainless.exception.SecretKeyNotFoundException;
+import org.pgpainless.key.KeyRingValidator;
 import org.pgpainless.key.OpenPgpV4Fingerprint;
+import org.pgpainless.key.SubkeyIdentifier;
 import org.pgpainless.key.protection.SecretKeyRingProtector;
+import org.pgpainless.util.Passphrase;
+import org.pgpainless.util.Tuple;
 import org.pgpainless.util.selection.key.PublicKeySelectionStrategy;
 import org.pgpainless.util.selection.key.SecretKeySelectionStrategy;
+import org.pgpainless.util.selection.key.impl.And;
 import org.pgpainless.util.selection.key.impl.EncryptionKeySelectionStrategy;
 import org.pgpainless.util.selection.key.impl.NoRevocation;
 import org.pgpainless.util.selection.key.impl.SignatureKeySelectionStrategy;
-import org.pgpainless.util.selection.key.impl.And;
-import org.pgpainless.util.selection.keyring.PublicKeyRingSelectionStrategy;
-import org.pgpainless.util.selection.keyring.SecretKeyRingSelectionStrategy;
-import org.pgpainless.util.MultiMap;
-import org.pgpainless.util.Passphrase;
 
 public class EncryptionBuilder implements EncryptionBuilderInterface {
 
     private final EncryptionStream.Purpose purpose;
     private OutputStream outputStream;
-    private final Set<PGPPublicKey> encryptionKeys = new HashSet<>();
+    private final Map<SubkeyIdentifier, PGPPublicKeyRing> encryptionKeys = new ConcurrentHashMap<>();
     private final Set<Passphrase> encryptionPassphrases = new HashSet<>();
     private boolean detachedSignature = false;
     private SignatureType signatureType = SignatureType.BINARY_DOCUMENT;
-    private final Set<PGPSecretKey> signingKeys = new HashSet<>();
+    private final Map<SubkeyIdentifier, PGPSecretKeyRing> signingKeys = new ConcurrentHashMap<>();
     private SecretKeyRingProtector signingKeysDecryptor;
     private SymmetricKeyAlgorithm symmetricKeyAlgorithm = SymmetricKeyAlgorithm.AES_128;
     private HashAlgorithm hashAlgorithm = HashAlgorithm.SHA256;
@@ -89,90 +88,54 @@ public class EncryptionBuilder implements EncryptionBuilderInterface {
     class ToRecipientsImpl implements ToRecipients {
 
         @Override
-        public WithAlgorithms toRecipients(@Nonnull PGPPublicKey... keys) {
-            if (keys.length != 0) {
-                List<PGPPublicKey> encryptionKeys = new ArrayList<>();
-                for (PGPPublicKey k : keys) {
+        public WithAlgorithms toRecipients(@Nonnull PGPPublicKeyRing... keys) {
+            if (keys.length == 0) {
+                throw new IllegalArgumentException("No public keys provided.");
+            }
+
+            Map<SubkeyIdentifier, PGPPublicKeyRing> encryptionKeys = new ConcurrentHashMap<>();
+            for (PGPPublicKeyRing ring : keys) {
+                PGPPublicKeyRing validatedKeyRing = KeyRingValidator.validate(ring, PGPainless.getPolicy());
+                for (PGPPublicKey k : validatedKeyRing) {
                     if (encryptionKeySelector().accept(k)) {
-                        encryptionKeys.add(k);
-                    } else {
-                        throw new IllegalArgumentException("Key " + k.getKeyID() + " is not a valid encryption key.");
+                        encryptionKeys.put(new SubkeyIdentifier(ring, k.getKeyID()), ring);
                     }
                 }
-
-                if (encryptionKeys.isEmpty()) {
-                    throw new IllegalArgumentException("No valid encryption keys found!");
-                }
-                EncryptionBuilder.this.encryptionKeys.addAll(encryptionKeys);
             }
+            if (encryptionKeys.isEmpty()) {
+                throw new IllegalArgumentException("No valid encryption keys found!");
+            }
+            EncryptionBuilder.this.encryptionKeys.putAll(encryptionKeys);
 
             return new WithAlgorithmsImpl();
         }
 
-        @Override
-        public WithAlgorithms toRecipients(@Nonnull PGPPublicKeyRing... keys) {
-            if (keys.length != 0) {
-                List<PGPPublicKey> encryptionKeys = new ArrayList<>();
-                for (PGPPublicKeyRing ring : keys) {
-                    for (PGPPublicKey k : ring) {
-                        if (encryptionKeySelector().accept(k)) {
-                            encryptionKeys.add(k);
-                        }
-                    }
-                }
-                if (encryptionKeys.isEmpty()) {
-                    throw new IllegalArgumentException("No valid encryption keys found!");
-                }
-                EncryptionBuilder.this.encryptionKeys.addAll(encryptionKeys);
-            }
-
-            return new WithAlgorithmsImpl();
+        private String getPrimaryUserId(PGPPublicKey publicKey) {
+            // TODO: Use real function to get primary userId.
+            return publicKey.getUserIDs().next();
         }
 
         @Override
         public WithAlgorithms toRecipients(@Nonnull PGPPublicKeyRingCollection... keys) {
-            if (keys.length != 0) {
-                List<PGPPublicKey> encryptionKeys = new ArrayList<>();
-                for (PGPPublicKeyRingCollection collection : keys) {
-                    for (PGPPublicKeyRing ring : collection) {
-                        for (PGPPublicKey k : ring) {
-                            if (encryptionKeySelector().accept(k)) {
-                                encryptionKeys.add(k);
-                            }
-                        }
-                    }
-                }
-
-                if (encryptionKeys.isEmpty()) {
-                    throw new IllegalArgumentException("No valid encryption keys found!");
-                }
-
-                EncryptionBuilder.this.encryptionKeys.addAll(encryptionKeys);
+            if (keys.length == 0) {
+                throw new IllegalArgumentException("No key ring collections provided.");
             }
 
-            return new WithAlgorithmsImpl();
-        }
-
-        @Override
-        public <O> WithAlgorithms toRecipients(@Nonnull PublicKeyRingSelectionStrategy<O> ringSelectionStrategy,
-                                               @Nonnull MultiMap<O, PGPPublicKeyRingCollection> keys) {
-            if (keys.isEmpty()) {
-                throw new IllegalArgumentException("Recipient map MUST NOT be empty.");
-            }
-            MultiMap<O, PGPPublicKeyRing> acceptedKeyRings = ringSelectionStrategy.selectKeyRingsFromCollections(keys);
-            for (O identifier : acceptedKeyRings.keySet()) {
-                Set<PGPPublicKeyRing> acceptedSet = acceptedKeyRings.get(identifier);
-                for (PGPPublicKeyRing ring : acceptedSet) {
+            for (PGPPublicKeyRingCollection collection : keys) {
+                for (PGPPublicKeyRing ring : collection) {
+                    Map<SubkeyIdentifier, PGPPublicKeyRing> encryptionKeys = new ConcurrentHashMap<>();
                     for (PGPPublicKey k : ring) {
                         if (encryptionKeySelector().accept(k)) {
-                            EncryptionBuilder.this.encryptionKeys.add(k);
+                            encryptionKeys.put(new SubkeyIdentifier(ring, k.getKeyID()), ring);
                         }
                     }
-                }
-            }
 
-            if (EncryptionBuilder.this.encryptionKeys.isEmpty()) {
-                throw new IllegalArgumentException("No valid encryption keys found!");
+                    if (encryptionKeys.isEmpty()) {
+                        throw new IllegalArgumentException("No valid encryption keys found!");
+                    }
+
+                    EncryptionBuilder.this.encryptionKeys.putAll(encryptionKeys);
+                }
             }
 
             return new WithAlgorithmsImpl();
@@ -200,32 +163,22 @@ public class EncryptionBuilder implements EncryptionBuilderInterface {
     class WithAlgorithmsImpl implements WithAlgorithms {
 
         @Override
-        public WithAlgorithms andToSelf(@Nonnull PGPPublicKey... keys) {
-            if (keys.length == 0) {
-                throw new IllegalArgumentException("Recipient list MUST NOT be empty.");
-            }
-            for (PGPPublicKey k : keys) {
-                if (encryptionKeySelector().accept(k)) {
-                    EncryptionBuilder.this.encryptionKeys.add(k);
-                } else {
-                    throw new IllegalArgumentException("Key " + k.getKeyID() + " is not a valid encryption key.");
-                }
-            }
-            return this;
-        }
-
-        @Override
         public WithAlgorithms andToSelf(@Nonnull PGPPublicKeyRing... keys) {
             if (keys.length == 0) {
                 throw new IllegalArgumentException("Recipient list MUST NOT be empty.");
             }
             for (PGPPublicKeyRing ring : keys) {
+                Map<SubkeyIdentifier, PGPPublicKeyRing> encryptionKeys = new ConcurrentHashMap<>();
                 for (Iterator<PGPPublicKey> i = ring.getPublicKeys(); i.hasNext(); ) {
                     PGPPublicKey key = i.next();
                     if (encryptionKeySelector().accept(key)) {
-                        EncryptionBuilder.this.encryptionKeys.add(key);
+                        encryptionKeys.put(new SubkeyIdentifier(ring, key.getKeyID()), ring);
                     }
                 }
+                if (encryptionKeys.isEmpty()) {
+                    throw new IllegalArgumentException("No suitable encryption key found in key ring " + new OpenPgpV4Fingerprint(ring));
+                }
+                EncryptionBuilder.this.encryptionKeys.putAll(encryptionKeys);
             }
             return this;
         }
@@ -233,34 +186,17 @@ public class EncryptionBuilder implements EncryptionBuilderInterface {
         @Override
         public WithAlgorithms andToSelf(@Nonnull PGPPublicKeyRingCollection keys) {
             for (PGPPublicKeyRing ring : keys) {
+                Map<SubkeyIdentifier, PGPPublicKeyRing> encryptionKeys = new ConcurrentHashMap<>();
                 for (Iterator<PGPPublicKey> i = ring.getPublicKeys(); i.hasNext(); ) {
                     PGPPublicKey key = i.next();
                     if (encryptionKeySelector().accept(key)) {
-                        EncryptionBuilder.this.encryptionKeys.add(key);
+                        encryptionKeys.put(new SubkeyIdentifier(ring, key.getKeyID()), ring);
                     }
                 }
-            }
-            return this;
-        }
-
-        @Override
-        public <O> WithAlgorithms andToSelf(@Nonnull PublicKeyRingSelectionStrategy<O> ringSelectionStrategy,
-                                            @Nonnull MultiMap<O, PGPPublicKeyRingCollection> keys) {
-            if (keys.isEmpty()) {
-                throw new IllegalArgumentException("Recipient list MUST NOT be empty.");
-            }
-            MultiMap<O, PGPPublicKeyRing> acceptedKeyRings =
-                    ringSelectionStrategy.selectKeyRingsFromCollections(keys);
-            for (O identifier : acceptedKeyRings.keySet()) {
-                Set<PGPPublicKeyRing> acceptedSet = acceptedKeyRings.get(identifier);
-                for (PGPPublicKeyRing k : acceptedSet) {
-                    for (Iterator<PGPPublicKey> i = k.getPublicKeys(); i.hasNext(); ) {
-                        PGPPublicKey key = i.next();
-                        if (encryptionKeySelector().accept(key)) {
-                            EncryptionBuilder.this.encryptionKeys.add(key);
-                        }
-                    }
+                if (encryptionKeys.isEmpty()) {
+                    throw new IllegalArgumentException("No suitable encryption key found in key ring " + new OpenPgpV4Fingerprint(ring));
                 }
+                EncryptionBuilder.this.encryptionKeys.putAll(encryptionKeys);
             }
             return this;
         }
@@ -306,81 +242,36 @@ public class EncryptionBuilder implements EncryptionBuilderInterface {
         }
 
         @Override
-        public DocumentType signWith(@Nonnull SecretKeyRingProtector decryptor, @Nonnull PGPSecretKey... keys) {
-            return new SignWithImpl().signWith(decryptor, keys);
-        }
-
-        @Override
         public DocumentType signWith(@Nonnull SecretKeyRingProtector decryptor, @Nonnull PGPSecretKeyRing... keyRings) {
             return new SignWithImpl().signWith(decryptor, keyRings);
         }
 
-        @Override
-        public <O> DocumentType signWith(@Nonnull SecretKeyRingSelectionStrategy<O> selectionStrategy,
-                                  @Nonnull SecretKeyRingProtector decryptor,
-                                  @Nonnull MultiMap<O, PGPSecretKeyRingCollection> keys)
-                throws SecretKeyNotFoundException {
-            return new SignWithImpl().signWith(selectionStrategy, decryptor, keys);
-        }
     }
 
     class SignWithImpl implements SignWith {
 
         @Override
         public DocumentType signWith(@Nonnull SecretKeyRingProtector decryptor,
-                                  @Nonnull PGPSecretKey... keys) {
-            if (keys.length == 0) {
+                                     @Nonnull PGPSecretKeyRing... keyRings) {
+            if (keyRings.length == 0) {
                 throw new IllegalArgumentException("Recipient list MUST NOT be empty.");
             }
-            for (PGPSecretKey s : keys) {
-                if (EncryptionBuilder.this.signingKeySelector().accept(s)) {
-                    signingKeys.add(s);
-                } else {
-                    throw new IllegalArgumentException("Key " + s.getKeyID() + " is not a valid signing key.");
-                }
-            }
-            EncryptionBuilder.this.signingKeysDecryptor = decryptor;
-            return new DocumentTypeImpl();
-        }
-
-        @Override
-        public DocumentType signWith(@Nonnull SecretKeyRingProtector decryptor,
-                                  @Nonnull PGPSecretKeyRing... keys) {
-            if (keys.length == 0) {
-                throw new IllegalArgumentException("Recipient list MUST NOT be empty.");
-            }
-            for (PGPSecretKeyRing key : keys) {
-                for (Iterator<PGPSecretKey> i = key.getSecretKeys(); i.hasNext(); ) {
+            for (PGPSecretKeyRing ring : keyRings) {
+                Map<SubkeyIdentifier, PGPSecretKeyRing> signingKeys = new ConcurrentHashMap<>();
+                for (Iterator<PGPSecretKey> i = ring.getSecretKeys(); i.hasNext(); ) {
                     PGPSecretKey s = i.next();
                     if (EncryptionBuilder.this.signingKeySelector().accept(s)) {
-                        EncryptionBuilder.this.signingKeys.add(s);
+                        signingKeys.put(new SubkeyIdentifier(ring, s.getKeyID()), ring);
                     }
                 }
+
+                if (signingKeys.isEmpty()) {
+                    throw new IllegalArgumentException("No suitable signing key found in key ring " + new OpenPgpV4Fingerprint(ring));
+                }
+
+                EncryptionBuilder.this.signingKeys.putAll(signingKeys);
             }
             EncryptionBuilder.this.signingKeysDecryptor = decryptor;
-            return new DocumentTypeImpl();
-        }
-
-        @Override
-        public <O> DocumentType signWith(@Nonnull SecretKeyRingSelectionStrategy<O> ringSelectionStrategy,
-                                  @Nonnull SecretKeyRingProtector decryptor,
-                                  @Nonnull MultiMap<O, PGPSecretKeyRingCollection> keys) {
-            if (keys.isEmpty()) {
-                throw new IllegalArgumentException("Recipient list MUST NOT be empty.");
-            }
-            MultiMap<O, PGPSecretKeyRing> acceptedKeyRings =
-                    ringSelectionStrategy.selectKeyRingsFromCollections(keys);
-            for (O identifier : acceptedKeyRings.keySet()) {
-                Set<PGPSecretKeyRing> acceptedSet = acceptedKeyRings.get(identifier);
-                for (PGPSecretKeyRing k : acceptedSet) {
-                    for (Iterator<PGPSecretKey> i = k.getSecretKeys(); i.hasNext(); ) {
-                        PGPSecretKey s = i.next();
-                        if (EncryptionBuilder.this.<O>signingKeySelector().accept(s)) {
-                            EncryptionBuilder.this.signingKeys.add(s);
-                        }
-                    }
-                }
-            }
             return new DocumentTypeImpl();
         }
     }
@@ -416,11 +307,13 @@ public class EncryptionBuilder implements EncryptionBuilderInterface {
 
         private EncryptionStream build() throws IOException, PGPException {
 
-            Map<OpenPgpV4Fingerprint, PGPPrivateKey> privateKeys = new ConcurrentHashMap<>();
-            for (PGPSecretKey secretKey : signingKeys) {
+            Map<SubkeyIdentifier, Tuple<PGPSecretKeyRing, PGPPrivateKey>> privateKeys = new ConcurrentHashMap<>();
+            for (SubkeyIdentifier signingKey : signingKeys.keySet()) {
+                PGPSecretKeyRing secretKeyRing = signingKeys.get(signingKey);
+                PGPSecretKey secretKey = secretKeyRing.getSecretKey(signingKey.getSubkeyFingerprint().getKeyId());
                 PBESecretKeyDecryptor decryptor = signingKeysDecryptor.getDecryptor(secretKey.getKeyID());
                 PGPPrivateKey privateKey = secretKey.extractPrivateKey(decryptor);
-                privateKeys.put(new OpenPgpV4Fingerprint(secretKey), privateKey);
+                privateKeys.put(signingKey, new Tuple<>(secretKeyRing, privateKey));
             }
 
             return new EncryptionStream(

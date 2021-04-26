@@ -60,7 +60,7 @@ import org.pgpainless.key.generation.type.xdh.XDHCurve;
 import org.pgpainless.key.util.UserId;
 import org.pgpainless.provider.ProviderFactory;
 import org.pgpainless.util.Passphrase;
-import org.pgpainless.util.SignatureSubpacketGeneratorUtil;
+import org.pgpainless.signature.subpackets.SignatureSubpacketGeneratorUtil;
 
 public class KeyRingBuilder implements KeyRingBuilderInterface {
 

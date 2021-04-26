@@ -52,14 +52,4 @@ public final class ElGamal implements KeyType {
         return new ElGamalParameterSpec(length.getP(), length.getG());
     }
 
-    @Override
-    public boolean canSign() {
-        return false;
-    }
-
-    @Override
-    public boolean canEncryptCommunication() {
-        return true;
-    }
-
 }

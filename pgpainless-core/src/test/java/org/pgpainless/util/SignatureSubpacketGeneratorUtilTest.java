@@ -26,6 +26,7 @@ import org.bouncycastle.openpgp.PGPSignatureSubpacketGenerator;
 import org.bouncycastle.openpgp.PGPSignatureSubpacketVector;
 import org.junit.jupiter.api.Test;
 import org.pgpainless.algorithm.SignatureSubpacket;
+import org.pgpainless.signature.subpackets.SignatureSubpacketGeneratorUtil;
 
 public class SignatureSubpacketGeneratorUtilTest {
 

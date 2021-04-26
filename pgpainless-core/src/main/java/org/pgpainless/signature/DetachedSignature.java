@@ -13,19 +13,23 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.pgpainless.decryption_verification;
+package org.pgpainless.signature;
 
+import org.bouncycastle.openpgp.PGPKeyRing;
 import org.bouncycastle.openpgp.PGPSignature;
 import org.pgpainless.key.OpenPgpV4Fingerprint;
+import org.pgpainless.key.SubkeyIdentifier;
 
 public class DetachedSignature {
     private final PGPSignature signature;
-    private final OpenPgpV4Fingerprint fingerprint;
+    private final PGPKeyRing signingKeyRing;
+    private final SubkeyIdentifier signingKeyIdentifier;
     private boolean verified;
 
-    public DetachedSignature(PGPSignature signature, OpenPgpV4Fingerprint fingerprint) {
+    public DetachedSignature(PGPSignature signature, PGPKeyRing signingKeyRing, SubkeyIdentifier signingKeyIdentifier) {
         this.signature = signature;
-        this.fingerprint = fingerprint;
+        this.signingKeyRing = signingKeyRing;
+        this.signingKeyIdentifier = signingKeyIdentifier;
     }
 
     public void setVerified(boolean verified) {
@@ -40,7 +44,16 @@ public class DetachedSignature {
         return signature;
     }
 
+    public SubkeyIdentifier getSigningKeyIdentifier() {
+        return signingKeyIdentifier;
+    }
+
+    public PGPKeyRing getSigningKeyRing() {
+        return signingKeyRing;
+    }
+
+    @Deprecated
     public OpenPgpV4Fingerprint getFingerprint() {
-        return fingerprint;
+        return signingKeyIdentifier.getSubkeyFingerprint();
     }
 }

@@ -131,9 +131,9 @@ public class RevokeKeyWithoutPreferredAlgorithmsOnPrimaryKey {
         secretKeys = modify.done();
 
         KeyRingInfo info = PGPainless.inspectKeyRing(secretKeys);
-        assertEquals(expirationDate.getTime(), info.getExpirationDate().getTime(), 1000);
+        assertEquals(expirationDate.getTime(), info.getPrimaryKeyExpirationDate().getTime(), 1000);
         for (OpenPgpV4Fingerprint fingerprint : fingerprintList) {
-            assertEquals(expirationDate.getTime(), info.getExpirationDate(fingerprint).getTime(), 1000);
+            assertEquals(expirationDate.getTime(), info.getSubkeyExpirationDate(fingerprint).getTime(), 1000);
         }
     }
 }

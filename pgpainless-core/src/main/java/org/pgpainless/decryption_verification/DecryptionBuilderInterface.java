@@ -26,6 +26,7 @@ import java.util.Set;
 import org.bouncycastle.openpgp.PGPException;
 import org.bouncycastle.openpgp.PGPPublicKeyRing;
 import org.bouncycastle.openpgp.PGPPublicKeyRingCollection;
+import org.bouncycastle.openpgp.PGPSecretKeyRing;
 import org.bouncycastle.openpgp.PGPSecretKeyRingCollection;
 import org.bouncycastle.openpgp.PGPSignature;
 import org.pgpainless.key.OpenPgpV4Fingerprint;
@@ -67,6 +68,16 @@ public interface DecryptionBuilderInterface {
          * @return api handle
          */
         Verify decryptWith(@Nonnull SecretKeyRingProtector decryptor, @Nonnull PGPSecretKeyRingCollection secretKeyRings);
+
+        /**
+         * Decrypt the encrypted data using the provided {@link PGPSecretKeyRing}.
+         * The secret key is unlocked by the provided {@link SecretKeyRingProtector}.
+         *
+         * @param decryptor for unlocking locked secret key
+         * @param secretKeyRing secret key
+         * @return api handle
+         */
+        Verify decryptWith(@Nonnull SecretKeyRingProtector decryptor, @Nonnull PGPSecretKeyRing secretKeyRing) throws PGPException, IOException;
 
         /**
          * Decrypt the encrypted data using a passphrase.

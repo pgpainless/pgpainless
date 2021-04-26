@@ -57,7 +57,9 @@ public interface KeyType {
      *
      * @return true if the key can sign.
      */
-    boolean canSign();
+    default boolean canSign() {
+        return getAlgorithm().isSigningCapable();
+    }
 
     /**
      * Return true if the key that is generated from this type is able to carry the CERTIFY_OTHER key flag.
@@ -85,7 +87,9 @@ public interface KeyType {
      *
      * @return true if the key can encrypt communication
      */
-    boolean canEncryptCommunication();
+    default boolean canEncryptCommunication() {
+        return getAlgorithm().isEncryptionCapable();
+    }
 
     /**
      * Return true if the key that is generated from this type is able to carry the ENCRYPT_STORAGE key flag.

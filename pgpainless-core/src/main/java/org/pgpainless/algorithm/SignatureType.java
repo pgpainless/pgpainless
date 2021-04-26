@@ -202,4 +202,32 @@ public enum SignatureType {
         return code;
     }
 
+    public static boolean isRevocationSignature(int signatureType) {
+        return isRevocationSignature(SignatureType.valueOf(signatureType));
+    }
+
+    public static boolean isRevocationSignature(SignatureType signatureType) {
+        switch (signatureType) {
+            case BINARY_DOCUMENT:
+            case CANONICAL_TEXT_DOCUMENT:
+            case STANDALONE:
+            case GENERIC_CERTIFICATION:
+            case NO_CERTIFICATION:
+            case CASUAL_CERTIFICATION:
+            case POSITIVE_CERTIFICATION:
+            case SUBKEY_BINDING:
+            case PRIMARYKEY_BINDING:
+            case DIRECT_KEY:
+            case TIMESTAMP:
+            case THIRD_PARTY_CONFIRMATION:
+                return false;
+            case KEY_REVOCATION:
+            case SUBKEY_REVOCATION:
+            case CERTIFICATION_REVOCATION:
+                return true;
+            default:
+                throw new IllegalArgumentException("Unknown type: " + signatureType);
+        }
+    }
+
 }

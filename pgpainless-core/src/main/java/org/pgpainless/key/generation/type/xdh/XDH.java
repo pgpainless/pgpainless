@@ -48,13 +48,4 @@ public final class XDH implements KeyType {
         return new ECNamedCurveGenParameterSpec(curve.getName());
     }
 
-    @Override
-    public boolean canSign() {
-        return false;
-    }
-
-    @Override
-    public boolean canEncryptCommunication() {
-        return true;
-    }
 }

@@ -44,7 +44,10 @@ public class HasAnyKeyFlagSelectionStrategy {
         @Override
         public boolean accept(PGPPublicKey key) {
             Iterator<PGPSignature> signatures = key.getSignatures();
-            int flags = signatures.next().getHashedSubPackets().getKeyFlags();
+            int flags = 0;
+            while (signatures.hasNext()) {
+                flags = signatures.next().getHashedSubPackets().getKeyFlags();
+            }
             return (keyFlagMask & flags) != 0;
         }
     }

@@ -13,22 +13,23 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.pgpainless.decryption_verification;
+package org.pgpainless.signature;
 
 import org.bouncycastle.openpgp.PGPException;
 import org.bouncycastle.openpgp.PGPOnePassSignature;
+import org.bouncycastle.openpgp.PGPPublicKeyRing;
 import org.bouncycastle.openpgp.PGPSignature;
 import org.pgpainless.key.OpenPgpV4Fingerprint;
 
 public class OnePassSignature {
     private final PGPOnePassSignature onePassSignature;
-    private final OpenPgpV4Fingerprint fingerprint;
+    private final PGPPublicKeyRing verificationKeys;
     private PGPSignature signature;
     private boolean verified;
 
-    public OnePassSignature(PGPOnePassSignature onePassSignature, OpenPgpV4Fingerprint fingerprint) {
+    public OnePassSignature(PGPOnePassSignature onePassSignature, PGPPublicKeyRing verificationKeys) {
         this.onePassSignature = onePassSignature;
-        this.fingerprint = fingerprint;
+        this.verificationKeys = verificationKeys;
     }
 
     public boolean isVerified() {
@@ -40,7 +41,7 @@ public class OnePassSignature {
     }
 
     public OpenPgpV4Fingerprint getFingerprint() {
-        return fingerprint;
+        return new OpenPgpV4Fingerprint(verificationKeys.getPublicKey(onePassSignature.getKeyID()));
     }
 
     public boolean verify(PGPSignature signature) throws PGPException {
@@ -53,5 +54,9 @@ public class OnePassSignature {
 
     public PGPSignature getSignature() {
         return signature;
+    }
+
+    public PGPPublicKeyRing getVerificationKeys() {
+        return verificationKeys;
     }
 }

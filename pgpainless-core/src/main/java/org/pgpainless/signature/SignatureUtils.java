@@ -13,7 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.pgpainless.key.util;
+package org.pgpainless.signature;
 
 import java.util.ArrayList;
 import java.util.Collections;
@@ -22,6 +22,9 @@ import java.util.Date;
 import java.util.Iterator;
 import java.util.List;
 
+import org.bouncycastle.bcpg.sig.KeyExpirationTime;
+import org.bouncycastle.bcpg.sig.RevocationReason;
+import org.bouncycastle.bcpg.sig.SignatureExpirationTime;
 import org.bouncycastle.openpgp.PGPException;
 import org.bouncycastle.openpgp.PGPKeyRing;
 import org.bouncycastle.openpgp.PGPPublicKey;
@@ -33,6 +36,10 @@ import org.pgpainless.PGPainless;
 import org.pgpainless.algorithm.HashAlgorithm;
 import org.pgpainless.algorithm.SignatureType;
 import org.pgpainless.implementation.ImplementationFactory;
+import org.pgpainless.key.util.KeyRingUtils;
+import org.pgpainless.key.util.OpenPgpKeyAttributeUtil;
+import org.pgpainless.key.util.RevocationAttributes;
+import org.pgpainless.signature.subpackets.SignatureSubpacketsUtil;
 
 public class SignatureUtils {
 
@@ -150,14 +157,36 @@ public class SignatureUtils {
         return signature.verifyCertification(userId, publicKey);
     }
 
+    public static Date getKeyExpirationDate(Date keyCreationDate, PGPSignature signature) {
+        KeyExpirationTime keyExpirationTime = SignatureSubpacketsUtil.getKeyExpirationTime(signature);
+        long expiresInSecs = keyExpirationTime == null ? 0 : keyExpirationTime.getTime();
+        return datePlusSeconds(keyCreationDate, expiresInSecs);
+    }
+
+    public static Date getSignatureExpirationDate(PGPSignature signature) {
+        Date creationDate = signature.getCreationTime();
+        SignatureExpirationTime signatureExpirationTime = SignatureSubpacketsUtil.getSignatureExpirationTime(signature);
+        long expiresInSecs = signatureExpirationTime == null ? 0 : signatureExpirationTime.getTime();
+        return datePlusSeconds(creationDate, expiresInSecs);
+    }
+
+    public static Date datePlusSeconds(Date date, long seconds) {
+        if (seconds == 0) {
+            return null;
+        }
+        return new Date(date.getTime() + 1000 * seconds);
+    }
+
     public static boolean isSignatureExpired(PGPSignature signature) {
-        long expiration = signature.getHashedSubPackets().getSignatureExpirationTime();
-        if (expiration == 0) {
+        return isSignatureExpired(signature, new Date());
+    }
+
+    public static boolean isSignatureExpired(PGPSignature signature, Date comparisonDate) {
+        Date expirationDate = getSignatureExpirationDate(signature);
+        if (expirationDate == null) {
             return false;
         }
-        Date now = new Date();
-        Date creation = signature.getCreationTime();
-        return now.after(new Date(creation.getTime() + 1000 * expiration));
+        return comparisonDate.after(expirationDate);
     }
 
     public static void sortByCreationTimeAscending(List<PGPSignature> signatures) {
@@ -221,10 +250,38 @@ public class SignatureUtils {
     }
 
     public static boolean isUserIdValid(PGPPublicKey publicKey, String userId) throws PGPException {
+        return isUserIdValid(publicKey, userId, new Date());
+    }
+
+    public static boolean isUserIdValid(PGPPublicKey publicKey, String userId, Date validationDate) throws PGPException {
         PGPSignature latestSelfSig = getLatestSelfSignatureForUserId(publicKey, userId);
         if (latestSelfSig == null) {
             return false;
         }
+        if (latestSelfSig.getCreationTime().after(validationDate)) {
+            // Signature creation date lays in the future.
+            return false;
+        }
+        if (isSignatureExpired(latestSelfSig, validationDate)) {
+            return false;
+        }
+
         return latestSelfSig.getSignatureType() != SignatureType.CERTIFICATION_REVOCATION.getCode();
+    }
+
+    public static boolean isHardRevocation(PGPSignature signature) {
+
+        SignatureType type = SignatureType.valueOf(signature.getSignatureType());
+        if (type != SignatureType.KEY_REVOCATION && type != SignatureType.SUBKEY_REVOCATION && type != SignatureType.CERTIFICATION_REVOCATION) {
+            // Not a revocation
+            return false;
+        }
+
+        RevocationReason reasonSubpacket = SignatureSubpacketsUtil.getRevocationReason(signature);
+        if (reasonSubpacket == null) {
+            // no reason -> hard revocation
+            return true;
+        }
+        return RevocationAttributes.Reason.isHardRevocation(reasonSubpacket.getRevocationReason());
     }
 }

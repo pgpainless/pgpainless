@@ -18,17 +18,20 @@ package org.pgpainless.decryption_verification;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Set;
 import javax.annotation.Nonnull;
 
+import org.bouncycastle.bcpg.MarkerPacket;
 import org.bouncycastle.openpgp.PGPCompressedData;
 import org.bouncycastle.openpgp.PGPException;
 import org.bouncycastle.openpgp.PGPObjectFactory;
 import org.bouncycastle.openpgp.PGPPublicKeyRing;
 import org.bouncycastle.openpgp.PGPPublicKeyRingCollection;
+import org.bouncycastle.openpgp.PGPSecretKeyRing;
 import org.bouncycastle.openpgp.PGPSecretKeyRingCollection;
 import org.bouncycastle.openpgp.PGPSignature;
 import org.bouncycastle.openpgp.PGPSignatureList;
@@ -68,6 +71,13 @@ public class DecryptionBuilder implements DecryptionBuilderInterface {
         }
 
         @Override
+        public Verify decryptWith(@Nonnull SecretKeyRingProtector decryptor, @Nonnull PGPSecretKeyRing secretKeyRing) throws PGPException, IOException {
+            DecryptionBuilder.this.decryptionKeys = new PGPSecretKeyRingCollection(Collections.singleton(secretKeyRing));
+            DecryptionBuilder.this.decryptionKeyDecryptor = decryptor;
+            return new VerifyImpl();
+        }
+
+        @Override
         public Verify decryptWith(@Nonnull Passphrase passphrase) {
             if (passphrase.isEmpty()) {
                 throw new IllegalArgumentException("Passphrase MUST NOT be empty.");
@@ -94,6 +104,10 @@ public class DecryptionBuilder implements DecryptionBuilderInterface {
                     pgpIn, keyFingerPrintCalculator);
             Object nextObject = objectFactory.nextObject();
             while (nextObject != null) {
+                if (nextObject instanceof MarkerPacket) {
+                    nextObject = objectFactory.nextObject();
+                    continue;
+                }
                 if (nextObject instanceof PGPCompressedData) {
                     PGPCompressedData compressedData = (PGPCompressedData) nextObject;
                     objectFactory = new PGPObjectFactory(compressedData.getDataStream(), keyFingerPrintCalculator);
@@ -205,8 +219,8 @@ public class DecryptionBuilder implements DecryptionBuilderInterface {
 
         @Override
         public DecryptionStream build() throws IOException, PGPException {
-            return DecryptionStreamFactory.create(inputStream,
-                    decryptionKeys, decryptionKeyDecryptor, decryptionPassphrase, detachedSignatures, verificationKeys, missingPublicKeyCallback);
+            return DecryptionStreamFactory.create(inputStream, decryptionKeys, decryptionKeyDecryptor,
+                    decryptionPassphrase, detachedSignatures, verificationKeys, missingPublicKeyCallback);
         }
     }
 }

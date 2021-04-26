@@ -15,20 +15,30 @@
  */
 package org.pgpainless.decryption_verification;
 
-import javax.annotation.Nonnull;
+import static org.pgpainless.signature.SignatureValidator.signatureIsEffective;
+import static org.pgpainless.signature.SignatureValidator.signatureStructureIsAcceptable;
+
 import java.io.FilterInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.security.SignatureException;
+import java.util.Date;
 import java.util.Map;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+import javax.annotation.Nonnull;
 
 import org.bouncycastle.openpgp.PGPException;
 import org.bouncycastle.openpgp.PGPObjectFactory;
+import org.bouncycastle.openpgp.PGPPublicKey;
 import org.bouncycastle.openpgp.PGPSignature;
 import org.bouncycastle.openpgp.PGPSignatureList;
+import org.pgpainless.PGPainless;
 import org.pgpainless.key.OpenPgpV4Fingerprint;
+import org.pgpainless.policy.Policy;
+import org.pgpainless.signature.OnePassSignature;
+import org.pgpainless.signature.SignatureChainValidator;
+import org.pgpainless.signature.SignatureValidationException;
 
 public class SignatureVerifyingInputStream extends FilterInputStream {
 
@@ -93,20 +103,30 @@ public class SignatureVerifyingInputStream extends FilterInputStream {
                     continue;
                 }
 
-                verifySignatureOrThrowSignatureException(signature, fingerprint, onePassSignature);
+                verifySignatureOrThrowSignatureException(signature, onePassSignature);
             }
         } catch (PGPException | SignatureException e) {
             throw new IOException(e.getMessage(), e);
         }
     }
 
-    private void verifySignatureOrThrowSignatureException(PGPSignature signature, OpenPgpV4Fingerprint fingerprint,
-                                                          OnePassSignature onePassSignature)
+    private void verifySignatureOrThrowSignatureException(PGPSignature signature, OnePassSignature onePassSignature)
             throws PGPException, SignatureException {
-        if (onePassSignature.verify(signature)) {
-            LOGGER.log(LEVEL, "Verified signature of key " + Long.toHexString(signature.getKeyID()));
-        } else {
+        Policy policy = PGPainless.getPolicy();
+        try {
+            PGPPublicKey signingKey = onePassSignature.getVerificationKeys().getPublicKey(signature.getKeyID());
+            signatureStructureIsAcceptable(signingKey, policy).verify(signature);
+            signatureIsEffective(new Date()).verify(signature);
+
+            SignatureChainValidator.validateSigningKey(signature, onePassSignature.getVerificationKeys(), PGPainless.getPolicy(), signature.getCreationTime());
+
+        } catch (SignatureValidationException e) {
+            throw new SignatureException("Signature key is not valid.", e);
+        }
+        if (!onePassSignature.verify(signature)) {
             throw new SignatureException("Bad Signature of key " + signature.getKeyID());
+        } else {
+            LOGGER.log(LEVEL, "Verified signature of key " + Long.toHexString(signature.getKeyID()));
         }
     }
 

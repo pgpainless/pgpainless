@@ -17,9 +17,16 @@ package org.junit;
 
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
+import org.junit.jupiter.api.Test;
+
 public class JUtils {
 
     public static void assertEquals(long a, long b, long delta) {
         assertTrue(a - delta <= b && a + delta >= b);
+    }
+
+    @Test
+    public void comparatorLearningTest() {
+        assertEquals(-1, Integer.compare(5,6), 0);
     }
 }

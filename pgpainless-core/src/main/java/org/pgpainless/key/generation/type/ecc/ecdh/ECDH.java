@@ -49,14 +49,4 @@ public final class ECDH implements KeyType {
     public AlgorithmParameterSpec getAlgorithmSpec() {
         return new ECNamedCurveGenParameterSpec(curve.getName());
     }
-
-    @Override
-    public boolean canSign() {
-        return false;
-    }
-
-    @Override
-    public boolean canEncryptCommunication() {
-        return true;
-    }
 }

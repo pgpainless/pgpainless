@@ -51,14 +51,4 @@ public class RSA implements KeyType {
     public AlgorithmParameterSpec getAlgorithmSpec() {
         return new RSAKeyGenParameterSpec(length.getLength(), RSAKeyGenParameterSpec.F4);
     }
-
-    @Override
-    public boolean canSign() {
-        return true;
-    }
-
-    @Override
-    public boolean canEncryptCommunication() {
-        return true;
-    }
 }

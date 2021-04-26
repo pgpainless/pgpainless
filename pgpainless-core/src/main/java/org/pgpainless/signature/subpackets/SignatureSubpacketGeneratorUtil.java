@@ -13,7 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.pgpainless.util;
+package org.pgpainless.signature.subpackets;
 
 import java.util.ArrayList;
 import java.util.Date;

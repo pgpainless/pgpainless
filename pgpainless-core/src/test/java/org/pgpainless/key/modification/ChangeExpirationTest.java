@@ -45,17 +45,17 @@ public class ChangeExpirationTest {
         PGPSecretKeyRing secretKeys = TestKeys.getEmilSecretKeyRing();
         KeyRingInfo sInfo = PGPainless.inspectKeyRing(secretKeys);
 
-        assertNull(sInfo.getExpirationDate());
-        assertNull(sInfo.getExpirationDate(subKeyFingerprint));
+        assertNull(sInfo.getPrimaryKeyExpirationDate());
+        assertNull(sInfo.getSubkeyExpirationDate(subKeyFingerprint));
 
         Date date = new Date(1606493432000L);
         secretKeys = PGPainless.modifyKeyRing(secretKeys)
                 .setExpirationDate(date, new UnprotectedKeysProtector()).done();
         sInfo = PGPainless.inspectKeyRing(secretKeys);
-        assertNotNull(sInfo.getExpirationDate());
-        assertEquals(date.getTime(), sInfo.getExpirationDate().getTime());
+        assertNotNull(sInfo.getPrimaryKeyExpirationDate());
+        assertEquals(date.getTime(), sInfo.getPrimaryKeyExpirationDate().getTime());
         // subkey unchanged
-        assertNull(sInfo.getExpirationDate(subKeyFingerprint));
+        assertNull(sInfo.getSubkeyExpirationDate(subKeyFingerprint));
 
         // We need to wait for one second as OpenPGP signatures have coarse-grained (up to a second)
         // accuracy. Creating two signatures within a short amount of time will make the second one
@@ -66,8 +66,8 @@ public class ChangeExpirationTest {
                 .setExpirationDate(null, new UnprotectedKeysProtector()).done();
 
         sInfo = PGPainless.inspectKeyRing(secretKeys);
-        assertNull(sInfo.getExpirationDate());
-        assertNull(sInfo.getExpirationDate(subKeyFingerprint));
+        assertNull(sInfo.getPrimaryKeyExpirationDate());
+        assertNull(sInfo.getSubkeyExpirationDate(subKeyFingerprint));
     }
 
     @Test
@@ -75,16 +75,16 @@ public class ChangeExpirationTest {
         PGPSecretKeyRing secretKeys = TestKeys.getEmilSecretKeyRing();
         KeyRingInfo sInfo = PGPainless.inspectKeyRing(secretKeys);
 
-        assertNull(sInfo.getExpirationDate(subKeyFingerprint));
-        assertNull(sInfo.getExpirationDate());
+        assertNull(sInfo.getSubkeyExpirationDate(subKeyFingerprint));
+        assertNull(sInfo.getPrimaryKeyExpirationDate());
 
         Date date = new Date(1606493432000L);
         secretKeys = PGPainless.modifyKeyRing(secretKeys)
                 .setExpirationDate(subKeyFingerprint, date, new UnprotectedKeysProtector()).done();
         sInfo = PGPainless.inspectKeyRing(secretKeys);
-        assertNotNull(sInfo.getExpirationDate(subKeyFingerprint));
-        assertEquals(date.getTime(), sInfo.getExpirationDate(subKeyFingerprint).getTime());
-        assertNull(sInfo.getExpirationDate());
+        assertNotNull(sInfo.getSubkeyExpirationDate(subKeyFingerprint));
+        assertEquals(date.getTime(), sInfo.getSubkeyExpirationDate(subKeyFingerprint).getTime());
+        assertNull(sInfo.getPrimaryKeyExpirationDate());
 
         // We need to wait for one second as OpenPGP signatures have coarse-grained (up to a second)
         // accuracy. Creating two signatures within a short amount of time will make the second one
@@ -95,7 +95,7 @@ public class ChangeExpirationTest {
                 .setExpirationDate(subKeyFingerprint, null, new UnprotectedKeysProtector()).done();
 
         sInfo = PGPainless.inspectKeyRing(secretKeys);
-        assertNull(sInfo.getExpirationDate(subKeyFingerprint));
-        assertNull(sInfo.getExpirationDate());
+        assertNull(sInfo.getSubkeyExpirationDate(subKeyFingerprint));
+        assertNull(sInfo.getPrimaryKeyExpirationDate());
     }
 }

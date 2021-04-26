@@ -15,9 +15,22 @@
  */
 package org.pgpainless.util;
 
+import java.text.ParseException;
+import java.text.SimpleDateFormat;
+import java.util.Date;
 import java.util.Iterator;
 
 public class TestUtils {
+
+    public static SimpleDateFormat UTC_PARSER = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss z");
+
+    public static Date getUTCDate(String dateString) {
+        try {
+            return UTC_PARSER.parse(dateString);
+        } catch (ParseException e) {
+            return null;
+        }
+    }
 
     public static int getNumberOfItemsInIterator(Iterator<?> iterator) {
         int num = 0;

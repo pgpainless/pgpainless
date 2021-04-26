@@ -58,7 +58,10 @@ import org.pgpainless.algorithm.SymmetricKeyAlgorithm;
 import org.pgpainless.exception.MessageNotIntegrityProtectedException;
 import org.pgpainless.implementation.ImplementationFactory;
 import org.pgpainless.key.OpenPgpV4Fingerprint;
+import org.pgpainless.key.SubkeyIdentifier;
 import org.pgpainless.key.protection.SecretKeyRingProtector;
+import org.pgpainless.signature.DetachedSignature;
+import org.pgpainless.signature.OnePassSignature;
 import org.pgpainless.util.IntegrityProtectedInputStream;
 import org.pgpainless.util.Passphrase;
 
@@ -107,13 +110,14 @@ public final class DecryptionStreamFactory {
         if (detachedSignatures != null) {
             pgpInputStream = inputStream;
             for (PGPSignature signature : detachedSignatures) {
-                PGPPublicKey signingKey = factory.findSignatureVerificationKey(signature.getKeyID());
-                if (signingKey == null) {
+                PGPPublicKeyRing signingKeyRing = factory.findSignatureVerificationKeyRing(signature.getKeyID());
+                if (signingKeyRing == null) {
                     continue;
                 }
+                PGPPublicKey signingKey = signingKeyRing.getPublicKey(signature.getKeyID());
                 signature.init(ImplementationFactory.getInstance().getPGPContentVerifierBuilderProvider(), signingKey);
                 factory.resultBuilder.addDetachedSignature(
-                        new DetachedSignature(signature, new OpenPgpV4Fingerprint(signingKey)));
+                        new DetachedSignature(signature, signingKeyRing, new SubkeyIdentifier(signingKeyRing, signature.getKeyID())));
             }
         } else {
             PGPObjectFactory objectFactory = new PGPObjectFactory(
@@ -312,59 +316,31 @@ public final class DecryptionStreamFactory {
         LOGGER.log(LEVEL, "Message contains OnePassSignature from " + Long.toHexString(keyId));
 
         // Find public key
-        PGPPublicKey verificationKey = findSignatureVerificationKey(keyId);
-        if (verificationKey == null) {
+        PGPPublicKeyRing verificationKeyRing = findSignatureVerificationKeyRing(keyId);
+        if (verificationKeyRing == null) {
             LOGGER.log(LEVEL, "Missing verification key from " + Long.toHexString(keyId));
             return;
         }
+        PGPPublicKey verificationKey = verificationKeyRing.getPublicKey(keyId);
 
         signature.init(verifierBuilderProvider, verificationKey);
         OpenPgpV4Fingerprint fingerprint = new OpenPgpV4Fingerprint(verificationKey);
-        OnePassSignature onePassSignature = new OnePassSignature(signature, fingerprint);
+        OnePassSignature onePassSignature = new OnePassSignature(signature, verificationKeyRing);
         resultBuilder.addOnePassSignature(onePassSignature);
         verifiableOnePassSignatures.put(fingerprint, onePassSignature);
     }
 
-    private PGPPublicKey findSignatureVerificationKey(long keyId) {
-        PGPPublicKey verificationKey = null;
+    private PGPPublicKeyRing findSignatureVerificationKeyRing(long keyId) {
+        PGPPublicKeyRing verificationKeyRing = null;
         for (PGPPublicKeyRing publicKeyRing : verificationKeys) {
-            verificationKey = publicKeyRing.getPublicKey(keyId);
+            PGPPublicKey verificationKey = publicKeyRing.getPublicKey(keyId);
             if (verificationKey != null) {
                 LOGGER.log(LEVEL, "Found public key " + Long.toHexString(keyId) + " for signature verification");
+                verificationKeyRing = publicKeyRing;
                 break;
             }
         }
 
-        if (verificationKey == null) {
-            verificationKey = handleMissingVerificationKey(keyId);
-        }
-
-        return verificationKey;
+        return verificationKeyRing;
     }
-
-    private PGPPublicKey handleMissingVerificationKey(long keyId) {
-        LOGGER.log(Level.FINER, "No public key found for signature of " + Long.toHexString(keyId));
-
-        if (missingPublicKeyCallback == null) {
-            LOGGER.log(Level.FINER, "No MissingPublicKeyCallback registered. " +
-                    "Skip signature of " + Long.toHexString(keyId));
-            return null;
-        }
-
-        PGPPublicKey missingPublicKey = missingPublicKeyCallback.onMissingPublicKeyEncountered(keyId);
-        if (missingPublicKey == null) {
-            LOGGER.log(Level.FINER, "MissingPublicKeyCallback did not provider key. " +
-                    "Skip signature of " + Long.toHexString(keyId));
-            return null;
-        }
-
-        if (missingPublicKey.getKeyID() != keyId) {
-            throw new IllegalArgumentException("KeyID of the provided public key differs from the signatures keyId. " +
-                    "The signature was created from " + Long.toHexString(keyId) + " while the provided key has ID " +
-                    Long.toHexString(missingPublicKey.getKeyID()));
-        }
-
-        return missingPublicKey;
-    }
-
 }

@@ -33,6 +33,8 @@ import org.bouncycastle.openpgp.PGPException;
 import org.bouncycastle.openpgp.PGPLiteralDataGenerator;
 import org.bouncycastle.openpgp.PGPPrivateKey;
 import org.bouncycastle.openpgp.PGPPublicKey;
+import org.bouncycastle.openpgp.PGPPublicKeyRing;
+import org.bouncycastle.openpgp.PGPSecretKeyRing;
 import org.bouncycastle.openpgp.PGPSignature;
 import org.bouncycastle.openpgp.PGPSignatureGenerator;
 import org.bouncycastle.openpgp.operator.PBEKeyEncryptionMethodGenerator;
@@ -45,12 +47,13 @@ import org.pgpainless.algorithm.CompressionAlgorithm;
 import org.pgpainless.algorithm.HashAlgorithm;
 import org.pgpainless.algorithm.SignatureType;
 import org.pgpainless.algorithm.SymmetricKeyAlgorithm;
-import org.pgpainless.decryption_verification.DetachedSignature;
 import org.pgpainless.decryption_verification.OpenPgpMetadata;
 import org.pgpainless.implementation.ImplementationFactory;
-import org.pgpainless.key.OpenPgpV4Fingerprint;
+import org.pgpainless.key.SubkeyIdentifier;
+import org.pgpainless.signature.DetachedSignature;
 import org.pgpainless.util.ArmoredOutputStreamFactory;
 import org.pgpainless.util.Passphrase;
+import org.pgpainless.util.Tuple;
 
 /**
  * This class is based upon Jens Neuhalfen's Bouncy-GPG PGPEncryptingStream.
@@ -83,16 +86,16 @@ public final class EncryptionStream extends OutputStream {
     private final SymmetricKeyAlgorithm symmetricKeyAlgorithm;
     private final HashAlgorithm hashAlgorithm;
     private final CompressionAlgorithm compressionAlgorithm;
-    private final Set<PGPPublicKey> encryptionKeys;
+    private final Map<SubkeyIdentifier, PGPPublicKeyRing> encryptionKeys;
     private final Set<Passphrase> encryptionPassphrases;
     private final boolean detachedSignature;
     private final SignatureType signatureType;
-    private final Map<OpenPgpV4Fingerprint, PGPPrivateKey> signingKeys;
+    private final Map<SubkeyIdentifier, Tuple<PGPSecretKeyRing, PGPPrivateKey>> signingKeys;
     private final boolean asciiArmor;
 
     private final OpenPgpMetadata.Builder resultBuilder = OpenPgpMetadata.getBuilder();
 
-    private Map<OpenPgpV4Fingerprint, PGPSignatureGenerator> signatureGenerators = new ConcurrentHashMap<>();
+    private Map<SubkeyIdentifier, Tuple<PGPSecretKeyRing, PGPSignatureGenerator>> signatureGenerators = new ConcurrentHashMap<>();
     private boolean closed = false;
 
     OutputStream outermostStream = null;
@@ -107,11 +110,11 @@ public final class EncryptionStream extends OutputStream {
     private OutputStream literalDataStream;
 
     EncryptionStream(@Nonnull OutputStream targetOutputStream,
-                     @Nonnull Set<PGPPublicKey> encryptionKeys,
+                     @Nonnull Map<SubkeyIdentifier, PGPPublicKeyRing> encryptionKeys,
                      @Nonnull Set<Passphrase> encryptionPassphrases,
                      boolean detachedSignature,
                      SignatureType signatureType,
-                     @Nonnull Map<OpenPgpV4Fingerprint, PGPPrivateKey> signingKeys,
+                     @Nonnull Map<SubkeyIdentifier, Tuple<PGPSecretKeyRing, PGPPrivateKey>> signingKeys,
                      @Nonnull SymmetricKeyAlgorithm symmetricKeyAlgorithm,
                      @Nonnull HashAlgorithm hashAlgorithm,
                      @Nonnull CompressionAlgorithm compressionAlgorithm,
@@ -122,7 +125,7 @@ public final class EncryptionStream extends OutputStream {
         this.symmetricKeyAlgorithm = symmetricKeyAlgorithm;
         this.hashAlgorithm = hashAlgorithm;
         this.compressionAlgorithm = compressionAlgorithm;
-        this.encryptionKeys = Collections.unmodifiableSet(encryptionKeys);
+        this.encryptionKeys = Collections.unmodifiableMap(encryptionKeys);
         this.encryptionPassphrases = Collections.unmodifiableSet(encryptionPassphrases);
         this.detachedSignature = detachedSignature;
         this.signatureType = signatureType;
@@ -170,8 +173,9 @@ public final class EncryptionStream extends OutputStream {
         PGPEncryptedDataGenerator encryptedDataGenerator =
                 new PGPEncryptedDataGenerator(dataEncryptorBuilder);
 
-        for (PGPPublicKey key : encryptionKeys) {
-            LOGGER.log(LEVEL, "Encrypt for key " + Long.toHexString(key.getKeyID()));
+        for (SubkeyIdentifier keyIdentifier : encryptionKeys.keySet()) {
+            LOGGER.log(LEVEL, "Encrypt for key " + keyIdentifier);
+            PGPPublicKey key = encryptionKeys.get(keyIdentifier).getPublicKey(keyIdentifier.getSubkeyFingerprint().getKeyId());
             PublicKeyKeyEncryptionMethodGenerator keyEncryption =
                     ImplementationFactory.getInstance().getPublicKeyKeyEncryptionMethodGenerator(key);
             encryptedDataGenerator.addMethod(keyEncryption);
@@ -193,17 +197,17 @@ public final class EncryptionStream extends OutputStream {
         }
 
         LOGGER.log(LEVEL, "At least one signing key is available -> sign " + hashAlgorithm + " hash of message");
-        for (OpenPgpV4Fingerprint fingerprint : signingKeys.keySet()) {
-            PGPPrivateKey privateKey = signingKeys.get(fingerprint);
-            LOGGER.log(LEVEL, "Sign using key " + fingerprint);
+        for (SubkeyIdentifier subkeyIdentifier : signingKeys.keySet()) {
+            LOGGER.log(LEVEL, "Sign using key " + subkeyIdentifier);
+
+            PGPPrivateKey privateKey = signingKeys.get(subkeyIdentifier).getSecond();
             PGPContentSignerBuilder contentSignerBuilder = ImplementationFactory.getInstance()
                     .getPGPContentSignerBuilder(
                             privateKey.getPublicKeyPacket().getAlgorithm(),
                             hashAlgorithm.getAlgorithmId());
-
             PGPSignatureGenerator signatureGenerator = new PGPSignatureGenerator(contentSignerBuilder);
             signatureGenerator.init(signatureType.getCode(), privateKey);
-            signatureGenerators.put(fingerprint, signatureGenerator);
+            signatureGenerators.put(subkeyIdentifier, new Tuple<>(signingKeys.get(subkeyIdentifier).getFirst(), signatureGenerator));
         }
     }
 
@@ -220,7 +224,8 @@ public final class EncryptionStream extends OutputStream {
     }
 
     private void prepareOnePassSignatures() throws IOException, PGPException {
-        for (PGPSignatureGenerator signatureGenerator : signatureGenerators.values()) {
+        for (SubkeyIdentifier identifier : signatureGenerators.keySet()) {
+            PGPSignatureGenerator signatureGenerator = signatureGenerators.get(identifier).getSecond();
             signatureGenerator.generateOnePassVersion(false).encode(outermostStream);
         }
     }
@@ -236,8 +241,8 @@ public final class EncryptionStream extends OutputStream {
     }
 
     private void prepareResultBuilder() {
-        for (PGPPublicKey recipient : encryptionKeys) {
-            resultBuilder.addRecipientKeyId(recipient.getKeyID());
+        for (SubkeyIdentifier recipient : encryptionKeys.keySet()) {
+            resultBuilder.addRecipientKeyId(recipient.getSubkeyFingerprint().getKeyId());
         }
         resultBuilder.setSymmetricKeyAlgorithm(symmetricKeyAlgorithm);
         resultBuilder.setCompressionAlgorithm(compressionAlgorithm);
@@ -247,7 +252,8 @@ public final class EncryptionStream extends OutputStream {
     public void write(int data) throws IOException {
         outermostStream.write(data);
 
-        for (PGPSignatureGenerator signatureGenerator : signatureGenerators.values()) {
+        for (SubkeyIdentifier signingKey : signatureGenerators.keySet()) {
+            PGPSignatureGenerator signatureGenerator = signatureGenerators.get(signingKey).getSecond();
             byte asByte = (byte) (data & 0xff);
             signatureGenerator.update(asByte);
         }
@@ -262,7 +268,8 @@ public final class EncryptionStream extends OutputStream {
     @Override
     public void write(byte[] buffer, int off, int len) throws IOException {
         outermostStream.write(buffer, 0, len);
-        for (PGPSignatureGenerator signatureGenerator : signatureGenerators.values()) {
+        for (SubkeyIdentifier signingKey : signatureGenerators.keySet()) {
+            PGPSignatureGenerator signatureGenerator = signatureGenerators.get(signingKey).getSecond();
             signatureGenerator.update(buffer, 0, len);
         }
     }
@@ -303,14 +310,16 @@ public final class EncryptionStream extends OutputStream {
     }
 
     private void writeSignatures() throws IOException {
-        for (OpenPgpV4Fingerprint fingerprint : signatureGenerators.keySet()) {
-            PGPSignatureGenerator signatureGenerator = signatureGenerators.get(fingerprint);
+        for (SubkeyIdentifier signingKey : signatureGenerators.keySet()) {
+            PGPSignatureGenerator signatureGenerator = signatureGenerators.get(signingKey).getSecond();
             try {
                 PGPSignature signature = signatureGenerator.generate();
                 if (!detachedSignature) {
                     signature.encode(outermostStream);
                 }
-                resultBuilder.addDetachedSignature(new DetachedSignature(signature, fingerprint));
+                DetachedSignature detachedSignature = new DetachedSignature(
+                        signature, signatureGenerators.get(signingKey).getFirst(), signingKey);
+                resultBuilder.addDetachedSignature(detachedSignature);
             } catch (PGPException e) {
                 throw new IOException(e);
             }

@@ -25,20 +25,12 @@ import java.util.Set;
  *
  * To add a notation name, call {@link #addKnownNotation(String)}.
  */
-public final class NotationRegistry {
+public class NotationRegistry {
 
-    private static NotationRegistry INSTANCE;
     private final Set<String> knownNotations = new HashSet<>();
 
-    private NotationRegistry() {
+    public NotationRegistry() {
 
-    }
-
-    public static NotationRegistry getInstance() {
-        if (INSTANCE == null) {
-            INSTANCE = new NotationRegistry();
-        }
-        return INSTANCE;
     }
 
     /**

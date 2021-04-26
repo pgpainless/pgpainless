@@ -72,7 +72,7 @@ public class SigningTest {
                 .toRecipients(keys)
                 .andToSelf(KeyRingUtils.publicKeyRingFrom(cryptieKeys))
                 .usingAlgorithms(SymmetricKeyAlgorithm.AES_192, HashAlgorithm.SHA384, CompressionAlgorithm.ZIP)
-                .signWith(SecretKeyRingProtector.unlockSingleKeyWith(TestKeys.CRYPTIE_PASSPHRASE, cryptieSigningKey), cryptieSigningKey)
+                .signWith(SecretKeyRingProtector.unlockSingleKeyWith(TestKeys.CRYPTIE_PASSPHRASE, cryptieSigningKey), cryptieKeys)
                 .signCanonicalText()
                 .asciiArmor();
 
