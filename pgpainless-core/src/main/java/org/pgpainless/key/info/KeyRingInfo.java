@@ -308,7 +308,7 @@ public class KeyRingInfo {
     public boolean isFullyDecrypted() {
         if (isSecretKey()) {
             for (PGPSecretKey secretKey : getSecretKeys()) {
-                if (!KeyInfo.hasGnuDummyS2K(secretKey) && KeyInfo.isEncrypted(secretKey)) {
+                if (!KeyInfo.hasDummyS2K(secretKey) && KeyInfo.isEncrypted(secretKey)) {
                     return false;
                 }
             }
@@ -327,7 +327,7 @@ public class KeyRingInfo {
     public boolean isFullyEncrypted() {
         if (isSecretKey()) {
             for (PGPSecretKey secretKey : getSecretKeys()) {
-                if (!KeyInfo.hasGnuDummyS2K(secretKey) && KeyInfo.isDecrypted(secretKey)) {
+                if (!KeyInfo.hasDummyS2K(secretKey) && KeyInfo.isDecrypted(secretKey)) {
                     return false;
                 }
             }

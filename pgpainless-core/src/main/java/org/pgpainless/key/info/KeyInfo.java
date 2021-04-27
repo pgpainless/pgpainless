@@ -69,8 +69,8 @@ public class KeyInfo {
      * @return true if secret key has S2K of a type GNU_DUMMY_S2K, false if there is public key only,
      *         or S2K on the secret key is absent or not of a type GNU_DUMMY_S2K.
      */
-    public boolean hasGnuDummyS2K() {
-        return secretKey != null && hasGnuDummyS2K(secretKey);
+    public boolean hasDummyS2K() {
+        return secretKey != null && hasDummyS2K(secretKey);
     }
 
     public static String getCurveName(PGPPublicKey publicKey) {
@@ -125,7 +125,7 @@ public class KeyInfo {
      * @param secretKey A secret key to examine.
      * @return true if secret key has S2K of a type GNU_DUMMY_S2K, false otherwise.
      */
-    public static boolean hasGnuDummyS2K(PGPSecretKey secretKey) {
+    public static boolean hasDummyS2K(PGPSecretKey secretKey) {
         final S2K s2k = secretKey.getS2K();
         return s2k != null && s2k.getType() == S2K.GNU_DUMMY_S2K;
     }
