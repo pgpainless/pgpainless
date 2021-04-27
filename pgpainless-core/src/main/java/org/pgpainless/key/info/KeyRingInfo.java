@@ -1,5 +1,5 @@
 /*
- * Copyright 2020 Paul Schaub.
+ * Copyright 2020 Paul Schaub. Copyright 2021 Flowcrypt a.s.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -297,21 +297,42 @@ public class KeyRingInfo {
     }
 
     /**
-     * Return true when every secret key on the key ring is not encrypted.
-     * If there is at least one encrypted secret key on the ring, return false.
-     * If the ring is a {@link PGPPublicKeyRing}, return true.
+     * Returns true when every secret key on the key ring is not encrypted.
+     * If there is at least one encrypted secret key on the key ring, returns false.
+     * If the key ring is a {@link PGPPublicKeyRing}, returns true.
+     * Sub-keys with S2K of a type GNU_DUMMY_S2K do not affect the result.
      *
      * @return true if all secret keys are unencrypted.
      */
     public boolean isFullyDecrypted() {
         if (isSecretKey()) {
             for (PGPSecretKey secretKey : getSecretKeys()) {
-                if (secretKey.getS2KUsage() != 0) {
+                if (!KeyInfo.hasDummyS2K(secretKey) && KeyInfo.isEncrypted(secretKey)) {
                     return false;
                 }
             }
         }
         return true;
+    }
+
+    /**
+     * Returns true when every secret key on the key ring is encrypted.
+     * If there is at least one not encrypted secret key on the key ring, returns false.
+     * If the key ring is a {@link PGPPublicKeyRing}, returns false.
+     * Sub-keys with S2K of a type GNU_DUMMY_S2K do not affect a result.
+     *
+     * @return true if all secret keys are encrypted.
+     */
+    public boolean isFullyEncrypted() {
+        if (isSecretKey()) {
+            for (PGPSecretKey secretKey : getSecretKeys()) {
+                if (!KeyInfo.hasDummyS2K(secretKey) && KeyInfo.isDecrypted(secretKey)) {
+                    return false;
+                }
+            }
+            return true;
+        }
+        return false;
     }
 
     public List<PGPSignature> getSelfSignaturesOnKey(long subkeyId) {
