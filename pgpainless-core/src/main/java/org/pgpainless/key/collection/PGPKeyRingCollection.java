@@ -1,5 +1,5 @@
 /*
- * Copyright 2021 Flowcrypt a.s. Copyright 2021 Paul Schaub
+ * Copyright 2021 Paul Schaub. Copyright 2021 Flowcrypt a.s.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -77,7 +77,8 @@ public class PGPKeyRingCollection {
         pgpPublicKeyRingCollection = new PGPPublicKeyRingCollection(publicKeyRings);
     }
 
-    public PGPKeyRingCollection(Collection<PGPKeyRing> collection, boolean isSilent) throws IOException, PGPException {
+    public PGPKeyRingCollection(@Nonnull Collection<PGPKeyRing> collection, boolean isSilent)
+            throws IOException, PGPException {
         List<PGPSecretKeyRing> secretKeyRings = new ArrayList<>();
         List<PGPPublicKeyRing> publicKeyRings = new ArrayList<>();
 
