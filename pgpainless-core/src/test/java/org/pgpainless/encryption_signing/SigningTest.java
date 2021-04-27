@@ -111,7 +111,6 @@ public class SigningTest {
         assertTrue(metadata.isEncrypted());
         assertTrue(metadata.isSigned());
         assertTrue(metadata.isVerified());
-        assertTrue(metadata.isIntegrityProtected());
         assertTrue(metadata.containsVerifiedSignatureFrom(KeyRingUtils.publicKeyRingFrom(cryptieKeys)));
         assertFalse(metadata.containsVerifiedSignatureFrom(julietKeys));
     }

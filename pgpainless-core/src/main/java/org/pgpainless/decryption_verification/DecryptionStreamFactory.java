@@ -55,6 +55,7 @@ import org.bouncycastle.openpgp.operator.PublicKeyDataDecryptorFactory;
 import org.pgpainless.algorithm.CompressionAlgorithm;
 import org.pgpainless.algorithm.StreamEncoding;
 import org.pgpainless.algorithm.SymmetricKeyAlgorithm;
+import org.pgpainless.exception.MessageNotIntegrityProtectedException;
 import org.pgpainless.implementation.ImplementationFactory;
 import org.pgpainless.key.OpenPgpV4Fingerprint;
 import org.pgpainless.key.protection.SecretKeyRingProtector;
@@ -201,8 +202,11 @@ public final class DecryptionStreamFactory {
         while (encryptedDataIterator.hasNext()) {
             PGPEncryptedData encryptedData = encryptedDataIterator.next();
 
-            if (encryptedData instanceof PGPPBEEncryptedData) {
+            if (!encryptedData.isIntegrityProtected()) {
+                throw new MessageNotIntegrityProtectedException();
+            }
 
+            if (encryptedData instanceof PGPPBEEncryptedData) {
                 PGPPBEEncryptedData pbeEncryptedData = (PGPPBEEncryptedData) encryptedData;
                 if (decryptionPassphrase != null) {
                     PBEDataDecryptorFactory passphraseDecryptor = ImplementationFactory.getInstance()
@@ -213,7 +217,6 @@ public final class DecryptionStreamFactory {
                         throw new PGPException("Data is not encrypted.");
                     }
                     resultBuilder.setSymmetricKeyAlgorithm(symmetricKeyAlgorithm);
-                    resultBuilder.setIntegrityProtected(pbeEncryptedData.isIntegrityProtected());
 
                     try {
                         return pbeEncryptedData.getDataStream(passphraseDecryptor);
@@ -277,8 +280,6 @@ public final class DecryptionStreamFactory {
 
         LOGGER.log(LEVEL, "Message is encrypted using " + symmetricKeyAlgorithm);
         resultBuilder.setSymmetricKeyAlgorithm(symmetricKeyAlgorithm);
-
-        resultBuilder.setIntegrityProtected(encryptedSessionKey.isIntegrityProtected());
 
         if (encryptedSessionKey.isIntegrityProtected()) {
             IntegrityProtectedInputStream integrityProtected =

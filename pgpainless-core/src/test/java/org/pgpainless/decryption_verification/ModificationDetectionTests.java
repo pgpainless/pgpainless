@@ -29,11 +29,15 @@ import org.bouncycastle.openpgp.PGPException;
 import org.bouncycastle.openpgp.PGPSecretKeyRing;
 import org.bouncycastle.openpgp.PGPSecretKeyRingCollection;
 import org.bouncycastle.util.io.Streams;
+import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.MethodSource;
 import org.pgpainless.PGPainless;
+import org.pgpainless.exception.MessageNotIntegrityProtectedException;
+import org.pgpainless.exception.ModificationDetectionException;
 import org.pgpainless.implementation.ImplementationFactory;
 import org.pgpainless.key.protection.SecretKeyRingProtector;
+import org.pgpainless.util.Passphrase;
 
 public class ModificationDetectionTests {
 
@@ -120,6 +124,12 @@ public class ModificationDetectionTests {
             "=miES\n" +
             "-----END PGP PRIVATE KEY BLOCK-----\n";
 
+    /**
+     * Messages containing a missing MDC shall fail to decrypt.
+     * @param implementationFactory
+     * @throws IOException
+     * @throws PGPException
+     */
     @ParameterizedTest
     @MethodSource("org.pgpainless.util.TestUtil#provideImplementationFactories")
     public void testMissingMDC(ImplementationFactory implementationFactory) throws IOException, PGPException {
@@ -183,7 +193,7 @@ public class ModificationDetectionTests {
 
         ByteArrayOutputStream out = new ByteArrayOutputStream();
         Streams.pipeAll(decryptionStream, out);
-        assertThrows(IOException.class, decryptionStream::close);
+        assertThrows(ModificationDetectionException.class, decryptionStream::close);
     }
 
     @ParameterizedTest
@@ -214,7 +224,172 @@ public class ModificationDetectionTests {
 
         ByteArrayOutputStream out = new ByteArrayOutputStream();
         Streams.pipeAll(decryptionStream, out);
-        assertThrows(IOException.class, decryptionStream::close);
+        assertThrows(ModificationDetectionException.class, decryptionStream::close);
+    }
+
+    @Test
+    public void decryptMessageWithSEDPacket() throws IOException, PGPException {
+        Passphrase passphrase = Passphrase.fromPassword("flowcrypt compatibility tests");
+        String key = "-----BEGIN PGP PRIVATE KEY BLOCK-----\r\n" +
+                "Version: FlowCrypt 6.9.1 Gmail Encryption\r\n" +
+                "Comment: Seamlessly send and receive encrypted email\r\n" +
+                "\r\n" +
+                "xcaGBFn7qV4BEACgKfufG6yseRP9jKXZ1zrM5sQtkGWiKLks1799m0KwIYuA\r\n" +
+                "QyYvw6cIWbM2dcuBNOzYHsLqluqoXaCDbUpK8wI/xnH/9ZHDyomk0ASdyI0K\r\n" +
+                "Ogn2DrXFySuRlglPmnMQF7vhpnXeflqp9bxQ9m4yiHMS+FQazMvf/zcrAKKg\r\n" +
+                "hPxcYXC1BJfSub5tj1rY24ARpK91fWOQO6gAFUvpeSiNiKb7C4lmWuLg64UL\r\n" +
+                "jLTLXO9P/2Vs2BBHOACs6u0pmDnFtDnFleGLC5jrL6VvQDp3ekEvcqcfC5MV\r\n" +
+                "R0N6uVTesRc5hlBtwhbGg4HuI5cFLL+jkRwWcVSluJS9MMtug2eU7FAWIzOC\r\n" +
+                "xWa+Lfb8cHpEg6cidGSxSe49vgKKrysv5PdVfOuXhL63i4TEnKFspOYB8qXy\r\n" +
+                "5n3FkYF/5CpYN/HQaoCCxDIXLGp33u03OItadAtQU+qACaGmRhQA9qwe4i+k\r\n" +
+                "LWL3oxoSwQ/aewb3fVo+K7ygGNltk6poHPcL0dU6VHYe8h2MCEO/1LR7yVsK\r\n" +
+                "W47B4fgd3huXh868AX3YQn4Pd6mqft4WdcCuRpGJgvJNHq18JvIysDpgsLSq\r\n" +
+                "QF44Z0GOH2vQrnOhJxIWNUKN+QnMy8RN6SZ1UFo4P+vf1z97YI2MfrMLfHB/\r\n" +
+                "TUnsxS6fGrKhNVxN7ETH69p2rI6F836EZhebLQARAQAB/gkDCDyuMzkoMQjC\r\n" +
+                "YLUdlPhViioPQAb/WMfaiE5ntf3u2Scm1mGuXTQsTmU2yTbY3igXTJ6YJH4C\r\n" +
+                "FLB18f6u+NhZb0r97LteF4JiuTtm6ZA63ejSgp/5Lns1Z5wY7pMNPsH0cTU3\r\n" +
+                "UrFQh/ghoxanSHaN1XQpaovYsOHfsWcYzAxtvqhDV2vqfIlhiL6EdE7Vn84C\r\n" +
+                "QE096Gu4iMtKZSXCDU9B1XN2+rK2e+9c1nQHAXjAq49v9WUzstzjvrCmBajU\r\n" +
+                "GS6Ccy3VHRel458boMNOZqvLOBCtw4nx2GFDs16ZQNZFywj1pThExKMxHlnB\r\n" +
+                "Sw6tMJ0FJBCk2E9S28Buudu6sJJerZGjUKIafoSCcO8wpvixzL1s4dqJs+iH\r\n" +
+                "Rv04xfHk78rgaP010NwoqHjd+ops+NxLoC9dS5PcDm9CAuBxRjf9gSJ8Qo8w\r\n" +
+                "1jeldj93qiYU4Z0O87rzW+IDX6GBIcE8JghpOO+XMxN0nfb2EZpkFhBLe62j\r\n" +
+                "JOgQsdoYy+iBKGSgx2uoHIvifxiq827XGCXTZmHkAwZyJPl7myja/qdiudlD\r\n" +
+                "FnBtOexTnZ77HXlFC9s7/PItZZqKnIPuIKhsW/Tk8fzpUPf7Uu0tS/vCzc8+\r\n" +
+                "abrpQM2ppI7O93kCKJdXVzKioE2MfV5DhLjNOe82ORWZO4uwCg2u8ZHhCOzz\r\n" +
+                "MsMpAm89f+1nvOQtvBS9v45MhZdbndwPHQEg2pM689ZxHw9EgPiOhyOMFGM1\r\n" +
+                "4tBZ3jYfPxGxTW7NZfryWUQxvSSkFaLsPMjxTB93T/fsJdeUDGKJR44cRweP\r\n" +
+                "ATQWK/EBgx1d+jJUHKYl5aHUxdKLvwH1ikzgHuKkb4pV0yaRjONy8sEgXYkj\r\n" +
+                "HoH1qfZAqbCoqraRorTEgO9QvzaLKb9gdDjEMxuzEJuA3QxP9HqHR5aU+T8o\r\n" +
+                "hXss9SMFVjVok6t92v6keeUVRJYxjhoROZNUeMwfIg/EQEXACQUIGokJqaYC\r\n" +
+                "4TX3GoLWa5+BTw5ChKiRC9VOyFNvq8Q2euBzSRoYPYUU7ekDawUQU+SCpN0I\r\n" +
+                "3HYiJlGzDJ7zwFybeEMdv1F94F4NefROdRFcPtzrAJ4LM38zoq2YEUyK9RN0\r\n" +
+                "lO2I9BFw30AR+Ps/qxtptWtzNXBohYuNNpaZt2UMcMOZhRYmHJjq59oH65X9\r\n" +
+                "/l8wEk4nxgFmCjnpHyGpn2jtdMtRDrwAeHKBJ4ZQUV3SU/cgpc0VZ2rg+ZqL\r\n" +
+                "7iAWfofoD/M/3bEOu6ePqcl2bKOhw8RT07CimovKUcXujp7/hsj47yNGKASs\r\n" +
+                "rZMyJXT+VqMA/MWb++jOUwQkCz6dlzM8W5UC2ezlm1uIX+nrZp0LoWzq2VGG\r\n" +
+                "ENbDpnyXh0W3FmVeSgwej1Fg7AJ4wdLkPxeb916UGONrUbFYRtE7jAo/h9c3\r\n" +
+                "kus/8rsxMVfTvQu+tZPO7liWxhuuRWaG+YOJe2s8NYuqlyyPpvKRtGIqy363\r\n" +
+                "c9j5VnfqOil1SxAjEgm7E5AHkCdQD2/BL4+hReex27WejedSHRVyQ6M8H0RO\r\n" +
+                "+48eflFeaCTTWE970HIZ1hMQTf3bLEaB08758UuYVa7geF6jQmpg8OnkRPBQ\r\n" +
+                "acQHgBOV1Fzf0an0uMhVw0vBQIX3XdaLe+uVUuvl00VOLB4JErCQzKDGsAMj\r\n" +
+                "N2uE1cACfAEauTMik9+/G5wp2hW8JOO1mrH7lq7z3RzhJN/VkTFFSOGy/mB1\r\n" +
+                "yu4inb+u5aVyJIL5ljs/NBno9b/aDOUmmiHw4my0KCQVdGNbletqfjeJV4gM\r\n" +
+                "IQnXYXlQgg398LBawCNLYHkb/dDNO0Zsb3dDcnlwdCBDb21wYXRpYmlsaXR5\r\n" +
+                "IDxmbG93Y3J5cHQuY29tcGF0aWJpbGl0eUBnbWFpbC5jb20+wsF/BBABCAAp\r\n" +
+                "BQJZ+6ljBgsJBwgDAgkQrawnnJUJMgcEFQgKAgMWAgECGQECGwMCHgEACgkQ\r\n" +
+                "rawnnJUJMgfO5g//audO5E7KXiXIQzqsVfh0RpOS5KwDa8ZNAOzbBjQbfjyv\r\n" +
+                "jnvej9pYy+7Pot9NDfGtMEMpWj5uWuPhD1fv2Kv/uBP4csJqf8Vbs1H1hD4s\r\n" +
+                "D21RrHerM7xCFzIN1XHhkemR7IALNfekrC9TGi4IYYZrZKz/yK0lCjT8BIro\r\n" +
+                "jYUE5CODa8mKPB2BSmJwqNwZxhr0KKnPykrOAZfpArnHEdY3JE54Se6FCxKM\r\n" +
+                "WOtnKBHcwHiSTsX/nBtK30sCul9j1Wgd1jFRJ244ESJd7M6cBlNrJ6GTZDil\r\n" +
+                "rmpo9nVO0slTwD/YD6GCyN3r3hJ3IEDnwZK05pL+1trM6718pyWaywfT62vW\r\n" +
+                "zL7pNqk7tIghX+HrvrHVNYs/G3LnN9m5zlCJMk5wKP+f9olsz3Llupam2auk\r\n" +
+                "g/h1HXEl3lli9u9QkJkbGaEDWR9UCnH/xoybpS0mgjVYt0B6jNYvHBLLhuaj\r\n" +
+                "hR+1sjVIIg0kwfxZfQgFXyAL8LWu4nNaSEICUl8hVBWf9V6Xn4VX7JkkWlE3\r\n" +
+                "JEByYiuZkADhSdyklJYkR9fQjUc5AcZsUgOuTXsY4fG0IEryMzrxRw0qgqG1\r\n" +
+                "7rir1uqrvLDrDM18FPWkW2JwGzF0YR5yezvvz3H3rXog+ryEzeZAN48Zwrzv\r\n" +
+                "GRcvEZJFmB1CwTHrW4UykC592pqHR5K4nV7BUTzHxoYEWfupXgEQAK/GGjyh\r\n" +
+                "3CHg0yGZL5q4LJfn2xABV00RXiwxNyPc/7YzYgSanBQmzFj3AMJhcFdJx/Eg\r\n" +
+                "3i0pTr6qbAnwzkYoSm9R9k40PTA9LP4AMBP4uXiwbbkV2Nlo/RMgmHN4Kquz\r\n" +
+                "wY/hbNK6ZujFtDGXp2s/wqtfrfmdDnXuUhnilrOo6NR/DrtMaEmsXTCfQiZj\r\n" +
+                "nmSkAEJvVUJKihb9C51LzFSWPYEMkjOWo03ZSYJR6NjubjMK2hVEbh8wQ7Wv\r\n" +
+                "vdfssOiwO+gwXw7zibZphCMA7ADVqUeM10q+j+TLGh/gvpm0ghqjKZsdk2eh\r\n" +
+                "ncUlTQhDkwY8JJ5iJ6QThgjYwaAcC0Ake5rA/7nPn6YMnxlP/R7Nq651l8SB\r\n" +
+                "ozcTzjseOSwearH5tMeKyastTWEIHFAd5rYIEqawpx9F87kLxRhQj9NUQ6uk\r\n" +
+                "mdR66P8elsm9AZdQuaQF53oEQ5zwuUK8+wXqDTC853XtfHsCvxKENP0ZXXvy\r\n" +
+                "qVo2INRNBO5WlSYQjGxoxohs1X+CMAmFSDvbV70dZVf0cQJ9GidocAv70DOH\r\n" +
+                "eXBuOiXZBqyGSNjecPl2bFr4A6r5RMnNZDrYieXJOEWUqgaX0uNQacX4Aecm\r\n" +
+                "KiCEyR08XKEPVnnJGUM7mOvhuGdH0ZC03ZUPqLAhfW2cxcsiOeTQ7tc8LLaT\r\n" +
+                "u348PxVsPkN19RbBABEBAAH+CQMIXnc7lrdca0Rg8eLOHqbZ4HZeKswdL0Jg\r\n" +
+                "lNZ9Fnp2ZPOgrnYxqeCbpRoZwr09aZ/DYiUfUgDuuJIRFzmorhczyKMOWTW+\r\n" +
+                "eTTGFWIJB4ANAGie4EUhrJe4cDFxPg4Uvuvk/KMt5kLTOcSaN70kIKvt2lQT\r\n" +
+                "LFzi6gCW9TWAtf5Jg+CcOoOw0tIsBcxTSL2V6SQDAS9KBJcgyhQAvbey44Zb\r\n" +
+                "8s8kmtt1Xwl9bEtG2uDvKNvbb1GszeXf1wW2acwO4OAmrJXMhOscWb6eiDx+\r\n" +
+                "9sIM5VoDrUG6K+72VSn9xqbEE9K5+U83qeAIb8dn+FLuKR0+auAJF19bkCUz\r\n" +
+                "ZQS3wXzCm/D+PqE+BWexd7Jd8m/zg0eSzw+0hAxQ7sw5c2EdZ6LmqA1qs6yU\r\n" +
+                "gIk92HufgO+fpRnUVRhD7ZklxfaG3dLIdbOs5R6DdA9z015r2VOh4S5mLJfY\r\n" +
+                "rCQqEtqbtJpUOreyXejDYOCvv/mpFa81EWOMGmySvEPK7d25VAgIM/MS2l2H\r\n" +
+                "+oJ7nMI4ZxgB7W4nVz15YK3RoJKAlcyy//1MAyNbH3TU8rytOKcPfCB7qgAP\r\n" +
+                "6yjBGrej0IzuMWBmuuLCvfiYIqYDBgZ6GruAJhuudPXbhojl0l9z+lcM94IU\r\n" +
+                "GOoGGhUIy3Zgt2nLQFB4vegY2EYUBMOO6dYeMh2QMwlSU63cnpxE/w6wby8b\r\n" +
+                "RZ4GDPEBmYkCTZ0vbV34vJ72Z+LJ0/FOrTuQA8RHUJ7LMkTV5OF8oo20cE9O\r\n" +
+                "h8Eyay+yYtccL2M8mpiJ9FXOyxURVyz4VaDfSXfo2auSzvUALVA/kMT3IVWZ\r\n" +
+                "929TCb5uI/KwcqIMlP5Ih5hj0+0C34v5XnkNDLO8G3bcQ+NAb3ydUg5FpERy\r\n" +
+                "0vW5TtgQmf04CdPJ341urINodtrUSabiOqBHSTLVaaYbSFcGF7Ur4lRwDlx3\r\n" +
+                "50JqAcbp8Dl2eKMjW7EkHnTaKKC7lJwG62I3XbVg4mdkgzNAOF9UKjdHVn7Q\r\n" +
+                "/DU3m67ZN5wwSruffu6DWNrDnytpl9Hdw2s9AF5UN1WfxobO7OD2vQPJ8Fcg\r\n" +
+                "8kPUgnJ1OzBtvzNP53Aorbd8RDxx7rBQBtCFQN8Uq1ksUKiYNqbeRZ6vOtmH\r\n" +
+                "LhiyhjMsrF0cog7r86dAAlWQJLnv+zUtdZ2LGS3aGMjAb7Y/iOVS5Q6/7Zw9\r\n" +
+                "3wKAAfl7vFdZ7TFzq/p1/+xwc42WtO96XjFCtqKtpQ4sGRMUt7zUuq8ZJk26\r\n" +
+                "ja94/v6iHhR9GID3HNiDLRvpQPFiK5PM5p6EI0Z5JfL5OQjvsmv/ltu5XmO6\r\n" +
+                "08uXoZJM7IwPBdGZ7yNrDu0E9MEU7UW5kgSQzeGESV+jw2rXxU6wXeIAhkGh\r\n" +
+                "um7f0JoKqYYOjRDLAXOtJgVAHGcto+U4XJQK4Bv7ohCpP0M+hSrEU1uYGC1G\r\n" +
+                "4O6GSpN+4WV99i+JLFBya0R0ZUZfKQuU0EjRXX39WKT5LX7cUTTMHtuY3Xd/\r\n" +
+                "BC/YMFqbk5+MZ0P1L1awJGkhMSc1qCrQ1OEtMk49ak2IrT+E19gQ6lR3q7yQ\r\n" +
+                "B5D7ys/Z5X0ZbTsy6GK5JZE3X31of/DTbigqWLENk3oh5OaDNZ1hYUmHe03s\r\n" +
+                "QuVrwD8TWqig4/KfQgFrUDLEdTZJezUsybHzjzWw5E8+5WrlBnx5PERaZzBF\r\n" +
+                "wubVzAIAD9NsRGAzEF0ZBIsqzcxMQzF0jnvtl7YENQuH9ZYNuZY9h9f8uczV\r\n" +
+                "6WM2HmQioFUswnzC+FNwC9Re+NNjrtdQAsVJAnn2BW4tvXlYb37foe0r8WDk\r\n" +
+                "ULZ4Q8LBaQQYAQgAEwUCWfupZAkQrawnnJUJMgcCGwwACgkQrawnnJUJMge5\r\n" +
+                "uA/+NA4zV+NWRNIpkyTDPD7FGi4pmFcMUs96Wzcedx244au4ixLLprSOib5e\r\n" +
+                "A1UImjRWptJII6rZJCHVrB/rFJVQhSHaJQCsSd8K0N1DOOrv4oaGrL9zyzPd\r\n" +
+                "ATW8izY9rzIRaNg9Si8DvULfKIheLI429RWDfeYFjFPVJ8n55gwaf28Nptxs\r\n" +
+                "yo4mEWhf+pF/l8HaQtOzLB82PE4NXwrzf2MogNz3W5BMvcWZo1Vma4Iz1IJf\r\n" +
+                "HdNlZYJO1vMC7u/7JYAztyH50mXT9Jh6U2jim5OElFRNEUh35E1L2G6XzRdO\r\n" +
+                "JrEXbghF7EO+iekIyRScf2pE+vNBhL2iwnJs+ChgFDFIGnR+Zjwl3rG8mux0\r\n" +
+                "iykse5vOToid8SEZ16nu7WF9b8hIxOrM7NBAIaWVD9oqsw8u+n30Mp0DB+pc\r\n" +
+                "0Mnhy0xjMWdTmLcp+Ur5R2uZ6QCZ0lYzLFYs7ZW4X6mT3TwtGWa7eBNIRiyA\r\n" +
+                "Bm5g3jhTi8swQXhv8MtG6eLix8H5/XDOZS91y6PlUdAjfDS34/IeMlS8SM1Q\r\n" +
+                "IlBkLHqJ18viQNHqw9iYbf557NA6BVqo3A2OVPyyCVaKRoYH3LTcSEpxMciq\r\n" +
+                "OHsqtYlSo7dRyJOEUQ6bWERIAH5vC95fBLgdqted+a5Kq/7hx8sfrYdL1lJy\r\n" +
+                "tiL0VgGWS0GVL1cZMUwhvvu8bxI=\r\n" +
+                "=2z30\r\n" +
+                "-----END PGP PRIVATE KEY BLOCK-----\r\n";
+        // longId = "ADAC279C95093207"
+
+        PGPSecretKeyRing secretKeyRing = PGPainless.readKeyRing().secretKeyRing(key);
+
+        String ciphertext = "-----BEGIN PGP MESSAGE-----\n" +
+                "Version: FlowCrypt 5.5.9 Gmail Encryption flowcrypt.com\n" +
+                "Comment: Seamlessly send, receive and search encrypted email\n" +
+                "\n" +
+                "wcFMA0taL/zmLZUBAQ/7Bwida5vvhXv5Zi+qJbG/QPst11jWfljDQlw1VLzF\n" +
+                "ou8ofoIEHpvoFgXegZUnoQXBmlHGD+XLs9jG/TV1mtE2RWq4hDtqiTQ6rEIa\n" +
+                "brN3Nx77Yr+4EN1aKI20aTLEPTIjVU2GH2i9DAmjHteBU3nkL9Z3yecB8Pn8\n" +
+                "EdhpCRY6cj2yrhJ5MPwmXrus9OFv39wA2DqYpqW5Be+KD8mipZ2CtJo5xtin\n" +
+                "aeEhpWSDsdg26rjx1nz4dA0NcFzZK2p/BPfPIFzRvmoXoWFigpUnwryEoCqX\n" +
+                "/tgmcrv7PqiYT5oziPmMuBc1lb7icI/Aq69uXz2z6+4MJHOlcTEFygV36J+1\n" +
+                "1opcjoX+JKJNn1nvHovBxuemcMwriJdmDj4Hmfo4zkd6ryUtGVrMVn8DbRp6\n" +
+                "TWB/0MSE8cmfuiA5DgzdGbrevdL6RxnQDmalTHJ5oxurFQVoLwpmbgd36C4Q\n" +
+                "xMfG1xEqFn5zvrCTGHg2OfS2cynal8CQDG0ZQCoWwdb0kT5D6bx7QKcuyy1/\n" +
+                "1TXKnp1NamD5Uhu1+XuxD7EbvDYUWYh3bkqgslsoX+OUl+ONdtMD5PswArd5\n" +
+                "KisD9UJuddJShL4clBUPoXeNrRxrU6HqjP5T4fapK684MeizicHIRpAww7fu\n" +
+                "Z8YtaySZ/hoOAKWsx0rV4grgJV7pryj4ARBRa1pLL9rBwUwDS1ov/OYtlQEB\n" +
+                "D/47fyD/6BvepqWmZXj7VLl2y63eE0b/6hf5K+Izv5A/+5l/EnjFx0rq+qeX\n" +
+                "6hftYZBUAbbBvKfxq9D5xsWg3tnhFv2sYIE3YpkCSzZpWJmahHwQOVNT0ASw\n" +
+                "gbO25OiTPlYPqfSkGYe0palbL+4T5dLOwVilmrZ2bQf/rLePwA4RQpWDPYio\n" +
+                "NDU0Xfi7TQcHQrZTpwFbVzNPXgCHnQkqF+s0v8RDJHnt9vVs2KEpi49V/YgN\n" +
+                "+gZnZOeADL0rbre/PrIck1YSjZLbrWtQVk4+sCf0TjvixJ7MNjA4NgdZPo0M\n" +
+                "Hke/9XBFie3NiZaW/cEIVZ7WnjB3IbhkmOMJd4LgdHKgmswJwCYm+XvpOI19\n" +
+                "FzU1vzZmfOA1nEJSuuCDNVUoKYIQA5UEYJrVJeGnVN5sU5jkdlX9xPtYceww\n" +
+                "YFmLisuf9Ev0HC7v27KwYQRDPNYRA8GeK/jY6aZdg+VccsnzEigdYL5Tm4JI\n" +
+                "Zrxp/G807bZvt0yZwWh0gpWOFgbVgrm4Hpji5ilDyulZSW+8nJxB5tDoPzL4\n" +
+                "j4w9malje0c60GWNtiyCPLURyN63C2q144UpQjSU5r66oP1yF2A97aXKbf4p\n" +
+                "qO7cSNWEOTpqJkJrNFVKQdWvXZ+mvW1PQFmkkwish2HiQIXmWb04uV1pI8hR\n" +
+                "6YWk2ox9aZiJ664MpncgyJ5uIMlzVfYrX+AZRtBW36RgCTprIv6l1M5NcHMy\n" +
+                "zEscTaSY/e+pM5HzQKSzX+zHLa5kk5L7veX+1G33saiqSJ/fK13+k7qDNZQD\n" +
+                "nbtaebfh2JS0Pdbub6FUFjPHR5PydU9ltuppGEeYrOe1SxwiZ6BZfIXO2/8M\n" +
+                "hA==\n" +
+                "=B/NE\n" +
+                "-----END PGP MESSAGE-----\n" +
+                "\n";
+
+        assertThrows(MessageNotIntegrityProtectedException.class, () -> PGPainless.decryptAndOrVerify()
+                .onInputStream(new ByteArrayInputStream(ciphertext.getBytes(StandardCharsets.UTF_8)))
+                .decryptWith(SecretKeyRingProtector.unlockAllKeysWith(passphrase, secretKeyRing), new PGPSecretKeyRingCollection(Collections.singleton(secretKeyRing)))
+                .doNotVerify()
+                .build());
     }
 
     private PGPSecretKeyRingCollection getDecryptionKey() throws IOException, PGPException {

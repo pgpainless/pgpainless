@@ -20,6 +20,7 @@ import java.io.InputStream;
 
 import org.bouncycastle.openpgp.PGPEncryptedData;
 import org.bouncycastle.openpgp.PGPException;
+import org.pgpainless.exception.ModificationDetectionException;
 
 public class IntegrityProtectedInputStream extends InputStream {
 
@@ -41,10 +42,10 @@ public class IntegrityProtectedInputStream extends InputStream {
         if (encryptedData.isIntegrityProtected()) {
             try {
                 if (!encryptedData.verify()) {
-                    throw new PGPException("Modification Detection failed.");
+                    throw new ModificationDetectionException();
                 }
             } catch (PGPException e) {
-                throw new IOException(e);
+                throw new IOException("Failed to verify integrity protection", e);
             }
         }
     }

@@ -41,14 +41,12 @@ public class OpenPgpMetadata {
     private final List<DetachedSignature> detachedSignatures;
     private final SymmetricKeyAlgorithm symmetricKeyAlgorithm;
     private final CompressionAlgorithm compressionAlgorithm;
-    private final boolean integrityProtected;
     private final FileInfo fileInfo;
 
     public OpenPgpMetadata(Set<Long> recipientKeyIds,
                            OpenPgpV4Fingerprint decryptionFingerprint,
                            SymmetricKeyAlgorithm symmetricKeyAlgorithm,
                            CompressionAlgorithm algorithm,
-                           boolean integrityProtected,
                            List<OnePassSignature> onePassSignatures,
                            List<DetachedSignature> detachedSignatures,
                            FileInfo fileInfo) {
@@ -57,7 +55,6 @@ public class OpenPgpMetadata {
         this.decryptionFingerprint = decryptionFingerprint;
         this.symmetricKeyAlgorithm = symmetricKeyAlgorithm;
         this.compressionAlgorithm = algorithm;
-        this.integrityProtected = integrityProtected;
         this.detachedSignatures = Collections.unmodifiableList(detachedSignatures);
         this.onePassSignatures = Collections.unmodifiableList(onePassSignatures);
         this.fileInfo = fileInfo;
@@ -81,10 +78,6 @@ public class OpenPgpMetadata {
 
     public CompressionAlgorithm getCompressionAlgorithm() {
         return compressionAlgorithm;
-    }
-
-    public boolean isIntegrityProtected() {
-        return integrityProtected;
     }
 
     public Set<PGPSignature> getSignatures() {
@@ -245,7 +238,6 @@ public class OpenPgpMetadata {
         private final List<OnePassSignature> onePassSignatures = new ArrayList<>();
         private SymmetricKeyAlgorithm symmetricKeyAlgorithm = SymmetricKeyAlgorithm.NULL;
         private CompressionAlgorithm compressionAlgorithm = CompressionAlgorithm.UNCOMPRESSED;
-        private boolean integrityProtected = false;
         private FileInfo fileInfo;
 
         public Builder addRecipientKeyId(Long keyId) {
@@ -272,11 +264,6 @@ public class OpenPgpMetadata {
             return this;
         }
 
-        public Builder setIntegrityProtected(boolean integrityProtected) {
-            this.integrityProtected = integrityProtected;
-            return this;
-        }
-
         public void addDetachedSignature(DetachedSignature signature) {
             this.detachedSignatures.add(signature);
         }
@@ -292,7 +279,7 @@ public class OpenPgpMetadata {
 
         public OpenPgpMetadata build() {
             return new OpenPgpMetadata(recipientFingerprints, decryptionFingerprint,
-                    symmetricKeyAlgorithm, compressionAlgorithm, integrityProtected,
+                    symmetricKeyAlgorithm, compressionAlgorithm,
                     onePassSignatures, detachedSignatures, fileInfo);
         }
     }

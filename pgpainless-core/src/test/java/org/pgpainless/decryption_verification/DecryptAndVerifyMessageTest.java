@@ -78,7 +78,6 @@ public class DecryptAndVerifyMessageTest {
 
         assertArrayEquals(expected, actual);
 
-        assertTrue(metadata.isIntegrityProtected());
         assertTrue(metadata.isEncrypted());
         assertTrue(metadata.isSigned());
         assertTrue(metadata.isVerified());

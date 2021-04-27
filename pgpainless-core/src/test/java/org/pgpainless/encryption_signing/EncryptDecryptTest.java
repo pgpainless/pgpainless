@@ -195,7 +195,6 @@ public class EncryptDecryptTest {
         assertArrayEquals(secretMessage, decryptedSecretMessage.toByteArray());
         OpenPgpMetadata result = decryptor.getResult();
         assertTrue(result.containsVerifiedSignatureFrom(senderPub));
-        assertTrue(result.isIntegrityProtected());
         assertTrue(result.isSigned());
         assertTrue(result.isEncrypted());
         assertTrue(result.isVerified());
