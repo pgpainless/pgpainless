@@ -36,7 +36,7 @@ import org.pgpainless.key.util.KeyRingUtils;
 import org.pgpainless.policy.Policy;
 import org.pgpainless.signature.SelectSignatureFromKey;
 import org.pgpainless.signature.SignatureCreationDateComparator;
-import org.pgpainless.signature.SignatureValidationException;
+import org.pgpainless.exception.SignatureValidationException;
 import org.pgpainless.signature.SignatureValidator;
 import org.pgpainless.util.CollectionUtils;
 
@@ -74,7 +74,7 @@ public class KeyRingValidator {
 
         Iterator<PGPSignature> directKeyIterator = primaryKey.getSignaturesOfType(SignatureType.DIRECT_KEY.getCode());
         List<PGPSignature> directKeyCertifications = CollectionUtils.iteratorToList(directKeyIterator);
-        Collections.sort(directKeyCertifications, new SignatureCreationDateComparator(SignatureCreationDateComparator.Order.new_to_old));
+        Collections.sort(directKeyCertifications, new SignatureCreationDateComparator(SignatureCreationDateComparator.Order.NEW_TO_OLD));
         for (PGPSignature signature : directKeyCertifications) {
             try {
                 if (SignatureValidator.verifyDirectKeySignature(signature, blank, policy, validationDate)) {
@@ -87,7 +87,7 @@ public class KeyRingValidator {
 
         Iterator<PGPSignature> revocationIterator = primaryKey.getSignaturesOfType(SignatureType.KEY_REVOCATION.getCode());
         List<PGPSignature> directKeyRevocations = CollectionUtils.iteratorToList(revocationIterator);
-        Collections.sort(directKeyRevocations, new SignatureCreationDateComparator(SignatureCreationDateComparator.Order.new_to_old));
+        Collections.sort(directKeyRevocations, new SignatureCreationDateComparator(SignatureCreationDateComparator.Order.NEW_TO_OLD));
         for (PGPSignature signature : directKeyRevocations) {
             try {
                 if (SignatureValidator.verifyKeyRevocationSignature(signature, primaryKey, policy, validationDate)) {
@@ -103,7 +103,7 @@ public class KeyRingValidator {
             String userId = userIdIterator.next();
             Iterator<PGPSignature> userIdSigs = primaryKey.getSignaturesForID(userId);
             List<PGPSignature> signatures = CollectionUtils.iteratorToList(userIdSigs);
-            Collections.sort(signatures, new SignatureCreationDateComparator(SignatureCreationDateComparator.Order.new_to_old));
+            Collections.sort(signatures, new SignatureCreationDateComparator(SignatureCreationDateComparator.Order.NEW_TO_OLD));
             for (PGPSignature signature : signatures) {
                 try {
                     if (SignatureType.valueOf(signature.getSignatureType()) == SignatureType.CERTIFICATION_REVOCATION) {

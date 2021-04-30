@@ -259,8 +259,15 @@ public class BCUtil {
         return ring.getSecretKey(keyId) != null;
     }
 
-    public static PGPSignatureList readSignatures(String encoding) throws IOException {
-        InputStream inputStream = getPgpDecoderInputStream(encoding.getBytes(Charset.forName("UTF8")));
+    /**
+     * Parse an ASCII encoded list of OpenPGP signatures into a {@link PGPSignatureList}.
+     *
+     * @param encodedSignatures ASCII armored signature list
+     * @return signature list
+     * @throws IOException if the signatures cannot be read
+     */
+    public static PGPSignatureList readSignatures(String encodedSignatures) throws IOException {
+        InputStream inputStream = getPgpDecoderInputStream(encodedSignatures.getBytes(Charset.forName("UTF8")));
         PGPObjectFactory objectFactory = new PGPObjectFactory(inputStream, ImplementationFactory.getInstance().getKeyFingerprintCalculator());
         Object next = objectFactory.nextObject();
         while (next != null) {
@@ -271,5 +278,5 @@ public class BCUtil {
             return (PGPSignatureList) next;
         }
         return null;
-    };
+    }
 }

@@ -38,7 +38,7 @@ import org.pgpainless.key.OpenPgpV4Fingerprint;
 import org.pgpainless.policy.Policy;
 import org.pgpainless.signature.OnePassSignature;
 import org.pgpainless.signature.SignatureChainValidator;
-import org.pgpainless.signature.SignatureValidationException;
+import org.pgpainless.exception.SignatureValidationException;
 
 public class SignatureVerifyingInputStream extends FilterInputStream {
 

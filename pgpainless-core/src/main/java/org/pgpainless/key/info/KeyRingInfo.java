@@ -143,11 +143,11 @@ public class KeyRingInfo {
 
         if (publicKey == getPublicKey()) {
             return revocationSelfSignature == null;
-        } else {
-            PGPSignature binding = mostRecentSubkeyBindings.get(keyId);
-            PGPSignature revocation = mostRecentSubkeyRevocations.get(keyId);
-            return binding != null && revocation == null;
         }
+
+        PGPSignature binding = mostRecentSubkeyBindings.get(keyId);
+        PGPSignature revocation = mostRecentSubkeyRevocations.get(keyId);
+        return binding != null && revocation == null;
     }
 
     /**
@@ -264,10 +264,7 @@ public class KeyRingInfo {
         PGPSignature certification = mostRecentUserIdSignatures.get(userId);
         PGPSignature revocation = mostRecentUserIdRevocations.get(userId);
 
-        if (certification == null) {
-            return false;
-        }
-        return revocation == null;
+        return certification != null && revocation == null;
     }
 
     /**

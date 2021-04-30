@@ -21,11 +21,11 @@ import org.bouncycastle.openpgp.PGPSignature;
 
 public class SignatureCreationDateComparator implements Comparator<PGPSignature> {
 
-    public static final Order DEFAULT_ORDER = Order.old_to_new;
+    public static final Order DEFAULT_ORDER = Order.OLD_TO_NEW;
 
     public enum Order {
-        old_to_new,
-        new_to_old
+        OLD_TO_NEW,
+        NEW_TO_OLD
     }
 
     private final Order order;
@@ -40,7 +40,7 @@ public class SignatureCreationDateComparator implements Comparator<PGPSignature>
 
     @Override
     public int compare(PGPSignature one, PGPSignature two) {
-        return order == Order.old_to_new
+        return order == Order.OLD_TO_NEW
                 ? one.getCreationTime().compareTo(two.getCreationTime())
                 : two.getCreationTime().compareTo(one.getCreationTime());
     }

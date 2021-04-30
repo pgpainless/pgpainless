@@ -26,7 +26,7 @@ import org.bouncycastle.openpgp.PGPPublicKeyRing;
 import org.pgpainless.PGPainless;
 import org.pgpainless.signature.DetachedSignature;
 import org.pgpainless.signature.SignatureChainValidator;
-import org.pgpainless.signature.SignatureValidationException;
+import org.pgpainless.exception.SignatureValidationException;
 import org.pgpainless.util.IntegrityProtectedInputStream;
 
 /**

@@ -31,6 +31,7 @@ import org.bouncycastle.openpgp.PGPPublicKeyRing;
 import org.bouncycastle.openpgp.PGPSignature;
 import org.pgpainless.algorithm.KeyFlag;
 import org.pgpainless.algorithm.SignatureType;
+import org.pgpainless.exception.SignatureValidationException;
 import org.pgpainless.policy.Policy;
 import org.pgpainless.signature.subpackets.SignatureSubpacketsUtil;
 
@@ -76,7 +77,7 @@ public class SignatureChainValidator {
             }
         }
 
-        Collections.sort(directKeySignatures, new SignatureValidityComparator(SignatureCreationDateComparator.Order.new_to_old));
+        Collections.sort(directKeySignatures, new SignatureValidityComparator(SignatureCreationDateComparator.Order.NEW_TO_OLD));
         if (directKeySignatures.isEmpty()) {
 
         } else {
@@ -102,7 +103,7 @@ public class SignatureChainValidator {
                     LOGGER.log(Level.INFO, "Rejecting user-id signature.", e);
                 }
             }
-            Collections.sort(signaturesOnUserId, new SignatureValidityComparator(SignatureCreationDateComparator.Order.new_to_old));
+            Collections.sort(signaturesOnUserId, new SignatureValidityComparator(SignatureCreationDateComparator.Order.NEW_TO_OLD));
             userIdSignatures.put(userId, signaturesOnUserId);
         }
 
@@ -150,7 +151,7 @@ public class SignatureChainValidator {
                 }
             }
 
-            Collections.sort(subkeySigs, new SignatureValidityComparator(SignatureCreationDateComparator.Order.new_to_old));
+            Collections.sort(subkeySigs, new SignatureValidityComparator(SignatureCreationDateComparator.Order.NEW_TO_OLD));
             if (subkeySigs.isEmpty()) {
                 throw new SignatureValidationException("Subkey is not bound.", rejections);
             }

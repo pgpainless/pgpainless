@@ -170,6 +170,16 @@ public class SignatureUtils {
         return datePlusSeconds(creationDate, expiresInSecs);
     }
 
+    /**
+     * Return a new date which represents the given date plus the given amount of seconds added.
+     *
+     * Since '0' is a special value in the OpenPGP specification when it comes to dates
+     * (e.g. '0' means no expiration for expiration dates), this method will return 'null' if seconds is 0.
+     *
+     * @param date date
+     * @param seconds number of seconds to be added
+     * @return date plus seconds or null if seconds is '0'
+     */
     public static Date datePlusSeconds(Date date, long seconds) {
         if (seconds == 0) {
             return null;
@@ -183,10 +193,7 @@ public class SignatureUtils {
 
     public static boolean isSignatureExpired(PGPSignature signature, Date comparisonDate) {
         Date expirationDate = getSignatureExpirationDate(signature);
-        if (expirationDate == null) {
-            return false;
-        }
-        return comparisonDate.after(expirationDate);
+        return expirationDate != null && comparisonDate.after(expirationDate);
     }
 
     public static void sortByCreationTimeAscending(List<PGPSignature> signatures) {

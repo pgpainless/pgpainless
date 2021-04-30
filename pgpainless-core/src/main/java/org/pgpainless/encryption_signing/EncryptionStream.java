@@ -213,7 +213,7 @@ public final class EncryptionStream extends OutputStream {
 
     private void prepareCompression() throws IOException {
         compressedDataGenerator = new PGPCompressedDataGenerator(
-            compressionAlgorithm.getAlgorithmId());
+                compressionAlgorithm.getAlgorithmId());
         if (compressionAlgorithm == CompressionAlgorithm.UNCOMPRESSED) {
             return;
         }
@@ -290,7 +290,11 @@ public final class EncryptionStream extends OutputStream {
         literalDataStream.close();
         literalDataGenerator.close();
 
-        writeSignatures();
+        try {
+            writeSignatures();
+        } catch (PGPException e) {
+            throw new IOException("Exception while writing signatures.", e);
+        }
 
         // Compressed Data
         compressedDataGenerator.close();
@@ -309,20 +313,16 @@ public final class EncryptionStream extends OutputStream {
         closed = true;
     }
 
-    private void writeSignatures() throws IOException {
+    private void writeSignatures() throws PGPException, IOException {
         for (SubkeyIdentifier signingKey : signatureGenerators.keySet()) {
             PGPSignatureGenerator signatureGenerator = signatureGenerators.get(signingKey).getSecond();
-            try {
-                PGPSignature signature = signatureGenerator.generate();
-                if (!detachedSignature) {
-                    signature.encode(outermostStream);
-                }
-                DetachedSignature detachedSignature = new DetachedSignature(
-                        signature, signatureGenerators.get(signingKey).getFirst(), signingKey);
-                resultBuilder.addDetachedSignature(detachedSignature);
-            } catch (PGPException e) {
-                throw new IOException(e);
+            PGPSignature signature = signatureGenerator.generate();
+            if (!detachedSignature) {
+                signature.encode(outermostStream);
             }
+            DetachedSignature detachedSignature = new DetachedSignature(
+                    signature, signatureGenerators.get(signingKey).getFirst(), signingKey);
+            resultBuilder.addDetachedSignature(detachedSignature);
         }
     }
 

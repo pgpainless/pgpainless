@@ -33,6 +33,7 @@ import org.bouncycastle.openpgp.PGPPublicKeyRing;
 import org.bouncycastle.openpgp.PGPPublicKeyRingCollection;
 import org.bouncycastle.openpgp.PGPSecretKey;
 import org.bouncycastle.openpgp.PGPSecretKeyRing;
+import org.bouncycastle.openpgp.PGPSecretKeyRingCollection;
 import org.bouncycastle.openpgp.operator.PBESecretKeyDecryptor;
 import org.pgpainless.PGPainless;
 import org.pgpainless.algorithm.CompressionAlgorithm;
@@ -176,7 +177,7 @@ public class EncryptionBuilder implements EncryptionBuilderInterface {
                     }
                 }
                 if (encryptionKeys.isEmpty()) {
-                    throw new IllegalArgumentException("No suitable encryption key found in key ring " + new OpenPgpV4Fingerprint(ring));
+                    throw new IllegalArgumentException("No suitable encryption key found in the key ring " + new OpenPgpV4Fingerprint(ring));
                 }
                 EncryptionBuilder.this.encryptionKeys.putAll(encryptionKeys);
             }
@@ -194,7 +195,7 @@ public class EncryptionBuilder implements EncryptionBuilderInterface {
                     }
                 }
                 if (encryptionKeys.isEmpty()) {
-                    throw new IllegalArgumentException("No suitable encryption key found in key ring " + new OpenPgpV4Fingerprint(ring));
+                    throw new IllegalArgumentException("No suitable encryption key found in the key ring " + new OpenPgpV4Fingerprint(ring));
                 }
                 EncryptionBuilder.this.encryptionKeys.putAll(encryptionKeys);
             }
@@ -246,6 +247,11 @@ public class EncryptionBuilder implements EncryptionBuilderInterface {
             return new SignWithImpl().signWith(decryptor, keyRings);
         }
 
+        @Override
+        public DocumentType signWith(@Nonnull SecretKeyRingProtector decryptor, @Nonnull PGPSecretKeyRingCollection keyRings) {
+            return new SignWithImpl().signWith(decryptor, keyRings);
+        }
+
     }
 
     class SignWithImpl implements SignWith {
@@ -254,7 +260,7 @@ public class EncryptionBuilder implements EncryptionBuilderInterface {
         public DocumentType signWith(@Nonnull SecretKeyRingProtector decryptor,
                                      @Nonnull PGPSecretKeyRing... keyRings) {
             if (keyRings.length == 0) {
-                throw new IllegalArgumentException("Recipient list MUST NOT be empty.");
+                throw new IllegalArgumentException("Signing key list MUST NOT be empty.");
             }
             for (PGPSecretKeyRing ring : keyRings) {
                 Map<SubkeyIdentifier, PGPSecretKeyRing> signingKeys = new ConcurrentHashMap<>();
@@ -266,11 +272,38 @@ public class EncryptionBuilder implements EncryptionBuilderInterface {
                 }
 
                 if (signingKeys.isEmpty()) {
-                    throw new IllegalArgumentException("No suitable signing key found in key ring " + new OpenPgpV4Fingerprint(ring));
+                    throw new IllegalArgumentException("No suitable signing key found in the key ring " + new OpenPgpV4Fingerprint(ring));
                 }
 
                 EncryptionBuilder.this.signingKeys.putAll(signingKeys);
             }
+            EncryptionBuilder.this.signingKeysDecryptor = decryptor;
+            return new DocumentTypeImpl();
+        }
+
+        @Override
+        public DocumentType signWith(@Nonnull SecretKeyRingProtector decryptor, @Nonnull PGPSecretKeyRingCollection keyRings) {
+            Iterator<PGPSecretKeyRing> iterator = keyRings.iterator();
+            if (!iterator.hasNext()) {
+                throw new IllegalArgumentException("Signing key collection MUST NOT be empty.");
+            }
+            while (iterator.hasNext()) {
+                PGPSecretKeyRing ring = iterator.next();
+                Map<SubkeyIdentifier, PGPSecretKeyRing> signingKeys = new ConcurrentHashMap<>();
+                for (Iterator<PGPSecretKey> i = ring.getSecretKeys(); i.hasNext(); ) {
+                    PGPSecretKey s = i.next();
+                    if (EncryptionBuilder.this.signingKeySelector().accept(s)) {
+                        signingKeys.put(new SubkeyIdentifier(ring, s.getKeyID()), ring);
+                    }
+                }
+
+                if (signingKeys.isEmpty()) {
+                    throw new IllegalArgumentException("No suitable signing key found in the key ring " + new OpenPgpV4Fingerprint(ring));
+                }
+
+                EncryptionBuilder.this.signingKeys.putAll(signingKeys);
+            }
+
             EncryptionBuilder.this.signingKeysDecryptor = decryptor;
             return new DocumentTypeImpl();
         }

@@ -226,7 +226,7 @@ public enum SignatureType {
             case CERTIFICATION_REVOCATION:
                 return true;
             default:
-                throw new IllegalArgumentException("Unknown type: " + signatureType);
+                throw new IllegalArgumentException("Unknown signature type: " + signatureType);
         }
     }
 

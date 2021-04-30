@@ -28,6 +28,7 @@ import org.bouncycastle.openpgp.PGPPublicKeyRing;
 import org.bouncycastle.openpgp.PGPSignature;
 import org.junit.jupiter.api.Test;
 import org.pgpainless.PGPainless;
+import org.pgpainless.exception.SignatureValidationException;
 import org.pgpainless.policy.Policy;
 import org.pgpainless.util.BCUtil;
 

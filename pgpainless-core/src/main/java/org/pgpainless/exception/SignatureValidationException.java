@@ -13,20 +13,21 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.pgpainless.signature;
+package org.pgpainless.exception;
 
 import java.util.Map;
 
+import org.bouncycastle.openpgp.PGPException;
 import org.bouncycastle.openpgp.PGPSignature;
 import org.pgpainless.algorithm.SignatureType;
 
-public class SignatureValidationException extends Exception {
+public class SignatureValidationException extends PGPException {
 
     public SignatureValidationException(String message) {
         super(message);
     }
 
-    public SignatureValidationException(String message, Throwable underlying) {
+    public SignatureValidationException(String message, Exception underlying) {
         super(message, underlying);
     }
 
@@ -35,11 +36,13 @@ public class SignatureValidationException extends Exception {
     }
 
     private static String exceptionMapToString(Map<PGPSignature, Exception> rejections) {
-        String out = "";
-        out += rejections.size() + " Rejected signatures:\n";
+        StringBuilder sb = new StringBuilder();
+        sb.append(rejections.size()).append(" rejected signatures:\n");
         for (PGPSignature signature : rejections.keySet()) {
-            out += SignatureType.valueOf(signature.getSignatureType()) + " " + signature.getCreationTime() + ": " + rejections.get(signature).getMessage() + "\n";
+            sb.append(SignatureType.valueOf(signature.getSignatureType())).append(' ')
+                    .append(signature.getCreationTime()).append(": ")
+                    .append(rejections.get(signature).getMessage()).append('\n');
         }
-        return out;
-    };
+        return sb.toString();
+    }
 }

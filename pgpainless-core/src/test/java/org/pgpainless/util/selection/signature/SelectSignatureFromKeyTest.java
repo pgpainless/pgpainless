@@ -15,10 +15,13 @@
  */
 package org.pgpainless.util.selection.signature;
 
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.junit.jupiter.api.Assertions.fail;
+
 import java.io.IOException;
 import java.util.Iterator;
 
-import org.bouncycastle.openpgp.PGPException;
 import org.bouncycastle.openpgp.PGPPublicKey;
 import org.bouncycastle.openpgp.PGPPublicKeyRing;
 import org.bouncycastle.openpgp.PGPSignature;
@@ -29,7 +32,7 @@ import org.pgpainless.signature.SelectSignatureFromKey;
 public class SelectSignatureFromKeyTest {
 
     @Test
-    public void validKeyTest() throws IOException, PGPException {
+    public void validKeyTest() throws IOException {
         String key = "-----BEGIN PGP PUBLIC KEY BLOCK-----\n" +
                 "\n" +
                 "xsDNBF2lnPIBDAC5cL9PQoQLTMuhjbYvb4Ncuuo0bfmgPRFywX53jPhoFf4Zg6mv\n" +
@@ -90,19 +93,19 @@ public class SelectSignatureFromKeyTest {
         PGPPublicKey primaryKey = publicKeys.getPublicKey();
         while (keyIt.hasNext()) {
             PGPPublicKey publicKey = keyIt.next();
-            // CHECKSTYLE:OFF
-            System.out.println(publicKey.getKeyID());
-            // CHECKSTYLE:ON
+            if (publicKey == primaryKey) {
+                continue;
+            }
 
+            boolean validBinding = false;
             Iterator<PGPSignature> signatures = publicKey.getSignatures();
             while (signatures.hasNext()) {
                 PGPSignature signature = signatures.next();
                 if (SelectSignatureFromKey.isValidSubkeyBindingSignature(primaryKey, publicKey).accept(signature, publicKey, publicKeys)) {
-                    // CHECKSTYLE:OFF
-                    System.out.println("Valid subkey binding signature");
-                    // CHECKSTYLE:ON
+                    validBinding = true;
                 }
             }
+            assertTrue(validBinding);
         }
     }
 
@@ -156,31 +159,17 @@ public class SelectSignatureFromKeyTest {
         PGPPublicKey primaryKey = publicKeys.getPublicKey();
         while (keyIt.hasNext()) {
             PGPPublicKey publicKey = keyIt.next();
-            // CHECKSTYLE:OFF
-            System.out.println(publicKey.getKeyID());
-            // CHECKSTYLE:ON
-            if (publicKey.isMasterKey()) {
-                Iterator<PGPSignature> signatures = publicKey.getSignatures();
-                boolean isValidPrimaryKey = false;
-                boolean isRevokedPrimaryKey = false;
-                while (signatures.hasNext()) {
-                    PGPSignature signature = signatures.next();
-                }
-            } else {
-                Iterator<PGPSignature> signatures = publicKey.getSignatures();
-                while (signatures.hasNext()) {
-                    PGPSignature signature = signatures.next();
-
-                    if (SelectSignatureFromKey.isValidSubkeyBindingSignature(primaryKey, publicKey).accept(signature, publicKey, publicKeys)) {
-                        // CHECKSTYLE:OFF
-                        System.out.println("Valid subkey binding signature");
-                        // CHECKSTYLE:ON
-                    }
-                }
+            if (publicKey == primaryKey) {
+                continue;
             }
 
-
-
+            Iterator<PGPSignature> signatures = publicKey.getSignatures();
+            while (signatures.hasNext()) {
+                PGPSignature signature = signatures.next();
+                if (SelectSignatureFromKey.isValidSubkeyBindingSignature(primaryKey, publicKey).accept(signature, publicKey, publicKeys)) {
+                    fail("Implementation MUST NOT accept this subkey as bound valid since the backsig is missing.");
+                }
+            }
         }
     }
 }

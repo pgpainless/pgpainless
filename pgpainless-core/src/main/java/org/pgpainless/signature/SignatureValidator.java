@@ -36,6 +36,7 @@ import org.pgpainless.algorithm.HashAlgorithm;
 import org.pgpainless.algorithm.PublicKeyAlgorithm;
 import org.pgpainless.algorithm.SignatureSubpacket;
 import org.pgpainless.algorithm.SignatureType;
+import org.pgpainless.exception.SignatureValidationException;
 import org.pgpainless.implementation.ImplementationFactory;
 import org.pgpainless.policy.Policy;
 import org.pgpainless.signature.subpackets.SignatureSubpacketsUtil;

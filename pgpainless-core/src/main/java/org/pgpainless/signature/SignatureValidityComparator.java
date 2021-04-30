@@ -35,13 +35,12 @@ public class SignatureValidityComparator implements Comparator<PGPSignature> {
 
     @Override
     public int compare(PGPSignature one, PGPSignature two) {
-        int compareByCreationTime = creationDateComparator.compare(one, two);
         boolean oneIsHard = SignatureUtils.isHardRevocation(one);
         boolean twoIsHard = SignatureUtils.isHardRevocation(two);
 
         // both have same "hardness", so compare creation time
         if (oneIsHard == twoIsHard) {
-            return compareByCreationTime;
+            return creationDateComparator.compare(one, two);
         }
         // favor the "harder" signature
         return oneIsHard ? -1 : 1;
