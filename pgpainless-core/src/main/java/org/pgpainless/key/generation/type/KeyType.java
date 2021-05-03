@@ -98,7 +98,7 @@ public interface KeyType {
      * @return true if the key can encrypt for storage
      */
     default boolean canEncryptStorage() {
-        return canEncryptCommunication();
+        return getAlgorithm().isEncryptionCapable();
     }
 
     static KeyType RSA(RsaLength length) {
