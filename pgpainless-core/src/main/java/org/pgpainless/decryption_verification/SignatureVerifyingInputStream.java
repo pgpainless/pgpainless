@@ -118,7 +118,7 @@ public class SignatureVerifyingInputStream extends FilterInputStream {
             signatureStructureIsAcceptable(signingKey, policy).verify(signature);
             signatureIsEffective(new Date()).verify(signature);
 
-            SignatureChainValidator.validateSigningKey(signature, onePassSignature.getVerificationKeys(), PGPainless.getPolicy(), signature.getCreationTime());
+            SignatureChainValidator.validateSigningKey(signature, onePassSignature.getVerificationKeys(), PGPainless.getPolicy());
 
         } catch (SignatureValidationException e) {
             throw new SignatureException("Signature key is not valid.", e);

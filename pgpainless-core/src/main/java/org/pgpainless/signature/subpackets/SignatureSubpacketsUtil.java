@@ -46,6 +46,7 @@ import org.bouncycastle.openpgp.PGPSignatureSubpacketVector;
 import org.bouncycastle.util.encoders.Hex;
 import org.pgpainless.algorithm.SignatureSubpacket;
 import org.pgpainless.key.OpenPgpV4Fingerprint;
+import org.pgpainless.signature.SignatureUtils;
 
 /**
  * Utility class to access signature subpackets from signatures.
@@ -67,6 +68,13 @@ public class SignatureSubpacketsUtil {
         return hashedOrUnhashed(signature, SignatureSubpacket.issuerFingerprint);
     }
 
+    /**
+     * Return the {@link IssuerFingerprint} subpacket of the signature into a {@link OpenPgpV4Fingerprint}.
+     * If no issuer fingerprint is present in the signature, return null.
+     *
+     * @param signature signature
+     * @return v4 fingerprint of the issuer, or null
+     */
     public static OpenPgpV4Fingerprint getIssuerFingerprintAsOpenPgpV4Fingerprint(PGPSignature signature) {
         IssuerFingerprint subpacket = getIssuerFingerprint(signature);
         if (subpacket == null) {
@@ -123,12 +131,20 @@ public class SignatureSubpacketsUtil {
         return hashed(signature, SignatureSubpacket.signatureExpirationTime);
     }
 
+    /**
+     * Return the signatures expiration time as a date.
+     * The expiration date is computed by adding the expiration time to the signature creation date.
+     * If the signature has no expiration time subpacket, or the expiration time is set to '0', this message returns null.
+     *
+     * @param signature signature
+     * @return expiration time as date
+     */
     public static Date getSignatureExpirationTimeAsDate(PGPSignature signature) {
         SignatureExpirationTime subpacket = getSignatureExpirationTime(signature);
-        if (subpacket == null || subpacket.getTime() == 0) {
+        if (subpacket == null) {
             return null;
         }
-        return new Date(signature.getCreationTime().getTime() + 1000 * subpacket.getTime());
+        return SignatureUtils.datePlusSeconds(signature.getCreationTime(), subpacket.getTime());
     }
 
     /**
@@ -142,15 +158,25 @@ public class SignatureSubpacketsUtil {
         return hashed(signature, SignatureSubpacket.keyExpirationTime);
     }
 
+    /**
+     * Return the signatures key-expiration time as a date.
+     * The expiration date is computed by adding the signatures' key-expiration time to the signing keys
+     * creation date.
+     * If the signature does not have a key-expiration time subpacket, or its value is '0', this method returns null.
+     *
+     * @param signature self-signature carrying the key-expiration time subpacket
+     * @param signingKey signature creation key
+     * @return key expiration time as date
+     */
     public static Date getKeyExpirationTimeAsDate(PGPSignature signature, PGPPublicKey signingKey) {
         KeyExpirationTime subpacket = getKeyExpirationTime(signature);
-        if (subpacket == null || subpacket.getTime() == 0) {
+        if (subpacket == null) {
             return null;
         }
         if (signature.getKeyID() != signingKey.getKeyID()) {
             throw new IllegalArgumentException("Provided key (" + Long.toHexString(signingKey.getKeyID()) + ") did not create the signature (" + Long.toHexString(signature.getKeyID()) + ")");
         }
-        return new Date(signingKey.getCreationTime().getTime() +  1000 * subpacket.getTime());
+        return SignatureUtils.datePlusSeconds(signingKey.getCreationTime(), subpacket.getTime());
     }
 
     /**
@@ -328,14 +354,41 @@ public class SignatureSubpacketsUtil {
         return hashed(signature, SignatureSubpacket.trustSignature);
     }
 
+    /**
+     * Select a list of all signature subpackets of the given type, which are present in the hashed area of
+     * the given signature.
+     *
+     * @param signature signature
+     * @param type subpacket type
+     * @param <P> generic subpacket type
+     * @return list of subpackets from the hashed area
+     */
     private static <P extends org.bouncycastle.bcpg.SignatureSubpacket> P hashed(PGPSignature signature, SignatureSubpacket type) {
         return getSignatureSubpacket(signature.getHashedSubPackets(), type);
     }
 
+    /**
+     * Select a list of all signature subpackets of the given type, which are present in the unhashed area of
+     * the given signature.
+     *
+     * @param signature signature
+     * @param type subpacket type
+     * @param <P> generic subpacket type
+     * @return list of subpackets from the unhashed area
+     */
     private static <P extends org.bouncycastle.bcpg.SignatureSubpacket> P unhashed(PGPSignature signature, SignatureSubpacket type) {
         return getSignatureSubpacket(signature.getUnhashedSubPackets(), type);
     }
 
+    /**
+     * Select a list of all signature subpackets of the given type, which are present in either the hashed
+     * or the unhashed area of the given signature.
+     *
+     * @param signature signature
+     * @param type subpacket type
+     * @param <P> generic subpacket type
+     * @return list of subpackets from the hashed/unhashed area
+     */
     private static <P extends org.bouncycastle.bcpg.SignatureSubpacket> P hashedOrUnhashed(PGPSignature signature, SignatureSubpacket type) {
         P hashedSubpacket = hashed(signature, type);
         return hashedSubpacket != null ? hashedSubpacket : unhashed(signature, type);

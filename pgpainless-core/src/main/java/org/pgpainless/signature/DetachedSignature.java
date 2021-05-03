@@ -20,38 +20,79 @@ import org.bouncycastle.openpgp.PGPSignature;
 import org.pgpainless.key.OpenPgpV4Fingerprint;
 import org.pgpainless.key.SubkeyIdentifier;
 
+/**
+ * Tuple-class which bundles together a signature, the signing key that created the signature,
+ * an identifier of the signing key and a record of whether or not the signature was verified.
+ */
 public class DetachedSignature {
     private final PGPSignature signature;
     private final PGPKeyRing signingKeyRing;
     private final SubkeyIdentifier signingKeyIdentifier;
     private boolean verified;
 
+    /**
+     * Create a new {@link DetachedSignature} object.
+     *
+     * @param signature signature
+     * @param signingKeyRing signing key that created the signature
+     * @param signingKeyIdentifier identifier of the used signing key
+     */
     public DetachedSignature(PGPSignature signature, PGPKeyRing signingKeyRing, SubkeyIdentifier signingKeyIdentifier) {
         this.signature = signature;
         this.signingKeyRing = signingKeyRing;
         this.signingKeyIdentifier = signingKeyIdentifier;
     }
 
+    /**
+     * Mark this {@link DetachedSignature} as verified.
+     *
+     * @param verified verified
+     */
     public void setVerified(boolean verified) {
         this.verified = verified;
     }
 
+    /**
+     * Return true iff the signature is verified.
+     *
+     * @return verified
+     */
     public boolean isVerified() {
         return verified;
     }
 
+    /**
+     * Return the OpenPGP signature.
+     *
+     * @return signature
+     */
     public PGPSignature getSignature() {
         return signature;
     }
 
+    /**
+     * Return an identifier pointing to the exact signing key which was used to create this signature.
+     *
+     * @return signing key identifier
+     */
     public SubkeyIdentifier getSigningKeyIdentifier() {
         return signingKeyIdentifier;
     }
 
+    /**
+     * Return the key ring that contains the signing key that created this signature.
+     *
+     * @return key ring
+     */
     public PGPKeyRing getSigningKeyRing() {
         return signingKeyRing;
     }
 
+    /**
+     * Return the {@link OpenPgpV4Fingerprint} of the key that created the signature.
+     *
+     * @return fingerprint of the signing key
+     */
     @Deprecated
     public OpenPgpV4Fingerprint getFingerprint() {
         return signingKeyIdentifier.getSubkeyFingerprint();

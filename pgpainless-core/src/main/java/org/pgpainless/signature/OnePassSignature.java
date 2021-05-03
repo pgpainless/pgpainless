@@ -21,29 +21,65 @@ import org.bouncycastle.openpgp.PGPPublicKeyRing;
 import org.bouncycastle.openpgp.PGPSignature;
 import org.pgpainless.key.OpenPgpV4Fingerprint;
 
+/**
+ * Tuple-class that bundles together a {@link PGPOnePassSignature} object, a {@link PGPPublicKeyRing}
+ * destined to verify the signature, the {@link PGPSignature} itself and a record of whether or not the signature
+ * was verified.
+ */
 public class OnePassSignature {
     private final PGPOnePassSignature onePassSignature;
     private final PGPPublicKeyRing verificationKeys;
     private PGPSignature signature;
     private boolean verified;
 
+    /**
+     * Create a new {@link OnePassSignature}.
+     *
+     * @param onePassSignature one-pass signature packet used to initialize the signature verifier.
+     * @param verificationKeys verification keys
+     */
     public OnePassSignature(PGPOnePassSignature onePassSignature, PGPPublicKeyRing verificationKeys) {
         this.onePassSignature = onePassSignature;
         this.verificationKeys = verificationKeys;
     }
 
+    /**
+     * Return true if the signature is verified.
+     *
+     * @return verified
+     */
     public boolean isVerified() {
         return verified;
     }
 
+    /**
+     * Return the {@link PGPOnePassSignature} object.
+     *
+     * @return onePassSignature
+     */
     public PGPOnePassSignature getOnePassSignature() {
         return onePassSignature;
     }
 
+    /**
+     * Return the {@link OpenPgpV4Fingerprint} of the signing key.
+     *
+     * @return signing key fingerprint
+     */
     public OpenPgpV4Fingerprint getFingerprint() {
         return new OpenPgpV4Fingerprint(verificationKeys.getPublicKey(onePassSignature.getKeyID()));
     }
 
+    /**
+     * Verify the one-pass signature.
+     * Note: This method only checks if the signature itself is correct.
+     * It does not check if the signing key was eligible to create the signature, or if the signature is expired etc.
+     * Those checks are being done by {@link org.pgpainless.decryption_verification.SignatureVerifyingInputStream}.
+     *
+     * @param signature parsed-out signature
+     * @return true if the signature was verified, false otherwise
+     * @throws PGPException if signature verification fails with an exception.
+     */
     public boolean verify(PGPSignature signature) throws PGPException {
         this.verified = getOnePassSignature().verify(signature);
         if (verified) {
@@ -52,10 +88,20 @@ public class OnePassSignature {
         return verified;
     }
 
+    /**
+     * Return the signature.
+     *
+     * @return signature
+     */
     public PGPSignature getSignature() {
         return signature;
     }
 
+    /**
+     * Return the key ring used to verify the signature.
+     *
+     * @return verification keys
+     */
     public PGPPublicKeyRing getVerificationKeys() {
         return verificationKeys;
     }

@@ -19,15 +19,30 @@ import java.util.Comparator;
 
 import org.bouncycastle.openpgp.PGPSignature;
 
+/**
+ * Comparator which sorts signatures based on an ordering and on revocation hardness.
+ *
+ * If a list of signatures gets ordered using this comparator, hard revocations will always
+ * come first.
+ * Further, signatures are ordered by date according to the {@link org.pgpainless.signature.SignatureCreationDateComparator.Order}.
+ */
 public class SignatureValidityComparator implements Comparator<PGPSignature> {
 
     private final SignatureCreationDateComparator.Order order;
     private final SignatureCreationDateComparator creationDateComparator;
 
+    /**
+     * Create a new {@link SignatureValidityComparator} which orders signatures oldest first.
+     * Still, hard revocations will come first.
+     */
     public SignatureValidityComparator() {
         this(SignatureCreationDateComparator.DEFAULT_ORDER);
     }
 
+    /**
+     * Create a new {@link SignatureValidityComparator} which orders signatures following the passed ordering.
+     * Still, hard revocations will come first.
+     */
     public SignatureValidityComparator(SignatureCreationDateComparator.Order order) {
         this.order = order;
         this.creationDateComparator = new SignatureCreationDateComparator(order);

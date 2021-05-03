@@ -26,6 +26,7 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
+import org.bouncycastle.bcpg.sig.SignerUserID;
 import org.bouncycastle.openpgp.PGPPublicKey;
 import org.bouncycastle.openpgp.PGPPublicKeyRing;
 import org.bouncycastle.openpgp.PGPSignature;
@@ -35,11 +36,32 @@ import org.pgpainless.exception.SignatureValidationException;
 import org.pgpainless.policy.Policy;
 import org.pgpainless.signature.subpackets.SignatureSubpacketsUtil;
 
+/**
+ * This class implements validity checks on OpenPGP signatures.
+ * Its responsibilities are checking if a signing key was eligible to create a certain signature
+ * and if the signature is valid at the time of validation.
+ */
 public class SignatureChainValidator {
 
     private static final Logger LOGGER = Logger.getLogger(SignatureChainValidator.class.getName());
 
-    public static boolean validateSigningKey(PGPSignature signature, PGPPublicKeyRing signingKeyRing, Policy policy, Date validationDate) throws SignatureValidationException {
+    /**
+     * Check if the signing key was eligible to create the provided signature.
+     *
+     * That entails:
+     * - Check, if the primary key is being revoked via key-revocation signatures.
+     * - Check, if the keys user-ids are revoked or not bound.
+     * - Check, if the signing subkey is revoked or expired.
+     * - Check, if the signing key is not capable of signing
+     *
+     * @param signature signature
+     * @param signingKeyRing signing key ring
+     * @param policy validation policy
+     * @return true if the signing key was eligible to create the signature
+     * @throws SignatureValidationException in case of a validation constraint violation
+     */
+    public static boolean validateSigningKey(PGPSignature signature, PGPPublicKeyRing signingKeyRing, Policy policy)
+            throws SignatureValidationException {
 
         Map<PGPSignature, Exception> rejections = new ConcurrentHashMap<>();
 
@@ -50,6 +72,7 @@ public class SignatureChainValidator {
 
         PGPPublicKey primaryKey = signingKeyRing.getPublicKey();
 
+        // Key-Revocation Signatures
         List<PGPSignature> directKeySignatures = new ArrayList<>();
         Iterator<PGPSignature> primaryKeyRevocationIterator = primaryKey.getSignaturesOfType(SignatureType.KEY_REVOCATION.getCode());
         while (primaryKeyRevocationIterator.hasNext()) {
@@ -64,6 +87,7 @@ public class SignatureChainValidator {
             }
         }
 
+        // Direct-Key Signatures
         Iterator<PGPSignature> keySignatures = primaryKey.getSignaturesOfType(SignatureType.DIRECT_KEY.getCode());
         while (keySignatures.hasNext()) {
             PGPSignature keySignature = keySignatures.next();
@@ -78,14 +102,13 @@ public class SignatureChainValidator {
         }
 
         Collections.sort(directKeySignatures, new SignatureValidityComparator(SignatureCreationDateComparator.Order.NEW_TO_OLD));
-        if (directKeySignatures.isEmpty()) {
-
-        } else {
+        if (!directKeySignatures.isEmpty()) {
             if (directKeySignatures.get(0).getSignatureType() == SignatureType.KEY_REVOCATION.getCode()) {
                 throw new SignatureValidationException("Primary key has been revoked.");
             }
         }
 
+        // User-ID signatures (certifications, revocations)
         Iterator<String> userIds = primaryKey.getUserIDs();
         Map<String, List<PGPSignature>> userIdSignatures = new ConcurrentHashMap<>();
         while (userIds.hasNext()) {
@@ -107,23 +130,39 @@ public class SignatureChainValidator {
             userIdSignatures.put(userId, signaturesOnUserId);
         }
 
-        boolean userIdValid = false;
+        boolean anyUserIdValid = false;
         for (String userId : userIdSignatures.keySet()) {
             if (!userIdSignatures.get(userId).isEmpty()) {
                 PGPSignature current = userIdSignatures.get(userId).get(0);
                 if (current.getSignatureType() == SignatureType.CERTIFICATION_REVOCATION.getCode()) {
                     LOGGER.log(Level.FINE, "User-ID '" + userId + "' is revoked.");
                 } else {
-                    userIdValid = true;
+                    anyUserIdValid = true;
                 }
             }
         }
 
-        if (!userIdValid) {
-            throw new SignatureValidationException("Key is not valid at this point.", rejections);
+        if (!anyUserIdValid) {
+            throw new SignatureValidationException("No valid user-id found.", rejections);
         }
 
-        if (signingSubkey != primaryKey) {
+        // Specific signer user-id
+        SignerUserID signerUserID = SignatureSubpacketsUtil.getSignerUserID(signature);
+        if (signerUserID != null) {
+            PGPSignature userIdSig = userIdSignatures.get(signerUserID.getID()).get(0);
+            if (userIdSig.getSignatureType() == SignatureType.CERTIFICATION_REVOCATION.getCode()) {
+                throw new SignatureValidationException("Signature was made with user-id '" + signerUserID.getID() + "' which is revoked.");
+            }
+        }
+
+        if (signingSubkey == primaryKey) {
+            if (!directKeySignatures.isEmpty()) {
+                if (KeyFlag.hasKeyFlag(SignatureSubpacketsUtil.getKeyFlags(directKeySignatures.get(0)).getFlags(), KeyFlag.SIGN_DATA)) {
+                    return true;
+                }
+            }
+        } // Subkey Binding Signatures / Subkey Revocation Signatures
+        else {
             List<PGPSignature> subkeySigs = new ArrayList<>();
             Iterator<PGPSignature> bindingRevocations = signingSubkey.getSignaturesOfType(SignatureType.SUBKEY_REVOCATION.getCode());
             while (bindingRevocations.hasNext()) {
@@ -168,14 +207,41 @@ public class SignatureChainValidator {
         return true;
     }
 
-    public static boolean validateSignatureChain(PGPSignature signature, InputStream signedData, PGPPublicKeyRing signingKeyRing, Policy policy, Date validationDate)
+    /**
+     * Validate the given signing key and then verify the given signature while parsing out the signed data.
+     * Uninitialized means that no signed data has been read and the hash generators state has not yet been updated.
+     *
+     * @param signature uninitialized signature
+     * @param signedData input stream containing signed data
+     * @param signingKeyRing key ring containing signing key
+     * @param policy validation policy
+     * @param validationDate date of validation
+     * @return true if the signature is valid, false otherwise
+     * @throws SignatureValidationException for validation constraint violations
+     */
+    public static boolean validateSignatureChain(PGPSignature signature,
+                                                 InputStream signedData,
+                                                 PGPPublicKeyRing signingKeyRing,
+                                                 Policy policy,
+                                                 Date validationDate)
             throws SignatureValidationException {
-        validateSigningKey(signature, signingKeyRing, policy, validationDate);
+        validateSigningKey(signature, signingKeyRing, policy);
         return SignatureValidator.verifyUninitializedSignature(signature, signedData, signingKeyRing.getPublicKey(signature.getKeyID()), policy, validationDate);
     }
 
-    public static boolean validateSignature(PGPSignature signature, PGPPublicKeyRing verificationKeys, Policy policy) throws SignatureValidationException {
-        validateSigningKey(signature, verificationKeys, policy, signature.getCreationTime());
+    /**
+     * Validate the signing key and the given initialized signature.
+     * Initialized means that the signatures hash generator has already been updated by reading the signed data completely.
+     *
+     * @param signature initialized signature
+     * @param verificationKeys key ring containing the verification key
+     * @param policy validation policy
+     * @return true if the signature is valid, false otherwise
+     * @throws SignatureValidationException in case of a validation constraint violation
+     */
+    public static boolean validateSignature(PGPSignature signature, PGPPublicKeyRing verificationKeys, Policy policy)
+            throws SignatureValidationException {
+        validateSigningKey(signature, verificationKeys, policy);
         PGPPublicKey signingKey = verificationKeys.getPublicKey(signature.getKeyID());
         SignatureValidator.verifyInitializedSignature(signature, signingKey, policy, signature.getCreationTime());
         return true;
