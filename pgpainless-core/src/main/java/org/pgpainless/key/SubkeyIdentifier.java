@@ -62,6 +62,14 @@ public class SubkeyIdentifier {
         this.subkeyFingerprint = subkeyFingerprint;
     }
 
+    public @Nonnull OpenPgpV4Fingerprint getFingerprint() {
+        return getSubkeyFingerprint();
+    }
+
+    public long getKeyId() {
+        return getSubkeyId();
+    }
+
     /**
      * Return the {@link OpenPgpV4Fingerprint} of the primary key of the identified key.
      * This might be the same as {@link #getSubkeyFingerprint()} if the identified subkey is the primary key.
@@ -73,12 +81,31 @@ public class SubkeyIdentifier {
     }
 
     /**
+     * Return the key id of the primary key of the identified key.
+     * This might be the same as {@link #getSubkeyId()} if the identified subkey is the primary key.
+     *
+     * @return primary key id
+     */
+    public long getPrimaryKeyId() {
+        return getPrimaryKeyFingerprint().getKeyId();
+    }
+
+    /**
      * Return the {@link OpenPgpV4Fingerprint} of the identified subkey.
      *
      * @return subkey fingerprint
      */
     public @Nonnull OpenPgpV4Fingerprint getSubkeyFingerprint() {
         return subkeyFingerprint;
+    }
+
+    /**
+     * Return the key id of the identified subkey.
+     *
+     * @return subkey id
+     */
+    public long getSubkeyId() {
+        return getSubkeyFingerprint().getKeyId();
     }
 
     @Override

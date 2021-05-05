@@ -37,8 +37,8 @@ public class EncryptionStreamClosedTest {
         OutputStream out = new ByteArrayOutputStream();
         EncryptionStream stream = PGPainless.encryptAndOrSign()
                 .onOutputStream(out)
-                .forPassphrases(Passphrase.fromPassword("dummy"))
-                .usingSecureAlgorithms()
+                .forPassphrase(Passphrase.fromPassword("dummy"))
+                .and()
                 .doNotSign()
                 .asciiArmor();
 

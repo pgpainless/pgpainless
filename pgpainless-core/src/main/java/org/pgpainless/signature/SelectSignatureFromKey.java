@@ -59,7 +59,7 @@ public abstract class SelectSignatureFromKey {
      * Criterion that checks if the signature is valid at the validation date.
      * A signature is not valid if it was created after the validation date, or if it is expired at the validation date.
      *
-     * creationTime less than or equal validationDate less than expirationDate.
+     * creationTime &le; validationDate &lt; expirationDate.
      *
      * @param validationDate validation date
      * @return criterion implementation

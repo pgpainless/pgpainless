@@ -17,10 +17,6 @@ package org.pgpainless.encryption_signing;
 
 import java.io.IOException;
 import java.io.OutputStream;
-import java.util.Collections;
-import java.util.Map;
-import java.util.Set;
-import java.util.concurrent.ConcurrentHashMap;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import javax.annotation.Nonnull;
@@ -31,29 +27,18 @@ import org.bouncycastle.openpgp.PGPCompressedDataGenerator;
 import org.bouncycastle.openpgp.PGPEncryptedDataGenerator;
 import org.bouncycastle.openpgp.PGPException;
 import org.bouncycastle.openpgp.PGPLiteralDataGenerator;
-import org.bouncycastle.openpgp.PGPPrivateKey;
-import org.bouncycastle.openpgp.PGPPublicKey;
-import org.bouncycastle.openpgp.PGPPublicKeyRing;
-import org.bouncycastle.openpgp.PGPSecretKeyRing;
 import org.bouncycastle.openpgp.PGPSignature;
 import org.bouncycastle.openpgp.PGPSignatureGenerator;
-import org.bouncycastle.openpgp.operator.PBEKeyEncryptionMethodGenerator;
-import org.bouncycastle.openpgp.operator.PGPContentSignerBuilder;
 import org.bouncycastle.openpgp.operator.PGPDataEncryptorBuilder;
-import org.bouncycastle.openpgp.operator.PublicKeyKeyEncryptionMethodGenerator;
+import org.bouncycastle.openpgp.operator.PGPKeyEncryptionMethodGenerator;
 import org.bouncycastle.openpgp.operator.bc.BcPGPDataEncryptorBuilder;
 import org.bouncycastle.openpgp.operator.jcajce.JcePGPDataEncryptorBuilder;
 import org.pgpainless.algorithm.CompressionAlgorithm;
-import org.pgpainless.algorithm.HashAlgorithm;
-import org.pgpainless.algorithm.SignatureType;
 import org.pgpainless.algorithm.SymmetricKeyAlgorithm;
 import org.pgpainless.decryption_verification.OpenPgpMetadata;
 import org.pgpainless.implementation.ImplementationFactory;
 import org.pgpainless.key.SubkeyIdentifier;
-import org.pgpainless.signature.DetachedSignature;
 import org.pgpainless.util.ArmoredOutputStreamFactory;
-import org.pgpainless.util.Passphrase;
-import org.pgpainless.util.Tuple;
 
 /**
  * This class is based upon Jens Neuhalfen's Bouncy-GPG PGPEncryptingStream.
@@ -81,70 +66,36 @@ public final class EncryptionStream extends OutputStream {
     private static final Logger LOGGER = Logger.getLogger(EncryptionStream.class.getName());
     private static final Level LEVEL = Level.FINE;
 
+    private final ProducerOptions options;
+    private final EncryptionResult.Builder resultBuilder = EncryptionResult.builder();
+
+    private boolean closed = false;
     private static final int BUFFER_SIZE = 1 << 8;
 
-    private final SymmetricKeyAlgorithm symmetricKeyAlgorithm;
-    private final HashAlgorithm hashAlgorithm;
-    private final CompressionAlgorithm compressionAlgorithm;
-    private final Map<SubkeyIdentifier, PGPPublicKeyRing> encryptionKeys;
-    private final Set<Passphrase> encryptionPassphrases;
-    private final boolean detachedSignature;
-    private final SignatureType signatureType;
-    private final Map<SubkeyIdentifier, Tuple<PGPSecretKeyRing, PGPPrivateKey>> signingKeys;
-    private final boolean asciiArmor;
-
-    private final OpenPgpMetadata.Builder resultBuilder = OpenPgpMetadata.getBuilder();
-
-    private Map<SubkeyIdentifier, Tuple<PGPSecretKeyRing, PGPSignatureGenerator>> signatureGenerators = new ConcurrentHashMap<>();
-    private boolean closed = false;
-
-    OutputStream outermostStream = null;
-
+    OutputStream outermostStream;
     private ArmoredOutputStream armorOutputStream = null;
     private OutputStream publicKeyEncryptedStream = null;
-
     private PGPCompressedDataGenerator compressedDataGenerator;
     private BCPGOutputStream basicCompressionStream;
-
     private PGPLiteralDataGenerator literalDataGenerator;
     private OutputStream literalDataStream;
 
     EncryptionStream(@Nonnull OutputStream targetOutputStream,
-                     @Nonnull Map<SubkeyIdentifier, PGPPublicKeyRing> encryptionKeys,
-                     @Nonnull Set<Passphrase> encryptionPassphrases,
-                     boolean detachedSignature,
-                     SignatureType signatureType,
-                     @Nonnull Map<SubkeyIdentifier, Tuple<PGPSecretKeyRing, PGPPrivateKey>> signingKeys,
-                     @Nonnull SymmetricKeyAlgorithm symmetricKeyAlgorithm,
-                     @Nonnull HashAlgorithm hashAlgorithm,
-                     @Nonnull CompressionAlgorithm compressionAlgorithm,
-                     boolean asciiArmor,
+                     @Nonnull ProducerOptions options,
                      @Nonnull OpenPgpMetadata.FileInfo fileInfo)
             throws IOException, PGPException {
-
-        this.symmetricKeyAlgorithm = symmetricKeyAlgorithm;
-        this.hashAlgorithm = hashAlgorithm;
-        this.compressionAlgorithm = compressionAlgorithm;
-        this.encryptionKeys = Collections.unmodifiableMap(encryptionKeys);
-        this.encryptionPassphrases = Collections.unmodifiableSet(encryptionPassphrases);
-        this.detachedSignature = detachedSignature;
-        this.signatureType = signatureType;
-        this.signingKeys = Collections.unmodifiableMap(signingKeys);
-        this.asciiArmor = asciiArmor;
-
+        this.options = options;
         outermostStream = targetOutputStream;
+
         prepareArmor();
         prepareEncryption();
-        prepareSigning();
         prepareCompression();
         prepareOnePassSignatures();
         prepareLiteralDataProcessing(fileInfo);
-        prepareResultBuilder();
-        resultBuilder.setFileInfo(fileInfo);
     }
 
     private void prepareArmor() {
-        if (!asciiArmor) {
+        if (!options.isAsciiArmor()) {
             LOGGER.log(LEVEL, "Encryption output will be binary");
             return;
         }
@@ -155,14 +106,18 @@ public final class EncryptionStream extends OutputStream {
     }
 
     private void prepareEncryption() throws IOException, PGPException {
-        if (encryptionKeys.isEmpty() && encryptionPassphrases.isEmpty()) {
+        EncryptionOptions encryptionOptions = options.getEncryptionOptions();
+        if (encryptionOptions == null || encryptionOptions.getEncryptionMethods().isEmpty()) {
+            // No encryption options/methods -> no encryption
+            resultBuilder.setEncryptionAlgorithm(SymmetricKeyAlgorithm.NULL);
             return;
         }
 
-        LOGGER.log(LEVEL, "At least one encryption key is available -> encrypt using " + symmetricKeyAlgorithm);
+        SymmetricKeyAlgorithm encryptionAlgorithm = EncryptionBuilder.negotiateSymmetricEncryptionAlgorithm(encryptionOptions);
+        resultBuilder.setEncryptionAlgorithm(encryptionAlgorithm);
+        LOGGER.log(LEVEL, "Encrypt message using " + encryptionAlgorithm);
         PGPDataEncryptorBuilder dataEncryptorBuilder =
-                ImplementationFactory.getInstance().getPGPDataEncryptorBuilder(symmetricKeyAlgorithm);
-
+                ImplementationFactory.getInstance().getPGPDataEncryptorBuilder(encryptionAlgorithm);
         // Simplify once https://github.com/bcgit/bc-java/pull/859 is merged
         if (dataEncryptorBuilder instanceof BcPGPDataEncryptorBuilder) {
             ((BcPGPDataEncryptorBuilder) dataEncryptorBuilder).setWithIntegrityPacket(true);
@@ -172,46 +127,21 @@ public final class EncryptionStream extends OutputStream {
 
         PGPEncryptedDataGenerator encryptedDataGenerator =
                 new PGPEncryptedDataGenerator(dataEncryptorBuilder);
-
-        for (SubkeyIdentifier keyIdentifier : encryptionKeys.keySet()) {
-            LOGGER.log(LEVEL, "Encrypt for key " + keyIdentifier);
-            PGPPublicKey key = encryptionKeys.get(keyIdentifier).getPublicKey(keyIdentifier.getSubkeyFingerprint().getKeyId());
-            PublicKeyKeyEncryptionMethodGenerator keyEncryption =
-                    ImplementationFactory.getInstance().getPublicKeyKeyEncryptionMethodGenerator(key);
-            encryptedDataGenerator.addMethod(keyEncryption);
+        for (PGPKeyEncryptionMethodGenerator encryptionMethod : encryptionOptions.getEncryptionMethods()) {
+            encryptedDataGenerator.addMethod(encryptionMethod);
         }
 
-        for (Passphrase passphrase : encryptionPassphrases) {
-            PBEKeyEncryptionMethodGenerator passphraseEncryption =
-                    ImplementationFactory.getInstance().getPBEKeyEncryptionMethodGenerator(passphrase);
-            encryptedDataGenerator.addMethod(passphraseEncryption);
+        for (SubkeyIdentifier recipientSubkeyIdentifier : encryptionOptions.getEncryptionKeyIdentifiers()) {
+            resultBuilder.addRecipient(recipientSubkeyIdentifier);
         }
 
         publicKeyEncryptedStream = encryptedDataGenerator.open(outermostStream, new byte[BUFFER_SIZE]);
         outermostStream = publicKeyEncryptedStream;
     }
 
-    private void prepareSigning() throws PGPException {
-        if (signingKeys.isEmpty()) {
-            return;
-        }
-
-        LOGGER.log(LEVEL, "At least one signing key is available -> sign " + hashAlgorithm + " hash of message");
-        for (SubkeyIdentifier subkeyIdentifier : signingKeys.keySet()) {
-            LOGGER.log(LEVEL, "Sign using key " + subkeyIdentifier);
-
-            PGPPrivateKey privateKey = signingKeys.get(subkeyIdentifier).getSecond();
-            PGPContentSignerBuilder contentSignerBuilder = ImplementationFactory.getInstance()
-                    .getPGPContentSignerBuilder(
-                            privateKey.getPublicKeyPacket().getAlgorithm(),
-                            hashAlgorithm.getAlgorithmId());
-            PGPSignatureGenerator signatureGenerator = new PGPSignatureGenerator(contentSignerBuilder);
-            signatureGenerator.init(signatureType.getCode(), privateKey);
-            signatureGenerators.put(subkeyIdentifier, new Tuple<>(signingKeys.get(subkeyIdentifier).getFirst(), signatureGenerator));
-        }
-    }
-
     private void prepareCompression() throws IOException {
+        CompressionAlgorithm compressionAlgorithm = options.getCompressionAlgorithmOverride();
+        resultBuilder.setCompressionAlgorithm(compressionAlgorithm);
         compressedDataGenerator = new PGPCompressedDataGenerator(
                 compressionAlgorithm.getAlgorithmId());
         if (compressionAlgorithm == CompressionAlgorithm.UNCOMPRESSED) {
@@ -224,9 +154,19 @@ public final class EncryptionStream extends OutputStream {
     }
 
     private void prepareOnePassSignatures() throws IOException, PGPException {
-        for (SubkeyIdentifier identifier : signatureGenerators.keySet()) {
-            PGPSignatureGenerator signatureGenerator = signatureGenerators.get(identifier).getSecond();
-            signatureGenerator.generateOnePassVersion(false).encode(outermostStream);
+        SigningOptions signingOptions = options.getSigningOptions();
+        if (signingOptions == null || signingOptions.getSigningMethods().isEmpty()) {
+            // No singing options/methods -> no signing
+            return;
+        }
+
+        for (SubkeyIdentifier identifier : signingOptions.getSigningMethods().keySet()) {
+            SigningOptions.SigningMethod signingMethod = signingOptions.getSigningMethods().get(identifier);
+
+            if (!signingMethod.isDetached()) {
+                PGPSignatureGenerator signatureGenerator = signingMethod.getSignatureGenerator();
+                signatureGenerator.generateOnePassVersion(false).encode(outermostStream);
+            }
         }
     }
 
@@ -238,38 +178,41 @@ public final class EncryptionStream extends OutputStream {
                 fileInfo.getModificationDate(),
                 new byte[BUFFER_SIZE]);
         outermostStream = literalDataStream;
-    }
-
-    private void prepareResultBuilder() {
-        for (SubkeyIdentifier recipient : encryptionKeys.keySet()) {
-            resultBuilder.addRecipientKeyId(recipient.getSubkeyFingerprint().getKeyId());
-        }
-        resultBuilder.setSymmetricKeyAlgorithm(symmetricKeyAlgorithm);
-        resultBuilder.setCompressionAlgorithm(compressionAlgorithm);
+        resultBuilder.setFileInfo(fileInfo);
     }
 
     @Override
     public void write(int data) throws IOException {
         outermostStream.write(data);
+        SigningOptions signingOptions = options.getSigningOptions();
+        if (signingOptions == null || signingOptions.getSigningMethods().isEmpty()) {
+            return;
+        }
 
-        for (SubkeyIdentifier signingKey : signatureGenerators.keySet()) {
-            PGPSignatureGenerator signatureGenerator = signatureGenerators.get(signingKey).getSecond();
+        for (SubkeyIdentifier signingKey : signingOptions.getSigningMethods().keySet()) {
+            SigningOptions.SigningMethod signingMethod = signingOptions.getSigningMethods().get(signingKey);
+            PGPSignatureGenerator signatureGenerator = signingMethod.getSignatureGenerator();
             byte asByte = (byte) (data & 0xff);
             signatureGenerator.update(asByte);
         }
     }
 
     @Override
-    public void write(byte[] buffer) throws IOException {
+    public void write(@Nonnull byte[] buffer) throws IOException {
         write(buffer, 0, buffer.length);
     }
 
 
     @Override
-    public void write(byte[] buffer, int off, int len) throws IOException {
+    public void write(@Nonnull byte[] buffer, int off, int len) throws IOException {
         outermostStream.write(buffer, 0, len);
-        for (SubkeyIdentifier signingKey : signatureGenerators.keySet()) {
-            PGPSignatureGenerator signatureGenerator = signatureGenerators.get(signingKey).getSecond();
+        SigningOptions signingOptions = options.getSigningOptions();
+        if (signingOptions == null || signingOptions.getSigningMethods().isEmpty()) {
+            return;
+        }
+        for (SubkeyIdentifier signingKey : signingOptions.getSigningMethods().keySet()) {
+            SigningOptions.SigningMethod signingMethod = signingOptions.getSigningMethods().get(signingKey);
+            PGPSignatureGenerator signatureGenerator = signingMethod.getSignatureGenerator();
             signatureGenerator.update(buffer, 0, len);
         }
     }
@@ -314,19 +257,23 @@ public final class EncryptionStream extends OutputStream {
     }
 
     private void writeSignatures() throws PGPException, IOException {
-        for (SubkeyIdentifier signingKey : signatureGenerators.keySet()) {
-            PGPSignatureGenerator signatureGenerator = signatureGenerators.get(signingKey).getSecond();
+        SigningOptions signingOptions = options.getSigningOptions();
+        if (signingOptions == null || signingOptions.getSigningMethods().isEmpty()) {
+            return;
+        }
+        for (SubkeyIdentifier signingKey : signingOptions.getSigningMethods().keySet()) {
+            SigningOptions.SigningMethod signingMethod = signingOptions.getSigningMethods().get(signingKey);
+            PGPSignatureGenerator signatureGenerator = signingMethod.getSignatureGenerator();
             PGPSignature signature = signatureGenerator.generate();
-            if (!detachedSignature) {
+            if (signingMethod.isDetached()) {
+                resultBuilder.addDetachedSignature(signingKey, signature);
+            } else {
                 signature.encode(outermostStream);
             }
-            DetachedSignature detachedSignature = new DetachedSignature(
-                    signature, signatureGenerators.get(signingKey).getFirst(), signingKey);
-            resultBuilder.addDetachedSignature(detachedSignature);
         }
     }
 
-    public OpenPgpMetadata getResult() {
+    public EncryptionResult getResult() {
         if (!closed) {
             throw new IllegalStateException("EncryptionStream must be closed before accessing the Result.");
         }

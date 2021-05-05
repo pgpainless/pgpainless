@@ -20,12 +20,12 @@ import static org.pgpainless.util.CollectionUtils.iteratorToList;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Date;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
-import java.util.concurrent.ConcurrentHashMap;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -37,9 +37,14 @@ import org.bouncycastle.openpgp.PGPPublicKeyRing;
 import org.bouncycastle.openpgp.PGPSecretKey;
 import org.bouncycastle.openpgp.PGPSecretKeyRing;
 import org.bouncycastle.openpgp.PGPSignature;
+import org.pgpainless.PGPainless;
+import org.pgpainless.algorithm.HashAlgorithm;
 import org.pgpainless.algorithm.KeyFlag;
 import org.pgpainless.algorithm.PublicKeyAlgorithm;
+import org.pgpainless.encryption_signing.EncryptionStream;
+import org.pgpainless.exception.KeyValidationException;
 import org.pgpainless.key.OpenPgpV4Fingerprint;
+import org.pgpainless.policy.Policy;
 import org.pgpainless.signature.SignaturePicker;
 import org.pgpainless.signature.SignatureUtils;
 import org.pgpainless.signature.subpackets.SignatureSubpacketsUtil;
@@ -52,13 +57,7 @@ public class KeyRingInfo {
     private static final Pattern PATTERN_EMAIL = Pattern.compile("[A-Z0-9a-z._%+-]+@[A-Za-z0-9.-]+\\.[A-Za-z]{2,6}");
 
     private final PGPKeyRing keys;
-
-    private final PGPSignature revocationSelfSignature;
-    private final PGPSignature mostRecentSelfSignature;
-    private final Map<String, PGPSignature> mostRecentUserIdSignatures = new ConcurrentHashMap<>();
-    private final Map<String, PGPSignature> mostRecentUserIdRevocations = new ConcurrentHashMap<>();
-    private final Map<Long, PGPSignature> mostRecentSubkeyBindings = new ConcurrentHashMap<>();
-    private final Map<Long, PGPSignature> mostRecentSubkeyRevocations = new ConcurrentHashMap<>();
+    private Signatures signatures;
 
     /**
      * Evaluate the key ring at creation time of the given signature.
@@ -82,36 +81,7 @@ public class KeyRingInfo {
 
     public KeyRingInfo(PGPKeyRing keys, Date validationDate) {
         this.keys = keys;
-
-        revocationSelfSignature = SignaturePicker.pickCurrentRevocationSelfSignature(keys, validationDate);
-        mostRecentSelfSignature = SignaturePicker.pickCurrentDirectKeySelfSignature(keys, validationDate);
-
-        for (Iterator<String> it = keys.getPublicKey().getUserIDs(); it.hasNext(); ) {
-            String userId = it.next();
-            PGPSignature certification = SignaturePicker.pickCurrentUserIdCertificationSignature(keys, userId, validationDate);
-            if (certification != null) {
-                mostRecentUserIdSignatures.put(userId, certification);
-            }
-            PGPSignature revocation = SignaturePicker.pickCurrentUserIdRevocationSignature(keys, userId, validationDate);
-            if (revocation != null) {
-                mostRecentUserIdRevocations.put(userId, revocation);
-            }
-        }
-
-        Iterator<PGPPublicKey> publicKeys = keys.getPublicKeys();
-        publicKeys.next(); // Skip primary key
-
-        while (publicKeys.hasNext()) {
-            PGPPublicKey subkey = publicKeys.next();
-            PGPSignature bindingSig = SignaturePicker.pickCurrentSubkeyBindingSignature(keys, subkey, validationDate);
-            if (bindingSig != null) {
-                mostRecentSubkeyBindings.put(subkey.getKeyID(), bindingSig);
-            }
-            PGPSignature bindingRevocation = SignaturePicker.pickCurrentSubkeyBindingRevocationSignature(keys, subkey, validationDate);
-            if (bindingRevocation != null) {
-                mostRecentSubkeyRevocations.put(subkey.getKeyID(), bindingRevocation);
-            }
-        }
+        this.signatures = new Signatures(keys, validationDate, PGPainless.getPolicy());
     }
 
     /**
@@ -142,11 +112,11 @@ public class KeyRingInfo {
         }
 
         if (publicKey == getPublicKey()) {
-            return revocationSelfSignature == null;
+            return signatures.primaryKeyRevocation == null;
         }
 
-        PGPSignature binding = mostRecentSubkeyBindings.get(keyId);
-        PGPSignature revocation = mostRecentSubkeyRevocations.get(keyId);
+        PGPSignature binding = signatures.subkeyBindings.get(keyId);
+        PGPSignature revocation = signatures.subkeyRevocations.get(keyId);
         return binding != null && revocation == null;
     }
 
@@ -225,7 +195,7 @@ public class KeyRingInfo {
         String primaryUserId = null;
         Date modificationDate = null;
         for (String userId : getValidUserIds()) {
-            PGPSignature signature = mostRecentUserIdSignatures.get(userId);
+            PGPSignature signature = signatures.userIdCertifications.get(userId);
             PrimaryUserID subpacket = SignatureSubpacketsUtil.getPrimaryUserId(signature);
             if (subpacket != null && subpacket.isPrimaryUserID()) {
                 // if there are multiple primary userIDs, return most recently signed
@@ -235,6 +205,11 @@ public class KeyRingInfo {
                 }
             }
         }
+        // Workaround for keys with only one user-id but no primary user-id packet.
+        if (primaryUserId == null) {
+            return getValidUserIds().get(0);
+        }
+
         return primaryUserId;
     }
 
@@ -261,8 +236,8 @@ public class KeyRingInfo {
     }
 
     public boolean isUserIdValid(String userId) {
-        PGPSignature certification = mostRecentUserIdSignatures.get(userId);
-        PGPSignature revocation = mostRecentUserIdRevocations.get(userId);
+        PGPSignature certification = signatures.userIdCertifications.get(userId);
+        PGPSignature revocation = signatures.userIdRevocations.get(userId);
 
         return certification != null && revocation == null;
     }
@@ -285,34 +260,35 @@ public class KeyRingInfo {
     }
 
     public PGPSignature getCurrentDirectKeySelfSignature() {
-        return mostRecentSelfSignature;
+        return signatures.primaryKeySelfSignature;
     }
 
     public PGPSignature getRevocationSelfSignature() {
-        return revocationSelfSignature;
+        return signatures.primaryKeyRevocation;
     }
 
     public PGPSignature getCurrentUserIdCertification(String userId) {
-        return mostRecentUserIdSignatures.get(userId);
+        return signatures.userIdCertifications.get(userId);
     }
 
     public PGPSignature getUserIdRevocation(String userId) {
-        return mostRecentUserIdRevocations.get(userId);
+        return signatures.userIdRevocations.get(userId);
     }
 
     public PGPSignature getCurrentSubkeyBindingSignature(long keyId) {
-        return mostRecentSubkeyBindings.get(keyId);
+        return signatures.subkeyBindings.get(keyId);
     }
 
     public PGPSignature getSubkeyRevocationSignature(long keyId) {
-        return mostRecentSubkeyRevocations.get(keyId);
+        return signatures.subkeyRevocations.get(keyId);
     }
 
     public List<KeyFlag> getKeyFlagsOf(long keyId) {
         if (getPublicKey().getKeyID() == keyId) {
 
-            if (mostRecentSelfSignature != null) {
-                KeyFlags flags = SignatureSubpacketsUtil.getKeyFlags(mostRecentSelfSignature);
+            PGPSignature directKeySignature = getCurrentDirectKeySelfSignature();
+            if (directKeySignature != null) {
+                KeyFlags flags = SignatureSubpacketsUtil.getKeyFlags(directKeySignature);
                 if (flags != null) {
                     return KeyFlag.fromBitmask(flags.getFlags());
                 }
@@ -320,7 +296,15 @@ public class KeyRingInfo {
 
             String primaryUserId = getPrimaryUserId();
             if (primaryUserId != null) {
-                KeyFlags flags = SignatureSubpacketsUtil.getKeyFlags(mostRecentUserIdSignatures.get(primaryUserId));
+                KeyFlags flags = SignatureSubpacketsUtil.getKeyFlags(getCurrentUserIdCertification(primaryUserId));
+                if (flags != null) {
+                    return KeyFlag.fromBitmask(flags.getFlags());
+                }
+            }
+        } else {
+            PGPSignature bindingSignature = getCurrentSubkeyBindingSignature(keyId);
+            if (bindingSignature != null) {
+                KeyFlags flags = SignatureSubpacketsUtil.getKeyFlags(bindingSignature);
                 if (flags != null) {
                     return KeyFlag.fromBitmask(flags.getFlags());
                 }
@@ -334,7 +318,7 @@ public class KeyRingInfo {
             return Collections.emptyList();
         }
 
-        PGPSignature userIdCertification = mostRecentUserIdSignatures.get(userId);
+        PGPSignature userIdCertification = getCurrentUserIdCertification(userId);
         if (userIdCertification == null) {
             return Collections.emptyList();
         }
@@ -377,12 +361,14 @@ public class KeyRingInfo {
 
     private PGPSignature getMostRecentSignature() {
         Set<PGPSignature> allSignatures = new HashSet<>();
+        PGPSignature mostRecentSelfSignature = getCurrentDirectKeySelfSignature();
+        PGPSignature revocationSelfSignature = getRevocationSelfSignature();
         if (mostRecentSelfSignature != null) allSignatures.add(mostRecentSelfSignature);
         if (revocationSelfSignature != null) allSignatures.add(revocationSelfSignature);
-        allSignatures.addAll(mostRecentUserIdSignatures.values());
-        allSignatures.addAll(mostRecentUserIdRevocations.values());
-        allSignatures.addAll(mostRecentSubkeyBindings.values());
-        allSignatures.addAll(mostRecentSubkeyRevocations.values());
+        allSignatures.addAll(signatures.userIdCertifications.values());
+        allSignatures.addAll(signatures.userIdRevocations.values());
+        allSignatures.addAll(signatures.subkeyBindings.values());
+        allSignatures.addAll(signatures.subkeyRevocations.values());
 
         PGPSignature mostRecent = null;
         for (PGPSignature signature : allSignatures) {
@@ -399,7 +385,7 @@ public class KeyRingInfo {
      * @return revocation date or null
      */
     public Date getRevocationDate() {
-        return revocationSelfSignature == null ? null : revocationSelfSignature.getCreationTime();
+        return getRevocationSelfSignature() == null ? null : getRevocationSelfSignature().getCreationTime();
     }
 
     /**
@@ -409,8 +395,8 @@ public class KeyRingInfo {
      */
     public Date getPrimaryKeyExpirationDate() {
         Date lastExpiration = null;
-        if (mostRecentSelfSignature != null) {
-            lastExpiration = SignatureUtils.getKeyExpirationDate(getCreationDate(), mostRecentSelfSignature);
+        if (getCurrentDirectKeySelfSignature() != null) {
+            lastExpiration = SignatureUtils.getKeyExpirationDate(getCreationDate(), getCurrentDirectKeySelfSignature());
         }
 
         for (String userId : getValidUserIds()) {
@@ -432,7 +418,7 @@ public class KeyRingInfo {
         if (subkey == null) {
             throw new IllegalArgumentException("No subkey with fingerprint " + fingerprint + " found.");
         }
-        return SignatureUtils.getKeyExpirationDate(subkey.getCreationTime(), mostRecentSubkeyBindings.get(fingerprint.getKeyId()));
+        return SignatureUtils.getKeyExpirationDate(subkey.getCreationTime(), getCurrentSubkeyBindingSignature(fingerprint.getKeyId()));
     }
 
     /**
@@ -488,5 +474,131 @@ public class KeyRingInfo {
             return true;
         }
         return false;
+    }
+
+    public PGPPublicKey getEncryptionSubkey(EncryptionStream.Purpose purpose) {
+        Iterator<PGPPublicKey> subkeys = keys.getPublicKeys();
+        while (subkeys.hasNext()) {
+            PGPPublicKey subKey = subkeys.next();
+
+            if (!isKeyValidlyBound(subKey.getKeyID())) {
+                continue;
+            }
+
+            if (!subKey.isEncryptionKey()) {
+                continue;
+            }
+
+            List<KeyFlag> keyFlags = getKeyFlagsOf(subKey.getKeyID());
+            switch (purpose) {
+                case COMMUNICATIONS:
+                    if (keyFlags.contains(KeyFlag.ENCRYPT_COMMS)) {
+                        return subKey;
+                    }
+                    break;
+                case STORAGE:
+                    if (keyFlags.contains(KeyFlag.ENCRYPT_STORAGE)) {
+                        return subKey;
+                    }
+                    break;
+                case STORAGE_AND_COMMUNICATIONS:
+                    if (keyFlags.contains(KeyFlag.ENCRYPT_COMMS) || keyFlags.contains(KeyFlag.ENCRYPT_STORAGE)) {
+                        return subKey;
+                    }
+                    break;
+            }
+        }
+        return null;
+    }
+
+    public PGPPublicKey getEncryptionSubkey(String userId, EncryptionStream.Purpose purpose) {
+        if (userId != null) {
+            if (!isUserIdValid(userId)) {
+                throw new KeyValidationException(userId, getCurrentUserIdCertification(userId), getUserIdRevocation(userId));
+            }
+        }
+
+        return getEncryptionSubkey(purpose);
+    }
+
+    public PGPPublicKey getSigningSubkey() {
+        Iterator<PGPPublicKey> subkeys = keys.getPublicKeys();
+        while (subkeys.hasNext()) {
+            PGPPublicKey subKey = subkeys.next();
+
+            if (!isKeyValidlyBound(subKey.getKeyID())) {
+                continue;
+            }
+
+            if (!subKey.isEncryptionKey()) {
+                continue;
+            }
+
+            List<KeyFlag> keyFlags = getKeyFlagsOf(subKey.getKeyID());
+            if (keyFlags.contains(KeyFlag.SIGN_DATA)) {
+                return subKey;
+            }
+        }
+        return null;
+    }
+
+    public List<HashAlgorithm> getPreferredHashAlgorithms(String userId, long keyID) {
+        PGPSignature signature = getCurrentUserIdCertification(userId == null ? getPrimaryUserId() : userId);
+        if (signature == null) {
+            signature = getCurrentDirectKeySelfSignature();
+        }
+        if (signature == null) {
+            signature = getCurrentSubkeyBindingSignature(keyID);
+        }
+        if (signature == null) {
+            throw new IllegalStateException("No valid signature.");
+        }
+        return SignatureSubpacketsUtil.parsePreferredHashAlgorithms(signature);
+    }
+
+    public static class Signatures {
+
+        private final PGPSignature primaryKeyRevocation;
+        private final PGPSignature primaryKeySelfSignature;
+        private final Map<String, PGPSignature> userIdRevocations;
+        private final Map<String, PGPSignature> userIdCertifications;
+        private final Map<Long, PGPSignature> subkeyRevocations;
+        private final Map<Long, PGPSignature> subkeyBindings;
+
+        public Signatures(PGPKeyRing keyRing, Date evaluationDate, Policy policy) {
+            primaryKeyRevocation = SignaturePicker.pickCurrentRevocationSelfSignature(keyRing, evaluationDate);
+            primaryKeySelfSignature = SignaturePicker.pickCurrentDirectKeySelfSignature(keyRing, evaluationDate);
+            userIdRevocations = new HashMap<>();
+            userIdCertifications = new HashMap<>();
+            subkeyRevocations = new HashMap<>();
+            subkeyBindings = new HashMap<>();
+
+            for (Iterator<String> it = keyRing.getPublicKey().getUserIDs(); it.hasNext(); ) {
+                String userId = it.next();
+                PGPSignature revocation = SignaturePicker.pickCurrentUserIdRevocationSignature(keyRing, userId, evaluationDate);
+                if (revocation != null) {
+                    userIdRevocations.put(userId, revocation);
+                }
+                PGPSignature certification = SignaturePicker.pickCurrentUserIdCertificationSignature(keyRing, userId, evaluationDate);
+                if (certification != null) {
+                    userIdCertifications.put(userId, certification);
+                }
+            }
+
+            Iterator<PGPPublicKey> keys = keyRing.getPublicKeys();
+            keys.next(); // Skip primary key
+            while (keys.hasNext()) {
+                PGPPublicKey subkey = keys.next();
+                PGPSignature subkeyRevocation = SignaturePicker.pickCurrentSubkeyBindingRevocationSignature(keyRing, subkey, evaluationDate);
+                if (subkeyRevocation != null) {
+                    subkeyRevocations.put(subkey.getKeyID(), subkeyRevocation);
+                }
+                PGPSignature subkeyBinding = SignaturePicker.pickCurrentSubkeyBindingSignature(keyRing, subkey, evaluationDate);
+                if (subkeyBinding != null) {
+                    subkeyBindings.put(subkey.getKeyID(), subkeyBinding);
+                }
+            }
+        }
+
     }
 }

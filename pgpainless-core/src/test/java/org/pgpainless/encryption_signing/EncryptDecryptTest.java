@@ -41,12 +41,13 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.MethodSource;
 import org.pgpainless.PGPainless;
+import org.pgpainless.algorithm.DocumentSignatureType;
 import org.pgpainless.algorithm.KeyFlag;
 import org.pgpainless.algorithm.SymmetricKeyAlgorithm;
 import org.pgpainless.decryption_verification.DecryptionStream;
 import org.pgpainless.decryption_verification.OpenPgpMetadata;
 import org.pgpainless.implementation.ImplementationFactory;
-import org.pgpainless.key.OpenPgpV4Fingerprint;
+import org.pgpainless.key.SubkeyIdentifier;
 import org.pgpainless.key.TestKeys;
 import org.pgpainless.key.generation.KeySpec;
 import org.pgpainless.key.generation.type.KeyType;
@@ -155,26 +156,20 @@ public class EncryptDecryptTest {
 
         EncryptionStream encryptor = PGPainless.encryptAndOrSign()
                 .onOutputStream(envelope)
-                .toRecipients(recipientPub)
-                .usingSecureAlgorithms()
-                .signWith(keyDecryptor, senderSec)
-                .signBinaryDocument()
+                .toRecipient(recipientPub)
+                .and()
+                .signInlineWith(keyDecryptor, senderSec, null, DocumentSignatureType.BINARY_DOCUMENT)
                 .noArmor();
 
         Streams.pipeAll(new ByteArrayInputStream(secretMessage), encryptor);
         encryptor.close();
         byte[] encryptedSecretMessage = envelope.toByteArray();
 
-        OpenPgpMetadata encryptionResult = encryptor.getResult();
+        EncryptionResult encryptionResult = encryptor.getResult();
 
-        assertFalse(encryptionResult.getSignatures().isEmpty());
-        for (OpenPgpV4Fingerprint fingerprint : encryptionResult.getVerifiedSignatures().keySet()) {
-            assertTrue(BCUtil.keyRingContainsKeyWithId(senderPub, fingerprint.getKeyId()));
-        }
-
-        assertFalse(encryptionResult.getRecipientKeyIds().isEmpty());
-        for (long keyId : encryptionResult.getRecipientKeyIds()) {
-            assertTrue(BCUtil.keyRingContainsKeyWithId(recipientPub, keyId));
+        assertFalse(encryptionResult.getRecipients().isEmpty());
+        for (SubkeyIdentifier encryptionKey : encryptionResult.getRecipients()) {
+            assertTrue(BCUtil.keyRingContainsKeyWithId(recipientPub, encryptionKey.getKeyId()));
         }
 
         assertEquals(SymmetricKeyAlgorithm.AES_256, encryptionResult.getSymmetricKeyAlgorithm());
@@ -214,15 +209,14 @@ public class EncryptDecryptTest {
         ByteArrayOutputStream dummyOut = new ByteArrayOutputStream();
         EncryptionStream signer = PGPainless.encryptAndOrSign().onOutputStream(dummyOut)
                 .doNotEncrypt()
-                .createDetachedSignature()
-                .signWith(keyRingProtector, signingKeys)
-                .signBinaryDocument()
+                .signDetachedWith(keyRingProtector, signingKeys)
                 .noArmor();
         Streams.pipeAll(inputStream, signer);
         signer.close();
-        OpenPgpMetadata metadata = signer.getResult();
 
-        Set<PGPSignature> signatureSet = metadata.getSignatures();
+        EncryptionResult metadata = signer.getResult();
+
+        Set<PGPSignature> signatureSet = metadata.getDetachedSignatures().get(metadata.getDetachedSignatures().keySet().iterator().next());
         ByteArrayOutputStream sigOut = new ByteArrayOutputStream();
         ArmoredOutputStream armorOut = ArmoredOutputStreamFactory.get(sigOut);
         signatureSet.iterator().next().encode(armorOut);
@@ -244,8 +238,8 @@ public class EncryptDecryptTest {
         Streams.pipeAll(verifier, dummyOut);
         verifier.close();
 
-        metadata = verifier.getResult();
-        assertFalse(metadata.getVerifiedSignatures().isEmpty());
+        OpenPgpMetadata decryptionResult = verifier.getResult();
+        assertFalse(decryptionResult.getVerifiedSignatures().isEmpty());
     }
 
     @ParameterizedTest
@@ -259,8 +253,7 @@ public class EncryptDecryptTest {
         ByteArrayOutputStream signOut = new ByteArrayOutputStream();
         EncryptionStream signer = PGPainless.encryptAndOrSign().onOutputStream(signOut)
                 .doNotEncrypt()
-                .signWith(keyRingProtector, signingKeys)
-                .signBinaryDocument()
+                .signInlineWith(keyRingProtector, signingKeys)
                 .asciiArmor();
         Streams.pipeAll(inputStream, signer);
         signer.close();
@@ -344,6 +337,6 @@ public class EncryptDecryptTest {
         ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
         assertThrows(IllegalArgumentException.class, () ->
         PGPainless.encryptAndOrSign().onOutputStream(outputStream)
-                .toRecipients(publicKeys));
+                .toRecipient(publicKeys));
     }
 }

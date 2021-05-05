@@ -22,17 +22,20 @@ import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Scanner;
 
 import org.bouncycastle.openpgp.PGPException;
 import org.bouncycastle.openpgp.PGPPublicKeyRing;
+import org.bouncycastle.openpgp.PGPPublicKeyRingCollection;
 import org.bouncycastle.openpgp.PGPSecretKey;
 import org.bouncycastle.openpgp.PGPSecretKeyRing;
 import org.bouncycastle.openpgp.PGPSignature;
 import org.bouncycastle.util.io.Streams;
 import org.pgpainless.PGPainless;
+import org.pgpainless.algorithm.DocumentSignatureType;
 import org.pgpainless.algorithm.KeyFlag;
 import org.pgpainless.algorithm.SymmetricKeyAlgorithm;
 import org.pgpainless.encryption_signing.EncryptionBuilderInterface;
@@ -40,6 +43,7 @@ import org.pgpainless.encryption_signing.EncryptionStream;
 import org.pgpainless.key.OpenPgpV4Fingerprint;
 import org.pgpainless.key.protection.KeyRingProtectionSettings;
 import org.pgpainless.key.protection.CachingSecretKeyRingProtector;
+import org.pgpainless.key.protection.SecretKeyRingProtector;
 import org.pgpainless.util.Passphrase;
 import picocli.CommandLine;
 
@@ -86,16 +90,25 @@ public class Encrypt implements Runnable {
             System.exit(19);
         }
 
-        PGPPublicKeyRing[] publicKeys = new PGPPublicKeyRing[certs.length];
+        PGPPublicKeyRing[] pubKeysArray = new PGPPublicKeyRing[certs.length];
         for (int i = 0 ; i < certs.length; i++) {
             try (InputStream fileIn = new FileInputStream(certs[i])) {
                 PGPPublicKeyRing publicKey = PGPainless.readKeyRing().publicKeyRing(fileIn);
-                publicKeys[i] = publicKey;
+                pubKeysArray[i] = publicKey;
             } catch (IOException e) {
                 err_ln("Cannot read certificate " + certs[i].getName());
                 err_ln(e.getMessage());
                 System.exit(1);
             }
+        }
+        PGPPublicKeyRingCollection publicKeys;
+        try {
+            publicKeys = new PGPPublicKeyRingCollection(Arrays.asList(pubKeysArray));
+        } catch (IOException | PGPException e) {
+            err_ln("Cannot construct public key collection.");
+            err_ln(e.getMessage());
+            System.exit(1);
+            return;
         }
         PGPSecretKeyRing[] secretKeys = new PGPSecretKeyRing[signWith.length];
         for (int i = 0; i < signWith.length; i++) {
@@ -140,25 +153,32 @@ public class Encrypt implements Runnable {
             }
         }
 
-        EncryptionBuilderInterface.DetachedSign builder = PGPainless.encryptAndOrSign()
+        EncryptionBuilderInterface.ToRecipientsOrSign builder = PGPainless.encryptAndOrSign()
                 .onOutputStream(System.out)
                 .toRecipients(publicKeys)
-                .and()
-                .forPassphrases(passphraseArray)
-                .usingSecureAlgorithms();
-        EncryptionBuilderInterface.Armor builder_armor;
-        if (signWith.length != 0) {
-            EncryptionBuilderInterface.DocumentType documentType = builder.signWith(new CachingSecretKeyRingProtector(passphraseMap,
-                    KeyRingProtectionSettings.secureDefaultSettings(), null), secretKeys);
-            if (type == Type.text || type == Type.mime) {
-                builder_armor = documentType.signCanonicalText();
-            } else {
-                builder_armor = documentType.signBinaryDocument();
-            }
-        } else {
-            builder_armor = builder.doNotSign();
+                .and();
+        for (Passphrase passphrase : passphraseArray) {
+            builder = builder.forPassphrase(passphrase).and();
         }
+        EncryptionBuilderInterface.Armor builder_armor = null;
+        EncryptionBuilderInterface.SignWith builder1 = builder;
         try {
+            if (signWith.length != 0) {
+                for (int i = 0; i < signWith.length; i++) {
+                    PGPSecretKeyRing secretKeyRing = secretKeys[i];
+                    EncryptionBuilderInterface.AdditionalSignWith additionalSignWith = builder1.signInlineWith(
+                            SecretKeyRingProtector.unlockAllKeysWith(
+                                    passphraseMap.get(secretKeyRing.getPublicKey().getKeyID()),
+                                    secretKeyRing),
+                            secretKeyRing, null,
+                            type == Type.text || type == Type.mime ?
+                                    DocumentSignatureType.CANONICAL_TEXT_DOCUMENT : DocumentSignatureType.BINARY_DOCUMENT);
+                    builder_armor = additionalSignWith;
+                    builder1 = additionalSignWith.and();
+                }
+            } else {
+                builder_armor = builder.doNotSign();
+            }
             EncryptionStream encryptionStream = !armor ? builder_armor.noArmor() : builder_armor.asciiArmor();
 
             Streams.pipeAll(System.in, encryptionStream);

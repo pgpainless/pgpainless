@@ -28,7 +28,7 @@ import org.bouncycastle.openpgp.PGPSecretKeyRing;
 import org.bouncycastle.util.io.Streams;
 import org.junit.jupiter.api.Test;
 import org.pgpainless.PGPainless;
-import org.pgpainless.decryption_verification.OpenPgpMetadata;
+import org.pgpainless.encryption_signing.EncryptionResult;
 import org.pgpainless.encryption_signing.EncryptionStream;
 import org.pgpainless.key.WeirdKeys;
 import org.pgpainless.key.util.KeyRingUtils;
@@ -57,16 +57,16 @@ public class TestTwoSubkeysEncryption {
         ByteArrayOutputStream out = new ByteArrayOutputStream();
         EncryptionStream encryptionStream = PGPainless.encryptAndOrSign(EncryptionStream.Purpose.STORAGE)
                 .onOutputStream(out)
-                .toRecipients(publicKeys)
-                .usingSecureAlgorithms()
+                .toRecipient(publicKeys)
+                .and()
                 .doNotSign()
                 .noArmor();
 
         Streams.pipeAll(getPlainIn(), encryptionStream);
         encryptionStream.close();
 
-        OpenPgpMetadata metadata = encryptionStream.getResult();
+        EncryptionResult metadata = encryptionStream.getResult();
 
-        assertEquals(2, metadata.getRecipientKeyIds().size());
+        assertEquals(2, metadata.getRecipients().size());
     }
 }

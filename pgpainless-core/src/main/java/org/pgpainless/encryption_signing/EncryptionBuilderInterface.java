@@ -25,11 +25,10 @@ import org.bouncycastle.openpgp.PGPPublicKeyRing;
 import org.bouncycastle.openpgp.PGPPublicKeyRingCollection;
 import org.bouncycastle.openpgp.PGPSecretKeyRing;
 import org.bouncycastle.openpgp.PGPSecretKeyRingCollection;
-import org.pgpainless.algorithm.CompressionAlgorithm;
-import org.pgpainless.algorithm.HashAlgorithm;
+import org.pgpainless.algorithm.DocumentSignatureType;
 import org.pgpainless.algorithm.StreamEncoding;
-import org.pgpainless.algorithm.SymmetricKeyAlgorithm;
 import org.pgpainless.decryption_verification.OpenPgpMetadata;
+import org.pgpainless.exception.KeyValidationException;
 import org.pgpainless.key.protection.SecretKeyRingProtector;
 import org.pgpainless.util.Passphrase;
 
@@ -42,7 +41,7 @@ public interface EncryptionBuilderInterface {
      * @param outputStream output stream of the plain data.
      * @return api handle
      */
-    default ToRecipients onOutputStream(@Nonnull OutputStream outputStream) {
+    default ToRecipientsOrNoEncryption onOutputStream(@Nonnull OutputStream outputStream) {
         return onOutputStream(outputStream, OpenPgpMetadata.FileInfo.binaryStream());
     }
     /**
@@ -55,7 +54,7 @@ public interface EncryptionBuilderInterface {
      *
      * @deprecated use {@link #onOutputStream(OutputStream, OpenPgpMetadata.FileInfo)} instead.
      */
-    default ToRecipients onOutputStream(@Nonnull OutputStream outputStream, boolean forYourEyesOnly) {
+    default ToRecipientsOrNoEncryption onOutputStream(@Nonnull OutputStream outputStream, boolean forYourEyesOnly) {
         return onOutputStream(outputStream, forYourEyesOnly ? OpenPgpMetadata.FileInfo.forYourEyesOnly() : OpenPgpMetadata.FileInfo.binaryStream());
     }
 
@@ -70,7 +69,7 @@ public interface EncryptionBuilderInterface {
      *
      * @deprecated use {@link #onOutputStream(OutputStream, OpenPgpMetadata.FileInfo)} instead.
      */
-    default ToRecipients onOutputStream(@Nonnull OutputStream outputStream, String fileName, boolean forYourEyesOnly) {
+    default ToRecipientsOrNoEncryption onOutputStream(@Nonnull OutputStream outputStream, String fileName, boolean forYourEyesOnly) {
         return onOutputStream(outputStream, new OpenPgpMetadata.FileInfo(forYourEyesOnly ? "_CONSOLE" : fileName, new Date(), StreamEncoding.BINARY));
     }
 
@@ -82,102 +81,99 @@ public interface EncryptionBuilderInterface {
      * @param fileInfo file information
      * @return api handle
      */
-    ToRecipients onOutputStream(@Nonnull OutputStream outputStream, OpenPgpMetadata.FileInfo fileInfo);
+    ToRecipientsOrNoEncryption onOutputStream(@Nonnull OutputStream outputStream, OpenPgpMetadata.FileInfo fileInfo);
 
-    interface ToRecipients {
-
-        /**
-         * Pass in a list of trusted public key rings of the recipients.
-         *
-         * @param keys recipient keys for which the message will be encrypted.
-         * @return api handle
-         */
-        WithAlgorithms toRecipients(@Nonnull PGPPublicKeyRing... keys);
+    interface ToRecipientsOrNoEncryption extends ToRecipients {
 
         /**
-         * Pass in a list of trusted public key ring collections of the recipients.
+         * Create an {@link EncryptionStream} with the given options (recipients, signers, algorithms...).
          *
-         * @param keys recipient keys for which the message will be encrypted.
-         * @return api handle
+         * @param options options
+         * @return encryption strea
          */
-        WithAlgorithms toRecipients(@Nonnull PGPPublicKeyRingCollection... keys);
-
-        /**
-         * Encrypt to one or more symmetric passphrases.
-         * Note that the passphrases MUST NOT be empty.
-         *
-         * @param passphrases passphrase
-         * @return api handle
-         */
-        WithAlgorithms forPassphrases(Passphrase... passphrases);
+        EncryptionStream withOptions(ProducerOptions options) throws PGPException, IOException;
 
         /**
          * Instruct the {@link EncryptionStream} to not encrypt any data.
          *
          * @return api handle
          */
-        DetachedSign doNotEncrypt();
+        SignWithOrDontSign doNotEncrypt();
+    }
+
+    interface ToRecipients {
+
+        /**
+         * Encrypt for the given valid public key.
+         * TODO: Explain the difference between this and {@link #toRecipient(PGPPublicKeyRing, String)}.
+         *
+         * @param key recipient key for which the message will be encrypted.
+         * @return api handle
+         */
+        AdditionalRecipients toRecipient(@Nonnull PGPPublicKeyRing key);
+
+        /**
+         * Encrypt for the given valid key using the provided user-id signature to determine preferences.
+         *
+         * @param key public key
+         * @param userId user-id which is used to select the correct encryption parameters based on preferences.
+         * @return api handle
+         */
+        AdditionalRecipients toRecipient(@Nonnull PGPPublicKeyRing key, @Nonnull String userId);
+
+        /**
+         * Encrypt for the first valid key in the provided keys collection which has a valid user-id that matches
+         * the provided userId.
+         * The user-id is also used to determine encryption preferences.
+         *
+         * @param keys collection of keys
+         * @param userId user-id used to select the correct key
+         * @return api handle
+         */
+        AdditionalRecipients toRecipient(@Nonnull PGPPublicKeyRingCollection keys, @Nonnull String userId);
+
+        /**
+         * Encrypt for all valid public keys in the provided collection.
+         * If any key is not eligible for encryption (e.g. expired, revoked...), an exception will be thrown.
+         * TODO: which exception?
+         *
+         * @param keys collection of public keys
+         * @return api handle
+         */
+        AdditionalRecipients toRecipients(@Nonnull PGPPublicKeyRingCollection keys);
+
+        /**
+         * Symmetrically encrypt the message using a passphrase.
+         * Note that the passphrase MUST NOT be empty.
+         *
+         * @param passphrase passphrase
+         * @return api handle
+         */
+        AdditionalRecipients forPassphrase(Passphrase passphrase);
 
     }
 
-    interface WithAlgorithms {
-
+    interface AdditionalRecipients {
         /**
-         * Add our own public key to the list of recipient keys.
-         *
-         * @param keys own public keys
-         * @return api handle
-         */
-        WithAlgorithms andToSelf(@Nonnull PGPPublicKeyRing... keys);
-
-        /**
-         * Add our own public keys to the list of recipient keys.
-         *
-         * @param keys own public keys
-         * @return api handle
-         */
-        WithAlgorithms andToSelf(@Nonnull PGPPublicKeyRingCollection keys);
-
-        /**
-         * Specify which algorithms should be used for the encryption.
-         *
-         * @param symmetricKeyAlgorithm symmetric algorithm for the session key
-         * @param hashAlgorithm hash algorithm
-         * @param compressionAlgorithm compression algorithm
-         * @return api handle
-         */
-        DetachedSign usingAlgorithms(@Nonnull SymmetricKeyAlgorithm symmetricKeyAlgorithm,
-                                 @Nonnull HashAlgorithm hashAlgorithm,
-                                 @Nonnull CompressionAlgorithm compressionAlgorithm);
-
-        /**
-         * Use a suite of algorithms that are considered secure.
+         * Add an additional recipient key/passphrase or configure signing.
          *
          * @return api handle
          */
-        DetachedSign usingSecureAlgorithms();
-
-        ToRecipients and();
-
+        ToRecipientsOrSign and();
     }
 
-    interface DetachedSign extends SignWith {
+    // Allow additional recipient or signing configuration
+    interface ToRecipientsOrSign extends ToRecipients, SignWithOrDontSign {
+    }
 
-        /**
-         * Instruct the {@link EncryptionStream} to generate detached signatures instead of One-Pass-Signatures.
-         * Those can be retrieved later via {@link OpenPgpMetadata#getSignatures()}.
-         *
-         * @return api handle
-         */
-        SignWith createDetachedSignature();
-
+    // Allow signing configuration or no signing at all
+    interface SignWithOrDontSign extends SignWith {
         /**
          * Do not sign the plain data at all.
          *
          * @return api handle
          */
         Armor doNotSign();
-
     }
 
     interface SignWith {
@@ -186,21 +182,104 @@ public interface EncryptionBuilderInterface {
          * Pass in a list of secret keys used for signing, along with a {@link SecretKeyRingProtector} used to unlock
          * the secret keys.
          *
+         * @deprecated use {@link #signInlineWith(SecretKeyRingProtector, PGPSecretKeyRing)} instead.
          * @param decryptor {@link SecretKeyRingProtector} used to unlock the secret keys
          * @param keyRings secret keys used for signing
          * @return api handle
          */
-        DocumentType signWith(@Nonnull SecretKeyRingProtector decryptor, @Nonnull PGPSecretKeyRing... keyRings);
+        @Deprecated
+        AdditionalSignWith signWith(@Nonnull SecretKeyRingProtector decryptor, @Nonnull PGPSecretKeyRing... keyRings) throws KeyValidationException;
 
-        DocumentType signWith(@Nonnull SecretKeyRingProtector decryptor, @Nonnull PGPSecretKeyRingCollection keyRings);
+        /**
+         * Sign inline using the passed in secret keys.
+         *
+         * @deprecated use {@link #signInlineWith(SecretKeyRingProtector, PGPSecretKeyRing)} instead.
+         * @param decryptor for unlocking the secret keys
+         * @param keyRings secret keys
+         * @return api handle
+         */
+        @Deprecated
+        AdditionalSignWith signWith(@Nonnull SecretKeyRingProtector decryptor, @Nonnull PGPSecretKeyRingCollection keyRings) throws KeyValidationException;
 
+        /**
+         * Create an inline signature using the provided secret key.
+         * The signature will be of type {@link DocumentSignatureType#BINARY_DOCUMENT}.
+         *
+         * @param secretKeyDecryptor for unlocking the secret key
+         * @param signingKey signing key
+         * @return api handle
+         */
+        default AdditionalSignWith signInlineWith(@Nonnull SecretKeyRingProtector secretKeyDecryptor, @Nonnull PGPSecretKeyRing signingKey) throws PGPException, KeyValidationException {
+            return signInlineWith(secretKeyDecryptor, signingKey, null);
+        }
+
+        /**
+         * Create an inline signature using the provided secret key.
+         * If userId is not null, the preferences of the matching user-id on the key will be used for signing.
+         * The signature will be of type {@link DocumentSignatureType#BINARY_DOCUMENT}.
+         *
+         * @param secretKeyDecryptor for unlocking the secret key
+         * @param signingKey signing key
+         * @param userId userId whose preferences shall be used for signing
+         * @return api handle
+         */
+        default AdditionalSignWith signInlineWith(@Nonnull SecretKeyRingProtector secretKeyDecryptor, @Nonnull PGPSecretKeyRing signingKey, String userId) throws PGPException, KeyValidationException {
+            return signInlineWith(secretKeyDecryptor, signingKey, userId, DocumentSignatureType.BINARY_DOCUMENT);
+        }
+
+        /**
+         * Create an inline signature using the provided secret key with the algorithm preferences of the provided user-id.
+         *
+         * @param secretKeyDecryptor for unlocking the secret key
+         * @param signingKey signing key
+         * @param userId user-id whose preferences shall be used for signing
+         * @param signatureType signature type
+         * @return api handle
+         */
+        AdditionalSignWith signInlineWith(@Nonnull SecretKeyRingProtector secretKeyDecryptor, @Nonnull PGPSecretKeyRing signingKey, String userId, DocumentSignatureType signatureType) throws KeyValidationException, PGPException;
+
+        /**
+         * Create a detached signature using the provided secret key.
+         *
+         * @param secretKeyDecryptor for unlocking the secret key
+         * @param signingKey signing key
+         * @return api handle
+         */
+        default AdditionalSignWith signDetachedWith(@Nonnull SecretKeyRingProtector secretKeyDecryptor, @Nonnull PGPSecretKeyRing signingKey) throws PGPException, KeyValidationException {
+            return signDetachedWith(secretKeyDecryptor, signingKey, null);
+        }
+
+        /**
+         * Create a detached signature using the provided secret key with the algorithm preferences of the provided user-id.
+         *
+         * @param secretKeyDecryptor for unlocking the secret key
+         * @param signingKey signing key
+         * @param userId user-id whose preferences shall be used for signing
+         * @return api handle
+         */
+        default AdditionalSignWith signDetachedWith(@Nonnull SecretKeyRingProtector secretKeyDecryptor, @Nonnull PGPSecretKeyRing signingKey, String userId) throws PGPException, KeyValidationException {
+            return signDetachedWith(secretKeyDecryptor, signingKey, userId, DocumentSignatureType.BINARY_DOCUMENT);
+        }
+
+        /**
+         * Create a detached signature using the provided secret key with the algorithm preferences of the provided user-id.
+         *
+         * @param secretKeyDecryptor for unlocking the secret key
+         * @param signingKey signing key
+         * @param userId user-id whose preferences shall be used for signing
+         * @param signatureType type of the signature
+         * @return api handle
+         */
+        AdditionalSignWith signDetachedWith(@Nonnull SecretKeyRingProtector secretKeyDecryptor, @Nonnull PGPSecretKeyRing signingKey, String userId, DocumentSignatureType signatureType) throws PGPException, KeyValidationException;
     }
 
-    interface DocumentType {
-
-        Armor signBinaryDocument();
-
-        Armor signCanonicalText();
+    interface AdditionalSignWith extends Armor {
+        /**
+         * Add an additional signing key/method.
+         *
+         * @return api handle
+         */
+        SignWith and();
     }
 
     interface Armor {

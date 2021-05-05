@@ -17,311 +17,202 @@ package org.pgpainless.encryption_signing;
 
 import java.io.IOException;
 import java.io.OutputStream;
-import java.util.ArrayList;
-import java.util.HashSet;
-import java.util.Iterator;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
-import java.util.concurrent.ConcurrentHashMap;
 import javax.annotation.Nonnull;
 
 import org.bouncycastle.openpgp.PGPException;
-import org.bouncycastle.openpgp.PGPPrivateKey;
-import org.bouncycastle.openpgp.PGPPublicKey;
 import org.bouncycastle.openpgp.PGPPublicKeyRing;
 import org.bouncycastle.openpgp.PGPPublicKeyRingCollection;
-import org.bouncycastle.openpgp.PGPSecretKey;
 import org.bouncycastle.openpgp.PGPSecretKeyRing;
 import org.bouncycastle.openpgp.PGPSecretKeyRingCollection;
-import org.bouncycastle.openpgp.operator.PBESecretKeyDecryptor;
 import org.pgpainless.PGPainless;
 import org.pgpainless.algorithm.CompressionAlgorithm;
+import org.pgpainless.algorithm.DocumentSignatureType;
 import org.pgpainless.algorithm.HashAlgorithm;
-import org.pgpainless.algorithm.KeyFlag;
-import org.pgpainless.algorithm.SignatureType;
 import org.pgpainless.algorithm.SymmetricKeyAlgorithm;
 import org.pgpainless.decryption_verification.OpenPgpMetadata;
-import org.pgpainless.key.KeyRingValidator;
-import org.pgpainless.key.OpenPgpV4Fingerprint;
-import org.pgpainless.key.SubkeyIdentifier;
+import org.pgpainless.exception.KeyValidationException;
 import org.pgpainless.key.protection.SecretKeyRingProtector;
-import org.pgpainless.key.protection.UnlockSecretKey;
+import org.pgpainless.policy.Policy;
 import org.pgpainless.util.Passphrase;
-import org.pgpainless.util.Tuple;
-import org.pgpainless.util.selection.key.PublicKeySelectionStrategy;
-import org.pgpainless.util.selection.key.SecretKeySelectionStrategy;
-import org.pgpainless.util.selection.key.impl.And;
-import org.pgpainless.util.selection.key.impl.EncryptionKeySelectionStrategy;
-import org.pgpainless.util.selection.key.impl.NoRevocation;
-import org.pgpainless.util.selection.key.impl.SignatureKeySelectionStrategy;
 
 public class EncryptionBuilder implements EncryptionBuilderInterface {
 
-    private final EncryptionStream.Purpose purpose;
     private OutputStream outputStream;
-    private final Map<SubkeyIdentifier, PGPPublicKeyRing> encryptionKeys = new ConcurrentHashMap<>();
-    private final Set<Passphrase> encryptionPassphrases = new HashSet<>();
-    private boolean detachedSignature = false;
-    private SignatureType signatureType = SignatureType.BINARY_DOCUMENT;
-    private final Map<SubkeyIdentifier, PGPSecretKeyRing> signingKeys = new ConcurrentHashMap<>();
-    private SecretKeyRingProtector signingKeysDecryptor;
-    private SymmetricKeyAlgorithm symmetricKeyAlgorithm = SymmetricKeyAlgorithm.AES_128;
-    private HashAlgorithm hashAlgorithm = HashAlgorithm.SHA256;
-    private CompressionAlgorithm compressionAlgorithm = CompressionAlgorithm.UNCOMPRESSED;
-    private boolean asciiArmor = false;
+    private EncryptionOptions encryptionOptions;
+    private SigningOptions signingOptions = new SigningOptions();
+    private ProducerOptions options;
     private OpenPgpMetadata.FileInfo fileInfo;
 
     public EncryptionBuilder() {
-        this.purpose = EncryptionStream.Purpose.COMMUNICATIONS;
+        this.encryptionOptions = new EncryptionOptions(EncryptionStream.Purpose.COMMUNICATIONS);
     }
 
     public EncryptionBuilder(@Nonnull EncryptionStream.Purpose purpose) {
-        this.purpose = purpose;
+        this.encryptionOptions = new EncryptionOptions(purpose);
     }
 
     @Override
-    public ToRecipients onOutputStream(@Nonnull OutputStream outputStream, OpenPgpMetadata.FileInfo fileInfo) {
+    public ToRecipientsOrNoEncryption onOutputStream(@Nonnull OutputStream outputStream, OpenPgpMetadata.FileInfo fileInfo) {
         this.outputStream = outputStream;
         this.fileInfo = fileInfo;
-        return new ToRecipientsImpl();
+        return new ToRecipientsOrNoEncryptionImpl();
     }
 
     class ToRecipientsImpl implements ToRecipients {
 
         @Override
-        public WithAlgorithms toRecipients(@Nonnull PGPPublicKeyRing... keys) {
-            if (keys.length == 0) {
-                throw new IllegalArgumentException("No public keys provided.");
-            }
+        public AdditionalRecipients toRecipient(@Nonnull PGPPublicKeyRing key) {
+            encryptionOptions.addRecipient(key);
+            return new AdditionalRecipientsImpl();
+        }
 
-            Map<SubkeyIdentifier, PGPPublicKeyRing> encryptionKeys = new ConcurrentHashMap<>();
+        @Override
+        public AdditionalRecipients toRecipient(@Nonnull PGPPublicKeyRing key, @Nonnull String userId) {
+            encryptionOptions.addRecipient(key, userId);
+            return new AdditionalRecipientsImpl();
+        }
+
+        @Override
+        public AdditionalRecipients toRecipient(@Nonnull PGPPublicKeyRingCollection keys, @Nonnull String userId) {
             for (PGPPublicKeyRing ring : keys) {
-                PGPPublicKeyRing validatedKeyRing = KeyRingValidator.validate(ring, PGPainless.getPolicy());
-                for (PGPPublicKey k : validatedKeyRing) {
-                    if (encryptionKeySelector().accept(k)) {
-                        encryptionKeys.put(new SubkeyIdentifier(ring, k.getKeyID()), ring);
-                    }
-                }
+                encryptionOptions.addRecipient(ring, userId);
             }
-            if (encryptionKeys.isEmpty()) {
-                throw new IllegalArgumentException("No valid encryption keys found!");
-            }
-            EncryptionBuilder.this.encryptionKeys.putAll(encryptionKeys);
-
-            return new WithAlgorithmsImpl();
-        }
-
-        private String getPrimaryUserId(PGPPublicKey publicKey) {
-            // TODO: Use real function to get primary userId.
-            return publicKey.getUserIDs().next();
+            return new AdditionalRecipientsImpl();
         }
 
         @Override
-        public WithAlgorithms toRecipients(@Nonnull PGPPublicKeyRingCollection... keys) {
-            if (keys.length == 0) {
-                throw new IllegalArgumentException("No key ring collections provided.");
+        public AdditionalRecipients toRecipients(@Nonnull PGPPublicKeyRingCollection keys) {
+            for (PGPPublicKeyRing ring : keys) {
+                encryptionOptions.addRecipient(ring);
             }
-
-            for (PGPPublicKeyRingCollection collection : keys) {
-                for (PGPPublicKeyRing ring : collection) {
-                    Map<SubkeyIdentifier, PGPPublicKeyRing> encryptionKeys = new ConcurrentHashMap<>();
-                    for (PGPPublicKey k : ring) {
-                        if (encryptionKeySelector().accept(k)) {
-                            encryptionKeys.put(new SubkeyIdentifier(ring, k.getKeyID()), ring);
-                        }
-                    }
-
-                    if (encryptionKeys.isEmpty()) {
-                        throw new IllegalArgumentException("No valid encryption keys found!");
-                    }
-
-                    EncryptionBuilder.this.encryptionKeys.putAll(encryptionKeys);
-                }
-            }
-
-            return new WithAlgorithmsImpl();
+            return new AdditionalRecipientsImpl();
         }
 
         @Override
-        public WithAlgorithms forPassphrases(Passphrase... passphrases) {
-            List<Passphrase> passphraseList = new ArrayList<>();
-            for (Passphrase passphrase : passphrases) {
-                if (passphrase.isEmpty()) {
-                    throw new IllegalArgumentException("Passphrase must not be empty.");
-                }
-                passphraseList.add(passphrase);
-            }
-            EncryptionBuilder.this.encryptionPassphrases.addAll(passphraseList);
-            return new WithAlgorithmsImpl();
-        }
-
-        @Override
-        public DetachedSign doNotEncrypt() {
-            return new DetachedSignImpl();
+        public AdditionalRecipients forPassphrase(Passphrase passphrase) {
+            encryptionOptions.addPassphrase(passphrase);
+            return new AdditionalRecipientsImpl();
         }
     }
 
-    class WithAlgorithmsImpl implements WithAlgorithms {
+    class ToRecipientsOrNoEncryptionImpl extends ToRecipientsImpl implements ToRecipientsOrNoEncryption {
 
         @Override
-        public WithAlgorithms andToSelf(@Nonnull PGPPublicKeyRing... keys) {
-            if (keys.length == 0) {
-                throw new IllegalArgumentException("Recipient list MUST NOT be empty.");
+        public EncryptionStream withOptions(ProducerOptions options) throws PGPException, IOException {
+            if (options == null) {
+                throw new NullPointerException("ProducerOptions cannot be null.");
             }
-            for (PGPPublicKeyRing ring : keys) {
-                Map<SubkeyIdentifier, PGPPublicKeyRing> encryptionKeys = new ConcurrentHashMap<>();
-                for (Iterator<PGPPublicKey> i = ring.getPublicKeys(); i.hasNext(); ) {
-                    PGPPublicKey key = i.next();
-                    if (encryptionKeySelector().accept(key)) {
-                        encryptionKeys.put(new SubkeyIdentifier(ring, key.getKeyID()), ring);
-                    }
-                }
-                if (encryptionKeys.isEmpty()) {
-                    throw new IllegalArgumentException("No suitable encryption key found in the key ring " + new OpenPgpV4Fingerprint(ring));
-                }
-                EncryptionBuilder.this.encryptionKeys.putAll(encryptionKeys);
-            }
-            return this;
+            return new EncryptionStream(outputStream, options, fileInfo);
         }
 
         @Override
-        public WithAlgorithms andToSelf(@Nonnull PGPPublicKeyRingCollection keys) {
-            for (PGPPublicKeyRing ring : keys) {
-                Map<SubkeyIdentifier, PGPPublicKeyRing> encryptionKeys = new ConcurrentHashMap<>();
-                for (Iterator<PGPPublicKey> i = ring.getPublicKeys(); i.hasNext(); ) {
-                    PGPPublicKey key = i.next();
-                    if (encryptionKeySelector().accept(key)) {
-                        encryptionKeys.put(new SubkeyIdentifier(ring, key.getKeyID()), ring);
-                    }
-                }
-                if (encryptionKeys.isEmpty()) {
-                    throw new IllegalArgumentException("No suitable encryption key found in the key ring " + new OpenPgpV4Fingerprint(ring));
-                }
-                EncryptionBuilder.this.encryptionKeys.putAll(encryptionKeys);
-            }
-            return this;
-        }
-
-        @Override
-        public DetachedSign usingAlgorithms(@Nonnull SymmetricKeyAlgorithm symmetricKeyAlgorithm,
-                                            @Nonnull HashAlgorithm hashAlgorithm,
-                                            @Nonnull CompressionAlgorithm compressionAlgorithm) {
-
-            EncryptionBuilder.this.symmetricKeyAlgorithm = symmetricKeyAlgorithm;
-            EncryptionBuilder.this.hashAlgorithm = hashAlgorithm;
-            EncryptionBuilder.this.compressionAlgorithm = compressionAlgorithm;
-
-            return new DetachedSignImpl();
-        }
-
-        @Override
-        public DetachedSign usingSecureAlgorithms() {
-            EncryptionBuilder.this.symmetricKeyAlgorithm = SymmetricKeyAlgorithm.AES_256;
-            EncryptionBuilder.this.hashAlgorithm = HashAlgorithm.SHA512;
-            EncryptionBuilder.this.compressionAlgorithm = CompressionAlgorithm.UNCOMPRESSED;
-
-            return new DetachedSignImpl();
-        }
-
-        @Override
-        public ToRecipients and() {
-            return new ToRecipientsImpl();
+        public SignWithOrDontSign doNotEncrypt() {
+            EncryptionBuilder.this.encryptionOptions = null;
+            return new SignWithOrDontSignImpl();
         }
     }
 
-    class DetachedSignImpl implements DetachedSign {
+    class AdditionalRecipientsImpl implements AdditionalRecipients {
+        @Override
+        public ToRecipientsOrSign and() {
+            return new ToRecipientsOrSignImpl();
+        }
+    }
+
+    class ToRecipientsOrSignImpl extends ToRecipientsImpl implements ToRecipientsOrSign {
 
         @Override
-        public SignWith createDetachedSignature() {
-            EncryptionBuilder.this.detachedSignature = true;
-            return new SignWithImpl();
+        public Armor doNotSign() {
+            EncryptionBuilder.this.signingOptions = null;
+            return new ArmorImpl();
         }
+
+        @Override
+        public AdditionalSignWith signWith(@Nonnull SecretKeyRingProtector decryptor, @Nonnull PGPSecretKeyRing... keyRings) throws KeyValidationException {
+            return new SignWithImpl().signWith(decryptor, keyRings);
+        }
+
+        @Override
+        public AdditionalSignWith signWith(@Nonnull SecretKeyRingProtector decryptor, @Nonnull PGPSecretKeyRingCollection keyRings) {
+            return new SignWithImpl().signWith(decryptor, keyRings);
+        }
+
+        @Override
+        public AdditionalSignWith signInlineWith(@Nonnull SecretKeyRingProtector secretKeyDecryptor, @Nonnull PGPSecretKeyRing signingKey, String userId, DocumentSignatureType signatureType) throws PGPException {
+            return new SignWithImpl().signInlineWith(secretKeyDecryptor, signingKey, userId, signatureType);
+        }
+
+        @Override
+        public AdditionalSignWith signDetachedWith(@Nonnull SecretKeyRingProtector secretKeyDecryptor, @Nonnull PGPSecretKeyRing signingKey, String userId, DocumentSignatureType signatureType) throws PGPException {
+            return new SignWithImpl().signDetachedWith(secretKeyDecryptor, signingKey, userId, signatureType);
+        }
+    }
+
+    class SignWithOrDontSignImpl extends SignWithImpl implements SignWithOrDontSign {
 
         @Override
         public Armor doNotSign() {
             return new ArmorImpl();
         }
-
-        @Override
-        public DocumentType signWith(@Nonnull SecretKeyRingProtector decryptor, @Nonnull PGPSecretKeyRing... keyRings) {
-            return new SignWithImpl().signWith(decryptor, keyRings);
-        }
-
-        @Override
-        public DocumentType signWith(@Nonnull SecretKeyRingProtector decryptor, @Nonnull PGPSecretKeyRingCollection keyRings) {
-            return new SignWithImpl().signWith(decryptor, keyRings);
-        }
-
     }
 
     class SignWithImpl implements SignWith {
 
         @Override
-        public DocumentType signWith(@Nonnull SecretKeyRingProtector decryptor,
-                                     @Nonnull PGPSecretKeyRing... keyRings) {
-            if (keyRings.length == 0) {
-                throw new IllegalArgumentException("Signing key list MUST NOT be empty.");
+        public AdditionalSignWith signWith(@Nonnull SecretKeyRingProtector decryptor,
+                                           @Nonnull PGPSecretKeyRing... keyRings)
+                throws KeyValidationException {
+            for (PGPSecretKeyRing secretKeyRing : keyRings) {
+                signingOptions.addInlineSignature(decryptor, secretKeyRing, DocumentSignatureType.BINARY_DOCUMENT);
             }
-            for (PGPSecretKeyRing ring : keyRings) {
-                Map<SubkeyIdentifier, PGPSecretKeyRing> signingKeys = new ConcurrentHashMap<>();
-                for (Iterator<PGPSecretKey> i = ring.getSecretKeys(); i.hasNext(); ) {
-                    PGPSecretKey s = i.next();
-                    if (EncryptionBuilder.this.signingKeySelector().accept(s)) {
-                        signingKeys.put(new SubkeyIdentifier(ring, s.getKeyID()), ring);
-                    }
-                }
-
-                if (signingKeys.isEmpty()) {
-                    throw new IllegalArgumentException("No suitable signing key found in the key ring " + new OpenPgpV4Fingerprint(ring));
-                }
-
-                EncryptionBuilder.this.signingKeys.putAll(signingKeys);
-            }
-            EncryptionBuilder.this.signingKeysDecryptor = decryptor;
-            return new DocumentTypeImpl();
+            return new AdditionalSignWithImpl();
         }
 
         @Override
-        public DocumentType signWith(@Nonnull SecretKeyRingProtector decryptor, @Nonnull PGPSecretKeyRingCollection keyRings) {
-            Iterator<PGPSecretKeyRing> iterator = keyRings.iterator();
-            if (!iterator.hasNext()) {
-                throw new IllegalArgumentException("Signing key collection MUST NOT be empty.");
+        public AdditionalSignWith signWith(@Nonnull SecretKeyRingProtector decryptor, @Nonnull PGPSecretKeyRingCollection keyRings)
+                throws KeyValidationException {
+            for (PGPSecretKeyRing key : keyRings) {
+                signingOptions.addInlineSignature(decryptor, key, DocumentSignatureType.BINARY_DOCUMENT);
             }
-            while (iterator.hasNext()) {
-                PGPSecretKeyRing ring = iterator.next();
-                Map<SubkeyIdentifier, PGPSecretKeyRing> signingKeys = new ConcurrentHashMap<>();
-                for (Iterator<PGPSecretKey> i = ring.getSecretKeys(); i.hasNext(); ) {
-                    PGPSecretKey s = i.next();
-                    if (EncryptionBuilder.this.signingKeySelector().accept(s)) {
-                        signingKeys.put(new SubkeyIdentifier(ring, s.getKeyID()), ring);
-                    }
-                }
+            return new AdditionalSignWithImpl();
+        }
 
-                if (signingKeys.isEmpty()) {
-                    throw new IllegalArgumentException("No suitable signing key found in the key ring " + new OpenPgpV4Fingerprint(ring));
-                }
+        @Override
+        public AdditionalSignWith signInlineWith(@Nonnull SecretKeyRingProtector secretKeyDecryptor,
+                                                 @Nonnull PGPSecretKeyRing signingKey,
+                                                 String userId,
+                                                 DocumentSignatureType signatureType)
+                throws KeyValidationException, PGPException {
+            signingOptions.addInlineSignature(secretKeyDecryptor, signingKey, userId, signatureType);
+            return new AdditionalSignWithImpl();
+        }
 
-                EncryptionBuilder.this.signingKeys.putAll(signingKeys);
-            }
-
-            EncryptionBuilder.this.signingKeysDecryptor = decryptor;
-            return new DocumentTypeImpl();
+        @Override
+        public AdditionalSignWith signDetachedWith(@Nonnull SecretKeyRingProtector secretKeyDecryptor,
+                                                   @Nonnull PGPSecretKeyRing signingKey,
+                                                   String userId,
+                                                   DocumentSignatureType signatureType)
+                throws PGPException, KeyValidationException {
+            signingOptions.addInlineSignature(secretKeyDecryptor, signingKey, userId, signatureType);
+            return new AdditionalSignWithImpl();
         }
     }
 
-    class DocumentTypeImpl implements DocumentType {
+    class AdditionalSignWithImpl implements AdditionalSignWith {
 
         @Override
-        public Armor signBinaryDocument() {
-            EncryptionBuilder.this.signatureType = SignatureType.BINARY_DOCUMENT;
-            return new ArmorImpl();
+        public SignWith and() {
+            return new SignWithImpl();
         }
 
         @Override
-        public Armor signCanonicalText() {
-            EncryptionBuilder.this.signatureType = SignatureType.CANONICAL_TEXT_DOCUMENT;
-            return new ArmorImpl();
+        public EncryptionStream asciiArmor() throws IOException, PGPException {
+            return new ArmorImpl().asciiArmor();
+        }
+
+        @Override
+        public EncryptionStream noArmor() throws IOException, PGPException {
+            return new ArmorImpl().noArmor();
         }
     }
 
@@ -329,70 +220,87 @@ public class EncryptionBuilder implements EncryptionBuilderInterface {
 
         @Override
         public EncryptionStream asciiArmor() throws IOException, PGPException {
-            EncryptionBuilder.this.asciiArmor = true;
+            assignProducerOptions();
+            options.setAsciiArmor(true);
             return build();
         }
 
         @Override
         public EncryptionStream noArmor() throws IOException, PGPException {
-            EncryptionBuilder.this.asciiArmor = false;
+            assignProducerOptions();
+            options.setAsciiArmor(false);
             return build();
         }
 
         private EncryptionStream build() throws IOException, PGPException {
-
-            Map<SubkeyIdentifier, Tuple<PGPSecretKeyRing, PGPPrivateKey>> privateKeys = new ConcurrentHashMap<>();
-            for (SubkeyIdentifier signingKey : signingKeys.keySet()) {
-                PGPSecretKeyRing secretKeyRing = signingKeys.get(signingKey);
-                PGPSecretKey secretKey = secretKeyRing.getSecretKey(signingKey.getSubkeyFingerprint().getKeyId());
-                PBESecretKeyDecryptor decryptor = signingKeysDecryptor.getDecryptor(secretKey.getKeyID());
-                PGPPrivateKey privateKey = UnlockSecretKey.unlockSecretKey(secretKey, decryptor);
-                privateKeys.put(signingKey, new Tuple<>(secretKeyRing, privateKey));
-            }
-
             return new EncryptionStream(
                     EncryptionBuilder.this.outputStream,
-                    EncryptionBuilder.this.encryptionKeys,
-                    EncryptionBuilder.this.encryptionPassphrases,
-                    EncryptionBuilder.this.detachedSignature,
-                    signatureType,
-                    privateKeys,
-                    EncryptionBuilder.this.symmetricKeyAlgorithm,
-                    EncryptionBuilder.this.hashAlgorithm,
-                    EncryptionBuilder.this.compressionAlgorithm,
-                    EncryptionBuilder.this.asciiArmor,
+                    EncryptionBuilder.this.options,
                     fileInfo);
         }
-    }
 
-    PublicKeySelectionStrategy encryptionKeySelector() {
-        KeyFlag[] flags = mapPurposeToKeyFlags(purpose);
-        return new And.PubKeySelectionStrategy(
-                new NoRevocation.PubKeySelectionStrategy(),
-                new EncryptionKeySelectionStrategy(flags));
-    }
-
-    SecretKeySelectionStrategy signingKeySelector() {
-        return new And.SecKeySelectionStrategy(
-                new NoRevocation.SecKeySelectionStrategy(),
-                new SignatureKeySelectionStrategy());
-    }
-
-    private static KeyFlag[] mapPurposeToKeyFlags(EncryptionStream.Purpose purpose) {
-        KeyFlag[] flags;
-        switch (purpose) {
-            case COMMUNICATIONS:
-                flags = new KeyFlag[] {KeyFlag.ENCRYPT_COMMS};
-                break;
-            case STORAGE:
-                flags = new KeyFlag[] {KeyFlag.ENCRYPT_STORAGE};
-                break;
-            case STORAGE_AND_COMMUNICATIONS:
-                flags = new KeyFlag[] {KeyFlag.ENCRYPT_COMMS, KeyFlag.ENCRYPT_STORAGE};
-                break;
-            default:
-                throw new AssertionError("Illegal purpose enum value encountered.");
+        private void assignProducerOptions() {
+            if (encryptionOptions != null && signingOptions != null) {
+                options = ProducerOptions.signAndEncrypt(encryptionOptions, signingOptions);
+            } else if (encryptionOptions != null) {
+                options = ProducerOptions.encrypt(encryptionOptions);
+            } else if (signingOptions != null) {
+                options = ProducerOptions.sign(signingOptions);
+            } else {
+                options = ProducerOptions.noEncryptionNoSigning();
+            }
         }
-        return flags;
+    }
+
+    /**
+     * Negotiate the {@link SymmetricKeyAlgorithm} used for message encryption.
+     * If the user chose to set an override ({@link EncryptionOptions#overrideEncryptionAlgorithm(SymmetricKeyAlgorithm)}, use that.
+     * Otherwise find an algorithm which is acceptable for all recipients.
+     * If no consensus can be reached, use {@link Policy.SymmetricKeyAlgorithmPolicy#getDefaultSymmetricKeyAlgorithm()}.
+     *
+     * @param encryptionOptions encryption options
+     * @return negotiated symmetric key algorithm
+     */
+    public static SymmetricKeyAlgorithm negotiateSymmetricEncryptionAlgorithm(EncryptionOptions encryptionOptions) {
+        SymmetricKeyAlgorithm encryptionAlgorithmOverride = encryptionOptions.getEncryptionAlgorithmOverride();
+        if (encryptionAlgorithmOverride != null) {
+            return encryptionAlgorithmOverride;
+        }
+
+        // TODO: Negotiation
+
+        return PGPainless.getPolicy().getSymmetricKeyAlgorithmPolicy().getDefaultSymmetricKeyAlgorithm();
+    }
+
+    /**
+     * Negotiate the {@link HashAlgorithm} used for signatures.
+     *
+     * If we encrypt and sign, we look at the recipients keys to determine which algorithm to use.
+     * If we only sign, we look at the singing keys preferences instead.
+     *
+     * @param encryptionOptions encryption options (recipients keys)
+     * @param signingOptions signing options (signing keys)
+     * @return negotiated hash algorithm
+     */
+    public static HashAlgorithm negotiateSignatureHashAlgorithm(EncryptionOptions encryptionOptions, SigningOptions signingOptions) {
+        HashAlgorithm hashAlgorithmOverride = signingOptions.getHashAlgorithmOverride();
+        if (hashAlgorithmOverride != null) {
+            return hashAlgorithmOverride;
+        }
+
+        // TODO: Negotiation
+
+        return PGPainless.getPolicy().getSignatureHashAlgorithmPolicy().defaultHashAlgorithm();
+    }
+
+    public static CompressionAlgorithm negotiateCompressionAlgorithm(ProducerOptions producerOptions) {
+        CompressionAlgorithm compressionAlgorithmOverride = producerOptions.getCompressionAlgorithmOverride();
+        if (compressionAlgorithmOverride != null) {
+            return compressionAlgorithmOverride;
+        }
+
+        // TODO: Negotiation
+
+        return PGPainless.getPolicy().getCompressionAlgorithmPolicy().defaultCompressionAlgorithm();
     }
 }

@@ -31,6 +31,7 @@ import org.bouncycastle.openpgp.PGPPublicKeyRing;
 import org.bouncycastle.openpgp.PGPSecretKeyRing;
 import org.bouncycastle.util.io.Streams;
 import org.pgpainless.PGPainless;
+import org.pgpainless.algorithm.DocumentSignatureType;
 import org.pgpainless.key.TestKeys;
 import org.pgpainless.key.generation.type.rsa.RsaLength;
 import org.pgpainless.key.protection.SecretKeyRingProtector;
@@ -111,11 +112,9 @@ public class LengthTest {
 
             OutputStream encryptor = PGPainless.encryptAndOrSign()
                     .onOutputStream(envelope)
-                    .toRecipients(recipientPub)
-                    // .doNotEncrypt()
-                    .usingSecureAlgorithms()
-                    .signWith(keyDecryptor, senderSec)
-                    .signBinaryDocument()
+                    .toRecipient(recipientPub)
+                    .and()
+                    .signInlineWith(keyDecryptor, senderSec, "simplejid@server.tld", DocumentSignatureType.BINARY_DOCUMENT)
                     .noArmor();
 
             Streams.pipeAll(new ByteArrayInputStream(secretMessage), encryptor);

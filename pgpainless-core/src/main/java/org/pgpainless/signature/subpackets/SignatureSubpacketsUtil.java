@@ -20,6 +20,8 @@ import java.util.Arrays;
 import java.util.Date;
 import java.util.List;
 
+import javax.annotation.Nullable;
+
 import org.bouncycastle.bcpg.sig.Exportable;
 import org.bouncycastle.bcpg.sig.Features;
 import org.bouncycastle.bcpg.sig.IntendedRecipientFingerprint;
@@ -44,7 +46,11 @@ import org.bouncycastle.openpgp.PGPSignature;
 import org.bouncycastle.openpgp.PGPSignatureList;
 import org.bouncycastle.openpgp.PGPSignatureSubpacketVector;
 import org.bouncycastle.util.encoders.Hex;
+import org.pgpainless.algorithm.CompressionAlgorithm;
+import org.pgpainless.algorithm.HashAlgorithm;
+import org.pgpainless.algorithm.KeyFlag;
 import org.pgpainless.algorithm.SignatureSubpacket;
+import org.pgpainless.algorithm.SymmetricKeyAlgorithm;
 import org.pgpainless.key.OpenPgpV4Fingerprint;
 import org.pgpainless.signature.SignatureUtils;
 
@@ -200,6 +206,17 @@ public class SignatureSubpacketsUtil {
         return hashed(signature, SignatureSubpacket.preferredSymmetricAlgorithms);
     }
 
+    public static List<SymmetricKeyAlgorithm> parsePreferredSymmetricKeyAlgorithms(PGPSignature signature) {
+        List<SymmetricKeyAlgorithm> algorithms = new ArrayList<>();
+        PreferredAlgorithms preferences = getPreferredSymmetricAlgorithms(signature);
+        if (preferences != null) {
+            for (int code : preferences.getPreferences()) {
+                algorithms.add(SymmetricKeyAlgorithm.fromId(code));
+            }
+        }
+        return algorithms;
+    }
+
     /**
      * Return the hash algorithm preferences from the signatures hashed area.
      *
@@ -210,6 +227,17 @@ public class SignatureSubpacketsUtil {
         return hashed(signature, SignatureSubpacket.preferredHashAlgorithms);
     }
 
+    public static List<HashAlgorithm> parsePreferredHashAlgorithms(PGPSignature signature) {
+        List<HashAlgorithm> algorithms = new ArrayList<>();
+        PreferredAlgorithms preferences = getPreferredHashAlgorithms(signature);
+        if (preferences != null) {
+            for (int code : preferences.getPreferences()) {
+                algorithms.add(HashAlgorithm.fromId(code));
+            }
+        }
+        return algorithms;
+    }
+
     /**
      * Return the compression algorithm preferences from the signatures hashed area.
      *
@@ -218,6 +246,17 @@ public class SignatureSubpacketsUtil {
      */
     public static PreferredAlgorithms getPreferredCompressionAlgorithms(PGPSignature signature) {
         return hashed(signature, SignatureSubpacket.preferredCompressionAlgorithms);
+    }
+
+    public static List<CompressionAlgorithm> parsePreferredCompressionAlgorithms(PGPSignature signature) {
+        List<CompressionAlgorithm> algorithms = new ArrayList<>();
+        PreferredAlgorithms preferences = getPreferredCompressionAlgorithms(signature);
+        if (preferences != null) {
+            for (int code : preferences.getPreferences()) {
+                algorithms.add(CompressionAlgorithm.fromId(code));
+            }
+        }
+        return algorithms;
     }
 
     /**
@@ -238,6 +277,24 @@ public class SignatureSubpacketsUtil {
      */
     public static KeyFlags getKeyFlags(PGPSignature signature) {
         return hashed(signature, SignatureSubpacket.keyFlags);
+    }
+
+    /**
+     * Return a list of key flags carried by the signature.
+     * If the signature is null, or has no {@link KeyFlags} subpacket, return null.
+     *
+     * @param signature signature
+     * @return list of key flags
+     */
+    public static List<KeyFlag> parseKeyFlags(@Nullable PGPSignature signature) {
+        if (signature == null) {
+            return null;
+        }
+        KeyFlags keyFlags = getKeyFlags(signature);
+        if (keyFlags == null) {
+            return null;
+        }
+        return KeyFlag.fromBitmask(keyFlags.getFlags());
     }
 
     /**

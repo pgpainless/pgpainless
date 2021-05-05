@@ -17,18 +17,23 @@ package org.bouncycastle;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import java.security.InvalidAlgorithmParameterException;
 import java.security.NoSuchAlgorithmException;
+import java.util.Collections;
 import java.util.Iterator;
+import java.util.List;
 
 import org.bouncycastle.openpgp.PGPException;
 import org.bouncycastle.openpgp.PGPPublicKey;
 import org.bouncycastle.openpgp.PGPPublicKeyRing;
 import org.bouncycastle.openpgp.PGPSecretKeyRing;
+import org.bouncycastle.openpgp.PGPSignature;
 import org.junit.jupiter.api.Test;
 import org.pgpainless.PGPainless;
 import org.pgpainless.key.util.KeyRingUtils;
+import org.pgpainless.util.CollectionUtils;
 
 public class PGPPublicKeyRingTest {
 
@@ -56,5 +61,22 @@ public class PGPPublicKeyRingTest {
                 assertFalse(userIds.hasNext());
             }
         }
+    }
+
+    @Test
+    public void removeUserIdTest() throws PGPException, InvalidAlgorithmParameterException, NoSuchAlgorithmException {
+        String userId = "alice@wonderland.lit";
+        PGPSecretKeyRing secretKeyRing = PGPainless.generateKeyRing().simpleEcKeyRing(userId);
+        PGPPublicKeyRing publicKeys = KeyRingUtils.publicKeyRingFrom(secretKeyRing);
+
+        List<String> userIds = CollectionUtils.iteratorToList(publicKeys.getPublicKey().getUserIDs());
+        assertTrue(userIds.contains(userId));
+
+        PGPPublicKey publicKey = publicKeys.getPublicKey();
+        PGPSignature cert = publicKey.getSignaturesForID(userId).next();
+        publicKey = PGPPublicKey.removeCertification(publicKey, cert);
+
+        userIds = CollectionUtils.iteratorToList(publicKey.getUserIDs());
+        assertFalse(userIds.contains(userId));
     }
 }

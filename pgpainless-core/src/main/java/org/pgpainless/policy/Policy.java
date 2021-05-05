@@ -19,6 +19,7 @@ import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 
+import org.pgpainless.algorithm.CompressionAlgorithm;
 import org.pgpainless.algorithm.HashAlgorithm;
 import org.pgpainless.algorithm.SymmetricKeyAlgorithm;
 import org.pgpainless.util.NotationRegistry;
@@ -38,6 +39,8 @@ public final class Policy {
             SymmetricKeyAlgorithmPolicy.defaultSymmetricKeyEncryptionAlgorithmPolicy();
     private SymmetricKeyAlgorithmPolicy symmetricKeyDecryptionAlgorithmPolicy =
             SymmetricKeyAlgorithmPolicy.defaultSymmetricKeyDecryptionAlgorithmPolicy();
+    private CompressionAlgorithmPolicy compressionAlgorithmPolicy =
+            CompressionAlgorithmPolicy.defaultCompressionAlgorithmPolicy();
     private final NotationRegistry notationRegistry = new NotationRegistry();
 
     private Policy() {
@@ -140,6 +143,17 @@ public final class Policy {
             throw new NullPointerException("Policy cannot be null.");
         }
         this.symmetricKeyDecryptionAlgorithmPolicy = policy;
+    }
+
+    public CompressionAlgorithmPolicy getCompressionAlgorithmPolicy() {
+        return compressionAlgorithmPolicy;
+    }
+
+    public void setCompressionAlgorithmPolicy(CompressionAlgorithmPolicy policy) {
+        if (policy == null) {
+            throw new NullPointerException("Compression policy cannot be null.");
+        }
+        this.compressionAlgorithmPolicy = policy;
     }
 
     public static final class SymmetricKeyAlgorithmPolicy {
@@ -293,6 +307,39 @@ public final class Policy {
                     HashAlgorithm.SHA256,
                     HashAlgorithm.SHA384,
                     HashAlgorithm.SHA512
+            ));
+        }
+    }
+
+    public static final class CompressionAlgorithmPolicy {
+
+        private final CompressionAlgorithm defaultCompressionAlgorithm;
+        private final List<CompressionAlgorithm> acceptableCompressionAlgorithms;
+
+        public CompressionAlgorithmPolicy(CompressionAlgorithm defaultCompressionAlgorithm,
+                                          List<CompressionAlgorithm> acceptableCompressionAlgorithms) {
+            this.defaultCompressionAlgorithm = defaultCompressionAlgorithm;
+            this.acceptableCompressionAlgorithms = Collections.unmodifiableList(acceptableCompressionAlgorithms);
+        }
+
+        public CompressionAlgorithm defaultCompressionAlgorithm() {
+            return defaultCompressionAlgorithm;
+        }
+
+        public boolean isAcceptable(int compressionAlgorithmTag) {
+            return isAcceptable(CompressionAlgorithm.fromId(compressionAlgorithmTag));
+        }
+
+        public boolean isAcceptable(CompressionAlgorithm compressionAlgorithm) {
+            return acceptableCompressionAlgorithms.contains(compressionAlgorithm);
+        }
+
+        public static CompressionAlgorithmPolicy defaultCompressionAlgorithmPolicy() {
+            return new CompressionAlgorithmPolicy(CompressionAlgorithm.UNCOMPRESSED, Arrays.asList(
+                    CompressionAlgorithm.UNCOMPRESSED,
+                    CompressionAlgorithm.ZIP,
+                    CompressionAlgorithm.BZIP2,
+                    CompressionAlgorithm.ZLIB
             ));
         }
     }

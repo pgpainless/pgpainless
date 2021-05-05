@@ -36,7 +36,7 @@ public class MultiPassphraseSymmetricEncryptionTest {
     @ParameterizedTest
     @MethodSource("org.pgpainless.util.TestUtil#provideImplementationFactories")
     @Disabled
-    public void test(ImplementationFactory implementationFactory) throws IOException, PGPException {
+    public void encryptDecryptWithMultiplePassphrases(ImplementationFactory implementationFactory) throws IOException, PGPException {
         ImplementationFactory.setFactoryImplementation(implementationFactory);
         String message = "Here we test if during decryption of a message that was encrypted with two passphrases, " +
                 "the decryptor finds the session key encrypted for the right passphrase.";
@@ -44,8 +44,10 @@ public class MultiPassphraseSymmetricEncryptionTest {
         ByteArrayOutputStream ciphertextOut = new ByteArrayOutputStream();
         EncryptionStream encryptor = PGPainless.encryptAndOrSign()
                 .onOutputStream(ciphertextOut)
-                .forPassphrases(Passphrase.fromPassword("p1"), Passphrase.fromPassword("p2"))
-                .usingSecureAlgorithms()
+                .forPassphrase(Passphrase.fromPassword("p1"))
+                .and()
+                .forPassphrase(Passphrase.fromPassword("p2"))
+                .and()
                 .doNotSign()
                 .noArmor();
 

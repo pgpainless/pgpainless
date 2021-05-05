@@ -30,6 +30,7 @@ import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.MethodSource;
 import org.pgpainless.PGPainless;
 import org.pgpainless.decryption_verification.DecryptionStream;
+import org.pgpainless.encryption_signing.EncryptionBuilderInterface;
 import org.pgpainless.encryption_signing.EncryptionStream;
 import org.pgpainless.implementation.ImplementationFactory;
 import org.pgpainless.key.TestKeys;
@@ -46,7 +47,7 @@ public class SymmetricEncryptionTest {
 
     @ParameterizedTest
     @MethodSource("org.pgpainless.util.TestUtil#provideImplementationFactories")
-    public void test(ImplementationFactory implementationFactory) throws IOException, PGPException {
+    public void encryptWithKeyAndPassphrase_DecryptWithKey(ImplementationFactory implementationFactory) throws IOException, PGPException {
         ImplementationFactory.setFactoryImplementation(implementationFactory);
         byte[] plaintext = "This is a secret message".getBytes(StandardCharsets.UTF_8);
         ByteArrayInputStream plaintextIn = new ByteArrayInputStream(plaintext);
@@ -54,12 +55,13 @@ public class SymmetricEncryptionTest {
         Passphrase encryptionPassphrase = Passphrase.fromPassword("greenBeans");
 
         ByteArrayOutputStream ciphertextOut = new ByteArrayOutputStream();
-        EncryptionStream encryptor = PGPainless.encryptAndOrSign().onOutputStream(ciphertextOut)
-                .forPassphrases(encryptionPassphrase)
+        EncryptionBuilderInterface.Armor armor = PGPainless.encryptAndOrSign().onOutputStream(ciphertextOut)
+                .forPassphrase(encryptionPassphrase)
                 .and()
-                .toRecipients(encryptionKey)
-                .usingSecureAlgorithms()
-                .doNotSign()
+                .toRecipient(encryptionKey)
+                .and()
+                .doNotSign();
+        EncryptionStream encryptor = armor
                 .noArmor();
 
         Streams.pipeAll(plaintextIn, encryptor);

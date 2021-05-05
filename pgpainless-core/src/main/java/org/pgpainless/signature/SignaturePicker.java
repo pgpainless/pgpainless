@@ -25,8 +25,11 @@ import org.bouncycastle.bcpg.sig.SignatureCreationTime;
 import org.bouncycastle.openpgp.PGPKeyRing;
 import org.bouncycastle.openpgp.PGPPublicKey;
 import org.bouncycastle.openpgp.PGPSignature;
+import org.pgpainless.PGPainless;
 import org.pgpainless.algorithm.SignatureType;
+import org.pgpainless.exception.SignatureValidationException;
 import org.pgpainless.key.util.RevocationAttributes;
+import org.pgpainless.policy.Policy;
 import org.pgpainless.signature.subpackets.SignatureSubpacketsUtil;
 import org.pgpainless.util.CollectionUtils;
 
@@ -53,36 +56,19 @@ public class SignaturePicker {
      * @return most recent, valid key revocation signature
      */
     public static PGPSignature pickCurrentRevocationSelfSignature(PGPKeyRing keyRing, Date validationDate) {
+        Policy policy = PGPainless.getPolicy();
         PGPPublicKey primaryKey = keyRing.getPublicKey();
 
         List<PGPSignature> signatures = getSortedSignaturesOfType(primaryKey, SignatureType.KEY_REVOCATION);
         PGPSignature mostCurrentValidSig = null;
 
         for (PGPSignature signature : signatures) {
-            if (!SelectSignatureFromKey.isWellFormed().accept(signature, primaryKey, keyRing)) {
-                // Signature is not well-formed. Reject
+            try {
+                SignatureValidator.verifyKeyRevocationSignature(signature, primaryKey, policy, validationDate);
+            } catch (SignatureValidationException e) {
+                // Signature is not valid
                 continue;
             }
-
-            if (!SelectSignatureFromKey.isCreatedBy(keyRing.getPublicKey()).accept(signature, primaryKey, keyRing)) {
-                // Revocation signature was not created by primary key
-                continue;
-            }
-
-            RevocationReason reason = SignatureSubpacketsUtil.getRevocationReason(signature);
-            if (reason != null && !RevocationAttributes.Reason.isHardRevocation(reason.getRevocationReason())) {
-                // reason code states soft revocation
-                if (!SelectSignatureFromKey.isValidAt(validationDate).accept(signature, primaryKey, keyRing)) {
-                    // Soft revocation is either expired or not yet valid
-                    continue;
-                }
-            }
-
-            if (!SelectSignatureFromKey.isValidKeyRevocationSignature(primaryKey).accept(signature, primaryKey, keyRing)) {
-                // sig does not check out
-                continue;
-            }
-
             mostCurrentValidSig = signature;
         }
 

@@ -37,7 +37,7 @@ import org.bouncycastle.util.io.Streams;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.MethodSource;
 import org.pgpainless.PGPainless;
-import org.pgpainless.algorithm.CompressionAlgorithm;
+import org.pgpainless.algorithm.DocumentSignatureType;
 import org.pgpainless.algorithm.HashAlgorithm;
 import org.pgpainless.algorithm.SymmetricKeyAlgorithm;
 import org.pgpainless.decryption_verification.DecryptionStream;
@@ -70,10 +70,11 @@ public class SigningTest {
         EncryptionStream encryptionStream = PGPainless.encryptAndOrSign(EncryptionStream.Purpose.STORAGE)
                 .onOutputStream(out)
                 .toRecipients(keys)
-                .andToSelf(KeyRingUtils.publicKeyRingFrom(cryptieKeys))
-                .usingAlgorithms(SymmetricKeyAlgorithm.AES_192, HashAlgorithm.SHA384, CompressionAlgorithm.ZIP)
-                .signWith(SecretKeyRingProtector.unlockSingleKeyWith(TestKeys.CRYPTIE_PASSPHRASE, cryptieSigningKey), cryptieKeys)
-                .signCanonicalText()
+                .and()
+                .toRecipient(KeyRingUtils.publicKeyRingFrom(cryptieKeys))
+                .and()
+                .signInlineWith(SecretKeyRingProtector.unlockSingleKeyWith(TestKeys.CRYPTIE_PASSPHRASE, cryptieSigningKey),
+                        cryptieKeys, TestKeys.CRYPTIE_UID, DocumentSignatureType.CANONICAL_TEXT_DOCUMENT)
                 .asciiArmor();
 
         byte[] messageBytes = "This message is signed and encrypted to Romeo and Juliet.".getBytes(StandardCharsets.UTF_8);

@@ -11,7 +11,7 @@ About
 
 PGPainless aims to make using OpenPGP in Java projects as simple as possible.
 It does so by introducing an intuitive Builder structure, which allows easy 
-setup of encryption / decrytion operations, as well as straight forward key generation.
+setup of encryptionOptions / decrytion operations, as well as straight forward key generation.
 
 PGPainless is based around the Bouncycastle java library and can be used on Android down to API level 10.
 
@@ -74,7 +74,7 @@ Take for example a look at this delicious key:
 
 ### Encrypt / Sign Data
 
-Encrypting and signing data is pretty straight forward as well.
+Encrypting and signingOptions data is pretty straight forward as well.
 ```java
         EncryptionStream encryptor = PGPainless.encryptAndOrSign()
                 .onOutputStream(targetOuputStream)
@@ -102,7 +102,7 @@ Additionally you can get information about the encrypted data by calling
         OpenPgpMetadata result = encryptor.getResult();
 ```
 
-This object will contain information like to which keys the message is encrypted, which keys were used for signing and so on.
+This object will contain information like to which keys the message is encrypted, which keys were used for signingOptions and so on.
 
 ### Decrypt / Verify Encrypted Data
 
