@@ -18,7 +18,7 @@ package org.pgpainless.util;
 import javax.annotation.Nonnull;
 import java.util.Collection;
 import java.util.HashMap;
-import java.util.HashSet;
+import java.util.LinkedHashSet;
 import java.util.Map;
 import java.util.Set;
 
@@ -33,7 +33,7 @@ public class MultiMap<K, V> {
     public MultiMap(@Nonnull MultiMap<K, V> other) {
         this.map = new HashMap<>();
         for (K k : other.map.keySet()) {
-            map.put(k, new HashSet<>(other.map.get(k)));
+            map.put(k, new LinkedHashSet<>(other.map.get(k)));
         }
     }
 
@@ -67,7 +67,7 @@ public class MultiMap<K, V> {
     public void put(K k, V v) {
         Set<V> values = map.get(k);
         if (values == null) {
-            values = new HashSet<>();
+            values = new LinkedHashSet<>();
             map.put(k, values);
         }
         values.add(v);
