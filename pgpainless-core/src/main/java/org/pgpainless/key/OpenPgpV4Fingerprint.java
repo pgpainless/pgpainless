@@ -22,6 +22,7 @@ import java.nio.ByteBuffer;
 import java.nio.charset.Charset;
 import javax.annotation.Nonnull;
 
+import org.bouncycastle.openpgp.PGPKeyRing;
 import org.bouncycastle.openpgp.PGPPublicKey;
 import org.bouncycastle.openpgp.PGPPublicKeyRing;
 import org.bouncycastle.openpgp.PGPSecretKey;
@@ -45,7 +46,7 @@ public class OpenPgpV4Fingerprint implements CharSequence, Comparable<OpenPgpV4F
      * @param fingerprint hexadecimal representation of the fingerprint.
      */
     public OpenPgpV4Fingerprint(@Nonnull String fingerprint) {
-        String fp = fingerprint.trim().toUpperCase();
+        String fp = fingerprint.replace(" ", "").trim().toUpperCase();
         if (!isValid(fp)) {
             throw new IllegalArgumentException("Fingerprint " + fingerprint +
                     " does not appear to be a valid OpenPGP v4 fingerprint.");
@@ -73,6 +74,10 @@ public class OpenPgpV4Fingerprint implements CharSequence, Comparable<OpenPgpV4F
     }
 
     public OpenPgpV4Fingerprint(@Nonnull PGPSecretKeyRing ring) {
+        this(ring.getPublicKey());
+    }
+
+    public OpenPgpV4Fingerprint(@Nonnull PGPKeyRing ring) {
         this(ring.getPublicKey());
     }
 
@@ -140,6 +145,20 @@ public class OpenPgpV4Fingerprint implements CharSequence, Comparable<OpenPgpV4F
     @Nonnull
     public String toString() {
         return fingerprint;
+    }
+
+    public String prettyPrint() {
+        String fp = toString();
+        StringBuilder pretty = new StringBuilder();
+        for (int i = 0; i < 5; i++) {
+            pretty.append(fp, i * 4, (i + 1) * 4).append(' ');
+        }
+        pretty.append(' ');
+        for (int i = 5; i < 9; i++) {
+            pretty.append(fp, i * 4, (i + 1) * 4).append(' ');
+        }
+        pretty.append(fp, 36, 40);
+        return pretty.toString();
     }
 
     /**

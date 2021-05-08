@@ -95,4 +95,11 @@ public class OpenPgpV4FingerprintTest {
         URI uri = new URI(null, "5448452043414B452049532041204C4945212121", null);
         assertThrows(IllegalArgumentException.class, () -> OpenPgpV4Fingerprint.fromUri(uri));
     }
+
+    @Test
+    public void testFromPrettyPrinted() {
+        String prettyPrint = "C94B 884B 9A56 7B1C FB23  6999 7DC5 BDAC BBDF BF87";
+        OpenPgpV4Fingerprint fingerprint = new OpenPgpV4Fingerprint(prettyPrint);
+        assertEquals(prettyPrint, fingerprint.prettyPrint());
+    }
 }
