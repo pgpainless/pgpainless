@@ -489,7 +489,8 @@ public class KeyRingBuilder implements KeyRingBuilderInterface {
         } catch (PGPException e) {
             // When generating EdDSA keys, the private key has an encoding length of 33 instead of 34, which results
             //  in an exception. Therefore we just try again as a workaround.
-            LOGGER.log(Level.INFO, "Private key has wrong length. Try again.", e);
+            LOGGER.log(Level.INFO, "Generated private key encoding has incorrect length. Trying again.");
+            LOGGER.log(Level.FINER, "Incorrect private key encoding length is caused by a bug in Bouncycastle. See https://github.com/bcgit/bc-java/issues/887", e);
             pgpKeyPair = generateKeyPair(spec);
         }
         return pgpKeyPair;
