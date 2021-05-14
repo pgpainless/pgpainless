@@ -98,7 +98,7 @@ public class SecretKeyRingProtectorTest {
     public void testFromPassphraseMap() {
         Map<Long, Passphrase> passphraseMap = new ConcurrentHashMap<>();
         passphraseMap.put(1L, Passphrase.emptyPassphrase());
-        PassphraseMapKeyRingProtector protector = (PassphraseMapKeyRingProtector) SecretKeyRingProtector.fromPassphraseMap(passphraseMap);
+        CachingSecretKeyRingProtector protector = (CachingSecretKeyRingProtector) SecretKeyRingProtector.fromPassphraseMap(passphraseMap);
 
         assertNotNull(protector.getPassphraseFor(1L));
         assertNull(protector.getPassphraseFor(5L));
@@ -114,7 +114,7 @@ public class SecretKeyRingProtectorTest {
     public void testMissingPassphraseCallback() {
         Map<Long, Passphrase> passphraseMap = new ConcurrentHashMap<>();
         passphraseMap.put(1L, Passphrase.emptyPassphrase());
-        PassphraseMapKeyRingProtector protector = new PassphraseMapKeyRingProtector(passphraseMap,
+        CachingSecretKeyRingProtector protector = new CachingSecretKeyRingProtector(passphraseMap,
                 KeyRingProtectionSettings.secureDefaultSettings(), new SecretKeyPassphraseProvider() {
             @Nullable
             @Override

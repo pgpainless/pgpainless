@@ -39,7 +39,7 @@ import org.pgpainless.encryption_signing.EncryptionBuilderInterface;
 import org.pgpainless.encryption_signing.EncryptionStream;
 import org.pgpainless.key.OpenPgpV4Fingerprint;
 import org.pgpainless.key.protection.KeyRingProtectionSettings;
-import org.pgpainless.key.protection.PassphraseMapKeyRingProtector;
+import org.pgpainless.key.protection.CachingSecretKeyRingProtector;
 import org.pgpainless.util.Passphrase;
 import picocli.CommandLine;
 
@@ -148,7 +148,7 @@ public class Encrypt implements Runnable {
                 .usingSecureAlgorithms();
         EncryptionBuilderInterface.Armor builder_armor;
         if (signWith.length != 0) {
-            EncryptionBuilderInterface.DocumentType documentType = builder.signWith(new PassphraseMapKeyRingProtector(passphraseMap,
+            EncryptionBuilderInterface.DocumentType documentType = builder.signWith(new CachingSecretKeyRingProtector(passphraseMap,
                     KeyRingProtectionSettings.secureDefaultSettings(), null), secretKeys);
             if (type == Type.text || type == Type.mime) {
                 builder_armor = documentType.signCanonicalText();

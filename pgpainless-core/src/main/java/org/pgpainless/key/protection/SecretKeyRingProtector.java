@@ -15,6 +15,7 @@
  */
 package org.pgpainless.key.protection;
 
+import java.util.HashMap;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 import javax.annotation.Nullable;
@@ -24,6 +25,7 @@ import org.bouncycastle.openpgp.PGPSecretKey;
 import org.bouncycastle.openpgp.PGPSecretKeyRing;
 import org.bouncycastle.openpgp.operator.PBESecretKeyDecryptor;
 import org.bouncycastle.openpgp.operator.PBESecretKeyEncryptor;
+import org.pgpainless.key.protection.passphrase_provider.SecretKeyPassphraseProvider;
 import org.pgpainless.util.Passphrase;
 
 /**
@@ -49,6 +51,21 @@ public interface SecretKeyRingProtector {
      * @throws PGPException if the encryptor cannot be created for some reason
      */
     @Nullable PBESecretKeyEncryptor getEncryptor(Long keyId) throws PGPException;
+
+    /**
+     * Return a protector for secret keys.
+     * The protector maintains an in-memory cache of passphrases and can be extended with new passphrases
+     * at runtime.
+     *
+     * @param missingPassphraseCallback callback that is used to provide missing passphrases.
+     * @return caching secret key protector
+     */
+    static CachingSecretKeyRingProtector defaultSecretKeyRingProtector(SecretKeyPassphraseProvider missingPassphraseCallback) {
+        return new CachingSecretKeyRingProtector(
+                new HashMap<>(),
+                KeyRingProtectionSettings.secureDefaultSettings(),
+                missingPassphraseCallback);
+    }
 
     /**
      * Use the provided passphrase to lock/unlock all subkeys in the provided key ring.
@@ -92,6 +109,6 @@ public interface SecretKeyRingProtector {
      * @return protector
      */
     static SecretKeyRingProtector fromPassphraseMap(Map<Long, Passphrase> passphraseMap) {
-        return new PassphraseMapKeyRingProtector(passphraseMap, KeyRingProtectionSettings.secureDefaultSettings(), null);
+        return new CachingSecretKeyRingProtector(passphraseMap, KeyRingProtectionSettings.secureDefaultSettings(), null);
     }
 }

@@ -55,7 +55,7 @@ import org.pgpainless.key.generation.KeyRingBuilder;
 import org.pgpainless.key.generation.KeySpec;
 import org.pgpainless.key.info.KeyRingInfo;
 import org.pgpainless.key.protection.KeyRingProtectionSettings;
-import org.pgpainless.key.protection.PassphraseMapKeyRingProtector;
+import org.pgpainless.key.protection.CachingSecretKeyRingProtector;
 import org.pgpainless.key.protection.PasswordBasedSecretKeyRingProtector;
 import org.pgpainless.key.protection.SecretKeyRingProtector;
 import org.pgpainless.key.protection.UnlockSecretKey;
@@ -590,7 +590,7 @@ public class SecretKeyRingEditor implements SecretKeyRingEditorInterface {
                                                                                  @Nullable Passphrase oldPassphrase,
                                                                                  @Nonnull KeyRingProtectionSettings oldProtectionSettings) {
         Map<Long, Passphrase> passphraseMap = Collections.singletonMap(keyId, oldPassphrase);
-        SecretKeyRingProtector protector = new PassphraseMapKeyRingProtector(
+        SecretKeyRingProtector protector = new CachingSecretKeyRingProtector(
                 passphraseMap, oldProtectionSettings, null);
 
         return new WithKeyRingEncryptionSettingsImpl(keyId, protector);
