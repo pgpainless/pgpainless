@@ -46,6 +46,7 @@ import org.pgpainless.key.KeyRingValidator;
 import org.pgpainless.key.OpenPgpV4Fingerprint;
 import org.pgpainless.key.SubkeyIdentifier;
 import org.pgpainless.key.protection.SecretKeyRingProtector;
+import org.pgpainless.key.protection.UnlockSecretKey;
 import org.pgpainless.util.Passphrase;
 import org.pgpainless.util.Tuple;
 import org.pgpainless.util.selection.key.PublicKeySelectionStrategy;
@@ -345,7 +346,7 @@ public class EncryptionBuilder implements EncryptionBuilderInterface {
                 PGPSecretKeyRing secretKeyRing = signingKeys.get(signingKey);
                 PGPSecretKey secretKey = secretKeyRing.getSecretKey(signingKey.getSubkeyFingerprint().getKeyId());
                 PBESecretKeyDecryptor decryptor = signingKeysDecryptor.getDecryptor(secretKey.getKeyID());
-                PGPPrivateKey privateKey = secretKey.extractPrivateKey(decryptor);
+                PGPPrivateKey privateKey = UnlockSecretKey.unlockSecretKey(secretKey, decryptor);
                 privateKeys.put(signingKey, new Tuple<>(secretKeyRing, privateKey));
             }
 

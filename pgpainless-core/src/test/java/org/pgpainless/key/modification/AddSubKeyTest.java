@@ -39,6 +39,8 @@ import org.pgpainless.key.generation.KeySpec;
 import org.pgpainless.key.generation.type.ecc.EllipticCurve;
 import org.pgpainless.key.generation.type.ecc.ecdsa.ECDSA;
 import org.pgpainless.key.protection.PasswordBasedSecretKeyRingProtector;
+import org.pgpainless.key.protection.SecretKeyRingProtector;
+import org.pgpainless.key.protection.UnlockSecretKey;
 import org.pgpainless.util.Passphrase;
 
 public class AddSubKeyTest {
@@ -73,9 +75,8 @@ public class AddSubKeyTest {
         long subKeyId = keyIdsAfter.get(0);
 
         PGPSecretKey subKey = secretKeys.getSecretKey(subKeyId);
-        PGPPrivateKey privateKey = subKey.extractPrivateKey(
-                PasswordBasedSecretKeyRingProtector
-                        .forKey(subKey, Passphrase.fromPassword("subKeyPassphrase"))
-                        .getDecryptor(subKeyId));
+        SecretKeyRingProtector protector = SecretKeyRingProtector.unlockAllKeysWith(
+                Passphrase.fromPassword("subKeyPassphrase"), secretKeys);
+        PGPPrivateKey privateKey = UnlockSecretKey.unlockSecretKey(subKey, protector);
     }
 }

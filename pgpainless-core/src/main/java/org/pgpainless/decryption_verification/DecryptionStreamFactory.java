@@ -60,6 +60,7 @@ import org.pgpainless.implementation.ImplementationFactory;
 import org.pgpainless.key.OpenPgpV4Fingerprint;
 import org.pgpainless.key.SubkeyIdentifier;
 import org.pgpainless.key.protection.SecretKeyRingProtector;
+import org.pgpainless.key.protection.UnlockSecretKey;
 import org.pgpainless.signature.DetachedSignature;
 import org.pgpainless.signature.OnePassSignature;
 import org.pgpainless.util.IntegrityProtectedInputStream;
@@ -209,7 +210,7 @@ public final class DecryptionStreamFactory {
             if (!encryptedData.isIntegrityProtected()) {
                 throw new MessageNotIntegrityProtectedException();
             }
-
+            // Data is passphrase encrypted
             if (encryptedData instanceof PGPPBEEncryptedData) {
                 PGPPBEEncryptedData pbeEncryptedData = (PGPPBEEncryptedData) encryptedData;
                 if (decryptionPassphrase != null) {
@@ -228,8 +229,9 @@ public final class DecryptionStreamFactory {
                         LOGGER.log(LEVEL, "Probable passphrase mismatch, skip PBE encrypted data block", e);
                     }
                 }
-
-            } else if (encryptedData instanceof PGPPublicKeyEncryptedData) {
+            }
+            // data is public key encrypted
+            else if (encryptedData instanceof PGPPublicKeyEncryptedData) {
                 PGPPublicKeyEncryptedData publicKeyEncryptedData = (PGPPublicKeyEncryptedData) encryptedData;
                 long keyId = publicKeyEncryptedData.getKeyID();
                 if (decryptionKeys != null) {
@@ -242,7 +244,7 @@ public final class DecryptionStreamFactory {
                             LOGGER.log(LEVEL, "Found respective secret key " + Long.toHexString(keyId));
                             // Watch out! This assignment is possibly done multiple times.
                             encryptedSessionKey = publicKeyEncryptedData;
-                            decryptionKey = secretKey.extractPrivateKey(decryptionKeyDecryptor.getDecryptor(keyId));
+                            decryptionKey = UnlockSecretKey.unlockSecretKey(secretKey, decryptionKeyDecryptor);
                             resultBuilder.setDecryptionFingerprint(new OpenPgpV4Fingerprint(secretKey));
                         }
                     } else {

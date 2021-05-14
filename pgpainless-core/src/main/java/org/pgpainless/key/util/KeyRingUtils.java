@@ -27,8 +27,8 @@ import org.bouncycastle.openpgp.PGPPublicKey;
 import org.bouncycastle.openpgp.PGPPublicKeyRing;
 import org.bouncycastle.openpgp.PGPSecretKey;
 import org.bouncycastle.openpgp.PGPSecretKeyRing;
-import org.bouncycastle.openpgp.operator.PBESecretKeyDecryptor;
 import org.pgpainless.key.protection.SecretKeyRingProtector;
+import org.pgpainless.key.protection.UnlockSecretKey;
 
 public class KeyRingUtils {
 
@@ -136,8 +136,6 @@ public class KeyRingUtils {
      * @throws PGPException if something goes wrong (eg. wrong passphrase)
      */
     public static PGPPrivateKey unlockSecretKey(PGPSecretKey secretKey, SecretKeyRingProtector protector) throws PGPException {
-        PBESecretKeyDecryptor secretKeyDecryptor = protector.getDecryptor(secretKey.getKeyID());
-        PGPPrivateKey privateKey = secretKey.extractPrivateKey(secretKeyDecryptor);
-        return privateKey;
+        return UnlockSecretKey.unlockSecretKey(secretKey, protector);
     }
 }

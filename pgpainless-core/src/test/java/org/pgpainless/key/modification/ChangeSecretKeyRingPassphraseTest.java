@@ -42,6 +42,7 @@ import org.pgpainless.encryption_signing.EncryptionStream;
 import org.pgpainless.implementation.ImplementationFactory;
 import org.pgpainless.key.protection.KeyRingProtectionSettings;
 import org.pgpainless.key.protection.PasswordBasedSecretKeyRingProtector;
+import org.pgpainless.key.protection.UnlockSecretKey;
 import org.pgpainless.util.Passphrase;
 
 public class ChangeSecretKeyRingPassphraseTest {
@@ -184,7 +185,7 @@ public class ChangeSecretKeyRingPassphraseTest {
         PBESecretKeyDecryptor decryptor = passphrase.isEmpty() ? null : new BcPBESecretKeyDecryptorBuilder(digestCalculatorProvider)
                 .build(passphrase.getChars());
 
-        secretKey.extractPrivateKey(decryptor);
+        UnlockSecretKey.unlockSecretKey(secretKey, decryptor);
     }
 
     private void signDummyMessageWithKeysAndPassphrase(PGPSecretKeyRing keyRing, Passphrase passphrase) throws IOException, PGPException {

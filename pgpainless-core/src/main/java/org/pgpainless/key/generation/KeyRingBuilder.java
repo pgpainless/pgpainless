@@ -57,6 +57,7 @@ import org.pgpainless.key.generation.type.KeyType;
 import org.pgpainless.key.generation.type.eddsa.EdDSACurve;
 import org.pgpainless.key.generation.type.rsa.RsaLength;
 import org.pgpainless.key.generation.type.xdh.XDHCurve;
+import org.pgpainless.key.protection.UnlockSecretKey;
 import org.pgpainless.key.util.UserId;
 import org.pgpainless.provider.ProviderFactory;
 import org.pgpainless.util.Passphrase;
@@ -376,7 +377,7 @@ public class KeyRingBuilder implements KeyRingBuilderInterface {
 
                 // Attempt to add additional user-ids to the primary public key
                 PGPPublicKey primaryPubKey = secretKeys.next().getPublicKey();
-                PGPPrivateKey privateKey = secretKeyRing.getSecretKey().extractPrivateKey(secretKeyDecryptor);
+                PGPPrivateKey privateKey = UnlockSecretKey.unlockSecretKey(secretKeyRing.getSecretKey(), secretKeyDecryptor);
                 for (String additionalUserId : additionalUserIds) {
                     signatureGenerator.init(SignatureType.POSITIVE_CERTIFICATION.getCode(), privateKey);
                     PGPSignature additionalUserIdSignature =

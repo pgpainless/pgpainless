@@ -140,7 +140,7 @@ public class SecretKeyRingProtectorTest {
 
         PGPSecretKeyRing secretKeys = TestKeys.getEmilSecretKeyRing();
         for (PGPSecretKey secretKey : secretKeys) {
-            secretKey.extractPrivateKey(protector.getDecryptor(secretKey));
+            UnlockSecretKey.unlockSecretKey(secretKey, protector);
             assertNotNull(protector.getEncryptor(secretKey));
         }
     }
