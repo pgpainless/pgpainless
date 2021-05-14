@@ -54,7 +54,7 @@ public class ChangeSecretKeyRingPassphraseTest {
 
     @ParameterizedTest
     @MethodSource("org.pgpainless.util.TestUtil#provideImplementationFactories")
-    public void changePassphraseOfWholeKeyRingTest(ImplementationFactory implementationFactory) throws InvalidAlgorithmParameterException, NoSuchAlgorithmException, PGPException, IOException {
+    public void changePassphraseOfWholeKeyRingTest(ImplementationFactory implementationFactory) throws PGPException {
         ImplementationFactory.setFactoryImplementation(implementationFactory);
 
         PGPSecretKeyRing secretKeys = PGPainless.modifyKeyRing(keyRing)
