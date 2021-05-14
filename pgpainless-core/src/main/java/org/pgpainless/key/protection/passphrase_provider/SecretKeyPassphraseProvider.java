@@ -25,6 +25,15 @@ import org.pgpainless.util.Passphrase;
  */
 public interface SecretKeyPassphraseProvider {
 
+    /**
+     * Return a passphrase for the given secret key.
+     * If no record is found, return null.
+     * Note: In case of an unprotected secret key, this method must may not return null, but a {@link Passphrase} with
+     * a content of null.
+     *
+     * @param secretKey secret key
+     * @return passphrase or null, if no passphrase record is found.
+     */
     @Nullable default Passphrase getPassphraseFor(PGPSecretKey secretKey) {
         return getPassphraseFor(secretKey.getKeyID());
     }

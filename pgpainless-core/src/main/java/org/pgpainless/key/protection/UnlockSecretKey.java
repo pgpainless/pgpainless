@@ -34,15 +34,6 @@ public class UnlockSecretKey {
         }
     }
 
-    public static PGPPrivateKey unlockSecretKey(PGPSecretKey secretKey, SecretKeyRingProtector2 protector) throws WrongPassphraseException {
-        try {
-            PBESecretKeyDecryptor decryptor = protector.getDecryptor(secretKey);
-            return secretKey.extractPrivateKey(decryptor);
-        } catch (PGPException e) {
-            throw new WrongPassphraseException(secretKey.getKeyID(), e);
-        }
-    }
-
     public static PGPPrivateKey unlockSecretKey(PGPSecretKey secretKey, PBESecretKeyDecryptor decryptor) throws WrongPassphraseException {
         try {
             return secretKey.extractPrivateKey(decryptor);

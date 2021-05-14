@@ -126,22 +126,4 @@ public class SecretKeyRingProtectorTest {
         assertEquals(Passphrase.emptyPassphrase(), protector.getPassphraseFor(1L));
         assertEquals(Passphrase.fromPassword("missingP455w0rd"), protector.getPassphraseFor(3L));
     }
-
-    @ParameterizedTest
-    @MethodSource("org.pgpainless.util.TestUtil#provideImplementationFactories")
-    public void testCallbackBasedKeyRingProtector(ImplementationFactory implementationFactory) throws IOException, PGPException {
-        ImplementationFactory.setFactoryImplementation(implementationFactory);
-        SecretKeyRingProtector2 protector = new CallbackBasedKeyringProtector(new CallbackBasedKeyringProtector.Callback() {
-            @Override
-            public Passphrase getPassphraseFor(PGPSecretKey secretKey) {
-                return TestKeys.CRYPTIE_PASSPHRASE;
-            }
-        });
-
-        PGPSecretKeyRing secretKeys = TestKeys.getEmilSecretKeyRing();
-        for (PGPSecretKey secretKey : secretKeys) {
-            UnlockSecretKey.unlockSecretKey(secretKey, protector);
-            assertNotNull(protector.getEncryptor(secretKey));
-        }
-    }
 }

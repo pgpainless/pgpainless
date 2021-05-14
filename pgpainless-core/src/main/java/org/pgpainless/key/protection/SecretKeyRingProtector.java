@@ -50,6 +50,13 @@ public interface SecretKeyRingProtector {
      */
     @Nullable PBESecretKeyEncryptor getEncryptor(Long keyId) throws PGPException;
 
+    /**
+     * Use the provided passphrase to lock/unlock all subkeys in the provided key ring.
+     *
+     * @param passphrase passphrase
+     * @param keys key ring
+     * @return protector
+     */
     static SecretKeyRingProtector unlockAllKeysWith(Passphrase passphrase, PGPSecretKeyRing keys) {
         Map<Long, Passphrase> map = new ConcurrentHashMap<>();
         for (PGPSecretKey secretKey : keys) {
@@ -58,14 +65,32 @@ public interface SecretKeyRingProtector {
         return fromPassphraseMap(map);
     }
 
+    /**
+     * Use the provided passphrase to lock/unlock only the provided (sub-)key.
+     *
+     * @param passphrase passphrase
+     * @param key key to lock/unlock
+     * @return protector
+     */
     static SecretKeyRingProtector unlockSingleKeyWith(Passphrase passphrase, PGPSecretKey key) {
         return PasswordBasedSecretKeyRingProtector.forKey(key, passphrase);
     }
 
+    /**
+     * Protector for unprotected keys.
+     *
+     * @return protector
+     */
     static SecretKeyRingProtector unprotectedKeys() {
         return new UnprotectedKeysProtector();
     }
 
+    /**
+     * Use the provided map of key-ids and passphrases to unlock keys.
+     *
+     * @param passphraseMap map of key ids and their respective passphrases
+     * @return protector
+     */
     static SecretKeyRingProtector fromPassphraseMap(Map<Long, Passphrase> passphraseMap) {
         return new PassphraseMapKeyRingProtector(passphraseMap, KeyRingProtectionSettings.secureDefaultSettings(), null);
     }
