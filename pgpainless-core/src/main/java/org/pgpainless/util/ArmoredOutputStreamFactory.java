@@ -28,7 +28,7 @@ public class ArmoredOutputStreamFactory {
 
     public static ArmoredOutputStream get(OutputStream outputStream) {
         ArmoredOutputStream armoredOutputStream = new ArmoredOutputStream(outputStream);
-        armoredOutputStream.setHeader(ArmoredOutputStream.VERSION_HDR, VERSION);
+        armoredOutputStream.setHeader(ArmorUtils.HEADER_VERSION, VERSION);
         return armoredOutputStream;
     }
 }

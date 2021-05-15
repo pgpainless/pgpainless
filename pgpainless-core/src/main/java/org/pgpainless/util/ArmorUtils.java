@@ -19,16 +19,26 @@ import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.util.ArrayList;
 import java.util.Iterator;
+import java.util.List;
 
+import org.bouncycastle.bcpg.ArmoredInputStream;
 import org.bouncycastle.bcpg.ArmoredOutputStream;
 import org.bouncycastle.openpgp.PGPKeyRing;
 import org.bouncycastle.openpgp.PGPPublicKeyRing;
 import org.bouncycastle.openpgp.PGPSecretKeyRing;
 import org.bouncycastle.util.io.Streams;
+import org.pgpainless.algorithm.HashAlgorithm;
 import org.pgpainless.key.OpenPgpV4Fingerprint;
 
 public class ArmorUtils {
+
+    public static final String HEADER_COMMENT = "Comment";
+    public static final String HEADER_VERSION = "Version";
+    public static final String HEADER_MESSAGEID = "MessageID";
+    public static final String HEADER_HASH = "Hash";
+    public static final String HEADER_CHARSET = "Charset";
 
     public static String toAsciiArmoredString(PGPSecretKeyRing secretKeys) throws IOException {
         MultiMap<String, String> header = keyToHeader(secretKeys);
@@ -45,9 +55,9 @@ public class ArmorUtils {
         OpenPgpV4Fingerprint fingerprint = new OpenPgpV4Fingerprint(keyRing);
         Iterator<String> userIds = keyRing.getPublicKey().getUserIDs();
 
-        header.put("Comment", fingerprint.prettyPrint());
+        header.put(HEADER_COMMENT, fingerprint.prettyPrint());
         if (userIds.hasNext()) {
-            header.put("Comment", userIds.next());
+            header.put(HEADER_COMMENT, userIds.next());
         }
         return header;
     }
@@ -78,5 +88,46 @@ public class ArmorUtils {
         armor.close();
 
         return out.toString();
+    }
+
+    public static List<String> getCommendHeaderValues(ArmoredInputStream armor) {
+        return getArmorHeaderValues(armor, HEADER_COMMENT);
+    }
+
+    public static List<String> getMessageIdHeaderValues(ArmoredInputStream armor) {
+        return getArmorHeaderValues(armor, HEADER_MESSAGEID);
+    }
+
+    public static List<String> getHashHeaderValues(ArmoredInputStream armor) {
+        return getArmorHeaderValues(armor, HEADER_HASH);
+    }
+
+    public static List<HashAlgorithm> getHashAlgorithms(ArmoredInputStream armor) {
+        List<String> algorithmNames = getHashHeaderValues(armor);
+        List<HashAlgorithm> algorithms = new ArrayList<>(algorithmNames.size());
+        for (String name : algorithmNames) {
+            algorithms.add(HashAlgorithm.fromName(name));
+        }
+        return algorithms;
+    }
+
+    public static List<String> getVersionHeaderValues(ArmoredInputStream armor) {
+        return getArmorHeaderValues(armor, HEADER_VERSION);
+    }
+
+    public static List<String> getCharsetHeaderValues(ArmoredInputStream armor) {
+        return getArmorHeaderValues(armor, HEADER_CHARSET);
+    }
+
+    public static List<String> getArmorHeaderValues(ArmoredInputStream armor, String headerKey) {
+        String[] header = armor.getArmorHeaders();
+        String key = headerKey + ": ";
+        List<String> values = new ArrayList<>();
+        for (String line : header) {
+            if (line.startsWith(key)) {
+                values.add(line.substring(key.length()));
+            }
+        }
+        return values;
     }
 }
