@@ -16,13 +16,16 @@
 package org.pgpainless.util;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 
 import java.io.ByteArrayInputStream;
+import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.util.List;
 
 import org.bouncycastle.bcpg.ArmoredInputStream;
+import org.bouncycastle.bcpg.ArmoredOutputStream;
 import org.junit.jupiter.api.Test;
 import org.pgpainless.algorithm.HashAlgorithm;
 
@@ -73,5 +76,17 @@ public class ArmorUtilsTest {
 
         // MessageID
         assertEquals(0, ArmorUtils.getMessageIdHeaderValues(armorIn).size());
+    }
+
+    @Test
+    public void testSetMessageId() {
+        ArmoredOutputStream armor = new ArmoredOutputStream(new ByteArrayOutputStream());
+        ArmorUtils.addMessageIdHeader(armor, "abcdefghi01234567890123456789012");
+
+        assertThrows(NullPointerException.class, () -> ArmorUtils.addMessageIdHeader(armor, null));
+        assertThrows(IllegalArgumentException.class, () -> ArmorUtils.addMessageIdHeader(armor, "tooShort"));
+        assertThrows(IllegalArgumentException.class, () -> ArmorUtils.addMessageIdHeader(armor, "toLooooooooooooooooooooooooooooooooooong"));
+        assertThrows(IllegalArgumentException.class, () -> ArmorUtils.addMessageIdHeader(armor, "contains spaces 7890123456789012"));
+        assertThrows(IllegalArgumentException.class, () -> ArmorUtils.addMessageIdHeader(armor, "contains\nnewlines\n12345678901234"));
     }
 }

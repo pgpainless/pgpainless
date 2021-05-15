@@ -22,6 +22,7 @@ import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
+import java.util.regex.Pattern;
 
 import org.bouncycastle.bcpg.ArmoredInputStream;
 import org.bouncycastle.bcpg.ArmoredOutputStream;
@@ -33,6 +34,9 @@ import org.pgpainless.algorithm.HashAlgorithm;
 import org.pgpainless.key.OpenPgpV4Fingerprint;
 
 public class ArmorUtils {
+
+    // MessageIDs are 32 printable characters
+    private static final Pattern PATTERN_MESSAGE_ID = Pattern.compile("^\\S{32}$");
 
     public static final String HEADER_COMMENT = "Comment";
     public static final String HEADER_VERSION = "Version";
@@ -74,6 +78,24 @@ public class ArmorUtils {
         return toAsciiArmoredString(inputStream, null);
     }
 
+    public static void addHashAlgorithmHeader(ArmoredOutputStream armor, HashAlgorithm hashAlgorithm) {
+        armor.addHeader(HEADER_HASH, hashAlgorithm.getAlgorithmName());
+    }
+
+    public static void addCommentHeader(ArmoredOutputStream armor, String comment) {
+        armor.addHeader(HEADER_COMMENT, comment);
+    }
+
+    public static void addMessageIdHeader(ArmoredOutputStream armor, String messageId) {
+        if (messageId == null) {
+            throw new NullPointerException("MessageID cannot be null.");
+        }
+        if (!PATTERN_MESSAGE_ID.matcher(messageId).matches()) {
+            throw new IllegalArgumentException("MessageIDs MUST consist of 32 printable characters.");
+        }
+        armor.addHeader(HEADER_MESSAGEID, messageId);
+    }
+
     public static String toAsciiArmoredString(InputStream inputStream, MultiMap<String, String> additionalHeaderValues) throws IOException {
         ByteArrayOutputStream out = new ByteArrayOutputStream();
         ArmoredOutputStream armor = ArmoredOutputStreamFactory.get(out);
@@ -104,9 +126,12 @@ public class ArmorUtils {
 
     public static List<HashAlgorithm> getHashAlgorithms(ArmoredInputStream armor) {
         List<String> algorithmNames = getHashHeaderValues(armor);
-        List<HashAlgorithm> algorithms = new ArrayList<>(algorithmNames.size());
+        List<HashAlgorithm> algorithms = new ArrayList<>();
         for (String name : algorithmNames) {
-            algorithms.add(HashAlgorithm.fromName(name));
+            HashAlgorithm algorithm = HashAlgorithm.fromName(name);
+            if (algorithm != null) {
+                algorithms.add(algorithm);
+            }
         }
         return algorithms;
     }
