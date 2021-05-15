@@ -33,6 +33,8 @@ import org.pgpainless.key.modification.secretkeyring.SecretKeyRingEditor;
 import org.pgpainless.key.modification.secretkeyring.SecretKeyRingEditorInterface;
 import org.pgpainless.key.parsing.KeyRingReader;
 import org.pgpainless.policy.Policy;
+import org.pgpainless.signature.cleartext_signatures.VerifyCleartextSignatures;
+import org.pgpainless.signature.cleartext_signatures.VerifyCleartextSignaturesImpl;
 import org.pgpainless.symmetric_encryption.SymmetricEncryptorDecryptor;
 import org.pgpainless.util.Passphrase;
 
@@ -100,10 +102,20 @@ public class PGPainless {
 
     /**
      * Create a {@link DecryptionStream}, which can be used to decrypt and/or verify data using OpenPGP.
+     *
      * @return builder
      */
     public static DecryptionBuilder decryptAndOrVerify() {
         return new DecryptionBuilder();
+    }
+
+    /**
+     * Verify a cleartext-signed message.
+     *
+     * @return builder
+     */
+    public static VerifyCleartextSignatures verifyCleartextSignedMessage() {
+        return new VerifyCleartextSignaturesImpl();
     }
 
     public static SecretKeyRingEditorInterface modifyKeyRing(PGPSecretKeyRing secretKeys) {
