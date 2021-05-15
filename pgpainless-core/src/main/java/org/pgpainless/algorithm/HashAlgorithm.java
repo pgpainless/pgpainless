@@ -15,8 +15,8 @@
  */
 package org.pgpainless.algorithm;
 
+import java.util.HashMap;
 import java.util.Map;
-import java.util.concurrent.ConcurrentHashMap;
 
 import org.bouncycastle.bcpg.HashAlgorithmTags;
 
@@ -27,24 +27,22 @@ import org.bouncycastle.bcpg.HashAlgorithmTags;
  */
 public enum HashAlgorithm {
     @Deprecated
-    MD5        (HashAlgorithmTags.MD5),
-    SHA1       (HashAlgorithmTags.SHA1),
-    RIPEMD160  (HashAlgorithmTags.RIPEMD160),
-    DOUBLE_SHA (HashAlgorithmTags.DOUBLE_SHA),
-    MD2        (HashAlgorithmTags.MD2),
-    TIGER_192  (HashAlgorithmTags.TIGER_192),
-    HAVAL_5_160(HashAlgorithmTags.HAVAL_5_160),
-    SHA256     (HashAlgorithmTags.SHA256),
-    SHA384     (HashAlgorithmTags.SHA384),
-    SHA512     (HashAlgorithmTags.SHA512),
-    SHA224     (HashAlgorithmTags.SHA224),
+    MD5        (HashAlgorithmTags.MD5, "MD5"),
+    SHA1       (HashAlgorithmTags.SHA1, "SHA1"),
+    RIPEMD160  (HashAlgorithmTags.RIPEMD160, "RIPEMD160"),
+    SHA256     (HashAlgorithmTags.SHA256, "SHA256"),
+    SHA384     (HashAlgorithmTags.SHA384, "SHA384"),
+    SHA512     (HashAlgorithmTags.SHA512, "SHA512"),
+    SHA224     (HashAlgorithmTags.SHA224, "SHA224"),
     ;
 
-    private static final Map<Integer, HashAlgorithm> MAP = new ConcurrentHashMap<>();
+    private static final Map<Integer, HashAlgorithm> ID_MAP = new HashMap<>();
+    private static final Map<String, HashAlgorithm> NAME_MAP = new HashMap<>();
 
     static {
         for (HashAlgorithm h : HashAlgorithm.values()) {
-            MAP.put(h.algorithmId, h);
+            ID_MAP.put(h.algorithmId, h);
+            NAME_MAP.put(h.name, h);
         }
     }
 
@@ -56,13 +54,29 @@ public enum HashAlgorithm {
      * @return enum value
      */
     public static HashAlgorithm fromId(int id) {
-        return MAP.get(id);
+        return ID_MAP.get(id);
+    }
+
+    /**
+     * Return the {@link HashAlgorithm} value that corresponds to the provided name.
+     * If an invalid algorithm name was provided, null is returned.
+     *
+     * @see <a href="https://datatracker.ietf.org/doc/html/rfc4880#section-9.4">RFC4880: §9.4 Hash Algorithms</a>
+     * for a list of algorithms and names.
+     *
+     * @param name text name
+     * @return enum value
+     */
+    public static HashAlgorithm fromName(String name) {
+        return NAME_MAP.get(name);
     }
 
     private final int algorithmId;
+    private final String name;
 
-    HashAlgorithm(int id) {
+    HashAlgorithm(int id, String name) {
         this.algorithmId = id;
+        this.name = name;
     }
 
     /**
