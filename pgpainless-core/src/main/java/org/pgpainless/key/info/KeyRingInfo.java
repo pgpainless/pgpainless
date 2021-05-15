@@ -79,6 +79,12 @@ public class KeyRingInfo {
         this(keys, new Date());
     }
 
+    /**
+     * Evaluate the key ring at the provided validation date.
+     *
+     * @param keys key ring
+     * @param validationDate date of validation
+     */
     public KeyRingInfo(PGPKeyRing keys, Date validationDate) {
         this.keys = keys;
         this.signatures = new Signatures(keys, validationDate, PGPainless.getPolicy());
@@ -93,18 +99,43 @@ public class KeyRingInfo {
         return keys.getPublicKey();
     }
 
+    /**
+     * Return the public key with the given fingerprint.
+     *
+     * @param fingerprint fingerprint
+     * @return public key or null
+     */
     public PGPPublicKey getPublicKey(OpenPgpV4Fingerprint fingerprint) {
         return getPublicKey(fingerprint.getKeyId());
     }
 
+    /**
+     * Return the public key with the given key id.
+     *
+     * @param keyId key id
+     * @return public key or null
+     */
     public PGPPublicKey getPublicKey(long keyId) {
         return keys.getPublicKey(keyId);
     }
 
+    /**
+     * Return the public key with the given key id from the provided key ring.
+     *
+     * @param keyRing key ring
+     * @param keyId key id
+     * @return public key or null
+     */
     public static PGPPublicKey getPublicKey(PGPKeyRing keyRing, long keyId) {
         return keyRing.getPublicKey(keyId);
     }
 
+    /**
+     * Return true if the public key with the given key id is bound to the key ring properly.
+     *
+     * @param keyId key id
+     * @return true if key is bound validly
+     */
     public boolean isKeyValidlyBound(long keyId) {
         PGPPublicKey publicKey = keys.getPublicKey(keyId);
         if (publicKey == null) {
@@ -146,10 +177,22 @@ public class KeyRingInfo {
         return null;
     }
 
+    /**
+     * Return the secret key with the given fingerprint.
+     *
+     * @param fingerprint fingerprint
+     * @return secret key or null
+     */
     public PGPSecretKey getSecretKey(OpenPgpV4Fingerprint fingerprint) {
         return getSecretKey(fingerprint.getKeyId());
     }
 
+    /**
+     * Return the secret key with the given key id.
+     *
+     * @param keyId key id
+     * @return secret key or null
+     */
     public PGPSecretKey getSecretKey(long keyId) {
         if (keys instanceof PGPSecretKeyRing) {
             return ((PGPSecretKeyRing) keys).getSecretKey(keyId);
@@ -191,6 +234,14 @@ public class KeyRingInfo {
         return new OpenPgpV4Fingerprint(getPublicKey());
     }
 
+    /**
+     * Return the primary user-id of the key ring.
+     *
+     * Note: If no user-id is marked as primary key using a {@link PrimaryUserID} packet, this method returns the
+     * first valid user-id, otherwise null.
+     *
+     * @return primary user-id or null
+     */
     public String getPrimaryUserId() {
         String primaryUserId = null;
         Date modificationDate = null;
@@ -224,6 +275,11 @@ public class KeyRingInfo {
         return userIds;
     }
 
+    /**
+     * Return a list of valid user-ids.
+     *
+     * @return valid user-ids
+     */
     public List<String> getValidUserIds() {
         List<String> valid = new ArrayList<>();
         List<String> userIds = getUserIds();
@@ -235,6 +291,12 @@ public class KeyRingInfo {
         return valid;
     }
 
+    /**
+     * Return true if the provided user-id is valid.
+     *
+     * @param userId user-id
+     * @return true if user-id is valid
+     */
     public boolean isUserIdValid(String userId) {
         PGPSignature certification = signatures.userIdCertifications.get(userId);
         PGPSignature revocation = signatures.userIdRevocations.get(userId);
@@ -259,6 +321,11 @@ public class KeyRingInfo {
         return emails;
     }
 
+    /**
+     * Return the current direct-key self signature.
+     *
+     * @return
+     */
     public PGPSignature getCurrentDirectKeySelfSignature() {
         return signatures.primaryKeySelfSignature;
     }
