@@ -87,4 +87,13 @@ public enum HashAlgorithm {
     public int getAlgorithmId() {
         return algorithmId;
     }
+
+    /**
+     * Return the text name of the hash algorithm.
+     *
+     * @return text name
+     */
+    public String getAlgorithmName() {
+        return name;
+    }
 }
