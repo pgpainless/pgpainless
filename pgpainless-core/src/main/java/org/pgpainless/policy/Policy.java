@@ -17,7 +17,6 @@ package org.pgpainless.policy;
 
 import java.util.Arrays;
 import java.util.Collections;
-import java.util.Date;
 import java.util.List;
 
 import org.pgpainless.algorithm.HashAlgorithm;
@@ -37,7 +36,6 @@ public final class Policy {
             HashAlgorithmPolicy.defaultRevocationSignatureHashAlgorithmPolicy();
     private SymmetricKeyAlgorithmPolicy symmetricKeyAlgorithmPolicy =
             SymmetricKeyAlgorithmPolicy.defaultSymmetricKeyAlgorithmPolicy();
-    private ValidationDateProvider signatureValidationDateProvider = getDefaultSignatureValidationDateProvider();
     private final NotationRegistry notationRegistry = new NotationRegistry();
 
     private Policy() {
@@ -254,34 +252,6 @@ public final class Policy {
                     HashAlgorithm.SHA512
             ));
         }
-    }
-
-    public Date getSignatureValidationDate() {
-        return getSignatureValidationDateProvider().getValidationDate();
-    }
-
-    public ValidationDateProvider getDefaultSignatureValidationDateProvider() {
-        return new ValidationDateProvider() {
-            @Override
-            public Date getValidationDate() {
-                return new Date(); // now
-            }
-        };
-    }
-
-    public ValidationDateProvider getSignatureValidationDateProvider() {
-        return signatureValidationDateProvider;
-    }
-
-    public void setValidationDateProvider(ValidationDateProvider validationDateProvider) {
-        if (validationDateProvider == null) {
-            throw new NullPointerException("ValidationDateProvider MUST NOT be null.");
-        }
-        this.signatureValidationDateProvider = validationDateProvider;
-    }
-
-    public interface ValidationDateProvider {
-        Date getValidationDate();
     }
 
     /**

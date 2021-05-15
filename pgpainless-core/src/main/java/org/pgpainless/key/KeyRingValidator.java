@@ -46,7 +46,7 @@ public class KeyRingValidator {
 
     public static <R extends PGPKeyRing> R validate(R keyRing, Policy policy) {
         try {
-            return validate(keyRing, policy, policy.getSignatureValidationDate());
+            return validate(keyRing, policy, new Date());
         } catch (PGPException e) {
             return null;
         }
