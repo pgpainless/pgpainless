@@ -34,8 +34,10 @@ public final class Policy {
             HashAlgorithmPolicy.defaultSignatureAlgorithmPolicy();
     private HashAlgorithmPolicy revocationSignatureHashAlgorithmPolicy =
             HashAlgorithmPolicy.defaultRevocationSignatureHashAlgorithmPolicy();
-    private SymmetricKeyAlgorithmPolicy symmetricKeyAlgorithmPolicy =
-            SymmetricKeyAlgorithmPolicy.defaultSymmetricKeyAlgorithmPolicy();
+    private SymmetricKeyAlgorithmPolicy symmetricKeyEncryptionAlgorithmPolicy =
+            SymmetricKeyAlgorithmPolicy.defaultSymmetricKeyEncryptionAlgorithmPolicy();
+    private SymmetricKeyAlgorithmPolicy symmetricKeyDecryptionAlgorithmPolicy =
+            SymmetricKeyAlgorithmPolicy.defaultSymmetricKeyEncryptionAlgorithmPolicy();
     private final NotationRegistry notationRegistry = new NotationRegistry();
 
     private Policy() {
@@ -97,25 +99,47 @@ public final class Policy {
     }
 
     /**
-     * Return the symmetric encryption algorithm policy.
-     * This policy defines which symmetric algorithms are acceptable.
+     * Return the symmetric encryption algorithm policy for encryption.
+     * This policy defines which symmetric algorithms are acceptable when producing encrypted messages.
      *
-     * @return symmetric algorithm policy
+     * @return symmetric algorithm policy for encryption
      */
-    public SymmetricKeyAlgorithmPolicy getSymmetricKeyAlgorithmPolicy() {
-        return symmetricKeyAlgorithmPolicy;
+    public SymmetricKeyAlgorithmPolicy getSymmetricKeyEncryptionAlgorithmPolicy() {
+        return symmetricKeyEncryptionAlgorithmPolicy;
     }
 
     /**
-     * Set a custom symmetric encryption algorithm policy.
+     * Return the symmetric encryption algorithm policy for decryption.
+     * This policy defines which symmetric algorithms are acceptable when decrypting encrypted messages.
+     *
+     * @return symmetric algorithm policy for decryption
+     */
+    public SymmetricKeyAlgorithmPolicy getSymmetricKeyDecryptionAlgoritmPolicy() {
+        return symmetricKeyDecryptionAlgorithmPolicy;
+    }
+
+    /**
+     * Set a custom symmetric encryption algorithm policy for encrypting messages.
      *
      * @param policy custom policy
      */
-    public void setSymmetricKeyAlgorithmPolicy(SymmetricKeyAlgorithmPolicy policy) {
+    public void setSymmetricKeyEncryptionAlgorithmPolicy(SymmetricKeyAlgorithmPolicy policy) {
         if (policy == null) {
             throw new NullPointerException("Policy cannot be null.");
         }
-        this.symmetricKeyAlgorithmPolicy = policy;
+        this.symmetricKeyEncryptionAlgorithmPolicy = policy;
+    }
+
+    /**
+     * Set a custom symmetric encryption algorithm policy for decrypting messages.
+     *
+     * @param policy custom policy
+     */
+    public void setSymmetricKeyDecryptionAlgorithmPolicy(SymmetricKeyAlgorithmPolicy policy) {
+        if (policy == null) {
+            throw new NullPointerException("Policy cannot be null.");
+        }
+        this.symmetricKeyDecryptionAlgorithmPolicy = policy;
     }
 
     public static final class SymmetricKeyAlgorithmPolicy {
@@ -164,7 +188,20 @@ public final class Policy {
          *
          * @return default symmetric encryption algorithm policy
          */
-        public static SymmetricKeyAlgorithmPolicy defaultSymmetricKeyAlgorithmPolicy() {
+        public static SymmetricKeyAlgorithmPolicy defaultSymmetricKeyEncryptionAlgorithmPolicy() {
+            return new SymmetricKeyAlgorithmPolicy(SymmetricKeyAlgorithm.AES_256, Arrays.asList(
+                    SymmetricKeyAlgorithm.BLOWFISH,
+                    SymmetricKeyAlgorithm.AES_128,
+                    SymmetricKeyAlgorithm.AES_192,
+                    SymmetricKeyAlgorithm.AES_256,
+                    SymmetricKeyAlgorithm.TWOFISH,
+                    SymmetricKeyAlgorithm.CAMELLIA_128,
+                    SymmetricKeyAlgorithm.CAMELLIA_192,
+                    SymmetricKeyAlgorithm.CAMELLIA_256
+            ));
+        }
+
+        public static SymmetricKeyAlgorithmPolicy defaultSymmetricKeyDecryptionAlgorithmPolicy() {
             return new SymmetricKeyAlgorithmPolicy(SymmetricKeyAlgorithm.AES_256, Arrays.asList(
                     SymmetricKeyAlgorithm.IDEA,
                     SymmetricKeyAlgorithm.CAST5,

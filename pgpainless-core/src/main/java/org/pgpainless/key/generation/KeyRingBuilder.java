@@ -450,7 +450,7 @@ public class KeyRingBuilder implements KeyRingBuilderInterface {
             }
 
             private PBESecretKeyEncryptor buildSecretKeyEncryptor() {
-                SymmetricKeyAlgorithm keyEncryptionAlgorithm = PGPainless.getPolicy().getSymmetricKeyAlgorithmPolicy()
+                SymmetricKeyAlgorithm keyEncryptionAlgorithm = PGPainless.getPolicy().getSymmetricKeyEncryptionAlgorithmPolicy()
                         .getDefaultSymmetricKeyAlgorithm();
                 PBESecretKeyEncryptor encryptor = passphrase == null || passphrase.isEmpty() ?
                         null : // unencrypted key pair, otherwise AES-256 encrypted
