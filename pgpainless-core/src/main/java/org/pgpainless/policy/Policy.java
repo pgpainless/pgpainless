@@ -37,7 +37,7 @@ public final class Policy {
     private SymmetricKeyAlgorithmPolicy symmetricKeyEncryptionAlgorithmPolicy =
             SymmetricKeyAlgorithmPolicy.defaultSymmetricKeyEncryptionAlgorithmPolicy();
     private SymmetricKeyAlgorithmPolicy symmetricKeyDecryptionAlgorithmPolicy =
-            SymmetricKeyAlgorithmPolicy.defaultSymmetricKeyEncryptionAlgorithmPolicy();
+            SymmetricKeyAlgorithmPolicy.defaultSymmetricKeyDecryptionAlgorithmPolicy();
     private final NotationRegistry notationRegistry = new NotationRegistry();
 
     private Policy() {
@@ -190,6 +190,7 @@ public final class Policy {
          */
         public static SymmetricKeyAlgorithmPolicy defaultSymmetricKeyEncryptionAlgorithmPolicy() {
             return new SymmetricKeyAlgorithmPolicy(SymmetricKeyAlgorithm.AES_256, Arrays.asList(
+                    // Reject: Unencrypted, IDEA, TripleDES, CAST5
                     SymmetricKeyAlgorithm.BLOWFISH,
                     SymmetricKeyAlgorithm.AES_128,
                     SymmetricKeyAlgorithm.AES_192,
@@ -201,9 +202,14 @@ public final class Policy {
             ));
         }
 
+        /**
+         * The default symmetric decryption algorithm policy of PGPainless.
+         *
+         * @return default symmetric decryption algorithm policy
+         */
         public static SymmetricKeyAlgorithmPolicy defaultSymmetricKeyDecryptionAlgorithmPolicy() {
             return new SymmetricKeyAlgorithmPolicy(SymmetricKeyAlgorithm.AES_256, Arrays.asList(
-                    SymmetricKeyAlgorithm.IDEA,
+                    // Reject: Unencrypted, IDEA, TripleDES
                     SymmetricKeyAlgorithm.CAST5,
                     SymmetricKeyAlgorithm.BLOWFISH,
                     SymmetricKeyAlgorithm.AES_128,

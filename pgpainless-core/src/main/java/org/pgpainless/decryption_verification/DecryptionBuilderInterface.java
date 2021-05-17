@@ -249,6 +249,7 @@ public interface DecryptionBuilderInterface {
          * @return the decryption stream
          * @throws IOException in case of an I/O error
          * @throws PGPException if something is malformed
+         * @throws org.pgpainless.exception.UnacceptableAlgorithmException if the message uses weak/unacceptable algorithms
          */
         DecryptionStream build() throws IOException, PGPException;
 

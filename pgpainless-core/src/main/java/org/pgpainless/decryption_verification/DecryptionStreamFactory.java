@@ -52,10 +52,12 @@ import org.bouncycastle.openpgp.operator.KeyFingerPrintCalculator;
 import org.bouncycastle.openpgp.operator.PBEDataDecryptorFactory;
 import org.bouncycastle.openpgp.operator.PGPContentVerifierBuilderProvider;
 import org.bouncycastle.openpgp.operator.PublicKeyDataDecryptorFactory;
+import org.pgpainless.PGPainless;
 import org.pgpainless.algorithm.CompressionAlgorithm;
 import org.pgpainless.algorithm.StreamEncoding;
 import org.pgpainless.algorithm.SymmetricKeyAlgorithm;
 import org.pgpainless.exception.MessageNotIntegrityProtectedException;
+import org.pgpainless.exception.UnacceptableAlgorithmException;
 import org.pgpainless.implementation.ImplementationFactory;
 import org.pgpainless.key.OpenPgpV4Fingerprint;
 import org.pgpainless.key.SubkeyIdentifier;
@@ -218,9 +220,7 @@ public final class DecryptionStreamFactory {
                             .getPBEDataDecryptorFactory(decryptionPassphrase);
                     SymmetricKeyAlgorithm symmetricKeyAlgorithm = SymmetricKeyAlgorithm.fromId(
                             pbeEncryptedData.getSymmetricAlgorithm(passphraseDecryptor));
-                    if (symmetricKeyAlgorithm == SymmetricKeyAlgorithm.NULL) {
-                        throw new PGPException("Data is not encrypted.");
-                    }
+                    throwIfAlgorithmIsRejected(symmetricKeyAlgorithm);
                     resultBuilder.setSymmetricKeyAlgorithm(symmetricKeyAlgorithm);
 
                     try {
@@ -281,19 +281,25 @@ public final class DecryptionStreamFactory {
         SymmetricKeyAlgorithm symmetricKeyAlgorithm = SymmetricKeyAlgorithm
                 .fromId(encryptedSessionKey.getSymmetricAlgorithm(dataDecryptor));
         if (symmetricKeyAlgorithm == SymmetricKeyAlgorithm.NULL) {
-            throw new PGPException("Data is not encrypted.");
+            LOGGER.log(LEVEL, "Message is unencrypted");
+        } else {
+            LOGGER.log(LEVEL, "Message is encrypted using " + symmetricKeyAlgorithm);
         }
-
-        LOGGER.log(LEVEL, "Message is encrypted using " + symmetricKeyAlgorithm);
+        throwIfAlgorithmIsRejected(symmetricKeyAlgorithm);
         resultBuilder.setSymmetricKeyAlgorithm(symmetricKeyAlgorithm);
 
-        if (encryptedSessionKey.isIntegrityProtected()) {
-            IntegrityProtectedInputStream integrityProtected =
-                    new IntegrityProtectedInputStream(encryptedSessionKey.getDataStream(dataDecryptor), encryptedSessionKey);
-            integrityProtectedStreams.add(integrityProtected);
-            return integrityProtected;
+        IntegrityProtectedInputStream integrityProtected =
+                new IntegrityProtectedInputStream(encryptedSessionKey.getDataStream(dataDecryptor), encryptedSessionKey);
+        integrityProtectedStreams.add(integrityProtected);
+        return integrityProtected;
+    }
+
+    private void throwIfAlgorithmIsRejected(SymmetricKeyAlgorithm algorithm) throws UnacceptableAlgorithmException {
+        if (!PGPainless.getPolicy().getSymmetricKeyDecryptionAlgoritmPolicy().isAcceptable(algorithm)) {
+            throw new UnacceptableAlgorithmException("Data is "
+                    + (algorithm == SymmetricKeyAlgorithm.NULL ? "unencrypted" : "encrypted with symmetric algorithm " + algorithm) + " which is not acceptable as per PGPainless' policy.\n" +
+                    "To mark this algorithm as acceptable, use PGPainless.getPolicy().setSymmetricKeyDecryptionAlgorithmPolicy().");
         }
-        return encryptedSessionKey.getDataStream(dataDecryptor);
     }
 
     private void initOnePassSignatures(@Nonnull PGPOnePassSignatureList onePassSignatureList) throws PGPException {
