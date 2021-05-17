@@ -50,7 +50,7 @@ import org.pgpainless.signature.SignatureUtils;
 public class UserIdRevocationTest {
 
     @Test
-    public void test() throws IOException, PGPException, InvalidAlgorithmParameterException, NoSuchAlgorithmException, InterruptedException {
+    public void testRevocationWithoutRevocationAttributes() throws PGPException, InvalidAlgorithmParameterException, NoSuchAlgorithmException, InterruptedException {
         PGPSecretKeyRing secretKeys = PGPainless.generateKeyRing()
                 .withSubKey(KeySpec.getBuilder(KeyType.XDH(XDHCurve._X25519))
                         .withKeyFlags(KeyFlag.ENCRYPT_COMMS)
@@ -62,8 +62,6 @@ public class UserIdRevocationTest {
                 .withAdditionalUserId("secondary@key.id")
                 .withoutPassphrase()
                 .build();
-
-        Thread.sleep(1000);
 
         // make a copy with revoked subkey
         PGPSecretKeyRing revoked = PGPainless.modifyKeyRing(secretKeys)
@@ -104,8 +102,6 @@ public class UserIdRevocationTest {
                 .withAdditionalUserId("secondary@key.id")
                 .withoutPassphrase()
                 .build();
-
-        Thread.sleep(1000);
 
         secretKeys = PGPainless.modifyKeyRing(secretKeys)
                 .revokeUserIdOnAllSubkeys("secondary@key.id", new UnprotectedKeysProtector(),
