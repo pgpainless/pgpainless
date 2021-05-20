@@ -128,12 +128,12 @@ public class EncryptionBuilder implements EncryptionBuilderInterface {
         }
 
         @Override
-        public AdditionalSignWith signWith(@Nonnull SecretKeyRingProtector decryptor, @Nonnull PGPSecretKeyRing... keyRings) throws KeyValidationException {
+        public AdditionalSignWith signWith(@Nonnull SecretKeyRingProtector decryptor, @Nonnull PGPSecretKeyRing... keyRings) throws KeyValidationException, PGPException {
             return new SignWithImpl().signWith(decryptor, keyRings);
         }
 
         @Override
-        public AdditionalSignWith signWith(@Nonnull SecretKeyRingProtector decryptor, @Nonnull PGPSecretKeyRingCollection keyRings) {
+        public AdditionalSignWith signWith(@Nonnull SecretKeyRingProtector decryptor, @Nonnull PGPSecretKeyRingCollection keyRings) throws PGPException {
             return new SignWithImpl().signWith(decryptor, keyRings);
         }
 
@@ -161,7 +161,7 @@ public class EncryptionBuilder implements EncryptionBuilderInterface {
         @Override
         public AdditionalSignWith signWith(@Nonnull SecretKeyRingProtector decryptor,
                                            @Nonnull PGPSecretKeyRing... keyRings)
-                throws KeyValidationException {
+                throws KeyValidationException, PGPException {
             for (PGPSecretKeyRing secretKeyRing : keyRings) {
                 signingOptions.addInlineSignature(decryptor, secretKeyRing, DocumentSignatureType.BINARY_DOCUMENT);
             }
@@ -170,7 +170,7 @@ public class EncryptionBuilder implements EncryptionBuilderInterface {
 
         @Override
         public AdditionalSignWith signWith(@Nonnull SecretKeyRingProtector decryptor, @Nonnull PGPSecretKeyRingCollection keyRings)
-                throws KeyValidationException {
+                throws KeyValidationException, PGPException {
             for (PGPSecretKeyRing key : keyRings) {
                 signingOptions.addInlineSignature(decryptor, key, DocumentSignatureType.BINARY_DOCUMENT);
             }
@@ -193,7 +193,7 @@ public class EncryptionBuilder implements EncryptionBuilderInterface {
                                                    String userId,
                                                    DocumentSignatureType signatureType)
                 throws PGPException, KeyValidationException {
-            signingOptions.addInlineSignature(secretKeyDecryptor, signingKey, userId, signatureType);
+            signingOptions.addDetachedSignature(secretKeyDecryptor, signingKey, userId, signatureType);
             return new AdditionalSignWithImpl();
         }
     }
@@ -269,7 +269,7 @@ public class EncryptionBuilder implements EncryptionBuilderInterface {
 
         // TODO: Negotiation
 
-        return PGPainless.getPolicy().getSymmetricKeyAlgorithmPolicy().getDefaultSymmetricKeyAlgorithm();
+        return PGPainless.getPolicy().getSymmetricKeyEncryptionAlgorithmPolicy().getDefaultSymmetricKeyAlgorithm();
     }
 
     /**

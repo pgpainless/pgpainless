@@ -20,8 +20,15 @@ import org.bouncycastle.openpgp.PGPSecretKeyRing;
 import org.bouncycastle.openpgp.PGPSignature;
 import org.bouncycastle.util.io.Streams;
 import org.pgpainless.PGPainless;
+import org.pgpainless.algorithm.DocumentSignatureType;
 import org.pgpainless.encryption_signing.EncryptionBuilderInterface;
+import org.pgpainless.encryption_signing.EncryptionOptions;
+import org.pgpainless.encryption_signing.EncryptionResult;
 import org.pgpainless.encryption_signing.EncryptionStream;
+import org.pgpainless.encryption_signing.ProducerOptions;
+import org.pgpainless.encryption_signing.SigningOptions;
+import org.pgpainless.key.SubkeyIdentifier;
+import org.pgpainless.key.protection.SecretKeyRingProtector;
 import org.pgpainless.key.protection.UnprotectedKeysProtector;
 import org.pgpainless.sop.Print;
 import picocli.CommandLine;
@@ -74,22 +81,28 @@ public class Sign implements Runnable {
             }
         }
         try {
+            SigningOptions signOpt = new SigningOptions();
+            for (PGPSecretKeyRing signingKey : secretKeys) {
+                signOpt.addDetachedSignature(SecretKeyRingProtector.unprotectedKeys(), signingKey,
+                        type == Type.text ? DocumentSignatureType.CANONICAL_TEXT_DOCUMENT : DocumentSignatureType.BINARY_DOCUMENT);
+            }
             ByteArrayOutputStream out = new ByteArrayOutputStream();
-            EncryptionBuilderInterface.DocumentType documentType = PGPainless.encryptAndOrSign()
-                    .onOutputStream(out)
-                    .doNotEncrypt()
-                    .createDetachedSignature()
-                    .signWith(new UnprotectedKeysProtector(), secretKeys);
 
-            EncryptionBuilderInterface.Armor builder = type == Type.text ? documentType.signCanonicalText() : documentType.signBinaryDocument();
-            EncryptionStream encryptionStream = armor ? builder.asciiArmor() : builder.noArmor();
+            EncryptionStream encryptionStream = PGPainless.encryptAndOrSign()
+                    .onOutputStream(out)
+                    .withOptions(ProducerOptions
+                            .sign(signOpt)
+                            .setAsciiArmor(armor));
 
             Streams.pipeAll(System.in, encryptionStream);
             encryptionStream.close();
 
-            PGPSignature signature = encryptionStream.getResult().getSignatures().iterator().next();
-
-            print_ln(Print.toString(signature.getEncoded(), armor));
+            EncryptionResult result = encryptionStream.getResult();
+            for (SubkeyIdentifier signingKey : result.getDetachedSignatures().keySet()) {
+                for (PGPSignature signature : result.getDetachedSignatures().get(signingKey)) {
+                    print_ln(Print.toString(signature.getEncoded(), armor));
+                }
+            }
         } catch (PGPException | IOException e) {
             err_ln("Error signing data.");
             err_ln(e.getMessage());

@@ -597,10 +597,6 @@ public class KeyRingInfo {
                 continue;
             }
 
-            if (!subKey.isEncryptionKey()) {
-                continue;
-            }
-
             List<KeyFlag> keyFlags = getKeyFlagsOf(subKey.getKeyID());
             if (keyFlags.contains(KeyFlag.SIGN_DATA)) {
                 return subKey;

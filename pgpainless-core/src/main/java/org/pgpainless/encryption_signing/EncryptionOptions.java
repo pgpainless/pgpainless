@@ -41,8 +41,20 @@ public class EncryptionOptions {
 
     private SymmetricKeyAlgorithm encryptionAlgorithmOverride = null;
 
+    public EncryptionOptions() {
+        this(EncryptionStream.Purpose.STORAGE_AND_COMMUNICATIONS);
+    }
+
     public EncryptionOptions(EncryptionStream.Purpose purpose) {
         this.purpose = purpose;
+    }
+
+    public static EncryptionOptions encryptCommunications() {
+        return new EncryptionOptions(EncryptionStream.Purpose.COMMUNICATIONS);
+    }
+
+    public static EncryptionOptions encryptDataAtRest() {
+        return new EncryptionOptions(EncryptionStream.Purpose.STORAGE);
     }
 
     /**
@@ -71,7 +83,7 @@ public class EncryptionOptions {
         KeyRingInfo info = new KeyRingInfo(key, new Date());
         PGPPublicKey encryptionSubkey = info.getEncryptionSubkey(purpose);
         if (encryptionSubkey == null) {
-            throw new AssertionError("Key has no encryption subkey.");
+            throw new IllegalArgumentException("Key has no encryption subkey.");
         }
         addRecipientKey(key, encryptionSubkey);
     }

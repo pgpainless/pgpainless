@@ -28,7 +28,6 @@ import org.bouncycastle.openpgp.PGPException;
 import org.bouncycastle.openpgp.PGPPublicKey;
 import org.bouncycastle.openpgp.PGPPublicKeyRing;
 import org.bouncycastle.openpgp.PGPSecretKeyRing;
-import org.bouncycastle.openpgp.PGPSignature;
 import org.junit.jupiter.api.Test;
 import org.pgpainless.PGPainless;
 import org.pgpainless.key.util.KeyRingUtils;
@@ -72,8 +71,7 @@ public class PGPPublicKeyRingTest {
         assertTrue(userIds.contains(userId));
 
         PGPPublicKey publicKey = publicKeys.getPublicKey();
-        PGPSignature cert = publicKey.getSignaturesForID(userId).next();
-        publicKey = PGPPublicKey.removeCertification(publicKey, cert);
+        publicKey = PGPPublicKey.removeCertification(publicKey, userId);
 
         userIds = CollectionUtils.iteratorToList(publicKey.getUserIDs());
         assertFalse(userIds.contains(userId));

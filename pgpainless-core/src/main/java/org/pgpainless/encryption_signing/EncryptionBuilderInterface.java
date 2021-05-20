@@ -188,7 +188,7 @@ public interface EncryptionBuilderInterface {
          * @return api handle
          */
         @Deprecated
-        AdditionalSignWith signWith(@Nonnull SecretKeyRingProtector decryptor, @Nonnull PGPSecretKeyRing... keyRings) throws KeyValidationException;
+        AdditionalSignWith signWith(@Nonnull SecretKeyRingProtector decryptor, @Nonnull PGPSecretKeyRing... keyRings) throws KeyValidationException, PGPException;
 
         /**
          * Sign inline using the passed in secret keys.
@@ -199,7 +199,7 @@ public interface EncryptionBuilderInterface {
          * @return api handle
          */
         @Deprecated
-        AdditionalSignWith signWith(@Nonnull SecretKeyRingProtector decryptor, @Nonnull PGPSecretKeyRingCollection keyRings) throws KeyValidationException;
+        AdditionalSignWith signWith(@Nonnull SecretKeyRingProtector decryptor, @Nonnull PGPSecretKeyRingCollection keyRings) throws KeyValidationException, PGPException;
 
         /**
          * Create an inline signature using the provided secret key.

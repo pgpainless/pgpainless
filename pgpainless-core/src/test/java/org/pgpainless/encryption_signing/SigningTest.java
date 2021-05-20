@@ -15,7 +15,6 @@
  */
 package org.pgpainless.encryption_signing;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
@@ -38,8 +37,6 @@ import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.MethodSource;
 import org.pgpainless.PGPainless;
 import org.pgpainless.algorithm.DocumentSignatureType;
-import org.pgpainless.algorithm.HashAlgorithm;
-import org.pgpainless.algorithm.SymmetricKeyAlgorithm;
 import org.pgpainless.decryption_verification.DecryptionStream;
 import org.pgpainless.decryption_verification.OpenPgpMetadata;
 import org.pgpainless.implementation.ImplementationFactory;
@@ -107,8 +104,6 @@ public class SigningTest {
         decryptionStream.close();
 
         OpenPgpMetadata metadata = decryptionStream.getResult();
-        assertEquals(SymmetricKeyAlgorithm.AES_192, metadata.getSymmetricKeyAlgorithm());
-        assertEquals(HashAlgorithm.SHA384.getAlgorithmId(), metadata.getSignatures().iterator().next().getHashAlgorithm());
         assertTrue(metadata.isEncrypted());
         assertTrue(metadata.isSigned());
         assertTrue(metadata.isVerified());

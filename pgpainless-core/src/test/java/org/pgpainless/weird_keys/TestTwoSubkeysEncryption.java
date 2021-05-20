@@ -26,6 +26,7 @@ import org.bouncycastle.openpgp.PGPException;
 import org.bouncycastle.openpgp.PGPPublicKeyRing;
 import org.bouncycastle.openpgp.PGPSecretKeyRing;
 import org.bouncycastle.util.io.Streams;
+import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 import org.pgpainless.PGPainless;
 import org.pgpainless.encryption_signing.EncryptionResult;
@@ -51,6 +52,7 @@ public class TestTwoSubkeysEncryption {
      * @throws PGPException not expected
      */
     @Test
+    @Disabled("We may not want to encrypt to all enc capable subkeys.")
     public void testEncryptsToBothSubkeys() throws IOException, PGPException {
         PGPSecretKeyRing twoSuitableSubkeysKeyRing = WeirdKeys.getTwoCryptSubkeysKey();
         PGPPublicKeyRing publicKeys = KeyRingUtils.publicKeyRingFrom(twoSuitableSubkeysKeyRing);
