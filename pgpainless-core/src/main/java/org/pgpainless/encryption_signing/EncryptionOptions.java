@@ -124,6 +124,9 @@ public class EncryptionOptions {
     }
 
     public void overrideEncryptionAlgorithm(SymmetricKeyAlgorithm encryptionAlgorithm) {
+        if (encryptionAlgorithm == SymmetricKeyAlgorithm.NULL) {
+            throw new IllegalArgumentException("Plaintext encryption can only be used to denote unencrypted secret keys.");
+        }
         this.encryptionAlgorithmOverride = encryptionAlgorithm;
     }
 }
