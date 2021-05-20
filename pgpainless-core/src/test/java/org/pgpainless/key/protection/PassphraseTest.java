@@ -17,6 +17,7 @@ package org.pgpainless.key.protection;
 
 import static org.junit.jupiter.api.Assertions.assertArrayEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
@@ -36,5 +37,35 @@ public class PassphraseTest {
 
         assertFalse(passphrase.isValid());
         assertThrows(IllegalStateException.class, passphrase::getChars);
+    }
+
+    @Test
+    public void testTrimming() {
+        Passphrase leadingSpace = Passphrase.fromPassword(" space");
+        assertArrayEquals("space".toCharArray(), leadingSpace.getChars());
+        assertFalse(leadingSpace.isEmpty());
+
+        Passphrase trailingSpace = Passphrase.fromPassword("space ");
+        assertArrayEquals("space".toCharArray(), trailingSpace.getChars());
+        assertFalse(trailingSpace.isEmpty());
+
+        Passphrase leadingTrailingWhitespace = new Passphrase("\t Such whitespace, much wow\n ".toCharArray());
+        assertArrayEquals("Such whitespace, much wow".toCharArray(), leadingTrailingWhitespace.getChars());
+        assertFalse(leadingTrailingWhitespace.isEmpty());
+
+        Passphrase fromEmptyChars = new Passphrase("     ".toCharArray());
+        assertNull(fromEmptyChars.getChars());
+        assertTrue(fromEmptyChars.isEmpty());
+    }
+
+    @Test
+    public void testEmptyPassphrase() {
+        Passphrase empty = Passphrase.emptyPassphrase();
+        assertNull(empty.getChars());
+        assertTrue(empty.isEmpty());
+
+        Passphrase trimmedEmpty = Passphrase.fromPassword("    ");
+        assertNull(trimmedEmpty.getChars());
+        assertTrue(trimmedEmpty.isEmpty());
     }
 }
