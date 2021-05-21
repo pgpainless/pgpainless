@@ -26,17 +26,13 @@ import org.bouncycastle.openpgp.PGPException;
 import org.bouncycastle.openpgp.PGPKeyRing;
 import org.bouncycastle.openpgp.PGPPublicKey;
 import org.bouncycastle.openpgp.PGPPublicKeyRing;
-import org.bouncycastle.openpgp.PGPSecretKeyRing;
 import org.bouncycastle.openpgp.PGPSignature;
 import org.bouncycastle.openpgp.PGPUserAttributeSubpacketVector;
 import org.pgpainless.algorithm.SignatureType;
-import org.pgpainless.implementation.ImplementationFactory;
-import org.pgpainless.key.info.KeyRingInfo;
-import org.pgpainless.key.util.KeyRingUtils;
-import org.pgpainless.policy.Policy;
-import org.pgpainless.signature.SelectSignatureFromKey;
-import org.pgpainless.signature.SignatureCreationDateComparator;
 import org.pgpainless.exception.SignatureValidationException;
+import org.pgpainless.implementation.ImplementationFactory;
+import org.pgpainless.policy.Policy;
+import org.pgpainless.signature.SignatureCreationDateComparator;
 import org.pgpainless.signature.SignatureValidator;
 import org.pgpainless.util.CollectionUtils;
 
@@ -146,115 +142,4 @@ public class KeyRingValidator {
         return blank;
     }
 
-    public static <R extends PGPKeyRing> R getKeyRingAtDate(R keyRing, KeyRingInfo info) {
-        Iterator<PGPPublicKey> iterator = keyRing.getPublicKeys();
-        while (iterator.hasNext()) {
-            PGPPublicKey publicKey = iterator.next();
-            if (publicKey.isMasterKey()) {
-                keyRing = assessPrimaryKeyAtDate(publicKey, keyRing, info);
-            } else {
-                keyRing = assessSubkeyAtDate(publicKey, keyRing, info);
-            }
-        }
-        return keyRing;
-    }
-
-    private static <R extends PGPKeyRing> R assessPrimaryKeyAtDate(PGPPublicKey primaryKey, PGPKeyRing keyRing, KeyRingInfo info) {
-        if (!primaryKey.isMasterKey()) {
-            throw new IllegalArgumentException("Passed in key is not a primary key");
-        }
-
-        // Direct Key Signatures
-        PGPSignature latestSelfSig = info.getCurrentDirectKeySelfSignature();
-        PGPSignature latestSelfRevocation = info.getRevocationSelfSignature();
-
-
-        // User-ID certifications
-        Iterator<String> userIdIterator = primaryKey.getUserIDs();
-        while (userIdIterator.hasNext()) {
-            String userId = userIdIterator.next();
-            boolean isUserIdBound = false;
-            Iterator<PGPSignature> userIdSigIterator = primaryKey.getSignaturesForID(userId);
-            while (userIdSigIterator.hasNext()) {
-                PGPSignature userIdSig = userIdSigIterator.next();
-                if (!SelectSignatureFromKey.isValidSignatureOnUserId(userId, primaryKey)
-                        .accept(userIdSig, primaryKey, keyRing)) {
-                    primaryKey = PGPPublicKey.removeCertification(primaryKey, userId, userIdSig);
-                    continue;
-                }
-                isUserIdBound = true;
-            }
-            if (!isUserIdBound) {
-                primaryKey = PGPPublicKey.removeCertification(primaryKey, userId);
-            }
-        }
-
-        // Revocations
-        Iterator<PGPSignature> revocationSignatures = primaryKey.getSignaturesOfType(SignatureType.KEY_REVOCATION.getCode());
-        while (revocationSignatures.hasNext()) {
-            PGPSignature revocationSig = revocationSignatures.next();
-            if (!SelectSignatureFromKey.isValidKeyRevocationSignature(primaryKey)
-                    .accept(revocationSig, primaryKey, keyRing)) {
-                primaryKey = PGPPublicKey.removeCertification(primaryKey, revocationSig);
-            }
-        }
-
-        return (R) replacePublicKey(keyRing, primaryKey);
-    }
-
-    private static <R extends PGPKeyRing> R assessSubkeyAtDate(PGPPublicKey subkey, PGPKeyRing keyRing, KeyRingInfo info) {
-        if (subkey.isMasterKey()) {
-            throw new IllegalArgumentException("Passed in key is not a subkey");
-        }
-
-        // Subkey binding sigs
-        Iterator<PGPSignature> subkeyBindingSigIterator = subkey.getSignaturesOfType(SignatureType.SUBKEY_BINDING.getCode());
-        while (subkeyBindingSigIterator.hasNext()) {
-            PGPSignature signature = subkeyBindingSigIterator.next();
-            if (!SelectSignatureFromKey.isValidSubkeyBindingSignature(keyRing.getPublicKey(), subkey)
-                    .accept(signature, subkey, keyRing)) {
-                subkey = PGPPublicKey.removeCertification(subkey, signature);
-            }
-        }
-
-        // Subkey revocation sigs
-        Iterator<PGPSignature> revocationSigIterator = subkey.getSignaturesOfType(SignatureType.SUBKEY_REVOCATION.getCode());
-        while (revocationSigIterator.hasNext()) {
-            PGPSignature signature = revocationSigIterator.next();
-            if (!SelectSignatureFromKey.isValidSubkeyRevocationSignature().accept(signature, subkey, keyRing)) {
-                subkey = PGPPublicKey.removeCertification(subkey, signature);
-            }
-        }
-
-        Iterator<PGPSignature> directKeySigIterator = subkey.getSignaturesOfType(SignatureType.DIRECT_KEY.getCode());
-        while (directKeySigIterator.hasNext()) {
-            PGPSignature signature = directKeySigIterator.next();
-            PGPPublicKey creator = keyRing.getPublicKey(signature.getKeyID());
-            if (creator == null) {
-                // remove external signature
-                subkey = PGPPublicKey.removeCertification(subkey, signature);
-                continue;
-            }
-
-            if (!SelectSignatureFromKey.isValidDirectKeySignature(creator, subkey)
-                    .accept(signature, subkey, keyRing)) {
-                subkey = PGPPublicKey.removeCertification(subkey, signature);
-            }
-        }
-
-        return (R) replacePublicKey(keyRing, subkey);
-    }
-
-    private static PGPKeyRing replacePublicKey(PGPKeyRing keyRing, PGPPublicKey publicKey) {
-        if (keyRing instanceof PGPPublicKeyRing) {
-            keyRing = PGPPublicKeyRing.insertPublicKey((PGPPublicKeyRing) keyRing, publicKey);
-        } else if (keyRing instanceof PGPSecretKeyRing) {
-            PGPSecretKeyRing secretKeys = (PGPSecretKeyRing) keyRing;
-            PGPPublicKeyRing publicKeys = KeyRingUtils.publicKeyRingFrom(secretKeys);
-            publicKeys = PGPPublicKeyRing.insertPublicKey(publicKeys, publicKey);
-            secretKeys = PGPSecretKeyRing.replacePublicKeys(secretKeys, publicKeys);
-            keyRing = secretKeys;
-        }
-        return keyRing;
-    }
 }

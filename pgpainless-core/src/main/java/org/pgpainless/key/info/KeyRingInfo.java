@@ -629,8 +629,8 @@ public class KeyRingInfo {
         private final Map<Long, PGPSignature> subkeyBindings;
 
         public Signatures(PGPKeyRing keyRing, Date evaluationDate, Policy policy) {
-            primaryKeyRevocation = SignaturePicker.pickCurrentRevocationSelfSignature(keyRing, evaluationDate);
-            primaryKeySelfSignature = SignaturePicker.pickCurrentDirectKeySelfSignature(keyRing, evaluationDate);
+            primaryKeyRevocation = SignaturePicker.pickCurrentRevocationSelfSignature(keyRing, policy, evaluationDate);
+            primaryKeySelfSignature = SignaturePicker.pickLatestDirectKeySignature(keyRing, policy, evaluationDate);
             userIdRevocations = new HashMap<>();
             userIdCertifications = new HashMap<>();
             subkeyRevocations = new HashMap<>();
@@ -638,11 +638,11 @@ public class KeyRingInfo {
 
             for (Iterator<String> it = keyRing.getPublicKey().getUserIDs(); it.hasNext(); ) {
                 String userId = it.next();
-                PGPSignature revocation = SignaturePicker.pickCurrentUserIdRevocationSignature(keyRing, userId, evaluationDate);
+                PGPSignature revocation = SignaturePicker.pickCurrentUserIdRevocationSignature(keyRing, userId, policy, evaluationDate);
                 if (revocation != null) {
                     userIdRevocations.put(userId, revocation);
                 }
-                PGPSignature certification = SignaturePicker.pickCurrentUserIdCertificationSignature(keyRing, userId, evaluationDate);
+                PGPSignature certification = SignaturePicker.pickLatestUserIdCertificationSignature(keyRing, userId, policy, evaluationDate);
                 if (certification != null) {
                     userIdCertifications.put(userId, certification);
                 }
@@ -652,11 +652,11 @@ public class KeyRingInfo {
             keys.next(); // Skip primary key
             while (keys.hasNext()) {
                 PGPPublicKey subkey = keys.next();
-                PGPSignature subkeyRevocation = SignaturePicker.pickCurrentSubkeyBindingRevocationSignature(keyRing, subkey, evaluationDate);
+                PGPSignature subkeyRevocation = SignaturePicker.pickCurrentSubkeyBindingRevocationSignature(keyRing, subkey, policy, evaluationDate);
                 if (subkeyRevocation != null) {
                     subkeyRevocations.put(subkey.getKeyID(), subkeyRevocation);
                 }
-                PGPSignature subkeyBinding = SignaturePicker.pickCurrentSubkeyBindingSignature(keyRing, subkey, evaluationDate);
+                PGPSignature subkeyBinding = SignaturePicker.pickLatestSubkeyBindingSignature(keyRing, subkey, policy, evaluationDate);
                 if (subkeyBinding != null) {
                     subkeyBindings.put(subkey.getKeyID(), subkeyBinding);
                 }

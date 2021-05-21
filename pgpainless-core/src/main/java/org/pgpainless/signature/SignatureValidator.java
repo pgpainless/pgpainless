@@ -178,7 +178,7 @@ public abstract class SignatureValidator {
         signatureStructureIsAcceptable(primaryKey, policy).verify(signature);
         signatureIsEffective(validationDate).verify(signature);
         hasValidPrimaryKeyBindingSignatureIfRequired(primaryKey, subkey, policy, validationDate).verify(signature);
-        correctSignatureOverKey(primaryKey, subkey).verify(signature);
+        correctSubkeyBindingSignature(primaryKey, subkey).verify(signature);
 
         return true;
     }
@@ -274,20 +274,32 @@ public abstract class SignatureValidator {
             @Override
             public void verify(PGPSignature signature) throws SignatureValidationException {
                 HashAlgorithm hashAlgorithm = HashAlgorithm.fromId(signature.getHashAlgorithm());
-
-                Policy.HashAlgorithmPolicy hashAlgorithmPolicy = null;
-                SignatureType type = SignatureType.valueOf(signature.getSignatureType());
-                if (type == SignatureType.CERTIFICATION_REVOCATION || type == SignatureType.KEY_REVOCATION || type == SignatureType.SUBKEY_REVOCATION) {
-                    hashAlgorithmPolicy = policy.getRevocationSignatureHashAlgorithmPolicy();
-                } else {
-                    hashAlgorithmPolicy = policy.getSignatureHashAlgorithmPolicy();
-                }
+                Policy.HashAlgorithmPolicy hashAlgorithmPolicy = getHashAlgorithmPolicyForSignature(signature, policy);
 
                 if (!hashAlgorithmPolicy.isAcceptable(signature.getHashAlgorithm())) {
-                    throw new SignatureValidationException("Signature uses inacceptable hash algorithm " + hashAlgorithm);
+                    throw new SignatureValidationException("Signature uses unacceptable hash algorithm " + hashAlgorithm);
                 }
             }
         };
+    }
+
+    /**
+     * Return the applicable {@link Policy.HashAlgorithmPolicy} for the given {@link PGPSignature}.
+     * Revocation signatures are being policed using a different policy than non-revocation signatures.
+     *
+     * @param signature signature
+     * @param policy revocation policy for revocation sigs, normal policy for non-rev sigs
+     * @return policy
+     */
+    private static Policy.HashAlgorithmPolicy getHashAlgorithmPolicyForSignature(PGPSignature signature, Policy policy) {
+        Policy.HashAlgorithmPolicy hashAlgorithmPolicy = null;
+        SignatureType type = SignatureType.valueOf(signature.getSignatureType());
+        if (type == SignatureType.CERTIFICATION_REVOCATION || type == SignatureType.KEY_REVOCATION || type == SignatureType.SUBKEY_REVOCATION) {
+            hashAlgorithmPolicy = policy.getRevocationSignatureHashAlgorithmPolicy();
+        } else {
+            hashAlgorithmPolicy = policy.getSignatureHashAlgorithmPolicy();
+        }
+        return hashAlgorithmPolicy;
     }
 
     public static SignatureValidator signatureDoesNotHaveCriticalUnknownNotations(NotationRegistry registry) {
@@ -327,12 +339,36 @@ public abstract class SignatureValidator {
         return new SignatureValidator() {
             @Override
             public void verify(PGPSignature signature) throws SignatureValidationException {
+                signatureIsAlreadyEffective(validationDate).verify(signature);
+                signatureIsNotYetExpired(validationDate).verify(signature);
+            }
+        };
+    }
+
+    public static SignatureValidator signatureIsAlreadyEffective(Date validationDate) {
+        return new SignatureValidator() {
+            @Override
+            public void verify(PGPSignature signature) throws SignatureValidationException {
                 Date signatureCreationTime = SignatureSubpacketsUtil.getSignatureCreationTime(signature).getTime();
-                // For hard revocations, skip the creation time check
-                if (!SignatureUtils.isHardRevocation(signature)) {
-                    if (signatureCreationTime.after(validationDate)) {
-                        throw new SignatureValidationException("Signature was created at " + signatureCreationTime + " and is therefore not yet valid at " + validationDate);
-                    }
+                // Hard revocations are always effective
+                if (SignatureUtils.isHardRevocation(signature)) {
+                    return;
+                }
+
+                if (signatureCreationTime.after(validationDate)) {
+                    throw new SignatureValidationException("Signature was created at " + signatureCreationTime + " and is therefore not yet valid at " + validationDate);
+                }
+            }
+        };
+    }
+
+    public static SignatureValidator signatureIsNotYetExpired(Date validationDate) {
+        return new SignatureValidator() {
+            @Override
+            public void verify(PGPSignature signature) throws SignatureValidationException {
+                // Hard revocations do not expire
+                if (SignatureUtils.isHardRevocation(signature)) {
+                    return;
                 }
 
                 Date signatureExpirationTime = SignatureSubpacketsUtil.getSignatureExpirationTimeAsDate(signature);
@@ -415,6 +451,26 @@ public abstract class SignatureValidator {
                 }
                 if (predatesBindingSig) {
                     throw new SignatureValidationException("Signature was created before the signing key was bound to the key ring.");
+                }
+            }
+        };
+    }
+
+    public static SignatureValidator correctSubkeyBindingSignature(PGPPublicKey primaryKey, PGPPublicKey subkey) {
+        return new SignatureValidator() {
+            @Override
+            public void verify(PGPSignature signature) throws SignatureValidationException {
+                if (primaryKey.getKeyID() == subkey.getKeyID()) {
+                    throw new SignatureValidationException("Primary key cannot be its own subkey.");
+                }
+                try {
+                    signature.init(ImplementationFactory.getInstance().getPGPContentVerifierBuilderProvider(), primaryKey);
+                    boolean valid = signature.verifyCertification(primaryKey, subkey);
+                    if (!valid) {
+                        throw new SignatureValidationException("Signature is not correct.");
+                    }
+                } catch (PGPException e) {
+                    throw new SignatureValidationException("Cannot verify subkey binding signature correctness", e);
                 }
             }
         };

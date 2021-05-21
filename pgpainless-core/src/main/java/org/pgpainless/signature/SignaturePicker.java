@@ -20,17 +20,12 @@ import java.util.Date;
 import java.util.Iterator;
 import java.util.List;
 
-import org.bouncycastle.bcpg.sig.RevocationReason;
-import org.bouncycastle.bcpg.sig.SignatureCreationTime;
 import org.bouncycastle.openpgp.PGPKeyRing;
 import org.bouncycastle.openpgp.PGPPublicKey;
 import org.bouncycastle.openpgp.PGPSignature;
-import org.pgpainless.PGPainless;
 import org.pgpainless.algorithm.SignatureType;
 import org.pgpainless.exception.SignatureValidationException;
-import org.pgpainless.key.util.RevocationAttributes;
 import org.pgpainless.policy.Policy;
-import org.pgpainless.signature.subpackets.SignatureSubpacketsUtil;
 import org.pgpainless.util.CollectionUtils;
 
 /**
@@ -49,14 +44,14 @@ import org.pgpainless.util.CollectionUtils;
 public class SignaturePicker {
 
     /**
-     * Pick the most current (at the time of evaluation) key revocation signature.
-     * If there is a hard revocation signature, it is picked, regardless of expiration or creation time.
+     * Pick the, at validation date most recent valid key revocation signature.
+     * If there are hard revocation signatures, the latest hard revocation sig is picked, even if it was created after
+     * validationDate or if it is already expired.
      *
      * @param keyRing key ring
      * @return most recent, valid key revocation signature
      */
-    public static PGPSignature pickCurrentRevocationSelfSignature(PGPKeyRing keyRing, Date validationDate) {
-        Policy policy = PGPainless.getPolicy();
+    public static PGPSignature pickCurrentRevocationSelfSignature(PGPKeyRing keyRing, Policy policy, Date validationDate) {
         PGPPublicKey primaryKey = keyRing.getPublicKey();
 
         List<PGPSignature> signatures = getSortedSignaturesOfType(primaryKey, SignatureType.KEY_REVOCATION);
@@ -76,42 +71,36 @@ public class SignaturePicker {
     }
 
     /**
-     * Pick the current direct key self-signature on the primary key.
+     * Pick the, at validationDate most recent, valid direct key signature.
+     * This method might return null, if there is no direct key self-signature which is valid at validationDate.
+     *
      * @param keyRing key ring
      * @param validationDate validation date
      * @return direct-key self-signature
      */
-    public static PGPSignature pickCurrentDirectKeySelfSignature(PGPKeyRing keyRing, Date validationDate) {
+    public static PGPSignature pickCurrentDirectKeySelfSignature(PGPKeyRing keyRing, Policy policy, Date validationDate) {
         PGPPublicKey primaryKey = keyRing.getPublicKey();
-        return pickCurrentDirectKeySignature(primaryKey, primaryKey, keyRing, validationDate);
+        return pickCurrentDirectKeySignature(primaryKey, primaryKey, policy, validationDate);
     }
 
     /**
-     * Pick the current direct-key signature made by the signing key on the signed key.
+     * Pick the, at validationDate, latest, valid direct key signature made by signingKey on signedKey.
+     * This method might return null, if there is no direct key self signature which is valid at validationDate.
      *
      * @param signingKey key that created the signature
      * @param signedKey key that carries the signature
-     * @param keyRing key ring
      * @param validationDate validation date
      * @return direct key sig
      */
-    public static PGPSignature pickCurrentDirectKeySignature(PGPPublicKey signingKey, PGPPublicKey signedKey, PGPKeyRing keyRing, Date validationDate) {
+    public static PGPSignature pickCurrentDirectKeySignature(PGPPublicKey signingKey, PGPPublicKey signedKey, Policy policy, Date validationDate) {
         List<PGPSignature> directKeySignatures = getSortedSignaturesOfType(signedKey, SignatureType.DIRECT_KEY);
 
         PGPSignature mostRecentDirectKeySigBySigningKey = null;
         for (PGPSignature signature : directKeySignatures) {
-            if (!SelectSignatureFromKey.isWellFormed().accept(signature, signingKey, keyRing)) {
-                // signature is not well formed
-                continue;
-            }
-
-            if (!SelectSignatureFromKey.isValidAt(validationDate).accept(signature, signedKey, keyRing)) {
-                // Signature is either expired or not yet valid
-                continue;
-            }
-
-            if (!SelectSignatureFromKey.isValidDirectKeySignature(signingKey, signedKey).accept(signature, signedKey, keyRing)) {
-                // signature does not check out.
+            try {
+                SignatureValidator.verifyDirectKeySignature(signature, signingKey, signedKey, policy, validationDate);
+            } catch (SignatureValidationException e) {
+                // Direct key sig is not valid
                 continue;
             }
             mostRecentDirectKeySigBySigningKey = signature;
@@ -121,57 +110,94 @@ public class SignaturePicker {
     }
 
     /**
-     * Pick the most recent user-id revocation signature.
+     * Pick the, at validationDate, latest direct key signature.
+     * This method might return an expired signature.
+     * If there are more than one direct-key signature, and some of those are not expired, the latest non-expired
+     * yet already effective direct-key signature will be returned.
+     *
+     * @param keyRing key ring
+     * @param validationDate validation date
+     * @return latest direct key signature
+     */
+    public static PGPSignature pickLatestDirectKeySignature(PGPKeyRing keyRing, Policy policy, Date validationDate) {
+        PGPPublicKey primaryKey = keyRing.getPublicKey();
+        return pickLatestDirectKeySignature(primaryKey, primaryKey, policy, validationDate);
+    }
+
+    /**
+     * Pick the, at validationDate, latest direct key signature made by signingKey on signedKey.
+     * This method might return an expired signature.
+     * If a non-expired direct-key signature exists, the latest non-expired yet already effective direct-key
+     * signature will be returned.
+     *
+     * @param signingKey signing key (key that made the sig)
+     * @param signedKey signed key (key that carries the sig)
+     * @param validationDate date of validation
+     * @return latest direct key sig
+     */
+    public static PGPSignature pickLatestDirectKeySignature(PGPPublicKey signingKey, PGPPublicKey signedKey, Policy policy, Date validationDate) {
+        List<PGPSignature> signatures = getSortedSignaturesOfType(signedKey, SignatureType.DIRECT_KEY);
+
+        PGPSignature latestDirectKeySignature = null;
+        for (PGPSignature signature : signatures) {
+            try {
+                SignatureValidator.signatureIsOfType(SignatureType.DIRECT_KEY).verify(signature);
+                SignatureValidator.signatureStructureIsAcceptable(signingKey, policy).verify(signature);
+                SignatureValidator.signatureIsAlreadyEffective(validationDate).verify(signature);
+                // if the currently latest signature is not yet expired, check if the next candidate is not yet expired
+                if (latestDirectKeySignature != null && !SignatureUtils.isSignatureExpired(latestDirectKeySignature, validationDate)) {
+                    SignatureValidator.signatureIsNotYetExpired(validationDate).verify(signature);
+                }
+                SignatureValidator.correctSignatureOverKey(signingKey, signedKey).verify(signature);
+            } catch (SignatureValidationException e) {
+                // Direct key signature is not valid
+                continue;
+            }
+            latestDirectKeySignature = signature;
+        }
+
+        return latestDirectKeySignature;
+    }
+
+    /**
+     * Pick the, at validationDate most recent, valid user-id revocation signature.
+     * If there are hard revocation signatures, the latest hard revocation sig is picked, even if it was created after
+     * validationDate or if it is already expired.
      *
      * @param keyRing key ring
      * @param userId user-Id that gets revoked
      * @param validationDate validation date
      * @return revocation signature
      */
-    public static PGPSignature pickCurrentUserIdRevocationSignature(PGPKeyRing keyRing, String userId, Date validationDate) {
+    public static PGPSignature pickCurrentUserIdRevocationSignature(PGPKeyRing keyRing, String userId, Policy policy, Date validationDate) {
         PGPPublicKey primaryKey = keyRing.getPublicKey();
+        List<PGPSignature> signatures = getSortedSignaturesOfType(primaryKey, SignatureType.CERTIFICATION_REVOCATION);
 
-        Iterator<PGPSignature> certificationRevocations = primaryKey.getSignaturesOfType(SignatureType.CERTIFICATION_REVOCATION.getCode());
-        List<PGPSignature> signatures = CollectionUtils.iteratorToList(certificationRevocations);
-        Collections.sort(signatures, new SignatureCreationDateComparator());
-
-        PGPSignature mostRecentUserIdRevocation = null;
+        PGPSignature latestUserIdRevocation = null;
         for (PGPSignature signature : signatures) {
-            if (!SelectSignatureFromKey.isWellFormed().accept(signature, primaryKey, keyRing)) {
-                // Sig is not well formed.
+            try {
+                SignatureValidator.verifyUserIdRevocation(userId, signature, primaryKey, policy, validationDate);
+            } catch (SignatureValidationException e) {
+                // User-id revocation is not valid
                 continue;
             }
-
-            RevocationReason reason = SignatureSubpacketsUtil.getRevocationReason(signature);
-            if (reason != null && !RevocationAttributes.Reason.isHardRevocation(reason.getRevocationReason())) {
-                // reason code states soft revocation
-                if (!SelectSignatureFromKey.isValidAt(validationDate).accept(signature, primaryKey, keyRing)) {
-                    // Soft revocation is either expired or not yet valid
-                    continue;
-                }
-            }
-
-            if (!SelectSignatureFromKey.isValidCertificationRevocationSignature(primaryKey, userId)
-                    .accept(signature, primaryKey, keyRing)) {
-                // sig does not check out for userid
-                continue;
-            }
-
-            mostRecentUserIdRevocation = signature;
+            latestUserIdRevocation = signature;
         }
 
-        return mostRecentUserIdRevocation;
+        return latestUserIdRevocation;
     }
 
     /**
-     * Pick the most current certification self-signature for the given user-id.
+     * Pick the, at validationDate latest, valid certification self-signature for the given user-id.
+     * This method might return null, if there is no certification self signature for that user-id which is valid
+     * at validationDate.
      *
      * @param keyRing keyring
      * @param userId userid
      * @param validationDate validation date
      * @return user-id certification
      */
-    public static PGPSignature pickCurrentUserIdCertificationSignature(PGPKeyRing keyRing, String userId, Date validationDate) {
+    public static PGPSignature pickCurrentUserIdCertificationSignature(PGPKeyRing keyRing, String userId, Policy policy, Date validationDate) {
         PGPPublicKey primaryKey = keyRing.getPublicKey();
 
         Iterator<PGPSignature> userIdSigIterator = primaryKey.getSignaturesForID(userId);
@@ -180,21 +206,12 @@ public class SignaturePicker {
 
         PGPSignature mostRecentUserIdCertification = null;
         for (PGPSignature signature : signatures) {
-            if (!SelectSignatureFromKey.isWellFormed().accept(signature, primaryKey, keyRing)) {
-                // Sig not well formed
+            try {
+                SignatureValidator.verifyUserIdCertification(userId, signature, primaryKey, policy, validationDate);
+            } catch (SignatureValidationException e) {
+                // User-id certification is not valid
                 continue;
             }
-
-            if (!SelectSignatureFromKey.isValidAt(validationDate).accept(signature, primaryKey, keyRing)) {
-                // Sig is either expired or not valid yet
-                continue;
-            }
-
-            if (!SelectSignatureFromKey.isValidSignatureOnUserId(userId, primaryKey).accept(signature, primaryKey, keyRing)) {
-                // Sig does not check out
-                continue;
-            }
-
             mostRecentUserIdCertification = signature;
         }
 
@@ -202,57 +219,88 @@ public class SignaturePicker {
     }
 
     /**
-     * Return the current subkey binding revocation signature for the given subkey.
+     * Pick the, at validationDate latest certification self-signature for the given user-id.
+     * This method might return an expired signature.
+     * If a non-expired user-id certification signature exists, the latest non-expired yet already effective
+     * user-id certification signature for the given user-id will be returned.
+     *
+     * @param keyRing keyring
+     * @param userId userid
+     * @param validationDate validation date
+     * @return user-id certification
+     */
+    public static PGPSignature pickLatestUserIdCertificationSignature(PGPKeyRing keyRing, String userId, Policy policy, Date validationDate) {
+        PGPPublicKey primaryKey = keyRing.getPublicKey();
+
+        Iterator<PGPSignature> userIdSigIterator = primaryKey.getSignaturesForID(userId);
+        List<PGPSignature> signatures = CollectionUtils.iteratorToList(userIdSigIterator);
+        Collections.sort(signatures, new SignatureCreationDateComparator());
+
+        PGPSignature latestUserIdCert = null;
+        for (PGPSignature signature : signatures) {
+            try {
+                SignatureValidator.signatureIsCertification().verify(signature);
+                SignatureValidator.signatureStructureIsAcceptable(primaryKey, policy).verify(signature);
+                SignatureValidator.signatureIsAlreadyEffective(validationDate).verify(signature);
+                // if the currently latest signature is not yet expired, check if the next candidate is not yet expired
+                if (latestUserIdCert != null && !SignatureUtils.isSignatureExpired(latestUserIdCert, validationDate)) {
+                    SignatureValidator.signatureIsNotYetExpired(validationDate).verify(signature);
+                }
+                SignatureValidator.correctSignatureOverUserId(userId, primaryKey, primaryKey).verify(signature);
+            } catch (SignatureValidationException e) {
+                // User-id certification is not valid
+                continue;
+            }
+
+            latestUserIdCert = signature;
+        }
+
+        return latestUserIdCert;
+    }
+
+    /**
+     * Pick the, at validationDate most recent, valid subkey revocation signature.
+     * If there are hard revocation signatures, the latest hard revocation sig is picked, even if it was created after
+     * validationDate or if it is already expired.
      *
      * @param keyRing keyring
      * @param subkey subkey
      * @param validationDate validation date
      * @return subkey revocation signature
      */
-    public static PGPSignature pickCurrentSubkeyBindingRevocationSignature(PGPKeyRing keyRing, PGPPublicKey subkey, Date validationDate) {
+    public static PGPSignature pickCurrentSubkeyBindingRevocationSignature(PGPKeyRing keyRing, PGPPublicKey subkey, Policy policy, Date validationDate) {
         PGPPublicKey primaryKey = keyRing.getPublicKey();
         if (primaryKey.getKeyID() == subkey.getKeyID()) {
             throw new IllegalArgumentException("Primary key cannot have subkey binding revocations.");
         }
 
-        List<PGPSignature> subkeyRevocationSigs = getSortedSignaturesOfType(subkey, SignatureType.SUBKEY_BINDING);
-        PGPSignature mostRecentSubkeyRevocation = null;
+        List<PGPSignature> signatures = getSortedSignaturesOfType(subkey, SignatureType.SUBKEY_BINDING);
+        PGPSignature latestSubkeyRevocation = null;
 
-        for (PGPSignature signature : subkeyRevocationSigs) {
-            if (!SelectSignatureFromKey.isWellFormed().accept(signature, primaryKey, keyRing)) {
-                // Signature is not well formed
+        for (PGPSignature signature : signatures) {
+            try {
+                SignatureValidator.verifySubkeyBindingRevocation(signature, primaryKey, subkey, policy, validationDate);
+            } catch (SignatureValidationException e) {
+                // subkey binding revocation is not valid
                 continue;
             }
-
-            RevocationReason reason = SignatureSubpacketsUtil.getRevocationReason(signature);
-            if (reason != null && !RevocationAttributes.Reason.isHardRevocation(reason.getRevocationReason())) {
-                // reason code states soft revocation
-                if (!SelectSignatureFromKey.isValidAt(validationDate).accept(signature, primaryKey, keyRing)) {
-                    // Soft revocation is either expired or not yet valid
-                    continue;
-                }
-            }
-
-            if (!SelectSignatureFromKey.isValidSubkeyRevocationSignature().accept(signature, subkey, keyRing)) {
-                // Signature does not check out
-                continue;
-            }
-            mostRecentSubkeyRevocation = signature;
+            latestSubkeyRevocation = signature;
         }
 
-        return mostRecentSubkeyRevocation;
+        return latestSubkeyRevocation;
     }
 
     /**
-     * Return the (at the time of validation) most recent, valid subkey binding signature
-     * made by the primary key of the key ring on the subkey.
+     * Pick the, at validationDate latest, valid subkey binding signature for the given subkey.
+     * This method might return null, if there is no subkey binding signature which is valid
+     * at validationDate.
      *
      * @param keyRing key ring
      * @param subkey subkey
      * @param validationDate date of validation
      * @return most recent valid subkey binding signature
      */
-    public static PGPSignature pickCurrentSubkeyBindingSignature(PGPKeyRing keyRing, PGPPublicKey subkey, Date validationDate) {
+    public static PGPSignature pickCurrentSubkeyBindingSignature(PGPKeyRing keyRing, PGPPublicKey subkey, Policy policy, Date validationDate) {
         PGPPublicKey primaryKey = keyRing.getPublicKey();
         if (primaryKey.getKeyID() == subkey.getKeyID()) {
             throw new IllegalArgumentException("Primary key cannot have subkey binding signature.");
@@ -262,35 +310,68 @@ public class SignaturePicker {
         PGPSignature mostCurrentValidSig = null;
 
         for (PGPSignature signature : subkeyBindingSigs) {
-            // has hashed creation time, does not predate signing key creation date
-            if (!SelectSignatureFromKey.isWellFormed().accept(signature, primaryKey, keyRing)) {
-                // Signature is not well-formed. Reject.
+            try {
+                SignatureValidator.verifySubkeyBindingSignature(signature, primaryKey, subkey, policy, validationDate);
+            } catch (SignatureValidationException validationException) {
+                // Subkey binding sig is not valid
                 continue;
             }
-
-            SignatureCreationTime creationTime = SignatureSubpacketsUtil.getSignatureCreationTime(signature);
-            if (creationTime.getTime().after(validationDate)) {
-                // signature is not yet valid
-                continue;
-            }
-
-            if (SignatureUtils.isSignatureExpired(signature, validationDate)) {
-                // Signature is expired
-                continue;
-            }
-
-            if (!SelectSignatureFromKey.isValidSubkeyBindingSignature(primaryKey, subkey)
-                    .accept(signature, subkey, keyRing)) {
-                // Invalid subkey binding signature
-                continue;
-            }
-
             mostCurrentValidSig = signature;
         }
 
         return mostCurrentValidSig;
     }
 
+    /**
+     * Pick the, at validationDate latest subkey binding signature for the given subkey.
+     * This method might return an expired signature.
+     * If a non-expired subkey binding signature exists, the latest non-expired yet already effective
+     * subkey binding signature for the given subkey will be returned.
+     *
+     * @param keyRing key ring
+     * @param subkey subkey
+     * @param validationDate validationDate
+     * @return subkey binding signature
+     */
+    public static PGPSignature pickLatestSubkeyBindingSignature(PGPKeyRing keyRing, PGPPublicKey subkey, Policy policy, Date validationDate) {
+        PGPPublicKey primaryKey = keyRing.getPublicKey();
+        if (primaryKey.getKeyID() == subkey.getKeyID()) {
+            throw new IllegalArgumentException("Primary key cannot have subkey binding signature.");
+        }
+
+        List<PGPSignature> signatures = getSortedSignaturesOfType(subkey, SignatureType.SUBKEY_BINDING);
+        PGPSignature latestSubkeyBinding = null;
+
+        for (PGPSignature signature : signatures) {
+            try {
+                SignatureValidator.signatureIsOfType(SignatureType.SUBKEY_BINDING).verify(signature);
+                SignatureValidator.signatureStructureIsAcceptable(primaryKey, policy).verify(signature);
+                SignatureValidator.signatureIsAlreadyEffective(validationDate).verify(signature);
+                // if the currently latest signature is not yet expired, check if the next candidate is not yet expired
+                if (latestSubkeyBinding != null && !SignatureUtils.isSignatureExpired(latestSubkeyBinding, validationDate)) {
+                    SignatureValidator.signatureIsNotYetExpired(validationDate).verify(signature);
+                }
+                SignatureValidator.correctSubkeyBindingSignature(primaryKey, subkey).verify(signature);
+            } catch (SignatureValidationException e) {
+                // Subkey binding sig is not valid
+                continue;
+            }
+            latestSubkeyBinding = signature;
+        }
+
+        return latestSubkeyBinding;
+    }
+
+    /**
+     * Return a list of all signatures of the given {@link SignatureType} on the given key, sorted using a
+     * {@link SignatureCreationDateComparator}.
+     *
+     * The returned list will be sorted first by ascending signature creation time.
+     *
+     * @param key key
+     * @param type type of signatures which shall be collected and sorted
+     * @return sorted list of signatures
+     */
     private static List<PGPSignature> getSortedSignaturesOfType(PGPPublicKey key, SignatureType type) {
         Iterator<PGPSignature> signaturesOfType = key.getSignaturesOfType(type.getCode());
         List<PGPSignature> signatureList = CollectionUtils.iteratorToList(signaturesOfType);
