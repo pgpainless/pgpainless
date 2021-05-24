@@ -82,18 +82,21 @@ public final class SigningOptions {
         KeyRingInfo keyRingInfo = new KeyRingInfo(secretKey, new Date());
         if (userId != null) {
             if (!keyRingInfo.isUserIdValid(userId)) {
-                throw new KeyValidationException(userId, keyRingInfo.getCurrentUserIdCertification(userId), keyRingInfo.getUserIdRevocation(userId));
+                throw new KeyValidationException(userId, keyRingInfo.getLatestUserIdCertification(userId), keyRingInfo.getUserIdRevocation(userId));
             }
         }
 
-        PGPPublicKey signingPubKey = keyRingInfo.getSigningSubkey();
-        if (signingPubKey == null) {
+        List<PGPPublicKey> signingPubKeys = keyRingInfo.getSigningSubkeys();
+        if (signingPubKeys.isEmpty()) {
             throw new AssertionError("Key has no valid signing key.");
         }
-        PGPSecretKey signingSecKey = secretKey.getSecretKey(signingPubKey.getKeyID());
-        PGPPrivateKey signingSubkey = signingSecKey.extractPrivateKey(secretKeyDecryptor.getDecryptor(signingPubKey.getKeyID()));
-        List<HashAlgorithm> hashAlgorithms = keyRingInfo.getPreferredHashAlgorithms(userId, signingPubKey.getKeyID());
-        addSigningMethod(secretKey, signingSubkey, hashAlgorithms.get(0), signatureType, false);
+
+        for (PGPPublicKey signingPubKey : signingPubKeys) {
+            PGPSecretKey signingSecKey = secretKey.getSecretKey(signingPubKey.getKeyID());
+            PGPPrivateKey signingSubkey = signingSecKey.extractPrivateKey(secretKeyDecryptor.getDecryptor(signingPubKey.getKeyID()));
+            List<HashAlgorithm> hashAlgorithms = keyRingInfo.getPreferredHashAlgorithms(userId, signingPubKey.getKeyID());
+            addSigningMethod(secretKey, signingSubkey, hashAlgorithms.get(0), signatureType, false);
+        }
     }
 
     public void addDetachedSignature(SecretKeyRingProtector secretKeyDecryptor,
@@ -111,18 +114,21 @@ public final class SigningOptions {
         KeyRingInfo keyRingInfo = new KeyRingInfo(secretKey, new Date());
         if (userId != null) {
             if (!keyRingInfo.isUserIdValid(userId)) {
-                throw new KeyValidationException(userId, keyRingInfo.getCurrentUserIdCertification(userId), keyRingInfo.getUserIdRevocation(userId));
+                throw new KeyValidationException(userId, keyRingInfo.getLatestUserIdCertification(userId), keyRingInfo.getUserIdRevocation(userId));
             }
         }
 
-        PGPPublicKey signingPubKey = keyRingInfo.getSigningSubkey();
-        if (signingPubKey == null) {
+        List<PGPPublicKey> signingPubKeys = keyRingInfo.getSigningSubkeys();
+        if (signingPubKeys.isEmpty()) {
             throw new AssertionError("Key has no valid signing key.");
         }
-        PGPSecretKey signingSecKey = secretKey.getSecretKey(signingPubKey.getKeyID());
-        PGPPrivateKey signingSubkey = signingSecKey.extractPrivateKey(secretKeyDecryptor.getDecryptor(signingPubKey.getKeyID()));
-        List<HashAlgorithm> hashAlgorithms = keyRingInfo.getPreferredHashAlgorithms(userId, signingPubKey.getKeyID());
-        addSigningMethod(secretKey, signingSubkey, hashAlgorithms.get(0), signatureType, true);
+
+        for (PGPPublicKey signingPubKey : signingPubKeys) {
+            PGPSecretKey signingSecKey = secretKey.getSecretKey(signingPubKey.getKeyID());
+            PGPPrivateKey signingSubkey = signingSecKey.extractPrivateKey(secretKeyDecryptor.getDecryptor(signingPubKey.getKeyID()));
+            List<HashAlgorithm> hashAlgorithms = keyRingInfo.getPreferredHashAlgorithms(userId, signingPubKey.getKeyID());
+            addSigningMethod(secretKey, signingSubkey, hashAlgorithms.get(0), signatureType, true);
+        }
     }
 
     private void addSigningMethod(PGPSecretKeyRing secretKey,

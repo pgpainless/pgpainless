@@ -26,11 +26,12 @@ import org.bouncycastle.openpgp.PGPException;
 import org.bouncycastle.openpgp.PGPPublicKeyRing;
 import org.bouncycastle.openpgp.PGPSecretKeyRing;
 import org.bouncycastle.util.io.Streams;
-import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 import org.pgpainless.PGPainless;
+import org.pgpainless.encryption_signing.EncryptionOptions;
 import org.pgpainless.encryption_signing.EncryptionResult;
 import org.pgpainless.encryption_signing.EncryptionStream;
+import org.pgpainless.encryption_signing.ProducerOptions;
 import org.pgpainless.key.WeirdKeys;
 import org.pgpainless.key.util.KeyRingUtils;
 
@@ -46,23 +47,25 @@ public class TestTwoSubkeysEncryption {
      * {@link WeirdKeys#TWO_CRYPT_SUBKEYS} is a key that has two subkeys which both carry the key flags
      * {@link org.pgpainless.algorithm.KeyFlag#ENCRYPT_COMMS} and {@link org.pgpainless.algorithm.KeyFlag#ENCRYPT_STORAGE}.
      *
-     * This test makes sure that both subkeys are used for encryption.
+     * This test verifies that {@link EncryptionOptions#addRecipient(PGPPublicKeyRing, EncryptionOptions.EncryptionKeySelector)}
+     * works properly, if {@link EncryptionOptions#encryptToAllCapableSubkeys()} is provided as argument.
      *
      * @throws IOException not expected
      * @throws PGPException not expected
      */
     @Test
-    @Disabled("We may not want to encrypt to all enc capable subkeys.")
     public void testEncryptsToBothSubkeys() throws IOException, PGPException {
         PGPSecretKeyRing twoSuitableSubkeysKeyRing = WeirdKeys.getTwoCryptSubkeysKey();
         PGPPublicKeyRing publicKeys = KeyRingUtils.publicKeyRingFrom(twoSuitableSubkeysKeyRing);
         ByteArrayOutputStream out = new ByteArrayOutputStream();
         EncryptionStream encryptionStream = PGPainless.encryptAndOrSign(EncryptionStream.Purpose.STORAGE)
                 .onOutputStream(out)
-                .toRecipient(publicKeys)
-                .and()
-                .doNotSign()
-                .noArmor();
+                .withOptions(
+                        ProducerOptions.encrypt(new EncryptionOptions(EncryptionStream.Purpose.STORAGE_AND_COMMUNICATIONS)
+                                .addRecipient(publicKeys, EncryptionOptions.encryptToAllCapableSubkeys())
+                        )
+                        .setAsciiArmor(false)
+                );
 
         Streams.pipeAll(getPlainIn(), encryptionStream);
         encryptionStream.close();
