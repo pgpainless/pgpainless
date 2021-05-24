@@ -17,6 +17,12 @@ package org.pgpainless.encryption_signing;
 
 import java.io.IOException;
 import java.io.OutputStream;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.Comparator;
+import java.util.LinkedHashMap;
+import java.util.List;
+import java.util.Map;
 import javax.annotation.Nonnull;
 
 import org.bouncycastle.openpgp.PGPException;
@@ -31,6 +37,8 @@ import org.pgpainless.algorithm.HashAlgorithm;
 import org.pgpainless.algorithm.SymmetricKeyAlgorithm;
 import org.pgpainless.decryption_verification.OpenPgpMetadata;
 import org.pgpainless.exception.KeyValidationException;
+import org.pgpainless.key.SubkeyIdentifier;
+import org.pgpainless.key.info.KeyView;
 import org.pgpainless.key.protection.SecretKeyRingProtector;
 import org.pgpainless.policy.Policy;
 import org.pgpainless.util.Passphrase;
@@ -267,7 +275,33 @@ public class EncryptionBuilder implements EncryptionBuilderInterface {
             return encryptionAlgorithmOverride;
         }
 
-        // TODO: Negotiation
+        Map<SymmetricKeyAlgorithm, Integer> supportWeight = new LinkedHashMap<>();
+
+        for (SubkeyIdentifier key : encryptionOptions.getKeyViews().keySet()) {
+            KeyView keyView = encryptionOptions.getKeyViews().get(key);
+            for (SymmetricKeyAlgorithm preferred : keyView.getPreferredSymmetricKeyAlgorithms()) {
+                if (supportWeight.containsKey(preferred)) {
+                    supportWeight.put(preferred, supportWeight.get(preferred) + 1);
+                } else {
+                    supportWeight.put(preferred, 1);
+                }
+            }
+        }
+
+        List<SymmetricKeyAlgorithm> scoreboard = new ArrayList<>(supportWeight.keySet());
+        // Sort scoreboard by descending popularity
+        Collections.sort(scoreboard, new Comparator<SymmetricKeyAlgorithm>() {
+            @Override
+            public int compare(SymmetricKeyAlgorithm t0, SymmetricKeyAlgorithm t1) {
+                return -supportWeight.get(t0).compareTo(supportWeight.get(t1));
+            }
+        });
+
+        for (SymmetricKeyAlgorithm mostWanted : scoreboard) {
+            if (PGPainless.getPolicy().getSymmetricKeyEncryptionAlgorithmPolicy().isAcceptable(mostWanted)) {
+                return mostWanted;
+            }
+        }
 
         return PGPainless.getPolicy().getSymmetricKeyEncryptionAlgorithmPolicy().getDefaultSymmetricKeyAlgorithm();
     }

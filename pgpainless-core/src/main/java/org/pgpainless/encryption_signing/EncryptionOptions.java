@@ -32,6 +32,7 @@ import org.pgpainless.algorithm.SymmetricKeyAlgorithm;
 import org.pgpainless.implementation.ImplementationFactory;
 import org.pgpainless.key.SubkeyIdentifier;
 import org.pgpainless.key.info.KeyRingInfo;
+import org.pgpainless.key.info.KeyView;
 import org.pgpainless.util.Passphrase;
 
 /**
@@ -66,6 +67,7 @@ public class EncryptionOptions {
     private final Set<PGPKeyEncryptionMethodGenerator> encryptionMethods = new LinkedHashSet<>();
     private final Set<SubkeyIdentifier> encryptionKeys = new LinkedHashSet<>();
     private final Map<SubkeyIdentifier, KeyRingInfo> keyRingInfo = new HashMap<>();
+    private final Map<SubkeyIdentifier, KeyView> keyViews = new HashMap<>();
     private final EncryptionKeySelector encryptionKeySelector = encryptToFirstSubkey();
 
     private SymmetricKeyAlgorithm encryptionAlgorithmOverride = null;
@@ -131,6 +133,9 @@ public class EncryptionOptions {
         }
 
         for (PGPPublicKey encryptionSubkey : encryptionSubkeys) {
+            SubkeyIdentifier keyId = new SubkeyIdentifier(key, encryptionSubkey.getKeyID());
+            keyRingInfo.put(keyId, info);
+            keyViews.put(keyId, new KeyView.ViaUserId(info, keyId, userId));
             addRecipientKey(key, encryptionSubkey);
         }
 
@@ -162,6 +167,9 @@ public class EncryptionOptions {
         }
 
         for (PGPPublicKey encryptionSubkey : encryptionSubkeys) {
+            SubkeyIdentifier keyId = new SubkeyIdentifier(key, encryptionSubkey.getKeyID());
+            keyRingInfo.put(keyId, info);
+            keyViews.put(keyId, new KeyView.ViaKeyId(info, keyId));
             addRecipientKey(key, encryptionSubkey);
         }
 
@@ -204,12 +212,20 @@ public class EncryptionOptions {
         return this;
     }
 
-    public Set<PGPKeyEncryptionMethodGenerator> getEncryptionMethods() {
+    Set<PGPKeyEncryptionMethodGenerator> getEncryptionMethods() {
         return new HashSet<>(encryptionMethods);
+    }
+
+    Map<SubkeyIdentifier, KeyRingInfo> getKeyRingInfo() {
+        return new HashMap<>(keyRingInfo);
     }
 
     public Set<SubkeyIdentifier> getEncryptionKeyIdentifiers() {
         return new HashSet<>(encryptionKeys);
+    }
+
+    public Map<SubkeyIdentifier, KeyView> getKeyViews() {
+        return new HashMap<>(keyViews);
     }
 
     public SymmetricKeyAlgorithm getEncryptionAlgorithmOverride() {
