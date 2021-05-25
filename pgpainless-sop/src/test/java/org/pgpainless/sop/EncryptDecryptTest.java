@@ -103,7 +103,8 @@ public class EncryptDecryptTest {
         FileInputStream msgAscIn = new FileInputStream(msgAscFile);
         System.setIn(msgAscIn);
         ByteArrayOutputStream out = new ByteArrayOutputStream();
-        System.setOut(new PrintStream(out));
+        PrintStream pOut = new PrintStream(out);
+        System.setOut(pOut);
         new CommandLine(new PGPainlessCLI()).execute("decrypt",
                 "--verify-out", verifyFile.getAbsolutePath(),
                 "--verify-with", romeoCertFile.getAbsolutePath(),

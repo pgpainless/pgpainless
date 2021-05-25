@@ -16,14 +16,12 @@
 package org.pgpainless.sop.commands;
 
 import static org.pgpainless.sop.Print.err_ln;
-import static org.pgpainless.sop.Print.print_ln;
 
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
-import java.util.Scanner;
-import javax.annotation.Nullable;
+import java.util.List;
 
 import org.bouncycastle.openpgp.PGPException;
 import org.bouncycastle.openpgp.PGPPublicKeyRing;
@@ -35,9 +33,8 @@ import org.pgpainless.encryption_signing.EncryptionOptions;
 import org.pgpainless.encryption_signing.EncryptionStream;
 import org.pgpainless.encryption_signing.ProducerOptions;
 import org.pgpainless.encryption_signing.SigningOptions;
-import org.pgpainless.key.OpenPgpV4Fingerprint;
 import org.pgpainless.key.protection.SecretKeyRingProtector;
-import org.pgpainless.key.protection.passphrase_provider.SecretKeyPassphraseProvider;
+import org.pgpainless.sop.SopKeyUtil;
 import org.pgpainless.util.Passphrase;
 import picocli.CommandLine;
 
@@ -87,38 +84,27 @@ public class Encrypt implements Runnable {
         EncryptionOptions encOpt = new EncryptionOptions();
         SigningOptions signOpt = new SigningOptions();
 
-        for (int i = 0 ; i < certs.length; i++) {
-            try (InputStream fileIn = new FileInputStream(certs[i])) {
-                PGPPublicKeyRing publicKey = PGPainless.readKeyRing().publicKeyRing(fileIn);
-                encOpt.addRecipient(publicKey);
-            } catch (IOException e) {
-                err_ln("Cannot read certificate " + certs[i].getName());
-                err_ln(e.getMessage());
-                System.exit(1);
+        try {
+            List<PGPPublicKeyRing> encryptionKeys = SopKeyUtil.loadCertificatesFromFile(certs);
+            for (PGPPublicKeyRing key : encryptionKeys) {
+                encOpt.addRecipient(key);
             }
+        } catch (IOException e) {
+            err_ln(e.getMessage());
+            System.exit(1);
+            return;
         }
 
-        for (int i = 0; i < withPassword.length; i++) {
-            Passphrase passphrase = Passphrase.fromPassword(withPassword[i]);
+        for (String s : withPassword) {
+            Passphrase passphrase = Passphrase.fromPassword(s);
             encOpt.addPassphrase(passphrase);
         }
 
-        final Scanner scanner = new Scanner(System.in);
+        SecretKeyRingProtector protector = SecretKeyRingProtector.unprotectedKeys();
+
         for (int i = 0; i < signWith.length; i++) {
             try (FileInputStream fileIn = new FileInputStream(signWith[i])) {
                 PGPSecretKeyRing secretKey = PGPainless.readKeyRing().secretKeyRing(fileIn);
-                SecretKeyRingProtector protector = SecretKeyRingProtector.defaultSecretKeyRingProtector(
-                        new SecretKeyPassphraseProvider() {
-                            @Nullable
-                            @Override
-                            public Passphrase getPassphraseFor(Long keyId) {
-                                print_ln("Please provide the passphrase for key " + new OpenPgpV4Fingerprint(secretKey));
-                                String password = scanner.nextLine();
-                                Passphrase passphrase = Passphrase.fromPassword(password.trim());
-                                return passphrase;
-                            }
-                        }
-                );
                 signOpt.addInlineSignature(protector, secretKey,
                         type == Type.text || type == Type.mime ?
                                 DocumentSignatureType.CANONICAL_TEXT_DOCUMENT : DocumentSignatureType.BINARY_DOCUMENT);

@@ -112,7 +112,7 @@ public class KeyRingValidator {
                         }
                     }
                 } catch (SignatureValidationException e) {
-                    LOGGER.log(Level.INFO, "Rejecting user-id certification for user-id " + userId, e);
+                    LOGGER.log(Level.FINE, "Rejecting user-id certification for user-id " + userId, e);
                 }
             }
         }

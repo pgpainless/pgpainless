@@ -24,6 +24,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 import org.bouncycastle.openpgp.PGPException;
+import org.bouncycastle.openpgp.PGPPublicKeyRing;
 import org.bouncycastle.openpgp.PGPSecretKeyRing;
 import org.pgpainless.PGPainless;
 
@@ -40,5 +41,18 @@ public class SopKeyUtil {
             }
         }
         return secretKeyRings;
+    }
+
+    public static List<PGPPublicKeyRing> loadCertificatesFromFile(File... files) throws IOException {
+        List<PGPPublicKeyRing> publicKeyRings = new ArrayList<>();
+        for (File file : files) {
+            try (FileInputStream in = new FileInputStream(file)) {
+                publicKeyRings.add(PGPainless.readKeyRing().publicKeyRing(in));
+            } catch (IOException e) {
+                err_ln("Could not read certificate from file " + file.getName() + ": " + e.getMessage());
+                throw e;
+            }
+        }
+        return publicKeyRings;
     }
 }

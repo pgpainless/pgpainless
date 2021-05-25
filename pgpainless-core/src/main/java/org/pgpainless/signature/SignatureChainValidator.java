@@ -26,6 +26,7 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
+import org.bouncycastle.bcpg.sig.KeyFlags;
 import org.bouncycastle.bcpg.sig.SignerUserID;
 import org.bouncycastle.openpgp.PGPPublicKey;
 import org.bouncycastle.openpgp.PGPPublicKeyRing;
@@ -123,7 +124,7 @@ public class SignatureChainValidator {
                     }
                 } catch (SignatureValidationException e) {
                     rejections.put(userIdSig, e);
-                    LOGGER.log(Level.INFO, "Rejecting user-id signature.", e);
+                    LOGGER.log(Level.FINE, "Rejecting user-id signature.", e);
                 }
             }
             Collections.sort(signaturesOnUserId, new SignatureValidityComparator(SignatureCreationDateComparator.Order.NEW_TO_OLD));
@@ -200,8 +201,18 @@ public class SignatureChainValidator {
                 throw new SignatureValidationException("Subkey is revoked.");
             }
 
-            if (!KeyFlag.hasKeyFlag(SignatureSubpacketsUtil.getKeyFlags(currentSig).getFlags(), KeyFlag.SIGN_DATA)) {
-                throw new SignatureValidationException("Signature was made by key which is not capable of signing.");
+            KeyFlags keyFlags = SignatureSubpacketsUtil.getKeyFlags(currentSig);
+            if (keyFlags == null) {
+                if (directKeySignatures.isEmpty()) {
+                    throw new SignatureValidationException("Signature was made by key which is not capable of signing (no keyflags on binding sig, no direct-key sig).");
+                }
+                PGPSignature directKeySig = directKeySignatures.get(0);
+                KeyFlags directKeyFlags = SignatureSubpacketsUtil.getKeyFlags(directKeySig);
+                if (!KeyFlag.hasKeyFlag(directKeyFlags.getFlags(), KeyFlag.SIGN_DATA)) {
+                    throw new SignatureValidationException("Signature was made by key which is not capable of signing (no keyflags on binding sig, no SIGN flag on direct-key sig).");
+                }
+            } else if (!KeyFlag.hasKeyFlag(keyFlags.getFlags(), KeyFlag.SIGN_DATA)) {
+                throw new SignatureValidationException("Signature was made by key which is not capable of signing (no SIGN flag on binding sig).");
             }
         }
         return true;

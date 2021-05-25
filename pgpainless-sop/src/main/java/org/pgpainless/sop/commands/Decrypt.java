@@ -26,6 +26,7 @@ import java.io.PrintStream;
 import java.text.DateFormat;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.HashSet;
 import java.util.List;
 
@@ -40,7 +41,9 @@ import org.pgpainless.decryption_verification.DecryptionBuilderInterface;
 import org.pgpainless.decryption_verification.DecryptionStream;
 import org.pgpainless.decryption_verification.OpenPgpMetadata;
 import org.pgpainless.key.OpenPgpV4Fingerprint;
+import org.pgpainless.sop.SopKeyUtil;
 import picocli.CommandLine;
+import sun.text.resources.CollationData;
 
 @CommandLine.Command(name = "decrypt",
         description = "Decrypt a message from standard input",
@@ -110,24 +113,18 @@ public class Decrypt implements Runnable {
         }
 
         PGPSecretKeyRingCollection secretKeys;
+        List<PGPPublicKeyRing> verifyWith = null;
+
         try {
             List<PGPSecretKeyRing> secretKeyRings = loadKeysFromFiles(keys);
             secretKeys = new PGPSecretKeyRingCollection(secretKeyRings);
-        } catch (PGPException | IOException e) {
+            if (certs != null) {
+                verifyWith = SopKeyUtil.loadCertificatesFromFile(certs);
+            }
+        } catch (IOException | PGPException e) {
             err_ln(e.getMessage());
             System.exit(1);
             return;
-        }
-
-        List<PGPPublicKeyRing> verifyWith = new ArrayList<>();
-        if (certs != null) {
-            for (File f : certs) {
-                try {
-                    verifyWith.add(PGPainless.readKeyRing().publicKeyRing(new FileInputStream(f)));
-                } catch (IOException e) {
-
-                }
-            }
         }
 
 
@@ -136,7 +133,7 @@ public class Decrypt implements Runnable {
                 .decryptWith(secretKeys);
         DecryptionStream decryptionStream = null;
         try {
-            if (certs != null) {
+            if (verifyWith != null) {
                 decryptionStream = builder.verifyWith(new HashSet<>(verifyWith))
                         .ignoreMissingPublicKeys().build();
             } else {
@@ -144,12 +141,14 @@ public class Decrypt implements Runnable {
                         .build();
             }
         } catch (IOException | PGPException e) {
+            err_ln("Error constructing decryption stream: " + e.getMessage());
             System.exit(1);
             return;
         }
 
         try {
             Streams.pipeAll(decryptionStream, System.out);
+            System.out.flush();
             decryptionStream.close();
         } catch (IOException e) {
             err_ln("Unable to decrypt: " + e.getMessage());
@@ -161,28 +160,32 @@ public class Decrypt implements Runnable {
 
         OpenPgpMetadata metadata = decryptionStream.getResult();
         StringBuilder sb = new StringBuilder();
-        for (OpenPgpV4Fingerprint fingerprint : metadata.getVerifiedSignatures().keySet()) {
-            PGPPublicKeyRing verifier = null;
-            for (PGPPublicKeyRing ring : verifyWith) {
-                if (ring.getPublicKey(fingerprint.getKeyId()) != null) {
-                    verifier = ring;
-                    break;
-                }
-            }
-            PGPSignature signature = metadata.getVerifiedSignatures().get(fingerprint);
-            sb.append(df.format(signature.getCreationTime())).append(' ')
-                    .append(fingerprint).append(' ')
-                    .append(new OpenPgpV4Fingerprint(verifier)).append('\n');
-        }
 
-        try {
-            verifyOut.createNewFile();
-            PrintStream verifyPrinter = new PrintStream(new FileOutputStream(verifyOut));
-            // CHECKSTYLE:OFF
-            verifyPrinter.println(sb.toString());
-            // CHECKSTYLE:ON
-            verifyPrinter.close();
-        } catch (IOException e) {
+        if (verifyWith != null) {
+            for (OpenPgpV4Fingerprint fingerprint : metadata.getVerifiedSignatures().keySet()) {
+                PGPPublicKeyRing verifier = null;
+                for (PGPPublicKeyRing ring : verifyWith) {
+                    if (ring.getPublicKey(fingerprint.getKeyId()) != null) {
+                        verifier = ring;
+                        break;
+                    }
+                }
+                PGPSignature signature = metadata.getVerifiedSignatures().get(fingerprint);
+                sb.append(df.format(signature.getCreationTime())).append(' ')
+                        .append(fingerprint).append(' ')
+                        .append(new OpenPgpV4Fingerprint(verifier)).append('\n');
+            }
+
+            try {
+                verifyOut.createNewFile();
+                PrintStream verifyPrinter = new PrintStream(new FileOutputStream(verifyOut));
+                // CHECKSTYLE:OFF
+                verifyPrinter.println(sb.toString());
+                // CHECKSTYLE:ON
+                verifyPrinter.close();
+            } catch (IOException e) {
+                err_ln("Error writing verifications file: " + e);
+            }
         }
     }
 }

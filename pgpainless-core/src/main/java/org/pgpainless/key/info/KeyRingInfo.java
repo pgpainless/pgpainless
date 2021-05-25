@@ -269,7 +269,11 @@ public class KeyRingInfo {
     public String getPrimaryUserId() {
         String primaryUserId = null;
         Date modificationDate = null;
-        for (String userId : getValidUserIds()) {
+        List<String> validUserIds = getValidUserIds();
+        if (validUserIds.isEmpty()) {
+            return null;
+        }
+        for (String userId : validUserIds) {
             PGPSignature signature = signatures.userIdCertifications.get(userId);
             PrimaryUserID subpacket = SignatureSubpacketsUtil.getPrimaryUserId(signature);
             if (subpacket != null && subpacket.isPrimaryUserID()) {
@@ -282,7 +286,7 @@ public class KeyRingInfo {
         }
         // Workaround for keys with only one user-id but no primary user-id packet.
         if (primaryUserId == null) {
-            return getValidUserIds().get(0);
+            return validUserIds.get(0);
         }
 
         return primaryUserId;
