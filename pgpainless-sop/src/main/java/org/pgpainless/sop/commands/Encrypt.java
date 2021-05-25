@@ -20,7 +20,6 @@ import static org.pgpainless.sop.Print.err_ln;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
-import java.io.InputStream;
 import java.util.List;
 
 import org.bouncycastle.openpgp.PGPException;

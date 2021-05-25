@@ -17,7 +17,6 @@ package org.pgpainless.sop;
 
 import java.io.IOException;
 
-import org.bouncycastle.openpgp.PGPKeyRing;
 import org.bouncycastle.openpgp.PGPPublicKeyRing;
 import org.bouncycastle.openpgp.PGPSecretKeyRing;
 import org.pgpainless.util.ArmorUtils;

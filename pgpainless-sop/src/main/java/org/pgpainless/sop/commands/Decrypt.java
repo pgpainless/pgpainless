@@ -19,14 +19,11 @@ import static org.pgpainless.sop.Print.err_ln;
 import static org.pgpainless.sop.SopKeyUtil.loadKeysFromFiles;
 
 import java.io.File;
-import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.PrintStream;
 import java.text.DateFormat;
 import java.text.SimpleDateFormat;
-import java.util.ArrayList;
-import java.util.Collections;
 import java.util.HashSet;
 import java.util.List;
 
@@ -43,7 +40,6 @@ import org.pgpainless.decryption_verification.OpenPgpMetadata;
 import org.pgpainless.key.OpenPgpV4Fingerprint;
 import org.pgpainless.sop.SopKeyUtil;
 import picocli.CommandLine;
-import sun.text.resources.CollationData;
 
 @CommandLine.Command(name = "decrypt",
         description = "Decrypt a message from standard input",
