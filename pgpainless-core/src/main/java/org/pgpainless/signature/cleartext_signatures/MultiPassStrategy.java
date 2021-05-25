@@ -17,16 +17,35 @@ package org.pgpainless.signature.cleartext_signatures;
 
 import java.io.ByteArrayOutputStream;
 import java.io.File;
-import java.io.FileInputStream;
-import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 
+/**
+ * Interface that describes a strategy to deal with the fact that detached signatures require multiple passes
+ * to do verification.
+ *
+ * This interface can be used to write the signed data stream out via {@link #getMessageOutputStream()} and later
+ * get access to the data again via {@link #getMessageInputStream()}.
+ * Thereby the detail where the data is being stored (memory, file, etc.) can be abstracted away.
+ */
 public interface MultiPassStrategy {
 
+    /**
+     * Provide an {@link OutputStream} into which the signed data can be read into.
+     *
+     * @return output stream
+     * @throws IOException io error
+     */
     OutputStream getMessageOutputStream() throws IOException;
 
+    /**
+     * Provide an {@link InputStream} which contains the data that was previously written away in
+     * {@link #getMessageOutputStream()}.
+     *
+     * @return input stream
+     * @throws IOException io error
+     */
     InputStream getMessageInputStream() throws IOException;
 
     /**
@@ -38,27 +57,7 @@ public interface MultiPassStrategy {
      * @return strategy
      */
     static MultiPassStrategy writeMessageToFile(File file) {
-
-        return new MultiPassStrategy() {
-            @Override
-            public OutputStream getMessageOutputStream() throws IOException {
-                if (!file.exists()) {
-                    boolean created = file.createNewFile();
-                    if (!created) {
-                        throw new IOException("New file '" + file.getAbsolutePath() + "' was not created.");
-                    }
-                }
-                return new FileOutputStream(file);
-            }
-
-            @Override
-            public InputStream getMessageInputStream() throws IOException {
-                if (!file.exists()) {
-                    throw new IOException("File '" + file.getAbsolutePath() + "' does no longer exist.");
-                }
-                return new FileInputStream(file);
-            }
-        };
+        return new WriteToFileMultiPassStrategy(file);
     }
 
     /**
