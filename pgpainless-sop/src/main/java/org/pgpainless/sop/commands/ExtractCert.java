@@ -44,7 +44,7 @@ public class ExtractCert implements Runnable {
             PGPSecretKeyRing secretKeys = PGPainless.readKeyRing().secretKeyRing(System.in);
             PGPPublicKeyRing publicKeys = KeyRingUtils.publicKeyRingFrom(secretKeys);
 
-            print_ln(Print.toString(publicKeys.getEncoded(), armor));
+            print_ln(Print.toString(publicKeys, armor));
         } catch (IOException | PGPException e) {
             err_ln("Error extracting certificate from keys;");
             err_ln(e.getMessage());

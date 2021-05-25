@@ -105,9 +105,7 @@ public class Encrypt implements Runnable {
         for (int i = 0; i < signWith.length; i++) {
             try (FileInputStream fileIn = new FileInputStream(signWith[i])) {
                 PGPSecretKeyRing secretKey = PGPainless.readKeyRing().secretKeyRing(fileIn);
-                signOpt.addInlineSignature(protector, secretKey,
-                        type == Type.text || type == Type.mime ?
-                                DocumentSignatureType.CANONICAL_TEXT_DOCUMENT : DocumentSignatureType.BINARY_DOCUMENT);
+                signOpt.addInlineSignature(protector, secretKey, parseType(type));
             } catch (IOException | PGPException e) {
                 err_ln("Cannot read secret key from file " + signWith[i].getName());
                 err_ln(e.getMessage());
@@ -130,5 +128,9 @@ public class Encrypt implements Runnable {
             err_ln(e.getMessage());
             System.exit(1);
         }
+    }
+
+    private static DocumentSignatureType parseType(Type type) {
+        return type == Type.binary ? DocumentSignatureType.BINARY_DOCUMENT : DocumentSignatureType.CANONICAL_TEXT_DOCUMENT;
     }
 }

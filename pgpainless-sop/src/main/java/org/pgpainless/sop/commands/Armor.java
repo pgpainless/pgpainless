@@ -51,7 +51,8 @@ public class Armor implements Runnable {
     @Override
     public void run() {
 
-        try (PushbackInputStream pbIn = new PushbackInputStream(System.in); ArmoredOutputStream armoredOutputStream = ArmoredOutputStreamFactory.get(System.out)) {
+        try (PushbackInputStream pbIn = new PushbackInputStream(System.in);
+             ArmoredOutputStream armoredOutputStream = ArmoredOutputStreamFactory.get(System.out)) {
             byte[] start = new byte[14];
             int read = pbIn.read(start);
             pbIn.unread(read);

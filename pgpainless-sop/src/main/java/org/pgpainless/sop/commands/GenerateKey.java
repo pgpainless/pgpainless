@@ -84,7 +84,7 @@ public class GenerateKey implements Runnable {
                     .withoutPassphrase()
                     .build();
 
-            print_ln(Print.toString(secretKeys.getEncoded(), armor));
+            print_ln(Print.toString(secretKeys, armor));
 
         } catch (InvalidAlgorithmParameterException | NoSuchAlgorithmException | PGPException | IOException e) {
             err_ln("Error creating OpenPGP key:");

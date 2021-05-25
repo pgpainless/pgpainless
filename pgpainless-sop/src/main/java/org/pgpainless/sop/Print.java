@@ -17,9 +17,28 @@ package org.pgpainless.sop;
 
 import java.io.IOException;
 
+import org.bouncycastle.openpgp.PGPKeyRing;
+import org.bouncycastle.openpgp.PGPPublicKeyRing;
+import org.bouncycastle.openpgp.PGPSecretKeyRing;
 import org.pgpainless.util.ArmorUtils;
 
 public class Print {
+
+    public static String toString(PGPSecretKeyRing keyRing, boolean armor) throws IOException {
+        if (armor) {
+            return ArmorUtils.toAsciiArmoredString(keyRing);
+        } else {
+            return new String(keyRing.getEncoded(), "UTF-8");
+        }
+    }
+
+    public static String toString(PGPPublicKeyRing keyRing, boolean armor) throws IOException {
+        if (armor) {
+            return ArmorUtils.toAsciiArmoredString(keyRing);
+        } else {
+            return new String(keyRing.getEncoded(), "UTF-8");
+        }
+    }
 
     public static String toString(byte[] bytes, boolean armor) throws IOException {
         if (armor) {
