@@ -144,7 +144,7 @@ public class PGPainless {
      * @throws IOException IO is dangerous.
      * @throws PGPException PGP is brittle.
      * @deprecated use {@link #encryptAndOrSign()} instead and provide a passphrase in
-     * {@link org.pgpainless.encryption_signing.EncryptionBuilderInterface.ToRecipients#forPassphrases(Passphrase...)}.
+     * {@link org.pgpainless.encryption_signing.EncryptionOptions#addPassphrase(Passphrase)}.
      */
     @Deprecated
     public static byte[] encryptWithPassword(@Nonnull byte[] data, @Nonnull Passphrase password, @Nonnull SymmetricKeyAlgorithm algorithm) throws IOException, PGPException {
