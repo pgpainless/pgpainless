@@ -18,11 +18,8 @@ package org.pgpainless.encryption_signing;
 import java.io.IOException;
 import java.io.OutputStream;
 import java.util.ArrayList;
-import java.util.Collections;
-import java.util.Comparator;
-import java.util.LinkedHashMap;
 import java.util.List;
-import java.util.Map;
+import java.util.Set;
 import javax.annotation.Nonnull;
 
 import org.bouncycastle.openpgp.PGPException;
@@ -33,14 +30,12 @@ import org.bouncycastle.openpgp.PGPSecretKeyRingCollection;
 import org.pgpainless.PGPainless;
 import org.pgpainless.algorithm.CompressionAlgorithm;
 import org.pgpainless.algorithm.DocumentSignatureType;
-import org.pgpainless.algorithm.HashAlgorithm;
 import org.pgpainless.algorithm.SymmetricKeyAlgorithm;
+import org.pgpainless.algorithm.negotiation.SymmetricKeyAlgorithmNegotiator;
 import org.pgpainless.decryption_verification.OpenPgpMetadata;
 import org.pgpainless.exception.KeyValidationException;
 import org.pgpainless.key.SubkeyIdentifier;
-import org.pgpainless.key.info.KeyView;
 import org.pgpainless.key.protection.SecretKeyRingProtector;
-import org.pgpainless.policy.Policy;
 import org.pgpainless.util.Passphrase;
 
 public class EncryptionBuilder implements EncryptionBuilderInterface {
@@ -262,69 +257,22 @@ public class EncryptionBuilder implements EncryptionBuilderInterface {
 
     /**
      * Negotiate the {@link SymmetricKeyAlgorithm} used for message encryption.
-     * If the user chose to set an override ({@link EncryptionOptions#overrideEncryptionAlgorithm(SymmetricKeyAlgorithm)}, use that.
-     * Otherwise find an algorithm which is acceptable for all recipients.
-     * If no consensus can be reached, use {@link Policy.SymmetricKeyAlgorithmPolicy#getDefaultSymmetricKeyAlgorithm()}.
      *
      * @param encryptionOptions encryption options
      * @return negotiated symmetric key algorithm
      */
     public static SymmetricKeyAlgorithm negotiateSymmetricEncryptionAlgorithm(EncryptionOptions encryptionOptions) {
-        SymmetricKeyAlgorithm encryptionAlgorithmOverride = encryptionOptions.getEncryptionAlgorithmOverride();
-        if (encryptionAlgorithmOverride != null) {
-            return encryptionAlgorithmOverride;
-        }
-
-        Map<SymmetricKeyAlgorithm, Integer> supportWeight = new LinkedHashMap<>();
-
+        List<Set<SymmetricKeyAlgorithm>> preferences = new ArrayList<>();
         for (SubkeyIdentifier key : encryptionOptions.getKeyViews().keySet()) {
-            KeyView keyView = encryptionOptions.getKeyViews().get(key);
-            for (SymmetricKeyAlgorithm preferred : keyView.getPreferredSymmetricKeyAlgorithms()) {
-                if (supportWeight.containsKey(preferred)) {
-                    supportWeight.put(preferred, supportWeight.get(preferred) + 1);
-                } else {
-                    supportWeight.put(preferred, 1);
-                }
-            }
+            preferences.add(encryptionOptions.getKeyViews().get(key).getPreferredSymmetricKeyAlgorithms());
         }
 
-        List<SymmetricKeyAlgorithm> scoreboard = new ArrayList<>(supportWeight.keySet());
-        // Sort scoreboard by descending popularity
-        Collections.sort(scoreboard, new Comparator<SymmetricKeyAlgorithm>() {
-            @Override
-            public int compare(SymmetricKeyAlgorithm t0, SymmetricKeyAlgorithm t1) {
-                return -supportWeight.get(t0).compareTo(supportWeight.get(t1));
-            }
-        });
-
-        for (SymmetricKeyAlgorithm mostWanted : scoreboard) {
-            if (PGPainless.getPolicy().getSymmetricKeyEncryptionAlgorithmPolicy().isAcceptable(mostWanted)) {
-                return mostWanted;
-            }
-        }
-
-        return PGPainless.getPolicy().getSymmetricKeyEncryptionAlgorithmPolicy().getDefaultSymmetricKeyAlgorithm();
-    }
-
-    /**
-     * Negotiate the {@link HashAlgorithm} used for signatures.
-     *
-     * If we encrypt and sign, we look at the recipients keys to determine which algorithm to use.
-     * If we only sign, we look at the singing keys preferences instead.
-     *
-     * @param encryptionOptions encryption options (recipients keys)
-     * @param signingOptions signing options (signing keys)
-     * @return negotiated hash algorithm
-     */
-    public static HashAlgorithm negotiateSignatureHashAlgorithm(EncryptionOptions encryptionOptions, SigningOptions signingOptions) {
-        HashAlgorithm hashAlgorithmOverride = signingOptions.getHashAlgorithmOverride();
-        if (hashAlgorithmOverride != null) {
-            return hashAlgorithmOverride;
-        }
-
-        // TODO: Negotiation
-
-        return PGPainless.getPolicy().getSignatureHashAlgorithmPolicy().defaultHashAlgorithm();
+        return SymmetricKeyAlgorithmNegotiator
+                .byPopularity()
+                .negotiate(
+                        PGPainless.getPolicy().getSymmetricKeyEncryptionAlgorithmPolicy(),
+                        encryptionOptions.getEncryptionAlgorithmOverride(),
+                        preferences);
     }
 
     public static CompressionAlgorithm negotiateCompressionAlgorithm(ProducerOptions producerOptions) {

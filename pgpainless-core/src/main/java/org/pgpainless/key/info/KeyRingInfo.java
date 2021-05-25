@@ -43,6 +43,7 @@ import org.pgpainless.algorithm.PublicKeyAlgorithm;
 import org.pgpainless.encryption_signing.EncryptionStream;
 import org.pgpainless.exception.KeyValidationException;
 import org.pgpainless.key.OpenPgpV4Fingerprint;
+import org.pgpainless.key.SubkeyIdentifier;
 import org.pgpainless.policy.Policy;
 import org.pgpainless.signature.SignaturePicker;
 import org.pgpainless.signature.SignatureUtils;
@@ -633,18 +634,10 @@ public class KeyRingInfo {
         return signingKeys;
     }
 
-    public List<HashAlgorithm> getPreferredHashAlgorithms(String userId, long keyID) {
-        PGPSignature signature = getLatestUserIdCertification(userId == null ? getPrimaryUserId() : userId);
-        if (signature == null) {
-            signature = getLatestDirectKeySelfSignature();
-        }
-        if (signature == null) {
-            signature = getCurrentSubkeyBindingSignature(keyID);
-        }
-        if (signature == null) {
-            throw new IllegalStateException("No valid signature.");
-        }
-        return SignatureSubpacketsUtil.parsePreferredHashAlgorithms(signature);
+    public Set<HashAlgorithm> getPreferredHashAlgorithms(String userId, long keyID) {
+        KeyAccessor keyAccessor = userId == null ? new KeyAccessor.ViaKeyId(this, new SubkeyIdentifier(keys, keyID))
+                : new KeyAccessor.ViaUserId(this, new SubkeyIdentifier(keys, keyID), userId);
+        return keyAccessor.getPreferredHashAlgorithms();
     }
 
     public static class Signatures {

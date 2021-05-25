@@ -18,7 +18,9 @@ package org.pgpainless.signature.subpackets;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Date;
+import java.util.LinkedHashSet;
 import java.util.List;
+import java.util.Set;
 
 import javax.annotation.Nullable;
 
@@ -206,8 +208,8 @@ public class SignatureSubpacketsUtil {
         return hashed(signature, SignatureSubpacket.preferredSymmetricAlgorithms);
     }
 
-    public static List<SymmetricKeyAlgorithm> parsePreferredSymmetricKeyAlgorithms(PGPSignature signature) {
-        List<SymmetricKeyAlgorithm> algorithms = new ArrayList<>();
+    public static Set<SymmetricKeyAlgorithm> parsePreferredSymmetricKeyAlgorithms(PGPSignature signature) {
+        Set<SymmetricKeyAlgorithm> algorithms = new LinkedHashSet<>();
         PreferredAlgorithms preferences = getPreferredSymmetricAlgorithms(signature);
         if (preferences != null) {
             for (int code : preferences.getPreferences()) {
@@ -227,8 +229,8 @@ public class SignatureSubpacketsUtil {
         return hashed(signature, SignatureSubpacket.preferredHashAlgorithms);
     }
 
-    public static List<HashAlgorithm> parsePreferredHashAlgorithms(PGPSignature signature) {
-        List<HashAlgorithm> algorithms = new ArrayList<>();
+    public static Set<HashAlgorithm> parsePreferredHashAlgorithms(PGPSignature signature) {
+        Set<HashAlgorithm> algorithms = new LinkedHashSet<>();
         PreferredAlgorithms preferences = getPreferredHashAlgorithms(signature);
         if (preferences != null) {
             for (int code : preferences.getPreferences()) {
@@ -248,8 +250,8 @@ public class SignatureSubpacketsUtil {
         return hashed(signature, SignatureSubpacket.preferredCompressionAlgorithms);
     }
 
-    public static List<CompressionAlgorithm> parsePreferredCompressionAlgorithms(PGPSignature signature) {
-        List<CompressionAlgorithm> algorithms = new ArrayList<>();
+    public static Set<CompressionAlgorithm> parsePreferredCompressionAlgorithms(PGPSignature signature) {
+        Set<CompressionAlgorithm> algorithms = new LinkedHashSet<>();
         PreferredAlgorithms preferences = getPreferredCompressionAlgorithms(signature);
         if (preferences != null) {
             for (int code : preferences.getPreferences()) {

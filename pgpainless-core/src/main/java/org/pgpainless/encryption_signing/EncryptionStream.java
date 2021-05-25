@@ -140,7 +140,7 @@ public final class EncryptionStream extends OutputStream {
     }
 
     private void prepareCompression() throws IOException {
-        CompressionAlgorithm compressionAlgorithm = options.getCompressionAlgorithmOverride();
+        CompressionAlgorithm compressionAlgorithm = EncryptionBuilder.negotiateCompressionAlgorithm(options);
         resultBuilder.setCompressionAlgorithm(compressionAlgorithm);
         compressedDataGenerator = new PGPCompressedDataGenerator(
                 compressionAlgorithm.getAlgorithmId());
