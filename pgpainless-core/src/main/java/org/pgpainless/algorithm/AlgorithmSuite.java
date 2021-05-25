@@ -18,7 +18,9 @@ package org.pgpainless.algorithm;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
+import java.util.LinkedHashSet;
 import java.util.List;
+import java.util.Set;
 
 public class AlgorithmSuite {
 
@@ -39,62 +41,65 @@ public class AlgorithmSuite {
                     CompressionAlgorithm.UNCOMPRESSED)
     );
 
-    private List<SymmetricKeyAlgorithm> symmetricKeyAlgorithms;
-    private List<HashAlgorithm> hashAlgorithms;
-    private List<CompressionAlgorithm> compressionAlgorithms;
+    private Set<SymmetricKeyAlgorithm> symmetricKeyAlgorithms;
+    private Set<HashAlgorithm> hashAlgorithms;
+    private Set<CompressionAlgorithm> compressionAlgorithms;
 
     public AlgorithmSuite(List<SymmetricKeyAlgorithm> symmetricKeyAlgorithms,
                           List<HashAlgorithm> hashAlgorithms,
                           List<CompressionAlgorithm> compressionAlgorithms) {
-        this.symmetricKeyAlgorithms = Collections.unmodifiableList(symmetricKeyAlgorithms);
-        this.hashAlgorithms = Collections.unmodifiableList(hashAlgorithms);
-        this.compressionAlgorithms = Collections.unmodifiableList(compressionAlgorithms);
+        this.symmetricKeyAlgorithms = Collections.unmodifiableSet(new LinkedHashSet<>(symmetricKeyAlgorithms));
+        this.hashAlgorithms = Collections.unmodifiableSet(new LinkedHashSet<>(hashAlgorithms));
+        this.compressionAlgorithms = Collections.unmodifiableSet(new LinkedHashSet<>(compressionAlgorithms));
     }
 
     public void setSymmetricKeyAlgorithms(List<SymmetricKeyAlgorithm> symmetricKeyAlgorithms) {
-        this.symmetricKeyAlgorithms = symmetricKeyAlgorithms;
+        this.symmetricKeyAlgorithms = Collections.unmodifiableSet(new LinkedHashSet<>(symmetricKeyAlgorithms));
     }
 
-    public List<SymmetricKeyAlgorithm> getSymmetricKeyAlgorithms() {
-        return new ArrayList<>(symmetricKeyAlgorithms);
+    public Set<SymmetricKeyAlgorithm> getSymmetricKeyAlgorithms() {
+        return new LinkedHashSet<>(symmetricKeyAlgorithms);
     }
 
     public int[] getSymmetricKeyAlgorithmIds() {
         int[] array = new int[symmetricKeyAlgorithms.size()];
+        List<SymmetricKeyAlgorithm> list = new ArrayList<>(symmetricKeyAlgorithms);
         for (int i = 0; i < array.length; i++) {
-            array[i] = symmetricKeyAlgorithms.get(i).getAlgorithmId();
+            array[i] = list.get(i).getAlgorithmId();
         }
         return array;
     }
 
     public void setHashAlgorithms(List<HashAlgorithm> hashAlgorithms) {
-        this.hashAlgorithms = hashAlgorithms;
+        this.hashAlgorithms = Collections.unmodifiableSet(new LinkedHashSet<>(hashAlgorithms));
     }
 
-    public List<HashAlgorithm> getHashAlgorithms() {
-        return hashAlgorithms;
+    public Set<HashAlgorithm> getHashAlgorithms() {
+        return new LinkedHashSet<>(hashAlgorithms);
     }
 
     public int[] getHashAlgorithmIds() {
         int[] array = new int[hashAlgorithms.size()];
+        List<HashAlgorithm> list = new ArrayList<>(hashAlgorithms);
         for (int i = 0; i < array.length; i++) {
-            array[i] = hashAlgorithms.get(i).getAlgorithmId();
+            array[i] = list.get(i).getAlgorithmId();
         }
         return array;
     }
 
     public void setCompressionAlgorithms(List<CompressionAlgorithm> compressionAlgorithms) {
-        this.compressionAlgorithms = compressionAlgorithms;
+        this.compressionAlgorithms = Collections.unmodifiableSet(new LinkedHashSet<>(compressionAlgorithms));
     }
 
-    public List<CompressionAlgorithm> getCompressionAlgorithms() {
-        return compressionAlgorithms;
+    public Set<CompressionAlgorithm> getCompressionAlgorithms() {
+        return new LinkedHashSet<>(compressionAlgorithms);
     }
 
     public int[] getCompressionAlgorithmIds() {
         int[] array = new int[compressionAlgorithms.size()];
+        List<CompressionAlgorithm> list = new ArrayList<>(compressionAlgorithms);
         for (int i = 0; i < array.length; i++) {
-            array[i] = compressionAlgorithms.get(i).getAlgorithmId();
+            array[i] = list.get(i).getAlgorithmId();
         }
         return array;
     }
