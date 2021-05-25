@@ -15,10 +15,22 @@
  */
 package org.pgpainless.algorithm;
 
+/**
+ * Subset of {@link SignatureType}, used for signatures over documents.
+ */
 public enum DocumentSignatureType {
 
+    /**
+     * Signature is calculated over the unchanged binary data.
+     */
     BINARY_DOCUMENT(SignatureType.BINARY_DOCUMENT),
 
+    /**
+     * The signature is calculated over the text data with its line endings converted to
+     * <pre>
+     *     {@code &lt;CR&gt;&lt;LF&gt;}
+     * </pre>.
+     */
     CANONICAL_TEXT_DOCUMENT(SignatureType.CANONICAL_TEXT_DOCUMENT),
     ;
 
