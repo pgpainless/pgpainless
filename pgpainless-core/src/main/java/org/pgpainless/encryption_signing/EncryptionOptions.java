@@ -226,15 +226,15 @@ public class EncryptionOptions {
         return new HashMap<>(keyRingInfo);
     }
 
-    public Set<SubkeyIdentifier> getEncryptionKeyIdentifiers() {
+    Set<SubkeyIdentifier> getEncryptionKeyIdentifiers() {
         return new HashSet<>(encryptionKeys);
     }
 
-    public Map<SubkeyIdentifier, KeyAccessor> getKeyViews() {
+    Map<SubkeyIdentifier, KeyAccessor> getKeyViews() {
         return new HashMap<>(keyViews);
     }
 
-    public SymmetricKeyAlgorithm getEncryptionAlgorithmOverride() {
+    SymmetricKeyAlgorithm getEncryptionAlgorithmOverride() {
         return encryptionAlgorithmOverride;
     }
 
