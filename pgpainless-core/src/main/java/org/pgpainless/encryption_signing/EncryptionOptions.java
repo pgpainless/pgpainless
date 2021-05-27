@@ -110,6 +110,7 @@ public class EncryptionOptions {
      *
      * @param key key ring
      * @param userId user id
+     * @return this
      */
     public EncryptionOptions addRecipient(PGPPublicKeyRing key, String userId) {
         return addRecipient(key, userId, encryptionKeySelector);
@@ -122,6 +123,7 @@ public class EncryptionOptions {
      * @param key key
      * @param userId user-id
      * @param encryptionKeySelectionStrategy strategy to select one or more encryption subkeys to encrypt to
+     * @return this
      */
     public EncryptionOptions addRecipient(PGPPublicKeyRing key, String userId, EncryptionKeySelector encryptionKeySelectionStrategy) {
         KeyRingInfo info = new KeyRingInfo(key, new Date());
@@ -146,6 +148,7 @@ public class EncryptionOptions {
      * Add a recipient by providing a key.
      *
      * @param key key ring
+     * @return this
      */
     public EncryptionOptions addRecipient(PGPPublicKeyRing key) {
         return addRecipient(key, encryptionKeySelector);
@@ -156,6 +159,7 @@ public class EncryptionOptions {
      *
      * @param key key ring
      * @param encryptionKeySelectionStrategy strategy used to select one or multiple encryption subkeys.
+     * @return this
      */
     public EncryptionOptions addRecipient(PGPPublicKeyRing key, EncryptionKeySelector encryptionKeySelectionStrategy) {
         KeyRingInfo info = new KeyRingInfo(key, new Date());
@@ -187,6 +191,7 @@ public class EncryptionOptions {
      * Add a symmetric passphrase which the message will be encrypted to.
      *
      * @param passphrase passphrase
+     * @return this
      */
     public EncryptionOptions addPassphrase(Passphrase passphrase) {
         if (passphrase.isEmpty()) {
@@ -206,6 +211,7 @@ public class EncryptionOptions {
      * This can come in handy for example if data needs to be encrypted to a subkey that's ignored by PGPainless.
      *
      * @param encryptionMethod encryption method
+     * @return this
      */
     public EncryptionOptions addEncryptionMethod(PGPKeyEncryptionMethodGenerator encryptionMethod) {
         encryptionMethods.add(encryptionMethod);
@@ -232,6 +238,16 @@ public class EncryptionOptions {
         return encryptionAlgorithmOverride;
     }
 
+    /**
+     * Override the used symmetric encryption algorithm.
+     * The symmetric encryption algorithm is used to encrypt the message itself,
+     * while the used symmetric key will be encrypted to all recipients using public key
+     * cryptography.
+     *
+     * If the algorithm is not overridden, a suitable algorithm will be negotiated.
+     *
+     * @param encryptionAlgorithm encryption algorithm override
+     */
     public void overrideEncryptionAlgorithm(SymmetricKeyAlgorithm encryptionAlgorithm) {
         if (encryptionAlgorithm == SymmetricKeyAlgorithm.NULL) {
             throw new IllegalArgumentException("Plaintext encryption can only be used to denote unencrypted secret keys.");
