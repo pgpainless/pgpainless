@@ -41,11 +41,11 @@ import org.bouncycastle.openpgp.PGPSecretKeyRing;
 import org.bouncycastle.openpgp.PGPSignature;
 import org.pgpainless.PGPainless;
 import org.pgpainless.algorithm.CompressionAlgorithm;
+import org.pgpainless.algorithm.EncryptionPurpose;
 import org.pgpainless.algorithm.HashAlgorithm;
 import org.pgpainless.algorithm.KeyFlag;
 import org.pgpainless.algorithm.PublicKeyAlgorithm;
 import org.pgpainless.algorithm.SymmetricKeyAlgorithm;
-import org.pgpainless.encryption_signing.EncryptionStream;
 import org.pgpainless.exception.KeyValidationException;
 import org.pgpainless.key.OpenPgpV4Fingerprint;
 import org.pgpainless.key.SubkeyIdentifier;
@@ -691,7 +691,7 @@ public class KeyRingInfo {
      * @param purpose purpose (encrypt data at rest / communications)
      * @return encryption subkeys
      */
-    public @Nonnull List<PGPPublicKey> getEncryptionSubkeys(EncryptionStream.Purpose purpose) {
+    public @Nonnull List<PGPPublicKey> getEncryptionSubkeys(EncryptionPurpose purpose) {
         Iterator<PGPPublicKey> subkeys = keys.getPublicKeys();
         List<PGPPublicKey> encryptionKeys = new ArrayList<>();
         while (subkeys.hasNext()) {
@@ -737,7 +737,7 @@ public class KeyRingInfo {
      * @param purpose encryption purpose
      * @return encryption subkeys
      */
-    public @Nonnull List<PGPPublicKey> getEncryptionSubkeys(String userId, EncryptionStream.Purpose purpose) {
+    public @Nonnull List<PGPPublicKey> getEncryptionSubkeys(String userId, EncryptionPurpose purpose) {
         if (userId != null) {
             if (!isUserIdValid(userId)) {
                 throw new KeyValidationException(userId, getLatestUserIdCertification(userId), getUserIdRevocation(userId));

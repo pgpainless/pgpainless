@@ -30,6 +30,7 @@ import org.bouncycastle.openpgp.PGPSecretKeyRingCollection;
 import org.pgpainless.PGPainless;
 import org.pgpainless.algorithm.CompressionAlgorithm;
 import org.pgpainless.algorithm.DocumentSignatureType;
+import org.pgpainless.algorithm.EncryptionPurpose;
 import org.pgpainless.algorithm.SymmetricKeyAlgorithm;
 import org.pgpainless.algorithm.negotiation.SymmetricKeyAlgorithmNegotiator;
 import org.pgpainless.decryption_verification.OpenPgpMetadata;
@@ -47,10 +48,10 @@ public class EncryptionBuilder implements EncryptionBuilderInterface {
     private OpenPgpMetadata.FileInfo fileInfo;
 
     public EncryptionBuilder() {
-        this.encryptionOptions = new EncryptionOptions(EncryptionStream.Purpose.COMMUNICATIONS);
+        this.encryptionOptions = new EncryptionOptions(EncryptionPurpose.COMMUNICATIONS);
     }
 
-    public EncryptionBuilder(@Nonnull EncryptionStream.Purpose purpose) {
+    public EncryptionBuilder(@Nonnull EncryptionPurpose purpose) {
         this.encryptionOptions = new EncryptionOptions(purpose);
     }
 

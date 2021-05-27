@@ -29,6 +29,7 @@ import org.bouncycastle.openpgp.PGPPublicKeyRing;
 import org.bouncycastle.openpgp.PGPPublicKeyRingCollection;
 import org.bouncycastle.openpgp.operator.PBEKeyEncryptionMethodGenerator;
 import org.bouncycastle.openpgp.operator.PGPKeyEncryptionMethodGenerator;
+import org.pgpainless.algorithm.EncryptionPurpose;
 import org.pgpainless.algorithm.SymmetricKeyAlgorithm;
 import org.pgpainless.implementation.ImplementationFactory;
 import org.pgpainless.key.SubkeyIdentifier;
@@ -64,7 +65,7 @@ import org.pgpainless.util.Passphrase;
  */
 public class EncryptionOptions {
 
-    private final EncryptionStream.Purpose purpose;
+    private final EncryptionPurpose purpose;
     private final Set<PGPKeyEncryptionMethodGenerator> encryptionMethods = new LinkedHashSet<>();
     private final Set<SubkeyIdentifier> encryptionKeys = new LinkedHashSet<>();
     private final Map<SubkeyIdentifier, KeyRingInfo> keyRingInfo = new HashMap<>();
@@ -78,10 +79,10 @@ public class EncryptionOptions {
      * or {@link org.pgpainless.algorithm.KeyFlag#ENCRYPT_STORAGE}.
      */
     public EncryptionOptions() {
-        this(EncryptionStream.Purpose.STORAGE_AND_COMMUNICATIONS);
+        this(EncryptionPurpose.STORAGE_AND_COMMUNICATIONS);
     }
 
-    public EncryptionOptions(EncryptionStream.Purpose purpose) {
+    public EncryptionOptions(EncryptionPurpose purpose) {
         this.purpose = purpose;
     }
 
@@ -92,7 +93,7 @@ public class EncryptionOptions {
      * @return encryption options
      */
     public static EncryptionOptions encryptCommunications() {
-        return new EncryptionOptions(EncryptionStream.Purpose.COMMUNICATIONS);
+        return new EncryptionOptions(EncryptionPurpose.COMMUNICATIONS);
     }
 
     /**
@@ -102,7 +103,7 @@ public class EncryptionOptions {
      * @return encryption options
      */
     public static EncryptionOptions encryptDataAtRest() {
-        return new EncryptionOptions(EncryptionStream.Purpose.STORAGE);
+        return new EncryptionOptions(EncryptionPurpose.STORAGE);
     }
 
     /**

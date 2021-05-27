@@ -37,6 +37,7 @@ import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.MethodSource;
 import org.pgpainless.PGPainless;
 import org.pgpainless.algorithm.DocumentSignatureType;
+import org.pgpainless.algorithm.EncryptionPurpose;
 import org.pgpainless.decryption_verification.DecryptionStream;
 import org.pgpainless.decryption_verification.OpenPgpMetadata;
 import org.pgpainless.implementation.ImplementationFactory;
@@ -64,7 +65,7 @@ public class SigningTest {
         PGPPublicKeyRingCollection keys = new PGPPublicKeyRingCollection(Arrays.asList(julietKeys, romeoKeys));
 
         ByteArrayOutputStream out = new ByteArrayOutputStream();
-        EncryptionStream encryptionStream = PGPainless.encryptAndOrSign(EncryptionStream.Purpose.STORAGE)
+        EncryptionStream encryptionStream = PGPainless.encryptAndOrSign(EncryptionPurpose.STORAGE)
                 .onOutputStream(out)
                 .toRecipients(keys)
                 .and()

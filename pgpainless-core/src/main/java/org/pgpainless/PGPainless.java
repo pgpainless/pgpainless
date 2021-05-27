@@ -22,6 +22,7 @@ import org.bouncycastle.openpgp.PGPException;
 import org.bouncycastle.openpgp.PGPKeyRing;
 import org.bouncycastle.openpgp.PGPSecretKeyRing;
 import org.pgpainless.algorithm.CompressionAlgorithm;
+import org.pgpainless.algorithm.EncryptionPurpose;
 import org.pgpainless.algorithm.SymmetricKeyAlgorithm;
 import org.pgpainless.decryption_verification.DecryptionBuilder;
 import org.pgpainless.decryption_verification.DecryptionStream;
@@ -71,7 +72,7 @@ public class PGPainless {
      * Create an {@link EncryptionStream}, which can be used to encrypt and/or sign data using OpenPGP.
      * This method assumes that the stream will be used to encrypt data for communication purposes.
      * If you instead want to encrypt data that will be saved on disk (eg. a backup), use
-     * {@link #encryptAndOrSign(EncryptionStream.Purpose)} and chose an appropriate purpose.
+     * {@link #encryptAndOrSign(EncryptionPurpose)} and chose an appropriate purpose.
      *
      * @return builder
      */
@@ -85,7 +86,7 @@ public class PGPainless {
      * @param purpose how will the data be used?
      * @return builder
      */
-    public static EncryptionBuilder encryptAndOrSign(EncryptionStream.Purpose purpose) {
+    public static EncryptionBuilder encryptAndOrSign(EncryptionPurpose purpose) {
         return new EncryptionBuilder(purpose);
     }
 

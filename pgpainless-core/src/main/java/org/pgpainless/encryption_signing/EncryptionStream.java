@@ -46,23 +46,6 @@ import org.pgpainless.util.ArmoredOutputStreamFactory;
  */
 public final class EncryptionStream extends OutputStream {
 
-    public enum Purpose {
-        /**
-         * The stream will encrypt communication that goes over the wire.
-         * Eg. EMail, Chat...
-         */
-        COMMUNICATIONS,
-        /**
-         * The stream will encrypt data that is stored on disk.
-         * Eg. Encrypted backup...
-         */
-        STORAGE,
-        /**
-         * The stream will use keys with either flags to encrypt the data.
-         */
-        STORAGE_AND_COMMUNICATIONS
-    }
-
     private static final Logger LOGGER = Logger.getLogger(EncryptionStream.class.getName());
     private static final Level LEVEL = Level.FINE;
 
