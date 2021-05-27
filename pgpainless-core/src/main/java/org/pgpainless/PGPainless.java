@@ -85,6 +85,8 @@ public class PGPainless {
      *
      * @param purpose how will the data be used?
      * @return builder
+     * @deprecated use {@link #encryptAndOrSign()} and set the purpose in
+     * {@link org.pgpainless.encryption_signing.EncryptionOptions} instead
      */
     public static EncryptionBuilder encryptAndOrSign(EncryptionPurpose purpose) {
         return new EncryptionBuilder(purpose);
