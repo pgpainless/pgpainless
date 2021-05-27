@@ -5,6 +5,7 @@ PGPainless - Use OpenPGP Painlessly!
 [![Git Tag](https://badgen.now.sh/github/tag/pgpainless/pgpainless)](https://github.com/pgpainless/pgpainless/tags)
 [![Coverage Status](https://coveralls.io/repos/github/pgpainless/pgpainless/badge.svg?branch=master)](https://coveralls.io/github/pgpainless/pgpainless?branch=master)
 [![JavaDoc](https://badgen.net/badge/javadoc/yes/green)](https://pgpainless.org/releases/latest/javadoc/)
+[![Interoperability Test-Suite](https://badgen.net/badge/interoperable/yes/green)](https://tests.sequoia-pgp.org/)
 
 About
 -----
