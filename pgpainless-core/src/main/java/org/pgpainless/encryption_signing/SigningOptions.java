@@ -27,6 +27,7 @@ import org.bouncycastle.openpgp.PGPPrivateKey;
 import org.bouncycastle.openpgp.PGPPublicKey;
 import org.bouncycastle.openpgp.PGPSecretKey;
 import org.bouncycastle.openpgp.PGPSecretKeyRing;
+import org.bouncycastle.openpgp.PGPSecretKeyRingCollection;
 import org.bouncycastle.openpgp.PGPSignatureGenerator;
 import org.bouncycastle.openpgp.operator.PGPContentSignerBuilder;
 import org.pgpainless.PGPainless;
@@ -89,6 +90,26 @@ public final class SigningOptions {
     private HashAlgorithm hashAlgorithmOverride;
 
     /**
+     * Add inline signatures with all secret key rings in the provided secret key ring collection.
+     *
+     * @param secrectKeyDecryptor decryptor to unlock the signing secret keys
+     * @param signingKeys collection of signing keys
+     * @param signatureType type of signature (binary, canonical text)
+     * @return this
+     * @throws KeyValidationException if something is wrong with any of the keys
+     * @throws PGPException if any of the keys cannot be unlocked or a signing method cannot be created
+     */
+    public SigningOptions addInlineSignatures(SecretKeyRingProtector secrectKeyDecryptor,
+                                              PGPSecretKeyRingCollection signingKeys,
+                                              DocumentSignatureType signatureType)
+            throws KeyValidationException, PGPException {
+        for (PGPSecretKeyRing signingKey : signingKeys) {
+            addInlineSignature(secrectKeyDecryptor, signingKey, signatureType);
+        }
+        return this;
+    }
+
+    /**
      * Add an inline-signature.
      * Inline signatures are being embedded into the message itself and can be processed in one pass, thanks to the use
      * of one-pass-signature packets.
@@ -147,6 +168,25 @@ public final class SigningOptions {
             addSigningMethod(secretKey, signingSubkey, hashAlgorithm, signatureType, false);
         }
 
+        return this;
+    }
+
+    /**
+     * Add detached signatures with all key rings from the provided secret key ring collection.
+     *
+     * @param secretKeyDecryptor decryptor to unlock the secret signing keys
+     * @param signingKeys collection of signing key rings
+     * @param signatureType type of the signature (binary, canonical text)
+     * @return this
+     * @throws PGPException if any of the keys cannot be validated or unlocked, or if any signing method cannot be created
+     */
+    public SigningOptions addDetachedSignatures(SecretKeyRingProtector secretKeyDecryptor,
+                                                PGPSecretKeyRingCollection signingKeys,
+                                                DocumentSignatureType signatureType)
+            throws PGPException {
+        for (PGPSecretKeyRing signingKey : signingKeys) {
+            addDetachedSignature(secretKeyDecryptor, signingKey, signatureType);
+        }
         return this;
     }
 
