@@ -26,6 +26,7 @@ import java.util.Set;
 
 import org.bouncycastle.openpgp.PGPPublicKey;
 import org.bouncycastle.openpgp.PGPPublicKeyRing;
+import org.bouncycastle.openpgp.PGPPublicKeyRingCollection;
 import org.bouncycastle.openpgp.operator.PBEKeyEncryptionMethodGenerator;
 import org.bouncycastle.openpgp.operator.PGPKeyEncryptionMethodGenerator;
 import org.pgpainless.algorithm.SymmetricKeyAlgorithm;
@@ -102,6 +103,19 @@ public class EncryptionOptions {
      */
     public static EncryptionOptions encryptDataAtRest() {
         return new EncryptionOptions(EncryptionStream.Purpose.STORAGE);
+    }
+
+    /**
+     * Add all key rings in the provided key ring collection as recipients.
+     *
+     * @param keys keys
+     * @return this
+     */
+    public EncryptionOptions addRecipients(PGPPublicKeyRingCollection keys) {
+        for (PGPPublicKeyRing key : keys) {
+            addRecipient(key);
+        }
+        return this;
     }
 
     /**
