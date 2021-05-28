@@ -16,12 +16,15 @@
 package org.pgpainless.encryption_signing;
 
 import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
+import java.security.InvalidAlgorithmParameterException;
+import java.security.NoSuchAlgorithmException;
 import java.util.Arrays;
 import java.util.HashSet;
 import java.util.Set;
@@ -33,6 +36,7 @@ import org.bouncycastle.openpgp.PGPSecretKey;
 import org.bouncycastle.openpgp.PGPSecretKeyRing;
 import org.bouncycastle.openpgp.PGPSecretKeyRingCollection;
 import org.bouncycastle.util.io.Streams;
+import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.MethodSource;
 import org.pgpainless.PGPainless;
@@ -40,11 +44,13 @@ import org.pgpainless.algorithm.DocumentSignatureType;
 import org.pgpainless.algorithm.EncryptionPurpose;
 import org.pgpainless.decryption_verification.DecryptionStream;
 import org.pgpainless.decryption_verification.OpenPgpMetadata;
+import org.pgpainless.exception.KeyValidationException;
 import org.pgpainless.implementation.ImplementationFactory;
 import org.pgpainless.key.OpenPgpV4Fingerprint;
 import org.pgpainless.key.TestKeys;
 import org.pgpainless.key.protection.SecretKeyRingProtector;
 import org.pgpainless.key.util.KeyRingUtils;
+import org.pgpainless.util.Passphrase;
 import org.pgpainless.util.selection.key.impl.SignatureKeySelectionStrategy;
 
 public class SigningTest {
@@ -110,5 +116,34 @@ public class SigningTest {
         assertTrue(metadata.isVerified());
         assertTrue(metadata.containsVerifiedSignatureFrom(KeyRingUtils.publicKeyRingFrom(cryptieKeys)));
         assertFalse(metadata.containsVerifiedSignatureFrom(julietKeys));
+    }
+
+    @Test
+    public void testSignWithInvalidUserIdFails() throws PGPException, InvalidAlgorithmParameterException, NoSuchAlgorithmException {
+        PGPSecretKeyRing secretKeys = PGPainless.generateKeyRing()
+                .modernKeyRing("alice", "password123");
+        SecretKeyRingProtector protector = SecretKeyRingProtector.unlockAllKeysWith(Passphrase.fromPassword("password123"), secretKeys);
+
+        SigningOptions opts = new SigningOptions();
+        // "bob" is not a valid user-id
+        assertThrows(KeyValidationException.class,
+                () -> opts.addInlineSignature(protector, secretKeys, "bob", DocumentSignatureType.CANONICAL_TEXT_DOCUMENT));
+    }
+
+    @Test
+    public void testSignWithRevokedUserIdFails() throws PGPException, InvalidAlgorithmParameterException, NoSuchAlgorithmException {
+        PGPSecretKeyRing secretKeys = PGPainless.generateKeyRing()
+                .modernKeyRing("alice", "password123");
+        SecretKeyRingProtector protector = SecretKeyRingProtector.unlockAllKeysWith(Passphrase.fromPassword("password123"), secretKeys);
+        secretKeys = PGPainless.modifyKeyRing(secretKeys)
+                .revokeUserIdOnAllSubkeys("alice", protector)
+                .done();
+
+        final PGPSecretKeyRing fSecretKeys = secretKeys;
+
+        SigningOptions opts = new SigningOptions();
+        // "alice" has been revoked
+        assertThrows(KeyValidationException.class,
+                () -> opts.addInlineSignature(protector, fSecretKeys, "alice", DocumentSignatureType.CANONICAL_TEXT_DOCUMENT));
     }
 }
