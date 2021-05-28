@@ -15,15 +15,9 @@
  */
 package org.pgpainless;
 
-import java.io.IOException;
-import javax.annotation.Nonnull;
-
-import org.bouncycastle.openpgp.PGPException;
 import org.bouncycastle.openpgp.PGPKeyRing;
 import org.bouncycastle.openpgp.PGPSecretKeyRing;
-import org.pgpainless.algorithm.CompressionAlgorithm;
 import org.pgpainless.algorithm.EncryptionPurpose;
-import org.pgpainless.algorithm.SymmetricKeyAlgorithm;
 import org.pgpainless.decryption_verification.DecryptionBuilder;
 import org.pgpainless.decryption_verification.DecryptionStream;
 import org.pgpainless.encryption_signing.EncryptionBuilder;
@@ -36,8 +30,6 @@ import org.pgpainless.key.parsing.KeyRingReader;
 import org.pgpainless.policy.Policy;
 import org.pgpainless.signature.cleartext_signatures.VerifyCleartextSignatures;
 import org.pgpainless.signature.cleartext_signatures.VerifyCleartextSignaturesImpl;
-import org.pgpainless.symmetric_encryption.SymmetricEncryptorDecryptor;
-import org.pgpainless.util.Passphrase;
 
 public class PGPainless {
 
@@ -133,43 +125,6 @@ public class PGPainless {
      */
     public static KeyRingInfo inspectKeyRing(PGPKeyRing keyRing) {
         return new KeyRingInfo(keyRing);
-    }
-
-    /**
-     * Encrypt some data symmetrically using OpenPGP and a password.
-     * The resulting data will be uncompressed and integrity protected.
-     *
-     * @param data input data.
-     * @param password password.
-     * @param algorithm symmetric encryption algorithm.
-     * @return symmetrically OpenPGP encrypted data.
-     *
-     * @throws IOException IO is dangerous.
-     * @throws PGPException PGP is brittle.
-     * @deprecated use {@link #encryptAndOrSign()} instead and provide a passphrase in
-     * {@link org.pgpainless.encryption_signing.EncryptionOptions#addPassphrase(Passphrase)}.
-     */
-    @Deprecated
-    public static byte[] encryptWithPassword(@Nonnull byte[] data, @Nonnull Passphrase password, @Nonnull SymmetricKeyAlgorithm algorithm) throws IOException, PGPException {
-        return SymmetricEncryptorDecryptor.symmetricallyEncrypt(data, password,
-                algorithm, CompressionAlgorithm.UNCOMPRESSED);
-    }
-
-    /**
-     * Decrypt some symmetrically encrypted data using a password.
-     * The data is suspected to be integrity protected.
-     *
-     * @param data symmetrically OpenPGP encrypted data.
-     * @param password password.
-     * @return decrypted data.
-     * @throws IOException IO is dangerous.
-     * @throws PGPException PGP is brittle.
-     * @deprecated Use {@link #decryptAndOrVerify()} instead and provide the decryption passphrase in
-     * {@link org.pgpainless.decryption_verification.DecryptionBuilder.DecryptWith#decryptWith(Passphrase)}.
-     */
-    @Deprecated
-    public static byte[] decryptWithPassword(@Nonnull byte[] data, @Nonnull Passphrase password) throws IOException, PGPException {
-        return SymmetricEncryptorDecryptor.symmetricallyDecrypt(data, password);
     }
 
     public static Policy getPolicy() {
