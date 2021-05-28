@@ -45,7 +45,6 @@ import org.pgpainless.key.protection.PasswordBasedSecretKeyRingProtector;
 import org.pgpainless.key.protection.SecretKeyRingProtector;
 import org.pgpainless.key.protection.UnprotectedKeysProtector;
 import org.pgpainless.key.util.RevocationAttributes;
-import org.pgpainless.signature.SignatureUtils;
 
 public class UserIdRevocationTest {
 
@@ -109,7 +108,9 @@ public class UserIdRevocationTest {
                                 .withReason(RevocationAttributes.Reason.USER_ID_NO_LONGER_VALID)
                                 .withDescription("I lost my mail password"))
                 .done();
-        PGPSignature signature = SignatureUtils.getLatestSelfSignatureForUserId(secretKeys.getPublicKey(), "secondary@key.id");
+        KeyRingInfo info = new KeyRingInfo(secretKeys);
+
+        PGPSignature signature = info.getUserIdRevocation("secondary@key.id");
         RevocationReason reason = (RevocationReason) signature.getHashedSubPackets()
                 .getSubpacket(SignatureSubpacketTags.REVOCATION_REASON);
         assertNotNull(reason);

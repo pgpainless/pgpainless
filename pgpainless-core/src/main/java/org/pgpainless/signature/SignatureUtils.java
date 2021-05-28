@@ -15,18 +15,12 @@
  */
 package org.pgpainless.signature;
 
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.Comparator;
 import java.util.Date;
-import java.util.Iterator;
 import java.util.List;
 
 import org.bouncycastle.bcpg.sig.KeyExpirationTime;
 import org.bouncycastle.bcpg.sig.RevocationReason;
 import org.bouncycastle.bcpg.sig.SignatureExpirationTime;
-import org.bouncycastle.openpgp.PGPException;
-import org.bouncycastle.openpgp.PGPKeyRing;
 import org.bouncycastle.openpgp.PGPPublicKey;
 import org.bouncycastle.openpgp.PGPSecretKey;
 import org.bouncycastle.openpgp.PGPSignature;
@@ -36,7 +30,6 @@ import org.pgpainless.PGPainless;
 import org.pgpainless.algorithm.HashAlgorithm;
 import org.pgpainless.algorithm.SignatureType;
 import org.pgpainless.implementation.ImplementationFactory;
-import org.pgpainless.key.util.KeyRingUtils;
 import org.pgpainless.key.util.OpenPgpKeyAttributeUtil;
 import org.pgpainless.key.util.RevocationAttributes;
 import org.pgpainless.policy.Policy;
@@ -72,11 +65,13 @@ public class SignatureUtils {
     }
 
     /**
-     * Return a content signer builder fot the passed public key.
+     * Return a content signer builder for the passed public key.
      *
      * The content signer will use a hash algorithm derived from the keys algorithm preferences.
      * If no preferences can be derived, the key will fall back to the default hash algorithm as set in
      * the {@link org.pgpainless.policy.Policy}.
+     *
+     * TODO: Move negotiation to negotiator class
      *
      * @param publicKey public key
      * @return content signer builder
@@ -107,114 +102,6 @@ public class SignatureUtils {
         }
 
         return PGPainless.getPolicy().getSignatureHashAlgorithmPolicy().defaultHashAlgorithm();
-    }
-
-    /**
-     * Return the latest valid signature on the provided public key.
-     *
-     * @param publicKey signed key
-     * @param signatures signatures
-     * @param keyRing key ring containing signature creator key
-     * @return latest valid signature
-     * @throws PGPException in case of a validation error
-     */
-    public static PGPSignature getLatestValidSignature(PGPPublicKey publicKey,
-                                                       List<PGPSignature> signatures,
-                                                       PGPKeyRing keyRing)
-            throws PGPException {
-        List<PGPSignature> valid = new ArrayList<>();
-        for (PGPSignature signature : signatures) {
-            long issuerID = signature.getKeyID();
-            PGPPublicKey issuer = KeyRingUtils.getPublicKeyFrom(keyRing, issuerID);
-            if (issuer == null) {
-                continue;
-            }
-
-            if (!isSignatureValid(signature, issuer, publicKey)) {
-                continue;
-            }
-
-            if (isSignatureExpired(signature)) {
-                continue;
-            }
-            valid.add(signature);
-        }
-        sortByCreationTimeAscending(valid);
-
-        return valid.isEmpty() ? null : valid.get(valid.size() - 1);
-    }
-
-    /**
-     * Return true, iff a signature is valid.
-     *
-     * @param signature signature to validate
-     * @param issuer signing key
-     * @param target signed key
-     * @return true if signature is valid
-     * @throws PGPException if a validation error occurs.
-     */
-    public static boolean isSignatureValid(PGPSignature signature, PGPPublicKey issuer, PGPPublicKey target) throws PGPException {
-        SignatureType signatureType = SignatureType.valueOf(signature.getSignatureType());
-        switch (signatureType) {
-            case BINARY_DOCUMENT:
-            case CANONICAL_TEXT_DOCUMENT:
-            case STANDALONE:
-            case TIMESTAMP:
-            case THIRD_PARTY_CONFIRMATION:
-                throw new IllegalArgumentException("Signature is not a key signature.");
-            case GENERIC_CERTIFICATION:
-            case NO_CERTIFICATION:
-            case CASUAL_CERTIFICATION:
-            case POSITIVE_CERTIFICATION:
-            case DIRECT_KEY:
-                return isSelfSignatureValid(signature, issuer);
-            case KEY_REVOCATION:
-            case CERTIFICATION_REVOCATION:
-                return isRevocationSignatureValid(signature, issuer);
-            case SUBKEY_BINDING:
-            case PRIMARYKEY_BINDING:
-            case SUBKEY_REVOCATION:
-                return isKeyOnKeySignatureValid(signature, issuer, target);
-        }
-        return false;
-    }
-
-    public static boolean isKeyOnKeySignatureValid(PGPSignature signature, PGPPublicKey issuer, PGPPublicKey target) throws PGPException {
-        signature.init(ImplementationFactory.getInstance().getPGPContentVerifierBuilderProvider(), issuer);
-        return signature.verifyCertification(issuer, target);
-    }
-
-    public static boolean isSelfSignatureValid(PGPSignature signature, PGPPublicKey publicKey) throws PGPException {
-        if (!PGPainless.getPolicy().getSignatureHashAlgorithmPolicy().isAcceptable(signature.getHashAlgorithm())) {
-            return false;
-        }
-        for (Iterator<String> it = publicKey.getUserIDs(); it.hasNext(); ) {
-            String userId = it.next();
-            boolean valid = isSelfSignatureOnUserIdValid(signature, userId, publicKey);
-            if (valid) {
-                return true;
-            }
-        }
-        return false;
-    }
-
-    public static boolean isRevocationSignatureValid(PGPSignature signature, PGPPublicKey publicKey) throws PGPException {
-        if (!PGPainless.getPolicy().getRevocationSignatureHashAlgorithmPolicy().isAcceptable(signature.getHashAlgorithm())) {
-            return false;
-        }
-        for (Iterator<String> it = publicKey.getUserIDs(); it.hasNext(); ) {
-            String userId = it.next();
-            boolean valid = isSelfSignatureOnUserIdValid(signature, userId, publicKey);
-            if (valid) {
-                return true;
-            }
-        }
-        return false;
-    }
-
-    public static boolean isSelfSignatureOnUserIdValid(PGPSignature signature, String userId, PGPPublicKey publicKey) throws PGPException {
-        signature.init(ImplementationFactory.getInstance().getPGPContentVerifierBuilderProvider(), publicKey);
-        return signature.verifyCertification(userId, publicKey);
     }
 
     public static Date getKeyExpirationDate(Date keyCreationDate, PGPSignature signature) {
@@ -254,86 +141,6 @@ public class SignatureUtils {
     public static boolean isSignatureExpired(PGPSignature signature, Date comparisonDate) {
         Date expirationDate = getSignatureExpirationDate(signature);
         return expirationDate != null && comparisonDate.after(expirationDate);
-    }
-
-    public static void sortByCreationTimeAscending(List<PGPSignature> signatures) {
-        Collections.sort(signatures, new Comparator<PGPSignature>() {
-            @Override
-            public int compare(PGPSignature s1, PGPSignature s2) {
-                return s1.getCreationTime().compareTo(s2.getCreationTime());
-            }
-        });
-    }
-
-    public static List<PGPSignature> getBindingSignatures(PGPPublicKey subKey, long primaryKeyId) {
-        List<PGPSignature> signatures = new ArrayList<>();
-        List<PGPSignature> bindingSigs = getSignaturesOfTypes(subKey, SignatureType.SUBKEY_BINDING);
-        for (PGPSignature signature : bindingSigs) {
-            if (signature.getKeyID() != primaryKeyId) {
-                continue;
-            }
-            signatures.add(signature);
-        }
-        return signatures;
-    }
-
-    public static List<PGPSignature> getSignaturesOfTypes(PGPPublicKey publicKey, SignatureType... types) {
-        List<PGPSignature> signatures = new ArrayList<>();
-        for (SignatureType type : types) {
-            Iterator<?> it = publicKey.getSignaturesOfType(type.getCode());
-            while (it.hasNext()) {
-                Object o = it.next();
-                if (o instanceof PGPSignature) {
-                    signatures.add((PGPSignature) o);
-                }
-            }
-        }
-        sortByCreationTimeAscending(signatures);
-        return signatures;
-    }
-
-    public static List<PGPSignature> getSignaturesForUserId(PGPPublicKey publicKey, String userId) {
-        List<PGPSignature> signatures = new ArrayList<>();
-        Iterator<?> it = publicKey.getSignaturesForID(userId);
-        while (it != null && it.hasNext()) {
-            Object o = it.next();
-            if (o instanceof PGPSignature) {
-                signatures.add((PGPSignature) o);
-            }
-        }
-        sortByCreationTimeAscending(signatures);
-        return signatures;
-    }
-
-    public static PGPSignature getLatestSelfSignatureForUserId(PGPPublicKey publicKey, String userId) throws PGPException {
-        List<PGPSignature> valid = new ArrayList<>();
-        List<PGPSignature> signatures = getSignaturesForUserId(publicKey, userId);
-        for (PGPSignature signature : signatures) {
-            if (isSelfSignatureOnUserIdValid(signature, userId, publicKey)) {
-                valid.add(signature);
-            }
-        }
-        return valid.isEmpty() ? null : valid.get(valid.size() - 1);
-    }
-
-    public static boolean isUserIdValid(PGPPublicKey publicKey, String userId) throws PGPException {
-        return isUserIdValid(publicKey, userId, new Date());
-    }
-
-    public static boolean isUserIdValid(PGPPublicKey publicKey, String userId, Date validationDate) throws PGPException {
-        PGPSignature latestSelfSig = getLatestSelfSignatureForUserId(publicKey, userId);
-        if (latestSelfSig == null) {
-            return false;
-        }
-        if (latestSelfSig.getCreationTime().after(validationDate)) {
-            // Signature creation date lays in the future.
-            return false;
-        }
-        if (isSignatureExpired(latestSelfSig, validationDate)) {
-            return false;
-        }
-
-        return latestSelfSig.getSignatureType() != SignatureType.CERTIFICATION_REVOCATION.getCode();
     }
 
     /**
