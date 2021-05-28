@@ -16,11 +16,13 @@
 package org.pgpainless.symmetric_encryption;
 
 import static org.junit.jupiter.api.Assertions.assertArrayEquals;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
+import java.util.Random;
 
 import org.bouncycastle.openpgp.PGPException;
 import org.bouncycastle.openpgp.PGPPublicKeyRing;
@@ -31,7 +33,10 @@ import org.junit.jupiter.params.provider.MethodSource;
 import org.pgpainless.PGPainless;
 import org.pgpainless.decryption_verification.DecryptionStream;
 import org.pgpainless.encryption_signing.EncryptionBuilderInterface;
+import org.pgpainless.encryption_signing.EncryptionOptions;
 import org.pgpainless.encryption_signing.EncryptionStream;
+import org.pgpainless.encryption_signing.ProducerOptions;
+import org.pgpainless.exception.MissingDecryptionMethodException;
 import org.pgpainless.implementation.ImplementationFactory;
 import org.pgpainless.key.TestKeys;
 import org.pgpainless.key.protection.KeyRingProtectionSettings;
@@ -100,5 +105,29 @@ public class SymmetricEncryptionTest {
         decryptor.close();
 
         assertArrayEquals(plaintext, decrypted.toByteArray());
+    }
+
+    @ParameterizedTest
+    @MethodSource("org.pgpainless.util.TestUtil#provideImplementationFactories")
+    public void testMissmatchPassphraseFails(ImplementationFactory implementationFactory) throws IOException, PGPException {
+        ImplementationFactory.setFactoryImplementation(implementationFactory);
+
+        byte[] bytes = new byte[5000];
+        new Random().nextBytes(bytes);
+
+        ByteArrayOutputStream ciphertextOut = new ByteArrayOutputStream();
+        EncryptionStream encryptor = PGPainless.encryptAndOrSign().onOutputStream(ciphertextOut)
+                .withOptions(ProducerOptions.encrypt(
+                        EncryptionOptions.encryptCommunications()
+                                .addPassphrase(Passphrase.fromPassword("mellon"))));
+
+        Streams.pipeAll(new ByteArrayInputStream(bytes), encryptor);
+        encryptor.close();
+
+        assertThrows(MissingDecryptionMethodException.class, () -> PGPainless.decryptAndOrVerify()
+                .onInputStream(new ByteArrayInputStream(ciphertextOut.toByteArray()))
+                .decryptWith(Passphrase.fromPassword("meldir"))
+                .doNotVerify()
+                .build());
     }
 }
