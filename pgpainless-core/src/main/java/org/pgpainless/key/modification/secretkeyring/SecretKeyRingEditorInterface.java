@@ -36,12 +36,19 @@ import org.pgpainless.util.selection.userid.SelectUserId;
 
 public interface SecretKeyRingEditorInterface {
 
+    /**
+     * Add a user-id to the key ring.
+     *
+     * @param userId user-id
+     * @param secretKeyRingProtector protector to unlock the secret key
+     * @return the builder
+     */
     default SecretKeyRingEditorInterface addUserId(UserId userId, SecretKeyRingProtector secretKeyRingProtector) throws PGPException {
         return addUserId(userId.toString(), secretKeyRingProtector);
     }
 
     /**
-     * Add a user-id to the primary key of the key ring.
+     * Add a user-id to the key ring.
      *
      * @param userId user-id
      * @param secretKeyRingProtector protector to unlock the secret key
@@ -49,22 +56,8 @@ public interface SecretKeyRingEditorInterface {
      */
     SecretKeyRingEditorInterface addUserId(String userId, SecretKeyRingProtector secretKeyRingProtector) throws PGPException;
 
-    default SecretKeyRingEditorInterface addUserId(OpenPgpV4Fingerprint fingerprint, UserId userId, SecretKeyRingProtector secretKeyRingProtector) throws PGPException {
-        return addUserId(fingerprint, userId.toString(), secretKeyRingProtector);
-    }
-
-    default SecretKeyRingEditorInterface addUserId(OpenPgpV4Fingerprint fingerprint, String userId, SecretKeyRingProtector secretKeyRingProtector) throws PGPException {
-        return addUserId(fingerprint.getKeyId(), userId, secretKeyRingProtector);
-    }
-
-    default SecretKeyRingEditorInterface addUserId(long keyId, UserId userId, SecretKeyRingProtector secretKeyRingProtector) throws PGPException {
-        return addUserId(keyId, userId.toString(), secretKeyRingProtector);
-    }
-
-    SecretKeyRingEditorInterface addUserId(long keyId, String userId, SecretKeyRingProtector secretKeyRingProtector) throws PGPException;
-
     /**
-     * Remove a user-id from the primary key of the key ring.
+     * Remove a user-id from the key ring.
      *
      * @param userId exact user-id to be removed
      * @param secretKeyRingProtector protector to unlock the secret key
@@ -72,21 +65,25 @@ public interface SecretKeyRingEditorInterface {
      */
     SecretKeyRingEditorInterface deleteUserId(String userId, SecretKeyRingProtector secretKeyRingProtector);
 
-    default SecretKeyRingEditorInterface deleteUserId(OpenPgpV4Fingerprint fingerprint, String userId, SecretKeyRingProtector secretKeyRingProtector) {
-        return deleteUserId(fingerprint.getKeyId(), userId, secretKeyRingProtector);
+    /**
+     * Remove a user-id from the key ring.
+     *
+     * @param userId exact user-id to be removed
+     * @param secretKeyRingProtector protector to unlock the secret key
+     * @return the builder
+     */
+    default SecretKeyRingEditorInterface deleteUserId(UserId userId, SecretKeyRingProtector secretKeyRingProtector) {
+        return deleteUserId(userId.toString(), secretKeyRingProtector);
     }
 
-    default SecretKeyRingEditorInterface deleteUserId(long keyId, String userId, SecretKeyRingProtector secretKeyRingProtector) {
-        return deleteUserIds(keyId, SelectUserId.exactMatch(userId), secretKeyRingProtector);
-    }
-
+    /**
+     * Delete all user-ids from the key, which match the provided {@link SelectUserId} strategy.
+     *
+     * @param selectionStrategy strategy to select user-ids
+     * @param secretKeyRingProtector protector to unlock the secret key
+     * @return the builder
+     */
     SecretKeyRingEditorInterface deleteUserIds(SelectUserId selectionStrategy, SecretKeyRingProtector secretKeyRingProtector);
-
-    default SecretKeyRingEditorInterface deleteUserIds(OpenPgpV4Fingerprint fingerprint, SelectUserId selectionStrategy, SecretKeyRingProtector secretKeyRingProtector) {
-        return deleteUserIds(fingerprint.getKeyId(), selectionStrategy, secretKeyRingProtector);
-    }
-
-    SecretKeyRingEditorInterface deleteUserIds(long keyId, SelectUserId selectionStrategy, SecretKeyRingProtector secretKeyRingProtector);
 
     /**
      * Add a subkey to the key ring.
@@ -129,6 +126,7 @@ public interface SecretKeyRingEditorInterface {
 
     /**
      * Revoke the key ring.
+     * The revocation will be a hard revocation, rendering the whole key invalid for any past or future signatures.
      *
      * @param secretKeyRingProtector protector of the primary key
      * @return the builder
@@ -139,7 +137,8 @@ public interface SecretKeyRingEditorInterface {
     }
 
     /**
-     * Revoke the key ring.
+     * Revoke the key ring using the provided revocation attributes.
+     * The attributes define, whether or not the revocation was a hard revocation or not.
      *
      * @param secretKeyRingProtector protector of the primary key
      * @param revocationAttributes reason for the revocation
@@ -209,88 +208,30 @@ public interface SecretKeyRingEditorInterface {
                                               RevocationAttributes revocationAttributes)
             throws PGPException;
 
-    /**
-     * Revoke the given userID on any key in the key ring that is currently carrying the userID.
-     *
-     * @param userId userId to revoke
-     * @param secretKeyRingProtector protector to unlock the primary key
-     * @return the builder
-     */
-    default SecretKeyRingEditorInterface revokeUserIdOnAllSubkeys(String userId,
-                                                                  SecretKeyRingProtector secretKeyRingProtector)
-            throws PGPException {
-        return revokeUserIdOnAllSubkeys(userId, secretKeyRingProtector, null);
-    }
 
     /**
-     * Revoke the given userID on any key in the key ring that is currently carrying the userID.
+     * Revoke the given userID.
+     * The revocation will be a hard revocation, rendering the user-id invalid for any past or future signatures.
      *
      * @param userId userId to revoke
-     * @param secretKeyRingProtector protector to unlock the primary key
-     * @param revocationAttributes reason for the revocation
-     * @return the builder
-     */
-    SecretKeyRingEditorInterface revokeUserIdOnAllSubkeys(String userId,
-                                                          SecretKeyRingProtector secretKeyRingProtector,
-                                                          RevocationAttributes revocationAttributes)
-            throws PGPException;
-
-    /**
-     * Revoke the given userID on the key that belongs to the given fingerprint.
-     *
-     * @param userId userId to revoke
-     * @param subkeyFingerprint fingerprint of the key on which the userID should be revoked
      * @param secretKeyRingProtector protector to unlock the primary key
      * @return the builder
      */
     default SecretKeyRingEditorInterface revokeUserId(String userId,
-                                                      OpenPgpV4Fingerprint subkeyFingerprint,
                                                       SecretKeyRingProtector secretKeyRingProtector)
             throws PGPException {
-        return revokeUserId(userId, subkeyFingerprint, secretKeyRingProtector, null);
+        return revokeUserId(userId, secretKeyRingProtector, null);
     }
 
     /**
-     * Revoke the given userID on the key that belongs to the given fingerprint.
+     * Revoke the given userID using the provided revocation attributes.
      *
      * @param userId userId to revoke
-     * @param subkeyFingerprint fingerprint of the key on which the userID should be revoked
      * @param secretKeyRingProtector protector to unlock the primary key
      * @param revocationAttributes reason for the revocation
      * @return the builder
      */
     SecretKeyRingEditorInterface revokeUserId(String userId,
-                                              OpenPgpV4Fingerprint subkeyFingerprint,
-                                              SecretKeyRingProtector secretKeyRingProtector,
-                                              RevocationAttributes revocationAttributes)
-            throws PGPException;
-
-    /**
-     * Revoke the given userID on the key that belongs to the given key ID.
-     *
-     * @param userId userId to revoke
-     * @param subKeyId ID of the subkey on which we the userID should be revoked
-     * @param secretKeyRingProtector protector to unlock the primary key
-     * @return the builder
-     */
-    default SecretKeyRingEditorInterface revokeUserId(String userId,
-                                              long subKeyId,
-                                              SecretKeyRingProtector secretKeyRingProtector)
-            throws PGPException {
-        return revokeUserId(userId, subKeyId, secretKeyRingProtector, null);
-    }
-
-    /**
-     * Revoke the given userID on the key that belongs to the given key ID.
-     *
-     * @param userId userId to revoke
-     * @param subkeyId ID of the subkey on which we the userID should be revoked
-     * @param secretKeyRingProtector protector to unlock the primary key
-     * @param revocationAttributes reason for the revocation
-     * @return the builder
-     */
-    SecretKeyRingEditorInterface revokeUserId(String userId,
-                                              long subkeyId,
                                               SecretKeyRingProtector secretKeyRingProtector,
                                               RevocationAttributes revocationAttributes)
             throws PGPException;
@@ -300,9 +241,8 @@ public interface SecretKeyRingEditorInterface {
      * If the key is supposed to never expire, then an expiration date of null is expected.
      *
      * @param expiration new expiration date or null
-     * @param secretKeyRingProtector
-     * @return
-     * @throws PGPException
+     * @param secretKeyRingProtector to unlock the secret key
+     * @return the builder
      */
     SecretKeyRingEditorInterface setExpirationDate(Date expiration,
                                                    SecretKeyRingProtector secretKeyRingProtector)
@@ -324,28 +264,25 @@ public interface SecretKeyRingEditorInterface {
     /**
      * Create a detached revocation certificate, which can be used to revoke the specified key.
      *
-     * @param fingerprint fingerprint of the key to be revoked. Can be primary or sub key.
      * @param secretKeyRingProtector protector to unlock the primary key.
      * @param revocationAttributes reason for the revocation
      * @return revocation certificate
      */
-    PGPSignature createRevocationCertificate(OpenPgpV4Fingerprint fingerprint,
-                                             SecretKeyRingProtector secretKeyRingProtector,
+    PGPSignature createRevocationCertificate(SecretKeyRingProtector secretKeyRingProtector,
                                              RevocationAttributes revocationAttributes)
             throws PGPException;
 
-    /**
-     * Create a detached revocation certificate, which can be used to revoke the specified key.
-     *
-     * @param subKeyId id of the key to be revoked. Can be primary or sub key.
-     * @param secretKeyRingProtector protector to unlock the primary key.
-     * @param revocationAttributes reason for the revocation
-     * @return revocation certificate
-     */
-    PGPSignature createRevocationCertificate(long subKeyId,
+    PGPSignature createRevocationCertificate(long subkeyId,
                                              SecretKeyRingProtector secretKeyRingProtector,
                                              RevocationAttributes revocationAttributes)
-            throws PGPException;
+        throws PGPException;
+
+    default PGPSignature createRevocationCertificate(OpenPgpV4Fingerprint subkeyFingerprint,
+                                             SecretKeyRingProtector secretKeyRingProtector,
+                                             RevocationAttributes revocationAttributes)
+        throws PGPException {
+        return createRevocationCertificate(subkeyFingerprint.getKeyId(), secretKeyRingProtector, revocationAttributes);
+    }
 
     /**
      * Change the passphrase of the whole key ring.

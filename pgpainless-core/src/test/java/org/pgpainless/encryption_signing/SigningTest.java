@@ -136,7 +136,7 @@ public class SigningTest {
                 .modernKeyRing("alice", "password123");
         SecretKeyRingProtector protector = SecretKeyRingProtector.unlockAllKeysWith(Passphrase.fromPassword("password123"), secretKeys);
         secretKeys = PGPainless.modifyKeyRing(secretKeys)
-                .revokeUserIdOnAllSubkeys("alice", protector)
+                .revokeUserId("alice", protector)
                 .done();
 
         final PGPSecretKeyRing fSecretKeys = secretKeys;

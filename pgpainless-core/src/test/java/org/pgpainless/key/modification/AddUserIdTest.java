@@ -69,26 +69,11 @@ public class AddUserIdTest {
         assertFalse(userIds.hasNext());
     }
 
-
-    @Test
-    public void addUserId_NoSuchElementExceptionForMissingKey() throws IOException, PGPException {
-        PGPSecretKeyRing secretKeys = TestKeys.getCryptieSecretKeyRing();
-        assertThrows(NoSuchElementException.class, () -> PGPainless.modifyKeyRing(secretKeys)
-                .addUserId(0L, TestKeys.CRYPTIE_UID, new UnprotectedKeysProtector()));
-    }
-
     @Test
     public void deleteUserId_noSuchElementExceptionForMissingUserId() throws IOException, PGPException {
         PGPSecretKeyRing secretKeys = TestKeys.getCryptieSecretKeyRing();
         assertThrows(NoSuchElementException.class, () -> PGPainless.modifyKeyRing(secretKeys)
                 .deleteUserId("invalid@user.id", new UnprotectedKeysProtector()));
-    }
-
-    @Test
-    public void deleteUserId_noSuchElementExceptionForMissingKey() throws IOException, PGPException {
-        PGPSecretKeyRing secretKeys = TestKeys.getCryptieSecretKeyRing();
-        assertThrows(NoSuchElementException.class, () -> PGPainless.modifyKeyRing(secretKeys)
-                .deleteUserId(0L, TestKeys.CRYPTIE_UID, new UnprotectedKeysProtector()));
     }
 
     @Test

@@ -64,7 +64,7 @@ public class UserIdRevocationTest {
 
         // make a copy with revoked subkey
         PGPSecretKeyRing revoked = PGPainless.modifyKeyRing(secretKeys)
-                .revokeUserIdOnAllSubkeys("secondary@key.id", new UnprotectedKeysProtector())
+                .revokeUserId("secondary@key.id", new UnprotectedKeysProtector())
                 .done();
 
         KeyRingInfo info = PGPainless.inspectKeyRing(revoked);
@@ -78,7 +78,7 @@ public class UserIdRevocationTest {
         assertTrue(info.isUserIdValid("secondary@key.id")); // key on original secret key ring is still valid
 
         revoked = PGPainless.modifyKeyRing(secretKeys)
-                .revokeUserId("secondary@key.id", secretKeys.getSecretKey().getKeyID(), new UnprotectedKeysProtector())
+                .revokeUserId("secondary@key.id", new UnprotectedKeysProtector())
                 .done();
         info = PGPainless.inspectKeyRing(revoked);
         userIds = info.getUserIds();
@@ -103,7 +103,7 @@ public class UserIdRevocationTest {
                 .build();
 
         secretKeys = PGPainless.modifyKeyRing(secretKeys)
-                .revokeUserIdOnAllSubkeys("secondary@key.id", new UnprotectedKeysProtector(),
+                .revokeUserId("secondary@key.id", new UnprotectedKeysProtector(),
                         RevocationAttributes.createCertificateRevocation()
                                 .withReason(RevocationAttributes.Reason.USER_ID_NO_LONGER_VALID)
                                 .withDescription("I lost my mail password"))
@@ -123,10 +123,8 @@ public class UserIdRevocationTest {
         SecretKeyRingProtector protector = PasswordBasedSecretKeyRingProtector
                 .forKey(secretKeys.getSecretKey(), TestKeys.CRYPTIE_PASSPHRASE);
 
-        assertThrows(IllegalArgumentException.class, () -> PGPainless.modifyKeyRing(secretKeys)
-                .revokeUserId("cryptie@encrypted.key", 1L, protector));
-        assertThrows(IllegalArgumentException.class, () -> PGPainless.modifyKeyRing(secretKeys)
-                .revokeUserId("cryptie@encrypted.key", TestKeys.EMIL_FINGERPRINT, protector));
+        assertThrows(NoSuchElementException.class, () -> PGPainless.modifyKeyRing(secretKeys)
+                .revokeSubKey(1L, protector));
     }
 
     @Test
@@ -136,9 +134,7 @@ public class UserIdRevocationTest {
                 .forKey(secretKeys.getSecretKey(), TestKeys.CRYPTIE_PASSPHRASE);
 
         assertThrows(NoSuchElementException.class, () -> PGPainless.modifyKeyRing(secretKeys)
-                .revokeUserId("invalid@user.id", TestKeys.CRYPTIE_FINGERPRINT, protector));
-        assertThrows(NoSuchElementException.class, () -> PGPainless.modifyKeyRing(secretKeys)
-                .revokeUserId("invalid@user.id", TestKeys.CRYPTIE_KEY_ID, protector));
+                .revokeUserId("invalid@user.id", protector));
     }
 
     @Test
@@ -148,7 +144,7 @@ public class UserIdRevocationTest {
                 .forKey(secretKeys.getSecretKey(), TestKeys.CRYPTIE_PASSPHRASE);
 
         assertThrows(IllegalArgumentException.class, () -> PGPainless.modifyKeyRing(secretKeys)
-                .revokeUserId("cryptie@encrypted.key", secretKeys.getSecretKey().getKeyID(), protector,
+                .revokeUserId("cryptie@encrypted.key", protector,
                         RevocationAttributes.createKeyRevocation().withReason(RevocationAttributes.Reason.KEY_RETIRED)
                 .withDescription("This is not a valid certification revocation reason.")));
     }
