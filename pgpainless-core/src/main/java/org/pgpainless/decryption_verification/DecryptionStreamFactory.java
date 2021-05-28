@@ -57,6 +57,7 @@ import org.pgpainless.algorithm.CompressionAlgorithm;
 import org.pgpainless.algorithm.StreamEncoding;
 import org.pgpainless.algorithm.SymmetricKeyAlgorithm;
 import org.pgpainless.exception.MessageNotIntegrityProtectedException;
+import org.pgpainless.exception.MissingDecryptionMethodException;
 import org.pgpainless.exception.UnacceptableAlgorithmException;
 import org.pgpainless.implementation.ImplementationFactory;
 import org.pgpainless.key.OpenPgpV4Fingerprint;
@@ -272,7 +273,7 @@ public final class DecryptionStreamFactory {
         }
 
         if (decryptionKey == null) {
-            throw new PGPException("Decryption failed - No suitable decryption key or passphrase found");
+            throw new MissingDecryptionMethodException("Decryption failed - No suitable decryption key or passphrase found");
         }
 
         PublicKeyDataDecryptorFactory dataDecryptor = ImplementationFactory.getInstance()
