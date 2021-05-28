@@ -13,7 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.pgpainless.sop;
+package org.pgpainless.sop.commands;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
@@ -31,6 +31,8 @@ import java.nio.charset.StandardCharsets;
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
+import org.pgpainless.sop.PGPainlessCLI;
+import org.pgpainless.sop.TestUtils;
 import picocli.CommandLine;
 
 public class EncryptDecryptTest {

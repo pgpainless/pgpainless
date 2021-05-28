@@ -13,7 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.pgpainless.sop;
+package org.pgpainless.sop.commands;
 
 import static org.junit.jupiter.api.Assertions.assertArrayEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
@@ -32,6 +32,8 @@ import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 import org.pgpainless.PGPainless;
 import org.pgpainless.key.info.KeyRingInfo;
+import org.pgpainless.sop.PGPainlessCLI;
+import org.pgpainless.sop.TestUtils;
 import picocli.CommandLine;
 
 public class GenerateCertTest {

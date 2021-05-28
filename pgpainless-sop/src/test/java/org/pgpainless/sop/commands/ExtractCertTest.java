@@ -13,7 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.pgpainless.sop;
+package org.pgpainless.sop.commands;
 
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
@@ -31,6 +31,7 @@ import org.bouncycastle.openpgp.PGPSecretKeyRing;
 import org.junit.jupiter.api.Test;
 import org.pgpainless.PGPainless;
 import org.pgpainless.key.info.KeyRingInfo;
+import org.pgpainless.sop.PGPainlessCLI;
 import picocli.CommandLine;
 
 public class ExtractCertTest {
