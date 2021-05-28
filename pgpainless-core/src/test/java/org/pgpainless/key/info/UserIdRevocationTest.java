@@ -49,7 +49,7 @@ import org.pgpainless.key.util.RevocationAttributes;
 public class UserIdRevocationTest {
 
     @Test
-    public void testRevocationWithoutRevocationAttributes() throws PGPException, InvalidAlgorithmParameterException, NoSuchAlgorithmException, InterruptedException {
+    public void testRevocationWithoutRevocationAttributes() throws PGPException, InvalidAlgorithmParameterException, NoSuchAlgorithmException {
         PGPSecretKeyRing secretKeys = PGPainless.generateKeyRing()
                 .withSubKey(KeySpec.getBuilder(KeyType.XDH(XDHCurve._X25519))
                         .withKeyFlags(KeyFlag.ENCRYPT_COMMS)
@@ -89,7 +89,7 @@ public class UserIdRevocationTest {
     }
 
     @Test
-    public void testRevocationWithRevocationReason() throws InvalidAlgorithmParameterException, NoSuchAlgorithmException, PGPException, InterruptedException {
+    public void testRevocationWithRevocationReason() throws InvalidAlgorithmParameterException, NoSuchAlgorithmException, PGPException {
         PGPSecretKeyRing secretKeys = PGPainless.generateKeyRing()
                 .withSubKey(KeySpec.getBuilder(KeyType.XDH(XDHCurve._X25519))
                         .withKeyFlags(KeyFlag.ENCRYPT_COMMS)
