@@ -147,7 +147,6 @@ public class SignatureUtils {
     /**
      * Return true, iff a signature is valid.
      *
-     * TODO: There is code duplication here ({@link SelectSignatureFromKey}, {@link SignatureChainValidator}, {@link SignatureValidator}).
      * @param signature signature to validate
      * @param issuer signing key
      * @param target signed key
