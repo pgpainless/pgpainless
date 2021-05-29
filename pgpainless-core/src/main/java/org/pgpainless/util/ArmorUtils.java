@@ -28,7 +28,9 @@ import org.bouncycastle.bcpg.ArmoredInputStream;
 import org.bouncycastle.bcpg.ArmoredOutputStream;
 import org.bouncycastle.openpgp.PGPKeyRing;
 import org.bouncycastle.openpgp.PGPPublicKeyRing;
+import org.bouncycastle.openpgp.PGPPublicKeyRingCollection;
 import org.bouncycastle.openpgp.PGPSecretKeyRing;
+import org.bouncycastle.openpgp.PGPSecretKeyRingCollection;
 import org.bouncycastle.util.io.Streams;
 import org.pgpainless.algorithm.HashAlgorithm;
 import org.pgpainless.key.OpenPgpV4Fingerprint;
@@ -52,6 +54,30 @@ public class ArmorUtils {
     public static String toAsciiArmoredString(PGPPublicKeyRing publicKeys) throws IOException {
         MultiMap<String, String> header = keyToHeader(publicKeys);
         return toAsciiArmoredString(publicKeys.getEncoded(), header);
+    }
+
+    public static String toAsciiArmoredString(PGPSecretKeyRingCollection secretKeyRings) throws IOException {
+        StringBuilder sb = new StringBuilder();
+        for (Iterator<PGPSecretKeyRing> iterator = secretKeyRings.iterator(); iterator.hasNext(); ) {
+            PGPSecretKeyRing secretKeyRing = iterator.next();
+            sb.append(toAsciiArmoredString(secretKeyRing));
+            if (iterator.hasNext()) {
+                sb.append('\n');
+            }
+        }
+        return sb.toString();
+    }
+
+    public static String toAsciiArmoredString(PGPPublicKeyRingCollection publicKeyRings) throws IOException {
+        StringBuilder sb = new StringBuilder();
+        for (Iterator<PGPPublicKeyRing> iterator = publicKeyRings.iterator(); iterator.hasNext(); ) {
+            PGPPublicKeyRing publicKeyRing = iterator.next();
+            sb.append(toAsciiArmoredString(publicKeyRing));
+            if (iterator.hasNext()) {
+                sb.append('\n');
+            }
+        }
+        return sb.toString();
     }
 
     private static MultiMap<String, String> keyToHeader(PGPKeyRing keyRing) {

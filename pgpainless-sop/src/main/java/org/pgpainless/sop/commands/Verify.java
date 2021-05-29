@@ -17,6 +17,7 @@ package org.pgpainless.sop.commands;
 
 import org.bouncycastle.openpgp.PGPException;
 import org.bouncycastle.openpgp.PGPPublicKeyRing;
+import org.bouncycastle.openpgp.PGPPublicKeyRingCollection;
 import org.bouncycastle.openpgp.PGPSignature;
 import org.bouncycastle.util.io.Streams;
 import org.pgpainless.PGPainless;
@@ -88,7 +89,7 @@ public class Verify implements Runnable {
         Date notBeforeDate = parseNotBefore();
         Date notAfterDate = parseNotAfter();
 
-        Map<File, PGPPublicKeyRing> publicKeys = readCertificatesFromFiles();
+        Map<PGPPublicKeyRing, File> publicKeys = readCertificatesFromFiles();
         if (publicKeys.isEmpty()) {
             err_ln("No certificates supplied.");
             System.exit(19);
@@ -100,7 +101,7 @@ public class Verify implements Runnable {
                     .onInputStream(System.in)
                     .doNotDecrypt()
                     .verifyDetachedSignature(sigIn)
-                    .verifyWith(new HashSet<>(publicKeys.values()))
+                    .verifyWith(new HashSet<>(publicKeys.keySet()))
                     .ignoreMissingPublicKeys()
                     .build();
 
@@ -138,30 +139,33 @@ public class Verify implements Runnable {
         printValidSignatures(signaturesInTimeRange, publicKeys);
     }
 
-    private void printValidSignatures(Map<OpenPgpV4Fingerprint, PGPSignature> validSignatures, Map<File, PGPPublicKeyRing> publicKeys) {
+    private void printValidSignatures(Map<OpenPgpV4Fingerprint, PGPSignature> validSignatures, Map<PGPPublicKeyRing, File> publicKeys) {
         for (OpenPgpV4Fingerprint sigKeyFp : validSignatures.keySet()) {
             PGPSignature signature = validSignatures.get(sigKeyFp);
-            for (File file : publicKeys.keySet()) {
+            for (PGPPublicKeyRing ring : publicKeys.keySet()) {
                 // Search signing key ring
-                PGPPublicKeyRing publicKeyRing = publicKeys.get(file);
-                if (publicKeyRing.getPublicKey(sigKeyFp.getKeyId()) == null) {
+                File file = publicKeys.get(ring);
+                if (ring.getPublicKey(sigKeyFp.getKeyId()) == null) {
                     continue;
                 }
 
                 String utcSigDate = df.format(signature.getCreationTime());
-                OpenPgpV4Fingerprint primaryKeyFp = new OpenPgpV4Fingerprint(publicKeyRing);
+                OpenPgpV4Fingerprint primaryKeyFp = new OpenPgpV4Fingerprint(ring);
                 print_ln(utcSigDate + " " + sigKeyFp.toString() + " " + primaryKeyFp.toString() +
                         " signed by " + file.getName());
             }
         }
     }
 
-    private Map<File, PGPPublicKeyRing> readCertificatesFromFiles() {
-        Map<File, PGPPublicKeyRing> publicKeys = new HashMap<>();
+    private Map<PGPPublicKeyRing, File> readCertificatesFromFiles() {
+        Map<PGPPublicKeyRing, File> publicKeys = new HashMap<>();
         for (File cert : certificates) {
             try (FileInputStream in = new FileInputStream(cert)) {
-                publicKeys.put(cert, PGPainless.readKeyRing().publicKeyRing(in));
-            } catch (IOException e) {
+                PGPPublicKeyRingCollection collection = PGPainless.readKeyRing().publicKeyRingCollection(in);
+                for (PGPPublicKeyRing ring : collection) {
+                    publicKeys.put(ring, cert);
+                }
+            } catch (IOException | PGPException e) {
                 err_ln("Cannot read certificate from file " + cert.getAbsolutePath() + ":");
                 err_ln(e.getMessage());
             }

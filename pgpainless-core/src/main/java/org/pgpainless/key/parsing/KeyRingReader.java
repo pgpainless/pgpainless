@@ -136,26 +136,6 @@ public class KeyRingReader {
                 isSilent);
     }
 
-    private static void validateStreamsNotBothNull(InputStream publicIn, InputStream secretIn) {
-        if (publicIn == null && secretIn == null) {
-            throw new NullPointerException("publicIn and secretIn cannot be BOTH null.");
-        }
-    }
-
-    private static PGPPublicKeyRing maybeReadPublicKeys(InputStream publicIn) throws IOException {
-        if (publicIn != null) {
-            return readPublicKeyRing(publicIn);
-        }
-        return null;
-    }
-
-    private static PGPSecretKeyRing maybeReadSecretKeys(InputStream secretIn) throws IOException, PGPException {
-        if (secretIn != null) {
-            return readSecretKeyRing(secretIn);
-        }
-        return null;
-    }
-
     /**
      * Hacky workaround for #96.
      * For {@link PGPPublicKeyRingCollection#PGPPublicKeyRingCollection(InputStream, KeyFingerPrintCalculator)}
