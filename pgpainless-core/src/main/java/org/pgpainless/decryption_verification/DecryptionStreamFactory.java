@@ -350,6 +350,10 @@ public final class DecryptionStreamFactory {
             }
         }
 
+        if (verificationKeyRing == null && missingPublicKeyCallback != null) {
+            verificationKeyRing = missingPublicKeyCallback.onMissingPublicKeyEncountered(keyId);
+        }
+
         return verificationKeyRing;
     }
 }
