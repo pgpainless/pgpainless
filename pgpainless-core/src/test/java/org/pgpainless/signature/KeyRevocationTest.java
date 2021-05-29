@@ -27,7 +27,6 @@ import org.bouncycastle.openpgp.PGPSignature;
 import org.junit.jupiter.api.Test;
 import org.pgpainless.PGPainless;
 import org.pgpainless.exception.SignatureValidationException;
-import org.pgpainless.util.BCUtil;
 
 public class KeyRevocationTest {
 
@@ -154,10 +153,10 @@ public class KeyRevocationTest {
                 "-----END PGP ARMORED FILE-----\n";
 
         PGPPublicKeyRing publicKeys = PGPainless.readKeyRing().publicKeyRing(key);
-        PGPSignature t0 = BCUtil.readSignatures(sigT0).get(0);
-        PGPSignature t1t2 = BCUtil.readSignatures(sigT1T2).get(0);
-        PGPSignature t2t3 = BCUtil.readSignatures(sigT2T3).get(0);
-        PGPSignature t3now = BCUtil.readSignatures(sigT3Now).get(0);
+        PGPSignature t0 = SignatureUtils.readSignatures(sigT0).get(0);
+        PGPSignature t1t2 = SignatureUtils.readSignatures(sigT1T2).get(0);
+        PGPSignature t2t3 = SignatureUtils.readSignatures(sigT2T3).get(0);
+        PGPSignature t3now = SignatureUtils.readSignatures(sigT3Now).get(0);
 
         assertThrows(SignatureValidationException.class, () -> SignatureChainValidator.validateSignatureChain(t0,
                 new ByteArrayInputStream(data.getBytes(StandardCharsets.UTF_8)),
@@ -257,7 +256,7 @@ public class KeyRevocationTest {
                 "-----END PGP ARMORED FILE-----\n";
 
         PGPPublicKeyRing publicKeys = PGPainless.readKeyRing().publicKeyRing(key);
-        PGPSignature signature = BCUtil.readSignatures(sig).get(0);
+        PGPSignature signature = SignatureUtils.readSignatures(sig).get(0);
 
         SignatureChainValidator.validateSignatureChain(signature,
                 new ByteArrayInputStream(data.getBytes(StandardCharsets.UTF_8)),

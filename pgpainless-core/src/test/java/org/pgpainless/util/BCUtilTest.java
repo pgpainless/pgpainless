@@ -36,8 +36,6 @@ import org.bouncycastle.openpgp.PGPSecretKeyRingCollection;
 import org.junit.jupiter.api.Test;
 import org.pgpainless.PGPainless;
 import org.pgpainless.algorithm.KeyFlag;
-import org.pgpainless.key.OpenPgpV4Fingerprint;
-import org.pgpainless.key.TestKeys;
 import org.pgpainless.key.generation.KeySpec;
 import org.pgpainless.key.generation.type.KeyType;
 import org.pgpainless.key.generation.type.rsa.RsaLength;
@@ -83,7 +81,7 @@ public class BCUtilTest {
 
         assertEquals(secSize, pubSize);
 
-        PGPSecretKeyRingCollection secCol = BCUtil.keyRingsToKeyRingCollection(sec);
+        PGPSecretKeyRingCollection secCol = KeyRingUtils.keyRingsToKeyRingCollection(sec);
 
         int secColSize = 0;
         Iterator<PGPSecretKeyRing> secColIt = secCol.getKeyRings();
@@ -95,7 +93,7 @@ public class BCUtilTest {
 
         LOGGER.log(Level.FINER, "SecCol: " + secColSize);
 
-        PGPPublicKeyRingCollection pubCol = BCUtil.keyRingsToKeyRingCollection(pub);
+        PGPPublicKeyRingCollection pubCol = KeyRingUtils.keyRingsToKeyRingCollection(pub);
 
         int pubColSize = 0;
         Iterator<PGPPublicKeyRing> pubColIt = pubCol.getKeyRings();
@@ -132,17 +130,7 @@ public class BCUtilTest {
         // Check, if alice_mallory contains mallory's key
         assertNotNull(alice_mallory.getSecretKey(subKey.getKeyID()));
 
-        PGPSecretKeyRing cleaned = BCUtil.removeUnassociatedKeysFromKeyRing(alice_mallory, alice.getPublicKey());
+        PGPSecretKeyRing cleaned = KeyRingUtils.removeUnassociatedKeysFromKeyRing(alice_mallory, alice.getPublicKey());
         assertNull(cleaned.getSecretKey(subKey.getKeyID()));
-    }
-
-    @Test
-    public void getMasterKeyFromRingTest() throws IOException, PGPException {
-        PGPSecretKeyRing secretKeys = TestKeys.getCryptieSecretKeyRing();
-
-        PGPPublicKey primaryKey = BCUtil.getMasterKeyFrom(secretKeys);
-
-        assertNotNull(primaryKey);
-        assertEquals(TestKeys.CRYPTIE_FINGERPRINT, new OpenPgpV4Fingerprint(primaryKey));
     }
 }

@@ -15,16 +15,22 @@
  */
 package org.pgpainless.signature;
 
+import java.io.IOException;
+import java.io.InputStream;
+import java.nio.charset.Charset;
 import java.util.Date;
 import java.util.List;
 
 import org.bouncycastle.bcpg.sig.KeyExpirationTime;
 import org.bouncycastle.bcpg.sig.RevocationReason;
 import org.bouncycastle.bcpg.sig.SignatureExpirationTime;
+import org.bouncycastle.openpgp.PGPMarker;
+import org.bouncycastle.openpgp.PGPObjectFactory;
 import org.bouncycastle.openpgp.PGPPublicKey;
 import org.bouncycastle.openpgp.PGPSecretKey;
 import org.bouncycastle.openpgp.PGPSignature;
 import org.bouncycastle.openpgp.PGPSignatureGenerator;
+import org.bouncycastle.openpgp.PGPSignatureList;
 import org.bouncycastle.openpgp.operator.PGPContentSignerBuilder;
 import org.pgpainless.PGPainless;
 import org.pgpainless.algorithm.HashAlgorithm;
@@ -34,6 +40,7 @@ import org.pgpainless.key.util.OpenPgpKeyAttributeUtil;
 import org.pgpainless.key.util.RevocationAttributes;
 import org.pgpainless.policy.Policy;
 import org.pgpainless.signature.subpackets.SignatureSubpacketsUtil;
+import org.pgpainless.util.BCUtil;
 
 /**
  * Utility methods related to signatures.
@@ -166,5 +173,26 @@ public class SignatureUtils {
             return true;
         }
         return RevocationAttributes.Reason.isHardRevocation(reasonSubpacket.getRevocationReason());
+    }
+
+    /**
+     * Parse an ASCII encoded list of OpenPGP signatures into a {@link PGPSignatureList}.
+     *
+     * @param encodedSignatures ASCII armored signature list
+     * @return signature list
+     * @throws IOException if the signatures cannot be read
+     */
+    public static PGPSignatureList readSignatures(String encodedSignatures) throws IOException {
+        InputStream inputStream = BCUtil.getPgpDecoderInputStream(encodedSignatures.getBytes(Charset.forName("UTF8")));
+        PGPObjectFactory objectFactory = new PGPObjectFactory(inputStream, ImplementationFactory.getInstance().getKeyFingerprintCalculator());
+        Object next = objectFactory.nextObject();
+        while (next != null) {
+            if (next instanceof PGPMarker) {
+                next = objectFactory.nextObject();
+                continue;
+            }
+            return (PGPSignatureList) next;
+        }
+        return null;
     }
 }

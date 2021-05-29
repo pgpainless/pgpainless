@@ -58,7 +58,6 @@ import org.pgpainless.key.protection.SecretKeyRingProtector;
 import org.pgpainless.key.protection.UnprotectedKeysProtector;
 import org.pgpainless.key.util.KeyRingUtils;
 import org.pgpainless.util.ArmoredOutputStreamFactory;
-import org.pgpainless.util.BCUtil;
 
 public class EncryptDecryptTest {
 
@@ -169,7 +168,7 @@ public class EncryptDecryptTest {
 
         assertFalse(encryptionResult.getRecipients().isEmpty());
         for (SubkeyIdentifier encryptionKey : encryptionResult.getRecipients()) {
-            assertTrue(BCUtil.keyRingContainsKeyWithId(recipientPub, encryptionKey.getKeyId()));
+            assertTrue(KeyRingUtils.keyRingContainsKeyWithId(recipientPub, encryptionKey.getKeyId()));
         }
 
         assertEquals(SymmetricKeyAlgorithm.AES_256, encryptionResult.getSymmetricKeyAlgorithm());
@@ -179,8 +178,8 @@ public class EncryptDecryptTest {
         ByteArrayInputStream envelopeIn = new ByteArrayInputStream(encryptedSecretMessage);
         DecryptionStream decryptor = PGPainless.decryptAndOrVerify()
                 .onInputStream(envelopeIn)
-                .decryptWith(keyDecryptor, BCUtil.keyRingsToKeyRingCollection(recipientSec))
-                .verifyWith(BCUtil.keyRingsToKeyRingCollection(senderPub))
+                .decryptWith(keyDecryptor, KeyRingUtils.keyRingsToKeyRingCollection(recipientSec))
+                .verifyWith(KeyRingUtils.keyRingsToKeyRingCollection(senderPub))
                 .ignoreMissingPublicKeys()
                 .build();
 

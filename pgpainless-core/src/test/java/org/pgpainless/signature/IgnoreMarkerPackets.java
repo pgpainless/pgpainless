@@ -38,7 +38,6 @@ import org.pgpainless.decryption_verification.OpenPgpMetadata;
 import org.pgpainless.key.OpenPgpV4Fingerprint;
 import org.pgpainless.key.protection.SecretKeyRingProtector;
 import org.pgpainless.key.util.KeyRingUtils;
-import org.pgpainless.util.BCUtil;
 
 /**
  * Test if marker packets are being ignored properly.
@@ -151,7 +150,7 @@ public class IgnoreMarkerPackets {
         PGPSecretKeyRing secretKeys = PGPainless.readKeyRing().secretKeyRing(KEY);
         PGPPublicKeyRing publicKeys = KeyRingUtils.publicKeyRingFrom(secretKeys);
         String data = "Marker + Detached signature";
-        PGPSignature signature = BCUtil.readSignatures(sig).get(0);
+        PGPSignature signature = SignatureUtils.readSignatures(sig).get(0);
 
         DecryptionStream decryptionStream = PGPainless.decryptAndOrVerify().onInputStream(new ByteArrayInputStream(data.getBytes(StandardCharsets.UTF_8)))
                 .doNotDecrypt()

@@ -30,7 +30,6 @@ import org.junit.jupiter.api.Test;
 import org.pgpainless.PGPainless;
 import org.pgpainless.exception.SignatureValidationException;
 import org.pgpainless.policy.Policy;
-import org.pgpainless.util.BCUtil;
 
 public class SignatureChainValidatorTest {
 
@@ -161,10 +160,10 @@ public class SignatureChainValidatorTest {
                 "-----END PGP ARMORED FILE-----\n";
 
         PGPPublicKeyRing publicKeys = PGPainless.readKeyRing().publicKeyRing(key);
-        PGPSignature predatesPrimaryKey = BCUtil.readSignatures(sigPredatesPrimaryKey).get(0);
-        PGPSignature unboundSubkey = BCUtil.readSignatures(sigSubkeyNotBound).get(0);
-        PGPSignature primaryKeyRevoked = BCUtil.readSignatures(sigPrimaryKeyRevoked).get(0);
-        PGPSignature primaryKeyRevalidated = BCUtil.readSignatures(sigPrimaryKeyRevalidated).get(0);
+        PGPSignature predatesPrimaryKey = SignatureUtils.readSignatures(sigPredatesPrimaryKey).get(0);
+        PGPSignature unboundSubkey = SignatureUtils.readSignatures(sigSubkeyNotBound).get(0);
+        PGPSignature primaryKeyRevoked = SignatureUtils.readSignatures(sigPrimaryKeyRevoked).get(0);
+        PGPSignature primaryKeyRevalidated = SignatureUtils.readSignatures(sigPrimaryKeyRevalidated).get(0);
 
         Policy policy = PGPainless.getPolicy();
         Date validationDate = new Date();
@@ -310,10 +309,10 @@ public class SignatureChainValidatorTest {
                 "-----END PGP ARMORED FILE-----\n";
 
         PGPPublicKeyRing publicKeys = PGPainless.readKeyRing().publicKeyRing(key);
-        PGPSignature predatesPrimaryKey = BCUtil.readSignatures(sigPredatesPrimaryKey).get(0);
-        PGPSignature unboundSubkey = BCUtil.readSignatures(sigSigningKeyUnbound).get(0);
-        PGPSignature revokedSubkey = BCUtil.readSignatures(sigSubkeyRevoked).get(0);
-        PGPSignature revalidatedSubkey = BCUtil.readSignatures(sigSubkeyRevalidated).get(0);
+        PGPSignature predatesPrimaryKey = SignatureUtils.readSignatures(sigPredatesPrimaryKey).get(0);
+        PGPSignature unboundSubkey = SignatureUtils.readSignatures(sigSigningKeyUnbound).get(0);
+        PGPSignature revokedSubkey = SignatureUtils.readSignatures(sigSubkeyRevoked).get(0);
+        PGPSignature revalidatedSubkey = SignatureUtils.readSignatures(sigSubkeyRevalidated).get(0);
 
         Policy policy = PGPainless.getPolicy();
         Date validationDate = new Date();
@@ -460,10 +459,10 @@ public class SignatureChainValidatorTest {
                 "=lkHs\n" +
                 "-----END PGP ARMORED FILE-----\n";
 
-        PGPSignature predatesPrimaryKey = BCUtil.readSignatures(sigPredatesPrimaryKey).get(0);
-        PGPSignature unboundKey = BCUtil.readSignatures(sigUnboundBeforeHardRevocation).get(0);
-        PGPSignature afterHardRevocation = BCUtil.readSignatures(sigAfterHardRevocation).get(0);
-        PGPSignature afterRevalidation = BCUtil.readSignatures(sigAfterRevalidation).get(0);
+        PGPSignature predatesPrimaryKey = SignatureUtils.readSignatures(sigPredatesPrimaryKey).get(0);
+        PGPSignature unboundKey = SignatureUtils.readSignatures(sigUnboundBeforeHardRevocation).get(0);
+        PGPSignature afterHardRevocation = SignatureUtils.readSignatures(sigAfterHardRevocation).get(0);
+        PGPSignature afterRevalidation = SignatureUtils.readSignatures(sigAfterRevalidation).get(0);
 
         Policy policy = PGPainless.getPolicy();
         Date validationDate = new Date();
@@ -610,10 +609,10 @@ public class SignatureChainValidatorTest {
                 "-----END PGP ARMORED FILE-----\n";
 
         PGPPublicKeyRing publicKeys = PGPainless.readKeyRing().publicKeyRing(keyWithSoftRev);
-        PGPSignature predatesPrimaryKey = BCUtil.readSignatures(sigPredatesPrimaryKey).get(0);
-        PGPSignature keyIsValid = BCUtil.readSignatures(sigKeyIsValid).get(0);
-        PGPSignature keyIsRevoked = BCUtil.readSignatures(sigKeyIsRevoked).get(0);
-        PGPSignature keyIsRevalidated = BCUtil.readSignatures(sigKeyIsRevalidated).get(0);
+        PGPSignature predatesPrimaryKey = SignatureUtils.readSignatures(sigPredatesPrimaryKey).get(0);
+        PGPSignature keyIsValid = SignatureUtils.readSignatures(sigKeyIsValid).get(0);
+        PGPSignature keyIsRevoked = SignatureUtils.readSignatures(sigKeyIsRevoked).get(0);
+        PGPSignature keyIsRevalidated = SignatureUtils.readSignatures(sigKeyIsRevalidated).get(0);
         Policy policy = PGPainless.getPolicy();
         String data = "Hello, World";
 
@@ -765,10 +764,10 @@ public class SignatureChainValidatorTest {
                 "-----END PGP ARMORED FILE-----\n";
 
         PGPPublicKeyRing publicKeys = PGPainless.readKeyRing().publicKeyRing(key);
-        PGPSignature predatesPrimaryKey = BCUtil.readSignatures(sigPredatesPrimaryKey).get(0);
-        PGPSignature keyNotBound = BCUtil.readSignatures(sigSubkeyNotBound).get(0);
-        PGPSignature keyRevoked = BCUtil.readSignatures(sigKeyRevoked).get(0);
-        PGPSignature valid = BCUtil.readSignatures(sigKeyValid).get(0);
+        PGPSignature predatesPrimaryKey = SignatureUtils.readSignatures(sigPredatesPrimaryKey).get(0);
+        PGPSignature keyNotBound = SignatureUtils.readSignatures(sigSubkeyNotBound).get(0);
+        PGPSignature keyRevoked = SignatureUtils.readSignatures(sigKeyRevoked).get(0);
+        PGPSignature valid = SignatureUtils.readSignatures(sigKeyValid).get(0);
 
         Policy policy = PGPainless.getPolicy();
         String data = "Hello, World";
@@ -916,10 +915,10 @@ public class SignatureChainValidatorTest {
                 "-----END PGP ARMORED FILE-----\n";
 
         PGPPublicKeyRing publicKeys = PGPainless.readKeyRing().publicKeyRing(key);
-        PGPSignature predatesPrimaryKey = BCUtil.readSignatures(sigPredatesPrimaryKey).get(0);
-        PGPSignature valid = BCUtil.readSignatures(sigValid).get(0);
-        PGPSignature revoked = BCUtil.readSignatures(sigRevoked).get(0);
-        PGPSignature revalidated = BCUtil.readSignatures(sigReLegitimized).get(0);
+        PGPSignature predatesPrimaryKey = SignatureUtils.readSignatures(sigPredatesPrimaryKey).get(0);
+        PGPSignature valid = SignatureUtils.readSignatures(sigValid).get(0);
+        PGPSignature revoked = SignatureUtils.readSignatures(sigRevoked).get(0);
+        PGPSignature revalidated = SignatureUtils.readSignatures(sigReLegitimized).get(0);
 
         Policy policy = PGPainless.getPolicy();
         Date validationDate = new Date();
@@ -1246,18 +1245,18 @@ public class SignatureChainValidatorTest {
         PGPPublicKeyRing keysB = PGPainless.readKeyRing().publicKeyRing(keyB);
         PGPPublicKeyRing keysC = PGPainless.readKeyRing().publicKeyRing(keyC);
 
-        PGPSignature sigAT0 = BCUtil.readSignatures(keyASigT0).get(0);
-        PGPSignature sigAT1_T2 = BCUtil.readSignatures(keyASigT1_T2).get(0);
-        PGPSignature sigAT2_T3 = BCUtil.readSignatures(keyASigT2_T3).get(0);
-        PGPSignature sigAT3_now = BCUtil.readSignatures(keyASigT3_now).get(0);
-        PGPSignature sigBT0 = BCUtil.readSignatures(keyBSigT0).get(0);
-        PGPSignature sigBT1_T2 = BCUtil.readSignatures(keyBSigT1_T2).get(0);
-        PGPSignature sigBT2_T3 = BCUtil.readSignatures(keyBSigT2_T3).get(0);
-        PGPSignature sigBT3_now = BCUtil.readSignatures(keyBSigT3_now).get(0);
-        PGPSignature sigCT0 = BCUtil.readSignatures(keyCSigT0).get(0);
-        PGPSignature sigCT1_T2 = BCUtil.readSignatures(keyCSigT1_T2).get(0);
-        PGPSignature sigCT2_T3 = BCUtil.readSignatures(keyCSigT2_T3).get(0);
-        PGPSignature sigCT3_now = BCUtil.readSignatures(keyCSigT3_now).get(0);
+        PGPSignature sigAT0 = SignatureUtils.readSignatures(keyASigT0).get(0);
+        PGPSignature sigAT1_T2 = SignatureUtils.readSignatures(keyASigT1_T2).get(0);
+        PGPSignature sigAT2_T3 = SignatureUtils.readSignatures(keyASigT2_T3).get(0);
+        PGPSignature sigAT3_now = SignatureUtils.readSignatures(keyASigT3_now).get(0);
+        PGPSignature sigBT0 = SignatureUtils.readSignatures(keyBSigT0).get(0);
+        PGPSignature sigBT1_T2 = SignatureUtils.readSignatures(keyBSigT1_T2).get(0);
+        PGPSignature sigBT2_T3 = SignatureUtils.readSignatures(keyBSigT2_T3).get(0);
+        PGPSignature sigBT3_now = SignatureUtils.readSignatures(keyBSigT3_now).get(0);
+        PGPSignature sigCT0 = SignatureUtils.readSignatures(keyCSigT0).get(0);
+        PGPSignature sigCT1_T2 = SignatureUtils.readSignatures(keyCSigT1_T2).get(0);
+        PGPSignature sigCT2_T3 = SignatureUtils.readSignatures(keyCSigT2_T3).get(0);
+        PGPSignature sigCT3_now = SignatureUtils.readSignatures(keyCSigT3_now).get(0);
 
         Policy policy = PGPainless.getPolicy();
         Date validationDate = new Date();

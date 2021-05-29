@@ -30,7 +30,6 @@ import org.junit.jupiter.api.Test;
 import org.pgpainless.PGPainless;
 import org.pgpainless.exception.SignatureValidationException;
 import org.pgpainless.policy.Policy;
-import org.pgpainless.util.BCUtil;
 
 /**
  * Explores how subpackets on binding sigs are handled.
@@ -1918,7 +1917,7 @@ public class BindingSignatureSubpacketsTest {
 
     private void expectSignatureValidationSucceeds(String key, String message) throws IOException {
         PGPPublicKeyRing publicKeys = PGPainless.readKeyRing().publicKeyRing(key);
-        PGPSignature signature = BCUtil.readSignatures(sig).get(0);
+        PGPSignature signature = SignatureUtils.readSignatures(sig).get(0);
 
         try {
             SignatureChainValidator.validateSignatureChain(signature, getSignedData(data), publicKeys, policy, validationDate);
@@ -1932,7 +1931,7 @@ public class BindingSignatureSubpacketsTest {
 
     private void expectSignatureValidationFails(String key, String message) throws IOException {
         PGPPublicKeyRing publicKeys = PGPainless.readKeyRing().publicKeyRing(key);
-        PGPSignature signature = BCUtil.readSignatures(sig).get(0);
+        PGPSignature signature = SignatureUtils.readSignatures(sig).get(0);
 
         assertThrows(SignatureValidationException.class, () ->
                         SignatureChainValidator.validateSignatureChain(
