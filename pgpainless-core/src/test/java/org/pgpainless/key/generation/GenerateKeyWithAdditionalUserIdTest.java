@@ -38,6 +38,7 @@ import org.pgpainless.implementation.ImplementationFactory;
 import org.pgpainless.key.generation.type.KeyType;
 import org.pgpainless.key.generation.type.rsa.RsaLength;
 import org.pgpainless.key.util.KeyRingUtils;
+import org.pgpainless.key.util.UserId;
 import org.pgpainless.util.ArmoredOutputStreamFactory;
 
 public class GenerateKeyWithAdditionalUserIdTest {
@@ -52,9 +53,9 @@ public class GenerateKeyWithAdditionalUserIdTest {
                 .withPrimaryKey(KeySpec.getBuilder(KeyType.RSA(RsaLength._3072))
                         .withKeyFlags(KeyFlag.CERTIFY_OTHER, KeyFlag.SIGN_DATA, KeyFlag.ENCRYPT_COMMS)
                         .withDefaultAlgorithms())
-                .withPrimaryUserId("primary@user.id")
-                .withAdditionalUserId("additional@user.id")
-                .withAdditionalUserId("additional2@user.id")
+                .withPrimaryUserId(UserId.onlyEmail("primary@user.id"))
+                .withAdditionalUserId(UserId.onlyEmail("additional@user.id"))
+                .withAdditionalUserId(UserId.onlyEmail("additional2@user.id"))
                 .withAdditionalUserId("\ttrimThis@user.id     ")
                 .setExpirationDate(expiration)
                 .withoutPassphrase()
