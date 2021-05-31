@@ -40,7 +40,7 @@ import org.pgpainless.key.TestKeys;
 import org.pgpainless.key.generation.KeySpec;
 import org.pgpainless.key.generation.type.KeyType;
 import org.pgpainless.key.generation.type.eddsa.EdDSACurve;
-import org.pgpainless.key.generation.type.xdh.XDHCurve;
+import org.pgpainless.key.generation.type.xdh.XDHSpec;
 import org.pgpainless.key.protection.PasswordBasedSecretKeyRingProtector;
 import org.pgpainless.key.protection.SecretKeyRingProtector;
 import org.pgpainless.key.protection.UnprotectedKeysProtector;
@@ -51,7 +51,7 @@ public class UserIdRevocationTest {
     @Test
     public void testRevocationWithoutRevocationAttributes() throws PGPException, InvalidAlgorithmParameterException, NoSuchAlgorithmException {
         PGPSecretKeyRing secretKeys = PGPainless.generateKeyRing()
-                .withSubKey(KeySpec.getBuilder(KeyType.XDH(XDHCurve._X25519))
+                .withSubKey(KeySpec.getBuilder(KeyType.XDH(XDHSpec._X25519))
                         .withKeyFlags(KeyFlag.ENCRYPT_COMMS)
                         .withDefaultAlgorithms())
                 .withPrimaryKey(KeySpec.getBuilder(KeyType.EDDSA(EdDSACurve._Ed25519))
@@ -91,7 +91,7 @@ public class UserIdRevocationTest {
     @Test
     public void testRevocationWithRevocationReason() throws InvalidAlgorithmParameterException, NoSuchAlgorithmException, PGPException {
         PGPSecretKeyRing secretKeys = PGPainless.generateKeyRing()
-                .withSubKey(KeySpec.getBuilder(KeyType.XDH(XDHCurve._X25519))
+                .withSubKey(KeySpec.getBuilder(KeyType.XDH(XDHSpec._X25519))
                         .withKeyFlags(KeyFlag.ENCRYPT_COMMS)
                         .withDefaultAlgorithms())
                 .withPrimaryKey(KeySpec.getBuilder(KeyType.EDDSA(EdDSACurve._Ed25519))

@@ -23,14 +23,14 @@ import org.pgpainless.key.generation.type.KeyType;
 
 public final class XDH implements KeyType {
 
-    private final XDHCurve curve;
+    private final XDHSpec spec;
 
-    private XDH(XDHCurve curve) {
-        this.curve = curve;
+    private XDH(XDHSpec spec) {
+        this.spec = spec;
     }
 
-    public static XDH fromCurve(XDHCurve curve) {
-        return new XDH(curve);
+    public static XDH fromSpec(XDHSpec spec) {
+        return new XDH(spec);
     }
 
     @Override
@@ -45,7 +45,7 @@ public final class XDH implements KeyType {
 
     @Override
     public AlgorithmParameterSpec getAlgorithmSpec() {
-        return new ECNamedCurveGenParameterSpec(curve.getName());
+        return new ECNamedCurveGenParameterSpec(spec.getName());
     }
 
 }

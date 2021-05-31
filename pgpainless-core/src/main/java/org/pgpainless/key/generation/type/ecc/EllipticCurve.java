@@ -17,11 +17,13 @@ package org.pgpainless.key.generation.type.ecc;
 
 import javax.annotation.Nonnull;
 
+import org.pgpainless.key.generation.type.xdh.XDHSpec;
+
 /**
  * Elliptic curves for use with
  * {@link org.pgpainless.key.generation.type.ecc.ecdh.ECDH}/{@link org.pgpainless.key.generation.type.ecc.ecdsa.ECDSA}.
  * For curve25519 related curve definitions see
- * {@link org.pgpainless.key.generation.type.xdh.XDHCurve} and {@link org.pgpainless.key.generation.type.eddsa.EdDSACurve}.
+ * {@link XDHSpec} and {@link org.pgpainless.key.generation.type.eddsa.EdDSACurve}.
  */
 public enum EllipticCurve {
     _P256("prime256v1"), // prime256v1 is equivalent to P-256, see https://tools.ietf.org/search/rfc4492#page-32

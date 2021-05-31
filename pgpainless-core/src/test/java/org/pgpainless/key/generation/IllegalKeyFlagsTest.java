@@ -24,7 +24,7 @@ import org.pgpainless.algorithm.KeyFlag;
 import org.pgpainless.implementation.ImplementationFactory;
 import org.pgpainless.key.generation.type.KeyType;
 import org.pgpainless.key.generation.type.eddsa.EdDSACurve;
-import org.pgpainless.key.generation.type.xdh.XDHCurve;
+import org.pgpainless.key.generation.type.xdh.XDHSpec;
 
 public class IllegalKeyFlagsTest {
 
@@ -33,17 +33,17 @@ public class IllegalKeyFlagsTest {
     public void testKeyCannotCarryFlagsTest(ImplementationFactory implementationFactory) {
         ImplementationFactory.setFactoryImplementation(implementationFactory);
         assertThrows(IllegalArgumentException.class, () -> PGPainless.generateKeyRing()
-                .withPrimaryKey(KeySpec.getBuilder(KeyType.XDH(XDHCurve._X25519))
+                .withPrimaryKey(KeySpec.getBuilder(KeyType.XDH(XDHSpec._X25519))
                         .withKeyFlags(KeyFlag.SIGN_DATA) // <- should throw
                         .withDefaultAlgorithms()));
 
         assertThrows(IllegalArgumentException.class, () -> PGPainless.generateKeyRing()
-                .withPrimaryKey(KeySpec.getBuilder(KeyType.XDH(XDHCurve._X25519))
+                .withPrimaryKey(KeySpec.getBuilder(KeyType.XDH(XDHSpec._X25519))
                         .withKeyFlags(KeyFlag.CERTIFY_OTHER) // <- should throw
                         .withDefaultAlgorithms()));
 
         assertThrows(IllegalArgumentException.class, () -> PGPainless.generateKeyRing()
-                .withPrimaryKey(KeySpec.getBuilder(KeyType.XDH(XDHCurve._X25519))
+                .withPrimaryKey(KeySpec.getBuilder(KeyType.XDH(XDHSpec._X25519))
                         .withKeyFlags(KeyFlag.AUTHENTICATION) // <- should throw
                         .withDefaultAlgorithms()));
 

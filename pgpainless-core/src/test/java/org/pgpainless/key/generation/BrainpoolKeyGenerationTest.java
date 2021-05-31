@@ -1,0 +1,141 @@
+/*
+ * Copyright 2021 Paul Schaub.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+package org.pgpainless.key.generation;
+
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.assertTrue;
+
+import java.security.InvalidAlgorithmParameterException;
+import java.security.NoSuchAlgorithmException;
+import java.util.Iterator;
+
+import org.bouncycastle.openpgp.PGPException;
+import org.bouncycastle.openpgp.PGPPublicKey;
+import org.bouncycastle.openpgp.PGPSecretKey;
+import org.bouncycastle.openpgp.PGPSecretKeyRing;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.MethodSource;
+import org.pgpainless.PGPainless;
+import org.pgpainless.algorithm.KeyFlag;
+import org.pgpainless.algorithm.PublicKeyAlgorithm;
+import org.pgpainless.implementation.ImplementationFactory;
+import org.pgpainless.key.generation.type.KeyType;
+import org.pgpainless.key.generation.type.ecc.EllipticCurve;
+import org.pgpainless.key.generation.type.eddsa.EdDSACurve;
+import org.pgpainless.key.generation.type.rsa.RsaLength;
+import org.pgpainless.key.generation.type.xdh.XDHSpec;
+import org.pgpainless.key.info.KeyInfo;
+import org.pgpainless.key.util.UserId;
+import org.pgpainless.util.Passphrase;
+
+public class BrainpoolKeyGenerationTest {
+
+    @ParameterizedTest
+    @MethodSource("org.pgpainless.util.TestUtil#provideImplementationFactories")
+    public void generateEcKeysTest(ImplementationFactory implementationFactory)
+            throws InvalidAlgorithmParameterException, NoSuchAlgorithmException, PGPException {
+        ImplementationFactory.setFactoryImplementation(implementationFactory);
+
+        for (EllipticCurve curve : EllipticCurve.values()) {
+            PGPSecretKeyRing secretKeys = generateKey(
+                    KeySpec.getBuilder(KeyType.ECDSA(curve))
+                            .withKeyFlags(KeyFlag.CERTIFY_OTHER, KeyFlag.SIGN_DATA)
+                            .withDefaultAlgorithms(),
+                    KeySpec.getBuilder(KeyType.ECDH(curve))
+                            .withKeyFlags(KeyFlag.ENCRYPT_COMMS, KeyFlag.ENCRYPT_STORAGE)
+                            .withDefaultAlgorithms(),
+                    "Elliptic Curve <elliptic@curve.key>");
+
+            assertEquals(PublicKeyAlgorithm.ECDSA, PublicKeyAlgorithm.fromId(secretKeys.getPublicKey().getAlgorithm()));
+            Iterator<PGPSecretKey> secretKeyIterator = secretKeys.iterator();
+
+            PGPSecretKey primaryKey = secretKeyIterator.next();
+            KeyInfo primaryInfo = new KeyInfo(primaryKey);
+            assertEquals(curve.getName(), primaryInfo.getCurveName());
+            assertFalse(primaryInfo.isEncrypted());
+            assertTrue(primaryInfo.isDecrypted());
+            assertFalse(primaryInfo.hasDummyS2K());
+
+            PGPSecretKey subKey = secretKeyIterator.next();
+            KeyInfo subInfo = new KeyInfo(subKey);
+            assertEquals(curve.getName(), subInfo.getCurveName());
+        }
+    }
+
+    @ParameterizedTest
+    @MethodSource("org.pgpainless.util.TestUtil#provideImplementationFactories")
+    public void generateEdDSAKeyTest(ImplementationFactory implementationFactory)
+            throws PGPException, InvalidAlgorithmParameterException, NoSuchAlgorithmException {
+        ImplementationFactory.setFactoryImplementation(implementationFactory);
+
+        PGPSecretKeyRing secretKeys = PGPainless.generateKeyRing()
+                .withSubKey(KeySpec.getBuilder(KeyType.EDDSA(EdDSACurve._Ed25519))
+                        .withKeyFlags(KeyFlag.SIGN_DATA)
+                        .withDefaultAlgorithms())
+                .withSubKey(KeySpec.getBuilder(KeyType.XDH(XDHSpec._X25519))
+                        .withKeyFlags(KeyFlag.ENCRYPT_COMMS, KeyFlag.ENCRYPT_STORAGE)
+                        .withDefaultAlgorithms())
+                .withSubKey(KeySpec.getBuilder(KeyType.RSA(RsaLength._3072))
+                        .withKeyFlags(KeyFlag.SIGN_DATA)
+                        .withDefaultAlgorithms())
+                .withPrimaryKey(KeySpec.getBuilder(KeyType.ECDSA(EllipticCurve._BRAINPOOLP384R1))
+                        .withKeyFlags(KeyFlag.CERTIFY_OTHER)
+                        .withDefaultAlgorithms())
+                .withPrimaryUserId(UserId.nameAndEmail("Alice", "alice@pgpainless.org"))
+                .withPassphrase(Passphrase.fromPassword("passphrase"))
+                .build();
+
+        for (PGPSecretKey key : secretKeys) {
+            KeyInfo info = new KeyInfo(key);
+            assertTrue(info.isEncrypted());
+            assertFalse(info.isDecrypted());
+
+            PGPPublicKey pubKey = key.getPublicKey();
+            assertFalse(new KeyInfo(pubKey).isEncrypted());
+            assertTrue(new KeyInfo(pubKey).isDecrypted());
+            assertFalse(new KeyInfo(pubKey).hasDummyS2K());
+        }
+
+        Iterator<PGPSecretKey> iterator = secretKeys.iterator();
+        PGPSecretKey ecdsaPrim = iterator.next();
+        KeyInfo ecdsaInfo = new KeyInfo(ecdsaPrim);
+        assertEquals(EllipticCurve._BRAINPOOLP384R1.getName(), ecdsaInfo.getCurveName());
+
+        PGPSecretKey eddsaSub = iterator.next();
+        KeyInfo eddsaInfo = new KeyInfo(eddsaSub);
+        assertEquals(EdDSACurve._Ed25519.getName(), eddsaInfo.getCurveName());
+
+        PGPSecretKey xdhSub = iterator.next();
+        KeyInfo xdhInfo = new KeyInfo(xdhSub);
+        assertEquals(XDHSpec._X25519.getCurveName(), xdhInfo.getCurveName());
+
+        PGPSecretKey rsaSub = iterator.next();
+        KeyInfo rsaInfo = new KeyInfo(rsaSub);
+        assertThrows(IllegalArgumentException.class, rsaInfo::getCurveName, "RSA is not a curve-based encryption system");
+    }
+
+    public PGPSecretKeyRing generateKey(KeySpec primaryKey, KeySpec subKey, String userId) throws InvalidAlgorithmParameterException, NoSuchAlgorithmException, PGPException {
+        PGPSecretKeyRing secretKeys = PGPainless.generateKeyRing()
+                .withSubKey(subKey)
+                .withPrimaryKey(primaryKey)
+                .withPrimaryUserId(userId)
+                .withoutPassphrase()
+                .build();
+        return secretKeys;
+    }
+}

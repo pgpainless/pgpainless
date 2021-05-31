@@ -38,7 +38,7 @@ import org.pgpainless.key.generation.KeySpec;
 import org.pgpainless.key.generation.type.KeyType;
 import org.pgpainless.key.generation.type.ecc.EllipticCurve;
 import org.pgpainless.key.generation.type.eddsa.EdDSACurve;
-import org.pgpainless.key.generation.type.xdh.XDHCurve;
+import org.pgpainless.key.generation.type.xdh.XDHSpec;
 import org.pgpainless.util.selection.key.impl.HasAllKeyFlagSelectionStrategy;
 import org.pgpainless.util.selection.key.impl.HasAnyKeyFlagSelectionStrategy;
 import org.pgpainless.key.util.KeyRingUtils;
@@ -51,7 +51,7 @@ public class KeyFlagBasedSelectionStrategyTest {
                 .withSubKey(KeySpec.getBuilder(KeyType.ECDSA(EllipticCurve._P256))
                         .withKeyFlags(KeyFlag.SIGN_DATA)
                         .withDefaultAlgorithms())
-                .withSubKey(KeySpec.getBuilder(KeyType.XDH(XDHCurve._X25519))
+                .withSubKey(KeySpec.getBuilder(KeyType.XDH(XDHSpec._X25519))
                         .withKeyFlags(KeyFlag.ENCRYPT_COMMS)
                         .withDefaultAlgorithms())
                 .withPrimaryKey(KeySpec.getBuilder(KeyType.EDDSA(EdDSACurve._Ed25519))
@@ -131,7 +131,7 @@ public class KeyFlagBasedSelectionStrategyTest {
                 .withSubKey(KeySpec.getBuilder(KeyType.ECDSA(EllipticCurve._P256))
                         .withKeyFlags(KeyFlag.SIGN_DATA)
                         .withDefaultAlgorithms())
-                .withSubKey(KeySpec.getBuilder(KeyType.XDH(XDHCurve._X25519))
+                .withSubKey(KeySpec.getBuilder(KeyType.XDH(XDHSpec._X25519))
                         .withKeyFlags(KeyFlag.ENCRYPT_COMMS)
                         .withDefaultAlgorithms())
                 .withPrimaryKey(KeySpec.getBuilder(KeyType.EDDSA(EdDSACurve._Ed25519))

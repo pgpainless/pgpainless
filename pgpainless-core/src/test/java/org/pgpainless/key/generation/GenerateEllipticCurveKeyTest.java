@@ -28,7 +28,7 @@ import org.pgpainless.algorithm.KeyFlag;
 import org.pgpainless.implementation.ImplementationFactory;
 import org.pgpainless.key.generation.type.KeyType;
 import org.pgpainless.key.generation.type.eddsa.EdDSACurve;
-import org.pgpainless.key.generation.type.xdh.XDHCurve;
+import org.pgpainless.key.generation.type.xdh.XDHSpec;
 import org.pgpainless.key.util.UserId;
 import org.pgpainless.util.ArmorUtils;
 
@@ -39,7 +39,7 @@ public class GenerateEllipticCurveKeyTest {
     public void test(ImplementationFactory implementationFactory) throws InvalidAlgorithmParameterException, NoSuchAlgorithmException, PGPException, IOException {
         ImplementationFactory.setFactoryImplementation(implementationFactory);
         PGPSecretKeyRing keyRing = PGPainless.generateKeyRing()
-                .withSubKey(KeySpec.getBuilder(KeyType.XDH(XDHCurve._X25519))
+                .withSubKey(KeySpec.getBuilder(KeyType.XDH(XDHSpec._X25519))
                         .withKeyFlags(KeyFlag.ENCRYPT_COMMS)
                         .withDefaultAlgorithms())
                 .withPrimaryKey(KeySpec.getBuilder(KeyType.EDDSA(EdDSACurve._Ed25519))

@@ -15,6 +15,7 @@
  */
 package org.pgpainless.key.info;
 
+import org.bouncycastle.asn1.ASN1ObjectIdentifier;
 import org.bouncycastle.bcpg.ECDHPublicBCPGKey;
 import org.bouncycastle.bcpg.ECDSAPublicBCPGKey;
 import org.bouncycastle.bcpg.ECPublicBCPGKey;
@@ -24,6 +25,7 @@ import org.bouncycastle.jcajce.provider.asymmetric.util.ECUtil;
 import org.bouncycastle.openpgp.PGPPublicKey;
 import org.bouncycastle.openpgp.PGPSecretKey;
 import org.pgpainless.algorithm.PublicKeyAlgorithm;
+import org.pgpainless.key.generation.type.eddsa.EdDSACurve;
 
 public class KeyInfo {
 
@@ -89,13 +91,20 @@ public class KeyInfo {
                 break;
             }
             default:
-                throw new IllegalArgumentException("Not a EC public key (" + algorithm + ")");
+                throw new IllegalArgumentException("Not an elliptic curve public key (" + algorithm + ")");
         }
         return getCurveName(key);
     }
 
     public static String getCurveName(ECPublicBCPGKey key) {
-        return ECUtil.getCurveName(key.getCurveOID());
+        ASN1ObjectIdentifier identifier = key.getCurveOID();
+
+        // Workaround for ECUtil not recognizing ed25519
+        if (identifier.getId().equals("1.3.6.1.4.1.11591.15.1")) {
+            return EdDSACurve._Ed25519.getName();
+        }
+
+        return ECUtil.getCurveName(identifier);
     }
 
     /**

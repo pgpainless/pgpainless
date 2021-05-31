@@ -31,7 +31,7 @@ import org.pgpainless.key.generation.KeyRingBuilderInterface;
 import org.pgpainless.key.generation.KeySpec;
 import org.pgpainless.key.generation.type.KeyType;
 import org.pgpainless.key.generation.type.eddsa.EdDSACurve;
-import org.pgpainless.key.generation.type.xdh.XDHCurve;
+import org.pgpainless.key.generation.type.xdh.XDHSpec;
 import org.pgpainless.sop.Print;
 import picocli.CommandLine;
 
@@ -64,7 +64,7 @@ public class GenerateKey implements Runnable {
                     .withSubKey(KeySpec.getBuilder(KeyType.EDDSA(EdDSACurve._Ed25519))
                             .withKeyFlags(KeyFlag.SIGN_DATA)
                             .withDefaultAlgorithms())
-                    .withSubKey(KeySpec.getBuilder(KeyType.XDH(XDHCurve._X25519))
+                    .withSubKey(KeySpec.getBuilder(KeyType.XDH(XDHSpec._X25519))
                             .withKeyFlags(KeyFlag.ENCRYPT_COMMS, KeyFlag.ENCRYPT_STORAGE)
                             .withDefaultAlgorithms())
                     .withPrimaryKey(KeySpec.getBuilder(KeyType.EDDSA(EdDSACurve._Ed25519))

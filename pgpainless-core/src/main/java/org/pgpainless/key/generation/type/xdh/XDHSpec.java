@@ -17,17 +17,23 @@ package org.pgpainless.key.generation.type.xdh;
 
 import javax.annotation.Nonnull;
 
-public enum XDHCurve {
-    _X25519("X25519"),
+public enum XDHSpec {
+    _X25519("X25519", "curve25519"),
     ;
 
     final String name;
+    final String curveName;
 
-    XDHCurve(@Nonnull String name) {
+    XDHSpec(@Nonnull String name, @Nonnull String curveName) {
         this.name = name;
+        this.curveName = curveName;
     }
 
     public String getName() {
         return name;
+    }
+
+    public String getCurveName() {
+        return curveName;
     }
 }

@@ -56,7 +56,7 @@ import org.pgpainless.implementation.ImplementationFactory;
 import org.pgpainless.key.generation.type.KeyType;
 import org.pgpainless.key.generation.type.eddsa.EdDSACurve;
 import org.pgpainless.key.generation.type.rsa.RsaLength;
-import org.pgpainless.key.generation.type.xdh.XDHCurve;
+import org.pgpainless.key.generation.type.xdh.XDHSpec;
 import org.pgpainless.key.protection.UnlockSecretKey;
 import org.pgpainless.key.util.UserId;
 import org.pgpainless.provider.ProviderFactory;
@@ -201,7 +201,7 @@ public class KeyRingBuilder implements KeyRingBuilderInterface {
             throws PGPException, NoSuchAlgorithmException, InvalidAlgorithmParameterException {
         WithAdditionalUserIdOrPassphrase builder = this
                 .withSubKey(
-                        KeySpec.getBuilder(KeyType.XDH(XDHCurve._X25519))
+                        KeySpec.getBuilder(KeyType.XDH(XDHSpec._X25519))
                                 .withKeyFlags(KeyFlag.ENCRYPT_STORAGE, KeyFlag.ENCRYPT_COMMS)
                                 .withDefaultAlgorithms())
                 .withPrimaryKey(
@@ -229,7 +229,7 @@ public class KeyRingBuilder implements KeyRingBuilderInterface {
             throws InvalidAlgorithmParameterException, NoSuchAlgorithmException, PGPException {
         WithAdditionalUserIdOrPassphrase builder = this
                 .withSubKey(
-                        KeySpec.getBuilder(KeyType.XDH(XDHCurve._X25519))
+                        KeySpec.getBuilder(KeyType.XDH(XDHSpec._X25519))
                                 .withKeyFlags(KeyFlag.ENCRYPT_STORAGE, KeyFlag.ENCRYPT_COMMS)
                                 .withDefaultAlgorithms())
                 .withSubKey(

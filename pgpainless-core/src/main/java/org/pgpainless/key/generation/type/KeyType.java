@@ -26,7 +26,7 @@ import org.pgpainless.key.generation.type.eddsa.EdDSACurve;
 import org.pgpainless.key.generation.type.rsa.RsaLength;
 import org.pgpainless.key.generation.type.rsa.RSA;
 import org.pgpainless.key.generation.type.xdh.XDH;
-import org.pgpainless.key.generation.type.xdh.XDHCurve;
+import org.pgpainless.key.generation.type.xdh.XDHSpec;
 
 public interface KeyType {
 
@@ -117,7 +117,7 @@ public interface KeyType {
         return EdDSA.fromCurve(curve);
     }
 
-    static KeyType XDH(XDHCurve curve) {
-        return XDH.fromCurve(curve);
+    static KeyType XDH(XDHSpec curve) {
+        return XDH.fromSpec(curve);
     }
 }

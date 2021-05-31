@@ -143,4 +143,40 @@ public class KeyRingInfoTest {
         assertEquals(KeyRingUtils.requirePrimarySecretKeyFrom(secretKeys),
                 KeyRingUtils.requireSecretKeyFrom(secretKeys, secretKeys.getPublicKey().getKeyID()));
     }
+
+    @Test
+    public void dummyS2KTest() throws PGPException, IOException {
+        String withDummyS2K = "-----BEGIN PGP PRIVATE KEY BLOCK-----\n" +
+                "\n" +
+                "lQCVBFZuSwwBBAC04VdUUq2REb7+IF/x21yOV3kIn798XRl7A7RiGcE9VpBjT5xM\n" +
+                "xtghWhH1mxyT+nrS36OJxdvtgJb3NB6hhh3qBQC6DmCGbWe61tT6TfyFbN6OvzZK\n" +
+                "MEa6RMunyd+2ErX4RLOcO+9X7a0weVASH5wRYjjqQtvPvt1/k25sloPnZQARAQAB\n" +
+                "/gNlAkdOVQG0EyA8dGVzdEBleGFtcGxlLmNvbT6IuAQTAQIAIgUCVm5LDAIbLwYL\n" +
+                "CQgHAwIGFQgCCQoLBBYCAwECHgECF4AACgkQwaXYFkPfLEVROQP/RF4GXi/yGm6y\n" +
+                "QoDNXFkFiwNhJndayfZxf5Qa+JWz1ltLyal7Dm1c+U6/R/7D25gmEslI+5YrHpbE\n" +
+                "xWXyfG8DbX/5Ef9Be04e9IvjoZboeRpxmyb8IflEw90tJGL8YAK2xWohvayigPnj\n" +
+                "jhycZQPMuMK9X35o89oJs+p1MxcC9EOwAgAAnQH9BFZuSwwBBADBDfq8oUK8Jr8I\n" +
+                "VkQEEEZzQ7AWh03oTVodROebMz4vAk34HkrebZuxT4U/8yFIP+kJ3Yie3T8V6F8j\n" +
+                "F3a3ZUHNj2ghgxMbPH+kRKwBphvX8Fb5GtoFVbJq1tNMDaLhVRIkDLBTqQp/20sp\n" +
+                "cuU5+OMzQRUt+Z6GxMaUwt5zLHPUgwARAQAB/gMDAvozhXZdexxPYMKrp7yC2FNN\n" +
+                "pVAC61hD0VQKvFeeeXZIGOBx57F1wVBNjuPyglji0kaX0m9yYI+I1V546END4aV/\n" +
+                "hXlZve3r6qYVE9W+T1imwx1NXPSb0j/nMmdiFYFXuyz70yEO+cDwHONzmRLdBZlP\n" +
+                "1DKYBcjF7rwF0gWuIoWgDYdfECo/aANSRQtKw5Q6UowQLzpHTV+X6iL/CbjIL5f8\n" +
+                "1KXPMO1AubxzAW+iatzI7jfL0MvA1FxRpMjpHc1uyT8oIfic17PklbjcnLe5GH78\n" +
+                "2AEGhXwn4bY1H+ss0bxmkJV9HkcMokJUVMQxKw+a6+/IuLXdFtcA5z4CDeIbt9rv\n" +
+                "+b8s0bfq9aW4kDxG3PDcyoMTrTuJLBd6/XwJgdtrmLSCtlU4fLzZEoAd2FVyWbS6\n" +
+                "Nys3eXgIBkRRokzKANknne78LpvIiamzinb0iJk2X+AYnRKoy1pUsC+unqaXm9YH\n" +
+                "fdpxv/OXLe13zhSJAT0EGAECAAkFAlZuSwwCGy4AqAkQwaXYFkPfLEWdIAQZAQIA\n" +
+                "BgUCVm5LDAAKCRBv1XiTGF5T/qsmA/9LOUNetM1QtsJ71OVdXE3dutUZULE/27DT\n" +
+                "rA/vvSfhzSFj3U3FnyI7AVsiiiwmnJnthf0zaa2HYBL844Bm7drtzGBNVvddgIJZ\n" +
+                "KBE0x2vUlTVc661e2FBhtLh6xX2nhEy9owc+C7PR9OXvGiET8tTRnUDUO3PgPkyA\n" +
+                "LkHfQMWMR11sA/0YQl4wf3knjk83DVVhFK5fT2lW4hmSO74tuCAA4V71C8B5rJzV\n" +
+                "q2vy1L2bGHAroe+LtX30LtZM5qWKzZzK7jjo1/eaXimOkJcnnpg6jmUP7TMkWpU7\n" +
+                "hlOQ3ZHjS2K5xJYJqBwP86TWPtDLxYD3mTlYtp2dDT8ogV/sEPPd44yWlrACAAA=\n" +
+                "=gU+0\n" +
+                "-----END PGP PRIVATE KEY BLOCK-----\n";
+
+        PGPSecretKeyRing secretKeys = PGPainless.readKeyRing().secretKeyRing(withDummyS2K);
+        assertTrue(new KeyInfo(secretKeys.getSecretKey()).hasDummyS2K());
+    }
 }
