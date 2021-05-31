@@ -624,6 +624,16 @@ public class KeyRingInfo {
         return SignatureUtils.getKeyExpirationDate(subkey.getCreationTime(), bindingSig);
     }
 
+    /**
+     * Return the latest date on which  the key ring is still usable for the given key flag.
+     * If a only a subkey is carrying the required flag and the primary key expires earlier than the subkey,
+     * the expiry date of the primary key is returned.
+     *
+     * This method might return null, if the primary key and a subkey with the required flag does not expire.
+     * @param use key flag representing the use case, eg. {@link KeyFlag#SIGN_DATA} or
+     * {@link KeyFlag#ENCRYPT_COMMS}/{@link KeyFlag#ENCRYPT_STORAGE}.
+     * @return latest date on which the key ring can be used for the given use case, or null if it can be used indefinitely.
+     */
     public Date getExpirationDateForUse(KeyFlag use) {
         if (use == KeyFlag.SPLIT || use == KeyFlag.SHARED) {
             throw new IllegalArgumentException("SPLIT and SHARED are not uses, but properties.");
@@ -634,6 +644,10 @@ public class KeyRingInfo {
         Date latestSubkeyExpirationDate = null;
 
         List<PGPPublicKey> keysWithFlag = getKeysWithKeyFlag(use);
+        if (keysWithFlag.isEmpty()) {
+            throw new NoSuchElementException("No key with the required key flag found.");
+        }
+
         for (PGPPublicKey key : keysWithFlag) {
             Date subkeyExpirationDate = getSubkeyExpirationDate(new OpenPgpV4Fingerprint(key));
             if (subkeyExpirationDate == null) {
@@ -752,6 +766,12 @@ public class KeyRingInfo {
         return encryptionKeys;
     }
 
+    /**
+     * Return a list of all keys which carry the provided key flag in their signature.
+     *
+     * @param flag flag
+     * @return keys with flag
+     */
     public List<PGPPublicKey> getKeysWithKeyFlag(KeyFlag flag) {
         List<PGPPublicKey> keysWithFlag = new ArrayList<>();
         for (PGPPublicKey key : getPublicKeys()) {
