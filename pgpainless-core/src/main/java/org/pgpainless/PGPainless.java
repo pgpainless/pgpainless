@@ -15,6 +15,8 @@
  */
 package org.pgpainless;
 
+import java.util.Date;
+
 import org.bouncycastle.openpgp.PGPKeyRing;
 import org.bouncycastle.openpgp.PGPSecretKeyRing;
 import org.pgpainless.algorithm.EncryptionPurpose;
@@ -106,6 +108,17 @@ public class PGPainless {
 
     /**
      * Verify a cleartext-signed message.
+     * Cleartext signed messages are often found in emails and look like this:
+     * <pre>
+     * {@code
+     * -----BEGIN PGP SIGNED MESSAGE-----
+     * Hash: [Hash algorithm]
+     * [Human Readable Message Body]
+     * -----BEGIN PGP SIGNATURE-----
+     * [Signature]
+     * -----END PGP SIGNATURE-----
+     * }
+     * </pre>
      *
      * @return builder
      */
@@ -113,12 +126,25 @@ public class PGPainless {
         return new VerifyCleartextSignaturesImpl();
     }
 
+    /**
+     * Make changes to a key ring.
+     * This method can be used to change key expiration dates and passphrases, or add/remove/revoke subkeys.
+     *
+     * After making the desired changes in the builder, the modified key ring can be extracted using {@link SecretKeyRingEditorInterface#done()}.
+     *
+     * @param secretKeys secret key ring
+     * @return builder
+     */
     public static SecretKeyRingEditorInterface modifyKeyRing(PGPSecretKeyRing secretKeys) {
         return new SecretKeyRingEditor(secretKeys);
     }
 
     /**
      * Quickly access information about a {@link org.bouncycastle.openpgp.PGPPublicKeyRing} / {@link PGPSecretKeyRing}.
+     * This method can be used to determine expiration dates, key flags and other information about a key.
+     *
+     * To evaluate a key at a given date (e.g. to determine if the key was allowed to create a certain signature)
+     * use {@link KeyRingInfo#KeyRingInfo(PGPKeyRing, Date)} instead.
      *
      * @param keyRing key ring
      * @return access object
@@ -127,6 +153,11 @@ public class PGPainless {
         return new KeyRingInfo(keyRing);
     }
 
+    /**
+     * Access, and make changes to PGPainless policy on acceptable/default algorithms etc.
+     *
+     * @return policy
+     */
     public static Policy getPolicy() {
         return Policy.getInstance();
     }
