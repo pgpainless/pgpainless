@@ -11,7 +11,7 @@ buildscript {
         mavenCentral()
     }
     dependencies {
-        classpath "org.kt3k.gradle.plugin:coveralls-gradle-plugin:2.8.2"
+        classpath "gradle.plugin.org.kt3k.gradle.plugin:coveralls-gradle-plugin:2.12.0"
     }
 }
 
@@ -245,7 +245,6 @@ apply plugin: "com.github.kt3k.coveralls"
 coveralls {
 	sourceDirs = files(subprojects.sourceSets.main.allSource.srcDirs).files.absolutePath
 }
-
 
 task jacocoRootReport(type: JacocoReport) {
     dependsOn = subprojects.jacocoTestReport
