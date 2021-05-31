@@ -22,18 +22,33 @@ import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import java.io.IOException;
+import java.security.InvalidAlgorithmParameterException;
+import java.security.NoSuchAlgorithmException;
+import java.util.Calendar;
 import java.util.Collections;
 import java.util.Date;
+import java.util.Iterator;
+import java.util.List;
 
 import org.bouncycastle.openpgp.PGPException;
+import org.bouncycastle.openpgp.PGPPublicKey;
 import org.bouncycastle.openpgp.PGPPublicKeyRing;
+import org.bouncycastle.openpgp.PGPSecretKey;
 import org.bouncycastle.openpgp.PGPSecretKeyRing;
 import org.junit.jupiter.api.Test;
 import org.pgpainless.PGPainless;
+import org.pgpainless.algorithm.KeyFlag;
 import org.pgpainless.algorithm.PublicKeyAlgorithm;
+import org.pgpainless.key.OpenPgpV4Fingerprint;
 import org.pgpainless.key.TestKeys;
+import org.pgpainless.key.generation.KeySpec;
+import org.pgpainless.key.generation.type.KeyType;
+import org.pgpainless.key.generation.type.ecc.EllipticCurve;
+import org.pgpainless.key.generation.type.eddsa.EdDSACurve;
+import org.pgpainless.key.protection.SecretKeyRingProtector;
 import org.pgpainless.key.protection.UnprotectedKeysProtector;
 import org.pgpainless.key.util.KeyRingUtils;
+import org.pgpainless.key.util.UserId;
 import org.pgpainless.util.ArmorUtils;
 import org.pgpainless.util.Passphrase;
 
@@ -178,5 +193,63 @@ public class KeyRingInfoTest {
 
         PGPSecretKeyRing secretKeys = PGPainless.readKeyRing().secretKeyRing(withDummyS2K);
         assertTrue(new KeyInfo(secretKeys.getSecretKey()).hasDummyS2K());
+    }
+
+    @Test
+    public void testGetKeysWithFlagsAndExpiry() throws PGPException, InvalidAlgorithmParameterException, NoSuchAlgorithmException {
+        PGPSecretKeyRing secretKeys = PGPainless.generateKeyRing()
+                .withSubKey(KeySpec.getBuilder(KeyType.ECDH(EllipticCurve._BRAINPOOLP384R1)).withKeyFlags(KeyFlag.ENCRYPT_STORAGE).withDefaultAlgorithms())
+                .withSubKey(KeySpec.getBuilder(KeyType.ECDSA(EllipticCurve._BRAINPOOLP384R1)).withKeyFlags(KeyFlag.SIGN_DATA).withDefaultAlgorithms())
+                .withPrimaryKey(KeySpec.getBuilder(KeyType.EDDSA(EdDSACurve._Ed25519)).withKeyFlags(KeyFlag.CERTIFY_OTHER).withDefaultAlgorithms())
+                .withPrimaryUserId(UserId.newBuilder().withName("Alice").withEmail("alice@pgpainless.org").build())
+                .withoutPassphrase()
+                .build();
+
+        Iterator<PGPSecretKey> keys = secretKeys.iterator();
+        Date now = new Date();
+
+        Calendar calendar = Calendar.getInstance();
+        calendar.setTime(now);
+        calendar.add(Calendar.DATE, 5);
+        Date primaryKeyExpiration = calendar.getTime(); // in 5 days
+        PGPSecretKey primaryKey = keys.next();
+
+        calendar.setTime(now);
+        calendar.add(Calendar.DATE, 10);
+        Date encryptionKeyExpiration = calendar.getTime(); // in 10 days
+        PGPSecretKey encryptionKey = keys.next();
+
+        calendar.setTime(now);
+        calendar.add(Calendar.DATE, 3);
+        Date signingKeyExpiration = calendar.getTime(); // in 3 days
+        PGPSecretKey signingKey = keys.next();
+
+        SecretKeyRingProtector protector = SecretKeyRingProtector.unprotectedKeys();
+        secretKeys = PGPainless.modifyKeyRing(secretKeys)
+                .setExpirationDate(new OpenPgpV4Fingerprint(primaryKey), primaryKeyExpiration, protector)
+                .setExpirationDate(new OpenPgpV4Fingerprint(encryptionKey), encryptionKeyExpiration, protector)
+                .setExpirationDate(new OpenPgpV4Fingerprint(signingKey), signingKeyExpiration, protector)
+                .done();
+
+        KeyRingInfo info = new KeyRingInfo(secretKeys);
+
+        List<PGPPublicKey> encryptionKeys = info.getKeysWithKeyFlag(KeyFlag.ENCRYPT_STORAGE);
+        assertEquals(1, encryptionKeys.size());
+        assertEquals(encryptionKey.getKeyID(), encryptionKeys.get(0).getKeyID());
+
+        List<PGPPublicKey> signingKeys = info.getKeysWithKeyFlag(KeyFlag.SIGN_DATA);
+        assertEquals(1, signingKeys.size());
+        assertEquals(signingKey.getKeyID(), signingKeys.get(0).getKeyID());
+
+        List<PGPPublicKey> certKeys = info.getKeysWithKeyFlag(KeyFlag.CERTIFY_OTHER);
+        assertEquals(1, certKeys.size());
+        assertEquals(primaryKey.getKeyID(), certKeys.get(0).getKeyID());
+
+        assertEquals(primaryKeyExpiration.getTime(), info.getPrimaryKeyExpirationDate().getTime(), 5);
+        assertEquals(signingKeyExpiration.getTime(), info.getExpirationDateForUse(KeyFlag.SIGN_DATA).getTime(), 5);
+
+        // Encryption key expires after primary key, so we return primary key expiration instead.
+        assertEquals(primaryKeyExpiration.getTime(), info.getExpirationDateForUse(KeyFlag.ENCRYPT_STORAGE).getTime(), 5);
+
     }
 }

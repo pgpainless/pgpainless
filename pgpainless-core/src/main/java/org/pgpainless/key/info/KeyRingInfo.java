@@ -25,6 +25,7 @@ import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
+import java.util.NoSuchElementException;
 import java.util.Set;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -587,24 +588,16 @@ public class KeyRingInfo {
      * @return expiration date
      */
     public @Nullable Date getPrimaryKeyExpirationDate() {
-        Date lastExpiration = null;
-        if (getLatestDirectKeySelfSignature() != null) {
-            lastExpiration = SignatureUtils.getKeyExpirationDate(getCreationDate(), getLatestDirectKeySelfSignature());
+        PGPSignature primaryUserIdCertification = getLatestUserIdCertification(getPrimaryUserId());
+        if (primaryUserIdCertification != null) {
+            return SignatureSubpacketsUtil.getKeyExpirationTimeAsDate(primaryUserIdCertification, getPublicKey());
         }
 
-        for (String userId : getValidUserIds()) {
-
-            PGPSignature signature = getLatestUserIdCertification(userId);
-            if (signature == null) {
-                continue;
-            }
-
-            Date expiration = SignatureUtils.getKeyExpirationDate(getCreationDate(), signature);
-            if (expiration != null && (lastExpiration == null || expiration.after(lastExpiration))) {
-                lastExpiration = expiration;
-            }
+        PGPSignature directKeySig = getLatestDirectKeySelfSignature();
+        if (directKeySig != null) {
+            return SignatureSubpacketsUtil.getKeyExpirationTimeAsDate(directKeySig, getPublicKey());
         }
-        return lastExpiration;
+        throw new NoSuchElementException("No suitable signatures found on the key.");
     }
 
     /**
@@ -620,13 +613,45 @@ public class KeyRingInfo {
 
         PGPPublicKey subkey = getPublicKey(fingerprint.getKeyId());
         if (subkey == null) {
-            throw new IllegalArgumentException("No subkey with fingerprint " + fingerprint + " found.");
+            throw new NoSuchElementException("No subkey with fingerprint " + fingerprint + " found.");
         }
+
         PGPSignature bindingSig = getCurrentSubkeyBindingSignature(fingerprint.getKeyId());
         if (bindingSig == null) {
-            return null;
+            throw new AssertionError("Subkey has no valid binding signature.");
         }
+
         return SignatureUtils.getKeyExpirationDate(subkey.getCreationTime(), bindingSig);
+    }
+
+    public Date getExpirationDateForUse(KeyFlag use) {
+        if (use == KeyFlag.SPLIT || use == KeyFlag.SHARED) {
+            throw new IllegalArgumentException("SPLIT and SHARED are not uses, but properties.");
+        }
+
+        Date primaryExpiration = getPrimaryKeyExpirationDate();
+        List<PGPPublicKey> nonExpiringSubkeys = new ArrayList<>();
+        Date latestSubkeyExpirationDate = null;
+
+        List<PGPPublicKey> keysWithFlag = getKeysWithKeyFlag(use);
+        for (PGPPublicKey key : keysWithFlag) {
+            Date subkeyExpirationDate = getSubkeyExpirationDate(new OpenPgpV4Fingerprint(key));
+            if (subkeyExpirationDate == null) {
+                nonExpiringSubkeys.add(key);
+            } else {
+                if (latestSubkeyExpirationDate == null || subkeyExpirationDate.after(latestSubkeyExpirationDate)) {
+                    latestSubkeyExpirationDate = subkeyExpirationDate;
+                }
+            }
+        }
+
+        if (nonExpiringSubkeys.isEmpty()) {
+            if (latestSubkeyExpirationDate.before(primaryExpiration)) {
+                return latestSubkeyExpirationDate;
+            }
+            return primaryExpiration;
+        }
+        return null;
     }
 
     /**
@@ -725,6 +750,18 @@ public class KeyRingInfo {
             }
         }
         return encryptionKeys;
+    }
+
+    public List<PGPPublicKey> getKeysWithKeyFlag(KeyFlag flag) {
+        List<PGPPublicKey> keysWithFlag = new ArrayList<>();
+        for (PGPPublicKey key : getPublicKeys()) {
+            List<KeyFlag> keyFlags = getKeyFlagsOf(key.getKeyID());
+            if (keyFlags.contains(flag)) {
+                keysWithFlag.add(key);
+            }
+        }
+
+        return keysWithFlag;
     }
 
     /**
