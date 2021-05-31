@@ -20,6 +20,7 @@ import org.bouncycastle.openpgp.PGPPrivateKey;
 import org.bouncycastle.openpgp.PGPSecretKey;
 import org.bouncycastle.openpgp.operator.PBESecretKeyDecryptor;
 import org.pgpainless.exception.WrongPassphraseException;
+import org.pgpainless.key.info.KeyInfo;
 import org.pgpainless.util.Passphrase;
 
 public class UnlockSecretKey {
@@ -27,7 +28,10 @@ public class UnlockSecretKey {
     public static PGPPrivateKey unlockSecretKey(PGPSecretKey secretKey, SecretKeyRingProtector protector)
             throws WrongPassphraseException {
         try {
-            PBESecretKeyDecryptor decryptor = protector.getDecryptor(secretKey.getKeyID());
+            PBESecretKeyDecryptor decryptor = null;
+            if (KeyInfo.isEncrypted(secretKey)) {
+                decryptor = protector.getDecryptor(secretKey.getKeyID());
+            }
             return secretKey.extractPrivateKey(decryptor);
         } catch (PGPException e) {
             throw new WrongPassphraseException(secretKey.getKeyID(), e);
