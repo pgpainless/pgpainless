@@ -55,7 +55,7 @@ allprojects {
     }
 
     project.ext {
-        junitVersion = '5.7.0'
+        junitVersion = '5.7.1'
         androidBootClasspath = getAndroidRuntimeJar(pgpainlessMinAndroidSdk)
         rootConfigDir = new File(rootDir, 'config')
         gitCommit = getGitCommit()
