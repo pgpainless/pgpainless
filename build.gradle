@@ -28,6 +28,7 @@ allprojects {
     apply plugin: 'jacoco'
     apply plugin: 'checkstyle'
 
+    // For non-sop modules, enable android api compatibility check
     if (!it.name.equals('pgpainless-sop')) {
         // animalsniffer
         apply plugin: 'ru.vyarus.animalsniffer'
@@ -56,7 +57,6 @@ allprojects {
 
     project.ext {
         junitVersion = '5.7.1'
-        androidBootClasspath = getAndroidRuntimeJar(pgpainlessMinAndroidSdk)
         rootConfigDir = new File(rootDir, 'config')
         gitCommit = getGitCommit()
         builtDate = (new SimpleDateFormat("yyyy-MM-dd")).format(new Date())
@@ -194,26 +194,6 @@ subprojects {
         }
     }
     processResources.dependsOn generateVersionProperties
-}
-
-def getAndroidRuntimeJar(androidSdkApiLevel) {
-    def androidHome = getAndroidHome()
-    def androidJar = new File("$androidHome/platforms/android-$androidSdkApiLevel/android.jar")
-    if (androidJar.isFile()) {
-        return androidJar
-    } else {
-        throw new Exception("Can't find android.jar for API level $androidSdkApiLevel at $androidHome/platforms/android-$androidSdkApiLevel/android.jar. Please install corresponding SDK platform package")
-    }
-}
-
-def getAndroidHome() {
-    def androidHomeEnv = System.getenv("ANDROID_HOME")
-    if (androidHomeEnv == null) {
-        throw new Exception("ANDROID_HOME environment variable is not set")
-    }
-    def androidHome = new File(androidHomeEnv)
-    if (!androidHome.isDirectory()) throw new Exception("Environment variable ANDROID_HOME is not pointing to a directory")
-    return androidHome
 }
 
 def getGitCommit() {

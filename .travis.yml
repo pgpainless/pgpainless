@@ -1,8 +1,5 @@
-language: android
+language: java
 dist: trusty
-android:
-  components:
-    - android-10
 jdk:
   - openjdk8
   - openjdk11
@@ -13,7 +10,6 @@ before_cache:
 cache:
   directories:
     - $HOME/.gradle/caches/
-    - $HOME/.android/build-cache
     - $HOME/.m2
 
 before_install:
