@@ -22,6 +22,12 @@ if keys are allowed to create signatures in the first place.
 These rigorous checks make PGPainless stand out from other Java-based OpenPGP libraries and are the reason why
 PGPainless currently [*scores second place* on Sequoia-PGPs Interoperability Test-Suite](tests.sequoia-pgp.org).
 
+> At FlowCrypt we are using PGPainless in our Kotlin code bases on Android and on server side.
+> The ergonomy of legacy PGP tooling on Java is not very good, and PGPainless improves it greatly.
+> We were so happy with our initial tests and with Paul - the maintainer, that we decided to sponsor further development of this library.
+>
+> -Tom @ FlowCrypt.com
+
 ## Features
 
 Most of PGPainless' features can be accessed directly from the `PGPainless` class.
