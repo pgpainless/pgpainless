@@ -18,11 +18,64 @@ package org.pgpainless.encryption_signing;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
+import java.io.IOException;
+import java.security.InvalidAlgorithmParameterException;
+import java.security.NoSuchAlgorithmException;
+import java.util.Arrays;
+import java.util.Collections;
+import java.util.Iterator;
+import java.util.List;
+import java.util.Set;
+
+import org.bouncycastle.openpgp.PGPException;
+import org.bouncycastle.openpgp.PGPPublicKey;
+import org.bouncycastle.openpgp.PGPPublicKeyRing;
+import org.bouncycastle.openpgp.PGPPublicKeyRingCollection;
+import org.bouncycastle.openpgp.PGPSecretKeyRing;
+import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
+import org.pgpainless.PGPainless;
+import org.pgpainless.algorithm.KeyFlag;
 import org.pgpainless.algorithm.SymmetricKeyAlgorithm;
+import org.pgpainless.key.SubkeyIdentifier;
+import org.pgpainless.key.generation.KeySpec;
+import org.pgpainless.key.generation.type.KeyType;
+import org.pgpainless.key.generation.type.eddsa.EdDSACurve;
+import org.pgpainless.key.generation.type.xdh.XDHSpec;
+import org.pgpainless.key.util.KeyRingUtils;
+import org.pgpainless.util.Passphrase;
 
 public class EncryptionOptionsTest {
+
+    private static PGPSecretKeyRing secretKeys;
+    private static PGPPublicKeyRing publicKeys;
+    private static SubkeyIdentifier primaryKey;
+    private static SubkeyIdentifier encryptComms;
+    private static SubkeyIdentifier encryptStorage;
+
+    @BeforeAll
+    public static void generateKey() throws PGPException, InvalidAlgorithmParameterException, NoSuchAlgorithmException {
+        secretKeys = PGPainless.generateKeyRing()
+                .withSubKey(KeySpec.getBuilder(KeyType.XDH(XDHSpec._X25519))
+                        .withKeyFlags(KeyFlag.ENCRYPT_COMMS).withDefaultAlgorithms())
+                .withSubKey(KeySpec.getBuilder(KeyType.XDH(XDHSpec._X25519))
+                        .withKeyFlags(KeyFlag.ENCRYPT_STORAGE).withDefaultAlgorithms())
+                .withPrimaryKey(KeySpec.getBuilder(KeyType.EDDSA(EdDSACurve._Ed25519))
+                        .withKeyFlags(KeyFlag.CERTIFY_OTHER)
+                        .withDefaultAlgorithms())
+                .withPrimaryUserId("test@pgpainless.org")
+                .withoutPassphrase()
+                .build();
+
+        publicKeys = KeyRingUtils.publicKeyRingFrom(secretKeys);
+
+        Iterator<PGPPublicKey> iterator = publicKeys.iterator();
+        primaryKey = new SubkeyIdentifier(publicKeys, iterator.next().getKeyID());
+        encryptComms = new SubkeyIdentifier(publicKeys, iterator.next().getKeyID());
+        encryptStorage = new SubkeyIdentifier(publicKeys, iterator.next().getKeyID());
+    }
 
     @Test
     public void testOverrideEncryptionAlgorithmFailsForNULL() {
@@ -41,5 +94,91 @@ public class EncryptionOptionsTest {
         options.overrideEncryptionAlgorithm(SymmetricKeyAlgorithm.AES_128);
 
         assertEquals(SymmetricKeyAlgorithm.AES_128, options.getEncryptionAlgorithmOverride());
+    }
+
+    @Test
+    public void testAddRecipients_EncryptCommunications() {
+        EncryptionOptions options = EncryptionOptions.encryptCommunications();
+        options.addRecipient(publicKeys);
+
+        Set<SubkeyIdentifier> encryptionKeys = options.getEncryptionKeyIdentifiers();
+        assertEquals(1, encryptionKeys.size());
+        assertEquals(encryptComms, encryptionKeys.iterator().next());
+    }
+
+    @Test
+    public void testAddRecipients_EncryptDataAtRest() {
+        EncryptionOptions options = EncryptionOptions.encryptDataAtRest();
+        options.addRecipient(publicKeys);
+
+        Set<SubkeyIdentifier> encryptionKeys = options.getEncryptionKeyIdentifiers();
+        assertEquals(1, encryptionKeys.size());
+        assertEquals(encryptStorage, encryptionKeys.iterator().next());
+    }
+
+    @Test
+    public void testAddRecipients_AllKeys() {
+        EncryptionOptions options = new EncryptionOptions();
+        options.addRecipient(publicKeys, EncryptionOptions.encryptToAllCapableSubkeys());
+
+        Set<SubkeyIdentifier> encryptionKeys = options.getEncryptionKeyIdentifiers();
+
+        assertEquals(2, encryptionKeys.size());
+        assertTrue(encryptionKeys.contains(encryptComms));
+        assertTrue(encryptionKeys.contains(encryptStorage));
+    }
+
+    @Test
+    public void testAddEmptyPassphraseFails() {
+        EncryptionOptions options = new EncryptionOptions();
+        assertThrows(IllegalArgumentException.class, () ->
+                options.addPassphrase(Passphrase.emptyPassphrase()));
+    }
+
+    @Test
+    public void testAddRecipient_KeyWithoutEncryptionKeyFails() throws PGPException, InvalidAlgorithmParameterException, NoSuchAlgorithmException {
+        EncryptionOptions options = new EncryptionOptions();
+        PGPSecretKeyRing secretKeys = PGPainless.generateKeyRing()
+                .withPrimaryKey(KeySpec.getBuilder(KeyType.EDDSA(EdDSACurve._Ed25519))
+                .withKeyFlags(KeyFlag.CERTIFY_OTHER, KeyFlag.SIGN_DATA).withDefaultAlgorithms())
+                .withPrimaryUserId("test@pgpainless.org")
+                .withoutPassphrase().build();
+        PGPPublicKeyRing publicKeys = KeyRingUtils.publicKeyRingFrom(secretKeys);
+
+        assertThrows(IllegalArgumentException.class, () -> options.addRecipient(publicKeys));
+    }
+
+    @Test
+    public void testEncryptionKeySelectionStrategyEmpty_ThrowsAssertionError() {
+        EncryptionOptions options = new EncryptionOptions();
+
+        assertThrows(IllegalArgumentException.class,
+                () -> options.addRecipient(publicKeys, new EncryptionOptions.EncryptionKeySelector() {
+                    @Override
+                    public List<PGPPublicKey> selectEncryptionSubkeys(List<PGPPublicKey> encryptionCapableKeys) {
+                        return Collections.emptyList();
+                    }
+                }));
+
+        assertThrows(IllegalArgumentException.class,
+                () -> options.addRecipient(publicKeys, "test@pgpainless.org", new EncryptionOptions.EncryptionKeySelector() {
+                    @Override
+                    public List<PGPPublicKey> selectEncryptionSubkeys(List<PGPPublicKey> encryptionCapableKeys) {
+                        return Collections.emptyList();
+                    }
+                }));
+    }
+
+    @Test
+    public void testAddRecipients_PGPPublicKeyRingCollection() throws PGPException, InvalidAlgorithmParameterException, NoSuchAlgorithmException, IOException {
+        PGPPublicKeyRing secondKeyRing = KeyRingUtils.publicKeyRingFrom(
+                PGPainless.generateKeyRing().modernKeyRing("other@pgpainless.org", null));
+
+        PGPPublicKeyRingCollection collection = new PGPPublicKeyRingCollection(
+                Arrays.asList(publicKeys, secondKeyRing));
+
+        EncryptionOptions options = new EncryptionOptions();
+        options.addRecipients(collection);
+        assertEquals(2, options.getEncryptionKeyIdentifiers().size());
     }
 }
