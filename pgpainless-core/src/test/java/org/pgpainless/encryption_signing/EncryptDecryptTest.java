@@ -171,7 +171,7 @@ public class EncryptDecryptTest {
             assertTrue(KeyRingUtils.keyRingContainsKeyWithId(recipientPub, encryptionKey.getKeyId()));
         }
 
-        assertEquals(SymmetricKeyAlgorithm.AES_256, encryptionResult.getSymmetricKeyAlgorithm());
+        assertEquals(SymmetricKeyAlgorithm.AES_256, encryptionResult.getEncryptionAlgorithm());
 
         // Juliet trieth to comprehend Romeos words
 

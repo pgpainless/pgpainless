@@ -101,7 +101,7 @@ public class OpenPgpMetadata {
         Map<OpenPgpV4Fingerprint, PGPSignature> verifiedSignatures = new ConcurrentHashMap<>();
         for (DetachedSignature detachedSignature : detachedSignatures) {
             if (detachedSignature.isVerified()) {
-                verifiedSignatures.put(detachedSignature.getFingerprint(), detachedSignature.getSignature());
+                verifiedSignatures.put(detachedSignature.getSigningKeyIdentifier().getSubkeyFingerprint(), detachedSignature.getSignature());
             }
         }
         for (OnePassSignature onePassSignature : onePassSignatures) {
