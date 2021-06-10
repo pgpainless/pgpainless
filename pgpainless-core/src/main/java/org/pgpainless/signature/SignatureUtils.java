@@ -32,6 +32,7 @@ import org.bouncycastle.openpgp.PGPSignature;
 import org.bouncycastle.openpgp.PGPSignatureGenerator;
 import org.bouncycastle.openpgp.PGPSignatureList;
 import org.bouncycastle.openpgp.operator.PGPContentSignerBuilder;
+import org.bouncycastle.util.encoders.Hex;
 import org.pgpainless.PGPainless;
 import org.pgpainless.algorithm.HashAlgorithm;
 import org.pgpainless.algorithm.SignatureType;
@@ -194,5 +195,9 @@ public class SignatureUtils {
             return (PGPSignatureList) next;
         }
         return null;
+    }
+
+    public static String getSignatureDigestPrefix(PGPSignature signature) {
+        return Hex.toHexString(signature.getDigestPrefix());
     }
 }
