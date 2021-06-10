@@ -146,7 +146,7 @@ public class EncryptionOptions {
         List<PGPPublicKey> encryptionSubkeys = encryptionKeySelectionStrategy
                 .selectEncryptionSubkeys(info.getEncryptionSubkeys(userId, purpose));
         if (encryptionSubkeys.isEmpty()) {
-            throw new AssertionError("Key has no suitable encryption subkeys.");
+            throw new IllegalArgumentException("Key has no suitable encryption subkeys.");
         }
 
         for (PGPPublicKey encryptionSubkey : encryptionSubkeys) {
