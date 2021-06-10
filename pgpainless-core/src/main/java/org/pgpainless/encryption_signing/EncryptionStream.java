@@ -31,8 +31,6 @@ import org.bouncycastle.openpgp.PGPSignature;
 import org.bouncycastle.openpgp.PGPSignatureGenerator;
 import org.bouncycastle.openpgp.operator.PGPDataEncryptorBuilder;
 import org.bouncycastle.openpgp.operator.PGPKeyEncryptionMethodGenerator;
-import org.bouncycastle.openpgp.operator.bc.BcPGPDataEncryptorBuilder;
-import org.bouncycastle.openpgp.operator.jcajce.JcePGPDataEncryptorBuilder;
 import org.pgpainless.algorithm.CompressionAlgorithm;
 import org.pgpainless.algorithm.SymmetricKeyAlgorithm;
 import org.pgpainless.decryption_verification.OpenPgpMetadata;
@@ -101,12 +99,7 @@ public final class EncryptionStream extends OutputStream {
         LOGGER.log(LEVEL, "Encrypt message using " + encryptionAlgorithm);
         PGPDataEncryptorBuilder dataEncryptorBuilder =
                 ImplementationFactory.getInstance().getPGPDataEncryptorBuilder(encryptionAlgorithm);
-        // Simplify once https://github.com/bcgit/bc-java/pull/859 is merged
-        if (dataEncryptorBuilder instanceof BcPGPDataEncryptorBuilder) {
-            ((BcPGPDataEncryptorBuilder) dataEncryptorBuilder).setWithIntegrityPacket(true);
-        } else if (dataEncryptorBuilder instanceof JcePGPDataEncryptorBuilder) {
-            ((JcePGPDataEncryptorBuilder) dataEncryptorBuilder).setWithIntegrityPacket(true);
-        }
+        dataEncryptorBuilder.setWithIntegrityPacket(true);
 
         PGPEncryptedDataGenerator encryptedDataGenerator =
                 new PGPEncryptedDataGenerator(dataEncryptorBuilder);

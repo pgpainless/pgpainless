@@ -30,7 +30,6 @@ import org.bouncycastle.openpgp.PGPPublicKeyRing;
 import org.bouncycastle.openpgp.PGPSecretKeyRing;
 import org.bouncycastle.openpgp.PGPSignature;
 import org.bouncycastle.util.io.Streams;
-import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 import org.pgpainless.PGPainless;
 import org.pgpainless.decryption_verification.DecryptionStream;
@@ -217,7 +216,6 @@ public class IgnoreMarkerPackets {
     }
 
     @Test
-    @Disabled // TODO: Fix upstreamed. Enable once BC is bumped
     public void markerPlusCertificate() throws IOException {
         String pubKeyBlock = "-----BEGIN PGP PUBLIC KEY BLOCK-----\n" +
                 "\n" +

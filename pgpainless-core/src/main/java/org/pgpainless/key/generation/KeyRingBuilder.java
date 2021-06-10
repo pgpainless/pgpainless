@@ -28,8 +28,6 @@ import java.util.Iterator;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Set;
-import java.util.logging.Level;
-import java.util.logging.Logger;
 import javax.annotation.Nonnull;
 
 import org.bouncycastle.openpgp.PGPException;
@@ -64,8 +62,6 @@ import org.pgpainless.util.Passphrase;
 import org.pgpainless.signature.subpackets.SignatureSubpacketGeneratorUtil;
 
 public class KeyRingBuilder implements KeyRingBuilderInterface {
-
-    private static final Logger LOGGER = Logger.getLogger(KeyRingBuilder.class.getName());
 
     private final Charset UTF8 = Charset.forName("UTF-8");
 
@@ -484,16 +480,7 @@ public class KeyRingBuilder implements KeyRingBuilderInterface {
         KeyPair keyPair = certKeyGenerator.generateKeyPair();
 
         // Form PGP key pair
-        PGPKeyPair pgpKeyPair;
-        try {
-            pgpKeyPair = ImplementationFactory.getInstance().getPGPKeyPair(type.getAlgorithm(), keyPair, new Date());
-        } catch (PGPException e) {
-            // When generating EdDSA keys, the private key has an encoding length of 33 instead of 34, which results
-            //  in an exception. Therefore we just try again as a workaround.
-            LOGGER.log(Level.INFO, "Generated private key encoding has incorrect length. Trying again.");
-            LOGGER.log(Level.FINER, "Incorrect private key encoding length is caused by a bug in Bouncycastle. See https://github.com/bcgit/bc-java/issues/887", e);
-            pgpKeyPair = generateKeyPair(spec);
-        }
+        PGPKeyPair pgpKeyPair = ImplementationFactory.getInstance().getPGPKeyPair(type.getAlgorithm(), keyPair, new Date());
         return pgpKeyPair;
     }
 }

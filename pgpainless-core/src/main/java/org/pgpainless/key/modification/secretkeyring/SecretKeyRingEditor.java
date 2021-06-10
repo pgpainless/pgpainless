@@ -422,9 +422,9 @@ public class SecretKeyRingEditor implements SecretKeyRingEditorInterface {
                 throw new IllegalStateException("Key " + new OpenPgpV4Fingerprint(subjectPubKey) + " does not have a previous positive signature.");
             }
         } else {
-            Iterator bindingSignatures = subjectPubKey.getSignaturesOfType(SignatureType.SUBKEY_BINDING.getCode());
+            Iterator<PGPSignature> bindingSignatures = subjectPubKey.getSignaturesOfType(SignatureType.SUBKEY_BINDING.getCode());
             while (bindingSignatures.hasNext()) {
-                oldSignature = (PGPSignature) bindingSignatures.next();
+                oldSignature = bindingSignatures.next();
             }
         }
 
