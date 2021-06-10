@@ -16,6 +16,8 @@
 
 package org.pgpainless.key.util;
 
+import javax.annotation.Nonnull;
+
 public final class UserId implements CharSequence {
     public static final class Builder {
         private String name;
@@ -127,7 +129,7 @@ public final class UserId implements CharSequence {
     }
 
     @Override
-    public String toString() {
+    public @Nonnull String toString() {
         return asString(false);
     }
 

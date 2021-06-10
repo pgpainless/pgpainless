@@ -38,6 +38,7 @@ public class ProviderFactoryTest {
 
     private ProviderFactory customProviderFactory = new ProviderFactory() {
 
+        @SuppressWarnings("deprecation")
         Provider provider = new Provider("PL", 1L, "PGPainlessTestProvider") {
 
         };

@@ -126,9 +126,9 @@ public class ModificationDetectionTests {
 
     /**
      * Messages containing a missing MDC shall fail to decrypt.
-     * @param implementationFactory
-     * @throws IOException
-     * @throws PGPException
+     * @param implementationFactory implementation factory
+     * @throws IOException in case of an io-error
+     * @throws PGPException in case of a pgp error
      */
     @ParameterizedTest
     @MethodSource("org.pgpainless.util.TestUtil#provideImplementationFactories")

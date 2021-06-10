@@ -342,10 +342,7 @@ public class SecretKeyRingEditor implements SecretKeyRingEditorInterface {
         }
 
         boolean found = false;
-        Iterator<PGPSecretKey> iterator = secretKeyRing.iterator();
-        while (iterator.hasNext()) {
-            PGPSecretKey secretKey = iterator.next();
-
+        for (PGPSecretKey secretKey : secretKeyRing) {
             // Skip over unaffected subkeys
             if (secretKey.getKeyID() != fingerprint.getKeyId()) {
                 secretKeyList.add(secretKey);

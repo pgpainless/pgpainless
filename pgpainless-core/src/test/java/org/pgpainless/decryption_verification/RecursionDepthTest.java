@@ -39,8 +39,6 @@ public class RecursionDepthTest {
      * Test that decryption is aborted when maximum recursion depth of nested packets is exceeded.
      *
      * @see <a href="https://tests.sequoia-pgp.org/#Maximum_recursion_depth">Sequoia-PGP Test Suite</a>
-     * @throws IOException
-     * @throws PGPException
      */
     @ParameterizedTest
     @MethodSource("org.pgpainless.util.TestUtil#provideImplementationFactories")

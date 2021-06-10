@@ -40,10 +40,6 @@ public class PGPPublicKeyRingTest {
      * It does not.
      *
      * see also https://security.stackexchange.com/questions/92635/is-it-possible-to-assign-different-uids-to-subkeys-for-the-purpose-of-having-mul
-     *
-     * @throws InvalidAlgorithmParameterException
-     * @throws NoSuchAlgorithmException
-     * @throws PGPException
      */
     @Test
     public void subkeysDoNotHaveUserIDsTest() throws InvalidAlgorithmParameterException, NoSuchAlgorithmException, PGPException {
@@ -54,10 +50,8 @@ public class PGPPublicKeyRingTest {
             Iterator<String> userIds = subkey.getUserIDs();
             if (primaryKey == subkey) {
                 assertEquals("primary@user.id", userIds.next());
-                assertFalse(userIds.hasNext());
-            } else {
-                assertFalse(userIds.hasNext());
             }
+            assertFalse(userIds.hasNext());
         }
     }
 

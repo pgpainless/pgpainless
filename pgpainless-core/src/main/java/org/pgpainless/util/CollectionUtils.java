@@ -24,8 +24,8 @@ public class CollectionUtils {
     public static <I> List<I> iteratorToList(Iterator<I> iterator) {
         List<I> items = new ArrayList<>();
         while (iterator.hasNext()) {
-            Object o = iterator.next();
-            items.add((I) o);
+            I item = iterator.next();
+            items.add(item);
         }
         return items;
     }
