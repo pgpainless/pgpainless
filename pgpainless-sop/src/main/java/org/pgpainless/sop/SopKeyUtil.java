@@ -48,7 +48,9 @@ public class SopKeyUtil {
         List<PGPPublicKeyRing> publicKeyRings = new ArrayList<>();
         for (File file : files) {
             try (FileInputStream in = new FileInputStream(file)) {
-                PGPPublicKeyRingCollection collection = PGPainless.readKeyRing().publicKeyRingCollection(in);
+                PGPPublicKeyRingCollection collection = PGPainless.readKeyRing()
+                        .keyRingCollection(in, true)
+                        .getPgpPublicKeyRingCollection();
                 for (PGPPublicKeyRing keyRing : collection) {
                     publicKeyRings.add(keyRing);
                 }

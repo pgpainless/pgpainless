@@ -15,6 +15,7 @@
  */
 package org.pgpainless.key.collection;
 
+import org.bouncycastle.bcpg.MarkerPacket;
 import org.bouncycastle.openpgp.PGPException;
 import org.bouncycastle.openpgp.PGPKeyRing;
 import org.bouncycastle.openpgp.PGPObjectFactory;
@@ -64,6 +65,10 @@ public class PGPKeyRingCollection {
         List<PGPPublicKeyRing> publicKeyRings = new ArrayList<>();
 
         while ((obj = pgpFact.nextObject()) != null) {
+            if (obj instanceof MarkerPacket) {
+                // Skip marker packets
+                continue;
+            }
             if (obj instanceof PGPSecretKeyRing) {
                 secretKeyRings.add((PGPSecretKeyRing) obj);
             } else if (obj instanceof PGPPublicKeyRing) {
