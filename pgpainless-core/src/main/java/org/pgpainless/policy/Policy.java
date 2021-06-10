@@ -43,7 +43,7 @@ public final class Policy {
             CompressionAlgorithmPolicy.defaultCompressionAlgorithmPolicy();
     private final NotationRegistry notationRegistry = new NotationRegistry();
 
-    private Policy() {
+    Policy() {
     }
 
     /**
