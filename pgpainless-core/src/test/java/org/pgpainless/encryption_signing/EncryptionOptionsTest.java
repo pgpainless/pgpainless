@@ -39,6 +39,7 @@ import org.junit.jupiter.api.Test;
 import org.pgpainless.PGPainless;
 import org.pgpainless.algorithm.KeyFlag;
 import org.pgpainless.algorithm.SymmetricKeyAlgorithm;
+import org.pgpainless.exception.KeyValidationException;
 import org.pgpainless.key.SubkeyIdentifier;
 import org.pgpainless.key.generation.KeySpec;
 import org.pgpainless.key.generation.type.KeyType;
@@ -180,5 +181,19 @@ public class EncryptionOptionsTest {
         EncryptionOptions options = new EncryptionOptions();
         options.addRecipients(collection);
         assertEquals(2, options.getEncryptionKeyIdentifiers().size());
+    }
+
+    @Test
+    public void testAddRecipient_withValidUserId() {
+        EncryptionOptions options = new EncryptionOptions();
+        options.addRecipient(publicKeys, "test@pgpainless.org");
+
+        assertEquals(1, options.getEncryptionMethods().size());
+    }
+
+    @Test
+    public void testAddRecipient_withInvalidUserId() {
+        EncryptionOptions options = new EncryptionOptions();
+        assertThrows(KeyValidationException.class, () -> options.addRecipient(publicKeys, "invalid@user.id"));
     }
 }
