@@ -331,6 +331,17 @@ public class SignatureSubpacketsUtil {
         return Arrays.asList(notations);
     }
 
+    public static List<NotationData> getHashedNotationData(PGPSignature signature, String notationName) {
+        List<NotationData> allNotations = getHashedNotationData(signature);
+        List<NotationData> withName = new ArrayList<>();
+        for (NotationData data : allNotations) {
+            if (data.getNotationName().equals(notationName)) {
+                withName.add(data);
+            }
+        }
+        return withName;
+    }
+
     /**
      * Return the notation data subpackets from the signatures unhashed area.
      *
@@ -340,6 +351,17 @@ public class SignatureSubpacketsUtil {
     public static List<NotationData> getUnhashedNotationData(PGPSignature signature) {
         NotationData[] notations = signature.getUnhashedSubPackets().getNotationDataOccurrences();
         return Arrays.asList(notations);
+    }
+
+    public static List<NotationData> getUnhashedNotationData(PGPSignature signature, String notationName) {
+        List<NotationData> allNotations = getUnhashedNotationData(signature);
+        List<NotationData> withName = new ArrayList<>();
+        for (NotationData data : allNotations) {
+            if (data.getNotationName().equals(notationName)) {
+                withName.add(data);
+            }
+        }
+        return withName;
     }
 
     /**
