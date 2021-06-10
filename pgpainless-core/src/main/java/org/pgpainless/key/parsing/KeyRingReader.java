@@ -130,10 +130,7 @@ public class KeyRingReader {
 
     public static PGPKeyRingCollection readKeyRingCollection(@Nonnull InputStream inputStream, boolean isSilent)
             throws IOException, PGPException {
-        return new PGPKeyRingCollection(
-                getDecoderStream(inputStream),
-                ImplementationFactory.getInstance().getKeyFingerprintCalculator(),
-                isSilent);
+        return new PGPKeyRingCollection(inputStream, isSilent);
     }
 
     /**

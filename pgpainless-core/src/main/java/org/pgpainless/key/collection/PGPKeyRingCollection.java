@@ -22,7 +22,8 @@ import org.bouncycastle.openpgp.PGPPublicKeyRing;
 import org.bouncycastle.openpgp.PGPPublicKeyRingCollection;
 import org.bouncycastle.openpgp.PGPSecretKeyRing;
 import org.bouncycastle.openpgp.PGPSecretKeyRingCollection;
-import org.bouncycastle.openpgp.operator.KeyFingerPrintCalculator;
+import org.bouncycastle.openpgp.PGPUtil;
+import org.pgpainless.implementation.ImplementationFactory;
 
 import javax.annotation.Nonnull;
 import java.io.ByteArrayInputStream;
@@ -37,12 +38,12 @@ import java.util.List;
  * {@link PGPSecretKeyRingCollection} and {@link PGPPublicKeyRingCollection}.
  */
 public class PGPKeyRingCollection {
-    private PGPSecretKeyRingCollection pgpSecretKeyRingCollection;
-    private PGPPublicKeyRingCollection pgpPublicKeyRingCollection;
 
-    public PGPKeyRingCollection(@Nonnull byte[] encoding, @Nonnull KeyFingerPrintCalculator fingerPrintCalculator,
-                                boolean isSilent) throws IOException, PGPException {
-        this(new ByteArrayInputStream(encoding), fingerPrintCalculator, isSilent);
+    private final PGPSecretKeyRingCollection pgpSecretKeyRingCollection;
+    private final PGPPublicKeyRingCollection pgpPublicKeyRingCollection;
+
+    public PGPKeyRingCollection(@Nonnull byte[] encoding, boolean isSilent) throws IOException, PGPException {
+        this(new ByteArrayInputStream(encoding), isSilent);
     }
 
     /**
@@ -53,9 +54,10 @@ public class PGPKeyRingCollection {
      * @throws IOException  if a problem parsing the base stream occurs
      * @throws PGPException if an object is encountered which isn't a {@link PGPSecretKeyRing} or {@link PGPPublicKeyRing}
      */
-    public PGPKeyRingCollection(@Nonnull InputStream in, @Nonnull KeyFingerPrintCalculator fingerPrintCalculator,
-                                boolean isSilent) throws IOException, PGPException {
-        PGPObjectFactory pgpFact = new PGPObjectFactory(in, fingerPrintCalculator);
+    public PGPKeyRingCollection(@Nonnull InputStream in, boolean isSilent) throws IOException, PGPException {
+        // Double getDecoderStream because of #96
+        InputStream decoderStream = PGPUtil.getDecoderStream(PGPUtil.getDecoderStream(in));
+        PGPObjectFactory pgpFact = new PGPObjectFactory(decoderStream, ImplementationFactory.getInstance().getKeyFingerprintCalculator());
         Object obj;
 
         List<PGPSecretKeyRing> secretKeyRings = new ArrayList<>();
