@@ -20,6 +20,9 @@ import java.io.IOException;
 import java.io.InputStream;
 import javax.annotation.Nonnull;
 
+import org.bouncycastle.asn1.ASN1ObjectIdentifier;
+import org.bouncycastle.bcpg.ECPublicBCPGKey;
+import org.bouncycastle.openpgp.PGPPublicKey;
 import org.bouncycastle.openpgp.PGPUtil;
 
 public class BCUtil {
@@ -32,6 +35,28 @@ public class BCUtil {
     public static InputStream getPgpDecoderInputStream(@Nonnull InputStream inputStream)
             throws IOException {
         return PGPUtil.getDecoderStream(inputStream);
+    }
+
+    public static int getBitStrenght(PGPPublicKey key) {
+        int bitStrength = key.getBitStrength();
+
+        if (bitStrength == -1) {
+            // TODO: BC's PGPPublicKey.getBitStrength() does fail for some keys (EdDSA, X25519)
+            //  Manually set the bit strength.
+
+            ASN1ObjectIdentifier oid = ((ECPublicBCPGKey) key.getPublicKeyPacket().getKey()).getCurveOID();
+            if (oid.getId().equals("1.3.6.1.4.1.11591.15.1")) {
+                // ed25519 is 256 bits
+                bitStrength = 256;
+            } else if (oid.getId().equals("1.3.6.1.4.1.3029.1.5.1")) {
+                // curvey25519 is 256 bits
+                bitStrength = 256;
+            } else {
+                throw new RuntimeException("Unknown curve: " + oid.getId());
+            }
+
+        }
+        return bitStrength;
     }
 
 }

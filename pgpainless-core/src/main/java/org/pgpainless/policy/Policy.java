@@ -17,10 +17,13 @@ package org.pgpainless.policy;
 
 import java.util.Arrays;
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 import org.pgpainless.algorithm.CompressionAlgorithm;
 import org.pgpainless.algorithm.HashAlgorithm;
+import org.pgpainless.algorithm.PublicKeyAlgorithm;
 import org.pgpainless.algorithm.SymmetricKeyAlgorithm;
 import org.pgpainless.util.NotationRegistry;
 
@@ -41,6 +44,8 @@ public final class Policy {
             SymmetricKeyAlgorithmPolicy.defaultSymmetricKeyDecryptionAlgorithmPolicy();
     private CompressionAlgorithmPolicy compressionAlgorithmPolicy =
             CompressionAlgorithmPolicy.defaultCompressionAlgorithmPolicy();
+    private PublicKeyAlgorithmPolicy publicKeyAlgorithmPolicy =
+            PublicKeyAlgorithmPolicy.defaultPublicKeyAlgorithmPolicy();
     private final NotationRegistry notationRegistry = new NotationRegistry();
 
     Policy() {
@@ -154,6 +159,27 @@ public final class Policy {
             throw new NullPointerException("Compression policy cannot be null.");
         }
         this.compressionAlgorithmPolicy = policy;
+    }
+
+    /**
+     * Return the current public key algorithm policy.
+     *
+     * @return public key algorithm policy
+     */
+    public PublicKeyAlgorithmPolicy getPublicKeyAlgorithmPolicy() {
+        return publicKeyAlgorithmPolicy;
+    }
+
+    /**
+     * Set a custom public key algorithm policy.
+     *
+     * @param publicKeyAlgorithmPolicy custom policy
+     */
+    public void setPublicKeyAlgorithmPolicy(PublicKeyAlgorithmPolicy publicKeyAlgorithmPolicy) {
+        if (publicKeyAlgorithmPolicy == null) {
+            throw new NullPointerException("Public key algorithm policy cannot be null.");
+        }
+        this.publicKeyAlgorithmPolicy = publicKeyAlgorithmPolicy;
     }
 
     public static final class SymmetricKeyAlgorithmPolicy {
@@ -341,6 +367,66 @@ public final class Policy {
                     CompressionAlgorithm.BZIP2,
                     CompressionAlgorithm.ZLIB
             ));
+        }
+    }
+
+    public static final class PublicKeyAlgorithmPolicy {
+
+        private final Map<PublicKeyAlgorithm, Integer> algorithmStrengths = new HashMap<>();
+
+        public PublicKeyAlgorithmPolicy(Map<PublicKeyAlgorithm, Integer> minimalAlgorithmBitStrengths) {
+            this.algorithmStrengths.putAll(minimalAlgorithmBitStrengths);
+        }
+
+        public boolean isAcceptable(int algorithmId, int bitStrength) {
+            return isAcceptable(PublicKeyAlgorithm.fromId(algorithmId), bitStrength);
+        }
+
+        public boolean isAcceptable(PublicKeyAlgorithm algorithm, int bitStrength) {
+            if (!algorithmStrengths.containsKey(algorithm)) {
+                return false;
+            }
+
+            int minStrength = algorithmStrengths.get(algorithm);
+            return bitStrength >= minStrength;
+        }
+
+        /**
+         * Return PGPainless' default public key algorithm policy.
+         * This policy is based upon recommendations made by the German Federal Office for Information Security (BSI).
+         *
+         * Basically this policy requires keys based on elliptic curves to have a bit strength of at least 250,
+         * and keys based on prime number factorization / discrete logarithm problems to have a strength of at least 2000 bits.
+         *
+         * @see <a href="https://www.bsi.bund.de/SharedDocs/Downloads/EN/BSI/Publications/TechGuidelines/TG02102/BSI-TR-02102-1.pdf">
+         *     BSI - Technical Guideline - Cryptographic Mechanisms: Recommendations and Key Lengths (2021-01)</a>
+         *
+         * @return default algorithm policy
+         */
+        public static PublicKeyAlgorithmPolicy defaultPublicKeyAlgorithmPolicy() {
+            Map<PublicKeyAlgorithm, Integer> minimalBitStrengths = new HashMap<>();
+            // §5.4.1
+            minimalBitStrengths.put(PublicKeyAlgorithm.RSA_GENERAL, 2000);
+            minimalBitStrengths.put(PublicKeyAlgorithm.RSA_SIGN, 2000);
+            minimalBitStrengths.put(PublicKeyAlgorithm.RSA_ENCRYPT, 2000);
+            // TODO: ElGamal is not mentioned in the BSI document.
+            //  We assume that the requirements are similar to other DH algorithms
+            minimalBitStrengths.put(PublicKeyAlgorithm.ELGAMAL_ENCRYPT, 2000);
+            minimalBitStrengths.put(PublicKeyAlgorithm.ELGAMAL_GENERAL, 2000);
+            // §5.4.2
+            minimalBitStrengths.put(PublicKeyAlgorithm.DSA, 2000);
+            // §5.4.3
+            minimalBitStrengths.put(PublicKeyAlgorithm.ECDSA, 250);
+            // TODO: EdDSA is not mentioned in the BSI document.
+            //  We assume that the requirements are similar to other EC algorithms.
+            minimalBitStrengths.put(PublicKeyAlgorithm.EDDSA, 250);
+            // §7.2.1
+            minimalBitStrengths.put(PublicKeyAlgorithm.DIFFIE_HELLMAN, 2000);
+            // §7.2.2
+            minimalBitStrengths.put(PublicKeyAlgorithm.ECDH, 250);
+            minimalBitStrengths.put(PublicKeyAlgorithm.EC, 250);
+
+            return new PublicKeyAlgorithmPolicy(minimalBitStrengths);
         }
     }
 

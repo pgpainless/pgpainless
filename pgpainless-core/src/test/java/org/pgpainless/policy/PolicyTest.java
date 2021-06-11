@@ -25,6 +25,7 @@ import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 import org.pgpainless.algorithm.CompressionAlgorithm;
 import org.pgpainless.algorithm.HashAlgorithm;
+import org.pgpainless.algorithm.PublicKeyAlgorithm;
 import org.pgpainless.algorithm.SymmetricKeyAlgorithm;
 
 public class PolicyTest {
@@ -48,6 +49,8 @@ public class PolicyTest {
 
         policy.setRevocationSignatureHashAlgorithmPolicy(new Policy.HashAlgorithmPolicy(HashAlgorithm.SHA512,
                 Arrays.asList(HashAlgorithm.SHA512, HashAlgorithm.SHA384, HashAlgorithm.SHA256, HashAlgorithm.SHA224, HashAlgorithm.SHA1)));
+
+        policy.setPublicKeyAlgorithmPolicy(Policy.PublicKeyAlgorithmPolicy.defaultPublicKeyAlgorithmPolicy());
     }
 
     @Test
@@ -128,6 +131,17 @@ public class PolicyTest {
     @Test
     public void testDefaultRevocationSignatureHashAlgorithm() {
         assertEquals(HashAlgorithm.SHA512, policy.getRevocationSignatureHashAlgorithmPolicy().defaultHashAlgorithm());
+    }
+
+    @Test
+    public void testAcceptablePublicKeyAlgorithm() {
+        assertTrue(policy.getPublicKeyAlgorithmPolicy().isAcceptable(PublicKeyAlgorithm.ECDSA, 256));
+        assertTrue(policy.getPublicKeyAlgorithmPolicy().isAcceptable(PublicKeyAlgorithm.RSA_GENERAL, 3072));
+    }
+
+    @Test
+    public void testUnacceptablePublicKeyAlgorithm() {
+        assertFalse(policy.getPublicKeyAlgorithmPolicy().isAcceptable(PublicKeyAlgorithm.RSA_GENERAL, 1024));
     }
 
     @Test

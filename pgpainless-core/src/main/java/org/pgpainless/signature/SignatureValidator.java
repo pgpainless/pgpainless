@@ -40,6 +40,7 @@ import org.pgpainless.exception.SignatureValidationException;
 import org.pgpainless.implementation.ImplementationFactory;
 import org.pgpainless.policy.Policy;
 import org.pgpainless.signature.subpackets.SignatureSubpacketsUtil;
+import org.pgpainless.util.BCUtil;
 import org.pgpainless.util.NotationRegistry;
 
 public abstract class SignatureValidator {
@@ -265,6 +266,21 @@ public abstract class SignatureValidator {
                 signatureDoesNotHaveCriticalUnknownNotations(policy.getNotationRegistry()).verify(signature);
                 signatureDoesNotHaveCriticalUnknownSubpackets().verify(signature);
                 signatureUsesAcceptableHashAlgorithm(policy).verify(signature);
+                signatureUsesAcceptablePublicKeyAlgorithm(policy, signingKey).verify(signature);
+            }
+        };
+    }
+
+    private static SignatureValidator signatureUsesAcceptablePublicKeyAlgorithm(Policy policy, PGPPublicKey signingKey) {
+        return new SignatureValidator() {
+            @Override
+            public void verify(PGPSignature signature) throws SignatureValidationException {
+                PublicKeyAlgorithm algorithm = PublicKeyAlgorithm.fromId(signingKey.getAlgorithm());
+                int bitStrength = BCUtil.getBitStrenght(signingKey);
+                if (!policy.getPublicKeyAlgorithmPolicy().isAcceptable(algorithm, bitStrength)) {
+                    throw new SignatureValidationException("Signature was made using unacceptable key. " +
+                            algorithm + " (" + bitStrength + " bits) is not acceptable according to the public key algorithm policy.");
+                }
             }
         };
     }

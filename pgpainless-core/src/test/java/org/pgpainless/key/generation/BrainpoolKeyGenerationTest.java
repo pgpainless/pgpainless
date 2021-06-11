@@ -41,6 +41,7 @@ import org.pgpainless.key.generation.type.rsa.RsaLength;
 import org.pgpainless.key.generation.type.xdh.XDHSpec;
 import org.pgpainless.key.info.KeyInfo;
 import org.pgpainless.key.util.UserId;
+import org.pgpainless.util.BCUtil;
 import org.pgpainless.util.Passphrase;
 
 public class BrainpoolKeyGenerationTest {
@@ -115,18 +116,22 @@ public class BrainpoolKeyGenerationTest {
         PGPSecretKey ecdsaPrim = iterator.next();
         KeyInfo ecdsaInfo = new KeyInfo(ecdsaPrim);
         assertEquals(EllipticCurve._BRAINPOOLP384R1.getName(), ecdsaInfo.getCurveName());
+        assertEquals(384, BCUtil.getBitStrenght(ecdsaPrim.getPublicKey()));
 
         PGPSecretKey eddsaSub = iterator.next();
         KeyInfo eddsaInfo = new KeyInfo(eddsaSub);
         assertEquals(EdDSACurve._Ed25519.getName(), eddsaInfo.getCurveName());
+        assertEquals(256, BCUtil.getBitStrenght(eddsaSub.getPublicKey()));
 
         PGPSecretKey xdhSub = iterator.next();
         KeyInfo xdhInfo = new KeyInfo(xdhSub);
         assertEquals(XDHSpec._X25519.getCurveName(), xdhInfo.getCurveName());
+        assertEquals(256, BCUtil.getBitStrenght(xdhSub.getPublicKey()));
 
         PGPSecretKey rsaSub = iterator.next();
         KeyInfo rsaInfo = new KeyInfo(rsaSub);
         assertThrows(IllegalArgumentException.class, rsaInfo::getCurveName, "RSA is not a curve-based encryption system");
+        assertEquals(3072, BCUtil.getBitStrenght(rsaSub.getPublicKey()));
     }
 
     public PGPSecretKeyRing generateKey(KeySpec primaryKey, KeySpec subKey, String userId) throws InvalidAlgorithmParameterException, NoSuchAlgorithmException, PGPException {
