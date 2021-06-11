@@ -136,12 +136,15 @@ public class PolicyTest {
     @Test
     public void testAcceptablePublicKeyAlgorithm() {
         assertTrue(policy.getPublicKeyAlgorithmPolicy().isAcceptable(PublicKeyAlgorithm.ECDSA, 256));
+        assertTrue(policy.getPublicKeyAlgorithmPolicy().isAcceptable(PublicKeyAlgorithm.ECDSA.getAlgorithmId(), 256));
         assertTrue(policy.getPublicKeyAlgorithmPolicy().isAcceptable(PublicKeyAlgorithm.RSA_GENERAL, 3072));
+        assertTrue(policy.getPublicKeyAlgorithmPolicy().isAcceptable(PublicKeyAlgorithm.RSA_GENERAL.getAlgorithmId(), 3072));
     }
 
     @Test
     public void testUnacceptablePublicKeyAlgorithm() {
         assertFalse(policy.getPublicKeyAlgorithmPolicy().isAcceptable(PublicKeyAlgorithm.RSA_GENERAL, 1024));
+        assertFalse(policy.getPublicKeyAlgorithmPolicy().isAcceptable(PublicKeyAlgorithm.RSA_GENERAL.getAlgorithmId(), 1024));
     }
 
     @Test

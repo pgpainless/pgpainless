@@ -15,9 +15,14 @@
  */
 package org.pgpainless.policy;
 
+import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 
+import java.util.HashMap;
+import java.util.Map;
+
 import org.junit.jupiter.api.Test;
+import org.pgpainless.algorithm.PublicKeyAlgorithm;
 
 public class PolicySetterTest {
 
@@ -49,5 +54,22 @@ public class PolicySetterTest {
     public void testSetCompressionAlgorithmPolicy_NullFails() {
         Policy policy = Policy.getInstance();
         assertThrows(NullPointerException.class, () -> policy.setCompressionAlgorithmPolicy(null));
+    }
+
+    @Test
+    public void testSetPublicKeyAlgorithmPolicy_NullFails() {
+        Policy policy = Policy.getInstance();
+        assertThrows(NullPointerException.class, () -> policy.setPublicKeyAlgorithmPolicy(null));
+    }
+
+    @Test
+    public void testNonRegisteredPublicKeyAlgorithm() {
+        Policy policy = new Policy();
+        Map<PublicKeyAlgorithm, Integer> acceptableAlgorithms = new HashMap<>();
+        acceptableAlgorithms.put(PublicKeyAlgorithm.RSA_GENERAL, 2000);
+        policy.setPublicKeyAlgorithmPolicy(new Policy.PublicKeyAlgorithmPolicy(acceptableAlgorithms));
+
+        // Policy does not contain ECDSA
+        assertFalse(policy.getPublicKeyAlgorithmPolicy().isAcceptable(PublicKeyAlgorithm.ECDSA, 256));
     }
 }
