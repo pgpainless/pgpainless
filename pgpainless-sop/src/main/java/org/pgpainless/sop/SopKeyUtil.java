@@ -51,6 +51,9 @@ public class SopKeyUtil {
                 PGPPublicKeyRingCollection collection = PGPainless.readKeyRing()
                         .keyRingCollection(in, true)
                         .getPgpPublicKeyRingCollection();
+                if (collection == null) {
+                    throw new PGPException("Provided file " + file.getName() + " does not contain a certificate.");
+                }
                 for (PGPPublicKeyRing keyRing : collection) {
                     publicKeyRings.add(keyRing);
                 }
