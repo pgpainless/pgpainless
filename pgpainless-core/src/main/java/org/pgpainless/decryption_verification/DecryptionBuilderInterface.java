@@ -46,6 +46,8 @@ public interface DecryptionBuilderInterface {
 
     interface DecryptWith {
 
+        DecryptionStream withOptions(ConsumerOptions consumerOptions) throws PGPException, IOException;
+
         /**
          * Decrypt the encrypted data using the secret keys found in the provided {@link PGPSecretKeyRingCollection}.
          * Here it is assumed that the secret keys are not password protected.

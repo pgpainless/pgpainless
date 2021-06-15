@@ -109,7 +109,7 @@ public class SymmetricEncryptionTest {
 
     @ParameterizedTest
     @MethodSource("org.pgpainless.util.TestUtil#provideImplementationFactories")
-    public void testMissmatchPassphraseFails(ImplementationFactory implementationFactory) throws IOException, PGPException {
+    public void testMismatchPassphraseFails(ImplementationFactory implementationFactory) throws IOException, PGPException {
         ImplementationFactory.setFactoryImplementation(implementationFactory);
 
         byte[] bytes = new byte[5000];

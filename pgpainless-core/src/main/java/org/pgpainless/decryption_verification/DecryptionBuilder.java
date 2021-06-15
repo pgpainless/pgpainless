@@ -64,6 +64,15 @@ public class DecryptionBuilder implements DecryptionBuilderInterface {
     class DecryptWithImpl implements DecryptWith {
 
         @Override
+        public DecryptionStream withOptions(ConsumerOptions consumerOptions) throws PGPException, IOException {
+            if (consumerOptions == null) {
+                throw new IllegalArgumentException("Consumer options cannot be null.");
+            }
+
+            return DecryptionStreamFactory.create(inputStream, consumerOptions);
+        }
+
+        @Override
         public Verify decryptWith(@Nonnull SecretKeyRingProtector decryptor, @Nonnull PGPSecretKeyRingCollection secretKeyRings) {
             DecryptionBuilder.this.decryptionKeys = secretKeyRings;
             DecryptionBuilder.this.decryptionKeyDecryptor = decryptor;
@@ -219,8 +228,27 @@ public class DecryptionBuilder implements DecryptionBuilderInterface {
 
         @Override
         public DecryptionStream build() throws IOException, PGPException {
-            return DecryptionStreamFactory.create(inputStream, decryptionKeys, decryptionKeyDecryptor,
-                    decryptionPassphrase, detachedSignatures, verificationKeys, missingPublicKeyCallback);
+            ConsumerOptions options = new ConsumerOptions();
+
+            for (PGPSecretKeyRing decryptionKey : (decryptionKeys != null ? decryptionKeys : Collections.<PGPSecretKeyRing>emptyList())) {
+                options.addDecryptionKey(decryptionKey, decryptionKeyDecryptor);
+            }
+
+            for (PGPPublicKeyRing certificate : (verificationKeys != null ? verificationKeys : Collections.<PGPPublicKeyRing>emptyList())) {
+                options.addVerificationCert(certificate);
+            }
+
+            for (PGPSignature detachedSignature : (detachedSignatures != null ? detachedSignatures : Collections.<PGPSignature>emptyList())) {
+                options.addVerificationOfDetachedSignature(detachedSignature);
+            }
+
+            options.setMissingCertificateCallback(missingPublicKeyCallback);
+
+            if (decryptionPassphrase != null) {
+                options.addDecryptionPassphrase(decryptionPassphrase);
+            }
+
+            return DecryptionStreamFactory.create(inputStream, options);
         }
     }
 }
