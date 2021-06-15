@@ -1,23 +1,32 @@
+/*
+ * Copyright 2021 Paul Schaub.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
 package org.pgpainless.decryption_verification;
 
-import java.io.IOException;
-import java.util.ArrayList;
-import java.util.Collection;
 import java.util.Collections;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.HashSet;
-import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
 
-import org.bouncycastle.openpgp.PGPException;
 import org.bouncycastle.openpgp.PGPPublicKeyRing;
 import org.bouncycastle.openpgp.PGPPublicKeyRingCollection;
 import org.bouncycastle.openpgp.PGPSecretKeyRing;
-import org.bouncycastle.openpgp.PGPSecretKeyRingCollection;
 import org.bouncycastle.openpgp.PGPSignature;
 import org.pgpainless.key.protection.SecretKeyRingProtector;
 import org.pgpainless.util.Passphrase;
@@ -31,8 +40,8 @@ public class ConsumerOptions {
     private Date verifyNotAfter;
 
     // Set of verification keys
-    private Set<PGPPublicKeyRing> certificates = new HashSet<>();
-    private Set<PGPSignature> detachedSignatures = new HashSet<>();
+    private final Set<PGPPublicKeyRing> certificates = new HashSet<>();
+    private final Set<PGPSignature> detachedSignatures = new HashSet<>();
     private MissingPublicKeyCallback missingCertificateCallback = null;
 
     // Session key for decryption without passphrase/key
@@ -53,6 +62,10 @@ public class ConsumerOptions {
         return this;
     }
 
+    public Date getVerifyNotBefore() {
+        return verifyNotBefore;
+    }
+
     /**
      * Consider signatures made after the given timestamp invalid.
      *
@@ -62,6 +75,10 @@ public class ConsumerOptions {
     public ConsumerOptions verifyNotAfter(Date timestamp) {
         this.verifyNotAfter = timestamp;
         return this;
+    }
+
+    public Date getVerifyNotAfter() {
+        return verifyNotAfter;
     }
 
     /**
@@ -128,6 +145,21 @@ public class ConsumerOptions {
     }
 
     /**
+     * Return the session key.
+     *
+     * @return session key or null
+     */
+    public @Nullable byte[] getSessionKey() {
+        if (sessionKey == null) {
+            return null;
+        }
+
+        byte[] sk = new byte[sessionKey.length];
+        System.arraycopy(sessionKey, 0, sk, 0, sessionKey.length);
+        return sk;
+    }
+
+    /**
      * Add a key for message decryption.
      * The key is expected to be unencrypted.
      *
@@ -162,27 +194,27 @@ public class ConsumerOptions {
         return this;
     }
 
-    public Set<PGPSecretKeyRing> getDecryptionKeys() {
+    public @Nonnull Set<PGPSecretKeyRing> getDecryptionKeys() {
         return Collections.unmodifiableSet(decryptionKeys.keySet());
     }
 
-    public Set<Passphrase> getDecryptionPassphrases() {
+    public @Nonnull Set<Passphrase> getDecryptionPassphrases() {
         return Collections.unmodifiableSet(decryptionPassphrases);
     }
 
-    public Set<PGPPublicKeyRing> getCertificates() {
+    public @Nonnull Set<PGPPublicKeyRing> getCertificates() {
         return Collections.unmodifiableSet(certificates);
     }
 
-    public MissingPublicKeyCallback getMissingCertificateCallback() {
+    public @Nullable MissingPublicKeyCallback getMissingCertificateCallback() {
         return missingCertificateCallback;
     }
 
-    public SecretKeyRingProtector getSecretKeyProtector(PGPSecretKeyRing decryptionKeyRing) {
+    public @Nullable SecretKeyRingProtector getSecretKeyProtector(PGPSecretKeyRing decryptionKeyRing) {
         return decryptionKeys.get(decryptionKeyRing);
     }
 
-    public Set<PGPSignature> getDetachedSignatures() {
+    public @Nonnull Set<PGPSignature> getDetachedSignatures() {
         return Collections.unmodifiableSet(detachedSignatures);
     }
 }

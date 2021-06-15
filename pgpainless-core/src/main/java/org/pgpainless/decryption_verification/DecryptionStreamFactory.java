@@ -19,17 +19,13 @@ import java.io.BufferedInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.HashMap;
-import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
-import java.util.Set;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import javax.annotation.Nonnull;
-import javax.annotation.Nullable;
 
 import org.bouncycastle.openpgp.PGPCompressedData;
 import org.bouncycastle.openpgp.PGPEncryptedData;
@@ -46,7 +42,6 @@ import org.bouncycastle.openpgp.PGPPublicKeyEncryptedData;
 import org.bouncycastle.openpgp.PGPPublicKeyRing;
 import org.bouncycastle.openpgp.PGPSecretKey;
 import org.bouncycastle.openpgp.PGPSecretKeyRing;
-import org.bouncycastle.openpgp.PGPSecretKeyRingCollection;
 import org.bouncycastle.openpgp.PGPSignature;
 import org.bouncycastle.openpgp.PGPUtil;
 import org.bouncycastle.openpgp.operator.KeyFingerPrintCalculator;
@@ -66,7 +61,6 @@ import org.pgpainless.implementation.ImplementationFactory;
 import org.pgpainless.key.OpenPgpV4Fingerprint;
 import org.pgpainless.key.SubkeyIdentifier;
 import org.pgpainless.key.info.KeyRingInfo;
-import org.pgpainless.key.protection.SecretKeyRingProtector;
 import org.pgpainless.key.protection.UnlockSecretKey;
 import org.pgpainless.signature.DetachedSignature;
 import org.pgpainless.signature.OnePassSignature;
@@ -92,7 +86,8 @@ public final class DecryptionStreamFactory {
     }
 
     public static DecryptionStream create(@Nonnull InputStream inputStream,
-                                          @Nonnull ConsumerOptions options) throws PGPException, IOException {
+                                          @Nonnull ConsumerOptions options)
+            throws PGPException, IOException {
         BufferedInputStream bufferedIn = new BufferedInputStream(inputStream);
         bufferedIn.mark(200);
         DecryptionStreamFactory factory = new DecryptionStreamFactory(options);

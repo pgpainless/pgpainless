@@ -46,6 +46,14 @@ public interface DecryptionBuilderInterface {
 
     interface DecryptWith {
 
+        /**
+         * Add options for decryption / signature verification, such as keys, passphrases etc.
+         *
+         * @param consumerOptions consumer options
+         * @return decryption stream
+         * @throws PGPException in case of an OpenPGP related error
+         * @throws IOException in case of an IO error
+         */
         DecryptionStream withOptions(ConsumerOptions consumerOptions) throws PGPException, IOException;
 
         /**
@@ -56,7 +64,11 @@ public interface DecryptionBuilderInterface {
          *
          * @param secretKeyRings secret keys
          * @return api handle
+         *
+         * @deprecated use {@link ConsumerOptions#addDecryptionKey(PGPSecretKeyRing, SecretKeyRingProtector)}
+         * ({@link #withOptions(ConsumerOptions)}) instead.
          */
+        @Deprecated
         default Verify decryptWith(@Nonnull PGPSecretKeyRingCollection secretKeyRings) {
             return decryptWith(new UnprotectedKeysProtector(), secretKeyRings);
         }
@@ -68,7 +80,11 @@ public interface DecryptionBuilderInterface {
          * @param decryptor for unlocking locked secret keys
          * @param secretKeyRings secret keys
          * @return api handle
+         *
+         * @deprecated use {@link ConsumerOptions#addDecryptionKey(PGPSecretKeyRing, SecretKeyRingProtector)}
+         * ({@link #withOptions(ConsumerOptions)}) instead.
          */
+        @Deprecated
         Verify decryptWith(@Nonnull SecretKeyRingProtector decryptor, @Nonnull PGPSecretKeyRingCollection secretKeyRings);
 
         /**
@@ -78,8 +94,13 @@ public interface DecryptionBuilderInterface {
          * @param decryptor for unlocking locked secret key
          * @param secretKeyRing secret key
          * @return api handle
+         *
+         * @deprecated use {@link ConsumerOptions#addDecryptionKey(PGPSecretKeyRing, SecretKeyRingProtector)}
+         * ({@link #withOptions(ConsumerOptions)}) instead.
          */
-        Verify decryptWith(@Nonnull SecretKeyRingProtector decryptor, @Nonnull PGPSecretKeyRing secretKeyRing) throws PGPException, IOException;
+        @Deprecated
+        Verify decryptWith(@Nonnull SecretKeyRingProtector decryptor, @Nonnull PGPSecretKeyRing secretKeyRing)
+                throws PGPException, IOException;
 
         /**
          * Decrypt the encrypted data using a passphrase.
@@ -87,7 +108,11 @@ public interface DecryptionBuilderInterface {
          *
          * @param passphrase passphrase
          * @return api handle
+         *
+         * @deprecated use {@link ConsumerOptions#addDecryptionPassphrase(Passphrase)}
+         * ({@link #withOptions(ConsumerOptions)}) instead.
          */
+        @Deprecated
         Verify decryptWith(@Nonnull Passphrase passphrase);
 
         /**
@@ -95,32 +120,41 @@ public interface DecryptionBuilderInterface {
          * Useful for signature verification of signed-only data.
          *
          * @return api handle
+         *
+         * @deprecated use {@link #withOptions(ConsumerOptions)} instead and set no decryption keys.
          */
+        @Deprecated
         Verify doNotDecrypt();
 
     }
 
+    @Deprecated
     interface Verify extends VerifyWith {
 
         @Override
+        @Deprecated
         HandleMissingPublicKeys verifyWith(@Nonnull PGPPublicKeyRingCollection publicKeyRings);
 
         @Override
+        @Deprecated
         default HandleMissingPublicKeys verifyWith(@Nonnull OpenPgpV4Fingerprint trustedFingerprint,
                                                    @Nonnull PGPPublicKeyRingCollection publicKeyRings) {
             return verifyWith(Collections.singleton(trustedFingerprint), publicKeyRings);
         }
 
         @Override
+        @Deprecated
         HandleMissingPublicKeys verifyWith(@Nonnull Set<OpenPgpV4Fingerprint> trustedFingerprints,
                                            @Nonnull PGPPublicKeyRingCollection publicKeyRings);
 
         @Override
+        @Deprecated
         default HandleMissingPublicKeys verifyWith(@Nonnull PGPPublicKeyRing publicKeyRing) {
             return verifyWith(Collections.singleton(publicKeyRing));
         }
 
         @Override
+        @Deprecated
         HandleMissingPublicKeys verifyWith(@Nonnull Set<PGPPublicKeyRing> publicKeyRings);
 
         /**
@@ -130,7 +164,11 @@ public interface DecryptionBuilderInterface {
          * @return api handle
          * @throws IOException if some IO error occurs
          * @throws PGPException if the detached signatures are malformed
+         *
+         * @deprecated use {@link ConsumerOptions#addVerificationOfDetachedSignature(PGPSignature)}
+         * ({@link DecryptWith#withOptions(ConsumerOptions)}) instead.
          */
+        @Deprecated
         default VerifyWith verifyDetachedSignature(@Nonnull byte[] bytes) throws IOException, PGPException {
             return verifyDetachedSignature(new ByteArrayInputStream(bytes));
         }
@@ -142,7 +180,11 @@ public interface DecryptionBuilderInterface {
          * @return api handle
          * @throws IOException in case something is wrong with the input stream
          * @throws PGPException if the detached signatures are malformed
+         *
+         * @deprecated use {@link ConsumerOptions#addVerificationOfDetachedSignature(PGPSignature)}
+         * ({@link DecryptWith#withOptions(ConsumerOptions)}) instead.
          */
+        @Deprecated
         VerifyWith verifyDetachedSignature(@Nonnull InputStream inputStream) throws IOException, PGPException;
 
         /**
@@ -150,7 +192,11 @@ public interface DecryptionBuilderInterface {
          *
          * @param signature detached signature
          * @return api handle
+         *
+         * @deprecated use {@link ConsumerOptions#addVerificationOfDetachedSignature(PGPSignature)}
+         * ({@link DecryptWith#withOptions(ConsumerOptions)}) instead.
          */
+        @Deprecated
         default VerifyWith verifyDetachedSignature(@Nonnull PGPSignature signature) {
             return verifyDetachedSignatures(Collections.singletonList(signature));
         }
@@ -160,17 +206,25 @@ public interface DecryptionBuilderInterface {
          *
          * @param signatures detached signatures
          * @return api handle
+         *
+         * @deprecated use {@link ConsumerOptions#addVerificationOfDetachedSignature(PGPSignature)}
+         * ({@link DecryptWith#withOptions(ConsumerOptions)}) instead.
          */
+        @Deprecated
         VerifyWith verifyDetachedSignatures(@Nonnull List<PGPSignature> signatures);
 
         /**
          * Instruct the {@link DecryptionStream} to not verify any signatures.
          *
          * @return api handle
+         *
+         * @deprecated use {@link DecryptWith#withOptions(ConsumerOptions)} instead and don't set verification keys.
          */
+        @Deprecated
         Build doNotVerify();
     }
 
+    @Deprecated
     interface VerifyWith {
 
         /**
@@ -178,7 +232,11 @@ public interface DecryptionBuilderInterface {
          *
          * @param publicKeyRings public keys
          * @return api handle
+         *
+         * @deprecated use {@link ConsumerOptions#addVerificationCerts(PGPPublicKeyRingCollection)}
+         * ({@link DecryptWith#withOptions(ConsumerOptions)}) instead.
          */
+        @Deprecated
         HandleMissingPublicKeys verifyWith(@Nonnull PGPPublicKeyRingCollection publicKeyRings);
 
         /**
@@ -188,7 +246,10 @@ public interface DecryptionBuilderInterface {
          * @param trustedFingerprint {@link OpenPgpV4Fingerprint} of the public key that shall be used to verify the signatures.
          * @param publicKeyRings public keys
          * @return api handle
+         * @deprecated use {@link ConsumerOptions#addVerificationCert(PGPPublicKeyRing)}
+          * ({@link DecryptWith#withOptions(ConsumerOptions)}) instead.
          */
+        @Deprecated
         default HandleMissingPublicKeys verifyWith(@Nonnull OpenPgpV4Fingerprint trustedFingerprint,
                                                    @Nonnull PGPPublicKeyRingCollection publicKeyRings) {
             return verifyWith(Collections.singleton(trustedFingerprint), publicKeyRings);
@@ -201,7 +262,11 @@ public interface DecryptionBuilderInterface {
          * @param trustedFingerprints set of trusted {@link OpenPgpV4Fingerprint OpenPgpV4Fingerprints}.
          * @param publicKeyRings public keys
          * @return api handle
+         *
+         * @deprecated use {@link ConsumerOptions#addVerificationCert(PGPPublicKeyRing)}
+         * ({@link DecryptWith#withOptions(ConsumerOptions)}) instead.
          */
+        @Deprecated
         HandleMissingPublicKeys verifyWith(@Nonnull Set<OpenPgpV4Fingerprint> trustedFingerprints,
                                            @Nonnull PGPPublicKeyRingCollection publicKeyRings);
 
@@ -210,7 +275,11 @@ public interface DecryptionBuilderInterface {
          *
          * @param publicKeyRing public key
          * @return api handle
+         *
+         * @deprecated use {@link ConsumerOptions#addVerificationCert(PGPPublicKeyRing)}
+         * ({@link DecryptWith#withOptions(ConsumerOptions)}) instead.
          */
+        @Deprecated
         default HandleMissingPublicKeys verifyWith(@Nonnull PGPPublicKeyRing publicKeyRing) {
             return verifyWith(Collections.singleton(publicKeyRing));
         }
@@ -220,11 +289,16 @@ public interface DecryptionBuilderInterface {
          *
          * @param publicKeyRings public keys
          * @return api handle
+         *
+         * @deprecated use {@link ConsumerOptions#addVerificationCert(PGPPublicKeyRing)}
+         * ({@link DecryptWith#withOptions(ConsumerOptions)}) instead.
          */
+        @Deprecated
         HandleMissingPublicKeys verifyWith(@Nonnull Set<PGPPublicKeyRing> publicKeyRings);
 
     }
 
+    @Deprecated
     interface HandleMissingPublicKeys {
 
         /**
@@ -232,17 +306,26 @@ public interface DecryptionBuilderInterface {
          *
          * @param callback callback
          * @return api handle
+         *
+         * @deprecated use {@link ConsumerOptions#setMissingCertificateCallback(MissingPublicKeyCallback)}
+         * ({@link DecryptWith#withOptions(ConsumerOptions)}) instead.
          */
+        @Deprecated
         Build handleMissingPublicKeysWith(@Nonnull MissingPublicKeyCallback callback);
 
         /**
          * Instruct the {@link DecryptionStream} to ignore any missing public keys.
          *
          * @return api handle
+         *
+         * @deprecated simply do not set a {@link MissingPublicKeyCallback} and use
+         * {@link DecryptWith#withOptions(ConsumerOptions)} instead.
          */
+        @Deprecated
         Build ignoreMissingPublicKeys();
     }
 
+    @Deprecated
     interface Build {
 
         /**
@@ -252,7 +335,10 @@ public interface DecryptionBuilderInterface {
          * @throws IOException in case of an I/O error
          * @throws PGPException if something is malformed
          * @throws org.pgpainless.exception.UnacceptableAlgorithmException if the message uses weak/unacceptable algorithms
+         *
+         * @deprecated use {@link DecryptWith#withOptions(ConsumerOptions)} instead.
          */
+        @Deprecated
         DecryptionStream build() throws IOException, PGPException;
 
     }
