@@ -15,6 +15,7 @@
  */
 package org.pgpainless.decryption_verification;
 
+import java.io.BufferedInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.ArrayList;
@@ -59,6 +60,7 @@ import org.pgpainless.algorithm.StreamEncoding;
 import org.pgpainless.algorithm.SymmetricKeyAlgorithm;
 import org.pgpainless.exception.MessageNotIntegrityProtectedException;
 import org.pgpainless.exception.MissingDecryptionMethodException;
+import org.pgpainless.exception.MissingLiteralDataException;
 import org.pgpainless.exception.UnacceptableAlgorithmException;
 import org.pgpainless.implementation.ImplementationFactory;
 import org.pgpainless.key.OpenPgpV4Fingerprint;
@@ -91,7 +93,8 @@ public final class DecryptionStreamFactory {
 
     public static DecryptionStream create(@Nonnull InputStream inputStream,
                                           @Nonnull ConsumerOptions options) throws PGPException, IOException {
-        InputStream pgpInputStream = inputStream;
+        BufferedInputStream bufferedIn = new BufferedInputStream(inputStream);
+        bufferedIn.mark(200);
         DecryptionStreamFactory factory = new DecryptionStreamFactory(options);
 
         for (PGPSignature signature : options.getDetachedSignatures()) {
@@ -106,10 +109,19 @@ public final class DecryptionStreamFactory {
         }
 
         PGPObjectFactory objectFactory = new PGPObjectFactory(
-                PGPUtil.getDecoderStream(inputStream), keyFingerprintCalculator);
-        pgpInputStream = factory.processPGPPackets(objectFactory, 1);
+                PGPUtil.getDecoderStream(bufferedIn), keyFingerprintCalculator);
 
-        return new DecryptionStream(pgpInputStream, factory.resultBuilder, factory.integrityProtectedStreams);
+        try {
+            // Parse OpenPGP message
+            inputStream = factory.processPGPPackets(objectFactory, 1);
+        } catch (MissingLiteralDataException e) {
+            // Not an OpenPGP message. Reset the buffered stream to parse the message as arbitrary binary data
+            //  to allow for detached signature verification.
+            bufferedIn.reset();
+            inputStream = bufferedIn;
+        }
+
+        return new DecryptionStream(inputStream, factory.resultBuilder, factory.integrityProtectedStreams);
     }
 
     private InputStream processPGPPackets(@Nonnull PGPObjectFactory objectFactory, int depth) throws IOException, PGPException {
@@ -132,7 +144,7 @@ public final class DecryptionStreamFactory {
             }
         }
 
-        throw new PGPException("No Literal Data Packet found");
+        throw new MissingLiteralDataException("No Literal Data Packet found");
     }
 
     private InputStream processPGPEncryptedDataList(PGPEncryptedDataList pgpEncryptedDataList, int depth)
