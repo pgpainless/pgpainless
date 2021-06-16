@@ -72,18 +72,17 @@ public class VerifyWithMissingPublicKeyCallback {
 
         DecryptionStream verificationStream = PGPainless.decryptAndOrVerify()
                 .onInputStream(new ByteArrayInputStream(signOut.toByteArray()))
-                .doNotDecrypt()
-                .verifyWith(unrelatedKeys)
-                .handleMissingPublicKeysWith(
-                        new MissingPublicKeyCallback() {
+                .withOptions(new ConsumerOptions()
+                        .addVerificationCert(unrelatedKeys)
+                        .setMissingCertificateCallback(new MissingPublicKeyCallback() {
                             @Nullable
                             @Override
                             public PGPPublicKeyRing onMissingPublicKeyEncountered(@Nonnull Long keyId) {
                                 assertEquals(signingKey.getKeyID(), keyId, "Signing key-ID mismatch.");
                                 return signingPubKeys;
                             }
-                        }
-                ).build();
+                        }));
+
         ByteArrayOutputStream plainOut = new ByteArrayOutputStream();
         Streams.pipeAll(verificationStream, plainOut);
         verificationStream.close();

@@ -31,8 +31,8 @@ import org.bouncycastle.util.io.Streams;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.MethodSource;
 import org.pgpainless.PGPainless;
+import org.pgpainless.decryption_verification.ConsumerOptions;
 import org.pgpainless.decryption_verification.DecryptionStream;
-import org.pgpainless.encryption_signing.EncryptionBuilderInterface;
 import org.pgpainless.encryption_signing.EncryptionOptions;
 import org.pgpainless.encryption_signing.EncryptionStream;
 import org.pgpainless.encryption_signing.ProducerOptions;
@@ -60,14 +60,13 @@ public class SymmetricEncryptionTest {
         Passphrase encryptionPassphrase = Passphrase.fromPassword("greenBeans");
 
         ByteArrayOutputStream ciphertextOut = new ByteArrayOutputStream();
-        EncryptionBuilderInterface.Armor armor = PGPainless.encryptAndOrSign().onOutputStream(ciphertextOut)
-                .forPassphrase(encryptionPassphrase)
-                .and()
-                .toRecipient(encryptionKey)
-                .and()
-                .doNotSign();
-        EncryptionStream encryptor = armor
-                .noArmor();
+        EncryptionStream encryptor = PGPainless.encryptAndOrSign()
+                .onOutputStream(ciphertextOut)
+                .withOptions(ProducerOptions.encrypt(
+                        EncryptionOptions.encryptCommunications()
+                                .addPassphrase(encryptionPassphrase)
+                                .addRecipient(encryptionKey)
+                ));
 
         Streams.pipeAll(plaintextIn, encryptor);
         encryptor.close();
@@ -77,9 +76,8 @@ public class SymmetricEncryptionTest {
         // Test symmetric decryption
         DecryptionStream decryptor = PGPainless.decryptAndOrVerify()
                 .onInputStream(new ByteArrayInputStream(ciphertext))
-                .decryptWith(encryptionPassphrase)
-                .doNotVerify()
-                .build();
+                .withOptions(new ConsumerOptions()
+                        .addDecryptionPassphrase(encryptionPassphrase));
 
         ByteArrayOutputStream decrypted = new ByteArrayOutputStream();
 
@@ -95,9 +93,8 @@ public class SymmetricEncryptionTest {
                 new SolitaryPassphraseProvider(Passphrase.fromPassword(TestKeys.CRYPTIE_PASSWORD)));
         decryptor = PGPainless.decryptAndOrVerify()
                 .onInputStream(new ByteArrayInputStream(ciphertext))
-                .decryptWith(protector, decryptionKeys)
-                .doNotVerify()
-                .build();
+                .withOptions(new ConsumerOptions()
+                        .addDecryptionKeys(decryptionKeys, protector));
 
         decrypted = new ByteArrayOutputStream();
 
@@ -126,8 +123,7 @@ public class SymmetricEncryptionTest {
 
         assertThrows(MissingDecryptionMethodException.class, () -> PGPainless.decryptAndOrVerify()
                 .onInputStream(new ByteArrayInputStream(ciphertextOut.toByteArray()))
-                .decryptWith(Passphrase.fromPassword("meldir"))
-                .doNotVerify()
-                .build());
+                .withOptions(new ConsumerOptions()
+                        .addDecryptionPassphrase(Passphrase.fromPassword("meldir"))));
     }
 }

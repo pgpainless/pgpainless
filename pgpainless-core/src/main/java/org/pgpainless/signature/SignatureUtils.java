@@ -15,22 +15,27 @@
  */
 package org.pgpainless.signature;
 
+import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.nio.charset.Charset;
+import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
 
+import org.bouncycastle.bcpg.MarkerPacket;
 import org.bouncycastle.bcpg.sig.KeyExpirationTime;
 import org.bouncycastle.bcpg.sig.RevocationReason;
 import org.bouncycastle.bcpg.sig.SignatureExpirationTime;
-import org.bouncycastle.openpgp.PGPMarker;
+import org.bouncycastle.openpgp.PGPCompressedData;
+import org.bouncycastle.openpgp.PGPException;
 import org.bouncycastle.openpgp.PGPObjectFactory;
 import org.bouncycastle.openpgp.PGPPublicKey;
 import org.bouncycastle.openpgp.PGPSecretKey;
 import org.bouncycastle.openpgp.PGPSignature;
 import org.bouncycastle.openpgp.PGPSignatureGenerator;
 import org.bouncycastle.openpgp.PGPSignatureList;
+import org.bouncycastle.openpgp.PGPUtil;
 import org.bouncycastle.openpgp.operator.PGPContentSignerBuilder;
 import org.bouncycastle.util.encoders.Hex;
 import org.pgpainless.PGPainless;
@@ -41,7 +46,6 @@ import org.pgpainless.key.util.OpenPgpKeyAttributeUtil;
 import org.pgpainless.key.util.RevocationAttributes;
 import org.pgpainless.policy.Policy;
 import org.pgpainless.signature.subpackets.SignatureSubpacketsUtil;
-import org.pgpainless.util.BCUtil;
 
 /**
  * Utility methods related to signatures.
@@ -183,18 +187,44 @@ public class SignatureUtils {
      * @return signature list
      * @throws IOException if the signatures cannot be read
      */
-    public static PGPSignatureList readSignatures(String encodedSignatures) throws IOException {
-        InputStream inputStream = BCUtil.getPgpDecoderInputStream(encodedSignatures.getBytes(Charset.forName("UTF8")));
-        PGPObjectFactory objectFactory = new PGPObjectFactory(inputStream, ImplementationFactory.getInstance().getKeyFingerprintCalculator());
-        Object next = objectFactory.nextObject();
-        while (next != null) {
-            if (next instanceof PGPMarker) {
-                next = objectFactory.nextObject();
+    public static List<PGPSignature> readSignatures(String encodedSignatures) throws IOException, PGPException {
+        InputStream inputStream = new ByteArrayInputStream(encodedSignatures.getBytes(Charset.forName("UTF8")));
+        return readSignatures(inputStream);
+    }
+
+    public static List<PGPSignature> readSignatures(InputStream inputStream) throws IOException, PGPException {
+        List<PGPSignature> signatures = new ArrayList<>();
+        InputStream pgpIn = PGPUtil.getDecoderStream(inputStream);
+        PGPObjectFactory objectFactory = new PGPObjectFactory(
+                pgpIn, ImplementationFactory.getInstance().getKeyFingerprintCalculator());
+
+        Object nextObject = objectFactory.nextObject();
+        while (nextObject != null) {
+            if (nextObject instanceof MarkerPacket) {
+                nextObject = objectFactory.nextObject();
                 continue;
             }
-            return (PGPSignatureList) next;
+            if (nextObject instanceof PGPCompressedData) {
+                PGPCompressedData compressedData = (PGPCompressedData) nextObject;
+                objectFactory = new PGPObjectFactory(compressedData.getDataStream(),
+                        ImplementationFactory.getInstance().getKeyFingerprintCalculator());
+                nextObject = objectFactory.nextObject();
+                continue;
+            }
+            if (nextObject instanceof PGPSignatureList) {
+                PGPSignatureList signatureList = (PGPSignatureList) nextObject;
+                for (PGPSignature s : signatureList) {
+                    signatures.add(s);
+                }
+            }
+            if (nextObject instanceof PGPSignature) {
+                signatures.add((PGPSignature) nextObject);
+            }
+            nextObject = objectFactory.nextObject();
         }
-        return null;
+        pgpIn.close();
+
+        return signatures;
     }
 
     public static String getSignatureDigestPrefix(PGPSignature signature) {

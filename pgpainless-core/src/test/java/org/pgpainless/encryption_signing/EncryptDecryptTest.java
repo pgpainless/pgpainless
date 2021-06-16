@@ -27,9 +27,7 @@ import java.io.IOException;
 import java.nio.charset.Charset;
 import java.security.InvalidAlgorithmParameterException;
 import java.security.NoSuchAlgorithmException;
-import java.util.Collections;
 import java.util.Set;
-import java.util.logging.Logger;
 
 import org.bouncycastle.bcpg.ArmoredOutputStream;
 import org.bouncycastle.openpgp.PGPException;
@@ -44,6 +42,7 @@ import org.pgpainless.PGPainless;
 import org.pgpainless.algorithm.DocumentSignatureType;
 import org.pgpainless.algorithm.KeyFlag;
 import org.pgpainless.algorithm.SymmetricKeyAlgorithm;
+import org.pgpainless.decryption_verification.ConsumerOptions;
 import org.pgpainless.decryption_verification.DecryptionStream;
 import org.pgpainless.decryption_verification.OpenPgpMetadata;
 import org.pgpainless.implementation.ImplementationFactory;
@@ -61,17 +60,16 @@ import org.pgpainless.util.ArmoredOutputStreamFactory;
 
 public class EncryptDecryptTest {
 
-    private static final Logger LOGGER = Logger.getLogger(EncryptDecryptTest.class.getName());
     // Don't use StandardCharsets.UTF_8 because of Android API level.
     private static final Charset UTF8 = Charset.forName("UTF-8");
 
     private static final String testMessage =
             "Ah, Juliet, if the measure of thy joy\n" +
-            "Be heaped like mine, and that thy skill be more\n" +
-            "To blazon it, then sweeten with thy breath\n" +
-            "This neighbor air, and let rich music’s tongue\n" +
-            "Unfold the imagined happiness that both\n" +
-            "Receive in either by this dear encounter.";
+                    "Be heaped like mine, and that thy skill be more\n" +
+                    "To blazon it, then sweeten with thy breath\n" +
+                    "This neighbor air, and let rich music’s tongue\n" +
+                    "Unfold the imagined happiness that both\n" +
+                    "Receive in either by this dear encounter.";
 
     @ParameterizedTest
     @MethodSource("org.pgpainless.util.TestUtil#provideImplementationFactories")
@@ -178,10 +176,10 @@ public class EncryptDecryptTest {
         ByteArrayInputStream envelopeIn = new ByteArrayInputStream(encryptedSecretMessage);
         DecryptionStream decryptor = PGPainless.decryptAndOrVerify()
                 .onInputStream(envelopeIn)
-                .decryptWith(keyDecryptor, KeyRingUtils.keyRingsToKeyRingCollection(recipientSec))
-                .verifyWith(KeyRingUtils.keyRingsToKeyRingCollection(senderPub))
-                .ignoreMissingPublicKeys()
-                .build();
+                .withOptions(new ConsumerOptions()
+                        .addDecryptionKey(recipientSec, keyDecryptor)
+                        .addVerificationCert(senderPub)
+                );
 
         ByteArrayOutputStream decryptedSecretMessage = new ByteArrayOutputStream();
 
@@ -227,12 +225,13 @@ public class EncryptDecryptTest {
         // CHECKSTYLE:ON
 
         inputStream = new ByteArrayInputStream(testMessage.getBytes());
-        DecryptionStream verifier = PGPainless.decryptAndOrVerify().onInputStream(inputStream)
-                .doNotDecrypt()
-                .verifyDetachedSignature(new ByteArrayInputStream(armorSig.getBytes()))
-                .verifyWith(Collections.singleton(KeyRingUtils.publicKeyRingFrom(signingKeys)))
-                .ignoreMissingPublicKeys()
-                .build();
+        DecryptionStream verifier = PGPainless.decryptAndOrVerify()
+                .onInputStream(inputStream)
+                .withOptions(new ConsumerOptions()
+                        .addVerificationOfDetachedSignatures(new ByteArrayInputStream(armorSig.getBytes()))
+                        .addVerificationCert(KeyRingUtils.publicKeyRingFrom(signingKeys))
+                );
+
         dummyOut = new ByteArrayOutputStream();
         Streams.pipeAll(verifier, dummyOut);
         verifier.close();
@@ -257,16 +256,12 @@ public class EncryptDecryptTest {
         Streams.pipeAll(inputStream, signer);
         signer.close();
 
-        // CHECKSTYLE:OFF
-        System.out.println(signOut.toString());
-        // CHECKSTYLE:ON
-
         inputStream = new ByteArrayInputStream(signOut.toByteArray());
-        DecryptionStream verifier = PGPainless.decryptAndOrVerify().onInputStream(inputStream)
-                .doNotDecrypt()
-                .verifyWith(Collections.singleton(KeyRingUtils.publicKeyRingFrom(signingKeys)))
-                .ignoreMissingPublicKeys()
-                .build();
+        DecryptionStream verifier = PGPainless.decryptAndOrVerify()
+                .onInputStream(inputStream)
+                .withOptions(new ConsumerOptions()
+                        .addVerificationCert(KeyRingUtils.publicKeyRingFrom(signingKeys))
+                );
         signOut = new ByteArrayOutputStream();
         Streams.pipeAll(verifier, signOut);
         verifier.close();
@@ -335,7 +330,7 @@ public class EncryptDecryptTest {
         PGPPublicKeyRing publicKeys = PGPainless.readKeyRing().publicKeyRing(key);
         ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
         assertThrows(IllegalArgumentException.class, () ->
-        PGPainless.encryptAndOrSign().onOutputStream(outputStream)
-                .toRecipient(publicKeys));
+                PGPainless.encryptAndOrSign().onOutputStream(outputStream)
+                        .toRecipient(publicKeys));
     }
 }

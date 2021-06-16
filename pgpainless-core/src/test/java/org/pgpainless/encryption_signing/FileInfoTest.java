@@ -23,20 +23,18 @@ import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.security.InvalidAlgorithmParameterException;
 import java.security.NoSuchAlgorithmException;
-import java.util.Collections;
 import java.util.Date;
 
 import org.bouncycastle.openpgp.PGPException;
 import org.bouncycastle.openpgp.PGPPublicKeyRing;
 import org.bouncycastle.openpgp.PGPSecretKeyRing;
-import org.bouncycastle.openpgp.PGPSecretKeyRingCollection;
 import org.bouncycastle.util.io.Streams;
 import org.junit.jupiter.api.Test;
 import org.pgpainless.PGPainless;
 import org.pgpainless.algorithm.StreamEncoding;
+import org.pgpainless.decryption_verification.ConsumerOptions;
 import org.pgpainless.decryption_verification.DecryptionStream;
 import org.pgpainless.decryption_verification.OpenPgpMetadata;
-import org.pgpainless.key.protection.SecretKeyRingProtector;
 import org.pgpainless.key.util.KeyRingUtils;
 
 public class FileInfoTest {
@@ -85,9 +83,8 @@ public class FileInfoTest {
 
         DecryptionStream decryptionStream = PGPainless.decryptAndOrVerify()
                 .onInputStream(cryptIn)
-                .decryptWith(SecretKeyRingProtector.unprotectedKeys(), new PGPSecretKeyRingCollection(Collections.singleton(secretKeys)))
-                .doNotVerify()
-                .build();
+                .withOptions(new ConsumerOptions()
+                        .addDecryptionKey(secretKeys));
         Streams.pipeAll(decryptionStream, plainOut);
 
         decryptionStream.close();

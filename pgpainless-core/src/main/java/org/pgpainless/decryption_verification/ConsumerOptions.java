@@ -15,19 +15,31 @@
  */
 package org.pgpainless.decryption_verification;
 
+import java.io.IOException;
+import java.io.InputStream;
+import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
 
+import org.bouncycastle.bcpg.MarkerPacket;
+import org.bouncycastle.openpgp.PGPCompressedData;
+import org.bouncycastle.openpgp.PGPException;
+import org.bouncycastle.openpgp.PGPObjectFactory;
 import org.bouncycastle.openpgp.PGPPublicKeyRing;
 import org.bouncycastle.openpgp.PGPPublicKeyRingCollection;
 import org.bouncycastle.openpgp.PGPSecretKeyRing;
+import org.bouncycastle.openpgp.PGPSecretKeyRingCollection;
 import org.bouncycastle.openpgp.PGPSignature;
+import org.bouncycastle.openpgp.PGPSignatureList;
+import org.bouncycastle.openpgp.PGPUtil;
+import org.pgpainless.implementation.ImplementationFactory;
 import org.pgpainless.key.protection.SecretKeyRingProtector;
 import org.pgpainless.util.Passphrase;
 
@@ -101,6 +113,48 @@ public class ConsumerOptions {
     public ConsumerOptions addVerificationCerts(PGPPublicKeyRingCollection verificationCerts) {
         for (PGPPublicKeyRing certificate : verificationCerts) {
             addVerificationCert(certificate);
+        }
+        return this;
+    }
+
+    public ConsumerOptions addVerificationOfDetachedSignatures(InputStream signatureInputStream) throws IOException, PGPException {
+        List<PGPSignature> signatures = new ArrayList<>();
+        InputStream pgpIn = PGPUtil.getDecoderStream(signatureInputStream);
+        PGPObjectFactory objectFactory = new PGPObjectFactory(
+                pgpIn, ImplementationFactory.getInstance().getKeyFingerprintCalculator());
+
+        Object nextObject = objectFactory.nextObject();
+        while (nextObject != null) {
+            if (nextObject instanceof MarkerPacket) {
+                nextObject = objectFactory.nextObject();
+                continue;
+            }
+            if (nextObject instanceof PGPCompressedData) {
+                PGPCompressedData compressedData = (PGPCompressedData) nextObject;
+                objectFactory = new PGPObjectFactory(compressedData.getDataStream(),
+                        ImplementationFactory.getInstance().getKeyFingerprintCalculator());
+                nextObject = objectFactory.nextObject();
+                continue;
+            }
+            if (nextObject instanceof PGPSignatureList) {
+                PGPSignatureList signatureList = (PGPSignatureList) nextObject;
+                for (PGPSignature s : signatureList) {
+                    signatures.add(s);
+                }
+            }
+            if (nextObject instanceof PGPSignature) {
+                signatures.add((PGPSignature) nextObject);
+            }
+            nextObject = objectFactory.nextObject();
+        }
+        pgpIn.close();
+
+        return addVerificationOfDetachedSignatures(signatures);
+    }
+
+    public ConsumerOptions addVerificationOfDetachedSignatures(List<PGPSignature> detachedSignatures) {
+        for (PGPSignature signature : detachedSignatures) {
+            addVerificationOfDetachedSignature(signature);
         }
         return this;
     }
@@ -180,6 +234,20 @@ public class ConsumerOptions {
      */
     public ConsumerOptions addDecryptionKey(@Nonnull PGPSecretKeyRing key, @Nonnull SecretKeyRingProtector keyRingProtector) {
         decryptionKeys.put(key, keyRingProtector);
+        return this;
+    }
+
+    /**
+     * Add the keys in the provided key collection for message decryption.
+     *
+     * @param keys key collection
+     * @param keyRingProtector protector for encrypted secret keys
+     * @return options
+     */
+    public ConsumerOptions addDecryptionKeys(@Nonnull PGPSecretKeyRingCollection keys, @Nonnull SecretKeyRingProtector keyRingProtector) {
+        for (PGPSecretKeyRing key : keys) {
+            addDecryptionKey(key, keyRingProtector);
+        }
         return this;
     }
 

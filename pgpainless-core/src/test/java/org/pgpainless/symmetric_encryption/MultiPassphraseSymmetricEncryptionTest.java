@@ -26,8 +26,11 @@ import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.MethodSource;
 import org.pgpainless.PGPainless;
+import org.pgpainless.decryption_verification.ConsumerOptions;
 import org.pgpainless.decryption_verification.DecryptionStream;
+import org.pgpainless.encryption_signing.EncryptionOptions;
 import org.pgpainless.encryption_signing.EncryptionStream;
+import org.pgpainless.encryption_signing.ProducerOptions;
 import org.pgpainless.implementation.ImplementationFactory;
 import org.pgpainless.util.Passphrase;
 
@@ -44,12 +47,11 @@ public class MultiPassphraseSymmetricEncryptionTest {
         ByteArrayOutputStream ciphertextOut = new ByteArrayOutputStream();
         EncryptionStream encryptor = PGPainless.encryptAndOrSign()
                 .onOutputStream(ciphertextOut)
-                .forPassphrase(Passphrase.fromPassword("p1"))
-                .and()
-                .forPassphrase(Passphrase.fromPassword("p2"))
-                .and()
-                .doNotSign()
-                .noArmor();
+                .withOptions(ProducerOptions.encrypt(
+                        EncryptionOptions.encryptCommunications()
+                        .addPassphrase(Passphrase.fromPassword("p1"))
+                        .addPassphrase(Passphrase.fromPassword("p2"))
+                ).setAsciiArmor(false));
 
         Streams.pipeAll(plaintextIn, encryptor);
         encryptor.close();
@@ -58,10 +60,10 @@ public class MultiPassphraseSymmetricEncryptionTest {
 
         // decrypting the p1 package with p2 first will not work. Test if it is handled correctly.
         for (Passphrase passphrase : new Passphrase[] {Passphrase.fromPassword("p2"), Passphrase.fromPassword("p1")}) {
-            DecryptionStream decryptor = PGPainless.decryptAndOrVerify().onInputStream(new ByteArrayInputStream(ciphertext))
-                    .decryptWith(passphrase)
-                    .doNotVerify()
-                    .build();
+            DecryptionStream decryptor = PGPainless.decryptAndOrVerify()
+                    .onInputStream(new ByteArrayInputStream(ciphertext))
+                    .withOptions(new ConsumerOptions()
+                    .addDecryptionPassphrase(passphrase));
 
             ByteArrayOutputStream plaintextOut = new ByteArrayOutputStream();
 

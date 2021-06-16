@@ -17,7 +17,6 @@ package org.pgpainless.weird_keys;
 
 import static org.junit.jupiter.api.Assertions.assertThrows;
 
-import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.security.InvalidAlgorithmParameterException;
 import java.security.NoSuchAlgorithmException;
@@ -27,9 +26,8 @@ import org.bouncycastle.openpgp.PGPPublicKeyRing;
 import org.bouncycastle.openpgp.PGPSecretKeyRing;
 import org.junit.jupiter.api.Test;
 import org.pgpainless.PGPainless;
-import org.pgpainless.algorithm.EncryptionPurpose;
 import org.pgpainless.algorithm.KeyFlag;
-import org.pgpainless.encryption_signing.EncryptionBuilderInterface;
+import org.pgpainless.encryption_signing.EncryptionOptions;
 import org.pgpainless.key.generation.KeySpec;
 import org.pgpainless.key.generation.type.KeyType;
 import org.pgpainless.key.generation.type.rsa.RsaLength;
@@ -49,13 +47,10 @@ public class TestEncryptCommsStorageFlagsDifferentiated {
                 .withPrimaryUserId("cannot@encrypt.comms")
                 .withoutPassphrase()
                 .build();
+
         PGPPublicKeyRing publicKeys = KeyRingUtils.publicKeyRingFrom(secretKeys);
 
-        ByteArrayOutputStream out = new ByteArrayOutputStream();
-        EncryptionBuilderInterface.ToRecipients builder = PGPainless.encryptAndOrSign(EncryptionPurpose.COMMUNICATIONS)
-                .onOutputStream(out);
-
-        // since the key does not carry the flag ENCRYPT_COMMS, it cannot be used by the stream.
-        assertThrows(IllegalArgumentException.class, () -> builder.toRecipient(publicKeys));
+        assertThrows(IllegalArgumentException.class, () -> EncryptionOptions.encryptCommunications()
+                .addRecipient(publicKeys));
     }
 }

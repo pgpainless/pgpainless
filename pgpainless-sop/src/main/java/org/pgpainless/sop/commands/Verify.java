@@ -15,20 +15,11 @@
  */
 package org.pgpainless.sop.commands;
 
-import org.bouncycastle.openpgp.PGPException;
-import org.bouncycastle.openpgp.PGPPublicKeyRing;
-import org.bouncycastle.openpgp.PGPPublicKeyRingCollection;
-import org.bouncycastle.openpgp.PGPSignature;
-import org.bouncycastle.util.io.Streams;
-import org.pgpainless.PGPainless;
-import org.pgpainless.decryption_verification.DecryptionStream;
-import org.pgpainless.decryption_verification.OpenPgpMetadata;
-import org.pgpainless.key.OpenPgpV4Fingerprint;
-import picocli.CommandLine;
+import static org.pgpainless.sop.Print.err_ln;
+import static org.pgpainless.sop.Print.print_ln;
 
 import java.io.File;
 import java.io.FileInputStream;
-import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.OutputStream;
 import java.text.DateFormat;
@@ -36,12 +27,20 @@ import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.HashMap;
-import java.util.HashSet;
 import java.util.Map;
 import java.util.TimeZone;
 
-import static org.pgpainless.sop.Print.err_ln;
-import static org.pgpainless.sop.Print.print_ln;
+import org.bouncycastle.openpgp.PGPException;
+import org.bouncycastle.openpgp.PGPPublicKeyRing;
+import org.bouncycastle.openpgp.PGPPublicKeyRingCollection;
+import org.bouncycastle.openpgp.PGPSignature;
+import org.bouncycastle.util.io.Streams;
+import org.pgpainless.PGPainless;
+import org.pgpainless.decryption_verification.ConsumerOptions;
+import org.pgpainless.decryption_verification.DecryptionStream;
+import org.pgpainless.decryption_verification.OpenPgpMetadata;
+import org.pgpainless.key.OpenPgpV4Fingerprint;
+import picocli.CommandLine;
 
 @CommandLine.Command(name = "verify",
         description = "Verify a detached signature over the data from standard input",
@@ -89,32 +88,35 @@ public class Verify implements Runnable {
         Date notBeforeDate = parseNotBefore();
         Date notAfterDate = parseNotAfter();
 
+        ConsumerOptions options = new ConsumerOptions();
+        try (FileInputStream sigIn = new FileInputStream(signature)) {
+            options.addVerificationOfDetachedSignatures(sigIn);
+        } catch (IOException | PGPException e) {
+            err_ln("Cannot read detached signature: " + e.getMessage());
+            System.exit(1);
+        }
+
         Map<PGPPublicKeyRing, File> publicKeys = readCertificatesFromFiles();
         if (publicKeys.isEmpty()) {
             err_ln("No certificates supplied.");
             System.exit(19);
         }
 
+        for (PGPPublicKeyRing cert : publicKeys.keySet()) {
+            options.addVerificationCert(cert);
+        }
+
         OpenPgpMetadata metadata;
-        try (FileInputStream sigIn = new FileInputStream(signature)) {
+        try {
             DecryptionStream verifier = PGPainless.decryptAndOrVerify()
                     .onInputStream(System.in)
-                    .doNotDecrypt()
-                    .verifyDetachedSignature(sigIn)
-                    .verifyWith(new HashSet<>(publicKeys.keySet()))
-                    .ignoreMissingPublicKeys()
-                    .build();
+                    .withOptions(options);
 
             OutputStream out = new NullOutputStream();
             Streams.pipeAll(verifier, out);
             verifier.close();
 
             metadata = verifier.getResult();
-        } catch (FileNotFoundException e) {
-            err_ln("Signature file not found:");
-            err_ln(e.getMessage());
-            System.exit(1);
-            return;
         } catch (IOException | PGPException e) {
             err_ln("Signature validation failed.");
             err_ln(e.getMessage());

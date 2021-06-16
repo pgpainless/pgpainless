@@ -22,6 +22,7 @@ import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.util.Date;
 
+import org.bouncycastle.openpgp.PGPException;
 import org.bouncycastle.openpgp.PGPPublicKeyRing;
 import org.bouncycastle.openpgp.PGPSignature;
 import org.junit.jupiter.api.Test;
@@ -33,7 +34,7 @@ public class KeyRevocationTest {
     private static final String data = "Hello, World";
 
     @Test
-    public void subkeySignsPrimaryKeyRevokedNoReason() throws IOException, SignatureValidationException {
+    public void subkeySignsPrimaryKeyRevokedNoReason() throws IOException, PGPException {
         String key = "-----BEGIN PGP ARMORED FILE-----\n" +
                 "Comment: ASCII Armor added by openpgp-interoperability-test-suite\n" +
                 "\n" +
@@ -178,7 +179,7 @@ public class KeyRevocationTest {
      * @see <a href="https://tests.sequoia-pgp.org/#Key_revocation_test__subkey_signs__primary_key_is_not_revoked__base_case_">Sequoia Test-Suite</a>
      */
     @Test
-    public void subkeySignsPrimaryKeyNotRevoked() throws IOException, SignatureValidationException {
+    public void subkeySignsPrimaryKeyNotRevoked() throws IOException, PGPException {
         String key = "-----BEGIN PGP ARMORED FILE-----\n" +
                 "Comment: ASCII Armor added by openpgp-interoperability-test-suite\n" +
                 "\n" +
