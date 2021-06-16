@@ -17,7 +17,6 @@ package org.pgpainless.decryption_verification;
 
 import java.io.IOException;
 import java.io.InputStream;
-import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Date;
 import java.util.HashMap;
@@ -28,19 +27,15 @@ import java.util.Set;
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
 
-import org.bouncycastle.bcpg.MarkerPacket;
-import org.bouncycastle.openpgp.PGPCompressedData;
 import org.bouncycastle.openpgp.PGPException;
-import org.bouncycastle.openpgp.PGPObjectFactory;
 import org.bouncycastle.openpgp.PGPPublicKeyRing;
 import org.bouncycastle.openpgp.PGPPublicKeyRingCollection;
 import org.bouncycastle.openpgp.PGPSecretKeyRing;
 import org.bouncycastle.openpgp.PGPSecretKeyRingCollection;
 import org.bouncycastle.openpgp.PGPSignature;
-import org.bouncycastle.openpgp.PGPSignatureList;
-import org.bouncycastle.openpgp.PGPUtil;
-import org.pgpainless.implementation.ImplementationFactory;
+import org.pgpainless.exception.NotYetImplementedException;
 import org.pgpainless.key.protection.SecretKeyRingProtector;
+import org.pgpainless.signature.SignatureUtils;
 import org.pgpainless.util.Passphrase;
 
 /**
@@ -66,12 +61,16 @@ public class ConsumerOptions {
     /**
      * Consider signatures made before the given timestamp invalid.
      *
+     * Note: This method does not have any effect yet.
+     * TODO: Add support for custom signature validity date ranges
+     *
      * @param timestamp timestamp
      * @return options
      */
     public ConsumerOptions verifyNotBefore(Date timestamp) {
         this.verifyNotBefore = timestamp;
-        return this;
+        throw new NotYetImplementedException();
+        // return this;
     }
 
     public Date getVerifyNotBefore() {
@@ -81,12 +80,16 @@ public class ConsumerOptions {
     /**
      * Consider signatures made after the given timestamp invalid.
      *
+     * Note: This method does not have any effect yet.
+     * TODO: Add support for custom signature validity date ranges
+     *
      * @param timestamp timestamp
      * @return options
      */
     public ConsumerOptions verifyNotAfter(Date timestamp) {
         this.verifyNotAfter = timestamp;
-        return this;
+        throw new NotYetImplementedException();
+        // return this;
     }
 
     public Date getVerifyNotAfter() {
@@ -118,37 +121,7 @@ public class ConsumerOptions {
     }
 
     public ConsumerOptions addVerificationOfDetachedSignatures(InputStream signatureInputStream) throws IOException, PGPException {
-        List<PGPSignature> signatures = new ArrayList<>();
-        InputStream pgpIn = PGPUtil.getDecoderStream(signatureInputStream);
-        PGPObjectFactory objectFactory = new PGPObjectFactory(
-                pgpIn, ImplementationFactory.getInstance().getKeyFingerprintCalculator());
-
-        Object nextObject = objectFactory.nextObject();
-        while (nextObject != null) {
-            if (nextObject instanceof MarkerPacket) {
-                nextObject = objectFactory.nextObject();
-                continue;
-            }
-            if (nextObject instanceof PGPCompressedData) {
-                PGPCompressedData compressedData = (PGPCompressedData) nextObject;
-                objectFactory = new PGPObjectFactory(compressedData.getDataStream(),
-                        ImplementationFactory.getInstance().getKeyFingerprintCalculator());
-                nextObject = objectFactory.nextObject();
-                continue;
-            }
-            if (nextObject instanceof PGPSignatureList) {
-                PGPSignatureList signatureList = (PGPSignatureList) nextObject;
-                for (PGPSignature s : signatureList) {
-                    signatures.add(s);
-                }
-            }
-            if (nextObject instanceof PGPSignature) {
-                signatures.add((PGPSignature) nextObject);
-            }
-            nextObject = objectFactory.nextObject();
-        }
-        pgpIn.close();
-
+        List<PGPSignature> signatures = SignatureUtils.readSignatures(signatureInputStream);
         return addVerificationOfDetachedSignatures(signatures);
     }
 
@@ -186,7 +159,7 @@ public class ConsumerOptions {
      * Attempt decryption using a session key.
      *
      * Note: PGPainless does not yet support decryption with session keys.
-     * TODO: Implement
+     * TODO: Add support for decryption using session key.
      *
      * @see <a href="https://datatracker.ietf.org/doc/html/rfc4880#section-2.1">RFC4880 on Session Keys</a>
      *
@@ -195,7 +168,8 @@ public class ConsumerOptions {
      */
     public ConsumerOptions setSessionKey(@Nonnull byte[] sessionKey) {
         this.sessionKey = sessionKey;
-        return this;
+        throw new NotYetImplementedException();
+        // return this;
     }
 
     /**
