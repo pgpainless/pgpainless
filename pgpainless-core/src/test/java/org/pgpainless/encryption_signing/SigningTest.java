@@ -45,10 +45,10 @@ import org.pgpainless.decryption_verification.OpenPgpMetadata;
 import org.pgpainless.exception.KeyValidationException;
 import org.pgpainless.implementation.ImplementationFactory;
 import org.pgpainless.key.TestKeys;
+import org.pgpainless.key.info.KeyRingInfo;
 import org.pgpainless.key.protection.SecretKeyRingProtector;
 import org.pgpainless.key.util.KeyRingUtils;
 import org.pgpainless.util.Passphrase;
-import org.pgpainless.util.selection.key.impl.SignatureKeySelectionStrategy;
 
 public class SigningTest {
 
@@ -61,9 +61,8 @@ public class SigningTest {
         PGPPublicKeyRing romeoKeys = TestKeys.getRomeoPublicKeyRing();
 
         PGPSecretKeyRing cryptieKeys = TestKeys.getCryptieSecretKeyRing();
-        PGPSecretKey cryptieSigningKey = new SignatureKeySelectionStrategy()
-                .selectKeysFromKeyRing(cryptieKeys)
-                .iterator().next();
+        KeyRingInfo cryptieInfo = new KeyRingInfo(cryptieKeys);
+        PGPSecretKey cryptieSigningKey = cryptieKeys.getSecretKey(cryptieInfo.getSigningSubkeys().get(0).getKeyID());
 
         PGPPublicKeyRingCollection keys = new PGPPublicKeyRingCollection(Arrays.asList(julietKeys, romeoKeys));
 
