@@ -34,8 +34,13 @@ import org.pgpainless.util.NotationRegistry;
  * PGPainless comes with an algorithm policy.
  * This policy is consulted during signature verification, such that signatures made using weak algorithms
  * can be rejected.
+ * Note, that PGPainless distinguishes between hash algorithms used in revocation and non-revocation signatures,
+ * and has different policies for those.
  *
- * The following examples show how this policy can be modified.
+ * Furthermore PGPainless has policies for symmetric encryption algorithms (both for encrypting and decrypting),
+ * for public key algorithms and key lengths, as well as compression algorithms.
+ *
+ * The following examples show how these policies can be modified.
  *
  * PGPainless' policy is being accessed by calling {@link PGPainless#getPolicy()}.
  * Custom sub-policies can be set by calling the setter methods of {@link Policy}.
@@ -48,18 +53,25 @@ public class ManagePolicy {
     @BeforeEach
     @AfterEach
     public void resetPolicy() {
+        // Policy for hash algorithms in non-revocation signatures
         PGPainless.getPolicy().setSignatureHashAlgorithmPolicy(
                 Policy.HashAlgorithmPolicy.defaultSignatureAlgorithmPolicy());
+        // Policy for hash algorithms in revocation signatures
         PGPainless.getPolicy().setRevocationSignatureHashAlgorithmPolicy(
                 Policy.HashAlgorithmPolicy.defaultRevocationSignatureHashAlgorithmPolicy());
+        // Policy for public key algorithms and bit lengths
         PGPainless.getPolicy().setPublicKeyAlgorithmPolicy(
                 Policy.PublicKeyAlgorithmPolicy.defaultPublicKeyAlgorithmPolicy());
+        // Policy for acceptable symmetric encryption algorithms when decrypting messages
         PGPainless.getPolicy().setSymmetricKeyDecryptionAlgorithmPolicy(
                 Policy.SymmetricKeyAlgorithmPolicy.defaultSymmetricKeyDecryptionAlgorithmPolicy());
+        // Policy for acceptable symmetric encryption algorithms when encrypting messages
         PGPainless.getPolicy().setSymmetricKeyEncryptionAlgorithmPolicy(
                 Policy.SymmetricKeyAlgorithmPolicy.defaultSymmetricKeyEncryptionAlgorithmPolicy());
+        // Policy for acceptable compression algorithms
         PGPainless.getPolicy().setCompressionAlgorithmPolicy(
                 Policy.CompressionAlgorithmPolicy.defaultCompressionAlgorithmPolicy());
+        // Known notations
         PGPainless.getPolicy().getNotationRegistry().clear();
     }
 
