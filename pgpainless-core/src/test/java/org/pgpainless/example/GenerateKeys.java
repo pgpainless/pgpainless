@@ -16,6 +16,7 @@
 package org.pgpainless.example;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import java.io.IOException;
 import java.security.InvalidAlgorithmParameterException;
@@ -26,6 +27,7 @@ import org.bouncycastle.openpgp.PGPPublicKeyRing;
 import org.bouncycastle.openpgp.PGPSecretKeyRing;
 import org.junit.jupiter.api.Test;
 import org.pgpainless.PGPainless;
+import org.pgpainless.algorithm.AlgorithmSuite;
 import org.pgpainless.algorithm.CompressionAlgorithm;
 import org.pgpainless.algorithm.EncryptionPurpose;
 import org.pgpainless.algorithm.Feature;
@@ -34,6 +36,7 @@ import org.pgpainless.algorithm.KeyFlag;
 import org.pgpainless.algorithm.PublicKeyAlgorithm;
 import org.pgpainless.algorithm.SymmetricKeyAlgorithm;
 import org.pgpainless.key.generation.KeySpec;
+import org.pgpainless.key.generation.KeySpecBuilderInterface;
 import org.pgpainless.key.generation.type.KeyType;
 import org.pgpainless.key.generation.type.ecc.EllipticCurve;
 import org.pgpainless.key.generation.type.eddsa.EdDSACurve;
@@ -136,9 +139,11 @@ public class GenerateKeys {
      */
     @Test
     public void generateSimpleECKey() throws PGPException, InvalidAlgorithmParameterException, NoSuchAlgorithmException {
+        // Define a primary user-id
         String userId = "mhelms@pgpainless.org";
+        // Set a password to protect the secret key
         String password = "tr4ns";
-
+        // Generate the OpenPGP key
         PGPSecretKeyRing secretKey = PGPainless.generateKeyRing()
                 .simpleEcKeyRing(userId, password);
 
@@ -153,6 +158,37 @@ public class GenerateKeys {
      * Among user-id and password, the user can add an arbitrary number of subkeys and specify their algorithms and
      * algorithm preferences.
      *
+     * If the target key amalgamation (key ring) should consist of more than just a single (sub-)key, start by providing
+     * the specifications for the subkeys first (in {@link org.pgpainless.key.generation.KeyRingBuilderInterface#withSubKey(KeySpec)})
+     * and add the primary key specification last (in {@link org.pgpainless.key.generation.KeyRingBuilderInterface#withPrimaryKey(KeySpec)}.
+     *
+     * {@link KeySpec} objects can best be obtained by using the {@link KeySpec#getBuilder(KeyType)} method and providing a {@link KeyType}.
+     * There are a bunch of factory methods for different {@link KeyType} implementations present in {@link KeyType} itself
+     * (such as {@link KeyType#ECDH(EllipticCurve)}.
+     *
+     * After that, the {@link org.pgpainless.key.generation.KeySpecBuilder} needs to be further configured.
+     * First of all, the keys {@link KeyFlag KeyFlags} need to be specified. {@link KeyFlag KeyFlags} determine
+     * the use of the key, like encryption, signing data or certifying subkeys.
+     * KeyFlags can be set with {@link org.pgpainless.key.generation.KeySpecBuilder#withKeyFlags(KeyFlag...)}.
+     *
+     * Next is algorithm setup. You can either trust PGPainless' defaults (see {@link AlgorithmSuite#getDefaultAlgorithmSuite()}),
+     * or specify your own algorithm preferences.
+     * To go with the defaults, call {@link KeySpecBuilderInterface.WithDetailedConfiguration#withDefaultAlgorithms()},
+     * otherwise start detailed config with {@link KeySpecBuilderInterface.WithDetailedConfiguration#withDetailedConfiguration()}.
+     *
+     * Note, that if you set preferred algorithms, the preference lists are sorted from high priority to low priority.
+     *
+     * When setting the primary key spec ({@link org.pgpainless.key.generation.KeyRingBuilder#withPrimaryKey(KeySpec)}),
+     * make sure that the primary key spec has the {@link KeyFlag} {@link KeyFlag#CERTIFY_OTHER} set, as this is an requirement
+     * for primary keys.
+     *
+     * Furthermore you have to set at least the primary user-id via
+     * {@link org.pgpainless.key.generation.KeyRingBuilderInterface.WithPrimaryUserId#withPrimaryUserId(String)},
+     * but you can also add additional user-ids via
+     * {@link org.pgpainless.key.generation.KeyRingBuilderInterface.WithAdditionalUserIdOrPassphrase#withAdditionalUserId(String)}.
+     *
+     * Lastly you can decide whether or not to set a passphrase to protect the secret key.
+     *
      * @throws PGPException
      * @throws InvalidAlgorithmParameterException
      * @throws NoSuchAlgorithmException
@@ -166,6 +202,7 @@ public class GenerateKeys {
                 .withEmail("mcarpenter@pgpainless.org")
                 .withComment("Pride!")
                 .build();
+        String additionalUserId = "mcarpenter@christopher.street";
 
         // It is recommended to use the Passphrase class, as it can be used to safely invalidate passwords from memory
         Passphrase passphrase = Passphrase.fromPassword("1nters3x");
@@ -204,10 +241,14 @@ public class GenerateKeys {
                 .withPrimaryKey(
                         KeySpec.getBuilder(KeyType.EDDSA(EdDSACurve._Ed25519))
                                 // The primary key MUST carry the CERTIFY_OTHER flag, but CAN carry additional flags
-                        .withKeyFlags(KeyFlag.CERTIFY_OTHER)
-                        .withDefaultAlgorithms()
+                                .withKeyFlags(KeyFlag.CERTIFY_OTHER)
+                                .withDefaultAlgorithms()
                 )
+                // Set primary user-id
                 .withPrimaryUserId(userId)
+                // Add an additional user id. This step can be repeated
+                .withAdditionalUserId(additionalUserId)
+                // Set passphrase. Alternatively use .withoutPassphrase() to leave key unprotected.
                 .withPassphrase(passphrase)
                 .build();
 
@@ -215,6 +256,7 @@ public class GenerateKeys {
         KeyRingInfo keyInfo = new KeyRingInfo(secretKey);
         assertEquals(3, keyInfo.getSecretKeys().size());
         assertEquals("Morgan Carpenter (Pride!) <mcarpenter@pgpainless.org>", keyInfo.getPrimaryUserId());
+        assertTrue(keyInfo.isUserIdValid(additionalUserId));
     }
 
 }
