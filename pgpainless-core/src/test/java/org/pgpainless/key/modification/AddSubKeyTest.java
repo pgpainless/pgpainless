@@ -15,12 +15,14 @@
  */
 package org.pgpainless.key.modification;
 
+import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotEquals;
 
 import java.io.IOException;
 import java.security.InvalidAlgorithmParameterException;
 import java.security.NoSuchAlgorithmException;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.Iterator;
 import java.util.List;
 
@@ -38,6 +40,7 @@ import org.pgpainless.key.TestKeys;
 import org.pgpainless.key.generation.KeySpec;
 import org.pgpainless.key.generation.type.ecc.EllipticCurve;
 import org.pgpainless.key.generation.type.ecc.ecdsa.ECDSA;
+import org.pgpainless.key.info.KeyRingInfo;
 import org.pgpainless.key.protection.PasswordBasedSecretKeyRingProtector;
 import org.pgpainless.key.protection.SecretKeyRingProtector;
 import org.pgpainless.key.protection.UnlockSecretKey;
@@ -78,5 +81,8 @@ public class AddSubKeyTest {
         SecretKeyRingProtector protector = SecretKeyRingProtector.unlockAllKeysWith(
                 Passphrase.fromPassword("subKeyPassphrase"), secretKeys);
         PGPPrivateKey privateKey = UnlockSecretKey.unlockSecretKey(subKey, protector);
+
+        KeyRingInfo info = new KeyRingInfo(secretKeys);
+        assertEquals(Collections.singletonList(KeyFlag.SIGN_DATA), info.getKeyFlagsOf(subKeyId));
     }
 }

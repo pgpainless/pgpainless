@@ -25,6 +25,7 @@ import org.bouncycastle.openpgp.PGPException;
 import org.bouncycastle.openpgp.PGPSecretKey;
 import org.bouncycastle.openpgp.PGPSecretKeyRing;
 import org.bouncycastle.openpgp.PGPSignature;
+import org.bouncycastle.openpgp.PGPSignatureSubpacketVector;
 import org.pgpainless.key.OpenPgpV4Fingerprint;
 import org.pgpainless.key.generation.KeySpec;
 import org.pgpainless.key.protection.KeyRingProtectionSettings;
@@ -99,7 +100,10 @@ public interface SecretKeyRingEditorInterface {
                                            SecretKeyRingProtector secretKeyRingProtector)
             throws InvalidAlgorithmParameterException, NoSuchAlgorithmException, PGPException;
 
-    SecretKeyRingEditorInterface addSubKey(PGPSecretKey subKey, SecretKeyRingProtector subKeyProtector, SecretKeyRingProtector keyRingProtector)
+    SecretKeyRingEditorInterface addSubKey(PGPSecretKey subKey,
+                                           PGPSignatureSubpacketVector hashedSubpackets,
+                                           PGPSignatureSubpacketVector unhashedSubpackets,
+                                           SecretKeyRingProtector subKeyProtector, SecretKeyRingProtector keyRingProtector)
             throws PGPException;
 
     /**

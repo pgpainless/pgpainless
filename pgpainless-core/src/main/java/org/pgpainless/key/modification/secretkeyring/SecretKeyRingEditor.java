@@ -167,12 +167,16 @@ public class SecretKeyRingEditor implements SecretKeyRingEditorInterface {
         PGPSecretKey secretSubKey = generateSubKey(keySpec, subKeyPassphrase);
         SecretKeyRingProtector subKeyProtector = PasswordBasedSecretKeyRingProtector
                 .forKey(secretSubKey, subKeyPassphrase);
+        PGPSignatureSubpacketVector hashedSubpackets = keySpec.getSubpackets();
+        PGPSignatureSubpacketVector unhashedSubpackets = null;
 
-        return addSubKey(secretSubKey, subKeyProtector, secretKeyRingProtector);
+        return addSubKey(secretSubKey, hashedSubpackets, unhashedSubpackets, subKeyProtector, secretKeyRingProtector);
     }
 
     @Override
     public SecretKeyRingEditorInterface addSubKey(PGPSecretKey secretSubKey,
+                                                  PGPSignatureSubpacketVector hashedSubpackets,
+                                                  PGPSignatureSubpacketVector unhashedSubpackets,
                                                   SecretKeyRingProtector subKeyProtector,
                                                   SecretKeyRingProtector keyRingProtector)
             throws PGPException {
@@ -196,7 +200,7 @@ public class SecretKeyRingEditor implements SecretKeyRingEditorInterface {
         PGPKeyRingGenerator keyRingGenerator = new PGPKeyRingGenerator(
                 secretKeyRing, ringDecryptor, digestCalculator, contentSignerBuilder, subKeyEncryptor);
 
-        keyRingGenerator.addSubKey(subKeyPair);
+        keyRingGenerator.addSubKey(subKeyPair, hashedSubpackets, unhashedSubpackets);
         secretKeyRing = keyRingGenerator.generateSecretKeyRing();
 
         return this;
