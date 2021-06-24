@@ -1,5 +1,9 @@
 # PGPainless Changelog
 
+## 0.2.2
+- Fix bug where adding a subkey would ignore the user-requested key flags  
+  This would cause subkeys to erroneously carry the certify-others key flag
+
 ## 0.2.1
 - Bump Bouncycastle dependency to `1.69`  
   This fixes a number of issues ([#70](https://github.com/pgpainless/pgpainless/issues/70),
