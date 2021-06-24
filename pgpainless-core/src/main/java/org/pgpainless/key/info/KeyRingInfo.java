@@ -660,12 +660,16 @@ public class KeyRingInfo {
         }
 
         if (nonExpiringSubkeys.isEmpty()) {
-            if (latestSubkeyExpirationDate.before(primaryExpiration)) {
-                return latestSubkeyExpirationDate;
+            if (latestSubkeyExpirationDate != null) {
+                if (primaryExpiration == null) {
+                    return latestSubkeyExpirationDate;
+                }
+                if (latestSubkeyExpirationDate.before(primaryExpiration)) {
+                    return latestSubkeyExpirationDate;
+                }
             }
-            return primaryExpiration;
         }
-        return null;
+        return primaryExpiration;
     }
 
     /**
