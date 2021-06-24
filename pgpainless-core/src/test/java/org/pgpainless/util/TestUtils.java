@@ -23,10 +23,14 @@ import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.Iterator;
 import java.util.Random;
+import java.util.TimeZone;
 
 public class TestUtils {
 
     public static SimpleDateFormat UTC_PARSER = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss z");
+    static {
+        UTC_PARSER.setTimeZone(TimeZone.getTimeZone("UTC"));
+    }
     public static final String ALPHABET = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";
     private static final Random RANDOM = new Random();
 
@@ -36,6 +40,10 @@ public class TestUtils {
         } catch (ParseException e) {
             return null;
         }
+    }
+
+    public static String formatUTCDate(Date date) {
+        return UTC_PARSER.format(date);
     }
 
     public static int getNumberOfItemsInIterator(Iterator<?> iterator) {
