@@ -105,7 +105,8 @@ public interface EncryptionBuilderInterface {
 
         /**
          * Encrypt for the given valid public key.
-         * TODO: Explain the difference between this and {@link #toRecipient(PGPPublicKeyRing, String)}.
+         * With this method, the recipient key is being addressed by key-id,
+         * so this method prioritizes algorithm preferences from the keys direct-key signature.
          *
          * @param key recipient key for which the message will be encrypted.
          * @return api handle
@@ -134,8 +135,8 @@ public interface EncryptionBuilderInterface {
 
         /**
          * Encrypt for all valid public keys in the provided collection.
-         * If any key is not eligible for encryption (e.g. expired, revoked...), an exception will be thrown.
-         * TODO: which exception?
+         * If any key is not eligible for encryption (e.g. expired, revoked...),
+         * an {@link IllegalArgumentException} will be thrown.
          *
          * @param keys collection of public keys
          * @return api handle

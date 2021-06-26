@@ -153,7 +153,6 @@ public class BcImplementationFactory extends ImplementationFactory {
                 .build(passphrase.getChars());
     }
 
-    // TODO: Find a better conversion method that does not depend on JcaPGPKeyPair.
     private AsymmetricCipherKeyPair jceToBcKeyPair(PublicKeyAlgorithm algorithm,
                                                    KeyPair keyPair,
                                                    Date creationDate) throws PGPException {
