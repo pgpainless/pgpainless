@@ -45,6 +45,10 @@ import org.pgpainless.key.protection.UnlockSecretKey;
 import org.pgpainless.util.Passphrase;
 import org.pgpainless.util.TestUtils;
 
+/**
+ * PGPainless offers a simple API to modify keys by adding and replacing signatures and/or subkeys.
+ * The main entry point to this API is {@link PGPainless#modifyKeyRing(PGPSecretKeyRing)}.
+ */
 public class ModifyKeys {
 
     private final String userId = "alice@pgpainless.org";
@@ -191,12 +195,17 @@ public class ModifyKeys {
         assertEquals(TestUtils.formatUTCDate(expirationDate), TestUtils.formatUTCDate(info.getExpirationDateForUse(KeyFlag.SIGN_DATA)));
     }
 
+    /**
+     * This example demonstrates how to set an expiration date for single subkeys.
+     *
+     * @throws PGPException
+     */
     @Test
     public void setSubkeyExpirationDate() throws PGPException {
         Date expirationDate = TestUtils.getUTCDate("2032-01-13 22:30:01 UTC");
-
         SecretKeyRingProtector protector = SecretKeyRingProtector
                 .unlockAllKeysWith(Passphrase.fromPassword(originalPassphrase), secretKey);
+
         secretKey = PGPainless.modifyKeyRing(secretKey)
                 .setExpirationDate(
                         new OpenPgpV4Fingerprint(secretKey.getPublicKey(encryptionSubkeyId)),
@@ -210,5 +219,26 @@ public class ModifyKeys {
         assertNull(info.getPrimaryKeyExpirationDate());
         assertNull(info.getExpirationDateForUse(KeyFlag.SIGN_DATA));
         assertEquals(TestUtils.formatUTCDate(expirationDate), TestUtils.formatUTCDate(info.getExpirationDateForUse(KeyFlag.ENCRYPT_COMMS)));
+    }
+
+    /**
+     * This example demonstrates how to revoke a user-id on a key.
+     *
+     * @throws PGPException
+     */
+    @Test
+    public void revokeUserId() throws PGPException {
+        secretKey = PGPainless.modifyKeyRing(secretKey)
+                .addUserId("alcie@pgpainless.org", SecretKeyRingProtector.unprotectedKeys())
+                .done();
+        // Initially the user-id is valid
+        assertTrue(PGPainless.inspectKeyRing(secretKey).isUserIdValid("alcie@pgpainless.org"));
+
+        // Revoke the second user-id
+        secretKey = PGPainless.modifyKeyRing(secretKey)
+                .revokeUserId("alcie@pgpainless.org", SecretKeyRingProtector.unprotectedKeys())
+                .done();
+        // Now the user-id is no longer valid
+        assertFalse(PGPainless.inspectKeyRing(secretKey).isUserIdValid("alcie@pgpainless.org"));
     }
 }
