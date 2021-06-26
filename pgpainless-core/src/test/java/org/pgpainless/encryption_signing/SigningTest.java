@@ -26,8 +26,6 @@ import java.nio.charset.StandardCharsets;
 import java.security.InvalidAlgorithmParameterException;
 import java.security.NoSuchAlgorithmException;
 import java.util.Arrays;
-import java.util.HashSet;
-import java.util.Set;
 
 import org.bouncycastle.openpgp.PGPException;
 import org.bouncycastle.openpgp.PGPPublicKeyRing;
@@ -41,17 +39,16 @@ import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.MethodSource;
 import org.pgpainless.PGPainless;
 import org.pgpainless.algorithm.DocumentSignatureType;
-import org.pgpainless.algorithm.EncryptionPurpose;
+import org.pgpainless.decryption_verification.ConsumerOptions;
 import org.pgpainless.decryption_verification.DecryptionStream;
 import org.pgpainless.decryption_verification.OpenPgpMetadata;
 import org.pgpainless.exception.KeyValidationException;
 import org.pgpainless.implementation.ImplementationFactory;
-import org.pgpainless.key.OpenPgpV4Fingerprint;
 import org.pgpainless.key.TestKeys;
+import org.pgpainless.key.info.KeyRingInfo;
 import org.pgpainless.key.protection.SecretKeyRingProtector;
 import org.pgpainless.key.util.KeyRingUtils;
 import org.pgpainless.util.Passphrase;
-import org.pgpainless.util.selection.key.impl.SignatureKeySelectionStrategy;
 
 public class SigningTest {
 
@@ -64,22 +61,22 @@ public class SigningTest {
         PGPPublicKeyRing romeoKeys = TestKeys.getRomeoPublicKeyRing();
 
         PGPSecretKeyRing cryptieKeys = TestKeys.getCryptieSecretKeyRing();
-        PGPSecretKey cryptieSigningKey = new SignatureKeySelectionStrategy()
-                .selectKeysFromKeyRing(cryptieKeys)
-                .iterator().next();
+        KeyRingInfo cryptieInfo = new KeyRingInfo(cryptieKeys);
+        PGPSecretKey cryptieSigningKey = cryptieKeys.getSecretKey(cryptieInfo.getSigningSubkeys().get(0).getKeyID());
 
         PGPPublicKeyRingCollection keys = new PGPPublicKeyRingCollection(Arrays.asList(julietKeys, romeoKeys));
 
         ByteArrayOutputStream out = new ByteArrayOutputStream();
-        EncryptionStream encryptionStream = PGPainless.encryptAndOrSign(EncryptionPurpose.STORAGE)
+        EncryptionStream encryptionStream = PGPainless.encryptAndOrSign()
                 .onOutputStream(out)
-                .toRecipients(keys)
-                .and()
-                .toRecipient(KeyRingUtils.publicKeyRingFrom(cryptieKeys))
-                .and()
-                .signInlineWith(SecretKeyRingProtector.unlockSingleKeyWith(TestKeys.CRYPTIE_PASSPHRASE, cryptieSigningKey),
-                        cryptieKeys, TestKeys.CRYPTIE_UID, DocumentSignatureType.CANONICAL_TEXT_DOCUMENT)
-                .asciiArmor();
+                .withOptions(ProducerOptions.signAndEncrypt(
+                        EncryptionOptions.encryptDataAtRest()
+                                .addRecipients(keys)
+                                .addRecipient(KeyRingUtils.publicKeyRingFrom(cryptieKeys)),
+                        new SigningOptions()
+                                .addInlineSignature(SecretKeyRingProtector.unlockSingleKeyWith(TestKeys.CRYPTIE_PASSPHRASE, cryptieSigningKey),
+                                        cryptieKeys, TestKeys.CRYPTIE_UID, DocumentSignatureType.CANONICAL_TEXT_DOCUMENT)
+                ).setAsciiArmor(true));
 
         byte[] messageBytes = "This message is signed and encrypted to Romeo and Juliet.".getBytes(StandardCharsets.UTF_8);
         ByteArrayInputStream message = new ByteArrayInputStream(messageBytes);
@@ -94,16 +91,14 @@ public class SigningTest {
         PGPSecretKeyRing julietSecret = TestKeys.getJulietSecretKeyRing();
 
         PGPSecretKeyRingCollection secretKeys = new PGPSecretKeyRingCollection(Arrays.asList(romeoSecret, julietSecret));
-        Set<OpenPgpV4Fingerprint> trustedFingerprints = new HashSet<>();
-        trustedFingerprints.add(new OpenPgpV4Fingerprint(cryptieKeys));
-        trustedFingerprints.add(new OpenPgpV4Fingerprint(julietKeys));
         PGPPublicKeyRingCollection verificationKeys = new PGPPublicKeyRingCollection(Arrays.asList(KeyRingUtils.publicKeyRingFrom(cryptieKeys), romeoKeys));
 
-        DecryptionStream decryptionStream = PGPainless.decryptAndOrVerify().onInputStream(cryptIn)
-                .decryptWith(secretKeys)
-                .verifyWith(trustedFingerprints, verificationKeys)
-                .ignoreMissingPublicKeys()
-                .build();
+        DecryptionStream decryptionStream = PGPainless.decryptAndOrVerify()
+                .onInputStream(cryptIn)
+                .withOptions(new ConsumerOptions()
+                        .addDecryptionKeys(secretKeys, SecretKeyRingProtector.unprotectedKeys())
+                        .addVerificationCerts(verificationKeys)
+                );
 
         ByteArrayOutputStream plaintextOut = new ByteArrayOutputStream();
 

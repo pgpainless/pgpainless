@@ -21,7 +21,6 @@ import java.util.Arrays;
 import java.util.Iterator;
 import java.util.List;
 import java.util.NoSuchElementException;
-
 import javax.annotation.Nonnull;
 
 import org.bouncycastle.openpgp.PGPException;
@@ -35,10 +34,6 @@ import org.bouncycastle.openpgp.PGPSecretKeyRing;
 import org.bouncycastle.openpgp.PGPSecretKeyRingCollection;
 import org.pgpainless.key.protection.SecretKeyRingProtector;
 import org.pgpainless.key.protection.UnlockSecretKey;
-import org.pgpainless.util.selection.key.PublicKeySelectionStrategy;
-import org.pgpainless.util.selection.key.impl.And;
-import org.pgpainless.util.selection.key.impl.KeyBelongsToKeyRing;
-import org.pgpainless.util.selection.key.impl.NoRevocation;
 
 public class KeyRingUtils {
 
@@ -160,37 +155,6 @@ public class KeyRingUtils {
     public static PGPSecretKeyRingCollection keyRingsToKeyRingCollection(@Nonnull PGPSecretKeyRing... rings)
             throws IOException, PGPException {
         return new PGPSecretKeyRingCollection(Arrays.asList(rings));
-    }
-
-    /**
-     * Remove all keys from the key ring, are either not having a subkey signature from the master key
-     * (identified by {@code masterKeyId}), or are revoked ("normal" key revocation, as well as subkey revocation).
-     *
-     * @param ring key ring
-     * @param masterKey master key
-     * @return "cleaned" key ring
-     */
-    public static PGPSecretKeyRing removeUnassociatedKeysFromKeyRing(@Nonnull PGPSecretKeyRing ring,
-                                                                     @Nonnull PGPPublicKey masterKey) {
-        if (!masterKey.isMasterKey()) {
-            throw new IllegalArgumentException("Given key is not a master key.");
-        }
-        // Only select keys which are signed by the master key and not revoked.
-        PublicKeySelectionStrategy selector = new And.PubKeySelectionStrategy(
-                new KeyBelongsToKeyRing.PubkeySelectionStrategy(masterKey),
-                new NoRevocation.PubKeySelectionStrategy());
-
-        PGPSecretKeyRing cleaned = ring;
-
-        Iterator<PGPSecretKey> secretKeys = ring.getSecretKeys();
-        while (secretKeys.hasNext()) {
-            PGPSecretKey secretKey = secretKeys.next();
-            if (!selector.accept(secretKey.getPublicKey())) {
-                cleaned = PGPSecretKeyRing.removeSecretKey(cleaned, secretKey);
-            }
-        }
-
-        return cleaned;
     }
 
     public static boolean keyRingContainsKeyWithId(@Nonnull PGPPublicKeyRing ring,

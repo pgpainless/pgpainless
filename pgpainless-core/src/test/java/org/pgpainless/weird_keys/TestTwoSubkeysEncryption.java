@@ -59,7 +59,7 @@ public class TestTwoSubkeysEncryption {
         PGPSecretKeyRing twoSuitableSubkeysKeyRing = WeirdKeys.getTwoCryptSubkeysKey();
         PGPPublicKeyRing publicKeys = KeyRingUtils.publicKeyRingFrom(twoSuitableSubkeysKeyRing);
         ByteArrayOutputStream out = new ByteArrayOutputStream();
-        EncryptionStream encryptionStream = PGPainless.encryptAndOrSign(EncryptionPurpose.STORAGE)
+        EncryptionStream encryptionStream = PGPainless.encryptAndOrSign()
                 .onOutputStream(out)
                 .withOptions(
                         ProducerOptions.encrypt(new EncryptionOptions(EncryptionPurpose.STORAGE_AND_COMMUNICATIONS)

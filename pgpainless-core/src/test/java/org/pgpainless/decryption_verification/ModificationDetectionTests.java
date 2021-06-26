@@ -154,9 +154,9 @@ public class ModificationDetectionTests {
         InputStream in = new ByteArrayInputStream(message.getBytes(StandardCharsets.UTF_8));
         DecryptionStream decryptionStream = PGPainless.decryptAndOrVerify()
                 .onInputStream(in)
-                .decryptWith(SecretKeyRingProtector.unprotectedKeys(), secretKeyRings)
-                .doNotVerify()
-                .build();
+                .withOptions(new ConsumerOptions()
+                        .addDecryptionKeys(secretKeyRings, SecretKeyRingProtector.unprotectedKeys())
+                );
 
         ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
         assertThrows(EOFException.class, () -> {
@@ -187,9 +187,9 @@ public class ModificationDetectionTests {
         ByteArrayInputStream in = new ByteArrayInputStream(message.getBytes(StandardCharsets.UTF_8));
         DecryptionStream decryptionStream = PGPainless.decryptAndOrVerify()
                 .onInputStream(in)
-                .decryptWith(getDecryptionKey())
-                .doNotVerify()
-                .build();
+                .withOptions(new ConsumerOptions()
+                        .addDecryptionKeys(getDecryptionKey(), SecretKeyRingProtector.unprotectedKeys())
+                );
 
         ByteArrayOutputStream out = new ByteArrayOutputStream();
         Streams.pipeAll(decryptionStream, out);
@@ -218,9 +218,9 @@ public class ModificationDetectionTests {
         ByteArrayInputStream in = new ByteArrayInputStream(message.getBytes(StandardCharsets.UTF_8));
         DecryptionStream decryptionStream = PGPainless.decryptAndOrVerify()
                 .onInputStream(in)
-                .decryptWith(getDecryptionKey())
-                .doNotVerify()
-                .build();
+                .withOptions(new ConsumerOptions()
+                        .addDecryptionKeys(getDecryptionKey(), SecretKeyRingProtector.unprotectedKeys())
+                );
 
         ByteArrayOutputStream out = new ByteArrayOutputStream();
         Streams.pipeAll(decryptionStream, out);
@@ -387,9 +387,9 @@ public class ModificationDetectionTests {
 
         assertThrows(MessageNotIntegrityProtectedException.class, () -> PGPainless.decryptAndOrVerify()
                 .onInputStream(new ByteArrayInputStream(ciphertext.getBytes(StandardCharsets.UTF_8)))
-                .decryptWith(SecretKeyRingProtector.unlockAllKeysWith(passphrase, secretKeyRing), new PGPSecretKeyRingCollection(Collections.singleton(secretKeyRing)))
-                .doNotVerify()
-                .build());
+                .withOptions(new ConsumerOptions().addDecryptionKey(secretKeyRing,
+                        SecretKeyRingProtector.unlockAllKeysWith(passphrase, secretKeyRing)))
+        );
     }
 
     private PGPSecretKeyRingCollection getDecryptionKey() throws IOException, PGPException {

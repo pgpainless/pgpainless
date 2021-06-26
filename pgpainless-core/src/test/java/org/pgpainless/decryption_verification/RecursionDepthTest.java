@@ -21,17 +21,14 @@ import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
-import java.util.Collections;
 
 import org.bouncycastle.openpgp.PGPException;
 import org.bouncycastle.openpgp.PGPSecretKeyRing;
-import org.bouncycastle.openpgp.PGPSecretKeyRingCollection;
 import org.bouncycastle.util.io.Streams;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.MethodSource;
 import org.pgpainless.PGPainless;
 import org.pgpainless.implementation.ImplementationFactory;
-import org.pgpainless.key.protection.SecretKeyRingProtector;
 
 public class RecursionDepthTest {
 
@@ -127,7 +124,6 @@ public class RecursionDepthTest {
                 "=miES\n" +
                 "-----END PGP PRIVATE KEY BLOCK-----\n";
         PGPSecretKeyRing secretKey = PGPainless.readKeyRing().secretKeyRing(key);
-        PGPSecretKeyRingCollection secretKeys = new PGPSecretKeyRingCollection(Collections.singletonList(secretKey));
 
         // message contains compressed data that contains compressed data that contains... 64 times.
         String msg = "-----BEGIN PGP ARMORED FILE-----\n" +
@@ -161,9 +157,7 @@ public class RecursionDepthTest {
         assertThrows(PGPException.class, () -> {
             DecryptionStream decryptionStream = PGPainless.decryptAndOrVerify()
                     .onInputStream(new ByteArrayInputStream(msg.getBytes(StandardCharsets.UTF_8)))
-                    .decryptWith(SecretKeyRingProtector.unprotectedKeys(), secretKeys)
-                    .doNotVerify()
-                    .build();
+                    .withOptions(new ConsumerOptions().addDecryptionKey(secretKey));
 
             ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
             Streams.pipeAll(decryptionStream, outputStream);

@@ -24,17 +24,15 @@ import java.io.IOException;
 import java.io.PrintStream;
 import java.text.DateFormat;
 import java.text.SimpleDateFormat;
-import java.util.HashSet;
 import java.util.List;
 
 import org.bouncycastle.openpgp.PGPException;
 import org.bouncycastle.openpgp.PGPPublicKeyRing;
 import org.bouncycastle.openpgp.PGPSecretKeyRing;
-import org.bouncycastle.openpgp.PGPSecretKeyRingCollection;
 import org.bouncycastle.openpgp.PGPSignature;
 import org.bouncycastle.util.io.Streams;
 import org.pgpainless.PGPainless;
-import org.pgpainless.decryption_verification.DecryptionBuilderInterface;
+import org.pgpainless.decryption_verification.ConsumerOptions;
 import org.pgpainless.decryption_verification.DecryptionStream;
 import org.pgpainless.decryption_verification.OpenPgpMetadata;
 import org.pgpainless.key.OpenPgpV4Fingerprint;
@@ -108,34 +106,34 @@ public class Decrypt implements Runnable {
             System.exit(1);
         }
 
-        PGPSecretKeyRingCollection secretKeys;
-        List<PGPPublicKeyRing> verifyWith = null;
+        ConsumerOptions options = new ConsumerOptions();
 
+        List<PGPPublicKeyRing> verifyWith = null;
         try {
+
             List<PGPSecretKeyRing> secretKeyRings = loadKeysFromFiles(keys);
-            secretKeys = new PGPSecretKeyRingCollection(secretKeyRings);
+            for (PGPSecretKeyRing secretKey : secretKeyRings) {
+                options.addDecryptionKey(secretKey);
+            }
+
             if (certs != null) {
                 verifyWith = SopKeyUtil.loadCertificatesFromFile(certs);
+                for (PGPPublicKeyRing cert : verifyWith) {
+                    options.addVerificationCert(cert);
+                }
             }
+
         } catch (IOException | PGPException e) {
             err_ln(e.getMessage());
             System.exit(1);
             return;
         }
 
-
-        DecryptionBuilderInterface.Verify builder = PGPainless.decryptAndOrVerify()
-                .onInputStream(System.in)
-                .decryptWith(secretKeys);
-        DecryptionStream decryptionStream = null;
+        DecryptionStream decryptionStream;
         try {
-            if (verifyWith != null) {
-                decryptionStream = builder.verifyWith(new HashSet<>(verifyWith))
-                        .ignoreMissingPublicKeys().build();
-            } else {
-                decryptionStream = builder.doNotVerify()
-                        .build();
-            }
+            decryptionStream = PGPainless.decryptAndOrVerify()
+                    .onInputStream(System.in)
+                    .withOptions(options);
         } catch (IOException | PGPException e) {
             err_ln("Error constructing decryption stream: " + e.getMessage());
             System.exit(1);
@@ -169,14 +167,14 @@ public class Decrypt implements Runnable {
                 PGPSignature signature = metadata.getVerifiedSignatures().get(fingerprint);
                 sb.append(df.format(signature.getCreationTime())).append(' ')
                         .append(fingerprint).append(' ')
-                        .append(new OpenPgpV4Fingerprint(verifier)).append('\n');
+                        .append(verifier != null ? new OpenPgpV4Fingerprint(verifier) : "null").append('\n');
             }
 
             try {
                 verifyOut.createNewFile();
                 PrintStream verifyPrinter = new PrintStream(new FileOutputStream(verifyOut));
                 // CHECKSTYLE:OFF
-                verifyPrinter.println(sb.toString());
+                verifyPrinter.println(sb);
                 // CHECKSTYLE:ON
                 verifyPrinter.close();
             } catch (IOException e) {

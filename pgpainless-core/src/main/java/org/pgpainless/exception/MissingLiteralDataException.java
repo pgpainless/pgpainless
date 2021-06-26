@@ -1,5 +1,5 @@
 /*
- * Copyright 2018 Paul Schaub.
+ * Copyright 2021 Paul Schaub.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -13,20 +13,16 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.pgpainless.util.selection.key;
+package org.pgpainless.exception;
 
-import java.util.Set;
-import javax.annotation.Nonnull;
-
+import org.bouncycastle.openpgp.PGPException;
 
 /**
- * Interface that describes a selection strategy for OpenPGP keys.
- * @param <K> Type of the Key
- * @param <R> Type of the PGPKeyRing
+ * Exception that gets thrown if a {@link org.bouncycastle.bcpg.LiteralDataPacket} is expected, but not found.
  */
-public interface KeySelectionStrategy<K, R> {
+public class MissingLiteralDataException extends PGPException {
 
-    boolean accept(K key);
-
-    Set<K> selectKeysFromKeyRing(@Nonnull R ring);
+    public MissingLiteralDataException(String message) {
+        super(message);
+    }
 }

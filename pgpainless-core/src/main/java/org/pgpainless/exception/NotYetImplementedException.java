@@ -1,5 +1,5 @@
 /*
- * Copyright 2018 Paul Schaub.
+ * Copyright 2021 Paul Schaub.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -13,7 +13,11 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+package org.pgpainless.exception;
+
 /**
- * Implementations of Key Selection Strategies.
+ * Method that gets thrown if the user requests some functionality which is not yet implemented.
  */
-package org.pgpainless.util.selection.key.impl;
+public class NotYetImplementedException extends RuntimeException {
+
+}

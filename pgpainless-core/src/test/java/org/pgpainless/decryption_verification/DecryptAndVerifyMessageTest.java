@@ -23,12 +23,9 @@ import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.nio.charset.Charset;
-import java.util.Collections;
 
 import org.bouncycastle.openpgp.PGPException;
-import org.bouncycastle.openpgp.PGPPublicKeyRing;
 import org.bouncycastle.openpgp.PGPSecretKeyRing;
-import org.bouncycastle.openpgp.PGPSecretKeyRingCollection;
 import org.bouncycastle.util.io.Streams;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.params.ParameterizedTest;
@@ -38,7 +35,7 @@ import org.pgpainless.algorithm.CompressionAlgorithm;
 import org.pgpainless.algorithm.SymmetricKeyAlgorithm;
 import org.pgpainless.implementation.ImplementationFactory;
 import org.pgpainless.key.TestKeys;
-import org.pgpainless.key.protection.UnprotectedKeysProtector;
+import org.pgpainless.key.util.KeyRingUtils;
 
 public class DecryptAndVerifyMessageTest {
 
@@ -60,12 +57,13 @@ public class DecryptAndVerifyMessageTest {
         ImplementationFactory.setFactoryImplementation(implementationFactory);
         String encryptedMessage = TestKeys.MSG_SIGN_CRYPT_JULIET_JULIET;
 
+        ConsumerOptions options = new ConsumerOptions()
+                .addDecryptionKey(juliet)
+                .addVerificationCert(KeyRingUtils.publicKeyRingFrom(juliet));
+
         DecryptionStream decryptor = PGPainless.decryptAndOrVerify()
                 .onInputStream(new ByteArrayInputStream(encryptedMessage.getBytes()))
-                .decryptWith(new UnprotectedKeysProtector(), new PGPSecretKeyRingCollection(Collections.singleton(juliet)))
-                .verifyWith(Collections.singleton(new PGPPublicKeyRing(Collections.singletonList(juliet.getPublicKey()))))
-                .ignoreMissingPublicKeys()
-                .build();
+                .withOptions(options);
 
         ByteArrayOutputStream toPlain = new ByteArrayOutputStream();
         Streams.pipeAll(decryptor, toPlain);

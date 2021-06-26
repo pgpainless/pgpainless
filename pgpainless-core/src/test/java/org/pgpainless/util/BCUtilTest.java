@@ -16,8 +16,6 @@
 package org.pgpainless.util;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertNotNull;
-import static org.junit.jupiter.api.Assertions.assertNull;
 
 import java.io.IOException;
 import java.security.InvalidAlgorithmParameterException;
@@ -30,7 +28,6 @@ import org.bouncycastle.openpgp.PGPException;
 import org.bouncycastle.openpgp.PGPPublicKey;
 import org.bouncycastle.openpgp.PGPPublicKeyRing;
 import org.bouncycastle.openpgp.PGPPublicKeyRingCollection;
-import org.bouncycastle.openpgp.PGPSecretKey;
 import org.bouncycastle.openpgp.PGPSecretKeyRing;
 import org.bouncycastle.openpgp.PGPSecretKeyRingCollection;
 import org.junit.jupiter.api.Test;
@@ -104,33 +101,5 @@ public class BCUtilTest {
         }
 
         LOGGER.log(Level.FINER, "PubCol: " + pubColSize);
-    }
-
-    @Test
-    public void removeUnsignedKeysTest()
-            throws PGPException, NoSuchAlgorithmException, InvalidAlgorithmParameterException {
-        @SuppressWarnings("deprecation")
-        PGPSecretKeyRing alice = PGPainless.generateKeyRing().simpleRsaKeyRing("alice@wonderland.lit", RsaLength._1024);
-        PGPSecretKeyRing mallory = PGPainless.generateKeyRing().simpleEcKeyRing("mallory@mall.ory");
-
-        PGPSecretKey subKey = null;
-        Iterator<PGPSecretKey> sit = mallory.getSecretKeys();
-        while (sit.hasNext()) {
-            PGPSecretKey s = sit.next();
-            if (!s.isMasterKey()) {
-                subKey = s;
-                break;
-            }
-        }
-
-        assertNotNull(subKey);
-
-        PGPSecretKeyRing alice_mallory = PGPSecretKeyRing.insertSecretKey(alice, subKey);
-
-        // Check, if alice_mallory contains mallory's key
-        assertNotNull(alice_mallory.getSecretKey(subKey.getKeyID()));
-
-        PGPSecretKeyRing cleaned = KeyRingUtils.removeUnassociatedKeysFromKeyRing(alice_mallory, alice.getPublicKey());
-        assertNull(cleaned.getSecretKey(subKey.getKeyID()));
     }
 }

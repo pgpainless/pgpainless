@@ -20,6 +20,7 @@ import static org.junit.jupiter.api.Assertions.fail;
 
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
+import java.io.InputStream;
 import java.nio.charset.StandardCharsets;
 
 import org.bouncycastle.openpgp.PGPException;
@@ -27,7 +28,6 @@ import org.bouncycastle.openpgp.PGPSecretKeyRing;
 import org.junit.jupiter.api.Test;
 import org.pgpainless.PGPainless;
 import org.pgpainless.exception.UnacceptableAlgorithmException;
-import org.pgpainless.key.protection.SecretKeyRingProtector;
 
 /**
  * Test PGPainless' default symmetric key algorithm policy for decryption of messages.
@@ -146,11 +146,13 @@ public class RejectWeakSymmetricAlgorithmDuringDecryption {
                 "=w0KS\n" +
                 "-----END PGP MESSAGE-----\n";
 
+        InputStream messageIn = new ByteArrayInputStream(message.getBytes(StandardCharsets.UTF_8));
+
         assertThrows(UnacceptableAlgorithmException.class, () ->
-                PGPainless.decryptAndOrVerify().onInputStream(new ByteArrayInputStream(message.getBytes(StandardCharsets.UTF_8)))
-                        .decryptWith(SecretKeyRingProtector.unprotectedKeys(), secretKeys)
-                        .doNotVerify()
-                        .build());
+                PGPainless.decryptAndOrVerify()
+                        .onInputStream(messageIn)
+                        .withOptions(new ConsumerOptions().addDecryptionKey(secretKeys))
+        );
     }
 
     @Test
@@ -171,11 +173,14 @@ public class RejectWeakSymmetricAlgorithmDuringDecryption {
                 "WLlG7ee7fRqQPTSP+OLh4Cm8zDIaCNowj0Ua4KwcWZDYERzg\n" +
                 "=j71X\n" +
                 "-----END PGP ARMORED FILE-----\n";
+
+        InputStream messageIn = new ByteArrayInputStream(message.getBytes(StandardCharsets.UTF_8));
+
         assertThrows(UnacceptableAlgorithmException.class, () ->
-                PGPainless.decryptAndOrVerify().onInputStream(new ByteArrayInputStream(message.getBytes(StandardCharsets.UTF_8)))
-                        .decryptWith(SecretKeyRingProtector.unprotectedKeys(), secretKeys)
-                        .doNotVerify()
-                        .build());
+                PGPainless.decryptAndOrVerify()
+                        .onInputStream(messageIn)
+                        .withOptions(new ConsumerOptions().addDecryptionKey(secretKeys))
+        );
     }
 
     @Test
@@ -197,11 +202,11 @@ public class RejectWeakSymmetricAlgorithmDuringDecryption {
                 "=qNxx\n" +
                 "-----END PGP ARMORED FILE-----\n";
 
+        InputStream messageIn = new ByteArrayInputStream(message.getBytes(StandardCharsets.UTF_8));
         assertThrows(UnacceptableAlgorithmException.class, () ->
-                PGPainless.decryptAndOrVerify().onInputStream(new ByteArrayInputStream(message.getBytes(StandardCharsets.UTF_8)))
-                        .decryptWith(SecretKeyRingProtector.unprotectedKeys(), secretKeys)
-                        .doNotVerify()
-                        .build());
+                PGPainless.decryptAndOrVerify().onInputStream(messageIn)
+                        .withOptions(new ConsumerOptions().addDecryptionKey(secretKeys))
+        );
     }
 
     // Control: In contrast, AES256 is acceptable
@@ -222,11 +227,10 @@ public class RejectWeakSymmetricAlgorithmDuringDecryption {
                 "4yjtOxfmmp9Fac50SS5i9dzBdnVNllLs+ADQt+LksJnzTW1IINGnIw8=\n" +
                 "=kLfl\n" +
                 "-----END PGP ARMORED FILE-----\n";
+        InputStream messageIn = new ByteArrayInputStream(message.getBytes(StandardCharsets.UTF_8));
 
-        PGPainless.decryptAndOrVerify().onInputStream(new ByteArrayInputStream(message.getBytes(StandardCharsets.UTF_8)))
-                .decryptWith(SecretKeyRingProtector.unprotectedKeys(), secretKeys)
-                .doNotVerify()
-                .build();
+        PGPainless.decryptAndOrVerify().onInputStream(messageIn)
+                .withOptions(new ConsumerOptions().addDecryptionKey(secretKeys));
     }
 
 }

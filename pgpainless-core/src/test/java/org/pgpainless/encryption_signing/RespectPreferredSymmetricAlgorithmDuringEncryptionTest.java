@@ -89,8 +89,7 @@ public class RespectPreferredSymmetricAlgorithmDuringEncryptionTest {
         ByteArrayOutputStream out = new ByteArrayOutputStream();
         EncryptionStream encryptionStream = PGPainless.encryptAndOrSign().onOutputStream(out)
                 .withOptions(
-                        ProducerOptions.encrypt(
-                                new EncryptionOptions()
+                        ProducerOptions.encrypt(new EncryptionOptions()
                                 .addRecipient(publicKeys)
                         ));
 

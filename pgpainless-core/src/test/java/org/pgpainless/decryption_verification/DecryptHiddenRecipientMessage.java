@@ -21,23 +21,19 @@ import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
-import java.util.Collections;
-import java.util.Set;
+import java.util.List;
 
 import org.bouncycastle.openpgp.PGPException;
 import org.bouncycastle.openpgp.PGPPublicKey;
 import org.bouncycastle.openpgp.PGPSecretKeyRing;
-import org.bouncycastle.openpgp.PGPSecretKeyRingCollection;
 import org.bouncycastle.util.io.Streams;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.MethodSource;
 import org.pgpainless.PGPainless;
-import org.pgpainless.algorithm.KeyFlag;
+import org.pgpainless.algorithm.EncryptionPurpose;
 import org.pgpainless.implementation.ImplementationFactory;
 import org.pgpainless.key.OpenPgpV4Fingerprint;
-import org.pgpainless.key.protection.SecretKeyRingProtector;
-import org.pgpainless.key.util.KeyRingUtils;
-import org.pgpainless.util.selection.key.impl.EncryptionKeySelectionStrategy;
+import org.pgpainless.key.info.KeyRingInfo;
 
 public class DecryptHiddenRecipientMessage {
 
@@ -144,11 +140,12 @@ public class DecryptHiddenRecipientMessage {
                 "=1knQ\n" +
                 "-----END PGP MESSAGE-----\n";
         ByteArrayInputStream messageIn = new ByteArrayInputStream(message.getBytes(StandardCharsets.UTF_8));
+        ConsumerOptions options = new ConsumerOptions()
+                .addDecryptionKey(secretKeys);
 
-        DecryptionStream decryptionStream = PGPainless.decryptAndOrVerify().onInputStream(messageIn)
-                .decryptWith(SecretKeyRingProtector.unprotectedKeys(), new PGPSecretKeyRingCollection(Collections.singletonList(secretKeys)))
-                .doNotVerify()
-                .build();
+        DecryptionStream decryptionStream = PGPainless.decryptAndOrVerify()
+                .onInputStream(messageIn)
+                .withOptions(options);
 
         ByteArrayOutputStream out = new ByteArrayOutputStream();
         Streams.pipeAll(decryptionStream, out);
@@ -157,10 +154,8 @@ public class DecryptHiddenRecipientMessage {
         OpenPgpMetadata metadata = decryptionStream.getResult();
         assertEquals(0, metadata.getRecipientKeyIds().size());
 
-        // Hacky way of getting the encryption subkey of the key ring
-        //  TODO: Create convenient method for this
-        Set<PGPPublicKey> encryptionKeys = new EncryptionKeySelectionStrategy(KeyFlag.ENCRYPT_STORAGE, KeyFlag.ENCRYPT_COMMS)
-                .selectKeysFromKeyRing(KeyRingUtils.publicKeyRingFrom(secretKeys));
+        KeyRingInfo info = new KeyRingInfo(secretKeys);
+        List<PGPPublicKey> encryptionKeys = info.getEncryptionSubkeys(EncryptionPurpose.STORAGE_AND_COMMUNICATIONS);
         assertEquals(1, encryptionKeys.size());
 
         assertEquals(new OpenPgpV4Fingerprint(encryptionKeys.iterator().next()), metadata.getDecryptionFingerprint());

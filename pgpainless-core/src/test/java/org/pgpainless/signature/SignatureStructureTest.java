@@ -21,6 +21,7 @@ import java.io.IOException;
 import java.util.List;
 
 import org.bouncycastle.bcpg.sig.NotationData;
+import org.bouncycastle.openpgp.PGPException;
 import org.bouncycastle.openpgp.PGPSignature;
 import org.bouncycastle.util.encoders.Hex;
 import org.junit.jupiter.api.BeforeAll;
@@ -38,7 +39,7 @@ public class SignatureStructureTest {
     private static PGPSignature signature;
 
     @BeforeAll
-    public static void parseSignature() throws IOException {
+    public static void parseSignature() throws IOException, PGPException {
         // see https://tests.sequoia-pgp.org/#Detached_signature_with_Subpackets (base case)
         signature = SignatureUtils.readSignatures("-----BEGIN PGP SIGNATURE-----\n" +
                 "\n" +

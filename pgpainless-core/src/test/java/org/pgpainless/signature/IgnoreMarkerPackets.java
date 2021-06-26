@@ -23,6 +23,7 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
+import java.io.InputStream;
 import java.nio.charset.StandardCharsets;
 
 import org.bouncycastle.openpgp.PGPException;
@@ -32,10 +33,10 @@ import org.bouncycastle.openpgp.PGPSignature;
 import org.bouncycastle.util.io.Streams;
 import org.junit.jupiter.api.Test;
 import org.pgpainless.PGPainless;
+import org.pgpainless.decryption_verification.ConsumerOptions;
 import org.pgpainless.decryption_verification.DecryptionStream;
 import org.pgpainless.decryption_verification.OpenPgpMetadata;
 import org.pgpainless.key.OpenPgpV4Fingerprint;
-import org.pgpainless.key.protection.SecretKeyRingProtector;
 import org.pgpainless.key.util.KeyRingUtils;
 
 /**
@@ -151,12 +152,13 @@ public class IgnoreMarkerPackets {
         String data = "Marker + Detached signature";
         PGPSignature signature = SignatureUtils.readSignatures(sig).get(0);
 
-        DecryptionStream decryptionStream = PGPainless.decryptAndOrVerify().onInputStream(new ByteArrayInputStream(data.getBytes(StandardCharsets.UTF_8)))
-                .doNotDecrypt()
-                .verifyDetachedSignature(signature)
-                .verifyWith(publicKeys)
-                .ignoreMissingPublicKeys()
-                .build();
+        InputStream messageIn = new ByteArrayInputStream(data.getBytes(StandardCharsets.UTF_8));
+        DecryptionStream decryptionStream = PGPainless.decryptAndOrVerify()
+                .onInputStream(messageIn)
+                .withOptions(new ConsumerOptions()
+                        .addVerificationCert(publicKeys)
+                        .addVerificationOfDetachedSignature(signature)
+                );
 
         ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
 
@@ -199,11 +201,13 @@ public class IgnoreMarkerPackets {
         PGPPublicKeyRing publicKeys = KeyRingUtils.publicKeyRingFrom(secretKeys);
         String data = "Marker + Encrypted Message";
 
-        DecryptionStream decryptionStream = PGPainless.decryptAndOrVerify().onInputStream(new ByteArrayInputStream(msg.getBytes(StandardCharsets.UTF_8)))
-                .decryptWith(SecretKeyRingProtector.unprotectedKeys(), secretKeys)
-                .verifyWith(publicKeys)
-                .ignoreMissingPublicKeys()
-                .build();
+        InputStream messageIn = new ByteArrayInputStream(msg.getBytes(StandardCharsets.UTF_8));
+        DecryptionStream decryptionStream = PGPainless.decryptAndOrVerify()
+                .onInputStream(messageIn)
+                .withOptions(new ConsumerOptions()
+                        .addDecryptionKey(secretKeys)
+                        .addVerificationCert(publicKeys)
+                );
 
         ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
 
