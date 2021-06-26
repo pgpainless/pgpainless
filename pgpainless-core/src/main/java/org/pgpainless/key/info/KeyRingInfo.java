@@ -728,6 +728,15 @@ public class KeyRingInfo {
     }
 
     /**
+     * Return the version number of the public keys format.
+     *
+     * @return version
+     */
+    public int getVersion() {
+        return keys.getPublicKey().getVersion();
+    }
+
+    /**
      * Return a list of all subkeys which can be used for encryption of the given purpose.
      * This list does not include expired or revoked keys.
      *
