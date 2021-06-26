@@ -32,6 +32,7 @@ import org.bouncycastle.util.io.Streams;
 import org.junit.jupiter.api.Test;
 import org.pgpainless.PGPainless;
 import org.pgpainless.algorithm.DocumentSignatureType;
+import org.pgpainless.decryption_verification.ConsumerOptions;
 import org.pgpainless.decryption_verification.DecryptionStream;
 import org.pgpainless.decryption_verification.OpenPgpMetadata;
 import org.pgpainless.encryption_signing.EncryptionOptions;
@@ -88,10 +89,10 @@ public class Encrypt {
         // Decrypt and verify signatures
         DecryptionStream decryptor = PGPainless.decryptAndOrVerify()
                 .onInputStream(new ByteArrayInputStream(encryptedMessage.getBytes(StandardCharsets.UTF_8)))
-                .decryptWith(protectorBob, keyBob)
-                .verifyWith(certificateAlice)
-                .ignoreMissingPublicKeys()
-                .build();
+                .withOptions(new ConsumerOptions()
+                        .addDecryptionKey(keyBob, protectorBob)
+                        .addVerificationCert(certificateAlice)
+                );
 
         ByteArrayOutputStream plaintext = new ByteArrayOutputStream();
 
@@ -133,9 +134,7 @@ public class Encrypt {
         // Decrypt
         DecryptionStream decryptor = PGPainless.decryptAndOrVerify()
                 .onInputStream(new ByteArrayInputStream(asciiCiphertext.getBytes(StandardCharsets.UTF_8)))
-                .decryptWith(Passphrase.fromPassword("p4ssphr4s3"))
-                .doNotVerify()
-                .build();
+                .withOptions(new ConsumerOptions().addDecryptionPassphrase(Passphrase.fromPassword("p4ssphr4s3")));
 
         ByteArrayOutputStream plaintext = new ByteArrayOutputStream();
         Streams.pipeAll(decryptor, plaintext);

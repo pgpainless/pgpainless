@@ -228,15 +228,17 @@ public class ModifyKeys {
      */
     @Test
     public void revokeUserId() throws PGPException {
+        SecretKeyRingProtector protector = SecretKeyRingProtector.unlockAllKeysWith(
+                Passphrase.fromPassword(originalPassphrase), secretKey);
         secretKey = PGPainless.modifyKeyRing(secretKey)
-                .addUserId("alcie@pgpainless.org", SecretKeyRingProtector.unprotectedKeys())
+                .addUserId("alcie@pgpainless.org", protector)
                 .done();
         // Initially the user-id is valid
         assertTrue(PGPainless.inspectKeyRing(secretKey).isUserIdValid("alcie@pgpainless.org"));
 
         // Revoke the second user-id
         secretKey = PGPainless.modifyKeyRing(secretKey)
-                .revokeUserId("alcie@pgpainless.org", SecretKeyRingProtector.unprotectedKeys())
+                .revokeUserId("alcie@pgpainless.org", protector)
                 .done();
         // Now the user-id is no longer valid
         assertFalse(PGPainless.inspectKeyRing(secretKey).isUserIdValid("alcie@pgpainless.org"));
