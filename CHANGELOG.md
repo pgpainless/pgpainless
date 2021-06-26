@@ -1,5 +1,17 @@
 # PGPainless Changelog
 
+## 0.2.3
+- Introduce new simplified decryption API  
+  The new API (`withOptions(ConsumerOptions)`) resembles the encryption API and is more friendly to dynamic
+  construction of decryption properties  
+  The old API has been deprecated and will be removed in a future release
+- Add `example` package in the JUnit tests  
+  This package contains always-up-to-date usage examples for the PGPainless' API and various use cases
+- Add `KeyRingInfo.getVersion`
+- Add `CachingSecretKeyRingProtector.addPassphrase(OpenPgpV4Fingerprint, Passphrase)`
+- Make builds of all jars reproducible
+- Fix `NullPointerException` in `KeyRingInfo.getExpirationDateForUse()`
+
 ## 0.2.2
 - Fix bug where adding a subkey would ignore the user-requested key flags  
   This would cause subkeys to erroneously carry the certify-others key flag
