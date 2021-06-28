@@ -697,11 +697,12 @@ public class KeyRingInfo {
      * @return true if all secret keys are unencrypted.
      */
     public boolean isFullyDecrypted() {
-        if (isSecretKey()) {
-            for (PGPSecretKey secretKey : getSecretKeys()) {
-                if (!KeyInfo.hasDummyS2K(secretKey) && KeyInfo.isEncrypted(secretKey)) {
-                    return false;
-                }
+        if (!isSecretKey()) {
+            return true;
+        }
+        for (PGPSecretKey secretKey : getSecretKeys()) {
+            if (!KeyInfo.hasDummyS2K(secretKey) && KeyInfo.isEncrypted(secretKey)) {
+                return false;
             }
         }
         return true;
@@ -716,15 +717,15 @@ public class KeyRingInfo {
      * @return true if all secret keys are encrypted.
      */
     public boolean isFullyEncrypted() {
-        if (isSecretKey()) {
-            for (PGPSecretKey secretKey : getSecretKeys()) {
-                if (!KeyInfo.hasDummyS2K(secretKey) && KeyInfo.isDecrypted(secretKey)) {
-                    return false;
-                }
-            }
-            return true;
+        if (!isSecretKey()) {
+            return false;
         }
-        return false;
+        for (PGPSecretKey secretKey : getSecretKeys()) {
+            if (!KeyInfo.hasDummyS2K(secretKey) && KeyInfo.isDecrypted(secretKey)) {
+                return false;
+            }
+        }
+        return true;
     }
 
     /**
