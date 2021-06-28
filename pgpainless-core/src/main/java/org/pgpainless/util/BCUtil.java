@@ -15,29 +15,21 @@
  */
 package org.pgpainless.util;
 
-import java.io.ByteArrayInputStream;
-import java.io.IOException;
-import java.io.InputStream;
-import javax.annotation.Nonnull;
-
 import org.bouncycastle.asn1.ASN1ObjectIdentifier;
 import org.bouncycastle.bcpg.ECPublicBCPGKey;
 import org.bouncycastle.openpgp.PGPPublicKey;
-import org.bouncycastle.openpgp.PGPUtil;
 
 public class BCUtil {
 
-    public static InputStream getPgpDecoderInputStream(@Nonnull byte[] bytes)
-            throws IOException {
-        return getPgpDecoderInputStream(new ByteArrayInputStream(bytes));
-    }
-
-    public static InputStream getPgpDecoderInputStream(@Nonnull InputStream inputStream)
-            throws IOException {
-        return PGPUtil.getDecoderStream(inputStream);
-    }
-
-    public static int getBitStrenght(PGPPublicKey key) {
+    /**
+     * Utility method to get the bit strength of OpenPGP keys.
+     * Bouncycastle is lacking support for some keys (eg. EdDSA, X25519), so this method
+     * manually derives the bit strength from the keys curves OID.
+     *
+     * @param key key
+     * @return bit strength
+     */
+    public static int getBitStrength(PGPPublicKey key) {
         int bitStrength = key.getBitStrength();
 
         if (bitStrength == -1) {

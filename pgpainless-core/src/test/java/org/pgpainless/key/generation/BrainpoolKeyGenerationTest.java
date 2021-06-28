@@ -116,22 +116,22 @@ public class BrainpoolKeyGenerationTest {
         PGPSecretKey ecdsaPrim = iterator.next();
         KeyInfo ecdsaInfo = new KeyInfo(ecdsaPrim);
         assertEquals(EllipticCurve._BRAINPOOLP384R1.getName(), ecdsaInfo.getCurveName());
-        assertEquals(384, BCUtil.getBitStrenght(ecdsaPrim.getPublicKey()));
+        assertEquals(384, BCUtil.getBitStrength(ecdsaPrim.getPublicKey()));
 
         PGPSecretKey eddsaSub = iterator.next();
         KeyInfo eddsaInfo = new KeyInfo(eddsaSub);
         assertEquals(EdDSACurve._Ed25519.getName(), eddsaInfo.getCurveName());
-        assertEquals(256, BCUtil.getBitStrenght(eddsaSub.getPublicKey()));
+        assertEquals(256, BCUtil.getBitStrength(eddsaSub.getPublicKey()));
 
         PGPSecretKey xdhSub = iterator.next();
         KeyInfo xdhInfo = new KeyInfo(xdhSub);
         assertEquals(XDHSpec._X25519.getCurveName(), xdhInfo.getCurveName());
-        assertEquals(256, BCUtil.getBitStrenght(xdhSub.getPublicKey()));
+        assertEquals(256, BCUtil.getBitStrength(xdhSub.getPublicKey()));
 
         PGPSecretKey rsaSub = iterator.next();
         KeyInfo rsaInfo = new KeyInfo(rsaSub);
         assertThrows(IllegalArgumentException.class, rsaInfo::getCurveName, "RSA is not a curve-based encryption system");
-        assertEquals(3072, BCUtil.getBitStrenght(rsaSub.getPublicKey()));
+        assertEquals(3072, BCUtil.getBitStrength(rsaSub.getPublicKey()));
     }
 
     public PGPSecretKeyRing generateKey(KeySpec primaryKey, KeySpec subKey, String userId) throws InvalidAlgorithmParameterException, NoSuchAlgorithmException, PGPException {

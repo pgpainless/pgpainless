@@ -276,7 +276,7 @@ public abstract class SignatureValidator {
             @Override
             public void verify(PGPSignature signature) throws SignatureValidationException {
                 PublicKeyAlgorithm algorithm = PublicKeyAlgorithm.fromId(signingKey.getAlgorithm());
-                int bitStrength = BCUtil.getBitStrenght(signingKey);
+                int bitStrength = BCUtil.getBitStrength(signingKey);
                 if (!policy.getPublicKeyAlgorithmPolicy().isAcceptable(algorithm, bitStrength)) {
                     throw new SignatureValidationException("Signature was made using unacceptable key. " +
                             algorithm + " (" + bitStrength + " bits) is not acceptable according to the public key algorithm policy.");
