@@ -53,17 +53,6 @@ public class PGPainless {
 
     /**
      * Create an {@link EncryptionStream}, which can be used to encrypt and/or sign data using OpenPGP.
-     *
-     * @deprecated Use {@link #encryptAndOrSign()} instead.
-     * @return builder
-     */
-    @Deprecated
-    public static EncryptionBuilder createEncryptor() {
-        return encryptAndOrSign();
-    }
-
-    /**
-     * Create an {@link EncryptionStream}, which can be used to encrypt and/or sign data using OpenPGP.
      * This method assumes that the stream will be used to encrypt data for communication purposes.
      * If you instead want to encrypt data that will be saved on disk (eg. a backup), use
      * {@link #encryptAndOrSign(EncryptionPurpose)} and chose an appropriate purpose.
@@ -84,17 +73,6 @@ public class PGPainless {
      */
     public static EncryptionBuilder encryptAndOrSign(EncryptionPurpose purpose) {
         return new EncryptionBuilder(purpose);
-    }
-
-    /**
-     * Create a {@link DecryptionStream}, which can be used to decrypt and/or verify data using OpenPGP.
-     *
-     * @deprecated Use {@link #decryptAndOrVerify()} instead.
-     * @return builder
-     */
-    @Deprecated
-    public static DecryptionBuilder createDecryptor() {
-        return decryptAndOrVerify();
     }
 
     /**
