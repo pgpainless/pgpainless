@@ -37,8 +37,11 @@ import org.bouncycastle.util.io.Streams;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.MethodSource;
 import org.pgpainless.PGPainless;
+import org.pgpainless.algorithm.DocumentSignatureType;
 import org.pgpainless.algorithm.SymmetricKeyAlgorithm;
 import org.pgpainless.encryption_signing.EncryptionStream;
+import org.pgpainless.encryption_signing.ProducerOptions;
+import org.pgpainless.encryption_signing.SigningOptions;
 import org.pgpainless.implementation.ImplementationFactory;
 import org.pgpainless.key.protection.KeyRingProtectionSettings;
 import org.pgpainless.key.protection.PasswordBasedSecretKeyRingProtector;
@@ -192,9 +195,9 @@ public class ChangeSecretKeyRingPassphraseTest {
         String dummyMessage = "dummy";
         ByteArrayOutputStream dummy = new ByteArrayOutputStream();
         EncryptionStream stream = PGPainless.encryptAndOrSign().onOutputStream(dummy)
-                .doNotEncrypt()
-                .signInlineWith(PasswordBasedSecretKeyRingProtector.forKey(keyRing, passphrase), keyRing)
-                .noArmor();
+                .withOptions(ProducerOptions.sign(SigningOptions.get()
+                        .addInlineSignature(PasswordBasedSecretKeyRingProtector.forKey(keyRing, passphrase),
+                                keyRing, DocumentSignatureType.BINARY_DOCUMENT)));
 
         Streams.pipeAll(new ByteArrayInputStream(dummyMessage.getBytes()), stream);
         stream.close();

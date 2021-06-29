@@ -153,10 +153,10 @@ public class EncryptDecryptTest {
 
         EncryptionStream encryptor = PGPainless.encryptAndOrSign()
                 .onOutputStream(envelope)
-                .toRecipient(recipientPub)
-                .and()
-                .signInlineWith(keyDecryptor, senderSec, null, DocumentSignatureType.BINARY_DOCUMENT)
-                .noArmor();
+                .withOptions(ProducerOptions.signAndEncrypt(
+                        EncryptionOptions.encryptCommunications().addRecipient(recipientPub),
+                        new SigningOptions().addInlineSignature(keyDecryptor, senderSec, DocumentSignatureType.BINARY_DOCUMENT)
+                ));
 
         Streams.pipeAll(new ByteArrayInputStream(secretMessage), encryptor);
         encryptor.close();
@@ -205,9 +205,9 @@ public class EncryptDecryptTest {
         ByteArrayInputStream inputStream = new ByteArrayInputStream(data);
         ByteArrayOutputStream dummyOut = new ByteArrayOutputStream();
         EncryptionStream signer = PGPainless.encryptAndOrSign().onOutputStream(dummyOut)
-                .doNotEncrypt()
-                .signDetachedWith(keyRingProtector, signingKeys)
-                .noArmor();
+                .withOptions(ProducerOptions.sign(
+                        new SigningOptions().addDetachedSignature(keyRingProtector, signingKeys, DocumentSignatureType.BINARY_DOCUMENT)
+                ));
         Streams.pipeAll(inputStream, signer);
         signer.close();
 
@@ -250,9 +250,10 @@ public class EncryptDecryptTest {
         ByteArrayInputStream inputStream = new ByteArrayInputStream(data);
         ByteArrayOutputStream signOut = new ByteArrayOutputStream();
         EncryptionStream signer = PGPainless.encryptAndOrSign().onOutputStream(signOut)
-                .doNotEncrypt()
-                .signInlineWith(keyRingProtector, signingKeys)
-                .asciiArmor();
+                .withOptions(ProducerOptions.sign(
+                        SigningOptions.get()
+                        .addInlineSignature(keyRingProtector, signingKeys, DocumentSignatureType.BINARY_DOCUMENT)
+                ).setAsciiArmor(true));
         Streams.pipeAll(inputStream, signer);
         signer.close();
 
@@ -328,9 +329,9 @@ public class EncryptDecryptTest {
                 "-----END PGP PUBLIC KEY BLOCK-----\n";
 
         PGPPublicKeyRing publicKeys = PGPainless.readKeyRing().publicKeyRing(key);
-        ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
+
         assertThrows(IllegalArgumentException.class, () ->
-                PGPainless.encryptAndOrSign().onOutputStream(outputStream)
-                        .toRecipient(publicKeys));
+                EncryptionOptions.encryptCommunications()
+                        .addRecipient(publicKeys));
     }
 }

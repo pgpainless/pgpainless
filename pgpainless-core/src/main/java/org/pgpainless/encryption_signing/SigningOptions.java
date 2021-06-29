@@ -89,6 +89,10 @@ public final class SigningOptions {
     private final Map<SubkeyIdentifier, SigningMethod> signingMethods = new HashMap<>();
     private HashAlgorithm hashAlgorithmOverride;
 
+    public static SigningOptions get() {
+        return new SigningOptions();
+    }
+
     /**
      * Add inline signatures with all secret key rings in the provided secret key ring collection.
      *

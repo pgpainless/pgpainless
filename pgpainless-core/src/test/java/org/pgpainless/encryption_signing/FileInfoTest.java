@@ -67,10 +67,11 @@ public class FileInfoTest {
         ByteArrayOutputStream dataOut = new ByteArrayOutputStream();
         EncryptionStream encryptionStream = PGPainless.encryptAndOrSign()
                 .onOutputStream(dataOut, fileInfo)
-                .toRecipient(publicKeys)
-                .and()
-                .doNotSign()
-                .noArmor();
+                .withOptions(ProducerOptions.encrypt(
+                        EncryptionOptions
+                                .encryptCommunications()
+                                .addRecipient(publicKeys))
+                );
 
         Streams.pipeAll(dataIn, encryptionStream);
         encryptionStream.close();
