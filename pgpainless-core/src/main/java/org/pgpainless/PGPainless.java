@@ -19,7 +19,6 @@ import java.util.Date;
 
 import org.bouncycastle.openpgp.PGPKeyRing;
 import org.bouncycastle.openpgp.PGPSecretKeyRing;
-import org.pgpainless.algorithm.EncryptionPurpose;
 import org.pgpainless.decryption_verification.DecryptionBuilder;
 import org.pgpainless.decryption_verification.DecryptionStream;
 import org.pgpainless.encryption_signing.EncryptionBuilder;
@@ -53,26 +52,11 @@ public class PGPainless {
 
     /**
      * Create an {@link EncryptionStream}, which can be used to encrypt and/or sign data using OpenPGP.
-     * This method assumes that the stream will be used to encrypt data for communication purposes.
-     * If you instead want to encrypt data that will be saved on disk (eg. a backup), use
-     * {@link #encryptAndOrSign(EncryptionPurpose)} and chose an appropriate purpose.
      *
      * @return builder
      */
     public static EncryptionBuilder encryptAndOrSign() {
         return new EncryptionBuilder();
-    }
-
-    /**
-     * Create an {@link EncryptionStream}, that can be used to encrypt and/or sign data using OpenPGP.
-     *
-     * @param purpose how will the data be used?
-     * @return builder
-     * @deprecated use {@link #encryptAndOrSign()} and set the purpose in
-     * {@link org.pgpainless.encryption_signing.EncryptionOptions} instead
-     */
-    public static EncryptionBuilder encryptAndOrSign(EncryptionPurpose purpose) {
-        return new EncryptionBuilder(purpose);
     }
 
     /**
