@@ -16,7 +16,9 @@
 package org.pgpainless.key.protection;
 
 import static org.junit.jupiter.api.Assertions.assertArrayEquals;
+import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertNotEquals;
 import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
@@ -67,5 +69,21 @@ public class PassphraseTest {
         Passphrase trimmedEmpty = Passphrase.fromPassword("    ");
         assertNull(trimmedEmpty.getChars());
         assertTrue(trimmedEmpty.isEmpty());
+    }
+
+    @Test
+    public void equalsTest() {
+        assertNotEquals(Passphrase.fromPassword("passphrase"), Passphrase.fromPassword("Password"));
+        assertNotEquals(Passphrase.fromPassword("password"), null);
+        assertNotEquals(Passphrase.fromPassword("password"), "password");
+        Passphrase passphrase = Passphrase.fromPassword("passphrase");
+        assertEquals(passphrase, passphrase);
+    }
+
+    @Test
+    public void hashCodeTest() {
+        assertNotEquals(0, Passphrase.fromPassword("passphrase").hashCode());
+        assertNotEquals(Passphrase.fromPassword("passphrase").hashCode(), Passphrase.fromPassword("password").hashCode());
+        assertEquals(0, Passphrase.emptyPassphrase().hashCode());
     }
 }

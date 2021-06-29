@@ -128,5 +128,6 @@ public class MultiMapTest {
         assertEquals(fromMap.get("key"), Collections.singleton("value"));
 
         assertNotEquals(fromMap, map);
+        assertNotEquals(fromMap, null);
     }
 }

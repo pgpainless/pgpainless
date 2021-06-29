@@ -16,6 +16,7 @@
 package org.pgpainless.util;
 
 import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import org.junit.jupiter.api.Test;
@@ -36,5 +37,11 @@ public class NotationRegistryTest {
         registry.clear();
         assertFalse(registry.isKnownNotation("proof@metacode.biz"), "Notation is no longer known after registry is cleared.");
         assertFalse(registry.isKnownNotation("unknown@notation.data"));
+    }
+
+    @Test
+    public void addKnownNotation_nullThrows() {
+        NotationRegistry registry = new NotationRegistry();
+        assertThrows(NullPointerException.class, () -> registry.addKnownNotation(null));
     }
 }

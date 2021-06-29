@@ -17,6 +17,7 @@ package org.pgpainless.util;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
@@ -26,8 +27,11 @@ import java.util.List;
 
 import org.bouncycastle.bcpg.ArmoredInputStream;
 import org.bouncycastle.bcpg.ArmoredOutputStream;
+import org.bouncycastle.openpgp.PGPException;
+import org.bouncycastle.openpgp.PGPSecretKeyRing;
 import org.junit.jupiter.api.Test;
 import org.pgpainless.algorithm.HashAlgorithm;
+import org.pgpainless.key.TestKeys;
 
 public class ArmorUtilsTest {
 
@@ -88,5 +92,32 @@ public class ArmorUtilsTest {
         assertThrows(IllegalArgumentException.class, () -> ArmorUtils.addMessageIdHeader(armor, "toLooooooooooooooooooooooooooooooooooong"));
         assertThrows(IllegalArgumentException.class, () -> ArmorUtils.addMessageIdHeader(armor, "contains spaces 7890123456789012"));
         assertThrows(IllegalArgumentException.class, () -> ArmorUtils.addMessageIdHeader(armor, "contains\nnewlines\n12345678901234"));
+    }
+
+    @Test
+    public void testAddCommentAndHashHeaders() throws PGPException, IOException {
+        PGPSecretKeyRing secretKeys = TestKeys.getEmilSecretKeyRing();
+        ByteArrayOutputStream out = new ByteArrayOutputStream();
+        ArmoredOutputStream armor = new ArmoredOutputStream(out);
+        ArmorUtils.addCommentHeader(armor, "This is a comment.");
+        ArmorUtils.addHashAlgorithmHeader(armor, HashAlgorithm.SHA224);
+
+        secretKeys.encode(armor);
+        armor.close();
+
+        String armored = out.toString();
+        assertTrue(armored.contains("Hash: SHA224"));
+        assertTrue(armored.contains("Comment: This is a comment."));
+    }
+
+    @Test
+    public void toAsciiArmoredString() throws PGPException, IOException {
+        PGPSecretKeyRing secretKeys = TestKeys.getEmilSecretKeyRing();
+        ByteArrayOutputStream bytes = new ByteArrayOutputStream();
+        secretKeys.encode(bytes);
+
+        ByteArrayInputStream in = new ByteArrayInputStream(bytes.toByteArray());
+        String ascii = ArmorUtils.toAsciiArmoredString(in);
+        assertTrue(ascii.startsWith("-----BEGIN PGP PRIVATE KEY BLOCK-----\n"));
     }
 }
