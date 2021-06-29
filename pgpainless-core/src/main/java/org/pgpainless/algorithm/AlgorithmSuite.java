@@ -22,6 +22,10 @@ import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Set;
 
+/**
+ * The {@link AlgorithmSuite} class is consulted when new OpenPGP keys are being generated to set
+ * preferred algorithms on the key.
+ */
 public class AlgorithmSuite {
 
     private static AlgorithmSuite defaultAlgorithmSuite = new AlgorithmSuite(
@@ -63,7 +67,7 @@ public class AlgorithmSuite {
 
     public int[] getSymmetricKeyAlgorithmIds() {
         int[] array = new int[symmetricKeyAlgorithms.size()];
-        List<SymmetricKeyAlgorithm> list = new ArrayList<>(symmetricKeyAlgorithms);
+        List<SymmetricKeyAlgorithm> list = new ArrayList<>(getSymmetricKeyAlgorithms());
         for (int i = 0; i < array.length; i++) {
             array[i] = list.get(i).getAlgorithmId();
         }
@@ -80,7 +84,7 @@ public class AlgorithmSuite {
 
     public int[] getHashAlgorithmIds() {
         int[] array = new int[hashAlgorithms.size()];
-        List<HashAlgorithm> list = new ArrayList<>(hashAlgorithms);
+        List<HashAlgorithm> list = new ArrayList<>(getHashAlgorithms());
         for (int i = 0; i < array.length; i++) {
             array[i] = list.get(i).getAlgorithmId();
         }
@@ -97,7 +101,7 @@ public class AlgorithmSuite {
 
     public int[] getCompressionAlgorithmIds() {
         int[] array = new int[compressionAlgorithms.size()];
-        List<CompressionAlgorithm> list = new ArrayList<>(compressionAlgorithms);
+        List<CompressionAlgorithm> list = new ArrayList<>(getCompressionAlgorithms());
         for (int i = 0; i < array.length; i++) {
             array[i] = list.get(i).getAlgorithmId();
         }
