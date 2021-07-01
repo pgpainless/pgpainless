@@ -21,6 +21,7 @@ import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
+import java.io.IOException;
 import java.security.InvalidAlgorithmParameterException;
 import java.security.NoSuchAlgorithmException;
 import java.util.Date;
@@ -28,6 +29,7 @@ import java.util.List;
 
 import org.bouncycastle.openpgp.PGPException;
 import org.bouncycastle.openpgp.PGPPublicKey;
+import org.bouncycastle.openpgp.PGPPublicKeyRing;
 import org.bouncycastle.openpgp.PGPSecretKeyRing;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -67,6 +69,35 @@ public class ModifyKeys {
         primaryKeyId = info.getKeyId();
         encryptionSubkeyId = info.getEncryptionSubkeys(EncryptionPurpose.STORAGE_AND_COMMUNICATIONS).get(0).getKeyID();
         signingSubkeyId = info.getSigningSubkeys().get(0).getKeyID();
+    }
+
+    /**
+     * This example demonstrates how to extract a certificate (public key) from a secret key.
+     */
+    @Test
+    public void extractPublicKey() {
+        // the certificate consists of only the public keys
+        PGPPublicKeyRing certificate = PGPainless.extractCertificate(secretKey);
+
+
+        KeyRingInfo info = PGPainless.inspectKeyRing(certificate);
+        assertFalse(info.isSecretKey());
+    }
+
+    /**
+     * This example demonstrates how to export a secret key or certificate to an ASCII armored string.
+     */
+    @Test
+    public void toAsciiArmoredString() throws IOException {
+        PGPPublicKeyRing certificate = PGPainless.extractCertificate(secretKey);
+
+
+        String asciiArmoredSecretKey = PGPainless.asciiArmor(secretKey);
+        String asciiArmoredCertificate = PGPainless.asciiArmor(certificate);
+
+
+        assertTrue(asciiArmoredSecretKey.startsWith("-----BEGIN PGP PRIVATE KEY BLOCK-----"));
+        assertTrue(asciiArmoredCertificate.startsWith("-----BEGIN PGP PUBLIC KEY BLOCK-----"));
     }
 
     /**
