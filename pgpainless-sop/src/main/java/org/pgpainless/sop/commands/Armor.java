@@ -51,12 +51,17 @@ public class Armor implements Runnable {
     @Override
     public void run() {
 
-        try (PushbackInputStream pbIn = new PushbackInputStream(System.in);
+        try (PushbackInputStream pbIn = new PushbackInputStream(System.in, BEGIN_ARMOR.length);
              ArmoredOutputStream armoredOutputStream = ArmoredOutputStreamFactory.get(System.out)) {
-            byte[] start = new byte[14];
-            int read = pbIn.read(start);
-            pbIn.unread(read);
-            if (Arrays.equals(BEGIN_ARMOR, start) && !allowNested) {
+
+            // take a peek
+            byte[] firstBytes = new byte[BEGIN_ARMOR.length];
+            int readByteCount = pbIn.read(firstBytes);
+            if (readByteCount != -1) {
+                pbIn.unread(firstBytes, 0, readByteCount);
+            }
+
+            if (Arrays.equals(BEGIN_ARMOR, firstBytes) && !allowNested) {
                 Streams.pipeAll(pbIn, System.out);
             } else {
                 Streams.pipeAll(pbIn, armoredOutputStream);
