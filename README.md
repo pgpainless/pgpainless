@@ -35,6 +35,31 @@ If you want to get started, this class is your friend :)
 
 For further details you should check out the [javadoc](https://pgpainless.org/releases/latest/javadoc/)!
 
+### Handle Keys
+Reading keys from ASCII armored strings or from binary files is easy:
+
+```java
+        String key = "-----BEGIN PGP PRIVATE KEY BLOCK-----\n"...
+        PGPSecretKeyRing secretKey = PGPainless.readKeyRing()
+                .secretKeyRing(key);
+```
+
+Similarly, keys can quickly be exported::
+
+```java
+        PGPSecretKeyRing secretKey = ...;
+        String armored = PGPainless.asciiArmor(secretKey);
+        ByteArrayOutputStream binary = new ByteArrayOutputStream();
+        secretKey.encode(binary);
+```
+
+Extract a public key certificate from a secret key:
+
+```java
+        PGPSecretKeyRing secretKey = ...;
+        PGPPublicKeyRing certificate = PGPainless.extractCertificate(secretKey);
+```
+
 ### Easily Generate Keys
 PGPainless comes with a simple to use `KeyRingBuilder` class that helps you to quickly generate modern OpenPGP keys.
 There are some predefined key archetypes, but it is possible to fully customize key generation to your needs.
@@ -108,19 +133,19 @@ Still it allows you to manually specify which algorithms to use of course.
 
 ### Decrypt and Verify Signatures
 
-Decrypting data and verifying signatures is being done in a similar fashion.
+Decrypting data and verifying signatures is being done similarly.
 PGPainless will not only verify *correctness* of signatures, but also if the signing key was allowed to create the signature.
 A key might not be allowed to create signatures if, for example, it expired or was revoked, or was not properly bound to the key ring.
-Furthermore PGPainless will reject signatures made using weak algorithms like SHA-1. 
+Furthermore, PGPainless will reject signatures made using weak algorithms like SHA-1. 
 This behaviour can be modified though using the `Policy` class.
 
 ```java
         DecryptionStream decryptionStream = PGPainless.decryptAndOrVerify()
                 .onInputStream(encryptedInputStream)
-                .decryptWith(secretKeyProtector, bobSecKeys)
-                .verifyWith(alicePubKeys)
-                .ignoreMissingPublicKeys()
-                .build();
+                .withOptions(new ConsumerOptions()
+                        .addDecryptionKey(bobSecKeys, secretKeyProtector)
+                        .addVerificationCert(alicePubKeys)
+                );
 
         Streams.pipeAll(decryptionStream, outputStream);
         decryptionStream.close();
@@ -131,6 +156,8 @@ This behaviour can be modified though using the `Policy` class.
 
 *After* the `DecryptionStream` was closed, you can get metadata about the processed data by retrieving the `OpenPgpMetadata`.
 Again, this object will contain information about how the message was encrypted, who signed it and so on.
+
+#### Many more examples can be found in the [examples package](pgpainless-core/src/test/java/org/pgpainless/example)!!!
 
 ## Include PGPainless in your Project
 
@@ -143,7 +170,7 @@ repositories {
 }
 
 dependencies {
-	implementation 'org.pgpainless:pgpainless-core:0.2.0'
+	implementation 'org.pgpainless:pgpainless-core:0.2.3'
 }
 ```
 
