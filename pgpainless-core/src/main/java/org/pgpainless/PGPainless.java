@@ -15,9 +15,13 @@
  */
 package org.pgpainless;
 
+import java.io.IOException;
 import java.util.Date;
 
+import javax.annotation.Nonnull;
+
 import org.bouncycastle.openpgp.PGPKeyRing;
+import org.bouncycastle.openpgp.PGPPublicKeyRing;
 import org.bouncycastle.openpgp.PGPSecretKeyRing;
 import org.pgpainless.decryption_verification.DecryptionBuilder;
 import org.pgpainless.decryption_verification.DecryptionStream;
@@ -28,9 +32,11 @@ import org.pgpainless.key.info.KeyRingInfo;
 import org.pgpainless.key.modification.secretkeyring.SecretKeyRingEditor;
 import org.pgpainless.key.modification.secretkeyring.SecretKeyRingEditorInterface;
 import org.pgpainless.key.parsing.KeyRingReader;
+import org.pgpainless.key.util.KeyRingUtils;
 import org.pgpainless.policy.Policy;
 import org.pgpainless.signature.cleartext_signatures.VerifyCleartextSignatures;
 import org.pgpainless.signature.cleartext_signatures.VerifyCleartextSignaturesImpl;
+import org.pgpainless.util.ArmorUtils;
 
 public class PGPainless {
 
@@ -48,6 +54,31 @@ public class PGPainless {
      */
     public static KeyRingReader readKeyRing() {
         return new KeyRingReader();
+    }
+
+    /**
+     * Extract a public key certificate from a secret key.
+     *
+     * @param secretKey secret key
+     * @return public key certificate
+     */
+    public static PGPPublicKeyRing extractCertificate(@Nonnull PGPSecretKeyRing secretKey) {
+        return KeyRingUtils.publicKeyRingFrom(secretKey);
+    }
+
+    /**
+     * Wrap a key or certificate in ASCII armor.
+     *
+     * @param key key or certificate
+     * @return ascii armored string
+     * @throws IOException
+     */
+    public static String asciiArmor(@Nonnull PGPKeyRing key) throws IOException {
+        if (key instanceof PGPSecretKeyRing) {
+            return ArmorUtils.toAsciiArmoredString((PGPSecretKeyRing) key);
+        } else {
+            return ArmorUtils.toAsciiArmoredString((PGPPublicKeyRing) key);
+        }
     }
 
     /**
