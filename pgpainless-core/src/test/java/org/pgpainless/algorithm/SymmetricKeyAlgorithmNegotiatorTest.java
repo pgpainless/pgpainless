@@ -1,0 +1,79 @@
+/*
+ * Copyright 2021 Paul Schaub.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+package org.pgpainless.algorithm;
+
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertThrows;
+
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collections;
+import java.util.LinkedHashSet;
+import java.util.List;
+import java.util.Set;
+
+import org.junit.jupiter.api.Test;
+import org.pgpainless.algorithm.negotiation.SymmetricKeyAlgorithmNegotiator;
+import org.pgpainless.policy.Policy;
+
+public class SymmetricKeyAlgorithmNegotiatorTest {
+
+    private final SymmetricKeyAlgorithmNegotiator byPopularity = SymmetricKeyAlgorithmNegotiator.byPopularity();
+    private final Policy.SymmetricKeyAlgorithmPolicy policy = new Policy.SymmetricKeyAlgorithmPolicy(
+            SymmetricKeyAlgorithm.CAMELLIA_256,
+            Arrays.asList(SymmetricKeyAlgorithm.AES_256, SymmetricKeyAlgorithm.AES_192, SymmetricKeyAlgorithm.AES_128, SymmetricKeyAlgorithm.CAMELLIA_256));
+
+    @Test
+    public void byPopularityReturnsOverrideIfNotNull() {
+        assertEquals(SymmetricKeyAlgorithm.AES_192, byPopularity.negotiate(
+                policy,
+                // override is not null
+                SymmetricKeyAlgorithm.AES_192,
+                Collections.emptyList()));
+    }
+
+    @Test
+    public void byPopularityThrowsIAEForUnencryptedOverride() {
+        assertThrows(IllegalArgumentException.class, () ->
+                byPopularity.negotiate(
+                        policy,
+                        // Unencrypted is not allowed
+                        SymmetricKeyAlgorithm.NULL,
+                        Collections.emptyList()));
+    }
+
+    @Test
+    public void byPopularityChoosesMostPopularAlgorithm() {
+        List<Set<SymmetricKeyAlgorithm>> preferences = new ArrayList<>();
+
+        preferences.add(new LinkedHashSet<SymmetricKeyAlgorithm>(){{
+            add(SymmetricKeyAlgorithm.AES_128);
+            add(SymmetricKeyAlgorithm.AES_192); // <-
+            add(SymmetricKeyAlgorithm.AES_256);
+        }});
+        preferences.add(new LinkedHashSet<SymmetricKeyAlgorithm>(){{
+            add(SymmetricKeyAlgorithm.AES_128);
+            add(SymmetricKeyAlgorithm.AES_192); // <-
+        }});
+        preferences.add(new LinkedHashSet<SymmetricKeyAlgorithm>(){{
+            add(SymmetricKeyAlgorithm.AES_192); // <-
+            add(SymmetricKeyAlgorithm.CAMELLIA_256);
+        }});
+
+        // AES 192 is most popular
+        assertEquals(SymmetricKeyAlgorithm.AES_192, byPopularity.negotiate(policy, null, preferences));
+    }
+}
