@@ -15,13 +15,9 @@
  */
 package org.pgpainless.implementation;
 
-import java.io.IOException;
 import java.security.KeyPair;
-import java.security.NoSuchAlgorithmException;
-import java.security.spec.InvalidKeySpecException;
 import java.util.Date;
 
-import org.bouncycastle.crypto.AsymmetricCipherKeyPair;
 import org.bouncycastle.openpgp.PGPException;
 import org.bouncycastle.openpgp.PGPKeyPair;
 import org.bouncycastle.openpgp.PGPPrivateKey;
@@ -111,9 +107,6 @@ public abstract class ImplementationFactory {
     public abstract PGPDataEncryptorBuilder getPGPDataEncryptorBuilder(int symmetricKeyAlgorithm);
 
     public abstract PGPKeyPair getPGPKeyPair(PublicKeyAlgorithm algorithm, KeyPair keyPair, Date creationDate) throws PGPException;
-
-    public abstract PGPKeyPair getPGPKeyPair(PublicKeyAlgorithm algorithm, AsymmetricCipherKeyPair keyPair, Date creationDate)
-            throws PGPException, NoSuchAlgorithmException, IOException, InvalidKeySpecException;
 
     public abstract PBESecretKeyEncryptor getPBESecretKeyEncryptor(SymmetricKeyAlgorithm encryptionAlgorithm,
                                                                    HashAlgorithm hashAlgorithm, int s2kCount,

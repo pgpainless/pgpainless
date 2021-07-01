@@ -140,11 +140,6 @@ public class BcImplementationFactory extends ImplementationFactory {
     }
 
     @Override
-    public PGPKeyPair getPGPKeyPair(PublicKeyAlgorithm algorithm, AsymmetricCipherKeyPair keyPair, Date creationDate) throws PGPException {
-        return new BcPGPKeyPair(algorithm.getAlgorithmId(), keyPair, creationDate);
-    }
-
-    @Override
     public PBESecretKeyEncryptor getPBESecretKeyEncryptor(SymmetricKeyAlgorithm encryptionAlgorithm, HashAlgorithm hashAlgorithm, int s2kCount, Passphrase passphrase) throws PGPException {
         return new BcPBESecretKeyEncryptorBuilder(
                 encryptionAlgorithm.getAlgorithmId(),
