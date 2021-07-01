@@ -17,7 +17,7 @@ package org.pgpainless.algorithm.negotiation;
 
 import java.util.ArrayList;
 import java.util.Collections;
-import java.util.Comparator;
+import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
@@ -53,8 +53,8 @@ public interface SymmetricKeyAlgorithmNegotiator {
                     return override;
                 }
 
+                // Count score (occurrences) of each algorithm
                 Map<SymmetricKeyAlgorithm, Integer> supportWeight = new LinkedHashMap<>();
-
                 for (Set<SymmetricKeyAlgorithm> keyPreferences : preferences) {
                     for (SymmetricKeyAlgorithm preferred : keyPreferences) {
                         if (supportWeight.containsKey(preferred)) {
@@ -65,21 +65,33 @@ public interface SymmetricKeyAlgorithmNegotiator {
                     }
                 }
 
-                List<SymmetricKeyAlgorithm> scoreboard = new ArrayList<>(supportWeight.keySet());
-                // Sort scoreboard by descending popularity
-                Collections.sort(scoreboard, new Comparator<SymmetricKeyAlgorithm>() {
-                    @Override
-                    public int compare(SymmetricKeyAlgorithm t0, SymmetricKeyAlgorithm t1) {
-                        return -supportWeight.get(t0).compareTo(supportWeight.get(t1));
+                // Pivot the score map
+                Map<Integer, List<SymmetricKeyAlgorithm>> byScore = new HashMap<>();
+                for (SymmetricKeyAlgorithm algorithm : supportWeight.keySet()) {
+                    int score = supportWeight.get(algorithm);
+                    List<SymmetricKeyAlgorithm> withSameScore = byScore.get(score);
+                    if (withSameScore == null) {
+                        withSameScore = new ArrayList<>();
+                        byScore.put(score, withSameScore);
                     }
-                });
+                    withSameScore.add(algorithm);
+                }
 
-                for (SymmetricKeyAlgorithm mostWanted : scoreboard) {
-                    if (policy.isAcceptable(mostWanted)) {
-                        return mostWanted;
+                List<Integer> scores = new ArrayList<>(byScore.keySet());
+
+                // Sort map and iterate from highest to lowest score
+                Collections.sort(scores);
+                for (int i = scores.size() - 1; i >= 0; i--) {
+                    int score = scores.get(i);
+                    List<SymmetricKeyAlgorithm> withSameScore = byScore.get(score);
+                    // Select best algorithm
+                    SymmetricKeyAlgorithm best = policy.selectBest(withSameScore);
+                    if (best != null) {
+                        return best;
                     }
                 }
 
+                // If no algorithm is acceptable, choose fallback
                 return policy.getDefaultSymmetricKeyAlgorithm();
             }
         };

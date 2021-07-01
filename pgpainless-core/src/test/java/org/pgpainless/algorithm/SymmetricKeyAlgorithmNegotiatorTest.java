@@ -76,4 +76,66 @@ public class SymmetricKeyAlgorithmNegotiatorTest {
         // AES 192 is most popular
         assertEquals(SymmetricKeyAlgorithm.AES_192, byPopularity.negotiate(policy, null, preferences));
     }
+
+    @Test
+    public void byPopularityIgnoresRejectedAlgorithms() {
+        List<Set<SymmetricKeyAlgorithm>> preferences = new ArrayList<>();
+
+        preferences.add(new LinkedHashSet<SymmetricKeyAlgorithm>(){{
+            add(SymmetricKeyAlgorithm.CAMELLIA_128);
+            add(SymmetricKeyAlgorithm.CAMELLIA_192); // <- rejected
+            add(SymmetricKeyAlgorithm.AES_256); // <- accepted
+        }});
+        preferences.add(new LinkedHashSet<SymmetricKeyAlgorithm>(){{
+            add(SymmetricKeyAlgorithm.CAMELLIA_128);
+            add(SymmetricKeyAlgorithm.CAMELLIA_192); // <- rejected
+        }});
+        preferences.add(new LinkedHashSet<SymmetricKeyAlgorithm>(){{
+            add(SymmetricKeyAlgorithm.CAMELLIA_192); // <- rejected
+            add(SymmetricKeyAlgorithm.AES_256); // <- accepted
+        }});
+
+        // AES 192 is most popular
+        assertEquals(SymmetricKeyAlgorithm.AES_256, byPopularity.negotiate(policy, null, preferences));
+    }
+
+    @Test
+    public void byPopularityChoosesFallbackWhenNoAlgIsAcceptable() {
+        List<Set<SymmetricKeyAlgorithm>> preferences = new ArrayList<>();
+
+        preferences.add(new LinkedHashSet<SymmetricKeyAlgorithm>(){{
+            add(SymmetricKeyAlgorithm.CAMELLIA_128);
+            add(SymmetricKeyAlgorithm.CAMELLIA_192);
+        }});
+        preferences.add(new LinkedHashSet<SymmetricKeyAlgorithm>(){{
+            add(SymmetricKeyAlgorithm.CAMELLIA_128);
+            add(SymmetricKeyAlgorithm.CAMELLIA_192);
+        }});
+        preferences.add(new LinkedHashSet<SymmetricKeyAlgorithm>(){{
+            add(SymmetricKeyAlgorithm.CAMELLIA_192);
+            add(SymmetricKeyAlgorithm.BLOWFISH);
+        }});
+
+        // AES 192 is most popular
+        assertEquals(SymmetricKeyAlgorithm.CAMELLIA_256, byPopularity.negotiate(policy, null, preferences));
+    }
+
+    @Test
+    public void byPopularitySelectsBestOnDraw() {
+        List<Set<SymmetricKeyAlgorithm>> preferences = new ArrayList<>();
+
+        // Create draw between AES 128 and AES 256
+        // The recipients prefer AES 128 first, but we prioritize our policies order
+        preferences.add(new LinkedHashSet<SymmetricKeyAlgorithm>(){{
+            add(SymmetricKeyAlgorithm.AES_128);
+            add(SymmetricKeyAlgorithm.AES_192);
+            add(SymmetricKeyAlgorithm.AES_256);
+        }});
+        preferences.add(new LinkedHashSet<SymmetricKeyAlgorithm>(){{
+            add(SymmetricKeyAlgorithm.AES_128);
+            add(SymmetricKeyAlgorithm.AES_256);
+        }});
+
+        assertEquals(SymmetricKeyAlgorithm.AES_256, byPopularity.negotiate(policy, null, preferences));
+    }
 }

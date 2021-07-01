@@ -35,6 +35,7 @@ import org.bouncycastle.openpgp.PGPPublicKeyRing;
 import org.bouncycastle.openpgp.PGPSecretKeyRing;
 import org.bouncycastle.openpgp.PGPSignature;
 import org.bouncycastle.util.io.Streams;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.MethodSource;
@@ -56,6 +57,7 @@ import org.pgpainless.key.generation.type.rsa.RsaLength;
 import org.pgpainless.key.protection.SecretKeyRingProtector;
 import org.pgpainless.key.protection.UnprotectedKeysProtector;
 import org.pgpainless.key.util.KeyRingUtils;
+import org.pgpainless.policy.Policy;
 import org.pgpainless.util.ArmoredOutputStreamFactory;
 
 public class EncryptDecryptTest {
@@ -70,6 +72,14 @@ public class EncryptDecryptTest {
                     "This neighbor air, and let rich music’s tongue\n" +
                     "Unfold the imagined happiness that both\n" +
                     "Receive in either by this dear encounter.";
+
+    @BeforeEach
+    public void setDefaultPolicy() {
+        PGPainless.getPolicy().setSymmetricKeyEncryptionAlgorithmPolicy(
+                Policy.SymmetricKeyAlgorithmPolicy.defaultSymmetricKeyEncryptionAlgorithmPolicy());
+        PGPainless.getPolicy().setSymmetricKeyDecryptionAlgorithmPolicy(
+                Policy.SymmetricKeyAlgorithmPolicy.defaultSymmetricKeyDecryptionAlgorithmPolicy());
+    }
 
     @ParameterizedTest
     @MethodSource("org.pgpainless.util.TestUtil#provideImplementationFactories")

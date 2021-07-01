@@ -231,14 +231,14 @@ public final class Policy {
         public static SymmetricKeyAlgorithmPolicy defaultSymmetricKeyEncryptionAlgorithmPolicy() {
             return new SymmetricKeyAlgorithmPolicy(SymmetricKeyAlgorithm.AES_256, Arrays.asList(
                     // Reject: Unencrypted, IDEA, TripleDES, CAST5
-                    SymmetricKeyAlgorithm.BLOWFISH,
-                    SymmetricKeyAlgorithm.AES_128,
-                    SymmetricKeyAlgorithm.AES_192,
                     SymmetricKeyAlgorithm.AES_256,
+                    SymmetricKeyAlgorithm.AES_192,
+                    SymmetricKeyAlgorithm.AES_128,
+                    SymmetricKeyAlgorithm.BLOWFISH,
                     SymmetricKeyAlgorithm.TWOFISH,
-                    SymmetricKeyAlgorithm.CAMELLIA_128,
+                    SymmetricKeyAlgorithm.CAMELLIA_256,
                     SymmetricKeyAlgorithm.CAMELLIA_192,
-                    SymmetricKeyAlgorithm.CAMELLIA_256
+                    SymmetricKeyAlgorithm.CAMELLIA_128
             ));
         }
 
@@ -251,15 +251,33 @@ public final class Policy {
             return new SymmetricKeyAlgorithmPolicy(SymmetricKeyAlgorithm.AES_256, Arrays.asList(
                     // Reject: Unencrypted, IDEA, TripleDES
                     SymmetricKeyAlgorithm.CAST5,
-                    SymmetricKeyAlgorithm.BLOWFISH,
-                    SymmetricKeyAlgorithm.AES_128,
-                    SymmetricKeyAlgorithm.AES_192,
                     SymmetricKeyAlgorithm.AES_256,
+                    SymmetricKeyAlgorithm.AES_192,
+                    SymmetricKeyAlgorithm.AES_128,
+                    SymmetricKeyAlgorithm.BLOWFISH,
                     SymmetricKeyAlgorithm.TWOFISH,
-                    SymmetricKeyAlgorithm.CAMELLIA_128,
+                    SymmetricKeyAlgorithm.CAMELLIA_256,
                     SymmetricKeyAlgorithm.CAMELLIA_192,
-                    SymmetricKeyAlgorithm.CAMELLIA_256
+                    SymmetricKeyAlgorithm.CAMELLIA_128
             ));
+        }
+
+        /**
+         * Select the best acceptable algorithm from the options list.
+         * The best algorithm is the first algorithm we encounter in our list of acceptable algorithms that
+         * is also contained in the list of options.
+         *
+         *
+         * @param options list of algorithm options
+         * @return best
+         */
+        public SymmetricKeyAlgorithm selectBest(List<SymmetricKeyAlgorithm> options) {
+            for (SymmetricKeyAlgorithm acceptable : acceptableSymmetricKeyAlgorithms) {
+                if (options.contains(acceptable)) {
+                    return acceptable;
+                }
+            }
+            return null;
         }
     }
 
