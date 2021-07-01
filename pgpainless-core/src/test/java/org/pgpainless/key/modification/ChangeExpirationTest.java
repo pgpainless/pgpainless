@@ -32,6 +32,7 @@ import org.pgpainless.key.OpenPgpV4Fingerprint;
 import org.pgpainless.key.TestKeys;
 import org.pgpainless.key.info.KeyRingInfo;
 import org.pgpainless.key.protection.UnprotectedKeysProtector;
+import org.pgpainless.util.TestUtils;
 
 public class ChangeExpirationTest {
 
@@ -41,13 +42,14 @@ public class ChangeExpirationTest {
     @MethodSource("org.pgpainless.util.TestUtil#provideImplementationFactories")
     public void setExpirationDateAndThenUnsetIt_OnPrimaryKey(ImplementationFactory implementationFactory) throws PGPException, IOException, InterruptedException {
         ImplementationFactory.setFactoryImplementation(implementationFactory);
+
         PGPSecretKeyRing secretKeys = TestKeys.getEmilSecretKeyRing();
         KeyRingInfo sInfo = PGPainless.inspectKeyRing(secretKeys);
 
         assertNull(sInfo.getPrimaryKeyExpirationDate());
         assertNull(sInfo.getSubkeyExpirationDate(subKeyFingerprint));
 
-        Date date = new Date(1606493432000L);
+        Date date = TestUtils.getUTCDate("2020-11-27 16:10:32 UTC");
         secretKeys = PGPainless.modifyKeyRing(secretKeys)
                 .setExpirationDate(date, new UnprotectedKeysProtector()).done();
         sInfo = PGPainless.inspectKeyRing(secretKeys);
@@ -73,13 +75,14 @@ public class ChangeExpirationTest {
     @MethodSource("org.pgpainless.util.TestUtil#provideImplementationFactories")
     public void setExpirationDateAndThenUnsetIt_OnSubkey(ImplementationFactory implementationFactory) throws PGPException, IOException, InterruptedException {
         ImplementationFactory.setFactoryImplementation(implementationFactory);
+
         PGPSecretKeyRing secretKeys = TestKeys.getEmilSecretKeyRing();
         KeyRingInfo sInfo = PGPainless.inspectKeyRing(secretKeys);
 
         assertNull(sInfo.getSubkeyExpirationDate(subKeyFingerprint));
         assertNull(sInfo.getPrimaryKeyExpirationDate());
 
-        Date date = new Date(1606493432000L);
+        Date date = TestUtils.getUTCDate("2020-11-27 16:10:32 UTC");
         secretKeys = PGPainless.modifyKeyRing(secretKeys)
                 .setExpirationDate(subKeyFingerprint, date, new UnprotectedKeysProtector()).done();
         sInfo = PGPainless.inspectKeyRing(secretKeys);

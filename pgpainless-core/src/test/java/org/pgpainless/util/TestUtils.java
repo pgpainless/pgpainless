@@ -46,6 +46,15 @@ public class TestUtils {
         return UTC_PARSER.format(date);
     }
 
+    /**
+     * Return the current data "rounded" to UTC precision.
+     *
+     * @return now
+     */
+    public static Date now() {
+        return getUTCDate(formatUTCDate(new Date()));
+    }
+
     public static int getNumberOfItemsInIterator(Iterator<?> iterator) {
         int num = 0;
         while (iterator.hasNext()) {

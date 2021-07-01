@@ -41,6 +41,7 @@ import org.junit.jupiter.params.provider.MethodSource;
 import org.pgpainless.PGPainless;
 import org.pgpainless.algorithm.KeyFlag;
 import org.pgpainless.algorithm.PublicKeyAlgorithm;
+import org.pgpainless.implementation.ImplementationFactory;
 import org.pgpainless.key.OpenPgpV4Fingerprint;
 import org.pgpainless.key.TestKeys;
 import org.pgpainless.key.generation.KeySpec;
@@ -51,8 +52,8 @@ import org.pgpainless.key.protection.SecretKeyRingProtector;
 import org.pgpainless.key.protection.UnprotectedKeysProtector;
 import org.pgpainless.key.util.KeyRingUtils;
 import org.pgpainless.key.util.UserId;
-import org.pgpainless.util.ArmorUtils;
 import org.pgpainless.util.Passphrase;
+import org.pgpainless.util.TestUtils;
 
 public class KeyRingInfoTest {
 
@@ -60,6 +61,7 @@ public class KeyRingInfoTest {
     @MethodSource("org.pgpainless.util.TestUtil#provideImplementationFactories")
     public void testWithEmilsKeys(ImplementationFactory implementationFactory) throws IOException, PGPException {
         ImplementationFactory.setFactoryImplementation(implementationFactory);
+
         PGPSecretKeyRing secretKeys = TestKeys.getEmilSecretKeyRing();
         PGPPublicKeyRing publicKeys = TestKeys.getEmilPublicKeyRing();
         KeyRingInfo sInfo = PGPainless.inspectKeyRing(secretKeys);
@@ -96,15 +98,12 @@ public class KeyRingInfoTest {
 
         assertNull(sInfo.getRevocationDate());
         assertNull(pInfo.getRevocationDate());
-        Date revocationDate = new Date();
+        Date revocationDate = TestUtils.now();
         PGPSecretKeyRing revoked = PGPainless.modifyKeyRing(secretKeys).revoke(new UnprotectedKeysProtector()).done();
-        // CHECKSTYLE:OFF
-        System.out.println(ArmorUtils.toAsciiArmoredString(revoked));
-        // CHECKSTYLE:ON
         KeyRingInfo rInfo = PGPainless.inspectKeyRing(revoked);
         assertNotNull(rInfo.getRevocationDate());
-        assertEquals(revocationDate.getTime(), rInfo.getRevocationDate().getTime(), 1000);
-        assertEquals(revocationDate.getTime(), rInfo.getLastModified().getTime(), 1000);
+        assertEquals(revocationDate.getTime(), rInfo.getRevocationDate().getTime(), 5);
+        assertEquals(revocationDate.getTime(), rInfo.getLastModified().getTime(), 5);
     }
 
     @Test
@@ -169,6 +168,7 @@ public class KeyRingInfoTest {
     @MethodSource("org.pgpainless.util.TestUtil#provideImplementationFactories")
     public void dummyS2KTest(ImplementationFactory implementationFactory) throws PGPException, IOException {
         ImplementationFactory.setFactoryImplementation(implementationFactory);
+
         String withDummyS2K = "-----BEGIN PGP PRIVATE KEY BLOCK-----\n" +
                 "\n" +
                 "lQCVBFZuSwwBBAC04VdUUq2REb7+IF/x21yOV3kIn798XRl7A7RiGcE9VpBjT5xM\n" +
@@ -207,6 +207,7 @@ public class KeyRingInfoTest {
     @MethodSource("org.pgpainless.util.TestUtil#provideImplementationFactories")
     public void testGetKeysWithFlagsAndExpiry(ImplementationFactory implementationFactory) throws PGPException, InvalidAlgorithmParameterException, NoSuchAlgorithmException {
         ImplementationFactory.setFactoryImplementation(implementationFactory);
+
         PGPSecretKeyRing secretKeys = PGPainless.generateKeyRing()
                 .withSubKey(KeySpec.getBuilder(KeyType.ECDH(EllipticCurve._BRAINPOOLP384R1)).withKeyFlags(KeyFlag.ENCRYPT_STORAGE).withDefaultAlgorithms())
                 .withSubKey(KeySpec.getBuilder(KeyType.ECDSA(EllipticCurve._BRAINPOOLP384R1)).withKeyFlags(KeyFlag.SIGN_DATA).withDefaultAlgorithms())
@@ -216,7 +217,7 @@ public class KeyRingInfoTest {
                 .build();
 
         Iterator<PGPSecretKey> keys = secretKeys.iterator();
-        Date now = new Date();
+        Date now = TestUtils.now();
 
         Calendar calendar = Calendar.getInstance();
         calendar.setTime(now);
