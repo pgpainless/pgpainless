@@ -27,7 +27,6 @@ import java.util.NoSuchElementException;
 
 import org.bouncycastle.openpgp.PGPException;
 import org.bouncycastle.openpgp.PGPSecretKeyRing;
-import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.MethodSource;
 import org.pgpainless.PGPainless;
@@ -69,15 +68,21 @@ public class AddUserIdTest {
         assertFalse(userIds.hasNext());
     }
 
-    @Test
-    public void deleteUserId_noSuchElementExceptionForMissingUserId() throws IOException, PGPException {
+    @ParameterizedTest
+    @MethodSource("org.pgpainless.util.TestUtil#provideImplementationFactories")
+    public void deleteUserId_noSuchElementExceptionForMissingUserId(ImplementationFactory implementationFactory) throws IOException, PGPException {
+        ImplementationFactory.setFactoryImplementation(implementationFactory);
+
         PGPSecretKeyRing secretKeys = TestKeys.getCryptieSecretKeyRing();
         assertThrows(NoSuchElementException.class, () -> PGPainless.modifyKeyRing(secretKeys)
                 .deleteUserId("invalid@user.id", new UnprotectedKeysProtector()));
     }
 
-    @Test
-    public void deleteExistingAndAddNewUserIdToExistingKeyRing() throws PGPException, IOException {
+    @ParameterizedTest
+    @MethodSource("org.pgpainless.util.TestUtil#provideImplementationFactories")
+    public void deleteExistingAndAddNewUserIdToExistingKeyRing(ImplementationFactory implementationFactory) throws PGPException, IOException {
+        ImplementationFactory.setFactoryImplementation(implementationFactory);
+
         final String ARMORED_PRIVATE_KEY =
                 "-----BEGIN PGP PRIVATE KEY BLOCK-----\r\n\r\n" +
                         "xVgEX6UIExYJKwYBBAHaRw8BAQdAMfHf64wPQ2LC9In5AKYU/KT1qWvI7e7a\r\n" +

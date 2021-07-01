@@ -24,7 +24,6 @@ import java.util.Date;
 
 import org.bouncycastle.openpgp.PGPException;
 import org.bouncycastle.openpgp.PGPSecretKeyRing;
-import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.MethodSource;
 import org.pgpainless.PGPainless;
@@ -70,8 +69,10 @@ public class ChangeExpirationTest {
         assertNull(sInfo.getSubkeyExpirationDate(subKeyFingerprint));
     }
 
-    @Test
-    public void setExpirationDateAndThenUnsetIt_OnSubkey() throws PGPException, IOException, InterruptedException {
+    @ParameterizedTest
+    @MethodSource("org.pgpainless.util.TestUtil#provideImplementationFactories")
+    public void setExpirationDateAndThenUnsetIt_OnSubkey(ImplementationFactory implementationFactory) throws PGPException, IOException, InterruptedException {
+        ImplementationFactory.setFactoryImplementation(implementationFactory);
         PGPSecretKeyRing secretKeys = TestKeys.getEmilSecretKeyRing();
         KeyRingInfo sInfo = PGPainless.inspectKeyRing(secretKeys);
 

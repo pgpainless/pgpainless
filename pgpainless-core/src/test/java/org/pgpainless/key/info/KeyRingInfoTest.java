@@ -36,6 +36,8 @@ import org.bouncycastle.openpgp.PGPPublicKeyRing;
 import org.bouncycastle.openpgp.PGPSecretKey;
 import org.bouncycastle.openpgp.PGPSecretKeyRing;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.MethodSource;
 import org.pgpainless.PGPainless;
 import org.pgpainless.algorithm.KeyFlag;
 import org.pgpainless.algorithm.PublicKeyAlgorithm;
@@ -54,8 +56,10 @@ import org.pgpainless.util.Passphrase;
 
 public class KeyRingInfoTest {
 
-    @Test
-    public void testWithEmilsKeys() throws IOException, PGPException {
+    @ParameterizedTest
+    @MethodSource("org.pgpainless.util.TestUtil#provideImplementationFactories")
+    public void testWithEmilsKeys(ImplementationFactory implementationFactory) throws IOException, PGPException {
+        ImplementationFactory.setFactoryImplementation(implementationFactory);
         PGPSecretKeyRing secretKeys = TestKeys.getEmilSecretKeyRing();
         PGPPublicKeyRing publicKeys = TestKeys.getEmilPublicKeyRing();
         KeyRingInfo sInfo = PGPainless.inspectKeyRing(secretKeys);
@@ -161,8 +165,10 @@ public class KeyRingInfoTest {
                 KeyRingUtils.requireSecretKeyFrom(secretKeys, secretKeys.getPublicKey().getKeyID()));
     }
 
-    @Test
-    public void dummyS2KTest() throws PGPException, IOException {
+    @ParameterizedTest
+    @MethodSource("org.pgpainless.util.TestUtil#provideImplementationFactories")
+    public void dummyS2KTest(ImplementationFactory implementationFactory) throws PGPException, IOException {
+        ImplementationFactory.setFactoryImplementation(implementationFactory);
         String withDummyS2K = "-----BEGIN PGP PRIVATE KEY BLOCK-----\n" +
                 "\n" +
                 "lQCVBFZuSwwBBAC04VdUUq2REb7+IF/x21yOV3kIn798XRl7A7RiGcE9VpBjT5xM\n" +
@@ -197,8 +203,10 @@ public class KeyRingInfoTest {
         assertTrue(new KeyInfo(secretKeys.getSecretKey()).hasDummyS2K());
     }
 
-    @Test
-    public void testGetKeysWithFlagsAndExpiry() throws PGPException, InvalidAlgorithmParameterException, NoSuchAlgorithmException {
+    @ParameterizedTest
+    @MethodSource("org.pgpainless.util.TestUtil#provideImplementationFactories")
+    public void testGetKeysWithFlagsAndExpiry(ImplementationFactory implementationFactory) throws PGPException, InvalidAlgorithmParameterException, NoSuchAlgorithmException {
+        ImplementationFactory.setFactoryImplementation(implementationFactory);
         PGPSecretKeyRing secretKeys = PGPainless.generateKeyRing()
                 .withSubKey(KeySpec.getBuilder(KeyType.ECDH(EllipticCurve._BRAINPOOLP384R1)).withKeyFlags(KeyFlag.ENCRYPT_STORAGE).withDefaultAlgorithms())
                 .withSubKey(KeySpec.getBuilder(KeyType.ECDSA(EllipticCurve._BRAINPOOLP384R1)).withKeyFlags(KeyFlag.SIGN_DATA).withDefaultAlgorithms())
