@@ -53,7 +53,7 @@ import org.pgpainless.util.Passphrase;
 public class SigningTest {
 
     @ParameterizedTest
-    @MethodSource("org.pgpainless.util.TestUtil#provideImplementationFactories")
+    @MethodSource("org.pgpainless.util.TestImplementationFactoryProvider#provideImplementationFactories")
     public void testEncryptionAndSignatureVerification(ImplementationFactory implementationFactory) throws IOException, PGPException {
         ImplementationFactory.setFactoryImplementation(implementationFactory);
 

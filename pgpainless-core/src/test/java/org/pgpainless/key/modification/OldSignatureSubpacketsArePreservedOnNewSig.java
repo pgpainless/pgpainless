@@ -38,7 +38,7 @@ import org.pgpainless.key.protection.UnprotectedKeysProtector;
 public class OldSignatureSubpacketsArePreservedOnNewSig {
 
     @ParameterizedTest
-    @MethodSource("org.pgpainless.util.TestUtil#provideImplementationFactories")
+    @MethodSource("org.pgpainless.util.TestImplementationFactoryProvider#provideImplementationFactories")
     public void verifyOldSignatureSubpacketsArePreservedOnNewExpirationDateSig(ImplementationFactory implementationFactory)
             throws InvalidAlgorithmParameterException, NoSuchAlgorithmException, PGPException, InterruptedException, IOException {
         ImplementationFactory.setFactoryImplementation(implementationFactory);

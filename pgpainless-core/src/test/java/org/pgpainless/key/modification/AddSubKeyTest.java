@@ -49,7 +49,7 @@ import org.pgpainless.util.Passphrase;
 public class AddSubKeyTest {
 
     @ParameterizedTest
-    @MethodSource("org.pgpainless.util.TestUtil#provideImplementationFactories")
+    @MethodSource("org.pgpainless.util.TestImplementationFactoryProvider#provideImplementationFactories")
     public void testAddSubKey(ImplementationFactory implementationFactory) throws IOException, PGPException, InvalidAlgorithmParameterException, NoSuchAlgorithmException {
         ImplementationFactory.setFactoryImplementation(implementationFactory);
         PGPSecretKeyRing secretKeys = TestKeys.getCryptieSecretKeyRing();

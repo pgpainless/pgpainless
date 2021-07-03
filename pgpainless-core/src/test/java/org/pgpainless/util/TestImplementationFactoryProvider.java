@@ -25,7 +25,7 @@ import java.util.List;
 /**
  * Utility class used to provide all available implementations of {@link ImplementationFactory} for parametrized tests.
  */
-public class TestUtil {
+public class TestImplementationFactoryProvider {
 
     private static final List<ImplementationFactory> IMPLEMENTATIONS = Arrays.asList(
             new BcImplementationFactory(),

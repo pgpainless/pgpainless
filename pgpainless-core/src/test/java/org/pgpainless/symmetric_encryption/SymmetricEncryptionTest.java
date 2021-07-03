@@ -51,7 +51,7 @@ import org.pgpainless.util.Passphrase;
 public class SymmetricEncryptionTest {
 
     @ParameterizedTest
-    @MethodSource("org.pgpainless.util.TestUtil#provideImplementationFactories")
+    @MethodSource("org.pgpainless.util.TestImplementationFactoryProvider#provideImplementationFactories")
     public void encryptWithKeyAndPassphrase_DecryptWithKey(ImplementationFactory implementationFactory) throws IOException, PGPException {
         ImplementationFactory.setFactoryImplementation(implementationFactory);
         byte[] plaintext = "This is a secret message".getBytes(StandardCharsets.UTF_8);
@@ -105,7 +105,7 @@ public class SymmetricEncryptionTest {
     }
 
     @ParameterizedTest
-    @MethodSource("org.pgpainless.util.TestUtil#provideImplementationFactories")
+    @MethodSource("org.pgpainless.util.TestImplementationFactoryProvider#provideImplementationFactories")
     public void testMismatchPassphraseFails(ImplementationFactory implementationFactory) throws IOException, PGPException {
         ImplementationFactory.setFactoryImplementation(implementationFactory);
 

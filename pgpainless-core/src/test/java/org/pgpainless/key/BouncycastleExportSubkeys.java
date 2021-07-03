@@ -48,7 +48,7 @@ import org.pgpainless.provider.ProviderFactory;
 public class BouncycastleExportSubkeys {
 
     @ParameterizedTest
-    @MethodSource("org.pgpainless.util.TestUtil#provideImplementationFactories")
+    @MethodSource("org.pgpainless.util.TestImplementationFactoryProvider#provideImplementationFactories")
     public void testExportImport(ImplementationFactory implementationFactory) throws NoSuchAlgorithmException, InvalidAlgorithmParameterException, PGPException {
         ImplementationFactory.setFactoryImplementation(implementationFactory);
         KeyPairGenerator generator;

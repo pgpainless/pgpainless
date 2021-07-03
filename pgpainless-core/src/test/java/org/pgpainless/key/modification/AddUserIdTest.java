@@ -40,7 +40,7 @@ import org.pgpainless.util.Passphrase;
 public class AddUserIdTest {
 
     @ParameterizedTest
-    @MethodSource("org.pgpainless.util.TestUtil#provideImplementationFactories")
+    @MethodSource("org.pgpainless.util.TestImplementationFactoryProvider#provideImplementationFactories")
     public void addUserIdToExistingKeyRing(ImplementationFactory implementationFactory) throws InvalidAlgorithmParameterException, NoSuchAlgorithmException, PGPException {
         ImplementationFactory.setFactoryImplementation(implementationFactory);
         PGPSecretKeyRing secretKeys = PGPainless.generateKeyRing().simpleEcKeyRing("alice@wonderland.lit", "rabb1th0le");
@@ -69,7 +69,7 @@ public class AddUserIdTest {
     }
 
     @ParameterizedTest
-    @MethodSource("org.pgpainless.util.TestUtil#provideImplementationFactories")
+    @MethodSource("org.pgpainless.util.TestImplementationFactoryProvider#provideImplementationFactories")
     public void deleteUserId_noSuchElementExceptionForMissingUserId(ImplementationFactory implementationFactory) throws IOException, PGPException {
         ImplementationFactory.setFactoryImplementation(implementationFactory);
 
@@ -79,7 +79,7 @@ public class AddUserIdTest {
     }
 
     @ParameterizedTest
-    @MethodSource("org.pgpainless.util.TestUtil#provideImplementationFactories")
+    @MethodSource("org.pgpainless.util.TestImplementationFactoryProvider#provideImplementationFactories")
     public void deleteExistingAndAddNewUserIdToExistingKeyRing(ImplementationFactory implementationFactory) throws PGPException, IOException {
         ImplementationFactory.setFactoryImplementation(implementationFactory);
 

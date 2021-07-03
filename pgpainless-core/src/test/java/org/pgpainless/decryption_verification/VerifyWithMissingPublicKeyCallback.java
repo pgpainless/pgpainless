@@ -48,7 +48,7 @@ import org.pgpainless.key.util.KeyRingUtils;
 /**
  * Test functionality of the {@link MissingPublicKeyCallback} which is called when during signature verification,
  * a signature is encountered which was made by a key that was not provided in
- * {@link DecryptionBuilderInterface.VerifyWith#verifyWith(PGPPublicKeyRing)}.
+ * {@link ConsumerOptions#addVerificationCert(PGPPublicKeyRing)}.
  */
 public class VerifyWithMissingPublicKeyCallback {
 

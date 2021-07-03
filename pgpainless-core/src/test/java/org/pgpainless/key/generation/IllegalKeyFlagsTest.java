@@ -29,7 +29,7 @@ import org.pgpainless.key.generation.type.xdh.XDHSpec;
 public class IllegalKeyFlagsTest {
 
     @ParameterizedTest
-    @MethodSource("org.pgpainless.util.TestUtil#provideImplementationFactories")
+    @MethodSource("org.pgpainless.util.TestImplementationFactoryProvider#provideImplementationFactories")
     public void testKeyCannotCarryFlagsTest(ImplementationFactory implementationFactory) {
         ImplementationFactory.setFactoryImplementation(implementationFactory);
         assertThrows(IllegalArgumentException.class, () -> PGPainless.generateKeyRing()

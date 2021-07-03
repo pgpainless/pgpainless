@@ -38,7 +38,7 @@ import org.pgpainless.key.info.KeyRingInfo;
 public class DecryptHiddenRecipientMessage {
 
     @ParameterizedTest
-    @MethodSource("org.pgpainless.util.TestUtil#provideImplementationFactories")
+    @MethodSource("org.pgpainless.util.TestImplementationFactoryProvider#provideImplementationFactories")
     public void testDecryptionWithWildcardRecipient(ImplementationFactory implementationFactory) throws IOException, PGPException {
         ImplementationFactory.setFactoryImplementation(implementationFactory);
         String secretKeyAscii = "-----BEGIN PGP PRIVATE KEY BLOCK-----\n" +

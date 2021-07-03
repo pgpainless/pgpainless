@@ -36,7 +36,7 @@ public class ImportExportKeyTest {
      * @throws IOException in case of a IO error
      */
     @ParameterizedTest
-    @MethodSource("org.pgpainless.util.TestUtil#provideImplementationFactories")
+    @MethodSource("org.pgpainless.util.TestImplementationFactoryProvider#provideImplementationFactories")
     public void testExportImportPublicKeyRing(ImplementationFactory implementationFactory) throws IOException {
         ImplementationFactory.setFactoryImplementation(implementationFactory);
         PGPPublicKeyRing publicKeys = TestKeys.getJulietPublicKeyRing();

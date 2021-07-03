@@ -47,7 +47,7 @@ import org.pgpainless.util.Passphrase;
 public class BrainpoolKeyGenerationTest {
 
     @ParameterizedTest
-    @MethodSource("org.pgpainless.util.TestUtil#provideImplementationFactories")
+    @MethodSource("org.pgpainless.util.TestImplementationFactoryProvider#provideImplementationFactories")
     public void generateEcKeysTest(ImplementationFactory implementationFactory)
             throws InvalidAlgorithmParameterException, NoSuchAlgorithmException, PGPException {
         ImplementationFactory.setFactoryImplementation(implementationFactory);
@@ -79,7 +79,7 @@ public class BrainpoolKeyGenerationTest {
     }
 
     @ParameterizedTest
-    @MethodSource("org.pgpainless.util.TestUtil#provideImplementationFactories")
+    @MethodSource("org.pgpainless.util.TestImplementationFactoryProvider#provideImplementationFactories")
     public void generateEdDSAKeyTest(ImplementationFactory implementationFactory)
             throws PGPException, InvalidAlgorithmParameterException, NoSuchAlgorithmException {
         ImplementationFactory.setFactoryImplementation(implementationFactory);

@@ -37,7 +37,7 @@ import org.pgpainless.util.Passphrase;
 public class MultiPassphraseSymmetricEncryptionTest {
 
     @ParameterizedTest
-    @MethodSource("org.pgpainless.util.TestUtil#provideImplementationFactories")
+    @MethodSource("org.pgpainless.util.TestImplementationFactoryProvider#provideImplementationFactories")
     @Disabled
     public void encryptDecryptWithMultiplePassphrases(ImplementationFactory implementationFactory) throws IOException, PGPException {
         ImplementationFactory.setFactoryImplementation(implementationFactory);

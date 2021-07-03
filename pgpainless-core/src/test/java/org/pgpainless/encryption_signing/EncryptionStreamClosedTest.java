@@ -31,7 +31,7 @@ import org.pgpainless.util.Passphrase;
 public class EncryptionStreamClosedTest {
 
     @ParameterizedTest
-    @MethodSource("org.pgpainless.util.TestUtil#provideImplementationFactories")
+    @MethodSource("org.pgpainless.util.TestImplementationFactoryProvider#provideImplementationFactories")
     public void testStreamHasToBeClosedBeforeGetResultCanBeCalled(ImplementationFactory implementationFactory) throws IOException, PGPException {
         ImplementationFactory.setFactoryImplementation(implementationFactory);
         OutputStream out = new ByteArrayOutputStream();

@@ -39,7 +39,7 @@ public class ChangeExpirationTest {
     private final OpenPgpV4Fingerprint subKeyFingerprint = new OpenPgpV4Fingerprint("F73FDE6439ABE210B1AF4EDD273EF7A0C749807B");
 
     @ParameterizedTest
-    @MethodSource("org.pgpainless.util.TestUtil#provideImplementationFactories")
+    @MethodSource("org.pgpainless.util.TestImplementationFactoryProvider#provideImplementationFactories")
     public void setExpirationDateAndThenUnsetIt_OnPrimaryKey(ImplementationFactory implementationFactory) throws PGPException, IOException, InterruptedException {
         ImplementationFactory.setFactoryImplementation(implementationFactory);
 
@@ -72,7 +72,7 @@ public class ChangeExpirationTest {
     }
 
     @ParameterizedTest
-    @MethodSource("org.pgpainless.util.TestUtil#provideImplementationFactories")
+    @MethodSource("org.pgpainless.util.TestImplementationFactoryProvider#provideImplementationFactories")
     public void setExpirationDateAndThenUnsetIt_OnSubkey(ImplementationFactory implementationFactory) throws PGPException, IOException, InterruptedException {
         ImplementationFactory.setFactoryImplementation(implementationFactory);
 

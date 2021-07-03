@@ -38,7 +38,7 @@ public class RecursionDepthTest {
      * @see <a href="https://tests.sequoia-pgp.org/#Maximum_recursion_depth">Sequoia-PGP Test Suite</a>
      */
     @ParameterizedTest
-    @MethodSource("org.pgpainless.util.TestUtil#provideImplementationFactories")
+    @MethodSource("org.pgpainless.util.TestImplementationFactoryProvider#provideImplementationFactories")
     public void decryptionAbortsWhenMaximumRecursionDepthReachedTest(ImplementationFactory implementationFactory) throws IOException, PGPException {
         ImplementationFactory.setFactoryImplementation(implementationFactory);
         String key = "-----BEGIN PGP PRIVATE KEY BLOCK-----\n" +

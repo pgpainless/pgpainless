@@ -112,7 +112,7 @@ public class RevokeKeyWithoutPreferredAlgorithmsOnPrimaryKey {
             "-----END PGP PRIVATE KEY BLOCK-----";
 
     @ParameterizedTest
-    @MethodSource("org.pgpainless.util.TestUtil#provideImplementationFactories")
+    @MethodSource("org.pgpainless.util.TestImplementationFactoryProvider#provideImplementationFactories")
     public void testChangingExpirationTimeWithKeyWithoutPrefAlgos(ImplementationFactory implementationFactory) throws IOException, PGPException {
         ImplementationFactory.setFactoryImplementation(implementationFactory);
         Date expirationDate = new Date();

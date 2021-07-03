@@ -34,7 +34,7 @@ public class CertificationKeyMustBeAbleToCertifyTest {
      * This test therefore verifies that generating such keys fails.
      */
     @ParameterizedTest
-    @MethodSource("org.pgpainless.util.TestUtil#provideImplementationFactories")
+    @MethodSource("org.pgpainless.util.TestImplementationFactoryProvider#provideImplementationFactories")
     public void testCertificationIncapableKeyTypesThrow(ImplementationFactory implementationFactory) {
         ImplementationFactory.setFactoryImplementation(implementationFactory);
         KeyType[] typesIncapableOfCreatingVerifications = new KeyType[] {

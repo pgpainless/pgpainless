@@ -52,7 +52,7 @@ public class DecryptAndVerifyMessageTest {
     }
 
     @ParameterizedTest
-    @MethodSource("org.pgpainless.util.TestUtil#provideImplementationFactories")
+    @MethodSource("org.pgpainless.util.TestImplementationFactoryProvider#provideImplementationFactories")
     public void decryptMessageAndVerifySignatureTest(ImplementationFactory implementationFactory) throws Exception {
         ImplementationFactory.setFactoryImplementation(implementationFactory);
         String encryptedMessage = TestKeys.MSG_SIGN_CRYPT_JULIET_JULIET;

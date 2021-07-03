@@ -131,7 +131,7 @@ public class ModificationDetectionTests {
      * @throws PGPException in case of a pgp error
      */
     @ParameterizedTest
-    @MethodSource("org.pgpainless.util.TestUtil#provideImplementationFactories")
+    @MethodSource("org.pgpainless.util.TestImplementationFactoryProvider#provideImplementationFactories")
     public void testMissingMDC(ImplementationFactory implementationFactory) throws IOException, PGPException {
         ImplementationFactory.setFactoryImplementation(implementationFactory);
         String message = "-----BEGIN PGP MESSAGE-----\n" +
@@ -166,7 +166,7 @@ public class ModificationDetectionTests {
     }
 
     @ParameterizedTest
-    @MethodSource("org.pgpainless.util.TestUtil#provideImplementationFactories")
+    @MethodSource("org.pgpainless.util.TestImplementationFactoryProvider#provideImplementationFactories")
     public void tamperedCiphertextTest(ImplementationFactory implementationFactory) throws IOException, PGPException {
         ImplementationFactory.setFactoryImplementation(implementationFactory);
         String message = "-----BEGIN PGP MESSAGE-----\n" +
@@ -197,7 +197,7 @@ public class ModificationDetectionTests {
     }
 
     @ParameterizedTest
-    @MethodSource("org.pgpainless.util.TestUtil#provideImplementationFactories")
+    @MethodSource("org.pgpainless.util.TestImplementationFactoryProvider#provideImplementationFactories")
     public void tamperedMDCTest(ImplementationFactory implementationFactory) throws IOException, PGPException {
         ImplementationFactory.setFactoryImplementation(implementationFactory);
         String message = "-----BEGIN PGP MESSAGE-----\n" +

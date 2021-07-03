@@ -56,7 +56,7 @@ public class ChangeSecretKeyRingPassphraseTest {
     }
 
     @ParameterizedTest
-    @MethodSource("org.pgpainless.util.TestUtil#provideImplementationFactories")
+    @MethodSource("org.pgpainless.util.TestImplementationFactoryProvider#provideImplementationFactories")
     public void changePassphraseOfWholeKeyRingTest(ImplementationFactory implementationFactory) throws PGPException {
         ImplementationFactory.setFactoryImplementation(implementationFactory);
 
@@ -84,7 +84,7 @@ public class ChangeSecretKeyRingPassphraseTest {
     }
 
     @ParameterizedTest
-    @MethodSource("org.pgpainless.util.TestUtil#provideImplementationFactories")
+    @MethodSource("org.pgpainless.util.TestImplementationFactoryProvider#provideImplementationFactories")
     public void changePassphraseOfWholeKeyRingToEmptyPassphrase(ImplementationFactory implementationFactory) throws PGPException, IOException {
         ImplementationFactory.setFactoryImplementation(implementationFactory);
         PGPSecretKeyRing secretKeys = PGPainless.modifyKeyRing(keyRing)
@@ -102,7 +102,7 @@ public class ChangeSecretKeyRingPassphraseTest {
     }
 
     @ParameterizedTest
-    @MethodSource("org.pgpainless.util.TestUtil#provideImplementationFactories")
+    @MethodSource("org.pgpainless.util.TestImplementationFactoryProvider#provideImplementationFactories")
     public void changePassphraseOfSingleSubkeyToNewPassphrase(ImplementationFactory implementationFactory) throws PGPException {
         ImplementationFactory.setFactoryImplementation(implementationFactory);
 
@@ -139,7 +139,7 @@ public class ChangeSecretKeyRingPassphraseTest {
     }
 
     @ParameterizedTest
-    @MethodSource("org.pgpainless.util.TestUtil#provideImplementationFactories")
+    @MethodSource("org.pgpainless.util.TestImplementationFactoryProvider#provideImplementationFactories")
     public void changePassphraseOfSingleSubkeyToEmptyPassphrase(ImplementationFactory implementationFactory) throws PGPException {
         ImplementationFactory.setFactoryImplementation(implementationFactory);
 
