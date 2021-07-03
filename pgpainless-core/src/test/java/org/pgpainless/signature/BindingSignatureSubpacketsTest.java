@@ -27,9 +27,11 @@ import java.util.Date;
 import org.bouncycastle.openpgp.PGPException;
 import org.bouncycastle.openpgp.PGPPublicKeyRing;
 import org.bouncycastle.openpgp.PGPSignature;
-import org.junit.jupiter.api.Test;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.MethodSource;
 import org.pgpainless.PGPainless;
 import org.pgpainless.exception.SignatureValidationException;
+import org.pgpainless.implementation.ImplementationFactory;
 import org.pgpainless.policy.Policy;
 
 /**
@@ -59,8 +61,11 @@ public class BindingSignatureSubpacketsTest {
     private Date validationDate = new Date();
     private Policy policy = PGPainless.getPolicy();
 
-    @Test
-    public void baseCase() throws IOException, PGPException {
+    @ParameterizedTest
+    @MethodSource("org.pgpainless.util.TestImplementationFactoryProvider#provideImplementationFactories")
+    public void baseCase(ImplementationFactory implementationFactory) throws IOException, PGPException {
+        ImplementationFactory.setFactoryImplementation(implementationFactory);
+
         String key = "-----BEGIN PGP PUBLIC KEY BLOCK-----\n" +
                 "\n" +
                 "xsDNBF2lnPIBDAC5cL9PQoQLTMuhjbYvb4Ncuuo0bfmgPRFywX53jPhoFf4Zg6mv\n" +
@@ -118,8 +123,11 @@ public class BindingSignatureSubpacketsTest {
         expectSignatureValidationSucceeds(key, "Base case. Is valid.");
     }
 
-    @Test
-    public void subkeyBindingIssuerFpOnly() throws IOException, PGPException {
+    @ParameterizedTest
+    @MethodSource("org.pgpainless.util.TestImplementationFactoryProvider#provideImplementationFactories")
+    public void subkeyBindingIssuerFpOnly(ImplementationFactory implementationFactory) throws IOException, PGPException {
+        ImplementationFactory.setFactoryImplementation(implementationFactory);
+
         String key = "-----BEGIN PGP PUBLIC KEY BLOCK-----\n" +
                 "\n" +
                 "xsDNBF2lnPIBDAC5cL9PQoQLTMuhjbYvb4Ncuuo0bfmgPRFywX53jPhoFf4Zg6mv\n" +
@@ -177,8 +185,11 @@ public class BindingSignatureSubpacketsTest {
         expectSignatureValidationSucceeds(key, "Interoperability concern.");
     }
 
-    @Test
-    public void subkeyBindingIssuerV6IssuerFp() throws IOException, PGPException {
+    @ParameterizedTest
+    @MethodSource("org.pgpainless.util.TestImplementationFactoryProvider#provideImplementationFactories")
+    public void subkeyBindingIssuerV6IssuerFp(ImplementationFactory implementationFactory) throws IOException, PGPException {
+        ImplementationFactory.setFactoryImplementation(implementationFactory);
+
         String key = "-----BEGIN PGP PUBLIC KEY BLOCK-----\n" +
                 "\n" +
                 "xsDNBF2lnPIBDAC5cL9PQoQLTMuhjbYvb4Ncuuo0bfmgPRFywX53jPhoFf4Zg6mv\n" +
@@ -236,8 +247,11 @@ public class BindingSignatureSubpacketsTest {
         expectSignatureValidationSucceeds(key, "Interoperability concern");
     }
 
-    @Test
-    public void subkeyBindingIssuerFakeIssuer() throws IOException, PGPException {
+    @ParameterizedTest
+    @MethodSource("org.pgpainless.util.TestImplementationFactoryProvider#provideImplementationFactories")
+    public void subkeyBindingIssuerFakeIssuer(ImplementationFactory implementationFactory) throws IOException, PGPException {
+        ImplementationFactory.setFactoryImplementation(implementationFactory);
+
         String key = "-----BEGIN PGP PUBLIC KEY BLOCK-----\n" +
                 "\n" +
                 "xsDNBF2lnPIBDAC5cL9PQoQLTMuhjbYvb4Ncuuo0bfmgPRFywX53jPhoFf4Zg6mv\n" +
@@ -295,8 +309,11 @@ public class BindingSignatureSubpacketsTest {
         expectSignatureValidationSucceeds(key, "Interoperability concern.");
     }
 
-    @Test
-    public void subkeyBindingFakeIssuerIssuer() throws IOException, PGPException {
+    @ParameterizedTest
+    @MethodSource("org.pgpainless.util.TestImplementationFactoryProvider#provideImplementationFactories")
+    public void subkeyBindingFakeIssuerIssuer(ImplementationFactory implementationFactory) throws IOException, PGPException {
+        ImplementationFactory.setFactoryImplementation(implementationFactory);
+
         String key = "-----BEGIN PGP PUBLIC KEY BLOCK-----\n" +
                 "\n" +
                 "xsDNBF2lnPIBDAC5cL9PQoQLTMuhjbYvb4Ncuuo0bfmgPRFywX53jPhoFf4Zg6mv\n" +
@@ -354,8 +371,11 @@ public class BindingSignatureSubpacketsTest {
         expectSignatureValidationSucceeds(key, "Interop concern");
     }
 
-    @Test
-    public void subkeyBindingFakeIssuer() throws IOException, PGPException {
+    @ParameterizedTest
+    @MethodSource("org.pgpainless.util.TestImplementationFactoryProvider#provideImplementationFactories")
+    public void subkeyBindingFakeIssuer(ImplementationFactory implementationFactory) throws IOException, PGPException {
+        ImplementationFactory.setFactoryImplementation(implementationFactory);
+
         String key = "-----BEGIN PGP PUBLIC KEY BLOCK-----\n" +
                 "\n" +
                 "xsDNBF2lnPIBDAC5cL9PQoQLTMuhjbYvb4Ncuuo0bfmgPRFywX53jPhoFf4Zg6mv\n" +
@@ -413,8 +433,11 @@ public class BindingSignatureSubpacketsTest {
         expectSignatureValidationSucceeds(key, "fake issuers do not throw us off here.");
     }
 
-    @Test
-    public void subkeyBindingNoIssuer() throws IOException, PGPException {
+    @ParameterizedTest
+    @MethodSource("org.pgpainless.util.TestImplementationFactoryProvider#provideImplementationFactories")
+    public void subkeyBindingNoIssuer(ImplementationFactory implementationFactory) throws IOException, PGPException {
+        ImplementationFactory.setFactoryImplementation(implementationFactory);
+
         String key = "-----BEGIN PGP PUBLIC KEY BLOCK-----\n" +
                 "\n" +
                 "xsDNBF2lnPIBDAC5cL9PQoQLTMuhjbYvb4Ncuuo0bfmgPRFywX53jPhoFf4Zg6mv\n" +
@@ -471,8 +494,11 @@ public class BindingSignatureSubpacketsTest {
         expectSignatureValidationSucceeds(key, "subkey binding sig does not need issuer");
     }
 
-    @Test
-    public void unknownSubpacketHashed() throws IOException, PGPException {
+    @ParameterizedTest
+    @MethodSource("org.pgpainless.util.TestImplementationFactoryProvider#provideImplementationFactories")
+    public void unknownSubpacketHashed(ImplementationFactory implementationFactory) throws IOException, PGPException {
+        ImplementationFactory.setFactoryImplementation(implementationFactory);
+
         String key = "-----BEGIN PGP PUBLIC KEY BLOCK-----\n" +
                 "\n" +
                 "xsDNBF2lnPIBDAC5cL9PQoQLTMuhjbYvb4Ncuuo0bfmgPRFywX53jPhoFf4Zg6mv\n" +
@@ -530,8 +556,11 @@ public class BindingSignatureSubpacketsTest {
         expectSignatureValidationSucceeds(key, "Unknown subpackets are okay in hashed area");
     }
 
-    @Test
-    public void subkeyBindingUnknownCriticalSubpacket() throws IOException, PGPException {
+    @ParameterizedTest
+    @MethodSource("org.pgpainless.util.TestImplementationFactoryProvider#provideImplementationFactories")
+    public void subkeyBindingUnknownCriticalSubpacket(ImplementationFactory implementationFactory) throws IOException, PGPException {
+        ImplementationFactory.setFactoryImplementation(implementationFactory);
+
         String key = "-----BEGIN PGP PUBLIC KEY BLOCK-----\n" +
                 "\n" +
                 "xsDNBF2lnPIBDAC5cL9PQoQLTMuhjbYvb4Ncuuo0bfmgPRFywX53jPhoFf4Zg6mv\n" +
@@ -589,8 +618,11 @@ public class BindingSignatureSubpacketsTest {
         expectSignatureValidationFails(key, "Unknown critical subpacket in hashed area invalidates signature");
     }
 
-    @Test
-    public void subkeyBindingUnknownSubpacketUnhashed() throws IOException, PGPException {
+    @ParameterizedTest
+    @MethodSource("org.pgpainless.util.TestImplementationFactoryProvider#provideImplementationFactories")
+    public void subkeyBindingUnknownSubpacketUnhashed(ImplementationFactory implementationFactory) throws IOException, PGPException {
+        ImplementationFactory.setFactoryImplementation(implementationFactory);
+
         String key = "-----BEGIN PGP PUBLIC KEY BLOCK-----\n" +
                 "\n" +
                 "xsDNBF2lnPIBDAC5cL9PQoQLTMuhjbYvb4Ncuuo0bfmgPRFywX53jPhoFf4Zg6mv\n" +
@@ -648,8 +680,11 @@ public class BindingSignatureSubpacketsTest {
         expectSignatureValidationSucceeds(key, "Unknown subpackets may be allowed in unhashed area.");
     }
 
-    @Test
-    public void subkeyBindingUnknownCriticalSubpacketUnhashed() throws IOException, PGPException {
+    @ParameterizedTest
+    @MethodSource("org.pgpainless.util.TestImplementationFactoryProvider#provideImplementationFactories")
+    public void subkeyBindingUnknownCriticalSubpacketUnhashed(ImplementationFactory implementationFactory) throws IOException, PGPException {
+        ImplementationFactory.setFactoryImplementation(implementationFactory);
+
         String key = "-----BEGIN PGP PUBLIC KEY BLOCK-----\n" +
                 "\n" +
                 "xsDNBF2lnPIBDAC5cL9PQoQLTMuhjbYvb4Ncuuo0bfmgPRFywX53jPhoFf4Zg6mv\n" +
@@ -707,8 +742,11 @@ public class BindingSignatureSubpacketsTest {
         expectSignatureValidationSucceeds(key, "Critical unknown subpacket is okay in unhashed area.");
     }
 
-    @Test
-    public void subkeyBindingUnknownNotationHashed() throws IOException, PGPException {
+    @ParameterizedTest
+    @MethodSource("org.pgpainless.util.TestImplementationFactoryProvider#provideImplementationFactories")
+    public void subkeyBindingUnknownNotationHashed(ImplementationFactory implementationFactory) throws IOException, PGPException {
+        ImplementationFactory.setFactoryImplementation(implementationFactory);
+
         String key = "-----BEGIN PGP PUBLIC KEY BLOCK-----\n" +
                 "\n" +
                 "xsDNBF2lnPIBDAC5cL9PQoQLTMuhjbYvb4Ncuuo0bfmgPRFywX53jPhoFf4Zg6mv\n" +
@@ -767,8 +805,11 @@ public class BindingSignatureSubpacketsTest {
         expectSignatureValidationSucceeds(key, "Unknown notation is okay in subkey binding sig.");
     }
 
-    @Test
-    public void subkeyBindingCriticalUnknownNotationHashed() throws IOException, PGPException {
+    @ParameterizedTest
+    @MethodSource("org.pgpainless.util.TestImplementationFactoryProvider#provideImplementationFactories")
+    public void subkeyBindingCriticalUnknownNotationHashed(ImplementationFactory implementationFactory) throws IOException, PGPException {
+        ImplementationFactory.setFactoryImplementation(implementationFactory);
+
         String key = "-----BEGIN PGP PUBLIC KEY BLOCK-----\n" +
                 "\n" +
                 "xsDNBF2lnPIBDAC5cL9PQoQLTMuhjbYvb4Ncuuo0bfmgPRFywX53jPhoFf4Zg6mv\n" +
@@ -827,8 +868,11 @@ public class BindingSignatureSubpacketsTest {
         expectSignatureValidationFails(key, "Critical unknown notation invalidates subkey binding sig.");
     }
 
-    @Test
-    public void subkeyBindingUnknownNotationUnhashed() throws IOException, PGPException {
+    @ParameterizedTest
+    @MethodSource("org.pgpainless.util.TestImplementationFactoryProvider#provideImplementationFactories")
+    public void subkeyBindingUnknownNotationUnhashed(ImplementationFactory implementationFactory) throws IOException, PGPException {
+        ImplementationFactory.setFactoryImplementation(implementationFactory);
+
         String key = "-----BEGIN PGP PUBLIC KEY BLOCK-----\n" +
                 "\n" +
                 "xsDNBF2lnPIBDAC5cL9PQoQLTMuhjbYvb4Ncuuo0bfmgPRFywX53jPhoFf4Zg6mv\n" +
@@ -887,8 +931,11 @@ public class BindingSignatureSubpacketsTest {
         expectSignatureValidationSucceeds(key, "Unknown notation is okay in unhashed area.");
     }
 
-    @Test
-    public void subkeyBindingCriticalUnknownNotationUnhashed() throws IOException, PGPException {
+    @ParameterizedTest
+    @MethodSource("org.pgpainless.util.TestImplementationFactoryProvider#provideImplementationFactories")
+    public void subkeyBindingCriticalUnknownNotationUnhashed(ImplementationFactory implementationFactory) throws IOException, PGPException {
+        ImplementationFactory.setFactoryImplementation(implementationFactory);
+
         String key = "-----BEGIN PGP PUBLIC KEY BLOCK-----\n" +
                 "\n" +
                 "xsDNBF2lnPIBDAC5cL9PQoQLTMuhjbYvb4Ncuuo0bfmgPRFywX53jPhoFf4Zg6mv\n" +
@@ -947,8 +994,11 @@ public class BindingSignatureSubpacketsTest {
         expectSignatureValidationSucceeds(key, "Critical unknown notation is okay in unhashed area.");
     }
 
-    @Test
-    public void subkeyBindingBackSigFakeBackSig() throws IOException, PGPException {
+    @ParameterizedTest
+    @MethodSource("org.pgpainless.util.TestImplementationFactoryProvider#provideImplementationFactories")
+    public void subkeyBindingBackSigFakeBackSig(ImplementationFactory implementationFactory) throws IOException, PGPException {
+        ImplementationFactory.setFactoryImplementation(implementationFactory);
+
         String key = "-----BEGIN PGP PUBLIC KEY BLOCK-----\n" +
                 "\n" +
                 "xsDNBF2lnPIBDAC5cL9PQoQLTMuhjbYvb4Ncuuo0bfmgPRFywX53jPhoFf4Zg6mv\n" +
@@ -1017,8 +1067,11 @@ public class BindingSignatureSubpacketsTest {
         expectSignatureValidationSucceeds(key, "Back-sig, fake back-sig should succeed to verify");
     }
 
-    @Test
-    public void subkeyBindingFakeBackSigBackSig() throws IOException, PGPException {
+    @ParameterizedTest
+    @MethodSource("org.pgpainless.util.TestImplementationFactoryProvider#provideImplementationFactories")
+    public void subkeyBindingFakeBackSigBackSig(ImplementationFactory implementationFactory) throws IOException, PGPException {
+        ImplementationFactory.setFactoryImplementation(implementationFactory);
+
         String key = "-----BEGIN PGP PUBLIC KEY BLOCK-----\n" +
                 "\n" +
                 "xsDNBF2lnPIBDAC5cL9PQoQLTMuhjbYvb4Ncuuo0bfmgPRFywX53jPhoFf4Zg6mv\n" +
@@ -1087,8 +1140,11 @@ public class BindingSignatureSubpacketsTest {
         expectSignatureValidationSucceeds(key, "Fake back-sig, back-sig should succeed to verify.");
     }
 
-    @Test
-    public void primaryBindingIssuerFpOnly() throws IOException, PGPException {
+    @ParameterizedTest
+    @MethodSource("org.pgpainless.util.TestImplementationFactoryProvider#provideImplementationFactories")
+    public void primaryBindingIssuerFpOnly(ImplementationFactory implementationFactory) throws IOException, PGPException {
+        ImplementationFactory.setFactoryImplementation(implementationFactory);
+
         String key = "-----BEGIN PGP PUBLIC KEY BLOCK-----\n" +
                 "\n" +
                 "xsDNBF2lnPIBDAC5cL9PQoQLTMuhjbYvb4Ncuuo0bfmgPRFywX53jPhoFf4Zg6mv\n" +
@@ -1146,8 +1202,11 @@ public class BindingSignatureSubpacketsTest {
         expectSignatureValidationSucceeds(key, "issuer fp is enough");
     }
 
-    @Test
-    public void primaryBindingIssuerV6IssuerFp() throws IOException, PGPException {
+    @ParameterizedTest
+    @MethodSource("org.pgpainless.util.TestImplementationFactoryProvider#provideImplementationFactories")
+    public void primaryBindingIssuerV6IssuerFp(ImplementationFactory implementationFactory) throws IOException, PGPException {
+        ImplementationFactory.setFactoryImplementation(implementationFactory);
+
         String key = "-----BEGIN PGP PUBLIC KEY BLOCK-----\n" +
                 "\n" +
                 "xsDNBF2lnPIBDAC5cL9PQoQLTMuhjbYvb4Ncuuo0bfmgPRFywX53jPhoFf4Zg6mv\n" +
@@ -1205,8 +1264,11 @@ public class BindingSignatureSubpacketsTest {
         expectSignatureValidationSucceeds(key, "interop");
     }
 
-    @Test
-    public void primaryBindingIssuerFakeIssuer() throws IOException, PGPException {
+    @ParameterizedTest
+    @MethodSource("org.pgpainless.util.TestImplementationFactoryProvider#provideImplementationFactories")
+    public void primaryBindingIssuerFakeIssuer(ImplementationFactory implementationFactory) throws IOException, PGPException {
+        ImplementationFactory.setFactoryImplementation(implementationFactory);
+
         String key = "-----BEGIN PGP PUBLIC KEY BLOCK-----\n" +
                 "\n" +
                 "xsDNBF2lnPIBDAC5cL9PQoQLTMuhjbYvb4Ncuuo0bfmgPRFywX53jPhoFf4Zg6mv\n" +
@@ -1264,8 +1326,11 @@ public class BindingSignatureSubpacketsTest {
         expectSignatureValidationSucceeds(key, "interop");
     }
 
-    @Test
-    public void primaryBindingFakeIssuerIssuer() throws IOException, PGPException {
+    @ParameterizedTest
+    @MethodSource("org.pgpainless.util.TestImplementationFactoryProvider#provideImplementationFactories")
+    public void primaryBindingFakeIssuerIssuer(ImplementationFactory implementationFactory) throws IOException, PGPException {
+        ImplementationFactory.setFactoryImplementation(implementationFactory);
+
         String key = "-----BEGIN PGP PUBLIC KEY BLOCK-----\n" +
                 "\n" +
                 "xsDNBF2lnPIBDAC5cL9PQoQLTMuhjbYvb4Ncuuo0bfmgPRFywX53jPhoFf4Zg6mv\n" +
@@ -1323,8 +1388,11 @@ public class BindingSignatureSubpacketsTest {
         expectSignatureValidationSucceeds(key, "interop");
     }
 
-    @Test
-    public void primaryBindingFakeIssuer() throws IOException, PGPException {
+    @ParameterizedTest
+    @MethodSource("org.pgpainless.util.TestImplementationFactoryProvider#provideImplementationFactories")
+    public void primaryBindingFakeIssuer(ImplementationFactory implementationFactory) throws IOException, PGPException {
+        ImplementationFactory.setFactoryImplementation(implementationFactory);
+
         String key = "-----BEGIN PGP PUBLIC KEY BLOCK-----\n" +
                 "\n" +
                 "xsDNBF2lnPIBDAC5cL9PQoQLTMuhjbYvb4Ncuuo0bfmgPRFywX53jPhoFf4Zg6mv\n" +
@@ -1382,8 +1450,11 @@ public class BindingSignatureSubpacketsTest {
         expectSignatureValidationSucceeds(key, "Fake issuer on primary key binding sig is not an issue.");
     }
 
-    @Test
-    public void primaryBindingNoIssuer() throws IOException, PGPException {
+    @ParameterizedTest
+    @MethodSource("org.pgpainless.util.TestImplementationFactoryProvider#provideImplementationFactories")
+    public void primaryBindingNoIssuer(ImplementationFactory implementationFactory) throws IOException, PGPException {
+        ImplementationFactory.setFactoryImplementation(implementationFactory);
+
         String key = "-----BEGIN PGP PUBLIC KEY BLOCK-----\n" +
                 "\n" +
                 "xsDNBF2lnPIBDAC5cL9PQoQLTMuhjbYvb4Ncuuo0bfmgPRFywX53jPhoFf4Zg6mv\n" +
@@ -1440,8 +1511,11 @@ public class BindingSignatureSubpacketsTest {
         expectSignatureValidationSucceeds(key, "Missing issuer on primary key binding sig is not an issue");
     }
 
-    @Test
-    public void primaryBindingUnknownSubpacketHashed() throws IOException, PGPException {
+    @ParameterizedTest
+    @MethodSource("org.pgpainless.util.TestImplementationFactoryProvider#provideImplementationFactories")
+    public void primaryBindingUnknownSubpacketHashed(ImplementationFactory implementationFactory) throws IOException, PGPException {
+        ImplementationFactory.setFactoryImplementation(implementationFactory);
+
         String key = "-----BEGIN PGP PUBLIC KEY BLOCK-----\n" +
                 "\n" +
                 "xsDNBF2lnPIBDAC5cL9PQoQLTMuhjbYvb4Ncuuo0bfmgPRFywX53jPhoFf4Zg6mv\n" +
@@ -1499,8 +1573,11 @@ public class BindingSignatureSubpacketsTest {
         expectSignatureValidationSucceeds(key, "Unknown subpacket in hashed area is not a problem.");
     }
 
-    @Test
-    public void primaryBindingCriticalUnknownSubpacketHashed() throws IOException, PGPException {
+    @ParameterizedTest
+    @MethodSource("org.pgpainless.util.TestImplementationFactoryProvider#provideImplementationFactories")
+    public void primaryBindingCriticalUnknownSubpacketHashed(ImplementationFactory implementationFactory) throws IOException, PGPException {
+        ImplementationFactory.setFactoryImplementation(implementationFactory);
+
         String key = "-----BEGIN PGP PUBLIC KEY BLOCK-----\n" +
                 "\n" +
                 "xsDNBF2lnPIBDAC5cL9PQoQLTMuhjbYvb4Ncuuo0bfmgPRFywX53jPhoFf4Zg6mv\n" +
@@ -1558,8 +1635,11 @@ public class BindingSignatureSubpacketsTest {
         expectSignatureValidationFails(key, "Critical unknown subpacket in hashed area invalidates signature.");
     }
 
-    @Test
-    public void primaryBindingUnknownSubpacketUnhashed() throws IOException, PGPException {
+    @ParameterizedTest
+    @MethodSource("org.pgpainless.util.TestImplementationFactoryProvider#provideImplementationFactories")
+    public void primaryBindingUnknownSubpacketUnhashed(ImplementationFactory implementationFactory) throws IOException, PGPException {
+        ImplementationFactory.setFactoryImplementation(implementationFactory);
+
         String key = "-----BEGIN PGP PUBLIC KEY BLOCK-----\n" +
                 "\n" +
                 "xsDNBF2lnPIBDAC5cL9PQoQLTMuhjbYvb4Ncuuo0bfmgPRFywX53jPhoFf4Zg6mv\n" +
@@ -1617,8 +1697,11 @@ public class BindingSignatureSubpacketsTest {
         expectSignatureValidationSucceeds(key, "Unknown subpacket is not an issue in the unhashed area");
     }
 
-    @Test
-    public void primaryBindingCriticalUnknownSubpacketUnhashed() throws IOException, PGPException {
+    @ParameterizedTest
+    @MethodSource("org.pgpainless.util.TestImplementationFactoryProvider#provideImplementationFactories")
+    public void primaryBindingCriticalUnknownSubpacketUnhashed(ImplementationFactory implementationFactory) throws IOException, PGPException {
+        ImplementationFactory.setFactoryImplementation(implementationFactory);
+
         String key = "-----BEGIN PGP PUBLIC KEY BLOCK-----\n" +
                 "\n" +
                 "xsDNBF2lnPIBDAC5cL9PQoQLTMuhjbYvb4Ncuuo0bfmgPRFywX53jPhoFf4Zg6mv\n" +
@@ -1676,8 +1759,11 @@ public class BindingSignatureSubpacketsTest {
         expectSignatureValidationSucceeds(key, "Critical unknown subpacket is acceptable in unhashed area of primary binding sig");
     }
 
-    @Test
-    public void primaryBindingUnknownNotationHashed() throws IOException, PGPException {
+    @ParameterizedTest
+    @MethodSource("org.pgpainless.util.TestImplementationFactoryProvider#provideImplementationFactories")
+    public void primaryBindingUnknownNotationHashed(ImplementationFactory implementationFactory) throws IOException, PGPException {
+        ImplementationFactory.setFactoryImplementation(implementationFactory);
+
         String key = "-----BEGIN PGP PUBLIC KEY BLOCK-----\n" +
                 "\n" +
                 "xsDNBF2lnPIBDAC5cL9PQoQLTMuhjbYvb4Ncuuo0bfmgPRFywX53jPhoFf4Zg6mv\n" +
@@ -1736,8 +1822,11 @@ public class BindingSignatureSubpacketsTest {
         expectSignatureValidationSucceeds(key, "Unknown notation is acceptable in hashed area of primary binding sig.");
     }
 
-    @Test
-    public void primaryBindingCriticalUnknownNotationHashed() throws IOException, PGPException {
+    @ParameterizedTest
+    @MethodSource("org.pgpainless.util.TestImplementationFactoryProvider#provideImplementationFactories")
+    public void primaryBindingCriticalUnknownNotationHashed(ImplementationFactory implementationFactory) throws IOException, PGPException {
+        ImplementationFactory.setFactoryImplementation(implementationFactory);
+
         String key = "-----BEGIN PGP PUBLIC KEY BLOCK-----\n" +
                 "\n" +
                 "xsDNBF2lnPIBDAC5cL9PQoQLTMuhjbYvb4Ncuuo0bfmgPRFywX53jPhoFf4Zg6mv\n" +
@@ -1796,8 +1885,11 @@ public class BindingSignatureSubpacketsTest {
         expectSignatureValidationFails(key, "Critical unknown notation in hashed area invalidates primary binding sig");
     }
 
-    @Test
-    public void primaryBindingUnknownNotationUnhashed() throws IOException, PGPException {
+    @ParameterizedTest
+    @MethodSource("org.pgpainless.util.TestImplementationFactoryProvider#provideImplementationFactories")
+    public void primaryBindingUnknownNotationUnhashed(ImplementationFactory implementationFactory) throws IOException, PGPException {
+        ImplementationFactory.setFactoryImplementation(implementationFactory);
+
         String key = "-----BEGIN PGP PUBLIC KEY BLOCK-----\n" +
                 "\n" +
                 "xsDNBF2lnPIBDAC5cL9PQoQLTMuhjbYvb4Ncuuo0bfmgPRFywX53jPhoFf4Zg6mv\n" +
@@ -1856,8 +1948,11 @@ public class BindingSignatureSubpacketsTest {
         expectSignatureValidationSucceeds(key, "Unknown notation in unhashed area of primary key binding is okay.");
     }
 
-    @Test
-    public void primaryBindingCriticalUnknownNotationUnhashed() throws IOException, PGPException {
+    @ParameterizedTest
+    @MethodSource("org.pgpainless.util.TestImplementationFactoryProvider#provideImplementationFactories")
+    public void primaryBindingCriticalUnknownNotationUnhashed(ImplementationFactory implementationFactory) throws IOException, PGPException {
+        ImplementationFactory.setFactoryImplementation(implementationFactory);
+
         String key = "-----BEGIN PGP PUBLIC KEY BLOCK-----\n" +
                 "\n" +
                 "xsDNBF2lnPIBDAC5cL9PQoQLTMuhjbYvb4Ncuuo0bfmgPRFywX53jPhoFf4Zg6mv\n" +
