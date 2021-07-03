@@ -25,16 +25,21 @@ import java.util.Date;
 import org.bouncycastle.openpgp.PGPException;
 import org.bouncycastle.openpgp.PGPPublicKeyRing;
 import org.bouncycastle.openpgp.PGPSignature;
-import org.junit.jupiter.api.Test;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.MethodSource;
 import org.pgpainless.PGPainless;
 import org.pgpainless.exception.SignatureValidationException;
+import org.pgpainless.implementation.ImplementationFactory;
 
 public class KeyRevocationTest {
 
     private static final String data = "Hello, World";
 
-    @Test
-    public void subkeySignsPrimaryKeyRevokedNoReason() throws IOException, PGPException {
+    @ParameterizedTest
+    @MethodSource("org.pgpainless.util.TestImplementationFactoryProvider#provideImplementationFactories")
+    public void subkeySignsPrimaryKeyRevokedNoReason(ImplementationFactory implementationFactory) throws IOException, PGPException {
+        ImplementationFactory.setFactoryImplementation(implementationFactory);
+
         String key = "-----BEGIN PGP ARMORED FILE-----\n" +
                 "Comment: ASCII Armor added by openpgp-interoperability-test-suite\n" +
                 "\n" +
@@ -178,8 +183,11 @@ public class KeyRevocationTest {
      *
      * @see <a href="https://tests.sequoia-pgp.org/#Key_revocation_test__subkey_signs__primary_key_is_not_revoked__base_case_">Sequoia Test-Suite</a>
      */
-    @Test
-    public void subkeySignsPrimaryKeyNotRevoked() throws IOException, PGPException {
+    @ParameterizedTest
+    @MethodSource("org.pgpainless.util.TestImplementationFactoryProvider#provideImplementationFactories")
+    public void subkeySignsPrimaryKeyNotRevoked(ImplementationFactory implementationFactory) throws IOException, PGPException {
+        ImplementationFactory.setFactoryImplementation(implementationFactory);
+
         String key = "-----BEGIN PGP ARMORED FILE-----\n" +
                 "Comment: ASCII Armor added by openpgp-interoperability-test-suite\n" +
                 "\n" +

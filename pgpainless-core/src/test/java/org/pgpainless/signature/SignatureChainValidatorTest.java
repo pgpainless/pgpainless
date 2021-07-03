@@ -27,9 +27,11 @@ import java.util.Date;
 import org.bouncycastle.openpgp.PGPException;
 import org.bouncycastle.openpgp.PGPPublicKeyRing;
 import org.bouncycastle.openpgp.PGPSignature;
-import org.junit.jupiter.api.Test;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.MethodSource;
 import org.pgpainless.PGPainless;
 import org.pgpainless.exception.SignatureValidationException;
+import org.pgpainless.implementation.ImplementationFactory;
 import org.pgpainless.policy.Policy;
 
 public class SignatureChainValidatorTest {
@@ -39,8 +41,11 @@ public class SignatureChainValidatorTest {
      *
      * @see <a href="https://tests.sequoia-pgp.org/#Key_revocation_test__primary_key_signs_and_is_revoked__revoked__unknown">Sequoia Test Suite</a>
      */
-    @Test
-    public void testPrimaryKeySignsAndIsHardRevokedUnknown() throws IOException, PGPException {
+    @ParameterizedTest
+    @MethodSource("org.pgpainless.util.TestImplementationFactoryProvider#provideImplementationFactories")
+    public void testPrimaryKeySignsAndIsHardRevokedUnknown(ImplementationFactory implementationFactory) throws IOException, PGPException {
+        ImplementationFactory.setFactoryImplementation(implementationFactory);
+
         String key = "-----BEGIN PGP ARMORED FILE-----\n" +
                 "Comment: ASCII Armor added by openpgp-interoperability-test-suite\n" +
                 "\n" +
@@ -188,8 +193,11 @@ public class SignatureChainValidatorTest {
      * Subkey signs, primary key is hard revoked with reason: unknown.
      * @see <a href="https://tests.sequoia-pgp.org/#Key_revocation_test__subkey_signs__primary_key_is_revoked__revoked__unknown">Sequoia Test Suite</a>
      */
-    @Test
-    public void testSubkeySignsPrimaryKeyIsHardRevokedUnknown() throws IOException, PGPException {
+    @ParameterizedTest
+    @MethodSource("org.pgpainless.util.TestImplementationFactoryProvider#provideImplementationFactories")
+    public void testSubkeySignsPrimaryKeyIsHardRevokedUnknown(ImplementationFactory implementationFactory) throws IOException, PGPException {
+        ImplementationFactory.setFactoryImplementation(implementationFactory);
+
         String key = "-----BEGIN PGP ARMORED FILE-----\n" +
                 "Comment: ASCII Armor added by openpgp-interoperability-test-suite\n" +
                 "\n" +
@@ -338,8 +346,11 @@ public class SignatureChainValidatorTest {
      *
      * @see <a href="https://tests.sequoia-pgp.org/#Key_revocation_test__subkey_signs__subkey_is_revoked__revoked__unknown">Sequoia Test Suite</a>
      */
-    @Test
-    public void testSubkeySignsAndIsHardRevokedUnknown() throws IOException, PGPException {
+    @ParameterizedTest
+    @MethodSource("org.pgpainless.util.TestImplementationFactoryProvider#provideImplementationFactories")
+    public void testSubkeySignsAndIsHardRevokedUnknown(ImplementationFactory implementationFactory) throws IOException, PGPException {
+        ImplementationFactory.setFactoryImplementation(implementationFactory);
+
         String keyWithHardRev = "-----BEGIN PGP ARMORED FILE-----\n" +
                 "Comment: ASCII Armor added by openpgp-interoperability-test-suite\n" +
                 "\n" +
@@ -488,8 +499,11 @@ public class SignatureChainValidatorTest {
      *
      * @see <a href="https://tests.sequoia-pgp.org/#Key_revocation_test__primary_key_signs_and_is_revoked__revoked__superseded">Sequoia Test Suite</a>
      */
-    @Test
-    public void testPrimaryKeySignsAndIsSoftRevokedSuperseded() throws IOException, PGPException {
+    @ParameterizedTest
+    @MethodSource("org.pgpainless.util.TestImplementationFactoryProvider#provideImplementationFactories")
+    public void testPrimaryKeySignsAndIsSoftRevokedSuperseded(ImplementationFactory implementationFactory) throws IOException, PGPException {
+        ImplementationFactory.setFactoryImplementation(implementationFactory);
+
         String keyWithSoftRev = "-----BEGIN PGP ARMORED FILE-----\n" +
                 "Comment: ASCII Armor added by openpgp-interoperability-test-suite\n" +
                 "\n" +
@@ -643,8 +657,11 @@ public class SignatureChainValidatorTest {
      *
      * @see <a href="https://tests.sequoia-pgp.org/#Key_revocation_test__subkey_signs__primary_key_is_revoked__revoked__superseded">Sequoia Test Suite</a>
      */
-    @Test
-    public void testSubkeySignsPrimaryKeyIsSoftRevokedSuperseded() throws IOException, PGPException {
+    @ParameterizedTest
+    @MethodSource("org.pgpainless.util.TestImplementationFactoryProvider#provideImplementationFactories")
+    public void testSubkeySignsPrimaryKeyIsSoftRevokedSuperseded(ImplementationFactory implementationFactory) throws IOException, PGPException {
+        ImplementationFactory.setFactoryImplementation(implementationFactory);
+
         String key = "-----BEGIN PGP ARMORED FILE-----\n" +
                 "Comment: ASCII Armor added by openpgp-interoperability-test-suite\n" +
                 "\n" +
@@ -785,7 +802,7 @@ public class SignatureChainValidatorTest {
                 "Signing key is revoked at this point");
         assertDoesNotThrow(() ->
                         SignatureChainValidator.validateSignatureChain(
-                valid, getSignedData(data), publicKeys, policy, validationDate),
+                                valid, getSignedData(data), publicKeys, policy, validationDate),
                 "Signing key is revalidated");
     }
 
@@ -794,8 +811,11 @@ public class SignatureChainValidatorTest {
      *
      * @see <a href="https://tests.sequoia-pgp.org/#Key_revocation_test__primary_key_signs_and_is_revoked__revoked__key_retired">Sequoia Test Suite</a>
      */
-    @Test
-    public void testPrimaryKeySignsAndIsSoftRevokedRetired() throws IOException, PGPException {
+    @ParameterizedTest
+    @MethodSource("org.pgpainless.util.TestImplementationFactoryProvider#provideImplementationFactories")
+    public void testPrimaryKeySignsAndIsSoftRevokedRetired(ImplementationFactory implementationFactory) throws IOException, PGPException {
+        ImplementationFactory.setFactoryImplementation(implementationFactory);
+
         String key = "-----BEGIN PGP ARMORED FILE-----\n" +
                 "Comment: ASCII Armor added by openpgp-interoperability-test-suite\n" +
                 "\n" +
@@ -945,8 +965,11 @@ public class SignatureChainValidatorTest {
      *
      * @see <a href="https://tests.sequoia-pgp.org/#Temporary_validity">Sequoia Test Suite</a>
      */
-    @Test
-    public void testTemporaryValidity() throws IOException, PGPException {
+    @ParameterizedTest
+    @MethodSource("org.pgpainless.util.TestImplementationFactoryProvider#provideImplementationFactories")
+    public void testTemporaryValidity(ImplementationFactory implementationFactory) throws IOException, PGPException {
+        ImplementationFactory.setFactoryImplementation(implementationFactory);
+
         String keyA = "-----BEGIN PGP PUBLIC KEY BLOCK-----\n" +
                 "Comment: D1A6 6E1A 23B1 82C9 980F  788C FBFC C82A 015E 7330\n" +
                 "Comment: Bob Babbage <bob@openpgp.example>\n" +
@@ -1271,7 +1294,7 @@ public class SignatureChainValidatorTest {
                 "Key valid");
         assertThrows(SignatureValidationException.class, () ->
                         SignatureChainValidator.validateSignatureChain(
-                sigAT2_T3, getSignedData(data), keysA, policy, validationDate),
+                                sigAT2_T3, getSignedData(data), keysA, policy, validationDate),
                 "Key is not valid, as subkey binding expired");
         assertDoesNotThrow(() -> SignatureChainValidator.validateSignatureChain(
                 sigAT3_now, getSignedData(data), keysA, policy, validationDate),
