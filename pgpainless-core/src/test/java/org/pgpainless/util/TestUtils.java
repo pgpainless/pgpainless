@@ -38,7 +38,7 @@ public class TestUtils {
     public static File createTempDirectory() throws IOException {
         String name = randomString(10);
         File dir = Files.createTempDirectory(name).toFile();
-        // dir.deleteOnExit();
+        dir.deleteOnExit();
         return dir;
     }
 
