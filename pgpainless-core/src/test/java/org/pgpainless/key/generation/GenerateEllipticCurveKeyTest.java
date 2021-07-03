@@ -15,6 +15,8 @@
  */
 package org.pgpainless.key.generation;
 
+import static org.junit.jupiter.api.Assertions.assertEquals;
+
 import java.io.IOException;
 import java.security.InvalidAlgorithmParameterException;
 import java.security.NoSuchAlgorithmException;
@@ -25,12 +27,12 @@ import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.MethodSource;
 import org.pgpainless.PGPainless;
 import org.pgpainless.algorithm.KeyFlag;
+import org.pgpainless.algorithm.PublicKeyAlgorithm;
 import org.pgpainless.implementation.ImplementationFactory;
 import org.pgpainless.key.generation.type.KeyType;
 import org.pgpainless.key.generation.type.eddsa.EdDSACurve;
 import org.pgpainless.key.generation.type.xdh.XDHSpec;
 import org.pgpainless.key.util.UserId;
-import org.pgpainless.util.ArmorUtils;
 
 public class GenerateEllipticCurveKeyTest {
 
@@ -48,8 +50,7 @@ public class GenerateEllipticCurveKeyTest {
                 .withPrimaryUserId(UserId.onlyEmail("alice@wonderland.lit").toString())
                 .withoutPassphrase()
                 .build();
-        // CHECKSTYLE:OFF
-        System.out.println(ArmorUtils.toAsciiArmoredString(keyRing));
-        // CHECKSTYLE:ON
+
+        assertEquals(PublicKeyAlgorithm.EDDSA.getAlgorithmId(), keyRing.getPublicKey().getAlgorithm());
     }
 }
