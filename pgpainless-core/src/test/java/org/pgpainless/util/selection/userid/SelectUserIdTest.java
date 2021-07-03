@@ -34,7 +34,7 @@ import static org.junit.jupiter.api.Assertions.assertNull;
 public class SelectUserIdTest {
 
     @Test
-    public void test() throws InvalidAlgorithmParameterException, NoSuchAlgorithmException, PGPException {
+    public void testSelectUserIds() throws InvalidAlgorithmParameterException, NoSuchAlgorithmException, PGPException {
         PGPSecretKeyRing secretKeys = PGPainless.generateKeyRing()
                 .simpleEcKeyRing("<alice@wonderland.lit>");
         secretKeys = PGPainless.modifyKeyRing(secretKeys)

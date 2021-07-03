@@ -38,7 +38,7 @@ public class GenerateEllipticCurveKeyTest {
 
     @ParameterizedTest
     @MethodSource("org.pgpainless.util.TestImplementationFactoryProvider#provideImplementationFactories")
-    public void test(ImplementationFactory implementationFactory) throws InvalidAlgorithmParameterException, NoSuchAlgorithmException, PGPException, IOException {
+    public void generateEllipticCurveKeys(ImplementationFactory implementationFactory) throws InvalidAlgorithmParameterException, NoSuchAlgorithmException, PGPException, IOException {
         ImplementationFactory.setFactoryImplementation(implementationFactory);
         PGPSecretKeyRing keyRing = PGPainless.generateKeyRing()
                 .withSubKey(KeySpec.getBuilder(KeyType.XDH(XDHSpec._X25519))
