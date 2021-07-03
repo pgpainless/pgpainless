@@ -32,7 +32,7 @@ import org.pgpainless.key.OpenPgpV4Fingerprint;
 import org.pgpainless.key.TestKeys;
 import org.pgpainless.key.info.KeyRingInfo;
 import org.pgpainless.key.protection.UnprotectedKeysProtector;
-import org.pgpainless.util.TestUtils;
+import org.pgpainless.util.DateUtil;
 
 public class ChangeExpirationTest {
 
@@ -49,7 +49,7 @@ public class ChangeExpirationTest {
         assertNull(sInfo.getPrimaryKeyExpirationDate());
         assertNull(sInfo.getSubkeyExpirationDate(subKeyFingerprint));
 
-        Date date = TestUtils.getUTCDate("2020-11-27 16:10:32 UTC");
+        Date date = DateUtil.parseUTCDate("2020-11-27 16:10:32 UTC");
         secretKeys = PGPainless.modifyKeyRing(secretKeys)
                 .setExpirationDate(date, new UnprotectedKeysProtector()).done();
         sInfo = PGPainless.inspectKeyRing(secretKeys);
@@ -82,7 +82,7 @@ public class ChangeExpirationTest {
         assertNull(sInfo.getSubkeyExpirationDate(subKeyFingerprint));
         assertNull(sInfo.getPrimaryKeyExpirationDate());
 
-        Date date = TestUtils.getUTCDate("2020-11-27 16:10:32 UTC");
+        Date date = DateUtil.parseUTCDate("2020-11-27 16:10:32 UTC");
         secretKeys = PGPainless.modifyKeyRing(secretKeys)
                 .setExpirationDate(subKeyFingerprint, date, new UnprotectedKeysProtector()).done();
         sInfo = PGPainless.inspectKeyRing(secretKeys);

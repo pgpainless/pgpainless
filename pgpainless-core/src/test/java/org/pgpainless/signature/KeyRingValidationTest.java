@@ -29,7 +29,7 @@ import org.pgpainless.algorithm.HashAlgorithm;
 import org.pgpainless.key.KeyRingValidator;
 import org.pgpainless.policy.Policy;
 import org.pgpainless.util.ArmorUtils;
-import org.pgpainless.util.TestUtils;
+import org.pgpainless.util.DateUtil;
 
 public class KeyRingValidationTest {
 
@@ -123,7 +123,7 @@ public class KeyRingValidationTest {
 
         PGPPublicKeyRing publicKeys = PGPainless.readKeyRing().publicKeyRing(key);
 
-        Date validationDate = TestUtils.getUTCDate("2019-05-01 00:00:00 UTC");
+        Date validationDate = DateUtil.parseUTCDate("2019-05-01 00:00:00 UTC");
         Policy policy = PGPainless.getPolicy();
         PGPPublicKeyRing evaluated = KeyRingValidator.validate(publicKeys, policy, validationDate);
 

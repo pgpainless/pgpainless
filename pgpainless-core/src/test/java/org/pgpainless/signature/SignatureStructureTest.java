@@ -32,7 +32,7 @@ import org.pgpainless.algorithm.SignatureType;
 import org.pgpainless.key.OpenPgpV4Fingerprint;
 import org.pgpainless.key.util.KeyIdUtil;
 import org.pgpainless.signature.subpackets.SignatureSubpacketsUtil;
-import org.pgpainless.util.TestUtils;
+import org.pgpainless.util.DateUtil;
 
 public class SignatureStructureTest {
 
@@ -80,7 +80,7 @@ public class SignatureStructureTest {
 
     @Test
     public void testGetSignatureCreationTime() {
-        assertEquals(TestUtils.getUTCDate("2021-06-08 14:56:55 UTC"), signature.getCreationTime());
+        assertEquals(DateUtil.parseUTCDate("2021-06-08 14:56:55 UTC"), signature.getCreationTime());
     }
 
     @Test

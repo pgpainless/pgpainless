@@ -52,8 +52,8 @@ import org.pgpainless.key.protection.SecretKeyRingProtector;
 import org.pgpainless.key.protection.UnprotectedKeysProtector;
 import org.pgpainless.key.util.KeyRingUtils;
 import org.pgpainless.key.util.UserId;
+import org.pgpainless.util.DateUtil;
 import org.pgpainless.util.Passphrase;
-import org.pgpainless.util.TestUtils;
 
 public class KeyRingInfoTest {
 
@@ -98,7 +98,7 @@ public class KeyRingInfoTest {
 
         assertNull(sInfo.getRevocationDate());
         assertNull(pInfo.getRevocationDate());
-        Date revocationDate = TestUtils.now();
+        Date revocationDate = DateUtil.now();
         PGPSecretKeyRing revoked = PGPainless.modifyKeyRing(secretKeys).revoke(new UnprotectedKeysProtector()).done();
         KeyRingInfo rInfo = PGPainless.inspectKeyRing(revoked);
         assertNotNull(rInfo.getRevocationDate());
@@ -217,7 +217,7 @@ public class KeyRingInfoTest {
                 .build();
 
         Iterator<PGPSecretKey> keys = secretKeys.iterator();
-        Date now = TestUtils.now();
+        Date now = DateUtil.now();
 
         Calendar calendar = Calendar.getInstance();
         calendar.setTime(now);

@@ -18,42 +18,13 @@ package org.pgpainless.util;
 import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
-import java.text.ParseException;
-import java.text.SimpleDateFormat;
-import java.util.Date;
 import java.util.Iterator;
 import java.util.Random;
-import java.util.TimeZone;
 
 public class TestUtils {
 
-    public static SimpleDateFormat UTC_PARSER = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss z");
-    static {
-        UTC_PARSER.setTimeZone(TimeZone.getTimeZone("UTC"));
-    }
     public static final String ALPHABET = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";
     private static final Random RANDOM = new Random();
-
-    public static Date getUTCDate(String dateString) {
-        try {
-            return UTC_PARSER.parse(dateString);
-        } catch (ParseException e) {
-            return null;
-        }
-    }
-
-    public static String formatUTCDate(Date date) {
-        return UTC_PARSER.format(date);
-    }
-
-    /**
-     * Return the current data "rounded" to UTC precision.
-     *
-     * @return now
-     */
-    public static Date now() {
-        return getUTCDate(formatUTCDate(new Date()));
-    }
 
     public static int getNumberOfItemsInIterator(Iterator<?> iterator) {
         int num = 0;

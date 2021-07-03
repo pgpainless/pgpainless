@@ -44,8 +44,8 @@ import org.pgpainless.key.generation.type.ecc.EllipticCurve;
 import org.pgpainless.key.info.KeyRingInfo;
 import org.pgpainless.key.protection.SecretKeyRingProtector;
 import org.pgpainless.key.protection.UnlockSecretKey;
+import org.pgpainless.util.DateUtil;
 import org.pgpainless.util.Passphrase;
-import org.pgpainless.util.TestUtils;
 
 /**
  * PGPainless offers a simple API to modify keys by adding and replacing signatures and/or subkeys.
@@ -211,7 +211,7 @@ public class ModifyKeys {
      */
     @Test
     public void setKeyExpirationDate() throws PGPException {
-        Date expirationDate = TestUtils.getUTCDate("2030-06-24 12:44:56 UTC");
+        Date expirationDate = DateUtil.parseUTCDate("2030-06-24 12:44:56 UTC");
 
         SecretKeyRingProtector protector = SecretKeyRingProtector
                 .unlockAllKeysWith(Passphrase.fromPassword(originalPassphrase), secretKey);
@@ -221,9 +221,9 @@ public class ModifyKeys {
 
 
         KeyRingInfo info = PGPainless.inspectKeyRing(secretKey);
-        assertEquals(TestUtils.formatUTCDate(expirationDate), TestUtils.formatUTCDate(info.getPrimaryKeyExpirationDate()));
-        assertEquals(TestUtils.formatUTCDate(expirationDate), TestUtils.formatUTCDate(info.getExpirationDateForUse(KeyFlag.ENCRYPT_COMMS)));
-        assertEquals(TestUtils.formatUTCDate(expirationDate), TestUtils.formatUTCDate(info.getExpirationDateForUse(KeyFlag.SIGN_DATA)));
+        assertEquals(DateUtil.formatUTCDate(expirationDate), DateUtil.formatUTCDate(info.getPrimaryKeyExpirationDate()));
+        assertEquals(DateUtil.formatUTCDate(expirationDate), DateUtil.formatUTCDate(info.getExpirationDateForUse(KeyFlag.ENCRYPT_COMMS)));
+        assertEquals(DateUtil.formatUTCDate(expirationDate), DateUtil.formatUTCDate(info.getExpirationDateForUse(KeyFlag.SIGN_DATA)));
     }
 
     /**
@@ -233,7 +233,7 @@ public class ModifyKeys {
      */
     @Test
     public void setSubkeyExpirationDate() throws PGPException {
-        Date expirationDate = TestUtils.getUTCDate("2032-01-13 22:30:01 UTC");
+        Date expirationDate = DateUtil.parseUTCDate("2032-01-13 22:30:01 UTC");
         SecretKeyRingProtector protector = SecretKeyRingProtector
                 .unlockAllKeysWith(Passphrase.fromPassword(originalPassphrase), secretKey);
 
@@ -249,7 +249,7 @@ public class ModifyKeys {
         KeyRingInfo info = PGPainless.inspectKeyRing(secretKey);
         assertNull(info.getPrimaryKeyExpirationDate());
         assertNull(info.getExpirationDateForUse(KeyFlag.SIGN_DATA));
-        assertEquals(TestUtils.formatUTCDate(expirationDate), TestUtils.formatUTCDate(info.getExpirationDateForUse(KeyFlag.ENCRYPT_COMMS)));
+        assertEquals(DateUtil.formatUTCDate(expirationDate), DateUtil.formatUTCDate(info.getExpirationDateForUse(KeyFlag.ENCRYPT_COMMS)));
     }
 
     /**

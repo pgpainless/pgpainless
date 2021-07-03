@@ -30,7 +30,7 @@ import org.pgpainless.PGPainless;
 import org.pgpainless.key.info.KeyRingInfo;
 import org.pgpainless.util.ArmorUtils;
 import org.pgpainless.util.CollectionUtils;
-import org.pgpainless.util.TestUtils;
+import org.pgpainless.util.DateUtil;
 
 public class KeyRingValidatorTest {
 
@@ -227,7 +227,7 @@ public class KeyRingValidatorTest {
         PGPPublicKey unbound = CollectionUtils.iteratorToList(publicKeys.getPublicKeys()).get(2);
         assertNotNull(unbound);
 
-        Date validationDate = TestUtils.getUTCDate("2019-10-15 10:18:26 UTC");
+        Date validationDate = DateUtil.parseUTCDate("2019-10-15 10:18:26 UTC");
         KeyRingInfo info = new KeyRingInfo(publicKeys, validationDate);
         for (PGPPublicKey publicKey : publicKeys) {
             if (publicKey != unbound) {
