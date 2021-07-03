@@ -21,27 +21,28 @@ import static org.junit.jupiter.api.Assertions.assertNotEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
-import static org.junit.jupiter.api.Assertions.fail;
 
 import java.util.Arrays;
 import java.util.Collections;
-import java.util.HashMap;
 import java.util.HashSet;
-import java.util.Map;
-import java.util.Set;
 
 import org.junit.jupiter.api.Test;
 
 public class MultiMapTest {
 
     @Test
-    public void test() {
+    public void isEmptyAfterCreation() {
+        MultiMap<String, String> map = new MultiMap<>();
+        assertTrue(map.isEmpty());
+        assertNull(map.get("alice"));
+        assertFalse(map.containsKey("alice"));
+        assertFalse(map.containsValue("wonderland"));
+        assertEquals(0, map.size());
+    }
+
+    @Test
+    public void addOneElement_works() {
         MultiMap<String, String> multiMap = new MultiMap<>();
-        assertTrue(multiMap.isEmpty());
-        assertNull(multiMap.get("alice"));
-        assertFalse(multiMap.containsKey("alice"));
-        assertFalse(multiMap.containsValue("wonderland"));
-        assertEquals(0, multiMap.size());
 
         multiMap.put("alice", "wonderland");
         assertFalse(multiMap.isEmpty());
@@ -50,84 +51,120 @@ public class MultiMapTest {
         assertTrue(multiMap.containsValue("wonderland"));
         assertNotNull(multiMap.get("alice"));
         assertTrue(multiMap.get("alice").contains("wonderland"));
+    }
 
+    @Test
+    public void addTwoKeys_OneWithTwoValues_works() {
+        MultiMap<String, String> multiMap = new MultiMap<>();
+
+        multiMap.put("alice", "wonderland");
         multiMap.put("mad", new HashSet<>(Arrays.asList("hatter", "max")));
+
+        assertEquals(2, multiMap.size());
+        assertEquals(new HashSet<>(Arrays.asList("alice", "mad")), multiMap.keySet());
         assertEquals(new HashSet<>(Arrays.asList("hatter", "max")), multiMap.get("mad"));
+        assertEquals(
+                new HashSet<>(Arrays.asList(
+                        Collections.singleton("wonderland"),
+                        new HashSet<>(Arrays.asList("hatter", "max")
+                        ))),
+                new HashSet<>(multiMap.values()));
 
-        assertEquals(new HashSet<>(Arrays.asList("mad", "alice")), multiMap.keySet());
-        assertEquals(new HashSet<>(Arrays.asList(
-                Collections.singleton("wonderland"),
-                new HashSet<>(Arrays.asList("hatter", "max")))), new HashSet<>(multiMap.values()));
+        assertEquals(Collections.singleton("wonderland"), multiMap.get("alice"));
+        assertEquals(new HashSet<>(Arrays.asList("hatter", "max")), multiMap.get("mad"));
+    }
 
-        Set<Map.Entry<String, Set<String>>> entries = multiMap.entrySet();
-        assertEquals(2, entries.size());
-        for (Map.Entry<String, Set<String>> e : entries) {
-            switch (e.getKey()) {
-                case "alice":
-                    assertEquals(1, e.getValue().size());
-                    assertTrue(e.getValue().contains("wonderland"));
-                    break;
-                case "mad":
-                    assertEquals(2, e.getValue().size());
-                    assertTrue(e.getValue().contains("hatter"));
-                    assertTrue(e.getValue().contains("max"));
-                    break;
-                default:
-                    fail("Illegal key.");
-                    break;
-            }
-        }
+    @Test
+    public void emptyEqualsEmptyTest() {
+        MultiMap<String, String> emptyOne = new MultiMap<>();
+        MultiMap<String, String> emptyTwo = new MultiMap<>();
+        assertEquals(emptyOne, emptyTwo);
+    }
 
-        MultiMap<String, String> empty = new MultiMap<>();
-        assertNotEquals(multiMap, empty);
-        assertEquals(multiMap, multiMap);
-        assertNotEquals(null, multiMap);
+    @Test
+    public void notEqualsNull() {
+        MultiMap<String, String> map = new MultiMap<>();
+        assertNotEquals(map, null);
+    }
 
-        MultiMap<String, String> map2 = new MultiMap<>();
-        map2.put("alice", "schwarzer");
-        map2.put("dr", "strange");
+    @Test
+    public void selfEquals() {
+        MultiMap<String, String> map = new MultiMap<>();
+        assertEquals(map, map);
+    }
 
-        multiMap.putAll(map2);
-        assertTrue(multiMap.containsKey("dr"));
-        assertEquals(1, multiMap.get("dr").size());
-        assertTrue(multiMap.get("dr").contains("strange"));
-        assertTrue(multiMap.containsKey("mad"));
-        assertEquals(2, multiMap.get("alice").size());
-        assertTrue(multiMap.get("alice").contains("wonderland"));
-        assertTrue(multiMap.get("alice").contains("schwarzer"));
+    @Test
+    public void otherClassNotEquals() {
+        MultiMap<String, String> map = new MultiMap<>();
+        assertNotEquals(map, "String");
+    }
 
-        multiMap.removeAll("mad");
-        assertFalse(multiMap.containsKey("mad"));
-        assertNull(multiMap.get("mad"));
+    @Test
+    public void mapEqualsCopy() {
+        MultiMap<String, String> map = new MultiMap<>();
+        map.put("foo", "bar");
+        map.put("entries", new HashSet<>(Arrays.asList("one", "two")));
 
-        multiMap.remove("alice", "wonderland");
-        assertFalse(multiMap.containsValue("wonderland"));
-        assertTrue(multiMap.containsKey("alice"));
-        assertEquals(1, multiMap.get("alice").size());
-        assertTrue(multiMap.get("alice").contains("schwarzer"));
+        MultiMap<String, String> copy = new MultiMap<>(map);
 
-        MultiMap<String, String> copy = new MultiMap<>(multiMap);
-        assertEquals(multiMap, copy);
+        assertEquals(map, copy);
+    }
 
-        copy.removeAll("inexistent");
-        assertEquals(multiMap, copy);
+    @Test
+    public void emptyAfterClear() {
+        MultiMap<String, String> map = new MultiMap<>();
+        map.put("test", "foo");
+        assertFalse(map.isEmpty());
+        map.clear();
+        assertTrue(map.isEmpty());
+    }
 
-        copy.remove("inexistent", "schwarzer");
-        assertEquals(multiMap, copy);
+    @Test
+    public void addTwoRemoveOneWorks() {
+        MultiMap<String, String> map = new MultiMap<>();
+        map.put("alice", "wonderland");
+        map.put("bob", "builder");
+        map.removeAll("alice");
 
-        assertEquals(multiMap.hashCode(), copy.hashCode());
+        assertFalse(map.containsKey("alice"));
+        assertNull(map.get("alice"));
+        assertFalse(map.isEmpty());
+    }
 
-        copy.clear();
-        assertTrue(copy.isEmpty());
+    @Test
+    public void addMultiValue() {
+        MultiMap<String, String> addOneByOne = new MultiMap<>();
+        addOneByOne.put("foo", "bar");
+        addOneByOne.put("foo", "baz");
 
-        Map<String, Set<String>> map = new HashMap<>();
-        map.put("key", Collections.singleton("value"));
+        MultiMap<String, String> addOnce = new MultiMap<>();
+        addOnce.put("foo", new HashSet<>(Arrays.asList("baz", "bar")));
 
-        MultiMap<String, String> fromMap = new MultiMap<>(map);
-        assertFalse(fromMap.isEmpty());
-        assertEquals(fromMap.get("key"), Collections.singleton("value"));
+        assertEquals(addOneByOne, addOnce);
+    }
 
-        assertNotEquals(fromMap, map);
-        assertNotEquals(fromMap, null);
+    @Test
+    public void addMultiValueRemoveSingle() {
+        MultiMap<String, String> map = new MultiMap<>();
+        map.put("foo", "bar");
+        map.put("foo", "baz");
+
+        map.remove("foo", "bar");
+        assertFalse(map.isEmpty());
+        assertTrue(map.containsKey("foo"));
+        assertEquals(Collections.singleton("baz"), map.get("foo"));
+    }
+
+    @Test
+    public void addMultiValueRemoveAll() {
+        MultiMap<String, String> map = new MultiMap<>();
+        map.put("foo", "bar");
+        map.put("foo", "baz");
+        map.put("bingo", "bango");
+
+        map.removeAll("foo");
+        assertFalse(map.isEmpty());
+        assertFalse(map.containsKey("foo"));
+        assertTrue(map.containsKey("bingo"));
     }
 }
