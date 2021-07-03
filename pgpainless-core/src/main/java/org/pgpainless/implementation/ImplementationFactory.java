@@ -42,11 +42,6 @@ import org.pgpainless.util.Passphrase;
 
 public abstract class ImplementationFactory {
 
-    enum FactoryType {
-        bc,
-        jce
-    }
-
     private static ImplementationFactory FACTORY_IMPLEMENTATION = new BcImplementationFactory();
 
     public static void setFactoryImplementation(ImplementationFactory implementation) {
@@ -111,4 +106,9 @@ public abstract class ImplementationFactory {
     public abstract PBESecretKeyEncryptor getPBESecretKeyEncryptor(SymmetricKeyAlgorithm encryptionAlgorithm,
                                                                    HashAlgorithm hashAlgorithm, int s2kCount,
                                                                    Passphrase passphrase) throws PGPException;
+
+    @Override
+    public String toString() {
+        return getClass().getSimpleName();
+    }
 }
