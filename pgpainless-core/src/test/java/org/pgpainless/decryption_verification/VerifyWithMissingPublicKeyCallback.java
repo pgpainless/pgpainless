@@ -39,7 +39,6 @@ import org.pgpainless.algorithm.DocumentSignatureType;
 import org.pgpainless.encryption_signing.EncryptionStream;
 import org.pgpainless.encryption_signing.ProducerOptions;
 import org.pgpainless.encryption_signing.SigningOptions;
-import org.pgpainless.key.OpenPgpV4Fingerprint;
 import org.pgpainless.key.TestKeys;
 import org.pgpainless.key.info.KeyRingInfo;
 import org.pgpainless.key.protection.SecretKeyRingProtector;
@@ -89,6 +88,6 @@ public class VerifyWithMissingPublicKeyCallback {
 
         assertArrayEquals(msg.getBytes(StandardCharsets.UTF_8), plainOut.toByteArray());
         OpenPgpMetadata metadata = verificationStream.getResult();
-        assertTrue(metadata.getVerifiedSignatureKeyFingerprints().contains(new OpenPgpV4Fingerprint(signingKey)));
+        assertTrue(metadata.containsVerifiedSignatureFrom(signingPubKeys));
     }
 }

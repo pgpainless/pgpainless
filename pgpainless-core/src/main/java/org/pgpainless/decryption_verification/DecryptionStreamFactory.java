@@ -243,7 +243,7 @@ public final class DecryptionStreamFactory {
                             // Watch out! This assignment is possibly done multiple times.
                             encryptedSessionKey = publicKeyEncryptedData;
                             decryptionKey = UnlockSecretKey.unlockSecretKey(secretKey, options.getSecretKeyProtector(decryptionKeyRing));
-                            resultBuilder.setDecryptionFingerprint(new OpenPgpV4Fingerprint(secretKey));
+                            resultBuilder.setDecryptionKey(new SubkeyIdentifier(decryptionKeyRing, decryptionKey.getKeyID()));
                         }
                     }
 
@@ -265,7 +265,7 @@ public final class DecryptionStreamFactory {
                                     publicKeyEncryptedData.getSymmetricAlgorithm(decryptorFactory); // will only succeed if we have the right secret key
                                     LOGGER.log(LEVEL, "Found correct key " + Long.toHexString(key.getKeyID()) + " for hidden recipient decryption.");
                                     decryptionKey = privateKey;
-                                    resultBuilder.setDecryptionFingerprint(new OpenPgpV4Fingerprint(key));
+                                    resultBuilder.setDecryptionKey(new SubkeyIdentifier(ring, decryptionKey.getKeyID()));
                                     encryptedSessionKey = publicKeyEncryptedData;
                                     break outerloop;
                                 } catch (PGPException | ClassCastException e) {

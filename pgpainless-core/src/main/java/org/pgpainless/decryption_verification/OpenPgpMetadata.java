@@ -32,13 +32,14 @@ import org.pgpainless.algorithm.CompressionAlgorithm;
 import org.pgpainless.algorithm.StreamEncoding;
 import org.pgpainless.algorithm.SymmetricKeyAlgorithm;
 import org.pgpainless.key.OpenPgpV4Fingerprint;
+import org.pgpainless.key.SubkeyIdentifier;
 import org.pgpainless.signature.DetachedSignature;
 import org.pgpainless.signature.OnePassSignature;
 
 public class OpenPgpMetadata {
 
     private final Set<Long> recipientKeyIds;
-    private final OpenPgpV4Fingerprint decryptionFingerprint;
+    private final SubkeyIdentifier decryptionKey;
     private final List<OnePassSignature> onePassSignatures;
     private final List<DetachedSignature> detachedSignatures;
     private final SymmetricKeyAlgorithm symmetricKeyAlgorithm;
@@ -46,7 +47,7 @@ public class OpenPgpMetadata {
     private final FileInfo fileInfo;
 
     public OpenPgpMetadata(Set<Long> recipientKeyIds,
-                           OpenPgpV4Fingerprint decryptionFingerprint,
+                           SubkeyIdentifier decryptionKey,
                            SymmetricKeyAlgorithm symmetricKeyAlgorithm,
                            CompressionAlgorithm algorithm,
                            List<OnePassSignature> onePassSignatures,
@@ -54,7 +55,7 @@ public class OpenPgpMetadata {
                            FileInfo fileInfo) {
 
         this.recipientKeyIds = Collections.unmodifiableSet(recipientKeyIds);
-        this.decryptionFingerprint = decryptionFingerprint;
+        this.decryptionKey = decryptionKey;
         this.symmetricKeyAlgorithm = symmetricKeyAlgorithm;
         this.compressionAlgorithm = algorithm;
         this.detachedSignatures = Collections.unmodifiableList(detachedSignatures);
@@ -70,8 +71,8 @@ public class OpenPgpMetadata {
         return symmetricKeyAlgorithm != SymmetricKeyAlgorithm.NULL && !getRecipientKeyIds().isEmpty();
     }
 
-    public OpenPgpV4Fingerprint getDecryptionFingerprint() {
-        return decryptionFingerprint;
+    public SubkeyIdentifier getDecryptionKey() {
+        return decryptionKey;
     }
 
     public SymmetricKeyAlgorithm getSymmetricKeyAlgorithm() {
@@ -97,24 +98,20 @@ public class OpenPgpMetadata {
         return !getSignatures().isEmpty();
     }
 
-    public Map<OpenPgpV4Fingerprint, PGPSignature> getVerifiedSignatures() {
-        Map<OpenPgpV4Fingerprint, PGPSignature> verifiedSignatures = new ConcurrentHashMap<>();
+    public Map<SubkeyIdentifier, PGPSignature> getVerifiedSignatures() {
+        Map<SubkeyIdentifier, PGPSignature> verifiedSignatures = new ConcurrentHashMap<>();
         for (DetachedSignature detachedSignature : detachedSignatures) {
             if (detachedSignature.isVerified()) {
-                verifiedSignatures.put(detachedSignature.getSigningKeyIdentifier().getSubkeyFingerprint(), detachedSignature.getSignature());
+                verifiedSignatures.put(detachedSignature.getSigningKeyIdentifier(), detachedSignature.getSignature());
             }
         }
         for (OnePassSignature onePassSignature : onePassSignatures) {
             if (onePassSignature.isVerified()) {
-                verifiedSignatures.put(onePassSignature.getFingerprint(), onePassSignature.getSignature());
+                verifiedSignatures.put(onePassSignature.getSigningKey(), onePassSignature.getSignature());
             }
         }
 
         return verifiedSignatures;
-    }
-
-    public Set<OpenPgpV4Fingerprint> getVerifiedSignatureKeyFingerprints() {
-        return getVerifiedSignatures().keySet();
     }
 
     public boolean isVerified() {
@@ -132,7 +129,13 @@ public class OpenPgpMetadata {
     }
 
     public boolean containsVerifiedSignatureFrom(OpenPgpV4Fingerprint fingerprint) {
-        return getVerifiedSignatureKeyFingerprints().contains(fingerprint);
+        for (SubkeyIdentifier verifiedSigningKey : getVerifiedSignatures().keySet()) {
+            if (verifiedSigningKey.getPrimaryKeyFingerprint().equals(fingerprint) ||
+                    verifiedSigningKey.getSubkeyFingerprint().equals(fingerprint)) {
+                return true;
+            }
+        }
+        return false;
     }
 
     public static class Signature {
@@ -235,7 +238,7 @@ public class OpenPgpMetadata {
     public static class Builder {
 
         private final Set<Long> recipientFingerprints = new HashSet<>();
-        private OpenPgpV4Fingerprint decryptionFingerprint;
+        private SubkeyIdentifier decryptionKey;
         private final List<DetachedSignature> detachedSignatures = new ArrayList<>();
         private final List<OnePassSignature> onePassSignatures = new ArrayList<>();
         private SymmetricKeyAlgorithm symmetricKeyAlgorithm = SymmetricKeyAlgorithm.NULL;
@@ -247,8 +250,8 @@ public class OpenPgpMetadata {
             return this;
         }
 
-        public Builder setDecryptionFingerprint(OpenPgpV4Fingerprint fingerprint) {
-            this.decryptionFingerprint = fingerprint;
+        public Builder setDecryptionKey(SubkeyIdentifier decryptionKey) {
+            this.decryptionKey = decryptionKey;
             return this;
         }
 
@@ -280,7 +283,7 @@ public class OpenPgpMetadata {
         }
 
         public OpenPgpMetadata build() {
-            return new OpenPgpMetadata(recipientFingerprints, decryptionFingerprint,
+            return new OpenPgpMetadata(recipientFingerprints, decryptionKey,
                     symmetricKeyAlgorithm, compressionAlgorithm,
                     onePassSignatures, detachedSignatures, fileInfo);
         }

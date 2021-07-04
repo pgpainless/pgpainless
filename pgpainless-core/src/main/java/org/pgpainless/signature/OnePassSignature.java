@@ -20,6 +20,7 @@ import org.bouncycastle.openpgp.PGPOnePassSignature;
 import org.bouncycastle.openpgp.PGPPublicKeyRing;
 import org.bouncycastle.openpgp.PGPSignature;
 import org.pgpainless.key.OpenPgpV4Fingerprint;
+import org.pgpainless.key.SubkeyIdentifier;
 
 /**
  * Tuple-class that bundles together a {@link PGPOnePassSignature} object, a {@link PGPPublicKeyRing}
@@ -66,8 +67,8 @@ public class OnePassSignature {
      *
      * @return signing key fingerprint
      */
-    public OpenPgpV4Fingerprint getFingerprint() {
-        return new OpenPgpV4Fingerprint(verificationKeys.getPublicKey(onePassSignature.getKeyID()));
+    public SubkeyIdentifier getSigningKey() {
+        return new SubkeyIdentifier(verificationKeys, onePassSignature.getKeyID());
     }
 
     /**

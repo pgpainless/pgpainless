@@ -166,7 +166,7 @@ public class IgnoreMarkerPackets {
 
         decryptionStream.close();
         OpenPgpMetadata metadata = decryptionStream.getResult();
-        assertTrue(metadata.getVerifiedSignatures().containsKey(new OpenPgpV4Fingerprint("D1A66E1A23B182C9980F788CFBFCC82A015E7330")));
+        assertTrue(metadata.containsVerifiedSignatureFrom(new OpenPgpV4Fingerprint("D1A66E1A23B182C9980F788CFBFCC82A015E7330")));
     }
 
     @Test
@@ -216,7 +216,7 @@ public class IgnoreMarkerPackets {
         decryptionStream.close();
         assertArrayEquals(data.getBytes(StandardCharsets.UTF_8), outputStream.toByteArray());
         OpenPgpMetadata metadata = decryptionStream.getResult();
-        assertTrue(metadata.getVerifiedSignatures().containsKey(new OpenPgpV4Fingerprint("D1A66E1A23B182C9980F788CFBFCC82A015E7330")));
+        assertTrue(metadata.containsVerifiedSignatureFrom(new OpenPgpV4Fingerprint("D1A66E1A23B182C9980F788CFBFCC82A015E7330")));
     }
 
     @Test

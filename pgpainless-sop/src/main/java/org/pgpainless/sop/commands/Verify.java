@@ -39,7 +39,7 @@ import org.pgpainless.PGPainless;
 import org.pgpainless.decryption_verification.ConsumerOptions;
 import org.pgpainless.decryption_verification.DecryptionStream;
 import org.pgpainless.decryption_verification.OpenPgpMetadata;
-import org.pgpainless.key.OpenPgpV4Fingerprint;
+import org.pgpainless.key.SubkeyIdentifier;
 import picocli.CommandLine;
 
 @CommandLine.Command(name = "verify",
@@ -124,12 +124,12 @@ public class Verify implements Runnable {
             return;
         }
 
-        Map<OpenPgpV4Fingerprint, PGPSignature> signaturesInTimeRange = new HashMap<>();
-        for (OpenPgpV4Fingerprint fingerprint : metadata.getVerifiedSignatures().keySet()) {
-            PGPSignature signature = metadata.getVerifiedSignatures().get(fingerprint);
+        Map<SubkeyIdentifier, PGPSignature> signaturesInTimeRange = new HashMap<>();
+        for (SubkeyIdentifier signingKey : metadata.getVerifiedSignatures().keySet()) {
+            PGPSignature signature = metadata.getVerifiedSignatures().get(signingKey);
             Date creationTime = signature.getCreationTime();
             if (!creationTime.before(notBeforeDate) && !creationTime.after(notAfterDate)) {
-                signaturesInTimeRange.put(fingerprint, signature);
+                signaturesInTimeRange.put(signingKey, signature);
             }
         }
 
@@ -141,19 +141,19 @@ public class Verify implements Runnable {
         printValidSignatures(signaturesInTimeRange, publicKeys);
     }
 
-    private void printValidSignatures(Map<OpenPgpV4Fingerprint, PGPSignature> validSignatures, Map<PGPPublicKeyRing, File> publicKeys) {
-        for (OpenPgpV4Fingerprint sigKeyFp : validSignatures.keySet()) {
-            PGPSignature signature = validSignatures.get(sigKeyFp);
+    private void printValidSignatures(Map<SubkeyIdentifier, PGPSignature> validSignatures, Map<PGPPublicKeyRing, File> publicKeys) {
+        for (SubkeyIdentifier signingKey : validSignatures.keySet()) {
+            PGPSignature signature = validSignatures.get(signingKey);
+
             for (PGPPublicKeyRing ring : publicKeys.keySet()) {
                 // Search signing key ring
                 File file = publicKeys.get(ring);
-                if (ring.getPublicKey(sigKeyFp.getKeyId()) == null) {
+                if (ring.getPublicKey(signingKey.getKeyId()) == null) {
                     continue;
                 }
 
                 String utcSigDate = df.format(signature.getCreationTime());
-                OpenPgpV4Fingerprint primaryKeyFp = new OpenPgpV4Fingerprint(ring);
-                print_ln(utcSigDate + " " + sigKeyFp.toString() + " " + primaryKeyFp.toString() +
+                print_ln(utcSigDate + " " + signingKey.getSubkeyFingerprint() + " " + signingKey.getPrimaryKeyFingerprint() +
                         " signed by " + file.getName());
             }
         }

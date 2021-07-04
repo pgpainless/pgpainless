@@ -35,7 +35,7 @@ import org.pgpainless.PGPainless;
 import org.pgpainless.decryption_verification.ConsumerOptions;
 import org.pgpainless.decryption_verification.DecryptionStream;
 import org.pgpainless.decryption_verification.OpenPgpMetadata;
-import org.pgpainless.key.OpenPgpV4Fingerprint;
+import org.pgpainless.key.SubkeyIdentifier;
 import org.pgpainless.sop.SopKeyUtil;
 import picocli.CommandLine;
 
@@ -156,18 +156,11 @@ public class Decrypt implements Runnable {
         StringBuilder sb = new StringBuilder();
 
         if (verifyWith != null) {
-            for (OpenPgpV4Fingerprint fingerprint : metadata.getVerifiedSignatures().keySet()) {
-                PGPPublicKeyRing verifier = null;
-                for (PGPPublicKeyRing ring : verifyWith) {
-                    if (ring.getPublicKey(fingerprint.getKeyId()) != null) {
-                        verifier = ring;
-                        break;
-                    }
-                }
-                PGPSignature signature = metadata.getVerifiedSignatures().get(fingerprint);
+            for (SubkeyIdentifier signingKey : metadata.getVerifiedSignatures().keySet()) {
+                PGPSignature signature = metadata.getVerifiedSignatures().get(signingKey);
                 sb.append(df.format(signature.getCreationTime())).append(' ')
-                        .append(fingerprint).append(' ')
-                        .append(verifier != null ? new OpenPgpV4Fingerprint(verifier) : "null").append('\n');
+                        .append(signingKey.getSubkeyFingerprint()).append(' ')
+                        .append(signingKey.getPrimaryKeyFingerprint()).append('\n');
             }
 
             try {

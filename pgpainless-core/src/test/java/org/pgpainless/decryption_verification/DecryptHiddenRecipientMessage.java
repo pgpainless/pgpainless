@@ -32,7 +32,7 @@ import org.junit.jupiter.params.provider.MethodSource;
 import org.pgpainless.PGPainless;
 import org.pgpainless.algorithm.EncryptionPurpose;
 import org.pgpainless.implementation.ImplementationFactory;
-import org.pgpainless.key.OpenPgpV4Fingerprint;
+import org.pgpainless.key.SubkeyIdentifier;
 import org.pgpainless.key.info.KeyRingInfo;
 
 public class DecryptHiddenRecipientMessage {
@@ -158,7 +158,7 @@ public class DecryptHiddenRecipientMessage {
         List<PGPPublicKey> encryptionKeys = info.getEncryptionSubkeys(EncryptionPurpose.STORAGE_AND_COMMUNICATIONS);
         assertEquals(1, encryptionKeys.size());
 
-        assertEquals(new OpenPgpV4Fingerprint(encryptionKeys.iterator().next()), metadata.getDecryptionFingerprint());
+        assertEquals(new SubkeyIdentifier(secretKeys, encryptionKeys.get(0).getKeyID()), metadata.getDecryptionKey());
         assertEquals("Hello Recipient :)", out.toString());
     }
 }

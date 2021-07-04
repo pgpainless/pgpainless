@@ -34,6 +34,7 @@ import org.pgpainless.PGPainless;
 import org.pgpainless.algorithm.CompressionAlgorithm;
 import org.pgpainless.algorithm.SymmetricKeyAlgorithm;
 import org.pgpainless.implementation.ImplementationFactory;
+import org.pgpainless.key.SubkeyIdentifier;
 import org.pgpainless.key.TestKeys;
 import org.pgpainless.key.util.KeyRingUtils;
 
@@ -82,8 +83,8 @@ public class DecryptAndVerifyMessageTest {
         assertEquals(CompressionAlgorithm.ZLIB, metadata.getCompressionAlgorithm());
         assertEquals(SymmetricKeyAlgorithm.AES_256, metadata.getSymmetricKeyAlgorithm());
         assertEquals(1, metadata.getSignatures().size());
-        assertEquals(1, metadata.getVerifiedSignatureKeyFingerprints().size());
+        assertEquals(1, metadata.getVerifiedSignatures().size());
         assertTrue(metadata.containsVerifiedSignatureFrom(TestKeys.JULIET_FINGERPRINT));
-        assertEquals(TestKeys.JULIET_FINGERPRINT, metadata.getDecryptionFingerprint());
+        assertEquals(new SubkeyIdentifier(TestKeys.JULIET_FINGERPRINT), metadata.getDecryptionKey());
     }
 }
