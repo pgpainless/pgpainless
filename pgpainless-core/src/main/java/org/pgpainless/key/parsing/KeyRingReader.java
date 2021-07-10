@@ -19,9 +19,14 @@ import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.nio.charset.Charset;
+import java.util.ArrayList;
+import java.util.Iterator;
+import java.util.List;
 import javax.annotation.Nonnull;
 
+import org.bouncycastle.bcpg.MarkerPacket;
 import org.bouncycastle.openpgp.PGPException;
+import org.bouncycastle.openpgp.PGPObjectFactory;
 import org.bouncycastle.openpgp.PGPPublicKeyRing;
 import org.bouncycastle.openpgp.PGPPublicKeyRingCollection;
 import org.bouncycastle.openpgp.PGPSecretKeyRing;
@@ -98,34 +103,111 @@ public class KeyRingReader {
         return keyRingCollection(asciiArmored.getBytes(UTF8), isSilent);
     }
 
-    /*
-    STATIC METHODS
-     */
-
     public static PGPPublicKeyRing readPublicKeyRing(@Nonnull InputStream inputStream) throws IOException {
-        return new PGPPublicKeyRing(
-                PGPUtil.getDecoderStream(inputStream),
+        PGPObjectFactory objectFactory = new PGPObjectFactory(
+                getDecoderStream(inputStream),
                 ImplementationFactory.getInstance().getKeyFingerprintCalculator());
+        Object next;
+        do {
+            next = objectFactory.nextObject();
+            if (next == null) {
+                break;
+            }
+            if (next instanceof MarkerPacket) {
+                continue;
+            }
+            if (next instanceof PGPPublicKeyRing) {
+                return (PGPPublicKeyRing) next;
+            }
+        } while (true);
+
+        return null;
     }
 
     public static PGPPublicKeyRingCollection readPublicKeyRingCollection(@Nonnull InputStream inputStream)
             throws IOException, PGPException {
-        return new PGPPublicKeyRingCollection(
+        PGPObjectFactory objectFactory = new PGPObjectFactory(
                 getDecoderStream(inputStream),
                 ImplementationFactory.getInstance().getKeyFingerprintCalculator());
+
+        List<PGPPublicKeyRing> rings = new ArrayList<>();
+
+        Object next;
+        do {
+            next = objectFactory.nextObject();
+            if (next == null) {
+                break;
+            }
+            if (next instanceof MarkerPacket) {
+                continue;
+            }
+            if (next instanceof PGPPublicKeyRing) {
+                rings.add((PGPPublicKeyRing) next);
+            }
+            if (next instanceof PGPPublicKeyRingCollection) {
+                PGPPublicKeyRingCollection collection = (PGPPublicKeyRingCollection) next;
+                Iterator<PGPPublicKeyRing> iterator = collection.getKeyRings();
+                while (iterator.hasNext()) {
+                    rings.add(iterator.next());
+                }
+            }
+        } while (true);
+
+        return new PGPPublicKeyRingCollection(rings);
     }
 
-    public static PGPSecretKeyRing readSecretKeyRing(@Nonnull InputStream inputStream) throws IOException, PGPException {
-        return new PGPSecretKeyRing(
-                PGPUtil.getDecoderStream(inputStream),
+    public static PGPSecretKeyRing readSecretKeyRing(@Nonnull InputStream inputStream) throws IOException {
+        PGPObjectFactory objectFactory = new PGPObjectFactory(
+                getDecoderStream(inputStream),
                 ImplementationFactory.getInstance().getKeyFingerprintCalculator());
+
+        Object next;
+        do {
+            next = objectFactory.nextObject();
+            if (next == null) {
+                break;
+            }
+            if (next instanceof MarkerPacket) {
+                continue;
+            }
+            if (next instanceof PGPSecretKeyRing) {
+                return (PGPSecretKeyRing) next;
+            }
+        } while (true);
+
+        return null;
     }
 
     public static PGPSecretKeyRingCollection readSecretKeyRingCollection(@Nonnull InputStream inputStream)
             throws IOException, PGPException {
-        return new PGPSecretKeyRingCollection(
+        PGPObjectFactory objectFactory = new PGPObjectFactory(
                 getDecoderStream(inputStream),
                 ImplementationFactory.getInstance().getKeyFingerprintCalculator());
+
+        List<PGPSecretKeyRing> rings = new ArrayList<>();
+
+        Object next;
+        do {
+            next = objectFactory.nextObject();
+            if (next == null) {
+                break;
+            }
+            if (next instanceof MarkerPacket) {
+                continue;
+            }
+            if (next instanceof PGPSecretKeyRing) {
+                rings.add((PGPSecretKeyRing) next);
+            }
+            if (next instanceof PGPSecretKeyRingCollection) {
+                PGPSecretKeyRingCollection collection = (PGPSecretKeyRingCollection) next;
+                Iterator<PGPSecretKeyRing> iterator = collection.getKeyRings();
+                while (iterator.hasNext()) {
+                    rings.add(iterator.next());
+                }
+            }
+        } while (true);
+
+        return new PGPSecretKeyRingCollection(rings);
     }
 
     public static PGPKeyRingCollection readKeyRingCollection(@Nonnull InputStream inputStream, boolean isSilent)
