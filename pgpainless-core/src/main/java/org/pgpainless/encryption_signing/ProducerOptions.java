@@ -15,15 +15,22 @@
  */
 package org.pgpainless.encryption_signing;
 
+import java.util.Date;
+import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
 
+import org.bouncycastle.openpgp.PGPLiteralData;
 import org.pgpainless.PGPainless;
 import org.pgpainless.algorithm.CompressionAlgorithm;
+import org.pgpainless.algorithm.StreamEncoding;
 
 public final class ProducerOptions {
 
     private final EncryptionOptions encryptionOptions;
     private final SigningOptions signingOptions;
+    private String fileName = "";
+    private Date modificationDate = PGPLiteralData.NOW;
+    private StreamEncoding streamEncoding = StreamEncoding.BINARY;
 
     private CompressionAlgorithm compressionAlgorithmOverride = PGPainless.getPolicy().getCompressionAlgorithmPolicy()
             .defaultCompressionAlgorithm();
@@ -87,20 +94,6 @@ public final class ProducerOptions {
     }
 
     /**
-     * Override which compression algorithm shall be used.
-     *
-     * @param compressionAlgorithm compression algorithm override
-     * @return builder
-     */
-    public ProducerOptions overrideCompressionAlgorithm(CompressionAlgorithm compressionAlgorithm) {
-        if (compressionAlgorithm == null) {
-            throw new NullPointerException("Compression algorithm cannot be null.");
-        }
-        this.compressionAlgorithmOverride = compressionAlgorithm;
-        return this;
-    }
-
-    /**
      * Specify, whether or not the result of the encryption/signing operation shall be ascii armored.
      * The default value is true.
      *
@@ -119,6 +112,89 @@ public final class ProducerOptions {
      */
     public boolean isAsciiArmor() {
         return asciiArmor;
+    }
+
+    /**
+     * Set the name of the encrypted file.
+     * Note: This option cannot be used simultaneously with {@link #setForYourEyesOnly()}.
+     *
+     * @param fileName name of the encrypted file
+     * @return this
+     */
+    public ProducerOptions setFileName(@Nonnull String fileName) {
+        this.fileName = fileName;
+        return this;
+    }
+
+    /**
+     * Return the encrypted files name.
+     *
+     * @return file name
+     */
+    public String getFileName() {
+        return fileName;
+    }
+
+    /**
+     * Mark the encrypted message as for-your-eyes-only by setting a special file name.
+     * Note: Therefore this method cannot be used simultaneously with {@link #setFileName(String)}.
+     *
+     * @return this
+     */
+    public ProducerOptions setForYourEyesOnly() {
+        this.fileName = PGPLiteralData.CONSOLE;
+        return this;
+    }
+
+    /**
+     * Set the modification date of the encrypted file.
+     *
+     * @param modificationDate Modification date of the encrypted file.
+     * @return this
+     */
+    public ProducerOptions setModificationDate(@Nonnull Date modificationDate) {
+        this.modificationDate = modificationDate;
+        return this;
+    }
+
+    /**
+     * Return the modification date of the encrypted file.
+     *
+     * @return modification date
+     */
+    public Date getModificationDate() {
+        return modificationDate;
+    }
+
+    /**
+     * Set the format of the literal data packet.
+     * Defaults to {@link StreamEncoding#BINARY}.
+     *
+     * @see <a href="https://datatracker.ietf.org/doc/html/rfc4880#section-5.9">RFC4880 §5.9. Literal Data Packet</a>
+     *
+     * @param encoding encoding
+     * @return this
+     */
+    public ProducerOptions setEncoding(@Nonnull StreamEncoding encoding) {
+        this.streamEncoding = encoding;
+        return this;
+    }
+
+    public StreamEncoding getEncoding() {
+        return streamEncoding;
+    }
+    /**
+     * Override which compression algorithm shall be used.
+     *
+     * @param compressionAlgorithm compression algorithm override
+     * @return builder
+     */
+    public ProducerOptions overrideCompressionAlgorithm(CompressionAlgorithm compressionAlgorithm) {
+        if (compressionAlgorithm == null) {
+            throw new NullPointerException("Compression algorithm cannot be null.");
+        }
+        this.compressionAlgorithmOverride = compressionAlgorithm;
+        return this;
     }
 
     public CompressionAlgorithm getCompressionAlgorithmOverride() {

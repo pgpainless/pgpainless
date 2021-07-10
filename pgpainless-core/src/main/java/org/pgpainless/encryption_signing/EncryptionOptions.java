@@ -33,8 +33,8 @@ import org.pgpainless.algorithm.EncryptionPurpose;
 import org.pgpainless.algorithm.SymmetricKeyAlgorithm;
 import org.pgpainless.implementation.ImplementationFactory;
 import org.pgpainless.key.SubkeyIdentifier;
-import org.pgpainless.key.info.KeyRingInfo;
 import org.pgpainless.key.info.KeyAccessor;
+import org.pgpainless.key.info.KeyRingInfo;
 import org.pgpainless.util.Passphrase;
 
 /**

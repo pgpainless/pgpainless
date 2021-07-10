@@ -66,11 +66,14 @@ public class FileInfoTest {
         ByteArrayInputStream dataIn = new ByteArrayInputStream(data.getBytes(StandardCharsets.UTF_8));
         ByteArrayOutputStream dataOut = new ByteArrayOutputStream();
         EncryptionStream encryptionStream = PGPainless.encryptAndOrSign()
-                .onOutputStream(dataOut, fileInfo)
+                .onOutputStream(dataOut)
                 .withOptions(ProducerOptions.encrypt(
                         EncryptionOptions
                                 .encryptCommunications()
                                 .addRecipient(publicKeys))
+                        .setEncoding(fileInfo.getStreamFormat())
+                        .setFileName(fileInfo.getFileName())
+                        .setModificationDate(fileInfo.getModificationDate())
                 );
 
         Streams.pipeAll(dataIn, encryptionStream);

@@ -156,12 +156,12 @@ public class OpenPgpMetadata {
         public static final String FOR_YOUR_EYES_ONLY = PGPLiteralData.CONSOLE;
 
         protected final String fileName;
-        protected final Date modicationDate;
+        protected final Date modificationDate;
         protected final StreamEncoding streamEncoding;
 
-        public FileInfo(String fileName, Date modicationDate, StreamEncoding streamEncoding) {
+        public FileInfo(String fileName, Date modificationDate, StreamEncoding streamEncoding) {
             this.fileName = fileName == null ? "" : fileName;
-            this.modicationDate = modicationDate == null ? PGPLiteralData.NOW : modicationDate;
+            this.modificationDate = modificationDate == null ? PGPLiteralData.NOW : modificationDate;
             this.streamEncoding = streamEncoding;
         }
 
@@ -182,7 +182,7 @@ public class OpenPgpMetadata {
         }
 
         public Date getModificationDate() {
-            return modicationDate;
+            return modificationDate;
         }
 
         public StreamEncoding getStreamFormat() {

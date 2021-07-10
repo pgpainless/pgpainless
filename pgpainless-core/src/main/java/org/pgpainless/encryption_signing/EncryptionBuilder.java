@@ -27,18 +27,15 @@ import org.pgpainless.PGPainless;
 import org.pgpainless.algorithm.CompressionAlgorithm;
 import org.pgpainless.algorithm.SymmetricKeyAlgorithm;
 import org.pgpainless.algorithm.negotiation.SymmetricKeyAlgorithmNegotiator;
-import org.pgpainless.decryption_verification.OpenPgpMetadata;
 import org.pgpainless.key.SubkeyIdentifier;
 
 public class EncryptionBuilder implements EncryptionBuilderInterface {
 
     private OutputStream outputStream;
-    private OpenPgpMetadata.FileInfo fileInfo;
 
     @Override
-    public WithOptions onOutputStream(@Nonnull OutputStream outputStream, OpenPgpMetadata.FileInfo fileInfo) {
+    public WithOptions onOutputStream(@Nonnull OutputStream outputStream) {
         this.outputStream = outputStream;
-        this.fileInfo = fileInfo;
         return new WithOptionsImpl();
     }
 
@@ -48,7 +45,7 @@ public class EncryptionBuilder implements EncryptionBuilderInterface {
             if (options == null) {
                 throw new NullPointerException("ProducerOptions cannot be null.");
             }
-            return new EncryptionStream(outputStream, options, fileInfo);
+            return new EncryptionStream(outputStream, options);
         }
     }
 

@@ -62,8 +62,7 @@ public final class EncryptionStream extends OutputStream {
     private OutputStream literalDataStream;
 
     EncryptionStream(@Nonnull OutputStream targetOutputStream,
-                     @Nonnull ProducerOptions options,
-                     @Nonnull OpenPgpMetadata.FileInfo fileInfo)
+                     @Nonnull ProducerOptions options)
             throws IOException, PGPException {
         this.options = options;
         outermostStream = targetOutputStream;
@@ -72,7 +71,7 @@ public final class EncryptionStream extends OutputStream {
         prepareEncryption();
         prepareCompression();
         prepareOnePassSignatures();
-        prepareLiteralDataProcessing(fileInfo);
+        prepareLiteralDataProcessing();
     }
 
     private void prepareArmor() {
@@ -146,15 +145,17 @@ public final class EncryptionStream extends OutputStream {
         }
     }
 
-    private void prepareLiteralDataProcessing(@Nonnull OpenPgpMetadata.FileInfo fileInfo) throws IOException {
+    private void prepareLiteralDataProcessing() throws IOException {
         literalDataGenerator = new PGPLiteralDataGenerator();
         literalDataStream = literalDataGenerator.open(outermostStream,
-                fileInfo.getStreamFormat().getCode(),
-                fileInfo.getFileName(),
-                fileInfo.getModificationDate(),
+                options.getEncoding().getCode(),
+                options.getFileName(),
+                options.getModificationDate(),
                 new byte[BUFFER_SIZE]);
         outermostStream = literalDataStream;
-        resultBuilder.setFileInfo(fileInfo);
+
+        resultBuilder.setFileInfo(new OpenPgpMetadata.FileInfo(
+                options.getFileName(), options.getModificationDate(), options.getEncoding()));
     }
 
     @Override
