@@ -15,11 +15,16 @@
  */
 package org.pgpainless.util;
 
+import java.io.ByteArrayInputStream;
 import java.io.File;
 import java.io.IOException;
+import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.util.Iterator;
 import java.util.Random;
+
+import org.bouncycastle.bcpg.BCPGInputStream;
+import org.bouncycastle.bcpg.MarkerPacket;
 
 public class TestUtils {
 
@@ -48,5 +53,12 @@ public class TestUtils {
             sb.append(ALPHABET.charAt(RANDOM.nextInt(ALPHABET.length())));
         }
         return sb.toString();
+    }
+
+    public static MarkerPacket getMarkerPacket() throws IOException {
+        BCPGInputStream pgpIn = new BCPGInputStream(new ByteArrayInputStream("PGP".getBytes(StandardCharsets.UTF_8)));
+        MarkerPacket markerPacket = new MarkerPacket(pgpIn);
+        pgpIn.close();
+        return markerPacket;
     }
 }
