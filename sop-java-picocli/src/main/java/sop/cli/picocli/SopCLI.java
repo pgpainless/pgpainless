@@ -30,6 +30,7 @@ import sop.cli.picocli.commands.VersionCmd;
 @CommandLine.Command(
         exitCodeOnInvalidInput = 69,
         subcommands = {
+                CommandLine.HelpCommand.class,
                 ArmorCmd.class,
                 DearmorCmd.class,
                 DecryptCmd.class,
