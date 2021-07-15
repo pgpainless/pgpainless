@@ -7,11 +7,11 @@ To build an executable, `gradle jar` should be sufficient. The resulting jar fil
 
 ## Execute
 
-Simply use the provided `./pgpainless` script to execute PGPainless' Stateless Command Line Interface.
+Alternatively you can use the provided `./pgpainless-cli` script to execute PGPainless' Stateless Command Line Interface from within Gradle.
 
-To discover all commands use
+To discover all available commands use
 ```
-./pgpainless help
+./pgpainless-cli help
 ```
 
 Enjoy!
