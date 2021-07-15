@@ -1,0 +1,66 @@
+plugins {
+    id 'application'
+}
+def generatedVersionDir = "${buildDir}/generated-version"
+
+sourceSets {
+    main {
+        output.dir(generatedVersionDir, builtBy: 'generateVersionProperties')
+    }
+}
+
+task generateVersionProperties {
+    doLast {
+        def propertiesFile = file "$generatedVersionDir/version.properties"
+        propertiesFile.parentFile.mkdirs()
+        propertiesFile.createNewFile()
+        // Instead of using a Properties object here, we directly write to the file
+        //  since Properties adds a timestamp, ruining reproducibility
+        propertiesFile.write("version="+rootProject.version.toString())
+    }
+}
+processResources.dependsOn generateVersionProperties
+
+dependencies {
+    implementation(project(":pgpainless-sop"))
+    implementation(project(":sop-java"))
+
+    implementation(project(":sop-java-picocli"))
+    implementation 'info.picocli:picocli:4.5.2'
+
+    testImplementation(project(":pgpainless-core"))
+
+    testImplementation "org.junit.jupiter:junit-jupiter-api:$junitVersion"
+    testRuntimeOnly "org.junit.jupiter:junit-jupiter-engine:$junitVersion"
+
+    // https://todd.ginsberg.com/post/testing-system-exit/
+    testImplementation 'com.ginsberg:junit5-system-exit:1.1.1'
+
+    /*
+    implementation "org.bouncycastle:bcprov-debug-jdk15on:$bouncyCastleVersion"
+    /*/
+    implementation "org.bouncycastle:bcprov-jdk15on:$bouncyCastleVersion"
+    //*/
+    implementation "org.bouncycastle:bcpg-jdk15on:$bouncyCastleVersion"
+
+    // https://mvnrepository.com/artifact/com.google.code.findbugs/jsr305
+    implementation group: 'com.google.code.findbugs', name: 'jsr305', version: '3.0.2'
+}
+
+mainClassName = 'org.pgpainless.cli.PGPainlessCLI'
+
+jar {
+    manifest {
+        attributes 'Main-Class': "$mainClassName"
+    }
+
+    from {
+        configurations.runtimeClasspath.collect { it.isDirectory() ? it : zipTree(it) }
+    } {
+        exclude "META-INF/*.SF"
+        exclude "META-INF/*.DSA"
+        exclude "META-INF/*.RSA"
+    }
+}
+
+tasks."jar".dependsOn(":pgpainless-core:assemble")

@@ -16,11 +16,16 @@
 package org.pgpainless.encryption_signing;
 
 import java.util.Collections;
+import java.util.Date;
 import java.util.HashSet;
 import java.util.Set;
 
+import javax.annotation.Nonnull;
+
+import org.bouncycastle.openpgp.PGPLiteralData;
 import org.bouncycastle.openpgp.PGPSignature;
 import org.pgpainless.algorithm.CompressionAlgorithm;
+import org.pgpainless.algorithm.StreamEncoding;
 import org.pgpainless.algorithm.SymmetricKeyAlgorithm;
 import org.pgpainless.decryption_verification.OpenPgpMetadata;
 import org.pgpainless.key.SubkeyIdentifier;
@@ -33,18 +38,24 @@ public final class EncryptionResult {
 
     private final MultiMap<SubkeyIdentifier, PGPSignature> detachedSignatures;
     private final Set<SubkeyIdentifier> recipients;
-    private final OpenPgpMetadata.FileInfo fileInfo;
+    private final String fileName;
+    private final Date modificationDate;
+    private final StreamEncoding fileEncoding;
 
     private EncryptionResult(SymmetricKeyAlgorithm encryptionAlgorithm,
                              CompressionAlgorithm compressionAlgorithm,
                              MultiMap<SubkeyIdentifier, PGPSignature> detachedSignatures,
                              Set<SubkeyIdentifier> recipients,
-                             OpenPgpMetadata.FileInfo fileInfo) {
+                             String fileName,
+                             Date modificationDate,
+                             StreamEncoding encoding) {
         this.encryptionAlgorithm = encryptionAlgorithm;
         this.compressionAlgorithm = compressionAlgorithm;
         this.detachedSignatures = detachedSignatures;
         this.recipients = Collections.unmodifiableSet(recipients);
-        this.fileInfo = fileInfo;
+        this.fileName = fileName;
+        this.modificationDate = modificationDate;
+        this.fileEncoding = encoding;
     }
 
     @Deprecated
@@ -68,12 +79,35 @@ public final class EncryptionResult {
         return recipients;
     }
 
+    /**
+     * Return information about the encrypted / signed data.
+     *
+     * @deprecated use {@link #getFileName()}, {@link #getModificationDate()} and {@link #getFileEncoding()} instead.
+     * @return info
+     */
+    @Deprecated
     public OpenPgpMetadata.FileInfo getFileInfo() {
-        return fileInfo;
+        return new OpenPgpMetadata.FileInfo(getFileName(), getModificationDate(), getFileEncoding());
+    }
+
+    public String getFileName() {
+        return fileName;
+    }
+
+    public Date getModificationDate() {
+        return modificationDate;
+    }
+
+    public StreamEncoding getFileEncoding() {
+        return fileEncoding;
     }
 
     public static Builder builder() {
         return new Builder();
+    }
+
+    public boolean isForYourEyesOnly() {
+        return PGPLiteralData.CONSOLE.equals(getFileName());
     }
 
     public static class Builder {
@@ -83,7 +117,9 @@ public final class EncryptionResult {
 
         private final MultiMap<SubkeyIdentifier, PGPSignature> detachedSignatures = new MultiMap<>();
         private Set<SubkeyIdentifier> recipients = new HashSet<>();
-        private OpenPgpMetadata.FileInfo fileInfo;
+        private String fileName = "";
+        private Date modificationDate = new Date(0L); // NOW
+        private StreamEncoding encoding = StreamEncoding.BINARY;
 
         public Builder setEncryptionAlgorithm(SymmetricKeyAlgorithm encryptionAlgorithm) {
             this.encryptionAlgorithm = encryptionAlgorithm;
@@ -105,8 +141,18 @@ public final class EncryptionResult {
             return this;
         }
 
-        public Builder setFileInfo(OpenPgpMetadata.FileInfo fileInfo) {
-            this.fileInfo = fileInfo;
+        public Builder setFileName(@Nonnull String fileName) {
+            this.fileName = fileName;
+            return this;
+        }
+
+        public Builder setModificationDate(@Nonnull Date modificationDate) {
+            this.modificationDate = modificationDate;
+            return this;
+        }
+
+        public Builder setFileEncoding(StreamEncoding fileEncoding) {
+            this.encoding = fileEncoding;
             return this;
         }
 
@@ -117,11 +163,9 @@ public final class EncryptionResult {
             if (compressionAlgorithm == null) {
                 throw new IllegalStateException("Compression algorithm not set.");
             }
-            if (fileInfo == null) {
-                throw new IllegalStateException("File info not set.");
-            }
 
-            return new EncryptionResult(encryptionAlgorithm, compressionAlgorithm, detachedSignatures, recipients, fileInfo);
+            return new EncryptionResult(encryptionAlgorithm, compressionAlgorithm, detachedSignatures, recipients,
+                    fileName, modificationDate, encoding);
         }
     }
 }

@@ -16,6 +16,7 @@
 package org.pgpainless.decryption_verification;
 
 import java.io.BufferedInputStream;
+import java.io.EOFException;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.ArrayList;
@@ -76,8 +77,10 @@ public final class DecryptionStreamFactory {
     private final ConsumerOptions options;
 
     private final OpenPgpMetadata.Builder resultBuilder = OpenPgpMetadata.getBuilder();
-    private static final PGPContentVerifierBuilderProvider verifierBuilderProvider = ImplementationFactory.getInstance().getPGPContentVerifierBuilderProvider();
-    private static final KeyFingerPrintCalculator keyFingerprintCalculator = ImplementationFactory.getInstance().getKeyFingerprintCalculator();
+    private static final PGPContentVerifierBuilderProvider verifierBuilderProvider =
+            ImplementationFactory.getInstance().getPGPContentVerifierBuilderProvider();
+    private static final KeyFingerPrintCalculator keyFingerprintCalculator =
+            ImplementationFactory.getInstance().getKeyFingerprintCalculator();
     private final Map<OpenPgpV4Fingerprint, OnePassSignature> verifiableOnePassSignatures = new HashMap<>();
     private final List<IntegrityProtectedInputStream> integrityProtectedStreams = new ArrayList<>();
 
@@ -109,11 +112,23 @@ public final class DecryptionStreamFactory {
         try {
             // Parse OpenPGP message
             inputStream = factory.processPGPPackets(objectFactory, 1);
-        } catch (MissingLiteralDataException e) {
-            // Not an OpenPGP message. Reset the buffered stream to parse the message as arbitrary binary data
+        } catch (EOFException e) {
+            throw e;
+        }
+        catch (MissingLiteralDataException e) {
+            // Not an OpenPGP message.
+            //  Reset the buffered stream to parse the message as arbitrary binary data
             //  to allow for detached signature verification.
             bufferedIn.reset();
             inputStream = bufferedIn;
+        } catch (IOException e) {
+            if (e.getMessage().contains("invalid armor")) {
+                // We falsely assumed the data to be armored.
+                bufferedIn.reset();
+                inputStream = bufferedIn;
+            } else {
+                throw e;
+            }
         }
 
         return new DecryptionStream(inputStream, factory.resultBuilder, factory.integrityProtectedStreams);
@@ -146,7 +161,9 @@ public final class DecryptionStreamFactory {
             throws PGPException, IOException {
         LOGGER.log(LEVEL, "Encountered PGPEncryptedDataList");
         InputStream decryptedDataStream = decrypt(pgpEncryptedDataList);
-        return processPGPPackets(new PGPObjectFactory(PGPUtil.getDecoderStream(decryptedDataStream), keyFingerprintCalculator), ++depth);
+        InputStream decodedDataStream = PGPUtil.getDecoderStream(decryptedDataStream);
+        PGPObjectFactory factory = new PGPObjectFactory(decodedDataStream, keyFingerprintCalculator);
+        return processPGPPackets(factory, ++depth);
     }
 
     private InputStream processPGPCompressedData(PGPCompressedData pgpCompressedData, int depth)
@@ -155,8 +172,9 @@ public final class DecryptionStreamFactory {
         LOGGER.log(LEVEL, "Encountered PGPCompressedData: " + compressionAlgorithm);
         resultBuilder.setCompressionAlgorithm(compressionAlgorithm);
 
-        InputStream dataStream = pgpCompressedData.getDataStream();
-        PGPObjectFactory objectFactory = new PGPObjectFactory(PGPUtil.getDecoderStream(dataStream), keyFingerprintCalculator);
+        InputStream inflatedDataStream = pgpCompressedData.getDataStream();
+        InputStream decodedDataStream = PGPUtil.getDecoderStream(inflatedDataStream);
+        PGPObjectFactory objectFactory = new PGPObjectFactory(decodedDataStream, keyFingerprintCalculator);
 
         return processPGPPackets(objectFactory, ++depth);
     }
@@ -171,11 +189,10 @@ public final class DecryptionStreamFactory {
     private InputStream processPGPLiteralData(@Nonnull PGPObjectFactory objectFactory, PGPLiteralData pgpLiteralData) {
         LOGGER.log(LEVEL, "Found PGPLiteralData");
         InputStream literalDataInputStream = pgpLiteralData.getInputStream();
-        OpenPgpMetadata.FileInfo fileInfo = new OpenPgpMetadata.FileInfo(
-                pgpLiteralData.getFileName(),
-                pgpLiteralData.getModificationTime(),
-                StreamEncoding.fromCode(pgpLiteralData.getFormat()));
-        resultBuilder.setFileInfo(fileInfo);
+
+        resultBuilder.setFileName(pgpLiteralData.getFileName())
+                .setModificationDate(pgpLiteralData.getModificationTime())
+                .setFileEncoding(StreamEncoding.fromCode(pgpLiteralData.getFormat()));
 
         if (verifiableOnePassSignatures.isEmpty()) {
             LOGGER.log(LEVEL, "No OnePassSignatures found -> We are done");
@@ -226,9 +243,6 @@ public final class DecryptionStreamFactory {
 
             // data is public key encrypted
             else if (encryptedData instanceof PGPPublicKeyEncryptedData) {
-                if (options.getDecryptionKeys().isEmpty()) {
-
-                }
                 PGPPublicKeyEncryptedData publicKeyEncryptedData = (PGPPublicKeyEncryptedData) encryptedData;
                 long keyId = publicKeyEncryptedData.getKeyID();
                 if (!options.getDecryptionKeys().isEmpty()) {

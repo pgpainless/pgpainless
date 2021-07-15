@@ -33,11 +33,14 @@ import org.bouncycastle.openpgp.operator.PGPContentSignerBuilder;
 import org.pgpainless.PGPainless;
 import org.pgpainless.algorithm.DocumentSignatureType;
 import org.pgpainless.algorithm.HashAlgorithm;
+import org.pgpainless.exception.KeyCannotSignException;
 import org.pgpainless.exception.KeyValidationException;
 import org.pgpainless.implementation.ImplementationFactory;
+import org.pgpainless.key.OpenPgpV4Fingerprint;
 import org.pgpainless.key.SubkeyIdentifier;
 import org.pgpainless.key.info.KeyRingInfo;
 import org.pgpainless.key.protection.SecretKeyRingProtector;
+import org.pgpainless.key.protection.UnlockSecretKey;
 import org.pgpainless.policy.Policy;
 
 public final class SigningOptions {
@@ -161,12 +164,12 @@ public final class SigningOptions {
 
         List<PGPPublicKey> signingPubKeys = keyRingInfo.getSigningSubkeys();
         if (signingPubKeys.isEmpty()) {
-            throw new AssertionError("Key has no valid signing key.");
+            throw new KeyCannotSignException("Key " + new OpenPgpV4Fingerprint(secretKey) + " has no valid signing key.");
         }
 
         for (PGPPublicKey signingPubKey : signingPubKeys) {
             PGPSecretKey signingSecKey = secretKey.getSecretKey(signingPubKey.getKeyID());
-            PGPPrivateKey signingSubkey = signingSecKey.extractPrivateKey(secretKeyDecryptor.getDecryptor(signingPubKey.getKeyID()));
+            PGPPrivateKey signingSubkey = UnlockSecretKey.unlockSecretKey(signingSecKey, secretKeyDecryptor);
             Set<HashAlgorithm> hashAlgorithms = keyRingInfo.getPreferredHashAlgorithms(userId, signingPubKey.getKeyID());
             HashAlgorithm hashAlgorithm = negotiateHashAlgorithm(hashAlgorithms, PGPainless.getPolicy());
             addSigningMethod(secretKey, signingSubkey, hashAlgorithm, signatureType, false);
@@ -242,7 +245,7 @@ public final class SigningOptions {
 
         List<PGPPublicKey> signingPubKeys = keyRingInfo.getSigningSubkeys();
         if (signingPubKeys.isEmpty()) {
-            throw new AssertionError("Key has no valid signing key.");
+            throw new KeyCannotSignException("Key has no valid signing key.");
         }
 
         for (PGPPublicKey signingPubKey : signingPubKeys) {
