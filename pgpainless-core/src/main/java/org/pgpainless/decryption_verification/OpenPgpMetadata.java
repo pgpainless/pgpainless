@@ -24,6 +24,8 @@ import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 
+import javax.annotation.Nonnull;
+
 import org.bouncycastle.openpgp.PGPLiteralData;
 import org.bouncycastle.openpgp.PGPPublicKey;
 import org.bouncycastle.openpgp.PGPPublicKeyRing;
@@ -44,7 +46,9 @@ public class OpenPgpMetadata {
     private final List<DetachedSignature> detachedSignatures;
     private final SymmetricKeyAlgorithm symmetricKeyAlgorithm;
     private final CompressionAlgorithm compressionAlgorithm;
-    private final FileInfo fileInfo;
+    private final String fileName;
+    private final Date modificationDate;
+    private final StreamEncoding fileEncoding;
 
     public OpenPgpMetadata(Set<Long> recipientKeyIds,
                            SubkeyIdentifier decryptionKey,
@@ -52,7 +56,9 @@ public class OpenPgpMetadata {
                            CompressionAlgorithm algorithm,
                            List<OnePassSignature> onePassSignatures,
                            List<DetachedSignature> detachedSignatures,
-                           FileInfo fileInfo) {
+                           String fileName,
+                           Date modificationDate,
+                           StreamEncoding fileEncoding) {
 
         this.recipientKeyIds = Collections.unmodifiableSet(recipientKeyIds);
         this.decryptionKey = decryptionKey;
@@ -60,7 +66,9 @@ public class OpenPgpMetadata {
         this.compressionAlgorithm = algorithm;
         this.detachedSignatures = Collections.unmodifiableList(detachedSignatures);
         this.onePassSignatures = Collections.unmodifiableList(onePassSignatures);
-        this.fileInfo = fileInfo;
+        this.fileName = fileName;
+        this.modificationDate = modificationDate;
+        this.fileEncoding = fileEncoding;
     }
 
     public Set<Long> getRecipientKeyIds() {
@@ -148,12 +156,59 @@ public class OpenPgpMetadata {
         }
     }
 
+    /**
+     * Return information about the encrypted/signed file.
+     *
+     * @deprecated use {@link #getFileName()}, {@link #getModificationDate()} and {@link #getFileEncoding()} instead.
+     * @return file info
+     */
+    @Deprecated
     public FileInfo getFileInfo() {
-        return fileInfo;
+        return new FileInfo(
+                getFileName(),
+                getModificationDate(),
+                getFileEncoding()
+        );
     }
 
+    /**
+     * Return the name of the encrypted / signed file.
+     *
+     * @return file name
+     */
+    public String getFileName() {
+        return fileName;
+    }
+
+    /**
+     * Return true, if the encrypted data is intended for your eyes only.
+     *
+     * @return true if for-your-eyes-only
+     */
+    public boolean isForYourEyesOnly() {
+        return PGPLiteralData.CONSOLE.equals(getFileName());
+    }
+
+    /**
+     * Return the modification date of the encrypted / signed file.
+     *
+     * @return modification date
+     */
+    public Date getModificationDate() {
+        return modificationDate;
+    }
+
+    /**
+     * Return the encoding format of the encrypted / signed file.
+     *
+     * @return encoding
+     */
+    public StreamEncoding getFileEncoding() {
+        return fileEncoding;
+    }
+
+    @Deprecated
     public static class FileInfo {
-        public static final String FOR_YOUR_EYES_ONLY = PGPLiteralData.CONSOLE;
 
         protected final String fileName;
         protected final Date modificationDate;
@@ -165,20 +220,8 @@ public class OpenPgpMetadata {
             this.streamEncoding = streamEncoding;
         }
 
-        public static FileInfo binaryStream() {
-            return new FileInfo("", null, StreamEncoding.BINARY);
-        }
-
-        public static FileInfo forYourEyesOnly() {
-            return new FileInfo(FOR_YOUR_EYES_ONLY, null, StreamEncoding.BINARY);
-        }
-
         public String getFileName() {
             return fileName;
-        }
-
-        public boolean isForYourEyesOnly() {
-            return FOR_YOUR_EYES_ONLY.equals(fileName);
         }
 
         public Date getModificationDate() {
@@ -243,7 +286,9 @@ public class OpenPgpMetadata {
         private final List<OnePassSignature> onePassSignatures = new ArrayList<>();
         private SymmetricKeyAlgorithm symmetricKeyAlgorithm = SymmetricKeyAlgorithm.NULL;
         private CompressionAlgorithm compressionAlgorithm = CompressionAlgorithm.UNCOMPRESSED;
-        private FileInfo fileInfo;
+        private String fileName;
+        private StreamEncoding fileEncoding;
+        private Date modificationDate;
 
         public Builder addRecipientKeyId(Long keyId) {
             this.recipientFingerprints.add(keyId);
@@ -269,6 +314,21 @@ public class OpenPgpMetadata {
             return this;
         }
 
+        public Builder setFileName(@Nonnull String fileName) {
+            this.fileName = fileName;
+            return this;
+        }
+
+        public Builder setModificationDate(Date modificationDate) {
+            this.modificationDate = modificationDate;
+            return this;
+        }
+
+        public Builder setFileEncoding(StreamEncoding encoding) {
+            this.fileEncoding = encoding;
+            return this;
+        }
+
         public void addDetachedSignature(DetachedSignature signature) {
             this.detachedSignatures.add(signature);
         }
@@ -277,15 +337,10 @@ public class OpenPgpMetadata {
             this.onePassSignatures.add(onePassSignature);
         }
 
-        public Builder setFileInfo(FileInfo fileInfo) {
-            this.fileInfo = fileInfo;
-            return this;
-        }
-
         public OpenPgpMetadata build() {
             return new OpenPgpMetadata(recipientFingerprints, decryptionKey,
                     symmetricKeyAlgorithm, compressionAlgorithm,
-                    onePassSignatures, detachedSignatures, fileInfo);
+                    onePassSignatures, detachedSignatures, fileName, modificationDate, fileEncoding);
         }
     }
 }

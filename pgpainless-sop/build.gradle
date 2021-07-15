@@ -1,59 +1,23 @@
 plugins {
-    id 'application'
+    id 'java'
+}
+
+group 'org.pgpainless'
+version '0.2.1-SNAPSHOT'
+
+repositories {
+    mavenCentral()
 }
 
 dependencies {
+
     implementation(project(":pgpainless-core"))
+    implementation(project(":sop-java"))
 
-    implementation 'info.picocli:picocli:4.5.2'
-
-    testImplementation "org.junit.jupiter:junit-jupiter-api:$junitVersion"
-    testRuntimeOnly "org.junit.jupiter:junit-jupiter-engine:$junitVersion"
-
-    /*
-    implementation "org.bouncycastle:bcprov-debug-jdk15on:$bouncyCastleVersion"
-    /*/
-    implementation "org.bouncycastle:bcprov-jdk15on:$bouncyCastleVersion"
-    //*/
-    implementation "org.bouncycastle:bcpg-jdk15on:$bouncyCastleVersion"
-
-    // https://mvnrepository.com/artifact/com.google.code.findbugs/jsr305
-    implementation group: 'com.google.code.findbugs', name: 'jsr305', version: '3.0.2'
+    testImplementation 'org.junit.jupiter:junit-jupiter-api:5.7.0'
+    testRuntimeOnly 'org.junit.jupiter:junit-jupiter-engine:5.7.0'
 }
 
-mainClassName = 'org.pgpainless.sop.PGPainlessCLI'
-
-def generatedVersionDir = "${buildDir}/generated-version"
-
-sourceSets {
-    main {
-        output.dir(generatedVersionDir, builtBy: 'generateVersionProperties')
-    }
+test {
+    useJUnitPlatform()
 }
-
-task generateVersionProperties {
-    doLast {
-        def propertiesFile = file "$generatedVersionDir/version.properties"
-        propertiesFile.parentFile.mkdirs()
-        propertiesFile.createNewFile()
-        // Instead of using a Properties object here, we directly write to the file
-        //  since Properties adds a timestamp, ruining reproducibility
-        propertiesFile.write("version="+rootProject.version.toString())
-    }
-}
-processResources.dependsOn generateVersionProperties
-
-jar {
-    manifest {
-        attributes 'Main-Class': "$mainClassName"
-    }
-
-    from {
-        configurations.runtimeClasspath.collect { it.isDirectory() ? it : zipTree(it) }
-    } {
-        exclude "META-INF/*.SF"
-        exclude "META-INF/*.DSA"
-        exclude "META-INF/*.RSA"
-    }
-}
-

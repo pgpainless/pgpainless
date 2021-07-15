@@ -1,5 +1,5 @@
 /*
- * Copyright 2020 Paul Schaub.
+ * Copyright 2021 Paul Schaub.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -14,9 +14,6 @@
  * limitations under the License.
  */
 /**
- * PGPainless SOP implementing a Stateless OpenPGP Command Line Interface.
- * @see <a href="https://tools.ietf.org/html/draft-dkg-openpgp-stateless-cli-01">
- *     Stateless OpenPGP Command Line Interface
- *     draft-dkg-openpgp-stateless-cli-01</a>
+ * Implementation of the java-sop package using pgpainless-core.
  */
 package org.pgpainless.sop;

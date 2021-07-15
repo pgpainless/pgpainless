@@ -19,6 +19,7 @@ import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.io.OutputStream;
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
@@ -66,6 +67,23 @@ public class ArmorUtils {
             }
         }
         return sb.toString();
+    }
+
+    public static ArmoredOutputStream toAsciiArmoredStream(PGPKeyRing keyRing, OutputStream outputStream) {
+        MultiMap<String, String> header = keyToHeader(keyRing);
+        return toAsciiArmoredStream(outputStream, header);
+    }
+
+    public static ArmoredOutputStream toAsciiArmoredStream(OutputStream outputStream, MultiMap<String, String> header) {
+        ArmoredOutputStream armoredOutputStream = ArmoredOutputStreamFactory.get(outputStream);
+        if (header != null) {
+            for (String headerKey : header.keySet()) {
+                for (String headerValue : header.get(headerKey)) {
+                    armoredOutputStream.addHeader(headerKey, headerValue);
+                }
+            }
+        }
+        return armoredOutputStream;
     }
 
     public static String toAsciiArmoredString(PGPPublicKeyRingCollection publicKeyRings) throws IOException {
@@ -124,18 +142,23 @@ public class ArmorUtils {
 
     public static String toAsciiArmoredString(InputStream inputStream, MultiMap<String, String> additionalHeaderValues) throws IOException {
         ByteArrayOutputStream out = new ByteArrayOutputStream();
-        ArmoredOutputStream armor = ArmoredOutputStreamFactory.get(out);
-        if (additionalHeaderValues != null) {
-            for (String header : additionalHeaderValues.keySet()) {
-                for (String value : additionalHeaderValues.get(header)) {
-                    armor.addHeader(header, value);
-                }
-            }
-        }
+        ArmoredOutputStream armor = toAsciiArmoredStream(out, additionalHeaderValues);
         Streams.pipeAll(inputStream, armor);
         armor.close();
 
         return out.toString();
+    }
+
+    public static ArmoredOutputStream createArmoredOutputStreamFor(PGPKeyRing keyRing, OutputStream outputStream) {
+        ArmoredOutputStream armor = ArmoredOutputStreamFactory.get(outputStream);
+        MultiMap<String, String> headerMap = keyToHeader(keyRing);
+        for (String header : headerMap.keySet()) {
+            for (String value : headerMap.get(header)) {
+                armor.addHeader(header, value);
+            }
+        }
+
+        return armor;
     }
 
     public static List<String> getCommendHeaderValues(ArmoredInputStream armor) {

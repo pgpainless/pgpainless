@@ -27,7 +27,7 @@ allprojects {
     apply plugin: 'checkstyle'
 
     // For non-sop modules, enable android api compatibility check
-    if (!it.name.equals('pgpainless-sop')) {
+    if (it.name.equals('pgpainless-core') || it.name.equals('sop-java') || it.name.equals('pgpainless-sop')) {
         // animalsniffer
         apply plugin: 'ru.vyarus.animalsniffer'
         dependencies {
