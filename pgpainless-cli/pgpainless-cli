@@ -15,4 +15,8 @@ popd  > /dev/null
 
 BASEDIR="$(cd ${SCRIPTDIR}/.. && pwd)"
 
-exec "${BASEDIR}/gradlew" run --quiet --args="${@}"
+# https://discuss.gradle.org/t/how-can-i-provide-command-line-args-to-application-started-with-gradle-run/6474/5
+printf -v var "'%s', " "$@"
+var=${var%??}
+
+exec "${BASEDIR}/gradlew" run --quiet -PappArgs="[$var]"

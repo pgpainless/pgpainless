@@ -63,4 +63,11 @@ jar {
     }
 }
 
+run {
+    // https://discuss.gradle.org/t/how-can-i-provide-command-line-args-to-application-started-with-gradle-run/6474/5
+    if (project.hasProperty("appArgs")) {
+        args Eval.me(appArgs)
+    }
+}
+
 tasks."jar".dependsOn(":pgpainless-core:assemble")
