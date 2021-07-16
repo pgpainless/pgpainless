@@ -1,15 +1,24 @@
-# PGPainless-SOP
+# PGPainless-CLI
 
-PGPainless-SOP is an implementation of the [Stateless OpenPGP Command Line Interface](https://tools.ietf.org/html/draft-dkg-openpgp-stateless-cli-01) specification based on PGPainless.
+PGPainless-CLI is an implementation of the [Stateless OpenPGP Command Line Interface](https://tools.ietf.org/html/draft-dkg-openpgp-stateless-cli-01) specification based on PGPainless.
+
+It plugs `pgpainless-sop` into `sop-java-picocli`.
 
 ## Build
 To build an executable, `gradle jar` should be sufficient. The resulting jar file can be found in `pgpainless-sop/build/libs/`.
 
 ## Execute
 
-Alternatively you can use the provided `./pgpainless-cli` script to execute PGPainless' Stateless Command Line Interface from within Gradle.
+The jar file produced in the step above is executable as is.
+
+```
+java -jar pgpainless-cli-XXX.jar help
+```
+
+Alternatively you can use the provided `./pgpainless-cli` script to directly build and execute PGPainless' Stateless Command Line Interface from within Gradle.
 
 To discover all available commands use
+
 ```
 ./pgpainless-cli help
 ```
