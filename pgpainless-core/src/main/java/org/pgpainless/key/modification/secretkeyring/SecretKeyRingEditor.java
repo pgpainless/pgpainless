@@ -29,6 +29,7 @@ import java.util.NoSuchElementException;
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
 
+import org.bouncycastle.bcpg.S2K;
 import org.bouncycastle.openpgp.PGPException;
 import org.bouncycastle.openpgp.PGPKeyPair;
 import org.bouncycastle.openpgp.PGPKeyRingGenerator;
@@ -593,8 +594,7 @@ public class SecretKeyRingEditor implements SecretKeyRingEditorInterface {
             Iterator<PGPSecretKey> secretKeyIterator = secretKeys.getSecretKeys();
             while (secretKeyIterator.hasNext()) {
                 PGPSecretKey secretKey = secretKeyIterator.next();
-                PGPPrivateKey privateKey = UnlockSecretKey.unlockSecretKey(secretKey, oldProtector);
-                secretKey = lockPrivateKey(privateKey, secretKey.getPublicKey(), newProtector);
+                secretKey = reencryptPrivateKey(secretKey, oldProtector, newProtector);
                 newlyEncryptedSecretKeys.add(secretKey);
             }
             return new PGPSecretKeyRing(newlyEncryptedSecretKeys);
@@ -607,8 +607,7 @@ public class SecretKeyRingEditor implements SecretKeyRingEditorInterface {
 
                 if (secretKey.getPublicKey().getKeyID() == keyId) {
                     // Re-encrypt only the selected subkey
-                    PGPPrivateKey privateKey = UnlockSecretKey.unlockSecretKey(secretKey, oldProtector);
-                    secretKey = lockPrivateKey(privateKey, secretKey.getPublicKey(), newProtector);
+                    secretKey = reencryptPrivateKey(secretKey, oldProtector, newProtector);
                 }
 
                 secretKeyList.add(secretKey);
@@ -617,12 +616,15 @@ public class SecretKeyRingEditor implements SecretKeyRingEditorInterface {
         }
     }
 
-    // TODO: Move to utility class
-    private PGPSecretKey lockPrivateKey(PGPPrivateKey privateKey, PGPPublicKey publicKey, SecretKeyRingProtector protector) throws PGPException {
-        PGPDigestCalculator checksumCalculator = ImplementationFactory.getInstance()
-                .getPGPDigestCalculator(defaultDigestHashAlgorithm);
-        PBESecretKeyEncryptor encryptor = protector.getEncryptor(publicKey.getKeyID());
-        PGPSecretKey secretKey = new PGPSecretKey(privateKey, publicKey, checksumCalculator, publicKey.isMasterKey(), encryptor);
+    private static PGPSecretKey reencryptPrivateKey(PGPSecretKey secretKey, SecretKeyRingProtector oldProtector, SecretKeyRingProtector newProtector) throws PGPException {
+        S2K s2k = secretKey.getS2K();
+        // If the key uses GNU_DUMMY_S2K, we leave it as is and skip this block
+        if (s2k == null || s2k.getType() != S2K.GNU_DUMMY_S2K) {
+            long secretKeyId = secretKey.getKeyID();
+            PBESecretKeyDecryptor decryptor = oldProtector.getDecryptor(secretKeyId);
+            PBESecretKeyEncryptor encryptor = newProtector.getEncryptor(secretKeyId);
+            secretKey = PGPSecretKey.copyWithNewPassword(secretKey, decryptor, encryptor);
+        }
         return secretKey;
     }
 }
