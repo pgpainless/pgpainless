@@ -91,7 +91,7 @@ public class GenerateKeyCmdTest {
     @Test
     @ExpectSystemExitWithStatus(13)
     public void unsupportedAsymmetricAlgorithmCausesExit13() throws SOPGPException.UnsupportedAsymmetricAlgo, SOPGPException.MissingArg, IOException {
-        when(generateKey.generate()).thenThrow(new SOPGPException.UnsupportedAsymmetricAlgo(new Exception()));
+        when(generateKey.generate()).thenThrow(new SOPGPException.UnsupportedAsymmetricAlgo("Unsupported asymmetric algorithm.", new Exception()));
         SopCLI.main(new String[] {"generate-key", "Alice"});
     }
 

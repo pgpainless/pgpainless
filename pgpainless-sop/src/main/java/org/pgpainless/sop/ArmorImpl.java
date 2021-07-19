@@ -38,7 +38,7 @@ public class ArmorImpl implements Armor {
 
     @Override
     public Armor label(ArmorLabel label) throws SOPGPException.UnsupportedOption {
-        throw new SOPGPException.UnsupportedOption();
+        throw new SOPGPException.UnsupportedOption("Setting custom Armor labels not supported.");
     }
 
     @Override

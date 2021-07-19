@@ -24,7 +24,6 @@ import java.util.List;
 
 import picocli.CommandLine;
 import sop.Ready;
-import sop.cli.picocli.Print;
 import sop.cli.picocli.SopCLI;
 import sop.enums.EncryptAs;
 import sop.exception.SOPGPException;
@@ -67,28 +66,19 @@ public class EncryptCmd implements Runnable {
             try {
                 encrypt.mode(type);
             } catch (SOPGPException.UnsupportedOption unsupportedOption) {
-                Print.errln("Unsupported option '--as'.");
-                Print.trace(unsupportedOption);
-                System.exit(unsupportedOption.getExitCode());
+                throw new SOPGPException.UnsupportedOption("Unsupported option '--as'.", unsupportedOption);
             }
         }
 
         if (withPassword.isEmpty() && certs.isEmpty()) {
-            Print.errln("At least one password or cert file required for encryption.");
-            System.exit(19);
+            throw new SOPGPException.MissingArg("At least one password or cert file required for encryption.");
         }
 
         for (String password : withPassword) {
             try {
                 encrypt.withPassword(password);
-            } catch (SOPGPException.PasswordNotHumanReadable passwordNotHumanReadable) {
-                Print.errln("Password is not human-readable.");
-                Print.trace(passwordNotHumanReadable);
-                System.exit(passwordNotHumanReadable.getExitCode());
             } catch (SOPGPException.UnsupportedOption unsupportedOption) {
-                Print.errln("Unsupported option '--with-password'.");
-                Print.trace(unsupportedOption);
-                System.exit(unsupportedOption.getExitCode());
+                throw new SOPGPException.UnsupportedOption("Unsupported option '--with-password'.", unsupportedOption);
             }
         }
 
@@ -96,29 +86,17 @@ public class EncryptCmd implements Runnable {
             try (FileInputStream keyIn = new FileInputStream(keyFile)) {
                 encrypt.signWith(keyIn);
             } catch (FileNotFoundException e) {
-                Print.errln("Key file " + keyFile.getAbsolutePath() + " not found.");
-                Print.trace(e);
-                System.exit(1);
+                throw new SOPGPException.MissingInput("Key file " + keyFile.getAbsolutePath() + " not found.", e);
             } catch (IOException e) {
-                Print.errln("IO Error.");
-                Print.trace(e);
-                System.exit(1);
+                throw new RuntimeException(e);
             } catch (SOPGPException.KeyIsProtected keyIsProtected) {
-                Print.errln("Key from " + keyFile.getAbsolutePath() + " is password protected.");
-                Print.trace(keyIsProtected);
-                System.exit(1);
+                throw new SOPGPException.KeyIsProtected("Key from " + keyFile.getAbsolutePath() + " is password protected.", keyIsProtected);
             } catch (SOPGPException.UnsupportedAsymmetricAlgo unsupportedAsymmetricAlgo) {
-                Print.errln("Key from " + keyFile.getAbsolutePath() + " has unsupported asymmetric algorithm.");
-                Print.trace(unsupportedAsymmetricAlgo);
-                System.exit(unsupportedAsymmetricAlgo.getExitCode());
+                throw new SOPGPException.UnsupportedAsymmetricAlgo("Key from " + keyFile.getAbsolutePath() + " has unsupported asymmetric algorithm.", unsupportedAsymmetricAlgo);
             } catch (SOPGPException.CertCannotSign certCannotSign) {
-                Print.errln("Key from " + keyFile.getAbsolutePath() + " cannot sign.");
-                Print.trace(certCannotSign);
-                System.exit(1);
+                throw new RuntimeException("Key from " + keyFile.getAbsolutePath() + " cannot sign.", certCannotSign);
             } catch (SOPGPException.BadData badData) {
-                Print.errln("Key file " + keyFile.getAbsolutePath() + " does not contain a valid OpenPGP private key.");
-                Print.trace(badData);
-                System.exit(badData.getExitCode());
+                throw new SOPGPException.BadData("Key file " + keyFile.getAbsolutePath() + " does not contain a valid OpenPGP private key.", badData);
             }
         }
 
@@ -126,25 +104,15 @@ public class EncryptCmd implements Runnable {
             try (FileInputStream certIn = new FileInputStream(certFile)) {
                 encrypt.withCert(certIn);
             } catch (FileNotFoundException e) {
-                Print.errln("Certificate file " + certFile.getAbsolutePath() + " not found.");
-                Print.trace(e);
-                System.exit(1);
+                throw new SOPGPException.MissingInput("Certificate file " + certFile.getAbsolutePath() + " not found.", e);
             } catch (IOException e) {
-                Print.errln("IO Error.");
-                Print.trace(e);
-                System.exit(1);
+                throw new RuntimeException(e);
             } catch (SOPGPException.UnsupportedAsymmetricAlgo unsupportedAsymmetricAlgo) {
-                Print.errln("Certificate from " + certFile.getAbsolutePath() + " has unsupported asymmetric algorithm.");
-                Print.trace(unsupportedAsymmetricAlgo);
-                System.exit(unsupportedAsymmetricAlgo.getExitCode());
+                throw new SOPGPException.UnsupportedAsymmetricAlgo("Certificate from " + certFile.getAbsolutePath() + " has unsupported asymmetric algorithm.", unsupportedAsymmetricAlgo);
             } catch (SOPGPException.CertCannotEncrypt certCannotEncrypt) {
-                Print.errln("Certificate from " + certFile.getAbsolutePath() + " is not capable of encryption.");
-                Print.trace(certCannotEncrypt);
-                System.exit(certCannotEncrypt.getExitCode());
+                throw new SOPGPException.CertCannotEncrypt("Certificate from " + certFile.getAbsolutePath() + " is not capable of encryption.", certCannotEncrypt);
             } catch (SOPGPException.BadData badData) {
-                Print.errln("Certificate file " + certFile.getAbsolutePath() + " does not contain a valid OpenPGP certificate.");
-                Print.trace(badData);
-                System.exit(badData.getExitCode());
+                throw new SOPGPException.BadData("Certificate file " + certFile.getAbsolutePath() + " does not contain a valid OpenPGP certificate.", badData);
             }
         }
 
@@ -156,9 +124,7 @@ public class EncryptCmd implements Runnable {
             Ready ready = encrypt.plaintext(System.in);
             ready.writeTo(System.out);
         } catch (IOException e) {
-            Print.errln("IO Error.");
-            Print.trace(e);
-            System.exit(1);
+            throw new RuntimeException(e);
         }
     }
 }

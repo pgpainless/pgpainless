@@ -106,7 +106,7 @@ public class VerifyCmdTest {
     @Test
     @ExpectSystemExitWithStatus(37)
     public void notAfter_unsupportedOptionCausesExit37() throws SOPGPException.UnsupportedOption {
-        when(verify.notAfter(any())).thenThrow(new SOPGPException.UnsupportedOption());
+        when(verify.notAfter(any())).thenThrow(new SOPGPException.UnsupportedOption("Setting upper signature date boundary not supported."));
         SopCLI.main(new String[] {"verify", "--not-after", "2019-10-29T18:36:45Z", signature.getAbsolutePath(), cert.getAbsolutePath()});
     }
 
@@ -133,7 +133,7 @@ public class VerifyCmdTest {
     @Test
     @ExpectSystemExitWithStatus(37)
     public void notBefore_unsupportedOptionCausesExit37() throws SOPGPException.UnsupportedOption {
-        when(verify.notBefore(any())).thenThrow(new SOPGPException.UnsupportedOption());
+        when(verify.notBefore(any())).thenThrow(new SOPGPException.UnsupportedOption("Setting lower signature date boundary not supported."));
         SopCLI.main(new String[] {"verify", "--not-before", "2019-10-29T18:36:45Z", signature.getAbsolutePath(), cert.getAbsolutePath()});
     }
 

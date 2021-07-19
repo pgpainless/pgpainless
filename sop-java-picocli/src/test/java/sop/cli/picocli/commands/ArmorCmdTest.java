@@ -92,7 +92,7 @@ public class ArmorCmdTest {
     @Test
     @ExpectSystemExitWithStatus(37)
     public void ifLabelsUnsupportedExit37() throws SOPGPException.UnsupportedOption {
-        when(armor.label(any())).thenThrow(new SOPGPException.UnsupportedOption());
+        when(armor.label(any())).thenThrow(new SOPGPException.UnsupportedOption("Custom Armor labels are not supported."));
 
         SopCLI.main(new String[] {"armor", "--label", "Sig"});
     }
@@ -100,7 +100,7 @@ public class ArmorCmdTest {
     @Test
     @ExpectSystemExitWithStatus(37)
     public void ifAllowNestedUnsupportedExit37() throws SOPGPException.UnsupportedOption {
-        when(armor.allowNested()).thenThrow(new SOPGPException.UnsupportedOption());
+        when(armor.allowNested()).thenThrow(new SOPGPException.UnsupportedOption("Allowing nested Armor not supported."));
 
         SopCLI.main(new String[] {"armor", "--allow-nested"});
     }

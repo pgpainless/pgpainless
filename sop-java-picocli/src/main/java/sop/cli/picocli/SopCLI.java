@@ -58,6 +58,8 @@ public class SopCLI {
     public static int execute(String[] args) {
         return new CommandLine(SopCLI.class)
                 .setCommandName(EXECUTABLE_NAME)
+                .setExecutionExceptionHandler(new SOPExecutionExceptionHandler())
+                .setExitCodeExceptionMapper(new SOPExceptionExitCodeMapper())
                 .setCaseInsensitiveEnumValuesAllowed(true)
                 .execute(args);
     }

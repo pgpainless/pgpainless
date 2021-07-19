@@ -87,7 +87,7 @@ public class GenerateKeyImpl implements GenerateKey {
                 }
             };
         } catch (InvalidAlgorithmParameterException | NoSuchAlgorithmException e) {
-            throw new SOPGPException.UnsupportedAsymmetricAlgo(e);
+            throw new SOPGPException.UnsupportedAsymmetricAlgo("Unsupported asymmetric algorithm.", e);
         } catch (PGPException e) {
             throw new RuntimeException(e);
         }

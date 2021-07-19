@@ -87,7 +87,7 @@ public class DecryptImpl implements Decrypt {
 
     @Override
     public DecryptImpl withSessionKey(SessionKey sessionKey) throws SOPGPException.UnsupportedOption {
-        throw new SOPGPException.UnsupportedOption();
+        throw new SOPGPException.UnsupportedOption("Setting custom session key not supported.");
     }
 
     @Override

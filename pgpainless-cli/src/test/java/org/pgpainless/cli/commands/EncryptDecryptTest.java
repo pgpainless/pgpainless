@@ -101,7 +101,6 @@ public class EncryptDecryptTest {
         msgAscOut.close();
 
         File verifyFile = new File(tempDir, "verify.txt");
-        assertTrue(verifyFile.createNewFile());
 
         FileInputStream msgAscIn = new FileInputStream(msgAscFile);
         System.setIn(msgAscIn);

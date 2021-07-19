@@ -74,7 +74,7 @@ public class SignCmdTest {
     @Test
     @ExpectSystemExitWithStatus(37)
     public void as_unsupportedOptionCausesExit37() throws SOPGPException.UnsupportedOption {
-        when(sign.mode(any())).thenThrow(new SOPGPException.UnsupportedOption());
+        when(sign.mode(any())).thenThrow(new SOPGPException.UnsupportedOption("Setting signing mode not supported."));
         SopCLI.main(new String[] {"sign", "--as", "binary", keyFile.getAbsolutePath()});
     }
 
