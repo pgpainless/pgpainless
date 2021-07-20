@@ -1,5 +1,24 @@
 # PGPainless Changelog
 
+## 0.2.4
+- Java based Stateless OpenPGP Protocol
+  - Introduce `sop-java` module  
+  Contains Java interfaces modelling the Stateless OpenPGP Protocol
+  - Introduce `sop-java-picocli`  
+  Command Line Interface frontend for `sop-java` based OpenPGP implementations
+  - `pgpainless-sop` now contains an implementation of `sop-java` using `pgpainless-core`
+  - `pgpainless-cli` now contains a ready to use OpenPGP command line application  
+  It simply plugs `pgpainless-sop` into `sop-java-picocli`.
+- Remove deprecated encryption API
+- Remove deprecated decryption API
+- Add `PGPainless.extractCertificate()` and `PGPainless.asciiArmor()` methods
+- `OpenPgpMetadata`: `getDecryptionKey()` and `getVerifiedSignatures()` now return `SubkeyIdentifier` objects
+- `KeyRingReader` now properly ignores marker packets
+- Encryption: File-related metadata (e.g. file name) moved to `ProducerOptions`
+- `pgpainless-cli/pgpainless-cli` executable script: Fix piping and parameter passing
+- `sop-java-picocli`: Add `help` command
+- When changing passphrases: Subkeys with `GNU_DUMMY_S2K` will now be ignored
+
 ## 0.2.3
 - Introduce new simplified decryption API  
   The new API (`withOptions(ConsumerOptions)`) resembles the encryption API and is more friendly to dynamic
