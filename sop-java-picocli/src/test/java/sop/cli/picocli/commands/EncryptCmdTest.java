@@ -58,7 +58,7 @@ public class EncryptCmdTest {
 
     @Test
     @ExpectSystemExitWithStatus(19)
-    public void missingPasswordAndCertFileCauseExit19() {
+    public void missingBothPasswordAndCertFileCauseExit19() {
         SopCLI.main(new String[] {"encrypt", "--no-armor"});
     }
 
