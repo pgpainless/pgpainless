@@ -239,6 +239,7 @@ public class SignaturePicker {
         PGPSignature latestUserIdCert = null;
         for (PGPSignature signature : signatures) {
             try {
+                SignatureValidator.verifyWasPossiblyMadeByKey(primaryKey, signature);
                 SignatureValidator.signatureIsCertification().verify(signature);
                 SignatureValidator.signatureStructureIsAcceptable(primaryKey, policy).verify(signature);
                 SignatureValidator.signatureIsAlreadyEffective(validationDate).verify(signature);

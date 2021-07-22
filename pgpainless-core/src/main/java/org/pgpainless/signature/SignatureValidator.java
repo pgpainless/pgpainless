@@ -38,6 +38,7 @@ import org.pgpainless.algorithm.SignatureSubpacket;
 import org.pgpainless.algorithm.SignatureType;
 import org.pgpainless.exception.SignatureValidationException;
 import org.pgpainless.implementation.ImplementationFactory;
+import org.pgpainless.key.OpenPgpV4Fingerprint;
 import org.pgpainless.policy.Policy;
 import org.pgpainless.signature.subpackets.SignatureSubpacketsUtil;
 import org.pgpainless.util.BCUtil;
@@ -101,6 +102,44 @@ public abstract class SignatureValidator {
             default:
                 throw new SignatureValidationException("Signature is not a valid user-id certification/revocation signature: " + type);
         }
+    }
+
+    /**
+     * Check, whether there is the possibility that the given signature was created by the given key.
+     * This method throws a {@link SignatureValidationException} if we can say with certainty that the signature
+     * was not created by the given key (e.g. if the sig carries another issuer, issuer fingerprint packet).
+     *
+     * If there is no information found in the signature about who created it (no issuer, no fingerprint),
+     * return true since it is plausible that the given key created the sig.
+     *
+     * @param signingKey signing key
+     * @param signature signature
+     * @return true only if the signing key either created the signature or the signature doesn't carry signer information
+     * @throws SignatureValidationException if the sig was not created by the key
+     */
+    public static boolean verifyWasPossiblyMadeByKey(PGPPublicKey signingKey, PGPSignature signature) throws SignatureValidationException {
+        OpenPgpV4Fingerprint signingKeyFingerprint = new OpenPgpV4Fingerprint(signingKey);
+
+        Long issuer = SignatureSubpacketsUtil.getIssuerKeyIdAsLong(signature);
+        if (issuer != null) {
+            if (issuer != signingKey.getKeyID()) {
+                throw new SignatureValidationException("Signature was not created by " + signingKeyFingerprint + " (signature issuer: " + Long.toHexString(issuer) + ")");
+            } else {
+                return true;
+            }
+        }
+
+        OpenPgpV4Fingerprint fingerprint = SignatureSubpacketsUtil.getIssuerFingerprintAsOpenPgpV4Fingerprint(signature);
+        if (fingerprint != null) {
+            if (!fingerprint.equals(signingKeyFingerprint)) {
+                throw new SignatureValidationException("Signature was not created by " + signingKeyFingerprint + " (signature fingerprint: " + fingerprint + ")");
+            } else {
+                return true;
+            }
+        }
+
+        // No issuer information found, so we cannot rule out that we did not create the sig
+        return true;
     }
 
     public static boolean verifyUserIdCertification(String userId, PGPSignature signature, PGPPublicKey primaryKey, Policy policy, Date validationDate)

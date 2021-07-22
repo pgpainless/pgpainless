@@ -104,6 +104,14 @@ public class SignatureSubpacketsUtil {
         return hashedOrUnhashed(signature, SignatureSubpacket.issuerKeyId);
     }
 
+    public static Long getIssuerKeyIdAsLong(PGPSignature signature) {
+        IssuerKeyID keyID = getIssuerKeyId(signature);
+        if (keyID == null) {
+            return null;
+        }
+        return keyID.getKeyID();
+    }
+
     /**
      * Return the revocation reason subpacket of the signature.
      * Since this packet is rather important for revocations, we only search for it in the
