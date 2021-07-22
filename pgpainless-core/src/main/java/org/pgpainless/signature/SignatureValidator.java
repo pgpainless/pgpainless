@@ -48,11 +48,32 @@ public abstract class SignatureValidator {
 
     public abstract void verify(PGPSignature signature) throws SignatureValidationException;
 
+    /**
+     * Initialize a signature and verify it afterwards by updating it with the signed data.
+     *
+     * @param signature OpenPGP signature
+     * @param signedData input stream containing the signed data
+     * @param signingKey the key that created the signature
+     * @param policy policy
+     * @param validationDate reference date of signature verification
+     * @return true if the signature is successfully verified
+     *
+     * @throws SignatureValidationException if the signature verification fails for some reason
+     */
     public static boolean verifyUninitializedSignature(PGPSignature signature, InputStream signedData, PGPPublicKey signingKey, Policy policy, Date validationDate) throws SignatureValidationException {
         initializeSignatureAndUpdateWithSignedData(signature, signedData, signingKey);
         return verifyInitializedSignature(signature, signingKey, policy, validationDate);
     }
 
+    /**
+     * Initialize a signature and then update it with the signed data from the given {@link InputStream}.
+     *
+     * @param signature OpenPGP signature
+     * @param signedData input stream containing signed data
+     * @param signingKey key that created the signature
+     *
+     * @throws SignatureValidationException in case the signature cannot be verified for some reason
+     */
     public static void initializeSignatureAndUpdateWithSignedData(PGPSignature signature, InputStream signedData, PGPPublicKey signingKey)
             throws SignatureValidationException {
         try {
@@ -68,8 +89,21 @@ public abstract class SignatureValidator {
         }
     }
 
+    /**
+     * Verify an initialized signature.
+     * An initialized signature was already updated with the signed data.
+     *
+     * @param signature OpenPGP signature
+     * @param signingKey key that created the signature
+     * @param policy policy
+     * @param validationDate reference date for signature verification
+     * @return true if signature is verified successfully
+     *
+     * @throws SignatureValidationException if signature verification fails for some reason
+     */
     public static boolean verifyInitializedSignature(PGPSignature signature, PGPPublicKey signingKey, Policy policy, Date validationDate)
             throws SignatureValidationException {
+        verifyWasPossiblyMadeByKey(signingKey, signature);
         signatureStructureIsAcceptable(signingKey, policy).verify(signature);
         signatureIsEffective(validationDate).verify(signature);
 
@@ -83,11 +117,36 @@ public abstract class SignatureValidator {
         }
     }
 
+    /**
+     * Verify a signature (certification or revocation) over a user-id.
+     *
+     * @param userId user-id
+     * @param signature self-signature
+     * @param primaryKey primary key that created the signature
+     * @param policy policy
+     * @param validationDate reference date for signature verification
+     * @return true if the signature is successfully verified
+     *
+     * @throws SignatureValidationException if signature verification fails for some reason
+     */
     public static boolean verifySignatureOverUserId(String userId, PGPSignature signature, PGPPublicKey primaryKey, Policy policy, Date validationDate)
             throws SignatureValidationException {
         return verifySignatureOverUserId(userId, signature, primaryKey, primaryKey, policy, validationDate);
     }
 
+    /**
+     * Verify a signature (certification or revocation) over a user-id.
+     *
+     * @param userId user-id
+     * @param signature certification signature
+     * @param signingKey key that created the certification
+     * @param keyWithUserId key carrying the user-id
+     * @param policy policy
+     * @param validationDate reference date for signature verification
+     * @return true if signature verification is successful
+     *
+     * @throws SignatureValidationException if signature verification fails for some reason
+     */
     public static boolean verifySignatureOverUserId(String userId, PGPSignature signature, PGPPublicKey signingKey, PGPPublicKey keyWithUserId, Policy policy, Date validationDate)
             throws SignatureValidationException {
         SignatureType type = SignatureType.valueOf(signature.getSignatureType());
@@ -142,14 +201,38 @@ public abstract class SignatureValidator {
         return true;
     }
 
+    /**
+     * Verify a certification self-signature over a user-id.
+     *
+     * @param userId user-id
+     * @param signature certification signature
+     * @param primaryKey primary key
+     * @param policy policy
+     * @param validationDate reference date for signature verification
+     * @return true if the self-signature is verified successfully
+     *
+     * @throws SignatureValidationException if signature verification fails for some reason
+     */
     public static boolean verifyUserIdCertification(String userId, PGPSignature signature, PGPPublicKey primaryKey, Policy policy, Date validationDate)
             throws SignatureValidationException {
         return verifyUserIdCertification(userId, signature, primaryKey, primaryKey, policy, validationDate);
     }
 
+    /**
+     * Verify a user-id certification.
+     *
+     * @param userId user-id
+     * @param signature certification signature
+     * @param signingKey key that created the certification
+     * @param keyWithUserId primary key that carries the user-id
+     * @param policy policy
+     * @param validationDate reference date for signature verification
+     * @return true if signature verification is successful
+     *
+     * @throws SignatureValidationException if signature verification fails for some reason
+     */
     public static boolean verifyUserIdCertification(String userId, PGPSignature signature, PGPPublicKey signingKey, PGPPublicKey keyWithUserId, Policy policy, Date validationDate)
             throws SignatureValidationException {
-
         signatureIsCertification().verify(signature);
         signatureStructureIsAcceptable(signingKey, policy).verify(signature);
         signatureIsEffective(validationDate).verify(signature);
@@ -157,11 +240,37 @@ public abstract class SignatureValidator {
 
         return true;
     }
+
+    /**
+     * Verify a user-id revocation self-signature.
+     *
+     * @param userId user-id
+     * @param signature user-id revocation signature
+     * @param primaryKey primary key
+     * @param policy policy
+     * @param validationDate reference date for signature verification
+     * @return true if the user-id revocation signature is successfully verified
+     *
+     * @throws SignatureValidationException if signature verification fails for some reason
+     */
     public static boolean verifyUserIdRevocation(String userId, PGPSignature signature, PGPPublicKey primaryKey, Policy policy, Date validationDate)
             throws SignatureValidationException {
         return verifyUserIdRevocation(userId, signature, primaryKey, primaryKey, policy, validationDate);
     }
 
+    /**
+     * Verify a user-id revocation signature.
+     *
+     * @param userId user-id
+     * @param signature revocation signature
+     * @param signingKey key that created the revocation signature
+     * @param keyWithUserId primary key carrying the user-id
+     * @param policy policy
+     * @param validationDate reference date for signature verification
+     * @return true if the user-id revocation signature is successfully verified
+     *
+     * @throws SignatureValidationException if signature verification fails for some reason
+     */
     public static boolean verifyUserIdRevocation(String userId, PGPSignature signature, PGPPublicKey signingKey, PGPPublicKey keyWithUserId, Policy policy, Date validationDate)
             throws SignatureValidationException {
         signatureIsOfType(SignatureType.CERTIFICATION_REVOCATION).verify(signature);
@@ -172,6 +281,18 @@ public abstract class SignatureValidator {
         return true;
     }
 
+    /**
+     * Verify a certification self-signature over a user-attributes packet.
+     *
+     * @param userAttributes user attributes
+     * @param signature certification self-signature
+     * @param primaryKey primary key that carries the user-attributes
+     * @param policy policy
+     * @param validationDate reference date for signature verification
+     * @return true if the signature can be verified successfully
+     *
+     * @throws SignatureValidationException if signature verification fails for some reason
+     */
     public static boolean verifyUserAttributesCertification(PGPUserAttributeSubpacketVector userAttributes,
                                                             PGPSignature signature, PGPPublicKey primaryKey,
                                                             Policy policy, Date validationDate)
@@ -179,6 +300,19 @@ public abstract class SignatureValidator {
         return verifyUserAttributesCertification(userAttributes, signature, primaryKey, primaryKey, policy, validationDate);
     }
 
+    /**
+     * Verify a certification signature over a user-attributes packet.
+     *
+     * @param userAttributes user attributes
+     * @param signature certification signature
+     * @param signingKey key that created the user-attributes certification
+     * @param keyWithUserAttributes key that carries the user-attributes certification
+     * @param policy policy
+     * @param validationDate reference date for signature verification
+     * @return true if the signature can be verified successfully
+     *
+     * @throws SignatureValidationException if signature verification fails for some reason
+     */
     public static boolean verifyUserAttributesCertification(PGPUserAttributeSubpacketVector userAttributes,
                                                             PGPSignature signature, PGPPublicKey signingKey,
                                                             PGPPublicKey keyWithUserAttributes, Policy policy,
@@ -192,6 +326,18 @@ public abstract class SignatureValidator {
         return true;
     }
 
+    /**
+     * Verify a user-attributes revocation self-signature.
+     *
+     * @param userAttributes user-attributes
+     * @param signature user-attributes revocation signature
+     * @param primaryKey primary key that carries the user-attributes
+     * @param policy policy
+     * @param validationDate reference date for signature verification
+     * @return true if the revocation signature can be verified successfully
+     *
+     * @throws SignatureValidationException if signature verification fails for some reason
+     */
     public static boolean verifyUserAttributesRevocation(PGPUserAttributeSubpacketVector userAttributes,
                                                          PGPSignature signature, PGPPublicKey primaryKey,
                                                          Policy policy, Date validationDate)
@@ -199,6 +345,19 @@ public abstract class SignatureValidator {
         return verifyUserAttributesRevocation(userAttributes, signature, primaryKey, primaryKey, policy, validationDate);
     }
 
+    /**
+     * Verify a user-attributes revocation signature.
+     *
+     * @param userAttributes user-attributes
+     * @param signature revocation signature
+     * @param signingKey revocation key
+     * @param keyWithUserAttributes key that carries the user-attributes
+     * @param policy policy
+     * @param validationDate reference date for signature verification
+     * @return true if the revocation signature can be verified successfully
+     *
+     * @throws SignatureValidationException if signature verification fails for some reason
+     */
     public static boolean verifyUserAttributesRevocation(PGPUserAttributeSubpacketVector userAttributes,
                                                          PGPSignature signature, PGPPublicKey signingKey,
                                                          PGPPublicKey keyWithUserAttributes, Policy policy,
@@ -212,6 +371,18 @@ public abstract class SignatureValidator {
         return true;
     }
 
+    /**
+     * Verify a subkey binding signature.
+     *
+     * @param signature binding signature
+     * @param primaryKey primary key
+     * @param subkey subkey
+     * @param policy policy
+     * @param validationDate reference date for signature verification
+     * @return true if the binding signature can be verified successfully
+     *
+     * @throws SignatureValidationException if signature verification fails for some reason
+     */
     public static boolean verifySubkeyBindingSignature(PGPSignature signature, PGPPublicKey primaryKey, PGPPublicKey subkey, Policy policy, Date validationDate)
             throws SignatureValidationException {
         signatureIsOfType(SignatureType.SUBKEY_BINDING).verify(signature);
@@ -223,6 +394,18 @@ public abstract class SignatureValidator {
         return true;
     }
 
+    /**
+     * Verify a subkey revocation signature.
+     *
+     * @param signature subkey revocation signature
+     * @param primaryKey primary key
+     * @param subkey subkey
+     * @param policy policy
+     * @param validationDate reference date for signature verification
+     * @return true if the subkey revocation signature can be verified successfully
+     *
+     * @throws SignatureValidationException if signature verification fails for some reason
+     */
     public static boolean verifySubkeyBindingRevocation(PGPSignature signature, PGPPublicKey primaryKey, PGPPublicKey subkey, Policy policy, Date validationDate) throws SignatureValidationException {
         signatureIsOfType(SignatureType.SUBKEY_REVOCATION).verify(signature);
         signatureStructureIsAcceptable(primaryKey, policy).verify(signature);
@@ -232,11 +415,34 @@ public abstract class SignatureValidator {
         return true;
     }
 
+    /**
+     * Verify a direct-key self-signature.
+     *
+     * @param signature signature
+     * @param primaryKey primary key
+     * @param policy policy
+     * @param validationDate reference date for signature verification
+     * @return true if the signature can be verified successfully
+     *
+     * @throws SignatureValidationException if signature verification fails for some reason
+     */
     public static boolean verifyDirectKeySignature(PGPSignature signature, PGPPublicKey primaryKey, Policy policy, Date validationDate)
             throws SignatureValidationException {
         return verifyDirectKeySignature(signature, primaryKey, primaryKey, policy, validationDate);
     }
 
+    /**
+     * Verify a direct-key signature.
+     *
+     * @param signature signature
+     * @param signingKey signing key
+     * @param signedKey signed key
+     * @param policy policy
+     * @param validationDate reference date for signature verification
+     * @return true if signature verification is successful
+     *
+     * @throws SignatureValidationException if signature verification fails for some reason
+     */
     public static boolean verifyDirectKeySignature(PGPSignature signature, PGPPublicKey signingKey, PGPPublicKey signedKey, Policy policy, Date validationDate)
             throws SignatureValidationException {
         signatureIsOfType(SignatureType.DIRECT_KEY).verify(signature);
@@ -247,6 +453,17 @@ public abstract class SignatureValidator {
         return true;
     }
 
+    /**
+     * Verify a key revocation signature.
+     *
+     * @param signature signature
+     * @param primaryKey primary key
+     * @param policy policy
+     * @param validationDate reference date for signature verification
+     * @return true if signature verification is successful
+     *
+     * @throws SignatureValidationException if signature verification fails for some reason
+     */
     public static boolean verifyKeyRevocationSignature(PGPSignature signature, PGPPublicKey primaryKey, Policy policy, Date validationDate)
             throws SignatureValidationException {
         signatureIsOfType(SignatureType.KEY_REVOCATION).verify(signature);
@@ -257,6 +474,16 @@ public abstract class SignatureValidator {
         return true;
     }
 
+    /**
+     * Verify that a subkey binding signature - if the subkey is signing-capable - contains a valid primary key
+     * binding signature.
+     *
+     * @param primaryKey primary key
+     * @param subkey subkey
+     * @param policy policy
+     * @param validationDate reference date for signature verification
+     * @return validator
+     */
     private static SignatureValidator hasValidPrimaryKeyBindingSignatureIfRequired(PGPPublicKey primaryKey, PGPPublicKey subkey, Policy policy, Date validationDate) {
         return new SignatureValidator() {
             @Override
@@ -297,6 +524,13 @@ public abstract class SignatureValidator {
         };
     }
 
+    /**
+     * Verify that a signature has an acceptable structure.
+     *
+     * @param signingKey signing key
+     * @param policy policy
+     * @return validator
+     */
     public static SignatureValidator signatureStructureIsAcceptable(PGPPublicKey signingKey, Policy policy) {
         return new SignatureValidator() {
             @Override
@@ -310,6 +544,13 @@ public abstract class SignatureValidator {
         };
     }
 
+    /**
+     * Verify that a signature was made using an acceptable {@link PublicKeyAlgorithm}.
+     *
+     * @param policy policy
+     * @param signingKey signing key
+     * @return validator
+     */
     private static SignatureValidator signatureUsesAcceptablePublicKeyAlgorithm(Policy policy, PGPPublicKey signingKey) {
         return new SignatureValidator() {
             @Override
@@ -324,6 +565,12 @@ public abstract class SignatureValidator {
         };
     }
 
+    /**
+     * Verify that a signature uses an acceptable {@link HashAlgorithm}.
+     *
+     * @param policy policy
+     * @return validator
+     */
     private static SignatureValidator signatureUsesAcceptableHashAlgorithm(Policy policy) {
         return new SignatureValidator() {
             @Override
@@ -357,6 +604,12 @@ public abstract class SignatureValidator {
         return hashAlgorithmPolicy;
     }
 
+    /**
+     * Verify that a signature does not carry critical unknown notations.
+     *
+     * @param registry notation registry of known notations
+     * @return validator
+     */
     public static SignatureValidator signatureDoesNotHaveCriticalUnknownNotations(NotationRegistry registry) {
         return new SignatureValidator() {
             @Override
@@ -374,6 +627,11 @@ public abstract class SignatureValidator {
         };
     }
 
+    /**
+     * Verify that a signature does not contain critical unknown subpackets.
+     *
+     * @return validator
+     */
     public static SignatureValidator signatureDoesNotHaveCriticalUnknownSubpackets() {
         return new SignatureValidator() {
             @Override
@@ -390,6 +648,12 @@ public abstract class SignatureValidator {
         };
     }
 
+    /**
+     * Verify that a signature is effective at the given reference date.
+     *
+     * @param validationDate reference date for signature verification
+     * @return validator
+     */
     public static SignatureValidator signatureIsEffective(Date validationDate) {
         return new SignatureValidator() {
             @Override
@@ -400,6 +664,12 @@ public abstract class SignatureValidator {
         };
     }
 
+    /**
+     * Verify that a signature was created prior to the given reference date.
+     *
+     * @param validationDate reference date for signature verification
+     * @return validator
+     */
     public static SignatureValidator signatureIsAlreadyEffective(Date validationDate) {
         return new SignatureValidator() {
             @Override
@@ -417,6 +687,12 @@ public abstract class SignatureValidator {
         };
     }
 
+    /**
+     * Verify that a signature is not yet expired.
+     *
+     * @param validationDate reference date for signature verification
+     * @return validator
+     */
     public static SignatureValidator signatureIsNotYetExpired(Date validationDate) {
         return new SignatureValidator() {
             @Override
@@ -434,6 +710,15 @@ public abstract class SignatureValidator {
         };
     }
 
+    /**
+     * Verify that a signature is not malformed.
+     * A signature is malformed if it has no hashed creation time subpacket,
+     * it predates the creation time of the signing key, or it predates the creation date
+     * of the signing key binding signature.
+     *
+     * @param creator signing key
+     * @return validator
+     */
     public static SignatureValidator signatureIsNotMalformed(PGPPublicKey creator) {
         return new SignatureValidator() {
             @Override
@@ -445,6 +730,11 @@ public abstract class SignatureValidator {
         };
     }
 
+    /**
+     * Verify that a signature has a hashed creation time subpacket.
+     *
+     * @return validator
+     */
     public static SignatureValidator signatureHasHashedCreationTime() {
         return new SignatureValidator() {
             @Override
@@ -457,6 +747,12 @@ public abstract class SignatureValidator {
         };
     }
 
+    /**
+     * Verify that a signature does not predate the creation time of the signing key.
+     *
+     * @param key signing key
+     * @return validator
+     */
     public static SignatureValidator signatureDoesNotPredateSigningKey(PGPPublicKey key) {
         return new SignatureValidator() {
             @Override
@@ -486,6 +782,12 @@ public abstract class SignatureValidator {
         };
     }
 
+    /**
+     * Verify that a signature does not predate the binding date of the signing key.
+     *
+     * @param signingKey signing key
+     * @return validator
+     */
     public static SignatureValidator signatureDoesNotPredateSigningKeyBindingDate(PGPPublicKey signingKey) {
         return new SignatureValidator() {
             @Override
@@ -511,6 +813,13 @@ public abstract class SignatureValidator {
         };
     }
 
+    /**
+     * Verify that a subkey binding signature is correct.
+     *
+     * @param primaryKey primary key
+     * @param subkey subkey
+     * @return validator
+     */
     public static SignatureValidator correctSubkeyBindingSignature(PGPPublicKey primaryKey, PGPPublicKey subkey) {
         return new SignatureValidator() {
             @Override
@@ -531,6 +840,13 @@ public abstract class SignatureValidator {
         };
     }
 
+    /**
+     * Verify that a primary key binding signature is correct.
+     *
+     * @param primaryKey primary key
+     * @param subkey subkey
+     * @return validator
+     */
     public static SignatureValidator correctPrimaryKeyBindingSignature(PGPPublicKey primaryKey, PGPPublicKey subkey) {
         return new SignatureValidator() {
             @Override
@@ -548,6 +864,13 @@ public abstract class SignatureValidator {
         };
     }
 
+    /**
+     * Verify that a direct-key signature is correct.
+     *
+     * @param signer signing key
+     * @param signee signed key
+     * @return validator
+     */
     public static SignatureValidator correctSignatureOverKey(PGPPublicKey signer, PGPPublicKey signee) {
         return new SignatureValidator() {
             @Override
@@ -570,6 +893,11 @@ public abstract class SignatureValidator {
         };
     }
 
+    /**
+     * Verify that a signature is a certification signature.
+     *
+     * @return validator
+     */
     public static SignatureValidator signatureIsCertification() {
         return signatureIsOfType(
                 SignatureType.POSITIVE_CERTIFICATION,
@@ -578,6 +906,12 @@ public abstract class SignatureValidator {
                 SignatureType.NO_CERTIFICATION);
     }
 
+    /**
+     * Verify that a signature type equals one of the given {@link SignatureType SignatureTypes}.
+     *
+     * @param signatureTypes one or more signature types
+     * @return validator
+     */
     public static SignatureValidator signatureIsOfType(SignatureType... signatureTypes) {
         return new SignatureValidator() {
             @Override
@@ -597,6 +931,14 @@ public abstract class SignatureValidator {
         };
     }
 
+    /**
+     * Verify that a signature over a user-id is correct.
+     *
+     * @param userId user-id
+     * @param certifiedKey key carrying the user-id
+     * @param certifyingKey key that created the signature.
+     * @return validator
+     */
     public static SignatureValidator correctSignatureOverUserId(String userId, PGPPublicKey certifiedKey, PGPPublicKey certifyingKey) {
         return new SignatureValidator() {
             @Override
@@ -614,6 +956,14 @@ public abstract class SignatureValidator {
         };
     }
 
+    /**
+     * Verify that a signature over a user-attribute packet is correct.
+     *
+     * @param userAttributes user attributes
+     * @param certifiedKey key carrying the user-attributes
+     * @param certifyingKey key that created the certification signature
+     * @return validator
+     */
     public static SignatureValidator correctSignatureOverUserAttributes(PGPUserAttributeSubpacketVector userAttributes, PGPPublicKey certifiedKey, PGPPublicKey certifyingKey) {
         return new SignatureValidator() {
             @Override
