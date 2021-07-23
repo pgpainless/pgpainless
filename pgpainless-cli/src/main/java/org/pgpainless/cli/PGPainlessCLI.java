@@ -21,6 +21,7 @@ import sop.cli.picocli.SopCLI;
 public class PGPainlessCLI {
 
     static {
+        SopCLI.EXECUTABLE_NAME = "pgpainless-cli";
         SopCLI.setSopInstance(new SOPImpl());
     }
 
