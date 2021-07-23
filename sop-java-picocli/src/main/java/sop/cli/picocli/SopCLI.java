@@ -43,8 +43,10 @@ import sop.cli.picocli.commands.VersionCmd;
         }
 )
 public class SopCLI {
-
+    // Singleton
     static SOP SOP_INSTANCE;
+
+    public static String EXECUTABLE_NAME = "sop";
 
     public static void main(String[] args) {
         int exitCode = execute(args);
@@ -55,6 +57,7 @@ public class SopCLI {
 
     public static int execute(String[] args) {
         return new CommandLine(SopCLI.class)
+                .setCommandName(EXECUTABLE_NAME)
                 .setCaseInsensitiveEnumValuesAllowed(true)
                 .execute(args);
     }
