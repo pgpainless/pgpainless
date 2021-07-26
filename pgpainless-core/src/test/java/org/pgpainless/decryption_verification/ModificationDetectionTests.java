@@ -28,7 +28,6 @@ import java.util.Collections;
 import org.bouncycastle.openpgp.PGPException;
 import org.bouncycastle.openpgp.PGPSecretKeyRing;
 import org.bouncycastle.openpgp.PGPSecretKeyRingCollection;
-import org.bouncycastle.util.io.Streams;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.MethodSource;
@@ -38,6 +37,7 @@ import org.pgpainless.exception.ModificationDetectionException;
 import org.pgpainless.implementation.ImplementationFactory;
 import org.pgpainless.key.protection.SecretKeyRingProtector;
 import org.pgpainless.util.Passphrase;
+import org.pgpainless.util.StreamUtil;
 
 public class ModificationDetectionTests {
 
@@ -160,7 +160,7 @@ public class ModificationDetectionTests {
 
         ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
         assertThrows(EOFException.class, () -> {
-            Streams.pipeAll(decryptionStream, outputStream);
+            StreamUtil.pipeAll(decryptionStream, outputStream);
             decryptionStream.close();
         });
     }
@@ -192,7 +192,7 @@ public class ModificationDetectionTests {
                 );
 
         ByteArrayOutputStream out = new ByteArrayOutputStream();
-        Streams.pipeAll(decryptionStream, out);
+        StreamUtil.pipeAll(decryptionStream, out);
         assertThrows(ModificationDetectionException.class, decryptionStream::close);
     }
 
@@ -223,7 +223,7 @@ public class ModificationDetectionTests {
                 );
 
         ByteArrayOutputStream out = new ByteArrayOutputStream();
-        Streams.pipeAll(decryptionStream, out);
+        StreamUtil.pipeAll(decryptionStream, out);
         assertThrows(ModificationDetectionException.class, decryptionStream::close);
     }
 

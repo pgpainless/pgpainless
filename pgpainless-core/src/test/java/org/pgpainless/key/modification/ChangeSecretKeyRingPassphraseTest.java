@@ -33,7 +33,6 @@ import org.bouncycastle.openpgp.operator.PBESecretKeyDecryptor;
 import org.bouncycastle.openpgp.operator.PGPDigestCalculatorProvider;
 import org.bouncycastle.openpgp.operator.bc.BcPBESecretKeyDecryptorBuilder;
 import org.bouncycastle.openpgp.operator.bc.BcPGPDigestCalculatorProvider;
-import org.bouncycastle.util.io.Streams;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.MethodSource;
 import org.pgpainless.PGPainless;
@@ -47,6 +46,7 @@ import org.pgpainless.key.protection.KeyRingProtectionSettings;
 import org.pgpainless.key.protection.PasswordBasedSecretKeyRingProtector;
 import org.pgpainless.key.protection.UnlockSecretKey;
 import org.pgpainless.util.Passphrase;
+import org.pgpainless.util.StreamUtil;
 
 public class ChangeSecretKeyRingPassphraseTest {
 
@@ -199,7 +199,7 @@ public class ChangeSecretKeyRingPassphraseTest {
                         .addInlineSignature(PasswordBasedSecretKeyRingProtector.forKey(keyRing, passphrase),
                                 keyRing, DocumentSignatureType.BINARY_DOCUMENT)));
 
-        Streams.pipeAll(new ByteArrayInputStream(dummyMessage.getBytes()), stream);
+        StreamUtil.pipeAll(new ByteArrayInputStream(dummyMessage.getBytes()), stream);
         stream.close();
     }
 }

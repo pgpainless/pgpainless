@@ -32,7 +32,6 @@ import org.bouncycastle.openpgp.PGPPublicKeyRing;
 import org.bouncycastle.openpgp.PGPPublicKeyRingCollection;
 import org.bouncycastle.openpgp.PGPSecretKeyRing;
 import org.bouncycastle.openpgp.PGPSecretKeyRingCollection;
-import org.bouncycastle.util.io.Streams;
 import org.pgpainless.algorithm.HashAlgorithm;
 import org.pgpainless.key.OpenPgpV4Fingerprint;
 
@@ -143,7 +142,7 @@ public class ArmorUtils {
     public static String toAsciiArmoredString(InputStream inputStream, MultiMap<String, String> additionalHeaderValues) throws IOException {
         ByteArrayOutputStream out = new ByteArrayOutputStream();
         ArmoredOutputStream armor = toAsciiArmoredStream(out, additionalHeaderValues);
-        Streams.pipeAll(inputStream, armor);
+        StreamUtil.pipeAll(inputStream, armor);
         armor.close();
 
         return out.toString();

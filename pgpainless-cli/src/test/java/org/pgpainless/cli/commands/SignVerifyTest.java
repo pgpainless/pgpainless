@@ -36,7 +36,6 @@ import com.ginsberg.junit.exit.FailOnSystemExit;
 import org.bouncycastle.openpgp.PGPException;
 import org.bouncycastle.openpgp.PGPPublicKeyRing;
 import org.bouncycastle.openpgp.PGPSecretKeyRing;
-import org.bouncycastle.util.io.Streams;
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
@@ -46,6 +45,7 @@ import org.pgpainless.cli.TestUtils;
 import org.pgpainless.key.OpenPgpV4Fingerprint;
 import org.pgpainless.key.info.KeyRingInfo;
 import org.pgpainless.key.util.KeyRingUtils;
+import org.pgpainless.util.StreamUtil;
 
 public class SignVerifyTest {
 
@@ -71,7 +71,7 @@ public class SignVerifyTest {
         PGPSecretKeyRing aliceKeys = PGPainless.generateKeyRing()
                 .modernKeyRing("alice", null);
         OutputStream aliceKeyOut = new FileOutputStream(aliceKeyFile);
-        Streams.pipeAll(new ByteArrayInputStream(aliceKeys.getEncoded()), aliceKeyOut);
+        StreamUtil.pipeAll(new ByteArrayInputStream(aliceKeys.getEncoded()), aliceKeyOut);
         aliceKeyOut.close();
 
         // Write alice pub key to disc
@@ -79,14 +79,14 @@ public class SignVerifyTest {
         assertTrue(aliceCertFile.createNewFile());
         PGPPublicKeyRing alicePub = KeyRingUtils.publicKeyRingFrom(aliceKeys);
         OutputStream aliceCertOut = new FileOutputStream(aliceCertFile);
-        Streams.pipeAll(new ByteArrayInputStream(alicePub.getEncoded()), aliceCertOut);
+        StreamUtil.pipeAll(new ByteArrayInputStream(alicePub.getEncoded()), aliceCertOut);
         aliceCertOut.close();
 
         // Write test data to disc
         File dataFile = new File(tempDir, "data");
         assertTrue(dataFile.createNewFile());
         FileOutputStream dataOut = new FileOutputStream(dataFile);
-        Streams.pipeAll(new ByteArrayInputStream(data.getBytes(StandardCharsets.UTF_8)), dataOut);
+        StreamUtil.pipeAll(new ByteArrayInputStream(data.getBytes(StandardCharsets.UTF_8)), dataOut);
         dataOut.close();
 
         // Sign test data

@@ -30,7 +30,6 @@ import org.bouncycastle.openpgp.PGPException;
 import org.bouncycastle.openpgp.PGPPublicKeyRing;
 import org.bouncycastle.openpgp.PGPSecretKeyRing;
 import org.bouncycastle.openpgp.PGPSignature;
-import org.bouncycastle.util.io.Streams;
 import org.junit.jupiter.api.Test;
 import org.pgpainless.PGPainless;
 import org.pgpainless.decryption_verification.ConsumerOptions;
@@ -38,6 +37,7 @@ import org.pgpainless.decryption_verification.DecryptionStream;
 import org.pgpainless.decryption_verification.OpenPgpMetadata;
 import org.pgpainless.key.OpenPgpV4Fingerprint;
 import org.pgpainless.key.util.KeyRingUtils;
+import org.pgpainless.util.StreamUtil;
 
 /**
  * Test if marker packets are being ignored properly.
@@ -162,7 +162,7 @@ public class IgnoreMarkerPackets {
 
         ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
 
-        Streams.pipeAll(decryptionStream, outputStream);
+        StreamUtil.pipeAll(decryptionStream, outputStream);
 
         decryptionStream.close();
         OpenPgpMetadata metadata = decryptionStream.getResult();
@@ -211,7 +211,7 @@ public class IgnoreMarkerPackets {
 
         ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
 
-        Streams.pipeAll(decryptionStream, outputStream);
+        StreamUtil.pipeAll(decryptionStream, outputStream);
 
         decryptionStream.close();
         assertArrayEquals(data.getBytes(StandardCharsets.UTF_8), outputStream.toByteArray());

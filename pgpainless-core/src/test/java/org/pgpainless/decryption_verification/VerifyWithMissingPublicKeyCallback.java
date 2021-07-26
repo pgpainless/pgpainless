@@ -32,7 +32,6 @@ import org.bouncycastle.openpgp.PGPException;
 import org.bouncycastle.openpgp.PGPPublicKey;
 import org.bouncycastle.openpgp.PGPPublicKeyRing;
 import org.bouncycastle.openpgp.PGPSecretKeyRing;
-import org.bouncycastle.util.io.Streams;
 import org.junit.jupiter.api.Test;
 import org.pgpainless.PGPainless;
 import org.pgpainless.algorithm.DocumentSignatureType;
@@ -43,6 +42,7 @@ import org.pgpainless.key.TestKeys;
 import org.pgpainless.key.info.KeyRingInfo;
 import org.pgpainless.key.protection.SecretKeyRingProtector;
 import org.pgpainless.key.util.KeyRingUtils;
+import org.pgpainless.util.StreamUtil;
 
 /**
  * Test functionality of the {@link MissingPublicKeyCallback} which is called when during signature verification,
@@ -66,7 +66,7 @@ public class VerifyWithMissingPublicKeyCallback {
                         SecretKeyRingProtector.unprotectedKeys(),
                         signingSecKeys, DocumentSignatureType.CANONICAL_TEXT_DOCUMENT
                 )));
-        Streams.pipeAll(new ByteArrayInputStream(msg.getBytes(StandardCharsets.UTF_8)), signingStream);
+        StreamUtil.pipeAll(new ByteArrayInputStream(msg.getBytes(StandardCharsets.UTF_8)), signingStream);
         signingStream.close();
 
         DecryptionStream verificationStream = PGPainless.decryptAndOrVerify()
@@ -83,7 +83,7 @@ public class VerifyWithMissingPublicKeyCallback {
                         }));
 
         ByteArrayOutputStream plainOut = new ByteArrayOutputStream();
-        Streams.pipeAll(verificationStream, plainOut);
+        StreamUtil.pipeAll(verificationStream, plainOut);
         verificationStream.close();
 
         assertArrayEquals(msg.getBytes(StandardCharsets.UTF_8), plainOut.toByteArray());

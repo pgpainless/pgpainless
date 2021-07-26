@@ -25,7 +25,6 @@ import java.nio.charset.StandardCharsets;
 import org.bouncycastle.openpgp.PGPException;
 import org.bouncycastle.openpgp.PGPPublicKeyRing;
 import org.bouncycastle.openpgp.PGPSecretKeyRing;
-import org.bouncycastle.util.io.Streams;
 import org.junit.jupiter.api.Test;
 import org.pgpainless.PGPainless;
 import org.pgpainless.algorithm.EncryptionPurpose;
@@ -35,6 +34,7 @@ import org.pgpainless.encryption_signing.EncryptionStream;
 import org.pgpainless.encryption_signing.ProducerOptions;
 import org.pgpainless.key.WeirdKeys;
 import org.pgpainless.key.util.KeyRingUtils;
+import org.pgpainless.util.StreamUtil;
 
 public class TestTwoSubkeysEncryption {
 
@@ -68,7 +68,7 @@ public class TestTwoSubkeysEncryption {
                         .setAsciiArmor(false)
                 );
 
-        Streams.pipeAll(getPlainIn(), encryptionStream);
+        StreamUtil.pipeAll(getPlainIn(), encryptionStream);
         encryptionStream.close();
 
         EncryptionResult metadata = encryptionStream.getResult();

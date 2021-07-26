@@ -26,7 +26,6 @@ import java.util.List;
 import org.bouncycastle.openpgp.PGPException;
 import org.bouncycastle.openpgp.PGPPublicKey;
 import org.bouncycastle.openpgp.PGPSecretKeyRing;
-import org.bouncycastle.util.io.Streams;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.MethodSource;
 import org.pgpainless.PGPainless;
@@ -34,6 +33,7 @@ import org.pgpainless.algorithm.EncryptionPurpose;
 import org.pgpainless.implementation.ImplementationFactory;
 import org.pgpainless.key.SubkeyIdentifier;
 import org.pgpainless.key.info.KeyRingInfo;
+import org.pgpainless.util.StreamUtil;
 
 public class DecryptHiddenRecipientMessage {
 
@@ -148,7 +148,7 @@ public class DecryptHiddenRecipientMessage {
                 .withOptions(options);
 
         ByteArrayOutputStream out = new ByteArrayOutputStream();
-        Streams.pipeAll(decryptionStream, out);
+        StreamUtil.pipeAll(decryptionStream, out);
         decryptionStream.close();
 
         OpenPgpMetadata metadata = decryptionStream.getResult();

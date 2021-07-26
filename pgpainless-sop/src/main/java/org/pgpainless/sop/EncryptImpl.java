@@ -22,7 +22,6 @@ import java.io.OutputStream;
 import org.bouncycastle.openpgp.PGPException;
 import org.bouncycastle.openpgp.PGPPublicKeyRingCollection;
 import org.bouncycastle.openpgp.PGPSecretKeyRingCollection;
-import org.bouncycastle.util.io.Streams;
 import org.pgpainless.PGPainless;
 import org.pgpainless.algorithm.DocumentSignatureType;
 import org.pgpainless.algorithm.StreamEncoding;
@@ -33,11 +32,12 @@ import org.pgpainless.encryption_signing.SigningOptions;
 import org.pgpainless.exception.WrongPassphraseException;
 import org.pgpainless.key.protection.SecretKeyRingProtector;
 import org.pgpainless.util.Passphrase;
-import sop.util.ProxyOutputStream;
+import org.pgpainless.util.StreamUtil;
 import sop.Ready;
 import sop.enums.EncryptAs;
 import sop.exception.SOPGPException;
 import sop.operation.Encrypt;
+import sop.util.ProxyOutputStream;
 
 public class EncryptImpl implements Encrypt {
 
@@ -117,7 +117,7 @@ public class EncryptImpl implements Encrypt {
                 @Override
                 public void writeTo(OutputStream outputStream) throws IOException {
                     proxy.replaceOutputStream(outputStream);
-                    Streams.pipeAll(plaintext, encryptionStream);
+                    StreamUtil.pipeAll(plaintext, encryptionStream);
                     encryptionStream.close();
                 }
             };

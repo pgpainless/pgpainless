@@ -26,7 +26,6 @@ import java.nio.charset.Charset;
 
 import org.bouncycastle.openpgp.PGPException;
 import org.bouncycastle.openpgp.PGPSecretKeyRing;
-import org.bouncycastle.util.io.Streams;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.MethodSource;
@@ -37,6 +36,7 @@ import org.pgpainless.implementation.ImplementationFactory;
 import org.pgpainless.key.SubkeyIdentifier;
 import org.pgpainless.key.TestKeys;
 import org.pgpainless.key.util.KeyRingUtils;
+import org.pgpainless.util.StreamUtil;
 
 public class DecryptAndVerifyMessageTest {
 
@@ -67,7 +67,7 @@ public class DecryptAndVerifyMessageTest {
                 .withOptions(options);
 
         ByteArrayOutputStream toPlain = new ByteArrayOutputStream();
-        Streams.pipeAll(decryptor, toPlain);
+        StreamUtil.pipeAll(decryptor, toPlain);
         decryptor.close();
         toPlain.close();
         OpenPgpMetadata metadata = decryptor.getResult();

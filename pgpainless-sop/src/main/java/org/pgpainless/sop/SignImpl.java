@@ -25,7 +25,6 @@ import java.util.List;
 import org.bouncycastle.openpgp.PGPException;
 import org.bouncycastle.openpgp.PGPSecretKeyRing;
 import org.bouncycastle.openpgp.PGPSignature;
-import org.bouncycastle.util.io.Streams;
 import org.pgpainless.PGPainless;
 import org.pgpainless.algorithm.DocumentSignatureType;
 import org.pgpainless.encryption_signing.EncryptionResult;
@@ -36,6 +35,7 @@ import org.pgpainless.key.SubkeyIdentifier;
 import org.pgpainless.key.info.KeyRingInfo;
 import org.pgpainless.key.protection.SecretKeyRingProtector;
 import org.pgpainless.util.ArmoredOutputStreamFactory;
+import org.pgpainless.util.StreamUtil;
 import sop.Ready;
 import sop.enums.SignAs;
 import sop.exception.SOPGPException;
@@ -92,7 +92,7 @@ public class SignImpl implements Sign {
                         throw new IllegalStateException("EncryptionStream is already closed.");
                     }
 
-                    Streams.pipeAll(data, signingStream);
+                    StreamUtil.pipeAll(data, signingStream);
                     signingStream.close();
                     EncryptionResult encryptionResult = signingStream.getResult();
 

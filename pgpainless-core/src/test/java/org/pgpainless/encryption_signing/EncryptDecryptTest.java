@@ -34,7 +34,6 @@ import org.bouncycastle.openpgp.PGPException;
 import org.bouncycastle.openpgp.PGPPublicKeyRing;
 import org.bouncycastle.openpgp.PGPSecretKeyRing;
 import org.bouncycastle.openpgp.PGPSignature;
-import org.bouncycastle.util.io.Streams;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
@@ -59,6 +58,7 @@ import org.pgpainless.key.protection.UnprotectedKeysProtector;
 import org.pgpainless.key.util.KeyRingUtils;
 import org.pgpainless.policy.Policy;
 import org.pgpainless.util.ArmoredOutputStreamFactory;
+import org.pgpainless.util.StreamUtil;
 
 public class EncryptDecryptTest {
 
@@ -168,7 +168,7 @@ public class EncryptDecryptTest {
                         new SigningOptions().addInlineSignature(keyDecryptor, senderSec, DocumentSignatureType.BINARY_DOCUMENT)
                 ));
 
-        Streams.pipeAll(new ByteArrayInputStream(secretMessage), encryptor);
+        StreamUtil.pipeAll(new ByteArrayInputStream(secretMessage), encryptor);
         encryptor.close();
         byte[] encryptedSecretMessage = envelope.toByteArray();
 
@@ -193,7 +193,7 @@ public class EncryptDecryptTest {
 
         ByteArrayOutputStream decryptedSecretMessage = new ByteArrayOutputStream();
 
-        Streams.pipeAll(decryptor, decryptedSecretMessage);
+        StreamUtil.pipeAll(decryptor, decryptedSecretMessage);
         decryptor.close();
 
         assertArrayEquals(secretMessage, decryptedSecretMessage.toByteArray());
@@ -218,7 +218,7 @@ public class EncryptDecryptTest {
                 .withOptions(ProducerOptions.sign(
                         new SigningOptions().addDetachedSignature(keyRingProtector, signingKeys, DocumentSignatureType.BINARY_DOCUMENT)
                 ));
-        Streams.pipeAll(inputStream, signer);
+        StreamUtil.pipeAll(inputStream, signer);
         signer.close();
 
         EncryptionResult metadata = signer.getResult();
@@ -243,7 +243,7 @@ public class EncryptDecryptTest {
                 );
 
         dummyOut = new ByteArrayOutputStream();
-        Streams.pipeAll(verifier, dummyOut);
+        StreamUtil.pipeAll(verifier, dummyOut);
         verifier.close();
 
         OpenPgpMetadata decryptionResult = verifier.getResult();
@@ -264,7 +264,7 @@ public class EncryptDecryptTest {
                         SigningOptions.get()
                         .addInlineSignature(keyRingProtector, signingKeys, DocumentSignatureType.BINARY_DOCUMENT)
                 ).setAsciiArmor(true));
-        Streams.pipeAll(inputStream, signer);
+        StreamUtil.pipeAll(inputStream, signer);
         signer.close();
 
         inputStream = new ByteArrayInputStream(signOut.toByteArray());
@@ -274,7 +274,7 @@ public class EncryptDecryptTest {
                         .addVerificationCert(KeyRingUtils.publicKeyRingFrom(signingKeys))
                 );
         signOut = new ByteArrayOutputStream();
-        Streams.pipeAll(verifier, signOut);
+        StreamUtil.pipeAll(verifier, signOut);
         verifier.close();
 
         OpenPgpMetadata metadata = verifier.getResult();
