@@ -1,5 +1,10 @@
 # PGPainless Changelog
 
+## 0.2.5
+- Explicitly reject non-self-signatures when picking user-id self-signatures
+- pgpainless-cli: Set executable name in help text
+- Properly detect CRC checksum errors in ASCII armor
+
 ## 0.2.4
 - Java based Stateless OpenPGP Protocol
   - Introduce `sop-java` module  
