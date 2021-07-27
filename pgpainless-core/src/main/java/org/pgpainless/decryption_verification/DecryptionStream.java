@@ -23,6 +23,7 @@ import java.util.logging.Logger;
 import javax.annotation.Nonnull;
 
 import org.bouncycastle.openpgp.PGPPublicKeyRing;
+import org.bouncycastle.util.io.Streams;
 import org.pgpainless.PGPainless;
 import org.pgpainless.signature.DetachedSignature;
 import org.pgpainless.signature.SignatureChainValidator;
@@ -41,12 +42,15 @@ public class DecryptionStream extends InputStream {
     private final OpenPgpMetadata.Builder resultBuilder;
     private boolean isClosed = false;
     private List<IntegrityProtectedInputStream> integrityProtectedInputStreamList;
+    private final InputStream armorStream;
 
     DecryptionStream(@Nonnull InputStream wrapped, @Nonnull OpenPgpMetadata.Builder resultBuilder,
-                     List<IntegrityProtectedInputStream> integrityProtectedInputStreamList) {
+                     List<IntegrityProtectedInputStream> integrityProtectedInputStreamList,
+                     InputStream armorStream) {
         this.inputStream = wrapped;
         this.resultBuilder = resultBuilder;
         this.integrityProtectedInputStreamList = integrityProtectedInputStreamList;
+        this.armorStream = armorStream;
     }
 
     @Override
@@ -66,6 +70,9 @@ public class DecryptionStream extends InputStream {
 
     @Override
     public void close() throws IOException {
+        if (armorStream != null) {
+            Streams.drain(armorStream);
+        }
         inputStream.close();
         maybeVerifyDetachedSignatures();
         for (IntegrityProtectedInputStream s : integrityProtectedInputStreamList) {

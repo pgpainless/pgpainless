@@ -15,6 +15,7 @@
  */
 package org.pgpainless.key.parsing;
 
+import java.io.BufferedInputStream;
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.io.InputStream;
@@ -24,6 +25,7 @@ import java.util.Iterator;
 import java.util.List;
 import javax.annotation.Nonnull;
 
+import org.bouncycastle.bcpg.ArmoredInputStream;
 import org.bouncycastle.bcpg.MarkerPacket;
 import org.bouncycastle.openpgp.PGPException;
 import org.bouncycastle.openpgp.PGPObjectFactory;
@@ -35,6 +37,8 @@ import org.bouncycastle.openpgp.PGPUtil;
 import org.bouncycastle.openpgp.operator.KeyFingerPrintCalculator;
 import org.pgpainless.implementation.ImplementationFactory;
 import org.pgpainless.key.collection.PGPKeyRingCollection;
+import org.pgpainless.util.ArmoredInputStreamFactory;
+import org.pgpainless.util.StreamUtil;
 
 public class KeyRingReader {
 
@@ -157,8 +161,9 @@ public class KeyRingReader {
     }
 
     public static PGPSecretKeyRing readSecretKeyRing(@Nonnull InputStream inputStream) throws IOException {
+        InputStream decoderStream = getDecoderStream(inputStream);
         PGPObjectFactory objectFactory = new PGPObjectFactory(
-                getDecoderStream(inputStream),
+                decoderStream,
                 ImplementationFactory.getInstance().getKeyFingerprintCalculator());
 
         Object next;
@@ -171,6 +176,7 @@ public class KeyRingReader {
                 continue;
             }
             if (next instanceof PGPSecretKeyRing) {
+                StreamUtil.drain(decoderStream);
                 return (PGPSecretKeyRing) next;
             }
         } while (true);
@@ -231,6 +237,17 @@ public class KeyRingReader {
      * @return BufferedInputStreamExt
      */
     private static InputStream getDecoderStream(InputStream inputStream) throws IOException {
-        return PGPUtil.getDecoderStream(PGPUtil.getDecoderStream(inputStream));
+        InputStream decoderStream = PGPUtil.getDecoderStream(inputStream);
+        // Data is not armored -> return
+        if (decoderStream instanceof BufferedInputStream) {
+            return decoderStream;
+        }
+        // Wrap armored input stream with fix for #159
+        if (decoderStream instanceof ArmoredInputStream) {
+            decoderStream = ArmoredInputStreamFactory.get(decoderStream);
+        }
+
+        decoderStream = PGPUtil.getDecoderStream(decoderStream);
+        return decoderStream;
     }
 }

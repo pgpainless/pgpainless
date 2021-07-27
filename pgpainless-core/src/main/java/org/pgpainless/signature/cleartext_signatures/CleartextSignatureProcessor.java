@@ -37,6 +37,7 @@ import org.pgpainless.PGPainless;
 import org.pgpainless.exception.SignatureValidationException;
 import org.pgpainless.implementation.ImplementationFactory;
 import org.pgpainless.signature.SignatureChainValidator;
+import org.pgpainless.util.ArmoredInputStreamFactory;
 
 /**
  * Processor for cleartext-signed messages.
@@ -55,7 +56,7 @@ public class CleartextSignatureProcessor {
         if (inputStream instanceof ArmoredInputStream) {
             this.in = (ArmoredInputStream) inputStream;
         } else {
-            this.in = new ArmoredInputStream(inputStream);
+            this.in = ArmoredInputStreamFactory.get(inputStream);
         }
         this.verificationKeys = verificationKeys;
         this.multiPassStrategy = multiPassStrategy;

@@ -55,7 +55,7 @@ public class ArmorUtilsTest {
                 "-----END PGP PUBLIC KEY BLOCK-----";
 
         ByteArrayInputStream in = new ByteArrayInputStream(armoredKey.getBytes(StandardCharsets.UTF_8));
-        ArmoredInputStream armorIn = new ArmoredInputStream(in);
+        ArmoredInputStream armorIn = ArmoredInputStreamFactory.get(in);
 
         // No charset
         assertEquals(0, ArmorUtils.getCharsetHeaderValues(armorIn).size());

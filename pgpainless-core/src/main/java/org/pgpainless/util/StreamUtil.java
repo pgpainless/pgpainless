@@ -44,4 +44,17 @@ public class StreamUtil {
             outputStream.write(i);
         } while (true);
     }
+
+    /**
+     * Drain an {@link InputStream} without calling {@link InputStream#read(byte[], int, int)}.
+     *
+     * @param inputStream input stream
+     * @throws IOException io exception
+     */
+    public static void drain(InputStream inputStream) throws IOException {
+        int i;
+        do {
+            i = inputStream.read();
+        } while (i != -1);
+    }
 }

@@ -28,6 +28,7 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 import javax.annotation.Nonnull;
 
+import org.bouncycastle.bcpg.ArmoredInputStream;
 import org.bouncycastle.openpgp.PGPCompressedData;
 import org.bouncycastle.openpgp.PGPEncryptedData;
 import org.bouncycastle.openpgp.PGPEncryptedDataList;
@@ -65,6 +66,7 @@ import org.pgpainless.key.info.KeyRingInfo;
 import org.pgpainless.key.protection.UnlockSecretKey;
 import org.pgpainless.signature.DetachedSignature;
 import org.pgpainless.signature.OnePassSignature;
+import org.pgpainless.util.CRCingArmoredInputStreamWrapper;
 import org.pgpainless.util.IntegrityProtectedInputStream;
 import org.pgpainless.util.Passphrase;
 
@@ -86,6 +88,22 @@ public final class DecryptionStreamFactory {
 
     public DecryptionStreamFactory(ConsumerOptions options) {
         this.options = options;
+
+        for (PGPSignature signature : options.getDetachedSignatures()) {
+            PGPPublicKeyRing signingKeyRing = findSignatureVerificationKeyRing(signature.getKeyID());
+            if (signingKeyRing == null) {
+                continue;
+            }
+            PGPPublicKey signingKey = signingKeyRing.getPublicKey(signature.getKeyID());
+            SubkeyIdentifier signingKeyIdentifier = new SubkeyIdentifier(signingKeyRing, signingKey.getKeyID());
+            try {
+                signature.init(ImplementationFactory.getInstance().getPGPContentVerifierBuilderProvider(), signingKey);
+                resultBuilder.addDetachedSignature(
+                        new DetachedSignature(signature, signingKeyRing, signingKeyIdentifier));
+            } catch (PGPException e) {
+                LOGGER.log(Level.INFO, "Cannot verify signature made by " + signingKeyIdentifier, e);
+            }
+        }
     }
 
     public static DecryptionStream create(@Nonnull InputStream inputStream,
@@ -95,19 +113,11 @@ public final class DecryptionStreamFactory {
         bufferedIn.mark(200);
         DecryptionStreamFactory factory = new DecryptionStreamFactory(options);
 
-        for (PGPSignature signature : options.getDetachedSignatures()) {
-            PGPPublicKeyRing signingKeyRing = factory.findSignatureVerificationKeyRing(signature.getKeyID());
-            if (signingKeyRing == null) {
-                continue;
-            }
-            PGPPublicKey signingKey = signingKeyRing.getPublicKey(signature.getKeyID());
-            signature.init(ImplementationFactory.getInstance().getPGPContentVerifierBuilderProvider(), signingKey);
-            factory.resultBuilder.addDetachedSignature(
-                    new DetachedSignature(signature, signingKeyRing, new SubkeyIdentifier(signingKeyRing, signature.getKeyID())));
-        }
+        InputStream decoderStream = PGPUtil.getDecoderStream(bufferedIn);
+        decoderStream = CRCingArmoredInputStreamWrapper.possiblyWrap(decoderStream);
 
         PGPObjectFactory objectFactory = new PGPObjectFactory(
-                PGPUtil.getDecoderStream(bufferedIn), keyFingerprintCalculator);
+                decoderStream, keyFingerprintCalculator);
 
         try {
             // Parse OpenPGP message
@@ -131,7 +141,8 @@ public final class DecryptionStreamFactory {
             }
         }
 
-        return new DecryptionStream(inputStream, factory.resultBuilder, factory.integrityProtectedStreams);
+        return new DecryptionStream(inputStream, factory.resultBuilder, factory.integrityProtectedStreams,
+                (decoderStream instanceof ArmoredInputStream) ? decoderStream : null);
     }
 
     private InputStream processPGPPackets(@Nonnull PGPObjectFactory objectFactory, int depth) throws IOException, PGPException {
