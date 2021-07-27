@@ -1,5 +1,8 @@
 # PGPainless Changelog
 
+## 0.2.6
+- Actually properly detect CRC checksum errors in ASCII armor
+
 ## 0.2.5
 - Explicitly reject non-self-signatures when picking user-id self-signatures
 - pgpainless-cli: Set executable name in help text
