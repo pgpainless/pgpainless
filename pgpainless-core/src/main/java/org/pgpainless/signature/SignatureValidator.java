@@ -24,6 +24,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
+import org.bouncycastle.bcpg.sig.KeyFlags;
 import org.bouncycastle.bcpg.sig.NotationData;
 import org.bouncycastle.bcpg.sig.SignatureCreationTime;
 import org.bouncycastle.openpgp.PGPException;
@@ -33,6 +34,7 @@ import org.bouncycastle.openpgp.PGPSignatureList;
 import org.bouncycastle.openpgp.PGPSignatureSubpacketVector;
 import org.bouncycastle.openpgp.PGPUserAttributeSubpacketVector;
 import org.pgpainless.algorithm.HashAlgorithm;
+import org.pgpainless.algorithm.KeyFlag;
 import org.pgpainless.algorithm.PublicKeyAlgorithm;
 import org.pgpainless.algorithm.SignatureSubpacket;
 import org.pgpainless.algorithm.SignatureType;
@@ -490,6 +492,15 @@ public abstract class SignatureValidator {
             public void verify(PGPSignature signature) throws SignatureValidationException {
                 if (!PublicKeyAlgorithm.fromId(signature.getKeyAlgorithm()).isSigningCapable()) {
                     // subkey is not signing capable -> No need to process embedded sigs
+                    return;
+                }
+
+                KeyFlags keyFlags = SignatureSubpacketsUtil.getKeyFlags(signature);
+                if (keyFlags == null) {
+                    return;
+                }
+                if (!KeyFlag.hasKeyFlag(keyFlags.getFlags(), KeyFlag.SIGN_DATA)
+                        && !KeyFlag.hasKeyFlag(keyFlags.getFlags(), KeyFlag.CERTIFY_OTHER)) {
                     return;
                 }
 
