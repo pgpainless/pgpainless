@@ -65,10 +65,10 @@ public class SignatureChainValidator {
             throws SignatureValidationException {
 
         Map<PGPSignature, Exception> rejections = new ConcurrentHashMap<>();
-
-        PGPPublicKey signingSubkey = signingKeyRing.getPublicKey(signature.getKeyID());
+        long keyId = SignatureUtils.determineIssuerKeyId(signature);
+        PGPPublicKey signingSubkey = signingKeyRing.getPublicKey(keyId);
         if (signingSubkey == null) {
-            throw new SignatureValidationException("Provided key ring does not contain a subkey with id " + Long.toHexString(signature.getKeyID()));
+            throw new SignatureValidationException("Provided key ring does not contain a subkey with id " + Long.toHexString(keyId));
         }
 
         PGPPublicKey primaryKey = signingKeyRing.getPublicKey();
@@ -237,7 +237,8 @@ public class SignatureChainValidator {
                                                  Date validationDate)
             throws SignatureValidationException {
         validateSigningKey(signature, signingKeyRing, policy);
-        return SignatureValidator.verifyUninitializedSignature(signature, signedData, signingKeyRing.getPublicKey(signature.getKeyID()), policy, validationDate);
+        long keyId = SignatureUtils.determineIssuerKeyId(signature);
+        return SignatureValidator.verifyUninitializedSignature(signature, signedData, signingKeyRing.getPublicKey(keyId), policy, validationDate);
     }
 
     /**
@@ -253,7 +254,8 @@ public class SignatureChainValidator {
     public static boolean validateSignature(PGPSignature signature, PGPPublicKeyRing verificationKeys, Policy policy)
             throws SignatureValidationException {
         validateSigningKey(signature, verificationKeys, policy);
-        PGPPublicKey signingKey = verificationKeys.getPublicKey(signature.getKeyID());
+        long keyId = SignatureUtils.determineIssuerKeyId(signature);
+        PGPPublicKey signingKey = verificationKeys.getPublicKey(keyId);
         SignatureValidator.verifyInitializedSignature(signature, signingKey, policy, signature.getCreationTime());
         return true;
     }

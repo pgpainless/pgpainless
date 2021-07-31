@@ -23,6 +23,7 @@ import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
 
+import org.bouncycastle.bcpg.sig.IssuerKeyID;
 import org.bouncycastle.bcpg.MarkerPacket;
 import org.bouncycastle.bcpg.sig.KeyExpirationTime;
 import org.bouncycastle.bcpg.sig.RevocationReason;
@@ -42,6 +43,7 @@ import org.pgpainless.PGPainless;
 import org.pgpainless.algorithm.HashAlgorithm;
 import org.pgpainless.algorithm.SignatureType;
 import org.pgpainless.implementation.ImplementationFactory;
+import org.pgpainless.key.OpenPgpV4Fingerprint;
 import org.pgpainless.key.util.OpenPgpKeyAttributeUtil;
 import org.pgpainless.key.util.RevocationAttributes;
 import org.pgpainless.policy.Policy;
@@ -225,6 +227,20 @@ public class SignatureUtils {
         pgpIn.close();
 
         return signatures;
+    }
+
+    public static long determineIssuerKeyId(PGPSignature signature) {
+        IssuerKeyID issuerKeyId = SignatureSubpacketsUtil.getIssuerKeyId(signature);
+        OpenPgpV4Fingerprint fingerprint = SignatureSubpacketsUtil.getIssuerFingerprintAsOpenPgpV4Fingerprint(signature);
+        if (issuerKeyId != null && issuerKeyId.getKeyID() != 0) {
+            return issuerKeyId.getKeyID();
+        }
+        if (issuerKeyId == null) {
+            if (fingerprint != null) {
+                return fingerprint.getKeyId();
+            }
+        }
+        return 0;
     }
 
     public static String getSignatureDigestPrefix(PGPSignature signature) {

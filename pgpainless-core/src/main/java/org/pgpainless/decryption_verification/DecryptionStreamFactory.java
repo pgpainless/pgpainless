@@ -66,6 +66,7 @@ import org.pgpainless.key.info.KeyRingInfo;
 import org.pgpainless.key.protection.UnlockSecretKey;
 import org.pgpainless.signature.DetachedSignature;
 import org.pgpainless.signature.OnePassSignature;
+import org.pgpainless.signature.SignatureUtils;
 import org.pgpainless.util.CRCingArmoredInputStreamWrapper;
 import org.pgpainless.util.IntegrityProtectedInputStream;
 import org.pgpainless.util.Passphrase;
@@ -90,11 +91,12 @@ public final class DecryptionStreamFactory {
         this.options = options;
 
         for (PGPSignature signature : options.getDetachedSignatures()) {
-            PGPPublicKeyRing signingKeyRing = findSignatureVerificationKeyRing(signature.getKeyID());
+            long issuerKeyId = SignatureUtils.determineIssuerKeyId(signature);
+            PGPPublicKeyRing signingKeyRing = findSignatureVerificationKeyRing(issuerKeyId);
             if (signingKeyRing == null) {
                 continue;
             }
-            PGPPublicKey signingKey = signingKeyRing.getPublicKey(signature.getKeyID());
+            PGPPublicKey signingKey = signingKeyRing.getPublicKey(issuerKeyId);
             SubkeyIdentifier signingKeyIdentifier = new SubkeyIdentifier(signingKeyRing, signingKey.getKeyID());
             try {
                 signature.init(ImplementationFactory.getInstance().getPGPContentVerifierBuilderProvider(), signingKey);
