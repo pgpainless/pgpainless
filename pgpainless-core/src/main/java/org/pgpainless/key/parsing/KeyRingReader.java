@@ -26,8 +26,8 @@ import java.util.List;
 import javax.annotation.Nonnull;
 
 import org.bouncycastle.bcpg.ArmoredInputStream;
-import org.bouncycastle.bcpg.MarkerPacket;
 import org.bouncycastle.openpgp.PGPException;
+import org.bouncycastle.openpgp.PGPMarker;
 import org.bouncycastle.openpgp.PGPObjectFactory;
 import org.bouncycastle.openpgp.PGPPublicKeyRing;
 import org.bouncycastle.openpgp.PGPPublicKeyRingCollection;
@@ -117,7 +117,7 @@ public class KeyRingReader {
             if (next == null) {
                 break;
             }
-            if (next instanceof MarkerPacket) {
+            if (next instanceof PGPMarker) {
                 continue;
             }
             if (next instanceof PGPPublicKeyRing) {
@@ -142,7 +142,7 @@ public class KeyRingReader {
             if (next == null) {
                 break;
             }
-            if (next instanceof MarkerPacket) {
+            if (next instanceof PGPMarker) {
                 continue;
             }
             if (next instanceof PGPPublicKeyRing) {
@@ -172,7 +172,7 @@ public class KeyRingReader {
             if (next == null) {
                 break;
             }
-            if (next instanceof MarkerPacket) {
+            if (next instanceof PGPMarker) {
                 continue;
             }
             if (next instanceof PGPSecretKeyRing) {
@@ -198,7 +198,7 @@ public class KeyRingReader {
             if (next == null) {
                 break;
             }
-            if (next instanceof MarkerPacket) {
+            if (next instanceof PGPMarker) {
                 continue;
             }
             if (next instanceof PGPSecretKeyRing) {

@@ -24,12 +24,12 @@ import java.util.Date;
 import java.util.List;
 
 import org.bouncycastle.bcpg.sig.IssuerKeyID;
-import org.bouncycastle.bcpg.MarkerPacket;
 import org.bouncycastle.bcpg.sig.KeyExpirationTime;
 import org.bouncycastle.bcpg.sig.RevocationReason;
 import org.bouncycastle.bcpg.sig.SignatureExpirationTime;
 import org.bouncycastle.openpgp.PGPCompressedData;
 import org.bouncycastle.openpgp.PGPException;
+import org.bouncycastle.openpgp.PGPMarker;
 import org.bouncycastle.openpgp.PGPObjectFactory;
 import org.bouncycastle.openpgp.PGPPublicKey;
 import org.bouncycastle.openpgp.PGPSecretKey;
@@ -202,7 +202,7 @@ public class SignatureUtils {
 
         Object nextObject = objectFactory.nextObject();
         while (nextObject != null) {
-            if (nextObject instanceof MarkerPacket) {
+            if (nextObject instanceof PGPMarker) {
                 nextObject = objectFactory.nextObject();
                 continue;
             }

@@ -15,9 +15,17 @@
  */
 package org.pgpainless.key.collection;
 
-import org.bouncycastle.bcpg.MarkerPacket;
+import java.io.ByteArrayInputStream;
+import java.io.IOException;
+import java.io.InputStream;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.List;
+import javax.annotation.Nonnull;
+
 import org.bouncycastle.openpgp.PGPException;
 import org.bouncycastle.openpgp.PGPKeyRing;
+import org.bouncycastle.openpgp.PGPMarker;
 import org.bouncycastle.openpgp.PGPObjectFactory;
 import org.bouncycastle.openpgp.PGPPublicKeyRing;
 import org.bouncycastle.openpgp.PGPPublicKeyRingCollection;
@@ -25,14 +33,6 @@ import org.bouncycastle.openpgp.PGPSecretKeyRing;
 import org.bouncycastle.openpgp.PGPSecretKeyRingCollection;
 import org.bouncycastle.openpgp.PGPUtil;
 import org.pgpainless.implementation.ImplementationFactory;
-
-import javax.annotation.Nonnull;
-import java.io.ByteArrayInputStream;
-import java.io.IOException;
-import java.io.InputStream;
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.List;
 
 /**
  * This class describes a logic of handling a collection of different {@link PGPKeyRing}. The logic was inspired by
@@ -65,7 +65,7 @@ public class PGPKeyRingCollection {
         List<PGPPublicKeyRing> publicKeyRings = new ArrayList<>();
 
         while ((obj = pgpFact.nextObject()) != null) {
-            if (obj instanceof MarkerPacket) {
+            if (obj instanceof PGPMarker) {
                 // Skip marker packets
                 continue;
             }
