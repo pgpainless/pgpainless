@@ -24,11 +24,11 @@ import java.nio.charset.StandardCharsets;
 
 import org.bouncycastle.openpgp.PGPException;
 import org.bouncycastle.openpgp.PGPSecretKeyRing;
+import org.bouncycastle.util.io.Streams;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.MethodSource;
 import org.pgpainless.PGPainless;
 import org.pgpainless.implementation.ImplementationFactory;
-import org.pgpainless.util.StreamUtil;
 
 public class RecursionDepthTest {
 
@@ -160,7 +160,7 @@ public class RecursionDepthTest {
                     .withOptions(new ConsumerOptions().addDecryptionKey(secretKey));
 
             ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
-            StreamUtil.pipeAll(decryptionStream, outputStream);
+            Streams.pipeAll(decryptionStream, outputStream);
         });
 
     }

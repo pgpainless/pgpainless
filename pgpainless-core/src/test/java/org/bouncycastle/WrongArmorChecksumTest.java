@@ -23,11 +23,11 @@ import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 
 import org.bouncycastle.bcpg.ArmoredInputStream;
+import org.bouncycastle.util.io.Streams;
 import org.junit.jupiter.api.Test;
 import org.pgpainless.PGPainless;
 import org.pgpainless.signature.SignatureUtils;
 import org.pgpainless.util.ArmoredInputStreamFactory;
-import org.pgpainless.util.StreamUtil;
 
 public class WrongArmorChecksumTest {
 
@@ -92,7 +92,7 @@ public class WrongArmorChecksumTest {
 
         assertThrows(IOException.class, () -> {
             ArmoredInputStream armorIn = ArmoredInputStreamFactory.get(bytes);
-            StreamUtil.pipeAll(armorIn, out);
+            Streams.pipeAll(armorIn, out);
             armorIn.close();
         });
     }

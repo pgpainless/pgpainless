@@ -33,6 +33,7 @@ import org.bouncycastle.openpgp.PGPPublicKeyRingCollection;
 import org.bouncycastle.openpgp.PGPSecretKey;
 import org.bouncycastle.openpgp.PGPSecretKeyRing;
 import org.bouncycastle.openpgp.PGPSecretKeyRingCollection;
+import org.bouncycastle.util.io.Streams;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.MethodSource;
@@ -48,7 +49,6 @@ import org.pgpainless.key.info.KeyRingInfo;
 import org.pgpainless.key.protection.SecretKeyRingProtector;
 import org.pgpainless.key.util.KeyRingUtils;
 import org.pgpainless.util.Passphrase;
-import org.pgpainless.util.StreamUtil;
 
 public class SigningTest {
 
@@ -81,7 +81,7 @@ public class SigningTest {
         byte[] messageBytes = "This message is signed and encrypted to Romeo and Juliet.".getBytes(StandardCharsets.UTF_8);
         ByteArrayInputStream message = new ByteArrayInputStream(messageBytes);
 
-        StreamUtil.pipeAll(message, encryptionStream);
+        Streams.pipeAll(message, encryptionStream);
         encryptionStream.close();
 
         byte[] encrypted = out.toByteArray();
@@ -102,7 +102,7 @@ public class SigningTest {
 
         ByteArrayOutputStream plaintextOut = new ByteArrayOutputStream();
 
-        StreamUtil.pipeAll(decryptionStream, plaintextOut);
+        Streams.pipeAll(decryptionStream, plaintextOut);
         decryptionStream.close();
 
         OpenPgpMetadata metadata = decryptionStream.getResult();

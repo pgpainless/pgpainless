@@ -31,6 +31,7 @@ import org.bouncycastle.openpgp.PGPException;
 import org.bouncycastle.openpgp.PGPLiteralData;
 import org.bouncycastle.openpgp.PGPPublicKeyRing;
 import org.bouncycastle.openpgp.PGPSecretKeyRing;
+import org.bouncycastle.util.io.Streams;
 import org.junit.JUtils;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
@@ -39,7 +40,6 @@ import org.pgpainless.algorithm.StreamEncoding;
 import org.pgpainless.decryption_verification.ConsumerOptions;
 import org.pgpainless.decryption_verification.DecryptionStream;
 import org.pgpainless.decryption_verification.OpenPgpMetadata;
-import org.pgpainless.util.StreamUtil;
 
 public class FileInformationTest {
 
@@ -72,7 +72,7 @@ public class FileInformationTest {
                         .setEncoding(encoding)
                 );
 
-        StreamUtil.pipeAll(dataIn, encryptionStream);
+        Streams.pipeAll(dataIn, encryptionStream);
         encryptionStream.close();
 
         EncryptionResult encResult = encryptionStream.getResult();
@@ -87,7 +87,7 @@ public class FileInformationTest {
                 .onInputStream(cryptIn)
                 .withOptions(new ConsumerOptions()
                         .addDecryptionKey(secretKey));
-        StreamUtil.pipeAll(decryptionStream, plainOut);
+        Streams.pipeAll(decryptionStream, plainOut);
 
         decryptionStream.close();
 
@@ -110,7 +110,7 @@ public class FileInformationTest {
                                 .addRecipient(certificate))
                 );
 
-        StreamUtil.pipeAll(dataIn, encryptionStream);
+        Streams.pipeAll(dataIn, encryptionStream);
         encryptionStream.close();
 
         EncryptionResult encResult = encryptionStream.getResult();
@@ -126,7 +126,7 @@ public class FileInformationTest {
                 .onInputStream(cryptIn)
                 .withOptions(new ConsumerOptions()
                         .addDecryptionKey(secretKey));
-        StreamUtil.pipeAll(decryptionStream, plainOut);
+        Streams.pipeAll(decryptionStream, plainOut);
 
         decryptionStream.close();
 
@@ -151,7 +151,7 @@ public class FileInformationTest {
                         .setForYourEyesOnly()
                 );
 
-        StreamUtil.pipeAll(dataIn, encryptionStream);
+        Streams.pipeAll(dataIn, encryptionStream);
         encryptionStream.close();
 
         EncryptionResult encResult = encryptionStream.getResult();
@@ -167,7 +167,7 @@ public class FileInformationTest {
                 .onInputStream(cryptIn)
                 .withOptions(new ConsumerOptions()
                         .addDecryptionKey(secretKey));
-        StreamUtil.pipeAll(decryptionStream, plainOut);
+        Streams.pipeAll(decryptionStream, plainOut);
 
         decryptionStream.close();
 

@@ -27,6 +27,7 @@ import org.bouncycastle.openpgp.PGPPublicKeyRingCollection;
 import org.bouncycastle.openpgp.PGPSecretKeyRing;
 import org.bouncycastle.openpgp.PGPSecretKeyRingCollection;
 import org.bouncycastle.openpgp.PGPSignature;
+import org.bouncycastle.util.io.Streams;
 import org.pgpainless.PGPainless;
 import org.pgpainless.decryption_verification.ConsumerOptions;
 import org.pgpainless.decryption_verification.DecryptionStream;
@@ -36,7 +37,6 @@ import org.pgpainless.key.SubkeyIdentifier;
 import org.pgpainless.key.info.KeyRingInfo;
 import org.pgpainless.key.protection.SecretKeyRingProtector;
 import org.pgpainless.util.Passphrase;
-import org.pgpainless.util.StreamUtil;
 import sop.DecryptionResult;
 import sop.ReadyWithResult;
 import sop.SessionKey;
@@ -151,7 +151,7 @@ public class DecryptImpl implements Decrypt {
         return new ReadyWithResult<DecryptionResult>() {
             @Override
             public DecryptionResult writeTo(OutputStream outputStream) throws IOException, SOPGPException.NoSignature {
-                StreamUtil.pipeAll(decryptionStream, outputStream);
+                Streams.pipeAll(decryptionStream, outputStream);
                 decryptionStream.close();
                 OpenPgpMetadata metadata = decryptionStream.getResult();
 

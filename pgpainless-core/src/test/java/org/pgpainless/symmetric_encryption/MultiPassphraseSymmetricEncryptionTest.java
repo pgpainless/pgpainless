@@ -21,6 +21,7 @@ import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 
 import org.bouncycastle.openpgp.PGPException;
+import org.bouncycastle.util.io.Streams;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.MethodSource;
 import org.pgpainless.PGPainless;
@@ -31,7 +32,6 @@ import org.pgpainless.encryption_signing.EncryptionStream;
 import org.pgpainless.encryption_signing.ProducerOptions;
 import org.pgpainless.implementation.ImplementationFactory;
 import org.pgpainless.util.Passphrase;
-import org.pgpainless.util.StreamUtil;
 
 public class MultiPassphraseSymmetricEncryptionTest {
 
@@ -51,7 +51,7 @@ public class MultiPassphraseSymmetricEncryptionTest {
                         .addPassphrase(Passphrase.fromPassword("p2"))
                 ).setAsciiArmor(false));
 
-        StreamUtil.pipeAll(plaintextIn, encryptor);
+        Streams.pipeAll(plaintextIn, encryptor);
         encryptor.close();
 
         byte[] ciphertext = ciphertextOut.toByteArray();
@@ -65,7 +65,7 @@ public class MultiPassphraseSymmetricEncryptionTest {
 
             ByteArrayOutputStream plaintextOut = new ByteArrayOutputStream();
 
-            StreamUtil.pipeAll(decryptor, plaintextOut);
+            Streams.pipeAll(decryptor, plaintextOut);
 
             decryptor.close();
         }

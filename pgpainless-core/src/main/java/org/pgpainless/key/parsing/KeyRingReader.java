@@ -35,10 +35,10 @@ import org.bouncycastle.openpgp.PGPSecretKeyRing;
 import org.bouncycastle.openpgp.PGPSecretKeyRingCollection;
 import org.bouncycastle.openpgp.PGPUtil;
 import org.bouncycastle.openpgp.operator.KeyFingerPrintCalculator;
+import org.bouncycastle.util.io.Streams;
 import org.pgpainless.implementation.ImplementationFactory;
 import org.pgpainless.key.collection.PGPKeyRingCollection;
 import org.pgpainless.util.ArmoredInputStreamFactory;
-import org.pgpainless.util.StreamUtil;
 
 public class KeyRingReader {
 
@@ -176,7 +176,7 @@ public class KeyRingReader {
                 continue;
             }
             if (next instanceof PGPSecretKeyRing) {
-                StreamUtil.drain(decoderStream);
+                Streams.drain(decoderStream);
                 return (PGPSecretKeyRing) next;
             }
         } while (true);

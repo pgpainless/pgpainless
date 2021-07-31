@@ -23,8 +23,8 @@ import java.nio.charset.Charset;
 import java.util.Arrays;
 
 import org.bouncycastle.bcpg.ArmoredOutputStream;
+import org.bouncycastle.util.io.Streams;
 import org.pgpainless.util.ArmoredOutputStreamFactory;
-import org.pgpainless.util.StreamUtil;
 import sop.Ready;
 import sop.enums.ArmorLabel;
 import sop.exception.SOPGPException;
@@ -57,10 +57,10 @@ public class ArmorImpl implements Armor {
                 int read = pbIn.read(buffer);
                 pbIn.unread(buffer, 0, read);
                 if (!allowNested && Arrays.equals(ARMOR_START, buffer)) {
-                    StreamUtil.pipeAll(pbIn, System.out);
+                    Streams.pipeAll(pbIn, System.out);
                 } else {
                     ArmoredOutputStream armor = ArmoredOutputStreamFactory.get(System.out);
-                    StreamUtil.pipeAll(pbIn, armor);
+                    Streams.pipeAll(pbIn, armor);
                     armor.close();
                 }
             }

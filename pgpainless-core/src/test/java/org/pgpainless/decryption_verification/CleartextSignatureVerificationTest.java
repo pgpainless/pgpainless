@@ -28,13 +28,13 @@ import java.nio.charset.StandardCharsets;
 import org.bouncycastle.openpgp.PGPException;
 import org.bouncycastle.openpgp.PGPPublicKeyRing;
 import org.bouncycastle.openpgp.PGPSignature;
+import org.bouncycastle.util.io.Streams;
 import org.junit.jupiter.api.Test;
 import org.pgpainless.PGPainless;
 import org.pgpainless.key.TestKeys;
 import org.pgpainless.signature.cleartext_signatures.CleartextSignatureProcessor;
 import org.pgpainless.signature.cleartext_signatures.InMemoryMultiPassStrategy;
 import org.pgpainless.signature.cleartext_signatures.MultiPassStrategy;
-import org.pgpainless.util.StreamUtil;
 import org.pgpainless.util.TestUtils;
 
 public class CleartextSignatureVerificationTest {
@@ -116,7 +116,7 @@ public class CleartextSignatureVerificationTest {
         assertEquals(signature.getKeyID(), signingKeys.getPublicKey().getKeyID());
         FileInputStream fileIn = new FileInputStream(file);
         ByteArrayOutputStream bytes = new ByteArrayOutputStream();
-        StreamUtil.pipeAll(fileIn, bytes);
+        Streams.pipeAll(fileIn, bytes);
         fileIn.close();
         assertArrayEquals(message.getBytes(StandardCharsets.UTF_8), bytes.toByteArray());
     }

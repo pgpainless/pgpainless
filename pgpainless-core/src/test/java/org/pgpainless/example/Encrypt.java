@@ -28,6 +28,7 @@ import java.security.NoSuchAlgorithmException;
 import org.bouncycastle.openpgp.PGPException;
 import org.bouncycastle.openpgp.PGPPublicKeyRing;
 import org.bouncycastle.openpgp.PGPSecretKeyRing;
+import org.bouncycastle.util.io.Streams;
 import org.junit.jupiter.api.Test;
 import org.pgpainless.PGPainless;
 import org.pgpainless.algorithm.DocumentSignatureType;
@@ -41,7 +42,6 @@ import org.pgpainless.encryption_signing.SigningOptions;
 import org.pgpainless.key.protection.SecretKeyRingProtector;
 import org.pgpainless.key.util.KeyRingUtils;
 import org.pgpainless.util.Passphrase;
-import org.pgpainless.util.StreamUtil;
 
 public class Encrypt {
 
@@ -82,7 +82,7 @@ public class Encrypt {
                 );
 
         // Pipe data trough and CLOSE the stream (important)
-        StreamUtil.pipeAll(new ByteArrayInputStream(message.getBytes(StandardCharsets.UTF_8)), encryptor);
+        Streams.pipeAll(new ByteArrayInputStream(message.getBytes(StandardCharsets.UTF_8)), encryptor);
         encryptor.close();
         String encryptedMessage = ciphertext.toString();
 
@@ -96,7 +96,7 @@ public class Encrypt {
 
         ByteArrayOutputStream plaintext = new ByteArrayOutputStream();
 
-        StreamUtil.pipeAll(decryptor, plaintext);
+        Streams.pipeAll(decryptor, plaintext);
         decryptor.close();
 
         // Check the metadata to see how the message was encrypted/signed
@@ -126,7 +126,7 @@ public class Encrypt {
                         ).setAsciiArmor(true)
                 );
 
-        StreamUtil.pipeAll(new ByteArrayInputStream(message.getBytes(StandardCharsets.UTF_8)), encryptor);
+        Streams.pipeAll(new ByteArrayInputStream(message.getBytes(StandardCharsets.UTF_8)), encryptor);
         encryptor.close();
 
         String asciiCiphertext = ciphertext.toString();
@@ -137,7 +137,7 @@ public class Encrypt {
                 .withOptions(new ConsumerOptions().addDecryptionPassphrase(Passphrase.fromPassword("p4ssphr4s3")));
 
         ByteArrayOutputStream plaintext = new ByteArrayOutputStream();
-        StreamUtil.pipeAll(decryptor, plaintext);
+        Streams.pipeAll(decryptor, plaintext);
 
         decryptor.close();
 

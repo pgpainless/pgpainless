@@ -27,6 +27,7 @@ import java.util.Random;
 import org.bouncycastle.openpgp.PGPException;
 import org.bouncycastle.openpgp.PGPPublicKeyRing;
 import org.bouncycastle.openpgp.PGPSecretKeyRingCollection;
+import org.bouncycastle.util.io.Streams;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.MethodSource;
 import org.pgpainless.PGPainless;
@@ -43,7 +44,6 @@ import org.pgpainless.key.protection.PasswordBasedSecretKeyRingProtector;
 import org.pgpainless.key.protection.SecretKeyRingProtector;
 import org.pgpainless.key.protection.passphrase_provider.SolitaryPassphraseProvider;
 import org.pgpainless.util.Passphrase;
-import org.pgpainless.util.StreamUtil;
 
 /**
  * Test parallel symmetric and public key encryption/decryption.
@@ -68,7 +68,7 @@ public class SymmetricEncryptionTest {
                                 .addRecipient(encryptionKey)
                 ));
 
-        StreamUtil.pipeAll(plaintextIn, encryptor);
+        Streams.pipeAll(plaintextIn, encryptor);
         encryptor.close();
 
         byte[] ciphertext = ciphertextOut.toByteArray();
@@ -81,7 +81,7 @@ public class SymmetricEncryptionTest {
 
         ByteArrayOutputStream decrypted = new ByteArrayOutputStream();
 
-        StreamUtil.pipeAll(decryptor, decrypted);
+        Streams.pipeAll(decryptor, decrypted);
         decryptor.close();
 
         assertArrayEquals(plaintext, decrypted.toByteArray());
@@ -98,7 +98,7 @@ public class SymmetricEncryptionTest {
 
         decrypted = new ByteArrayOutputStream();
 
-        StreamUtil.pipeAll(decryptor, decrypted);
+        Streams.pipeAll(decryptor, decrypted);
         decryptor.close();
 
         assertArrayEquals(plaintext, decrypted.toByteArray());
@@ -118,7 +118,7 @@ public class SymmetricEncryptionTest {
                         EncryptionOptions.encryptCommunications()
                                 .addPassphrase(Passphrase.fromPassword("mellon"))));
 
-        StreamUtil.pipeAll(new ByteArrayInputStream(bytes), encryptor);
+        Streams.pipeAll(new ByteArrayInputStream(bytes), encryptor);
         encryptor.close();
 
         assertThrows(MissingDecryptionMethodException.class, () -> PGPainless.decryptAndOrVerify()

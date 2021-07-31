@@ -20,7 +20,7 @@ import java.io.InputStream;
 import java.io.OutputStream;
 
 import org.bouncycastle.openpgp.PGPUtil;
-import org.pgpainless.util.StreamUtil;
+import org.bouncycastle.util.io.Streams;
 import sop.Ready;
 import sop.operation.Dearmor;
 
@@ -32,7 +32,7 @@ public class DearmorImpl implements Dearmor {
         return new Ready() {
             @Override
             public void writeTo(OutputStream outputStream) throws IOException {
-                StreamUtil.pipeAll(decoder, outputStream);
+                Streams.pipeAll(decoder, outputStream);
                 decoder.close();
             }
         };

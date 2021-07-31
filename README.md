@@ -127,7 +127,7 @@ Still it allows you to manually specify which algorithms to use of course.
                         ).setAsciiArmor(true) // Ascii armor or not
                 );
 
-        StreamUtil.pipeAll(plaintextInputStream, encryptionStream);
+        Streams.pipeAll(plaintextInputStream, encryptionStream);
         encryptionStream.close();
 ```
 
@@ -147,7 +147,7 @@ This behaviour can be modified though using the `Policy` class.
                         .addVerificationCert(alicePubKeys)
                 );
 
-        StreamUtil.pipeAll(decryptionStream, outputStream);
+        Streams.pipeAll(decryptionStream, outputStream);
         decryptionStream.close();
 
         // Result contains information like signature status etc.

@@ -24,11 +24,11 @@ import java.nio.charset.StandardCharsets;
 
 import org.bouncycastle.openpgp.PGPException;
 import org.bouncycastle.openpgp.PGPSecretKeyRing;
+import org.bouncycastle.util.io.Streams;
 import org.junit.jupiter.api.Test;
 import org.pgpainless.PGPainless;
 import org.pgpainless.key.protection.SecretKeyRingProtector;
 import org.pgpainless.util.Passphrase;
-import org.pgpainless.util.StreamUtil;
 
 public class BrokenAsciiArmorOnMessageDecryptionThrows {
 
@@ -211,7 +211,7 @@ public class BrokenAsciiArmorOnMessageDecryptionThrows {
                 ));
 
         ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
-        StreamUtil.pipeAll(decryptionStream, outputStream);
+        Streams.pipeAll(decryptionStream, outputStream);
         assertThrows(IOException.class, decryptionStream::close);
     }
 }
