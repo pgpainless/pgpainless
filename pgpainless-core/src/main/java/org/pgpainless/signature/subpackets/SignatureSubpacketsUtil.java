@@ -78,7 +78,7 @@ public class SignatureSubpacketsUtil {
 
     /**
      * Return the {@link IssuerFingerprint} subpacket of the signature into a {@link OpenPgpV4Fingerprint}.
-     * If no issuer fingerprint is present in the signature, return null.
+     * If no v4 issuer fingerprint is present in the signature, return null.
      *
      * @param signature signature
      * @return v4 fingerprint of the issuer, or null
@@ -88,8 +88,12 @@ public class SignatureSubpacketsUtil {
         if (subpacket == null) {
             return null;
         }
-        OpenPgpV4Fingerprint fingerprint = new OpenPgpV4Fingerprint(Hex.encode(subpacket.getFingerprint()));
-        return fingerprint;
+
+        if (subpacket.getKeyVersion() == 4) {
+            OpenPgpV4Fingerprint fingerprint = new OpenPgpV4Fingerprint(Hex.encode(subpacket.getFingerprint()));
+            return fingerprint;
+        }
+        return null;
     }
 
     /**
