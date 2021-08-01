@@ -267,7 +267,9 @@ public final class SigningOptions {
                                   boolean detached)
             throws PGPException {
         SubkeyIdentifier signingKeyIdentifier = new SubkeyIdentifier(secretKey, signingSubkey.getKeyID());
-        PGPSignatureGenerator generator = createSignatureGenerator(secretKey.getSecretKey(signingSubkey.getKeyID()), signingSubkey, hashAlgorithm, signatureType);
+        PGPSecretKey signingSecretKey = secretKey.getSecretKey(signingSubkey.getKeyID());
+        PGPSignatureGenerator generator = createSignatureGenerator(signingSubkey, hashAlgorithm, signatureType);
+        generator.setUnhashedSubpackets(unhashedSubpackets(signingSecretKey).generate());
         SigningMethod signingMethod = detached ? SigningMethod.detachedSignature(generator) : SigningMethod.inlineSignature(generator);
         signingMethods.put(signingKeyIdentifier, signingMethod);
     }
@@ -303,8 +305,7 @@ public final class SigningOptions {
         return algorithm;
     }
 
-    private PGPSignatureGenerator createSignatureGenerator(PGPSecretKey secretKey,
-                                                           PGPPrivateKey privateKey,
+    private PGPSignatureGenerator createSignatureGenerator(PGPPrivateKey privateKey,
                                                            HashAlgorithm hashAlgorithm,
                                                            DocumentSignatureType signatureType)
             throws PGPException {
@@ -312,7 +313,6 @@ public final class SigningOptions {
         PGPContentSignerBuilder signerBuilder = ImplementationFactory.getInstance()
                 .getPGPContentSignerBuilder(publicKeyAlgorithm, hashAlgorithm.getAlgorithmId());
         PGPSignatureGenerator signatureGenerator = new PGPSignatureGenerator(signerBuilder);
-        signatureGenerator.setUnhashedSubpackets(unhashedSubpackets(secretKey).generate());
         signatureGenerator.init(signatureType.getSignatureType().getCode(), privateKey);
 
         return signatureGenerator;

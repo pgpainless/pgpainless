@@ -79,16 +79,21 @@ public class InvestigateThunderbirdDecryption {
 
     @Test
     public void generateMessage() throws PGPException, IOException {
+        // CHECKSTYLE:OFF
         System.out.println("Decryption Key");
         System.out.println(OUR_KEY);
+        // CHECKSTYLE:ON
+
         PGPSecretKeyRing ourKey = PGPainless.readKeyRing().secretKeyRing(OUR_KEY);
         PGPPublicKeyRing ourCert = PGPainless.extractCertificate(ourKey);
         PGPPublicKeyRing theirCert = PGPainless.readKeyRing().publicKeyRing(THEIR_CERT);
 
+        // CHECKSTYLE:OFF
         System.out.println("Certificate:");
         System.out.println(ArmorUtils.toAsciiArmoredString(ourCert));
 
         System.out.println("Crypt-Only:");
+        // CHECKSTYLE:ON
         ProducerOptions producerOptions = ProducerOptions
                 .encrypt(new EncryptionOptions().addRecipient(ourCert).addRecipient(theirCert))
                 .setFileName("msg.txt")
@@ -96,7 +101,10 @@ public class InvestigateThunderbirdDecryption {
 
         generateMessage(producerOptions);
 
+        // CHECKSTYLE:OFF
         System.out.println("Sign-Crypt:");
+        // CHECKSTYLE:ON
+
         producerOptions = ProducerOptions
                 .signAndEncrypt(new EncryptionOptions().addRecipient(ourCert).addRecipient(theirCert),
                         new SigningOptions().addInlineSignature(SecretKeyRingProtector.unprotectedKeys(), ourKey, DocumentSignatureType.BINARY_DOCUMENT))
@@ -116,6 +124,8 @@ public class InvestigateThunderbirdDecryption {
         Streams.pipeAll(new ByteArrayInputStream(data.getBytes(StandardCharsets.UTF_8)), encryptionStream);
         encryptionStream.close();
 
+        // CHECKSTYLE:OFF
         System.out.println(out);
+        // CHECKSTYLE:ON
     }
 }
