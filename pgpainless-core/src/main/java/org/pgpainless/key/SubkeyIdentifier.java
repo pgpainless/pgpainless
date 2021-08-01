@@ -18,7 +18,6 @@ package org.pgpainless.key;
 import javax.annotation.Nonnull;
 
 import org.bouncycastle.openpgp.PGPKeyRing;
-import org.bouncycastle.openpgp.PGPSecretKeyRing;
 
 /**
  * Tuple class used to identify a subkey by fingerprints of the primary key of the subkeys key ring,
@@ -30,6 +29,16 @@ public class SubkeyIdentifier {
     private final OpenPgpV4Fingerprint subkeyFingerprint;
 
     /**
+     * Create a {@link SubkeyIdentifier} from a {@link PGPKeyRing}.
+     * The identifier will point to the primary key of the provided ring.
+     *
+     * @param keyRing key ring
+     */
+    public SubkeyIdentifier(PGPKeyRing keyRing) {
+        this(keyRing, keyRing.getPublicKey().getKeyID());
+    }
+
+    /**
      * Create a {@link SubkeyIdentifier} from a {@link PGPKeyRing} and the subkeys key id.
      * {@link #getPrimaryKeyFingerprint()} will return the {@link OpenPgpV4Fingerprint} of the keyrings primary key,
      * while {@link #getSubkeyFingerprint()} will return the subkeys fingerprint.
@@ -39,6 +48,10 @@ public class SubkeyIdentifier {
      */
     public SubkeyIdentifier(@Nonnull PGPKeyRing keyRing, long keyId) {
         this(new OpenPgpV4Fingerprint(keyRing.getPublicKey()), new OpenPgpV4Fingerprint(keyRing.getPublicKey(keyId)));
+    }
+
+    public SubkeyIdentifier(@Nonnull PGPKeyRing keyRing, @Nonnull OpenPgpV4Fingerprint subkeyFingerprint) {
+        this(new OpenPgpV4Fingerprint(keyRing), subkeyFingerprint);
     }
 
     /**
@@ -61,10 +74,6 @@ public class SubkeyIdentifier {
     public SubkeyIdentifier(@Nonnull OpenPgpV4Fingerprint primaryKeyFingerprint, @Nonnull OpenPgpV4Fingerprint subkeyFingerprint) {
         this.primaryKeyFingerprint = primaryKeyFingerprint;
         this.subkeyFingerprint = subkeyFingerprint;
-    }
-
-    public SubkeyIdentifier(PGPSecretKeyRing secretKeys) {
-        this(secretKeys, secretKeys.getPublicKey().getKeyID());
     }
 
     public @Nonnull OpenPgpV4Fingerprint getFingerprint() {
