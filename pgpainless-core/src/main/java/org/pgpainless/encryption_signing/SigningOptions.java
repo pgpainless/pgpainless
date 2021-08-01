@@ -29,6 +29,7 @@ import org.bouncycastle.openpgp.PGPSecretKey;
 import org.bouncycastle.openpgp.PGPSecretKeyRing;
 import org.bouncycastle.openpgp.PGPSecretKeyRingCollection;
 import org.bouncycastle.openpgp.PGPSignatureGenerator;
+import org.bouncycastle.openpgp.PGPSignatureSubpacketGenerator;
 import org.bouncycastle.openpgp.operator.PGPContentSignerBuilder;
 import org.pgpainless.PGPainless;
 import org.pgpainless.algorithm.DocumentSignatureType;
@@ -266,7 +267,7 @@ public final class SigningOptions {
                                   boolean detached)
             throws PGPException {
         SubkeyIdentifier signingKeyIdentifier = new SubkeyIdentifier(secretKey, signingSubkey.getKeyID());
-        PGPSignatureGenerator generator = createSignatureGenerator(signingSubkey, hashAlgorithm, signatureType);
+        PGPSignatureGenerator generator = createSignatureGenerator(secretKey.getSecretKey(signingSubkey.getKeyID()), signingSubkey, hashAlgorithm, signatureType);
         SigningMethod signingMethod = detached ? SigningMethod.detachedSignature(generator) : SigningMethod.inlineSignature(generator);
         signingMethods.put(signingKeyIdentifier, signingMethod);
     }
@@ -302,7 +303,8 @@ public final class SigningOptions {
         return algorithm;
     }
 
-    private PGPSignatureGenerator createSignatureGenerator(PGPPrivateKey privateKey,
+    private PGPSignatureGenerator createSignatureGenerator(PGPSecretKey secretKey,
+                                                           PGPPrivateKey privateKey,
                                                            HashAlgorithm hashAlgorithm,
                                                            DocumentSignatureType signatureType)
             throws PGPException {
@@ -310,9 +312,17 @@ public final class SigningOptions {
         PGPContentSignerBuilder signerBuilder = ImplementationFactory.getInstance()
                 .getPGPContentSignerBuilder(publicKeyAlgorithm, hashAlgorithm.getAlgorithmId());
         PGPSignatureGenerator signatureGenerator = new PGPSignatureGenerator(signerBuilder);
+        signatureGenerator.setUnhashedSubpackets(unhashedSubpackets(secretKey).generate());
         signatureGenerator.init(signatureType.getSignatureType().getCode(), privateKey);
 
         return signatureGenerator;
+    }
+
+    private PGPSignatureSubpacketGenerator unhashedSubpackets(PGPSecretKey key) {
+        PGPSignatureSubpacketGenerator generator = new PGPSignatureSubpacketGenerator();
+        generator.setIssuerKeyID(false, key.getKeyID());
+        generator.setIssuerFingerprint(false, key);
+        return generator;
     }
 
     /**
