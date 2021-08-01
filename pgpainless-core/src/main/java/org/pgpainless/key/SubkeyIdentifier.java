@@ -15,9 +15,11 @@
  */
 package org.pgpainless.key;
 
+import java.util.NoSuchElementException;
 import javax.annotation.Nonnull;
 
 import org.bouncycastle.openpgp.PGPKeyRing;
+import org.bouncycastle.openpgp.PGPPublicKey;
 
 /**
  * Tuple class used to identify a subkey by fingerprints of the primary key of the subkeys key ring,
@@ -47,7 +49,12 @@ public class SubkeyIdentifier {
      * @param keyId keyid of the subkey
      */
     public SubkeyIdentifier(@Nonnull PGPKeyRing keyRing, long keyId) {
-        this(new OpenPgpV4Fingerprint(keyRing.getPublicKey()), new OpenPgpV4Fingerprint(keyRing.getPublicKey(keyId)));
+        PGPPublicKey subkey = keyRing.getPublicKey(keyId);
+        if (subkey == null) {
+            throw new NoSuchElementException("Key ring does not contain subkey with id " + Long.toHexString(keyId));
+        }
+        this.primaryKeyFingerprint = new OpenPgpV4Fingerprint(keyRing);
+        this.subkeyFingerprint = new OpenPgpV4Fingerprint(subkey);
     }
 
     public SubkeyIdentifier(@Nonnull PGPKeyRing keyRing, @Nonnull OpenPgpV4Fingerprint subkeyFingerprint) {

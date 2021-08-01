@@ -17,8 +17,10 @@ package org.pgpainless.key;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotEquals;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 
 import java.io.IOException;
+import java.util.NoSuchElementException;
 
 import org.bouncycastle.openpgp.PGPPublicKeyRing;
 import org.junit.jupiter.api.BeforeAll;
@@ -109,5 +111,10 @@ public class SubkeyIdentifierTest {
 
         assertNotEquals(id1, PRIMARY_FP);
         assertNotEquals(id1, null);
+    }
+
+    @Test
+    public void nonExistentSubkeyThrowsNoSuchElementException() {
+        assertThrows(NoSuchElementException.class, () -> new SubkeyIdentifier(CERT, 123));
     }
 }
