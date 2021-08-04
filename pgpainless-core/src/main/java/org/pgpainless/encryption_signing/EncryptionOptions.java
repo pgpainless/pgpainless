@@ -24,6 +24,8 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
+import javax.annotation.Nonnull;
+
 import org.bouncycastle.openpgp.PGPPublicKey;
 import org.bouncycastle.openpgp.PGPPublicKeyRing;
 import org.bouncycastle.openpgp.PGPPublicKeyRingCollection;
@@ -70,7 +72,7 @@ public class EncryptionOptions {
     private final Set<SubkeyIdentifier> encryptionKeys = new LinkedHashSet<>();
     private final Map<SubkeyIdentifier, KeyRingInfo> keyRingInfo = new HashMap<>();
     private final Map<SubkeyIdentifier, KeyAccessor> keyViews = new HashMap<>();
-    private final EncryptionKeySelector encryptionKeySelector = encryptToFirstSubkey();
+    private final EncryptionKeySelector encryptionKeySelector = encryptToAllCapableSubkeys();
 
     private SymmetricKeyAlgorithm encryptionAlgorithmOverride = null;
 
@@ -115,6 +117,21 @@ public class EncryptionOptions {
     public EncryptionOptions addRecipients(PGPPublicKeyRingCollection keys) {
         for (PGPPublicKeyRing key : keys) {
             addRecipient(key);
+        }
+        return this;
+    }
+
+    /**
+     * Add all key rings in the provided key ring collection as recipients.
+     * Per key ring, the selector is applied to select one or more encryption subkeys.
+     *
+     * @param keys keys
+     * @param selector encryption key selector
+     * @return this
+     */
+    public EncryptionOptions addRecipients(@Nonnull PGPPublicKeyRingCollection keys, @Nonnull EncryptionKeySelector selector) {
+        for (PGPPublicKeyRing key : keys) {
+            addRecipient(key, selector);
         }
         return this;
     }

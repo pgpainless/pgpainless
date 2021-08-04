@@ -179,14 +179,14 @@ public class EncryptionOptionsTest {
                 Arrays.asList(publicKeys, secondKeyRing));
 
         EncryptionOptions options = new EncryptionOptions();
-        options.addRecipients(collection);
+        options.addRecipients(collection, EncryptionOptions.encryptToFirstSubkey());
         assertEquals(2, options.getEncryptionKeyIdentifiers().size());
     }
 
     @Test
     public void testAddRecipient_withValidUserId() {
         EncryptionOptions options = new EncryptionOptions();
-        options.addRecipient(publicKeys, "test@pgpainless.org");
+        options.addRecipient(publicKeys, "test@pgpainless.org", EncryptionOptions.encryptToFirstSubkey());
 
         assertEquals(1, options.getEncryptionMethods().size());
     }
