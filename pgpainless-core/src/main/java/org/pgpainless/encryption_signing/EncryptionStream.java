@@ -52,7 +52,10 @@ public final class EncryptionStream extends OutputStream {
     private final EncryptionResult.Builder resultBuilder = EncryptionResult.builder();
 
     private boolean closed = false;
-    private static final int BUFFER_SIZE = 1 << 8;
+    // 1 << 8 causes wrong partial body length encoding
+    //  1 << 9 fixes this.
+    //  see https://github.com/pgpainless/pgpainless/issues/160
+    private static final int BUFFER_SIZE = 1 << 9;
 
     OutputStream outermostStream;
     private ArmoredOutputStream armorOutputStream = null;
