@@ -17,6 +17,8 @@ package org.pgpainless.encryption_signing;
 
 import java.io.IOException;
 import java.io.OutputStream;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import javax.annotation.Nonnull;
@@ -134,12 +136,16 @@ public final class EncryptionStream extends OutputStream {
             return;
         }
 
+        int sigIndex = 0;
         for (SubkeyIdentifier identifier : signingOptions.getSigningMethods().keySet()) {
+            sigIndex++;
             SigningOptions.SigningMethod signingMethod = signingOptions.getSigningMethods().get(identifier);
 
             if (!signingMethod.isDetached()) {
                 PGPSignatureGenerator signatureGenerator = signingMethod.getSignatureGenerator();
-                signatureGenerator.generateOnePassVersion(false).encode(outermostStream);
+                // The last sig is not nested, all others are
+                boolean nested = sigIndex != signingOptions.getSigningMethods().size();
+                signatureGenerator.generateOnePassVersion(nested).encode(outermostStream);
             }
         }
     }
@@ -238,7 +244,15 @@ public final class EncryptionStream extends OutputStream {
         if (signingOptions == null || signingOptions.getSigningMethods().isEmpty()) {
             return;
         }
+
+        // One-Pass-Signatures are bracketed. That means we have to append the signatures in reverse order
+        //  compared to the one-pass-signature packets.
+        List<SubkeyIdentifier> signingKeys = new ArrayList<>();
         for (SubkeyIdentifier signingKey : signingOptions.getSigningMethods().keySet()) {
+            signingKeys.add(signingKey);
+        }
+        for (int i = signingKeys.size() - 1; i >= 0; i--) {
+            SubkeyIdentifier signingKey = signingKeys.get(i);
             SigningOptions.SigningMethod signingMethod = signingOptions.getSigningMethods().get(signingKey);
             PGPSignatureGenerator signatureGenerator = signingMethod.getSignatureGenerator();
             PGPSignature signature = signatureGenerator.generate();
