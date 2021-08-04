@@ -1,5 +1,14 @@
 # PGPainless Changelog
 
+## 0.2.7
+- Fix writing data to standard out in the `java-sop-picocli` module
+- Improve handling of signatures with missing issuer-key-id packets
+- Properly ignore marker packets
+- Add issuer-fingerprint packets to message signatures by default
+- Fix ordering (bracketing) and nested-ness of one-pass-signatures
+- Fix interoperability issue with Thunderbird  
+  - Some keys caused wrong partial-length encodings for integrity protected session packets
+
 ## 0.2.6
 - Actually properly detect CRC checksum errors in ASCII armor
 
