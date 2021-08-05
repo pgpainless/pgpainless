@@ -200,17 +200,17 @@ public class SignatureUtils {
         PGPObjectFactory objectFactory = new PGPObjectFactory(
                 pgpIn, ImplementationFactory.getInstance().getKeyFingerprintCalculator());
 
-        Object nextObject = objectFactory.nextObject();
+        Object nextObject = tryNext(objectFactory);
         while (nextObject != null) {
             if (nextObject instanceof PGPMarker) {
-                nextObject = objectFactory.nextObject();
+                nextObject = tryNext(objectFactory);
                 continue;
             }
             if (nextObject instanceof PGPCompressedData) {
                 PGPCompressedData compressedData = (PGPCompressedData) nextObject;
                 objectFactory = new PGPObjectFactory(compressedData.getDataStream(),
                         ImplementationFactory.getInstance().getKeyFingerprintCalculator());
-                nextObject = objectFactory.nextObject();
+                nextObject = tryNext(objectFactory);
                 continue;
             }
             if (nextObject instanceof PGPSignatureList) {
@@ -222,11 +222,20 @@ public class SignatureUtils {
             if (nextObject instanceof PGPSignature) {
                 signatures.add((PGPSignature) nextObject);
             }
-            nextObject = objectFactory.nextObject();
+            nextObject = tryNext(objectFactory);
         }
         pgpIn.close();
 
         return signatures;
+    }
+
+    private static Object tryNext(PGPObjectFactory factory) throws IOException {
+        try {
+            Object o = factory.nextObject();
+            return o;
+        } catch (RuntimeException e) {
+            return tryNext(factory);
+        }
     }
 
     public static long determineIssuerKeyId(PGPSignature signature) {
