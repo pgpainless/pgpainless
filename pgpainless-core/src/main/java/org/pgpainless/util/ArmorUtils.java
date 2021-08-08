@@ -213,10 +213,10 @@ public class ArmorUtils {
      * For {@link PGPPublicKeyRingCollection#PGPPublicKeyRingCollection(InputStream, KeyFingerPrintCalculator)}
      * or {@link PGPSecretKeyRingCollection#PGPSecretKeyRingCollection(InputStream, KeyFingerPrintCalculator)}
      * to read all PGPKeyRings properly, we apparently have to make sure that the {@link InputStream} that is given
-     * as constructor argument is a {@link PGPUtil.BufferedInputStreamExt}.
+     * as constructor argument is a PGPUtil.BufferedInputStreamExt.
      * Since {@link PGPUtil#getDecoderStream(InputStream)} will return an {@link org.bouncycastle.bcpg.ArmoredInputStream}
      * if the underlying input stream contains armored data, we have to nest two method calls to make sure that the
-     * end-result is a {@link PGPUtil.BufferedInputStreamExt}.
+     * end-result is a PGPUtil.BufferedInputStreamExt.
      *
      * This is a hacky solution.
      *
