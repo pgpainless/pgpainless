@@ -34,25 +34,30 @@ public class WeirdKeys {
      * communications" (key flag 0x04), and "may be used to encrypt storage"
      * (key flag 0x08).
      */
-    public static final String TWO_CRYPT_SUBKEYS = "-----BEGIN PGP PRIVATE KEY BLOCK-----\n" +
-        "\n" +
-        "xVgEWxpOHRYJKwYBBAHaRw8BAQdAxq7YVmI0c+fxhv9fCd3SwrVIvXiUkKjS/Zz8\n" +
-        "xmkV+4YAAP9QXswTMSNZScLMSB186DmFrDYvdv9a5dYJaMbn3ssAXBBVzRpUd28g\n" +
-        "RmlzaCA8dHdvQGV4YW1wbGUub3JnPsJ+BBMWCgAwApsDBYJbGk4dBYkB3+IAFqEE\n" +
-        "K3dX2K8oNGigV0aZkQ5VRHjM3gAJkJEOVUR4zN4AAAC9/AD9F+KyqaTdSZxn6KKd\n" +
-        "grcOiunuxA1pZ/bP2TYBWLXoirQA+wTm9K2aSc9YulbJcFF3XKQJDzvKeDyknok+\n" +
-        "TVzYIVMIx10EWxpOHRIKKwYBBAGXVQEFAQEHQEr7lcszstnVdhkTOYGfZJuYQznG\n" +
-        "pfz2/Jydug3Mmn19AwEKCQAA/3jWHYWk3UY4L9aqcHwJj9VdKxrjP5soyUx1Uey/\n" +
-        "4dUYENHCfgQYFgoAMAKbDAWCWxpOHQWJAd/iABahBCt3V9ivKDRooFdGmZEOVUR4\n" +
-        "zN4ACZCRDlVEeMzeAAAAllIBAPrKUhqobdgqYkK2sz6Rmh+EYFKDfQw2/PEfdRU4\n" +
-        "WGuWAP9RR1cEVzArXFgjfuyoeFjH7eUUY8+mLcpzEgKrykhxD8ddBFsaTh0SCisG\n" +
-        "AQQBl1UBBQEBB0AZvZWhCE0hWegUjFz193npbGPib3EmdzgbbrfjefDNNAMBCgkA\n" +
-        "AP9e5eLZhejDULF5JI9OQ7mCrabEEYbuoPy2njhHJa5XwBMbwn4EGBYKADACmwwF\n" +
-        "glsaTh0FiQHf4gAWoQQrd1fYryg0aKBXRpmRDlVEeMzeAAmQkQ5VRHjM3gAAAAj2\n" +
-        "AP0bD/gR70zkMKwC3+dEpPZ41+gyjlrrrHbGMiaBEzug5QD/e3I6t5XtPbRg66np\n" +
-        "GwsOQiY1zEbCH/CpCRO3w/OQUgM=\n" +
-        "=+0IG\n" +
-        "-----END PGP PRIVATE KEY BLOCK-----\n";
+    public static final String TWO_CRYPT_SUBKEYS = "" +
+            "-----BEGIN PGP PRIVATE KEY BLOCK-----\n" +
+            "Version: PGPainless\n" +
+            "Comment: 7B71 019D 244B 250E 2D87  B168 AA4C 965A 79FD 159F\n" +
+            "Comment: Two Fish <two@example.org>\n" +
+            "\n" +
+            "lFgEYQ/uqxYJKwYBBAHaRw8BAQdAajnmsfDPTpwJtqsH7yuSSmKzk/v6Q2qXmFOI\n" +
+            "ra8YeKgAAQDcKvq5zVAKvurI+qXh80aw3ynIH/JYds+0CtMtZJyEDRKHtBpUd28g\n" +
+            "RmlzaCA8dHdvQGV4YW1wbGUub3JnPoh4BBMWCgAgBQJhD+6sAhsDBRYCAwEABAsJ\n" +
+            "CAcFFQoJCAsCHgECGQEACgkQqkyWWnn9FZ+v+QEAt3o0BwY1yQZ7W6KNNGFwk5yP\n" +
+            "82zK5POtJ8tv1sZIf18BAOqgZU6IzasEIjihbrVmyB6qhxgy41ScKvHSNhAN7vEP\n" +
+            "nHsEYQ/urBIIKoZIzj0DAQcCAwRcUEGR3ZdvlXQQSxVLMOi0eLhFqZ09STxjS0kM\n" +
+            "7r4llRlVI3jXNYorGmJIXb8xgnyisWLb11FvL1EGT6s7DcSEAwEIBwAA/0u+YdR0\n" +
+            "CJhfM2YmtiHv9WYOrN9J1qXuXQuoikeiISimEE2IdQQYFgoAHQUCYQ/urAIbDAUW\n" +
+            "AgMBAAQLCQgHBRUKCQgLAh4BAAoJEKpMllp5/RWfatUA/RJrmJaZ7TaDUHZJAgiX\n" +
+            "UPgEZw5R675jYfKN4y6YLg2rAP0XWV6T1fmGcxjV//shbP693DlyHrpCfIFHvASl\n" +
+            "PofuA5x7BGEP7qwSCCqGSM49AwEHAgMEiBmYN0LnrsgtITA2ZXfCtreq20bsj1mR\n" +
+            "nSt2zsFqvy9c3OM18PiT8sgmAUMvS0up9hWtOB1XgA0OwNHzv19uvQMBCAcAAP9o\n" +
+            "jX1KuCRPvyeo8GiwUCVdciG7BpsMNxhQlkoyhHt/dw3viHUEGBYKAB0FAmEP7qwC\n" +
+            "GwwFFgIDAQAECwkIBwUVCgkICwIeAQAKCRCqTJZaef0VnxpOAQClDbWnBpUNflwX\n" +
+            "UcT1mUtFABYhDI+yo3DkfHxq/wEZzwD/U4NDtvxAYkX01qPSBfE+u+iQ4GiHya87\n" +
+            "aEdm1GVjyQw=\n" +
+            "=BlPm\n" +
+            "-----END PGP PRIVATE KEY BLOCK-----\n";
 
     public static PGPSecretKeyRing getTwoCryptSubkeysKey() throws IOException, PGPException {
         return PGPainless.readKeyRing().secretKeyRing(TWO_CRYPT_SUBKEYS);
