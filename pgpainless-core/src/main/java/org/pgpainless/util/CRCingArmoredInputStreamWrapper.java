@@ -20,6 +20,13 @@ import java.io.InputStream;
 
 import org.bouncycastle.bcpg.ArmoredInputStream;
 
+/**
+ * Utility class that causes read(bytes, offset, length) to properly throw exceptions
+ * caused by faulty CRC checksums.
+ *
+ * Furthermore, this class swallows exceptions from BC's ArmoredInputStream that are caused
+ * by missing CRC checksums.
+ */
 public class CRCingArmoredInputStreamWrapper extends ArmoredInputStream {
 
     private final ArmoredInputStream inputStream;
@@ -63,7 +70,16 @@ public class CRCingArmoredInputStreamWrapper extends ArmoredInputStream {
 
     @Override
     public int read() throws IOException {
-        return inputStream.read();
+        try {
+            return inputStream.read();
+        } catch (IOException e) {
+            if (e.getMessage().equals("no crc found in armored message.") || e.getMessage().equals("crc check not found.")) {
+                // swallow exception
+                return -1;
+            } else {
+                throw e;
+            }
+        }
     }
 
     @Override
