@@ -24,6 +24,7 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 import java.io.IOException;
 import java.security.InvalidAlgorithmParameterException;
 import java.security.NoSuchAlgorithmException;
+import java.util.Arrays;
 import java.util.Calendar;
 import java.util.Collections;
 import java.util.Date;
@@ -74,8 +75,16 @@ public class KeyRingInfoTest {
         assertEquals(PublicKeyAlgorithm.ECDSA, sInfo.getAlgorithm());
         assertEquals(PublicKeyAlgorithm.ECDSA, pInfo.getAlgorithm());
 
+        assertEquals(Arrays.asList(KeyFlag.CERTIFY_OTHER, KeyFlag.SIGN_DATA, KeyFlag.AUTHENTICATION), pInfo.getKeyFlagsOf(TestKeys.EMIL_UID));
+        assertEquals(Arrays.asList(KeyFlag.CERTIFY_OTHER, KeyFlag.SIGN_DATA, KeyFlag.AUTHENTICATION), sInfo.getKeyFlagsOf(TestKeys.EMIL_UID));
+        assertEquals(Collections.emptyList(), pInfo.getKeyFlagsOf("invalid@user.id"));
+        assertEquals(Collections.emptyList(), sInfo.getKeyFlagsOf("invalid@user.id"));
+
         assertEquals(2, sInfo.getPublicKeys().size());
         assertEquals(2, pInfo.getPublicKeys().size());
+
+        assertEquals(2, sInfo.getSecretKeys().size());
+        assertEquals(0, pInfo.getSecretKeys().size());
 
         assertEquals(Collections.singletonList("<emil@email.user>"), sInfo.getUserIds());
         assertEquals(Collections.singletonList("<emil@email.user>"), pInfo.getUserIds());
@@ -104,6 +113,9 @@ public class KeyRingInfoTest {
         assertNotNull(rInfo.getRevocationDate());
         assertEquals(revocationDate.getTime(), rInfo.getRevocationDate().getTime(), 5);
         assertEquals(revocationDate.getTime(), rInfo.getLastModified().getTime(), 5);
+
+        assertFalse(pInfo.isKeyValidlyBound(1230));
+        assertFalse(sInfo.isKeyValidlyBound(1230));
     }
 
     @Test
