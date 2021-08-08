@@ -15,7 +15,6 @@
  */
 package org.pgpainless.key.parsing;
 
-import java.io.BufferedInputStream;
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.io.InputStream;
@@ -25,7 +24,6 @@ import java.util.Iterator;
 import java.util.List;
 import javax.annotation.Nonnull;
 
-import org.bouncycastle.bcpg.ArmoredInputStream;
 import org.bouncycastle.openpgp.PGPException;
 import org.bouncycastle.openpgp.PGPMarker;
 import org.bouncycastle.openpgp.PGPObjectFactory;
@@ -33,12 +31,10 @@ import org.bouncycastle.openpgp.PGPPublicKeyRing;
 import org.bouncycastle.openpgp.PGPPublicKeyRingCollection;
 import org.bouncycastle.openpgp.PGPSecretKeyRing;
 import org.bouncycastle.openpgp.PGPSecretKeyRingCollection;
-import org.bouncycastle.openpgp.PGPUtil;
-import org.bouncycastle.openpgp.operator.KeyFingerPrintCalculator;
 import org.bouncycastle.util.io.Streams;
 import org.pgpainless.implementation.ImplementationFactory;
 import org.pgpainless.key.collection.PGPKeyRingCollection;
-import org.pgpainless.util.ArmoredInputStreamFactory;
+import org.pgpainless.util.ArmorUtils;
 
 public class KeyRingReader {
 
@@ -109,7 +105,7 @@ public class KeyRingReader {
 
     public static PGPPublicKeyRing readPublicKeyRing(@Nonnull InputStream inputStream) throws IOException {
         PGPObjectFactory objectFactory = new PGPObjectFactory(
-                getDecoderStream(inputStream),
+                ArmorUtils.getDecoderStream(inputStream),
                 ImplementationFactory.getInstance().getKeyFingerprintCalculator());
         Object next;
         do {
@@ -131,7 +127,7 @@ public class KeyRingReader {
     public static PGPPublicKeyRingCollection readPublicKeyRingCollection(@Nonnull InputStream inputStream)
             throws IOException, PGPException {
         PGPObjectFactory objectFactory = new PGPObjectFactory(
-                getDecoderStream(inputStream),
+                ArmorUtils.getDecoderStream(inputStream),
                 ImplementationFactory.getInstance().getKeyFingerprintCalculator());
 
         List<PGPPublicKeyRing> rings = new ArrayList<>();
@@ -161,7 +157,7 @@ public class KeyRingReader {
     }
 
     public static PGPSecretKeyRing readSecretKeyRing(@Nonnull InputStream inputStream) throws IOException {
-        InputStream decoderStream = getDecoderStream(inputStream);
+        InputStream decoderStream = ArmorUtils.getDecoderStream(inputStream);
         PGPObjectFactory objectFactory = new PGPObjectFactory(
                 decoderStream,
                 ImplementationFactory.getInstance().getKeyFingerprintCalculator());
@@ -187,7 +183,7 @@ public class KeyRingReader {
     public static PGPSecretKeyRingCollection readSecretKeyRingCollection(@Nonnull InputStream inputStream)
             throws IOException, PGPException {
         PGPObjectFactory objectFactory = new PGPObjectFactory(
-                getDecoderStream(inputStream),
+                ArmorUtils.getDecoderStream(inputStream),
                 ImplementationFactory.getInstance().getKeyFingerprintCalculator());
 
         List<PGPSecretKeyRing> rings = new ArrayList<>();
@@ -219,35 +215,5 @@ public class KeyRingReader {
     public static PGPKeyRingCollection readKeyRingCollection(@Nonnull InputStream inputStream, boolean isSilent)
             throws IOException, PGPException {
         return new PGPKeyRingCollection(inputStream, isSilent);
-    }
-
-    /**
-     * Hacky workaround for #96.
-     * For {@link PGPPublicKeyRingCollection#PGPPublicKeyRingCollection(InputStream, KeyFingerPrintCalculator)}
-     * or {@link PGPSecretKeyRingCollection#PGPSecretKeyRingCollection(InputStream, KeyFingerPrintCalculator)}
-     * to read all PGPKeyRings properly, we apparently have to make sure that the {@link InputStream} that is given
-     * as constructor argument is a {@link PGPUtil.BufferedInputStreamExt}.
-     * Since {@link PGPUtil#getDecoderStream(InputStream)} will return an {@link org.bouncycastle.bcpg.ArmoredInputStream}
-     * if the underlying input stream contains armored data, we have to nest two method calls to make sure that the
-     * end-result is a {@link PGPUtil.BufferedInputStreamExt}.
-     *
-     * This is a hacky solution.
-     *
-     * @param inputStream input stream
-     * @return BufferedInputStreamExt
-     */
-    private static InputStream getDecoderStream(InputStream inputStream) throws IOException {
-        InputStream decoderStream = PGPUtil.getDecoderStream(inputStream);
-        // Data is not armored -> return
-        if (decoderStream instanceof BufferedInputStream) {
-            return decoderStream;
-        }
-        // Wrap armored input stream with fix for #159
-        if (decoderStream instanceof ArmoredInputStream) {
-            decoderStream = ArmoredInputStreamFactory.get(decoderStream);
-        }
-
-        decoderStream = PGPUtil.getDecoderStream(decoderStream);
-        return decoderStream;
     }
 }

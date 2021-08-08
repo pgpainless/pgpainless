@@ -15,6 +15,7 @@
  */
 package org.pgpainless.util;
 
+import java.io.BufferedInputStream;
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
@@ -32,6 +33,8 @@ import org.bouncycastle.openpgp.PGPPublicKeyRing;
 import org.bouncycastle.openpgp.PGPPublicKeyRingCollection;
 import org.bouncycastle.openpgp.PGPSecretKeyRing;
 import org.bouncycastle.openpgp.PGPSecretKeyRingCollection;
+import org.bouncycastle.openpgp.PGPUtil;
+import org.bouncycastle.openpgp.operator.KeyFingerPrintCalculator;
 import org.bouncycastle.util.io.Streams;
 import org.pgpainless.algorithm.HashAlgorithm;
 import org.pgpainless.key.OpenPgpV4Fingerprint;
@@ -203,5 +206,33 @@ public class ArmorUtils {
             }
         }
         return values;
+    }
+
+    /**
+     * Hacky workaround for #96.
+     * For {@link PGPPublicKeyRingCollection#PGPPublicKeyRingCollection(InputStream, KeyFingerPrintCalculator)}
+     * or {@link PGPSecretKeyRingCollection#PGPSecretKeyRingCollection(InputStream, KeyFingerPrintCalculator)}
+     * to read all PGPKeyRings properly, we apparently have to make sure that the {@link InputStream} that is given
+     * as constructor argument is a {@link PGPUtil.BufferedInputStreamExt}.
+     * Since {@link PGPUtil#getDecoderStream(InputStream)} will return an {@link org.bouncycastle.bcpg.ArmoredInputStream}
+     * if the underlying input stream contains armored data, we have to nest two method calls to make sure that the
+     * end-result is a {@link PGPUtil.BufferedInputStreamExt}.
+     *
+     * This is a hacky solution.
+     *
+     * @param inputStream input stream
+     * @return BufferedInputStreamExt
+     */
+    public static InputStream getDecoderStream(InputStream inputStream) throws IOException {
+        InputStream decoderStream = PGPUtil.getDecoderStream(inputStream);
+        // Data is not armored -> return
+        if (decoderStream instanceof BufferedInputStream) {
+            return decoderStream;
+        }
+        // Wrap armored input stream with fix for #159
+        decoderStream = CRCingArmoredInputStreamWrapper.possiblyWrap(decoderStream);
+
+        decoderStream = PGPUtil.getDecoderStream(decoderStream);
+        return decoderStream;
     }
 }

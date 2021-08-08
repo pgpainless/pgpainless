@@ -36,7 +36,6 @@ import org.bouncycastle.openpgp.PGPSecretKey;
 import org.bouncycastle.openpgp.PGPSignature;
 import org.bouncycastle.openpgp.PGPSignatureGenerator;
 import org.bouncycastle.openpgp.PGPSignatureList;
-import org.bouncycastle.openpgp.PGPUtil;
 import org.bouncycastle.openpgp.operator.PGPContentSignerBuilder;
 import org.bouncycastle.util.encoders.Hex;
 import org.pgpainless.PGPainless;
@@ -48,6 +47,7 @@ import org.pgpainless.key.util.OpenPgpKeyAttributeUtil;
 import org.pgpainless.key.util.RevocationAttributes;
 import org.pgpainless.policy.Policy;
 import org.pgpainless.signature.subpackets.SignatureSubpacketsUtil;
+import org.pgpainless.util.ArmorUtils;
 
 /**
  * Utility methods related to signatures.
@@ -196,7 +196,7 @@ public class SignatureUtils {
 
     public static List<PGPSignature> readSignatures(InputStream inputStream) throws IOException, PGPException {
         List<PGPSignature> signatures = new ArrayList<>();
-        InputStream pgpIn = PGPUtil.getDecoderStream(inputStream);
+        InputStream pgpIn = ArmorUtils.getDecoderStream(inputStream);
         PGPObjectFactory objectFactory = new PGPObjectFactory(
                 pgpIn, ImplementationFactory.getInstance().getKeyFingerprintCalculator());
 
