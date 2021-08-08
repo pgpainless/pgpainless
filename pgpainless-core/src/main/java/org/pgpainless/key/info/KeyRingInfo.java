@@ -349,6 +349,9 @@ public class KeyRingInfo {
         if (certification == null) {
             return false;
         }
+        if (SignatureUtils.isSignatureExpired(certification)) {
+            return false;
+        }
         // Not revoked -> valid
         if (revocation == null) {
             return true;
@@ -588,15 +591,19 @@ public class KeyRingInfo {
      * @return expiration date
      */
     public @Nullable Date getPrimaryKeyExpirationDate() {
+        PGPSignature directKeySig = getLatestDirectKeySelfSignature();
+        if (directKeySig != null) {
+            Date directKeyExpirationDate = SignatureSubpacketsUtil.getKeyExpirationTimeAsDate(directKeySig, getPublicKey());
+            if (directKeyExpirationDate != null) {
+                return directKeyExpirationDate;
+            }
+        }
+
         PGPSignature primaryUserIdCertification = getLatestUserIdCertification(getPrimaryUserId());
         if (primaryUserIdCertification != null) {
             return SignatureSubpacketsUtil.getKeyExpirationTimeAsDate(primaryUserIdCertification, getPublicKey());
         }
 
-        PGPSignature directKeySig = getLatestDirectKeySelfSignature();
-        if (directKeySig != null) {
-            return SignatureSubpacketsUtil.getKeyExpirationTimeAsDate(directKeySig, getPublicKey());
-        }
         throw new NoSuchElementException("No suitable signatures found on the key.");
     }
 
@@ -745,10 +752,19 @@ public class KeyRingInfo {
      * @return encryption subkeys
      */
     public @Nonnull List<PGPPublicKey> getEncryptionSubkeys(EncryptionPurpose purpose) {
+        Date primaryExpiration = getPrimaryKeyExpirationDate();
+        if (primaryExpiration != null && primaryExpiration.before(new Date())) {
+            return Collections.emptyList();
+        }
+
         Iterator<PGPPublicKey> subkeys = keys.getPublicKeys();
         List<PGPPublicKey> encryptionKeys = new ArrayList<>();
         while (subkeys.hasNext()) {
             PGPPublicKey subKey = subkeys.next();
+            Date subkeyExpiration = getSubkeyExpirationDate(new OpenPgpV4Fingerprint(subKey));
+            if (subkeyExpiration != null && subkeyExpiration.before(new Date())) {
+                continue;
+            }
 
             if (!isKeyValidlyBound(subKey.getKeyID())) {
                 continue;

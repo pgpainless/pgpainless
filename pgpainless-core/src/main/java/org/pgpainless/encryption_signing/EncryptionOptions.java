@@ -34,6 +34,7 @@ import org.bouncycastle.openpgp.operator.PGPKeyEncryptionMethodGenerator;
 import org.pgpainless.algorithm.EncryptionPurpose;
 import org.pgpainless.algorithm.SymmetricKeyAlgorithm;
 import org.pgpainless.implementation.ImplementationFactory;
+import org.pgpainless.key.OpenPgpV4Fingerprint;
 import org.pgpainless.key.SubkeyIdentifier;
 import org.pgpainless.key.info.KeyAccessor;
 import org.pgpainless.key.info.KeyRingInfo;
@@ -195,7 +196,10 @@ public class EncryptionOptions {
      */
     public EncryptionOptions addRecipient(PGPPublicKeyRing key, EncryptionKeySelector encryptionKeySelectionStrategy) {
         KeyRingInfo info = new KeyRingInfo(key, new Date());
-
+        Date primaryKeyExpiration = info.getPrimaryKeyExpirationDate();
+        if (primaryKeyExpiration != null && primaryKeyExpiration.before(new Date())) {
+            throw new IllegalArgumentException("Provided key " + new OpenPgpV4Fingerprint(key) + " is expired: " + primaryKeyExpiration.toString());
+        }
         List<PGPPublicKey> encryptionSubkeys = encryptionKeySelectionStrategy
                 .selectEncryptionSubkeys(info.getEncryptionSubkeys(purpose));
         if (encryptionSubkeys.isEmpty()) {
