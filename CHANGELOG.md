@@ -3,7 +3,6 @@
 ## 0.2.8
 - Encrypt to all capable subkeys by default
 - Ignore missing CRC checksums in ASCII Armor
-- 
 
 ## 0.2.7
 - Fix writing data to standard out in the `java-sop-picocli` module
