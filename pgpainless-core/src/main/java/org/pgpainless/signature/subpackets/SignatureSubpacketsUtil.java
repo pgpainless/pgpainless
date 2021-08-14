@@ -108,6 +108,13 @@ public class SignatureSubpacketsUtil {
         return hashedOrUnhashed(signature, SignatureSubpacket.issuerKeyId);
     }
 
+    /**
+     * Inspect the given signature's {@link IssuerKeyID} packet to determine the issuer key-id.
+     * If no such packet is present, return null.
+     *
+     * @param signature signature
+     * @return issuer key-id as {@link Long}
+     */
     public static Long getIssuerKeyIdAsLong(PGPSignature signature) {
         IssuerKeyID keyID = getIssuerKeyId(signature);
         if (keyID == null) {
@@ -220,6 +227,14 @@ public class SignatureSubpacketsUtil {
         return hashed(signature, SignatureSubpacket.preferredSymmetricAlgorithms);
     }
 
+    /**
+     * Return the preferred {@link SymmetricKeyAlgorithm SymmetricKeyAlgorithms} as present in the signature.
+     * If no preference is given with regard to symmetric encryption algorithms, return an empty set.
+     *
+     * In any case, the resulting set is ordered by occurrence ({@link LinkedHashSet}).
+     * @param signature signature
+     * @return ordered set of symmetric key algorithm preferences
+     */
     public static Set<SymmetricKeyAlgorithm> parsePreferredSymmetricKeyAlgorithms(PGPSignature signature) {
         Set<SymmetricKeyAlgorithm> algorithms = new LinkedHashSet<>();
         PreferredAlgorithms preferences = getPreferredSymmetricAlgorithms(signature);
@@ -241,6 +256,14 @@ public class SignatureSubpacketsUtil {
         return hashed(signature, SignatureSubpacket.preferredHashAlgorithms);
     }
 
+    /**
+     * Return the preferred {@link HashAlgorithm HashAlgorithms} as present in the signature.
+     * If no preference is given with regard to hash algorithms, return an empty set.
+     *
+     * In any case, the resulting set is ordered by occurrence ({@link LinkedHashSet}).
+     * @param signature signature
+     * @return ordered set of hash algorithm preferences
+     */
     public static Set<HashAlgorithm> parsePreferredHashAlgorithms(PGPSignature signature) {
         Set<HashAlgorithm> algorithms = new LinkedHashSet<>();
         PreferredAlgorithms preferences = getPreferredHashAlgorithms(signature);
@@ -262,6 +285,14 @@ public class SignatureSubpacketsUtil {
         return hashed(signature, SignatureSubpacket.preferredCompressionAlgorithms);
     }
 
+    /**
+     * Return the preferred {@link CompressionAlgorithm CompressionAlgorithms} as present in the signature.
+     * If no preference is given with regard to compression algorithms, return an empty set.
+     *
+     * In any case, the resulting set is ordered by occurrence ({@link LinkedHashSet}).
+     * @param signature signature
+     * @return ordered set of compression algorithm preferences
+     */
     public static Set<CompressionAlgorithm> parsePreferredCompressionAlgorithms(PGPSignature signature) {
         Set<CompressionAlgorithm> algorithms = new LinkedHashSet<>();
         PreferredAlgorithms preferences = getPreferredCompressionAlgorithms(signature);
@@ -343,6 +374,14 @@ public class SignatureSubpacketsUtil {
         return Arrays.asList(notations);
     }
 
+    /**
+     * Return a list of all {@link NotationData} objects from the hashed area of the signature that have a
+     * notation name equal to the given notationName argument.
+     *
+     * @param signature signature
+     * @param notationName notation name
+     * @return list of matching notation data objects
+     */
     public static List<NotationData> getHashedNotationData(PGPSignature signature, String notationName) {
         List<NotationData> allNotations = getHashedNotationData(signature);
         List<NotationData> withName = new ArrayList<>();
@@ -365,6 +404,14 @@ public class SignatureSubpacketsUtil {
         return Arrays.asList(notations);
     }
 
+    /**
+     * Return a list of all {@link NotationData} objects from the unhashed area of the signature that have a
+     * notation name equal to the given notationName argument.
+     *
+     * @param signature signature
+     * @param notationName notation name
+     * @return list of matching notation data objects
+     */
     public static List<NotationData> getUnhashedNotationData(PGPSignature signature, String notationName) {
         List<NotationData> allNotations = getUnhashedNotationData(signature);
         List<NotationData> withName = new ArrayList<>();
