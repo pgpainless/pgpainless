@@ -118,12 +118,27 @@ public class SignatureUtils {
         return PGPainless.getPolicy().getSignatureHashAlgorithmPolicy().defaultHashAlgorithm();
     }
 
+    /**
+     * Extract and return the key expiration date value from the given signature.
+     * If the signature does not carry a {@link KeyExpirationTime} subpacket, return null.
+     *
+     * @param keyCreationDate creation date of the key
+     * @param signature signature
+     * @return key expiration date as given by the signature
+     */
     public static Date getKeyExpirationDate(Date keyCreationDate, PGPSignature signature) {
         KeyExpirationTime keyExpirationTime = SignatureSubpacketsUtil.getKeyExpirationTime(signature);
         long expiresInSecs = keyExpirationTime == null ? 0 : keyExpirationTime.getTime();
         return datePlusSeconds(keyCreationDate, expiresInSecs);
     }
 
+    /**
+     * Return the expiration date of the signature.
+     * If the signature has no expiration date, {@link #datePlusSeconds(Date, long)} will return null.
+     *
+     * @param signature signature
+     * @return expiration date of the signature, or null if it does not expire.
+     */
     public static Date getSignatureExpirationDate(PGPSignature signature) {
         Date creationDate = signature.getCreationTime();
         SignatureExpirationTime signatureExpirationTime = SignatureSubpacketsUtil.getSignatureExpirationTime(signature);
@@ -148,10 +163,25 @@ public class SignatureUtils {
         return new Date(date.getTime() + 1000 * seconds);
     }
 
+    /**
+     * Return true, if the expiration date of the {@link PGPSignature} lays in the past.
+     * If no expiration date is present in the signature, it is considered non-expired.
+     *
+     * @param signature signature
+     * @return true if expired, false otherwise
+     */
     public static boolean isSignatureExpired(PGPSignature signature) {
         return isSignatureExpired(signature, new Date());
     }
 
+    /**
+     * Return true, if the expiration date of the given {@link PGPSignature} is past the given comparison {@link Date}.
+     * If no expiration date is present in the signature, it is considered non-expiring.
+     *
+     * @param signature signature
+     * @param comparisonDate reference date
+     * @return true if sig is expired at reference date, false otherwise
+     */
     public static boolean isSignatureExpired(PGPSignature signature, Date comparisonDate) {
         Date expirationDate = getSignatureExpirationDate(signature);
         return expirationDate != null && comparisonDate.after(expirationDate);
@@ -194,6 +224,15 @@ public class SignatureUtils {
         return readSignatures(inputStream);
     }
 
+    /**
+     * Read and return {@link PGPSignature PGPSignatures}.
+     * This method can deal with signatures that may be armored, compressed and may contain marker packets.
+     *
+     * @param inputStream input stream
+     * @return list of encountered signatures
+     * @throws IOException in case of a stream error
+     * @throws PGPException in case of an OpenPGP error
+     */
     public static List<PGPSignature> readSignatures(InputStream inputStream) throws IOException, PGPException {
         List<PGPSignature> signatures = new ArrayList<>();
         InputStream pgpIn = ArmorUtils.getDecoderStream(inputStream);
@@ -229,6 +268,18 @@ public class SignatureUtils {
         return signatures;
     }
 
+    /**
+     * Try reading the next signature from the factory.
+     *
+     * This is a helper method for BC choking on unexpected data like invalid signature versions.
+     * Unfortunately, this solves only half the issue, see bcgit/bc-java#1006 for a proper fix.
+     *
+     * @see <a href="https://github.com/bcgit/bc-java/pull/1006">BC-Java: Ignore PGPSignature with invalid version</a>
+     *
+     * @param factory pgp object factory
+     * @return next non-throwing object or null
+     * @throws IOException in case of a stream error
+     */
     private static Object tryNext(PGPObjectFactory factory) throws IOException {
         try {
             Object o = factory.nextObject();
@@ -238,6 +289,15 @@ public class SignatureUtils {
         }
     }
 
+    /**
+     * Determine the issuer key-id of a {@link PGPSignature}.
+     * This method first inspects the {@link IssuerKeyID} subpacket of the signature and returns the key-id if present.
+     * If not, it inspects the {@link org.bouncycastle.bcpg.sig.IssuerFingerprint} packet and retrieves the key-id from the fingerprint.
+     *
+     * Otherwise it returns 0.
+     * @param signature signature
+     * @return signatures issuing key id
+     */
     public static long determineIssuerKeyId(PGPSignature signature) {
         IssuerKeyID issuerKeyId = SignatureSubpacketsUtil.getIssuerKeyId(signature);
         OpenPgpV4Fingerprint fingerprint = SignatureSubpacketsUtil.getIssuerFingerprintAsOpenPgpV4Fingerprint(signature);
@@ -252,6 +312,12 @@ public class SignatureUtils {
         return 0;
     }
 
+    /**
+     * Return the digest prefix of the signature as hex-encoded String.
+     *
+     * @param signature signature
+     * @return digest prefix
+     */
     public static String getSignatureDigestPrefix(PGPSignature signature) {
         return Hex.toHexString(signature.getDigestPrefix());
     }
