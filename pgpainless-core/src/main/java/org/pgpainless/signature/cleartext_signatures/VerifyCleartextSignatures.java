@@ -23,6 +23,9 @@ import org.bouncycastle.openpgp.PGPException;
 import org.bouncycastle.openpgp.PGPPublicKeyRing;
 import org.bouncycastle.openpgp.PGPPublicKeyRingCollection;
 
+/**
+ * Interface defining the API for verification of cleartext signed documents.
+ */
 public interface VerifyCleartextSignatures {
 
     /**

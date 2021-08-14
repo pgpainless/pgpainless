@@ -22,7 +22,11 @@ import java.io.InputStream;
 import java.io.OutputStream;
 
 /**
- * Interface that describes a strategy to deal with the fact that detached signatures require multiple passes
+ * Since the {@link CleartextSignatureProcessor} needs to read the whole data twice in order to verify signatures,
+ * a strategy for how to cache the read data is required.
+ * Otherwise large data kept in memory could cause {@link OutOfMemoryError OutOfMemoryErrors} or other issues.
+ *
+ * This is an Interface that describes a strategy to deal with the fact that detached signatures require multiple passes
  * to do verification.
  *
  * This interface can be used to write the signed data stream out via {@link #getMessageOutputStream()} and later

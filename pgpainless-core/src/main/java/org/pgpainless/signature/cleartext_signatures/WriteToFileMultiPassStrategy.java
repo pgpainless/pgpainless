@@ -23,9 +23,12 @@ import java.io.InputStream;
 import java.io.OutputStream;
 
 /**
- * File-based multi-pass strategy.
- * When processing the signed data the first time, the data is being written out into a file.
+ * Implementation of the {@link MultiPassStrategy}.
+ * When processing signed data the first time, the data is being written out into a file.
  * For the second pass, that file is being read again.
+ *
+ * This strategy is recommended when larger amounts of data need to be processed.
+ * For smaller files, {@link InMemoryMultiPassStrategy} yields higher efficiency.
  */
 public class WriteToFileMultiPassStrategy implements MultiPassStrategy {
 
