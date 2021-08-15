@@ -19,7 +19,7 @@ import java.security.Provider;
 
 public abstract class ProviderFactory {
 
-    private static ProviderFactory FACTORY = new BouncyCastleProviderFactory();
+    private static ProviderFactory FACTORY;
 
     protected abstract Provider _getProvider();
     protected abstract String _getProviderName();
@@ -28,12 +28,19 @@ public abstract class ProviderFactory {
         ProviderFactory.FACTORY = factory;
     }
 
+    public static ProviderFactory getFactory() {
+        if (FACTORY == null) {
+            FACTORY = new BouncyCastleProviderFactory();
+        }
+        return FACTORY;
+    }
+
     public static Provider getProvider() {
-        return ProviderFactory.FACTORY._getProvider();
+        return ProviderFactory.getFactory()._getProvider();
     }
 
     public static String getProviderName() {
-        return ProviderFactory.FACTORY._getProviderName();
+        return ProviderFactory.getFactory()._getProviderName();
     }
 
 }
