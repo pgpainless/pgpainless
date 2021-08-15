@@ -60,6 +60,21 @@ public class DecryptionStream extends InputStream {
         return r;
     }
 
+    @Override
+    public int read(@Nonnull byte[] bytes, int offset, int length) throws IOException {
+        int read = inputStream.read(bytes, offset, length);
+        if (read != -1) {
+            maybeUpdateDetachedSignatures(bytes, offset, read);
+        }
+        return read;
+    }
+
+    private void maybeUpdateDetachedSignatures(byte[] bytes, int offset, int length) {
+        for (DetachedSignature s : resultBuilder.getDetachedSignatures()) {
+            s.getSignature().update(bytes, offset, length);
+        }
+    }
+
     private void maybeUpdateDetachedSignatures(int rByte) {
         for (DetachedSignature s : resultBuilder.getDetachedSignatures()) {
             if (rByte != -1) {

@@ -18,6 +18,8 @@ package org.pgpainless.util;
 import java.io.IOException;
 import java.io.InputStream;
 
+import javax.annotation.Nonnull;
+
 import org.bouncycastle.openpgp.PGPEncryptedData;
 import org.bouncycastle.openpgp.PGPException;
 import org.pgpainless.exception.ModificationDetectionException;
@@ -35,6 +37,11 @@ public class IntegrityProtectedInputStream extends InputStream {
     @Override
     public int read() throws IOException {
         return inputStream.read();
+    }
+
+    @Override
+    public int read(@Nonnull byte[] b, int offset, int length) throws IOException {
+        return inputStream.read(b, offset, length);
     }
 
     @Override
