@@ -111,7 +111,7 @@ public class KeyRingReader {
         do {
             next = objectFactory.nextObject();
             if (next == null) {
-                break;
+                return null;
             }
             if (next instanceof PGPMarker) {
                 continue;
@@ -120,8 +120,6 @@ public class KeyRingReader {
                 return (PGPPublicKeyRing) next;
             }
         } while (true);
-
-        return null;
     }
 
     public static PGPPublicKeyRingCollection readPublicKeyRingCollection(@Nonnull InputStream inputStream)
@@ -136,7 +134,7 @@ public class KeyRingReader {
         do {
             next = objectFactory.nextObject();
             if (next == null) {
-                break;
+                return new PGPPublicKeyRingCollection(rings);
             }
             if (next instanceof PGPMarker) {
                 continue;
@@ -152,8 +150,6 @@ public class KeyRingReader {
                 }
             }
         } while (true);
-
-        return new PGPPublicKeyRingCollection(rings);
     }
 
     public static PGPSecretKeyRing readSecretKeyRing(@Nonnull InputStream inputStream) throws IOException {
@@ -166,7 +162,7 @@ public class KeyRingReader {
         do {
             next = objectFactory.nextObject();
             if (next == null) {
-                break;
+                return null;
             }
             if (next instanceof PGPMarker) {
                 continue;
@@ -176,8 +172,6 @@ public class KeyRingReader {
                 return (PGPSecretKeyRing) next;
             }
         } while (true);
-
-        return null;
     }
 
     public static PGPSecretKeyRingCollection readSecretKeyRingCollection(@Nonnull InputStream inputStream)
@@ -192,7 +186,7 @@ public class KeyRingReader {
         do {
             next = objectFactory.nextObject();
             if (next == null) {
-                break;
+                return new PGPSecretKeyRingCollection(rings);
             }
             if (next instanceof PGPMarker) {
                 continue;
@@ -208,8 +202,6 @@ public class KeyRingReader {
                 }
             }
         } while (true);
-
-        return new PGPSecretKeyRingCollection(rings);
     }
 
     public static PGPKeyRingCollection readKeyRingCollection(@Nonnull InputStream inputStream, boolean isSilent)
