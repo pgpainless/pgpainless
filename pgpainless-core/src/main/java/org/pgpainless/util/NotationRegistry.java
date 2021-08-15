@@ -29,10 +29,6 @@ public class NotationRegistry {
 
     private final Set<String> knownNotations = new HashSet<>();
 
-    public NotationRegistry() {
-
-    }
-
     /**
      * Add a known notation name into the registry.
      * This will cause critical notations with that name to no longer invalidate the signature.
