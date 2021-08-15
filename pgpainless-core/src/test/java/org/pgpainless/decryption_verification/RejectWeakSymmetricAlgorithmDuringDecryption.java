@@ -122,7 +122,7 @@ public class RejectWeakSymmetricAlgorithmDuringDecryption {
     static {
         try {
             secretKeys = PGPainless.readKeyRing().secretKeyRing(key);
-        } catch (IOException | PGPException e) {
+        } catch (IOException e) {
             fail("Secret key cannot be parsed.");
         }
     }

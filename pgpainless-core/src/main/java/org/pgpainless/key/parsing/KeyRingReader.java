@@ -40,7 +40,7 @@ public class KeyRingReader {
 
     public static final Charset UTF8 = Charset.forName("UTF-8");
 
-    public @Nonnull PGPPublicKeyRing publicKeyRing(@Nonnull InputStream inputStream) throws IOException {
+    public PGPPublicKeyRing publicKeyRing(@Nonnull InputStream inputStream) throws IOException {
         return readPublicKeyRing(inputStream);
     }
 
@@ -65,15 +65,15 @@ public class KeyRingReader {
         return publicKeyRingCollection(asciiArmored.getBytes(UTF8));
     }
 
-    public PGPSecretKeyRing secretKeyRing(@Nonnull InputStream inputStream) throws IOException, PGPException {
+    public PGPSecretKeyRing secretKeyRing(@Nonnull InputStream inputStream) throws IOException {
         return readSecretKeyRing(inputStream);
     }
 
-    public PGPSecretKeyRing secretKeyRing(@Nonnull byte[] bytes) throws IOException, PGPException {
+    public PGPSecretKeyRing secretKeyRing(@Nonnull byte[] bytes) throws IOException {
         return secretKeyRing(new ByteArrayInputStream(bytes));
     }
 
-    public PGPSecretKeyRing secretKeyRing(@Nonnull String asciiArmored) throws IOException, PGPException {
+    public PGPSecretKeyRing secretKeyRing(@Nonnull String asciiArmored) throws IOException {
         return secretKeyRing(asciiArmored.getBytes(UTF8));
     }
 

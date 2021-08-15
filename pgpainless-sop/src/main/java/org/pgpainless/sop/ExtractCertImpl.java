@@ -41,23 +41,23 @@ public class ExtractCertImpl implements ExtractCert {
 
     @Override
     public Ready key(InputStream keyInputStream) throws IOException, SOPGPException.BadData {
-        try {
-            PGPSecretKeyRing key = PGPainless.readKeyRing().secretKeyRing(keyInputStream);
-            PGPPublicKeyRing cert = KeyRingUtils.publicKeyRingFrom(key);
-
-            return new Ready() {
-                @Override
-                public void writeTo(OutputStream outputStream) throws IOException {
-                    OutputStream out = armor ? ArmorUtils.createArmoredOutputStreamFor(cert, outputStream) : outputStream;
-                    cert.encode(out);
-
-                    if (armor) {
-                        out.close();
-                    }
-                }
-            };
-        } catch (PGPException e) {
-            throw new SOPGPException.BadData(e);
+        PGPSecretKeyRing key = PGPainless.readKeyRing().secretKeyRing(keyInputStream);
+        if (key == null) {
+            throw new SOPGPException.BadData(new PGPException("No key data found."));
         }
+
+        PGPPublicKeyRing cert = KeyRingUtils.publicKeyRingFrom(key);
+
+        return new Ready() {
+            @Override
+            public void writeTo(OutputStream outputStream) throws IOException {
+                OutputStream out = armor ? ArmorUtils.createArmoredOutputStreamFor(cert, outputStream) : outputStream;
+                cert.encode(out);
+
+                if (armor) {
+                    out.close();
+                }
+            }
+        };
     }
 }
