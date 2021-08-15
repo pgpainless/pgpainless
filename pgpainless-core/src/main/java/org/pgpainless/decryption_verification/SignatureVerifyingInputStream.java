@@ -126,7 +126,7 @@ public class SignatureVerifyingInputStream extends FilterInputStream {
         if (!onePassSignature.verify(signature)) {
             throw new SignatureException("Bad Signature of key " + signature.getKeyID());
         } else {
-            LOGGER.log(LEVEL, "Verified signature of key " + Long.toHexString(signature.getKeyID()));
+            LOGGER.log(LEVEL, "Verified signature of key {}", Long.toHexString(signature.getKeyID()));
         }
     }
 

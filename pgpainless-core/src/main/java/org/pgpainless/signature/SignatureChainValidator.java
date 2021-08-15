@@ -140,7 +140,7 @@ public final class SignatureChainValidator {
             if (!userIdSignatures.get(userId).isEmpty()) {
                 PGPSignature current = userIdSignatures.get(userId).get(0);
                 if (current.getSignatureType() == SignatureType.CERTIFICATION_REVOCATION.getCode()) {
-                    LOGGER.log(Level.FINE, "User-ID '" + userId + "' is revoked.");
+                    LOGGER.log(Level.FINE, "User-ID '{}' is revoked.", userId);
                 } else {
                     anyUserIdValid = true;
                 }

@@ -99,7 +99,7 @@ public final class EncryptionStream extends OutputStream {
 
         SymmetricKeyAlgorithm encryptionAlgorithm = EncryptionBuilder.negotiateSymmetricEncryptionAlgorithm(encryptionOptions);
         resultBuilder.setEncryptionAlgorithm(encryptionAlgorithm);
-        LOGGER.log(LEVEL, "Encrypt message using " + encryptionAlgorithm);
+        LOGGER.log(LEVEL, "Encrypt message using {}", encryptionAlgorithm);
         PGPDataEncryptorBuilder dataEncryptorBuilder =
                 ImplementationFactory.getInstance().getPGPDataEncryptorBuilder(encryptionAlgorithm);
         dataEncryptorBuilder.setWithIntegrityPacket(true);
@@ -127,7 +127,7 @@ public final class EncryptionStream extends OutputStream {
             return;
         }
 
-        LOGGER.log(LEVEL, "Compress using " + compressionAlgorithm);
+        LOGGER.log(LEVEL, "Compress using {}", compressionAlgorithm);
         basicCompressionStream = new BCPGOutputStream(compressedDataGenerator.open(outermostStream));
         outermostStream = basicCompressionStream;
     }
