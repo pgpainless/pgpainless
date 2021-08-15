@@ -42,13 +42,16 @@ import org.pgpainless.util.Passphrase;
 
 public abstract class ImplementationFactory {
 
-    private static ImplementationFactory FACTORY_IMPLEMENTATION = new BcImplementationFactory();
+    private static ImplementationFactory FACTORY_IMPLEMENTATION;
 
     public static void setFactoryImplementation(ImplementationFactory implementation) {
         FACTORY_IMPLEMENTATION = implementation;
     }
 
     public static ImplementationFactory getInstance() {
+        if (FACTORY_IMPLEMENTATION == null) {
+            FACTORY_IMPLEMENTATION = new BcImplementationFactory();
+        }
         return FACTORY_IMPLEMENTATION;
     }
 
