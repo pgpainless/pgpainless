@@ -21,6 +21,7 @@ import org.bouncycastle.bcpg.ArmoredOutputStream;
 
 /**
  * Factory to create configured {@link ArmoredOutputStream ArmoredOutputStreams}.
+ * The configuration entails setting custom version and comment headers.
  */
 public class ArmoredOutputStreamFactory {
 
@@ -28,6 +29,12 @@ public class ArmoredOutputStreamFactory {
     private static String VERSION = PGPAINLESS;
     public static String[] COMMENT = new String[0];
 
+    /**
+     * Wrap an {@link OutputStream} inside a preconfigured {@link ArmoredOutputStream}.
+     *
+     * @param outputStream inner stream
+     * @return armored output stream
+     */
     public static ArmoredOutputStream get(OutputStream outputStream) {
         ArmoredOutputStream armoredOutputStream = new ArmoredOutputStream(outputStream);
         armoredOutputStream.setHeader(ArmorUtils.HEADER_VERSION, VERSION);
