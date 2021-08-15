@@ -29,7 +29,11 @@ import org.pgpainless.algorithm.KeyFlag;
 /**
  * Utility class that helps dealing with BCs SignatureSubpacketGenerator class.
  */
-public class SignatureSubpacketGeneratorUtil {
+public final class SignatureSubpacketGeneratorUtil {
+
+    private SignatureSubpacketGeneratorUtil() {
+
+    }
 
     /**
      * Return a list of {@link SignatureSubpacket SignatureSubpackets} from the subpacket generator, which correspond

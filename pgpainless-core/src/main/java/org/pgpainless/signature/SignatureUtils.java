@@ -52,7 +52,11 @@ import org.pgpainless.util.ArmorUtils;
 /**
  * Utility methods related to signatures.
  */
-public class SignatureUtils {
+public final class SignatureUtils {
+
+    private SignatureUtils() {
+
+    }
 
     /**
      * Return a signature generator for the provided signing key.

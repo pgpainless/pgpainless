@@ -20,7 +20,11 @@ import org.bouncycastle.openpgp.PGPSecretKeyRing;
 import org.pgpainless.util.selection.keyring.PublicKeyRingSelectionStrategy;
 import org.pgpainless.util.selection.keyring.SecretKeyRingSelectionStrategy;
 
-public class Wildcard {
+public final class Wildcard {
+
+    private Wildcard() {
+
+    }
 
     public static class PubRingSelectionStrategy<O> extends PublicKeyRingSelectionStrategy<O> {
 

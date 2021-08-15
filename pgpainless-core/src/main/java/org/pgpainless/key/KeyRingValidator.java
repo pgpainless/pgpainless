@@ -36,7 +36,11 @@ import org.pgpainless.signature.SignatureCreationDateComparator;
 import org.pgpainless.signature.SignatureValidator;
 import org.pgpainless.util.CollectionUtils;
 
-public class KeyRingValidator {
+public final class KeyRingValidator {
+
+    private KeyRingValidator() {
+
+    }
 
     private static final Logger LOGGER = Logger.getLogger(KeyRingValidator.class.getName());
 

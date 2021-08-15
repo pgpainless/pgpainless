@@ -39,7 +39,7 @@ import org.bouncycastle.util.io.Streams;
 import org.pgpainless.algorithm.HashAlgorithm;
 import org.pgpainless.key.OpenPgpV4Fingerprint;
 
-public class ArmorUtils {
+public final class ArmorUtils {
 
     // MessageIDs are 32 printable characters
     private static final Pattern PATTERN_MESSAGE_ID = Pattern.compile("^\\S{32}$");
@@ -49,6 +49,10 @@ public class ArmorUtils {
     public static final String HEADER_MESSAGEID = "MessageID";
     public static final String HEADER_HASH = "Hash";
     public static final String HEADER_CHARSET = "Charset";
+
+    private ArmorUtils() {
+
+    }
 
     public static String toAsciiArmoredString(PGPSecretKeyRing secretKeys) throws IOException {
         MultiMap<String, String> header = keyToHeader(secretKeys);

@@ -18,7 +18,11 @@ package org.pgpainless.util.selection.keyring.impl;
 import org.bouncycastle.openpgp.PGPPublicKeyRing;
 import org.bouncycastle.openpgp.PGPSecretKeyRing;
 
-public class XMPP {
+public final class XMPP {
+
+    private XMPP() {
+
+    }
 
     public static class PubRingSelectionStrategy extends ExactUserId.PubRingSelectionStrategy {
 

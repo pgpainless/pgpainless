@@ -20,8 +20,11 @@ import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.TimeZone;
 
-public class DateUtil {
+public final class DateUtil {
 
+    private DateUtil() {
+
+    }
     public static SimpleDateFormat UTC_PARSER = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss z");
     static {
         UTC_PARSER.setTimeZone(TimeZone.getTimeZone("UTC"));

@@ -62,7 +62,11 @@ import org.pgpainless.signature.SignatureUtils;
  * Since rfc4880 is not always clear about where a signature subpacket can be located (hashed/unhashed area),
  * this class makes some educated guesses as to where the subpacket may be found when necessary.
  */
-public class SignatureSubpacketsUtil {
+public final class SignatureSubpacketsUtil {
+
+    private SignatureSubpacketsUtil() {
+
+    }
 
     /**
      * Return the issuer-fingerprint subpacket of the signature.

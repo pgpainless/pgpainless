@@ -17,7 +17,6 @@ package org.pgpainless;
 
 import java.io.IOException;
 import java.util.Date;
-
 import javax.annotation.Nonnull;
 
 import org.bouncycastle.openpgp.PGPKeyRing;
@@ -38,7 +37,11 @@ import org.pgpainless.signature.cleartext_signatures.VerifyCleartextSignatures;
 import org.pgpainless.signature.cleartext_signatures.VerifyCleartextSignaturesImpl;
 import org.pgpainless.util.ArmorUtils;
 
-public class PGPainless {
+public final class PGPainless {
+
+    private PGPainless() {
+
+    }
 
     /**
      * Generate a new OpenPGP key ring.

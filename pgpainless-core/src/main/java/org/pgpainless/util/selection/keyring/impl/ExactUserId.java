@@ -22,7 +22,11 @@ import org.bouncycastle.openpgp.PGPSecretKeyRing;
 import org.pgpainless.util.selection.keyring.PublicKeyRingSelectionStrategy;
 import org.pgpainless.util.selection.keyring.SecretKeyRingSelectionStrategy;
 
-public class ExactUserId {
+public final class ExactUserId {
+
+    private ExactUserId() {
+
+    }
 
     public static class PubRingSelectionStrategy extends PublicKeyRingSelectionStrategy<String> {
 

@@ -19,7 +19,11 @@ import org.bouncycastle.asn1.ASN1ObjectIdentifier;
 import org.bouncycastle.bcpg.ECPublicBCPGKey;
 import org.bouncycastle.openpgp.PGPPublicKey;
 
-public class BCUtil {
+public final class BCUtil {
+
+    private BCUtil() {
+
+    }
 
     /**
      * Utility method to get the bit strength of OpenPGP keys.

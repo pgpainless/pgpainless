@@ -20,7 +20,11 @@ import java.io.InputStream;
 
 import org.bouncycastle.bcpg.ArmoredInputStream;
 
-public class ArmoredInputStreamFactory {
+public final class ArmoredInputStreamFactory {
+
+    private ArmoredInputStreamFactory() {
+
+    }
 
     public static ArmoredInputStream get(InputStream inputStream) throws IOException {
         if (inputStream instanceof CRCingArmoredInputStreamWrapper) {

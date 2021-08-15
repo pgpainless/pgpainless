@@ -18,7 +18,11 @@ package org.pgpainless.key.util;
 import java.math.BigInteger;
 import java.util.regex.Pattern;
 
-public class KeyIdUtil {
+public final class KeyIdUtil {
+
+    private KeyIdUtil() {
+
+    }
 
     private static final Pattern LONG_KEY_ID = Pattern.compile("^[0-9A-Fa-f]{16}$");
 

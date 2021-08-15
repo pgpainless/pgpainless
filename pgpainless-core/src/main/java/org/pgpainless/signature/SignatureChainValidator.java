@@ -42,7 +42,11 @@ import org.pgpainless.signature.subpackets.SignatureSubpacketsUtil;
  * Its responsibilities are checking if a signing key was eligible to create a certain signature
  * and if the signature is valid at the time of validation.
  */
-public class SignatureChainValidator {
+public final class SignatureChainValidator {
+
+    private SignatureChainValidator() {
+
+    }
 
     private static final Logger LOGGER = Logger.getLogger(SignatureChainValidator.class.getName());
 

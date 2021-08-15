@@ -24,7 +24,11 @@ import org.pgpainless.util.selection.keyring.PublicKeyRingSelectionStrategy;
 import org.pgpainless.util.selection.keyring.SecretKeyRingSelectionStrategy;
 import org.pgpainless.util.MultiMap;
 
-public class Whitelist {
+public final class Whitelist {
+
+    private Whitelist() {
+
+    }
 
     public static class PubRingSelectionStrategy<O> extends PublicKeyRingSelectionStrategy<O> {
 

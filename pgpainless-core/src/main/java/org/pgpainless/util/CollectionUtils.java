@@ -19,7 +19,11 @@ import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
 
-public class CollectionUtils {
+public final class CollectionUtils {
+
+    private CollectionUtils() {
+
+    }
 
     public static <I> List<I> iteratorToList(Iterator<I> iterator) {
         List<I> items = new ArrayList<>();

@@ -23,11 +23,15 @@ import org.bouncycastle.bcpg.ArmoredOutputStream;
  * Factory to create configured {@link ArmoredOutputStream ArmoredOutputStreams}.
  * The configuration entails setting custom version and comment headers.
  */
-public class ArmoredOutputStreamFactory {
+public final class ArmoredOutputStreamFactory {
 
     public static final String PGPAINLESS = "PGPainless";
     private static String VERSION = PGPAINLESS;
     public static String[] COMMENT = new String[0];
+
+    private ArmoredOutputStreamFactory() {
+
+    }
 
     /**
      * Wrap an {@link OutputStream} inside a preconfigured {@link ArmoredOutputStream}.

@@ -26,7 +26,11 @@ import org.bouncycastle.openpgp.PGPSignature;
 import org.pgpainless.algorithm.HashAlgorithm;
 import org.pgpainless.algorithm.SignatureType;
 
-public class OpenPgpKeyAttributeUtil {
+public final class OpenPgpKeyAttributeUtil {
+
+    private OpenPgpKeyAttributeUtil() {
+
+    }
 
     public static List<HashAlgorithm> getPreferredHashAlgorithms(PGPPublicKey publicKey) {
         List<HashAlgorithm> hashAlgorithms = new ArrayList<>();

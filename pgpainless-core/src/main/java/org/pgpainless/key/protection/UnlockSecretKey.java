@@ -23,7 +23,11 @@ import org.pgpainless.exception.WrongPassphraseException;
 import org.pgpainless.key.info.KeyInfo;
 import org.pgpainless.util.Passphrase;
 
-public class UnlockSecretKey {
+public final class UnlockSecretKey {
+
+    private UnlockSecretKey() {
+
+    }
 
     public static PGPPrivateKey unlockSecretKey(PGPSecretKey secretKey, SecretKeyRingProtector protector)
             throws WrongPassphraseException {

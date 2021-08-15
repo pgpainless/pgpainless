@@ -35,7 +35,11 @@ import org.bouncycastle.openpgp.PGPSecretKeyRingCollection;
 import org.pgpainless.key.protection.SecretKeyRingProtector;
 import org.pgpainless.key.protection.UnlockSecretKey;
 
-public class KeyRingUtils {
+public final class KeyRingUtils {
+
+    private KeyRingUtils() {
+
+    }
 
     /**
      * Return the primary {@link PGPSecretKey} from the provided {@link PGPSecretKeyRing}.

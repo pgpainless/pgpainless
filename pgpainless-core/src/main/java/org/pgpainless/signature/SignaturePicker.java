@@ -41,7 +41,11 @@ import org.pgpainless.util.CollectionUtils;
  *    [User Attribute [Signature ...] ...]
  *    [[Subkey [Binding-Signature-Revocation] Primary-Key-Binding-Signature] ...]
  */
-public class SignaturePicker {
+public final class SignaturePicker {
+
+    private SignaturePicker() {
+
+    }
 
     /**
      * Pick the, at validation date most recent valid key revocation signature.
