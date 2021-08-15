@@ -25,9 +25,11 @@ public final class DateUtil {
     private DateUtil() {
 
     }
-    public static SimpleDateFormat UTC_PARSER = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss z");
-    static {
-        UTC_PARSER.setTimeZone(TimeZone.getTimeZone("UTC"));
+
+    public static SimpleDateFormat getParser() {
+        SimpleDateFormat parser = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss z");
+        parser.setTimeZone(TimeZone.getTimeZone("UTC"));
+        return parser;
     }
 
     /**
@@ -38,7 +40,7 @@ public final class DateUtil {
      */
     public static Date parseUTCDate(String dateString) {
         try {
-            return UTC_PARSER.parse(dateString);
+            return getParser().parse(dateString);
         } catch (ParseException e) {
             return null;
         }
@@ -51,7 +53,7 @@ public final class DateUtil {
      * @return timestamp
      */
     public static String formatUTCDate(Date date) {
-        return UTC_PARSER.format(date);
+        return getParser().format(date);
     }
 
     /**
