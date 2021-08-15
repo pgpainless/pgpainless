@@ -17,9 +17,9 @@ package org.pgpainless.exception;
 
 import org.bouncycastle.openpgp.PGPSignature;
 
-public class KeyValidationException extends AssertionError {
+public class KeyValidationError extends AssertionError {
 
-    public KeyValidationException(String userId, PGPSignature userIdSig, PGPSignature userIdRevocation) {
+    public KeyValidationError(String userId, PGPSignature userIdSig, PGPSignature userIdRevocation) {
         super("User-ID '" + userId + "' is not valid: Sig: " + userIdSig + " Rev: " + userIdRevocation);
     }
 }

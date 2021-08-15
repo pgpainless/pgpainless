@@ -42,7 +42,7 @@ import org.pgpainless.algorithm.DocumentSignatureType;
 import org.pgpainless.decryption_verification.ConsumerOptions;
 import org.pgpainless.decryption_verification.DecryptionStream;
 import org.pgpainless.decryption_verification.OpenPgpMetadata;
-import org.pgpainless.exception.KeyValidationException;
+import org.pgpainless.exception.KeyValidationError;
 import org.pgpainless.implementation.ImplementationFactory;
 import org.pgpainless.key.TestKeys;
 import org.pgpainless.key.info.KeyRingInfo;
@@ -121,7 +121,7 @@ public class SigningTest {
 
         SigningOptions opts = new SigningOptions();
         // "bob" is not a valid user-id
-        assertThrows(KeyValidationException.class,
+        assertThrows(KeyValidationError.class,
                 () -> opts.addInlineSignature(protector, secretKeys, "bob", DocumentSignatureType.CANONICAL_TEXT_DOCUMENT));
     }
 
@@ -138,7 +138,7 @@ public class SigningTest {
 
         SigningOptions opts = new SigningOptions();
         // "alice" has been revoked
-        assertThrows(KeyValidationException.class,
+        assertThrows(KeyValidationError.class,
                 () -> opts.addInlineSignature(protector, fSecretKeys, "alice", DocumentSignatureType.CANONICAL_TEXT_DOCUMENT));
     }
 }
