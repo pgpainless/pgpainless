@@ -26,8 +26,8 @@ import org.bouncycastle.bcpg.ArmoredOutputStream;
 public final class ArmoredOutputStreamFactory {
 
     public static final String PGPAINLESS = "PGPainless";
-    private static String VERSION = PGPAINLESS;
-    public static String[] COMMENT = new String[0];
+    private static String version = PGPAINLESS;
+    private static String[] comment = new String[0];
 
     private ArmoredOutputStreamFactory() {
 
@@ -41,8 +41,8 @@ public final class ArmoredOutputStreamFactory {
      */
     public static ArmoredOutputStream get(OutputStream outputStream) {
         ArmoredOutputStream armoredOutputStream = new ArmoredOutputStream(outputStream);
-        armoredOutputStream.setHeader(ArmorUtils.HEADER_VERSION, VERSION);
-        for (String comment : COMMENT) {
+        armoredOutputStream.setHeader(ArmorUtils.HEADER_VERSION, version);
+        for (String comment : comment) {
             ArmorUtils.addCommentHeader(armoredOutputStream, comment);
         }
         return armoredOutputStream;
@@ -52,45 +52,45 @@ public final class ArmoredOutputStreamFactory {
      * Overwrite the version header of ASCII armors with a custom value.
      * Newlines in the version info string result in multiple version header entries.
      *
-     * @param version version string
+     * @param versionString version string
      */
-    public static void setVersionInfo(String version) {
-        if (version == null || version.trim().isEmpty()) {
+    public static void setVersionInfo(String versionString) {
+        if (versionString == null || versionString.trim().isEmpty()) {
             throw new IllegalArgumentException("Version Info MUST NOT be null NOR empty.");
         }
-        VERSION = version;
+        version = versionString;
     }
 
     /**
      * Reset the version header to its default value of {@link #PGPAINLESS}.
      */
     public static void resetVersionInfo() {
-        VERSION = PGPAINLESS;
+        version = PGPAINLESS;
     }
 
     /**
      * Set a comment header value in the ASCII armor header.
      * If the comment contains newlines, it will be split into multiple header entries.
      *
-     * @param comment comment
+     * @param commentString comment
      */
-    public static void setComment(String comment) {
-        if (comment == null) {
+    public static void setComment(String commentString) {
+        if (commentString == null) {
             throw new IllegalArgumentException("Comment cannot be null.");
         }
-        String trimmed = comment.trim();
+        String trimmed = commentString.trim();
         if (trimmed.isEmpty()) {
             throw new IllegalArgumentException("Comment cannot be empty.");
         }
 
-        String[] lines = comment.split("\n");
-        COMMENT = lines;
+        String[] lines = commentString.split("\n");
+        comment = lines;
     }
 
     /**
      * Reset to the default of no comment headers.
      */
     public static void resetComment() {
-        COMMENT = new String[0];
+        comment = new String[0];
     }
 }
