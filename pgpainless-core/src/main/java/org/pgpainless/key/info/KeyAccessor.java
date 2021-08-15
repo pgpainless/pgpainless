@@ -31,7 +31,7 @@ public abstract class KeyAccessor {
     protected final KeyRingInfo info;
     protected final SubkeyIdentifier key;
 
-    public KeyAccessor(KeyRingInfo info, SubkeyIdentifier key) {
+    KeyAccessor(KeyRingInfo info, SubkeyIdentifier key) {
         this.info = info;
         this.key = key;
     }
