@@ -28,7 +28,6 @@ import org.bouncycastle.openpgp.PGPSignature;
  */
 public class SignatureValidityComparator implements Comparator<PGPSignature> {
 
-    private final SignatureCreationDateComparator.Order order;
     private final SignatureCreationDateComparator creationDateComparator;
 
     /**
@@ -44,7 +43,6 @@ public class SignatureValidityComparator implements Comparator<PGPSignature> {
      * Still, hard revocations will come first.
      */
     public SignatureValidityComparator(SignatureCreationDateComparator.Order order) {
-        this.order = order;
         this.creationDateComparator = new SignatureCreationDateComparator(order);
     }
 
