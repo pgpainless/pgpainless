@@ -430,9 +430,9 @@ public class KeyRingBuilder implements KeyRingBuilderInterface {
                     return hashedSubpackets;
                 }
 
-                PGPSignatureGenerator signatureGenerator = new PGPSignatureGenerator(buildContentSigner(subKey));
-                signatureGenerator.init(SignatureType.PRIMARYKEY_BINDING.getCode(), subKey.getPrivateKey());
-                PGPSignature primaryKeyBindingSig = signatureGenerator.generateCertification(primaryKey.getPublicKey(), subKey.getPublicKey());
+                PGPSignatureGenerator bindingSignatureGenerator = new PGPSignatureGenerator(buildContentSigner(subKey));
+                bindingSignatureGenerator.init(SignatureType.PRIMARYKEY_BINDING.getCode(), subKey.getPrivateKey());
+                PGPSignature primaryKeyBindingSig = bindingSignatureGenerator.generateCertification(primaryKey.getPublicKey(), subKey.getPublicKey());
                 PGPSignatureSubpacketGenerator subpacketGenerator = new PGPSignatureSubpacketGenerator(hashedSubpackets);
                 subpacketGenerator.addEmbeddedSignature(false, primaryKeyBindingSig);
                 return subpacketGenerator.generate();
