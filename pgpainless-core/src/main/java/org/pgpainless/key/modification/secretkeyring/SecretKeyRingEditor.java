@@ -72,7 +72,7 @@ public class SecretKeyRingEditor implements SecretKeyRingEditorInterface {
     // Default algorithm for calculating private key checksums
     // While I'd like to use something else, eg. SHA256, BC seems to lack support for
     // calculating secret key checksums with algorithms other than SHA1.
-    private final HashAlgorithm defaultDigestHashAlgorithm = HashAlgorithm.SHA1;
+    private static final HashAlgorithm defaultDigestHashAlgorithm = HashAlgorithm.SHA1;
 
     private PGPSecretKeyRing secretKeyRing;
 
