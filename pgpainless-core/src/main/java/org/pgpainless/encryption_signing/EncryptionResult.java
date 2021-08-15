@@ -137,12 +137,17 @@ public final class EncryptionResult {
      *
      * @return is message for your eyes only?
      */
-    public static Builder builder() {
-        return new Builder();
-    }
-
     public boolean isForYourEyesOnly() {
         return PGPLiteralData.CONSOLE.equals(getFileName());
+    }
+
+    /**
+     * Create a builder for the encryption result class.
+     *
+     * @return builder
+     */
+    public static Builder builder() {
+        return new Builder();
     }
 
     public static class Builder {
