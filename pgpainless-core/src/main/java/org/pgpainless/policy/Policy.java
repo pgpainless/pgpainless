@@ -17,7 +17,7 @@ package org.pgpainless.policy;
 
 import java.util.Arrays;
 import java.util.Collections;
-import java.util.HashMap;
+import java.util.EnumMap;
 import java.util.List;
 import java.util.Map;
 
@@ -390,7 +390,7 @@ public final class Policy {
 
     public static final class PublicKeyAlgorithmPolicy {
 
-        private final Map<PublicKeyAlgorithm, Integer> algorithmStrengths = new HashMap<>();
+        private final Map<PublicKeyAlgorithm, Integer> algorithmStrengths = new EnumMap<>(PublicKeyAlgorithm.class);
 
         public PublicKeyAlgorithmPolicy(Map<PublicKeyAlgorithm, Integer> minimalAlgorithmBitStrengths) {
             this.algorithmStrengths.putAll(minimalAlgorithmBitStrengths);
@@ -423,7 +423,7 @@ public final class Policy {
          * @return default algorithm policy
          */
         public static PublicKeyAlgorithmPolicy defaultPublicKeyAlgorithmPolicy() {
-            Map<PublicKeyAlgorithm, Integer> minimalBitStrengths = new HashMap<>();
+            Map<PublicKeyAlgorithm, Integer> minimalBitStrengths = new EnumMap<>(PublicKeyAlgorithm.class);
             // §5.4.1
             minimalBitStrengths.put(PublicKeyAlgorithm.RSA_GENERAL, 2000);
             minimalBitStrengths.put(PublicKeyAlgorithm.RSA_SIGN, 2000);
