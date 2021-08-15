@@ -132,7 +132,7 @@ public class KeyRingInfo {
      * @param keyId key id
      * @return public key or null
      */
-    public @Nullable static PGPPublicKey getPublicKey(PGPKeyRing keyRing, long keyId) {
+    public static @Nullable PGPPublicKey getPublicKey(PGPKeyRing keyRing, long keyId) {
         return keyRing.getPublicKey(keyId);
     }
 
