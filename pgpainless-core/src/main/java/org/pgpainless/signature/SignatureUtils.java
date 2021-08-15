@@ -308,10 +308,8 @@ public final class SignatureUtils {
         if (issuerKeyId != null && issuerKeyId.getKeyID() != 0) {
             return issuerKeyId.getKeyID();
         }
-        if (issuerKeyId == null) {
-            if (fingerprint != null) {
-                return fingerprint.getKeyId();
-            }
+        if (issuerKeyId == null && fingerprint != null) {
+            return fingerprint.getKeyId();
         }
         return 0;
     }

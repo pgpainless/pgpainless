@@ -149,10 +149,8 @@ public class KeyRingInfo {
         }
 
         if (publicKey == getPublicKey()) {
-            if (signatures.primaryKeyRevocation != null) {
-                if (SignatureUtils.isHardRevocation(signatures.primaryKeyRevocation)) {
-                    return false;
-                }
+            if (signatures.primaryKeyRevocation != null && SignatureUtils.isHardRevocation(signatures.primaryKeyRevocation)) {
+                return false;
             }
             return signatures.primaryKeyRevocation == null;
         }
@@ -825,10 +823,8 @@ public class KeyRingInfo {
      * @return encryption subkeys
      */
     public @Nonnull List<PGPPublicKey> getEncryptionSubkeys(String userId, EncryptionPurpose purpose) {
-        if (userId != null) {
-            if (!isUserIdValid(userId)) {
-                throw new KeyValidationException(userId, getLatestUserIdCertification(userId), getUserIdRevocation(userId));
-            }
+        if (userId != null && !isUserIdValid(userId)) {
+            throw new KeyValidationError(userId, getLatestUserIdCertification(userId), getUserIdRevocation(userId));
         }
 
         return getEncryptionSubkeys(purpose);
