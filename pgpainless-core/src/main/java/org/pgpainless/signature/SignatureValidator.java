@@ -17,6 +17,7 @@ package org.pgpainless.signature;
 
 import java.io.IOException;
 import java.io.InputStream;
+import java.security.NoSuchAlgorithmException;
 import java.util.Arrays;
 import java.util.Date;
 import java.util.Iterator;
@@ -567,10 +568,14 @@ public abstract class SignatureValidator {
             @Override
             public void verify(PGPSignature signature) throws SignatureValidationException {
                 PublicKeyAlgorithm algorithm = PublicKeyAlgorithm.fromId(signingKey.getAlgorithm());
-                int bitStrength = BCUtil.getBitStrength(signingKey);
-                if (!policy.getPublicKeyAlgorithmPolicy().isAcceptable(algorithm, bitStrength)) {
-                    throw new SignatureValidationException("Signature was made using unacceptable key. " +
-                            algorithm + " (" + bitStrength + " bits) is not acceptable according to the public key algorithm policy.");
+                try {
+                    int bitStrength = BCUtil.getBitStrength(signingKey);
+                    if (!policy.getPublicKeyAlgorithmPolicy().isAcceptable(algorithm, bitStrength)) {
+                        throw new SignatureValidationException("Signature was made using unacceptable key. " +
+                                algorithm + " (" + bitStrength + " bits) is not acceptable according to the public key algorithm policy.");
+                    }
+                } catch (NoSuchAlgorithmException e) {
+                    throw new SignatureValidationException("Cannot determine bit strength of signing key.", e);
                 }
             }
         };

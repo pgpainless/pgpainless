@@ -15,6 +15,8 @@
  */
 package org.pgpainless.util;
 
+import java.security.NoSuchAlgorithmException;
+
 import org.bouncycastle.asn1.ASN1ObjectIdentifier;
 import org.bouncycastle.bcpg.ECPublicBCPGKey;
 import org.bouncycastle.openpgp.PGPPublicKey;
@@ -33,12 +35,13 @@ public final class BCUtil {
      * @param key key
      * @return bit strength
      */
-    public static int getBitStrength(PGPPublicKey key) {
+    public static int getBitStrength(PGPPublicKey key) throws NoSuchAlgorithmException {
         int bitStrength = key.getBitStrength();
 
         if (bitStrength == -1) {
-            // TODO: BC's PGPPublicKey.getBitStrength() does fail for some keys (EdDSA, X25519)
-            //  Manually set the bit strength.
+            // BC's PGPPublicKey.getBitStrength() does fail for some keys (EdDSA, X25519)
+            // therefore we manually set the bit strength.
+            // see https://github.com/bcgit/bc-java/issues/972
 
             ASN1ObjectIdentifier oid = ((ECPublicBCPGKey) key.getPublicKeyPacket().getKey()).getCurveOID();
             if (oid.getId().equals("1.3.6.1.4.1.11591.15.1")) {
@@ -48,7 +51,7 @@ public final class BCUtil {
                 // curvey25519 is 256 bits
                 bitStrength = 256;
             } else {
-                throw new RuntimeException("Unknown curve: " + oid.getId());
+                throw new NoSuchAlgorithmException("Unknown curve: " + oid.getId());
             }
 
         }
