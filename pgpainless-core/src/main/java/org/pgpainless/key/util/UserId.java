@@ -171,12 +171,12 @@ public final class UserId implements CharSequence {
         if (hash != Long.MAX_VALUE) {
             return (int) hash;
         } else {
-            int hash = 7;
-            hash = 31 * hash + (name == null ? 0 : name.hashCode());
-            hash = 31 * hash + (comment == null ? 0 : comment.hashCode());
-            hash = 31 * hash + (email == null ? 0 : email.toLowerCase().hashCode());
-            this.hash = hash;
-            return hash;
+            int hashCode = 7;
+            hashCode = 31 * hashCode + (name == null ? 0 : name.hashCode());
+            hashCode = 31 * hashCode + (comment == null ? 0 : comment.hashCode());
+            hashCode = 31 * hashCode + (email == null ? 0 : email.toLowerCase().hashCode());
+            this.hash = hashCode;
+            return hashCode;
         }
     }
 
