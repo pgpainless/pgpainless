@@ -479,7 +479,6 @@ public final class SignatureSubpacketsUtil {
 
     /**
      * Return the signatures exportable certification subpacket from the hashed area.
-     * TODO: Can this packet also be placed in the unhashed area?
      *
      * @param signature signature
      * @return exportable certification subpacket

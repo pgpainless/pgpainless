@@ -56,42 +56,87 @@ public final class EncryptionResult {
         this.fileEncoding = encoding;
     }
 
+    /**
+     * Return the symmetric encryption algorithm used to encrypt the message.
+     * @return symmetric encryption algorithm
+     *
+     * @deprecated use {@link #getEncryptionAlgorithm()} instead.
+     */
     @Deprecated
     public SymmetricKeyAlgorithm getSymmetricKeyAlgorithm() {
         return getEncryptionAlgorithm();
     }
 
+    /**
+     * Return the symmetric encryption algorithm used to encrypt the message.
+     *
+     * @return symmetric encryption algorithm
+     * */
     public SymmetricKeyAlgorithm getEncryptionAlgorithm() {
         return encryptionAlgorithm;
     }
 
+    /**
+     * Return the compression algorithm that was used to compress the message before encryption/signing.
+     *
+     * @return compression algorithm
+     */
     public CompressionAlgorithm getCompressionAlgorithm() {
         return compressionAlgorithm;
     }
 
+    /**
+     * Return a {@link MultiMap} of key identifiers and detached signatures that were generated for the message.
+     * Each key of the map represents a signing key, which has one or more detached signatures associated with it.
+     *
+     * @return detached signatures
+     */
     public MultiMap<SubkeyIdentifier, PGPSignature> getDetachedSignatures() {
         return detachedSignatures;
     }
 
+    /**
+     * Return the set of recipient encryption keys.
+     *
+     * @return recipients
+     */
     public Set<SubkeyIdentifier> getRecipients() {
         return recipients;
     }
 
     /**
+     * Return the file name of the encrypted/signed data.
      *
+     * @return filename
      */
     public String getFileName() {
         return fileName;
     }
 
+    /**
+     * Return the modification date of the encrypted/signed file.
+     *
+     * @return modification date
+     */
     public Date getModificationDate() {
         return modificationDate;
     }
 
+    /**
+     * Return the encoding format of the encrypted/signed data.
+     *
+     * @return encoding format
+     */
     public StreamEncoding getFileEncoding() {
         return fileEncoding;
     }
 
+    /**
+     * Return true, if the message is marked as for-your-eyes-only.
+     * This is typically done by setting the filename "_CONSOLE".
+     *
+     * @return is message for your eyes only?
+     */
     public static Builder builder() {
         return new Builder();
     }

@@ -169,7 +169,6 @@ public class ConsumerOptions {
     public ConsumerOptions setSessionKey(@Nonnull byte[] sessionKey) {
         this.sessionKey = sessionKey;
         throw new NotYetImplementedException();
-        // return this;
     }
 
     /**

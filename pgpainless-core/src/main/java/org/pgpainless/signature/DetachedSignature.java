@@ -92,6 +92,7 @@ public class DetachedSignature {
      * Return the {@link OpenPgpV4Fingerprint} of the key that created the signature.
      *
      * @return fingerprint of the signing key
+     * @deprecated use {@link #getSigningKeyIdentifier()} instead.
      */
     @Deprecated
     public OpenPgpV4Fingerprint getFingerprint() {

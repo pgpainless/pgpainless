@@ -428,7 +428,7 @@ public final class Policy {
             minimalBitStrengths.put(PublicKeyAlgorithm.RSA_GENERAL, 2000);
             minimalBitStrengths.put(PublicKeyAlgorithm.RSA_SIGN, 2000);
             minimalBitStrengths.put(PublicKeyAlgorithm.RSA_ENCRYPT, 2000);
-            // TODO: ElGamal is not mentioned in the BSI document.
+            // Note: ElGamal is not mentioned in the BSI document.
             //  We assume that the requirements are similar to other DH algorithms
             minimalBitStrengths.put(PublicKeyAlgorithm.ELGAMAL_ENCRYPT, 2000);
             minimalBitStrengths.put(PublicKeyAlgorithm.ELGAMAL_GENERAL, 2000);
@@ -436,7 +436,7 @@ public final class Policy {
             minimalBitStrengths.put(PublicKeyAlgorithm.DSA, 2000);
             // §5.4.3
             minimalBitStrengths.put(PublicKeyAlgorithm.ECDSA, 250);
-            // TODO: EdDSA is not mentioned in the BSI document.
+            // Note: EdDSA is not mentioned in the BSI document.
             //  We assume that the requirements are similar to other EC algorithms.
             minimalBitStrengths.put(PublicKeyAlgorithm.EDDSA, 250);
             // §7.2.1
@@ -451,7 +451,7 @@ public final class Policy {
 
     /**
      * Return the {@link NotationRegistry} of PGPainless.
-     * The notation registry is used to decide, whether or not a Notation is known or not.
+     * The notation registry is used to decide, whether a Notation is known or not.
      * Background: Critical unknown notations render signatures invalid.
      *
      * @return Notation registry
