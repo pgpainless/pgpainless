@@ -157,21 +157,6 @@ public class OpenPgpMetadata {
     }
 
     /**
-     * Return information about the encrypted/signed file.
-     *
-     * @deprecated use {@link #getFileName()}, {@link #getModificationDate()} and {@link #getFileEncoding()} instead.
-     * @return file info
-     */
-    @Deprecated
-    public FileInfo getFileInfo() {
-        return new FileInfo(
-                getFileName(),
-                getModificationDate(),
-                getFileEncoding()
-        );
-    }
-
-    /**
      * Return the name of the encrypted / signed file.
      *
      * @return file name
@@ -205,73 +190,6 @@ public class OpenPgpMetadata {
      */
     public StreamEncoding getFileEncoding() {
         return fileEncoding;
-    }
-
-    @Deprecated
-    public static class FileInfo {
-
-        protected final String fileName;
-        protected final Date modificationDate;
-        protected final StreamEncoding streamEncoding;
-
-        public FileInfo(String fileName, Date modificationDate, StreamEncoding streamEncoding) {
-            this.fileName = fileName == null ? "" : fileName;
-            this.modificationDate = modificationDate == null ? PGPLiteralData.NOW : modificationDate;
-            this.streamEncoding = streamEncoding;
-        }
-
-        public String getFileName() {
-            return fileName;
-        }
-
-        public Date getModificationDate() {
-            return modificationDate;
-        }
-
-        public StreamEncoding getStreamFormat() {
-            return streamEncoding;
-        }
-
-        @Override
-        public boolean equals(Object other) {
-            if (other == null) {
-                return false;
-            }
-            if (this == other) {
-                return true;
-            }
-            if (!(other instanceof FileInfo)) {
-                return false;
-            }
-
-            FileInfo o = (FileInfo) other;
-
-            if (getFileName() != null) {
-                if (!getFileName().equals(o.getFileName())) {
-                    return false;
-                }
-            } else {
-                if (o.getFileName() != null) {
-                    return false;
-                }
-            }
-
-            if (getModificationDate() != null) {
-                if (o.getModificationDate() == null) {
-                    return false;
-                }
-                long diff = Math.abs(getModificationDate().getTime() - o.getModificationDate().getTime());
-                if (diff > 1000) {
-                    return false;
-                }
-            } else {
-                if (o.getModificationDate() != null) {
-                    return false;
-                }
-            }
-
-            return getStreamFormat() == o.getStreamFormat();
-        }
     }
 
     public static Builder getBuilder() {

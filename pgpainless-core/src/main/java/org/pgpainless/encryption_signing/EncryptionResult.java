@@ -19,7 +19,6 @@ import java.util.Collections;
 import java.util.Date;
 import java.util.HashSet;
 import java.util.Set;
-
 import javax.annotation.Nonnull;
 
 import org.bouncycastle.openpgp.PGPLiteralData;
@@ -27,7 +26,6 @@ import org.bouncycastle.openpgp.PGPSignature;
 import org.pgpainless.algorithm.CompressionAlgorithm;
 import org.pgpainless.algorithm.StreamEncoding;
 import org.pgpainless.algorithm.SymmetricKeyAlgorithm;
-import org.pgpainless.decryption_verification.OpenPgpMetadata;
 import org.pgpainless.key.SubkeyIdentifier;
 import org.pgpainless.util.MultiMap;
 
@@ -80,16 +78,8 @@ public final class EncryptionResult {
     }
 
     /**
-     * Return information about the encrypted / signed data.
      *
-     * @deprecated use {@link #getFileName()}, {@link #getModificationDate()} and {@link #getFileEncoding()} instead.
-     * @return info
      */
-    @Deprecated
-    public OpenPgpMetadata.FileInfo getFileInfo() {
-        return new OpenPgpMetadata.FileInfo(getFileName(), getModificationDate(), getFileEncoding());
-    }
-
     public String getFileName() {
         return fileName;
     }
