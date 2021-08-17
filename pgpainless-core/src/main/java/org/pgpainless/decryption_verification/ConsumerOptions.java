@@ -43,8 +43,8 @@ import org.pgpainless.util.Passphrase;
  */
 public class ConsumerOptions {
 
-    private Date verifyNotBefore;
-    private Date verifyNotAfter;
+    private Date verifyNotBefore = null;
+    private Date verifyNotAfter = new Date();
 
     // Set of verification keys
     private final Set<PGPPublicKeyRing> certificates = new HashSet<>();
@@ -59,39 +59,45 @@ public class ConsumerOptions {
 
 
     /**
-     * Consider signatures made before the given timestamp invalid.
-     *
-     * Note: This method does not have any effect yet.
-     * TODO: Add support for custom signature validity date ranges
+     * Consider signatures on the message made before the given timestamp invalid.
+     * Null means no limitation.
      *
      * @param timestamp timestamp
      * @return options
      */
     public ConsumerOptions verifyNotBefore(Date timestamp) {
         this.verifyNotBefore = timestamp;
-        throw new NotYetImplementedException();
-        // return this;
+        return this;
     }
 
-    public Date getVerifyNotBefore() {
+    /**
+     * Return the earliest creation date on which signatures on the message are considered valid.
+     * Signatures made earlier than this date are considered invalid.
+     *
+     * @return earliest allowed signature creation date or null
+     */
+    public @Nullable Date getVerifyNotBefore() {
         return verifyNotBefore;
     }
 
     /**
-     * Consider signatures made after the given timestamp invalid.
-     *
-     * Note: This method does not have any effect yet.
-     * TODO: Add support for custom signature validity date ranges
+     * Consider signatures on the message made after the given timestamp invalid.
+     * Null means no limitation.
      *
      * @param timestamp timestamp
      * @return options
      */
     public ConsumerOptions verifyNotAfter(Date timestamp) {
         this.verifyNotAfter = timestamp;
-        throw new NotYetImplementedException();
-        // return this;
+        return this;
     }
 
+    /**
+     * Return the latest possible creation date on which signatures made on the message are considered valid.
+     * Signatures made later than this date are considered invalid.
+     *
+     * @return Latest possible creation date or null.
+     */
     public Date getVerifyNotAfter() {
         return verifyNotAfter;
     }

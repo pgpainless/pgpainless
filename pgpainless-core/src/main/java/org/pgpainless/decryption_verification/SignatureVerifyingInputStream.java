@@ -17,12 +17,12 @@ package org.pgpainless.decryption_verification;
 
 import static org.pgpainless.signature.SignatureValidator.signatureIsEffective;
 import static org.pgpainless.signature.SignatureValidator.signatureStructureIsAcceptable;
+import static org.pgpainless.signature.SignatureValidator.verifySignatureCreationTimeIsInBounds;
 
 import java.io.FilterInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.security.SignatureException;
-import java.util.Date;
 import java.util.Map;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -47,6 +47,7 @@ public class SignatureVerifyingInputStream extends FilterInputStream {
 
     private final PGPObjectFactory objectFactory;
     private final Map<OpenPgpV4Fingerprint, OnePassSignature> onePassSignatures;
+    private final ConsumerOptions options;
     private final OpenPgpMetadata.Builder resultBuilder;
 
     private boolean validated = false;
@@ -54,9 +55,11 @@ public class SignatureVerifyingInputStream extends FilterInputStream {
     protected SignatureVerifyingInputStream(@Nonnull InputStream inputStream,
                                             @Nonnull PGPObjectFactory objectFactory,
                                             @Nonnull Map<OpenPgpV4Fingerprint, OnePassSignature> onePassSignatures,
+                                            @Nonnull ConsumerOptions options,
                                             @Nonnull OpenPgpMetadata.Builder resultBuilder) {
         super(inputStream);
         this.objectFactory = objectFactory;
+        this.options = options;
         this.resultBuilder = resultBuilder;
         this.onePassSignatures = onePassSignatures;
 
@@ -116,7 +119,8 @@ public class SignatureVerifyingInputStream extends FilterInputStream {
         try {
             PGPPublicKey signingKey = onePassSignature.getVerificationKeys().getPublicKey(signature.getKeyID());
             signatureStructureIsAcceptable(signingKey, policy).verify(signature);
-            signatureIsEffective(new Date()).verify(signature);
+            verifySignatureCreationTimeIsInBounds(options.getVerifyNotBefore(), options.getVerifyNotAfter()).verify(signature);
+            signatureIsEffective().verify(signature);
 
             SignatureChainValidator.validateSigningKey(signature, onePassSignature.getVerificationKeys(), PGPainless.getPolicy());
 

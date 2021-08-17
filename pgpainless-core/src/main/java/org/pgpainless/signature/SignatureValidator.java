@@ -45,6 +45,7 @@ import org.pgpainless.key.OpenPgpV4Fingerprint;
 import org.pgpainless.policy.Policy;
 import org.pgpainless.signature.subpackets.SignatureSubpacketsUtil;
 import org.pgpainless.util.BCUtil;
+import org.pgpainless.util.DateUtil;
 import org.pgpainless.util.NotationRegistry;
 
 public abstract class SignatureValidator {
@@ -665,6 +666,15 @@ public abstract class SignatureValidator {
     }
 
     /**
+     * Verify that a signature is effective right now.
+     *
+     * @return validator
+     */
+    public static SignatureValidator signatureIsEffective() {
+        return signatureIsEffective(new Date());
+    }
+
+    /**
      * Verify that a signature is effective at the given reference date.
      *
      * @param validationDate reference date for signature verification
@@ -992,6 +1002,23 @@ public abstract class SignatureValidator {
                     }
                 } catch (PGPException e) {
                     throw new SignatureValidationException("Cannot verify signature over user-attribute vector.", e);
+                }
+            }
+        };
+    }
+
+    public static SignatureValidator verifySignatureCreationTimeIsInBounds(Date notBefore, Date notAfter) {
+        return new SignatureValidator() {
+            @Override
+            public void verify(PGPSignature signature) throws SignatureValidationException {
+                Date timestamp = signature.getCreationTime();
+                if (notBefore != null && timestamp.before(notBefore)) {
+                    throw new SignatureValidationException("Signature was made before the earliest allowed signature creation time. Created: " +
+                            DateUtil.formatUTCDate(timestamp) + " Earliest allowed: " + DateUtil.formatUTCDate(notBefore));
+                }
+                if (notAfter != null && timestamp.after(notAfter)) {
+                    throw new SignatureValidationException("Signature was made after the latest allowed signature creation time. Created: " +
+                            DateUtil.formatUTCDate(timestamp) + " Latest allowed: " + DateUtil.formatUTCDate(notAfter));
                 }
             }
         };

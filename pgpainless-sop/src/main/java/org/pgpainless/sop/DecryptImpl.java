@@ -53,7 +53,7 @@ public class DecryptImpl implements Decrypt {
         try {
             consumerOptions.verifyNotBefore(timestamp);
         } catch (NotYetImplementedException e) {
-            // throw new SOPGPException.UnsupportedOption();
+            throw new SOPGPException.UnsupportedOption();
         }
         return this;
     }
@@ -63,7 +63,7 @@ public class DecryptImpl implements Decrypt {
         try {
             consumerOptions.verifyNotAfter(timestamp);
         } catch (NotYetImplementedException e) {
-            // throw new SOPGPException.UnsupportedOption();
+            throw new SOPGPException.UnsupportedOption();
         }
         return this;
     }
@@ -91,7 +91,7 @@ public class DecryptImpl implements Decrypt {
     }
 
     @Override
-    public DecryptImpl withPassword(String password) throws SOPGPException.PasswordNotHumanReadable, SOPGPException.UnsupportedOption {
+    public DecryptImpl withPassword(String password) {
         consumerOptions.addDecryptionPassphrase(Passphrase.fromPassword(password));
         String withoutTrailingWhitespace = removeTrailingWhitespace(password);
         if (!password.equals(withoutTrailingWhitespace)) {
@@ -158,17 +158,10 @@ public class DecryptImpl implements Decrypt {
                 List<Verification> verificationList = new ArrayList<>();
                 for (SubkeyIdentifier verifiedSigningKey : metadata.getVerifiedSignatures().keySet()) {
                     PGPSignature signature = metadata.getVerifiedSignatures().get(verifiedSigningKey);
-                    Date verifyNotBefore = consumerOptions.getVerifyNotBefore();
-                    Date verifyNotAfter = consumerOptions.getVerifyNotAfter();
-
-                    if (verifyNotAfter == null || !signature.getCreationTime().after(verifyNotAfter)) {
-                        if (verifyNotBefore == null || !signature.getCreationTime().before(verifyNotBefore)) {
-                            verificationList.add(new Verification(
-                                    signature.getCreationTime(),
-                                    verifiedSigningKey.getSubkeyFingerprint().toString(),
-                                    verifiedSigningKey.getPrimaryKeyFingerprint().toString()));
-                        }
-                    }
+                    verificationList.add(new Verification(
+                            signature.getCreationTime(),
+                            verifiedSigningKey.getSubkeyFingerprint().toString(),
+                            verifiedSigningKey.getPrimaryKeyFingerprint().toString()));
                 }
 
                 if (!consumerOptions.getCertificates().isEmpty()) {

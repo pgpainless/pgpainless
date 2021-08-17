@@ -44,7 +44,7 @@ public class VerifyImpl implements Verify {
         try {
             options.verifyNotBefore(timestamp);
         } catch (NotYetImplementedException e) {
-            // throw new SOPGPException.UnsupportedOption();
+            throw new SOPGPException.UnsupportedOption();
         }
         return this;
     }
@@ -54,7 +54,7 @@ public class VerifyImpl implements Verify {
         try {
             options.verifyNotAfter(timestamp);
         } catch (NotYetImplementedException e) {
-            // throw new SOPGPException.UnsupportedOption();
+            throw new SOPGPException.UnsupportedOption();
         }
         return this;
     }
@@ -97,17 +97,10 @@ public class VerifyImpl implements Verify {
 
             for (SubkeyIdentifier verifiedSigningKey : metadata.getVerifiedSignatures().keySet()) {
                 PGPSignature signature = metadata.getVerifiedSignatures().get(verifiedSigningKey);
-                Date verifyNotBefore = options.getVerifyNotBefore();
-                Date verifyNotAfter = options.getVerifyNotAfter();
-
-                if (verifyNotAfter == null || !signature.getCreationTime().after(verifyNotAfter)) {
-                    if (verifyNotBefore == null || !signature.getCreationTime().before(verifyNotBefore)) {
-                        verificationList.add(new Verification(
-                                signature.getCreationTime(),
-                                verifiedSigningKey.getSubkeyFingerprint().toString(),
-                                verifiedSigningKey.getPrimaryKeyFingerprint().toString()));
-                    }
-                }
+                verificationList.add(new Verification(
+                        signature.getCreationTime(),
+                        verifiedSigningKey.getSubkeyFingerprint().toString(),
+                        verifiedSigningKey.getPrimaryKeyFingerprint().toString()));
             }
 
             if (!options.getCertificates().isEmpty()) {

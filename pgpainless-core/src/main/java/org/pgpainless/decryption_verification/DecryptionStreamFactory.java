@@ -213,7 +213,7 @@ public final class DecryptionStreamFactory {
         }
 
         return new SignatureVerifyingInputStream(literalDataInputStream,
-                objectFactory, verifiableOnePassSignatures, resultBuilder);
+                objectFactory, verifiableOnePassSignatures, options, resultBuilder);
     }
 
     private InputStream decrypt(@Nonnull PGPEncryptedDataList encryptedDataList)
