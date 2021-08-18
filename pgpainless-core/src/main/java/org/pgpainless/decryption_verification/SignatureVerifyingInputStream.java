@@ -15,7 +15,7 @@
  */
 package org.pgpainless.decryption_verification;
 
-import static org.pgpainless.signature.SignatureValidator.verifySignatureCreationTimeIsInBounds;
+import static org.pgpainless.signature.SignatureValidator.signatureWasCreatedInBounds;
 
 import java.io.FilterInputStream;
 import java.io.IOException;
@@ -112,7 +112,7 @@ public class SignatureVerifyingInputStream extends FilterInputStream {
     private void verifySignatureOrThrowSignatureException(PGPSignature signature, OnePassSignature onePassSignature)
             throws SignatureValidationException {
         Policy policy = PGPainless.getPolicy();
-        verifySignatureCreationTimeIsInBounds(options.getVerifyNotBefore(), options.getVerifyNotAfter()).verify(signature);
+        signatureWasCreatedInBounds(options.getVerifyNotBefore(), options.getVerifyNotAfter()).verify(signature);
         CertificateValidator.validateCertificateAndVerifyOnePassSignature(signature, onePassSignature, policy);
     }
 

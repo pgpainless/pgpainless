@@ -30,7 +30,7 @@ import org.pgpainless.policy.Policy;
 
 /**
  * Collection of static methods for signature verification.
- * Signature verification entails validation of certain criteria (see {@link SignatureValidator}, as well as
+ * Signature verification entails validation of certain criteria (see {@link SignatureValidator}), as well as
  * cryptographic verification of signature correctness.
  */
 public final class SignatureVerifier {

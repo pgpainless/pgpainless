@@ -619,7 +619,7 @@ public abstract class SignatureValidator {
         };
     }
 
-    public static SignatureValidator verifySignatureCreationTimeIsInBounds(Date notBefore, Date notAfter) {
+    public static SignatureValidator signatureWasCreatedInBounds(Date notBefore, Date notAfter) {
         return new SignatureValidator() {
             @Override
             public void verify(PGPSignature signature) throws SignatureValidationException {

@@ -15,7 +15,7 @@
  */
 package org.pgpainless.decryption_verification;
 
-import static org.pgpainless.signature.SignatureValidator.verifySignatureCreationTimeIsInBounds;
+import static org.pgpainless.signature.SignatureValidator.signatureWasCreatedInBounds;
 
 import java.io.IOException;
 import java.io.InputStream;
@@ -104,7 +104,7 @@ public class DecryptionStream extends InputStream {
     private void maybeVerifyDetachedSignatures() {
         for (DetachedSignature s : resultBuilder.getDetachedSignatures()) {
             try {
-                verifySignatureCreationTimeIsInBounds(options.getVerifyNotBefore(), options.getVerifyNotAfter()).verify(s.getSignature());
+                signatureWasCreatedInBounds(options.getVerifyNotBefore(), options.getVerifyNotAfter()).verify(s.getSignature());
                 boolean verified = CertificateValidator.validateCertificateAndVerifyInitializedSignature(s.getSignature(), (PGPPublicKeyRing) s.getSigningKeyRing(), PGPainless.getPolicy());
                 s.setVerified(verified);
             } catch (SignatureValidationException e) {
