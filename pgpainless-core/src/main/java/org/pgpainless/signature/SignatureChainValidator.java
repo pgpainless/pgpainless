@@ -15,7 +15,12 @@
  */
 package org.pgpainless.signature;
 
+import static org.pgpainless.signature.SignatureValidator.signatureIsEffective;
+import static org.pgpainless.signature.SignatureValidator.signatureStructureIsAcceptable;
+import static org.pgpainless.signature.SignatureValidator.verifyWasPossiblyMadeByKey;
+
 import java.io.InputStream;
+import java.security.SignatureException;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Date;
@@ -28,6 +33,7 @@ import java.util.logging.Logger;
 
 import org.bouncycastle.bcpg.sig.KeyFlags;
 import org.bouncycastle.bcpg.sig.SignerUserID;
+import org.bouncycastle.openpgp.PGPException;
 import org.bouncycastle.openpgp.PGPPublicKey;
 import org.bouncycastle.openpgp.PGPPublicKeyRing;
 import org.bouncycastle.openpgp.PGPSignature;
@@ -261,6 +267,28 @@ public final class SignatureChainValidator {
         long keyId = SignatureUtils.determineIssuerKeyId(signature);
         PGPPublicKey signingKey = verificationKeys.getPublicKey(keyId);
         SignatureValidator.verifyInitializedSignature(signature, signingKey, policy, signature.getCreationTime());
+        return true;
+    }
+
+    public static boolean validateOnePassSignature(PGPSignature signature, OnePassSignature onePassSignature, Policy policy) throws PGPException, SignatureException {
+        PGPPublicKey signingKey = onePassSignature.getVerificationKeys().getPublicKey(signature.getKeyID());
+        try {
+            verifyWasPossiblyMadeByKey(signingKey, signature);
+            signatureStructureIsAcceptable(signingKey, policy).verify(signature);
+            signatureIsEffective().verify(signature);
+        } catch (SignatureValidationException e) {
+            throw new SignatureException("Signature is not valid: " + e.getMessage(), e);
+        }
+
+        try {
+            validateSigningKey(signature, onePassSignature.getVerificationKeys(), policy);
+        } catch (SignatureValidationException e) {
+            throw new SignatureException("Signing key " + Long.toHexString(signingKey.getKeyID()) + " is not valid: " + e.getMessage(), e);
+        }
+        if (!onePassSignature.verify(signature)) {
+            throw new SignatureException("Bad signature of key " + Long.toHexString(signingKey.getKeyID()));
+        }
+
         return true;
     }
 }

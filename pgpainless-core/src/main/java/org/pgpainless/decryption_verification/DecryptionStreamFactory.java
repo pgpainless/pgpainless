@@ -143,7 +143,7 @@ public final class DecryptionStreamFactory {
             }
         }
 
-        return new DecryptionStream(inputStream, factory.resultBuilder, factory.integrityProtectedStreams,
+        return new DecryptionStream(inputStream, options, factory.resultBuilder, factory.integrityProtectedStreams,
                 (decoderStream instanceof ArmoredInputStream) ? decoderStream : null);
     }
 

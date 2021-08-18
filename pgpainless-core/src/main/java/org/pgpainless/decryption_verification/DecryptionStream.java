@@ -15,6 +15,8 @@
  */
 package org.pgpainless.decryption_verification;
 
+import static org.pgpainless.signature.SignatureValidator.verifySignatureCreationTimeIsInBounds;
+
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.List;
@@ -39,15 +41,18 @@ public class DecryptionStream extends InputStream {
     private static final Logger LOGGER = Logger.getLogger(DecryptionStream.class.getName());
 
     private final InputStream inputStream;
+    private final ConsumerOptions options;
     private final OpenPgpMetadata.Builder resultBuilder;
     private boolean isClosed = false;
     private List<IntegrityProtectedInputStream> integrityProtectedInputStreamList;
     private final InputStream armorStream;
 
-    DecryptionStream(@Nonnull InputStream wrapped, @Nonnull OpenPgpMetadata.Builder resultBuilder,
+    DecryptionStream(@Nonnull InputStream wrapped, @Nonnull ConsumerOptions options,
+                     @Nonnull OpenPgpMetadata.Builder resultBuilder,
                      List<IntegrityProtectedInputStream> integrityProtectedInputStreamList,
                      InputStream armorStream) {
         this.inputStream = wrapped;
+        this.options = options;
         this.resultBuilder = resultBuilder;
         this.integrityProtectedInputStreamList = integrityProtectedInputStreamList;
         this.armorStream = armorStream;
@@ -99,6 +104,7 @@ public class DecryptionStream extends InputStream {
     private void maybeVerifyDetachedSignatures() {
         for (DetachedSignature s : resultBuilder.getDetachedSignatures()) {
             try {
+                verifySignatureCreationTimeIsInBounds(options.getVerifyNotBefore(), options.getVerifyNotAfter()).verify(s.getSignature());
                 boolean verified = SignatureChainValidator.validateSignature(s.getSignature(), (PGPPublicKeyRing) s.getSigningKeyRing(), PGPainless.getPolicy());
                 s.setVerified(verified);
             } catch (SignatureValidationException e) {
