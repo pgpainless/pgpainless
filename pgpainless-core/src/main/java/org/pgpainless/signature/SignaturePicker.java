@@ -63,7 +63,7 @@ public final class SignaturePicker {
 
         for (PGPSignature signature : signatures) {
             try {
-                SignatureValidator.verifyKeyRevocationSignature(signature, primaryKey, policy, validationDate);
+                SignatureVerifier.verifyKeyRevocationSignature(signature, primaryKey, policy, validationDate);
             } catch (SignatureValidationException e) {
                 // Signature is not valid
                 continue;
@@ -102,7 +102,7 @@ public final class SignaturePicker {
         PGPSignature mostRecentDirectKeySigBySigningKey = null;
         for (PGPSignature signature : directKeySignatures) {
             try {
-                SignatureValidator.verifyDirectKeySignature(signature, signingKey, signedKey, policy, validationDate);
+                SignatureVerifier.verifyDirectKeySignature(signature, signingKey, signedKey, policy, validationDate);
             } catch (SignatureValidationException e) {
                 // Direct key sig is not valid
                 continue;
@@ -180,7 +180,7 @@ public final class SignaturePicker {
         PGPSignature latestUserIdRevocation = null;
         for (PGPSignature signature : signatures) {
             try {
-                SignatureValidator.verifyUserIdRevocation(userId, signature, primaryKey, policy, validationDate);
+                SignatureVerifier.verifyUserIdRevocation(userId, signature, primaryKey, policy, validationDate);
             } catch (SignatureValidationException e) {
                 // User-id revocation is not valid
                 continue;
@@ -211,7 +211,7 @@ public final class SignaturePicker {
         PGPSignature mostRecentUserIdCertification = null;
         for (PGPSignature signature : signatures) {
             try {
-                SignatureValidator.verifyUserIdCertification(userId, signature, primaryKey, policy, validationDate);
+                SignatureVerifier.verifyUserIdCertification(userId, signature, primaryKey, policy, validationDate);
             } catch (SignatureValidationException e) {
                 // User-id certification is not valid
                 continue;
@@ -243,7 +243,7 @@ public final class SignaturePicker {
         PGPSignature latestUserIdCert = null;
         for (PGPSignature signature : signatures) {
             try {
-                SignatureValidator.verifyWasPossiblyMadeByKey(primaryKey, signature);
+                SignatureValidator.wasPossiblyMadeByKey(primaryKey).verify(signature);
                 SignatureValidator.signatureIsCertification().verify(signature);
                 SignatureValidator.signatureStructureIsAcceptable(primaryKey, policy).verify(signature);
                 SignatureValidator.signatureIsAlreadyEffective(validationDate).verify(signature);
@@ -284,7 +284,7 @@ public final class SignaturePicker {
 
         for (PGPSignature signature : signatures) {
             try {
-                SignatureValidator.verifySubkeyBindingRevocation(signature, primaryKey, subkey, policy, validationDate);
+                SignatureVerifier.verifySubkeyBindingRevocation(signature, primaryKey, subkey, policy, validationDate);
             } catch (SignatureValidationException e) {
                 // subkey binding revocation is not valid
                 continue;
@@ -316,7 +316,7 @@ public final class SignaturePicker {
 
         for (PGPSignature signature : subkeyBindingSigs) {
             try {
-                SignatureValidator.verifySubkeyBindingSignature(signature, primaryKey, subkey, policy, validationDate);
+                SignatureVerifier.verifySubkeyBindingSignature(signature, primaryKey, subkey, policy, validationDate);
             } catch (SignatureValidationException validationException) {
                 // Subkey binding sig is not valid
                 continue;

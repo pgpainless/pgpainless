@@ -16,7 +16,6 @@
 package org.pgpainless.signature;
 
 import static org.junit.jupiter.api.Assertions.assertThrows;
-import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.junit.jupiter.api.Assertions.fail;
 
 import java.io.IOException;
@@ -30,7 +29,7 @@ import org.pgpainless.PGPainless;
 import org.pgpainless.exception.SignatureValidationException;
 import org.pgpainless.key.OpenPgpV4Fingerprint;
 
-public class SignatureWasPossibleyMadeByKeyTest {
+public class SignatureWasPossiblyMadeByKeyTest {
 
     public static PGPPublicKeyRing CERT;
     public static PGPPublicKey SIGKEY;
@@ -103,7 +102,7 @@ public class SignatureWasPossibleyMadeByKeyTest {
                 "cqP71SMuOwD+JNuWQCd4e1WaTWNXrB1xerzmuWFc\n" +
                 "=4ZFC\n" +
                 "-----END PGP SIGNATURE-----";
-        assertTrue(SignatureValidator.verifyWasPossiblyMadeByKey(SIGKEY, get(sigWithIssuer)));
+        assertWasPossiblyMadeByKey(SIGKEY, get(sigWithIssuer));
     }
 
     @Test
@@ -123,7 +122,7 @@ public class SignatureWasPossibleyMadeByKeyTest {
                 "Q0Quxar3DOTtNNQVrXeoeIlVGue0pNCwg6abDj5N\n" +
                 "=IcX1\n" +
                 "-----END PGP SIGNATURE-----\n";
-        assertTrue(SignatureValidator.verifyWasPossiblyMadeByKey(SIGKEY, get(sigWithHashedIssuer)));
+        assertWasPossiblyMadeByKey(SIGKEY, get(sigWithHashedIssuer));
     }
 
     @Test
@@ -144,7 +143,7 @@ public class SignatureWasPossibleyMadeByKeyTest {
                 "-----END PGP SIGNATURE-----";
 
 
-        assertTrue(SignatureValidator.verifyWasPossiblyMadeByKey(SIGKEY, get(sigWithNoIssuerNoFingerprint)));
+        assertWasPossiblyMadeByKey(SIGKEY, get(sigWithNoIssuerNoFingerprint));
     }
 
     @Test
@@ -165,11 +164,11 @@ public class SignatureWasPossibleyMadeByKeyTest {
                 "=LBou\n" +
                 "-----END PGP SIGNATURE-----\n";
 
-        assertTrue(SignatureValidator.verifyWasPossiblyMadeByKey(SIGKEY, get(sigWithNoIssuerUnhashedFingerprint)));
+        assertWasPossiblyMadeByKey(SIGKEY, get(sigWithNoIssuerUnhashedFingerprint));
     }
 
     @Test
-    public void issuerMismatch() {
+    public void issuerMismatch() throws PGPException, IOException {
         String sig = "-----BEGIN PGP SIGNATURE-----\n" +
                 "\n" +
                 "wsE7BAABCABlBYJgyf21RxQAAAAAAB4AIHNhbHRAbm90YXRpb25zLnNlcXVvaWEt\n" +
@@ -185,11 +184,11 @@ public class SignatureWasPossibleyMadeByKeyTest {
                 "cqP71SMuOwD+JNuWQCd4e1WaTWNXrB1xerzmuWFc\n" +
                 "=4ZFC\n" +
                 "-----END PGP SIGNATURE-----";
-        assertThrows(SignatureValidationException.class, () -> SignatureValidator.verifyWasPossiblyMadeByKey(NOSIGKEY, get(sig)));
+        assertWasNotPossiblyMadeByKey(NOSIGKEY, get(sig));
     }
 
     @Test
-    public void noIssuer_fingerprintMismatch() {
+    public void noIssuer_fingerprintMismatch() throws PGPException, IOException {
         String sigWithNoIssuerAndWrongFingerprint = "-----BEGIN PGP SIGNATURE-----\n" +
                 "\n" +
                 "wsExBAABCABlBYJgyf21RxQAAAAAAB4AIHNhbHRAbm90YXRpb25zLnNlcXVvaWEt\n" +
@@ -206,10 +205,19 @@ public class SignatureWasPossibleyMadeByKeyTest {
                 "=A/zE\n" +
                 "-----END PGP SIGNATURE-----\n";
 
-        assertThrows(SignatureValidationException.class, () -> SignatureValidator.verifyWasPossiblyMadeByKey(NOSIGKEY, get(sigWithNoIssuerAndWrongFingerprint)));
+        assertWasNotPossiblyMadeByKey(NOSIGKEY, get(sigWithNoIssuerAndWrongFingerprint));
     }
 
     private PGPSignature get(String encoded) throws PGPException, IOException {
         return SignatureUtils.readSignatures(encoded).get(0);
     }
+
+    private void assertWasPossiblyMadeByKey(PGPPublicKey signatureKey, PGPSignature signature) throws SignatureValidationException {
+        SignatureValidator.wasPossiblyMadeByKey(signatureKey).verify(signature);
+    }
+
+    private void assertWasNotPossiblyMadeByKey(PGPPublicKey signatureKey, PGPSignature signature) {
+        assertThrows(SignatureValidationException.class, () -> assertWasPossiblyMadeByKey(signatureKey, signature));
+    }
+
 }

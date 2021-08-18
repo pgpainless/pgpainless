@@ -15,7 +15,7 @@
  */
 package org.pgpainless.signature;
 
-import static org.pgpainless.signature.SignatureValidator.verifyOnePassSignature;
+import static org.pgpainless.signature.SignatureVerifier.verifyOnePassSignature;
 
 import java.io.InputStream;
 import java.util.ArrayList;
@@ -40,9 +40,7 @@ import org.pgpainless.policy.Policy;
 import org.pgpainless.signature.subpackets.SignatureSubpacketsUtil;
 
 /**
- * This class implements validity checks on OpenPGP signatures.
- * Its responsibilities are checking if a signing key was eligible to create a certain signature
- * and if the signature is valid at the time of validation.
+ * A collection of static methods that validate signing certificates (public keys) and verify signature correctness.
  */
 public final class CertificateValidator {
 
@@ -85,7 +83,7 @@ public final class CertificateValidator {
         while (primaryKeyRevocationIterator.hasNext()) {
             PGPSignature revocation = primaryKeyRevocationIterator.next();
             try {
-                if (SignatureValidator.verifyKeyRevocationSignature(revocation, primaryKey, policy, signature.getCreationTime())) {
+                if (SignatureVerifier.verifyKeyRevocationSignature(revocation, primaryKey, policy, signature.getCreationTime())) {
                     directKeySignatures.add(revocation);
                 }
             } catch (SignatureValidationException e) {
@@ -99,7 +97,7 @@ public final class CertificateValidator {
         while (keySignatures.hasNext()) {
             PGPSignature keySignature = keySignatures.next();
             try {
-                if (SignatureValidator.verifyDirectKeySignature(keySignature, primaryKey, policy, signature.getCreationTime())) {
+                if (SignatureVerifier.verifyDirectKeySignature(keySignature, primaryKey, policy, signature.getCreationTime())) {
                     directKeySignatures.add(keySignature);
                 }
             } catch (SignatureValidationException e) {
@@ -125,7 +123,7 @@ public final class CertificateValidator {
             while (userIdSigs.hasNext()) {
                 PGPSignature userIdSig = userIdSigs.next();
                 try {
-                    if (SignatureValidator.verifySignatureOverUserId(userId, userIdSig, primaryKey, policy, signature.getCreationTime())) {
+                    if (SignatureVerifier.verifySignatureOverUserId(userId, userIdSig, primaryKey, policy, signature.getCreationTime())) {
                         signaturesOnUserId.add(userIdSig);
                     }
                 } catch (SignatureValidationException e) {
@@ -175,7 +173,7 @@ public final class CertificateValidator {
             while (bindingRevocations.hasNext()) {
                 PGPSignature revocation = bindingRevocations.next();
                 try {
-                    if (SignatureValidator.verifySubkeyBindingRevocation(revocation, primaryKey, signingSubkey, policy, signature.getCreationTime())) {
+                    if (SignatureVerifier.verifySubkeyBindingRevocation(revocation, primaryKey, signingSubkey, policy, signature.getCreationTime())) {
                         subkeySigs.add(revocation);
                     }
                 } catch (SignatureValidationException e) {
@@ -188,7 +186,7 @@ public final class CertificateValidator {
             while (bindingSigs.hasNext()) {
                 PGPSignature bindingSig = bindingSigs.next();
                 try {
-                    if (SignatureValidator.verifySubkeyBindingSignature(bindingSig, primaryKey, signingSubkey, policy, signature.getCreationTime())) {
+                    if (SignatureVerifier.verifySubkeyBindingSignature(bindingSig, primaryKey, signingSubkey, policy, signature.getCreationTime())) {
                         subkeySigs.add(bindingSig);
                     }
                 } catch (SignatureValidationException e) {
@@ -244,7 +242,7 @@ public final class CertificateValidator {
             throws SignatureValidationException {
         validateCertificate(signature, signingKeyRing, policy);
         long keyId = SignatureUtils.determineIssuerKeyId(signature);
-        return SignatureValidator.verifyUninitializedSignature(signature, signedData, signingKeyRing.getPublicKey(keyId), policy, validationDate);
+        return SignatureVerifier.verifyUninitializedSignature(signature, signedData, signingKeyRing.getPublicKey(keyId), policy, validationDate);
     }
 
     /**
@@ -262,10 +260,19 @@ public final class CertificateValidator {
         validateCertificate(signature, verificationKeys, policy);
         long keyId = SignatureUtils.determineIssuerKeyId(signature);
         PGPPublicKey signingKey = verificationKeys.getPublicKey(keyId);
-        SignatureValidator.verifyInitializedSignature(signature, signingKey, policy, signature.getCreationTime());
+        SignatureVerifier.verifyInitializedSignature(signature, signingKey, policy, signature.getCreationTime());
         return true;
     }
 
+    /**
+     * Validate the signing key certificate and the given {@link OnePassSignature}.
+     *
+     * @param signature OpenPGP signature from the signed message
+     * @param onePassSignature corresponding one-pass-signature
+     * @param policy policy
+     * @return true if the certificate is valid and the signature is correct, false otherwise.
+     * @throws SignatureValidationException in case of a validation error
+     */
     public static boolean validateCertificateAndVerifyOnePassSignature(PGPSignature signature, OnePassSignature onePassSignature, Policy policy)
             throws SignatureValidationException {
         validateCertificate(signature, onePassSignature.getVerificationKeys(), policy);

@@ -33,7 +33,7 @@ import org.pgpainless.exception.SignatureValidationException;
 import org.pgpainless.implementation.ImplementationFactory;
 import org.pgpainless.policy.Policy;
 import org.pgpainless.signature.SignatureCreationDateComparator;
-import org.pgpainless.signature.SignatureValidator;
+import org.pgpainless.signature.SignatureVerifier;
 import org.pgpainless.util.CollectionUtils;
 
 public final class KeyRingValidator {
@@ -77,7 +77,7 @@ public final class KeyRingValidator {
         Collections.sort(directKeyCertifications, new SignatureCreationDateComparator(SignatureCreationDateComparator.Order.NEW_TO_OLD));
         for (PGPSignature signature : directKeyCertifications) {
             try {
-                if (SignatureValidator.verifyDirectKeySignature(signature, blank, policy, validationDate)) {
+                if (SignatureVerifier.verifyDirectKeySignature(signature, blank, policy, validationDate)) {
                     blank = PGPPublicKey.addCertification(blank, signature);
                 }
             } catch (SignatureValidationException e) {
@@ -90,7 +90,7 @@ public final class KeyRingValidator {
         Collections.sort(directKeyRevocations, new SignatureCreationDateComparator(SignatureCreationDateComparator.Order.NEW_TO_OLD));
         for (PGPSignature signature : directKeyRevocations) {
             try {
-                if (SignatureValidator.verifyKeyRevocationSignature(signature, primaryKey, policy, validationDate)) {
+                if (SignatureVerifier.verifyKeyRevocationSignature(signature, primaryKey, policy, validationDate)) {
                     blank = PGPPublicKey.addCertification(blank, signature);
                 }
             } catch (SignatureValidationException e) {
@@ -107,11 +107,11 @@ public final class KeyRingValidator {
             for (PGPSignature signature : signatures) {
                 try {
                     if (SignatureType.valueOf(signature.getSignatureType()) == SignatureType.CERTIFICATION_REVOCATION) {
-                        if (SignatureValidator.verifyUserIdRevocation(userId, signature, primaryKey, policy, validationDate)) {
+                        if (SignatureVerifier.verifyUserIdRevocation(userId, signature, primaryKey, policy, validationDate)) {
                             blank = PGPPublicKey.addCertification(blank, userId, signature);
                         }
                     } else {
-                        if (SignatureValidator.verifyUserIdCertification(userId, signature, primaryKey, policy, validationDate)) {
+                        if (SignatureVerifier.verifyUserIdCertification(userId, signature, primaryKey, policy, validationDate)) {
                             blank = PGPPublicKey.addCertification(blank, userId, signature);
                         }
                     }
@@ -129,11 +129,11 @@ public final class KeyRingValidator {
                 PGPSignature signature = userAttributeSignatureIterator.next();
                 try {
                     if (SignatureType.valueOf(signature.getSignatureType()) == SignatureType.CERTIFICATION_REVOCATION) {
-                        if (SignatureValidator.verifyUserAttributesRevocation(userAttribute, signature, primaryKey, policy, validationDate)) {
+                        if (SignatureVerifier.verifyUserAttributesRevocation(userAttribute, signature, primaryKey, policy, validationDate)) {
                             blank = PGPPublicKey.addCertification(blank, userAttribute, signature);
                         }
                     } else {
-                        if (SignatureValidator.verifyUserAttributesCertification(userAttribute, signature, primaryKey, policy, validationDate)) {
+                        if (SignatureVerifier.verifyUserAttributesCertification(userAttribute, signature, primaryKey, policy, validationDate)) {
                             blank = PGPPublicKey.addCertification(blank, userAttribute, signature);
                         }
                     }
