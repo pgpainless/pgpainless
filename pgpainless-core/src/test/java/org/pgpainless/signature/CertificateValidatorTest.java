@@ -40,7 +40,7 @@ import org.pgpainless.exception.SignatureValidationException;
 import org.pgpainless.implementation.ImplementationFactory;
 import org.pgpainless.policy.Policy;
 
-public class SignatureChainValidatorTest {
+public class CertificateValidatorTest {
 
     /**
      * Primary Key signs and is hard revoked with reason: unknown.
@@ -181,16 +181,16 @@ public class SignatureChainValidatorTest {
         Date validationDate = new Date();
         String data = "Hello, World";
 
-        assertThrows(SignatureValidationException.class, () -> SignatureChainValidator.validateSignatureChain(
+        assertThrows(SignatureValidationException.class, () -> CertificateValidator.validateCertificateAndVerifyUninitializedSignature(
                 predatesPrimaryKey, getSignedData(data), publicKeys, policy, validationDate),
                 "Signature predates primary key");
-        assertThrows(SignatureValidationException.class, () -> SignatureChainValidator.validateSignatureChain(
+        assertThrows(SignatureValidationException.class, () -> CertificateValidator.validateCertificateAndVerifyUninitializedSignature(
                 unboundSubkey, getSignedData(data), publicKeys, policy, validationDate),
                 "Primary key hard revoked");
-        assertThrows(SignatureValidationException.class, () -> SignatureChainValidator.validateSignatureChain(
+        assertThrows(SignatureValidationException.class, () -> CertificateValidator.validateCertificateAndVerifyUninitializedSignature(
                 primaryKeyRevoked, getSignedData(data), publicKeys, policy, validationDate),
                 "Primary key hard revoked");
-        assertThrows(SignatureValidationException.class, () -> SignatureChainValidator.validateSignatureChain(
+        assertThrows(SignatureValidationException.class, () -> CertificateValidator.validateCertificateAndVerifyUninitializedSignature(
                 primaryKeyRevalidated, getSignedData(data), publicKeys, policy, validationDate),
                 "Primary key hard revoked");
     }
@@ -333,16 +333,16 @@ public class SignatureChainValidatorTest {
         Date validationDate = new Date();
         String data = "Hello, World";
 
-        assertThrows(SignatureValidationException.class, () -> SignatureChainValidator.validateSignatureChain(
+        assertThrows(SignatureValidationException.class, () -> CertificateValidator.validateCertificateAndVerifyUninitializedSignature(
                 predatesPrimaryKey, getSignedData(data), publicKeys, policy, validationDate),
                 "Signature predates primary key");
-        assertThrows(SignatureValidationException.class, () -> SignatureChainValidator.validateSignatureChain(
+        assertThrows(SignatureValidationException.class, () -> CertificateValidator.validateCertificateAndVerifyUninitializedSignature(
                 unboundSubkey, getSignedData(data), publicKeys, policy, validationDate),
                 "Signing key unbound + hard revocation");
-        assertThrows(SignatureValidationException.class, () -> SignatureChainValidator.validateSignatureChain(
+        assertThrows(SignatureValidationException.class, () -> CertificateValidator.validateCertificateAndVerifyUninitializedSignature(
                 revokedSubkey, getSignedData(data), publicKeys, policy, validationDate),
                 "Primary key is hard revoked");
-        assertThrows(SignatureValidationException.class, () -> SignatureChainValidator.validateSignatureChain(
+        assertThrows(SignatureValidationException.class, () -> CertificateValidator.validateCertificateAndVerifyUninitializedSignature(
                 revalidatedSubkey, getSignedData(data), publicKeys, policy, validationDate),
                 "Primary key is hard revoked");
     }
@@ -486,16 +486,16 @@ public class SignatureChainValidatorTest {
         Date validationDate = new Date();
         String data = "Hello World :)";
 
-        assertThrows(SignatureValidationException.class, () -> SignatureChainValidator.validateSignatureChain(
+        assertThrows(SignatureValidationException.class, () -> CertificateValidator.validateCertificateAndVerifyUninitializedSignature(
                 predatesPrimaryKey, getSignedData(data), publicKeys, policy, validationDate),
                 "Signature predates primary key");
-        assertThrows(SignatureValidationException.class, () -> SignatureChainValidator.validateSignatureChain(
+        assertThrows(SignatureValidationException.class, () -> CertificateValidator.validateCertificateAndVerifyUninitializedSignature(
                 unboundKey, getSignedData(data), publicKeys, policy, validationDate),
                 "Signing key unbound + hard revocation");
-        assertThrows(SignatureValidationException.class, () -> SignatureChainValidator.validateSignatureChain(
+        assertThrows(SignatureValidationException.class, () -> CertificateValidator.validateCertificateAndVerifyUninitializedSignature(
                 afterHardRevocation, getSignedData(data), publicKeys, policy, validationDate),
                 "Hard revocation invalidates key at all times");
-        assertThrows(SignatureValidationException.class, () -> SignatureChainValidator.validateSignatureChain(
+        assertThrows(SignatureValidationException.class, () -> CertificateValidator.validateCertificateAndVerifyUninitializedSignature(
                 afterRevalidation, getSignedData(data), publicKeys, policy, validationDate),
                 "Hard revocation invalidates key at all times");
     }
@@ -638,22 +638,22 @@ public class SignatureChainValidatorTest {
         String data = "Hello, World";
 
         // Sig not valid, as it predates the signing key creation time
-        assertThrows(SignatureValidationException.class, () -> SignatureChainValidator.validateSignatureChain(
+        assertThrows(SignatureValidationException.class, () -> CertificateValidator.validateCertificateAndVerifyUninitializedSignature(
                 predatesPrimaryKey, getSignedData(data), publicKeys, policy, predatesPrimaryKey.getCreationTime()),
                 "Signature predates primary key creation date");
 
         // Sig valid
-        assertDoesNotThrow(() -> SignatureChainValidator.validateSignatureChain(
+        assertDoesNotThrow(() -> CertificateValidator.validateCertificateAndVerifyUninitializedSignature(
                 keyIsValid, getSignedData(data), publicKeys, policy, keyIsValid.getCreationTime()),
                 "Signature is valid");
 
         // Sig not valid, as the signing key is revoked
-        assertThrows(SignatureValidationException.class, () -> SignatureChainValidator.validateSignatureChain(
+        assertThrows(SignatureValidationException.class, () -> CertificateValidator.validateCertificateAndVerifyUninitializedSignature(
                 keyIsRevoked, getSignedData(data), publicKeys, policy, keyIsRevoked.getCreationTime()),
                 "Signing key is revoked at this point");
 
         // Sig valid, as the signing key is revalidated
-        assertDoesNotThrow(() -> SignatureChainValidator.validateSignatureChain(
+        assertDoesNotThrow(() -> CertificateValidator.validateCertificateAndVerifyUninitializedSignature(
                 keyIsRevalidated, getSignedData(data), publicKeys, policy, keyIsRevalidated.getCreationTime()),
                 "Signature is valid, as signing key is revalidated");
     }
@@ -797,17 +797,17 @@ public class SignatureChainValidatorTest {
         String data = "Hello, World";
         Date validationDate = new Date();
 
-        assertThrows(SignatureValidationException.class, () -> SignatureChainValidator.validateSignatureChain(
+        assertThrows(SignatureValidationException.class, () -> CertificateValidator.validateCertificateAndVerifyUninitializedSignature(
                 predatesPrimaryKey, getSignedData(data), publicKeys, policy, validationDate),
                 "Signature predates primary key creation date");
-        assertThrows(SignatureValidationException.class, () -> SignatureChainValidator.validateSignatureChain(
+        assertThrows(SignatureValidationException.class, () -> CertificateValidator.validateCertificateAndVerifyUninitializedSignature(
                 keyNotBound, getSignedData(data), publicKeys, policy, validationDate),
                 "Signing key is not bound at this point");
-        assertThrows(SignatureValidationException.class, () -> SignatureChainValidator.validateSignatureChain(
+        assertThrows(SignatureValidationException.class, () -> CertificateValidator.validateCertificateAndVerifyUninitializedSignature(
                 keyRevoked, getSignedData(data), publicKeys, policy, validationDate),
                 "Signing key is revoked at this point");
         assertDoesNotThrow(() ->
-                        SignatureChainValidator.validateSignatureChain(
+                        CertificateValidator.validateCertificateAndVerifyUninitializedSignature(
                                 valid, getSignedData(data), publicKeys, policy, validationDate),
                 "Signing key is revalidated");
     }
@@ -951,17 +951,17 @@ public class SignatureChainValidatorTest {
         Date validationDate = new Date();
         String data = "Hello, World";
 
-        assertThrows(SignatureValidationException.class, () -> SignatureChainValidator.validateSignatureChain(
+        assertThrows(SignatureValidationException.class, () -> CertificateValidator.validateCertificateAndVerifyUninitializedSignature(
                 predatesPrimaryKey, getSignedData(data), publicKeys, policy, validationDate),
                 "Signature predates primary key creation date");
-        assertDoesNotThrow(() -> SignatureChainValidator.validateSignatureChain(
+        assertDoesNotThrow(() -> CertificateValidator.validateCertificateAndVerifyUninitializedSignature(
                 valid, getSignedData(data), publicKeys, policy, validationDate),
                 "Signature is valid");
         assertThrows(SignatureValidationException.class, () ->
-                        SignatureChainValidator.validateSignatureChain(
+                        CertificateValidator.validateCertificateAndVerifyUninitializedSignature(
                                 revoked, getSignedData(data), publicKeys, policy, validationDate),
                 "Primary key is revoked");
-        assertDoesNotThrow(() -> SignatureChainValidator.validateSignatureChain(
+        assertDoesNotThrow(() -> CertificateValidator.validateCertificateAndVerifyUninitializedSignature(
                 revalidated, getSignedData(data), publicKeys, policy, validationDate),
                 "Primary key is re-legitimized");
     }
@@ -1292,43 +1292,43 @@ public class SignatureChainValidatorTest {
         Date validationDate = new Date();
         String data = "Hello World :)";
 
-        assertThrows(SignatureValidationException.class, () -> SignatureChainValidator.validateSignatureChain(
+        assertThrows(SignatureValidationException.class, () -> CertificateValidator.validateCertificateAndVerifyUninitializedSignature(
                 sigAT0, getSignedData(data), keysA, policy, validationDate),
                 "Signature predates key creation time");
-        assertDoesNotThrow(() -> SignatureChainValidator.validateSignatureChain(
+        assertDoesNotThrow(() -> CertificateValidator.validateCertificateAndVerifyUninitializedSignature(
                 sigAT1_T2, getSignedData(data), keysA, policy, validationDate),
                 "Key valid");
         assertThrows(SignatureValidationException.class, () ->
-                        SignatureChainValidator.validateSignatureChain(
+                        CertificateValidator.validateCertificateAndVerifyUninitializedSignature(
                                 sigAT2_T3, getSignedData(data), keysA, policy, validationDate),
                 "Key is not valid, as subkey binding expired");
-        assertDoesNotThrow(() -> SignatureChainValidator.validateSignatureChain(
+        assertDoesNotThrow(() -> CertificateValidator.validateCertificateAndVerifyUninitializedSignature(
                 sigAT3_now, getSignedData(data), keysA, policy, validationDate),
                 "Key is valid again");
 
-        assertThrows(SignatureValidationException.class, () -> SignatureChainValidator.validateSignatureChain(
+        assertThrows(SignatureValidationException.class, () -> CertificateValidator.validateCertificateAndVerifyUninitializedSignature(
                 sigBT0, getSignedData(data), keysB, policy, validationDate),
                 "Signature predates key creation time");
-        assertDoesNotThrow(() -> SignatureChainValidator.validateSignatureChain(
+        assertDoesNotThrow(() -> CertificateValidator.validateCertificateAndVerifyUninitializedSignature(
                 sigBT1_T2, getSignedData(data), keysB, policy, validationDate),
                 "Key is valid");
-        assertThrows(SignatureValidationException.class, () -> SignatureChainValidator.validateSignatureChain(
+        assertThrows(SignatureValidationException.class, () -> CertificateValidator.validateCertificateAndVerifyUninitializedSignature(
                 sigBT2_T3, getSignedData(data), keysB, policy, validationDate),
                 "Primary key is not signing-capable");
-        assertDoesNotThrow(() -> SignatureChainValidator.validateSignatureChain(
+        assertDoesNotThrow(() -> CertificateValidator.validateCertificateAndVerifyUninitializedSignature(
                 sigBT3_now, getSignedData(data), keysB, policy, validationDate),
                 "Key is valid again");
 
-        assertThrows(SignatureValidationException.class, () -> SignatureChainValidator.validateSignatureChain(
+        assertThrows(SignatureValidationException.class, () -> CertificateValidator.validateCertificateAndVerifyUninitializedSignature(
                 sigCT0, getSignedData(data), keysC, policy, validationDate),
                 "Signature predates key creation time");
-        assertDoesNotThrow(() -> SignatureChainValidator.validateSignatureChain(
+        assertDoesNotThrow(() -> CertificateValidator.validateCertificateAndVerifyUninitializedSignature(
                 sigCT1_T2, getSignedData(data), keysC, policy, validationDate),
                 "Key is valid");
-        assertThrows(SignatureValidationException.class, () -> SignatureChainValidator.validateSignatureChain(
+        assertThrows(SignatureValidationException.class, () -> CertificateValidator.validateCertificateAndVerifyUninitializedSignature(
                 sigCT2_T3, getSignedData(data), keysC, policy, validationDate),
                 "Key is revoked");
-        assertDoesNotThrow(() -> SignatureChainValidator.validateSignatureChain(
+        assertDoesNotThrow(() -> CertificateValidator.validateCertificateAndVerifyUninitializedSignature(
                 sigCT3_now, getSignedData(data), keysC, policy, validationDate),
                 "Key is valid again");
     }

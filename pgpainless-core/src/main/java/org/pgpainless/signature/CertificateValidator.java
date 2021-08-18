@@ -15,12 +15,9 @@
  */
 package org.pgpainless.signature;
 
-import static org.pgpainless.signature.SignatureValidator.signatureIsEffective;
-import static org.pgpainless.signature.SignatureValidator.signatureStructureIsAcceptable;
-import static org.pgpainless.signature.SignatureValidator.verifyWasPossiblyMadeByKey;
+import static org.pgpainless.signature.SignatureValidator.verifyOnePassSignature;
 
 import java.io.InputStream;
-import java.security.SignatureException;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Date;
@@ -33,7 +30,6 @@ import java.util.logging.Logger;
 
 import org.bouncycastle.bcpg.sig.KeyFlags;
 import org.bouncycastle.bcpg.sig.SignerUserID;
-import org.bouncycastle.openpgp.PGPException;
 import org.bouncycastle.openpgp.PGPPublicKey;
 import org.bouncycastle.openpgp.PGPPublicKeyRing;
 import org.bouncycastle.openpgp.PGPSignature;
@@ -48,13 +44,13 @@ import org.pgpainless.signature.subpackets.SignatureSubpacketsUtil;
  * Its responsibilities are checking if a signing key was eligible to create a certain signature
  * and if the signature is valid at the time of validation.
  */
-public final class SignatureChainValidator {
+public final class CertificateValidator {
 
-    private SignatureChainValidator() {
+    private CertificateValidator() {
 
     }
 
-    private static final Logger LOGGER = Logger.getLogger(SignatureChainValidator.class.getName());
+    private static final Logger LOGGER = Logger.getLogger(CertificateValidator.class.getName());
 
     /**
      * Check if the signing key was eligible to create the provided signature.
@@ -71,7 +67,7 @@ public final class SignatureChainValidator {
      * @return true if the signing key was eligible to create the signature
      * @throws SignatureValidationException in case of a validation constraint violation
      */
-    public static boolean validateSigningKey(PGPSignature signature, PGPPublicKeyRing signingKeyRing, Policy policy)
+    public static boolean validateCertificate(PGPSignature signature, PGPPublicKeyRing signingKeyRing, Policy policy)
             throws SignatureValidationException {
 
         Map<PGPSignature, Exception> rejections = new ConcurrentHashMap<>();
@@ -240,13 +236,13 @@ public final class SignatureChainValidator {
      * @return true if the signature is valid, false otherwise
      * @throws SignatureValidationException for validation constraint violations
      */
-    public static boolean validateSignatureChain(PGPSignature signature,
-                                                 InputStream signedData,
-                                                 PGPPublicKeyRing signingKeyRing,
-                                                 Policy policy,
-                                                 Date validationDate)
+    public static boolean validateCertificateAndVerifyUninitializedSignature(PGPSignature signature,
+                                                                             InputStream signedData,
+                                                                             PGPPublicKeyRing signingKeyRing,
+                                                                             Policy policy,
+                                                                             Date validationDate)
             throws SignatureValidationException {
-        validateSigningKey(signature, signingKeyRing, policy);
+        validateCertificate(signature, signingKeyRing, policy);
         long keyId = SignatureUtils.determineIssuerKeyId(signature);
         return SignatureValidator.verifyUninitializedSignature(signature, signedData, signingKeyRing.getPublicKey(keyId), policy, validationDate);
     }
@@ -261,34 +257,20 @@ public final class SignatureChainValidator {
      * @return true if the signature is valid, false otherwise
      * @throws SignatureValidationException in case of a validation constraint violation
      */
-    public static boolean validateSignature(PGPSignature signature, PGPPublicKeyRing verificationKeys, Policy policy)
+    public static boolean validateCertificateAndVerifyInitializedSignature(PGPSignature signature, PGPPublicKeyRing verificationKeys, Policy policy)
             throws SignatureValidationException {
-        validateSigningKey(signature, verificationKeys, policy);
+        validateCertificate(signature, verificationKeys, policy);
         long keyId = SignatureUtils.determineIssuerKeyId(signature);
         PGPPublicKey signingKey = verificationKeys.getPublicKey(keyId);
         SignatureValidator.verifyInitializedSignature(signature, signingKey, policy, signature.getCreationTime());
         return true;
     }
 
-    public static boolean validateOnePassSignature(PGPSignature signature, OnePassSignature onePassSignature, Policy policy) throws PGPException, SignatureException {
+    public static boolean validateCertificateAndVerifyOnePassSignature(PGPSignature signature, OnePassSignature onePassSignature, Policy policy)
+            throws SignatureValidationException {
+        validateCertificate(signature, onePassSignature.getVerificationKeys(), policy);
         PGPPublicKey signingKey = onePassSignature.getVerificationKeys().getPublicKey(signature.getKeyID());
-        try {
-            verifyWasPossiblyMadeByKey(signingKey, signature);
-            signatureStructureIsAcceptable(signingKey, policy).verify(signature);
-            signatureIsEffective().verify(signature);
-        } catch (SignatureValidationException e) {
-            throw new SignatureException("Signature is not valid: " + e.getMessage(), e);
-        }
-
-        try {
-            validateSigningKey(signature, onePassSignature.getVerificationKeys(), policy);
-        } catch (SignatureValidationException e) {
-            throw new SignatureException("Signing key " + Long.toHexString(signingKey.getKeyID()) + " is not valid: " + e.getMessage(), e);
-        }
-        if (!onePassSignature.verify(signature)) {
-            throw new SignatureException("Bad signature of key " + Long.toHexString(signingKey.getKeyID()));
-        }
-
+        verifyOnePassSignature(signature, signingKey, onePassSignature, policy);
         return true;
     }
 }

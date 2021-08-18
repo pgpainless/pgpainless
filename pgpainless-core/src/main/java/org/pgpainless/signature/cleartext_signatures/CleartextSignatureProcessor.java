@@ -36,7 +36,7 @@ import org.bouncycastle.util.Strings;
 import org.pgpainless.PGPainless;
 import org.pgpainless.exception.SignatureValidationException;
 import org.pgpainless.implementation.ImplementationFactory;
-import org.pgpainless.signature.SignatureChainValidator;
+import org.pgpainless.signature.CertificateValidator;
 import org.pgpainless.util.ArmoredInputStreamFactory;
 
 /**
@@ -140,7 +140,7 @@ public class CleartextSignatureProcessor {
         }
         sigIn.close();
 
-        SignatureChainValidator.validateSignature(signature, signingKeyRing, PGPainless.getPolicy());
+        CertificateValidator.validateCertificateAndVerifyInitializedSignature(signature, signingKeyRing, PGPainless.getPolicy());
         return signature;
     }
 

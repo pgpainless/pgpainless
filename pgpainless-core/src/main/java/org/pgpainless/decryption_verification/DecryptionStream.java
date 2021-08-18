@@ -28,7 +28,7 @@ import org.bouncycastle.openpgp.PGPPublicKeyRing;
 import org.bouncycastle.util.io.Streams;
 import org.pgpainless.PGPainless;
 import org.pgpainless.signature.DetachedSignature;
-import org.pgpainless.signature.SignatureChainValidator;
+import org.pgpainless.signature.CertificateValidator;
 import org.pgpainless.exception.SignatureValidationException;
 import org.pgpainless.util.IntegrityProtectedInputStream;
 
@@ -105,7 +105,7 @@ public class DecryptionStream extends InputStream {
         for (DetachedSignature s : resultBuilder.getDetachedSignatures()) {
             try {
                 verifySignatureCreationTimeIsInBounds(options.getVerifyNotBefore(), options.getVerifyNotAfter()).verify(s.getSignature());
-                boolean verified = SignatureChainValidator.validateSignature(s.getSignature(), (PGPPublicKeyRing) s.getSigningKeyRing(), PGPainless.getPolicy());
+                boolean verified = CertificateValidator.validateCertificateAndVerifyInitializedSignature(s.getSignature(), (PGPPublicKeyRing) s.getSigningKeyRing(), PGPainless.getPolicy());
                 s.setVerified(verified);
             } catch (SignatureValidationException e) {
                 LOGGER.log(Level.WARNING, "Could not verify signature of key " + s.getSigningKeyIdentifier(), e);

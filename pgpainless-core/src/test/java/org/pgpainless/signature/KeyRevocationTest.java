@@ -164,16 +164,16 @@ public class KeyRevocationTest {
         PGPSignature t2t3 = SignatureUtils.readSignatures(sigT2T3).get(0);
         PGPSignature t3now = SignatureUtils.readSignatures(sigT3Now).get(0);
 
-        assertThrows(SignatureValidationException.class, () -> SignatureChainValidator.validateSignatureChain(t0,
+        assertThrows(SignatureValidationException.class, () -> CertificateValidator.validateCertificateAndVerifyUninitializedSignature(t0,
                 new ByteArrayInputStream(data.getBytes(StandardCharsets.UTF_8)),
                 publicKeys, PGPainless.getPolicy(), new Date()));
-        assertThrows(SignatureValidationException.class, () -> SignatureChainValidator.validateSignatureChain(t1t2,
+        assertThrows(SignatureValidationException.class, () -> CertificateValidator.validateCertificateAndVerifyUninitializedSignature(t1t2,
                 new ByteArrayInputStream(data.getBytes(StandardCharsets.UTF_8)),
                 publicKeys, PGPainless.getPolicy(), new Date()));
-        assertThrows(SignatureValidationException.class, () -> SignatureChainValidator.validateSignatureChain(t2t3,
+        assertThrows(SignatureValidationException.class, () -> CertificateValidator.validateCertificateAndVerifyUninitializedSignature(t2t3,
                 new ByteArrayInputStream(data.getBytes(StandardCharsets.UTF_8)),
                 publicKeys, PGPainless.getPolicy(), new Date()));
-        assertThrows(SignatureValidationException.class, () -> SignatureChainValidator.validateSignatureChain(t3now,
+        assertThrows(SignatureValidationException.class, () -> CertificateValidator.validateCertificateAndVerifyUninitializedSignature(t3now,
                 new ByteArrayInputStream(data.getBytes(StandardCharsets.UTF_8)),
                 publicKeys, PGPainless.getPolicy(), new Date()));
     }
@@ -267,7 +267,7 @@ public class KeyRevocationTest {
         PGPPublicKeyRing publicKeys = PGPainless.readKeyRing().publicKeyRing(key);
         PGPSignature signature = SignatureUtils.readSignatures(sig).get(0);
 
-        SignatureChainValidator.validateSignatureChain(signature,
+        CertificateValidator.validateCertificateAndVerifyUninitializedSignature(signature,
                 new ByteArrayInputStream(data.getBytes(StandardCharsets.UTF_8)),
                 publicKeys, PGPainless.getPolicy(), new Date());
     }

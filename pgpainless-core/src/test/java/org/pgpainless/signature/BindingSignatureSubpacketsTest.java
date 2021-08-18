@@ -2016,7 +2016,7 @@ public class BindingSignatureSubpacketsTest {
         PGPSignature signature = SignatureUtils.readSignatures(sig).get(0);
 
         try {
-            SignatureChainValidator.validateSignatureChain(signature, getSignedData(data), publicKeys, policy, validationDate);
+            CertificateValidator.validateCertificateAndVerifyUninitializedSignature(signature, getSignedData(data), publicKeys, policy, validationDate);
         } catch (SignatureValidationException e) {
             // CHECKSTYLE:OFF
             e.printStackTrace();
@@ -2030,7 +2030,7 @@ public class BindingSignatureSubpacketsTest {
         PGPSignature signature = SignatureUtils.readSignatures(sig).get(0);
 
         assertThrows(SignatureValidationException.class, () ->
-                        SignatureChainValidator.validateSignatureChain(
+                        CertificateValidator.validateCertificateAndVerifyUninitializedSignature(
                                 signature, getSignedData(data), publicKeys, policy, validationDate),
                 message);
     }

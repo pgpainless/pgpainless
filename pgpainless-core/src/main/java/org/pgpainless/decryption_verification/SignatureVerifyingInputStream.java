@@ -20,21 +20,20 @@ import static org.pgpainless.signature.SignatureValidator.verifySignatureCreatio
 import java.io.FilterInputStream;
 import java.io.IOException;
 import java.io.InputStream;
-import java.security.SignatureException;
 import java.util.Map;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import javax.annotation.Nonnull;
 
-import org.bouncycastle.openpgp.PGPException;
 import org.bouncycastle.openpgp.PGPObjectFactory;
 import org.bouncycastle.openpgp.PGPSignature;
 import org.bouncycastle.openpgp.PGPSignatureList;
 import org.pgpainless.PGPainless;
+import org.pgpainless.exception.SignatureValidationException;
 import org.pgpainless.key.OpenPgpV4Fingerprint;
 import org.pgpainless.policy.Policy;
 import org.pgpainless.signature.OnePassSignature;
-import org.pgpainless.signature.SignatureChainValidator;
+import org.pgpainless.signature.CertificateValidator;
 
 public class SignatureVerifyingInputStream extends FilterInputStream {
 
@@ -103,7 +102,7 @@ public class SignatureVerifyingInputStream extends FilterInputStream {
                 }
 
                 verifySignatureOrThrowSignatureException(signature, onePassSignature);
-            } catch (PGPException | SignatureException e) {
+            } catch (SignatureValidationException e) {
                 LOGGER.log(LEVEL, "One-pass-signature verification failed for signature made by key " +
                         Long.toHexString(signature.getKeyID()) + ": " + e.getMessage(), e);
             }
@@ -111,10 +110,10 @@ public class SignatureVerifyingInputStream extends FilterInputStream {
     }
 
     private void verifySignatureOrThrowSignatureException(PGPSignature signature, OnePassSignature onePassSignature)
-            throws PGPException, SignatureException {
+            throws SignatureValidationException {
         Policy policy = PGPainless.getPolicy();
         verifySignatureCreationTimeIsInBounds(options.getVerifyNotBefore(), options.getVerifyNotAfter()).verify(signature);
-        SignatureChainValidator.validateOnePassSignature(signature, onePassSignature, policy);
+        CertificateValidator.validateCertificateAndVerifyOnePassSignature(signature, onePassSignature, policy);
     }
 
     private OnePassSignature findOnePassSignature(OpenPgpV4Fingerprint fingerprint) {

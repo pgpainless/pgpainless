@@ -83,8 +83,9 @@ public abstract class SignatureValidator {
         try {
             signature.init(ImplementationFactory.getInstance().getPGPContentVerifierBuilderProvider(), signingKey);
             int read;
-            while ((read = signedData.read()) != -1) {
-                signature.update((byte) read);
+            byte[] buf = new byte[8192];
+            while ((read = signedData.read(buf)) != -1) {
+                signature.update(buf, 0, read);
             }
         } catch (PGPException e) {
             throw new SignatureValidationException("Cannot init signature.", e);
@@ -119,6 +120,27 @@ public abstract class SignatureValidator {
         } catch (PGPException e) {
             throw new SignatureValidationException("Could not verify signature correctness.", e);
         }
+    }
+
+    public static boolean verifyOnePassSignature(PGPSignature signature, PGPPublicKey signingKey, OnePassSignature onePassSignature, Policy policy)
+            throws SignatureValidationException {
+        try {
+            verifyWasPossiblyMadeByKey(signingKey, signature);
+            signatureStructureIsAcceptable(signingKey, policy).verify(signature);
+            signatureIsEffective().verify(signature);
+        } catch (SignatureValidationException e) {
+            throw new SignatureValidationException("Signature is not valid: " + e.getMessage(), e);
+        }
+
+        try {
+            if (!onePassSignature.verify(signature)) {
+                throw new SignatureValidationException("Bad signature of key " + Long.toHexString(signingKey.getKeyID()));
+            }
+        } catch (PGPException e) {
+            throw new SignatureValidationException("Could not verify correctness of One-Pass-Signature: " + e.getMessage(), e);
+        }
+
+        return true;
     }
 
     /**
