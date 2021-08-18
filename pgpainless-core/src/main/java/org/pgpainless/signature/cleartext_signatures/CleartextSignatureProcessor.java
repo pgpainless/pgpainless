@@ -15,35 +15,33 @@
  */
 package org.pgpainless.signature.cleartext_signatures;
 
-import java.io.BufferedInputStream;
-import java.io.BufferedOutputStream;
-import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
-import java.io.OutputStream;
+import java.util.HashMap;
+import java.util.Map;
+import java.util.NoSuchElementException;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 import org.bouncycastle.bcpg.ArmoredInputStream;
 import org.bouncycastle.openpgp.PGPException;
-import org.bouncycastle.openpgp.PGPObjectFactory;
 import org.bouncycastle.openpgp.PGPPublicKey;
 import org.bouncycastle.openpgp.PGPPublicKeyRing;
 import org.bouncycastle.openpgp.PGPPublicKeyRingCollection;
 import org.bouncycastle.openpgp.PGPSignature;
-import org.bouncycastle.openpgp.PGPSignatureGenerator;
 import org.bouncycastle.openpgp.PGPSignatureList;
-import org.bouncycastle.util.Strings;
 import org.pgpainless.PGPainless;
 import org.pgpainless.exception.SignatureValidationException;
-import org.pgpainless.implementation.ImplementationFactory;
 import org.pgpainless.signature.CertificateValidator;
 import org.pgpainless.util.ArmoredInputStreamFactory;
 
 /**
  * Processor for cleartext-signed messages.
- * Based on Bouncycastle's {@link org.bouncycastle.openpgp.examples.ClearSignedFileProcessor}.
  */
 public class CleartextSignatureProcessor {
+
+    private static final Logger LOGGER = Logger.getLogger(CleartextSignatureProcessor.class.getName());
 
     private final ArmoredInputStream in;
     private final PGPPublicKeyRingCollection verificationKeys;
@@ -76,182 +74,35 @@ public class CleartextSignatureProcessor {
      * @throws SignatureValidationException if the signature is invalid.
      */
     public PGPSignature process() throws IOException, PGPException {
-        if (!in.isClearText()) {
-            throw new IllegalStateException("Message is not cleartext.");
-        }
+        PGPSignatureList signatures = ClearsignedMessageUtil.detachSignaturesFromInbandClearsignedMessage(in, multiPassStrategy.getMessageOutputStream());
+        Map<PGPSignature, Exception> signatureValidationExceptions = new HashMap<>();
 
-        OutputStream out = new BufferedOutputStream(multiPassStrategy.getMessageOutputStream());
-
-        ByteArrayOutputStream lineOut = new ByteArrayOutputStream();
-        int lookAhead = readInputLine(lineOut, in);
-        byte[] lineSep = getLineSeparator();
-
-        if (lookAhead != -1 && in.isClearText()) {
-            byte[] line = lineOut.toByteArray();
-            out.write(line, 0, getLengthWithoutSeparatorOrTrailingWhitespace(line));
-            out.write(lineSep);
-
-            while (lookAhead != -1 && in.isClearText()) {
-                lookAhead = readInputLine(lineOut, lookAhead, in);
-                line = lineOut.toByteArray();
-                out.write(line, 0, getLengthWithoutSeparatorOrTrailingWhitespace(line));
-                out.write(lineSep);
+        for (PGPSignature signature : signatures) {
+            PGPPublicKeyRing certificate = null;
+            PGPPublicKey signingKey = null;
+            for (PGPPublicKeyRing cert : verificationKeys) {
+                signingKey = cert.getPublicKey(signature.getKeyID());
+                if (signingKey != null) {
+                    certificate = cert;
+                    break;
+                }
             }
-        } else {
-            if (lookAhead != -1) {
-                byte[] line = lineOut.toByteArray();
-                out.write(line, 0, getLengthWithoutSeparatorOrTrailingWhitespace(line));
-                out.write(lineSep);
+            if (signingKey == null) {
+                signatureValidationExceptions.put(signature, new NoSuchElementException("Missing verification key with key-id " + Long.toHexString(signature.getKeyID())));
+                continue;
             }
-        }
 
-        out.close();
-
-        PGPObjectFactory objectFactory = new PGPObjectFactory(in, ImplementationFactory.getInstance().getKeyFingerprintCalculator());
-        PGPSignatureList signatures = (PGPSignatureList) objectFactory.nextObject();
-        PGPSignature signature = signatures.get(0);
-
-        PGPPublicKeyRing signingKeyRing = null;
-        PGPPublicKey signingKey = null;
-        for (PGPPublicKeyRing ring : verificationKeys) {
-            signingKey = ring.getPublicKey(signature.getKeyID());
-            if (signingKey != null) {
-                signingKeyRing = ring;
-                break;
-            }
-        }
-        if (signingKey == null) {
-            throw new SignatureValidationException("Missing public key " + Long.toHexString(signature.getKeyID()));
-        }
-
-        signature.init(ImplementationFactory.getInstance().getPGPContentVerifierBuilderProvider(), signingKey);
-
-        InputStream sigIn = new BufferedInputStream(multiPassStrategy.getMessageInputStream());
-        lookAhead = readInputLine(lineOut, sigIn);
-        processLine(signature, lineOut.toByteArray());
-
-        if (lookAhead != -1) {
-            do {
-                lookAhead = readInputLine(lineOut, lookAhead, sigIn);
-                signature.update((byte) '\r');
-                signature.update((byte) '\n');
-                processLine(signature, lineOut.toByteArray());
-            } while (lookAhead != -1);
-        }
-        sigIn.close();
-
-        CertificateValidator.validateCertificateAndVerifyInitializedSignature(signature, signingKeyRing, PGPainless.getPolicy());
-        return signature;
-    }
-
-    private static int readInputLine(ByteArrayOutputStream bOut, InputStream fIn)
-            throws IOException {
-        bOut.reset();
-
-        int lookAhead = -1;
-        int ch;
-
-        while ((ch = fIn.read()) >= 0) {
-            bOut.write(ch);
-            if (ch == '\r' || ch == '\n') {
-                lookAhead = readPassedEOL(bOut, ch, fIn);
-                break;
+            try {
+                ClearsignedMessageUtil.initializeSignature(signature, signingKey, multiPassStrategy.getMessageInputStream());
+                CertificateValidator.validateCertificateAndVerifyInitializedSignature(signature, certificate, PGPainless.getPolicy());
+                return signature;
+            } catch (SignatureValidationException e) {
+                LOGGER.log(Level.INFO, "Cannot verify signature made by key " + Long.toHexString(signature.getKeyID()) + ": " + e.getMessage());
+                signatureValidationExceptions.put(signature, e);
             }
         }
 
-        return lookAhead;
+        throw new SignatureValidationException("No valid signatures found.", signatureValidationExceptions);
     }
 
-    private static int readInputLine(ByteArrayOutputStream bOut, int lookAhead, InputStream fIn)
-            throws IOException {
-        bOut.reset();
-
-        int ch = lookAhead;
-
-        do {
-            bOut.write(ch);
-            if (ch == '\r' || ch == '\n') {
-                lookAhead = readPassedEOL(bOut, ch, fIn);
-                break;
-            }
-        }
-        while ((ch = fIn.read()) >= 0);
-
-        if (ch < 0) {
-            lookAhead = -1;
-        }
-
-        return lookAhead;
-    }
-
-    private static int readPassedEOL(ByteArrayOutputStream bOut, int lastCh, InputStream fIn)
-            throws IOException {
-        int lookAhead = fIn.read();
-
-        if (lastCh == '\r' && lookAhead == '\n') {
-            bOut.write(lookAhead);
-            lookAhead = fIn.read();
-        }
-
-        return lookAhead;
-    }
-
-
-    private static byte[] getLineSeparator() {
-        String nl = Strings.lineSeparator();
-        byte[] nlBytes = new byte[nl.length()];
-
-        for (int i = 0; i != nlBytes.length; i++) {
-            nlBytes[i] = (byte) nl.charAt(i);
-        }
-
-        return nlBytes;
-    }
-
-    private static void processLine(PGPSignature sig, byte[] line) {
-        int length = getLengthWithoutWhiteSpace(line);
-        if (length > 0) {
-            sig.update(line, 0, length);
-        }
-    }
-
-    private static void processLine(OutputStream aOut, PGPSignatureGenerator sGen, byte[] line)
-            throws IOException {
-        // note: trailing white space needs to be removed from the end of
-        // each line for signature calculation RFC 4880 Section 7.1
-        int length = getLengthWithoutWhiteSpace(line);
-        if (length > 0) {
-            sGen.update(line, 0, length);
-        }
-
-        aOut.write(line, 0, line.length);
-    }
-
-    private static int getLengthWithoutSeparatorOrTrailingWhitespace(byte[] line) {
-        int    end = line.length - 1;
-
-        while (end >= 0 && isWhiteSpace(line[end])) {
-            end--;
-        }
-
-        return end + 1;
-    }
-
-    private static boolean isLineEnding(byte b) {
-        return b == '\r' || b == '\n';
-    }
-
-    private static int getLengthWithoutWhiteSpace(byte[] line) {
-        int    end = line.length - 1;
-
-        while (end >= 0 && isWhiteSpace(line[end])) {
-            end--;
-        }
-
-        return end + 1;
-    }
-
-    private static boolean isWhiteSpace(byte b) {
-        return isLineEnding(b) || b == '\t' || b == ' ';
-    }
 }

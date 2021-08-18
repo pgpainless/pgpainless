@@ -15,30 +15,18 @@
  */
 package sop;
 
-import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.OutputStream;
 
-public abstract class Ready {
+public abstract class Signatures extends Ready {
 
     /**
-     * Write the data to the provided output stream.
+     * Write OpenPGP signatures to the provided output stream.
      *
-     * @param outputStream output stream
+     * @param signatureOutputStream output stream
      * @throws IOException in case of an IO error
      */
-    public abstract void writeTo(OutputStream outputStream) throws IOException;
+    @Override
+    public abstract void writeTo(OutputStream signatureOutputStream) throws IOException;
 
-    /**
-     * Return the data as a byte array by writing it to a {@link ByteArrayOutputStream} first and then returning
-     * the array.
-     *
-     * @return data as byte array
-     * @throws IOException in case of an IO error
-     */
-    public byte[] getBytes() throws IOException {
-        ByteArrayOutputStream bytes = new ByteArrayOutputStream();
-        writeTo(bytes);
-        return bytes.toByteArray();
-    }
 }

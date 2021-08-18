@@ -19,6 +19,7 @@ import sop.SOP;
 import sop.operation.Armor;
 import sop.operation.Dearmor;
 import sop.operation.Decrypt;
+import sop.operation.DetachInbandSignatureAndMessage;
 import sop.operation.Encrypt;
 import sop.operation.ExtractCert;
 import sop.operation.GenerateKey;
@@ -71,5 +72,10 @@ public class SOPImpl implements SOP {
     @Override
     public Dearmor dearmor() {
         return new DearmorImpl();
+    }
+
+    @Override
+    public DetachInbandSignatureAndMessage detachInbandSignatureAndMessage() {
+        return new DetachInbandSignatureAndMessageImpl();
     }
 }

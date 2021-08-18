@@ -18,6 +18,7 @@ package sop;
 import sop.operation.Armor;
 import sop.operation.Dearmor;
 import sop.operation.Decrypt;
+import sop.operation.DetachInbandSignatureAndMessage;
 import sop.operation.Encrypt;
 import sop.operation.ExtractCert;
 import sop.operation.GenerateKey;
@@ -100,4 +101,6 @@ public interface SOP {
      * @return builder instance
      */
     Dearmor dearmor();
+
+    DetachInbandSignatureAndMessage detachInbandSignatureAndMessage();
 }

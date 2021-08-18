@@ -47,6 +47,9 @@ public interface MultiPassStrategy {
      * Provide an {@link InputStream} which contains the data that was previously written away in
      * {@link #getMessageOutputStream()}.
      *
+     * As there may be multiple signatures that need to be processed, each call of this method MUST return
+     * a new {@link InputStream}.
+     *
      * @return input stream
      * @throws IOException io error
      */

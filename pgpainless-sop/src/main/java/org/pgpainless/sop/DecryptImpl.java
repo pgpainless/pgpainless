@@ -32,7 +32,6 @@ import org.pgpainless.PGPainless;
 import org.pgpainless.decryption_verification.ConsumerOptions;
 import org.pgpainless.decryption_verification.DecryptionStream;
 import org.pgpainless.decryption_verification.OpenPgpMetadata;
-import org.pgpainless.exception.NotYetImplementedException;
 import org.pgpainless.key.SubkeyIdentifier;
 import org.pgpainless.key.info.KeyRingInfo;
 import org.pgpainless.key.protection.SecretKeyRingProtector;
@@ -50,21 +49,13 @@ public class DecryptImpl implements Decrypt {
 
     @Override
     public DecryptImpl verifyNotBefore(Date timestamp) throws SOPGPException.UnsupportedOption {
-        try {
-            consumerOptions.verifyNotBefore(timestamp);
-        } catch (NotYetImplementedException e) {
-            throw new SOPGPException.UnsupportedOption();
-        }
+        consumerOptions.verifyNotBefore(timestamp);
         return this;
     }
 
     @Override
     public DecryptImpl verifyNotAfter(Date timestamp) throws SOPGPException.UnsupportedOption {
-        try {
-            consumerOptions.verifyNotAfter(timestamp);
-        } catch (NotYetImplementedException e) {
-            throw new SOPGPException.UnsupportedOption();
-        }
+        consumerOptions.verifyNotAfter(timestamp);
         return this;
     }
 

@@ -29,7 +29,6 @@ import org.pgpainless.PGPainless;
 import org.pgpainless.decryption_verification.ConsumerOptions;
 import org.pgpainless.decryption_verification.DecryptionStream;
 import org.pgpainless.decryption_verification.OpenPgpMetadata;
-import org.pgpainless.exception.NotYetImplementedException;
 import org.pgpainless.key.SubkeyIdentifier;
 import sop.Verification;
 import sop.exception.SOPGPException;
@@ -41,21 +40,13 @@ public class VerifyImpl implements Verify {
 
     @Override
     public Verify notBefore(Date timestamp) throws SOPGPException.UnsupportedOption {
-        try {
-            options.verifyNotBefore(timestamp);
-        } catch (NotYetImplementedException e) {
-            throw new SOPGPException.UnsupportedOption();
-        }
+        options.verifyNotBefore(timestamp);
         return this;
     }
 
     @Override
     public Verify notAfter(Date timestamp) throws SOPGPException.UnsupportedOption {
-        try {
-            options.verifyNotAfter(timestamp);
-        } catch (NotYetImplementedException e) {
-            throw new SOPGPException.UnsupportedOption();
-        }
+        options.verifyNotAfter(timestamp);
         return this;
     }
 

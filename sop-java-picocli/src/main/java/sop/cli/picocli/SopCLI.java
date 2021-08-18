@@ -20,6 +20,7 @@ import sop.SOP;
 import sop.cli.picocli.commands.ArmorCmd;
 import sop.cli.picocli.commands.DearmorCmd;
 import sop.cli.picocli.commands.DecryptCmd;
+import sop.cli.picocli.commands.DetachInbandSignatureAndMessageCmd;
 import sop.cli.picocli.commands.EncryptCmd;
 import sop.cli.picocli.commands.ExtractCertCmd;
 import sop.cli.picocli.commands.GenerateKeyCmd;
@@ -34,6 +35,7 @@ import sop.cli.picocli.commands.VersionCmd;
                 ArmorCmd.class,
                 DearmorCmd.class,
                 DecryptCmd.class,
+                DetachInbandSignatureAndMessageCmd.class,
                 EncryptCmd.class,
                 ExtractCertCmd.class,
                 GenerateKeyCmd.class,
