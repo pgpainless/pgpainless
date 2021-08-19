@@ -33,21 +33,9 @@ public class ArmorCmd implements Runnable {
     @CommandLine.Option(names = {"--label"}, description = "Label to be used in the header and tail of the armoring.", paramLabel = "{auto|sig|key|cert|message}")
     ArmorLabel label;
 
-    @CommandLine.Option(names = {"--allow-nested"}, description = "Allow additional armoring of already armored input")
-    boolean allowNested = false;
-
     @Override
     public void run() {
         Armor armor = SopCLI.getSop().armor();
-        if (allowNested) {
-            try {
-                armor.allowNested();
-            } catch (SOPGPException.UnsupportedOption unsupportedOption) {
-                Print.errln("Option --allow-nested is not supported.");
-                Print.trace(unsupportedOption);
-                System.exit(unsupportedOption.getExitCode());
-            }
-        }
         if (label != null) {
             try {
                 armor.label(label);

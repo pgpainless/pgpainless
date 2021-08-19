@@ -16,8 +16,6 @@
 package org.pgpainless.cli.commands;
 
 import static org.junit.jupiter.api.Assertions.assertArrayEquals;
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertNotEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import java.io.ByteArrayInputStream;
@@ -101,43 +99,4 @@ public class ArmorTest {
         assertTrue(armored.contains("SGVsbG8sIFdvcmxkIQo="));
     }
 
-    @Test
-    @FailOnSystemExit
-    public void doesNotNestArmorByDefault() {
-        String armored = "-----BEGIN PGP MESSAGE-----\n" +
-                "Version: BCPG v1.69\n" +
-                "\n" +
-                "SGVsbG8sIFdvcmxkCg==\n" +
-                "=fkLo\n" +
-                "-----END PGP MESSAGE-----";
-
-        System.setIn(new ByteArrayInputStream(armored.getBytes(StandardCharsets.UTF_8)));
-        ByteArrayOutputStream out = new ByteArrayOutputStream();
-        System.setOut(new PrintStream(out));
-        PGPainlessCLI.execute("armor");
-
-        assertEquals(armored, out.toString());
-    }
-
-    @Test
-    @FailOnSystemExit
-    public void testAllowNested() {
-        String armored = "-----BEGIN PGP MESSAGE-----\n" +
-                "Version: BCPG v1.69\n" +
-                "\n" +
-                "SGVsbG8sIFdvcmxkCg==\n" +
-                "=fkLo\n" +
-                "-----END PGP MESSAGE-----";
-
-        System.setIn(new ByteArrayInputStream(armored.getBytes(StandardCharsets.UTF_8)));
-        ByteArrayOutputStream out = new ByteArrayOutputStream();
-        System.setOut(new PrintStream(out));
-        PGPainlessCLI.execute("armor", "--allow-nested");
-
-        assertNotEquals(armored, out.toString());
-        assertTrue(out.toString().contains(
-                "LS0tLS1CRUdJTiBQR1AgTUVTU0FHRS0tLS0tClZlcnNpb246IEJDUEcgdjEuNjkK\n" +
-                "ClNHVnNiRzhzSUZkdmNteGtDZz09Cj1ma0xvCi0tLS0tRU5EIFBHUCBNRVNTQUdF\n" +
-                "LS0tLS0="));
-    }
 }

@@ -45,8 +45,7 @@ public class SignImpl implements Sign {
 
     private boolean armor = true;
     private SignAs mode = SignAs.Binary;
-    private List<PGPSecretKeyRing> keys = new ArrayList<>();
-    private SigningOptions signingOptions = new SigningOptions();
+    private final SigningOptions signingOptions = new SigningOptions();
 
     @Override
     public Sign noArmor() {

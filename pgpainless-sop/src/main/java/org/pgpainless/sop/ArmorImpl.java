@@ -18,9 +18,6 @@ package org.pgpainless.sop;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
-import java.io.PushbackInputStream;
-import java.nio.charset.Charset;
-import java.util.Arrays;
 
 import org.bouncycastle.bcpg.ArmoredOutputStream;
 import org.bouncycastle.util.io.Streams;
@@ -32,19 +29,9 @@ import sop.operation.Armor;
 
 public class ArmorImpl implements Armor {
 
-    public static final byte[] ARMOR_START = "-----BEGIN PGP".getBytes(Charset.forName("UTF8"));
-
-    boolean allowNested = false;
-
     @Override
     public Armor label(ArmorLabel label) throws SOPGPException.UnsupportedOption {
         throw new SOPGPException.UnsupportedOption("Setting custom Armor labels not supported.");
-    }
-
-    @Override
-    public Armor allowNested() throws SOPGPException.UnsupportedOption {
-        allowNested = true;
-        return this;
     }
 
     @Override
@@ -52,17 +39,9 @@ public class ArmorImpl implements Armor {
         return new Ready() {
             @Override
             public void writeTo(OutputStream outputStream) throws IOException {
-                PushbackInputStream pbIn = new PushbackInputStream(data, ARMOR_START.length);
-                byte[] buffer = new byte[ARMOR_START.length];
-                int read = pbIn.read(buffer);
-                pbIn.unread(buffer, 0, read);
-                if (!allowNested && Arrays.equals(ARMOR_START, buffer)) {
-                    Streams.pipeAll(pbIn, System.out);
-                } else {
-                    ArmoredOutputStream armor = ArmoredOutputStreamFactory.get(System.out);
-                    Streams.pipeAll(pbIn, armor);
-                    armor.close();
-                }
+                ArmoredOutputStream armor = ArmoredOutputStreamFactory.get(System.out);
+                Streams.pipeAll(data, armor);
+                armor.close();
             }
         };
     }

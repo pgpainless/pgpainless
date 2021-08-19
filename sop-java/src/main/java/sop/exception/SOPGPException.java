@@ -253,6 +253,10 @@ public abstract class SOPGPException extends RuntimeException {
 
         public static final int EXIT_CODE = 73;
 
+        public AmbiguousInput(String message) {
+            super(message);
+        }
+
         @Override
         public int getExitCode() {
             return EXIT_CODE;

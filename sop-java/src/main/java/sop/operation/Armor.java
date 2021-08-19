@@ -32,13 +32,6 @@ public interface Armor {
     Armor label(ArmorLabel label) throws SOPGPException.UnsupportedOption;
 
     /**
-     * Allow nested Armoring.
-     *
-     * @return builder instance
-     */
-    Armor allowNested() throws SOPGPException.UnsupportedOption;
-
-    /**
      * Armor the provided data.
      *
      * @param data input stream of unarmored OpenPGP data

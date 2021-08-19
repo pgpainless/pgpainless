@@ -52,18 +52,6 @@ public class ArmorCmdTest {
     }
 
     @Test
-    public void assertAllowNestedIsCalledWhenFlagged() throws SOPGPException.UnsupportedOption {
-        SopCLI.main(new String[] {"armor", "--allow-nested"});
-        verify(armor, times(1)).allowNested();
-    }
-
-    @Test
-    public void assertAllowNestedIsNotCalledByDefault() throws SOPGPException.UnsupportedOption {
-        SopCLI.main(new String[] {"armor"});
-        verify(armor, never()).allowNested();
-    }
-
-    @Test
     public void assertLabelIsNotCalledByDefault() throws SOPGPException.UnsupportedOption {
         SopCLI.main(new String[] {"armor"});
         verify(armor, never()).label(any());
@@ -95,14 +83,6 @@ public class ArmorCmdTest {
         when(armor.label(any())).thenThrow(new SOPGPException.UnsupportedOption("Custom Armor labels are not supported."));
 
         SopCLI.main(new String[] {"armor", "--label", "Sig"});
-    }
-
-    @Test
-    @ExpectSystemExitWithStatus(37)
-    public void ifAllowNestedUnsupportedExit37() throws SOPGPException.UnsupportedOption {
-        when(armor.allowNested()).thenThrow(new SOPGPException.UnsupportedOption("Allowing nested Armor not supported."));
-
-        SopCLI.main(new String[] {"armor", "--allow-nested"});
     }
 
     @Test
