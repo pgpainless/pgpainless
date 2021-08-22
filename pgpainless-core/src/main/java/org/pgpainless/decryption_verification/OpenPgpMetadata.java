@@ -146,16 +146,6 @@ public class OpenPgpMetadata {
         return false;
     }
 
-    public static class Signature {
-        protected final PGPSignature signature;
-        protected final OpenPgpV4Fingerprint fingerprint;
-
-        public Signature(PGPSignature signature, OpenPgpV4Fingerprint fingerprint) {
-            this.signature = signature;
-            this.fingerprint = fingerprint;
-        }
-    }
-
     /**
      * Return the name of the encrypted / signed file.
      *

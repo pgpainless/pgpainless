@@ -24,6 +24,7 @@ import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import javax.annotation.Nonnull;
 
 import org.bouncycastle.bcpg.ArmoredInputStream;
@@ -88,8 +89,11 @@ public final class DecryptionStreamFactory {
 
     public DecryptionStreamFactory(ConsumerOptions options) {
         this.options = options;
+        initializeDetachedSignatures(options.getDetachedSignatures());
+    }
 
-        for (PGPSignature signature : options.getDetachedSignatures()) {
+    private void initializeDetachedSignatures(Set<PGPSignature> signatures) {
+        for (PGPSignature signature : signatures) {
             long issuerKeyId = SignatureUtils.determineIssuerKeyId(signature);
             PGPPublicKeyRing signingKeyRing = findSignatureVerificationKeyRing(issuerKeyId);
             if (signingKeyRing == null) {
