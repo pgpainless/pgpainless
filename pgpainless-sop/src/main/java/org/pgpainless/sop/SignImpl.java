@@ -24,6 +24,7 @@ import java.util.List;
 
 import org.bouncycastle.openpgp.PGPException;
 import org.bouncycastle.openpgp.PGPSecretKeyRing;
+import org.bouncycastle.openpgp.PGPSecretKeyRingCollection;
 import org.bouncycastle.openpgp.PGPSignature;
 import org.bouncycastle.util.io.Streams;
 import org.pgpainless.PGPainless;
@@ -62,7 +63,12 @@ public class SignImpl implements Sign {
     @Override
     public Sign key(InputStream keyIn) throws SOPGPException.KeyIsProtected, SOPGPException.BadData, IOException {
         try {
-            PGPSecretKeyRing key = PGPainless.readKeyRing().secretKeyRing(keyIn);
+            PGPSecretKeyRingCollection keys = PGPainless.readKeyRing().secretKeyRingCollection(keyIn);
+            if (keys.size() != 1) {
+                throw new SOPGPException.BadData(new AssertionError("Exactly one secret key at a time expected. Got " + keys.size()));
+            }
+
+            PGPSecretKeyRing key = keys.iterator().next();
             KeyRingInfo info = new KeyRingInfo(key);
             if (!info.isFullyDecrypted()) {
                 throw new SOPGPException.KeyIsProtected();

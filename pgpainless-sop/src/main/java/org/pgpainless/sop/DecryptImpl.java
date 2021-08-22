@@ -104,8 +104,11 @@ public class DecryptImpl implements Decrypt {
     public DecryptImpl withKey(InputStream keyIn) throws SOPGPException.KeyIsProtected, SOPGPException.BadData, SOPGPException.UnsupportedAsymmetricAlgo {
         try {
             PGPSecretKeyRingCollection secretKeys = PGPainless.readKeyRing()
-                    .keyRingCollection(keyIn, true)
-                    .getPGPSecretKeyRingCollection();
+                    .secretKeyRingCollection(keyIn);
+
+            if (secretKeys.size() != 1) {
+                throw new SOPGPException.BadData(new AssertionError("Exactly one single secret key expected. Got " + secretKeys.size()));
+            }
 
             for (PGPSecretKeyRing secretKey : secretKeys) {
                 KeyRingInfo info = new KeyRingInfo(secretKey);

@@ -63,6 +63,9 @@ public class EncryptImpl implements Encrypt {
     public Encrypt signWith(InputStream keyIn) throws SOPGPException.KeyIsProtected, SOPGPException.CertCannotSign, SOPGPException.UnsupportedAsymmetricAlgo, SOPGPException.BadData {
         try {
             PGPSecretKeyRingCollection keys = PGPainless.readKeyRing().secretKeyRingCollection(keyIn);
+            if (keys.size() != 1) {
+                throw new SOPGPException.BadData(new AssertionError("Exactly one secret key at a time expected. Got " + keys.size()));
+            }
 
             if (signingOptions == null) {
                 signingOptions = SigningOptions.get();
