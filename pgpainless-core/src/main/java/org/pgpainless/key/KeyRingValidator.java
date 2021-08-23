@@ -19,8 +19,6 @@ import java.util.Collections;
 import java.util.Date;
 import java.util.Iterator;
 import java.util.List;
-import java.util.logging.Level;
-import java.util.logging.Logger;
 
 import org.bouncycastle.openpgp.PGPException;
 import org.bouncycastle.openpgp.PGPKeyRing;
@@ -35,6 +33,8 @@ import org.pgpainless.policy.Policy;
 import org.pgpainless.signature.SignatureCreationDateComparator;
 import org.pgpainless.signature.SignatureVerifier;
 import org.pgpainless.util.CollectionUtils;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 public final class KeyRingValidator {
 
@@ -42,7 +42,7 @@ public final class KeyRingValidator {
 
     }
 
-    private static final Logger LOGGER = Logger.getLogger(KeyRingValidator.class.getName());
+    private static final Logger LOGGER = LoggerFactory.getLogger(KeyRingValidator.class);
 
     public static <R extends PGPKeyRing> R validate(R keyRing, Policy policy) {
         try {
@@ -81,7 +81,7 @@ public final class KeyRingValidator {
                     blank = PGPPublicKey.addCertification(blank, signature);
                 }
             } catch (SignatureValidationException e) {
-                LOGGER.log(Level.INFO, "Rejecting direct key signature", e);
+                LOGGER.debug("Rejecting direct key signature: {}", e.getMessage(), e);
             }
         }
 
@@ -94,7 +94,7 @@ public final class KeyRingValidator {
                     blank = PGPPublicKey.addCertification(blank, signature);
                 }
             } catch (SignatureValidationException e) {
-                LOGGER.log(Level.INFO, "Rejecting key revocation signature", e);
+                LOGGER.debug("Rejecting key revocation signature: {}", e.getMessage(), e);
             }
         }
 
@@ -116,7 +116,7 @@ public final class KeyRingValidator {
                         }
                     }
                 } catch (SignatureValidationException e) {
-                    LOGGER.log(Level.FINE, "Rejecting user-id certification for user-id " + userId, e);
+                    LOGGER.debug("Rejecting user-id certification for user-id {}: {}", userId, e.getMessage(), e);
                 }
             }
         }
@@ -138,7 +138,7 @@ public final class KeyRingValidator {
                         }
                     }
                 } catch (SignatureValidationException e) {
-                    LOGGER.log(Level.INFO, "Rejecting user-attribute signature", e);
+                    LOGGER.debug("Rejecting user-attribute signature: {}", e.getMessage(), e);
                 }
             }
         }

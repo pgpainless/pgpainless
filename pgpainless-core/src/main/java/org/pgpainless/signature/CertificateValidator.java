@@ -25,8 +25,6 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
-import java.util.logging.Level;
-import java.util.logging.Logger;
 
 import org.bouncycastle.bcpg.sig.KeyFlags;
 import org.bouncycastle.bcpg.sig.SignerUserID;
@@ -38,6 +36,8 @@ import org.pgpainless.algorithm.SignatureType;
 import org.pgpainless.exception.SignatureValidationException;
 import org.pgpainless.policy.Policy;
 import org.pgpainless.signature.subpackets.SignatureSubpacketsUtil;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * A collection of static methods that validate signing certificates (public keys) and verify signature correctness.
@@ -48,7 +48,7 @@ public final class CertificateValidator {
 
     }
 
-    private static final Logger LOGGER = Logger.getLogger(CertificateValidator.class.getName());
+    private static final Logger LOGGER = LoggerFactory.getLogger(CertificateValidator.class);
 
     /**
      * Check if the signing key was eligible to create the provided signature.
@@ -88,7 +88,7 @@ public final class CertificateValidator {
                 }
             } catch (SignatureValidationException e) {
                 rejections.put(revocation, e);
-                LOGGER.log(Level.FINE, "Rejecting key revocation signature.", e);
+                LOGGER.debug("Rejecting key revocation signature: {}", e.getMessage(), e);
             }
         }
 
@@ -102,7 +102,7 @@ public final class CertificateValidator {
                 }
             } catch (SignatureValidationException e) {
                 rejections.put(keySignature, e);
-                LOGGER.log(Level.FINE, "Rejecting key signature.", e);
+                LOGGER.debug("Rejecting key signature: {}", e.getMessage(), e);
             }
         }
 
@@ -128,7 +128,7 @@ public final class CertificateValidator {
                     }
                 } catch (SignatureValidationException e) {
                     rejections.put(userIdSig, e);
-                    LOGGER.log(Level.FINE, "Rejecting user-id signature.", e);
+                    LOGGER.debug("Rejecting user-id signature: {}", e.getMessage(), e);
                 }
             }
             Collections.sort(signaturesOnUserId, new SignatureValidityComparator(SignatureCreationDateComparator.Order.NEW_TO_OLD));
@@ -140,7 +140,7 @@ public final class CertificateValidator {
             if (!userIdSignatures.get(userId).isEmpty()) {
                 PGPSignature current = userIdSignatures.get(userId).get(0);
                 if (current.getSignatureType() == SignatureType.CERTIFICATION_REVOCATION.getCode()) {
-                    LOGGER.log(Level.FINE, "User-ID '{}' is revoked.", userId);
+                    LOGGER.debug("User-ID '{}' is revoked.", userId);
                 } else {
                     anyUserIdValid = true;
                 }
@@ -178,7 +178,7 @@ public final class CertificateValidator {
                     }
                 } catch (SignatureValidationException e) {
                     rejections.put(revocation, e);
-                    LOGGER.log(Level.FINE, "Rejecting subkey revocation signature.", e);
+                    LOGGER.debug("Rejecting subkey revocation signature: {}", e.getMessage(), e);
                 }
             }
 
@@ -191,7 +191,7 @@ public final class CertificateValidator {
                     }
                 } catch (SignatureValidationException e) {
                     rejections.put(bindingSig, e);
-                    LOGGER.log(Level.FINE, "Rejecting subkey binding signature.", e);
+                    LOGGER.debug("Rejecting subkey binding signature: {}", e.getMessage(), e);
                 }
             }
 
