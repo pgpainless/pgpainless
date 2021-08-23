@@ -19,8 +19,6 @@ import java.io.IOException;
 import java.io.OutputStream;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.logging.Level;
-import java.util.logging.Logger;
 import javax.annotation.Nonnull;
 
 import org.bouncycastle.bcpg.ArmoredOutputStream;
@@ -38,6 +36,8 @@ import org.pgpainless.algorithm.SymmetricKeyAlgorithm;
 import org.pgpainless.implementation.ImplementationFactory;
 import org.pgpainless.key.SubkeyIdentifier;
 import org.pgpainless.util.ArmoredOutputStreamFactory;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * This class is based upon Jens Neuhalfen's Bouncy-GPG PGPEncryptingStream.
@@ -45,8 +45,7 @@ import org.pgpainless.util.ArmoredOutputStreamFactory;
  */
 public final class EncryptionStream extends OutputStream {
 
-    private static final Logger LOGGER = Logger.getLogger(EncryptionStream.class.getName());
-    private static final Level LEVEL = Level.FINE;
+    private static final Logger LOGGER = LoggerFactory.getLogger(EncryptionStream.class);
 
     private final ProducerOptions options;
     private final EncryptionResult.Builder resultBuilder = EncryptionResult.builder();
@@ -80,11 +79,11 @@ public final class EncryptionStream extends OutputStream {
 
     private void prepareArmor() {
         if (!options.isAsciiArmor()) {
-            LOGGER.log(LEVEL, "Encryption output will be binary");
+            LOGGER.debug("Output will be unarmored");
             return;
         }
 
-        LOGGER.log(LEVEL, "Wrap encryption output in ASCII armor");
+        LOGGER.debug("Wrap encryption output in ASCII armor");
         armorOutputStream = ArmoredOutputStreamFactory.get(outermostStream);
         outermostStream = armorOutputStream;
     }
@@ -99,7 +98,7 @@ public final class EncryptionStream extends OutputStream {
 
         SymmetricKeyAlgorithm encryptionAlgorithm = EncryptionBuilder.negotiateSymmetricEncryptionAlgorithm(encryptionOptions);
         resultBuilder.setEncryptionAlgorithm(encryptionAlgorithm);
-        LOGGER.log(LEVEL, "Encrypt message using {}", encryptionAlgorithm);
+        LOGGER.debug("Encrypt message using {}", encryptionAlgorithm);
         PGPDataEncryptorBuilder dataEncryptorBuilder =
                 ImplementationFactory.getInstance().getPGPDataEncryptorBuilder(encryptionAlgorithm);
         dataEncryptorBuilder.setWithIntegrityPacket(true);
@@ -127,7 +126,7 @@ public final class EncryptionStream extends OutputStream {
             return;
         }
 
-        LOGGER.log(LEVEL, "Compress using {}", compressionAlgorithm);
+        LOGGER.debug("Compress using {}", compressionAlgorithm);
         basicCompressionStream = new BCPGOutputStream(compressedDataGenerator.open(outermostStream));
         outermostStream = basicCompressionStream;
     }

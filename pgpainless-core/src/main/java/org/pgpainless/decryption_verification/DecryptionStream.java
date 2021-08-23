@@ -20,8 +20,6 @@ import static org.pgpainless.signature.SignatureValidator.signatureWasCreatedInB
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.List;
-import java.util.logging.Level;
-import java.util.logging.Logger;
 import javax.annotation.Nonnull;
 
 import org.bouncycastle.openpgp.PGPPublicKeyRing;
@@ -31,6 +29,8 @@ import org.pgpainless.signature.DetachedSignature;
 import org.pgpainless.signature.CertificateValidator;
 import org.pgpainless.exception.SignatureValidationException;
 import org.pgpainless.util.IntegrityProtectedInputStream;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * Decryption Stream that handles updating and verification of detached signatures,
@@ -38,7 +38,7 @@ import org.pgpainless.util.IntegrityProtectedInputStream;
  */
 public class DecryptionStream extends InputStream {
 
-    private static final Logger LOGGER = Logger.getLogger(DecryptionStream.class.getName());
+    private static final Logger LOGGER = LoggerFactory.getLogger(DecryptionStream.class);
 
     private final InputStream inputStream;
     private final ConsumerOptions options;
@@ -108,7 +108,7 @@ public class DecryptionStream extends InputStream {
                 boolean verified = CertificateValidator.validateCertificateAndVerifyInitializedSignature(s.getSignature(), (PGPPublicKeyRing) s.getSigningKeyRing(), PGPainless.getPolicy());
                 s.setVerified(verified);
             } catch (SignatureValidationException e) {
-                LOGGER.log(Level.WARNING, "Could not verify signature of key " + s.getSigningKeyIdentifier(), e);
+                LOGGER.warn("Could not verify signature of key {}", s.getSigningKeyIdentifier(), e);
             }
         }
     }

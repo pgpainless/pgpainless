@@ -21,8 +21,6 @@ import java.io.FilterInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.Map;
-import java.util.logging.Level;
-import java.util.logging.Logger;
 import javax.annotation.Nonnull;
 
 import org.bouncycastle.openpgp.PGPObjectFactory;
@@ -34,11 +32,12 @@ import org.pgpainless.key.OpenPgpV4Fingerprint;
 import org.pgpainless.policy.Policy;
 import org.pgpainless.signature.OnePassSignature;
 import org.pgpainless.signature.CertificateValidator;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 public class SignatureVerifyingInputStream extends FilterInputStream {
 
-    private static final Logger LOGGER = Logger.getLogger(SignatureVerifyingInputStream.class.getName());
-    private static final Level LEVEL = Level.FINE;
+    private static final Logger LOGGER = LoggerFactory.getLogger(SignatureVerifyingInputStream.class);
 
     private final PGPObjectFactory objectFactory;
     private final Map<OpenPgpV4Fingerprint, OnePassSignature> onePassSignatures;
@@ -58,7 +57,7 @@ public class SignatureVerifyingInputStream extends FilterInputStream {
         this.resultBuilder = resultBuilder;
         this.onePassSignatures = onePassSignatures;
 
-        LOGGER.log(LEVEL, "Begin verifying OnePassSignatures");
+        LOGGER.debug("Begin verifying OnePassSignatures");
     }
 
     private void updateOnePassSignatures(byte data) {
@@ -83,7 +82,7 @@ public class SignatureVerifyingInputStream extends FilterInputStream {
 
     private void validateOnePassSignaturesIfAny() throws IOException {
         if (onePassSignatures.isEmpty()) {
-            LOGGER.log(LEVEL, "No One-Pass-Signatures found -> No validation");
+            LOGGER.debug("No One-Pass-Signatures found -> No validation");
             return;
         }
         validateOnePassSignatures();
@@ -97,14 +96,14 @@ public class SignatureVerifyingInputStream extends FilterInputStream {
                 OpenPgpV4Fingerprint fingerprint = findFingerprintForSignature(signature);
                 OnePassSignature onePassSignature = findOnePassSignature(fingerprint);
                 if (onePassSignature == null) {
-                    LOGGER.log(LEVEL, "Found Signature without respective OnePassSignature packet -> skip");
+                    LOGGER.warn("Found Signature without respective OnePassSignature packet -> skip");
                     continue;
                 }
 
                 verifySignatureOrThrowSignatureException(signature, onePassSignature);
             } catch (SignatureValidationException e) {
-                LOGGER.log(LEVEL, "One-pass-signature verification failed for signature made by key " +
-                        Long.toHexString(signature.getKeyID()) + ": " + e.getMessage(), e);
+                LOGGER.warn("One-pass-signature verification failed for signature made by key {}: {}",
+                        Long.toHexString(signature.getKeyID()), e.getMessage(), e);
             }
         }
     }

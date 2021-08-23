@@ -28,8 +28,12 @@ import org.pgpainless.algorithm.CompressionAlgorithm;
 import org.pgpainless.algorithm.SymmetricKeyAlgorithm;
 import org.pgpainless.algorithm.negotiation.SymmetricKeyAlgorithmNegotiator;
 import org.pgpainless.key.SubkeyIdentifier;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 public class EncryptionBuilder implements EncryptionBuilderInterface {
+
+    private static final Logger LOGGER = LoggerFactory.getLogger(EncryptionBuilder.class);
 
     private OutputStream outputStream;
 
@@ -61,12 +65,14 @@ public class EncryptionBuilder implements EncryptionBuilderInterface {
             preferences.add(encryptionOptions.getKeyViews().get(key).getPreferredSymmetricKeyAlgorithms());
         }
 
-        return SymmetricKeyAlgorithmNegotiator
+        SymmetricKeyAlgorithm algorithm = SymmetricKeyAlgorithmNegotiator
                 .byPopularity()
                 .negotiate(
                         PGPainless.getPolicy().getSymmetricKeyEncryptionAlgorithmPolicy(),
                         encryptionOptions.getEncryptionAlgorithmOverride(),
                         preferences);
+        LOGGER.debug("Negotiation resulted in {} being the symmetric encryption algorithm of choice.", algorithm);
+        return algorithm;
     }
 
     public static CompressionAlgorithm negotiateCompressionAlgorithm(ProducerOptions producerOptions) {

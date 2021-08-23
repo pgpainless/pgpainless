@@ -24,8 +24,6 @@ import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
-import java.util.logging.Level;
-import java.util.logging.Logger;
 import javax.annotation.Nonnull;
 
 import org.bouncycastle.bcpg.ArmoredInputStream;
@@ -70,11 +68,12 @@ import org.pgpainless.signature.SignatureUtils;
 import org.pgpainless.util.CRCingArmoredInputStreamWrapper;
 import org.pgpainless.util.IntegrityProtectedInputStream;
 import org.pgpainless.util.Passphrase;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 public final class DecryptionStreamFactory {
 
-    private static final Logger LOGGER = Logger.getLogger(DecryptionStreamFactory.class.getName());
-    private static final Level LEVEL = Level.FINE;
+    private static final Logger LOGGER = LoggerFactory.getLogger(DecryptionStreamFactory.class);
     private static final int MAX_RECURSION_DEPTH = 16;
 
     private final ConsumerOptions options;
@@ -103,7 +102,7 @@ public final class DecryptionStreamFactory {
                 resultBuilder.addDetachedSignature(
                         new DetachedSignature(signature, signingKeyRing, signingKeyIdentifier));
             } catch (PGPException e) {
-                LOGGER.log(Level.INFO, "Cannot verify signature made by " + signingKeyIdentifier, e);
+                LOGGER.warn("Cannot verify detached signature made by {}. Reason: {}", signingKeyIdentifier, e.getMessage(), e);
             }
         }
     }
@@ -163,7 +162,7 @@ public final class DecryptionStreamFactory {
                 return processOnePassSignatureList(objectFactory, (PGPOnePassSignatureList) nextPgpObject, depth);
             }
             if (nextPgpObject instanceof PGPLiteralData) {
-                return processPGPLiteralData(objectFactory, (PGPLiteralData) nextPgpObject);
+                return processPGPLiteralData(objectFactory, (PGPLiteralData) nextPgpObject, depth);
             }
         }
 
@@ -172,7 +171,7 @@ public final class DecryptionStreamFactory {
 
     private InputStream processPGPEncryptedDataList(PGPEncryptedDataList pgpEncryptedDataList, int depth)
             throws PGPException, IOException {
-        LOGGER.log(LEVEL, "Encountered PGPEncryptedDataList");
+        LOGGER.debug("Depth {}: Encountered PGPEncryptedDataList", depth);
         InputStream decryptedDataStream = decrypt(pgpEncryptedDataList);
         InputStream decodedDataStream = PGPUtil.getDecoderStream(decryptedDataStream);
         PGPObjectFactory factory = new PGPObjectFactory(decodedDataStream, keyFingerprintCalculator);
@@ -182,7 +181,7 @@ public final class DecryptionStreamFactory {
     private InputStream processPGPCompressedData(PGPCompressedData pgpCompressedData, int depth)
             throws PGPException, IOException {
         CompressionAlgorithm compressionAlgorithm = CompressionAlgorithm.fromId(pgpCompressedData.getAlgorithm());
-        LOGGER.log(LEVEL, "Encountered PGPCompressedData: {}", compressionAlgorithm);
+        LOGGER.debug("Depth {}: Encountered PGPCompressedData: {}", depth, compressionAlgorithm);
         resultBuilder.setCompressionAlgorithm(compressionAlgorithm);
 
         InputStream inflatedDataStream = pgpCompressedData.getDataStream();
@@ -194,13 +193,13 @@ public final class DecryptionStreamFactory {
 
     private InputStream processOnePassSignatureList(@Nonnull PGPObjectFactory objectFactory, PGPOnePassSignatureList onePassSignatures, int depth)
             throws PGPException, IOException {
-        LOGGER.log(LEVEL, "Encountered PGPOnePassSignatureList of size {}", onePassSignatures.size());
+        LOGGER.debug("Depth {}: Encountered PGPOnePassSignatureList of size {}", depth, onePassSignatures.size());
         initOnePassSignatures(onePassSignatures);
         return processPGPPackets(objectFactory, ++depth);
     }
 
-    private InputStream processPGPLiteralData(@Nonnull PGPObjectFactory objectFactory, PGPLiteralData pgpLiteralData) {
-        LOGGER.log(LEVEL, "Found PGPLiteralData");
+    private InputStream processPGPLiteralData(@Nonnull PGPObjectFactory objectFactory, PGPLiteralData pgpLiteralData, int depth) {
+        LOGGER.debug("Depth {}: Found PGPLiteralData", depth);
         InputStream literalDataInputStream = pgpLiteralData.getInputStream();
 
         resultBuilder.setFileName(pgpLiteralData.getFileName())
@@ -208,7 +207,7 @@ public final class DecryptionStreamFactory {
                 .setFileEncoding(StreamEncoding.fromCode(pgpLiteralData.getFormat()));
 
         if (verifiableOnePassSignatures.isEmpty()) {
-            LOGGER.log(LEVEL, "No OnePassSignatures found -> We are done");
+            LOGGER.debug("No OnePassSignatures found -> We are done");
             return literalDataInputStream;
         }
 
@@ -249,7 +248,7 @@ public final class DecryptionStreamFactory {
 
                         return decryptedDataStream;
                     } catch (PGPException e) {
-                        LOGGER.log(LEVEL, "Probable passphrase mismatch, skip PBE encrypted data block", e);
+                        LOGGER.debug("Probable passphrase mismatch, skip PBE encrypted data block", e);
                     }
                 }
             }
@@ -261,12 +260,12 @@ public final class DecryptionStreamFactory {
                 if (!options.getDecryptionKeys().isEmpty()) {
                     // Known key id
                     if (keyId != 0) {
-                        LOGGER.log(LEVEL, "PGPEncryptedData is encrypted for key {}", Long.toHexString(keyId));
+                        LOGGER.debug("PGPEncryptedData is encrypted for key {}", Long.toHexString(keyId));
                         resultBuilder.addRecipientKeyId(keyId);
                         PGPSecretKeyRing decryptionKeyRing = findDecryptionKeyRing(keyId);
                         if (decryptionKeyRing != null) {
                             PGPSecretKey secretKey = decryptionKeyRing.getSecretKey(keyId);
-                            LOGGER.log(LEVEL, "Found respective secret key {}", Long.toHexString(keyId));
+                            LOGGER.debug("Found respective secret key {}", Long.toHexString(keyId));
                             // Watch out! This assignment is possibly done multiple times.
                             encryptedSessionKey = publicKeyEncryptedData;
                             decryptionKey = UnlockSecretKey.unlockSecretKey(secretKey, options.getSecretKeyProtector(decryptionKeyRing));
@@ -276,7 +275,7 @@ public final class DecryptionStreamFactory {
 
                     // Hidden recipient
                     else {
-                        LOGGER.log(LEVEL, "Hidden recipient detected. Try to decrypt with all available secret keys.");
+                        LOGGER.debug("Hidden recipient detected. Try to decrypt with all available secret keys.");
                         outerloop: for (PGPSecretKeyRing ring : options.getDecryptionKeys()) {
                             KeyRingInfo info = new KeyRingInfo(ring);
                             List<PGPPublicKey> encryptionSubkeys = info.getEncryptionSubkeys(EncryptionPurpose.STORAGE_AND_COMMUNICATIONS);
@@ -290,13 +289,13 @@ public final class DecryptionStreamFactory {
                                 PublicKeyDataDecryptorFactory decryptorFactory = ImplementationFactory.getInstance().getPublicKeyDataDecryptorFactory(privateKey);
                                 try {
                                     publicKeyEncryptedData.getSymmetricAlgorithm(decryptorFactory); // will only succeed if we have the right secret key
-                                    LOGGER.log(LEVEL, "Found correct key {} for hidden recipient decryption.", Long.toHexString(key.getKeyID()));
+                                    LOGGER.debug("Found correct key {} for hidden recipient decryption.", Long.toHexString(key.getKeyID()));
                                     decryptionKey = privateKey;
                                     resultBuilder.setDecryptionKey(new SubkeyIdentifier(ring, decryptionKey.getKeyID()));
                                     encryptedSessionKey = publicKeyEncryptedData;
                                     break outerloop;
                                 } catch (PGPException | ClassCastException e) {
-                                    LOGGER.log(LEVEL, "Skipping wrong key " + Long.toHexString(key.getKeyID()) + " for hidden recipient decryption.", e);
+                                    LOGGER.debug("Skipping wrong key {} for hidden recipient decryption.", Long.toHexString(key.getKeyID()), e);
                                 }
                             }
                         }
@@ -319,9 +318,9 @@ public final class DecryptionStreamFactory {
         SymmetricKeyAlgorithm symmetricKeyAlgorithm = SymmetricKeyAlgorithm
                 .fromId(encryptedSessionKey.getSymmetricAlgorithm(dataDecryptor));
         if (symmetricKeyAlgorithm == SymmetricKeyAlgorithm.NULL) {
-            LOGGER.log(LEVEL, "Message is unencrypted");
+            LOGGER.debug("Message is unencrypted");
         } else {
-            LOGGER.log(LEVEL, "Message is encrypted using {}", symmetricKeyAlgorithm);
+            LOGGER.debug("Message is encrypted using {}", symmetricKeyAlgorithm);
         }
         throwIfAlgorithmIsRejected(symmetricKeyAlgorithm);
         resultBuilder.setSymmetricKeyAlgorithm(symmetricKeyAlgorithm);
@@ -359,12 +358,12 @@ public final class DecryptionStreamFactory {
     private void processOnePassSignature(PGPOnePassSignature signature) throws PGPException {
         final long keyId = signature.getKeyID();
 
-        LOGGER.log(LEVEL, "Message contains OnePassSignature from {}", Long.toHexString(keyId));
+        LOGGER.debug("Message contains OnePassSignature from {}", Long.toHexString(keyId));
 
         // Find public key
         PGPPublicKeyRing verificationKeyRing = findSignatureVerificationKeyRing(keyId);
         if (verificationKeyRing == null) {
-            LOGGER.log(LEVEL, "Missing verification key from {}", Long.toHexString(keyId));
+            LOGGER.debug("Missing verification key from {}", Long.toHexString(keyId));
             return;
         }
         PGPPublicKey verificationKey = verificationKeyRing.getPublicKey(keyId);
@@ -390,7 +389,7 @@ public final class DecryptionStreamFactory {
         for (PGPPublicKeyRing publicKeyRing : options.getCertificates()) {
             PGPPublicKey verificationKey = publicKeyRing.getPublicKey(keyId);
             if (verificationKey != null) {
-                LOGGER.log(LEVEL, "Found public key {} for signature verification", Long.toHexString(keyId));
+                LOGGER.debug("Found public key {} for signature verification", Long.toHexString(keyId));
                 verificationKeyRing = publicKeyRing;
                 break;
             }

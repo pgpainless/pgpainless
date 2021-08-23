@@ -21,8 +21,6 @@ import java.io.IOException;
 import java.security.InvalidAlgorithmParameterException;
 import java.security.NoSuchAlgorithmException;
 import java.util.Iterator;
-import java.util.logging.Level;
-import java.util.logging.Logger;
 
 import org.bouncycastle.openpgp.PGPException;
 import org.bouncycastle.openpgp.PGPPublicKey;
@@ -37,10 +35,12 @@ import org.pgpainless.key.generation.KeySpec;
 import org.pgpainless.key.generation.type.KeyType;
 import org.pgpainless.key.generation.type.rsa.RsaLength;
 import org.pgpainless.key.util.KeyRingUtils;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 public class BCUtilTest {
 
-    private static final Logger LOGGER = Logger.getLogger(BCUtil.class.getName());
+    private static final Logger LOGGER = LoggerFactory.getLogger(BCUtilTest.class);
 
     @Test
     public void keyRingToCollectionTest()
@@ -57,22 +57,22 @@ public class BCUtilTest {
 
         PGPPublicKeyRing pub = KeyRingUtils.publicKeyRingFrom(sec);
 
-        LOGGER.log(Level.FINER, "Main ID: " + sec.getPublicKey().getKeyID() + " " + pub.getPublicKey().getKeyID());
+        assertEquals(sec.getPublicKey().getKeyID(), pub.getPublicKey().getKeyID());
 
         int secSize = 1;
         Iterator<PGPPublicKey> secPubIt = sec.getPublicKeys();
         while (secPubIt.hasNext()) {
             PGPPublicKey k = secPubIt.next();
-            LOGGER.log(Level.FINER, secSize + " " + k.getKeyID() + " " + k.isEncryptionKey() + " " + k.isMasterKey());
+            LOGGER.debug("Index {}, keyId {}, isEncryptionKey={}, isPrimary={}", secSize, k.getKeyID(), k.isEncryptionKey(), k.isMasterKey());
             secSize++;
         }
 
-        LOGGER.log(Level.FINER, "After BCUtil.publicKeyRingFromSecretKeyRing()");
+        LOGGER.debug("After BCUtil.publicKeyRingFromSecretKeyRing()");
         int pubSize = 1;
         Iterator<PGPPublicKey> pubPubIt = pub.getPublicKeys();
         while (pubPubIt.hasNext()) {
             PGPPublicKey k = pubPubIt.next();
-            LOGGER.log(Level.FINER, pubSize + " " + k.getKeyID() + " " + k.isEncryptionKey() + " " + k.isMasterKey());
+            LOGGER.debug("Index {}, keyId {}, isEncryptionKey={}, isPrimary={}", pubSize, k.getKeyID(), k.isEncryptionKey(), k.isMasterKey());
             pubSize++;
         }
 
@@ -84,11 +84,9 @@ public class BCUtilTest {
         Iterator<PGPSecretKeyRing> secColIt = secCol.getKeyRings();
         while (secColIt.hasNext()) {
             PGPSecretKeyRing r = secColIt.next();
-            LOGGER.log(Level.FINER, "" + r.getPublicKey().getKeyID());
+            LOGGER.debug("{}", r.getPublicKey().getKeyID());
             secColSize++;
         }
-
-        LOGGER.log(Level.FINER, "SecCol: " + secColSize);
 
         PGPPublicKeyRingCollection pubCol = KeyRingUtils.keyRingsToKeyRingCollection(pub);
 
@@ -96,10 +94,10 @@ public class BCUtilTest {
         Iterator<PGPPublicKeyRing> pubColIt = pubCol.getKeyRings();
         while (pubColIt.hasNext()) {
             PGPPublicKeyRing r = pubColIt.next();
-            LOGGER.log(Level.FINER, "" + r.getPublicKey().getKeyID());
+            LOGGER.debug("{}", r.getPublicKey().getKeyID());
             pubColSize++;
         }
 
-        LOGGER.log(Level.FINER, "PubCol: " + pubColSize);
+        assertEquals(pubColSize, secColSize);
     }
 }
