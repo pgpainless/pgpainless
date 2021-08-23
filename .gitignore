@@ -4,6 +4,7 @@
 out/
 build/
 bin/
+libs/
 
 *.iws
 *.iml
