@@ -34,6 +34,7 @@ import org.bouncycastle.openpgp.PGPSignatureList;
 import org.pgpainless.PGPainless;
 import org.pgpainless.exception.SignatureValidationException;
 import org.pgpainless.signature.CertificateValidator;
+import org.pgpainless.signature.SignatureVerifier;
 import org.pgpainless.util.ArmoredInputStreamFactory;
 
 /**
@@ -93,7 +94,7 @@ public class CleartextSignatureProcessor {
             }
 
             try {
-                ClearsignedMessageUtil.initializeSignature(signature, signingKey, multiPassStrategy.getMessageInputStream());
+                SignatureVerifier.initializeSignatureAndUpdateWithSignedData(signature, multiPassStrategy.getMessageInputStream(), signingKey);
                 CertificateValidator.validateCertificateAndVerifyInitializedSignature(signature, certificate, PGPainless.getPolicy());
                 return signature;
             } catch (SignatureValidationException e) {

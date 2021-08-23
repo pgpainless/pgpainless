@@ -30,15 +30,17 @@ import org.bouncycastle.openpgp.PGPPublicKey;
 import org.bouncycastle.openpgp.PGPPublicKeyRing;
 import org.bouncycastle.openpgp.PGPSignature;
 import org.bouncycastle.util.io.Streams;
+import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 import org.pgpainless.PGPainless;
 import org.pgpainless.key.TestKeys;
 import org.pgpainless.signature.CertificateValidator;
 import org.pgpainless.signature.SignatureUtils;
-import org.pgpainless.signature.cleartext_signatures.ClearsignedMessageUtil;
+import org.pgpainless.signature.SignatureVerifier;
 import org.pgpainless.signature.cleartext_signatures.CleartextSignatureProcessor;
 import org.pgpainless.signature.cleartext_signatures.InMemoryMultiPassStrategy;
 import org.pgpainless.signature.cleartext_signatures.MultiPassStrategy;
+import org.pgpainless.util.ArmorUtils;
 import org.pgpainless.util.TestUtils;
 
 public class CleartextSignatureVerificationTest {
@@ -48,7 +50,7 @@ public class CleartextSignatureVerificationTest {
             "To blazon it, then sweeten with thy breath\n" +
             "This neighbor air, and let rich music’s tongue\n" +
             "Unfold the imagined happiness that both\n" +
-            "Receive in either by this dear encounter.\n";
+            "Receive in either by this dear encounter.";
     public static final String MESSAGE_SIGNED = "-----BEGIN PGP SIGNED MESSAGE-----\n" +
             "Hash: SHA512\n" +
             "\n" +
@@ -118,11 +120,40 @@ public class CleartextSignatureVerificationTest {
         PGPSignature signature = SignatureUtils.readSignatures(SIGNATURE).get(0);
         PGPPublicKey signingKey = signingKeys.getPublicKey(signature.getKeyID());
 
-        /*
         SignatureVerifier.initializeSignatureAndUpdateWithSignedData(signature, new ByteArrayInputStream(MESSAGE_BODY.getBytes(StandardCharsets.UTF_8)), signingKey);
-        /*/
-        ClearsignedMessageUtil.initializeSignature(signature, signingKey, new ByteArrayInputStream(MESSAGE_BODY.getBytes(StandardCharsets.UTF_8)));
-        //*/
+
         CertificateValidator.validateCertificateAndVerifyInitializedSignature(signature, signingKeys, PGPainless.getPolicy());
+    }
+
+    @Test
+    @Disabled
+    public void print() throws IOException {
+        // CHECKSTYLE:OFF
+        PGPPublicKeyRing keys = TestKeys.getEmilPublicKeyRing();
+        System.out.println(ArmorUtils.toAsciiArmoredString(keys));
+        System.out.println(MESSAGE_SIGNED);
+        System.out.println(MESSAGE_BODY);
+        System.out.println(SIGNATURE);
+        // CHECKSTYLE:ON
+    }
+
+    @Test
+    public void testOutputOfSigVerification() throws IOException, PGPException {
+        PGPSignature signature = SignatureUtils.readSignatures(SIGNATURE).get(0);
+
+        ConsumerOptions options = new ConsumerOptions()
+                .addVerificationCert(TestKeys.getEmilPublicKeyRing())
+                .addVerificationOfDetachedSignature(signature);
+
+        DecryptionStream decryptionStream = PGPainless.decryptAndOrVerify()
+                .onInputStream(new ByteArrayInputStream(MESSAGE_BODY.getBytes(StandardCharsets.UTF_8)))
+                .withOptions(options);
+
+        ByteArrayOutputStream out = new ByteArrayOutputStream();
+        Streams.pipeAll(decryptionStream, out);
+        decryptionStream.close();
+
+        OpenPgpMetadata metadata = decryptionStream.getResult();
+        assertEquals(1, metadata.getVerifiedSignatures().size());
     }
 }

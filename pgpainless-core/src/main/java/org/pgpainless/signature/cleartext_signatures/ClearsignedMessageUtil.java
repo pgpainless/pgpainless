@@ -15,7 +15,6 @@
  */
 package org.pgpainless.signature.cleartext_signatures;
 
-import java.io.BufferedInputStream;
 import java.io.BufferedOutputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
@@ -23,11 +22,7 @@ import java.io.InputStream;
 import java.io.OutputStream;
 
 import org.bouncycastle.bcpg.ArmoredInputStream;
-import org.bouncycastle.openpgp.PGPException;
 import org.bouncycastle.openpgp.PGPObjectFactory;
-import org.bouncycastle.openpgp.PGPPublicKey;
-import org.bouncycastle.openpgp.PGPSignature;
-import org.bouncycastle.openpgp.PGPSignatureGenerator;
 import org.bouncycastle.openpgp.PGPSignatureList;
 import org.bouncycastle.util.Strings;
 import org.pgpainless.implementation.ImplementationFactory;
@@ -69,19 +64,17 @@ public final class ClearsignedMessageUtil {
             if (lookAhead != -1 && in.isClearText()) {
                 byte[] line = lineOut.toByteArray();
                 out.write(line, 0, getLengthWithoutSeparatorOrTrailingWhitespace(line));
-                out.write(lineSep);
 
                 while (lookAhead != -1 && in.isClearText()) {
                     lookAhead = readInputLine(lineOut, lookAhead, in);
                     line = lineOut.toByteArray();
-                    out.write(line, 0, getLengthWithoutSeparatorOrTrailingWhitespace(line));
                     out.write(lineSep);
+                    out.write(line, 0, getLengthWithoutSeparatorOrTrailingWhitespace(line));
                 }
             } else {
                 if (lookAhead != -1) {
                     byte[] line = lineOut.toByteArray();
                     out.write(line, 0, getLengthWithoutSeparatorOrTrailingWhitespace(line));
-                    out.write(lineSep);
                 }
             }
         } finally {
@@ -92,38 +85,6 @@ public final class ClearsignedMessageUtil {
         PGPSignatureList signatures = (PGPSignatureList) objectFactory.nextObject();
 
         return signatures;
-    }
-
-    /**
-     * Initialize the given signature by processing the data from the messageData input stream.
-     *
-     * @param signature uninitialized signature
-     * @param signingKey public signing key
-     * @param messageData input stream containing the data to which the signature belongs
-     * @return initialized signature
-     *
-     * @throws PGPException if the signature cannot be initialized
-     * @throws IOException if an IO error happens
-     */
-    public static PGPSignature initializeSignature(PGPSignature signature, PGPPublicKey signingKey, InputStream messageData)
-            throws PGPException, IOException {
-        signature.init(ImplementationFactory.getInstance().getPGPContentVerifierBuilderProvider(), signingKey);
-
-        InputStream sigIn = new BufferedInputStream(messageData);
-        ByteArrayOutputStream lineOut = new ByteArrayOutputStream();
-        int lookAhead = readInputLine(lineOut, sigIn);
-        processLine(signature, lineOut.toByteArray());
-
-        if (lookAhead != -1) {
-            do {
-                lookAhead = readInputLine(lineOut, lookAhead, sigIn);
-                signature.update((byte) '\r');
-                signature.update((byte) '\n');
-                processLine(signature, lineOut.toByteArray());
-            } while (lookAhead != -1);
-        }
-        sigIn.close();
-        return signature;
     }
 
     public static int readInputLine(ByteArrayOutputStream bOut, InputStream fIn)
@@ -190,25 +151,6 @@ public final class ClearsignedMessageUtil {
         return nlBytes;
     }
 
-    public static void processLine(PGPSignature sig, byte[] line) {
-        int length = getLengthWithoutWhiteSpace(line);
-        if (length > 0) {
-            sig.update(line, 0, length);
-        }
-    }
-
-    public static void processLine(OutputStream aOut, PGPSignatureGenerator sGen, byte[] line)
-            throws IOException {
-        // note: trailing white space needs to be removed from the end of
-        // each line for signature calculation RFC 4880 Section 7.1
-        int length = getLengthWithoutWhiteSpace(line);
-        if (length > 0) {
-            sGen.update(line, 0, length);
-        }
-
-        aOut.write(line, 0, line.length);
-    }
-
     private static int getLengthWithoutSeparatorOrTrailingWhitespace(byte[] line) {
         int    end = line.length - 1;
 
@@ -221,16 +163,6 @@ public final class ClearsignedMessageUtil {
 
     private static boolean isLineEnding(byte b) {
         return b == '\r' || b == '\n';
-    }
-
-    private static int getLengthWithoutWhiteSpace(byte[] line) {
-        int    end = line.length - 1;
-
-        while (end >= 0 && isWhiteSpace(line[end])) {
-            end--;
-        }
-
-        return end + 1;
     }
 
     private static boolean isWhiteSpace(byte b) {

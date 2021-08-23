@@ -373,8 +373,21 @@ public final class SignatureVerifier {
             signature.init(ImplementationFactory.getInstance().getPGPContentVerifierBuilderProvider(), signingKey);
             int read;
             byte[] buf = new byte[8192];
+            byte lastByte = -1;
             while ((read = signedData.read(buf)) != -1) {
-                signature.update(buf, 0, read);
+                // If we previously omitted a newline, but the stream is not yet empty, add it now
+                if (lastByte == (byte) '\n') {
+                    signature.update(lastByte);
+                }
+                lastByte = buf[read - 1];
+
+                if (lastByte == (byte) '\n') {
+                    // if last byte in buffer is newline, omit it for now
+                    signature.update(buf, 0, read - 1);
+                } else {
+                    // otherwise, write buffer as usual
+                    signature.update(buf, 0, read);
+                }
             }
         } catch (PGPException e) {
             throw new SignatureValidationException("Cannot init signature.", e);
