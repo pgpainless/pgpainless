@@ -36,6 +36,8 @@ dependencies {
     // https://todd.ginsberg.com/post/testing-system-exit/
     testImplementation 'com.ginsberg:junit5-system-exit:1.1.1'
 
+    testImplementation 'ch.qos.logback:logback-classic:1.2.5'
+
     /*
     implementation "org.bouncycastle:bcprov-debug-jdk15on:$bouncyCastleVersion"
     /*/

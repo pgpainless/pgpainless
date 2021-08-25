@@ -134,11 +134,13 @@ public final class DecryptionStreamFactory {
             // Not an OpenPGP message.
             //  Reset the buffered stream to parse the message as arbitrary binary data
             //  to allow for detached signature verification.
+            LOGGER.debug("The message appears to not be an OpenPGP message. This is probably data signed with detached signatures?");
             bufferedIn.reset();
             inputStream = bufferedIn;
         } catch (IOException e) {
             if (e.getMessage().contains("invalid armor")) {
                 // We falsely assumed the data to be armored.
+                LOGGER.debug("The message is apparently not armored.");
                 bufferedIn.reset();
                 inputStream = bufferedIn;
             } else {
