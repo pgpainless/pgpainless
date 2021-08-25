@@ -15,7 +15,7 @@ dependencies {
     api files("libs/bcpg-jdk18on-1.70-SNAPSHOT.jar")
     // */
 
-    implementation 'org.slf4j:slf4j-api:1.7.32'
+    implementation "org.slf4j:slf4j-api:$slf4jVersion"
     testImplementation 'ch.qos.logback:logback-classic:1.2.5'
 
     // https://mvnrepository.com/artifact/com.google.code.findbugs/jsr305

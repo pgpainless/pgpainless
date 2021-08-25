@@ -60,6 +60,7 @@ allprojects {
     }
 
     project.ext {
+        slf4jVersion = '1.7.32'
         junitVersion = '5.7.2'
         rootConfigDir = new File(rootDir, 'config')
         gitCommit = getGitCommit()

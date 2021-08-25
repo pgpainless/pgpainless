@@ -36,7 +36,11 @@ dependencies {
     // https://todd.ginsberg.com/post/testing-system-exit/
     testImplementation 'com.ginsberg:junit5-system-exit:1.1.1'
 
+    // We want logback logging in tests
     testImplementation 'ch.qos.logback:logback-classic:1.2.5'
+
+    // We don't want logging in the application itself
+    implementation "org.slf4j:slf4j-nop:$slf4jVersion"
 
     /*
     implementation "org.bouncycastle:bcprov-debug-jdk15on:$bouncyCastleVersion"
