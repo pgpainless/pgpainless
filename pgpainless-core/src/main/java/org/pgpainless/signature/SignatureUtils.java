@@ -217,14 +217,28 @@ public final class SignatureUtils {
     }
 
     /**
-     * Parse an ASCII encoded list of OpenPGP signatures into a {@link PGPSignatureList}.
+     * Parse an ASCII encoded list of OpenPGP signatures into a {@link PGPSignatureList}
+     * and return it as a {@link List}.
      *
      * @param encodedSignatures ASCII armored signature list
      * @return signature list
      * @throws IOException if the signatures cannot be read
      */
     public static List<PGPSignature> readSignatures(String encodedSignatures) throws IOException, PGPException {
-        InputStream inputStream = new ByteArrayInputStream(encodedSignatures.getBytes(Charset.forName("UTF8")));
+        byte[] bytes = encodedSignatures.getBytes(Charset.forName("UTF8"));
+        return readSignatures(bytes);
+    }
+
+    /**
+     * Read a single, or a list of {@link PGPSignature PGPSignatures} and return them as a {@link List}.
+     *
+     * @param encodedSignatures ASCII armored or binary signatures
+     * @return signatures
+     * @throws IOException if the signatures cannot be read
+     * @throws PGPException in case of an OpenPGP error
+     */
+    public static List<PGPSignature> readSignatures(byte[] encodedSignatures) throws IOException, PGPException {
+        InputStream inputStream = new ByteArrayInputStream(encodedSignatures);
         return readSignatures(inputStream);
     }
 
