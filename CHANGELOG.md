@@ -1,5 +1,17 @@
 # PGPainless Changelog
 
+## 0.2.9
+- Allow customization of ASCII armor comment and version headers
+- Small bug fixes of SOP implementation
+- Readability fixes
+- Switch from JUL to [slf4j](http://www.slf4j.org/) for logging
+- SOP: Native support for verify-not-before and verify-not-after
+- SOP: Adopt changes for SOP spec version 2
+  - Add `detach-inband-signatures-and-message` subcommand
+  - Add support for environment variables
+  - Remove `-allow-nested`
+- Cleartext Signature Framework: Fix handling of trailing newlines
+
 ## 0.2.8
 - Encrypt to all capable subkeys by default
 - Ignore missing CRC checksums in ASCII Armor
