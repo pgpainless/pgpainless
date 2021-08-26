@@ -25,6 +25,7 @@ import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 
 import javax.annotation.Nonnull;
+import javax.annotation.Nullable;
 
 import org.bouncycastle.openpgp.PGPLiteralData;
 import org.bouncycastle.openpgp.PGPPublicKey;
@@ -71,27 +72,61 @@ public class OpenPgpMetadata {
         this.fileEncoding = fileEncoding;
     }
 
-    public Set<Long> getRecipientKeyIds() {
+    /**
+     * Return a set of key-ids the messages was encrypted for.
+     *
+     * @return recipient ids
+     */
+    public @Nonnull Set<Long> getRecipientKeyIds() {
         return recipientKeyIds;
     }
 
+    /**
+     * Return true, if the message was encrypted.
+     *
+     * @return true if encrypted, false otherwise
+     */
     public boolean isEncrypted() {
         return symmetricKeyAlgorithm != SymmetricKeyAlgorithm.NULL && !getRecipientKeyIds().isEmpty();
     }
 
-    public SubkeyIdentifier getDecryptionKey() {
+    /**
+     * Return the {@link SubkeyIdentifier} of the key that was used to decrypt the message.
+     * This can be null if the message was decrypted using a {@link org.pgpainless.util.Passphrase}, or if it was not
+     * encrypted at all (eg. signed only).
+     *
+     * @return subkey identifier of decryption key
+     */
+    public @Nullable SubkeyIdentifier getDecryptionKey() {
         return decryptionKey;
     }
 
-    public SymmetricKeyAlgorithm getSymmetricKeyAlgorithm() {
+    /**
+     * Return the algorithm that was used to symmetrically encrypt the message.
+     *
+     * @return encryption algorithm
+     */
+    public @Nullable SymmetricKeyAlgorithm getSymmetricKeyAlgorithm() {
         return symmetricKeyAlgorithm;
     }
 
-    public CompressionAlgorithm getCompressionAlgorithm() {
+    /**
+     * Return the {@link CompressionAlgorithm} that was used to compress the message.
+     *
+     * @return compression algorithm
+     */
+    public @Nullable CompressionAlgorithm getCompressionAlgorithm() {
         return compressionAlgorithm;
     }
 
-    public Set<PGPSignature> getSignatures() {
+    /**
+     * Return a set of all signatures on the message.
+     * Note: This method returns just the signatures. There is no guarantee that the signatures are verified or even correct.
+     *
+     * Use {@link #getVerifiedSignatures()} instead to get all verified signatures.
+     * @return unverified and verified signatures
+     */
+    public @Nonnull Set<PGPSignature> getSignatures() {
         Set<PGPSignature> signatures = new HashSet<>();
         for (DetachedSignature detachedSignature : detachedSignatures) {
             signatures.add(detachedSignature.getSignature());
@@ -102,10 +137,25 @@ public class OpenPgpMetadata {
         return signatures;
     }
 
+    /**
+     * Return true if the message contained at least one signature.
+     *
+     * Note: This method does not reflect, whether the signature on the message is correct.
+     * Use {@link #isVerified()} instead to determine, if the message carries a verifiable signature.
+     *
+     * @return true if message contains at least one unverified or verified signature, false otherwise.
+     */
     public boolean isSigned() {
         return !getSignatures().isEmpty();
     }
 
+    /**
+     * Return a map of all verified signatures on the message.
+     * The map contains verified signatures as value, with the {@link SubkeyIdentifier} of the key that was used to verify
+     * the signature as the maps keys.
+     *
+     * @return verified detached and one-pass signatures
+     */
     public Map<SubkeyIdentifier, PGPSignature> getVerifiedSignatures() {
         Map<SubkeyIdentifier, PGPSignature> verifiedSignatures = new ConcurrentHashMap<>();
         for (DetachedSignature detachedSignature : detachedSignatures) {
@@ -122,12 +172,24 @@ public class OpenPgpMetadata {
         return verifiedSignatures;
     }
 
+    /**
+     * Return true, if the message is signed and at least one signature on the message was verified successfully.
+     *
+     * @return true if message is verified, false otherwise
+     */
     public boolean isVerified() {
         return !getVerifiedSignatures().isEmpty();
     }
 
-    public boolean containsVerifiedSignatureFrom(PGPPublicKeyRing publicKeys) {
-        for (PGPPublicKey key : publicKeys) {
+    /**
+     * Return true, if the message contains at least one verified signature made by a key in the
+     * given certificate.
+     *
+     * @param certificate certificate
+     * @return true if message was signed by the certificate (and the signature is valid), false otherwise
+     */
+    public boolean containsVerifiedSignatureFrom(PGPPublicKeyRing certificate) {
+        for (PGPPublicKey key : certificate) {
             OpenPgpV4Fingerprint fingerprint = new OpenPgpV4Fingerprint(key);
             if (containsVerifiedSignatureFrom(fingerprint)) {
                 return true;
@@ -136,6 +198,15 @@ public class OpenPgpMetadata {
         return false;
     }
 
+    /**
+     * Return true, if the message contains at least one valid signature made by the key with the given
+     * fingerprint, false otherwise.
+     *
+     * The fingerprint might be of the signing subkey, or the primary key of the signing certificate.
+     *
+     * @param fingerprint fingerprint of primary key or signing subkey
+     * @return true if validly signed, false otherwise
+     */
     public boolean containsVerifiedSignatureFrom(OpenPgpV4Fingerprint fingerprint) {
         for (SubkeyIdentifier verifiedSigningKey : getVerifiedSignatures().keySet()) {
             if (verifiedSigningKey.getPrimaryKeyFingerprint().equals(fingerprint) ||
