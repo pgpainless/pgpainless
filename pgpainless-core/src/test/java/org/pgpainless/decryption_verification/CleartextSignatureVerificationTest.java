@@ -30,7 +30,6 @@ import org.bouncycastle.openpgp.PGPPublicKey;
 import org.bouncycastle.openpgp.PGPPublicKeyRing;
 import org.bouncycastle.openpgp.PGPSignature;
 import org.bouncycastle.util.io.Streams;
-import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 import org.pgpainless.PGPainless;
 import org.pgpainless.key.TestKeys;
@@ -125,9 +124,7 @@ public class CleartextSignatureVerificationTest {
         CertificateValidator.validateCertificateAndVerifyInitializedSignature(signature, signingKeys, PGPainless.getPolicy());
     }
 
-    @Test
-    @Disabled
-    public void print() throws IOException {
+    public static void main(String[] args) throws IOException {
         // CHECKSTYLE:OFF
         PGPPublicKeyRing keys = TestKeys.getEmilPublicKeyRing();
         System.out.println(ArmorUtils.toAsciiArmoredString(keys));
