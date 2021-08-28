@@ -17,17 +17,15 @@ package org.pgpainless.signature.cleartext_signatures;
 
 import java.io.IOException;
 import java.io.InputStream;
-import java.util.Collections;
 
-import org.bouncycastle.openpgp.PGPException;
 import org.bouncycastle.openpgp.PGPPublicKeyRing;
 import org.bouncycastle.openpgp.PGPPublicKeyRingCollection;
+import org.pgpainless.decryption_verification.ConsumerOptions;
 
 public class VerifyCleartextSignaturesImpl implements VerifyCleartextSignatures {
 
     private InputStream inputStream;
     private MultiPassStrategy multiPassStrategy;
-    private PGPPublicKeyRingCollection verificationKeys;
 
     @Override
     public WithStrategy onInputStream(InputStream inputStream) {
@@ -50,15 +48,22 @@ public class VerifyCleartextSignaturesImpl implements VerifyCleartextSignatures 
     public class VerifyWithImpl implements VerifyWith {
 
         @Override
-        public CleartextSignatureProcessor verifyWith(PGPPublicKeyRing publicKey) throws PGPException, IOException {
-            VerifyCleartextSignaturesImpl.this.verificationKeys = new PGPPublicKeyRingCollection(Collections.singleton(publicKey));
-            return new CleartextSignatureProcessor(inputStream, verificationKeys, multiPassStrategy);
+        public CleartextSignatureProcessor withOptions(ConsumerOptions options) throws IOException {
+            return new CleartextSignatureProcessor(inputStream, options, multiPassStrategy);
+        }
+
+        @Override
+        public CleartextSignatureProcessor verifyWith(PGPPublicKeyRing publicKey) throws IOException {
+            ConsumerOptions options = new ConsumerOptions();
+            options.addVerificationCert(publicKey);
+            return new CleartextSignatureProcessor(inputStream, options, multiPassStrategy);
         }
 
         @Override
         public CleartextSignatureProcessor verifyWith(PGPPublicKeyRingCollection publicKeys) throws IOException {
-            VerifyCleartextSignaturesImpl.this.verificationKeys = publicKeys;
-            return new CleartextSignatureProcessor(inputStream, verificationKeys, multiPassStrategy);
+            ConsumerOptions options = new ConsumerOptions();
+            options.addVerificationCerts(publicKeys);
+            return new CleartextSignatureProcessor(inputStream, options, multiPassStrategy);
         }
     }
 }

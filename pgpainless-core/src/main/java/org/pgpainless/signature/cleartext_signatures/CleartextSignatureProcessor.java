@@ -15,6 +15,8 @@
  */
 package org.pgpainless.signature.cleartext_signatures;
 
+import static org.pgpainless.signature.SignatureValidator.signatureWasCreatedInBounds;
+
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
@@ -28,10 +30,10 @@ import org.bouncycastle.bcpg.ArmoredInputStream;
 import org.bouncycastle.openpgp.PGPException;
 import org.bouncycastle.openpgp.PGPPublicKey;
 import org.bouncycastle.openpgp.PGPPublicKeyRing;
-import org.bouncycastle.openpgp.PGPPublicKeyRingCollection;
 import org.bouncycastle.openpgp.PGPSignature;
 import org.bouncycastle.openpgp.PGPSignatureList;
 import org.pgpainless.PGPainless;
+import org.pgpainless.decryption_verification.ConsumerOptions;
 import org.pgpainless.exception.SignatureValidationException;
 import org.pgpainless.signature.CertificateValidator;
 import org.pgpainless.signature.SignatureVerifier;
@@ -45,11 +47,11 @@ public class CleartextSignatureProcessor {
     private static final Logger LOGGER = Logger.getLogger(CleartextSignatureProcessor.class.getName());
 
     private final ArmoredInputStream in;
-    private final PGPPublicKeyRingCollection verificationKeys;
+    private final ConsumerOptions options;
     private final MultiPassStrategy multiPassStrategy;
 
     public CleartextSignatureProcessor(InputStream inputStream,
-                                       PGPPublicKeyRingCollection verificationKeys,
+                                       ConsumerOptions options,
                                        MultiPassStrategy multiPassStrategy)
             throws IOException {
         if (inputStream instanceof ArmoredInputStream) {
@@ -57,7 +59,7 @@ public class CleartextSignatureProcessor {
         } else {
             this.in = ArmoredInputStreamFactory.get(inputStream);
         }
-        this.verificationKeys = verificationKeys;
+        this.options = options;
         this.multiPassStrategy = multiPassStrategy;
     }
 
@@ -81,7 +83,7 @@ public class CleartextSignatureProcessor {
         for (PGPSignature signature : signatures) {
             PGPPublicKeyRing certificate = null;
             PGPPublicKey signingKey = null;
-            for (PGPPublicKeyRing cert : verificationKeys) {
+            for (PGPPublicKeyRing cert : options.getCertificates()) {
                 signingKey = cert.getPublicKey(signature.getKeyID());
                 if (signingKey != null) {
                     certificate = cert;
@@ -94,6 +96,7 @@ public class CleartextSignatureProcessor {
             }
 
             try {
+                signatureWasCreatedInBounds(options.getVerifyNotBefore(), options.getVerifyNotAfter()).verify(signature);
                 SignatureVerifier.initializeSignatureAndUpdateWithSignedData(signature, multiPassStrategy.getMessageInputStream(), signingKey);
                 CertificateValidator.validateCertificateAndVerifyInitializedSignature(signature, certificate, PGPainless.getPolicy());
                 return signature;

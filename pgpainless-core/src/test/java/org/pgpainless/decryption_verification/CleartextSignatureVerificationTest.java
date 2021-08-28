@@ -77,12 +77,14 @@ public class CleartextSignatureVerificationTest {
     @Test
     public void cleartextSignVerification_InMemoryMultiPassStrategy() throws IOException, PGPException {
         PGPPublicKeyRing signingKeys = TestKeys.getEmilPublicKeyRing();
+        ConsumerOptions options = new ConsumerOptions()
+                .addVerificationCert(signingKeys);
 
         InMemoryMultiPassStrategy multiPassStrategy = MultiPassStrategy.keepMessageInMemory();
         CleartextSignatureProcessor processor = PGPainless.verifyCleartextSignedMessage()
                 .onInputStream(new ByteArrayInputStream(MESSAGE_SIGNED))
                 .withStrategy(multiPassStrategy)
-                .verifyWith(signingKeys);
+                .withOptions(options);
 
         PGPSignature signature = processor.process();
 
@@ -93,6 +95,8 @@ public class CleartextSignatureVerificationTest {
     @Test
     public void cleartextSignVerification_FileBasedMultiPassStrategy() throws IOException, PGPException {
         PGPPublicKeyRing signingKeys = TestKeys.getEmilPublicKeyRing();
+        ConsumerOptions options = new ConsumerOptions()
+                .addVerificationCert(signingKeys);
 
         File tempDir = TestUtils.createTempDirectory();
         File file = new File(tempDir, "file");
@@ -100,7 +104,7 @@ public class CleartextSignatureVerificationTest {
         CleartextSignatureProcessor processor = PGPainless.verifyCleartextSignedMessage()
                 .onInputStream(new ByteArrayInputStream(MESSAGE_SIGNED))
                 .withStrategy(multiPassStrategy)
-                .verifyWith(signingKeys);
+                .withOptions(options);
 
         PGPSignature signature = processor.process();
 
