@@ -22,6 +22,7 @@ import java.io.OutputStream;
 import org.bouncycastle.bcpg.ArmoredOutputStream;
 import org.bouncycastle.openpgp.PGPSignature;
 import org.bouncycastle.openpgp.PGPSignatureList;
+import org.pgpainless.exception.WrongConsumingMethodException;
 import org.pgpainless.signature.cleartext_signatures.ClearsignedMessageUtil;
 import org.pgpainless.util.ArmoredOutputStreamFactory;
 import sop.ReadyWithResult;
@@ -49,7 +50,12 @@ public class DetachInbandSignatureAndMessageImpl implements DetachInbandSignatur
                 return new Signatures() {
                     @Override
                     public void writeTo(OutputStream signatureOutputStream) throws IOException {
-                        PGPSignatureList signatures = ClearsignedMessageUtil.detachSignaturesFromInbandClearsignedMessage(messageInputStream, messageOutputStream);
+                        PGPSignatureList signatures = null;
+                        try {
+                            signatures = ClearsignedMessageUtil.detachSignaturesFromInbandClearsignedMessage(messageInputStream, messageOutputStream);
+                        } catch (WrongConsumingMethodException e) {
+                            throw new IOException(e);
+                        }
                         if (armor) {
                             ArmoredOutputStream armorOut = ArmoredOutputStreamFactory.get(signatureOutputStream);
                             for (PGPSignature signature : signatures) {

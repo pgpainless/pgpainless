@@ -17,6 +17,7 @@ package org.pgpainless.decryption_verification;
 
 import static org.junit.jupiter.api.Assertions.assertArrayEquals;
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
@@ -32,6 +33,7 @@ import org.bouncycastle.openpgp.PGPSignature;
 import org.bouncycastle.util.io.Streams;
 import org.junit.jupiter.api.Test;
 import org.pgpainless.PGPainless;
+import org.pgpainless.exception.WrongConsumingMethodException;
 import org.pgpainless.key.TestKeys;
 import org.pgpainless.signature.CertificateValidator;
 import org.pgpainless.signature.SignatureUtils;
@@ -156,5 +158,46 @@ public class CleartextSignatureVerificationTest {
 
         OpenPgpMetadata metadata = decryptionStream.getResult();
         assertEquals(1, metadata.getVerifiedSignatures().size());
+    }
+
+    @Test
+    public void consumingCleartextSignedMessageWithNormalAPIThrowsWrongConsumingMethodException() throws IOException, PGPException {
+        PGPPublicKeyRing certificate = TestKeys.getEmilPublicKeyRing();
+        ConsumerOptions options = new ConsumerOptions()
+                .addVerificationCert(certificate);
+
+        assertThrows(WrongConsumingMethodException.class, () ->
+                PGPainless.decryptAndOrVerify()
+                        .onInputStream(new ByteArrayInputStream(MESSAGE_SIGNED))
+                        .withOptions(options));
+    }
+
+    @Test
+    public void consumingInlineSignedMessageWithCleartextSignedVerificationApiThrowsWrongConsumingMethodException() throws PGPException, IOException {
+        String inlineSignedMessage = "-----BEGIN PGP MESSAGE-----\n" +
+                "Version: PGPainless\n" +
+                "\n" +
+                "kA0DAQoTVzbmkxrPNwwBy8BJYgAAAAAAQWgsIEp1bGlldCwgaWYgdGhlIG1lYXN1\n" +
+                "cmUgb2YgdGh5IGpveQpCZSBoZWFwZWQgbGlrZSBtaW5lLCBhbmQgdGhhdCB0aHkg\n" +
+                "c2tpbGwgYmUgbW9yZQpUbyBibGF6b24gaXQsIHRoZW4gc3dlZXRlbiB3aXRoIHRo\n" +
+                "eSBicmVhdGgKVGhpcyBuZWlnaGJvciBhaXIsIGFuZCBsZXQgcmljaCBtdXNpY+KA\n" +
+                "mXMgdG9uZ3VlClVuZm9sZCB0aGUgaW1hZ2luZWQgaGFwcGluZXNzIHRoYXQgYm90\n" +
+                "aApSZWNlaXZlIGluIGVpdGhlciBieSB0aGlzIGRlYXIgZW5jb3VudGVyLoh1BAET\n" +
+                "CgAGBQJhK2q9ACEJEFc25pMazzcMFiEET2ZcTcLEZgvGQl5BVzbmkxrPNwxr8gD+\n" +
+                "MDfg+qccpsoJVgHIW8mRPBQowXDyw+oNHsf28ii+/pEBAO/RXhFkZBPzlfDJMJVT\n" +
+                "UwJJeuna1R4yOoWjq0zqRvrg\n" +
+                "=dBiV\n" +
+                "-----END PGP MESSAGE-----\n";
+
+        PGPPublicKeyRing certificate = TestKeys.getEmilPublicKeyRing();
+        ConsumerOptions options = new ConsumerOptions()
+                .addVerificationCert(certificate);
+
+        assertThrows(WrongConsumingMethodException.class, () ->
+                PGPainless.verifyCleartextSignedMessage()
+                .onInputStream(new ByteArrayInputStream(inlineSignedMessage.getBytes(StandardCharsets.UTF_8)))
+                .withStrategy(new InMemoryMultiPassStrategy())
+                .withOptions(options)
+                .process());
     }
 }

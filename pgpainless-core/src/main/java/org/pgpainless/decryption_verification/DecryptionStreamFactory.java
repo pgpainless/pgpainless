@@ -58,6 +58,7 @@ import org.pgpainless.exception.MessageNotIntegrityProtectedException;
 import org.pgpainless.exception.MissingDecryptionMethodException;
 import org.pgpainless.exception.MissingLiteralDataException;
 import org.pgpainless.exception.UnacceptableAlgorithmException;
+import org.pgpainless.exception.WrongConsumingMethodException;
 import org.pgpainless.implementation.ImplementationFactory;
 import org.pgpainless.key.OpenPgpV4Fingerprint;
 import org.pgpainless.key.SubkeyIdentifier;
@@ -120,6 +121,15 @@ public final class DecryptionStreamFactory {
 
         InputStream decoderStream = PGPUtil.getDecoderStream(bufferedIn);
         decoderStream = CRCingArmoredInputStreamWrapper.possiblyWrap(decoderStream);
+
+        if (decoderStream instanceof ArmoredInputStream) {
+            ArmoredInputStream armor = (ArmoredInputStream) decoderStream;
+
+            if (armor.isClearText()) {
+                throw new WrongConsumingMethodException("Message appears to be using the Cleartext Signature Framework. " +
+                        "Use PGPainless.verifyCleartextSignedMessage() to verify this message instead.");
+            }
+        }
 
         PGPObjectFactory objectFactory = new PGPObjectFactory(
                 decoderStream, keyFingerprintCalculator);

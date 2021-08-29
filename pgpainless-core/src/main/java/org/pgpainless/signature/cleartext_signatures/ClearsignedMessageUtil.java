@@ -25,6 +25,7 @@ import org.bouncycastle.bcpg.ArmoredInputStream;
 import org.bouncycastle.openpgp.PGPObjectFactory;
 import org.bouncycastle.openpgp.PGPSignatureList;
 import org.bouncycastle.util.Strings;
+import org.pgpainless.exception.WrongConsumingMethodException;
 import org.pgpainless.implementation.ImplementationFactory;
 import org.pgpainless.util.ArmoredInputStreamFactory;
 
@@ -49,10 +50,10 @@ public final class ClearsignedMessageUtil {
      */
     public static PGPSignatureList detachSignaturesFromInbandClearsignedMessage(InputStream clearsignedInputStream,
                                                                                 OutputStream messageOutputStream)
-            throws IOException {
+            throws IOException, WrongConsumingMethodException {
         ArmoredInputStream in = ArmoredInputStreamFactory.get(clearsignedInputStream);
         if (!in.isClearText()) {
-            throw new IOException("Message is not clearsigned.");
+            throw new WrongConsumingMethodException("Message is not using the Cleartext Signature Framework.");
         }
 
         OutputStream out = new BufferedOutputStream(messageOutputStream);
