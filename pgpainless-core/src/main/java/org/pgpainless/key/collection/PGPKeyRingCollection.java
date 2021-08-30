@@ -105,11 +105,11 @@ public class PGPKeyRingCollection {
         pgpPublicKeyRingCollection = new PGPPublicKeyRingCollection(publicKeyRings);
     }
 
-    public PGPSecretKeyRingCollection getPGPSecretKeyRingCollection() {
+    public @Nonnull PGPSecretKeyRingCollection getPGPSecretKeyRingCollection() {
         return pgpSecretKeyRingCollection;
     }
 
-    public PGPPublicKeyRingCollection getPgpPublicKeyRingCollection() {
+    public @Nonnull PGPPublicKeyRingCollection getPgpPublicKeyRingCollection() {
         return pgpPublicKeyRingCollection;
     }
 

@@ -64,7 +64,7 @@ public class DecryptImpl implements Decrypt {
         try {
             PGPPublicKeyRingCollection certs = PGPainless.readKeyRing().keyRingCollection(certIn, false)
                     .getPgpPublicKeyRingCollection();
-            if (certs == null) {
+            if (certs.size() == 0) {
                 throw new SOPGPException.BadData(new PGPException("No certificates provided."));
             }
 
