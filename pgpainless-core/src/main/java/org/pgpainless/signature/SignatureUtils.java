@@ -337,4 +337,12 @@ public final class SignatureUtils {
     public static String getSignatureDigestPrefix(PGPSignature signature) {
         return Hex.toHexString(signature.getDigestPrefix());
     }
+
+    public static List<PGPSignature> toList(PGPSignatureList signatures) {
+        List<PGPSignature> list = new ArrayList<>();
+        for (PGPSignature signature : signatures) {
+            list.add(signature);
+        }
+        return list;
+    }
 }

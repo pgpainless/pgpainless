@@ -30,6 +30,7 @@ public class DearmorImpl implements Dearmor {
     public Ready data(InputStream data) throws IOException {
         InputStream decoder = PGPUtil.getDecoderStream(data);
         return new Ready() {
+
             @Override
             public void writeTo(OutputStream outputStream) throws IOException {
                 Streams.pipeAll(decoder, outputStream);

@@ -424,7 +424,7 @@ public final class SignatureVerifier {
         }
     }
 
-    public static boolean verifyOnePassSignature(PGPSignature signature, PGPPublicKey signingKey, OnePassSignature onePassSignature, Policy policy)
+    public static boolean verifyOnePassSignature(PGPSignature signature, PGPPublicKey signingKey, OnePassSignatureCheck onePassSignature, Policy policy)
             throws SignatureValidationException {
         try {
             SignatureValidator.wasPossiblyMadeByKey(signingKey).verify(signature);
@@ -435,7 +435,7 @@ public final class SignatureVerifier {
         }
 
         try {
-            if (!onePassSignature.verify(signature)) {
+            if (!onePassSignature.verify()) {
                 throw new SignatureValidationException("Bad signature of key " + Long.toHexString(signingKey.getKeyID()));
             }
         } catch (PGPException e) {

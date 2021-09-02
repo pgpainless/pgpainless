@@ -93,7 +93,7 @@ public class VerifyNotBeforeNotAfterTest {
                 .withOptions(options);
 
         OpenPgpMetadata metadata = processSignedData(verifier);
-        assertTrue(metadata.getVerifiedSignatures().containsKey(new SubkeyIdentifier(certificate)));
+        assertTrue(metadata.containsVerifiedSignatureFrom(certificate));
     }
 
     @Test

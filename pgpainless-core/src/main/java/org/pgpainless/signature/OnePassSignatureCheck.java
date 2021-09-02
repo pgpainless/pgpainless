@@ -19,29 +19,34 @@ import org.bouncycastle.openpgp.PGPException;
 import org.bouncycastle.openpgp.PGPOnePassSignature;
 import org.bouncycastle.openpgp.PGPPublicKeyRing;
 import org.bouncycastle.openpgp.PGPSignature;
+import org.pgpainless.decryption_verification.SignatureInputStream;
 import org.pgpainless.key.OpenPgpV4Fingerprint;
 import org.pgpainless.key.SubkeyIdentifier;
 
 /**
  * Tuple-class that bundles together a {@link PGPOnePassSignature} object, a {@link PGPPublicKeyRing}
- * destined to verify the signature, the {@link PGPSignature} itself and a record of whether or not the signature
+ * destined to verify the signature, the {@link PGPSignature} itself and a record of whether the signature
  * was verified.
  */
-public class OnePassSignature {
+public class OnePassSignatureCheck {
     private final PGPOnePassSignature onePassSignature;
     private final PGPPublicKeyRing verificationKeys;
     private PGPSignature signature;
     private boolean verified;
 
     /**
-     * Create a new {@link OnePassSignature}.
+     * Create a new {@link OnePassSignatureCheck}.
      *
      * @param onePassSignature one-pass signature packet used to initialize the signature verifier.
      * @param verificationKeys verification keys
      */
-    public OnePassSignature(PGPOnePassSignature onePassSignature, PGPPublicKeyRing verificationKeys) {
+    public OnePassSignatureCheck(PGPOnePassSignature onePassSignature, PGPPublicKeyRing verificationKeys) {
         this.onePassSignature = onePassSignature;
         this.verificationKeys = verificationKeys;
+    }
+
+    public void setSignature(PGPSignature signature) {
+        this.signature = signature;
     }
 
     /**
@@ -75,17 +80,16 @@ public class OnePassSignature {
      * Verify the one-pass signature.
      * Note: This method only checks if the signature itself is correct.
      * It does not check if the signing key was eligible to create the signature, or if the signature is expired etc.
-     * Those checks are being done by {@link org.pgpainless.decryption_verification.SignatureVerifyingInputStream}.
+     * Those checks are being done by {@link SignatureInputStream.VerifySignatures}.
      *
-     * @param signature parsed-out signature
      * @return true if the signature was verified, false otherwise
      * @throws PGPException if signature verification fails with an exception.
      */
-    public boolean verify(PGPSignature signature) throws PGPException {
-        this.verified = getOnePassSignature().verify(signature);
-        if (verified) {
-            this.signature = signature;
+    public boolean verify() throws PGPException {
+        if (signature == null) {
+            throw new IllegalStateException("No comparison signature provided.");
         }
+        this.verified = getOnePassSignature().verify(signature);
         return verified;
     }
 

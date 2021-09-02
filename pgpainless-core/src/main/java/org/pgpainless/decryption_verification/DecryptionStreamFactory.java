@@ -19,10 +19,9 @@ import java.io.BufferedInputStream;
 import java.io.EOFException;
 import java.io.IOException;
 import java.io.InputStream;
-import java.util.HashMap;
+import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
-import java.util.Map;
 import java.util.Set;
 import javax.annotation.Nonnull;
 
@@ -43,6 +42,7 @@ import org.bouncycastle.openpgp.PGPPublicKeyRing;
 import org.bouncycastle.openpgp.PGPSecretKey;
 import org.bouncycastle.openpgp.PGPSecretKeyRing;
 import org.bouncycastle.openpgp.PGPSignature;
+import org.bouncycastle.openpgp.PGPSignatureList;
 import org.bouncycastle.openpgp.PGPUtil;
 import org.bouncycastle.openpgp.operator.KeyFingerPrintCalculator;
 import org.bouncycastle.openpgp.operator.PBEDataDecryptorFactory;
@@ -59,12 +59,11 @@ import org.pgpainless.exception.MissingLiteralDataException;
 import org.pgpainless.exception.UnacceptableAlgorithmException;
 import org.pgpainless.exception.WrongConsumingMethodException;
 import org.pgpainless.implementation.ImplementationFactory;
-import org.pgpainless.key.OpenPgpV4Fingerprint;
 import org.pgpainless.key.SubkeyIdentifier;
 import org.pgpainless.key.info.KeyRingInfo;
 import org.pgpainless.key.protection.UnlockSecretKey;
 import org.pgpainless.signature.DetachedSignature;
-import org.pgpainless.signature.OnePassSignature;
+import org.pgpainless.signature.OnePassSignatureCheck;
 import org.pgpainless.signature.SignatureUtils;
 import org.pgpainless.util.CRCingArmoredInputStreamWrapper;
 import org.pgpainless.util.IntegrityProtectedInputStream;
@@ -78,14 +77,16 @@ public final class DecryptionStreamFactory {
     private static final int MAX_RECURSION_DEPTH = 16;
 
     private final ConsumerOptions options;
-
     private final OpenPgpMetadata.Builder resultBuilder = OpenPgpMetadata.getBuilder();
+    private final List<OnePassSignatureCheck> onePassSignatureChecks = new ArrayList<>();
+    private final List<DetachedSignature> detachedSignatureChecks = new ArrayList<>();
+
     private static final PGPContentVerifierBuilderProvider verifierBuilderProvider =
             ImplementationFactory.getInstance().getPGPContentVerifierBuilderProvider();
     private static final KeyFingerPrintCalculator keyFingerprintCalculator =
             ImplementationFactory.getInstance().getKeyFingerprintCalculator();
-    private final Map<OpenPgpV4Fingerprint, OnePassSignature> verifiableOnePassSignatures = new HashMap<>();
     private IntegrityProtectedInputStream integrityProtectedEncryptedInputStream;
+
 
     public static DecryptionStream create(@Nonnull InputStream inputStream,
                                           @Nonnull ConsumerOptions options)
@@ -109,9 +110,9 @@ public final class DecryptionStreamFactory {
             PGPPublicKey signingKey = signingKeyRing.getPublicKey(issuerKeyId);
             SubkeyIdentifier signingKeyIdentifier = new SubkeyIdentifier(signingKeyRing, signingKey.getKeyID());
             try {
-                signature.init(ImplementationFactory.getInstance().getPGPContentVerifierBuilderProvider(), signingKey);
-                resultBuilder.addDetachedSignature(
-                        new DetachedSignature(signature, signingKeyRing, signingKeyIdentifier));
+                signature.init(verifierBuilderProvider, signingKey);
+                DetachedSignature detachedSignature = new DetachedSignature(signature, signingKeyRing, signingKeyIdentifier);
+                detachedSignatureChecks.add(detachedSignature);
             } catch (PGPException e) {
                 LOGGER.warn("Cannot verify detached signature made by {}. Reason: {}", signingKeyIdentifier, e.getMessage(), e);
             }
@@ -142,27 +143,33 @@ public final class DecryptionStreamFactory {
             inputStream = processPGPPackets(objectFactory, 1);
         } catch (EOFException e) {
             throw e;
-        }
-        catch (MissingLiteralDataException e) {
+        } catch (MissingLiteralDataException e) {
             // Not an OpenPGP message.
             //  Reset the buffered stream to parse the message as arbitrary binary data
             //  to allow for detached signature verification.
             LOGGER.debug("The message appears to not be an OpenPGP message. This is probably data signed with detached signatures?");
             bufferedIn.reset();
-            inputStream = bufferedIn;
+            inputStream = wrapInVerifySignatureStream(bufferedIn);
         } catch (IOException e) {
             if (e.getMessage().contains("invalid armor")) {
                 // We falsely assumed the data to be armored.
                 LOGGER.debug("The message is apparently not armored.");
                 bufferedIn.reset();
-                inputStream = bufferedIn;
+                inputStream = wrapInVerifySignatureStream(bufferedIn);
             } else {
                 throw e;
             }
         }
 
-        return new DecryptionStream(inputStream, options, resultBuilder, integrityProtectedEncryptedInputStream,
+        return new DecryptionStream(inputStream, resultBuilder, integrityProtectedEncryptedInputStream,
                 (decoderStream instanceof ArmoredInputStream) ? decoderStream : null);
+    }
+
+    private InputStream wrapInVerifySignatureStream(InputStream bufferedIn) {
+        return new SignatureInputStream.VerifySignatures(
+                bufferedIn, onePassSignatureChecks,
+                detachedSignatureChecks, options,
+                resultBuilder);
     }
 
     private InputStream processPGPPackets(@Nonnull PGPObjectFactory objectFactory, int depth) throws IOException, PGPException {
@@ -217,7 +224,7 @@ public final class DecryptionStreamFactory {
         return processPGPPackets(objectFactory, ++depth);
     }
 
-    private InputStream processPGPLiteralData(@Nonnull PGPObjectFactory objectFactory, PGPLiteralData pgpLiteralData, int depth) {
+    private InputStream processPGPLiteralData(@Nonnull PGPObjectFactory objectFactory, PGPLiteralData pgpLiteralData, int depth) throws IOException {
         LOGGER.debug("Depth {}: Found PGPLiteralData", depth);
         InputStream literalDataInputStream = pgpLiteralData.getInputStream();
 
@@ -225,13 +232,39 @@ public final class DecryptionStreamFactory {
                 .setModificationDate(pgpLiteralData.getModificationTime())
                 .setFileEncoding(StreamEncoding.fromCode(pgpLiteralData.getFormat()));
 
-        if (verifiableOnePassSignatures.isEmpty()) {
+        if (onePassSignatureChecks.isEmpty()) {
             LOGGER.debug("No OnePassSignatures found -> We are done");
             return literalDataInputStream;
         }
 
-        return new SignatureVerifyingInputStream(literalDataInputStream,
-                objectFactory, verifiableOnePassSignatures, options, resultBuilder);
+        PGPSignatureList signatures = parseSignatures(objectFactory);
+        List<PGPSignature> signatureList = SignatureUtils.toList(signatures);
+
+        for (int i = 0; i < onePassSignatureChecks.size(); i++) {
+            onePassSignatureChecks.get(i).setSignature(signatureList.get(onePassSignatureChecks.size() - i - 1));
+        }
+
+        return new SignatureInputStream.VerifySignatures(literalDataInputStream,
+                onePassSignatureChecks, detachedSignatureChecks, options, resultBuilder) {
+        };
+    }
+
+    private PGPSignatureList parseSignatures(PGPObjectFactory objectFactory) throws IOException {
+        PGPSignatureList signatureList = null;
+        Object pgpObject = objectFactory.nextObject();
+        while (pgpObject !=  null && signatureList == null) {
+            if (pgpObject instanceof PGPSignatureList) {
+                signatureList = (PGPSignatureList) pgpObject;
+            } else {
+                pgpObject = objectFactory.nextObject();
+            }
+        }
+
+        if (signatureList == null || signatureList.isEmpty()) {
+            throw new IOException("Verification failed - No Signatures found");
+        }
+
+        return signatureList;
     }
 
     private InputStream decryptSessionKey(@Nonnull PGPEncryptedDataList encryptedDataList)
@@ -377,7 +410,7 @@ public final class DecryptionStreamFactory {
     private void processOnePassSignature(PGPOnePassSignature signature) throws PGPException {
         final long keyId = signature.getKeyID();
 
-        LOGGER.debug("Message contains OnePassSignature from {}", Long.toHexString(keyId));
+        LOGGER.debug("Encountered OnePassSignature from {}", Long.toHexString(keyId));
 
         // Find public key
         PGPPublicKeyRing verificationKeyRing = findSignatureVerificationKeyRing(keyId);
@@ -388,10 +421,8 @@ public final class DecryptionStreamFactory {
         PGPPublicKey verificationKey = verificationKeyRing.getPublicKey(keyId);
 
         signature.init(verifierBuilderProvider, verificationKey);
-        OpenPgpV4Fingerprint fingerprint = new OpenPgpV4Fingerprint(verificationKey);
-        OnePassSignature onePassSignature = new OnePassSignature(signature, verificationKeyRing);
-        resultBuilder.addOnePassSignature(onePassSignature);
-        verifiableOnePassSignatures.put(fingerprint, onePassSignature);
+        OnePassSignatureCheck onePassSignature = new OnePassSignatureCheck(signature, verificationKeyRing);
+        onePassSignatureChecks.add(onePassSignature);
     }
 
     private PGPSecretKeyRing findDecryptionKeyRing(long keyId) {
