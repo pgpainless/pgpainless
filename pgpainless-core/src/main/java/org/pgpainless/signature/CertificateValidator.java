@@ -265,16 +265,16 @@ public final class CertificateValidator {
     }
 
     /**
-     * Validate the signing key certificate and the given {@link OnePassSignature}.
+     * Validate the signing key certificate and the given {@link OnePassSignatureCheck}.
      *
-     * @param signature OpenPGP signature from the signed message
      * @param onePassSignature corresponding one-pass-signature
      * @param policy policy
      * @return true if the certificate is valid and the signature is correct, false otherwise.
      * @throws SignatureValidationException in case of a validation error
      */
-    public static boolean validateCertificateAndVerifyOnePassSignature(PGPSignature signature, OnePassSignature onePassSignature, Policy policy)
+    public static boolean validateCertificateAndVerifyOnePassSignature(OnePassSignatureCheck onePassSignature, Policy policy)
             throws SignatureValidationException {
+        PGPSignature signature = onePassSignature.getSignature();
         validateCertificate(signature, onePassSignature.getVerificationKeys(), policy);
         PGPPublicKey signingKey = onePassSignature.getVerificationKeys().getPublicKey(signature.getKeyID());
         verifyOnePassSignature(signature, signingKey, onePassSignature, policy);

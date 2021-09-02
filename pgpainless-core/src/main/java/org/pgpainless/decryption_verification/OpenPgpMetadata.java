@@ -23,7 +23,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
-
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
 
@@ -34,17 +33,19 @@ import org.bouncycastle.openpgp.PGPSignature;
 import org.pgpainless.algorithm.CompressionAlgorithm;
 import org.pgpainless.algorithm.StreamEncoding;
 import org.pgpainless.algorithm.SymmetricKeyAlgorithm;
+import org.pgpainless.exception.SignatureValidationException;
 import org.pgpainless.key.OpenPgpV4Fingerprint;
 import org.pgpainless.key.SubkeyIdentifier;
-import org.pgpainless.signature.DetachedSignature;
-import org.pgpainless.signature.OnePassSignature;
+import org.pgpainless.signature.cleartext_signatures.SignatureVerification;
 
 public class OpenPgpMetadata {
 
     private final Set<Long> recipientKeyIds;
     private final SubkeyIdentifier decryptionKey;
-    private final List<OnePassSignature> onePassSignatures;
-    private final List<DetachedSignature> detachedSignatures;
+    private final List<SignatureVerification> verifiedInbandSignatures;
+    private final List<SignatureVerification.Failure> invalidInbandSignatures;
+    private final List<SignatureVerification> verifiedDetachedSignatures;
+    private final List<SignatureVerification.Failure> invalidDetachedSignatures;
     private final SymmetricKeyAlgorithm symmetricKeyAlgorithm;
     private final CompressionAlgorithm compressionAlgorithm;
     private final String fileName;
@@ -55,8 +56,10 @@ public class OpenPgpMetadata {
                            SubkeyIdentifier decryptionKey,
                            SymmetricKeyAlgorithm symmetricKeyAlgorithm,
                            CompressionAlgorithm algorithm,
-                           List<OnePassSignature> onePassSignatures,
-                           List<DetachedSignature> detachedSignatures,
+                           List<SignatureVerification> verifiedInbandSignatures,
+                           List<SignatureVerification.Failure> invalidInbandSignatures,
+                           List<SignatureVerification> verifiedDetachedSignatures,
+                           List<SignatureVerification.Failure> invalidDetachedSignatures,
                            String fileName,
                            Date modificationDate,
                            StreamEncoding fileEncoding) {
@@ -65,8 +68,10 @@ public class OpenPgpMetadata {
         this.decryptionKey = decryptionKey;
         this.symmetricKeyAlgorithm = symmetricKeyAlgorithm;
         this.compressionAlgorithm = algorithm;
-        this.detachedSignatures = Collections.unmodifiableList(detachedSignatures);
-        this.onePassSignatures = Collections.unmodifiableList(onePassSignatures);
+        this.verifiedInbandSignatures = Collections.unmodifiableList(verifiedInbandSignatures);
+        this.invalidInbandSignatures = Collections.unmodifiableList(invalidInbandSignatures);
+        this.verifiedDetachedSignatures = Collections.unmodifiableList(verifiedDetachedSignatures);
+        this.invalidDetachedSignatures = Collections.unmodifiableList(invalidDetachedSignatures);
         this.fileName = fileName;
         this.modificationDate = modificationDate;
         this.fileEncoding = fileEncoding;
@@ -128,11 +133,17 @@ public class OpenPgpMetadata {
      */
     public @Nonnull Set<PGPSignature> getSignatures() {
         Set<PGPSignature> signatures = new HashSet<>();
-        for (DetachedSignature detachedSignature : detachedSignatures) {
-            signatures.add(detachedSignature.getSignature());
+        for (SignatureVerification v : getVerifiedDetachedSignatures()) {
+            signatures.add(v.getSignature());
         }
-        for (OnePassSignature onePassSignature : onePassSignatures) {
-            signatures.add(onePassSignature.getSignature());
+        for (SignatureVerification v : getVerifiedInbandSignatures()) {
+            signatures.add(v.getSignature());
+        }
+        for (SignatureVerification.Failure f : getInvalidDetachedSignatures()) {
+            signatures.add(f.getSignatureVerification().getSignature());
+        }
+        for (SignatureVerification.Failure f : getInvalidInbandSignatures()) {
+            signatures.add(f.getSignatureVerification().getSignature());
         }
         return signatures;
     }
@@ -158,18 +169,30 @@ public class OpenPgpMetadata {
      */
     public Map<SubkeyIdentifier, PGPSignature> getVerifiedSignatures() {
         Map<SubkeyIdentifier, PGPSignature> verifiedSignatures = new ConcurrentHashMap<>();
-        for (DetachedSignature detachedSignature : detachedSignatures) {
-            if (detachedSignature.isVerified()) {
-                verifiedSignatures.put(detachedSignature.getSigningKeyIdentifier(), detachedSignature.getSignature());
-            }
+        for (SignatureVerification detachedSignature : getVerifiedDetachedSignatures()) {
+            verifiedSignatures.put(detachedSignature.getSigningKey(), detachedSignature.getSignature());
         }
-        for (OnePassSignature onePassSignature : onePassSignatures) {
-            if (onePassSignature.isVerified()) {
-                verifiedSignatures.put(onePassSignature.getSigningKey(), onePassSignature.getSignature());
-            }
+        for (SignatureVerification inbandSignatures : verifiedInbandSignatures) {
+            verifiedSignatures.put(inbandSignatures.getSigningKey(), inbandSignatures.getSignature());
         }
 
         return verifiedSignatures;
+    }
+
+    public List<SignatureVerification> getVerifiedInbandSignatures() {
+        return verifiedInbandSignatures;
+    }
+
+    public List<SignatureVerification> getVerifiedDetachedSignatures() {
+        return verifiedDetachedSignatures;
+    }
+
+    public List<SignatureVerification.Failure> getInvalidInbandSignatures() {
+        return invalidInbandSignatures;
+    }
+
+    public List<SignatureVerification.Failure> getInvalidDetachedSignatures() {
+        return invalidDetachedSignatures;
     }
 
     /**
@@ -261,13 +284,17 @@ public class OpenPgpMetadata {
 
         private final Set<Long> recipientFingerprints = new HashSet<>();
         private SubkeyIdentifier decryptionKey;
-        private final List<DetachedSignature> detachedSignatures = new ArrayList<>();
-        private final List<OnePassSignature> onePassSignatures = new ArrayList<>();
         private SymmetricKeyAlgorithm symmetricKeyAlgorithm = SymmetricKeyAlgorithm.NULL;
         private CompressionAlgorithm compressionAlgorithm = CompressionAlgorithm.UNCOMPRESSED;
         private String fileName;
         private StreamEncoding fileEncoding;
         private Date modificationDate;
+
+        private final List<SignatureVerification> verifiedInbandSignatures = new ArrayList<>();
+        private final List<SignatureVerification> verifiedDetachedSignatures = new ArrayList<>();
+        private final List<SignatureVerification.Failure> invalidInbandSignatures = new ArrayList<>();
+        private final List<SignatureVerification.Failure> invalidDetachedSignatures = new ArrayList<>();
+
 
         public Builder addRecipientKeyId(Long keyId) {
             this.recipientFingerprints.add(keyId);
@@ -282,10 +309,6 @@ public class OpenPgpMetadata {
         public Builder setCompressionAlgorithm(CompressionAlgorithm algorithm) {
             this.compressionAlgorithm = algorithm;
             return this;
-        }
-
-        public List<DetachedSignature> getDetachedSignatures() {
-            return detachedSignatures;
         }
 
         public Builder setSymmetricKeyAlgorithm(SymmetricKeyAlgorithm symmetricKeyAlgorithm) {
@@ -308,18 +331,29 @@ public class OpenPgpMetadata {
             return this;
         }
 
-        public void addDetachedSignature(DetachedSignature signature) {
-            this.detachedSignatures.add(signature);
-        }
-
-        public void addOnePassSignature(OnePassSignature onePassSignature) {
-            this.onePassSignatures.add(onePassSignature);
-        }
-
         public OpenPgpMetadata build() {
-            return new OpenPgpMetadata(recipientFingerprints, decryptionKey,
+            return new OpenPgpMetadata(
+                    recipientFingerprints, decryptionKey,
                     symmetricKeyAlgorithm, compressionAlgorithm,
-                    onePassSignatures, detachedSignatures, fileName, modificationDate, fileEncoding);
+                    verifiedInbandSignatures, invalidInbandSignatures,
+                    verifiedDetachedSignatures, invalidDetachedSignatures,
+                    fileName, modificationDate, fileEncoding);
+        }
+
+        public void addVerifiedInbandSignature(SignatureVerification signatureVerification) {
+            this.verifiedInbandSignatures.add(signatureVerification);
+        }
+
+        public void addVerifiedDetachedSignature(SignatureVerification signatureVerification) {
+            this.verifiedDetachedSignatures.add(signatureVerification);
+        }
+
+        public void addInvalidInbandSignature(SignatureVerification signatureVerification, SignatureValidationException e) {
+            this.invalidInbandSignatures.add(new SignatureVerification.Failure(signatureVerification, e));
+        }
+
+        public void addInvalidDetachedSignature(SignatureVerification signatureVerification, SignatureValidationException e) {
+            this.invalidDetachedSignatures.add(new SignatureVerification.Failure(signatureVerification, e));
         }
     }
 }
