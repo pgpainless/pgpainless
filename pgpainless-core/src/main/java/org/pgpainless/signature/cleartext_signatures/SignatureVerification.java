@@ -15,6 +15,8 @@
  */
 package org.pgpainless.signature.cleartext_signatures;
 
+import javax.annotation.Nullable;
+
 import org.bouncycastle.openpgp.PGPSignature;
 import org.pgpainless.exception.SignatureValidationException;
 import org.pgpainless.key.SubkeyIdentifier;
@@ -24,7 +26,7 @@ public class SignatureVerification {
     private final PGPSignature signature;
     private final SubkeyIdentifier signingKey;
 
-    public SignatureVerification(PGPSignature signature, SubkeyIdentifier signingKey) {
+    public SignatureVerification(PGPSignature signature, @Nullable SubkeyIdentifier signingKey) {
         this.signature = signature;
         this.signingKey = signingKey;
     }
@@ -33,6 +35,7 @@ public class SignatureVerification {
         return signature;
     }
 
+    @Nullable
     public SubkeyIdentifier getSigningKey() {
         return signingKey;
     }

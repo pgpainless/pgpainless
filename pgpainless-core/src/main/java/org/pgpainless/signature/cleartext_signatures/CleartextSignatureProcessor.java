@@ -20,9 +20,6 @@ import static org.pgpainless.signature.SignatureValidator.signatureWasCreatedInB
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
-import java.util.HashMap;
-import java.util.Map;
-import java.util.NoSuchElementException;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -33,8 +30,13 @@ import org.bouncycastle.openpgp.PGPPublicKeyRing;
 import org.bouncycastle.openpgp.PGPSignature;
 import org.bouncycastle.openpgp.PGPSignatureList;
 import org.pgpainless.PGPainless;
+import org.pgpainless.algorithm.CompressionAlgorithm;
+import org.pgpainless.algorithm.StreamEncoding;
+import org.pgpainless.algorithm.SymmetricKeyAlgorithm;
 import org.pgpainless.decryption_verification.ConsumerOptions;
+import org.pgpainless.decryption_verification.OpenPgpMetadata;
 import org.pgpainless.exception.SignatureValidationException;
+import org.pgpainless.key.SubkeyIdentifier;
 import org.pgpainless.signature.CertificateValidator;
 import org.pgpainless.signature.SignatureVerifier;
 import org.pgpainless.util.ArmoredInputStreamFactory;
@@ -76,9 +78,13 @@ public class CleartextSignatureProcessor {
      * @throws PGPException if the signature cannot be initialized.
      * @throws SignatureValidationException if the signature is invalid.
      */
-    public PGPSignature process() throws IOException, PGPException {
+    public OpenPgpMetadata process() throws IOException, PGPException {
+        OpenPgpMetadata.Builder resultBuilder = OpenPgpMetadata.getBuilder();
+        resultBuilder.setCompressionAlgorithm(CompressionAlgorithm.UNCOMPRESSED)
+                .setSymmetricKeyAlgorithm(SymmetricKeyAlgorithm.NULL)
+                .setFileEncoding(StreamEncoding.TEXT);
+
         PGPSignatureList signatures = ClearsignedMessageUtil.detachSignaturesFromInbandClearsignedMessage(in, multiPassStrategy.getMessageOutputStream());
-        Map<PGPSignature, Exception> signatureValidationExceptions = new HashMap<>();
 
         for (PGPSignature signature : signatures) {
             PGPPublicKeyRing certificate = null;
@@ -90,23 +96,29 @@ public class CleartextSignatureProcessor {
                     break;
                 }
             }
-            if (signingKey == null) {
-                signatureValidationExceptions.put(signature, new NoSuchElementException("Missing verification key with key-id " + Long.toHexString(signature.getKeyID())));
-                continue;
-            }
 
             try {
+                if (signingKey == null) {
+                    throw new SignatureValidationException("Missing verification key with key-id " + Long.toHexString(signature.getKeyID()));
+                }
+
+                SubkeyIdentifier signingKeyIdentifier = new SubkeyIdentifier(certificate, signingKey.getKeyID());
+
                 signatureWasCreatedInBounds(options.getVerifyNotBefore(), options.getVerifyNotAfter()).verify(signature);
                 SignatureVerifier.initializeSignatureAndUpdateWithSignedData(signature, multiPassStrategy.getMessageInputStream(), signingKey);
                 CertificateValidator.validateCertificateAndVerifyInitializedSignature(signature, certificate, PGPainless.getPolicy());
-                return signature;
+                resultBuilder.addVerifiedInbandSignature(new SignatureVerification(signature, signingKeyIdentifier));
             } catch (SignatureValidationException e) {
                 LOGGER.log(Level.INFO, "Cannot verify signature made by key " + Long.toHexString(signature.getKeyID()) + ": " + e.getMessage());
-                signatureValidationExceptions.put(signature, e);
+                SubkeyIdentifier signingKeyIdentifier = null;
+                if (signingKey != null) {
+                    signingKeyIdentifier = new SubkeyIdentifier(certificate, signingKey.getKeyID());
+                }
+                resultBuilder.addInvalidInbandSignature(new SignatureVerification(signature, signingKeyIdentifier), e);
             }
         }
 
-        throw new SignatureValidationException("No valid signatures found.", signatureValidationExceptions);
+        return resultBuilder.build();
     }
 
 }
