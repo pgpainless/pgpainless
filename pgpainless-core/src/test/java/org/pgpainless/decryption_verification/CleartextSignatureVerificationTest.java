@@ -18,6 +18,7 @@ package org.pgpainless.decryption_verification;
 import static org.junit.jupiter.api.Assertions.assertArrayEquals;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
@@ -88,7 +89,10 @@ public class CleartextSignatureVerificationTest {
                 .withStrategy(multiPassStrategy)
                 .withOptions(options);
 
-        PGPSignature signature = processor.process();
+        OpenPgpMetadata result = processor.process();
+        assertTrue(result.isVerified());
+
+        PGPSignature signature = result.getVerifiedSignatures().values().iterator().next();
 
         assertEquals(signature.getKeyID(), signingKeys.getPublicKey().getKeyID());
         assertArrayEquals(MESSAGE_BODY, multiPassStrategy.getBytes());
@@ -108,7 +112,10 @@ public class CleartextSignatureVerificationTest {
                 .withStrategy(multiPassStrategy)
                 .withOptions(options);
 
-        PGPSignature signature = processor.process();
+        OpenPgpMetadata result = processor.process();
+        assertTrue(result.isVerified());
+
+        PGPSignature signature = result.getVerifiedSignatures().values().iterator().next();
 
         assertEquals(signature.getKeyID(), signingKeys.getPublicKey().getKeyID());
         FileInputStream fileIn = new FileInputStream(file);
