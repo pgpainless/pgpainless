@@ -379,7 +379,7 @@ public final class Policy {
         }
 
         public static CompressionAlgorithmPolicy defaultCompressionAlgorithmPolicy() {
-            return new CompressionAlgorithmPolicy(CompressionAlgorithm.UNCOMPRESSED, Arrays.asList(
+            return new CompressionAlgorithmPolicy(CompressionAlgorithm.ZIP, Arrays.asList(
                     CompressionAlgorithm.UNCOMPRESSED,
                     CompressionAlgorithm.ZIP,
                     CompressionAlgorithm.BZIP2,

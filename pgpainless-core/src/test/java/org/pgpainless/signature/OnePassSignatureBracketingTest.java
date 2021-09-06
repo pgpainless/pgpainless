@@ -26,6 +26,7 @@ import java.nio.charset.StandardCharsets;
 import java.security.InvalidAlgorithmParameterException;
 import java.security.NoSuchAlgorithmException;
 
+import org.bouncycastle.openpgp.PGPCompressedData;
 import org.bouncycastle.openpgp.PGPEncryptedData;
 import org.bouncycastle.openpgp.PGPEncryptedDataList;
 import org.bouncycastle.openpgp.PGPException;
@@ -114,6 +115,11 @@ public class OnePassSignatureBracketingTest {
                 }
             } else if (next instanceof PGPOnePassSignatureList) {
                 onePassSignatures = (PGPOnePassSignatureList) next;
+                continue outerloop;
+            } else if (next instanceof PGPCompressedData) {
+                PGPCompressedData compressed = (PGPCompressedData) next;
+                InputStream decompressor = compressed.getDataStream();
+                objectFactory = new PGPObjectFactory(decompressor, ImplementationFactory.getInstance().getKeyFingerprintCalculator());
                 continue outerloop;
             } else if (next instanceof PGPLiteralData) {
                 continue outerloop;
