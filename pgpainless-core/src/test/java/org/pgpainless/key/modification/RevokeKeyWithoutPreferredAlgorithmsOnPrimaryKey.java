@@ -15,8 +15,6 @@
  */
 package org.pgpainless.key.modification;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
-
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Date;
@@ -25,6 +23,7 @@ import java.util.List;
 import org.bouncycastle.openpgp.PGPException;
 import org.bouncycastle.openpgp.PGPSecretKey;
 import org.bouncycastle.openpgp.PGPSecretKeyRing;
+import org.junit.JUtils;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.MethodSource;
 import org.pgpainless.PGPainless;
@@ -34,6 +33,7 @@ import org.pgpainless.key.info.KeyRingInfo;
 import org.pgpainless.key.modification.secretkeyring.SecretKeyRingEditorInterface;
 import org.pgpainless.key.protection.SecretKeyRingProtector;
 import org.pgpainless.key.protection.UnprotectedKeysProtector;
+import org.pgpainless.util.DateUtil;
 
 public class RevokeKeyWithoutPreferredAlgorithmsOnPrimaryKey {
 
@@ -115,7 +115,7 @@ public class RevokeKeyWithoutPreferredAlgorithmsOnPrimaryKey {
     @MethodSource("org.pgpainless.util.TestImplementationFactoryProvider#provideImplementationFactories")
     public void testChangingExpirationTimeWithKeyWithoutPrefAlgos(ImplementationFactory implementationFactory) throws IOException, PGPException {
         ImplementationFactory.setFactoryImplementation(implementationFactory);
-        Date expirationDate = new Date();
+        Date expirationDate = DateUtil.parseUTCDate(DateUtil.formatUTCDate(new Date()));
         PGPSecretKeyRing secretKeys = PGPainless.readKeyRing().secretKeyRing(KEY);
         List<OpenPgpV4Fingerprint> fingerprintList = new ArrayList<>();
         for (PGPSecretKey secretKey : secretKeys) {
@@ -131,9 +131,10 @@ public class RevokeKeyWithoutPreferredAlgorithmsOnPrimaryKey {
         secretKeys = modify.done();
 
         KeyRingInfo info = PGPainless.inspectKeyRing(secretKeys);
-        assertEquals(expirationDate.getTime(), info.getPrimaryKeyExpirationDate().getTime(), 1000);
+
+        JUtils.assertDateEquals(expirationDate, info.getPrimaryKeyExpirationDate());
         for (OpenPgpV4Fingerprint fingerprint : fingerprintList) {
-            assertEquals(expirationDate.getTime(), info.getSubkeyExpirationDate(fingerprint).getTime(), 1000);
+            JUtils.assertDateEquals(expirationDate, info.getSubkeyExpirationDate(fingerprint));
         }
     }
 }
