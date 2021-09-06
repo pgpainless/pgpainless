@@ -87,6 +87,13 @@ public final class DecryptionStreamFactory {
     private final Map<OpenPgpV4Fingerprint, OnePassSignature> verifiableOnePassSignatures = new HashMap<>();
     private IntegrityProtectedInputStream integrityProtectedEncryptedInputStream;
 
+    public static DecryptionStream create(@Nonnull InputStream inputStream,
+                                          @Nonnull ConsumerOptions options)
+            throws PGPException, IOException {
+        DecryptionStreamFactory factory = new DecryptionStreamFactory(options);
+        return factory.parseOpenPGPDataAndCreateDecryptionStream(inputStream);
+    }
+
     public DecryptionStreamFactory(ConsumerOptions options) {
         this.options = options;
         initializeDetachedSignatures(options.getDetachedSignatures());
@@ -111,12 +118,9 @@ public final class DecryptionStreamFactory {
         }
     }
 
-    public static DecryptionStream create(@Nonnull InputStream inputStream,
-                                          @Nonnull ConsumerOptions options)
-            throws PGPException, IOException {
+    private DecryptionStream parseOpenPGPDataAndCreateDecryptionStream(InputStream inputStream) throws IOException, PGPException {
         BufferedInputStream bufferedIn = new BufferedInputStream(inputStream);
         bufferedIn.mark(200);
-        DecryptionStreamFactory factory = new DecryptionStreamFactory(options);
 
         InputStream decoderStream = PGPUtil.getDecoderStream(bufferedIn);
         decoderStream = CRCingArmoredInputStreamWrapper.possiblyWrap(decoderStream);
@@ -135,7 +139,7 @@ public final class DecryptionStreamFactory {
 
         try {
             // Parse OpenPGP message
-            inputStream = factory.processPGPPackets(objectFactory, 1);
+            inputStream = processPGPPackets(objectFactory, 1);
         } catch (EOFException e) {
             throw e;
         }
@@ -157,7 +161,7 @@ public final class DecryptionStreamFactory {
             }
         }
 
-        return new DecryptionStream(inputStream, options, factory.resultBuilder, factory.integrityProtectedEncryptedInputStream,
+        return new DecryptionStream(inputStream, options, resultBuilder, integrityProtectedEncryptedInputStream,
                 (decoderStream instanceof ArmoredInputStream) ? decoderStream : null);
     }
 
@@ -187,7 +191,7 @@ public final class DecryptionStreamFactory {
     private InputStream processPGPEncryptedDataList(PGPEncryptedDataList pgpEncryptedDataList, int depth)
             throws PGPException, IOException {
         LOGGER.debug("Depth {}: Encountered PGPEncryptedDataList", depth);
-        InputStream decryptedDataStream = decrypt(pgpEncryptedDataList);
+        InputStream decryptedDataStream = decryptSessionKey(pgpEncryptedDataList);
         InputStream decodedDataStream = PGPUtil.getDecoderStream(decryptedDataStream);
         PGPObjectFactory factory = new PGPObjectFactory(decodedDataStream, keyFingerprintCalculator);
         return processPGPPackets(factory, ++depth);
@@ -230,7 +234,7 @@ public final class DecryptionStreamFactory {
                 objectFactory, verifiableOnePassSignatures, options, resultBuilder);
     }
 
-    private InputStream decrypt(@Nonnull PGPEncryptedDataList encryptedDataList)
+    private InputStream decryptSessionKey(@Nonnull PGPEncryptedDataList encryptedDataList)
             throws PGPException {
         Iterator<PGPEncryptedData> encryptedDataIterator = encryptedDataList.getEncryptedDataObjects();
         if (!encryptedDataIterator.hasNext()) {
