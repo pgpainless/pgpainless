@@ -19,15 +19,14 @@ import static org.pgpainless.signature.SignatureValidator.signatureWasCreatedInB
 
 import java.io.IOException;
 import java.io.InputStream;
-import java.util.List;
 import javax.annotation.Nonnull;
 
 import org.bouncycastle.openpgp.PGPPublicKeyRing;
 import org.bouncycastle.util.io.Streams;
 import org.pgpainless.PGPainless;
-import org.pgpainless.signature.DetachedSignature;
-import org.pgpainless.signature.CertificateValidator;
 import org.pgpainless.exception.SignatureValidationException;
+import org.pgpainless.signature.CertificateValidator;
+import org.pgpainless.signature.DetachedSignature;
 import org.pgpainless.util.IntegrityProtectedInputStream;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -44,17 +43,26 @@ public class DecryptionStream extends InputStream {
     private final ConsumerOptions options;
     private final OpenPgpMetadata.Builder resultBuilder;
     private boolean isClosed = false;
-    private List<IntegrityProtectedInputStream> integrityProtectedInputStreamList;
+    private final IntegrityProtectedInputStream integrityProtectedInputStream;
     private final InputStream armorStream;
 
+    /**
+     * Create an input stream that handles decryption and - if necessary - integrity protection verification.
+     *
+     * @param wrapped underlying input stream
+     * @param options options for consuming, eg. decryption key...
+     * @param resultBuilder builder for decryption metadata like algorithms, recipients etc.
+     * @param integrityProtectedInputStream in case of data encrypted using SEIP packet close this stream to check integrity
+     * @param armorStream armor stream to verify CRC checksums
+     */
     DecryptionStream(@Nonnull InputStream wrapped, @Nonnull ConsumerOptions options,
                      @Nonnull OpenPgpMetadata.Builder resultBuilder,
-                     List<IntegrityProtectedInputStream> integrityProtectedInputStreamList,
+                     IntegrityProtectedInputStream integrityProtectedInputStream,
                      InputStream armorStream) {
         this.inputStream = wrapped;
         this.options = options;
         this.resultBuilder = resultBuilder;
-        this.integrityProtectedInputStreamList = integrityProtectedInputStreamList;
+        this.integrityProtectedInputStream = integrityProtectedInputStream;
         this.armorStream = armorStream;
     }
 
@@ -95,8 +103,8 @@ public class DecryptionStream extends InputStream {
         }
         inputStream.close();
         maybeVerifyDetachedSignatures();
-        for (IntegrityProtectedInputStream s : integrityProtectedInputStreamList) {
-            s.close();
+        if (integrityProtectedInputStream != null) {
+            integrityProtectedInputStream.close();
         }
         this.isClosed = true;
     }

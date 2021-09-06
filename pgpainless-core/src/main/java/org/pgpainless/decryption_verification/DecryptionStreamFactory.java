@@ -19,7 +19,6 @@ import java.io.BufferedInputStream;
 import java.io.EOFException;
 import java.io.IOException;
 import java.io.InputStream;
-import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
@@ -86,7 +85,7 @@ public final class DecryptionStreamFactory {
     private static final KeyFingerPrintCalculator keyFingerprintCalculator =
             ImplementationFactory.getInstance().getKeyFingerprintCalculator();
     private final Map<OpenPgpV4Fingerprint, OnePassSignature> verifiableOnePassSignatures = new HashMap<>();
-    private final List<IntegrityProtectedInputStream> integrityProtectedStreams = new ArrayList<>();
+    private IntegrityProtectedInputStream integrityProtectedEncryptedInputStream;
 
     public DecryptionStreamFactory(ConsumerOptions options) {
         this.options = options;
@@ -158,7 +157,7 @@ public final class DecryptionStreamFactory {
             }
         }
 
-        return new DecryptionStream(inputStream, options, factory.resultBuilder, factory.integrityProtectedStreams,
+        return new DecryptionStream(inputStream, options, factory.resultBuilder, factory.integrityProtectedEncryptedInputStream,
                 (decoderStream instanceof ArmoredInputStream) ? decoderStream : null);
     }
 
@@ -262,7 +261,9 @@ public final class DecryptionStreamFactory {
                         throwIfAlgorithmIsRejected(symmetricKeyAlgorithm);
                         resultBuilder.setSymmetricKeyAlgorithm(symmetricKeyAlgorithm);
 
-                        return decryptedDataStream;
+                        integrityProtectedEncryptedInputStream = new IntegrityProtectedInputStream(decryptedDataStream, pbeEncryptedData);
+
+                        return integrityProtectedEncryptedInputStream;
                     } catch (PGPException e) {
                         LOGGER.debug("Probable passphrase mismatch, skip PBE encrypted data block", e);
                     }
@@ -341,10 +342,8 @@ public final class DecryptionStreamFactory {
         throwIfAlgorithmIsRejected(symmetricKeyAlgorithm);
         resultBuilder.setSymmetricKeyAlgorithm(symmetricKeyAlgorithm);
 
-        IntegrityProtectedInputStream integrityProtected =
-                new IntegrityProtectedInputStream(encryptedSessionKey.getDataStream(dataDecryptor), encryptedSessionKey);
-        integrityProtectedStreams.add(integrityProtected);
-        return integrityProtected;
+        integrityProtectedEncryptedInputStream = new IntegrityProtectedInputStream(encryptedSessionKey.getDataStream(dataDecryptor), encryptedSessionKey);
+        return integrityProtectedEncryptedInputStream;
     }
 
     private void throwIfAlgorithmIsRejected(SymmetricKeyAlgorithm algorithm) throws UnacceptableAlgorithmException {
