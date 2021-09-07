@@ -1,5 +1,12 @@
 # PGPainless Changelog
 
+## 0.2.10
+- Cleartext Signature Framework 
+  - Reuse `ConsumerOptions` class for verification
+  - Return `OpenPgpMetadata` object as result of verification
+- Change default compression algorithm from `UNCOMPRESSED` to `ZIP`
+- Cleanup: Move Signature Verification code to dedicated internal stream
+
 ## 0.2.9
 - Allow customization of ASCII armor comment and version headers
 - Small bug fixes of SOP implementation
