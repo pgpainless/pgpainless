@@ -44,8 +44,6 @@ public class DetachInbandSignatureAndMessageTest {
     private PrintStream originalSout;
     private static File tempDir;
     private static File certFile;
-    private static File tempSigFile;
-    private static File existingSigFile;
 
     private static final String CERT = "-----BEGIN PGP PUBLIC KEY BLOCK-----\n" +
             "Version: BCPG v1.64\n" +
@@ -65,11 +63,6 @@ public class DetachInbandSignatureAndMessageTest {
     @BeforeAll
     public static void createTempDir() throws IOException {
         tempDir = TestUtils.createTempDirectory();
-
-        tempSigFile = new File(tempDir, "sig.out");
-
-        existingSigFile = new File(tempDir, "sig.existing");
-        assertTrue(existingSigFile.getCanonicalFile().createNewFile());
 
         certFile = new File(tempDir, "cert.asc");
         assertTrue(certFile.createNewFile());
@@ -132,6 +125,7 @@ public class DetachInbandSignatureAndMessageTest {
         System.setOut(new PrintStream(msgOut));
 
         // Detach
+        File tempSigFile = new File(tempDir, "sig.out");
         PGPainlessCLI.main(new String[] {"detach-inband-signature-and-message", "--signatures-out=" + tempSigFile.getAbsolutePath()});
 
         // Test equality with expected values
@@ -139,7 +133,44 @@ public class DetachInbandSignatureAndMessageTest {
         try (FileInputStream sigIn = new FileInputStream(tempSigFile)) {
             ByteArrayOutputStream sigBytes = new ByteArrayOutputStream();
             Streams.pipeAll(sigIn, sigBytes);
-            TestUtils.assertSignatureEquals(CLEAR_SIGNED_SIGNATURE, sigBytes.toString());
+            String sig = sigBytes.toString();
+            TestUtils.assertSignatureIsArmored(sigBytes.toByteArray());
+            TestUtils.assertSignatureEquals(CLEAR_SIGNED_SIGNATURE, sig);
+        } catch (FileNotFoundException e) {
+            fail("Signature File must have been written.", e);
+        }
+
+        // Check if produced signature still checks out
+        System.setIn(new ByteArrayInputStream(msgOut.toByteArray()));
+        ByteArrayOutputStream verifyOut = new ByteArrayOutputStream();
+        System.setOut(new PrintStream(verifyOut));
+        PGPainlessCLI.main(new String[] {"verify", tempSigFile.getAbsolutePath(), certFile.getAbsolutePath()});
+
+        assertEquals("2021-05-15T16:08:06Z 4F665C4DC2C4660BC6425E415736E6931ACF370C 4F665C4DC2C4660BC6425E415736E6931ACF370C\n", verifyOut.toString());
+    }
+
+    @Test
+    public void detachInbandSignatureAndMessageNoArmor() throws IOException {
+        // Clearsigned In
+        ByteArrayInputStream clearSignedIn = new ByteArrayInputStream(CLEAR_SIGNED_MESSAGE.getBytes(StandardCharsets.UTF_8));
+        System.setIn(clearSignedIn);
+
+        // Plaintext Out
+        ByteArrayOutputStream msgOut = new ByteArrayOutputStream();
+        System.setOut(new PrintStream(msgOut));
+
+        // Detach
+        File tempSigFile = new File(tempDir, "sig.asc");
+        PGPainlessCLI.main(new String[] {"detach-inband-signature-and-message", "--signatures-out=" + tempSigFile.getAbsolutePath(), "--no-armor"});
+
+        // Test equality with expected values
+        assertEquals(CLEAR_SIGNED_BODY, msgOut.toString());
+        try (FileInputStream sigIn = new FileInputStream(tempSigFile)) {
+            ByteArrayOutputStream sigBytes = new ByteArrayOutputStream();
+            Streams.pipeAll(sigIn, sigBytes);
+            byte[] sig = sigBytes.toByteArray();
+            TestUtils.assertSignatureIsNotArmored(sig);
+            TestUtils.assertSignatureEquals(CLEAR_SIGNED_SIGNATURE.getBytes(StandardCharsets.UTF_8), sig);
         } catch (FileNotFoundException e) {
             fail("Signature File must have been written.", e);
         }
@@ -155,7 +186,7 @@ public class DetachInbandSignatureAndMessageTest {
 
     @Test
     @ExpectSystemExitWithStatus(SOPGPException.OutputExists.EXIT_CODE)
-    public void existingSignatureOutCausesException() {
+    public void existingSignatureOutCausesException() throws IOException {
         // Clearsigned In
         ByteArrayInputStream clearSignedIn = new ByteArrayInputStream(CLEAR_SIGNED_MESSAGE.getBytes(StandardCharsets.UTF_8));
         System.setIn(clearSignedIn);
@@ -165,6 +196,8 @@ public class DetachInbandSignatureAndMessageTest {
         System.setOut(new PrintStream(msgOut));
 
         // Detach
+        File existingSigFile = new File(tempDir, "sig.existing");
+        assertTrue(existingSigFile.createNewFile());
         PGPainlessCLI.main(new String[] {"detach-inband-signature-and-message", "--signatures-out=" + existingSigFile.getAbsolutePath()});
     }
 
