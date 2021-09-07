@@ -19,9 +19,6 @@ import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
 
-import org.bouncycastle.openpgp.PGPException;
-import org.bouncycastle.openpgp.PGPPublicKeyRing;
-import org.bouncycastle.openpgp.PGPPublicKeyRingCollection;
 import org.pgpainless.decryption_verification.ConsumerOptions;
 
 /**
@@ -62,31 +59,6 @@ public interface VerifyCleartextSignatures {
          * @throws IOException in case of an IO error
          */
         CleartextSignatureProcessor withOptions(ConsumerOptions options) throws IOException;
-
-        /**
-         * Pass in the verification key ring.
-         *
-         * @param publicKey verification key
-         * @return processor
-         * @throws PGPException if the keys cannot be converted to a {@link PGPPublicKeyRingCollection}.
-         * @throws IOException if the keys cannot be parsed properly
-         *
-         * @deprecated use {@link #withOptions(ConsumerOptions)} instead.
-         */
-        @Deprecated
-        CleartextSignatureProcessor verifyWith(PGPPublicKeyRing publicKey) throws PGPException, IOException;
-
-        /**
-         * Pass in the verification key ring collection.
-         *
-         * @param publicKeys verification keys
-         * @return processor
-         * @throws IOException if the keys cannot be parsed properly
-         *
-         * @deprecated use {@link #withOptions(ConsumerOptions)} instead.
-         */
-        @Deprecated
-        CleartextSignatureProcessor verifyWith(PGPPublicKeyRingCollection publicKeys) throws IOException;
 
     }
 }

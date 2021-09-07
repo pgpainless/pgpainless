@@ -18,8 +18,6 @@ package org.pgpainless.signature.cleartext_signatures;
 import java.io.IOException;
 import java.io.InputStream;
 
-import org.bouncycastle.openpgp.PGPPublicKeyRing;
-import org.bouncycastle.openpgp.PGPPublicKeyRingCollection;
 import org.pgpainless.decryption_verification.ConsumerOptions;
 
 public class VerifyCleartextSignaturesImpl implements VerifyCleartextSignatures {
@@ -52,18 +50,5 @@ public class VerifyCleartextSignaturesImpl implements VerifyCleartextSignatures 
             return new CleartextSignatureProcessor(inputStream, options, multiPassStrategy);
         }
 
-        @Override
-        public CleartextSignatureProcessor verifyWith(PGPPublicKeyRing publicKey) throws IOException {
-            ConsumerOptions options = new ConsumerOptions();
-            options.addVerificationCert(publicKey);
-            return new CleartextSignatureProcessor(inputStream, options, multiPassStrategy);
-        }
-
-        @Override
-        public CleartextSignatureProcessor verifyWith(PGPPublicKeyRingCollection publicKeys) throws IOException {
-            ConsumerOptions options = new ConsumerOptions();
-            options.addVerificationCerts(publicKeys);
-            return new CleartextSignatureProcessor(inputStream, options, multiPassStrategy);
-        }
     }
 }
