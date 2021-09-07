@@ -41,6 +41,18 @@ public class CachingSecretKeyRingProtector implements SecretKeyRingProtector, Se
     private final SecretKeyRingProtector protector;
     private final SecretKeyPassphraseProvider provider;
 
+    public CachingSecretKeyRingProtector() {
+        this(null);
+    }
+
+    public CachingSecretKeyRingProtector(@Nullable SecretKeyPassphraseProvider missingPassphraseCallback) {
+        this(
+                new HashMap<>(),
+                KeyRingProtectionSettings.secureDefaultSettings(),
+                missingPassphraseCallback
+        );
+    }
+
     public CachingSecretKeyRingProtector(@Nonnull Map<Long, Passphrase> passphrases,
                                          @Nonnull KeyRingProtectionSettings protectionSettings,
                                          @Nullable SecretKeyPassphraseProvider missingPassphraseCallback) {
