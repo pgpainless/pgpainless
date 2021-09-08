@@ -416,12 +416,15 @@ public class SecretKeyRingEditor implements SecretKeyRingEditorInterface {
             Iterator<PGPSignature> keySignatures = subjectPubKey.getSignaturesForKeyID(primaryKey.getKeyID());
             while (keySignatures.hasNext()) {
                 PGPSignature next = keySignatures.next();
-                if (next.getSignatureType() == PGPSignature.POSITIVE_CERTIFICATION) {
+                SignatureType type = SignatureType.valueOf(next.getSignatureType());
+                if (type == SignatureType.POSITIVE_CERTIFICATION ||
+                        type == SignatureType.CASUAL_CERTIFICATION ||
+                        type == SignatureType.GENERIC_CERTIFICATION) {
                     oldSignature = next;
                 }
             }
             if (oldSignature == null) {
-                throw new IllegalStateException("Key " + new OpenPgpV4Fingerprint(subjectPubKey) + " does not have a previous positive signature.");
+                throw new IllegalStateException("Key " + new OpenPgpV4Fingerprint(subjectPubKey) + " does not have a previous positive/casual/generic certification signature.");
             }
         } else {
             Iterator<PGPSignature> bindingSignatures = subjectPubKey.getSignaturesOfType(SignatureType.SUBKEY_BINDING.getCode());
