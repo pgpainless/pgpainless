@@ -13,21 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.pgpainless.exception;
-
-import org.bouncycastle.openpgp.PGPException;
-
-public class WrongPassphraseException extends PGPException {
-
-    public WrongPassphraseException(String message) {
-        super(message);
-    }
-
-    public WrongPassphraseException(long keyId, PGPException cause) {
-        this("Wrong passphrase provided for key " + Long.toHexString(keyId), cause);
-    }
-
-    public WrongPassphraseException(String message, PGPException cause) {
-        super(message, cause);
-    }
-}
+/**
+ * Secret Key Protection Fixes.
+ */
+package org.pgpainless.key.protection.fixes;
