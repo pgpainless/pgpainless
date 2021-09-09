@@ -1,5 +1,8 @@
 # PGPainless Changelog
 
+## 0.2.11
+- Fix: When changing expiration date of keys, also consider generic and casual certifications
+
 ## 0.2.10
 - Cleartext Signature Framework 
   - Reuse `ConsumerOptions` class for verification
