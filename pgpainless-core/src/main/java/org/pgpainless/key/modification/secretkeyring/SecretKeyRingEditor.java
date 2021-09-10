@@ -625,6 +625,7 @@ public class SecretKeyRingEditor implements SecretKeyRingEditorInterface {
         for (PGPSecretKey secKey : secretKeys) {
             if (secKey.getS2KUsage() == SecretKeyPacket.USAGE_CHECKSUM) {
                 hasS2KUsageChecksum = true;
+                break;
             }
         }
         if (hasS2KUsageChecksum) {
