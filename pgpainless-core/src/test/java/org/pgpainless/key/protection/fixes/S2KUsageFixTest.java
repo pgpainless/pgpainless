@@ -37,7 +37,7 @@ import org.pgpainless.decryption_verification.DecryptionStream;
 import org.pgpainless.key.protection.SecretKeyRingProtector;
 import org.pgpainless.util.Passphrase;
 
-public class EnsureSecureS2KUsageTest {
+public class S2KUsageFixTest {
 
     private static final String KEY_WITH_USAGE_CHECKSUM = "-----BEGIN PGP PRIVATE KEY BLOCK-----\n" +
             "Version: PGPainless\n" +
@@ -78,11 +78,7 @@ public class EnsureSecureS2KUsageTest {
     private static final String MESSAGE_PLAIN = "Hello, World!\n";
 
     @Test
-    public void verifyBouncycastleChangesUnprotectedKeysTo_USAGE_CHECKSUM() throws PGPException, InvalidAlgorithmParameterException, NoSuchAlgorithmException, IOException {
-        // Bouncycastle unfortunately uses USAGE_CHECKSUM as default S2K usage when setting a passphrase
-        //  on a previously unprotected key.
-        // This test verifies this hypothesis by creating a fresh, protected key (which uses the recommended USAGE_SHA1),
-        //  unprotecting the key and then again setting a passphrase on it.
+    public void verifyOutFixInChangePassphraseWorks() throws PGPException, InvalidAlgorithmParameterException, NoSuchAlgorithmException, IOException {
         PGPSecretKeyRing before = PGPainless.generateKeyRing().modernKeyRing("Alice", "before");
         for (PGPSecretKey key : before) {
             assertEquals(SecretKeyPacket.USAGE_SHA1, key.getS2KUsage());
@@ -103,7 +99,7 @@ public class EnsureSecureS2KUsageTest {
                 .toNewPassphrase(Passphrase.fromPassword("after"))
                 .done();
         for (PGPSecretKey key : after) {
-            assertEquals(SecretKeyPacket.USAGE_CHECKSUM, key.getS2KUsage(), "Looks like BC fixed the default S2K usage. Yay!");
+            assertEquals(SecretKeyPacket.USAGE_SHA1, key.getS2KUsage());
         }
     }
 

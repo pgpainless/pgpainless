@@ -30,6 +30,7 @@ import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
 
 import org.bouncycastle.bcpg.S2K;
+import org.bouncycastle.bcpg.SecretKeyPacket;
 import org.bouncycastle.openpgp.PGPException;
 import org.bouncycastle.openpgp.PGPKeyPair;
 import org.bouncycastle.openpgp.PGPKeyRingGenerator;
@@ -59,6 +60,7 @@ import org.pgpainless.key.protection.PasswordBasedSecretKeyRingProtector;
 import org.pgpainless.key.protection.SecretKeyRingProtector;
 import org.pgpainless.key.protection.UnlockSecretKey;
 import org.pgpainless.key.protection.UnprotectedKeysProtector;
+import org.pgpainless.key.protection.fixes.S2KUsageFix;
 import org.pgpainless.key.protection.passphrase_provider.SolitaryPassphraseProvider;
 import org.pgpainless.key.util.KeyRingUtils;
 import org.pgpainless.key.util.RevocationAttributes;
@@ -591,32 +593,44 @@ public class SecretKeyRingEditor implements SecretKeyRingEditorInterface {
                                               PGPSecretKeyRing secretKeys,
                                               SecretKeyRingProtector oldProtector,
                                               SecretKeyRingProtector newProtector) throws PGPException {
+        List<PGPSecretKey> secretKeyList = new ArrayList<>();
         if (keyId == null) {
             // change passphrase of whole key ring
-            List<PGPSecretKey> newlyEncryptedSecretKeys = new ArrayList<>();
             Iterator<PGPSecretKey> secretKeyIterator = secretKeys.getSecretKeys();
             while (secretKeyIterator.hasNext()) {
                 PGPSecretKey secretKey = secretKeyIterator.next();
                 secretKey = reencryptPrivateKey(secretKey, oldProtector, newProtector);
-                newlyEncryptedSecretKeys.add(secretKey);
+                secretKeyList.add(secretKey);
             }
-            return new PGPSecretKeyRing(newlyEncryptedSecretKeys);
         } else {
             // change passphrase of selected subkey only
-            List<PGPSecretKey> secretKeyList = new ArrayList<>();
             Iterator<PGPSecretKey> secretKeyIterator = secretKeys.getSecretKeys();
             while (secretKeyIterator.hasNext()) {
                 PGPSecretKey secretKey = secretKeyIterator.next();
-
                 if (secretKey.getPublicKey().getKeyID() == keyId) {
                     // Re-encrypt only the selected subkey
                     secretKey = reencryptPrivateKey(secretKey, oldProtector, newProtector);
                 }
-
                 secretKeyList.add(secretKey);
             }
-            return new PGPSecretKeyRing(secretKeyList);
         }
+
+        PGPSecretKeyRing newRing = new PGPSecretKeyRing(secretKeyList);
+        newRing = s2kUsageFixIfNecessary(newRing, newProtector);
+        return newRing;
+    }
+
+    private PGPSecretKeyRing s2kUsageFixIfNecessary(PGPSecretKeyRing secretKeys, SecretKeyRingProtector protector) throws PGPException {
+        boolean hasS2KUsageChecksum = false;
+        for (PGPSecretKey secKey : secretKeys) {
+            if (secKey.getS2KUsage() == SecretKeyPacket.USAGE_CHECKSUM) {
+                hasS2KUsageChecksum = true;
+            }
+        }
+        if (hasS2KUsageChecksum) {
+            secretKeys = S2KUsageFix.replaceUsageChecksumWithUsageSha1(secretKeys, protector, true);
+        }
+        return secretKeys;
     }
 
     private static PGPSecretKey reencryptPrivateKey(PGPSecretKey secretKey, SecretKeyRingProtector oldProtector, SecretKeyRingProtector newProtector) throws PGPException {
