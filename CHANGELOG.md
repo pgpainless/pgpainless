@@ -1,5 +1,9 @@
 # PGPainless Changelog
 
+## 0.2.12
+- Fix: Add workaround for BC defaulting to S2K `USAGE_CHECKSUM` by changing S2K usage to `USAGE_SHA1`
+- Repair keys with `USAGE_CHECKSUM` when changing passphrase
+
 ## 0.2.11
 - Fix: When changing expiration date of keys, also consider generic and casual certifications
 
