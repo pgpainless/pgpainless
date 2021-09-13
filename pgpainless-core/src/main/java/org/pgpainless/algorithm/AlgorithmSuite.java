@@ -15,7 +15,6 @@
  */
 package org.pgpainless.algorithm;
 
-import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.LinkedHashSet;
@@ -45,9 +44,9 @@ public class AlgorithmSuite {
                     CompressionAlgorithm.UNCOMPRESSED)
     );
 
-    private Set<SymmetricKeyAlgorithm> symmetricKeyAlgorithms;
-    private Set<HashAlgorithm> hashAlgorithms;
-    private Set<CompressionAlgorithm> compressionAlgorithms;
+    private final Set<SymmetricKeyAlgorithm> symmetricKeyAlgorithms;
+    private final Set<HashAlgorithm> hashAlgorithms;
+    private final Set<CompressionAlgorithm> compressionAlgorithms;
 
     public AlgorithmSuite(List<SymmetricKeyAlgorithm> symmetricKeyAlgorithms,
                           List<HashAlgorithm> hashAlgorithms,
@@ -57,55 +56,16 @@ public class AlgorithmSuite {
         this.compressionAlgorithms = Collections.unmodifiableSet(new LinkedHashSet<>(compressionAlgorithms));
     }
 
-    public void setSymmetricKeyAlgorithms(List<SymmetricKeyAlgorithm> symmetricKeyAlgorithms) {
-        this.symmetricKeyAlgorithms = Collections.unmodifiableSet(new LinkedHashSet<>(symmetricKeyAlgorithms));
-    }
-
     public Set<SymmetricKeyAlgorithm> getSymmetricKeyAlgorithms() {
         return new LinkedHashSet<>(symmetricKeyAlgorithms);
-    }
-
-    public int[] getSymmetricKeyAlgorithmIds() {
-        int[] array = new int[symmetricKeyAlgorithms.size()];
-        List<SymmetricKeyAlgorithm> list = new ArrayList<>(getSymmetricKeyAlgorithms());
-        for (int i = 0; i < array.length; i++) {
-            array[i] = list.get(i).getAlgorithmId();
-        }
-        return array;
-    }
-
-    public void setHashAlgorithms(List<HashAlgorithm> hashAlgorithms) {
-        this.hashAlgorithms = Collections.unmodifiableSet(new LinkedHashSet<>(hashAlgorithms));
     }
 
     public Set<HashAlgorithm> getHashAlgorithms() {
         return new LinkedHashSet<>(hashAlgorithms);
     }
 
-    public int[] getHashAlgorithmIds() {
-        int[] array = new int[hashAlgorithms.size()];
-        List<HashAlgorithm> list = new ArrayList<>(getHashAlgorithms());
-        for (int i = 0; i < array.length; i++) {
-            array[i] = list.get(i).getAlgorithmId();
-        }
-        return array;
-    }
-
-    public void setCompressionAlgorithms(List<CompressionAlgorithm> compressionAlgorithms) {
-        this.compressionAlgorithms = Collections.unmodifiableSet(new LinkedHashSet<>(compressionAlgorithms));
-    }
-
     public Set<CompressionAlgorithm> getCompressionAlgorithms() {
         return new LinkedHashSet<>(compressionAlgorithms);
-    }
-
-    public int[] getCompressionAlgorithmIds() {
-        int[] array = new int[compressionAlgorithms.size()];
-        List<CompressionAlgorithm> list = new ArrayList<>(getCompressionAlgorithms());
-        for (int i = 0; i < array.length; i++) {
-            array[i] = list.get(i).getAlgorithmId();
-        }
-        return array;
     }
 
     public static AlgorithmSuite getDefaultAlgorithmSuite() {
