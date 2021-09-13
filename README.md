@@ -76,22 +76,19 @@ There are some predefined key archetypes, but it is possible to fully customize 
         // Customized key
         PGPSecretKeyRing keyRing = PGPainless.generateKeyRing()
                 .withSubKey(
-                        KeySpec.getBuilder(ECDSA.fromCurve(EllipticCurve._P256))
-                                .withKeyFlags(KeyFlag.SIGN_DATA)
-                                .withDetailedConfiguration()
-                                .withDefaultSymmetricAlgorithms()
-                                .withDefaultHashAlgorithms()
-                                .withPreferredCompressionAlgorithms(CompressionAlgorithm.ZLIB)
-                                .withFeature(Feature.MODIFICATION_DETECTION)
-                                .done()
+                        KeySpec.getBuilder(ECDSA.fromCurve(EllipticCurve._P256), KeyFlag.SIGN_DATA)
+                                .overrideCompressionAlgorithms(CompressionAlgorithm.ZLIB)
+                                .build()
                 ).withSubKey(
-                        KeySpec.getBuilder(ECDH.fromCurve(EllipticCurve._P256))
-                                .withKeyFlags(KeyFlag.ENCRYPT_COMMS, KeyFlag.ENCRYPT_STORAGE)
-                                .withDefaultAlgorithms()
+                        KeySpec.getBuilder(
+                                        ECDH.fromCurve(EllipticCurve._P256),
+                                        KeyFlag.ENCRYPT_COMMS, KeyFlag.ENCRYPT_STORAGE)
+                                .build()
                 ).withMasterKey(
-                        KeySpec.getBuilder(RSA.withLength(RsaLength._8192))
-                                .withKeyFlags(KeyFlag.SIGN_DATA, KeyFlag.CERTIFY_OTHER)
-                                .withDefaultAlgorithms()
+                        KeySpec.getBuilder(
+                                        RSA.withLength(RsaLength._8192),
+                                        KeyFlag.SIGN_DATA, KeyFlag.CERTIFY_OTHER)
+                                .build()
                 ).withPrimaryUserId("Juliet <juliet@montague.lit>")
                 .withAdditionalUserId("xmpp:juliet@capulet.lit")
                 .withPassphrase("romeo_oh_Romeo<3")
