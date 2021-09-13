@@ -192,3 +192,8 @@ PGPainless is developed in - and accepts contributions from - the following plac
 * [Codeberg](https://codeberg.org/PGPainless/pgpainless)
 
 Please follow the [code of conduct](CODE_OF_CONDUCT.md) if you want to be part of the project.
+
+## Acknowledgements
+Development on PGPainless is generously sponsored by [FlowCrypt.com](https://flowcrypt.com). Thank you very very very much!
+
+Continuous Integration is kindly provided by [Travis-CI.com](https://travis-ci.com/).
