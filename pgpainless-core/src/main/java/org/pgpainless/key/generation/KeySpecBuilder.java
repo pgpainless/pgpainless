@@ -77,10 +77,7 @@ public class KeySpecBuilder implements KeySpecBuilderInterface {
         this.hashedSubPackets.setPreferredSymmetricAlgorithms(false, getPreferredSymmetricKeyAlgorithmIDs());
         this.hashedSubPackets.setFeature(false, Feature.MODIFICATION_DETECTION.getFeatureId());
 
-        return new KeySpec(
-                KeySpecBuilder.this.type,
-                hashedSubPackets,
-                false);
+        return new KeySpec(type, hashedSubPackets, false);
     }
 
     private int[] getPreferredCompressionAlgorithmIDs() {
