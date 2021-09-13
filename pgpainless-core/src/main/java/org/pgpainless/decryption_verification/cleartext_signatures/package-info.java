@@ -16,4 +16,4 @@
 /**
  * Classes related to cleartext signature verification.
  */
-package org.pgpainless.signature.cleartext_signatures;
+package org.pgpainless.decryption_verification.cleartext_signatures;

@@ -13,7 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.pgpainless.signature.cleartext_signatures;
+package org.pgpainless.decryption_verification.cleartext_signatures;
 
 import java.io.ByteArrayOutputStream;
 import java.io.File;

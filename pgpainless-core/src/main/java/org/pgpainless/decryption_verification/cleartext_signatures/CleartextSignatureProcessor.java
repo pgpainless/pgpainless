@@ -13,7 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.pgpainless.signature.cleartext_signatures;
+package org.pgpainless.decryption_verification.cleartext_signatures;
 
 import static org.pgpainless.signature.SignatureValidator.signatureWasCreatedInBounds;
 
@@ -35,6 +35,7 @@ import org.pgpainless.algorithm.StreamEncoding;
 import org.pgpainless.algorithm.SymmetricKeyAlgorithm;
 import org.pgpainless.decryption_verification.ConsumerOptions;
 import org.pgpainless.decryption_verification.OpenPgpMetadata;
+import org.pgpainless.decryption_verification.SignatureVerification;
 import org.pgpainless.exception.SignatureValidationException;
 import org.pgpainless.key.SubkeyIdentifier;
 import org.pgpainless.signature.CertificateValidator;

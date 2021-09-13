@@ -23,7 +23,7 @@ import org.bouncycastle.bcpg.ArmoredOutputStream;
 import org.bouncycastle.openpgp.PGPSignature;
 import org.bouncycastle.openpgp.PGPSignatureList;
 import org.pgpainless.exception.WrongConsumingMethodException;
-import org.pgpainless.signature.cleartext_signatures.ClearsignedMessageUtil;
+import org.pgpainless.decryption_verification.cleartext_signatures.ClearsignedMessageUtil;
 import org.pgpainless.util.ArmoredOutputStreamFactory;
 import sop.ReadyWithResult;
 import sop.Signatures;

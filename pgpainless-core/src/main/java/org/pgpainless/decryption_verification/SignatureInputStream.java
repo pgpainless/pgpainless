@@ -31,7 +31,6 @@ import org.pgpainless.policy.Policy;
 import org.pgpainless.signature.CertificateValidator;
 import org.pgpainless.signature.DetachedSignature;
 import org.pgpainless.signature.OnePassSignatureCheck;
-import org.pgpainless.signature.cleartext_signatures.SignatureVerification;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 

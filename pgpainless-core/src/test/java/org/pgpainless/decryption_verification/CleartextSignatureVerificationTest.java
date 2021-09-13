@@ -39,9 +39,9 @@ import org.pgpainless.key.TestKeys;
 import org.pgpainless.signature.CertificateValidator;
 import org.pgpainless.signature.SignatureUtils;
 import org.pgpainless.signature.SignatureVerifier;
-import org.pgpainless.signature.cleartext_signatures.CleartextSignatureProcessor;
-import org.pgpainless.signature.cleartext_signatures.InMemoryMultiPassStrategy;
-import org.pgpainless.signature.cleartext_signatures.MultiPassStrategy;
+import org.pgpainless.decryption_verification.cleartext_signatures.CleartextSignatureProcessor;
+import org.pgpainless.decryption_verification.cleartext_signatures.InMemoryMultiPassStrategy;
+import org.pgpainless.decryption_verification.cleartext_signatures.MultiPassStrategy;
 import org.pgpainless.util.ArmorUtils;
 import org.pgpainless.util.TestUtils;
 

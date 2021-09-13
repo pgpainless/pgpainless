@@ -33,8 +33,8 @@ import org.pgpainless.key.modification.secretkeyring.SecretKeyRingEditorInterfac
 import org.pgpainless.key.parsing.KeyRingReader;
 import org.pgpainless.key.util.KeyRingUtils;
 import org.pgpainless.policy.Policy;
-import org.pgpainless.signature.cleartext_signatures.VerifyCleartextSignatures;
-import org.pgpainless.signature.cleartext_signatures.VerifyCleartextSignaturesImpl;
+import org.pgpainless.decryption_verification.cleartext_signatures.VerifyCleartextSignatures;
+import org.pgpainless.decryption_verification.cleartext_signatures.VerifyCleartextSignaturesImpl;
 import org.pgpainless.util.ArmorUtils;
 
 public final class PGPainless {

@@ -36,7 +36,6 @@ import org.pgpainless.algorithm.SymmetricKeyAlgorithm;
 import org.pgpainless.exception.SignatureValidationException;
 import org.pgpainless.key.OpenPgpV4Fingerprint;
 import org.pgpainless.key.SubkeyIdentifier;
-import org.pgpainless.signature.cleartext_signatures.SignatureVerification;
 
 public class OpenPgpMetadata {
 
