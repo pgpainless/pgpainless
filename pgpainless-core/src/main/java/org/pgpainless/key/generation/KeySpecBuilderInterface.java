@@ -18,55 +18,16 @@ package org.pgpainless.key.generation;
 import javax.annotation.Nonnull;
 
 import org.pgpainless.algorithm.CompressionAlgorithm;
-import org.pgpainless.algorithm.Feature;
 import org.pgpainless.algorithm.HashAlgorithm;
-import org.pgpainless.algorithm.KeyFlag;
 import org.pgpainless.algorithm.SymmetricKeyAlgorithm;
 
 public interface KeySpecBuilderInterface {
 
-    WithDetailedConfiguration withKeyFlags(@Nonnull KeyFlag... flags);
+    KeySpecBuilder overridePreferredCompressionAlgorithms(@Nonnull CompressionAlgorithm... compressionAlgorithms);
 
-    KeySpec withInheritedSubPackets();
+    KeySpecBuilder overridePreferredHashAlgorithms(@Nonnull HashAlgorithm... preferredHashAlgorithms);
 
-    interface WithDetailedConfiguration {
+    KeySpecBuilder overridePreferredSymmetricKeyAlgorithms(@Nonnull SymmetricKeyAlgorithm... preferredSymmetricKeyAlgorithms);
 
-        WithPreferredSymmetricAlgorithms withDetailedConfiguration();
-
-        KeySpec withDefaultAlgorithms();
-    }
-
-    interface WithPreferredSymmetricAlgorithms {
-
-        WithPreferredHashAlgorithms withPreferredSymmetricAlgorithms(@Nonnull SymmetricKeyAlgorithm... algorithms);
-
-        WithPreferredHashAlgorithms withDefaultSymmetricAlgorithms();
-
-        WithFeatures withDefaultAlgorithms();
-
-    }
-
-    interface WithPreferredHashAlgorithms {
-
-        WithPreferredCompressionAlgorithms withPreferredHashAlgorithms(@Nonnull HashAlgorithm... algorithms);
-
-        WithPreferredCompressionAlgorithms withDefaultHashAlgorithms();
-
-    }
-
-    interface WithPreferredCompressionAlgorithms {
-
-        WithFeatures withPreferredCompressionAlgorithms(@Nonnull CompressionAlgorithm... algorithms);
-
-        WithFeatures withDefaultCompressionAlgorithms();
-
-    }
-
-    interface WithFeatures {
-
-        WithFeatures withFeature(@Nonnull Feature feature);
-
-        KeySpec done();
-    }
-
+    KeySpec build();
 }

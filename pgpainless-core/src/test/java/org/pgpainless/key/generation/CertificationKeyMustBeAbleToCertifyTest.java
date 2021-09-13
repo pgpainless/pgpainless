@@ -47,9 +47,8 @@ public class CertificationKeyMustBeAbleToCertifyTest {
             assertThrows(IllegalArgumentException.class, () -> PGPainless
                     .generateKeyRing()
                     .withPrimaryKey(KeySpec
-                            .getBuilder(type)
-                            .withKeyFlags(KeyFlag.CERTIFY_OTHER, KeyFlag.SIGN_DATA)
-                            .withDefaultAlgorithms())
+                            .getBuilder(type, KeyFlag.CERTIFY_OTHER, KeyFlag.SIGN_DATA)
+                            .build())
                     .withPrimaryUserId("should@throw.ex")
                     .withoutPassphrase().build());
         }

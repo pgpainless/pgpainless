@@ -41,12 +41,11 @@ public class GenerateEllipticCurveKeyTest {
     public void generateEllipticCurveKeys(ImplementationFactory implementationFactory) throws InvalidAlgorithmParameterException, NoSuchAlgorithmException, PGPException, IOException {
         ImplementationFactory.setFactoryImplementation(implementationFactory);
         PGPSecretKeyRing keyRing = PGPainless.generateKeyRing()
-                .withSubKey(KeySpec.getBuilder(KeyType.XDH(XDHSpec._X25519))
-                        .withKeyFlags(KeyFlag.ENCRYPT_COMMS)
-                        .withDefaultAlgorithms())
-                .withPrimaryKey(KeySpec.getBuilder(KeyType.EDDSA(EdDSACurve._Ed25519))
-                        .withKeyFlags(KeyFlag.CERTIFY_OTHER, KeyFlag.SIGN_DATA)
-                        .withDefaultAlgorithms())
+                .withSubKey(KeySpec.getBuilder(KeyType.XDH(XDHSpec._X25519), KeyFlag.ENCRYPT_COMMS).build())
+                .withPrimaryKey(KeySpec.getBuilder(
+                        KeyType.EDDSA(EdDSACurve._Ed25519),
+                                KeyFlag.CERTIFY_OTHER, KeyFlag.SIGN_DATA)
+                        .build())
                 .withPrimaryUserId(UserId.onlyEmail("alice@wonderland.lit").toString())
                 .withoutPassphrase()
                 .build();

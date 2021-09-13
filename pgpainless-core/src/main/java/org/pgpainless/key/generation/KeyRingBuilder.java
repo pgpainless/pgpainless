@@ -127,10 +127,9 @@ public class KeyRingBuilder implements KeyRingBuilderInterface {
     public PGPSecretKeyRing simpleRsaKeyRing(@Nonnull String userId, @Nonnull RsaLength length, String password)
             throws PGPException, NoSuchAlgorithmException, InvalidAlgorithmParameterException {
         WithAdditionalUserIdOrPassphrase builder = this
-                .withPrimaryKey(
-                        KeySpec.getBuilder(KeyType.RSA(length))
-                                .withKeyFlags(KeyFlag.CERTIFY_OTHER, KeyFlag.SIGN_DATA, KeyFlag.ENCRYPT_COMMS)
-                                .withDefaultAlgorithms())
+                .withPrimaryKey(KeySpec
+                        .getBuilder(KeyType.RSA(length), KeyFlag.CERTIFY_OTHER, KeyFlag.SIGN_DATA, KeyFlag.ENCRYPT_COMMS)
+                        .build())
                 .withPrimaryUserId(userId);
 
         if (password == null) {
@@ -197,13 +196,11 @@ public class KeyRingBuilder implements KeyRingBuilderInterface {
             throws PGPException, NoSuchAlgorithmException, InvalidAlgorithmParameterException {
         WithAdditionalUserIdOrPassphrase builder = this
                 .withSubKey(
-                        KeySpec.getBuilder(KeyType.XDH(XDHSpec._X25519))
-                                .withKeyFlags(KeyFlag.ENCRYPT_STORAGE, KeyFlag.ENCRYPT_COMMS)
-                                .withDefaultAlgorithms())
+                        KeySpec.getBuilder(KeyType.XDH(XDHSpec._X25519), KeyFlag.ENCRYPT_STORAGE, KeyFlag.ENCRYPT_COMMS)
+                                .build())
                 .withPrimaryKey(
-                        KeySpec.getBuilder(KeyType.EDDSA(EdDSACurve._Ed25519))
-                                .withKeyFlags(KeyFlag.CERTIFY_OTHER, KeyFlag.SIGN_DATA)
-                                .withDefaultAlgorithms())
+                        KeySpec.getBuilder(KeyType.EDDSA(EdDSACurve._Ed25519), KeyFlag.CERTIFY_OTHER, KeyFlag.SIGN_DATA)
+                                .build())
                 .withPrimaryUserId(userId);
 
         if (password == null) {
@@ -225,17 +222,14 @@ public class KeyRingBuilder implements KeyRingBuilderInterface {
             throws InvalidAlgorithmParameterException, NoSuchAlgorithmException, PGPException {
         WithAdditionalUserIdOrPassphrase builder = this
                 .withSubKey(
-                        KeySpec.getBuilder(KeyType.XDH(XDHSpec._X25519))
-                                .withKeyFlags(KeyFlag.ENCRYPT_STORAGE, KeyFlag.ENCRYPT_COMMS)
-                                .withDefaultAlgorithms())
+                        KeySpec.getBuilder(KeyType.XDH(XDHSpec._X25519), KeyFlag.ENCRYPT_STORAGE, KeyFlag.ENCRYPT_COMMS)
+                                .build())
                 .withSubKey(
-                        KeySpec.getBuilder(KeyType.EDDSA(EdDSACurve._Ed25519))
-                                .withKeyFlags(KeyFlag.SIGN_DATA)
-                                .withDefaultAlgorithms())
+                        KeySpec.getBuilder(KeyType.EDDSA(EdDSACurve._Ed25519), KeyFlag.SIGN_DATA)
+                                .build())
                 .withPrimaryKey(
-                        KeySpec.getBuilder(KeyType.EDDSA(EdDSACurve._Ed25519))
-                                .withKeyFlags(KeyFlag.CERTIFY_OTHER)
-                                .withDefaultAlgorithms())
+                        KeySpec.getBuilder(KeyType.EDDSA(EdDSACurve._Ed25519), KeyFlag.CERTIFY_OTHER)
+                                .build())
                 .withPrimaryUserId(userId);
 
         if (password == null) {

@@ -46,9 +46,10 @@ public class GenerateWithEmptyPassphrase {
         ImplementationFactory.setFactoryImplementation(implementationFactory);
 
         assertNotNull(PGPainless.generateKeyRing()
-                .withPrimaryKey(KeySpec.getBuilder(KeyType.RSA(RsaLength._3072))
-                        .withKeyFlags(KeyFlag.CERTIFY_OTHER, KeyFlag.SIGN_DATA, KeyFlag.ENCRYPT_COMMS)
-                        .withDefaultAlgorithms())
+                .withPrimaryKey(KeySpec.getBuilder(
+                                KeyType.RSA(RsaLength._3072),
+                                KeyFlag.CERTIFY_OTHER, KeyFlag.SIGN_DATA, KeyFlag.ENCRYPT_COMMS)
+                        .build())
                 .withPrimaryUserId("primary@user.id")
                 .withPassphrase(Passphrase.emptyPassphrase())
                 .build());

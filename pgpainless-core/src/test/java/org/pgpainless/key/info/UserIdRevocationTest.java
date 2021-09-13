@@ -51,12 +51,13 @@ public class UserIdRevocationTest {
     @Test
     public void testRevocationWithoutRevocationAttributes() throws PGPException, InvalidAlgorithmParameterException, NoSuchAlgorithmException {
         PGPSecretKeyRing secretKeys = PGPainless.generateKeyRing()
-                .withSubKey(KeySpec.getBuilder(KeyType.XDH(XDHSpec._X25519))
-                        .withKeyFlags(KeyFlag.ENCRYPT_COMMS)
-                        .withDefaultAlgorithms())
-                .withPrimaryKey(KeySpec.getBuilder(KeyType.EDDSA(EdDSACurve._Ed25519))
-                        .withKeyFlags(KeyFlag.SIGN_DATA, KeyFlag.CERTIFY_OTHER)
-                        .withDefaultAlgorithms())
+                .withSubKey(KeySpec.getBuilder(
+                        KeyType.XDH(XDHSpec._X25519), KeyFlag.ENCRYPT_COMMS)
+                        .build())
+                .withPrimaryKey(KeySpec.getBuilder(
+                        KeyType.EDDSA(EdDSACurve._Ed25519),
+                                KeyFlag.SIGN_DATA, KeyFlag.CERTIFY_OTHER)
+                        .build())
                 .withPrimaryUserId("primary@key.id")
                 .withAdditionalUserId("secondary@key.id")
                 .withoutPassphrase()
@@ -91,12 +92,12 @@ public class UserIdRevocationTest {
     @Test
     public void testRevocationWithRevocationReason() throws InvalidAlgorithmParameterException, NoSuchAlgorithmException, PGPException {
         PGPSecretKeyRing secretKeys = PGPainless.generateKeyRing()
-                .withSubKey(KeySpec.getBuilder(KeyType.XDH(XDHSpec._X25519))
-                        .withKeyFlags(KeyFlag.ENCRYPT_COMMS)
-                        .withDefaultAlgorithms())
-                .withPrimaryKey(KeySpec.getBuilder(KeyType.EDDSA(EdDSACurve._Ed25519))
-                        .withKeyFlags(KeyFlag.SIGN_DATA, KeyFlag.CERTIFY_OTHER)
-                        .withDefaultAlgorithms())
+                .withSubKey(KeySpec.getBuilder(KeyType.XDH(XDHSpec._X25519), KeyFlag.ENCRYPT_COMMS)
+                        .build())
+                .withPrimaryKey(KeySpec.getBuilder(
+                        KeyType.EDDSA(EdDSACurve._Ed25519),
+                                KeyFlag.SIGN_DATA, KeyFlag.CERTIFY_OTHER)
+                        .build())
                 .withPrimaryUserId("primary@key.id")
                 .withAdditionalUserId("secondary@key.id")
                 .withoutPassphrase()

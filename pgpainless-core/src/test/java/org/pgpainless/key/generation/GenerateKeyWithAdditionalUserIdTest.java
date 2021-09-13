@@ -47,9 +47,10 @@ public class GenerateKeyWithAdditionalUserIdTest {
         ImplementationFactory.setFactoryImplementation(implementationFactory);
         Date expiration = new Date(DateUtil.now().getTime() + 60 * 1000);
         PGPSecretKeyRing secretKeys = PGPainless.generateKeyRing()
-                .withPrimaryKey(KeySpec.getBuilder(KeyType.RSA(RsaLength._3072))
-                        .withKeyFlags(KeyFlag.CERTIFY_OTHER, KeyFlag.SIGN_DATA, KeyFlag.ENCRYPT_COMMS)
-                        .withDefaultAlgorithms())
+                .withPrimaryKey(KeySpec.getBuilder(
+                        KeyType.RSA(RsaLength._3072),
+                                KeyFlag.CERTIFY_OTHER, KeyFlag.SIGN_DATA, KeyFlag.ENCRYPT_COMMS)
+                        .build())
                 .withPrimaryUserId(UserId.onlyEmail("primary@user.id"))
                 .withAdditionalUserId(UserId.onlyEmail("additional@user.id"))
                 .withAdditionalUserId(UserId.onlyEmail("additional2@user.id"))

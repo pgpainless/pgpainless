@@ -20,6 +20,7 @@ import javax.annotation.Nullable;
 
 import org.bouncycastle.openpgp.PGPSignatureSubpacketGenerator;
 import org.bouncycastle.openpgp.PGPSignatureSubpacketVector;
+import org.pgpainless.algorithm.KeyFlag;
 import org.pgpainless.key.generation.type.KeyType;
 
 public class KeySpec {
@@ -54,7 +55,7 @@ public class KeySpec {
         return inheritedSubPackets;
     }
 
-    public static KeySpecBuilder getBuilder(KeyType type) {
-        return new KeySpecBuilder(type);
+    public static KeySpecBuilder getBuilder(KeyType type, KeyFlag... flags) {
+        return new KeySpecBuilder(type, flags);
     }
 }

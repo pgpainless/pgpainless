@@ -41,15 +41,12 @@ public class GuessPreferredHashAlgorithmTest {
     @Test
     public void guessPreferredHashAlgorithmsAssumesHashAlgoUsedBySelfSig() throws InvalidAlgorithmParameterException, NoSuchAlgorithmException, PGPException, IOException {
         PGPSecretKeyRing secretKeys = PGPainless.generateKeyRing()
-                .withPrimaryKey(KeySpec.getBuilder(KeyType.EDDSA(EdDSACurve._Ed25519))
-                        .withKeyFlags(KeyFlag.CERTIFY_OTHER, KeyFlag.SIGN_DATA)
-                        .withDetailedConfiguration()
-                        // Do not specify preferred algorithms
-                        .withPreferredSymmetricAlgorithms(new SymmetricKeyAlgorithm[] {})
-                        .withPreferredHashAlgorithms(new HashAlgorithm[] {})
-                        .withPreferredCompressionAlgorithms(new CompressionAlgorithm[] {})
-
-                        .done())
+                .withPrimaryKey(KeySpec.getBuilder(KeyType.EDDSA(EdDSACurve._Ed25519),
+                                KeyFlag.CERTIFY_OTHER, KeyFlag.SIGN_DATA)
+                        .overridePreferredHashAlgorithms(new HashAlgorithm[] {})
+                        .overridePreferredSymmetricKeyAlgorithms(new SymmetricKeyAlgorithm[] {})
+                        .overridePreferredCompressionAlgorithms(new CompressionAlgorithm[] {})
+                        .build())
                 .withPrimaryUserId("test@test.test")
                 .withoutPassphrase()
                 .build();

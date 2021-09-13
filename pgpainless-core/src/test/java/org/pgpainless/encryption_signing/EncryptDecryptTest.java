@@ -88,8 +88,13 @@ public class EncryptDecryptTest {
         ImplementationFactory.setFactoryImplementation(implementationFactory);
         PGPSecretKeyRing sender = PGPainless.generateKeyRing().simpleRsaKeyRing("romeo@montague.lit", RsaLength._3072);
         PGPSecretKeyRing recipient = PGPainless.generateKeyRing()
-                .withSubKey(KeySpec.getBuilder(ElGamal.withLength(ElGamalLength._3072)).withKeyFlags(KeyFlag.ENCRYPT_STORAGE, KeyFlag.ENCRYPT_COMMS).withDefaultAlgorithms())
-                .withPrimaryKey(KeySpec.getBuilder(KeyType.RSA(RsaLength._4096)).withKeyFlags(KeyFlag.SIGN_DATA, KeyFlag.CERTIFY_OTHER).withDefaultAlgorithms())
+                .withSubKey(KeySpec.getBuilder(
+                                ElGamal.withLength(ElGamalLength._3072),
+                                KeyFlag.ENCRYPT_STORAGE, KeyFlag.ENCRYPT_COMMS)
+                        .build())
+                .withPrimaryKey(KeySpec.getBuilder(
+                        KeyType.RSA(RsaLength._4096),
+                        KeyFlag.SIGN_DATA, KeyFlag.CERTIFY_OTHER).build())
                 .withPrimaryUserId("juliet@capulet.lit").withoutPassphrase().build();
 
         encryptDecryptForSecretKeyRings(sender, recipient);
@@ -262,7 +267,7 @@ public class EncryptDecryptTest {
         EncryptionStream signer = PGPainless.encryptAndOrSign().onOutputStream(signOut)
                 .withOptions(ProducerOptions.sign(
                         SigningOptions.get()
-                        .addInlineSignature(keyRingProtector, signingKeys, DocumentSignatureType.BINARY_DOCUMENT)
+                                .addInlineSignature(keyRingProtector, signingKeys, DocumentSignatureType.BINARY_DOCUMENT)
                 ).setAsciiArmor(true));
         Streams.pipeAll(inputStream, signer);
         signer.close();

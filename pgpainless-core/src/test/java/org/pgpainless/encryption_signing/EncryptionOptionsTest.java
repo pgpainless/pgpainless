@@ -59,13 +59,12 @@ public class EncryptionOptionsTest {
     @BeforeAll
     public static void generateKey() throws PGPException, InvalidAlgorithmParameterException, NoSuchAlgorithmException {
         secretKeys = PGPainless.generateKeyRing()
-                .withSubKey(KeySpec.getBuilder(KeyType.XDH(XDHSpec._X25519))
-                        .withKeyFlags(KeyFlag.ENCRYPT_COMMS).withDefaultAlgorithms())
-                .withSubKey(KeySpec.getBuilder(KeyType.XDH(XDHSpec._X25519))
-                        .withKeyFlags(KeyFlag.ENCRYPT_STORAGE).withDefaultAlgorithms())
-                .withPrimaryKey(KeySpec.getBuilder(KeyType.EDDSA(EdDSACurve._Ed25519))
-                        .withKeyFlags(KeyFlag.CERTIFY_OTHER)
-                        .withDefaultAlgorithms())
+                .withSubKey(KeySpec.getBuilder(KeyType.XDH(XDHSpec._X25519), KeyFlag.ENCRYPT_COMMS)
+                        .build())
+                .withSubKey(KeySpec.getBuilder(KeyType.XDH(XDHSpec._X25519), KeyFlag.ENCRYPT_STORAGE)
+                        .build())
+                .withPrimaryKey(KeySpec.getBuilder(KeyType.EDDSA(EdDSACurve._Ed25519), KeyFlag.CERTIFY_OTHER)
+                        .build())
                 .withPrimaryUserId("test@pgpainless.org")
                 .withoutPassphrase()
                 .build();
@@ -140,8 +139,8 @@ public class EncryptionOptionsTest {
     public void testAddRecipient_KeyWithoutEncryptionKeyFails() throws PGPException, InvalidAlgorithmParameterException, NoSuchAlgorithmException {
         EncryptionOptions options = new EncryptionOptions();
         PGPSecretKeyRing secretKeys = PGPainless.generateKeyRing()
-                .withPrimaryKey(KeySpec.getBuilder(KeyType.EDDSA(EdDSACurve._Ed25519))
-                .withKeyFlags(KeyFlag.CERTIFY_OTHER, KeyFlag.SIGN_DATA).withDefaultAlgorithms())
+                .withPrimaryKey(KeySpec.getBuilder(KeyType.EDDSA(EdDSACurve._Ed25519), KeyFlag.CERTIFY_OTHER, KeyFlag.SIGN_DATA)
+                        .build())
                 .withPrimaryUserId("test@pgpainless.org")
                 .withoutPassphrase().build();
         PGPPublicKeyRing publicKeys = KeyRingUtils.publicKeyRingFrom(secretKeys);

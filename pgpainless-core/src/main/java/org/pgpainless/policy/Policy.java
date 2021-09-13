@@ -21,6 +21,9 @@ import java.util.EnumMap;
 import java.util.List;
 import java.util.Map;
 
+import javax.annotation.Nonnull;
+
+import org.pgpainless.algorithm.AlgorithmSuite;
 import org.pgpainless.algorithm.CompressionAlgorithm;
 import org.pgpainless.algorithm.HashAlgorithm;
 import org.pgpainless.algorithm.PublicKeyAlgorithm;
@@ -47,6 +50,8 @@ public final class Policy {
     private PublicKeyAlgorithmPolicy publicKeyAlgorithmPolicy =
             PublicKeyAlgorithmPolicy.defaultPublicKeyAlgorithmPolicy();
     private final NotationRegistry notationRegistry = new NotationRegistry();
+
+    private AlgorithmSuite keyGenerationAlgorithmSuite = AlgorithmSuite.getDefaultAlgorithmSuite();
 
     Policy() {
     }
@@ -122,7 +127,7 @@ public final class Policy {
      *
      * @return symmetric algorithm policy for decryption
      */
-    public SymmetricKeyAlgorithmPolicy getSymmetricKeyDecryptionAlgoritmPolicy() {
+    public SymmetricKeyAlgorithmPolicy getSymmetricKeyDecryptionAlgorithmPolicy() {
         return symmetricKeyDecryptionAlgorithmPolicy;
     }
 
@@ -458,5 +463,22 @@ public final class Policy {
      */
     public NotationRegistry getNotationRegistry() {
         return notationRegistry;
+    }
+
+    /**
+     * Return the current {@link AlgorithmSuite} which defines preferred algorithms used during key generation.
+     * @return current algorithm suite
+     */
+    public @Nonnull AlgorithmSuite getKeyGenerationAlgorithmSuite() {
+        return keyGenerationAlgorithmSuite;
+    }
+
+    /**
+     * Set a custom {@link AlgorithmSuite} which defines preferred algorithms used during key generation.
+     *
+     * @param algorithmSuite custom algorithm suite
+     */
+    public void setKeyGenerationAlgorithmSuite(@Nonnull AlgorithmSuite algorithmSuite) {
+        this.keyGenerationAlgorithmSuite = algorithmSuite;
     }
 }
