@@ -46,6 +46,11 @@ public class CachingSecretKeyRingProtectorTest {
             long doubled = keyId * 2;
             return Passphrase.fromPassword(Long.toString(doubled));
         }
+
+        @Override
+        public boolean hasPassphrase(Long keyId) {
+            return true;
+        }
     };
 
     private CachingSecretKeyRingProtector protector;

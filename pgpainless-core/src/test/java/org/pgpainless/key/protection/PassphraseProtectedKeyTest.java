@@ -49,6 +49,11 @@ public class PassphraseProtectedKeyTest {
                         return null;
                     }
                 }
+
+                @Override
+                public boolean hasPassphrase(Long keyId) {
+                    return keyId.equals(TestKeys.CRYPTIE_KEY_ID);
+                }
             });
 
     @Test

@@ -65,6 +65,11 @@ public class PasswordBasedSecretKeyRingProtector implements SecretKeyRingProtect
                 }
                 return null;
             }
+
+            @Override
+            public boolean hasPassphrase(Long keyId) {
+                return keyRing.getPublicKey(keyId) != null;
+            }
         };
         return new PasswordBasedSecretKeyRingProtector(protectionSettings, passphraseProvider);
     }
@@ -80,8 +85,18 @@ public class PasswordBasedSecretKeyRingProtector implements SecretKeyRingProtect
                 }
                 return null;
             }
+
+            @Override
+            public boolean hasPassphrase(Long keyId) {
+                return keyId == key.getKeyID();
+            }
         };
         return new PasswordBasedSecretKeyRingProtector(protectionSettings, passphraseProvider);
+    }
+
+    @Override
+    public boolean hasPassphraseFor(Long keyId) {
+        return passphraseProvider.hasPassphrase(keyId);
     }
 
     @Override

@@ -121,6 +121,11 @@ public class SecretKeyRingProtectorTest {
             public Passphrase getPassphraseFor(Long keyId) {
                 return Passphrase.fromPassword("missingP455w0rd");
             }
+
+            @Override
+            public boolean hasPassphrase(Long keyId) {
+                return true;
+            }
         });
 
         assertEquals(Passphrase.emptyPassphrase(), protector.getPassphraseFor(1L));

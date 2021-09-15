@@ -38,6 +38,8 @@ import org.pgpainless.util.Passphrase;
  */
 public interface SecretKeyRingProtector {
 
+    boolean hasPassphraseFor(Long keyId);
+
     /**
      * Return a decryptor for the key of id {@code keyId}.
      * This method returns null if the key is unprotected.

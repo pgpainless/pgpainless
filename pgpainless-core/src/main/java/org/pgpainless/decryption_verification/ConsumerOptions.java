@@ -257,7 +257,7 @@ public class ConsumerOptions {
         return missingCertificateCallback;
     }
 
-    public @Nullable SecretKeyRingProtector getSecretKeyProtector(PGPSecretKeyRing decryptionKeyRing) {
+    public @Nonnull SecretKeyRingProtector getSecretKeyProtector(PGPSecretKeyRing decryptionKeyRing) {
         return decryptionKeys.get(decryptionKeyRing);
     }
 

@@ -150,6 +150,16 @@ public class CachingSecretKeyRingProtector implements SecretKeyRingProtector, Se
     }
 
     @Override
+    public boolean hasPassphrase(Long keyId) {
+        return cache.containsKey(keyId);
+    }
+
+    @Override
+    public boolean hasPassphraseFor(Long keyId) {
+        return cache.containsKey(keyId);
+    }
+
+    @Override
     @Nullable
     public PBESecretKeyDecryptor getDecryptor(@Nonnull Long keyId) throws PGPException {
         return protector.getDecryptor(keyId);

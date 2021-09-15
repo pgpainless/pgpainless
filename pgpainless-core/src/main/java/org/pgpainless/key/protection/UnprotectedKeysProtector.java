@@ -26,6 +26,11 @@ import org.bouncycastle.openpgp.operator.PBESecretKeyEncryptor;
 public class UnprotectedKeysProtector implements SecretKeyRingProtector {
 
     @Override
+    public boolean hasPassphraseFor(Long keyId) {
+        return true;
+    }
+
+    @Override
     @Nullable
     public PBESecretKeyDecryptor getDecryptor(Long keyId) {
         return null;

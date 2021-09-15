@@ -36,4 +36,9 @@ public class SolitaryPassphraseProvider implements SecretKeyPassphraseProvider {
         // always return the same passphrase.
         return passphrase;
     }
+
+    @Override
+    public boolean hasPassphrase(Long keyId) {
+        return true;
+    }
 }

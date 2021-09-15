@@ -45,4 +45,9 @@ public class MapBasedPassphraseProvider implements SecretKeyPassphraseProvider {
     public Passphrase getPassphraseFor(Long keyId) {
         return map.get(keyId);
     }
+
+    @Override
+    public boolean hasPassphrase(Long keyId) {
+        return map.containsKey(keyId);
+    }
 }

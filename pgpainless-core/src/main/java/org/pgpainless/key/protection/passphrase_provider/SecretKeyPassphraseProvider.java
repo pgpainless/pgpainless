@@ -46,4 +46,6 @@ public interface SecretKeyPassphraseProvider {
      * @return passphrase or null, if no passphrase record has been found.
      */
     @Nullable Passphrase getPassphraseFor(Long keyId);
+
+    boolean hasPassphrase(Long keyId);
 }

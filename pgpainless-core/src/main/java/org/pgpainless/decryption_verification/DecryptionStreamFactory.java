@@ -61,6 +61,7 @@ import org.pgpainless.exception.WrongConsumingMethodException;
 import org.pgpainless.implementation.ImplementationFactory;
 import org.pgpainless.key.SubkeyIdentifier;
 import org.pgpainless.key.info.KeyRingInfo;
+import org.pgpainless.key.protection.SecretKeyRingProtector;
 import org.pgpainless.key.protection.UnlockSecretKey;
 import org.pgpainless.signature.DetachedSignature;
 import org.pgpainless.signature.OnePassSignatureCheck;
@@ -68,6 +69,7 @@ import org.pgpainless.signature.SignatureUtils;
 import org.pgpainless.util.CRCingArmoredInputStreamWrapper;
 import org.pgpainless.util.IntegrityProtectedInputStream;
 import org.pgpainless.util.Passphrase;
+import org.pgpainless.util.Tuple;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -276,93 +278,173 @@ public final class DecryptionStreamFactory {
 
         PGPPrivateKey decryptionKey = null;
         PGPPublicKeyEncryptedData encryptedSessionKey = null;
+
+        List<PGPPBEEncryptedData> passphraseProtected = new ArrayList<>();
+        List<PGPPublicKeyEncryptedData> publicKeyProtected = new ArrayList<>();
+        List<Tuple<SubkeyIdentifier, PGPPublicKeyEncryptedData>> postponedDueToMissingPassphrase = new ArrayList<>();
+
+        // Sort PKESK and SKESK packets
         while (encryptedDataIterator.hasNext()) {
             PGPEncryptedData encryptedData = encryptedDataIterator.next();
-
-            // TODO: Can we just skip non-integrity-protected packages?
+            // TODO: Maybe just skip non-integrity-protected packages?
             if (!encryptedData.isIntegrityProtected()) {
                 throw new MessageNotIntegrityProtectedException();
             }
 
-            // Data is passphrase encrypted
+            // SKESK
             if (encryptedData instanceof PGPPBEEncryptedData) {
-                PGPPBEEncryptedData pbeEncryptedData = (PGPPBEEncryptedData) encryptedData;
-                for (Passphrase passphrase : options.getDecryptionPassphrases()) {
-                    PBEDataDecryptorFactory passphraseDecryptor = ImplementationFactory.getInstance()
-                            .getPBEDataDecryptorFactory(passphrase);
-                    try {
-                        InputStream decryptedDataStream = pbeEncryptedData.getDataStream(passphraseDecryptor);
-
-                        SymmetricKeyAlgorithm symmetricKeyAlgorithm = SymmetricKeyAlgorithm.fromId(
-                                pbeEncryptedData.getSymmetricAlgorithm(passphraseDecryptor));
-                        throwIfAlgorithmIsRejected(symmetricKeyAlgorithm);
-                        resultBuilder.setSymmetricKeyAlgorithm(symmetricKeyAlgorithm);
-
-                        integrityProtectedEncryptedInputStream = new IntegrityProtectedInputStream(decryptedDataStream, pbeEncryptedData);
-
-                        return integrityProtectedEncryptedInputStream;
-                    } catch (PGPException e) {
-                        LOGGER.debug("Probable passphrase mismatch, skip PBE encrypted data block", e);
-                    }
-                }
+                passphraseProtected.add((PGPPBEEncryptedData) encryptedData);
             }
-
-            // data is public key encrypted
+            // PKESK
             else if (encryptedData instanceof PGPPublicKeyEncryptedData) {
-                PGPPublicKeyEncryptedData publicKeyEncryptedData = (PGPPublicKeyEncryptedData) encryptedData;
-                long keyId = publicKeyEncryptedData.getKeyID();
-                if (!options.getDecryptionKeys().isEmpty()) {
-                    // Known key id
-                    if (keyId != 0) {
-                        LOGGER.debug("PGPEncryptedData is encrypted for key {}", Long.toHexString(keyId));
-                        resultBuilder.addRecipientKeyId(keyId);
-                        PGPSecretKeyRing decryptionKeyRing = findDecryptionKeyRing(keyId);
-                        if (decryptionKeyRing != null) {
-                            PGPSecretKey secretKey = decryptionKeyRing.getSecretKey(keyId);
-                            LOGGER.debug("Found respective secret key {}", Long.toHexString(keyId));
-                            // Watch out! This assignment is possibly done multiple times.
-                            encryptedSessionKey = publicKeyEncryptedData;
-                            decryptionKey = UnlockSecretKey.unlockSecretKey(secretKey, options.getSecretKeyProtector(decryptionKeyRing));
-                            resultBuilder.setDecryptionKey(new SubkeyIdentifier(decryptionKeyRing, decryptionKey.getKeyID()));
-                        }
-                    }
+                publicKeyProtected.add((PGPPublicKeyEncryptedData) encryptedData);
+            }
+        }
 
-                    // Hidden recipient
-                    else {
-                        LOGGER.debug("Hidden recipient detected. Try to decrypt with all available secret keys.");
-                        outerloop: for (PGPSecretKeyRing ring : options.getDecryptionKeys()) {
-                            KeyRingInfo info = new KeyRingInfo(ring);
-                            List<PGPPublicKey> encryptionSubkeys = info.getEncryptionSubkeys(EncryptionPurpose.STORAGE_AND_COMMUNICATIONS);
-                            for (PGPPublicKey pubkey : encryptionSubkeys) {
-                                PGPSecretKey key = ring.getSecretKey(pubkey.getKeyID());
-                                if (key == null) {
-                                    continue;
-                                }
+        // Try decryption with passphrases first
+        for (PGPPBEEncryptedData pbeEncryptedData : passphraseProtected) {
+            for (Passphrase passphrase : options.getDecryptionPassphrases()) {
+                PBEDataDecryptorFactory passphraseDecryptor = ImplementationFactory.getInstance()
+                        .getPBEDataDecryptorFactory(passphrase);
+                try {
+                    InputStream decryptedDataStream = pbeEncryptedData.getDataStream(passphraseDecryptor);
 
-                                PGPPrivateKey privateKey = UnlockSecretKey.unlockSecretKey(key, options.getSecretKeyProtector(ring).getDecryptor(key.getKeyID()));
-                                PublicKeyDataDecryptorFactory decryptorFactory = ImplementationFactory.getInstance().getPublicKeyDataDecryptorFactory(privateKey);
-                                try {
-                                    publicKeyEncryptedData.getSymmetricAlgorithm(decryptorFactory); // will only succeed if we have the right secret key
-                                    LOGGER.debug("Found correct key {} for hidden recipient decryption.", Long.toHexString(key.getKeyID()));
-                                    decryptionKey = privateKey;
-                                    resultBuilder.setDecryptionKey(new SubkeyIdentifier(ring, decryptionKey.getKeyID()));
-                                    encryptedSessionKey = publicKeyEncryptedData;
-                                    break outerloop;
-                                } catch (PGPException | ClassCastException e) {
-                                    LOGGER.debug("Skipping wrong key {} for hidden recipient decryption.", Long.toHexString(key.getKeyID()), e);
-                                }
-                            }
-                        }
-                    }
+                    SymmetricKeyAlgorithm symmetricKeyAlgorithm = SymmetricKeyAlgorithm.fromId(
+                            pbeEncryptedData.getSymmetricAlgorithm(passphraseDecryptor));
+                    throwIfAlgorithmIsRejected(symmetricKeyAlgorithm);
+                    resultBuilder.setSymmetricKeyAlgorithm(symmetricKeyAlgorithm);
+
+                    integrityProtectedEncryptedInputStream = new IntegrityProtectedInputStream(decryptedDataStream, pbeEncryptedData);
+
+                    return integrityProtectedEncryptedInputStream;
+                } catch (PGPException e) {
+                    LOGGER.debug("Probable passphrase mismatch, skip PBE encrypted data block", e);
                 }
             }
         }
+
+        // Then try decryption with public key encryption
+        for (PGPPublicKeyEncryptedData publicKeyEncryptedData : publicKeyProtected) {
+            PGPPrivateKey privateKey = null;
+            if (options.getDecryptionKeys().isEmpty()) {
+                break;
+            }
+
+            long keyId = publicKeyEncryptedData.getKeyID();
+            // Wildcard KeyID
+            if (keyId == 0L) {
+                LOGGER.debug("Hidden recipient detected. Try to decrypt with all available secret keys.");
+                for (PGPSecretKeyRing secretKeys : options.getDecryptionKeys()) {
+                    if (privateKey != null) {
+                        break;
+                    }
+                    KeyRingInfo info = new KeyRingInfo(secretKeys);
+                    List<PGPPublicKey> encryptionSubkeys = info.getEncryptionSubkeys(EncryptionPurpose.STORAGE_AND_COMMUNICATIONS);
+                    for (PGPPublicKey pubkey : encryptionSubkeys) {
+                        PGPSecretKey secretKey = secretKeys.getSecretKey(pubkey.getKeyID());
+                        // Skip missing secret key
+                        if (secretKey == null) {
+                            continue;
+                        }
+
+                        privateKey = tryPublicKeyDecryption(secretKeys, secretKey, publicKeyEncryptedData, postponedDueToMissingPassphrase, true);
+                    }
+                }
+            }
+            // Non-wildcard key-id
+            else {
+                LOGGER.debug("PGPEncryptedData is encrypted for key {}", Long.toHexString(keyId));
+                resultBuilder.addRecipientKeyId(keyId);
+
+                PGPSecretKeyRing secretKeys = findDecryptionKeyRing(keyId);
+                if (secretKeys == null) {
+                    LOGGER.debug("Missing certificate of {}. Skip.", Long.toHexString(keyId));
+                    continue;
+                }
+
+                PGPSecretKey secretKey = secretKeys.getSecretKey(keyId);
+                privateKey = tryPublicKeyDecryption(secretKeys, secretKey, publicKeyEncryptedData, postponedDueToMissingPassphrase, true);
+            }
+            if (privateKey == null) {
+                continue;
+            }
+            decryptionKey = privateKey;
+            encryptedSessionKey = publicKeyEncryptedData;
+        }
+
+        // Try postponed keys with missing passphrases (will cause missing passphrase callbacks to fire)
+        if (encryptedSessionKey == null) {
+            for (Tuple<SubkeyIdentifier, PGPPublicKeyEncryptedData> missingPassphrases : postponedDueToMissingPassphrase) {
+                SubkeyIdentifier keyId = missingPassphrases.getA();
+                PGPPublicKeyEncryptedData publicKeyEncryptedData = missingPassphrases.getB();
+                PGPSecretKeyRing secretKeys = findDecryptionKeyRing(keyId.getKeyId());
+                PGPSecretKey secretKey = secretKeys.getSecretKey(keyId.getSubkeyId());
+
+                PGPPrivateKey privateKey = tryPublicKeyDecryption(secretKeys, secretKey, publicKeyEncryptedData, postponedDueToMissingPassphrase, false);
+                if (privateKey == null) {
+                    continue;
+                }
+
+                decryptionKey = privateKey;
+                encryptedSessionKey = publicKeyEncryptedData;
+                break;
+            }
+        }
+
         return decryptWith(encryptedSessionKey, decryptionKey);
+    }
+
+    /**
+     * Try decryption of the provided public-key-encrypted-data using the given secret key.
+     * If the secret key is encrypted and the secret key protector does not have a passphrase available and the boolean
+     * postponeIfMissingPassphrase is true, data decryption is postponed by pushing a tuple of the encrypted data decryption key
+     * identifier to the postponed list.
+     *
+     * This method only returns a non-null private key, if the private key is able to decrypt the message successfully.
+     *
+     * @param secretKeys secret key ring
+     * @param secretKey secret key
+     * @param publicKeyEncryptedData encrypted data which is tried to decrypt using the secret key
+     * @param postponed list of postponed decryptions due to missing secret key passphrases
+     * @param postponeIfMissingPassphrase flag to specify whether missing secret key passphrases should result in postponed decryption
+     * @return private key if decryption is successful, null if decryption is unsuccessful or postponed
+     *
+     * @throws PGPException in case of an OpenPGP error
+     */
+    private PGPPrivateKey tryPublicKeyDecryption(
+            PGPSecretKeyRing secretKeys,
+            PGPSecretKey secretKey,
+            PGPPublicKeyEncryptedData publicKeyEncryptedData,
+            List<Tuple<SubkeyIdentifier, PGPPublicKeyEncryptedData>> postponed,
+            boolean postponeIfMissingPassphrase) throws PGPException {
+        SecretKeyRingProtector protector = options.getSecretKeyProtector(secretKeys);
+
+        if (postponeIfMissingPassphrase && !protector.hasPassphraseFor(secretKey.getKeyID())) {
+            // Postpone decryption with key with missing passphrase
+            SubkeyIdentifier identifier = new SubkeyIdentifier(secretKeys, secretKey.getKeyID());
+            postponed.add(new Tuple<>(identifier, publicKeyEncryptedData));
+            return null;
+        }
+
+        PGPPrivateKey privateKey = UnlockSecretKey.unlockSecretKey(
+                secretKey, protector.getDecryptor(secretKey.getKeyID()));
+
+        // test if we have the right private key
+        PublicKeyDataDecryptorFactory decryptorFactory = ImplementationFactory.getInstance()
+                .getPublicKeyDataDecryptorFactory(privateKey);
+        try {
+            publicKeyEncryptedData.getSymmetricAlgorithm(decryptorFactory); // will only succeed if we have the right secret key
+            LOGGER.debug("Found correct decryption key {}.", Long.toHexString(secretKey.getKeyID()));
+            resultBuilder.setDecryptionKey(new SubkeyIdentifier(secretKeys, privateKey.getKeyID()));
+            return privateKey;
+        } catch (PGPException | ClassCastException e) {
+            return null;
+        }
     }
 
     private InputStream decryptWith(PGPPublicKeyEncryptedData encryptedSessionKey, PGPPrivateKey decryptionKey)
             throws PGPException {
-        if (decryptionKey == null) {
+        if (decryptionKey == null || encryptedSessionKey == null) {
             throw new MissingDecryptionMethodException("Decryption failed - No suitable decryption key or passphrase found");
         }
 
