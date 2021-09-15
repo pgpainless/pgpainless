@@ -1,5 +1,9 @@
 # PGPainless Changelog
 
+## 0.2.13
+- Add `MessageInspector` class to determine IDs of recipient keys.
+- PGPainless now tries decryption using keys with available passphrases first and only then request key passphrases using callbacks.
+
 ## 0.2.12
 - Fix: Add workaround for BC defaulting to S2K `USAGE_CHECKSUM` by changing S2K usage to `USAGE_SHA1`
 - Repair keys with `USAGE_CHECKSUM` when changing passphrase
