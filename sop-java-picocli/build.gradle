@@ -3,17 +3,14 @@ plugins {
 }
 
 dependencies {
-    implementation(project(":sop-java"))
-    implementation 'info.picocli:picocli:4.6.1'
-    implementation 'com.google.inject:guice:5.0.1'
-
     testImplementation "org.junit.jupiter:junit-jupiter-api:$junitVersion"
     testRuntimeOnly "org.junit.jupiter:junit-jupiter-engine:$junitVersion"
-
     // https://todd.ginsberg.com/post/testing-system-exit/
     testImplementation 'com.ginsberg:junit5-system-exit:1.1.1'
-
     testImplementation "org.mockito:mockito-core:3.11.2"
+
+    implementation(project(":sop-java"))
+    implementation "info.picocli:picocli:$picocliVersion"
 
     // https://mvnrepository.com/artifact/com.google.code.findbugs/jsr305
     implementation group: 'com.google.code.findbugs', name: 'jsr305', version: '3.0.2'

@@ -22,32 +22,23 @@ task generateVersionProperties {
 processResources.dependsOn generateVersionProperties
 
 dependencies {
-    implementation(project(":pgpainless-sop"))
-    implementation(project(":sop-java"))
-
-    implementation(project(":sop-java-picocli"))
-    implementation 'info.picocli:picocli:4.5.2'
 
     testImplementation(project(":pgpainless-core"))
 
     testImplementation "org.junit.jupiter:junit-jupiter-api:$junitVersion"
     testRuntimeOnly "org.junit.jupiter:junit-jupiter-engine:$junitVersion"
-
     // https://todd.ginsberg.com/post/testing-system-exit/
     testImplementation 'com.ginsberg:junit5-system-exit:1.1.1'
-
     // We want logback logging in tests
     testImplementation 'ch.qos.logback:logback-classic:1.2.5'
 
+    implementation(project(":pgpainless-sop"))
+    implementation(project(":sop-java"))
+    implementation(project(":sop-java-picocli"))
+
+    implementation "info.picocli:picocli:$picocliVersion"
     // We don't want logging in the application itself
     implementation "org.slf4j:slf4j-nop:$slf4jVersion"
-
-    /*
-    implementation "org.bouncycastle:bcprov-debug-jdk15on:$bouncyCastleVersion"
-    /*/
-    implementation "org.bouncycastle:bcprov-jdk15on:$bouncyCastleVersion"
-    //*/
-    implementation "org.bouncycastle:bcpg-jdk15on:$bouncyCastleVersion"
 
     // https://mvnrepository.com/artifact/com.google.code.findbugs/jsr305
     implementation group: 'com.google.code.findbugs', name: 'jsr305', version: '3.0.2'
