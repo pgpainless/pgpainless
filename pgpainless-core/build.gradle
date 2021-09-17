@@ -6,17 +6,12 @@ dependencies {
     testImplementation "org.junit.jupiter:junit-jupiter-api:$junitVersion"
     testImplementation "org.junit.jupiter:junit-jupiter-params:$junitVersion"
     testRuntimeOnly "org.junit.jupiter:junit-jupiter-engine:$junitVersion"
-
-    implementation "org.bouncycastle:bcprov-jdk15on:$bouncyCastleVersion"
-
-    //*
-    api "org.bouncycastle:bcpg-jdk15on:$bouncyCastleVersion"
-    /*/
-    api files("libs/bcpg-jdk18on-1.70-SNAPSHOT.jar")
-    // */
-
-    implementation "org.slf4j:slf4j-api:$slf4jVersion"
     testImplementation 'ch.qos.logback:logback-classic:1.2.5'
+
+    api "org.slf4j:slf4j-api:$slf4jVersion"
+
+    api "org.bouncycastle:bcprov-jdk15on:$bouncyCastleVersion"
+    api "org.bouncycastle:bcpg-jdk15on:$bouncyCastleVersion"
 
     // https://mvnrepository.com/artifact/com.google.code.findbugs/jsr305
     implementation group: 'com.google.code.findbugs', name: 'jsr305', version: '3.0.2'
