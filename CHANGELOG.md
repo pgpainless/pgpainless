@@ -1,5 +1,10 @@
 # PGPainless Changelog
 
+## 0.2.14-SNAPSHOT
+- Export dependency on Bouncycastle's `bcprov-jdk15on`
+- Rework Key Generation API
+  - Replace builder-chain structure with single `KeyRingBuilder` class
+
 ## 0.2.13
 - Add `MessageInspector` class to determine IDs of recipient keys.
 - PGPainless now tries decryption using keys with available passphrases first and only then request key passphrases using callbacks.
