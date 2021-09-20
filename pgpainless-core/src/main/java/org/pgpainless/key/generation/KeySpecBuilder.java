@@ -30,6 +30,7 @@ import org.pgpainless.algorithm.HashAlgorithm;
 import org.pgpainless.algorithm.KeyFlag;
 import org.pgpainless.algorithm.SymmetricKeyAlgorithm;
 import org.pgpainless.key.generation.type.KeyType;
+import org.pgpainless.util.CollectionUtils;
 
 public class KeySpecBuilder implements KeySpecBuilderInterface {
 
@@ -41,10 +42,14 @@ public class KeySpecBuilder implements KeySpecBuilderInterface {
     private Set<HashAlgorithm> preferredHashAlgorithms = algorithmSuite.getHashAlgorithms();
     private Set<SymmetricKeyAlgorithm> preferredSymmetricAlgorithms = algorithmSuite.getSymmetricKeyAlgorithms();
 
-    KeySpecBuilder(@Nonnull KeyType type, KeyFlag... flags) {
-        if (flags == null || flags.length == 0) {
-            throw new IllegalArgumentException("KeyFlags cannot be empty.");
+    KeySpecBuilder(@Nonnull KeyType type, KeyFlag flag, KeyFlag... flags) {
+        if (flag == null) {
+            throw new IllegalArgumentException("Key MUST carry at least one key flag");
         }
+        if (flags == null) {
+            throw new IllegalArgumentException("List of additional flags MUST NOT be null.");
+        }
+        flags = CollectionUtils.concat(flag, flags);
         assureKeyCanCarryFlags(type, flags);
         this.type = type;
         this.keyFlags = flags;

@@ -55,7 +55,7 @@ public class KeySpec {
         return inheritedSubPackets;
     }
 
-    public static KeySpecBuilder getBuilder(KeyType type, KeyFlag... flags) {
-        return new KeySpecBuilder(type, flags);
+    public static KeySpecBuilder getBuilder(KeyType type, KeyFlag flag, KeyFlag... flags) {
+        return new KeySpecBuilder(type, flag, flags);
     }
 }
