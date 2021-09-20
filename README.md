@@ -75,26 +75,19 @@ There are some predefined key archetypes, but it is possible to fully customize 
 
         // Customized key
         PGPSecretKeyRing keyRing = PGPainless.generateKeyRing()
-                .withSubKey(
-                        KeySpec.getBuilder(ECDSA.fromCurve(EllipticCurve._P256))
-                                .withKeyFlags(KeyFlag.SIGN_DATA)
-                                .withDetailedConfiguration()
-                                .withDefaultSymmetricAlgorithms()
-                                .withDefaultHashAlgorithms()
-                                .withPreferredCompressionAlgorithms(CompressionAlgorithm.ZLIB)
-                                .withFeature(Feature.MODIFICATION_DETECTION)
-                                .done()
-                ).withSubKey(
-                        KeySpec.getBuilder(ECDH.fromCurve(EllipticCurve._P256))
-                                .withKeyFlags(KeyFlag.ENCRYPT_COMMS, KeyFlag.ENCRYPT_STORAGE)
-                                .withDefaultAlgorithms()
-                ).withMasterKey(
-                        KeySpec.getBuilder(RSA.withLength(RsaLength._8192))
-                                .withKeyFlags(KeyFlag.SIGN_DATA, KeyFlag.CERTIFY_OTHER)
-                                .withDefaultAlgorithms()
-                ).withPrimaryUserId("Juliet <juliet@montague.lit>")
-                .withAdditionalUserId("xmpp:juliet@capulet.lit")
-                .withPassphrase("romeo_oh_Romeo<3")
+                .setPrimaryKey(KeySpec.getBuilder(
+                        RSA.withLength(RsaLength._8192),
+                        KeyFlag.SIGN_DATA, KeyFlag.CERTIFY_OTHER))
+                .addSubkey(
+                        KeySpec.getBuilder(ECDSA.fromCurve(EllipticCurve._P256), KeyFlag.SIGN_DATA)
+                                .overrideCompressionAlgorithms(CompressionAlgorithm.ZLIB)
+                ).addSubkey(
+                        KeySpec.getBuilder(
+                                        ECDH.fromCurve(EllipticCurve._P256),
+                                        KeyFlag.ENCRYPT_COMMS, KeyFlag.ENCRYPT_STORAGE)
+                ).addUserId("Juliet <juliet@montague.lit>")
+                .addUserId("xmpp:juliet@capulet.lit")
+                .setPassphrase("romeo_oh_Romeo<3")
                 .build();
 ```
 

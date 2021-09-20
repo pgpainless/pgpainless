@@ -61,9 +61,7 @@ public class AddSubKeyTest {
 
         secretKeys = PGPainless.modifyKeyRing(secretKeys)
                 .addSubKey(
-                        KeySpec.getBuilder(ECDSA.fromCurve(EllipticCurve._P256))
-                                .withKeyFlags(KeyFlag.SIGN_DATA)
-                                .withDefaultAlgorithms(),
+                        KeySpec.getBuilder(ECDSA.fromCurve(EllipticCurve._P256), KeyFlag.SIGN_DATA).build(),
                         Passphrase.fromPassword("subKeyPassphrase"),
                         PasswordBasedSecretKeyRingProtector.forKey(secretKeys, Passphrase.fromPassword("password123")))
                 .done();

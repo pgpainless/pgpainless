@@ -21,22 +21,21 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 import java.io.IOException;
 import java.security.InvalidAlgorithmParameterException;
 import java.security.NoSuchAlgorithmException;
+import java.util.Date;
 
 import org.bouncycastle.openpgp.PGPException;
 import org.bouncycastle.openpgp.PGPPublicKeyRing;
 import org.bouncycastle.openpgp.PGPSecretKeyRing;
 import org.junit.jupiter.api.Test;
 import org.pgpainless.PGPainless;
-import org.pgpainless.algorithm.AlgorithmSuite;
 import org.pgpainless.algorithm.CompressionAlgorithm;
 import org.pgpainless.algorithm.EncryptionPurpose;
-import org.pgpainless.algorithm.Feature;
 import org.pgpainless.algorithm.HashAlgorithm;
 import org.pgpainless.algorithm.KeyFlag;
 import org.pgpainless.algorithm.PublicKeyAlgorithm;
 import org.pgpainless.algorithm.SymmetricKeyAlgorithm;
 import org.pgpainless.key.generation.KeySpec;
-import org.pgpainless.key.generation.KeySpecBuilderInterface;
+import org.pgpainless.key.generation.KeySpecBuilder;
 import org.pgpainless.key.generation.type.KeyType;
 import org.pgpainless.key.generation.type.ecc.EllipticCurve;
 import org.pgpainless.key.generation.type.eddsa.EdDSACurve;
@@ -159,35 +158,34 @@ public class GenerateKeys {
      * algorithm preferences.
      *
      * If the target key amalgamation (key ring) should consist of more than just a single (sub-)key, start by providing
-     * the specifications for the subkeys first (in {@link org.pgpainless.key.generation.KeyRingBuilderInterface#withSubKey(KeySpec)})
-     * and add the primary key specification last (in {@link org.pgpainless.key.generation.KeyRingBuilderInterface#withPrimaryKey(KeySpec)}.
+     * the primary key specification using {@link org.pgpainless.key.generation.KeyRingBuilder#setPrimaryKey(KeySpec)}.
+     * Any additional subkeys can be then added using {@link org.pgpainless.key.generation.KeyRingBuilder#addSubkey(KeySpec)}.
      *
-     * {@link KeySpec} objects can best be obtained by using the {@link KeySpec#getBuilder(KeyType)} method and providing a {@link KeyType}.
+     * {@link KeySpec} objects can best be obtained by using the {@link KeySpec#getBuilder(KeyType, KeyFlag, KeyFlag...)}
+     * method and providing a {@link KeyType}.
      * There are a bunch of factory methods for different {@link KeyType} implementations present in {@link KeyType} itself
-     * (such as {@link KeyType#ECDH(EllipticCurve)}.
-     *
-     * After that, the {@link org.pgpainless.key.generation.KeySpecBuilder} needs to be further configured.
-     * First of all, the keys {@link KeyFlag KeyFlags} need to be specified. {@link KeyFlag KeyFlags} determine
+     * (such as {@link KeyType#ECDH(EllipticCurve)}. {@link KeyFlag KeyFlags} determine
      * the use of the key, like encryption, signing data or certifying subkeys.
-     * KeyFlags can be set with {@link org.pgpainless.key.generation.KeySpecBuilder#withKeyFlags(KeyFlag...)}.
      *
-     * Next is algorithm setup. You can either trust PGPainless' defaults (see {@link AlgorithmSuite#getDefaultAlgorithmSuite()}),
-     * or specify your own algorithm preferences.
-     * To go with the defaults, call {@link KeySpecBuilderInterface.WithDetailedConfiguration#withDefaultAlgorithms()},
-     * otherwise start detailed config with {@link KeySpecBuilderInterface.WithDetailedConfiguration#withDetailedConfiguration()}.
+     * If you so desire, you can now specify your own algorithm preferences.
+     * For that, see {@link org.pgpainless.key.generation.KeySpecBuilder#overridePreferredCompressionAlgorithms(CompressionAlgorithm...)},
+     * {@link org.pgpainless.key.generation.KeySpecBuilder#overridePreferredHashAlgorithms(HashAlgorithm...)} or
+     * {@link org.pgpainless.key.generation.KeySpecBuilder#overridePreferredSymmetricKeyAlgorithms(SymmetricKeyAlgorithm...)}.
      *
      * Note, that if you set preferred algorithms, the preference lists are sorted from high priority to low priority.
      *
-     * When setting the primary key spec ({@link org.pgpainless.key.generation.KeyRingBuilder#withPrimaryKey(KeySpec)}),
-     * make sure that the primary key spec has the {@link KeyFlag} {@link KeyFlag#CERTIFY_OTHER} set, as this is an requirement
+     * When setting the primary key spec ({@link org.pgpainless.key.generation.KeyRingBuilder#setPrimaryKey(KeySpecBuilder)}),
+     * make sure that the primary key spec has the {@link KeyFlag} {@link KeyFlag#CERTIFY_OTHER} set, as this is a requirement
      * for primary keys.
      *
      * Furthermore you have to set at least the primary user-id via
-     * {@link org.pgpainless.key.generation.KeyRingBuilderInterface.WithPrimaryUserId#withPrimaryUserId(String)},
-     * but you can also add additional user-ids via
-     * {@link org.pgpainless.key.generation.KeyRingBuilderInterface.WithAdditionalUserIdOrPassphrase#withAdditionalUserId(String)}.
+     * {@link org.pgpainless.key.generation.KeyRingBuilder#addUserId(String)},
+     * but you can also add additional user-ids.
      *
-     * Lastly you can decide whether or not to set a passphrase to protect the secret key.
+     * If you want the key to expire at a certain point in time, call
+     * {@link org.pgpainless.key.generation.KeyRingBuilder#setExpirationDate(Date)}.
+     * Lastly you can decide whether to set a passphrase to protect the secret key using
+     * {@link org.pgpainless.key.generation.KeyRingBuilder#setPassphrase(Passphrase)}.
      *
      * @throws PGPException
      * @throws InvalidAlgorithmParameterException
@@ -208,48 +206,35 @@ public class GenerateKeys {
         Passphrase passphrase = Passphrase.fromPassword("1nters3x");
 
         PGPSecretKeyRing secretKey = PGPainless.generateKeyRing()
+                .setPrimaryKey(KeySpec.getBuilder(KeyType.EDDSA(EdDSACurve._Ed25519),
+                        // The primary key MUST carry the CERTIFY_OTHER flag, but CAN carry additional flags
+                        KeyFlag.CERTIFY_OTHER))
                 // Add the first subkey (in this case encryption)
-                .withSubKey(
-                        KeySpec.getBuilder(
+                .addSubkey(KeySpec.getBuilder(
                                 // We choose an ECDH key over the brainpoolp256r1 curve
-                                KeyType.ECDH(EllipticCurve._BRAINPOOLP256R1)
-                        )
+                                KeyType.ECDH(EllipticCurve._BRAINPOOLP256R1),
                                 // Our key can encrypt both communication data, as well as data at rest
-                                .withKeyFlags(KeyFlag.ENCRYPT_STORAGE, KeyFlag.ENCRYPT_COMMS)
-                                // Optionally: Configure the subkey with custom algorithm preferences
-                                //  Is is recommended though to go with PGPainless' defaults which can be found in the
-                                //  AlgorithmSuite class.
-                                .withDetailedConfiguration()
-                                .withPreferredSymmetricAlgorithms(SymmetricKeyAlgorithm.AES_256, SymmetricKeyAlgorithm.AES_192, SymmetricKeyAlgorithm.AES_128)
-                                .withPreferredHashAlgorithms(HashAlgorithm.SHA512, HashAlgorithm.SHA384, HashAlgorithm.SHA256)
-                                .withPreferredCompressionAlgorithms(CompressionAlgorithm.ZIP, CompressionAlgorithm.BZIP2, CompressionAlgorithm.ZLIB)
-                                // Modification Detection is highly recommended
-                                .withFeature(Feature.MODIFICATION_DETECTION)
-                                .done()
-                )
-                // Add the second subkey (signing)
-                .withSubKey(
-                        KeySpec.getBuilder(
-                                KeyType.ECDSA(EllipticCurve._BRAINPOOLP384R1)
+                                KeyFlag.ENCRYPT_STORAGE, KeyFlag.ENCRYPT_COMMS
                         )
-                                // This key is used for creating signatures only
-                                .withKeyFlags(KeyFlag.SIGN_DATA)
-                                // Instead of manually specifying algorithm preferences, we can simply use PGPainless' sane defaults
-                                .withDefaultAlgorithms()
-                )
-                // Lastly we add the primary key (certification only in our case)
-                .withPrimaryKey(
-                        KeySpec.getBuilder(KeyType.EDDSA(EdDSACurve._Ed25519))
-                                // The primary key MUST carry the CERTIFY_OTHER flag, but CAN carry additional flags
-                                .withKeyFlags(KeyFlag.CERTIFY_OTHER)
-                                .withDefaultAlgorithms()
-                )
+                        // Optionally: Configure the subkey with custom algorithm preferences
+                        //  Is is recommended though to go with PGPainless' defaults which can be found in the
+                        //  AlgorithmSuite class.
+                        .overridePreferredSymmetricKeyAlgorithms(SymmetricKeyAlgorithm.AES_256, SymmetricKeyAlgorithm.AES_192, SymmetricKeyAlgorithm.AES_128)
+                        .overridePreferredHashAlgorithms(HashAlgorithm.SHA512, HashAlgorithm.SHA384, HashAlgorithm.SHA256)
+                        .overridePreferredCompressionAlgorithms(CompressionAlgorithm.ZIP, CompressionAlgorithm.BZIP2, CompressionAlgorithm.ZLIB)
+                        .build())
+                // Add the second subkey (signing)
+                .addSubkey(KeySpec.getBuilder(
+                        KeyType.ECDSA(EllipticCurve._BRAINPOOLP384R1),
+                        // This key is used for creating signatures only
+                        KeyFlag.SIGN_DATA
+                ))
                 // Set primary user-id
-                .withPrimaryUserId(userId)
+                .addUserId(userId)
                 // Add an additional user id. This step can be repeated
-                .withAdditionalUserId(additionalUserId)
+                .addUserId(additionalUserId)
                 // Set passphrase. Alternatively use .withoutPassphrase() to leave key unprotected.
-                .withPassphrase(passphrase)
+                .setPassphrase(passphrase)
                 .build();
 
 

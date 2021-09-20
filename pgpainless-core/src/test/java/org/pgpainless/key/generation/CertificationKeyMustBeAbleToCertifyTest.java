@@ -46,12 +46,9 @@ public class CertificationKeyMustBeAbleToCertifyTest {
         for (KeyType type : typesIncapableOfCreatingVerifications) {
             assertThrows(IllegalArgumentException.class, () -> PGPainless
                     .generateKeyRing()
-                    .withPrimaryKey(KeySpec
-                            .getBuilder(type)
-                            .withKeyFlags(KeyFlag.CERTIFY_OTHER, KeyFlag.SIGN_DATA)
-                            .withDefaultAlgorithms())
-                    .withPrimaryUserId("should@throw.ex")
-                    .withoutPassphrase().build());
+                    .setPrimaryKey(KeySpec.getBuilder(type, KeyFlag.CERTIFY_OTHER, KeyFlag.SIGN_DATA))
+                    .addUserId("should@throw.ex")
+                    .build());
         }
     }
 }

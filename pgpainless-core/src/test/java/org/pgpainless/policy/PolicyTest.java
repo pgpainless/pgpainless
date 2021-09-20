@@ -89,14 +89,14 @@ public class PolicyTest {
 
     @Test
     public void testAcceptableSymmetricKeyDecryptionAlgorithm() {
-        assertTrue(policy.getSymmetricKeyDecryptionAlgoritmPolicy().isAcceptable(SymmetricKeyAlgorithm.BLOWFISH));
-        assertTrue(policy.getSymmetricKeyDecryptionAlgoritmPolicy().isAcceptable(SymmetricKeyAlgorithm.BLOWFISH.getAlgorithmId()));
+        assertTrue(policy.getSymmetricKeyDecryptionAlgorithmPolicy().isAcceptable(SymmetricKeyAlgorithm.BLOWFISH));
+        assertTrue(policy.getSymmetricKeyDecryptionAlgorithmPolicy().isAcceptable(SymmetricKeyAlgorithm.BLOWFISH.getAlgorithmId()));
     }
 
     @Test
     public void testUnAcceptableSymmetricKeyDecryptionAlgorithm() {
-        assertFalse(policy.getSymmetricKeyDecryptionAlgoritmPolicy().isAcceptable(SymmetricKeyAlgorithm.CAMELLIA_128));
-        assertFalse(policy.getSymmetricKeyDecryptionAlgoritmPolicy().isAcceptable(SymmetricKeyAlgorithm.CAMELLIA_128.getAlgorithmId()));
+        assertFalse(policy.getSymmetricKeyDecryptionAlgorithmPolicy().isAcceptable(SymmetricKeyAlgorithm.CAMELLIA_128));
+        assertFalse(policy.getSymmetricKeyDecryptionAlgorithmPolicy().isAcceptable(SymmetricKeyAlgorithm.CAMELLIA_128.getAlgorithmId()));
     }
 
     @Test

@@ -15,6 +15,7 @@
  */
 package org.pgpainless.util;
 
+import java.lang.reflect.Array;
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
@@ -32,5 +33,12 @@ public final class CollectionUtils {
             items.add(item);
         }
         return items;
+    }
+
+    public static <T> T[] concat(T t, T[] ts) {
+        T[] concat = (T[]) Array.newInstance(t.getClass(), ts.length + 1);
+        concat[0] = t;
+        System.arraycopy(ts, 0, concat, 1, ts.length);
+        return concat;
     }
 }

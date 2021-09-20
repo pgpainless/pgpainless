@@ -187,9 +187,8 @@ public class ModifyKeys {
         Passphrase subkeyPassphrase = Passphrase.fromPassword("subk3yP4ssphr4s3");
         secretKey = PGPainless.modifyKeyRing(secretKey)
                 .addSubKey(
-                        KeySpec.getBuilder(KeyType.ECDH(EllipticCurve._BRAINPOOLP512R1))
-                                .withKeyFlags(KeyFlag.ENCRYPT_COMMS)
-                                .withDefaultAlgorithms(),
+                        KeySpec.getBuilder(KeyType.ECDH(EllipticCurve._BRAINPOOLP512R1), KeyFlag.ENCRYPT_COMMS)
+                                .build(),
                         subkeyPassphrase,
                         protector)
                 .done();

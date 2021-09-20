@@ -25,50 +25,32 @@ import org.bouncycastle.openpgp.PGPSecretKeyRing;
 import org.pgpainless.key.util.UserId;
 import org.pgpainless.util.Passphrase;
 
-public interface KeyRingBuilderInterface {
+public interface KeyRingBuilderInterface<B extends KeyRingBuilderInterface<B>> {
 
-    KeyRingBuilderInterface withSubKey(@Nonnull KeySpec keySpec);
+    B setPrimaryKey(@Nonnull KeySpec keySpec);
 
-    WithPrimaryUserId withPrimaryKey(@Nonnull KeySpec keySpec);
-
-    interface WithPrimaryUserId {
-
-        default WithAdditionalUserIdOrPassphrase withPrimaryUserId(@Nonnull UserId userId) {
-            return withPrimaryUserId(userId.toString());
-        }
-
-        WithAdditionalUserIdOrPassphrase withPrimaryUserId(@Nonnull String userId);
-
-        WithAdditionalUserIdOrPassphrase withPrimaryUserId(@Nonnull byte[] userId);
-
+    default B setPrimaryKey(@Nonnull KeySpecBuilder builder) {
+        return setPrimaryKey(builder.build());
     }
 
-    interface WithAdditionalUserIdOrPassphrase {
+    B addSubkey(@Nonnull KeySpec keySpec);
 
-        default WithAdditionalUserIdOrPassphrase withAdditionalUserId(@Nonnull UserId userId) {
-            return withAdditionalUserId(userId.toString());
-        }
-
-        /**
-         * Set an expiration date for the key.
-         *
-         * @param expirationDate date on which the key will expire.
-         * @return builder
-         */
-        WithAdditionalUserIdOrPassphrase setExpirationDate(@Nonnull Date expirationDate);
-
-        WithAdditionalUserIdOrPassphrase withAdditionalUserId(@Nonnull String userId);
-
-        WithAdditionalUserIdOrPassphrase withAdditionalUserId(@Nonnull byte[] userId);
-
-        Build withPassphrase(@Nonnull Passphrase passphrase);
-
-        Build withoutPassphrase();
+    default B addSubkey(@Nonnull KeySpecBuilder builder) {
+        return addSubkey(builder.build());
     }
 
-    interface Build {
+    default B addUserId(UserId userId) {
+        return addUserId(userId.toString());
+    }
 
-        PGPSecretKeyRing build() throws NoSuchAlgorithmException, PGPException,
+    B addUserId(@Nonnull String userId);
+
+    B addUserId(@Nonnull byte[] userId);
+
+    B setExpirationDate(@Nonnull Date expirationDate);
+
+    B setPassphrase(@Nonnull Passphrase passphrase);
+
+    PGPSecretKeyRing build() throws NoSuchAlgorithmException, PGPException,
                 InvalidAlgorithmParameterException;
-    }
 }

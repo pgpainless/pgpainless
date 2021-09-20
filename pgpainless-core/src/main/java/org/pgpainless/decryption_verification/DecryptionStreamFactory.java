@@ -466,7 +466,7 @@ public final class DecryptionStreamFactory {
     }
 
     private void throwIfAlgorithmIsRejected(SymmetricKeyAlgorithm algorithm) throws UnacceptableAlgorithmException {
-        if (!PGPainless.getPolicy().getSymmetricKeyDecryptionAlgoritmPolicy().isAcceptable(algorithm)) {
+        if (!PGPainless.getPolicy().getSymmetricKeyDecryptionAlgorithmPolicy().isAcceptable(algorithm)) {
             throw new UnacceptableAlgorithmException("Data is "
                     + (algorithm == SymmetricKeyAlgorithm.NULL ? "unencrypted" : "encrypted with symmetric algorithm " + algorithm) + " which is not acceptable as per PGPainless' policy.\n" +
                     "To mark this algorithm as acceptable, use PGPainless.getPolicy().setSymmetricKeyDecryptionAlgorithmPolicy().");

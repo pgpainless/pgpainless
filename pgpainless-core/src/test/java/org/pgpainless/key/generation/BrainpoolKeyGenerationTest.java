@@ -54,12 +54,10 @@ public class BrainpoolKeyGenerationTest {
 
         for (EllipticCurve curve : EllipticCurve.values()) {
             PGPSecretKeyRing secretKeys = generateKey(
-                    KeySpec.getBuilder(KeyType.ECDSA(curve))
-                            .withKeyFlags(KeyFlag.CERTIFY_OTHER, KeyFlag.SIGN_DATA)
-                            .withDefaultAlgorithms(),
-                    KeySpec.getBuilder(KeyType.ECDH(curve))
-                            .withKeyFlags(KeyFlag.ENCRYPT_COMMS, KeyFlag.ENCRYPT_STORAGE)
-                            .withDefaultAlgorithms(),
+                    KeySpec.getBuilder(
+                            KeyType.ECDSA(curve), KeyFlag.CERTIFY_OTHER, KeyFlag.SIGN_DATA).build(),
+                    KeySpec.getBuilder(
+                            KeyType.ECDH(curve), KeyFlag.ENCRYPT_COMMS, KeyFlag.ENCRYPT_STORAGE).build(),
                     "Elliptic Curve <elliptic@curve.key>");
 
             assertEquals(PublicKeyAlgorithm.ECDSA, PublicKeyAlgorithm.fromId(secretKeys.getPublicKey().getAlgorithm()));
@@ -85,20 +83,15 @@ public class BrainpoolKeyGenerationTest {
         ImplementationFactory.setFactoryImplementation(implementationFactory);
 
         PGPSecretKeyRing secretKeys = PGPainless.generateKeyRing()
-                .withSubKey(KeySpec.getBuilder(KeyType.EDDSA(EdDSACurve._Ed25519))
-                        .withKeyFlags(KeyFlag.SIGN_DATA)
-                        .withDefaultAlgorithms())
-                .withSubKey(KeySpec.getBuilder(KeyType.XDH(XDHSpec._X25519))
-                        .withKeyFlags(KeyFlag.ENCRYPT_COMMS, KeyFlag.ENCRYPT_STORAGE)
-                        .withDefaultAlgorithms())
-                .withSubKey(KeySpec.getBuilder(KeyType.RSA(RsaLength._3072))
-                        .withKeyFlags(KeyFlag.SIGN_DATA)
-                        .withDefaultAlgorithms())
-                .withPrimaryKey(KeySpec.getBuilder(KeyType.ECDSA(EllipticCurve._BRAINPOOLP384R1))
-                        .withKeyFlags(KeyFlag.CERTIFY_OTHER)
-                        .withDefaultAlgorithms())
-                .withPrimaryUserId(UserId.nameAndEmail("Alice", "alice@pgpainless.org"))
-                .withPassphrase(Passphrase.fromPassword("passphrase"))
+                .setPrimaryKey(KeySpec.getBuilder(
+                        KeyType.ECDSA(EllipticCurve._BRAINPOOLP384R1), KeyFlag.CERTIFY_OTHER))
+                .addSubkey(KeySpec.getBuilder(KeyType.EDDSA(EdDSACurve._Ed25519), KeyFlag.SIGN_DATA))
+                .addSubkey(KeySpec.getBuilder(
+                        KeyType.XDH(XDHSpec._X25519), KeyFlag.ENCRYPT_COMMS, KeyFlag.ENCRYPT_STORAGE))
+                .addSubkey(KeySpec.getBuilder(
+                        KeyType.RSA(RsaLength._3072), KeyFlag.SIGN_DATA))
+                .addUserId(UserId.nameAndEmail("Alice", "alice@pgpainless.org"))
+                .setPassphrase(Passphrase.fromPassword("passphrase"))
                 .build();
 
         for (PGPSecretKey key : secretKeys) {
@@ -136,10 +129,9 @@ public class BrainpoolKeyGenerationTest {
 
     public PGPSecretKeyRing generateKey(KeySpec primaryKey, KeySpec subKey, String userId) throws InvalidAlgorithmParameterException, NoSuchAlgorithmException, PGPException {
         PGPSecretKeyRing secretKeys = PGPainless.generateKeyRing()
-                .withSubKey(subKey)
-                .withPrimaryKey(primaryKey)
-                .withPrimaryUserId(userId)
-                .withoutPassphrase()
+                .setPrimaryKey(primaryKey)
+                .addSubkey(subKey)
+                .addUserId(userId)
                 .build();
         return secretKeys;
     }
