@@ -51,16 +51,13 @@ public class UserIdRevocationTest {
     @Test
     public void testRevocationWithoutRevocationAttributes() throws PGPException, InvalidAlgorithmParameterException, NoSuchAlgorithmException {
         PGPSecretKeyRing secretKeys = PGPainless.generateKeyRing()
-                .withSubKey(KeySpec.getBuilder(
-                        KeyType.XDH(XDHSpec._X25519), KeyFlag.ENCRYPT_COMMS)
-                        .build())
-                .withPrimaryKey(KeySpec.getBuilder(
+                .setPrimaryKey(KeySpec.getBuilder(
                         KeyType.EDDSA(EdDSACurve._Ed25519),
-                                KeyFlag.SIGN_DATA, KeyFlag.CERTIFY_OTHER)
-                        .build())
-                .withPrimaryUserId("primary@key.id")
-                .withAdditionalUserId("secondary@key.id")
-                .withoutPassphrase()
+                        KeyFlag.SIGN_DATA, KeyFlag.CERTIFY_OTHER))
+                .addSubkey(KeySpec.getBuilder(
+                        KeyType.XDH(XDHSpec._X25519), KeyFlag.ENCRYPT_COMMS))
+                .addUserId("primary@key.id")
+                .addUserId("secondary@key.id")
                 .build();
 
         // make a copy with revoked subkey
@@ -92,15 +89,12 @@ public class UserIdRevocationTest {
     @Test
     public void testRevocationWithRevocationReason() throws InvalidAlgorithmParameterException, NoSuchAlgorithmException, PGPException {
         PGPSecretKeyRing secretKeys = PGPainless.generateKeyRing()
-                .withSubKey(KeySpec.getBuilder(KeyType.XDH(XDHSpec._X25519), KeyFlag.ENCRYPT_COMMS)
-                        .build())
-                .withPrimaryKey(KeySpec.getBuilder(
+                .setPrimaryKey(KeySpec.getBuilder(
                         KeyType.EDDSA(EdDSACurve._Ed25519),
-                                KeyFlag.SIGN_DATA, KeyFlag.CERTIFY_OTHER)
-                        .build())
-                .withPrimaryUserId("primary@key.id")
-                .withAdditionalUserId("secondary@key.id")
-                .withoutPassphrase()
+                        KeyFlag.SIGN_DATA, KeyFlag.CERTIFY_OTHER))
+                .addSubkey(KeySpec.getBuilder(KeyType.XDH(XDHSpec._X25519), KeyFlag.ENCRYPT_COMMS))
+                .addUserId("primary@key.id")
+                .addUserId("secondary@key.id")
                 .build();
 
         secretKeys = PGPainless.modifyKeyRing(secretKeys)
@@ -147,6 +141,6 @@ public class UserIdRevocationTest {
         assertThrows(IllegalArgumentException.class, () -> PGPainless.modifyKeyRing(secretKeys)
                 .revokeUserId("cryptie@encrypted.key", protector,
                         RevocationAttributes.createKeyRevocation().withReason(RevocationAttributes.Reason.KEY_RETIRED)
-                .withDescription("This is not a valid certification revocation reason.")));
+                                .withDescription("This is not a valid certification revocation reason.")));
     }
 }

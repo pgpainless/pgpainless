@@ -47,12 +47,12 @@ public class BCUtilTest {
             throws PGPException, NoSuchAlgorithmException, InvalidAlgorithmParameterException,
             IOException {
         PGPSecretKeyRing sec = PGPainless.generateKeyRing()
-                .withSubKey(KeySpec.getBuilder(KeyType.RSA(RsaLength._3072), KeyFlag.ENCRYPT_COMMS).build())
-                .withPrimaryKey(KeySpec.getBuilder(
+                .setPrimaryKey(KeySpec.getBuilder(
                         KeyType.RSA(RsaLength._3072),
-                                KeyFlag.CERTIFY_OTHER, KeyFlag.SIGN_DATA)
-                        .build())
-                .withPrimaryUserId("donald@duck.tails").withoutPassphrase().build();
+                        KeyFlag.CERTIFY_OTHER, KeyFlag.SIGN_DATA))
+                .addSubkey(KeySpec.getBuilder(KeyType.RSA(RsaLength._3072), KeyFlag.ENCRYPT_COMMS))
+                .addUserId("donald@duck.tails")
+                .build();
 
         PGPPublicKeyRing pub = KeyRingUtils.publicKeyRingFrom(sec);
 

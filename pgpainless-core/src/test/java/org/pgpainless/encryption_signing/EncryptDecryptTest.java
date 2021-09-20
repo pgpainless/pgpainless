@@ -88,14 +88,13 @@ public class EncryptDecryptTest {
         ImplementationFactory.setFactoryImplementation(implementationFactory);
         PGPSecretKeyRing sender = PGPainless.generateKeyRing().simpleRsaKeyRing("romeo@montague.lit", RsaLength._3072);
         PGPSecretKeyRing recipient = PGPainless.generateKeyRing()
-                .withSubKey(KeySpec.getBuilder(
-                                ElGamal.withLength(ElGamalLength._3072),
-                                KeyFlag.ENCRYPT_STORAGE, KeyFlag.ENCRYPT_COMMS)
-                        .build())
-                .withPrimaryKey(KeySpec.getBuilder(
+                .setPrimaryKey(KeySpec.getBuilder(
                         KeyType.RSA(RsaLength._4096),
-                        KeyFlag.SIGN_DATA, KeyFlag.CERTIFY_OTHER).build())
-                .withPrimaryUserId("juliet@capulet.lit").withoutPassphrase().build();
+                        KeyFlag.SIGN_DATA, KeyFlag.CERTIFY_OTHER))
+                .addSubkey(KeySpec.getBuilder(
+                        ElGamal.withLength(ElGamalLength._3072),
+                        KeyFlag.ENCRYPT_STORAGE, KeyFlag.ENCRYPT_COMMS))
+                .addUserId("juliet@capulet.lit").build();
 
         encryptDecryptForSecretKeyRings(sender, recipient);
     }

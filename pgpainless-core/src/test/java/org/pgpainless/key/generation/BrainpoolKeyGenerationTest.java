@@ -83,17 +83,15 @@ public class BrainpoolKeyGenerationTest {
         ImplementationFactory.setFactoryImplementation(implementationFactory);
 
         PGPSecretKeyRing secretKeys = PGPainless.generateKeyRing()
-                .withSubKey(KeySpec.getBuilder(KeyType.EDDSA(EdDSACurve._Ed25519), KeyFlag.SIGN_DATA).build())
-                .withSubKey(KeySpec.getBuilder(
-                        KeyType.XDH(XDHSpec._X25519), KeyFlag.ENCRYPT_COMMS, KeyFlag.ENCRYPT_STORAGE)
-                        .build())
-                .withSubKey(KeySpec.getBuilder(
-                        KeyType.RSA(RsaLength._3072), KeyFlag.SIGN_DATA)
-                        .build())
-                .withPrimaryKey(KeySpec.getBuilder(
-                        KeyType.ECDSA(EllipticCurve._BRAINPOOLP384R1), KeyFlag.CERTIFY_OTHER).build())
-                .withPrimaryUserId(UserId.nameAndEmail("Alice", "alice@pgpainless.org"))
-                .withPassphrase(Passphrase.fromPassword("passphrase"))
+                .setPrimaryKey(KeySpec.getBuilder(
+                        KeyType.ECDSA(EllipticCurve._BRAINPOOLP384R1), KeyFlag.CERTIFY_OTHER))
+                .addSubkey(KeySpec.getBuilder(KeyType.EDDSA(EdDSACurve._Ed25519), KeyFlag.SIGN_DATA))
+                .addSubkey(KeySpec.getBuilder(
+                        KeyType.XDH(XDHSpec._X25519), KeyFlag.ENCRYPT_COMMS, KeyFlag.ENCRYPT_STORAGE))
+                .addSubkey(KeySpec.getBuilder(
+                        KeyType.RSA(RsaLength._3072), KeyFlag.SIGN_DATA))
+                .addUserId(UserId.nameAndEmail("Alice", "alice@pgpainless.org"))
+                .setPassphrase(Passphrase.fromPassword("passphrase"))
                 .build();
 
         for (PGPSecretKey key : secretKeys) {
@@ -131,10 +129,9 @@ public class BrainpoolKeyGenerationTest {
 
     public PGPSecretKeyRing generateKey(KeySpec primaryKey, KeySpec subKey, String userId) throws InvalidAlgorithmParameterException, NoSuchAlgorithmException, PGPException {
         PGPSecretKeyRing secretKeys = PGPainless.generateKeyRing()
-                .withSubKey(subKey)
-                .withPrimaryKey(primaryKey)
-                .withPrimaryUserId(userId)
-                .withoutPassphrase()
+                .setPrimaryKey(primaryKey)
+                .addSubkey(subKey)
+                .addUserId(userId)
                 .build();
         return secretKeys;
     }

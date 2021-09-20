@@ -38,7 +38,7 @@ import org.pgpainless.util.Passphrase;
  * The issue is that the implementation of {@link Passphrase#emptyPassphrase()} would set the underlying
  * char array to null, which caused an NPE later on.
  */
-public class GenerateWithEmptyPassphrase {
+public class GenerateWithEmptyPassphraseTest {
 
     @ParameterizedTest
     @MethodSource("org.pgpainless.util.TestImplementationFactoryProvider#provideImplementationFactories")
@@ -46,12 +46,11 @@ public class GenerateWithEmptyPassphrase {
         ImplementationFactory.setFactoryImplementation(implementationFactory);
 
         assertNotNull(PGPainless.generateKeyRing()
-                .withPrimaryKey(KeySpec.getBuilder(
+                .setPrimaryKey(KeySpec.getBuilder(
                                 KeyType.RSA(RsaLength._3072),
-                                KeyFlag.CERTIFY_OTHER, KeyFlag.SIGN_DATA, KeyFlag.ENCRYPT_COMMS)
-                        .build())
-                .withPrimaryUserId("primary@user.id")
-                .withPassphrase(Passphrase.emptyPassphrase())
+                                KeyFlag.CERTIFY_OTHER, KeyFlag.SIGN_DATA, KeyFlag.ENCRYPT_COMMS))
+                .addUserId("primary@user.id")
+                .setPassphrase(Passphrase.emptyPassphrase())
                 .build());
     }
 }

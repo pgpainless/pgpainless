@@ -59,14 +59,13 @@ public class EncryptionOptionsTest {
     @BeforeAll
     public static void generateKey() throws PGPException, InvalidAlgorithmParameterException, NoSuchAlgorithmException {
         secretKeys = PGPainless.generateKeyRing()
-                .withSubKey(KeySpec.getBuilder(KeyType.XDH(XDHSpec._X25519), KeyFlag.ENCRYPT_COMMS)
+                .setPrimaryKey(KeySpec.getBuilder(KeyType.EDDSA(EdDSACurve._Ed25519), KeyFlag.CERTIFY_OTHER)
                         .build())
-                .withSubKey(KeySpec.getBuilder(KeyType.XDH(XDHSpec._X25519), KeyFlag.ENCRYPT_STORAGE)
+                .addSubkey(KeySpec.getBuilder(KeyType.XDH(XDHSpec._X25519), KeyFlag.ENCRYPT_COMMS)
                         .build())
-                .withPrimaryKey(KeySpec.getBuilder(KeyType.EDDSA(EdDSACurve._Ed25519), KeyFlag.CERTIFY_OTHER)
+                .addSubkey(KeySpec.getBuilder(KeyType.XDH(XDHSpec._X25519), KeyFlag.ENCRYPT_STORAGE)
                         .build())
-                .withPrimaryUserId("test@pgpainless.org")
-                .withoutPassphrase()
+                .addUserId("test@pgpainless.org")
                 .build();
 
         publicKeys = KeyRingUtils.publicKeyRingFrom(secretKeys);
@@ -139,10 +138,9 @@ public class EncryptionOptionsTest {
     public void testAddRecipient_KeyWithoutEncryptionKeyFails() throws PGPException, InvalidAlgorithmParameterException, NoSuchAlgorithmException {
         EncryptionOptions options = new EncryptionOptions();
         PGPSecretKeyRing secretKeys = PGPainless.generateKeyRing()
-                .withPrimaryKey(KeySpec.getBuilder(KeyType.EDDSA(EdDSACurve._Ed25519), KeyFlag.CERTIFY_OTHER, KeyFlag.SIGN_DATA)
-                        .build())
-                .withPrimaryUserId("test@pgpainless.org")
-                .withoutPassphrase().build();
+                .setPrimaryKey(KeySpec.getBuilder(KeyType.EDDSA(EdDSACurve._Ed25519), KeyFlag.CERTIFY_OTHER, KeyFlag.SIGN_DATA))
+                .addUserId("test@pgpainless.org")
+                .build();
         PGPPublicKeyRing publicKeys = KeyRingUtils.publicKeyRingFrom(secretKeys);
 
         assertThrows(IllegalArgumentException.class, () -> options.addRecipient(publicKeys));

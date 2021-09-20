@@ -221,16 +221,14 @@ public class KeyRingInfoTest {
         ImplementationFactory.setFactoryImplementation(implementationFactory);
 
         PGPSecretKeyRing secretKeys = PGPainless.generateKeyRing()
-                .withSubKey(KeySpec.getBuilder(
+                .setPrimaryKey(KeySpec.getBuilder(
+                KeyType.EDDSA(EdDSACurve._Ed25519), KeyFlag.CERTIFY_OTHER))
+                .addSubkey(KeySpec.getBuilder(
                         KeyType.ECDH(EllipticCurve._BRAINPOOLP384R1),
-                        KeyFlag.ENCRYPT_STORAGE).build())
-                .withSubKey(KeySpec.getBuilder(
-                        KeyType.ECDSA(EllipticCurve._BRAINPOOLP384R1), KeyFlag.SIGN_DATA)
-                        .build())
-                .withPrimaryKey(KeySpec.getBuilder(
-                        KeyType.EDDSA(EdDSACurve._Ed25519), KeyFlag.CERTIFY_OTHER).build())
-                .withPrimaryUserId(UserId.newBuilder().withName("Alice").withEmail("alice@pgpainless.org").build())
-                .withoutPassphrase()
+                        KeyFlag.ENCRYPT_STORAGE))
+                .addSubkey(KeySpec.getBuilder(
+                        KeyType.ECDSA(EllipticCurve._BRAINPOOLP384R1), KeyFlag.SIGN_DATA))
+                .addUserId(UserId.newBuilder().withName("Alice").withEmail("alice@pgpainless.org").build())
                 .build();
 
         Iterator<PGPSecretKey> keys = secretKeys.iterator();
