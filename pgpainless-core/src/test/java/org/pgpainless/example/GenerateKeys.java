@@ -43,7 +43,6 @@ import org.pgpainless.key.generation.type.rsa.RsaLength;
 import org.pgpainless.key.info.KeyRingInfo;
 import org.pgpainless.key.util.KeyRingUtils;
 import org.pgpainless.key.util.UserId;
-import org.pgpainless.util.ArmorUtils;
 import org.pgpainless.util.Passphrase;
 
 /**
@@ -84,7 +83,7 @@ public class GenerateKeys {
         // Extract public key
         PGPPublicKeyRing publicKey = KeyRingUtils.publicKeyRingFrom(secretKey);
         // Encode the public key to an ASCII armored string ready for sharing
-        String asciiArmoredPublicKey = ArmorUtils.toAsciiArmoredString(publicKey);
+        String asciiArmoredPublicKey = PGPainless.asciiArmor(publicKey);
 
 
         KeyRingInfo keyInfo = new KeyRingInfo(secretKey);
