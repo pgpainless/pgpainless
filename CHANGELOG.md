@@ -4,6 +4,10 @@
 - Export dependency on Bouncycastle's `bcprov-jdk15on`
 - Rework Key Generation API
   - Replace builder-chain structure with single `KeyRingBuilder` class
+- Change return value of `CleartextSignatureProcessor.process()` to `DecryptionStream`
+- Rename `CleartextSignatureProcessor.process()` to `CleartextSignatureProcessor.getVerificationStream()`
+- Add support for creating cleartext signed messages by calling `ProducerOptions.setCleartextSigned()`
+- Add examples for signing messages in the `examples` package.
 
 ## 0.2.13
 - Add `MessageInspector` class to determine IDs of recipient keys.
