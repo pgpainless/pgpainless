@@ -1,6 +1,6 @@
 # PGPainless Changelog
 
-## 0.2.14-SNAPSHOT
+## 0.2.14
 - Export dependency on Bouncycastle's `bcprov-jdk15on`
 - Rework Key Generation API
   - Replace builder-chain structure with single `KeyRingBuilder` class
