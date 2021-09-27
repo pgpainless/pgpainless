@@ -26,11 +26,9 @@ import org.pgpainless.util.IntegrityProtectedInputStream;
  * Decryption Stream that handles updating and verification of detached signatures,
  * as well as verification of integrity-protected input streams once the stream gets closed.
  */
-public class DecryptionStream extends InputStream {
+public class DecryptionStream extends CloseForResultInputStream {
 
     private final InputStream inputStream;
-    private final OpenPgpMetadata.Builder resultBuilder;
-    private boolean isClosed = false;
     private final IntegrityProtectedInputStream integrityProtectedInputStream;
     private final InputStream armorStream;
 
@@ -46,10 +44,22 @@ public class DecryptionStream extends InputStream {
                      @Nonnull OpenPgpMetadata.Builder resultBuilder,
                      IntegrityProtectedInputStream integrityProtectedInputStream,
                      InputStream armorStream) {
+        super(resultBuilder);
         this.inputStream = wrapped;
-        this.resultBuilder = resultBuilder;
         this.integrityProtectedInputStream = integrityProtectedInputStream;
         this.armorStream = armorStream;
+    }
+
+    @Override
+    public void close() throws IOException {
+        if (armorStream != null) {
+            Streams.drain(armorStream);
+        }
+        inputStream.close();
+        if (integrityProtectedInputStream != null) {
+            integrityProtectedInputStream.close();
+        }
+        super.close();
     }
 
     @Override
@@ -64,30 +74,4 @@ public class DecryptionStream extends InputStream {
         return read;
     }
 
-    @Override
-    public void close() throws IOException {
-        if (armorStream != null) {
-            Streams.drain(armorStream);
-        }
-        inputStream.close();
-        if (integrityProtectedInputStream != null) {
-            integrityProtectedInputStream.close();
-        }
-        this.isClosed = true;
-    }
-
-    /**
-     * Return the result of the decryption.
-     * The result contains metadata about the decryption, such as signatures, used keys and algorithms, as well as information
-     * about the decrypted file/stream.
-     *
-     * Can only be obtained once the stream got successfully closed ({@link #close()}).
-     * @return metadata
-     */
-    public OpenPgpMetadata getResult() {
-        if (!isClosed) {
-            throw new IllegalStateException("DecryptionStream MUST be closed before the result can be accessed.");
-        }
-        return resultBuilder.build();
-    }
 }

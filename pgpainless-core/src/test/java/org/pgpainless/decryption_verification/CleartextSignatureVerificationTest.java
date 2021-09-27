@@ -89,13 +89,18 @@ public class CleartextSignatureVerificationTest {
                 .withStrategy(multiPassStrategy)
                 .withOptions(options);
 
-        OpenPgpMetadata result = processor.process();
+        DecryptionStream decryptionStream = processor.getVerificationStream();
+        ByteArrayOutputStream out = new ByteArrayOutputStream();
+        Streams.pipeAll(decryptionStream, out);
+        decryptionStream.close();
+
+        OpenPgpMetadata result = decryptionStream.getResult();
         assertTrue(result.isVerified());
 
         PGPSignature signature = result.getVerifiedSignatures().values().iterator().next();
 
         assertEquals(signature.getKeyID(), signingKeys.getPublicKey().getKeyID());
-        assertArrayEquals(MESSAGE_BODY, multiPassStrategy.getBytes());
+        assertArrayEquals(MESSAGE_BODY, out.toByteArray());
     }
 
     @Test
@@ -112,7 +117,13 @@ public class CleartextSignatureVerificationTest {
                 .withStrategy(multiPassStrategy)
                 .withOptions(options);
 
-        OpenPgpMetadata result = processor.process();
+        DecryptionStream decryptionStream = processor.getVerificationStream();
+
+        ByteArrayOutputStream out = new ByteArrayOutputStream();
+        Streams.pipeAll(decryptionStream, out);
+        decryptionStream.close();
+
+        OpenPgpMetadata result = decryptionStream.getResult();
         assertTrue(result.isVerified());
 
         PGPSignature signature = result.getVerifiedSignatures().values().iterator().next();
@@ -205,6 +216,6 @@ public class CleartextSignatureVerificationTest {
                 .onInputStream(new ByteArrayInputStream(inlineSignedMessage.getBytes(StandardCharsets.UTF_8)))
                 .withStrategy(new InMemoryMultiPassStrategy())
                 .withOptions(options)
-                .process());
+                .getVerificationStream());
     }
 }
