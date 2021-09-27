@@ -153,6 +153,11 @@ public final class EncryptionStream extends OutputStream {
     }
 
     private void prepareLiteralDataProcessing() throws IOException {
+        if (options.isCleartextSigned()) {
+            SigningOptions.SigningMethod firstMethod = options.getSigningOptions().getSigningMethods().values().iterator().next();
+            armorOutputStream.beginClearText(firstMethod.getHashAlgorithm().getAlgorithmId());
+            return;
+        }
         literalDataGenerator = new PGPLiteralDataGenerator();
         literalDataStream = literalDataGenerator.open(outermostStream,
                 options.getEncoding().getCode(),
@@ -214,9 +219,22 @@ public final class EncryptionStream extends OutputStream {
         }
 
         // Literal Data
-        literalDataStream.flush();
-        literalDataStream.close();
-        literalDataGenerator.close();
+        if (literalDataStream != null) {
+            literalDataStream.flush();
+            literalDataStream.close();
+        }
+        if (literalDataGenerator != null) {
+            literalDataGenerator.close();
+        }
+
+        if (options.isCleartextSigned()) {
+            // Add linebreak between body and signatures
+            // TODO: We should only add this line if required.
+            //  I.e. if the message already ends with \n, don't add another linebreak.
+            armorOutputStream.write('\r');
+            armorOutputStream.write('\n');
+            armorOutputStream.endClearText();
+        }
 
         try {
             writeSignatures();
@@ -260,7 +278,8 @@ public final class EncryptionStream extends OutputStream {
             PGPSignature signature = signatureGenerator.generate();
             if (signingMethod.isDetached()) {
                 resultBuilder.addDetachedSignature(signingKey, signature);
-            } else {
+            }
+            if (!signingMethod.isDetached() || options.isCleartextSigned()) {
                 signature.encode(outermostStream);
             }
         }

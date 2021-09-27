@@ -31,6 +31,7 @@ public final class ProducerOptions {
     private String fileName = "";
     private Date modificationDate = PGPLiteralData.NOW;
     private StreamEncoding streamEncoding = StreamEncoding.BINARY;
+    private boolean cleartextSigned = false;
 
     private CompressionAlgorithm compressionAlgorithmOverride = PGPainless.getPolicy().getCompressionAlgorithmPolicy()
             .defaultCompressionAlgorithm();
@@ -101,6 +102,9 @@ public final class ProducerOptions {
      * @return builder
      */
     public ProducerOptions setAsciiArmor(boolean asciiArmor) {
+        if (cleartextSigned && !asciiArmor) {
+            throw new IllegalArgumentException("Cleartext signing is enabled. Cannot disable ASCII armoring.");
+        }
         this.asciiArmor = asciiArmor;
         return this;
     }
@@ -112,6 +116,28 @@ public final class ProducerOptions {
      */
     public boolean isAsciiArmor() {
         return asciiArmor;
+    }
+
+    public ProducerOptions setCleartextSigned() {
+        if (signingOptions == null) {
+            throw new IllegalArgumentException("Signing Options cannot be null if cleartext signing is enabled.");
+        }
+        if (encryptionOptions != null) {
+            throw new IllegalArgumentException("Cannot encode encrypted message as Cleartext Signed.");
+        }
+        for (SigningOptions.SigningMethod method : signingOptions.getSigningMethods().values()) {
+            if (!method.isDetached()) {
+                throw new IllegalArgumentException("For cleartext signed message, all signatures must be added as detached signatures.");
+            }
+        }
+        cleartextSigned = true;
+        asciiArmor = true;
+        compressionAlgorithmOverride = CompressionAlgorithm.UNCOMPRESSED;
+        return this;
+    }
+
+    public boolean isCleartextSigned() {
+        return cleartextSigned;
     }
 
     /**

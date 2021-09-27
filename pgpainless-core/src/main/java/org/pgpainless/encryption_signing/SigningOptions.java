@@ -52,10 +52,12 @@ public final class SigningOptions {
     public static final class SigningMethod {
         private final PGPSignatureGenerator signatureGenerator;
         private final boolean detached;
+        private final HashAlgorithm hashAlgorithm;
 
-        private SigningMethod(PGPSignatureGenerator signatureGenerator, boolean detached) {
+        private SigningMethod(PGPSignatureGenerator signatureGenerator, boolean detached, HashAlgorithm hashAlgorithm) {
             this.signatureGenerator = signatureGenerator;
             this.detached = detached;
+            this.hashAlgorithm = hashAlgorithm;
         }
 
         /**
@@ -65,8 +67,8 @@ public final class SigningOptions {
          * @param signatureGenerator signature generator
          * @return inline signing method
          */
-        public static SigningMethod inlineSignature(PGPSignatureGenerator signatureGenerator) {
-            return new SigningMethod(signatureGenerator, false);
+        public static SigningMethod inlineSignature(PGPSignatureGenerator signatureGenerator, HashAlgorithm hashAlgorithm) {
+            return new SigningMethod(signatureGenerator, false, hashAlgorithm);
         }
 
         /**
@@ -77,8 +79,8 @@ public final class SigningOptions {
          * @param signatureGenerator signature generator
          * @return detached signing method
          */
-        public static SigningMethod detachedSignature(PGPSignatureGenerator signatureGenerator) {
-            return new SigningMethod(signatureGenerator, true);
+        public static SigningMethod detachedSignature(PGPSignatureGenerator signatureGenerator, HashAlgorithm hashAlgorithm) {
+            return new SigningMethod(signatureGenerator, true, hashAlgorithm);
         }
 
         public boolean isDetached() {
@@ -87,6 +89,10 @@ public final class SigningOptions {
 
         public PGPSignatureGenerator getSignatureGenerator() {
             return signatureGenerator;
+        }
+
+        public HashAlgorithm getHashAlgorithm() {
+            return hashAlgorithm;
         }
     }
 
@@ -266,7 +272,9 @@ public final class SigningOptions {
         PGPSecretKey signingSecretKey = secretKey.getSecretKey(signingSubkey.getKeyID());
         PGPSignatureGenerator generator = createSignatureGenerator(signingSubkey, hashAlgorithm, signatureType);
         generator.setUnhashedSubpackets(unhashedSubpackets(signingSecretKey).generate());
-        SigningMethod signingMethod = detached ? SigningMethod.detachedSignature(generator) : SigningMethod.inlineSignature(generator);
+        SigningMethod signingMethod = detached ?
+                SigningMethod.detachedSignature(generator, hashAlgorithm) :
+                SigningMethod.inlineSignature(generator, hashAlgorithm);
         signingMethods.put(signingKeyIdentifier, signingMethod);
     }
 
