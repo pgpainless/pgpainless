@@ -38,7 +38,7 @@ public class SignatureVerification {
      * @param signature PGPSignature object
      * @param signingKey identifier of the signing key
      */
-    public SignatureVerification(PGPSignature signature, @Nullable SubkeyIdentifier signingKey) {
+    public SignatureVerification(@Nullable PGPSignature signature, @Nullable SubkeyIdentifier signingKey) {
         this.signature = signature;
         this.signingKey = signingKey;
     }
@@ -48,6 +48,7 @@ public class SignatureVerification {
      *
      * @return signature
      */
+    @Nullable
     public PGPSignature getSignature() {
         return signature;
     }

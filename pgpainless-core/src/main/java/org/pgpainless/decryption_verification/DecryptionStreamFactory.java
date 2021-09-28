@@ -56,6 +56,7 @@ import org.pgpainless.algorithm.SymmetricKeyAlgorithm;
 import org.pgpainless.exception.MessageNotIntegrityProtectedException;
 import org.pgpainless.exception.MissingDecryptionMethodException;
 import org.pgpainless.exception.MissingLiteralDataException;
+import org.pgpainless.exception.SignatureValidationException;
 import org.pgpainless.exception.UnacceptableAlgorithmException;
 import org.pgpainless.exception.WrongConsumingMethodException;
 import org.pgpainless.implementation.ImplementationFactory;
@@ -107,6 +108,8 @@ public final class DecryptionStreamFactory {
             long issuerKeyId = SignatureUtils.determineIssuerKeyId(signature);
             PGPPublicKeyRing signingKeyRing = findSignatureVerificationKeyRing(issuerKeyId);
             if (signingKeyRing == null) {
+                SignatureValidationException ex = new SignatureValidationException("Missing verification certificate " + Long.toHexString(issuerKeyId));
+                resultBuilder.addInvalidDetachedSignature(new SignatureVerification(signature, null), ex);
                 continue;
             }
             PGPPublicKey signingKey = signingKeyRing.getPublicKey(issuerKeyId);
@@ -497,7 +500,8 @@ public final class DecryptionStreamFactory {
         // Find public key
         PGPPublicKeyRing verificationKeyRing = findSignatureVerificationKeyRing(keyId);
         if (verificationKeyRing == null) {
-            LOGGER.debug("Missing verification key from {}", Long.toHexString(keyId));
+            SignatureValidationException ex = new SignatureValidationException("Missing verification certificate " + Long.toHexString(keyId));
+            resultBuilder.addInvalidInbandSignature(new SignatureVerification(null, null), ex);
             return;
         }
         PGPPublicKey verificationKey = verificationKeyRing.getPublicKey(keyId);
