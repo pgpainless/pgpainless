@@ -44,6 +44,8 @@ public class MessageInspectorTest {
                 new ByteArrayInputStream(message.getBytes(StandardCharsets.UTF_8)));
 
         assertFalse(info.isPassphraseEncrypted());
+        assertFalse(info.isSignedOnly());
+        assertTrue(info.isEncrypted());
         assertEquals(1, info.getKeyIds().size());
         assertEquals(KeyIdUtil.fromLongKeyId("4766F6B9D5F21EB6"), info.getKeyIds().get(0));
     }
@@ -66,9 +68,57 @@ public class MessageInspectorTest {
 
         MessageInspector.EncryptionInfo info = MessageInspector.determineEncryptionInfoForMessage(new ByteArrayInputStream(message.getBytes(StandardCharsets.UTF_8)));
 
+        assertTrue(info.isEncrypted());
         assertTrue(info.isPassphraseEncrypted());
         assertEquals(2, info.getKeyIds().size());
+        assertFalse(info.isSignedOnly());
         assertTrue(info.getKeyIds().contains(KeyIdUtil.fromLongKeyId("4C6E8F99F6E47184")));
         assertTrue(info.getKeyIds().contains(KeyIdUtil.fromLongKeyId("1839079A640B2FAC")));
+    }
+
+    @Test
+    public void testSignedOnlyMessage() throws PGPException, IOException {
+        String message = "-----BEGIN PGP MESSAGE-----\n" +
+                "Version: PGPainless\n" +
+                "\n" +
+                "owGbwMvMwCU2JftV+VJxWRbG0yJJDCDgkZqTk6+jEJ5flJOiyNVRysIgxsXAxsqU\n" +
+                "GPbzCoMipwBMg5giy+9JdusX5zywTwq60QsTfj2J4a9ki6nKuVnu940q5qzl+aK3\n" +
+                "89zdHzzyDBEdJg4asQcf3PBk+Cu1W/vQ1mMVW3fyTVc0VNe9PyktZlfcge2CbR8F\n" +
+                "Dvxwv8UPAA==\n" +
+                "=nt5n\n" +
+                "-----END PGP MESSAGE-----";
+
+        MessageInspector.EncryptionInfo info = MessageInspector.determineEncryptionInfoForMessage(new ByteArrayInputStream(message.getBytes(StandardCharsets.UTF_8)));
+
+        assertTrue(info.isSignedOnly());
+
+        assertFalse(info.isEncrypted());
+        assertFalse(info.isPassphraseEncrypted());
+        assertEquals(0, info.getKeyIds().size());
+    }
+
+    @Test
+    public void testEncryptedAndSignedMessage() throws PGPException, IOException {
+        String message = "-----BEGIN PGP MESSAGE-----\n" +
+                "Version: PGPainless\n" +
+                "\n" +
+                "jC4ECQMCKFdrpiMTt8xgtZjkH60Nu4s+5THbPWOgyTmXkAeBAsmXDNWWuB5QSXFz\n" +
+                "hF4DaM8R0fnHE6USAQdALJl6fCtB597Ub/GR3bxu3Uv2lirMA8bI2iGHUE7f0Rkw\n" +
+                "ZNgmEk3YRGp+zddZoLp0WAIL0y4FLwUlMrR+YFYA37eAILiCwLEesIpvIoYq+fIu\n" +
+                "0r4BJ/bM9oiCZGy7clpBQgOBFOTMR2fCO9ESVOaLwTGDJkVk6m+iLV1OYG6997vP\n" +
+                "qHrg/zzy/U+xm90iHJzXoQ7yd2QZMU7llvC/otf5j14x3PCqd/rIxQrO2uc76Pef\n" +
+                "Lh1JRHb7St4PC429HfE7pEAfFUej1I56U/ZCPwxa9f6je911jM4ZmZQTKJq3XZ3H\n" +
+                "KK0Ymg5GrsBTEGFm4jb1p+V85PPhsIioX3np/N3fkIfxFguTGZza33/GHy61+DTy\n" +
+                "=SZU6\n" +
+                "-----END PGP MESSAGE-----";
+        MessageInspector.EncryptionInfo info = MessageInspector.determineEncryptionInfoForMessage(new ByteArrayInputStream(message.getBytes(StandardCharsets.UTF_8)));
+
+        // Message is encrypted, so we cannot determine if it is signed or not.
+        // It is not signed only
+        assertFalse(info.isSignedOnly());
+
+        assertTrue(info.isEncrypted());
+        assertTrue(info.isPassphraseEncrypted());
+        assertEquals(1, info.getKeyIds().size());
     }
 }

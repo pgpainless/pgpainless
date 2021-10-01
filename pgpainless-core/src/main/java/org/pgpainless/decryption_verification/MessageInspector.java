@@ -27,6 +27,7 @@ import org.bouncycastle.openpgp.PGPEncryptedDataList;
 import org.bouncycastle.openpgp.PGPException;
 import org.bouncycastle.openpgp.PGPLiteralData;
 import org.bouncycastle.openpgp.PGPObjectFactory;
+import org.bouncycastle.openpgp.PGPOnePassSignatureList;
 import org.bouncycastle.openpgp.PGPPBEEncryptedData;
 import org.bouncycastle.openpgp.PGPPublicKeyEncryptedData;
 import org.pgpainless.implementation.ImplementationFactory;
@@ -40,13 +41,36 @@ public final class MessageInspector {
     public static class EncryptionInfo {
         private final List<Long> keyIds = new ArrayList<>();
         private boolean isPassphraseEncrypted = false;
+        private boolean isSignedOnly = false;
 
+        /**
+         * Return a list of recipient key ids for whom the message is encrypted.
+         * @return recipient key ids
+         */
         public List<Long> getKeyIds() {
             return Collections.unmodifiableList(keyIds);
         }
 
         public boolean isPassphraseEncrypted() {
             return isPassphraseEncrypted;
+        }
+
+        /**
+         * Return true, if the message is encrypted.
+         *
+         * @return true if encrypted
+         */
+        public boolean isEncrypted() {
+            return isPassphraseEncrypted || !keyIds.isEmpty();
+        }
+
+        /**
+         * Return true, if the message is not encrypted, but signed using {@link org.bouncycastle.openpgp.PGPOnePassSignature OnePassSignatures}.
+         *
+         * @return true if message is signed only
+         */
+        public boolean isSignedOnly() {
+            return isSignedOnly;
         }
     }
 
@@ -67,16 +91,24 @@ public final class MessageInspector {
         InputStream decoded = ArmorUtils.getDecoderStream(dataIn);
         EncryptionInfo info = new EncryptionInfo();
 
-        collectDecryptionKeyIDs(decoded, info);
+        processMessage(decoded, info);
 
         return info;
     }
 
-    private static void collectDecryptionKeyIDs(InputStream dataIn, EncryptionInfo info) throws PGPException {
+    private static void processMessage(InputStream dataIn, EncryptionInfo info) throws PGPException {
         PGPObjectFactory objectFactory = new PGPObjectFactory(dataIn,
                 ImplementationFactory.getInstance().getKeyFingerprintCalculator());
 
         for (Object next : objectFactory) {
+            if (next instanceof PGPOnePassSignatureList) {
+                PGPOnePassSignatureList signatures = (PGPOnePassSignatureList) next;
+                if (!signatures.isEmpty()) {
+                    info.isSignedOnly = true;
+                    return;
+                }
+            }
+
             if (next instanceof PGPEncryptedDataList) {
                 PGPEncryptedDataList encryptedDataList = (PGPEncryptedDataList) next;
                 for (PGPEncryptedData encryptedData : encryptedDataList) {
@@ -92,7 +124,7 @@ public final class MessageInspector {
             if (next instanceof PGPCompressedData) {
                 PGPCompressedData compressed = (PGPCompressedData) next;
                 InputStream decompressed = compressed.getDataStream();
-                collectDecryptionKeyIDs(decompressed, info);
+                processMessage(decompressed, info);
             }
 
             if (next instanceof PGPLiteralData) {
