@@ -228,7 +228,8 @@ public final class ArmorUtils {
      * @return BufferedInputStreamExt
      */
     public static InputStream getDecoderStream(InputStream inputStream) throws IOException {
-        InputStream decoderStream = PGPUtil.getDecoderStream(inputStream);
+        BufferedInputStream buf = new BufferedInputStream(inputStream, 512);
+        InputStream decoderStream = PGPUtilWrapper.getDecoderStream(buf);
         // Data is not armored -> return
         if (decoderStream instanceof BufferedInputStream) {
             return decoderStream;

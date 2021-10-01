@@ -67,6 +67,7 @@ import org.pgpainless.signature.DetachedSignature;
 import org.pgpainless.signature.OnePassSignatureCheck;
 import org.pgpainless.signature.SignatureUtils;
 import org.pgpainless.util.CRCingArmoredInputStreamWrapper;
+import org.pgpainless.util.PGPUtilWrapper;
 import org.pgpainless.util.Passphrase;
 import org.pgpainless.util.Tuple;
 import org.slf4j.Logger;
@@ -121,10 +122,10 @@ public final class DecryptionStreamFactory {
     }
 
     private DecryptionStream parseOpenPGPDataAndCreateDecryptionStream(InputStream inputStream) throws IOException, PGPException {
+        // Make sure we handle armored and non-armored data properly
         BufferedInputStream bufferedIn = new BufferedInputStream(inputStream);
-        bufferedIn.mark(200);
+        InputStream decoderStream = PGPUtilWrapper.getDecoderStream(bufferedIn);
 
-        InputStream decoderStream = PGPUtil.getDecoderStream(bufferedIn);
         decoderStream = CRCingArmoredInputStreamWrapper.possiblyWrap(decoderStream);
 
         if (decoderStream instanceof ArmoredInputStream) {

@@ -31,8 +31,8 @@ import org.bouncycastle.openpgp.PGPPublicKeyRing;
 import org.bouncycastle.openpgp.PGPPublicKeyRingCollection;
 import org.bouncycastle.openpgp.PGPSecretKeyRing;
 import org.bouncycastle.openpgp.PGPSecretKeyRingCollection;
-import org.bouncycastle.openpgp.PGPUtil;
 import org.pgpainless.implementation.ImplementationFactory;
+import org.pgpainless.util.ArmorUtils;
 
 /**
  * This class describes a logic of handling a collection of different {@link PGPKeyRing}. The logic was inspired by
@@ -57,7 +57,7 @@ public class PGPKeyRingCollection {
      */
     public PGPKeyRingCollection(@Nonnull InputStream in, boolean isSilent) throws IOException, PGPException {
         // Double getDecoderStream because of #96
-        InputStream decoderStream = PGPUtil.getDecoderStream(PGPUtil.getDecoderStream(in));
+        InputStream decoderStream = ArmorUtils.getDecoderStream(in);
         PGPObjectFactory pgpFact = new PGPObjectFactory(decoderStream, ImplementationFactory.getInstance().getKeyFingerprintCalculator());
         Object obj;
 
