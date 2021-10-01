@@ -153,7 +153,7 @@ public final class DecryptionStreamFactory {
             bufferedIn.reset();
             inputStream = wrapInVerifySignatureStream(bufferedIn);
         } catch (IOException e) {
-            if (e.getMessage().contains("invalid armor")) {
+            if (e.getMessage().contains("invalid armor") || e.getMessage().contains("invalid header encountered")) {
                 // We falsely assumed the data to be armored.
                 LOGGER.debug("The message is apparently not armored.");
                 bufferedIn.reset();

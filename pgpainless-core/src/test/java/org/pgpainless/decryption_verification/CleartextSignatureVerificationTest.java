@@ -30,18 +30,24 @@ import java.nio.charset.StandardCharsets;
 import org.bouncycastle.openpgp.PGPException;
 import org.bouncycastle.openpgp.PGPPublicKey;
 import org.bouncycastle.openpgp.PGPPublicKeyRing;
+import org.bouncycastle.openpgp.PGPSecretKeyRing;
 import org.bouncycastle.openpgp.PGPSignature;
 import org.bouncycastle.util.io.Streams;
 import org.junit.jupiter.api.Test;
 import org.pgpainless.PGPainless;
-import org.pgpainless.exception.WrongConsumingMethodException;
-import org.pgpainless.key.TestKeys;
-import org.pgpainless.signature.CertificateValidator;
-import org.pgpainless.signature.SignatureUtils;
-import org.pgpainless.signature.SignatureVerifier;
+import org.pgpainless.algorithm.DocumentSignatureType;
 import org.pgpainless.decryption_verification.cleartext_signatures.CleartextSignatureProcessor;
 import org.pgpainless.decryption_verification.cleartext_signatures.InMemoryMultiPassStrategy;
 import org.pgpainless.decryption_verification.cleartext_signatures.MultiPassStrategy;
+import org.pgpainless.encryption_signing.EncryptionStream;
+import org.pgpainless.encryption_signing.ProducerOptions;
+import org.pgpainless.encryption_signing.SigningOptions;
+import org.pgpainless.exception.WrongConsumingMethodException;
+import org.pgpainless.key.TestKeys;
+import org.pgpainless.key.protection.SecretKeyRingProtector;
+import org.pgpainless.signature.CertificateValidator;
+import org.pgpainless.signature.SignatureUtils;
+import org.pgpainless.signature.SignatureVerifier;
 import org.pgpainless.util.ArmorUtils;
 import org.pgpainless.util.TestUtils;
 
@@ -217,5 +223,38 @@ public class CleartextSignatureVerificationTest {
                 .withStrategy(new InMemoryMultiPassStrategy())
                 .withOptions(options)
                 .getVerificationStream());
+    }
+
+    @Test
+    public void getDecoderStreamMistakensPlaintextForBase64RegressionTest() throws PGPException, IOException {
+        String message = "Foo\nBar"; // PGPUtil.getDecoderStream() would mistaken this for base64 data
+        ByteArrayInputStream msgIn = new ByteArrayInputStream(message.getBytes(StandardCharsets.UTF_8));
+
+        PGPSecretKeyRing secretKey = TestKeys.getEmilSecretKeyRing();
+        ByteArrayOutputStream signedOut = new ByteArrayOutputStream();
+        EncryptionStream signingStream = PGPainless.encryptAndOrSign().onOutputStream(signedOut)
+                .withOptions(ProducerOptions.sign(SigningOptions.get()
+                        .addDetachedSignature(SecretKeyRingProtector.unprotectedKeys(), secretKey, DocumentSignatureType.CANONICAL_TEXT_DOCUMENT))
+                        .setCleartextSigned());
+
+        Streams.pipeAll(msgIn, signingStream);
+        signingStream.close();
+
+        String signed = signedOut.toString();
+
+        ByteArrayInputStream signedIn = new ByteArrayInputStream(signed.getBytes(StandardCharsets.UTF_8));
+        DecryptionStream verificationStream = PGPainless.verifyCleartextSignedMessage()
+                .onInputStream(signedIn)
+                .withStrategy(new InMemoryMultiPassStrategy())
+                .withOptions(new ConsumerOptions()
+                        .addVerificationCert(TestKeys.getEmilPublicKeyRing()))
+                .getVerificationStream();
+
+        ByteArrayOutputStream msgOut = new ByteArrayOutputStream();
+        Streams.pipeAll(verificationStream, msgOut);
+        verificationStream.close();
+
+        OpenPgpMetadata metadata = verificationStream.getResult();
+        assertTrue(metadata.isVerified());
     }
 }
