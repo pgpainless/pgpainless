@@ -67,7 +67,6 @@ import org.pgpainless.signature.DetachedSignature;
 import org.pgpainless.signature.OnePassSignatureCheck;
 import org.pgpainless.signature.SignatureUtils;
 import org.pgpainless.util.CRCingArmoredInputStreamWrapper;
-import org.pgpainless.util.IntegrityProtectedInputStream;
 import org.pgpainless.util.Passphrase;
 import org.pgpainless.util.Tuple;
 import org.slf4j.Logger;
@@ -286,8 +285,8 @@ public final class DecryptionStreamFactory {
         // Sort PKESK and SKESK packets
         while (encryptedDataIterator.hasNext()) {
             PGPEncryptedData encryptedData = encryptedDataIterator.next();
-            // TODO: Maybe just skip non-integrity-protected packages?
-            if (!encryptedData.isIntegrityProtected()) {
+
+            if (!encryptedData.isIntegrityProtected() && !options.isIgnoreMDCErrors()) {
                 throw new MessageNotIntegrityProtectedException();
             }
 
@@ -314,7 +313,7 @@ public final class DecryptionStreamFactory {
                     throwIfAlgorithmIsRejected(symmetricKeyAlgorithm);
                     resultBuilder.setSymmetricKeyAlgorithm(symmetricKeyAlgorithm);
 
-                    integrityProtectedEncryptedInputStream = new IntegrityProtectedInputStream(decryptedDataStream, pbeEncryptedData);
+                    integrityProtectedEncryptedInputStream = new IntegrityProtectedInputStream(decryptedDataStream, pbeEncryptedData, options);
 
                     return integrityProtectedEncryptedInputStream;
                 } catch (PGPException e) {
@@ -461,7 +460,7 @@ public final class DecryptionStreamFactory {
         throwIfAlgorithmIsRejected(symmetricKeyAlgorithm);
         resultBuilder.setSymmetricKeyAlgorithm(symmetricKeyAlgorithm);
 
-        integrityProtectedEncryptedInputStream = new IntegrityProtectedInputStream(encryptedSessionKey.getDataStream(dataDecryptor), encryptedSessionKey);
+        integrityProtectedEncryptedInputStream = new IntegrityProtectedInputStream(encryptedSessionKey.getDataStream(dataDecryptor), encryptedSessionKey, options);
         return integrityProtectedEncryptedInputStream;
     }
 

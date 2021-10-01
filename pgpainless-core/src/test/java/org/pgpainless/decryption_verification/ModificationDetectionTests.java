@@ -124,6 +124,96 @@ public class ModificationDetectionTests {
             "=miES\n" +
             "-----END PGP PRIVATE KEY BLOCK-----\n";
 
+    private static final String MESSAGE_TAMPERED_CIPHERTEXT = "-----BEGIN PGP MESSAGE-----\n" +
+            "\n" +
+            "wcDMA3wvqk35PDeyAQv+NgaEl1h8ZLRD0YiGFqVyO4G0slWQotmgPuovBU8YpNPd\n" +
+            "A/sROQAOpkxR0mSzhUpMcgkpwi1r7dC3HGQCf+mitGwe+JFXCTx7N/4t1U321BKj\n" +
+            "c7k7Zu9pDHpPzWi52T6yL30dyR7XkU85P2BrZoOc7B6GuZF07f4qIG1c3+YzBWuw\n" +
+            "cXyqAmLx/zHUkX72Ga6vzUX/ud08gGYeWthLim7jLG9JzNr+BGnOb93+bKTwe7GX\n" +
+            "dxNkBP7NTtGaFBM9epvsBiMSBIUHxuJDFgN4KSzpTP3+tcgrpTAaNWalJPzzphqD\n" +
+            "Iu7ZrBDARQb/8FIymHt0QITZXu3ml8WopiIDbC42JOt16aMy5VDbcP/LlVZn/DB7\n" +
+            "xr3waDZoxIMhNDcnu8R0w25pbf9T6Lt90a8/UIewCVjciUF82TK6KWLJkTJhmRK3\n" +
+            "QJ/XgkMhDhS94Rj+l+FIRxJF/oyTtRFoeBHOB8V5neqXmOgGf3aX5UIJu3pf+GH/\n" +
+            "n+PEoyEw7S7gQxF4VV4S0kwBZlc6xwHfvO+NPf7W0rAtUxMdOl3LBLiILDxF+cq2\n" +
+            "eKG76gkewCp4EhTfK+iDr4KlObXDzADm1cXRlqFhtoQZrHV0poZVw2kIwSlF\n" +
+            "=3G7i\n" +
+            "-----END PGP MESSAGE-----\n";
+
+    private static final String MESSAGE_MISSING_MDC = "-----BEGIN PGP MESSAGE-----\n" +
+            "\n" +
+            "wcDMA3wvqk35PDeyAQwAnTmchA6ve/aF7cPEnyJSb9Ot61LSIMrU3+RaEdA90qn4\n" +
+            "iC+yA7rH+nBX4t9nYSLI4EbQibSfzgxj0Bon1sAwfUfU88UMHypnL1HYsZRoiiLe\n" +
+            "crRr/9Vot2X1firhSu6kwqPZw5eIbvPPhHojZxWo7Plv7lDsXdtgRXc544jKA+Cx\n" +
+            "4Rt9D0WG7sWDifHUaitNHC4klZbvO29qmaND1F+RNUpO6H1j63UCPvHqSEvfV+kT\n" +
+            "vQXtOqk34SLo8SOfpni8Dy1wUePIbuaXyqe5uwSprWoAAmRZOjskv6z28pj9jVs3\n" +
+            "dWRkWca5Mmm3VQZlmxcNeFyTAgSth0GNalwWSVNcPK9W/VaDX8ecw7xYU04cpbQr\n" +
+            "a4JF9oc33bhgn4ZDdcvcP8/QUQP+TyN4vGjp1k9+AgkIsJjLanqHE29chsh7ZcVF\n" +
+            "GDjq3DppEo/Hh647rYRqXpxLfJB6fsDyYLmqNKsBcgtBqE9DtiXQ16GuGFrePxd2\n" +
+            "nRKcSWQbisEa1LHr8G4d0jYBMjIoPiEhw4sgEt1ZCiQPO1HXqaK7VN3PhPOqjyjf\n" +
+            "Rt6lN5kVA3+Dd2DRov9NQ83TQPJdg7I=\n" +
+            "=pgX9\n" +
+            "-----END PGP MESSAGE-----\n";
+
+    private static final String MESSAGE_TAMPERED_MDC = "-----BEGIN PGP MESSAGE-----\n" +
+            "\n" +
+            "wcDMA3wvqk35PDeyAQv+NgaEl1h8ZLRD0YiGFqVyO4G0slWQotmgPuovBU8YpNPd\n" +
+            "A/sROQAOpkxR0mSzhUpMcgkpwi1r7dC3HGQCf+mitGwe+JFXCTx7N/4t1U321BKj\n" +
+            "c7k7Zu9pDHpPzWi52T6yL30dyR7XkU85P2BrZoOc7B6GuZF07f4qIG1c3+YzBWuw\n" +
+            "cXyqAmLx/zHUkX72Ga6vzUX/ud08gGYeWthLim7jLG9JzNr+BGnOb93+bKTwe7GX\n" +
+            "dxNkBP7NTtGaFBM9epvsBiMSBIUHxuJDFgN4KSzpTP3+tcgrpTAaNWalJPzzphqD\n" +
+            "Iu7ZrBDARQb/8FIymHt0QITZXu3ml8WopiIDbC42JOt16aMy5VDbcP/LlVZn/DB7\n" +
+            "xr3waDZoxIMhNDcnu8R0w25pbf9T6Lt90a8/UIewCVjciUF82TK6KWLJkTJhmRK3\n" +
+            "QJ/XgkMhDhS94Rj+l+FIRxJF/oyTtRFoeBHOB8V5neqXmOgGf3aX5UIJu3pf+GH/\n" +
+            "n+PEoyEw7S7gQxF4VV4S0kwBZlc6xwHfvO+NPf7W0rAtUxMdOl3LBLiILDxF+cq2\n" +
+            "eKG76gkewCp4EhTfK+iDr4KlObXDzB/m1cXRlqFhtoQZrHV0poZVw2kIwSkA\n" +
+            "=Ishh\n" +
+            "-----END PGP MESSAGE-----\n";
+
+    private static final String MESSAGE_TRUNCATED_MDC = "-----BEGIN PGP MESSAGE-----\n" +
+            "\n" +
+            "wcDMA3wvqk35PDeyAQv+NgaEl1h8ZLRD0YiGFqVyO4G0slWQotmgPuovBU8YpNPd\n" +
+            "A/sROQAOpkxR0mSzhUpMcgkpwi1r7dC3HGQCf+mitGwe+JFXCTx7N/4t1U321BKj\n" +
+            "c7k7Zu9pDHpPzWi52T6yL30dyR7XkU85P2BrZoOc7B6GuZF07f4qIG1c3+YzBWuw\n" +
+            "cXyqAmLx/zHUkX72Ga6vzUX/ud08gGYeWthLim7jLG9JzNr+BGnOb93+bKTwe7GX\n" +
+            "dxNkBP7NTtGaFBM9epvsBiMSBIUHxuJDFgN4KSzpTP3+tcgrpTAaNWalJPzzphqD\n" +
+            "Iu7ZrBDARQb/8FIymHt0QITZXu3ml8WopiIDbC42JOt16aMy5VDbcP/LlVZn/DB7\n" +
+            "xr3waDZoxIMhNDcnu8R0w25pbf9T6Lt90a8/UIewCVjciUF82TK6KWLJkTJhmRK3\n" +
+            "QJ/XgkMhDhS94Rj+l+FIRxJF/oyTtRFoeBHOB8V5neqXmOgGf3aX5UIJu3pf+GH/\n" +
+            "n+PEoyEw7S7gQxF4VV4S0ksBZlc6xwHfvO+NPf7W0rAtUxMdOl3LBLiILDxF+cq2\n" +
+            "eKG76gkewCp4EhTfK+iDr4KlObXDzB/m1cXRlqFhtoQZrHV0poZVw2kIwSk=\n" +
+            "=FDIu\n" +
+            "-----END PGP MESSAGE-----\n";
+
+    private static final String MESSAGE_MDC_WITH_BAD_CTB = "-----BEGIN PGP MESSAGE-----\n" +
+            "\n" +
+            "wcDMA3wvqk35PDeyAQv+NgaEl1h8ZLRD0YiGFqVyO4G0slWQotmgPuovBU8YpNPd\n" +
+            "A/sROQAOpkxR0mSzhUpMcgkpwi1r7dC3HGQCf+mitGwe+JFXCTx7N/4t1U321BKj\n" +
+            "c7k7Zu9pDHpPzWi52T6yL30dyR7XkU85P2BrZoOc7B6GuZF07f4qIG1c3+YzBWuw\n" +
+            "cXyqAmLx/zHUkX72Ga6vzUX/ud08gGYeWthLim7jLG9JzNr+BGnOb93+bKTwe7GX\n" +
+            "dxNkBP7NTtGaFBM9epvsBiMSBIUHxuJDFgN4KSzpTP3+tcgrpTAaNWalJPzzphqD\n" +
+            "Iu7ZrBDARQb/8FIymHt0QITZXu3ml8WopiIDbC42JOt16aMy5VDbcP/LlVZn/DB7\n" +
+            "xr3waDZoxIMhNDcnu8R0w25pbf9T6Lt90a8/UIewCVjciUF82TK6KWLJkTJhmRK3\n" +
+            "QJ/XgkMhDhS94Rj+l+FIRxJF/oyTtRFoeBHOB8V5neqXmOgGf3aX5UIJu3pf+GH/\n" +
+            "n+PEoyEw7S7gQxF4VV4S0kwBZlc6xwHfvO+NPf7W0rAtUxMdOl3LBLiILDxF+cq2\n" +
+            "eKG76gkewCp4EhTfK+iDr4KlObXDzB/n1cXRlqFhtoQZrHV0poZVw2kIwSlF\n" +
+            "=nOqY\n" +
+            "-----END PGP MESSAGE-----\n";
+
+    private static final String MESSAGE_MDC_WITH_BAD_LENGTH = "-----BEGIN PGP MESSAGE-----\n" +
+            "\n" +
+            "wcDMA3wvqk35PDeyAQv+NgaEl1h8ZLRD0YiGFqVyO4G0slWQotmgPuovBU8YpNPd\n" +
+            "A/sROQAOpkxR0mSzhUpMcgkpwi1r7dC3HGQCf+mitGwe+JFXCTx7N/4t1U321BKj\n" +
+            "c7k7Zu9pDHpPzWi52T6yL30dyR7XkU85P2BrZoOc7B6GuZF07f4qIG1c3+YzBWuw\n" +
+            "cXyqAmLx/zHUkX72Ga6vzUX/ud08gGYeWthLim7jLG9JzNr+BGnOb93+bKTwe7GX\n" +
+            "dxNkBP7NTtGaFBM9epvsBiMSBIUHxuJDFgN4KSzpTP3+tcgrpTAaNWalJPzzphqD\n" +
+            "Iu7ZrBDARQb/8FIymHt0QITZXu3ml8WopiIDbC42JOt16aMy5VDbcP/LlVZn/DB7\n" +
+            "xr3waDZoxIMhNDcnu8R0w25pbf9T6Lt90a8/UIewCVjciUF82TK6KWLJkTJhmRK3\n" +
+            "QJ/XgkMhDhS94Rj+l+FIRxJF/oyTtRFoeBHOB8V5neqXmOgGf3aX5UIJu3pf+GH/\n" +
+            "n+PEoyEw7S7gQxF4VV4S0kwBZlc6xwHfvO+NPf7W0rAtUxMdOl3LBLiILDxF+cq2\n" +
+            "eKG76gkewCp4EhTfK+iDr4KlObXDzB/m1MXRlqFhtoQZrHV0poZVw2kIwSlF\n" +
+            "=Ak00\n" +
+            "-----END PGP MESSAGE-----\n";
+
     /**
      * Messages containing a missing MDC shall fail to decrypt.
      * @param implementationFactory implementation factory
@@ -132,26 +222,12 @@ public class ModificationDetectionTests {
      */
     @ParameterizedTest
     @MethodSource("org.pgpainless.util.TestImplementationFactoryProvider#provideImplementationFactories")
-    public void testMissingMDC(ImplementationFactory implementationFactory) throws IOException, PGPException {
+    public void testMissingMDCThrowsByDefault(ImplementationFactory implementationFactory) throws IOException, PGPException {
         ImplementationFactory.setFactoryImplementation(implementationFactory);
-        String message = "-----BEGIN PGP MESSAGE-----\n" +
-                "\n" +
-                "wcDMA3wvqk35PDeyAQwAnTmchA6ve/aF7cPEnyJSb9Ot61LSIMrU3+RaEdA90qn4\n" +
-                "iC+yA7rH+nBX4t9nYSLI4EbQibSfzgxj0Bon1sAwfUfU88UMHypnL1HYsZRoiiLe\n" +
-                "crRr/9Vot2X1firhSu6kwqPZw5eIbvPPhHojZxWo7Plv7lDsXdtgRXc544jKA+Cx\n" +
-                "4Rt9D0WG7sWDifHUaitNHC4klZbvO29qmaND1F+RNUpO6H1j63UCPvHqSEvfV+kT\n" +
-                "vQXtOqk34SLo8SOfpni8Dy1wUePIbuaXyqe5uwSprWoAAmRZOjskv6z28pj9jVs3\n" +
-                "dWRkWca5Mmm3VQZlmxcNeFyTAgSth0GNalwWSVNcPK9W/VaDX8ecw7xYU04cpbQr\n" +
-                "a4JF9oc33bhgn4ZDdcvcP8/QUQP+TyN4vGjp1k9+AgkIsJjLanqHE29chsh7ZcVF\n" +
-                "GDjq3DppEo/Hh647rYRqXpxLfJB6fsDyYLmqNKsBcgtBqE9DtiXQ16GuGFrePxd2\n" +
-                "nRKcSWQbisEa1LHr8G4d0jYBMjIoPiEhw4sgEt1ZCiQPO1HXqaK7VN3PhPOqjyjf\n" +
-                "Rt6lN5kVA3+Dd2DRov9NQ83TQPJdg7I=\n" +
-                "=pgX9\n" +
-                "-----END PGP MESSAGE-----\n";
 
         PGPSecretKeyRingCollection secretKeyRings = getDecryptionKey();
 
-        InputStream in = new ByteArrayInputStream(message.getBytes(StandardCharsets.UTF_8));
+        InputStream in = new ByteArrayInputStream(MESSAGE_MISSING_MDC.getBytes(StandardCharsets.UTF_8));
         DecryptionStream decryptionStream = PGPainless.decryptAndOrVerify()
                 .onInputStream(in)
                 .withOptions(new ConsumerOptions()
@@ -167,24 +243,9 @@ public class ModificationDetectionTests {
 
     @ParameterizedTest
     @MethodSource("org.pgpainless.util.TestImplementationFactoryProvider#provideImplementationFactories")
-    public void tamperedCiphertextTest(ImplementationFactory implementationFactory) throws IOException, PGPException {
+    public void testTamperedCiphertextThrows(ImplementationFactory implementationFactory) throws IOException, PGPException {
         ImplementationFactory.setFactoryImplementation(implementationFactory);
-        String message = "-----BEGIN PGP MESSAGE-----\n" +
-                "\n" +
-                "wcDMA3wvqk35PDeyAQwAnTmchA6ve/aF7cPEnyJSb9Ot61LSIMrU3+RaEdA90qn4\n" +
-                "iC+yA7rH+nBX4t9nYSLI4EbQibSfzgxj0Bon1sAwfUfU88UMHypnL1HYsZRoiiLe\n" +
-                "crRr/9Vot2X1firhSu6kwqPZw5eIbvPPhHojZxWo7Plv7lDsXdtgRXc544jKA+Cx\n" +
-                "4Rt9D0WG7sWDifHUaitNHC4klZbvO29qmaND1F+RNUpO6H1j63UCPvHqSEvfV+kT\n" +
-                "vQXtOqk34SLo8SOfpni8Dy1wUePIbuaXyqe5uwSprWoAAmRZOjskv6z28pj9jVs3\n" +
-                "dWRkWca5Mmm3VQZlmxcNeFyTAgSth0GNalwWSVNcPK9W/VaDX8ecw7xYU04cpbQr\n" +
-                "a4JF9oc33bhgn4ZDdcvcP8/QUQP+TyN4vGjp1k9+AgkIsJjLanqHE29chsh7ZcVF\n" +
-                "GDjq3DppEo/Hh647rYRqXpxLfJB6fsDyYLmqNKsBcgtBqE9DtiXQ16GuGFrePxd2\n" +
-                "nRKcSWQbisEa1LHr8G4d0kwBMjIoPiEhw4sgEt1ZCiQPO1HXqaK7VN3PhPOqjyjf\n" +
-                "Rt6lN5kVA3+Dd2DRov9NQ83TQPJdgwCD5cXqlEliiMR4G0gWh8QZ4oAp541H\n" +
-                "=wx2s\n" +
-                "-----END PGP MESSAGE-----\n";
-
-        ByteArrayInputStream in = new ByteArrayInputStream(message.getBytes(StandardCharsets.UTF_8));
+        ByteArrayInputStream in = new ByteArrayInputStream(MESSAGE_TAMPERED_CIPHERTEXT.getBytes(StandardCharsets.UTF_8));
         DecryptionStream decryptionStream = PGPainless.decryptAndOrVerify()
                 .onInputStream(in)
                 .withOptions(new ConsumerOptions()
@@ -198,24 +259,26 @@ public class ModificationDetectionTests {
 
     @ParameterizedTest
     @MethodSource("org.pgpainless.util.TestImplementationFactoryProvider#provideImplementationFactories")
-    public void tamperedMDCTest(ImplementationFactory implementationFactory) throws IOException, PGPException {
+    public void testIgnoreTamperedCiphertext(ImplementationFactory implementationFactory) throws IOException, PGPException {
         ImplementationFactory.setFactoryImplementation(implementationFactory);
-        String message = "-----BEGIN PGP MESSAGE-----\n" +
-                "\n" +
-                "wcDMA3wvqk35PDeyAQwAnTmchA6ve/aF7cPEnyJSb9Ot61LSIMrU3+RaEdA90qn4\n" +
-                "iC+yA7rH+nBX4t9nYSLI4EbQibSfzgxj0Bon1sAwfUfU88UMHypnL1HYsZRoiiLe\n" +
-                "crRr/9Vot2X1firhSu6kwqPZw5eIbvPPhHojZxWo7Plv7lDsXdtgRXc544jKA+Cx\n" +
-                "4Rt9D0WG7sWDifHUaitNHC4klZbvO29qmaND1F+RNUpO6H1j63UCPvHqSEvfV+kT\n" +
-                "vQXtOqk34SLo8SOfpni8Dy1wUePIbuaXyqe5uwSprWoAAmRZOjskv6z28pj9jVs3\n" +
-                "dWRkWca5Mmm3VQZlmxcNeFyTAgSth0GNalwWSVNcPK9W/VaDX8ecw7xYU04cpbQr\n" +
-                "a4JF9oc33bhgn4ZDdcvcP8/QUQP+TyN4vGjp1k9+AgkIsJjLanqHE29chsh7ZcVF\n" +
-                "GDjq3DppEo/Hh647rYRqXpxLfJB6fsDyYLmqNKsBcgtBqE9DtiXQ16GuGFrePxd2\n" +
-                "nRKcSWQbisEa1LHr8G4d0kwBMjIoPiEhw4sgEt1ZCiQPO1HXqaK7VN3PhPOqjyjf\n" +
-                "Rt6lN5kVA3+Dd2DRov9NQ83TQPJdg7KD5cXqlEliiMR4G0gWh8QZ4oAp540A\n" +
-                "=ucHU\n" +
-                "-----END PGP MESSAGE-----\n";
+        ByteArrayInputStream in = new ByteArrayInputStream(MESSAGE_TAMPERED_CIPHERTEXT.getBytes(StandardCharsets.UTF_8));
+        DecryptionStream decryptionStream = PGPainless.decryptAndOrVerify()
+                .onInputStream(in)
+                .withOptions(new ConsumerOptions()
+                        .addDecryptionKeys(getDecryptionKey(), SecretKeyRingProtector.unprotectedKeys())
+                        .setIgnoreMDCErrors(true)
+                );
 
-        ByteArrayInputStream in = new ByteArrayInputStream(message.getBytes(StandardCharsets.UTF_8));
+        ByteArrayOutputStream out = new ByteArrayOutputStream();
+        Streams.pipeAll(decryptionStream, out);
+        decryptionStream.close();
+    }
+
+    @ParameterizedTest
+    @MethodSource("org.pgpainless.util.TestImplementationFactoryProvider#provideImplementationFactories")
+    public void testTamperedMDCThrowsByDefault(ImplementationFactory implementationFactory) throws IOException, PGPException {
+        ImplementationFactory.setFactoryImplementation(implementationFactory);
+        ByteArrayInputStream in = new ByteArrayInputStream(MESSAGE_TAMPERED_MDC.getBytes(StandardCharsets.UTF_8));
         DecryptionStream decryptionStream = PGPainless.decryptAndOrVerify()
                 .onInputStream(in)
                 .withOptions(new ConsumerOptions()
@@ -225,6 +288,103 @@ public class ModificationDetectionTests {
         ByteArrayOutputStream out = new ByteArrayOutputStream();
         Streams.pipeAll(decryptionStream, out);
         assertThrows(ModificationDetectionException.class, decryptionStream::close);
+    }
+
+    @ParameterizedTest
+    @MethodSource("org.pgpainless.util.TestImplementationFactoryProvider#provideImplementationFactories")
+    public void testIgnoreTamperedMDC(ImplementationFactory implementationFactory) throws IOException, PGPException {
+        ImplementationFactory.setFactoryImplementation(implementationFactory);
+        ByteArrayInputStream in = new ByteArrayInputStream(MESSAGE_TAMPERED_MDC.getBytes(StandardCharsets.UTF_8));
+        DecryptionStream decryptionStream = PGPainless.decryptAndOrVerify()
+                .onInputStream(in)
+                .withOptions(new ConsumerOptions()
+                        .addDecryptionKeys(getDecryptionKey(), SecretKeyRingProtector.unprotectedKeys())
+                        .setIgnoreMDCErrors(true)
+                );
+
+        ByteArrayOutputStream out = new ByteArrayOutputStream();
+        Streams.pipeAll(decryptionStream, out);
+    }
+
+    @ParameterizedTest
+    @MethodSource("org.pgpainless.util.TestImplementationFactoryProvider#provideImplementationFactories")
+    public void testTruncatedMDCThrows(ImplementationFactory implementationFactory) throws IOException, PGPException {
+        ImplementationFactory.setFactoryImplementation(implementationFactory);
+        ByteArrayInputStream in = new ByteArrayInputStream(MESSAGE_TRUNCATED_MDC.getBytes(StandardCharsets.UTF_8));
+        DecryptionStream decryptionStream = PGPainless.decryptAndOrVerify()
+                .onInputStream(in)
+                .withOptions(new ConsumerOptions()
+                        .addDecryptionKeys(getDecryptionKey(), SecretKeyRingProtector.unprotectedKeys())
+                );
+
+        ByteArrayOutputStream out = new ByteArrayOutputStream();
+        assertThrows(EOFException.class, () -> Streams.pipeAll(decryptionStream, out));
+    }
+
+    @ParameterizedTest
+    @MethodSource("org.pgpainless.util.TestImplementationFactoryProvider#provideImplementationFactories")
+    public void testMDCWithBadCTBThrows(ImplementationFactory implementationFactory) throws IOException, PGPException {
+        ImplementationFactory.setFactoryImplementation(implementationFactory);
+        ByteArrayInputStream in = new ByteArrayInputStream(MESSAGE_MDC_WITH_BAD_CTB.getBytes(StandardCharsets.UTF_8));
+        DecryptionStream decryptionStream = PGPainless.decryptAndOrVerify()
+                .onInputStream(in)
+                .withOptions(new ConsumerOptions()
+                        .addDecryptionKeys(getDecryptionKey(), SecretKeyRingProtector.unprotectedKeys())
+                );
+
+        ByteArrayOutputStream out = new ByteArrayOutputStream();
+        Streams.pipeAll(decryptionStream, out);
+        assertThrows(ModificationDetectionException.class, decryptionStream::close);
+    }
+
+    @ParameterizedTest
+    @MethodSource("org.pgpainless.util.TestImplementationFactoryProvider#provideImplementationFactories")
+    public void testIgnoreMDCWithBadCTB(ImplementationFactory implementationFactory) throws IOException, PGPException {
+        ImplementationFactory.setFactoryImplementation(implementationFactory);
+        ByteArrayInputStream in = new ByteArrayInputStream(MESSAGE_MDC_WITH_BAD_CTB.getBytes(StandardCharsets.UTF_8));
+        DecryptionStream decryptionStream = PGPainless.decryptAndOrVerify()
+                .onInputStream(in)
+                .withOptions(new ConsumerOptions()
+                        .addDecryptionKeys(getDecryptionKey(), SecretKeyRingProtector.unprotectedKeys())
+                        .setIgnoreMDCErrors(true)
+                );
+
+        ByteArrayOutputStream out = new ByteArrayOutputStream();
+        Streams.pipeAll(decryptionStream, out);
+        decryptionStream.close();
+    }
+
+    @ParameterizedTest
+    @MethodSource("org.pgpainless.util.TestImplementationFactoryProvider#provideImplementationFactories")
+    public void testMDCWithBadLengthThrows(ImplementationFactory implementationFactory) throws IOException, PGPException {
+        ImplementationFactory.setFactoryImplementation(implementationFactory);
+        ByteArrayInputStream in = new ByteArrayInputStream(MESSAGE_MDC_WITH_BAD_LENGTH.getBytes(StandardCharsets.UTF_8));
+        DecryptionStream decryptionStream = PGPainless.decryptAndOrVerify()
+                .onInputStream(in)
+                .withOptions(new ConsumerOptions()
+                        .addDecryptionKeys(getDecryptionKey(), SecretKeyRingProtector.unprotectedKeys())
+                );
+
+        ByteArrayOutputStream out = new ByteArrayOutputStream();
+        Streams.pipeAll(decryptionStream, out);
+        assertThrows(ModificationDetectionException.class, decryptionStream::close);
+    }
+
+    @ParameterizedTest
+    @MethodSource("org.pgpainless.util.TestImplementationFactoryProvider#provideImplementationFactories")
+    public void testIgnoreMDCWithBadLength(ImplementationFactory implementationFactory) throws IOException, PGPException {
+        ImplementationFactory.setFactoryImplementation(implementationFactory);
+        ByteArrayInputStream in = new ByteArrayInputStream(MESSAGE_MDC_WITH_BAD_LENGTH.getBytes(StandardCharsets.UTF_8));
+        DecryptionStream decryptionStream = PGPainless.decryptAndOrVerify()
+                .onInputStream(in)
+                .withOptions(new ConsumerOptions()
+                        .addDecryptionKeys(getDecryptionKey(), SecretKeyRingProtector.unprotectedKeys())
+                        .setIgnoreMDCErrors(true)
+                );
+
+        ByteArrayOutputStream out = new ByteArrayOutputStream();
+        Streams.pipeAll(decryptionStream, out);
+        decryptionStream.close();
     }
 
     @Test

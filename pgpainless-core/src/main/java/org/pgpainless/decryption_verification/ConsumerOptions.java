@@ -43,6 +43,8 @@ import org.pgpainless.util.Passphrase;
  */
 public class ConsumerOptions {
 
+    private boolean ignoreMDCErrors = false;
+
     private Date verifyNotBefore = null;
     private Date verifyNotAfter = new Date();
 
@@ -263,5 +265,39 @@ public class ConsumerOptions {
 
     public @Nonnull Set<PGPSignature> getDetachedSignatures() {
         return Collections.unmodifiableSet(detachedSignatures);
+    }
+
+    /**
+     * By default, PGPainless will require encrypted messages to make use of SEIP data packets.
+     * Those are Symmetrically Encrypted Integrity Protected Data packets.
+     * Symmetrically Encrypted Data Packets without integrity protection are rejected by default.
+     * Furthermore, PGPainless will throw an exception if verification of the MDC error detection code of the SEIP packet
+     * fails.
+     *
+     * Failure of MDC verification indicates a tampered ciphertext, which might be the cause of an attack or data corruption.
+     *
+     * This method can be used to ignore MDC errors and allow PGPainless to consume encrypted data without integrity protection.
+     * If the flag <pre>ignoreMDCErrors</pre> is set to true, PGPainless will
+     * <ul>
+     *     <li>not throw exceptions for SEIP packets with tampered ciphertext</li>
+     *     <li>not throw exceptions for SEIP packets with tampered MDC</li>
+     *     <li>not throw exceptions for MDCs with bad CTB</li>
+     *     <li>not throw exceptions for MDCs with bad length</li>
+     * </ul>
+     *
+     * It will however still throw an exception if it encounters a SEIP packet with missing or truncated MDC
+     *
+     * @see <a href="https://datatracker.ietf.org/doc/html/rfc4880#section-5.13">Sym. Encrypted Integrity Protected Data Packet</a>
+     * @param ignoreMDCErrors true if MDC errors or missing MDCs shall be ignored, false otherwise.
+     * @return options
+     */
+    @Deprecated
+    public ConsumerOptions setIgnoreMDCErrors(boolean ignoreMDCErrors) {
+        this.ignoreMDCErrors = ignoreMDCErrors;
+        return this;
+    }
+
+    boolean isIgnoreMDCErrors() {
+        return ignoreMDCErrors;
     }
 }

@@ -13,11 +13,10 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.pgpainless.util;
+package org.pgpainless.decryption_verification;
 
 import java.io.IOException;
 import java.io.InputStream;
-
 import javax.annotation.Nonnull;
 
 import org.bouncycastle.openpgp.PGPEncryptedData;
@@ -28,10 +27,12 @@ public class IntegrityProtectedInputStream extends InputStream {
 
     private final InputStream inputStream;
     private final PGPEncryptedData encryptedData;
+    private final ConsumerOptions options;
 
-    public IntegrityProtectedInputStream(InputStream inputStream, PGPEncryptedData encryptedData) {
+    public IntegrityProtectedInputStream(InputStream inputStream, PGPEncryptedData encryptedData, ConsumerOptions options) {
         this.inputStream = inputStream;
         this.encryptedData = encryptedData;
+        this.options = options;
     }
 
     @Override
@@ -46,7 +47,7 @@ public class IntegrityProtectedInputStream extends InputStream {
 
     @Override
     public void close() throws IOException {
-        if (encryptedData.isIntegrityProtected()) {
+        if (encryptedData.isIntegrityProtected() && !options.isIgnoreMDCErrors()) {
             try {
                 if (!encryptedData.verify()) {
                     throw new ModificationDetectionException();

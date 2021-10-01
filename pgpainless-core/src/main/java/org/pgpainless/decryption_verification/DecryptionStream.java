@@ -20,7 +20,6 @@ import java.io.InputStream;
 import javax.annotation.Nonnull;
 
 import org.bouncycastle.util.io.Streams;
-import org.pgpainless.util.IntegrityProtectedInputStream;
 
 /**
  * Decryption Stream that handles updating and verification of detached signatures,
