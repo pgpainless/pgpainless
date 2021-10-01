@@ -1,5 +1,10 @@
 # PGPainless Changelog
 
+## 0.2.15-SNAPSHOT
+- Add `ConsumerOptions.setIgnoreMDCErrors()` which can be used to consume broken messages. Not recommended!
+- Add `MessageInspector.isSignedOnly()` which can be used to identify messages created via `gpg --sign --armor`
+- Workaround for BCs `PGPUtil.getDecoderStream` mistaking plaintext for base64 encoded data
+
 ## 0.2.14
 - Export dependency on Bouncycastle's `bcprov-jdk15on`
 - Rework Key Generation API
