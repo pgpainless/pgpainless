@@ -28,7 +28,6 @@ public class DetachedSignature {
     private final PGPSignature signature;
     private final PGPKeyRing signingKeyRing;
     private final SubkeyIdentifier signingKeyIdentifier;
-    private boolean verified;
 
     /**
      * Create a new {@link DetachedSignature} object.
@@ -41,24 +40,6 @@ public class DetachedSignature {
         this.signature = signature;
         this.signingKeyRing = signingKeyRing;
         this.signingKeyIdentifier = signingKeyIdentifier;
-    }
-
-    /**
-     * Mark this {@link DetachedSignature} as verified.
-     *
-     * @param verified verified
-     */
-    public void setVerified(boolean verified) {
-        this.verified = verified;
-    }
-
-    /**
-     * Return true iff the signature is verified.
-     *
-     * @return verified
-     */
-    public boolean isVerified() {
-        return verified;
     }
 
     /**
