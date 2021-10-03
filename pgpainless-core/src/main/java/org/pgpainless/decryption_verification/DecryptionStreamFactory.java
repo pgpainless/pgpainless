@@ -63,7 +63,7 @@ import org.pgpainless.key.SubkeyIdentifier;
 import org.pgpainless.key.info.KeyRingInfo;
 import org.pgpainless.key.protection.SecretKeyRingProtector;
 import org.pgpainless.key.protection.UnlockSecretKey;
-import org.pgpainless.signature.DetachedSignature;
+import org.pgpainless.signature.DetachedSignatureCheck;
 import org.pgpainless.signature.OnePassSignatureCheck;
 import org.pgpainless.signature.SignatureUtils;
 import org.pgpainless.util.CRCingArmoredInputStreamWrapper;
@@ -81,7 +81,7 @@ public final class DecryptionStreamFactory {
     private final ConsumerOptions options;
     private final OpenPgpMetadata.Builder resultBuilder = OpenPgpMetadata.getBuilder();
     private final List<OnePassSignatureCheck> onePassSignatureChecks = new ArrayList<>();
-    private final List<DetachedSignature> detachedSignatureChecks = new ArrayList<>();
+    private final List<DetachedSignatureCheck> detachedSignatureChecks = new ArrayList<>();
 
     private static final PGPContentVerifierBuilderProvider verifierBuilderProvider =
             ImplementationFactory.getInstance().getPGPContentVerifierBuilderProvider();
@@ -113,7 +113,7 @@ public final class DecryptionStreamFactory {
             SubkeyIdentifier signingKeyIdentifier = new SubkeyIdentifier(signingKeyRing, signingKey.getKeyID());
             try {
                 signature.init(verifierBuilderProvider, signingKey);
-                DetachedSignature detachedSignature = new DetachedSignature(signature, signingKeyRing, signingKeyIdentifier);
+                DetachedSignatureCheck detachedSignature = new DetachedSignatureCheck(signature, signingKeyRing, signingKeyIdentifier);
                 detachedSignatureChecks.add(detachedSignature);
             } catch (PGPException e) {
                 LOGGER.warn("Cannot verify detached signature made by {}. Reason: {}", signingKeyIdentifier, e.getMessage(), e);

@@ -29,7 +29,7 @@ import org.pgpainless.PGPainless;
 import org.pgpainless.exception.SignatureValidationException;
 import org.pgpainless.policy.Policy;
 import org.pgpainless.signature.CertificateValidator;
-import org.pgpainless.signature.DetachedSignature;
+import org.pgpainless.signature.DetachedSignatureCheck;
 import org.pgpainless.signature.OnePassSignatureCheck;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -45,14 +45,14 @@ public abstract class SignatureInputStream extends FilterInputStream {
         private static final Logger LOGGER = LoggerFactory.getLogger(VerifySignatures.class);
 
         private final List<OnePassSignatureCheck> opSignatures;
-        private final List<DetachedSignature> detachedSignatures;
+        private final List<DetachedSignatureCheck> detachedSignatures;
         private final ConsumerOptions options;
         private final OpenPgpMetadata.Builder resultBuilder;
 
         public VerifySignatures(
                 InputStream literalDataStream,
                 List<OnePassSignatureCheck> opSignatures,
-                List<DetachedSignature> detachedSignatures,
+                List<DetachedSignatureCheck> detachedSignatures,
                 ConsumerOptions options,
                 OpenPgpMetadata.Builder resultBuilder) {
             super(literalDataStream);
@@ -114,7 +114,7 @@ public abstract class SignatureInputStream extends FilterInputStream {
 
         private void verifyDetachedSignatures() {
             Policy policy = PGPainless.getPolicy();
-            for (DetachedSignature s : detachedSignatures) {
+            for (DetachedSignatureCheck s : detachedSignatures) {
                 try {
                     signatureWasCreatedInBounds(options.getVerifyNotBefore(), options.getVerifyNotAfter()).verify(s.getSignature());
                     CertificateValidator.validateCertificateAndVerifyInitializedSignature(s.getSignature(), (PGPPublicKeyRing) s.getSigningKeyRing(), policy);
@@ -140,13 +140,13 @@ public abstract class SignatureInputStream extends FilterInputStream {
         }
 
         private void updateDetachedSignatures(byte b) {
-            for (DetachedSignature detachedSignature : detachedSignatures) {
+            for (DetachedSignatureCheck detachedSignature : detachedSignatures) {
                 detachedSignature.getSignature().update(b);
             }
         }
 
         private void updateDetachedSignatures(byte[] b, int off, int read) {
-            for (DetachedSignature detachedSignature : detachedSignatures) {
+            for (DetachedSignatureCheck detachedSignature : detachedSignatures) {
                 detachedSignature.getSignature().update(b, off, read);
             }
         }

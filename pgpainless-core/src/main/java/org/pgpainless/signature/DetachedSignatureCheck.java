@@ -24,19 +24,19 @@ import org.pgpainless.key.SubkeyIdentifier;
  * Tuple-class which bundles together a signature, the signing key that created the signature,
  * an identifier of the signing key and a record of whether or not the signature was verified.
  */
-public class DetachedSignature {
+public class DetachedSignatureCheck {
     private final PGPSignature signature;
     private final PGPKeyRing signingKeyRing;
     private final SubkeyIdentifier signingKeyIdentifier;
 
     /**
-     * Create a new {@link DetachedSignature} object.
+     * Create a new {@link DetachedSignatureCheck} object.
      *
      * @param signature signature
      * @param signingKeyRing signing key that created the signature
      * @param signingKeyIdentifier identifier of the used signing key
      */
-    public DetachedSignature(PGPSignature signature, PGPKeyRing signingKeyRing, SubkeyIdentifier signingKeyIdentifier) {
+    public DetachedSignatureCheck(PGPSignature signature, PGPKeyRing signingKeyRing, SubkeyIdentifier signingKeyIdentifier) {
         this.signature = signature;
         this.signingKeyRing = signingKeyRing;
         this.signingKeyIdentifier = signingKeyIdentifier;
