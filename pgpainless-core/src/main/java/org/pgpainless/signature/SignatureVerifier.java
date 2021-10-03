@@ -435,7 +435,10 @@ public final class SignatureVerifier {
         }
 
         try {
-            if (!onePassSignature.verify()) {
+            if (onePassSignature.getSignature() == null) {
+                throw new IllegalStateException("No comparison signature provided.");
+            }
+            if (!onePassSignature.getOnePassSignature().verify(signature)) {
                 throw new SignatureValidationException("Bad signature of key " + Long.toHexString(signingKey.getKeyID()));
             }
         } catch (PGPException e) {

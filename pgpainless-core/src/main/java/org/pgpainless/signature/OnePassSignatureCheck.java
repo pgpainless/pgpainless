@@ -15,11 +15,9 @@
  */
 package org.pgpainless.signature;
 
-import org.bouncycastle.openpgp.PGPException;
 import org.bouncycastle.openpgp.PGPOnePassSignature;
 import org.bouncycastle.openpgp.PGPPublicKeyRing;
 import org.bouncycastle.openpgp.PGPSignature;
-import org.pgpainless.decryption_verification.SignatureInputStream;
 import org.pgpainless.key.OpenPgpV4Fingerprint;
 import org.pgpainless.key.SubkeyIdentifier;
 
@@ -32,7 +30,6 @@ public class OnePassSignatureCheck {
     private final PGPOnePassSignature onePassSignature;
     private final PGPPublicKeyRing verificationKeys;
     private PGPSignature signature;
-    private boolean verified;
 
     /**
      * Create a new {@link OnePassSignatureCheck}.
@@ -47,15 +44,6 @@ public class OnePassSignatureCheck {
 
     public void setSignature(PGPSignature signature) {
         this.signature = signature;
-    }
-
-    /**
-     * Return true if the signature is verified.
-     *
-     * @return verified
-     */
-    public boolean isVerified() {
-        return verified;
     }
 
     /**
@@ -74,23 +62,6 @@ public class OnePassSignatureCheck {
      */
     public SubkeyIdentifier getSigningKey() {
         return new SubkeyIdentifier(verificationKeys, onePassSignature.getKeyID());
-    }
-
-    /**
-     * Verify the one-pass signature.
-     * Note: This method only checks if the signature itself is correct.
-     * It does not check if the signing key was eligible to create the signature, or if the signature is expired etc.
-     * Those checks are being done by {@link SignatureInputStream.VerifySignatures}.
-     *
-     * @return true if the signature was verified, false otherwise
-     * @throws PGPException if signature verification fails with an exception.
-     */
-    public boolean verify() throws PGPException {
-        if (signature == null) {
-            throw new IllegalStateException("No comparison signature provided.");
-        }
-        this.verified = getOnePassSignature().verify(signature);
-        return verified;
     }
 
     /**

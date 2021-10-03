@@ -239,11 +239,13 @@ public final class DecryptionStreamFactory {
             return literalDataInputStream;
         }
 
+        // Parse signatures from message
         PGPSignatureList signatures = parseSignatures(objectFactory);
         List<PGPSignature> signatureList = SignatureUtils.toList(signatures);
-
+        // Set signatures as comparison sigs in OPS checks
         for (int i = 0; i < onePassSignatureChecks.size(); i++) {
-            onePassSignatureChecks.get(i).setSignature(signatureList.get(onePassSignatureChecks.size() - i - 1));
+            int reversedIndex = onePassSignatureChecks.size() - i - 1;
+            onePassSignatureChecks.get(i).setSignature(signatureList.get(reversedIndex));
         }
 
         return new SignatureInputStream.VerifySignatures(literalDataInputStream,
