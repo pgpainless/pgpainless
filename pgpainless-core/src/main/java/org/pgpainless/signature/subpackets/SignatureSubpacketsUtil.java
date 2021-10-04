@@ -49,6 +49,7 @@ import org.bouncycastle.openpgp.PGPSignatureList;
 import org.bouncycastle.openpgp.PGPSignatureSubpacketVector;
 import org.bouncycastle.util.encoders.Hex;
 import org.pgpainless.algorithm.CompressionAlgorithm;
+import org.pgpainless.algorithm.Feature;
 import org.pgpainless.algorithm.HashAlgorithm;
 import org.pgpainless.algorithm.KeyFlag;
 import org.pgpainless.algorithm.SignatureSubpacket;
@@ -354,6 +355,22 @@ public final class SignatureSubpacketsUtil {
      */
     public static Features getFeatures(PGPSignature signature) {
         return hashed(signature, SignatureSubpacket.features);
+    }
+
+    /**
+     * Parse out the features subpacket of a signature.
+     * If the signature has no features subpacket, return null.
+     * Otherwise, return the features as a feature set.
+     *
+     * @param signature signature
+     * @return features as set
+     */
+    public static @Nullable Set<Feature> parseFeatures(PGPSignature signature) {
+        Features features = getFeatures(signature);
+        if (features == null) {
+            return null;
+        }
+        return new LinkedHashSet<>(Feature.fromBitmask(features.getData()[0]));
     }
 
     /**
