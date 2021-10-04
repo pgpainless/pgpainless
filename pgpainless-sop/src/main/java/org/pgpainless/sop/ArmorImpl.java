@@ -39,7 +39,7 @@ public class ArmorImpl implements Armor {
         return new Ready() {
             @Override
             public void writeTo(OutputStream outputStream) throws IOException {
-                ArmoredOutputStream armor = ArmoredOutputStreamFactory.get(System.out);
+                ArmoredOutputStream armor = ArmoredOutputStreamFactory.get(outputStream);
                 Streams.pipeAll(data, armor);
                 armor.close();
             }
