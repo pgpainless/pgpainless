@@ -15,6 +15,8 @@
  */
 package org.pgpainless.sop;
 
+import java.io.ByteArrayInputStream;
+import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
@@ -22,6 +24,7 @@ import java.io.OutputStream;
 import org.bouncycastle.bcpg.ArmoredOutputStream;
 import org.bouncycastle.openpgp.PGPSignature;
 import org.bouncycastle.openpgp.PGPSignatureList;
+import org.bouncycastle.util.io.Streams;
 import org.pgpainless.exception.WrongConsumingMethodException;
 import org.pgpainless.decryption_verification.cleartext_signatures.ClearsignedMessageUtil;
 import org.pgpainless.util.ArmoredOutputStreamFactory;
@@ -44,29 +47,34 @@ public class DetachInbandSignatureAndMessageImpl implements DetachInbandSignatur
     public ReadyWithResult<Signatures> message(InputStream messageInputStream) {
 
         return new ReadyWithResult<Signatures>() {
+
+            private ByteArrayOutputStream sigOut = new ByteArrayOutputStream();
             @Override
-            public Signatures writeTo(OutputStream messageOutputStream) throws SOPGPException.NoSignature {
+            public Signatures writeTo(OutputStream messageOutputStream) throws SOPGPException.NoSignature, IOException {
+
+                PGPSignatureList signatures = null;
+                try {
+                    signatures = ClearsignedMessageUtil.detachSignaturesFromInbandClearsignedMessage(messageInputStream, messageOutputStream);
+                } catch (WrongConsumingMethodException e) {
+                    throw new IOException(e);
+                }
+
+                if (armor) {
+                    ArmoredOutputStream armorOut = ArmoredOutputStreamFactory.get(sigOut);
+                    for (PGPSignature signature : signatures) {
+                        signature.encode(armorOut);
+                    }
+                    armorOut.close();
+                } else {
+                    for (PGPSignature signature : signatures) {
+                        signature.encode(sigOut);
+                    }
+                }
 
                 return new Signatures() {
                     @Override
                     public void writeTo(OutputStream signatureOutputStream) throws IOException {
-                        PGPSignatureList signatures = null;
-                        try {
-                            signatures = ClearsignedMessageUtil.detachSignaturesFromInbandClearsignedMessage(messageInputStream, messageOutputStream);
-                        } catch (WrongConsumingMethodException e) {
-                            throw new IOException(e);
-                        }
-                        if (armor) {
-                            ArmoredOutputStream armorOut = ArmoredOutputStreamFactory.get(signatureOutputStream);
-                            for (PGPSignature signature : signatures) {
-                                signature.encode(armorOut);
-                            }
-                            armorOut.close();
-                        } else {
-                            for (PGPSignature signature : signatures) {
-                                signature.encode(signatureOutputStream);
-                            }
-                        }
+                        Streams.pipeAll(new ByteArrayInputStream(sigOut.toByteArray()), signatureOutputStream);
                     }
                 };
             }
