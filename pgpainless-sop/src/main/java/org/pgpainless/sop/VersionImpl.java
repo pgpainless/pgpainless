@@ -16,6 +16,7 @@
 package org.pgpainless.sop;
 
 import java.io.IOException;
+import java.io.InputStream;
 import java.util.Properties;
 
 import sop.operation.Version;
@@ -32,7 +33,11 @@ public class VersionImpl implements Version {
         String version;
         try {
             Properties properties = new Properties();
-            properties.load(getClass().getResourceAsStream("/version.properties"));
+            InputStream propertiesFileIn = getClass().getResourceAsStream("/version.properties");
+            if (propertiesFileIn == null) {
+                throw new IOException("File version.properties not found.");
+            }
+            properties.load(propertiesFileIn);
             version = properties.getProperty("version");
         } catch (IOException e) {
             version = "DEVELOPMENT";

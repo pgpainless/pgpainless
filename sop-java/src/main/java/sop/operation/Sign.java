@@ -33,6 +33,7 @@ public interface Sign {
 
     /**
      * Sets the signature mode.
+     * Note: This method has to be called before {@link #key(InputStream)} is called.
      *
      * @param mode signature mode
      * @return builder instance
