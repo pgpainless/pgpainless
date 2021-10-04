@@ -33,6 +33,26 @@ public class FileUtil {
     public static final String PRFX_ENV = "@ENV:";
     public static final String PRFX_FD = "@FD:";
 
+    private static EnvironmentVariableResolver envResolver = System::getenv;
+
+    public static void setEnvironmentVariableResolver(EnvironmentVariableResolver envResolver) {
+        if (envResolver == null) {
+            throw new NullPointerException("Variable envResolver cannot be null.");
+        }
+        FileUtil.envResolver = envResolver;
+    }
+
+    public interface EnvironmentVariableResolver {
+        /**
+         * Resolve the value of the given environment variable.
+         * Return null if the variable is not present.
+         *
+         * @param name name of the variable
+         * @return variable value or null
+         */
+        String resolveEnvironmentVariable(String name);
+    }
+
     public static File getFile(String fileName) {
         if (fileName == null) {
             throw new NullPointerException("File name cannot be null.");
@@ -45,7 +65,7 @@ public class FileUtil {
             }
 
             String envName = fileName.substring(PRFX_ENV.length());
-            String envValue = System.getenv(envName);
+            String envValue = envResolver.resolveEnvironmentVariable(envName);
             if (envValue == null) {
                 throw new IllegalArgumentException(String.format(ERROR_ENV_FOUND, envName));
             }
