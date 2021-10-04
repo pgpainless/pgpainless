@@ -20,14 +20,31 @@ import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import java.io.IOException;
+import java.security.InvalidAlgorithmParameterException;
+import java.security.NoSuchAlgorithmException;
 import java.util.Date;
 import java.util.Iterator;
+import java.util.Random;
 
+import org.bouncycastle.bcpg.attr.ImageAttribute;
+import org.bouncycastle.openpgp.PGPException;
+import org.bouncycastle.openpgp.PGPPrivateKey;
 import org.bouncycastle.openpgp.PGPPublicKey;
 import org.bouncycastle.openpgp.PGPPublicKeyRing;
+import org.bouncycastle.openpgp.PGPSecretKey;
+import org.bouncycastle.openpgp.PGPSecretKeyRing;
+import org.bouncycastle.openpgp.PGPSignature;
+import org.bouncycastle.openpgp.PGPSignatureGenerator;
+import org.bouncycastle.openpgp.PGPUserAttributeSubpacketVector;
+import org.bouncycastle.openpgp.PGPUserAttributeSubpacketVectorGenerator;
 import org.junit.jupiter.api.Test;
 import org.pgpainless.PGPainless;
+import org.pgpainless.algorithm.HashAlgorithm;
+import org.pgpainless.algorithm.SignatureType;
+import org.pgpainless.implementation.ImplementationFactory;
 import org.pgpainless.key.info.KeyRingInfo;
+import org.pgpainless.key.protection.SecretKeyRingProtector;
+import org.pgpainless.key.protection.UnlockSecretKey;
 import org.pgpainless.util.ArmorUtils;
 import org.pgpainless.util.CollectionUtils;
 import org.pgpainless.util.DateUtil;
@@ -285,5 +302,34 @@ public class KeyRingValidatorTest {
 
         PGPPublicKeyRing publicKeys = PGPainless.readKeyRing().publicKeyRing(key);
         PGPPublicKeyRing validated = KeyRingValidator.validate(publicKeys, PGPainless.getPolicy());
+    }
+
+    @Test
+    public void testKeyWithUserAttributes() throws PGPException, InvalidAlgorithmParameterException, NoSuchAlgorithmException {
+        PGPSecretKeyRing secretKeys = PGPainless.generateKeyRing()
+                .modernKeyRing("Alice <alice@pgpainless.org>", null);
+        PGPPublicKeyRing publicKeys = PGPainless.extractCertificate(secretKeys);
+        PGPPublicKey publicKey = secretKeys.getPublicKey();
+        PGPSecretKey secretKey = secretKeys.getSecretKey();
+        PGPPrivateKey privateKey = UnlockSecretKey.unlockSecretKey(secretKey, SecretKeyRingProtector.unprotectedKeys());
+
+        PGPSignatureGenerator signatureGenerator = new PGPSignatureGenerator(
+                ImplementationFactory.getInstance().getPGPContentSignerBuilder(publicKey.getAlgorithm(), HashAlgorithm.SHA512.getAlgorithmId())
+        );
+
+        signatureGenerator.init(SignatureType.CASUAL_CERTIFICATION.getCode(), privateKey);
+        PGPUserAttributeSubpacketVectorGenerator userAttrGen = new PGPUserAttributeSubpacketVectorGenerator();
+        byte[] image = new byte[100];
+        new Random().nextBytes(image);
+        userAttrGen.setImageAttribute(ImageAttribute.JPEG, image);
+        PGPUserAttributeSubpacketVector userAttr = userAttrGen.generate();
+
+        PGPSignature certification = signatureGenerator.generateCertification(userAttr, publicKey);
+        publicKey = PGPPublicKey.addCertification(publicKey, userAttr, certification);
+        publicKeys = PGPPublicKeyRing.insertPublicKey(publicKeys, publicKey);
+        secretKeys = PGPSecretKeyRing.replacePublicKeys(secretKeys, publicKeys);
+
+        secretKeys = KeyRingValidator.validate(secretKeys, PGPainless.getPolicy());
+        assertTrue(secretKeys.getPublicKey().getUserAttributes().hasNext());
     }
 }
