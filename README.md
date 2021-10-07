@@ -1,3 +1,9 @@
+<!--
+SPDX-FileCopyrightText: 2021 Paul Schaub <info@pgpainless.org>
+
+SPDX-License-Identifier: Apache-2.0
+-->
+
 # PGPainless - Use OpenPGP Painlessly!
 
 [![Travis (.com)](https://travis-ci.com/pgpainless/pgpainless.svg?branch=master)](https://travis-ci.com/pgpainless/pgpainless)

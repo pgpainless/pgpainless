@@ -1,4 +1,7 @@
 #!/usr/bin/env bash
+# SPDX-FileCopyrightText: 2021 Paul Schaub <info@pgpainless.org>
+#
+# SPDX-License-Identifier: Apache-2.0
 
 # Pretty fancy method to get reliable the absolute path of a shell
 # script, *even if it is sourced*. Credits go to GreenFox on

@@ -1,3 +1,9 @@
+<!--
+SPDX-FileCopyrightText: 2021 Paul Schaub <vanitasvitae@fsfe.org>
+
+SPDX-License-Identifier: Apache-2.0
+-->
+
 # Signature Verification and Validation
 
 This package can be a bit overwhelming, hence this README file.
