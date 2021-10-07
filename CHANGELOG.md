@@ -1,3 +1,8 @@
+<!--
+SPDX-FileCopyrightText: 2021 Paul Schaub <info@pgpainless.org>
+SPDX-License-Identifier: CC0-1.0
+-->
+
 # PGPainless Changelog
 
 ## 0.2.15-SNAPSHOT

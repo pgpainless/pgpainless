@@ -1,3 +1,8 @@
+<!--
+SPDX-FileCopyrightText: 2021 Paul Schaub <vanitasvitae@fsfe.org>
+
+SPDX-License-Identifier: Apache-2.0
+-->
 # SOP-Java-Picocli
 
 Implementation of the [Stateless OpenPGP Command Line Interface](https://tools.ietf.org/html/draft-dkg-openpgp-stateless-cli-01) specification.
