@@ -29,7 +29,7 @@ These rigorous checks make PGPainless stand out from other Java-based OpenPGP li
 PGPainless currently [*scores second place* on Sequoia-PGPs Interoperability Test-Suite](https://tests.sequoia-pgp.org).
 
 > At FlowCrypt we are using PGPainless in our Kotlin code bases on Android and on server side.
-> The ergonomy of legacy PGP tooling on Java is not very good, and PGPainless improves it greatly.
+> The ergonomics of legacy PGP tooling on Java is not very good, and PGPainless improves it greatly.
 > We were so happy with our initial tests and with Paul - the maintainer, that we decided to sponsor further development of this library.
 >
 > -Tom @ FlowCrypt.com
