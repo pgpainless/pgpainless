@@ -9,8 +9,10 @@ import java.io.EOFException;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 import javax.annotation.Nonnull;
 
@@ -45,6 +47,7 @@ import org.pgpainless.algorithm.SymmetricKeyAlgorithm;
 import org.pgpainless.exception.MessageNotIntegrityProtectedException;
 import org.pgpainless.exception.MissingDecryptionMethodException;
 import org.pgpainless.exception.MissingLiteralDataException;
+import org.pgpainless.exception.SignatureValidationException;
 import org.pgpainless.exception.UnacceptableAlgorithmException;
 import org.pgpainless.exception.WrongConsumingMethodException;
 import org.pgpainless.implementation.ImplementationFactory;
@@ -71,6 +74,7 @@ public final class DecryptionStreamFactory {
     private final OpenPgpMetadata.Builder resultBuilder = OpenPgpMetadata.getBuilder();
     private final List<OnePassSignatureCheck> onePassSignatureChecks = new ArrayList<>();
     private final List<DetachedSignatureCheck> detachedSignatureChecks = new ArrayList<>();
+    private final Map<Long, OnePassSignatureCheck> onePassSignaturesWithMissingCert = new HashMap<>();
 
     private static final PGPContentVerifierBuilderProvider verifierBuilderProvider =
             ImplementationFactory.getInstance().getPGPContentVerifierBuilderProvider();
@@ -96,6 +100,8 @@ public final class DecryptionStreamFactory {
             long issuerKeyId = SignatureUtils.determineIssuerKeyId(signature);
             PGPPublicKeyRing signingKeyRing = findSignatureVerificationKeyRing(issuerKeyId);
             if (signingKeyRing == null) {
+                SignatureValidationException ex = new SignatureValidationException("Missing verification certificate " + Long.toHexString(issuerKeyId));
+                resultBuilder.addInvalidDetachedSignature(new SignatureVerification(signature, null), ex);
                 continue;
             }
             PGPPublicKey signingKey = signingKeyRing.getPublicKey(issuerKeyId);
@@ -105,7 +111,8 @@ public final class DecryptionStreamFactory {
                 DetachedSignatureCheck detachedSignature = new DetachedSignatureCheck(signature, signingKeyRing, signingKeyIdentifier);
                 detachedSignatureChecks.add(detachedSignature);
             } catch (PGPException e) {
-                LOGGER.warn("Cannot verify detached signature made by {}. Reason: {}", signingKeyIdentifier, e.getMessage(), e);
+                SignatureValidationException ex = new SignatureValidationException("Cannot verify detached signature made by " + signingKeyIdentifier + ".", e);
+                resultBuilder.addInvalidDetachedSignature(new SignatureVerification(signature, signingKeyIdentifier), ex);
             }
         }
     }
@@ -223,7 +230,7 @@ public final class DecryptionStreamFactory {
                 .setModificationDate(pgpLiteralData.getModificationTime())
                 .setFileEncoding(StreamEncoding.fromCode(pgpLiteralData.getFormat()));
 
-        if (onePassSignatureChecks.isEmpty()) {
+        if (onePassSignatureChecks.isEmpty() && onePassSignaturesWithMissingCert.isEmpty()) {
             LOGGER.debug("No OnePassSignatures found -> We are done");
             return literalDataInputStream;
         }
@@ -235,6 +242,16 @@ public final class DecryptionStreamFactory {
         for (int i = 0; i < onePassSignatureChecks.size(); i++) {
             int reversedIndex = onePassSignatureChecks.size() - i - 1;
             onePassSignatureChecks.get(i).setSignature(signatureList.get(reversedIndex));
+        }
+
+        for (PGPSignature signature : signatureList) {
+            if (onePassSignaturesWithMissingCert.containsKey(signature.getKeyID())) {
+                OnePassSignatureCheck check = onePassSignaturesWithMissingCert.remove(signature.getKeyID());
+                check.setSignature(signature);
+
+                resultBuilder.addInvalidInbandSignature(new SignatureVerification(signature, null),
+                        new SignatureValidationException("Missing verification certificate " + Long.toHexString(signature.getKeyID())));
+            }
         }
 
         return new SignatureInputStream.VerifySignatures(literalDataInputStream,
@@ -488,7 +505,7 @@ public final class DecryptionStreamFactory {
         // Find public key
         PGPPublicKeyRing verificationKeyRing = findSignatureVerificationKeyRing(keyId);
         if (verificationKeyRing == null) {
-            LOGGER.debug("Missing verification key from {}", Long.toHexString(keyId));
+            onePassSignaturesWithMissingCert.put(keyId, new OnePassSignatureCheck(signature, null));
             return;
         }
         PGPPublicKey verificationKey = verificationKeyRing.getPublicKey(keyId);
