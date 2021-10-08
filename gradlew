@@ -1,9 +1,5 @@
 #!/usr/bin/env sh
 
-# Copyright 2015 the original author or authors.
-#
-# SPDX-License-Identifier: Apache-2.0
-
 ##############################################################################
 ##
 ##  Gradle start up script for UN*X
