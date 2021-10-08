@@ -5,10 +5,14 @@ SPDX-License-Identifier: CC0-1.0
 
 # PGPainless Changelog
 
-## 0.2.15-SNAPSHOT
+## 0.2.15
 - Add `ConsumerOptions.setIgnoreMDCErrors()` which can be used to consume broken messages. Not recommended!
 - Add `MessageInspector.isSignedOnly()` which can be used to identify messages created via `gpg --sign --armor`
 - Workaround for BCs `PGPUtil.getDecoderStream` mistaking plaintext for base64 encoded data
+- Cleanup of unused internal methods
+- SOP: Fix `ArmorImpl` writing data to provided output stream instead of `System.out`
+- Fix hen and egg problem with streams in signature detaching implementation of SOP
+- Make code [REUSE](https://reuse.software) compliant
 
 ## 0.2.14
 - Export dependency on Bouncycastle's `bcprov-jdk15on`
