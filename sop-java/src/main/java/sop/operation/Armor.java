@@ -4,6 +4,7 @@
 
 package sop.operation;
 
+import java.io.ByteArrayInputStream;
 import java.io.InputStream;
 
 import sop.Ready;
@@ -27,4 +28,14 @@ public interface Armor {
      * @return armored data
      */
     Ready data(InputStream data) throws SOPGPException.BadData;
+
+    /**
+     * Armor the provided data.
+     *
+     * @param data unarmored OpenPGP data
+     * @return armored data
+     */
+    default Ready data(byte[] data) throws SOPGPException.BadData {
+        return data(new ByteArrayInputStream(data));
+    }
 }

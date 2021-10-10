@@ -12,6 +12,7 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 import java.io.IOException;
+import java.io.InputStream;
 import java.io.OutputStream;
 
 import com.ginsberg.junit.exit.ExpectSystemExitWithStatus;
@@ -35,7 +36,7 @@ public class ArmorCmdTest {
         armor = mock(Armor.class);
         sop = mock(SOP.class);
         when(sop.armor()).thenReturn(armor);
-        when(armor.data(any())).thenReturn(nopReady());
+        when(armor.data((InputStream) any())).thenReturn(nopReady());
 
         SopCLI.setSopInstance(sop);
     }
@@ -57,7 +58,7 @@ public class ArmorCmdTest {
     @Test
     public void assertDataIsAlwaysCalled() throws SOPGPException.BadData {
         SopCLI.main(new String[] {"armor"});
-        verify(armor, times(1)).data(any());
+        verify(armor, times(1)).data((InputStream) any());
     }
 
     @Test
@@ -77,7 +78,7 @@ public class ArmorCmdTest {
     @Test
     @ExpectSystemExitWithStatus(41)
     public void ifBadDataExit41() throws SOPGPException.BadData {
-        when(armor.data(any())).thenThrow(new SOPGPException.BadData(new IOException()));
+        when(armor.data((InputStream) any())).thenThrow(new SOPGPException.BadData(new IOException()));
 
         SopCLI.main(new String[] {"armor"});
     }

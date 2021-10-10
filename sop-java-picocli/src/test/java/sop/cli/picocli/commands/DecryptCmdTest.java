@@ -18,6 +18,7 @@ import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileReader;
 import java.io.IOException;
+import java.io.InputStream;
 import java.io.OutputStream;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
@@ -55,8 +56,8 @@ public class DecryptCmdTest {
         when(decrypt.verifyNotBefore(any())).thenReturn(decrypt);
         when(decrypt.withPassword(any())).thenReturn(decrypt);
         when(decrypt.withSessionKey(any())).thenReturn(decrypt);
-        when(decrypt.withKey(any())).thenReturn(decrypt);
-        when(decrypt.ciphertext(any())).thenReturn(nopReadyWithResult());
+        when(decrypt.withKey((InputStream) any())).thenReturn(decrypt);
+        when(decrypt.ciphertext((InputStream) any())).thenReturn(nopReadyWithResult());
 
         when(sop.decrypt()).thenReturn(decrypt);
 
@@ -75,14 +76,14 @@ public class DecryptCmdTest {
     @Test
     @ExpectSystemExitWithStatus(19)
     public void missingArgumentsExceptionCausesExit19() throws SOPGPException.MissingArg, SOPGPException.BadData, SOPGPException.CannotDecrypt {
-        when(decrypt.ciphertext(any())).thenThrow(new SOPGPException.MissingArg("Missing arguments."));
+        when(decrypt.ciphertext((InputStream) any())).thenThrow(new SOPGPException.MissingArg("Missing arguments."));
         SopCLI.main(new String[] {"decrypt"});
     }
 
     @Test
     @ExpectSystemExitWithStatus(41)
     public void badDataExceptionCausesExit41() throws SOPGPException.MissingArg, SOPGPException.BadData, SOPGPException.CannotDecrypt {
-        when(decrypt.ciphertext(any())).thenThrow(new SOPGPException.BadData(new IOException()));
+        when(decrypt.ciphertext((InputStream) any())).thenThrow(new SOPGPException.BadData(new IOException()));
         SopCLI.main(new String[] {"decrypt"});
     }
 
@@ -187,7 +188,7 @@ public class DecryptCmdTest {
     @Test
     public void assertSessionKeyIsProperlyWrittenToSessionKeyFile() throws SOPGPException.CannotDecrypt, SOPGPException.MissingArg, SOPGPException.BadData, IOException {
         byte[] key = "C7CBDAF42537776F12509B5168793C26B93294E5ABDFA73224FB0177123E9137".getBytes(StandardCharsets.UTF_8);
-        when(decrypt.ciphertext(any())).thenReturn(new ReadyWithResult<DecryptionResult>() {
+        when(decrypt.ciphertext((InputStream) any())).thenReturn(new ReadyWithResult<DecryptionResult>() {
             @Override
             public DecryptionResult writeTo(OutputStream outputStream) {
                 return new DecryptionResult(
@@ -220,14 +221,14 @@ public class DecryptCmdTest {
     @Test
     @ExpectSystemExitWithStatus(29)
     public void assertUnableToDecryptExceptionResultsInExit29() throws SOPGPException.CannotDecrypt, SOPGPException.MissingArg, SOPGPException.BadData {
-        when(decrypt.ciphertext(any())).thenThrow(new SOPGPException.CannotDecrypt());
+        when(decrypt.ciphertext((InputStream) any())).thenThrow(new SOPGPException.CannotDecrypt());
         SopCLI.main(new String[] {"decrypt"});
     }
 
     @Test
     @ExpectSystemExitWithStatus(3)
     public void assertNoSignatureExceptionCausesExit3() throws SOPGPException.CannotDecrypt, SOPGPException.MissingArg, SOPGPException.BadData {
-        when(decrypt.ciphertext(any())).thenReturn(new ReadyWithResult<DecryptionResult>() {
+        when(decrypt.ciphertext((InputStream) any())).thenReturn(new ReadyWithResult<DecryptionResult>() {
             @Override
             public DecryptionResult writeTo(OutputStream outputStream) throws SOPGPException.NoSignature {
                 throw new SOPGPException.NoSignature();
@@ -239,7 +240,7 @@ public class DecryptCmdTest {
     @Test
     @ExpectSystemExitWithStatus(41)
     public void badDataInVerifyWithCausesExit41() throws IOException, SOPGPException.BadData {
-        when(decrypt.verifyWithCert(any())).thenThrow(new SOPGPException.BadData(new IOException()));
+        when(decrypt.verifyWithCert((InputStream) any())).thenThrow(new SOPGPException.BadData(new IOException()));
         File tempFile = File.createTempFile("verify-with-", ".tmp");
         SopCLI.main(new String[] {"decrypt", "--verify-with", tempFile.getAbsolutePath()});
     }
@@ -268,7 +269,7 @@ public class DecryptCmdTest {
         }
         verifyOut.deleteOnExit();
         Date date = UTCUtil.parseUTCDate("2021-07-11T20:58:23Z");
-        when(decrypt.ciphertext(any())).thenReturn(new ReadyWithResult<DecryptionResult>() {
+        when(decrypt.ciphertext((InputStream) any())).thenReturn(new ReadyWithResult<DecryptionResult>() {
             @Override
             public DecryptionResult writeTo(OutputStream outputStream) {
                 return new DecryptionResult(null, Collections.singletonList(
@@ -308,7 +309,7 @@ public class DecryptCmdTest {
     @Test
     @ExpectSystemExitWithStatus(41)
     public void assertBadDataInKeysResultsInExit41() throws SOPGPException.KeyIsProtected, SOPGPException.UnsupportedAsymmetricAlgo, SOPGPException.BadData, IOException {
-        when(decrypt.withKey(any())).thenThrow(new SOPGPException.BadData(new IOException()));
+        when(decrypt.withKey((InputStream) any())).thenThrow(new SOPGPException.BadData(new IOException()));
         File tempKeyFile = File.createTempFile("key-", ".tmp");
         SopCLI.main(new String[] {"decrypt", tempKeyFile.getAbsolutePath()});
     }
@@ -322,7 +323,7 @@ public class DecryptCmdTest {
     @Test
     @ExpectSystemExitWithStatus(67)
     public void assertProtectedKeyCausesExit67() throws IOException, SOPGPException.KeyIsProtected, SOPGPException.UnsupportedAsymmetricAlgo, SOPGPException.BadData {
-        when(decrypt.withKey(any())).thenThrow(new SOPGPException.KeyIsProtected());
+        when(decrypt.withKey((InputStream) any())).thenThrow(new SOPGPException.KeyIsProtected());
         File tempKeyFile = File.createTempFile("key-", ".tmp");
         SopCLI.main(new String[] {"decrypt", tempKeyFile.getAbsolutePath()});
     }
@@ -330,7 +331,7 @@ public class DecryptCmdTest {
     @Test
     @ExpectSystemExitWithStatus(13)
     public void assertUnsupportedAlgorithmExceptionCausesExit13() throws SOPGPException.KeyIsProtected, SOPGPException.UnsupportedAsymmetricAlgo, SOPGPException.BadData, IOException {
-        when(decrypt.withKey(any())).thenThrow(new SOPGPException.UnsupportedAsymmetricAlgo("Unsupported asymmetric algorithm.", new IOException()));
+        when(decrypt.withKey((InputStream) any())).thenThrow(new SOPGPException.UnsupportedAsymmetricAlgo("Unsupported asymmetric algorithm.", new IOException()));
         File tempKeyFile = File.createTempFile("key-", ".tmp");
         SopCLI.main(new String[] {"decrypt", tempKeyFile.getAbsolutePath()});
     }

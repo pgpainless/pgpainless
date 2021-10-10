@@ -12,6 +12,7 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 import java.io.IOException;
+import java.io.InputStream;
 import java.io.OutputStream;
 
 import com.ginsberg.junit.exit.ExpectSystemExitWithStatus;
@@ -30,7 +31,7 @@ public class ExtractCertCmdTest {
     @BeforeEach
     public void mockComponents() throws IOException, SOPGPException.BadData {
         extractCert = mock(ExtractCert.class);
-        when(extractCert.key(any())).thenReturn(new Ready() {
+        when(extractCert.key((InputStream) any())).thenReturn(new Ready() {
             @Override
             public void writeTo(OutputStream outputStream) {
             }
@@ -57,7 +58,7 @@ public class ExtractCertCmdTest {
     @Test
     @ExpectSystemExitWithStatus(1)
     public void key_ioExceptionCausesExit1() throws IOException, SOPGPException.BadData {
-        when(extractCert.key(any())).thenReturn(new Ready() {
+        when(extractCert.key((InputStream) any())).thenReturn(new Ready() {
             @Override
             public void writeTo(OutputStream outputStream) throws IOException {
                 throw new IOException();
@@ -69,7 +70,7 @@ public class ExtractCertCmdTest {
     @Test
     @ExpectSystemExitWithStatus(41)
     public void key_badDataCausesExit41() throws IOException, SOPGPException.BadData {
-        when(extractCert.key(any())).thenThrow(new SOPGPException.BadData(new IOException()));
+        when(extractCert.key((InputStream) any())).thenThrow(new SOPGPException.BadData(new IOException()));
         SopCLI.main(new String[] {"extract-cert"});
     }
 }

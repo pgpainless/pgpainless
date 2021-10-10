@@ -4,6 +4,7 @@
 
 package sop.operation;
 
+import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.Date;
@@ -44,6 +45,17 @@ public interface Decrypt {
             IOException;
 
     /**
+     * Adds the verification cert.
+     *
+     * @param cert byte array containing the cert
+     * @return builder instance
+     */
+    default Decrypt verifyWithCert(byte[] cert)
+            throws SOPGPException.BadData, IOException {
+        return verifyWithCert(new ByteArrayInputStream(cert));
+    }
+
+    /**
      * Tries to decrypt with the given session key.
      *
      * @param sessionKey session key
@@ -74,10 +86,33 @@ public interface Decrypt {
             SOPGPException.UnsupportedAsymmetricAlgo;
 
     /**
+     * Adds the decryption key.
+     *
+     * @param key byte array containing the key
+     * @return builder instance
+     */
+    default Decrypt withKey(byte[] key)
+            throws SOPGPException.KeyIsProtected,
+            SOPGPException.BadData,
+            SOPGPException.UnsupportedAsymmetricAlgo {
+        return withKey(new ByteArrayInputStream(key));
+    }
+
+    /**
      * Decrypts the given ciphertext, returning verification results and plaintext.
      * @param ciphertext ciphertext
      * @return ready with result
      */
     ReadyWithResult<DecryptionResult> ciphertext(InputStream ciphertext)
             throws SOPGPException.BadData, SOPGPException.MissingArg, SOPGPException.CannotDecrypt;
+
+    /**
+     * Decrypts the given ciphertext, returning verification results and plaintext.
+     * @param ciphertext ciphertext
+     * @return ready with result
+     */
+    default ReadyWithResult<DecryptionResult> ciphertext(byte[] ciphertext)
+        throws SOPGPException.BadData, SOPGPException.MissingArg, SOPGPException.CannotDecrypt {
+        return ciphertext(new ByteArrayInputStream(ciphertext));
+    }
 }

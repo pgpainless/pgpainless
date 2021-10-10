@@ -4,6 +4,7 @@
 
 package sop.operation;
 
+import java.io.ByteArrayInputStream;
 import java.io.InputStream;
 import java.util.Date;
 
@@ -36,11 +37,31 @@ public interface Verify extends VerifySignatures {
     Verify cert(InputStream cert) throws SOPGPException.BadData;
 
     /**
+     * Adds the verification cert.
+     *
+     * @param cert byte array containing the encoded cert
+     * @return builder instance
+     */
+    default Verify cert(byte[] cert) throws SOPGPException.BadData {
+        return cert(new ByteArrayInputStream(cert));
+    }
+
+    /**
      * Provides the signatures.
      * @param signatures input stream containing encoded, detached signatures.
      *
      * @return builder instance
      */
     VerifySignatures signatures(InputStream signatures) throws SOPGPException.BadData;
+
+    /**
+     * Provides the signatures.
+     * @param signatures byte array containing encoded, detached signatures.
+     *
+     * @return builder instance
+     */
+    default VerifySignatures signatures(byte[] signatures) throws SOPGPException.BadData {
+        return signatures(new ByteArrayInputStream(signatures));
+    }
 
 }

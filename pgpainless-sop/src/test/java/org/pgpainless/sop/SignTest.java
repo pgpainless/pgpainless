@@ -9,7 +9,6 @@ import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
-import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.security.InvalidAlgorithmParameterException;
@@ -47,7 +46,7 @@ public class SignTest {
                 .generate()
                 .getBytes();
         cert = sop.extractCert()
-                .key(new ByteArrayInputStream(key))
+                .key(key)
                 .getBytes();
         data = "Hello, World\n".getBytes(StandardCharsets.UTF_8);
     }
@@ -55,18 +54,18 @@ public class SignTest {
     @Test
     public void signArmored() throws IOException {
         byte[] signature = sop.sign()
-                .key(new ByteArrayInputStream(key))
-                .data(new ByteArrayInputStream(data))
+                .key(key)
+                .data(data)
                 .getBytes();
 
         assertTrue(new String(signature).startsWith("-----BEGIN PGP SIGNATURE-----"));
 
         List<Verification> verifications = sop.verify()
-                .cert(new ByteArrayInputStream(cert))
+                .cert(cert)
                 .notAfter(new Date(new Date().getTime() + 10000))
                 .notBefore(new Date(new Date().getTime() - 10000))
-                .signatures(new ByteArrayInputStream(signature))
-                .data(new ByteArrayInputStream(data));
+                .signatures(signature)
+                .data(data);
 
         assertEquals(1, verifications.size());
     }
@@ -74,19 +73,19 @@ public class SignTest {
     @Test
     public void signUnarmored() throws IOException {
         byte[] signature = sop.sign()
-                .key(new ByteArrayInputStream(key))
+                .key(key)
                 .noArmor()
-                .data(new ByteArrayInputStream(data))
+                .data(data)
                 .getBytes();
 
         assertFalse(new String(signature).startsWith("-----BEGIN PGP SIGNATURE-----"));
 
         List<Verification> verifications = sop.verify()
-                .cert(new ByteArrayInputStream(cert))
+                .cert(cert)
                 .notAfter(new Date(new Date().getTime() + 10000))
                 .notBefore(new Date(new Date().getTime() - 10000))
-                .signatures(new ByteArrayInputStream(signature))
-                .data(new ByteArrayInputStream(data));
+                .signatures(signature)
+                .data(data);
 
         assertEquals(1, verifications.size());
     }
@@ -94,40 +93,40 @@ public class SignTest {
     @Test
     public void rejectSignatureAsTooOld() throws IOException {
         byte[] signature = sop.sign()
-                .key(new ByteArrayInputStream(key))
-                .data(new ByteArrayInputStream(data))
+                .key(key)
+                .data(data)
                 .getBytes();
 
         assertThrows(SOPGPException.NoSignature.class, () -> sop.verify()
-                .cert(new ByteArrayInputStream(cert))
+                .cert(cert)
                 .notAfter(new Date(new Date().getTime() - 10000)) // Sig is older
-                .signatures(new ByteArrayInputStream(signature))
-                .data(new ByteArrayInputStream(data)));
+                .signatures(signature)
+                .data(data));
     }
 
     @Test
     public void rejectSignatureAsTooYoung() throws IOException {
         byte[] signature = sop.sign()
-                .key(new ByteArrayInputStream(key))
-                .data(new ByteArrayInputStream(data))
+                .key(key)
+                .data(data)
                 .getBytes();
 
         assertThrows(SOPGPException.NoSignature.class, () -> sop.verify()
-                .cert(new ByteArrayInputStream(cert))
+                .cert(cert)
                 .notBefore(new Date(new Date().getTime() + 10000)) // Sig is younger
-                .signatures(new ByteArrayInputStream(signature))
-                .data(new ByteArrayInputStream(data)));
+                .signatures(signature)
+                .data(data));
     }
 
     @Test
     public void mode() throws IOException, PGPException {
         byte[] signature = sop.sign()
                 .mode(SignAs.Text)
-                .key(new ByteArrayInputStream(key))
-                .data(new ByteArrayInputStream(data))
+                .key(key)
+                .data(data)
                 .getBytes();
 
-        PGPSignature sig = SignatureUtils.readSignatures(new ByteArrayInputStream(signature)).get(0);
+        PGPSignature sig = SignatureUtils.readSignatures(signature).get(0);
         assertEquals(SignatureType.CANONICAL_TEXT_DOCUMENT.getCode(), sig.getSignatureType());
     }
 
@@ -138,7 +137,7 @@ public class SignTest {
         PGPSecretKeyRingCollection collection = new PGPSecretKeyRingCollection(Arrays.asList(key1, key2));
         byte[] keys = collection.getEncoded();
 
-        assertThrows(SOPGPException.BadData.class, () -> sop.sign().key(new ByteArrayInputStream(keys)));
+        assertThrows(SOPGPException.BadData.class, () -> sop.sign().key(keys));
     }
 
     @Test
@@ -147,7 +146,7 @@ public class SignTest {
                 .modernKeyRing("Alice", "passphrase");
         byte[] bytes = key.getEncoded();
 
-        assertThrows(SOPGPException.KeyIsProtected.class, () -> sop.sign().key(new ByteArrayInputStream(bytes)));
+        assertThrows(SOPGPException.KeyIsProtected.class, () -> sop.sign().key(bytes));
     }
 
 }

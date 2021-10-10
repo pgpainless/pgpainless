@@ -4,6 +4,7 @@
 
 package sop.operation;
 
+import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 
@@ -42,6 +43,20 @@ public interface Encrypt {
             SOPGPException.BadData;
 
     /**
+     * Adds the signer key.
+     *
+     * @param key byte array containing the encoded signer key
+     * @return builder instance
+     */
+    default Encrypt signWith(byte[] key)
+            throws SOPGPException.KeyIsProtected,
+            SOPGPException.CertCannotSign,
+            SOPGPException.UnsupportedAsymmetricAlgo,
+            SOPGPException.BadData {
+        return signWith(new ByteArrayInputStream(key));
+    }
+
+    /**
      * Encrypt with the given password.
      *
      * @param password password
@@ -63,10 +78,32 @@ public interface Encrypt {
             SOPGPException.BadData;
 
     /**
+     * Encrypt with the given cert.
+     *
+     * @param cert byte array containing the encoded cert.
+     * @return builder instance
+     */
+    default Encrypt withCert(byte[] cert)
+            throws SOPGPException.CertCannotEncrypt,
+            SOPGPException.UnsupportedAsymmetricAlgo,
+            SOPGPException.BadData {
+        return withCert(new ByteArrayInputStream(cert));
+    }
+
+    /**
      * Encrypt the given data yielding the ciphertext.
      * @param plaintext plaintext
      * @return input stream containing the ciphertext
      */
     Ready plaintext(InputStream plaintext)
         throws IOException;
+
+    /**
+     * Encrypt the given data yielding the ciphertext.
+     * @param plaintext plaintext
+     * @return input stream containing the ciphertext
+     */
+    default Ready plaintext(byte[] plaintext) throws IOException {
+        return plaintext(new ByteArrayInputStream(plaintext));
+    }
 }

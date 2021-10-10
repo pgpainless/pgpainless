@@ -13,6 +13,7 @@ import static org.mockito.Mockito.when;
 
 import java.io.File;
 import java.io.IOException;
+import java.io.InputStream;
 import java.io.OutputStream;
 
 import com.ginsberg.junit.exit.ExpectSystemExitWithStatus;
@@ -32,7 +33,7 @@ public class EncryptCmdTest {
     @BeforeEach
     public void mockComponents() throws IOException {
         encrypt = mock(Encrypt.class);
-        when(encrypt.plaintext(any())).thenReturn(new Ready() {
+        when(encrypt.plaintext((InputStream) any())).thenReturn(new Ready() {
             @Override
             public void writeTo(OutputStream outputStream) {
 
@@ -95,7 +96,7 @@ public class EncryptCmdTest {
         File keyFile2 = File.createTempFile("sign-with-2-", ".asc");
 
         SopCLI.main(new String[] {"encrypt", "--with-password", "password", "--sign-with", keyFile1.getAbsolutePath(), "--sign-with", keyFile2.getAbsolutePath()});
-        verify(encrypt, times(2)).signWith(any());
+        verify(encrypt, times(2)).signWith((InputStream) any());
     }
 
     @Test
@@ -107,7 +108,7 @@ public class EncryptCmdTest {
     @Test
     @ExpectSystemExitWithStatus(67)
     public void signWith_keyIsProtectedCausesExit67() throws SOPGPException.KeyIsProtected, SOPGPException.UnsupportedAsymmetricAlgo, SOPGPException.CertCannotSign, SOPGPException.BadData, IOException {
-        when(encrypt.signWith(any())).thenThrow(new SOPGPException.KeyIsProtected());
+        when(encrypt.signWith((InputStream) any())).thenThrow(new SOPGPException.KeyIsProtected());
         File keyFile = File.createTempFile("sign-with", ".asc");
         SopCLI.main(new String[] {"encrypt", "--sign-with", keyFile.getAbsolutePath(), "--with-password", "starship"});
     }
@@ -115,7 +116,7 @@ public class EncryptCmdTest {
     @Test
     @ExpectSystemExitWithStatus(13)
     public void signWith_unsupportedAsymmetricAlgoCausesExit13() throws SOPGPException.KeyIsProtected, SOPGPException.UnsupportedAsymmetricAlgo, SOPGPException.CertCannotSign, SOPGPException.BadData, IOException {
-        when(encrypt.signWith(any())).thenThrow(new SOPGPException.UnsupportedAsymmetricAlgo("Unsupported asymmetric algorithm.", new Exception()));
+        when(encrypt.signWith((InputStream) any())).thenThrow(new SOPGPException.UnsupportedAsymmetricAlgo("Unsupported asymmetric algorithm.", new Exception()));
         File keyFile = File.createTempFile("sign-with", ".asc");
         SopCLI.main(new String[] {"encrypt", "--with-password", "123456", "--sign-with", keyFile.getAbsolutePath()});
     }
@@ -123,7 +124,7 @@ public class EncryptCmdTest {
     @Test
     @ExpectSystemExitWithStatus(1)
     public void signWith_certCannotSignCausesExit1() throws IOException, SOPGPException.KeyIsProtected, SOPGPException.UnsupportedAsymmetricAlgo, SOPGPException.CertCannotSign, SOPGPException.BadData {
-        when(encrypt.signWith(any())).thenThrow(new SOPGPException.CertCannotSign());
+        when(encrypt.signWith((InputStream) any())).thenThrow(new SOPGPException.CertCannotSign());
         File keyFile = File.createTempFile("sign-with", ".asc");
         SopCLI.main(new String[] {"encrypt", "--with-password", "dragon", "--sign-with", keyFile.getAbsolutePath()});
     }
@@ -131,7 +132,7 @@ public class EncryptCmdTest {
     @Test
     @ExpectSystemExitWithStatus(41)
     public void signWith_badDataCausesExit41() throws SOPGPException.KeyIsProtected, SOPGPException.UnsupportedAsymmetricAlgo, SOPGPException.CertCannotSign, SOPGPException.BadData, IOException {
-        when(encrypt.signWith(any())).thenThrow(new SOPGPException.BadData(new IOException()));
+        when(encrypt.signWith((InputStream) any())).thenThrow(new SOPGPException.BadData(new IOException()));
         File keyFile = File.createTempFile("sign-with", ".asc");
         SopCLI.main(new String[] {"encrypt", "--with-password", "orange", "--sign-with", keyFile.getAbsolutePath()});
     }
@@ -145,7 +146,7 @@ public class EncryptCmdTest {
     @Test
     @ExpectSystemExitWithStatus(13)
     public void cert_unsupportedAsymmetricAlgorithmCausesExit13() throws IOException, SOPGPException.UnsupportedAsymmetricAlgo, SOPGPException.CertCannotEncrypt, SOPGPException.BadData {
-        when(encrypt.withCert(any())).thenThrow(new SOPGPException.UnsupportedAsymmetricAlgo("Unsupported asymmetric algorithm.", new Exception()));
+        when(encrypt.withCert((InputStream) any())).thenThrow(new SOPGPException.UnsupportedAsymmetricAlgo("Unsupported asymmetric algorithm.", new Exception()));
         File certFile = File.createTempFile("cert", ".asc");
         SopCLI.main(new String[] {"encrypt", certFile.getAbsolutePath()});
     }
@@ -153,7 +154,7 @@ public class EncryptCmdTest {
     @Test
     @ExpectSystemExitWithStatus(17)
     public void cert_certCannotEncryptCausesExit17() throws IOException, SOPGPException.UnsupportedAsymmetricAlgo, SOPGPException.CertCannotEncrypt, SOPGPException.BadData {
-        when(encrypt.withCert(any())).thenThrow(new SOPGPException.CertCannotEncrypt("Certificate cannot encrypt.", new Exception()));
+        when(encrypt.withCert((InputStream) any())).thenThrow(new SOPGPException.CertCannotEncrypt("Certificate cannot encrypt.", new Exception()));
         File certFile = File.createTempFile("cert", ".asc");
         SopCLI.main(new String[] {"encrypt", certFile.getAbsolutePath()});
     }
@@ -161,7 +162,7 @@ public class EncryptCmdTest {
     @Test
     @ExpectSystemExitWithStatus(41)
     public void cert_badDataCausesExit41() throws IOException, SOPGPException.UnsupportedAsymmetricAlgo, SOPGPException.CertCannotEncrypt, SOPGPException.BadData {
-        when(encrypt.withCert(any())).thenThrow(new SOPGPException.BadData(new IOException()));
+        when(encrypt.withCert((InputStream) any())).thenThrow(new SOPGPException.BadData(new IOException()));
         File certFile = File.createTempFile("cert", ".asc");
         SopCLI.main(new String[] {"encrypt", certFile.getAbsolutePath()});
     }
@@ -181,7 +182,7 @@ public class EncryptCmdTest {
     @Test
     @ExpectSystemExitWithStatus(1)
     public void writeTo_ioExceptionCausesExit1() throws IOException {
-        when(encrypt.plaintext(any())).thenReturn(new Ready() {
+        when(encrypt.plaintext((InputStream) any())).thenReturn(new Ready() {
             @Override
             public void writeTo(OutputStream outputStream) throws IOException {
                 throw new IOException();

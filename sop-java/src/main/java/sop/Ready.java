@@ -4,8 +4,10 @@
 
 package sop;
 
+import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
+import java.io.InputStream;
 import java.io.OutputStream;
 
 public abstract class Ready {
@@ -29,5 +31,15 @@ public abstract class Ready {
         ByteArrayOutputStream bytes = new ByteArrayOutputStream();
         writeTo(bytes);
         return bytes.toByteArray();
+    }
+
+    /**
+     * Return an input stream containing the data.
+     *
+     * @return input stream
+     * @throws IOException in case of an IO error
+     */
+    public InputStream getInputStream() throws IOException {
+        return new ByteArrayInputStream(getBytes());
     }
 }

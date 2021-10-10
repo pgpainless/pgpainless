@@ -11,6 +11,7 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 import java.io.IOException;
+import java.io.InputStream;
 import java.io.OutputStream;
 
 import com.ginsberg.junit.exit.ExpectSystemExitWithStatus;
@@ -31,7 +32,7 @@ public class DearmorCmdTest {
     public void mockComponents() throws IOException, SOPGPException.BadData {
         sop = mock(SOP.class);
         dearmor = mock(Dearmor.class);
-        when(dearmor.data(any())).thenReturn(nopReady());
+        when(dearmor.data((InputStream) any())).thenReturn(nopReady());
         when(sop.dearmor()).thenReturn(dearmor);
 
         SopCLI.setSopInstance(sop);
@@ -48,13 +49,13 @@ public class DearmorCmdTest {
     @Test
     public void assertDataIsCalled() throws IOException, SOPGPException.BadData {
         SopCLI.main(new String[] {"dearmor"});
-        verify(dearmor, times(1)).data(any());
+        verify(dearmor, times(1)).data((InputStream) any());
     }
 
     @Test
     @ExpectSystemExitWithStatus(41)
     public void assertBadDataCausesExit41() throws IOException, SOPGPException.BadData {
-        when(dearmor.data(any())).thenThrow(new SOPGPException.BadData(new IOException("invalid armor")));
+        when(dearmor.data((InputStream) any())).thenThrow(new SOPGPException.BadData(new IOException("invalid armor")));
         SopCLI.main(new String[] {"dearmor"});
     }
 }

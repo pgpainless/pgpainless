@@ -13,6 +13,7 @@ import static org.mockito.Mockito.when;
 
 import java.io.File;
 import java.io.IOException;
+import java.io.InputStream;
 import java.io.OutputStream;
 
 import com.ginsberg.junit.exit.ExpectSystemExitWithStatus;
@@ -32,7 +33,7 @@ public class SignCmdTest {
     @BeforeEach
     public void mockComponents() throws IOException, SOPGPException.ExpectedText {
         sign = mock(Sign.class);
-        when(sign.data(any())).thenReturn(new Ready() {
+        when(sign.data((InputStream) any())).thenReturn(new Ready() {
             @Override
             public void writeTo(OutputStream outputStream) {
 
@@ -76,14 +77,14 @@ public class SignCmdTest {
     @Test
     @ExpectSystemExitWithStatus(1)
     public void key_keyIsProtectedCausesExit1() throws SOPGPException.KeyIsProtected, IOException, SOPGPException.BadData {
-        when(sign.key(any())).thenThrow(new SOPGPException.KeyIsProtected());
+        when(sign.key((InputStream) any())).thenThrow(new SOPGPException.KeyIsProtected());
         SopCLI.main(new String[] {"sign", keyFile.getAbsolutePath()});
     }
 
     @Test
     @ExpectSystemExitWithStatus(41)
     public void key_badDataCausesExit41() throws SOPGPException.KeyIsProtected, IOException, SOPGPException.BadData {
-        when(sign.key(any())).thenThrow(new SOPGPException.BadData(new IOException()));
+        when(sign.key((InputStream) any())).thenThrow(new SOPGPException.BadData(new IOException()));
         SopCLI.main(new String[] {"sign", keyFile.getAbsolutePath()});
     }
 
@@ -108,7 +109,7 @@ public class SignCmdTest {
     @Test
     @ExpectSystemExitWithStatus(1)
     public void data_ioExceptionCausesExit1() throws IOException, SOPGPException.ExpectedText {
-        when(sign.data(any())).thenReturn(new Ready() {
+        when(sign.data((InputStream) any())).thenReturn(new Ready() {
             @Override
             public void writeTo(OutputStream outputStream) throws IOException {
                 throw new IOException();
@@ -120,7 +121,7 @@ public class SignCmdTest {
     @Test
     @ExpectSystemExitWithStatus(53)
     public void data_expectedTextExceptionCausesExit53() throws IOException, SOPGPException.ExpectedText {
-        when(sign.data(any())).thenThrow(new SOPGPException.ExpectedText());
+        when(sign.data((InputStream) any())).thenThrow(new SOPGPException.ExpectedText());
         SopCLI.main(new String[] {"sign", keyFile.getAbsolutePath()});
     }
 }

@@ -7,7 +7,6 @@ package org.pgpainless.sop;
 import static org.junit.jupiter.api.Assertions.assertArrayEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 
-import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.security.InvalidAlgorithmParameterException;
@@ -33,13 +32,13 @@ public class ArmorTest {
         byte[] knownGoodArmor = ArmorUtils.toAsciiArmoredString(data).getBytes(StandardCharsets.UTF_8);
         byte[] armored = new SOPImpl()
                 .armor()
-                .data(new ByteArrayInputStream(data))
+                .data(data)
                 .getBytes();
 
         assertArrayEquals(knownGoodArmor, armored);
 
         byte[] dearmored = new SOPImpl().dearmor()
-                .data(new ByteArrayInputStream(knownGoodArmor))
+                .data(knownGoodArmor)
                 .getBytes();
 
         assertArrayEquals(data, dearmored);

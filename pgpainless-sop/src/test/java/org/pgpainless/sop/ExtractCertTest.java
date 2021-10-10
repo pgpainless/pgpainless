@@ -7,7 +7,6 @@ package org.pgpainless.sop;
 import static org.junit.jupiter.api.Assertions.assertArrayEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 
-import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 
@@ -76,13 +75,13 @@ public class ExtractCertTest {
         assertArrayEquals(
                 cert.getBytes(StandardCharsets.UTF_8),
                 sop.extractCert()
-                        .key(new ByteArrayInputStream(key.getBytes(StandardCharsets.UTF_8)))
+                        .key(key.getBytes(StandardCharsets.UTF_8))
                         .getBytes());
     }
 
     @Test
     public void emptyKeyDataYieldsBadData() {
         assertThrows(SOPGPException.BadData.class, () -> sop.extractCert()
-                .key(new ByteArrayInputStream(new byte[0])));
+                .key(new byte[0]));
     }
 }

@@ -8,10 +8,11 @@ import static org.junit.jupiter.api.Assertions.assertArrayEquals;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 
-import java.io.ByteArrayInputStream;
+import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 
+import org.bouncycastle.util.io.Streams;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 import sop.ByteArrayAndResult;
@@ -36,34 +37,35 @@ public class EncryptDecryptRoundTripTest {
                 .generate()
                 .getBytes();
         aliceCert = sop.extractCert()
-                .key(new ByteArrayInputStream(aliceKey))
+                .key(aliceKey)
                 .getBytes();
         bobKey = sop.generateKey()
                 .userId("Bob <bob@pgpainless.org>")
                 .generate()
                 .getBytes();
         bobCert = sop.extractCert()
-                .key(new ByteArrayInputStream(bobKey))
+                .key(bobKey)
                 .getBytes();
     }
 
     @Test
     public void basicRoundTripWithKey() throws IOException, SOPGPException.CertCannotSign {
         byte[] encrypted = sop.encrypt()
-                .signWith(new ByteArrayInputStream(aliceKey))
-                .withCert(new ByteArrayInputStream(aliceCert))
-                .withCert(new ByteArrayInputStream(bobCert))
-                .plaintext(new ByteArrayInputStream(message))
+                .signWith(aliceKey)
+                .withCert(aliceCert)
+                .withCert(bobCert)
+                .plaintext(message)
                 .getBytes();
 
         ByteArrayAndResult<DecryptionResult> bytesAndResult = sop.decrypt()
-                .withKey(new ByteArrayInputStream(bobKey))
-                .verifyWithCert(new ByteArrayInputStream(aliceCert))
-                .ciphertext(new ByteArrayInputStream(encrypted))
-                .toBytes();
+                .withKey(bobKey)
+                .verifyWithCert(aliceCert)
+                .ciphertext(encrypted)
+                .toByteArrayAndResult();
 
-        byte[] decrypted = bytesAndResult.getBytes();
-        assertArrayEquals(message, decrypted);
+        ByteArrayOutputStream decrypted = new ByteArrayOutputStream();
+        Streams.pipeAll(bytesAndResult.getInputStream(), decrypted);
+        assertArrayEquals(message, decrypted.toByteArray());
 
         DecryptionResult result = bytesAndResult.getResult();
         assertEquals(1, result.getVerifications().size());
@@ -78,20 +80,20 @@ public class EncryptDecryptRoundTripTest {
                 .getBytes();
         byte[] aliceCertNoArmor = sop.extractCert()
                 .noArmor()
-                .key(new ByteArrayInputStream(aliceKeyNoArmor))
+                .key(aliceKeyNoArmor)
                 .getBytes();
         byte[] encrypted = sop.encrypt()
-                .signWith(new ByteArrayInputStream(aliceKeyNoArmor))
-                .withCert(new ByteArrayInputStream(aliceCertNoArmor))
+                .signWith(aliceKeyNoArmor)
+                .withCert(aliceCertNoArmor)
                 .noArmor()
-                .plaintext(new ByteArrayInputStream(message))
+                .plaintext(message)
                 .getBytes();
 
         ByteArrayAndResult<DecryptionResult> bytesAndResult = sop.decrypt()
-                .withKey(new ByteArrayInputStream(aliceKeyNoArmor))
-                .verifyWithCert(new ByteArrayInputStream(aliceCertNoArmor))
-                .ciphertext(new ByteArrayInputStream(encrypted))
-                .toBytes();
+                .withKey(aliceKeyNoArmor)
+                .verifyWithCert(aliceCertNoArmor)
+                .ciphertext(encrypted)
+                .toByteArrayAndResult();
 
         byte[] decrypted = bytesAndResult.getBytes();
         assertArrayEquals(message, decrypted);
@@ -104,13 +106,13 @@ public class EncryptDecryptRoundTripTest {
     public void basicRoundTripWithPassword() throws IOException {
         byte[] encrypted = sop.encrypt()
                 .withPassword("passphr4s3")
-                .plaintext(new ByteArrayInputStream(message))
+                .plaintext(message)
                 .getBytes();
 
         ByteArrayAndResult<DecryptionResult> bytesAndResult = sop.decrypt()
                 .withPassword("passphr4s3")
-                .ciphertext(new ByteArrayInputStream(encrypted))
-                .toBytes();
+                .ciphertext(encrypted)
+                .toByteArrayAndResult();
 
         byte[] decrypted = bytesAndResult.getBytes();
         assertArrayEquals(message, decrypted);
@@ -121,15 +123,15 @@ public class EncryptDecryptRoundTripTest {
 
     @Test
     public void roundTripWithDecryptionPasswordContainingWhitespace() throws IOException {
-        byte[] encrypted = sop.encrypt()
-                .withPassword("passphr4s3")
-                .plaintext(new ByteArrayInputStream(message))
-                .getBytes();
-
         ByteArrayAndResult<DecryptionResult> bytesAndResult = sop.decrypt()
                 .withPassword("passphr4s3    ") // whitespace is removed
-                .ciphertext(new ByteArrayInputStream(encrypted))
-                .toBytes();
+                .ciphertext(
+                        sop.encrypt()
+                                .withPassword("passphr4s3")
+                                .plaintext(message)
+                                .getInputStream()
+                )
+                .toByteArrayAndResult();
 
         byte[] decrypted = bytesAndResult.getBytes();
         assertArrayEquals(message, decrypted);
@@ -142,13 +144,13 @@ public class EncryptDecryptRoundTripTest {
     public void roundTripWithEncryptionPasswordContainingWhitespace() throws IOException {
         byte[] encrypted = sop.encrypt()
                 .withPassword("passphr4s3    ")
-                .plaintext(new ByteArrayInputStream(message))
+                .plaintext(message)
                 .getBytes();
 
         ByteArrayAndResult<DecryptionResult> bytesAndResult = sop.decrypt()
                 .withPassword("passphr4s3    ")
-                .ciphertext(new ByteArrayInputStream(encrypted))
-                .toBytes();
+                .ciphertext(encrypted)
+                .toByteArrayAndResult();
 
         byte[] decrypted = bytesAndResult.getBytes();
         assertArrayEquals(message, decrypted);
@@ -160,29 +162,29 @@ public class EncryptDecryptRoundTripTest {
     @Test
     public void encrypt_decryptAndVerifyYieldsNoSignatureException() throws IOException {
         byte[] encrypted = sop.encrypt()
-                .withCert(new ByteArrayInputStream(bobCert))
-                .plaintext(new ByteArrayInputStream(message))
+                .withCert(bobCert)
+                .plaintext(message)
                 .getBytes();
 
         assertThrows(SOPGPException.NoSignature.class, () -> sop
                 .decrypt()
-                .withKey(new ByteArrayInputStream(bobKey))
-                .verifyWithCert(new ByteArrayInputStream(aliceCert))
-                .ciphertext(new ByteArrayInputStream(encrypted))
-                .toBytes());
+                .withKey(bobKey)
+                .verifyWithCert(aliceCert)
+                .ciphertext(encrypted)
+                .toByteArrayAndResult());
     }
 
     @Test
     public void encrypt_decryptWithoutKeyOrPassphraseYieldsMissingArgException() throws IOException {
         byte[] encrypted = sop.encrypt()
-                .withCert(new ByteArrayInputStream(bobCert))
-                .plaintext(new ByteArrayInputStream(message))
+                .withCert(bobCert)
+                .plaintext(message)
                 .getBytes();
 
         assertThrows(SOPGPException.MissingArg.class, () -> sop
                 .decrypt()
-                .ciphertext(new ByteArrayInputStream(encrypted))
-                .toBytes());
+                .ciphertext(encrypted)
+                .toByteArrayAndResult());
     }
 
     @Test
@@ -192,7 +194,7 @@ public class EncryptDecryptRoundTripTest {
         System.arraycopy(bobKey, 0, keys, aliceKey.length, bobKey.length);
 
         assertThrows(SOPGPException.BadData.class, () -> sop.decrypt()
-                .withKey(new ByteArrayInputStream(keys)));
+                .withKey(keys));
     }
 
     @Test
@@ -225,12 +227,12 @@ public class EncryptDecryptRoundTripTest {
                 "-----END PGP PRIVATE KEY BLOCK-----";
 
         assertThrows(SOPGPException.KeyIsProtected.class, () -> sop.decrypt()
-                .withKey(new ByteArrayInputStream(passwordProtectedKey.getBytes(StandardCharsets.UTF_8))));
+                .withKey(passwordProtectedKey.getBytes(StandardCharsets.UTF_8)));
     }
 
     @Test
     public void verifyWith_noDataThrowsBadData() {
         assertThrows(SOPGPException.BadData.class, () -> sop.decrypt()
-                .verifyWithCert(new ByteArrayInputStream(new byte[0])));
+                .verifyWithCert(new byte[0]));
     }
 }

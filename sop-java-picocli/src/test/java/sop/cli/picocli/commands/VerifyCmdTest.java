@@ -14,6 +14,7 @@ import static org.mockito.Mockito.when;
 import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.IOException;
+import java.io.InputStream;
 import java.io.PrintStream;
 import java.util.Arrays;
 import java.util.Collections;
@@ -47,9 +48,9 @@ public class VerifyCmdTest {
         verify = mock(Verify.class);
         when(verify.notBefore(any())).thenReturn(verify);
         when(verify.notAfter(any())).thenReturn(verify);
-        when(verify.cert(any())).thenReturn(verify);
-        when(verify.signatures(any())).thenReturn(verify);
-        when(verify.data(any())).thenReturn(
+        when(verify.cert((InputStream) any())).thenReturn(verify);
+        when(verify.signatures((InputStream) any())).thenReturn(verify);
+        when(verify.data((InputStream) any())).thenReturn(
                 Collections.singletonList(
                         new Verification(
                                 UTCUtil.parseUTCDate("2019-10-29T18:36:45Z"),
@@ -146,7 +147,7 @@ public class VerifyCmdTest {
     @Test
     @ExpectSystemExitWithStatus(41)
     public void cert_badDataCausesExit41() throws SOPGPException.BadData {
-        when(verify.cert(any())).thenThrow(new SOPGPException.BadData(new IOException()));
+        when(verify.cert((InputStream) any())).thenThrow(new SOPGPException.BadData(new IOException()));
         SopCLI.main(new String[] {"verify", signature.getAbsolutePath(), cert.getAbsolutePath()});
     }
 
@@ -159,27 +160,27 @@ public class VerifyCmdTest {
     @Test
     @ExpectSystemExitWithStatus(41)
     public void signature_badDataCausesExit41() throws SOPGPException.BadData {
-        when(verify.signatures(any())).thenThrow(new SOPGPException.BadData(new IOException()));
+        when(verify.signatures((InputStream) any())).thenThrow(new SOPGPException.BadData(new IOException()));
         SopCLI.main(new String[] {"verify", signature.getAbsolutePath(), cert.getAbsolutePath()});
     }
 
     @Test
     @ExpectSystemExitWithStatus(3)
     public void data_noSignaturesCausesExit3() throws SOPGPException.NoSignature, IOException, SOPGPException.BadData {
-        when(verify.data(any())).thenThrow(new SOPGPException.NoSignature());
+        when(verify.data((InputStream) any())).thenThrow(new SOPGPException.NoSignature());
         SopCLI.main(new String[] {"verify", signature.getAbsolutePath(), cert.getAbsolutePath()});
     }
 
     @Test
     @ExpectSystemExitWithStatus(41)
     public void data_badDataCausesExit41() throws SOPGPException.NoSignature, IOException, SOPGPException.BadData {
-        when(verify.data(any())).thenThrow(new SOPGPException.BadData(new IOException()));
+        when(verify.data((InputStream) any())).thenThrow(new SOPGPException.BadData(new IOException()));
         SopCLI.main(new String[] {"verify", signature.getAbsolutePath(), cert.getAbsolutePath()});
     }
 
     @Test
     public void resultIsPrintedProperly() throws SOPGPException.NoSignature, IOException, SOPGPException.BadData {
-        when(verify.data(any())).thenReturn(Arrays.asList(
+        when(verify.data((InputStream) any())).thenReturn(Arrays.asList(
                 new Verification(UTCUtil.parseUTCDate("2019-10-29T18:36:45Z"),
                         "EB85BB5FA33A75E15E944E63F231550C4F47E38E",
                         "EB85BB5FA33A75E15E944E63F231550C4F47E38E"),

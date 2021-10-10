@@ -20,11 +20,20 @@ public abstract class ReadyWithResult<T> {
      * @return result, eg. signatures
      *
      * @throws IOException in case of an IO error
-     * @throws SOPGPException.NoSignature
+     * @throws SOPGPException.NoSignature if there are no valid signatures found
      */
     public abstract T writeTo(OutputStream outputStream) throws IOException, SOPGPException.NoSignature;
 
-    public ByteArrayAndResult<T> toBytes() throws IOException, SOPGPException.NoSignature {
+    /**
+     * Return the data as a {@link ByteArrayAndResult}.
+     * Calling {@link ByteArrayAndResult#getBytes()} will give you access to the data as byte array, while
+     * {@link ByteArrayAndResult#getResult()} will grant access to the appended result.
+     *
+     * @return byte array and result
+     * @throws IOException in case of an IO error
+     * @throws SOPGPException.NoSignature if there are no valid signatures found
+     */
+    public ByteArrayAndResult<T> toByteArrayAndResult() throws IOException, SOPGPException.NoSignature {
         ByteArrayOutputStream bytes = new ByteArrayOutputStream();
         T result = writeTo(bytes);
         return new ByteArrayAndResult<>(bytes.toByteArray(), result);

@@ -4,6 +4,13 @@
 
 package sop;
 
+import java.io.ByteArrayInputStream;
+import java.io.InputStream;
+
+/**
+ * Tuple of a byte array and associated result object.
+ * @param <T> type of result
+ */
 public class ByteArrayAndResult<T> {
 
     private final byte[] bytes;
@@ -14,11 +21,30 @@ public class ByteArrayAndResult<T> {
         this.result = result;
     }
 
+    /**
+     * Return the byte array part.
+     *
+     * @return bytes
+     */
     public byte[] getBytes() {
         return bytes;
     }
 
+    /**
+     * Return the result part.
+     *
+     * @return result
+     */
     public T getResult() {
         return result;
+    }
+
+    /**
+     * Return the byte array part as an {@link InputStream}.
+     *
+     * @return input stream
+     */
+    public InputStream getInputStream() {
+        return new ByteArrayInputStream(getBytes());
     }
 }

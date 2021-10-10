@@ -37,7 +37,7 @@ public class ReadyWithResultTest {
             }
         };
 
-        ByteArrayAndResult<List<Verification>> bytesAndResult = readyWithResult.toBytes();
+        ByteArrayAndResult<List<Verification>> bytesAndResult = readyWithResult.toByteArrayAndResult();
         assertArrayEquals(data, bytesAndResult.getBytes());
         assertEquals(result, bytesAndResult.getResult());
     }
