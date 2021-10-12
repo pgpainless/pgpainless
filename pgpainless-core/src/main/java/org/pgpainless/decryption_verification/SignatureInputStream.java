@@ -13,7 +13,6 @@ import java.util.List;
 import javax.annotation.Nonnull;
 
 import org.bouncycastle.openpgp.PGPPublicKeyRing;
-import org.bouncycastle.openpgp.PGPSignature;
 import org.pgpainless.PGPainless;
 import org.pgpainless.exception.SignatureValidationException;
 import org.pgpainless.policy.Policy;
@@ -140,11 +139,5 @@ public abstract class SignatureInputStream extends FilterInputStream {
             }
         }
 
-    }
-
-    public static class CleartextSignatures extends SignatureInputStream {
-        public CleartextSignatures(InputStream inputStream, List<PGPSignature> signatures) {
-            super(inputStream);
-        }
     }
 }
