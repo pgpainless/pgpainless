@@ -8,6 +8,7 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertNull;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import java.io.IOException;
@@ -18,19 +19,26 @@ import java.util.Calendar;
 import java.util.Collections;
 import java.util.Date;
 import java.util.Iterator;
+import java.util.LinkedHashSet;
 import java.util.List;
+import java.util.NoSuchElementException;
+import java.util.Set;
 
 import org.bouncycastle.openpgp.PGPException;
 import org.bouncycastle.openpgp.PGPPublicKey;
 import org.bouncycastle.openpgp.PGPPublicKeyRing;
 import org.bouncycastle.openpgp.PGPSecretKey;
 import org.bouncycastle.openpgp.PGPSecretKeyRing;
+import org.junit.JUtils;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.MethodSource;
 import org.pgpainless.PGPainless;
+import org.pgpainless.algorithm.CompressionAlgorithm;
+import org.pgpainless.algorithm.HashAlgorithm;
 import org.pgpainless.algorithm.KeyFlag;
 import org.pgpainless.algorithm.PublicKeyAlgorithm;
+import org.pgpainless.algorithm.SymmetricKeyAlgorithm;
 import org.pgpainless.implementation.ImplementationFactory;
 import org.pgpainless.key.OpenPgpV4Fingerprint;
 import org.pgpainless.key.TestKeys;
@@ -420,12 +428,14 @@ public class KeyRingInfoTest {
                 "-----END PGP ARMORED FILE-----\n";
 
         PGPPublicKeyRing keys = PGPainless.readKeyRing().publicKeyRing(KEY);
+        final long subkeyId = 5364407983539305061L;
 
         KeyRingInfo inspectDuringRevokedPeriod = new KeyRingInfo(keys, DateUtil.parseUTCDate("2019-01-02 00:00:00 UTC"));
-        assertFalse(inspectDuringRevokedPeriod.isKeyValidlyBound(5364407983539305061L));
+        assertFalse(inspectDuringRevokedPeriod.isKeyValidlyBound(subkeyId));
+        assertNotNull(inspectDuringRevokedPeriod.getSubkeyRevocationSignature(subkeyId));
 
         KeyRingInfo inspectAfterRebinding = new KeyRingInfo(keys, DateUtil.parseUTCDate("2020-01-02 00:00:00 UTC"));
-        assertTrue(inspectAfterRebinding.isKeyValidlyBound(5364407983539305061L));
+        assertTrue(inspectAfterRebinding.isKeyValidlyBound(subkeyId));
     }
 
     @Test
@@ -506,5 +516,128 @@ public class KeyRingInfoTest {
         KeyRingInfo info = PGPainless.inspectKeyRing(keys);
         // Primary key is hard revoked
         assertFalse(info.isKeyValidlyBound(keys.getPublicKey().getKeyID()));
+        assertFalse(info.isFullyEncrypted());
+    }
+
+    @Test
+    public void getSecretKeyTest() throws PGPException, InvalidAlgorithmParameterException, NoSuchAlgorithmException {
+        PGPSecretKeyRing secretKeys = PGPainless.generateKeyRing().modernKeyRing("Alice", null);
+        KeyRingInfo info = PGPainless.inspectKeyRing(secretKeys);
+
+        OpenPgpV4Fingerprint primaryKeyFingerprint = new OpenPgpV4Fingerprint(secretKeys);
+        PGPSecretKey primaryKey = info.getSecretKey(primaryKeyFingerprint);
+
+        assertEquals(secretKeys.getSecretKey(), primaryKey);
+    }
+
+    @Test
+    public void testGetLatestKeyCreationDate() throws PGPException, IOException {
+        PGPSecretKeyRing secretKeys = TestKeys.getEmilSecretKeyRing();
+        Date latestCreationDate = DateUtil.parseUTCDate("2020-01-12 18:01:44 UTC");
+
+        KeyRingInfo info = PGPainless.inspectKeyRing(secretKeys);
+        JUtils.assertDateEquals(latestCreationDate, info.getLatestKeyCreationDate());
+    }
+
+    @Test
+    public void testGetExpirationDateForUse_SPLIT() throws PGPException, IOException {
+        PGPSecretKeyRing secretKeys = TestKeys.getEmilSecretKeyRing();
+        KeyRingInfo info = PGPainless.inspectKeyRing(secretKeys);
+        assertThrows(IllegalArgumentException.class, () -> info.getExpirationDateForUse(KeyFlag.SPLIT));
+    }
+
+    @Test
+    public void testGetExpirationDateForUse_SHARED() throws PGPException, IOException {
+        PGPSecretKeyRing secretKeys = TestKeys.getEmilSecretKeyRing();
+        KeyRingInfo info = PGPainless.inspectKeyRing(secretKeys);
+        assertThrows(IllegalArgumentException.class, () -> info.getExpirationDateForUse(KeyFlag.SHARED));
+    }
+
+    @Test
+    public void testGetExpirationDateForUse_NoSuchKey() throws PGPException, InvalidAlgorithmParameterException, NoSuchAlgorithmException {
+        PGPSecretKeyRing secretKeys = PGPainless.generateKeyRing()
+                .addUserId("Alice")
+                .setPrimaryKey(KeySpec.getBuilder(KeyType.EDDSA(EdDSACurve._Ed25519), KeyFlag.CERTIFY_OTHER))
+                .build();
+
+        KeyRingInfo info = PGPainless.inspectKeyRing(secretKeys);
+
+        assertThrows(NoSuchElementException.class, () -> info.getExpirationDateForUse(KeyFlag.ENCRYPT_COMMS));
+    }
+
+    @Test
+    public void testGetPreferredAlgorithms() throws IOException {
+        String KEY = "-----BEGIN PGP PRIVATE KEY BLOCK-----\n" +
+                "Version: PGPainless\n" +
+                "Comment: AC6F E854 F1F8 FC2C 121F  64BC 5C33 8C29 81C0 25F0\n" +
+                "Comment: Alice\n" +
+                "\n" +
+                "lFgEYWWA1BYJKwYBBAHaRw8BAQdAdrm6pbGxiF810GBTscYRc5Nj3ds1BS3OoMOK\n" +
+                "Ae7LPEoAAQDqwu/sBr0UQbxwinbc5SxajwkIZFmZppLugkEu19eNIRB8tAVBbGlj\n" +
+                "ZYh4BBMWCgAgBQJhZYDUAhsBBRYCAwEABRUKCQgLBAsJCAcCHgECGQEACgkQXDOM\n" +
+                "KYHAJfAqLwEA1H99UN3+/iJZjD0ZecqDZGeH2axtFj9WRr1hqokwFv0A/jXyBV+Q\n" +
+                "Y+bQYiKcmHwk2n7VxHC4PBNY0pEDI/iDwYcBnF0EYWWA1BIKKwYBBAGXVQEFAQEH\n" +
+                "QMDczPpxXth89G/sJ84tYrg2WPIut04H4z8Ys49FuH0GAwEIBwAA/0ASQkU3tbCD\n" +
+                "jqwbnJ69qqQ9Qko+CnwuMcxXBCy5rNBYDl2IdQQYFgoAHQUCYWWA1AIbDAUWAgMB\n" +
+                "AAUVCgkICwQLCQgHAh4BAAoJEFwzjCmBwCXwcBoBAKhQxSlacUPB27OJ0KVUXJsQ\n" +
+                "CGoZ4wcOsstla9N1da8uAP9+W6zxc4VFYFZa3L9PsGLaQ01NTgngWJmPG+gRVu9h\n" +
+                "BJxYBGFlgNQWCSsGAQQB2kcPAQEHQFW53p+2ZwsazALz7P5dYzx0LaQ7lv0veR8e\n" +
+                "DjKAeAMVAAD6AlUAJfkp19PmEEDWW7I3iSpXB3e5njEDbGs12Kt2XLoOwIjVBBgW\n" +
+                "CgB9BQJhZYDUAhsCBRYCAwEABRUKCQgLBAsJCAcCHgFfIAQZFgoABgUCYWWA1AAK\n" +
+                "CRDShjEjcUDsWJA+AQCtbMUCXa8M3znR95V22zxptRmPsapGpw21/t2U4YHYhgD/\n" +
+                "aFFrxG7Q3pbjHJa42u9jakpCm4zIhyfWI0wasPuaBwMACgkQXDOMKYHAJfCTYgD/\n" +
+                "Uc9F3P6UQM0KpeUbensec/fKs8tp67WLLBvBa+p0YBIA/272CXdHaJurCEJoDYaG\n" +
+                "/+XL+qMMgLHaQ25aA11GVAkC\n" +
+                "=7gbt\n" +
+                "-----END PGP PRIVATE KEY BLOCK-----";
+
+        PGPSecretKeyRing secretKeys = PGPainless.readKeyRing().secretKeyRing(KEY);
+        final long pkid = 6643807985200014832L;
+        final long skid1 = -2328413746552029063L;
+        final long skid2 = -3276877650571760552L;
+        Set<HashAlgorithm> preferredHashAlgorithms = new LinkedHashSet<>(
+                Arrays.asList(HashAlgorithm.SHA512, HashAlgorithm.SHA384, HashAlgorithm.SHA256, HashAlgorithm.SHA224));
+        Set<CompressionAlgorithm> preferredCompressionAlgorithms = new LinkedHashSet<>(
+                Arrays.asList(CompressionAlgorithm.ZLIB, CompressionAlgorithm.BZIP2, CompressionAlgorithm.ZIP, CompressionAlgorithm.UNCOMPRESSED));
+        Set<SymmetricKeyAlgorithm> preferredSymmetricAlgorithms = new LinkedHashSet<>(
+                Arrays.asList(SymmetricKeyAlgorithm.AES_256, SymmetricKeyAlgorithm.AES_192, SymmetricKeyAlgorithm.AES_128));
+        KeyRingInfo info = PGPainless.inspectKeyRing(secretKeys);
+
+        // Bob is an invalid userId
+        assertThrows(IllegalArgumentException.class, () -> info.getPreferredSymmetricKeyAlgorithms("Bob", 0));
+        assertThrows(IllegalArgumentException.class, () -> info.getPreferredSymmetricKeyAlgorithms("Bob", pkid));
+        // 123 is an invalid keyid
+        assertThrows(IllegalArgumentException.class, () -> info.getPreferredSymmetricKeyAlgorithms(null, 123L));
+        assertThrows(IllegalArgumentException.class, () -> info.getPreferredSymmetricKeyAlgorithms("Alice", 123L));
+
+        assertEquals(preferredHashAlgorithms, info.getPreferredHashAlgorithms("Alice", pkid));
+        assertEquals(preferredHashAlgorithms, info.getPreferredHashAlgorithms(null, pkid));
+        assertEquals(preferredHashAlgorithms, info.getPreferredHashAlgorithms(null, skid1));
+        assertEquals(preferredHashAlgorithms, info.getPreferredHashAlgorithms(null, skid2));
+
+        // Bob is an invalid userId
+        assertThrows(IllegalArgumentException.class, () -> info.getPreferredCompressionAlgorithms("Bob", 0));
+        assertThrows(IllegalArgumentException.class, () -> info.getPreferredCompressionAlgorithms("Bob", pkid));
+        // 123 is an invalid keyid
+        assertThrows(IllegalArgumentException.class, () -> info.getPreferredCompressionAlgorithms(null, 123L));
+        assertThrows(IllegalArgumentException.class, () -> info.getPreferredCompressionAlgorithms("Alice", 123L));
+
+        assertEquals(preferredCompressionAlgorithms, info.getPreferredCompressionAlgorithms("Alice", pkid));
+        assertEquals(preferredCompressionAlgorithms, info.getPreferredCompressionAlgorithms(null, pkid));
+        assertEquals(preferredCompressionAlgorithms, info.getPreferredCompressionAlgorithms(null, skid1));
+        assertEquals(preferredCompressionAlgorithms, info.getPreferredCompressionAlgorithms(null, skid2));
+
+        // Bob is an invalid userId
+        assertThrows(IllegalArgumentException.class, () -> info.getPreferredSymmetricKeyAlgorithms("Bob", 0));
+        assertThrows(IllegalArgumentException.class, () -> info.getPreferredSymmetricKeyAlgorithms("Bob", pkid));
+        // 123 is an invalid keyid
+        assertThrows(IllegalArgumentException.class, () -> info.getPreferredSymmetricKeyAlgorithms(null, 123L));
+        assertThrows(IllegalArgumentException.class, () -> info.getPreferredSymmetricKeyAlgorithms("Alice", 123L));
+
+        assertEquals(preferredSymmetricAlgorithms, info.getPreferredSymmetricKeyAlgorithms("Alice", pkid));
+        assertEquals(preferredSymmetricAlgorithms, info.getPreferredSymmetricKeyAlgorithms(null, pkid));
+        assertEquals(preferredSymmetricAlgorithms, info.getPreferredSymmetricKeyAlgorithms(null, skid1));
+        assertEquals(preferredSymmetricAlgorithms, info.getPreferredSymmetricKeyAlgorithms(null, skid2));
+
     }
 }
