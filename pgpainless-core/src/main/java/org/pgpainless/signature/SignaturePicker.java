@@ -268,7 +268,7 @@ public final class SignaturePicker {
             throw new IllegalArgumentException("Primary key cannot have subkey binding revocations.");
         }
 
-        List<PGPSignature> signatures = getSortedSignaturesOfType(subkey, SignatureType.SUBKEY_BINDING);
+        List<PGPSignature> signatures = getSortedSignaturesOfType(subkey, SignatureType.SUBKEY_REVOCATION);
         PGPSignature latestSubkeyRevocation = null;
 
         for (PGPSignature signature : signatures) {
