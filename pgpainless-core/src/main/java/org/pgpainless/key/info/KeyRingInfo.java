@@ -748,12 +748,13 @@ public class KeyRingInfo {
         List<PGPPublicKey> encryptionKeys = new ArrayList<>();
         while (subkeys.hasNext()) {
             PGPPublicKey subKey = subkeys.next();
-            Date subkeyExpiration = getSubkeyExpirationDate(new OpenPgpV4Fingerprint(subKey));
-            if (subkeyExpiration != null && subkeyExpiration.before(new Date())) {
+
+            if (!isKeyValidlyBound(subKey.getKeyID())) {
                 continue;
             }
 
-            if (!isKeyValidlyBound(subKey.getKeyID())) {
+            Date subkeyExpiration = getSubkeyExpirationDate(new OpenPgpV4Fingerprint(subKey));
+            if (subkeyExpiration != null && subkeyExpiration.before(new Date())) {
                 continue;
             }
 
