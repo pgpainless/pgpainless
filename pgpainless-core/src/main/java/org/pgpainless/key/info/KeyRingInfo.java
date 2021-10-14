@@ -532,13 +532,16 @@ public class KeyRingInfo {
     public @Nonnull Date getLatestKeyCreationDate() {
         Date latestCreation = null;
         for (PGPPublicKey key : getPublicKeys()) {
+            if (!isKeyValidlyBound(key.getKeyID())) {
+                continue;
+            }
             Date keyCreation = key.getCreationTime();
             if (latestCreation == null || latestCreation.before(keyCreation)) {
                 latestCreation = keyCreation;
             }
         }
         if (latestCreation == null) {
-            throw new AssertionError("Apparently there is no key in this key ring.");
+            throw new AssertionError("Apparently there is no validly bound key in this key ring.");
         }
         return latestCreation;
     }
