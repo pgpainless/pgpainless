@@ -24,6 +24,7 @@ import org.bouncycastle.openpgp.PGPSecretKeyRingCollection;
 import org.bouncycastle.openpgp.PGPSignature;
 import org.pgpainless.exception.NotYetImplementedException;
 import org.pgpainless.key.protection.SecretKeyRingProtector;
+import org.pgpainless.key.protection.SingleSecretKeyRingProtector;
 import org.pgpainless.signature.SignatureUtils;
 import org.pgpainless.util.Passphrase;
 
@@ -195,15 +196,22 @@ public class ConsumerOptions {
     }
 
     /**
-     * Add a key for message decryption. If the key is encrypted, the {@link SecretKeyRingProtector} is used to decrypt it
+     * Add a key ring for message decryption. If the key ring is encrypted, the {@link SecretKeyRingProtector} is used to decrypt it
      * when needed.
      *
-     * @param key key
+     * @param keyRing key ring
      * @param keyRingProtector protector for the secret key
      * @return options
      */
-    public ConsumerOptions addDecryptionKey(@Nonnull PGPSecretKeyRing key, @Nonnull SecretKeyRingProtector keyRingProtector) {
-        decryptionKeys.put(key, keyRingProtector);
+    public ConsumerOptions addDecryptionKey(@Nonnull PGPSecretKeyRing keyRing, @Nonnull SecretKeyRingProtector keyRingProtector) {
+        decryptionKeys.forEach((key, value) -> {
+            if (value instanceof SingleSecretKeyRingProtector && value != keyRingProtector){
+                throw new IllegalStateException("SingleSecretKeyRingProtector is found. " +
+                        "Please specify the same SecretKeyRingProtector for all keys.");
+            }
+        });
+
+        decryptionKeys.put(keyRing, keyRingProtector);
         return this;
     }
 

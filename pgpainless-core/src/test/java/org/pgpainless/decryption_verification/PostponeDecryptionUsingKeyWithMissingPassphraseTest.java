@@ -5,22 +5,27 @@
 package org.pgpainless.decryption_verification;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.fail;
 
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
+import java.util.Arrays;
 import javax.annotation.Nullable;
 
 import org.bouncycastle.openpgp.PGPException;
 import org.bouncycastle.openpgp.PGPSecretKeyRing;
+import org.bouncycastle.openpgp.PGPSecretKeyRingCollection;
 import org.bouncycastle.util.io.Streams;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 import org.pgpainless.PGPainless;
+import org.pgpainless.exception.WrongPassphraseException;
 import org.pgpainless.key.protection.CachingSecretKeyRingProtector;
 import org.pgpainless.key.protection.SecretKeyRingProtector;
+import org.pgpainless.key.protection.SingleSecretKeyRingProtector;
 import org.pgpainless.key.protection.passphrase_provider.SecretKeyPassphraseProvider;
 import org.pgpainless.util.Passphrase;
 
@@ -178,6 +183,21 @@ public class PostponeDecryptionUsingKeyWithMissingPassphraseTest {
     }
 
     @Test
+    public void missingPassphraseFirstAndSecond() throws PGPException, IOException {
+        PGPSecretKeyRingCollection keyRings = new PGPSecretKeyRingCollection(Arrays.asList(k1, k2));
+        assertThrows(WrongPassphraseException.class, () -> {
+            DecryptionStream decryptionStream = PGPainless.decryptAndOrVerify()
+                    .onInputStream(new ByteArrayInputStream(ENCRYPTED_FOR_K1_K2.getBytes(StandardCharsets.UTF_8)))
+                    .withOptions(new ConsumerOptions()
+                            .addDecryptionKeys(keyRings, new SingleCachingSecretKeyRingProtector()));
+
+            ByteArrayOutputStream out = new ByteArrayOutputStream();
+            Streams.pipeAll(decryptionStream, out);
+            decryptionStream.close();
+        }, "Wrong passphrase provided for keys: a7c78cc7690fcc46, 10da90900b1cec68");
+    }
+
+    @Test
     public void messagePassphraseFirst() throws PGPException, IOException {
         SecretKeyPassphraseProvider provider = new SecretKeyPassphraseProvider() {
             @Nullable
@@ -206,5 +226,9 @@ public class PostponeDecryptionUsingKeyWithMissingPassphraseTest {
         decryptionStream.close();
 
         assertEquals(PLAINTEXT, out.toString());
+    }
+
+    private static class SingleCachingSecretKeyRingProtector extends CachingSecretKeyRingProtector
+            implements SingleSecretKeyRingProtector {
     }
 }

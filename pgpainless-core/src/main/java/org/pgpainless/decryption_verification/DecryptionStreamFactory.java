@@ -50,10 +50,12 @@ import org.pgpainless.exception.MissingLiteralDataException;
 import org.pgpainless.exception.SignatureValidationException;
 import org.pgpainless.exception.UnacceptableAlgorithmException;
 import org.pgpainless.exception.WrongConsumingMethodException;
+import org.pgpainless.exception.WrongPassphraseException;
 import org.pgpainless.implementation.ImplementationFactory;
 import org.pgpainless.key.SubkeyIdentifier;
 import org.pgpainless.key.info.KeyRingInfo;
 import org.pgpainless.key.protection.SecretKeyRingProtector;
+import org.pgpainless.key.protection.SingleSecretKeyRingProtector;
 import org.pgpainless.key.protection.UnlockSecretKey;
 import org.pgpainless.signature.DetachedSignatureCheck;
 import org.pgpainless.signature.OnePassSignatureCheck;
@@ -262,7 +264,7 @@ public final class DecryptionStreamFactory {
     private PGPSignatureList parseSignatures(PGPObjectFactory objectFactory) throws IOException {
         PGPSignatureList signatureList = null;
         Object pgpObject = objectFactory.nextObject();
-        while (pgpObject !=  null && signatureList == null) {
+        while (pgpObject != null && signatureList == null) {
             if (pgpObject instanceof PGPSignatureList) {
                 signatureList = (PGPSignatureList) pgpObject;
             } else {
@@ -397,6 +399,14 @@ public final class DecryptionStreamFactory {
                 encryptedSessionKey = publicKeyEncryptedData;
                 break;
             }
+
+            if (!options.getDecryptionKeys().isEmpty()) {
+                SecretKeyRingProtector firstPeeked = options.getSecretKeyProtector(options.getDecryptionKeys().iterator().next());
+
+                if (decryptionKey == null && firstPeeked instanceof SingleSecretKeyRingProtector) {
+                    throw new WrongPassphraseException(((SingleSecretKeyRingProtector) firstPeeked).getFailedKeyIds());
+                }
+            }
         }
 
         return decryptWith(encryptedSessionKey, decryptionKey);
@@ -407,16 +417,15 @@ public final class DecryptionStreamFactory {
      * If the secret key is encrypted and the secret key protector does not have a passphrase available and the boolean
      * postponeIfMissingPassphrase is true, data decryption is postponed by pushing a tuple of the encrypted data decryption key
      * identifier to the postponed list.
-     *
+     * <p>
      * This method only returns a non-null private key, if the private key is able to decrypt the message successfully.
      *
-     * @param secretKeys secret key ring
-     * @param secretKey secret key
-     * @param publicKeyEncryptedData encrypted data which is tried to decrypt using the secret key
-     * @param postponed list of postponed decryptions due to missing secret key passphrases
+     * @param secretKeys                  secret key ring
+     * @param secretKey                   secret key
+     * @param publicKeyEncryptedData      encrypted data which is tried to decrypt using the secret key
+     * @param postponed                   list of postponed decryptions due to missing secret key passphrases
      * @param postponeIfMissingPassphrase flag to specify whether missing secret key passphrases should result in postponed decryption
      * @return private key if decryption is successful, null if decryption is unsuccessful or postponed
-     *
      * @throws PGPException in case of an OpenPGP error
      */
     private PGPPrivateKey tryPublicKeyDecryption(
@@ -434,8 +443,16 @@ public final class DecryptionStreamFactory {
             return null;
         }
 
-        PGPPrivateKey privateKey = UnlockSecretKey.unlockSecretKey(
-                secretKey, protector.getDecryptor(secretKey.getKeyID()));
+        PGPPrivateKey privateKey;
+        try {
+            privateKey = UnlockSecretKey.unlockSecretKey(
+                    secretKey, protector.getDecryptor(secretKey.getKeyID()));
+        } catch (Exception e) {
+            if (protector instanceof SingleSecretKeyRingProtector) {
+                ((SingleSecretKeyRingProtector) protector).addFailedKeyId(secretKey.getKeyID(), e);
+                return null;
+            } else throw e;
+        }
 
         // test if we have the right private key
         PublicKeyDataDecryptorFactory decryptorFactory = ImplementationFactory.getInstance()
