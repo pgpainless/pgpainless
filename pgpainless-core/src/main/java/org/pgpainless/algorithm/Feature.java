@@ -19,13 +19,36 @@ import org.bouncycastle.bcpg.sig.Features;
 public enum Feature {
 
     /**
-     * Add modification detection package.
+     * Support for Symmetrically Encrypted Integrity Protected Data Packets using Modification Detection Code Packets.
      *
      * @see <a href="https://tools.ietf.org/html/rfc4880#section-5.14">
      *     RFC-4880 §5.14: Modification Detection Code Packet</a>
      */
     MODIFICATION_DETECTION(Features.FEATURE_MODIFICATION_DETECTION),
+
+    /**
+     * Support for Authenticated Encryption with Additional Data (AEAD).
+     * If a key announces this feature, it signals support for consuming AEAD Encrypted Data Packets.
+     *
+     * NOTE: PGPAINLESS DOES NOT YET SUPPORT THIS FEATURE!!!
+     *
+     * @see <a href="https://openpgp-wg.gitlab.io/rfc4880bis/#name-aead-encrypted-data-packet-">
+     *     AEAD Encrypted Data Packet</a>
+     */
     AEAD_ENCRYPTED_DATA(Features.FEATURE_AEAD_ENCRYPTED_DATA),
+
+    /**
+     * If a key announces this feature, it is a version 5 public key.
+     * The version 5 format is similar to the version 4 format except for the addition of a count for the key material.
+     * This count helps parsing secret key packets (which are an extension of the public key packet format) in the case
+     * of an unknown algorithm.
+     * In addition, fingerprints of version 5 keys are calculated differently from version 4 keys.
+     *
+     * NOTE: PGPAINLESS DOES NOT YET SUPPORT THIS FEATURE!!!
+     *
+     * @see <a href="https://openpgp-wg.gitlab.io/rfc4880bis/#name-public-key-packet-formats">
+     *     Public-Key Packet Formats</a>
+     */
     VERSION_5_PUBLIC_KEY(Features.FEATURE_VERSION_5_PUBLIC_KEY)
     ;
 
