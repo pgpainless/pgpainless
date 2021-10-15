@@ -25,6 +25,7 @@ import org.pgpainless.algorithm.SymmetricKeyAlgorithm;
 import org.pgpainless.exception.SignatureValidationException;
 import org.pgpainless.key.OpenPgpFingerprint;
 import org.pgpainless.key.SubkeyIdentifier;
+import org.pgpainless.util.SessionKey;
 
 public class OpenPgpMetadata {
 
@@ -34,7 +35,7 @@ public class OpenPgpMetadata {
     private final List<SignatureVerification.Failure> invalidInbandSignatures;
     private final List<SignatureVerification> verifiedDetachedSignatures;
     private final List<SignatureVerification.Failure> invalidDetachedSignatures;
-    private final SymmetricKeyAlgorithm symmetricKeyAlgorithm;
+    private final SessionKey sessionKey;
     private final CompressionAlgorithm compressionAlgorithm;
     private final String fileName;
     private final Date modificationDate;
@@ -42,7 +43,7 @@ public class OpenPgpMetadata {
 
     public OpenPgpMetadata(Set<Long> recipientKeyIds,
                            SubkeyIdentifier decryptionKey,
-                           SymmetricKeyAlgorithm symmetricKeyAlgorithm,
+                           SessionKey sessionKey,
                            CompressionAlgorithm algorithm,
                            List<SignatureVerification> verifiedInbandSignatures,
                            List<SignatureVerification.Failure> invalidInbandSignatures,
@@ -54,7 +55,7 @@ public class OpenPgpMetadata {
 
         this.recipientKeyIds = Collections.unmodifiableSet(recipientKeyIds);
         this.decryptionKey = decryptionKey;
-        this.symmetricKeyAlgorithm = symmetricKeyAlgorithm;
+        this.sessionKey = sessionKey;
         this.compressionAlgorithm = algorithm;
         this.verifiedInbandSignatures = Collections.unmodifiableList(verifiedInbandSignatures);
         this.invalidInbandSignatures = Collections.unmodifiableList(invalidInbandSignatures);
@@ -80,7 +81,7 @@ public class OpenPgpMetadata {
      * @return true if encrypted, false otherwise
      */
     public boolean isEncrypted() {
-        return symmetricKeyAlgorithm != SymmetricKeyAlgorithm.NULL && !getRecipientKeyIds().isEmpty();
+        return sessionKey != null && sessionKey.getAlgorithm() != SymmetricKeyAlgorithm.NULL && !getRecipientKeyIds().isEmpty();
     }
 
     /**
@@ -100,7 +101,11 @@ public class OpenPgpMetadata {
      * @return encryption algorithm
      */
     public @Nullable SymmetricKeyAlgorithm getSymmetricKeyAlgorithm() {
-        return symmetricKeyAlgorithm;
+        return sessionKey == null ? null : sessionKey.getAlgorithm();
+    }
+
+    public @Nullable SessionKey getSessionKey() {
+        return sessionKey;
     }
 
     /**
@@ -271,8 +276,8 @@ public class OpenPgpMetadata {
     public static class Builder {
 
         private final Set<Long> recipientFingerprints = new HashSet<>();
+        private SessionKey sessionKey;
         private SubkeyIdentifier decryptionKey;
-        private SymmetricKeyAlgorithm symmetricKeyAlgorithm = SymmetricKeyAlgorithm.NULL;
         private CompressionAlgorithm compressionAlgorithm = CompressionAlgorithm.UNCOMPRESSED;
         private String fileName;
         private StreamEncoding fileEncoding;
@@ -294,13 +299,13 @@ public class OpenPgpMetadata {
             return this;
         }
 
-        public Builder setCompressionAlgorithm(CompressionAlgorithm algorithm) {
-            this.compressionAlgorithm = algorithm;
+        public Builder setSessionKey(SessionKey sessionKey) {
+            this.sessionKey = sessionKey;
             return this;
         }
 
-        public Builder setSymmetricKeyAlgorithm(SymmetricKeyAlgorithm symmetricKeyAlgorithm) {
-            this.symmetricKeyAlgorithm = symmetricKeyAlgorithm;
+        public Builder setCompressionAlgorithm(CompressionAlgorithm algorithm) {
+            this.compressionAlgorithm = algorithm;
             return this;
         }
 
@@ -322,7 +327,7 @@ public class OpenPgpMetadata {
         public OpenPgpMetadata build() {
             return new OpenPgpMetadata(
                     recipientFingerprints, decryptionKey,
-                    symmetricKeyAlgorithm, compressionAlgorithm,
+                    sessionKey, compressionAlgorithm,
                     verifiedInbandSignatures, invalidInbandSignatures,
                     verifiedDetachedSignatures, invalidDetachedSignatures,
                     fileName, modificationDate, fileEncoding);

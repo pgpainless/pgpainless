@@ -14,7 +14,6 @@ import org.bouncycastle.openpgp.PGPSignatureList;
 import org.pgpainless.PGPainless;
 import org.pgpainless.algorithm.CompressionAlgorithm;
 import org.pgpainless.algorithm.StreamEncoding;
-import org.pgpainless.algorithm.SymmetricKeyAlgorithm;
 import org.pgpainless.decryption_verification.ConsumerOptions;
 import org.pgpainless.decryption_verification.DecryptionStream;
 import org.pgpainless.decryption_verification.OpenPgpMetadata;
@@ -58,7 +57,6 @@ public class CleartextSignatureProcessor {
     public DecryptionStream getVerificationStream() throws IOException, PGPException {
         OpenPgpMetadata.Builder resultBuilder = OpenPgpMetadata.getBuilder();
         resultBuilder.setCompressionAlgorithm(CompressionAlgorithm.UNCOMPRESSED)
-                .setSymmetricKeyAlgorithm(SymmetricKeyAlgorithm.NULL)
                 .setFileEncoding(StreamEncoding.TEXT);
 
         MultiPassStrategy multiPassStrategy = options.getMultiPassStrategy();

@@ -5,10 +5,14 @@
 package sop;
 
 import java.util.Arrays;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 import sop.util.HexUtil;
 
 public class SessionKey {
+
+    private static final Pattern PATTERN = Pattern.compile("^(\\d):([0-9a-fA-F]+)$");
 
     private final byte algorithm;
     private final byte[] sessionKey;
@@ -55,6 +59,17 @@ public class SessionKey {
 
         SessionKey otherKey = (SessionKey) other;
         return getAlgorithm() == otherKey.getAlgorithm() && Arrays.equals(getKey(), otherKey.getKey());
+    }
+
+    public static SessionKey fromString(String string) {
+        Matcher matcher = PATTERN.matcher(string);
+        if (!matcher.matches()) {
+            throw new IllegalArgumentException("Provided session key does not match expected format.");
+        }
+        byte algorithm = Byte.parseByte(matcher.group(1));
+        String key = matcher.group(2);
+
+        return new SessionKey(algorithm, HexUtil.hexToBytes(key));
     }
 
     @Override

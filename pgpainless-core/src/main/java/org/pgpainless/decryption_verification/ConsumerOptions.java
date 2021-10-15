@@ -24,10 +24,10 @@ import org.bouncycastle.openpgp.PGPSecretKeyRingCollection;
 import org.bouncycastle.openpgp.PGPSignature;
 import org.pgpainless.decryption_verification.cleartext_signatures.InMemoryMultiPassStrategy;
 import org.pgpainless.decryption_verification.cleartext_signatures.MultiPassStrategy;
-import org.pgpainless.exception.NotYetImplementedException;
 import org.pgpainless.key.protection.SecretKeyRingProtector;
 import org.pgpainless.signature.SignatureUtils;
 import org.pgpainless.util.Passphrase;
+import org.pgpainless.util.SessionKey;
 
 /**
  * Options for decryption and signature verification.
@@ -46,7 +46,7 @@ public class ConsumerOptions {
     private MissingPublicKeyCallback missingCertificateCallback = null;
 
     // Session key for decryption without passphrase/key
-    private byte[] sessionKey = null;
+    private SessionKey sessionKey = null;
 
     private final Map<PGPSecretKeyRing, SecretKeyRingProtector> decryptionKeys = new HashMap<>();
     private final Set<Passphrase> decryptionPassphrases = new HashSet<>();
@@ -162,16 +162,15 @@ public class ConsumerOptions {
      * Attempt decryption using a session key.
      *
      * Note: PGPainless does not yet support decryption with session keys.
-     * TODO: Add support for decryption using session key.
      *
      * @see <a href="https://datatracker.ietf.org/doc/html/rfc4880#section-2.1">RFC4880 on Session Keys</a>
      *
      * @param sessionKey session key
      * @return options
      */
-    public ConsumerOptions setSessionKey(@Nonnull byte[] sessionKey) {
+    public ConsumerOptions setSessionKey(@Nonnull SessionKey sessionKey) {
         this.sessionKey = sessionKey;
-        throw new NotYetImplementedException();
+        return this;
     }
 
     /**
@@ -179,14 +178,8 @@ public class ConsumerOptions {
      *
      * @return session key or null
      */
-    public @Nullable byte[] getSessionKey() {
-        if (sessionKey == null) {
-            return null;
-        }
-
-        byte[] sk = new byte[sessionKey.length];
-        System.arraycopy(sessionKey, 0, sk, 0, sessionKey.length);
-        return sk;
+    public @Nullable SessionKey getSessionKey() {
+        return sessionKey;
     }
 
     /**

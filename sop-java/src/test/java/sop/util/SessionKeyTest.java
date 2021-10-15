@@ -13,6 +13,13 @@ import sop.SessionKey;
 public class SessionKeyTest {
 
     @Test
+    public void fromStringTest() {
+        String string = "9:FCA4BEAF687F48059CACC14FB019125CD57392BAB7037C707835925CBF9F7BCD";
+        SessionKey sessionKey = SessionKey.fromString(string);
+        assertEquals(string, sessionKey.toString());
+    }
+
+    @Test
     public void toStringTest() {
         SessionKey sessionKey = new SessionKey((byte) 9, HexUtil.hexToBytes("FCA4BEAF687F48059CACC14FB019125CD57392BAB7037C707835925CBF9F7BCD"));
         assertEquals("9:FCA4BEAF687F48059CACC14FB019125CD57392BAB7037C707835925CBF9F7BCD", sessionKey.toString());

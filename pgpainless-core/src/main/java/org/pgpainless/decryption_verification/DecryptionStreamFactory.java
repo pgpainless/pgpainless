@@ -34,12 +34,14 @@ import org.bouncycastle.openpgp.PGPPublicKeyEncryptedData;
 import org.bouncycastle.openpgp.PGPPublicKeyRing;
 import org.bouncycastle.openpgp.PGPSecretKey;
 import org.bouncycastle.openpgp.PGPSecretKeyRing;
+import org.bouncycastle.openpgp.PGPSessionKey;
 import org.bouncycastle.openpgp.PGPSignature;
 import org.bouncycastle.openpgp.PGPUtil;
 import org.bouncycastle.openpgp.operator.KeyFingerPrintCalculator;
 import org.bouncycastle.openpgp.operator.PBEDataDecryptorFactory;
 import org.bouncycastle.openpgp.operator.PGPContentVerifierBuilderProvider;
 import org.bouncycastle.openpgp.operator.PublicKeyDataDecryptorFactory;
+import org.bouncycastle.openpgp.operator.SessionKeyDataDecryptorFactory;
 import org.pgpainless.PGPainless;
 import org.pgpainless.algorithm.CompressionAlgorithm;
 import org.pgpainless.algorithm.EncryptionPurpose;
@@ -63,6 +65,7 @@ import org.pgpainless.signature.SignatureUtils;
 import org.pgpainless.util.CRCingArmoredInputStreamWrapper;
 import org.pgpainless.util.PGPUtilWrapper;
 import org.pgpainless.util.Passphrase;
+import org.pgpainless.util.SessionKey;
 import org.pgpainless.util.Tuple;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -210,10 +213,51 @@ public final class DecryptionStreamFactory {
     private InputStream processPGPEncryptedDataList(PGPEncryptedDataList pgpEncryptedDataList, int depth)
             throws PGPException, IOException {
         LOGGER.debug("Depth {}: Encountered PGPEncryptedDataList", depth);
+
+        SessionKey sessionKey = options.getSessionKey();
+        if (sessionKey != null) {
+            integrityProtectedEncryptedInputStream = decryptWithProvidedSessionKey(pgpEncryptedDataList, sessionKey);
+            InputStream decodedDataStream = PGPUtil.getDecoderStream(integrityProtectedEncryptedInputStream);
+            PGPObjectFactory factory = new PGPObjectFactory(decodedDataStream, keyFingerprintCalculator);
+            return processPGPPackets(factory, ++depth);
+        }
+
         InputStream decryptedDataStream = decryptSessionKey(pgpEncryptedDataList);
         InputStream decodedDataStream = PGPUtil.getDecoderStream(decryptedDataStream);
         PGPObjectFactory factory = new PGPObjectFactory(decodedDataStream, keyFingerprintCalculator);
         return processPGPPackets(factory, ++depth);
+    }
+
+    private IntegrityProtectedInputStream decryptWithProvidedSessionKey(PGPEncryptedDataList pgpEncryptedDataList, SessionKey sessionKey) throws PGPException {
+        PGPSessionKey pgpSessionKey = new PGPSessionKey(sessionKey.getAlgorithm().getAlgorithmId(), sessionKey.getKey());
+        SessionKeyDataDecryptorFactory decryptorFactory = ImplementationFactory.getInstance().provideSessionKeyDataDecryptorFactory(pgpSessionKey);
+        InputStream decryptedDataStream = null;
+        PGPEncryptedData encryptedData = null;
+        for (PGPEncryptedData pgpEncryptedData : pgpEncryptedDataList) {
+            encryptedData = pgpEncryptedData;
+            if (!options.isIgnoreMDCErrors() && !encryptedData.isIntegrityProtected()) {
+                throw new MessageNotIntegrityProtectedException();
+            }
+
+            if (encryptedData instanceof PGPPBEEncryptedData) {
+                PGPPBEEncryptedData pbeEncrypted = (PGPPBEEncryptedData) encryptedData;
+                decryptedDataStream = pbeEncrypted.getDataStream(decryptorFactory);
+                break;
+            } else if (encryptedData instanceof PGPPublicKeyEncryptedData) {
+                PGPPublicKeyEncryptedData pkEncrypted = (PGPPublicKeyEncryptedData) encryptedData;
+                decryptedDataStream = pkEncrypted.getDataStream(decryptorFactory);
+                break;
+            }
+        }
+
+        if (decryptedDataStream == null) {
+            throw new PGPException("No valid PGP data encountered.");
+        }
+
+        resultBuilder.setSessionKey(sessionKey);
+        throwIfAlgorithmIsRejected(sessionKey.getAlgorithm());
+        integrityProtectedEncryptedInputStream = new IntegrityProtectedInputStream(decryptedDataStream, encryptedData, options);
+        return integrityProtectedEncryptedInputStream;
     }
 
     private InputStream processPGPCompressedData(PGPCompressedData pgpCompressedData, int depth)
@@ -294,10 +338,11 @@ public final class DecryptionStreamFactory {
                 try {
                     InputStream decryptedDataStream = pbeEncryptedData.getDataStream(passphraseDecryptor);
 
-                    SymmetricKeyAlgorithm symmetricKeyAlgorithm = SymmetricKeyAlgorithm.fromId(
-                            pbeEncryptedData.getSymmetricAlgorithm(passphraseDecryptor));
-                    throwIfAlgorithmIsRejected(symmetricKeyAlgorithm);
-                    resultBuilder.setSymmetricKeyAlgorithm(symmetricKeyAlgorithm);
+                    PGPSessionKey pgpSessionKey = pbeEncryptedData.getSessionKey(passphraseDecryptor);
+                    SessionKey sessionKey = new SessionKey(pgpSessionKey);
+                    resultBuilder.setSessionKey(sessionKey);
+
+                    throwIfAlgorithmIsRejected(sessionKey.getAlgorithm());
 
                     integrityProtectedEncryptedInputStream = new IntegrityProtectedInputStream(decryptedDataStream, pbeEncryptedData, options);
 
@@ -454,15 +499,17 @@ public final class DecryptionStreamFactory {
         PublicKeyDataDecryptorFactory dataDecryptor = ImplementationFactory.getInstance()
                 .getPublicKeyDataDecryptorFactory(decryptionKey);
 
-        SymmetricKeyAlgorithm symmetricKeyAlgorithm = SymmetricKeyAlgorithm
-                .fromId(encryptedSessionKey.getSymmetricAlgorithm(dataDecryptor));
+        PGPSessionKey pgpSessionKey = encryptedSessionKey.getSessionKey(dataDecryptor);
+        SessionKey sessionKey = new SessionKey(pgpSessionKey);
+        resultBuilder.setSessionKey(sessionKey);
+
+        SymmetricKeyAlgorithm symmetricKeyAlgorithm = sessionKey.getAlgorithm();
         if (symmetricKeyAlgorithm == SymmetricKeyAlgorithm.NULL) {
             LOGGER.debug("Message is unencrypted");
         } else {
             LOGGER.debug("Message is encrypted using {}", symmetricKeyAlgorithm);
         }
         throwIfAlgorithmIsRejected(symmetricKeyAlgorithm);
-        resultBuilder.setSymmetricKeyAlgorithm(symmetricKeyAlgorithm);
 
         integrityProtectedEncryptedInputStream = new IntegrityProtectedInputStream(encryptedSessionKey.getDataStream(dataDecryptor), encryptedSessionKey, options);
         return integrityProtectedEncryptedInputStream;

@@ -7,6 +7,7 @@ package org.pgpainless.sop;
 import static org.junit.jupiter.api.Assertions.assertArrayEquals;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
@@ -18,6 +19,7 @@ import org.junit.jupiter.api.Test;
 import sop.ByteArrayAndResult;
 import sop.DecryptionResult;
 import sop.SOP;
+import sop.SessionKey;
 import sop.exception.SOPGPException;
 
 public class EncryptDecryptRoundTripTest {
@@ -234,5 +236,166 @@ public class EncryptDecryptRoundTripTest {
     public void verifyWith_noDataThrowsBadData() {
         assertThrows(SOPGPException.BadData.class, () -> sop.decrypt()
                 .verifyWithCert(new byte[0]));
+    }
+
+    @Test
+    public void testPassphraseDecryptionYieldsSessionKey() throws IOException {
+        byte[] message = "Hello\nWorld\n".getBytes(StandardCharsets.UTF_8);
+        byte[] ciphertext = ("-----BEGIN PGP MESSAGE-----\n" +
+                "Version: PGPainless\n" +
+                "\n" +
+                "jA0ECQMCdFswArqHpj1g0j4BLDTkZhCC1crZf0EFq1xPIMUtnyRmfJJ7IzsdMJ5Y\n" +
+                "EhKbBc2h6wIX7B/GxUbyNj1xh5JRzt2ZX8KL2d6HAQ==\n" +
+                "=zZ0/\n" +
+                "-----END PGP MESSAGE-----").getBytes(StandardCharsets.UTF_8);
+        String passphrase = "sw0rdf1sh";
+        ByteArrayAndResult<DecryptionResult> bytesAndResult = sop.decrypt().withPassword(passphrase).ciphertext(ciphertext).toByteArrayAndResult();
+        assertArrayEquals(message, bytesAndResult.getBytes());
+        assertTrue(bytesAndResult.getResult().getSessionKey().isPresent());
+        assertEquals("9:7BCB7383D23E20D4BA8980B26D6C0813769056546C45B7E55F4612BFAD5B4B1C", bytesAndResult.getResult().getSessionKey().get().toString());
+    }
+
+    @Test
+    public void testPublicKeyDecryptionYieldsSessionKey() throws IOException {
+        byte[] key = ("-----BEGIN PGP PRIVATE KEY BLOCK-----\n" +
+                "Version: PGPainless\n" +
+                "Comment: D94A AA9C 5F73 48B2 5D81  72E7 F20C F71E 93FE 897F\n" +
+                "Comment: Alice\n" +
+                "\n" +
+                "lFgEYWlyaRYJKwYBBAHaRw8BAQdAJsJfjByLE+8HNVGbEKiIbSGXBYwR6L61bT5E\n" +
+                "Hhu642kAAP49D4TOaI+Z3G5ko4C4D1bOzLajLRpIuPLuwYHpF1xD0RHmtAVBbGlj\n" +
+                "ZYh4BBMWCgAgBQJhaXJpAhsBBRYCAwEABRUKCQgLBAsJCAcCHgECGQEACgkQ8gz3\n" +
+                "HpP+iX/c8AD9Hx0PUu97n8ZlrpuA6YuJL3rONPQnaXMz9eE+KHxJS6sBAM06X8Wm\n" +
+                "XRGUVURsoerwYTbUnXcUnqH/U/JhwlUerJAInF0EYWlyaRIKKwYBBAGXVQEFAQEH\n" +
+                "QJOHyxI5K8ZqX+v/AmTLHAIjWd8wHO8eGld4KHniCFx9AwEIBwAA/0zVZYYWsr3w\n" +
+                "GKkmqfIZlB+wIeJlWrho87kvXiNAe0LIEIGIdQQYFgoAHQUCYWlyaQIbDAUWAgMB\n" +
+                "AAUVCgkICwQLCQgHAh4BAAoJEPIM9x6T/ol/vggA/ilxi5UTjDYDR7sGrYyaGPRK\n" +
+                "Sg0KNn2SV4c5M5ZmZR7sAP4kKz6kQ4UtYmSmUmMBu+A3mMTN8VQY+6LSTdekvU0N\n" +
+                "ApxYBGFpcmkWCSsGAQQB2kcPAQEHQJiiZENQ52jyt8wBwX7fD1vQkvgTg5T3v1S1\n" +
+                "yzr1yI0RAAD+KOTcMdv8rz3U6K42PNE4b983KoMfyQ/hgjIWOi2BYBwP94jVBBgW\n" +
+                "CgB9BQJhaXJpAhsCBRYCAwEABRUKCQgLBAsJCAcCHgFfIAQZFgoABgUCYWlyaQAK\n" +
+                "CRDP7lemqmadIYLuAP9oAm+OFzyMNrmWRcvdHqH/DAfJTM2+ZmANSm44geZDEAD9\n" +
+                "HfeCHev1H1H1wOd0S3tW9gZwonrYFoqOBW/YTmf5XwYACgkQ8gz3HpP+iX+veQEA\n" +
+                "sWC+xDo+lc6oJr4q0mTJkxzYfgUBtQ0VjUWNcGyOdegBAL8hMzb9+e4wbP2F0tMb\n" +
+                "ZFA2MgHsvqGhXyAXi50arZYF\n" +
+                "=k66N\n" +
+                "-----END PGP PRIVATE KEY BLOCK-----\n").getBytes(StandardCharsets.UTF_8);
+        byte[] message = "Hello\nWorld\n".getBytes(StandardCharsets.UTF_8);
+        byte[] ciphertext = ("-----BEGIN PGP MESSAGE-----\n" +
+                "Version: PGPainless\n" +
+                "\n" +
+                "hF4DrJ3c2YF1IKUSAQdA9VL6OwIwOwB4GnE4yR5JJ5OjcC76WTpdm85I6WHvhD4w\n" +
+                "hqHpf6UGaDDQ7xAcSd7YnEGVMBOOBnJfD1PRuNWE5hwgqqsqpMDrvvMHjUsg3HNH\n" +
+                "0j4BriMU8XQ6MLdvCaFmeQqFwBD4mlI/x32wj0I9VyBIKysopA8HNV4ES2rOhGuW\n" +
+                "T/zFmI9Tm9eWvNwv0LUNhQ==\n" +
+                "=4Z+m\n" +
+                "-----END PGP MESSAGE-----\n").getBytes(StandardCharsets.UTF_8);
+
+        ByteArrayAndResult<DecryptionResult> bytesAndResult = sop.decrypt().withKey(key).ciphertext(ciphertext).toByteArrayAndResult();
+        DecryptionResult result = bytesAndResult.getResult();
+        assertArrayEquals(message, bytesAndResult.getBytes());
+        assertTrue(result.getSessionKey().isPresent());
+        assertEquals("9:63F741E7FB60247BE59C64158573308F727236482DB7653908C95839E4166AAE", result.getSessionKey().get().toString());
+    }
+
+    @Test
+    public void testDecryptionWithSessionKey() throws IOException {
+        byte[] message = "Hello\nWorld\n".getBytes(StandardCharsets.UTF_8);
+        byte[] ciphertext = ("-----BEGIN PGP MESSAGE-----\n" +
+                "Version: PGPainless\n" +
+                "\n" +
+                "hF4DrJ3c2YF1IKUSAQdA9VL6OwIwOwB4GnE4yR5JJ5OjcC76WTpdm85I6WHvhD4w\n" +
+                "hqHpf6UGaDDQ7xAcSd7YnEGVMBOOBnJfD1PRuNWE5hwgqqsqpMDrvvMHjUsg3HNH\n" +
+                "0j4BriMU8XQ6MLdvCaFmeQqFwBD4mlI/x32wj0I9VyBIKysopA8HNV4ES2rOhGuW\n" +
+                "T/zFmI9Tm9eWvNwv0LUNhQ==\n" +
+                "=4Z+m\n" +
+                "-----END PGP MESSAGE-----\n").getBytes(StandardCharsets.UTF_8);
+        SessionKey sessionKey = SessionKey.fromString("9:63F741E7FB60247BE59C64158573308F727236482DB7653908C95839E4166AAE");
+
+        ByteArrayAndResult<DecryptionResult> bytesAndResult = sop.decrypt().withSessionKey(sessionKey)
+                .ciphertext(ciphertext)
+                .toByteArrayAndResult();
+
+        DecryptionResult result = bytesAndResult.getResult();
+        assertTrue(result.getSessionKey().isPresent());
+        assertEquals(sessionKey, result.getSessionKey().get());
+
+        assertArrayEquals(message, bytesAndResult.getBytes());
+    }
+
+    @Test
+    public void testDecryptionWithSessionKey_VerificationWithCert() throws IOException {
+        byte[] plaintext = "This is a test message.\nSit back and relax.\n".getBytes(StandardCharsets.UTF_8);
+        byte[] key = ("-----BEGIN PGP PRIVATE KEY BLOCK-----\n" +
+                "Version: PGPainless\n" +
+                "Comment: 9C26 EFAB 1C65 00A2 28E8  A9C2 658E E420 C824 D191\n" +
+                "Comment: Alice\n" +
+                "\n" +
+                "lFgEYWl4ixYJKwYBBAHaRw8BAQdAv6+cd8R/ICS/z9hlT99g++wyquxVsO0FCb8F\n" +
+                "MSkTplUAAP9gPoBi8fxdfLaEyt6GWeIBTeYsVxsogbKzXXnjp3MbiRE/tAVBbGlj\n" +
+                "ZYh4BBMWCgAgBQJhaXiLAhsBBRYCAwEABRUKCQgLBAsJCAcCHgECGQEACgkQZY7k\n" +
+                "IMgk0ZEZuAEA3hWzfqCXGUjlv+miWey1AyWRu9eQvTdE9YqbIMuxIk4BAMtGlo6l\n" +
+                "d3E868q0zLOOktmsBxnzaE7knbd9nAlK3FUJnF0EYWl4ixIKKwYBBAGXVQEFAQEH\n" +
+                "QK8vS3T3Yf3Gpy9iWOTR0jdhV4XgtchcvKCpFMgc5uwFAwEIBwAA/1tNle5cT9kS\n" +
+                "8yzNxL16ElEREtEX+5kpkt6JZyTx0xfAEPGIdQQYFgoAHQUCYWl4iwIbDAUWAgMB\n" +
+                "AAUVCgkICwQLCQgHAh4BAAoJEGWO5CDIJNGRM80BANJ6EGKIkVNxYj7wOaEqyRh1\n" +
+                "Rtv3tLAnEzLl/b0mZx3WAQDADAPNCl5xnjTt5InyfrwV90kM4vDGcl4mQE8FD7dD\n" +
+                "B5xYBGFpeIsWCSsGAQQB2kcPAQEHQFuEaBKUllw+MfdkkSNE0CncJCeFGCbHvmsc\n" +
+                "Ma/DPgrpAAEAlsoxcTyTFfHxV2CayDCFvBSHYXOSOg6fyMdh0SxzjC0PVIjVBBgW\n" +
+                "CgB9BQJhaXiLAhsCBRYCAwEABRUKCQgLBAsJCAcCHgFfIAQZFgoABgUCYWl4iwAK\n" +
+                "CRBGMq3j1oKUXenjAP974AvBOAVIdNUkVAishoDL7ee7/eAU3Ni7V2Kn47cusQD/\n" +
+                "c8c9phtf2NIL23K4bvBdvsU3opV2DIVJwRutV4v6jgAACgkQZY7kIMgk0ZG1dwEA\n" +
+                "sFp1AuPcn3dGF05D6ohlqunoBwBWEcwZLjx+v5X27R8A/17V5nzC+eny3XjCF8Ib\n" +
+                "qw1VTfR84stki65Xhm2lxFAN\n" +
+                "=TQO7\n" +
+                "-----END PGP PRIVATE KEY BLOCK-----\n").getBytes(StandardCharsets.UTF_8);
+        byte[] cert = sop.extractCert().key(key).getBytes();
+        byte[] ciphertext = ("-----BEGIN PGP MESSAGE-----\n" +
+                "Version: PGPainless\n" +
+                "\n" +
+                "hF4DSjXDMRql2RASAQdAkhJyA9GX5ios8PNlti7v7BieggiiR9trqrKFQwomU2Aw\n" +
+                "elEFuDA3ugJO2rNiyQQH1riFFJuod6BiQuxFhdf/mmsFFDzHmJeUOx9pQeNemzST\n" +
+                "0sAdAQQYC+iXUNn2y15kTqbFQFgfOWObgsqspGY04V17fZdVI7bEORLM+YT6KoZA\n" +
+                "uq2WO49ze9jp2jdvTsjjNNseZDhmxtgOCfi1/Fi3IHPnBJW7M3UWaJCSLozWkO95\n" +
+                "FztCSWL22jDGPGIjgQ589hYW+WuJMvMv6ltTOo+l70S5dHSObijbcOqfNSmrxlpw\n" +
+                "hqZfkU0BA01I9Pf3lBPCNyMbCPZP0oaIiWACnm6svWp4oH5u5ClhS9BVJTptzwXv\n" +
+                "mMj+lTi5ahGQJ3Nr8krloTSsjpkssz6D2+FDnvjwu6E=\n" +
+                "=BYOB\n" +
+                "-----END PGP MESSAGE-----").getBytes(StandardCharsets.UTF_8);
+        String sessionKey = "9:87C0870598AD908ABEECCAE265DCEEA146CF557AAF698D097024404A00EBD072";
+
+        // Decrypt with public key
+        ByteArrayAndResult<DecryptionResult> bytesAndResult =
+                sop.decrypt().withKey(key).verifyWithCert(cert).ciphertext(ciphertext).toByteArrayAndResult();
+        assertEquals(sessionKey, bytesAndResult.getResult().getSessionKey().get().toString());
+        assertArrayEquals(plaintext, bytesAndResult.getBytes());
+        assertEquals(1, bytesAndResult.getResult().getVerifications().size());
+
+        // Decrypt with session key
+        bytesAndResult = sop.decrypt().withSessionKey(SessionKey.fromString(sessionKey))
+                .verifyWithCert(cert).ciphertext(ciphertext).toByteArrayAndResult();
+        assertEquals(sessionKey, bytesAndResult.getResult().getSessionKey().get().toString());
+        assertArrayEquals(plaintext, bytesAndResult.getBytes());
+        assertEquals(1, bytesAndResult.getResult().getVerifications().size());
+    }
+
+    @Test
+    public void decryptWithWrongSessionKey() {
+        byte[] ciphertext = ("-----BEGIN PGP MESSAGE-----\n" +
+                "Version: PGPainless\n" +
+                "\n" +
+                "hF4DSjXDMRql2RASAQdAkhJyA9GX5ios8PNlti7v7BieggiiR9trqrKFQwomU2Aw\n" +
+                "elEFuDA3ugJO2rNiyQQH1riFFJuod6BiQuxFhdf/mmsFFDzHmJeUOx9pQeNemzST\n" +
+                "0sAdAQQYC+iXUNn2y15kTqbFQFgfOWObgsqspGY04V17fZdVI7bEORLM+YT6KoZA\n" +
+                "uq2WO49ze9jp2jdvTsjjNNseZDhmxtgOCfi1/Fi3IHPnBJW7M3UWaJCSLozWkO95\n" +
+                "FztCSWL22jDGPGIjgQ589hYW+WuJMvMv6ltTOo+l70S5dHSObijbcOqfNSmrxlpw\n" +
+                "hqZfkU0BA01I9Pf3lBPCNyMbCPZP0oaIiWACnm6svWp4oH5u5ClhS9BVJTptzwXv\n" +
+                "mMj+lTi5ahGQJ3Nr8krloTSsjpkssz6D2+FDnvjwu6E=\n" +
+                "=BYOB\n" +
+                "-----END PGP MESSAGE-----").getBytes(StandardCharsets.UTF_8);
+        SessionKey wrongSessionKey = SessionKey.fromString("9:63F741E7FB60247BE59C64158573308F727236482DB7653908C95839E4166AAE");
+
+        assertThrows(SOPGPException.BadData.class, () ->
+                sop.decrypt().withSessionKey(wrongSessionKey).ciphertext(ciphertext));
     }
 }

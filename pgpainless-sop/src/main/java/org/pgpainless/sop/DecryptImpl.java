@@ -18,6 +18,7 @@ import org.bouncycastle.openpgp.PGPSecretKeyRingCollection;
 import org.bouncycastle.openpgp.PGPSignature;
 import org.bouncycastle.util.io.Streams;
 import org.pgpainless.PGPainless;
+import org.pgpainless.algorithm.SymmetricKeyAlgorithm;
 import org.pgpainless.decryption_verification.ConsumerOptions;
 import org.pgpainless.decryption_verification.DecryptionStream;
 import org.pgpainless.decryption_verification.OpenPgpMetadata;
@@ -67,7 +68,11 @@ public class DecryptImpl implements Decrypt {
 
     @Override
     public DecryptImpl withSessionKey(SessionKey sessionKey) throws SOPGPException.UnsupportedOption {
-        throw new SOPGPException.UnsupportedOption("Setting custom session key not supported.");
+        consumerOptions.setSessionKey(
+                new org.pgpainless.util.SessionKey(
+                        SymmetricKeyAlgorithm.fromId(sessionKey.getAlgorithm()),
+                        sessionKey.getKey()));
+        return this;
     }
 
     @Override
@@ -118,8 +123,8 @@ public class DecryptImpl implements Decrypt {
             throws SOPGPException.BadData,
             SOPGPException.MissingArg {
 
-        if (consumerOptions.getDecryptionKeys().isEmpty() && consumerOptions.getDecryptionPassphrases().isEmpty()) {
-            throw new SOPGPException.MissingArg("Missing decryption key or passphrase.");
+        if (consumerOptions.getDecryptionKeys().isEmpty() && consumerOptions.getDecryptionPassphrases().isEmpty() && consumerOptions.getSessionKey() == null) {
+            throw new SOPGPException.MissingArg("Missing decryption key, passphrase or session key.");
         }
 
         DecryptionStream decryptionStream;
@@ -153,7 +158,16 @@ public class DecryptImpl implements Decrypt {
                     }
                 }
 
-                return new DecryptionResult(null, verificationList);
+                SessionKey sessionKey = null;
+                if (metadata.getSessionKey() != null) {
+                    org.pgpainless.util.SessionKey sk = metadata.getSessionKey();
+                    sessionKey = new SessionKey(
+                            (byte) sk.getAlgorithm().getAlgorithmId(),
+                            sk.getKey()
+                    );
+                }
+
+                return new DecryptionResult(sessionKey, verificationList);
             }
         };
     }
