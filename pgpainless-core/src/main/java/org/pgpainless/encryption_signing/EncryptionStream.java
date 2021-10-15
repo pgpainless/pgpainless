@@ -15,7 +15,6 @@ import org.bouncycastle.bcpg.BCPGOutputStream;
 import org.bouncycastle.openpgp.PGPCompressedDataGenerator;
 import org.bouncycastle.openpgp.PGPEncryptedDataGenerator;
 import org.bouncycastle.openpgp.PGPException;
-import org.bouncycastle.openpgp.PGPLiteralDataGenerator;
 import org.bouncycastle.openpgp.PGPSignature;
 import org.bouncycastle.openpgp.PGPSignatureGenerator;
 import org.bouncycastle.openpgp.operator.PGPDataEncryptorBuilder;
@@ -25,6 +24,7 @@ import org.pgpainless.algorithm.SymmetricKeyAlgorithm;
 import org.pgpainless.implementation.ImplementationFactory;
 import org.pgpainless.key.SubkeyIdentifier;
 import org.pgpainless.util.ArmoredOutputStreamFactory;
+import org.pgpainless.util.StreamGeneratorWrapper;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -50,7 +50,7 @@ public final class EncryptionStream extends OutputStream {
     private OutputStream publicKeyEncryptedStream = null;
     private PGPCompressedDataGenerator compressedDataGenerator;
     private BCPGOutputStream basicCompressionStream;
-    private PGPLiteralDataGenerator literalDataGenerator;
+    private StreamGeneratorWrapper streamGeneratorWrapper;
     private OutputStream literalDataStream;
 
     EncryptionStream(@Nonnull OutputStream targetOutputStream,
@@ -147,12 +147,10 @@ public final class EncryptionStream extends OutputStream {
             armorOutputStream.beginClearText(firstMethod.getHashAlgorithm().getAlgorithmId());
             return;
         }
-        literalDataGenerator = new PGPLiteralDataGenerator();
-        literalDataStream = literalDataGenerator.open(outermostStream,
-                options.getEncoding().getCode(),
-                options.getFileName(),
-                options.getModificationDate(),
-                new byte[BUFFER_SIZE]);
+
+        streamGeneratorWrapper = StreamGeneratorWrapper.forStreamEncoding(options.getEncoding());
+        literalDataStream = streamGeneratorWrapper.open(outermostStream,
+                options.getFileName(), options.getModificationDate(), new byte[BUFFER_SIZE]);
         outermostStream = literalDataStream;
 
         resultBuilder.setFileName(options.getFileName())
@@ -212,8 +210,8 @@ public final class EncryptionStream extends OutputStream {
             literalDataStream.flush();
             literalDataStream.close();
         }
-        if (literalDataGenerator != null) {
-            literalDataGenerator.close();
+        if (streamGeneratorWrapper != null) {
+            streamGeneratorWrapper.close();
         }
 
         if (options.isCleartextSigned()) {

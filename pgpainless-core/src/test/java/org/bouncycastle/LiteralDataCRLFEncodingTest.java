@@ -23,7 +23,7 @@ public class LiteralDataCRLFEncodingTest {
     public void testCanonicalization() throws IOException {
         PGPCanonicalizedDataGenerator generator = new PGPCanonicalizedDataGenerator();
         ByteArrayOutputStream out = new ByteArrayOutputStream();
-        OutputStream canonicalizer = generator.open(out, PGPCanonicalizedDataGenerator.UTF8, "", new Date(), new byte[1<<9]);
+        OutputStream canonicalizer = generator.open(out, PGPCanonicalizedDataGenerator.UTF8, "", new Date(), new byte[1 << 9]);
 
         ByteArrayInputStream in = new ByteArrayInputStream("Foo\nBar\n".getBytes(StandardCharsets.UTF_8));
         Streams.pipeAll(in, canonicalizer);
