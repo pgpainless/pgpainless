@@ -19,7 +19,6 @@ import org.bouncycastle.bcpg.sig.RevocationReason;
 import org.bouncycastle.bcpg.sig.SignatureExpirationTime;
 import org.bouncycastle.openpgp.PGPCompressedData;
 import org.bouncycastle.openpgp.PGPException;
-import org.bouncycastle.openpgp.PGPMarker;
 import org.bouncycastle.openpgp.PGPObjectFactory;
 import org.bouncycastle.openpgp.PGPPublicKey;
 import org.bouncycastle.openpgp.PGPSecretKey;
@@ -226,54 +225,28 @@ public final class SignatureUtils {
         PGPObjectFactory objectFactory = new PGPObjectFactory(
                 pgpIn, ImplementationFactory.getInstance().getKeyFingerprintCalculator());
 
-        Object nextObject = tryNext(objectFactory);
-        while (nextObject != null) {
-            if (nextObject instanceof PGPMarker) {
-                nextObject = tryNext(objectFactory);
-                continue;
-            }
+        Object nextObject;
+        while ((nextObject = objectFactory.nextObject()) != null) {
             if (nextObject instanceof PGPCompressedData) {
                 PGPCompressedData compressedData = (PGPCompressedData) nextObject;
                 objectFactory = new PGPObjectFactory(compressedData.getDataStream(),
                         ImplementationFactory.getInstance().getKeyFingerprintCalculator());
-                nextObject = tryNext(objectFactory);
-                continue;
             }
+
             if (nextObject instanceof PGPSignatureList) {
                 PGPSignatureList signatureList = (PGPSignatureList) nextObject;
                 for (PGPSignature s : signatureList) {
                     signatures.add(s);
                 }
             }
+
             if (nextObject instanceof PGPSignature) {
                 signatures.add((PGPSignature) nextObject);
             }
-            nextObject = tryNext(objectFactory);
         }
         pgpIn.close();
 
         return signatures;
-    }
-
-    /**
-     * Try reading the next signature from the factory.
-     *
-     * This is a helper method for BC choking on unexpected data like invalid signature versions.
-     * Unfortunately, this solves only half the issue, see bcgit/bc-java#1006 for a proper fix.
-     *
-     * @see <a href="https://github.com/bcgit/bc-java/pull/1006">BC-Java: Ignore PGPSignature with invalid version</a>
-     *
-     * @param factory pgp object factory
-     * @return next non-throwing object or null
-     * @throws IOException in case of a stream error
-     */
-    private static Object tryNext(PGPObjectFactory factory) throws IOException {
-        try {
-            Object o = factory.nextObject();
-            return o;
-        } catch (RuntimeException e) {
-            return tryNext(factory);
-        }
     }
 
     /**
