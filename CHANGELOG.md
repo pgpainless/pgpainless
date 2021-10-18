@@ -5,6 +5,12 @@ SPDX-License-Identifier: CC0-1.0
 
 # PGPainless Changelog
 
+## 0.2.16
+- Fix handling of subkey revocation signatures
+- SOP: improve API use with byte arrays
+- Fix `AssertionError` when determining encryption subkeys from set containing unbound key
+- Add `ConsumerOptions.setMissingKeyPassphraseStrategy(strategy)` to modify behavior when missing key passphrases are encountered during decryption
+
 ## 0.2.15
 - Add `ConsumerOptions.setIgnoreMDCErrors()` which can be used to consume broken messages. Not recommended!
 - Add `MessageInspector.isSignedOnly()` which can be used to identify messages created via `gpg --sign --armor`
