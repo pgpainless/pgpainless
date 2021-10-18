@@ -225,6 +225,9 @@ public class ConsumerOptions {
 
     /**
      * Add a passphrase for message decryption.
+     * This passphrase will be used to try to decrypt messages which were symmetrically encrypted for a passphrase.
+     *
+     * @see <a href="https://datatracker.ietf.org/doc/html/rfc4880#section-5.7">Symmetrically Encrypted Data Packet</a>
      *
      * @param passphrase passphrase
      * @return options
@@ -288,15 +291,39 @@ public class ConsumerOptions {
         return this;
     }
 
+    /**
+     * Return true, if PGPainless is ignoring MDC errors.
+     *
+     * @return ignore mdc errors
+     */
     boolean isIgnoreMDCErrors() {
         return ignoreMDCErrors;
     }
 
+    /**
+     * Specify the {@link MissingKeyPassphraseStrategy}.
+     * This strategy defines, how missing passphrases for unlocking secret keys are handled.
+     * In interactive mode ({@link MissingKeyPassphraseStrategy#INTERACTIVE}) PGPainless will try to obtain missing
+     * passphrases for secret keys via the {@link SecretKeyRingProtector SecretKeyRingProtectors}
+     * {@link org.pgpainless.key.protection.passphrase_provider.SecretKeyPassphraseProvider} callback.
+     *
+     * In non-interactice mode ({@link MissingKeyPassphraseStrategy#THROW_EXCEPTION}, PGPainless will instead
+     * throw a {@link org.pgpainless.exception.MissingPassphraseException} containing the ids of all keys for which
+     * there are missing passphrases.
+     *
+     * @param strategy strategy
+     * @return options
+     */
     public ConsumerOptions setMissingKeyPassphraseStrategy(MissingKeyPassphraseStrategy strategy) {
         this.missingKeyPassphraseStrategy = strategy;
         return this;
     }
 
+    /**
+     * Return the currently configured {@link MissingKeyPassphraseStrategy}.
+     *
+     * @return missing key passphrase strategy
+     */
     MissingKeyPassphraseStrategy getMissingKeyPassphraseStrategy() {
         return missingKeyPassphraseStrategy;
     }

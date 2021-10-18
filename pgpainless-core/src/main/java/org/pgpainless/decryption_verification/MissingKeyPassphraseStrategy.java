@@ -4,7 +4,18 @@
 
 package org.pgpainless.decryption_verification;
 
+/**
+ * Strategy defining how missing secret key passphrases are handled.
+ */
 public enum MissingKeyPassphraseStrategy {
-    INTERACTIVE, // ask for missing key passphrases one by one
-    THROW_EXCEPTION // throw an exception with all keys with missing passphrases
+    /**
+     * Try to interactively obtain key passphrases one-by-one via callbacks,
+     * eg {@link org.pgpainless.key.protection.passphrase_provider.SecretKeyPassphraseProvider}.
+     */
+    INTERACTIVE,
+    /**
+     * Do not try to obtain passphrases interactively and instead throw a
+     * {@link org.pgpainless.exception.MissingPassphraseException} listing all keys with missing passphrases.
+     */
+    THROW_EXCEPTION
 }
