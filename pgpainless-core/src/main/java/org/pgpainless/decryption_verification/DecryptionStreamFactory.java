@@ -10,6 +10,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
@@ -47,6 +48,7 @@ import org.pgpainless.algorithm.SymmetricKeyAlgorithm;
 import org.pgpainless.exception.MessageNotIntegrityProtectedException;
 import org.pgpainless.exception.MissingDecryptionMethodException;
 import org.pgpainless.exception.MissingLiteralDataException;
+import org.pgpainless.exception.MissingPassphraseException;
 import org.pgpainless.exception.SignatureValidationException;
 import org.pgpainless.exception.UnacceptableAlgorithmException;
 import org.pgpainless.exception.WrongConsumingMethodException;
@@ -66,6 +68,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 public final class DecryptionStreamFactory {
+
 
     private static final Logger LOGGER = LoggerFactory.getLogger(DecryptionStreamFactory.class);
     private static final int MAX_RECURSION_DEPTH = 16;
@@ -382,21 +385,36 @@ public final class DecryptionStreamFactory {
 
         // Try postponed keys with missing passphrases (will cause missing passphrase callbacks to fire)
         if (encryptedSessionKey == null) {
-            for (Tuple<SubkeyIdentifier, PGPPublicKeyEncryptedData> missingPassphrases : postponedDueToMissingPassphrase) {
-                SubkeyIdentifier keyId = missingPassphrases.getA();
-                PGPPublicKeyEncryptedData publicKeyEncryptedData = missingPassphrases.getB();
-                PGPSecretKeyRing secretKeys = findDecryptionKeyRing(keyId.getKeyId());
-                PGPSecretKey secretKey = secretKeys.getSecretKey(keyId.getSubkeyId());
 
-                PGPPrivateKey privateKey = tryPublicKeyDecryption(secretKeys, secretKey, publicKeyEncryptedData, postponedDueToMissingPassphrase, false);
-                if (privateKey == null) {
-                    continue;
+            if (options.getMissingKeyPassphraseStrategy() == MissingKeyPassphraseStrategy.THROW_EXCEPTION) {
+                // Non-interactive mode: Throw an exception with all locked decryption keys
+                Set<SubkeyIdentifier> keyIds = new HashSet<>();
+                for (Tuple<SubkeyIdentifier, ?> k : postponedDueToMissingPassphrase) {
+                    keyIds.add(k.getA());
                 }
-
-                decryptionKey = privateKey;
-                encryptedSessionKey = publicKeyEncryptedData;
-                break;
+                throw new MissingPassphraseException(keyIds);
             }
+            else if (options.getMissingKeyPassphraseStrategy() == MissingKeyPassphraseStrategy.INTERACTIVE) {
+                // Interactive mode: Fire protector callbacks to get passphrases interactively
+                for (Tuple<SubkeyIdentifier, PGPPublicKeyEncryptedData> missingPassphrases : postponedDueToMissingPassphrase) {
+                    SubkeyIdentifier keyId = missingPassphrases.getA();
+                    PGPPublicKeyEncryptedData publicKeyEncryptedData = missingPassphrases.getB();
+                    PGPSecretKeyRing secretKeys = findDecryptionKeyRing(keyId.getKeyId());
+                    PGPSecretKey secretKey = secretKeys.getSecretKey(keyId.getSubkeyId());
+
+                    PGPPrivateKey privateKey = tryPublicKeyDecryption(secretKeys, secretKey, publicKeyEncryptedData, postponedDueToMissingPassphrase, false);
+                    if (privateKey == null) {
+                        continue;
+                    }
+
+                    decryptionKey = privateKey;
+                    encryptedSessionKey = publicKeyEncryptedData;
+                    break;
+                }
+            } else {
+                throw new IllegalStateException("Invalid PostponedKeysStrategy set in consumer options.");
+            }
+
         }
 
         return decryptWith(encryptedSessionKey, decryptionKey);

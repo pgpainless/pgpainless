@@ -32,6 +32,7 @@ import org.pgpainless.util.Passphrase;
  */
 public class ConsumerOptions {
 
+
     private boolean ignoreMDCErrors = false;
 
     private Date verifyNotBefore = null;
@@ -47,6 +48,7 @@ public class ConsumerOptions {
 
     private final Map<PGPSecretKeyRing, SecretKeyRingProtector> decryptionKeys = new HashMap<>();
     private final Set<Passphrase> decryptionPassphrases = new HashSet<>();
+    private MissingKeyPassphraseStrategy missingKeyPassphraseStrategy = MissingKeyPassphraseStrategy.INTERACTIVE;
 
 
     /**
@@ -288,5 +290,14 @@ public class ConsumerOptions {
 
     boolean isIgnoreMDCErrors() {
         return ignoreMDCErrors;
+    }
+
+    public ConsumerOptions setMissingKeyPassphraseStrategy(MissingKeyPassphraseStrategy strategy) {
+        this.missingKeyPassphraseStrategy = strategy;
+        return this;
+    }
+
+    MissingKeyPassphraseStrategy getMissingKeyPassphraseStrategy() {
+        return missingKeyPassphraseStrategy;
     }
 }
