@@ -22,6 +22,7 @@ import org.junit.jupiter.params.provider.MethodSource;
 import org.pgpainless.PGPainless;
 import org.pgpainless.decryption_verification.ConsumerOptions;
 import org.pgpainless.decryption_verification.DecryptionStream;
+import org.pgpainless.decryption_verification.MissingKeyPassphraseStrategy;
 import org.pgpainless.encryption_signing.EncryptionOptions;
 import org.pgpainless.encryption_signing.EncryptionStream;
 import org.pgpainless.encryption_signing.ProducerOptions;
@@ -113,6 +114,7 @@ public class SymmetricEncryptionTest {
         assertThrows(MissingDecryptionMethodException.class, () -> PGPainless.decryptAndOrVerify()
                 .onInputStream(new ByteArrayInputStream(ciphertextOut.toByteArray()))
                 .withOptions(new ConsumerOptions()
+                        .setMissingKeyPassphraseStrategy(MissingKeyPassphraseStrategy.THROW_EXCEPTION)
                         .addDecryptionPassphrase(Passphrase.fromPassword("meldir"))));
     }
 }

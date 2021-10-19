@@ -392,7 +392,9 @@ public final class DecryptionStreamFactory {
                 for (Tuple<SubkeyIdentifier, ?> k : postponedDueToMissingPassphrase) {
                     keyIds.add(k.getA());
                 }
-                throw new MissingPassphraseException(keyIds);
+                if (!keyIds.isEmpty()) {
+                    throw new MissingPassphraseException(keyIds);
+                }
             }
             else if (options.getMissingKeyPassphraseStrategy() == MissingKeyPassphraseStrategy.INTERACTIVE) {
                 // Interactive mode: Fire protector callbacks to get passphrases interactively
