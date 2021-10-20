@@ -10,7 +10,6 @@ import java.io.InputStream;
 import java.nio.charset.Charset;
 import java.util.ArrayList;
 import java.util.Date;
-import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Set;
 
@@ -37,7 +36,6 @@ import org.pgpainless.implementation.ImplementationFactory;
 import org.pgpainless.key.OpenPgpV4Fingerprint;
 import org.pgpainless.key.util.OpenPgpKeyAttributeUtil;
 import org.pgpainless.key.util.RevocationAttributes;
-import org.pgpainless.policy.Policy;
 import org.pgpainless.signature.subpackets.SignatureSubpacketsUtil;
 import org.pgpainless.util.ArmorUtils;
 
