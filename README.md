@@ -17,7 +17,7 @@ SPDX-License-Identifier: Apache-2.0
 
 PGPainless aims to make using OpenPGP in Java projects as simple as possible.
 It does so by introducing an intuitive Builder structure, which allows easy 
-setup of encryptionOptions / decryption operations, as well as straight forward key generation.
+setup of encryption/decryption operations, as well as straight forward key generation.
 
 PGPainless is based around the Bouncycastle java library and can be used on Android down to API level 10.
 It can be configured to either use the Java Cryptographic Engine (JCE), or Bouncycastles lightweight reimplementation.
