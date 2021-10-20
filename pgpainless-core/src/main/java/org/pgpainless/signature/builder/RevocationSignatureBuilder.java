@@ -37,5 +37,7 @@ public class RevocationSignatureBuilder extends AbstractSignatureBuilder<Revocat
         return unhashedSubpackets;
     }
 
-    public PGPSignature build()
+    public PGPSignature build() {
+        return null;
+    }
 }

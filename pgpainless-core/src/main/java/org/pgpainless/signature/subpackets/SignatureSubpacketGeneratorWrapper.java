@@ -549,12 +549,10 @@ public class SignatureSubpacketGeneratorWrapper
         byte[] sig = signature.getEncoded();
         byte[] data;
 
-        if (sig.length - 1 > 256)
-        {
+        if (sig.length - 1 > 256) {
             data = new byte[sig.length - 3];
         }
-        else
-        {
+        else {
             data = new byte[sig.length - 2];
         }
 
