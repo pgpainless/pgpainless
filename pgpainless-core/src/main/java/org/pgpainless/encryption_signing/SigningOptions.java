@@ -23,6 +23,7 @@ import org.bouncycastle.openpgp.operator.PGPContentSignerBuilder;
 import org.pgpainless.PGPainless;
 import org.pgpainless.algorithm.DocumentSignatureType;
 import org.pgpainless.algorithm.HashAlgorithm;
+import org.pgpainless.algorithm.negotiation.HashAlgorithmNegotiator;
 import org.pgpainless.exception.KeyCannotSignException;
 import org.pgpainless.exception.KeyValidationError;
 import org.pgpainless.implementation.ImplementationFactory;
@@ -270,7 +271,7 @@ public final class SigningOptions {
     /**
      * Negotiate, which hash algorithm to use.
      *
-     * This method gives highest priority to the algorithm override, which can be set via {@link #overrideHashAlgorithm(HashAlgorithm)}.
+     * This method gives the highest priority to the algorithm override, which can be set via {@link #overrideHashAlgorithm(HashAlgorithm)}.
      * After that, the signing keys hash algorithm preferences are iterated to find the first acceptable algorithm.
      * Lastly, should no acceptable algorithm be found, the {@link Policy Policies} default signature hash algorithm is
      * used as a fallback.
@@ -284,18 +285,8 @@ public final class SigningOptions {
             return hashAlgorithmOverride;
         }
 
-        HashAlgorithm algorithm = policy.getSignatureHashAlgorithmPolicy().defaultHashAlgorithm();
-        if (preferences.isEmpty()) {
-            return algorithm;
-        }
-
-        for (HashAlgorithm pref : preferences) {
-            if (policy.getSignatureHashAlgorithmPolicy().isAcceptable(pref)) {
-                return pref;
-            }
-        }
-
-        return algorithm;
+        return HashAlgorithmNegotiator.negotiateSignatureHashAlgorithm(policy)
+                .negotiateHashAlgorithm(preferences);
     }
 
     private PGPSignatureGenerator createSignatureGenerator(PGPPrivateKey privateKey,

@@ -8,7 +8,9 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Date;
 import java.util.Iterator;
+import java.util.LinkedHashSet;
 import java.util.List;
+import java.util.Set;
 
 import org.bouncycastle.openpgp.PGPPublicKey;
 import org.bouncycastle.openpgp.PGPSignature;
@@ -23,7 +25,6 @@ public final class OpenPgpKeyAttributeUtil {
 
     public static List<HashAlgorithm> getPreferredHashAlgorithms(PGPPublicKey publicKey) {
         List<HashAlgorithm> hashAlgorithms = new ArrayList<>();
-        // TODO: I'd assume that we have to use publicKey.getKeySignatures() here, but that is empty...
         Iterator<?> keySignatures = publicKey.getSignatures();
         while (keySignatures.hasNext()) {
             PGPSignature signature = (PGPSignature) keySignatures.next();
@@ -44,8 +45,6 @@ public final class OpenPgpKeyAttributeUtil {
                     hashAlgorithms.add(HashAlgorithm.fromId(h));
                 }
                 // Exit the loop after the first key signature with hash algorithms.
-                // TODO: Find out, if it is possible that there are multiple key signatures which specify preferred
-                //  algorithms and how to deal with that.
                 break;
             }
         }
@@ -86,5 +85,22 @@ public final class OpenPgpKeyAttributeUtil {
             return Collections.emptyList();
         }
         return Collections.singletonList(hashAlgorithm);
+    }
+
+    /**
+     * Try to extract hash algorithm preferences from self signatures.
+     * If no self-signature containing hash algorithm preferences is found,
+     * try to derive a hash algorithm preference by inspecting the hash algorithm used by existing
+     * self-signatures.
+     *
+     * @param publicKey key
+     * @return hash algorithm preferences (might be empty!)
+     */
+    public static Set<HashAlgorithm> getOrGuessPreferredHashAlgorithms(PGPPublicKey publicKey) {
+        List<HashAlgorithm> preferredHashAlgorithms = OpenPgpKeyAttributeUtil.getPreferredHashAlgorithms(publicKey);
+        if (preferredHashAlgorithms.isEmpty()) {
+            preferredHashAlgorithms = OpenPgpKeyAttributeUtil.guessPreferredHashAlgorithms(publicKey);
+        }
+        return new LinkedHashSet<>(preferredHashAlgorithms);
     }
 }

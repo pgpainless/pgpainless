@@ -10,7 +10,9 @@ import java.io.InputStream;
 import java.nio.charset.Charset;
 import java.util.ArrayList;
 import java.util.Date;
+import java.util.LinkedHashSet;
 import java.util.List;
+import java.util.Set;
 
 import org.bouncycastle.bcpg.sig.IssuerKeyID;
 import org.bouncycastle.bcpg.sig.KeyExpirationTime;
@@ -30,6 +32,7 @@ import org.bouncycastle.util.encoders.Hex;
 import org.pgpainless.PGPainless;
 import org.pgpainless.algorithm.HashAlgorithm;
 import org.pgpainless.algorithm.SignatureType;
+import org.pgpainless.algorithm.negotiation.HashAlgorithmNegotiator;
 import org.pgpainless.implementation.ImplementationFactory;
 import org.pgpainless.key.OpenPgpV4Fingerprint;
 import org.pgpainless.key.util.OpenPgpKeyAttributeUtil;
@@ -78,37 +81,16 @@ public final class SignatureUtils {
      * If no preferences can be derived, the key will fall back to the default hash algorithm as set in
      * the {@link org.pgpainless.policy.Policy}.
      *
-     * TODO: Move negotiation to negotiator class
-     *
      * @param publicKey public key
      * @return content signer builder
      */
     private static PGPContentSignerBuilder getPgpContentSignerBuilderForKey(PGPPublicKey publicKey) {
-        List<HashAlgorithm> preferredHashAlgorithms = OpenPgpKeyAttributeUtil.getPreferredHashAlgorithms(publicKey);
-        if (preferredHashAlgorithms.isEmpty()) {
-            preferredHashAlgorithms = OpenPgpKeyAttributeUtil.guessPreferredHashAlgorithms(publicKey);
-        }
-        HashAlgorithm hashAlgorithm = negotiateHashAlgorithm(preferredHashAlgorithms);
+        Set<HashAlgorithm> hashAlgorithmSet = OpenPgpKeyAttributeUtil.getOrGuessPreferredHashAlgorithms(publicKey);
+
+        HashAlgorithm hashAlgorithm = HashAlgorithmNegotiator.negotiateSignatureHashAlgorithm(PGPainless.getPolicy())
+                .negotiateHashAlgorithm(hashAlgorithmSet);
 
         return ImplementationFactory.getInstance().getPGPContentSignerBuilder(publicKey.getAlgorithm(), hashAlgorithm.getAlgorithmId());
-    }
-
-    /**
-     * Negotiate an acceptable hash algorithm from the provided list of options.
-     * Acceptance of hash algorithms can be changed by setting a custom {@link Policy}.
-     *
-     * @param preferredHashAlgorithms list of preferred hash algorithms of a key
-     * @return first acceptable algorithm, or policies default hash algorithm
-     */
-    private static HashAlgorithm negotiateHashAlgorithm(List<HashAlgorithm> preferredHashAlgorithms) {
-        Policy policy = PGPainless.getPolicy();
-        for (HashAlgorithm option : preferredHashAlgorithms) {
-            if (policy.getSignatureHashAlgorithmPolicy().isAcceptable(option)) {
-                return option;
-            }
-        }
-
-        return PGPainless.getPolicy().getSignatureHashAlgorithmPolicy().defaultHashAlgorithm();
     }
 
     /**
