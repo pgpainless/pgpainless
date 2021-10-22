@@ -39,6 +39,7 @@ import org.bouncycastle.bcpg.sig.TrustSignature;
 import org.bouncycastle.openpgp.PGPPublicKey;
 import org.bouncycastle.openpgp.PGPSignature;
 import org.bouncycastle.openpgp.PGPSignatureSubpacketGenerator;
+import org.bouncycastle.openpgp.PGPSignatureSubpacketVector;
 import org.pgpainless.algorithm.CompressionAlgorithm;
 import org.pgpainless.algorithm.Feature;
 import org.pgpainless.algorithm.HashAlgorithm;
@@ -71,14 +72,123 @@ public class SignatureSubpacketGeneratorWrapper
     private PrimaryUserID primaryUserId;
     private Revocable revocable;
     private RevocationReason revocationReason;
+    private final List<SignatureSubpacket> unsupportedSubpackets = new ArrayList<>();
 
     public SignatureSubpacketGeneratorWrapper() {
         setSignatureCreationTime(new Date());
     }
 
     public SignatureSubpacketGeneratorWrapper(PGPPublicKey issuer) {
-        this();
+        setSignatureCreationTime(new Date());
         setIssuerFingerprintAndKeyId(issuer);
+    }
+
+    public SignatureSubpacketGeneratorWrapper(PGPPublicKey issuer, PGPSignatureSubpacketVector base) {
+        extractSubpacketsFromVector(base);
+        setSignatureCreationTime(new Date());
+        setIssuerFingerprintAndKeyId(issuer);
+    }
+
+    public SignatureSubpacketGeneratorWrapper(PGPSignatureSubpacketVector base) {
+        extractSubpacketsFromVector(base);
+        setSignatureCreationTime(new Date());
+    }
+
+    private void extractSubpacketsFromVector(PGPSignatureSubpacketVector base) {
+        for (SignatureSubpacket subpacket : base.toArray()) {
+            org.pgpainless.algorithm.SignatureSubpacket type = org.pgpainless.algorithm.SignatureSubpacket.fromCode(subpacket.getType());
+            switch (type) {
+                case signatureCreationTime:
+                case issuerKeyId:
+                case issuerFingerprint:
+                    // ignore, we override this anyways
+                    break;
+                case signatureExpirationTime:
+                    SignatureExpirationTime sigExpTime = (SignatureExpirationTime) subpacket;
+                    setSignatureExpirationTime(sigExpTime.isCritical(), sigExpTime.getTime());
+                    break;
+                case exportableCertification:
+                    Exportable exp = (Exportable) subpacket;
+                    setExportable(exp.isCritical(), exp.isExportable());
+                    break;
+                case trustSignature:
+                    TrustSignature trustSignature = (TrustSignature) subpacket;
+                    setTrust(trustSignature.isCritical(), trustSignature.getDepth(), trustSignature.getTrustAmount());
+                    break;
+                case revocable:
+                    Revocable rev = (Revocable) subpacket;
+                    setRevocable(rev.isCritical(), rev.isRevocable());
+                    break;
+                case keyExpirationTime:
+                    KeyExpirationTime keyExpTime = (KeyExpirationTime) subpacket;
+                    setKeyExpirationTime(keyExpTime.isCritical(), keyExpTime.getTime());
+                    break;
+                case preferredSymmetricAlgorithms:
+                    setPreferredSymmetricKeyAlgorithms((PreferredAlgorithms) subpacket);
+                    break;
+                case revocationKey:
+                    RevocationKey revocationKey = (RevocationKey) subpacket;
+                    addRevocationKey(revocationKey);
+                    break;
+                case notationData:
+                    NotationData notationData = (NotationData) subpacket;
+                    addNotationData(notationData.isCritical(), notationData.getNotationName(), notationData.getNotationValue());
+                    break;
+                case preferredHashAlgorithms:
+                    setPreferredHashAlgorithms((PreferredAlgorithms) subpacket);
+                    break;
+                case preferredCompressionAlgorithms:
+                    setPreferredCompressionAlgorithms((PreferredAlgorithms) subpacket);
+                    break;
+                case primaryUserId:
+                    PrimaryUserID primaryUserID = (PrimaryUserID) subpacket;
+                    setPrimaryUserId(primaryUserID);
+                    break;
+                case keyFlags:
+                    KeyFlags flags = (KeyFlags) subpacket;
+                    setKeyFlags(flags.isCritical(), KeyFlag.fromBitmask(flags.getFlags()).toArray(new KeyFlag[0]));
+                    break;
+                case signerUserId:
+                    SignerUserID signerUserID = (SignerUserID) subpacket;
+                    setSignerUserId(signerUserID.isCritical(), signerUserID.getID());
+                    break;
+                case revocationReason:
+                    RevocationReason reason = (RevocationReason) subpacket;
+                    setRevocationReason(reason.isCritical(),
+                            RevocationAttributes.Reason.fromCode(reason.getRevocationReason()),
+                            reason.getRevocationDescription());
+                    break;
+                case features:
+                    Features f = (Features) subpacket;
+                    setFeatures(f.isCritical(), Feature.fromBitmask(f.getData()[0]).toArray(new Feature[0]));
+                    break;
+                case signatureTarget:
+                    SignatureTarget target = (SignatureTarget) subpacket;
+                    setSignatureTarget(target.isCritical(),
+                            PublicKeyAlgorithm.fromId(target.getPublicKeyAlgorithm()),
+                            HashAlgorithm.fromId(target.getHashAlgorithm()),
+                            target.getHashData());
+                    break;
+                case embeddedSignature:
+                    EmbeddedSignature embeddedSignature = (EmbeddedSignature) subpacket;
+                    addEmbeddedSignature(embeddedSignature);
+                    break;
+                case intendedRecipientFingerprint:
+                    IntendedRecipientFingerprint intendedRecipientFingerprint = (IntendedRecipientFingerprint) subpacket;
+                    addIntendedRecipientFingerprint(intendedRecipientFingerprint);
+                    break;
+
+                case regularExpression:
+                case keyServerPreferences:
+                case preferredKeyServers:
+                case policyUrl:
+                case placeholder:
+                case preferredAEADAlgorithms:
+                case attestedCertification:
+                    unsupportedSubpackets.add(subpacket);
+                    break;
+            }
+        }
     }
 
     public PGPSignatureSubpacketGenerator getGenerator() {
@@ -113,6 +223,9 @@ public class SignatureSubpacketGeneratorWrapper
         addSubpacket(generator, primaryUserId);
         addSubpacket(generator, revocable);
         addSubpacket(generator, revocationReason);
+        for (SignatureSubpacket subpacket : unsupportedSubpackets) {
+            addSubpacket(generator, subpacket);
+        }
 
         return generator;
     }
@@ -381,7 +494,12 @@ public class SignatureSubpacketGeneratorWrapper
 
     @Override
     public SignatureSubpacketGeneratorWrapper addNotationData(boolean isCritical, @Nonnull String notationName, @Nonnull String notationValue) {
-        return addNotationData(new NotationData(isCritical, true, notationName, notationValue));
+        return addNotationData(isCritical, true, notationName, notationValue);
+    }
+
+    @Override
+    public SignatureSubpacketGeneratorWrapper addNotationData(boolean isCritical, boolean isHumanReadable, @Nonnull String notationName, @Nonnull String notationValue) {
+        return addNotationData(new NotationData(isCritical, isHumanReadable, notationName, notationValue));
     }
 
     @Override

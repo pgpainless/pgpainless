@@ -64,6 +64,8 @@ public interface BaseSignatureSubpackets {
 
     SignatureSubpacketGeneratorWrapper addNotationData(boolean isCritical, @Nonnull String notationName, @Nonnull String notationValue);
 
+    SignatureSubpacketGeneratorWrapper addNotationData(boolean isCritical, boolean isHumanReadable, @Nonnull String notationName, @Nonnull String notationValue);
+
     SignatureSubpacketGeneratorWrapper addNotationData(@Nonnull NotationData notationData);
 
     SignatureSubpacketGeneratorWrapper clearNotationData();

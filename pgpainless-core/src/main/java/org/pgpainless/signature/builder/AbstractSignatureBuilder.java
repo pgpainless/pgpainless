@@ -10,6 +10,7 @@ import org.bouncycastle.openpgp.PGPException;
 import org.bouncycastle.openpgp.PGPPrivateKey;
 import org.bouncycastle.openpgp.PGPPublicKey;
 import org.bouncycastle.openpgp.PGPSecretKey;
+import org.bouncycastle.openpgp.PGPSignature;
 import org.bouncycastle.openpgp.PGPSignatureGenerator;
 import org.pgpainless.PGPainless;
 import org.pgpainless.algorithm.HashAlgorithm;
@@ -44,6 +45,20 @@ public abstract class AbstractSignatureBuilder<B extends AbstractSignatureBuilde
 
         unhashedSubpackets = new SignatureSubpacketGeneratorWrapper();
         hashedSubpackets = new SignatureSubpacketGeneratorWrapper(publicSigningKey);
+    }
+
+    public AbstractSignatureBuilder(PGPSecretKey certificationKey, SecretKeyRingProtector protector, PGPSignature archetypeSignature) throws WrongPassphraseException {
+        SignatureType type = SignatureType.valueOf(archetypeSignature.getSignatureType());
+        if (!isValidSignatureType(type)) {
+            throw new IllegalArgumentException("Invalid signature type.");
+        }
+        this.signatureType = SignatureType.valueOf(archetypeSignature.getSignatureType());
+        this.privateSigningKey = UnlockSecretKey.unlockSecretKey(certificationKey, protector);
+        this.publicSigningKey = certificationKey.getPublicKey();
+        this.hashAlgorithm = negotiateHashAlgorithm(publicSigningKey);
+
+        unhashedSubpackets = new SignatureSubpacketGeneratorWrapper(archetypeSignature.getUnhashedSubPackets());
+        hashedSubpackets = new SignatureSubpacketGeneratorWrapper(publicSigningKey, archetypeSignature.getHashedSubPackets());
     }
 
     protected HashAlgorithm negotiateHashAlgorithm(PGPPublicKey publicKey) {

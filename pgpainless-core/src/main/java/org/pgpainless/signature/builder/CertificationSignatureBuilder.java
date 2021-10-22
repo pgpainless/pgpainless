@@ -4,6 +4,8 @@
 
 package org.pgpainless.signature.builder;
 
+import javax.annotation.Nonnull;
+
 import org.bouncycastle.openpgp.PGPException;
 import org.bouncycastle.openpgp.PGPPublicKey;
 import org.bouncycastle.openpgp.PGPSecretKey;
@@ -12,11 +14,24 @@ import org.bouncycastle.openpgp.PGPUserAttributeSubpacketVector;
 import org.pgpainless.algorithm.SignatureType;
 import org.pgpainless.exception.WrongPassphraseException;
 import org.pgpainless.key.protection.SecretKeyRingProtector;
+import org.pgpainless.signature.subpackets.SelfSignatureSubpackets;
 
 public class CertificationSignatureBuilder extends AbstractSignatureBuilder<CertificationSignatureBuilder> {
 
     public CertificationSignatureBuilder(PGPSecretKey certificationKey, SecretKeyRingProtector protector) throws WrongPassphraseException {
         super(SignatureType.GENERIC_CERTIFICATION, certificationKey, protector);
+    }
+
+    public CertificationSignatureBuilder(PGPSecretKey certificationKey, SecretKeyRingProtector protector, PGPSignature archetypeSignature) throws WrongPassphraseException {
+        super(certificationKey, protector, archetypeSignature);
+    }
+
+    public SelfSignatureSubpackets getHashedSubpackets() {
+        return hashedSubpackets;
+    }
+
+    public SelfSignatureSubpackets getUnhashedSubpackets() {
+        return unhashedSubpackets;
     }
 
     public PGPSignature build(PGPPublicKey certifiedKey, String userId) throws PGPException {
@@ -28,8 +43,8 @@ public class CertificationSignatureBuilder extends AbstractSignatureBuilder<Cert
     }
 
     @Override
-    protected boolean isValidSignatureType(SignatureType type) {
-        switch (signatureType) {
+    protected boolean isValidSignatureType(@Nonnull SignatureType type) {
+        switch (type) {
             case GENERIC_CERTIFICATION:
             case NO_CERTIFICATION:
             case CASUAL_CERTIFICATION:
