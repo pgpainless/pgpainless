@@ -10,15 +10,20 @@ import java.io.FilterInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.List;
+import java.util.Map;
 import javax.annotation.Nonnull;
 
+import org.bouncycastle.openpgp.PGPObjectFactory;
 import org.bouncycastle.openpgp.PGPPublicKeyRing;
+import org.bouncycastle.openpgp.PGPSignature;
+import org.bouncycastle.openpgp.PGPSignatureList;
 import org.pgpainless.PGPainless;
 import org.pgpainless.exception.SignatureValidationException;
 import org.pgpainless.policy.Policy;
 import org.pgpainless.signature.CertificateValidator;
 import org.pgpainless.signature.DetachedSignatureCheck;
 import org.pgpainless.signature.OnePassSignatureCheck;
+import org.pgpainless.signature.SignatureUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -32,19 +37,25 @@ public abstract class SignatureInputStream extends FilterInputStream {
 
         private static final Logger LOGGER = LoggerFactory.getLogger(VerifySignatures.class);
 
+        private final PGPObjectFactory objectFactory;
         private final List<OnePassSignatureCheck> opSignatures;
+        private final Map<Long, OnePassSignatureCheck> opSignaturesWithMissingCert;
         private final List<DetachedSignatureCheck> detachedSignatures;
         private final ConsumerOptions options;
         private final OpenPgpMetadata.Builder resultBuilder;
 
         public VerifySignatures(
                 InputStream literalDataStream,
+                PGPObjectFactory objectFactory,
                 List<OnePassSignatureCheck> opSignatures,
+                Map<Long, OnePassSignatureCheck> onePassSignaturesWithMissingCert,
                 List<DetachedSignatureCheck> detachedSignatures,
                 ConsumerOptions options,
                 OpenPgpMetadata.Builder resultBuilder) {
             super(literalDataStream);
+            this.objectFactory = objectFactory;
             this.opSignatures = opSignatures;
+            this.opSignaturesWithMissingCert = onePassSignaturesWithMissingCert;
             this.detachedSignatures = detachedSignatures;
             this.options = options;
             this.resultBuilder = resultBuilder;
@@ -71,6 +82,7 @@ public abstract class SignatureInputStream extends FilterInputStream {
 
             final boolean endOfStream = read == -1;
             if (endOfStream) {
+                parseAndCombineSignatures();
                 verifyOnePassSignatures();
                 verifyDetachedSignatures();
             } else {
@@ -79,6 +91,51 @@ public abstract class SignatureInputStream extends FilterInputStream {
             }
             return read;
         }
+
+        public void parseAndCombineSignatures() throws IOException {
+            // Parse signatures from message
+            PGPSignatureList signatures;
+            try {
+                signatures = parseSignatures(objectFactory);
+            } catch (IOException e) {
+                return;
+            }
+            List<PGPSignature> signatureList = SignatureUtils.toList(signatures);
+            // Set signatures as comparison sigs in OPS checks
+            for (int i = 0; i < opSignatures.size(); i++) {
+                int reversedIndex = opSignatures.size() - i - 1;
+                opSignatures.get(i).setSignature(signatureList.get(reversedIndex));
+            }
+
+            for (PGPSignature signature : signatureList) {
+                if (opSignaturesWithMissingCert.containsKey(signature.getKeyID())) {
+                    OnePassSignatureCheck check = opSignaturesWithMissingCert.remove(signature.getKeyID());
+                    check.setSignature(signature);
+
+                    resultBuilder.addInvalidInbandSignature(new SignatureVerification(signature, null),
+                            new SignatureValidationException("Missing verification certificate " + Long.toHexString(signature.getKeyID())));
+                }
+            }
+        }
+
+        private PGPSignatureList parseSignatures(PGPObjectFactory objectFactory) throws IOException {
+            PGPSignatureList signatureList = null;
+            Object pgpObject = objectFactory.nextObject();
+            while (pgpObject !=  null && signatureList == null) {
+                if (pgpObject instanceof PGPSignatureList) {
+                    signatureList = (PGPSignatureList) pgpObject;
+                } else {
+                    pgpObject = objectFactory.nextObject();
+                }
+            }
+
+            if (signatureList == null || signatureList.isEmpty()) {
+                throw new IOException("Verification failed - No Signatures found");
+            }
+
+            return signatureList;
+        }
+
 
         private synchronized void verifyOnePassSignatures() {
             Policy policy = PGPainless.getPolicy();
