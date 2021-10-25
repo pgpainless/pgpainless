@@ -75,23 +75,44 @@ public class SignatureSubpacketGeneratorWrapper
     private final List<SignatureSubpacket> unsupportedSubpackets = new ArrayList<>();
 
     public SignatureSubpacketGeneratorWrapper() {
-        setSignatureCreationTime(new Date());
+
     }
 
-    public SignatureSubpacketGeneratorWrapper(PGPPublicKey issuer) {
-        setSignatureCreationTime(new Date());
-        setIssuerFingerprintAndKeyId(issuer);
+    public static SignatureSubpacketGeneratorWrapper refreshHashedSubpackets(PGPPublicKey issuer, PGPSignature oldSignature) {
+        return createHashedSubpacketsFrom(issuer, oldSignature.getHashedSubPackets());
     }
 
-    public SignatureSubpacketGeneratorWrapper(PGPPublicKey issuer, PGPSignatureSubpacketVector base) {
-        extractSubpacketsFromVector(base);
-        setSignatureCreationTime(new Date());
-        setIssuerFingerprintAndKeyId(issuer);
+    public static SignatureSubpacketGeneratorWrapper refreshUnhashedSubpackets(PGPSignature oldSignature) {
+        return createSubpacketsFrom(oldSignature.getUnhashedSubPackets());
     }
 
-    public SignatureSubpacketGeneratorWrapper(PGPSignatureSubpacketVector base) {
-        extractSubpacketsFromVector(base);
-        setSignatureCreationTime(new Date());
+    public static SignatureSubpacketGeneratorWrapper createHashedSubpacketsFrom(PGPPublicKey issuer, PGPSignatureSubpacketVector base) {
+        SignatureSubpacketGeneratorWrapper wrapper = createSubpacketsFrom(base);
+        wrapper.setIssuerFingerprintAndKeyId(issuer);
+        return wrapper;
+    }
+
+    public static SignatureSubpacketGeneratorWrapper createSubpacketsFrom(PGPSignatureSubpacketVector base) {
+        SignatureSubpacketGeneratorWrapper wrapper = new SignatureSubpacketGeneratorWrapper();
+        wrapper.extractSubpacketsFromVector(base);
+        wrapper.setSignatureCreationTime(new Date());
+        return wrapper;
+    }
+
+    public static SignatureSubpacketGeneratorWrapper createEmptySubpackets() {
+        return new SignatureSubpacketGeneratorWrapper();
+    }
+
+    public static SignatureSubpacketGeneratorWrapper createHashedSubpackets() {
+        SignatureSubpacketGeneratorWrapper wrapper = new SignatureSubpacketGeneratorWrapper();
+        wrapper.setSignatureCreationTime(new Date());
+        return wrapper;
+    }
+
+    public static SignatureSubpacketGeneratorWrapper createHashedSubpackets(PGPPublicKey issuer) {
+        SignatureSubpacketGeneratorWrapper wrapper = createHashedSubpackets();
+        wrapper.setIssuerFingerprintAndKeyId(issuer);
+        return wrapper;
     }
 
     private void extractSubpacketsFromVector(PGPSignatureSubpacketVector base) {

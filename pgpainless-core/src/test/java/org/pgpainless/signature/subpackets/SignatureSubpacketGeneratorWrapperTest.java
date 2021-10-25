@@ -69,13 +69,13 @@ public class SignatureSubpacketGeneratorWrapperTest {
 
     @BeforeEach
     public void createWrapper() {
-        wrapper = new SignatureSubpacketGeneratorWrapper(key);
+        wrapper = SignatureSubpacketGeneratorWrapper.createHashedSubpackets(key);
     }
 
     @Test
     public void initialStateTest() {
         Date now = new Date();
-        wrapper = new SignatureSubpacketGeneratorWrapper();
+        wrapper = SignatureSubpacketGeneratorWrapper.createHashedSubpackets();
         PGPSignatureSubpacketVector vector = wrapper.getGenerator().generate();
 
         assertEquals(now.getTime(), vector.getSignatureCreationTime().getTime(), 1000);

@@ -43,8 +43,8 @@ public abstract class AbstractSignatureBuilder<B extends AbstractSignatureBuilde
         this.publicSigningKey = signingKey.getPublicKey();
         this.hashAlgorithm = negotiateHashAlgorithm(publicSigningKey);
 
-        unhashedSubpackets = new SignatureSubpacketGeneratorWrapper();
-        hashedSubpackets = new SignatureSubpacketGeneratorWrapper(publicSigningKey);
+        unhashedSubpackets = SignatureSubpacketGeneratorWrapper.createEmptySubpackets();
+        hashedSubpackets = SignatureSubpacketGeneratorWrapper.createHashedSubpackets(publicSigningKey);
     }
 
     public AbstractSignatureBuilder(PGPSecretKey certificationKey, SecretKeyRingProtector protector, PGPSignature archetypeSignature) throws WrongPassphraseException {
@@ -57,8 +57,8 @@ public abstract class AbstractSignatureBuilder<B extends AbstractSignatureBuilde
         this.publicSigningKey = certificationKey.getPublicKey();
         this.hashAlgorithm = negotiateHashAlgorithm(publicSigningKey);
 
-        unhashedSubpackets = new SignatureSubpacketGeneratorWrapper(archetypeSignature.getUnhashedSubPackets());
-        hashedSubpackets = new SignatureSubpacketGeneratorWrapper(publicSigningKey, archetypeSignature.getHashedSubPackets());
+        unhashedSubpackets = SignatureSubpacketGeneratorWrapper.refreshUnhashedSubpackets(archetypeSignature);
+        hashedSubpackets = SignatureSubpacketGeneratorWrapper.refreshHashedSubpackets(publicSigningKey, archetypeSignature);
     }
 
     protected HashAlgorithm negotiateHashAlgorithm(PGPPublicKey publicKey) {

@@ -13,16 +13,11 @@ import org.pgpainless.exception.WrongPassphraseException;
 import org.pgpainless.key.protection.SecretKeyRingProtector;
 import org.pgpainless.signature.subpackets.SelfSignatureSubpackets;
 
-public class SubkeyBindingSignatureBuilder extends AbstractSignatureBuilder<SubkeyBindingSignatureBuilder> {
+public class PrimaryKeyBindingSignatureBuilder extends AbstractSignatureBuilder<PrimaryKeyBindingSignatureBuilder> {
 
-    public SubkeyBindingSignatureBuilder(PGPSecretKey signingKey, SecretKeyRingProtector protector)
+    public PrimaryKeyBindingSignatureBuilder(PGPSecretKey subkey, SecretKeyRingProtector subkeyProtector)
             throws WrongPassphraseException {
-        super(SignatureType.SUBKEY_BINDING, signingKey, protector);
-    }
-
-    @Override
-    protected boolean isValidSignatureType(SignatureType type) {
-        return type == SignatureType.SUBKEY_BINDING;
+        super(SignatureType.PRIMARYKEY_BINDING, subkey, subkeyProtector);
     }
 
     public SelfSignatureSubpackets getHashedSubpackets() {
@@ -33,8 +28,13 @@ public class SubkeyBindingSignatureBuilder extends AbstractSignatureBuilder<Subk
         return unhashedSubpackets;
     }
 
-    public PGPSignature build(PGPPublicKey subkey) throws PGPException {
+    @Override
+    protected boolean isValidSignatureType(SignatureType type) {
+        return type == SignatureType.PRIMARYKEY_BINDING;
+    }
+
+    public PGPSignature build(PGPPublicKey primaryKey) throws PGPException {
         return buildAndInitSignatureGenerator()
-                .generateCertification(publicSigningKey, subkey);
+                .generateCertification(primaryKey, publicSigningKey);
     }
 }

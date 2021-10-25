@@ -20,7 +20,6 @@ import org.junit.jupiter.api.Test;
 import org.pgpainless.PGPainless;
 import org.pgpainless.algorithm.EncryptionPurpose;
 import org.pgpainless.algorithm.KeyFlag;
-import org.pgpainless.algorithm.SignatureType;
 import org.pgpainless.key.info.KeyRingInfo;
 import org.pgpainless.key.protection.SecretKeyRingProtector;
 import org.pgpainless.util.Passphrase;
@@ -40,7 +39,7 @@ public class SubkeyBindingSignatureBuilderTest {
         PGPPublicKey subkey = PGPainless.inspectKeyRing(tempSubkeyRing)
                 .getEncryptionSubkeys(EncryptionPurpose.STORAGE_AND_COMMUNICATIONS).get(0);
 
-        SubkeyBindingSignatureBuilder skbb = new SubkeyBindingSignatureBuilder(SignatureType.SUBKEY_BINDING, secretKey.getSecretKey(), protector);
+        SubkeyBindingSignatureBuilder skbb = new SubkeyBindingSignatureBuilder(secretKey.getSecretKey(), protector);
         skbb.getHashedSubpackets().addNotationData(false, "testnotation@pgpainless.org", "hello-world");
         skbb.getHashedSubpackets().setKeyFlags(KeyFlag.ENCRYPT_COMMS, KeyFlag.ENCRYPT_STORAGE);
         PGPSignature binding = skbb.build(subkey);
