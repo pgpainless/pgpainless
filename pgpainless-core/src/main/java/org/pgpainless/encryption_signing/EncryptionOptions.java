@@ -273,11 +273,12 @@ public class EncryptionOptions {
      *
      * @param encryptionAlgorithm encryption algorithm override
      */
-    public void overrideEncryptionAlgorithm(SymmetricKeyAlgorithm encryptionAlgorithm) {
+    public EncryptionOptions overrideEncryptionAlgorithm(SymmetricKeyAlgorithm encryptionAlgorithm) {
         if (encryptionAlgorithm == SymmetricKeyAlgorithm.NULL) {
             throw new IllegalArgumentException("Plaintext encryption can only be used to denote unencrypted secret keys.");
         }
         this.encryptionAlgorithmOverride = encryptionAlgorithm;
+        return this;
     }
 
     public interface EncryptionKeySelector {
