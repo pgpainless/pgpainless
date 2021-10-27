@@ -8,9 +8,7 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
-import java.io.ByteArrayInputStream;
 import java.io.IOException;
-import java.nio.charset.StandardCharsets;
 
 import org.bouncycastle.openpgp.PGPException;
 import org.junit.jupiter.api.Test;
@@ -29,8 +27,7 @@ public class MessageInspectorTest {
                 "=IICf\n" +
                 "-----END PGP MESSAGE-----\n";
 
-        MessageInspector.EncryptionInfo info = MessageInspector.determineEncryptionInfoForMessage(
-                new ByteArrayInputStream(message.getBytes(StandardCharsets.UTF_8)));
+        MessageInspector.EncryptionInfo info = MessageInspector.determineEncryptionInfoForMessage(message);
 
         assertFalse(info.isPassphraseEncrypted());
         assertFalse(info.isSignedOnly());
@@ -55,7 +52,7 @@ public class MessageInspectorTest {
                 "=z6e0\n" +
                 "-----END PGP MESSAGE-----";
 
-        MessageInspector.EncryptionInfo info = MessageInspector.determineEncryptionInfoForMessage(new ByteArrayInputStream(message.getBytes(StandardCharsets.UTF_8)));
+        MessageInspector.EncryptionInfo info = MessageInspector.determineEncryptionInfoForMessage(message);
 
         assertTrue(info.isEncrypted());
         assertTrue(info.isPassphraseEncrypted());
@@ -77,7 +74,7 @@ public class MessageInspectorTest {
                 "=nt5n\n" +
                 "-----END PGP MESSAGE-----";
 
-        MessageInspector.EncryptionInfo info = MessageInspector.determineEncryptionInfoForMessage(new ByteArrayInputStream(message.getBytes(StandardCharsets.UTF_8)));
+        MessageInspector.EncryptionInfo info = MessageInspector.determineEncryptionInfoForMessage(message);
 
         assertTrue(info.isSignedOnly());
 
@@ -100,7 +97,7 @@ public class MessageInspectorTest {
                 "KK0Ymg5GrsBTEGFm4jb1p+V85PPhsIioX3np/N3fkIfxFguTGZza33/GHy61+DTy\n" +
                 "=SZU6\n" +
                 "-----END PGP MESSAGE-----";
-        MessageInspector.EncryptionInfo info = MessageInspector.determineEncryptionInfoForMessage(new ByteArrayInputStream(message.getBytes(StandardCharsets.UTF_8)));
+        MessageInspector.EncryptionInfo info = MessageInspector.determineEncryptionInfoForMessage(message);
 
         // Message is encrypted, so we cannot determine if it is signed or not.
         // It is not signed only
@@ -109,5 +106,40 @@ public class MessageInspectorTest {
         assertTrue(info.isEncrypted());
         assertTrue(info.isPassphraseEncrypted());
         assertEquals(1, info.getKeyIds().size());
+    }
+
+    @Test
+    public void testPlaintextMessage() throws IOException, PGPException {
+        String message = "-----BEGIN PGP MESSAGE-----\n" +
+                "Version: PGPainless\n" +
+                "Comment: Literal Data\n" +
+                "\n" +
+                "yyl0CF9DT05TT0xFYXlXgUp1c3Qgc29tZSB1bmVuY3J5cHRlZCBkYXRhLg==\n" +
+                "=jVNT\n" +
+                "-----END PGP MESSAGE-----";
+
+        MessageInspector.EncryptionInfo info = MessageInspector.determineEncryptionInfoForMessage(message);
+        assertFalse(info.isEncrypted());
+        assertFalse(info.isSignedOnly());
+        assertFalse(info.isPassphraseEncrypted());
+        assertTrue(info.getKeyIds().isEmpty());
+    }
+
+    @Test
+    public void testCompressedPlaintextMessage() throws IOException, PGPException {
+        String message = "-----BEGIN PGP MESSAGE-----\n" +
+                "Version: PGPainless\n" +
+                "Comment: Compressed Literal Data\n" +
+                "\n" +
+                "owE7HVDCEe/s7xfs7+OaWBmxJDw1L08hIzOvJLVIwS0nMzU9NQ9Op0FoHRgDQ0Fe\n" +
+                "YnKGHgA=\n" +
+                "=jw3E\n" +
+                "-----END PGP MESSAGE-----";
+
+        MessageInspector.EncryptionInfo info = MessageInspector.determineEncryptionInfoForMessage(message);
+        assertFalse(info.isEncrypted());
+        assertFalse(info.isSignedOnly());
+        assertFalse(info.isPassphraseEncrypted());
+        assertTrue(info.getKeyIds().isEmpty());
     }
 }
