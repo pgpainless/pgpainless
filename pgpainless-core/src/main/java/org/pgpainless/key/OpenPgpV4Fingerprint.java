@@ -8,7 +8,6 @@ import java.net.URI;
 import java.net.URISyntaxException;
 import java.nio.Buffer;
 import java.nio.ByteBuffer;
-import java.nio.charset.Charset;
 import javax.annotation.Nonnull;
 
 import org.bouncycastle.openpgp.PGPKeyRing;
@@ -21,12 +20,9 @@ import org.bouncycastle.util.encoders.Hex;
 /**
  * This class represents an hex encoded, uppercase OpenPGP v4 fingerprint.
  */
-public class OpenPgpV4Fingerprint implements CharSequence, Comparable<OpenPgpV4Fingerprint> {
+public class OpenPgpV4Fingerprint extends OpenPgpFingerprint<OpenPgpV4Fingerprint> {
 
     public static final String SCHEME = "openpgp4fpr";
-
-    private static final Charset utf8 = Charset.forName("UTF-8");
-    private final String fingerprint;
 
     /**
      * Create an {@link OpenPgpV4Fingerprint}.
@@ -35,57 +31,20 @@ public class OpenPgpV4Fingerprint implements CharSequence, Comparable<OpenPgpV4F
      * @param fingerprint hexadecimal representation of the fingerprint.
      */
     public OpenPgpV4Fingerprint(@Nonnull String fingerprint) {
-        String fp = fingerprint.replace(" ", "").trim().toUpperCase();
-        if (!isValid(fp)) {
-            throw new IllegalArgumentException("Fingerprint " + fingerprint +
-                    " does not appear to be a valid OpenPGP v4 fingerprint.");
-        }
-        this.fingerprint = fp;
+        super(fingerprint);
     }
 
-    public OpenPgpV4Fingerprint(@Nonnull byte[] bytes) {
-        this(new String(bytes, utf8));
+    @Override
+    public int getVersion() {
+        return 4;
     }
 
-    public OpenPgpV4Fingerprint(@Nonnull PGPPublicKey key) {
-        this(Hex.encode(key.getFingerprint()));
-        if (key.getVersion() != 4) {
-            throw new IllegalArgumentException("Key is not a v4 OpenPgp key.");
-        }
-    }
-
-    public OpenPgpV4Fingerprint(@Nonnull PGPSecretKey key) {
-        this(key.getPublicKey());
-    }
-
-    public OpenPgpV4Fingerprint(@Nonnull PGPPublicKeyRing ring) {
-        this(ring.getPublicKey());
-    }
-
-    public OpenPgpV4Fingerprint(@Nonnull PGPSecretKeyRing ring) {
-        this(ring.getPublicKey());
-    }
-
-    public OpenPgpV4Fingerprint(@Nonnull PGPKeyRing ring) {
-        this(ring.getPublicKey());
-    }
-
-    /**
-     * Check, whether the fingerprint consists of 40 valid hexadecimal characters.
-     * @param fp fingerprint to check.
-     * @return true if fingerprint is valid.
-     */
-    private static boolean isValid(@Nonnull String fp) {
+    @Override
+    protected boolean isValid(@Nonnull String fp) {
         return fp.matches("[0-9A-F]{40}");
     }
 
-    /**
-     * Return the key id of the OpenPGP public key this {@link OpenPgpV4Fingerprint} belongs to.
-     *
-     * @see <a href="https://tools.ietf.org/html/rfc4880#section-12.2">
-     *     RFC-4880 §12.2: Key IDs and Fingerprints</a>
-     * @return key id
-     */
+    @Override
     public long getKeyId() {
         byte[] bytes = Hex.decode(toString().getBytes(utf8));
         ByteBuffer buf = ByteBuffer.wrap(bytes);
@@ -95,6 +54,45 @@ public class OpenPgpV4Fingerprint implements CharSequence, Comparable<OpenPgpV4F
         ((Buffer) buf).position(12);
 
         return buf.getLong();
+    }
+
+    @Override
+    public String prettyPrint() {
+        String fp = toString();
+        StringBuilder pretty = new StringBuilder();
+        for (int i = 0; i < 5; i++) {
+            pretty.append(fp, i * 4, (i + 1) * 4).append(' ');
+        }
+        pretty.append(' ');
+        for (int i = 5; i < 9; i++) {
+            pretty.append(fp, i * 4, (i + 1) * 4).append(' ');
+        }
+        pretty.append(fp, 36, 40);
+        return pretty.toString();
+    }
+
+    public OpenPgpV4Fingerprint(@Nonnull byte[] bytes) {
+        super(bytes);
+    }
+
+    public OpenPgpV4Fingerprint(@Nonnull PGPPublicKey key) {
+        super(key);
+    }
+
+    public OpenPgpV4Fingerprint(@Nonnull PGPSecretKey key) {
+        this(key.getPublicKey());
+    }
+
+    public OpenPgpV4Fingerprint(@Nonnull PGPPublicKeyRing ring) {
+        super(ring);
+    }
+
+    public OpenPgpV4Fingerprint(@Nonnull PGPSecretKeyRing ring) {
+        super(ring);
+    }
+
+    public OpenPgpV4Fingerprint(@Nonnull PGPKeyRing ring) {
+        super(ring);
     }
 
     @Override
@@ -112,42 +110,7 @@ public class OpenPgpV4Fingerprint implements CharSequence, Comparable<OpenPgpV4F
 
     @Override
     public int hashCode() {
-        return fingerprint.hashCode();
-    }
-
-    @Override
-    public int length() {
-        return fingerprint.length();
-    }
-
-    @Override
-    public char charAt(int i) {
-        return fingerprint.charAt(i);
-    }
-
-    @Override
-    public CharSequence subSequence(int i, int i1) {
-        return fingerprint.subSequence(i, i1);
-    }
-
-    @Override
-    @Nonnull
-    public String toString() {
-        return fingerprint;
-    }
-
-    public String prettyPrint() {
-        String fp = toString();
-        StringBuilder pretty = new StringBuilder();
-        for (int i = 0; i < 5; i++) {
-            pretty.append(fp, i * 4, (i + 1) * 4).append(' ');
-        }
-        pretty.append(' ');
-        for (int i = 5; i < 9; i++) {
-            pretty.append(fp, i * 4, (i + 1) * 4).append(' ');
-        }
-        pretty.append(fp, 36, 40);
-        return pretty.toString();
+        return toString().hashCode();
     }
 
     /**
@@ -159,7 +122,7 @@ public class OpenPgpV4Fingerprint implements CharSequence, Comparable<OpenPgpV4F
      */
     public URI toUri() {
         try {
-            return new URI(SCHEME, toString(), null);
+            return new URI(OpenPgpV4Fingerprint.SCHEME, toString(), null);
         } catch (URISyntaxException e) {
             throw new AssertionError(e);
         }
@@ -181,6 +144,6 @@ public class OpenPgpV4Fingerprint implements CharSequence, Comparable<OpenPgpV4F
 
     @Override
     public int compareTo(@Nonnull OpenPgpV4Fingerprint openPgpV4Fingerprint) {
-        return fingerprint.compareTo(openPgpV4Fingerprint.fingerprint);
+        return toString().compareTo(openPgpV4Fingerprint.toString());
     }
 }
