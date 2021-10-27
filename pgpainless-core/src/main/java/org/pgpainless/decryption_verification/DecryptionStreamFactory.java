@@ -343,6 +343,7 @@ public final class DecryptionStreamFactory {
             }
             decryptionKey = privateKey;
             encryptedSessionKey = publicKeyEncryptedData;
+            break;
         }
 
         // Try postponed keys with missing passphrases (will cause missing passphrase callbacks to fire)
