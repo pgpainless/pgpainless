@@ -19,6 +19,8 @@ import org.bouncycastle.openpgp.PGPObjectFactory;
 import org.bouncycastle.openpgp.PGPOnePassSignatureList;
 import org.bouncycastle.openpgp.PGPPBEEncryptedData;
 import org.bouncycastle.openpgp.PGPPublicKeyEncryptedData;
+import org.bouncycastle.openpgp.PGPUtil;
+import org.bouncycastle.openpgp.operator.KeyFingerPrintCalculator;
 import org.pgpainless.implementation.ImplementationFactory;
 import org.pgpainless.util.ArmorUtils;
 
@@ -85,11 +87,12 @@ public final class MessageInspector {
         return info;
     }
 
-    private static void processMessage(InputStream dataIn, EncryptionInfo info) throws PGPException {
-        PGPObjectFactory objectFactory = new PGPObjectFactory(dataIn,
-                ImplementationFactory.getInstance().getKeyFingerprintCalculator());
+    private static void processMessage(InputStream dataIn, EncryptionInfo info) throws PGPException, IOException {
+        KeyFingerPrintCalculator calculator = ImplementationFactory.getInstance().getKeyFingerprintCalculator();
+        PGPObjectFactory objectFactory = new PGPObjectFactory(dataIn, calculator);
 
-        for (Object next : objectFactory) {
+        Object next;
+        while ((next = objectFactory.nextObject()) != null) {
             if (next instanceof PGPOnePassSignatureList) {
                 PGPOnePassSignatureList signatures = (PGPOnePassSignatureList) next;
                 if (!signatures.isEmpty()) {
@@ -108,12 +111,14 @@ public final class MessageInspector {
                         info.isPassphraseEncrypted = true;
                     }
                 }
+                // Data is encrypted, we cannot go deeper
+                return;
             }
 
             if (next instanceof PGPCompressedData) {
                 PGPCompressedData compressed = (PGPCompressedData) next;
                 InputStream decompressed = compressed.getDataStream();
-                processMessage(decompressed, info);
+                objectFactory = new PGPObjectFactory(PGPUtil.getDecoderStream(decompressed), calculator);
             }
 
             if (next instanceof PGPLiteralData) {
