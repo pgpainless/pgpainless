@@ -4,6 +4,7 @@
 
 package org.pgpainless.decryption_verification;
 
+import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.ArrayList;
@@ -67,6 +68,18 @@ public final class MessageInspector {
 
     private MessageInspector() {
 
+    }
+
+    /**
+     * Parses parts of the provided OpenPGP message in order to determine which keys were used to encrypt it.
+     *
+     * @param message OpenPGP message
+     * @return encryption info
+     * @throws PGPException
+     * @throws IOException
+     */
+    public static EncryptionInfo determineEncryptionInfoForMessage(String message) throws PGPException, IOException {
+        return determineEncryptionInfoForMessage(new ByteArrayInputStream(message.getBytes("UTF-8")));
     }
 
     /**
