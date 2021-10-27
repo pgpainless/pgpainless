@@ -5,6 +5,17 @@ SPDX-License-Identifier: CC0-1.0
 
 # PGPainless Changelog
 
+## 0.2.18
+- Fix compatibility with PGPainless < 0.2.10
+- Fix interoperability with Kleopatra
+  - Decryption: Do not skip over first PKESKs when we have a matching decryption key
+  - MessageInspector: Break from object factory loop after encountering encrypted data (we cannot go deeper)
+- Move hash algorithm negotiation to own class
+- Change return value of `EncryptionOptions.overrideEncryptionAlgorithm()`
+
+## 0.2.17
+- Fix prematurely throwing `MissingPassphraseException` when decrypting message with multiple possible keys and passphrases
+
 ## 0.2.16
 - Fix handling of subkey revocation signatures
 - SOP: improve API use with byte arrays
