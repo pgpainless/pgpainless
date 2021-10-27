@@ -37,7 +37,7 @@ import org.pgpainless.algorithm.KeyFlag;
 import org.pgpainless.algorithm.PublicKeyAlgorithm;
 import org.pgpainless.algorithm.SymmetricKeyAlgorithm;
 import org.pgpainless.exception.KeyValidationError;
-import org.pgpainless.key.OpenPgpV4Fingerprint;
+import org.pgpainless.key.OpenPgpFingerprint;
 import org.pgpainless.key.SubkeyIdentifier;
 import org.pgpainless.policy.Policy;
 import org.pgpainless.signature.SignaturePicker;
@@ -100,7 +100,7 @@ public class KeyRingInfo {
      * @param fingerprint fingerprint
      * @return public key or null
      */
-    public @Nullable PGPPublicKey getPublicKey(OpenPgpV4Fingerprint fingerprint) {
+    public @Nullable PGPPublicKey getPublicKey(OpenPgpFingerprint fingerprint) {
         return getPublicKey(fingerprint.getKeyId());
     }
 
@@ -201,7 +201,7 @@ public class KeyRingInfo {
      * @param fingerprint fingerprint
      * @return secret key or null
      */
-    public @Nullable PGPSecretKey getSecretKey(OpenPgpV4Fingerprint fingerprint) {
+    public @Nullable PGPSecretKey getSecretKey(OpenPgpFingerprint fingerprint) {
         return getSecretKey(fingerprint.getKeyId());
     }
 
@@ -244,12 +244,12 @@ public class KeyRingInfo {
     }
 
     /**
-     * Return the {@link OpenPgpV4Fingerprint} of this key ring.
+     * Return the {@link OpenPgpFingerprint} of this key ring.
      *
      * @return fingerprint
      */
-    public OpenPgpV4Fingerprint getFingerprint() {
-        return new OpenPgpV4Fingerprint(getPublicKey());
+    public OpenPgpFingerprint getFingerprint() {
+        return OpenPgpFingerprint.of(getPublicKey());
     }
 
     /**
@@ -603,7 +603,7 @@ public class KeyRingInfo {
      * @param fingerprint subkey fingerprint
      * @return expiration date or null
      */
-    public @Nullable Date getSubkeyExpirationDate(OpenPgpV4Fingerprint fingerprint) {
+    public @Nullable Date getSubkeyExpirationDate(OpenPgpFingerprint fingerprint) {
         if (getPublicKey().getKeyID() == fingerprint.getKeyId()) {
             return getPrimaryKeyExpirationDate();
         }
@@ -646,7 +646,7 @@ public class KeyRingInfo {
         }
 
         for (PGPPublicKey key : keysWithFlag) {
-            Date subkeyExpirationDate = getSubkeyExpirationDate(new OpenPgpV4Fingerprint(key));
+            Date subkeyExpirationDate = getSubkeyExpirationDate(OpenPgpFingerprint.of(key));
             if (subkeyExpirationDate == null) {
                 nonExpiringSubkeys.add(key);
             } else {
@@ -756,7 +756,7 @@ public class KeyRingInfo {
                 continue;
             }
 
-            Date subkeyExpiration = getSubkeyExpirationDate(new OpenPgpV4Fingerprint(subKey));
+            Date subkeyExpiration = getSubkeyExpirationDate(OpenPgpFingerprint.of(subKey));
             if (subkeyExpiration != null && subkeyExpiration.before(new Date())) {
                 continue;
             }

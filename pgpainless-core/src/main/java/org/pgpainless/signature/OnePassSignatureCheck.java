@@ -7,7 +7,6 @@ package org.pgpainless.signature;
 import org.bouncycastle.openpgp.PGPOnePassSignature;
 import org.bouncycastle.openpgp.PGPPublicKeyRing;
 import org.bouncycastle.openpgp.PGPSignature;
-import org.pgpainless.key.OpenPgpV4Fingerprint;
 import org.pgpainless.key.SubkeyIdentifier;
 
 /**
@@ -45,7 +44,7 @@ public class OnePassSignatureCheck {
     }
 
     /**
-     * Return the {@link OpenPgpV4Fingerprint} of the signing key.
+     * Return an identifier for the signing key.
      *
      * @return signing key fingerprint
      */

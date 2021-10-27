@@ -16,8 +16,8 @@ import org.bouncycastle.openpgp.PGPPublicKey;
  */
 public class SubkeyIdentifier {
 
-    private final OpenPgpV4Fingerprint primaryKeyFingerprint;
-    private final OpenPgpV4Fingerprint subkeyFingerprint;
+    private final OpenPgpFingerprint primaryKeyFingerprint;
+    private final OpenPgpFingerprint subkeyFingerprint;
 
     /**
      * Create a {@link SubkeyIdentifier} from a {@link PGPKeyRing}.
@@ -31,7 +31,7 @@ public class SubkeyIdentifier {
 
     /**
      * Create a {@link SubkeyIdentifier} from a {@link PGPKeyRing} and the subkeys key id.
-     * {@link #getPrimaryKeyFingerprint()} will return the {@link OpenPgpV4Fingerprint} of the keyrings primary key,
+     * {@link #getPrimaryKeyFingerprint()} will return the {@link OpenPgpFingerprint} of the keyrings primary key,
      * while {@link #getSubkeyFingerprint()} will return the subkeys fingerprint.
      *
      * @param keyRing keyring the subkey belongs to
@@ -42,12 +42,12 @@ public class SubkeyIdentifier {
         if (subkey == null) {
             throw new NoSuchElementException("Key ring does not contain subkey with id " + Long.toHexString(keyId));
         }
-        this.primaryKeyFingerprint = new OpenPgpV4Fingerprint(keyRing);
-        this.subkeyFingerprint = new OpenPgpV4Fingerprint(subkey);
+        this.primaryKeyFingerprint = OpenPgpFingerprint.of(keyRing);
+        this.subkeyFingerprint = OpenPgpFingerprint.of(subkey);
     }
 
-    public SubkeyIdentifier(@Nonnull PGPKeyRing keyRing, @Nonnull OpenPgpV4Fingerprint subkeyFingerprint) {
-        this(new OpenPgpV4Fingerprint(keyRing), subkeyFingerprint);
+    public SubkeyIdentifier(@Nonnull PGPKeyRing keyRing, @Nonnull OpenPgpFingerprint subkeyFingerprint) {
+        this(OpenPgpFingerprint.of(keyRing), subkeyFingerprint);
     }
 
     /**
@@ -56,7 +56,7 @@ public class SubkeyIdentifier {
      *
      * @param primaryKeyFingerprint fingerprint of the identified key
      */
-    public SubkeyIdentifier(@Nonnull OpenPgpV4Fingerprint primaryKeyFingerprint) {
+    public SubkeyIdentifier(@Nonnull OpenPgpFingerprint primaryKeyFingerprint) {
         this(primaryKeyFingerprint, primaryKeyFingerprint);
     }
 
@@ -67,12 +67,12 @@ public class SubkeyIdentifier {
      * @param primaryKeyFingerprint fingerprint of the primary key
      * @param subkeyFingerprint fingerprint of the subkey
      */
-    public SubkeyIdentifier(@Nonnull OpenPgpV4Fingerprint primaryKeyFingerprint, @Nonnull OpenPgpV4Fingerprint subkeyFingerprint) {
+    public SubkeyIdentifier(@Nonnull OpenPgpFingerprint primaryKeyFingerprint, @Nonnull OpenPgpFingerprint subkeyFingerprint) {
         this.primaryKeyFingerprint = primaryKeyFingerprint;
         this.subkeyFingerprint = subkeyFingerprint;
     }
 
-    public @Nonnull OpenPgpV4Fingerprint getFingerprint() {
+    public @Nonnull OpenPgpFingerprint getFingerprint() {
         return getSubkeyFingerprint();
     }
 
@@ -81,12 +81,12 @@ public class SubkeyIdentifier {
     }
 
     /**
-     * Return the {@link OpenPgpV4Fingerprint} of the primary key of the identified key.
+     * Return the {@link OpenPgpFingerprint} of the primary key of the identified key.
      * This might be the same as {@link #getSubkeyFingerprint()} if the identified subkey is the primary key.
      *
      * @return primary key fingerprint
      */
-    public @Nonnull OpenPgpV4Fingerprint getPrimaryKeyFingerprint() {
+    public @Nonnull OpenPgpFingerprint getPrimaryKeyFingerprint() {
         return primaryKeyFingerprint;
     }
 
@@ -101,11 +101,11 @@ public class SubkeyIdentifier {
     }
 
     /**
-     * Return the {@link OpenPgpV4Fingerprint} of the identified subkey.
+     * Return the {@link OpenPgpFingerprint} of the identified subkey.
      *
      * @return subkey fingerprint
      */
-    public @Nonnull OpenPgpV4Fingerprint getSubkeyFingerprint() {
+    public @Nonnull OpenPgpFingerprint getSubkeyFingerprint() {
         return subkeyFingerprint;
     }
 

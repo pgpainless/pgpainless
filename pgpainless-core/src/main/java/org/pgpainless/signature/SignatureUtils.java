@@ -33,7 +33,7 @@ import org.pgpainless.algorithm.HashAlgorithm;
 import org.pgpainless.algorithm.SignatureType;
 import org.pgpainless.algorithm.negotiation.HashAlgorithmNegotiator;
 import org.pgpainless.implementation.ImplementationFactory;
-import org.pgpainless.key.OpenPgpV4Fingerprint;
+import org.pgpainless.key.OpenPgpFingerprint;
 import org.pgpainless.key.util.OpenPgpKeyAttributeUtil;
 import org.pgpainless.key.util.RevocationAttributes;
 import org.pgpainless.signature.subpackets.SignatureSubpacketsUtil;
@@ -286,8 +286,14 @@ public final class SignatureUtils {
      * @return signatures issuing key id
      */
     public static long determineIssuerKeyId(PGPSignature signature) {
+        if (signature.getVersion() == 3) {
+            // V3 sigs do not contain subpackets
+            return signature.getKeyID();
+        }
+
         IssuerKeyID issuerKeyId = SignatureSubpacketsUtil.getIssuerKeyId(signature);
-        OpenPgpV4Fingerprint fingerprint = SignatureSubpacketsUtil.getIssuerFingerprintAsOpenPgpV4Fingerprint(signature);
+        OpenPgpFingerprint fingerprint = SignatureSubpacketsUtil.getIssuerFingerprintAsOpenPgpFingerprint(signature);
+
         if (issuerKeyId != null && issuerKeyId.getKeyID() != 0) {
             return issuerKeyId.getKeyID();
         }

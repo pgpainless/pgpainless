@@ -43,6 +43,7 @@ import org.pgpainless.algorithm.HashAlgorithm;
 import org.pgpainless.algorithm.KeyFlag;
 import org.pgpainless.algorithm.SignatureSubpacket;
 import org.pgpainless.algorithm.SymmetricKeyAlgorithm;
+import org.pgpainless.key.OpenPgpFingerprint;
 import org.pgpainless.key.OpenPgpV4Fingerprint;
 import org.pgpainless.signature.SignatureUtils;
 
@@ -71,23 +72,24 @@ public final class SignatureSubpacketsUtil {
     }
 
     /**
-     * Return the {@link IssuerFingerprint} subpacket of the signature into a {@link OpenPgpV4Fingerprint}.
+     * Return the {@link IssuerFingerprint} subpacket of the signature into a {@link org.pgpainless.key.OpenPgpFingerprint}.
      * If no v4 issuer fingerprint is present in the signature, return null.
      *
      * @param signature signature
      * @return v4 fingerprint of the issuer, or null
      */
-    public static OpenPgpV4Fingerprint getIssuerFingerprintAsOpenPgpV4Fingerprint(PGPSignature signature) {
+    public static OpenPgpFingerprint getIssuerFingerprintAsOpenPgpFingerprint(PGPSignature signature) {
         IssuerFingerprint subpacket = getIssuerFingerprint(signature);
         if (subpacket == null) {
             return null;
         }
 
+        OpenPgpFingerprint fingerprint = null;
         if (subpacket.getKeyVersion() == 4) {
-            OpenPgpV4Fingerprint fingerprint = new OpenPgpV4Fingerprint(Hex.encode(subpacket.getFingerprint()));
-            return fingerprint;
+            fingerprint = new OpenPgpV4Fingerprint(Hex.encode(subpacket.getFingerprint()));
         }
-        return null;
+
+        return fingerprint;
     }
 
     /**

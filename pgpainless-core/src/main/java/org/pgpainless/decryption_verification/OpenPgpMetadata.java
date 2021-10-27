@@ -23,7 +23,7 @@ import org.pgpainless.algorithm.CompressionAlgorithm;
 import org.pgpainless.algorithm.StreamEncoding;
 import org.pgpainless.algorithm.SymmetricKeyAlgorithm;
 import org.pgpainless.exception.SignatureValidationException;
-import org.pgpainless.key.OpenPgpV4Fingerprint;
+import org.pgpainless.key.OpenPgpFingerprint;
 import org.pgpainless.key.SubkeyIdentifier;
 
 public class OpenPgpMetadata {
@@ -201,7 +201,7 @@ public class OpenPgpMetadata {
      */
     public boolean containsVerifiedSignatureFrom(PGPPublicKeyRing certificate) {
         for (PGPPublicKey key : certificate) {
-            OpenPgpV4Fingerprint fingerprint = new OpenPgpV4Fingerprint(key);
+            OpenPgpFingerprint fingerprint = OpenPgpFingerprint.of(key);
             if (containsVerifiedSignatureFrom(fingerprint)) {
                 return true;
             }
@@ -218,7 +218,7 @@ public class OpenPgpMetadata {
      * @param fingerprint fingerprint of primary key or signing subkey
      * @return true if validly signed, false otherwise
      */
-    public boolean containsVerifiedSignatureFrom(OpenPgpV4Fingerprint fingerprint) {
+    public boolean containsVerifiedSignatureFrom(OpenPgpFingerprint fingerprint) {
         for (SubkeyIdentifier verifiedSigningKey : getVerifiedSignatures().keySet()) {
             if (verifiedSigningKey.getPrimaryKeyFingerprint().equals(fingerprint) ||
                     verifiedSigningKey.getSubkeyFingerprint().equals(fingerprint)) {

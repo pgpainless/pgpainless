@@ -15,7 +15,7 @@ import org.bouncycastle.openpgp.PGPSecretKey;
 import org.bouncycastle.openpgp.PGPSecretKeyRing;
 import org.bouncycastle.openpgp.PGPSignature;
 import org.bouncycastle.openpgp.PGPSignatureSubpacketVector;
-import org.pgpainless.key.OpenPgpV4Fingerprint;
+import org.pgpainless.key.OpenPgpFingerprint;
 import org.pgpainless.key.generation.KeySpec;
 import org.pgpainless.key.protection.KeyRingProtectionSettings;
 import org.pgpainless.key.protection.SecretKeyRingProtector;
@@ -104,7 +104,7 @@ public interface SecretKeyRingEditorInterface {
      * @param secretKeyRingProtector protector to unlock the secret key ring
      * @return the builder
      */
-    SecretKeyRingEditorInterface deleteSubKey(OpenPgpV4Fingerprint fingerprint, SecretKeyRingProtector secretKeyRingProtector);
+    SecretKeyRingEditorInterface deleteSubKey(OpenPgpFingerprint fingerprint, SecretKeyRingProtector secretKeyRingProtector);
 
     /**
      * Delete a subkey from the key ring.
@@ -150,7 +150,7 @@ public interface SecretKeyRingEditorInterface {
      * @param secretKeyRingProtector protector to unlock the secret key ring
      * @return the builder
      */
-    default SecretKeyRingEditorInterface revokeSubKey(OpenPgpV4Fingerprint fingerprint,
+    default SecretKeyRingEditorInterface revokeSubKey(OpenPgpFingerprint fingerprint,
                                                       SecretKeyRingProtector secretKeyRingProtector)
             throws PGPException {
         return revokeSubKey(fingerprint, secretKeyRingProtector, null);
@@ -166,7 +166,7 @@ public interface SecretKeyRingEditorInterface {
      * @param revocationAttributes reason for the revocation
      * @return the builder
      */
-    SecretKeyRingEditorInterface revokeSubKey(OpenPgpV4Fingerprint fingerprint,
+    SecretKeyRingEditorInterface revokeSubKey(OpenPgpFingerprint fingerprint,
                                               SecretKeyRingProtector secretKeyRingProtector,
                                               RevocationAttributes revocationAttributes)
             throws PGPException;
@@ -249,7 +249,7 @@ public interface SecretKeyRingEditorInterface {
      * @param secretKeyRingProtector protector to unlock the priary key
      * @return the builder
      */
-    SecretKeyRingEditorInterface setExpirationDate(OpenPgpV4Fingerprint fingerprint,
+    SecretKeyRingEditorInterface setExpirationDate(OpenPgpFingerprint fingerprint,
                                                    Date expiration,
                                                    SecretKeyRingProtector secretKeyRingProtector)
             throws PGPException;
@@ -270,7 +270,7 @@ public interface SecretKeyRingEditorInterface {
                                              RevocationAttributes revocationAttributes)
         throws PGPException;
 
-    default PGPSignature createRevocationCertificate(OpenPgpV4Fingerprint subkeyFingerprint,
+    default PGPSignature createRevocationCertificate(OpenPgpFingerprint subkeyFingerprint,
                                              SecretKeyRingProtector secretKeyRingProtector,
                                              RevocationAttributes revocationAttributes)
         throws PGPException {

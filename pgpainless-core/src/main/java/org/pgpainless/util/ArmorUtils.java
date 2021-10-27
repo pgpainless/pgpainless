@@ -26,7 +26,7 @@ import org.bouncycastle.openpgp.PGPUtil;
 import org.bouncycastle.openpgp.operator.KeyFingerPrintCalculator;
 import org.bouncycastle.util.io.Streams;
 import org.pgpainless.algorithm.HashAlgorithm;
-import org.pgpainless.key.OpenPgpV4Fingerprint;
+import org.pgpainless.key.OpenPgpFingerprint;
 
 public final class ArmorUtils {
 
@@ -96,7 +96,7 @@ public final class ArmorUtils {
 
     private static MultiMap<String, String> keyToHeader(PGPKeyRing keyRing) {
         MultiMap<String, String> header = new MultiMap<>();
-        OpenPgpV4Fingerprint fingerprint = new OpenPgpV4Fingerprint(keyRing);
+        OpenPgpFingerprint fingerprint = OpenPgpFingerprint.of(keyRing);
         Iterator<String> userIds = keyRing.getPublicKey().getUserIDs();
 
         header.put(HEADER_COMMENT, fingerprint.prettyPrint());

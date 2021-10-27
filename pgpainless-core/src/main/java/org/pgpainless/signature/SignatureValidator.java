@@ -28,7 +28,7 @@ import org.pgpainless.algorithm.SignatureSubpacket;
 import org.pgpainless.algorithm.SignatureType;
 import org.pgpainless.exception.SignatureValidationException;
 import org.pgpainless.implementation.ImplementationFactory;
-import org.pgpainless.key.OpenPgpV4Fingerprint;
+import org.pgpainless.key.OpenPgpFingerprint;
 import org.pgpainless.policy.Policy;
 import org.pgpainless.signature.subpackets.SignatureSubpacketsUtil;
 import org.pgpainless.util.BCUtil;
@@ -57,7 +57,7 @@ public abstract class SignatureValidator {
         return new SignatureValidator() {
             @Override
             public void verify(PGPSignature signature) throws SignatureValidationException {
-                OpenPgpV4Fingerprint signingKeyFingerprint = new OpenPgpV4Fingerprint(signingKey);
+                OpenPgpFingerprint signingKeyFingerprint = OpenPgpFingerprint.of(signingKey);
 
                 Long issuer = SignatureSubpacketsUtil.getIssuerKeyIdAsLong(signature);
                 if (issuer != null) {
@@ -66,7 +66,7 @@ public abstract class SignatureValidator {
                     }
                 }
 
-                OpenPgpV4Fingerprint fingerprint = SignatureSubpacketsUtil.getIssuerFingerprintAsOpenPgpV4Fingerprint(signature);
+                OpenPgpFingerprint fingerprint = SignatureSubpacketsUtil.getIssuerFingerprintAsOpenPgpFingerprint(signature);
                 if (fingerprint != null) {
                     if (!fingerprint.equals(signingKeyFingerprint)) {
                         throw new SignatureValidationException("Signature was not created by " + signingKeyFingerprint + " (signature fingerprint: " + fingerprint + ")");

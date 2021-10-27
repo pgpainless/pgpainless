@@ -75,7 +75,7 @@ public class SignatureStructureTest {
     @Test
     public void testGetIssuerFingerprint() {
         assertEquals(new OpenPgpV4Fingerprint("D1A66E1A23B182C9980F788CFBFCC82A015E7330"),
-                SignatureSubpacketsUtil.getIssuerFingerprintAsOpenPgpV4Fingerprint(signature));
+                SignatureSubpacketsUtil.getIssuerFingerprintAsOpenPgpFingerprint(signature));
     }
 
     @Test

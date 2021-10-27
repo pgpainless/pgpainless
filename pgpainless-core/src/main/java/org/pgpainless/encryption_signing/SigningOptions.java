@@ -27,7 +27,7 @@ import org.pgpainless.algorithm.negotiation.HashAlgorithmNegotiator;
 import org.pgpainless.exception.KeyCannotSignException;
 import org.pgpainless.exception.KeyValidationError;
 import org.pgpainless.implementation.ImplementationFactory;
-import org.pgpainless.key.OpenPgpV4Fingerprint;
+import org.pgpainless.key.OpenPgpFingerprint;
 import org.pgpainless.key.SubkeyIdentifier;
 import org.pgpainless.key.info.KeyRingInfo;
 import org.pgpainless.key.protection.SecretKeyRingProtector;
@@ -159,7 +159,7 @@ public final class SigningOptions {
 
         List<PGPPublicKey> signingPubKeys = keyRingInfo.getSigningSubkeys();
         if (signingPubKeys.isEmpty()) {
-            throw new KeyCannotSignException("Key " + new OpenPgpV4Fingerprint(secretKey) + " has no valid signing key.");
+            throw new KeyCannotSignException("Key " + OpenPgpFingerprint.of(secretKey) + " has no valid signing key.");
         }
 
         for (PGPPublicKey signingPubKey : signingPubKeys) {

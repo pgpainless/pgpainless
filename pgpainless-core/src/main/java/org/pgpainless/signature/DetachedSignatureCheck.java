@@ -6,7 +6,7 @@ package org.pgpainless.signature;
 
 import org.bouncycastle.openpgp.PGPKeyRing;
 import org.bouncycastle.openpgp.PGPSignature;
-import org.pgpainless.key.OpenPgpV4Fingerprint;
+import org.pgpainless.key.OpenPgpFingerprint;
 import org.pgpainless.key.SubkeyIdentifier;
 
 /**
@@ -59,13 +59,13 @@ public class DetachedSignatureCheck {
     }
 
     /**
-     * Return the {@link OpenPgpV4Fingerprint} of the key that created the signature.
+     * Return the {@link OpenPgpFingerprint} of the key that created the signature.
      *
      * @return fingerprint of the signing key
      * @deprecated use {@link #getSigningKeyIdentifier()} instead.
      */
     @Deprecated
-    public OpenPgpV4Fingerprint getFingerprint() {
+    public OpenPgpFingerprint getFingerprint() {
         return signingKeyIdentifier.getSubkeyFingerprint();
     }
 }

@@ -40,7 +40,7 @@ import org.pgpainless.algorithm.HashAlgorithm;
 import org.pgpainless.algorithm.SignatureType;
 import org.pgpainless.algorithm.SymmetricKeyAlgorithm;
 import org.pgpainless.implementation.ImplementationFactory;
-import org.pgpainless.key.OpenPgpV4Fingerprint;
+import org.pgpainless.key.OpenPgpFingerprint;
 import org.pgpainless.key.generation.KeyRingBuilder;
 import org.pgpainless.key.generation.KeySpec;
 import org.pgpainless.key.protection.CachingSecretKeyRingProtector;
@@ -214,7 +214,7 @@ public class SecretKeyRingEditor implements SecretKeyRingEditorInterface {
     }
 
     @Override
-    public SecretKeyRingEditorInterface deleteSubKey(OpenPgpV4Fingerprint fingerprint,
+    public SecretKeyRingEditorInterface deleteSubKey(OpenPgpFingerprint fingerprint,
                                                      SecretKeyRingProtector protector) {
         return deleteSubKey(fingerprint.getKeyId(), protector);
     }
@@ -244,7 +244,7 @@ public class SecretKeyRingEditor implements SecretKeyRingEditorInterface {
     }
 
     @Override
-    public SecretKeyRingEditorInterface revokeSubKey(OpenPgpV4Fingerprint fingerprint,
+    public SecretKeyRingEditorInterface revokeSubKey(OpenPgpFingerprint fingerprint,
                                                      SecretKeyRingProtector protector,
                                                      RevocationAttributes revocationAttributes)
             throws PGPException {
@@ -322,11 +322,11 @@ public class SecretKeyRingEditor implements SecretKeyRingEditorInterface {
     public SecretKeyRingEditorInterface setExpirationDate(Date expiration,
                                                           SecretKeyRingProtector secretKeyRingProtector)
             throws PGPException {
-        return setExpirationDate(new OpenPgpV4Fingerprint(secretKeyRing), expiration, secretKeyRingProtector);
+        return setExpirationDate(OpenPgpFingerprint.of(secretKeyRing), expiration, secretKeyRingProtector);
     }
 
     @Override
-    public SecretKeyRingEditorInterface setExpirationDate(OpenPgpV4Fingerprint fingerprint,
+    public SecretKeyRingEditorInterface setExpirationDate(OpenPgpFingerprint fingerprint,
                                                           Date expiration,
                                                           SecretKeyRingProtector secretKeyRingProtector)
             throws PGPException {
@@ -415,7 +415,7 @@ public class SecretKeyRingEditor implements SecretKeyRingEditorInterface {
                 }
             }
             if (oldSignature == null) {
-                throw new IllegalStateException("Key " + new OpenPgpV4Fingerprint(subjectPubKey) + " does not have a previous positive/casual/generic certification signature.");
+                throw new IllegalStateException("Key " + OpenPgpFingerprint.of(subjectPubKey) + " does not have a previous positive/casual/generic certification signature.");
             }
         } else {
             Iterator<PGPSignature> bindingSignatures = subjectPubKey.getSignaturesOfType(SignatureType.SUBKEY_BINDING.getCode());
@@ -425,7 +425,7 @@ public class SecretKeyRingEditor implements SecretKeyRingEditorInterface {
         }
 
         if (oldSignature == null) {
-            throw new IllegalStateException("Key " + new OpenPgpV4Fingerprint(subjectPubKey) + " does not have a previous subkey binding signature.");
+            throw new IllegalStateException("Key " + OpenPgpFingerprint.of(subjectPubKey) + " does not have a previous subkey binding signature.");
         }
         return oldSignature;
     }

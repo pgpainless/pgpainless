@@ -16,9 +16,8 @@ import org.bouncycastle.util.encoders.Hex;
 /**
  * Abstract super class of different version OpenPGP fingerprints.
  *
- * @param <C> subclass type
  */
-public abstract class OpenPgpFingerprint<C extends OpenPgpV4Fingerprint> implements CharSequence, Comparable<C> {
+public abstract class OpenPgpFingerprint implements CharSequence, Comparable<OpenPgpFingerprint> {
     protected static final Charset utf8 = Charset.forName("UTF-8");
     protected final String fingerprint;
 
@@ -29,7 +28,7 @@ public abstract class OpenPgpFingerprint<C extends OpenPgpV4Fingerprint> impleme
      * @param key key
      * @return fingerprint
      */
-    public static OpenPgpFingerprint<?> of(PGPPublicKey key) {
+    public static OpenPgpFingerprint of(PGPPublicKey key) {
         if (key.getVersion() == 4) {
             return new OpenPgpV4Fingerprint(key);
         }
@@ -43,7 +42,7 @@ public abstract class OpenPgpFingerprint<C extends OpenPgpV4Fingerprint> impleme
      * @param ring key ring
      * @return fingerprint
      */
-    public static OpenPgpFingerprint<?> of(PGPKeyRing ring) {
+    public static OpenPgpFingerprint of(PGPKeyRing ring) {
         return of(ring.getPublicKey());
     }
 

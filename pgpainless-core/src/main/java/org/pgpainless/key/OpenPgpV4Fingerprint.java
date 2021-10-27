@@ -18,9 +18,9 @@ import org.bouncycastle.openpgp.PGPSecretKeyRing;
 import org.bouncycastle.util.encoders.Hex;
 
 /**
- * This class represents an hex encoded, uppercase OpenPGP v4 fingerprint.
+ * This class represents a hex encoded, uppercase OpenPGP v4 fingerprint.
  */
-public class OpenPgpV4Fingerprint extends OpenPgpFingerprint<OpenPgpV4Fingerprint> {
+public class OpenPgpV4Fingerprint extends OpenPgpFingerprint {
 
     public static final String SCHEME = "openpgp4fpr";
 
@@ -129,7 +129,7 @@ public class OpenPgpV4Fingerprint extends OpenPgpFingerprint<OpenPgpV4Fingerprin
     }
 
     /**
-     * Convert a openpgp4fpr URI to an {@link OpenPgpV4Fingerprint}.
+     * Convert an openpgp4fpr URI to an {@link OpenPgpV4Fingerprint}.
      *
      * @param uri {@link URI} with scheme 'openpgp4fpr'
      * @return fingerprint parsed from the uri
@@ -143,7 +143,7 @@ public class OpenPgpV4Fingerprint extends OpenPgpFingerprint<OpenPgpV4Fingerprin
     }
 
     @Override
-    public int compareTo(@Nonnull OpenPgpV4Fingerprint openPgpV4Fingerprint) {
-        return toString().compareTo(openPgpV4Fingerprint.toString());
+    public int compareTo(@Nonnull OpenPgpFingerprint openPgpFingerprint) {
+        return toString().compareTo(openPgpFingerprint.toString());
     }
 }

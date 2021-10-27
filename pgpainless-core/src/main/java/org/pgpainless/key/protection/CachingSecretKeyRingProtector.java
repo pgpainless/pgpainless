@@ -15,7 +15,7 @@ import org.bouncycastle.openpgp.PGPKeyRing;
 import org.bouncycastle.openpgp.PGPPublicKey;
 import org.bouncycastle.openpgp.operator.PBESecretKeyDecryptor;
 import org.bouncycastle.openpgp.operator.PBESecretKeyEncryptor;
-import org.pgpainless.key.OpenPgpV4Fingerprint;
+import org.pgpainless.key.OpenPgpFingerprint;
 import org.pgpainless.key.protection.passphrase_provider.SecretKeyPassphraseProvider;
 import org.pgpainless.util.Passphrase;
 
@@ -84,7 +84,7 @@ public class CachingSecretKeyRingProtector implements SecretKeyRingProtector, Se
         addPassphrase(key.getKeyID(), passphrase);
     }
 
-    public void addPassphrase(@Nonnull OpenPgpV4Fingerprint fingerprint, @Nullable Passphrase passphrase) {
+    public void addPassphrase(@Nonnull OpenPgpFingerprint fingerprint, @Nullable Passphrase passphrase) {
         addPassphrase(fingerprint.getKeyId(), passphrase);
     }
 
