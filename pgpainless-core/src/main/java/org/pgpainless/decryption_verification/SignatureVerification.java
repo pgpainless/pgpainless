@@ -7,6 +7,7 @@ package org.pgpainless.decryption_verification;
 import javax.annotation.Nullable;
 
 import org.bouncycastle.openpgp.PGPSignature;
+import org.bouncycastle.util.encoders.Hex;
 import org.pgpainless.exception.SignatureValidationException;
 import org.pgpainless.key.SubkeyIdentifier;
 
@@ -52,6 +53,12 @@ public class SignatureVerification {
         return signingKey;
     }
 
+    @Override
+    public String toString() {
+        return "Signature: " + (signature != null ? Hex.toHexString(signature.getDigestPrefix()) : "null")
+                + "; Key: " + (signingKey != null ? signingKey.toString() : "null") + ";";
+    }
+
     /**
      * Tuple object of a {@link SignatureVerification} and the corresponding {@link SignatureValidationException}
      * that caused the verification to fail.
@@ -89,6 +96,11 @@ public class SignatureVerification {
          */
         public SignatureValidationException getValidationException() {
             return validationException;
+        }
+
+        @Override
+        public String toString() {
+            return signatureVerification.toString() + " Failure: " + getValidationException().getMessage();
         }
     }
 }
