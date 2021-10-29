@@ -170,7 +170,7 @@ repositories {
 }
 
 dependencies {
-	implementation 'org.pgpainless:pgpainless-core:0.2.18'
+	implementation 'org.pgpainless:pgpainless-core:0.2.19'
 }
 ```
 

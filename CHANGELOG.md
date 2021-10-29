@@ -5,6 +5,11 @@ SPDX-License-Identifier: CC0-1.0
 
 # PGPainless Changelog
 
+## 0.2.19
+- Some preparations for OpenPGP V5 keys: `OpenPgpV4Fingerprint` is now an implementation of `OpenPgpFingerprint`
+- `SignatureVerification` and `Failure` now have `toString()` implementations
+- Logging: `logback-classic` is now an optional runtime dependency
+
 ## 0.2.18
 - Fix compatibility with PGPainless < 0.2.10
 - Fix interoperability with Kleopatra
