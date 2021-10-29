@@ -1,3 +1,10 @@
+<!--
+SPDX-FileCopyrightText: 2021 Paul Schaub <info@pgpainless.org>
+
+SPDX-License-Identifier: Apache-2.0
+-->
+
+
 # Security Policy
 
 ## Supported Versions
