@@ -33,16 +33,17 @@ dependencies {
     testRuntimeOnly "org.junit.jupiter:junit-jupiter-engine:$junitVersion"
     // https://todd.ginsberg.com/post/testing-system-exit/
     testImplementation 'com.ginsberg:junit5-system-exit:1.1.1'
-    // We want logback logging in tests
-    testImplementation 'ch.qos.logback:logback-classic:1.2.5'
+
+    // implementation "ch.qos.logback:logback-core:1.2.6"
+    // We want logback logging in tests and in the app
+    testImplementation "ch.qos.logback:logback-classic:$logbackVersion"
+    implementation "ch.qos.logback:logback-classic:$logbackVersion"
 
     implementation(project(":pgpainless-sop"))
     implementation(project(":sop-java"))
     implementation(project(":sop-java-picocli"))
 
     implementation "info.picocli:picocli:$picocliVersion"
-    // We don't want logging in the application itself
-    implementation "org.slf4j:slf4j-nop:$slf4jVersion"
 
     // https://mvnrepository.com/artifact/com.google.code.findbugs/jsr305
     implementation group: 'com.google.code.findbugs', name: 'jsr305', version: '3.0.2'
