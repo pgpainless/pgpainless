@@ -26,7 +26,7 @@ import org.pgpainless.PGPainless;
 import org.pgpainless.algorithm.EncryptionPurpose;
 import org.pgpainless.algorithm.KeyFlag;
 import org.pgpainless.exception.WrongPassphraseException;
-import org.pgpainless.key.OpenPgpV4Fingerprint;
+import org.pgpainless.key.OpenPgpFingerprint;
 import org.pgpainless.key.generation.KeySpec;
 import org.pgpainless.key.generation.type.KeyType;
 import org.pgpainless.key.generation.type.ecc.EllipticCurve;
@@ -227,7 +227,7 @@ public class ModifyKeys {
 
         secretKey = PGPainless.modifyKeyRing(secretKey)
                 .setExpirationDate(
-                        new OpenPgpV4Fingerprint(secretKey.getPublicKey(encryptionSubkeyId)),
+                        OpenPgpFingerprint.of(secretKey.getPublicKey(encryptionSubkeyId)),
                         expirationDate,
                         protector
                 )

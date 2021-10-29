@@ -14,6 +14,7 @@ import org.bouncycastle.openpgp.PGPPublicKeyRingCollection;
 import org.bouncycastle.openpgp.PGPSecretKeyRing;
 import org.junit.jupiter.api.Test;
 import org.pgpainless.PGPainless;
+import org.pgpainless.key.OpenPgpFingerprint;
 import org.pgpainless.key.OpenPgpV4Fingerprint;
 import org.pgpainless.key.info.KeyRingInfo;
 
@@ -47,7 +48,7 @@ public class ReadKeys {
 
 
         KeyRingInfo keyInfo = new KeyRingInfo(publicKey);
-        OpenPgpV4Fingerprint fingerprint = new OpenPgpV4Fingerprint("EB85 BB5F A33A 75E1 5E94  4E63 F231 550C 4F47 E38E");
+        OpenPgpFingerprint fingerprint = new OpenPgpV4Fingerprint("EB85 BB5F A33A 75E1 5E94  4E63 F231 550C 4F47 E38E");
         assertEquals(fingerprint, keyInfo.getFingerprint());
         assertEquals("Alice Lovelace <alice@openpgp.example>", keyInfo.getPrimaryUserId());
     }
@@ -83,7 +84,7 @@ public class ReadKeys {
 
 
         KeyRingInfo keyInfo = new KeyRingInfo(secretKey);
-        OpenPgpV4Fingerprint fingerprint = new OpenPgpV4Fingerprint("EB85 BB5F A33A 75E1 5E94  4E63 F231 550C 4F47 E38E");
+        OpenPgpFingerprint fingerprint = new OpenPgpV4Fingerprint("EB85 BB5F A33A 75E1 5E94  4E63 F231 550C 4F47 E38E");
         assertEquals(fingerprint, keyInfo.getFingerprint());
         assertEquals("Alice Lovelace <alice@openpgp.example>", keyInfo.getPrimaryUserId());
     }
