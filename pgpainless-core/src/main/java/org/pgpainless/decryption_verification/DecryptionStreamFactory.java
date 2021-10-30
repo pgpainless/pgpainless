@@ -122,23 +122,23 @@ public final class DecryptionStreamFactory {
     private DecryptionStream parseOpenPGPDataAndCreateDecryptionStream(InputStream inputStream) throws IOException, PGPException {
         // Make sure we handle armored and non-armored data properly
         BufferedInputStream bufferedIn = new BufferedInputStream(inputStream);
-        InputStream decoderStream = PGPUtilWrapper.getDecoderStream(bufferedIn);
-
-        decoderStream = CRCingArmoredInputStreamWrapper.possiblyWrap(decoderStream);
-
-        if (decoderStream instanceof ArmoredInputStream) {
-            ArmoredInputStream armor = (ArmoredInputStream) decoderStream;
-
-            if (armor.isClearText()) {
-                throw new WrongConsumingMethodException("Message appears to be using the Cleartext Signature Framework. " +
-                        "Use PGPainless.verifyCleartextSignedMessage() to verify this message instead.");
-            }
-        }
-
-        PGPObjectFactory objectFactory = new PGPObjectFactory(
-                decoderStream, keyFingerprintCalculator);
+        InputStream decoderStream;
+        PGPObjectFactory objectFactory;
 
         try {
+            decoderStream = PGPUtilWrapper.getDecoderStream(bufferedIn);
+            decoderStream = CRCingArmoredInputStreamWrapper.possiblyWrap(decoderStream);
+
+            if (decoderStream instanceof ArmoredInputStream) {
+                ArmoredInputStream armor = (ArmoredInputStream) decoderStream;
+
+                if (armor.isClearText()) {
+                    throw new WrongConsumingMethodException("Message appears to be using the Cleartext Signature Framework. " +
+                            "Use PGPainless.verifyCleartextSignedMessage() to verify this message instead.");
+                }
+            }
+
+            objectFactory = new PGPObjectFactory(decoderStream, keyFingerprintCalculator);
             // Parse OpenPGP message
             inputStream = processPGPPackets(objectFactory, 1);
         } catch (EOFException e) {
@@ -149,12 +149,16 @@ public final class DecryptionStreamFactory {
             //  to allow for detached signature verification.
             LOGGER.debug("The message appears to not be an OpenPGP message. This is probably data signed with detached signatures?");
             bufferedIn.reset();
+            decoderStream = bufferedIn;
+            objectFactory = new PGPObjectFactory(decoderStream, keyFingerprintCalculator);
             inputStream = wrapInVerifySignatureStream(bufferedIn, objectFactory);
         } catch (IOException e) {
             if (e.getMessage().contains("invalid armor") || e.getMessage().contains("invalid header encountered")) {
                 // We falsely assumed the data to be armored.
                 LOGGER.debug("The message is apparently not armored.");
                 bufferedIn.reset();
+                decoderStream = bufferedIn;
+                objectFactory = new PGPObjectFactory(decoderStream, keyFingerprintCalculator);
                 inputStream = wrapInVerifySignatureStream(bufferedIn, objectFactory);
             } else {
                 throw e;
