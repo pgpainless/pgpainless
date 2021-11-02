@@ -34,7 +34,7 @@ public class GenerateWithEmptyPassphraseTest {
     public void testGeneratingKeyWithEmptyPassphraseDoesNotThrow(ImplementationFactory implementationFactory) throws InvalidAlgorithmParameterException, NoSuchAlgorithmException, PGPException, IOException {
         ImplementationFactory.setFactoryImplementation(implementationFactory);
 
-        assertNotNull(PGPainless.generateKeyRing()
+        assertNotNull(PGPainless.buildKeyRing()
                 .setPrimaryKey(KeySpec.getBuilder(
                                 KeyType.RSA(RsaLength._3072),
                                 KeyFlag.CERTIFY_OTHER, KeyFlag.SIGN_DATA, KeyFlag.ENCRYPT_COMMS))

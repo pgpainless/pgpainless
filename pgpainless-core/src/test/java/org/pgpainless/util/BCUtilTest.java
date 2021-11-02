@@ -35,7 +35,7 @@ public class BCUtilTest {
     public void keyRingToCollectionTest()
             throws PGPException, NoSuchAlgorithmException, InvalidAlgorithmParameterException,
             IOException {
-        PGPSecretKeyRing sec = PGPainless.generateKeyRing()
+        PGPSecretKeyRing sec = PGPainless.buildKeyRing()
                 .setPrimaryKey(KeySpec.getBuilder(
                         KeyType.RSA(RsaLength._3072),
                         KeyFlag.CERTIFY_OTHER, KeyFlag.SIGN_DATA))

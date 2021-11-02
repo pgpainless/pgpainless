@@ -29,7 +29,7 @@ public class GuessPreferredHashAlgorithmTest {
 
     @Test
     public void guessPreferredHashAlgorithmsAssumesHashAlgoUsedBySelfSig() throws InvalidAlgorithmParameterException, NoSuchAlgorithmException, PGPException, IOException {
-        PGPSecretKeyRing secretKeys = PGPainless.generateKeyRing()
+        PGPSecretKeyRing secretKeys = PGPainless.buildKeyRing()
                 .setPrimaryKey(KeySpec.getBuilder(KeyType.EDDSA(EdDSACurve._Ed25519),
                                 KeyFlag.CERTIFY_OTHER, KeyFlag.SIGN_DATA)
                         .overridePreferredHashAlgorithms(new HashAlgorithm[] {})

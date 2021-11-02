@@ -218,7 +218,7 @@ public class KeyRingInfoTest {
     public void testGetKeysWithFlagsAndExpiry(ImplementationFactory implementationFactory) throws PGPException, InvalidAlgorithmParameterException, NoSuchAlgorithmException {
         ImplementationFactory.setFactoryImplementation(implementationFactory);
 
-        PGPSecretKeyRing secretKeys = PGPainless.generateKeyRing()
+        PGPSecretKeyRing secretKeys = PGPainless.buildKeyRing()
                 .setPrimaryKey(KeySpec.getBuilder(
                 KeyType.EDDSA(EdDSACurve._Ed25519), KeyFlag.CERTIFY_OTHER))
                 .addSubkey(KeySpec.getBuilder(
@@ -556,7 +556,7 @@ public class KeyRingInfoTest {
 
     @Test
     public void testGetExpirationDateForUse_NoSuchKey() throws PGPException, InvalidAlgorithmParameterException, NoSuchAlgorithmException {
-        PGPSecretKeyRing secretKeys = PGPainless.generateKeyRing()
+        PGPSecretKeyRing secretKeys = PGPainless.buildKeyRing()
                 .addUserId("Alice")
                 .setPrimaryKey(KeySpec.getBuilder(KeyType.EDDSA(EdDSACurve._Ed25519), KeyFlag.CERTIFY_OTHER))
                 .build();

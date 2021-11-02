@@ -71,7 +71,7 @@ public class BrainpoolKeyGenerationTest {
             throws PGPException, InvalidAlgorithmParameterException, NoSuchAlgorithmException {
         ImplementationFactory.setFactoryImplementation(implementationFactory);
 
-        PGPSecretKeyRing secretKeys = PGPainless.generateKeyRing()
+        PGPSecretKeyRing secretKeys = PGPainless.buildKeyRing()
                 .setPrimaryKey(KeySpec.getBuilder(
                         KeyType.ECDSA(EllipticCurve._BRAINPOOLP384R1), KeyFlag.CERTIFY_OTHER))
                 .addSubkey(KeySpec.getBuilder(KeyType.EDDSA(EdDSACurve._Ed25519), KeyFlag.SIGN_DATA))
@@ -117,7 +117,7 @@ public class BrainpoolKeyGenerationTest {
     }
 
     public PGPSecretKeyRing generateKey(KeySpec primaryKey, KeySpec subKey, String userId) throws InvalidAlgorithmParameterException, NoSuchAlgorithmException, PGPException {
-        PGPSecretKeyRing secretKeys = PGPainless.generateKeyRing()
+        PGPSecretKeyRing secretKeys = PGPainless.buildKeyRing()
                 .setPrimaryKey(primaryKey)
                 .addSubkey(subKey)
                 .addUserId(userId)

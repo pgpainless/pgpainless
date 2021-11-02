@@ -47,7 +47,7 @@ public class EncryptionOptionsTest {
 
     @BeforeAll
     public static void generateKey() throws PGPException, InvalidAlgorithmParameterException, NoSuchAlgorithmException {
-        secretKeys = PGPainless.generateKeyRing()
+        secretKeys = PGPainless.buildKeyRing()
                 .setPrimaryKey(KeySpec.getBuilder(KeyType.EDDSA(EdDSACurve._Ed25519), KeyFlag.CERTIFY_OTHER)
                         .build())
                 .addSubkey(KeySpec.getBuilder(KeyType.XDH(XDHSpec._X25519), KeyFlag.ENCRYPT_COMMS)
@@ -126,7 +126,7 @@ public class EncryptionOptionsTest {
     @Test
     public void testAddRecipient_KeyWithoutEncryptionKeyFails() throws PGPException, InvalidAlgorithmParameterException, NoSuchAlgorithmException {
         EncryptionOptions options = new EncryptionOptions();
-        PGPSecretKeyRing secretKeys = PGPainless.generateKeyRing()
+        PGPSecretKeyRing secretKeys = PGPainless.buildKeyRing()
                 .setPrimaryKey(KeySpec.getBuilder(KeyType.EDDSA(EdDSACurve._Ed25519), KeyFlag.CERTIFY_OTHER, KeyFlag.SIGN_DATA))
                 .addUserId("test@pgpainless.org")
                 .build();

@@ -76,7 +76,7 @@ public class EncryptDecryptTest {
             throws PGPException, NoSuchAlgorithmException, InvalidAlgorithmParameterException, IOException {
         ImplementationFactory.setFactoryImplementation(implementationFactory);
         PGPSecretKeyRing sender = PGPainless.generateKeyRing().simpleRsaKeyRing("romeo@montague.lit", RsaLength._3072);
-        PGPSecretKeyRing recipient = PGPainless.generateKeyRing()
+        PGPSecretKeyRing recipient = PGPainless.buildKeyRing()
                 .setPrimaryKey(KeySpec.getBuilder(
                         KeyType.RSA(RsaLength._4096),
                         KeyFlag.SIGN_DATA, KeyFlag.CERTIFY_OTHER))

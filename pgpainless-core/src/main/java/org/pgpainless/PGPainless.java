@@ -16,6 +16,7 @@ import org.pgpainless.decryption_verification.DecryptionStream;
 import org.pgpainless.encryption_signing.EncryptionBuilder;
 import org.pgpainless.encryption_signing.EncryptionStream;
 import org.pgpainless.key.generation.KeyRingBuilder;
+import org.pgpainless.key.generation.KeyRingTemplates;
 import org.pgpainless.key.info.KeyRingInfo;
 import org.pgpainless.key.modification.secretkeyring.SecretKeyRingEditor;
 import org.pgpainless.key.modification.secretkeyring.SecretKeyRingEditorInterface;
@@ -31,10 +32,19 @@ public final class PGPainless {
     }
 
     /**
-     * Generate a new OpenPGP key ring.
+     * Generate a fresh OpenPGP key ring from predefined templates.
+     * @return templates
+     */
+    public static KeyRingTemplates generateKeyRing() {
+        return new KeyRingTemplates();
+    }
+
+    /**
+     * Build a custom OpenPGP key ring.
+     *
      * @return builder
      */
-    public static KeyRingBuilder generateKeyRing() {
+    public static KeyRingBuilder buildKeyRing() {
         return new KeyRingBuilder();
     }
 

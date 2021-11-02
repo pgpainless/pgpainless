@@ -39,7 +39,7 @@ public class UserIdRevocationTest {
 
     @Test
     public void testRevocationWithoutRevocationAttributes() throws PGPException, InvalidAlgorithmParameterException, NoSuchAlgorithmException {
-        PGPSecretKeyRing secretKeys = PGPainless.generateKeyRing()
+        PGPSecretKeyRing secretKeys = PGPainless.buildKeyRing()
                 .setPrimaryKey(KeySpec.getBuilder(
                         KeyType.EDDSA(EdDSACurve._Ed25519),
                         KeyFlag.SIGN_DATA, KeyFlag.CERTIFY_OTHER))
@@ -77,7 +77,7 @@ public class UserIdRevocationTest {
 
     @Test
     public void testRevocationWithRevocationReason() throws InvalidAlgorithmParameterException, NoSuchAlgorithmException, PGPException {
-        PGPSecretKeyRing secretKeys = PGPainless.generateKeyRing()
+        PGPSecretKeyRing secretKeys = PGPainless.buildKeyRing()
                 .setPrimaryKey(KeySpec.getBuilder(
                         KeyType.EDDSA(EdDSACurve._Ed25519),
                         KeyFlag.SIGN_DATA, KeyFlag.CERTIFY_OTHER))

@@ -175,7 +175,7 @@ public class SigningTest {
 
     @Test
     public void negotiateHashAlgorithmChoseFallbackIfEmptyPreferences() throws PGPException, InvalidAlgorithmParameterException, NoSuchAlgorithmException, IOException {
-        PGPSecretKeyRing secretKeys = PGPainless.generateKeyRing()
+        PGPSecretKeyRing secretKeys = PGPainless.buildKeyRing()
                 .setPrimaryKey(KeySpec.getBuilder(KeyType.EDDSA(EdDSACurve._Ed25519), KeyFlag.CERTIFY_OTHER, KeyFlag.SIGN_DATA).overridePreferredHashAlgorithms())
                 .addUserId("Alice")
                 .build();
@@ -199,7 +199,7 @@ public class SigningTest {
 
     @Test
     public void negotiateHashAlgorithmChoseFallbackIfUnacceptablePreferences() throws PGPException, InvalidAlgorithmParameterException, NoSuchAlgorithmException, IOException {
-        PGPSecretKeyRing secretKeys = PGPainless.generateKeyRing()
+        PGPSecretKeyRing secretKeys = PGPainless.buildKeyRing()
                 .setPrimaryKey(KeySpec.getBuilder(KeyType.EDDSA(EdDSACurve._Ed25519), KeyFlag.CERTIFY_OTHER, KeyFlag.SIGN_DATA)
                         .overridePreferredHashAlgorithms(HashAlgorithm.MD5))
                 .addUserId("Alice")
@@ -224,7 +224,7 @@ public class SigningTest {
 
     @Test
     public void signingWithNonCapableKeyThrowsKeyCannotSignException() throws PGPException, InvalidAlgorithmParameterException, NoSuchAlgorithmException, IOException {
-        PGPSecretKeyRing secretKeys = PGPainless.generateKeyRing()
+        PGPSecretKeyRing secretKeys = PGPainless.buildKeyRing()
                 .setPrimaryKey(KeySpec.getBuilder(KeyType.EDDSA(EdDSACurve._Ed25519), KeyFlag.CERTIFY_OTHER))
                 .addUserId("Alice")
                 .build();
@@ -236,7 +236,7 @@ public class SigningTest {
 
     @Test
     public void signWithInvalidUserIdThrowsKeyValidationError() throws PGPException, InvalidAlgorithmParameterException, NoSuchAlgorithmException, IOException {
-        PGPSecretKeyRing secretKeys = PGPainless.generateKeyRing()
+        PGPSecretKeyRing secretKeys = PGPainless.buildKeyRing()
                 .setPrimaryKey(KeySpec.getBuilder(KeyType.EDDSA(EdDSACurve._Ed25519), KeyFlag.CERTIFY_OTHER, KeyFlag.SIGN_DATA))
                 .addUserId("Alice")
                 .build();

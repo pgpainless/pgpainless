@@ -38,8 +38,8 @@ import org.pgpainless.util.Passphrase;
  * This class demonstrates how to use PGPainless to generate secret keys.
  * In general the starting point for generating secret keys using PGPainless is {@link PGPainless#generateKeyRing()}.
  * The result ({@link org.pgpainless.key.generation.KeyRingBuilder}) provides some factory methods for key archetypes
- * such as {@link org.pgpainless.key.generation.KeyRingBuilder#modernKeyRing(String, String)} or
- * {@link org.pgpainless.key.generation.KeyRingBuilder#simpleRsaKeyRing(String, RsaLength)}.
+ * such as {@link org.pgpainless.key.generation.KeyRingTemplates#modernKeyRing(String, String)} or
+ * {@link org.pgpainless.key.generation.KeyRingTemplates#simpleRsaKeyRing(String, RsaLength)}.
  *
  * Those methods always take a user-id which is used as primary user-id, as well as a passphrase which is used to encrypt
  * the secret key.
@@ -193,7 +193,7 @@ public class GenerateKeys {
         // It is recommended to use the Passphrase class, as it can be used to safely invalidate passwords from memory
         Passphrase passphrase = Passphrase.fromPassword("1nters3x");
 
-        PGPSecretKeyRing secretKey = PGPainless.generateKeyRing()
+        PGPSecretKeyRing secretKey = PGPainless.buildKeyRing()
                 .setPrimaryKey(KeySpec.getBuilder(KeyType.EDDSA(EdDSACurve._Ed25519),
                         // The primary key MUST carry the CERTIFY_OTHER flag, but CAN carry additional flags
                         KeyFlag.CERTIFY_OTHER))
