@@ -129,6 +129,9 @@ Still it allows you to manually specify which algorithms to use of course.
 
         Streams.pipeAll(plaintextInputStream, encryptionStream);
         encryptionStream.close();
+
+        // Information about the encryption (algorithms, detached signatures etc.)
+        EncryptionResult result = encryptionStream.getResult();
 ```
 
 ### Decrypt and Verify Signatures
@@ -170,18 +173,19 @@ repositories {
 }
 
 dependencies {
-	implementation 'org.pgpainless:pgpainless-core:0.2.19'
+	implementation 'org.pgpainless:pgpainless-core:1.0.0-rc1'
 }
 ```
 
 ## About
-PGPainless is a by-product of my [Summer of Code 2018 project](https://blog.jabberhead.tk/summer-of-code-2018/).
+PGPainless is a by-product of my [Summer of Code 2018 project](https://blog.jabberhead.tk/summer-of-code-2018/)
+implementing OpenPGP support for the XMPP client library [Smack](https://github.com/igniterealtime/Smack).
 For that project I was in need of a simple to use OpenPGP library.
 
 Originally I was going to use [Bouncy-GPG](https://github.com/neuhalje/bouncy-gpg) for my project,
 but ultimately I decided to create my own OpenPGP library which better fits my needs.
 
-However, PGPainless is heavily influenced by Bouncy-GPG.
+However, PGPainless was heavily influenced by Bouncy-GPG.
 
 To reach out to the development team, feel free to send a mail: info@pgpainless.org
 

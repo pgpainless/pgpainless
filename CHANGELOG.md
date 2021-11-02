@@ -5,6 +5,17 @@ SPDX-License-Identifier: CC0-1.0
 
 # PGPainless Changelog
 
+## 1.0.0-rc1
+- First release candidate for a 1.0.0 release! \o/
+- Rename `EncryptionPurpose.STORAGE_AND_COMMUNICATIONS` to `EncryptionPurpose.ANY`
+- Hide `PGPainless.verifyCleartextSignedMessage()` behind `PGPainless.decryptAndVerify()`.
+  - the latter now checks whether the message is cleartext-signed or not and automatically calls the proper API
+  - `MultiPassStrategy` objects are now set through `ConsumerOptions.setMultiPassStrategy()`.
+- Separate key ring generation through templates from custom key ring builder
+  - `PGPainless.generateKeyRing()` now offers to generate keys from templates
+  - `PGPainless.buildKeyRing()` offers a detailed API to build custom keys
+- Fix detection of non-armored data
+
 ## 0.2.19
 - Some preparations for OpenPGP V5 keys: `OpenPgpV4Fingerprint` is now an implementation of `OpenPgpFingerprint`
 - `SignatureVerification` and `Failure` now have `toString()` implementations
