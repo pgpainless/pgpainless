@@ -81,7 +81,7 @@ There are some predefined key archetypes, but it is possible to fully customize 
                 .modernKeyRing("Romeo <romeo@montague.lit>", "I defy you, stars!");
 
         // Customized key
-        PGPSecretKeyRing keyRing = PGPainless.generateKeyRing()
+        PGPSecretKeyRing keyRing = PGPainless.buildKeyRing()
                 .setPrimaryKey(KeySpec.getBuilder(
                         RSA.withLength(RsaLength._8192),
                         KeyFlag.SIGN_DATA, KeyFlag.CERTIFY_OTHER))
