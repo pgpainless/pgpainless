@@ -83,7 +83,7 @@ public class GenerateKeys {
         assertEquals(PublicKeyAlgorithm.EDDSA.getAlgorithmId(),
                 keyInfo.getSigningSubkeys().get(0).getAlgorithm());
         assertEquals(PublicKeyAlgorithm.ECDH.getAlgorithmId(),
-                keyInfo.getEncryptionSubkeys(EncryptionPurpose.STORAGE_AND_COMMUNICATIONS).get(0).getAlgorithm());
+                keyInfo.getEncryptionSubkeys(EncryptionPurpose.ANY).get(0).getAlgorithm());
     }
 
     /**

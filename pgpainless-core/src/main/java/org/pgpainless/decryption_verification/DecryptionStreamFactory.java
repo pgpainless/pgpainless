@@ -316,7 +316,7 @@ public final class DecryptionStreamFactory {
                         break;
                     }
                     KeyRingInfo info = new KeyRingInfo(secretKeys);
-                    List<PGPPublicKey> encryptionSubkeys = info.getEncryptionSubkeys(EncryptionPurpose.STORAGE_AND_COMMUNICATIONS);
+                    List<PGPPublicKey> encryptionSubkeys = info.getEncryptionSubkeys(EncryptionPurpose.ANY);
                     for (PGPPublicKey pubkey : encryptionSubkeys) {
                         PGPSecretKey secretKey = secretKeys.getSecretKey(pubkey.getKeyID());
                         // Skip missing secret key

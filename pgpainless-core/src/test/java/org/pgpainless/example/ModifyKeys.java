@@ -56,7 +56,7 @@ public class ModifyKeys {
 
         KeyRingInfo info = PGPainless.inspectKeyRing(secretKey);
         primaryKeyId = info.getKeyId();
-        encryptionSubkeyId = info.getEncryptionSubkeys(EncryptionPurpose.STORAGE_AND_COMMUNICATIONS).get(0).getKeyID();
+        encryptionSubkeyId = info.getEncryptionSubkeys(EncryptionPurpose.ANY).get(0).getKeyID();
         signingSubkeyId = info.getSigningSubkeys().get(0).getKeyID();
     }
 

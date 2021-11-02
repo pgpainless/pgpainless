@@ -777,7 +777,7 @@ public class KeyRingInfo {
                         encryptionKeys.add(subKey);
                     }
                     break;
-                case STORAGE_AND_COMMUNICATIONS:
+                case ANY:
                     if (keyFlags.contains(KeyFlag.ENCRYPT_COMMS) || keyFlags.contains(KeyFlag.ENCRYPT_STORAGE)) {
                         encryptionKeys.add(subKey);
                     }

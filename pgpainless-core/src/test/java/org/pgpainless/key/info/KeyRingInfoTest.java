@@ -698,7 +698,7 @@ public class KeyRingInfoTest {
 
         assertFalse(info.isKeyValidlyBound(unboundKey.getKeyId()));
 
-        List<PGPPublicKey> encryptionSubkeys = info.getEncryptionSubkeys(EncryptionPurpose.STORAGE_AND_COMMUNICATIONS);
+        List<PGPPublicKey> encryptionSubkeys = info.getEncryptionSubkeys(EncryptionPurpose.ANY);
         assertTrue(encryptionSubkeys.stream().map(OpenPgpV4Fingerprint::new).noneMatch(f -> f.equals(unboundKey)),
                 "Unbound subkey MUST NOT be considered a valid encryption subkey");
 

@@ -71,7 +71,7 @@ public class EncryptionOptions {
      * or {@link org.pgpainless.algorithm.KeyFlag#ENCRYPT_STORAGE}.
      */
     public EncryptionOptions() {
-        this(EncryptionPurpose.STORAGE_AND_COMMUNICATIONS);
+        this(EncryptionPurpose.ANY);
     }
 
     public EncryptionOptions(EncryptionPurpose purpose) {

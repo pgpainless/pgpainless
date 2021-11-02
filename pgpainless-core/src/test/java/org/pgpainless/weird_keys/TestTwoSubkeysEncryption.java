@@ -51,7 +51,7 @@ public class TestTwoSubkeysEncryption {
         EncryptionStream encryptionStream = PGPainless.encryptAndOrSign()
                 .onOutputStream(out)
                 .withOptions(
-                        ProducerOptions.encrypt(new EncryptionOptions(EncryptionPurpose.STORAGE_AND_COMMUNICATIONS)
+                        ProducerOptions.encrypt(new EncryptionOptions(EncryptionPurpose.ANY)
                                 .addRecipient(publicKeys, EncryptionOptions.encryptToAllCapableSubkeys())
                         )
                         .setAsciiArmor(false)

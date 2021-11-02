@@ -11,12 +11,12 @@ public enum EncryptionPurpose {
      */
     COMMUNICATIONS,
     /**
-     * The stream will encrypt data that is stored on disk.
+     * The stream will encrypt data at rest.
      * Eg. Encrypted backup...
      */
     STORAGE,
     /**
      * The stream will use keys with either flags to encrypt the data.
      */
-    STORAGE_AND_COMMUNICATIONS
+    ANY
 }

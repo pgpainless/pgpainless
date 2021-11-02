@@ -118,7 +118,7 @@ public class MissingPassphraseForDecryptionTest {
     @Test
     public void throwExceptionStrategy() throws PGPException, IOException {
         KeyRingInfo info = PGPainless.inspectKeyRing(secretKeys);
-        List<PGPPublicKey> encryptionKeys = info.getEncryptionSubkeys(EncryptionPurpose.STORAGE_AND_COMMUNICATIONS);
+        List<PGPPublicKey> encryptionKeys = info.getEncryptionSubkeys(EncryptionPurpose.ANY);
 
         SecretKeyPassphraseProvider callback = new SecretKeyPassphraseProvider() {
             @Nullable

@@ -144,7 +144,7 @@ public class DecryptHiddenRecipientMessage {
         assertEquals(0, metadata.getRecipientKeyIds().size());
 
         KeyRingInfo info = new KeyRingInfo(secretKeys);
-        List<PGPPublicKey> encryptionKeys = info.getEncryptionSubkeys(EncryptionPurpose.STORAGE_AND_COMMUNICATIONS);
+        List<PGPPublicKey> encryptionKeys = info.getEncryptionSubkeys(EncryptionPurpose.ANY);
         assertEquals(1, encryptionKeys.size());
 
         assertEquals(new SubkeyIdentifier(secretKeys, encryptionKeys.get(0).getKeyID()), metadata.getDecryptionKey());
