@@ -12,31 +12,18 @@ import org.pgpainless.decryption_verification.ConsumerOptions;
 public class VerifyCleartextSignaturesImpl implements VerifyCleartextSignatures {
 
     private InputStream inputStream;
-    private MultiPassStrategy multiPassStrategy;
 
     @Override
-    public WithStrategy onInputStream(InputStream inputStream) {
+    public VerifyWithImpl onInputStream(InputStream inputStream) {
         VerifyCleartextSignaturesImpl.this.inputStream = inputStream;
-        return new WithStrategyImpl();
-    }
-
-    public class WithStrategyImpl implements WithStrategy {
-
-        @Override
-        public VerifyWith withStrategy(MultiPassStrategy multiPassStrategy) {
-            if (multiPassStrategy == null) {
-                throw new NullPointerException("MultiPassStrategy cannot be null.");
-            }
-            VerifyCleartextSignaturesImpl.this.multiPassStrategy = multiPassStrategy;
-            return new VerifyWithImpl();
-        }
+        return new VerifyWithImpl();
     }
 
     public class VerifyWithImpl implements VerifyWith {
 
         @Override
         public CleartextSignatureProcessor withOptions(ConsumerOptions options) throws IOException {
-            return new CleartextSignatureProcessor(inputStream, options, multiPassStrategy);
+            return new CleartextSignatureProcessor(inputStream, options);
         }
 
     }

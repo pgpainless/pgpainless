@@ -4,7 +4,6 @@
 
 package org.pgpainless.decryption_verification.cleartext_signatures;
 
-import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
 
@@ -20,23 +19,7 @@ public interface VerifyCleartextSignatures {
      * @param inputStream inputstream
      * @return api handle
      */
-    WithStrategy onInputStream(InputStream inputStream);
-
-    interface WithStrategy {
-
-        /**
-         * Provide a {@link MultiPassStrategy} which is used to store the message content.
-         * Since cleartext-signed messages cannot be processed in one pass, the message has to be passed twice.
-         * Therefore the user needs to decide upon a strategy where to cache/store the message between the passes.
-         * This could be {@link MultiPassStrategy#writeMessageToFile(File)} or {@link MultiPassStrategy#keepMessageInMemory()},
-         * depending on message size and use-case.
-         *
-         * @param multiPassStrategy strategy
-         * @return api handle
-         */
-        VerifyWith withStrategy(MultiPassStrategy multiPassStrategy);
-
-    }
+    VerifyWith onInputStream(InputStream inputStream);
 
     interface VerifyWith {
 

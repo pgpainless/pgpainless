@@ -22,8 +22,6 @@ import org.pgpainless.key.modification.secretkeyring.SecretKeyRingEditorInterfac
 import org.pgpainless.key.parsing.KeyRingReader;
 import org.pgpainless.key.util.KeyRingUtils;
 import org.pgpainless.policy.Policy;
-import org.pgpainless.decryption_verification.cleartext_signatures.VerifyCleartextSignatures;
-import org.pgpainless.decryption_verification.cleartext_signatures.VerifyCleartextSignaturesImpl;
 import org.pgpainless.util.ArmorUtils;
 
 public final class PGPainless {
@@ -89,26 +87,6 @@ public final class PGPainless {
      */
     public static DecryptionBuilder decryptAndOrVerify() {
         return new DecryptionBuilder();
-    }
-
-    /**
-     * Verify a cleartext-signed message.
-     * Cleartext signed messages are often found in emails and look like this:
-     * <pre>
-     * {@code
-     * -----BEGIN PGP SIGNED MESSAGE-----
-     * Hash: [Hash algorithm]
-     * [Human Readable Message Body]
-     * -----BEGIN PGP SIGNATURE-----
-     * [Signature]
-     * -----END PGP SIGNATURE-----
-     * }
-     * </pre>
-     *
-     * @return builder
-     */
-    public static VerifyCleartextSignatures verifyCleartextSignedMessage() {
-        return new VerifyCleartextSignaturesImpl();
     }
 
     /**

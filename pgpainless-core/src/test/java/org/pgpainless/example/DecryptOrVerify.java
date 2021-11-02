@@ -7,7 +7,6 @@ package org.pgpainless.example;
 import static org.junit.jupiter.api.Assertions.assertArrayEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
-import java.io.BufferedInputStream;
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
@@ -24,11 +23,9 @@ import org.pgpainless.algorithm.DocumentSignatureType;
 import org.pgpainless.decryption_verification.ConsumerOptions;
 import org.pgpainless.decryption_verification.DecryptionStream;
 import org.pgpainless.decryption_verification.OpenPgpMetadata;
-import org.pgpainless.decryption_verification.cleartext_signatures.InMemoryMultiPassStrategy;
 import org.pgpainless.encryption_signing.EncryptionStream;
 import org.pgpainless.encryption_signing.ProducerOptions;
 import org.pgpainless.encryption_signing.SigningOptions;
-import org.pgpainless.exception.WrongConsumingMethodException;
 import org.pgpainless.key.protection.SecretKeyRingProtector;
 
 public class DecryptOrVerify {
@@ -97,22 +94,10 @@ public class DecryptOrVerify {
         for (String signed : new String[] {INBAND_SIGNED, CLEARTEXT_SIGNED}) {
             ByteArrayOutputStream out = new ByteArrayOutputStream();
             ByteArrayInputStream in = new ByteArrayInputStream(signed.getBytes(StandardCharsets.UTF_8));
-            BufferedInputStream bufIn = new BufferedInputStream(in);
-            bufIn.mark(512);
             DecryptionStream verificationStream;
-            try {
                 verificationStream = PGPainless.decryptAndOrVerify()
-                        .onInputStream(bufIn)
+                        .onInputStream(in)
                         .withOptions(options);
-            } catch (WrongConsumingMethodException e) {
-                bufIn.reset();
-                // Cleartext Signed Message
-                verificationStream = PGPainless.verifyCleartextSignedMessage()
-                        .onInputStream(bufIn)
-                        .withStrategy(new InMemoryMultiPassStrategy())
-                        .withOptions(options)
-                        .getVerificationStream();
-            }
 
             Streams.pipeAll(verificationStream, out);
             verificationStream.close();
@@ -140,11 +125,9 @@ public class DecryptOrVerify {
 
             ByteArrayInputStream signedIn = new ByteArrayInputStream(out.toByteArray());
 
-            DecryptionStream verificationStream = PGPainless.verifyCleartextSignedMessage()
+            DecryptionStream verificationStream = PGPainless.decryptAndOrVerify()
                     .onInputStream(signedIn)
-                    .withStrategy(new InMemoryMultiPassStrategy())
-                    .withOptions(new ConsumerOptions().addVerificationCert(certificate))
-                    .getVerificationStream();
+                    .withOptions(new ConsumerOptions().addVerificationCert(certificate));
 
             ByteArrayOutputStream plain = new ByteArrayOutputStream();
             Streams.pipeAll(verificationStream, plain);

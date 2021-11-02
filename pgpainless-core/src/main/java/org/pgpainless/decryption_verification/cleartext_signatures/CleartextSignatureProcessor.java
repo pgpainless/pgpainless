@@ -31,11 +31,9 @@ public class CleartextSignatureProcessor {
 
     private final ArmoredInputStream in;
     private final ConsumerOptions options;
-    private final MultiPassStrategy multiPassStrategy;
 
     public CleartextSignatureProcessor(InputStream inputStream,
-                                       ConsumerOptions options,
-                                       MultiPassStrategy multiPassStrategy)
+                                       ConsumerOptions options)
             throws IOException {
         if (inputStream instanceof ArmoredInputStream) {
             this.in = (ArmoredInputStream) inputStream;
@@ -43,7 +41,6 @@ public class CleartextSignatureProcessor {
             this.in = ArmoredInputStreamFactory.get(inputStream);
         }
         this.options = options;
-        this.multiPassStrategy = multiPassStrategy;
     }
 
     /**
@@ -67,6 +64,7 @@ public class CleartextSignatureProcessor {
                 .setSymmetricKeyAlgorithm(SymmetricKeyAlgorithm.NULL)
                 .setFileEncoding(StreamEncoding.TEXT);
 
+        MultiPassStrategy multiPassStrategy = options.getMultiPassStrategy();
         PGPSignatureList signatures = ClearsignedMessageUtil.detachSignaturesFromInbandClearsignedMessage(in, multiPassStrategy.getMessageOutputStream());
 
         for (PGPSignature signature : signatures) {

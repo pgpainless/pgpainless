@@ -22,6 +22,8 @@ import org.bouncycastle.openpgp.PGPPublicKeyRingCollection;
 import org.bouncycastle.openpgp.PGPSecretKeyRing;
 import org.bouncycastle.openpgp.PGPSecretKeyRingCollection;
 import org.bouncycastle.openpgp.PGPSignature;
+import org.pgpainless.decryption_verification.cleartext_signatures.InMemoryMultiPassStrategy;
+import org.pgpainless.decryption_verification.cleartext_signatures.MultiPassStrategy;
 import org.pgpainless.exception.NotYetImplementedException;
 import org.pgpainless.key.protection.SecretKeyRingProtector;
 import org.pgpainless.signature.SignatureUtils;
@@ -50,6 +52,7 @@ public class ConsumerOptions {
     private final Set<Passphrase> decryptionPassphrases = new HashSet<>();
     private MissingKeyPassphraseStrategy missingKeyPassphraseStrategy = MissingKeyPassphraseStrategy.INTERACTIVE;
 
+    private MultiPassStrategy multiPassStrategy = new InMemoryMultiPassStrategy();
 
     /**
      * Consider signatures on the message made before the given timestamp invalid.
@@ -326,5 +329,27 @@ public class ConsumerOptions {
      */
     MissingKeyPassphraseStrategy getMissingKeyPassphraseStrategy() {
         return missingKeyPassphraseStrategy;
+    }
+
+    /**
+     * Set a custom multi-pass strategy for processing cleartext-signed messages.
+     * Uses {@link InMemoryMultiPassStrategy} by default.
+     *
+     * @param multiPassStrategy multi-pass caching strategy
+     * @return builder
+     */
+    public ConsumerOptions setMultiPassStrategy(@Nonnull MultiPassStrategy multiPassStrategy) {
+        this.multiPassStrategy = multiPassStrategy;
+        return this;
+    }
+
+    /**
+     * Return the currently configured {@link MultiPassStrategy}.
+     * Defaults to {@link InMemoryMultiPassStrategy}.
+     *
+     * @return multi-pass strategy
+     */
+    public MultiPassStrategy getMultiPassStrategy() {
+        return multiPassStrategy;
     }
 }

@@ -25,9 +25,9 @@ import org.bouncycastle.util.io.Streams;
 import org.junit.jupiter.api.Test;
 import org.pgpainless.PGPainless;
 import org.pgpainless.algorithm.DocumentSignatureType;
-import org.pgpainless.decryption_verification.cleartext_signatures.CleartextSignatureProcessor;
 import org.pgpainless.decryption_verification.cleartext_signatures.InMemoryMultiPassStrategy;
 import org.pgpainless.decryption_verification.cleartext_signatures.MultiPassStrategy;
+import org.pgpainless.decryption_verification.cleartext_signatures.VerifyCleartextSignaturesImpl;
 import org.pgpainless.encryption_signing.EncryptionStream;
 import org.pgpainless.encryption_signing.ProducerOptions;
 import org.pgpainless.encryption_signing.SigningOptions;
@@ -79,12 +79,11 @@ public class CleartextSignatureVerificationTest {
                 .addVerificationCert(signingKeys);
 
         InMemoryMultiPassStrategy multiPassStrategy = MultiPassStrategy.keepMessageInMemory();
-        CleartextSignatureProcessor processor = PGPainless.verifyCleartextSignedMessage()
+        options.setMultiPassStrategy(multiPassStrategy);
+        DecryptionStream decryptionStream = PGPainless.decryptAndOrVerify()
                 .onInputStream(new ByteArrayInputStream(MESSAGE_SIGNED))
-                .withStrategy(multiPassStrategy)
                 .withOptions(options);
 
-        DecryptionStream decryptionStream = processor.getVerificationStream();
         ByteArrayOutputStream out = new ByteArrayOutputStream();
         Streams.pipeAll(decryptionStream, out);
         decryptionStream.close();
@@ -107,12 +106,10 @@ public class CleartextSignatureVerificationTest {
         File tempDir = TestUtils.createTempDirectory();
         File file = new File(tempDir, "file");
         MultiPassStrategy multiPassStrategy = MultiPassStrategy.writeMessageToFile(file);
-        CleartextSignatureProcessor processor = PGPainless.verifyCleartextSignedMessage()
+        options.setMultiPassStrategy(multiPassStrategy);
+        DecryptionStream decryptionStream = PGPainless.decryptAndOrVerify()
                 .onInputStream(new ByteArrayInputStream(MESSAGE_SIGNED))
-                .withStrategy(multiPassStrategy)
                 .withOptions(options);
-
-        DecryptionStream decryptionStream = processor.getVerificationStream();
 
         ByteArrayOutputStream out = new ByteArrayOutputStream();
         Streams.pipeAll(decryptionStream, out);
@@ -174,18 +171,6 @@ public class CleartextSignatureVerificationTest {
     }
 
     @Test
-    public void consumingCleartextSignedMessageWithNormalAPIThrowsWrongConsumingMethodException() throws IOException, PGPException {
-        PGPPublicKeyRing certificate = TestKeys.getEmilPublicKeyRing();
-        ConsumerOptions options = new ConsumerOptions()
-                .addVerificationCert(certificate);
-
-        assertThrows(WrongConsumingMethodException.class, () ->
-                PGPainless.decryptAndOrVerify()
-                        .onInputStream(new ByteArrayInputStream(MESSAGE_SIGNED))
-                        .withOptions(options));
-    }
-
-    @Test
     public void consumingInlineSignedMessageWithCleartextSignedVerificationApiThrowsWrongConsumingMethodException() throws PGPException, IOException {
         String inlineSignedMessage = "-----BEGIN PGP MESSAGE-----\n" +
                 "Version: PGPainless\n" +
@@ -207,11 +192,10 @@ public class CleartextSignatureVerificationTest {
                 .addVerificationCert(certificate);
 
         assertThrows(WrongConsumingMethodException.class, () ->
-                PGPainless.verifyCleartextSignedMessage()
-                .onInputStream(new ByteArrayInputStream(inlineSignedMessage.getBytes(StandardCharsets.UTF_8)))
-                .withStrategy(new InMemoryMultiPassStrategy())
-                .withOptions(options)
-                .getVerificationStream());
+                new VerifyCleartextSignaturesImpl()
+                        .onInputStream(new ByteArrayInputStream(inlineSignedMessage.getBytes(StandardCharsets.UTF_8)))
+                        .withOptions(options)
+                        .getVerificationStream());
     }
 
     @Test
@@ -223,7 +207,7 @@ public class CleartextSignatureVerificationTest {
         ByteArrayOutputStream signedOut = new ByteArrayOutputStream();
         EncryptionStream signingStream = PGPainless.encryptAndOrSign().onOutputStream(signedOut)
                 .withOptions(ProducerOptions.sign(SigningOptions.get()
-                        .addDetachedSignature(SecretKeyRingProtector.unprotectedKeys(), secretKey, DocumentSignatureType.CANONICAL_TEXT_DOCUMENT))
+                                .addDetachedSignature(SecretKeyRingProtector.unprotectedKeys(), secretKey, DocumentSignatureType.CANONICAL_TEXT_DOCUMENT))
                         .setCleartextSigned());
 
         Streams.pipeAll(msgIn, signingStream);
@@ -232,12 +216,10 @@ public class CleartextSignatureVerificationTest {
         String signed = signedOut.toString();
 
         ByteArrayInputStream signedIn = new ByteArrayInputStream(signed.getBytes(StandardCharsets.UTF_8));
-        DecryptionStream verificationStream = PGPainless.verifyCleartextSignedMessage()
+        DecryptionStream verificationStream = PGPainless.decryptAndOrVerify()
                 .onInputStream(signedIn)
-                .withStrategy(new InMemoryMultiPassStrategy())
                 .withOptions(new ConsumerOptions()
-                        .addVerificationCert(TestKeys.getEmilPublicKeyRing()))
-                .getVerificationStream();
+                        .addVerificationCert(TestKeys.getEmilPublicKeyRing()));
 
         ByteArrayOutputStream msgOut = new ByteArrayOutputStream();
         Streams.pipeAll(verificationStream, msgOut);

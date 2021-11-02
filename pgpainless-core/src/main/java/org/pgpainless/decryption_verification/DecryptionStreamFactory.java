@@ -121,7 +121,8 @@ public final class DecryptionStreamFactory {
 
     private DecryptionStream parseOpenPGPDataAndCreateDecryptionStream(InputStream inputStream) throws IOException, PGPException {
         // Make sure we handle armored and non-armored data properly
-        BufferedInputStream bufferedIn = new BufferedInputStream(inputStream);
+        BufferedInputStream bufferedIn = new BufferedInputStream(inputStream, 512);
+        bufferedIn.mark(512);
         InputStream decoderStream;
         PGPObjectFactory objectFactory;
 
