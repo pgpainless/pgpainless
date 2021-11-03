@@ -24,6 +24,16 @@ import org.pgpainless.algorithm.SymmetricKeyAlgorithm;
 
 public interface SelfSignatureSubpackets extends BaseSignatureSubpackets {
 
+    interface Callback {
+        default void modifyHashedSubpackets(SelfSignatureSubpackets subpackets) {
+
+        }
+
+        default void modifyUnhashedSubpackets(SelfSignatureSubpackets subpackets) {
+
+        }
+    }
+
     SignatureSubpacketGeneratorWrapper setKeyFlags(KeyFlag... keyFlags);
 
     SignatureSubpacketGeneratorWrapper setKeyFlags(boolean isCritical, KeyFlag... keyFlags);
