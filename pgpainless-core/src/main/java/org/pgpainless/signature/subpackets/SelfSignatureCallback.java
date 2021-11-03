@@ -4,7 +4,7 @@
 
 package org.pgpainless.signature.subpackets;
 
-public interface SelfSignatureSubpacketCallback {
+public interface SelfSignatureCallback {
 
     void modifyHashedSubpackets(SelfSignatureSubpackets subpackets);
 

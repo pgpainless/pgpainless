@@ -31,13 +31,13 @@ public class SubkeyBindingSignatureBuilderTest {
         PGPSecretKeyRing secretKey = PGPainless.generateKeyRing()
                 .modernKeyRing("Alice <alice@pgpainless.org>", "passphrase");
         KeyRingInfo info = PGPainless.inspectKeyRing(secretKey);
-        List<PGPPublicKey> previousSubkeys = info.getEncryptionSubkeys(EncryptionPurpose.STORAGE_AND_COMMUNICATIONS);
+        List<PGPPublicKey> previousSubkeys = info.getEncryptionSubkeys(EncryptionPurpose.ANY);
         SecretKeyRingProtector protector = SecretKeyRingProtector.unlockAllKeysWith(Passphrase.fromPassword("passphrase"), secretKey);
 
         PGPSecretKeyRing tempSubkeyRing = PGPainless.generateKeyRing()
                 .modernKeyRing("Subkeys", null);
         PGPPublicKey subkey = PGPainless.inspectKeyRing(tempSubkeyRing)
-                .getEncryptionSubkeys(EncryptionPurpose.STORAGE_AND_COMMUNICATIONS).get(0);
+                .getEncryptionSubkeys(EncryptionPurpose.ANY).get(0);
 
         SubkeyBindingSignatureBuilder skbb = new SubkeyBindingSignatureBuilder(secretKey.getSecretKey(), protector);
         skbb.getHashedSubpackets().addNotationData(false, "testnotation@pgpainless.org", "hello-world");
@@ -49,7 +49,7 @@ public class SubkeyBindingSignatureBuilderTest {
         secretKey = PGPSecretKeyRing.insertSecretKey(secretKey, secSubkey);
 
         info = PGPainless.inspectKeyRing(secretKey);
-        List<PGPPublicKey> nextSubkeys = info.getEncryptionSubkeys(EncryptionPurpose.STORAGE_AND_COMMUNICATIONS);
+        List<PGPPublicKey> nextSubkeys = info.getEncryptionSubkeys(EncryptionPurpose.ANY);
         assertEquals(previousSubkeys.size() + 1, nextSubkeys.size());
     }
 }
