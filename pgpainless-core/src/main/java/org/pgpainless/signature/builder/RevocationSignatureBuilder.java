@@ -4,12 +4,15 @@
 
 package org.pgpainless.signature.builder;
 
+import javax.annotation.Nullable;
+
 import org.bouncycastle.openpgp.PGPSecretKey;
 import org.bouncycastle.openpgp.PGPSignature;
 import org.pgpainless.algorithm.SignatureType;
 import org.pgpainless.exception.WrongPassphraseException;
 import org.pgpainless.key.protection.SecretKeyRingProtector;
 import org.pgpainless.signature.subpackets.RevocationSignatureSubpackets;
+import org.pgpainless.signature.subpackets.SelfSignatureSubpackets;
 
 public class RevocationSignatureBuilder extends AbstractSignatureBuilder<RevocationSignatureBuilder> {
 
@@ -35,6 +38,13 @@ public class RevocationSignatureBuilder extends AbstractSignatureBuilder<Revocat
 
     public RevocationSignatureSubpackets getUnhashedSubpackets() {
         return unhashedSubpackets;
+    }
+
+    public void applyCallback(@Nullable RevocationSignatureSubpackets.Callback callback) {
+        if (callback != null) {
+            callback.modifyHashedSubpackets(getHashedSubpackets());
+            callback.modifyUnhashedSubpackets(getUnhashedSubpackets());
+        }
     }
 
     public PGPSignature build() {

@@ -5,6 +5,7 @@
 package org.pgpainless.signature.builder;
 
 import javax.annotation.Nonnull;
+import javax.annotation.Nullable;
 
 import org.bouncycastle.openpgp.PGPException;
 import org.bouncycastle.openpgp.PGPPublicKey;
@@ -32,6 +33,13 @@ public class CertificationSignatureBuilder extends AbstractSignatureBuilder<Cert
 
     public SelfSignatureSubpackets getUnhashedSubpackets() {
         return unhashedSubpackets;
+    }
+
+    public void applyCallback(@Nullable SelfSignatureSubpackets.Callback callback) {
+        if (callback != null) {
+            callback.modifyHashedSubpackets(getHashedSubpackets());
+            callback.modifyUnhashedSubpackets(getUnhashedSubpackets());
+        }
     }
 
     public PGPSignature build(PGPPublicKey certifiedKey, String userId) throws PGPException {

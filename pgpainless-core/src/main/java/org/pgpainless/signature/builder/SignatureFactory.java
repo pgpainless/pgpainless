@@ -8,7 +8,6 @@ import java.io.IOException;
 import javax.annotation.Nullable;
 
 import org.bouncycastle.openpgp.PGPException;
-import org.bouncycastle.openpgp.PGPPublicKey;
 import org.bouncycastle.openpgp.PGPSecretKey;
 import org.bouncycastle.openpgp.PGPSignature;
 import org.pgpainless.algorithm.KeyFlag;
@@ -48,8 +47,9 @@ public final class SignatureFactory {
         SubkeyBindingSignatureBuilder subkeyBinder = bindSubkey(primaryKey, primaryKeyProtector, subkeyBindingSubpacketsCallback, flags);
 
         if (hasSignDataFlag(flags)) {
-            PGPSignature backsig = createPrimaryKeyBinding(
-                    subkey, subkeyProtector, primaryKeyBindingSubpacketsCallback, primaryKey.getPublicKey());
+            PGPSignature backsig = bindPrimaryKey(
+                    subkey, subkeyProtector, primaryKeyBindingSubpacketsCallback)
+                    .build(primaryKey.getPublicKey());
             subkeyBinder.getHashedSubpackets().addEmbeddedSignature(backsig);
         }
 
@@ -65,13 +65,9 @@ public final class SignatureFactory {
         }
         SubkeyBindingSignatureBuilder subkeyBinder = new SubkeyBindingSignatureBuilder(primaryKey, primaryKeyProtector);
         SelfSignatureSubpackets hashedSubpackets = subkeyBinder.getHashedSubpackets();
-        SelfSignatureSubpackets unhashedSubpackets = subkeyBinder.getUnhashedSubpackets();
         hashedSubpackets.setKeyFlags(flags);
 
-        if (subkeyBindingSubpacketsCallback != null) {
-            subkeyBindingSubpacketsCallback.modifyHashedSubpackets(hashedSubpackets);
-            subkeyBindingSubpacketsCallback.modifyUnhashedSubpackets(unhashedSubpackets);
-        }
+        subkeyBinder.applyCallback(subkeyBindingSubpacketsCallback);
 
         return subkeyBinder;
     }
@@ -82,22 +78,9 @@ public final class SignatureFactory {
             @Nullable SelfSignatureSubpackets.Callback primaryKeyBindingSubpacketsCallback) throws WrongPassphraseException {
         PrimaryKeyBindingSignatureBuilder primaryKeyBinder = new PrimaryKeyBindingSignatureBuilder(subkey, subkeyProtector);
 
-        if (primaryKeyBindingSubpacketsCallback != null) {
-            primaryKeyBindingSubpacketsCallback.modifyHashedSubpackets(primaryKeyBinder.getHashedSubpackets());
-            primaryKeyBindingSubpacketsCallback.modifyUnhashedSubpackets(primaryKeyBinder.getUnhashedSubpackets());
-        }
+        primaryKeyBinder.applyCallback(primaryKeyBindingSubpacketsCallback);
 
         return primaryKeyBinder;
-    }
-
-    public static PGPSignature createPrimaryKeyBinding(
-            PGPSecretKey subkey,
-            SecretKeyRingProtector subkeyProtector,
-            @Nullable SelfSignatureSubpackets.Callback primaryKeyBindingSubpacketsCallback,
-            PGPPublicKey primaryKey)
-            throws PGPException {
-        return bindPrimaryKey(subkey, subkeyProtector, primaryKeyBindingSubpacketsCallback)
-                .build(primaryKey);
     }
 
     public static CertificationSignatureBuilder selfCertifyUserId(
@@ -108,10 +91,8 @@ public final class SignatureFactory {
 
         CertificationSignatureBuilder certifier = new CertificationSignatureBuilder(primaryKey, primaryKeyProtector);
         certifier.getHashedSubpackets().setKeyFlags(flags);
-        if (selfSignatureCallback != null) {
-            selfSignatureCallback.modifyHashedSubpackets(certifier.getHashedSubpackets());
-            selfSignatureCallback.modifyUnhashedSubpackets(certifier.getUnhashedSubpackets());
-        }
+        certifier.applyCallback(selfSignatureCallback);
+
         return certifier;
     }
 
@@ -120,22 +101,12 @@ public final class SignatureFactory {
             SecretKeyRingProtector primaryKeyProtector,
             @Nullable SelfSignatureSubpackets.Callback selfSignatureCallback,
             PGPSignature oldCertification) throws WrongPassphraseException {
-        CertificationSignatureBuilder certifier =
-                new CertificationSignatureBuilder(primaryKey, primaryKeyProtector, oldCertification);
+        CertificationSignatureBuilder certifier = new CertificationSignatureBuilder(
+                primaryKey, primaryKeyProtector, oldCertification);
 
-        // TODO
-        return null;
-    }
+        certifier.applyCallback(selfSignatureCallback);
 
-    public static PGPSignature createUserIdSelfCertification(
-            String userId,
-            PGPSecretKey primaryKey,
-            SecretKeyRingProtector primaryKeyProtector,
-            @Nullable SelfSignatureSubpackets.Callback selfSignatureCallback,
-            KeyFlag... flags)
-            throws PGPException {
-        return selfCertifyUserId(primaryKey, primaryKeyProtector, selfSignatureCallback, flags)
-                .build(primaryKey.getPublicKey(), userId);
+        return certifier;
     }
 
     private static boolean hasSignDataFlag(KeyFlag... flags) {
