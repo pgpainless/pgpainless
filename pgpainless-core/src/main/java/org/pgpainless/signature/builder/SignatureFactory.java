@@ -16,9 +16,9 @@ import org.pgpainless.exception.WrongPassphraseException;
 import org.pgpainless.key.protection.SecretKeyRingProtector;
 import org.pgpainless.signature.subpackets.SelfSignatureSubpackets;
 
-public final class SignatureBuilder {
+public final class SignatureFactory {
 
-    private SignatureBuilder() {
+    private SignatureFactory() {
 
     }
 

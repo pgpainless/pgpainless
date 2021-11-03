@@ -39,7 +39,7 @@ import org.pgpainless.exception.KeyValidationError;
 import org.pgpainless.key.OpenPgpFingerprint;
 import org.pgpainless.key.SubkeyIdentifier;
 import org.pgpainless.policy.Policy;
-import org.pgpainless.signature.SignaturePicker;
+import org.pgpainless.signature.consumer.SignaturePicker;
 import org.pgpainless.signature.SignatureUtils;
 import org.pgpainless.signature.subpackets.SignatureSubpacketsUtil;
 

@@ -2,7 +2,7 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
-package org.pgpainless.signature;
+package org.pgpainless.signature.consumer;
 
 import java.security.NoSuchAlgorithmException;
 import java.util.Arrays;
@@ -30,6 +30,7 @@ import org.pgpainless.exception.SignatureValidationException;
 import org.pgpainless.implementation.ImplementationFactory;
 import org.pgpainless.key.OpenPgpFingerprint;
 import org.pgpainless.policy.Policy;
+import org.pgpainless.signature.SignatureUtils;
 import org.pgpainless.signature.subpackets.SignatureSubpacketsUtil;
 import org.pgpainless.util.BCUtil;
 import org.pgpainless.util.DateUtil;

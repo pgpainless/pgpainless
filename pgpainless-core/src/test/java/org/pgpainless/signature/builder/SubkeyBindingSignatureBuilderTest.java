@@ -45,7 +45,7 @@ public class SubkeyBindingSignatureBuilderTest {
                 .getEncryptionSubkeys(EncryptionPurpose.ANY).get(0);
         PGPSecretKey subkeySec = tempSubkeyRing.getSecretKey(subkeyPub.getKeyID());
 
-        PGPSignature binding = SignatureBuilder.bindNonSigningSubkey(
+        PGPSignature binding = SignatureFactory.bindNonSigningSubkey(
                 secretKey.getSecretKey(), protector,
                 new SelfSignatureSubpackets.Callback() {
                     @Override

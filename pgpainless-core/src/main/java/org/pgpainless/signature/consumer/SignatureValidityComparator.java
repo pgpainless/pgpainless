@@ -2,18 +2,19 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
-package org.pgpainless.signature;
+package org.pgpainless.signature.consumer;
 
 import java.util.Comparator;
 
 import org.bouncycastle.openpgp.PGPSignature;
+import org.pgpainless.signature.SignatureUtils;
 
 /**
  * Comparator which sorts signatures based on an ordering and on revocation hardness.
  *
  * If a list of signatures gets ordered using this comparator, hard revocations will always
  * come first.
- * Further, signatures are ordered by date according to the {@link org.pgpainless.signature.SignatureCreationDateComparator.Order}.
+ * Further, signatures are ordered by date according to the {@link SignatureCreationDateComparator.Order}.
  */
 public class SignatureValidityComparator implements Comparator<PGPSignature> {
 

@@ -4,7 +4,7 @@
 
 package org.pgpainless.decryption_verification;
 
-import static org.pgpainless.signature.SignatureValidator.signatureWasCreatedInBounds;
+import static org.pgpainless.signature.consumer.SignatureValidator.signatureWasCreatedInBounds;
 
 import java.io.FilterInputStream;
 import java.io.IOException;
@@ -20,9 +20,9 @@ import org.bouncycastle.openpgp.PGPSignatureList;
 import org.pgpainless.PGPainless;
 import org.pgpainless.exception.SignatureValidationException;
 import org.pgpainless.policy.Policy;
-import org.pgpainless.signature.CertificateValidator;
-import org.pgpainless.signature.DetachedSignatureCheck;
-import org.pgpainless.signature.OnePassSignatureCheck;
+import org.pgpainless.signature.consumer.CertificateValidator;
+import org.pgpainless.signature.consumer.DetachedSignatureCheck;
+import org.pgpainless.signature.consumer.OnePassSignatureCheck;
 import org.pgpainless.signature.SignatureUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;

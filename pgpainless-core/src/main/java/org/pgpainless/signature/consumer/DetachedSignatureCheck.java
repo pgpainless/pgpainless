@@ -2,7 +2,7 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
-package org.pgpainless.signature;
+package org.pgpainless.signature.consumer;
 
 import org.bouncycastle.openpgp.PGPKeyRing;
 import org.bouncycastle.openpgp.PGPSignature;

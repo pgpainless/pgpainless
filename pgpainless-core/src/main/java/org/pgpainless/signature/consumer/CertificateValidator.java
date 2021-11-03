@@ -2,9 +2,9 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
-package org.pgpainless.signature;
+package org.pgpainless.signature.consumer;
 
-import static org.pgpainless.signature.SignatureVerifier.verifyOnePassSignature;
+import static org.pgpainless.signature.consumer.SignatureVerifier.verifyOnePassSignature;
 
 import java.io.InputStream;
 import java.util.ArrayList;
@@ -24,6 +24,7 @@ import org.pgpainless.algorithm.KeyFlag;
 import org.pgpainless.algorithm.SignatureType;
 import org.pgpainless.exception.SignatureValidationException;
 import org.pgpainless.policy.Policy;
+import org.pgpainless.signature.SignatureUtils;
 import org.pgpainless.signature.subpackets.SignatureSubpacketsUtil;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;

@@ -20,7 +20,7 @@ import org.junit.jupiter.api.Test;
 import org.pgpainless.PGPainless;
 import org.pgpainless.key.info.KeyRingInfo;
 import org.pgpainless.key.protection.SecretKeyRingProtector;
-import org.pgpainless.signature.ProofUtil;
+import org.pgpainless.signature.consumer.ProofUtil;
 
 public class ProofUtilTest {
 

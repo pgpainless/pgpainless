@@ -34,9 +34,9 @@ import org.pgpainless.encryption_signing.SigningOptions;
 import org.pgpainless.exception.WrongConsumingMethodException;
 import org.pgpainless.key.TestKeys;
 import org.pgpainless.key.protection.SecretKeyRingProtector;
-import org.pgpainless.signature.CertificateValidator;
+import org.pgpainless.signature.consumer.CertificateValidator;
 import org.pgpainless.signature.SignatureUtils;
-import org.pgpainless.signature.SignatureVerifier;
+import org.pgpainless.signature.consumer.SignatureVerifier;
 import org.pgpainless.util.ArmorUtils;
 import org.pgpainless.util.TestUtils;
 

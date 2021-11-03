@@ -28,6 +28,7 @@ import org.pgpainless.decryption_verification.OpenPgpMetadata;
 import org.pgpainless.exception.SignatureValidationException;
 import org.pgpainless.implementation.ImplementationFactory;
 import org.pgpainless.policy.Policy;
+import org.pgpainless.signature.consumer.CertificateValidator;
 
 public class CertificateValidatorTest {
 

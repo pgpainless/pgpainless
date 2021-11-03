@@ -17,6 +17,7 @@ import org.junit.jupiter.api.Test;
 import org.pgpainless.PGPainless;
 import org.pgpainless.exception.SignatureValidationException;
 import org.pgpainless.key.OpenPgpV4Fingerprint;
+import org.pgpainless.signature.consumer.SignatureValidator;
 
 public class SignatureWasPossiblyMadeByKeyTest {
 

@@ -19,6 +19,7 @@ import org.junit.jupiter.params.provider.MethodSource;
 import org.pgpainless.PGPainless;
 import org.pgpainless.exception.SignatureValidationException;
 import org.pgpainless.implementation.ImplementationFactory;
+import org.pgpainless.signature.consumer.CertificateValidator;
 
 public class KeyRevocationTest {
 

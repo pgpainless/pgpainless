@@ -2,7 +2,7 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
-package org.pgpainless.signature;
+package org.pgpainless.signature.consumer;
 
 import java.util.Collections;
 import java.util.Date;
@@ -15,6 +15,7 @@ import org.bouncycastle.openpgp.PGPSignature;
 import org.pgpainless.algorithm.SignatureType;
 import org.pgpainless.exception.SignatureValidationException;
 import org.pgpainless.policy.Policy;
+import org.pgpainless.signature.SignatureUtils;
 import org.pgpainless.util.CollectionUtils;
 
 /**
