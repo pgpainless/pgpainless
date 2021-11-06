@@ -88,9 +88,9 @@ public final class SignatureSubpacketGeneratorUtil {
      * @param creationDate date on which the key was created
      * @param subpacketGenerator subpacket generator
      */
-    public static void setExpirationDateInSubpacketGenerator(Date expirationDate,
-                                                       @Nonnull Date creationDate,
-                                                       PGPSignatureSubpacketGenerator subpacketGenerator) {
+    public static void setKeyExpirationDateInSubpacketGenerator(Date expirationDate,
+                                                                @Nonnull Date creationDate,
+                                                                PGPSignatureSubpacketGenerator subpacketGenerator) {
         removeAllPacketsOfType(SignatureSubpacketTags.KEY_EXPIRE_TIME, subpacketGenerator);
         long secondsToExpire = getKeyLifetimeInSeconds(expirationDate, creationDate);
         subpacketGenerator.setKeyExpirationTime(true, secondsToExpire);

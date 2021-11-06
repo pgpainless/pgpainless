@@ -138,7 +138,7 @@ public class KeyRingBuilder implements KeyRingBuilderInterface<KeyRingBuilder> {
         PGPSignatureSubpacketGenerator hashedSubPacketGenerator = primaryKeySpec.getSubpacketGenerator();
         hashedSubPacketGenerator.setPrimaryUserID(false, true);
         if (expirationDate != null) {
-            SignatureSubpacketGeneratorUtil.setExpirationDateInSubpacketGenerator(
+            SignatureSubpacketGeneratorUtil.setKeyExpirationDateInSubpacketGenerator(
                     expirationDate, new Date(), hashedSubPacketGenerator);
         }
         PGPSignatureSubpacketVector hashedSubPackets = hashedSubPacketGenerator.generate();

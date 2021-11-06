@@ -377,7 +377,7 @@ public class SecretKeyRingEditor implements SecretKeyRingEditorInterface {
         PGPSignatureSubpacketVector oldSubpackets = oldSignature.getHashedSubPackets();
         PGPSignatureSubpacketGenerator subpacketGenerator = new PGPSignatureSubpacketGenerator(oldSubpackets);
         SignatureSubpacketGeneratorUtil.setSignatureCreationTimeInSubpacketGenerator(new Date(), subpacketGenerator);
-        SignatureSubpacketGeneratorUtil.setExpirationDateInSubpacketGenerator(expiration, subjectPubKey.getCreationTime(), subpacketGenerator);
+        SignatureSubpacketGeneratorUtil.setKeyExpirationDateInSubpacketGenerator(expiration, subjectPubKey.getCreationTime(), subpacketGenerator);
 
         PGPSignatureGenerator signatureGenerator = SignatureUtils.getSignatureGeneratorFor(primaryKey);
         signatureGenerator.setHashedSubpackets(subpacketGenerator.generate());
