@@ -37,7 +37,9 @@ import org.bouncycastle.openpgp.PGPSecretKey;
 import org.bouncycastle.openpgp.PGPSecretKeyRing;
 import org.bouncycastle.openpgp.PGPSignature;
 import org.bouncycastle.openpgp.PGPSignatureGenerator;
+import org.bouncycastle.openpgp.PGPSignatureSubpacketGenerator;
 import org.bouncycastle.openpgp.PGPSignatureSubpacketVector;
+import org.junit.JUtils;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -49,9 +51,11 @@ import org.pgpainless.algorithm.PublicKeyAlgorithm;
 import org.pgpainless.algorithm.SignatureType;
 import org.pgpainless.algorithm.SymmetricKeyAlgorithm;
 import org.pgpainless.implementation.ImplementationFactory;
+import org.pgpainless.key.OpenPgpFingerprint;
 import org.pgpainless.key.TestKeys;
 import org.pgpainless.key.protection.UnlockSecretKey;
 import org.pgpainless.key.util.RevocationAttributes;
+import org.pgpainless.util.DateUtil;
 import org.pgpainless.util.Passphrase;
 
 public class SignatureSubpacketGeneratorWrapperTest {
@@ -437,5 +441,99 @@ public class SignatureSubpacketGeneratorWrapperTest {
         wrapper.clearEmbeddedSignatures();
         vector = wrapper.getGenerator().generate();
         assertEquals(0, vector.getEmbeddedSignatures().size());
+    }
+
+    @Test
+    public void testExtractSubpacketsFromVector() throws IOException {
+        Date sigCreationDate = DateUtil.parseUTCDate("2021-11-06 12:39:06 UTC");
+        PGPPublicKeyRing publicKeys = TestKeys.getEmilPublicKeyRing();
+        OpenPgpFingerprint fingerprint = OpenPgpFingerprint.of(publicKeys);
+        long keyId = fingerprint.getKeyId();
+
+        PGPSignatureSubpacketGenerator subpackets = new PGPSignatureSubpacketGenerator();
+        // These are not extracted from the vector
+        subpackets.setSignatureCreationTime(true, sigCreationDate);
+        subpackets.setIssuerKeyID(true, keyId);
+        subpackets.setIssuerFingerprint(true, publicKeys.getPublicKey());
+        // These are extracted
+        subpackets.setSignatureExpirationTime(true, 256000);
+        subpackets.setExportable(true, true);
+        subpackets.setTrust(true, 5, 15);
+        subpackets.setRevocable(true, true);
+        subpackets.setKeyExpirationTime(true, 512000);
+        subpackets.setPreferredSymmetricAlgorithms(true, new int[] {
+                SymmetricKeyAlgorithm.AES_192.getAlgorithmId(), SymmetricKeyAlgorithm.AES_128.getAlgorithmId()
+        });
+        subpackets.addRevocationKey(true, publicKeys.getPublicKey().getAlgorithm(),
+                publicKeys.getPublicKey().getFingerprint());
+        subpackets.addNotationData(false, true, "test@test.test", "test");
+        subpackets.addNotationData(false,  true, "check@check.check", "check");
+        subpackets.setPreferredHashAlgorithms(true, new int[] {
+                HashAlgorithm.SHA512.getAlgorithmId(), HashAlgorithm.SHA384.getAlgorithmId()
+        });
+        subpackets.setPreferredCompressionAlgorithms(true, new int[] {
+                CompressionAlgorithm.ZIP.getAlgorithmId(), CompressionAlgorithm.BZIP2.getAlgorithmId()
+        });
+        subpackets.setPrimaryUserID(true, true);
+        subpackets.setKeyFlags(true, KeyFlag.toBitmask(KeyFlag.SIGN_DATA, KeyFlag.CERTIFY_OTHER));
+        subpackets.addSignerUserID(false, "alice@test.test");
+        subpackets.setRevocationReason(true, RevocationAttributes.Reason.KEY_RETIRED.code(), "Key was retired.");
+        subpackets.setFeature(true, Feature.toBitmask(Feature.MODIFICATION_DETECTION, Feature.AEAD_ENCRYPTED_DATA));
+        byte[] hash = new byte[128];
+        new Random().nextBytes(hash);
+        subpackets.setSignatureTarget(false, publicKeys.getPublicKey().getAlgorithm(), HashAlgorithm.SHA512.getAlgorithmId(), hash);
+        subpackets.addIntendedRecipientFingerprint(true, publicKeys.getPublicKey());
+        PreferredAlgorithms aead = new PreferredAlgorithms(SignatureSubpacketTags.PREFERRED_AEAD_ALGORITHMS, false, new int[] {2});
+        subpackets.addCustomSubpacket(aead);
+
+
+        SignatureSubpacketGeneratorWrapper wrapper = SignatureSubpacketGeneratorWrapper.createSubpacketsFrom(subpackets.generate());
+        PGPSignatureSubpacketVector vector = wrapper.getGenerator().generate();
+
+        // Verify these are not extracted
+        assertEquals(0, vector.getIssuerKeyID());
+        assertNull(vector.getIssuerFingerprint());
+        // BC overrides the date with current time
+        JUtils.assertDateNotEquals(sigCreationDate, vector.getSignatureCreationTime());
+
+        // Verify these are extracted
+        assertEquals(256000, vector.getSignatureExpirationTime());
+        assertTrue(((Exportable) vector.getSubpacket(SignatureSubpacketTags.EXPORTABLE)).isExportable());
+        TrustSignature trust = (TrustSignature) vector.getSubpacket(SignatureSubpacketTags.TRUST_SIG);
+        assertEquals(5, trust.getDepth());
+        assertEquals(15, trust.getTrustAmount());
+        assertTrue(((Revocable) vector.getSubpacket(SignatureSubpacketTags.REVOCABLE)).isRevocable());
+        assertEquals(512000, vector.getKeyExpirationTime());
+        assertArrayEquals(new int[] {
+                SymmetricKeyAlgorithm.AES_192.getAlgorithmId(), SymmetricKeyAlgorithm.AES_128.getAlgorithmId()
+        }, vector.getPreferredSymmetricAlgorithms());
+        assertArrayEquals(publicKeys.getPublicKey().getFingerprint(),
+                ((RevocationKey) vector.getSubpacket(SignatureSubpacketTags.REVOCATION_KEY)).getFingerprint());
+        assertEquals(2, vector.getNotationDataOccurrences().length);
+        assertEquals("test@test.test", vector.getNotationDataOccurrences()[0].getNotationName());
+        assertEquals("test", vector.getNotationDataOccurrences()[0].getNotationValue());
+        assertEquals("check@check.check", vector.getNotationDataOccurrences()[1].getNotationName());
+        assertEquals("check", vector.getNotationDataOccurrences()[1].getNotationValue());
+        assertArrayEquals(new int[] {
+                HashAlgorithm.SHA512.getAlgorithmId(), HashAlgorithm.SHA384.getAlgorithmId()
+        }, vector.getPreferredHashAlgorithms());
+        assertArrayEquals(new int[] {
+                CompressionAlgorithm.ZIP.getAlgorithmId(), CompressionAlgorithm.BZIP2.getAlgorithmId()
+        }, vector.getPreferredCompressionAlgorithms());
+        assertTrue(vector.isPrimaryUserID());
+        assertEquals(KeyFlag.toBitmask(KeyFlag.SIGN_DATA, KeyFlag.CERTIFY_OTHER), vector.getKeyFlags());
+        assertEquals("alice@test.test", vector.getSignerUserID());
+        RevocationReason reason = (RevocationReason) vector.getSubpacket(SignatureSubpacketTags.REVOCATION_REASON);
+        assertEquals(RevocationAttributes.Reason.KEY_RETIRED.code(), reason.getRevocationReason());
+        assertEquals("Key was retired.", reason.getRevocationDescription());
+        assertTrue(vector.getFeatures().supportsFeature(Features.FEATURE_MODIFICATION_DETECTION));
+        assertTrue(vector.getFeatures().supportsFeature(Features.FEATURE_AEAD_ENCRYPTED_DATA));
+        SignatureTarget signatureTarget = vector.getSignatureTarget();
+        assertEquals(publicKeys.getPublicKey().getAlgorithm(), signatureTarget.getPublicKeyAlgorithm());
+        assertEquals(HashAlgorithm.SHA512.getAlgorithmId(), signatureTarget.getHashAlgorithm());
+        assertArrayEquals(hash, signatureTarget.getHashData());
+        assertArrayEquals(publicKeys.getPublicKey().getFingerprint(), vector.getIntendedRecipientFingerprint().getFingerprint());
+        PreferredAlgorithms aeadAlgorithms = (PreferredAlgorithms) vector.getSubpacket(SignatureSubpacketTags.PREFERRED_AEAD_ALGORITHMS);
+        assertArrayEquals(aead.getPreferences(), aeadAlgorithms.getPreferences());
     }
 }

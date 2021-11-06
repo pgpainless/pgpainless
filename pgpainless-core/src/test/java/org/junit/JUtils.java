@@ -4,6 +4,7 @@
 
 package org.junit;
 
+import static org.junit.jupiter.api.Assertions.assertNotEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import java.util.Date;
@@ -18,5 +19,9 @@ public class JUtils {
 
     public static void assertDateEquals(Date a, Date b) {
         org.junit.jupiter.api.Assertions.assertEquals(DateUtil.formatUTCDate(a), DateUtil.formatUTCDate(b));
+    }
+
+    public static void assertDateNotEquals(Date a, Date b) {
+        assertNotEquals(DateUtil.formatUTCDate(a), DateUtil.formatUTCDate(b));
     }
 }
