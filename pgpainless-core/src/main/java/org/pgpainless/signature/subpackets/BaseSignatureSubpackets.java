@@ -28,6 +28,16 @@ import org.pgpainless.algorithm.PublicKeyAlgorithm;
 
 public interface BaseSignatureSubpackets {
 
+    interface Callback {
+        default void modifyHashedSubpackets(SignatureSubpacketGeneratorWrapper subpackets) {
+
+        }
+
+        default void modifyUnhashedSubpackets(SignatureSubpacketGeneratorWrapper subpackets) {
+
+        }
+    }
+
     SignatureSubpacketGeneratorWrapper setIssuerFingerprintAndKeyId(PGPPublicKey key);
 
     SignatureSubpacketGeneratorWrapper setIssuerKeyId(long keyId);

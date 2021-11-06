@@ -11,8 +11,10 @@ import org.bouncycastle.openpgp.PGPException;
 import org.bouncycastle.openpgp.PGPSecretKey;
 import org.bouncycastle.openpgp.PGPSignature;
 import org.pgpainless.algorithm.KeyFlag;
+import org.pgpainless.algorithm.SignatureType;
 import org.pgpainless.exception.WrongPassphraseException;
 import org.pgpainless.key.protection.SecretKeyRingProtector;
+import org.pgpainless.signature.subpackets.BaseSignatureSubpackets;
 import org.pgpainless.signature.subpackets.SelfSignatureSubpackets;
 
 public final class SignatureFactory {
@@ -109,6 +111,20 @@ public final class SignatureFactory {
         return certifier;
     }
 
+    public static UniversalSignatureBuilder universalSignature(
+            SignatureType signatureType,
+            PGPSecretKey signingKey,
+            SecretKeyRingProtector signingKeyProtector,
+            @Nullable BaseSignatureSubpackets.Callback callback)
+            throws WrongPassphraseException {
+        UniversalSignatureBuilder builder =
+                new UniversalSignatureBuilder(signatureType, signingKey, signingKeyProtector);
+
+        builder.applyCallback(callback);
+
+        return builder;
+    }
+
     private static boolean hasSignDataFlag(KeyFlag... flags) {
         if (flags == null) {
             return false;
@@ -120,4 +136,5 @@ public final class SignatureFactory {
         }
         return false;
     }
+
 }
