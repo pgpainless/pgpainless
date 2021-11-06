@@ -44,10 +44,12 @@ public abstract class AbstractSignatureBuilder<B extends AbstractSignatureBuilde
         this.hashAlgorithm = negotiateHashAlgorithm(publicSigningKey);
 
         unhashedSubpackets = SignatureSubpacketGeneratorWrapper.createEmptySubpackets();
+        // Prepopulate hashed subpackets with default values (key-id etc.)
         hashedSubpackets = SignatureSubpacketGeneratorWrapper.createHashedSubpackets(publicSigningKey);
     }
 
-    public AbstractSignatureBuilder(PGPSecretKey certificationKey, SecretKeyRingProtector protector, PGPSignature archetypeSignature) throws WrongPassphraseException {
+    public AbstractSignatureBuilder(PGPSecretKey certificationKey, SecretKeyRingProtector protector, PGPSignature archetypeSignature)
+            throws WrongPassphraseException {
         SignatureType type = SignatureType.valueOf(archetypeSignature.getSignatureType());
         if (!isValidSignatureType(type)) {
             throw new IllegalArgumentException("Invalid signature type.");
@@ -61,12 +63,26 @@ public abstract class AbstractSignatureBuilder<B extends AbstractSignatureBuilde
         hashedSubpackets = SignatureSubpacketGeneratorWrapper.refreshHashedSubpackets(publicSigningKey, archetypeSignature);
     }
 
+    /**
+     * Negotiate a {@link HashAlgorithm} to be used when creating the signature.
+     *
+     * @param publicKey signing public key
+     * @return hash algorithm
+     */
     protected HashAlgorithm negotiateHashAlgorithm(PGPPublicKey publicKey) {
         Set<HashAlgorithm> hashAlgorithmPreferences = OpenPgpKeyAttributeUtil.getOrGuessPreferredHashAlgorithms(publicKey);
         return HashAlgorithmNegotiator.negotiateSignatureHashAlgorithm(PGPainless.getPolicy())
                 .negotiateHashAlgorithm(hashAlgorithmPreferences);
     }
 
+    /**
+     * Set the builders {@link SignatureType}.
+     * Note that only those types who are valid for the concrete subclass of this {@link AbstractSignatureBuilder}
+     * are allowed. Invalid choices result in an {@link IllegalArgumentException} to be thrown.
+     *
+     * @param type signature type
+     * @return builder
+     */
     public B setSignatureType(SignatureType type) {
         if (!isValidSignatureType(type)) {
             throw new IllegalArgumentException("Invalid signature type: " + type);
@@ -75,6 +91,13 @@ public abstract class AbstractSignatureBuilder<B extends AbstractSignatureBuilde
         return (B) this;
     }
 
+    /**
+     * Build an instance of {@link PGPSignatureGenerator} initialized with the signing key
+     * and with hashed and unhashed subpackets.
+     *
+     * @return pgp signature generator
+     * @throws PGPException
+     */
     protected PGPSignatureGenerator buildAndInitSignatureGenerator() throws PGPException {
         PGPSignatureGenerator generator = new PGPSignatureGenerator(
                 ImplementationFactory.getInstance().getPGPContentSignerBuilder(
@@ -87,5 +110,12 @@ public abstract class AbstractSignatureBuilder<B extends AbstractSignatureBuilde
         return generator;
     }
 
+    /**
+     * Return true if the given {@link SignatureType} is a valid choice for the concrete implementation
+     * of {@link AbstractSignatureBuilder}.
+     *
+     * @param type type
+     * @return return true if valid, false otherwise
+     */
     protected abstract boolean isValidSignatureType(SignatureType type);
 }

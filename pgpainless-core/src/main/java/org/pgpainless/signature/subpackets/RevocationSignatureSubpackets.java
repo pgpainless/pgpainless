@@ -12,21 +12,15 @@ import org.pgpainless.key.util.RevocationAttributes;
 
 public interface RevocationSignatureSubpackets extends BaseSignatureSubpackets {
 
-    interface Callback {
-        default void modifyHashedSubpackets(RevocationSignatureSubpackets subpackets) {
+    interface Callback extends SignatureSubpacketCallback<RevocationSignatureSubpackets> {
 
-        }
-
-        default void modifyUnhashedSubpackets(RevocationSignatureSubpackets subpackets) {
-
-        }
     }
 
-    SignatureSubpacketGeneratorWrapper setRevocationReason(RevocationAttributes revocationAttributes);
+    RevocationSignatureSubpackets setRevocationReason(RevocationAttributes revocationAttributes);
 
-    SignatureSubpacketGeneratorWrapper setRevocationReason(boolean isCritical, RevocationAttributes revocationAttributes);
+    RevocationSignatureSubpackets setRevocationReason(boolean isCritical, RevocationAttributes revocationAttributes);
 
-    SignatureSubpacketGeneratorWrapper setRevocationReason(boolean isCritical, RevocationAttributes.Reason reason, @Nonnull String description);
+    RevocationSignatureSubpackets setRevocationReason(boolean isCritical, RevocationAttributes.Reason reason, @Nonnull String description);
 
-    SignatureSubpacketGeneratorWrapper setRevocationReason(@Nullable RevocationReason reason);
+    RevocationSignatureSubpackets setRevocationReason(@Nullable RevocationReason reason);
 }

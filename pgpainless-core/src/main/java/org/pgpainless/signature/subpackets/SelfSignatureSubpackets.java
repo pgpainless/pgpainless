@@ -24,75 +24,69 @@ import org.pgpainless.algorithm.SymmetricKeyAlgorithm;
 
 public interface SelfSignatureSubpackets extends BaseSignatureSubpackets {
 
-    interface Callback {
-        default void modifyHashedSubpackets(SelfSignatureSubpackets subpackets) {
+    interface Callback extends SignatureSubpacketCallback<SelfSignatureSubpackets> {
 
-        }
-
-        default void modifyUnhashedSubpackets(SelfSignatureSubpackets subpackets) {
-
-        }
     }
 
-    SignatureSubpacketGeneratorWrapper setKeyFlags(KeyFlag... keyFlags);
+    SelfSignatureSubpackets setKeyFlags(KeyFlag... keyFlags);
 
-    SignatureSubpacketGeneratorWrapper setKeyFlags(boolean isCritical, KeyFlag... keyFlags);
+    SelfSignatureSubpackets setKeyFlags(boolean isCritical, KeyFlag... keyFlags);
 
-    SignatureSubpacketGeneratorWrapper setKeyFlags(@Nullable KeyFlags keyFlags);
+    SelfSignatureSubpackets setKeyFlags(@Nullable KeyFlags keyFlags);
 
-    SignatureSubpacketGeneratorWrapper setPrimaryUserId();
+    SelfSignatureSubpackets setPrimaryUserId();
 
-    SignatureSubpacketGeneratorWrapper setPrimaryUserId(boolean isCritical);
+    SelfSignatureSubpackets setPrimaryUserId(boolean isCritical);
 
-    SignatureSubpacketGeneratorWrapper setPrimaryUserId(@Nullable PrimaryUserID primaryUserId);
+    SelfSignatureSubpackets setPrimaryUserId(@Nullable PrimaryUserID primaryUserId);
 
-    SignatureSubpacketGeneratorWrapper setKeyExpirationTime(@Nonnull PGPPublicKey key, @Nonnull Date keyExpirationTime);
+    SelfSignatureSubpackets setKeyExpirationTime(@Nonnull PGPPublicKey key, @Nonnull Date keyExpirationTime);
 
-    SignatureSubpacketGeneratorWrapper setKeyExpirationTime(@Nonnull Date keyCreationTime, @Nonnull Date keyExpirationTime);
+    SelfSignatureSubpackets setKeyExpirationTime(@Nonnull Date keyCreationTime, @Nonnull Date keyExpirationTime);
 
-    SignatureSubpacketGeneratorWrapper setKeyExpirationTime(boolean isCritical, @Nonnull Date keyCreationTime, @Nonnull Date keyExpirationTime);
+    SelfSignatureSubpackets setKeyExpirationTime(boolean isCritical, @Nonnull Date keyCreationTime, @Nonnull Date keyExpirationTime);
 
-    SignatureSubpacketGeneratorWrapper setKeyExpirationTime(boolean isCritical, long secondsFromCreationToExpiration);
+    SelfSignatureSubpackets setKeyExpirationTime(boolean isCritical, long secondsFromCreationToExpiration);
 
-    SignatureSubpacketGeneratorWrapper setKeyExpirationTime(@Nullable KeyExpirationTime keyExpirationTime);
+    SelfSignatureSubpackets setKeyExpirationTime(@Nullable KeyExpirationTime keyExpirationTime);
 
-    SignatureSubpacketGeneratorWrapper setPreferredCompressionAlgorithms(CompressionAlgorithm... algorithms);
+    SelfSignatureSubpackets setPreferredCompressionAlgorithms(CompressionAlgorithm... algorithms);
 
-    SignatureSubpacketGeneratorWrapper setPreferredCompressionAlgorithms(Set<CompressionAlgorithm> algorithms);
+    SelfSignatureSubpackets setPreferredCompressionAlgorithms(Set<CompressionAlgorithm> algorithms);
 
-    SignatureSubpacketGeneratorWrapper setPreferredCompressionAlgorithms(boolean isCritical, Set<CompressionAlgorithm> algorithms);
+    SelfSignatureSubpackets setPreferredCompressionAlgorithms(boolean isCritical, Set<CompressionAlgorithm> algorithms);
 
-    SignatureSubpacketGeneratorWrapper setPreferredCompressionAlgorithms(@Nullable PreferredAlgorithms algorithms);
+    SelfSignatureSubpackets setPreferredCompressionAlgorithms(@Nullable PreferredAlgorithms algorithms);
 
-    SignatureSubpacketGeneratorWrapper setPreferredSymmetricKeyAlgorithms(SymmetricKeyAlgorithm... algorithms);
+    SelfSignatureSubpackets setPreferredSymmetricKeyAlgorithms(SymmetricKeyAlgorithm... algorithms);
 
-    SignatureSubpacketGeneratorWrapper setPreferredSymmetricKeyAlgorithms(Set<SymmetricKeyAlgorithm> algorithms);
+    SelfSignatureSubpackets setPreferredSymmetricKeyAlgorithms(Set<SymmetricKeyAlgorithm> algorithms);
 
-    SignatureSubpacketGeneratorWrapper setPreferredSymmetricKeyAlgorithms(boolean isCritical, Set<SymmetricKeyAlgorithm> algorithms);
+    SelfSignatureSubpackets setPreferredSymmetricKeyAlgorithms(boolean isCritical, Set<SymmetricKeyAlgorithm> algorithms);
 
-    SignatureSubpacketGeneratorWrapper setPreferredSymmetricKeyAlgorithms(@Nullable PreferredAlgorithms algorithms);
+    SelfSignatureSubpackets setPreferredSymmetricKeyAlgorithms(@Nullable PreferredAlgorithms algorithms);
 
-    SignatureSubpacketGeneratorWrapper setPreferredHashAlgorithms(HashAlgorithm... algorithms);
+    SelfSignatureSubpackets setPreferredHashAlgorithms(HashAlgorithm... algorithms);
 
-    SignatureSubpacketGeneratorWrapper setPreferredHashAlgorithms(Set<HashAlgorithm> algorithms);
+    SelfSignatureSubpackets setPreferredHashAlgorithms(Set<HashAlgorithm> algorithms);
 
-    SignatureSubpacketGeneratorWrapper setPreferredHashAlgorithms(boolean isCritical, Set<HashAlgorithm> algorithms);
+    SelfSignatureSubpackets setPreferredHashAlgorithms(boolean isCritical, Set<HashAlgorithm> algorithms);
 
-    SignatureSubpacketGeneratorWrapper setPreferredHashAlgorithms(@Nullable PreferredAlgorithms algorithms);
+    SelfSignatureSubpackets setPreferredHashAlgorithms(@Nullable PreferredAlgorithms algorithms);
 
-    SignatureSubpacketGeneratorWrapper addRevocationKey(@Nonnull PGPPublicKey revocationKey);
+    SelfSignatureSubpackets addRevocationKey(@Nonnull PGPPublicKey revocationKey);
 
-    SignatureSubpacketGeneratorWrapper addRevocationKey(boolean isCritical, @Nonnull PGPPublicKey revocationKey);
+    SelfSignatureSubpackets addRevocationKey(boolean isCritical, @Nonnull PGPPublicKey revocationKey);
 
-    SignatureSubpacketGeneratorWrapper addRevocationKey(boolean isCritical, boolean isSensitive, @Nonnull PGPPublicKey revocationKey);
+    SelfSignatureSubpackets addRevocationKey(boolean isCritical, boolean isSensitive, @Nonnull PGPPublicKey revocationKey);
 
-    SignatureSubpacketGeneratorWrapper addRevocationKey(@Nonnull RevocationKey revocationKey);
+    SelfSignatureSubpackets addRevocationKey(@Nonnull RevocationKey revocationKey);
 
-    SignatureSubpacketGeneratorWrapper clearRevocationKeys();
+    SelfSignatureSubpackets clearRevocationKeys();
 
-    SignatureSubpacketGeneratorWrapper setFeatures(Feature... features);
+    SelfSignatureSubpackets setFeatures(Feature... features);
 
-    SignatureSubpacketGeneratorWrapper setFeatures(boolean isCritical, Feature... features);
+    SelfSignatureSubpackets setFeatures(boolean isCritical, Feature... features);
 
-    SignatureSubpacketGeneratorWrapper setFeatures(@Nullable Features features);
+    SelfSignatureSubpackets setFeatures(@Nullable Features features);
 }

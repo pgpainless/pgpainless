@@ -28,91 +28,85 @@ import org.pgpainless.algorithm.PublicKeyAlgorithm;
 
 public interface BaseSignatureSubpackets {
 
-    interface Callback {
-        default void modifyHashedSubpackets(SignatureSubpacketGeneratorWrapper subpackets) {
+    interface Callback extends SignatureSubpacketCallback<SignatureSubpacketGeneratorWrapper> {
 
-        }
-
-        default void modifyUnhashedSubpackets(SignatureSubpacketGeneratorWrapper subpackets) {
-
-        }
     }
 
-    SignatureSubpacketGeneratorWrapper setIssuerFingerprintAndKeyId(PGPPublicKey key);
+    BaseSignatureSubpackets setIssuerFingerprintAndKeyId(PGPPublicKey key);
 
-    SignatureSubpacketGeneratorWrapper setIssuerKeyId(long keyId);
+    BaseSignatureSubpackets setIssuerKeyId(long keyId);
 
-    SignatureSubpacketGeneratorWrapper setIssuerKeyId(boolean isCritical, long keyId);
+    BaseSignatureSubpackets setIssuerKeyId(boolean isCritical, long keyId);
 
-    SignatureSubpacketGeneratorWrapper setIssuerKeyId(@Nullable IssuerKeyID issuerKeyID);
+    BaseSignatureSubpackets setIssuerKeyId(@Nullable IssuerKeyID issuerKeyID);
 
-    SignatureSubpacketGeneratorWrapper setIssuerFingerprint(@Nonnull PGPPublicKey key);
+    BaseSignatureSubpackets setIssuerFingerprint(@Nonnull PGPPublicKey key);
 
-    SignatureSubpacketGeneratorWrapper setIssuerFingerprint(boolean isCritical, @Nonnull PGPPublicKey key);
+    BaseSignatureSubpackets setIssuerFingerprint(boolean isCritical, @Nonnull PGPPublicKey key);
 
-    SignatureSubpacketGeneratorWrapper setIssuerFingerprint(@Nullable IssuerFingerprint fingerprint);
+    BaseSignatureSubpackets setIssuerFingerprint(@Nullable IssuerFingerprint fingerprint);
 
-    SignatureSubpacketGeneratorWrapper setSignatureCreationTime(@Nonnull Date creationTime);
+    BaseSignatureSubpackets setSignatureCreationTime(@Nonnull Date creationTime);
 
-    SignatureSubpacketGeneratorWrapper setSignatureCreationTime(boolean isCritical, @Nonnull Date creationTime);
+    BaseSignatureSubpackets setSignatureCreationTime(boolean isCritical, @Nonnull Date creationTime);
 
-    SignatureSubpacketGeneratorWrapper setSignatureCreationTime(@Nullable SignatureCreationTime signatureCreationTime);
+    BaseSignatureSubpackets setSignatureCreationTime(@Nullable SignatureCreationTime signatureCreationTime);
 
-    SignatureSubpacketGeneratorWrapper setSignatureExpirationTime(@Nonnull Date creationTime, @Nonnull Date expirationTime);
+    BaseSignatureSubpackets setSignatureExpirationTime(@Nonnull Date creationTime, @Nonnull Date expirationTime);
 
-    SignatureSubpacketGeneratorWrapper setSignatureExpirationTime(boolean isCritical, @Nonnull Date creationTime, @Nonnull Date expirationTime);
+    BaseSignatureSubpackets setSignatureExpirationTime(boolean isCritical, @Nonnull Date creationTime, @Nonnull Date expirationTime);
 
-    SignatureSubpacketGeneratorWrapper setSignatureExpirationTime(boolean isCritical, long seconds);
+    BaseSignatureSubpackets setSignatureExpirationTime(boolean isCritical, long seconds);
 
-    SignatureSubpacketGeneratorWrapper setSignatureExpirationTime(@Nullable SignatureExpirationTime expirationTime);
+    BaseSignatureSubpackets setSignatureExpirationTime(@Nullable SignatureExpirationTime expirationTime);
 
-    SignatureSubpacketGeneratorWrapper setSignerUserId(@Nonnull String userId);
+    BaseSignatureSubpackets setSignerUserId(@Nonnull String userId);
 
-    SignatureSubpacketGeneratorWrapper setSignerUserId(boolean isCritical, @Nonnull String userId);
+    BaseSignatureSubpackets setSignerUserId(boolean isCritical, @Nonnull String userId);
 
-    SignatureSubpacketGeneratorWrapper setSignerUserId(@Nullable SignerUserID signerUserId);
+    BaseSignatureSubpackets setSignerUserId(@Nullable SignerUserID signerUserId);
 
-    SignatureSubpacketGeneratorWrapper addNotationData(boolean isCritical, @Nonnull String notationName, @Nonnull String notationValue);
+    BaseSignatureSubpackets addNotationData(boolean isCritical, @Nonnull String notationName, @Nonnull String notationValue);
 
-    SignatureSubpacketGeneratorWrapper addNotationData(boolean isCritical, boolean isHumanReadable, @Nonnull String notationName, @Nonnull String notationValue);
+    BaseSignatureSubpackets addNotationData(boolean isCritical, boolean isHumanReadable, @Nonnull String notationName, @Nonnull String notationValue);
 
-    SignatureSubpacketGeneratorWrapper addNotationData(@Nonnull NotationData notationData);
+    BaseSignatureSubpackets addNotationData(@Nonnull NotationData notationData);
 
-    SignatureSubpacketGeneratorWrapper clearNotationData();
+    BaseSignatureSubpackets clearNotationData();
 
-    SignatureSubpacketGeneratorWrapper addIntendedRecipientFingerprint(@Nonnull PGPPublicKey recipient);
+    BaseSignatureSubpackets addIntendedRecipientFingerprint(@Nonnull PGPPublicKey recipient);
 
-    SignatureSubpacketGeneratorWrapper addIntendedRecipientFingerprint(boolean isCritical, @Nonnull PGPPublicKey recipient);
+    BaseSignatureSubpackets addIntendedRecipientFingerprint(boolean isCritical, @Nonnull PGPPublicKey recipient);
 
-    SignatureSubpacketGeneratorWrapper addIntendedRecipientFingerprint(IntendedRecipientFingerprint intendedRecipientFingerprint);
+    BaseSignatureSubpackets addIntendedRecipientFingerprint(IntendedRecipientFingerprint intendedRecipientFingerprint);
 
-    SignatureSubpacketGeneratorWrapper clearIntendedRecipientFingerprints();
+    BaseSignatureSubpackets clearIntendedRecipientFingerprints();
 
-    SignatureSubpacketGeneratorWrapper setExportable(boolean isCritical, boolean isExportable);
+    BaseSignatureSubpackets setExportable(boolean isCritical, boolean isExportable);
 
-    SignatureSubpacketGeneratorWrapper setExportable(@Nullable Exportable exportable);
+    BaseSignatureSubpackets setExportable(@Nullable Exportable exportable);
 
-    SignatureSubpacketGeneratorWrapper setRevocable(boolean isCritical, boolean isRevocable);
+    BaseSignatureSubpackets setRevocable(boolean isCritical, boolean isRevocable);
 
-    SignatureSubpacketGeneratorWrapper setRevocable(@Nullable Revocable revocable);
+    BaseSignatureSubpackets setRevocable(@Nullable Revocable revocable);
 
-    SignatureSubpacketGeneratorWrapper setSignatureTarget(@Nonnull PublicKeyAlgorithm keyAlgorithm, @Nonnull HashAlgorithm hashAlgorithm, @Nonnull byte[] hashData);
+    BaseSignatureSubpackets setSignatureTarget(@Nonnull PublicKeyAlgorithm keyAlgorithm, @Nonnull HashAlgorithm hashAlgorithm, @Nonnull byte[] hashData);
 
-    SignatureSubpacketGeneratorWrapper setSignatureTarget(boolean isCritical, @Nonnull PublicKeyAlgorithm keyAlgorithm, @Nonnull HashAlgorithm hashAlgorithm, @Nonnull byte[] hashData);
+    BaseSignatureSubpackets setSignatureTarget(boolean isCritical, @Nonnull PublicKeyAlgorithm keyAlgorithm, @Nonnull HashAlgorithm hashAlgorithm, @Nonnull byte[] hashData);
 
-    SignatureSubpacketGeneratorWrapper setSignatureTarget(@Nullable SignatureTarget signatureTarget);
+    BaseSignatureSubpackets setSignatureTarget(@Nullable SignatureTarget signatureTarget);
 
-    SignatureSubpacketGeneratorWrapper setTrust(int depth, int amount);
+    BaseSignatureSubpackets setTrust(int depth, int amount);
 
-    SignatureSubpacketGeneratorWrapper setTrust(boolean isCritical, int depth, int amount);
+    BaseSignatureSubpackets setTrust(boolean isCritical, int depth, int amount);
 
-    SignatureSubpacketGeneratorWrapper setTrust(@Nullable TrustSignature trust);
+    BaseSignatureSubpackets setTrust(@Nullable TrustSignature trust);
 
-    SignatureSubpacketGeneratorWrapper addEmbeddedSignature(@Nonnull PGPSignature signature) throws IOException;
+    BaseSignatureSubpackets addEmbeddedSignature(@Nonnull PGPSignature signature) throws IOException;
 
-    SignatureSubpacketGeneratorWrapper addEmbeddedSignature(boolean isCritical, @Nonnull PGPSignature signature) throws IOException;
+    BaseSignatureSubpackets addEmbeddedSignature(boolean isCritical, @Nonnull PGPSignature signature) throws IOException;
 
-    SignatureSubpacketGeneratorWrapper addEmbeddedSignature(@Nonnull EmbeddedSignature embeddedSignature);
+    BaseSignatureSubpackets addEmbeddedSignature(@Nonnull EmbeddedSignature embeddedSignature);
 
-    SignatureSubpacketGeneratorWrapper clearEmbeddedSignatures();
+    BaseSignatureSubpackets clearEmbeddedSignatures();
 }
