@@ -49,7 +49,7 @@ import org.pgpainless.algorithm.SymmetricKeyAlgorithm;
 import org.pgpainless.key.util.RevocationAttributes;
 
 public class SignatureSubpacketGeneratorWrapper
-        implements BaseSignatureSubpackets, SelfSignatureSubpackets, RevocationSignatureSubpackets {
+        implements BaseSignatureSubpackets, SelfSignatureSubpackets, CertificationSubpackets, RevocationSignatureSubpackets {
 
     private SignatureCreationTime signatureCreationTime;
     private SignatureExpirationTime signatureExpirationTime;

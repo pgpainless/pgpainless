@@ -4,7 +4,6 @@
 
 package org.pgpainless.signature.builder;
 
-import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
 
 import org.bouncycastle.openpgp.PGPException;
@@ -15,37 +14,36 @@ import org.bouncycastle.openpgp.PGPUserAttributeSubpacketVector;
 import org.pgpainless.algorithm.SignatureType;
 import org.pgpainless.exception.WrongPassphraseException;
 import org.pgpainless.key.protection.SecretKeyRingProtector;
-import org.pgpainless.signature.subpackets.CertificationSubpackets;
+import org.pgpainless.signature.subpackets.SelfSignatureSubpackets;
 
-public class CertificationSignatureBuilder extends AbstractSignatureBuilder<CertificationSignatureBuilder> {
+public class SelfSignatureBuilder extends AbstractSignatureBuilder<SelfSignatureBuilder> {
 
-    public CertificationSignatureBuilder(PGPSecretKey certificationKey, SecretKeyRingProtector protector)
-            throws WrongPassphraseException {
-        this(SignatureType.GENERIC_CERTIFICATION, certificationKey, protector);
+    public SelfSignatureBuilder(PGPSecretKey signingKey, SecretKeyRingProtector protector) throws WrongPassphraseException {
+        this(SignatureType.GENERIC_CERTIFICATION, signingKey, protector);
     }
 
-    public CertificationSignatureBuilder(SignatureType signatureType, PGPSecretKey signingKey, SecretKeyRingProtector protector)
+    public SelfSignatureBuilder(SignatureType signatureType, PGPSecretKey signingKey, SecretKeyRingProtector protector)
             throws WrongPassphraseException {
         super(signatureType, signingKey, protector);
     }
 
-    public CertificationSignatureBuilder(
-            PGPSecretKey certificationKey,
-            SecretKeyRingProtector protector,
-            PGPSignature archetypeSignature)
+    public SelfSignatureBuilder(
+            PGPSecretKey primaryKey,
+            SecretKeyRingProtector primaryKeyProtector,
+            PGPSignature oldCertification)
             throws WrongPassphraseException {
-        super(certificationKey, protector, archetypeSignature);
+        super(primaryKey, primaryKeyProtector, oldCertification);
     }
 
-    public CertificationSubpackets getHashedSubpackets() {
+    public SelfSignatureSubpackets getHashedSubpackets() {
         return hashedSubpackets;
     }
 
-    public CertificationSubpackets getUnhashedSubpackets() {
+    public SelfSignatureSubpackets getUnhashedSubpackets() {
         return unhashedSubpackets;
     }
 
-    public void applyCallback(@Nullable CertificationSubpackets.Callback callback) {
+    public void applyCallback(@Nullable SelfSignatureSubpackets.Callback callback) {
         if (callback != null) {
             callback.modifyHashedSubpackets(getHashedSubpackets());
             callback.modifyUnhashedSubpackets(getUnhashedSubpackets());
@@ -62,12 +60,13 @@ public class CertificationSignatureBuilder extends AbstractSignatureBuilder<Cert
     }
 
     @Override
-    protected boolean isValidSignatureType(@Nonnull SignatureType type) {
+    protected boolean isValidSignatureType(SignatureType type) {
         switch (type) {
             case GENERIC_CERTIFICATION:
             case NO_CERTIFICATION:
             case CASUAL_CERTIFICATION:
             case POSITIVE_CERTIFICATION:
+            case DIRECT_KEY:
                 return true;
             default:
                 return false;

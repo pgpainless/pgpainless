@@ -15,6 +15,7 @@ import org.pgpainless.algorithm.SignatureType;
 import org.pgpainless.exception.WrongPassphraseException;
 import org.pgpainless.key.protection.SecretKeyRingProtector;
 import org.pgpainless.signature.subpackets.BaseSignatureSubpackets;
+import org.pgpainless.signature.subpackets.CertificationSubpackets;
 import org.pgpainless.signature.subpackets.SelfSignatureSubpackets;
 
 public final class SignatureFactory {
@@ -29,8 +30,8 @@ public final class SignatureFactory {
             @Nullable SelfSignatureSubpackets.Callback subkeyBindingSubpacketsCallback,
             KeyFlag... flags) throws WrongPassphraseException {
         if (hasSignDataFlag(flags)) {
-            throw new IllegalArgumentException("Binding a subkey with SIGN_DATA flag requires primary key backsig." +
-                    "Please use the method bindSigningSubkey().");
+            throw new IllegalArgumentException("Binding a subkey with SIGN_DATA flag requires primary key backsig.\n" +
+                    "Please use the method bindSigningSubkey() instead.");
         }
 
         return bindSubkey(primaryKey, primaryKeyProtector, subkeyBindingSubpacketsCallback, flags);
@@ -85,28 +86,41 @@ public final class SignatureFactory {
         return primaryKeyBinder;
     }
 
-    public static CertificationSignatureBuilder selfCertifyUserId(
+    public static SelfSignatureBuilder selfCertifyUserId(
             PGPSecretKey primaryKey,
             SecretKeyRingProtector primaryKeyProtector,
             @Nullable SelfSignatureSubpackets.Callback selfSignatureCallback,
             KeyFlag... flags) throws WrongPassphraseException {
 
-        CertificationSignatureBuilder certifier = new CertificationSignatureBuilder(primaryKey, primaryKeyProtector);
+        SelfSignatureBuilder certifier = new SelfSignatureBuilder(SignatureType.POSITIVE_CERTIFICATION, primaryKey, primaryKeyProtector);
         certifier.getHashedSubpackets().setKeyFlags(flags);
+
         certifier.applyCallback(selfSignatureCallback);
 
         return certifier;
     }
 
-    public static CertificationSignatureBuilder renewSelfCertification(
+    public static SelfSignatureBuilder renewSelfCertification(
             PGPSecretKey primaryKey,
             SecretKeyRingProtector primaryKeyProtector,
             @Nullable SelfSignatureSubpackets.Callback selfSignatureCallback,
             PGPSignature oldCertification) throws WrongPassphraseException {
-        CertificationSignatureBuilder certifier = new CertificationSignatureBuilder(
+        SelfSignatureBuilder certifier = new SelfSignatureBuilder(
                 primaryKey, primaryKeyProtector, oldCertification);
 
         certifier.applyCallback(selfSignatureCallback);
+
+        return certifier;
+    }
+
+    public static CertificationSignatureBuilder certifyUserId(
+            PGPSecretKey signingKey,
+            SecretKeyRingProtector signingKeyProtector,
+            @Nullable CertificationSubpackets.Callback subpacketsCallback)
+            throws WrongPassphraseException {
+        CertificationSignatureBuilder certifier = new CertificationSignatureBuilder(signingKey, signingKeyProtector);
+
+        certifier.applyCallback(subpacketsCallback);
 
         return certifier;
     }

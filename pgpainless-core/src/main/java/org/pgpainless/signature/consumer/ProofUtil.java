@@ -24,6 +24,7 @@ import org.pgpainless.key.info.KeyRingInfo;
 import org.pgpainless.key.protection.SecretKeyRingProtector;
 import org.pgpainless.signature.builder.CertificationSignatureBuilder;
 import org.pgpainless.signature.builder.DirectKeySignatureBuilder;
+import org.pgpainless.signature.builder.SelfSignatureBuilder;
 
 public class ProofUtil {
 
@@ -73,7 +74,7 @@ public class ProofUtil {
                 throw new NoSuchElementException("No previous valid user-id certification found.");
             }
 
-            CertificationSignatureBuilder sigBuilder = new CertificationSignatureBuilder(certificationKey, protector, previousCertification);
+            SelfSignatureBuilder sigBuilder = new SelfSignatureBuilder(certificationKey, protector, previousCertification);
             for (Proof proof : proofs) {
                 sigBuilder.getHashedSubpackets().addNotationData(false, proof.getNotationName(), proof.getNotationValue());
             }
