@@ -12,7 +12,6 @@ import org.pgpainless.algorithm.SignatureType;
 import org.pgpainless.exception.WrongPassphraseException;
 import org.pgpainless.key.protection.SecretKeyRingProtector;
 import org.pgpainless.signature.subpackets.RevocationSignatureSubpackets;
-import org.pgpainless.signature.subpackets.SelfSignatureSubpackets;
 
 public class RevocationSignatureBuilder extends AbstractSignatureBuilder<RevocationSignatureBuilder> {
 
