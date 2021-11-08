@@ -59,6 +59,10 @@ public abstract class ImplementationFactory {
 
     public abstract PBESecretKeyDecryptor getPBESecretKeyDecryptor(Passphrase passphrase) throws PGPException;
 
+    public PGPDigestCalculator getV4FingerprintCalculator() throws PGPException {
+        return getPGPDigestCalculator(HashAlgorithm.SHA1);
+    }
+
     public PGPDigestCalculator getPGPDigestCalculator(HashAlgorithm algorithm) throws PGPException {
         return getPGPDigestCalculator(algorithm.getAlgorithmId());
     }

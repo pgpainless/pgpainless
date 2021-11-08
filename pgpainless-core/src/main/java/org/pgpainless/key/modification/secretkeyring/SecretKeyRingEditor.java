@@ -41,7 +41,6 @@ import org.pgpainless.algorithm.HashAlgorithm;
 import org.pgpainless.algorithm.KeyFlag;
 import org.pgpainless.algorithm.PublicKeyAlgorithm;
 import org.pgpainless.algorithm.SignatureType;
-import org.pgpainless.algorithm.SymmetricKeyAlgorithm;
 import org.pgpainless.implementation.ImplementationFactory;
 import org.pgpainless.key.OpenPgpFingerprint;
 import org.pgpainless.key.generation.KeyRingBuilder;
@@ -182,28 +181,27 @@ public class SecretKeyRingEditor implements SecretKeyRingEditorInterface {
                                                   KeyFlag keyFlag,
                                                   KeyFlag... additionalKeyFlags) throws PGPException, IOException {
         KeyFlag[] flags = concat(keyFlag, additionalKeyFlags);
-        SignatureSubpacketsUtil.assureKeyCanCarryFlags(PublicKeyAlgorithm.fromId(subkey.getPublicKey().getAlgorithm()));
-
-        boolean isSigningKey = CollectionUtils.contains(flags, KeyFlag.SIGN_DATA) ||
-                CollectionUtils.contains(flags, KeyFlag.CERTIFY_OTHER);
-        if (!isSigningKey) {
-            return addSubKey(subkey.getPublicKey(),
-                    bindingSignatureCallback,
-                    primaryKeyProtector,
-                    keyFlag,
-                    additionalKeyFlags);
-        }
+        PublicKeyAlgorithm subkeyAlgorithm = PublicKeyAlgorithm.fromId(subkey.getPublicKey().getAlgorithm());
+        SignatureSubpacketsUtil.assureKeyCanCarryFlags(subkeyAlgorithm);
 
         PGPSecretKey primaryKey = secretKeyRing.getSecretKey();
-        SubkeyBindingSignatureBuilder bindingSigBuilder = new SubkeyBindingSignatureBuilder(primaryKey, primaryKeyProtector);
+        SubkeyBindingSignatureBuilder bindingSigBuilder =
+                new SubkeyBindingSignatureBuilder(primaryKey, primaryKeyProtector);
+
         bindingSigBuilder.applyCallback(bindingSignatureCallback);
         bindingSigBuilder.getHashedSubpackets().setKeyFlags(flags);
 
-        PrimaryKeyBindingSignatureBuilder backSigBuilder = new PrimaryKeyBindingSignatureBuilder(subkey, subkeyProtector);
-        backSigBuilder.applyCallback(backSignatureCallback);
-        PGPSignature backSig = backSigBuilder.build(primaryKey.getPublicKey());
+        boolean isSigningKey = CollectionUtils.contains(flags, KeyFlag.SIGN_DATA) ||
+                CollectionUtils.contains(flags, KeyFlag.CERTIFY_OTHER);
+        if (isSigningKey) {
+            // Add embedded back-signature made by subkey over primary key
+            PrimaryKeyBindingSignatureBuilder backSigBuilder =
+                    new PrimaryKeyBindingSignatureBuilder(subkey, subkeyProtector);
+            backSigBuilder.applyCallback(backSignatureCallback);
+            PGPSignature backSig = backSigBuilder.build(primaryKey.getPublicKey());
+            bindingSigBuilder.getHashedSubpackets().addEmbeddedSignature(backSig);
+        }
 
-        bindingSigBuilder.getHashedSubpackets().addEmbeddedSignature(backSig);
         PGPSignature bindingSig = bindingSigBuilder.build(subkey.getPublicKey());
         subkey = KeyRingUtils.secretKeyPlusSignature(subkey, bindingSig);
         secretKeyRing = KeyRingUtils.secretKeysPlusSecretKey(secretKeyRing, subkey);
@@ -211,54 +209,10 @@ public class SecretKeyRingEditor implements SecretKeyRingEditorInterface {
         return this;
     }
 
-    @Override
-    public SecretKeyRingEditorInterface addSubKey(PGPPublicKey subkey,
-                                                  SelfSignatureSubpackets.Callback bindingSignatureCallback,
-                                                  SecretKeyRingProtector primaryKeyProtector,
-                                                  KeyFlag keyFlag,
-                                                  KeyFlag... additionalKeyFlags) throws PGPException {
-        KeyFlag[] flags = concat(keyFlag, additionalKeyFlags);
-        boolean isSigningKey = CollectionUtils.contains(flags, KeyFlag.SIGN_DATA) ||
-                CollectionUtils.contains(flags, KeyFlag.CERTIFY_OTHER);
-        if (isSigningKey) {
-            throw new IllegalArgumentException("Cannot bind a signing capable subkey without access to the secret subkey.\n" +
-                    "Please use addSubKey(PGPSecretKey secretSubKey, [...]) instead.");
-        }
-
-        PGPSignature bindingSignature = createSubkeyBindingSignature(subkey, bindingSignatureCallback, primaryKeyProtector, flags);
-        subkey = PGPPublicKey.addCertification(subkey, bindingSignature);
-
-        secretKeyRing = KeyRingUtils.secretKeysPlusPublicKey(secretKeyRing, subkey);
-
-        return this;
-    }
-
-    private PGPSignature createSubkeyBindingSignature(PGPPublicKey subkey,
-                                                      SelfSignatureSubpackets.Callback bindingSignatureCallback,
-                                                      SecretKeyRingProtector primaryKeyProtector,
-                                                      KeyFlag... keyFlags) throws PGPException {
-        PGPSecretKey primaryKey = secretKeyRing.getSecretKey();
-        SubkeyBindingSignatureBuilder builder = new SubkeyBindingSignatureBuilder(primaryKey, primaryKeyProtector);
-        builder.applyCallback(bindingSignatureCallback);
-        builder.getHashedSubpackets().setKeyFlags(keyFlags);
-
-        PGPSignature signature = builder.build(subkey);
-        return signature;
-    }
-
     private PGPSecretKey generateSubKey(@Nonnull KeySpec keySpec,
                                         @Nonnull Passphrase subKeyPassphrase)
             throws PGPException, InvalidAlgorithmParameterException, NoSuchAlgorithmException {
-        PGPDigestCalculator checksumCalculator = ImplementationFactory.getInstance()
-                .getPGPDigestCalculator(defaultDigestHashAlgorithm);
-
-        PBESecretKeyEncryptor subKeyEncryptor = subKeyPassphrase.isEmpty() ? null :
-                ImplementationFactory.getInstance().getPBESecretKeyEncryptor(SymmetricKeyAlgorithm.AES_256, subKeyPassphrase);
-
-        PGPKeyPair keyPair = KeyRingBuilder.generateKeyPair(keySpec);
-        PGPSecretKey secretKey = new PGPSecretKey(keyPair.getPrivateKey(), keyPair.getPublicKey(),
-                checksumCalculator, false, subKeyEncryptor);
-        return secretKey;
+        return KeyRingBuilder.generatePGPSecretKey(keySpec, subKeyPassphrase, false);
     }
 
     @Override

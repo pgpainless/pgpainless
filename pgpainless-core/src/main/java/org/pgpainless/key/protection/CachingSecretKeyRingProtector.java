@@ -56,7 +56,7 @@ public class CachingSecretKeyRingProtector implements SecretKeyRingProtector, Se
      * @param keyId id of the key
      * @param passphrase passphrase
      */
-    public void addPassphrase(@Nonnull Long keyId, @Nullable Passphrase passphrase) {
+    public void addPassphrase(@Nonnull Long keyId, @Nonnull Passphrase passphrase) {
         this.cache.put(keyId, passphrase);
     }
 
@@ -66,7 +66,7 @@ public class CachingSecretKeyRingProtector implements SecretKeyRingProtector, Se
      * @param keyRing key ring
      * @param passphrase passphrase
      */
-    public void addPassphrase(@Nonnull PGPKeyRing keyRing, @Nullable Passphrase passphrase) {
+    public void addPassphrase(@Nonnull PGPKeyRing keyRing, @Nonnull Passphrase passphrase) {
         Iterator<PGPPublicKey> keys = keyRing.getPublicKeys();
         while (keys.hasNext()) {
             PGPPublicKey publicKey = keys.next();
@@ -80,11 +80,11 @@ public class CachingSecretKeyRingProtector implements SecretKeyRingProtector, Se
      * @param key key
      * @param passphrase passphrase
      */
-    public void addPassphrase(@Nonnull PGPPublicKey key, @Nullable Passphrase passphrase) {
+    public void addPassphrase(@Nonnull PGPPublicKey key, @Nonnull Passphrase passphrase) {
         addPassphrase(key.getKeyID(), passphrase);
     }
 
-    public void addPassphrase(@Nonnull OpenPgpFingerprint fingerprint, @Nullable Passphrase passphrase) {
+    public void addPassphrase(@Nonnull OpenPgpFingerprint fingerprint, @Nonnull Passphrase passphrase) {
         addPassphrase(fingerprint.getKeyId(), passphrase);
     }
 
@@ -95,9 +95,10 @@ public class CachingSecretKeyRingProtector implements SecretKeyRingProtector, Se
      * @param keyId id of the key
      */
     public void forgetPassphrase(@Nonnull Long keyId) {
-        Passphrase passphrase = cache.get(keyId);
-        passphrase.clear();
-        cache.remove(keyId);
+        Passphrase passphrase = cache.remove(keyId);
+        if (passphrase != null) {
+            passphrase.clear();
+        }
     }
 
     /**
@@ -140,12 +141,13 @@ public class CachingSecretKeyRingProtector implements SecretKeyRingProtector, Se
 
     @Override
     public boolean hasPassphrase(Long keyId) {
-        return cache.containsKey(keyId);
+        Passphrase passphrase = cache.get(keyId);
+        return passphrase != null && passphrase.isValid();
     }
 
     @Override
     public boolean hasPassphraseFor(Long keyId) {
-        return cache.containsKey(keyId);
+        return hasPassphrase(keyId);
     }
 
     @Override

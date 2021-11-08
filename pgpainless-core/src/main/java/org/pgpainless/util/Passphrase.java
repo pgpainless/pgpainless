@@ -10,7 +10,7 @@ import java.util.Arrays;
 
 public class Passphrase {
 
-    private final Object lock = new Object();
+    public final Object lock = new Object();
 
     private final char[] chars;
     private boolean valid = true;

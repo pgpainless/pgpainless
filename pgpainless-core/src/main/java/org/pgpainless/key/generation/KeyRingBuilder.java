@@ -41,6 +41,7 @@ import org.pgpainless.algorithm.SignatureType;
 import org.pgpainless.algorithm.SymmetricKeyAlgorithm;
 import org.pgpainless.implementation.ImplementationFactory;
 import org.pgpainless.key.generation.type.KeyType;
+import org.pgpainless.key.protection.SecretKeyRingProtector;
 import org.pgpainless.key.protection.UnlockSecretKey;
 import org.pgpainless.provider.ProviderFactory;
 import org.pgpainless.signature.subpackets.SignatureSubpacketGeneratorUtil;
@@ -52,13 +53,13 @@ public class KeyRingBuilder implements KeyRingBuilderInterface<KeyRingBuilder> {
     private final Charset UTF8 = Charset.forName("UTF-8");
 
     private PGPSignatureGenerator signatureGenerator;
-    private PGPDigestCalculator digestCalculator;
+    private PGPDigestCalculator keyFingerprintCalculator;
     private PBESecretKeyEncryptor secretKeyEncryptor;
 
     private KeySpec primaryKeySpec;
     private final List<KeySpec> subkeySpecs = new ArrayList<>();
     private final Set<String> userIds = new LinkedHashSet<>();
-    private Passphrase passphrase = null;
+    private Passphrase passphrase = Passphrase.emptyPassphrase();
     private Date expirationDate = null;
 
     @Override
@@ -126,13 +127,11 @@ public class KeyRingBuilder implements KeyRingBuilderInterface<KeyRingBuilder> {
         if (userIds.isEmpty()) {
             throw new IllegalStateException("At least one user-id is required.");
         }
-        digestCalculator = buildDigestCalculator();
+        keyFingerprintCalculator = ImplementationFactory.getInstance().getV4FingerprintCalculator();
         secretKeyEncryptor = buildSecretKeyEncryptor();
         PBESecretKeyDecryptor secretKeyDecryptor = buildSecretKeyDecryptor();
 
-        if (passphrase != null) {
-            passphrase.clear();
-        }
+        passphrase.clear();
 
         // Generate Primary Key
         PGPKeyPair certKey = generateKeyPair(primaryKeySpec);
@@ -171,8 +170,7 @@ public class KeyRingBuilder implements KeyRingBuilderInterface<KeyRingBuilder> {
 
         // "reassemble" secret key ring with modified primary key
         PGPSecretKey primarySecKey = new PGPSecretKey(
-                privateKey,
-                primaryPubKey, digestCalculator, true, secretKeyEncryptor);
+                privateKey, primaryPubKey, keyFingerprintCalculator, true, secretKeyEncryptor);
         List<PGPSecretKey> secretKeyList = new ArrayList<>();
         secretKeyList.add(primarySecKey);
         while (secretKeys.hasNext()) {
@@ -190,7 +188,7 @@ public class KeyRingBuilder implements KeyRingBuilderInterface<KeyRingBuilder> {
         String primaryUserId = userIds.iterator().next();
         return new PGPKeyRingGenerator(
                 SignatureType.POSITIVE_CERTIFICATION.getCode(), certKey,
-                primaryUserId, digestCalculator,
+                primaryUserId, keyFingerprintCalculator,
                 hashedSubPackets, null, signer, secretKeyEncryptor);
     }
 
@@ -236,22 +234,20 @@ public class KeyRingBuilder implements KeyRingBuilderInterface<KeyRingBuilder> {
     private PBESecretKeyEncryptor buildSecretKeyEncryptor() {
         SymmetricKeyAlgorithm keyEncryptionAlgorithm = PGPainless.getPolicy().getSymmetricKeyEncryptionAlgorithmPolicy()
                 .getDefaultSymmetricKeyAlgorithm();
-        PBESecretKeyEncryptor encryptor = passphrase == null || passphrase.isEmpty() ?
-                null : // unencrypted key pair, otherwise AES-256 encrypted
+        if (!passphrase.isValid()) {
+            throw new IllegalStateException("Passphrase was cleared.");
+        }
+        return passphrase.isEmpty() ? null : // unencrypted key pair, otherwise AES-256 encrypted
                 ImplementationFactory.getInstance().getPBESecretKeyEncryptor(
-                        keyEncryptionAlgorithm, digestCalculator, passphrase);
-        return encryptor;
+                        keyEncryptionAlgorithm, keyFingerprintCalculator, passphrase);
     }
 
     private PBESecretKeyDecryptor buildSecretKeyDecryptor() throws PGPException {
-        PBESecretKeyDecryptor decryptor = passphrase == null || passphrase.isEmpty() ?
-                null :
+        if (!passphrase.isValid()) {
+            throw new IllegalStateException("Passphrase was cleared.");
+        }
+        return passphrase.isEmpty() ? null :
                 ImplementationFactory.getInstance().getPBESecretKeyDecryptor(passphrase);
-        return decryptor;
-    }
-
-    private PGPDigestCalculator buildDigestCalculator() throws PGPException {
-        return ImplementationFactory.getInstance().getPGPDigestCalculator(HashAlgorithm.SHA1);
     }
 
     public static PGPKeyPair generateKeyPair(KeySpec spec)
@@ -268,5 +264,31 @@ public class KeyRingBuilder implements KeyRingBuilderInterface<KeyRingBuilder> {
         // Form PGP key pair
         PGPKeyPair pgpKeyPair = ImplementationFactory.getInstance().getPGPKeyPair(type.getAlgorithm(), keyPair, new Date());
         return pgpKeyPair;
+    }
+
+    public static PGPSecretKey generatePGPSecretKey(KeySpec keySpec, @Nonnull Passphrase passphrase, boolean isPrimary)
+            throws PGPException, InvalidAlgorithmParameterException, NoSuchAlgorithmException {
+        PGPDigestCalculator keyFingerprintCalculator = ImplementationFactory.getInstance()
+                .getV4FingerprintCalculator();
+        PGPKeyPair keyPair = generateKeyPair(keySpec);
+        SecretKeyRingProtector protector;
+
+        synchronized (passphrase.lock) {
+            if (!passphrase.isValid()) {
+                throw new IllegalStateException("Passphrase has been cleared.");
+            }
+            if (!passphrase.isEmpty()) {
+                protector = SecretKeyRingProtector.unlockSingleKeyWith(passphrase, keyPair.getKeyID());
+            } else {
+                protector = SecretKeyRingProtector.unprotectedKeys();
+            }
+
+            return new PGPSecretKey(
+                    keyPair.getPrivateKey(),
+                    keyPair.getPublicKey(),
+                    keyFingerprintCalculator,
+                    isPrimary,
+                    protector.getEncryptor(keyPair.getKeyID()));
+        }
     }
 }

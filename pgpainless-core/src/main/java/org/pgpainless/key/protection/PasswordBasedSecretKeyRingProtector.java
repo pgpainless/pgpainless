@@ -64,12 +64,16 @@ public class PasswordBasedSecretKeyRingProtector implements SecretKeyRingProtect
     }
 
     public static PasswordBasedSecretKeyRingProtector forKey(PGPSecretKey key, Passphrase passphrase) {
+        return forKeyId(key.getPublicKey().getKeyID(), passphrase);
+    }
+
+    public static PasswordBasedSecretKeyRingProtector forKeyId(long singleKeyId, Passphrase passphrase) {
         KeyRingProtectionSettings protectionSettings = KeyRingProtectionSettings.secureDefaultSettings();
         SecretKeyPassphraseProvider passphraseProvider = new SecretKeyPassphraseProvider() {
-            @Override
             @Nullable
+            @Override
             public Passphrase getPassphraseFor(Long keyId) {
-                if (key.getKeyID() == keyId) {
+                if (keyId == singleKeyId) {
                     return passphrase;
                 }
                 return null;
@@ -77,7 +81,7 @@ public class PasswordBasedSecretKeyRingProtector implements SecretKeyRingProtect
 
             @Override
             public boolean hasPassphrase(Long keyId) {
-                return keyId == key.getKeyID();
+                return keyId == singleKeyId;
             }
         };
         return new PasswordBasedSecretKeyRingProtector(protectionSettings, passphraseProvider);

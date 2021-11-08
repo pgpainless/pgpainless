@@ -98,6 +98,10 @@ public interface SecretKeyRingProtector {
         return PasswordBasedSecretKeyRingProtector.forKey(key, passphrase);
     }
 
+    static SecretKeyRingProtector unlockSingleKeyWith(Passphrase passphrase, long keyId) {
+        return PasswordBasedSecretKeyRingProtector.forKeyId(keyId, passphrase);
+    }
+
     /**
      * Protector for unprotected keys.
      * This protector returns null for all {@link #getEncryptor(Long)}/{@link #getDecryptor(Long)} calls,

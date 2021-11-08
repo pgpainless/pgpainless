@@ -12,7 +12,6 @@ import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
 
 import org.bouncycastle.openpgp.PGPException;
-import org.bouncycastle.openpgp.PGPPublicKey;
 import org.bouncycastle.openpgp.PGPSecretKey;
 import org.bouncycastle.openpgp.PGPSecretKeyRing;
 import org.bouncycastle.openpgp.PGPSignature;
@@ -59,7 +58,7 @@ public interface SecretKeyRingEditorInterface {
      * @return the builder
      */
     SecretKeyRingEditorInterface addSubKey(@Nonnull KeySpec keySpec,
-                                           @Nonnull Passphrase subKeyPassphrase,
+                                           @Nullable Passphrase subKeyPassphrase,
                                            SecretKeyRingProtector secretKeyRingProtector)
             throws InvalidAlgorithmParameterException, NoSuchAlgorithmException, PGPException;
 
@@ -77,12 +76,6 @@ public interface SecretKeyRingEditorInterface {
                                            SecretKeyRingProtector primaryKeyProtector,
                                            KeyFlag keyFlag,
                                            KeyFlag... additionalKeyFlags) throws PGPException, IOException;
-
-    SecretKeyRingEditorInterface addSubKey(PGPPublicKey subkey,
-                                           SelfSignatureSubpackets.Callback bindingSignatureCallback,
-                                           SecretKeyRingProtector primaryKeyProtector,
-                                           KeyFlag keyFlag,
-                                           KeyFlag... additionalKeyFlags) throws PGPException;
 
     /**
      * Revoke the key ring.
