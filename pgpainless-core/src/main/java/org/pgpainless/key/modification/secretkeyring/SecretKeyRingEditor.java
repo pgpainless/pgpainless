@@ -52,6 +52,8 @@ import org.pgpainless.key.protection.passphrase_provider.SolitaryPassphraseProvi
 import org.pgpainless.key.util.KeyRingUtils;
 import org.pgpainless.key.util.RevocationAttributes;
 import org.pgpainless.signature.SignatureUtils;
+import org.pgpainless.signature.builder.SelfSignatureBuilder;
+import org.pgpainless.signature.subpackets.SelfSignatureSubpackets;
 import org.pgpainless.signature.subpackets.SignatureSubpacketGeneratorUtil;
 import org.pgpainless.util.Passphrase;
 
@@ -73,6 +75,13 @@ public class SecretKeyRingEditor implements SecretKeyRingEditorInterface {
 
     @Override
     public SecretKeyRingEditorInterface addUserId(String userId, SecretKeyRingProtector secretKeyRingProtector) throws PGPException {
+        return addUserId(userId, null, secretKeyRingProtector);
+    }
+
+    public SecretKeyRingEditorInterface addUserId(
+            String userId,
+            @Nullable SelfSignatureSubpackets.Callback signatureSubpacketCallback,
+            SecretKeyRingProtector protector) throws PGPException {
         userId = sanitizeUserId(userId);
 
         List<PGPSecretKey> secretKeyList = new ArrayList<>();
@@ -81,10 +90,15 @@ public class SecretKeyRingEditor implements SecretKeyRingEditorInterface {
         // add user-id certificate to primary key
         PGPSecretKey primaryKey = secretKeyIterator.next();
         PGPPublicKey publicKey = primaryKey.getPublicKey();
-        PGPPrivateKey privateKey = UnlockSecretKey.unlockSecretKey(primaryKey, secretKeyRingProtector);
-        publicKey = addUserIdToPubKey(userId, privateKey, publicKey);
-        primaryKey = PGPSecretKey.replacePublicKey(primaryKey, publicKey);
 
+        SelfSignatureBuilder builder = new SelfSignatureBuilder(primaryKey, protector);
+        builder.setSignatureType(SignatureType.POSITIVE_CERTIFICATION);
+        builder.applyCallback(signatureSubpacketCallback);
+        PGPSignature signature = builder.build(publicKey, userId);
+
+        publicKey = PGPPublicKey.addCertification(publicKey,
+                userId, signature);
+        primaryKey = PGPSecretKey.replacePublicKey(primaryKey, publicKey);
         secretKeyList.add(primaryKey);
 
         while (secretKeyIterator.hasNext()) {
@@ -94,21 +108,6 @@ public class SecretKeyRingEditor implements SecretKeyRingEditorInterface {
         secretKeyRing = new PGPSecretKeyRing(secretKeyList);
 
         return this;
-    }
-
-    private static PGPPublicKey addUserIdToPubKey(String userId, PGPPrivateKey privateKey, PGPPublicKey publicKey) throws PGPException {
-        if (privateKey.getKeyID() != publicKey.getKeyID()) {
-            throw new IllegalArgumentException("Key-ID mismatch!");
-        }
-        // Create signature with new user-id and add it to the public key
-        PGPSignatureGenerator signatureGenerator = SignatureUtils.getSignatureGeneratorFor(publicKey);
-        signatureGenerator.init(SignatureType.POSITIVE_CERTIFICATION.getCode(), privateKey);
-
-        PGPSignature userIdSignature = signatureGenerator.generateCertification(userId, publicKey);
-        publicKey = PGPPublicKey.addCertification(publicKey,
-                userId, userIdSignature);
-
-        return publicKey;
     }
 
     // TODO: Move to utility class?
@@ -149,11 +148,8 @@ public class SecretKeyRingEditor implements SecretKeyRingEditorInterface {
 
         PGPDigestCalculator digestCalculator =
                 ImplementationFactory.getInstance().getPGPDigestCalculator(defaultDigestHashAlgorithm);
-        PGPContentSignerBuilder contentSignerBuilder = ImplementationFactory.getInstance()
-                .getPGPContentSignerBuilder(
-                        primaryKey.getAlgorithm(),
-                        HashAlgorithm.SHA256.getAlgorithmId() // TODO: Why SHA256?
-                );
+        PGPContentSignerBuilder contentSignerBuilder =
+                SignatureUtils.getPgpContentSignerBuilderForKey(primaryKey);
 
         PGPPrivateKey privateSubKey = UnlockSecretKey.unlockSecretKey(secretSubKey, subKeyProtector);
         PGPKeyPair subKeyPair = new PGPKeyPair(secretSubKey.getPublicKey(), privateSubKey);

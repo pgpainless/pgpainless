@@ -22,7 +22,6 @@ import org.bouncycastle.openpgp.PGPSignatureSubpacketVector;
 import org.pgpainless.PGPainless;
 import org.pgpainless.key.info.KeyRingInfo;
 import org.pgpainless.key.protection.SecretKeyRingProtector;
-import org.pgpainless.signature.builder.CertificationSignatureBuilder;
 import org.pgpainless.signature.builder.DirectKeySignatureBuilder;
 import org.pgpainless.signature.builder.SelfSignatureBuilder;
 

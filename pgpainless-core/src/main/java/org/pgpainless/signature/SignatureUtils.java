@@ -82,7 +82,7 @@ public final class SignatureUtils {
      * @param publicKey public key
      * @return content signer builder
      */
-    private static PGPContentSignerBuilder getPgpContentSignerBuilderForKey(PGPPublicKey publicKey) {
+    public static PGPContentSignerBuilder getPgpContentSignerBuilderForKey(PGPPublicKey publicKey) {
         Set<HashAlgorithm> hashAlgorithmSet = OpenPgpKeyAttributeUtil.getOrGuessPreferredHashAlgorithms(publicKey);
 
         HashAlgorithm hashAlgorithm = HashAlgorithmNegotiator.negotiateSignatureHashAlgorithm(PGPainless.getPolicy())
