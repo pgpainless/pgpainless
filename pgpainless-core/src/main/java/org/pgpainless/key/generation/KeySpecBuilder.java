@@ -19,6 +19,7 @@ import org.pgpainless.algorithm.HashAlgorithm;
 import org.pgpainless.algorithm.KeyFlag;
 import org.pgpainless.algorithm.SymmetricKeyAlgorithm;
 import org.pgpainless.key.generation.type.KeyType;
+import org.pgpainless.signature.subpackets.SignatureSubpacketsUtil;
 import org.pgpainless.util.CollectionUtils;
 
 public class KeySpecBuilder implements KeySpecBuilderInterface {
@@ -39,7 +40,7 @@ public class KeySpecBuilder implements KeySpecBuilderInterface {
             throw new IllegalArgumentException("List of additional flags MUST NOT be null.");
         }
         flags = CollectionUtils.concat(flag, flags);
-        assureKeyCanCarryFlags(type, flags);
+        SignatureSubpacketsUtil.assureKeyCanCarryFlags(type, flags);
         this.type = type;
         this.keyFlags = flags;
     }
@@ -99,29 +100,5 @@ public class KeySpecBuilder implements KeySpecBuilderInterface {
             ids[i] = iterator.next().getAlgorithmId();
         }
         return ids;
-    }
-
-    private static void assureKeyCanCarryFlags(KeyType type, KeyFlag... flags) {
-        final int mask = KeyFlag.toBitmask(flags);
-
-        if (!type.canCertify() && KeyFlag.hasKeyFlag(mask, KeyFlag.CERTIFY_OTHER)) {
-            throw new IllegalArgumentException("KeyType " + type.getName() + " cannot carry key flag CERTIFY_OTHER.");
-        }
-
-        if (!type.canSign() && KeyFlag.hasKeyFlag(mask, KeyFlag.SIGN_DATA)) {
-            throw new IllegalArgumentException("KeyType " + type.getName() + " cannot carry key flag SIGN_DATA.");
-        }
-
-        if (!type.canEncryptCommunication() && KeyFlag.hasKeyFlag(mask, KeyFlag.ENCRYPT_COMMS)) {
-            throw new IllegalArgumentException("KeyType " + type.getName() + " cannot carry key flag ENCRYPT_COMMS.");
-        }
-
-        if (!type.canEncryptStorage() && KeyFlag.hasKeyFlag(mask, KeyFlag.ENCRYPT_STORAGE)) {
-            throw new IllegalArgumentException("KeyType " + type.getName() + " cannot carry key flag ENCRYPT_STORAGE.");
-        }
-
-        if (!type.canAuthenticate() && KeyFlag.hasKeyFlag(mask, KeyFlag.AUTHENTICATION)) {
-            throw new IllegalArgumentException("KeyType " + type.getName() + " cannot carry key flag AUTHENTIACTION.");
-        }
     }
 }

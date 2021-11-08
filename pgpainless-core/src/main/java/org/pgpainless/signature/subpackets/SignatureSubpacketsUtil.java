@@ -41,10 +41,12 @@ import org.pgpainless.algorithm.CompressionAlgorithm;
 import org.pgpainless.algorithm.Feature;
 import org.pgpainless.algorithm.HashAlgorithm;
 import org.pgpainless.algorithm.KeyFlag;
+import org.pgpainless.algorithm.PublicKeyAlgorithm;
 import org.pgpainless.algorithm.SignatureSubpacket;
 import org.pgpainless.algorithm.SymmetricKeyAlgorithm;
 import org.pgpainless.key.OpenPgpFingerprint;
 import org.pgpainless.key.OpenPgpV4Fingerprint;
+import org.pgpainless.key.generation.type.KeyType;
 import org.pgpainless.signature.SignatureUtils;
 
 /**
@@ -559,5 +561,59 @@ public final class SignatureSubpacketsUtil {
             return null;
         }
         return (P) allPackets[allPackets.length - 1]; // return last
+    }
+
+    /**
+     * Make sure that the given key type can carry the given key flags.
+     *
+     * @param type key type
+     * @param flags key flags
+     */
+    public static void assureKeyCanCarryFlags(KeyType type, KeyFlag... flags) {
+        final int mask = KeyFlag.toBitmask(flags);
+
+        if (!type.canCertify() && KeyFlag.hasKeyFlag(mask, KeyFlag.CERTIFY_OTHER)) {
+            throw new IllegalArgumentException("KeyType " + type.getName() + " cannot carry key flag CERTIFY_OTHER.");
+        }
+
+        if (!type.canSign() && KeyFlag.hasKeyFlag(mask, KeyFlag.SIGN_DATA)) {
+            throw new IllegalArgumentException("KeyType " + type.getName() + " cannot carry key flag SIGN_DATA.");
+        }
+
+        if (!type.canEncryptCommunication() && KeyFlag.hasKeyFlag(mask, KeyFlag.ENCRYPT_COMMS)) {
+            throw new IllegalArgumentException("KeyType " + type.getName() + " cannot carry key flag ENCRYPT_COMMS.");
+        }
+
+        if (!type.canEncryptStorage() && KeyFlag.hasKeyFlag(mask, KeyFlag.ENCRYPT_STORAGE)) {
+            throw new IllegalArgumentException("KeyType " + type.getName() + " cannot carry key flag ENCRYPT_STORAGE.");
+        }
+
+        if (!type.canAuthenticate() && KeyFlag.hasKeyFlag(mask, KeyFlag.AUTHENTICATION)) {
+            throw new IllegalArgumentException("KeyType " + type.getName() + " cannot carry key flag AUTHENTIACTION.");
+        }
+    }
+
+    public static void assureKeyCanCarryFlags(PublicKeyAlgorithm algorithm, KeyFlag... flags) {
+        final int mask = KeyFlag.toBitmask(flags);
+
+        if (!algorithm.isSigningCapable() && KeyFlag.hasKeyFlag(mask, KeyFlag.CERTIFY_OTHER)) {
+            throw new IllegalArgumentException("Algorithm " + algorithm + " cannot be used with key flag CERTIFY_OTHER.");
+        }
+
+        if (!algorithm.isSigningCapable() && KeyFlag.hasKeyFlag(mask, KeyFlag.SIGN_DATA)) {
+            throw new IllegalArgumentException("Algorithm " + algorithm + " cannot be used with key flag SIGN_DATA.");
+        }
+
+        if (!algorithm.isEncryptionCapable() && KeyFlag.hasKeyFlag(mask, KeyFlag.ENCRYPT_COMMS)) {
+            throw new IllegalArgumentException("Algorithm " + algorithm + " cannot be used with key flag ENCRYPT_COMMS.");
+        }
+
+        if (!algorithm.isEncryptionCapable() && KeyFlag.hasKeyFlag(mask, KeyFlag.ENCRYPT_STORAGE)) {
+            throw new IllegalArgumentException("Algorithm " + algorithm + " cannot be used with key flag ENCRYPT_STORAGE.");
+        }
+
+        if (!algorithm.isSigningCapable() && KeyFlag.hasKeyFlag(mask, KeyFlag.AUTHENTICATION)) {
+            throw new IllegalArgumentException("Algorithm " + algorithm + " cannot be used with key flag AUTHENTIACTION.");
+        }
     }
 }

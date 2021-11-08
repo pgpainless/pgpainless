@@ -30,4 +30,13 @@ public final class CollectionUtils {
         System.arraycopy(ts, 0, concat, 1, ts.length);
         return concat;
     }
+
+    public static <T> boolean contains(T[] ts, T t) {
+        for (T i : ts) {
+            if (i.equals(t)) {
+                return true;
+            }
+        }
+        return false;
+    }
 }

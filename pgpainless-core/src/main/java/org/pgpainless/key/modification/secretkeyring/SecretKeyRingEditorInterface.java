@@ -4,6 +4,7 @@
 
 package org.pgpainless.key.modification.secretkeyring;
 
+import java.io.IOException;
 import java.security.InvalidAlgorithmParameterException;
 import java.security.NoSuchAlgorithmException;
 import java.util.Date;
@@ -11,16 +12,19 @@ import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
 
 import org.bouncycastle.openpgp.PGPException;
+import org.bouncycastle.openpgp.PGPPublicKey;
 import org.bouncycastle.openpgp.PGPSecretKey;
 import org.bouncycastle.openpgp.PGPSecretKeyRing;
 import org.bouncycastle.openpgp.PGPSignature;
 import org.bouncycastle.openpgp.PGPSignatureSubpacketVector;
+import org.pgpainless.algorithm.KeyFlag;
 import org.pgpainless.key.OpenPgpFingerprint;
 import org.pgpainless.key.generation.KeySpec;
 import org.pgpainless.key.protection.KeyRingProtectionSettings;
 import org.pgpainless.key.protection.SecretKeyRingProtector;
 import org.pgpainless.key.util.RevocationAttributes;
 import org.pgpainless.key.util.UserId;
+import org.pgpainless.signature.subpackets.SelfSignatureSubpackets;
 import org.pgpainless.util.Passphrase;
 
 public interface SecretKeyRingEditorInterface {
@@ -59,11 +63,27 @@ public interface SecretKeyRingEditorInterface {
                                            SecretKeyRingProtector secretKeyRingProtector)
             throws InvalidAlgorithmParameterException, NoSuchAlgorithmException, PGPException;
 
+    @Deprecated
     SecretKeyRingEditorInterface addSubKey(PGPSecretKey subKey,
                                            PGPSignatureSubpacketVector hashedSubpackets,
                                            PGPSignatureSubpacketVector unhashedSubpackets,
                                            SecretKeyRingProtector subKeyProtector, SecretKeyRingProtector keyRingProtector)
             throws PGPException;
+
+    SecretKeyRingEditorInterface addSubKey(PGPSecretKey subkey,
+                                           @Nullable SelfSignatureSubpackets.Callback bindingSignatureCallback,
+                                           @Nullable SelfSignatureSubpackets.Callback backSignatureCallback,
+                                           SecretKeyRingProtector subkeyProtector,
+                                           SecretKeyRingProtector primaryKeyProtector,
+                                           KeyFlag keyFlag,
+                                           KeyFlag... additionalKeyFlags) throws PGPException, IOException;
+
+    SecretKeyRingEditorInterface addSubKey(PGPPublicKey subkey,
+                                           SelfSignatureSubpackets.Callback bindingSignatureCallback,
+                                           SecretKeyRingProtector primaryKeyProtector,
+                                           KeyFlag keyFlag,
+                                           KeyFlag... additionalKeyFlags) throws PGPException;
+
     /**
      * Revoke the key ring.
      * The revocation will be a hard revocation, rendering the whole key invalid for any past or future signatures.

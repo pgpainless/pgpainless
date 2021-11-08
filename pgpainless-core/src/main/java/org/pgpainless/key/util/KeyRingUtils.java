@@ -21,8 +21,10 @@ import org.bouncycastle.openpgp.PGPPublicKeyRingCollection;
 import org.bouncycastle.openpgp.PGPSecretKey;
 import org.bouncycastle.openpgp.PGPSecretKeyRing;
 import org.bouncycastle.openpgp.PGPSecretKeyRingCollection;
+import org.bouncycastle.openpgp.PGPSignature;
 import org.pgpainless.key.protection.SecretKeyRingProtector;
 import org.pgpainless.key.protection.UnlockSecretKey;
+import org.pgpainless.util.CollectionUtils;
 
 public final class KeyRingUtils {
 
@@ -199,5 +201,30 @@ public final class KeyRingUtils {
         }
         publicKeys = PGPPublicKeyRing.insertPublicKey(publicKeys, publicKey);
         return publicKeys;
+    }
+
+    public static PGPSecretKeyRing secretKeysPlusPublicKey(PGPSecretKeyRing secretKeys, PGPPublicKey subkey) {
+        PGPPublicKeyRing publicKeys = publicKeyRingFrom(secretKeys);
+        PGPPublicKeyRing newPublicKeys = publicKeysPlusPublicKey(publicKeys, subkey);
+        PGPSecretKeyRing newSecretKeys = PGPSecretKeyRing.replacePublicKeys(secretKeys, newPublicKeys);
+        return newSecretKeys;
+    }
+
+    public static PGPPublicKeyRing publicKeysPlusPublicKey(PGPPublicKeyRing publicKeys, PGPPublicKey subkey) {
+        List<PGPPublicKey> publicKeyList = CollectionUtils.iteratorToList(publicKeys.getPublicKeys());
+        publicKeyList.add(subkey);
+        PGPPublicKeyRing newPublicKeys = new PGPPublicKeyRing(publicKeyList);
+        return newPublicKeys;
+    }
+
+    public static PGPSecretKeyRing secretKeysPlusSecretKey(PGPSecretKeyRing secretKeys, PGPSecretKey subkey) {
+        return PGPSecretKeyRing.insertSecretKey(secretKeys, subkey);
+    }
+
+    public static PGPSecretKey secretKeyPlusSignature(PGPSecretKey secretKey, PGPSignature signature) {
+        PGPPublicKey publicKey = secretKey.getPublicKey();
+        publicKey = PGPPublicKey.addCertification(publicKey, signature);
+        PGPSecretKey newSecretKey = PGPSecretKey.replacePublicKey(secretKey, publicKey);
+        return newSecretKey;
     }
 }

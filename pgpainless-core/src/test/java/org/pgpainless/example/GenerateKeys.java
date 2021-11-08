@@ -97,7 +97,7 @@ public class GenerateKeys {
      * @throws NoSuchAlgorithmException
      */
     @Test
-    public void generateSimpleRSAKey() throws PGPException, InvalidAlgorithmParameterException, NoSuchAlgorithmException {
+    public void generateSimpleRSAKey() throws PGPException, InvalidAlgorithmParameterException, NoSuchAlgorithmException, IOException {
         // Define a primary user-id
         String userId = "mpage@pgpainless.org";
         // Set a password to protect the secret key
@@ -105,7 +105,6 @@ public class GenerateKeys {
         // Generate the OpenPGP key
         PGPSecretKeyRing secretKey = PGPainless.generateKeyRing()
                 .simpleRsaKeyRing(userId, RsaLength._4096, password);
-
 
         KeyRingInfo keyInfo = new KeyRingInfo(secretKey);
         assertEquals(1, keyInfo.getSecretKeys().size());

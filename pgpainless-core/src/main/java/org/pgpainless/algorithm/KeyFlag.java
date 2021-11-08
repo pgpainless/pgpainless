@@ -109,4 +109,13 @@ public enum KeyFlag {
     public static boolean hasKeyFlag(int mask, KeyFlag flag) {
         return (mask & flag.getFlag()) == flag.getFlag();
     }
+
+    public static boolean containsAny(int mask, KeyFlag... flags) {
+        for (KeyFlag flag : flags) {
+            if (hasKeyFlag(mask, flag)) {
+                return true;
+            }
+        }
+        return false;
+    }
 }

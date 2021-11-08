@@ -95,7 +95,6 @@ public class SignatureSubpacketGeneratorWrapper
     public static SignatureSubpacketGeneratorWrapper createSubpacketsFrom(PGPSignatureSubpacketVector base) {
         SignatureSubpacketGeneratorWrapper wrapper = new SignatureSubpacketGeneratorWrapper();
         wrapper.extractSubpacketsFromVector(base);
-        wrapper.setSignatureCreationTime(new Date());
         return wrapper;
     }
 

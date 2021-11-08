@@ -44,6 +44,7 @@ import org.pgpainless.key.generation.type.KeyType;
 import org.pgpainless.key.protection.UnlockSecretKey;
 import org.pgpainless.provider.ProviderFactory;
 import org.pgpainless.signature.subpackets.SignatureSubpacketGeneratorUtil;
+import org.pgpainless.signature.subpackets.SignatureSubpacketGeneratorWrapper;
 import org.pgpainless.util.Passphrase;
 
 public class KeyRingBuilder implements KeyRingBuilderInterface<KeyRingBuilder> {
@@ -110,7 +111,9 @@ public class KeyRingBuilder implements KeyRingBuilderInterface<KeyRingBuilder> {
     }
 
     private boolean hasCertifyOthersFlag(KeySpec keySpec) {
-        return SignatureSubpacketGeneratorUtil.hasKeyFlag(KeyFlag.CERTIFY_OTHER, keySpec.getSubpacketGenerator());
+        return SignatureSubpacketGeneratorUtil.hasKeyFlag(KeyFlag.CERTIFY_OTHER,
+                keySpec.getSubpacketGenerator() == null ? null :
+                        keySpec.getSubpacketGenerator().getGenerator());
     }
 
     private boolean keyIsCertificationCapable(KeySpec keySpec) {
@@ -135,13 +138,12 @@ public class KeyRingBuilder implements KeyRingBuilderInterface<KeyRingBuilder> {
         PGPKeyPair certKey = generateKeyPair(primaryKeySpec);
         PGPContentSignerBuilder signer = buildContentSigner(certKey);
         signatureGenerator = new PGPSignatureGenerator(signer);
-        PGPSignatureSubpacketGenerator hashedSubPacketGenerator = primaryKeySpec.getSubpacketGenerator();
-        hashedSubPacketGenerator.setPrimaryUserID(false, true);
+        SignatureSubpacketGeneratorWrapper hashedSubPacketGenerator = primaryKeySpec.getSubpacketGenerator();
+        hashedSubPacketGenerator.setPrimaryUserId();
         if (expirationDate != null) {
-            SignatureSubpacketGeneratorUtil.setKeyExpirationDateInSubpacketGenerator(
-                    expirationDate, new Date(), hashedSubPacketGenerator);
+            hashedSubPacketGenerator.setKeyExpirationTime(certKey.getPublicKey(), expirationDate);
         }
-        PGPSignatureSubpacketVector hashedSubPackets = hashedSubPacketGenerator.generate();
+        PGPSignatureSubpacketVector hashedSubPackets = hashedSubPacketGenerator.getGenerator().generate();
 
         // Generator which the user can get the key pair from
         PGPKeyRingGenerator ringGenerator = buildRingGenerator(certKey, signer, hashedSubPackets);

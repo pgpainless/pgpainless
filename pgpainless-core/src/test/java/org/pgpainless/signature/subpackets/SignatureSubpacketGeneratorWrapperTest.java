@@ -39,7 +39,6 @@ import org.bouncycastle.openpgp.PGPSignature;
 import org.bouncycastle.openpgp.PGPSignatureGenerator;
 import org.bouncycastle.openpgp.PGPSignatureSubpacketGenerator;
 import org.bouncycastle.openpgp.PGPSignatureSubpacketVector;
-import org.junit.JUtils;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -493,8 +492,7 @@ public class SignatureSubpacketGeneratorWrapperTest {
         // Verify these are not extracted
         assertEquals(0, vector.getIssuerKeyID());
         assertNull(vector.getIssuerFingerprint());
-        // BC overrides the date with current time
-        JUtils.assertDateNotEquals(sigCreationDate, vector.getSignatureCreationTime());
+        assertNull(vector.getSignatureCreationTime());
 
         // Verify these are extracted
         assertEquals(256000, vector.getSignatureExpirationTime());
