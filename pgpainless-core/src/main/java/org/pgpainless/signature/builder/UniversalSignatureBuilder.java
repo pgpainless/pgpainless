@@ -14,7 +14,7 @@ import org.pgpainless.algorithm.SignatureType;
 import org.pgpainless.exception.WrongPassphraseException;
 import org.pgpainless.key.protection.SecretKeyRingProtector;
 import org.pgpainless.signature.subpackets.BaseSignatureSubpackets;
-import org.pgpainless.signature.subpackets.SignatureSubpacketGeneratorWrapper;
+import org.pgpainless.signature.subpackets.SignatureSubpackets;
 
 /**
  * Signature builder without restrictions on subpacket contents.
@@ -36,11 +36,11 @@ public class UniversalSignatureBuilder extends AbstractSignatureBuilder<Universa
         return true;
     }
 
-    public SignatureSubpacketGeneratorWrapper getHashedSubpackets() {
+    public SignatureSubpackets getHashedSubpackets() {
         return hashedSubpackets;
     }
 
-    public SignatureSubpacketGeneratorWrapper getUnhashedSubpackets() {
+    public SignatureSubpackets getUnhashedSubpackets() {
         return unhashedSubpackets;
     }
 

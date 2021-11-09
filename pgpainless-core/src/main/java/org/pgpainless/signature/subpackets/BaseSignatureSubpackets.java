@@ -28,7 +28,7 @@ import org.pgpainless.algorithm.PublicKeyAlgorithm;
 
 public interface BaseSignatureSubpackets {
 
-    interface Callback extends SignatureSubpacketCallback<SignatureSubpacketGeneratorWrapper> {
+    interface Callback extends SignatureSubpacketCallback<SignatureSubpackets> {
 
     }
 

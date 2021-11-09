@@ -21,7 +21,8 @@ import org.pgpainless.implementation.ImplementationFactory;
 import org.pgpainless.key.protection.SecretKeyRingProtector;
 import org.pgpainless.key.protection.UnlockSecretKey;
 import org.pgpainless.key.util.OpenPgpKeyAttributeUtil;
-import org.pgpainless.signature.subpackets.SignatureSubpacketGeneratorWrapper;
+import org.pgpainless.signature.subpackets.SignatureSubpackets;
+import org.pgpainless.signature.subpackets.SignatureSubpacketsHelper;
 
 public abstract class AbstractSignatureBuilder<B extends AbstractSignatureBuilder<B>> {
     protected final PGPPrivateKey privateSigningKey;
@@ -30,8 +31,8 @@ public abstract class AbstractSignatureBuilder<B extends AbstractSignatureBuilde
     protected HashAlgorithm hashAlgorithm;
     protected SignatureType signatureType;
 
-    protected SignatureSubpacketGeneratorWrapper unhashedSubpackets;
-    protected SignatureSubpacketGeneratorWrapper hashedSubpackets;
+    protected SignatureSubpackets unhashedSubpackets;
+    protected SignatureSubpackets hashedSubpackets;
 
     public AbstractSignatureBuilder(SignatureType signatureType, PGPSecretKey signingKey, SecretKeyRingProtector protector)
             throws WrongPassphraseException {
@@ -43,9 +44,9 @@ public abstract class AbstractSignatureBuilder<B extends AbstractSignatureBuilde
         this.publicSigningKey = signingKey.getPublicKey();
         this.hashAlgorithm = negotiateHashAlgorithm(publicSigningKey);
 
-        unhashedSubpackets = SignatureSubpacketGeneratorWrapper.createEmptySubpackets();
+        unhashedSubpackets = new SignatureSubpackets();
         // Prepopulate hashed subpackets with default values (key-id etc.)
-        hashedSubpackets = SignatureSubpacketGeneratorWrapper.createHashedSubpackets(publicSigningKey);
+        hashedSubpackets = SignatureSubpackets.createHashedSubpackets(publicSigningKey);
     }
 
     public AbstractSignatureBuilder(PGPSecretKey certificationKey, SecretKeyRingProtector protector, PGPSignature archetypeSignature)
@@ -59,8 +60,8 @@ public abstract class AbstractSignatureBuilder<B extends AbstractSignatureBuilde
         this.publicSigningKey = certificationKey.getPublicKey();
         this.hashAlgorithm = negotiateHashAlgorithm(publicSigningKey);
 
-        unhashedSubpackets = SignatureSubpacketGeneratorWrapper.refreshUnhashedSubpackets(archetypeSignature);
-        hashedSubpackets = SignatureSubpacketGeneratorWrapper.refreshHashedSubpackets(publicSigningKey, archetypeSignature);
+        unhashedSubpackets = SignatureSubpackets.refreshUnhashedSubpackets(archetypeSignature);
+        hashedSubpackets = SignatureSubpackets.refreshHashedSubpackets(publicSigningKey, archetypeSignature);
     }
 
     /**
@@ -104,8 +105,8 @@ public abstract class AbstractSignatureBuilder<B extends AbstractSignatureBuilde
                         publicSigningKey.getAlgorithm(), hashAlgorithm.getAlgorithmId()
                 )
         );
-        generator.setUnhashedSubpackets(unhashedSubpackets.getGenerator().generate());
-        generator.setHashedSubpackets(hashedSubpackets.getGenerator().generate());
+        generator.setUnhashedSubpackets(SignatureSubpacketsHelper.toVector(unhashedSubpackets));
+        generator.setHashedSubpackets(SignatureSubpacketsHelper.toVector(hashedSubpackets));
         generator.init(signatureType.getCode(), privateSigningKey);
         return generator;
     }

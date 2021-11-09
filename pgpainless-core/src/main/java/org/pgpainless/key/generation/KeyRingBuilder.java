@@ -19,6 +19,7 @@ import java.util.List;
 import java.util.Set;
 import javax.annotation.Nonnull;
 
+import org.bouncycastle.bcpg.sig.KeyFlags;
 import org.bouncycastle.openpgp.PGPException;
 import org.bouncycastle.openpgp.PGPKeyPair;
 import org.bouncycastle.openpgp.PGPKeyRingGenerator;
@@ -44,8 +45,8 @@ import org.pgpainless.key.generation.type.KeyType;
 import org.pgpainless.key.protection.SecretKeyRingProtector;
 import org.pgpainless.key.protection.UnlockSecretKey;
 import org.pgpainless.provider.ProviderFactory;
-import org.pgpainless.signature.subpackets.SignatureSubpacketGeneratorUtil;
-import org.pgpainless.signature.subpackets.SignatureSubpacketGeneratorWrapper;
+import org.pgpainless.signature.subpackets.SignatureSubpackets;
+import org.pgpainless.signature.subpackets.SignatureSubpacketsHelper;
 import org.pgpainless.util.Passphrase;
 
 public class KeyRingBuilder implements KeyRingBuilderInterface<KeyRingBuilder> {
@@ -112,9 +113,8 @@ public class KeyRingBuilder implements KeyRingBuilderInterface<KeyRingBuilder> {
     }
 
     private boolean hasCertifyOthersFlag(KeySpec keySpec) {
-        return SignatureSubpacketGeneratorUtil.hasKeyFlag(KeyFlag.CERTIFY_OTHER,
-                keySpec.getSubpacketGenerator() == null ? null :
-                        keySpec.getSubpacketGenerator().getGenerator());
+        KeyFlags keyFlags = keySpec.getSubpacketGenerator().getKeyFlagsSubpacket();
+        return keyFlags != null && KeyFlag.hasKeyFlag(keyFlags.getFlags(), KeyFlag.CERTIFY_OTHER);
     }
 
     private boolean keyIsCertificationCapable(KeySpec keySpec) {
@@ -137,12 +137,14 @@ public class KeyRingBuilder implements KeyRingBuilderInterface<KeyRingBuilder> {
         PGPKeyPair certKey = generateKeyPair(primaryKeySpec);
         PGPContentSignerBuilder signer = buildContentSigner(certKey);
         signatureGenerator = new PGPSignatureGenerator(signer);
-        SignatureSubpacketGeneratorWrapper hashedSubPacketGenerator = primaryKeySpec.getSubpacketGenerator();
+        SignatureSubpackets hashedSubPacketGenerator = primaryKeySpec.getSubpacketGenerator();
         hashedSubPacketGenerator.setPrimaryUserId();
         if (expirationDate != null) {
             hashedSubPacketGenerator.setKeyExpirationTime(certKey.getPublicKey(), expirationDate);
         }
-        PGPSignatureSubpacketVector hashedSubPackets = hashedSubPacketGenerator.getGenerator().generate();
+        PGPSignatureSubpacketGenerator generator = new PGPSignatureSubpacketGenerator();
+        SignatureSubpacketsHelper.applyTo(hashedSubPacketGenerator, generator);
+        PGPSignatureSubpacketVector hashedSubPackets = generator.generate();
 
         // Generator which the user can get the key pair from
         PGPKeyRingGenerator ringGenerator = buildRingGenerator(certKey, signer, hashedSubPackets);

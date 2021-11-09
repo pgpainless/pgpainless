@@ -57,12 +57,12 @@ import org.pgpainless.key.util.RevocationAttributes;
 import org.pgpainless.util.DateUtil;
 import org.pgpainless.util.Passphrase;
 
-public class SignatureSubpacketGeneratorWrapperTest {
+public class SignatureSubpacketsTest {
 
     private static PGPPublicKeyRing keys;
     private static PGPPublicKey key;
 
-    private SignatureSubpacketGeneratorWrapper wrapper;
+    private SignatureSubpackets wrapper;
 
     @BeforeAll
     public static void setup() throws IOException {
@@ -72,27 +72,24 @@ public class SignatureSubpacketGeneratorWrapperTest {
 
     @BeforeEach
     public void createWrapper() {
-        wrapper = SignatureSubpacketGeneratorWrapper.createHashedSubpackets(key);
+        wrapper = SignatureSubpackets.createHashedSubpackets(key);
     }
 
     @Test
     public void initialStateTest() {
-        Date now = new Date();
-        wrapper = SignatureSubpacketGeneratorWrapper.createHashedSubpackets();
-        PGPSignatureSubpacketVector vector = wrapper.getGenerator().generate();
-
-        assertEquals(now.getTime(), vector.getSignatureCreationTime().getTime(), 1000);
+        wrapper = new SignatureSubpackets();
+        PGPSignatureSubpacketVector vector = SignatureSubpacketsHelper.toVector(wrapper);
+        assertNull(vector.getSignatureCreationTime());
     }
 
     @Test
     public void initialStateFromKeyTest() throws PGPException {
-        Date now = new Date();
-        PGPSignatureSubpacketVector vector = wrapper.getGenerator().generate();
+        PGPSignatureSubpacketVector vector = SignatureSubpacketsHelper.toVector(wrapper);
 
         assertEquals(key.getKeyID(), vector.getIssuerKeyID());
         assertEquals(key.getVersion(), vector.getIssuerFingerprint().getKeyVersion());
         assertArrayEquals(key.getFingerprint(), vector.getIssuerFingerprint().getFingerprint());
-        assertEquals(now.getTime(), vector.getSignatureCreationTime().getTime(), 2000);
+        assertNull(vector.getSignatureCreationTime());
 
         assertEquals(0, vector.getKeyFlags());
         assertEquals(0, vector.getSignatureExpirationTime());
@@ -116,7 +113,7 @@ public class SignatureSubpacketGeneratorWrapperTest {
     @Test
     public void testNullKeyId() {
         wrapper.setIssuerKeyId(null);
-        PGPSignatureSubpacketVector vector = wrapper.getGenerator().generate();
+        PGPSignatureSubpacketVector vector = SignatureSubpacketsHelper.toVector(wrapper);
 
         assertEquals(0, vector.getIssuerKeyID());
     }
@@ -125,7 +122,7 @@ public class SignatureSubpacketGeneratorWrapperTest {
     @Test
     public void testNullFingerprint() {
         wrapper.setIssuerFingerprint((IssuerFingerprint) null);
-        PGPSignatureSubpacketVector vector = wrapper.getGenerator().generate();
+        PGPSignatureSubpacketVector vector = SignatureSubpacketsHelper.toVector(wrapper);
 
         assertNull(vector.getIssuerFingerprint());
     }
@@ -134,7 +131,7 @@ public class SignatureSubpacketGeneratorWrapperTest {
     public void testAddNotationData() {
         wrapper.addNotationData(true, "critical@notation.data", "isCritical");
         wrapper.addNotationData(false, "noncrit@notation.data", "notCritical");
-        PGPSignatureSubpacketVector vector = wrapper.getGenerator().generate();
+        PGPSignatureSubpacketVector vector = SignatureSubpacketsHelper.toVector(wrapper);
 
         NotationData[] notationData = vector.getNotationDataOccurrences();
         assertEquals(2, notationData.length);
@@ -151,7 +148,7 @@ public class SignatureSubpacketGeneratorWrapperTest {
         assertEquals("notCritical", second.getNotationValue());
 
         wrapper.clearNotationData();
-        vector = wrapper.getGenerator().generate();
+        vector = SignatureSubpacketsHelper.toVector(wrapper);
         assertEquals(0, vector.getNotationDataOccurrences().length);
 
     }
@@ -159,14 +156,14 @@ public class SignatureSubpacketGeneratorWrapperTest {
     @Test
     public void testIntendedRecipientFingerprints() {
         wrapper.addIntendedRecipientFingerprint(key);
-        PGPSignatureSubpacketVector vector = wrapper.getGenerator().generate();
+        PGPSignatureSubpacketVector vector = SignatureSubpacketsHelper.toVector(wrapper);
 
         assertEquals(1, vector.getSubpackets(SignatureSubpacketTags.INTENDED_RECIPIENT_FINGERPRINT).length);
         assertArrayEquals(key.getFingerprint(), vector.getIntendedRecipientFingerprint().getFingerprint());
         assertEquals(key.getVersion(), vector.getIntendedRecipientFingerprint().getKeyVersion());
 
         wrapper.clearIntendedRecipientFingerprints();
-        vector = wrapper.getGenerator().generate();
+        vector = SignatureSubpacketsHelper.toVector(wrapper);
         assertEquals(0, vector.getSubpackets(SignatureSubpacketTags.INTENDED_RECIPIENT_FINGERPRINT).length);
     }
 
@@ -178,7 +175,7 @@ public class SignatureSubpacketGeneratorWrapperTest {
         assertTrue(keyIterator.hasNext());
         PGPPublicKey second = keyIterator.next();
         wrapper.addRevocationKey(false, true, second);
-        PGPSignatureSubpacketVector vector = wrapper.getGenerator().generate();
+        PGPSignatureSubpacketVector vector = SignatureSubpacketsHelper.toVector(wrapper);
 
         SignatureSubpacket[] revKeys = vector.getSubpackets(SignatureSubpacketTags.REVOCATION_KEY);
         assertEquals(2, revKeys.length);
@@ -196,14 +193,14 @@ public class SignatureSubpacketGeneratorWrapperTest {
         assertEquals((byte) (0x80 | 0x40), r2.getSignatureClass());
 
         wrapper.clearRevocationKeys();
-        vector = wrapper.getGenerator().generate();
+        vector = SignatureSubpacketsHelper.toVector(wrapper);
         assertEquals(0, vector.getSubpackets(SignatureSubpacketTags.REVOCATION_KEY).length);
     }
 
     @Test
     public void testSetKeyFlags() {
         wrapper.setKeyFlags(KeyFlag.SIGN_DATA, KeyFlag.CERTIFY_OTHER, KeyFlag.SIGN_DATA); // duplicates are removed
-        PGPSignatureSubpacketVector vector = wrapper.getGenerator().generate();
+        PGPSignatureSubpacketVector vector = SignatureSubpacketsHelper.toVector(wrapper);
 
         assertEquals(KeyFlag.toBitmask(KeyFlag.SIGN_DATA, KeyFlag.CERTIFY_OTHER), vector.getKeyFlags());
         assertTrue(vector.getSubpacket(SignatureSubpacketTags.KEY_FLAGS).isCritical());
@@ -215,7 +212,7 @@ public class SignatureSubpacketGeneratorWrapperTest {
         long secondsInAWeek = 60 * 60 * 24 * 7;
         Date inAWeek = new Date(now.getTime() + 1000 * secondsInAWeek);
         wrapper.setSignatureExpirationTime(now, inAWeek);
-        PGPSignatureSubpacketVector vector = wrapper.getGenerator().generate();
+        PGPSignatureSubpacketVector vector = SignatureSubpacketsHelper.toVector(wrapper);
 
         assertEquals(secondsInAWeek, vector.getSignatureExpirationTime());
     }
@@ -232,17 +229,19 @@ public class SignatureSubpacketGeneratorWrapperTest {
     public void testSignerUserId() {
         String userId = "Alice <alice@pgpainless.org>";
         wrapper.setSignerUserId(userId);
-        PGPSignatureSubpacketVector vector = wrapper.getGenerator().generate();
+        PGPSignatureSubpacketVector vector = SignatureSubpacketsHelper.toVector(wrapper);
 
         assertEquals(userId, vector.getSignerUserID());
     }
 
     @Test
     public void testSetPrimaryUserId() {
-        assertFalse(wrapper.getGenerator().generate().isPrimaryUserID());
+        PGPSignatureSubpacketVector vector = SignatureSubpacketsHelper.toVector(wrapper);
+        assertFalse(vector.isPrimaryUserID());
 
         wrapper.setPrimaryUserId();
-        assertTrue(wrapper.getGenerator().generate().isPrimaryUserID());
+        vector = SignatureSubpacketsHelper.toVector(wrapper);
+        assertTrue(vector.isPrimaryUserID());
     }
 
     @Test
@@ -250,7 +249,7 @@ public class SignatureSubpacketGeneratorWrapperTest {
         Date now = new Date();
         long secondsSinceKeyCreation = (now.getTime() - key.getCreationTime().getTime()) / 1000;
         wrapper.setKeyExpirationTime(key, now);
-        PGPSignatureSubpacketVector vector = wrapper.getGenerator().generate();
+        PGPSignatureSubpacketVector vector = SignatureSubpacketsHelper.toVector(wrapper);
 
         assertEquals(secondsSinceKeyCreation, vector.getKeyExpirationTime());
     }
@@ -264,7 +263,7 @@ public class SignatureSubpacketGeneratorWrapperTest {
     @Test
     public void testSetPreferredCompressionAlgorithms() {
         wrapper.setPreferredCompressionAlgorithms(CompressionAlgorithm.BZIP2, CompressionAlgorithm.ZIP, CompressionAlgorithm.BZIP2); // duplicates get removed
-        PGPSignatureSubpacketVector vector = wrapper.getGenerator().generate();
+        PGPSignatureSubpacketVector vector = SignatureSubpacketsHelper.toVector(wrapper);
 
         int[] ids = vector.getPreferredCompressionAlgorithms();
         assertEquals(2, ids.length);
@@ -272,11 +271,11 @@ public class SignatureSubpacketGeneratorWrapperTest {
         assertEquals(CompressionAlgorithm.ZIP.getAlgorithmId(), ids[1]);
 
         wrapper.setPreferredCompressionAlgorithms(); // empty
-        vector = wrapper.getGenerator().generate();
+        vector = SignatureSubpacketsHelper.toVector(wrapper);
         assertEquals(0, vector.getPreferredCompressionAlgorithms().length);
 
         wrapper.setPreferredCompressionAlgorithms((PreferredAlgorithms) null);
-        vector = wrapper.getGenerator().generate();
+        vector = SignatureSubpacketsHelper.toVector(wrapper);
         assertNull(vector.getPreferredCompressionAlgorithms());
 
         assertThrows(IllegalArgumentException.class, () -> wrapper.setPreferredCompressionAlgorithms(
@@ -286,7 +285,7 @@ public class SignatureSubpacketGeneratorWrapperTest {
     @Test
     public void testSetPreferredSymmetricKeyAlgorithms() {
         wrapper.setPreferredSymmetricKeyAlgorithms(SymmetricKeyAlgorithm.AES_192, SymmetricKeyAlgorithm.AES_128, SymmetricKeyAlgorithm.AES_128); // duplicates get removed
-        PGPSignatureSubpacketVector vector = wrapper.getGenerator().generate();
+        PGPSignatureSubpacketVector vector = SignatureSubpacketsHelper.toVector(wrapper);
 
         int[] ids = vector.getPreferredSymmetricAlgorithms();
         assertEquals(2, ids.length);
@@ -294,11 +293,11 @@ public class SignatureSubpacketGeneratorWrapperTest {
         assertEquals(SymmetricKeyAlgorithm.AES_128.getAlgorithmId(), ids[1]);
 
         wrapper.setPreferredSymmetricKeyAlgorithms(); // empty
-        vector = wrapper.getGenerator().generate();
+        vector = SignatureSubpacketsHelper.toVector(wrapper);
         assertEquals(0, vector.getPreferredSymmetricAlgorithms().length);
 
         wrapper.setPreferredSymmetricKeyAlgorithms((PreferredAlgorithms) null);
-        vector = wrapper.getGenerator().generate();
+        vector = SignatureSubpacketsHelper.toVector(wrapper);
         assertNull(vector.getPreferredCompressionAlgorithms());
 
         assertThrows(IllegalArgumentException.class, () -> wrapper.setPreferredSymmetricKeyAlgorithms(
@@ -308,7 +307,7 @@ public class SignatureSubpacketGeneratorWrapperTest {
     @Test
     public void testSetPreferredHashAlgorithms() {
         wrapper.setPreferredHashAlgorithms(HashAlgorithm.SHA512, HashAlgorithm.SHA384, HashAlgorithm.SHA512); // duplicates get removed
-        PGPSignatureSubpacketVector vector = wrapper.getGenerator().generate();
+        PGPSignatureSubpacketVector vector = SignatureSubpacketsHelper.toVector(wrapper);
 
         int[] ids = vector.getPreferredHashAlgorithms();
         assertEquals(2, ids.length);
@@ -316,11 +315,11 @@ public class SignatureSubpacketGeneratorWrapperTest {
         assertEquals(HashAlgorithm.SHA384.getAlgorithmId(), ids[1]);
 
         wrapper.setPreferredHashAlgorithms(); // empty
-        vector = wrapper.getGenerator().generate();
+        vector = SignatureSubpacketsHelper.toVector(wrapper);
         assertEquals(0, vector.getPreferredHashAlgorithms().length);
 
         wrapper.setPreferredHashAlgorithms((PreferredAlgorithms) null);
-        vector = wrapper.getGenerator().generate();
+        vector = SignatureSubpacketsHelper.toVector(wrapper);
         assertNull(vector.getPreferredHashAlgorithms());
 
         assertThrows(IllegalArgumentException.class, () -> wrapper.setPreferredHashAlgorithms(
@@ -330,14 +329,14 @@ public class SignatureSubpacketGeneratorWrapperTest {
     @Test
     public void testSetExportable() {
         wrapper.setExportable(true, false);
-        PGPSignatureSubpacketVector vector = wrapper.getGenerator().generate();
+        PGPSignatureSubpacketVector vector = SignatureSubpacketsHelper.toVector(wrapper);
 
         Exportable exportable = (Exportable) vector.getSubpacket(SignatureSubpacketTags.EXPORTABLE);
         assertTrue(exportable.isCritical());
         assertFalse(exportable.isExportable());
 
         wrapper.setExportable(false, true);
-        vector = wrapper.getGenerator().generate();
+        vector = SignatureSubpacketsHelper.toVector(wrapper);
 
         exportable = (Exportable) vector.getSubpacket(SignatureSubpacketTags.EXPORTABLE);
         assertFalse(exportable.isCritical());
@@ -347,14 +346,14 @@ public class SignatureSubpacketGeneratorWrapperTest {
     @Test
     public void testSetRevocable() {
         wrapper.setRevocable(true, true);
-        PGPSignatureSubpacketVector vector = wrapper.getGenerator().generate();
+        PGPSignatureSubpacketVector vector = SignatureSubpacketsHelper.toVector(wrapper);
 
         Revocable revocable = (Revocable) vector.getSubpacket(SignatureSubpacketTags.REVOCABLE);
         assertTrue(revocable.isCritical());
         assertTrue(revocable.isRevocable());
 
         wrapper.setRevocable(false, false);
-        vector = wrapper.getGenerator().generate();
+        vector = SignatureSubpacketsHelper.toVector(wrapper);
 
         revocable = (Revocable) vector.getSubpacket(SignatureSubpacketTags.REVOCABLE);
         assertFalse(revocable.isCritical());
@@ -365,7 +364,7 @@ public class SignatureSubpacketGeneratorWrapperTest {
     public void testSetRevocationReason() {
         wrapper.setRevocationReason(RevocationAttributes.createKeyRevocation()
                 .withReason(RevocationAttributes.Reason.KEY_RETIRED).withDescription("The key is too weak."));
-        PGPSignatureSubpacketVector vector = wrapper.getGenerator().generate();
+        PGPSignatureSubpacketVector vector = SignatureSubpacketsHelper.toVector(wrapper);
 
         assertEquals(1, vector.getSubpackets(SignatureSubpacketTags.REVOCATION_REASON).length);
         RevocationReason reason = (RevocationReason) vector.getSubpacket(SignatureSubpacketTags.REVOCATION_REASON);
@@ -378,7 +377,7 @@ public class SignatureSubpacketGeneratorWrapperTest {
         byte[] hash = new byte[20];
         new Random().nextBytes(hash);
         wrapper.setSignatureTarget(PublicKeyAlgorithm.fromId(key.getAlgorithm()), HashAlgorithm.SHA512, hash);
-        PGPSignatureSubpacketVector vector = wrapper.getGenerator().generate();
+        PGPSignatureSubpacketVector vector = SignatureSubpacketsHelper.toVector(wrapper);
 
         SignatureTarget target = vector.getSignatureTarget();
         assertNotNull(target);
@@ -390,7 +389,7 @@ public class SignatureSubpacketGeneratorWrapperTest {
     @Test
     public void testSetFeatures() {
         wrapper.setFeatures(Feature.MODIFICATION_DETECTION, Feature.AEAD_ENCRYPTED_DATA);
-        PGPSignatureSubpacketVector vector = wrapper.getGenerator().generate();
+        PGPSignatureSubpacketVector vector = SignatureSubpacketsHelper.toVector(wrapper);
 
         Features features = vector.getFeatures();
         assertTrue(features.supportsModificationDetection());
@@ -401,7 +400,7 @@ public class SignatureSubpacketGeneratorWrapperTest {
     @Test
     public void testSetTrust() {
         wrapper.setTrust(10, 5);
-        PGPSignatureSubpacketVector vector = wrapper.getGenerator().generate();
+        PGPSignatureSubpacketVector vector = SignatureSubpacketsHelper.toVector(wrapper);
 
         TrustSignature trustSignature = (TrustSignature) vector.getSubpacket(SignatureSubpacketTags.TRUST_SIG);
         assertNotNull(trustSignature);
@@ -427,18 +426,18 @@ public class SignatureSubpacketGeneratorWrapperTest {
 
         wrapper.addEmbeddedSignature(sig1);
 
-        PGPSignatureSubpacketVector vector = wrapper.getGenerator().generate();
+        PGPSignatureSubpacketVector vector = SignatureSubpacketsHelper.toVector(wrapper);
         assertEquals(1, vector.getEmbeddedSignatures().size());
         assertArrayEquals(sig1.getSignature(), vector.getEmbeddedSignatures().get(0).getSignature());
 
         wrapper.addEmbeddedSignature(sig2);
 
-        vector = wrapper.getGenerator().generate();
+        vector = SignatureSubpacketsHelper.toVector(wrapper);
         assertEquals(2, vector.getEmbeddedSignatures().size());
         assertArrayEquals(sig2.getSignature(), vector.getEmbeddedSignatures().get(1).getSignature());
 
         wrapper.clearEmbeddedSignatures();
-        vector = wrapper.getGenerator().generate();
+        vector = SignatureSubpacketsHelper.toVector(wrapper);
         assertEquals(0, vector.getEmbeddedSignatures().size());
     }
 
@@ -486,8 +485,8 @@ public class SignatureSubpacketGeneratorWrapperTest {
         subpackets.addCustomSubpacket(aead);
 
 
-        SignatureSubpacketGeneratorWrapper wrapper = SignatureSubpacketGeneratorWrapper.createSubpacketsFrom(subpackets.generate());
-        PGPSignatureSubpacketVector vector = wrapper.getGenerator().generate();
+        SignatureSubpackets wrapper = SignatureSubpackets.createSubpacketsFrom(subpackets.generate());
+        PGPSignatureSubpacketVector vector = SignatureSubpacketsHelper.toVector(wrapper);
 
         // Verify these are not extracted
         assertEquals(0, vector.getIssuerKeyID());

@@ -10,12 +10,13 @@ import org.bouncycastle.openpgp.PGPSignatureSubpacketGenerator;
 import org.bouncycastle.openpgp.PGPSignatureSubpacketVector;
 import org.pgpainless.algorithm.KeyFlag;
 import org.pgpainless.key.generation.type.KeyType;
-import org.pgpainless.signature.subpackets.SignatureSubpacketGeneratorWrapper;
+import org.pgpainless.signature.subpackets.SignatureSubpackets;
+import org.pgpainless.signature.subpackets.SignatureSubpacketsHelper;
 
 public class KeySpec {
 
     private final KeyType keyType;
-    private final SignatureSubpacketGeneratorWrapper subpacketGenerator;
+    private final SignatureSubpackets subpacketGenerator;
     private final boolean inheritedSubPackets;
 
     KeySpec(@Nonnull KeyType type,
@@ -23,12 +24,12 @@ public class KeySpec {
             boolean inheritedSubPackets) {
         this(
                 type,
-                SignatureSubpacketGeneratorWrapper.createSubpacketsFrom(subpacketGenerator.generate()),
+                SignatureSubpackets.createSubpacketsFrom(subpacketGenerator.generate()),
                 inheritedSubPackets);
     }
 
     KeySpec(@Nonnull KeyType type,
-            @Nonnull SignatureSubpacketGeneratorWrapper subpacketGenerator,
+            @Nonnull SignatureSubpackets subpacketGenerator,
             boolean inheritedSubPackets) {
         this.keyType = type;
         this.subpacketGenerator = subpacketGenerator;
@@ -42,11 +43,11 @@ public class KeySpec {
 
     @Nonnull
     public PGPSignatureSubpacketVector getSubpackets() {
-        return subpacketGenerator.getGenerator().generate();
+        return SignatureSubpacketsHelper.toVector(subpacketGenerator);
     }
 
     @Nonnull
-    SignatureSubpacketGeneratorWrapper getSubpacketGenerator() {
+    SignatureSubpackets getSubpacketGenerator() {
         return subpacketGenerator;
     }
 
