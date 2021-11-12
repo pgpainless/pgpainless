@@ -22,7 +22,6 @@ import org.pgpainless.key.protection.SecretKeyRingProtector;
 import org.pgpainless.key.util.RevocationAttributes;
 import org.pgpainless.key.util.UserId;
 import org.pgpainless.util.Passphrase;
-import org.pgpainless.util.selection.userid.SelectUserId;
 
 public interface SecretKeyRingEditorInterface {
 
@@ -47,35 +46,6 @@ public interface SecretKeyRingEditorInterface {
     SecretKeyRingEditorInterface addUserId(String userId, SecretKeyRingProtector secretKeyRingProtector) throws PGPException;
 
     /**
-     * Remove a user-id from the key ring.
-     *
-     * @param userId exact user-id to be removed
-     * @param secretKeyRingProtector protector to unlock the secret key
-     * @return the builder
-     */
-    SecretKeyRingEditorInterface deleteUserId(String userId, SecretKeyRingProtector secretKeyRingProtector);
-
-    /**
-     * Remove a user-id from the key ring.
-     *
-     * @param userId exact user-id to be removed
-     * @param secretKeyRingProtector protector to unlock the secret key
-     * @return the builder
-     */
-    default SecretKeyRingEditorInterface deleteUserId(UserId userId, SecretKeyRingProtector secretKeyRingProtector) {
-        return deleteUserId(userId.toString(), secretKeyRingProtector);
-    }
-
-    /**
-     * Delete all user-ids from the key, which match the provided {@link SelectUserId} strategy.
-     *
-     * @param selectionStrategy strategy to select user-ids
-     * @param secretKeyRingProtector protector to unlock the secret key
-     * @return the builder
-     */
-    SecretKeyRingEditorInterface deleteUserIds(SelectUserId selectionStrategy, SecretKeyRingProtector secretKeyRingProtector);
-
-    /**
      * Add a subkey to the key ring.
      * The subkey will be generated from the provided {@link KeySpec}.
      *
@@ -94,29 +64,6 @@ public interface SecretKeyRingEditorInterface {
                                            PGPSignatureSubpacketVector unhashedSubpackets,
                                            SecretKeyRingProtector subKeyProtector, SecretKeyRingProtector keyRingProtector)
             throws PGPException;
-
-    /**
-     * Delete a subkey from the key ring.
-     * The subkey with the provided fingerprint will be remove from the key ring.
-     * If no suitable subkey is found, a {@link java.util.NoSuchElementException} will be thrown.
-     *
-     * @param fingerprint fingerprint of the subkey to be removed
-     * @param secretKeyRingProtector protector to unlock the secret key ring
-     * @return the builder
-     */
-    SecretKeyRingEditorInterface deleteSubKey(OpenPgpFingerprint fingerprint, SecretKeyRingProtector secretKeyRingProtector);
-
-    /**
-     * Delete a subkey from the key ring.
-     * The subkey with the provided key-id will be removed from the key ring.
-     * If no suitable subkey is found, a {@link java.util.NoSuchElementException} will be thrown.
-     *
-     * @param subKeyId id of the subkey
-     * @param secretKeyRingProtector protector to unlock the secret key ring
-     * @return the builder
-     */
-    SecretKeyRingEditorInterface deleteSubKey(long subKeyId, SecretKeyRingProtector secretKeyRingProtector);
-
     /**
      * Revoke the key ring.
      * The revocation will be a hard revocation, rendering the whole key invalid for any past or future signatures.
