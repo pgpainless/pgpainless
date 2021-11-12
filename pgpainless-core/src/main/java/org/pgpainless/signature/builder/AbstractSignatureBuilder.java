@@ -24,6 +24,8 @@ import org.pgpainless.key.util.OpenPgpKeyAttributeUtil;
 import org.pgpainless.signature.subpackets.SignatureSubpackets;
 import org.pgpainless.signature.subpackets.SignatureSubpacketsHelper;
 
+import javax.annotation.Nonnull;
+
 public abstract class AbstractSignatureBuilder<B extends AbstractSignatureBuilder<B>> {
     protected final PGPPrivateKey privateSigningKey;
     protected final PGPPublicKey publicSigningKey;
@@ -34,7 +36,12 @@ public abstract class AbstractSignatureBuilder<B extends AbstractSignatureBuilde
     protected SignatureSubpackets unhashedSubpackets;
     protected SignatureSubpackets hashedSubpackets;
 
-    public AbstractSignatureBuilder(SignatureType signatureType, PGPSecretKey signingKey, SecretKeyRingProtector protector)
+    protected AbstractSignatureBuilder(SignatureType signatureType,
+                                       PGPSecretKey signingKey,
+                                       SecretKeyRingProtector protector,
+                                       HashAlgorithm hashAlgorithm,
+                                       SignatureSubpackets hashedSubpackets,
+                                       SignatureSubpackets unhashedSubpackets)
             throws WrongPassphraseException {
         if (!isValidSignatureType(signatureType)) {
             throw new IllegalArgumentException("Invalid signature type.");
@@ -42,26 +49,33 @@ public abstract class AbstractSignatureBuilder<B extends AbstractSignatureBuilde
         this.signatureType = signatureType;
         this.privateSigningKey = UnlockSecretKey.unlockSecretKey(signingKey, protector);
         this.publicSigningKey = signingKey.getPublicKey();
-        this.hashAlgorithm = negotiateHashAlgorithm(publicSigningKey);
+        this.hashAlgorithm = hashAlgorithm;
+        this.hashedSubpackets = hashedSubpackets;
+        this.unhashedSubpackets = unhashedSubpackets;
+    }
 
-        unhashedSubpackets = new SignatureSubpackets();
-        // Prepopulate hashed subpackets with default values (key-id etc.)
-        hashedSubpackets = SignatureSubpackets.createHashedSubpackets(publicSigningKey);
+    public AbstractSignatureBuilder(SignatureType signatureType, PGPSecretKey signingKey, SecretKeyRingProtector protector)
+            throws WrongPassphraseException {
+        this(
+                signatureType,
+                signingKey,
+                protector,
+                negotiateHashAlgorithm(signingKey.getPublicKey()),
+                SignatureSubpackets.createHashedSubpackets(signingKey.getPublicKey()),
+                SignatureSubpackets.createEmptySubpackets()
+        );
     }
 
     public AbstractSignatureBuilder(PGPSecretKey certificationKey, SecretKeyRingProtector protector, PGPSignature archetypeSignature)
             throws WrongPassphraseException {
-        SignatureType type = SignatureType.valueOf(archetypeSignature.getSignatureType());
-        if (!isValidSignatureType(type)) {
-            throw new IllegalArgumentException("Invalid signature type.");
-        }
-        this.signatureType = SignatureType.valueOf(archetypeSignature.getSignatureType());
-        this.privateSigningKey = UnlockSecretKey.unlockSecretKey(certificationKey, protector);
-        this.publicSigningKey = certificationKey.getPublicKey();
-        this.hashAlgorithm = negotiateHashAlgorithm(publicSigningKey);
-
-        unhashedSubpackets = SignatureSubpackets.refreshUnhashedSubpackets(archetypeSignature);
-        hashedSubpackets = SignatureSubpackets.refreshHashedSubpackets(publicSigningKey, archetypeSignature);
+        this(
+                SignatureType.valueOf(archetypeSignature.getSignatureType()),
+                certificationKey,
+                protector,
+                negotiateHashAlgorithm(certificationKey.getPublicKey()),
+                SignatureSubpackets.refreshHashedSubpackets(certificationKey.getPublicKey(), archetypeSignature),
+                SignatureSubpackets.refreshUnhashedSubpackets(archetypeSignature)
+        );
     }
 
     /**
@@ -70,10 +84,15 @@ public abstract class AbstractSignatureBuilder<B extends AbstractSignatureBuilde
      * @param publicKey signing public key
      * @return hash algorithm
      */
-    protected HashAlgorithm negotiateHashAlgorithm(PGPPublicKey publicKey) {
+    protected static HashAlgorithm negotiateHashAlgorithm(PGPPublicKey publicKey) {
         Set<HashAlgorithm> hashAlgorithmPreferences = OpenPgpKeyAttributeUtil.getOrGuessPreferredHashAlgorithms(publicKey);
         return HashAlgorithmNegotiator.negotiateSignatureHashAlgorithm(PGPainless.getPolicy())
                 .negotiateHashAlgorithm(hashAlgorithmPreferences);
+    }
+
+    public B overrideHashAlgorithm(@Nonnull HashAlgorithm hashAlgorithm) {
+        this.hashAlgorithm = hashAlgorithm;
+        return (B) this;
     }
 
     /**

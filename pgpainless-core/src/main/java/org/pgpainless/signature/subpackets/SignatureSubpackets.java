@@ -103,6 +103,10 @@ public class SignatureSubpackets
         return wrapper;
     }
 
+    public static SignatureSubpackets createEmptySubpackets() {
+        return new SignatureSubpackets();
+    }
+
     @Override
     public SignatureSubpackets setIssuerFingerprintAndKeyId(PGPPublicKey key) {
         setIssuerKeyId(key.getKeyID());

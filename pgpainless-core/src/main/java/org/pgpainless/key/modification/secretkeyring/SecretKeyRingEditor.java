@@ -37,7 +37,7 @@ import org.bouncycastle.openpgp.operator.PBESecretKeyDecryptor;
 import org.bouncycastle.openpgp.operator.PBESecretKeyEncryptor;
 import org.bouncycastle.openpgp.operator.PGPContentSignerBuilder;
 import org.bouncycastle.openpgp.operator.PGPDigestCalculator;
-import org.pgpainless.algorithm.HashAlgorithm;
+import org.pgpainless.PGPainless;
 import org.pgpainless.algorithm.KeyFlag;
 import org.pgpainless.algorithm.PublicKeyAlgorithm;
 import org.pgpainless.algorithm.SignatureType;
@@ -45,6 +45,7 @@ import org.pgpainless.implementation.ImplementationFactory;
 import org.pgpainless.key.OpenPgpFingerprint;
 import org.pgpainless.key.generation.KeyRingBuilder;
 import org.pgpainless.key.generation.KeySpec;
+import org.pgpainless.key.info.KeyRingInfo;
 import org.pgpainless.key.protection.CachingSecretKeyRingProtector;
 import org.pgpainless.key.protection.KeyRingProtectionSettings;
 import org.pgpainless.key.protection.PasswordBasedSecretKeyRingProtector;
@@ -58,6 +59,7 @@ import org.pgpainless.key.util.RevocationAttributes;
 import org.pgpainless.signature.SignatureUtils;
 import org.pgpainless.signature.builder.PrimaryKeyBindingSignatureBuilder;
 import org.pgpainless.signature.builder.SelfSignatureBuilder;
+import org.pgpainless.signature.builder.SignatureFactory;
 import org.pgpainless.signature.builder.SubkeyBindingSignatureBuilder;
 import org.pgpainless.signature.subpackets.SelfSignatureSubpackets;
 import org.pgpainless.signature.subpackets.SignatureSubpacketGeneratorUtil;
@@ -66,11 +68,6 @@ import org.pgpainless.util.CollectionUtils;
 import org.pgpainless.util.Passphrase;
 
 public class SecretKeyRingEditor implements SecretKeyRingEditorInterface {
-
-    // Default algorithm for calculating private key checksums
-    // While I'd like to use something else, eg. SHA256, BC seems to lack support for
-    // calculating secret key checksums with algorithms other than SHA1.
-    private static final HashAlgorithm defaultDigestHashAlgorithm = HashAlgorithm.SHA1;
 
     private PGPSecretKeyRing secretKeyRing;
 
@@ -98,8 +95,9 @@ public class SecretKeyRingEditor implements SecretKeyRingEditorInterface {
         // add user-id certificate to primary key
         PGPSecretKey primaryKey = secretKeyIterator.next();
         PGPPublicKey publicKey = primaryKey.getPublicKey();
-
-        SelfSignatureBuilder builder = new SelfSignatureBuilder(primaryKey, protector);
+        KeyRingInfo info = PGPainless.inspectKeyRing(secretKeyRing);
+        List<KeyFlag> keyFlags = info.getKeyFlagsOf(info.getKeyId());
+        SelfSignatureBuilder builder = SignatureFactory.selfCertifyUserId(primaryKey, protector, signatureSubpacketCallback, keyFlags.toArray(new KeyFlag[0]));
         builder.setSignatureType(SignatureType.POSITIVE_CERTIFICATION);
         builder.applyCallback(signatureSubpacketCallback);
         PGPSignature signature = builder.build(publicKey, userId);
@@ -155,8 +153,7 @@ public class SecretKeyRingEditor implements SecretKeyRingEditorInterface {
         PBESecretKeyDecryptor ringDecryptor = keyRingProtector.getDecryptor(primaryKey.getKeyID());
         PBESecretKeyEncryptor subKeyEncryptor = subKeyProtector.getEncryptor(secretSubKey.getKeyID());
 
-        PGPDigestCalculator digestCalculator =
-                ImplementationFactory.getInstance().getPGPDigestCalculator(defaultDigestHashAlgorithm);
+        PGPDigestCalculator digestCalculator = ImplementationFactory.getInstance().getV4FingerprintCalculator();
         PGPContentSignerBuilder contentSignerBuilder =
                 SignatureUtils.getPgpContentSignerBuilderForKey(primaryKey);
 
