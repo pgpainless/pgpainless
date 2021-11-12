@@ -5,9 +5,11 @@
 package org.pgpainless.key.util;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 
 import java.security.InvalidAlgorithmParameterException;
 import java.security.NoSuchAlgorithmException;
+import java.util.NoSuchElementException;
 
 import org.bouncycastle.openpgp.PGPException;
 import org.bouncycastle.openpgp.PGPPublicKeyRing;
@@ -36,7 +38,8 @@ public class KeyRingUtilTest {
     }
 
     @Test
-    public void testDeleteUserIdFromPublicKeyRing() throws PGPException, InvalidAlgorithmParameterException, NoSuchAlgorithmException {
+    public void testDeleteUserIdFromPublicKeyRing()
+            throws PGPException, InvalidAlgorithmParameterException, NoSuchAlgorithmException {
         PGPSecretKeyRing secretKeys = PGPainless.generateKeyRing()
                 .modernKeyRing("Alice", null);
 
@@ -49,5 +52,15 @@ public class KeyRingUtilTest {
         publicKeys = KeyRingUtils.deleteUserIdFromPublicKeyRing(publicKeys, "Alice");
 
         assertEquals(1, CollectionUtils.iteratorToList(publicKeys.getPublicKey().getUserIDs()).size());
+    }
+
+    @Test
+    public void testDeleteNonexistentUserIdFromKeyRingThrows()
+            throws PGPException, InvalidAlgorithmParameterException, NoSuchAlgorithmException {
+        PGPSecretKeyRing secretKeys = PGPainless.generateKeyRing()
+                .modernKeyRing("Alice", null);
+
+        assertThrows(NoSuchElementException.class,
+                () -> KeyRingUtils.deleteUserIdFromSecretKeyRing(secretKeys, "Charlie"));
     }
 }
