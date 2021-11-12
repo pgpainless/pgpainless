@@ -167,7 +167,7 @@ public final class KeyRingUtils {
      * @return modified secret keys
      */
     @Deprecated
-    public PGPSecretKeyRing deleteUserIdFromSecretKeyRing(PGPSecretKeyRing secretKeys, String userId) {
+    public static PGPSecretKeyRing deleteUserIdFromSecretKeyRing(PGPSecretKeyRing secretKeys, String userId) {
         PGPSecretKey secretKey = secretKeys.getSecretKey(); // user-ids are located on primary key only
         PGPPublicKey publicKey = secretKey.getPublicKey(); // user-ids are placed on the public key part
         publicKey = PGPPublicKey.removeCertification(publicKey, userId);
@@ -191,7 +191,7 @@ public final class KeyRingUtils {
      * @return modified secret keys
      */
     @Deprecated
-    public PGPPublicKeyRing deleteUserIdFromPublicKeyRing(PGPPublicKeyRing publicKeys, String userId) {
+    public static PGPPublicKeyRing deleteUserIdFromPublicKeyRing(PGPPublicKeyRing publicKeys, String userId) {
         PGPPublicKey publicKey = publicKeys.getPublicKey(); // user-ids are located on primary key only
         publicKey = PGPPublicKey.removeCertification(publicKey, userId);
         if (publicKey == null) {
