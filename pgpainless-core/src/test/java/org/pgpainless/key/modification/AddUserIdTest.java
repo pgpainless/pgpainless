@@ -21,6 +21,7 @@ import org.junit.jupiter.params.provider.MethodSource;
 import org.pgpainless.PGPainless;
 import org.pgpainless.implementation.ImplementationFactory;
 import org.pgpainless.key.TestKeys;
+import org.pgpainless.key.info.KeyRingInfo;
 import org.pgpainless.key.protection.PasswordBasedSecretKeyRingProtector;
 import org.pgpainless.key.protection.SecretKeyRingProtector;
 import org.pgpainless.key.protection.UnprotectedKeysProtector;
@@ -30,11 +31,12 @@ public class AddUserIdTest {
 
     @ParameterizedTest
     @MethodSource("org.pgpainless.util.TestImplementationFactoryProvider#provideImplementationFactories")
-    public void addUserIdToExistingKeyRing(ImplementationFactory implementationFactory) throws InvalidAlgorithmParameterException, NoSuchAlgorithmException, PGPException {
+    public void addUserIdToExistingKeyRing(ImplementationFactory implementationFactory) throws InvalidAlgorithmParameterException, NoSuchAlgorithmException, PGPException, InterruptedException {
         ImplementationFactory.setFactoryImplementation(implementationFactory);
         PGPSecretKeyRing secretKeys = PGPainless.generateKeyRing().simpleEcKeyRing("alice@wonderland.lit", "rabb1th0le");
 
-        Iterator<String> userIds = secretKeys.getSecretKey().getPublicKey().getUserIDs();
+        KeyRingInfo info = PGPainless.inspectKeyRing(secretKeys);
+        Iterator<String> userIds = info.getValidUserIds().iterator();
         assertEquals("alice@wonderland.lit", userIds.next());
         assertFalse(userIds.hasNext());
 
@@ -43,16 +45,18 @@ public class AddUserIdTest {
                 .addUserId("cheshirecat@wonderland.lit", protector)
                 .done();
 
-        userIds = secretKeys.getPublicKey().getUserIDs();
+        info = PGPainless.inspectKeyRing(secretKeys);
+        userIds = info.getValidUserIds().iterator();
         assertEquals("alice@wonderland.lit", userIds.next());
         assertEquals("cheshirecat@wonderland.lit", userIds.next());
         assertFalse(userIds.hasNext());
 
         secretKeys = PGPainless.modifyKeyRing(secretKeys)
-                .deleteUserId("cheshirecat@wonderland.lit", protector)
+                .revokeUserId("cheshirecat@wonderland.lit", protector)
                 .done();
 
-        userIds = secretKeys.getPublicKey().getUserIDs();
+        info = PGPainless.inspectKeyRing(secretKeys);
+        userIds = info.getValidUserIds().iterator();
         assertEquals("alice@wonderland.lit", userIds.next());
         assertFalse(userIds.hasNext());
     }
@@ -64,7 +68,7 @@ public class AddUserIdTest {
 
         PGPSecretKeyRing secretKeys = TestKeys.getCryptieSecretKeyRing();
         assertThrows(NoSuchElementException.class, () -> PGPainless.modifyKeyRing(secretKeys)
-                .deleteUserId("invalid@user.id", new UnprotectedKeysProtector()));
+                .revokeUserId("invalid@user.id", new UnprotectedKeysProtector()));
     }
 
     @ParameterizedTest
@@ -89,17 +93,19 @@ public class AddUserIdTest {
                         "-----END PGP PRIVATE KEY BLOCK-----\r\n";
 
         PGPSecretKeyRing secretKeys = PGPainless.readKeyRing().secretKeyRing(ARMORED_PRIVATE_KEY);
-        Iterator<String> userIds = secretKeys.getSecretKey().getPublicKey().getUserIDs();
+        KeyRingInfo info = PGPainless.inspectKeyRing(secretKeys);
+        Iterator<String> userIds = info.getValidUserIds().iterator();
         assertEquals("<user@example.com>", userIds.next());
         assertFalse(userIds.hasNext());
 
         SecretKeyRingProtector protector = new UnprotectedKeysProtector();
         secretKeys = PGPainless.modifyKeyRing(secretKeys)
-                .deleteUserId("<user@example.com>", protector)
+                .revokeUserId("<user@example.com>", protector)
                 .addUserId("cheshirecat@wonderland.lit", protector)
                 .done();
 
-        userIds = secretKeys.getSecretKey().getPublicKey().getUserIDs();
+        info = PGPainless.inspectKeyRing(secretKeys);
+        userIds = info.getValidUserIds().iterator();
         assertEquals("cheshirecat@wonderland.lit", userIds.next());
         assertFalse(userIds.hasNext());
     }

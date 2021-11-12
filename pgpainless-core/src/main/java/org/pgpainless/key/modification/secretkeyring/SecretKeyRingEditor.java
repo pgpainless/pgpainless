@@ -4,8 +4,6 @@
 
 package org.pgpainless.key.modification.secretkeyring;
 
-import static org.pgpainless.util.CollectionUtils.iteratorToList;
-
 import java.security.InvalidAlgorithmParameterException;
 import java.security.NoSuchAlgorithmException;
 import java.util.ArrayList;
@@ -56,7 +54,6 @@ import org.pgpainless.key.util.RevocationAttributes;
 import org.pgpainless.signature.SignatureUtils;
 import org.pgpainless.signature.subpackets.SignatureSubpacketGeneratorUtil;
 import org.pgpainless.util.Passphrase;
-import org.pgpainless.util.selection.userid.SelectUserId;
 
 public class SecretKeyRingEditor implements SecretKeyRingEditorInterface {
 
@@ -123,34 +120,6 @@ public class SecretKeyRingEditor implements SecretKeyRingEditorInterface {
     }
 
     @Override
-    public SecretKeyRingEditorInterface deleteUserId(String userId, SecretKeyRingProtector protector) {
-        return deleteUserIds(SelectUserId.exactMatch(userId), protector);
-    }
-
-    @Override
-    public SecretKeyRingEditorInterface deleteUserIds(SelectUserId selectionStrategy, SecretKeyRingProtector secretKeyRingProtector) {
-        List<PGPPublicKey> publicKeys = new ArrayList<>();
-        Iterator<PGPPublicKey> publicKeyIterator = secretKeyRing.getPublicKeys();
-        PGPPublicKey primaryKey = publicKeyIterator.next();
-        List<String> matchingUserIds = selectionStrategy.selectUserIds(iteratorToList(primaryKey.getUserIDs()));
-        if (matchingUserIds.isEmpty()) {
-            throw new NoSuchElementException("Key does not have a matching user-id attribute.");
-        }
-        for (String userId : matchingUserIds) {
-            primaryKey = PGPPublicKey.removeCertification(primaryKey, userId);
-        }
-        publicKeys.add(primaryKey);
-
-        while (publicKeyIterator.hasNext()) {
-            publicKeys.add(publicKeyIterator.next());
-        }
-
-        PGPPublicKeyRing publicKeyRing = new PGPPublicKeyRing(publicKeys);
-        secretKeyRing = PGPSecretKeyRing.replacePublicKeys(secretKeyRing, publicKeyRing);
-        return this;
-    }
-
-    @Override
     public SecretKeyRingEditorInterface addSubKey(@Nonnull KeySpec keySpec,
                                                   @Nonnull Passphrase subKeyPassphrase,
                                                   SecretKeyRingProtector secretKeyRingProtector)
@@ -211,29 +180,6 @@ public class SecretKeyRingEditor implements SecretKeyRingEditorInterface {
         PGPSecretKey secretKey = new PGPSecretKey(keyPair.getPrivateKey(), keyPair.getPublicKey(),
                 checksumCalculator, false, subKeyEncryptor);
         return secretKey;
-    }
-
-    @Override
-    public SecretKeyRingEditorInterface deleteSubKey(OpenPgpFingerprint fingerprint,
-                                                     SecretKeyRingProtector protector) {
-        return deleteSubKey(fingerprint.getKeyId(), protector);
-    }
-
-    @Override
-    public SecretKeyRingEditorInterface deleteSubKey(long subKeyId,
-                                                     SecretKeyRingProtector protector) {
-        if (secretKeyRing.getSecretKey().getKeyID() == subKeyId) {
-            throw new IllegalArgumentException("You cannot delete the primary key of this key ring.");
-        }
-
-        PGPSecretKey deleteMe = secretKeyRing.getSecretKey(subKeyId);
-        if (deleteMe == null) {
-            throw new NoSuchElementException("KeyRing does not contain a key with keyId " + Long.toHexString(subKeyId));
-        }
-
-        PGPSecretKeyRing newKeyRing = PGPSecretKeyRing.removeSecretKey(secretKeyRing, deleteMe);
-        secretKeyRing = newKeyRing;
-        return this;
     }
 
     @Override
