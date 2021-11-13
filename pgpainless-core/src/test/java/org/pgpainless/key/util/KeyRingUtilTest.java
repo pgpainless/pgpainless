@@ -32,7 +32,7 @@ public class KeyRingUtilTest {
                 .done();
         assertEquals(2, CollectionUtils.iteratorToList(secretKeys.getPublicKey().getUserIDs()).size());
 
-        secretKeys = KeyRingUtils.deleteUserIdFromSecretKeyRing(secretKeys, "Bob");
+        secretKeys = KeyRingUtils.deleteUserId(secretKeys, "Bob");
 
         assertEquals(1, CollectionUtils.iteratorToList(secretKeys.getPublicKey().getUserIDs()).size());
     }
@@ -49,7 +49,7 @@ public class KeyRingUtilTest {
         PGPPublicKeyRing publicKeys = PGPainless.extractCertificate(secretKeys);
         assertEquals(2, CollectionUtils.iteratorToList(publicKeys.getPublicKey().getUserIDs()).size());
 
-        publicKeys = KeyRingUtils.deleteUserIdFromPublicKeyRing(publicKeys, "Alice");
+        publicKeys = KeyRingUtils.deleteUserId(publicKeys, "Alice");
 
         assertEquals(1, CollectionUtils.iteratorToList(publicKeys.getPublicKey().getUserIDs()).size());
     }
@@ -61,6 +61,6 @@ public class KeyRingUtilTest {
                 .modernKeyRing("Alice", null);
 
         assertThrows(NoSuchElementException.class,
-                () -> KeyRingUtils.deleteUserIdFromSecretKeyRing(secretKeys, "Charlie"));
+                () -> KeyRingUtils.deleteUserId(secretKeys, "Charlie"));
     }
 }
