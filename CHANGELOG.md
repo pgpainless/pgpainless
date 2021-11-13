@@ -5,6 +5,13 @@ SPDX-License-Identifier: CC0-1.0
 
 # PGPainless Changelog
 
+## 1.0.0-rc2
+- `SecretKeyRingEditor`: Remove support for user-id- and subkey *deletion* in favor of *revocation*
+  - Deletion causes all sorts of problems. Most notably, receiving implementations will not honor deletion of user-ids/subkeys.
+    If you really need to delete user-ids there now is `KeyRingUtils.deleteUserId(keys, userid)`,
+    but its use is highly discouraged and should only (if ever) be used for local manipulations of keys.
+- `pgpainless-core` & `pgpainless-sop`: Fix accidental compile scope dependency on `logback-classic`
+
 ## 1.0.0-rc1
 - First release candidate for a 1.0.0 release! \o/
 - Rename `EncryptionPurpose.STORAGE_AND_COMMUNICATIONS` to `EncryptionPurpose.ANY`
