@@ -18,7 +18,6 @@ dependencies {
 
     // Logging
     testImplementation "ch.qos.logback:logback-classic:$logbackVersion"
-    runtime "ch.qos.logback:logback-classic:$logbackVersion"
 
     implementation(project(":pgpainless-core"))
     implementation(project(":sop-java"))
