@@ -11,6 +11,7 @@ SPDX-License-Identifier: CC0-1.0
     If you really need to delete user-ids there now is `KeyRingUtils.deleteUserId(keys, userid)`,
     but its use is highly discouraged and should only (if ever) be used for local manipulations of keys.
 - `pgpainless-core` & `pgpainless-sop`: Fix accidental compile scope dependency on `logback-classic`
+- `KeyRingInfo`: Sensible arguments for methods to get preferred algorithms
 
 ## 1.0.0-rc1
 - First release candidate for a 1.0.0 release! \o/
