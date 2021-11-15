@@ -18,7 +18,6 @@ import java.util.NoSuchElementException;
 import java.util.Set;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
-
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
 
@@ -846,43 +845,40 @@ public class KeyRingInfo {
         return signingKeys;
     }
 
-    /**
-     * Return the (sorted) set of preferred hash algorithms of the given key.
-     *
-     * @param userId user-id. If this is non-null, the hash algorithms are being extracted from the user-id
-     *               certification signature first.
-     * @param keyID if of the key in question
-     * @return hash algorithm preferences
-     */
-    public Set<HashAlgorithm> getPreferredHashAlgorithms(@Nullable String userId, long keyID) {
-        KeyAccessor keyAccessor = getKeyAccessor(userId, keyID);
-        return keyAccessor.getPreferredHashAlgorithms();
+    public Set<HashAlgorithm> getPreferredHashAlgorithms() {
+        return getPreferredHashAlgorithms(getPrimaryUserId());
     }
 
-    /**
-     * Return the (sorted) set of preferred symmetric encryption algorithms of the given key.
-     *
-     * @param userId user-id. If this is non-null, the symmetric encryption algorithms are being
-     *               extracted from the user-id certification signature first.
-     * @param keyId if of the key in question
-     * @return symmetric encryption algorithm preferences
-     */
-    public Set<SymmetricKeyAlgorithm> getPreferredSymmetricKeyAlgorithms(@Nullable String userId, long keyId) {
-        KeyAccessor keyAccessor = getKeyAccessor(userId, keyId);
-        return keyAccessor.getPreferredSymmetricKeyAlgorithms();
+    public Set<HashAlgorithm> getPreferredHashAlgorithms(String userId) {
+        return getKeyAccessor(userId, getKeyId()).getPreferredHashAlgorithms();
     }
 
-    /**
-     * Return the (sorted) set of preferred compression algorithms of the given key.
-     *
-     * @param userId user-id. If this is non-null, the compression algorithms are being extracted from the user-id
-     *               certification signature first.
-     * @param keyId if of the key in question
-     * @return compression algorithm preferences
-     */
-    public Set<CompressionAlgorithm> getPreferredCompressionAlgorithms(@Nullable String userId, long keyId) {
-        KeyAccessor keyAccessor = getKeyAccessor(userId, keyId);
-        return keyAccessor.getPreferredCompressionAlgorithms();
+    public Set<HashAlgorithm> getPreferredHashAlgorithms(long keyId) {
+        return getKeyAccessor(null, keyId).getPreferredHashAlgorithms();
+    }
+
+    public Set<SymmetricKeyAlgorithm> getPreferredSymmetricKeyAlgorithms() {
+        return getPreferredSymmetricKeyAlgorithms(getPrimaryUserId());
+    }
+
+    public Set<SymmetricKeyAlgorithm> getPreferredSymmetricKeyAlgorithms(String userId) {
+        return getKeyAccessor(userId, getKeyId()).getPreferredSymmetricKeyAlgorithms();
+    }
+
+    public Set<SymmetricKeyAlgorithm> getPreferredSymmetricKeyAlgorithms(long keyId) {
+        return getKeyAccessor(null, keyId).getPreferredSymmetricKeyAlgorithms();
+    }
+
+    public Set<CompressionAlgorithm> getPreferredCompressionAlgorithms() {
+        return getPreferredCompressionAlgorithms(getPrimaryUserId());
+    }
+
+    public Set<CompressionAlgorithm> getPreferredCompressionAlgorithms(String userId) {
+        return getKeyAccessor(userId, getKeyId()).getPreferredCompressionAlgorithms();
+    }
+
+    public Set<CompressionAlgorithm> getPreferredCompressionAlgorithms(long keyId) {
+        return getKeyAccessor(null, keyId).getPreferredCompressionAlgorithms();
     }
 
     private KeyAccessor getKeyAccessor(@Nullable String userId, long keyID) {

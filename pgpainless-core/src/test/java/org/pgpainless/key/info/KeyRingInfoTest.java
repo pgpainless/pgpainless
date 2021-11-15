@@ -605,40 +605,34 @@ public class KeyRingInfoTest {
         KeyRingInfo info = PGPainless.inspectKeyRing(secretKeys);
 
         // Bob is an invalid userId
-        assertThrows(IllegalArgumentException.class, () -> info.getPreferredSymmetricKeyAlgorithms("Bob", 0));
-        assertThrows(IllegalArgumentException.class, () -> info.getPreferredSymmetricKeyAlgorithms("Bob", pkid));
+        assertThrows(IllegalArgumentException.class, () -> info.getPreferredSymmetricKeyAlgorithms("Bob"));
         // 123 is an invalid keyid
-        assertThrows(IllegalArgumentException.class, () -> info.getPreferredSymmetricKeyAlgorithms(null, 123L));
-        assertThrows(IllegalArgumentException.class, () -> info.getPreferredSymmetricKeyAlgorithms("Alice", 123L));
+        assertThrows(IllegalArgumentException.class, () -> info.getPreferredSymmetricKeyAlgorithms(123L));
 
-        assertEquals(preferredHashAlgorithms, info.getPreferredHashAlgorithms("Alice", pkid));
-        assertEquals(preferredHashAlgorithms, info.getPreferredHashAlgorithms(null, pkid));
-        assertEquals(preferredHashAlgorithms, info.getPreferredHashAlgorithms(null, skid1));
-        assertEquals(preferredHashAlgorithms, info.getPreferredHashAlgorithms(null, skid2));
+        assertEquals(preferredHashAlgorithms, info.getPreferredHashAlgorithms("Alice"));
+        assertEquals(preferredHashAlgorithms, info.getPreferredHashAlgorithms(pkid));
+        assertEquals(preferredHashAlgorithms, info.getPreferredHashAlgorithms(skid1));
+        assertEquals(preferredHashAlgorithms, info.getPreferredHashAlgorithms(skid2));
 
         // Bob is an invalid userId
-        assertThrows(IllegalArgumentException.class, () -> info.getPreferredCompressionAlgorithms("Bob", 0));
-        assertThrows(IllegalArgumentException.class, () -> info.getPreferredCompressionAlgorithms("Bob", pkid));
+        assertThrows(IllegalArgumentException.class, () -> info.getPreferredCompressionAlgorithms("Bob"));
         // 123 is an invalid keyid
-        assertThrows(IllegalArgumentException.class, () -> info.getPreferredCompressionAlgorithms(null, 123L));
-        assertThrows(IllegalArgumentException.class, () -> info.getPreferredCompressionAlgorithms("Alice", 123L));
+        assertThrows(IllegalArgumentException.class, () -> info.getPreferredCompressionAlgorithms(123L));
 
-        assertEquals(preferredCompressionAlgorithms, info.getPreferredCompressionAlgorithms("Alice", pkid));
-        assertEquals(preferredCompressionAlgorithms, info.getPreferredCompressionAlgorithms(null, pkid));
-        assertEquals(preferredCompressionAlgorithms, info.getPreferredCompressionAlgorithms(null, skid1));
-        assertEquals(preferredCompressionAlgorithms, info.getPreferredCompressionAlgorithms(null, skid2));
+        assertEquals(preferredCompressionAlgorithms, info.getPreferredCompressionAlgorithms("Alice"));
+        assertEquals(preferredCompressionAlgorithms, info.getPreferredCompressionAlgorithms(pkid));
+        assertEquals(preferredCompressionAlgorithms, info.getPreferredCompressionAlgorithms(skid1));
+        assertEquals(preferredCompressionAlgorithms, info.getPreferredCompressionAlgorithms(skid2));
 
         // Bob is an invalid userId
-        assertThrows(IllegalArgumentException.class, () -> info.getPreferredSymmetricKeyAlgorithms("Bob", 0));
-        assertThrows(IllegalArgumentException.class, () -> info.getPreferredSymmetricKeyAlgorithms("Bob", pkid));
+        assertThrows(IllegalArgumentException.class, () -> info.getPreferredSymmetricKeyAlgorithms("Bob"));
         // 123 is an invalid keyid
-        assertThrows(IllegalArgumentException.class, () -> info.getPreferredSymmetricKeyAlgorithms(null, 123L));
-        assertThrows(IllegalArgumentException.class, () -> info.getPreferredSymmetricKeyAlgorithms("Alice", 123L));
+        assertThrows(IllegalArgumentException.class, () -> info.getPreferredSymmetricKeyAlgorithms(123L));
 
-        assertEquals(preferredSymmetricAlgorithms, info.getPreferredSymmetricKeyAlgorithms("Alice", pkid));
-        assertEquals(preferredSymmetricAlgorithms, info.getPreferredSymmetricKeyAlgorithms(null, pkid));
-        assertEquals(preferredSymmetricAlgorithms, info.getPreferredSymmetricKeyAlgorithms(null, skid1));
-        assertEquals(preferredSymmetricAlgorithms, info.getPreferredSymmetricKeyAlgorithms(null, skid2));
+        assertEquals(preferredSymmetricAlgorithms, info.getPreferredSymmetricKeyAlgorithms("Alice"));
+        assertEquals(preferredSymmetricAlgorithms, info.getPreferredSymmetricKeyAlgorithms(pkid));
+        assertEquals(preferredSymmetricAlgorithms, info.getPreferredSymmetricKeyAlgorithms(skid1));
+        assertEquals(preferredSymmetricAlgorithms, info.getPreferredSymmetricKeyAlgorithms(skid2));
 
     }
 

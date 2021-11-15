@@ -165,7 +165,8 @@ public final class SigningOptions {
         for (PGPPublicKey signingPubKey : signingPubKeys) {
             PGPSecretKey signingSecKey = secretKey.getSecretKey(signingPubKey.getKeyID());
             PGPPrivateKey signingSubkey = UnlockSecretKey.unlockSecretKey(signingSecKey, secretKeyDecryptor);
-            Set<HashAlgorithm> hashAlgorithms = keyRingInfo.getPreferredHashAlgorithms(userId, signingPubKey.getKeyID());
+            Set<HashAlgorithm> hashAlgorithms = userId != null ? keyRingInfo.getPreferredHashAlgorithms(userId)
+                    : keyRingInfo.getPreferredHashAlgorithms(signingPubKey.getKeyID());
             HashAlgorithm hashAlgorithm = negotiateHashAlgorithm(hashAlgorithms, PGPainless.getPolicy());
             addSigningMethod(secretKey, signingSubkey, hashAlgorithm, signatureType, false);
         }
@@ -244,7 +245,8 @@ public final class SigningOptions {
         for (PGPPublicKey signingPubKey : signingPubKeys) {
             PGPSecretKey signingSecKey = secretKey.getSecretKey(signingPubKey.getKeyID());
             PGPPrivateKey signingSubkey = signingSecKey.extractPrivateKey(secretKeyDecryptor.getDecryptor(signingPubKey.getKeyID()));
-            Set<HashAlgorithm> hashAlgorithms = keyRingInfo.getPreferredHashAlgorithms(userId, signingPubKey.getKeyID());
+            Set<HashAlgorithm> hashAlgorithms = userId != null ? keyRingInfo.getPreferredHashAlgorithms(userId)
+                    : keyRingInfo.getPreferredHashAlgorithms(signingPubKey.getKeyID());
             HashAlgorithm hashAlgorithm = negotiateHashAlgorithm(hashAlgorithms, PGPainless.getPolicy());
             addSigningMethod(secretKey, signingSubkey, hashAlgorithm, signatureType, true);
         }
