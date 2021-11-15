@@ -40,7 +40,6 @@ dependencies {
     implementation "ch.qos.logback:logback-classic:$logbackVersion"
 
     implementation(project(":pgpainless-sop"))
-    implementation(project(":sop-java"))
     implementation(project(":sop-java-picocli"))
 
     implementation "info.picocli:picocli:$picocliVersion"
@@ -52,6 +51,7 @@ dependencies {
 mainClassName = 'org.pgpainless.cli.PGPainlessCLI'
 
 jar {
+    duplicatesStrategy(DuplicatesStrategy.EXCLUDE)
     manifest {
         attributes 'Main-Class': "$mainClassName"
     }
