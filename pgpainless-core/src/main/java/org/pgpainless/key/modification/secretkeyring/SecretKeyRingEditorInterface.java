@@ -190,7 +190,7 @@ public interface SecretKeyRingEditorInterface {
     default SecretKeyRingEditorInterface revokeUserId(String userId,
                                                       SecretKeyRingProtector secretKeyRingProtector)
             throws PGPException {
-        return revokeUserId(userId, secretKeyRingProtector, null);
+        return revokeUserId(userId, secretKeyRingProtector, (RevocationAttributes) null);
     }
 
     /**
@@ -203,8 +203,13 @@ public interface SecretKeyRingEditorInterface {
      */
     SecretKeyRingEditorInterface revokeUserId(String userId,
                                               SecretKeyRingProtector secretKeyRingProtector,
-                                              RevocationAttributes revocationAttributes)
+                                              @Nullable RevocationAttributes revocationAttributes)
             throws PGPException;
+
+    SecretKeyRingEditorInterface revokeUserId(String userId,
+                                              SecretKeyRingProtector secretKeyRingProtector,
+                                              @Nullable RevocationSignatureSubpackets.Callback subpacketCallback)
+        throws PGPException;
 
     /**
      * Set the expiration date for the primary key of the key ring.

@@ -315,7 +315,33 @@ public class SecretKeyRingEditor implements SecretKeyRingEditorInterface {
     @Override
     public SecretKeyRingEditorInterface revokeUserId(String userId,
                                                      SecretKeyRingProtector secretKeyRingProtector,
-                                                     RevocationAttributes revocationAttributes)
+                                                     @Nullable RevocationAttributes revocationAttributes)
+            throws PGPException {
+        if (revocationAttributes != null) {
+            RevocationAttributes.Reason reason = revocationAttributes.getReason();
+            if (reason != RevocationAttributes.Reason.NO_REASON
+                    && reason != RevocationAttributes.Reason.USER_ID_NO_LONGER_VALID) {
+                throw new IllegalArgumentException("Revocation reason must either be NO_REASON or USER_ID_NO_LONGER_VALID");
+            }
+        }
+
+        RevocationSignatureSubpackets.Callback callback = new RevocationSignatureSubpackets.Callback() {
+            @Override
+            public void modifyHashedSubpackets(RevocationSignatureSubpackets hashedSubpackets) {
+                if (revocationAttributes != null) {
+                    hashedSubpackets.setRevocationReason(false, revocationAttributes);
+                }
+            }
+        };
+
+        return revokeUserId(userId, secretKeyRingProtector, callback);
+    }
+
+    @Override
+    public SecretKeyRingEditorInterface revokeUserId(
+            String userId,
+            SecretKeyRingProtector secretKeyRingProtector,
+            @Nullable RevocationSignatureSubpackets.Callback subpacketCallback)
             throws PGPException {
         Iterator<String> userIds = secretKeyRing.getPublicKey().getUserIDs();
         boolean found = false;
@@ -328,38 +354,23 @@ public class SecretKeyRingEditor implements SecretKeyRingEditorInterface {
         if (!found) {
             throw new NoSuchElementException("No user-id '" + userId + "' found on the key.");
         }
-        return doRevokeUserId(userId, secretKeyRingProtector, revocationAttributes);
+        return doRevokeUserId(userId, secretKeyRingProtector, subpacketCallback);
     }
 
     private SecretKeyRingEditorInterface doRevokeUserId(String userId,
                                                         SecretKeyRingProtector protector,
-                                                        RevocationAttributes revocationAttributes)
+                                                        @Nullable RevocationSignatureSubpackets.Callback callback)
             throws PGPException {
         PGPSecretKey primarySecretKey = secretKeyRing.getSecretKey();
         PGPPublicKey primaryPublicKey = primarySecretKey.getPublicKey();
-        PGPPrivateKey privateKey = UnlockSecretKey.unlockSecretKey(primarySecretKey, protector);
+        RevocationSignatureBuilder signatureBuilder = new RevocationSignatureBuilder(
+                SignatureType.CERTIFICATION_REVOCATION,
+                primarySecretKey,
+                protector);
 
-        PGPSignatureSubpacketGenerator subpacketGenerator = new PGPSignatureSubpacketGenerator();
-        subpacketGenerator.setSignatureCreationTime(false, new Date());
-        subpacketGenerator.setRevocable(false, false);
-        subpacketGenerator.setIssuerFingerprint(false, primarySecretKey);
-        if (revocationAttributes != null) {
-            RevocationAttributes.Reason reason = revocationAttributes.getReason();
-            if (reason != RevocationAttributes.Reason.NO_REASON
-                    && reason != RevocationAttributes.Reason.USER_ID_NO_LONGER_VALID) {
-                throw new IllegalArgumentException("Revocation reason must either be NO_REASON or USER_ID_NO_LONGER_VALID");
-            }
-            subpacketGenerator.setRevocationReason(
-                    false,
-                    revocationAttributes.getReason().code(),
-                    revocationAttributes.getDescription());
-        }
+        signatureBuilder.applyCallback(callback);
 
-        PGPSignatureGenerator signatureGenerator = SignatureUtils.getSignatureGeneratorFor(primarySecretKey);
-        signatureGenerator.setHashedSubpackets(subpacketGenerator.generate());
-        signatureGenerator.init(SignatureType.CERTIFICATION_REVOCATION.getCode(), privateKey);
-
-        PGPSignature revocationSignature = signatureGenerator.generateCertification(userId, primaryPublicKey);
+        PGPSignature revocationSignature = signatureBuilder.build(userId);
         primaryPublicKey = PGPPublicKey.addCertification(primaryPublicKey, userId, revocationSignature);
 
         PGPPublicKeyRing publicKeyRing = KeyRingUtils.publicKeyRingFrom(secretKeyRing);

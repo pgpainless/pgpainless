@@ -20,6 +20,7 @@ public class RevocationSignatureBuilder extends AbstractSignatureBuilder<Revocat
 
     public RevocationSignatureBuilder(SignatureType signatureType, PGPSecretKey signingKey, SecretKeyRingProtector protector) throws WrongPassphraseException {
         super(signatureType, signingKey, protector);
+        getHashedSubpackets().setRevocable(true, false);
     }
 
     @Override
@@ -59,5 +60,13 @@ public class RevocationSignatureBuilder extends AbstractSignatureBuilder<Revocat
         } else {
             return signatureGenerator.generateCertification(publicSigningKey, revokeeSubkey);
         }
+    }
+
+    public PGPSignature build(String revokeeUserId) throws PGPException {
+        PGPSignatureGenerator signatureGenerator = buildAndInitSignatureGenerator();
+        if (signatureType != SignatureType.CERTIFICATION_REVOCATION) {
+            throw new IllegalArgumentException("Signature type is != CERTIFICATION_REVOCATION.");
+        }
+        return signatureGenerator.generateCertification(revokeeUserId, publicSigningKey);
     }
 }
