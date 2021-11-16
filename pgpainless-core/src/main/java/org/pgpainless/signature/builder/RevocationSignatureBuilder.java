@@ -6,8 +6,11 @@ package org.pgpainless.signature.builder;
 
 import javax.annotation.Nullable;
 
+import org.bouncycastle.openpgp.PGPException;
+import org.bouncycastle.openpgp.PGPPublicKey;
 import org.bouncycastle.openpgp.PGPSecretKey;
 import org.bouncycastle.openpgp.PGPSignature;
+import org.bouncycastle.openpgp.PGPSignatureGenerator;
 import org.pgpainless.algorithm.SignatureType;
 import org.pgpainless.exception.WrongPassphraseException;
 import org.pgpainless.key.protection.SecretKeyRingProtector;
@@ -46,7 +49,15 @@ public class RevocationSignatureBuilder extends AbstractSignatureBuilder<Revocat
         }
     }
 
-    public PGPSignature build() {
-        return null;
+    public PGPSignature build(PGPPublicKey revokeeSubkey) throws PGPException {
+        PGPSignatureGenerator signatureGenerator = buildAndInitSignatureGenerator();
+        if (signatureType == SignatureType.KEY_REVOCATION) {
+            if (revokeeSubkey.getKeyID() != publicSigningKey.getKeyID()) {
+                throw new IllegalArgumentException("Signature type is KEY_REVOCATION, but provided revokeeSubkey is != signingPublicKey.");
+            }
+            return signatureGenerator.generateCertification(publicSigningKey);
+        } else {
+            return signatureGenerator.generateCertification(publicSigningKey, revokeeSubkey);
+        }
     }
 }

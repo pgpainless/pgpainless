@@ -177,4 +177,10 @@ public class SignatureSubpacketsHelper {
         applyTo(subpackets, generator);
         return generator.generate();
     }
+
+    public static PGPSignatureSubpacketVector toVector(RevocationSignatureSubpackets subpackets) {
+        PGPSignatureSubpacketGenerator generator = new PGPSignatureSubpacketGenerator();
+        applyTo((SignatureSubpackets) subpackets, generator);
+        return generator.generate();
+    }
 }

@@ -97,7 +97,7 @@ public final class KeyRingUtils {
     public static PGPPublicKey requirePublicKeyFrom(PGPKeyRing keyRing, long subKeyId) {
         PGPPublicKey publicKey = getPublicKeyFrom(keyRing, subKeyId);
         if (publicKey == null) {
-            throw new IllegalArgumentException("KeyRing does not contain public key with keyID " + Long.toHexString(subKeyId));
+            throw new NoSuchElementException("KeyRing does not contain public key with keyID " + Long.toHexString(subKeyId));
         }
         return publicKey;
     }
@@ -105,7 +105,7 @@ public final class KeyRingUtils {
     public static PGPSecretKey requireSecretKeyFrom(PGPSecretKeyRing keyRing, long subKeyId) {
         PGPSecretKey secretKey = keyRing.getSecretKey(subKeyId);
         if (secretKey == null) {
-            throw new IllegalArgumentException("KeyRing does not contain secret key with keyID " + Long.toHexString(subKeyId));
+            throw new NoSuchElementException("KeyRing does not contain secret key with keyID " + Long.toHexString(subKeyId));
         }
         return secretKey;
     }

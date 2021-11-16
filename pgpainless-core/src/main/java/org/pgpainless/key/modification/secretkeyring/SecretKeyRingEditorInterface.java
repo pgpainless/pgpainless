@@ -23,6 +23,7 @@ import org.pgpainless.key.protection.KeyRingProtectionSettings;
 import org.pgpainless.key.protection.SecretKeyRingProtector;
 import org.pgpainless.key.util.RevocationAttributes;
 import org.pgpainless.key.util.UserId;
+import org.pgpainless.signature.subpackets.RevocationSignatureSubpackets;
 import org.pgpainless.signature.subpackets.SelfSignatureSubpackets;
 import org.pgpainless.util.Passphrase;
 
@@ -47,6 +48,11 @@ public interface SecretKeyRingEditorInterface {
      * @return the builder
      */
     SecretKeyRingEditorInterface addUserId(String userId, SecretKeyRingProtector secretKeyRingProtector) throws PGPException;
+
+    SecretKeyRingEditorInterface addUserId(
+            String userId,
+            @Nullable SelfSignatureSubpackets.Callback signatureSubpacketCallback,
+            SecretKeyRingProtector protector) throws PGPException;
 
     /**
      * Add a subkey to the key ring.
@@ -86,7 +92,7 @@ public interface SecretKeyRingEditorInterface {
      */
     default SecretKeyRingEditorInterface revoke(SecretKeyRingProtector secretKeyRingProtector)
             throws PGPException {
-        return revoke(secretKeyRingProtector, null);
+        return revoke(secretKeyRingProtector, (RevocationAttributes) null);
     }
 
     /**
@@ -98,8 +104,11 @@ public interface SecretKeyRingEditorInterface {
      * @return the builder
      */
     SecretKeyRingEditorInterface revoke(SecretKeyRingProtector secretKeyRingProtector,
-                                        RevocationAttributes revocationAttributes)
+                                        @Nullable RevocationAttributes revocationAttributes)
             throws PGPException;
+
+    SecretKeyRingEditorInterface revoke(SecretKeyRingProtector secretKeyRingProtector,
+                                        @Nullable RevocationSignatureSubpackets.Callback subpacketsCallback) throws PGPException;
 
     /**
      * Revoke the subkey binding signature of a subkey.
@@ -126,24 +135,13 @@ public interface SecretKeyRingEditorInterface {
      * @param revocationAttributes reason for the revocation
      * @return the builder
      */
-    SecretKeyRingEditorInterface revokeSubKey(OpenPgpFingerprint fingerprint,
+    default SecretKeyRingEditorInterface revokeSubKey(OpenPgpFingerprint fingerprint,
                                               SecretKeyRingProtector secretKeyRingProtector,
                                               RevocationAttributes revocationAttributes)
-            throws PGPException;
-
-    /**
-     * Revoke the subkey binding signature of a subkey.
-     * The subkey with the provided key-id will be revoked.
-     * If no suitable subkey is found, q {@link java.util.NoSuchElementException} will be thrown.
-     *
-     * @param subKeyId id of the subkey
-     * @param secretKeyRingProtector protector to unlock the secret key ring
-     * @return the builder
-     */
-    default SecretKeyRingEditorInterface revokeSubKey(long subKeyId,
-                                                      SecretKeyRingProtector secretKeyRingProtector)
             throws PGPException {
-        return revokeSubKey(subKeyId, secretKeyRingProtector, null);
+        return revokeSubKey(fingerprint.getKeyId(),
+                secretKeyRingProtector,
+                revocationAttributes);
     }
 
     /**
@@ -161,6 +159,25 @@ public interface SecretKeyRingEditorInterface {
                                               RevocationAttributes revocationAttributes)
             throws PGPException;
 
+    /**
+     * Revoke the subkey binding signature of a subkey.
+     * The subkey with the provided key-id will be revoked.
+     * If no suitable subkey is found, q {@link java.util.NoSuchElementException} will be thrown.
+     *
+     * @param subKeyId id of the subkey
+     * @param secretKeyRingProtector protector to unlock the secret key ring
+     * @return the builder
+     */
+    default SecretKeyRingEditorInterface revokeSubKey(long subKeyId,
+                                                      SecretKeyRingProtector secretKeyRingProtector)
+            throws PGPException {
+        return revokeSubKey(subKeyId, secretKeyRingProtector, (RevocationSignatureSubpackets.Callback) null);
+    }
+
+    SecretKeyRingEditorInterface revokeSubKey(long keyID,
+                                              SecretKeyRingProtector secretKeyRingProtector,
+                                              @Nullable RevocationSignatureSubpackets.Callback subpacketsCallback)
+            throws PGPException;
 
     /**
      * Revoke the given userID.
