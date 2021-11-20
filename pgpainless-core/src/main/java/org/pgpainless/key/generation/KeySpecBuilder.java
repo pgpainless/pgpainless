@@ -5,12 +5,10 @@
 package org.pgpainless.key.generation;
 
 import java.util.Arrays;
-import java.util.Iterator;
 import java.util.LinkedHashSet;
 import java.util.Set;
 import javax.annotation.Nonnull;
 
-import org.bouncycastle.openpgp.PGPSignatureSubpacketGenerator;
 import org.pgpainless.PGPainless;
 import org.pgpainless.algorithm.AlgorithmSuite;
 import org.pgpainless.algorithm.CompressionAlgorithm;
@@ -19,6 +17,8 @@ import org.pgpainless.algorithm.HashAlgorithm;
 import org.pgpainless.algorithm.KeyFlag;
 import org.pgpainless.algorithm.SymmetricKeyAlgorithm;
 import org.pgpainless.key.generation.type.KeyType;
+import org.pgpainless.signature.subpackets.SelfSignatureSubpackets;
+import org.pgpainless.signature.subpackets.SignatureSubpackets;
 import org.pgpainless.signature.subpackets.SignatureSubpacketsUtil;
 import org.pgpainless.util.CollectionUtils;
 
@@ -26,7 +26,7 @@ public class KeySpecBuilder implements KeySpecBuilderInterface {
 
     private final KeyType type;
     private final KeyFlag[] keyFlags;
-    private final PGPSignatureSubpacketGenerator hashedSubPackets = new PGPSignatureSubpacketGenerator();
+    private final SelfSignatureSubpackets hashedSubpackets = new SignatureSubpackets();
     private final AlgorithmSuite algorithmSuite = PGPainless.getPolicy().getKeyGenerationAlgorithmSuite();
     private Set<CompressionAlgorithm> preferredCompressionAlgorithms = algorithmSuite.getCompressionAlgorithms();
     private Set<HashAlgorithm> preferredHashAlgorithms = algorithmSuite.getHashAlgorithms();
@@ -46,19 +46,22 @@ public class KeySpecBuilder implements KeySpecBuilderInterface {
     }
 
     @Override
-    public KeySpecBuilder overridePreferredCompressionAlgorithms(@Nonnull CompressionAlgorithm... compressionAlgorithms) {
+    public KeySpecBuilder overridePreferredCompressionAlgorithms(
+            @Nonnull CompressionAlgorithm... compressionAlgorithms) {
         this.preferredCompressionAlgorithms = new LinkedHashSet<>(Arrays.asList(compressionAlgorithms));
         return this;
     }
 
     @Override
-    public KeySpecBuilder overridePreferredHashAlgorithms(@Nonnull HashAlgorithm... preferredHashAlgorithms) {
+    public KeySpecBuilder overridePreferredHashAlgorithms(
+            @Nonnull HashAlgorithm... preferredHashAlgorithms) {
         this.preferredHashAlgorithms = new LinkedHashSet<>(Arrays.asList(preferredHashAlgorithms));
         return this;
     }
 
     @Override
-    public KeySpecBuilder overridePreferredSymmetricKeyAlgorithms(@Nonnull SymmetricKeyAlgorithm... preferredSymmetricKeyAlgorithms) {
+    public KeySpecBuilder overridePreferredSymmetricKeyAlgorithms(
+            @Nonnull SymmetricKeyAlgorithm... preferredSymmetricKeyAlgorithms) {
         this.preferredSymmetricAlgorithms = new LinkedHashSet<>(Arrays.asList(preferredSymmetricKeyAlgorithms));
         return this;
     }
@@ -66,39 +69,12 @@ public class KeySpecBuilder implements KeySpecBuilderInterface {
 
     @Override
     public KeySpec build() {
-        this.hashedSubPackets.setKeyFlags(false, KeyFlag.toBitmask(keyFlags));
-        this.hashedSubPackets.setPreferredCompressionAlgorithms(false, getPreferredCompressionAlgorithmIDs());
-        this.hashedSubPackets.setPreferredHashAlgorithms(false, getPreferredHashAlgorithmIDs());
-        this.hashedSubPackets.setPreferredSymmetricAlgorithms(false, getPreferredSymmetricKeyAlgorithmIDs());
-        this.hashedSubPackets.setFeature(false, Feature.MODIFICATION_DETECTION.getFeatureId());
+        this.hashedSubpackets.setKeyFlags(keyFlags);
+        this.hashedSubpackets.setPreferredCompressionAlgorithms(preferredCompressionAlgorithms);
+        this.hashedSubpackets.setPreferredHashAlgorithms(preferredHashAlgorithms);
+        this.hashedSubpackets.setPreferredSymmetricKeyAlgorithms(preferredSymmetricAlgorithms);
+        this.hashedSubpackets.setFeatures(Feature.MODIFICATION_DETECTION);
 
-        return new KeySpec(type, hashedSubPackets, false);
-    }
-
-    private int[] getPreferredCompressionAlgorithmIDs() {
-        int[] ids = new int[preferredCompressionAlgorithms.size()];
-        Iterator<CompressionAlgorithm> iterator = preferredCompressionAlgorithms.iterator();
-        for (int i = 0; i < ids.length; i++) {
-            ids[i] = iterator.next().getAlgorithmId();
-        }
-        return ids;
-    }
-
-    private int[] getPreferredHashAlgorithmIDs() {
-        int[] ids = new int[preferredHashAlgorithms.size()];
-        Iterator<HashAlgorithm> iterator = preferredHashAlgorithms.iterator();
-        for (int i = 0; i < ids.length; i++) {
-            ids[i] = iterator.next().getAlgorithmId();
-        }
-        return ids;
-    }
-
-    private int[] getPreferredSymmetricKeyAlgorithmIDs() {
-        int[] ids = new int[preferredSymmetricAlgorithms.size()];
-        Iterator<SymmetricKeyAlgorithm> iterator = preferredSymmetricAlgorithms.iterator();
-        for (int i = 0; i < ids.length; i++) {
-            ids[i] = iterator.next().getAlgorithmId();
-        }
-        return ids;
+        return new KeySpec(type, (SignatureSubpackets) hashedSubpackets, false);
     }
 }
