@@ -14,10 +14,11 @@ import java.security.NoSuchAlgorithmException;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.Iterator;
-import java.util.LinkedHashSet;
+import java.util.LinkedHashMap;
 import java.util.List;
-import java.util.Set;
+import java.util.Map;
 import javax.annotation.Nonnull;
+import javax.annotation.Nullable;
 
 import org.bouncycastle.bcpg.sig.KeyFlags;
 import org.bouncycastle.openpgp.PGPException;
@@ -44,6 +45,7 @@ import org.pgpainless.implementation.ImplementationFactory;
 import org.pgpainless.key.generation.type.KeyType;
 import org.pgpainless.key.protection.UnlockSecretKey;
 import org.pgpainless.provider.ProviderFactory;
+import org.pgpainless.signature.subpackets.SelfSignatureSubpackets;
 import org.pgpainless.signature.subpackets.SignatureSubpackets;
 import org.pgpainless.signature.subpackets.SignatureSubpacketsHelper;
 import org.pgpainless.util.Passphrase;
@@ -54,7 +56,7 @@ public class KeyRingBuilder implements KeyRingBuilderInterface<KeyRingBuilder> {
 
     private KeySpec primaryKeySpec;
     private final List<KeySpec> subkeySpecs = new ArrayList<>();
-    private final Set<String> userIds = new LinkedHashSet<>();
+    private final Map<String, SelfSignatureSubpackets.Callback> userIds = new LinkedHashMap<>();
     private Passphrase passphrase = Passphrase.emptyPassphrase();
     private Date expirationDate = null;
 
@@ -73,7 +75,14 @@ public class KeyRingBuilder implements KeyRingBuilderInterface<KeyRingBuilder> {
 
     @Override
     public KeyRingBuilder addUserId(@Nonnull String userId) {
-        this.userIds.add(userId.trim());
+        this.userIds.put(userId.trim(), null);
+        return this;
+    }
+
+    public KeyRingBuilder addUserId(
+            @Nonnull String userId,
+            @Nullable SelfSignatureSubpackets.Callback subpacketsCallback) {
+        this.userIds.put(userId.trim(), subpacketsCallback);
         return this;
     }
 
@@ -135,6 +144,7 @@ public class KeyRingBuilder implements KeyRingBuilderInterface<KeyRingBuilder> {
 
         // Prepare primary user-id sig
         SignatureSubpackets hashedSubPacketGenerator = primaryKeySpec.getSubpacketGenerator();
+        hashedSubPacketGenerator.setIssuerFingerprintAndKeyId(certKey.getPublicKey());
         hashedSubPacketGenerator.setPrimaryUserId();
         if (expirationDate != null) {
             hashedSubPacketGenerator.setKeyExpirationTime(certKey.getPublicKey(), expirationDate);
@@ -143,7 +153,8 @@ public class KeyRingBuilder implements KeyRingBuilderInterface<KeyRingBuilder> {
         SignatureSubpacketsHelper.applyTo(hashedSubPacketGenerator, generator);
         PGPSignatureSubpacketVector hashedSubPackets = generator.generate();
 
-        PGPKeyRingGenerator ringGenerator = buildRingGenerator(certKey, signer, keyFingerprintCalculator, hashedSubPackets, secretKeyEncryptor);
+        PGPKeyRingGenerator ringGenerator = buildRingGenerator(
+                certKey, signer, keyFingerprintCalculator, hashedSubPackets, secretKeyEncryptor);
         addSubKeys(certKey, ringGenerator);
 
         // Generate secret key ring with only primary user id
@@ -154,15 +165,27 @@ public class KeyRingBuilder implements KeyRingBuilderInterface<KeyRingBuilder> {
         // Attempt to add additional user-ids to the primary public key
         PGPPublicKey primaryPubKey = secretKeys.next().getPublicKey();
         PGPPrivateKey privateKey = UnlockSecretKey.unlockSecretKey(secretKeyRing.getSecretKey(), secretKeyDecryptor);
-        Iterator<String> userIdIterator = this.userIds.iterator();
+        Iterator<Map.Entry<String, SelfSignatureSubpackets.Callback>> userIdIterator =
+                this.userIds.entrySet().iterator();
         userIdIterator.next(); // Skip primary user id
         while (userIdIterator.hasNext()) {
-            String additionalUserId = userIdIterator.next();
+            Map.Entry<String, SelfSignatureSubpackets.Callback> additionalUserId = userIdIterator.next();
+            String userIdString = additionalUserId.getKey();
+            SelfSignatureSubpackets.Callback callback = additionalUserId.getValue();
+            SelfSignatureSubpackets subpackets = null;
+            if (callback == null) {
+                subpackets = hashedSubPacketGenerator;
+            } else {
+                subpackets = SignatureSubpackets.createHashedSubpackets(primaryPubKey);
+                callback.modifyHashedSubpackets(subpackets);
+            }
             signatureGenerator.init(SignatureType.POSITIVE_CERTIFICATION.getCode(), privateKey);
+            signatureGenerator.setHashedSubpackets(
+                    SignatureSubpacketsHelper.toVector((SignatureSubpackets) subpackets));
             PGPSignature additionalUserIdSignature =
-                    signatureGenerator.generateCertification(additionalUserId, primaryPubKey);
+                    signatureGenerator.generateCertification(userIdString, primaryPubKey);
             primaryPubKey = PGPPublicKey.addCertification(primaryPubKey,
-                    additionalUserId, additionalUserIdSignature);
+                    userIdString, additionalUserIdSignature);
         }
 
         // "reassemble" secret key ring with modified primary key
@@ -183,7 +206,7 @@ public class KeyRingBuilder implements KeyRingBuilderInterface<KeyRingBuilder> {
                                                    PGPSignatureSubpacketVector hashedSubPackets,
                                                    PBESecretKeyEncryptor secretKeyEncryptor)
             throws PGPException {
-        String primaryUserId = userIds.iterator().next();
+        String primaryUserId = userIds.entrySet().iterator().next().getKey();
         return new PGPKeyRingGenerator(
                 SignatureType.POSITIVE_CERTIFICATION.getCode(), certKey,
                 primaryUserId, keyFingerprintCalculator,
@@ -199,7 +222,8 @@ public class KeyRingBuilder implements KeyRingBuilderInterface<KeyRingBuilder> {
             } else {
                 PGPSignatureSubpacketVector hashedSubpackets = subKeySpec.getSubpackets();
                 try {
-                    hashedSubpackets = addPrimaryKeyBindingSignatureIfNecessary(primaryKey, subKey, hashedSubpackets);
+                    hashedSubpackets = addPrimaryKeyBindingSignatureIfNecessary(
+                            primaryKey, subKey, hashedSubpackets);
                 } catch (IOException e) {
                     throw new PGPException("Exception while adding primary key binding signature to signing subkey", e);
                 }
@@ -208,10 +232,12 @@ public class KeyRingBuilder implements KeyRingBuilderInterface<KeyRingBuilder> {
         }
     }
 
-    private PGPSignatureSubpacketVector addPrimaryKeyBindingSignatureIfNecessary(PGPKeyPair primaryKey, PGPKeyPair subKey, PGPSignatureSubpacketVector hashedSubpackets)
+    private PGPSignatureSubpacketVector addPrimaryKeyBindingSignatureIfNecessary(
+            PGPKeyPair primaryKey, PGPKeyPair subKey, PGPSignatureSubpacketVector hashedSubpackets)
             throws PGPException, IOException {
         int keyFlagMask = hashedSubpackets.getKeyFlags();
-        if (!KeyFlag.hasKeyFlag(keyFlagMask, KeyFlag.SIGN_DATA) && !KeyFlag.hasKeyFlag(keyFlagMask, KeyFlag.CERTIFY_OTHER)) {
+        if (!KeyFlag.hasKeyFlag(keyFlagMask, KeyFlag.SIGN_DATA) &&
+                !KeyFlag.hasKeyFlag(keyFlagMask, KeyFlag.CERTIFY_OTHER)) {
             return hashedSubpackets;
         }
 
@@ -224,14 +250,16 @@ public class KeyRingBuilder implements KeyRingBuilderInterface<KeyRingBuilder> {
     }
 
     private PGPContentSignerBuilder buildContentSigner(PGPKeyPair certKey) {
-        HashAlgorithm hashAlgorithm = PGPainless.getPolicy().getSignatureHashAlgorithmPolicy().defaultHashAlgorithm();
+        HashAlgorithm hashAlgorithm = PGPainless.getPolicy()
+                .getSignatureHashAlgorithmPolicy().defaultHashAlgorithm();
         return ImplementationFactory.getInstance().getPGPContentSignerBuilder(
                 certKey.getPublicKey().getAlgorithm(),
                 hashAlgorithm.getAlgorithmId());
     }
 
     private PBESecretKeyEncryptor buildSecretKeyEncryptor(PGPDigestCalculator keyFingerprintCalculator) {
-        SymmetricKeyAlgorithm keyEncryptionAlgorithm = PGPainless.getPolicy().getSymmetricKeyEncryptionAlgorithmPolicy()
+        SymmetricKeyAlgorithm keyEncryptionAlgorithm = PGPainless.getPolicy()
+                .getSymmetricKeyEncryptionAlgorithmPolicy()
                 .getDefaultSymmetricKeyAlgorithm();
         if (!passphrase.isValid()) {
             throw new IllegalStateException("Passphrase was cleared.");
@@ -261,7 +289,8 @@ public class KeyRingBuilder implements KeyRingBuilderInterface<KeyRingBuilder> {
         KeyPair keyPair = certKeyGenerator.generateKeyPair();
 
         // Form PGP key pair
-        PGPKeyPair pgpKeyPair = ImplementationFactory.getInstance().getPGPKeyPair(type.getAlgorithm(), keyPair, new Date());
+        PGPKeyPair pgpKeyPair = ImplementationFactory.getInstance()
+                .getPGPKeyPair(type.getAlgorithm(), keyPair, new Date());
         return pgpKeyPair;
     }
 }
