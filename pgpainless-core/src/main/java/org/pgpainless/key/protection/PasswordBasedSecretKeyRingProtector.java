@@ -4,17 +4,13 @@
 
 package org.pgpainless.key.protection;
 
-import java.util.Iterator;
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
 
-import org.bouncycastle.openpgp.PGPException;
 import org.bouncycastle.openpgp.PGPKeyRing;
-import org.bouncycastle.openpgp.PGPPublicKey;
 import org.bouncycastle.openpgp.PGPSecretKey;
 import org.bouncycastle.openpgp.operator.PBESecretKeyDecryptor;
 import org.bouncycastle.openpgp.operator.PBESecretKeyEncryptor;
-import org.pgpainless.implementation.ImplementationFactory;
 import org.pgpainless.key.protection.passphrase_provider.SecretKeyPassphraseProvider;
 import org.pgpainless.util.Passphrase;
 
@@ -22,10 +18,11 @@ import org.pgpainless.util.Passphrase;
  * Provides {@link PBESecretKeyDecryptor} and {@link PBESecretKeyEncryptor} objects while getting the passphrases
  * from a {@link SecretKeyPassphraseProvider} and using settings from an {@link KeyRingProtectionSettings}.
  */
-public class PasswordBasedSecretKeyRingProtector implements SecretKeyRingProtector {
+public class PasswordBasedSecretKeyRingProtector extends BaseSecretKeyRingProtector {
 
-    protected final KeyRingProtectionSettings protectionSettings;
-    protected final SecretKeyPassphraseProvider passphraseProvider;
+    public PasswordBasedSecretKeyRingProtector(@Nonnull SecretKeyPassphraseProvider passphraseProvider) {
+        super(passphraseProvider);
+    }
 
     /**
      * Constructor.
@@ -36,23 +33,15 @@ public class PasswordBasedSecretKeyRingProtector implements SecretKeyRingProtect
      * @param passphraseProvider provider which provides passphrases.
      */
     public PasswordBasedSecretKeyRingProtector(@Nonnull KeyRingProtectionSettings settings, @Nonnull SecretKeyPassphraseProvider passphraseProvider) {
-        this.protectionSettings = settings;
-        this.passphraseProvider = passphraseProvider;
+        super(passphraseProvider, settings);
     }
 
     public static PasswordBasedSecretKeyRingProtector forKey(PGPKeyRing keyRing, Passphrase passphrase) {
-        KeyRingProtectionSettings protectionSettings = KeyRingProtectionSettings.secureDefaultSettings();
         SecretKeyPassphraseProvider passphraseProvider = new SecretKeyPassphraseProvider() {
             @Override
             @Nullable
             public Passphrase getPassphraseFor(Long keyId) {
-                for (Iterator<PGPPublicKey> it = keyRing.getPublicKeys(); it.hasNext(); ) {
-                    PGPPublicKey key = it.next();
-                    if (key.getKeyID() == keyId) {
-                        return passphrase;
-                    }
-                }
-                return null;
+                return hasPassphrase(keyId) ? passphrase : null;
             }
 
             @Override
@@ -60,7 +49,7 @@ public class PasswordBasedSecretKeyRingProtector implements SecretKeyRingProtect
                 return keyRing.getPublicKey(keyId) != null;
             }
         };
-        return new PasswordBasedSecretKeyRingProtector(protectionSettings, passphraseProvider);
+        return new PasswordBasedSecretKeyRingProtector(passphraseProvider);
     }
 
     public static PasswordBasedSecretKeyRingProtector forKey(PGPSecretKey key, Passphrase passphrase) {
@@ -68,7 +57,6 @@ public class PasswordBasedSecretKeyRingProtector implements SecretKeyRingProtect
     }
 
     public static PasswordBasedSecretKeyRingProtector forKeyId(long singleKeyId, Passphrase passphrase) {
-        KeyRingProtectionSettings protectionSettings = KeyRingProtectionSettings.secureDefaultSettings();
         SecretKeyPassphraseProvider passphraseProvider = new SecretKeyPassphraseProvider() {
             @Nullable
             @Override
@@ -84,31 +72,7 @@ public class PasswordBasedSecretKeyRingProtector implements SecretKeyRingProtect
                 return keyId == singleKeyId;
             }
         };
-        return new PasswordBasedSecretKeyRingProtector(protectionSettings, passphraseProvider);
+        return new PasswordBasedSecretKeyRingProtector(passphraseProvider);
     }
 
-    @Override
-    public boolean hasPassphraseFor(Long keyId) {
-        return passphraseProvider.hasPassphrase(keyId);
-    }
-
-    @Override
-    @Nullable
-    public PBESecretKeyDecryptor getDecryptor(Long keyId) throws PGPException {
-        Passphrase passphrase = passphraseProvider.getPassphraseFor(keyId);
-        return passphrase == null ? null :
-                ImplementationFactory.getInstance().getPBESecretKeyDecryptor(passphrase);
-    }
-
-    @Override
-    @Nullable
-    public PBESecretKeyEncryptor getEncryptor(Long keyId) throws PGPException {
-        Passphrase passphrase = passphraseProvider.getPassphraseFor(keyId);
-        return passphrase == null ? null :
-                ImplementationFactory.getInstance().getPBESecretKeyEncryptor(
-                        protectionSettings.getEncryptionAlgorithm(),
-                        protectionSettings.getHashAlgorithm(),
-                        protectionSettings.getS2kCount(),
-                        passphrase);
-    }
 }

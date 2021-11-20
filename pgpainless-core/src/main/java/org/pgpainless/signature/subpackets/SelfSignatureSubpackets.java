@@ -5,6 +5,7 @@
 package org.pgpainless.signature.subpackets;
 
 import java.util.Date;
+import java.util.List;
 import java.util.Set;
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
@@ -29,6 +30,11 @@ public interface SelfSignatureSubpackets extends BaseSignatureSubpackets {
     }
 
     SelfSignatureSubpackets setKeyFlags(KeyFlag... keyFlags);
+
+    default SelfSignatureSubpackets setKeyFlags(List<KeyFlag> keyFlags) {
+        KeyFlag[] flags = keyFlags.toArray(new KeyFlag[0]);
+        return setKeyFlags(flags);
+    }
 
     SelfSignatureSubpackets setKeyFlags(boolean isCritical, KeyFlag... keyFlags);
 

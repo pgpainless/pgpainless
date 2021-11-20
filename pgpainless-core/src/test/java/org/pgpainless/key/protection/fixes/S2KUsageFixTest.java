@@ -67,7 +67,8 @@ public class S2KUsageFixTest {
     private static final String MESSAGE_PLAIN = "Hello, World!\n";
 
     @Test
-    public void verifyOutFixInChangePassphraseWorks() throws PGPException, InvalidAlgorithmParameterException, NoSuchAlgorithmException, IOException {
+    public void verifyOutFixInChangePassphraseWorks()
+            throws PGPException, InvalidAlgorithmParameterException, NoSuchAlgorithmException {
         PGPSecretKeyRing before = PGPainless.generateKeyRing().modernKeyRing("Alice", "before");
         for (PGPSecretKey key : before) {
             assertEquals(SecretKeyPacket.USAGE_SHA1, key.getS2KUsage());
@@ -93,9 +94,10 @@ public class S2KUsageFixTest {
     }
 
     @Test
-    public void testFixS2KUsageFrom_USAGE_CHECKSUM_to_USAGE_SHA1() throws IOException, PGPException {
+    public void testFixS2KUsageFrom_USAGE_CHECKSUM_to_USAGE_SHA1()
+            throws IOException, PGPException {
         PGPSecretKeyRing keys = PGPainless.readKeyRing().secretKeyRing(KEY_WITH_USAGE_CHECKSUM);
-        SecretKeyRingProtector protector = SecretKeyRingProtector.unlockAllKeysWith(Passphrase.fromPassword("after"), keys);
+        SecretKeyRingProtector protector = SecretKeyRingProtector.unlockAnyKeyWith(Passphrase.fromPassword("after"));
 
         PGPSecretKeyRing fixed = S2KUsageFix.replaceUsageChecksumWithUsageSha1(keys, protector);
         for (PGPSecretKey key : fixed) {
@@ -105,7 +107,8 @@ public class S2KUsageFixTest {
         testCanStillDecrypt(keys, protector);
     }
 
-    private void testCanStillDecrypt(PGPSecretKeyRing keys, SecretKeyRingProtector protector) throws PGPException, IOException {
+    private void testCanStillDecrypt(PGPSecretKeyRing keys, SecretKeyRingProtector protector)
+            throws PGPException, IOException {
         ByteArrayInputStream in = new ByteArrayInputStream(MESSAGE.getBytes(StandardCharsets.UTF_8));
         DecryptionStream decryptionStream = PGPainless.decryptAndOrVerify()
                 .onInputStream(in)

@@ -50,7 +50,8 @@ public class ModifyKeys {
     private long signingSubkeyId;
 
     @BeforeEach
-    public void generateKey() throws PGPException, InvalidAlgorithmParameterException, NoSuchAlgorithmException {
+    public void generateKey()
+            throws PGPException, InvalidAlgorithmParameterException, NoSuchAlgorithmException {
         secretKey = PGPainless.generateKeyRing()
                 .modernKeyRing(userId, originalPassphrase);
 
@@ -128,10 +129,13 @@ public class ModifyKeys {
 
         // encryption key can now only be unlocked using the new passphrase
         assertThrows(WrongPassphraseException.class, () ->
-                UnlockSecretKey.unlockSecretKey(secretKey.getSecretKey(encryptionSubkeyId), Passphrase.fromPassword(originalPassphrase)));
-        UnlockSecretKey.unlockSecretKey(secretKey.getSecretKey(encryptionSubkeyId), Passphrase.fromPassword("cryptP4ssphr4s3"));
+                UnlockSecretKey.unlockSecretKey(
+                        secretKey.getSecretKey(encryptionSubkeyId), Passphrase.fromPassword(originalPassphrase)));
+        UnlockSecretKey.unlockSecretKey(
+                secretKey.getSecretKey(encryptionSubkeyId), Passphrase.fromPassword("cryptP4ssphr4s3"));
         // primary key remains unchanged
-        UnlockSecretKey.unlockSecretKey(secretKey.getSecretKey(primaryKeyId), Passphrase.fromPassword(originalPassphrase));
+        UnlockSecretKey.unlockSecretKey(
+                secretKey.getSecretKey(primaryKeyId), Passphrase.fromPassword(originalPassphrase));
     }
 
     /**
@@ -141,7 +145,8 @@ public class ModifyKeys {
      */
     @Test
     public void addUserId() throws PGPException {
-        SecretKeyRingProtector protector = SecretKeyRingProtector.unlockAllKeysWith(Passphrase.fromPassword(originalPassphrase), secretKey);
+        SecretKeyRingProtector protector =
+                SecretKeyRingProtector.unlockEachKeyWith(Passphrase.fromPassword(originalPassphrase), secretKey);
         secretKey = PGPainless.modifyKeyRing(secretKey)
                 .addUserId("additional@user.id", protector)
                 .done();
@@ -172,7 +177,8 @@ public class ModifyKeys {
     @Test
     public void addSubkey() throws PGPException, InvalidAlgorithmParameterException, NoSuchAlgorithmException, IOException {
         // Protector for unlocking the existing secret key
-        SecretKeyRingProtector protector = SecretKeyRingProtector.unlockAllKeysWith(Passphrase.fromPassword(originalPassphrase), secretKey);
+        SecretKeyRingProtector protector =
+                SecretKeyRingProtector.unlockEachKeyWith(Passphrase.fromPassword(originalPassphrase), secretKey);
         Passphrase subkeyPassphrase = Passphrase.fromPassword("subk3yP4ssphr4s3");
         secretKey = PGPainless.modifyKeyRing(secretKey)
                 .addSubKey(
@@ -202,16 +208,19 @@ public class ModifyKeys {
         Date expirationDate = DateUtil.parseUTCDate("2030-06-24 12:44:56 UTC");
 
         SecretKeyRingProtector protector = SecretKeyRingProtector
-                .unlockAllKeysWith(Passphrase.fromPassword(originalPassphrase), secretKey);
+                .unlockEachKeyWith(Passphrase.fromPassword(originalPassphrase), secretKey);
         secretKey = PGPainless.modifyKeyRing(secretKey)
                 .setExpirationDate(expirationDate, protector)
                 .done();
 
 
         KeyRingInfo info = PGPainless.inspectKeyRing(secretKey);
-        assertEquals(DateUtil.formatUTCDate(expirationDate), DateUtil.formatUTCDate(info.getPrimaryKeyExpirationDate()));
-        assertEquals(DateUtil.formatUTCDate(expirationDate), DateUtil.formatUTCDate(info.getExpirationDateForUse(KeyFlag.ENCRYPT_COMMS)));
-        assertEquals(DateUtil.formatUTCDate(expirationDate), DateUtil.formatUTCDate(info.getExpirationDateForUse(KeyFlag.SIGN_DATA)));
+        assertEquals(DateUtil.formatUTCDate(expirationDate),
+                DateUtil.formatUTCDate(info.getPrimaryKeyExpirationDate()));
+        assertEquals(DateUtil.formatUTCDate(expirationDate),
+                DateUtil.formatUTCDate(info.getExpirationDateForUse(KeyFlag.ENCRYPT_COMMS)));
+        assertEquals(DateUtil.formatUTCDate(expirationDate),
+                DateUtil.formatUTCDate(info.getExpirationDateForUse(KeyFlag.SIGN_DATA)));
     }
 
     /**
@@ -223,7 +232,7 @@ public class ModifyKeys {
     public void setSubkeyExpirationDate() throws PGPException {
         Date expirationDate = DateUtil.parseUTCDate("2032-01-13 22:30:01 UTC");
         SecretKeyRingProtector protector = SecretKeyRingProtector
-                .unlockAllKeysWith(Passphrase.fromPassword(originalPassphrase), secretKey);
+                .unlockEachKeyWith(Passphrase.fromPassword(originalPassphrase), secretKey);
 
         secretKey = PGPainless.modifyKeyRing(secretKey)
                 .setExpirationDate(
@@ -237,7 +246,8 @@ public class ModifyKeys {
         KeyRingInfo info = PGPainless.inspectKeyRing(secretKey);
         assertNull(info.getPrimaryKeyExpirationDate());
         assertNull(info.getExpirationDateForUse(KeyFlag.SIGN_DATA));
-        assertEquals(DateUtil.formatUTCDate(expirationDate), DateUtil.formatUTCDate(info.getExpirationDateForUse(KeyFlag.ENCRYPT_COMMS)));
+        assertEquals(DateUtil.formatUTCDate(expirationDate),
+                DateUtil.formatUTCDate(info.getExpirationDateForUse(KeyFlag.ENCRYPT_COMMS)));
     }
 
     /**
@@ -247,7 +257,7 @@ public class ModifyKeys {
      */
     @Test
     public void revokeUserId() throws PGPException {
-        SecretKeyRingProtector protector = SecretKeyRingProtector.unlockAllKeysWith(
+        SecretKeyRingProtector protector = SecretKeyRingProtector.unlockEachKeyWith(
                 Passphrase.fromPassword(originalPassphrase), secretKey);
         secretKey = PGPainless.modifyKeyRing(secretKey)
                 .addUserId("alcie@pgpainless.org", protector)

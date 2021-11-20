@@ -27,12 +27,17 @@ public class UnlockSecretKeyTest {
                 .simpleEcKeyRing("alice@wonderland.lit", "heureka!");
         PGPSecretKey secretKey = secretKeyRing.getSecretKey();
 
-        SecretKeyRingProtector correctPassphrase = SecretKeyRingProtector.unlockAllKeysWith(Passphrase.fromPassword("heureka!"), secretKeyRing);
-        SecretKeyRingProtector incorrectPassphrase = SecretKeyRingProtector.unlockAllKeysWith(Passphrase.fromPassword("bazinga!"), secretKeyRing);
-        SecretKeyRingProtector emptyPassphrase = SecretKeyRingProtector.unlockAllKeysWith(Passphrase.emptyPassphrase(), secretKeyRing);
+        SecretKeyRingProtector correctPassphrase = SecretKeyRingProtector
+                .unlockAnyKeyWith(Passphrase.fromPassword("heureka!"));
+        SecretKeyRingProtector incorrectPassphrase = SecretKeyRingProtector
+                .unlockAnyKeyWith(Passphrase.fromPassword("bazinga!"));
+        SecretKeyRingProtector emptyPassphrase = SecretKeyRingProtector
+                .unlockAnyKeyWith(Passphrase.emptyPassphrase());
         Passphrase cleared = Passphrase.fromPassword("cleared");
         cleared.clear();
-        SecretKeyRingProtector invalidPassphrase = SecretKeyRingProtector.unlockAllKeysWith(cleared, secretKeyRing);
+        SecretKeyRingProtector invalidPassphrase = SecretKeyRingProtector
+                .unlockAnyKeyWith(cleared);
+
         // Correct passphrase works
         PGPPrivateKey privateKey = UnlockSecretKey.unlockSecretKey(secretKey, correctPassphrase);
         assertNotNull(privateKey);
@@ -41,7 +46,7 @@ public class UnlockSecretKeyTest {
                 UnlockSecretKey.unlockSecretKey(secretKey, incorrectPassphrase));
         assertThrows(WrongPassphraseException.class, () ->
                 UnlockSecretKey.unlockSecretKey(secretKey, emptyPassphrase));
-        assertThrows(WrongPassphraseException.class, () ->
+        assertThrows(IllegalStateException.class, () ->
                 UnlockSecretKey.unlockSecretKey(secretKey, invalidPassphrase));
     }
 }

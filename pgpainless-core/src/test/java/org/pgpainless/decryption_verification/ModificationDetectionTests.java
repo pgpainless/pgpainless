@@ -537,7 +537,7 @@ public class ModificationDetectionTests {
         assertThrows(MessageNotIntegrityProtectedException.class, () -> PGPainless.decryptAndOrVerify()
                 .onInputStream(new ByteArrayInputStream(ciphertext.getBytes(StandardCharsets.UTF_8)))
                 .withOptions(new ConsumerOptions().addDecryptionKey(secretKeyRing,
-                        SecretKeyRingProtector.unlockAllKeysWith(passphrase, secretKeyRing)))
+                        SecretKeyRingProtector.unlockAnyKeyWith(passphrase)))
         );
     }
 

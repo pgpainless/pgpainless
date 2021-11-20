@@ -65,7 +65,7 @@ public class AddSubKeyTest {
         long subKeyId = keyIdsAfter.get(0);
 
         PGPSecretKey subKey = secretKeys.getSecretKey(subKeyId);
-        SecretKeyRingProtector protector = SecretKeyRingProtector.unlockAllKeysWith(
+        SecretKeyRingProtector protector = SecretKeyRingProtector.unlockEachKeyWith(
                 Passphrase.fromPassword("subKeyPassphrase"), secretKeys);
         PGPPrivateKey privateKey = UnlockSecretKey.unlockSecretKey(subKey, protector);
 

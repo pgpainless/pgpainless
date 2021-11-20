@@ -7,6 +7,7 @@ package org.pgpainless.key.protection;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
+import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
 
 import org.bouncycastle.openpgp.PGPException;
@@ -15,6 +16,7 @@ import org.bouncycastle.openpgp.PGPSecretKeyRing;
 import org.bouncycastle.openpgp.operator.PBESecretKeyDecryptor;
 import org.bouncycastle.openpgp.operator.PBESecretKeyEncryptor;
 import org.pgpainless.key.protection.passphrase_provider.SecretKeyPassphraseProvider;
+import org.pgpainless.key.protection.passphrase_provider.SolitaryPassphraseProvider;
 import org.pgpainless.util.Passphrase;
 
 /**
@@ -66,7 +68,23 @@ public interface SecretKeyRingProtector {
     }
 
     /**
-     * Use the provided passphrase to lock/unlock all subkeys in the provided key ring.
+     * Use the provided passphrase to lock/unlock all keys in the provided key ring.
+     *
+     * This protector will use the provided passphrase to lock/unlock all subkeys present in the provided keys object.
+     * For other keys that are not present in the ring, it will return null.
+     *
+     * @param passphrase passphrase
+     * @param keys key ring
+     * @return protector
+     * @deprecated use {@link #unlockEachKeyWith(Passphrase, PGPSecretKeyRing)} instead.
+     */
+    @Deprecated
+    static SecretKeyRingProtector unlockAllKeysWith(@Nonnull Passphrase passphrase, @Nonnull PGPSecretKeyRing keys) {
+        return unlockEachKeyWith(passphrase, keys);
+    }
+
+    /**
+     * Use the provided passphrase to lock/unlock all keys in the provided key ring.
      *
      * This protector will use the provided passphrase to lock/unlock all subkeys present in the provided keys object.
      * For other keys that are not present in the ring, it will return null.
@@ -75,12 +93,22 @@ public interface SecretKeyRingProtector {
      * @param keys key ring
      * @return protector
      */
-    static SecretKeyRingProtector unlockAllKeysWith(Passphrase passphrase, PGPSecretKeyRing keys) {
+    static SecretKeyRingProtector unlockEachKeyWith(@Nonnull Passphrase passphrase, @Nonnull PGPSecretKeyRing keys) {
         Map<Long, Passphrase> map = new ConcurrentHashMap<>();
         for (PGPSecretKey secretKey : keys) {
             map.put(secretKey.getKeyID(), passphrase);
         }
         return fromPassphraseMap(map);
+    }
+
+    /**
+     * Use the provided passphrase to unlock any key.
+     *
+     * @param passphrase passphrase
+     * @return protector
+     */
+    static SecretKeyRingProtector unlockAnyKeyWith(@Nonnull Passphrase passphrase) {
+        return new BaseSecretKeyRingProtector(new SolitaryPassphraseProvider(passphrase));
     }
 
     /**
@@ -94,11 +122,11 @@ public interface SecretKeyRingProtector {
      * @param key key to lock/unlock
      * @return protector
      */
-    static SecretKeyRingProtector unlockSingleKeyWith(Passphrase passphrase, PGPSecretKey key) {
+    static SecretKeyRingProtector unlockSingleKeyWith(@Nonnull Passphrase passphrase, @Nonnull PGPSecretKey key) {
         return PasswordBasedSecretKeyRingProtector.forKey(key, passphrase);
     }
 
-    static SecretKeyRingProtector unlockSingleKeyWith(Passphrase passphrase, long keyId) {
+    static SecretKeyRingProtector unlockSingleKeyWith(@Nonnull Passphrase passphrase, long keyId) {
         return PasswordBasedSecretKeyRingProtector.forKeyId(keyId, passphrase);
     }
 
@@ -123,7 +151,7 @@ public interface SecretKeyRingProtector {
      * @param passphraseMap map of key ids and their respective passphrases
      * @return protector
      */
-    static SecretKeyRingProtector fromPassphraseMap(Map<Long, Passphrase> passphraseMap) {
+    static SecretKeyRingProtector fromPassphraseMap(@Nonnull Map<Long, Passphrase> passphraseMap) {
         return new CachingSecretKeyRingProtector(passphraseMap, KeyRingProtectionSettings.secureDefaultSettings(), null);
     }
 }

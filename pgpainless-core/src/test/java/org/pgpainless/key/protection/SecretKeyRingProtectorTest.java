@@ -36,11 +36,13 @@ public class SecretKeyRingProtectorTest {
 
     @ParameterizedTest
     @MethodSource("org.pgpainless.util.TestImplementationFactoryProvider#provideImplementationFactories")
-    public void testUnlockAllKeysWithSamePassword(ImplementationFactory implementationFactory) throws IOException, PGPException, InvalidAlgorithmParameterException, NoSuchAlgorithmException {
+    public void testUnlockAllKeysWithSamePassword(ImplementationFactory implementationFactory)
+            throws IOException, PGPException, InvalidAlgorithmParameterException, NoSuchAlgorithmException {
         ImplementationFactory.setFactoryImplementation(implementationFactory);
 
         PGPSecretKeyRing secretKeys = TestKeys.getCryptieSecretKeyRing();
-        SecretKeyRingProtector protector = SecretKeyRingProtector.unlockAllKeysWith(TestKeys.CRYPTIE_PASSPHRASE, secretKeys);
+        SecretKeyRingProtector protector =
+                SecretKeyRingProtector.unlockEachKeyWith(TestKeys.CRYPTIE_PASSPHRASE, secretKeys);
         for (PGPSecretKey secretKey : secretKeys) {
             PBESecretKeyDecryptor decryptor = protector.getDecryptor(secretKey.getKeyID());
             assertNotNull(decryptor);
@@ -51,7 +53,8 @@ public class SecretKeyRingProtectorTest {
         for (PGPSecretKey unrelatedKey : unrelatedKeys) {
             PBESecretKeyDecryptor decryptor = protector.getDecryptor(unrelatedKey.getKeyID());
             assertNull(decryptor);
-            assertThrows(PGPException.class, () -> unrelatedKey.extractPrivateKey(protector.getDecryptor(unrelatedKey.getKeyID())));
+            assertThrows(PGPException.class,
+                    () -> unrelatedKey.extractPrivateKey(protector.getDecryptor(unrelatedKey.getKeyID())));
         }
     }
 
@@ -68,7 +71,8 @@ public class SecretKeyRingProtectorTest {
 
     @ParameterizedTest
     @MethodSource("org.pgpainless.util.TestImplementationFactoryProvider#provideImplementationFactories")
-    public void testUnlockSingleKeyWithPassphrase(ImplementationFactory implementationFactory) throws IOException, PGPException {
+    public void testUnlockSingleKeyWithPassphrase(ImplementationFactory implementationFactory)
+            throws IOException, PGPException {
         ImplementationFactory.setFactoryImplementation(implementationFactory);
 
         PGPSecretKeyRing secretKeys = TestKeys.getCryptieSecretKeyRing();
@@ -76,7 +80,8 @@ public class SecretKeyRingProtectorTest {
         PGPSecretKey secretKey = iterator.next();
         PGPSecretKey subKey = iterator.next();
 
-        SecretKeyRingProtector protector = SecretKeyRingProtector.unlockSingleKeyWith(TestKeys.CRYPTIE_PASSPHRASE, secretKey);
+        SecretKeyRingProtector protector =
+                SecretKeyRingProtector.unlockSingleKeyWith(TestKeys.CRYPTIE_PASSPHRASE, secretKey);
         assertNotNull(protector.getDecryptor(secretKey.getKeyID()));
         assertNotNull(protector.getEncryptor(secretKey.getKeyID()));
         assertNull(protector.getEncryptor(subKey.getKeyID()));
@@ -87,7 +92,8 @@ public class SecretKeyRingProtectorTest {
     public void testFromPassphraseMap() {
         Map<Long, Passphrase> passphraseMap = new ConcurrentHashMap<>();
         passphraseMap.put(1L, Passphrase.emptyPassphrase());
-        CachingSecretKeyRingProtector protector = (CachingSecretKeyRingProtector) SecretKeyRingProtector.fromPassphraseMap(passphraseMap);
+        CachingSecretKeyRingProtector protector =
+                (CachingSecretKeyRingProtector) SecretKeyRingProtector.fromPassphraseMap(passphraseMap);
 
         assertNotNull(protector.getPassphraseFor(1L));
         assertNull(protector.getPassphraseFor(5L));

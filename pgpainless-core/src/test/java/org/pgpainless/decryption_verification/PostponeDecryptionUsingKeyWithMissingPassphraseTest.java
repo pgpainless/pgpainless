@@ -132,7 +132,7 @@ public class PostponeDecryptionUsingKeyWithMissingPassphraseTest {
                 return false;
             }
         });
-        SecretKeyRingProtector protector2 = SecretKeyRingProtector.unlockAllKeysWith(p2, k2);
+        SecretKeyRingProtector protector2 = SecretKeyRingProtector.unlockEachKeyWith(p2, k2);
 
         DecryptionStream decryptionStream = PGPainless.decryptAndOrVerify()
                 .onInputStream(new ByteArrayInputStream(ENCRYPTED_FOR_K1_K2.getBytes(StandardCharsets.UTF_8)))
@@ -149,7 +149,7 @@ public class PostponeDecryptionUsingKeyWithMissingPassphraseTest {
 
     @Test
     public void missingPassphraseSecond() throws PGPException, IOException {
-        SecretKeyRingProtector protector1 = SecretKeyRingProtector.unlockAllKeysWith(p1, k1);
+        SecretKeyRingProtector protector1 = SecretKeyRingProtector.unlockEachKeyWith(p1, k1);
         SecretKeyRingProtector protector2 = new CachingSecretKeyRingProtector(new SecretKeyPassphraseProvider() {
             @Nullable
             @Override

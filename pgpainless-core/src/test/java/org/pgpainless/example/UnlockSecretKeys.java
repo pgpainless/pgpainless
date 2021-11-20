@@ -58,10 +58,10 @@ public class UnlockSecretKeys {
     @Test
     public void unlockWholeKeyWithSamePassphrase() throws PGPException, IOException {
         PGPSecretKeyRing secretKey = TestKeys.getCryptieSecretKeyRing();
-        // Unlock all subkeys in the secret key with the same passphrase
-        SecretKeyRingProtector protector = SecretKeyRingProtector.unlockAllKeysWith(
-                Passphrase.fromPassword(TestKeys.CRYPTIE_PASSWORD), secretKey);
+        Passphrase passphrase = TestKeys.CRYPTIE_PASSPHRASE;
 
+        // Unlock all subkeys in the secret key with the same passphrase
+        SecretKeyRingProtector protector = SecretKeyRingProtector.unlockAnyKeyWith(passphrase);
 
         assertProtectorUnlocksAllSecretKeys(secretKey, protector);
     }

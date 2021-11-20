@@ -59,7 +59,6 @@ import org.pgpainless.key.util.RevocationAttributes;
 import org.pgpainless.signature.SignatureUtils;
 import org.pgpainless.signature.builder.RevocationSignatureBuilder;
 import org.pgpainless.signature.builder.SelfSignatureBuilder;
-import org.pgpainless.signature.builder.SignatureFactory;
 import org.pgpainless.signature.subpackets.RevocationSignatureSubpackets;
 import org.pgpainless.signature.subpackets.SelfSignatureSubpackets;
 import org.pgpainless.signature.subpackets.SignatureSubpacketGeneratorUtil;
@@ -102,12 +101,11 @@ public class SecretKeyRingEditor implements SecretKeyRingEditorInterface {
         KeyRingInfo info = PGPainless.inspectKeyRing(secretKeyRing);
         List<KeyFlag> keyFlags = info.getKeyFlagsOf(info.getKeyId());
 
-        SelfSignatureBuilder builder = SignatureFactory.selfCertifyUserId(
-                primaryKey,
-                protector,
-                signatureSubpacketCallback,
-                keyFlags);
+        SelfSignatureBuilder builder = new SelfSignatureBuilder(primaryKey, protector);
         builder.setSignatureType(SignatureType.POSITIVE_CERTIFICATION);
+        builder.getHashedSubpackets().setKeyFlags(keyFlags);
+        builder.applyCallback(signatureSubpacketCallback);
+
         PGPSignature signature = builder.build(primaryKey.getPublicKey(), userId);
         secretKeyRing = KeyRingUtils.injectCertification(secretKeyRing, userId, signature);
 
