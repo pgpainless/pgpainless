@@ -47,7 +47,7 @@ public class KeySpec {
     }
 
     @Nonnull
-    SignatureSubpackets getSubpacketGenerator() {
+    public SignatureSubpackets getSubpacketGenerator() {
         return subpacketGenerator;
     }
 

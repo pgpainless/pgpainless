@@ -39,7 +39,6 @@ import org.pgpainless.key.util.RevocationAttributes;
 import org.pgpainless.signature.SignatureUtils;
 import org.pgpainless.signature.subpackets.RevocationSignatureSubpackets;
 import org.pgpainless.signature.subpackets.SignatureSubpacketsUtil;
-import org.pgpainless.util.ArmorUtils;
 import org.pgpainless.util.Passphrase;
 
 public class RevokeSubKeyTest {
@@ -82,11 +81,6 @@ public class RevokeSubKeyTest {
                         .withReason(RevocationAttributes.Reason.KEY_RETIRED)
                         .withDescription("Key no longer used."));
 
-        // CHECKSTYLE:OFF
-        System.out.println("Revocation Certificate:");
-        System.out.println(ArmorUtils.toAsciiArmoredString(revocationCertificate.getEncoded()));
-        // CHECKSTYLE:ON
-
         PGPPublicKey publicKey = secretKeys.getPublicKey();
         assertFalse(publicKey.hasRevocation());
 
@@ -107,8 +101,8 @@ public class RevokeSubKeyTest {
                 .forKey(secretKeys, Passphrase.fromPassword("password123"));
 
         SecretKeyRingEditorInterface editor = PGPainless.modifyKeyRing(secretKeys);
-        PGPSignature keyRevocation = editor.createRevocationCertificate(primaryKey.getKeyID(), protector, null);
-        PGPSignature subkeyRevocation = editor.createRevocationCertificate(subKey.getKeyID(), protector, null);
+        PGPSignature keyRevocation = editor.createRevocationCertificate(primaryKey.getKeyID(), protector, (RevocationAttributes) null);
+        PGPSignature subkeyRevocation = editor.createRevocationCertificate(subKey.getKeyID(), protector, (RevocationAttributes) null);
 
         assertEquals(SignatureType.KEY_REVOCATION.getCode(), keyRevocation.getSignatureType());
         assertEquals(SignatureType.SUBKEY_REVOCATION.getCode(), subkeyRevocation.getSignatureType());

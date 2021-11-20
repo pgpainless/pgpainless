@@ -12,10 +12,9 @@ import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
 
 import org.bouncycastle.openpgp.PGPException;
-import org.bouncycastle.openpgp.PGPSecretKey;
+import org.bouncycastle.openpgp.PGPKeyPair;
 import org.bouncycastle.openpgp.PGPSecretKeyRing;
 import org.bouncycastle.openpgp.PGPSignature;
-import org.bouncycastle.openpgp.PGPSignatureSubpacketVector;
 import org.pgpainless.algorithm.KeyFlag;
 import org.pgpainless.key.OpenPgpFingerprint;
 import org.pgpainless.key.generation.KeySpec;
@@ -66,18 +65,10 @@ public interface SecretKeyRingEditorInterface {
     SecretKeyRingEditorInterface addSubKey(@Nonnull KeySpec keySpec,
                                            @Nullable Passphrase subKeyPassphrase,
                                            SecretKeyRingProtector secretKeyRingProtector)
-            throws InvalidAlgorithmParameterException, NoSuchAlgorithmException, PGPException;
+            throws InvalidAlgorithmParameterException, NoSuchAlgorithmException, PGPException, IOException;
 
-    @Deprecated
-    SecretKeyRingEditorInterface addSubKey(PGPSecretKey subKey,
-                                           PGPSignatureSubpacketVector hashedSubpackets,
-                                           PGPSignatureSubpacketVector unhashedSubpackets,
-                                           SecretKeyRingProtector subKeyProtector, SecretKeyRingProtector keyRingProtector)
-            throws PGPException;
-
-    SecretKeyRingEditorInterface addSubKey(PGPSecretKey subkey,
+    SecretKeyRingEditorInterface addSubKey(PGPKeyPair subkey,
                                            @Nullable SelfSignatureSubpackets.Callback bindingSignatureCallback,
-                                           @Nullable SelfSignatureSubpackets.Callback backSignatureCallback,
                                            SecretKeyRingProtector subkeyProtector,
                                            SecretKeyRingProtector primaryKeyProtector,
                                            KeyFlag keyFlag,
@@ -244,17 +235,22 @@ public interface SecretKeyRingEditorInterface {
      * @return revocation certificate
      */
     PGPSignature createRevocationCertificate(SecretKeyRingProtector secretKeyRingProtector,
-                                             RevocationAttributes revocationAttributes)
+                                             @Nullable RevocationAttributes revocationAttributes)
             throws PGPException;
 
     PGPSignature createRevocationCertificate(long subkeyId,
                                              SecretKeyRingProtector secretKeyRingProtector,
-                                             RevocationAttributes revocationAttributes)
+                                             @Nullable RevocationAttributes revocationAttributes)
+        throws PGPException;
+
+    PGPSignature createRevocationCertificate(long subkeyId,
+                                             SecretKeyRingProtector secretKeyRingProtector,
+                                             @Nullable RevocationSignatureSubpackets.Callback certificateSubpacketsCallback)
         throws PGPException;
 
     default PGPSignature createRevocationCertificate(OpenPgpFingerprint subkeyFingerprint,
                                              SecretKeyRingProtector secretKeyRingProtector,
-                                             RevocationAttributes revocationAttributes)
+                                             @Nullable RevocationAttributes revocationAttributes)
         throws PGPException {
         return createRevocationCertificate(subkeyFingerprint.getKeyId(), secretKeyRingProtector, revocationAttributes);
     }

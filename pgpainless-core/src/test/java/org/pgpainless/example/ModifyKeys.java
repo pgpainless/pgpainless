@@ -170,7 +170,7 @@ public class ModifyKeys {
      * @throws NoSuchAlgorithmException
      */
     @Test
-    public void addSubkey() throws PGPException, InvalidAlgorithmParameterException, NoSuchAlgorithmException {
+    public void addSubkey() throws PGPException, InvalidAlgorithmParameterException, NoSuchAlgorithmException, IOException {
         // Protector for unlocking the existing secret key
         SecretKeyRingProtector protector = SecretKeyRingProtector.unlockAllKeysWith(Passphrase.fromPassword(originalPassphrase), secretKey);
         Passphrase subkeyPassphrase = Passphrase.fromPassword("subk3yP4ssphr4s3");

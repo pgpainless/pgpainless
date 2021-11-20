@@ -42,7 +42,6 @@ import org.pgpainless.algorithm.SignatureType;
 import org.pgpainless.algorithm.SymmetricKeyAlgorithm;
 import org.pgpainless.implementation.ImplementationFactory;
 import org.pgpainless.key.generation.type.KeyType;
-import org.pgpainless.key.protection.SecretKeyRingProtector;
 import org.pgpainless.key.protection.UnlockSecretKey;
 import org.pgpainless.provider.ProviderFactory;
 import org.pgpainless.signature.subpackets.SignatureSubpackets;
@@ -133,6 +132,8 @@ public class KeyRingBuilder implements KeyRingBuilderInterface<KeyRingBuilder> {
         PGPKeyPair certKey = generateKeyPair(primaryKeySpec);
         PGPContentSignerBuilder signer = buildContentSigner(certKey);
         PGPSignatureGenerator signatureGenerator = new PGPSignatureGenerator(signer);
+
+        // Prepare primary user-id sig
         SignatureSubpackets hashedSubPacketGenerator = primaryKeySpec.getSubpacketGenerator();
         hashedSubPacketGenerator.setPrimaryUserId();
         if (expirationDate != null) {
@@ -142,9 +143,7 @@ public class KeyRingBuilder implements KeyRingBuilderInterface<KeyRingBuilder> {
         SignatureSubpacketsHelper.applyTo(hashedSubPacketGenerator, generator);
         PGPSignatureSubpacketVector hashedSubPackets = generator.generate();
 
-        // Generator which the user can get the key pair from
         PGPKeyRingGenerator ringGenerator = buildRingGenerator(certKey, signer, keyFingerprintCalculator, hashedSubPackets, secretKeyEncryptor);
-
         addSubKeys(certKey, ringGenerator);
 
         // Generate secret key ring with only primary user id
@@ -155,10 +154,10 @@ public class KeyRingBuilder implements KeyRingBuilderInterface<KeyRingBuilder> {
         // Attempt to add additional user-ids to the primary public key
         PGPPublicKey primaryPubKey = secretKeys.next().getPublicKey();
         PGPPrivateKey privateKey = UnlockSecretKey.unlockSecretKey(secretKeyRing.getSecretKey(), secretKeyDecryptor);
-        Iterator<String> additionalUserIds = userIds.iterator();
-        additionalUserIds.next(); // Skip primary user id
-        while (additionalUserIds.hasNext()) {
-            String additionalUserId = additionalUserIds.next();
+        Iterator<String> userIdIterator = this.userIds.iterator();
+        userIdIterator.next(); // Skip primary user id
+        while (userIdIterator.hasNext()) {
+            String additionalUserId = userIdIterator.next();
             signatureGenerator.init(SignatureType.POSITIVE_CERTIFICATION.getCode(), privateKey);
             PGPSignature additionalUserIdSignature =
                     signatureGenerator.generateCertification(additionalUserId, primaryPubKey);
@@ -175,7 +174,6 @@ public class KeyRingBuilder implements KeyRingBuilderInterface<KeyRingBuilder> {
             secretKeyList.add(secretKeys.next());
         }
         secretKeyRing = new PGPSecretKeyRing(secretKeyList);
-
         return secretKeyRing;
     }
 
@@ -265,32 +263,5 @@ public class KeyRingBuilder implements KeyRingBuilderInterface<KeyRingBuilder> {
         // Form PGP key pair
         PGPKeyPair pgpKeyPair = ImplementationFactory.getInstance().getPGPKeyPair(type.getAlgorithm(), keyPair, new Date());
         return pgpKeyPair;
-    }
-
-    private static SecretKeyRingProtector protectorFromPassphrase(@Nonnull Passphrase passphrase, long keyId) {
-        if (!passphrase.isValid()) {
-            throw new IllegalStateException("Passphrase has been cleared.");
-        }
-        if (passphrase.isEmpty()) {
-            return SecretKeyRingProtector.unprotectedKeys();
-        } else {
-            return SecretKeyRingProtector.unlockSingleKeyWith(passphrase, keyId);
-        }
-    }
-
-    public static PGPSecretKey generatePGPSecretKey(KeySpec keySpec, @Nonnull Passphrase passphrase, boolean isPrimary)
-            throws PGPException, InvalidAlgorithmParameterException, NoSuchAlgorithmException {
-        PGPDigestCalculator keyFingerprintCalculator = ImplementationFactory.getInstance()
-                .getV4FingerprintCalculator();
-        PGPKeyPair keyPair = generateKeyPair(keySpec);
-
-        SecretKeyRingProtector protector = protectorFromPassphrase(passphrase, keyPair.getKeyID());
-
-        return new PGPSecretKey(
-                keyPair.getPrivateKey(),
-                keyPair.getPublicKey(),
-                keyFingerprintCalculator,
-                isPrimary,
-                protector.getEncryptor(keyPair.getKeyID()));
     }
 }

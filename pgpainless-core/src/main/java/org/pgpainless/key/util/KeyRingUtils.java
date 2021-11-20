@@ -22,9 +22,10 @@ import org.bouncycastle.openpgp.PGPSecretKey;
 import org.bouncycastle.openpgp.PGPSecretKeyRing;
 import org.bouncycastle.openpgp.PGPSecretKeyRingCollection;
 import org.bouncycastle.openpgp.PGPSignature;
+import org.bouncycastle.openpgp.PGPUserAttributeSubpacketVector;
+import org.pgpainless.PGPainless;
 import org.pgpainless.key.protection.SecretKeyRingProtector;
 import org.pgpainless.key.protection.UnlockSecretKey;
-import org.pgpainless.util.CollectionUtils;
 
 public final class KeyRingUtils {
 
@@ -203,22 +204,121 @@ public final class KeyRingUtils {
         return publicKeys;
     }
 
-    public static PGPSecretKeyRing secretKeysPlusPublicKey(PGPSecretKeyRing secretKeys, PGPPublicKey subkey) {
-        PGPPublicKeyRing publicKeys = publicKeyRingFrom(secretKeys);
-        PGPPublicKeyRing newPublicKeys = publicKeysPlusPublicKey(publicKeys, subkey);
-        PGPSecretKeyRing newSecretKeys = PGPSecretKeyRing.replacePublicKeys(secretKeys, newPublicKeys);
-        return newSecretKeys;
+    public static <T extends PGPKeyRing> T injectCertification(T keyRing, PGPPublicKey certifiedKey, PGPSignature certification) {
+        PGPSecretKeyRing secretKeys = null;
+        PGPPublicKeyRing publicKeys;
+        if (keyRing instanceof PGPSecretKeyRing) {
+            secretKeys = (PGPSecretKeyRing) keyRing;
+            publicKeys = PGPainless.extractCertificate(secretKeys);
+        } else {
+            publicKeys = (PGPPublicKeyRing) keyRing;
+        }
+
+        certifiedKey = PGPPublicKey.addCertification(certifiedKey, certification);
+        List<PGPPublicKey> publicKeyList = new ArrayList<>();
+        Iterator<PGPPublicKey> publicKeyIterator = publicKeys.iterator();
+        boolean added = false;
+        while (publicKeyIterator.hasNext()) {
+            PGPPublicKey key = publicKeyIterator.next();
+            if (key.getKeyID() == certifiedKey.getKeyID()) {
+                added = true;
+                publicKeyList.add(certifiedKey);
+            } else {
+                publicKeyList.add(key);
+            }
+        }
+        if (!added) {
+            throw new NoSuchElementException("Cannot find public key with id " + Long.toHexString(certifiedKey.getKeyID()) + " in the provided key ring.");
+        }
+
+        publicKeys = new PGPPublicKeyRing(publicKeyList);
+        if (secretKeys == null) {
+            return (T) publicKeys;
+        } else {
+            secretKeys = PGPSecretKeyRing.replacePublicKeys(secretKeys, publicKeys);
+            return (T) secretKeys;
+        }
     }
 
-    public static PGPPublicKeyRing publicKeysPlusPublicKey(PGPPublicKeyRing publicKeys, PGPPublicKey subkey) {
-        List<PGPPublicKey> publicKeyList = CollectionUtils.iteratorToList(publicKeys.getPublicKeys());
-        publicKeyList.add(subkey);
-        PGPPublicKeyRing newPublicKeys = new PGPPublicKeyRing(publicKeyList);
-        return newPublicKeys;
+    public static <T extends PGPKeyRing> T injectCertification(T keyRing, String userId, PGPSignature certification) {
+        PGPSecretKeyRing secretKeys = null;
+        PGPPublicKeyRing publicKeys;
+        if (keyRing instanceof PGPSecretKeyRing) {
+            secretKeys = (PGPSecretKeyRing) keyRing;
+            publicKeys = PGPainless.extractCertificate(secretKeys);
+        } else {
+            publicKeys = (PGPPublicKeyRing) keyRing;
+        }
+
+        Iterator<PGPPublicKey> publicKeyIterator = publicKeys.iterator();
+        PGPPublicKey primaryKey = publicKeyIterator.next();
+        primaryKey = PGPPublicKey.addCertification(primaryKey, userId, certification);
+
+        List<PGPPublicKey> publicKeyList = new ArrayList<>();
+        publicKeyList.add(primaryKey);
+        while (publicKeyIterator.hasNext()) {
+            publicKeyList.add(publicKeyIterator.next());
+        }
+
+        publicKeys = new PGPPublicKeyRing(publicKeyList);
+        if (secretKeys == null) {
+            return (T) publicKeys;
+        } else {
+            secretKeys = PGPSecretKeyRing.replacePublicKeys(secretKeys, publicKeys);
+            return (T) secretKeys;
+        }
     }
 
-    public static PGPSecretKeyRing secretKeysPlusSecretKey(PGPSecretKeyRing secretKeys, PGPSecretKey subkey) {
-        return PGPSecretKeyRing.insertSecretKey(secretKeys, subkey);
+    public static <T extends PGPKeyRing> T injectCertification(T keyRing, PGPUserAttributeSubpacketVector userAttributes, PGPSignature certification) {
+        PGPSecretKeyRing secretKeys = null;
+        PGPPublicKeyRing publicKeys;
+        if (keyRing instanceof PGPSecretKeyRing) {
+            secretKeys = (PGPSecretKeyRing) keyRing;
+            publicKeys = PGPainless.extractCertificate(secretKeys);
+        } else {
+            publicKeys = (PGPPublicKeyRing) keyRing;
+        }
+
+        Iterator<PGPPublicKey> publicKeyIterator = publicKeys.iterator();
+        PGPPublicKey primaryKey = publicKeyIterator.next();
+        primaryKey = PGPPublicKey.addCertification(primaryKey, userAttributes, certification);
+
+        List<PGPPublicKey> publicKeyList = new ArrayList<>();
+        publicKeyList.add(primaryKey);
+        while (publicKeyIterator.hasNext()) {
+            publicKeyList.add(publicKeyIterator.next());
+        }
+
+        publicKeys = new PGPPublicKeyRing(publicKeyList);
+        if (secretKeys == null) {
+            return (T) publicKeys;
+        } else {
+            secretKeys = PGPSecretKeyRing.replacePublicKeys(secretKeys, publicKeys);
+            return (T) secretKeys;
+        }
+    }
+
+    public static <T extends PGPKeyRing> T keysPlusPublicKey(T keyRing, PGPPublicKey publicKey) {
+        PGPSecretKeyRing secretKeys = null;
+        PGPPublicKeyRing publicKeys;
+        if (keyRing instanceof PGPSecretKeyRing) {
+            secretKeys = (PGPSecretKeyRing) keyRing;
+            publicKeys = PGPainless.extractCertificate(secretKeys);
+        } else {
+            publicKeys = (PGPPublicKeyRing) keyRing;
+        }
+
+        publicKeys = PGPPublicKeyRing.insertPublicKey(publicKeys, publicKey);
+        if (secretKeys == null) {
+            return (T) publicKeys;
+        } else {
+            secretKeys = PGPSecretKeyRing.replacePublicKeys(secretKeys, publicKeys);
+            return (T) secretKeys;
+        }
+    }
+
+    public static PGPSecretKeyRing keysPlusSecretKey(PGPSecretKeyRing secretKeys, PGPSecretKey secretKey) {
+        return PGPSecretKeyRing.insertSecretKey(secretKeys, secretKey);
     }
 
     public static PGPSecretKey secretKeyPlusSignature(PGPSecretKey secretKey, PGPSignature signature) {
@@ -227,4 +327,5 @@ public final class KeyRingUtils {
         PGPSecretKey newSecretKey = PGPSecretKey.replacePublicKey(secretKey, publicKey);
         return newSecretKey;
     }
+
 }
