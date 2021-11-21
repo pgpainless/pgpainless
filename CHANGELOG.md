@@ -5,6 +5,9 @@ SPDX-License-Identifier: CC0-1.0
 
 # PGPainless Changelog
 
+## 1.0.0-rc4
+- Fix bug where `KeyRingBuilder` would mark additional user-ids as primary
+
 ## 1.0.0-rc3
 - New Signature builder API for more fine-grained control over key-signatures:
   - Introduce `CertificationSignatureSubpackets` builder class to wrap `PGPSignatureSubpacketGenerator` for
