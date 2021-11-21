@@ -67,6 +67,11 @@ public interface SecretKeyRingEditorInterface {
                                            SecretKeyRingProtector secretKeyRingProtector)
             throws InvalidAlgorithmParameterException, NoSuchAlgorithmException, PGPException, IOException;
 
+    SecretKeyRingEditorInterface addSubKey(@Nonnull KeySpec keySpec,
+                                           @Nullable Passphrase subkeyPassphrase,
+                                           @Nullable SelfSignatureSubpackets.Callback subpacketsCallback,
+                                           SecretKeyRingProtector secretKeyRingProtector) throws PGPException, InvalidAlgorithmParameterException, NoSuchAlgorithmException, IOException;
+
     SecretKeyRingEditorInterface addSubKey(PGPKeyPair subkey,
                                            @Nullable SelfSignatureSubpackets.Callback bindingSignatureCallback,
                                            SecretKeyRingProtector subkeyProtector,

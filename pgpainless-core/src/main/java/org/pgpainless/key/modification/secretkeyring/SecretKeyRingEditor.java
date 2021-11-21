@@ -16,6 +16,7 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.NoSuchElementException;
+import java.util.Set;
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
 
@@ -36,10 +37,14 @@ import org.bouncycastle.openpgp.operator.PBESecretKeyDecryptor;
 import org.bouncycastle.openpgp.operator.PBESecretKeyEncryptor;
 import org.bouncycastle.openpgp.operator.PGPContentSignerBuilder;
 import org.pgpainless.PGPainless;
+import org.pgpainless.algorithm.AlgorithmSuite;
+import org.pgpainless.algorithm.CompressionAlgorithm;
+import org.pgpainless.algorithm.Feature;
 import org.pgpainless.algorithm.HashAlgorithm;
 import org.pgpainless.algorithm.KeyFlag;
 import org.pgpainless.algorithm.PublicKeyAlgorithm;
 import org.pgpainless.algorithm.SignatureType;
+import org.pgpainless.algorithm.SymmetricKeyAlgorithm;
 import org.pgpainless.algorithm.negotiation.HashAlgorithmNegotiator;
 import org.pgpainless.implementation.ImplementationFactory;
 import org.pgpainless.key.OpenPgpFingerprint;
@@ -101,9 +106,31 @@ public class SecretKeyRingEditor implements SecretKeyRingEditorInterface {
         KeyRingInfo info = PGPainless.inspectKeyRing(secretKeyRing);
         List<KeyFlag> keyFlags = info.getKeyFlagsOf(info.getKeyId());
 
+        Set<HashAlgorithm> hashAlgorithmPreferences;
+        Set<SymmetricKeyAlgorithm> symmetricKeyAlgorithmPreferences;
+        Set<CompressionAlgorithm> compressionAlgorithmPreferences;
+        try {
+            hashAlgorithmPreferences = info.getPreferredHashAlgorithms();
+            symmetricKeyAlgorithmPreferences = info.getPreferredSymmetricKeyAlgorithms();
+            compressionAlgorithmPreferences = info.getPreferredCompressionAlgorithms();
+        } catch (IllegalStateException e) {
+            // missing user-id sig
+            AlgorithmSuite algorithmSuite = AlgorithmSuite.getDefaultAlgorithmSuite();
+            hashAlgorithmPreferences = algorithmSuite.getHashAlgorithms();
+            symmetricKeyAlgorithmPreferences = algorithmSuite.getSymmetricKeyAlgorithms();
+            compressionAlgorithmPreferences = algorithmSuite.getCompressionAlgorithms();
+        }
+
         SelfSignatureBuilder builder = new SelfSignatureBuilder(primaryKey, protector);
         builder.setSignatureType(SignatureType.POSITIVE_CERTIFICATION);
+
+        // Retain signature subpackets of previous signatures
         builder.getHashedSubpackets().setKeyFlags(keyFlags);
+        builder.getHashedSubpackets().setPreferredHashAlgorithms(hashAlgorithmPreferences);
+        builder.getHashedSubpackets().setPreferredSymmetricKeyAlgorithms(symmetricKeyAlgorithmPreferences);
+        builder.getHashedSubpackets().setPreferredCompressionAlgorithms(compressionAlgorithmPreferences);
+        builder.getHashedSubpackets().setFeatures(Feature.MODIFICATION_DETECTION);
+
         builder.applyCallback(signatureSubpacketCallback);
 
         PGPSignature signature = builder.build(primaryKey.getPublicKey(), userId);
@@ -121,9 +148,10 @@ public class SecretKeyRingEditor implements SecretKeyRingEditorInterface {
     }
 
     @Override
-    public SecretKeyRingEditorInterface addSubKey(@Nonnull KeySpec keySpec,
-                                                  @Nonnull Passphrase subKeyPassphrase,
-                                                  SecretKeyRingProtector secretKeyRingProtector)
+    public SecretKeyRingEditorInterface addSubKey(
+            @Nonnull KeySpec keySpec,
+            @Nonnull Passphrase subKeyPassphrase,
+            SecretKeyRingProtector secretKeyRingProtector)
             throws InvalidAlgorithmParameterException, NoSuchAlgorithmException, PGPException, IOException {
 
         PGPKeyPair keyPair = KeyRingBuilder.generateKeyPair(keySpec);
@@ -146,12 +174,32 @@ public class SecretKeyRingEditor implements SecretKeyRingEditorInterface {
     }
 
     @Override
-    public SecretKeyRingEditorInterface addSubKey(PGPKeyPair subkey,
-                                                  @Nullable SelfSignatureSubpackets.Callback bindingSignatureCallback,
-                                                  SecretKeyRingProtector subkeyProtector,
-                                                  SecretKeyRingProtector primaryKeyProtector,
-                                                  KeyFlag keyFlag,
-                                                  KeyFlag... additionalKeyFlags)
+    public SecretKeyRingEditorInterface addSubKey(
+            @Nonnull KeySpec keySpec,
+            @Nullable Passphrase subkeyPassphrase,
+            @Nullable SelfSignatureSubpackets.Callback subpacketsCallback,
+            SecretKeyRingProtector secretKeyRingProtector)
+            throws PGPException, InvalidAlgorithmParameterException, NoSuchAlgorithmException, IOException {
+        PGPKeyPair keyPair = KeyRingBuilder.generateKeyPair(keySpec);
+
+        SecretKeyRingProtector subKeyProtector = PasswordBasedSecretKeyRingProtector
+                .forKeyId(keyPair.getKeyID(), subkeyPassphrase);
+
+        List<KeyFlag> keyFlags = KeyFlag.fromBitmask(keySpec.getSubpackets().getKeyFlags());
+        KeyFlag firstFlag = keyFlags.remove(0);
+        KeyFlag[] otherFlags = keyFlags.toArray(new KeyFlag[0]);
+
+        return addSubKey(keyPair, subpacketsCallback, subKeyProtector, secretKeyRingProtector, firstFlag, otherFlags);
+    }
+
+    @Override
+    public SecretKeyRingEditorInterface addSubKey(
+            PGPKeyPair subkey,
+            @Nullable SelfSignatureSubpackets.Callback bindingSignatureCallback,
+            SecretKeyRingProtector subkeyProtector,
+            SecretKeyRingProtector primaryKeyProtector,
+            KeyFlag keyFlag,
+            KeyFlag... additionalKeyFlags)
             throws PGPException, IOException {
         KeyFlag[] flags = concat(keyFlag, additionalKeyFlags);
         PublicKeyAlgorithm subkeyAlgorithm = PublicKeyAlgorithm.fromId(subkey.getPublicKey().getAlgorithm());
