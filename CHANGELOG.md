@@ -5,6 +5,21 @@ SPDX-License-Identifier: CC0-1.0
 
 # PGPainless Changelog
 
+## 1.0.0-rc3
+- New Signature builder API for more fine-grained control over key-signatures:
+  - Introduce `CertificationSignatureSubpackets` builder class to wrap `PGPSignatureSubpacketGenerator` for
+    certification style signatures.
+  - Introduce `SelfSignatureSubpackets` builder class for self-signatures.
+  - Introduce `RevocationSignatureSubpackets` builder class for revocation signatures.
+  - Introduce `CertificationSignatureSubpackets.Callback`, `SelfSignatureSubpackets.Callback` and
+    `RevocationSignatureSubpackets.Callback` to allow modification of signature subpackets by the user.
+  - Incorporate `*SignatureSubpackets.Callback` classes as arguments in `SecretKeyRingEditor` and `KeyRingBuilder` methods.
+- Start working on `ProofUtil` to create KeyOxide style identity proofs (WIP)
+- Move Signature verification related code to `org.pgpainless.signature.consumer` package
+- Ensure keyflags and other common subpackets are set in new signatures when adding user-ids
+- Ensure subkey can carry keyflag when adding it to a key
+- Refactor `SecretKeyRingProtector` methods and code
+
 ## 1.0.0-rc2
 - `SecretKeyRingEditor`: Remove support for user-id- and subkey *deletion* in favor of *revocation*
   - Deletion causes all sorts of problems. Most notably, receiving implementations will not honor deletion of user-ids/subkeys.
