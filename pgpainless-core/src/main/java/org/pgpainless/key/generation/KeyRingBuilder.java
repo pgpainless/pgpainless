@@ -175,6 +175,8 @@ public class KeyRingBuilder implements KeyRingBuilderInterface<KeyRingBuilder> {
             SelfSignatureSubpackets subpackets = null;
             if (callback == null) {
                 subpackets = hashedSubPacketGenerator;
+                subpackets.setPrimaryUserId(null);
+                // additional user-ids are not primary
             } else {
                 subpackets = SignatureSubpackets.createHashedSubpackets(primaryPubKey);
                 callback.modifyHashedSubpackets(subpackets);
