@@ -10,6 +10,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import javax.annotation.Nullable;
 
 import org.bouncycastle.openpgp.PGPException;
 import org.bouncycastle.openpgp.PGPPrivateKey;
@@ -18,7 +19,6 @@ import org.bouncycastle.openpgp.PGPSecretKey;
 import org.bouncycastle.openpgp.PGPSecretKeyRing;
 import org.bouncycastle.openpgp.PGPSecretKeyRingCollection;
 import org.bouncycastle.openpgp.PGPSignatureGenerator;
-import org.bouncycastle.openpgp.PGPSignatureSubpacketGenerator;
 import org.bouncycastle.openpgp.operator.PGPContentSignerBuilder;
 import org.pgpainless.PGPainless;
 import org.pgpainless.algorithm.DocumentSignatureType;
@@ -33,6 +33,9 @@ import org.pgpainless.key.info.KeyRingInfo;
 import org.pgpainless.key.protection.SecretKeyRingProtector;
 import org.pgpainless.key.protection.UnlockSecretKey;
 import org.pgpainless.policy.Policy;
+import org.pgpainless.signature.subpackets.BaseSignatureSubpackets;
+import org.pgpainless.signature.subpackets.SignatureSubpackets;
+import org.pgpainless.signature.subpackets.SignatureSubpacketsHelper;
 
 public final class SigningOptions {
 
@@ -152,6 +155,31 @@ public final class SigningOptions {
                                              String userId,
                                              DocumentSignatureType signatureType)
             throws KeyValidationError, PGPException {
+        return addInlineSignature(secretKeyDecryptor, secretKey, userId, signatureType, null);
+    }
+
+    /**
+     * Add an inline-signature.
+     * Inline signatures are being embedded into the message itself and can be processed in one pass, thanks to the use
+     * of one-pass-signature packets.
+     *
+     * This method uses the passed in user-id to select user-specific hash algorithms.
+     *
+     * @param secretKeyDecryptor decryptor to unlock the signing secret key
+     * @param secretKey signing key
+     * @param userId user-id of the signer
+     * @param signatureType signature type (binary, canonical text)
+     * @param subpacketsCallback callback to modify the hashed and unhashed subpackets of the signature
+     * @return this
+     * @throws KeyValidationError if the key is invalid
+     * @throws PGPException if the key cannot be unlocked or the signing method cannot be created
+     */
+    public SigningOptions addInlineSignature(SecretKeyRingProtector secretKeyDecryptor,
+                                             PGPSecretKeyRing secretKey,
+                                             String userId,
+                                             DocumentSignatureType signatureType,
+                                             @Nullable BaseSignatureSubpackets.Callback subpacketsCallback)
+            throws KeyValidationError, PGPException {
         KeyRingInfo keyRingInfo = new KeyRingInfo(secretKey, new Date());
         if (userId != null && !keyRingInfo.isUserIdValid(userId)) {
             throw new KeyValidationError(userId, keyRingInfo.getLatestUserIdCertification(userId), keyRingInfo.getUserIdRevocation(userId));
@@ -168,7 +196,7 @@ public final class SigningOptions {
             Set<HashAlgorithm> hashAlgorithms = userId != null ? keyRingInfo.getPreferredHashAlgorithms(userId)
                     : keyRingInfo.getPreferredHashAlgorithms(signingPubKey.getKeyID());
             HashAlgorithm hashAlgorithm = negotiateHashAlgorithm(hashAlgorithms, PGPainless.getPolicy());
-            addSigningMethod(secretKey, signingSubkey, hashAlgorithm, signatureType, false);
+            addSigningMethod(secretKey, signingSubkey, subpacketsCallback, hashAlgorithm, signatureType, false);
         }
 
         return this;
@@ -232,6 +260,31 @@ public final class SigningOptions {
                                                String userId,
                                                DocumentSignatureType signatureType)
             throws PGPException {
+        return addDetachedSignature(secretKeyDecryptor, secretKey, userId, signatureType, null);
+    }
+
+    /**
+     * Create a detached signature.
+     * Detached signatures are not being added into the PGP message itself.
+     * Instead they can be distributed separately to the message.
+     * Detached signatures are useful if the data that is being signed shall not be modified (eg. when signing a file).
+     *
+     * This method uses the passed in user-id to select user-specific hash algorithms.
+     *
+     * @param secretKeyDecryptor decryptor to unlock the secret signing key
+     * @param secretKey signing key
+     * @param userId user-id
+     * @param signatureType type of data that is signed (binary, canonical text)
+     * @param subpacketCallback callback to modify hashed and unhashed subpackets of the signature
+     * @throws PGPException if the key cannot be validated or unlocked, or if no signature method can be created
+     * @return this
+     */
+    public SigningOptions addDetachedSignature(SecretKeyRingProtector secretKeyDecryptor,
+                                               PGPSecretKeyRing secretKey,
+                                               String userId,
+                                               DocumentSignatureType signatureType,
+                                               @Nullable BaseSignatureSubpackets.Callback subpacketCallback)
+            throws PGPException {
         KeyRingInfo keyRingInfo = new KeyRingInfo(secretKey, new Date());
         if (userId != null && !keyRingInfo.isUserIdValid(userId)) {
             throw new KeyValidationError(userId, keyRingInfo.getLatestUserIdCertification(userId), keyRingInfo.getUserIdRevocation(userId));
@@ -248,7 +301,7 @@ public final class SigningOptions {
             Set<HashAlgorithm> hashAlgorithms = userId != null ? keyRingInfo.getPreferredHashAlgorithms(userId)
                     : keyRingInfo.getPreferredHashAlgorithms(signingPubKey.getKeyID());
             HashAlgorithm hashAlgorithm = negotiateHashAlgorithm(hashAlgorithms, PGPainless.getPolicy());
-            addSigningMethod(secretKey, signingSubkey, hashAlgorithm, signatureType, true);
+            addSigningMethod(secretKey, signingSubkey, subpacketCallback, hashAlgorithm, signatureType, true);
         }
 
         return this;
@@ -256,6 +309,7 @@ public final class SigningOptions {
 
     private void addSigningMethod(PGPSecretKeyRing secretKey,
                                   PGPPrivateKey signingSubkey,
+                                  @Nullable BaseSignatureSubpackets.Callback subpacketCallback,
                                   HashAlgorithm hashAlgorithm,
                                   DocumentSignatureType signatureType,
                                   boolean detached)
@@ -263,7 +317,17 @@ public final class SigningOptions {
         SubkeyIdentifier signingKeyIdentifier = new SubkeyIdentifier(secretKey, signingSubkey.getKeyID());
         PGPSecretKey signingSecretKey = secretKey.getSecretKey(signingSubkey.getKeyID());
         PGPSignatureGenerator generator = createSignatureGenerator(signingSubkey, hashAlgorithm, signatureType);
-        generator.setUnhashedSubpackets(unhashedSubpackets(signingSecretKey).generate());
+
+        // Subpackets
+        SignatureSubpackets hashedSubpackets = SignatureSubpackets.createHashedSubpackets(signingSecretKey.getPublicKey());
+        SignatureSubpackets unhashedSubpackets = SignatureSubpackets.createEmptySubpackets();
+        if (subpacketCallback != null) {
+            subpacketCallback.modifyHashedSubpackets(hashedSubpackets);
+            subpacketCallback.modifyUnhashedSubpackets(unhashedSubpackets);
+        }
+        generator.setHashedSubpackets(SignatureSubpacketsHelper.toVector(hashedSubpackets));
+        generator.setUnhashedSubpackets(SignatureSubpacketsHelper.toVector(unhashedSubpackets));
+
         SigningMethod signingMethod = detached ?
                 SigningMethod.detachedSignature(generator, hashAlgorithm) :
                 SigningMethod.inlineSignature(generator, hashAlgorithm);
@@ -302,13 +366,6 @@ public final class SigningOptions {
         signatureGenerator.init(signatureType.getSignatureType().getCode(), privateKey);
 
         return signatureGenerator;
-    }
-
-    private PGPSignatureSubpacketGenerator unhashedSubpackets(PGPSecretKey key) {
-        PGPSignatureSubpacketGenerator generator = new PGPSignatureSubpacketGenerator();
-        generator.setIssuerKeyID(false, key.getKeyID());
-        generator.setIssuerFingerprint(false, key);
-        return generator;
     }
 
     /**
