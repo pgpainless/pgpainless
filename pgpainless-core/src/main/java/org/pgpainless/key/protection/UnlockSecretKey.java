@@ -9,8 +9,10 @@ import org.bouncycastle.openpgp.PGPException;
 import org.bouncycastle.openpgp.PGPPrivateKey;
 import org.bouncycastle.openpgp.PGPSecretKey;
 import org.bouncycastle.openpgp.operator.PBESecretKeyDecryptor;
+import org.pgpainless.exception.KeyIntegrityException;
 import org.pgpainless.exception.WrongPassphraseException;
 import org.pgpainless.key.info.KeyInfo;
+import org.pgpainless.key.util.PublicKeyParameterValidationUtil;
 import org.pgpainless.util.Passphrase;
 
 public final class UnlockSecretKey {
@@ -20,13 +22,20 @@ public final class UnlockSecretKey {
     }
 
     public static PGPPrivateKey unlockSecretKey(PGPSecretKey secretKey, SecretKeyRingProtector protector)
-            throws WrongPassphraseException {
+            throws WrongPassphraseException, KeyIntegrityException {
         try {
             PBESecretKeyDecryptor decryptor = null;
             if (KeyInfo.isEncrypted(secretKey)) {
                 decryptor = protector.getDecryptor(secretKey.getKeyID());
             }
-            return secretKey.extractPrivateKey(decryptor);
+            PGPPrivateKey privateKey = secretKey.extractPrivateKey(decryptor);
+
+            if (secretKey.getPublicKey() != null) {
+                PublicKeyParameterValidationUtil.verifyPublicKeyParameterIntegrity(privateKey, secretKey.getPublicKey());
+            }
+            return privateKey;
+        } catch (KeyIntegrityException e) {
+            throw e;
         } catch (PGPException e) {
             throw new WrongPassphraseException(secretKey.getKeyID(), e);
         }
@@ -40,7 +49,7 @@ public final class UnlockSecretKey {
         }
     }
 
-    public static PGPPrivateKey unlockSecretKey(PGPSecretKey secretKey, Passphrase passphrase) throws WrongPassphraseException {
+    public static PGPPrivateKey unlockSecretKey(PGPSecretKey secretKey, Passphrase passphrase) throws WrongPassphraseException, KeyIntegrityException {
         return unlockSecretKey(secretKey, SecretKeyRingProtector.unlockSingleKeyWith(passphrase, secretKey));
     }
 }
