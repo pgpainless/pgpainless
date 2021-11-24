@@ -72,6 +72,7 @@ import org.pgpainless.signature.subpackets.SignatureSubpacketsHelper;
 import org.pgpainless.signature.subpackets.SignatureSubpacketsUtil;
 import org.pgpainless.util.CollectionUtils;
 import org.pgpainless.util.Passphrase;
+import org.pgpainless.util.selection.userid.SelectUserId;
 
 public class SecretKeyRingEditor implements SecretKeyRingEditorInterface {
 
@@ -391,12 +392,25 @@ public class SecretKeyRingEditor implements SecretKeyRingEditorInterface {
         return doRevokeUserId(userId, secretKeyRingProtector, subpacketCallback);
     }
 
+    @Override
+    public SecretKeyRingEditorInterface revokeUserIds(SelectUserId userIdSelector, SecretKeyRingProtector secretKeyRingProtector, @Nullable RevocationSignatureSubpackets.Callback subpacketsCallback) throws PGPException {
+        List<String> selected = userIdSelector.selectUserIds(secretKeyRing);
+        if (selected.isEmpty()) {
+            throw new NoSuchElementException("No matching user-ids found on the key.");
+        }
+
+        for (String userId : selected) {
+            doRevokeUserId(userId, secretKeyRingProtector, subpacketsCallback);
+        }
+
+        return this;
+    }
+
     private SecretKeyRingEditorInterface doRevokeUserId(String userId,
                                                         SecretKeyRingProtector protector,
                                                         @Nullable RevocationSignatureSubpackets.Callback callback)
             throws PGPException {
         PGPSecretKey primarySecretKey = secretKeyRing.getSecretKey();
-        PGPPublicKey primaryPublicKey = primarySecretKey.getPublicKey();
         RevocationSignatureBuilder signatureBuilder = new RevocationSignatureBuilder(
                 SignatureType.CERTIFICATION_REVOCATION,
                 primarySecretKey,

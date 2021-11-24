@@ -25,6 +25,7 @@ import org.pgpainless.key.util.UserId;
 import org.pgpainless.signature.subpackets.RevocationSignatureSubpackets;
 import org.pgpainless.signature.subpackets.SelfSignatureSubpackets;
 import org.pgpainless.util.Passphrase;
+import org.pgpainless.util.selection.userid.SelectUserId;
 
 public interface SecretKeyRingEditorInterface {
 
@@ -205,6 +206,11 @@ public interface SecretKeyRingEditorInterface {
     SecretKeyRingEditorInterface revokeUserId(String userId,
                                               SecretKeyRingProtector secretKeyRingProtector,
                                               @Nullable RevocationSignatureSubpackets.Callback subpacketCallback)
+        throws PGPException;
+
+    SecretKeyRingEditorInterface revokeUserIds(SelectUserId userIdSelector,
+                                               SecretKeyRingProtector secretKeyRingProtector,
+                                               @Nullable RevocationSignatureSubpackets.Callback subpacketsCallback)
         throws PGPException;
 
     /**
