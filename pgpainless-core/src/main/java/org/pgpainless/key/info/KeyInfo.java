@@ -5,6 +5,7 @@
 package org.pgpainless.key.info;
 
 import org.bouncycastle.asn1.ASN1ObjectIdentifier;
+import org.bouncycastle.asn1.gnu.GNUObjectIdentifiers;
 import org.bouncycastle.bcpg.ECDHPublicBCPGKey;
 import org.bouncycastle.bcpg.ECDSAPublicBCPGKey;
 import org.bouncycastle.bcpg.ECPublicBCPGKey;
@@ -89,7 +90,7 @@ public class KeyInfo {
         ASN1ObjectIdentifier identifier = key.getCurveOID();
 
         // Workaround for ECUtil not recognizing ed25519
-        if (identifier.getId().equals("1.3.6.1.4.1.11591.15.1")) {
+        if (identifier.equals(GNUObjectIdentifiers.Ed25519)) {
             return EdDSACurve._Ed25519.getName();
         }
 
