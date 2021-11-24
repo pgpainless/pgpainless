@@ -6,7 +6,6 @@ package org.pgpainless.decryption_verification.cleartext_signatures;
 
 import java.io.IOException;
 import java.io.InputStream;
-import java.util.logging.Logger;
 
 import org.bouncycastle.bcpg.ArmoredInputStream;
 import org.bouncycastle.openpgp.PGPException;
@@ -26,8 +25,6 @@ import org.pgpainless.util.ArmoredInputStreamFactory;
  * Processor for cleartext-signed messages.
  */
 public class CleartextSignatureProcessor {
-
-    private static final Logger LOGGER = Logger.getLogger(CleartextSignatureProcessor.class.getName());
 
     private final ArmoredInputStream in;
     private final ConsumerOptions options;
@@ -71,6 +68,7 @@ public class CleartextSignatureProcessor {
             options.addVerificationOfDetachedSignature(signature);
         }
 
+        options.setIsCleartextSigned();
         return PGPainless.decryptAndOrVerify()
                 .onInputStream(multiPassStrategy.getMessageInputStream())
                 .withOptions(options);

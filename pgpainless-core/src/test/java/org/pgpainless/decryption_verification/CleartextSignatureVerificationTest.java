@@ -15,6 +15,9 @@ import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
+import java.security.InvalidAlgorithmParameterException;
+import java.security.NoSuchAlgorithmException;
+import java.util.Random;
 
 import org.bouncycastle.openpgp.PGPException;
 import org.bouncycastle.openpgp.PGPPublicKey;
@@ -71,6 +74,9 @@ public class CleartextSignatureVerificationTest {
             "ySNgbyvqYYsNr0fnBwaG3aaj+u5ExiE=\n" +
             "=Z2SO\n" +
             "-----END PGP SIGNATURE-----").getBytes(StandardCharsets.UTF_8);
+
+    public static final String alphabet = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";
+    public static final Random random = new Random();
 
     @Test
     public void cleartextSignVerification_InMemoryMultiPassStrategy() throws IOException, PGPException {
@@ -227,5 +233,56 @@ public class CleartextSignatureVerificationTest {
 
         OpenPgpMetadata metadata = verificationStream.getResult();
         assertTrue(metadata.isVerified());
+    }
+
+    @Test
+    public void testDecryptionOfVeryLongClearsignedMessage() throws PGPException, InvalidAlgorithmParameterException, NoSuchAlgorithmException, IOException {
+        String message = randomString(28, 4000);
+
+        PGPSecretKeyRing secretKeys = PGPainless.generateKeyRing().modernKeyRing("Alice", null);
+        ByteArrayOutputStream out = new ByteArrayOutputStream();
+        EncryptionStream encryptionStream = PGPainless.encryptAndOrSign()
+                .onOutputStream(out)
+                .withOptions(ProducerOptions.sign(
+                        SigningOptions.get()
+                                .addDetachedSignature(SecretKeyRingProtector.unprotectedKeys(),
+                                        secretKeys, DocumentSignatureType.CANONICAL_TEXT_DOCUMENT)
+                ).setCleartextSigned());
+
+        Streams.pipeAll(new ByteArrayInputStream(message.getBytes(StandardCharsets.UTF_8)), encryptionStream);
+        encryptionStream.close();
+
+        String cleartextSigned = out.toString();
+
+        ByteArrayInputStream in = new ByteArrayInputStream(cleartextSigned.getBytes(StandardCharsets.UTF_8));
+        DecryptionStream decryptionStream = PGPainless.decryptAndOrVerify()
+                .onInputStream(in)
+                .withOptions(new ConsumerOptions()
+                        .addVerificationCert(PGPainless.extractCertificate(secretKeys)));
+
+        out = new ByteArrayOutputStream();
+        Streams.pipeAll(decryptionStream, out);
+        decryptionStream.close();
+    }
+
+    private String randomString(int maxWordLen, int wordCount) {
+        StringBuilder sb = new StringBuilder();
+        for (int i = 0; i < wordCount; i++) {
+            sb.append(randomWord(maxWordLen)).append(' ');
+            int n = random.nextInt(12);
+            if (n == 11) {
+                sb.append('\n');
+            }
+        }
+        return sb.toString();
+    }
+
+    private String randomWord(int maxWordLen) {
+        int len = random.nextInt(maxWordLen);
+        char[] word = new char[len];
+        for (int i = 0; i < word.length; i++) {
+            word[i] = alphabet.charAt(random.nextInt(alphabet.length()));
+        }
+        return new String(word);
     }
 }

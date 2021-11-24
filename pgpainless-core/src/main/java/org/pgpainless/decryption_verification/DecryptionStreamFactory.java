@@ -16,6 +16,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import javax.annotation.Nonnull;
+import javax.annotation.Nullable;
 
 import org.bouncycastle.bcpg.ArmoredInputStream;
 import org.bouncycastle.openpgp.PGPCompressedData;
@@ -126,6 +127,12 @@ public final class DecryptionStreamFactory {
         InputStream decoderStream;
         PGPObjectFactory objectFactory;
 
+        if (options.isCleartextSigned()) {
+            inputStream = wrapInVerifySignatureStream(bufferedIn, null);
+            return new DecryptionStream(inputStream, resultBuilder, integrityProtectedEncryptedInputStream,
+                    null);
+        }
+
         try {
             decoderStream = PGPUtilWrapper.getDecoderStream(bufferedIn);
             decoderStream = CRCingArmoredInputStreamWrapper.possiblyWrap(decoderStream);
@@ -170,7 +177,7 @@ public final class DecryptionStreamFactory {
                 (decoderStream instanceof ArmoredInputStream) ? decoderStream : null);
     }
 
-    private InputStream wrapInVerifySignatureStream(InputStream bufferedIn, PGPObjectFactory objectFactory) {
+    private InputStream wrapInVerifySignatureStream(InputStream bufferedIn, @Nullable PGPObjectFactory objectFactory) {
         return new SignatureInputStream.VerifySignatures(
                 bufferedIn, objectFactory, onePassSignatureChecks,
                 onePassSignaturesWithMissingCert, detachedSignatureChecks, options,

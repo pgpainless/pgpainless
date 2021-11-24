@@ -12,6 +12,7 @@ import java.io.InputStream;
 import java.util.List;
 import java.util.Map;
 import javax.annotation.Nonnull;
+import javax.annotation.Nullable;
 
 import org.bouncycastle.openpgp.PGPObjectFactory;
 import org.bouncycastle.openpgp.PGPPublicKeyRing;
@@ -46,7 +47,7 @@ public abstract class SignatureInputStream extends FilterInputStream {
 
         public VerifySignatures(
                 InputStream literalDataStream,
-                PGPObjectFactory objectFactory,
+                @Nullable PGPObjectFactory objectFactory,
                 List<OnePassSignatureCheck> opSignatures,
                 Map<Long, OnePassSignatureCheck> onePassSignaturesWithMissingCert,
                 List<DetachedSignatureCheck> detachedSignatures,
@@ -93,6 +94,9 @@ public abstract class SignatureInputStream extends FilterInputStream {
         }
 
         public void parseAndCombineSignatures() throws IOException {
+            if (objectFactory == null) {
+                return;
+            }
             // Parse signatures from message
             PGPSignatureList signatures;
             try {
