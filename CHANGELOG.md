@@ -5,6 +5,10 @@ SPDX-License-Identifier: CC0-1.0
 
 # PGPainless Changelog
 
+## 1.0.0-rc5
+- Fix invalid cursor mark in `BufferedInputStream` when processing large cleartext signed messages
+- Add `SecretKeyRingEditor.revokeUserIds(SelectUserId, SecretKeyRingProtector, RevocationSignatureSubpackets.Callback)`
+
 ## 1.0.0-rc4
 - Fix bug where `KeyRingBuilder` would mark additional user-ids as primary
 
