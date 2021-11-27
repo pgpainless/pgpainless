@@ -10,6 +10,21 @@ import java.util.concurrent.ConcurrentHashMap;
 
 public final class RevocationAttributes {
 
+    /**
+     * Reason for revocation.
+     * There are two kinds of reasons: hard and soft reason.
+     *
+     * Soft revocation reasons gracefully disable keys or user-ids.
+     * Softly revoked keys can no longer be used to encrypt data to or to generate signatures.
+     * Any signature made after a key has been soft revoked is deemed invalid.
+     * Any signature made before the key has been soft revoked stays valid.
+     * Soft revoked info can be re-certified at a later point.
+     *
+     * Hard revocation reasons on the other hand renders the key or user-id invalid immediately.
+     * Hard reasons are suitable to use if for example a key got compromised.
+     * Any signature made before or after a key has been hard revoked is no longer considered valid.
+     * Hard revoked information can also not be re-certified.
+     */
     public enum Reason {
         /**
          * The key or certification is being revoked without a reason.
