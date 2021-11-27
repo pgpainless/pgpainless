@@ -79,7 +79,7 @@ public class RespectPreferredSymmetricAlgorithmDuringEncryptionTest {
         EncryptionStream encryptionStream = PGPainless.encryptAndOrSign().onOutputStream(out)
                 .withOptions(
                         ProducerOptions.encrypt(new EncryptionOptions()
-                                .addRecipient(publicKeys)
+                                .addRecipient(publicKeys, "Bob Babbage <bob@openpgp.example>")
                         ));
 
         encryptionStream.close();
