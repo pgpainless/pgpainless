@@ -18,7 +18,7 @@ import org.pgpainless.algorithm.SymmetricKeyAlgorithm;
 public class RespectPreferredSymmetricAlgorithmDuringEncryptionTest {
 
     @Test
-    public void onlyAES128() throws IOException, PGPException {
+    public void algorithmPreferencesAreRespectedDependingOnEncryptionTarget() throws IOException, PGPException {
         // Key has [AES128] as preferred symm. algo on latest user-id cert
         String key = "-----BEGIN PGP ARMORED FILE-----\n" +
                 "Comment: ASCII Armor added by openpgp-interoperability-test-suite\n" +
@@ -75,6 +75,9 @@ public class RespectPreferredSymmetricAlgorithmDuringEncryptionTest {
                 "-----END PGP ARMORED FILE-----\n";
 
         PGPPublicKeyRing publicKeys = PGPainless.readKeyRing().publicKeyRing(key);
+
+        // Encrypt to the user-id
+        // PGPainless should extract algorithm preferences from the latest user-id sig in this case (AES-128)
         ByteArrayOutputStream out = new ByteArrayOutputStream();
         EncryptionStream encryptionStream = PGPainless.encryptAndOrSign().onOutputStream(out)
                 .withOptions(
@@ -84,5 +87,18 @@ public class RespectPreferredSymmetricAlgorithmDuringEncryptionTest {
 
         encryptionStream.close();
         assertEquals(SymmetricKeyAlgorithm.AES_128, encryptionStream.getResult().getEncryptionAlgorithm());
+
+
+        // Encrypt without specifying user-id
+        // PGPainless should now inspect the subkey binding sig for algorithm preferences (AES256, AES192, AES128)
+        out = new ByteArrayOutputStream();
+        encryptionStream = PGPainless.encryptAndOrSign().onOutputStream(out)
+                .withOptions(
+                        ProducerOptions.encrypt(new EncryptionOptions()
+                                .addRecipient(publicKeys) // no user-id passed
+                        ));
+
+        encryptionStream.close();
+        assertEquals(SymmetricKeyAlgorithm.AES_256, encryptionStream.getResult().getEncryptionAlgorithm());
     }
 }
