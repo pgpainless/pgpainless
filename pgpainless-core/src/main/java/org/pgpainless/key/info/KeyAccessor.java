@@ -110,7 +110,13 @@ public abstract class KeyAccessor {
 
         @Override
         public @Nonnull PGPSignature getSignatureWithPreferences() {
-            PGPSignature signature = info.getLatestDirectKeySelfSignature();
+            PGPSignature signature;
+            if (key.getPrimaryKeyId() != key.getSubkeyId()) {
+                signature = info.getCurrentSubkeyBindingSignature(key.getSubkeyId());
+            } else {
+                signature = info.getLatestDirectKeySelfSignature();
+            }
+
             if (signature != null) {
                 return signature;
             }
