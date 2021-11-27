@@ -207,5 +207,13 @@ public final class RevocationAttributes {
         public RevocationAttributes withDescription(@Nonnull String description) {
             return new RevocationAttributes(reason, description);
         }
+
+        /**
+         * Set an empty human-readable description.
+         * @return revocation attributes
+         */
+        public RevocationAttributes withoutDescription() {
+            return withDescription("");
+        }
     }
 }

@@ -4,6 +4,14 @@
 
 package org.pgpainless.key.modification;
 
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.assertTrue;
+
+import java.security.InvalidAlgorithmParameterException;
+import java.security.NoSuchAlgorithmException;
+import java.util.NoSuchElementException;
+
 import org.bouncycastle.openpgp.PGPException;
 import org.bouncycastle.openpgp.PGPSecretKeyRing;
 import org.junit.jupiter.api.Test;
@@ -11,16 +19,7 @@ import org.pgpainless.PGPainless;
 import org.pgpainless.key.info.KeyRingInfo;
 import org.pgpainless.key.protection.SecretKeyRingProtector;
 import org.pgpainless.key.util.RevocationAttributes;
-import org.pgpainless.signature.subpackets.RevocationSignatureSubpackets;
 import org.pgpainless.util.selection.userid.SelectUserId;
-
-import java.security.InvalidAlgorithmParameterException;
-import java.security.NoSuchAlgorithmException;
-import java.util.NoSuchElementException;
-
-import static org.junit.jupiter.api.Assertions.assertFalse;
-import static org.junit.jupiter.api.Assertions.assertThrows;
-import static org.junit.jupiter.api.Assertions.assertTrue;
 
 public class RevokeUserIdsTest {
 
@@ -41,7 +40,12 @@ public class RevokeUserIdsTest {
         assertTrue(info.isUserIdValid("Alice <alice@example.org>"));
 
         secretKeys = PGPainless.modifyKeyRing(secretKeys)
-                .revokeUserIds(SelectUserId.containsEmailAddress("alice@example.org"), protector, (RevocationSignatureSubpackets.Callback) null)
+                .revokeUserIds(
+                        SelectUserId.containsEmailAddress("alice@example.org"),
+                        protector,
+                        RevocationAttributes.createCertificateRevocation()
+                                .withReason(RevocationAttributes.Reason.USER_ID_NO_LONGER_VALID)
+                                .withoutDescription())
                 .done();
 
         info = PGPainless.inspectKeyRing(secretKeys);
