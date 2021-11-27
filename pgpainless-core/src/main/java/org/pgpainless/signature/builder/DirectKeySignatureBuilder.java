@@ -21,8 +21,8 @@ public class DirectKeySignatureBuilder extends AbstractSignatureBuilder<DirectKe
         super(certificationKey, protector, archetypeSignature);
     }
 
-    public DirectKeySignatureBuilder(SignatureType signatureType, PGPSecretKey signingKey, SecretKeyRingProtector protector) throws WrongPassphraseException {
-        super(signatureType, signingKey, protector);
+    public DirectKeySignatureBuilder(PGPSecretKey signingKey, SecretKeyRingProtector protector) throws WrongPassphraseException {
+        super(SignatureType.DIRECT_KEY, signingKey, protector);
     }
 
     public SelfSignatureSubpackets getHashedSubpackets() {
