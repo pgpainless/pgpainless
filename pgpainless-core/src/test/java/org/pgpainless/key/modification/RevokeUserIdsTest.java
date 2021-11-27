@@ -10,6 +10,8 @@ import org.junit.jupiter.api.Test;
 import org.pgpainless.PGPainless;
 import org.pgpainless.key.info.KeyRingInfo;
 import org.pgpainless.key.protection.SecretKeyRingProtector;
+import org.pgpainless.key.util.RevocationAttributes;
+import org.pgpainless.signature.subpackets.RevocationSignatureSubpackets;
 import org.pgpainless.util.selection.userid.SelectUserId;
 
 import java.security.InvalidAlgorithmParameterException;
@@ -39,7 +41,7 @@ public class RevokeUserIdsTest {
         assertTrue(info.isUserIdValid("Alice <alice@example.org>"));
 
         secretKeys = PGPainless.modifyKeyRing(secretKeys)
-                .revokeUserIds(SelectUserId.containsEmailAddress("alice@example.org"), protector, null)
+                .revokeUserIds(SelectUserId.containsEmailAddress("alice@example.org"), protector, (RevocationSignatureSubpackets.Callback) null)
                 .done();
 
         info = PGPainless.inspectKeyRing(secretKeys);
@@ -57,6 +59,6 @@ public class RevokeUserIdsTest {
                 PGPainless.modifyKeyRing(secretKeys).revokeUserIds(
                         SelectUserId.containsEmailAddress("alice@example.org"),
                         SecretKeyRingProtector.unprotectedKeys(),
-                        null));
+                        (RevocationAttributes) null));
     }
 }

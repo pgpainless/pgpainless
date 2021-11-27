@@ -254,8 +254,8 @@ public class KeyRingInfo {
     /**
      * Return the primary user-id of the key ring.
      *
-     * Note: If no user-id is marked as primary key using a {@link PrimaryUserID} packet, this method returns the
-     * first valid user-id, otherwise null.
+     * Note: If no user-id is marked as primary key using a {@link PrimaryUserID} packet,
+     * this method returns the first valid user-id, otherwise null.
      *
      * @return primary user-id or null
      */
@@ -278,7 +278,7 @@ public class KeyRingInfo {
             PrimaryUserID subpacket = SignatureSubpacketsUtil.getPrimaryUserId(signature);
             if (subpacket != null && subpacket.isPrimaryUserID()) {
                 // if there are multiple primary userIDs, return most recently signed
-                if (modificationDate == null || modificationDate.before(signature.getCreationTime())) {
+                if (modificationDate == null || !signature.getCreationTime().before(modificationDate)) {
                     primaryUserId = userId;
                     modificationDate = signature.getCreationTime();
                 }

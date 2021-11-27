@@ -6,6 +6,7 @@ package org.pgpainless.key.modification;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertNotEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 
 import java.io.IOException;
@@ -16,6 +17,7 @@ import java.util.NoSuchElementException;
 
 import org.bouncycastle.openpgp.PGPException;
 import org.bouncycastle.openpgp.PGPSecretKeyRing;
+import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.MethodSource;
 import org.pgpainless.PGPainless;
@@ -25,6 +27,7 @@ import org.pgpainless.key.info.KeyRingInfo;
 import org.pgpainless.key.protection.PasswordBasedSecretKeyRingProtector;
 import org.pgpainless.key.protection.SecretKeyRingProtector;
 import org.pgpainless.key.protection.UnprotectedKeysProtector;
+import org.pgpainless.key.util.UserId;
 import org.pgpainless.util.Passphrase;
 
 public class AddUserIdTest {
@@ -108,5 +111,20 @@ public class AddUserIdTest {
         userIds = info.getValidUserIds().iterator();
         assertEquals("cheshirecat@wonderland.lit", userIds.next());
         assertFalse(userIds.hasNext());
+    }
+
+    @Test
+    public void addNewPrimaryUserIdTest() throws PGPException, InvalidAlgorithmParameterException, NoSuchAlgorithmException {
+        PGPSecretKeyRing secretKeys = PGPainless.generateKeyRing()
+                .modernKeyRing("Alice", null);
+        UserId bob = UserId.newBuilder().withName("Bob").noEmail().noComment().build();
+
+        assertNotEquals("Bob", PGPainless.inspectKeyRing(secretKeys).getPrimaryUserId());
+
+        secretKeys = PGPainless.modifyKeyRing(secretKeys)
+                .addPrimaryUserId(bob, SecretKeyRingProtector.unprotectedKeys())
+                .done();
+
+        assertEquals("Bob", PGPainless.inspectKeyRing(secretKeys).getPrimaryUserId());
     }
 }

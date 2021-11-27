@@ -39,7 +39,7 @@ public class KeyGenerationSubpacketsTest {
 
     @Test
     public void verifyDefaultSubpacketsForUserIdSignatures()
-            throws PGPException, InvalidAlgorithmParameterException, NoSuchAlgorithmException {
+            throws PGPException, InvalidAlgorithmParameterException, NoSuchAlgorithmException, InterruptedException {
         PGPSecretKeyRing secretKeys = PGPainless.generateKeyRing().modernKeyRing("Alice", null);
 
         KeyRingInfo info = PGPainless.inspectKeyRing(secretKeys);
@@ -86,6 +86,9 @@ public class KeyGenerationSubpacketsTest {
         assertArrayEquals(preferredCompressionAlgorithms, userIdSig.getHashedSubPackets().getPreferredCompressionAlgorithms());
 
         assertEquals("Bob", info.getPrimaryUserId());
+
+        // wait one sec so that it is clear that the new certification for alice is the most recent one
+        Thread.sleep(1000);
 
         secretKeys = PGPainless.modifyKeyRing(secretKeys)
                 .addUserId("Alice", new SelfSignatureSubpackets.Callback() {

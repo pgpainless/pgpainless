@@ -87,18 +87,19 @@ public class SecretKeyRingEditor implements SecretKeyRingEditorInterface {
 
     @Override
     public SecretKeyRingEditorInterface addUserId(
-            String userId,
-            SecretKeyRingProtector secretKeyRingProtector)
+            @Nonnull CharSequence userId,
+            @Nonnull SecretKeyRingProtector secretKeyRingProtector)
             throws PGPException {
         return addUserId(userId, null, secretKeyRingProtector);
     }
 
     @Override
     public SecretKeyRingEditorInterface addUserId(
-            String userId,
+            @Nonnull CharSequence userId,
             @Nullable SelfSignatureSubpackets.Callback signatureSubpacketCallback,
-            SecretKeyRingProtector protector) throws PGPException {
-        userId = sanitizeUserId(userId);
+            @Nonnull SecretKeyRingProtector protector)
+            throws PGPException {
+        String sanitizeUserId = sanitizeUserId(userId);
 
         // user-id certifications live on the primary key
         PGPSecretKey primaryKey = secretKeyRing.getSecretKey();
@@ -134,25 +135,39 @@ public class SecretKeyRingEditor implements SecretKeyRingEditorInterface {
 
         builder.applyCallback(signatureSubpacketCallback);
 
-        PGPSignature signature = builder.build(primaryKey.getPublicKey(), userId);
-        secretKeyRing = KeyRingUtils.injectCertification(secretKeyRing, userId, signature);
+        PGPSignature signature = builder.build(primaryKey.getPublicKey(), sanitizeUserId);
+        secretKeyRing = KeyRingUtils.injectCertification(secretKeyRing, sanitizeUserId, signature);
 
         return this;
     }
 
+    @Override
+    public SecretKeyRingEditorInterface addPrimaryUserId(
+            @Nonnull CharSequence userId, @Nonnull SecretKeyRingProtector protector)
+            throws PGPException {
+        return addUserId(
+                userId,
+                new SelfSignatureSubpackets.Callback() {
+                    @Override
+                    public void modifyHashedSubpackets(SelfSignatureSubpackets hashedSubpackets) {
+                        hashedSubpackets.setPrimaryUserId();
+                    }
+                },
+                protector);
+    }
+
     // TODO: Move to utility class?
-    private String sanitizeUserId(String userId) {
-        userId = userId.trim();
+    private String sanitizeUserId(@Nonnull CharSequence userId) {
         // TODO: Further research how to sanitize user IDs.
         //  eg. what about newlines?
-        return userId;
+        return userId.toString().trim();
     }
 
     @Override
     public SecretKeyRingEditorInterface addSubKey(
             @Nonnull KeySpec keySpec,
             @Nonnull Passphrase subKeyPassphrase,
-            SecretKeyRingProtector secretKeyRingProtector)
+            @Nonnull SecretKeyRingProtector secretKeyRingProtector)
             throws InvalidAlgorithmParameterException, NoSuchAlgorithmException, PGPException, IOException {
 
         PGPKeyPair keyPair = KeyRingBuilder.generateKeyPair(keySpec);
@@ -179,7 +194,7 @@ public class SecretKeyRingEditor implements SecretKeyRingEditorInterface {
             @Nonnull KeySpec keySpec,
             @Nullable Passphrase subkeyPassphrase,
             @Nullable SelfSignatureSubpackets.Callback subpacketsCallback,
-            SecretKeyRingProtector secretKeyRingProtector)
+            @Nonnull SecretKeyRingProtector secretKeyRingProtector)
             throws PGPException, InvalidAlgorithmParameterException, NoSuchAlgorithmException, IOException {
         PGPKeyPair keyPair = KeyRingBuilder.generateKeyPair(keySpec);
 
@@ -195,11 +210,11 @@ public class SecretKeyRingEditor implements SecretKeyRingEditorInterface {
 
     @Override
     public SecretKeyRingEditorInterface addSubKey(
-            PGPKeyPair subkey,
+            @Nonnull PGPKeyPair subkey,
             @Nullable SelfSignatureSubpackets.Callback bindingSignatureCallback,
-            SecretKeyRingProtector subkeyProtector,
-            SecretKeyRingProtector primaryKeyProtector,
-            KeyFlag keyFlag,
+            @Nonnull SecretKeyRingProtector subkeyProtector,
+            @Nonnull SecretKeyRingProtector primaryKeyProtector,
+            @Nonnull KeyFlag keyFlag,
             KeyFlag... additionalKeyFlags)
             throws PGPException, IOException {
         KeyFlag[] flags = concat(keyFlag, additionalKeyFlags);
@@ -251,7 +266,7 @@ public class SecretKeyRingEditor implements SecretKeyRingEditorInterface {
     }
 
     @Override
-    public SecretKeyRingEditorInterface revoke(SecretKeyRingProtector secretKeyRingProtector,
+    public SecretKeyRingEditorInterface revoke(@Nonnull SecretKeyRingProtector secretKeyRingProtector,
                                                @Nullable RevocationAttributes revocationAttributes)
             throws PGPException {
         RevocationSignatureSubpackets.Callback callback = callbackFromRevocationAttributes(revocationAttributes);
@@ -259,7 +274,7 @@ public class SecretKeyRingEditor implements SecretKeyRingEditorInterface {
     }
 
     @Override
-    public SecretKeyRingEditorInterface revoke(SecretKeyRingProtector secretKeyRingProtector,
+    public SecretKeyRingEditorInterface revoke(@Nonnull SecretKeyRingProtector secretKeyRingProtector,
                                                @Nullable RevocationSignatureSubpackets.Callback subpacketsCallback)
             throws PGPException {
         return revokeSubKey(secretKeyRing.getSecretKey().getKeyID(), secretKeyRingProtector, subpacketsCallback);
@@ -276,7 +291,7 @@ public class SecretKeyRingEditor implements SecretKeyRingEditorInterface {
 
     @Override
     public SecretKeyRingEditorInterface revokeSubKey(long keyID,
-                                                     SecretKeyRingProtector secretKeyRingProtector,
+                                                     @Nonnull SecretKeyRingProtector secretKeyRingProtector,
                                                      @Nullable RevocationSignatureSubpackets.Callback subpacketsCallback)
             throws PGPException {
         // retrieve subkey to be revoked
@@ -290,8 +305,8 @@ public class SecretKeyRingEditor implements SecretKeyRingEditorInterface {
     }
 
     @Override
-    public PGPSignature createRevocationCertificate(SecretKeyRingProtector secretKeyRingProtector,
-                                                    RevocationAttributes revocationAttributes)
+    public PGPSignature createRevocationCertificate(@Nonnull SecretKeyRingProtector secretKeyRingProtector,
+                                                    @Nullable RevocationAttributes revocationAttributes)
             throws PGPException {
         PGPPublicKey revokeeSubKey = secretKeyRing.getPublicKey();
         PGPSignature revocationCertificate = generateRevocation(
@@ -302,8 +317,8 @@ public class SecretKeyRingEditor implements SecretKeyRingEditorInterface {
     @Override
     public PGPSignature createRevocationCertificate(
             long subkeyId,
-            SecretKeyRingProtector secretKeyRingProtector,
-            RevocationAttributes revocationAttributes)
+            @Nonnull SecretKeyRingProtector secretKeyRingProtector,
+            @Nullable RevocationAttributes revocationAttributes)
             throws PGPException {
         PGPPublicKey revokeeSubkey = KeyRingUtils.requirePublicKeyFrom(secretKeyRing, subkeyId);
         RevocationSignatureSubpackets.Callback callback = callbackFromRevocationAttributes(revocationAttributes);
@@ -313,15 +328,15 @@ public class SecretKeyRingEditor implements SecretKeyRingEditorInterface {
     @Override
     public PGPSignature createRevocationCertificate(
             long subkeyId,
-            SecretKeyRingProtector secretKeyRingProtector,
+            @Nonnull SecretKeyRingProtector secretKeyRingProtector,
             @Nullable RevocationSignatureSubpackets.Callback certificateSubpacketsCallback)
             throws PGPException {
         PGPPublicKey revokeeSubkey = KeyRingUtils.requirePublicKeyFrom(secretKeyRing, subkeyId);
         return generateRevocation(secretKeyRingProtector, revokeeSubkey, certificateSubpacketsCallback);
     }
 
-    private PGPSignature generateRevocation(SecretKeyRingProtector protector,
-                                            PGPPublicKey revokeeSubKey,
+    private PGPSignature generateRevocation(@Nonnull SecretKeyRingProtector protector,
+                                            @Nonnull PGPPublicKey revokeeSubKey,
                                             @Nullable RevocationSignatureSubpackets.Callback callback)
             throws PGPException {
         PGPSecretKey primaryKey = secretKeyRing.getSecretKey();
@@ -336,7 +351,7 @@ public class SecretKeyRingEditor implements SecretKeyRingEditorInterface {
     }
 
     private static RevocationSignatureSubpackets.Callback callbackFromRevocationAttributes(
-            RevocationAttributes attributes) {
+            @Nullable RevocationAttributes attributes) {
         return new RevocationSignatureSubpackets.Callback() {
             @Override
             public void modifyHashedSubpackets(RevocationSignatureSubpackets hashedSubpackets) {
@@ -348,9 +363,10 @@ public class SecretKeyRingEditor implements SecretKeyRingEditorInterface {
     }
 
     @Override
-    public SecretKeyRingEditorInterface revokeUserId(String userId,
-                                                     SecretKeyRingProtector secretKeyRingProtector,
-                                                     @Nullable RevocationAttributes revocationAttributes)
+    public SecretKeyRingEditorInterface revokeUserId(
+            @Nonnull CharSequence userId,
+            @Nonnull SecretKeyRingProtector secretKeyRingProtector,
+            @Nullable RevocationAttributes revocationAttributes)
             throws PGPException {
         if (revocationAttributes != null) {
             RevocationAttributes.Reason reason = revocationAttributes.getReason();
@@ -374,26 +390,41 @@ public class SecretKeyRingEditor implements SecretKeyRingEditorInterface {
 
     @Override
     public SecretKeyRingEditorInterface revokeUserId(
-            String userId,
-            SecretKeyRingProtector secretKeyRingProtector,
+            @Nonnull CharSequence userId,
+            @Nonnull SecretKeyRingProtector secretKeyRingProtector,
             @Nullable RevocationSignatureSubpackets.Callback subpacketCallback)
             throws PGPException {
-        Iterator<String> userIds = secretKeyRing.getPublicKey().getUserIDs();
-        boolean found = false;
-        while (userIds.hasNext()) {
-            if (userId.equals(userIds.next())) {
-                found = true;
-                break;
-            }
-        }
-        if (!found) {
-            throw new NoSuchElementException("No user-id '" + userId + "' found on the key.");
-        }
-        return doRevokeUserId(userId, secretKeyRingProtector, subpacketCallback);
+        String sanitized = sanitizeUserId(userId);
+        return revokeUserIds(
+                SelectUserId.exactMatch(sanitized),
+                secretKeyRingProtector,
+                subpacketCallback);
     }
 
     @Override
-    public SecretKeyRingEditorInterface revokeUserIds(SelectUserId userIdSelector, SecretKeyRingProtector secretKeyRingProtector, @Nullable RevocationSignatureSubpackets.Callback subpacketsCallback) throws PGPException {
+    public SecretKeyRingEditorInterface revokeUserIds(
+            @Nonnull SelectUserId userIdSelector,
+            @Nonnull SecretKeyRingProtector secretKeyRingProtector,
+            @Nullable RevocationAttributes revocationAttributes)
+            throws PGPException {
+
+        return revokeUserIds(
+                userIdSelector,
+                secretKeyRingProtector,
+                new RevocationSignatureSubpackets.Callback() {
+                    @Override
+                    public void modifyHashedSubpackets(RevocationSignatureSubpackets hashedSubpackets) {
+                        hashedSubpackets.setRevocationReason(revocationAttributes);
+                    }
+                });
+    }
+
+    @Override
+    public SecretKeyRingEditorInterface revokeUserIds(
+            @Nonnull SelectUserId userIdSelector,
+            @Nonnull SecretKeyRingProtector secretKeyRingProtector,
+            @Nullable RevocationSignatureSubpackets.Callback subpacketsCallback)
+            throws PGPException {
         List<String> selected = userIdSelector.selectUserIds(secretKeyRing);
         if (selected.isEmpty()) {
             throw new NoSuchElementException("No matching user-ids found on the key.");
@@ -406,9 +437,10 @@ public class SecretKeyRingEditor implements SecretKeyRingEditorInterface {
         return this;
     }
 
-    private SecretKeyRingEditorInterface doRevokeUserId(String userId,
-                                                        SecretKeyRingProtector protector,
-                                                        @Nullable RevocationSignatureSubpackets.Callback callback)
+    private SecretKeyRingEditorInterface doRevokeUserId(
+            @Nonnull String userId,
+            @Nonnull SecretKeyRingProtector protector,
+            @Nullable RevocationSignatureSubpackets.Callback callback)
             throws PGPException {
         PGPSecretKey primarySecretKey = secretKeyRing.getSecretKey();
         RevocationSignatureBuilder signatureBuilder = new RevocationSignatureBuilder(
@@ -424,16 +456,18 @@ public class SecretKeyRingEditor implements SecretKeyRingEditorInterface {
     }
 
     @Override
-    public SecretKeyRingEditorInterface setExpirationDate(Date expiration,
-                                                          SecretKeyRingProtector secretKeyRingProtector)
+    public SecretKeyRingEditorInterface setExpirationDate(
+            @Nullable Date expiration,
+            @Nonnull SecretKeyRingProtector secretKeyRingProtector)
             throws PGPException {
         return setExpirationDate(OpenPgpFingerprint.of(secretKeyRing), expiration, secretKeyRingProtector);
     }
 
     @Override
-    public SecretKeyRingEditorInterface setExpirationDate(OpenPgpFingerprint fingerprint,
-                                                          Date expiration,
-                                                          SecretKeyRingProtector secretKeyRingProtector)
+    public SecretKeyRingEditorInterface setExpirationDate(
+            @Nonnull OpenPgpFingerprint fingerprint,
+            @Nullable Date expiration,
+            @Nonnull SecretKeyRingProtector secretKeyRingProtector)
             throws PGPException {
 
         List<PGPSecretKey> secretKeyList = new ArrayList<>();
