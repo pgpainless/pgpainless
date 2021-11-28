@@ -42,16 +42,6 @@ public class PublicKeyParameterValidationUtil {
             throws KeyIntegrityException, PGPException {
         PublicKeyAlgorithm publicKeyAlgorithm = PublicKeyAlgorithm.fromId(publicKey.getAlgorithm());
         boolean valid = true;
-        // Additional to the algorithm-specific tests further below, we also perform
-        // generic functionality tests with the key, such as whether it is able to decrypt encrypted data
-        // or verify signatures.
-        // These tests should be more or less constant time.
-        if (publicKeyAlgorithm.isSigningCapable()) {
-            valid = verifyCanSign(privateKey, publicKey) && valid;
-        }
-        if (publicKeyAlgorithm.isEncryptionCapable()) {
-            valid = verifyCanDecrypt(privateKey, publicKey) && valid;
-        }
 
         // Algorithm specific validations
         BCPGKey key = privateKey.getPrivateKeyDataPacket();
@@ -73,6 +63,21 @@ public class PublicKeyParameterValidationUtil {
         }
 
         // TODO: ElGamal
+
+        if (!valid) {
+            throw new KeyIntegrityException();
+        }
+
+        // Additional to the algorithm-specific tests further above, we also perform
+        // generic functionality tests with the key, such as whether it is able to decrypt encrypted data
+        // or verify signatures.
+        // These tests should be more or less constant time.
+        if (publicKeyAlgorithm.isSigningCapable()) {
+            valid = verifyCanSign(privateKey, publicKey);
+        }
+        if (publicKeyAlgorithm.isEncryptionCapable()) {
+            valid = verifyCanDecrypt(privateKey, publicKey) && valid;
+        }
 
         if (!valid) {
             throw new KeyIntegrityException();
@@ -149,19 +154,46 @@ public class PublicKeyParameterValidationUtil {
         BigInteger sX = privateKey.getX();
 
         boolean pPrime = pP.isProbablePrime(certainty);
+        if (!pPrime) {
+            return false;
+        }
+
         boolean qPrime = pQ.isProbablePrime(certainty);
+        if (!qPrime) {
+            return false;
+        }
+
         // q > 160 bits
         boolean qLarge = pQ.getLowestSetBit() > 160;
+        if (!qLarge) {
+            return false;
+        }
+
         // q divides p - 1
         boolean qDividesPminus1 = pP.subtract(BigInteger.ONE).mod(pQ).equals(BigInteger.ZERO);
+        if (!qDividesPminus1) {
+            return false;
+        }
+
         // 1 < g < p
         boolean gInBounds = BigInteger.ONE.max(pG).equals(pG) && pG.max(pP).equals(pP);
+        if (!gInBounds) {
+            return false;
+        }
+
         // g^q = 1 mod p
         boolean gPowXModPEquals1 = pG.modPow(pQ, pP).equals(BigInteger.ONE);
+        if (!gPowXModPEquals1) {
+            return false;
+        }
+
         // y = g^x mod p
         boolean yEqualsGPowXModP = pY.equals(pG.modPow(sX, pP));
+        if (!yEqualsGPowXModP) {
+            return false;
+        }
 
-        return pPrime && qPrime && qLarge && qDividesPminus1 && gInBounds && gPowXModPEquals1 && yEqualsGPowXModP;
+        return true;
     }
 
     private static boolean verifyRSAKeyIntegrity(RSASecretBCPGKey secretKey, RSAPublicBCPGKey publicKey)
