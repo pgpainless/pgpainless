@@ -609,7 +609,7 @@ public final class SignatureSubpacketsUtil {
         }
 
         if (!type.canAuthenticate() && KeyFlag.hasKeyFlag(mask, KeyFlag.AUTHENTICATION)) {
-            throw new IllegalArgumentException("KeyType " + type.getName() + " cannot carry key flag AUTHENTIACTION.");
+            throw new IllegalArgumentException("KeyType " + type.getName() + " cannot carry key flag AUTHENTICATION.");
         }
     }
 
@@ -633,7 +633,7 @@ public final class SignatureSubpacketsUtil {
         }
 
         if (!algorithm.isSigningCapable() && KeyFlag.hasKeyFlag(mask, KeyFlag.AUTHENTICATION)) {
-            throw new IllegalArgumentException("Algorithm " + algorithm + " cannot be used with key flag AUTHENTIACTION.");
+            throw new IllegalArgumentException("Algorithm " + algorithm + " cannot be used with key flag AUTHENTICATION.");
         }
     }
 }
