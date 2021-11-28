@@ -4,16 +4,12 @@
 
 package org.pgpainless.signature.subpackets;
 
-import java.util.ArrayList;
 import java.util.Date;
-import java.util.List;
 import javax.annotation.Nonnull;
 
 import org.bouncycastle.bcpg.SignatureSubpacket;
 import org.bouncycastle.bcpg.SignatureSubpacketTags;
-import org.bouncycastle.bcpg.sig.KeyFlags;
 import org.bouncycastle.openpgp.PGPSignatureSubpacketGenerator;
-import org.pgpainless.algorithm.KeyFlag;
 
 /**
  * Utility class that helps dealing with BCs SignatureSubpacketGenerator class.
@@ -22,25 +18,6 @@ public final class SignatureSubpacketGeneratorUtil {
 
     private SignatureSubpacketGeneratorUtil() {
 
-    }
-
-    /**
-     * Return a list of {@link SignatureSubpacket SignatureSubpackets} from the subpacket generator, which correspond
-     * to the given {@link org.pgpainless.algorithm.SignatureSubpacket} type.
-     *
-     * @param type subpacket type
-     * @param generator subpacket generator
-     * @param <P> generic subpacket type
-     * @return possibly empty list of subpackets
-     */
-    public static <P extends SignatureSubpacket> List<P> getSubpacketsOfType(org.pgpainless.algorithm.SignatureSubpacket type,
-                                                               PGPSignatureSubpacketGenerator generator) {
-        SignatureSubpacket[] subpackets = generator.getSubpackets(type.getCode());
-        List<P> list = new ArrayList<>();
-        for (SignatureSubpacket p : subpackets) {
-            list.add((P) p);
-        }
-        return list;
     }
 
     /**
@@ -94,24 +71,5 @@ public final class SignatureSubpacketGeneratorUtil {
         removeAllPacketsOfType(SignatureSubpacketTags.KEY_EXPIRE_TIME, subpacketGenerator);
         long secondsToExpire = SignatureSubpacketsUtil.getKeyLifetimeInSeconds(expirationDate, creationDate);
         subpacketGenerator.setKeyExpirationTime(true, secondsToExpire);
-    }
-
-    /**
-     * Return true, if the subpacket generator has a {@link KeyFlags} subpacket which carries the given key flag.
-     * Returns false, if no {@link KeyFlags} subpacket is present.
-     * If there are more than one instance of a {@link KeyFlags} packet present, only the last occurrence will
-     * be tested.
-     *
-     * @param keyFlag flag to test for
-     * @param generator subpackets generator
-     * @return true if the generator has the given key flag set
-     */
-    public static boolean hasKeyFlag(KeyFlag keyFlag, PGPSignatureSubpacketGenerator generator) {
-        List<KeyFlags> keyFlagPackets = getSubpacketsOfType(org.pgpainless.algorithm.SignatureSubpacket.keyFlags, generator);
-        if (keyFlagPackets.isEmpty()) {
-            return false;
-        }
-        KeyFlags last = keyFlagPackets.get(keyFlagPackets.size() - 1);
-        return KeyFlag.hasKeyFlag(last.getFlags(), keyFlag);
     }
 }
