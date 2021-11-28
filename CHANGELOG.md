@@ -5,6 +5,14 @@ SPDX-License-Identifier: CC0-1.0
 
 # PGPainless Changelog
 
+## 1.0.0-rc6
+- Restructure method arguments in `SecretKeyRingEditor`
+- Add explanations of revocation reasons to `RevocationAttributes`
+- Rename `CertificationSignatureBuilder` to `ThirdPartyCertificationSignatureBuilder`
+- `KeyAccessor.ViaKeyId`: Differentiate between primary key (rely on direct-key sig) and subkey (subkey binding sig)
+- Expose `SignatureSubpacketsUtil.getKeyLifetimeInSeconds`
+- Various cleanup steps and new tests
+
 ## 1.0.0-rc5
 - Fix invalid cursor mark in `BufferedInputStream` when processing large cleartext signed messages
 - Add `SecretKeyRingEditor.revokeUserIds(SelectUserId, SecretKeyRingProtector, RevocationSignatureSubpackets.Callback)`
