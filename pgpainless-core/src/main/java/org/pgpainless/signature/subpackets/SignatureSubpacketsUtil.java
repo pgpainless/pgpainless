@@ -11,6 +11,7 @@ import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Set;
 
+import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
 
 import org.bouncycastle.bcpg.sig.Exportable;
@@ -202,6 +203,25 @@ public final class SignatureSubpacketsUtil {
             throw new IllegalArgumentException("Provided key (" + Long.toHexString(signingKey.getKeyID()) + ") did not create the signature (" + Long.toHexString(signature.getKeyID()) + ")");
         }
         return SignatureUtils.datePlusSeconds(signingKey.getCreationTime(), subpacket.getTime());
+    }
+
+    /**
+     * Calculate the duration in seconds until the key expires after creation.
+     *
+     * @param expirationDate new expiration date
+     * @param creationDate key creation time
+     * @return life time of the key in seconds
+     */
+    public static long getKeyLifetimeInSeconds(@Nullable Date expirationDate, @Nonnull Date creationDate) {
+        long secondsToExpire = 0; // 0 means "no expiration"
+        if (expirationDate != null) {
+            if (creationDate.after(expirationDate)) {
+                throw new IllegalArgumentException("Key MUST NOT expire before being created. " +
+                        "(creation: " + creationDate + ", expiration: " + expirationDate + ")");
+            }
+            secondsToExpire = (expirationDate.getTime() - creationDate.getTime()) / 1000;
+        }
+        return secondsToExpire;
     }
 
     /**

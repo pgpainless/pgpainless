@@ -92,26 +92,8 @@ public final class SignatureSubpacketGeneratorUtil {
                                                                 @Nonnull Date creationDate,
                                                                 PGPSignatureSubpacketGenerator subpacketGenerator) {
         removeAllPacketsOfType(SignatureSubpacketTags.KEY_EXPIRE_TIME, subpacketGenerator);
-        long secondsToExpire = getKeyLifetimeInSeconds(expirationDate, creationDate);
+        long secondsToExpire = SignatureSubpacketsUtil.getKeyLifetimeInSeconds(expirationDate, creationDate);
         subpacketGenerator.setKeyExpirationTime(true, secondsToExpire);
-    }
-
-    /**
-     * Calculate the duration in seconds until the key expires after creation.
-     *
-     * @param expirationDate new expiration date
-     * @param creationTime key creation time
-     * @return life time of the key in seconds
-     */
-    private static long getKeyLifetimeInSeconds(Date expirationDate, @Nonnull Date creationTime) {
-        long secondsToExpire = 0; // 0 means "no expiration"
-        if (expirationDate != null) {
-            if (creationTime.after(expirationDate)) {
-                throw new IllegalArgumentException("Key MUST NOT expire before being created. (creation: " + creationTime + ", expiration: " + expirationDate + ")");
-            }
-            secondsToExpire = (expirationDate.getTime() - creationTime.getTime()) / 1000;
-        }
-        return secondsToExpire;
     }
 
     /**
