@@ -5,6 +5,8 @@
 package org.pgpainless.util;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import java.io.IOException;
 import java.security.InvalidAlgorithmParameterException;
@@ -87,5 +89,19 @@ public class BCUtilTest {
         }
 
         assertEquals(pubColSize, secColSize);
+    }
+
+    @Test
+    public void constantTimeAreEqualsTest() {
+        char[] b = "Hello".toCharArray();
+        assertTrue(BCUtil.constantTimeAreEqual(b, b));
+        assertTrue(BCUtil.constantTimeAreEqual("Hello".toCharArray(), "Hello".toCharArray()));
+        assertTrue(BCUtil.constantTimeAreEqual(new char[0], new char[0]));
+        assertTrue(BCUtil.constantTimeAreEqual(new char[] {'H', 'e', 'l', 'l', 'o'}, "Hello".toCharArray()));
+
+        assertFalse(BCUtil.constantTimeAreEqual("Hello".toCharArray(), "Hello World".toCharArray()));
+        assertFalse(BCUtil.constantTimeAreEqual(null, "Hello".toCharArray()));
+        assertFalse(BCUtil.constantTimeAreEqual("Hello".toCharArray(), null));
+        assertFalse(BCUtil.constantTimeAreEqual(null, null));
     }
 }
