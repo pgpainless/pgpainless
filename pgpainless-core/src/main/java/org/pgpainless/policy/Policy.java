@@ -224,11 +224,10 @@ public final class Policy {
          */
         public static SymmetricKeyAlgorithmPolicy defaultSymmetricKeyEncryptionAlgorithmPolicy() {
             return new SymmetricKeyAlgorithmPolicy(SymmetricKeyAlgorithm.AES_256, Arrays.asList(
-                    // Reject: Unencrypted, IDEA, TripleDES, CAST5
+                    // Reject: Unencrypted, IDEA, TripleDES, CAST5, Blowfish
                     SymmetricKeyAlgorithm.AES_256,
                     SymmetricKeyAlgorithm.AES_192,
                     SymmetricKeyAlgorithm.AES_128,
-                    SymmetricKeyAlgorithm.BLOWFISH,
                     SymmetricKeyAlgorithm.TWOFISH,
                     SymmetricKeyAlgorithm.CAMELLIA_256,
                     SymmetricKeyAlgorithm.CAMELLIA_192,
@@ -243,12 +242,11 @@ public final class Policy {
          */
         public static SymmetricKeyAlgorithmPolicy defaultSymmetricKeyDecryptionAlgorithmPolicy() {
             return new SymmetricKeyAlgorithmPolicy(SymmetricKeyAlgorithm.AES_256, Arrays.asList(
-                    // Reject: Unencrypted, IDEA, TripleDES
+                    // Reject: Unencrypted, IDEA, TripleDES, Blowfish
                     SymmetricKeyAlgorithm.CAST5,
                     SymmetricKeyAlgorithm.AES_256,
                     SymmetricKeyAlgorithm.AES_192,
                     SymmetricKeyAlgorithm.AES_128,
-                    SymmetricKeyAlgorithm.BLOWFISH,
                     SymmetricKeyAlgorithm.TWOFISH,
                     SymmetricKeyAlgorithm.CAMELLIA_256,
                     SymmetricKeyAlgorithm.CAMELLIA_192,
