@@ -23,6 +23,7 @@ import org.bouncycastle.openpgp.operator.PGPContentSignerBuilder;
 import org.pgpainless.PGPainless;
 import org.pgpainless.algorithm.DocumentSignatureType;
 import org.pgpainless.algorithm.HashAlgorithm;
+import org.pgpainless.algorithm.PublicKeyAlgorithm;
 import org.pgpainless.algorithm.negotiation.HashAlgorithmNegotiator;
 import org.pgpainless.exception.KeyCannotSignException;
 import org.pgpainless.exception.KeyValidationError;
@@ -297,7 +298,11 @@ public final class SigningOptions {
 
         for (PGPPublicKey signingPubKey : signingPubKeys) {
             PGPSecretKey signingSecKey = secretKey.getSecretKey(signingPubKey.getKeyID());
-            PGPPrivateKey signingSubkey = signingSecKey.extractPrivateKey(secretKeyDecryptor.getDecryptor(signingPubKey.getKeyID()));
+            if (signingSecKey == null) {
+                throw new PGPException("Missing secret key for signing key " + Long.toHexString(signingPubKey.getKeyID()));
+            }
+            PGPPrivateKey signingSubkey = signingSecKey.extractPrivateKey(
+                    secretKeyDecryptor.getDecryptor(signingPubKey.getKeyID()));
             Set<HashAlgorithm> hashAlgorithms = userId != null ? keyRingInfo.getPreferredHashAlgorithms(userId)
                     : keyRingInfo.getPreferredHashAlgorithms(signingPubKey.getKeyID());
             HashAlgorithm hashAlgorithm = negotiateHashAlgorithm(hashAlgorithms, PGPainless.getPolicy());
@@ -316,6 +321,13 @@ public final class SigningOptions {
             throws PGPException {
         SubkeyIdentifier signingKeyIdentifier = new SubkeyIdentifier(secretKey, signingSubkey.getKeyID());
         PGPSecretKey signingSecretKey = secretKey.getSecretKey(signingSubkey.getKeyID());
+        PublicKeyAlgorithm publicKeyAlgorithm = PublicKeyAlgorithm.fromId(signingSecretKey.getPublicKey().getAlgorithm());
+        int bitStrength = secretKey.getPublicKey().getBitStrength();
+        if (!PGPainless.getPolicy().getPublicKeyAlgorithmPolicy().isAcceptable(publicKeyAlgorithm, bitStrength)) {
+            throw new IllegalArgumentException("Public key algorithm policy violation: " +
+                    publicKeyAlgorithm + " with bit strength " + bitStrength + " is not acceptable.");
+        }
+
         PGPSignatureGenerator generator = createSignatureGenerator(signingSubkey, hashAlgorithm, signatureType);
 
         // Subpackets
