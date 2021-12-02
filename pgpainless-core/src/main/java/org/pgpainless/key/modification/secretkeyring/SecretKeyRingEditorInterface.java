@@ -119,7 +119,7 @@ public interface SecretKeyRingEditorInterface {
             @Nonnull SecretKeyRingProtector primaryKeyProtector,
             @Nonnull KeyFlag keyFlag,
             KeyFlag... additionalKeyFlags)
-            throws PGPException, IOException;
+            throws PGPException, IOException, NoSuchAlgorithmException;
 
     /**
      * Revoke the key ring.

@@ -39,11 +39,13 @@ import org.bouncycastle.openpgp.operator.PGPDigestCalculator;
 import org.pgpainless.PGPainless;
 import org.pgpainless.algorithm.HashAlgorithm;
 import org.pgpainless.algorithm.KeyFlag;
+import org.pgpainless.algorithm.PublicKeyAlgorithm;
 import org.pgpainless.algorithm.SignatureType;
 import org.pgpainless.algorithm.SymmetricKeyAlgorithm;
 import org.pgpainless.implementation.ImplementationFactory;
 import org.pgpainless.key.generation.type.KeyType;
 import org.pgpainless.key.protection.UnlockSecretKey;
+import org.pgpainless.policy.Policy;
 import org.pgpainless.provider.ProviderFactory;
 import org.pgpainless.signature.subpackets.SelfSignatureSubpackets;
 import org.pgpainless.signature.subpackets.SignatureSubpackets;
@@ -62,6 +64,7 @@ public class KeyRingBuilder implements KeyRingBuilderInterface<KeyRingBuilder> {
 
     @Override
     public KeyRingBuilder setPrimaryKey(@Nonnull KeySpec keySpec) {
+        verifyKeySpecCompliesToPolicy(keySpec, PGPainless.getPolicy());
         verifyMasterKeyCanCertify(keySpec);
         this.primaryKeySpec = keySpec;
         return this;
@@ -69,6 +72,7 @@ public class KeyRingBuilder implements KeyRingBuilderInterface<KeyRingBuilder> {
 
     @Override
     public KeyRingBuilder addSubkey(@Nonnull KeySpec keySpec) {
+        verifyKeySpecCompliesToPolicy(keySpec, PGPainless.getPolicy());
         this.subkeySpecs.add(keySpec);
         return this;
     }
@@ -105,6 +109,16 @@ public class KeyRingBuilder implements KeyRingBuilderInterface<KeyRingBuilder> {
     public KeyRingBuilder setPassphrase(@Nonnull Passphrase passphrase) {
         this.passphrase = passphrase;
         return this;
+    }
+
+    private void verifyKeySpecCompliesToPolicy(KeySpec keySpec, Policy policy) {
+        PublicKeyAlgorithm publicKeyAlgorithm = keySpec.getKeyType().getAlgorithm();
+        int bitStrength = keySpec.getKeyType().getBitStrength();
+
+        if (!policy.getPublicKeyAlgorithmPolicy().isAcceptable(publicKeyAlgorithm, bitStrength)) {
+            throw new IllegalArgumentException("Public key algorithm policy violation: " +
+                    publicKeyAlgorithm + " with bit strength " + bitStrength + " is not acceptable.");
+        }
     }
 
     private void verifyMasterKeyCanCertify(KeySpec spec) {

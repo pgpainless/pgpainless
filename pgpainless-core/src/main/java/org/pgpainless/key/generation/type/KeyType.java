@@ -34,6 +34,12 @@ public interface KeyType {
     PublicKeyAlgorithm getAlgorithm();
 
     /**
+     * Return the strength of the key in bits.
+     * @return
+     */
+    int getBitStrength();
+
+    /**
      * Return an implementation of {@link AlgorithmParameterSpec} that can be used to generate the key.
      *
      * @return algorithm parameter spec

@@ -27,7 +27,7 @@ public class KeySpec {
     }
 
     @Nonnull
-    KeyType getKeyType() {
+    public KeyType getKeyType() {
         return keyType;
     }
 

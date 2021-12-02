@@ -37,6 +37,11 @@ public class RSA implements KeyType {
     }
 
     @Override
+    public int getBitStrength() {
+        return length.getLength();
+    }
+
+    @Override
     public AlgorithmParameterSpec getAlgorithmSpec() {
         return new RSAKeyGenParameterSpec(length.getLength(), RSAKeyGenParameterSpec.F4);
     }

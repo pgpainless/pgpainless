@@ -37,6 +37,11 @@ public final class ElGamal implements KeyType {
     }
 
     @Override
+    public int getBitStrength() {
+        return length.getLength();
+    }
+
+    @Override
     public AlgorithmParameterSpec getAlgorithmSpec() {
         return new ElGamalParameterSpec(length.getP(), length.getG());
     }

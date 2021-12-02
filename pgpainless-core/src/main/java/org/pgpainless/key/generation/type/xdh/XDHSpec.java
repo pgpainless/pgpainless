@@ -7,15 +7,17 @@ package org.pgpainless.key.generation.type.xdh;
 import javax.annotation.Nonnull;
 
 public enum XDHSpec {
-    _X25519("X25519", "curve25519"),
+    _X25519("X25519", "curve25519", 256),
     ;
 
     final String name;
     final String curveName;
+    final int bitStrength;
 
-    XDHSpec(@Nonnull String name, @Nonnull String curveName) {
+    XDHSpec(@Nonnull String name, @Nonnull String curveName, int bitStrength) {
         this.name = name;
         this.curveName = curveName;
+        this.bitStrength = bitStrength;
     }
 
     public String getName() {
@@ -24,5 +26,9 @@ public enum XDHSpec {
 
     public String getCurveName() {
         return curveName;
+    }
+
+    public int getBitStrength() {
+        return bitStrength;
     }
 }

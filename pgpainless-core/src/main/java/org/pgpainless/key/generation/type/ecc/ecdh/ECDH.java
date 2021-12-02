@@ -35,6 +35,11 @@ public final class ECDH implements KeyType {
     }
 
     @Override
+    public int getBitStrength() {
+        return curve.getBitStrength();
+    }
+
+    @Override
     public AlgorithmParameterSpec getAlgorithmSpec() {
         return new ECNamedCurveGenParameterSpec(curve.getName());
     }

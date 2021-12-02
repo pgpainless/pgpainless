@@ -70,6 +70,7 @@ import org.pgpainless.signature.subpackets.SignatureSubpacketGeneratorUtil;
 import org.pgpainless.signature.subpackets.SignatureSubpackets;
 import org.pgpainless.signature.subpackets.SignatureSubpacketsHelper;
 import org.pgpainless.signature.subpackets.SignatureSubpacketsUtil;
+import org.pgpainless.util.BCUtil;
 import org.pgpainless.util.CollectionUtils;
 import org.pgpainless.util.Passphrase;
 import org.pgpainless.util.selection.userid.SelectUserId;
@@ -169,7 +170,6 @@ public class SecretKeyRingEditor implements SecretKeyRingEditorInterface {
             @Nonnull Passphrase subKeyPassphrase,
             @Nonnull SecretKeyRingProtector secretKeyRingProtector)
             throws InvalidAlgorithmParameterException, NoSuchAlgorithmException, PGPException, IOException {
-
         PGPKeyPair keyPair = KeyRingBuilder.generateKeyPair(keySpec);
 
         SecretKeyRingProtector subKeyProtector = PasswordBasedSecretKeyRingProtector
@@ -216,10 +216,18 @@ public class SecretKeyRingEditor implements SecretKeyRingEditorInterface {
             @Nonnull SecretKeyRingProtector primaryKeyProtector,
             @Nonnull KeyFlag keyFlag,
             KeyFlag... additionalKeyFlags)
-            throws PGPException, IOException {
+            throws PGPException, IOException, NoSuchAlgorithmException {
         KeyFlag[] flags = concat(keyFlag, additionalKeyFlags);
         PublicKeyAlgorithm subkeyAlgorithm = PublicKeyAlgorithm.fromId(subkey.getPublicKey().getAlgorithm());
         SignatureSubpacketsUtil.assureKeyCanCarryFlags(subkeyAlgorithm);
+
+        // check key against public key algorithm policy
+        PublicKeyAlgorithm publicKeyAlgorithm = PublicKeyAlgorithm.fromId(subkey.getPublicKey().getAlgorithm());
+        int bitStrength = BCUtil.getBitStrength(subkey.getPublicKey());
+        if (!PGPainless.getPolicy().getPublicKeyAlgorithmPolicy().isAcceptable(publicKeyAlgorithm, bitStrength)) {
+            throw new IllegalArgumentException("Public key algorithm policy violation: " +
+                    publicKeyAlgorithm + " with bit strength " + bitStrength + " is not acceptable.");
+        }
 
         PGPSecretKey primaryKey = secretKeyRing.getSecretKey();
         KeyRingInfo info = PGPainless.inspectKeyRing(secretKeyRing);

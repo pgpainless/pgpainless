@@ -33,6 +33,11 @@ public final class XDH implements KeyType {
     }
 
     @Override
+    public int getBitStrength() {
+        return spec.getBitStrength();
+    }
+
+    @Override
     public AlgorithmParameterSpec getAlgorithmSpec() {
         return new ECNamedCurveGenParameterSpec(spec.getName());
     }
