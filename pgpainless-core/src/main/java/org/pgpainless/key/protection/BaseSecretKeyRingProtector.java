@@ -36,7 +36,7 @@ public class BaseSecretKeyRingProtector implements SecretKeyRingProtector {
     @Nullable
     public PBESecretKeyDecryptor getDecryptor(Long keyId) throws PGPException {
         Passphrase passphrase = passphraseProvider.getPassphraseFor(keyId);
-        return passphrase == null ? null :
+        return passphrase == null || passphrase.isEmpty() ? null :
                 ImplementationFactory.getInstance().getPBESecretKeyDecryptor(passphrase);
     }
 
@@ -44,7 +44,7 @@ public class BaseSecretKeyRingProtector implements SecretKeyRingProtector {
     @Nullable
     public PBESecretKeyEncryptor getEncryptor(Long keyId) throws PGPException {
         Passphrase passphrase = passphraseProvider.getPassphraseFor(keyId);
-        return passphrase == null ? null :
+        return passphrase == null || passphrase.isEmpty() ? null :
                 ImplementationFactory.getInstance().getPBESecretKeyEncryptor(
                         protectionSettings.getEncryptionAlgorithm(),
                         protectionSettings.getHashAlgorithm(),
