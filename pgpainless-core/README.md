@@ -10,7 +10,7 @@ Wrapper around Bouncycastle's OpenPGP implementation.
 
 ## Protection Against Attacks
 
-PGPainless aims to fulfil the primary goals of cryptography:
+PGPainless aims to fulfill the primary goals of cryptography:
 * Confidentiality through message encryption
 * Authenticity through signatures
 * Integrity through the use of Modification Detection Code and again signatures
