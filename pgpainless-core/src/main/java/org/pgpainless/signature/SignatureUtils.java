@@ -43,6 +43,8 @@ import org.pgpainless.util.ArmorUtils;
  */
 public final class SignatureUtils {
 
+    public static final int MAX_ITERATIONS = 10000;
+
     private SignatureUtils() {
 
     }
@@ -220,13 +222,28 @@ public final class SignatureUtils {
      * @throws PGPException in case of an OpenPGP error
      */
     public static List<PGPSignature> readSignatures(InputStream inputStream) throws IOException, PGPException {
+        return readSignatures(inputStream, MAX_ITERATIONS);
+    }
+
+    /**
+     * Read and return {@link PGPSignature PGPSignatures}.
+     * This method can deal with signatures that may be armored, compressed and may contain marker packets.
+     *
+     * @param inputStream input stream
+     * @param maxIterations number of loop iterations until reading is aborted
+     * @return list of encountered signatures
+     * @throws IOException in case of a stream error
+     * @throws PGPException in case of an OpenPGP error
+     */
+    public static List<PGPSignature> readSignatures(InputStream inputStream, int maxIterations) throws IOException, PGPException {
         List<PGPSignature> signatures = new ArrayList<>();
         InputStream pgpIn = ArmorUtils.getDecoderStream(inputStream);
         PGPObjectFactory objectFactory = new PGPObjectFactory(
                 pgpIn, ImplementationFactory.getInstance().getKeyFingerprintCalculator());
 
+        int i = 0;
         Object nextObject;
-        while ((nextObject = objectFactory.nextObject()) != null) {
+        while (i++ < maxIterations && (nextObject = objectFactory.nextObject()) != null) {
             if (nextObject instanceof PGPCompressedData) {
                 PGPCompressedData compressedData = (PGPCompressedData) nextObject;
                 objectFactory = new PGPObjectFactory(compressedData.getDataStream(),
