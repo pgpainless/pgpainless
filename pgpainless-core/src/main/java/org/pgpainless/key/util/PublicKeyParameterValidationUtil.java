@@ -16,6 +16,8 @@ import org.bouncycastle.bcpg.DSAPublicBCPGKey;
 import org.bouncycastle.bcpg.DSASecretBCPGKey;
 import org.bouncycastle.bcpg.EdDSAPublicBCPGKey;
 import org.bouncycastle.bcpg.EdSecretBCPGKey;
+import org.bouncycastle.bcpg.ElGamalPublicBCPGKey;
+import org.bouncycastle.bcpg.ElGamalSecretBCPGKey;
 import org.bouncycastle.bcpg.RSAPublicBCPGKey;
 import org.bouncycastle.bcpg.RSASecretBCPGKey;
 import org.bouncycastle.openpgp.PGPEncryptedDataGenerator;
@@ -39,7 +41,7 @@ import org.pgpainless.implementation.ImplementationFactory;
 public class PublicKeyParameterValidationUtil {
 
     public static void verifyPublicKeyParameterIntegrity(PGPPrivateKey privateKey, PGPPublicKey publicKey)
-            throws KeyIntegrityException, PGPException {
+            throws KeyIntegrityException {
         PublicKeyAlgorithm publicKeyAlgorithm = PublicKeyAlgorithm.fromId(publicKey.getAlgorithm());
         boolean valid = true;
 
@@ -60,9 +62,12 @@ public class PublicKeyParameterValidationUtil {
                     (DSASecretBCPGKey) key,
                     (DSAPublicBCPGKey) publicKey.getPublicKeyPacket().getKey())
                     && valid;
+        } else if (key instanceof ElGamalSecretBCPGKey) {
+            valid = verifyElGamalKeyIntegrity(
+                    (ElGamalSecretBCPGKey) key,
+                    (ElGamalPublicBCPGKey) publicKey.getPublicKeyPacket().getKey())
+                    && valid;
         }
-
-        // TODO: ElGamal
 
         if (!valid) {
             throw new KeyIntegrityException();
@@ -84,26 +89,43 @@ public class PublicKeyParameterValidationUtil {
         }
     }
 
-    private static boolean verifyCanSign(PGPPrivateKey privateKey, PGPPublicKey publicKey) throws PGPException {
+    /**
+     * Verify that the public key can be used to successfully verify a signature made by the private key.
+     * @param privateKey private key
+     * @param publicKey public key
+     * @return false if signature verification fails
+     */
+    private static boolean verifyCanSign(PGPPrivateKey privateKey, PGPPublicKey publicKey) {
         SecureRandom random = new SecureRandom();
         PublicKeyAlgorithm publicKeyAlgorithm = PublicKeyAlgorithm.fromId(publicKey.getAlgorithm());
         PGPSignatureGenerator signatureGenerator = new PGPSignatureGenerator(
                 ImplementationFactory.getInstance().getPGPContentSignerBuilder(publicKeyAlgorithm, HashAlgorithm.SHA256)
         );
 
-        signatureGenerator.init(SignatureType.TIMESTAMP.getCode(), privateKey);
+        try {
+            signatureGenerator.init(SignatureType.TIMESTAMP.getCode(), privateKey);
 
-        byte[] data = new byte[512];
-        random.nextBytes(data);
+            byte[] data = new byte[512];
+            random.nextBytes(data);
 
-        signatureGenerator.update(data);
-        PGPSignature sig = signatureGenerator.generate();
+            signatureGenerator.update(data);
+            PGPSignature sig = signatureGenerator.generate();
 
-        sig.init(ImplementationFactory.getInstance().getPGPContentVerifierBuilderProvider(), publicKey);
-        sig.update(data);
-        return sig.verify();
+            sig.init(ImplementationFactory.getInstance().getPGPContentVerifierBuilderProvider(), publicKey);
+            sig.update(data);
+            return sig.verify();
+        } catch (PGPException e) {
+            return false;
+        }
     }
 
+    /**
+     * Verify that the public key can be used to encrypt a message which can successfully be
+     * decrypted using the private key.
+     * @param privateKey private key
+     * @param publicKey public key
+     * @return false if decryption of a message encrypted with the public key fails
+     */
     private static boolean verifyCanDecrypt(PGPPrivateKey privateKey, PGPPublicKey publicKey) {
         SecureRandom random = new SecureRandom();
         PGPEncryptedDataGenerator encryptedDataGenerator = new PGPEncryptedDataGenerator(
@@ -201,4 +223,59 @@ public class PublicKeyParameterValidationUtil {
         // Verify that the public keys N is equal to private keys p*q
         return publicKey.getModulus().equals(secretKey.getPrimeP().multiply(secretKey.getPrimeQ()));
     }
+
+    /**
+     * Validate ElGamal public key parameters.
+     *
+     * Original implementation by the openpgpjs authors:
+     * https://github.com/openpgpjs/openpgpjs/blob/main/src/crypto/public_key/elgamal.js#L76-L143
+     * @param secretKey secret key
+     * @param publicKey public key
+     * @return true if supposedly valid, false if invalid
+     */
+    private static boolean verifyElGamalKeyIntegrity(ElGamalSecretBCPGKey secretKey, ElGamalPublicBCPGKey publicKey) {
+        BigInteger p = publicKey.getP();
+        BigInteger g = publicKey.getG();
+        BigInteger y = publicKey.getY();
+        BigInteger one = BigInteger.ONE;
+
+        // 1 < g < p
+        if (g.min(one).equals(g) || g.max(p).equals(g)) {
+            return false;
+        }
+
+        // p-1 is large
+        if (p.bitLength() < 1023) {
+            return false;
+        }
+
+        // g^(p-1) mod p = 1
+        if (!g.modPow(p.subtract(one), p).equals(one)) {
+            return false;
+        }
+
+        // check g^i mod p != 1 for i < threshold
+        BigInteger res = g;
+        BigInteger i = BigInteger.valueOf(1);
+        BigInteger threshold = BigInteger.valueOf(2).shiftLeft(17);
+        while (i.compareTo(threshold) < 0) {
+            res = res.multiply(g).mod(p);
+            if (res.equals(one)) {
+                return false;
+            }
+            i = i.add(one);
+        }
+
+        // blinded exponentiation to check y = g^(r*(p-1)+x) mod p
+        SecureRandom random = new SecureRandom();
+        BigInteger x = secretKey.getX();
+        BigInteger r = new BigInteger(p.bitLength(), random);
+        BigInteger rqx = p.subtract(one).multiply(r).add(x);
+        if (!y.equals(g.modPow(rqx, p))) {
+            return false;
+        }
+
+        return true;
+    }
+
 }
