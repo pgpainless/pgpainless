@@ -5,6 +5,7 @@
 package org.pgpainless.signature.builder;
 
 import java.util.Set;
+import javax.annotation.Nonnull;
 
 import org.bouncycastle.openpgp.PGPException;
 import org.bouncycastle.openpgp.PGPPrivateKey;
@@ -16,15 +17,12 @@ import org.pgpainless.PGPainless;
 import org.pgpainless.algorithm.HashAlgorithm;
 import org.pgpainless.algorithm.SignatureType;
 import org.pgpainless.algorithm.negotiation.HashAlgorithmNegotiator;
-import org.pgpainless.exception.WrongPassphraseException;
 import org.pgpainless.implementation.ImplementationFactory;
 import org.pgpainless.key.protection.SecretKeyRingProtector;
 import org.pgpainless.key.protection.UnlockSecretKey;
 import org.pgpainless.key.util.OpenPgpKeyAttributeUtil;
 import org.pgpainless.signature.subpackets.SignatureSubpackets;
 import org.pgpainless.signature.subpackets.SignatureSubpacketsHelper;
-
-import javax.annotation.Nonnull;
 
 public abstract class AbstractSignatureBuilder<B extends AbstractSignatureBuilder<B>> {
     protected final PGPPrivateKey privateSigningKey;
@@ -42,7 +40,7 @@ public abstract class AbstractSignatureBuilder<B extends AbstractSignatureBuilde
                                        HashAlgorithm hashAlgorithm,
                                        SignatureSubpackets hashedSubpackets,
                                        SignatureSubpackets unhashedSubpackets)
-            throws WrongPassphraseException {
+            throws PGPException {
         if (!isValidSignatureType(signatureType)) {
             throw new IllegalArgumentException("Invalid signature type.");
         }
@@ -55,7 +53,7 @@ public abstract class AbstractSignatureBuilder<B extends AbstractSignatureBuilde
     }
 
     public AbstractSignatureBuilder(SignatureType signatureType, PGPSecretKey signingKey, SecretKeyRingProtector protector)
-            throws WrongPassphraseException {
+            throws PGPException {
         this(
                 signatureType,
                 signingKey,
@@ -67,7 +65,7 @@ public abstract class AbstractSignatureBuilder<B extends AbstractSignatureBuilde
     }
 
     public AbstractSignatureBuilder(PGPSecretKey certificationKey, SecretKeyRingProtector protector, PGPSignature archetypeSignature)
-            throws WrongPassphraseException {
+            throws PGPException {
         this(
                 SignatureType.valueOf(archetypeSignature.getSignatureType()),
                 certificationKey,

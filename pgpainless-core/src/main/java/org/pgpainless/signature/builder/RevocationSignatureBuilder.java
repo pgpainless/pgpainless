@@ -12,13 +12,12 @@ import org.bouncycastle.openpgp.PGPSecretKey;
 import org.bouncycastle.openpgp.PGPSignature;
 import org.bouncycastle.openpgp.PGPSignatureGenerator;
 import org.pgpainless.algorithm.SignatureType;
-import org.pgpainless.exception.WrongPassphraseException;
 import org.pgpainless.key.protection.SecretKeyRingProtector;
 import org.pgpainless.signature.subpackets.RevocationSignatureSubpackets;
 
 public class RevocationSignatureBuilder extends AbstractSignatureBuilder<RevocationSignatureBuilder> {
 
-    public RevocationSignatureBuilder(SignatureType signatureType, PGPSecretKey signingKey, SecretKeyRingProtector protector) throws WrongPassphraseException {
+    public RevocationSignatureBuilder(SignatureType signatureType, PGPSecretKey signingKey, SecretKeyRingProtector protector) throws PGPException {
         super(signatureType, signingKey, protector);
         getHashedSubpackets().setRevocable(true, false);
     }

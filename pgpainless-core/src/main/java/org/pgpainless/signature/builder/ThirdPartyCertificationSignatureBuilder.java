@@ -31,7 +31,7 @@ public class ThirdPartyCertificationSignatureBuilder extends AbstractSignatureBu
      * @throws WrongPassphraseException in case of a wrong passphrase
      */
     public ThirdPartyCertificationSignatureBuilder(PGPSecretKey signingKey, SecretKeyRingProtector protector)
-            throws WrongPassphraseException {
+            throws PGPException {
         this(SignatureType.GENERIC_CERTIFICATION, signingKey, protector);
     }
 
@@ -44,7 +44,7 @@ public class ThirdPartyCertificationSignatureBuilder extends AbstractSignatureBu
      * @throws WrongPassphraseException in case of a wrong passphrase
      */
     public ThirdPartyCertificationSignatureBuilder(SignatureType signatureType, PGPSecretKey signingKey, SecretKeyRingProtector protector)
-            throws WrongPassphraseException {
+            throws PGPException {
         super(signatureType, signingKey, protector);
     }
 
@@ -60,7 +60,7 @@ public class ThirdPartyCertificationSignatureBuilder extends AbstractSignatureBu
             PGPSecretKey signingKey,
             SecretKeyRingProtector protector,
             PGPSignature archetypeSignature)
-            throws WrongPassphraseException {
+            throws PGPException {
         super(signingKey, protector, archetypeSignature);
     }
 

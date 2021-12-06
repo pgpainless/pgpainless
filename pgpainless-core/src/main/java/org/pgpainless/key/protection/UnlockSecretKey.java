@@ -20,27 +20,40 @@ public final class UnlockSecretKey {
     }
 
     public static PGPPrivateKey unlockSecretKey(PGPSecretKey secretKey, SecretKeyRingProtector protector)
-            throws WrongPassphraseException {
+            throws PGPException {
+
+        PBESecretKeyDecryptor decryptor = null;
+        if (KeyInfo.isEncrypted(secretKey)) {
+            decryptor = protector.getDecryptor(secretKey.getKeyID());
+        }
+        PGPPrivateKey privateKey = unlockSecretKey(secretKey, decryptor);
+        return privateKey;
+    }
+
+    public static PGPPrivateKey unlockSecretKey(PGPSecretKey secretKey, PBESecretKeyDecryptor decryptor)
+            throws PGPException {
+        PGPPrivateKey privateKey;
         try {
-            PBESecretKeyDecryptor decryptor = null;
-            if (KeyInfo.isEncrypted(secretKey)) {
-                decryptor = protector.getDecryptor(secretKey.getKeyID());
+            privateKey = secretKey.extractPrivateKey(decryptor);
+        } catch (PGPException e) {
+            throw new WrongPassphraseException(secretKey.getKeyID(), e);
+        }
+
+        if (privateKey == null) {
+            int s2kType = secretKey.getS2K().getType();
+            if (s2kType >= 100 && s2kType <= 110) {
+                throw new PGPException("Cannot decrypt secret key" + Long.toHexString(secretKey.getKeyID()) + ": " +
+                        "Unsupported private S2K usage type " + s2kType);
             }
-            return secretKey.extractPrivateKey(decryptor);
-        } catch (PGPException e) {
-            throw new WrongPassphraseException(secretKey.getKeyID(), e);
+
+            throw new PGPException("Cannot decrypt secret key.");
         }
+
+        return privateKey;
     }
 
-    public static PGPPrivateKey unlockSecretKey(PGPSecretKey secretKey, PBESecretKeyDecryptor decryptor) throws WrongPassphraseException {
-        try {
-            return secretKey.extractPrivateKey(decryptor);
-        } catch (PGPException e) {
-            throw new WrongPassphraseException(secretKey.getKeyID(), e);
-        }
-    }
-
-    public static PGPPrivateKey unlockSecretKey(PGPSecretKey secretKey, Passphrase passphrase) throws WrongPassphraseException {
+    public static PGPPrivateKey unlockSecretKey(PGPSecretKey secretKey, Passphrase passphrase)
+            throws PGPException {
         return unlockSecretKey(secretKey, SecretKeyRingProtector.unlockSingleKeyWith(passphrase, secretKey));
     }
 }

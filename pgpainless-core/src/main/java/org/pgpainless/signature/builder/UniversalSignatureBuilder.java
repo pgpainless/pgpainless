@@ -11,7 +11,6 @@ import org.bouncycastle.openpgp.PGPSecretKey;
 import org.bouncycastle.openpgp.PGPSignature;
 import org.bouncycastle.openpgp.PGPSignatureGenerator;
 import org.pgpainless.algorithm.SignatureType;
-import org.pgpainless.exception.WrongPassphraseException;
 import org.pgpainless.key.protection.SecretKeyRingProtector;
 import org.pgpainless.signature.subpackets.BaseSignatureSubpackets;
 import org.pgpainless.signature.subpackets.SignatureSubpackets;
@@ -22,12 +21,12 @@ import org.pgpainless.signature.subpackets.SignatureSubpackets;
 public class UniversalSignatureBuilder extends AbstractSignatureBuilder<UniversalSignatureBuilder> {
 
     public UniversalSignatureBuilder(SignatureType signatureType, PGPSecretKey signingKey, SecretKeyRingProtector protector)
-            throws WrongPassphraseException {
+            throws PGPException {
         super(signatureType, signingKey, protector);
     }
 
     public UniversalSignatureBuilder(PGPSecretKey certificationKey, SecretKeyRingProtector protector, PGPSignature archetypeSignature)
-            throws WrongPassphraseException {
+            throws PGPException {
         super(certificationKey, protector, archetypeSignature);
     }
 
