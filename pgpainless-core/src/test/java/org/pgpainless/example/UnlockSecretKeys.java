@@ -11,7 +11,6 @@ import org.bouncycastle.openpgp.PGPSecretKey;
 import org.bouncycastle.openpgp.PGPSecretKeyRing;
 import org.junit.jupiter.api.Test;
 import org.pgpainless.PGPainless;
-import org.pgpainless.exception.WrongPassphraseException;
 import org.pgpainless.key.OpenPgpV4Fingerprint;
 import org.pgpainless.key.TestKeys;
 import org.pgpainless.key.protection.CachingSecretKeyRingProtector;
@@ -120,7 +119,7 @@ public class UnlockSecretKeys {
     }
 
     private void assertProtectorUnlocksAllSecretKeys(PGPSecretKeyRing secretKey, SecretKeyRingProtector protector)
-            throws WrongPassphraseException {
+            throws PGPException {
         for (PGPSecretKey key : secretKey) {
             UnlockSecretKey.unlockSecretKey(key, protector);
         }

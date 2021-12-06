@@ -13,19 +13,18 @@ import org.bouncycastle.openpgp.PGPSecretKey;
 import org.bouncycastle.openpgp.PGPSignature;
 import org.bouncycastle.openpgp.PGPUserAttributeSubpacketVector;
 import org.pgpainless.algorithm.SignatureType;
-import org.pgpainless.exception.WrongPassphraseException;
 import org.pgpainless.key.protection.SecretKeyRingProtector;
 import org.pgpainless.signature.subpackets.CertificationSubpackets;
 
 public class CertificationSignatureBuilder extends AbstractSignatureBuilder<CertificationSignatureBuilder> {
 
     public CertificationSignatureBuilder(PGPSecretKey certificationKey, SecretKeyRingProtector protector)
-            throws WrongPassphraseException {
+            throws PGPException {
         this(SignatureType.GENERIC_CERTIFICATION, certificationKey, protector);
     }
 
     public CertificationSignatureBuilder(SignatureType signatureType, PGPSecretKey signingKey, SecretKeyRingProtector protector)
-            throws WrongPassphraseException {
+            throws PGPException {
         super(signatureType, signingKey, protector);
     }
 
@@ -33,7 +32,7 @@ public class CertificationSignatureBuilder extends AbstractSignatureBuilder<Cert
             PGPSecretKey certificationKey,
             SecretKeyRingProtector protector,
             PGPSignature archetypeSignature)
-            throws WrongPassphraseException {
+            throws PGPException {
         super(certificationKey, protector, archetypeSignature);
     }
 

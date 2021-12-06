@@ -11,17 +11,16 @@ import org.bouncycastle.openpgp.PGPPublicKey;
 import org.bouncycastle.openpgp.PGPSecretKey;
 import org.bouncycastle.openpgp.PGPSignature;
 import org.pgpainless.algorithm.SignatureType;
-import org.pgpainless.exception.WrongPassphraseException;
 import org.pgpainless.key.protection.SecretKeyRingProtector;
 import org.pgpainless.signature.subpackets.SelfSignatureSubpackets;
 
 public class DirectKeySignatureBuilder extends AbstractSignatureBuilder<DirectKeySignatureBuilder> {
 
-    public DirectKeySignatureBuilder(PGPSecretKey certificationKey, SecretKeyRingProtector protector, PGPSignature archetypeSignature) throws WrongPassphraseException {
+    public DirectKeySignatureBuilder(PGPSecretKey certificationKey, SecretKeyRingProtector protector, PGPSignature archetypeSignature) throws PGPException {
         super(certificationKey, protector, archetypeSignature);
     }
 
-    public DirectKeySignatureBuilder(SignatureType signatureType, PGPSecretKey signingKey, SecretKeyRingProtector protector) throws WrongPassphraseException {
+    public DirectKeySignatureBuilder(SignatureType signatureType, PGPSecretKey signingKey, SecretKeyRingProtector protector) throws PGPException {
         super(signatureType, signingKey, protector);
     }
 

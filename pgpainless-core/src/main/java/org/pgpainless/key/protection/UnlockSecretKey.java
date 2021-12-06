@@ -22,34 +22,41 @@ public final class UnlockSecretKey {
     }
 
     public static PGPPrivateKey unlockSecretKey(PGPSecretKey secretKey, SecretKeyRingProtector protector)
-            throws WrongPassphraseException, KeyIntegrityException {
-        try {
-            PBESecretKeyDecryptor decryptor = null;
-            if (KeyInfo.isEncrypted(secretKey)) {
-                decryptor = protector.getDecryptor(secretKey.getKeyID());
-            }
-            PGPPrivateKey privateKey = secretKey.extractPrivateKey(decryptor);
+            throws PGPException, KeyIntegrityException {
 
-            if (secretKey.getPublicKey() != null) {
-                PublicKeyParameterValidationUtil.verifyPublicKeyParameterIntegrity(privateKey, secretKey.getPublicKey());
-            }
-            return privateKey;
-        } catch (KeyIntegrityException e) {
-            throw e;
+        PBESecretKeyDecryptor decryptor = null;
+        if (KeyInfo.isEncrypted(secretKey)) {
+            decryptor = protector.getDecryptor(secretKey.getKeyID());
+        }
+        PGPPrivateKey privateKey = unlockSecretKey(secretKey, decryptor);
+        return privateKey;
+    }
+
+    public static PGPPrivateKey unlockSecretKey(PGPSecretKey secretKey, PBESecretKeyDecryptor decryptor) throws PGPException {
+        PGPPrivateKey privateKey;
+        try {
+            privateKey = secretKey.extractPrivateKey(decryptor);
         } catch (PGPException e) {
             throw new WrongPassphraseException(secretKey.getKeyID(), e);
         }
-    }
 
-    public static PGPPrivateKey unlockSecretKey(PGPSecretKey secretKey, PBESecretKeyDecryptor decryptor) throws WrongPassphraseException {
-        try {
-            return secretKey.extractPrivateKey(decryptor);
-        } catch (PGPException e) {
-            throw new WrongPassphraseException(secretKey.getKeyID(), e);
+        if (privateKey == null) {
+            int s2kType = secretKey.getS2K().getType();
+            if (s2kType >= 100 && s2kType <= 110) {
+                throw new PGPException("Cannot decrypt secret key" + Long.toHexString(secretKey.getKeyID()) + ": " +
+                        "Unsupported private S2K usage type " + s2kType);
+            }
+
+            throw new PGPException("Cannot decrypt secret key.");
         }
+
+        if (secretKey.getPublicKey() != null) {
+            PublicKeyParameterValidationUtil.verifyPublicKeyParameterIntegrity(privateKey, secretKey.getPublicKey());
+        }
+        return privateKey;
     }
 
-    public static PGPPrivateKey unlockSecretKey(PGPSecretKey secretKey, Passphrase passphrase) throws WrongPassphraseException, KeyIntegrityException {
+    public static PGPPrivateKey unlockSecretKey(PGPSecretKey secretKey, Passphrase passphrase) throws PGPException, KeyIntegrityException {
         return unlockSecretKey(secretKey, SecretKeyRingProtector.unlockSingleKeyWith(passphrase, secretKey));
     }
 }
