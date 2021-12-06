@@ -27,6 +27,8 @@ import org.pgpainless.util.ArmorUtils;
 
 public class KeyRingReader {
 
+    public static final int MAX_ITERATIONS = 10000;
+
     public static final Charset UTF8 = Charset.forName("UTF-8");
 
     public PGPPublicKeyRing publicKeyRing(@Nonnull InputStream inputStream) throws IOException {
@@ -93,9 +95,23 @@ public class KeyRingReader {
     }
 
     public static PGPPublicKeyRing readPublicKeyRing(@Nonnull InputStream inputStream) throws IOException {
+        return readPublicKeyRing(inputStream, MAX_ITERATIONS);
+    }
+
+    /**
+     * Read a public key ring from the provided {@link InputStream}.
+     * If more than maxIterations PGP packets are encountered before a {@link PGPPublicKeyRing} is read,
+     * an {@link IOException} is thrown.
+     *
+     * @param inputStream input stream
+     * @param maxIterations max iterations before abort
+     * @return public key ring
+     */
+    public static PGPPublicKeyRing readPublicKeyRing(@Nonnull InputStream inputStream, int maxIterations) throws IOException {
         PGPObjectFactory objectFactory = new PGPObjectFactory(
                 ArmorUtils.getDecoderStream(inputStream),
                 ImplementationFactory.getInstance().getKeyFingerprintCalculator());
+        int i = 0;
         Object next;
         do {
             next = objectFactory.nextObject();
@@ -108,17 +124,34 @@ public class KeyRingReader {
             if (next instanceof PGPPublicKeyRing) {
                 return (PGPPublicKeyRing) next;
             }
-        } while (true);
+        } while (++i < maxIterations);
+
+        throw new IOException("Loop exceeded max iteration count.");
     }
 
     public static PGPPublicKeyRingCollection readPublicKeyRingCollection(@Nonnull InputStream inputStream)
+            throws IOException, PGPException {
+        return readPublicKeyRingCollection(inputStream, MAX_ITERATIONS);
+    }
+
+    /**
+     * Read a public key ring collection from the provided {@link InputStream}.
+     * If more than maxIterations PGP packets are encountered before the stream is exhausted,
+     * an {@link IOException} is thrown.
+     *
+     * @param inputStream input stream
+     * @param maxIterations max iterations before abort
+     * @return public key ring collection
+     * @throws IOException
+     */
+    public static PGPPublicKeyRingCollection readPublicKeyRingCollection(@Nonnull InputStream inputStream, int maxIterations)
             throws IOException, PGPException {
         PGPObjectFactory objectFactory = new PGPObjectFactory(
                 ArmorUtils.getDecoderStream(inputStream),
                 ImplementationFactory.getInstance().getKeyFingerprintCalculator());
 
         List<PGPPublicKeyRing> rings = new ArrayList<>();
-
+        int i = 0;
         Object next;
         do {
             next = objectFactory.nextObject();
@@ -138,15 +171,30 @@ public class KeyRingReader {
                     rings.add(iterator.next());
                 }
             }
-        } while (true);
+        } while (++i < maxIterations);
+
+        throw new IOException("Loop exceeded max iteration count.");
     }
 
     public static PGPSecretKeyRing readSecretKeyRing(@Nonnull InputStream inputStream) throws IOException {
+        return readSecretKeyRing(inputStream, MAX_ITERATIONS);
+    }
+
+    /**
+     * Read a secret key ring from the provided {@link InputStream}.
+     * If more than maxIterations PGP packets are encountered before a {@link PGPSecretKeyRing} is read,
+     * an {@link IOException} is thrown.
+     *
+     * @param inputStream input stream
+     * @param maxIterations max iterations before abort
+     * @return public key ring
+     */
+    public static PGPSecretKeyRing readSecretKeyRing(@Nonnull InputStream inputStream, int maxIterations) throws IOException {
         InputStream decoderStream = ArmorUtils.getDecoderStream(inputStream);
         PGPObjectFactory objectFactory = new PGPObjectFactory(
                 decoderStream,
                 ImplementationFactory.getInstance().getKeyFingerprintCalculator());
-
+        int i = 0;
         Object next;
         do {
             next = objectFactory.nextObject();
@@ -160,17 +208,34 @@ public class KeyRingReader {
                 Streams.drain(decoderStream);
                 return (PGPSecretKeyRing) next;
             }
-        } while (true);
+        } while (++i < maxIterations);
+
+        throw new IOException("Loop exceeded max iteration count.");
     }
 
     public static PGPSecretKeyRingCollection readSecretKeyRingCollection(@Nonnull InputStream inputStream)
+            throws IOException, PGPException {
+        return readSecretKeyRingCollection(inputStream, MAX_ITERATIONS);
+    }
+
+    /**
+     * Read a secret key ring collection from the provided {@link InputStream}.
+     * If more than maxIterations PGP packets are encountered before the stream is exhausted,
+     * an {@link IOException} is thrown.
+     *
+     * @param inputStream input stream
+     * @param maxIterations max iterations before abort
+     * @return secret key ring collection
+     */
+    public static PGPSecretKeyRingCollection readSecretKeyRingCollection(@Nonnull InputStream inputStream,
+                                                                         int maxIterations)
             throws IOException, PGPException {
         PGPObjectFactory objectFactory = new PGPObjectFactory(
                 ArmorUtils.getDecoderStream(inputStream),
                 ImplementationFactory.getInstance().getKeyFingerprintCalculator());
 
         List<PGPSecretKeyRing> rings = new ArrayList<>();
-
+        int i = 0;
         Object next;
         do {
             next = objectFactory.nextObject();
@@ -190,7 +255,9 @@ public class KeyRingReader {
                     rings.add(iterator.next());
                 }
             }
-        } while (true);
+        } while (++i < maxIterations);
+
+        throw new IOException("Loop exceeded max iteration count.");
     }
 
     public static PGPKeyRingCollection readKeyRingCollection(@Nonnull InputStream inputStream, boolean isSilent)

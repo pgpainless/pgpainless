@@ -5,6 +5,7 @@
 package org.pgpainless.key.parsing;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import java.io.ByteArrayInputStream;
@@ -474,5 +475,89 @@ class KeyRingReaderTest {
         assertEquals(2, secretKeys.size());
         assertTrue(secretKeys.contains(alice.getSecretKey().getKeyID()));
         assertTrue(secretKeys.contains(bob.getSecretKey().getKeyID()));
+    }
+
+    @Test
+    public void testReadingSecretKeysExceedsIterationLimit()
+            throws PGPException, InvalidAlgorithmParameterException, NoSuchAlgorithmException, IOException {
+        PGPSecretKeyRing alice = PGPainless.generateKeyRing().modernKeyRing("alice@pgpainless.org", null);
+        MarkerPacket marker = TestUtils.getMarkerPacket();
+
+        ByteArrayOutputStream bytes = new ByteArrayOutputStream();
+        ArmoredOutputStream armor = ArmoredOutputStreamFactory.get(bytes);
+        BCPGOutputStream outputStream = new BCPGOutputStream(armor);
+
+        for (int i = 0; i < 600; i++) {
+            marker.encode(outputStream);
+        }
+        alice.encode(outputStream);
+
+        assertThrows(IOException.class, () ->
+                KeyRingReader.readSecretKeyRing(new ByteArrayInputStream(bytes.toByteArray()), 512));
+    }
+
+    @Test
+    public void testReadingSecretKeyCollectionExceedsIterationLimit()
+            throws PGPException, InvalidAlgorithmParameterException, NoSuchAlgorithmException, IOException {
+        PGPSecretKeyRing alice = PGPainless.generateKeyRing().modernKeyRing("alice@pgpainless.org", null);
+        PGPSecretKeyRing bob = PGPainless.generateKeyRing().modernKeyRing("bob@pgpainless.org", null);
+        MarkerPacket marker = TestUtils.getMarkerPacket();
+
+        ByteArrayOutputStream bytes = new ByteArrayOutputStream();
+        ArmoredOutputStream armor = ArmoredOutputStreamFactory.get(bytes);
+        BCPGOutputStream outputStream = new BCPGOutputStream(armor);
+
+        for (int i = 0; i < 600; i++) {
+            marker.encode(outputStream);
+        }
+        alice.encode(outputStream);
+        bob.encode(outputStream);
+
+        assertThrows(IOException.class, () ->
+                KeyRingReader.readSecretKeyRingCollection(new ByteArrayInputStream(bytes.toByteArray()), 512));
+    }
+
+
+    @Test
+    public void testReadingPublicKeysExceedsIterationLimit()
+            throws PGPException, InvalidAlgorithmParameterException, NoSuchAlgorithmException, IOException {
+        PGPSecretKeyRing secretKeys = PGPainless.generateKeyRing().modernKeyRing("alice@pgpainless.org", null);
+        PGPPublicKeyRing alice = PGPainless.extractCertificate(secretKeys);
+        MarkerPacket marker = TestUtils.getMarkerPacket();
+
+        ByteArrayOutputStream bytes = new ByteArrayOutputStream();
+        ArmoredOutputStream armor = ArmoredOutputStreamFactory.get(bytes);
+        BCPGOutputStream outputStream = new BCPGOutputStream(armor);
+
+        for (int i = 0; i < 600; i++) {
+            marker.encode(outputStream);
+        }
+        alice.encode(outputStream);
+
+        assertThrows(IOException.class, () ->
+                KeyRingReader.readPublicKeyRing(new ByteArrayInputStream(bytes.toByteArray()), 512));
+    }
+
+    @Test
+    public void testReadingPublicKeyCollectionExceedsIterationLimit()
+            throws PGPException, InvalidAlgorithmParameterException, NoSuchAlgorithmException, IOException {
+        PGPSecretKeyRing sec1 = PGPainless.generateKeyRing().modernKeyRing("alice@pgpainless.org", null);
+        PGPSecretKeyRing sec2 = PGPainless.generateKeyRing().modernKeyRing("bob@pgpainless.org", null);
+        PGPPublicKeyRing alice = PGPainless.extractCertificate(sec1);
+        PGPPublicKeyRing bob = PGPainless.extractCertificate(sec2);
+        MarkerPacket marker = TestUtils.getMarkerPacket();
+
+        ByteArrayOutputStream bytes = new ByteArrayOutputStream();
+        ArmoredOutputStream armor = ArmoredOutputStreamFactory.get(bytes);
+        BCPGOutputStream outputStream = new BCPGOutputStream(armor);
+
+        for (int i = 0; i < 600; i++) {
+            marker.encode(outputStream);
+        }
+        alice.encode(outputStream);
+        bob.encode(outputStream);
+
+        assertThrows(IOException.class, () ->
+                KeyRingReader.readPublicKeyRingCollection(new ByteArrayInputStream(bytes.toByteArray()), 512));
     }
 }
