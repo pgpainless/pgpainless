@@ -74,7 +74,8 @@ public final class DecryptionStreamFactory {
 
 
     private static final Logger LOGGER = LoggerFactory.getLogger(DecryptionStreamFactory.class);
-    private static final int MAX_RECURSION_DEPTH = 16;
+    // Maximum nesting depth of packets (e.g. compression, encryption...)
+    private static final int MAX_PACKET_NESTING_DEPTH = 16;
 
     private final ConsumerOptions options;
     private final OpenPgpMetadata.Builder resultBuilder = OpenPgpMetadata.getBuilder();
@@ -188,7 +189,7 @@ public final class DecryptionStreamFactory {
     }
 
     private InputStream processPGPPackets(@Nonnull PGPObjectFactory objectFactory, int depth) throws IOException, PGPException {
-        if (depth >= MAX_RECURSION_DEPTH) {
+        if (depth >= MAX_PACKET_NESTING_DEPTH) {
             throw new PGPException("Maximum recursion depth of packages exceeded.");
         }
         Object nextPgpObject;
