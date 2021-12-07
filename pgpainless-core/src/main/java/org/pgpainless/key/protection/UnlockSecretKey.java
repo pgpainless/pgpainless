@@ -9,6 +9,7 @@ import org.bouncycastle.openpgp.PGPException;
 import org.bouncycastle.openpgp.PGPPrivateKey;
 import org.bouncycastle.openpgp.PGPSecretKey;
 import org.bouncycastle.openpgp.operator.PBESecretKeyDecryptor;
+import org.pgpainless.exception.KeyIntegrityException;
 import org.pgpainless.exception.WrongPassphraseException;
 import org.pgpainless.key.info.KeyInfo;
 import org.pgpainless.util.Passphrase;
@@ -20,7 +21,7 @@ public final class UnlockSecretKey {
     }
 
     public static PGPPrivateKey unlockSecretKey(PGPSecretKey secretKey, SecretKeyRingProtector protector)
-            throws PGPException {
+            throws PGPException, KeyIntegrityException {
 
         PBESecretKeyDecryptor decryptor = null;
         if (KeyInfo.isEncrypted(secretKey)) {
@@ -53,7 +54,7 @@ public final class UnlockSecretKey {
     }
 
     public static PGPPrivateKey unlockSecretKey(PGPSecretKey secretKey, Passphrase passphrase)
-            throws PGPException {
+            throws PGPException, KeyIntegrityException {
         return unlockSecretKey(secretKey, SecretKeyRingProtector.unlockSingleKeyWith(passphrase, secretKey));
     }
 }
