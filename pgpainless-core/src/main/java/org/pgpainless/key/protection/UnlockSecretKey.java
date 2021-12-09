@@ -12,6 +12,7 @@ import org.bouncycastle.openpgp.operator.PBESecretKeyDecryptor;
 import org.pgpainless.exception.KeyIntegrityException;
 import org.pgpainless.exception.WrongPassphraseException;
 import org.pgpainless.key.info.KeyInfo;
+import org.pgpainless.key.util.PublicKeyParameterValidationUtil;
 import org.pgpainless.util.Passphrase;
 
 public final class UnlockSecretKey {
@@ -49,6 +50,8 @@ public final class UnlockSecretKey {
 
             throw new PGPException("Cannot decrypt secret key.");
         }
+
+        PublicKeyParameterValidationUtil.verifyPublicKeyParameterIntegrity(privateKey, secretKey.getPublicKey());
 
         return privateKey;
     }
