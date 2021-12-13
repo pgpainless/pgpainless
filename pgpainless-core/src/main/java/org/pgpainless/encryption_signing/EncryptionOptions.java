@@ -99,12 +99,12 @@ public class EncryptionOptions {
     }
 
     /**
-     * Add all key rings in the provided key ring collection as recipients.
+     * Add all key rings in the provided {@link Iterable} (e.g. {@link PGPPublicKeyRingCollection}) as recipients.
      *
      * @param keys keys
      * @return this
      */
-    public EncryptionOptions addRecipients(PGPPublicKeyRingCollection keys) {
+    public EncryptionOptions addRecipients(Iterable<PGPPublicKeyRing> keys) {
         for (PGPPublicKeyRing key : keys) {
             addRecipient(key);
         }
@@ -112,14 +112,14 @@ public class EncryptionOptions {
     }
 
     /**
-     * Add all key rings in the provided key ring collection as recipients.
+     * Add all key rings in the provided {@link Iterable} (e.g. {@link PGPPublicKeyRingCollection}) as recipients.
      * Per key ring, the selector is applied to select one or more encryption subkeys.
      *
      * @param keys keys
      * @param selector encryption key selector
      * @return this
      */
-    public EncryptionOptions addRecipients(@Nonnull PGPPublicKeyRingCollection keys, @Nonnull EncryptionKeySelector selector) {
+    public EncryptionOptions addRecipients(@Nonnull Iterable<PGPPublicKeyRing> keys, @Nonnull EncryptionKeySelector selector) {
         for (PGPPublicKeyRing key : keys) {
             addRecipient(key, selector);
         }
