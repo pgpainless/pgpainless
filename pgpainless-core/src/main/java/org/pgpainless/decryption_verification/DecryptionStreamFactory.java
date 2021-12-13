@@ -407,9 +407,9 @@ public final class DecryptionStreamFactory {
 
                 if (secretKey == null) {
                     LOGGER.debug("Key " + Long.toHexString(keyId) + " is not valid or not capable for decryption.");
+                } else {
+                    privateKey = tryPublicKeyDecryption(secretKeys, secretKey, publicKeyEncryptedData, postponedDueToMissingPassphrase, true);
                 }
-
-                privateKey = tryPublicKeyDecryption(secretKeys, secretKey, publicKeyEncryptedData, postponedDueToMissingPassphrase, true);
             }
             if (privateKey == null) {
                 continue;
