@@ -7,7 +7,9 @@ package org.pgpainless.key.protection;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertNull;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 
+import java.io.IOException;
 import java.security.InvalidAlgorithmParameterException;
 import java.security.NoSuchAlgorithmException;
 import java.util.Iterator;
@@ -22,6 +24,7 @@ import org.bouncycastle.openpgp.PGPSecretKeyRing;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.pgpainless.PGPainless;
+import org.pgpainless.key.TestKeys;
 import org.pgpainless.key.protection.passphrase_provider.SecretKeyPassphraseProvider;
 import org.pgpainless.util.Passphrase;
 
@@ -129,6 +132,32 @@ public class CachingSecretKeyRingProtectorTest {
             Passphrase passphrase = withCallback.getPassphraseFor(x);
             assertNotNull(passphrase);
             assertEquals(doubled, Long.valueOf(new String(passphrase.getChars())));
+        }
+    }
+
+    @Test
+    public void testAddPassphrase_collision() throws PGPException, IOException {
+        PGPSecretKeyRing secretKeys = TestKeys.getCryptieSecretKeyRing();
+        CachingSecretKeyRingProtector protector = new CachingSecretKeyRingProtector();
+        protector.addPassphrase(secretKeys, TestKeys.CRYPTIE_PASSPHRASE);
+
+        assertThrows(IllegalArgumentException.class, () ->
+                protector.addPassphrase(secretKeys.getPublicKey(), Passphrase.emptyPassphrase()));
+
+        assertThrows(IllegalArgumentException.class, () ->
+                protector.addPassphrase(secretKeys, Passphrase.fromPassword("anotherPass")));
+    }
+
+    @Test
+    public void testReplacePassphrase() throws PGPException, IOException {
+        PGPSecretKeyRing secretKeys = TestKeys.getCryptieSecretKeyRing();
+        CachingSecretKeyRingProtector protector = new CachingSecretKeyRingProtector();
+        protector.addPassphrase(secretKeys, Passphrase.fromPassword("wrong"));
+        // no throwing
+        protector.replacePassphrase(secretKeys, TestKeys.CRYPTIE_PASSPHRASE);
+
+        for (PGPSecretKey key : secretKeys) {
+            UnlockSecretKey.unlockSecretKey(key, protector);
         }
     }
 
