@@ -5,6 +5,27 @@ SPDX-License-Identifier: CC0-1.0
 
 # PGPainless Changelog
 
+## 1.0.0-rc7-SNAPSHOT
+- Make `Passphrase` comparison constant time
+- Bump Bouncycastle to 1.70
+  - Use new `PGPCanonicalizedDataGenerator` where applicable
+  - Implement decryption with user-provided session key
+  - Remove workaround for invalid signature processing
+- Remove Blowfish from default symmetric decryption/encryption policy
+- When adding/generating keys: Check compliance to `PublicKeyAlgorithmPolicy`
+- Fix `BaseSecretKeyRingProtector` misinterpreting empty passphrases
+- SOP: Fix NPE when attempting to sign with key with missing signing subkey
+- Describe Threat Model in [pgpainless-core/README.md]
+- Fix NPE when attempting to decrypt GNU_DUMMY_S2K key
+- Validate public key parameters when unlocking secret keys
+- Introduce iteration limits to prevent resource exhaustion when
+  - reading signatures
+  - reading keys
+- `CachingSecretKeyRingProtector`: Prevent accidental passphrase overriding via `addPassphrase()`
+- `EncryptionOptions`: replace method argument type `PGPPublicKeyRingCollection` with `Iterable<PGPPublicKeyRing>` to allow for `Collection<PGPPublicKeyRing>` as argument
+- `SigningOptions`: replace method argument type `PGPSecretKeyRingCollection` with `Iterable<PGPSecretKeyRing>` to allow for `Collection<PGPSecretKeyRing>` as argument
+- Prevent message decryption with non-encryption subkey
+
 ## 1.0.0-rc6
 - Restructure method arguments in `SecretKeyRingEditor`
 - Add explanations of revocation reasons to `RevocationAttributes`
