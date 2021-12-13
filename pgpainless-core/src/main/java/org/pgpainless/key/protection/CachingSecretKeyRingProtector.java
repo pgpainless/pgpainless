@@ -128,7 +128,7 @@ public class CachingSecretKeyRingProtector implements SecretKeyRingProtector, Se
         Iterator<PGPPublicKey> keys = keyRing.getPublicKeys();
         while (keys.hasNext()) {
             PGPPublicKey publicKey = keys.next();
-            addPassphrase(publicKey, passphrase);
+            replacePassphrase(publicKey.getKeyID(), passphrase);
         }
     }
 
