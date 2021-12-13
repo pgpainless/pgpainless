@@ -393,7 +393,22 @@ public final class DecryptionStreamFactory {
                     continue;
                 }
 
-                PGPSecretKey secretKey = secretKeys.getSecretKey(keyId);
+                // Make sure that the recipient key is encryption capable and non-expired
+                KeyRingInfo info = new KeyRingInfo(secretKeys);
+                List<PGPPublicKey> encryptionSubkeys = info.getEncryptionSubkeys(EncryptionPurpose.ANY);
+
+                PGPSecretKey secretKey = null;
+                for (PGPPublicKey pubkey : encryptionSubkeys) {
+                    if (pubkey.getKeyID() == keyId) {
+                        secretKey = secretKeys.getSecretKey(keyId);
+                        break;
+                    }
+                }
+
+                if (secretKey == null) {
+                    LOGGER.debug("Key " + Long.toHexString(keyId) + " is not valid or not capable for decryption.");
+                }
+
                 privateKey = tryPublicKeyDecryption(secretKeys, secretKey, publicKeyEncryptedData, postponedDueToMissingPassphrase, true);
             }
             if (privateKey == null) {
