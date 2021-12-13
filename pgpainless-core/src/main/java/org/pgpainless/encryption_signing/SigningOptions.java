@@ -17,7 +17,6 @@ import org.bouncycastle.openpgp.PGPPrivateKey;
 import org.bouncycastle.openpgp.PGPPublicKey;
 import org.bouncycastle.openpgp.PGPSecretKey;
 import org.bouncycastle.openpgp.PGPSecretKeyRing;
-import org.bouncycastle.openpgp.PGPSecretKeyRingCollection;
 import org.bouncycastle.openpgp.PGPSignatureGenerator;
 import org.bouncycastle.openpgp.operator.PGPContentSignerBuilder;
 import org.pgpainless.PGPainless;
@@ -108,7 +107,7 @@ public final class SigningOptions {
      * @throws PGPException if any of the keys cannot be unlocked or a signing method cannot be created
      */
     public SigningOptions addInlineSignatures(SecretKeyRingProtector secrectKeyDecryptor,
-                                              PGPSecretKeyRingCollection signingKeys,
+                                              Iterable<PGPSecretKeyRing> signingKeys,
                                               DocumentSignatureType signatureType)
             throws KeyValidationError, PGPException {
         for (PGPSecretKeyRing signingKey : signingKeys) {
@@ -213,7 +212,7 @@ public final class SigningOptions {
      * @throws PGPException if any of the keys cannot be validated or unlocked, or if any signing method cannot be created
      */
     public SigningOptions addDetachedSignatures(SecretKeyRingProtector secretKeyDecryptor,
-                                                PGPSecretKeyRingCollection signingKeys,
+                                                Iterable<PGPSecretKeyRing> signingKeys,
                                                 DocumentSignatureType signatureType)
             throws PGPException {
         for (PGPSecretKeyRing signingKey : signingKeys) {
