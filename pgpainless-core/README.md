@@ -43,3 +43,11 @@ It was decided that protection against brute force attacks on passwords used in 
 PGPainless cannot limit access to the ciphertext that is being brute forced, as that is provided by
 the application that uses PGPainless.
 Therefore, protection against brute force attacks must be employed by the application itself.
+
+#### (Public) Key Modification Attacks
+As a library, PGPainless cannot protect against swapped out public keys.
+It is therefore responsibility of the consumer to ensure that an attacker on the same system cannot tamper with stored keys.
+It is highly advised to store both secret and public keys in a secure key storage which protects against modifications.
+
+Furthermore, PGPainless cannot verify key authenticity, so it is up to the application that uses PGPainless to check,
+if a key really belongs to a certain user.
