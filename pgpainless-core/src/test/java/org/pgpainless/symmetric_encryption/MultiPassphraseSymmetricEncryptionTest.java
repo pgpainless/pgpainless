@@ -12,7 +12,7 @@ import java.nio.charset.StandardCharsets;
 import org.bouncycastle.openpgp.PGPException;
 import org.bouncycastle.util.io.Streams;
 import org.junit.jupiter.params.ParameterizedTest;
-import org.junit.jupiter.params.provider.MethodSource;
+import org.junit.jupiter.params.provider.ArgumentsSource;
 import org.pgpainless.PGPainless;
 import org.pgpainless.decryption_verification.ConsumerOptions;
 import org.pgpainless.decryption_verification.DecryptionStream;
@@ -21,11 +21,12 @@ import org.pgpainless.encryption_signing.EncryptionStream;
 import org.pgpainless.encryption_signing.ProducerOptions;
 import org.pgpainless.implementation.ImplementationFactory;
 import org.pgpainless.util.Passphrase;
+import org.pgpainless.util.TestImplementationFactoryProvider;
 
 public class MultiPassphraseSymmetricEncryptionTest {
 
     @ParameterizedTest
-    @MethodSource("org.pgpainless.util.TestImplementationFactoryProvider#provideImplementationFactories")
+    @ArgumentsSource(TestImplementationFactoryProvider.class)
     public void encryptDecryptWithMultiplePassphrases(ImplementationFactory implementationFactory) throws IOException, PGPException {
         ImplementationFactory.setFactoryImplementation(implementationFactory);
         String message = "Here we test if during decryption of a message that was encrypted with two passphrases, " +

@@ -20,14 +20,15 @@ import org.bouncycastle.openpgp.PGPLiteralDataGenerator;
 import org.bouncycastle.openpgp.PGPObjectFactory;
 import org.bouncycastle.util.io.Streams;
 import org.junit.jupiter.params.ParameterizedTest;
-import org.junit.jupiter.params.provider.MethodSource;
+import org.junit.jupiter.params.provider.ArgumentsSource;
 import org.pgpainless.implementation.ImplementationFactory;
 import org.pgpainless.util.PGPUtilWrapper;
+import org.pgpainless.util.TestImplementationFactoryProvider;
 
 public class PGPUtilWrapperTest {
 
     @ParameterizedTest
-    @MethodSource("org.pgpainless.util.TestImplementationFactoryProvider#provideImplementationFactories")
+    @ArgumentsSource(TestImplementationFactoryProvider.class)
     public void testGetDecoderStream(ImplementationFactory implementationFactory) throws IOException {
         ImplementationFactory.setFactoryImplementation(implementationFactory);
 

@@ -17,17 +17,18 @@ import org.bouncycastle.openpgp.PGPPublicKey;
 import org.bouncycastle.openpgp.PGPSecretKeyRing;
 import org.bouncycastle.util.io.Streams;
 import org.junit.jupiter.params.ParameterizedTest;
-import org.junit.jupiter.params.provider.MethodSource;
+import org.junit.jupiter.params.provider.ArgumentsSource;
 import org.pgpainless.PGPainless;
 import org.pgpainless.algorithm.EncryptionPurpose;
 import org.pgpainless.implementation.ImplementationFactory;
 import org.pgpainless.key.SubkeyIdentifier;
 import org.pgpainless.key.info.KeyRingInfo;
+import org.pgpainless.util.TestImplementationFactoryProvider;
 
 public class DecryptHiddenRecipientMessage {
 
     @ParameterizedTest
-    @MethodSource("org.pgpainless.util.TestImplementationFactoryProvider#provideImplementationFactories")
+    @ArgumentsSource(TestImplementationFactoryProvider.class)
     public void testDecryptionWithWildcardRecipient(ImplementationFactory implementationFactory) throws IOException, PGPException {
         ImplementationFactory.setFactoryImplementation(implementationFactory);
         String secretKeyAscii = "-----BEGIN PGP PRIVATE KEY BLOCK-----\n" +

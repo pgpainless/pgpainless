@@ -18,7 +18,7 @@ import org.bouncycastle.openpgp.PGPPublicKeyRing;
 import org.bouncycastle.openpgp.PGPSecretKeyRingCollection;
 import org.bouncycastle.util.io.Streams;
 import org.junit.jupiter.params.ParameterizedTest;
-import org.junit.jupiter.params.provider.MethodSource;
+import org.junit.jupiter.params.provider.ArgumentsSource;
 import org.pgpainless.PGPainless;
 import org.pgpainless.decryption_verification.ConsumerOptions;
 import org.pgpainless.decryption_verification.DecryptionStream;
@@ -34,6 +34,7 @@ import org.pgpainless.key.protection.PasswordBasedSecretKeyRingProtector;
 import org.pgpainless.key.protection.SecretKeyRingProtector;
 import org.pgpainless.key.protection.passphrase_provider.SolitaryPassphraseProvider;
 import org.pgpainless.util.Passphrase;
+import org.pgpainless.util.TestImplementationFactoryProvider;
 
 /**
  * Test parallel symmetric and public key encryption/decryption.
@@ -41,7 +42,7 @@ import org.pgpainless.util.Passphrase;
 public class SymmetricEncryptionTest {
 
     @ParameterizedTest
-    @MethodSource("org.pgpainless.util.TestImplementationFactoryProvider#provideImplementationFactories")
+    @ArgumentsSource(TestImplementationFactoryProvider.class)
     public void encryptWithKeyAndPassphrase_DecryptWithKey(ImplementationFactory implementationFactory) throws IOException, PGPException {
         ImplementationFactory.setFactoryImplementation(implementationFactory);
         byte[] plaintext = "This is a secret message".getBytes(StandardCharsets.UTF_8);
@@ -95,7 +96,7 @@ public class SymmetricEncryptionTest {
     }
 
     @ParameterizedTest
-    @MethodSource("org.pgpainless.util.TestImplementationFactoryProvider#provideImplementationFactories")
+    @ArgumentsSource(TestImplementationFactoryProvider.class)
     public void testMismatchPassphraseFails(ImplementationFactory implementationFactory) throws IOException, PGPException {
         ImplementationFactory.setFactoryImplementation(implementationFactory);
 

@@ -12,15 +12,16 @@ import java.io.OutputStream;
 
 import org.bouncycastle.openpgp.PGPException;
 import org.junit.jupiter.params.ParameterizedTest;
-import org.junit.jupiter.params.provider.MethodSource;
+import org.junit.jupiter.params.provider.ArgumentsSource;
 import org.pgpainless.PGPainless;
 import org.pgpainless.implementation.ImplementationFactory;
 import org.pgpainless.util.Passphrase;
+import org.pgpainless.util.TestImplementationFactoryProvider;
 
 public class EncryptionStreamClosedTest {
 
     @ParameterizedTest
-    @MethodSource("org.pgpainless.util.TestImplementationFactoryProvider#provideImplementationFactories")
+    @ArgumentsSource(TestImplementationFactoryProvider.class)
     public void testStreamHasToBeClosedBeforeGetResultCanBeCalled(ImplementationFactory implementationFactory) throws IOException, PGPException {
         ImplementationFactory.setFactoryImplementation(implementationFactory);
         OutputStream out = new ByteArrayOutputStream();

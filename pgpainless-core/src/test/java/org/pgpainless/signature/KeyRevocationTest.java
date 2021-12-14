@@ -15,18 +15,19 @@ import org.bouncycastle.openpgp.PGPException;
 import org.bouncycastle.openpgp.PGPPublicKeyRing;
 import org.bouncycastle.openpgp.PGPSignature;
 import org.junit.jupiter.params.ParameterizedTest;
-import org.junit.jupiter.params.provider.MethodSource;
+import org.junit.jupiter.params.provider.ArgumentsSource;
 import org.pgpainless.PGPainless;
 import org.pgpainless.exception.SignatureValidationException;
 import org.pgpainless.implementation.ImplementationFactory;
 import org.pgpainless.signature.consumer.CertificateValidator;
+import org.pgpainless.util.TestImplementationFactoryProvider;
 
 public class KeyRevocationTest {
 
     private static final String data = "Hello, World";
 
     @ParameterizedTest
-    @MethodSource("org.pgpainless.util.TestImplementationFactoryProvider#provideImplementationFactories")
+    @ArgumentsSource(TestImplementationFactoryProvider.class)
     public void subkeySignsPrimaryKeyRevokedNoReason(ImplementationFactory implementationFactory) throws IOException, PGPException {
         ImplementationFactory.setFactoryImplementation(implementationFactory);
 
@@ -174,7 +175,7 @@ public class KeyRevocationTest {
      * @see <a href="https://tests.sequoia-pgp.org/#Key_revocation_test__subkey_signs__primary_key_is_not_revoked__base_case_">Sequoia Test-Suite</a>
      */
     @ParameterizedTest
-    @MethodSource("org.pgpainless.util.TestImplementationFactoryProvider#provideImplementationFactories")
+    @ArgumentsSource(TestImplementationFactoryProvider.class)
     public void subkeySignsPrimaryKeyNotRevoked(ImplementationFactory implementationFactory) throws IOException, PGPException {
         ImplementationFactory.setFactoryImplementation(implementationFactory);
 

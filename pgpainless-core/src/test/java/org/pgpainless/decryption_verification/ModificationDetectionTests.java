@@ -18,15 +18,15 @@ import org.bouncycastle.openpgp.PGPException;
 import org.bouncycastle.openpgp.PGPSecretKeyRing;
 import org.bouncycastle.openpgp.PGPSecretKeyRingCollection;
 import org.bouncycastle.util.io.Streams;
-import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
-import org.junit.jupiter.params.provider.MethodSource;
+import org.junit.jupiter.params.provider.ArgumentsSource;
 import org.pgpainless.PGPainless;
 import org.pgpainless.exception.MessageNotIntegrityProtectedException;
 import org.pgpainless.exception.ModificationDetectionException;
 import org.pgpainless.implementation.ImplementationFactory;
 import org.pgpainless.key.protection.SecretKeyRingProtector;
 import org.pgpainless.util.Passphrase;
+import org.pgpainless.util.TestImplementationFactoryProvider;
 
 public class ModificationDetectionTests {
 
@@ -210,7 +210,7 @@ public class ModificationDetectionTests {
      * @throws PGPException in case of a pgp error
      */
     @ParameterizedTest
-    @MethodSource("org.pgpainless.util.TestImplementationFactoryProvider#provideImplementationFactories")
+    @ArgumentsSource(TestImplementationFactoryProvider.class)
     public void testMissingMDCThrowsByDefault(ImplementationFactory implementationFactory) throws IOException, PGPException {
         ImplementationFactory.setFactoryImplementation(implementationFactory);
 
@@ -231,7 +231,7 @@ public class ModificationDetectionTests {
     }
 
     @ParameterizedTest
-    @MethodSource("org.pgpainless.util.TestImplementationFactoryProvider#provideImplementationFactories")
+    @ArgumentsSource(TestImplementationFactoryProvider.class)
     public void testTamperedCiphertextThrows(ImplementationFactory implementationFactory) throws IOException, PGPException {
         ImplementationFactory.setFactoryImplementation(implementationFactory);
         ByteArrayInputStream in = new ByteArrayInputStream(MESSAGE_TAMPERED_CIPHERTEXT.getBytes(StandardCharsets.UTF_8));
@@ -247,7 +247,7 @@ public class ModificationDetectionTests {
     }
 
     @ParameterizedTest
-    @MethodSource("org.pgpainless.util.TestImplementationFactoryProvider#provideImplementationFactories")
+    @ArgumentsSource(TestImplementationFactoryProvider.class)
     public void testIgnoreTamperedCiphertext(ImplementationFactory implementationFactory) throws IOException, PGPException {
         ImplementationFactory.setFactoryImplementation(implementationFactory);
         ByteArrayInputStream in = new ByteArrayInputStream(MESSAGE_TAMPERED_CIPHERTEXT.getBytes(StandardCharsets.UTF_8));
@@ -264,7 +264,7 @@ public class ModificationDetectionTests {
     }
 
     @ParameterizedTest
-    @MethodSource("org.pgpainless.util.TestImplementationFactoryProvider#provideImplementationFactories")
+    @ArgumentsSource(TestImplementationFactoryProvider.class)
     public void testTamperedMDCThrowsByDefault(ImplementationFactory implementationFactory) throws IOException, PGPException {
         ImplementationFactory.setFactoryImplementation(implementationFactory);
         ByteArrayInputStream in = new ByteArrayInputStream(MESSAGE_TAMPERED_MDC.getBytes(StandardCharsets.UTF_8));
@@ -280,7 +280,7 @@ public class ModificationDetectionTests {
     }
 
     @ParameterizedTest
-    @MethodSource("org.pgpainless.util.TestImplementationFactoryProvider#provideImplementationFactories")
+    @ArgumentsSource(TestImplementationFactoryProvider.class)
     public void testIgnoreTamperedMDC(ImplementationFactory implementationFactory) throws IOException, PGPException {
         ImplementationFactory.setFactoryImplementation(implementationFactory);
         ByteArrayInputStream in = new ByteArrayInputStream(MESSAGE_TAMPERED_MDC.getBytes(StandardCharsets.UTF_8));
@@ -296,7 +296,7 @@ public class ModificationDetectionTests {
     }
 
     @ParameterizedTest
-    @MethodSource("org.pgpainless.util.TestImplementationFactoryProvider#provideImplementationFactories")
+    @ArgumentsSource(TestImplementationFactoryProvider.class)
     public void testTruncatedMDCThrows(ImplementationFactory implementationFactory) throws IOException, PGPException {
         ImplementationFactory.setFactoryImplementation(implementationFactory);
         ByteArrayInputStream in = new ByteArrayInputStream(MESSAGE_TRUNCATED_MDC.getBytes(StandardCharsets.UTF_8));
@@ -311,7 +311,7 @@ public class ModificationDetectionTests {
     }
 
     @ParameterizedTest
-    @MethodSource("org.pgpainless.util.TestImplementationFactoryProvider#provideImplementationFactories")
+    @ArgumentsSource(TestImplementationFactoryProvider.class)
     public void testMDCWithBadCTBThrows(ImplementationFactory implementationFactory) throws IOException, PGPException {
         ImplementationFactory.setFactoryImplementation(implementationFactory);
         ByteArrayInputStream in = new ByteArrayInputStream(MESSAGE_MDC_WITH_BAD_CTB.getBytes(StandardCharsets.UTF_8));
@@ -327,7 +327,7 @@ public class ModificationDetectionTests {
     }
 
     @ParameterizedTest
-    @MethodSource("org.pgpainless.util.TestImplementationFactoryProvider#provideImplementationFactories")
+    @ArgumentsSource(TestImplementationFactoryProvider.class)
     public void testIgnoreMDCWithBadCTB(ImplementationFactory implementationFactory) throws IOException, PGPException {
         ImplementationFactory.setFactoryImplementation(implementationFactory);
         ByteArrayInputStream in = new ByteArrayInputStream(MESSAGE_MDC_WITH_BAD_CTB.getBytes(StandardCharsets.UTF_8));
@@ -344,7 +344,7 @@ public class ModificationDetectionTests {
     }
 
     @ParameterizedTest
-    @MethodSource("org.pgpainless.util.TestImplementationFactoryProvider#provideImplementationFactories")
+    @ArgumentsSource(TestImplementationFactoryProvider.class)
     public void testMDCWithBadLengthThrows(ImplementationFactory implementationFactory) throws IOException, PGPException {
         ImplementationFactory.setFactoryImplementation(implementationFactory);
         ByteArrayInputStream in = new ByteArrayInputStream(MESSAGE_MDC_WITH_BAD_LENGTH.getBytes(StandardCharsets.UTF_8));
@@ -360,7 +360,7 @@ public class ModificationDetectionTests {
     }
 
     @ParameterizedTest
-    @MethodSource("org.pgpainless.util.TestImplementationFactoryProvider#provideImplementationFactories")
+    @ArgumentsSource(TestImplementationFactoryProvider.class)
     public void testIgnoreMDCWithBadLength(ImplementationFactory implementationFactory) throws IOException, PGPException {
         ImplementationFactory.setFactoryImplementation(implementationFactory);
         ByteArrayInputStream in = new ByteArrayInputStream(MESSAGE_MDC_WITH_BAD_LENGTH.getBytes(StandardCharsets.UTF_8));
@@ -376,8 +376,10 @@ public class ModificationDetectionTests {
         decryptionStream.close();
     }
 
-    @Test
-    public void decryptMessageWithSEDPacket() throws IOException, PGPException {
+    @ParameterizedTest
+    @ArgumentsSource(TestImplementationFactoryProvider.class)
+    public void decryptMessageWithSEDPacket(ImplementationFactory implementationFactory) throws IOException {
+        ImplementationFactory.setFactoryImplementation(implementationFactory);
         Passphrase passphrase = Passphrase.fromPassword("flowcrypt compatibility tests");
         String key = "-----BEGIN PGP PRIVATE KEY BLOCK-----\r\n" +
                 "Version: FlowCrypt 6.9.1 Gmail Encryption\r\n" +

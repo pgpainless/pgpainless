@@ -25,9 +25,8 @@ import org.bouncycastle.openpgp.PGPSecretKeyRing;
 import org.bouncycastle.openpgp.PGPSignature;
 import org.bouncycastle.util.io.Streams;
 import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
-import org.junit.jupiter.params.provider.MethodSource;
+import org.junit.jupiter.params.provider.ArgumentsSource;
 import org.pgpainless.PGPainless;
 import org.pgpainless.algorithm.DocumentSignatureType;
 import org.pgpainless.algorithm.KeyFlag;
@@ -48,6 +47,7 @@ import org.pgpainless.key.protection.UnprotectedKeysProtector;
 import org.pgpainless.key.util.KeyRingUtils;
 import org.pgpainless.policy.Policy;
 import org.pgpainless.util.ArmoredOutputStreamFactory;
+import org.pgpainless.util.TestImplementationFactoryProvider;
 
 public class EncryptDecryptTest {
 
@@ -71,7 +71,7 @@ public class EncryptDecryptTest {
     }
 
     @ParameterizedTest
-    @MethodSource("org.pgpainless.util.TestImplementationFactoryProvider#provideImplementationFactories")
+    @ArgumentsSource(TestImplementationFactoryProvider.class)
     public void freshKeysRsaToElGamalTest(ImplementationFactory implementationFactory)
             throws PGPException, NoSuchAlgorithmException, InvalidAlgorithmParameterException, IOException {
         ImplementationFactory.setFactoryImplementation(implementationFactory);
@@ -89,7 +89,7 @@ public class EncryptDecryptTest {
     }
 
     @ParameterizedTest
-    @MethodSource("org.pgpainless.util.TestImplementationFactoryProvider#provideImplementationFactories")
+    @ArgumentsSource(TestImplementationFactoryProvider.class)
     public void freshKeysRsaToRsaTest(ImplementationFactory implementationFactory)
             throws PGPException, NoSuchAlgorithmException, InvalidAlgorithmParameterException, IOException {
         ImplementationFactory.setFactoryImplementation(implementationFactory);
@@ -100,7 +100,7 @@ public class EncryptDecryptTest {
     }
 
     @ParameterizedTest
-    @MethodSource("org.pgpainless.util.TestImplementationFactoryProvider#provideImplementationFactories")
+    @ArgumentsSource(TestImplementationFactoryProvider.class)
     public void freshKeysEcToEcTest(ImplementationFactory implementationFactory)
             throws IOException, PGPException, NoSuchAlgorithmException, InvalidAlgorithmParameterException {
         ImplementationFactory.setFactoryImplementation(implementationFactory);
@@ -111,7 +111,7 @@ public class EncryptDecryptTest {
     }
 
     @ParameterizedTest
-    @MethodSource("org.pgpainless.util.TestImplementationFactoryProvider#provideImplementationFactories")
+    @ArgumentsSource(TestImplementationFactoryProvider.class)
     public void freshKeysEcToRsaTest(ImplementationFactory implementationFactory)
             throws PGPException, NoSuchAlgorithmException, InvalidAlgorithmParameterException, IOException {
         ImplementationFactory.setFactoryImplementation(implementationFactory);
@@ -122,7 +122,7 @@ public class EncryptDecryptTest {
     }
 
     @ParameterizedTest
-    @MethodSource("org.pgpainless.util.TestImplementationFactoryProvider#provideImplementationFactories")
+    @ArgumentsSource(TestImplementationFactoryProvider.class)
     public void freshKeysRsaToEcTest(ImplementationFactory implementationFactory)
             throws PGPException, NoSuchAlgorithmException, InvalidAlgorithmParameterException, IOException {
         ImplementationFactory.setFactoryImplementation(implementationFactory);
@@ -133,7 +133,7 @@ public class EncryptDecryptTest {
     }
 
     @ParameterizedTest
-    @MethodSource("org.pgpainless.util.TestImplementationFactoryProvider#provideImplementationFactories")
+    @ArgumentsSource(TestImplementationFactoryProvider.class)
     public void existingRsaKeysTest(ImplementationFactory implementationFactory) throws IOException, PGPException {
         ImplementationFactory.setFactoryImplementation(implementationFactory);
         PGPSecretKeyRing sender = TestKeys.getJulietSecretKeyRing();
@@ -198,7 +198,7 @@ public class EncryptDecryptTest {
     }
 
     @ParameterizedTest
-    @MethodSource("org.pgpainless.util.TestImplementationFactoryProvider#provideImplementationFactories")
+    @ArgumentsSource(TestImplementationFactoryProvider.class)
     public void testDetachedSignatureCreationAndVerification(ImplementationFactory implementationFactory) throws IOException, PGPException {
         ImplementationFactory.setFactoryImplementation(implementationFactory);
 
@@ -244,7 +244,7 @@ public class EncryptDecryptTest {
     }
 
     @ParameterizedTest
-    @MethodSource("org.pgpainless.util.TestImplementationFactoryProvider#provideImplementationFactories")
+    @ArgumentsSource(TestImplementationFactoryProvider.class)
     public void testOnePassSignatureCreationAndVerification(ImplementationFactory implementationFactory) throws IOException, PGPException {
         ImplementationFactory.setFactoryImplementation(implementationFactory);
         PGPSecretKeyRing signingKeys = TestKeys.getJulietSecretKeyRing();
@@ -274,8 +274,10 @@ public class EncryptDecryptTest {
         assertFalse(metadata.getVerifiedSignatures().isEmpty());
     }
 
-    @Test
-    public void expiredSubkeyBacksigTest() throws IOException {
+    @ParameterizedTest
+    @ArgumentsSource(TestImplementationFactoryProvider.class)
+    public void expiredSubkeyBacksigTest(ImplementationFactory implementationFactory) throws IOException {
+        ImplementationFactory.setFactoryImplementation(implementationFactory);
         String key = "-----BEGIN PGP PUBLIC KEY BLOCK-----\n" +
                 "\n" +
                 "xsDNBF2lnPIBDAC5cL9PQoQLTMuhjbYvb4Ncuuo0bfmgPRFywX53jPhoFf4Zg6mv\n" +

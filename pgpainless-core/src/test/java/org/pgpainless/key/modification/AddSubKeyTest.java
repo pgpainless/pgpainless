@@ -21,7 +21,7 @@ import org.bouncycastle.openpgp.PGPPublicKey;
 import org.bouncycastle.openpgp.PGPSecretKey;
 import org.bouncycastle.openpgp.PGPSecretKeyRing;
 import org.junit.jupiter.params.ParameterizedTest;
-import org.junit.jupiter.params.provider.MethodSource;
+import org.junit.jupiter.params.provider.ArgumentsSource;
 import org.pgpainless.PGPainless;
 import org.pgpainless.algorithm.KeyFlag;
 import org.pgpainless.implementation.ImplementationFactory;
@@ -34,11 +34,12 @@ import org.pgpainless.key.protection.PasswordBasedSecretKeyRingProtector;
 import org.pgpainless.key.protection.SecretKeyRingProtector;
 import org.pgpainless.key.protection.UnlockSecretKey;
 import org.pgpainless.util.Passphrase;
+import org.pgpainless.util.TestImplementationFactoryProvider;
 
 public class AddSubKeyTest {
 
     @ParameterizedTest
-    @MethodSource("org.pgpainless.util.TestImplementationFactoryProvider#provideImplementationFactories")
+    @ArgumentsSource(TestImplementationFactoryProvider.class)
     public void testAddSubKey(ImplementationFactory implementationFactory) throws IOException, PGPException, InvalidAlgorithmParameterException, NoSuchAlgorithmException {
         ImplementationFactory.setFactoryImplementation(implementationFactory);
         PGPSecretKeyRing secretKeys = TestKeys.getCryptieSecretKeyRing();

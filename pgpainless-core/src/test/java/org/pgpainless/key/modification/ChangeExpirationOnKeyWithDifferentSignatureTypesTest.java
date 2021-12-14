@@ -11,11 +11,12 @@ import org.bouncycastle.openpgp.PGPException;
 import org.bouncycastle.openpgp.PGPSecretKeyRing;
 import org.junit.JUtils;
 import org.junit.jupiter.params.ParameterizedTest;
-import org.junit.jupiter.params.provider.MethodSource;
+import org.junit.jupiter.params.provider.ArgumentsSource;
 import org.pgpainless.PGPainless;
 import org.pgpainless.implementation.ImplementationFactory;
 import org.pgpainless.key.protection.SecretKeyRingProtector;
 import org.pgpainless.util.DateUtil;
+import org.pgpainless.util.TestImplementationFactoryProvider;
 
 public class ChangeExpirationOnKeyWithDifferentSignatureTypesTest {
 
@@ -136,7 +137,7 @@ public class ChangeExpirationOnKeyWithDifferentSignatureTypesTest {
             "-----END PGP PRIVATE KEY BLOCK-----";
 
     @ParameterizedTest
-    @MethodSource("org.pgpainless.util.TestImplementationFactoryProvider#provideImplementationFactories")
+    @ArgumentsSource(TestImplementationFactoryProvider.class)
     public void setExpirationDate_keyHasSigClass10(ImplementationFactory implementationFactory)
             throws PGPException, IOException {
         ImplementationFactory.setFactoryImplementation(implementationFactory);
@@ -146,7 +147,7 @@ public class ChangeExpirationOnKeyWithDifferentSignatureTypesTest {
     }
 
     @ParameterizedTest
-    @MethodSource("org.pgpainless.util.TestImplementationFactoryProvider#provideImplementationFactories")
+    @ArgumentsSource(TestImplementationFactoryProvider.class)
     public void setExpirationDate_keyHasSigClass12(ImplementationFactory implementationFactory)
             throws PGPException, IOException {
         ImplementationFactory.setFactoryImplementation(implementationFactory);

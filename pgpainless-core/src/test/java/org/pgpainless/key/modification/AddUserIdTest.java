@@ -19,7 +19,7 @@ import org.bouncycastle.openpgp.PGPException;
 import org.bouncycastle.openpgp.PGPSecretKeyRing;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
-import org.junit.jupiter.params.provider.MethodSource;
+import org.junit.jupiter.params.provider.ArgumentsSource;
 import org.pgpainless.PGPainless;
 import org.pgpainless.implementation.ImplementationFactory;
 import org.pgpainless.key.TestKeys;
@@ -29,12 +29,14 @@ import org.pgpainless.key.protection.SecretKeyRingProtector;
 import org.pgpainless.key.protection.UnprotectedKeysProtector;
 import org.pgpainless.key.util.UserId;
 import org.pgpainless.util.Passphrase;
+import org.pgpainless.util.TestImplementationFactoryProvider;
 
 public class AddUserIdTest {
 
     @ParameterizedTest
-    @MethodSource("org.pgpainless.util.TestImplementationFactoryProvider#provideImplementationFactories")
-    public void addUserIdToExistingKeyRing(ImplementationFactory implementationFactory) throws InvalidAlgorithmParameterException, NoSuchAlgorithmException, PGPException, InterruptedException {
+    @ArgumentsSource(TestImplementationFactoryProvider.class)
+    public void addUserIdToExistingKeyRing(ImplementationFactory implementationFactory)
+            throws InvalidAlgorithmParameterException, NoSuchAlgorithmException, PGPException {
         ImplementationFactory.setFactoryImplementation(implementationFactory);
         PGPSecretKeyRing secretKeys = PGPainless.generateKeyRing().simpleEcKeyRing("alice@wonderland.lit", "rabb1th0le");
 
@@ -65,7 +67,7 @@ public class AddUserIdTest {
     }
 
     @ParameterizedTest
-    @MethodSource("org.pgpainless.util.TestImplementationFactoryProvider#provideImplementationFactories")
+    @ArgumentsSource(TestImplementationFactoryProvider.class)
     public void deleteUserId_noSuchElementExceptionForMissingUserId(ImplementationFactory implementationFactory) throws IOException, PGPException {
         ImplementationFactory.setFactoryImplementation(implementationFactory);
 
@@ -75,7 +77,7 @@ public class AddUserIdTest {
     }
 
     @ParameterizedTest
-    @MethodSource("org.pgpainless.util.TestImplementationFactoryProvider#provideImplementationFactories")
+    @ArgumentsSource(TestImplementationFactoryProvider.class)
     public void deleteExistingAndAddNewUserIdToExistingKeyRing(ImplementationFactory implementationFactory) throws PGPException, IOException {
         ImplementationFactory.setFactoryImplementation(implementationFactory);
 

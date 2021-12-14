@@ -18,7 +18,7 @@ import org.bouncycastle.openpgp.PGPPublicKey;
 import org.bouncycastle.openpgp.PGPSecretKey;
 import org.bouncycastle.openpgp.PGPSecretKeyRing;
 import org.junit.jupiter.params.ParameterizedTest;
-import org.junit.jupiter.params.provider.MethodSource;
+import org.junit.jupiter.params.provider.ArgumentsSource;
 import org.pgpainless.PGPainless;
 import org.pgpainless.algorithm.KeyFlag;
 import org.pgpainless.algorithm.PublicKeyAlgorithm;
@@ -32,11 +32,12 @@ import org.pgpainless.key.info.KeyInfo;
 import org.pgpainless.key.util.UserId;
 import org.pgpainless.util.BCUtil;
 import org.pgpainless.util.Passphrase;
+import org.pgpainless.util.TestImplementationFactoryProvider;
 
 public class BrainpoolKeyGenerationTest {
 
     @ParameterizedTest
-    @MethodSource("org.pgpainless.util.TestImplementationFactoryProvider#provideImplementationFactories")
+    @ArgumentsSource(TestImplementationFactoryProvider.class)
     public void generateEcKeysTest(ImplementationFactory implementationFactory)
             throws InvalidAlgorithmParameterException, NoSuchAlgorithmException, PGPException {
         ImplementationFactory.setFactoryImplementation(implementationFactory);
@@ -66,7 +67,7 @@ public class BrainpoolKeyGenerationTest {
     }
 
     @ParameterizedTest
-    @MethodSource("org.pgpainless.util.TestImplementationFactoryProvider#provideImplementationFactories")
+    @ArgumentsSource(TestImplementationFactoryProvider.class)
     public void generateEdDSAKeyTest(ImplementationFactory implementationFactory)
             throws PGPException, InvalidAlgorithmParameterException, NoSuchAlgorithmException {
         ImplementationFactory.setFactoryImplementation(implementationFactory);

@@ -26,9 +26,8 @@ import org.bouncycastle.openpgp.PGPSecretKeyRing;
 import org.bouncycastle.openpgp.PGPSecretKeyRingCollection;
 import org.bouncycastle.openpgp.PGPSignature;
 import org.bouncycastle.util.io.Streams;
-import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
-import org.junit.jupiter.params.provider.MethodSource;
+import org.junit.jupiter.params.provider.ArgumentsSource;
 import org.pgpainless.PGPainless;
 import org.pgpainless.algorithm.DocumentSignatureType;
 import org.pgpainless.algorithm.HashAlgorithm;
@@ -49,11 +48,12 @@ import org.pgpainless.key.protection.SecretKeyRingProtector;
 import org.pgpainless.key.util.KeyRingUtils;
 import org.pgpainless.util.MultiMap;
 import org.pgpainless.util.Passphrase;
+import org.pgpainless.util.TestImplementationFactoryProvider;
 
 public class SigningTest {
 
     @ParameterizedTest
-    @MethodSource("org.pgpainless.util.TestImplementationFactoryProvider#provideImplementationFactories")
+    @ArgumentsSource(TestImplementationFactoryProvider.class)
     public void testEncryptionAndSignatureVerification(ImplementationFactory implementationFactory)
             throws IOException, PGPException {
         ImplementationFactory.setFactoryImplementation(implementationFactory);
@@ -117,9 +117,11 @@ public class SigningTest {
         assertFalse(metadata.containsVerifiedSignatureFrom(julietKeys));
     }
 
-    @Test
-    public void testSignWithInvalidUserIdFails()
+    @ParameterizedTest
+    @ArgumentsSource(TestImplementationFactoryProvider.class)
+    public void testSignWithInvalidUserIdFails(ImplementationFactory implementationFactory)
             throws PGPException, InvalidAlgorithmParameterException, NoSuchAlgorithmException {
+        ImplementationFactory.setFactoryImplementation(implementationFactory);
         PGPSecretKeyRing secretKeys = PGPainless.generateKeyRing()
                 .modernKeyRing("alice", "password123");
         SecretKeyRingProtector protector = SecretKeyRingProtector.unlockAnyKeyWith(Passphrase.fromPassword("password123"));
@@ -131,9 +133,11 @@ public class SigningTest {
                         DocumentSignatureType.CANONICAL_TEXT_DOCUMENT));
     }
 
-    @Test
-    public void testSignWithRevokedUserIdFails()
+    @ParameterizedTest
+    @ArgumentsSource(TestImplementationFactoryProvider.class)
+    public void testSignWithRevokedUserIdFails(ImplementationFactory implementationFactory)
             throws PGPException, InvalidAlgorithmParameterException, NoSuchAlgorithmException {
+        ImplementationFactory.setFactoryImplementation(implementationFactory);
         PGPSecretKeyRing secretKeys = PGPainless.generateKeyRing()
                 .modernKeyRing("alice", "password123");
         SecretKeyRingProtector protector = SecretKeyRingProtector.unlockAnyKeyWith(
@@ -151,8 +155,10 @@ public class SigningTest {
                         DocumentSignatureType.CANONICAL_TEXT_DOCUMENT));
     }
 
-    @Test
-    public void signWithHashAlgorithmOverride() throws PGPException, IOException {
+    @ParameterizedTest
+    @ArgumentsSource(TestImplementationFactoryProvider.class)
+    public void signWithHashAlgorithmOverride(ImplementationFactory implementationFactory) throws PGPException, IOException {
+        ImplementationFactory.setFactoryImplementation(implementationFactory);
         PGPSecretKeyRing secretKeys = TestKeys.getEmilSecretKeyRing();
         SecretKeyRingProtector protector = SecretKeyRingProtector.unprotectedKeys();
 
@@ -182,9 +188,11 @@ public class SigningTest {
         assertEquals(HashAlgorithm.SHA224.getAlgorithmId(), signature.getHashAlgorithm());
     }
 
-    @Test
-    public void negotiateHashAlgorithmChoseFallbackIfEmptyPreferences()
+    @ParameterizedTest
+    @ArgumentsSource(TestImplementationFactoryProvider.class)
+    public void negotiateHashAlgorithmChoseFallbackIfEmptyPreferences(ImplementationFactory implementationFactory)
             throws PGPException, InvalidAlgorithmParameterException, NoSuchAlgorithmException, IOException {
+        ImplementationFactory.setFactoryImplementation(implementationFactory);
         PGPSecretKeyRing secretKeys = PGPainless.buildKeyRing()
                 .setPrimaryKey(KeySpec.getBuilder(
                         KeyType.EDDSA(EdDSACurve._Ed25519), KeyFlag.CERTIFY_OTHER, KeyFlag.SIGN_DATA)
@@ -211,9 +219,11 @@ public class SigningTest {
                 signature.getHashAlgorithm());
     }
 
-    @Test
-    public void negotiateHashAlgorithmChoseFallbackIfUnacceptablePreferences()
+    @ParameterizedTest
+    @ArgumentsSource(TestImplementationFactoryProvider.class)
+    public void negotiateHashAlgorithmChoseFallbackIfUnacceptablePreferences(ImplementationFactory implementationFactory)
             throws PGPException, InvalidAlgorithmParameterException, NoSuchAlgorithmException, IOException {
+        ImplementationFactory.setFactoryImplementation(implementationFactory);
         PGPSecretKeyRing secretKeys = PGPainless.buildKeyRing()
                 .setPrimaryKey(
                         KeySpec.getBuilder(KeyType.EDDSA(EdDSACurve._Ed25519), KeyFlag.CERTIFY_OTHER, KeyFlag.SIGN_DATA)
@@ -240,9 +250,11 @@ public class SigningTest {
                 signature.getHashAlgorithm());
     }
 
-    @Test
-    public void signingWithNonCapableKeyThrowsKeyCannotSignException()
+    @ParameterizedTest
+    @ArgumentsSource(TestImplementationFactoryProvider.class)
+    public void signingWithNonCapableKeyThrowsKeyCannotSignException(ImplementationFactory implementationFactory)
             throws PGPException, InvalidAlgorithmParameterException, NoSuchAlgorithmException {
+        ImplementationFactory.setFactoryImplementation(implementationFactory);
         PGPSecretKeyRing secretKeys = PGPainless.buildKeyRing()
                 .setPrimaryKey(KeySpec.getBuilder(KeyType.EDDSA(EdDSACurve._Ed25519), KeyFlag.CERTIFY_OTHER))
                 .addUserId("Alice")
@@ -255,9 +267,11 @@ public class SigningTest {
                 SecretKeyRingProtector.unprotectedKeys(), secretKeys, DocumentSignatureType.BINARY_DOCUMENT));
     }
 
-    @Test
-    public void signWithInvalidUserIdThrowsKeyValidationError()
+    @ParameterizedTest
+    @ArgumentsSource(TestImplementationFactoryProvider.class)
+    public void signWithInvalidUserIdThrowsKeyValidationError(ImplementationFactory implementationFactory)
             throws PGPException, InvalidAlgorithmParameterException, NoSuchAlgorithmException {
+        ImplementationFactory.setFactoryImplementation(implementationFactory);
         PGPSecretKeyRing secretKeys = PGPainless.buildKeyRing()
                 .setPrimaryKey(KeySpec.getBuilder(KeyType.EDDSA(EdDSACurve._Ed25519),
                         KeyFlag.CERTIFY_OTHER, KeyFlag.SIGN_DATA))

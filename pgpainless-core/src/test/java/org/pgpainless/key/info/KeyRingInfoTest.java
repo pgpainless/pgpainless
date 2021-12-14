@@ -32,7 +32,7 @@ import org.bouncycastle.openpgp.PGPSecretKeyRing;
 import org.junit.JUtils;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
-import org.junit.jupiter.params.provider.MethodSource;
+import org.junit.jupiter.params.provider.ArgumentsSource;
 import org.pgpainless.PGPainless;
 import org.pgpainless.algorithm.CompressionAlgorithm;
 import org.pgpainless.algorithm.EncryptionPurpose;
@@ -53,11 +53,12 @@ import org.pgpainless.key.util.KeyRingUtils;
 import org.pgpainless.key.util.UserId;
 import org.pgpainless.util.DateUtil;
 import org.pgpainless.util.Passphrase;
+import org.pgpainless.util.TestImplementationFactoryProvider;
 
 public class KeyRingInfoTest {
 
     @ParameterizedTest
-    @MethodSource("org.pgpainless.util.TestImplementationFactoryProvider#provideImplementationFactories")
+    @ArgumentsSource(TestImplementationFactoryProvider.class)
     public void testWithEmilsKeys(ImplementationFactory implementationFactory) throws IOException, PGPException {
         ImplementationFactory.setFactoryImplementation(implementationFactory);
 
@@ -175,8 +176,8 @@ public class KeyRingInfoTest {
     }
 
     @ParameterizedTest
-    @MethodSource("org.pgpainless.util.TestImplementationFactoryProvider#provideImplementationFactories")
-    public void dummyS2KTest(ImplementationFactory implementationFactory) throws PGPException, IOException {
+    @ArgumentsSource(TestImplementationFactoryProvider.class)
+    public void dummyS2KTest(ImplementationFactory implementationFactory) throws IOException {
         ImplementationFactory.setFactoryImplementation(implementationFactory);
 
         String withDummyS2K = "-----BEGIN PGP PRIVATE KEY BLOCK-----\n" +
@@ -214,7 +215,7 @@ public class KeyRingInfoTest {
     }
 
     @ParameterizedTest
-    @MethodSource("org.pgpainless.util.TestImplementationFactoryProvider#provideImplementationFactories")
+    @ArgumentsSource(TestImplementationFactoryProvider.class)
     public void testGetKeysWithFlagsAndExpiry(ImplementationFactory implementationFactory) throws PGPException, InvalidAlgorithmParameterException, NoSuchAlgorithmException {
         ImplementationFactory.setFactoryImplementation(implementationFactory);
 

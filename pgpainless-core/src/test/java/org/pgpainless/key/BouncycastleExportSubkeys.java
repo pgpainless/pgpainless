@@ -30,14 +30,15 @@ import org.bouncycastle.openpgp.operator.jcajce.JcaPGPContentSignerBuilder;
 import org.bouncycastle.openpgp.operator.jcajce.JcaPGPDigestCalculatorProviderBuilder;
 import org.bouncycastle.openpgp.operator.jcajce.JcaPGPKeyPair;
 import org.junit.jupiter.params.ParameterizedTest;
-import org.junit.jupiter.params.provider.MethodSource;
+import org.junit.jupiter.params.provider.ArgumentsSource;
 import org.pgpainless.implementation.ImplementationFactory;
 import org.pgpainless.provider.ProviderFactory;
+import org.pgpainless.util.TestImplementationFactoryProvider;
 
 public class BouncycastleExportSubkeys {
 
     @ParameterizedTest
-    @MethodSource("org.pgpainless.util.TestImplementationFactoryProvider#provideImplementationFactories")
+    @ArgumentsSource(TestImplementationFactoryProvider.class)
     public void testExportImport(ImplementationFactory implementationFactory) throws NoSuchAlgorithmException, InvalidAlgorithmParameterException, PGPException {
         ImplementationFactory.setFactoryImplementation(implementationFactory);
         KeyPairGenerator generator;

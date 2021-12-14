@@ -14,7 +14,7 @@ import org.bouncycastle.openpgp.PGPSecretKey;
 import org.bouncycastle.openpgp.PGPSecretKeyRing;
 import org.junit.JUtils;
 import org.junit.jupiter.params.ParameterizedTest;
-import org.junit.jupiter.params.provider.MethodSource;
+import org.junit.jupiter.params.provider.ArgumentsSource;
 import org.pgpainless.PGPainless;
 import org.pgpainless.implementation.ImplementationFactory;
 import org.pgpainless.key.OpenPgpV4Fingerprint;
@@ -23,6 +23,7 @@ import org.pgpainless.key.modification.secretkeyring.SecretKeyRingEditorInterfac
 import org.pgpainless.key.protection.SecretKeyRingProtector;
 import org.pgpainless.key.protection.UnprotectedKeysProtector;
 import org.pgpainless.util.DateUtil;
+import org.pgpainless.util.TestImplementationFactoryProvider;
 
 public class RevokeKeyWithoutPreferredAlgorithmsOnPrimaryKey {
 
@@ -101,8 +102,9 @@ public class RevokeKeyWithoutPreferredAlgorithmsOnPrimaryKey {
             "-----END PGP PRIVATE KEY BLOCK-----";
 
     @ParameterizedTest
-    @MethodSource("org.pgpainless.util.TestImplementationFactoryProvider#provideImplementationFactories")
-    public void testChangingExpirationTimeWithKeyWithoutPrefAlgos(ImplementationFactory implementationFactory) throws IOException, PGPException {
+    @ArgumentsSource(TestImplementationFactoryProvider.class)
+    public void testChangingExpirationTimeWithKeyWithoutPrefAlgos(ImplementationFactory implementationFactory)
+            throws IOException, PGPException {
         ImplementationFactory.setFactoryImplementation(implementationFactory);
         Date expirationDate = DateUtil.parseUTCDate(DateUtil.formatUTCDate(new Date()));
         PGPSecretKeyRing secretKeys = PGPainless.readKeyRing().secretKeyRing(KEY);

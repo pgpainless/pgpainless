@@ -27,7 +27,7 @@ import org.bouncycastle.util.io.Streams;
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
-import org.junit.jupiter.params.provider.MethodSource;
+import org.junit.jupiter.params.provider.ArgumentsSource;
 import org.pgpainless.algorithm.HashAlgorithm;
 import org.pgpainless.implementation.ImplementationFactory;
 import org.pgpainless.key.TestKeys;
@@ -145,7 +145,7 @@ public class ArmorUtilsTest {
     }
 
     @ParameterizedTest
-    @MethodSource("org.pgpainless.util.TestImplementationFactoryProvider#provideImplementationFactories")
+    @ArgumentsSource(TestImplementationFactoryProvider.class)
     public void decodeExampleTest(ImplementationFactory implementationFactory) throws IOException, PGPException {
         ImplementationFactory.setFactoryImplementation(implementationFactory);
         String armored = "-----BEGIN PGP MESSAGE-----\n" +

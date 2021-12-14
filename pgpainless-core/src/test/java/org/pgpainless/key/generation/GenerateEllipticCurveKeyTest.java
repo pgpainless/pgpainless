@@ -13,7 +13,7 @@ import java.security.NoSuchAlgorithmException;
 import org.bouncycastle.openpgp.PGPException;
 import org.bouncycastle.openpgp.PGPSecretKeyRing;
 import org.junit.jupiter.params.ParameterizedTest;
-import org.junit.jupiter.params.provider.MethodSource;
+import org.junit.jupiter.params.provider.ArgumentsSource;
 import org.pgpainless.PGPainless;
 import org.pgpainless.algorithm.KeyFlag;
 import org.pgpainless.algorithm.PublicKeyAlgorithm;
@@ -24,11 +24,12 @@ import org.pgpainless.key.generation.type.xdh.XDHSpec;
 import org.pgpainless.key.protection.SecretKeyRingProtector;
 import org.pgpainless.key.protection.UnlockSecretKey;
 import org.pgpainless.key.util.UserId;
+import org.pgpainless.util.TestImplementationFactoryProvider;
 
 public class GenerateEllipticCurveKeyTest {
 
     @ParameterizedTest
-    @MethodSource("org.pgpainless.util.TestImplementationFactoryProvider#provideImplementationFactories")
+    @ArgumentsSource(TestImplementationFactoryProvider.class)
     public void generateEllipticCurveKeys(ImplementationFactory implementationFactory) throws InvalidAlgorithmParameterException, NoSuchAlgorithmException, PGPException, IOException {
         ImplementationFactory.setFactoryImplementation(implementationFactory);
         PGPSecretKeyRing keyRing = PGPainless.buildKeyRing()

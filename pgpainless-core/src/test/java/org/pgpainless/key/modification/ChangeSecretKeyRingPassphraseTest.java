@@ -21,7 +21,7 @@ import org.bouncycastle.openpgp.PGPSecretKeyRing;
 import org.bouncycastle.openpgp.operator.PBESecretKeyDecryptor;
 import org.bouncycastle.util.io.Streams;
 import org.junit.jupiter.params.ParameterizedTest;
-import org.junit.jupiter.params.provider.MethodSource;
+import org.junit.jupiter.params.provider.ArgumentsSource;
 import org.pgpainless.PGPainless;
 import org.pgpainless.algorithm.DocumentSignatureType;
 import org.pgpainless.algorithm.SymmetricKeyAlgorithm;
@@ -33,6 +33,7 @@ import org.pgpainless.key.protection.KeyRingProtectionSettings;
 import org.pgpainless.key.protection.PasswordBasedSecretKeyRingProtector;
 import org.pgpainless.key.protection.UnlockSecretKey;
 import org.pgpainless.util.Passphrase;
+import org.pgpainless.util.TestImplementationFactoryProvider;
 
 public class ChangeSecretKeyRingPassphraseTest {
 
@@ -42,7 +43,7 @@ public class ChangeSecretKeyRingPassphraseTest {
     }
 
     @ParameterizedTest
-    @MethodSource("org.pgpainless.util.TestImplementationFactoryProvider#provideImplementationFactories")
+    @ArgumentsSource(TestImplementationFactoryProvider.class)
     public void changePassphraseOfWholeKeyRingTest(ImplementationFactory implementationFactory) throws PGPException {
         ImplementationFactory.setFactoryImplementation(implementationFactory);
 
@@ -70,7 +71,7 @@ public class ChangeSecretKeyRingPassphraseTest {
     }
 
     @ParameterizedTest
-    @MethodSource("org.pgpainless.util.TestImplementationFactoryProvider#provideImplementationFactories")
+    @ArgumentsSource(TestImplementationFactoryProvider.class)
     public void changePassphraseOfWholeKeyRingToEmptyPassphrase(ImplementationFactory implementationFactory) throws PGPException, IOException {
         ImplementationFactory.setFactoryImplementation(implementationFactory);
         PGPSecretKeyRing secretKeys = PGPainless.modifyKeyRing(keyRing)
@@ -88,7 +89,7 @@ public class ChangeSecretKeyRingPassphraseTest {
     }
 
     @ParameterizedTest
-    @MethodSource("org.pgpainless.util.TestImplementationFactoryProvider#provideImplementationFactories")
+    @ArgumentsSource(TestImplementationFactoryProvider.class)
     public void changePassphraseOfSingleSubkeyToNewPassphrase(ImplementationFactory implementationFactory) throws PGPException {
         ImplementationFactory.setFactoryImplementation(implementationFactory);
 
@@ -125,7 +126,7 @@ public class ChangeSecretKeyRingPassphraseTest {
     }
 
     @ParameterizedTest
-    @MethodSource("org.pgpainless.util.TestImplementationFactoryProvider#provideImplementationFactories")
+    @ArgumentsSource(TestImplementationFactoryProvider.class)
     public void changePassphraseOfSingleSubkeyToEmptyPassphrase(ImplementationFactory implementationFactory) throws PGPException {
         ImplementationFactory.setFactoryImplementation(implementationFactory);
 

@@ -14,8 +14,9 @@ import org.bouncycastle.openpgp.PGPPublicKeyRing;
 import org.bouncycastle.openpgp.PGPSecretKeyRing;
 import org.bouncycastle.openpgp.operator.KeyFingerPrintCalculator;
 import org.junit.jupiter.params.ParameterizedTest;
-import org.junit.jupiter.params.provider.MethodSource;
+import org.junit.jupiter.params.provider.ArgumentsSource;
 import org.pgpainless.implementation.ImplementationFactory;
+import org.pgpainless.util.TestImplementationFactoryProvider;
 
 public class ImportExportKeyTest {
 
@@ -24,7 +25,7 @@ public class ImportExportKeyTest {
      * @throws IOException in case of a IO error
      */
     @ParameterizedTest
-    @MethodSource("org.pgpainless.util.TestImplementationFactoryProvider#provideImplementationFactories")
+    @ArgumentsSource(TestImplementationFactoryProvider.class)
     public void testExportImportPublicKeyRing(ImplementationFactory implementationFactory) throws IOException {
         ImplementationFactory.setFactoryImplementation(implementationFactory);
         PGPPublicKeyRing publicKeys = TestKeys.getJulietPublicKeyRing();
@@ -36,7 +37,7 @@ public class ImportExportKeyTest {
     }
 
     @ParameterizedTest
-    @MethodSource("org.pgpainless.util.TestImplementationFactoryProvider#provideImplementationFactories")
+    @ArgumentsSource(TestImplementationFactoryProvider.class)
     public void testExportImportSecretKeyRing(ImplementationFactory implementationFactory) throws IOException, PGPException {
         ImplementationFactory.setFactoryImplementation(implementationFactory);
         PGPSecretKeyRing secretKeys = TestKeys.getRomeoSecretKeyRing();

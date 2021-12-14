@@ -8,7 +8,6 @@ import static org.junit.jupiter.api.Assertions.assertArrayEquals;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotEquals;
 
-import java.io.IOException;
 import java.security.InvalidAlgorithmParameterException;
 import java.security.NoSuchAlgorithmException;
 import java.util.Date;
@@ -18,18 +17,19 @@ import org.bouncycastle.openpgp.PGPSecretKeyRing;
 import org.bouncycastle.openpgp.PGPSignature;
 import org.bouncycastle.openpgp.PGPSignatureSubpacketVector;
 import org.junit.jupiter.params.ParameterizedTest;
-import org.junit.jupiter.params.provider.MethodSource;
+import org.junit.jupiter.params.provider.ArgumentsSource;
 import org.pgpainless.PGPainless;
 import org.pgpainless.implementation.ImplementationFactory;
 import org.pgpainless.key.OpenPgpV4Fingerprint;
 import org.pgpainless.key.protection.UnprotectedKeysProtector;
+import org.pgpainless.util.TestImplementationFactoryProvider;
 
 public class OldSignatureSubpacketsArePreservedOnNewSig {
 
     @ParameterizedTest
-    @MethodSource("org.pgpainless.util.TestImplementationFactoryProvider#provideImplementationFactories")
+    @ArgumentsSource(TestImplementationFactoryProvider.class)
     public void verifyOldSignatureSubpacketsArePreservedOnNewExpirationDateSig(ImplementationFactory implementationFactory)
-            throws InvalidAlgorithmParameterException, NoSuchAlgorithmException, PGPException, InterruptedException, IOException {
+            throws InvalidAlgorithmParameterException, NoSuchAlgorithmException, PGPException, InterruptedException {
         ImplementationFactory.setFactoryImplementation(implementationFactory);
         PGPSecretKeyRing secretKeys = PGPainless.generateKeyRing()
                 .simpleEcKeyRing("Alice <alice@wonderland.lit>");

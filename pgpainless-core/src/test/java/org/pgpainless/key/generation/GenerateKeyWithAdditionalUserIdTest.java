@@ -18,7 +18,7 @@ import org.bouncycastle.openpgp.PGPPublicKeyRing;
 import org.bouncycastle.openpgp.PGPSecretKeyRing;
 import org.junit.JUtils;
 import org.junit.jupiter.params.ParameterizedTest;
-import org.junit.jupiter.params.provider.MethodSource;
+import org.junit.jupiter.params.provider.ArgumentsSource;
 import org.pgpainless.PGPainless;
 import org.pgpainless.algorithm.KeyFlag;
 import org.pgpainless.implementation.ImplementationFactory;
@@ -27,11 +27,12 @@ import org.pgpainless.key.generation.type.rsa.RsaLength;
 import org.pgpainless.key.util.KeyRingUtils;
 import org.pgpainless.key.util.UserId;
 import org.pgpainless.util.DateUtil;
+import org.pgpainless.util.TestImplementationFactoryProvider;
 
 public class GenerateKeyWithAdditionalUserIdTest {
 
     @ParameterizedTest
-    @MethodSource("org.pgpainless.util.TestImplementationFactoryProvider#provideImplementationFactories")
+    @ArgumentsSource(TestImplementationFactoryProvider.class)
     public void test(ImplementationFactory implementationFactory) throws InvalidAlgorithmParameterException, NoSuchAlgorithmException, PGPException, IOException {
         ImplementationFactory.setFactoryImplementation(implementationFactory);
         Date expiration = new Date(DateUtil.now().getTime() + 60 * 1000);

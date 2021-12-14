@@ -18,7 +18,7 @@ import org.bouncycastle.openpgp.PGPSecretKeyRing;
 import org.bouncycastle.util.io.Streams;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.params.ParameterizedTest;
-import org.junit.jupiter.params.provider.MethodSource;
+import org.junit.jupiter.params.provider.ArgumentsSource;
 import org.pgpainless.PGPainless;
 import org.pgpainless.algorithm.CompressionAlgorithm;
 import org.pgpainless.algorithm.SymmetricKeyAlgorithm;
@@ -26,6 +26,7 @@ import org.pgpainless.implementation.ImplementationFactory;
 import org.pgpainless.key.SubkeyIdentifier;
 import org.pgpainless.key.TestKeys;
 import org.pgpainless.key.util.KeyRingUtils;
+import org.pgpainless.util.TestImplementationFactoryProvider;
 
 public class DecryptAndVerifyMessageTest {
 
@@ -42,7 +43,7 @@ public class DecryptAndVerifyMessageTest {
     }
 
     @ParameterizedTest
-    @MethodSource("org.pgpainless.util.TestImplementationFactoryProvider#provideImplementationFactories")
+    @ArgumentsSource(TestImplementationFactoryProvider.class)
     public void decryptMessageAndVerifySignatureTest(ImplementationFactory implementationFactory) throws Exception {
         ImplementationFactory.setFactoryImplementation(implementationFactory);
         String encryptedMessage = TestKeys.MSG_SIGN_CRYPT_JULIET_JULIET;

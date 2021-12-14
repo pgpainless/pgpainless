@@ -16,7 +16,6 @@ import java.util.Iterator;
 import java.util.Map;
 import java.util.Random;
 import java.util.concurrent.ConcurrentHashMap;
-
 import javax.annotation.Nullable;
 
 import org.bouncycastle.openpgp.PGPException;
@@ -25,17 +24,18 @@ import org.bouncycastle.openpgp.PGPSecretKeyRing;
 import org.bouncycastle.openpgp.operator.PBESecretKeyDecryptor;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
-import org.junit.jupiter.params.provider.MethodSource;
+import org.junit.jupiter.params.provider.ArgumentsSource;
 import org.pgpainless.PGPainless;
 import org.pgpainless.implementation.ImplementationFactory;
 import org.pgpainless.key.TestKeys;
 import org.pgpainless.key.protection.passphrase_provider.SecretKeyPassphraseProvider;
 import org.pgpainless.util.Passphrase;
+import org.pgpainless.util.TestImplementationFactoryProvider;
 
 public class SecretKeyRingProtectorTest {
 
     @ParameterizedTest
-    @MethodSource("org.pgpainless.util.TestImplementationFactoryProvider#provideImplementationFactories")
+    @ArgumentsSource(TestImplementationFactoryProvider.class)
     public void testUnlockAllKeysWithSamePassword(ImplementationFactory implementationFactory)
             throws IOException, PGPException, InvalidAlgorithmParameterException, NoSuchAlgorithmException {
         ImplementationFactory.setFactoryImplementation(implementationFactory);
@@ -70,7 +70,7 @@ public class SecretKeyRingProtectorTest {
     }
 
     @ParameterizedTest
-    @MethodSource("org.pgpainless.util.TestImplementationFactoryProvider#provideImplementationFactories")
+    @ArgumentsSource(TestImplementationFactoryProvider.class)
     public void testUnlockSingleKeyWithPassphrase(ImplementationFactory implementationFactory)
             throws IOException, PGPException {
         ImplementationFactory.setFactoryImplementation(implementationFactory);

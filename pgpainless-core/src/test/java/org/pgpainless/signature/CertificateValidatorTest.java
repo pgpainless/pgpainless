@@ -20,7 +20,7 @@ import org.bouncycastle.openpgp.PGPSignature;
 import org.bouncycastle.util.io.Streams;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
-import org.junit.jupiter.params.provider.MethodSource;
+import org.junit.jupiter.params.provider.ArgumentsSource;
 import org.pgpainless.PGPainless;
 import org.pgpainless.decryption_verification.ConsumerOptions;
 import org.pgpainless.decryption_verification.DecryptionStream;
@@ -29,6 +29,7 @@ import org.pgpainless.exception.SignatureValidationException;
 import org.pgpainless.implementation.ImplementationFactory;
 import org.pgpainless.policy.Policy;
 import org.pgpainless.signature.consumer.CertificateValidator;
+import org.pgpainless.util.TestImplementationFactoryProvider;
 
 public class CertificateValidatorTest {
 
@@ -38,7 +39,7 @@ public class CertificateValidatorTest {
      * @see <a href="https://tests.sequoia-pgp.org/#Key_revocation_test__primary_key_signs_and_is_revoked__revoked__unknown">Sequoia Test Suite</a>
      */
     @ParameterizedTest
-    @MethodSource("org.pgpainless.util.TestImplementationFactoryProvider#provideImplementationFactories")
+    @ArgumentsSource(TestImplementationFactoryProvider.class)
     public void testPrimaryKeySignsAndIsHardRevokedUnknown(ImplementationFactory implementationFactory) throws IOException, PGPException {
         ImplementationFactory.setFactoryImplementation(implementationFactory);
 
@@ -190,7 +191,7 @@ public class CertificateValidatorTest {
      * @see <a href="https://tests.sequoia-pgp.org/#Key_revocation_test__subkey_signs__primary_key_is_revoked__revoked__unknown">Sequoia Test Suite</a>
      */
     @ParameterizedTest
-    @MethodSource("org.pgpainless.util.TestImplementationFactoryProvider#provideImplementationFactories")
+    @ArgumentsSource(TestImplementationFactoryProvider.class)
     public void testSubkeySignsPrimaryKeyIsHardRevokedUnknown(ImplementationFactory implementationFactory) throws IOException, PGPException {
         ImplementationFactory.setFactoryImplementation(implementationFactory);
 
@@ -343,7 +344,7 @@ public class CertificateValidatorTest {
      * @see <a href="https://tests.sequoia-pgp.org/#Key_revocation_test__subkey_signs__subkey_is_revoked__revoked__unknown">Sequoia Test Suite</a>
      */
     @ParameterizedTest
-    @MethodSource("org.pgpainless.util.TestImplementationFactoryProvider#provideImplementationFactories")
+    @ArgumentsSource(TestImplementationFactoryProvider.class)
     public void testSubkeySignsAndIsHardRevokedUnknown(ImplementationFactory implementationFactory) throws IOException, PGPException {
         ImplementationFactory.setFactoryImplementation(implementationFactory);
 
@@ -496,7 +497,7 @@ public class CertificateValidatorTest {
      * @see <a href="https://tests.sequoia-pgp.org/#Key_revocation_test__primary_key_signs_and_is_revoked__revoked__superseded">Sequoia Test Suite</a>
      */
     @ParameterizedTest
-    @MethodSource("org.pgpainless.util.TestImplementationFactoryProvider#provideImplementationFactories")
+    @ArgumentsSource(TestImplementationFactoryProvider.class)
     public void testPrimaryKeySignsAndIsSoftRevokedSuperseded(ImplementationFactory implementationFactory) throws IOException, PGPException {
         ImplementationFactory.setFactoryImplementation(implementationFactory);
 
@@ -654,7 +655,7 @@ public class CertificateValidatorTest {
      * @see <a href="https://tests.sequoia-pgp.org/#Key_revocation_test__subkey_signs__primary_key_is_revoked__revoked__superseded">Sequoia Test Suite</a>
      */
     @ParameterizedTest
-    @MethodSource("org.pgpainless.util.TestImplementationFactoryProvider#provideImplementationFactories")
+    @ArgumentsSource(TestImplementationFactoryProvider.class)
     public void testSubkeySignsPrimaryKeyIsSoftRevokedSuperseded(ImplementationFactory implementationFactory) throws IOException, PGPException {
         ImplementationFactory.setFactoryImplementation(implementationFactory);
 
@@ -808,7 +809,7 @@ public class CertificateValidatorTest {
      * @see <a href="https://tests.sequoia-pgp.org/#Key_revocation_test__primary_key_signs_and_is_revoked__revoked__key_retired">Sequoia Test Suite</a>
      */
     @ParameterizedTest
-    @MethodSource("org.pgpainless.util.TestImplementationFactoryProvider#provideImplementationFactories")
+    @ArgumentsSource(TestImplementationFactoryProvider.class)
     public void testPrimaryKeySignsAndIsSoftRevokedRetired(ImplementationFactory implementationFactory) throws IOException, PGPException {
         ImplementationFactory.setFactoryImplementation(implementationFactory);
 
@@ -962,7 +963,7 @@ public class CertificateValidatorTest {
      * @see <a href="https://tests.sequoia-pgp.org/#Temporary_validity">Sequoia Test Suite</a>
      */
     @ParameterizedTest
-    @MethodSource("org.pgpainless.util.TestImplementationFactoryProvider#provideImplementationFactories")
+    @ArgumentsSource(TestImplementationFactoryProvider.class)
     public void testTemporaryValidity(ImplementationFactory implementationFactory) throws IOException, PGPException {
         ImplementationFactory.setFactoryImplementation(implementationFactory);
 
