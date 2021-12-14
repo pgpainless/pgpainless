@@ -13,6 +13,8 @@ import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.ValueSource;
 import org.pgpainless.util.Passphrase;
 
 public class PassphraseTest {
@@ -49,15 +51,13 @@ public class PassphraseTest {
         assertTrue(fromEmptyChars.isEmpty());
     }
 
-    @Test
-    public void testEmptyPassphrase() {
-        Passphrase empty = Passphrase.emptyPassphrase();
-        assertNull(empty.getChars());
-        assertTrue(empty.isEmpty());
+    @ParameterizedTest
+    @ValueSource(strings = {"", " ", "  ", "\t", "\t\t"})
+    public void testEmptyPassphrases(String empty) {
+        Passphrase passphrase = Passphrase.fromPassword(empty);
+        assertTrue(passphrase.isEmpty());
 
-        Passphrase trimmedEmpty = Passphrase.fromPassword("    ");
-        assertNull(trimmedEmpty.getChars());
-        assertTrue(trimmedEmpty.isEmpty());
+        assertEquals(Passphrase.emptyPassphrase(), passphrase);
     }
 
     @Test

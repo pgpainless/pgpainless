@@ -6,20 +6,18 @@ package org.pgpainless.key.generation;
 
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 
-import java.io.IOException;
 import java.security.InvalidAlgorithmParameterException;
 import java.security.NoSuchAlgorithmException;
 
 import org.bouncycastle.openpgp.PGPException;
-import org.junit.jupiter.params.ParameterizedTest;
-import org.junit.jupiter.params.provider.ArgumentsSource;
+import org.junit.jupiter.api.TestTemplate;
+import org.junit.jupiter.api.extension.ExtendWith;
 import org.pgpainless.PGPainless;
 import org.pgpainless.algorithm.KeyFlag;
-import org.pgpainless.implementation.ImplementationFactory;
 import org.pgpainless.key.generation.type.KeyType;
 import org.pgpainless.key.generation.type.rsa.RsaLength;
+import org.pgpainless.util.ImplementationFactoryTestInvocationContextProvider;
 import org.pgpainless.util.Passphrase;
-import org.pgpainless.util.TestImplementationFactoryProvider;
 
 /**
  * Reproduce behavior of https://github.com/pgpainless/pgpainless/issues/16
@@ -30,10 +28,10 @@ import org.pgpainless.util.TestImplementationFactoryProvider;
  */
 public class GenerateWithEmptyPassphraseTest {
 
-    @ParameterizedTest
-    @ArgumentsSource(TestImplementationFactoryProvider.class)
-    public void testGeneratingKeyWithEmptyPassphraseDoesNotThrow(ImplementationFactory implementationFactory) throws InvalidAlgorithmParameterException, NoSuchAlgorithmException, PGPException, IOException {
-        ImplementationFactory.setFactoryImplementation(implementationFactory);
+    @TestTemplate
+    @ExtendWith(ImplementationFactoryTestInvocationContextProvider.class)
+    public void testGeneratingKeyWithEmptyPassphraseDoesNotThrow()
+            throws InvalidAlgorithmParameterException, NoSuchAlgorithmException, PGPException {
 
         assertNotNull(PGPainless.buildKeyRing()
                 .setPrimaryKey(KeySpec.getBuilder(

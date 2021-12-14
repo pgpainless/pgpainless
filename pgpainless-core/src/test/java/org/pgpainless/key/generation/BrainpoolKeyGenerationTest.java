@@ -17,12 +17,11 @@ import org.bouncycastle.openpgp.PGPException;
 import org.bouncycastle.openpgp.PGPPublicKey;
 import org.bouncycastle.openpgp.PGPSecretKey;
 import org.bouncycastle.openpgp.PGPSecretKeyRing;
-import org.junit.jupiter.params.ParameterizedTest;
-import org.junit.jupiter.params.provider.ArgumentsSource;
+import org.junit.jupiter.api.TestTemplate;
+import org.junit.jupiter.api.extension.ExtendWith;
 import org.pgpainless.PGPainless;
 import org.pgpainless.algorithm.KeyFlag;
 import org.pgpainless.algorithm.PublicKeyAlgorithm;
-import org.pgpainless.implementation.ImplementationFactory;
 import org.pgpainless.key.generation.type.KeyType;
 import org.pgpainless.key.generation.type.ecc.EllipticCurve;
 import org.pgpainless.key.generation.type.eddsa.EdDSACurve;
@@ -31,16 +30,15 @@ import org.pgpainless.key.generation.type.xdh.XDHSpec;
 import org.pgpainless.key.info.KeyInfo;
 import org.pgpainless.key.util.UserId;
 import org.pgpainless.util.BCUtil;
+import org.pgpainless.util.ImplementationFactoryTestInvocationContextProvider;
 import org.pgpainless.util.Passphrase;
-import org.pgpainless.util.TestImplementationFactoryProvider;
 
 public class BrainpoolKeyGenerationTest {
 
-    @ParameterizedTest
-    @ArgumentsSource(TestImplementationFactoryProvider.class)
-    public void generateEcKeysTest(ImplementationFactory implementationFactory)
+    @TestTemplate
+    @ExtendWith(ImplementationFactoryTestInvocationContextProvider.class)
+    public void generateEcKeysTest()
             throws InvalidAlgorithmParameterException, NoSuchAlgorithmException, PGPException {
-        ImplementationFactory.setFactoryImplementation(implementationFactory);
 
         for (EllipticCurve curve : EllipticCurve.values()) {
             PGPSecretKeyRing secretKeys = generateKey(
@@ -66,11 +64,10 @@ public class BrainpoolKeyGenerationTest {
         }
     }
 
-    @ParameterizedTest
-    @ArgumentsSource(TestImplementationFactoryProvider.class)
-    public void generateEdDSAKeyTest(ImplementationFactory implementationFactory)
+    @TestTemplate
+    @ExtendWith(ImplementationFactoryTestInvocationContextProvider.class)
+    public void generateEdDSAKeyTest()
             throws PGPException, InvalidAlgorithmParameterException, NoSuchAlgorithmException {
-        ImplementationFactory.setFactoryImplementation(implementationFactory);
 
         PGPSecretKeyRing secretKeys = PGPainless.buildKeyRing()
                 .setPrimaryKey(KeySpec.getBuilder(

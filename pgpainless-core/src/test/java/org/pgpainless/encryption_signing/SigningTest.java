@@ -26,8 +26,8 @@ import org.bouncycastle.openpgp.PGPSecretKeyRing;
 import org.bouncycastle.openpgp.PGPSecretKeyRingCollection;
 import org.bouncycastle.openpgp.PGPSignature;
 import org.bouncycastle.util.io.Streams;
-import org.junit.jupiter.params.ParameterizedTest;
-import org.junit.jupiter.params.provider.ArgumentsSource;
+import org.junit.jupiter.api.TestTemplate;
+import org.junit.jupiter.api.extension.ExtendWith;
 import org.pgpainless.PGPainless;
 import org.pgpainless.algorithm.DocumentSignatureType;
 import org.pgpainless.algorithm.HashAlgorithm;
@@ -37,7 +37,6 @@ import org.pgpainless.decryption_verification.DecryptionStream;
 import org.pgpainless.decryption_verification.OpenPgpMetadata;
 import org.pgpainless.exception.KeyCannotSignException;
 import org.pgpainless.exception.KeyValidationError;
-import org.pgpainless.implementation.ImplementationFactory;
 import org.pgpainless.key.SubkeyIdentifier;
 import org.pgpainless.key.TestKeys;
 import org.pgpainless.key.generation.KeySpec;
@@ -46,17 +45,16 @@ import org.pgpainless.key.generation.type.eddsa.EdDSACurve;
 import org.pgpainless.key.info.KeyRingInfo;
 import org.pgpainless.key.protection.SecretKeyRingProtector;
 import org.pgpainless.key.util.KeyRingUtils;
+import org.pgpainless.util.ImplementationFactoryTestInvocationContextProvider;
 import org.pgpainless.util.MultiMap;
 import org.pgpainless.util.Passphrase;
-import org.pgpainless.util.TestImplementationFactoryProvider;
 
 public class SigningTest {
 
-    @ParameterizedTest
-    @ArgumentsSource(TestImplementationFactoryProvider.class)
-    public void testEncryptionAndSignatureVerification(ImplementationFactory implementationFactory)
+    @TestTemplate
+    @ExtendWith(ImplementationFactoryTestInvocationContextProvider.class)
+    public void testEncryptionAndSignatureVerification()
             throws IOException, PGPException {
-        ImplementationFactory.setFactoryImplementation(implementationFactory);
 
         PGPPublicKeyRing julietKeys = TestKeys.getJulietPublicKeyRing();
         PGPPublicKeyRing romeoKeys = TestKeys.getRomeoPublicKeyRing();
@@ -117,11 +115,10 @@ public class SigningTest {
         assertFalse(metadata.containsVerifiedSignatureFrom(julietKeys));
     }
 
-    @ParameterizedTest
-    @ArgumentsSource(TestImplementationFactoryProvider.class)
-    public void testSignWithInvalidUserIdFails(ImplementationFactory implementationFactory)
+    @TestTemplate
+    @ExtendWith(ImplementationFactoryTestInvocationContextProvider.class)
+    public void testSignWithInvalidUserIdFails()
             throws PGPException, InvalidAlgorithmParameterException, NoSuchAlgorithmException {
-        ImplementationFactory.setFactoryImplementation(implementationFactory);
         PGPSecretKeyRing secretKeys = PGPainless.generateKeyRing()
                 .modernKeyRing("alice", "password123");
         SecretKeyRingProtector protector = SecretKeyRingProtector.unlockAnyKeyWith(Passphrase.fromPassword("password123"));
@@ -133,11 +130,10 @@ public class SigningTest {
                         DocumentSignatureType.CANONICAL_TEXT_DOCUMENT));
     }
 
-    @ParameterizedTest
-    @ArgumentsSource(TestImplementationFactoryProvider.class)
-    public void testSignWithRevokedUserIdFails(ImplementationFactory implementationFactory)
+    @TestTemplate
+    @ExtendWith(ImplementationFactoryTestInvocationContextProvider.class)
+    public void testSignWithRevokedUserIdFails()
             throws PGPException, InvalidAlgorithmParameterException, NoSuchAlgorithmException {
-        ImplementationFactory.setFactoryImplementation(implementationFactory);
         PGPSecretKeyRing secretKeys = PGPainless.generateKeyRing()
                 .modernKeyRing("alice", "password123");
         SecretKeyRingProtector protector = SecretKeyRingProtector.unlockAnyKeyWith(
@@ -155,10 +151,9 @@ public class SigningTest {
                         DocumentSignatureType.CANONICAL_TEXT_DOCUMENT));
     }
 
-    @ParameterizedTest
-    @ArgumentsSource(TestImplementationFactoryProvider.class)
-    public void signWithHashAlgorithmOverride(ImplementationFactory implementationFactory) throws PGPException, IOException {
-        ImplementationFactory.setFactoryImplementation(implementationFactory);
+    @TestTemplate
+    @ExtendWith(ImplementationFactoryTestInvocationContextProvider.class)
+    public void signWithHashAlgorithmOverride() throws PGPException, IOException {
         PGPSecretKeyRing secretKeys = TestKeys.getEmilSecretKeyRing();
         SecretKeyRingProtector protector = SecretKeyRingProtector.unprotectedKeys();
 
@@ -188,11 +183,10 @@ public class SigningTest {
         assertEquals(HashAlgorithm.SHA224.getAlgorithmId(), signature.getHashAlgorithm());
     }
 
-    @ParameterizedTest
-    @ArgumentsSource(TestImplementationFactoryProvider.class)
-    public void negotiateHashAlgorithmChoseFallbackIfEmptyPreferences(ImplementationFactory implementationFactory)
+    @TestTemplate
+    @ExtendWith(ImplementationFactoryTestInvocationContextProvider.class)
+    public void negotiateHashAlgorithmChoseFallbackIfEmptyPreferences()
             throws PGPException, InvalidAlgorithmParameterException, NoSuchAlgorithmException, IOException {
-        ImplementationFactory.setFactoryImplementation(implementationFactory);
         PGPSecretKeyRing secretKeys = PGPainless.buildKeyRing()
                 .setPrimaryKey(KeySpec.getBuilder(
                         KeyType.EDDSA(EdDSACurve._Ed25519), KeyFlag.CERTIFY_OTHER, KeyFlag.SIGN_DATA)
@@ -219,11 +213,10 @@ public class SigningTest {
                 signature.getHashAlgorithm());
     }
 
-    @ParameterizedTest
-    @ArgumentsSource(TestImplementationFactoryProvider.class)
-    public void negotiateHashAlgorithmChoseFallbackIfUnacceptablePreferences(ImplementationFactory implementationFactory)
+    @TestTemplate
+    @ExtendWith(ImplementationFactoryTestInvocationContextProvider.class)
+    public void negotiateHashAlgorithmChoseFallbackIfUnacceptablePreferences()
             throws PGPException, InvalidAlgorithmParameterException, NoSuchAlgorithmException, IOException {
-        ImplementationFactory.setFactoryImplementation(implementationFactory);
         PGPSecretKeyRing secretKeys = PGPainless.buildKeyRing()
                 .setPrimaryKey(
                         KeySpec.getBuilder(KeyType.EDDSA(EdDSACurve._Ed25519), KeyFlag.CERTIFY_OTHER, KeyFlag.SIGN_DATA)
@@ -250,11 +243,10 @@ public class SigningTest {
                 signature.getHashAlgorithm());
     }
 
-    @ParameterizedTest
-    @ArgumentsSource(TestImplementationFactoryProvider.class)
-    public void signingWithNonCapableKeyThrowsKeyCannotSignException(ImplementationFactory implementationFactory)
+    @TestTemplate
+    @ExtendWith(ImplementationFactoryTestInvocationContextProvider.class)
+    public void signingWithNonCapableKeyThrowsKeyCannotSignException()
             throws PGPException, InvalidAlgorithmParameterException, NoSuchAlgorithmException {
-        ImplementationFactory.setFactoryImplementation(implementationFactory);
         PGPSecretKeyRing secretKeys = PGPainless.buildKeyRing()
                 .setPrimaryKey(KeySpec.getBuilder(KeyType.EDDSA(EdDSACurve._Ed25519), KeyFlag.CERTIFY_OTHER))
                 .addUserId("Alice")
@@ -267,11 +259,10 @@ public class SigningTest {
                 SecretKeyRingProtector.unprotectedKeys(), secretKeys, DocumentSignatureType.BINARY_DOCUMENT));
     }
 
-    @ParameterizedTest
-    @ArgumentsSource(TestImplementationFactoryProvider.class)
-    public void signWithInvalidUserIdThrowsKeyValidationError(ImplementationFactory implementationFactory)
+    @TestTemplate
+    @ExtendWith(ImplementationFactoryTestInvocationContextProvider.class)
+    public void signWithInvalidUserIdThrowsKeyValidationError()
             throws PGPException, InvalidAlgorithmParameterException, NoSuchAlgorithmException {
-        ImplementationFactory.setFactoryImplementation(implementationFactory);
         PGPSecretKeyRing secretKeys = PGPainless.buildKeyRing()
                 .setPrimaryKey(KeySpec.getBuilder(KeyType.EDDSA(EdDSACurve._Ed25519),
                         KeyFlag.CERTIFY_OTHER, KeyFlag.SIGN_DATA))

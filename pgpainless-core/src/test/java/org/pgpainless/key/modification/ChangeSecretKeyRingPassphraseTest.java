@@ -20,8 +20,8 @@ import org.bouncycastle.openpgp.PGPSecretKey;
 import org.bouncycastle.openpgp.PGPSecretKeyRing;
 import org.bouncycastle.openpgp.operator.PBESecretKeyDecryptor;
 import org.bouncycastle.util.io.Streams;
-import org.junit.jupiter.params.ParameterizedTest;
-import org.junit.jupiter.params.provider.ArgumentsSource;
+import org.junit.jupiter.api.TestTemplate;
+import org.junit.jupiter.api.extension.ExtendWith;
 import org.pgpainless.PGPainless;
 import org.pgpainless.algorithm.DocumentSignatureType;
 import org.pgpainless.algorithm.SymmetricKeyAlgorithm;
@@ -32,8 +32,8 @@ import org.pgpainless.implementation.ImplementationFactory;
 import org.pgpainless.key.protection.KeyRingProtectionSettings;
 import org.pgpainless.key.protection.PasswordBasedSecretKeyRingProtector;
 import org.pgpainless.key.protection.UnlockSecretKey;
+import org.pgpainless.util.ImplementationFactoryTestInvocationContextProvider;
 import org.pgpainless.util.Passphrase;
-import org.pgpainless.util.TestImplementationFactoryProvider;
 
 public class ChangeSecretKeyRingPassphraseTest {
 
@@ -42,10 +42,9 @@ public class ChangeSecretKeyRingPassphraseTest {
     public ChangeSecretKeyRingPassphraseTest() throws InvalidAlgorithmParameterException, NoSuchAlgorithmException, PGPException {
     }
 
-    @ParameterizedTest
-    @ArgumentsSource(TestImplementationFactoryProvider.class)
-    public void changePassphraseOfWholeKeyRingTest(ImplementationFactory implementationFactory) throws PGPException {
-        ImplementationFactory.setFactoryImplementation(implementationFactory);
+    @TestTemplate
+    @ExtendWith(ImplementationFactoryTestInvocationContextProvider.class)
+    public void changePassphraseOfWholeKeyRingTest() throws PGPException {
 
         PGPSecretKeyRing secretKeys = PGPainless.modifyKeyRing(keyRing)
                 .changePassphraseFromOldPassphrase(Passphrase.fromPassword("weakPassphrase"))
@@ -70,10 +69,9 @@ public class ChangeSecretKeyRingPassphraseTest {
                 "Unlocking the secret key ring with the new passphrase MUST succeed.");
     }
 
-    @ParameterizedTest
-    @ArgumentsSource(TestImplementationFactoryProvider.class)
-    public void changePassphraseOfWholeKeyRingToEmptyPassphrase(ImplementationFactory implementationFactory) throws PGPException, IOException {
-        ImplementationFactory.setFactoryImplementation(implementationFactory);
+    @TestTemplate
+    @ExtendWith(ImplementationFactoryTestInvocationContextProvider.class)
+    public void changePassphraseOfWholeKeyRingToEmptyPassphrase() throws PGPException, IOException {
         PGPSecretKeyRing secretKeys = PGPainless.modifyKeyRing(keyRing)
                 .changePassphraseFromOldPassphrase(Passphrase.fromPassword("weakPassphrase"))
                 .withSecureDefaultSettings()
@@ -88,10 +86,9 @@ public class ChangeSecretKeyRingPassphraseTest {
         signDummyMessageWithKeysAndPassphrase(changedPassphraseKeyRing, Passphrase.emptyPassphrase());
     }
 
-    @ParameterizedTest
-    @ArgumentsSource(TestImplementationFactoryProvider.class)
-    public void changePassphraseOfSingleSubkeyToNewPassphrase(ImplementationFactory implementationFactory) throws PGPException {
-        ImplementationFactory.setFactoryImplementation(implementationFactory);
+    @TestTemplate
+    @ExtendWith(ImplementationFactoryTestInvocationContextProvider.class)
+    public void changePassphraseOfSingleSubkeyToNewPassphrase() throws PGPException {
 
         Iterator<PGPSecretKey> keys = keyRing.getSecretKeys();
         PGPSecretKey primaryKey = keys.next();
@@ -125,10 +122,9 @@ public class ChangeSecretKeyRingPassphraseTest {
                 "Unlocking the subkey with the primary key passphrase must fail.");
     }
 
-    @ParameterizedTest
-    @ArgumentsSource(TestImplementationFactoryProvider.class)
-    public void changePassphraseOfSingleSubkeyToEmptyPassphrase(ImplementationFactory implementationFactory) throws PGPException {
-        ImplementationFactory.setFactoryImplementation(implementationFactory);
+    @TestTemplate
+    @ExtendWith(ImplementationFactoryTestInvocationContextProvider.class)
+    public void changePassphraseOfSingleSubkeyToEmptyPassphrase() throws PGPException {
 
         Iterator<PGPSecretKey> keys = keyRing.getSecretKeys();
         PGPSecretKey primaryKey = keys.next();

@@ -24,12 +24,11 @@ import org.bouncycastle.openpgp.PGPSecretKey;
 import org.bouncycastle.openpgp.PGPSecretKeyRing;
 import org.bouncycastle.openpgp.PGPSignature;
 import org.junit.jupiter.api.Test;
-import org.junit.jupiter.params.ParameterizedTest;
-import org.junit.jupiter.params.provider.ArgumentsSource;
+import org.junit.jupiter.api.TestTemplate;
+import org.junit.jupiter.api.extension.ExtendWith;
 import org.pgpainless.PGPainless;
 import org.pgpainless.algorithm.EncryptionPurpose;
 import org.pgpainless.algorithm.SignatureType;
-import org.pgpainless.implementation.ImplementationFactory;
 import org.pgpainless.key.OpenPgpV4Fingerprint;
 import org.pgpainless.key.TestKeys;
 import org.pgpainless.key.modification.secretkeyring.SecretKeyRingEditorInterface;
@@ -39,15 +38,14 @@ import org.pgpainless.key.util.RevocationAttributes;
 import org.pgpainless.signature.SignatureUtils;
 import org.pgpainless.signature.subpackets.RevocationSignatureSubpackets;
 import org.pgpainless.signature.subpackets.SignatureSubpacketsUtil;
+import org.pgpainless.util.ImplementationFactoryTestInvocationContextProvider;
 import org.pgpainless.util.Passphrase;
-import org.pgpainless.util.TestImplementationFactoryProvider;
 
 public class RevokeSubKeyTest {
 
-    @ParameterizedTest
-    @ArgumentsSource(TestImplementationFactoryProvider.class)
-    public void revokeSukeyTest(ImplementationFactory implementationFactory) throws IOException, PGPException {
-        ImplementationFactory.setFactoryImplementation(implementationFactory);
+    @TestTemplate
+    @ExtendWith(ImplementationFactoryTestInvocationContextProvider.class)
+    public void revokeSukeyTest() throws IOException, PGPException {
         PGPSecretKeyRing secretKeys = TestKeys.getCryptieSecretKeyRing();
 
         Iterator<PGPSecretKey> keysIterator = secretKeys.iterator();
@@ -69,10 +67,9 @@ public class RevokeSubKeyTest {
         assertTrue(subKey.getPublicKey().hasRevocation());
     }
 
-    @ParameterizedTest
-    @ArgumentsSource(TestImplementationFactoryProvider.class)
-    public void detachedRevokeSubkeyTest(ImplementationFactory implementationFactory) throws IOException, PGPException {
-        ImplementationFactory.setFactoryImplementation(implementationFactory);
+    @TestTemplate
+    @ExtendWith(ImplementationFactoryTestInvocationContextProvider.class)
+    public void detachedRevokeSubkeyTest() throws IOException, PGPException {
         PGPSecretKeyRing secretKeys = TestKeys.getCryptieSecretKeyRing();
         OpenPgpV4Fingerprint fingerprint = new OpenPgpV4Fingerprint(secretKeys);
         SecretKeyRingProtector protector = PasswordBasedSecretKeyRingProtector.forKey(secretKeys, Passphrase.fromPassword("password123"));
@@ -90,10 +87,9 @@ public class RevokeSubKeyTest {
         assertTrue(publicKey.hasRevocation());
     }
 
-    @ParameterizedTest
-    @ArgumentsSource(TestImplementationFactoryProvider.class)
-    public void testRevocationSignatureTypeCorrect(ImplementationFactory implementationFactory) throws IOException, PGPException {
-        ImplementationFactory.setFactoryImplementation(implementationFactory);
+    @TestTemplate
+    @ExtendWith(ImplementationFactoryTestInvocationContextProvider.class)
+    public void testRevocationSignatureTypeCorrect() throws IOException, PGPException {
         PGPSecretKeyRing secretKeys = TestKeys.getCryptieSecretKeyRing();
         Iterator<PGPPublicKey> keysIterator = secretKeys.getPublicKeys();
         PGPPublicKey primaryKey = keysIterator.next();

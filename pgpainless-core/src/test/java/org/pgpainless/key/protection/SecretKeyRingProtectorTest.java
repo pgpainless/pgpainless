@@ -23,22 +23,20 @@ import org.bouncycastle.openpgp.PGPSecretKey;
 import org.bouncycastle.openpgp.PGPSecretKeyRing;
 import org.bouncycastle.openpgp.operator.PBESecretKeyDecryptor;
 import org.junit.jupiter.api.Test;
-import org.junit.jupiter.params.ParameterizedTest;
-import org.junit.jupiter.params.provider.ArgumentsSource;
+import org.junit.jupiter.api.TestTemplate;
+import org.junit.jupiter.api.extension.ExtendWith;
 import org.pgpainless.PGPainless;
-import org.pgpainless.implementation.ImplementationFactory;
 import org.pgpainless.key.TestKeys;
 import org.pgpainless.key.protection.passphrase_provider.SecretKeyPassphraseProvider;
+import org.pgpainless.util.ImplementationFactoryTestInvocationContextProvider;
 import org.pgpainless.util.Passphrase;
-import org.pgpainless.util.TestImplementationFactoryProvider;
 
 public class SecretKeyRingProtectorTest {
 
-    @ParameterizedTest
-    @ArgumentsSource(TestImplementationFactoryProvider.class)
-    public void testUnlockAllKeysWithSamePassword(ImplementationFactory implementationFactory)
+    @TestTemplate
+    @ExtendWith(ImplementationFactoryTestInvocationContextProvider.class)
+    public void testUnlockAllKeysWithSamePassword()
             throws IOException, PGPException, InvalidAlgorithmParameterException, NoSuchAlgorithmException {
-        ImplementationFactory.setFactoryImplementation(implementationFactory);
 
         PGPSecretKeyRing secretKeys = TestKeys.getCryptieSecretKeyRing();
         SecretKeyRingProtector protector =
@@ -69,11 +67,10 @@ public class SecretKeyRingProtectorTest {
         }
     }
 
-    @ParameterizedTest
-    @ArgumentsSource(TestImplementationFactoryProvider.class)
-    public void testUnlockSingleKeyWithPassphrase(ImplementationFactory implementationFactory)
+    @TestTemplate
+    @ExtendWith(ImplementationFactoryTestInvocationContextProvider.class)
+    public void testUnlockSingleKeyWithPassphrase()
             throws IOException, PGPException {
-        ImplementationFactory.setFactoryImplementation(implementationFactory);
 
         PGPSecretKeyRing secretKeys = TestKeys.getCryptieSecretKeyRing();
         Iterator<PGPSecretKey> iterator = secretKeys.iterator();

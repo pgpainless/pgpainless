@@ -33,8 +33,8 @@ import org.bouncycastle.openpgp.PGPSignatureList;
 import org.bouncycastle.openpgp.PGPUtil;
 import org.bouncycastle.openpgp.operator.PublicKeyDataDecryptorFactory;
 import org.bouncycastle.util.io.Streams;
-import org.junit.jupiter.params.ParameterizedTest;
-import org.junit.jupiter.params.provider.ArgumentsSource;
+import org.junit.jupiter.api.TestTemplate;
+import org.junit.jupiter.api.extension.ExtendWith;
 import org.pgpainless.PGPainless;
 import org.pgpainless.algorithm.DocumentSignatureType;
 import org.pgpainless.algorithm.HashAlgorithm;
@@ -47,14 +47,14 @@ import org.pgpainless.encryption_signing.SigningOptions;
 import org.pgpainless.implementation.ImplementationFactory;
 import org.pgpainless.key.protection.SecretKeyRingProtector;
 import org.pgpainless.key.protection.UnlockSecretKey;
-import org.pgpainless.util.TestImplementationFactoryProvider;
+import org.pgpainless.util.ImplementationFactoryTestInvocationContextProvider;
 
 public class OnePassSignatureBracketingTest {
 
-    @ParameterizedTest
-    @ArgumentsSource(TestImplementationFactoryProvider.class)
-    public void onePassSignaturePacketsAndSignaturesAreBracketedTest(ImplementationFactory implementationFactory) throws PGPException, InvalidAlgorithmParameterException, NoSuchAlgorithmException, IOException {
-        ImplementationFactory.setFactoryImplementation(implementationFactory);
+    @TestTemplate
+    @ExtendWith(ImplementationFactoryTestInvocationContextProvider.class)
+    public void onePassSignaturePacketsAndSignaturesAreBracketedTest()
+            throws PGPException, InvalidAlgorithmParameterException, NoSuchAlgorithmException, IOException {
 
         PGPSecretKeyRing key1 = PGPainless.generateKeyRing().modernKeyRing("Alice", null);
         PGPSecretKeyRing key2 = PGPainless.generateKeyRing().modernKeyRing("Bob", null);

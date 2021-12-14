@@ -13,17 +13,16 @@ import org.bouncycastle.openpgp.PGPException;
 import org.bouncycastle.openpgp.PGPSecretKey;
 import org.bouncycastle.openpgp.PGPSecretKeyRing;
 import org.junit.JUtils;
-import org.junit.jupiter.params.ParameterizedTest;
-import org.junit.jupiter.params.provider.ArgumentsSource;
+import org.junit.jupiter.api.TestTemplate;
+import org.junit.jupiter.api.extension.ExtendWith;
 import org.pgpainless.PGPainless;
-import org.pgpainless.implementation.ImplementationFactory;
 import org.pgpainless.key.OpenPgpV4Fingerprint;
 import org.pgpainless.key.info.KeyRingInfo;
 import org.pgpainless.key.modification.secretkeyring.SecretKeyRingEditorInterface;
 import org.pgpainless.key.protection.SecretKeyRingProtector;
 import org.pgpainless.key.protection.UnprotectedKeysProtector;
 import org.pgpainless.util.DateUtil;
-import org.pgpainless.util.TestImplementationFactoryProvider;
+import org.pgpainless.util.ImplementationFactoryTestInvocationContextProvider;
 
 public class RevokeKeyWithoutPreferredAlgorithmsOnPrimaryKey {
 
@@ -101,11 +100,10 @@ public class RevokeKeyWithoutPreferredAlgorithmsOnPrimaryKey {
             "=3Zyp\n" +
             "-----END PGP PRIVATE KEY BLOCK-----";
 
-    @ParameterizedTest
-    @ArgumentsSource(TestImplementationFactoryProvider.class)
-    public void testChangingExpirationTimeWithKeyWithoutPrefAlgos(ImplementationFactory implementationFactory)
+    @TestTemplate
+    @ExtendWith(ImplementationFactoryTestInvocationContextProvider.class)
+    public void testChangingExpirationTimeWithKeyWithoutPrefAlgos()
             throws IOException, PGPException {
-        ImplementationFactory.setFactoryImplementation(implementationFactory);
         Date expirationDate = DateUtil.parseUTCDate(DateUtil.formatUTCDate(new Date()));
         PGPSecretKeyRing secretKeys = PGPainless.readKeyRing().secretKeyRing(KEY);
         List<OpenPgpV4Fingerprint> fingerprintList = new ArrayList<>();

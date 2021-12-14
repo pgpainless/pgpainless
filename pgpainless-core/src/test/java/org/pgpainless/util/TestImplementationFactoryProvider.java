@@ -17,6 +17,8 @@ import java.util.stream.Stream;
 
 /**
  * Utility class used to provide all available implementations of {@link ImplementationFactory} for parametrized tests.
+ *
+ * @deprecated in favor of {@link ImplementationFactoryTestInvocationContextProvider}.
  */
 public class TestImplementationFactoryProvider implements ArgumentsProvider {
 

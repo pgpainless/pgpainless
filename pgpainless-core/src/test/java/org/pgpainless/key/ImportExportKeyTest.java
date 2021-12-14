@@ -13,10 +13,10 @@ import org.bouncycastle.openpgp.PGPException;
 import org.bouncycastle.openpgp.PGPPublicKeyRing;
 import org.bouncycastle.openpgp.PGPSecretKeyRing;
 import org.bouncycastle.openpgp.operator.KeyFingerPrintCalculator;
-import org.junit.jupiter.params.ParameterizedTest;
-import org.junit.jupiter.params.provider.ArgumentsSource;
+import org.junit.jupiter.api.TestTemplate;
+import org.junit.jupiter.api.extension.ExtendWith;
 import org.pgpainless.implementation.ImplementationFactory;
-import org.pgpainless.util.TestImplementationFactoryProvider;
+import org.pgpainless.util.ImplementationFactoryTestInvocationContextProvider;
 
 public class ImportExportKeyTest {
 
@@ -24,10 +24,9 @@ public class ImportExportKeyTest {
      * Test the export and import of a key ring with sub keys.
      * @throws IOException in case of a IO error
      */
-    @ParameterizedTest
-    @ArgumentsSource(TestImplementationFactoryProvider.class)
-    public void testExportImportPublicKeyRing(ImplementationFactory implementationFactory) throws IOException {
-        ImplementationFactory.setFactoryImplementation(implementationFactory);
+    @TestTemplate
+    @ExtendWith(ImplementationFactoryTestInvocationContextProvider.class)
+    public void testExportImportPublicKeyRing() throws IOException {
         PGPPublicKeyRing publicKeys = TestKeys.getJulietPublicKeyRing();
 
         KeyFingerPrintCalculator calc = ImplementationFactory.getInstance().getKeyFingerprintCalculator();
@@ -36,10 +35,9 @@ public class ImportExportKeyTest {
         assertArrayEquals(publicKeys.getEncoded(), parsed.getEncoded());
     }
 
-    @ParameterizedTest
-    @ArgumentsSource(TestImplementationFactoryProvider.class)
-    public void testExportImportSecretKeyRing(ImplementationFactory implementationFactory) throws IOException, PGPException {
-        ImplementationFactory.setFactoryImplementation(implementationFactory);
+    @TestTemplate
+    @ExtendWith(ImplementationFactoryTestInvocationContextProvider.class)
+    public void testExportImportSecretKeyRing() throws IOException, PGPException {
         PGPSecretKeyRing secretKeys = TestKeys.getRomeoSecretKeyRing();
 
         KeyFingerPrintCalculator calc = ImplementationFactory.getInstance().getKeyFingerprintCalculator();

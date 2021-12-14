@@ -26,8 +26,8 @@ import org.bouncycastle.openpgp.PGPUtil;
 import org.bouncycastle.util.io.Streams;
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.Test;
-import org.junit.jupiter.params.ParameterizedTest;
-import org.junit.jupiter.params.provider.ArgumentsSource;
+import org.junit.jupiter.api.TestTemplate;
+import org.junit.jupiter.api.extension.ExtendWith;
 import org.pgpainless.algorithm.HashAlgorithm;
 import org.pgpainless.implementation.ImplementationFactory;
 import org.pgpainless.key.TestKeys;
@@ -144,10 +144,9 @@ public class ArmorUtilsTest {
                 "-----END PGP MESSAGE-----\n", out.toString());
     }
 
-    @ParameterizedTest
-    @ArgumentsSource(TestImplementationFactoryProvider.class)
-    public void decodeExampleTest(ImplementationFactory implementationFactory) throws IOException, PGPException {
-        ImplementationFactory.setFactoryImplementation(implementationFactory);
+    @TestTemplate
+    @ExtendWith(ImplementationFactoryTestInvocationContextProvider.class)
+    public void decodeExampleTest() throws IOException, PGPException {
         String armored = "-----BEGIN PGP MESSAGE-----\n" +
                 "Version: OpenPrivacy 0.99\n" +
                 "\n" +

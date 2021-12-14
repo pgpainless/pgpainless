@@ -19,18 +19,17 @@ import org.bouncycastle.openpgp.PGPLiteralData;
 import org.bouncycastle.openpgp.PGPLiteralDataGenerator;
 import org.bouncycastle.openpgp.PGPObjectFactory;
 import org.bouncycastle.util.io.Streams;
-import org.junit.jupiter.params.ParameterizedTest;
-import org.junit.jupiter.params.provider.ArgumentsSource;
+import org.junit.jupiter.api.TestTemplate;
+import org.junit.jupiter.api.extension.ExtendWith;
 import org.pgpainless.implementation.ImplementationFactory;
+import org.pgpainless.util.ImplementationFactoryTestInvocationContextProvider;
 import org.pgpainless.util.PGPUtilWrapper;
-import org.pgpainless.util.TestImplementationFactoryProvider;
 
 public class PGPUtilWrapperTest {
 
-    @ParameterizedTest
-    @ArgumentsSource(TestImplementationFactoryProvider.class)
-    public void testGetDecoderStream(ImplementationFactory implementationFactory) throws IOException {
-        ImplementationFactory.setFactoryImplementation(implementationFactory);
+    @TestTemplate
+    @ExtendWith(ImplementationFactoryTestInvocationContextProvider.class)
+    public void testGetDecoderStream() throws IOException {
 
         ByteArrayInputStream msg = new ByteArrayInputStream("Foo\nBar".getBytes(StandardCharsets.UTF_8));
         PGPLiteralDataGenerator literalDataGenerator = new PGPLiteralDataGenerator();

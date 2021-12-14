@@ -16,14 +16,13 @@ import java.util.Date;
 import org.bouncycastle.openpgp.PGPException;
 import org.bouncycastle.openpgp.PGPPublicKeyRing;
 import org.bouncycastle.openpgp.PGPSignature;
-import org.junit.jupiter.params.ParameterizedTest;
-import org.junit.jupiter.params.provider.ArgumentsSource;
+import org.junit.jupiter.api.TestTemplate;
+import org.junit.jupiter.api.extension.ExtendWith;
 import org.pgpainless.PGPainless;
 import org.pgpainless.exception.SignatureValidationException;
-import org.pgpainless.implementation.ImplementationFactory;
 import org.pgpainless.policy.Policy;
 import org.pgpainless.signature.consumer.CertificateValidator;
-import org.pgpainless.util.TestImplementationFactoryProvider;
+import org.pgpainless.util.ImplementationFactoryTestInvocationContextProvider;
 
 /**
  * Explores how subpackets on binding sigs are handled.
@@ -52,10 +51,9 @@ public class BindingSignatureSubpacketsTest {
     private Date validationDate = new Date();
     private Policy policy = PGPainless.getPolicy();
 
-    @ParameterizedTest
-    @ArgumentsSource(TestImplementationFactoryProvider.class)
-    public void baseCase(ImplementationFactory implementationFactory) throws IOException, PGPException {
-        ImplementationFactory.setFactoryImplementation(implementationFactory);
+    @TestTemplate
+    @ExtendWith(ImplementationFactoryTestInvocationContextProvider.class)
+    public void baseCase() throws IOException, PGPException {
 
         String key = "-----BEGIN PGP PUBLIC KEY BLOCK-----\n" +
                 "\n" +
@@ -114,10 +112,9 @@ public class BindingSignatureSubpacketsTest {
         expectSignatureValidationSucceeds(key, "Base case. Is valid.");
     }
 
-    @ParameterizedTest
-    @ArgumentsSource(TestImplementationFactoryProvider.class)
-    public void subkeyBindingIssuerFpOnly(ImplementationFactory implementationFactory) throws IOException, PGPException {
-        ImplementationFactory.setFactoryImplementation(implementationFactory);
+    @TestTemplate
+    @ExtendWith(ImplementationFactoryTestInvocationContextProvider.class)
+    public void subkeyBindingIssuerFpOnly() throws IOException, PGPException {
 
         String key = "-----BEGIN PGP PUBLIC KEY BLOCK-----\n" +
                 "\n" +
@@ -176,10 +173,9 @@ public class BindingSignatureSubpacketsTest {
         expectSignatureValidationSucceeds(key, "Interoperability concern.");
     }
 
-    @ParameterizedTest
-    @ArgumentsSource(TestImplementationFactoryProvider.class)
-    public void subkeyBindingIssuerV6IssuerFp(ImplementationFactory implementationFactory) throws IOException, PGPException {
-        ImplementationFactory.setFactoryImplementation(implementationFactory);
+    @TestTemplate
+    @ExtendWith(ImplementationFactoryTestInvocationContextProvider.class)
+    public void subkeyBindingIssuerV6IssuerFp() throws IOException, PGPException {
 
         String key = "-----BEGIN PGP PUBLIC KEY BLOCK-----\n" +
                 "\n" +
@@ -238,10 +234,9 @@ public class BindingSignatureSubpacketsTest {
         expectSignatureValidationSucceeds(key, "Interoperability concern");
     }
 
-    @ParameterizedTest
-    @ArgumentsSource(TestImplementationFactoryProvider.class)
-    public void subkeyBindingIssuerFakeIssuer(ImplementationFactory implementationFactory) throws IOException, PGPException {
-        ImplementationFactory.setFactoryImplementation(implementationFactory);
+    @TestTemplate
+    @ExtendWith(ImplementationFactoryTestInvocationContextProvider.class)
+    public void subkeyBindingIssuerFakeIssuer() throws IOException, PGPException {
 
         String key = "-----BEGIN PGP PUBLIC KEY BLOCK-----\n" +
                 "\n" +
@@ -300,10 +295,9 @@ public class BindingSignatureSubpacketsTest {
         expectSignatureValidationSucceeds(key, "Interoperability concern.");
     }
 
-    @ParameterizedTest
-    @ArgumentsSource(TestImplementationFactoryProvider.class)
-    public void subkeyBindingFakeIssuerIssuer(ImplementationFactory implementationFactory) throws IOException, PGPException {
-        ImplementationFactory.setFactoryImplementation(implementationFactory);
+    @TestTemplate
+    @ExtendWith(ImplementationFactoryTestInvocationContextProvider.class)
+    public void subkeyBindingFakeIssuerIssuer() throws IOException, PGPException {
 
         String key = "-----BEGIN PGP PUBLIC KEY BLOCK-----\n" +
                 "\n" +
@@ -362,10 +356,9 @@ public class BindingSignatureSubpacketsTest {
         expectSignatureValidationSucceeds(key, "Interop concern");
     }
 
-    @ParameterizedTest
-    @ArgumentsSource(TestImplementationFactoryProvider.class)
-    public void subkeyBindingFakeIssuer(ImplementationFactory implementationFactory) throws IOException, PGPException {
-        ImplementationFactory.setFactoryImplementation(implementationFactory);
+    @TestTemplate
+    @ExtendWith(ImplementationFactoryTestInvocationContextProvider.class)
+    public void subkeyBindingFakeIssuer() throws IOException, PGPException {
 
         String key = "-----BEGIN PGP PUBLIC KEY BLOCK-----\n" +
                 "\n" +
@@ -424,10 +417,9 @@ public class BindingSignatureSubpacketsTest {
         expectSignatureValidationSucceeds(key, "fake issuers do not throw us off here.");
     }
 
-    @ParameterizedTest
-    @ArgumentsSource(TestImplementationFactoryProvider.class)
-    public void subkeyBindingNoIssuer(ImplementationFactory implementationFactory) throws IOException, PGPException {
-        ImplementationFactory.setFactoryImplementation(implementationFactory);
+    @TestTemplate
+    @ExtendWith(ImplementationFactoryTestInvocationContextProvider.class)
+    public void subkeyBindingNoIssuer() throws IOException, PGPException {
 
         String key = "-----BEGIN PGP PUBLIC KEY BLOCK-----\n" +
                 "\n" +
@@ -485,10 +477,9 @@ public class BindingSignatureSubpacketsTest {
         expectSignatureValidationSucceeds(key, "subkey binding sig does not need issuer");
     }
 
-    @ParameterizedTest
-    @ArgumentsSource(TestImplementationFactoryProvider.class)
-    public void unknownSubpacketHashed(ImplementationFactory implementationFactory) throws IOException, PGPException {
-        ImplementationFactory.setFactoryImplementation(implementationFactory);
+    @TestTemplate
+    @ExtendWith(ImplementationFactoryTestInvocationContextProvider.class)
+    public void unknownSubpacketHashed() throws IOException, PGPException {
 
         String key = "-----BEGIN PGP PUBLIC KEY BLOCK-----\n" +
                 "\n" +
@@ -547,10 +538,9 @@ public class BindingSignatureSubpacketsTest {
         expectSignatureValidationSucceeds(key, "Unknown subpackets are okay in hashed area");
     }
 
-    @ParameterizedTest
-    @ArgumentsSource(TestImplementationFactoryProvider.class)
-    public void subkeyBindingUnknownCriticalSubpacket(ImplementationFactory implementationFactory) throws IOException, PGPException {
-        ImplementationFactory.setFactoryImplementation(implementationFactory);
+    @TestTemplate
+    @ExtendWith(ImplementationFactoryTestInvocationContextProvider.class)
+    public void subkeyBindingUnknownCriticalSubpacket() throws IOException, PGPException {
 
         String key = "-----BEGIN PGP PUBLIC KEY BLOCK-----\n" +
                 "\n" +
@@ -609,10 +599,9 @@ public class BindingSignatureSubpacketsTest {
         expectSignatureValidationFails(key, "Unknown critical subpacket in hashed area invalidates signature");
     }
 
-    @ParameterizedTest
-    @ArgumentsSource(TestImplementationFactoryProvider.class)
-    public void subkeyBindingUnknownSubpacketUnhashed(ImplementationFactory implementationFactory) throws IOException, PGPException {
-        ImplementationFactory.setFactoryImplementation(implementationFactory);
+    @TestTemplate
+    @ExtendWith(ImplementationFactoryTestInvocationContextProvider.class)
+    public void subkeyBindingUnknownSubpacketUnhashed() throws IOException, PGPException {
 
         String key = "-----BEGIN PGP PUBLIC KEY BLOCK-----\n" +
                 "\n" +
@@ -671,10 +660,9 @@ public class BindingSignatureSubpacketsTest {
         expectSignatureValidationSucceeds(key, "Unknown subpackets may be allowed in unhashed area.");
     }
 
-    @ParameterizedTest
-    @ArgumentsSource(TestImplementationFactoryProvider.class)
-    public void subkeyBindingUnknownCriticalSubpacketUnhashed(ImplementationFactory implementationFactory) throws IOException, PGPException {
-        ImplementationFactory.setFactoryImplementation(implementationFactory);
+    @TestTemplate
+    @ExtendWith(ImplementationFactoryTestInvocationContextProvider.class)
+    public void subkeyBindingUnknownCriticalSubpacketUnhashed() throws IOException, PGPException {
 
         String key = "-----BEGIN PGP PUBLIC KEY BLOCK-----\n" +
                 "\n" +
@@ -733,10 +721,9 @@ public class BindingSignatureSubpacketsTest {
         expectSignatureValidationSucceeds(key, "Critical unknown subpacket is okay in unhashed area.");
     }
 
-    @ParameterizedTest
-    @ArgumentsSource(TestImplementationFactoryProvider.class)
-    public void subkeyBindingUnknownNotationHashed(ImplementationFactory implementationFactory) throws IOException, PGPException {
-        ImplementationFactory.setFactoryImplementation(implementationFactory);
+    @TestTemplate
+    @ExtendWith(ImplementationFactoryTestInvocationContextProvider.class)
+    public void subkeyBindingUnknownNotationHashed() throws IOException, PGPException {
 
         String key = "-----BEGIN PGP PUBLIC KEY BLOCK-----\n" +
                 "\n" +
@@ -796,10 +783,9 @@ public class BindingSignatureSubpacketsTest {
         expectSignatureValidationSucceeds(key, "Unknown notation is okay in subkey binding sig.");
     }
 
-    @ParameterizedTest
-    @ArgumentsSource(TestImplementationFactoryProvider.class)
-    public void subkeyBindingCriticalUnknownNotationHashed(ImplementationFactory implementationFactory) throws IOException, PGPException {
-        ImplementationFactory.setFactoryImplementation(implementationFactory);
+    @TestTemplate
+    @ExtendWith(ImplementationFactoryTestInvocationContextProvider.class)
+    public void subkeyBindingCriticalUnknownNotationHashed() throws IOException, PGPException {
 
         String key = "-----BEGIN PGP PUBLIC KEY BLOCK-----\n" +
                 "\n" +
@@ -859,10 +845,9 @@ public class BindingSignatureSubpacketsTest {
         expectSignatureValidationFails(key, "Critical unknown notation invalidates subkey binding sig.");
     }
 
-    @ParameterizedTest
-    @ArgumentsSource(TestImplementationFactoryProvider.class)
-    public void subkeyBindingUnknownNotationUnhashed(ImplementationFactory implementationFactory) throws IOException, PGPException {
-        ImplementationFactory.setFactoryImplementation(implementationFactory);
+    @TestTemplate
+    @ExtendWith(ImplementationFactoryTestInvocationContextProvider.class)
+    public void subkeyBindingUnknownNotationUnhashed() throws IOException, PGPException {
 
         String key = "-----BEGIN PGP PUBLIC KEY BLOCK-----\n" +
                 "\n" +
@@ -922,10 +907,9 @@ public class BindingSignatureSubpacketsTest {
         expectSignatureValidationSucceeds(key, "Unknown notation is okay in unhashed area.");
     }
 
-    @ParameterizedTest
-    @ArgumentsSource(TestImplementationFactoryProvider.class)
-    public void subkeyBindingCriticalUnknownNotationUnhashed(ImplementationFactory implementationFactory) throws IOException, PGPException {
-        ImplementationFactory.setFactoryImplementation(implementationFactory);
+    @TestTemplate
+    @ExtendWith(ImplementationFactoryTestInvocationContextProvider.class)
+    public void subkeyBindingCriticalUnknownNotationUnhashed() throws IOException, PGPException {
 
         String key = "-----BEGIN PGP PUBLIC KEY BLOCK-----\n" +
                 "\n" +
@@ -985,10 +969,9 @@ public class BindingSignatureSubpacketsTest {
         expectSignatureValidationSucceeds(key, "Critical unknown notation is okay in unhashed area.");
     }
 
-    @ParameterizedTest
-    @ArgumentsSource(TestImplementationFactoryProvider.class)
-    public void subkeyBindingBackSigFakeBackSig(ImplementationFactory implementationFactory) throws IOException, PGPException {
-        ImplementationFactory.setFactoryImplementation(implementationFactory);
+    @TestTemplate
+    @ExtendWith(ImplementationFactoryTestInvocationContextProvider.class)
+    public void subkeyBindingBackSigFakeBackSig() throws IOException, PGPException {
 
         String key = "-----BEGIN PGP PUBLIC KEY BLOCK-----\n" +
                 "\n" +
@@ -1058,10 +1041,9 @@ public class BindingSignatureSubpacketsTest {
         expectSignatureValidationSucceeds(key, "Back-sig, fake back-sig should succeed to verify");
     }
 
-    @ParameterizedTest
-    @ArgumentsSource(TestImplementationFactoryProvider.class)
-    public void subkeyBindingFakeBackSigBackSig(ImplementationFactory implementationFactory) throws IOException, PGPException {
-        ImplementationFactory.setFactoryImplementation(implementationFactory);
+    @TestTemplate
+    @ExtendWith(ImplementationFactoryTestInvocationContextProvider.class)
+    public void subkeyBindingFakeBackSigBackSig() throws IOException, PGPException {
 
         String key = "-----BEGIN PGP PUBLIC KEY BLOCK-----\n" +
                 "\n" +
@@ -1131,10 +1113,9 @@ public class BindingSignatureSubpacketsTest {
         expectSignatureValidationSucceeds(key, "Fake back-sig, back-sig should succeed to verify.");
     }
 
-    @ParameterizedTest
-    @ArgumentsSource(TestImplementationFactoryProvider.class)
-    public void primaryBindingIssuerFpOnly(ImplementationFactory implementationFactory) throws IOException, PGPException {
-        ImplementationFactory.setFactoryImplementation(implementationFactory);
+    @TestTemplate
+    @ExtendWith(ImplementationFactoryTestInvocationContextProvider.class)
+    public void primaryBindingIssuerFpOnly() throws IOException, PGPException {
 
         String key = "-----BEGIN PGP PUBLIC KEY BLOCK-----\n" +
                 "\n" +
@@ -1193,10 +1174,9 @@ public class BindingSignatureSubpacketsTest {
         expectSignatureValidationSucceeds(key, "issuer fp is enough");
     }
 
-    @ParameterizedTest
-    @ArgumentsSource(TestImplementationFactoryProvider.class)
-    public void primaryBindingIssuerV6IssuerFp(ImplementationFactory implementationFactory) throws IOException, PGPException {
-        ImplementationFactory.setFactoryImplementation(implementationFactory);
+    @TestTemplate
+    @ExtendWith(ImplementationFactoryTestInvocationContextProvider.class)
+    public void primaryBindingIssuerV6IssuerFp() throws IOException, PGPException {
 
         String key = "-----BEGIN PGP PUBLIC KEY BLOCK-----\n" +
                 "\n" +
@@ -1255,10 +1235,9 @@ public class BindingSignatureSubpacketsTest {
         expectSignatureValidationSucceeds(key, "interop");
     }
 
-    @ParameterizedTest
-    @ArgumentsSource(TestImplementationFactoryProvider.class)
-    public void primaryBindingIssuerFakeIssuer(ImplementationFactory implementationFactory) throws IOException, PGPException {
-        ImplementationFactory.setFactoryImplementation(implementationFactory);
+    @TestTemplate
+    @ExtendWith(ImplementationFactoryTestInvocationContextProvider.class)
+    public void primaryBindingIssuerFakeIssuer() throws IOException, PGPException {
 
         String key = "-----BEGIN PGP PUBLIC KEY BLOCK-----\n" +
                 "\n" +
@@ -1317,10 +1296,9 @@ public class BindingSignatureSubpacketsTest {
         expectSignatureValidationSucceeds(key, "interop");
     }
 
-    @ParameterizedTest
-    @ArgumentsSource(TestImplementationFactoryProvider.class)
-    public void primaryBindingFakeIssuerIssuer(ImplementationFactory implementationFactory) throws IOException, PGPException {
-        ImplementationFactory.setFactoryImplementation(implementationFactory);
+    @TestTemplate
+    @ExtendWith(ImplementationFactoryTestInvocationContextProvider.class)
+    public void primaryBindingFakeIssuerIssuer() throws IOException, PGPException {
 
         String key = "-----BEGIN PGP PUBLIC KEY BLOCK-----\n" +
                 "\n" +
@@ -1379,10 +1357,9 @@ public class BindingSignatureSubpacketsTest {
         expectSignatureValidationSucceeds(key, "interop");
     }
 
-    @ParameterizedTest
-    @ArgumentsSource(TestImplementationFactoryProvider.class)
-    public void primaryBindingFakeIssuer(ImplementationFactory implementationFactory) throws IOException, PGPException {
-        ImplementationFactory.setFactoryImplementation(implementationFactory);
+    @TestTemplate
+    @ExtendWith(ImplementationFactoryTestInvocationContextProvider.class)
+    public void primaryBindingFakeIssuer() throws IOException, PGPException {
 
         String key = "-----BEGIN PGP PUBLIC KEY BLOCK-----\n" +
                 "\n" +
@@ -1441,10 +1418,9 @@ public class BindingSignatureSubpacketsTest {
         expectSignatureValidationSucceeds(key, "Fake issuer on primary key binding sig is not an issue.");
     }
 
-    @ParameterizedTest
-    @ArgumentsSource(TestImplementationFactoryProvider.class)
-    public void primaryBindingNoIssuer(ImplementationFactory implementationFactory) throws IOException, PGPException {
-        ImplementationFactory.setFactoryImplementation(implementationFactory);
+    @TestTemplate
+    @ExtendWith(ImplementationFactoryTestInvocationContextProvider.class)
+    public void primaryBindingNoIssuer() throws IOException, PGPException {
 
         String key = "-----BEGIN PGP PUBLIC KEY BLOCK-----\n" +
                 "\n" +
@@ -1502,10 +1478,9 @@ public class BindingSignatureSubpacketsTest {
         expectSignatureValidationSucceeds(key, "Missing issuer on primary key binding sig is not an issue");
     }
 
-    @ParameterizedTest
-    @ArgumentsSource(TestImplementationFactoryProvider.class)
-    public void primaryBindingUnknownSubpacketHashed(ImplementationFactory implementationFactory) throws IOException, PGPException {
-        ImplementationFactory.setFactoryImplementation(implementationFactory);
+    @TestTemplate
+    @ExtendWith(ImplementationFactoryTestInvocationContextProvider.class)
+    public void primaryBindingUnknownSubpacketHashed() throws IOException, PGPException {
 
         String key = "-----BEGIN PGP PUBLIC KEY BLOCK-----\n" +
                 "\n" +
@@ -1564,10 +1539,9 @@ public class BindingSignatureSubpacketsTest {
         expectSignatureValidationSucceeds(key, "Unknown subpacket in hashed area is not a problem.");
     }
 
-    @ParameterizedTest
-    @ArgumentsSource(TestImplementationFactoryProvider.class)
-    public void primaryBindingCriticalUnknownSubpacketHashed(ImplementationFactory implementationFactory) throws IOException, PGPException {
-        ImplementationFactory.setFactoryImplementation(implementationFactory);
+    @TestTemplate
+    @ExtendWith(ImplementationFactoryTestInvocationContextProvider.class)
+    public void primaryBindingCriticalUnknownSubpacketHashed() throws IOException, PGPException {
 
         String key = "-----BEGIN PGP PUBLIC KEY BLOCK-----\n" +
                 "\n" +
@@ -1626,10 +1600,9 @@ public class BindingSignatureSubpacketsTest {
         expectSignatureValidationFails(key, "Critical unknown subpacket in hashed area invalidates signature.");
     }
 
-    @ParameterizedTest
-    @ArgumentsSource(TestImplementationFactoryProvider.class)
-    public void primaryBindingUnknownSubpacketUnhashed(ImplementationFactory implementationFactory) throws IOException, PGPException {
-        ImplementationFactory.setFactoryImplementation(implementationFactory);
+    @TestTemplate
+    @ExtendWith(ImplementationFactoryTestInvocationContextProvider.class)
+    public void primaryBindingUnknownSubpacketUnhashed() throws IOException, PGPException {
 
         String key = "-----BEGIN PGP PUBLIC KEY BLOCK-----\n" +
                 "\n" +
@@ -1688,10 +1661,9 @@ public class BindingSignatureSubpacketsTest {
         expectSignatureValidationSucceeds(key, "Unknown subpacket is not an issue in the unhashed area");
     }
 
-    @ParameterizedTest
-    @ArgumentsSource(TestImplementationFactoryProvider.class)
-    public void primaryBindingCriticalUnknownSubpacketUnhashed(ImplementationFactory implementationFactory) throws IOException, PGPException {
-        ImplementationFactory.setFactoryImplementation(implementationFactory);
+    @TestTemplate
+    @ExtendWith(ImplementationFactoryTestInvocationContextProvider.class)
+    public void primaryBindingCriticalUnknownSubpacketUnhashed() throws IOException, PGPException {
 
         String key = "-----BEGIN PGP PUBLIC KEY BLOCK-----\n" +
                 "\n" +
@@ -1750,10 +1722,9 @@ public class BindingSignatureSubpacketsTest {
         expectSignatureValidationSucceeds(key, "Critical unknown subpacket is acceptable in unhashed area of primary binding sig");
     }
 
-    @ParameterizedTest
-    @ArgumentsSource(TestImplementationFactoryProvider.class)
-    public void primaryBindingUnknownNotationHashed(ImplementationFactory implementationFactory) throws IOException, PGPException {
-        ImplementationFactory.setFactoryImplementation(implementationFactory);
+    @TestTemplate
+    @ExtendWith(ImplementationFactoryTestInvocationContextProvider.class)
+    public void primaryBindingUnknownNotationHashed() throws IOException, PGPException {
 
         String key = "-----BEGIN PGP PUBLIC KEY BLOCK-----\n" +
                 "\n" +
@@ -1813,10 +1784,9 @@ public class BindingSignatureSubpacketsTest {
         expectSignatureValidationSucceeds(key, "Unknown notation is acceptable in hashed area of primary binding sig.");
     }
 
-    @ParameterizedTest
-    @ArgumentsSource(TestImplementationFactoryProvider.class)
-    public void primaryBindingCriticalUnknownNotationHashed(ImplementationFactory implementationFactory) throws IOException, PGPException {
-        ImplementationFactory.setFactoryImplementation(implementationFactory);
+    @TestTemplate
+    @ExtendWith(ImplementationFactoryTestInvocationContextProvider.class)
+    public void primaryBindingCriticalUnknownNotationHashed() throws IOException, PGPException {
 
         String key = "-----BEGIN PGP PUBLIC KEY BLOCK-----\n" +
                 "\n" +
@@ -1876,10 +1846,9 @@ public class BindingSignatureSubpacketsTest {
         expectSignatureValidationFails(key, "Critical unknown notation in hashed area invalidates primary binding sig");
     }
 
-    @ParameterizedTest
-    @ArgumentsSource(TestImplementationFactoryProvider.class)
-    public void primaryBindingUnknownNotationUnhashed(ImplementationFactory implementationFactory) throws IOException, PGPException {
-        ImplementationFactory.setFactoryImplementation(implementationFactory);
+    @TestTemplate
+    @ExtendWith(ImplementationFactoryTestInvocationContextProvider.class)
+    public void primaryBindingUnknownNotationUnhashed() throws IOException, PGPException {
 
         String key = "-----BEGIN PGP PUBLIC KEY BLOCK-----\n" +
                 "\n" +
@@ -1939,10 +1908,9 @@ public class BindingSignatureSubpacketsTest {
         expectSignatureValidationSucceeds(key, "Unknown notation in unhashed area of primary key binding is okay.");
     }
 
-    @ParameterizedTest
-    @ArgumentsSource(TestImplementationFactoryProvider.class)
-    public void primaryBindingCriticalUnknownNotationUnhashed(ImplementationFactory implementationFactory) throws IOException, PGPException {
-        ImplementationFactory.setFactoryImplementation(implementationFactory);
+    @TestTemplate
+    @ExtendWith(ImplementationFactoryTestInvocationContextProvider.class)
+    public void primaryBindingCriticalUnknownNotationUnhashed() throws IOException, PGPException {
 
         String key = "-----BEGIN PGP PUBLIC KEY BLOCK-----\n" +
                 "\n" +

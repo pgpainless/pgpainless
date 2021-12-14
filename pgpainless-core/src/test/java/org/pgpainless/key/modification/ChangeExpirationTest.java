@@ -13,26 +13,24 @@ import java.util.Date;
 
 import org.bouncycastle.openpgp.PGPException;
 import org.bouncycastle.openpgp.PGPSecretKeyRing;
-import org.junit.jupiter.params.ParameterizedTest;
-import org.junit.jupiter.params.provider.ArgumentsSource;
+import org.junit.jupiter.api.TestTemplate;
+import org.junit.jupiter.api.extension.ExtendWith;
 import org.pgpainless.PGPainless;
-import org.pgpainless.implementation.ImplementationFactory;
 import org.pgpainless.key.OpenPgpV4Fingerprint;
 import org.pgpainless.key.TestKeys;
 import org.pgpainless.key.info.KeyRingInfo;
 import org.pgpainless.key.protection.UnprotectedKeysProtector;
 import org.pgpainless.util.DateUtil;
-import org.pgpainless.util.TestImplementationFactoryProvider;
+import org.pgpainless.util.ImplementationFactoryTestInvocationContextProvider;
 
 public class ChangeExpirationTest {
 
     private final OpenPgpV4Fingerprint subKeyFingerprint = new OpenPgpV4Fingerprint("F73FDE6439ABE210B1AF4EDD273EF7A0C749807B");
 
-    @ParameterizedTest
-    @ArgumentsSource(TestImplementationFactoryProvider.class)
-    public void setExpirationDateAndThenUnsetIt_OnPrimaryKey(ImplementationFactory implementationFactory)
+    @TestTemplate
+    @ExtendWith(ImplementationFactoryTestInvocationContextProvider.class)
+    public void setExpirationDateAndThenUnsetIt_OnPrimaryKey()
             throws PGPException, IOException, InterruptedException {
-        ImplementationFactory.setFactoryImplementation(implementationFactory);
 
         PGPSecretKeyRing secretKeys = TestKeys.getEmilSecretKeyRing();
         KeyRingInfo sInfo = PGPainless.inspectKeyRing(secretKeys);
@@ -62,11 +60,10 @@ public class ChangeExpirationTest {
         assertNull(sInfo.getSubkeyExpirationDate(subKeyFingerprint));
     }
 
-    @ParameterizedTest
-    @ArgumentsSource(TestImplementationFactoryProvider.class)
-    public void setExpirationDateAndThenUnsetIt_OnSubkey(ImplementationFactory implementationFactory)
+    @TestTemplate
+    @ExtendWith(ImplementationFactoryTestInvocationContextProvider.class)
+    public void setExpirationDateAndThenUnsetIt_OnSubkey()
             throws PGPException, IOException, InterruptedException {
-        ImplementationFactory.setFactoryImplementation(implementationFactory);
 
         PGPSecretKeyRing secretKeys = TestKeys.getEmilSecretKeyRing();
         KeyRingInfo sInfo = PGPainless.inspectKeyRing(secretKeys);

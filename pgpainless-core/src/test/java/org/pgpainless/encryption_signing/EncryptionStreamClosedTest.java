@@ -11,19 +11,17 @@ import java.io.IOException;
 import java.io.OutputStream;
 
 import org.bouncycastle.openpgp.PGPException;
-import org.junit.jupiter.params.ParameterizedTest;
-import org.junit.jupiter.params.provider.ArgumentsSource;
+import org.junit.jupiter.api.TestTemplate;
+import org.junit.jupiter.api.extension.ExtendWith;
 import org.pgpainless.PGPainless;
-import org.pgpainless.implementation.ImplementationFactory;
+import org.pgpainless.util.ImplementationFactoryTestInvocationContextProvider;
 import org.pgpainless.util.Passphrase;
-import org.pgpainless.util.TestImplementationFactoryProvider;
 
 public class EncryptionStreamClosedTest {
 
-    @ParameterizedTest
-    @ArgumentsSource(TestImplementationFactoryProvider.class)
-    public void testStreamHasToBeClosedBeforeGetResultCanBeCalled(ImplementationFactory implementationFactory) throws IOException, PGPException {
-        ImplementationFactory.setFactoryImplementation(implementationFactory);
+    @TestTemplate
+    @ExtendWith(ImplementationFactoryTestInvocationContextProvider.class)
+    public void testStreamHasToBeClosedBeforeGetResultCanBeCalled() throws IOException, PGPException {
         OutputStream out = new ByteArrayOutputStream();
         EncryptionStream stream = PGPainless.encryptAndOrSign()
                 .onOutputStream(out)

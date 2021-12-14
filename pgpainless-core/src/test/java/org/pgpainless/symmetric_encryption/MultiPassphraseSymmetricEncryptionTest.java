@@ -11,24 +11,22 @@ import java.nio.charset.StandardCharsets;
 
 import org.bouncycastle.openpgp.PGPException;
 import org.bouncycastle.util.io.Streams;
-import org.junit.jupiter.params.ParameterizedTest;
-import org.junit.jupiter.params.provider.ArgumentsSource;
+import org.junit.jupiter.api.TestTemplate;
+import org.junit.jupiter.api.extension.ExtendWith;
 import org.pgpainless.PGPainless;
 import org.pgpainless.decryption_verification.ConsumerOptions;
 import org.pgpainless.decryption_verification.DecryptionStream;
 import org.pgpainless.encryption_signing.EncryptionOptions;
 import org.pgpainless.encryption_signing.EncryptionStream;
 import org.pgpainless.encryption_signing.ProducerOptions;
-import org.pgpainless.implementation.ImplementationFactory;
+import org.pgpainless.util.ImplementationFactoryTestInvocationContextProvider;
 import org.pgpainless.util.Passphrase;
-import org.pgpainless.util.TestImplementationFactoryProvider;
 
 public class MultiPassphraseSymmetricEncryptionTest {
 
-    @ParameterizedTest
-    @ArgumentsSource(TestImplementationFactoryProvider.class)
-    public void encryptDecryptWithMultiplePassphrases(ImplementationFactory implementationFactory) throws IOException, PGPException {
-        ImplementationFactory.setFactoryImplementation(implementationFactory);
+    @TestTemplate
+    @ExtendWith(ImplementationFactoryTestInvocationContextProvider.class)
+    public void encryptDecryptWithMultiplePassphrases() throws IOException, PGPException {
         String message = "Here we test if during decryption of a message that was encrypted with two passphrases, " +
                 "the decryptor finds the session key encrypted for the right passphrase.";
         ByteArrayInputStream plaintextIn = new ByteArrayInputStream(message.getBytes(StandardCharsets.UTF_8));

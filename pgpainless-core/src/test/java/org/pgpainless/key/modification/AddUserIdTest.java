@@ -18,26 +18,24 @@ import java.util.NoSuchElementException;
 import org.bouncycastle.openpgp.PGPException;
 import org.bouncycastle.openpgp.PGPSecretKeyRing;
 import org.junit.jupiter.api.Test;
-import org.junit.jupiter.params.ParameterizedTest;
-import org.junit.jupiter.params.provider.ArgumentsSource;
+import org.junit.jupiter.api.TestTemplate;
+import org.junit.jupiter.api.extension.ExtendWith;
 import org.pgpainless.PGPainless;
-import org.pgpainless.implementation.ImplementationFactory;
 import org.pgpainless.key.TestKeys;
 import org.pgpainless.key.info.KeyRingInfo;
 import org.pgpainless.key.protection.PasswordBasedSecretKeyRingProtector;
 import org.pgpainless.key.protection.SecretKeyRingProtector;
 import org.pgpainless.key.protection.UnprotectedKeysProtector;
 import org.pgpainless.key.util.UserId;
+import org.pgpainless.util.ImplementationFactoryTestInvocationContextProvider;
 import org.pgpainless.util.Passphrase;
-import org.pgpainless.util.TestImplementationFactoryProvider;
 
 public class AddUserIdTest {
 
-    @ParameterizedTest
-    @ArgumentsSource(TestImplementationFactoryProvider.class)
-    public void addUserIdToExistingKeyRing(ImplementationFactory implementationFactory)
+    @TestTemplate
+    @ExtendWith(ImplementationFactoryTestInvocationContextProvider.class)
+    public void addUserIdToExistingKeyRing()
             throws InvalidAlgorithmParameterException, NoSuchAlgorithmException, PGPException {
-        ImplementationFactory.setFactoryImplementation(implementationFactory);
         PGPSecretKeyRing secretKeys = PGPainless.generateKeyRing().simpleEcKeyRing("alice@wonderland.lit", "rabb1th0le");
 
         KeyRingInfo info = PGPainless.inspectKeyRing(secretKeys);
@@ -66,20 +64,18 @@ public class AddUserIdTest {
         assertFalse(userIds.hasNext());
     }
 
-    @ParameterizedTest
-    @ArgumentsSource(TestImplementationFactoryProvider.class)
-    public void deleteUserId_noSuchElementExceptionForMissingUserId(ImplementationFactory implementationFactory) throws IOException, PGPException {
-        ImplementationFactory.setFactoryImplementation(implementationFactory);
+    @TestTemplate
+    @ExtendWith(ImplementationFactoryTestInvocationContextProvider.class)
+    public void deleteUserId_noSuchElementExceptionForMissingUserId() throws IOException, PGPException {
 
         PGPSecretKeyRing secretKeys = TestKeys.getCryptieSecretKeyRing();
         assertThrows(NoSuchElementException.class, () -> PGPainless.modifyKeyRing(secretKeys)
                 .revokeUserId("invalid@user.id", new UnprotectedKeysProtector()));
     }
 
-    @ParameterizedTest
-    @ArgumentsSource(TestImplementationFactoryProvider.class)
-    public void deleteExistingAndAddNewUserIdToExistingKeyRing(ImplementationFactory implementationFactory) throws PGPException, IOException {
-        ImplementationFactory.setFactoryImplementation(implementationFactory);
+    @TestTemplate
+    @ExtendWith(ImplementationFactoryTestInvocationContextProvider.class)
+    public void deleteExistingAndAddNewUserIdToExistingKeyRing() throws PGPException, IOException {
 
         final String ARMORED_PRIVATE_KEY =
                 "-----BEGIN PGP PRIVATE KEY BLOCK-----\r\n\r\n" +
