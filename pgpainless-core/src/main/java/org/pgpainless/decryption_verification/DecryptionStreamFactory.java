@@ -190,7 +190,7 @@ public final class DecryptionStreamFactory {
 
     private InputStream processPGPPackets(@Nonnull PGPObjectFactory objectFactory, int depth) throws IOException, PGPException {
         if (depth >= MAX_PACKET_NESTING_DEPTH) {
-            throw new PGPException("Maximum recursion depth of packages exceeded.");
+            throw new PGPException("Maximum depth of nested packages exceeded.");
         }
         Object nextPgpObject;
         while ((nextPgpObject = objectFactory.nextObject()) != null) {
