@@ -70,7 +70,7 @@ public class ArmorUtilsTest {
         assertEquals(HashAlgorithm.SHA512, hashes.get(0));
 
         // Comment
-        List<String> commentHeader = ArmorUtils.getCommendHeaderValues(armorIn);
+        List<String> commentHeader = ArmorUtils.getCommentHeaderValues(armorIn);
         assertEquals(2, commentHeader.size());
         assertEquals("This is a comment", commentHeader.get(0));
         assertEquals("This is another comment", commentHeader.get(1));

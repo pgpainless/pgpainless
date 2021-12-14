@@ -157,7 +157,7 @@ public final class ArmorUtils {
         return armor;
     }
 
-    public static List<String> getCommendHeaderValues(ArmoredInputStream armor) {
+    public static List<String> getCommentHeaderValues(ArmoredInputStream armor) {
         return getArmorHeaderValues(armor, HEADER_COMMENT);
     }
 
