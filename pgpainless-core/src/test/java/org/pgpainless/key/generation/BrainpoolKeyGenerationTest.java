@@ -30,13 +30,13 @@ import org.pgpainless.key.generation.type.xdh.XDHSpec;
 import org.pgpainless.key.info.KeyInfo;
 import org.pgpainless.key.util.UserId;
 import org.pgpainless.util.BCUtil;
-import org.pgpainless.util.ImplementationFactoryTestInvocationContextProvider;
+import org.pgpainless.util.TestAllImplementations;
 import org.pgpainless.util.Passphrase;
 
 public class BrainpoolKeyGenerationTest {
 
     @TestTemplate
-    @ExtendWith(ImplementationFactoryTestInvocationContextProvider.class)
+    @ExtendWith(TestAllImplementations.class)
     public void generateEcKeysTest()
             throws InvalidAlgorithmParameterException, NoSuchAlgorithmException, PGPException {
 
@@ -65,7 +65,7 @@ public class BrainpoolKeyGenerationTest {
     }
 
     @TestTemplate
-    @ExtendWith(ImplementationFactoryTestInvocationContextProvider.class)
+    @ExtendWith(TestAllImplementations.class)
     public void generateEdDSAKeyTest()
             throws PGPException, InvalidAlgorithmParameterException, NoSuchAlgorithmException {
 

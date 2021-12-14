@@ -32,7 +32,7 @@ import org.pgpainless.implementation.ImplementationFactory;
 import org.pgpainless.key.protection.KeyRingProtectionSettings;
 import org.pgpainless.key.protection.PasswordBasedSecretKeyRingProtector;
 import org.pgpainless.key.protection.UnlockSecretKey;
-import org.pgpainless.util.ImplementationFactoryTestInvocationContextProvider;
+import org.pgpainless.util.TestAllImplementations;
 import org.pgpainless.util.Passphrase;
 
 public class ChangeSecretKeyRingPassphraseTest {
@@ -43,7 +43,7 @@ public class ChangeSecretKeyRingPassphraseTest {
     }
 
     @TestTemplate
-    @ExtendWith(ImplementationFactoryTestInvocationContextProvider.class)
+    @ExtendWith(TestAllImplementations.class)
     public void changePassphraseOfWholeKeyRingTest() throws PGPException {
 
         PGPSecretKeyRing secretKeys = PGPainless.modifyKeyRing(keyRing)
@@ -70,7 +70,7 @@ public class ChangeSecretKeyRingPassphraseTest {
     }
 
     @TestTemplate
-    @ExtendWith(ImplementationFactoryTestInvocationContextProvider.class)
+    @ExtendWith(TestAllImplementations.class)
     public void changePassphraseOfWholeKeyRingToEmptyPassphrase() throws PGPException, IOException {
         PGPSecretKeyRing secretKeys = PGPainless.modifyKeyRing(keyRing)
                 .changePassphraseFromOldPassphrase(Passphrase.fromPassword("weakPassphrase"))
@@ -87,7 +87,7 @@ public class ChangeSecretKeyRingPassphraseTest {
     }
 
     @TestTemplate
-    @ExtendWith(ImplementationFactoryTestInvocationContextProvider.class)
+    @ExtendWith(TestAllImplementations.class)
     public void changePassphraseOfSingleSubkeyToNewPassphrase() throws PGPException {
 
         Iterator<PGPSecretKey> keys = keyRing.getSecretKeys();
@@ -123,7 +123,7 @@ public class ChangeSecretKeyRingPassphraseTest {
     }
 
     @TestTemplate
-    @ExtendWith(ImplementationFactoryTestInvocationContextProvider.class)
+    @ExtendWith(TestAllImplementations.class)
     public void changePassphraseOfSingleSubkeyToEmptyPassphrase() throws PGPException {
 
         Iterator<PGPSecretKey> keys = keyRing.getSecretKeys();

@@ -45,14 +45,14 @@ import org.pgpainless.key.generation.type.eddsa.EdDSACurve;
 import org.pgpainless.key.info.KeyRingInfo;
 import org.pgpainless.key.protection.SecretKeyRingProtector;
 import org.pgpainless.key.util.KeyRingUtils;
-import org.pgpainless.util.ImplementationFactoryTestInvocationContextProvider;
+import org.pgpainless.util.TestAllImplementations;
 import org.pgpainless.util.MultiMap;
 import org.pgpainless.util.Passphrase;
 
 public class SigningTest {
 
     @TestTemplate
-    @ExtendWith(ImplementationFactoryTestInvocationContextProvider.class)
+    @ExtendWith(TestAllImplementations.class)
     public void testEncryptionAndSignatureVerification()
             throws IOException, PGPException {
 
@@ -116,7 +116,7 @@ public class SigningTest {
     }
 
     @TestTemplate
-    @ExtendWith(ImplementationFactoryTestInvocationContextProvider.class)
+    @ExtendWith(TestAllImplementations.class)
     public void testSignWithInvalidUserIdFails()
             throws PGPException, InvalidAlgorithmParameterException, NoSuchAlgorithmException {
         PGPSecretKeyRing secretKeys = PGPainless.generateKeyRing()
@@ -131,7 +131,7 @@ public class SigningTest {
     }
 
     @TestTemplate
-    @ExtendWith(ImplementationFactoryTestInvocationContextProvider.class)
+    @ExtendWith(TestAllImplementations.class)
     public void testSignWithRevokedUserIdFails()
             throws PGPException, InvalidAlgorithmParameterException, NoSuchAlgorithmException {
         PGPSecretKeyRing secretKeys = PGPainless.generateKeyRing()
@@ -152,7 +152,7 @@ public class SigningTest {
     }
 
     @TestTemplate
-    @ExtendWith(ImplementationFactoryTestInvocationContextProvider.class)
+    @ExtendWith(TestAllImplementations.class)
     public void signWithHashAlgorithmOverride() throws PGPException, IOException {
         PGPSecretKeyRing secretKeys = TestKeys.getEmilSecretKeyRing();
         SecretKeyRingProtector protector = SecretKeyRingProtector.unprotectedKeys();
@@ -184,7 +184,7 @@ public class SigningTest {
     }
 
     @TestTemplate
-    @ExtendWith(ImplementationFactoryTestInvocationContextProvider.class)
+    @ExtendWith(TestAllImplementations.class)
     public void negotiateHashAlgorithmChoseFallbackIfEmptyPreferences()
             throws PGPException, InvalidAlgorithmParameterException, NoSuchAlgorithmException, IOException {
         PGPSecretKeyRing secretKeys = PGPainless.buildKeyRing()
@@ -214,7 +214,7 @@ public class SigningTest {
     }
 
     @TestTemplate
-    @ExtendWith(ImplementationFactoryTestInvocationContextProvider.class)
+    @ExtendWith(TestAllImplementations.class)
     public void negotiateHashAlgorithmChoseFallbackIfUnacceptablePreferences()
             throws PGPException, InvalidAlgorithmParameterException, NoSuchAlgorithmException, IOException {
         PGPSecretKeyRing secretKeys = PGPainless.buildKeyRing()
@@ -244,7 +244,7 @@ public class SigningTest {
     }
 
     @TestTemplate
-    @ExtendWith(ImplementationFactoryTestInvocationContextProvider.class)
+    @ExtendWith(TestAllImplementations.class)
     public void signingWithNonCapableKeyThrowsKeyCannotSignException()
             throws PGPException, InvalidAlgorithmParameterException, NoSuchAlgorithmException {
         PGPSecretKeyRing secretKeys = PGPainless.buildKeyRing()
@@ -260,7 +260,7 @@ public class SigningTest {
     }
 
     @TestTemplate
-    @ExtendWith(ImplementationFactoryTestInvocationContextProvider.class)
+    @ExtendWith(TestAllImplementations.class)
     public void signWithInvalidUserIdThrowsKeyValidationError()
             throws PGPException, InvalidAlgorithmParameterException, NoSuchAlgorithmException {
         PGPSecretKeyRing secretKeys = PGPainless.buildKeyRing()

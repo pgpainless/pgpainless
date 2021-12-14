@@ -46,7 +46,7 @@ import org.pgpainless.key.protection.UnprotectedKeysProtector;
 import org.pgpainless.key.util.KeyRingUtils;
 import org.pgpainless.policy.Policy;
 import org.pgpainless.util.ArmoredOutputStreamFactory;
-import org.pgpainless.util.ImplementationFactoryTestInvocationContextProvider;
+import org.pgpainless.util.TestAllImplementations;
 
 public class EncryptDecryptTest {
 
@@ -70,7 +70,7 @@ public class EncryptDecryptTest {
     }
 
     @TestTemplate
-    @ExtendWith(ImplementationFactoryTestInvocationContextProvider.class)
+    @ExtendWith(TestAllImplementations.class)
     public void freshKeysRsaToElGamalTest()
             throws PGPException, NoSuchAlgorithmException, InvalidAlgorithmParameterException, IOException {
         PGPSecretKeyRing sender = PGPainless.generateKeyRing().simpleRsaKeyRing("romeo@montague.lit", RsaLength._3072);
@@ -87,7 +87,7 @@ public class EncryptDecryptTest {
     }
 
     @TestTemplate
-    @ExtendWith(ImplementationFactoryTestInvocationContextProvider.class)
+    @ExtendWith(TestAllImplementations.class)
     public void freshKeysRsaToRsaTest()
             throws PGPException, NoSuchAlgorithmException, InvalidAlgorithmParameterException, IOException {
         PGPSecretKeyRing sender = PGPainless.generateKeyRing().simpleRsaKeyRing("romeo@montague.lit", RsaLength._3072);
@@ -97,7 +97,7 @@ public class EncryptDecryptTest {
     }
 
     @TestTemplate
-    @ExtendWith(ImplementationFactoryTestInvocationContextProvider.class)
+    @ExtendWith(TestAllImplementations.class)
     public void freshKeysEcToEcTest()
             throws IOException, PGPException, NoSuchAlgorithmException, InvalidAlgorithmParameterException {
         PGPSecretKeyRing sender = PGPainless.generateKeyRing().simpleEcKeyRing("romeo@montague.lit");
@@ -107,7 +107,7 @@ public class EncryptDecryptTest {
     }
 
     @TestTemplate
-    @ExtendWith(ImplementationFactoryTestInvocationContextProvider.class)
+    @ExtendWith(TestAllImplementations.class)
     public void freshKeysEcToRsaTest()
             throws PGPException, NoSuchAlgorithmException, InvalidAlgorithmParameterException, IOException {
         PGPSecretKeyRing sender = PGPainless.generateKeyRing().simpleEcKeyRing("romeo@montague.lit");
@@ -117,7 +117,7 @@ public class EncryptDecryptTest {
     }
 
     @TestTemplate
-    @ExtendWith(ImplementationFactoryTestInvocationContextProvider.class)
+    @ExtendWith(TestAllImplementations.class)
     public void freshKeysRsaToEcTest()
             throws PGPException, NoSuchAlgorithmException, InvalidAlgorithmParameterException, IOException {
         PGPSecretKeyRing sender = PGPainless.generateKeyRing().simpleRsaKeyRing("romeo@montague.lit", RsaLength._3072);
@@ -127,7 +127,7 @@ public class EncryptDecryptTest {
     }
 
     @TestTemplate
-    @ExtendWith(ImplementationFactoryTestInvocationContextProvider.class)
+    @ExtendWith(TestAllImplementations.class)
     public void existingRsaKeysTest() throws IOException, PGPException {
         PGPSecretKeyRing sender = TestKeys.getJulietSecretKeyRing();
         PGPSecretKeyRing recipient = TestKeys.getRomeoSecretKeyRing();
@@ -191,7 +191,7 @@ public class EncryptDecryptTest {
     }
 
     @TestTemplate
-    @ExtendWith(ImplementationFactoryTestInvocationContextProvider.class)
+    @ExtendWith(TestAllImplementations.class)
     public void testDetachedSignatureCreationAndVerification() throws IOException, PGPException {
 
         PGPSecretKeyRing signingKeys = TestKeys.getJulietSecretKeyRing();
@@ -236,7 +236,7 @@ public class EncryptDecryptTest {
     }
 
     @TestTemplate
-    @ExtendWith(ImplementationFactoryTestInvocationContextProvider.class)
+    @ExtendWith(TestAllImplementations.class)
     public void testOnePassSignatureCreationAndVerification() throws IOException, PGPException {
         PGPSecretKeyRing signingKeys = TestKeys.getJulietSecretKeyRing();
         SecretKeyRingProtector keyRingProtector = new UnprotectedKeysProtector();
@@ -266,7 +266,7 @@ public class EncryptDecryptTest {
     }
 
     @TestTemplate
-    @ExtendWith(ImplementationFactoryTestInvocationContextProvider.class)
+    @ExtendWith(TestAllImplementations.class)
     public void expiredSubkeyBacksigTest() throws IOException {
         String key = "-----BEGIN PGP PUBLIC KEY BLOCK-----\n" +
                 "\n" +

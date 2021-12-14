@@ -13,7 +13,7 @@ import org.pgpainless.algorithm.KeyFlag;
 import org.pgpainless.key.generation.type.KeyType;
 import org.pgpainless.key.generation.type.ecc.EllipticCurve;
 import org.pgpainless.key.generation.type.xdh.XDHSpec;
-import org.pgpainless.util.ImplementationFactoryTestInvocationContextProvider;
+import org.pgpainless.util.TestAllImplementations;
 
 public class CertificationKeyMustBeAbleToCertifyTest {
 
@@ -23,7 +23,7 @@ public class CertificationKeyMustBeAbleToCertifyTest {
      * This test therefore verifies that generating such keys fails.
      */
     @TestTemplate
-    @ExtendWith(ImplementationFactoryTestInvocationContextProvider.class)
+    @ExtendWith(TestAllImplementations.class)
     public void testCertificationIncapableKeyTypesThrow() {
         KeyType[] typesIncapableOfCreatingVerifications = new KeyType[] {
                 KeyType.ECDH(EllipticCurve._P256),

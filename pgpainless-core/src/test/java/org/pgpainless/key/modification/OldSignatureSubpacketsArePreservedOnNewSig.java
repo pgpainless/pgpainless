@@ -21,12 +21,12 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.pgpainless.PGPainless;
 import org.pgpainless.key.OpenPgpV4Fingerprint;
 import org.pgpainless.key.protection.UnprotectedKeysProtector;
-import org.pgpainless.util.ImplementationFactoryTestInvocationContextProvider;
+import org.pgpainless.util.TestAllImplementations;
 
 public class OldSignatureSubpacketsArePreservedOnNewSig {
 
     @TestTemplate
-    @ExtendWith(ImplementationFactoryTestInvocationContextProvider.class)
+    @ExtendWith(TestAllImplementations.class)
     public void verifyOldSignatureSubpacketsArePreservedOnNewExpirationDateSig()
             throws InvalidAlgorithmParameterException, NoSuchAlgorithmException, PGPException, InterruptedException {
         PGPSecretKeyRing secretKeys = PGPainless.generateKeyRing()

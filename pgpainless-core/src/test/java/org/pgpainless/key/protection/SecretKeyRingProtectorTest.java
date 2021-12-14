@@ -28,13 +28,13 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.pgpainless.PGPainless;
 import org.pgpainless.key.TestKeys;
 import org.pgpainless.key.protection.passphrase_provider.SecretKeyPassphraseProvider;
-import org.pgpainless.util.ImplementationFactoryTestInvocationContextProvider;
+import org.pgpainless.util.TestAllImplementations;
 import org.pgpainless.util.Passphrase;
 
 public class SecretKeyRingProtectorTest {
 
     @TestTemplate
-    @ExtendWith(ImplementationFactoryTestInvocationContextProvider.class)
+    @ExtendWith(TestAllImplementations.class)
     public void testUnlockAllKeysWithSamePassword()
             throws IOException, PGPException, InvalidAlgorithmParameterException, NoSuchAlgorithmException {
 
@@ -68,7 +68,7 @@ public class SecretKeyRingProtectorTest {
     }
 
     @TestTemplate
-    @ExtendWith(ImplementationFactoryTestInvocationContextProvider.class)
+    @ExtendWith(TestAllImplementations.class)
     public void testUnlockSingleKeyWithPassphrase()
             throws IOException, PGPException {
 

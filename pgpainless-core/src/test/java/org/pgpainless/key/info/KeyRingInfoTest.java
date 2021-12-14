@@ -51,13 +51,13 @@ import org.pgpainless.key.protection.UnprotectedKeysProtector;
 import org.pgpainless.key.util.KeyRingUtils;
 import org.pgpainless.key.util.UserId;
 import org.pgpainless.util.DateUtil;
-import org.pgpainless.util.ImplementationFactoryTestInvocationContextProvider;
+import org.pgpainless.util.TestAllImplementations;
 import org.pgpainless.util.Passphrase;
 
 public class KeyRingInfoTest {
 
     @TestTemplate
-    @ExtendWith(ImplementationFactoryTestInvocationContextProvider.class)
+    @ExtendWith(TestAllImplementations.class)
     public void testWithEmilsKeys() throws IOException, PGPException {
 
         PGPSecretKeyRing secretKeys = TestKeys.getEmilSecretKeyRing();
@@ -174,7 +174,7 @@ public class KeyRingInfoTest {
     }
 
     @TestTemplate
-    @ExtendWith(ImplementationFactoryTestInvocationContextProvider.class)
+    @ExtendWith(TestAllImplementations.class)
     public void dummyS2KTest() throws IOException {
 
         String withDummyS2K = "-----BEGIN PGP PRIVATE KEY BLOCK-----\n" +
@@ -212,7 +212,7 @@ public class KeyRingInfoTest {
     }
 
     @TestTemplate
-    @ExtendWith(ImplementationFactoryTestInvocationContextProvider.class)
+    @ExtendWith(TestAllImplementations.class)
     public void testGetKeysWithFlagsAndExpiry() throws PGPException, InvalidAlgorithmParameterException, NoSuchAlgorithmException {
 
         PGPSecretKeyRing secretKeys = PGPainless.buildKeyRing()

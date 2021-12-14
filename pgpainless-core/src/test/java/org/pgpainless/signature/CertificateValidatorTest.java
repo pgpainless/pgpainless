@@ -28,7 +28,7 @@ import org.pgpainless.decryption_verification.OpenPgpMetadata;
 import org.pgpainless.exception.SignatureValidationException;
 import org.pgpainless.policy.Policy;
 import org.pgpainless.signature.consumer.CertificateValidator;
-import org.pgpainless.util.ImplementationFactoryTestInvocationContextProvider;
+import org.pgpainless.util.TestAllImplementations;
 
 public class CertificateValidatorTest {
 
@@ -38,7 +38,7 @@ public class CertificateValidatorTest {
      * @see <a href="https://tests.sequoia-pgp.org/#Key_revocation_test__primary_key_signs_and_is_revoked__revoked__unknown">Sequoia Test Suite</a>
      */
     @TestTemplate
-    @ExtendWith(ImplementationFactoryTestInvocationContextProvider.class)
+    @ExtendWith(TestAllImplementations.class)
     public void testPrimaryKeySignsAndIsHardRevokedUnknown() throws IOException, PGPException {
 
         String key = "-----BEGIN PGP ARMORED FILE-----\n" +
@@ -189,7 +189,7 @@ public class CertificateValidatorTest {
      * @see <a href="https://tests.sequoia-pgp.org/#Key_revocation_test__subkey_signs__primary_key_is_revoked__revoked__unknown">Sequoia Test Suite</a>
      */
     @TestTemplate
-    @ExtendWith(ImplementationFactoryTestInvocationContextProvider.class)
+    @ExtendWith(TestAllImplementations.class)
     public void testSubkeySignsPrimaryKeyIsHardRevokedUnknown() throws IOException, PGPException {
 
         String key = "-----BEGIN PGP ARMORED FILE-----\n" +
@@ -341,7 +341,7 @@ public class CertificateValidatorTest {
      * @see <a href="https://tests.sequoia-pgp.org/#Key_revocation_test__subkey_signs__subkey_is_revoked__revoked__unknown">Sequoia Test Suite</a>
      */
     @TestTemplate
-    @ExtendWith(ImplementationFactoryTestInvocationContextProvider.class)
+    @ExtendWith(TestAllImplementations.class)
     public void testSubkeySignsAndIsHardRevokedUnknown() throws IOException, PGPException {
 
         String keyWithHardRev = "-----BEGIN PGP ARMORED FILE-----\n" +
@@ -493,7 +493,7 @@ public class CertificateValidatorTest {
      * @see <a href="https://tests.sequoia-pgp.org/#Key_revocation_test__primary_key_signs_and_is_revoked__revoked__superseded">Sequoia Test Suite</a>
      */
     @TestTemplate
-    @ExtendWith(ImplementationFactoryTestInvocationContextProvider.class)
+    @ExtendWith(TestAllImplementations.class)
     public void testPrimaryKeySignsAndIsSoftRevokedSuperseded() throws IOException, PGPException {
 
         String keyWithSoftRev = "-----BEGIN PGP ARMORED FILE-----\n" +
@@ -650,7 +650,7 @@ public class CertificateValidatorTest {
      * @see <a href="https://tests.sequoia-pgp.org/#Key_revocation_test__subkey_signs__primary_key_is_revoked__revoked__superseded">Sequoia Test Suite</a>
      */
     @TestTemplate
-    @ExtendWith(ImplementationFactoryTestInvocationContextProvider.class)
+    @ExtendWith(TestAllImplementations.class)
     public void testSubkeySignsPrimaryKeyIsSoftRevokedSuperseded() throws IOException, PGPException {
 
         String key = "-----BEGIN PGP ARMORED FILE-----\n" +
@@ -803,7 +803,7 @@ public class CertificateValidatorTest {
      * @see <a href="https://tests.sequoia-pgp.org/#Key_revocation_test__primary_key_signs_and_is_revoked__revoked__key_retired">Sequoia Test Suite</a>
      */
     @TestTemplate
-    @ExtendWith(ImplementationFactoryTestInvocationContextProvider.class)
+    @ExtendWith(TestAllImplementations.class)
     public void testPrimaryKeySignsAndIsSoftRevokedRetired() throws IOException, PGPException {
 
         String key = "-----BEGIN PGP ARMORED FILE-----\n" +
@@ -956,7 +956,7 @@ public class CertificateValidatorTest {
      * @see <a href="https://tests.sequoia-pgp.org/#Temporary_validity">Sequoia Test Suite</a>
      */
     @TestTemplate
-    @ExtendWith(ImplementationFactoryTestInvocationContextProvider.class)
+    @ExtendWith(TestAllImplementations.class)
     public void testTemporaryValidity() throws IOException, PGPException {
 
         String keyA = "-----BEGIN PGP PUBLIC KEY BLOCK-----\n" +

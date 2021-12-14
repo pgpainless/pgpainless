@@ -22,7 +22,7 @@ import org.pgpainless.key.modification.secretkeyring.SecretKeyRingEditorInterfac
 import org.pgpainless.key.protection.SecretKeyRingProtector;
 import org.pgpainless.key.protection.UnprotectedKeysProtector;
 import org.pgpainless.util.DateUtil;
-import org.pgpainless.util.ImplementationFactoryTestInvocationContextProvider;
+import org.pgpainless.util.TestAllImplementations;
 
 public class RevokeKeyWithoutPreferredAlgorithmsOnPrimaryKey {
 
@@ -101,7 +101,7 @@ public class RevokeKeyWithoutPreferredAlgorithmsOnPrimaryKey {
             "-----END PGP PRIVATE KEY BLOCK-----";
 
     @TestTemplate
-    @ExtendWith(ImplementationFactoryTestInvocationContextProvider.class)
+    @ExtendWith(TestAllImplementations.class)
     public void testChangingExpirationTimeWithKeyWithoutPrefAlgos()
             throws IOException, PGPException {
         Date expirationDate = DateUtil.parseUTCDate(DateUtil.formatUTCDate(new Date()));

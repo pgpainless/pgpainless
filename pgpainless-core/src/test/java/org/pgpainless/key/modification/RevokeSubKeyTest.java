@@ -38,13 +38,13 @@ import org.pgpainless.key.util.RevocationAttributes;
 import org.pgpainless.signature.SignatureUtils;
 import org.pgpainless.signature.subpackets.RevocationSignatureSubpackets;
 import org.pgpainless.signature.subpackets.SignatureSubpacketsUtil;
-import org.pgpainless.util.ImplementationFactoryTestInvocationContextProvider;
+import org.pgpainless.util.TestAllImplementations;
 import org.pgpainless.util.Passphrase;
 
 public class RevokeSubKeyTest {
 
     @TestTemplate
-    @ExtendWith(ImplementationFactoryTestInvocationContextProvider.class)
+    @ExtendWith(TestAllImplementations.class)
     public void revokeSukeyTest() throws IOException, PGPException {
         PGPSecretKeyRing secretKeys = TestKeys.getCryptieSecretKeyRing();
 
@@ -68,7 +68,7 @@ public class RevokeSubKeyTest {
     }
 
     @TestTemplate
-    @ExtendWith(ImplementationFactoryTestInvocationContextProvider.class)
+    @ExtendWith(TestAllImplementations.class)
     public void detachedRevokeSubkeyTest() throws IOException, PGPException {
         PGPSecretKeyRing secretKeys = TestKeys.getCryptieSecretKeyRing();
         OpenPgpV4Fingerprint fingerprint = new OpenPgpV4Fingerprint(secretKeys);
@@ -88,7 +88,7 @@ public class RevokeSubKeyTest {
     }
 
     @TestTemplate
-    @ExtendWith(ImplementationFactoryTestInvocationContextProvider.class)
+    @ExtendWith(TestAllImplementations.class)
     public void testRevocationSignatureTypeCorrect() throws IOException, PGPException {
         PGPSecretKeyRing secretKeys = TestKeys.getCryptieSecretKeyRing();
         Iterator<PGPPublicKey> keysIterator = secretKeys.getPublicKeys();

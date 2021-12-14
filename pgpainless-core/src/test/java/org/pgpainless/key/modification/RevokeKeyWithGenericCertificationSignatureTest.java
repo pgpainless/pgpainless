@@ -19,7 +19,7 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.pgpainless.PGPainless;
 import org.pgpainless.key.protection.UnprotectedKeysProtector;
 import org.pgpainless.util.ArmoredOutputStreamFactory;
-import org.pgpainless.util.ImplementationFactoryTestInvocationContextProvider;
+import org.pgpainless.util.TestAllImplementations;
 
 /**
  * Test that makes sure that PGPainless can deal with keys that carry a key
@@ -64,7 +64,7 @@ public class RevokeKeyWithGenericCertificationSignatureTest {
     }
 
     @TestTemplate
-    @ExtendWith(ImplementationFactoryTestInvocationContextProvider.class)
+    @ExtendWith(TestAllImplementations.class)
     public void test() throws IOException, PGPException {
         revokeKey(SAMPLE_PRIVATE_KEY); // would crash previously
     }

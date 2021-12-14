@@ -15,7 +15,7 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.pgpainless.PGPainless;
 import org.pgpainless.key.protection.SecretKeyRingProtector;
 import org.pgpainless.util.DateUtil;
-import org.pgpainless.util.ImplementationFactoryTestInvocationContextProvider;
+import org.pgpainless.util.TestAllImplementations;
 
 public class ChangeExpirationOnKeyWithDifferentSignatureTypesTest {
 
@@ -136,7 +136,7 @@ public class ChangeExpirationOnKeyWithDifferentSignatureTypesTest {
             "-----END PGP PRIVATE KEY BLOCK-----";
 
     @TestTemplate
-    @ExtendWith(ImplementationFactoryTestInvocationContextProvider.class)
+    @ExtendWith(TestAllImplementations.class)
     public void setExpirationDate_keyHasSigClass10()
             throws PGPException, IOException {
         PGPSecretKeyRing keys = PGPainless.readKeyRing().secretKeyRing(keyWithGenericCertification);
@@ -145,7 +145,7 @@ public class ChangeExpirationOnKeyWithDifferentSignatureTypesTest {
     }
 
     @TestTemplate
-    @ExtendWith(ImplementationFactoryTestInvocationContextProvider.class)
+    @ExtendWith(TestAllImplementations.class)
     public void setExpirationDate_keyHasSigClass12()
             throws PGPException, IOException {
         PGPSecretKeyRing keys = PGPainless.readKeyRing().secretKeyRing(keyWithCasualCertification);

@@ -33,7 +33,7 @@ import org.pgpainless.implementation.JceImplementationFactory;
  *
  * @see <a href="https://www.baeldung.com/junit5-test-templates">Baeldung: Writing Templates for Test Cases Using JUnit 5</a>
  */
-public class ImplementationFactoryTestInvocationContextProvider implements TestTemplateInvocationContextProvider {
+public class TestAllImplementations implements TestTemplateInvocationContextProvider {
 
     private static final List<ImplementationFactory> IMPLEMENTATIONS = Arrays.asList(
             new BcImplementationFactory(),

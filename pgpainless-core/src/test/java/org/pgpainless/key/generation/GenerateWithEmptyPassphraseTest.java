@@ -16,7 +16,7 @@ import org.pgpainless.PGPainless;
 import org.pgpainless.algorithm.KeyFlag;
 import org.pgpainless.key.generation.type.KeyType;
 import org.pgpainless.key.generation.type.rsa.RsaLength;
-import org.pgpainless.util.ImplementationFactoryTestInvocationContextProvider;
+import org.pgpainless.util.TestAllImplementations;
 import org.pgpainless.util.Passphrase;
 
 /**
@@ -29,7 +29,7 @@ import org.pgpainless.util.Passphrase;
 public class GenerateWithEmptyPassphraseTest {
 
     @TestTemplate
-    @ExtendWith(ImplementationFactoryTestInvocationContextProvider.class)
+    @ExtendWith(TestAllImplementations.class)
     public void testGeneratingKeyWithEmptyPassphraseDoesNotThrow()
             throws InvalidAlgorithmParameterException, NoSuchAlgorithmException, PGPException {
 

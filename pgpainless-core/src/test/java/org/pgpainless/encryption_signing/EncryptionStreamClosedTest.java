@@ -14,13 +14,13 @@ import org.bouncycastle.openpgp.PGPException;
 import org.junit.jupiter.api.TestTemplate;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.pgpainless.PGPainless;
-import org.pgpainless.util.ImplementationFactoryTestInvocationContextProvider;
+import org.pgpainless.util.TestAllImplementations;
 import org.pgpainless.util.Passphrase;
 
 public class EncryptionStreamClosedTest {
 
     @TestTemplate
-    @ExtendWith(ImplementationFactoryTestInvocationContextProvider.class)
+    @ExtendWith(TestAllImplementations.class)
     public void testStreamHasToBeClosedBeforeGetResultCanBeCalled() throws IOException, PGPException {
         OutputStream out = new ByteArrayOutputStream();
         EncryptionStream stream = PGPainless.encryptAndOrSign()

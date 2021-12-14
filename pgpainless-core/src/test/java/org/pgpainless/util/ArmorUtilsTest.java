@@ -145,7 +145,7 @@ public class ArmorUtilsTest {
     }
 
     @TestTemplate
-    @ExtendWith(ImplementationFactoryTestInvocationContextProvider.class)
+    @ExtendWith(TestAllImplementations.class)
     public void decodeExampleTest() throws IOException, PGPException {
         String armored = "-----BEGIN PGP MESSAGE-----\n" +
                 "Version: OpenPrivacy 0.99\n" +

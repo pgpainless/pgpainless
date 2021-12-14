@@ -27,13 +27,13 @@ import org.pgpainless.key.protection.PasswordBasedSecretKeyRingProtector;
 import org.pgpainless.key.protection.SecretKeyRingProtector;
 import org.pgpainless.key.protection.UnprotectedKeysProtector;
 import org.pgpainless.key.util.UserId;
-import org.pgpainless.util.ImplementationFactoryTestInvocationContextProvider;
+import org.pgpainless.util.TestAllImplementations;
 import org.pgpainless.util.Passphrase;
 
 public class AddUserIdTest {
 
     @TestTemplate
-    @ExtendWith(ImplementationFactoryTestInvocationContextProvider.class)
+    @ExtendWith(TestAllImplementations.class)
     public void addUserIdToExistingKeyRing()
             throws InvalidAlgorithmParameterException, NoSuchAlgorithmException, PGPException {
         PGPSecretKeyRing secretKeys = PGPainless.generateKeyRing().simpleEcKeyRing("alice@wonderland.lit", "rabb1th0le");
@@ -65,7 +65,7 @@ public class AddUserIdTest {
     }
 
     @TestTemplate
-    @ExtendWith(ImplementationFactoryTestInvocationContextProvider.class)
+    @ExtendWith(TestAllImplementations.class)
     public void deleteUserId_noSuchElementExceptionForMissingUserId() throws IOException, PGPException {
 
         PGPSecretKeyRing secretKeys = TestKeys.getCryptieSecretKeyRing();
@@ -74,7 +74,7 @@ public class AddUserIdTest {
     }
 
     @TestTemplate
-    @ExtendWith(ImplementationFactoryTestInvocationContextProvider.class)
+    @ExtendWith(TestAllImplementations.class)
     public void deleteExistingAndAddNewUserIdToExistingKeyRing() throws PGPException, IOException {
 
         final String ARMORED_PRIVATE_KEY =

@@ -19,14 +19,14 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.pgpainless.PGPainless;
 import org.pgpainless.exception.SignatureValidationException;
 import org.pgpainless.signature.consumer.CertificateValidator;
-import org.pgpainless.util.ImplementationFactoryTestInvocationContextProvider;
+import org.pgpainless.util.TestAllImplementations;
 
 public class KeyRevocationTest {
 
     private static final String data = "Hello, World";
 
     @TestTemplate
-    @ExtendWith(ImplementationFactoryTestInvocationContextProvider.class)
+    @ExtendWith(TestAllImplementations.class)
     public void subkeySignsPrimaryKeyRevokedNoReason() throws IOException, PGPException {
 
         String key = "-----BEGIN PGP ARMORED FILE-----\n" +
@@ -173,7 +173,7 @@ public class KeyRevocationTest {
      * @see <a href="https://tests.sequoia-pgp.org/#Key_revocation_test__subkey_signs__primary_key_is_not_revoked__base_case_">Sequoia Test-Suite</a>
      */
     @TestTemplate
-    @ExtendWith(ImplementationFactoryTestInvocationContextProvider.class)
+    @ExtendWith(TestAllImplementations.class)
     public void subkeySignsPrimaryKeyNotRevoked() throws IOException, PGPException {
 
         String key = "-----BEGIN PGP ARMORED FILE-----\n" +

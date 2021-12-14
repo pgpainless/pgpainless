@@ -12,12 +12,12 @@ import org.pgpainless.algorithm.KeyFlag;
 import org.pgpainless.key.generation.type.KeyType;
 import org.pgpainless.key.generation.type.eddsa.EdDSACurve;
 import org.pgpainless.key.generation.type.xdh.XDHSpec;
-import org.pgpainless.util.ImplementationFactoryTestInvocationContextProvider;
+import org.pgpainless.util.TestAllImplementations;
 
 public class IllegalKeyFlagsTest {
 
     @TestTemplate
-    @ExtendWith(ImplementationFactoryTestInvocationContextProvider.class)
+    @ExtendWith(TestAllImplementations.class)
     public void testKeyCannotCarryFlagsTest() {
         assertThrows(IllegalArgumentException.class, () -> KeySpec.getBuilder(
                 KeyType.XDH(XDHSpec._X25519), KeyFlag.SIGN_DATA));
