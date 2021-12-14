@@ -21,7 +21,6 @@ import org.bouncycastle.openpgp.PGPOnePassSignatureList;
 import org.bouncycastle.openpgp.PGPPBEEncryptedData;
 import org.bouncycastle.openpgp.PGPPublicKeyEncryptedData;
 import org.bouncycastle.openpgp.PGPUtil;
-import org.bouncycastle.openpgp.operator.KeyFingerPrintCalculator;
 import org.pgpainless.implementation.ImplementationFactory;
 import org.pgpainless.util.ArmorUtils;
 
@@ -101,8 +100,7 @@ public final class MessageInspector {
     }
 
     private static void processMessage(InputStream dataIn, EncryptionInfo info) throws PGPException, IOException {
-        KeyFingerPrintCalculator calculator = ImplementationFactory.getInstance().getKeyFingerprintCalculator();
-        PGPObjectFactory objectFactory = new PGPObjectFactory(dataIn, calculator);
+        PGPObjectFactory objectFactory = ImplementationFactory.getInstance().getPGPObjectFactory(dataIn);
 
         Object next;
         while ((next = objectFactory.nextObject()) != null) {
@@ -131,7 +129,8 @@ public final class MessageInspector {
             if (next instanceof PGPCompressedData) {
                 PGPCompressedData compressed = (PGPCompressedData) next;
                 InputStream decompressed = compressed.getDataStream();
-                objectFactory = new PGPObjectFactory(PGPUtil.getDecoderStream(decompressed), calculator);
+                InputStream decoded = PGPUtil.getDecoderStream(decompressed);
+                objectFactory = ImplementationFactory.getInstance().getPGPObjectFactory(decoded);
             }
 
             if (next instanceof PGPLiteralData) {

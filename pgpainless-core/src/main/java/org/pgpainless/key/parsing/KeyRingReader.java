@@ -108,9 +108,8 @@ public class KeyRingReader {
      * @return public key ring
      */
     public static PGPPublicKeyRing readPublicKeyRing(@Nonnull InputStream inputStream, int maxIterations) throws IOException {
-        PGPObjectFactory objectFactory = new PGPObjectFactory(
-                ArmorUtils.getDecoderStream(inputStream),
-                ImplementationFactory.getInstance().getKeyFingerprintCalculator());
+        PGPObjectFactory objectFactory = ImplementationFactory.getInstance().getPGPObjectFactory(
+                ArmorUtils.getDecoderStream(inputStream));
         int i = 0;
         Object next;
         do {
@@ -146,9 +145,8 @@ public class KeyRingReader {
      */
     public static PGPPublicKeyRingCollection readPublicKeyRingCollection(@Nonnull InputStream inputStream, int maxIterations)
             throws IOException, PGPException {
-        PGPObjectFactory objectFactory = new PGPObjectFactory(
-                ArmorUtils.getDecoderStream(inputStream),
-                ImplementationFactory.getInstance().getKeyFingerprintCalculator());
+        PGPObjectFactory objectFactory = ImplementationFactory.getInstance().getPGPObjectFactory(
+                ArmorUtils.getDecoderStream(inputStream));
 
         List<PGPPublicKeyRing> rings = new ArrayList<>();
         int i = 0;
@@ -191,9 +189,7 @@ public class KeyRingReader {
      */
     public static PGPSecretKeyRing readSecretKeyRing(@Nonnull InputStream inputStream, int maxIterations) throws IOException {
         InputStream decoderStream = ArmorUtils.getDecoderStream(inputStream);
-        PGPObjectFactory objectFactory = new PGPObjectFactory(
-                decoderStream,
-                ImplementationFactory.getInstance().getKeyFingerprintCalculator());
+        PGPObjectFactory objectFactory = ImplementationFactory.getInstance().getPGPObjectFactory(decoderStream);
         int i = 0;
         Object next;
         do {
@@ -230,9 +226,8 @@ public class KeyRingReader {
     public static PGPSecretKeyRingCollection readSecretKeyRingCollection(@Nonnull InputStream inputStream,
                                                                          int maxIterations)
             throws IOException, PGPException {
-        PGPObjectFactory objectFactory = new PGPObjectFactory(
-                ArmorUtils.getDecoderStream(inputStream),
-                ImplementationFactory.getInstance().getKeyFingerprintCalculator());
+        PGPObjectFactory objectFactory = ImplementationFactory.getInstance().getPGPObjectFactory(
+                ArmorUtils.getDecoderStream(inputStream));
 
         List<PGPSecretKeyRing> rings = new ArrayList<>();
         int i = 0;

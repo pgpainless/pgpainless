@@ -71,7 +71,7 @@ public final class ClearsignedMessageUtil {
             out.close();
         }
 
-        PGPObjectFactory objectFactory = new PGPObjectFactory(in, ImplementationFactory.getInstance().getKeyFingerprintCalculator());
+        PGPObjectFactory objectFactory = ImplementationFactory.getInstance().getPGPObjectFactory(in);
         PGPSignatureList signatures = (PGPSignatureList) objectFactory.nextObject();
 
         return signatures;

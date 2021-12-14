@@ -37,7 +37,6 @@ import org.bouncycastle.openpgp.PGPSecretKeyRing;
 import org.bouncycastle.openpgp.PGPSessionKey;
 import org.bouncycastle.openpgp.PGPSignature;
 import org.bouncycastle.openpgp.PGPUtil;
-import org.bouncycastle.openpgp.operator.KeyFingerPrintCalculator;
 import org.bouncycastle.openpgp.operator.PBEDataDecryptorFactory;
 import org.bouncycastle.openpgp.operator.PGPContentVerifierBuilderProvider;
 import org.bouncycastle.openpgp.operator.PublicKeyDataDecryptorFactory;
@@ -59,9 +58,9 @@ import org.pgpainless.key.SubkeyIdentifier;
 import org.pgpainless.key.info.KeyRingInfo;
 import org.pgpainless.key.protection.SecretKeyRingProtector;
 import org.pgpainless.key.protection.UnlockSecretKey;
+import org.pgpainless.signature.SignatureUtils;
 import org.pgpainless.signature.consumer.DetachedSignatureCheck;
 import org.pgpainless.signature.consumer.OnePassSignatureCheck;
-import org.pgpainless.signature.SignatureUtils;
 import org.pgpainless.util.CRCingArmoredInputStreamWrapper;
 import org.pgpainless.util.PGPUtilWrapper;
 import org.pgpainless.util.Passphrase;
@@ -85,8 +84,6 @@ public final class DecryptionStreamFactory {
 
     private static final PGPContentVerifierBuilderProvider verifierBuilderProvider =
             ImplementationFactory.getInstance().getPGPContentVerifierBuilderProvider();
-    private static final KeyFingerPrintCalculator keyFingerprintCalculator =
-            ImplementationFactory.getInstance().getKeyFingerprintCalculator();
     private IntegrityProtectedInputStream integrityProtectedEncryptedInputStream;
 
 
@@ -150,7 +147,7 @@ public final class DecryptionStreamFactory {
                 }
             }
 
-            objectFactory = new PGPObjectFactory(decoderStream, keyFingerprintCalculator);
+            objectFactory = ImplementationFactory.getInstance().getPGPObjectFactory(decoderStream);
             // Parse OpenPGP message
             inputStream = processPGPPackets(objectFactory, 1);
         } catch (EOFException e) {
@@ -162,7 +159,7 @@ public final class DecryptionStreamFactory {
             LOGGER.debug("The message appears to not be an OpenPGP message. This is probably data signed with detached signatures?");
             bufferedIn.reset();
             decoderStream = bufferedIn;
-            objectFactory = new PGPObjectFactory(decoderStream, keyFingerprintCalculator);
+            objectFactory = ImplementationFactory.getInstance().getPGPObjectFactory(decoderStream);
             inputStream = wrapInVerifySignatureStream(bufferedIn, objectFactory);
         } catch (IOException e) {
             if (e.getMessage().contains("invalid armor") || e.getMessage().contains("invalid header encountered")) {
@@ -170,7 +167,7 @@ public final class DecryptionStreamFactory {
                 LOGGER.debug("The message is apparently not armored.");
                 bufferedIn.reset();
                 decoderStream = bufferedIn;
-                objectFactory = new PGPObjectFactory(decoderStream, keyFingerprintCalculator);
+                objectFactory = ImplementationFactory.getInstance().getPGPObjectFactory(decoderStream);
                 inputStream = wrapInVerifySignatureStream(bufferedIn, objectFactory);
             } else {
                 throw e;
@@ -219,13 +216,13 @@ public final class DecryptionStreamFactory {
         if (sessionKey != null) {
             integrityProtectedEncryptedInputStream = decryptWithProvidedSessionKey(pgpEncryptedDataList, sessionKey);
             InputStream decodedDataStream = PGPUtil.getDecoderStream(integrityProtectedEncryptedInputStream);
-            PGPObjectFactory factory = new PGPObjectFactory(decodedDataStream, keyFingerprintCalculator);
+            PGPObjectFactory factory = ImplementationFactory.getInstance().getPGPObjectFactory(decodedDataStream);
             return processPGPPackets(factory, ++depth);
         }
 
         InputStream decryptedDataStream = decryptSessionKey(pgpEncryptedDataList);
         InputStream decodedDataStream = PGPUtil.getDecoderStream(decryptedDataStream);
-        PGPObjectFactory factory = new PGPObjectFactory(decodedDataStream, keyFingerprintCalculator);
+        PGPObjectFactory factory = ImplementationFactory.getInstance().getPGPObjectFactory(decodedDataStream);
         return processPGPPackets(factory, ++depth);
     }
 
@@ -269,7 +266,7 @@ public final class DecryptionStreamFactory {
 
         InputStream inflatedDataStream = pgpCompressedData.getDataStream();
         InputStream decodedDataStream = PGPUtil.getDecoderStream(inflatedDataStream);
-        PGPObjectFactory objectFactory = new PGPObjectFactory(decodedDataStream, keyFingerprintCalculator);
+        PGPObjectFactory objectFactory = ImplementationFactory.getInstance().getPGPObjectFactory(decodedDataStream);
 
         return processPGPPackets(objectFactory, ++depth);
     }

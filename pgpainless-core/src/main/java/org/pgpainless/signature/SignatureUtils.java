@@ -238,16 +238,14 @@ public final class SignatureUtils {
     public static List<PGPSignature> readSignatures(InputStream inputStream, int maxIterations) throws IOException, PGPException {
         List<PGPSignature> signatures = new ArrayList<>();
         InputStream pgpIn = ArmorUtils.getDecoderStream(inputStream);
-        PGPObjectFactory objectFactory = new PGPObjectFactory(
-                pgpIn, ImplementationFactory.getInstance().getKeyFingerprintCalculator());
+        PGPObjectFactory objectFactory = ImplementationFactory.getInstance().getPGPObjectFactory(pgpIn);
 
         int i = 0;
         Object nextObject;
         while (i++ < maxIterations && (nextObject = objectFactory.nextObject()) != null) {
             if (nextObject instanceof PGPCompressedData) {
                 PGPCompressedData compressedData = (PGPCompressedData) nextObject;
-                objectFactory = new PGPObjectFactory(compressedData.getDataStream(),
-                        ImplementationFactory.getInstance().getKeyFingerprintCalculator());
+                objectFactory = ImplementationFactory.getInstance().getPGPObjectFactory(compressedData.getDataStream());
             }
 
             if (nextObject instanceof PGPSignatureList) {

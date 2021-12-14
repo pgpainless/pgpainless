@@ -47,7 +47,7 @@ public class PGPKeyRingCollection {
     public PGPKeyRingCollection(@Nonnull InputStream in, boolean isSilent) throws IOException, PGPException {
         // Double getDecoderStream because of #96
         InputStream decoderStream = ArmorUtils.getDecoderStream(in);
-        PGPObjectFactory pgpFact = new PGPObjectFactory(decoderStream, ImplementationFactory.getInstance().getKeyFingerprintCalculator());
+        PGPObjectFactory pgpFact = ImplementationFactory.getInstance().getPGPObjectFactory(decoderStream);
         Object obj;
 
         List<PGPSecretKeyRing> secretKeyRings = new ArrayList<>();

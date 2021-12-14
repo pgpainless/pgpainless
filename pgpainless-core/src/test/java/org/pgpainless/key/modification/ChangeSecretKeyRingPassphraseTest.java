@@ -19,9 +19,6 @@ import org.bouncycastle.openpgp.PGPException;
 import org.bouncycastle.openpgp.PGPSecretKey;
 import org.bouncycastle.openpgp.PGPSecretKeyRing;
 import org.bouncycastle.openpgp.operator.PBESecretKeyDecryptor;
-import org.bouncycastle.openpgp.operator.PGPDigestCalculatorProvider;
-import org.bouncycastle.openpgp.operator.bc.BcPBESecretKeyDecryptorBuilder;
-import org.bouncycastle.openpgp.operator.bc.BcPGPDigestCalculatorProvider;
 import org.bouncycastle.util.io.Streams;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.MethodSource;
@@ -168,14 +165,12 @@ public class ChangeSecretKeyRingPassphraseTest {
      * @throws PGPException if passphrase is wrong
      */
     private void extractPrivateKey(PGPSecretKey secretKey, Passphrase passphrase) throws PGPException {
-        PGPDigestCalculatorProvider digestCalculatorProvider = new BcPGPDigestCalculatorProvider();
         if (passphrase.isEmpty() && secretKey.getKeyEncryptionAlgorithm() != SymmetricKeyAlgorithm.NULL.getAlgorithmId()) {
             throw new PGPException("Cannot unlock encrypted private key with empty passphrase.");
         } else if (!passphrase.isEmpty() && secretKey.getKeyEncryptionAlgorithm() == SymmetricKeyAlgorithm.NULL.getAlgorithmId()) {
             throw new PGPException("Cannot unlock unprotected private key with non-empty passphrase.");
         }
-        PBESecretKeyDecryptor decryptor = passphrase.isEmpty() ? null : new BcPBESecretKeyDecryptorBuilder(digestCalculatorProvider)
-                .build(passphrase.getChars());
+        PBESecretKeyDecryptor decryptor = passphrase.isEmpty() ? null : ImplementationFactory.getInstance().getPBESecretKeyDecryptor(passphrase);
 
         UnlockSecretKey.unlockSecretKey(secretKey, decryptor);
     }
