@@ -4,6 +4,7 @@
 
 package org.pgpainless.implementation;
 
+import java.io.InputStream;
 import java.security.KeyPair;
 import java.util.Date;
 
@@ -11,10 +12,12 @@ import org.bouncycastle.crypto.AsymmetricCipherKeyPair;
 import org.bouncycastle.crypto.params.AsymmetricKeyParameter;
 import org.bouncycastle.openpgp.PGPException;
 import org.bouncycastle.openpgp.PGPKeyPair;
+import org.bouncycastle.openpgp.PGPObjectFactory;
 import org.bouncycastle.openpgp.PGPPrivateKey;
 import org.bouncycastle.openpgp.PGPPublicKey;
 import org.bouncycastle.openpgp.PGPSecretKey;
 import org.bouncycastle.openpgp.PGPSessionKey;
+import org.bouncycastle.openpgp.bc.BcPGPObjectFactory;
 import org.bouncycastle.openpgp.operator.KeyFingerPrintCalculator;
 import org.bouncycastle.openpgp.operator.PBEDataDecryptorFactory;
 import org.bouncycastle.openpgp.operator.PBEKeyEncryptionMethodGenerator;
@@ -143,6 +146,16 @@ public class BcImplementationFactory extends ImplementationFactory {
     @Override
     public SessionKeyDataDecryptorFactory provideSessionKeyDataDecryptorFactory(PGPSessionKey sessionKey) {
         return new BcSessionKeyDataDecryptorFactory(sessionKey);
+    }
+
+    @Override
+    public PGPObjectFactory getPGPObjectFactory(byte[] bytes) {
+        return new BcPGPObjectFactory(bytes);
+    }
+
+    @Override
+    public PGPObjectFactory getPGPObjectFactory(InputStream inputStream) {
+        return new BcPGPObjectFactory(inputStream);
     }
 
     private AsymmetricCipherKeyPair jceToBcKeyPair(PublicKeyAlgorithm algorithm,

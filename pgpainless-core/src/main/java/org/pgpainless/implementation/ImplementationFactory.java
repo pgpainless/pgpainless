@@ -4,11 +4,13 @@
 
 package org.pgpainless.implementation;
 
+import java.io.InputStream;
 import java.security.KeyPair;
 import java.util.Date;
 
 import org.bouncycastle.openpgp.PGPException;
 import org.bouncycastle.openpgp.PGPKeyPair;
+import org.bouncycastle.openpgp.PGPObjectFactory;
 import org.bouncycastle.openpgp.PGPPrivateKey;
 import org.bouncycastle.openpgp.PGPPublicKey;
 import org.bouncycastle.openpgp.PGPSecretKey;
@@ -106,6 +108,10 @@ public abstract class ImplementationFactory {
                                                                    Passphrase passphrase) throws PGPException;
 
     public abstract SessionKeyDataDecryptorFactory provideSessionKeyDataDecryptorFactory(PGPSessionKey sessionKey);
+
+    public abstract PGPObjectFactory getPGPObjectFactory(InputStream inputStream);
+
+    public abstract PGPObjectFactory getPGPObjectFactory(byte[] bytes);
 
     @Override
     public String toString() {

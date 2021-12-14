@@ -23,11 +23,13 @@ import org.bouncycastle.openpgp.PGPLiteralData;
 import org.bouncycastle.openpgp.PGPObjectFactory;
 import org.bouncycastle.openpgp.PGPSecretKeyRing;
 import org.bouncycastle.openpgp.PGPUtil;
-import org.bouncycastle.openpgp.bc.BcPGPObjectFactory;
 import org.bouncycastle.util.io.Streams;
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.MethodSource;
 import org.pgpainless.algorithm.HashAlgorithm;
+import org.pgpainless.implementation.ImplementationFactory;
 import org.pgpainless.key.TestKeys;
 
 public class ArmorUtilsTest {
@@ -142,8 +144,10 @@ public class ArmorUtilsTest {
                 "-----END PGP MESSAGE-----\n", out.toString());
     }
 
-    @Test
-    public void decodeExampleTest() throws IOException, PGPException {
+    @ParameterizedTest
+    @MethodSource("org.pgpainless.util.TestImplementationFactoryProvider#provideImplementationFactories")
+    public void decodeExampleTest(ImplementationFactory implementationFactory) throws IOException, PGPException {
+        ImplementationFactory.setFactoryImplementation(implementationFactory);
         String armored = "-----BEGIN PGP MESSAGE-----\n" +
                 "Version: OpenPrivacy 0.99\n" +
                 "\n" +
@@ -152,9 +156,10 @@ public class ArmorUtilsTest {
                 "=njUN\n" +
                 "-----END PGP MESSAGE-----";
         InputStream inputStream = PGPUtil.getDecoderStream(new ByteArrayInputStream(armored.getBytes(StandardCharsets.UTF_8)));
-        PGPObjectFactory factory = new BcPGPObjectFactory(inputStream);
+
+        PGPObjectFactory factory = ImplementationFactory.getInstance().getPGPObjectFactory(inputStream);
         PGPCompressedData compressed = (PGPCompressedData) factory.nextObject();
-        factory = new BcPGPObjectFactory(compressed.getDataStream());
+        factory = ImplementationFactory.getInstance().getPGPObjectFactory(compressed.getDataStream());
         PGPLiteralData literal = (PGPLiteralData) factory.nextObject();
         ByteArrayOutputStream out = new ByteArrayOutputStream();
         assertEquals("_CONSOLE", literal.getFileName());
