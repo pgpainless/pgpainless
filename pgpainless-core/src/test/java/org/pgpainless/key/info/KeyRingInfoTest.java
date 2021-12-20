@@ -237,19 +237,15 @@ public class KeyRingInfoTest {
 
         calendar.setTime(now);
         calendar.add(Calendar.DATE, 10);
-        Date encryptionKeyExpiration = calendar.getTime(); // in 10 days
         PGPSecretKey encryptionKey = keys.next();
 
         calendar.setTime(now);
         calendar.add(Calendar.DATE, 3);
-        Date signingKeyExpiration = calendar.getTime(); // in 3 days
         PGPSecretKey signingKey = keys.next();
 
         SecretKeyRingProtector protector = SecretKeyRingProtector.unprotectedKeys();
         secretKeys = PGPainless.modifyKeyRing(secretKeys)
-                .setExpirationDate(new OpenPgpV4Fingerprint(primaryKey), primaryKeyExpiration, protector)
-                .setExpirationDate(new OpenPgpV4Fingerprint(encryptionKey), encryptionKeyExpiration, protector)
-                .setExpirationDate(new OpenPgpV4Fingerprint(signingKey), signingKeyExpiration, protector)
+                .setExpirationDate(primaryKeyExpiration, protector)
                 .done();
 
         KeyRingInfo info = new KeyRingInfo(secretKeys);
@@ -267,7 +263,6 @@ public class KeyRingInfoTest {
         assertEquals(primaryKey.getKeyID(), certKeys.get(0).getKeyID());
 
         assertEquals(primaryKeyExpiration.getTime(), info.getPrimaryKeyExpirationDate().getTime(), 5);
-        assertEquals(signingKeyExpiration.getTime(), info.getExpirationDateForUse(KeyFlag.SIGN_DATA).getTime(), 5);
 
         // Encryption key expires after primary key, so we return primary key expiration instead.
         assertEquals(primaryKeyExpiration.getTime(), info.getExpirationDateForUse(KeyFlag.ENCRYPT_STORAGE).getTime(), 5);

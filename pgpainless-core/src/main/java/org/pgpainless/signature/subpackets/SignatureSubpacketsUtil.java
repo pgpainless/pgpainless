@@ -195,13 +195,14 @@ public final class SignatureSubpacketsUtil {
      * @return key expiration time as date
      */
     public static Date getKeyExpirationTimeAsDate(PGPSignature signature, PGPPublicKey signingKey) {
+        if (signature.getKeyID() != signingKey.getKeyID()) {
+            throw new IllegalArgumentException("Provided key (" + Long.toHexString(signingKey.getKeyID()) + ") did not create the signature (" + Long.toHexString(signature.getKeyID()) + ")");
+        }
         KeyExpirationTime subpacket = getKeyExpirationTime(signature);
         if (subpacket == null) {
             return null;
         }
-        if (signature.getKeyID() != signingKey.getKeyID()) {
-            throw new IllegalArgumentException("Provided key (" + Long.toHexString(signingKey.getKeyID()) + ") did not create the signature (" + Long.toHexString(signature.getKeyID()) + ")");
-        }
+
         return SignatureUtils.datePlusSeconds(signingKey.getCreationTime(), subpacket.getTime());
     }
 

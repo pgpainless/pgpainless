@@ -22,17 +22,14 @@ import javax.annotation.Nullable;
 
 import org.bouncycastle.bcpg.S2K;
 import org.bouncycastle.bcpg.SecretKeyPacket;
+import org.bouncycastle.bcpg.sig.KeyExpirationTime;
 import org.bouncycastle.openpgp.PGPException;
 import org.bouncycastle.openpgp.PGPKeyPair;
 import org.bouncycastle.openpgp.PGPKeyRingGenerator;
-import org.bouncycastle.openpgp.PGPPrivateKey;
 import org.bouncycastle.openpgp.PGPPublicKey;
 import org.bouncycastle.openpgp.PGPSecretKey;
 import org.bouncycastle.openpgp.PGPSecretKeyRing;
 import org.bouncycastle.openpgp.PGPSignature;
-import org.bouncycastle.openpgp.PGPSignatureGenerator;
-import org.bouncycastle.openpgp.PGPSignatureSubpacketGenerator;
-import org.bouncycastle.openpgp.PGPSignatureSubpacketVector;
 import org.bouncycastle.openpgp.operator.PBESecretKeyDecryptor;
 import org.bouncycastle.openpgp.operator.PBESecretKeyEncryptor;
 import org.bouncycastle.openpgp.operator.PGPContentSignerBuilder;
@@ -47,7 +44,6 @@ import org.pgpainless.algorithm.SignatureType;
 import org.pgpainless.algorithm.SymmetricKeyAlgorithm;
 import org.pgpainless.algorithm.negotiation.HashAlgorithmNegotiator;
 import org.pgpainless.implementation.ImplementationFactory;
-import org.pgpainless.key.OpenPgpFingerprint;
 import org.pgpainless.key.generation.KeyRingBuilder;
 import org.pgpainless.key.generation.KeySpec;
 import org.pgpainless.key.info.KeyRingInfo;
@@ -55,18 +51,16 @@ import org.pgpainless.key.protection.CachingSecretKeyRingProtector;
 import org.pgpainless.key.protection.KeyRingProtectionSettings;
 import org.pgpainless.key.protection.PasswordBasedSecretKeyRingProtector;
 import org.pgpainless.key.protection.SecretKeyRingProtector;
-import org.pgpainless.key.protection.UnlockSecretKey;
 import org.pgpainless.key.protection.UnprotectedKeysProtector;
 import org.pgpainless.key.protection.fixes.S2KUsageFix;
 import org.pgpainless.key.protection.passphrase_provider.SolitaryPassphraseProvider;
 import org.pgpainless.key.util.KeyRingUtils;
 import org.pgpainless.key.util.RevocationAttributes;
-import org.pgpainless.signature.SignatureUtils;
+import org.pgpainless.signature.builder.DirectKeySignatureBuilder;
 import org.pgpainless.signature.builder.RevocationSignatureBuilder;
 import org.pgpainless.signature.builder.SelfSignatureBuilder;
 import org.pgpainless.signature.subpackets.RevocationSignatureSubpackets;
 import org.pgpainless.signature.subpackets.SelfSignatureSubpackets;
-import org.pgpainless.signature.subpackets.SignatureSubpacketGeneratorUtil;
 import org.pgpainless.signature.subpackets.SignatureSubpackets;
 import org.pgpainless.signature.subpackets.SignatureSubpacketsHelper;
 import org.pgpainless.signature.subpackets.SignatureSubpacketsUtil;
@@ -107,6 +101,9 @@ public class SecretKeyRingEditor implements SecretKeyRingEditorInterface {
 
         // retain key flags from previous signature
         KeyRingInfo info = PGPainless.inspectKeyRing(secretKeyRing);
+        if (info.isHardRevoked(userId.toString())) {
+            throw new IllegalArgumentException("User-ID " + userId + " is hard revoked and cannot be re-certified.");
+        }
         List<KeyFlag> keyFlags = info.getKeyFlagsOf(info.getKeyId());
 
         Set<HashAlgorithm> hashAlgorithmPreferences;
@@ -146,15 +143,54 @@ public class SecretKeyRingEditor implements SecretKeyRingEditorInterface {
     public SecretKeyRingEditorInterface addPrimaryUserId(
             @Nonnull CharSequence userId, @Nonnull SecretKeyRingProtector protector)
             throws PGPException {
-        return addUserId(
+
+        // Determine previous key expiration date
+        PGPPublicKey primaryKey = secretKeyRing.getSecretKey().getPublicKey();
+        /*
+        KeyRingInfo info = PGPainless.inspectKeyRing(secretKeyRing);
+        String primaryUserId = info.getPrimaryUserId();
+        PGPSignature signature = primaryUserId == null ?
+                info.getLatestDirectKeySelfSignature() : info.getLatestUserIdCertification(primaryUserId);
+        final Date previousKeyExpiration = signature == null ? null :
+            SignatureSubpacketsUtil.getKeyExpirationTimeAsDate(signature, primaryKey);
+         */
+        final Date previousKeyExpiration = null;
+
+        // Add new primary user-id signature
+        addUserId(
                 userId,
                 new SelfSignatureSubpackets.Callback() {
                     @Override
                     public void modifyHashedSubpackets(SelfSignatureSubpackets hashedSubpackets) {
                         hashedSubpackets.setPrimaryUserId();
+                        if (previousKeyExpiration != null) {
+                            hashedSubpackets.setKeyExpirationTime(primaryKey, previousKeyExpiration);
+                        } else {
+                            hashedSubpackets.setKeyExpirationTime(null);
+                        }
                     }
                 },
                 protector);
+
+        // unmark previous primary user-ids to be non-primary
+        KeyRingInfo info = PGPainless.inspectKeyRing(secretKeyRing);
+        for (String otherUserId : info.getValidUserIds()) {
+            if (userId.toString().equals(otherUserId)) {
+                continue;
+            }
+
+            // We need to unmark this user-id as primary
+            if (info.getLatestUserIdCertification(otherUserId).getHashedSubPackets().isPrimaryUserID()) {
+                addUserId(otherUserId, new SelfSignatureSubpackets.Callback() {
+                    @Override
+                    public void modifyHashedSubpackets(SelfSignatureSubpackets hashedSubpackets) {
+                        hashedSubpackets.setPrimaryUserId(null);
+                        hashedSubpackets.setKeyExpirationTime(null); // non-primary
+                    }
+                }, protector);
+            }
+        }
+        return this;
     }
 
     // TODO: Move to utility class?
@@ -468,118 +504,119 @@ public class SecretKeyRingEditor implements SecretKeyRingEditorInterface {
             @Nullable Date expiration,
             @Nonnull SecretKeyRingProtector secretKeyRingProtector)
             throws PGPException {
-        return setExpirationDate(OpenPgpFingerprint.of(secretKeyRing), expiration, secretKeyRingProtector);
-    }
 
-    @Override
-    public SecretKeyRingEditorInterface setExpirationDate(
-            @Nonnull OpenPgpFingerprint fingerprint,
-            @Nullable Date expiration,
-            @Nonnull SecretKeyRingProtector secretKeyRingProtector)
-            throws PGPException {
-
-        List<PGPSecretKey> secretKeyList = new ArrayList<>();
         PGPSecretKey primaryKey = secretKeyRing.getSecretKey();
         if (!primaryKey.isMasterKey()) {
             throw new IllegalArgumentException("Key Ring does not appear to contain a primary secret key.");
         }
 
-        boolean found = false;
-        for (PGPSecretKey secretKey : secretKeyRing) {
-            // Skip over unaffected subkeys
-            if (secretKey.getKeyID() != fingerprint.getKeyId()) {
-                secretKeyList.add(secretKey);
+        // reissue direct key sig
+        PGPSignature prevDirectKeySig = getPreviousDirectKeySignature();
+        if (prevDirectKeySig != null) {
+            PGPSignature directKeySig = reissueDirectKeySignature(expiration, secretKeyRingProtector, prevDirectKeySig);
+            secretKeyRing = KeyRingUtils.injectCertification(secretKeyRing, primaryKey.getPublicKey(), directKeySig);
+        }
+
+        // reissue primary user-id sig
+        String primaryUserId = PGPainless.inspectKeyRing(secretKeyRing).getPossiblyExpiredUserId();
+        if (primaryUserId != null) {
+            PGPSignature prevUserIdSig = getPreviousUserIdSignatures(primaryUserId);
+            PGPSignature userIdSig = reissuePrimaryUserIdSig(expiration, secretKeyRingProtector, primaryUserId, prevUserIdSig);
+            secretKeyRing = KeyRingUtils.injectCertification(secretKeyRing, primaryUserId, userIdSig);
+        }
+
+        KeyRingInfo info = PGPainless.inspectKeyRing(secretKeyRing);
+        for (String userId : info.getValidUserIds()) {
+            if (userId.equals(primaryUserId)) {
                 continue;
             }
-            // We found the target subkey
-            found = true;
-            secretKey = setExpirationDate(primaryKey, secretKey, expiration, secretKeyRingProtector);
-            secretKeyList.add(secretKey);
-        }
 
-        if (!found) {
-            throw new IllegalArgumentException("Key Ring does not contain secret key with fingerprint " + fingerprint);
-        }
+            PGPSignature prevUserIdSig = info.getLatestUserIdCertification(userId);
+            if (prevUserIdSig == null) {
+                throw new AssertionError("A valid user-id shall never have no user-id signature.");
+            }
 
-        secretKeyRing = new PGPSecretKeyRing(secretKeyList);
+            if (prevUserIdSig.getHashedSubPackets().isPrimaryUserID()) {
+                PGPSignature userIdSig = reissueNonPrimaryUserId(secretKeyRingProtector, userId, prevUserIdSig);
+                secretKeyRing = KeyRingUtils.injectCertification(secretKeyRing, primaryUserId, userIdSig);
+            }
+        }
 
         return this;
     }
 
-    private PGPSecretKey setExpirationDate(PGPSecretKey primaryKey,
-                                           PGPSecretKey subjectKey,
-                                           Date expiration,
-                                           SecretKeyRingProtector secretKeyRingProtector)
+    private PGPSignature reissueNonPrimaryUserId(
+            SecretKeyRingProtector secretKeyRingProtector,
+            String userId,
+            PGPSignature prevUserIdSig)
             throws PGPException {
-
-        if (expiration != null && expiration.before(subjectKey.getPublicKey().getCreationTime())) {
-            throw new IllegalArgumentException("Expiration date cannot be before creation date.");
-        }
-
-        PGPPrivateKey privateKey = UnlockSecretKey.unlockSecretKey(primaryKey, secretKeyRingProtector);
-        PGPPublicKey subjectPubKey = subjectKey.getPublicKey();
-
-        PGPSignature oldSignature = getPreviousSignature(primaryKey, subjectPubKey);
-
-        PGPSignatureSubpacketVector oldSubpackets = oldSignature.getHashedSubPackets();
-        PGPSignatureSubpacketGenerator subpacketGenerator = new PGPSignatureSubpacketGenerator(oldSubpackets);
-        SignatureSubpacketGeneratorUtil.setSignatureCreationTimeInSubpacketGenerator(new Date(), subpacketGenerator);
-        SignatureSubpacketGeneratorUtil.setKeyExpirationDateInSubpacketGenerator(
-                expiration, subjectPubKey.getCreationTime(), subpacketGenerator);
-
-        PGPSignatureGenerator signatureGenerator = SignatureUtils.getSignatureGeneratorFor(primaryKey);
-        signatureGenerator.setHashedSubpackets(subpacketGenerator.generate());
-
-        if (primaryKey.getKeyID() == subjectKey.getKeyID()) {
-            signatureGenerator.init(PGPSignature.POSITIVE_CERTIFICATION, privateKey);
-
-            for (Iterator<String> it = subjectKey.getUserIDs(); it.hasNext(); ) {
-                String userId = it.next();
-                PGPSignature signature = signatureGenerator.generateCertification(userId, subjectPubKey);
-                subjectPubKey = PGPPublicKey.addCertification(subjectPubKey, userId, signature);
+        SelfSignatureBuilder builder = new SelfSignatureBuilder(secretKeyRing.getSecretKey(), secretKeyRingProtector, prevUserIdSig);
+        builder.applyCallback(new SelfSignatureSubpackets.Callback() {
+            @Override
+            public void modifyHashedSubpackets(SelfSignatureSubpackets hashedSubpackets) {
+                // unmark as primary
+                hashedSubpackets.setPrimaryUserId(null);
             }
-        } else {
-            signatureGenerator.init(PGPSignature.SUBKEY_BINDING, privateKey);
-
-            PGPSignature signature = signatureGenerator.generateCertification(
-                    primaryKey.getPublicKey(), subjectPubKey);
-            subjectPubKey = PGPPublicKey.addCertification(subjectPubKey, signature);
-        }
-
-        subjectKey = PGPSecretKey.replacePublicKey(subjectKey, subjectPubKey);
-        return subjectKey;
+        });
+        return builder.build(secretKeyRing.getPublicKey(), userId);
     }
 
-    private PGPSignature getPreviousSignature(PGPSecretKey primaryKey, PGPPublicKey subjectPubKey) {
-        PGPSignature oldSignature = null;
-        if (primaryKey.getKeyID() == subjectPubKey.getKeyID()) {
-            Iterator<PGPSignature> keySignatures = subjectPubKey.getSignaturesForKeyID(primaryKey.getKeyID());
-            while (keySignatures.hasNext()) {
-                PGPSignature next = keySignatures.next();
-                SignatureType type = SignatureType.valueOf(next.getSignatureType());
-                if (type == SignatureType.POSITIVE_CERTIFICATION ||
-                        type == SignatureType.CASUAL_CERTIFICATION ||
-                        type == SignatureType.GENERIC_CERTIFICATION) {
-                    oldSignature = next;
+    private PGPSignature reissuePrimaryUserIdSig(
+            @Nullable Date expiration,
+            @Nonnull SecretKeyRingProtector secretKeyRingProtector,
+            @Nonnull String primaryUserId,
+            @Nonnull PGPSignature prevUserIdSig)
+            throws PGPException {
+        PGPSecretKey primaryKey = secretKeyRing.getSecretKey();
+        PGPPublicKey publicKey = primaryKey.getPublicKey();
+
+        SelfSignatureBuilder builder = new SelfSignatureBuilder(primaryKey, secretKeyRingProtector, prevUserIdSig);
+        builder.applyCallback(new SelfSignatureSubpackets.Callback() {
+            @Override
+            public void modifyHashedSubpackets(SelfSignatureSubpackets hashedSubpackets) {
+                if (expiration != null) {
+                    hashedSubpackets.setKeyExpirationTime(true, publicKey.getCreationTime(), expiration);
+                } else {
+                    hashedSubpackets.setKeyExpirationTime(new KeyExpirationTime(true, 0));
+                }
+                hashedSubpackets.setPrimaryUserId();
+            }
+        });
+        return builder.build(publicKey, primaryUserId);
+    }
+
+    private PGPSignature reissueDirectKeySignature(
+            Date expiration,
+            SecretKeyRingProtector secretKeyRingProtector,
+            PGPSignature prevDirectKeySig)
+            throws PGPException {
+        PGPSecretKey primaryKey = secretKeyRing.getSecretKey();
+        PGPPublicKey publicKey = primaryKey.getPublicKey();
+        final Date keyCreationTime = publicKey.getCreationTime();
+
+        DirectKeySignatureBuilder builder = new DirectKeySignatureBuilder(primaryKey, secretKeyRingProtector, prevDirectKeySig);
+        builder.applyCallback(new SelfSignatureSubpackets.Callback() {
+            @Override
+            public void modifyHashedSubpackets(SelfSignatureSubpackets hashedSubpackets) {
+                if (expiration != null) {
+                    hashedSubpackets.setKeyExpirationTime(keyCreationTime, expiration);
+                } else {
+                    hashedSubpackets.setKeyExpirationTime(null);
                 }
             }
-            if (oldSignature == null) {
-                throw new IllegalStateException("Key " + OpenPgpFingerprint.of(subjectPubKey) +
-                        " does not have a previous positive/casual/generic certification signature.");
-            }
-        } else {
-            Iterator<PGPSignature> bindingSignatures = subjectPubKey.getSignaturesOfType(
-                    SignatureType.SUBKEY_BINDING.getCode());
-            while (bindingSignatures.hasNext()) {
-                oldSignature = bindingSignatures.next();
-            }
-        }
+        });
 
-        if (oldSignature == null) {
-            throw new IllegalStateException("Key " + OpenPgpFingerprint.of(subjectPubKey) +
-                    " does not have a previous subkey binding signature.");
-        }
-        return oldSignature;
+        return builder.build(publicKey);
+    }
+
+    private PGPSignature getPreviousDirectKeySignature() {
+        KeyRingInfo info = PGPainless.inspectKeyRing(secretKeyRing);
+        return info.getLatestDirectKeySelfSignature();
+    }
+
+    private PGPSignature getPreviousUserIdSignatures(String userId) {
+        KeyRingInfo info = PGPainless.inspectKeyRing(secretKeyRing);
+        return info.getLatestUserIdCertification(userId);
     }
 
     @Override

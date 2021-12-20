@@ -6,7 +6,6 @@ package org.pgpainless.example;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
-import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
@@ -26,7 +25,6 @@ import org.pgpainless.PGPainless;
 import org.pgpainless.algorithm.EncryptionPurpose;
 import org.pgpainless.algorithm.KeyFlag;
 import org.pgpainless.exception.WrongPassphraseException;
-import org.pgpainless.key.OpenPgpFingerprint;
 import org.pgpainless.key.generation.KeySpec;
 import org.pgpainless.key.generation.type.KeyType;
 import org.pgpainless.key.generation.type.ecc.EllipticCurve;
@@ -221,33 +219,6 @@ public class ModifyKeys {
                 DateUtil.formatUTCDate(info.getExpirationDateForUse(KeyFlag.ENCRYPT_COMMS)));
         assertEquals(DateUtil.formatUTCDate(expirationDate),
                 DateUtil.formatUTCDate(info.getExpirationDateForUse(KeyFlag.SIGN_DATA)));
-    }
-
-    /**
-     * This example demonstrates how to set an expiration date for single subkeys.
-     *
-     * @throws PGPException
-     */
-    @Test
-    public void setSubkeyExpirationDate() throws PGPException {
-        Date expirationDate = DateUtil.parseUTCDate("2032-01-13 22:30:01 UTC");
-        SecretKeyRingProtector protector = SecretKeyRingProtector
-                .unlockEachKeyWith(Passphrase.fromPassword(originalPassphrase), secretKey);
-
-        secretKey = PGPainless.modifyKeyRing(secretKey)
-                .setExpirationDate(
-                        OpenPgpFingerprint.of(secretKey.getPublicKey(encryptionSubkeyId)),
-                        expirationDate,
-                        protector
-                )
-                .done();
-
-
-        KeyRingInfo info = PGPainless.inspectKeyRing(secretKey);
-        assertNull(info.getPrimaryKeyExpirationDate());
-        assertNull(info.getExpirationDateForUse(KeyFlag.SIGN_DATA));
-        assertEquals(DateUtil.formatUTCDate(expirationDate),
-                DateUtil.formatUTCDate(info.getExpirationDateForUse(KeyFlag.ENCRYPT_COMMS)));
     }
 
     /**
