@@ -350,6 +350,38 @@ public class KeyRingInfo {
     }
 
     /**
+     * Return a list of all user-ids that were valid at some point, but might be expired by now.
+     *
+     * @return bound user-ids
+     */
+    public List<String> getBoundButPossiblyExpiredUserIds() {
+        List<String> probablyExpired = new ArrayList<>();
+        List<String> userIds = getUserIds();
+
+        for (String userId : userIds) {
+            PGPSignature certification = signatures.userIdCertifications.get(userId);
+            PGPSignature revocation = signatures.userIdRevocations.get(userId);
+
+            // Not revoked -> valid
+            if (revocation == null) {
+                probablyExpired.add(userId);
+                continue;
+            }
+
+            // Hard revocation -> invalid
+            if (SignatureUtils.isHardRevocation(revocation)) {
+                continue;
+            }
+
+            // Soft revocation -> valid if certification is newer than revocation (revalidation)
+            if (certification.getCreationTime().after(revocation.getCreationTime())) {
+                probablyExpired.add(userId);
+            }
+        }
+        return probablyExpired;
+    }
+
+    /**
      * Return true if the provided user-id is valid.
      *
      * @param userId user-id
@@ -371,7 +403,6 @@ public class KeyRingInfo {
         PGPSignature certification = signatures.userIdCertifications.get(userId);
         PGPSignature revocation = signatures.userIdRevocations.get(userId);
 
-        // If user-id is expired, certification will be null.
         if (certification == null) {
             return false;
         }

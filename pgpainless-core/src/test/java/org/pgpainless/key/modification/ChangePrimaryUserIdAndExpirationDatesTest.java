@@ -9,7 +9,6 @@ import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
-import java.io.IOException;
 import java.security.InvalidAlgorithmParameterException;
 import java.security.NoSuchAlgorithmException;
 import java.util.Date;
@@ -151,7 +150,7 @@ public class ChangePrimaryUserIdAndExpirationDatesTest {
 
     @Test
     public void generateA_expire_primaryB_expire_isPrimaryB()
-            throws PGPException, InvalidAlgorithmParameterException, NoSuchAlgorithmException, InterruptedException, IOException {
+            throws PGPException, InvalidAlgorithmParameterException, NoSuchAlgorithmException, InterruptedException {
         PGPSecretKeyRing secretKeys = PGPainless.generateKeyRing().modernKeyRing("A", null);
         SecretKeyRingProtector protector = SecretKeyRingProtector.unprotectedKeys();
 
@@ -165,7 +164,7 @@ public class ChangePrimaryUserIdAndExpirationDatesTest {
         KeyRingInfo info = PGPainless.inspectKeyRing(secretKeys);
 
         assertIsPrimaryUserId("A", info);
-        assertIsNotValid("A", info);
+        assertIsNotValid("A", info); // A is expired
 
         secretKeys = PGPainless.modifyKeyRing(secretKeys)
                 .addPrimaryUserId("B", protector)
@@ -174,8 +173,8 @@ public class ChangePrimaryUserIdAndExpirationDatesTest {
         info = PGPainless.inspectKeyRing(secretKeys);
 
         assertIsPrimaryUserId("B", info);
-        assertIsValid("B", info);
-        assertIsNotValid("A", info); // A is still expired
+        assertIsNotValid("B", info); // A and B are still expired
+        assertIsNotValid("A", info);
 
         Thread.sleep(1000);
 
@@ -187,7 +186,7 @@ public class ChangePrimaryUserIdAndExpirationDatesTest {
         info = PGPainless.inspectKeyRing(secretKeys);
 
         assertIsValid("B", info);
-        assertIsNotValid("A", info); // A was expired when the expiration date was changed, so it was not re-certified
+        assertIsValid("A", info); // A got re-validated when changing exp date
         assertIsPrimaryUserId("B", info);
 
         secretKeys = PGPainless.modifyKeyRing(secretKeys)

@@ -146,15 +146,12 @@ public class SecretKeyRingEditor implements SecretKeyRingEditorInterface {
 
         // Determine previous key expiration date
         PGPPublicKey primaryKey = secretKeyRing.getSecretKey().getPublicKey();
-        /*
         KeyRingInfo info = PGPainless.inspectKeyRing(secretKeyRing);
         String primaryUserId = info.getPrimaryUserId();
         PGPSignature signature = primaryUserId == null ?
                 info.getLatestDirectKeySelfSignature() : info.getLatestUserIdCertification(primaryUserId);
         final Date previousKeyExpiration = signature == null ? null :
             SignatureSubpacketsUtil.getKeyExpirationTimeAsDate(signature, primaryKey);
-         */
-        final Date previousKeyExpiration = null;
 
         // Add new primary user-id signature
         addUserId(
@@ -173,8 +170,8 @@ public class SecretKeyRingEditor implements SecretKeyRingEditorInterface {
                 protector);
 
         // unmark previous primary user-ids to be non-primary
-        KeyRingInfo info = PGPainless.inspectKeyRing(secretKeyRing);
-        for (String otherUserId : info.getValidUserIds()) {
+        info = PGPainless.inspectKeyRing(secretKeyRing);
+        for (String otherUserId : info.getBoundButPossiblyExpiredUserIds()) {
             if (userId.toString().equals(otherUserId)) {
                 continue;
             }
