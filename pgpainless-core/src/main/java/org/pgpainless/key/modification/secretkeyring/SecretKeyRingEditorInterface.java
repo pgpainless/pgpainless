@@ -367,20 +367,6 @@ public interface SecretKeyRingEditorInterface {
             throws PGPException;
 
     /**
-     * Set key expiration time.
-     *
-     * @param fingerprint key that will have its expiration date adjusted
-     * @param expiration target expiration time or @{code null} for no expiration
-     * @param secretKeyRingProtector protector to unlock the priary key
-     * @return the builder
-     */
-    SecretKeyRingEditorInterface setExpirationDate(
-            @Nonnull OpenPgpFingerprint fingerprint,
-            @Nullable Date expiration,
-            @Nonnull SecretKeyRingProtector secretKeyRingProtector)
-            throws PGPException;
-
-    /**
      * Create a detached revocation certificate, which can be used to revoke the whole key.
      *
      * @param secretKeyRingProtector protector to unlock the primary key.

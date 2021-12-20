@@ -22,6 +22,7 @@ import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
 
 import org.bouncycastle.bcpg.sig.PrimaryUserID;
+import org.bouncycastle.bcpg.sig.RevocationReason;
 import org.bouncycastle.openpgp.PGPKeyRing;
 import org.bouncycastle.openpgp.PGPPublicKey;
 import org.bouncycastle.openpgp.PGPPublicKeyRing;
@@ -38,9 +39,10 @@ import org.pgpainless.algorithm.SymmetricKeyAlgorithm;
 import org.pgpainless.exception.KeyValidationError;
 import org.pgpainless.key.OpenPgpFingerprint;
 import org.pgpainless.key.SubkeyIdentifier;
+import org.pgpainless.key.util.RevocationAttributes;
 import org.pgpainless.policy.Policy;
-import org.pgpainless.signature.consumer.SignaturePicker;
 import org.pgpainless.signature.SignatureUtils;
+import org.pgpainless.signature.consumer.SignaturePicker;
 import org.pgpainless.signature.subpackets.SignatureSubpacketsUtil;
 
 /**
@@ -52,6 +54,8 @@ public class KeyRingInfo {
 
     private final PGPKeyRing keys;
     private Signatures signatures;
+    private final Date evaluationDate;
+    private final String primaryUserId;
 
     /**
      * Evaluate the key ring at creation time of the given signature.
@@ -82,6 +86,8 @@ public class KeyRingInfo {
     public KeyRingInfo(PGPKeyRing keys, Date validationDate) {
         this.keys = keys;
         this.signatures = new Signatures(keys, validationDate, PGPainless.getPolicy());
+        this.evaluationDate = validationDate;
+        this.primaryUserId = findPrimaryUserId();
     }
 
     /**
@@ -251,45 +257,67 @@ public class KeyRingInfo {
         return OpenPgpFingerprint.of(getPublicKey());
     }
 
+    public @Nullable String getPrimaryUserId() {
+        return primaryUserId;
+    }
+
     /**
      * Return the primary user-id of the key ring.
      *
      * Note: If no user-id is marked as primary key using a {@link PrimaryUserID} packet,
-     * this method returns the first valid user-id, otherwise null.
+     * this method returns the latest added user-id, otherwise null.
      *
      * @return primary user-id or null
      */
-    public @Nullable String getPrimaryUserId() {
+    private String findPrimaryUserId() {
+        String nonPrimaryUserId = null;
         String primaryUserId = null;
         Date modificationDate = null;
 
-        List<String> validUserIds = getValidUserIds();
-        if (validUserIds.isEmpty()) {
+        List<String> userIds = getUserIds();
+        if (userIds.isEmpty()) {
             return null;
         }
 
-        for (String userId : validUserIds) {
+        if (userIds.size() == 1) {
+            return userIds.get(0);
+        }
 
-            PGPSignature signature = signatures.userIdCertifications.get(userId);
-            if (signature == null) {
+        for (String userId : userIds) {
+            PGPSignature certification = signatures.userIdCertifications.get(userId);
+            if (certification == null) {
                 continue;
             }
+            Date creationTime = certification.getCreationTime();
 
-            PrimaryUserID subpacket = SignatureSubpacketsUtil.getPrimaryUserId(signature);
-            if (subpacket != null && subpacket.isPrimaryUserID()) {
-                // if there are multiple primary userIDs, return most recently signed
-                if (modificationDate == null || !signature.getCreationTime().before(modificationDate)) {
+            if (certification.getHashedSubPackets().isPrimaryUserID()) {
+                if (nonPrimaryUserId != null) {
+                    nonPrimaryUserId = null;
+                    modificationDate = null;
+                }
+
+                if (modificationDate == null || creationTime.after(modificationDate)) {
                     primaryUserId = userId;
-                    modificationDate = signature.getCreationTime();
+                    modificationDate = creationTime;
+                }
+
+            } else {
+                if (primaryUserId != null) {
+                    continue;
+                }
+
+                if (modificationDate == null || creationTime.after(modificationDate)) {
+                    nonPrimaryUserId = userId;
+                    modificationDate = creationTime;
                 }
             }
         }
-        // Workaround for keys with only one user-id but no primary user-id packet.
-        if (primaryUserId == null) {
-            return validUserIds.get(0);
+
+        if (primaryUserId != null) {
+            return primaryUserId;
         }
 
-        return primaryUserId;
+        return nonPrimaryUserId;
     }
 
     /**
@@ -314,7 +342,7 @@ public class KeyRingInfo {
         List<String> valid = new ArrayList<>();
         List<String> userIds = getUserIds();
         for (String userId : userIds) {
-            if (isUserIdValid(userId)) {
+            if (isUserIdBound(userId)) {
                 valid.add(userId);
             }
         }
@@ -328,6 +356,18 @@ public class KeyRingInfo {
      * @return true if user-id is valid
      */
     public boolean isUserIdValid(String userId) {
+        if (!userId.equals(primaryUserId)) {
+            if (!isUserIdBound(primaryUserId)) {
+                // primary user-id not valid
+                return false;
+            }
+        }
+        return isUserIdBound(userId);
+    }
+
+
+    private boolean isUserIdBound(String userId) {
+
         PGPSignature certification = signatures.userIdCertifications.get(userId);
         PGPSignature revocation = signatures.userIdRevocations.get(userId);
 
@@ -337,6 +377,12 @@ public class KeyRingInfo {
         }
         if (SignatureUtils.isSignatureExpired(certification)) {
             return false;
+        }
+        if (certification.getHashedSubPackets().isPrimaryUserID()) {
+            Date keyExpiration = SignatureSubpacketsUtil.getKeyExpirationTimeAsDate(certification, keys.getPublicKey());
+            if (keyExpiration != null && evaluationDate.after(keyExpiration)) {
+                return false;
+            }
         }
         // Not revoked -> valid
         if (revocation == null) {
@@ -588,12 +634,44 @@ public class KeyRingInfo {
             }
         }
 
-        PGPSignature primaryUserIdCertification = getLatestUserIdCertification(getPrimaryUserId());
+        PGPSignature primaryUserIdCertification = getLatestUserIdCertification(getPossiblyExpiredUserId());
         if (primaryUserIdCertification != null) {
             return SignatureSubpacketsUtil.getKeyExpirationTimeAsDate(primaryUserIdCertification, getPublicKey());
         }
 
         throw new NoSuchElementException("No suitable signatures found on the key.");
+    }
+
+    public String getPossiblyExpiredUserId() {
+        String validPrimaryUserId = getPrimaryUserId();
+        if (validPrimaryUserId != null) {
+            return validPrimaryUserId;
+        }
+
+        Date latestCreationTime = null;
+        String primaryUserId = null;
+        boolean foundPrimary = false;
+        for (String userId : getUserIds()) {
+            PGPSignature signature = getLatestUserIdCertification(userId);
+            if (signature == null) {
+                continue;
+            }
+
+            boolean isPrimary = signature.getHashedSubPackets().isPrimaryUserID();
+            if (foundPrimary && !isPrimary) {
+                continue;
+            }
+
+            Date creationTime = signature.getCreationTime();
+            if (latestCreationTime == null || creationTime.after(latestCreationTime) || isPrimary && !foundPrimary) {
+                latestCreationTime = creationTime;
+                primaryUserId = userId;
+            }
+
+            foundPrimary |= isPrimary;
+        }
+
+        return primaryUserId;
     }
 
     /**
@@ -666,6 +744,15 @@ public class KeyRingInfo {
             }
         }
         return primaryExpiration;
+    }
+
+    public boolean isHardRevoked(String userId) {
+        PGPSignature revocation = signatures.userIdRevocations.get(userId);
+        if (revocation == null) {
+            return false;
+        }
+        RevocationReason revocationReason = revocation.getHashedSubPackets().getRevocationReason();
+        return revocationReason == null || RevocationAttributes.Reason.isHardRevocation(revocationReason.getRevocationReason());
     }
 
     /**

@@ -237,10 +237,6 @@ public final class SignaturePicker {
                 SignatureValidator.signatureIsCertification().verify(signature);
                 SignatureValidator.signatureStructureIsAcceptable(primaryKey, policy).verify(signature);
                 SignatureValidator.signatureIsAlreadyEffective(validationDate).verify(signature);
-                // if the currently latest signature is not yet expired, check if the next candidate is not yet expired
-                if (latestUserIdCert != null && !SignatureUtils.isSignatureExpired(latestUserIdCert, validationDate)) {
-                    SignatureValidator.signatureIsNotYetExpired(validationDate).verify(signature);
-                }
                 SignatureValidator.correctSignatureOverUserId(userId, primaryKey, primaryKey).verify(signature);
             } catch (SignatureValidationException e) {
                 // User-id certification is not valid

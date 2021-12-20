@@ -21,6 +21,21 @@ public class SubkeyBindingSignatureBuilder extends AbstractSignatureBuilder<Subk
         super(SignatureType.SUBKEY_BINDING, signingKey, protector);
     }
 
+    public SubkeyBindingSignatureBuilder(
+            PGPSecretKey signingKey,
+            SecretKeyRingProtector protector,
+            PGPSignature oldSubkeyBinding)
+            throws PGPException {
+        super(signingKey, protector, requireValidSignatureType(oldSubkeyBinding));
+    }
+
+    private static PGPSignature requireValidSignatureType(PGPSignature signature) {
+        if (signature.getSignatureType() == SignatureType.SUBKEY_BINDING.getCode()) {
+            return signature;
+        }
+        throw new IllegalArgumentException("Invalid signature type.");
+    }
+
     @Override
     protected boolean isValidSignatureType(SignatureType type) {
         return type == SignatureType.SUBKEY_BINDING;
