@@ -25,6 +25,13 @@ SPDX-License-Identifier: CC0-1.0
 - `EncryptionOptions`: replace method argument type `PGPPublicKeyRingCollection` with `Iterable<PGPPublicKeyRing>` to allow for `Collection<PGPPublicKeyRing>` as argument
 - `SigningOptions`: replace method argument type `PGPSecretKeyRingCollection` with `Iterable<PGPSecretKeyRing>` to allow for `Collection<PGPSecretKeyRing>` as argument
 - Prevent message decryption with non-encryption subkey
+- Rework key modification API to fix inconsistency problems with expiration and primary user-ids.
+  - Remove methods to change expiration dates of subkeys and specific user-ids
+  - Rework primary user-id marking logic to unmark non-primary ids
+- Added [Cure53 Security Audit Report](https://gh.pgpainless.org/assets/Audit-PGPainless.pdf) to the website
+- Reworked tests for cryptographic backend to use custom `InvocationContextProvider` implementation
+- Source `PGPObjectFactory` objects from `ImplementationProvider`
+- Fix typo `getCommendHeader() -> getCommentHeader()`
 
 ## 1.0.0-rc6
 - Restructure method arguments in `SecretKeyRingEditor`
