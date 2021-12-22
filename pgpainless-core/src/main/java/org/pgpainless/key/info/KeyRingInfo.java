@@ -340,7 +340,7 @@ public class KeyRingInfo {
      *
      * @return bound user-ids
      */
-    public List<String> getBoundButPossiblyExpiredUserIds() {
+    public List<String> getValidAndExpiredUserIds() {
         List<String> probablyExpired = new ArrayList<>();
         List<String> userIds = getUserIds();
 

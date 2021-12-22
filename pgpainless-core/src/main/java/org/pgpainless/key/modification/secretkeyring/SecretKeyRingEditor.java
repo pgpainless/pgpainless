@@ -171,7 +171,7 @@ public class SecretKeyRingEditor implements SecretKeyRingEditorInterface {
 
         // unmark previous primary user-ids to be non-primary
         info = PGPainless.inspectKeyRing(secretKeyRing);
-        for (String otherUserId : info.getBoundButPossiblyExpiredUserIds()) {
+        for (String otherUserId : info.getValidAndExpiredUserIds()) {
             if (userId.toString().equals(otherUserId)) {
                 continue;
             }
