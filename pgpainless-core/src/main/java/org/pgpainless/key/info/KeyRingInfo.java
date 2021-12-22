@@ -262,25 +262,25 @@ public class KeyRingInfo {
     }
 
     /**
-     * Return the primary user-id of the key ring.
+     * Return the current primary user-id of the key ring.
      *
      * Note: If no user-id is marked as primary key using a {@link PrimaryUserID} packet,
-     * this method returns the latest added user-id, otherwise null.
+     * this method returns the first user-id on the key, otherwise null.
      *
      * @return primary user-id or null
      */
     private String findPrimaryUserId() {
-        String nonPrimaryUserId = null;
         String primaryUserId = null;
-        Date modificationDate = null;
+        Date currentModificationDate = null;
 
         List<String> userIds = getUserIds();
         if (userIds.isEmpty()) {
             return null;
         }
 
+        String firstUserId = userIds.get(0);
         if (userIds.size() == 1) {
-            return userIds.get(0);
+            return firstUserId;
         }
 
         for (String userId : userIds) {
@@ -291,25 +291,11 @@ public class KeyRingInfo {
             Date creationTime = certification.getCreationTime();
 
             if (certification.getHashedSubPackets().isPrimaryUserID()) {
-                if (nonPrimaryUserId != null) {
-                    nonPrimaryUserId = null;
-                    modificationDate = null;
-                }
-
-                if (modificationDate == null || creationTime.after(modificationDate)) {
+                if (currentModificationDate == null || creationTime.after(currentModificationDate)) {
                     primaryUserId = userId;
-                    modificationDate = creationTime;
+                    currentModificationDate = creationTime;
                 }
 
-            } else {
-                if (primaryUserId != null) {
-                    continue;
-                }
-
-                if (modificationDate == null || creationTime.after(modificationDate)) {
-                    nonPrimaryUserId = userId;
-                    modificationDate = creationTime;
-                }
             }
         }
 
@@ -317,7 +303,7 @@ public class KeyRingInfo {
             return primaryUserId;
         }
 
-        return nonPrimaryUserId;
+        return firstUserId;
     }
 
     /**
