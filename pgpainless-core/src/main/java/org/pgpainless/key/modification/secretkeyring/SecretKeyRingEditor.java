@@ -515,7 +515,7 @@ public class SecretKeyRingEditor implements SecretKeyRingEditorInterface {
         }
 
         // reissue primary user-id sig
-        String primaryUserId = PGPainless.inspectKeyRing(secretKeyRing).getPossiblyExpiredUserId();
+        String primaryUserId = PGPainless.inspectKeyRing(secretKeyRing).getPossiblyExpiredPrimaryUserId();
         if (primaryUserId != null) {
             PGPSignature prevUserIdSig = getPreviousUserIdSignatures(primaryUserId);
             PGPSignature userIdSig = reissuePrimaryUserIdSig(expiration, secretKeyRingProtector, primaryUserId, prevUserIdSig);

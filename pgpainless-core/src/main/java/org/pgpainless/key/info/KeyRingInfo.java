@@ -644,22 +644,41 @@ public class KeyRingInfo {
      */
     public @Nullable Date getPrimaryKeyExpirationDate() {
         PGPSignature directKeySig = getLatestDirectKeySelfSignature();
+        Date directKeyExpirationDate = null;
         if (directKeySig != null) {
-            Date directKeyExpirationDate = SignatureSubpacketsUtil.getKeyExpirationTimeAsDate(directKeySig, getPublicKey());
-            if (directKeyExpirationDate != null) {
-                return directKeyExpirationDate;
+            directKeyExpirationDate = SignatureSubpacketsUtil.getKeyExpirationTimeAsDate(directKeySig, getPublicKey());
+        }
+
+        PGPSignature primaryUserIdCertification = null;
+        Date userIdExpirationDate = null;
+        String possiblyExpiredPrimaryUserId = getPossiblyExpiredPrimaryUserId();
+        if (possiblyExpiredPrimaryUserId != null) {
+            primaryUserIdCertification = getLatestUserIdCertification(possiblyExpiredPrimaryUserId);
+            if (primaryUserIdCertification != null) {
+                userIdExpirationDate = SignatureSubpacketsUtil.getKeyExpirationTimeAsDate(primaryUserIdCertification, getPublicKey());
             }
         }
 
-        PGPSignature primaryUserIdCertification = getLatestUserIdCertification(getPossiblyExpiredUserId());
-        if (primaryUserIdCertification != null) {
-            return SignatureSubpacketsUtil.getKeyExpirationTimeAsDate(primaryUserIdCertification, getPublicKey());
+        if (directKeySig == null && primaryUserIdCertification == null) {
+            throw new NoSuchElementException("No direct-key signature and no user-id signature found.");
         }
 
-        throw new NoSuchElementException("No suitable signatures found on the key.");
+        if (directKeyExpirationDate != null && userIdExpirationDate == null) {
+            return directKeyExpirationDate;
+        }
+
+        if (directKeyExpirationDate == null) {
+            return userIdExpirationDate;
+        }
+
+        if (directKeyExpirationDate.before(userIdExpirationDate)) {
+            return directKeyExpirationDate;
+        }
+
+        return userIdExpirationDate;
     }
 
-    public String getPossiblyExpiredUserId() {
+    public String getPossiblyExpiredPrimaryUserId() {
         String validPrimaryUserId = getPrimaryUserId();
         if (validPrimaryUserId != null) {
             return validPrimaryUserId;
