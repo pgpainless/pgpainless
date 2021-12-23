@@ -5,6 +5,9 @@ SPDX-License-Identifier: CC0-1.0
 
 # PGPainless Changelog
 
+## 1.0.0-rc9-SNAPSHOT
+- When key has both direct-key sig + primary user-id sig: resolve expiration date to earliest expiration
+
 ## 1.0.0-rc8
 - `KeyRingInfo.getPrimaryUserId()`: return first user-id when no primary user-id is found
 - Rename method `getBoundButPossiblyExpiredUserIds` to `getValidAndExpiredUserIds()`
