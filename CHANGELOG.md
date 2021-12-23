@@ -5,7 +5,12 @@ SPDX-License-Identifier: CC0-1.0
 
 # PGPainless Changelog
 
-## 1.0.0-rc7-SNAPSHOT
+## 1.0.0-rc8
+- `KeyRingInfo.getPrimaryUserId()`: return first user-id when no primary user-id is found
+- Rename method `getBoundButPossiblyExpiredUserIds` to `getValidAndExpiredUserIds()`
+- Remove audit resource material
+
+## 1.0.0-rc7
 - Make `Passphrase` comparison constant time
 - Bump Bouncycastle to 1.70
   - Use new `PGPCanonicalizedDataGenerator` where applicable
