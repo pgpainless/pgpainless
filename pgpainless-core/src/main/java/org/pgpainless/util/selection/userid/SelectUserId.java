@@ -10,6 +10,8 @@ import java.util.List;
 import org.bouncycastle.openpgp.PGPKeyRing;
 import org.pgpainless.PGPainless;
 
+import javax.annotation.Nonnull;
+
 public abstract class SelectUserId {
 
     protected abstract boolean accept(String userId);
@@ -42,35 +44,37 @@ public abstract class SelectUserId {
         return null;
     }
 
-    public static SelectUserId containsSubstring(String query) {
+    public static SelectUserId containsSubstring(@Nonnull CharSequence query) {
         return new SelectUserId() {
             @Override
             protected boolean accept(String userId) {
-                return userId.contains(query);
+                return userId.contains(query.toString());
             }
         };
     }
 
-    public static SelectUserId exactMatch(String query) {
+    public static SelectUserId exactMatch(@Nonnull CharSequence query) {
         return new SelectUserId() {
             @Override
             protected boolean accept(String userId) {
-                return userId.equals(query);
+                return userId.equals(query.toString());
             }
         };
     }
 
-    public static SelectUserId startsWith(String substring) {
+    public static SelectUserId startsWith(@Nonnull CharSequence substring) {
+        String string = substring.toString();
         return new SelectUserId() {
             @Override
             protected boolean accept(String userId) {
-                return userId.startsWith(substring);
+                return userId.startsWith(string);
             }
         };
     }
 
-    public static SelectUserId containsEmailAddress(String email) {
-        return containsSubstring(email.matches("^<.+>$") ? email : '<' + email + '>');
+    public static SelectUserId containsEmailAddress(@Nonnull CharSequence email) {
+        String string = email.toString();
+        return containsSubstring(string.matches("^<.+>$") ? string : '<' + string + '>');
     }
 
     public static SelectUserId validUserId(PGPKeyRing keyRing) {
@@ -115,5 +119,12 @@ public abstract class SelectUserId {
                 return !strategy.accept(userId);
             }
         };
+    }
+
+    public static SelectUserId byEmail(CharSequence email) {
+        return SelectUserId.or(
+                SelectUserId.exactMatch(email),
+                SelectUserId.containsEmailAddress(email)
+        );
     }
 }

@@ -19,6 +19,7 @@ import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNull;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 public class SelectUserIdTest {
 
@@ -110,5 +111,17 @@ public class SelectUserIdTest {
         assertEquals("Second UserID", SelectUserId.containsSubstring("Second").firstMatch(
                 PGPainless.inspectKeyRing(secretKeys).getUserIds()
         ));
+    }
+
+    @Test
+    public void testByEmail() {
+        SelectUserId containsEmailAddress = SelectUserId.containsEmailAddress("alice@pgpainless.org");
+        assertTrue(containsEmailAddress.accept("<alice@pgpainless.org>"));
+        assertTrue(containsEmailAddress.accept("Alice <alice@pgpainless.org>"));
+
+        SelectUserId byEmail = SelectUserId.byEmail("alice@pgpainless.org");
+        assertTrue(byEmail.accept("alice@pgpainless.org"));
+        assertTrue(byEmail.accept("<alice@pgpainless.org>"));
+        assertTrue(byEmail.accept("Alice <alice@pgpainless.org>"));
     }
 }
