@@ -159,52 +159,6 @@ public final class KeyRingUtils {
         return ring.getPublicKey(keyId) != null;
     }
 
-    /**
-     * Delete the given user-id and its certification signatures from the given key.
-     *
-     * @deprecated Deleting user-ids is highly discouraged, since it might lead to all sorts of problems
-     * (e.g. lost key properties).
-     * Instead, user-ids should only be revoked.
-     *
-     * @param secretKeys secret keys
-     * @param userId user-id
-     * @return modified secret keys
-     */
-    @Deprecated
-    public static PGPSecretKeyRing deleteUserId(PGPSecretKeyRing secretKeys, String userId) {
-        PGPSecretKey secretKey = secretKeys.getSecretKey(); // user-ids are located on primary key only
-        PGPPublicKey publicKey = secretKey.getPublicKey(); // user-ids are placed on the public key part
-        publicKey = PGPPublicKey.removeCertification(publicKey, userId);
-        if (publicKey == null) {
-            throw new NoSuchElementException("User-ID " + userId + " not found on the key.");
-        }
-        secretKey = PGPSecretKey.replacePublicKey(secretKey, publicKey);
-        secretKeys = PGPSecretKeyRing.insertSecretKey(secretKeys, secretKey);
-        return secretKeys;
-    }
-
-    /**
-     * Delete the given user-id and its certification signatures from the given certificate.
-     *
-     * @deprecated Deleting user-ids is highly discouraged, since it might lead to all sorts of problems
-     * (e.g. lost key properties).
-     * Instead, user-ids should only be revoked.
-     *
-     * @param publicKeys certificate
-     * @param userId user-id
-     * @return modified secret keys
-     */
-    @Deprecated
-    public static PGPPublicKeyRing deleteUserId(PGPPublicKeyRing publicKeys, String userId) {
-        PGPPublicKey publicKey = publicKeys.getPublicKey(); // user-ids are located on primary key only
-        publicKey = PGPPublicKey.removeCertification(publicKey, userId);
-        if (publicKey == null) {
-            throw new NoSuchElementException("User-ID " + userId + " not found on the key.");
-        }
-        publicKeys = PGPPublicKeyRing.insertPublicKey(publicKeys, publicKey);
-        return publicKeys;
-    }
-
     public static <T extends PGPKeyRing> T injectCertification(T keyRing, PGPPublicKey certifiedKey, PGPSignature certification) {
         PGPSecretKeyRing secretKeys = null;
         PGPPublicKeyRing publicKeys;

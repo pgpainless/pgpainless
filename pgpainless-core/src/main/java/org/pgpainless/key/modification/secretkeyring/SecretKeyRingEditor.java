@@ -190,6 +190,28 @@ public class SecretKeyRingEditor implements SecretKeyRingEditorInterface {
         return this;
     }
 
+    @Override
+    public SecretKeyRingEditorInterface removeUserId(
+            SelectUserId userIdSelector,
+            SecretKeyRingProtector protector)
+            throws PGPException {
+        RevocationAttributes revocationAttributes = RevocationAttributes.createCertificateRevocation()
+                .withReason(RevocationAttributes.Reason.USER_ID_NO_LONGER_VALID)
+                .withoutDescription();
+        return revokeUserIds(userIdSelector,
+                protector,
+                revocationAttributes);
+    }
+
+    @Override
+    public SecretKeyRingEditorInterface removeUserId(
+            CharSequence userId,
+            SecretKeyRingProtector protector) throws PGPException {
+        return removeUserId(
+                SelectUserId.exactMatch(userId.toString()),
+                protector);
+    }
+
     // TODO: Move to utility class?
     private String sanitizeUserId(@Nonnull CharSequence userId) {
         // TODO: Further research how to sanitize user IDs.

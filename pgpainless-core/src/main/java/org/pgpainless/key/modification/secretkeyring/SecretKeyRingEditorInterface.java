@@ -69,6 +69,14 @@ public interface SecretKeyRingEditorInterface {
             @Nonnull SecretKeyRingProtector protector)
             throws PGPException;
 
+    SecretKeyRingEditorInterface removeUserId(SelectUserId userIdSelector,
+                                              SecretKeyRingProtector protector)
+        throws PGPException;
+
+    SecretKeyRingEditorInterface removeUserId(CharSequence userId,
+                                              SecretKeyRingProtector protector)
+        throws PGPException;
+
     /**
      * Add a subkey to the key ring.
      * The subkey will be generated from the provided {@link KeySpec}.
