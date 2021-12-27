@@ -7,6 +7,8 @@ SPDX-License-Identifier: CC0-1.0
 
 ## 1.0.0-rc9-SNAPSHOT
 - When key has both direct-key sig + primary user-id sig: resolve expiration date to earliest expiration
+- Add `SecretKeyRingEditor.removeUserId()` convenience methods that do soft-revoke the user-id.
+- Add `SelectUserId.byEmail()` which also matches the plain email address
 
 ## 1.0.0-rc8
 - `KeyRingInfo.getPrimaryUserId()`: return first user-id when no primary user-id is found

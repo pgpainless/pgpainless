@@ -14,6 +14,7 @@ import java.util.NoSuchElementException;
 
 import org.bouncycastle.openpgp.PGPException;
 import org.bouncycastle.openpgp.PGPSecretKeyRing;
+import org.bouncycastle.openpgp.PGPSignature;
 import org.junit.jupiter.api.Test;
 import org.pgpainless.PGPainless;
 import org.pgpainless.key.info.KeyRingInfo;
@@ -52,6 +53,37 @@ public class RevokeUserIdsTest {
         assertTrue(info.isUserIdValid("Alice <alice@pgpainless.org>"));
         assertFalse(info.isUserIdValid("Allice <alice@example.org>"));
         assertFalse(info.isUserIdValid("Alice <alice@example.org>"));
+    }
+
+    @Test
+    public void removeUserId() throws PGPException, InvalidAlgorithmParameterException, NoSuchAlgorithmException {
+        PGPSecretKeyRing secretKeys = PGPainless.generateKeyRing()
+                .modernKeyRing("Alice <alice@pgpainless.org>", null);
+        SecretKeyRingProtector protector = SecretKeyRingProtector.unprotectedKeys();
+
+        secretKeys = PGPainless.modifyKeyRing(secretKeys)
+                .addUserId("Allice <alice@example.org>", protector)
+                .addUserId("Alice <alice@example.org>", protector)
+                .done();
+
+        KeyRingInfo info = PGPainless.inspectKeyRing(secretKeys);
+        assertTrue(info.isUserIdValid("Alice <alice@pgpainless.org>"));
+        assertTrue(info.isUserIdValid("Allice <alice@example.org>"));
+        assertTrue(info.isUserIdValid("Alice <alice@example.org>"));
+
+        secretKeys = PGPainless.modifyKeyRing(secretKeys)
+                .removeUserId("Allice <alice@example.org>", protector)
+                .done();
+
+        info = PGPainless.inspectKeyRing(secretKeys);
+        assertTrue(info.isUserIdValid("Alice <alice@pgpainless.org>"));
+        assertFalse(info.isUserIdValid("Allice <alice@example.org>"));
+        assertTrue(info.isUserIdValid("Alice <alice@example.org>"));
+
+        PGPSignature revocation = info.getUserIdRevocation("Allice <alice@example.org>");
+
+        assertFalse(RevocationAttributes.Reason.isHardRevocation(
+                revocation.getHashedSubPackets().getRevocationReason().getRevocationReason()));
     }
 
     @Test
