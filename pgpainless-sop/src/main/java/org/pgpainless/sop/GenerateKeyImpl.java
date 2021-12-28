@@ -41,7 +41,7 @@ public class GenerateKeyImpl implements GenerateKey {
     }
 
     @Override
-    public Ready generate() throws SOPGPException.MissingArg, SOPGPException.UnsupportedAsymmetricAlgo, IOException {
+    public Ready generate() throws SOPGPException.MissingArg, SOPGPException.UnsupportedAsymmetricAlgo {
         Iterator<String> userIdIterator = userIds.iterator();
         if (!userIdIterator.hasNext()) {
             throw new SOPGPException.MissingArg("Missing user-id.");

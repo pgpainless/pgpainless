@@ -13,7 +13,7 @@ import java.io.OutputStream;
  * At that point, first all the buffered data is being written to the underlying stream, followed by any successive
  * data that may get written to the {@link ProxyOutputStream}.
  *
- * This class is useful if we need to provide an {@link OutputStream} at one point in time where the final
+ * This class is useful if we need to provide an {@link OutputStream} at one point in time when the final
  * target output stream is not yet known.
  */
 public class ProxyOutputStream extends OutputStream {

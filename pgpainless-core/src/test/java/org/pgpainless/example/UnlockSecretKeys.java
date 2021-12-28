@@ -33,9 +33,6 @@ public class UnlockSecretKeys {
 
     /**
      * This example demonstrates how to create a {@link SecretKeyRingProtector} for unprotected secret keys.
-     *
-     * @throws PGPException
-     * @throws IOException
      */
     @Test
     public void unlockUnprotectedKeys() throws PGPException, IOException {
@@ -50,9 +47,6 @@ public class UnlockSecretKeys {
     /**
      * This example demonstrates how to create a {@link SecretKeyRingProtector} using a single passphrase to unlock
      * all secret subkeys of a key.
-     *
-     * @throws PGPException
-     * @throws IOException
      */
     @Test
     public void unlockWholeKeyWithSamePassphrase() throws PGPException, IOException {
@@ -68,9 +62,6 @@ public class UnlockSecretKeys {
     /**
      * This example demonstrates how to create a {@link SecretKeyRingProtector} that uses different
      * passphrases per subkey to unlock the secret keys.
-     *
-     * @throws PGPException
-     * @throws IOException
      */
     @Test
     public void unlockWithPerSubkeyPassphrases() throws PGPException, IOException {

@@ -18,8 +18,10 @@ import org.pgpainless.util.selection.keyring.impl.Wildcard;
 public class WildcardKeyRingSelectionStrategyTest {
 
 
-    Wildcard.PubRingSelectionStrategy<String> pubKeySelectionStrategy = new Wildcard.PubRingSelectionStrategy<>();
-    Wildcard.SecRingSelectionStrategy<String> secKeySelectionStrategy = new Wildcard.SecRingSelectionStrategy<>();
+    private static final Wildcard.PubRingSelectionStrategy<String> pubKeySelectionStrategy
+            = new Wildcard.PubRingSelectionStrategy<>();
+    private static final Wildcard.SecRingSelectionStrategy<String> secKeySelectionStrategy
+            = new Wildcard.SecRingSelectionStrategy<>();
 
     @Test
     public void testStratAcceptsMatchingUIDsOnPubKey() throws IOException {

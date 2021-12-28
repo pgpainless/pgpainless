@@ -18,6 +18,7 @@ import org.junit.jupiter.api.Test;
  */
 public class HexUtilTest {
 
+    @SuppressWarnings("CharsetObjectCanBeUsed")
     private static final Charset ASCII = Charset.forName("US-ASCII");
 
     @Test

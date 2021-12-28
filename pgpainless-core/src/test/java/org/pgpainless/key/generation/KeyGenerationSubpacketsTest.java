@@ -34,6 +34,7 @@ import org.pgpainless.key.generation.type.xdh.XDHSpec;
 import org.pgpainless.key.info.KeyRingInfo;
 import org.pgpainless.key.protection.SecretKeyRingProtector;
 import org.pgpainless.signature.subpackets.SelfSignatureSubpackets;
+import org.pgpainless.util.Passphrase;
 
 public class KeyGenerationSubpacketsTest {
 
@@ -105,13 +106,15 @@ public class KeyGenerationSubpacketsTest {
     }
 
     @Test
-    public void verifyDefaultSubpacketsForSubkeyBindingSignatures() throws PGPException, InvalidAlgorithmParameterException, NoSuchAlgorithmException, IOException {
+    public void verifyDefaultSubpacketsForSubkeyBindingSignatures()
+            throws PGPException, InvalidAlgorithmParameterException, NoSuchAlgorithmException, IOException {
         PGPSecretKeyRing secretKeys = PGPainless.generateKeyRing().modernKeyRing("Alice", null);
         KeyRingInfo info = PGPainless.inspectKeyRing(secretKeys);
         List<PGPPublicKey> keysBefore = info.getPublicKeys();
 
         secretKeys = PGPainless.modifyKeyRing(secretKeys)
-                .addSubKey(KeySpec.getBuilder(KeyType.EDDSA(EdDSACurve._Ed25519), KeyFlag.SIGN_DATA).build(), null, SecretKeyRingProtector.unprotectedKeys())
+                .addSubKey(KeySpec.getBuilder(KeyType.EDDSA(EdDSACurve._Ed25519), KeyFlag.SIGN_DATA).build(),
+                        Passphrase.emptyPassphrase(), SecretKeyRingProtector.unprotectedKeys())
                 .done();
 
 
@@ -127,7 +130,8 @@ public class KeyGenerationSubpacketsTest {
         assertNotNull(bindingSig.getHashedSubPackets().getEmbeddedSignatures().get(0));
 
         secretKeys = PGPainless.modifyKeyRing(secretKeys)
-                .addSubKey(KeySpec.getBuilder(KeyType.XDH(XDHSpec._X25519), KeyFlag.ENCRYPT_COMMS).build(), null,
+                .addSubKey(KeySpec.getBuilder(KeyType.XDH(XDHSpec._X25519), KeyFlag.ENCRYPT_COMMS).build(),
+                        Passphrase.emptyPassphrase(),
                         new SelfSignatureSubpackets.Callback() {
                             @Override
                             public void modifyHashedSubpackets(SelfSignatureSubpackets hashedSubpackets) {

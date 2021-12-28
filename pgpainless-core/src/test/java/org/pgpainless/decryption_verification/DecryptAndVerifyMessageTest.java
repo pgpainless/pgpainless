@@ -30,6 +30,7 @@ import org.pgpainless.util.TestAllImplementations;
 public class DecryptAndVerifyMessageTest {
 
     // Don't use StandardCharsets.UTF8 because of Android API level.
+    @SuppressWarnings("CharsetObjectCanBeUsed")
     private static final Charset UTF8 = Charset.forName("UTF-8");
 
     private PGPSecretKeyRing juliet;

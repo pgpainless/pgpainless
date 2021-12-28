@@ -9,6 +9,8 @@ import java.io.InputStream;
 
 import org.bouncycastle.bcpg.ArmoredInputStream;
 
+import javax.annotation.Nonnull;
+
 /**
  * Utility class that causes read(bytes, offset, length) to properly throw exceptions
  * caused by faulty CRC checksums.
@@ -72,7 +74,7 @@ public class CRCingArmoredInputStreamWrapper extends ArmoredInputStream {
     }
 
     @Override
-    public int read(byte[] b) throws IOException {
+    public int read(@Nonnull byte[] b) throws IOException {
         return read(b, 0, b.length);
     }
     /**

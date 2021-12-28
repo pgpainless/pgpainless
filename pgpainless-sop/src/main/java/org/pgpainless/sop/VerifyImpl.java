@@ -25,7 +25,7 @@ import sop.operation.Verify;
 
 public class VerifyImpl implements Verify {
 
-    ConsumerOptions options = new ConsumerOptions();
+    private final ConsumerOptions options = new ConsumerOptions();
 
     @Override
     public Verify notBefore(Date timestamp) throws SOPGPException.UnsupportedOption {

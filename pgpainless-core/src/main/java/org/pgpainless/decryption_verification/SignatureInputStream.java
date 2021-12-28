@@ -93,7 +93,7 @@ public abstract class SignatureInputStream extends FilterInputStream {
             return read;
         }
 
-        public void parseAndCombineSignatures() throws IOException {
+        public void parseAndCombineSignatures() {
             if (objectFactory == null) {
                 return;
             }
@@ -117,7 +117,8 @@ public abstract class SignatureInputStream extends FilterInputStream {
                     check.setSignature(signature);
 
                     resultBuilder.addInvalidInbandSignature(new SignatureVerification(signature, null),
-                            new SignatureValidationException("Missing verification certificate " + Long.toHexString(signature.getKeyID())));
+                            new SignatureValidationException(
+                                    "Missing verification certificate " + Long.toHexString(signature.getKeyID())));
                 }
             }
         }
@@ -150,13 +151,16 @@ public abstract class SignatureInputStream extends FilterInputStream {
                 }
 
                 try {
-                    signatureWasCreatedInBounds(options.getVerifyNotBefore(), options.getVerifyNotAfter()).verify(opSignature.getSignature());
+                    signatureWasCreatedInBounds(options.getVerifyNotBefore(),
+                            options.getVerifyNotAfter()).verify(opSignature.getSignature());
                     CertificateValidator.validateCertificateAndVerifyOnePassSignature(opSignature, policy);
-                    resultBuilder.addVerifiedInbandSignature(new SignatureVerification(opSignature.getSignature(), opSignature.getSigningKey()));
+                    resultBuilder.addVerifiedInbandSignature(
+                            new SignatureVerification(opSignature.getSignature(), opSignature.getSigningKey()));
                 } catch (SignatureValidationException e) {
                     LOGGER.warn("One-pass-signature verification failed for signature made by key {}: {}",
                             opSignature.getSigningKey(), e.getMessage(), e);
-                    resultBuilder.addInvalidInbandSignature(new SignatureVerification(opSignature.getSignature(), opSignature.getSigningKey()), e);
+                    resultBuilder.addInvalidInbandSignature(
+                            new SignatureVerification(opSignature.getSignature(), opSignature.getSigningKey()), e);
                 }
             }
         }
@@ -165,13 +169,17 @@ public abstract class SignatureInputStream extends FilterInputStream {
             Policy policy = PGPainless.getPolicy();
             for (DetachedSignatureCheck s : detachedSignatures) {
                 try {
-                    signatureWasCreatedInBounds(options.getVerifyNotBefore(), options.getVerifyNotAfter()).verify(s.getSignature());
-                    CertificateValidator.validateCertificateAndVerifyInitializedSignature(s.getSignature(), (PGPPublicKeyRing) s.getSigningKeyRing(), policy);
-                    resultBuilder.addVerifiedDetachedSignature(new SignatureVerification(s.getSignature(), s.getSigningKeyIdentifier()));
+                    signatureWasCreatedInBounds(options.getVerifyNotBefore(),
+                            options.getVerifyNotAfter()).verify(s.getSignature());
+                    CertificateValidator.validateCertificateAndVerifyInitializedSignature(s.getSignature(),
+                            (PGPPublicKeyRing) s.getSigningKeyRing(), policy);
+                    resultBuilder.addVerifiedDetachedSignature(new SignatureVerification(s.getSignature(),
+                            s.getSigningKeyIdentifier()));
                 } catch (SignatureValidationException e) {
                     LOGGER.warn("One-pass-signature verification failed for signature made by key {}: {}",
                             s.getSigningKeyIdentifier(), e.getMessage(), e);
-                    resultBuilder.addInvalidDetachedSignature(new SignatureVerification(s.getSignature(), s.getSigningKeyIdentifier()), e);
+                    resultBuilder.addInvalidDetachedSignature(new SignatureVerification(s.getSignature(),
+                            s.getSigningKeyIdentifier()), e);
                 }
             }
         }

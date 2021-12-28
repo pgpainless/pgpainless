@@ -54,6 +54,7 @@ import org.pgpainless.util.Passphrase;
 
 public class KeyRingBuilder implements KeyRingBuilderInterface<KeyRingBuilder> {
 
+    @SuppressWarnings("CharsetObjectCanBeUsed")
     private final Charset UTF8 = Charset.forName("UTF-8");
 
     private KeySpec primaryKeySpec;

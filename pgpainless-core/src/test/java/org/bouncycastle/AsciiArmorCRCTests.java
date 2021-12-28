@@ -278,12 +278,11 @@ public class AsciiArmorCRCTests {
     /**
      * This test verifies, whether PGPainless can read PGPSecretKeyRings from ASCII armored encodings
      * where the armor is missing its CRC checksum.
+     *
      * @see <a href="https://tests.sequoia-pgp.org/#Mangled_ASCII_Armored_Key">Sequoia Test Suite</a>
-     * @throws PGPException
-     * @throws IOException
      */
     @Test
-    public void missingCRCInArmoredKeyDoesNotCauseException() throws PGPException, IOException {
+    public void missingCRCInArmoredKeyDoesNotCauseException() throws IOException {
         String KEY = "-----BEGIN PGP PRIVATE KEY BLOCK-----\n" +
                 "Comment: Bob's OpenPGP Transferable Secret Key\n" +
                 "\n" +

@@ -35,7 +35,7 @@ public interface KeyType {
 
     /**
      * Return the strength of the key in bits.
-     * @return
+     * @return strength of the key in bits
      */
     int getBitStrength();
 

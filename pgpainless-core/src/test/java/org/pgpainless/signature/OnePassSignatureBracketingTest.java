@@ -86,7 +86,7 @@ public class OnePassSignatureBracketingTest {
         outerloop: while (true) {
             Object next = objectFactory.nextObject();
             if (next == null) {
-                break outerloop;
+                break;
             }
             if (next instanceof PGPEncryptedDataList) {
                 PGPEncryptedDataList encryptedDataList = (PGPEncryptedDataList) next;

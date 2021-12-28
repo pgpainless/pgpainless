@@ -16,7 +16,6 @@ import java.util.Iterator;
 import java.util.Map;
 import java.util.Random;
 import java.util.concurrent.ConcurrentHashMap;
-import javax.annotation.Nullable;
 
 import org.bouncycastle.openpgp.PGPException;
 import org.bouncycastle.openpgp.PGPSecretKey;
@@ -28,8 +27,8 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.pgpainless.PGPainless;
 import org.pgpainless.key.TestKeys;
 import org.pgpainless.key.protection.passphrase_provider.SecretKeyPassphraseProvider;
-import org.pgpainless.util.TestAllImplementations;
 import org.pgpainless.util.Passphrase;
+import org.pgpainless.util.TestAllImplementations;
 
 public class SecretKeyRingProtectorTest {
 
@@ -108,7 +107,6 @@ public class SecretKeyRingProtectorTest {
         passphraseMap.put(1L, Passphrase.emptyPassphrase());
         CachingSecretKeyRingProtector protector = new CachingSecretKeyRingProtector(passphraseMap,
                 KeyRingProtectionSettings.secureDefaultSettings(), new SecretKeyPassphraseProvider() {
-            @Nullable
             @Override
             public Passphrase getPassphraseFor(Long keyId) {
                 return Passphrase.fromPassword("missingP455w0rd");

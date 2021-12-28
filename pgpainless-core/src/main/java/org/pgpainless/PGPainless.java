@@ -71,7 +71,6 @@ public final class PGPainless {
      *
      * @param key key or certificate
      * @return ascii armored string
-     * @throws IOException
      */
     public static String asciiArmor(@Nonnull PGPKeyRing key) throws IOException {
         if (key instanceof PGPSecretKeyRing) {

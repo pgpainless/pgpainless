@@ -254,10 +254,7 @@ public final class EncryptionStream extends OutputStream {
 
         // One-Pass-Signatures are bracketed. That means we have to append the signatures in reverse order
         //  compared to the one-pass-signature packets.
-        List<SubkeyIdentifier> signingKeys = new ArrayList<>();
-        for (SubkeyIdentifier signingKey : signingOptions.getSigningMethods().keySet()) {
-            signingKeys.add(signingKey);
-        }
+        List<SubkeyIdentifier> signingKeys = new ArrayList<>(signingOptions.getSigningMethods().keySet());
         for (int i = signingKeys.size() - 1; i >= 0; i--) {
             SubkeyIdentifier signingKey = signingKeys.get(i);
             SigningOptions.SigningMethod signingMethod = signingOptions.getSigningMethods().get(signingKey);

@@ -48,7 +48,6 @@ public interface SecretKeyRingEditorInterface {
      *                                   certification signature.
      * @param protector protector to unlock the primary secret key
      * @return the builder
-     * @throws PGPException
      */
     SecretKeyRingEditorInterface addUserId(
             @Nonnull CharSequence userId,

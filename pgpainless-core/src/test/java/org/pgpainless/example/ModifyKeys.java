@@ -90,8 +90,6 @@ public class ModifyKeys {
 
     /**
      * This example demonstrates how to change the passphrase of a secret key and all its subkeys.
-     *
-     * @throws PGPException
      */
     @Test
     public void changePassphrase() throws PGPException {
@@ -112,8 +110,6 @@ public class ModifyKeys {
     /**
      * This example demonstrates how to change the passphrase of a single subkey in a key to a new passphrase.
      * Only the passphrase of the targeted key will be changed. All other keys remain untouched.
-     *
-     * @throws PGPException
      */
     @Test
     public void changeSingleSubkeyPassphrase() throws PGPException {
@@ -138,8 +134,6 @@ public class ModifyKeys {
 
     /**
      * This example demonstrates how to add an additional user-id to a key.
-     *
-     * @throws PGPException
      */
     @Test
     public void addUserId() throws PGPException {
@@ -167,10 +161,6 @@ public class ModifyKeys {
      * manually.
      *
      * Once the subkey is added, it can be decrypted using the provided subkey passphrase.
-     *
-     * @throws PGPException
-     * @throws InvalidAlgorithmParameterException
-     * @throws NoSuchAlgorithmException
      */
     @Test
     public void addSubkey() throws PGPException, InvalidAlgorithmParameterException, NoSuchAlgorithmException, IOException {
@@ -198,8 +188,6 @@ public class ModifyKeys {
     /**
      * This example demonstrates how to set a key expiration date.
      * The provided expiration date will be set on each user-id certification signature.
-     *
-     * @throws PGPException
      */
     @Test
     public void setKeyExpirationDate() throws PGPException {
@@ -223,8 +211,6 @@ public class ModifyKeys {
 
     /**
      * This example demonstrates how to revoke a user-id on a key.
-     *
-     * @throws PGPException
      */
     @Test
     public void revokeUserId() throws PGPException {

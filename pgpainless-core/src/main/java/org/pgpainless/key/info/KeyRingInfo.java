@@ -163,11 +163,9 @@ public class KeyRingInfo {
                 // Subkey is hard revoked
                 return false;
             } else {
-                if (!SignatureUtils.isSignatureExpired(revocation)
-                        && revocation.getCreationTime().after(binding.getCreationTime())) {
-                    // Key is soft-revoked, not yet re-bound
-                    return false;
-                }
+                // Key is soft-revoked, not yet re-bound
+                return SignatureUtils.isSignatureExpired(revocation)
+                        || !revocation.getCreationTime().after(binding.getCreationTime());
             }
         }
 

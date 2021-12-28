@@ -7,6 +7,7 @@ package org.pgpainless.decryption_verification;
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.nio.charset.Charset;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
@@ -74,11 +75,11 @@ public final class MessageInspector {
      *
      * @param message OpenPGP message
      * @return encryption info
-     * @throws PGPException
-     * @throws IOException
      */
     public static EncryptionInfo determineEncryptionInfoForMessage(String message) throws PGPException, IOException {
-        return determineEncryptionInfoForMessage(new ByteArrayInputStream(message.getBytes("UTF-8")));
+        @SuppressWarnings("CharsetObjectCanBeUsed")
+        Charset charset = Charset.forName("UTF-8");
+        return determineEncryptionInfoForMessage(new ByteArrayInputStream(message.getBytes(charset)));
     }
 
     /**
@@ -87,8 +88,6 @@ public final class MessageInspector {
      *
      * @param dataIn openpgp message
      * @return encryption information
-     * @throws IOException
-     * @throws PGPException
      */
     public static EncryptionInfo determineEncryptionInfoForMessage(InputStream dataIn) throws IOException, PGPException {
         InputStream decoded = ArmorUtils.getDecoderStream(dataIn);

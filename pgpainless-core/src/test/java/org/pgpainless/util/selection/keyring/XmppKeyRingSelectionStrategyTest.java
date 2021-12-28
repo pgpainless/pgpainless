@@ -18,8 +18,10 @@ import org.pgpainless.util.selection.keyring.impl.XMPP;
 
 public class XmppKeyRingSelectionStrategyTest {
 
-    XMPP.PubRingSelectionStrategy pubKeySelectionStrategy = new XMPP.PubRingSelectionStrategy();
-    XMPP.SecRingSelectionStrategy secKeySelectionStrategy = new XMPP.SecRingSelectionStrategy();
+    private static final XMPP.PubRingSelectionStrategy pubKeySelectionStrategy =
+            new XMPP.PubRingSelectionStrategy();
+    private static final XMPP.SecRingSelectionStrategy secKeySelectionStrategy =
+            new XMPP.SecRingSelectionStrategy();
 
     @Test
     public void testMatchingXmppUIDAcceptedOnPubKey() throws IOException {

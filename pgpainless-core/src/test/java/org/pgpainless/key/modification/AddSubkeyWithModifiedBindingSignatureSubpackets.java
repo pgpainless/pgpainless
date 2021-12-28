@@ -36,7 +36,7 @@ import org.pgpainless.signature.subpackets.SignatureSubpacketsUtil;
 
 public class AddSubkeyWithModifiedBindingSignatureSubpackets {
 
-    public static long MILLIS_IN_SEC = 1000;
+    public static final long MILLIS_IN_SEC = 1000;
 
     @Test
     public void bindEncryptionSubkeyAndModifyBindingSignatureHashedSubpackets() throws PGPException, InvalidAlgorithmParameterException, NoSuchAlgorithmException, IOException {

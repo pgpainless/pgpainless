@@ -68,7 +68,7 @@ public final class BCUtil {
             return true;
         }
 
-        int len = (expected.length < supplied.length) ? expected.length : supplied.length;
+        int len = Math.min(expected.length, supplied.length);
 
         int nonEqual = expected.length ^ supplied.length;
 

@@ -6,7 +6,6 @@ package org.pgpainless.weird_keys;
 
 import static org.junit.jupiter.api.Assertions.assertThrows;
 
-import java.io.IOException;
 import java.security.InvalidAlgorithmParameterException;
 import java.security.NoSuchAlgorithmException;
 
@@ -25,7 +24,8 @@ import org.pgpainless.key.util.KeyRingUtils;
 public class TestEncryptCommsStorageFlagsDifferentiated {
 
     @Test
-    public void testThatEncryptionDifferentiatesBetweenPurposeKeyFlags() throws InvalidAlgorithmParameterException, NoSuchAlgorithmException, PGPException, IOException {
+    public void testThatEncryptionDifferentiatesBetweenPurposeKeyFlags()
+            throws InvalidAlgorithmParameterException, NoSuchAlgorithmException, PGPException {
         PGPSecretKeyRing secretKeys = PGPainless.buildKeyRing()
                 .setPrimaryKey(KeySpec.getBuilder(
                         KeyType.RSA(RsaLength._3072),

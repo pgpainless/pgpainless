@@ -14,7 +14,6 @@ import java.security.InvalidAlgorithmParameterException;
 import java.security.NoSuchAlgorithmException;
 import java.util.Iterator;
 import java.util.Random;
-import javax.annotation.Nullable;
 
 import org.bouncycastle.openpgp.PGPException;
 import org.bouncycastle.openpgp.PGPKeyRing;
@@ -32,7 +31,6 @@ public class CachingSecretKeyRingProtectorTest {
 
     // Dummy passphrase callback that returns the doubled key-id as passphrase
     private final SecretKeyPassphraseProvider dummyCallback = new SecretKeyPassphraseProvider() {
-        @Nullable
         @Override
         public Passphrase getPassphraseFor(Long keyId) {
             long doubled = keyId * 2;

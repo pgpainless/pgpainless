@@ -68,7 +68,6 @@ public final class StreamGeneratorWrapper {
      * @param modificationDate modification date
      * @param buffer buffer
      * @return encoding stream
-     * @throws IOException
      */
     public OutputStream open(OutputStream outputStream, String filename, Date modificationDate, byte[] buffer) throws IOException {
         if (literalDataGenerator != null) {
@@ -80,8 +79,6 @@ public final class StreamGeneratorWrapper {
 
     /**
      * Close all encoding streams opened by this generator wrapper.
-     *
-     * @throws IOException
      */
     public void close() throws IOException {
         if (literalDataGenerator != null) {

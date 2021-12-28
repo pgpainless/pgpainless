@@ -9,7 +9,6 @@ import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 
-import java.io.IOException;
 import java.security.InvalidAlgorithmParameterException;
 import java.security.NoSuchAlgorithmException;
 
@@ -59,13 +58,16 @@ public class ProofUtilTest {
     }
 
     @Test
-    public void testAddProof() throws PGPException, InvalidAlgorithmParameterException, NoSuchAlgorithmException, IOException, InterruptedException {
+    public void testAddProof()
+            throws PGPException, InvalidAlgorithmParameterException, NoSuchAlgorithmException, InterruptedException {
         String userId = "Alice <alice@pgpainless.org>";
         PGPSecretKeyRing secretKey = PGPainless.generateKeyRing()
                 .modernKeyRing(userId, null);
         Thread.sleep(1000L);
-        secretKey = new ProofUtil()
-                .addProof(secretKey, SecretKeyRingProtector.unprotectedKeys(), new ProofUtil.Proof("xmpp:alice@pgpainless.org"));
+        secretKey = new ProofUtil().addProof(
+                secretKey,
+                SecretKeyRingProtector.unprotectedKeys(),
+                new ProofUtil.Proof("xmpp:alice@pgpainless.org"));
 
         KeyRingInfo info = PGPainless.inspectKeyRing(secretKey);
         PGPSignature signature = info.getLatestUserIdCertification(userId);

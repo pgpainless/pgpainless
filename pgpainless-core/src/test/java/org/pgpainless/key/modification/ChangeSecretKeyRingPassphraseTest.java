@@ -131,7 +131,7 @@ public class ChangeSecretKeyRingPassphraseTest {
         PGPSecretKey subKey = keys.next();
 
         PGPSecretKeyRing secretKeys = PGPainless.modifyKeyRing(keyRing)
-                .changeSubKeyPassphraseFromOldPassphrase(primaryKey.getKeyID(), Passphrase.fromPassword("weakPassphrase"))
+                .changeSubKeyPassphraseFromOldPassphrase(subKey.getKeyID(), Passphrase.fromPassword("weakPassphrase"))
                 .withSecureDefaultSettings()
                 .toNoPassphrase()
                 .done();
@@ -140,17 +140,17 @@ public class ChangeSecretKeyRingPassphraseTest {
         primaryKey = keys.next();
         subKey = keys.next();
 
-        extractPrivateKey(primaryKey, Passphrase.emptyPassphrase());
-        extractPrivateKey(subKey, Passphrase.fromPassword("weakPassphrase"));
+        extractPrivateKey(primaryKey, Passphrase.fromPassword("weakPassphrase"));
+        extractPrivateKey(subKey, Passphrase.emptyPassphrase());
 
         final PGPSecretKey finalPrimaryKey = primaryKey;
         assertThrows(PGPException.class,
-                () -> extractPrivateKey(finalPrimaryKey, Passphrase.fromPassword("weakPassphrase")),
+                () -> extractPrivateKey(finalPrimaryKey, Passphrase.emptyPassphrase()),
                 "Unlocking the unprotected primary key with the old passphrase must fail.");
 
         final PGPSecretKey finalSubKey = subKey;
         assertThrows(PGPException.class,
-                () -> extractPrivateKey(finalSubKey, Passphrase.emptyPassphrase()),
+                () -> extractPrivateKey(finalSubKey, Passphrase.fromPassword("weakPassphrase")),
                 "Unlocking the still protected subkey with an empty passphrase must fail.");
     }
 

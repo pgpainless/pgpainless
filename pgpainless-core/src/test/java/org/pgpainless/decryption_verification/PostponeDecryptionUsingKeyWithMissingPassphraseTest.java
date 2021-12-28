@@ -11,7 +11,6 @@ import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
-import javax.annotation.Nullable;
 
 import org.bouncycastle.openpgp.PGPException;
 import org.bouncycastle.openpgp.PGPSecretKeyRing;
@@ -120,7 +119,6 @@ public class PostponeDecryptionUsingKeyWithMissingPassphraseTest {
     @Test
     public void missingPassphraseFirst() throws PGPException, IOException {
         SecretKeyRingProtector protector1 = new CachingSecretKeyRingProtector(new SecretKeyPassphraseProvider() {
-            @Nullable
             @Override
             public Passphrase getPassphraseFor(Long keyId) {
                 fail("Although the first PKESK is for k1, we should have skipped it and tried k2 first, which has passphrase available.");
@@ -151,7 +149,6 @@ public class PostponeDecryptionUsingKeyWithMissingPassphraseTest {
     public void missingPassphraseSecond() throws PGPException, IOException {
         SecretKeyRingProtector protector1 = SecretKeyRingProtector.unlockEachKeyWith(p1, k1);
         SecretKeyRingProtector protector2 = new CachingSecretKeyRingProtector(new SecretKeyPassphraseProvider() {
-            @Nullable
             @Override
             public Passphrase getPassphraseFor(Long keyId) {
                 fail("This callback should not get called, since the first PKESK is for k1, which has a passphrase available.");
@@ -180,7 +177,6 @@ public class PostponeDecryptionUsingKeyWithMissingPassphraseTest {
     @Test
     public void messagePassphraseFirst() throws PGPException, IOException {
         SecretKeyPassphraseProvider provider = new SecretKeyPassphraseProvider() {
-            @Nullable
             @Override
             public Passphrase getPassphraseFor(Long keyId) {
                 fail("Since we provide a decryption passphrase, we should not try to decrypt any key.");

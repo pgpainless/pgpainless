@@ -98,9 +98,6 @@ public class Encrypt {
     /**
      * This example demonstrates how to encrypt and decrypt a message using a passphrase.
      * This method can be combined with public key based encryption and signing.
-     *
-     * @throws PGPException
-     * @throws IOException
      */
     @Test
     public void encryptUsingPassphrase() throws PGPException, IOException {

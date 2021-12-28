@@ -29,6 +29,7 @@ public class KeyRingReader {
 
     public static final int MAX_ITERATIONS = 10000;
 
+    @SuppressWarnings("CharsetObjectCanBeUsed")
     public static final Charset UTF8 = Charset.forName("UTF-8");
 
     public PGPPublicKeyRing publicKeyRing(@Nonnull InputStream inputStream) throws IOException {
@@ -141,7 +142,6 @@ public class KeyRingReader {
      * @param inputStream input stream
      * @param maxIterations max iterations before abort
      * @return public key ring collection
-     * @throws IOException
      */
     public static PGPPublicKeyRingCollection readPublicKeyRingCollection(@Nonnull InputStream inputStream, int maxIterations)
             throws IOException, PGPException {

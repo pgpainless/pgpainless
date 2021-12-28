@@ -35,6 +35,7 @@ import org.bouncycastle.openpgp.PGPSecretKeyRingCollection;
 import org.bouncycastle.openpgp.PGPSignature;
 import org.bouncycastle.openpgp.PGPUtil;
 import org.junit.jupiter.api.Test;
+import org.opentest4j.TestAbortedException;
 import org.pgpainless.PGPainless;
 import org.pgpainless.implementation.ImplementationFactory;
 import org.pgpainless.key.OpenPgpV4Fingerprint;
@@ -46,9 +47,17 @@ import org.pgpainless.util.TestUtils;
 
 class KeyRingReaderTest {
 
+    private InputStream requireResource(String resourceName) {
+        InputStream inputStream = getClass().getClassLoader().getResourceAsStream(resourceName);
+        if (inputStream == null) {
+            throw new TestAbortedException("Cannot read resource " + resourceName);
+        }
+        return inputStream;
+    }
+
     @Test
     public void assertThatPGPUtilsDetectAsciiArmoredData() throws IOException, PGPException {
-        InputStream inputStream = getClass().getClassLoader().getResourceAsStream("pub_keys_10_pieces.asc");
+        InputStream inputStream = requireResource("pub_keys_10_pieces.asc");
 
         InputStream possiblyArmored = PGPUtil.getDecoderStream(PGPUtil.getDecoderStream(inputStream));
 
@@ -59,7 +68,7 @@ class KeyRingReaderTest {
 
     @Test
     void publicKeyRingCollectionFromStream() throws IOException, PGPException {
-        InputStream inputStream = getClass().getClassLoader().getResourceAsStream("pub_keys_10_pieces.asc");
+        InputStream inputStream = requireResource("pub_keys_10_pieces.asc");
         PGPPublicKeyRingCollection rings = PGPainless.readKeyRing().publicKeyRingCollection(inputStream);
         assertEquals(10, rings.size());
     }
@@ -247,7 +256,7 @@ class KeyRingReaderTest {
     }
 
     @Test
-    public void testReadSecretKeyIgnoresMarkerPacket() throws PGPException, IOException {
+    public void testReadSecretKeyIgnoresMarkerPacket() throws IOException {
         String markerAndKey = "-----BEGIN PGP PRIVATE KEY BLOCK-----\n" +
                 "Version: PGPainless\n" +
                 "Comment: Secret Key with prepended Marker Packet\n" +

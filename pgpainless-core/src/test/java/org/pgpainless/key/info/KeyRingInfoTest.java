@@ -213,7 +213,8 @@ public class KeyRingInfoTest {
 
     @TestTemplate
     @ExtendWith(TestAllImplementations.class)
-    public void testGetKeysWithFlagsAndExpiry() throws PGPException, InvalidAlgorithmParameterException, NoSuchAlgorithmException {
+    public void testGetKeysWithFlagsAndExpiry()
+            throws PGPException, InvalidAlgorithmParameterException, NoSuchAlgorithmException {
 
         PGPSecretKeyRing secretKeys = PGPainless.buildKeyRing()
                 .setPrimaryKey(KeySpec.getBuilder(

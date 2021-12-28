@@ -18,6 +18,7 @@ import org.bouncycastle.util.encoders.Hex;
  *
  */
 public abstract class OpenPgpFingerprint implements CharSequence, Comparable<OpenPgpFingerprint> {
+    @SuppressWarnings("CharsetObjectCanBeUsed")
     protected static final Charset utf8 = Charset.forName("UTF-8");
     protected final String fingerprint;
 

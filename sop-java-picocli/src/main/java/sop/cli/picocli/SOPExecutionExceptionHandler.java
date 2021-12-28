@@ -9,7 +9,7 @@ import picocli.CommandLine;
 public class SOPExecutionExceptionHandler implements CommandLine.IExecutionExceptionHandler {
 
     @Override
-    public int handleExecutionException(Exception ex, CommandLine commandLine, CommandLine.ParseResult parseResult) throws Exception {
+    public int handleExecutionException(Exception ex, CommandLine commandLine, CommandLine.ParseResult parseResult) {
         int exitCode = commandLine.getExitCodeExceptionMapper() != null ?
                 commandLine.getExitCodeExceptionMapper().getExitCode(ex) :
                 commandLine.getCommandSpec().exitCodeOnExecutionException();

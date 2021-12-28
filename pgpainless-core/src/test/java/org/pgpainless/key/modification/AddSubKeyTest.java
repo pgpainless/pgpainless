@@ -16,7 +16,6 @@ import java.util.Iterator;
 import java.util.List;
 
 import org.bouncycastle.openpgp.PGPException;
-import org.bouncycastle.openpgp.PGPPrivateKey;
 import org.bouncycastle.openpgp.PGPPublicKey;
 import org.bouncycastle.openpgp.PGPSecretKey;
 import org.bouncycastle.openpgp.PGPSecretKeyRing;
@@ -32,8 +31,8 @@ import org.pgpainless.key.info.KeyRingInfo;
 import org.pgpainless.key.protection.PasswordBasedSecretKeyRingProtector;
 import org.pgpainless.key.protection.SecretKeyRingProtector;
 import org.pgpainless.key.protection.UnlockSecretKey;
-import org.pgpainless.util.TestAllImplementations;
 import org.pgpainless.util.Passphrase;
+import org.pgpainless.util.TestAllImplementations;
 
 public class AddSubKeyTest {
 
@@ -67,7 +66,7 @@ public class AddSubKeyTest {
         PGPSecretKey subKey = secretKeys.getSecretKey(subKeyId);
         SecretKeyRingProtector protector = SecretKeyRingProtector.unlockEachKeyWith(
                 Passphrase.fromPassword("subKeyPassphrase"), secretKeys);
-        PGPPrivateKey privateKey = UnlockSecretKey.unlockSecretKey(subKey, protector);
+        UnlockSecretKey.unlockSecretKey(subKey, protector);
 
         KeyRingInfo info = new KeyRingInfo(secretKeys);
         assertEquals(Collections.singletonList(KeyFlag.SIGN_DATA), info.getKeyFlagsOf(subKeyId));

@@ -30,7 +30,6 @@ import org.pgpainless.key.generation.type.ecc.EllipticCurve;
 import org.pgpainless.key.generation.type.eddsa.EdDSACurve;
 import org.pgpainless.key.generation.type.rsa.RsaLength;
 import org.pgpainless.key.info.KeyRingInfo;
-import org.pgpainless.key.util.KeyRingUtils;
 import org.pgpainless.key.util.UserId;
 import org.pgpainless.util.Passphrase;
 
@@ -55,13 +54,10 @@ public class GenerateKeys {
      * encryption subkey.
      *
      * This is the recommended way to generate OpenPGP keys with PGPainless.
-     *
-     * @throws PGPException
-     * @throws InvalidAlgorithmParameterException
-     * @throws NoSuchAlgorithmException
      */
     @Test
-    public void generateModernEcKey() throws PGPException, InvalidAlgorithmParameterException, NoSuchAlgorithmException, IOException {
+    public void generateModernEcKey()
+            throws PGPException, InvalidAlgorithmParameterException, NoSuchAlgorithmException, IOException {
         // Define a primary user-id
         String userId = "gbaker@pgpainless.org";
         // Set a password to protect the secret key
@@ -70,10 +66,10 @@ public class GenerateKeys {
         PGPSecretKeyRing secretKey = PGPainless.generateKeyRing()
                 .modernKeyRing(userId, password);
         // Extract public key
-        PGPPublicKeyRing publicKey = KeyRingUtils.publicKeyRingFrom(secretKey);
+        PGPPublicKeyRing publicKey = PGPainless.extractCertificate(secretKey);
         // Encode the public key to an ASCII armored string ready for sharing
         String asciiArmoredPublicKey = PGPainless.asciiArmor(publicKey);
-
+        assertTrue(asciiArmoredPublicKey.startsWith("-----BEGIN PGP PUBLIC KEY BLOCK-----"));
 
         KeyRingInfo keyInfo = new KeyRingInfo(secretKey);
         assertEquals(3, keyInfo.getSecretKeys().size());
@@ -91,13 +87,10 @@ public class GenerateKeys {
      * The RSA key is used for both signing and certifying, as well as encryption.
      *
      * This method is recommended if the application has to deal with legacy clients with poor algorithm support.
-     *
-     * @throws PGPException
-     * @throws InvalidAlgorithmParameterException
-     * @throws NoSuchAlgorithmException
      */
     @Test
-    public void generateSimpleRSAKey() throws PGPException, InvalidAlgorithmParameterException, NoSuchAlgorithmException, IOException {
+    public void generateSimpleRSAKey()
+            throws PGPException, InvalidAlgorithmParameterException, NoSuchAlgorithmException {
         // Define a primary user-id
         String userId = "mpage@pgpainless.org";
         // Set a password to protect the secret key
@@ -118,13 +111,10 @@ public class GenerateKeys {
      * and a single ECDH encryption subkey.
      *
      * This method is recommended if small keys and high performance are desired.
-     *
-     * @throws PGPException
-     * @throws InvalidAlgorithmParameterException
-     * @throws NoSuchAlgorithmException
      */
     @Test
-    public void generateSimpleECKey() throws PGPException, InvalidAlgorithmParameterException, NoSuchAlgorithmException {
+    public void generateSimpleECKey()
+            throws PGPException, InvalidAlgorithmParameterException, NoSuchAlgorithmException {
         // Define a primary user-id
         String userId = "mhelms@pgpainless.org";
         // Set a password to protect the secret key
@@ -173,13 +163,10 @@ public class GenerateKeys {
      * {@link org.pgpainless.key.generation.KeyRingBuilder#setExpirationDate(Date)}.
      * Lastly you can decide whether to set a passphrase to protect the secret key using
      * {@link org.pgpainless.key.generation.KeyRingBuilder#setPassphrase(Passphrase)}.
-     *
-     * @throws PGPException
-     * @throws InvalidAlgorithmParameterException
-     * @throws NoSuchAlgorithmException
      */
     @Test
-    public void generateCustomOpenPGPKey() throws PGPException, InvalidAlgorithmParameterException, NoSuchAlgorithmException {
+    public void generateCustomOpenPGPKey()
+            throws PGPException, InvalidAlgorithmParameterException, NoSuchAlgorithmException {
         // Instead of providing a string, we can assemble a user-id by using the user-id builder.
         // The example below corresponds to "Morgan Carpenter (Pride!) <mcarpenter@pgpainless.org>"
         UserId userId = UserId.newBuilder()

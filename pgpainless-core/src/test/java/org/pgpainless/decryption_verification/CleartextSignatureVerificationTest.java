@@ -79,7 +79,8 @@ public class CleartextSignatureVerificationTest {
     public static final Random random = new Random();
 
     @Test
-    public void cleartextSignVerification_InMemoryMultiPassStrategy() throws IOException, PGPException {
+    public void cleartextSignVerification_InMemoryMultiPassStrategy()
+            throws IOException, PGPException {
         PGPPublicKeyRing signingKeys = TestKeys.getEmilPublicKeyRing();
         ConsumerOptions options = new ConsumerOptions()
                 .addVerificationCert(signingKeys);
@@ -104,7 +105,8 @@ public class CleartextSignatureVerificationTest {
     }
 
     @Test
-    public void cleartextSignVerification_FileBasedMultiPassStrategy() throws IOException, PGPException {
+    public void cleartextSignVerification_FileBasedMultiPassStrategy()
+            throws IOException, PGPException {
         PGPPublicKeyRing signingKeys = TestKeys.getEmilPublicKeyRing();
         ConsumerOptions options = new ConsumerOptions()
                 .addVerificationCert(signingKeys);
@@ -135,7 +137,8 @@ public class CleartextSignatureVerificationTest {
     }
 
     @Test
-    public void verifySignatureDetached() throws IOException, PGPException {
+    public void verifySignatureDetached()
+            throws IOException, PGPException {
         PGPPublicKeyRing signingKeys = TestKeys.getEmilPublicKeyRing();
 
         PGPSignature signature = SignatureUtils.readSignatures(SIGNATURE).get(0);
@@ -157,7 +160,8 @@ public class CleartextSignatureVerificationTest {
     }
 
     @Test
-    public void testOutputOfSigVerification() throws IOException, PGPException {
+    public void testOutputOfSigVerification()
+            throws IOException, PGPException {
         PGPSignature signature = SignatureUtils.readSignatures(SIGNATURE).get(0);
 
         ConsumerOptions options = new ConsumerOptions()
@@ -177,7 +181,8 @@ public class CleartextSignatureVerificationTest {
     }
 
     @Test
-    public void consumingInlineSignedMessageWithCleartextSignedVerificationApiThrowsWrongConsumingMethodException() throws PGPException, IOException {
+    public void consumingInlineSignedMessageWithCleartextSignedVerificationApiThrowsWrongConsumingMethodException()
+            throws IOException {
         String inlineSignedMessage = "-----BEGIN PGP MESSAGE-----\n" +
                 "Version: PGPainless\n" +
                 "\n" +
@@ -205,7 +210,8 @@ public class CleartextSignatureVerificationTest {
     }
 
     @Test
-    public void getDecoderStreamMistakensPlaintextForBase64RegressionTest() throws PGPException, IOException {
+    public void getDecoderStreamMistakensPlaintextForBase64RegressionTest()
+            throws PGPException, IOException {
         String message = "Foo\nBar"; // PGPUtil.getDecoderStream() would mistaken this for base64 data
         ByteArrayInputStream msgIn = new ByteArrayInputStream(message.getBytes(StandardCharsets.UTF_8));
 
@@ -236,7 +242,8 @@ public class CleartextSignatureVerificationTest {
     }
 
     @Test
-    public void testDecryptionOfVeryLongClearsignedMessage() throws PGPException, InvalidAlgorithmParameterException, NoSuchAlgorithmException, IOException {
+    public void testDecryptionOfVeryLongClearsignedMessage()
+            throws PGPException, InvalidAlgorithmParameterException, NoSuchAlgorithmException, IOException {
         String message = randomString(28, 4000);
 
         PGPSecretKeyRing secretKeys = PGPainless.generateKeyRing().modernKeyRing("Alice", null);

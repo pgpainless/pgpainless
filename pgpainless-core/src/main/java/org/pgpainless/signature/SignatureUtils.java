@@ -195,7 +195,9 @@ public final class SignatureUtils {
      * @throws IOException if the signatures cannot be read
      */
     public static List<PGPSignature> readSignatures(String encodedSignatures) throws IOException, PGPException {
-        byte[] bytes = encodedSignatures.getBytes(Charset.forName("UTF8"));
+        @SuppressWarnings("CharsetObjectCanBeUsed")
+        Charset utf8 = Charset.forName("UTF-8");
+        byte[] bytes = encodedSignatures.getBytes(utf8);
         return readSignatures(bytes);
     }
 

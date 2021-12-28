@@ -6,7 +6,6 @@ package org.pgpainless.key;
 
 import java.io.IOException;
 
-import org.bouncycastle.openpgp.PGPException;
 import org.bouncycastle.openpgp.PGPSecretKeyRing;
 import org.pgpainless.PGPainless;
 
@@ -48,7 +47,7 @@ public class WeirdKeys {
             "=BlPm\n" +
             "-----END PGP PRIVATE KEY BLOCK-----\n";
 
-    public static PGPSecretKeyRing getTwoCryptSubkeysKey() throws IOException, PGPException {
+    public static PGPSecretKeyRing getTwoCryptSubkeysKey() throws IOException {
         return PGPainless.readKeyRing().secretKeyRing(TWO_CRYPT_SUBKEYS);
     }
 
@@ -77,7 +76,7 @@ public class WeirdKeys {
             "=h6sT\n" +
             "-----END PGP PRIVATE KEY BLOCK-----\n";
 
-    public static PGPSecretKeyRing getArchiveCommsSubkeysKey() throws IOException, PGPException {
+    public static PGPSecretKeyRing getArchiveCommsSubkeysKey() throws IOException {
         return PGPainless.readKeyRing().secretKeyRing(ARCHIVE_COMMS_SUBKEYS);
     }
 }

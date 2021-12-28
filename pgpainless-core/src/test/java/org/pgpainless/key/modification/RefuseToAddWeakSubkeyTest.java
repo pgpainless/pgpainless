@@ -31,7 +31,8 @@ import org.pgpainless.util.Passphrase;
 public class RefuseToAddWeakSubkeyTest {
 
     @Test
-    public void testEditorRefusesToAddWeakSubkey() throws PGPException, InvalidAlgorithmParameterException, NoSuchAlgorithmException, IOException {
+    public void testEditorRefusesToAddWeakSubkey()
+            throws PGPException, InvalidAlgorithmParameterException, NoSuchAlgorithmException {
         // ensure default policy is set
         PGPainless.getPolicy().setPublicKeyAlgorithmPolicy(Policy.PublicKeyAlgorithmPolicy.defaultPublicKeyAlgorithmPolicy());
 
@@ -45,7 +46,8 @@ public class RefuseToAddWeakSubkeyTest {
     }
 
     @Test
-    public void testEditorAllowsToAddWeakSubkeyIfCompliesToPublicKeyAlgorithmPolicy() throws PGPException, InvalidAlgorithmParameterException, NoSuchAlgorithmException, IOException {
+    public void testEditorAllowsToAddWeakSubkeyIfCompliesToPublicKeyAlgorithmPolicy()
+            throws PGPException, InvalidAlgorithmParameterException, NoSuchAlgorithmException, IOException {
         PGPSecretKeyRing secretKeys = PGPainless.generateKeyRing()
                 .modernKeyRing("Alice", null);
 

@@ -10,7 +10,7 @@ import org.junit.jupiter.api.Test;
 
 public class UnprotectedKeysProtectorTest {
 
-    private UnprotectedKeysProtector protector = new UnprotectedKeysProtector();
+    private final UnprotectedKeysProtector protector = new UnprotectedKeysProtector();
 
     @Test
     public void testKeyProtectorReturnsNullDecryptor() {

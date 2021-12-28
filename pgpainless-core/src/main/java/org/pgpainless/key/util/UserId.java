@@ -112,7 +112,7 @@ public final class UserId implements CharSequence {
     }
 
     @Override
-    public CharSequence subSequence(int i, int i1) {
+    public @Nonnull CharSequence subSequence(int i, int i1) {
         return toString().subSequence(i, i1);
     }
 

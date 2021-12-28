@@ -14,8 +14,8 @@ import java.util.TimeZone;
  */
 public class UTCUtil {
 
-    public static SimpleDateFormat UTC_FORMATTER = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss'Z'");
-    public static SimpleDateFormat[] UTC_PARSERS = new SimpleDateFormat[] {
+    public static final SimpleDateFormat UTC_FORMATTER = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss'Z'");
+    public static final SimpleDateFormat[] UTC_PARSERS = new SimpleDateFormat[] {
             UTC_FORMATTER,
             new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ssX"),
             new SimpleDateFormat("yyyyMMdd'T'HHmmss'Z'"),
@@ -38,6 +38,7 @@ public class UTCUtil {
             try {
                 return parser.parse(dateString);
             } catch (ParseException e) {
+                // Try next parser
             }
         }
         return null;

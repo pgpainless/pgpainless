@@ -14,8 +14,8 @@ public class HexUtil {
      *
      * @see <a href="https://stackoverflow.com/a/9855338">
      *     How to convert a byte array to a hex string in Java?</a>
-     * @param bytes
-     * @return
+     * @param bytes bytes
+     * @return hex encoding
      */
     public static String bytesToHex(byte[] bytes) {
         char[] hexChars = new char[bytes.length * 2];

@@ -22,7 +22,7 @@ public class DecryptionBuilder implements DecryptionBuilderInterface {
         return new DecryptWithImpl(inputStream);
     }
 
-    class DecryptWithImpl implements DecryptWith {
+    static class DecryptWithImpl implements DecryptWith {
 
         private final BufferedInputStream inputStream;
 

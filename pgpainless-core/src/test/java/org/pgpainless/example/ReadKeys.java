@@ -22,8 +22,6 @@ public class ReadKeys {
 
     /**
      * This example demonstrates how to parse a public key (certificate) from an ASCII armored string.
-     *
-     * @throws IOException
      */
     @Test
     public void readCertificate() throws IOException {
@@ -55,12 +53,9 @@ public class ReadKeys {
 
     /**
      * This example demonstrates how to parse an ASCII armored secret key.
-     *
-     * @throws PGPException
-     * @throws IOException
      */
     @Test
-    public void readSecretKey() throws PGPException, IOException {
+    public void readSecretKey() throws IOException {
         String key = "\n" +
                 "-----BEGIN PGP PRIVATE KEY BLOCK-----\n" +
                 "Comment: Alice's OpenPGP Transferable Secret Key\n" +
@@ -93,10 +88,7 @@ public class ReadKeys {
      * This example demonstrates how to read a collection of multiple OpenPGP public keys (certificates) at once.
      *
      * Note, that a public key collection can both be a concatenation of public key blocks (like below),
-     * as well as a single public key block containing multiple public key packets.
-     *
-     * @throws PGPException
-     * @throws IOException
+     * and a single public key block containing multiple public key packets.
      */
     @Test
     public void readKeyRingCollection() throws PGPException, IOException {
