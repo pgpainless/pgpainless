@@ -65,9 +65,9 @@ allprojects {
 
     project.ext {
         slf4jVersion = '1.7.32'
-        logbackVersion = '1.2.6'
-        junitVersion = '5.7.2'
-        picocliVersion = '4.6.1'
+        logbackVersion = '1.2.9'
+        junitVersion = '5.8.2'
+        picocliVersion = '4.6.2'
         rootConfigDir = new File(rootDir, 'config')
         gitCommit = getGitCommit()
         isContinuousIntegrationEnvironment = Boolean.parseBoolean(System.getenv('CI'))

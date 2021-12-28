@@ -32,7 +32,7 @@ dependencies {
     testImplementation "org.junit.jupiter:junit-jupiter-api:$junitVersion"
     testRuntimeOnly "org.junit.jupiter:junit-jupiter-engine:$junitVersion"
     // https://todd.ginsberg.com/post/testing-system-exit/
-    testImplementation 'com.ginsberg:junit5-system-exit:1.1.1'
+    testImplementation 'com.ginsberg:junit5-system-exit:1.1.2'
 
     // implementation "ch.qos.logback:logback-core:1.2.6"
     // We want logback logging in tests and in the app
