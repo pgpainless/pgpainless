@@ -16,7 +16,7 @@ import java.util.Set;
  */
 public class AlgorithmSuite {
 
-    private static AlgorithmSuite defaultAlgorithmSuite = new AlgorithmSuite(
+    private static final AlgorithmSuite defaultAlgorithmSuite = new AlgorithmSuite(
             Arrays.asList(
                     SymmetricKeyAlgorithm.AES_256,
                     SymmetricKeyAlgorithm.AES_192,

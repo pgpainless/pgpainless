@@ -18,7 +18,6 @@ import java.nio.charset.StandardCharsets;
 import java.security.InvalidAlgorithmParameterException;
 import java.security.NoSuchAlgorithmException;
 import java.util.List;
-import javax.annotation.Nullable;
 
 import org.bouncycastle.openpgp.PGPException;
 import org.bouncycastle.openpgp.PGPPublicKey;
@@ -41,7 +40,7 @@ import org.pgpainless.util.Passphrase;
 
 public class MissingPassphraseForDecryptionTest {
 
-    private String passphrase = "dragon123";
+    private final String passphrase = "dragon123";
     private PGPSecretKeyRing secretKeys;
     private byte[] message;
 
@@ -63,7 +62,6 @@ public class MissingPassphraseForDecryptionTest {
     @Test
     public void invalidPostponedKeysStrategyTest() {
         SecretKeyPassphraseProvider callback = new SecretKeyPassphraseProvider() {
-            @Nullable
             @Override
             public Passphrase getPassphraseFor(Long keyId) {
                 fail("MUST NOT get called in if postponed key strategy is invalid.");
@@ -88,7 +86,6 @@ public class MissingPassphraseForDecryptionTest {
     public void interactiveStrategy() throws PGPException, IOException {
         // interactive callback
         SecretKeyPassphraseProvider callback = new SecretKeyPassphraseProvider() {
-            @Nullable
             @Override
             public Passphrase getPassphraseFor(Long keyId) {
                 // is called in interactive mode
@@ -121,7 +118,6 @@ public class MissingPassphraseForDecryptionTest {
         List<PGPPublicKey> encryptionKeys = info.getEncryptionSubkeys(EncryptionPurpose.ANY);
 
         SecretKeyPassphraseProvider callback = new SecretKeyPassphraseProvider() {
-            @Nullable
             @Override
             public Passphrase getPassphraseFor(Long keyId) {
                 fail("MUST NOT get called in non-interactive mode.");

@@ -37,11 +37,13 @@ public class DetachInbandSignatureAndMessageImpl implements DetachInbandSignatur
 
         return new ReadyWithResult<Signatures>() {
 
-            private ByteArrayOutputStream sigOut = new ByteArrayOutputStream();
-            @Override
-            public Signatures writeTo(OutputStream messageOutputStream) throws SOPGPException.NoSignature, IOException {
+            private final ByteArrayOutputStream sigOut = new ByteArrayOutputStream();
 
-                PGPSignatureList signatures = null;
+            @Override
+            public Signatures writeTo(OutputStream messageOutputStream)
+                    throws SOPGPException.NoSignature, IOException {
+
+                PGPSignatureList signatures;
                 try {
                     signatures = ClearsignedMessageUtil.detachSignaturesFromInbandClearsignedMessage(messageInputStream, messageOutputStream);
                 } catch (WrongConsumingMethodException e) {

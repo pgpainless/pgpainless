@@ -53,7 +53,7 @@ public class KeyRingInfo {
     private static final Pattern PATTERN_EMAIL = Pattern.compile("[A-Z0-9a-z._%+-]+@[A-Za-z0-9.-]+\\.[A-Za-z]{2,6}");
 
     private final PGPKeyRing keys;
-    private Signatures signatures;
+    private final Signatures signatures;
     private final Date evaluationDate;
     private final String primaryUserId;
 

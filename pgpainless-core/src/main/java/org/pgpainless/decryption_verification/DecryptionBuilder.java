@@ -24,7 +24,7 @@ public class DecryptionBuilder implements DecryptionBuilderInterface {
 
     class DecryptWithImpl implements DecryptWith {
 
-        private BufferedInputStream inputStream;
+        private final BufferedInputStream inputStream;
 
         DecryptWithImpl(InputStream inputStream) {
             this.inputStream = new BufferedInputStream(inputStream, BUFFER_SIZE);

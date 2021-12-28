@@ -145,7 +145,7 @@ public final class EncryptionResult {
         private CompressionAlgorithm compressionAlgorithm;
 
         private final MultiMap<SubkeyIdentifier, PGPSignature> detachedSignatures = new MultiMap<>();
-        private Set<SubkeyIdentifier> recipients = new HashSet<>();
+        private final Set<SubkeyIdentifier> recipients = new HashSet<>();
         private String fileName = "";
         private Date modificationDate = new Date(0L); // NOW
         private StreamEncoding encoding = StreamEncoding.BINARY;
