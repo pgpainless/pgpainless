@@ -5,6 +5,10 @@ SPDX-License-Identifier: CC0-1.0
 
 # PGPainless Changelog
 
+## 1.0.0
+- Introduce `DateUtil.toSecondsPrecision()`
+- Clean JUnit tests, fix code style issues and fix typos in documentation
+
 ## 1.0.0-rc9
 - When key has both direct-key sig + primary user-id sig: resolve expiration date to the earliest expiration
 - Add `SecretKeyRingEditor.removeUserId()` convenience methods that do soft-revoke the user-id.
