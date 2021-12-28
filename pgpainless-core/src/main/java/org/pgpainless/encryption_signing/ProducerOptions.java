@@ -84,7 +84,7 @@ public final class ProducerOptions {
     }
 
     /**
-     * Specify, whether or not the result of the encryption/signing operation shall be ascii armored.
+     * Specify, whether the result of the encryption/signing operation shall be ascii armored.
      * The default value is true.
      *
      * @param asciiArmor ascii armor

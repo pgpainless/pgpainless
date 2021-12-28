@@ -21,7 +21,7 @@ public class Verification {
     }
 
     /**
-     * Return the signatures creation time.
+     * Return the signatures' creation time.
      *
      * @return signature creation time
      */

@@ -7,12 +7,12 @@ package org.pgpainless.algorithm;
 public enum EncryptionPurpose {
     /**
      * The stream will encrypt communication that goes over the wire.
-     * Eg. EMail, Chat...
+     * E.g. EMail, Chat...
      */
     COMMUNICATIONS,
     /**
      * The stream will encrypt data at rest.
-     * Eg. Encrypted backup...
+     * E.g. Encrypted backup...
      */
     STORAGE,
     /**

@@ -34,12 +34,12 @@ public enum SymmetricKeyAlgorithm {
     TRIPLE_DES      (SymmetricKeyAlgorithmTags.TRIPLE_DES),
 
     /**
-     * CAST5 (128 bit key, as per RFC2144).
+     * CAST5 (128-bit key, as per RFC2144).
      */
     CAST5           (SymmetricKeyAlgorithmTags.CAST5),
 
     /**
-     * Blowfish (128 bit key, 16 rounds).
+     * Blowfish (128-bit key, 16 rounds).
      */
     BLOWFISH        (SymmetricKeyAlgorithmTags.BLOWFISH),
 

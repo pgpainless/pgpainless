@@ -157,7 +157,7 @@ public final class RevocationAttributes {
     }
 
     /**
-     * Build a {@link RevocationAttributes} object suitable for certification (eg. user-id) revocations.
+     * Build a {@link RevocationAttributes} object suitable for certification (e.g. user-id) revocations.
      *
      * @return builder
      */

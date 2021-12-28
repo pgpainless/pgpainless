@@ -158,7 +158,7 @@ public final class SignatureSubpacketsUtil {
     }
 
     /**
-     * Return the signatures expiration time as a date.
+     * Return the signatures' expiration time as a date.
      * The expiration date is computed by adding the expiration time to the signature creation date.
      * If the signature has no expiration time subpacket, or the expiration time is set to '0', this message returns null.
      *
@@ -211,7 +211,7 @@ public final class SignatureSubpacketsUtil {
      *
      * @param expirationDate new expiration date
      * @param creationDate key creation time
-     * @return life time of the key in seconds
+     * @return lifetime of the key in seconds
      */
     public static long getKeyLifetimeInSeconds(@Nullable Date expirationDate, @Nonnull Date creationDate) {
         long secondsToExpire = 0; // 0 means "no expiration"

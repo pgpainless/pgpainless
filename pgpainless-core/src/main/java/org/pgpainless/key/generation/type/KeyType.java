@@ -70,7 +70,7 @@ public interface KeyType {
      * Return true if the key that is generated from this type is able to carry the AUTHENTICATION key flag.
      * See {@link org.pgpainless.algorithm.KeyFlag#AUTHENTICATION}.
      *
-     * @return true if the key is able to be used for authentication purposes.
+     * @return true if the key can be used for authentication purposes.
      */
     default boolean canAuthenticate() {
         return canSign();

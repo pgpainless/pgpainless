@@ -64,7 +64,7 @@ public abstract class KeyAccessor {
     }
 
     /**
-     * Address the key via a user-id (eg "Alice &lt;alice@wonderland.lit&gt;).
+     * Address the key via a user-id (e.g. "Alice &lt;alice@wonderland.lit&gt;").
      * In this case we are sourcing preferred algorithms from the user-id certification first.
      */
     public static class ViaUserId extends KeyAccessor {

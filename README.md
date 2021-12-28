@@ -185,7 +185,7 @@ dependencies {
 ## About
 PGPainless is a by-product of my [Summer of Code 2018 project](https://blog.jabberhead.tk/summer-of-code-2018/)
 implementing OpenPGP support for the XMPP client library [Smack](https://github.com/igniterealtime/Smack).
-For that project I was in need of a simple to use OpenPGP library.
+For that project I was in need of a simple-to-use OpenPGP library.
 
 Originally I was going to use [Bouncy-GPG](https://github.com/neuhalje/bouncy-gpg) for my project,
 but ultimately I decided to create my own OpenPGP library which better fits my needs.

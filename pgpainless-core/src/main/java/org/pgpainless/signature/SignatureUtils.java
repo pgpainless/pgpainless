@@ -76,7 +76,7 @@ public final class SignatureUtils {
     /**
      * Return a content signer builder for the passed public key.
      *
-     * The content signer will use a hash algorithm derived from the keys algorithm preferences.
+     * The content signer will use a hash algorithm derived from the keys' algorithm preferences.
      * If no preferences can be derived, the key will fall back to the default hash algorithm as set in
      * the {@link org.pgpainless.policy.Policy}.
      *
@@ -123,7 +123,7 @@ public final class SignatureUtils {
     /**
      * Return a new date which represents the given date plus the given amount of seconds added.
      *
-     * Since '0' is a special value in the OpenPGP specification when it comes to dates
+     * Since '0' is a special date value in the OpenPGP specification
      * (e.g. '0' means no expiration for expiration dates), this method will return 'null' if seconds is 0.
      *
      * @param date date
@@ -271,7 +271,7 @@ public final class SignatureUtils {
      * This method first inspects the {@link IssuerKeyID} subpacket of the signature and returns the key-id if present.
      * If not, it inspects the {@link org.bouncycastle.bcpg.sig.IssuerFingerprint} packet and retrieves the key-id from the fingerprint.
      *
-     * Otherwise it returns 0.
+     * Otherwise, it returns 0.
      * @param signature signature
      * @return signatures issuing key id
      */

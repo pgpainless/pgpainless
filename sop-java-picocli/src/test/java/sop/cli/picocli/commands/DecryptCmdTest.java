@@ -115,7 +115,7 @@ public class DecryptCmdTest {
         verify(decrypt, times(1)).verifyNotBefore(DateParser.BEGINNING_OF_TIME);
         verify(decrypt, times(1)).verifyNotAfter(
                 ArgumentMatchers.argThat(argument -> {
-                    // allow 1 second difference
+                    // allow 1-second difference
                     return Math.abs(now.getTime() - argument.getTime()) <= 1000;
                 }));
     }
@@ -131,7 +131,7 @@ public class DecryptCmdTest {
     public void assertVerifyNotAfterAndBeforeNowResultsInMinTimeRange() throws SOPGPException.UnsupportedOption {
         Date now = new Date();
         ArgumentMatcher<Date> isMaxOneSecOff = argument -> {
-            // Allow less than 1 second difference
+            // Allow less than 1-second difference
             return Math.abs(now.getTime() - argument.getTime()) <= 1000;
         };
 

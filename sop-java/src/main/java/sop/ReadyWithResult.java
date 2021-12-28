@@ -13,7 +13,7 @@ import sop.exception.SOPGPException;
 public abstract class ReadyWithResult<T> {
 
     /**
-     * Write the data eg. decrypted plaintext to the provided output stream and return the result of the
+     * Write the data e.g. decrypted plaintext to the provided output stream and return the result of the
      * processing operation.
      *
      * @param outputStream output stream

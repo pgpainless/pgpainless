@@ -224,8 +224,8 @@ public final class SigningOptions {
     /**
      * Create a detached signature.
      * Detached signatures are not being added into the PGP message itself.
-     * Instead they can be distributed separately to the message.
-     * Detached signatures are useful if the data that is being signed shall not be modified (eg. when signing a file).
+     * Instead, they can be distributed separately to the message.
+     * Detached signatures are useful if the data that is being signed shall not be modified (e.g. when signing a file).
      *
      * @param secretKeyDecryptor decryptor to unlock the secret signing key
      * @param secretKey signing key
@@ -243,8 +243,8 @@ public final class SigningOptions {
     /**
      * Create a detached signature.
      * Detached signatures are not being added into the PGP message itself.
-     * Instead they can be distributed separately to the message.
-     * Detached signatures are useful if the data that is being signed shall not be modified (eg. when signing a file).
+     * Instead, they can be distributed separately to the message.
+     * Detached signatures are useful if the data that is being signed shall not be modified (e.g. when signing a file).
      *
      * This method uses the passed in user-id to select user-specific hash algorithms.
      *
@@ -266,8 +266,8 @@ public final class SigningOptions {
     /**
      * Create a detached signature.
      * Detached signatures are not being added into the PGP message itself.
-     * Instead they can be distributed separately to the message.
-     * Detached signatures are useful if the data that is being signed shall not be modified (eg. when signing a file).
+     * Instead, they can be distributed separately to the message.
+     * Detached signatures are useful if the data that is being signed shall not be modified (e.g. when signing a file).
      *
      * This method uses the passed in user-id to select user-specific hash algorithms.
      *

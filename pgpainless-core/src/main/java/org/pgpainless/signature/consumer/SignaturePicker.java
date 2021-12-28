@@ -38,7 +38,7 @@ public final class SignaturePicker {
     }
 
     /**
-     * Pick the, at validation date most recent valid key revocation signature.
+     * Pick the at validation date most recent valid key revocation signature.
      * If there are hard revocation signatures, the latest hard revocation sig is picked, even if it was created after
      * validationDate or if it is already expired.
      *
@@ -65,7 +65,7 @@ public final class SignaturePicker {
     }
 
     /**
-     * Pick the, at validationDate most recent, valid direct key signature.
+     * Pick the at validationDate most recent, valid direct key signature.
      * This method might return null, if there is no direct key self-signature which is valid at validationDate.
      *
      * @param keyRing key ring
@@ -78,7 +78,7 @@ public final class SignaturePicker {
     }
 
     /**
-     * Pick the, at validationDate, latest, valid direct key signature made by signingKey on signedKey.
+     * Pick the at validationDate, latest, valid direct key signature made by signingKey on signedKey.
      * This method might return null, if there is no direct key self signature which is valid at validationDate.
      *
      * @param signingKey key that created the signature
@@ -104,7 +104,7 @@ public final class SignaturePicker {
     }
 
     /**
-     * Pick the, at validationDate, latest direct key signature.
+     * Pick the at validationDate latest direct key signature.
      * This method might return an expired signature.
      * If there are more than one direct-key signature, and some of those are not expired, the latest non-expired
      * yet already effective direct-key signature will be returned.
@@ -119,7 +119,7 @@ public final class SignaturePicker {
     }
 
     /**
-     * Pick the, at validationDate, latest direct key signature made by signingKey on signedKey.
+     * Pick the at validationDate latest direct key signature made by signingKey on signedKey.
      * This method might return an expired signature.
      * If a non-expired direct-key signature exists, the latest non-expired yet already effective direct-key
      * signature will be returned.
@@ -154,7 +154,7 @@ public final class SignaturePicker {
     }
 
     /**
-     * Pick the, at validationDate most recent, valid user-id revocation signature.
+     * Pick the at validationDate most recent, valid user-id revocation signature.
      * If there are hard revocation signatures, the latest hard revocation sig is picked, even if it was created after
      * validationDate or if it is already expired.
      *
@@ -182,7 +182,7 @@ public final class SignaturePicker {
     }
 
     /**
-     * Pick the, at validationDate latest, valid certification self-signature for the given user-id.
+     * Pick the at validationDate latest, valid certification self-signature for the given user-id.
      * This method might return null, if there is no certification self signature for that user-id which is valid
      * at validationDate.
      *
@@ -213,7 +213,7 @@ public final class SignaturePicker {
     }
 
     /**
-     * Pick the, at validationDate latest certification self-signature for the given user-id.
+     * Pick the at validationDate latest certification self-signature for the given user-id.
      * This method might return an expired signature.
      * If a non-expired user-id certification signature exists, the latest non-expired yet already effective
      * user-id certification signature for the given user-id will be returned.
@@ -250,7 +250,7 @@ public final class SignaturePicker {
     }
 
     /**
-     * Pick the, at validationDate most recent, valid subkey revocation signature.
+     * Pick the at validationDate most recent, valid subkey revocation signature.
      * If there are hard revocation signatures, the latest hard revocation sig is picked, even if it was created after
      * validationDate or if it is already expired.
      *
@@ -282,7 +282,7 @@ public final class SignaturePicker {
     }
 
     /**
-     * Pick the, at validationDate latest, valid subkey binding signature for the given subkey.
+     * Pick the at validationDate latest, valid subkey binding signature for the given subkey.
      * This method might return null, if there is no subkey binding signature which is valid
      * at validationDate.
      *
@@ -314,7 +314,7 @@ public final class SignaturePicker {
     }
 
     /**
-     * Pick the, at validationDate latest subkey binding signature for the given subkey.
+     * Pick the at validationDate latest subkey binding signature for the given subkey.
      * This method might return an expired signature.
      * If a non-expired subkey binding signature exists, the latest non-expired yet already effective
      * subkey binding signature for the given subkey will be returned.

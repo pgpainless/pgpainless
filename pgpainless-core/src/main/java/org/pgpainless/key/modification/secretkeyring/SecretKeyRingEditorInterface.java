@@ -175,7 +175,7 @@ public interface SecretKeyRingEditorInterface {
     /**
      * Revoke the key ring.
      * You can use the {@link RevocationSignatureSubpackets.Callback} to modify the revocation signatures
-     * subpackets, eg. in order to define whether this is a hard or soft revocation.
+     * subpackets, e.g. in order to define whether this is a hard or soft revocation.
      *
      * @param secretKeyRingProtector protector to unlock the primary secret key
      * @param subpacketsCallback callback to modify the revocations subpackets
@@ -192,7 +192,7 @@ public interface SecretKeyRingEditorInterface {
      *
      * Note: This method will hard-revoke the provided subkey, meaning it cannot be re-certified at a later point.
      * If you instead want to temporarily "deactivate" the subkey, provide a soft revocation reason,
-     * eg. by calling {@link #revokeSubKey(OpenPgpFingerprint, SecretKeyRingProtector, RevocationAttributes)}
+     * e.g. by calling {@link #revokeSubKey(OpenPgpFingerprint, SecretKeyRingProtector, RevocationAttributes)}
      * and provide a suitable {@link RevocationAttributes} object.
      *
      * @param fingerprint fingerprint of the subkey to be revoked

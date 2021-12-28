@@ -19,7 +19,7 @@ currently being supported with security updates.
 
 ## Reporting a Vulnerability
 
-If you find a security relevant vulnerability inside of PGPainless, please let me know!
+If you find a security relevant vulnerability inside PGPainless, please let me know!
 [Here](https://keyoxide.org/7F9116FEA90A5983936C7CFAA027DB2F3E1E118A) you can find my OpenPGP key to email me confidentially.
 
 Valid security issues will be fixed ASAP.

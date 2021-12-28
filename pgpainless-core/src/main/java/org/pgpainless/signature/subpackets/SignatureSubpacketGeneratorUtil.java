@@ -12,7 +12,7 @@ import org.bouncycastle.bcpg.SignatureSubpacketTags;
 import org.bouncycastle.openpgp.PGPSignatureSubpacketGenerator;
 
 /**
- * Utility class that helps dealing with BCs SignatureSubpacketGenerator class.
+ * Utility class that helps to deal with BCs SignatureSubpacketGenerator class.
  */
 public final class SignatureSubpacketGeneratorUtil {
 

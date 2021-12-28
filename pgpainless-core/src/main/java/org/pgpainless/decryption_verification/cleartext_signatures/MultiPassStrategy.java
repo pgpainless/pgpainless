@@ -13,7 +13,7 @@ import java.io.OutputStream;
 /**
  * Since the {@link CleartextSignatureProcessor} needs to read the whole data twice in order to verify signatures,
  * a strategy for how to cache the read data is required.
- * Otherwise large data kept in memory could cause {@link OutOfMemoryError OutOfMemoryErrors} or other issues.
+ * Otherwise, large data kept in memory could cause {@link OutOfMemoryError OutOfMemoryErrors} or other issues.
  *
  * This is an Interface that describes a strategy to deal with the fact that detached signatures require multiple passes
  * to do verification.
@@ -46,7 +46,7 @@ public interface MultiPassStrategy {
 
     /**
      * Write the message content out to a file and re-read it to verify signatures.
-     * This strategy is best suited for larger messages (eg. plaintext signed files) which might not fit into memory.
+     * This strategy is best suited for larger messages (e.g. plaintext signed files) which might not fit into memory.
      * After the message has been processed completely, the messages content are available at the provided file.
      *
      * @param file target file

@@ -11,7 +11,7 @@ import org.pgpainless.key.SubkeyIdentifier;
 
 /**
  * Tuple-class which bundles together a signature, the signing key that created the signature,
- * an identifier of the signing key and a record of whether or not the signature was verified.
+ * an identifier of the signing key and a record of whether the signature was verified.
  */
 public class DetachedSignatureCheck {
     private final PGPSignature signature;

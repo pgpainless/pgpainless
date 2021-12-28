@@ -90,7 +90,7 @@ public class CachingSecretKeyRingProtector implements SecretKeyRingProtector, Se
      * This is to prevent accidental passphrase override when dealing with multiple key rings containing
      * keys with conflicting key-ids.
      *
-     * If you can ensure that there will be no key-id clashes and you want to replace the passphrases for the key ring,
+     * If you can ensure that there will be no key-id clashes, and you want to replace the passphrases for the key ring,
      * use {@link #replacePassphrase(PGPKeyRing, Passphrase)} instead.
      *
      * If you need to unlock multiple {@link PGPKeyRing PGPKeyRings}, it is advised to use a separate

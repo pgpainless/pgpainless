@@ -63,7 +63,7 @@ public enum SignatureSubpacket {
     signatureExpirationTime(EXPIRE_TIME),
 
     /**
-     * Denotes whether or not the signature is exportable for other users.
+     * Denotes whether the signature is exportable for other users.
      *
      * @see <a href="https://tools.ietf.org/html/rfc4880#section-5.2.3.11">Exportable Certification</a>
      */
@@ -73,7 +73,7 @@ public enum SignatureSubpacket {
      * Signer asserts that the key is not only valid but also trustworthy at
      * the specified level.  Level 0 has the same meaning as an ordinary
      * validity signature.  Level 1 means that the signed key is asserted to
-     * be a valid trusted introducer, with the 2nd octet of the body
+     * be a valid, trusted introducer, with the 2nd octet of the body
      * specifying the degree of trust.  Level 2 means that the signed key is
      * asserted to be trusted to issue level 1 trust signatures, i.e., that
      * it is a "meta introducer".  Generally, a level n trust signature
@@ -128,8 +128,8 @@ public enum SignatureSubpacket {
     placeholder(PLACEHOLDER),
 
     /**
-     *  Symmetric algorithm numbers that indicate which algorithms the key
-     *  holder prefers to use.  The subpacket body is an ordered list of
+     *  Symmetric algorithm numbers that indicate which algorithms the keyholder
+     *  prefers to use.  The subpackets body is an ordered list of
      *  octets with the most preferred listed first.  It is assumed that only
      *  algorithms listed are supported by the recipient's software.
      *  This is only found on a self-signature.
@@ -180,7 +180,7 @@ public enum SignatureSubpacket {
 
     /**
      * Message digest algorithm numbers that indicate which algorithms the
-     * key holder prefers to receive.  Like the preferred symmetric
+     * keyholder prefers to receive.  Like the preferred symmetric
      * algorithms, the list is ordered.
      * This is only found on a self-signature.
      *
@@ -189,10 +189,10 @@ public enum SignatureSubpacket {
     preferredHashAlgorithms(PREFERRED_HASH_ALGS),
 
     /**
-     * Compression algorithm numbers that indicate which algorithms the key
-     * holder prefers to use.  Like the preferred symmetric algorithms, the
+     * Compression algorithm numbers that indicate which algorithms the
+     * keyholder prefers to use.  Like the preferred symmetric algorithms, the
      * list is ordered. If this subpacket is not included, ZIP is preferred.
-     * A zero denotes that uncompressed data is preferred; the key holder's
+     * A zero denotes that uncompressed data is preferred; the keyholder's
      * software might have no compression software in that implementation.
      * This is only found on a self-signature.
      *
@@ -202,7 +202,7 @@ public enum SignatureSubpacket {
 
     /**
      * This is a list of one-bit flags that indicate preferences that the
-     * key holder has about how the key is handled on a key server.  All
+     * keyholder has about how the key is handled on a key server.  All
      * undefined flags MUST be zero.
      * This is found only on a self-signature.
      *
@@ -211,7 +211,7 @@ public enum SignatureSubpacket {
     keyServerPreferences(KEY_SERVER_PREFS),
 
     /**
-     * This is a URI of a key server that the key holder prefers be used for
+     * This is a URI of a key server that the keyholder prefers be used for
      * updates.  Note that keys with multiple User IDs can have a preferred
      * key server for each User ID.  Note also that since this is a URI, the
      * key server can actually be a copy of the key retrieved by ftp, http,
@@ -345,8 +345,8 @@ public enum SignatureSubpacket {
     issuerFingerprint(ISSUER_FINGERPRINT),
 
     /**
-     * AEAD algorithm numbers that indicate which AEAD algorithms the key
-     * holder prefers to use.  The subpacket body is an ordered list of
+     * AEAD algorithm numbers that indicate which AEAD algorithms the
+     * keyholder prefers to use.  The subpackets body is an ordered list of
      * octets with the most preferred listed first.  It is assumed that only
      * algorithms listed are supported by the recipient's software.
      * This is only found on a self-signature.
@@ -363,7 +363,7 @@ public enum SignatureSubpacket {
      * it SHOULD be considered valid only in an encrypted context, where the
      * key it was encrypted to is one of the indicated primary keys, or one
      * of their subkeys.  This can be used to prevent forwarding a signature
-     * outside of its intended, encrypted context.
+     * outside its intended, encrypted context.
      *
      * Note that the length N of the fingerprint for a version 4 key is 20
      * octets; for a version 5 key N is 32.

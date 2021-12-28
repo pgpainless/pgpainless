@@ -14,7 +14,7 @@ therefore let me quickly outline some of its challenges for you:
 
 A signature is either valid or it is not.
 However, signature validity goes beyond merely checking the cryptographic correctness like BouncyCastle does.
-A signature that is correct can still be invalid, eg. if it is past its expiry date
+A signature that is correct can still be invalid, e.g. if it is past its expiry date
 or the key that issued the signature got revoked or is simply not a signing key in the first place.
 
 All the little criteria like "is not expired", "has a hashed signature creation time subpacket",

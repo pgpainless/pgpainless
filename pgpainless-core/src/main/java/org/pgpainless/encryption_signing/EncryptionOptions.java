@@ -47,7 +47,7 @@ import org.pgpainless.util.Passphrase;
  * by inspecting the provided recipient keys.
  *
  * By default, PGPainless will only encrypt to a single encryption capable subkey per recipient key.
- * This behavior can be changed, eg. by calling
+ * This behavior can be changed, e.g. by calling
  * <pre>
  * {@code
  * opt.addRecipient(aliceKey, EncryptionOptions.encryptToAllCapableSubkeys());

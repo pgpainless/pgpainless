@@ -26,7 +26,7 @@ import org.pgpainless.util.NotationRegistry;
  * Note, that PGPainless distinguishes between hash algorithms used in revocation and non-revocation signatures,
  * and has different policies for those.
  *
- * Furthermore PGPainless has policies for symmetric encryption algorithms (both for encrypting and decrypting),
+ * Furthermore, PGPainless has policies for symmetric encryption algorithms (both for encrypting and decrypting),
  * for public key algorithms and key lengths, as well as compression algorithms.
  *
  * The following examples show how these policies can be modified.

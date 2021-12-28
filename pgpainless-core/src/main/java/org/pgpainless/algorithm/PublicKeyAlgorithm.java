@@ -124,7 +124,7 @@ public enum PublicKeyAlgorithm {
     /**
      * Return true if this public key algorithm is able to create signatures.
      *
-     * @return true if can sign
+     * @return true if the algorithm can sign
      */
     public boolean isSigningCapable() {
         return signingCapable;
@@ -133,7 +133,7 @@ public enum PublicKeyAlgorithm {
     /**
      * Return true if this public key algorithm can be used as an encryption algorithm.
      *
-     * @return true if can encrypt
+     * @return true if the algorithm can encrypt
      */
     public boolean isEncryptionCapable() {
         return encryptionCapable;

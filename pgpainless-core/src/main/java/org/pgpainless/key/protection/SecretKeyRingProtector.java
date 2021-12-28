@@ -116,7 +116,7 @@ public interface SecretKeyRingProtector {
      * This protector will only return a non-null encryptor/decryptor based on the provided passphrase if
      * {@link #getEncryptor(Long)}/{@link #getDecryptor(Long)} is getting called with the key-id of the provided key.
      *
-     * Otherwise this protector will always return null.
+     * Otherwise, this protector will always return null.
      *
      * @param passphrase passphrase
      * @param key key to lock/unlock
@@ -137,7 +137,7 @@ public interface SecretKeyRingProtector {
      *
      * As a consequence, this protector can only "unlock" keys which are not protected using a passphrase, and it will
      * leave keys unprotected, should it be used to "protect" a key
-     * (eg. in {@link org.pgpainless.key.modification.secretkeyring.SecretKeyRingEditor#changePassphraseFromOldPassphrase(Passphrase)}).
+     * (e.g. in {@link org.pgpainless.key.modification.secretkeyring.SecretKeyRingEditor#changePassphraseFromOldPassphrase(Passphrase)}).
      *
      * @return protector
      */

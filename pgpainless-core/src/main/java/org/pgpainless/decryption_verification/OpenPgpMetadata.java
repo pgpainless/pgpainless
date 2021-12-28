@@ -87,7 +87,7 @@ public class OpenPgpMetadata {
     /**
      * Return the {@link SubkeyIdentifier} of the key that was used to decrypt the message.
      * This can be null if the message was decrypted using a {@link org.pgpainless.util.Passphrase}, or if it was not
-     * encrypted at all (eg. signed only).
+     * encrypted at all (e.g. signed only).
      *
      * @return subkey identifier of decryption key
      */

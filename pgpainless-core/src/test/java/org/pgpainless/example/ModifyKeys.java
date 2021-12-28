@@ -154,7 +154,7 @@ public class ModifyKeys {
      * Prerequisites are a {@link SecretKeyRingProtector} that is capable of unlocking the primary key of the existing key,
      * and a {@link Passphrase} for the new subkey.
      *
-     * There are two way to add a subkey into an existing key;
+     * There are two ways to add a subkey into an existing key;
      * Either the subkey gets generated on the fly (see below),
      * or the subkey already exists. In the latter case, the user has to provide
      * {@link org.bouncycastle.openpgp.PGPSignatureSubpacketVector PGPSignatureSubpacketVectors} for the binding signature

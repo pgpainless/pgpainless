@@ -490,7 +490,7 @@ public class KeyRingInfo {
     }
 
     /**
-     * Return the a list of {@link KeyFlag KeyFlags} that apply to the subkey with the provided key id.
+     * Return a list of {@link KeyFlag KeyFlags} that apply to the subkey with the provided key id.
      * @param keyId key-id
      * @return list of key flags
      */
@@ -734,11 +734,11 @@ public class KeyRingInfo {
 
     /**
      * Return the latest date on which  the key ring is still usable for the given key flag.
-     * If a only a subkey is carrying the required flag and the primary key expires earlier than the subkey,
+     * If only a subkey is carrying the required flag and the primary key expires earlier than the subkey,
      * the expiry date of the primary key is returned.
      *
      * This method might return null, if the primary key and a subkey with the required flag does not expire.
-     * @param use key flag representing the use case, eg. {@link KeyFlag#SIGN_DATA} or
+     * @param use key flag representing the use case, e.g. {@link KeyFlag#SIGN_DATA} or
      * {@link KeyFlag#ENCRYPT_COMMS}/{@link KeyFlag#ENCRYPT_STORAGE}.
      * @return latest date on which the key ring can be used for the given use case, or null if it can be used indefinitely.
      */

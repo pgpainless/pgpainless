@@ -47,8 +47,8 @@ public final class DateUtil {
 
     /**
      * "Round" a date down to seconds precision.
-     * @param date
-     * @return
+     * @param date date
+     * @return rounded date
      */
     public static Date toSecondsPrecision(Date date) {
         long seconds = date.getTime() / 1000;

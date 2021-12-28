@@ -40,7 +40,7 @@ public enum Feature {
     /**
      * If a key announces this feature, it is a version 5 public key.
      * The version 5 format is similar to the version 4 format except for the addition of a count for the key material.
-     * This count helps parsing secret key packets (which are an extension of the public key packet format) in the case
+     * This count helps to parse secret key packets (which are an extension of the public key packet format) in the case
      * of an unknown algorithm.
      * In addition, fingerprints of version 5 keys are calculated differently from version 4 keys.
      *

@@ -21,7 +21,7 @@ public class SignatureValidityComparator implements Comparator<PGPSignature> {
     private final SignatureCreationDateComparator creationDateComparator;
 
     /**
-     * Create a new {@link SignatureValidityComparator} which orders signatures oldest first.
+     * Create a new {@link SignatureValidityComparator} which orders signatures the oldest first.
      * Still, hard revocations will come first.
      */
     public SignatureValidityComparator() {

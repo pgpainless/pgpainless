@@ -19,7 +19,7 @@ In short: Communication protected using PGPainless is intended to be private,
 users can verify that messages they receive were really send by their communication peer
 and users can verify that messages have not been tampered with.
 
-This is being achieved by preventing a number of typical attacks on the users communication,
+This is being achieved by preventing a number of typical attacks on the user's communication,
 like the attacker introducing an evil subkey to the victims public key, or the attacker creating
 counterfeit signatures to fool the victim.
 
@@ -33,7 +33,7 @@ through a benign client application (like an email app) on a trustworthy device.
 
 The attacker can try to feed the application malicious input (like manipulated public key updates,
 specially crafted PGP message objects etc.) but they cannot access the victims decrypted secret key material as
-it is protected by the device (eg. stored in a secure key store).
+it is protected by the device (e.g. stored in a secure key store).
 
 ### What doesn't PGPainless Protect Against?
 

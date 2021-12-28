@@ -212,7 +212,7 @@ public class CleartextSignatureVerificationTest {
     @Test
     public void getDecoderStreamMistakensPlaintextForBase64RegressionTest()
             throws PGPException, IOException {
-        String message = "Foo\nBar"; // PGPUtil.getDecoderStream() would mistaken this for base64 data
+        String message = "Foo\nBar"; // PGPUtil.getDecoderStream() would have mistaken this for base64 data
         ByteArrayInputStream msgIn = new ByteArrayInputStream(message.getBytes(StandardCharsets.UTF_8));
 
         PGPSecretKeyRing secretKey = TestKeys.getEmilSecretKeyRing();

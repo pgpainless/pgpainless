@@ -6,7 +6,7 @@ SPDX-License-Identifier: CC0-1.0
 # PGPainless Changelog
 
 ## 1.0.0-rc9
-- When key has both direct-key sig + primary user-id sig: resolve expiration date to earliest expiration
+- When key has both direct-key sig + primary user-id sig: resolve expiration date to the earliest expiration
 - Add `SecretKeyRingEditor.removeUserId()` convenience methods that do soft-revoke the user-id.
 - Add `SelectUserId.byEmail()` which also matches the plain email address
 
@@ -110,7 +110,7 @@ SPDX-License-Identifier: CC0-1.0
 
 ## 0.2.16
 - Fix handling of subkey revocation signatures
-- SOP: improve API use with byte arrays
+- SOP: improve API usage with byte arrays
 - Fix `AssertionError` when determining encryption subkeys from set containing unbound key
 - Add `ConsumerOptions.setMissingKeyPassphraseStrategy(strategy)` to modify behavior when missing key passphrases are encountered during decryption
 

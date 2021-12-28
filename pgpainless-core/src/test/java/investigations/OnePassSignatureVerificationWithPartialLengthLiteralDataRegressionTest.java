@@ -26,7 +26,7 @@ public class OnePassSignatureVerificationWithPartialLengthLiteralDataRegressionT
      * PGPainless versions 0.2.10 - 0.2.18 fail to decrypt this message, due to it failing to parse the signatures trailing
      * the literal data. The cause for this was not draining the literal data first before trying to parse the sigs.
      * This is likely caused by the literal data using a partial length encoding scheme, so the PGPObjectFactory did not yet
-     * reach the signatures packet.
+     * reach the signatures packets.
      *
      * As a fix, PGPainless now only tries to parse signatures from after the literal data packet, once the literal data
      * stream gets closed.

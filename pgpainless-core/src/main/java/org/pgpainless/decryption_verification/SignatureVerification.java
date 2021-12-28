@@ -80,7 +80,7 @@ public class SignatureVerification {
         }
 
         /**
-         * Return the verification (tuple of {@link PGPSignature} and corresponding {@link SubkeyIdentifier}
+         * Return the verification (tuple of {@link PGPSignature} and corresponding {@link SubkeyIdentifier})
          * of the signing/verification key.
          *
          * @return verification
