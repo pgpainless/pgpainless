@@ -10,34 +10,22 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.pgpainless.cli.TestUtils.ARMOR_PRIVATE_KEY_HEADER_BYTES;
 
 import java.io.ByteArrayOutputStream;
-import java.io.File;
 import java.io.IOException;
 import java.io.PrintStream;
 import java.util.Arrays;
 
 import com.ginsberg.junit.exit.FailOnSystemExit;
-import org.bouncycastle.openpgp.PGPException;
 import org.bouncycastle.openpgp.PGPSecretKeyRing;
-import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 import org.pgpainless.PGPainless;
 import org.pgpainless.cli.PGPainlessCLI;
-import org.pgpainless.cli.TestUtils;
 import org.pgpainless.key.info.KeyRingInfo;
 
 public class GenerateCertTest {
 
-    private static File tempDir;
-
-
-    @BeforeAll
-    public static void setup() throws IOException {
-        tempDir = TestUtils.createTempDirectory();
-    }
-
     @Test
     @FailOnSystemExit
-    public void testKeyGeneration() throws IOException, PGPException {
+    public void testKeyGeneration() throws IOException {
         ByteArrayOutputStream out = new ByteArrayOutputStream();
         System.setOut(new PrintStream(out));
         PGPainlessCLI.execute("generate-key", "--armor", "Juliet Capulet <juliet@capulet.lit>");

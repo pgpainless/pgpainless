@@ -18,12 +18,11 @@ import sop.operation.Version;
 
 public class VersionCmdTest {
 
-    private SOP sop;
     private Version version;
 
     @BeforeEach
     public void mockComponents() {
-        sop = mock(SOP.class);
+        SOP sop = mock(SOP.class);
         version = mock(Version.class);
         when(version.getName()).thenReturn("MockSop");
         when(version.getVersion()).thenReturn("1.0");

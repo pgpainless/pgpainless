@@ -41,8 +41,6 @@ public class SignVerifyTest {
     private static File tempDir;
     private static PrintStream originalSout;
 
-    private final String data = "If privacy is outlawed, only outlaws will have privacy.\n";
-
     @BeforeAll
     public static void prepare() throws IOException {
         tempDir = TestUtils.createTempDirectory();
@@ -72,6 +70,7 @@ public class SignVerifyTest {
         aliceCertOut.close();
 
         // Write test data to disc
+        String data = "If privacy is outlawed, only outlaws will have privacy.\n";
         File dataFile = new File(tempDir, "data");
         assertTrue(dataFile.createNewFile());
         FileOutputStream dataOut = new FileOutputStream(dataFile);

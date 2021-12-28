@@ -213,8 +213,8 @@ public abstract class SignatureValidator {
      * @return policy
      */
     private static Policy.HashAlgorithmPolicy getHashAlgorithmPolicyForSignature(PGPSignature signature, Policy policy) {
-        Policy.HashAlgorithmPolicy hashAlgorithmPolicy = null;
         SignatureType type = SignatureType.valueOf(signature.getSignatureType());
+        Policy.HashAlgorithmPolicy hashAlgorithmPolicy;
         if (type == SignatureType.CERTIFICATION_REVOCATION || type == SignatureType.KEY_REVOCATION || type == SignatureType.SUBKEY_REVOCATION) {
             hashAlgorithmPolicy = policy.getRevocationSignatureHashAlgorithmPolicy();
         } else {
@@ -385,21 +385,6 @@ public abstract class SignatureValidator {
         return new SignatureValidator() {
             @Override
             public void verify(PGPSignature signature) throws SignatureValidationException {
-                // TODO: Uncommenting the code below would mean that fake issuers would become a problem for sig verification
-                /*
-                long keyId = signature.getKeyID();
-                if (keyId == 0) {
-                    OpenPgpV4Fingerprint fingerprint = SignatureSubpacketsUtil.getIssuerFingerprintAsOpenPgpV4Fingerprint(signature);
-                    if (fingerprint == null) {
-                        throw new SignatureValidationException("Signature does not contain an issuer-id, neither an issuer-fingerprint subpacket.");
-                    }
-                    keyId = fingerprint.getKeyId();
-                }
-                if (keyId != key.getKeyID()) {
-                    throw new IllegalArgumentException("Signature was not created using key " + Long.toHexString(key.getKeyID()));
-                }
-                 */
-
                 Date keyCreationTime = key.getCreationTime();
                 Date signatureCreationTime = signature.getCreationTime();
 
@@ -505,7 +490,7 @@ public abstract class SignatureValidator {
             public void verify(PGPSignature signature) throws SignatureValidationException {
                 try {
                     signature.init(ImplementationFactory.getInstance().getPGPContentVerifierBuilderProvider(), signer);
-                    boolean valid = false;
+                    boolean valid;
                     if (signer.getKeyID() != signee.getKeyID()) {
                         valid = signature.verifyCertification(signer, signee);
                     } else {

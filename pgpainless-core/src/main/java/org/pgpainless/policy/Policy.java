@@ -294,7 +294,7 @@ public final class Policy {
         }
 
         /**
-         * Return true if the the given hash algorithm is acceptable by this policy.
+         * Return true if the given hash algorithm is acceptable by this policy.
          *
          * @param hashAlgorithm hash algorithm
          * @return true if the hash algorithm is acceptable, false otherwise

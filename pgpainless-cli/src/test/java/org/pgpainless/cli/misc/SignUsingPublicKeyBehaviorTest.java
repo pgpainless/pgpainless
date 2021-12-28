@@ -15,11 +15,8 @@ import java.io.InputStream;
 import java.io.OutputStream;
 import java.io.PrintStream;
 import java.nio.charset.StandardCharsets;
-import java.security.InvalidAlgorithmParameterException;
-import java.security.NoSuchAlgorithmException;
 
 import com.ginsberg.junit.exit.ExpectSystemExitWithStatus;
-import org.bouncycastle.openpgp.PGPException;
 import org.bouncycastle.util.io.Streams;
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeAll;
@@ -96,8 +93,6 @@ public class SignUsingPublicKeyBehaviorTest {
     private static File tempDir;
     private static PrintStream originalSout;
 
-    private final String data = "If privacy is outlawed, only outlaws will have privacy.\n";
-
     @BeforeAll
     public static void prepare() throws IOException {
         tempDir = TestUtils.createTempDirectory();
@@ -105,7 +100,7 @@ public class SignUsingPublicKeyBehaviorTest {
 
     @Test
     @ExpectSystemExitWithStatus(SOPGPException.BadData.EXIT_CODE)
-    public void testSignatureCreationAndVerification() throws PGPException, InvalidAlgorithmParameterException, NoSuchAlgorithmException, IOException {
+    public void testSignatureCreationAndVerification() throws IOException {
         originalSout = System.out;
         InputStream originalIn = System.in;
 
@@ -124,6 +119,8 @@ public class SignUsingPublicKeyBehaviorTest {
         aliceCertOut.close();
 
         // Write test data to disc
+        String data = "If privacy is outlawed, only outlaws will have privacy.\n";
+
         File dataFile = new File(tempDir, "data");
         assertTrue(dataFile.createNewFile());
         FileOutputStream dataOut = new FileOutputStream(dataFile);
@@ -138,6 +135,8 @@ public class SignUsingPublicKeyBehaviorTest {
         FileOutputStream sigOut = new FileOutputStream(sigFile);
         System.setOut(new PrintStream(sigOut));
         PGPainlessCLI.execute("sign", "--armor", aliceKeyFile.getAbsolutePath());
+
+        System.setIn(originalIn);
     }
 
     @AfterAll
