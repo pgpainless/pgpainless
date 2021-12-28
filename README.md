@@ -35,6 +35,11 @@ PGPainless currently [*scores second place* on Sequoia-PGPs Interoperability Tes
 >
 > -Tom @ FlowCrypt.com
 
+> Finally, testing irrefutably confirmed that the library removes many associated difficulties with PGP use in its provision of an approachable and uncomplicated API.
+> In this regard, Paul Schaub deserves the utmost praise.
+>
+> -Mario @ Cure53.de
+
 ## Features
 
 Most of PGPainless' features can be accessed directly from the `PGPainless` class.
