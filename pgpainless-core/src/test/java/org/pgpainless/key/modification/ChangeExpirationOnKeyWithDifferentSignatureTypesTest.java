@@ -157,7 +157,7 @@ public class ChangeExpirationOnKeyWithDifferentSignatureTypesTest {
             throws PGPException {
         Date expirationDate = new Date(new Date().getTime() + 1000 * 60 * 60 * 24 * 14);
         // round date for test stability
-        expirationDate = DateUtil.parseUTCDate(DateUtil.formatUTCDate(expirationDate));
+        expirationDate = DateUtil.toSecondsPrecision(expirationDate);
 
         PGPSecretKeyRing modded = PGPainless.modifyKeyRing(keys)
                 .setExpirationDate(expirationDate, protector)

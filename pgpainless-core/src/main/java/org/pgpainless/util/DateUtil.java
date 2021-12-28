@@ -46,6 +46,16 @@ public final class DateUtil {
     }
 
     /**
+     * "Round" a date down to seconds precision.
+     * @param date
+     * @return
+     */
+    public static Date toSecondsPrecision(Date date) {
+        long seconds = date.getTime() / 1000;
+        return new Date(seconds * 1000);
+    }
+
+    /**
      * Return the current date "rounded" to UTC precision.
      *
      * @return now
