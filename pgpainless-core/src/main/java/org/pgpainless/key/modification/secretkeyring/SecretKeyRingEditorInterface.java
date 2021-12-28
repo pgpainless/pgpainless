@@ -69,10 +69,28 @@ public interface SecretKeyRingEditorInterface {
             @Nonnull SecretKeyRingProtector protector)
             throws PGPException;
 
+    /**
+     * Convenience method to revoke selected user-ids using soft revocation signatures.
+     * The revocation will use {@link RevocationAttributes.Reason#USER_ID_NO_LONGER_VALID}, so that the user-id
+     * can be re-certified at a later point.
+     *
+     * @param userIdSelector selector to select user-ids
+     * @param protector protector to unlock the primary key
+     * @return the builder
+     */
     SecretKeyRingEditorInterface removeUserId(SelectUserId userIdSelector,
                                               SecretKeyRingProtector protector)
         throws PGPException;
 
+    /**
+     * Convenience method to revoke a single user-id using a soft revocation signature.
+     * The revocation will use {@link RevocationAttributes.Reason#USER_ID_NO_LONGER_VALID}. so that the user-id
+     * can be re-certified at a later point.
+     *
+     * @param userId user-id to revoke
+     * @param protector protector to unlock the primary key
+     * @return the builder
+     */
     SecretKeyRingEditorInterface removeUserId(CharSequence userId,
                                               SecretKeyRingProtector protector)
         throws PGPException;
