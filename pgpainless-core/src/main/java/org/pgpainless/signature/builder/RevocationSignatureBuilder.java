@@ -52,8 +52,8 @@ public class RevocationSignatureBuilder extends AbstractSignatureBuilder<Revocat
     public PGPSignature build(PGPPublicKey revokeeSubkey) throws PGPException {
         PGPSignatureGenerator signatureGenerator = buildAndInitSignatureGenerator();
         if (signatureType == SignatureType.KEY_REVOCATION) {
-            if (revokeeSubkey.getKeyID() != publicSigningKey.getKeyID()) {
-                throw new IllegalArgumentException("Signature type is KEY_REVOCATION, but provided revokeeSubkey is != signingPublicKey.");
+            if (!revokeeSubkey.isMasterKey()) {
+                throw new IllegalArgumentException("Signature type is KEY_REVOCATION, but provided revokeeSubkey does not appear to be a primary key.");
             }
             return signatureGenerator.generateCertification(publicSigningKey);
         } else {
