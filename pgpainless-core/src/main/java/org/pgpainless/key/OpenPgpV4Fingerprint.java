@@ -72,7 +72,7 @@ public class OpenPgpV4Fingerprint extends OpenPgpFingerprint {
     }
 
     public OpenPgpV4Fingerprint(@Nonnull byte[] bytes) {
-        super(bytes);
+        super(Hex.encode(bytes));
     }
 
     public OpenPgpV4Fingerprint(@Nonnull PGPPublicKey key) {
