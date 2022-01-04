@@ -89,7 +89,7 @@ public final class SignatureSubpacketsUtil {
 
         OpenPgpFingerprint fingerprint = null;
         if (subpacket.getKeyVersion() == 4) {
-            fingerprint = new OpenPgpV4Fingerprint(Hex.encode(subpacket.getFingerprint()));
+            fingerprint = new OpenPgpV4Fingerprint(subpacket.getFingerprint());
         }
 
         return fingerprint;
