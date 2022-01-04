@@ -584,7 +584,9 @@ public final class SignatureSubpacketsUtil {
 
         if (type == SignatureSubpacket.revocationKey) {
             // RevocationKey subpackets are not castable for some reason
-            // We need to manually construct the new object
+            // See https://github.com/bcgit/bc-java/pull/1085 for an upstreamed fix
+            // We need to manually construct the new object for now.
+            // TODO: Remove workaround when BC 1.71 is released (and has our fix)
             return (P) new RevocationKey(last.isCritical(), last.isLongLength(), last.getData());
         }
 
