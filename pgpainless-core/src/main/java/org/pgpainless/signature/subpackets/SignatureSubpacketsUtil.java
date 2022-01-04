@@ -10,7 +10,6 @@ import java.util.Date;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Set;
-
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
 
@@ -37,7 +36,6 @@ import org.bouncycastle.openpgp.PGPPublicKey;
 import org.bouncycastle.openpgp.PGPSignature;
 import org.bouncycastle.openpgp.PGPSignatureList;
 import org.bouncycastle.openpgp.PGPSignatureSubpacketVector;
-import org.bouncycastle.util.encoders.Hex;
 import org.pgpainless.algorithm.CompressionAlgorithm;
 import org.pgpainless.algorithm.Feature;
 import org.pgpainless.algorithm.HashAlgorithm;
@@ -581,7 +579,16 @@ public final class SignatureSubpacketsUtil {
         if (allPackets.length == 0) {
             return null;
         }
-        return (P) allPackets[allPackets.length - 1]; // return last
+
+        org.bouncycastle.bcpg.SignatureSubpacket last = allPackets[allPackets.length - 1];
+
+        if (type == SignatureSubpacket.revocationKey) {
+            // RevocationKey subpackets are not castable for some reason
+            // We need to manually construct the new object
+            return (P) new RevocationKey(last.isCritical(), last.isLongLength(), last.getData());
+        }
+
+        return (P) last;
     }
 
     /**
