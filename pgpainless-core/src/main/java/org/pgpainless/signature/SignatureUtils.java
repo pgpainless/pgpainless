@@ -33,6 +33,7 @@ import org.pgpainless.algorithm.SignatureType;
 import org.pgpainless.algorithm.negotiation.HashAlgorithmNegotiator;
 import org.pgpainless.implementation.ImplementationFactory;
 import org.pgpainless.key.OpenPgpFingerprint;
+import org.pgpainless.key.OpenPgpV4Fingerprint;
 import org.pgpainless.key.util.OpenPgpKeyAttributeUtil;
 import org.pgpainless.key.util.RevocationAttributes;
 import org.pgpainless.signature.subpackets.SignatureSubpacketsUtil;
@@ -309,5 +310,19 @@ public final class SignatureUtils {
             list.add(signature);
         }
         return list;
+    }
+
+    public static boolean wasIssuedBy(byte[] fingerprint, PGPSignature signature) {
+        if (fingerprint.length != 20) {
+            // Unknown fingerprint length
+            return false;
+        }
+        OpenPgpV4Fingerprint fp = new OpenPgpV4Fingerprint(fingerprint);
+        OpenPgpFingerprint issuerFp = SignatureSubpacketsUtil.getIssuerFingerprintAsOpenPgpFingerprint(signature);
+        if (issuerFp == null) {
+            return fp.getKeyId() == signature.getKeyID();
+        }
+
+        return fp.equals(issuerFp);
     }
 }
