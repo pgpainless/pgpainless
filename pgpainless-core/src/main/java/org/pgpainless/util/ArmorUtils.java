@@ -18,8 +18,10 @@ import java.util.regex.Pattern;
 import org.bouncycastle.bcpg.ArmoredInputStream;
 import org.bouncycastle.bcpg.ArmoredOutputStream;
 import org.bouncycastle.openpgp.PGPKeyRing;
+import org.bouncycastle.openpgp.PGPPublicKey;
 import org.bouncycastle.openpgp.PGPPublicKeyRing;
 import org.bouncycastle.openpgp.PGPPublicKeyRingCollection;
+import org.bouncycastle.openpgp.PGPSecretKey;
 import org.bouncycastle.openpgp.PGPSecretKeyRing;
 import org.bouncycastle.openpgp.PGPSecretKeyRingCollection;
 import org.bouncycastle.openpgp.PGPUtil;
@@ -43,13 +45,23 @@ public final class ArmorUtils {
 
     }
 
+    public static String toAsciiArmoredString(PGPSecretKey secretKey) throws IOException {
+        MultiMap<String, String> header = keyToHeader(secretKey.getPublicKey());
+        return toAsciiArmoredString(secretKey.getEncoded(), header);
+    }
+
+    public static String toAsciiArmoredString(PGPPublicKey publicKey) throws IOException {
+        MultiMap<String, String> header = keyToHeader(publicKey);
+        return toAsciiArmoredString(publicKey.getEncoded(), header);
+    }
+
     public static String toAsciiArmoredString(PGPSecretKeyRing secretKeys) throws IOException {
-        MultiMap<String, String> header = keyToHeader(secretKeys);
+        MultiMap<String, String> header = keysToHeader(secretKeys);
         return toAsciiArmoredString(secretKeys.getEncoded(), header);
     }
 
     public static String toAsciiArmoredString(PGPPublicKeyRing publicKeys) throws IOException {
-        MultiMap<String, String> header = keyToHeader(publicKeys);
+        MultiMap<String, String> header = keysToHeader(publicKeys);
         return toAsciiArmoredString(publicKeys.getEncoded(), header);
     }
 
@@ -66,7 +78,7 @@ public final class ArmorUtils {
     }
 
     public static ArmoredOutputStream toAsciiArmoredStream(PGPKeyRing keyRing, OutputStream outputStream) {
-        MultiMap<String, String> header = keyToHeader(keyRing);
+        MultiMap<String, String> header = keysToHeader(keyRing);
         return toAsciiArmoredStream(outputStream, header);
     }
 
@@ -94,16 +106,21 @@ public final class ArmorUtils {
         return sb.toString();
     }
 
-    private static MultiMap<String, String> keyToHeader(PGPKeyRing keyRing) {
+    private static MultiMap<String, String> keyToHeader(PGPPublicKey publicKey) {
         MultiMap<String, String> header = new MultiMap<>();
-        OpenPgpFingerprint fingerprint = OpenPgpFingerprint.of(keyRing);
-        Iterator<String> userIds = keyRing.getPublicKey().getUserIDs();
+        OpenPgpFingerprint fingerprint = OpenPgpFingerprint.of(publicKey);
+        Iterator<String> userIds = publicKey.getUserIDs();
 
         header.put(HEADER_COMMENT, fingerprint.prettyPrint());
         if (userIds.hasNext()) {
             header.put(HEADER_COMMENT, userIds.next());
         }
         return header;
+    }
+
+    private static MultiMap<String, String> keysToHeader(PGPKeyRing keyRing) {
+        PGPPublicKey publicKey = keyRing.getPublicKey();
+        return keyToHeader(publicKey);
     }
 
     public static String toAsciiArmoredString(byte[] bytes) throws IOException {
@@ -147,7 +164,7 @@ public final class ArmorUtils {
 
     public static ArmoredOutputStream createArmoredOutputStreamFor(PGPKeyRing keyRing, OutputStream outputStream) {
         ArmoredOutputStream armor = ArmoredOutputStreamFactory.get(outputStream);
-        MultiMap<String, String> headerMap = keyToHeader(keyRing);
+        MultiMap<String, String> headerMap = keysToHeader(keyRing);
         for (String header : headerMap.keySet()) {
             for (String value : headerMap.get(header)) {
                 armor.addHeader(header, value);
