@@ -35,9 +35,9 @@ public interface Decrypt {
             throws SOPGPException.UnsupportedOption;
 
     /**
-     * Adds the verification cert.
+     * Adds one or more verification cert.
      *
-     * @param cert input stream containing the cert
+     * @param cert input stream containing the cert(s)
      * @return builder instance
      */
     Decrypt verifyWithCert(InputStream cert)
@@ -45,9 +45,9 @@ public interface Decrypt {
             IOException;
 
     /**
-     * Adds the verification cert.
+     * Adds one or more verification cert.
      *
-     * @param cert byte array containing the cert
+     * @param cert byte array containing the cert(s)
      * @return builder instance
      */
     default Decrypt verifyWithCert(byte[] cert)
@@ -75,9 +75,9 @@ public interface Decrypt {
             SOPGPException.UnsupportedOption;
 
     /**
-     * Adds the decryption key.
+     * Adds one or more decryption key.
      *
-     * @param key input stream containing the key
+     * @param key input stream containing the key(s)
      * @return builder instance
      */
     Decrypt withKey(InputStream key)
@@ -86,9 +86,9 @@ public interface Decrypt {
             SOPGPException.UnsupportedAsymmetricAlgo;
 
     /**
-     * Adds the decryption key.
+     * Adds one or more decryption key.
      *
-     * @param key byte array containing the key
+     * @param key byte array containing the key(s)
      * @return builder instance
      */
     default Decrypt withKey(byte[] key)

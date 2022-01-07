@@ -82,8 +82,8 @@ public class EncryptCmd implements Runnable {
                 throw new SOPGPException.KeyIsProtected("Key from " + keyFile.getAbsolutePath() + " is password protected.", keyIsProtected);
             } catch (SOPGPException.UnsupportedAsymmetricAlgo unsupportedAsymmetricAlgo) {
                 throw new SOPGPException.UnsupportedAsymmetricAlgo("Key from " + keyFile.getAbsolutePath() + " has unsupported asymmetric algorithm.", unsupportedAsymmetricAlgo);
-            } catch (SOPGPException.CertCannotSign certCannotSign) {
-                throw new RuntimeException("Key from " + keyFile.getAbsolutePath() + " cannot sign.", certCannotSign);
+            } catch (SOPGPException.KeyCannotSign keyCannotSign) {
+                throw new SOPGPException.KeyCannotSign("Key from " + keyFile.getAbsolutePath() + " cannot sign.", keyCannotSign);
             } catch (SOPGPException.BadData badData) {
                 throw new SOPGPException.BadData("Key file " + keyFile.getAbsolutePath() + " does not contain a valid OpenPGP private key.", badData);
             }

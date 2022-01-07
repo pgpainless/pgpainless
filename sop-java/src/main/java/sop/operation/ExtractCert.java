@@ -21,18 +21,18 @@ public interface ExtractCert {
     ExtractCert noArmor();
 
     /**
-     * Extract the cert from the provided key.
+     * Extract the cert(s) from the provided key(s).
      *
-     * @param keyInputStream input stream containing the encoding of an OpenPGP key
-     * @return result containing the encoding of the keys cert
+     * @param keyInputStream input stream containing the encoding of one or more OpenPGP keys
+     * @return result containing the encoding of the keys certs
      */
     Ready key(InputStream keyInputStream) throws IOException, SOPGPException.BadData;
 
     /**
-     * Extract the cert from the provided key.
+     * Extract the cert(s) from the provided key(s).
      *
-     * @param key byte array containing the encoding of an OpenPGP key
-     * @return result containing the encoding of the keys cert
+     * @param key byte array containing the encoding of one or more OpenPGP key
+     * @return result containing the encoding of the keys certs
      */
     default Ready key(byte[] key) throws IOException, SOPGPException.BadData {
         return key(new ByteArrayInputStream(key));

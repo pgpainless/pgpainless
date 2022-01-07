@@ -8,7 +8,8 @@ import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 
-import sop.Ready;
+import sop.MicAlg;
+import sop.ReadyWithResult;
 import sop.enums.SignAs;
 import sop.exception.SOPGPException;
 
@@ -31,17 +32,17 @@ public interface Sign {
     Sign mode(SignAs mode) throws SOPGPException.UnsupportedOption;
 
     /**
-     * Adds the signer key.
+     * Add one or more signing keys.
      *
-     * @param key input stream containing encoded key
+     * @param key input stream containing encoded keys
      * @return builder instance
      */
     Sign key(InputStream key) throws SOPGPException.KeyIsProtected, SOPGPException.BadData, IOException;
 
     /**
-     * Adds the signer key.
+     * Add one or more signing keys.
      *
-     * @param key byte array containing encoded key
+     * @param key byte array containing encoded keys
      * @return builder instance
      */
     default Sign key(byte[] key) throws SOPGPException.KeyIsProtected, SOPGPException.BadData, IOException {
@@ -54,7 +55,7 @@ public interface Sign {
      * @param data input stream containing data
      * @return ready
      */
-    Ready data(InputStream data) throws IOException, SOPGPException.ExpectedText;
+    ReadyWithResult<MicAlg> data(InputStream data) throws IOException, SOPGPException.ExpectedText;
 
     /**
      * Signs data.
@@ -62,7 +63,7 @@ public interface Sign {
      * @param data byte array containing data
      * @return ready
      */
-    default Ready data(byte[] data) throws IOException, SOPGPException.ExpectedText {
+    default ReadyWithResult<MicAlg> data(byte[] data) throws IOException, SOPGPException.ExpectedText {
         return data(new ByteArrayInputStream(data));
     }
 }

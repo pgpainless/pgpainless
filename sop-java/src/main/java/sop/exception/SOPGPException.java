@@ -24,6 +24,9 @@ public abstract class SOPGPException extends RuntimeException {
 
     public abstract int getExitCode();
 
+    /**
+     * No acceptable signatures found (sop verify).
+     */
     public static class NoSignature extends SOPGPException {
 
         public static final int EXIT_CODE = 3;
@@ -38,6 +41,9 @@ public abstract class SOPGPException extends RuntimeException {
         }
     }
 
+    /**
+     * Asymmetric algorithm unsupported (sop encrypt).
+     */
     public static class UnsupportedAsymmetricAlgo extends SOPGPException {
 
         public static final int EXIT_CODE = 13;
@@ -56,6 +62,9 @@ public abstract class SOPGPException extends RuntimeException {
         }
     }
 
+    /**
+     * Certificate not encryption capable (e,g, expired, revoked, unacceptable usage).
+     */
     public static class CertCannotEncrypt extends SOPGPException {
         public static final int EXIT_CODE = 17;
 
@@ -69,10 +78,9 @@ public abstract class SOPGPException extends RuntimeException {
         }
     }
 
-    public static class CertCannotSign extends Exception {
-
-    }
-
+    /**
+     * Missing required argument.
+     */
     public static class MissingArg extends SOPGPException {
 
         public static final int EXIT_CODE = 19;
@@ -87,6 +95,9 @@ public abstract class SOPGPException extends RuntimeException {
         }
     }
 
+    /**
+     * Incomplete verification instructions (sop decrypt).
+     */
     public static class IncompleteVerification extends SOPGPException {
 
         public static final int EXIT_CODE = 23;
@@ -101,6 +112,9 @@ public abstract class SOPGPException extends RuntimeException {
         }
     }
 
+    /**
+     * Unable to decrypt (sop decrypt).
+     */
     public static class CannotDecrypt extends SOPGPException {
 
         public static final int EXIT_CODE = 29;
@@ -111,6 +125,9 @@ public abstract class SOPGPException extends RuntimeException {
         }
     }
 
+    /**
+     * Non-UTF-8 or otherwise unreliable password (sop encrypt).
+     */
     public static class PasswordNotHumanReadable extends SOPGPException {
 
         public static final int EXIT_CODE = 31;
@@ -121,6 +138,9 @@ public abstract class SOPGPException extends RuntimeException {
         }
     }
 
+    /**
+     * Unsupported option.
+     */
     public static class UnsupportedOption extends SOPGPException {
 
         public static final int EXIT_CODE = 37;
@@ -139,6 +159,9 @@ public abstract class SOPGPException extends RuntimeException {
         }
     }
 
+    /**
+     * Invalid data type (no secret key where KEYS expected, etc.).
+     */
     public static class BadData extends SOPGPException {
 
         public static final int EXIT_CODE = 41;
@@ -157,6 +180,9 @@ public abstract class SOPGPException extends RuntimeException {
         }
     }
 
+    /**
+     * Non-Text input where text expected.
+     */
     public static class ExpectedText extends SOPGPException {
 
         public static final int EXIT_CODE = 53;
@@ -167,6 +193,9 @@ public abstract class SOPGPException extends RuntimeException {
         }
     }
 
+    /**
+     * Output file already exists.
+     */
     public static class OutputExists extends SOPGPException {
 
         public static final int EXIT_CODE = 59;
@@ -181,6 +210,9 @@ public abstract class SOPGPException extends RuntimeException {
         }
     }
 
+    /**
+     * Input file does not exist.
+     */
     public static class MissingInput extends SOPGPException {
 
         public static final int EXIT_CODE = 61;
@@ -195,6 +227,9 @@ public abstract class SOPGPException extends RuntimeException {
         }
     }
 
+    /**
+     * A KEYS input is protected (locked) with a password, and sop cannot unlock it.
+     */
     public static class KeyIsProtected extends SOPGPException {
 
         public static final int EXIT_CODE = 67;
@@ -213,6 +248,9 @@ public abstract class SOPGPException extends RuntimeException {
         }
     }
 
+    /**
+     * Unsupported subcommand.
+     */
     public static class UnsupportedSubcommand extends SOPGPException {
 
         public static final int EXIT_CODE = 69;
@@ -227,6 +265,9 @@ public abstract class SOPGPException extends RuntimeException {
         }
     }
 
+    /**
+     * An indirect parameter is a special designator (it starts with @), but sop does not know how to handle the prefix.
+     */
     public static class UnsupportedSpecialPrefix extends SOPGPException {
 
         public static final int EXIT_CODE = 71;
@@ -237,13 +278,42 @@ public abstract class SOPGPException extends RuntimeException {
         }
     }
 
-
+    /**
+     * A indirect input parameter is a special designator (it starts with @),
+     * and a filename matching the designator is actually present.
+     */
     public static class AmbiguousInput extends SOPGPException {
 
         public static final int EXIT_CODE = 73;
 
         public AmbiguousInput(String message) {
             super(message);
+        }
+
+        @Override
+        public int getExitCode() {
+            return EXIT_CODE;
+        }
+    }
+
+    /**
+     * Key not signature-capable (e.g. expired, revoked, unacceptable usage flags)
+     * (sop sign and sop encrypt with --sign-with).
+     */
+    public static class KeyCannotSign extends SOPGPException {
+
+        public static final int EXIT_CODE = 79;
+
+        public KeyCannotSign() {
+            super();
+        }
+
+        public KeyCannotSign(String message) {
+            super(message);
+        }
+
+        public KeyCannotSign(String s, KeyCannotSign keyCannotSign) {
+            super(s, keyCannotSign);
         }
 
         @Override

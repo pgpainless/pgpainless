@@ -38,7 +38,7 @@ public interface Encrypt {
      */
     Encrypt signWith(InputStream key)
             throws SOPGPException.KeyIsProtected,
-            SOPGPException.CertCannotSign,
+            SOPGPException.KeyCannotSign,
             SOPGPException.UnsupportedAsymmetricAlgo,
             SOPGPException.BadData;
 
@@ -50,7 +50,7 @@ public interface Encrypt {
      */
     default Encrypt signWith(byte[] key)
             throws SOPGPException.KeyIsProtected,
-            SOPGPException.CertCannotSign,
+            SOPGPException.KeyCannotSign,
             SOPGPException.UnsupportedAsymmetricAlgo,
             SOPGPException.BadData {
         return signWith(new ByteArrayInputStream(key));

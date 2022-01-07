@@ -91,7 +91,7 @@ public class EncryptCmdTest {
     }
 
     @Test
-    public void signWith_multipleTimesGetPassedDown() throws IOException, SOPGPException.KeyIsProtected, SOPGPException.UnsupportedAsymmetricAlgo, SOPGPException.CertCannotSign, SOPGPException.BadData {
+    public void signWith_multipleTimesGetPassedDown() throws IOException, SOPGPException.KeyIsProtected, SOPGPException.UnsupportedAsymmetricAlgo, SOPGPException.KeyCannotSign, SOPGPException.BadData {
         File keyFile1 = File.createTempFile("sign-with-1-", ".asc");
         File keyFile2 = File.createTempFile("sign-with-2-", ".asc");
 
@@ -107,7 +107,7 @@ public class EncryptCmdTest {
 
     @Test
     @ExpectSystemExitWithStatus(67)
-    public void signWith_keyIsProtectedCausesExit67() throws SOPGPException.KeyIsProtected, SOPGPException.UnsupportedAsymmetricAlgo, SOPGPException.CertCannotSign, SOPGPException.BadData, IOException {
+    public void signWith_keyIsProtectedCausesExit67() throws SOPGPException.KeyIsProtected, SOPGPException.UnsupportedAsymmetricAlgo, SOPGPException.KeyCannotSign, SOPGPException.BadData, IOException {
         when(encrypt.signWith((InputStream) any())).thenThrow(new SOPGPException.KeyIsProtected());
         File keyFile = File.createTempFile("sign-with", ".asc");
         SopCLI.main(new String[] {"encrypt", "--sign-with", keyFile.getAbsolutePath(), "--with-password", "starship"});
@@ -115,23 +115,23 @@ public class EncryptCmdTest {
 
     @Test
     @ExpectSystemExitWithStatus(13)
-    public void signWith_unsupportedAsymmetricAlgoCausesExit13() throws SOPGPException.KeyIsProtected, SOPGPException.UnsupportedAsymmetricAlgo, SOPGPException.CertCannotSign, SOPGPException.BadData, IOException {
+    public void signWith_unsupportedAsymmetricAlgoCausesExit13() throws SOPGPException.KeyIsProtected, SOPGPException.UnsupportedAsymmetricAlgo, SOPGPException.KeyCannotSign, SOPGPException.BadData, IOException {
         when(encrypt.signWith((InputStream) any())).thenThrow(new SOPGPException.UnsupportedAsymmetricAlgo("Unsupported asymmetric algorithm.", new Exception()));
         File keyFile = File.createTempFile("sign-with", ".asc");
         SopCLI.main(new String[] {"encrypt", "--with-password", "123456", "--sign-with", keyFile.getAbsolutePath()});
     }
 
     @Test
-    @ExpectSystemExitWithStatus(1)
-    public void signWith_certCannotSignCausesExit1() throws IOException, SOPGPException.KeyIsProtected, SOPGPException.UnsupportedAsymmetricAlgo, SOPGPException.CertCannotSign, SOPGPException.BadData {
-        when(encrypt.signWith((InputStream) any())).thenThrow(new SOPGPException.CertCannotSign());
+    @ExpectSystemExitWithStatus(79)
+    public void signWith_certCannotSignCausesExit1() throws IOException, SOPGPException.KeyIsProtected, SOPGPException.UnsupportedAsymmetricAlgo, SOPGPException.KeyCannotSign, SOPGPException.BadData {
+        when(encrypt.signWith((InputStream) any())).thenThrow(new SOPGPException.KeyCannotSign());
         File keyFile = File.createTempFile("sign-with", ".asc");
         SopCLI.main(new String[] {"encrypt", "--with-password", "dragon", "--sign-with", keyFile.getAbsolutePath()});
     }
 
     @Test
     @ExpectSystemExitWithStatus(41)
-    public void signWith_badDataCausesExit41() throws SOPGPException.KeyIsProtected, SOPGPException.UnsupportedAsymmetricAlgo, SOPGPException.CertCannotSign, SOPGPException.BadData, IOException {
+    public void signWith_badDataCausesExit41() throws SOPGPException.KeyIsProtected, SOPGPException.UnsupportedAsymmetricAlgo, SOPGPException.KeyCannotSign, SOPGPException.BadData, IOException {
         when(encrypt.signWith((InputStream) any())).thenThrow(new SOPGPException.BadData(new IOException()));
         File keyFile = File.createTempFile("sign-with", ".asc");
         SopCLI.main(new String[] {"encrypt", "--with-password", "orange", "--sign-with", keyFile.getAbsolutePath()});

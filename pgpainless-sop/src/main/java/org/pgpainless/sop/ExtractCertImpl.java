@@ -7,16 +7,18 @@ package org.pgpainless.sop;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
+import java.util.ArrayList;
+import java.util.List;
 
 import org.bouncycastle.openpgp.PGPException;
 import org.bouncycastle.openpgp.PGPPublicKeyRing;
 import org.bouncycastle.openpgp.PGPSecretKeyRing;
+import org.bouncycastle.openpgp.PGPSecretKeyRingCollection;
 import org.pgpainless.PGPainless;
-import org.pgpainless.key.util.KeyRingUtils;
 import org.pgpainless.util.ArmorUtils;
-import sop.operation.ExtractCert;
 import sop.Ready;
 import sop.exception.SOPGPException;
+import sop.operation.ExtractCert;
 
 public class ExtractCertImpl implements ExtractCert {
 
@@ -30,21 +32,34 @@ public class ExtractCertImpl implements ExtractCert {
 
     @Override
     public Ready key(InputStream keyInputStream) throws IOException, SOPGPException.BadData {
-        PGPSecretKeyRing key = PGPainless.readKeyRing().secretKeyRing(keyInputStream);
-        if (key == null) {
+        PGPSecretKeyRingCollection keys;
+        try {
+            keys = PGPainless.readKeyRing().secretKeyRingCollection(keyInputStream);
+        } catch (PGPException e) {
+            throw new IOException("Cannot read keys.", e);
+        }
+
+        if (keys == null || keys.size() == 0) {
             throw new SOPGPException.BadData(new PGPException("No key data found."));
         }
 
-        PGPPublicKeyRing cert = KeyRingUtils.publicKeyRingFrom(key);
+        List<PGPPublicKeyRing> certs = new ArrayList<>();
+        for (PGPSecretKeyRing key : keys) {
+            PGPPublicKeyRing cert = PGPainless.extractCertificate(key);
+            certs.add(cert);
+        }
 
         return new Ready() {
             @Override
             public void writeTo(OutputStream outputStream) throws IOException {
-                OutputStream out = armor ? ArmorUtils.createArmoredOutputStreamFor(cert, outputStream) : outputStream;
-                cert.encode(out);
 
-                if (armor) {
-                    out.close();
+                for (PGPPublicKeyRing cert : certs) {
+                    OutputStream out = armor ? ArmorUtils.createArmoredOutputStreamFor(cert, outputStream) : outputStream;
+                    cert.encode(out);
+
+                    if (armor) {
+                        out.close();
+                    }
                 }
             }
         };

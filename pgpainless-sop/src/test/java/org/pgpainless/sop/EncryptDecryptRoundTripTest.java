@@ -51,7 +51,7 @@ public class EncryptDecryptRoundTripTest {
     }
 
     @Test
-    public void basicRoundTripWithKey() throws IOException, SOPGPException.CertCannotSign {
+    public void basicRoundTripWithKey() throws IOException, SOPGPException.KeyCannotSign {
         byte[] encrypted = sop.encrypt()
                 .signWith(aliceKey)
                 .withCert(aliceCert)
@@ -74,7 +74,7 @@ public class EncryptDecryptRoundTripTest {
     }
 
     @Test
-    public void basicRoundTripWithoutArmorUsingKey() throws IOException, SOPGPException.CertCannotSign {
+    public void basicRoundTripWithoutArmorUsingKey() throws IOException, SOPGPException.KeyCannotSign {
         byte[] aliceKeyNoArmor = sop.generateKey()
                 .userId("Alice <alice@unarmored.org>")
                 .noArmor()
@@ -187,16 +187,6 @@ public class EncryptDecryptRoundTripTest {
                 .decrypt()
                 .ciphertext(encrypted)
                 .toByteArrayAndResult());
-    }
-
-    @Test
-    public void decrypt_withKeyWithMultipleKeysFails() {
-        byte[] keys = new byte[aliceKey.length + bobKey.length];
-        System.arraycopy(aliceKey, 0, keys, 0 , aliceKey.length);
-        System.arraycopy(bobKey, 0, keys, aliceKey.length, bobKey.length);
-
-        assertThrows(SOPGPException.BadData.class, () -> sop.decrypt()
-                .withKey(keys));
     }
 
     @Test

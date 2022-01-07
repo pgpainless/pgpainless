@@ -13,13 +13,11 @@ import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.security.InvalidAlgorithmParameterException;
 import java.security.NoSuchAlgorithmException;
-import java.util.Arrays;
 import java.util.Date;
 import java.util.List;
 
 import org.bouncycastle.openpgp.PGPException;
 import org.bouncycastle.openpgp.PGPSecretKeyRing;
-import org.bouncycastle.openpgp.PGPSecretKeyRingCollection;
 import org.bouncycastle.openpgp.PGPSignature;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
@@ -56,7 +54,7 @@ public class SignTest {
         byte[] signature = sop.sign()
                 .key(key)
                 .data(data)
-                .getBytes();
+                .toByteArrayAndResult().getBytes();
 
         assertTrue(new String(signature).startsWith("-----BEGIN PGP SIGNATURE-----"));
 
@@ -76,7 +74,7 @@ public class SignTest {
                 .key(key)
                 .noArmor()
                 .data(data)
-                .getBytes();
+                .toByteArrayAndResult().getBytes();
 
         assertFalse(new String(signature).startsWith("-----BEGIN PGP SIGNATURE-----"));
 
@@ -95,7 +93,7 @@ public class SignTest {
         byte[] signature = sop.sign()
                 .key(key)
                 .data(data)
-                .getBytes();
+                .toByteArrayAndResult().getBytes();
 
         assertThrows(SOPGPException.NoSignature.class, () -> sop.verify()
                 .cert(cert)
@@ -109,7 +107,7 @@ public class SignTest {
         byte[] signature = sop.sign()
                 .key(key)
                 .data(data)
-                .getBytes();
+                .toByteArrayAndResult().getBytes();
 
         assertThrows(SOPGPException.NoSignature.class, () -> sop.verify()
                 .cert(cert)
@@ -124,20 +122,10 @@ public class SignTest {
                 .mode(SignAs.Text)
                 .key(key)
                 .data(data)
-                .getBytes();
+                .toByteArrayAndResult().getBytes();
 
         PGPSignature sig = SignatureUtils.readSignatures(signature).get(0);
         assertEquals(SignatureType.CANONICAL_TEXT_DOCUMENT.getCode(), sig.getSignatureType());
-    }
-
-    @Test
-    public void rejectKeyRingCollection() throws PGPException, InvalidAlgorithmParameterException, NoSuchAlgorithmException, IOException {
-        PGPSecretKeyRing key1 = PGPainless.generateKeyRing().modernKeyRing("Alice", null);
-        PGPSecretKeyRing key2 = PGPainless.generateKeyRing().modernKeyRing("Bob", null);
-        PGPSecretKeyRingCollection collection = new PGPSecretKeyRingCollection(Arrays.asList(key1, key2));
-        byte[] keys = collection.getEncoded();
-
-        assertThrows(SOPGPException.BadData.class, () -> sop.sign().key(keys));
     }
 
     @Test
