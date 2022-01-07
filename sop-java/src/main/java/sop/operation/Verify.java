@@ -29,17 +29,17 @@ public interface Verify extends VerifySignatures {
     Verify notAfter(Date timestamp) throws SOPGPException.UnsupportedOption;
 
     /**
-     * Adds the verification cert.
+     * Add one or more verification cert.
      *
-     * @param cert input stream containing the encoded cert
+     * @param cert input stream containing the encoded certs
      * @return builder instance
      */
     Verify cert(InputStream cert) throws SOPGPException.BadData;
 
     /**
-     * Adds the verification cert.
+     * Add one or more verification cert.
      *
-     * @param cert byte array containing the encoded cert
+     * @param cert byte array containing the encoded certs
      * @return builder instance
      */
     default Verify cert(byte[] cert) throws SOPGPException.BadData {

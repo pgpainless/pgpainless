@@ -49,7 +49,7 @@ public class EncryptImpl implements Encrypt {
     }
 
     @Override
-    public Encrypt signWith(InputStream keyIn) throws SOPGPException.KeyIsProtected, SOPGPException.CertCannotSign, SOPGPException.UnsupportedAsymmetricAlgo, SOPGPException.BadData {
+    public Encrypt signWith(InputStream keyIn) throws SOPGPException.KeyIsProtected, SOPGPException.KeyCannotSign, SOPGPException.UnsupportedAsymmetricAlgo, SOPGPException.BadData {
         try {
             PGPSecretKeyRingCollection keys = PGPainless.readKeyRing().secretKeyRingCollection(keyIn);
             if (keys.size() != 1) {
@@ -62,7 +62,7 @@ public class EncryptImpl implements Encrypt {
             try {
                 signingOptions.addInlineSignatures(SecretKeyRingProtector.unprotectedKeys(), keys, DocumentSignatureType.BINARY_DOCUMENT);
             } catch (IllegalArgumentException e) {
-                throw new SOPGPException.CertCannotSign();
+                throw new SOPGPException.KeyCannotSign();
             } catch (WrongPassphraseException e) {
                 throw new SOPGPException.KeyIsProtected();
             }

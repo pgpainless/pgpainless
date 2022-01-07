@@ -100,10 +100,6 @@ public class DecryptImpl implements Decrypt {
             PGPSecretKeyRingCollection secretKeys = PGPainless.readKeyRing()
                     .secretKeyRingCollection(keyIn);
 
-            if (secretKeys.size() != 1) {
-                throw new SOPGPException.BadData(new AssertionError("Exactly one single secret key expected. Got " + secretKeys.size()));
-            }
-
             for (PGPSecretKeyRing secretKey : secretKeys) {
                 KeyRingInfo info = new KeyRingInfo(secretKey);
                 if (!info.isFullyDecrypted()) {

@@ -7,12 +7,14 @@ package sop.cli.picocli.commands;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
+import java.io.FileOutputStream;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 
 import picocli.CommandLine;
-import sop.Ready;
+import sop.MicAlg;
+import sop.ReadyWithResult;
 import sop.cli.picocli.Print;
 import sop.cli.picocli.SopCLI;
 import sop.enums.SignAs;
@@ -34,8 +36,12 @@ public class SignCmd implements Runnable {
     SignAs type;
 
     @CommandLine.Parameters(description = "Secret keys used for signing",
-            paramLabel = "KEY")
+            paramLabel = "KEYS")
     List<File> secretKeyFile = new ArrayList<>();
+
+    @CommandLine.Option(names = "--micalg-out", description = "Emits the digest algorithm used to the specified file in a way that can be used to populate the micalg parameter for the PGP/MIME Content-Type (RFC3156)",
+            paramLabel = "MICALG")
+    File micAlgOut;
 
     @Override
     public void run() {
@@ -51,8 +57,12 @@ public class SignCmd implements Runnable {
             }
         }
 
+        if (micAlgOut != null && micAlgOut.exists()) {
+            throw new SOPGPException.OutputExists(String.format("Target %s of option %s already exists.", micAlgOut.getAbsolutePath(), "--micalg-out"));
+        }
+
         if (secretKeyFile.isEmpty()) {
-            Print.errln("Missing required parameter 'KEY'.");
+            Print.errln("Missing required parameter 'KEYS'.");
             System.exit(19);
         }
 
@@ -83,8 +93,16 @@ public class SignCmd implements Runnable {
         }
 
         try {
-            Ready ready = sign.data(System.in);
-            ready.writeTo(System.out);
+            ReadyWithResult<MicAlg> ready = sign.data(System.in);
+            MicAlg micAlg = ready.writeTo(System.out);
+
+            if (micAlgOut != null) {
+                // Write micalg out
+                micAlgOut.createNewFile();
+                FileOutputStream micAlgOutStream = new FileOutputStream(micAlgOut);
+                micAlg.writeTo(micAlgOutStream);
+                micAlgOutStream.close();
+            }
         } catch (IOException e) {
             Print.errln("IO Error.");
             Print.trace(e);

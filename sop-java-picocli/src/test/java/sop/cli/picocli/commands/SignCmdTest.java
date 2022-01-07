@@ -19,7 +19,8 @@ import java.io.OutputStream;
 import com.ginsberg.junit.exit.ExpectSystemExitWithStatus;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-import sop.Ready;
+import sop.MicAlg;
+import sop.ReadyWithResult;
 import sop.SOP;
 import sop.cli.picocli.SopCLI;
 import sop.exception.SOPGPException;
@@ -33,10 +34,10 @@ public class SignCmdTest {
     @BeforeEach
     public void mockComponents() throws IOException, SOPGPException.ExpectedText {
         sign = mock(Sign.class);
-        when(sign.data((InputStream) any())).thenReturn(new Ready() {
+        when(sign.data((InputStream) any())).thenReturn(new ReadyWithResult<MicAlg>() {
             @Override
-            public void writeTo(OutputStream outputStream) {
-
+            public MicAlg writeTo(OutputStream outputStream) {
+                return MicAlg.fromHashAlgorithmId(10);
             }
         });
 
@@ -109,9 +110,9 @@ public class SignCmdTest {
     @Test
     @ExpectSystemExitWithStatus(1)
     public void data_ioExceptionCausesExit1() throws IOException, SOPGPException.ExpectedText {
-        when(sign.data((InputStream) any())).thenReturn(new Ready() {
+        when(sign.data((InputStream) any())).thenReturn(new ReadyWithResult<MicAlg>() {
             @Override
-            public void writeTo(OutputStream outputStream) throws IOException {
+            public MicAlg writeTo(OutputStream outputStream) throws IOException {
                 throw new IOException();
             }
         });

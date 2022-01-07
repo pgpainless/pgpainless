@@ -8,6 +8,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.util.Properties;
 
+import org.bouncycastle.jce.provider.BouncyCastleProvider;
 import sop.operation.Version;
 
 public class VersionImpl implements Version {
@@ -32,5 +33,21 @@ public class VersionImpl implements Version {
             version = "DEVELOPMENT";
         }
         return version;
+    }
+
+    @Override
+    public String getBackendVersion() {
+        double bcVersion = new BouncyCastleProvider().getVersion();
+        return String.format("Bouncycastle %,.2f", bcVersion);
+    }
+
+    @Override
+    public String getExtendedVersion() {
+        return getName() + " " + getVersion() + "\n" +
+                "Based on PGPainless " + getVersion() + "\n" +
+                "Using " + getBackendVersion() + "\n" +
+                "See https://pgpainless.org\n" +
+                "Implementing Stateless OpenPGP Protocol Version 3\n" +
+                "See https://datatracker.ietf.org/doc/html/draft-dkg-openpgp-stateless-cli-03";
     }
 }
