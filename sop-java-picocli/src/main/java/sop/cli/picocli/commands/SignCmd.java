@@ -15,6 +15,7 @@ import java.util.List;
 import picocli.CommandLine;
 import sop.MicAlg;
 import sop.ReadyWithResult;
+import sop.SigningResult;
 import sop.cli.picocli.Print;
 import sop.cli.picocli.SopCLI;
 import sop.enums.SignAs;
@@ -93,9 +94,10 @@ public class SignCmd implements Runnable {
         }
 
         try {
-            ReadyWithResult<MicAlg> ready = sign.data(System.in);
-            MicAlg micAlg = ready.writeTo(System.out);
+            ReadyWithResult<SigningResult> ready = sign.data(System.in);
+            SigningResult result = ready.writeTo(System.out);
 
+            MicAlg micAlg = result.getMicAlg();
             if (micAlgOut != null) {
                 // Write micalg out
                 micAlgOut.createNewFile();
