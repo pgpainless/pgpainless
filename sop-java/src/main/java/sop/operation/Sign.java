@@ -8,8 +8,8 @@ import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 
-import sop.MicAlg;
 import sop.ReadyWithResult;
+import sop.SigningResult;
 import sop.enums.SignAs;
 import sop.exception.SOPGPException;
 
@@ -55,7 +55,7 @@ public interface Sign {
      * @param data input stream containing data
      * @return ready
      */
-    ReadyWithResult<MicAlg> data(InputStream data) throws IOException, SOPGPException.ExpectedText;
+    ReadyWithResult<SigningResult> data(InputStream data) throws IOException, SOPGPException.ExpectedText;
 
     /**
      * Signs data.
@@ -63,7 +63,7 @@ public interface Sign {
      * @param data byte array containing data
      * @return ready
      */
-    default ReadyWithResult<MicAlg> data(byte[] data) throws IOException, SOPGPException.ExpectedText {
+    default ReadyWithResult<SigningResult> data(byte[] data) throws IOException, SOPGPException.ExpectedText {
         return data(new ByteArrayInputStream(data));
     }
 }

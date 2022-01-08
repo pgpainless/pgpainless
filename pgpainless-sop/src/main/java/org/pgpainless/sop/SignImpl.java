@@ -28,6 +28,7 @@ import org.pgpainless.key.protection.SecretKeyRingProtector;
 import org.pgpainless.util.ArmoredOutputStreamFactory;
 import sop.MicAlg;
 import sop.ReadyWithResult;
+import sop.SigningResult;
 import sop.enums.SignAs;
 import sop.exception.SOPGPException;
 import sop.operation.Sign;
@@ -69,7 +70,7 @@ public class SignImpl implements Sign {
     }
 
     @Override
-    public ReadyWithResult<MicAlg> data(InputStream data) throws IOException {
+    public ReadyWithResult<SigningResult> data(InputStream data) throws IOException {
         ByteArrayOutputStream buffer = new ByteArrayOutputStream();
         try {
             EncryptionStream signingStream = PGPainless.encryptAndOrSign()
@@ -77,9 +78,9 @@ public class SignImpl implements Sign {
                     .withOptions(ProducerOptions.sign(signingOptions)
                             .setAsciiArmor(armor));
 
-            return new ReadyWithResult<MicAlg>() {
+            return new ReadyWithResult<SigningResult>() {
                 @Override
-                public MicAlg writeTo(OutputStream outputStream) throws IOException {
+                public SigningResult writeTo(OutputStream outputStream) throws IOException {
 
                     if (signingStream.isClosed()) {
                         throw new IllegalStateException("EncryptionStream is already closed.");
@@ -106,7 +107,9 @@ public class SignImpl implements Sign {
                     out.close();
                     outputStream.close(); // armor out does not close underlying stream
 
-                    return micAlgFromSignatures(signatures);
+                    return SigningResult.builder()
+                            .setMicAlg(micAlgFromSignatures(signatures))
+                            .build();
                 }
             };
 
