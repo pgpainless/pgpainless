@@ -12,6 +12,10 @@ import org.bouncycastle.jce.provider.BouncyCastleProvider;
 import sop.operation.Version;
 
 public class VersionImpl implements Version {
+
+    // draft version
+    private static final String SOP_VERSION = "3";
+
     @Override
     public String getName() {
         return "PGPainless-SOP";
@@ -38,7 +42,7 @@ public class VersionImpl implements Version {
     @Override
     public String getBackendVersion() {
         double bcVersion = new BouncyCastleProvider().getVersion();
-        return String.format("Bouncycastle %,.2f", bcVersion);
+        return String.format("Bouncy Castle %,.2f", bcVersion);
     }
 
     @Override
@@ -47,7 +51,7 @@ public class VersionImpl implements Version {
                 "Based on PGPainless " + getVersion() + "\n" +
                 "Using " + getBackendVersion() + "\n" +
                 "See https://pgpainless.org\n" +
-                "Implementing Stateless OpenPGP Protocol Version 3\n" +
+                "Implementation of the Stateless OpenPGP Protocol Version " + SOP_VERSION + "\n" +
                 "See https://datatracker.ietf.org/doc/html/draft-dkg-openpgp-stateless-cli-03";
     }
 }
