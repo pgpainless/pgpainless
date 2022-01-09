@@ -25,6 +25,10 @@ public class ArmorCmd implements Runnable {
     @Override
     public void run() {
         Armor armor = SopCLI.getSop().armor();
+        if (armor == null) {
+            throw new SOPGPException.UnsupportedSubcommand("Command 'armor' not implemented.");
+        }
+
         if (label != null) {
             try {
                 armor.label(label);

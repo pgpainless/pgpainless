@@ -10,6 +10,7 @@ import picocli.CommandLine;
 import sop.cli.picocli.Print;
 import sop.cli.picocli.SopCLI;
 import sop.exception.SOPGPException;
+import sop.operation.Dearmor;
 
 @CommandLine.Command(name = "dearmor",
         description = "Remove ASCII Armor from standard input",
@@ -18,6 +19,11 @@ public class DearmorCmd implements Runnable {
 
     @Override
     public void run() {
+        Dearmor dearmor = SopCLI.getSop().dearmor();
+        if (dearmor == null) {
+            throw new SOPGPException.UnsupportedSubcommand("Command 'dearmor' not implemented.");
+        }
+
         try {
             SopCLI.getSop()
                     .dearmor()

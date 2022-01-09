@@ -32,11 +32,15 @@ public class DetachInbandSignatureAndMessageCmd implements Runnable {
 
     @Override
     public void run() {
+        DetachInbandSignatureAndMessage detach = SopCLI.getSop().detachInbandSignatureAndMessage();
+        if (detach == null) {
+            throw new SOPGPException.UnsupportedSubcommand("Command 'detach-inband-signature-and-message' not implemented.");
+        }
+
         if (signaturesOut == null) {
             throw new SOPGPException.MissingArg("--signatures-out is required.");
         }
 
-        DetachInbandSignatureAndMessage detach = SopCLI.getSop().detachInbandSignatureAndMessage();
         if (!armor) {
             detach.noArmor();
         }

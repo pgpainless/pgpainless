@@ -47,6 +47,9 @@ public class SignCmd implements Runnable {
     @Override
     public void run() {
         Sign sign = SopCLI.getSop().sign();
+        if (sign == null) {
+            throw new SOPGPException.UnsupportedSubcommand("Command 'sign' not implemented.");
+        }
 
         if (type != null) {
             try {

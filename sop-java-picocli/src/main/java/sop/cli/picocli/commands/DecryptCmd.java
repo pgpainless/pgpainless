@@ -94,7 +94,7 @@ public class DecryptCmd implements Runnable {
 
         Decrypt decrypt = SopCLI.getSop().decrypt();
         if (decrypt == null) {
-            throw new SOPGPException.UnsupportedSubcommand("Subcommand 'decrypt' not implemented.");
+            throw new SOPGPException.UnsupportedSubcommand("Command 'decrypt' not implemented.");
         }
 
         setNotAfter(notAfter, decrypt);

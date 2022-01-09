@@ -52,10 +52,6 @@ public abstract class SOPGPException extends RuntimeException {
             super(message, e);
         }
 
-        public UnsupportedAsymmetricAlgo(Throwable e) {
-            super(e);
-        }
-
         @Override
         public int getExitCode() {
             return EXIT_CODE;
@@ -306,10 +302,6 @@ public abstract class SOPGPException extends RuntimeException {
 
         public KeyCannotSign() {
             super();
-        }
-
-        public KeyCannotSign(String message) {
-            super(message);
         }
 
         public KeyCannotSign(String s, KeyCannotSign keyCannotSign) {

@@ -31,6 +31,10 @@ public class GenerateKeyCmd implements Runnable {
     @Override
     public void run() {
         GenerateKey generateKey = SopCLI.getSop().generateKey();
+        if (generateKey == null) {
+            throw new SOPGPException.UnsupportedSubcommand("Command 'generate-key' not implemented.");
+        }
+
         for (String userId : userId) {
             generateKey.userId(userId);
         }

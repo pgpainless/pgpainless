@@ -53,6 +53,10 @@ public class VerifyCmd implements Runnable {
     @Override
     public void run() {
         Verify verify = SopCLI.getSop().verify();
+        if (verify == null) {
+            throw new SOPGPException.UnsupportedSubcommand("Command 'verify' not implemented.");
+        }
+
         if (notAfter != null) {
             try {
                 verify.notAfter(DateParser.parseNotAfter(notAfter));

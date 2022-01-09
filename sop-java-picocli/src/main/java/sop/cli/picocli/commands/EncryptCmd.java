@@ -51,6 +51,10 @@ public class EncryptCmd implements Runnable {
     @Override
     public void run() {
         Encrypt encrypt = SopCLI.getSop().encrypt();
+        if (encrypt == null) {
+            throw new SOPGPException.UnsupportedSubcommand("Command 'encrypt' not implemented.");
+        }
+
         if (type != null) {
             try {
                 encrypt.mode(type);

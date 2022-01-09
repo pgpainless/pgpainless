@@ -25,6 +25,10 @@ public class ExtractCertCmd implements Runnable {
     @Override
     public void run() {
         ExtractCert extractCert = SopCLI.getSop().extractCert();
+        if (extractCert == null) {
+            throw new SOPGPException.UnsupportedSubcommand("Command 'extract-cert' not implemented.");
+        }
+
         if (!armor) {
             extractCert.noArmor();
         }
