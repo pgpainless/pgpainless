@@ -6,6 +6,7 @@ package sop.util;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotEquals;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 
 import org.junit.jupiter.api.Test;
 import sop.SessionKey;
@@ -44,5 +45,17 @@ public class SessionKeyTest {
         assertNotEquals(s4.hashCode(), s5.hashCode());
         assertNotEquals(s1, null);
         assertNotEquals(s1, "FCA4BEAF687F48059CACC14FB019125CD57392BAB7037C707835925CBF9F7BCD");
+    }
+
+    @Test
+    public void fromString_missingAlgorithmIdThrows() {
+        String missingAlgorithId = "FCA4BEAF687F48059CACC14FB019125CD57392BAB7037C707835925CBF9F7BCD";
+        assertThrows(IllegalArgumentException.class, () -> SessionKey.fromString(missingAlgorithId));
+    }
+
+    @Test
+    public void fromString_wrongDivider() {
+        String semicolonDivider = "9;FCA4BEAF687F48059CACC14FB019125CD57392BAB7037C707835925CBF9F7BCD";
+        assertThrows(IllegalArgumentException.class, () -> SessionKey.fromString(semicolonDivider));
     }
 }
