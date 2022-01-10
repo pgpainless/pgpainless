@@ -11,6 +11,9 @@ import java.io.InputStream;
 import sop.ReadyWithResult;
 import sop.Signatures;
 
+/**
+ * Split cleartext signed messages up into data and signatures.
+ */
 public interface DetachInbandSignatureAndMessage {
 
     /**
