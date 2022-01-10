@@ -4,7 +4,6 @@
 
 package org.pgpainless.signature.consumer;
 
-import java.security.NoSuchAlgorithmException;
 import java.util.Arrays;
 import java.util.Date;
 import java.util.Iterator;
@@ -32,7 +31,6 @@ import org.pgpainless.key.OpenPgpFingerprint;
 import org.pgpainless.policy.Policy;
 import org.pgpainless.signature.SignatureUtils;
 import org.pgpainless.signature.subpackets.SignatureSubpacketsUtil;
-import org.pgpainless.util.BCUtil;
 import org.pgpainless.util.DateUtil;
 import org.pgpainless.util.NotationRegistry;
 
@@ -171,15 +169,14 @@ public abstract class SignatureValidator {
             @Override
             public void verify(PGPSignature signature) throws SignatureValidationException {
                 PublicKeyAlgorithm algorithm = PublicKeyAlgorithm.fromId(signingKey.getAlgorithm());
-                try {
-                    int bitStrength = BCUtil.getBitStrength(signingKey);
+                    int bitStrength = signingKey.getBitStrength();
+                    if (bitStrength == -1) {
+                        throw new SignatureValidationException("Cannot determine bit strength of signing key.");
+                    }
                     if (!policy.getPublicKeyAlgorithmPolicy().isAcceptable(algorithm, bitStrength)) {
                         throw new SignatureValidationException("Signature was made using unacceptable key. " +
                                 algorithm + " (" + bitStrength + " bits) is not acceptable according to the public key algorithm policy.");
                     }
-                } catch (NoSuchAlgorithmException e) {
-                    throw new SignatureValidationException("Cannot determine bit strength of signing key.", e);
-                }
             }
         };
     }

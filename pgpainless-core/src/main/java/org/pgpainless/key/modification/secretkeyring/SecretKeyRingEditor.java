@@ -64,7 +64,6 @@ import org.pgpainless.signature.subpackets.SelfSignatureSubpackets;
 import org.pgpainless.signature.subpackets.SignatureSubpackets;
 import org.pgpainless.signature.subpackets.SignatureSubpacketsHelper;
 import org.pgpainless.signature.subpackets.SignatureSubpacketsUtil;
-import org.pgpainless.util.BCUtil;
 import org.pgpainless.util.CollectionUtils;
 import org.pgpainless.util.Passphrase;
 import org.pgpainless.util.selection.userid.SelectUserId;
@@ -278,7 +277,7 @@ public class SecretKeyRingEditor implements SecretKeyRingEditorInterface {
 
         // check key against public key algorithm policy
         PublicKeyAlgorithm publicKeyAlgorithm = PublicKeyAlgorithm.fromId(subkey.getPublicKey().getAlgorithm());
-        int bitStrength = BCUtil.getBitStrength(subkey.getPublicKey());
+        int bitStrength = subkey.getPublicKey().getBitStrength();
         if (!PGPainless.getPolicy().getPublicKeyAlgorithmPolicy().isAcceptable(publicKeyAlgorithm, bitStrength)) {
             throw new IllegalArgumentException("Public key algorithm policy violation: " +
                     publicKeyAlgorithm + " with bit strength " + bitStrength + " is not acceptable.");
