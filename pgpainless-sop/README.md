@@ -6,7 +6,47 @@ SPDX-License-Identifier: Apache-2.0
 
 # PGPainless-SOP
 
+[![Spec Revision: 3](https://img.shields.io/badge/Spec%20Revision-3-blue)](https://datatracker.ietf.org/doc/html/draft-dkg-openpgp-stateless-cli-03)
+[![Maven Central](https://badgen.net/maven/v/maven-central/org.pgpainless/pgpainless-sop)](https://search.maven.org/artifact/org.pgpainless/pgpainless-sop)
+[![JavaDoc](https://badgen.net/badge/javadoc/yes/green)](https://pgpainless.org/releases/latest/javadoc/org/pgpainless/sop/package-summary.html)
+[![REUSE status](https://api.reuse.software/badge/github.com/pgpainless/pgpainless)](https://api.reuse.software/info/github.com/pgpainless/pgpainless)
+
 Implementation of the Stateless OpenPGP Protocol using PGPainless.
 
 This module implements `sop-java` using `pgpainless-core`.
 If your code depends on `sop-java`, this module can be used as a realization of those interfaces.
+
+## Usage Examples
+```java
+SOP sop = new SOPImpl();
+        
+// Generate an OpenPGP key
+byte[] key = sop.generateKey()
+        .userId("Alice <alice@example.org>")
+        .generate()
+        .getBytes();
+
+// Extract the certificate (public key)
+byte[] cert = sop.extractCert()
+        .key(key)
+        .getBytes();
+
+// Encrypt a message
+byte[] message = ...
+byte[] encrypted = sop.encrypt()
+        .withCert(cert)
+        .signWith(key)
+        .plaintext(message)
+        .getBytes();
+
+// Decrypt a message
+ByteArrayAndResult<DecryptionResult> messageAndVerifications = sop.decrypt()
+        .verifyWith(cert)
+        .withKey(key)
+        .ciphertext(encrypted)
+        .toByteArrayAndResult();
+byte[] decrypted = messageAndVerifications.getBytes();
+// Signature Verifications
+DecryptionResult messageInfo = messageAndVerifications.getResult();
+List<Verification> signatureVerifications = messageInfo.getVerifications();
+```
