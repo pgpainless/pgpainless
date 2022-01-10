@@ -14,6 +14,19 @@ import sop.operation.Version;
         exitCodeOnInvalidInput = 37)
 public class VersionCmd implements Runnable {
 
+    @CommandLine.ArgGroup()
+    Exclusive exclusive;
+
+    static class Exclusive {
+        @CommandLine.Option(names = "--extended", description = "Print an extended version string.")
+        boolean extended;
+
+        @CommandLine.Option(names = "--backend", description = "Print information about the cryptographic backend.")
+        boolean backend;
+    }
+
+
+
     @Override
     public void run() {
         Version version = SopCLI.getSop().version();
@@ -21,6 +34,19 @@ public class VersionCmd implements Runnable {
             throw new SOPGPException.UnsupportedSubcommand("Command 'version' not implemented.");
         }
 
-        Print.outln(version.getName() + " " + version.getVersion());
+        if (exclusive == null) {
+            Print.outln(version.getName() + " " + version.getVersion());
+            return;
+        }
+
+        if (exclusive.extended) {
+            Print.outln(version.getExtendedVersion());
+            return;
+        }
+
+        if (exclusive.backend) {
+            Print.outln(version.getBackendVersion());
+            return;
+        }
     }
 }
