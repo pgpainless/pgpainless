@@ -5,6 +5,12 @@ SPDX-License-Identifier: CC0-1.0
 
 # PGPainless Changelog
 
+## 1.0.2-SNAPSHOT
+- Update SOP implementation to specification revision 03
+- `OpenPGPV4Fingerprint`: Hex decode bytes in constructor
+- Add `ArmorUtils.toAsciiArmoredString()` for single key
+- Fix `ClassCastException` when retrieving `RevocationKey` subpackets from signatures
+
 ## 1.0.1
 - Fix sourcing of preferred algorithms by primary user-id when key is located via key-id
 
