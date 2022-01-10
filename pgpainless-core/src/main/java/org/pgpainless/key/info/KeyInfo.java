@@ -89,12 +89,19 @@ public class KeyInfo {
     public static String getCurveName(ECPublicBCPGKey key) {
         ASN1ObjectIdentifier identifier = key.getCurveOID();
 
+        String curveName = ECUtil.getCurveName(identifier);
+        if (curveName != null) {
+            return curveName;
+        }
+
         // Workaround for ECUtil not recognizing ed25519
+        // see https://github.com/bcgit/bc-java/issues/1087
+        // TODO: Remove once BC 1.71 gets released and contains a fix
         if (identifier.equals(GNUObjectIdentifiers.Ed25519)) {
             return EdDSACurve._Ed25519.getName();
         }
 
-        return ECUtil.getCurveName(identifier);
+        return null;
     }
 
     /**
