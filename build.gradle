@@ -30,6 +30,12 @@ allprojects {
     apply plugin: 'jacoco'
     apply plugin: 'checkstyle'
 
+    // Only generate jar for submodules
+    // https://stackoverflow.com/a/25445035
+    jar {
+        onlyIf { !sourceSets.main.allSource.files.isEmpty() }
+    }
+
     // For non-sop modules, enable android api compatibility check
     if (it.name.equals('pgpainless-core') || it.name.equals('sop-java') || it.name.equals('pgpainless-sop')) {
         // animalsniffer
@@ -68,6 +74,7 @@ allprojects {
         logbackVersion = '1.2.9'
         junitVersion = '5.8.2'
         picocliVersion = '4.6.2'
+        sopJavaVersion = '1.1.0'
         rootConfigDir = new File(rootDir, 'config')
         gitCommit = getGitCommit()
         isContinuousIntegrationEnvironment = Boolean.parseBoolean(System.getenv('CI'))

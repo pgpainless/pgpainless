@@ -20,7 +20,7 @@ dependencies {
     testImplementation "ch.qos.logback:logback-classic:$logbackVersion"
 
     implementation(project(":pgpainless-core"))
-    implementation(project(":sop-java"))
+    implementation "org.pgpainless:sop-java:$sopJavaVersion"
 }
 
 test {

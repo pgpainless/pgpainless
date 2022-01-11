@@ -40,7 +40,7 @@ dependencies {
     implementation "ch.qos.logback:logback-classic:$logbackVersion"
 
     implementation(project(":pgpainless-sop"))
-    implementation(project(":sop-java-picocli"))
+    implementation "org.pgpainless:sop-java-picocli:$sopJavaVersion"
 
     implementation "info.picocli:picocli:$picocliVersion"
 
