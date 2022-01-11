@@ -40,6 +40,14 @@ PGPainless currently [*scores second place* on Sequoia-PGPs Interoperability Tes
 >
 > -Mario @ Cure53.de
 
+## Get Started
+
+The very easiest way to start using OpenPGP on Java/Kotlin based systems is to use an implementation of [sop-java](https://github.com/pgpainless/sop-java).
+`sop-java` defines a very stripped down API and is super easy to get started with.
+Luckily PGPainless provides an implementation for the `sop-java` interface definitions in the form of [pgpainless-sop](pgpainless-sop/README.md).
+
+If you need more flexibility, directly using `pgpainless-core` is the way to go.
+
 ## Features
 
 Most of PGPainless' features can be accessed directly from the `PGPainless` class.
