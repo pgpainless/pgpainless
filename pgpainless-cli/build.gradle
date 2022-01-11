@@ -42,8 +42,6 @@ dependencies {
     implementation(project(":pgpainless-sop"))
     implementation "org.pgpainless:sop-java-picocli:$sopJavaVersion"
 
-    implementation "info.picocli:picocli:$picocliVersion"
-
     // https://mvnrepository.com/artifact/com.google.code.findbugs/jsr305
     implementation group: 'com.google.code.findbugs', name: 'jsr305', version: '3.0.2'
 }
