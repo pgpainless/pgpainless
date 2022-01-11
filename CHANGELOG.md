@@ -7,6 +7,7 @@ SPDX-License-Identifier: CC0-1.0
 
 ## 1.0.2-SNAPSHOT
 - Update SOP implementation to specification revision 03
+- Move `sop-java` and `sop-java-picocli` modules to [its own repository](https://github.com/pgpainless/sop-java)
 - `OpenPGPV4Fingerprint`: Hex decode bytes in constructor
 - Add `ArmorUtils.toAsciiArmoredString()` for single key
 - Fix `ClassCastException` when retrieving `RevocationKey` subpackets from signatures
