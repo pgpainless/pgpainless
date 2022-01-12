@@ -31,13 +31,14 @@ allprojects {
     apply plugin: 'checkstyle'
 
     // Only generate jar for submodules
+    // without this we would generate an empty pgpainless.jar for the project root
     // https://stackoverflow.com/a/25445035
     jar {
         onlyIf { !sourceSets.main.allSource.files.isEmpty() }
     }
 
-    // For non-sop modules, enable android api compatibility check
-    if (it.name.equals('pgpainless-core') || it.name.equals('sop-java') || it.name.equals('pgpainless-sop')) {
+    // For library modules, enable android api compatibility check
+    if (it.name != 'pgpainless-cli') {
         // animalsniffer
         apply plugin: 'ru.vyarus.animalsniffer'
         dependencies {
