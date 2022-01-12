@@ -72,4 +72,4 @@ run {
     }
 }
 
-tasks."jar".dependsOn(":pgpainless-core:assemble")
+tasks."jar".dependsOn(":pgpainless-core:assemble", ":pgpainless-sop:assemble")
