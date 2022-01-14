@@ -110,18 +110,13 @@ public abstract class KeyAccessor {
 
         @Override
         public @Nonnull PGPSignature getSignatureWithPreferences() {
-            PGPSignature signature;
-            if (key.getPrimaryKeyId() != key.getSubkeyId()) {
-                signature = info.getCurrentSubkeyBindingSignature(key.getSubkeyId());
-            } else {
+            String primaryUserId = info.getPrimaryUserId();
+            // If the key is located by Key ID, the algorithm of the primary User ID of the key provides the
+            // preferred symmetric algorithm.
+            PGPSignature signature = info.getLatestUserIdCertification(primaryUserId);
+            if (signature == null) {
                 signature = info.getLatestDirectKeySelfSignature();
             }
-
-            if (signature != null) {
-                return signature;
-            }
-
-            signature = info.getLatestUserIdCertification(info.getPrimaryUserId());
             if (signature == null) {
                 throw new IllegalStateException("No valid signature found.");
             }
