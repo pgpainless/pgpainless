@@ -5,6 +5,9 @@ SPDX-License-Identifier: CC0-1.0
 
 # PGPainless Changelog
 
+## 1.0.1
+- Fix sourcing of preferred algorithms by primary user-id when key is located via key-id
+
 ## 1.0.0
 - Introduce `DateUtil.toSecondsPrecision()`
 - Clean JUnit tests, fix code style issues and fix typos in documentation
