@@ -19,80 +19,41 @@ public class RespectPreferredSymmetricAlgorithmDuringEncryptionTest {
 
     @Test
     public void algorithmPreferencesAreRespectedDependingOnEncryptionTarget() throws IOException, PGPException {
-        // Key has [AES128] as preferred symm. algo on latest user-id cert
-        String key = "-----BEGIN PGP ARMORED FILE-----\n" +
-                "Comment: ASCII Armor added by openpgp-interoperability-test-suite\n" +
+        // Key has AES256, AES192, AES128 as primary user-ids sym algo prefs,
+        // and AES128 as secondary user-id prefs
+        String key = "-----BEGIN PGP PUBLIC KEY BLOCK-----\n" +
+                "Version: PGPainless\n" +
+                "Comment: 7E13 2E9C EAE8 7E7B AD6C  5329 94CE B847 EEFB 044B\n" +
+                "Comment: Bob Babbage <bob@openpgp.example>\n" +
                 "\n" +
-                "xsDNBF2lnPIBDAC5cL9PQoQLTMuhjbYvb4Ncuuo0bfmgPRFywX53jPhoFf4Zg6mv\n" +
-                "/seOXpgecTdOcVttfzC8ycIKrt3aQTiwOG/ctaR4Bk/t6ayNFfdUNxHWk4WCKzdz\n" +
-                "/56fW2O0F23qIRd8UUJp5IIlN4RDdRCtdhVQIAuzvp2oVy/LaS2kxQoKvph/5pQ/\n" +
-                "5whqsyroEWDJoSV0yOb25B/iwk/pLUFoyhDG9bj0kIzDxrEqW+7Ba8nocQlecMF3\n" +
-                "X5KMN5kp2zraLv9dlBBpWW43XktjcCZgMy20SouraVma8Je/ECwUWYUiAZxLIlMv\n" +
-                "9CurEOtxUw6N3RdOtLmYZS9uEnn5y1UkF88o8Nku890uk6BrewFzJyLAx5wRZ4F0\n" +
-                "qV/yq36UWQ0JB/AUGhHVPdFf6pl6eaxBwT5GXvbBUibtf8YI2og5RsgTWtXfU7eb\n" +
-                "SGXrl5ZMpbA6mbfhd0R8aPxWfmDWiIOhBufhMCvUHh1sApMKVZnvIff9/0Dca3wb\n" +
-                "vLIwa3T4CyshfT0AEQEAAc0hQm9iIEJhYmJhZ2UgPGJvYkBvcGVucGdwLmV4YW1w\n" +
-                "bGU+wsFTBBMBCgCHBYJgq9xiAgsHCRD7/MgqAV5zMEcUAAAAAAAeACBzYWx0QG5v\n" +
-                "dGF0aW9ucy5zZXF1b2lhLXBncC5vcmdNgMRYEX46LCBpUimr3zIek/oZSVT+EcdR\n" +
-                "Y4Rno2QSzQYVCgkICwIEFgIDAQIXgAIbAwIeARYhBNGmbhojsYLJmA94jPv8yCoB\n" +
-                "XnMwAADsbAv/bpWiiT47IuGxe11aReA2ThLy8jwafKEOrHxiUvyJdG/s7Bn0QtqM\n" +
-                "9G/16QDOWbSiXMD2vJYB7ml7oYlSxDS6oVd1bfGRsRbRr6N/wCTMXBaB4TsYqbcl\n" +
-                "NOznt+RSRIWYKCHJDDEdBvuJmf+Mmi09NVHOupjOt51WiVWmm5GpVUl5789yBvN8\n" +
-                "iei7I85KB/bXV0CfUgw9jx8BwAANPri+l4Br5fKMoheguHBm8BLPzWCfvCxZORq5\n" +
-                "Nd9wLhEe+/7M2Y8AGzfn88XgGUXNOh7y8ZSD9AjK14UQilUg8IrYm7oJik29bVyh\n" +
-                "UyY7sAJB5B7TxjE374krsOkl+lXe6bWDguJhrjIR0S0OWXmFpt06uDIOuI+f6ach\n" +
-                "m0kbUELUiQOQ+4i17mph11WiQczT2iS7preLpI5cjQd1cIQczOjxDaRvNPvtxYne\n" +
-                "ijUCkQzPwGAAcuXRe94wW3VtimwswLM5wmhzCgjv7uZMvEg6lHpVRWrJA6oXj6f1\n" +
-                "MnufQ5Li2/zMwsEOBBMBCgA4AhsDBQsJCAcCBhUKCQgLAgQWAgMBAh4BAheAFiEE\n" +
-                "0aZuGiOxgsmYD3iM+/zIKgFeczAFAl2lnvoACgkQ+/zIKgFeczBvbAv/VNk90a6h\n" +
-                "G8Od9xTzXxH5YRFUSGfIA1yjPIVOnKqhMwps2U+sWE3urL+MvjyQRlyRV8oY9IOh\n" +
-                "Q5Esm6DOZYrTnE7qVETm1ajIAP2OFChEc55uH88x/anpPOXOJY7S8jbn3naC9qad\n" +
-                "75BrZ+3g9EBUWiy5p8TykP05WSnSxNRt7vFKLfEB4nGkehpwHXOVF0CRNwYle42b\n" +
-                "g8lpmdXFDcCZCi+qEbafmTQzkAqyzS3nCh3IAqq6Y0kBuaKLm2tSNUOlZbD+OHYQ\n" +
-                "NZ5Jix7cZUzs6Xh4+I55NRWl5smrLq66yOQoFPy9jot/Qxikx/wP3MsAzeGaZSEP\n" +
-                "c0fHp5G16rlGbxQ3vl8/usUV7W+TMEMljgwd5x8POR6HC8EaCDfVnUBCPi/Gv+eg\n" +
-                "LjsIbPJZZEroiE40e6/UoCiQtlpQB5exPJYSd1Q1txCwueih99PHepsDhmUQKiAC\n" +
-                "szNU+RRozAYau2VdHqnRJ7QYdxHDiH49jPK4NTMyb/tJh2TiIwcmsIpGzsDNBF2l\n" +
-                "nPIBDADWML9cbGMrp12CtF9b2P6z9TTT74S8iyBOzaSvdGDQY/sUtZXRg21HWamX\n" +
-                "nn9sSXvIDEINOQ6A9QxdxoqWdCHrOuW3ofneYXoG+zeKc4dC86wa1TR2q9vW+RMX\n" +
-                "SO4uImA+Uzula/6k1DogDf28qhCxMwG/i/m9g1c/0aApuDyKdQ1PXsHHNlgd/Dn6\n" +
-                "rrd5y2AObaifV7wIhEJnvqgFXDN2RXGjLeCOHV4Q2WTYPg/S4k1nMXVDwZXrvIsA\n" +
-                "0YwIMgIT86Rafp1qKlgPNbiIlC1g9RY/iFaGN2b4Ir6GDohBQSfZW2+LXoPZuVE/\n" +
-                "wGlQ01rh827KVZW4lXvqsge+wtnWlszcselGATyzqOK9LdHPdZGzROZYI2e8c+pa\n" +
-                "LNDdVPL6vdRBUnkCaEkOtl1mr2JpQi5nTU+gTX4IeInC7E+1a9UDF/Y85ybUz8XV\n" +
-                "8rUnR76UqVC7KidNepdHbZjjXCt8/Zo+Tec9JNbYNQB/e9ExmDntmlHEsSEQzFwz\n" +
-                "j8sxH48AEQEAAcLA9gQYAQoAIBYhBNGmbhojsYLJmA94jPv8yCoBXnMwBQJdpZzy\n" +
-                "AhsMAAoJEPv8yCoBXnMw6f8L/26C34dkjBffTzMj5Bdzm8MtF67OYneJ4TQMw7+4\n" +
-                "1IL4rVcSKhIhk/3Ud5knaRtP2ef1+5F66h9/RPQOJ5+tvBwhBAcUWSupKnUrdVaZ\n" +
-                "QanYmtSxcVV2PL9+QEiNN3tzluhaWO//rACxJ+K/ZXQlIzwQVTpNhfGzAaMVV9zp\n" +
-                "f3u0k14itcv6alKY8+rLZvO1wIIeRZLmU0tZDD5HtWDvUV7rIFI1WuoLb+KZgbYn\n" +
-                "3OWjCPHVdTrdZ2CqnZbG3SXw6awH9bzRLV9EXkbhIMez0deCVdeo+wFFklh8/5VK\n" +
-                "2b0vk/+wqMJxfpa1lHvJLobzOP9fvrswsr92MA2+k901WeISR7qEzcI0Fdg8AyFA\n" +
-                "ExaEK6VyjP7SXGLwvfisw34OxuZr3qmx1Sufu4toH3XrB7QJN8XyqqbsGxUCBqWi\n" +
-                "f9RSK4xjzRTe56iPeiSJJOIciMP9i2ldI+KgLycyeDvGoBj0HCLO3gVaBe4ubVrj\n" +
-                "5KjhX2PVNEJd3XZRzaXZE2aAMQ==\n" +
-                "=d5ke\n" +
-                "-----END PGP ARMORED FILE-----\n";
+                "mDMEYeIhnhYJKwYBBAHaRw8BAQdAfs9SkOSEyAQmvwLwwUPCp3Qiw2t4rm+e7n8t\n" +
+                "oVjAmle0IUJvYiBCYWJiYWdlIDxib2JAb3BlbnBncC5leGFtcGxlPoiPBBMWCgBB\n" +
+                "BQJh4iGeCZCUzrhH7vsESxahBH4TLpzq6H57rWxTKZTOuEfu+wRLAp4BApsBBZYC\n" +
+                "AwEABIsJCAcFlQoJCAsCmQEAAKK/AP4lCifuXpZIUR4PrenGBZFtoZpB5s1i/YrB\n" +
+                "cnCuodQX9wEAyENhlXNYopWdgBZ9g4E1Y0cJfpwCwWhx0DeATmrSzAO0H0JvYmJ5\n" +
+                "MTI4IDxib2JieUBhZXMxMjguZXhhbXBsZT6IigQTFgoAPAUCYeIhngmQlM64R+77\n" +
+                "BEsWoQR+Ey6c6uh+e61sUymUzrhH7vsESwKeAQKbAQWWAgMBAAKLBwWVCgkICwAA\n" +
+                "y0wBAIhAEpQgJRizHitPx3WUpIYbKq3R5jAO34NnlmTzNVj6AP9aWHPsW5r7HuQh\n" +
+                "xJz+8zdCOuAxKv6tvHthSWJ64VWDDrg4BGHiIZ4SCisGAQQBl1UBBQEBB0CEIv13\n" +
+                "/qTXR0wiUG5DVZCWh/KLKrF5TemUfYXA/kBTOAMBCAeIdQQYFgoAHQUCYeIhngKe\n" +
+                "AQKbDAWWAgMBAASLCQgHBZUKCQgLAAoJEJTOuEfu+wRLwC4A/0/VDPPDE6kT/8C3\n" +
+                "9d8ekZkQE38o2nC58E62AjM5O2x6AQDMd0gcoKIxPi9uRi3nVsNS233a3MxFEjpe\n" +
+                "qqgyBnqxBLgzBGHiIZ4WCSsGAQQB2kcPAQEHQP7IGdT9moutwtys4A/ndkWJVWn/\n" +
+                "zkoOn3cSad1bP8y8iNUEGBYKAH0FAmHiIZ4CngECmwIFlgIDAQAEiwkIBwWVCgkI\n" +
+                "C18gBBkWCgAGBQJh4iGeAAoJENcuZc0+RPVgrucBAI+IzpplBIpySOIyzHJdjeFt\n" +
+                "ikwTBOY3OTriY2Z62Ec6AQDhVxO7LZuH3mTCklj4HelfMrhlqUlnYr7qCIjzI5BY\n" +
+                "BwAKCRCUzrhH7vsES4snAP4qzlEbaHpN7ZPomCOHD7J2+CHlyTtsRP45XWVCqNH1\n" +
+                "jAEAmzz5Lu67k97AzArpoGHgYh492w5BfdApV8BCaTW4AgI=\n" +
+                "=XwJQ\n" +
+                "-----END PGP PUBLIC KEY BLOCK-----\n";
 
         PGPPublicKeyRing publicKeys = PGPainless.readKeyRing().publicKeyRing(key);
 
-        // Encrypt to the user-id
-        // PGPainless should extract algorithm preferences from the latest user-id sig in this case (AES-128)
-        ByteArrayOutputStream out = new ByteArrayOutputStream();
-        EncryptionStream encryptionStream = PGPainless.encryptAndOrSign().onOutputStream(out)
-                .withOptions(
-                        ProducerOptions.encrypt(new EncryptionOptions()
-                                .addRecipient(publicKeys, "Bob Babbage <bob@openpgp.example>")
-                        ));
-
-        encryptionStream.close();
-        assertEquals(SymmetricKeyAlgorithm.AES_128, encryptionStream.getResult().getEncryptionAlgorithm());
-
 
         // Encrypt without specifying user-id
-        // PGPainless should now inspect the subkey binding sig for algorithm preferences (AES256, AES192, AES128)
-        out = new ByteArrayOutputStream();
-        encryptionStream = PGPainless.encryptAndOrSign().onOutputStream(out)
+        // PGPainless now inspects the primary user-ids signature to get sym alg prefs (AES256, AES192, AES128)
+        ByteArrayOutputStream out = new ByteArrayOutputStream();
+        EncryptionStream encryptionStream = PGPainless.encryptAndOrSign().onOutputStream(out)
                 .withOptions(
                         ProducerOptions.encrypt(new EncryptionOptions()
                                 .addRecipient(publicKeys) // no user-id passed
@@ -100,5 +61,29 @@ public class RespectPreferredSymmetricAlgorithmDuringEncryptionTest {
 
         encryptionStream.close();
         assertEquals(SymmetricKeyAlgorithm.AES_256, encryptionStream.getResult().getEncryptionAlgorithm());
+
+        // Encrypt to the primary user-id
+        // PGPainless should extract algorithm preferences from the latest user-id sig in this case (AES-256, AES-192, AES-128)
+        out = new ByteArrayOutputStream();
+        encryptionStream = PGPainless.encryptAndOrSign().onOutputStream(out)
+                .withOptions(
+                        ProducerOptions.encrypt(new EncryptionOptions()
+                                .addRecipient(publicKeys, "Bob Babbage <bob@openpgp.example>")
+                        ));
+
+        encryptionStream.close();
+        assertEquals(SymmetricKeyAlgorithm.AES_256, encryptionStream.getResult().getEncryptionAlgorithm());
+
+        // Encrypt to the secondary user-id
+        // PGPainless extracts algorithm preferences from secondary user-id sig, in this case AES-128
+        out = new ByteArrayOutputStream();
+        encryptionStream = PGPainless.encryptAndOrSign().onOutputStream(out)
+                .withOptions(
+                        ProducerOptions.encrypt(new EncryptionOptions()
+                                .addRecipient(publicKeys, "Bobby128 <bobby@aes128.example>")
+                        ));
+
+        encryptionStream.close();
+        assertEquals(SymmetricKeyAlgorithm.AES_128, encryptionStream.getResult().getEncryptionAlgorithm());
     }
 }
