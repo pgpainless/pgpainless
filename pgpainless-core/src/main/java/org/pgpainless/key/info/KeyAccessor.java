@@ -123,4 +123,26 @@ public abstract class KeyAccessor {
             return signature;
         }
     }
+
+    public static class SubKey extends KeyAccessor {
+
+        public SubKey(KeyRingInfo info, SubkeyIdentifier key) {
+            super(info, key);
+        }
+
+        @Override
+        public @Nonnull PGPSignature getSignatureWithPreferences() {
+            PGPSignature signature;
+            if (key.getPrimaryKeyId() == key.getSubkeyId()) {
+                signature = info.getLatestDirectKeySelfSignature();
+                if (signature == null) {
+                    signature = info.getLatestUserIdCertification(info.getPrimaryUserId());
+                }
+            } else {
+                signature = info.getCurrentSubkeyBindingSignature(key.getSubkeyId());
+            }
+
+            return signature;
+        }
+    }
 }

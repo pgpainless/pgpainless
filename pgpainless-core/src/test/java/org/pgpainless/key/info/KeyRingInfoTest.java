@@ -598,9 +598,9 @@ public class KeyRingInfoTest {
         KeyRingInfo info = PGPainless.inspectKeyRing(secretKeys);
 
         // Bob is an invalid userId
-        assertThrows(IllegalArgumentException.class, () -> info.getPreferredSymmetricKeyAlgorithms("Bob"));
+        assertThrows(NoSuchElementException.class, () -> info.getPreferredSymmetricKeyAlgorithms("Bob"));
         // 123 is an invalid keyid
-        assertThrows(IllegalArgumentException.class, () -> info.getPreferredSymmetricKeyAlgorithms(123L));
+        assertThrows(NoSuchElementException.class, () -> info.getPreferredSymmetricKeyAlgorithms(123L));
 
         assertEquals(preferredHashAlgorithms, info.getPreferredHashAlgorithms("Alice"));
         assertEquals(preferredHashAlgorithms, info.getPreferredHashAlgorithms(pkid));
@@ -608,9 +608,9 @@ public class KeyRingInfoTest {
         assertEquals(preferredHashAlgorithms, info.getPreferredHashAlgorithms(skid2));
 
         // Bob is an invalid userId
-        assertThrows(IllegalArgumentException.class, () -> info.getPreferredCompressionAlgorithms("Bob"));
+        assertThrows(NoSuchElementException.class, () -> info.getPreferredCompressionAlgorithms("Bob"));
         // 123 is an invalid keyid
-        assertThrows(IllegalArgumentException.class, () -> info.getPreferredCompressionAlgorithms(123L));
+        assertThrows(NoSuchElementException.class, () -> info.getPreferredCompressionAlgorithms(123L));
 
         assertEquals(preferredCompressionAlgorithms, info.getPreferredCompressionAlgorithms("Alice"));
         assertEquals(preferredCompressionAlgorithms, info.getPreferredCompressionAlgorithms(pkid));
@@ -618,9 +618,9 @@ public class KeyRingInfoTest {
         assertEquals(preferredCompressionAlgorithms, info.getPreferredCompressionAlgorithms(skid2));
 
         // Bob is an invalid userId
-        assertThrows(IllegalArgumentException.class, () -> info.getPreferredSymmetricKeyAlgorithms("Bob"));
+        assertThrows(NoSuchElementException.class, () -> info.getPreferredSymmetricKeyAlgorithms("Bob"));
         // 123 is an invalid keyid
-        assertThrows(IllegalArgumentException.class, () -> info.getPreferredSymmetricKeyAlgorithms(123L));
+        assertThrows(NoSuchElementException.class, () -> info.getPreferredSymmetricKeyAlgorithms(123L));
 
         assertEquals(preferredSymmetricAlgorithms, info.getPreferredSymmetricKeyAlgorithms("Alice"));
         assertEquals(preferredSymmetricAlgorithms, info.getPreferredSymmetricKeyAlgorithms(pkid));

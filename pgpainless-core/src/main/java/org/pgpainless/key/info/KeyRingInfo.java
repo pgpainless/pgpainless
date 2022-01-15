@@ -975,7 +975,8 @@ public class KeyRingInfo {
     }
 
     public Set<HashAlgorithm> getPreferredHashAlgorithms(long keyId) {
-        return getKeyAccessor(null, keyId).getPreferredHashAlgorithms();
+        return new KeyAccessor.SubKey(this, new SubkeyIdentifier(keys, keyId))
+                .getPreferredHashAlgorithms();
     }
 
     public Set<SymmetricKeyAlgorithm> getPreferredSymmetricKeyAlgorithms() {
@@ -987,7 +988,7 @@ public class KeyRingInfo {
     }
 
     public Set<SymmetricKeyAlgorithm> getPreferredSymmetricKeyAlgorithms(long keyId) {
-        return getKeyAccessor(null, keyId).getPreferredSymmetricKeyAlgorithms();
+        return new KeyAccessor.SubKey(this, new SubkeyIdentifier(keys, keyId)).getPreferredSymmetricKeyAlgorithms();
     }
 
     public Set<CompressionAlgorithm> getPreferredCompressionAlgorithms() {
@@ -999,15 +1000,15 @@ public class KeyRingInfo {
     }
 
     public Set<CompressionAlgorithm> getPreferredCompressionAlgorithms(long keyId) {
-        return getKeyAccessor(null, keyId).getPreferredCompressionAlgorithms();
+        return new KeyAccessor.SubKey(this, new SubkeyIdentifier(keys, keyId)).getPreferredCompressionAlgorithms();
     }
 
     private KeyAccessor getKeyAccessor(@Nullable String userId, long keyID) {
         if (getPublicKey(keyID) == null) {
-            throw new IllegalArgumentException("No subkey with key id " + Long.toHexString(keyID) + " found on this key.");
+            throw new NoSuchElementException("No subkey with key id " + Long.toHexString(keyID) + " found on this key.");
         }
         if (userId != null && !getUserIds().contains(userId)) {
-            throw new IllegalArgumentException("No user-id '" + userId + "' found on this key.");
+            throw new NoSuchElementException("No user-id '" + userId + "' found on this key.");
         }
         return userId == null ? new KeyAccessor.ViaKeyId(this, new SubkeyIdentifier(keys, keyID))
                 : new KeyAccessor.ViaUserId(this, new SubkeyIdentifier(keys, keyID), userId);
