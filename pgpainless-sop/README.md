@@ -16,6 +16,33 @@ Implementation of the Stateless OpenPGP Protocol using PGPainless.
 This module implements `sop-java` using `pgpainless-core`.
 If your code depends on `sop-java`, this module can be used as a realization of those interfaces.
 
+## Get started
+
+To start using pgpainless-sop in your code, include the following lines in your build script:
+```
+// If you use Gradle
+...
+dependencies {
+    ...
+    implementation "org.pgpainless:pgpainless-sop:1.1.0"
+    ...
+}
+
+// If you use Maven
+...
+<dependencies>
+    ...
+    <dependency>
+        <groupId>org.pgpainless</groupId>
+        <artifactId>pgpainless-sop</artifactId>
+        <version>1.1.0</version>
+    </dependency>
+    ...
+</dependencies>
+```
+
+`pgpainless-sop` will transitively pull in its dependencies, such as `sop-java` and `pgpainless-core`.
+
 ## Usage Examples
 ```java
 SOP sop = new SOPImpl();
