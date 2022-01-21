@@ -1,4 +1,4 @@
-package org.pgpainless.key.storage;
+package pgp.certificate_store;
 
 import java.io.IOException;
 import java.io.InputStream;
@@ -9,7 +9,7 @@ public interface CertificateStore {
     Item get(String identifier) throws IOException;
 
     Item getIfChanged(String identifier, String tag) throws IOException;
-<
+
     Item insert(InputStream data, MergeCallback merge) throws IOException;
 
     Item tryInsert(InputStream data, MergeCallback merge) throws IOException;

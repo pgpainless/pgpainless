@@ -1,41 +1,10 @@
-package org.pgpainless.key.storage;
+package pgp.cert_d;
 
 import java.io.File;
 
-public class CertDStore {
+public class OSUtil {
 
-    private final File baseDirectory;
-    private static final String STORE_NAME = "pgp.cert.d";
-
-    public CertDStore() {
-        this(getDefaultBaseDir());
-    }
-
-    public CertDStore(File baseDirectory) {
-        this.baseDirectory = baseDirectory;
-    }
-
-    public File fingerprintToPrefixDir(String fingerprint) {
-        String dirName = fingerprint.toLowerCase().substring(0, 2);
-        return new File(baseDirectory, dirName);
-    }
-
-    public String fingerprintToCertFileName(String fingerprint) {
-        String certFileName = fingerprint.toLowerCase().substring(2);
-        return certFileName;
-    }
-
-    public File fingerprintToCertFile(String fingerprint) {
-        File dir = fingerprintToPrefixDir(fingerprint);
-        File certFile = new File(dir, fingerprintToCertFileName(fingerprint));
-        return certFile;
-    }
-
-    public File getBaseDirectory() {
-        return baseDirectory;
-    }
-
-    private static File getDefaultBaseDir() {
+    public static File getDefaultBaseDir() {
         // Check for environment variable
         String baseDirFromEnv = System.getenv("PGP_CERT_D");
         if (baseDirFromEnv != null) {
@@ -49,6 +18,7 @@ public class CertDStore {
     }
 
     public static File getDefaultBaseDirForOS(String osName, String separator) {
+        String STORE_NAME = "pgp.cert.d";
         if (osName.contains("win")) {
             String appData = System.getenv("APPDATA");
             String roaming = appData + separator + "Roaming";

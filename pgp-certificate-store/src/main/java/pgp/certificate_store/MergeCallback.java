@@ -1,6 +1,5 @@
-package org.pgpainless.key.storage;
+package pgp.certificate_store;
 
-import javax.annotation.Nullable;
 import java.io.InputStream;
 import java.io.OutputStream;
 
@@ -18,6 +17,6 @@ public interface MergeCallback {
      * @param existing optional input stream containing an already existing copy of the certificate
      * @return output stream containing the binary representation of the merged certificate
      */
-    OutputStream merge(InputStream data, @Nullable InputStream existing);
+    OutputStream merge(InputStream data, InputStream existing);
 
 }
