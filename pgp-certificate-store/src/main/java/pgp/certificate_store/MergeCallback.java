@@ -1,7 +1,8 @@
-package pgp.certificate_store;
+// SPDX-FileCopyrightText: 2022 Paul Schaub <vanitasvitae@fsfe.org>
+//
+// SPDX-License-Identifier: Apache-2.0
 
-import java.io.InputStream;
-import java.io.OutputStream;
+package pgp.certificate_store;
 
 /**
  * Merge a given certificate (update) with an existing certificate.
@@ -11,12 +12,12 @@ public interface MergeCallback {
     /**
      * Merge the given certificate data with the existing certificate and return the result.
      *
-     * If no existing certificate is found (i.e. existing is null), this method returns the binary representation of data.
+     * If no existing certificate is found (i.e. existing is null), this method returns the unmodified data.
      *
-     * @param data input stream containing the certificate
-     * @param existing optional input stream containing an already existing copy of the certificate
-     * @return output stream containing the binary representation of the merged certificate
+     * @param data certificate
+     * @param existing optional already existing copy of the certificate
+     * @return merged certificate
      */
-    OutputStream merge(InputStream data, InputStream existing);
+    Certificate merge(Certificate data, Certificate existing);
 
 }
