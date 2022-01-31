@@ -12,7 +12,7 @@ import org.junit.jupiter.api.Test;
 import org.junit.platform.commons.logging.Logger;
 import org.junit.platform.commons.logging.LoggerFactory;
 import org.pgpainless.PGPainless;
-import org.pgpainless.certificate_store.CertificateParser;
+import org.pgpainless.certificate_store.CertificateCertificateReader;
 import org.pgpainless.key.OpenPgpFingerprint;
 import pgp.cert_d.FileLockingMechanism;
 import pgp.cert_d.LockingMechanism;
@@ -51,7 +51,7 @@ public class SharedPGPCertificateDirectoryTest {
     public void beforeEach() throws IOException, NotAStoreException {
         File tempDir = Files.createTempDirectory("pgp.cert.d-").toFile();
         tempDir.deleteOnExit();
-        directory = new SharedPGPCertificateDirectoryImpl(tempDir, new CertificateParser());
+        directory = new SharedPGPCertificateDirectoryImpl(tempDir, new CertificateCertificateReader());
     }
 
     @Test

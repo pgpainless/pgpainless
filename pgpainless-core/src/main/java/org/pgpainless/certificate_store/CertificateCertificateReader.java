@@ -15,9 +15,9 @@ import org.bouncycastle.util.encoders.Base64;
 import org.pgpainless.PGPainless;
 import org.pgpainless.key.OpenPgpFingerprint;
 import pgp.certificate_store.Certificate;
-import pgp.certificate_store.ParserBackend;
+import pgp.certificate_store.CertificateReaderBackend;
 
-public class CertificateParser implements ParserBackend {
+public class CertificateCertificateReader implements CertificateReaderBackend {
 
     @Override
     public Certificate readCertificate(InputStream inputStream) throws IOException {
