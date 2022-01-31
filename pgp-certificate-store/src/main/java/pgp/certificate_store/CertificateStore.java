@@ -31,23 +31,108 @@ public interface CertificateStore {
     Certificate getCertificate(String identifier) throws IOException;
 
     /**
+     * Return the certificate that matches the given identifier, but only iff it changed since the last invocation.
+     * To compare the certificate against its last returned result, the given tag is used.
+     * If the tag of the currently found certificate matches the given argument, return null.
      *
-     * @param identifier
-     * @param tag
-     * @return
-     * @throws IOException
+     * @param identifier identifier for a certificate
+     * @param tag tag to compare freshness
+     * @return changed certificate or null
+     *
+     * @throws IOException in case of an IO-error
      */
     Certificate getCertificateIfChanged(String identifier, String tag) throws IOException;
 
+    /**
+     * Insert a certificate into the store.
+     * If an instance of the certificate is already present in the store, the given {@link MergeCallback} will be
+     * used to merge both the existing and the new instance of the {@link Certificate}. The resulting merged certificate
+     * will be stored in the store and returned.
+     *
+     * This method will block until a write-lock on the store can be acquired. If you cannot afford blocking,
+     * consider to use {@link #tryInsertCertificate(InputStream, MergeCallback)} instead.
+     *
+     * @param data input stream containing the new certificate instance
+     * @param merge callback for merging with an existing certificate instance
+     * @return merged certificate
+     *
+     * @throws IOException in case of an IO-error
+     * @throws InterruptedException in case the inserting thread gets interrupted
+     */
     Certificate insertCertificate(InputStream data, MergeCallback merge) throws IOException, InterruptedException;
 
+    /**
+     * Insert a certificate into the store.
+     * If an instance of the certificate is already present in the store, the given {@link MergeCallback} will be
+     * used to merge both the existing and the new instance of the {@link Certificate}. The resulting merged certificate
+     * will be stored in the store and returned.
+     *
+     * This method will not block. Instead, if the store is already write-locked, this method will simply return null
+     * without any writing.
+     * However, if the write-lock is available, this method will acquire the lock, write to the store, release the lock
+     * and return the written certificate.
+     *
+     * @param data input stream containing the new certificate instance
+     * @param merge callback for merging with an existing certificate instance
+     * @return merged certificate or null if the store cannot be locked
+     *
+     * @throws IOException in case of an IO-error
+     */
     Certificate tryInsertCertificate(InputStream data, MergeCallback merge) throws IOException;
 
+    /**
+     * Insert a certificate into the store.
+     * The certificate will be stored under the given special name instead of its fingerprint.
+     *
+     * If an instance of the certificate is already present under the special name in the store, the given {@link MergeCallback} will be
+     * used to merge both the existing and the new instance of the {@link Certificate}. The resulting merged certificate
+     * will be stored in the store and returned.
+     *
+     * This method will block until a write-lock on the store can be acquired. If you cannot afford blocking,
+     * consider to use {@link #tryInsertCertificateBySpecialName(String, InputStream, MergeCallback)}  instead.
+     *
+     * @param data input stream containing the new certificate instance
+     * @param merge callback for merging with an existing certificate instance
+     * @return merged certificate or null if the store cannot be locked
+     *
+     * @throws IOException in case of an IO-error
+     */
     Certificate insertCertificateBySpecialName(String specialName, InputStream data, MergeCallback merge) throws IOException, InterruptedException;
 
+    /**
+     * Insert a certificate into the store.
+     * The certificate will be stored under the given special name instead of its fingerprint.
+     *
+     * If an instance of the certificate is already present under the special name in the store, the given {@link MergeCallback} will be
+     * used to merge both the existing and the new instance of the {@link Certificate}. The resulting merged certificate
+     * will be stored in the store and returned.
+     *
+     * This method will not block. Instead, if the store is already write-locked, this method will simply return null
+     * without any writing.
+     * However, if the write-lock is available, this method will acquire the lock, write to the store, release the lock
+     * and return the written certificate.
+     *
+     * @param data input stream containing the new certificate instance
+     * @param merge callback for merging with an existing certificate instance
+     * @return merged certificate or null if the store cannot be locked
+     *
+     * @throws IOException in case of an IO-error
+     */
     Certificate tryInsertCertificateBySpecialName(String specialName, InputStream data, MergeCallback merge) throws IOException;
 
+    /**
+     * Return an {@link Iterator} containing all certificates in the store.
+     * The iterator will contain both certificates addressed by special names and by fingerprints.
+     *
+     * @return certificates
+     */
     Iterator<Certificate> getCertificates();
 
+    /**
+     * Return an {@link Iterator} containing all certificate fingerprints from the store.
+     * Note that this only includes the fingerprints of certificate primary keys, not those of subkeys.
+     *
+     * @return fingerprints
+     */
     Iterator<String> getFingerprints();
 }
