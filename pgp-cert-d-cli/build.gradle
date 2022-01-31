@@ -32,6 +32,7 @@ test {
 mainClassName = 'pgp.cert_d.cli.PGPCertDCli'
 
 jar {
+    dependsOn(":pgpainless-cert-d:assemble", ":pgp-certificate-store:assemble", ":pgp-cert-d-java:assemble", ":pgpainless-core:assemble")
     manifest {
         attributes 'Main-Class': "$mainClassName"
     }
