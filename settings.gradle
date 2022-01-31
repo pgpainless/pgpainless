@@ -9,5 +9,6 @@ include 'pgpainless-core',
         'pgpainless-cli',
         'pgpainless-cert-d',
         'pgp-certificate-store',
-        'pgp-cert-d-java'
+        'pgp-cert-d-java',
+        'pgp-cert-d-cli'
 

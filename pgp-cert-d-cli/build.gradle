@@ -1,0 +1,49 @@
+// SPDX-FileCopyrightText: 2021 Paul Schaub <vanitasvitae@fsfe.org>
+//
+// SPDX-License-Identifier: Apache-2.0
+
+plugins {
+    id 'application'
+}
+
+group 'org.pgpainless'
+
+repositories {
+    mavenCentral()
+}
+
+dependencies {
+    testImplementation "org.junit.jupiter:junit-jupiter-api:$junitVersion"
+    testRuntimeOnly "org.junit.jupiter:junit-jupiter-engine:$junitVersion"
+
+    // Logging
+    testImplementation "ch.qos.logback:logback-classic:$logbackVersion"
+
+    implementation project(":pgpainless-cert-d")
+
+    // picocli for cli
+    implementation "info.picocli:picocli:4.6.2"
+}
+
+test {
+    useJUnitPlatform()
+}
+
+mainClassName = 'pgp.cert_d.cli.PGPCertDCli'
+
+jar {
+    manifest {
+        attributes 'Main-Class': "$mainClassName"
+    }
+
+    duplicatesStrategy(DuplicatesStrategy.EXCLUDE)
+
+    from {
+        configurations.runtimeClasspath.collect { it.isDirectory() ? it : zipTree(it) }
+    } {
+        exclude "META-INF/*.SF"
+        exclude "META-INF/*.DSA"
+        exclude "META-INF/*.RSA"
+    }
+}
+
