@@ -28,6 +28,11 @@ public class SharedPGPCertificateDirectoryImpl implements SharedPGPCertificateDi
     private final LockingMechanism writeLock;
     private final CertificateReaderBackend certificateReaderBackend;
 
+    public SharedPGPCertificateDirectoryImpl(BackendProvider backendProvider)
+            throws NotAStoreException {
+        this(backendProvider.provideCertificateReaderBackend());
+    }
+
     public SharedPGPCertificateDirectoryImpl(CertificateReaderBackend certificateReaderBackend)
             throws NotAStoreException {
         this(
