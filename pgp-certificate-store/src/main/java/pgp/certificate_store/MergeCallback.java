@@ -4,6 +4,8 @@
 
 package pgp.certificate_store;
 
+import java.io.IOException;
+
 /**
  * Merge a given certificate (update) with an existing certificate.
  */
@@ -18,6 +20,6 @@ public interface MergeCallback {
      * @param existing optional already existing copy of the certificate
      * @return merged certificate
      */
-    Certificate merge(Certificate data, Certificate existing);
+    Certificate merge(Certificate data, Certificate existing) throws IOException;
 
 }

@@ -17,7 +17,7 @@ import org.pgpainless.key.OpenPgpFingerprint;
 import pgp.certificate_store.Certificate;
 import pgp.certificate_store.CertificateReaderBackend;
 
-public class CertificateCertificateReader implements CertificateReaderBackend {
+public class CertificateReader implements CertificateReaderBackend {
 
     @Override
     public Certificate readCertificate(InputStream inputStream) throws IOException {

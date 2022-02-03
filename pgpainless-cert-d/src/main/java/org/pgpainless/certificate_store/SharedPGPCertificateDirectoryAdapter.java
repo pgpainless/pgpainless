@@ -9,7 +9,7 @@ import java.io.InputStream;
 import java.util.Iterator;
 
 import pgp.cert_d.SharedPGPCertificateDirectory;
-import pgp.cert_d.SpecialName;
+import pgp.cert_d.SpecialNames;
 import pgp.cert_d.exception.BadDataException;
 import pgp.cert_d.exception.BadNameException;
 import pgp.certificate_store.Certificate;
@@ -37,38 +37,42 @@ public class SharedPGPCertificateDirectoryAdapter
     @Override
     public Certificate getCertificate(String identifier)
             throws IOException {
-        SpecialName specialName = SpecialName.fromString(identifier);
+        String specialName = SpecialNames.lookupSpecialName(identifier);
         if (specialName != null) {
             try {
-                return directory.get(specialName);
+                return directory.getBySpecialName(specialName);
             } catch (BadNameException e) {
                 throw new IllegalArgumentException("Unknown special name " + identifier, e);
             }
         }
 
         try {
-            return directory.get(identifier);
+            return directory.getByFingerprint(identifier);
         } catch (BadNameException e) {
-            throw new IllegalArgumentException("Invalid fingerprint or unknown special name " + identifier, e);
+            throw new IllegalArgumentException("Invalid fingerprint " + identifier, e);
+        } catch (BadDataException e) {
+            throw new IOException("Bad data.", e);
         }
     }
 
     @Override
     public Certificate getCertificateIfChanged(String identifier, String tag)
             throws IOException {
-        SpecialName specialName = SpecialName.fromString(identifier);
+        String specialName = SpecialNames.lookupSpecialName(identifier);
         if (specialName != null) {
             try {
-                return directory.getIfChanged(specialName, tag);
+                return directory.getBySpecialNameIfChanged(specialName, tag);
             } catch (BadNameException e) {
                 throw new IllegalArgumentException("Unknown special name " + identifier, e);
             }
         }
 
         try {
-            return directory.getIfChanged(identifier, tag);
+            return directory.getByFingerprintIfChanged(identifier, tag);
         } catch (BadNameException e) {
-            throw new IllegalArgumentException("Invalid fingerprint or unknown special name " + identifier, e);
+            throw new IllegalArgumentException("Invalid fingerprint " + identifier, e);
+        } catch (BadDataException e) {
+            throw new IOException("Bad data.", e);
         }
     }
 
@@ -96,12 +100,12 @@ public class SharedPGPCertificateDirectoryAdapter
     public Certificate insertCertificateBySpecialName(String specialName, InputStream data, MergeCallback merge)
             throws IOException, InterruptedException {
         try {
-            SpecialName specialNameEnum = SpecialName.fromString(specialName);
-            if (specialNameEnum == null) {
+            String specialNameValidated = SpecialNames.lookupSpecialName(specialName);
+            if (specialNameValidated == null) {
                 throw new IllegalArgumentException("Unknown special name " + specialName);
             }
 
-            return directory.insertSpecial(specialNameEnum, data, merge);
+            return directory.insertWithSpecialName(specialNameValidated, data, merge);
         } catch (BadNameException e) {
             throw new IllegalArgumentException("Unknown special name " + specialName);
         } catch (BadDataException e) {
@@ -113,12 +117,12 @@ public class SharedPGPCertificateDirectoryAdapter
     public Certificate tryInsertCertificateBySpecialName(String specialName, InputStream data, MergeCallback merge)
             throws IOException {
         try {
-            SpecialName specialNameEnum = SpecialName.fromString(specialName);
-            if (specialNameEnum == null) {
+            String specialNameValidated = SpecialNames.lookupSpecialName(specialName);
+            if (specialNameValidated == null) {
                 throw new IllegalArgumentException("Unknown special name " + specialName);
             }
 
-            return directory.tryInsertSpecial(specialNameEnum, data, merge);
+            return directory.tryInsertWithSpecialName(specialNameValidated, data, merge);
         } catch (BadNameException e) {
             throw new IllegalArgumentException("Unknown special name " + specialName);
         } catch (BadDataException e) {

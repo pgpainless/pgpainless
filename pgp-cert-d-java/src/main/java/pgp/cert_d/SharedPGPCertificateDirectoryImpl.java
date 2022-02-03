@@ -14,7 +14,6 @@ import java.io.InputStream;
 import java.util.Iterator;
 import java.util.Queue;
 import java.util.concurrent.SynchronousQueue;
-import java.util.regex.Pattern;
 
 import pgp.cert_d.exception.BadDataException;
 import pgp.cert_d.exception.BadNameException;
@@ -25,77 +24,70 @@ import pgp.certificate_store.CertificateReaderBackend;
 
 public class SharedPGPCertificateDirectoryImpl implements SharedPGPCertificateDirectory {
 
-    private final File baseDirectory;
-    private final Pattern openPgpV4FingerprintPattern = Pattern.compile("^[a-f0-9]{40}$");
-
+    private final FilenameResolver resolver;
     private final LockingMechanism writeLock;
     private final CertificateReaderBackend certificateReaderBackend;
 
     public SharedPGPCertificateDirectoryImpl(CertificateReaderBackend certificateReaderBackend)
             throws NotAStoreException {
-        this(OSUtil.getDefaultBaseDir(), certificateReaderBackend);
+        this(
+                BaseDirectoryProvider.getDefaultBaseDir(),
+                certificateReaderBackend);
     }
 
     public SharedPGPCertificateDirectoryImpl(File baseDirectory, CertificateReaderBackend certificateReaderBackend)
             throws NotAStoreException {
+        this(
+                certificateReaderBackend,
+                new FilenameResolver(baseDirectory),
+                FileLockingMechanism.defaultDirectoryFileLock(baseDirectory));
+    }
+
+    public SharedPGPCertificateDirectoryImpl(
+            CertificateReaderBackend certificateReaderBackend,
+            FilenameResolver filenameResolver,
+            LockingMechanism writeLock)
+            throws NotAStoreException {
         this.certificateReaderBackend = certificateReaderBackend;
-        this.baseDirectory = baseDirectory;
+        this.resolver = filenameResolver;
+        this.writeLock = writeLock;
+
+        File baseDirectory = resolver.getBaseDirectory();
         if (!baseDirectory.exists()) {
             if (!baseDirectory.mkdirs()) {
-                throw new NotAStoreException("Cannot create base directory '" + getBaseDirectory().getAbsolutePath() + "'");
+                throw new NotAStoreException("Cannot create base directory '" + resolver.getBaseDirectory().getAbsolutePath() + "'");
             }
         } else {
             if (baseDirectory.isFile()) {
-                throw new NotAStoreException("Base directory '" + getBaseDirectory().getAbsolutePath() + "' appears to be a file.");
+                throw new NotAStoreException("Base directory '" + resolver.getBaseDirectory().getAbsolutePath() + "' appears to be a file.");
             }
         }
-        writeLock = new FileLockingMechanism(new File(getBaseDirectory(), "writelock"));
-    }
-
-    public File getBaseDirectory() {
-        return baseDirectory;
-    }
-
-    private File getCertFile(String fingerprint) throws BadNameException {
-        if (!isFingerprint(fingerprint)) {
-            throw new BadNameException();
-        }
-
-        // is fingerprint
-        File subdirectory = new File(getBaseDirectory(), fingerprint.substring(0, 2));
-        File file = new File(subdirectory, fingerprint.substring(2));
-        return file;
-    }
-
-    private File getCertFile(SpecialName specialName) {
-        return new File(getBaseDirectory(), specialName.getValue());
-    }
-
-    private boolean isFingerprint(String fingerprint) {
-        return openPgpV4FingerprintPattern.matcher(fingerprint).matches();
     }
 
     @Override
-    public Certificate get(String fingerprint) throws IOException, BadNameException {
-        File certFile = getCertFile(fingerprint);
+    public Certificate getByFingerprint(String fingerprint)
+            throws IOException, BadNameException, BadDataException {
+        File certFile = resolver.getCertFileByFingerprint(fingerprint);
         if (!certFile.exists()) {
             return null;
         }
+
         FileInputStream fileIn = new FileInputStream(certFile);
         BufferedInputStream bufferedIn = new BufferedInputStream(fileIn);
         Certificate certificate = certificateReaderBackend.readCertificate(bufferedIn);
 
         if (!certificate.getFingerprint().equals(fingerprint)) {
             // TODO: Figure out more suitable exception
-            throw new BadNameException();
+            throw new BadDataException();
         }
 
         return certificate;
     }
 
     @Override
-    public Certificate get(SpecialName specialName) throws IOException {
-        File certFile = getCertFile(specialName);
+    public Certificate getBySpecialName(String specialName)
+            throws IOException, BadNameException {
+        File certFile = resolver.getCertFileBySpecialName(specialName);
         if (!certFile.exists()) {
             return null;
         }
@@ -108,8 +100,9 @@ public class SharedPGPCertificateDirectoryImpl implements SharedPGPCertificateDi
     }
 
     @Override
-    public Certificate getIfChanged(String fingerprint, String tag) throws IOException, BadNameException {
-        Certificate certificate = get(fingerprint);
+    public Certificate getByFingerprintIfChanged(String fingerprint, String tag)
+            throws IOException, BadNameException, BadDataException {
+        Certificate certificate = getByFingerprint(fingerprint);
         if (certificate.getTag().equals(tag)) {
             return null;
         }
@@ -117,8 +110,9 @@ public class SharedPGPCertificateDirectoryImpl implements SharedPGPCertificateDi
     }
 
     @Override
-    public Certificate getIfChanged(SpecialName specialName, String tag) throws IOException {
-        Certificate certificate = get(specialName);
+    public Certificate getBySpecialNameIfChanged(String specialName, String tag)
+            throws IOException, BadNameException {
+        Certificate certificate = getBySpecialName(specialName);
         if (certificate.getTag().equals(tag)) {
             return null;
         }
@@ -126,7 +120,8 @@ public class SharedPGPCertificateDirectoryImpl implements SharedPGPCertificateDi
     }
 
     @Override
-    public Certificate insert(InputStream data, MergeCallback merge) throws IOException, BadDataException, InterruptedException {
+    public Certificate insert(InputStream data, MergeCallback merge)
+            throws IOException, BadDataException, InterruptedException {
         writeLock.lockDirectory();
 
         Certificate certificate = _insert(data, merge);
@@ -136,7 +131,8 @@ public class SharedPGPCertificateDirectoryImpl implements SharedPGPCertificateDi
     }
 
     @Override
-    public Certificate tryInsert(InputStream data, MergeCallback merge) throws IOException, BadDataException {
+    public Certificate tryInsert(InputStream data, MergeCallback merge)
+            throws IOException, BadDataException {
         if (!writeLock.tryLockDirectory()) {
             return null;
         }
@@ -147,13 +143,14 @@ public class SharedPGPCertificateDirectoryImpl implements SharedPGPCertificateDi
         return certificate;
     }
 
-    private Certificate _insert(InputStream data, MergeCallback merge) throws IOException, BadDataException {
+    private Certificate _insert(InputStream data, MergeCallback merge)
+            throws IOException, BadDataException {
         Certificate newCertificate = certificateReaderBackend.readCertificate(data);
         Certificate existingCertificate;
         File certFile;
         try {
-            existingCertificate = get(newCertificate.getFingerprint());
-            certFile = getCertFile(newCertificate.getFingerprint());
+            existingCertificate = getByFingerprint(newCertificate.getFingerprint());
+            certFile = resolver.getCertFileByFingerprint(newCertificate.getFingerprint());
         } catch (BadNameException e) {
             throw new BadDataException();
         }
@@ -167,7 +164,8 @@ public class SharedPGPCertificateDirectoryImpl implements SharedPGPCertificateDi
         return newCertificate;
     }
 
-    private void writeCertificate(Certificate certificate, File certFile) throws IOException {
+    private void writeCertificate(Certificate certificate, File certFile)
+            throws IOException {
         certFile.getParentFile().mkdirs();
         if (!certFile.exists() && !certFile.createNewFile()) {
             throw new IOException("Could not create cert file " + certFile.getAbsolutePath());
@@ -187,7 +185,8 @@ public class SharedPGPCertificateDirectoryImpl implements SharedPGPCertificateDi
     }
 
     @Override
-    public Certificate insertSpecial(SpecialName specialName, InputStream data, MergeCallback merge) throws IOException, BadNameException, BadDataException, InterruptedException {
+    public Certificate insertWithSpecialName(String specialName, InputStream data, MergeCallback merge)
+            throws IOException, BadNameException, BadDataException, InterruptedException {
         writeLock.lockDirectory();
 
         Certificate certificate = _insertSpecial(specialName, data, merge);
@@ -197,7 +196,8 @@ public class SharedPGPCertificateDirectoryImpl implements SharedPGPCertificateDi
     }
 
     @Override
-    public Certificate tryInsertSpecial(SpecialName specialName, InputStream data, MergeCallback merge) throws IOException, BadNameException, BadDataException {
+    public Certificate tryInsertWithSpecialName(String specialName, InputStream data, MergeCallback merge)
+            throws IOException, BadNameException, BadDataException {
         if (!writeLock.tryLockDirectory()) {
             return null;
         }
@@ -208,10 +208,11 @@ public class SharedPGPCertificateDirectoryImpl implements SharedPGPCertificateDi
         return certificate;
     }
 
-    private Certificate _insertSpecial(SpecialName specialName, InputStream data, MergeCallback merge) throws IOException, BadNameException, BadDataException {
+    private Certificate _insertSpecial(String specialName, InputStream data, MergeCallback merge)
+            throws IOException, BadNameException, BadDataException {
         Certificate newCertificate = certificateReaderBackend.readCertificate(data);
-        Certificate existingCertificate = get(specialName);
-        File certFile = getCertFile(specialName);
+        Certificate existingCertificate = getBySpecialName(specialName);
+        File certFile = resolver.getCertFileBySpecialName(specialName);
 
         if (existingCertificate != null && !existingCertificate.getTag().equals(newCertificate.getTag())) {
             newCertificate = merge.merge(newCertificate, existingCertificate);
@@ -230,24 +231,7 @@ public class SharedPGPCertificateDirectoryImpl implements SharedPGPCertificateDi
 
             // Constructor... wtf.
             {
-                for (SpecialName specialName : SpecialName.values()) {
-                    File certFile = getCertFile(specialName);
-                    if (certFile.exists()) {
-                        certificateQueue.add(
-                                new Lazy<Certificate>() {
-                                    @Override
-                                    Certificate get() {
-                                        try {
-                                            return certificateReaderBackend.readCertificate(new FileInputStream(certFile));
-                                        } catch (IOException e) {
-                                            throw new AssertionError("File got deleted.");
-                                        }
-                                    }
-                                });
-                    }
-                }
-
-                File[] subdirectories = baseDirectory.listFiles(new FileFilter() {
+                File[] subdirectories = resolver.getBaseDirectory().listFiles(new FileFilter() {
                             @Override
                             public boolean accept(File file) {
                                 return file.isDirectory() && file.getName().matches("^[a-f0-9]{2}$");

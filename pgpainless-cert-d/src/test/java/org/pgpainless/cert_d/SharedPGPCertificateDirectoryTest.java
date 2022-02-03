@@ -12,7 +12,7 @@ import org.junit.jupiter.api.Test;
 import org.junit.platform.commons.logging.Logger;
 import org.junit.platform.commons.logging.LoggerFactory;
 import org.pgpainless.PGPainless;
-import org.pgpainless.certificate_store.CertificateCertificateReader;
+import org.pgpainless.certificate_store.CertificateReader;
 import org.pgpainless.key.OpenPgpFingerprint;
 import pgp.cert_d.FileLockingMechanism;
 import pgp.cert_d.LockingMechanism;
@@ -37,8 +37,9 @@ import static org.junit.jupiter.api.Assertions.assertNull;
 
 public class SharedPGPCertificateDirectoryTest {
 
-    Logger logger = LoggerFactory.getLogger(SharedPGPCertificateDirectoryTest.class);
-    SharedPGPCertificateDirectory directory;
+    private static final Logger logger = LoggerFactory.getLogger(SharedPGPCertificateDirectoryTest.class);
+    private File tempDir;
+    private SharedPGPCertificateDirectory directory;
 
     private static MergeCallback dummyMerge = new MergeCallback() {
         @Override
@@ -49,29 +50,29 @@ public class SharedPGPCertificateDirectoryTest {
 
     @BeforeEach
     public void beforeEach() throws IOException, NotAStoreException {
-        File tempDir = Files.createTempDirectory("pgp.cert.d-").toFile();
+        tempDir = Files.createTempDirectory("pgp.cert.d-").toFile();
         tempDir.deleteOnExit();
-        directory = new SharedPGPCertificateDirectoryImpl(tempDir, new CertificateCertificateReader());
+        directory = new SharedPGPCertificateDirectoryImpl(tempDir, new CertificateReader());
     }
 
     @Test
     public void simpleInsertGet() throws PGPException, InvalidAlgorithmParameterException, NoSuchAlgorithmException, IOException, BadDataException, InterruptedException, BadNameException {
-        logger.info(() -> "simpleInsertGet: " + ((SharedPGPCertificateDirectoryImpl) directory).getBaseDirectory().getAbsolutePath());
+        logger.info(() -> "simpleInsertGet: " + tempDir.getAbsolutePath());
         PGPSecretKeyRing key = PGPainless.generateKeyRing().modernKeyRing("Alice", null);
         PGPPublicKeyRing cert = PGPainless.extractCertificate(key);
         OpenPgpFingerprint fingerprint = OpenPgpFingerprint.of(cert);
         ByteArrayInputStream certIn = new ByteArrayInputStream(cert.getEncoded());
 
         // standard case: get() is null
-        assertNull(directory.get(fingerprint.toString().toLowerCase()));
+        assertNull(directory.getByFingerprint(fingerprint.toString().toLowerCase()));
 
         // insert and check returned certs fingerprint
         Certificate certificate = directory.insert(certIn, dummyMerge);
         assertEquals(fingerprint.toString().toLowerCase(), certificate.getFingerprint());
 
         // getIfChanged
-        assertNull(directory.getIfChanged(certificate.getFingerprint(), certificate.getTag()));
-        assertNotNull(directory.getIfChanged(certificate.getFingerprint(), "invalidTag"));
+        assertNull(directory.getByFingerprintIfChanged(certificate.getFingerprint(), certificate.getTag()));
+        assertNotNull(directory.getByFingerprintIfChanged(certificate.getFingerprint(), "invalidTag"));
 
         // tryInsert
         certIn = new ByteArrayInputStream(cert.getEncoded());
@@ -80,13 +81,12 @@ public class SharedPGPCertificateDirectoryTest {
 
     @Test
     public void tryInsertFailsWithLockedStore() throws PGPException, InvalidAlgorithmParameterException, NoSuchAlgorithmException, IOException, BadDataException, InterruptedException {
-        SharedPGPCertificateDirectoryImpl fileDirectory = (SharedPGPCertificateDirectoryImpl) directory;
-        logger.info(() -> "tryInsertFailsWithLockedStore: " + fileDirectory.getBaseDirectory().getAbsolutePath());
+        logger.info(() -> "tryInsertFailsWithLockedStore: " + tempDir.getAbsolutePath());
         PGPSecretKeyRing key = PGPainless.generateKeyRing().modernKeyRing("Alice", null);
         PGPPublicKeyRing cert = PGPainless.extractCertificate(key);
         ByteArrayInputStream certIn = new ByteArrayInputStream(cert.getEncoded());
 
-        File lockFile = new File(fileDirectory.getBaseDirectory(), "writelock");
+        File lockFile = new File(tempDir, "writelock");
         LockingMechanism lock = new FileLockingMechanism(lockFile);
         lock.lockDirectory();
 

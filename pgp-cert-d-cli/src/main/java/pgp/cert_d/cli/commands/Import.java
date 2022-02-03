@@ -13,11 +13,11 @@ import pgp.certificate_store.Certificate;
 import pgp.certificate_store.MergeCallback;
 import picocli.CommandLine;
 
-@CommandLine.Command(name = "insert",
-        description = "Insert or update a certificate")
-public class Insert implements Runnable {
+@CommandLine.Command(name = "import",
+        description = "Import or update a certificate")
+public class Import implements Runnable {
 
-    private static final Logger LOGGER = LoggerFactory.getLogger(Insert.class);
+    private static final Logger LOGGER = LoggerFactory.getLogger(Import.class);
 
     @Override
     public void run() {

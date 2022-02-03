@@ -21,6 +21,10 @@ public class FileLockingMechanism implements LockingMechanism {
         this.lockFile = lockFile;
     }
 
+    public static FileLockingMechanism defaultDirectoryFileLock(File baseDirectory) {
+        return new FileLockingMechanism(new File(baseDirectory, "writelock"));
+    }
+
     @Override
     public synchronized void lockDirectory() throws IOException, InterruptedException {
         if (randomAccessFile != null) {

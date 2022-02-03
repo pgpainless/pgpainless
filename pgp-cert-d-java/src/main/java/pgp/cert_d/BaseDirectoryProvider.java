@@ -6,7 +6,7 @@ package pgp.cert_d;
 
 import java.io.File;
 
-public class OSUtil {
+public class BaseDirectoryProvider {
 
     public static File getDefaultBaseDir() {
         // Check for environment variable

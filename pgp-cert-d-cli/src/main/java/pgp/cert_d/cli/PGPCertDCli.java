@@ -4,12 +4,11 @@
 
 package pgp.cert_d.cli;
 
-import org.pgpainless.certificate_store.CertificateCertificateReader;
+import org.pgpainless.certificate_store.CertificateReader;
 import org.pgpainless.certificate_store.SharedPGPCertificateDirectoryAdapter;
 import pgp.cert_d.SharedPGPCertificateDirectoryImpl;
 import pgp.cert_d.cli.commands.Get;
-import pgp.cert_d.cli.commands.Insert;
-import pgp.cert_d.cli.commands.PrintDirectory;
+import pgp.cert_d.cli.commands.Import;
 import pgp.cert_d.exception.NotAStoreException;
 import pgp.certificate_store.CertificateStore;
 import picocli.CommandLine;
@@ -18,8 +17,7 @@ import java.io.File;
 
 @CommandLine.Command(
         subcommands = {
-                Insert.class,
-                PrintDirectory.class,
+                Import.class,
                 Get.class,
         }
 )
@@ -29,7 +27,6 @@ public class PGPCertDCli {
     File baseDirectory;
 
     private static CertificateStore certificateStore;
-    private static String baseDir;
 
     private int executionStrategy(CommandLine.ParseResult parseResult) {
         try {
@@ -45,12 +42,11 @@ public class PGPCertDCli {
         if (baseDirectory != null) {
             certificateDirectory = new SharedPGPCertificateDirectoryImpl(
                     baseDirectory,
-                    new CertificateCertificateReader());
+                    new CertificateReader());
         } else {
             certificateDirectory = new SharedPGPCertificateDirectoryImpl(
-                    new CertificateCertificateReader());
+                    new CertificateReader());
         }
-        baseDir = certificateDirectory.getBaseDirectory().getAbsolutePath();
         certificateStore = new SharedPGPCertificateDirectoryAdapter(certificateDirectory);
     }
 
@@ -63,9 +59,5 @@ public class PGPCertDCli {
 
     public static CertificateStore getCertificateDirectory() {
         return certificateStore;
-    }
-
-    public static String getBaseDir() {
-        return baseDir;
     }
 }
