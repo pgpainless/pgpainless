@@ -11,6 +11,8 @@ SPDX-License-Identifier: CC0-1.0
 - `OpenPGPV4Fingerprint`: Hex decode bytes in constructor
 - Add `ArmorUtils.toAsciiArmoredString()` for single key
 - Fix `ClassCastException` when retrieving `RevocationKey` subpackets from signatures
+- Fix `pgpainless-sop` gradle script
+  - it now automatically pulls in transitive dependencies
 
 ## 1.0.1
 - Fix sourcing of preferred algorithms by primary user-id when key is located via key-id
