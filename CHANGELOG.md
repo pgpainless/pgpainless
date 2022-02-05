@@ -5,7 +5,7 @@ SPDX-License-Identifier: CC0-1.0
 
 # PGPainless Changelog
 
-## 1.0.2-SNAPSHOT
+## 1.0.2
 - Update SOP implementation to specification revision 03
 - Move `sop-java` and `sop-java-picocli` modules to [its own repository](https://github.com/pgpainless/sop-java)
 - `OpenPGPV4Fingerprint`: Hex decode bytes in constructor
