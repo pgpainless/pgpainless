@@ -70,6 +70,11 @@ public class SharedPGPCertificateDirectoryImpl implements SharedPGPCertificateDi
     }
 
     @Override
+    public LockingMechanism getLock() {
+        return writeLock;
+    }
+
+    @Override
     public Certificate getByFingerprint(String fingerprint)
             throws IOException, BadNameException, BadDataException {
         File certFile = resolver.getCertFileByFingerprint(fingerprint);

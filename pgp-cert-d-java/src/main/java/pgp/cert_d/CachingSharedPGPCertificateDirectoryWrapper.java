@@ -76,6 +76,11 @@ public class CachingSharedPGPCertificateDirectoryWrapper
     }
 
     @Override
+    public LockingMechanism getLock() {
+        return underlyingCertificateDirectory.getLock();
+    }
+
+    @Override
     public Certificate getByFingerprint(String fingerprint)
             throws IOException, BadNameException, BadDataException {
         Certificate certificate = certificateMap.get(fingerprint);

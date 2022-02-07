@@ -38,7 +38,7 @@ allprojects {
     }
 
     // For library modules, enable android api compatibility check
-    if (it.name != 'pgpainless-cli') {
+    if (it.name != 'pgpainless-cli' && it.name != 'pgpainless-cert-d-cli' && name != 'pgp-cert-d-java') {
         // animalsniffer
         apply plugin: 'ru.vyarus.animalsniffer'
         dependencies {

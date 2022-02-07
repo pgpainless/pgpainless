@@ -5,6 +5,7 @@
 package pgp.cert_d;
 
 import java.io.File;
+import java.nio.file.Paths;
 
 public class BaseDirectoryProvider {
 
@@ -18,29 +19,28 @@ public class BaseDirectoryProvider {
         // return OS-specific default dir
         String osName = System.getProperty("os.name", "generic")
                 .toLowerCase();
-        return getDefaultBaseDirForOS(osName, File.separator);
+        return getDefaultBaseDirForOS(osName);
     }
 
-    public static File getDefaultBaseDirForOS(String osName, String separator) {
+    public static File getDefaultBaseDirForOS(String osName) {
         String STORE_NAME = "pgp.cert.d";
         if (osName.contains("win")) {
-            String appData = System.getenv("APPDATA");
-            String roaming = appData + separator + "Roaming";
-            return new File(roaming, STORE_NAME);
+            // %APPDATA%\Roaming\pgp.cert.d
+            return Paths.get(System.getenv("APPDATA"), "Roaming", STORE_NAME).toFile();
         }
 
         if (osName.contains("nux")) {
+            // $XDG_DATA_HOME/pgp.cert.d
             String xdg_data_home = System.getenv("XDG_DATA_HOME");
-            String rootPath = xdg_data_home;
-            if (xdg_data_home == null) {
-                rootPath = System.getProperty("user.home") + separator + ".local" + separator + "share";
+            if (xdg_data_home != null) {
+                return Paths.get(xdg_data_home, STORE_NAME).toFile();
             }
-            return new File(rootPath, STORE_NAME);
+            // $HOME/.local/share/pgp.cert.d
+            return Paths.get(System.getProperty("user.home"), ".local", "share", STORE_NAME).toFile();
         }
 
         if (osName.contains("mac")) {
-            String home = System.getenv("HOME");
-            return new File(home + separator + "Library" + separator + "Application Support", STORE_NAME);
+            return Paths.get(System.getenv("HOME"), "Library", "Application Support", STORE_NAME).toFile();
         }
 
         throw new IllegalArgumentException("Unknown OS " + osName);

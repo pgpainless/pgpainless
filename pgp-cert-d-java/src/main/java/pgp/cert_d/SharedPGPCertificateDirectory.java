@@ -15,6 +15,8 @@ import pgp.certificate_store.MergeCallback;
 
 public interface SharedPGPCertificateDirectory {
 
+    LockingMechanism getLock();
+
     Certificate getByFingerprint(String fingerprint)
             throws IOException, BadNameException, BadDataException;
 
