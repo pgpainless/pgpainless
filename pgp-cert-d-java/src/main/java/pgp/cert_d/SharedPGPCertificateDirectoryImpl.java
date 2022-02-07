@@ -11,16 +11,17 @@ import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.util.ArrayList;
+import java.util.Collections;
 import java.util.Iterator;
-import java.util.Queue;
-import java.util.concurrent.SynchronousQueue;
+import java.util.List;
 
 import pgp.cert_d.exception.BadDataException;
 import pgp.cert_d.exception.BadNameException;
 import pgp.cert_d.exception.NotAStoreException;
 import pgp.certificate_store.Certificate;
-import pgp.certificate_store.MergeCallback;
 import pgp.certificate_store.CertificateReaderBackend;
+import pgp.certificate_store.MergeCallback;
 
 public class SharedPGPCertificateDirectoryImpl implements SharedPGPCertificateDirectory {
 
@@ -237,7 +238,7 @@ public class SharedPGPCertificateDirectoryImpl implements SharedPGPCertificateDi
     public Iterator<Certificate> items() {
         return new Iterator<Certificate>() {
 
-            private final Queue<Lazy<Certificate>> certificateQueue = new SynchronousQueue<>();
+            private final List<Lazy<Certificate>> certificateQueue = Collections.synchronizedList(new ArrayList<>());
 
             // Constructor... wtf.
             {
@@ -283,7 +284,7 @@ public class SharedPGPCertificateDirectoryImpl implements SharedPGPCertificateDi
             @Override
             public Certificate next() {
                 try {
-                    return certificateQueue.poll().get();
+                    return certificateQueue.remove(0).get();
                 } catch (BadDataException e) {
                     throw new AssertionError("Could not retrieve item: " + e.getMessage());
                 }

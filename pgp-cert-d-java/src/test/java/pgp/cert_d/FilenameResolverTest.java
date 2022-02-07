@@ -34,7 +34,7 @@ public class FilenameResolverTest {
         File subDir = new File(baseDir, "d1");
         File expected = new File(subDir, "a66e1a23b182c9980f788cfbfcc82a015e7330");
 
-        assertEquals(resolver.getCertFileByFingerprint(fingerprint).getAbsolutePath(), expected.getAbsolutePath());
+        assertEquals(expected.getAbsolutePath(), resolver.getCertFileByFingerprint(fingerprint).getAbsolutePath());
     }
 
     @Test
@@ -44,7 +44,7 @@ public class FilenameResolverTest {
         File subDir = new File(baseDir, "eb");
         File expected = new File(subDir, "85bb5fa33a75e15e944e63f231550c4f47e38e");
 
-        assertEquals(resolver.getCertFileByFingerprint(fingerprint).getAbsolutePath(), expected.getAbsolutePath());
+        assertEquals(expected.getAbsolutePath(), resolver.getCertFileByFingerprint(fingerprint).getAbsolutePath());
     }
 
     @Test
@@ -62,5 +62,19 @@ public class FilenameResolverTest {
     @Test
     public void testGetFileForNullFingerprint() {
         assertThrows(NullPointerException.class, () -> resolver.getCertFileByFingerprint(null));
+    }
+
+    @Test
+    public void testGetFileForSpecialName() throws BadNameException {
+        String specialName = "trust-root";
+        File expected = new File(baseDir, "trust-root");
+
+        assertEquals(expected, resolver.getCertFileBySpecialName(specialName));
+    }
+
+    @Test
+    public void testGetFileForInvalidSpecialName() {
+        String invalidSpecialName = "invalid";
+        assertThrows(BadNameException.class, () -> resolver.getCertFileBySpecialName(invalidSpecialName));
     }
 }
