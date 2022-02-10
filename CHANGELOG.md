@@ -5,6 +5,10 @@ SPDX-License-Identifier: CC0-1.0
 
 # PGPainless Changelog
 
+## 1.1.0-SNAPSHOT
+- `pgpainless-sop`: Update `sop-java` to version 1.2.0
+  - Treat passwords and session keys as indirect parameters
+
 ## 1.0.3
 - Fix detection of unarmored data in signature verification
 
