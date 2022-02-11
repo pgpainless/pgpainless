@@ -8,8 +8,7 @@ SPDX-License-Identifier: Apache-2.0
 
 [![Spec Revision: 3](https://img.shields.io/badge/Spec%20Revision-3-blue)](https://datatracker.ietf.org/doc/html/draft-dkg-openpgp-stateless-cli-03)
 [![Maven Central](https://badgen.net/maven/v/maven-central/org.pgpainless/pgpainless-sop)](https://search.maven.org/artifact/org.pgpainless/pgpainless-sop)
-[![JavaDoc](https://badgen.net/badge/javadoc/yes/green)](https://pgpainless.org/releases/latest/javadoc/org/pgpainless/sop/package-summary.html)
-[![REUSE status](https://api.reuse.software/badge/github.com/pgpainless/pgpainless)](https://api.reuse.software/info/github.com/pgpainless/pgpainless)
+[![javadoc](https://javadoc.io/badge2/org.pgpainless/pgpainless-sop/javadoc.svg)](https://javadoc.io/doc/org.pgpainless/pgpainless-sop)
 
 Implementation of the Stateless OpenPGP Protocol using PGPainless.
 
