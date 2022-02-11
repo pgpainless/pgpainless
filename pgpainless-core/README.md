@@ -6,6 +6,9 @@ SPDX-License-Identifier: Apache-2.0
 
 # PGPainless-Core
 
+[![javadoc](https://javadoc.io/badge2/org.pgpainless/pgpainless-core/javadoc.svg)](https://javadoc.io/doc/org.pgpainless/pgpainless-core)
+[![Maven Central](https://badgen.net/maven/v/maven-central/org.pgpainless/pgpainless-core)](https://search.maven.org/artifact/org.pgpainless/pgpainless-core)
+
 Wrapper around Bouncycastle's OpenPGP implementation.
 
 ## Protection Against Attacks
