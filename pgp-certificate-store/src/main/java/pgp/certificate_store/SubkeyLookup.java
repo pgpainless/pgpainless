@@ -2,7 +2,7 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
-package pgp.cert_d;
+package pgp.certificate_store;
 
 public interface SubkeyLookup {
 

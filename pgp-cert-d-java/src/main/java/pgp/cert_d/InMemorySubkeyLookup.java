@@ -4,6 +4,8 @@
 
 package pgp.cert_d;
 
+import pgp.certificate_store.SubkeyLookup;
+
 import java.util.HashMap;
 import java.util.Map;
 

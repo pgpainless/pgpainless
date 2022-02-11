@@ -12,7 +12,7 @@ public class SpecialNames {
     private static final Map<String, String> SPECIAL_NAMES = new HashMap<>();
 
     static {
-        SPECIAL_NAMES.put("TRUST-ROOT", "trust-root");
+        SPECIAL_NAMES.put("TRUST-ROOT", "trust-root"); // TODO: Remove
         SPECIAL_NAMES.put("trust-root", "trust-root");
     }
 
