@@ -46,6 +46,7 @@ import org.pgpainless.algorithm.CompressionAlgorithm;
 import org.pgpainless.algorithm.EncryptionPurpose;
 import org.pgpainless.algorithm.StreamEncoding;
 import org.pgpainless.algorithm.SymmetricKeyAlgorithm;
+import org.pgpainless.exception.FinalIOException;
 import org.pgpainless.exception.MessageNotIntegrityProtectedException;
 import org.pgpainless.exception.MissingDecryptionMethodException;
 import org.pgpainless.exception.MissingLiteralDataException;
@@ -154,7 +155,7 @@ public final class DecryptionStreamFactory {
             objectFactory = ImplementationFactory.getInstance().getPGPObjectFactory(decoderStream);
             // Parse OpenPGP message
             inputStream = processPGPPackets(objectFactory, 1);
-        } catch (EOFException e) {
+        } catch (EOFException | FinalIOException e) {
             throw e;
         } catch (MissingLiteralDataException e) {
             // Not an OpenPGP message.
@@ -174,7 +175,7 @@ public final class DecryptionStreamFactory {
                 objectFactory = ImplementationFactory.getInstance().getPGPObjectFactory(decoderStream);
                 inputStream = wrapInVerifySignatureStream(bufferedIn, objectFactory);
             } else {
-                throw e;
+                throw new FinalIOException(e);
             }
         }
 
@@ -195,18 +196,28 @@ public final class DecryptionStreamFactory {
             throw new PGPException("Maximum depth of nested packages exceeded.");
         }
         Object nextPgpObject;
-        while ((nextPgpObject = objectFactory.nextObject()) != null) {
-            if (nextPgpObject instanceof PGPEncryptedDataList) {
-                return processPGPEncryptedDataList((PGPEncryptedDataList) nextPgpObject, depth);
+        try {
+            while ((nextPgpObject = objectFactory.nextObject()) != null) {
+                if (nextPgpObject instanceof PGPEncryptedDataList) {
+                    return processPGPEncryptedDataList((PGPEncryptedDataList) nextPgpObject, depth);
+                }
+                if (nextPgpObject instanceof PGPCompressedData) {
+                    return processPGPCompressedData((PGPCompressedData) nextPgpObject, depth);
+                }
+                if (nextPgpObject instanceof PGPOnePassSignatureList) {
+                    return processOnePassSignatureList(objectFactory, (PGPOnePassSignatureList) nextPgpObject, depth);
+                }
+                if (nextPgpObject instanceof PGPLiteralData) {
+                    return processPGPLiteralData(objectFactory, (PGPLiteralData) nextPgpObject, depth);
+                }
             }
-            if (nextPgpObject instanceof PGPCompressedData) {
-                return processPGPCompressedData((PGPCompressedData) nextPgpObject, depth);
-            }
-            if (nextPgpObject instanceof PGPOnePassSignatureList) {
-                return processOnePassSignatureList(objectFactory, (PGPOnePassSignatureList) nextPgpObject, depth);
-            }
-            if (nextPgpObject instanceof PGPLiteralData) {
-                return processPGPLiteralData(objectFactory, (PGPLiteralData) nextPgpObject, depth);
+        } catch (FinalIOException e) {
+            throw e;
+        } catch (IOException e) {
+            if (depth == 1 && e.getMessage().contains("unknown object in stream:")) {
+                throw new MissingLiteralDataException("No Literal Data Packet found.");
+            } else {
+                throw new FinalIOException(e);
             }
         }
 
