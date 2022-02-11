@@ -53,7 +53,7 @@ If you need more flexibility, directly using `pgpainless-core` is the way to go.
 Most of PGPainless' features can be accessed directly from the `PGPainless` class.
 If you want to get started, this class is your friend :)
 
-For further details you should check out the [javadoc](https://pgpainless.org/releases/latest/javadoc/)!
+For further details you should check out the [javadoc](https://javadoc.io/doc/org.pgpainless/pgpainless-core)!
 
 ### Handle Keys
 Reading keys from ASCII armored strings or from binary files is easy:
