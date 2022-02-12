@@ -17,6 +17,7 @@ import java.util.regex.Pattern;
 
 import org.bouncycastle.bcpg.ArmoredInputStream;
 import org.bouncycastle.bcpg.ArmoredOutputStream;
+import org.bouncycastle.bcpg.BCPGOutputStream;
 import org.bouncycastle.openpgp.PGPKeyRing;
 import org.bouncycastle.openpgp.PGPPublicKey;
 import org.bouncycastle.openpgp.PGPPublicKeyRing;
@@ -47,22 +48,38 @@ public final class ArmorUtils {
 
     public static String toAsciiArmoredString(PGPSecretKey secretKey) throws IOException {
         MultiMap<String, String> header = keyToHeader(secretKey.getPublicKey());
-        return toAsciiArmoredString(secretKey.getEncoded(), header);
+        ByteArrayOutputStream bytes = new ByteArrayOutputStream();
+        BCPGOutputStream bcpgOut = new BCPGOutputStream(bytes, true);
+        secretKey.encode(bcpgOut);
+        bcpgOut.close();
+        return toAsciiArmoredString(bytes.toByteArray(), header);
     }
 
     public static String toAsciiArmoredString(PGPPublicKey publicKey) throws IOException {
         MultiMap<String, String> header = keyToHeader(publicKey);
-        return toAsciiArmoredString(publicKey.getEncoded(), header);
+        ByteArrayOutputStream bytes = new ByteArrayOutputStream();
+        BCPGOutputStream bcpgOut = new BCPGOutputStream(bytes, true);
+        publicKey.encode(bcpgOut);
+        bcpgOut.close();
+        return toAsciiArmoredString(bytes.toByteArray(), header);
     }
 
     public static String toAsciiArmoredString(PGPSecretKeyRing secretKeys) throws IOException {
         MultiMap<String, String> header = keysToHeader(secretKeys);
-        return toAsciiArmoredString(secretKeys.getEncoded(), header);
+        ByteArrayOutputStream bytes = new ByteArrayOutputStream();
+        BCPGOutputStream bcpgOut = new BCPGOutputStream(bytes, true);
+        secretKeys.encode(bcpgOut);
+        bcpgOut.close();
+        return toAsciiArmoredString(bytes.toByteArray(), header);
     }
 
     public static String toAsciiArmoredString(PGPPublicKeyRing publicKeys) throws IOException {
         MultiMap<String, String> header = keysToHeader(publicKeys);
-        return toAsciiArmoredString(publicKeys.getEncoded(), header);
+        ByteArrayOutputStream bytes = new ByteArrayOutputStream();
+        BCPGOutputStream bcpgOut = new BCPGOutputStream(bytes, true);
+        publicKeys.encode(bcpgOut);
+        bcpgOut.close();
+        return toAsciiArmoredString(bytes.toByteArray(), header);
     }
 
     public static String toAsciiArmoredString(PGPSecretKeyRingCollection secretKeyRings) throws IOException {
