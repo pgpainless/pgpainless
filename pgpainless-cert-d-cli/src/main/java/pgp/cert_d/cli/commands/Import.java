@@ -20,15 +20,18 @@ public class Import implements Runnable {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(Import.class);
 
+    // TODO: Replace with proper merge callback
+    private final MergeCallback dummyMerge = new MergeCallback() {
+        @Override
+        public Certificate merge(Certificate data, Certificate existing) throws IOException {
+            return data;
+        }
+    };
+
     @Override
     public void run() {
         try {
-            Certificate certificate = PGPCertDCli.getCertificateDirectory().insertCertificate(System.in, new MergeCallback() {
-                @Override
-                public Certificate merge(Certificate data, Certificate existing) {
-                    return data;
-                }
-            });
+            Certificate certificate = PGPCertDCli.getCertificateDirectory().insertCertificate(System.in, dummyMerge);
             // CHECKSTYLE:OFF
             System.out.println(certificate.getFingerprint());
             // CHECKSTYLE:ON
