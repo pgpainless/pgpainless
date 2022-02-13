@@ -16,6 +16,7 @@ import java.security.InvalidAlgorithmParameterException;
 import java.security.NoSuchAlgorithmException;
 
 import com.ginsberg.junit.exit.FailOnSystemExit;
+import org.bouncycastle.bcpg.BCPGOutputStream;
 import org.bouncycastle.openpgp.PGPException;
 import org.bouncycastle.openpgp.PGPPublicKeyRing;
 import org.bouncycastle.openpgp.PGPSecretKeyRing;
@@ -51,7 +52,12 @@ public class DearmorTest {
         System.setOut(new PrintStream(out));
         PGPainlessCLI.execute("dearmor");
 
-        assertArrayEquals(secretKey.getEncoded(), out.toByteArray());
+        ByteArrayOutputStream byteOut = new ByteArrayOutputStream();
+        BCPGOutputStream bcpgOut = new BCPGOutputStream(byteOut, true);
+        secretKey.encode(bcpgOut);
+        bcpgOut.close();
+
+        assertArrayEquals(byteOut.toByteArray(), out.toByteArray());
     }
 
 
@@ -68,7 +74,12 @@ public class DearmorTest {
         System.setOut(new PrintStream(out));
         PGPainlessCLI.execute("dearmor");
 
-        assertArrayEquals(certificate.getEncoded(), out.toByteArray());
+        ByteArrayOutputStream byteOut = new ByteArrayOutputStream();
+        BCPGOutputStream bcpgOut = new BCPGOutputStream(byteOut, true);
+        certificate.encode(bcpgOut);
+        bcpgOut.close();
+
+        assertArrayEquals(byteOut.toByteArray(), out.toByteArray());
     }
 
     @Test
