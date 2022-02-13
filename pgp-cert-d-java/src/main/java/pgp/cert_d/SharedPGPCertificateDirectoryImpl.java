@@ -16,9 +16,9 @@ import java.util.Collections;
 import java.util.Iterator;
 import java.util.List;
 
-import pgp.cert_d.exception.BadDataException;
-import pgp.cert_d.exception.BadNameException;
-import pgp.cert_d.exception.NotAStoreException;
+import pgp.certificate_store.exception.BadDataException;
+import pgp.certificate_store.exception.BadNameException;
+import pgp.certificate_store.exception.NotAStoreException;
 import pgp.certificate_store.Certificate;
 import pgp.certificate_store.CertificateReaderBackend;
 import pgp.certificate_store.MergeCallback;

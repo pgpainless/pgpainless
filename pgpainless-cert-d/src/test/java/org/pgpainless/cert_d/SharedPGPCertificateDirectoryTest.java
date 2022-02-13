@@ -41,9 +41,9 @@ import pgp.cert_d.CachingSharedPGPCertificateDirectoryWrapper;
 import pgp.cert_d.FileLockingMechanism;
 import pgp.cert_d.SharedPGPCertificateDirectory;
 import pgp.cert_d.SharedPGPCertificateDirectoryImpl;
-import pgp.cert_d.exception.BadDataException;
-import pgp.cert_d.exception.BadNameException;
-import pgp.cert_d.exception.NotAStoreException;
+import pgp.certificate_store.exception.BadDataException;
+import pgp.certificate_store.exception.BadNameException;
+import pgp.certificate_store.exception.NotAStoreException;
 import pgp.certificate_store.Certificate;
 import pgp.certificate_store.MergeCallback;
 

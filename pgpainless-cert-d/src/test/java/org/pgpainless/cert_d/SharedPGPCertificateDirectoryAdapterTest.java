@@ -27,7 +27,9 @@ import org.junit.jupiter.api.Test;
 import org.pgpainless.certificate_store.CertificateReader;
 import org.pgpainless.certificate_store.SharedPGPCertificateDirectoryAdapter;
 import pgp.cert_d.SharedPGPCertificateDirectoryImpl;
-import pgp.cert_d.exception.NotAStoreException;
+import pgp.certificate_store.exception.BadDataException;
+import pgp.certificate_store.exception.BadNameException;
+import pgp.certificate_store.exception.NotAStoreException;
 import pgp.certificate_store.Certificate;
 import pgp.certificate_store.CertificateStore;
 
@@ -53,18 +55,18 @@ public class SharedPGPCertificateDirectoryAdapterTest {
     }
 
     @Test
-    public void getNonExistentCertIsNull() throws IOException {
+    public void getNonExistentCertIsNull() throws IOException, BadDataException, BadNameException {
         assertNull(store.getCertificate("trust-root"));
         assertNull(store.getCertificate("eb85bb5fa33a75e15e944e63f231550c4f47e38e"));
     }
 
     @Test
     public void getInvalidIdentifierThrows() {
-        assertThrows(IllegalArgumentException.class, () -> store.getCertificate("invalid"));
+        assertThrows(BadNameException.class, () -> store.getCertificate("invalid"));
     }
 
     @Test
-    public void insertAndGet() throws IOException, InterruptedException {
+    public void insertAndGet() throws IOException, InterruptedException, BadDataException, BadNameException {
         byte[] bytes = Hex.decode(testCertificate);
         ByteArrayInputStream byteIn = new ByteArrayInputStream(bytes);
         String fingerprint = testCertFingerprint;
@@ -83,7 +85,7 @@ public class SharedPGPCertificateDirectoryAdapterTest {
 
 
     @Test
-    public void tryInsertAndGet() throws IOException {
+    public void tryInsertAndGet() throws IOException, BadDataException, BadNameException {
         byte[] bytes = Hex.decode(testCertificate);
         ByteArrayInputStream byteIn = new ByteArrayInputStream(bytes);
         String fingerprint = testCertFingerprint;
@@ -102,7 +104,7 @@ public class SharedPGPCertificateDirectoryAdapterTest {
 
 
     @Test
-    public void insertAndGetIfChanged() throws IOException, InterruptedException {
+    public void insertAndGetIfChanged() throws IOException, InterruptedException, BadDataException, BadNameException {
         byte[] bytes = Hex.decode(testCertificate);
         ByteArrayInputStream byteIn = new ByteArrayInputStream(bytes);
         String fingerprint = testCertFingerprint;
@@ -115,7 +117,7 @@ public class SharedPGPCertificateDirectoryAdapterTest {
     }
 
     @Test
-    public void insertBySpecialNameAndGet() throws IOException, InterruptedException {
+    public void insertBySpecialNameAndGet() throws IOException, InterruptedException, BadDataException, BadNameException {
         byte[] bytes = Hex.decode(testCertificate);
         ByteArrayInputStream byteIn = new ByteArrayInputStream(bytes);
         String fingerprint = testCertFingerprint;
@@ -134,7 +136,7 @@ public class SharedPGPCertificateDirectoryAdapterTest {
     }
 
     @Test
-    public void tryInsertBySpecialNameAndGet() throws IOException {
+    public void tryInsertBySpecialNameAndGet() throws IOException, BadDataException, BadNameException {
         byte[] bytes = Hex.decode(testCertificate);
         ByteArrayInputStream byteIn = new ByteArrayInputStream(bytes);
         String fingerprint = testCertFingerprint;
@@ -153,7 +155,7 @@ public class SharedPGPCertificateDirectoryAdapterTest {
     }
 
     @Test
-    public void insertBySpecialNameAndGetIfChanged() throws IOException, InterruptedException {
+    public void insertBySpecialNameAndGetIfChanged() throws IOException, InterruptedException, BadDataException, BadNameException {
         byte[] bytes = Hex.decode(testCertificate);
         ByteArrayInputStream byteIn = new ByteArrayInputStream(bytes);
         String fingerprint = testCertFingerprint;
@@ -170,7 +172,7 @@ public class SharedPGPCertificateDirectoryAdapterTest {
     }
 
     @Test
-    public void getItemsAndFingerprints() throws IOException, InterruptedException {
+    public void getItemsAndFingerprints() throws IOException, InterruptedException, BadDataException, BadNameException {
         byte[] bytes1 = Hex.decode(testCertificate);
         ByteArrayInputStream byteIn1 = new ByteArrayInputStream(bytes1);
         Certificate firstCert = store.insertCertificate(byteIn1, (data, existing) -> data);

@@ -4,8 +4,8 @@
 
 package pgp.cert_d;
 
-import pgp.cert_d.exception.BadDataException;
-import pgp.cert_d.exception.BadNameException;
+import pgp.certificate_store.exception.BadDataException;
+import pgp.certificate_store.exception.BadNameException;
 import pgp.certificate_store.Certificate;
 import pgp.certificate_store.MergeCallback;
 
@@ -96,7 +96,7 @@ public class CachingSharedPGPCertificateDirectoryWrapper
 
     @Override
     public Certificate getBySpecialName(String specialName)
-            throws IOException, BadNameException {
+            throws IOException, BadNameException, BadDataException {
         Certificate certificate = certificateMap.get(specialName);
         if (certificate == null) {
             certificate = underlyingCertificateDirectory.getBySpecialName(specialName);
@@ -119,7 +119,7 @@ public class CachingSharedPGPCertificateDirectoryWrapper
 
     @Override
     public Certificate getBySpecialNameIfChanged(String specialName, String tag)
-            throws IOException, BadNameException {
+            throws IOException, BadNameException, BadDataException {
         if (tagChanged(specialName, tag)) {
             return getBySpecialName(specialName);
         }

@@ -2,7 +2,7 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
-package pgp.cert_d.exception;
+package pgp.certificate_store.exception;
 
 /**
  * The data was not a valid OpenPGP cert or key in binary format.

@@ -2,11 +2,18 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
-package pgp.cert_d.exception;
+package pgp.certificate_store.exception;
 
 /**
  * Provided name was neither a valid fingerprint, nor a known special name.
  */
 public class BadNameException extends Exception {
 
+    public BadNameException() {
+        super();
+    }
+
+    public BadNameException(String message) {
+        super(message);
+    }
 }

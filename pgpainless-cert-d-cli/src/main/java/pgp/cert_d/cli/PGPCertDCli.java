@@ -9,7 +9,7 @@ import org.pgpainless.certificate_store.SharedPGPCertificateDirectoryAdapter;
 import pgp.cert_d.SharedPGPCertificateDirectoryImpl;
 import pgp.cert_d.cli.commands.Get;
 import pgp.cert_d.cli.commands.Import;
-import pgp.cert_d.exception.NotAStoreException;
+import pgp.certificate_store.exception.NotAStoreException;
 import pgp.certificate_store.CertificateStore;
 import picocli.CommandLine;
 

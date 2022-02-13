@@ -11,6 +11,8 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import pgp.cert_d.cli.PGPCertDCli;
 import pgp.certificate_store.Certificate;
+import pgp.certificate_store.exception.BadDataException;
+import pgp.certificate_store.exception.BadNameException;
 import picocli.CommandLine;
 
 @CommandLine.Command(name = "get",
@@ -36,7 +38,13 @@ public class Get implements Runnable {
             }
             Streams.pipeAll(certificate.getInputStream(), System.out);
         } catch (IOException e) {
-            LOGGER.info("IO Error", e);
+            LOGGER.error("IO Error", e);
+            System.exit(-1);
+        } catch (BadDataException e) {
+            LOGGER.error("Certificate file contains bad data.", e);
+            System.exit(-1);
+        } catch (BadNameException e) {
+            LOGGER.error("Certificate fingerprint mismatch.", e);
             System.exit(-1);
         }
     }

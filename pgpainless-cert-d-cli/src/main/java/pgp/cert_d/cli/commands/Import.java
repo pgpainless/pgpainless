@@ -11,6 +11,7 @@ import org.slf4j.LoggerFactory;
 import pgp.cert_d.cli.PGPCertDCli;
 import pgp.certificate_store.Certificate;
 import pgp.certificate_store.MergeCallback;
+import pgp.certificate_store.exception.BadDataException;
 import picocli.CommandLine;
 
 @CommandLine.Command(name = "import",
@@ -32,10 +33,13 @@ public class Import implements Runnable {
             System.out.println(certificate.getFingerprint());
             // CHECKSTYLE:ON
         } catch (IOException e) {
-            LOGGER.info("IO-Error", e);
+            LOGGER.error("IO-Error.", e);
             System.exit(-1);
         } catch (InterruptedException e) {
-            LOGGER.info("Thread interrupted.", e);
+            LOGGER.error("Thread interrupted.", e);
+            System.exit(-1);
+        } catch (BadDataException e) {
+            LOGGER.error("Certificate contains bad data.", e);
             System.exit(-1);
         }
     }

@@ -4,6 +4,9 @@
 
 package pgp.certificate_store;
 
+import pgp.certificate_store.exception.BadDataException;
+import pgp.certificate_store.exception.BadNameException;
+
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.Iterator;
@@ -28,7 +31,8 @@ public interface CertificateStore {
      *
      * @throws IOException in case of an IO-error
      */
-    Certificate getCertificate(String identifier) throws IOException;
+    Certificate getCertificate(String identifier)
+            throws IOException, BadNameException, BadDataException;
 
     /**
      * Return the certificate that matches the given identifier, but only iff it changed since the last invocation.
@@ -41,7 +45,8 @@ public interface CertificateStore {
      *
      * @throws IOException in case of an IO-error
      */
-    Certificate getCertificateIfChanged(String identifier, String tag) throws IOException;
+    Certificate getCertificateIfChanged(String identifier, String tag)
+            throws IOException, BadNameException, BadDataException;
 
     /**
      * Insert a certificate into the store.
@@ -59,7 +64,8 @@ public interface CertificateStore {
      * @throws IOException in case of an IO-error
      * @throws InterruptedException in case the inserting thread gets interrupted
      */
-    Certificate insertCertificate(InputStream data, MergeCallback merge) throws IOException, InterruptedException;
+    Certificate insertCertificate(InputStream data, MergeCallback merge)
+            throws IOException, InterruptedException, BadDataException;
 
     /**
      * Insert a certificate into the store.
@@ -78,7 +84,8 @@ public interface CertificateStore {
      *
      * @throws IOException in case of an IO-error
      */
-    Certificate tryInsertCertificate(InputStream data, MergeCallback merge) throws IOException;
+    Certificate tryInsertCertificate(InputStream data, MergeCallback merge)
+            throws IOException, BadDataException;
 
     /**
      * Insert a certificate into the store.
@@ -97,7 +104,8 @@ public interface CertificateStore {
      *
      * @throws IOException in case of an IO-error
      */
-    Certificate insertCertificateBySpecialName(String specialName, InputStream data, MergeCallback merge) throws IOException, InterruptedException;
+    Certificate insertCertificateBySpecialName(String specialName, InputStream data, MergeCallback merge)
+            throws IOException, InterruptedException, BadDataException, BadNameException;
 
     /**
      * Insert a certificate into the store.
@@ -118,7 +126,8 @@ public interface CertificateStore {
      *
      * @throws IOException in case of an IO-error
      */
-    Certificate tryInsertCertificateBySpecialName(String specialName, InputStream data, MergeCallback merge) throws IOException;
+    Certificate tryInsertCertificateBySpecialName(String specialName, InputStream data, MergeCallback merge)
+            throws IOException, BadDataException, BadNameException;
 
     /**
      * Return an {@link Iterator} containing all certificates in the store.

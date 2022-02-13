@@ -7,4 +7,4 @@
  *
  * @see <a href="https://sequoia-pgp.gitlab.io/pgp-cert-d/#name-failure-modes">Failure Modes</a>
  */
-package pgp.cert_d.exception;
+package pgp.certificate_store.exception;
