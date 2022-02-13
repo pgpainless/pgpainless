@@ -18,7 +18,6 @@ import java.security.InvalidAlgorithmParameterException;
 import java.security.NoSuchAlgorithmException;
 import java.util.Set;
 
-import org.bouncycastle.bcpg.ArmoredOutputStream;
 import org.bouncycastle.openpgp.PGPException;
 import org.bouncycastle.openpgp.PGPPublicKeyRing;
 import org.bouncycastle.openpgp.PGPSecretKeyRing;
@@ -45,7 +44,6 @@ import org.pgpainless.key.protection.SecretKeyRingProtector;
 import org.pgpainless.key.protection.UnprotectedKeysProtector;
 import org.pgpainless.key.util.KeyRingUtils;
 import org.pgpainless.policy.Policy;
-import org.pgpainless.util.ArmoredOutputStreamFactory;
 import org.pgpainless.util.TestAllImplementations;
 
 public class EncryptDecryptTest {
@@ -210,11 +208,7 @@ public class EncryptDecryptTest {
         EncryptionResult metadata = signer.getResult();
 
         Set<PGPSignature> signatureSet = metadata.getDetachedSignatures().get(metadata.getDetachedSignatures().keySet().iterator().next());
-        ByteArrayOutputStream sigOut = new ByteArrayOutputStream();
-        ArmoredOutputStream armorOut = ArmoredOutputStreamFactory.get(sigOut);
-        signatureSet.iterator().next().encode(armorOut);
-        armorOut.close();
-        String armorSig = sigOut.toString();
+        String armorSig = PGPainless.asciiArmor(signatureSet.iterator().next());
 
         // CHECKSTYLE:OFF
         System.out.println(armorSig);

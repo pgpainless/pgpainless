@@ -4,13 +4,17 @@
 
 package org.pgpainless;
 
+import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.util.Date;
 import javax.annotation.Nonnull;
 
+import org.bouncycastle.bcpg.ArmoredOutputStream;
+import org.bouncycastle.bcpg.BCPGOutputStream;
 import org.bouncycastle.openpgp.PGPKeyRing;
 import org.bouncycastle.openpgp.PGPPublicKeyRing;
 import org.bouncycastle.openpgp.PGPSecretKeyRing;
+import org.bouncycastle.openpgp.PGPSignature;
 import org.pgpainless.decryption_verification.DecryptionBuilder;
 import org.pgpainless.decryption_verification.DecryptionStream;
 import org.pgpainless.encryption_signing.EncryptionBuilder;
@@ -24,6 +28,7 @@ import org.pgpainless.key.parsing.KeyRingReader;
 import org.pgpainless.key.util.KeyRingUtils;
 import org.pgpainless.policy.Policy;
 import org.pgpainless.util.ArmorUtils;
+import org.pgpainless.util.ArmoredOutputStreamFactory;
 
 public final class PGPainless {
 
@@ -78,6 +83,16 @@ public final class PGPainless {
         } else {
             return ArmorUtils.toAsciiArmoredString((PGPPublicKeyRing) key);
         }
+    }
+
+    public static String asciiArmor(@Nonnull PGPSignature signature) throws IOException {
+        ByteArrayOutputStream byteOut = new ByteArrayOutputStream();
+        ArmoredOutputStream armoredOut = ArmoredOutputStreamFactory.get(byteOut);
+        BCPGOutputStream bcpgOut = new BCPGOutputStream(armoredOut, true);
+        signature.encode(bcpgOut);
+        bcpgOut.close();
+        armoredOut.close();
+        return byteOut.toString();
     }
 
     /**
