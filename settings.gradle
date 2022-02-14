@@ -10,5 +10,6 @@ include 'pgpainless-core',
         'pgpainless-cert-d',
         'pgpainless-cert-d-cli',
         'pgp-certificate-store',
-        'pgp-cert-d-java'
+        'pgp-cert-d-java',
+        'pgp-cert-d-java-jdbc-sqlite-lookup'
 
