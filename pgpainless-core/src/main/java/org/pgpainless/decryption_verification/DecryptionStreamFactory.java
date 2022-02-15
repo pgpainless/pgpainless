@@ -172,8 +172,7 @@ public final class DecryptionStreamFactory {
                 LOGGER.debug("The message is apparently not armored.");
                 bufferedIn.reset();
                 decoderStream = bufferedIn;
-                objectFactory = ImplementationFactory.getInstance().getPGPObjectFactory(decoderStream);
-                inputStream = wrapInVerifySignatureStream(bufferedIn, objectFactory);
+                inputStream = wrapInVerifySignatureStream(bufferedIn, null);
             } else {
                 throw new FinalIOException(e);
             }
@@ -214,6 +213,9 @@ public final class DecryptionStreamFactory {
         } catch (FinalIOException e) {
             throw e;
         } catch (IOException e) {
+            if (depth == 1 && e.getMessage().contains("invalid armor")) {
+                throw e;
+            }
             if (depth == 1 && e.getMessage().contains("unknown object in stream:")) {
                 throw new MissingLiteralDataException("No Literal Data Packet found.");
             } else {
