@@ -13,9 +13,10 @@ Use this section to tell people about which versions of your project are
 currently being supported with security updates.
 
 | Version | Supported          |
-| ------- | ------------------ |
-| 0.2.x   | :white_check_mark: |
-| < 0.2.0 | :x:                |
+|---------| ------------------ |
+| 1.1.X   | :white_check_mark: |
+| 1.0.X   | :white_check_mark: |
+| < 1.0.0 | :x:                |
 
 ## Reporting a Vulnerability
 
@@ -23,3 +24,11 @@ If you find a security relevant vulnerability inside PGPainless, please let me k
 [Here](https://keyoxide.org/7F9116FEA90A5983936C7CFAA027DB2F3E1E118A) you can find my OpenPGP key to email me confidentially.
 
 Valid security issues will be fixed ASAP.
+
+## Audits
+
+### Cure53 - FLO-04
+PGPainless has received a security audit by [cure53.de](https://cure53.de) in late 2021.
+The [penetrationj test and audit](https://cure53.de/pentest-report_pgpainless.pdf) covered PGPainless
+release candidate 1.0.0-rc6.
+Security fixes for discovered flaws were deployed before the final 1.0.0 release.
