@@ -5,6 +5,9 @@ SPDX-License-Identifier: CC0-1.0
 
 # PGPainless Changelog
 
+## 1.0.4
+- Yet another patch for faulty ASCII armor detection 😒
+
 ## 1.0.3
 - Fix detection of unarmored data in signature verification
 
