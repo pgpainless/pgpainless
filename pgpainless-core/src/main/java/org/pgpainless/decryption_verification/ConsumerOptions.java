@@ -351,8 +351,9 @@ public class ConsumerOptions {
      * INTERNAL method to mark cleartext signed messages.
      * Do not call this manually.
      */
-    public void setIsCleartextSigned() {
+    public ConsumerOptions setIsCleartextSigned() {
         this.cleartextSigned = true;
+        return this;
     }
 
     /**
