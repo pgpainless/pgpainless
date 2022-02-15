@@ -5,9 +5,10 @@ SPDX-License-Identifier: CC0-1.0
 
 # PGPainless Changelog
 
-## 1.1.0-SNAPSHOT
+## 1.1.0
 - `pgpainless-sop`: Update `sop-java` to version 1.2.0
     - Treat passwords and session keys as indirect parameters
+      This means they are no longer treated as string input, but pointers to files or env variables
 
 ## 1.0.4
 - Yet another patch for faulty ASCII armor detection 😒
