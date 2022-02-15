@@ -27,7 +27,6 @@ public final class PGPUtilWrapper {
      * @throws IOException in case of an io error which is unrelated to base64 encoding
      */
     public static InputStream getDecoderStream(BufferedInputStream buf) throws IOException {
-        buf.mark(512);
         try {
             return PGPUtil.getDecoderStream(buf);
         } catch (IOException e) {
