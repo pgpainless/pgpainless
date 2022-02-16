@@ -6,14 +6,18 @@ package pgp.cert_d.cli;
 
 import org.pgpainless.certificate_store.CertificateReader;
 import org.pgpainless.certificate_store.SharedPGPCertificateDirectoryAdapter;
+import pgp.cert_d.BaseDirectoryProvider;
 import pgp.cert_d.SharedPGPCertificateDirectoryImpl;
 import pgp.cert_d.cli.commands.Get;
 import pgp.cert_d.cli.commands.Import;
+import pgp.cert_d.jdbc.sqlite.SqliteSubkeyLookup;
+import pgp.certificate_store.SubkeyLookup;
 import pgp.certificate_store.exception.NotAStoreException;
-import pgp.certificate_store.CertificateStore;
+import pgp.certificate_store.CertificateDirectory;
 import picocli.CommandLine;
 
 import java.io.File;
+import java.sql.SQLException;
 
 @CommandLine.Command(
         subcommands = {
@@ -26,28 +30,30 @@ public class PGPCertDCli {
     @CommandLine.Option(names = "--base-directory", paramLabel = "DIRECTORY", description = "Overwrite the default certificate directory")
     File baseDirectory;
 
-    private static CertificateStore certificateStore;
+    private static CertificateDirectory certificateDirectory;
 
     private int executionStrategy(CommandLine.ParseResult parseResult) {
         try {
             initStore();
-        } catch (NotAStoreException e) {
+        } catch (NotAStoreException | SQLException e) {
             return -1;
         }
         return new CommandLine.RunLast().execute(parseResult);
     }
 
-    private void initStore() throws NotAStoreException {
+    private void initStore() throws NotAStoreException, SQLException {
         SharedPGPCertificateDirectoryImpl certificateDirectory;
-        if (baseDirectory != null) {
-            certificateDirectory = new SharedPGPCertificateDirectoryImpl(
-                    baseDirectory,
-                    new CertificateReader());
-        } else {
-            certificateDirectory = new SharedPGPCertificateDirectoryImpl(
-                    new CertificateReader());
+        SubkeyLookup subkeyLookup;
+        if (baseDirectory == null) {
+            baseDirectory = BaseDirectoryProvider.getDefaultBaseDir();
         }
-        certificateStore = new SharedPGPCertificateDirectoryAdapter(certificateDirectory);
+
+        certificateDirectory = new SharedPGPCertificateDirectoryImpl(
+                baseDirectory,
+                new CertificateReader());
+        subkeyLookup = SqliteSubkeyLookup.forDatabaseFile(new File(baseDirectory, "_pgpainless_subkey_map.db"));
+
+        PGPCertDCli.certificateDirectory = new SharedPGPCertificateDirectoryAdapter(certificateDirectory, subkeyLookup);
     }
 
     public static void main(String[] args) {
@@ -57,7 +63,7 @@ public class PGPCertDCli {
                 .execute(args);
     }
 
-    public static CertificateStore getCertificateDirectory() {
-        return certificateStore;
+    public static CertificateDirectory getCertificateDirectory() {
+        return certificateDirectory;
     }
 }

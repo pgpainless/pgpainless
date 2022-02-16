@@ -16,6 +16,8 @@ import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
+import java.util.Arrays;
+import java.util.Collections;
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.Set;
@@ -26,17 +28,21 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.pgpainless.certificate_store.CertificateReader;
 import org.pgpainless.certificate_store.SharedPGPCertificateDirectoryAdapter;
+import pgp.cert_d.InMemorySubkeyLookup;
 import pgp.cert_d.SharedPGPCertificateDirectoryImpl;
+import pgp.certificate_store.CertificateStore;
 import pgp.certificate_store.exception.BadDataException;
 import pgp.certificate_store.exception.BadNameException;
 import pgp.certificate_store.exception.NotAStoreException;
 import pgp.certificate_store.Certificate;
-import pgp.certificate_store.CertificateStore;
 
 public class SharedPGPCertificateDirectoryAdapterTest {
 
     private static final String testCertificate = "98330462069cc616092b06010401da470f010107400db5906b09f701ab1f7f96087eedab6ba44c02fcbd2470137cfeacac5a2d032db405416c696365888f0413160a0041050262069cc609906f054e826378552516a104505b134a7e62f0f154ec3d036f054e8263785525029e01029b01059602030100048b09080705950a09080b0299010000a12600fd117925c0f2192ef5b2a44e3d3038e2a7ce5ba0343fc2dfb661a3a46d1276fb380100bf2872e7e36b63f61ae3556464c4a04344e7d36e0d7313e623effb0290ce0b0fb8380462069cc6120a2b06010401975501050101074034ffd523242385fe92034a5e326a82f4edff614516cc1028ca91fb653557f25b0301080788750418160a001d050262069cc6029e01029b0c059602030100048b09080705950a09080b000a09106f054e8263785525391400ff4eb85df8ddfc15e94c9cf28bc0aa9d0426b571ca64c5421be5889d5410d8632f00fd1ac5e9aed683e711282489d8980222d2ceff15c5ce0499fcb36716d850749406b8330462069cc616092b06010401da470f0101074058f296fb7ce456039856144db677f14018963a8bfd281c84aaeebe7e14df8f1c88d50418160a007d050262069cc6029e01029b02059602030100048b09080705950a09080b5f200419160a0006050262069cc6000a09108119c86e0a4c6dc73a7600ff5e25427da84d824cc3f8890bc6bd037f423f610006e1249b1aad3d7f70ac47a100fc08e67a6a945c1feec301df9dc27e7ea4e61d107d0720e814eea1dc4f1da20a08000a09106f054e8263785525359700ff4ce78cf267c261468322de906118d4f003ceefa72fa3b86119e26f99be3727fc00fe3895207c4aac814549f0189d2f494f5b1fcee7f6da344e63a0c32743b216b406";
     private static final String testCertFingerprint = "505b134a7e62f0f154ec3d036f054e8263785525";
+    private static final long testCertificateSubkey1 = 7999886635015099685L;
+    private static final long testCertificateSubkey2 = -5375724347241457298L;
+    private static final long testCertificateSubkey3 = -9144057193454342713L;
 
     private SharedPGPCertificateDirectoryAdapter adapter;
     private CertificateStore store;
@@ -44,7 +50,8 @@ public class SharedPGPCertificateDirectoryAdapterTest {
     @BeforeEach
     public void setupInstance() throws IOException, NotAStoreException {
         adapter = new SharedPGPCertificateDirectoryAdapter(
-                new SharedPGPCertificateDirectoryImpl(tempDir(), new CertificateReader()));
+                new SharedPGPCertificateDirectoryImpl(tempDir(), new CertificateReader()),
+                new InMemorySubkeyLookup());
         store = adapter;
     }
 
@@ -73,6 +80,12 @@ public class SharedPGPCertificateDirectoryAdapterTest {
         Certificate certificate = store.insertCertificate(byteIn, (data, existing) -> data);
 
         assertEquals(fingerprint, certificate.getFingerprint());
+        Set<Long> expectedSubkeys = new HashSet<>(Arrays.asList(testCertificateSubkey1, testCertificateSubkey2, testCertificateSubkey3));
+        Set<Long> subkeys = certificate.getSubkeyIds();
+        assertEquals(expectedSubkeys, subkeys);
+        for (long subkey : subkeys) {
+            assertEquals(Collections.singleton(fingerprint), store.getIdentifiersForSubkeyId(subkey));
+        }
 
         Certificate retrieved = store.getCertificate(fingerprint);
         assertNotNull(retrieved);
@@ -92,6 +105,11 @@ public class SharedPGPCertificateDirectoryAdapterTest {
         Certificate certificate = store.tryInsertCertificate(byteIn, (data, existing) -> data);
 
         assertEquals(fingerprint, certificate.getFingerprint());
+        Set<Long> subkeys = certificate.getSubkeyIds();
+        assertEquals(3, subkeys.size());
+        for (long subkey : subkeys) {
+            assertEquals(Collections.singleton(fingerprint), store.getIdentifiersForSubkeyId(subkey));
+        }
 
         Certificate retrieved = store.getCertificate(fingerprint);
         assertNotNull(retrieved);

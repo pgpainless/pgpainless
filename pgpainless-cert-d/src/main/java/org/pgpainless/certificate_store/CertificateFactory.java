@@ -4,6 +4,7 @@
 
 package org.pgpainless.certificate_store;
 
+import org.bouncycastle.openpgp.PGPPublicKey;
 import org.bouncycastle.openpgp.PGPPublicKeyRing;
 import org.bouncycastle.util.encoders.Base64;
 import org.pgpainless.key.OpenPgpFingerprint;
@@ -14,6 +15,9 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
+import java.util.HashSet;
+import java.util.Iterator;
+import java.util.Set;
 
 public class CertificateFactory {
 
@@ -39,6 +43,16 @@ public class CertificateFactory {
                 }
                 digest.update(publicKeyRing.getEncoded());
                 return Base64.toBase64String(digest.digest());
+            }
+
+            @Override
+            public Set<Long> getSubkeyIds() throws IOException {
+                Set<Long> keyIds = new HashSet<>();
+                Iterator<PGPPublicKey> keys = publicKeyRing.getPublicKeys();
+                while (keys.hasNext()) {
+                    keyIds.add(keys.next().getKeyID());
+                }
+                return keyIds;
             }
         };
     }

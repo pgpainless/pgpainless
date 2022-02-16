@@ -7,31 +7,36 @@ package org.pgpainless.certificate_store;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.Iterator;
+import java.util.Set;
 
 import pgp.cert_d.SharedPGPCertificateDirectory;
 import pgp.cert_d.SpecialNames;
 import pgp.certificate_store.Certificate;
+import pgp.certificate_store.CertificateDirectory;
 import pgp.certificate_store.CertificateStore;
 import pgp.certificate_store.MergeCallback;
+import pgp.certificate_store.SubkeyLookup;
 import pgp.certificate_store.exception.BadDataException;
 import pgp.certificate_store.exception.BadNameException;
 
 /**
  * Adapter class used to adapt the {@link SharedPGPCertificateDirectory} for use with
- * {@link CertificateStore}.
+ * {@link CertificateDirectory}.
  */
 public class SharedPGPCertificateDirectoryAdapter
         implements CertificateStore {
 
     private final SharedPGPCertificateDirectory directory;
+    private final SubkeyLookup subkeyLookup;
 
     /**
-     * Create an adapter to use {@link SharedPGPCertificateDirectory} objects as {@link CertificateStore CertificateStores}.
+     * Create an adapter to use {@link SharedPGPCertificateDirectory} objects as {@link CertificateDirectory CertificateStores}.
      *
      * @param directory directory instance
      */
-    public SharedPGPCertificateDirectoryAdapter(SharedPGPCertificateDirectory directory) {
+    public SharedPGPCertificateDirectoryAdapter(SharedPGPCertificateDirectory directory, SubkeyLookup subkeyLookup) {
         this.directory = directory;
+        this.subkeyLookup = subkeyLookup;
     }
 
     @Override
@@ -61,13 +66,17 @@ public class SharedPGPCertificateDirectoryAdapter
     @Override
     public Certificate insertCertificate(InputStream data, MergeCallback merge)
             throws IOException, InterruptedException, BadDataException {
-        return directory.insert(data, merge);
+        Certificate certificate = directory.insert(data, merge);
+        storeIdentifierForSubkeys(certificate);
+        return certificate;
     }
 
     @Override
     public Certificate tryInsertCertificate(InputStream data, MergeCallback merge)
             throws IOException, BadDataException {
-        return directory.tryInsert(data, merge);
+        Certificate certificate = directory.tryInsert(data, merge);
+        storeIdentifierForSubkeys(certificate);
+        return certificate;
     }
 
     @Override
@@ -90,5 +99,25 @@ public class SharedPGPCertificateDirectoryAdapter
     @Override
     public Iterator<String> getFingerprints() {
         return directory.fingerprints();
+    }
+
+    private void storeIdentifierForSubkeys(Certificate certificate) throws IOException {
+        if (certificate == null) {
+            return;
+        }
+        String fingerprint = certificate.getFingerprint();
+        for (Long subkeyId : certificate.getSubkeyIds()) {
+            storeIdentifierForSubkeyId(subkeyId, fingerprint);
+        }
+    }
+
+    @Override
+    public Set<String> getIdentifiersForSubkeyId(long subkeyId) throws IOException {
+        return subkeyLookup.getIdentifiersForSubkeyId(subkeyId);
+    }
+
+    @Override
+    public void storeIdentifierForSubkeyId(long subkeyId, String identifier) throws IOException {
+        subkeyLookup.storeIdentifierForSubkeyId(subkeyId, identifier);
     }
 }

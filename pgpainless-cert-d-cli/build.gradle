@@ -20,6 +20,7 @@ dependencies {
     testImplementation "ch.qos.logback:logback-classic:$logbackVersion"
 
     implementation project(":pgpainless-cert-d")
+    implementation project(":pgp-cert-d-java-jdbc-sqlite-lookup")
 
     // picocli for cli
     implementation "info.picocli:picocli:4.6.2"

@@ -6,6 +6,7 @@ package pgp.certificate_store;
 
 import java.io.IOException;
 import java.io.InputStream;
+import java.util.Set;
 
 public abstract class Certificate {
     /**
@@ -30,4 +31,6 @@ public abstract class Certificate {
      * @return tag
      */
     public abstract String getTag() throws IOException;
+
+    public abstract Set<Long> getSubkeyIds() throws IOException;
 }
