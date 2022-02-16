@@ -56,7 +56,6 @@ public class SharedPGPCertificateDirectoryAdapterTest {
 
     @Test
     public void getNonExistentCertIsNull() throws IOException, BadDataException, BadNameException {
-        assertNull(store.getCertificate("trust-root"));
         assertNull(store.getCertificate("eb85bb5fa33a75e15e944e63f231550c4f47e38e"));
     }
 

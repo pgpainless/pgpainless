@@ -5,23 +5,24 @@
 package pgp.certificate_store;
 
 import java.io.IOException;
+import java.util.Set;
 
 public interface SubkeyLookup {
 
     /**
-     * Lookup the identifier of the certificate that contains the given subkey.
+     * Lookup the fingerprint of the certificate that contains the given subkey.
      * If no record is found, return null.
      *
      * @param subkeyId subkey id
-     * @return identifier (fingerprint or special name) of the certificate
+     * @return fingerprint of the certificate
      */
-    String getIdentifierForSubkeyId(long subkeyId) throws IOException;
+    Set<String> getIdentifiersForSubkeyId(long subkeyId) throws IOException;
 
     /**
-     * Store a record of the subkey id that points to the identifier.
+     * Store a record of the subkey id that points to the fingerprint.
      *
      * @param subkeyId subkey id
-     * @param identifier fingerprint or special name of the certificate
+     * @param identifier fingerprint of the certificate
      */
     void storeIdentifierForSubkeyId(long subkeyId, String identifier) throws IOException;
 }

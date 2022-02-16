@@ -4,11 +4,17 @@
 
 package pgp.cert_d;
 
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertTrue;
+
 import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.sql.SQLException;
 import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collections;
+import java.util.HashSet;
 import java.util.List;
 import java.util.stream.Stream;
 
@@ -18,9 +24,6 @@ import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.MethodSource;
 import pgp.cert_d.jdbc.sqlite.SqliteSubkeyLookup;
 import pgp.certificate_store.SubkeyLookup;
-
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertNull;
 
 public class SubkeyLookupTest {
 
@@ -52,32 +55,33 @@ public class SubkeyLookupTest {
     public void testInsertGet(SubkeyLookup subject) throws IOException {
         // Initially all null
 
-        assertNull(subject.getIdentifierForSubkeyId(123));
-        assertNull(subject.getIdentifierForSubkeyId(1337));
-        assertNull(subject.getIdentifierForSubkeyId(420));
+        assertTrue(subject.getIdentifiersForSubkeyId(123).isEmpty());
+        assertTrue(subject.getIdentifiersForSubkeyId(1337).isEmpty());
+        assertTrue(subject.getIdentifiersForSubkeyId(420).isEmpty());
 
         // Store one val, others still null
 
-        subject.storeIdentifierForSubkeyId(123, "trust-root");
+        subject.storeIdentifierForSubkeyId(123, "d1a66e1a23b182c9980f788cfbfcc82a015e7330");
 
-        assertEquals("trust-root", subject.getIdentifierForSubkeyId(123));
-        assertNull(subject.getIdentifierForSubkeyId(1337));
-        assertNull(subject.getIdentifierForSubkeyId(420));
+        assertEquals(Collections.singleton("d1a66e1a23b182c9980f788cfbfcc82a015e7330"), subject.getIdentifiersForSubkeyId(123));
+        assertTrue(subject.getIdentifiersForSubkeyId(1337).isEmpty());
+        assertTrue(subject.getIdentifiersForSubkeyId(420).isEmpty());
 
         // Store other val, first stays intact
 
         subject.storeIdentifierForSubkeyId(1337, "d1a66e1a23b182c9980f788cfbfcc82a015e7330");
         subject.storeIdentifierForSubkeyId(420, "d1a66e1a23b182c9980f788cfbfcc82a015e7330");
 
-        assertEquals("trust-root", subject.getIdentifierForSubkeyId(123));
-        assertEquals("d1a66e1a23b182c9980f788cfbfcc82a015e7330", subject.getIdentifierForSubkeyId(1337));
-        assertEquals("d1a66e1a23b182c9980f788cfbfcc82a015e7330", subject.getIdentifierForSubkeyId(420));
+        assertEquals(Collections.singleton("d1a66e1a23b182c9980f788cfbfcc82a015e7330"), subject.getIdentifiersForSubkeyId(123));
+        assertEquals(Collections.singleton("d1a66e1a23b182c9980f788cfbfcc82a015e7330"), subject.getIdentifiersForSubkeyId(1337));
+        assertEquals(Collections.singleton("d1a66e1a23b182c9980f788cfbfcc82a015e7330"), subject.getIdentifiersForSubkeyId(420));
 
-        // overwrite existing
+        // add additional entry for subkey
 
-        subject.storeIdentifierForSubkeyId(123, "d1a66e1a23b182c9980f788cfbfcc82a015e7330");
+        subject.storeIdentifierForSubkeyId(123, "eb85bb5fa33a75e15e944e63f231550c4f47e38e");
 
-        // TODO: Decide on expected result and fix test
-        // assertEquals("d1a66e1a23b182c9980f788cfbfcc82a015e7330", subject.getIdentifierForSubkeyId(123));
+        assertEquals(
+                new HashSet<>(Arrays.asList("eb85bb5fa33a75e15e944e63f231550c4f47e38e", "d1a66e1a23b182c9980f788cfbfcc82a015e7330")),
+                subject.getIdentifiersForSubkeyId(123));
     }
 }

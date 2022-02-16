@@ -13,8 +13,10 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
 import java.util.ArrayList;
-import java.util.Comparator;
+import java.util.Collections;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 
 import org.sqlite.SQLiteErrorCode;
 import org.sqlite.SQLiteException;
@@ -36,13 +38,6 @@ public class SqliteSubkeyLookup implements SubkeyLookup {
             "INSERT INTO subkey_lookup(identifier, subkey_id) VALUES (?,?)";
     private static final String QUERY_STMT = "" +
             "SELECT * FROM subkey_lookup WHERE subkey_id=?";
-    private final Comparator<Entry> entryComparator = new Comparator<Entry>() {
-        final SpecialNameFingerprintComparator comparator = new SpecialNameFingerprintComparator();
-        @Override
-        public int compare(Entry o1, Entry o2) {
-            return comparator.compare(o1.getIdentifier(), o2.getIdentifier());
-        }
-    };
 
     public SqliteSubkeyLookup(String databaseURL) throws SQLException {
         this.databaseUrl = databaseURL;
@@ -65,9 +60,9 @@ public class SqliteSubkeyLookup implements SubkeyLookup {
             statement.setLong(2, subkeyId);
             statement.executeUpdate();
         } catch (SQLiteException e) {
-            if (ignoreDuplicates && e.getResultCode().code == SQLiteErrorCode.SQLITE_CONSTRAINT_UNIQUE.code) {
-                // ignore
-            } else {
+            // throw any exception, except:
+            // ignore unique constraint-related exceptions if we ignoreDuplicates
+            if (!ignoreDuplicates || e.getResultCode().code != SQLiteErrorCode.SQLITE_CONSTRAINT_UNIQUE.code) {
                 throw e;
             }
         }
@@ -91,14 +86,15 @@ public class SqliteSubkeyLookup implements SubkeyLookup {
     }
 
     @Override
-    public String getIdentifierForSubkeyId(long subkeyId) throws IOException {
+    public Set<String> getIdentifiersForSubkeyId(long subkeyId) throws IOException {
         try {
             List<Entry> entries = get(subkeyId);
-            if (entries.isEmpty()) {
-                return null;
+            Set<String> identifiers = new HashSet<>();
+            for (Entry entry : entries) {
+                identifiers.add(entry.getIdentifier());
             }
-            entries.sort(entryComparator);
-            return entries.get(0).getIdentifier();
+
+            return Collections.unmodifiableSet(identifiers);
         } catch (SQLException e) {
             throw new IOException("Cannot query for subkey lookup entries.", e);
         }
