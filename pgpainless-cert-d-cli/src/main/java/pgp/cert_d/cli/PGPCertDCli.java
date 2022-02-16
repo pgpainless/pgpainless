@@ -10,6 +10,7 @@ import pgp.cert_d.BaseDirectoryProvider;
 import pgp.cert_d.SharedPGPCertificateDirectoryImpl;
 import pgp.cert_d.cli.commands.Get;
 import pgp.cert_d.cli.commands.Import;
+import pgp.cert_d.cli.commands.MultiImport;
 import pgp.cert_d.jdbc.sqlite.SqliteSubkeyLookup;
 import pgp.certificate_store.SubkeyLookup;
 import pgp.certificate_store.exception.NotAStoreException;
@@ -22,6 +23,7 @@ import java.sql.SQLException;
 @CommandLine.Command(
         subcommands = {
                 Import.class,
+                MultiImport.class,
                 Get.class,
         }
 )
