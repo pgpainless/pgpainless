@@ -11,7 +11,7 @@ import java.io.InputStream;
 import java.io.OutputStream;
 
 /**
- * Since the {@link CleartextSignatureProcessor} needs to read the whole data twice in order to verify signatures,
+ * Since for verification of cleartext signed messages, we need to read the whole data twice in order to verify signatures,
  * a strategy for how to cache the read data is required.
  * Otherwise, large data kept in memory could cause {@link OutOfMemoryError OutOfMemoryErrors} or other issues.
  *

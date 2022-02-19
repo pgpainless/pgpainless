@@ -4,18 +4,13 @@
 
 package org.pgpainless.decryption_verification;
 
-import java.io.BufferedInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import javax.annotation.Nonnull;
 
 import org.bouncycastle.openpgp.PGPException;
-import org.pgpainless.decryption_verification.cleartext_signatures.VerifyCleartextSignaturesImpl;
-import org.pgpainless.exception.WrongConsumingMethodException;
 
 public class DecryptionBuilder implements DecryptionBuilderInterface {
-
-    public static int BUFFER_SIZE = 4096;
 
     @Override
     public DecryptWith onInputStream(@Nonnull InputStream inputStream) {
@@ -24,11 +19,10 @@ public class DecryptionBuilder implements DecryptionBuilderInterface {
 
     static class DecryptWithImpl implements DecryptWith {
 
-        private final BufferedInputStream inputStream;
+        private final InputStream inputStream;
 
         DecryptWithImpl(InputStream inputStream) {
-            this.inputStream = new BufferedInputStream(inputStream, BUFFER_SIZE);
-            this.inputStream.mark(BUFFER_SIZE);
+            this.inputStream = inputStream;
         }
 
         @Override
@@ -37,15 +31,7 @@ public class DecryptionBuilder implements DecryptionBuilderInterface {
                 throw new IllegalArgumentException("Consumer options cannot be null.");
             }
 
-            try {
-                return DecryptionStreamFactory.create(inputStream, consumerOptions);
-            } catch (WrongConsumingMethodException e) {
-                inputStream.reset();
-                return new VerifyCleartextSignaturesImpl()
-                        .onInputStream(inputStream)
-                        .withOptions(consumerOptions)
-                        .getVerificationStream();
-            }
+            return DecryptionStreamFactory.create(inputStream, consumerOptions);
         }
     }
 }
