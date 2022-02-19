@@ -133,6 +133,11 @@ public final class DecryptionStreamFactory {
         InputStream decoderStream;
         PGPObjectFactory objectFactory;
 
+        // Workaround for cleartext signed data
+        // If we below threw a WrongConsumingMethodException, the CleartextSignatureProcessor will prepare the
+        // message for us and will set options.isCleartextSigned() to true.
+        // That way we can process long messages without running the issue of resetting the bufferedInputStream
+        // to invalid marks.
         if (options.isCleartextSigned()) {
             inputStream = wrapInVerifySignatureStream(bufferedIn, null);
             return new DecryptionStream(inputStream, resultBuilder, integrityProtectedEncryptedInputStream,
@@ -146,6 +151,9 @@ public final class DecryptionStreamFactory {
             if (decoderStream instanceof ArmoredInputStream) {
                 ArmoredInputStream armor = (ArmoredInputStream) decoderStream;
 
+                // Cleartext Signed Message
+                // Throw a WrongConsumingMethodException to delegate preparation (extraction of signatures)
+                // to the CleartextSignatureProcessor which will call us again (see comment above)
                 if (armor.isClearText()) {
                     throw new WrongConsumingMethodException("Message appears to be using the Cleartext Signature Framework. " +
                             "Use PGPainless.verifyCleartextSignedMessage() to verify this message instead.");
@@ -156,6 +164,7 @@ public final class DecryptionStreamFactory {
             // Parse OpenPGP message
             inputStream = processPGPPackets(objectFactory, 1);
         } catch (EOFException | FinalIOException e) {
+            // Broken message or invalid decryption session key
             throw e;
         } catch (MissingLiteralDataException e) {
             // Not an OpenPGP message.
