@@ -136,7 +136,7 @@ public class SignatureSubpackets
 
     @Override
     public SignatureSubpackets setIssuerFingerprint(@Nonnull PGPPublicKey key) {
-        return setIssuerFingerprint(true, key);
+        return setIssuerFingerprint(false, key);
     }
 
     @Override
