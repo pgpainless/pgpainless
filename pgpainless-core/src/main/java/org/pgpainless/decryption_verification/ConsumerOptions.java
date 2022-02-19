@@ -53,7 +53,6 @@ public class ConsumerOptions {
     private MissingKeyPassphraseStrategy missingKeyPassphraseStrategy = MissingKeyPassphraseStrategy.INTERACTIVE;
 
     private MultiPassStrategy multiPassStrategy = new InMemoryMultiPassStrategy();
-    private boolean cleartextSigned;
 
     /**
      * Consider signatures on the message made before the given timestamp invalid.
@@ -345,22 +344,5 @@ public class ConsumerOptions {
      */
     public MultiPassStrategy getMultiPassStrategy() {
         return multiPassStrategy;
-    }
-
-    /**
-     * INTERNAL method to mark cleartext signed messages.
-     * Do not call this manually.
-     */
-    public ConsumerOptions setIsCleartextSigned() {
-        this.cleartextSigned = true;
-        return this;
-    }
-
-    /**
-     * Return true if the message is cleartext signed.
-     * @return cleartext signed
-     */
-    public boolean isCleartextSigned() {
-        return this.cleartextSigned;
     }
 }

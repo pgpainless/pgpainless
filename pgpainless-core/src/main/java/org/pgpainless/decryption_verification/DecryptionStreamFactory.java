@@ -36,6 +36,7 @@ import org.bouncycastle.openpgp.PGPSecretKey;
 import org.bouncycastle.openpgp.PGPSecretKeyRing;
 import org.bouncycastle.openpgp.PGPSessionKey;
 import org.bouncycastle.openpgp.PGPSignature;
+import org.bouncycastle.openpgp.PGPSignatureList;
 import org.bouncycastle.openpgp.PGPUtil;
 import org.bouncycastle.openpgp.operator.PBEDataDecryptorFactory;
 import org.bouncycastle.openpgp.operator.PGPContentVerifierBuilderProvider;
@@ -46,6 +47,8 @@ import org.pgpainless.algorithm.CompressionAlgorithm;
 import org.pgpainless.algorithm.EncryptionPurpose;
 import org.pgpainless.algorithm.StreamEncoding;
 import org.pgpainless.algorithm.SymmetricKeyAlgorithm;
+import org.pgpainless.decryption_verification.cleartext_signatures.ClearsignedMessageUtil;
+import org.pgpainless.decryption_verification.cleartext_signatures.MultiPassStrategy;
 import org.pgpainless.exception.FinalIOException;
 import org.pgpainless.exception.MessageNotIntegrityProtectedException;
 import org.pgpainless.exception.MissingDecryptionMethodException;
@@ -53,7 +56,6 @@ import org.pgpainless.exception.MissingLiteralDataException;
 import org.pgpainless.exception.MissingPassphraseException;
 import org.pgpainless.exception.SignatureValidationException;
 import org.pgpainless.exception.UnacceptableAlgorithmException;
-import org.pgpainless.exception.WrongConsumingMethodException;
 import org.pgpainless.implementation.ImplementationFactory;
 import org.pgpainless.key.SubkeyIdentifier;
 import org.pgpainless.key.info.KeyRingInfo;
@@ -62,6 +64,7 @@ import org.pgpainless.key.protection.UnlockSecretKey;
 import org.pgpainless.signature.SignatureUtils;
 import org.pgpainless.signature.consumer.DetachedSignatureCheck;
 import org.pgpainless.signature.consumer.OnePassSignatureCheck;
+import org.pgpainless.util.ArmoredInputStreamFactory;
 import org.pgpainless.util.CRCingArmoredInputStreamWrapper;
 import org.pgpainless.util.PGPUtilWrapper;
 import org.pgpainless.util.Passphrase;
@@ -76,6 +79,9 @@ public final class DecryptionStreamFactory {
     private static final Logger LOGGER = LoggerFactory.getLogger(DecryptionStreamFactory.class);
     // Maximum nesting depth of packets (e.g. compression, encryption...)
     private static final int MAX_PACKET_NESTING_DEPTH = 16;
+
+    // Buffer Size for BufferedInputStreams
+    public static int BUFFER_SIZE = 4096;
 
     private final ConsumerOptions options;
     private final OpenPgpMetadata.Builder resultBuilder = OpenPgpMetadata.getBuilder();
@@ -92,7 +98,8 @@ public final class DecryptionStreamFactory {
                                           @Nonnull ConsumerOptions options)
             throws PGPException, IOException {
         DecryptionStreamFactory factory = new DecryptionStreamFactory(options);
-        return factory.parseOpenPGPDataAndCreateDecryptionStream(inputStream);
+        BufferedInputStream bufferedIn = new BufferedInputStream(inputStream, BUFFER_SIZE);
+        return factory.parseOpenPGPDataAndCreateDecryptionStream(bufferedIn);
     }
 
     public DecryptionStreamFactory(ConsumerOptions options) {
@@ -125,44 +132,34 @@ public final class DecryptionStreamFactory {
         }
     }
 
-    private DecryptionStream parseOpenPGPDataAndCreateDecryptionStream(InputStream inputStream)
+    private DecryptionStream parseOpenPGPDataAndCreateDecryptionStream(BufferedInputStream bufferedIn)
             throws IOException, PGPException {
-        // Make sure we handle armored and non-armored data properly
-        BufferedInputStream bufferedIn = new BufferedInputStream(inputStream, 512);
-        bufferedIn.mark(512);
-        InputStream decoderStream;
+        InputStream pgpInStream;
+        InputStream outerDecodingStream;
         PGPObjectFactory objectFactory;
 
-        // Workaround for cleartext signed data
-        // If we below threw a WrongConsumingMethodException, the CleartextSignatureProcessor will prepare the
-        // message for us and will set options.isCleartextSigned() to true.
-        // That way we can process long messages without running the issue of resetting the bufferedInputStream
-        // to invalid marks.
-        if (options.isCleartextSigned()) {
-            inputStream = wrapInVerifySignatureStream(bufferedIn, null);
-            return new DecryptionStream(inputStream, resultBuilder, integrityProtectedEncryptedInputStream,
-                    null);
-        }
-
         try {
-            decoderStream = PGPUtilWrapper.getDecoderStream(bufferedIn);
-            decoderStream = CRCingArmoredInputStreamWrapper.possiblyWrap(decoderStream);
+            outerDecodingStream = PGPUtilWrapper.getDecoderStream(bufferedIn);
+            outerDecodingStream = CRCingArmoredInputStreamWrapper.possiblyWrap(outerDecodingStream);
 
-            if (decoderStream instanceof ArmoredInputStream) {
-                ArmoredInputStream armor = (ArmoredInputStream) decoderStream;
+            if (outerDecodingStream instanceof ArmoredInputStream) {
+                ArmoredInputStream armor = (ArmoredInputStream) outerDecodingStream;
 
                 // Cleartext Signed Message
                 // Throw a WrongConsumingMethodException to delegate preparation (extraction of signatures)
                 // to the CleartextSignatureProcessor which will call us again (see comment above)
                 if (armor.isClearText()) {
-                    throw new WrongConsumingMethodException("Message appears to be using the Cleartext Signature Framework. " +
-                            "Use PGPainless.verifyCleartextSignedMessage() to verify this message instead.");
+                    bufferedIn.reset();
+                    return parseCleartextSignedMessage(bufferedIn);
                 }
             }
 
-            objectFactory = ImplementationFactory.getInstance().getPGPObjectFactory(decoderStream);
+            objectFactory = ImplementationFactory.getInstance().getPGPObjectFactory(outerDecodingStream);
             // Parse OpenPGP message
-            inputStream = processPGPPackets(objectFactory, 1);
+            pgpInStream = processPGPPackets(objectFactory, 1);
+            return new DecryptionStream(pgpInStream,
+                    resultBuilder, integrityProtectedEncryptedInputStream,
+                    (outerDecodingStream instanceof ArmoredInputStream) ? outerDecodingStream : null);
         } catch (EOFException | FinalIOException e) {
             // Broken message or invalid decryption session key
             throw e;
@@ -172,23 +169,44 @@ public final class DecryptionStreamFactory {
             //  to allow for detached signature verification.
             LOGGER.debug("The message appears to not be an OpenPGP message. This is probably data signed with detached signatures?");
             bufferedIn.reset();
-            decoderStream = bufferedIn;
-            objectFactory = ImplementationFactory.getInstance().getPGPObjectFactory(decoderStream);
-            inputStream = wrapInVerifySignatureStream(bufferedIn, objectFactory);
+            outerDecodingStream = bufferedIn;
+            objectFactory = ImplementationFactory.getInstance().getPGPObjectFactory(outerDecodingStream);
+            pgpInStream = wrapInVerifySignatureStream(bufferedIn, objectFactory);
         } catch (IOException e) {
             if (e.getMessage().contains("invalid armor") || e.getMessage().contains("invalid header encountered")) {
                 // We falsely assumed the data to be armored.
                 LOGGER.debug("The message is apparently not armored.");
                 bufferedIn.reset();
-                decoderStream = bufferedIn;
-                inputStream = wrapInVerifySignatureStream(bufferedIn, null);
+                outerDecodingStream = CRCingArmoredInputStreamWrapper.possiblyWrap(bufferedIn);
+                pgpInStream = wrapInVerifySignatureStream(outerDecodingStream, null);
             } else {
                 throw new FinalIOException(e);
             }
         }
 
-        return new DecryptionStream(inputStream, resultBuilder, integrityProtectedEncryptedInputStream,
-                (decoderStream instanceof ArmoredInputStream) ? decoderStream : null);
+        return new DecryptionStream(pgpInStream, resultBuilder, integrityProtectedEncryptedInputStream,
+                (outerDecodingStream instanceof ArmoredInputStream) ? outerDecodingStream : null);
+    }
+
+    private DecryptionStream parseCleartextSignedMessage(BufferedInputStream in)
+            throws IOException, PGPException {
+        resultBuilder.setCompressionAlgorithm(CompressionAlgorithm.UNCOMPRESSED)
+                .setFileEncoding(StreamEncoding.TEXT);
+
+        ArmoredInputStream armorIn = ArmoredInputStreamFactory.get(in);
+
+        MultiPassStrategy multiPassStrategy = options.getMultiPassStrategy();
+        PGPSignatureList signatures = ClearsignedMessageUtil.detachSignaturesFromInbandClearsignedMessage(armorIn, multiPassStrategy.getMessageOutputStream());
+
+        for (PGPSignature signature : signatures) {
+            options.addVerificationOfDetachedSignature(signature);
+        }
+
+        initializeDetachedSignatures(options.getDetachedSignatures());
+
+        InputStream verifyIn = wrapInVerifySignatureStream(multiPassStrategy.getMessageInputStream(), null);
+        return new DecryptionStream(verifyIn, resultBuilder, integrityProtectedEncryptedInputStream,
+                null);
     }
 
     private InputStream wrapInVerifySignatureStream(InputStream bufferedIn, @Nullable PGPObjectFactory objectFactory) {
