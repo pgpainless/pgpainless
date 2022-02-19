@@ -116,7 +116,7 @@ public class SignatureSubpackets
 
     @Override
     public SignatureSubpackets setIssuerKeyId(long keyId) {
-        return setIssuerKeyId(true, keyId);
+        return setIssuerKeyId(false, keyId);
     }
 
     @Override
@@ -303,7 +303,7 @@ public class SignatureSubpackets
 
     @Override
     public SignatureSubpackets setPreferredCompressionAlgorithms(Set<CompressionAlgorithm> algorithms) {
-        return setPreferredCompressionAlgorithms(true, algorithms);
+        return setPreferredCompressionAlgorithms(false, algorithms);
     }
 
     @Override
@@ -342,7 +342,7 @@ public class SignatureSubpackets
 
     @Override
     public SignatureSubpackets setPreferredSymmetricKeyAlgorithms(Set<SymmetricKeyAlgorithm> algorithms) {
-        return setPreferredSymmetricKeyAlgorithms(true, algorithms);
+        return setPreferredSymmetricKeyAlgorithms(false, algorithms);
     }
 
     @Override
@@ -381,7 +381,7 @@ public class SignatureSubpackets
 
     @Override
     public SignatureSubpackets setPreferredHashAlgorithms(Set<HashAlgorithm> algorithms) {
-        return setPreferredHashAlgorithms(true, algorithms);
+        return setPreferredHashAlgorithms(false, algorithms);
     }
 
     @Override
@@ -466,6 +466,11 @@ public class SignatureSubpackets
     }
 
     @Override
+    public SignatureSubpackets setExportable(boolean exportable) {
+        return setExportable(true, exportable);
+    }
+
+    @Override
     public SignatureSubpackets setExportable(boolean isCritical, boolean isExportable) {
         return setExportable(new Exportable(isCritical, isExportable));
     }
@@ -478,6 +483,11 @@ public class SignatureSubpackets
 
     public Exportable getExportableSubpacket() {
         return exportable;
+    }
+
+    @Override
+    public SignatureSubpackets setRevocable(boolean revocable) {
+        return setRevocable(true, revocable);
     }
 
     @Override
@@ -530,7 +540,7 @@ public class SignatureSubpackets
 
     @Override
     public SignatureSubpackets setRevocationReason(RevocationAttributes revocationAttributes) {
-        return setRevocationReason(true, revocationAttributes);
+        return setRevocationReason(false, revocationAttributes);
     }
 
     @Override

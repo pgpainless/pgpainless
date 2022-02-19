@@ -82,9 +82,13 @@ public interface BaseSignatureSubpackets {
 
     BaseSignatureSubpackets clearIntendedRecipientFingerprints();
 
+    BaseSignatureSubpackets setExportable(boolean isExportable);
+
     BaseSignatureSubpackets setExportable(boolean isCritical, boolean isExportable);
 
     BaseSignatureSubpackets setExportable(@Nullable Exportable exportable);
+
+    BaseSignatureSubpackets setRevocable(boolean revocable);
 
     BaseSignatureSubpackets setRevocable(boolean isCritical, boolean isRevocable);
 

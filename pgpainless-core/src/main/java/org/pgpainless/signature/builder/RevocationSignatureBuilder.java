@@ -19,7 +19,7 @@ public class RevocationSignatureBuilder extends AbstractSignatureBuilder<Revocat
 
     public RevocationSignatureBuilder(SignatureType signatureType, PGPSecretKey signingKey, SecretKeyRingProtector protector) throws PGPException {
         super(signatureType, signingKey, protector);
-        getHashedSubpackets().setRevocable(true, false);
+        getHashedSubpackets().setRevocable(false);
     }
 
     @Override
