@@ -4,6 +4,8 @@
 
 package pgp.wkd;
 
+import org.apache.commons.codec.binary.ZBase32;
+
 import java.io.UnsupportedEncodingException;
 import java.net.URI;
 import java.net.URLEncoder;
@@ -13,89 +15,73 @@ import java.security.NoSuchAlgorithmException;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-import org.apache.commons.codec.binary.ZBase32;
+public class WKDAddress {
 
-/**
- * Transform an email address into a WKD address.
- *
- * @see <a href="https://datatracker.ietf.org/doc/draft-koch-openpgp-webkey-service/">OpenPGP Web Key Directory</a>
- */
-public final class WKDAddress {
+    private static final String SCHEME = "https://";
+    private static final String ADV_SUBDOMAIN = "openpgpkey.";
+    private static final String DIRECT_WELL_KNOWN = "/.well-known/openpgpkey/hu/";
+    private static String ADV_WELL_KNOWN(String domain) {
+        return "/.well-known/openpgpkey/" + domain + "/hu/";
+    }
 
     // RegEx for Email Addresses.
     // https://www.baeldung.com/java-email-validation-regex#regular-expression-by-rfc-5322-for-email-validation
     // Modified by adding capture groups '()' for local and domain part
     private static final Pattern PATTERN_EMAIL = Pattern.compile("^([a-zA-Z0-9_!#$%&'*+/=?`{|}~^.-]+)@([a-zA-Z0-9.-]+)$");
 
-    // Firstname Lastname <email@address> [Optional Comment]
-    // we are only interested in "email@address"
-    private static final Pattern PATTERN_USER_ID = Pattern.compile("^.*\\<([a-zA-Z0-9_!#$%&'*+/=?`{|}~^.-]+@[a-zA-Z0-9.-]+)\\>.*");
-
-    private static final ZBase32 zBase32 = new ZBase32();
     private static final Charset utf8 = Charset.forName("UTF8");
+    private static final ZBase32 zBase32 = new ZBase32();
 
-    private static final String SCHEME = "https://";
-    private static final String SUBDOMAIN = "openpgpkey";
-    private static final String PATH = "/.well-known/openpgpkey/";
-    private static final String HU = "/hu/";
-    private static final String PATH_HU = "/.well-known/openpgpkey/hu/";
+    private final String localPart;
+    private final String domainPart;
+    private final String zbase32LocalPart;
+    private final String percentEncodedLocalPart;
 
-    private WKDAddress() {
+    public WKDAddress(String localPart, String domainPart) {
+        this.localPart = localPart;
+        this.domainPart = domainPart.toLowerCase();
 
+        this.zbase32LocalPart = zbase32(this.localPart);
+        this.percentEncodedLocalPart = percentEncode(this.localPart);
     }
 
-    public static String emailFromUserId(String userId) {
-        Matcher matcher = PATTERN_USER_ID.matcher(userId);
-        if (!matcher.matches()) {
-            throw new IllegalArgumentException("User-ID does not follow excepted pattern \"Firstname Lastname <email.address> [Optional Comment]\"");
+    public static WKDAddress fromEmail(String email) {
+        MailAddress mailAddress = parseMailAddress(email);
+        return new WKDAddress(mailAddress.getLocalPart(), mailAddress.getDomainPart());
+    }
+
+    public URI getDirectMethodURI() {
+        return URI.create(SCHEME + domainPart + DIRECT_WELL_KNOWN + zbase32LocalPart + "?l=" + percentEncodedLocalPart);
+    }
+
+    public URI getAdvancedMethodURI() {
+        return URI.create(SCHEME + ADV_SUBDOMAIN + domainPart + ADV_WELL_KNOWN(domainPart) + zbase32LocalPart + "?l=" + percentEncodedLocalPart);
+    }
+
+    private String zbase32(String localPart) {
+        MessageDigest sha1;
+        try {
+            sha1 = MessageDigest.getInstance("SHA1");
+        } catch (NoSuchAlgorithmException e) {
+            // SHA-1 is a MUST on JVM implementations
+            throw new AssertionError(e);
         }
+        sha1.update(localPart.toLowerCase().getBytes(utf8));
+        byte[] digest = sha1.digest();
 
-        String email = matcher.group(1);
-        return email;
+        String base32KeyHandle = zBase32.encodeAsString(digest);
+        return base32KeyHandle;
     }
 
-    public static URI directFromUserId(String userId) {
-        String email = emailFromUserId(userId);
-        return directFromEmail(email);
+    private String percentEncode(String localPart) {
+        try {
+            return URLEncoder.encode(localPart, "UTF-8");
+        } catch (UnsupportedEncodingException e) {
+            // UTF8 is a MUST on JVM implementations
+            throw new AssertionError(e);
+        }
     }
 
-    public static URI directFromEmail(String email) {
-        MailAddress mailAddress = parseMailAddress(email);
-
-        return URI.create(SCHEME + mailAddress.getDomainPart() + PATH_HU + mailAddress.getHashedLocalPart() + "?l=" + mailAddress.getPercentEncodedLocalPart());
-    }
-
-    /**
-     * Extract the email address from a user-id.
-     * The user-id is expected to correspond to a RFC2822 name-addr.
-     * The email address is expected to be framed by angle brackets.
-     *
-     * @see <a href="https://datatracker.ietf.org/doc/html/rfc2822#section-3.4">RFC2822 - Internet Message Format §3.4: Address Specification</a>
-     * @param userId user-id name-addr
-     * @return WKD URI
-     *
-     * @throws IllegalArgumentException in case the user-id does not match the expected format
-     */
-    public static URI advancedFromUserId(String userId) {
-        String email = emailFromUserId(userId);
-        return advancedFromEmail(email);
-    }
-
-    /**
-     * Translate an email address (localpart@domainpart) to a WKD URI.
-     *
-     * @param email email address
-     * @return WKD URI
-     * @throws IllegalArgumentException in case of a malformed email address
-     */
-    public static URI advancedFromEmail(String email) {
-        MailAddress mailAddress = parseMailAddress(email);
-
-        return URI.create(
-                SCHEME + SUBDOMAIN + "." + mailAddress.getDomainPart() + PATH + mailAddress.getDomainPart()
-                        + HU + mailAddress.getHashedLocalPart() + "?l=" + mailAddress.getPercentEncodedLocalPart()
-        );
-    }
 
     private static MailAddress parseMailAddress(String email) {
         Matcher matcher = PATTERN_EMAIL.matcher(email);
@@ -121,36 +107,8 @@ public final class WKDAddress {
             return localPart;
         }
 
-        public String getLowerCaseLocalPart() {
-            return getLocalPart().toLowerCase();
-        }
-
-        public String getPercentEncodedLocalPart() {
-            try {
-                return URLEncoder.encode(getLocalPart(), "UTF-8");
-            } catch (UnsupportedEncodingException e) {
-                // UTF8 is a MUST on JVM implementations
-                throw new AssertionError(e);
-            }
-        }
-
-        public String getHashedLocalPart() {
-            MessageDigest sha1;
-            try {
-                sha1 = MessageDigest.getInstance("SHA1");
-            } catch (NoSuchAlgorithmException e) {
-                // SHA-1 is a MUST on JVM implementations
-                throw new AssertionError(e);
-            }
-            sha1.update(getLowerCaseLocalPart().getBytes(utf8));
-            byte[] digest = sha1.digest();
-
-            String base32KeyHandle = zBase32.encodeAsString(digest);
-            return base32KeyHandle;
-        }
-
         public String getDomainPart() {
-            return domainPart.toLowerCase();
+            return domainPart;
         }
     }
 }
