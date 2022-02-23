@@ -129,13 +129,14 @@ public class Encrypt {
 
         assertEquals(message, plaintext.toString());
     }
-    
+
     /**
      * In this example, Alice is sending a signed and encrypted message to Bob.
-     * She signs the message using her key and then encrypts the message to both bobs certificate and her own.
-     *
-     * Bob subsequently decrypts the message using his key and verifies that the message was signed by Alice using
-     * her certificate.
+     * She encrypts the message to both bobs certificate and her own.
+     * A comment header with the text "This comment was added using options." is added 
+     * using the fluent ProducerOption syntax.
+     *  
+     * Bob subsequently decrypts the message using his key.
      */
     @Test
     public void encryptWithCommentHeader() throws PGPException, InvalidAlgorithmParameterException, NoSuchAlgorithmException, IOException {
@@ -170,11 +171,11 @@ public class Encrypt {
         encryptor.close();
         String encryptedMessage = ciphertext.toString();
 
-        // comment should be third line after "BEGIN PGP" and "Version:"
-        assertEquals(encryptedMessage.split("\n")[2].trim(), "Comment: "+comment);
+        // check that comment header was added after "BEGIN PGP" and "Version:"
+        assertEquals(encryptedMessage.split("\n")[2].trim(), "Comment: " + comment);
 
         // also test, that decryption still works...
-        
+
         // Decrypt and verify signatures
         DecryptionStream decryptor = PGPainless.decryptAndOrVerify()
                 .onInputStream(new ByteArrayInputStream(encryptedMessage.getBytes(StandardCharsets.UTF_8)))
@@ -194,5 +195,5 @@ public class Encrypt {
         assertEquals(message, plaintext.toString());
     }
 
-    
+
 }
