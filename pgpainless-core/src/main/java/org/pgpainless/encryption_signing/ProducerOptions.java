@@ -220,7 +220,7 @@ public final class ProducerOptions {
      * Set the format of the literal data packet.
      * Defaults to {@link StreamEncoding#BINARY}.
      *
-     * @see <a href="https://datatracker.ietf.org/doc/html/rfc4880#section-5.9">RFC4880 ง5.9. Literal Data Packet</a>
+     * @see <a href="https://datatracker.ietf.org/doc/html/rfc4880#section-5.9">RFC4880 ยง5.9. Literal Data Packet</a>
      *
      * @param encoding encoding
      * @return this
