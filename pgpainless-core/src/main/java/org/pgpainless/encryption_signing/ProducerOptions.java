@@ -111,9 +111,9 @@ public final class ProducerOptions {
     /**
      * set the comment for header in ascii armored output.
      * The default value is null, which means no comment header is added.
-     * Multiline comments are possible seperated with '\\n'.
+     * Multiline comments are possible using '\\n'.
      *
-     * @param comment 
+     * @param comment comment header text
      * @return builder
      */
     public ProducerOptions setComment(String comment) {
@@ -141,7 +141,7 @@ public final class ProducerOptions {
     public boolean hasComment() {
         return comment != null;
     }
-    
+
     public ProducerOptions setCleartextSigned() {
         if (signingOptions == null) {
             throw new IllegalArgumentException("Signing Options cannot be null if cleartext signing is enabled.");
