@@ -135,7 +135,7 @@ public class Encrypt {
      * She encrypts the message to both bobs certificate and her own.
      * A comment header with the text "This comment was added using options." is added 
      * using the fluent ProducerOption syntax.
-     *  
+     *
      * Bob subsequently decrypts the message using his key.
      */
     @Test
