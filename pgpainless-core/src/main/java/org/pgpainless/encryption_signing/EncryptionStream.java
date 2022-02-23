@@ -23,6 +23,7 @@ import org.pgpainless.algorithm.CompressionAlgorithm;
 import org.pgpainless.algorithm.SymmetricKeyAlgorithm;
 import org.pgpainless.implementation.ImplementationFactory;
 import org.pgpainless.key.SubkeyIdentifier;
+import org.pgpainless.util.ArmorUtils;
 import org.pgpainless.util.ArmoredOutputStreamFactory;
 import org.pgpainless.util.StreamGeneratorWrapper;
 import org.slf4j.Logger;
@@ -74,6 +75,9 @@ public final class EncryptionStream extends OutputStream {
 
         LOGGER.debug("Wrap encryption output in ASCII armor");
         armorOutputStream = ArmoredOutputStreamFactory.get(outermostStream);
+        if (options.hasComment()) {
+        	ArmorUtils.addCommentHeader(armorOutputStream, options.getComment());
+        }
         outermostStream = armorOutputStream;
     }
 

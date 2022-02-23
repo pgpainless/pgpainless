@@ -129,4 +129,71 @@ public class Encrypt {
 
         assertEquals(message, plaintext.toString());
     }
+
+    /**
+     * In this example, Alice is sending a signed and encrypted message to Bob.
+     * She encrypts the message to both bobs certificate and her own.
+     * A comment header with the text "This comment was added using options." is added
+     * using the fluent ProducerOption syntax.
+     *
+     * Bob subsequently decrypts the message using his key.
+     */
+    @Test
+    public void encryptWithCommentHeader() throws PGPException, InvalidAlgorithmParameterException, NoSuchAlgorithmException, IOException {
+        // Prepare keys
+        PGPSecretKeyRing keyAlice = PGPainless.generateKeyRing()
+                .modernKeyRing("alice@pgpainless.org", null);
+        PGPPublicKeyRing certificateAlice = KeyRingUtils.publicKeyRingFrom(keyAlice);
+
+        PGPSecretKeyRing keyBob = PGPainless.generateKeyRing()
+                .modernKeyRing("bob@pgpainless.org", null);
+        PGPPublicKeyRing certificateBob = KeyRingUtils.publicKeyRingFrom(keyBob);
+        SecretKeyRingProtector protectorBob = SecretKeyRingProtector.unprotectedKeys();
+
+        // plaintext message to encrypt
+        String message = "Hello, World!\n";
+        String comment = "This comment was added using options.";
+        ByteArrayOutputStream ciphertext = new ByteArrayOutputStream();
+        // Encrypt and sign
+        EncryptionStream encryptor = PGPainless.encryptAndOrSign()
+                .onOutputStream(ciphertext)
+                .withOptions(ProducerOptions.encrypt(
+                        // we want to encrypt communication (affects key selection based on key flags)
+                        EncryptionOptions.encryptCommunications()
+                                .addRecipient(certificateBob)
+                                .addRecipient(certificateAlice)
+                        ).setAsciiArmor(true)
+                		.setComment(comment)
+                );
+
+        // Pipe data trough and CLOSE the stream (important)
+        Streams.pipeAll(new ByteArrayInputStream(message.getBytes(StandardCharsets.UTF_8)), encryptor);
+        encryptor.close();
+        String encryptedMessage = ciphertext.toString();
+
+        // check that comment header was added after "BEGIN PGP" and "Version:"
+        assertEquals(encryptedMessage.split("\n")[2].trim(), "Comment: " + comment);
+
+        // also test, that decryption still works...
+
+        // Decrypt and verify signatures
+        DecryptionStream decryptor = PGPainless.decryptAndOrVerify()
+                .onInputStream(new ByteArrayInputStream(encryptedMessage.getBytes(StandardCharsets.UTF_8)))
+                .withOptions(new ConsumerOptions()
+                        .addDecryptionKey(keyBob, protectorBob)
+                        .addVerificationCert(certificateAlice)
+                );
+
+        ByteArrayOutputStream plaintext = new ByteArrayOutputStream();
+
+        Streams.pipeAll(decryptor, plaintext);
+        decryptor.close();
+
+        // Check the metadata to see how the message was encrypted/signed
+        OpenPgpMetadata metadata = decryptor.getResult();
+        assertTrue(metadata.isEncrypted());
+        assertEquals(message, plaintext.toString());
+    }
+
+
 }

@@ -25,6 +25,7 @@ public final class ProducerOptions {
     private CompressionAlgorithm compressionAlgorithmOverride = PGPainless.getPolicy().getCompressionAlgorithmPolicy()
             .defaultCompressionAlgorithm();
     private boolean asciiArmor = true;
+    private String comment = null;
 
     private ProducerOptions(EncryptionOptions encryptionOptions, SigningOptions signingOptions) {
         this.encryptionOptions = encryptionOptions;
@@ -105,6 +106,40 @@ public final class ProducerOptions {
      */
     public boolean isAsciiArmor() {
         return asciiArmor;
+    }
+
+    /**
+     * set the comment for header in ascii armored output.
+     * The default value is null, which means no comment header is added.
+     * Multiline comments are possible using '\\n'.
+     *
+     * @param comment comment header text
+     * @return builder
+     */
+    public ProducerOptions setComment(String comment) {
+        if (!asciiArmor) {
+            throw new IllegalArgumentException("Comment can only be set when ASCII armoring is enabled.");
+        }
+        this.comment = comment;
+        return this;
+    }
+
+    /**
+     * Return comment set for header in ascii armored output.
+     *
+     * @return comment
+     */
+    public String getComment() {
+        return comment;
+    }
+
+    /**
+     * Return whether a comment was set (!= null).
+     *
+     * @return comment
+     */
+    public boolean hasComment() {
+        return comment != null;
     }
 
     public ProducerOptions setCleartextSigned() {
