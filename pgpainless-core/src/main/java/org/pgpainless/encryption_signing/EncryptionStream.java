@@ -79,7 +79,7 @@ public final class EncryptionStream extends OutputStream {
             String[] commentLines = options.getComment().split("\n");
             for (String commentLine : commentLines) {
             	if (!commentLine.trim().isEmpty()) {
-            		ArmorUtils.addCommentHeader(armorOutputStream, commentLine);
+            		ArmorUtils.addCommentHeader(armorOutputStream, commentLine.trim());
             	}
             }
         }
