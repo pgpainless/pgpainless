@@ -109,9 +109,12 @@ public final class ProducerOptions {
     }
 
     /**
-     * set the comment for header in ascii armored output.
+     * Set the comment header in ASCII armored output.
      * The default value is null, which means no comment header is added.
      * Multiline comments are possible using '\\n'.
+     *
+     * Note: If a default header comment is set using {@link org.pgpainless.util.ArmoredOutputStreamFactory#setComment(String)},
+     * then both comments will be written to the produced ASCII armor.
      *
      * @param comment comment header text
      * @return builder

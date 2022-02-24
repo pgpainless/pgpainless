@@ -61,6 +61,9 @@ public final class ArmoredOutputStreamFactory {
      * Set a comment header value in the ASCII armor header.
      * If the comment contains newlines, it will be split into multiple header entries.
      *
+     * @see org.pgpainless.encryption_signing.ProducerOptions#setComment(String)  for how to set comments for
+     * individual messages.
+     *
      * @param commentString comment
      */
     public static void setComment(String commentString) {
