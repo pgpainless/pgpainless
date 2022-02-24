@@ -5,6 +5,16 @@ SPDX-License-Identifier: CC0-1.0
 
 # PGPainless Changelog
 
+## 1.1.1-SNAPSHOT
+- Add `producerOptions.setComment(string)` to allow adding ASCII armor comments when creating OpenPGP messages (thanks @ferenc-hechler)
+- Simplify consumption of cleartext-signed data
+- Change default criticality of signature subpackets
+  - Issuer Fingerprint: critical -> non-critical
+  - Revocable: non-critical -> critical
+  - Issuer KeyID: critical -> non-critical
+  - Preferred Algorithms: critical -> non-critical
+  - Revocation Reason: critical -> non-critical
+
 ## 1.1.0
 - `pgpainless-sop`: Update `sop-java` to version 1.2.0
     - Treat passwords and session keys as indirect parameters
