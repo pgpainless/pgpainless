@@ -133,8 +133,7 @@ public class Encrypt {
     /**
      * In this example, Alice is sending a signed and encrypted message to Bob.
      * She encrypts the message to both bobs certificate and her own.
-     * A comment header with the text "This comment was added using options." is added
-     * using the fluent ProducerOption syntax.
+     * A multiline comment header is added using the fluent ProducerOption syntax.
      *
      * Bob subsequently decrypts the message using his key.
      */
@@ -152,7 +151,13 @@ public class Encrypt {
 
         // plaintext message to encrypt
         String message = "Hello, World!\n";
-        String comment = "This comment was added using options.";
+        String[] comments = {
+        		"This comment was added using options.",
+        		"And it has three lines.",
+        		" ",
+        		"Empty lines are skipped."
+        };
+        String comment = comments[0] + "\n" + comments[1] + "\n" + comments[2] + "\n" + comments[3];
         ByteArrayOutputStream ciphertext = new ByteArrayOutputStream();
         // Encrypt and sign
         EncryptionStream encryptor = PGPainless.encryptAndOrSign()
@@ -172,7 +177,9 @@ public class Encrypt {
         String encryptedMessage = ciphertext.toString();
 
         // check that comment header was added after "BEGIN PGP" and "Version:"
-        assertEquals(encryptedMessage.split("\n")[2].trim(), "Comment: " + comment);
+        assertEquals(encryptedMessage.split("\n")[2].trim(), "Comment: " + comments[0]);
+        assertEquals(encryptedMessage.split("\n")[3].trim(), "Comment: " + comments[1]);
+        assertEquals(encryptedMessage.split("\n")[4].trim(), "Comment: " + comments[3]);
 
         // also test, that decryption still works...
 
