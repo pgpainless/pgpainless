@@ -19,6 +19,10 @@ Files: assets/repository-open-graph.png
 Copyright: 2021 Paul Schaub <info@pgpainless.org>
 License: CC-BY-3.0
 
+Files: assets/pgpainless.svg
+Copyright: 2021 Paul Schaub <info@pgpainless.org>
+License: CC-BY-3.0
+
 Files: assets/test_vectors/*
 Copyright: 2018 Paul Schaub <info@pgpainless.org>
 License: CC0-1.0
