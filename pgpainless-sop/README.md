@@ -34,7 +34,7 @@ dependencies {
     <dependency>
         <groupId>org.pgpainless</groupId>
         <artifactId>pgpainless-sop</artifactId>
-        <version>1.0.2</version>
+        <version>1.1.1</version>
     </dependency>
     ...
 </dependencies>
