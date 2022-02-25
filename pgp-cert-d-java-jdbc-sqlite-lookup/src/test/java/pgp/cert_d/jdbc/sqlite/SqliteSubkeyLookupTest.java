@@ -11,9 +11,11 @@ import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.sql.SQLException;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashSet;
+import java.util.List;
 
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -33,8 +35,8 @@ public class SqliteSubkeyLookupTest {
 
     @Test
     public void simpleInsertAndGet() throws IOException {
-        lookup.storeCertificateSubkeyIds("eb85bb5fa33a75e15e944e63f231550c4f47e38e", Arrays.asList(123L, 234L));
-        lookup.storeCertificateSubkeyIds("d1a66e1a23b182c9980f788cfbfcc82a015e7330", Collections.singletonList(234L));
+        store("eb85bb5fa33a75e15e944e63f231550c4f47e38e", 123L, 234L);
+        store("d1a66e1a23b182c9980f788cfbfcc82a015e7330", 234L);
 
         assertEquals(Collections.singleton("eb85bb5fa33a75e15e944e63f231550c4f47e38e"), lookup.getCertificatesForSubkeyId(123L));
         assertEquals(
@@ -50,7 +52,7 @@ public class SqliteSubkeyLookupTest {
 
     @Test
     public void secondInstanceLookupTest() throws IOException, SQLException {
-        lookup.storeCertificateSubkeyIds("eb85bb5fa33a75e15e944e63f231550c4f47e38e", Collections.singletonList(1337L));
+        store("eb85bb5fa33a75e15e944e63f231550c4f47e38e", 1337L);
         assertEquals(Collections.singleton("eb85bb5fa33a75e15e944e63f231550c4f47e38e"), lookup.getCertificatesForSubkeyId(1337));
 
         // do the lookup using a second db instance on the same file
@@ -60,8 +62,16 @@ public class SqliteSubkeyLookupTest {
 
     @Test
     public void ignoreInsertDuplicates() throws IOException {
-        lookup.storeCertificateSubkeyIds("d1a66e1a23b182c9980f788cfbfcc82a015e7330", Arrays.asList(123L, 234L));
+        store("d1a66e1a23b182c9980f788cfbfcc82a015e7330", 123L, 234L);
         // per default we ignore duplicates
-        lookup.storeCertificateSubkeyIds("d1a66e1a23b182c9980f788cfbfcc82a015e7330", Arrays.asList(123L, 512L));
+        store("d1a66e1a23b182c9980f788cfbfcc82a015e7330", 123L, 512L);
+    }
+
+    private void store(String cert, long... ids) throws IOException {
+        List<Long> idList = new ArrayList<>();
+        for (long id : ids) {
+            idList.add(id);
+        }
+        lookup.storeCertificateSubkeyIds(cert, idList);
     }
 }
