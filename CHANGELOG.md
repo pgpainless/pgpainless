@@ -5,7 +5,7 @@ SPDX-License-Identifier: CC0-1.0
 
 # PGPainless Changelog
 
-## 1.1.1-SNAPSHOT
+## 1.1.1
 - Add `producerOptions.setComment(string)` to allow adding ASCII armor comments when creating OpenPGP messages (thanks @ferenc-hechler)
 - Simplify consumption of cleartext-signed data
 - Change default criticality of signature subpackets
