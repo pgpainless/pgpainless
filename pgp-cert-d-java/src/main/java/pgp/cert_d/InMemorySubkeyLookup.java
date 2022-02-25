@@ -4,20 +4,21 @@
 
 package pgp.cert_d;
 
-import pgp.certificate_store.SubkeyLookup;
-
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Map;
 import java.util.Set;
+
+import pgp.certificate_store.SubkeyLookup;
 
 public class InMemorySubkeyLookup implements SubkeyLookup {
 
     private static final Map<Long, Set<String>> subkeyMap = new HashMap<>();
 
     @Override
-    public Set<String> getIdentifiersForSubkeyId(long subkeyId) {
+    public Set<String> getCertificatesForSubkeyId(long subkeyId) {
         Set<String> identifiers = subkeyMap.get(subkeyId);
         if (identifiers == null) {
             return Collections.emptySet();
@@ -26,13 +27,15 @@ public class InMemorySubkeyLookup implements SubkeyLookup {
     }
 
     @Override
-    public void storeIdentifierForSubkeyId(long subkeyId, String identifier) {
-        Set<String> identifiers = subkeyMap.get(subkeyId);
-        if (identifiers == null) {
-            identifiers = new HashSet<>();
-            subkeyMap.put(subkeyId, identifiers);
+    public void storeCertificateSubkeyIds(String certificate, List<Long> subkeyIds) {
+        for (long subkeyId : subkeyIds) {
+            Set<String> certificates = subkeyMap.get(subkeyId);
+            if (certificates == null) {
+                certificates = new HashSet<>();
+                subkeyMap.put(subkeyId, certificates);
+            }
+            certificates.add(certificate);
         }
-        identifiers.add(identifier);
     }
 
     public void clear() {

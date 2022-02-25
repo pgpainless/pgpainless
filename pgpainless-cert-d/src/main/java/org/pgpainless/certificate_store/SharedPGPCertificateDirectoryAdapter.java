@@ -6,7 +6,9 @@ package org.pgpainless.certificate_store;
 
 import java.io.IOException;
 import java.io.InputStream;
+import java.util.ArrayList;
 import java.util.Iterator;
+import java.util.List;
 import java.util.Set;
 
 import pgp.cert_d.SharedPGPCertificateDirectory;
@@ -106,18 +108,16 @@ public class SharedPGPCertificateDirectoryAdapter
             return;
         }
         String fingerprint = certificate.getFingerprint();
-        for (Long subkeyId : certificate.getSubkeyIds()) {
-            storeIdentifierForSubkeyId(subkeyId, fingerprint);
-        }
+        storeCertificateSubkeyIds(fingerprint, new ArrayList<>(certificate.getSubkeyIds()));
     }
 
     @Override
-    public Set<String> getIdentifiersForSubkeyId(long subkeyId) throws IOException {
-        return subkeyLookup.getIdentifiersForSubkeyId(subkeyId);
+    public Set<String> getCertificatesForSubkeyId(long subkeyId) throws IOException {
+        return subkeyLookup.getCertificatesForSubkeyId(subkeyId);
     }
 
     @Override
-    public void storeIdentifierForSubkeyId(long subkeyId, String identifier) throws IOException {
-        subkeyLookup.storeIdentifierForSubkeyId(subkeyId, identifier);
+    public void storeCertificateSubkeyIds(String certificate, List<Long> subkeyIds) throws IOException {
+        subkeyLookup.storeCertificateSubkeyIds(certificate, subkeyIds);
     }
 }

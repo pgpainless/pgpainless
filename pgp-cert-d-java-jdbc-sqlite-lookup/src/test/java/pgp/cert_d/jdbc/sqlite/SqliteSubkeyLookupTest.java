@@ -5,7 +5,6 @@
 package pgp.cert_d.jdbc.sqlite;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import java.io.File;
@@ -34,40 +33,35 @@ public class SqliteSubkeyLookupTest {
 
     @Test
     public void simpleInsertAndGet() throws IOException {
-        lookup.storeIdentifierForSubkeyId(123L, "eb85bb5fa33a75e15e944e63f231550c4f47e38e");
-        lookup.storeIdentifierForSubkeyId(234L, "eb85bb5fa33a75e15e944e63f231550c4f47e38e");
-        lookup.storeIdentifierForSubkeyId(234L, "d1a66e1a23b182c9980f788cfbfcc82a015e7330");
+        lookup.storeCertificateSubkeyIds("eb85bb5fa33a75e15e944e63f231550c4f47e38e", Arrays.asList(123L, 234L));
+        lookup.storeCertificateSubkeyIds("d1a66e1a23b182c9980f788cfbfcc82a015e7330", Collections.singletonList(234L));
 
-        assertEquals(Collections.singleton("eb85bb5fa33a75e15e944e63f231550c4f47e38e"), lookup.getIdentifiersForSubkeyId(123L));
+        assertEquals(Collections.singleton("eb85bb5fa33a75e15e944e63f231550c4f47e38e"), lookup.getCertificatesForSubkeyId(123L));
         assertEquals(
                 new HashSet<>(Arrays.asList("eb85bb5fa33a75e15e944e63f231550c4f47e38e", "d1a66e1a23b182c9980f788cfbfcc82a015e7330")),
-                lookup.getIdentifiersForSubkeyId(234L));
+                lookup.getCertificatesForSubkeyId(234L));
     }
 
     @Test
     public void getNonExistingSubkeyYieldsNull() throws IOException, SQLException {
-        assertTrue(lookup.get(6666666).isEmpty());
-        assertTrue(lookup.getIdentifiersForSubkeyId(6666666).isEmpty());
+        assertTrue(lookup.selectValues(6666666).isEmpty());
+        assertTrue(lookup.getCertificatesForSubkeyId(6666666).isEmpty());
     }
 
     @Test
     public void secondInstanceLookupTest() throws IOException, SQLException {
-        lookup.storeIdentifierForSubkeyId(1337, "eb85bb5fa33a75e15e944e63f231550c4f47e38e");
-        assertEquals(Collections.singleton("eb85bb5fa33a75e15e944e63f231550c4f47e38e"), lookup.getIdentifiersForSubkeyId(1337));
+        lookup.storeCertificateSubkeyIds("eb85bb5fa33a75e15e944e63f231550c4f47e38e", Collections.singletonList(1337L));
+        assertEquals(Collections.singleton("eb85bb5fa33a75e15e944e63f231550c4f47e38e"), lookup.getCertificatesForSubkeyId(1337));
 
         // do the lookup using a second db instance on the same file
         SqliteSubkeyLookup secondInstance = SqliteSubkeyLookup.forDatabaseFile(databaseFile);
-        assertEquals(Collections.singleton("eb85bb5fa33a75e15e944e63f231550c4f47e38e"), secondInstance.getIdentifiersForSubkeyId(1337));
+        assertEquals(Collections.singleton("eb85bb5fa33a75e15e944e63f231550c4f47e38e"), secondInstance.getCertificatesForSubkeyId(1337));
     }
 
     @Test
     public void ignoreInsertDuplicates() throws IOException {
-        lookup.storeIdentifierForSubkeyId(123L, "d1a66e1a23b182c9980f788cfbfcc82a015e7330");
+        lookup.storeCertificateSubkeyIds("d1a66e1a23b182c9980f788cfbfcc82a015e7330", Arrays.asList(123L, 234L));
         // per default we ignore duplicates
-        lookup.storeIdentifierForSubkeyId(123L, "d1a66e1a23b182c9980f788cfbfcc82a015e7330");
-
-        // if we choose not to ignore duplicates, we raise an exception
-        assertThrows(SQLException.class, () ->
-                lookup.insert(123L, "d1a66e1a23b182c9980f788cfbfcc82a015e7330", false));
+        lookup.storeCertificateSubkeyIds("d1a66e1a23b182c9980f788cfbfcc82a015e7330", Arrays.asList(123L, 512L));
     }
 }

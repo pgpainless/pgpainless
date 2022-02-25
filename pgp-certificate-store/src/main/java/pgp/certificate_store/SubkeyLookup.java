@@ -5,6 +5,7 @@
 package pgp.certificate_store;
 
 import java.io.IOException;
+import java.util.List;
 import java.util.Set;
 
 public interface SubkeyLookup {
@@ -16,13 +17,15 @@ public interface SubkeyLookup {
      * @param subkeyId subkey id
      * @return fingerprint of the certificate
      */
-    Set<String> getIdentifiersForSubkeyId(long subkeyId) throws IOException;
+    Set<String> getCertificatesForSubkeyId(long subkeyId) throws IOException;
 
     /**
-     * Store a record of the subkey id that points to the fingerprint.
+     * Record, which certificate the subkey-ids in the list belong to.
+     * This method does not change the affiliation of subkey-ids not contained in the provided list.
      *
-     * @param subkeyId subkey id
-     * @param identifier fingerprint of the certificate
+     * @param certificate certificate fingerprint
+     * @param subkeyIds subkey ids
+     * @throws IOException in case of an IO error
      */
-    void storeIdentifierForSubkeyId(long subkeyId, String identifier) throws IOException;
+    void storeCertificateSubkeyIds(String certificate, List<Long> subkeyIds) throws IOException;
 }

@@ -55,33 +55,33 @@ public class SubkeyLookupTest {
     public void testInsertGet(SubkeyLookup subject) throws IOException {
         // Initially all null
 
-        assertTrue(subject.getIdentifiersForSubkeyId(123).isEmpty());
-        assertTrue(subject.getIdentifiersForSubkeyId(1337).isEmpty());
-        assertTrue(subject.getIdentifiersForSubkeyId(420).isEmpty());
+        assertTrue(subject.getCertificatesForSubkeyId(123).isEmpty());
+        assertTrue(subject.getCertificatesForSubkeyId(1337).isEmpty());
+        assertTrue(subject.getCertificatesForSubkeyId(420).isEmpty());
 
         // Store one val, others still null
 
-        subject.storeIdentifierForSubkeyId(123, "d1a66e1a23b182c9980f788cfbfcc82a015e7330");
+        subject.storeCertificateSubkeyIds("d1a66e1a23b182c9980f788cfbfcc82a015e7330", Collections.singletonList(123L));
 
-        assertEquals(Collections.singleton("d1a66e1a23b182c9980f788cfbfcc82a015e7330"), subject.getIdentifiersForSubkeyId(123));
-        assertTrue(subject.getIdentifiersForSubkeyId(1337).isEmpty());
-        assertTrue(subject.getIdentifiersForSubkeyId(420).isEmpty());
+        assertEquals(Collections.singleton("d1a66e1a23b182c9980f788cfbfcc82a015e7330"), subject.getCertificatesForSubkeyId(123));
+        assertTrue(subject.getCertificatesForSubkeyId(1337).isEmpty());
+        assertTrue(subject.getCertificatesForSubkeyId(420).isEmpty());
 
         // Store other val, first stays intact
 
-        subject.storeIdentifierForSubkeyId(1337, "d1a66e1a23b182c9980f788cfbfcc82a015e7330");
-        subject.storeIdentifierForSubkeyId(420, "d1a66e1a23b182c9980f788cfbfcc82a015e7330");
+        subject.storeCertificateSubkeyIds("d1a66e1a23b182c9980f788cfbfcc82a015e7330", Collections.singletonList(1337L));
+        subject.storeCertificateSubkeyIds("d1a66e1a23b182c9980f788cfbfcc82a015e7330", Collections.singletonList(420L));
 
-        assertEquals(Collections.singleton("d1a66e1a23b182c9980f788cfbfcc82a015e7330"), subject.getIdentifiersForSubkeyId(123));
-        assertEquals(Collections.singleton("d1a66e1a23b182c9980f788cfbfcc82a015e7330"), subject.getIdentifiersForSubkeyId(1337));
-        assertEquals(Collections.singleton("d1a66e1a23b182c9980f788cfbfcc82a015e7330"), subject.getIdentifiersForSubkeyId(420));
+        assertEquals(Collections.singleton("d1a66e1a23b182c9980f788cfbfcc82a015e7330"), subject.getCertificatesForSubkeyId(123));
+        assertEquals(Collections.singleton("d1a66e1a23b182c9980f788cfbfcc82a015e7330"), subject.getCertificatesForSubkeyId(1337));
+        assertEquals(Collections.singleton("d1a66e1a23b182c9980f788cfbfcc82a015e7330"), subject.getCertificatesForSubkeyId(420));
 
         // add additional entry for subkey
 
-        subject.storeIdentifierForSubkeyId(123, "eb85bb5fa33a75e15e944e63f231550c4f47e38e");
+        subject.storeCertificateSubkeyIds("eb85bb5fa33a75e15e944e63f231550c4f47e38e", Collections.singletonList(123L));
 
         assertEquals(
                 new HashSet<>(Arrays.asList("eb85bb5fa33a75e15e944e63f231550c4f47e38e", "d1a66e1a23b182c9980f788cfbfcc82a015e7330")),
-                subject.getIdentifiersForSubkeyId(123));
+                subject.getCertificatesForSubkeyId(123));
     }
 }

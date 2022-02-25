@@ -28,16 +28,18 @@ public class SqliteSubkeyLookup implements SubkeyLookup {
 
     private static final String CREATE_TABLE_STMT = "" +
             "CREATE TABLE IF NOT EXISTS subkey_lookup (\n" +
-            "  id integer PRIMARY KEY,\n" +
-            "  identifier text NOT NULL,\n" +
-            "  subkey_id integer NOT NULL,\n" +
-            "  UNIQUE(identifier, subkey_id)\n" +
+            "  id integer PRIMARY KEY,\n" +         // id (internal to the database)
+            "  certificate text NOT NULL,\n" +      // certificate fingerprint
+            "  subkey_id integer NOT NULL,\n" +     // subkey id
+            "  UNIQUE(certificate, subkey_id)\n" +
             ")";
 
     private static final String INSERT_STMT = "" +
-            "INSERT INTO subkey_lookup(identifier, subkey_id) VALUES (?,?)";
+            "INSERT INTO subkey_lookup(certificate, subkey_id) " +
+            "VALUES (?,?)";
     private static final String QUERY_STMT = "" +
-            "SELECT * FROM subkey_lookup WHERE subkey_id=?";
+            "SELECT * FROM subkey_lookup " +
+            "WHERE subkey_id=?";
 
     public SqliteSubkeyLookup(String databaseURL) throws SQLException {
         this.databaseUrl = databaseURL;
@@ -54,21 +56,27 @@ public class SqliteSubkeyLookup implements SubkeyLookup {
         return new SqliteSubkeyLookup("jdbc:sqlite:" + databaseFile.getAbsolutePath());
     }
 
-    public void insert(long subkeyId, String identifier, boolean ignoreDuplicates) throws SQLException {
+    public void insertValues(String certificate, List<Long> subkeyIds) throws SQLException {
         try (Connection connection = getConnection(); PreparedStatement statement = connection.prepareStatement(INSERT_STMT)) {
-            statement.setString(1, identifier);
-            statement.setLong(2, subkeyId);
-            statement.executeUpdate();
-        } catch (SQLiteException e) {
-            // throw any exception, except:
-            // ignore unique constraint-related exceptions if we ignoreDuplicates
-            if (!ignoreDuplicates || e.getResultCode().code != SQLiteErrorCode.SQLITE_CONSTRAINT_UNIQUE.code) {
-                throw e;
+            for (long subkeyId : subkeyIds) {
+                try {
+                    statement.setString(1, certificate);
+                    statement.setLong(2, subkeyId);
+                    statement.executeUpdate();
+                } catch (SQLiteException e) {
+                    // throw any exception, except:
+                    // ignore unique constraint-related exceptions if we ignoreDuplicates
+                    if (e.getResultCode().code == SQLiteErrorCode.SQLITE_CONSTRAINT_UNIQUE.code) {
+                        // ignore duplicates
+                    } else {
+                        throw e;
+                    }
+                }
             }
         }
     }
 
-    public List<Entry> get(long subkeyId) throws SQLException {
+    public List<Entry> selectValues(long subkeyId) throws SQLException {
         List<Entry> results = new ArrayList<>();
         try (Connection connection = getConnection(); PreparedStatement statement = connection.prepareStatement(QUERY_STMT)) {
             statement.setLong(1, subkeyId);
@@ -77,7 +85,7 @@ public class SqliteSubkeyLookup implements SubkeyLookup {
                     Entry entry = new Entry(
                             resultSet.getInt("id"),
                             resultSet.getLong("subkey_id"),
-                            resultSet.getString("identifier"));
+                            resultSet.getString("certificate"));
                     results.add(entry);
                 }
             }
@@ -86,27 +94,26 @@ public class SqliteSubkeyLookup implements SubkeyLookup {
     }
 
     @Override
-    public Set<String> getIdentifiersForSubkeyId(long subkeyId) throws IOException {
+    public Set<String> getCertificatesForSubkeyId(long subkeyId) throws IOException {
         try {
-            List<Entry> entries = get(subkeyId);
-            Set<String> identifiers = new HashSet<>();
+            List<Entry> entries = selectValues(subkeyId);
+            Set<String> certificates = new HashSet<>();
             for (Entry entry : entries) {
-                identifiers.add(entry.getIdentifier());
+                certificates.add(entry.getCertificate());
             }
 
-            return Collections.unmodifiableSet(identifiers);
+            return Collections.unmodifiableSet(certificates);
         } catch (SQLException e) {
             throw new IOException("Cannot query for subkey lookup entries.", e);
         }
     }
 
     @Override
-    public void storeIdentifierForSubkeyId(long subkeyId, String identifier)
-            throws IOException {
+    public void storeCertificateSubkeyIds(String certificate, List<Long> subkeyIds) throws IOException {
         try {
-            insert(subkeyId, identifier, true);
+            insertValues(certificate, subkeyIds);
         } catch (SQLException e) {
-            throw new IOException("Cannot store subkey lookup entry in database.", e);
+            throw new IOException("Cannot store subkey lookup entries in database.", e);
         }
     }
 }

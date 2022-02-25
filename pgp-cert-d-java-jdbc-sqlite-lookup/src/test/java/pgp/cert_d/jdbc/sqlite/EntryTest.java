@@ -16,6 +16,6 @@ public class EntryTest {
 
         assertEquals(1, entry.getId());
         assertEquals(123L, entry.getSubkeyId());
-        assertEquals("eb85bb5fa33a75e15e944e63f231550c4f47e38e", entry.getIdentifier());
+        assertEquals("eb85bb5fa33a75e15e944e63f231550c4f47e38e", entry.getCertificate());
     }
 }
