@@ -22,7 +22,8 @@ import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.MethodSource;
-import pgp.cert_d.jdbc.sqlite.SqliteSubkeyLookup;
+import pgp.cert_d.jdbc.sqlite.DatabaseSubkeyLookup;
+import pgp.cert_d.jdbc.sqlite.SqliteSubkeyLookupDaoImpl;
 import pgp.certificate_store.SubkeyLookup;
 
 public class SubkeyLookupTest {
@@ -37,7 +38,7 @@ public class SubkeyLookupTest {
         File sqliteDatabase = Files.createTempFile("subkeyLookupTest", ".db").toFile();
         sqliteDatabase.createNewFile();
         sqliteDatabase.deleteOnExit();
-        SqliteSubkeyLookup sqliteSubkeyLookup = SqliteSubkeyLookup.forDatabaseFile(sqliteDatabase);
+        DatabaseSubkeyLookup sqliteSubkeyLookup = new DatabaseSubkeyLookup(SqliteSubkeyLookupDaoImpl.forDatabaseFile(sqliteDatabase));
         testSubjects.add(sqliteSubkeyLookup);
     }
 

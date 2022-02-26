@@ -11,7 +11,8 @@ import pgp.cert_d.SharedPGPCertificateDirectoryImpl;
 import pgp.cert_d.cli.commands.Get;
 import pgp.cert_d.cli.commands.Import;
 import pgp.cert_d.cli.commands.MultiImport;
-import pgp.cert_d.jdbc.sqlite.SqliteSubkeyLookup;
+import pgp.cert_d.jdbc.sqlite.DatabaseSubkeyLookup;
+import pgp.cert_d.jdbc.sqlite.SqliteSubkeyLookupDaoImpl;
 import pgp.certificate_store.SubkeyLookup;
 import pgp.certificate_store.exception.NotAStoreException;
 import pgp.certificate_store.CertificateDirectory;
@@ -53,7 +54,8 @@ public class PGPCertDCli {
         certificateDirectory = new SharedPGPCertificateDirectoryImpl(
                 baseDirectory,
                 new CertificateReader());
-        subkeyLookup = SqliteSubkeyLookup.forDatabaseFile(new File(baseDirectory, "_pgpainless_subkey_map.db"));
+        subkeyLookup = new DatabaseSubkeyLookup(
+                SqliteSubkeyLookupDaoImpl.forDatabaseFile(new File(baseDirectory, "_pgpainless_subkey_map.db")));
 
         PGPCertDCli.certificateDirectory = new SharedPGPCertificateDirectoryAdapter(certificateDirectory, subkeyLookup);
     }

@@ -4,8 +4,10 @@
 
 package pgp.cert_d.jdbc.sqlite;
 
+import org.sqlite.SQLiteErrorCode;
+import org.sqlite.SQLiteException;
+
 import java.io.File;
-import java.io.IOException;
 import java.sql.Connection;
 import java.sql.DriverManager;
 import java.sql.PreparedStatement;
@@ -13,16 +15,9 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
 import java.util.ArrayList;
-import java.util.Collections;
-import java.util.HashSet;
 import java.util.List;
-import java.util.Set;
 
-import org.sqlite.SQLiteErrorCode;
-import org.sqlite.SQLiteException;
-import pgp.certificate_store.SubkeyLookup;
-
-public class SqliteSubkeyLookup implements SubkeyLookup {
+public class SqliteSubkeyLookupDaoImpl implements SubkeyLookupDao {
 
     private final String databaseUrl;
 
@@ -41,7 +36,7 @@ public class SqliteSubkeyLookup implements SubkeyLookup {
             "SELECT * FROM subkey_lookup " +
             "WHERE subkey_id=?";
 
-    public SqliteSubkeyLookup(String databaseURL) throws SQLException {
+    public SqliteSubkeyLookupDaoImpl(String databaseURL) throws SQLException {
         this.databaseUrl = databaseURL;
         try (Connection connection = getConnection(); Statement statement = connection.createStatement()) {
             statement.execute(CREATE_TABLE_STMT);
@@ -52,17 +47,19 @@ public class SqliteSubkeyLookup implements SubkeyLookup {
         return DriverManager.getConnection(databaseUrl);
     }
 
-    public static SqliteSubkeyLookup forDatabaseFile(File databaseFile) throws SQLException {
-        return new SqliteSubkeyLookup("jdbc:sqlite:" + databaseFile.getAbsolutePath());
+    public static SqliteSubkeyLookupDaoImpl forDatabaseFile(File databaseFile) throws SQLException {
+        return new SqliteSubkeyLookupDaoImpl("jdbc:sqlite:" + databaseFile.getAbsolutePath());
     }
 
-    public void insertValues(String certificate, List<Long> subkeyIds) throws SQLException {
+    public int insertValues(String certificate, List<Long> subkeyIds) throws SQLException {
+        int inserted = 0;
         try (Connection connection = getConnection(); PreparedStatement statement = connection.prepareStatement(INSERT_STMT)) {
             for (long subkeyId : subkeyIds) {
                 try {
                     statement.setString(1, certificate);
                     statement.setLong(2, subkeyId);
                     statement.executeUpdate();
+                    inserted++;
                 } catch (SQLiteException e) {
                     // throw any exception, except:
                     // ignore unique constraint-related exceptions if we ignoreDuplicates
@@ -74,6 +71,7 @@ public class SqliteSubkeyLookup implements SubkeyLookup {
                 }
             }
         }
+        return inserted;
     }
 
     public List<Entry> selectValues(long subkeyId) throws SQLException {
@@ -91,29 +89,5 @@ public class SqliteSubkeyLookup implements SubkeyLookup {
             }
         }
         return results;
-    }
-
-    @Override
-    public Set<String> getCertificatesForSubkeyId(long subkeyId) throws IOException {
-        try {
-            List<Entry> entries = selectValues(subkeyId);
-            Set<String> certificates = new HashSet<>();
-            for (Entry entry : entries) {
-                certificates.add(entry.getCertificate());
-            }
-
-            return Collections.unmodifiableSet(certificates);
-        } catch (SQLException e) {
-            throw new IOException("Cannot query for subkey lookup entries.", e);
-        }
-    }
-
-    @Override
-    public void storeCertificateSubkeyIds(String certificate, List<Long> subkeyIds) throws IOException {
-        try {
-            insertValues(certificate, subkeyIds);
-        } catch (SQLException e) {
-            throw new IOException("Cannot store subkey lookup entries in database.", e);
-        }
     }
 }

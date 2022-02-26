@@ -23,14 +23,14 @@ import org.junit.jupiter.api.Test;
 public class SqliteSubkeyLookupTest {
 
     private File databaseFile;
-    private SqliteSubkeyLookup lookup;
+    private DatabaseSubkeyLookup lookup;
 
     @BeforeEach
     public void setupLookup() throws IOException, SQLException {
         databaseFile = Files.createTempFile("pgp.cert.d-", "lookup.db").toFile();
         databaseFile.createNewFile();
         databaseFile.deleteOnExit();
-        lookup = SqliteSubkeyLookup.forDatabaseFile(databaseFile);
+        lookup = new DatabaseSubkeyLookup(SqliteSubkeyLookupDaoImpl.forDatabaseFile(databaseFile));
     }
 
     @Test
@@ -45,8 +45,7 @@ public class SqliteSubkeyLookupTest {
     }
 
     @Test
-    public void getNonExistingSubkeyYieldsNull() throws IOException, SQLException {
-        assertTrue(lookup.selectValues(6666666).isEmpty());
+    public void getNonExistingSubkeyYieldsNull() throws IOException {
         assertTrue(lookup.getCertificatesForSubkeyId(6666666).isEmpty());
     }
 
@@ -56,7 +55,7 @@ public class SqliteSubkeyLookupTest {
         assertEquals(Collections.singleton("eb85bb5fa33a75e15e944e63f231550c4f47e38e"), lookup.getCertificatesForSubkeyId(1337));
 
         // do the lookup using a second db instance on the same file
-        SqliteSubkeyLookup secondInstance = SqliteSubkeyLookup.forDatabaseFile(databaseFile);
+        DatabaseSubkeyLookup secondInstance = new DatabaseSubkeyLookup(SqliteSubkeyLookupDaoImpl.forDatabaseFile(databaseFile));
         assertEquals(Collections.singleton("eb85bb5fa33a75e15e944e63f231550c4f47e38e"), secondInstance.getCertificatesForSubkeyId(1337));
     }
 
