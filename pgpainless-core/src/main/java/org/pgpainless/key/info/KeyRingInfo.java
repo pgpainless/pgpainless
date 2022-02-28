@@ -50,7 +50,7 @@ import org.pgpainless.signature.subpackets.SignatureSubpacketsUtil;
  */
 public class KeyRingInfo {
 
-    private static final Pattern PATTERN_EMAIL = Pattern.compile("[A-Z0-9a-z._%+-]+@[A-Za-z0-9.-]+\\.[A-Za-z]{2,6}");
+    private static final Pattern PATTERN_EMAIL = Pattern.compile("<([^<>\\s]+@.+)>");
 
     private final PGPKeyRing keys;
     private final Signatures signatures;
@@ -423,7 +423,7 @@ public class KeyRingInfo {
         for (String userId : userIds) {
             Matcher matcher = PATTERN_EMAIL.matcher(userId);
             if (matcher.find()) {
-                emails.add(matcher.group());
+                emails.add(matcher.group(1));
             }
         }
         return emails;
