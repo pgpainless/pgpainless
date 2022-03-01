@@ -50,10 +50,9 @@ import org.pgpainless.key.protection.SecretKeyRingProtector;
 import org.pgpainless.key.protection.UnprotectedKeysProtector;
 import org.pgpainless.key.util.KeyRingUtils;
 import org.pgpainless.key.util.UserId;
-import org.pgpainless.util.ArmorUtils;
 import org.pgpainless.util.DateUtil;
-import org.pgpainless.util.TestAllImplementations;
 import org.pgpainless.util.Passphrase;
+import org.pgpainless.util.TestAllImplementations;
 
 public class KeyRingInfoTest {
 
