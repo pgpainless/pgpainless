@@ -50,6 +50,7 @@ import org.pgpainless.key.protection.SecretKeyRingProtector;
 import org.pgpainless.key.protection.UnprotectedKeysProtector;
 import org.pgpainless.key.util.KeyRingUtils;
 import org.pgpainless.key.util.UserId;
+import org.pgpainless.util.ArmorUtils;
 import org.pgpainless.util.DateUtil;
 import org.pgpainless.util.TestAllImplementations;
 import org.pgpainless.util.Passphrase;
@@ -700,5 +701,62 @@ public class KeyRingInfoTest {
         Date unboundKeyCreation = certificate.getPublicKey(unboundKey.getKeyId()).getCreationTime();
         assertTrue(unboundKeyCreation.after(latestModification));
         assertTrue(unboundKeyCreation.after(latestKeyCreation));
+    }
+
+    @Test
+    public void getEmailsTest() throws IOException {
+        String KEY = "-----BEGIN PGP PRIVATE KEY BLOCK-----\n" +
+                "Version: PGPainless\n" +
+                "Comment: B4A8 9FE8 9D59 31E6 BCF7  DC2F 6BA1 2CC7 9A08 8D73\n" +
+                "Comment: Alice Anderson <alice@email.tld> [Primary Mail Address]\n" +
+                "Comment: Alice A. <alice@pgpainless.org>\n" +
+                "Comment: <alice@openpgp.org>\n" +
+                "Comment: alice@rfc4880.spec\n" +
+                "Comment: alice anderson@invalid.mail\n" +
+                "Comment: Alice Anderson <alice anderson@invalid.mail>\n" +
+                "\n" +
+                "lFgEYh39eBYJKwYBBAHaRw8BAQdAegaKui2AnIZ7D4fRozwqEvbHePpU/agSN6Kr\n" +
+                "11uVHKoAAP4xCyRezCJ04di6+NICghNDPqWBJLtk3MI1ndlBLwcgjw9LtDdBbGlj\n" +
+                "ZSBBbmRlcnNvbiA8YWxpY2VAZW1haWwudGxkPiBbUHJpbWFyeSBNYWlsIEFkZHJl\n" +
+                "c3NdiI8EExYKAEEFAmId/XgJEGuhLMeaCI1zFiEEtKif6J1ZMea899wva6Esx5oI\n" +
+                "jXMCngECmwEFFgIDAQAECwkIBwUVCgkICwKZAQAA1MoBALzi4qecj+tnLdQEWbTI\n" +
+                "uHIc6NVoUb7p4B8Jro/ehJ1fAQDjt3+VfLUZ8QaX+TtTDGnWHyEOoJ0VxiIKdMmv\n" +
+                "2dYtCrQfQWxpY2UgQS4gPGFsaWNlQHBncGFpbmxlc3Mub3JnPoiMBBMWCgA+BQJi\n" +
+                "Hf14CRBroSzHmgiNcxYhBLSon+idWTHmvPfcL2uhLMeaCI1zAp4BApsBBRYCAwEA\n" +
+                "BAsJCAcFFQoJCAsAAABCAP9jSCveW6JxpszuxOiGJyQSCDp39lql6BU35UgOb2fJ\n" +
+                "5QD+K00v724rDpqjKphMMr9B8CYXuU+jTDoUHquSCRhJrge0EzxhbGljZUBvcGVu\n" +
+                "cGdwLm9yZz6IjAQTFgoAPgUCYh39eAkQa6Esx5oIjXMWIQS0qJ/onVkx5rz33C9r\n" +
+                "oSzHmgiNcwKeAQKbAQUWAgMBAAQLCQgHBRUKCQgLAAD50AEAv/MkwkK9wojSH+uV\n" +
+                "0Y3Dnm4bZsA5bIWGAgAxmKsh/IMA/11NwGhx+YwRmerO9zVxWcEnnbSQP4Re4ALe\n" +
+                "AZTcx88GtBJhbGljZUByZmM0ODgwLnNwZWOIjAQTFgoAPgUCYh39eAkQa6Esx5oI\n" +
+                "jXMWIQS0qJ/onVkx5rz33C9roSzHmgiNcwKeAQKbAQUWAgMBAAQLCQgHBRUKCQgL\n" +
+                "AAC26wD+NDz1j3PB2v2QAKadzyYgod5IcSGAgzBUwf16edvsWCoBAL3nkb2ahPW/\n" +
+                "vk946LzejWPQToGSrRxmY7VjNutTNRQGtBthbGljZSBhbmRlcnNvbkBpbnZhbGlk\n" +
+                "Lm1haWyIjAQTFgoAPgUCYh39eAkQa6Esx5oIjXMWIQS0qJ/onVkx5rz33C9roSzH\n" +
+                "mgiNcwKeAQKbAQUWAgMBAAQLCQgHBRUKCQgLAAAxIwEAs/rtMrGAXfDO/yssC3B/\n" +
+                "8ZSVoExPi8B5jzJqMVb4kuQBAJVqpSSUNVPwNJsH7EP74iXPCyWn9oy1p4G53BxV\n" +
+                "8eQEtCxBbGljZSBBbmRlcnNvbiA8YWxpY2UgYW5kZXJzb25AaW52YWxpZC5tYWls\n" +
+                "PoiMBBMWCgA+BQJiHf14CRBroSzHmgiNcxYhBLSon+idWTHmvPfcL2uhLMeaCI1z\n" +
+                "Ap4BApsBBRYCAwEABAsJCAcFFQoJCAsAAA2cAP9ygQbt8oQtRc4oPm/LLPDjH89u\n" +
+                "LBMVywN0yBdEWO/ASgEAmgl1kgyMRyf28SjISAWAHiTGs0mRAn9kdwJGU4+27AGc\n" +
+                "XQRiHf14EgorBgEEAZdVAQUBAQdAIvJYcrgjLhPGjJ9YCaPKZcZrgpf93v3zlE/v\n" +
+                "GGUQrT8DAQgHAAD/WWQiuS/2UBFt97J4htg14ICcjoMnOrI4mimeZwYTtoAPrYh1\n" +
+                "BBgWCgAdBQJiHf14Ap4BApsMBRYCAwEABAsJCAcFFQoJCAsACgkQa6Esx5oIjXOo\n" +
+                "qQEAlmUF0RIpnqWqWmtKtbbTSYj6+UgV0L5n2RWtlOVdfMIA/34+rQ45pUqelgCc\n" +
+                "yzfUm8wDlJjT9ogVGsvtDnLokv4BnFgEYh39eBYJKwYBBAHaRw8BAQdAnQCPdWgk\n" +
+                "X02oa5RBIRNCAEkdf1FooxlzlDCXBUUMaMoAAP9EhqmoCsUBplDMfnMUtu1g6BLq\n" +
+                "qGIAOtm/HXtQ4UUo2xCFiNUEGBYKAH0FAmId/XgCngECmwIFFgIDAQAECwkIBwUV\n" +
+                "CgkIC18gBBkWCgAGBQJiHf14AAoJEIEZZ8Ab4jMdYsUA/ilgaT94y0hEEkEFF2Dm\n" +
+                "vle6KXtHHPo/G0fkcGras8W9AQDo+IQSzTJylS+AJQfTSTuGUEP8hWPG/1f7SWVo\n" +
+                "z6/eBgAKCRBroSzHmgiNc7A7AQDEGMAPe4guEgkCfZRFRZoWb8ahpKB3y6cYQ7t1\n" +
+                "qDzPRwEAhdVBeryRUcwjgwHX0xmMFK7vLkdonn8BR2++nXBO2g8=\n" +
+                "=ZRAy\n" +
+                "-----END PGP PRIVATE KEY BLOCK-----\n";
+
+        PGPSecretKeyRing secretKeys = PGPainless.readKeyRing().secretKeyRing(KEY);
+        KeyRingInfo info = PGPainless.inspectKeyRing(secretKeys);
+
+        List<String> emails = info.getEmailAddresses();
+        assertEquals(emails, Arrays.asList("alice@email.tld", "alice@pgpainless.org", "alice@openpgp.org", "alice@rfc4880.spec"));
     }
 }
