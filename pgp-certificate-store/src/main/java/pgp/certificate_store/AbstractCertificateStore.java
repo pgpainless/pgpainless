@@ -20,7 +20,7 @@ public abstract class AbstractCertificateStore implements CertificateStore {
 
     public Set<Certificate> getCertificatesBySubkeyId(long subkeyId)
             throws IOException {
-        Set<String> identifiers = getCertificatesForSubkeyId(subkeyId);
+        Set<String> identifiers = getCertificateFingerprintsForSubkeyId(subkeyId);
         if (identifiers.isEmpty()) {
             return Collections.emptySet();
         }

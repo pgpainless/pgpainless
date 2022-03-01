@@ -38,25 +38,25 @@ public class SqliteSubkeyLookupTest {
         store("eb85bb5fa33a75e15e944e63f231550c4f47e38e", 123L, 234L);
         store("d1a66e1a23b182c9980f788cfbfcc82a015e7330", 234L);
 
-        assertEquals(Collections.singleton("eb85bb5fa33a75e15e944e63f231550c4f47e38e"), lookup.getCertificatesForSubkeyId(123L));
+        assertEquals(Collections.singleton("eb85bb5fa33a75e15e944e63f231550c4f47e38e"), lookup.getCertificateFingerprintsForSubkeyId(123L));
         assertEquals(
                 new HashSet<>(Arrays.asList("eb85bb5fa33a75e15e944e63f231550c4f47e38e", "d1a66e1a23b182c9980f788cfbfcc82a015e7330")),
-                lookup.getCertificatesForSubkeyId(234L));
+                lookup.getCertificateFingerprintsForSubkeyId(234L));
     }
 
     @Test
     public void getNonExistingSubkeyYieldsNull() throws IOException {
-        assertTrue(lookup.getCertificatesForSubkeyId(6666666).isEmpty());
+        assertTrue(lookup.getCertificateFingerprintsForSubkeyId(6666666).isEmpty());
     }
 
     @Test
     public void secondInstanceLookupTest() throws IOException, SQLException {
         store("eb85bb5fa33a75e15e944e63f231550c4f47e38e", 1337L);
-        assertEquals(Collections.singleton("eb85bb5fa33a75e15e944e63f231550c4f47e38e"), lookup.getCertificatesForSubkeyId(1337));
+        assertEquals(Collections.singleton("eb85bb5fa33a75e15e944e63f231550c4f47e38e"), lookup.getCertificateFingerprintsForSubkeyId(1337));
 
         // do the lookup using a second db instance on the same file
         DatabaseSubkeyLookup secondInstance = new DatabaseSubkeyLookup(SqliteSubkeyLookupDaoImpl.forDatabaseFile(databaseFile));
-        assertEquals(Collections.singleton("eb85bb5fa33a75e15e944e63f231550c4f47e38e"), secondInstance.getCertificatesForSubkeyId(1337));
+        assertEquals(Collections.singleton("eb85bb5fa33a75e15e944e63f231550c4f47e38e"), secondInstance.getCertificateFingerprintsForSubkeyId(1337));
     }
 
     @Test

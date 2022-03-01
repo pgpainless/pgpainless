@@ -112,8 +112,8 @@ public class SharedPGPCertificateDirectoryAdapter
     }
 
     @Override
-    public Set<String> getCertificatesForSubkeyId(long subkeyId) throws IOException {
-        return subkeyLookup.getCertificatesForSubkeyId(subkeyId);
+    public Set<String> getCertificateFingerprintsForSubkeyId(long subkeyId) throws IOException {
+        return subkeyLookup.getCertificateFingerprintsForSubkeyId(subkeyId);
     }
 
     @Override

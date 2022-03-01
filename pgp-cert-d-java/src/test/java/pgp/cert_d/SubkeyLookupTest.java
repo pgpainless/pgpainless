@@ -56,26 +56,26 @@ public class SubkeyLookupTest {
     public void testInsertGet(SubkeyLookup subject) throws IOException {
         // Initially all null
 
-        assertTrue(subject.getCertificatesForSubkeyId(123).isEmpty());
-        assertTrue(subject.getCertificatesForSubkeyId(1337).isEmpty());
-        assertTrue(subject.getCertificatesForSubkeyId(420).isEmpty());
+        assertTrue(subject.getCertificateFingerprintsForSubkeyId(123).isEmpty());
+        assertTrue(subject.getCertificateFingerprintsForSubkeyId(1337).isEmpty());
+        assertTrue(subject.getCertificateFingerprintsForSubkeyId(420).isEmpty());
 
         // Store one val, others still null
 
         subject.storeCertificateSubkeyIds("d1a66e1a23b182c9980f788cfbfcc82a015e7330", Collections.singletonList(123L));
 
-        assertEquals(Collections.singleton("d1a66e1a23b182c9980f788cfbfcc82a015e7330"), subject.getCertificatesForSubkeyId(123));
-        assertTrue(subject.getCertificatesForSubkeyId(1337).isEmpty());
-        assertTrue(subject.getCertificatesForSubkeyId(420).isEmpty());
+        assertEquals(Collections.singleton("d1a66e1a23b182c9980f788cfbfcc82a015e7330"), subject.getCertificateFingerprintsForSubkeyId(123));
+        assertTrue(subject.getCertificateFingerprintsForSubkeyId(1337).isEmpty());
+        assertTrue(subject.getCertificateFingerprintsForSubkeyId(420).isEmpty());
 
         // Store other val, first stays intact
 
         subject.storeCertificateSubkeyIds("d1a66e1a23b182c9980f788cfbfcc82a015e7330", Collections.singletonList(1337L));
         subject.storeCertificateSubkeyIds("d1a66e1a23b182c9980f788cfbfcc82a015e7330", Collections.singletonList(420L));
 
-        assertEquals(Collections.singleton("d1a66e1a23b182c9980f788cfbfcc82a015e7330"), subject.getCertificatesForSubkeyId(123));
-        assertEquals(Collections.singleton("d1a66e1a23b182c9980f788cfbfcc82a015e7330"), subject.getCertificatesForSubkeyId(1337));
-        assertEquals(Collections.singleton("d1a66e1a23b182c9980f788cfbfcc82a015e7330"), subject.getCertificatesForSubkeyId(420));
+        assertEquals(Collections.singleton("d1a66e1a23b182c9980f788cfbfcc82a015e7330"), subject.getCertificateFingerprintsForSubkeyId(123));
+        assertEquals(Collections.singleton("d1a66e1a23b182c9980f788cfbfcc82a015e7330"), subject.getCertificateFingerprintsForSubkeyId(1337));
+        assertEquals(Collections.singleton("d1a66e1a23b182c9980f788cfbfcc82a015e7330"), subject.getCertificateFingerprintsForSubkeyId(420));
 
         // add additional entry for subkey
 
@@ -83,6 +83,6 @@ public class SubkeyLookupTest {
 
         assertEquals(
                 new HashSet<>(Arrays.asList("eb85bb5fa33a75e15e944e63f231550c4f47e38e", "d1a66e1a23b182c9980f788cfbfcc82a015e7330")),
-                subject.getCertificatesForSubkeyId(123));
+                subject.getCertificateFingerprintsForSubkeyId(123));
     }
 }

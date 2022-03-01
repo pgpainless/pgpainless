@@ -84,7 +84,7 @@ public class SharedPGPCertificateDirectoryAdapterTest {
         Set<Long> subkeys = certificate.getSubkeyIds();
         assertEquals(expectedSubkeys, subkeys);
         for (long subkey : subkeys) {
-            assertEquals(Collections.singleton(fingerprint), store.getCertificatesForSubkeyId(subkey));
+            assertEquals(Collections.singleton(fingerprint), store.getCertificateFingerprintsForSubkeyId(subkey));
         }
 
         Certificate retrieved = store.getCertificate(fingerprint);
@@ -108,7 +108,7 @@ public class SharedPGPCertificateDirectoryAdapterTest {
         Set<Long> subkeys = certificate.getSubkeyIds();
         assertEquals(3, subkeys.size());
         for (long subkey : subkeys) {
-            assertEquals(Collections.singleton(fingerprint), store.getCertificatesForSubkeyId(subkey));
+            assertEquals(Collections.singleton(fingerprint), store.getCertificateFingerprintsForSubkeyId(subkey));
         }
 
         Certificate retrieved = store.getCertificate(fingerprint);

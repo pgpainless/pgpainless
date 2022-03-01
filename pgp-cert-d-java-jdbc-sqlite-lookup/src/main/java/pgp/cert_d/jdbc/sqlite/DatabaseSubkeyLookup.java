@@ -22,7 +22,7 @@ public class DatabaseSubkeyLookup implements SubkeyLookup {
     }
 
     @Override
-    public Set<String> getCertificatesForSubkeyId(long subkeyId) throws IOException {
+    public Set<String> getCertificateFingerprintsForSubkeyId(long subkeyId) throws IOException {
         try {
             List<Entry> entries = dao.selectValues(subkeyId);
             Set<String> certificates = new HashSet<>();

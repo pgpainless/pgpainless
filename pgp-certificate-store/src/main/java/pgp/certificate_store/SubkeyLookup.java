@@ -17,7 +17,7 @@ public interface SubkeyLookup {
      * @param subkeyId subkey id
      * @return fingerprint of the certificate
      */
-    Set<String> getCertificatesForSubkeyId(long subkeyId) throws IOException;
+    Set<String> getCertificateFingerprintsForSubkeyId(long subkeyId) throws IOException;
 
     /**
      * Record, which certificate the subkey-ids in the list belong to.

@@ -18,7 +18,7 @@ public class InMemorySubkeyLookup implements SubkeyLookup {
     private static final Map<Long, Set<String>> subkeyMap = new HashMap<>();
 
     @Override
-    public Set<String> getCertificatesForSubkeyId(long subkeyId) {
+    public Set<String> getCertificateFingerprintsForSubkeyId(long subkeyId) {
         Set<String> identifiers = subkeyMap.get(subkeyId);
         if (identifiers == null) {
             return Collections.emptySet();
