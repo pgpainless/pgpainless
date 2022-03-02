@@ -13,7 +13,6 @@ import org.pgpainless.PGPainless;
 import org.pgpainless.algorithm.SignatureType;
 import org.pgpainless.implementation.ImplementationFactory;
 import org.pgpainless.key.protection.SecretKeyRingProtector;
-import org.pgpainless.signature.subpackets.BaseSignatureSubpackets;
 import org.pgpainless.signature.subpackets.CertificationSubpackets;
 import org.pgpainless.signature.subpackets.SignatureSubpacketsUtil;
 
@@ -53,7 +52,7 @@ public class ThirdPartyCertificationSignatureBuilderTest {
 
         signatureBuilder.applyCallback(new CertificationSubpackets.Callback() {
             @Override
-            public void modifyHashedSubpackets(BaseSignatureSubpackets hashedSubpackets) {
+            public void modifyHashedSubpackets(CertificationSubpackets hashedSubpackets) {
                 hashedSubpackets.setExportable(true, false);
             }
         });

@@ -6,7 +6,7 @@ package org.pgpainless.signature.subpackets;
 
 public interface CertificationSubpackets extends BaseSignatureSubpackets {
 
-    interface Callback extends SignatureSubpacketCallback<BaseSignatureSubpackets> {
+    interface Callback extends SignatureSubpacketCallback<CertificationSubpackets> {
 
     }
 }
