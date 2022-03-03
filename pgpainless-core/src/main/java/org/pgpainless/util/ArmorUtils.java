@@ -24,6 +24,7 @@ import org.bouncycastle.openpgp.PGPPublicKeyRingCollection;
 import org.bouncycastle.openpgp.PGPSecretKey;
 import org.bouncycastle.openpgp.PGPSecretKeyRing;
 import org.bouncycastle.openpgp.PGPSecretKeyRingCollection;
+import org.bouncycastle.openpgp.PGPSignature;
 import org.bouncycastle.openpgp.PGPUtil;
 import org.bouncycastle.openpgp.operator.KeyFingerPrintCalculator;
 import org.bouncycastle.util.io.Streams;
@@ -106,14 +107,38 @@ public final class ArmorUtils {
         return sb.toString();
     }
 
+    private static Tuple<String, Integer> getPrimaryUserIdAndUserIdCount(PGPPublicKey publicKey) {
+        Iterator<String> userIds = publicKey.getUserIDs();
+        int countIdentities = 0;
+        String primary = null;
+        while (userIds.hasNext()) {
+            countIdentities++;
+            String userId = userIds.next();
+            if (primary == null) {
+                Iterator<PGPSignature> signatures = publicKey.getSignaturesForID(userId);
+                while (signatures.hasNext()) {
+                    PGPSignature signature = signatures.next();
+                    if (signature.getHashedSubPackets().isPrimaryUserID()) {
+                        primary = userId;
+                        break;
+                    }
+                }
+            }
+        }
+        return new Tuple<>(primary, countIdentities);
+    }
+
     private static MultiMap<String, String> keyToHeader(PGPPublicKey publicKey) {
         MultiMap<String, String> header = new MultiMap<>();
         OpenPgpFingerprint fingerprint = OpenPgpFingerprint.of(publicKey);
-        Iterator<String> userIds = publicKey.getUserIDs();
 
         header.put(HEADER_COMMENT, fingerprint.prettyPrint());
-        if (userIds.hasNext()) {
-            header.put(HEADER_COMMENT, userIds.next());
+        Tuple<String, Integer> idCount = getPrimaryUserIdAndUserIdCount(publicKey);
+        if (idCount.getA() != null) {
+            header.put(HEADER_COMMENT, idCount.getA() + " (Primary)");
+        }
+        if (idCount.getB() != 1) {
+            header.put(HEADER_COMMENT, String.format("Public key contains %d identities", idCount.getB()));
         }
         return header;
     }

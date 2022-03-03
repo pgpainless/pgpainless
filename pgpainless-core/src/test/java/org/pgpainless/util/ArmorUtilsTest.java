@@ -21,16 +21,24 @@ import org.bouncycastle.openpgp.PGPCompressedData;
 import org.bouncycastle.openpgp.PGPException;
 import org.bouncycastle.openpgp.PGPLiteralData;
 import org.bouncycastle.openpgp.PGPObjectFactory;
+import org.bouncycastle.openpgp.PGPPublicKey;
+import org.bouncycastle.openpgp.PGPPublicKeyRing;
 import org.bouncycastle.openpgp.PGPSecretKeyRing;
 import org.bouncycastle.openpgp.PGPUtil;
 import org.bouncycastle.util.io.Streams;
 import org.junit.jupiter.api.AfterAll;
+import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.TestTemplate;
 import org.junit.jupiter.api.extension.ExtendWith;
+import org.pgpainless.PGPainless;
 import org.pgpainless.algorithm.HashAlgorithm;
+import org.pgpainless.algorithm.KeyFlag;
 import org.pgpainless.implementation.ImplementationFactory;
 import org.pgpainless.key.TestKeys;
+import org.pgpainless.key.generation.KeySpec;
+import org.pgpainless.key.generation.type.ecc.EllipticCurve;
+import org.pgpainless.key.generation.type.ecc.ecdsa.ECDSA;
 
 public class ArmorUtilsTest {
 
@@ -142,6 +150,53 @@ public class ArmorUtilsTest {
                 "b3dlZCB0byByZWFkLg==\n" +
                 "=XMZb\n" +
                 "-----END PGP MESSAGE-----\n", out.toString());
+    }
+
+    @Test
+    public void testMultipleIdentitiesInHeader() throws Exception {
+        PGPSecretKeyRing secretKeyRing = PGPainless.buildKeyRing()
+                .setPrimaryKey(KeySpec.getBuilder(ECDSA.fromCurve(EllipticCurve._P256), KeyFlag.SIGN_DATA, KeyFlag.CERTIFY_OTHER))
+                .addUserId("Juliet <juliet@montague.lit>")
+                .addUserId("xmpp:juliet@capulet.lit")
+                .setPassphrase(Passphrase.fromPassword("test"))
+                .build();
+        PGPPublicKey publicKey = secretKeyRing.getPublicKey();
+        PGPPublicKeyRing publicKeyRing = PGPainless.readKeyRing().publicKeyRing(publicKey.getEncoded());
+        String armored = PGPainless.asciiArmor(publicKeyRing);
+        Assertions.assertTrue(armored.contains("Comment: Juliet <juliet@montague.lit> (Primary)"));
+        Assertions.assertTrue(armored.contains("Comment: Public key contains 2 identities"));
+    }
+
+    @Test
+    public void testSingleIdentityInHeader() throws Exception {
+        PGPSecretKeyRing secretKeyRing = PGPainless.buildKeyRing()
+                .setPrimaryKey(KeySpec.getBuilder(ECDSA.fromCurve(EllipticCurve._P256), KeyFlag.SIGN_DATA, KeyFlag.CERTIFY_OTHER))
+                .addUserId("Juliet <juliet@montague.lit>")
+                .setPassphrase(Passphrase.fromPassword("test"))
+                .build();
+        PGPPublicKey publicKey = secretKeyRing.getPublicKey();
+        PGPPublicKeyRing publicKeyRing = PGPainless.readKeyRing().publicKeyRing(publicKey.getEncoded());
+        String armored = PGPainless.asciiArmor(publicKeyRing);
+        Assertions.assertTrue(armored.contains("Comment: Juliet <juliet@montague.lit> (Primary)"));
+        Assertions.assertFalse(armored.contains("Comment: Public key contains 1 identities"));
+    }
+
+    @Test
+    public void testWithoutIdentityInHeader() throws Exception {
+        PGPPublicKeyRing publicKeys = PGPainless.readKeyRing().publicKeyRing("-----BEGIN PGP PUBLIC KEY BLOCK-----\n" +
+                "\n" +
+                "xsBNBGIgzE0BCACwxaYg6bpmp0POq1T6yalGE9XaL2IG9d9khDBweZ63s3Pu1pHB\n" +
+                "JtmjgN7Tx3ts6hLzQm3YKYA6zu1MXQ8k2vqtdtGUpZPp18Pbars7yUDqh8QIdFjO\n" +
+                "GeE+c8So0MQgTgoBuyZiSmslwp1WO78ozf/0rCayFdy73dPUntuLE6c2ZKO8nw/g\n" +
+                "uyk2ozsqLN/TBpgbuJUyMedJtXV10DdT9QxH/66LmdjFKXTkc74qI8YAm/pmJeOh\n" +
+                "36qZ5ehAgz9MthPQINnZKpnqidqkGFvjwVFlCMlVSmNCNJmpgGDH3gvkklZHzGsf\n" +
+                "dfzQswd/BQjPsFH9cK+QFYMG6q2zrvM0X9mdABEBAAE=\n" +
+                "=njg8\n" +
+                "-----END PGP PUBLIC KEY BLOCK-----\n");
+        PGPPublicKey publicKey = publicKeys.getPublicKey();
+        PGPPublicKeyRing publicKeyRing = PGPainless.readKeyRing().publicKeyRing(publicKey.getEncoded());
+        String armored = PGPainless.asciiArmor(publicKeyRing);
+        Assertions.assertTrue(armored.contains("Comment: Public key contains 0 identities"));
     }
 
     @TestTemplate
