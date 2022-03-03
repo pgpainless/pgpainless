@@ -107,7 +107,7 @@ There are some predefined key archetypes, but it is possible to fully customize 
                                         KeyFlag.ENCRYPT_COMMS, KeyFlag.ENCRYPT_STORAGE)
                 ).addUserId("Juliet <juliet@montague.lit>")
                 .addUserId("xmpp:juliet@capulet.lit")
-                .setPassphrase("romeo_oh_Romeo<3")
+                .setPassphrase(Passphrase.fromPassword("romeo_oh_Romeo<3"))
                 .build();
 ```
 
