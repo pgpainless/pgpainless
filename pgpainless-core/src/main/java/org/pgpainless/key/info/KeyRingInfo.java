@@ -1009,6 +1009,25 @@ public class KeyRingInfo {
         return new KeyAccessor.SubKey(this, new SubkeyIdentifier(keys, keyId)).getPreferredCompressionAlgorithms();
     }
 
+    /**
+     * Returns true, if the certificate has at least one usable encryption subkey.
+     *
+     * @return true if usable for encryption
+     */
+    public boolean isUsableForEncryption() {
+        return isUsableForEncryption(EncryptionPurpose.ANY);
+    }
+
+    /**
+     * Returns true, if the certificate has at least one usable encryption subkey for the given purpose.
+     *
+     * @param purpose purpose of encryption
+     * @return true if usable for encryption
+     */
+    public boolean isUsableForEncryption(@Nonnull EncryptionPurpose purpose) {
+        return !getEncryptionSubkeys(purpose).isEmpty();
+    }
+
     private KeyAccessor getKeyAccessor(@Nullable String userId, long keyID) {
         if (getPublicKey(keyID) == null) {
             throw new NoSuchElementException("No subkey with key id " + Long.toHexString(keyID) + " found on this key.");
