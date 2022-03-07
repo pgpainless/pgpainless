@@ -15,6 +15,7 @@ public final class DateUtil {
 
     }
 
+    // Java's SimpleDateFormat is not thread-safe, therefore we return a new instance on every invocation.
     public static SimpleDateFormat getParser() {
         SimpleDateFormat parser = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss z");
         parser.setTimeZone(TimeZone.getTimeZone("UTC"));
