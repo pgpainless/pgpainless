@@ -5,6 +5,7 @@
 package org.pgpainless.key.generation;
 
 import javax.annotation.Nonnull;
+import javax.annotation.Nullable;
 
 import org.bouncycastle.openpgp.PGPSignatureSubpacketVector;
 import org.pgpainless.algorithm.KeyFlag;
@@ -12,18 +13,23 @@ import org.pgpainless.key.generation.type.KeyType;
 import org.pgpainless.signature.subpackets.SignatureSubpackets;
 import org.pgpainless.signature.subpackets.SignatureSubpacketsHelper;
 
+import java.util.Date;
+
 public class KeySpec {
 
     private final KeyType keyType;
     private final SignatureSubpackets subpacketGenerator;
     private final boolean inheritedSubPackets;
+    private final Date keyCreationDate;
 
     KeySpec(@Nonnull KeyType type,
             @Nonnull SignatureSubpackets subpacketGenerator,
-            boolean inheritedSubPackets) {
+            boolean inheritedSubPackets,
+            @Nullable Date keyCreationDate) {
         this.keyType = type;
         this.subpacketGenerator = subpacketGenerator;
         this.inheritedSubPackets = inheritedSubPackets;
+        this.keyCreationDate = keyCreationDate;
     }
 
     @Nonnull
@@ -43,6 +49,11 @@ public class KeySpec {
 
     boolean isInheritedSubPackets() {
         return inheritedSubPackets;
+    }
+
+    @Nullable
+    public Date getKeyCreationDate() {
+        return keyCreationDate;
     }
 
     public static KeySpecBuilder getBuilder(KeyType type, KeyFlag flag, KeyFlag... flags) {

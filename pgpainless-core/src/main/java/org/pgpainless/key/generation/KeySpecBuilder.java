@@ -5,6 +5,7 @@
 package org.pgpainless.key.generation;
 
 import java.util.Arrays;
+import java.util.Date;
 import java.util.LinkedHashSet;
 import java.util.Set;
 import javax.annotation.Nonnull;
@@ -31,6 +32,7 @@ public class KeySpecBuilder implements KeySpecBuilderInterface {
     private Set<CompressionAlgorithm> preferredCompressionAlgorithms = algorithmSuite.getCompressionAlgorithms();
     private Set<HashAlgorithm> preferredHashAlgorithms = algorithmSuite.getHashAlgorithms();
     private Set<SymmetricKeyAlgorithm> preferredSymmetricAlgorithms = algorithmSuite.getSymmetricKeyAlgorithms();
+    private Date keyCreationDate;
 
     KeySpecBuilder(@Nonnull KeyType type, KeyFlag flag, KeyFlag... flags) {
         if (flag == null) {
@@ -66,6 +68,11 @@ public class KeySpecBuilder implements KeySpecBuilderInterface {
         return this;
     }
 
+    @Override
+    public KeySpecBuilder setKeyCreationDate(@Nonnull Date creationDate) {
+        this.keyCreationDate = creationDate;
+        return this;
+    }
 
     @Override
     public KeySpec build() {
@@ -75,6 +82,6 @@ public class KeySpecBuilder implements KeySpecBuilderInterface {
         this.hashedSubpackets.setPreferredSymmetricKeyAlgorithms(preferredSymmetricAlgorithms);
         this.hashedSubpackets.setFeatures(Feature.MODIFICATION_DETECTION);
 
-        return new KeySpec(type, (SignatureSubpackets) hashedSubpackets, false);
+        return new KeySpec(type, (SignatureSubpackets) hashedSubpackets, false, keyCreationDate);
     }
 }

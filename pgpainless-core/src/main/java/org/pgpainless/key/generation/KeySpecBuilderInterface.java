@@ -10,6 +10,8 @@ import org.pgpainless.algorithm.CompressionAlgorithm;
 import org.pgpainless.algorithm.HashAlgorithm;
 import org.pgpainless.algorithm.SymmetricKeyAlgorithm;
 
+import java.util.Date;
+
 public interface KeySpecBuilderInterface {
 
     KeySpecBuilder overridePreferredCompressionAlgorithms(@Nonnull CompressionAlgorithm... compressionAlgorithms);
@@ -17,6 +19,8 @@ public interface KeySpecBuilderInterface {
     KeySpecBuilder overridePreferredHashAlgorithms(@Nonnull HashAlgorithm... preferredHashAlgorithms);
 
     KeySpecBuilder overridePreferredSymmetricKeyAlgorithms(@Nonnull SymmetricKeyAlgorithm... preferredSymmetricKeyAlgorithms);
+
+    KeySpecBuilder setKeyCreationDate(@Nonnull Date creationDate);
 
     KeySpec build();
 }

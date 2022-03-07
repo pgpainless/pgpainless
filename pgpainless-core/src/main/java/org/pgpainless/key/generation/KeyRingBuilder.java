@@ -305,9 +305,11 @@ public class KeyRingBuilder implements KeyRingBuilderInterface<KeyRingBuilder> {
         // Create raw Key Pair
         KeyPair keyPair = certKeyGenerator.generateKeyPair();
 
+        Date keyCreationDate = spec.getKeyCreationDate() != null ? spec.getKeyCreationDate() : new Date();
+
         // Form PGP key pair
         PGPKeyPair pgpKeyPair = ImplementationFactory.getInstance()
-                .getPGPKeyPair(type.getAlgorithm(), keyPair, new Date());
+                .getPGPKeyPair(type.getAlgorithm(), keyPair, keyCreationDate);
         return pgpKeyPair;
     }
 }
