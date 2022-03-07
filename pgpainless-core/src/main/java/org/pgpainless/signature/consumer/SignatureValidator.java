@@ -355,6 +355,10 @@ public abstract class SignatureValidator {
         };
     }
 
+    public static SignatureValidator signatureDoesNotPredateSignee(PGPPublicKey signee) {
+        return signatureDoesNotPredateKeyCreation(signee);
+    }
+
     /**
      * Verify that a signature has a hashed creation time subpacket.
      *
@@ -379,6 +383,16 @@ public abstract class SignatureValidator {
      * @return validator
      */
     public static SignatureValidator signatureDoesNotPredateSigningKey(PGPPublicKey key) {
+        return signatureDoesNotPredateKeyCreation(key);
+    }
+
+    /**
+     * Verify that a signature does not predate the creation time of the given key.
+     *
+     * @param key key
+     * @return validator
+     */
+    public static SignatureValidator signatureDoesNotPredateKeyCreation(PGPPublicKey key) {
         return new SignatureValidator() {
             @Override
             public void verify(PGPSignature signature) throws SignatureValidationException {
@@ -386,7 +400,7 @@ public abstract class SignatureValidator {
                 Date signatureCreationTime = signature.getCreationTime();
 
                 if (keyCreationTime.after(signatureCreationTime)) {
-                    throw new SignatureValidationException("Signature predates its signing key (key creation: " + keyCreationTime + ", signature creation: " + signatureCreationTime + ")");
+                    throw new SignatureValidationException("Signature predates key (key creation: " + keyCreationTime + ", signature creation: " + signatureCreationTime + ")");
                 }
             }
         };

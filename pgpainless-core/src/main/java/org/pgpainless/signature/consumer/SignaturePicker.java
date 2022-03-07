@@ -337,6 +337,7 @@ public final class SignaturePicker {
             try {
                 SignatureValidator.signatureIsOfType(SignatureType.SUBKEY_BINDING).verify(signature);
                 SignatureValidator.signatureStructureIsAcceptable(primaryKey, policy).verify(signature);
+                SignatureValidator.signatureDoesNotPredateSignee(subkey).verify(signature);
                 SignatureValidator.signatureIsAlreadyEffective(validationDate).verify(signature);
                 // if the currently latest signature is not yet expired, check if the next candidate is not yet expired
                 if (latestSubkeyBinding != null && !SignatureUtils.isSignatureExpired(latestSubkeyBinding, validationDate)) {

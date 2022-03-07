@@ -4,6 +4,14 @@
 
 package org.pgpainless.key.generation;
 
+import static org.junit.jupiter.api.Assertions.assertFalse;
+
+import java.security.InvalidAlgorithmParameterException;
+import java.security.NoSuchAlgorithmException;
+import java.util.Calendar;
+import java.util.Date;
+import java.util.Iterator;
+
 import org.bouncycastle.openpgp.PGPException;
 import org.bouncycastle.openpgp.PGPPublicKey;
 import org.bouncycastle.openpgp.PGPSecretKey;
@@ -13,14 +21,10 @@ import org.junit.jupiter.api.Test;
 import org.pgpainless.PGPainless;
 import org.pgpainless.algorithm.KeyFlag;
 import org.pgpainless.key.generation.type.KeyType;
+import org.pgpainless.key.generation.type.ecc.EllipticCurve;
 import org.pgpainless.key.generation.type.eddsa.EdDSACurve;
 import org.pgpainless.key.generation.type.xdh.XDHSpec;
 import org.pgpainless.util.DateUtil;
-
-import java.security.InvalidAlgorithmParameterException;
-import java.security.NoSuchAlgorithmException;
-import java.util.Date;
-import java.util.Iterator;
 
 public class GenerateKeyWithCustomCreationDateTest {
 
@@ -42,5 +46,22 @@ public class GenerateKeyWithCustomCreationDateTest {
         JUtils.assertDateEquals(creationDate, primaryKey.getCreationTime());
         // subkey has no creation date override, so it was generated "just now"
         JUtils.assertDateNotEquals(creationDate, subkey.getCreationTime());
+    }
+
+    @Test
+    public void generateSubkeyWithFutureKeyCreationDate() throws PGPException, InvalidAlgorithmParameterException, NoSuchAlgorithmException {
+        Calendar calendar = Calendar.getInstance();
+        calendar.add(Calendar.YEAR, 20);
+        Date future = calendar.getTime();
+
+        PGPSecretKeyRing secretKeys = PGPainless.buildKeyRing()
+                .addSubkey(KeySpec.getBuilder(KeyType.ECDH(EllipticCurve._P384), KeyFlag.ENCRYPT_COMMS, KeyFlag.ENCRYPT_STORAGE).setKeyCreationDate(future))
+                .setPrimaryKey(KeySpec.getBuilder(KeyType.ECDSA(EllipticCurve._P384), KeyFlag.CERTIFY_OTHER, KeyFlag.SIGN_DATA))
+                .addUserId("Captain Future <cpt@futu.re>")
+                .build();
+
+        // Subkey has future key creation date, so its binding will predate the key -> no usable encryption key left
+        assertFalse(PGPainless.inspectKeyRing(secretKeys)
+                .isUsableForEncryption());
     }
 }

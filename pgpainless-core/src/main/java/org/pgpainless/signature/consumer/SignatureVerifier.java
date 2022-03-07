@@ -243,6 +243,7 @@ public final class SignatureVerifier {
             throws SignatureValidationException {
         SignatureValidator.signatureIsOfType(SignatureType.SUBKEY_BINDING).verify(signature);
         SignatureValidator.signatureStructureIsAcceptable(primaryKey, policy).verify(signature);
+        SignatureValidator.signatureDoesNotPredateSignee(subkey).verify(signature);
         SignatureValidator.signatureIsEffective(validationDate).verify(signature);
         SignatureValidator.hasValidPrimaryKeyBindingSignatureIfRequired(primaryKey, subkey, policy, validationDate).verify(signature);
         SignatureValidator.correctSubkeyBindingSignature(primaryKey, subkey).verify(signature);
@@ -265,6 +266,7 @@ public final class SignatureVerifier {
     public static boolean verifySubkeyBindingRevocation(PGPSignature signature, PGPPublicKey primaryKey, PGPPublicKey subkey, Policy policy, Date validationDate) throws SignatureValidationException {
         SignatureValidator.signatureIsOfType(SignatureType.SUBKEY_REVOCATION).verify(signature);
         SignatureValidator.signatureStructureIsAcceptable(primaryKey, policy).verify(signature);
+        SignatureValidator.signatureDoesNotPredateSignee(subkey).verify(signature);
         SignatureValidator.signatureIsEffective(validationDate).verify(signature);
         SignatureValidator.correctSignatureOverKey(primaryKey, subkey).verify(signature);
 
@@ -303,6 +305,7 @@ public final class SignatureVerifier {
             throws SignatureValidationException {
         SignatureValidator.signatureIsOfType(SignatureType.DIRECT_KEY).verify(signature);
         SignatureValidator.signatureStructureIsAcceptable(signingKey, policy).verify(signature);
+        SignatureValidator.signatureDoesNotPredateSignee(signedKey).verify(signature);
         SignatureValidator.signatureIsEffective(validationDate).verify(signature);
         SignatureValidator.correctSignatureOverKey(signingKey, signedKey).verify(signature);
 
