@@ -8,6 +8,9 @@ SPDX-License-Identifier: CC0-1.0
 ## 1.1.2-SNAPSHOT
 - Fix `keyRingInfo.getEmailAddresses()` incorrectly matching some mail addresses (thanks @bratkartoffel for reporting and initial patch proposal)
 - Fix generic type of `CertificationSubpackets.Callback`
+- Add `KeyRingInfo.isUsableForEncryption()`
+- Add `PGPainless.inspectKeyRing(key, date)`
+- Allow custom key creation dates during key generation
 
 ## 1.1.1
 - Add `producerOptions.setComment(string)` to allow adding ASCII armor comments when creating OpenPGP messages (thanks @ferenc-hechler)
