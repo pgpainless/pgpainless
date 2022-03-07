@@ -11,6 +11,7 @@ import java.util.HashSet;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.NoSuchElementException;
 import java.util.Set;
 
 import javax.annotation.Nonnull;
@@ -184,15 +185,24 @@ public class EncryptionOptions {
      * @return this
      */
     public EncryptionOptions addRecipient(PGPPublicKeyRing key, EncryptionKeySelector encryptionKeySelectionStrategy) {
-        KeyRingInfo info = new KeyRingInfo(key, new Date());
-        Date primaryKeyExpiration = info.getPrimaryKeyExpirationDate();
-        if (primaryKeyExpiration != null && primaryKeyExpiration.before(new Date())) {
+        Date evaluationDate = new Date();
+        KeyRingInfo info;
+        info = new KeyRingInfo(key, evaluationDate);
+
+        Date primaryKeyExpiration;
+        try {
+            primaryKeyExpiration = info.getPrimaryKeyExpirationDate();
+        } catch (NoSuchElementException e) {
+            throw new IllegalArgumentException("Provided key " + OpenPgpFingerprint.of(key) + " does not have a valid/acceptable signature carrying a primary key expiration date.");
+        }
+        if (primaryKeyExpiration != null && primaryKeyExpiration.before(evaluationDate)) {
             throw new IllegalArgumentException("Provided key " + OpenPgpFingerprint.of(key) + " is expired: " + primaryKeyExpiration);
         }
+
         List<PGPPublicKey> encryptionSubkeys = encryptionKeySelectionStrategy
                 .selectEncryptionSubkeys(info.getEncryptionSubkeys(purpose));
         if (encryptionSubkeys.isEmpty()) {
-            throw new IllegalArgumentException("Key has no suitable encryption subkeys.");
+            throw new IllegalArgumentException("Key " + OpenPgpFingerprint.of(key) + " has no suitable encryption subkeys.");
         }
 
         for (PGPPublicKey encryptionSubkey : encryptionSubkeys) {
