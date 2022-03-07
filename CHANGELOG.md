@@ -5,7 +5,7 @@ SPDX-License-Identifier: CC0-1.0
 
 # PGPainless Changelog
 
-## 1.1.2-SNAPSHOT
+## 1.1.2
 - Fix `keyRingInfo.getEmailAddresses()` incorrectly matching some mail addresses (thanks @bratkartoffel for reporting and initial patch proposal)
 - Fix generic type of `CertificationSubpackets.Callback`
 - Add `KeyRingInfo.isUsableForEncryption()`
