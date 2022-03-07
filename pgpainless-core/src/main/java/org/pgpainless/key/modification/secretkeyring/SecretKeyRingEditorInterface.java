@@ -348,7 +348,7 @@ public interface SecretKeyRingEditorInterface {
      * @param secretKeyRingProtector protector to unlock the primary secret key
      * @param revocationAttributes revocation attributes
      * @return builder
-     * @throws PGPException
+     * @throws PGPException if the revocation signatures cannot be generated
      */
     SecretKeyRingEditorInterface revokeUserIds(
             @Nonnull SelectUserId userIdSelector,
@@ -370,7 +370,7 @@ public interface SecretKeyRingEditorInterface {
      * @param secretKeyRingProtector protector to unlock the primary secret key
      * @param subpacketsCallback callback to modify the revocations subpackets
      * @return builder
-     * @throws PGPException
+     * @throws PGPException if the revocation signatures cannot be generated
      */
     SecretKeyRingEditorInterface revokeUserIds(
             @Nonnull SelectUserId userIdSelector,
