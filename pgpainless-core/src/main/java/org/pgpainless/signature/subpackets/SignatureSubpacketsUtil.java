@@ -575,6 +575,10 @@ public final class SignatureSubpacketsUtil {
      * @return last occurrence of the subpacket in the vector
      */
     public static <P extends org.bouncycastle.bcpg.SignatureSubpacket> P getSignatureSubpacket(PGPSignatureSubpacketVector vector, SignatureSubpacket type) {
+        if (vector == null) {
+            // Almost never happens, but may be caused by broken signatures.
+            return null;
+        }
         org.bouncycastle.bcpg.SignatureSubpacket[] allPackets = vector.getSubpackets(type.getCode());
         if (allPackets.length == 0) {
             return null;
