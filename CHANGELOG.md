@@ -11,6 +11,10 @@ SPDX-License-Identifier: CC0-1.0
 - Add `KeyRingInfo.isUsableForEncryption()`
 - Add `PGPainless.inspectKeyRing(key, date)`
 - Allow custom key creation dates during key generation
+- Reject subkeys with bindings that predate key generation
+- `EncryptionOptions.addRecipient()`: Transform `NoSuchElementException` into `IllegalArgumentException` with proper error message
+- Fix `ClassCastException` by preventing accidental verification of 3rd-party-issued user-id revocation with primary key.
+- Fix `NullPointerException` when trying to verify malformed signature
 
 ## 1.1.1
 - Add `producerOptions.setComment(string)` to allow adding ASCII armor comments when creating OpenPGP messages (thanks @ferenc-hechler)
