@@ -567,7 +567,7 @@ public final class SignatureSubpacketsUtil {
     }
 
     /**
-     * Return the last occurence of a subpacket type in the given signature subpacket vector.
+     * Return the last occurrence of a subpacket type in the given signature subpacket vector.
      *
      * @param vector subpacket vector (hashed/unhashed)
      * @param type subpacket type
