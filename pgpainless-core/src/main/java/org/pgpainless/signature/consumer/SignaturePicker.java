@@ -169,6 +169,11 @@ public final class SignaturePicker {
 
         PGPSignature latestUserIdRevocation = null;
         for (PGPSignature signature : signatures) {
+            PGPPublicKey signer = keyRing.getPublicKey(signature.getKeyID());
+            if (signer == null) {
+                // Signature made by external key. Skip.
+                continue;
+            }
             try {
                 SignatureVerifier.verifyUserIdRevocation(userId, signature, primaryKey, policy, validationDate);
             } catch (SignatureValidationException e) {
