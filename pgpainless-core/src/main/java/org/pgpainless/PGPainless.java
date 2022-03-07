@@ -116,13 +116,25 @@ public final class PGPainless {
      * This method can be used to determine expiration dates, key flags and other information about a key.
      *
      * To evaluate a key at a given date (e.g. to determine if the key was allowed to create a certain signature)
-     * use {@link KeyRingInfo#KeyRingInfo(PGPKeyRing, Date)} instead.
+     * use {@link #inspectKeyRing(PGPKeyRing, Date)} instead.
      *
      * @param keyRing key ring
      * @return access object
      */
     public static KeyRingInfo inspectKeyRing(PGPKeyRing keyRing) {
         return new KeyRingInfo(keyRing);
+    }
+
+    /**
+     * Quickly access information about a {@link org.bouncycastle.openpgp.PGPPublicKeyRing} / {@link PGPSecretKeyRing}.
+     * This method can be used to determine expiration dates, key flags and other information about a key at a specific time.
+     *
+     * @param keyRing key ring
+     * @param inspectionDate date of inspection
+     * @return access object
+     */
+    public static KeyRingInfo inspectKeyRing(PGPKeyRing keyRing, Date inspectionDate) {
+        return new KeyRingInfo(keyRing, inspectionDate);
     }
 
     /**
