@@ -144,7 +144,13 @@ public final class CertificateValidator {
         // Specific signer user-id
         SignerUserID signerUserID = SignatureSubpacketsUtil.getSignerUserID(signature);
         if (signerUserID != null) {
-            PGPSignature userIdSig = userIdSignatures.get(signerUserID.getID()).get(0);
+            List<PGPSignature> signerUserIdSigs = userIdSignatures.get(signerUserID.getID());
+            if (signerUserIdSigs == null || signerUserIdSigs.isEmpty()) {
+                throw new SignatureValidationException("Signature was allegedly made by user-id '" + signerUserID.getID() +
+                        "' but we have no valid signatures for that on the certificate.");
+            }
+
+            PGPSignature userIdSig = signerUserIdSigs.get(0);
             if (userIdSig.getSignatureType() == SignatureType.CERTIFICATION_REVOCATION.getCode()) {
                 throw new SignatureValidationException("Signature was made with user-id '" + signerUserID.getID() + "' which is revoked.");
             }
