@@ -385,7 +385,7 @@ public final class SigningOptions {
      *
      * @return signing methods
      */
-    public Map<SubkeyIdentifier, SigningMethod> getSigningMethods() {
+    Map<SubkeyIdentifier, SigningMethod> getSigningMethods() {
         return Collections.unmodifiableMap(signingMethods);
     }
 
