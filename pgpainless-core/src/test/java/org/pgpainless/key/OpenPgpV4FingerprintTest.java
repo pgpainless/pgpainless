@@ -7,6 +7,7 @@ package org.pgpainless.key;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import java.io.IOException;
 import java.net.URI;
@@ -90,5 +91,15 @@ public class OpenPgpV4FingerprintTest {
         String prettyPrint = "C94B 884B 9A56 7B1C FB23  6999 7DC5 BDAC BBDF BF87";
         OpenPgpV4Fingerprint fingerprint = new OpenPgpV4Fingerprint(prettyPrint);
         assertEquals(prettyPrint, fingerprint.prettyPrint());
+    }
+
+    @Test
+    public void testParse() {
+        String prettyPrint = "C94B 884B 9A56 7B1C FB23  6999 7DC5 BDAC BBDF BF87";
+        OpenPgpFingerprint parsed = OpenPgpFingerprint.parse(prettyPrint);
+
+        assertTrue(parsed instanceof OpenPgpV4Fingerprint);
+        OpenPgpV4Fingerprint v4fp = (OpenPgpV4Fingerprint) parsed;
+        assertEquals(prettyPrint, v4fp.prettyPrint());
     }
 }

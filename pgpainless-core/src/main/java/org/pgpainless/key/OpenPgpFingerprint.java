@@ -50,6 +50,23 @@ public abstract class OpenPgpFingerprint implements CharSequence, Comparable<Ope
         return of(ring.getPublicKey());
     }
 
+    /**
+     * Try to parse an {@link OpenPgpFingerprint} from the given fingerprint string.
+     *
+     * @param fingerprint fingerprint
+     * @return parsed fingerprint
+     */
+    public static OpenPgpFingerprint parse(String fingerprint) {
+        String fp = fingerprint.replace(" ", "").trim().toUpperCase();
+        if (fp.matches("^[0-9A-F]{40}$")) {
+            return new OpenPgpV4Fingerprint(fp);
+        }
+        if (fp.matches("^[0-9A-F]{64}$")) {
+            return new OpenPgpV5Fingerprint(fp);
+        }
+        throw new IllegalArgumentException("Fingerprint does not appear to match any known fingerprint patterns.");
+    }
+
     public OpenPgpFingerprint(String fingerprint) {
         String fp = fingerprint.replace(" ", "").trim().toUpperCase();
         if (!isValid(fp)) {
