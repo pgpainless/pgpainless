@@ -26,49 +26,11 @@ public class OpenPgpV4Fingerprint extends OpenPgpFingerprint {
 
     /**
      * Create an {@link OpenPgpV4Fingerprint}.
-     * @see <a href="https://xmpp.org/extensions/xep-0373.html#annoucning-pubkey">
-     *     XEP-0373 §4.1: The OpenPGP Public-Key Data Node about how to obtain the fingerprint</a>
-     * @param fingerprint hexadecimal representation of the fingerprint.
+     *
+     * @param fingerprint uppercase hexadecimal fingerprint of length 40
      */
     public OpenPgpV4Fingerprint(@Nonnull String fingerprint) {
         super(fingerprint);
-    }
-
-    @Override
-    public int getVersion() {
-        return 4;
-    }
-
-    @Override
-    protected boolean isValid(@Nonnull String fp) {
-        return fp.matches("[0-9A-F]{40}");
-    }
-
-    @Override
-    public long getKeyId() {
-        byte[] bytes = Hex.decode(toString().getBytes(utf8));
-        ByteBuffer buf = ByteBuffer.wrap(bytes);
-
-        // We have to cast here in order to be compatible with java 8
-        // https://github.com/eclipse/jetty.project/issues/3244
-        ((Buffer) buf).position(12);
-
-        return buf.getLong();
-    }
-
-    @Override
-    public String prettyPrint() {
-        String fp = toString();
-        StringBuilder pretty = new StringBuilder();
-        for (int i = 0; i < 5; i++) {
-            pretty.append(fp, i * 4, (i + 1) * 4).append(' ');
-        }
-        pretty.append(' ');
-        for (int i = 5; i < 9; i++) {
-            pretty.append(fp, i * 4, (i + 1) * 4).append(' ');
-        }
-        pretty.append(fp, 36, 40);
-        return pretty.toString();
     }
 
     public OpenPgpV4Fingerprint(@Nonnull byte[] bytes) {
@@ -93,6 +55,44 @@ public class OpenPgpV4Fingerprint extends OpenPgpFingerprint {
 
     public OpenPgpV4Fingerprint(@Nonnull PGPKeyRing ring) {
         super(ring);
+    }
+
+    @Override
+    public int getVersion() {
+        return 4;
+    }
+
+    @Override
+    protected boolean isValid(@Nonnull String fp) {
+        return fp.matches("^[0-9A-F]{40}$");
+    }
+
+    @Override
+    public long getKeyId() {
+        byte[] bytes = Hex.decode(toString().getBytes(utf8));
+        ByteBuffer buf = ByteBuffer.wrap(bytes);
+
+        // The key id is the right-most 8 bytes (conveniently a long)
+        // We have to cast here in order to be compatible with java 8
+        // https://github.com/eclipse/jetty.project/issues/3244
+        ((Buffer) buf).position(12); // 20 - 8 bytes = offset 12
+
+        return buf.getLong();
+    }
+
+    @Override
+    public String prettyPrint() {
+        String fp = toString();
+        StringBuilder pretty = new StringBuilder();
+        for (int i = 0; i < 5; i++) {
+            pretty.append(fp, i * 4, (i + 1) * 4).append(' ');
+        }
+        pretty.append(' ');
+        for (int i = 5; i < 9; i++) {
+            pretty.append(fp, i * 4, (i + 1) * 4).append(' ');
+        }
+        pretty.append(fp, 36, 40);
+        return pretty.toString();
     }
 
     @Override

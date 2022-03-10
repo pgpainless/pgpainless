@@ -33,6 +33,9 @@ public abstract class OpenPgpFingerprint implements CharSequence, Comparable<Ope
         if (key.getVersion() == 4) {
             return new OpenPgpV4Fingerprint(key);
         }
+        if (key.getVersion() == 5) {
+            return new OpenPgpV5Fingerprint(key);
+        }
         throw new IllegalArgumentException("OpenPGP keys of version " + key.getVersion() + " are not supported.");
     }
 
