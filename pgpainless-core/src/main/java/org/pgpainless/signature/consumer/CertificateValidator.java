@@ -143,7 +143,7 @@ public final class CertificateValidator {
 
         // Specific signer user-id
         SignerUserID signerUserID = SignatureSubpacketsUtil.getSignerUserID(signature);
-        if (signerUserID != null) {
+        if (signerUserID != null && policy.getSignerUserIdValidationLevel() == Policy.SignerUserIdValidationLevel.STRICT) {
             List<PGPSignature> signerUserIdSigs = userIdSignatures.get(signerUserID.getID());
             if (signerUserIdSigs == null || signerUserIdSigs.isEmpty()) {
                 throw new SignatureValidationException("Signature was allegedly made by user-id '" + signerUserID.getID() +
