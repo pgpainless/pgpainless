@@ -42,6 +42,25 @@ public final class Policy {
 
     private AlgorithmSuite keyGenerationAlgorithmSuite = AlgorithmSuite.getDefaultAlgorithmSuite();
 
+    // Signers User-ID is soon to be deprecated.
+    private SignerUserIdValidationLevel signerUserIdValidationLevel = SignerUserIdValidationLevel.DISABLED;
+
+    public enum SignerUserIdValidationLevel {
+        /**
+         * PGPainless will verify {@link org.bouncycastle.bcpg.sig.SignerUserID} subpackets in signatures strictly.
+         * This means, that signatures with Signer's User-ID subpackets containing a value that does not match the signer key's
+         * user-id exactly, will be rejected.
+         * E.g. Signer's user-id "alice@pgpainless.org", User-ID: "Alice &lt;alice@pgpainless.org&gt;" does not
+         * match exactly and is therefore rejected.
+         */
+        STRICT,
+
+        /**
+         * PGPainless will ignore {@link org.bouncycastle.bcpg.sig.SignerUserID} subpackets on signature.
+         */
+        DISABLED
+    }
+
     Policy() {
     }
 
@@ -467,5 +486,30 @@ public final class Policy {
      */
     public void setKeyGenerationAlgorithmSuite(@Nonnull AlgorithmSuite algorithmSuite) {
         this.keyGenerationAlgorithmSuite = algorithmSuite;
+    }
+
+    /**
+     * Return the level of validation PGPainless shall do on {@link org.bouncycastle.bcpg.sig.SignerUserID} subpackets.
+     * By default, this value is {@link SignerUserIdValidationLevel#DISABLED}.
+     *
+     * @return the level of validation
+     */
+    public SignerUserIdValidationLevel getSignerUserIdValidationLevel() {
+        return signerUserIdValidationLevel;
+    }
+
+    /**
+     * Specify, how {@link org.bouncycastle.bcpg.sig.SignerUserID} subpackets on signatures shall be validated.
+     *
+     * @param signerUserIdValidationLevel level of verification PGPainless shall do on
+     * {@link org.bouncycastle.bcpg.sig.SignerUserID} subpackets.
+     * @return policy instance
+     */
+    public Policy setSignerUserIdValidationLevel(SignerUserIdValidationLevel signerUserIdValidationLevel) {
+        if (signerUserIdValidationLevel == null) {
+            throw new NullPointerException("SignerUserIdValidationLevel cannot be null.");
+        }
+        this.signerUserIdValidationLevel = signerUserIdValidationLevel;
+        return this;
     }
 }

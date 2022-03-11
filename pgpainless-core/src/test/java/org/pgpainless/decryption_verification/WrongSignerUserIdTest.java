@@ -2,9 +2,11 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
-package investigations;
+package org.pgpainless.decryption_verification;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
@@ -34,17 +36,17 @@ import org.bouncycastle.openpgp.operator.bc.BcPGPContentSignerBuilder;
 import org.bouncycastle.openpgp.operator.bc.BcPGPDataEncryptorBuilder;
 import org.bouncycastle.openpgp.operator.bc.BcPublicKeyKeyEncryptionMethodGenerator;
 import org.bouncycastle.util.io.Streams;
+import org.junit.jupiter.api.AfterAll;
+import org.junit.jupiter.api.Test;
 import org.pgpainless.PGPainless;
 import org.pgpainless.algorithm.HashAlgorithm;
-import org.pgpainless.decryption_verification.ConsumerOptions;
-import org.pgpainless.decryption_verification.DecryptionStream;
-import org.pgpainless.exception.SignatureValidationException;
 import org.pgpainless.key.protection.UnlockSecretKey;
+import org.pgpainless.policy.Policy;
 import org.pgpainless.util.Passphrase;
 
 public class WrongSignerUserIdTest {
 
-    private static final String CERT = "-----BEGIN PGP PRIVATE KEY BLOCK-----\n" +
+    private static final String KEY = "-----BEGIN PGP PRIVATE KEY BLOCK-----\n" +
             "   Comment: Alice's OpenPGP Transferable Secret Key\n" +
             "   Comment: https://www.ietf.org/id/draft-bre-openpgp-samples-01.html\n" +
             "\n" +
@@ -63,13 +65,54 @@ public class WrongSignerUserIdTest {
             "   -----END PGP PRIVATE KEY BLOCK-----";
     private static final String USER_ID = "Alice Lovelace <alice@openpgp.example>";
 
-    public static void main(String[] args) throws Exception {
-        WrongSignerUserIdTest test = new WrongSignerUserIdTest();
-        test.execute();
+    @Test
+    public void verificationSucceedsWithDisabledCheck() throws PGPException, IOException {
+        executeTest(false, true);
     }
 
-    public void execute() throws PGPException, IOException {
-        PGPSecretKeyRing secretKeys = PGPainless.readKeyRing().secretKeyRing(CERT);
+    @Test
+    public void verificationFailsWithEnabledCheck() throws PGPException, IOException {
+        executeTest(true, false);
+    }
+
+    @AfterAll
+    public static void resetDefault() {
+        PGPainless.getPolicy().setSignerUserIdValidationLevel(Policy.SignerUserIdValidationLevel.DISABLED);
+    }
+
+    public void executeTest(boolean enableCheck, boolean expectSucessfulVerification) throws IOException, PGPException {
+        PGPainless.getPolicy().setSignerUserIdValidationLevel(enableCheck ? Policy.SignerUserIdValidationLevel.STRICT : Policy.SignerUserIdValidationLevel.DISABLED);
+        PGPSecretKeyRing secretKeys = PGPainless.readKeyRing().secretKeyRing(KEY);
+        assertEquals(USER_ID, secretKeys.getPublicKey().getUserIDs().next());
+
+        String messageWithWrongUserId = generateTestMessage(secretKeys);
+        verifyTestMessage(messageWithWrongUserId, secretKeys, expectSucessfulVerification);
+    }
+
+    private void verifyTestMessage(String messageWithWrongUserId, PGPSecretKeyRing secretKeys, boolean expectSuccessfulVerification) throws IOException, PGPException {
+        PGPPublicKeyRing certificate = PGPainless.extractCertificate(secretKeys);
+
+        DecryptionStream decryptionStream = PGPainless.decryptAndOrVerify().onInputStream(
+                        new ByteArrayInputStream(messageWithWrongUserId.getBytes(StandardCharsets.UTF_8)))
+                .withOptions(new ConsumerOptions()
+                        .addDecryptionKey(secretKeys)
+                        .addVerificationCert(certificate));
+
+        ByteArrayOutputStream out = new ByteArrayOutputStream();
+        Streams.pipeAll(decryptionStream, out);
+
+        decryptionStream.close();
+        OpenPgpMetadata metadata = decryptionStream.getResult();
+
+        if (expectSuccessfulVerification) {
+            assertTrue(metadata.isVerified());
+        } else {
+            assertFalse(metadata.isVerified());
+        }
+
+    }
+
+    private String generateTestMessage(PGPSecretKeyRing secretKeys) throws PGPException, IOException {
         PGPPublicKeyRing certificate = PGPainless.extractCertificate(secretKeys);
 
         assertEquals(USER_ID, certificate.getPublicKey().getUserIDs().next());
@@ -126,19 +169,6 @@ public class WrongSignerUserIdTest {
         encStream.close();
         armorOut.close();
 
-        try {
-            DecryptionStream decryptionStream = PGPainless.decryptAndOrVerify().onInputStream(
-                            new ByteArrayInputStream(cipherText.toByteArray()))
-                    .withOptions(new ConsumerOptions()
-                            .addDecryptionKey(secretKeys)
-                            .addVerificationCert(certificate));
-
-            ByteArrayOutputStream out = new ByteArrayOutputStream();
-            Streams.pipeAll(decryptionStream, out);
-
-            decryptionStream.close();
-        } catch (SignatureValidationException e) {
-            // expected
-        }
+        return cipherText.toString();
     }
 }
