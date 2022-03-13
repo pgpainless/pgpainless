@@ -346,6 +346,11 @@ public class KeyRingInfo {
             PGPSignature certification = signatures.userIdCertifications.get(userId);
             PGPSignature revocation = signatures.userIdRevocations.get(userId);
 
+            // Unbound user-id
+            if (certification == null) {
+                continue;
+            }
+
             // Not revoked -> valid
             if (revocation == null) {
                 probablyExpired.add(userId);
