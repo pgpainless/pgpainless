@@ -152,6 +152,7 @@ public final class EncryptionStream extends OutputStream {
 
     private void prepareLiteralDataProcessing() throws IOException {
         if (options.isCleartextSigned()) {
+            // Begin cleartext with hash algorithm of first signing method
             SigningOptions.SigningMethod firstMethod = options.getSigningOptions().getSigningMethods().values().iterator().next();
             armorOutputStream.beginClearText(firstMethod.getHashAlgorithm().getAlgorithmId());
             return;
