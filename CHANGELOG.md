@@ -5,6 +5,13 @@ SPDX-License-Identifier: CC0-1.0
 
 # PGPainless Changelog
 
+## 1.1.3-SNAPSHOT
+- Make `SigningOptions.getSigningMethods()` part of internal API
+- Fix crash when trying to do verification of unmatched `SignersUserId` signature subpacket
+  - For now, verification of `SignersUserId` is disabled but can be enabled via `Policy.setSignerUserIdValidationLevel()`
+- Initial support for `OpenPgpV5Fingerprint`
+- Security: Fix `KeyRingInfo.getValidAndExpiredUserIds()` accidentally including unbound user-ids
+
 ## 1.1.2
 - Fix `keyRingInfo.getEmailAddresses()` incorrectly matching some mail addresses (thanks @bratkartoffel for reporting and initial patch proposal)
 - Fix generic type of `CertificationSubpackets.Callback`
