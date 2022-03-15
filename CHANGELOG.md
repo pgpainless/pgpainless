@@ -5,6 +5,11 @@ SPDX-License-Identifier: CC0-1.0
 
 # PGPainless Changelog
 
+
+## 1.2.0-SNAPSHOT
+- Improve exception hierarchy for key-related exceptions
+  - See [PR](https://github.com/pgpainless/pgpainless/pull/261) for more information on how to migrate.
+
 ## 1.1.5
 - SOP encrypt: match signature type when using `encrypt --as=` option
 - `ProducerOptions.setEncoding()`: The encoding is henceforth only considered metadata and will no longer trigger CRLF encoding.
