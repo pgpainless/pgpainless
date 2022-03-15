@@ -4,6 +4,7 @@
 
 package org.pgpainless.key.util;
 
+import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -25,6 +26,7 @@ import org.bouncycastle.openpgp.PGPSignature;
 import org.bouncycastle.openpgp.PGPUserAttributeSubpacketVector;
 import org.pgpainless.PGPainless;
 import org.pgpainless.exception.NotYetImplementedException;
+import org.pgpainless.implementation.ImplementationFactory;
 import org.pgpainless.key.protection.SecretKeyRingProtector;
 import org.pgpainless.key.protection.UnlockSecretKey;
 
@@ -290,4 +292,24 @@ public final class KeyRingUtils {
         return newSecretKey;
     }
 
+    public static PGPSecretKeyRing removeSecretKey(PGPSecretKeyRing secretKeys, long secretKeyId)
+            throws IOException, PGPException {
+        if (secretKeys.getSecretKey(secretKeyId) == null) {
+            throw new NoSuchElementException("PGPSecretKeyRing does not contain secret key " + Long.toHexString(secretKeyId));
+        }
+
+        ByteArrayOutputStream encoded = new ByteArrayOutputStream();
+        for (PGPSecretKey secretKey : secretKeys) {
+            if (secretKey.getKeyID() == secretKeyId) {
+                secretKey.getPublicKey().encode(encoded);
+            } else {
+                secretKey.encode(encoded);
+            }
+        }
+        for (Iterator<PGPPublicKey> it = secretKeys.getExtraPublicKeys(); it.hasNext(); ) {
+            PGPPublicKey extra = it.next();
+            extra.encode(encoded);
+        }
+        return new PGPSecretKeyRing(encoded.toByteArray(), ImplementationFactory.getInstance().getKeyFingerprintCalculator());
+    }
 }
