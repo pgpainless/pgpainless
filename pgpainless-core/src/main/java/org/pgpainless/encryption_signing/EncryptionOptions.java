@@ -23,6 +23,7 @@ import org.bouncycastle.openpgp.operator.PBEKeyEncryptionMethodGenerator;
 import org.bouncycastle.openpgp.operator.PGPKeyEncryptionMethodGenerator;
 import org.pgpainless.algorithm.EncryptionPurpose;
 import org.pgpainless.algorithm.SymmetricKeyAlgorithm;
+import org.pgpainless.exception.KeyException;
 import org.pgpainless.implementation.ImplementationFactory;
 import org.pgpainless.key.OpenPgpFingerprint;
 import org.pgpainless.key.SubkeyIdentifier;
@@ -154,7 +155,7 @@ public class EncryptionOptions {
         List<PGPPublicKey> encryptionSubkeys = encryptionKeySelectionStrategy
                 .selectEncryptionSubkeys(info.getEncryptionSubkeys(userId, purpose));
         if (encryptionSubkeys.isEmpty()) {
-            throw new IllegalArgumentException("Key has no suitable encryption subkeys.");
+            throw new KeyException.UnacceptableEncryptionKeyException(OpenPgpFingerprint.of(key));
         }
 
         for (PGPPublicKey encryptionSubkey : encryptionSubkeys) {
@@ -193,16 +194,16 @@ public class EncryptionOptions {
         try {
             primaryKeyExpiration = info.getPrimaryKeyExpirationDate();
         } catch (NoSuchElementException e) {
-            throw new IllegalArgumentException("Provided key " + OpenPgpFingerprint.of(key) + " does not have a valid/acceptable signature carrying a primary key expiration date.");
+            throw new KeyException.UnacceptableSelfSignatureException(OpenPgpFingerprint.of(key));
         }
         if (primaryKeyExpiration != null && primaryKeyExpiration.before(evaluationDate)) {
-            throw new IllegalArgumentException("Provided key " + OpenPgpFingerprint.of(key) + " is expired: " + primaryKeyExpiration);
+            throw new KeyException.ExpiredKeyException(OpenPgpFingerprint.of(key), primaryKeyExpiration);
         }
 
         List<PGPPublicKey> encryptionSubkeys = encryptionKeySelectionStrategy
                 .selectEncryptionSubkeys(info.getEncryptionSubkeys(purpose));
         if (encryptionSubkeys.isEmpty()) {
-            throw new IllegalArgumentException("Key " + OpenPgpFingerprint.of(key) + " has no suitable encryption subkeys.");
+            throw new KeyException.UnacceptableEncryptionKeyException(OpenPgpFingerprint.of(key));
         }
 
         for (PGPPublicKey encryptionSubkey : encryptionSubkeys) {

@@ -22,6 +22,7 @@ import org.pgpainless.encryption_signing.EncryptionResult;
 import org.pgpainless.encryption_signing.EncryptionStream;
 import org.pgpainless.encryption_signing.ProducerOptions;
 import org.pgpainless.encryption_signing.SigningOptions;
+import org.pgpainless.exception.KeyException;
 import org.pgpainless.key.SubkeyIdentifier;
 import org.pgpainless.key.info.KeyRingInfo;
 import org.pgpainless.key.protection.SecretKeyRingProtector;
@@ -63,7 +64,7 @@ public class SignImpl implements Sign {
                 }
                 signingOptions.addDetachedSignature(SecretKeyRingProtector.unprotectedKeys(), key, modeToSigType(mode));
             }
-        } catch (PGPException e) {
+        } catch (PGPException | KeyException e) {
             throw new SOPGPException.BadData(e);
         }
         return this;

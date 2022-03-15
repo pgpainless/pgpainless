@@ -21,6 +21,7 @@ import org.pgpainless.encryption_signing.EncryptionOptions;
 import org.pgpainless.encryption_signing.EncryptionResult;
 import org.pgpainless.encryption_signing.EncryptionStream;
 import org.pgpainless.encryption_signing.ProducerOptions;
+import org.pgpainless.exception.KeyException;
 import org.pgpainless.key.OpenPgpV4Fingerprint;
 import org.pgpainless.key.SubkeyIdentifier;
 
@@ -124,7 +125,7 @@ public class CertificateExpirationTest {
                 "-----END PGP PUBLIC KEY BLOCK-----\n";
 
         PGPPublicKeyRing cert = PGPainless.readKeyRing().publicKeyRing(CERT);
-        assertThrows(IllegalArgumentException.class, () -> encrypt(cert));
+        assertThrows(KeyException.ExpiredKeyException.class, () -> encrypt(cert));
     }
 
     private EncryptionResult encrypt(PGPPublicKeyRing certificate) throws PGPException, IOException {

@@ -28,7 +28,7 @@ import org.junit.jupiter.api.Test;
 import org.pgpainless.PGPainless;
 import org.pgpainless.algorithm.KeyFlag;
 import org.pgpainless.algorithm.SymmetricKeyAlgorithm;
-import org.pgpainless.exception.KeyValidationError;
+import org.pgpainless.exception.KeyException;
 import org.pgpainless.key.SubkeyIdentifier;
 import org.pgpainless.key.generation.KeySpec;
 import org.pgpainless.key.generation.type.KeyType;
@@ -132,14 +132,14 @@ public class EncryptionOptionsTest {
                 .build();
         PGPPublicKeyRing publicKeys = KeyRingUtils.publicKeyRingFrom(secretKeys);
 
-        assertThrows(IllegalArgumentException.class, () -> options.addRecipient(publicKeys));
+        assertThrows(KeyException.UnacceptableEncryptionKeyException.class, () -> options.addRecipient(publicKeys));
     }
 
     @Test
     public void testEncryptionKeySelectionStrategyEmpty_ThrowsAssertionError() {
         EncryptionOptions options = new EncryptionOptions();
 
-        assertThrows(IllegalArgumentException.class,
+        assertThrows(KeyException.UnacceptableEncryptionKeyException.class,
                 () -> options.addRecipient(publicKeys, new EncryptionOptions.EncryptionKeySelector() {
                     @Override
                     public List<PGPPublicKey> selectEncryptionSubkeys(List<PGPPublicKey> encryptionCapableKeys) {
@@ -147,7 +147,7 @@ public class EncryptionOptionsTest {
                     }
                 }));
 
-        assertThrows(IllegalArgumentException.class,
+        assertThrows(KeyException.UnacceptableEncryptionKeyException.class,
                 () -> options.addRecipient(publicKeys, "test@pgpainless.org", new EncryptionOptions.EncryptionKeySelector() {
                     @Override
                     public List<PGPPublicKey> selectEncryptionSubkeys(List<PGPPublicKey> encryptionCapableKeys) {
@@ -180,6 +180,6 @@ public class EncryptionOptionsTest {
     @Test
     public void testAddRecipient_withInvalidUserId() {
         EncryptionOptions options = new EncryptionOptions();
-        assertThrows(KeyValidationError.class, () -> options.addRecipient(publicKeys, "invalid@user.id"));
+        assertThrows(KeyException.UnboundUserIdException.class, () -> options.addRecipient(publicKeys, "invalid@user.id"));
     }
 }
