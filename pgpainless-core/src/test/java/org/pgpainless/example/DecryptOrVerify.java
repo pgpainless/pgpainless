@@ -5,6 +5,8 @@
 package org.pgpainless.example;
 
 import static org.junit.jupiter.api.Assertions.assertArrayEquals;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import java.io.ByteArrayInputStream;
@@ -54,6 +56,11 @@ public class DecryptOrVerify {
             "=JHMt\n" +
             "-----END PGP PRIVATE KEY BLOCK-----\n";
 
+    // The key above is not password protected.
+    private static final SecretKeyRingProtector keyProtector = SecretKeyRingProtector.unprotectedKeys();
+
+    private static final String PLAINTEXT = "Hello, World!\n";
+
     private static final String INBAND_SIGNED = "-----BEGIN PGP MESSAGE-----\n" +
             "Version: PGPainless\n" +
             "\n" +
@@ -76,6 +83,27 @@ public class DecryptOrVerify {
             "QUibivG5Slahz8l7PWnGkxbB2naQxgw=\n" +
             "=oNIK\n" +
             "-----END PGP SIGNATURE-----";
+    private static final String ENCRYPTED = "-----BEGIN PGP MESSAGE-----\n" +
+            "Version: PGPainless\n" +
+            "\n" +
+            "hF4DwqNy0B3ItTkSAQdArkuJHqPTVX+UaqQtHzppwOZDK0TfH1f/fAjrZaso/DUw\n" +
+            "ne6Xc1HYG+gTBWEQUw09m5b/f0E7DSeIg/ai/HKnF8mBSIQhphPR4yVAWypOOUmh\n" +
+            "0kABCiGjaJQyAzF/VtzC+ZVU67DfBl24CEPaRMumxieVUqo/VYWy3zyzE6H1zMqq\n" +
+            "/lWeVnK7NwtfArlhpRcph0S8\n" +
+            "=1cyl\n" +
+            "-----END PGP MESSAGE-----\n";
+    private static final String ENCRYPTED_AND_SIGNED = "-----BEGIN PGP MESSAGE-----\n" +
+            "Version: PGPainless\n" +
+            "\n" +
+            "hF4DwqNy0B3ItTkSAQdAGqwFJ6SRW6It9w+RBudeGbdUj8OZqwApqyvwbKUzJiYw\n" +
+            "WAcJOrGIbrK9bKzJdCLbVYkegILb6vqTuamU8iYDCccstV4Y2w0kT5ynHHPVFKfg\n" +
+            "0r8BUe/Mi8zL0Af6K2r6A9gq/Q8vmscoOB5mI5Yxrk48+rPcp0rZbSu9rC9pHZfs\n" +
+            "hhvxwGwG8EZm14pseHUZdoKldUD8tCbhkS7wDMOHzA1Fo1m1Yyjhe4kBaCrn9zhP\n" +
+            "YSeOzHtMxk5JBcrZW+LMMuRGNBzxc0R1yirqk8yymF1qzTTuYqziO0QxbW1gU00F\n" +
+            "ewdovd7Cx1Il8ONgRzGS3Wyb+iORNuhLpw+w2SV74Kg8XWLD7pDFgOuFZw39b+0X\n" +
+            "Nw==\n" +
+            "=9PiO\n" +
+            "-----END PGP MESSAGE-----";
 
     private static PGPSecretKeyRing secretKey;
     private static PGPPublicKeyRing certificate;
@@ -84,6 +112,53 @@ public class DecryptOrVerify {
     public static void prepare() throws IOException {
         secretKey = PGPainless.readKeyRing().secretKeyRing(KEY);
         certificate = PGPainless.extractCertificate(secretKey);
+    }
+
+    @Test
+    public void decryptMessage() throws PGPException, IOException {
+        ConsumerOptions consumerOptions = new ConsumerOptions()
+                .addDecryptionKey(secretKey, keyProtector);
+
+        ByteArrayOutputStream plaintextOut = new ByteArrayOutputStream();
+        ByteArrayInputStream ciphertextIn = new ByteArrayInputStream(ENCRYPTED.getBytes(StandardCharsets.UTF_8));
+
+        DecryptionStream decryptionStream = PGPainless.decryptAndOrVerify()
+                .onInputStream(ciphertextIn)
+                .withOptions(consumerOptions);
+
+        Streams.pipeAll(decryptionStream, plaintextOut);
+        decryptionStream.close();
+
+        OpenPgpMetadata metadata = decryptionStream.getResult();
+        assertTrue(metadata.isEncrypted()); // message was encrypted
+        assertFalse(metadata.isVerified()); // We did not do any signature verification
+
+        assertEquals(PLAINTEXT, plaintextOut.toString());
+    }
+
+    @Test
+    public void decryptMessageAndVerifySignatures() throws PGPException, IOException {
+        ConsumerOptions consumerOptions = new ConsumerOptions()
+                .addDecryptionKey(secretKey, keyProtector)
+                .addVerificationCert(certificate);
+
+        ByteArrayOutputStream plaintextOut = new ByteArrayOutputStream();
+        ByteArrayInputStream ciphertextIn = new ByteArrayInputStream(ENCRYPTED_AND_SIGNED.getBytes(StandardCharsets.UTF_8));
+
+        DecryptionStream decryptionStream = PGPainless.decryptAndOrVerify()
+                .onInputStream(ciphertextIn)
+                .withOptions(consumerOptions);
+
+        Streams.pipeAll(decryptionStream, plaintextOut);
+        decryptionStream.close();
+
+        OpenPgpMetadata metadata = decryptionStream.getResult();
+        assertTrue(metadata.isEncrypted());
+        assertTrue(metadata.isSigned());
+        assertTrue(metadata.isVerified());
+        assertTrue(metadata.containsVerifiedSignatureFrom(certificate));
+
+        assertEquals(PLAINTEXT, plaintextOut.toString());
     }
 
     @Test
@@ -104,7 +179,7 @@ public class DecryptOrVerify {
 
             OpenPgpMetadata metadata = verificationStream.getResult();
             assertTrue(metadata.isVerified());
-            assertArrayEquals("Hello, World!\n".getBytes(StandardCharsets.UTF_8), out.toByteArray());
+            assertEquals(PLAINTEXT, out.toString());
         }
     }
 
