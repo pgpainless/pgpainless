@@ -5,6 +5,9 @@ SPDX-License-Identifier: CC0-1.0
 
 # PGPainless Changelog
 
+## 1.0.5
+- Security: Fix `KeyRingInfo.getValidAndExpiredUserIds()` accidentally including unbound user-ids
+
 ## 1.0.4
 - Yet another patch for faulty ASCII armor detection 😒
 
