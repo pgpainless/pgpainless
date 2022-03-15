@@ -12,6 +12,9 @@ SPDX-License-Identifier: CC0-1.0
 - Initial support for `OpenPgpV5Fingerprint`
 - Security: Fix `KeyRingInfo.getValidAndExpiredUserIds()` accidentally including unbound user-ids
 
+## 1.0.5
+- Security: Fix `KeyRingInfo.getValidAndExpiredUserIds()` accidentally including unbound user-ids
+
 ## 1.1.2
 - Fix `keyRingInfo.getEmailAddresses()` incorrectly matching some mail addresses (thanks @bratkartoffel for reporting and initial patch proposal)
 - Fix generic type of `CertificationSubpackets.Callback`
