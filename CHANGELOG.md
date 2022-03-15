@@ -10,6 +10,7 @@ SPDX-License-Identifier: CC0-1.0
 - Fix crash when trying to do verification of unmatched `SignersUserId` signature subpacket
   - For now, verification of `SignersUserId` is disabled but can be enabled via `Policy.setSignerUserIdValidationLevel()`
 - Initial support for `OpenPgpV5Fingerprint`
+- Add `OpenPgpFingerprint.parse(string)`
 - Security: Fix `KeyRingInfo.getValidAndExpiredUserIds()` accidentally including unbound user-ids
 
 ## 1.0.5
