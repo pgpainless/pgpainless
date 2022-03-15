@@ -35,8 +35,7 @@ import org.pgpainless.algorithm.KeyFlag;
 import org.pgpainless.decryption_verification.ConsumerOptions;
 import org.pgpainless.decryption_verification.DecryptionStream;
 import org.pgpainless.decryption_verification.OpenPgpMetadata;
-import org.pgpainless.exception.KeyCannotSignException;
-import org.pgpainless.exception.KeyValidationError;
+import org.pgpainless.exception.KeyException;
 import org.pgpainless.key.SubkeyIdentifier;
 import org.pgpainless.key.TestKeys;
 import org.pgpainless.key.generation.KeySpec;
@@ -45,9 +44,9 @@ import org.pgpainless.key.generation.type.eddsa.EdDSACurve;
 import org.pgpainless.key.info.KeyRingInfo;
 import org.pgpainless.key.protection.SecretKeyRingProtector;
 import org.pgpainless.key.util.KeyRingUtils;
-import org.pgpainless.util.TestAllImplementations;
 import org.pgpainless.util.MultiMap;
 import org.pgpainless.util.Passphrase;
+import org.pgpainless.util.TestAllImplementations;
 
 public class SigningTest {
 
@@ -125,7 +124,7 @@ public class SigningTest {
 
         SigningOptions opts = new SigningOptions();
         // "bob" is not a valid user-id
-        assertThrows(KeyValidationError.class,
+        assertThrows(KeyException.UnboundUserIdException.class,
                 () -> opts.addInlineSignature(protector, secretKeys, "bob",
                         DocumentSignatureType.CANONICAL_TEXT_DOCUMENT));
     }
@@ -146,7 +145,7 @@ public class SigningTest {
 
         SigningOptions opts = new SigningOptions();
         // "alice" has been revoked
-        assertThrows(KeyValidationError.class,
+        assertThrows(KeyException.UnboundUserIdException.class,
                 () -> opts.addInlineSignature(protector, fSecretKeys, "alice",
                         DocumentSignatureType.CANONICAL_TEXT_DOCUMENT));
     }
@@ -253,9 +252,9 @@ public class SigningTest {
                 .build();
 
         SigningOptions options = new SigningOptions();
-        assertThrows(KeyCannotSignException.class, () -> options.addDetachedSignature(
+        assertThrows(KeyException.UnacceptableSigningKeyException.class, () -> options.addDetachedSignature(
                 SecretKeyRingProtector.unprotectedKeys(), secretKeys, DocumentSignatureType.BINARY_DOCUMENT));
-        assertThrows(KeyCannotSignException.class, () -> options.addInlineSignature(
+        assertThrows(KeyException.UnacceptableSigningKeyException.class, () -> options.addInlineSignature(
                 SecretKeyRingProtector.unprotectedKeys(), secretKeys, DocumentSignatureType.BINARY_DOCUMENT));
     }
 
@@ -270,10 +269,10 @@ public class SigningTest {
                 .build();
 
         SigningOptions options = new SigningOptions();
-        assertThrows(KeyValidationError.class, () ->
+        assertThrows(KeyException.UnboundUserIdException.class, () ->
                 options.addDetachedSignature(SecretKeyRingProtector.unprotectedKeys(), secretKeys, "Bob",
                         DocumentSignatureType.BINARY_DOCUMENT));
-        assertThrows(KeyValidationError.class, () ->
+        assertThrows(KeyException.UnboundUserIdException.class, () ->
                 options.addInlineSignature(SecretKeyRingProtector.unprotectedKeys(), secretKeys, "Bob",
                         DocumentSignatureType.BINARY_DOCUMENT));
     }

@@ -34,6 +34,7 @@ import org.pgpainless.algorithm.SymmetricKeyAlgorithm;
 import org.pgpainless.decryption_verification.ConsumerOptions;
 import org.pgpainless.decryption_verification.DecryptionStream;
 import org.pgpainless.decryption_verification.OpenPgpMetadata;
+import org.pgpainless.exception.KeyException;
 import org.pgpainless.key.SubkeyIdentifier;
 import org.pgpainless.key.TestKeys;
 import org.pgpainless.key.generation.KeySpec;
@@ -326,7 +327,7 @@ public class EncryptDecryptTest {
 
         PGPPublicKeyRing publicKeys = PGPainless.readKeyRing().publicKeyRing(key);
 
-        assertThrows(IllegalArgumentException.class, () ->
+        assertThrows(KeyException.UnacceptableEncryptionKeyException.class, () ->
                 EncryptionOptions.encryptCommunications()
                         .addRecipient(publicKeys));
     }

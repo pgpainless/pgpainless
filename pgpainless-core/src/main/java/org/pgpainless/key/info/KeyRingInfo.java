@@ -36,7 +36,7 @@ import org.pgpainless.algorithm.HashAlgorithm;
 import org.pgpainless.algorithm.KeyFlag;
 import org.pgpainless.algorithm.PublicKeyAlgorithm;
 import org.pgpainless.algorithm.SymmetricKeyAlgorithm;
-import org.pgpainless.exception.KeyValidationError;
+import org.pgpainless.exception.KeyException;
 import org.pgpainless.key.OpenPgpFingerprint;
 import org.pgpainless.key.SubkeyIdentifier;
 import org.pgpainless.key.util.RevocationAttributes;
@@ -948,7 +948,12 @@ public class KeyRingInfo {
      */
     public @Nonnull List<PGPPublicKey> getEncryptionSubkeys(String userId, EncryptionPurpose purpose) {
         if (userId != null && !isUserIdValid(userId)) {
-            throw new KeyValidationError(userId, getLatestUserIdCertification(userId), getUserIdRevocation(userId));
+            throw new KeyException.UnboundUserIdException(
+                    OpenPgpFingerprint.of(keys),
+                    userId,
+                    getLatestUserIdCertification(userId),
+                    getUserIdRevocation(userId)
+            );
         }
 
         return getEncryptionSubkeys(purpose);
