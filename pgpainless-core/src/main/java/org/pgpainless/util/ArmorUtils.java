@@ -108,12 +108,21 @@ public final class ArmorUtils {
     }
 
     private static Tuple<String, Integer> getPrimaryUserIdAndUserIdCount(PGPPublicKey publicKey) {
+        // Quickly determine the primary user-id + number of total user-ids
+        // NOTE: THIS METHOD DOES NOT CRYPTOGRAPHICALLY VERIFY THE SIGNATURES
+        // DO NOT RELY ON IT!
         Iterator<String> userIds = publicKey.getUserIDs();
         int countIdentities = 0;
+        String first = null;
         String primary = null;
         while (userIds.hasNext()) {
             countIdentities++;
             String userId = userIds.next();
+            // remember the first user-id
+            if (first == null) {
+                first = userId;
+            }
+
             if (primary == null) {
                 Iterator<PGPSignature> signatures = publicKey.getSignaturesForID(userId);
                 while (signatures.hasNext()) {
@@ -125,7 +134,10 @@ public final class ArmorUtils {
                 }
             }
         }
-        return new Tuple<>(primary, countIdentities);
+        // It may happen that no user-id is marked as primary
+        // in that case print the first one
+        String printed = primary != null ? primary : first;
+        return new Tuple<>(printed, countIdentities);
     }
 
     private static MultiMap<String, String> keyToHeader(PGPPublicKey publicKey) {
@@ -133,14 +145,22 @@ public final class ArmorUtils {
         OpenPgpFingerprint fingerprint = OpenPgpFingerprint.of(publicKey);
 
         header.put(HEADER_COMMENT, fingerprint.prettyPrint());
-        Tuple<String, Integer> idCount = getPrimaryUserIdAndUserIdCount(publicKey);
-        if (idCount.getA() != null) {
-            header.put(HEADER_COMMENT, idCount.getA() + " (Primary)");
-        }
-        if (idCount.getB() != 1) {
-            header.put(HEADER_COMMENT, String.format("Public key contains %d identities", idCount.getB()));
-        }
+        setUserIdInfoOnHeader(header, publicKey);
         return header;
+    }
+
+    private static void setUserIdInfoOnHeader(MultiMap<String, String> header, PGPPublicKey publicKey) {
+        Tuple<String, Integer> idCount = getPrimaryUserIdAndUserIdCount(publicKey);
+        String primary = idCount.getA();
+        int totalCount = idCount.getB();
+        if (primary != null) {
+            header.put(HEADER_COMMENT, primary);
+        }
+        if (totalCount == 2) {
+            header.put(HEADER_COMMENT, "1 further identity");
+        } else if (totalCount > 2) {
+            header.put(HEADER_COMMENT, String.format("%d further identities", totalCount - 1));
+        }
     }
 
     private static MultiMap<String, String> keysToHeader(PGPKeyRing keyRing) {

@@ -163,9 +163,26 @@ public class ArmorUtilsTest {
         PGPPublicKey publicKey = secretKeyRing.getPublicKey();
         PGPPublicKeyRing publicKeyRing = PGPainless.readKeyRing().publicKeyRing(publicKey.getEncoded());
         String armored = PGPainless.asciiArmor(publicKeyRing);
-        Assertions.assertTrue(armored.contains("Comment: Juliet <juliet@montague.lit> (Primary)"));
-        Assertions.assertTrue(armored.contains("Comment: Public key contains 2 identities"));
+        Assertions.assertTrue(armored.contains("Comment: Juliet <juliet@montague.lit>"));
+        Assertions.assertTrue(armored.contains("Comment: 1 further identity"));
     }
+
+    @Test
+    public void testEvenMoreIdentitiesInHeader() throws Exception {
+        PGPSecretKeyRing secretKeyRing = PGPainless.buildKeyRing()
+                .setPrimaryKey(KeySpec.getBuilder(ECDSA.fromCurve(EllipticCurve._P256), KeyFlag.SIGN_DATA, KeyFlag.CERTIFY_OTHER))
+                .addUserId("Juliet <juliet@montague.lit>")
+                .addUserId("xmpp:juliet@capulet.lit")
+                .addUserId("Juliet Montague <j@montague.lit>")
+                .setPassphrase(Passphrase.fromPassword("test"))
+                .build();
+        PGPPublicKey publicKey = secretKeyRing.getPublicKey();
+        PGPPublicKeyRing publicKeyRing = PGPainless.readKeyRing().publicKeyRing(publicKey.getEncoded());
+        String armored = PGPainless.asciiArmor(publicKeyRing);
+        Assertions.assertTrue(armored.contains("Comment: Juliet <juliet@montague.lit>"));
+        Assertions.assertTrue(armored.contains("Comment: 2 further identities"));
+    }
+
 
     @Test
     public void testSingleIdentityInHeader() throws Exception {
@@ -177,13 +194,13 @@ public class ArmorUtilsTest {
         PGPPublicKey publicKey = secretKeyRing.getPublicKey();
         PGPPublicKeyRing publicKeyRing = PGPainless.readKeyRing().publicKeyRing(publicKey.getEncoded());
         String armored = PGPainless.asciiArmor(publicKeyRing);
-        Assertions.assertTrue(armored.contains("Comment: Juliet <juliet@montague.lit> (Primary)"));
-        Assertions.assertFalse(armored.contains("Comment: Public key contains 1 identities"));
+        Assertions.assertTrue(armored.contains("Comment: Juliet <juliet@montague.lit>"));
+        Assertions.assertFalse(armored.contains("Comment: 1 total identities"));
     }
 
     @Test
     public void testWithoutIdentityInHeader() throws Exception {
-        PGPPublicKeyRing publicKeys = PGPainless.readKeyRing().publicKeyRing("-----BEGIN PGP PUBLIC KEY BLOCK-----\n" +
+        final String CERT = "-----BEGIN PGP PUBLIC KEY BLOCK-----\n" +
                 "\n" +
                 "xsBNBGIgzE0BCACwxaYg6bpmp0POq1T6yalGE9XaL2IG9d9khDBweZ63s3Pu1pHB\n" +
                 "JtmjgN7Tx3ts6hLzQm3YKYA6zu1MXQ8k2vqtdtGUpZPp18Pbars7yUDqh8QIdFjO\n" +
@@ -192,11 +209,13 @@ public class ArmorUtilsTest {
                 "36qZ5ehAgz9MthPQINnZKpnqidqkGFvjwVFlCMlVSmNCNJmpgGDH3gvkklZHzGsf\n" +
                 "dfzQswd/BQjPsFH9cK+QFYMG6q2zrvM0X9mdABEBAAE=\n" +
                 "=njg8\n" +
-                "-----END PGP PUBLIC KEY BLOCK-----\n");
+                "-----END PGP PUBLIC KEY BLOCK-----\n";
+
+        PGPPublicKeyRing publicKeys = PGPainless.readKeyRing().publicKeyRing(CERT);
         PGPPublicKey publicKey = publicKeys.getPublicKey();
         PGPPublicKeyRing publicKeyRing = PGPainless.readKeyRing().publicKeyRing(publicKey.getEncoded());
         String armored = PGPainless.asciiArmor(publicKeyRing);
-        Assertions.assertTrue(armored.contains("Comment: Public key contains 0 identities"));
+        Assertions.assertFalse(armored.contains("Comment: 0 total identities"));
     }
 
     @TestTemplate
