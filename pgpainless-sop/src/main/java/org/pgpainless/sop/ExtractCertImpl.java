@@ -54,7 +54,7 @@ public class ExtractCertImpl implements ExtractCert {
             public void writeTo(OutputStream outputStream) throws IOException {
 
                 for (PGPPublicKeyRing cert : certs) {
-                    OutputStream out = armor ? ArmorUtils.createArmoredOutputStreamFor(cert, outputStream) : outputStream;
+                    OutputStream out = armor ? ArmorUtils.toAsciiArmoredStream(cert, outputStream) : outputStream;
                     cert.encode(out);
 
                     if (armor) {
