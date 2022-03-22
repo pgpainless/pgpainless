@@ -292,17 +292,34 @@ public final class KeyRingUtils {
         return newSecretKey;
     }
 
+    /**
+     * Remove the secret key of the subkey identified by the given secret key id from the key ring.
+     * The public part stays attached to the key ring, so that it can still be used for encryption / verification of signatures.
+     *
+     * This method is intended to be used to remove secret primary keys from live keys when those are kept in offline storage.
+     *
+     * @param secretKeys secret key ring
+     * @param secretKeyId id of the secret key to remove
+     * @return secret key ring with removed secret key
+     *
+     * @throws IOException
+     * @throws PGPException
+     */
     public static PGPSecretKeyRing removeSecretKey(PGPSecretKeyRing secretKeys, long secretKeyId)
             throws IOException, PGPException {
         if (secretKeys.getSecretKey(secretKeyId) == null) {
             throw new NoSuchElementException("PGPSecretKeyRing does not contain secret key " + Long.toHexString(secretKeyId));
         }
 
+        // Since BCs constructors for secret key rings are mostly private, we need to encode the key ring how we want it
+        //  and then parse it again.
         ByteArrayOutputStream encoded = new ByteArrayOutputStream();
         for (PGPSecretKey secretKey : secretKeys) {
             if (secretKey.getKeyID() == secretKeyId) {
+                // only encode the public part of the target key
                 secretKey.getPublicKey().encode(encoded);
             } else {
+                // otherwise, encode secret + public key
                 secretKey.encode(encoded);
             }
         }
@@ -310,6 +327,7 @@ public final class KeyRingUtils {
             PGPPublicKey extra = it.next();
             extra.encode(encoded);
         }
+        // Parse the key back into an object
         return new PGPSecretKeyRing(encoded.toByteArray(), ImplementationFactory.getInstance().getKeyFingerprintCalculator());
     }
 }
