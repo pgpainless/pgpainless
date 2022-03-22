@@ -143,24 +143,57 @@ public final class KeyRingUtils {
         return UnlockSecretKey.unlockSecretKey(secretKey, protector);
     }
 
-    /*
-        PGPXxxKeyRing -> PGPXxxKeyRingCollection
-         */
+    /**
+     * Create a new {@link PGPPublicKeyRingCollection} from an array of {@link PGPPublicKeyRing PGPPublicKeyRings}.
+     *
+     * @param rings array of public key rings
+     * @return key ring collection
+     *
+     * @throws IOException in case of an io error
+     * @throws PGPException in case of a broken key
+     */
     public static PGPPublicKeyRingCollection keyRingsToKeyRingCollection(@Nonnull PGPPublicKeyRing... rings)
             throws IOException, PGPException {
         return new PGPPublicKeyRingCollection(Arrays.asList(rings));
     }
 
+    /**
+     * Create a new {@link PGPSecretKeyRingCollection} from an array of {@link PGPSecretKeyRing PGPSecretKeyRings}.
+     *
+     * @param rings array of secret key rings
+     * @return secret key ring collection
+     *
+     * @throws IOException in case of an io error
+     * @throws PGPException in case of a broken key
+     */
     public static PGPSecretKeyRingCollection keyRingsToKeyRingCollection(@Nonnull PGPSecretKeyRing... rings)
             throws IOException, PGPException {
         return new PGPSecretKeyRingCollection(Arrays.asList(rings));
     }
 
+    /**
+     * Return true, if the given {@link PGPPublicKeyRing} contains a {@link PGPPublicKey} for the given key id.
+     *
+     * @param ring public key ring
+     * @param keyId id of the key in question
+     * @return true if ring contains said key, false otherwise
+     */
     public static boolean keyRingContainsKeyWithId(@Nonnull PGPPublicKeyRing ring,
                                                    long keyId) {
         return ring.getPublicKey(keyId) != null;
     }
 
+    /**
+     * Inject a key certification into the given key ring.
+     *
+     * @param keyRing key ring
+     * @param certifiedKey signed public key
+     * @param certification key signature
+     * @param <T> either {@link PGPPublicKeyRing} or {@link PGPSecretKeyRing}
+     * @return key ring with injected signature
+     *
+     * @throws NoSuchElementException in case that the signed key is not part of the key ring
+     */
     public static <T extends PGPKeyRing> T injectCertification(T keyRing, PGPPublicKey certifiedKey, PGPSignature certification) {
         PGPSecretKeyRing secretKeys = null;
         PGPPublicKeyRing publicKeys;
@@ -197,6 +230,15 @@ public final class KeyRingUtils {
         }
     }
 
+    /**
+     * Inject a user-id certification into the given key ring.
+     *
+     * @param keyRing key ring
+     * @param userId signed user-id
+     * @param certification signature
+     * @param <T> either {@link PGPPublicKeyRing} or {@link PGPSecretKeyRing}
+     * @return key ring with injected certification
+     */
     public static <T extends PGPKeyRing> T injectCertification(T keyRing, String userId, PGPSignature certification) {
         PGPSecretKeyRing secretKeys = null;
         PGPPublicKeyRing publicKeys;
@@ -226,6 +268,15 @@ public final class KeyRingUtils {
         }
     }
 
+    /**
+     * Inject a user-attribute vector certification into the given key ring.
+     *
+     * @param keyRing key ring
+     * @param userAttributes certified user attributes
+     * @param certification certification signature
+     * @param <T> either {@link PGPPublicKeyRing} or {@link PGPSecretKeyRing}
+     * @return key ring with injected user-attribute certification
+     */
     public static <T extends PGPKeyRing> T injectCertification(T keyRing, PGPUserAttributeSubpacketVector userAttributes, PGPSignature certification) {
         PGPSecretKeyRing secretKeys = null;
         PGPPublicKeyRing publicKeys;
@@ -255,6 +306,17 @@ public final class KeyRingUtils {
         }
     }
 
+    /**
+     * Inject a {@link PGPPublicKey} into the given key ring.
+     *
+     * Note: Right now this method is broken and will throw a {@link NotYetImplementedException}.
+     * TODO: Fix with BC 171
+     *
+     * @param keyRing key ring
+     * @param publicKey public key
+     * @param <T> either {@link PGPPublicKeyRing} or {@link PGPSecretKeyRing}
+     * @return key ring with injected public key
+     */
     public static <T extends PGPKeyRing> T keysPlusPublicKey(T keyRing, PGPPublicKey publicKey) {
         if (true)
             // Is currently broken beyond repair
@@ -281,10 +343,23 @@ public final class KeyRingUtils {
         }
     }
 
+    /**
+     * Inject a {@link PGPSecretKey} into a {@link PGPSecretKeyRing}.
+     *
+     * @param secretKeys secret key ring
+     * @param secretKey secret key
+     * @return secret key ring with injected secret key
+     */
     public static PGPSecretKeyRing keysPlusSecretKey(PGPSecretKeyRing secretKeys, PGPSecretKey secretKey) {
         return PGPSecretKeyRing.insertSecretKey(secretKeys, secretKey);
     }
 
+    /**
+     * Inject the given signature into the public part of the given secret key.
+     * @param secretKey secret key
+     * @param signature signature
+     * @return secret key with the signature injected in its public key
+     */
     public static PGPSecretKey secretKeyPlusSignature(PGPSecretKey secretKey, PGPSignature signature) {
         PGPPublicKey publicKey = secretKey.getPublicKey();
         publicKey = PGPPublicKey.addCertification(publicKey, signature);
