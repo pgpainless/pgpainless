@@ -42,7 +42,10 @@ public final class OpenPgpKeyAttributeUtil {
                     continue;
                 }
                 for (int h : hashAlgos) {
-                    hashAlgorithms.add(HashAlgorithm.fromId(h));
+                    HashAlgorithm algorithm = HashAlgorithm.fromId(h);
+                    if (algorithm != null) {
+                        hashAlgorithms.add(algorithm);
+                    }
                 }
                 // Exit the loop after the first key signature with hash algorithms.
                 break;

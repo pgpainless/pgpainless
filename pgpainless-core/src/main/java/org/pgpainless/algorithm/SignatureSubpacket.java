@@ -4,6 +4,9 @@
 
 package org.pgpainless.algorithm;
 
+import javax.annotation.Nonnull;
+import javax.annotation.Nullable;
+
 import static org.bouncycastle.bcpg.SignatureSubpacketTags.ATTESTED_CERTIFICATIONS;
 import static org.bouncycastle.bcpg.SignatureSubpacketTags.CREATION_TIME;
 import static org.bouncycastle.bcpg.SignatureSubpacketTags.EMBEDDED_SIGNATURE;
@@ -36,6 +39,7 @@ import static org.bouncycastle.bcpg.SignatureSubpacketTags.TRUST_SIG;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
+import java.util.NoSuchElementException;
 import java.util.concurrent.ConcurrentHashMap;
 
 /**
@@ -412,14 +416,28 @@ public enum SignatureSubpacket {
 
     /**
      * Return the {@link SignatureSubpacket} that corresponds to the provided id.
+     * If an unmatched code is presented, return null.
      *
      * @param code id
      * @return signature subpacket
      */
+    @Nullable
     public static SignatureSubpacket fromCode(int code) {
-        SignatureSubpacket tag = MAP.get(code);
+        return MAP.get(code);
+    }
+
+    /**
+     * Return the {@link SignatureSubpacket} that corresponds to the provided code.
+     *
+     * @param code code
+     * @return signature subpacket
+     * @throws NoSuchElementException in case of an unmatched subpacket tag
+     */
+    @Nonnull
+    public static SignatureSubpacket requireFromCode(int code) {
+        SignatureSubpacket tag = fromCode(code);
         if (tag == null) {
-            throw new IllegalArgumentException("No SignatureSubpacket tag found with code " + code);
+            throw new NoSuchElementException("No SignatureSubpacket tag found with code " + code);
         }
         return tag;
     }
@@ -433,7 +451,11 @@ public enum SignatureSubpacket {
     public static List<SignatureSubpacket> fromCodes(int[] codes) {
         List<SignatureSubpacket> tags = new ArrayList<>();
         for (int code : codes) {
-            tags.add(fromCode(code));
+            try {
+                tags.add(requireFromCode(code));
+            } catch (NoSuchElementException e) {
+                // skip
+            }
         }
         return tags;
     }

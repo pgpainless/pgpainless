@@ -14,6 +14,7 @@ import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
+import java.util.NoSuchElementException;
 import java.util.Set;
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
@@ -310,9 +311,13 @@ public final class DecryptionStreamFactory {
 
     private InputStream processPGPCompressedData(PGPCompressedData pgpCompressedData, int depth)
             throws PGPException, IOException {
-        CompressionAlgorithm compressionAlgorithm = CompressionAlgorithm.fromId(pgpCompressedData.getAlgorithm());
-        LOGGER.debug("Depth {}: Encountered PGPCompressedData: {}", depth, compressionAlgorithm);
-        resultBuilder.setCompressionAlgorithm(compressionAlgorithm);
+        try {
+            CompressionAlgorithm compressionAlgorithm = CompressionAlgorithm.requireFromId(pgpCompressedData.getAlgorithm());
+            LOGGER.debug("Depth {}: Encountered PGPCompressedData: {}", depth, compressionAlgorithm);
+            resultBuilder.setCompressionAlgorithm(compressionAlgorithm);
+        } catch (NoSuchElementException e) {
+            throw new PGPException("Unknown compression algorithm encountered.", e);
+        }
 
         InputStream inflatedDataStream = pgpCompressedData.getDataStream();
         InputStream decodedDataStream = PGPUtil.getDecoderStream(inflatedDataStream);
@@ -340,7 +345,7 @@ public final class DecryptionStreamFactory {
 
         resultBuilder.setFileName(pgpLiteralData.getFileName())
                 .setModificationDate(pgpLiteralData.getModificationTime())
-                .setFileEncoding(StreamEncoding.fromCode(pgpLiteralData.getFormat()));
+                .setFileEncoding(StreamEncoding.requireFromCode(pgpLiteralData.getFormat()));
 
         if (onePassSignatureChecks.isEmpty() && onePassSignaturesWithMissingCert.isEmpty()) {
             LOGGER.debug("No OnePassSignatures found -> We are done");

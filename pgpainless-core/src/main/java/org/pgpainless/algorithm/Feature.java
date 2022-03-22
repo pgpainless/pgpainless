@@ -7,9 +7,13 @@ package org.pgpainless.algorithm;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
+import java.util.NoSuchElementException;
 import java.util.concurrent.ConcurrentHashMap;
 
 import org.bouncycastle.bcpg.sig.Features;
+
+import javax.annotation.Nonnull;
+import javax.annotation.Nullable;
 
 /**
  * An enumeration of features that may be set in the {@link Features} subpacket.
@@ -60,8 +64,33 @@ public enum Feature {
         }
     }
 
+    /**
+     * Return the {@link Feature} encoded by the given id.
+     * If the id does not match any known features, return null.
+     *
+     * @param id feature id
+     * @return feature
+     */
+    @Nullable
     public static Feature fromId(byte id) {
         return MAP.get(id);
+    }
+
+    /**
+     * Return the {@link Feature} encoded by the given id.
+     * If the id does not match any known features, throw an {@link NoSuchElementException}.
+     *
+     * @param id feature id
+     * @return feature
+     * @throws NoSuchElementException if an unmatched feature id is encountered
+     */
+    @Nonnull
+    public static Feature requireFromId(byte id) {
+        Feature feature = fromId(id);
+        if (feature == null) {
+            throw new NoSuchElementException("Unknown feature id encountered: " + id);
+        }
+        return feature;
     }
 
     private final byte featureId;
@@ -70,6 +99,11 @@ public enum Feature {
         this.featureId = featureId;
     }
 
+    /**
+     * Return the id of the feature.
+     *
+     * @return feature id
+     */
     public byte getFeatureId() {
         return featureId;
     }
@@ -80,6 +114,7 @@ public enum Feature {
      * @param bitmask bitmask
      * @return list of key flags encoded by the bitmask
      */
+    @Nonnull
     public static List<Feature> fromBitmask(int bitmask) {
         List<Feature> features = new ArrayList<>();
         for (Feature f : Feature.values()) {

@@ -70,7 +70,7 @@ public class DecryptImpl implements Decrypt {
     public DecryptImpl withSessionKey(SessionKey sessionKey) throws SOPGPException.UnsupportedOption {
         consumerOptions.setSessionKey(
                 new org.pgpainless.util.SessionKey(
-                        SymmetricKeyAlgorithm.fromId(sessionKey.getAlgorithm()),
+                        SymmetricKeyAlgorithm.requireFromId(sessionKey.getAlgorithm()),
                         sessionKey.getKey()));
         return this;
     }

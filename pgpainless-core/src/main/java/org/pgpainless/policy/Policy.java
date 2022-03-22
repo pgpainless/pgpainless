@@ -9,6 +9,7 @@ import java.util.Collections;
 import java.util.EnumMap;
 import java.util.List;
 import java.util.Map;
+import java.util.NoSuchElementException;
 
 import javax.annotation.Nonnull;
 
@@ -232,8 +233,13 @@ public final class Policy {
          * @return true if algorithm is acceptable, false otherwise
          */
         public boolean isAcceptable(int algorithmId) {
-            SymmetricKeyAlgorithm algorithm = SymmetricKeyAlgorithm.fromId(algorithmId);
-            return isAcceptable(algorithm);
+            try {
+                SymmetricKeyAlgorithm algorithm = SymmetricKeyAlgorithm.requireFromId(algorithmId);
+                return isAcceptable(algorithm);
+            } catch (NoSuchElementException e) {
+                // Unknown algorithm is not acceptable
+                return false;
+            }
         }
 
         /**
@@ -329,8 +335,13 @@ public final class Policy {
          * @return true if the hash algorithm is acceptable, false otherwise
          */
         public boolean isAcceptable(int algorithmId) {
-            HashAlgorithm algorithm = HashAlgorithm.fromId(algorithmId);
-            return isAcceptable(algorithm);
+            try {
+                HashAlgorithm algorithm = HashAlgorithm.requireFromId(algorithmId);
+                return isAcceptable(algorithm);
+            } catch (NoSuchElementException e) {
+                // Unknown algorithm is not acceptable
+                return false;
+            }
         }
 
         /**
@@ -382,7 +393,13 @@ public final class Policy {
         }
 
         public boolean isAcceptable(int compressionAlgorithmTag) {
-            return isAcceptable(CompressionAlgorithm.fromId(compressionAlgorithmTag));
+            try {
+                CompressionAlgorithm compressionAlgorithm = CompressionAlgorithm.requireFromId(compressionAlgorithmTag);
+                return isAcceptable(compressionAlgorithm);
+            } catch (NoSuchElementException e) {
+                // Unknown algorithm is not acceptable
+                return false;
+            }
         }
 
         public boolean isAcceptable(CompressionAlgorithm compressionAlgorithm) {
@@ -408,7 +425,13 @@ public final class Policy {
         }
 
         public boolean isAcceptable(int algorithmId, int bitStrength) {
-            return isAcceptable(PublicKeyAlgorithm.fromId(algorithmId), bitStrength);
+            try {
+                PublicKeyAlgorithm algorithm = PublicKeyAlgorithm.requireFromId(algorithmId);
+                return isAcceptable(algorithm, bitStrength);
+            } catch (NoSuchElementException e) {
+                // Unknown algorithm is not acceptable
+                return false;
+            }
         }
 
         public boolean isAcceptable(PublicKeyAlgorithm algorithm, int bitStrength) {

@@ -567,8 +567,9 @@ public class KeyRingInfo {
      *
      * @return public key algorithm
      */
+    @Nonnull
     public PublicKeyAlgorithm getAlgorithm() {
-        return PublicKeyAlgorithm.fromId(getPublicKey().getAlgorithm());
+        return PublicKeyAlgorithm.requireFromId(getPublicKey().getAlgorithm());
     }
 
     /**

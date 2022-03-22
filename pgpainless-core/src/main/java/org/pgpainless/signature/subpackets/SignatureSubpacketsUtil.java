@@ -257,7 +257,10 @@ public final class SignatureSubpacketsUtil {
         PreferredAlgorithms preferences = getPreferredSymmetricAlgorithms(signature);
         if (preferences != null) {
             for (int code : preferences.getPreferences()) {
-                algorithms.add(SymmetricKeyAlgorithm.fromId(code));
+                SymmetricKeyAlgorithm algorithm = SymmetricKeyAlgorithm.fromId(code);
+                if (algorithm != null) {
+                    algorithms.add(algorithm);
+                }
             }
         }
         return algorithms;
@@ -286,7 +289,10 @@ public final class SignatureSubpacketsUtil {
         PreferredAlgorithms preferences = getPreferredHashAlgorithms(signature);
         if (preferences != null) {
             for (int code : preferences.getPreferences()) {
-                algorithms.add(HashAlgorithm.fromId(code));
+                HashAlgorithm algorithm = HashAlgorithm.fromId(code);
+                if (algorithm != null) {
+                    algorithms.add(algorithm);
+                }
             }
         }
         return algorithms;
@@ -315,7 +321,10 @@ public final class SignatureSubpacketsUtil {
         PreferredAlgorithms preferences = getPreferredCompressionAlgorithms(signature);
         if (preferences != null) {
             for (int code : preferences.getPreferences()) {
-                algorithms.add(CompressionAlgorithm.fromId(code));
+                CompressionAlgorithm algorithm = CompressionAlgorithm.fromId(code);
+                if (algorithm != null) {
+                    algorithms.add(algorithm);
+                }
             }
         }
         return algorithms;

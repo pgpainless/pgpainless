@@ -5,9 +5,13 @@
 package org.pgpainless.algorithm;
 
 import java.util.Map;
+import java.util.NoSuchElementException;
 import java.util.concurrent.ConcurrentHashMap;
 
 import org.bouncycastle.bcpg.SymmetricKeyAlgorithmTags;
+
+import javax.annotation.Nonnull;
+import javax.annotation.Nullable;
 
 /**
  * Enumeration of possible symmetric encryption algorithms.
@@ -106,8 +110,27 @@ public enum SymmetricKeyAlgorithm {
      * @param id numeric algorithm id
      * @return symmetric key algorithm enum
      */
+    @Nullable
     public static SymmetricKeyAlgorithm fromId(int id) {
         return MAP.get(id);
+    }
+
+    /**
+     * Return the {@link SymmetricKeyAlgorithm} enum that corresponds to the provided numeric id.
+     * If an invalid id is provided, throw a {@link NoSuchElementException}.
+     *
+     * @param id numeric algorithm id
+     * @return symmetric key algorithm enum
+     *
+     * @throws NoSuchElementException if an unmatched id is provided
+     */
+    @Nonnull
+    public static SymmetricKeyAlgorithm requireFromId(int id) {
+        SymmetricKeyAlgorithm algorithm = fromId(id);
+        if (algorithm == null) {
+            throw new NoSuchElementException("No SymmetricKeyAlgorithm found for id " + id);
+        }
+        return algorithm;
     }
 
     private final int algorithmId;

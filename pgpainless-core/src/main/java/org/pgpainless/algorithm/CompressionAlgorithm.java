@@ -5,9 +5,13 @@
 package org.pgpainless.algorithm;
 
 import java.util.Map;
+import java.util.NoSuchElementException;
 import java.util.concurrent.ConcurrentHashMap;
 
 import org.bouncycastle.bcpg.CompressionAlgorithmTags;
+
+import javax.annotation.Nonnull;
+import javax.annotation.Nullable;
 
 /**
  * Enumeration of possible compression algorithms.
@@ -37,8 +41,26 @@ public enum CompressionAlgorithm {
      * @param id id
      * @return compression algorithm
      */
+    @Nullable
     public static CompressionAlgorithm fromId(int id) {
         return MAP.get(id);
+    }
+
+    /**
+     * Return the {@link CompressionAlgorithm} value that corresponds to the provided numerical id.
+     * If an invalid id is provided, thrown an {@link NoSuchElementException}.
+     *
+     * @param id id
+     * @return compression algorithm
+     * @throws NoSuchElementException in case of an unmapped id
+     */
+    @Nonnull
+    public static CompressionAlgorithm requireFromId(int id) {
+        CompressionAlgorithm algorithm = fromId(id);
+        if (algorithm == null) {
+            throw new NoSuchElementException("No CompressionAlgorithm found for id " + id);
+        }
+        return algorithm;
     }
 
     private final int algorithmId;

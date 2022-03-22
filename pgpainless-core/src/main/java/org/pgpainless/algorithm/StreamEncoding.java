@@ -5,9 +5,13 @@
 package org.pgpainless.algorithm;
 
 import java.util.Map;
+import java.util.NoSuchElementException;
 import java.util.concurrent.ConcurrentHashMap;
 
 import org.bouncycastle.openpgp.PGPLiteralData;
+
+import javax.annotation.Nonnull;
+import javax.annotation.Nullable;
 
 /**
  * Enumeration of possible encoding formats of the content of the literal data packet.
@@ -78,11 +82,31 @@ public enum StreamEncoding {
 
     /**
      * Return the {@link StreamEncoding} corresponding to the provided code identifier.
+     * If no matching encoding is found, return null.
      *
      * @param code identifier
      * @return encoding enum
      */
+    @Nullable
     public static StreamEncoding fromCode(int code) {
         return MAP.get((char) code);
+    }
+
+    /**
+     * Return the {@link StreamEncoding} corresponding to the provided code identifier.
+     * If no matching encoding is found, throw a {@link NoSuchElementException}.
+     *
+     * @param code identifier
+     * @return encoding enum
+     *
+     * @throws NoSuchElementException in case of an unmatched identifier
+     */
+    @Nonnull
+    public static StreamEncoding requireFromCode(int code) {
+        StreamEncoding encoding = fromCode(code);
+        if (encoding == null) {
+            throw new NoSuchElementException("No StreamEncoding found for code " + code);
+        }
+        return encoding;
     }
 }

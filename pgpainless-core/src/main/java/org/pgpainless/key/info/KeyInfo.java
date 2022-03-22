@@ -65,7 +65,7 @@ public class KeyInfo {
     }
 
     public static String getCurveName(PGPPublicKey publicKey) {
-        PublicKeyAlgorithm algorithm = PublicKeyAlgorithm.fromId(publicKey.getAlgorithm());
+        PublicKeyAlgorithm algorithm = PublicKeyAlgorithm.requireFromId(publicKey.getAlgorithm());
         ECPublicBCPGKey key;
         switch (algorithm) {
             case ECDSA: {

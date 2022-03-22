@@ -6,8 +6,12 @@ package org.pgpainless.algorithm;
 
 import java.util.HashMap;
 import java.util.Map;
+import java.util.NoSuchElementException;
 
 import org.bouncycastle.bcpg.HashAlgorithmTags;
+
+import javax.annotation.Nonnull;
+import javax.annotation.Nullable;
 
 /**
  * An enumeration of different hashing algorithms.
@@ -42,8 +46,26 @@ public enum HashAlgorithm {
      * @param id numeric id
      * @return enum value
      */
+    @Nullable
     public static HashAlgorithm fromId(int id) {
         return ID_MAP.get(id);
+    }
+
+    /**
+     * Return the  {@link HashAlgorithm} value that corresponds to the provided algorithm id.
+     * If an invalid algorithm id was provided, throw a {@link NoSuchElementException}.
+     *
+     * @param id algorithm id
+     * @return enum value
+     * @throws NoSuchElementException in case of an unknown algorithm id
+     */
+    @Nonnull
+    public static HashAlgorithm requireFromId(int id) {
+        HashAlgorithm algorithm = fromId(id);
+        if (algorithm == null) {
+            throw new NoSuchElementException("No HashAlgorithm found for id " + id);
+        }
+        return algorithm;
     }
 
     /**
@@ -56,6 +78,7 @@ public enum HashAlgorithm {
      * @param name text name
      * @return enum value
      */
+    @Nullable
     public static HashAlgorithm fromName(String name) {
         return NAME_MAP.get(name);
     }

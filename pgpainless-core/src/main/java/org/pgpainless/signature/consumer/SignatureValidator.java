@@ -9,6 +9,7 @@ import java.util.Date;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
+import java.util.NoSuchElementException;
 import java.util.concurrent.ConcurrentHashMap;
 
 import org.bouncycastle.bcpg.sig.KeyFlags;
@@ -92,7 +93,7 @@ public abstract class SignatureValidator {
         return new SignatureValidator() {
             @Override
             public void verify(PGPSignature signature) throws SignatureValidationException {
-                if (!PublicKeyAlgorithm.fromId(signature.getKeyAlgorithm()).isSigningCapable()) {
+                if (!PublicKeyAlgorithm.requireFromId(signature.getKeyAlgorithm()).isSigningCapable()) {
                     // subkey is not signing capable -> No need to process embedded sigs
                     return;
                 }
@@ -168,7 +169,7 @@ public abstract class SignatureValidator {
         return new SignatureValidator() {
             @Override
             public void verify(PGPSignature signature) throws SignatureValidationException {
-                PublicKeyAlgorithm algorithm = PublicKeyAlgorithm.fromId(signingKey.getAlgorithm());
+                PublicKeyAlgorithm algorithm = PublicKeyAlgorithm.requireFromId(signingKey.getAlgorithm());
                     int bitStrength = signingKey.getBitStrength();
                     if (bitStrength == -1) {
                         throw new SignatureValidationException("Cannot determine bit strength of signing key.");
@@ -191,11 +192,14 @@ public abstract class SignatureValidator {
         return new SignatureValidator() {
             @Override
             public void verify(PGPSignature signature) throws SignatureValidationException {
-                HashAlgorithm hashAlgorithm = HashAlgorithm.fromId(signature.getHashAlgorithm());
-                Policy.HashAlgorithmPolicy hashAlgorithmPolicy = getHashAlgorithmPolicyForSignature(signature, policy);
-
-                if (!hashAlgorithmPolicy.isAcceptable(signature.getHashAlgorithm())) {
-                    throw new SignatureValidationException("Signature uses unacceptable hash algorithm " + hashAlgorithm);
+                try {
+                    HashAlgorithm hashAlgorithm = HashAlgorithm.requireFromId(signature.getHashAlgorithm());
+                    Policy.HashAlgorithmPolicy hashAlgorithmPolicy = getHashAlgorithmPolicyForSignature(signature, policy);
+                    if (!hashAlgorithmPolicy.isAcceptable(signature.getHashAlgorithm())) {
+                        throw new SignatureValidationException("Signature uses unacceptable hash algorithm " + hashAlgorithm);
+                    }
+                } catch (NoSuchElementException e) {
+                    throw new SignatureValidationException("Signature uses unknown hash algorithm " + signature.getHashAlgorithm());
                 }
             }
         };
@@ -255,8 +259,8 @@ public abstract class SignatureValidator {
                 PGPSignatureSubpacketVector hashedSubpackets = signature.getHashedSubPackets();
                 for (int criticalTag : hashedSubpackets.getCriticalTags()) {
                     try {
-                        SignatureSubpacket.fromCode(criticalTag);
-                    } catch (IllegalArgumentException e) {
+                        SignatureSubpacket.requireFromCode(criticalTag);
+                    } catch (NoSuchElementException e) {
                         throw new SignatureValidationException("Signature contains unknown critical subpacket of type " + Long.toHexString(criticalTag));
                     }
                 }

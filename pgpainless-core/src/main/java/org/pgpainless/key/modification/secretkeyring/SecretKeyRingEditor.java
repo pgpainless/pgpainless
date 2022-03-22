@@ -272,11 +272,11 @@ public class SecretKeyRingEditor implements SecretKeyRingEditorInterface {
             KeyFlag... additionalKeyFlags)
             throws PGPException, IOException, NoSuchAlgorithmException {
         KeyFlag[] flags = concat(keyFlag, additionalKeyFlags);
-        PublicKeyAlgorithm subkeyAlgorithm = PublicKeyAlgorithm.fromId(subkey.getPublicKey().getAlgorithm());
+        PublicKeyAlgorithm subkeyAlgorithm = PublicKeyAlgorithm.requireFromId(subkey.getPublicKey().getAlgorithm());
         SignatureSubpacketsUtil.assureKeyCanCarryFlags(subkeyAlgorithm);
 
         // check key against public key algorithm policy
-        PublicKeyAlgorithm publicKeyAlgorithm = PublicKeyAlgorithm.fromId(subkey.getPublicKey().getAlgorithm());
+        PublicKeyAlgorithm publicKeyAlgorithm = PublicKeyAlgorithm.requireFromId(subkey.getPublicKey().getAlgorithm());
         int bitStrength = subkey.getPublicKey().getBitStrength();
         if (!PGPainless.getPolicy().getPublicKeyAlgorithmPolicy().isAcceptable(publicKeyAlgorithm, bitStrength)) {
             throw new IllegalArgumentException("Public key algorithm policy violation: " +
@@ -285,7 +285,7 @@ public class SecretKeyRingEditor implements SecretKeyRingEditorInterface {
 
         PGPSecretKey primaryKey = secretKeyRing.getSecretKey();
         KeyRingInfo info = PGPainless.inspectKeyRing(secretKeyRing);
-        PublicKeyAlgorithm signingKeyAlgorithm = PublicKeyAlgorithm.fromId(primaryKey.getPublicKey().getAlgorithm());
+        PublicKeyAlgorithm signingKeyAlgorithm = PublicKeyAlgorithm.requireFromId(primaryKey.getPublicKey().getAlgorithm());
         HashAlgorithm hashAlgorithm = HashAlgorithmNegotiator
                 .negotiateSignatureHashAlgorithm(PGPainless.getPolicy())
                 .negotiateHashAlgorithm(info.getPreferredHashAlgorithms());

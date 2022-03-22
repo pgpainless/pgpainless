@@ -42,7 +42,7 @@ public class PublicKeyParameterValidationUtil {
 
     public static void verifyPublicKeyParameterIntegrity(PGPPrivateKey privateKey, PGPPublicKey publicKey)
             throws KeyIntegrityException {
-        PublicKeyAlgorithm publicKeyAlgorithm = PublicKeyAlgorithm.fromId(publicKey.getAlgorithm());
+        PublicKeyAlgorithm publicKeyAlgorithm = PublicKeyAlgorithm.requireFromId(publicKey.getAlgorithm());
         boolean valid = true;
 
         // Algorithm specific validations
@@ -97,7 +97,7 @@ public class PublicKeyParameterValidationUtil {
      */
     private static boolean verifyCanSign(PGPPrivateKey privateKey, PGPPublicKey publicKey) {
         SecureRandom random = new SecureRandom();
-        PublicKeyAlgorithm publicKeyAlgorithm = PublicKeyAlgorithm.fromId(publicKey.getAlgorithm());
+        PublicKeyAlgorithm publicKeyAlgorithm = PublicKeyAlgorithm.requireFromId(publicKey.getAlgorithm());
         PGPSignatureGenerator signatureGenerator = new PGPSignatureGenerator(
                 ImplementationFactory.getInstance().getPGPContentSignerBuilder(publicKeyAlgorithm, HashAlgorithm.SHA256)
         );

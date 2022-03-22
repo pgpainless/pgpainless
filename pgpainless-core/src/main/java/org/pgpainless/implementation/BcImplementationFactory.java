@@ -58,7 +58,7 @@ public class BcImplementationFactory extends ImplementationFactory {
         int keyEncryptionAlgorithm = secretKey.getKeyEncryptionAlgorithm();
 
         if (secretKey.getS2K() == null) {
-            return getPBESecretKeyEncryptor(SymmetricKeyAlgorithm.fromId(keyEncryptionAlgorithm), passphrase);
+            return getPBESecretKeyEncryptor(SymmetricKeyAlgorithm.requireFromId(keyEncryptionAlgorithm), passphrase);
         }
 
         int hashAlgorithm = secretKey.getS2K().getHashAlgorithm();

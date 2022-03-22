@@ -6,6 +6,7 @@ package org.pgpainless.algorithm;
 
 import org.bouncycastle.openpgp.PGPSignature;
 
+import javax.annotation.Nonnull;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
@@ -167,7 +168,9 @@ public enum SignatureType {
      *
      * @param code numeric id
      * @return signature type enum
+     * @throws IllegalArgumentException in case of an unmatched signature type code
      */
+    @Nonnull
     public static SignatureType valueOf(int code) {
         SignatureType type = map.get(code);
         if (type != null) {

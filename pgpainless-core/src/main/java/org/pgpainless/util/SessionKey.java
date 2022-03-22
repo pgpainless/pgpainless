@@ -24,7 +24,7 @@ public class SessionKey {
      * @param sessionKey BC session key
      */
     public SessionKey(@Nonnull PGPSessionKey sessionKey) {
-        this(SymmetricKeyAlgorithm.fromId(sessionKey.getAlgorithm()), sessionKey.getKey());
+        this(SymmetricKeyAlgorithm.requireFromId(sessionKey.getAlgorithm()), sessionKey.getKey());
     }
 
     /**

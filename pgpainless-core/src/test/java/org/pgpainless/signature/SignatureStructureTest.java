@@ -64,7 +64,7 @@ public class SignatureStructureTest {
 
     @Test
     public void testGetHashAlgorithm() {
-        assertEquals(HashAlgorithm.SHA256, HashAlgorithm.fromId(signature.getHashAlgorithm()));
+        assertEquals(HashAlgorithm.SHA256, HashAlgorithm.requireFromId(signature.getHashAlgorithm()));
     }
 
     @Test

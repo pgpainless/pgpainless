@@ -33,7 +33,7 @@ public class SignatureSubpacketsHelper {
 
     public static SignatureSubpackets applyFrom(PGPSignatureSubpacketVector vector, SignatureSubpackets subpackets) {
         for (SignatureSubpacket subpacket : vector.toArray()) {
-            org.pgpainless.algorithm.SignatureSubpacket type = org.pgpainless.algorithm.SignatureSubpacket.fromCode(subpacket.getType());
+            org.pgpainless.algorithm.SignatureSubpacket type = org.pgpainless.algorithm.SignatureSubpacket.requireFromCode(subpacket.getType());
             switch (type) {
                 case signatureCreationTime:
                 case issuerKeyId:
@@ -102,8 +102,8 @@ public class SignatureSubpacketsHelper {
                 case signatureTarget:
                     SignatureTarget target = (SignatureTarget) subpacket;
                     subpackets.setSignatureTarget(target.isCritical(),
-                            PublicKeyAlgorithm.fromId(target.getPublicKeyAlgorithm()),
-                            HashAlgorithm.fromId(target.getHashAlgorithm()),
+                            PublicKeyAlgorithm.requireFromId(target.getPublicKeyAlgorithm()),
+                            HashAlgorithm.requireFromId(target.getHashAlgorithm()),
                             target.getHashData());
                     break;
                 case embeddedSignature:
