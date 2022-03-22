@@ -12,6 +12,7 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.NoSuchElementException;
 import javax.annotation.Nonnull;
+import javax.annotation.Nullable;
 
 import org.bouncycastle.openpgp.PGPException;
 import org.bouncycastle.openpgp.PGPKeyRing;
@@ -43,7 +44,8 @@ public final class KeyRingUtils {
      * @param secretKeys secret keys
      * @return primary secret key
      */
-    public static PGPSecretKey requirePrimarySecretKeyFrom(PGPSecretKeyRing secretKeys) {
+    @Nonnull
+    public static PGPSecretKey requirePrimarySecretKeyFrom(@Nonnull PGPSecretKeyRing secretKeys) {
         PGPSecretKey primarySecretKey = getPrimarySecretKeyFrom(secretKeys);
         if (primarySecretKey == null) {
             throw new NoSuchElementException("Provided PGPSecretKeyRing has no primary secret key.");
@@ -57,7 +59,8 @@ public final class KeyRingUtils {
      * @param secretKeys secret key ring
      * @return primary secret key
      */
-    public static PGPSecretKey getPrimarySecretKeyFrom(PGPSecretKeyRing secretKeys) {
+    @Nullable
+    public static PGPSecretKey getPrimarySecretKeyFrom(@Nonnull PGPSecretKeyRing secretKeys) {
         PGPSecretKey secretKey = secretKeys.getSecretKey();
         if (secretKey.isMasterKey()) {
             return secretKey;
@@ -72,7 +75,8 @@ public final class KeyRingUtils {
      * @param keyRing key ring
      * @return primary public key
      */
-    public static PGPPublicKey requirePrimaryPublicKeyFrom(PGPKeyRing keyRing) {
+    @Nonnull
+    public static PGPPublicKey requirePrimaryPublicKeyFrom(@Nonnull PGPKeyRing keyRing) {
         PGPPublicKey primaryPublicKey = getPrimaryPublicKeyFrom(keyRing);
         if (primaryPublicKey == null) {
             throw new NoSuchElementException("Provided PGPKeyRing has no primary public key.");
@@ -86,7 +90,8 @@ public final class KeyRingUtils {
      * @param keyRing key ring
      * @return primary public key
      */
-    public static PGPPublicKey getPrimaryPublicKeyFrom(PGPKeyRing keyRing) {
+    @Nullable
+    public static PGPPublicKey getPrimaryPublicKeyFrom(@Nonnull PGPKeyRing keyRing) {
         PGPPublicKey primaryPublicKey = keyRing.getPublicKey();
         if (primaryPublicKey.isMasterKey()) {
             return primaryPublicKey;
@@ -94,11 +99,28 @@ public final class KeyRingUtils {
         return null;
     }
 
-    public static PGPPublicKey getPublicKeyFrom(PGPKeyRing keyRing, long subKeyId) {
+    /**
+     * Return the public key with the given subKeyId from the keyRing.
+     * If no such subkey exists, return null.
+     * @param keyRing key ring
+     * @param subKeyId subkey id
+     * @return subkey or null
+     */
+    @Nullable
+    public static PGPPublicKey getPublicKeyFrom(@Nonnull PGPKeyRing keyRing, long subKeyId) {
         return keyRing.getPublicKey(subKeyId);
     }
 
-    public static PGPPublicKey requirePublicKeyFrom(PGPKeyRing keyRing, long subKeyId) {
+    /**
+     * Require the public key with the given subKeyId from the keyRing.
+     * If no such subkey exists, throw an {@link NoSuchElementException}.
+     *
+     * @param keyRing key ring
+     * @param subKeyId subkey id
+     * @return subkey
+     */
+    @Nonnull
+    public static PGPPublicKey requirePublicKeyFrom(@Nonnull PGPKeyRing keyRing, long subKeyId) {
         PGPPublicKey publicKey = getPublicKeyFrom(keyRing, subKeyId);
         if (publicKey == null) {
             throw new NoSuchElementException("KeyRing does not contain public key with keyID " + Long.toHexString(subKeyId));
@@ -106,7 +128,16 @@ public final class KeyRingUtils {
         return publicKey;
     }
 
-    public static PGPSecretKey requireSecretKeyFrom(PGPSecretKeyRing keyRing, long subKeyId) {
+    /**
+     * Require the secret key with the given secret subKeyId from the secret keyRing.
+     * If no such subkey exists, throw an {@link NoSuchElementException}.
+     *
+     * @param keyRing secret key ring
+     * @param subKeyId subkey id
+     * @return secret subkey
+     */
+    @Nonnull
+    public static PGPSecretKey requireSecretKeyFrom(@Nonnull PGPSecretKeyRing keyRing, long subKeyId) {
         PGPSecretKey secretKey = keyRing.getSecretKey(subKeyId);
         if (secretKey == null) {
             throw new NoSuchElementException("KeyRing does not contain secret key with keyID " + Long.toHexString(subKeyId));
@@ -120,7 +151,8 @@ public final class KeyRingUtils {
      * @param secretKeys secret key ring
      * @return public key ring
      */
-    public static PGPPublicKeyRing publicKeyRingFrom(PGPSecretKeyRing secretKeys) {
+    @Nonnull
+    public static PGPPublicKeyRing publicKeyRingFrom(@Nonnull PGPSecretKeyRing secretKeys) {
         List<PGPPublicKey> publicKeyList = new ArrayList<>();
         Iterator<PGPPublicKey> publicKeyIterator = secretKeys.getPublicKeys();
         while (publicKeyIterator.hasNext()) {
@@ -139,7 +171,9 @@ public final class KeyRingUtils {
      *
      * @throws PGPException if something goes wrong (e.g. wrong passphrase)
      */
-    public static PGPPrivateKey unlockSecretKey(PGPSecretKey secretKey, SecretKeyRingProtector protector) throws PGPException {
+    @Nonnull
+    public static PGPPrivateKey unlockSecretKey(@Nonnull PGPSecretKey secretKey, @Nonnull SecretKeyRingProtector protector)
+            throws PGPException {
         return UnlockSecretKey.unlockSecretKey(secretKey, protector);
     }
 
@@ -152,6 +186,7 @@ public final class KeyRingUtils {
      * @throws IOException in case of an io error
      * @throws PGPException in case of a broken key
      */
+    @Nonnull
     public static PGPPublicKeyRingCollection keyRingsToKeyRingCollection(@Nonnull PGPPublicKeyRing... rings)
             throws IOException, PGPException {
         return new PGPPublicKeyRingCollection(Arrays.asList(rings));
@@ -166,6 +201,7 @@ public final class KeyRingUtils {
      * @throws IOException in case of an io error
      * @throws PGPException in case of a broken key
      */
+    @Nonnull
     public static PGPSecretKeyRingCollection keyRingsToKeyRingCollection(@Nonnull PGPSecretKeyRing... rings)
             throws IOException, PGPException {
         return new PGPSecretKeyRingCollection(Arrays.asList(rings));
@@ -194,7 +230,10 @@ public final class KeyRingUtils {
      *
      * @throws NoSuchElementException in case that the signed key is not part of the key ring
      */
-    public static <T extends PGPKeyRing> T injectCertification(T keyRing, PGPPublicKey certifiedKey, PGPSignature certification) {
+    @Nonnull
+    public static <T extends PGPKeyRing> T injectCertification(@Nonnull T keyRing,
+                                                               @Nonnull PGPPublicKey certifiedKey,
+                                                               @Nonnull PGPSignature certification) {
         PGPSecretKeyRing secretKeys = null;
         PGPPublicKeyRing publicKeys;
         if (keyRing instanceof PGPSecretKeyRing) {
@@ -239,7 +278,10 @@ public final class KeyRingUtils {
      * @param <T> either {@link PGPPublicKeyRing} or {@link PGPSecretKeyRing}
      * @return key ring with injected certification
      */
-    public static <T extends PGPKeyRing> T injectCertification(T keyRing, String userId, PGPSignature certification) {
+    @Nonnull
+    public static <T extends PGPKeyRing> T injectCertification(@Nonnull T keyRing,
+                                                               @Nonnull String userId,
+                                                               @Nonnull PGPSignature certification) {
         PGPSecretKeyRing secretKeys = null;
         PGPPublicKeyRing publicKeys;
         if (keyRing instanceof PGPSecretKeyRing) {
@@ -277,7 +319,10 @@ public final class KeyRingUtils {
      * @param <T> either {@link PGPPublicKeyRing} or {@link PGPSecretKeyRing}
      * @return key ring with injected user-attribute certification
      */
-    public static <T extends PGPKeyRing> T injectCertification(T keyRing, PGPUserAttributeSubpacketVector userAttributes, PGPSignature certification) {
+    @Nonnull
+    public static <T extends PGPKeyRing> T injectCertification(@Nonnull T keyRing,
+                                                               @Nonnull PGPUserAttributeSubpacketVector userAttributes,
+                                                               @Nonnull PGPSignature certification) {
         PGPSecretKeyRing secretKeys = null;
         PGPPublicKeyRing publicKeys;
         if (keyRing instanceof PGPSecretKeyRing) {
@@ -317,7 +362,9 @@ public final class KeyRingUtils {
      * @param <T> either {@link PGPPublicKeyRing} or {@link PGPSecretKeyRing}
      * @return key ring with injected public key
      */
-    public static <T extends PGPKeyRing> T keysPlusPublicKey(T keyRing, PGPPublicKey publicKey) {
+    @Nonnull
+    public static <T extends PGPKeyRing> T keysPlusPublicKey(@Nonnull T keyRing,
+                                                             @Nonnull PGPPublicKey publicKey) {
         if (true)
             // Is currently broken beyond repair
             throw new NotYetImplementedException();
@@ -350,7 +397,9 @@ public final class KeyRingUtils {
      * @param secretKey secret key
      * @return secret key ring with injected secret key
      */
-    public static PGPSecretKeyRing keysPlusSecretKey(PGPSecretKeyRing secretKeys, PGPSecretKey secretKey) {
+    @Nonnull
+    public static PGPSecretKeyRing keysPlusSecretKey(@Nonnull PGPSecretKeyRing secretKeys,
+                                                     @Nonnull PGPSecretKey secretKey) {
         return PGPSecretKeyRing.insertSecretKey(secretKeys, secretKey);
     }
 
@@ -360,7 +409,9 @@ public final class KeyRingUtils {
      * @param signature signature
      * @return secret key with the signature injected in its public key
      */
-    public static PGPSecretKey secretKeyPlusSignature(PGPSecretKey secretKey, PGPSignature signature) {
+    @Nonnull
+    public static PGPSecretKey secretKeyPlusSignature(@Nonnull PGPSecretKey secretKey,
+                                                      @Nonnull PGPSignature signature) {
         PGPPublicKey publicKey = secretKey.getPublicKey();
         publicKey = PGPPublicKey.addCertification(publicKey, signature);
         PGPSecretKey newSecretKey = PGPSecretKey.replacePublicKey(secretKey, publicKey);
@@ -380,7 +431,9 @@ public final class KeyRingUtils {
      * @throws IOException
      * @throws PGPException
      */
-    public static PGPSecretKeyRing removeSecretKey(PGPSecretKeyRing secretKeys, long secretKeyId)
+    @Nonnull
+    public static PGPSecretKeyRing removeSecretKey(@Nonnull PGPSecretKeyRing secretKeys,
+                                                   long secretKeyId)
             throws IOException, PGPException {
         if (secretKeys.getSecretKey(secretKeyId) == null) {
             throw new NoSuchElementException("PGPSecretKeyRing does not contain secret key " + Long.toHexString(secretKeyId));
