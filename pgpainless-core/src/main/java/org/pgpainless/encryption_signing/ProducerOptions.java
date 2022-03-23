@@ -193,7 +193,10 @@ public final class ProducerOptions {
      * Note: Therefore this method cannot be used simultaneously with {@link #setFileName(String)}.
      *
      * @return this
+     * @deprecated deprecated since at least crypto-refresh-05. It is not recommended using this special filename in
+     * newly generated literal data packets
      */
+    @Deprecated
     public ProducerOptions setForYourEyesOnly() {
         this.fileName = PGPLiteralData.CONSOLE;
         return this;
