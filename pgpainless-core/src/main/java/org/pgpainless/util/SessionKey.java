@@ -7,6 +7,7 @@ package org.pgpainless.util;
 import javax.annotation.Nonnull;
 
 import org.bouncycastle.openpgp.PGPSessionKey;
+import org.bouncycastle.util.encoders.Hex;
 import org.pgpainless.algorithm.SymmetricKeyAlgorithm;
 
 /**
@@ -56,5 +57,10 @@ public class SessionKey {
         byte[] copy = new byte[key.length];
         System.arraycopy(key, 0, copy, 0, copy.length);
         return copy;
+    }
+
+    @Override
+    public String toString() {
+        return "" + getAlgorithm().getAlgorithmId() + ":" + Hex.toHexString(getKey());
     }
 }
