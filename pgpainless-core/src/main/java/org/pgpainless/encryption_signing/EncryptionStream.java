@@ -47,6 +47,8 @@ public final class EncryptionStream extends OutputStream {
     private static final int BUFFER_SIZE = 1 << 9;
 
     OutputStream outermostStream;
+    OutputStream signatureLayerStream;
+
     private ArmoredOutputStream armorOutputStream = null;
     private OutputStream publicKeyEncryptedStream = null;
     private PGPCompressedDataGenerator compressedDataGenerator;
@@ -130,6 +132,7 @@ public final class EncryptionStream extends OutputStream {
     }
 
     private void prepareOnePassSignatures() throws IOException, PGPException {
+        signatureLayerStream = outermostStream;
         SigningOptions signingOptions = options.getSigningOptions();
         if (signingOptions == null || signingOptions.getSigningMethods().isEmpty()) {
             // No singing options/methods -> no signing
@@ -274,7 +277,7 @@ public final class EncryptionStream extends OutputStream {
                 resultBuilder.addDetachedSignature(signingKey, signature);
             }
             if (!signingMethod.isDetached() || options.isCleartextSigned()) {
-                signature.encode(outermostStream);
+                signature.encode(signatureLayerStream);
             }
         }
     }
