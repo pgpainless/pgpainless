@@ -230,7 +230,11 @@ public final class ProducerOptions {
      *
      * @param encoding encoding
      * @return this
+     *
+     * @deprecated this option will be removed in the near future, as values other than {@link StreamEncoding#BINARY}
+     * are causing issues. See https://github.com/pgpainless/pgpainless/issues/264 for details
      */
+    @Deprecated
     public ProducerOptions setEncoding(@Nonnull StreamEncoding encoding) {
         this.streamEncoding = encoding;
         return this;
@@ -239,6 +243,7 @@ public final class ProducerOptions {
     public StreamEncoding getEncoding() {
         return streamEncoding;
     }
+
     /**
      * Override which compression algorithm shall be used.
      *
