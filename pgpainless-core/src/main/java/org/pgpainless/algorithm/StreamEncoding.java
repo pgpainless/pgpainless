@@ -37,17 +37,6 @@ public enum StreamEncoding {
     UTF8(PGPLiteralData.UTF8),
 
     /**
-     * The literal data packet contains a MIME message body part (RFC2045).
-     * Introduced in rfc4880-bis10.
-     *
-     * TODO: Replace 'm' with 'PGPLiteralData.MIME' once BC 1.71 gets released and contains our fix:
-     *  https://github.com/bcgit/bc-java/pull/1088
-     *
-     * @see <a href="https://tools.ietf.org/id/draft-ietf-openpgp-rfc4880bis-10.html#name-literal-data-packet-tag-11">RFC4880-bis10</a>
-     */
-    MIME('m'),
-
-    /**
      * Early versions of PGP also defined a value of 'l' as a 'local' mode for machine-local conversions.
      * RFC 1991 [RFC1991] incorrectly stated this local mode flag as '1' (ASCII numeral one).
      * Both of these local modes are deprecated.
