@@ -125,10 +125,9 @@ public class EncryptImpl implements Encrypt {
     private static StreamEncoding encryptAsToStreamEncoding(EncryptAs encryptAs) {
         switch (encryptAs) {
             case Binary:
+            case MIME:
                 return StreamEncoding.BINARY;
             case Text:
-                return StreamEncoding.TEXT;
-            case MIME:
                 return StreamEncoding.UTF8;
         }
         throw new IllegalArgumentException("Invalid value encountered: " + encryptAs);
