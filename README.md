@@ -188,7 +188,7 @@ repositories {
 }
 
 dependencies {
-	implementation 'org.pgpainless:pgpainless-core:1.1.3'
+	implementation 'org.pgpainless:pgpainless-core:1.1.4'
 }
 ```
 
@@ -221,10 +221,10 @@ which contains the bug you are fixing. That way we can update older revisions of
 * `development` contains new features that will make it into the next MINOR release.
 
 #### Example:
-Latest release: 1.1.3
+Latest release: 1.1.4
 * `release/1.0` contains the state of `1.0.5-SNAPSHOT`
-* `release/1.1` contains the state of `1.1.4-SNAPSHOT`
-* `master` contains the state `release/1.1` plus patch level changes that will make it into `1.1.4`.
+* `release/1.1` contains the state of `1.1.5-SNAPSHOT`
+* `master` contains the state `release/1.1` plus patch level changes that will make it into `1.1.5`.
 * `development` contains the state which will at some point become `1.2.0`.
 
 Please follow the [code of conduct](CODE_OF_CONDUCT.md) if you want to be part of the project.
