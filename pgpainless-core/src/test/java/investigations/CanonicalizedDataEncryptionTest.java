@@ -100,7 +100,9 @@ public class CanonicalizedDataEncryptionTest {
     public static void readKeys() throws IOException {
         secretKeys = PGPainless.readKeyRing().secretKeyRing(KEY);
         publicKeys = PGPainless.extractCertificate(secretKeys);
+        // CHECKSTYLE:OFF
         System.out.println(PGPainless.asciiArmor(secretKeys));
+        // CHECKSTYLE:ON
     }
 
     @Test
@@ -109,8 +111,10 @@ public class CanonicalizedDataEncryptionTest {
         OpenPgpMetadata metadata = decryptAndVerify(msg);
 
         if (!metadata.isVerified()) {
+            // CHECKSTYLE:OFF
             System.out.println("Not verified. Session-Key: " + metadata.getSessionKey());
             System.out.println(msg);
+            // CHECKSTYLE:ON
             fail();
         }
     }
@@ -121,8 +125,10 @@ public class CanonicalizedDataEncryptionTest {
         OpenPgpMetadata metadata = decryptAndVerify(msg);
 
         if (!metadata.isVerified()) {
+            // CHECKSTYLE:OFF
             System.out.println("Not verified. Session-Key: " + metadata.getSessionKey());
             System.out.println(msg);
+            // CHECKSTYLE:ON
             fail();
         }
     }
@@ -134,21 +140,24 @@ public class CanonicalizedDataEncryptionTest {
         OpenPgpMetadata metadata = decryptAndVerify(msg);
 
         if (!metadata.isVerified()) {
+            // CHECKSTYLE:OFF
             System.out.println("Not verified. Session-Key: " + metadata.getSessionKey());
             System.out.println(msg);
+            // CHECKSTYLE:ON
             fail();
         }
     }
 
     @Test
     public void textDataTextSig() throws PGPException, IOException {
-        System.out.println("SignatureType: Text, LiteralData: Text");
         String msg = encryptAndSign(message, DocumentSignatureType.CANONICAL_TEXT_DOCUMENT, StreamEncoding.TEXT);
         OpenPgpMetadata metadata = decryptAndVerify(msg);
 
         if (!metadata.isVerified()) {
+            // CHECKSTYLE:OFF
             System.out.println("Not verified. Session-Key: " + metadata.getSessionKey());
             System.out.println(msg);
+            // CHECKSTYLE:ON
             fail();
         }
     }
@@ -156,13 +165,14 @@ public class CanonicalizedDataEncryptionTest {
     @Test
     @Disabled("Fails")
     public void utf8DataBinarySig() throws PGPException, IOException {
-        System.out.println("SignatureType: Binary, LiteralData: UTF8");
         String msg = encryptAndSign(message, DocumentSignatureType.BINARY_DOCUMENT, StreamEncoding.UTF8);
         OpenPgpMetadata metadata = decryptAndVerify(msg);
 
         if (!metadata.isVerified()) {
+            // CHECKSTYLE:OFF
             System.out.println("Not verified. Session-Key: " + metadata.getSessionKey());
             System.out.println(msg);
+            // CHECKSTYLE:ON
             fail();
         }
     }
@@ -173,8 +183,10 @@ public class CanonicalizedDataEncryptionTest {
         OpenPgpMetadata metadata = decryptAndVerify(msg);
 
         if (!metadata.isVerified()) {
+            // CHECKSTYLE:OFF
             System.out.println("Not verified. Session-Key: " + metadata.getSessionKey());
             System.out.println(msg);
+            // CHECKSTYLE:ON
             fail();
         }
     }
