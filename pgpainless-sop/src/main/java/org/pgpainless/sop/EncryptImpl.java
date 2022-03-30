@@ -60,7 +60,11 @@ public class EncryptImpl implements Encrypt {
                 signingOptions = SigningOptions.get();
             }
             try {
-                signingOptions.addInlineSignatures(SecretKeyRingProtector.unprotectedKeys(), keys, DocumentSignatureType.BINARY_DOCUMENT);
+                signingOptions.addInlineSignatures(
+                        SecretKeyRingProtector.unprotectedKeys(),
+                        keys,
+                        (encryptAs == EncryptAs.Binary ? DocumentSignatureType.BINARY_DOCUMENT : DocumentSignatureType.CANONICAL_TEXT_DOCUMENT)
+                );
             } catch (IllegalArgumentException e) {
                 throw new SOPGPException.KeyCannotSign();
             } catch (WrongPassphraseException e) {
