@@ -15,6 +15,7 @@ import org.bouncycastle.bcpg.BCPGOutputStream;
 import org.bouncycastle.openpgp.PGPCompressedDataGenerator;
 import org.bouncycastle.openpgp.PGPEncryptedDataGenerator;
 import org.bouncycastle.openpgp.PGPException;
+import org.bouncycastle.openpgp.PGPLiteralDataGenerator;
 import org.bouncycastle.openpgp.PGPSignature;
 import org.bouncycastle.openpgp.PGPSignatureGenerator;
 import org.bouncycastle.openpgp.operator.PGPDataEncryptorBuilder;
@@ -25,7 +26,6 @@ import org.pgpainless.implementation.ImplementationFactory;
 import org.pgpainless.key.SubkeyIdentifier;
 import org.pgpainless.util.ArmorUtils;
 import org.pgpainless.util.ArmoredOutputStreamFactory;
-import org.pgpainless.util.StreamGeneratorWrapper;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -56,7 +56,7 @@ public final class EncryptionStream extends OutputStream {
     private OutputStream publicKeyEncryptedStream = null;
     private PGPCompressedDataGenerator compressedDataGenerator;
     private BCPGOutputStream basicCompressionStream;
-    private StreamGeneratorWrapper streamGeneratorWrapper;
+    private PGPLiteralDataGenerator literalDataGenerator;
     private OutputStream literalDataStream;
 
     EncryptionStream(@Nonnull OutputStream targetOutputStream,
@@ -164,8 +164,8 @@ public final class EncryptionStream extends OutputStream {
             return;
         }
 
-        streamGeneratorWrapper = StreamGeneratorWrapper.forStreamEncoding(options.getEncoding());
-        literalDataStream = streamGeneratorWrapper.open(outermostStream,
+        literalDataGenerator = new PGPLiteralDataGenerator();
+        literalDataStream = literalDataGenerator.open(outermostStream, options.getEncoding().getCode(),
                 options.getFileName(), options.getModificationDate(), new byte[BUFFER_SIZE]);
         outermostStream = literalDataStream;
 
@@ -226,8 +226,8 @@ public final class EncryptionStream extends OutputStream {
             literalDataStream.flush();
             literalDataStream.close();
         }
-        if (streamGeneratorWrapper != null) {
-            streamGeneratorWrapper.close();
+        if (literalDataGenerator != null) {
+            literalDataGenerator.close();
         }
 
         if (options.isCleartextSigned()) {

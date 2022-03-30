@@ -4,31 +4,46 @@
 
 package investigations;
 
+import static org.junit.jupiter.api.Assertions.assertArrayEquals;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.junit.jupiter.api.Assertions.fail;
 
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
+import java.io.OutputStream;
 import java.nio.charset.StandardCharsets;
 
+import org.bouncycastle.bcpg.ArmoredOutputStream;
+import org.bouncycastle.bcpg.CompressionAlgorithmTags;
+import org.bouncycastle.openpgp.PGPCompressedDataGenerator;
 import org.bouncycastle.openpgp.PGPException;
+import org.bouncycastle.openpgp.PGPLiteralData;
+import org.bouncycastle.openpgp.PGPLiteralDataGenerator;
+import org.bouncycastle.openpgp.PGPOnePassSignature;
+import org.bouncycastle.openpgp.PGPPrivateKey;
 import org.bouncycastle.openpgp.PGPPublicKeyRing;
 import org.bouncycastle.openpgp.PGPSecretKeyRing;
+import org.bouncycastle.openpgp.PGPSignature;
+import org.bouncycastle.openpgp.PGPSignatureGenerator;
+import org.bouncycastle.openpgp.operator.bc.BcPGPContentSignerBuilder;
 import org.bouncycastle.util.io.Streams;
 import org.junit.jupiter.api.BeforeAll;
-import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 import org.pgpainless.PGPainless;
 import org.pgpainless.algorithm.DocumentSignatureType;
+import org.pgpainless.algorithm.HashAlgorithm;
 import org.pgpainless.algorithm.StreamEncoding;
 import org.pgpainless.decryption_verification.ConsumerOptions;
 import org.pgpainless.decryption_verification.DecryptionStream;
 import org.pgpainless.decryption_verification.OpenPgpMetadata;
+import org.pgpainless.encryption_signing.CRLFGeneratorStream;
 import org.pgpainless.encryption_signing.EncryptionOptions;
 import org.pgpainless.encryption_signing.EncryptionStream;
 import org.pgpainless.encryption_signing.ProducerOptions;
 import org.pgpainless.encryption_signing.SigningOptions;
 import org.pgpainless.key.protection.SecretKeyRingProtector;
+import org.pgpainless.key.protection.UnlockSecretKey;
 
 public class CanonicalizedDataEncryptionTest {
 
@@ -134,7 +149,6 @@ public class CanonicalizedDataEncryptionTest {
     }
 
     @Test
-    @Disabled("Fails")
     public void textDataBinarySig() throws PGPException, IOException {
         String msg = encryptAndSign(message, DocumentSignatureType.BINARY_DOCUMENT, StreamEncoding.TEXT);
         OpenPgpMetadata metadata = decryptAndVerify(msg);
@@ -163,7 +177,6 @@ public class CanonicalizedDataEncryptionTest {
     }
 
     @Test
-    @Disabled("Fails")
     public void utf8DataBinarySig() throws PGPException, IOException {
         String msg = encryptAndSign(message, DocumentSignatureType.BINARY_DOCUMENT, StreamEncoding.UTF8);
         OpenPgpMetadata metadata = decryptAndVerify(msg);
@@ -227,5 +240,76 @@ public class CanonicalizedDataEncryptionTest {
         decryptionStream.close();
 
         return decryptionStream.getResult();
+    }
+
+    @Test
+    public void testManualSignWithAllCombinations() throws PGPException, IOException {
+        for (StreamEncoding streamEncoding : StreamEncoding.values()) {
+            for (DocumentSignatureType sigType : DocumentSignatureType.values()) {
+                manualSignAndVerify(sigType, streamEncoding);
+            }
+        }
+    }
+
+    public void manualSignAndVerify(DocumentSignatureType sigType, StreamEncoding streamEncoding)
+            throws IOException, PGPException {
+        PGPPrivateKey privateKey = UnlockSecretKey.unlockSecretKey(secretKeys.getSecretKey(), SecretKeyRingProtector.unprotectedKeys());
+        ByteArrayOutputStream out = new ByteArrayOutputStream();
+        ArmoredOutputStream armorOut = new ArmoredOutputStream(out);
+
+        PGPCompressedDataGenerator compressor = new PGPCompressedDataGenerator(CompressionAlgorithmTags.ZLIB);
+        OutputStream compressedOut = compressor.open(armorOut);
+
+        PGPSignatureGenerator signer = new PGPSignatureGenerator(
+                new BcPGPContentSignerBuilder(
+                        secretKeys.getPublicKey().getAlgorithm(),
+                        HashAlgorithm.SHA256.getAlgorithmId()));
+        signer.init(sigType.getSignatureType().getCode(), privateKey);
+
+        PGPOnePassSignature ops = signer.generateOnePassVersion(false);
+        ops.encode(compressedOut);
+
+        PGPLiteralDataGenerator author = new PGPLiteralDataGenerator();
+        OutputStream literalOut = author.open(compressedOut, streamEncoding.getCode(), "", PGPLiteralData.NOW, new byte[4096]);
+
+        byte[] msg = message.getBytes(StandardCharsets.UTF_8);
+
+        ByteArrayOutputStream crlfed = new ByteArrayOutputStream();
+        CRLFGeneratorStream crlfOut = new CRLFGeneratorStream(crlfed, streamEncoding);
+        crlfOut.write(msg);
+        msg = crlfed.toByteArray();
+
+        for (byte b : msg) {
+            literalOut.write(b);
+            signer.update(b);
+        }
+
+        literalOut.close();
+        PGPSignature signature = signer.generate();
+
+        signature.encode(compressedOut);
+        compressor.close();
+
+        armorOut.close();
+
+        String ciphertext = out.toString();
+        // CHECKSTYLE:OFF
+        System.out.println(sigType + " " + streamEncoding);
+        System.out.println(ciphertext);
+        // CHECKSTYLE:ON
+
+        ByteArrayInputStream cipherIn = new ByteArrayInputStream(ciphertext.getBytes(StandardCharsets.UTF_8));
+        ByteArrayOutputStream decrypted = new ByteArrayOutputStream();
+        DecryptionStream decryptionStream = PGPainless.decryptAndOrVerify()
+                        .onInputStream(cipherIn)
+                                .withOptions(new ConsumerOptions()
+                                        .addVerificationCert(publicKeys));
+
+        Streams.pipeAll(decryptionStream, decrypted);
+        decryptionStream.close();
+        OpenPgpMetadata metadata = decryptionStream.getResult();
+        assertTrue(metadata.isVerified(), "Not verified! Sig Type: " + sigType + " StreamEncoding: " + streamEncoding);
+
+        assertArrayEquals(msg, decrypted.toByteArray());
     }
 }

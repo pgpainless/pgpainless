@@ -231,8 +231,7 @@ public final class ProducerOptions {
      * @param encoding encoding
      * @return this
      *
-     * @deprecated this option will be removed in the near future, as values other than {@link StreamEncoding#BINARY}
-     * are causing issues. See https://github.com/pgpainless/pgpainless/issues/264 for details
+     * @deprecated options other than the default value of {@link StreamEncoding#BINARY} are discouraged.
      */
     @Deprecated
     public ProducerOptions setEncoding(@Nonnull StreamEncoding encoding) {
