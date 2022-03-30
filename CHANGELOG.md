@@ -5,6 +5,9 @@ SPDX-License-Identifier: CC0-1.0
 
 # PGPainless Changelog
 
+## 1.1.5-SNAPSHOT
+- SOP encrypt: match signature type when using `encrypt --as=` option
+
 ## 1.1.4
 - Add utility method `KeyRingUtils.removeSecretKey()` to remove secret key part from key ring
   - This can come in handy when using primary keys stored offline
