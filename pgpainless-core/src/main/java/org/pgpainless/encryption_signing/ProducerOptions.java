@@ -249,17 +249,16 @@ public final class ProducerOptions {
 
     /**
      * Apply special encoding of line endings to the input data.
-     * By default, this is set to <pre>false</pre>, which means that the data is not altered.
+     * By default, this is disabled, which means that the data is not altered.
      *
-     * Setting it to <pre>true</pre> will change the line endings to CR/LF.
+     * Enabling it will change the line endings to CR/LF.
      * Note: The encoding will not be reversed when decrypting, so applying CR/LF encoding will result in
      * the identity "decrypt(encrypt(data)) == data == verify(sign(data))".
      *
-     * @param applyCRLFEncoding apply crlf encoding
      * @return this
      */
-    public ProducerOptions applyCRLFEncoding(boolean applyCRLFEncoding) {
-        this.applyCRLFEncoding = applyCRLFEncoding;
+    public ProducerOptions applyCRLFEncoding() {
+        this.applyCRLFEncoding = true;
         return this;
     }
 
