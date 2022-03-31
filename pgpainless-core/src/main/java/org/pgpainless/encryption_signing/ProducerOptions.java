@@ -19,7 +19,8 @@ public final class ProducerOptions {
     private final SigningOptions signingOptions;
     private String fileName = "";
     private Date modificationDate = PGPLiteralData.NOW;
-    private StreamEncoding streamEncoding = StreamEncoding.BINARY;
+    private StreamEncoding encodingField = StreamEncoding.BINARY;
+    private boolean applyCRLFEncoding = false;
     private boolean cleartextSigned = false;
 
     private CompressionAlgorithm compressionAlgorithmOverride = PGPainless.getPolicy().getCompressionAlgorithmPolicy()
@@ -223,8 +224,11 @@ public final class ProducerOptions {
     }
 
     /**
-     * Set the format of the literal data packet.
+     * Set format metadata field of the literal data packet.
      * Defaults to {@link StreamEncoding#BINARY}.
+     *
+     * This does not change the encoding of the wrapped data itself.
+     * To apply CR/LF encoding to your input data before processing, use {@link #applyCRLFEncoding(boolean)} instead.
      *
      * @see <a href="https://datatracker.ietf.org/doc/html/rfc4880#section-5.9">RFC4880 §5.9. Literal Data Packet</a>
      *
@@ -235,12 +239,37 @@ public final class ProducerOptions {
      */
     @Deprecated
     public ProducerOptions setEncoding(@Nonnull StreamEncoding encoding) {
-        this.streamEncoding = encoding;
+        this.encodingField = encoding;
         return this;
     }
 
     public StreamEncoding getEncoding() {
-        return streamEncoding;
+        return encodingField;
+    }
+
+    /**
+     * Apply special encoding of line endings to the input data.
+     * By default, this is set to <pre>false</pre>, which means that the data is not altered.
+     *
+     * Setting it to <pre>true</pre> will change the line endings to CR/LF.
+     * Note: The encoding will not be reversed when decrypting, so applying CR/LF encoding will result in
+     * the identity "decrypt(encrypt(data)) == data == verify(sign(data))".
+     *
+     * @param applyCRLFEncoding apply crlf encoding
+     * @return this
+     */
+    public ProducerOptions applyCRLFEncoding(boolean applyCRLFEncoding) {
+        this.applyCRLFEncoding = applyCRLFEncoding;
+        return this;
+    }
+
+    /**
+     * Return the input encoding that will be applied before signing / encryption.
+     *
+     * @return input encoding
+     */
+    public boolean isApplyCRLFEncoding() {
+        return applyCRLFEncoding;
     }
 
     /**

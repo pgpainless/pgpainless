@@ -2,7 +2,7 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
-package investigations;
+package org.pgpainless.decryption_verification;
 
 import static org.junit.jupiter.api.Assertions.assertArrayEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
@@ -34,9 +34,6 @@ import org.pgpainless.PGPainless;
 import org.pgpainless.algorithm.DocumentSignatureType;
 import org.pgpainless.algorithm.HashAlgorithm;
 import org.pgpainless.algorithm.StreamEncoding;
-import org.pgpainless.decryption_verification.ConsumerOptions;
-import org.pgpainless.decryption_verification.DecryptionStream;
-import org.pgpainless.decryption_verification.OpenPgpMetadata;
 import org.pgpainless.encryption_signing.CRLFGeneratorStream;
 import org.pgpainless.encryption_signing.EncryptionOptions;
 import org.pgpainless.encryption_signing.EncryptionStream;
@@ -120,9 +117,11 @@ public class CanonicalizedDataEncryptionTest {
         // CHECKSTYLE:ON
     }
 
+    // NO CR/LF ENCODING PRIOR TO PROCESSING
+
     @Test
-    public void binaryDataBinarySig() throws PGPException, IOException {
-        String msg = encryptAndSign(message, DocumentSignatureType.BINARY_DOCUMENT, StreamEncoding.BINARY);
+    public void noInputEncodingBinaryDataBinarySig() throws PGPException, IOException {
+        String msg = encryptAndSign(message, DocumentSignatureType.BINARY_DOCUMENT, StreamEncoding.BINARY, false);
         OpenPgpMetadata metadata = decryptAndVerify(msg);
 
         if (!metadata.isVerified()) {
@@ -135,8 +134,8 @@ public class CanonicalizedDataEncryptionTest {
     }
 
     @Test
-    public void binaryDataTextSig() throws PGPException, IOException {
-        String msg = encryptAndSign(message, DocumentSignatureType.CANONICAL_TEXT_DOCUMENT, StreamEncoding.BINARY);
+    public void noInputEncodingBinaryDataTextSig() throws PGPException, IOException {
+        String msg = encryptAndSign(message, DocumentSignatureType.CANONICAL_TEXT_DOCUMENT, StreamEncoding.BINARY, false);
         OpenPgpMetadata metadata = decryptAndVerify(msg);
 
         if (!metadata.isVerified()) {
@@ -149,8 +148,8 @@ public class CanonicalizedDataEncryptionTest {
     }
 
     @Test
-    public void textDataBinarySig() throws PGPException, IOException {
-        String msg = encryptAndSign(message, DocumentSignatureType.BINARY_DOCUMENT, StreamEncoding.TEXT);
+    public void noInputEncodingTextDataBinarySig() throws PGPException, IOException {
+        String msg = encryptAndSign(message, DocumentSignatureType.BINARY_DOCUMENT, StreamEncoding.TEXT, false);
         OpenPgpMetadata metadata = decryptAndVerify(msg);
 
         if (!metadata.isVerified()) {
@@ -163,8 +162,8 @@ public class CanonicalizedDataEncryptionTest {
     }
 
     @Test
-    public void textDataTextSig() throws PGPException, IOException {
-        String msg = encryptAndSign(message, DocumentSignatureType.CANONICAL_TEXT_DOCUMENT, StreamEncoding.TEXT);
+    public void noInputEncodingTextDataTextSig() throws PGPException, IOException {
+        String msg = encryptAndSign(message, DocumentSignatureType.CANONICAL_TEXT_DOCUMENT, StreamEncoding.TEXT, false);
         OpenPgpMetadata metadata = decryptAndVerify(msg);
 
         if (!metadata.isVerified()) {
@@ -177,8 +176,8 @@ public class CanonicalizedDataEncryptionTest {
     }
 
     @Test
-    public void utf8DataBinarySig() throws PGPException, IOException {
-        String msg = encryptAndSign(message, DocumentSignatureType.BINARY_DOCUMENT, StreamEncoding.UTF8);
+    public void noInputEncodingUtf8DataBinarySig() throws PGPException, IOException {
+        String msg = encryptAndSign(message, DocumentSignatureType.BINARY_DOCUMENT, StreamEncoding.UTF8, false);
         OpenPgpMetadata metadata = decryptAndVerify(msg);
 
         if (!metadata.isVerified()) {
@@ -191,8 +190,23 @@ public class CanonicalizedDataEncryptionTest {
     }
 
     @Test
-    public void utf8DataTextSig() throws PGPException, IOException {
-        String msg = encryptAndSign(message, DocumentSignatureType.CANONICAL_TEXT_DOCUMENT, StreamEncoding.UTF8);
+    public void noInputEncodingUtf8DataTextSig() throws PGPException, IOException {
+        String msg = encryptAndSign(message, DocumentSignatureType.CANONICAL_TEXT_DOCUMENT, StreamEncoding.UTF8, false);
+        OpenPgpMetadata metadata = decryptAndVerify(msg);
+
+        if (!metadata.isVerified()) {
+            // CHECKSTYLE:OFF
+            System.out.println("Not verified. Session-Key: " + metadata.getSessionKey());
+            System.out.println(msg);
+            // CHECKSTYLE:ON
+            fail();
+        }
+    }
+    // APPLY CR/LF ENCODING PRIOR TO PROCESSING
+
+    @Test
+    public void inputEncodingBinaryDataBinarySig() throws PGPException, IOException {
+        String msg = encryptAndSign(message, DocumentSignatureType.BINARY_DOCUMENT, StreamEncoding.BINARY, true);
         OpenPgpMetadata metadata = decryptAndVerify(msg);
 
         if (!metadata.isVerified()) {
@@ -204,7 +218,80 @@ public class CanonicalizedDataEncryptionTest {
         }
     }
 
-    private String encryptAndSign(String message, DocumentSignatureType sigType, StreamEncoding dataFormat)
+    @Test
+    public void inputEncodingBinaryDataTextSig() throws PGPException, IOException {
+        String msg = encryptAndSign(message, DocumentSignatureType.CANONICAL_TEXT_DOCUMENT, StreamEncoding.BINARY, true);
+        OpenPgpMetadata metadata = decryptAndVerify(msg);
+
+        if (!metadata.isVerified()) {
+            // CHECKSTYLE:OFF
+            System.out.println("Not verified. Session-Key: " + metadata.getSessionKey());
+            System.out.println(msg);
+            // CHECKSTYLE:ON
+            fail();
+        }
+    }
+
+    @Test
+    public void inputEncodingTextDataBinarySig() throws PGPException, IOException {
+        String msg = encryptAndSign(message, DocumentSignatureType.BINARY_DOCUMENT, StreamEncoding.TEXT, true);
+        OpenPgpMetadata metadata = decryptAndVerify(msg);
+
+        if (!metadata.isVerified()) {
+            // CHECKSTYLE:OFF
+            System.out.println("Not verified. Session-Key: " + metadata.getSessionKey());
+            System.out.println(msg);
+            // CHECKSTYLE:ON
+            fail();
+        }
+    }
+
+    @Test
+    public void inputEncodingTextDataTextSig() throws PGPException, IOException {
+        String msg = encryptAndSign(message, DocumentSignatureType.CANONICAL_TEXT_DOCUMENT, StreamEncoding.TEXT, true);
+        OpenPgpMetadata metadata = decryptAndVerify(msg);
+
+        if (!metadata.isVerified()) {
+            // CHECKSTYLE:OFF
+            System.out.println("Not verified. Session-Key: " + metadata.getSessionKey());
+            System.out.println(msg);
+            // CHECKSTYLE:ON
+            fail();
+        }
+    }
+
+    @Test
+    public void inputEncodingUtf8DataBinarySig() throws PGPException, IOException {
+        String msg = encryptAndSign(message, DocumentSignatureType.BINARY_DOCUMENT, StreamEncoding.UTF8, true);
+        OpenPgpMetadata metadata = decryptAndVerify(msg);
+
+        if (!metadata.isVerified()) {
+            // CHECKSTYLE:OFF
+            System.out.println("Not verified. Session-Key: " + metadata.getSessionKey());
+            System.out.println(msg);
+            // CHECKSTYLE:ON
+            fail();
+        }
+    }
+
+    @Test
+    public void inputEncodingUtf8DataTextSig() throws PGPException, IOException {
+        String msg = encryptAndSign(message, DocumentSignatureType.CANONICAL_TEXT_DOCUMENT, StreamEncoding.UTF8, true);
+        OpenPgpMetadata metadata = decryptAndVerify(msg);
+
+        if (!metadata.isVerified()) {
+            // CHECKSTYLE:OFF
+            System.out.println("Not verified. Session-Key: " + metadata.getSessionKey());
+            System.out.println(msg);
+            // CHECKSTYLE:ON
+            fail();
+        }
+    }
+
+    private String encryptAndSign(String message,
+                                  DocumentSignatureType sigType,
+                                  StreamEncoding dataFormat,
+                                  boolean applyCRLFEncoding)
             throws PGPException, IOException {
         ByteArrayOutputStream out = new ByteArrayOutputStream();
 
@@ -218,6 +305,7 @@ public class CanonicalizedDataEncryptionTest {
                                         .addInlineSignature(SecretKeyRingProtector.unprotectedKeys(), secretKeys, sigType)
                         )
                         .setEncoding(dataFormat)
+                        .applyCRLFEncoding(applyCRLFEncoding)
                 );
 
         ByteArrayInputStream inputStream = new ByteArrayInputStream(message.getBytes(StandardCharsets.UTF_8));

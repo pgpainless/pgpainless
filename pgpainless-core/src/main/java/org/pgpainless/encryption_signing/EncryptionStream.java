@@ -21,6 +21,7 @@ import org.bouncycastle.openpgp.PGPSignatureGenerator;
 import org.bouncycastle.openpgp.operator.PGPDataEncryptorBuilder;
 import org.bouncycastle.openpgp.operator.PGPKeyEncryptionMethodGenerator;
 import org.pgpainless.algorithm.CompressionAlgorithm;
+import org.pgpainless.algorithm.StreamEncoding;
 import org.pgpainless.algorithm.SymmetricKeyAlgorithm;
 import org.pgpainless.implementation.ImplementationFactory;
 import org.pgpainless.key.SubkeyIdentifier;
@@ -70,6 +71,8 @@ public final class EncryptionStream extends OutputStream {
         prepareCompression();
         prepareOnePassSignatures();
         prepareLiteralDataProcessing();
+        prepareSigningStream();
+        prepareInputEncoding();
     }
 
     private void prepareArmor() {
@@ -174,20 +177,19 @@ public final class EncryptionStream extends OutputStream {
                 .setFileEncoding(options.getEncoding());
     }
 
+    public void prepareSigningStream() {
+        outermostStream = new SignatureGenerationStream(outermostStream, options.getSigningOptions());
+    }
+
+    public void prepareInputEncoding() {
+        CRLFGeneratorStream crlfGeneratorStream = new CRLFGeneratorStream(outermostStream,
+                options.isApplyCRLFEncoding() ? StreamEncoding.UTF8 : StreamEncoding.BINARY);
+        outermostStream = crlfGeneratorStream;
+    }
+
     @Override
     public void write(int data) throws IOException {
         outermostStream.write(data);
-        SigningOptions signingOptions = options.getSigningOptions();
-        if (signingOptions == null || signingOptions.getSigningMethods().isEmpty()) {
-            return;
-        }
-
-        for (SubkeyIdentifier signingKey : signingOptions.getSigningMethods().keySet()) {
-            SigningOptions.SigningMethod signingMethod = signingOptions.getSigningMethods().get(signingKey);
-            PGPSignatureGenerator signatureGenerator = signingMethod.getSignatureGenerator();
-            byte asByte = (byte) (data & 0xff);
-            signatureGenerator.update(asByte);
-        }
     }
 
     @Override
@@ -199,15 +201,6 @@ public final class EncryptionStream extends OutputStream {
     @Override
     public void write(@Nonnull byte[] buffer, int off, int len) throws IOException {
         outermostStream.write(buffer, 0, len);
-        SigningOptions signingOptions = options.getSigningOptions();
-        if (signingOptions == null || signingOptions.getSigningMethods().isEmpty()) {
-            return;
-        }
-        for (SubkeyIdentifier signingKey : signingOptions.getSigningMethods().keySet()) {
-            SigningOptions.SigningMethod signingMethod = signingOptions.getSigningMethods().get(signingKey);
-            PGPSignatureGenerator signatureGenerator = signingMethod.getSignatureGenerator();
-            signatureGenerator.update(buffer, 0, len);
-        }
     }
 
     @Override
@@ -220,6 +213,8 @@ public final class EncryptionStream extends OutputStream {
         if (closed) {
             return;
         }
+
+        outermostStream.close();
 
         // Literal Data
         if (literalDataStream != null) {
