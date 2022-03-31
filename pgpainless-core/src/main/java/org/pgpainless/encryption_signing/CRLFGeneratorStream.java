@@ -12,21 +12,6 @@ import java.io.OutputStream;
 
 /**
  * {@link OutputStream} which applies CR-LF encoding of its input data, based on the desired {@link StreamEncoding}.
- *
- *
- * If you need PGPainless to CRLF encode signed data for you, you could do the following:
- * {@code
- * <pre>
- *     InputStream plaintext = ...
- *     EncryptionStream signerOrEncryptor = PGPainless.signAndOrEncrypt(...);
- *     CRLFGeneratorStream crlfOut = new CRLFGeneratorStream(signerOrEncryptor, streamEncoding);
- *
- *     Streams.pipeAll(plaintext, crlfOut);
- *     crlfOut.close;
- *
- *     EncryptionResult result = signerOrEncryptor.getResult();
- * </pre>
- * }
  * This implementation originates from the Bouncy Castle library.
  */
 public class CRLFGeneratorStream extends OutputStream {

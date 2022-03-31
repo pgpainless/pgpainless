@@ -7,9 +7,9 @@ SPDX-License-Identifier: CC0-1.0
 
 ## 1.1.5-SNAPSHOT
 - SOP encrypt: match signature type when using `encrypt --as=` option
-- `ProducerOptions.setEncoding()`: The encoding is henceforth only considered metadata and will no longer trigger CRLF encoding
+- `ProducerOptions.setEncoding()`: The encoding is henceforth only considered metadata and will no longer trigger CRLF encoding.
   - This fixes broken signature generation for mismatching (`StreamEncoding`,`DocumentSignatureType`) tuples.
-  - Applications that rely on CRLF-encoding must now apply that encoding themselves (see [#264](https://github.com/pgpainless/pgpainless/issues/264#issuecomment-1083206738) for details).
+  - Applications that rely on CRLF-encoding can request PGPainless to apply this encoding by calling `ProducerOptions.applyCRLFEncoding(true)`.
 
 ## 1.1.4
 - Add utility method `KeyRingUtils.removeSecretKey()` to remove secret key part from key ring

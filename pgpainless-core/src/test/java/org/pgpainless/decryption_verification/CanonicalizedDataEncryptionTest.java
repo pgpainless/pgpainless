@@ -288,6 +288,47 @@ public class CanonicalizedDataEncryptionTest {
         }
     }
 
+    @Test
+    public void resultOfDecryptionIsCRLFEncoded() throws PGPException, IOException {
+        String before = "Foo\nBar!\n";
+        String after = "Foo\r\nBar!\r\n";
+
+        String encrypted = encryptAndSign(before, DocumentSignatureType.BINARY_DOCUMENT, StreamEncoding.TEXT, true);
+
+        ByteArrayInputStream in = new ByteArrayInputStream(encrypted.getBytes(StandardCharsets.UTF_8));
+        DecryptionStream decryptionStream = PGPainless.decryptAndOrVerify()
+                .onInputStream(in)
+                .withOptions(new ConsumerOptions()
+                        .addDecryptionKey(secretKeys, SecretKeyRingProtector.unprotectedKeys())
+                        .addVerificationCert(publicKeys));
+
+        ByteArrayOutputStream decrypted = new ByteArrayOutputStream();
+        Streams.pipeAll(decryptionStream, decrypted);
+        decryptionStream.close();
+
+        assertArrayEquals(after.getBytes(StandardCharsets.UTF_8), decrypted.toByteArray());
+    }
+
+    @Test
+    public void resultOfDecryptionIsNotCRLFEncoded() throws PGPException, IOException {
+        String beforeAndAfter = "Foo\nBar!\n";
+
+        String encrypted = encryptAndSign(beforeAndAfter, DocumentSignatureType.BINARY_DOCUMENT, StreamEncoding.TEXT, false);
+
+        ByteArrayInputStream in = new ByteArrayInputStream(encrypted.getBytes(StandardCharsets.UTF_8));
+        DecryptionStream decryptionStream = PGPainless.decryptAndOrVerify()
+                .onInputStream(in)
+                .withOptions(new ConsumerOptions()
+                        .addDecryptionKey(secretKeys, SecretKeyRingProtector.unprotectedKeys())
+                        .addVerificationCert(publicKeys));
+
+        ByteArrayOutputStream decrypted = new ByteArrayOutputStream();
+        Streams.pipeAll(decryptionStream, decrypted);
+        decryptionStream.close();
+
+        assertArrayEquals(beforeAndAfter.getBytes(StandardCharsets.UTF_8), decrypted.toByteArray());
+    }
+
     private String encryptAndSign(String message,
                                   DocumentSignatureType sigType,
                                   StreamEncoding dataFormat,
@@ -295,18 +336,21 @@ public class CanonicalizedDataEncryptionTest {
             throws PGPException, IOException {
         ByteArrayOutputStream out = new ByteArrayOutputStream();
 
+        ProducerOptions options = ProducerOptions
+                .signAndEncrypt(
+                        EncryptionOptions.encryptCommunications()
+                                .addRecipient(publicKeys),
+                        SigningOptions.get()
+                                .addInlineSignature(SecretKeyRingProtector.unprotectedKeys(), secretKeys, sigType)
+                )
+                .setEncoding(dataFormat);
+        if (applyCRLFEncoding) {
+            options.applyCRLFEncoding();
+        }
+
         EncryptionStream encryptionStream = PGPainless.encryptAndOrSign()
                 .onOutputStream(out)
-                .withOptions(ProducerOptions
-                        .signAndEncrypt(
-                                EncryptionOptions.encryptCommunications()
-                                        .addRecipient(publicKeys),
-                                SigningOptions.get()
-                                        .addInlineSignature(SecretKeyRingProtector.unprotectedKeys(), secretKeys, sigType)
-                        )
-                        .setEncoding(dataFormat)
-                        .applyCRLFEncoding(applyCRLFEncoding)
-                );
+                .withOptions(options);
 
         ByteArrayInputStream inputStream = new ByteArrayInputStream(message.getBytes(StandardCharsets.UTF_8));
         Streams.pipeAll(inputStream, encryptionStream);
