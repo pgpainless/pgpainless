@@ -11,6 +11,9 @@ import javax.annotation.Nonnull;
 import java.io.IOException;
 import java.io.OutputStream;
 
+/**
+ * OutputStream which has the task of updating signature generators for written data.
+ */
 class SignatureGenerationStream extends OutputStream {
 
     private final OutputStream wrapped;
