@@ -8,6 +8,7 @@ import org.bouncycastle.openpgp.PGPSignatureGenerator;
 import org.pgpainless.key.SubkeyIdentifier;
 
 import javax.annotation.Nonnull;
+import javax.annotation.Nullable;
 import java.io.IOException;
 import java.io.OutputStream;
 
@@ -19,7 +20,7 @@ class SignatureGenerationStream extends OutputStream {
     private final OutputStream wrapped;
     private final SigningOptions options;
 
-    SignatureGenerationStream(OutputStream wrapped, SigningOptions signingOptions) {
+    SignatureGenerationStream(@Nonnull OutputStream wrapped, @Nullable SigningOptions signingOptions) {
         this.wrapped = wrapped;
         this.options = signingOptions;
     }
