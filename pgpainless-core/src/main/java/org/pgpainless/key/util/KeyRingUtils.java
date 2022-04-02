@@ -430,9 +430,33 @@ public final class KeyRingUtils {
      *
      * @throws IOException
      * @throws PGPException
+     *
+     * @deprecated use {@link #stripSecretKey(PGPSecretKeyRing, long)} instead.
+     * TODO: Remove in 1.2.X
      */
     @Nonnull
+    @Deprecated
     public static PGPSecretKeyRing removeSecretKey(@Nonnull PGPSecretKeyRing secretKeys,
+                                                   long secretKeyId)
+            throws IOException, PGPException {
+        return stripSecretKey(secretKeys, secretKeyId);
+    }
+
+    /**
+     * Remove the secret key of the subkey identified by the given secret key id from the key ring.
+     * The public part stays attached to the key ring, so that it can still be used for encryption / verification of signatures.
+     *
+     * This method is intended to be used to remove secret primary keys from live keys when those are kept in offline storage.
+     *
+     * @param secretKeys secret key ring
+     * @param secretKeyId id of the secret key to remove
+     * @return secret key ring with removed secret key
+     *
+     * @throws IOException
+     * @throws PGPException
+     */
+    @Nonnull
+    public static PGPSecretKeyRing stripSecretKey(@Nonnull PGPSecretKeyRing secretKeys,
                                                    long secretKeyId)
             throws IOException, PGPException {
         if (secretKeys.getSecretKey(secretKeyId) == null) {
