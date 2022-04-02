@@ -228,7 +228,7 @@ public final class ProducerOptions {
      * Defaults to {@link StreamEncoding#BINARY}.
      *
      * This does not change the encoding of the wrapped data itself.
-     * To apply CR/LF encoding to your input data before processing, use {@link #applyCRLFEncoding(boolean)} instead.
+     * To apply CR/LF encoding to your input data before processing, use {@link #applyCRLFEncoding()} instead.
      *
      * @see <a href="https://datatracker.ietf.org/doc/html/rfc4880#section-5.9">RFC4880 §5.9. Literal Data Packet</a>
      *
