@@ -7,6 +7,10 @@ package org.pgpainless.cli;
 import org.pgpainless.sop.SOPImpl;
 import sop.cli.picocli.SopCLI;
 
+/**
+ * This class merely binds PGPainless to {@link SopCLI} by injecting a {@link SOPImpl} instance.
+ * CLI command calls are then simply forwarded to {@link SopCLI#execute(String[])}.
+ */
 public class PGPainlessCLI {
 
     static {
