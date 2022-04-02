@@ -77,6 +77,8 @@ public interface SecretKeyRingProtector {
      * @param keys key ring
      * @return protector
      * @deprecated use {@link #unlockEachKeyWith(Passphrase, PGPSecretKeyRing)} instead.
+     *
+     * TODO: Remove in 1.2.X
      */
     @Deprecated
     static SecretKeyRingProtector unlockAllKeysWith(@Nonnull Passphrase passphrase, @Nonnull PGPSecretKeyRing keys) {

@@ -63,6 +63,8 @@ public class DetachedSignatureCheck {
      *
      * @return fingerprint of the signing key
      * @deprecated use {@link #getSigningKeyIdentifier()} instead.
+     *
+     * TODO: Remove in 1.2.X
      */
     @Deprecated
     public OpenPgpFingerprint getFingerprint() {

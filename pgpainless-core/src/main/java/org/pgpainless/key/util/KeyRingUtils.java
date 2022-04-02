@@ -385,6 +385,7 @@ public final class KeyRingUtils {
             // TODO: Replace with PGPSecretKeyRing.insertOrReplacePublicKey() once available
             //  Right now replacePublicKeys looses extra public keys.
             //  See https://github.com/bcgit/bc-java/pull/1068 for a possible fix
+            //  Fix once BC 171 gets released.
             secretKeys = PGPSecretKeyRing.replacePublicKeys(secretKeys, publicKeys);
             return (T) secretKeys;
         }

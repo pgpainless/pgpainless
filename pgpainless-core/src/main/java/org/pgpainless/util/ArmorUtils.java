@@ -280,6 +280,8 @@ public final class ArmorUtils {
      * @return armored output stream
      *
      * @deprecated use {@link #toAsciiArmoredStream(PGPKeyRing, OutputStream)} instead
+     *
+     * TODO: Remove in 1.2.X
      */
     @Deprecated
     @Nonnull

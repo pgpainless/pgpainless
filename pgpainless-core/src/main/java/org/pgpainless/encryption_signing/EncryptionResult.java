@@ -51,6 +51,8 @@ public final class EncryptionResult {
      * @return symmetric encryption algorithm
      *
      * @deprecated use {@link #getEncryptionAlgorithm()} instead.
+     *
+     * TODO: Remove in 1.2.X
      */
     @Deprecated
     public SymmetricKeyAlgorithm getSymmetricKeyAlgorithm() {
