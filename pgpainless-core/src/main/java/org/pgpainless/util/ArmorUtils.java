@@ -544,6 +544,8 @@ public final class ArmorUtils {
      *
      * @param inputStream input stream
      * @return BufferedInputStreamExt
+     *
+     * @throws IOException in case of an IO error
      */
     @Nonnull
     public static InputStream getDecoderStream(@Nonnull InputStream inputStream)

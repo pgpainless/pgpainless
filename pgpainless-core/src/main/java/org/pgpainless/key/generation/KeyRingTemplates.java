@@ -33,6 +33,10 @@ public final class KeyRingTemplates {
      * @param length length in bits.
      *
      * @return {@link PGPSecretKeyRing} containing the KeyPair.
+     *
+     * @throws InvalidAlgorithmParameterException in case of invalid key generation parameters
+     * @throws NoSuchAlgorithmException in case of missing algorithm implementation in the crypto provider
+     * @throws PGPException in case of an OpenPGP related error
      */
     public PGPSecretKeyRing simpleRsaKeyRing(@Nonnull UserId userId, @Nonnull RsaLength length)
             throws InvalidAlgorithmParameterException, NoSuchAlgorithmException, PGPException {
@@ -47,6 +51,10 @@ public final class KeyRingTemplates {
      * @param length length in bits.
      *
      * @return {@link PGPSecretKeyRing} containing the KeyPair.
+     *
+     * @throws InvalidAlgorithmParameterException in case of invalid key generation parameters
+     * @throws NoSuchAlgorithmException in case of missing algorithm implementation in the crypto provider
+     * @throws PGPException in case of an OpenPGP related error
      */
     public PGPSecretKeyRing simpleRsaKeyRing(@Nonnull String userId, @Nonnull RsaLength length)
             throws InvalidAlgorithmParameterException, NoSuchAlgorithmException, PGPException {
@@ -62,6 +70,10 @@ public final class KeyRingTemplates {
      * @param password Password of the key. Can be null for unencrypted keys.
      *
      * @return {@link PGPSecretKeyRing} containing the KeyPair.
+     *
+     * @throws InvalidAlgorithmParameterException in case of invalid key generation parameters
+     * @throws NoSuchAlgorithmException in case of missing algorithm implementation in the crypto provider
+     * @throws PGPException in case of an OpenPGP related error
      */
     public PGPSecretKeyRing simpleRsaKeyRing(@Nonnull UserId userId, @Nonnull RsaLength length, String password)
             throws InvalidAlgorithmParameterException, NoSuchAlgorithmException, PGPException {
@@ -77,6 +89,10 @@ public final class KeyRingTemplates {
      * @param password Password of the key. Can be null for unencrypted keys.
      *
      * @return {@link PGPSecretKeyRing} containing the KeyPair.
+     *
+     * @throws InvalidAlgorithmParameterException in case of invalid key generation parameters
+     * @throws NoSuchAlgorithmException in case of missing algorithm implementation in the crypto provider
+     * @throws PGPException in case of an OpenPGP related error
      */
     public PGPSecretKeyRing simpleRsaKeyRing(@Nonnull String userId, @Nonnull RsaLength length, String password)
             throws PGPException, NoSuchAlgorithmException, InvalidAlgorithmParameterException {
@@ -98,6 +114,10 @@ public final class KeyRingTemplates {
      * @param userId user-id
      *
      * @return {@link PGPSecretKeyRing} containing the key pairs.
+     *
+     * @throws InvalidAlgorithmParameterException in case of invalid key generation parameters
+     * @throws NoSuchAlgorithmException in case of missing algorithm implementation in the crypto provider
+     * @throws PGPException in case of an OpenPGP related error
      */
     public PGPSecretKeyRing simpleEcKeyRing(@Nonnull UserId userId)
             throws InvalidAlgorithmParameterException, NoSuchAlgorithmException, PGPException {
@@ -112,6 +132,10 @@ public final class KeyRingTemplates {
      * @param userId user-id
      *
      * @return {@link PGPSecretKeyRing} containing the key pairs.
+     *
+     * @throws InvalidAlgorithmParameterException in case of invalid key generation parameters
+     * @throws NoSuchAlgorithmException in case of missing algorithm implementation in the crypto provider
+     * @throws PGPException in case of an OpenPGP related error
      */
     public PGPSecretKeyRing simpleEcKeyRing(@Nonnull String userId)
             throws InvalidAlgorithmParameterException, NoSuchAlgorithmException, PGPException {
@@ -127,6 +151,10 @@ public final class KeyRingTemplates {
      * @param password Password of the private key. Can be null for an unencrypted key.
      *
      * @return {@link PGPSecretKeyRing} containing the key pairs.
+     *
+     * @throws InvalidAlgorithmParameterException in case of invalid key generation parameters
+     * @throws NoSuchAlgorithmException in case of missing algorithm implementation in the crypto provider
+     * @throws PGPException in case of an OpenPGP related error
      */
     public PGPSecretKeyRing simpleEcKeyRing(@Nonnull UserId userId, String password)
             throws InvalidAlgorithmParameterException, NoSuchAlgorithmException, PGPException {
@@ -142,6 +170,10 @@ public final class KeyRingTemplates {
      * @param password Password of the private key. Can be null for an unencrypted key.
      *
      * @return {@link PGPSecretKeyRing} containing the key pairs.
+     *
+     * @throws InvalidAlgorithmParameterException in case of invalid key generation parameters
+     * @throws NoSuchAlgorithmException in case of missing algorithm implementation in the crypto provider
+     * @throws PGPException in case of an OpenPGP related error
      */
     public PGPSecretKeyRing simpleEcKeyRing(@Nonnull String userId, String password)
             throws PGPException, NoSuchAlgorithmException, InvalidAlgorithmParameterException {
@@ -163,6 +195,10 @@ public final class KeyRingTemplates {
      * @param userId primary user id
      * @param password passphrase or null if the key should be unprotected.
      * @return key ring
+     *
+     * @throws InvalidAlgorithmParameterException in case of invalid key generation parameters
+     * @throws NoSuchAlgorithmException in case of missing algorithm implementation in the crypto provider
+     * @throws PGPException in case of an OpenPGP related error
      */
     public PGPSecretKeyRing modernKeyRing(String userId, String password)
             throws InvalidAlgorithmParameterException, NoSuchAlgorithmException, PGPException {

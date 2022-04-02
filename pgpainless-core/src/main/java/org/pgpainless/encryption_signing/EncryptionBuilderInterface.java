@@ -27,7 +27,10 @@ public interface EncryptionBuilderInterface {
          * Create an {@link EncryptionStream} with the given options (recipients, signers, algorithms...).
          *
          * @param options options
-         * @return encryption strea
+         * @return encryption stream
+         *
+         * @throws PGPException if something goes wrong during encryption stream preparation
+         * @throws IOException if something goes wrong during encryption stream preparation (writing headers)
          */
         EncryptionStream withOptions(ProducerOptions options) throws PGPException, IOException;
 

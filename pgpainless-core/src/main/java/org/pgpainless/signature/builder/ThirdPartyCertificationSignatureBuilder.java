@@ -84,6 +84,8 @@ public class ThirdPartyCertificationSignatureBuilder extends AbstractSignatureBu
      * @param certifiedKey key ring
      * @param userId user-id to certify
      * @return signature
+     *
+     * @throws PGPException if the signature generator cannot be initialized
      */
     public PGPSignature build(PGPPublicKeyRing certifiedKey, String userId) throws PGPException {
         return buildAndInitSignatureGenerator().generateCertification(userId, certifiedKey.getPublicKey());
@@ -94,6 +96,8 @@ public class ThirdPartyCertificationSignatureBuilder extends AbstractSignatureBu
      * @param certifiedKey key ring
      * @param userAttribute user-attributes to certify
      * @return signature
+     *
+     * @throws PGPException if the signature generator cannot be initialized
      */
     public PGPSignature build(PGPPublicKeyRing certifiedKey, PGPUserAttributeSubpacketVector userAttribute)
             throws PGPException {

@@ -429,8 +429,8 @@ public final class KeyRingUtils {
      * @param secretKeyId id of the secret key to remove
      * @return secret key ring with removed secret key
      *
-     * @throws IOException
-     * @throws PGPException
+     * @throws IOException in case of an error during serialization / deserialization of the key
+     * @throws PGPException in case of a broken key
      *
      * @deprecated use {@link #stripSecretKey(PGPSecretKeyRing, long)} instead.
      * TODO: Remove in 1.2.X
@@ -453,8 +453,8 @@ public final class KeyRingUtils {
      * @param secretKeyId id of the secret key to remove
      * @return secret key ring with removed secret key
      *
-     * @throws IOException
-     * @throws PGPException
+     * @throws IOException in case of an error during serialization / deserialization of the key
+     * @throws PGPException in case of a broken key
      */
     @Nonnull
     public static PGPSecretKeyRing stripSecretKey(@Nonnull PGPSecretKeyRing secretKeys,

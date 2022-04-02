@@ -282,6 +282,7 @@ public class EncryptionOptions {
      * If the algorithm is not overridden, a suitable algorithm will be negotiated.
      *
      * @param encryptionAlgorithm encryption algorithm override
+     * @return this
      */
     public EncryptionOptions overrideEncryptionAlgorithm(SymmetricKeyAlgorithm encryptionAlgorithm) {
         if (encryptionAlgorithm == SymmetricKeyAlgorithm.NULL) {

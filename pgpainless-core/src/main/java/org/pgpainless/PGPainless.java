@@ -71,6 +71,8 @@ public final class PGPainless {
      *
      * @param key key or certificate
      * @return ascii armored string
+     *
+     * @throws IOException in case of an error in the {@link org.bouncycastle.bcpg.ArmoredOutputStream}
      */
     public static String asciiArmor(@Nonnull PGPKeyRing key) throws IOException {
         if (key instanceof PGPSecretKeyRing) {

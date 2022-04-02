@@ -193,7 +193,9 @@ public final class SignatureUtils {
      *
      * @param encodedSignatures ASCII armored signature list
      * @return signature list
+     *
      * @throws IOException if the signatures cannot be read
+     * @throws PGPException in case of a broken signature
      */
     public static List<PGPSignature> readSignatures(String encodedSignatures) throws IOException, PGPException {
         @SuppressWarnings("CharsetObjectCanBeUsed")

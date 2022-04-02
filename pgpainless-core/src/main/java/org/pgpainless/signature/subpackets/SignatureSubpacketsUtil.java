@@ -506,6 +506,8 @@ public final class SignatureSubpacketsUtil {
      *
      * @param signature signature
      * @return embedded signature
+     *
+     * @throws PGPException in case the embedded signatures cannot be parsed
      */
     public static PGPSignatureList getEmbeddedSignature(PGPSignature signature) throws PGPException {
         PGPSignatureList hashed = signature.getHashedSubPackets().getEmbeddedSignatures();

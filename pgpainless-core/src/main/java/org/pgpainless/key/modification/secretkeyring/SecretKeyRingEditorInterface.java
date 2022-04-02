@@ -34,6 +34,8 @@ public interface SecretKeyRingEditorInterface {
      * @param userId user-id
      * @param secretKeyRingProtector protector to unlock the secret key
      * @return the builder
+     *
+     * @throws PGPException in case we cannot generate a signature for the user-id
      */
     SecretKeyRingEditorInterface addUserId(
             @Nonnull CharSequence userId,
@@ -48,6 +50,8 @@ public interface SecretKeyRingEditorInterface {
      *                                   certification signature.
      * @param protector protector to unlock the primary secret key
      * @return the builder
+     *
+     * @throws PGPException in case we cannot generate a signature for the user-id
      */
     SecretKeyRingEditorInterface addUserId(
             @Nonnull CharSequence userId,
@@ -62,6 +66,8 @@ public interface SecretKeyRingEditorInterface {
      * @param userId user id
      * @param protector protector to unlock the secret key
      * @return the builder
+     *
+     * @throws PGPException in case we cannot generate a signature for the user-id
      */
     SecretKeyRingEditorInterface addPrimaryUserId(
             @Nonnull CharSequence userId,
@@ -76,6 +82,8 @@ public interface SecretKeyRingEditorInterface {
      * @param userIdSelector selector to select user-ids
      * @param protector protector to unlock the primary key
      * @return the builder
+     *
+     * @throws PGPException in case we cannot generate a revocation signature for the user-id
      */
     SecretKeyRingEditorInterface removeUserId(SelectUserId userIdSelector,
                                               SecretKeyRingProtector protector)
@@ -89,6 +97,8 @@ public interface SecretKeyRingEditorInterface {
      * @param userId user-id to revoke
      * @param protector protector to unlock the primary key
      * @return the builder
+     *
+     * @throws PGPException in case we cannot generate a revocation signature for the user-id
      */
     SecretKeyRingEditorInterface removeUserId(CharSequence userId,
                                               SecretKeyRingProtector protector)
@@ -102,6 +112,11 @@ public interface SecretKeyRingEditorInterface {
      * @param subKeyPassphrase passphrase to encrypt the sub key
      * @param secretKeyRingProtector protector to unlock the secret key of the key ring
      * @return the builder
+     *
+     * @throws InvalidAlgorithmParameterException in case the user wants to use invalid parameters for the key
+     * @throws NoSuchAlgorithmException in case of missing algorithm support in the crypto backend
+     * @throws PGPException in case we cannot generate a binding signature for the subkey
+     * @throws IOException in case of an IO error
      */
     SecretKeyRingEditorInterface addSubKey(
             @Nonnull KeySpec keySpec,
@@ -118,6 +133,11 @@ public interface SecretKeyRingEditorInterface {
      * @param subpacketsCallback callback to modify the subpackets of the subkey binding signature
      * @param secretKeyRingProtector protector to unlock the primary key
      * @return builder
+     *
+     * @throws InvalidAlgorithmParameterException in case the user wants to use invalid parameters for the key
+     * @throws NoSuchAlgorithmException in case of missing algorithm support in the crypto backend
+     * @throws PGPException in case we cannot generate a binding signature for the subkey
+     * @throws IOException in case of an IO error
      */
     SecretKeyRingEditorInterface addSubKey(
             @Nonnull KeySpec keySpec,
@@ -136,6 +156,10 @@ public interface SecretKeyRingEditorInterface {
      * @param keyFlag first key flag for the subkey
      * @param additionalKeyFlags optional additional key flags
      * @return builder
+     *
+     * @throws PGPException in case we cannot generate a binding signature for the subkey
+     * @throws IOException in case of an IO error
+     * @throws NoSuchAlgorithmException in case of missing algorithm support in the crypto backend
      */
     SecretKeyRingEditorInterface addSubKey(
             @Nonnull PGPKeyPair subkey,
@@ -152,6 +176,8 @@ public interface SecretKeyRingEditorInterface {
      *
      * @param secretKeyRingProtector protector of the primary key
      * @return the builder
+     *
+     * @throws PGPException in case we cannot generate a revocation signature
      */
     default SecretKeyRingEditorInterface revoke(
             @Nonnull SecretKeyRingProtector secretKeyRingProtector)
@@ -166,6 +192,8 @@ public interface SecretKeyRingEditorInterface {
      * @param secretKeyRingProtector protector of the primary key
      * @param revocationAttributes reason for the revocation
      * @return the builder
+     *
+     * @throws PGPException in case we cannot generate a revocation signature
      */
     SecretKeyRingEditorInterface revoke(
             @Nonnull SecretKeyRingProtector secretKeyRingProtector,
@@ -180,6 +208,8 @@ public interface SecretKeyRingEditorInterface {
      * @param secretKeyRingProtector protector to unlock the primary secret key
      * @param subpacketsCallback callback to modify the revocations subpackets
      * @return builder
+     *
+     * @throws PGPException in case we cannot generate a revocation signature
      */
     SecretKeyRingEditorInterface revoke(
             @Nonnull SecretKeyRingProtector secretKeyRingProtector,
@@ -198,6 +228,8 @@ public interface SecretKeyRingEditorInterface {
      * @param fingerprint fingerprint of the subkey to be revoked
      * @param secretKeyRingProtector protector to unlock the secret key ring
      * @return the builder
+     *
+     * @throws PGPException in case we cannot generate a revocation signature for the subkey
      */
     default SecretKeyRingEditorInterface revokeSubKey(
             @Nonnull OpenPgpFingerprint fingerprint,
@@ -215,6 +247,8 @@ public interface SecretKeyRingEditorInterface {
      * @param secretKeyRingProtector protector to unlock the primary key
      * @param revocationAttributes reason for the revocation
      * @return the builder
+     *
+     * @throws PGPException in case we cannot generate a revocation signature for the subkey
      */
     default SecretKeyRingEditorInterface revokeSubKey(
             OpenPgpFingerprint fingerprint,
@@ -235,6 +269,8 @@ public interface SecretKeyRingEditorInterface {
      * @param secretKeyRingProtector protector to unlock the primary key
      * @param revocationAttributes reason for the revocation
      * @return the builder
+     *
+     * @throws PGPException in case we cannot generate a revocation signature for the subkey
      */
     SecretKeyRingEditorInterface revokeSubKey(
             long subKeyId,
@@ -255,6 +291,8 @@ public interface SecretKeyRingEditorInterface {
      * @param subKeyId id of the subkey
      * @param secretKeyRingProtector protector to unlock the secret key ring
      * @return the builder
+     *
+     * @throws PGPException in case we cannot generate a revocation signature for the subkey
      */
     default SecretKeyRingEditorInterface revokeSubKey(
             long subKeyId,
@@ -279,6 +317,8 @@ public interface SecretKeyRingEditorInterface {
      * @param subpacketsCallback callback which can be used to modify the subpackets of the revocation
      *                           signature
      * @return the builder
+     *
+     * @throws PGPException in case we cannot generate a revocation signature for the subkey
      */
     SecretKeyRingEditorInterface revokeSubKey(
             long keyID,
@@ -296,6 +336,8 @@ public interface SecretKeyRingEditorInterface {
      * @param userId userId to revoke
      * @param secretKeyRingProtector protector to unlock the primary key
      * @return the builder
+     *
+     * @throws PGPException in case we cannot generate a revocation signature for the user-id
      */
     default SecretKeyRingEditorInterface revokeUserId(
             @Nonnull CharSequence userId,
@@ -311,6 +353,8 @@ public interface SecretKeyRingEditorInterface {
      * @param secretKeyRingProtector protector to unlock the primary key
      * @param revocationAttributes reason for the revocation
      * @return the builder
+     *
+     * @throws PGPException in case we cannot generate a revocation signature for the user-id
      */
     SecretKeyRingEditorInterface revokeUserId(
             @Nonnull CharSequence userId,
@@ -329,6 +373,8 @@ public interface SecretKeyRingEditorInterface {
      * @param secretKeyRingProtector protector to unlock the primary secret key
      * @param subpacketCallback callback to modify the revocations subpackets
      * @return builder
+     *
+     * @throws PGPException in case we cannot generate a revocation signature for the user-id
      */
     SecretKeyRingEditorInterface revokeUserId(
             @Nonnull CharSequence userId,
@@ -348,7 +394,8 @@ public interface SecretKeyRingEditorInterface {
      * @param secretKeyRingProtector protector to unlock the primary secret key
      * @param revocationAttributes revocation attributes
      * @return builder
-     * @throws PGPException if the revocation signatures cannot be generated
+     *
+     * @throws PGPException in case we cannot generate a revocation signature for the user-id
      */
     SecretKeyRingEditorInterface revokeUserIds(
             @Nonnull SelectUserId userIdSelector,
@@ -370,7 +417,8 @@ public interface SecretKeyRingEditorInterface {
      * @param secretKeyRingProtector protector to unlock the primary secret key
      * @param subpacketsCallback callback to modify the revocations subpackets
      * @return builder
-     * @throws PGPException if the revocation signatures cannot be generated
+     *
+     * @throws PGPException in case we cannot generate a revocation signature for the user-id
      */
     SecretKeyRingEditorInterface revokeUserIds(
             @Nonnull SelectUserId userIdSelector,
@@ -385,6 +433,8 @@ public interface SecretKeyRingEditorInterface {
      * @param expiration new expiration date or null
      * @param secretKeyRingProtector to unlock the secret key
      * @return the builder
+     *
+     * @throws PGPException in case we cannot generate a new self-signature with the changed expiration date
      */
     SecretKeyRingEditorInterface setExpirationDate(
             @Nullable Date expiration,
@@ -397,6 +447,8 @@ public interface SecretKeyRingEditorInterface {
      * @param secretKeyRingProtector protector to unlock the primary key.
      * @param revocationAttributes reason for the revocation
      * @return revocation certificate
+     *
+     * @throws PGPException in case we cannot generate a revocation certificate
      */
     PGPSignature createRevocationCertificate(
             @Nonnull SecretKeyRingProtector secretKeyRingProtector,
@@ -410,6 +462,8 @@ public interface SecretKeyRingEditorInterface {
      * @param secretKeyRingProtector protector to unlock the primary key.
      * @param revocationAttributes reason for the revocation
      * @return revocation certificate
+     *
+     * @throws PGPException in case we cannot generate a revocation certificate
      */
     PGPSignature createRevocationCertificate(
             long subkeyId,
@@ -424,6 +478,8 @@ public interface SecretKeyRingEditorInterface {
      * @param secretKeyRingProtector protector to unlock the primary key.
      * @param certificateSubpacketsCallback callback to modify the subpackets of the revocation certificate.
      * @return revocation certificate
+     *
+     * @throws PGPException in case we cannot generate a revocation certificate
      */
     PGPSignature createRevocationCertificate(
             long subkeyId,
@@ -438,6 +494,8 @@ public interface SecretKeyRingEditorInterface {
      * @param secretKeyRingProtector protector to unlock the primary key.
      * @param revocationAttributes reason for the revocation
      * @return revocation certificate
+     *
+     * @throws PGPException in case we cannot generate a revocation certificate
      */
     default PGPSignature createRevocationCertificate(
             OpenPgpFingerprint subkeyFingerprint,
@@ -521,6 +579,8 @@ public interface SecretKeyRingEditorInterface {
          *
          * @param passphrase passphrase
          * @return editor builder
+         *
+         * @throws PGPException in case the passphrase cannot be changed
          */
         SecretKeyRingEditorInterface toNewPassphrase(Passphrase passphrase)
                 throws PGPException;
@@ -529,6 +589,8 @@ public interface SecretKeyRingEditorInterface {
          * Leave the key unprotected.
          *
          * @return editor builder
+         *
+         * @throws PGPException in case the passphrase cannot be changed
          */
         SecretKeyRingEditorInterface toNoPassphrase() throws PGPException;
     }

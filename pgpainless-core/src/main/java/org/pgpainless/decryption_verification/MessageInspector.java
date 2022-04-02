@@ -75,6 +75,9 @@ public final class MessageInspector {
      *
      * @param message OpenPGP message
      * @return encryption info
+     *
+     * @throws PGPException in case the message is broken
+     * @throws IOException in case of an IO error
      */
     public static EncryptionInfo determineEncryptionInfoForMessage(String message) throws PGPException, IOException {
         @SuppressWarnings("CharsetObjectCanBeUsed")
@@ -88,6 +91,9 @@ public final class MessageInspector {
      *
      * @param dataIn openpgp message
      * @return encryption information
+     *
+     * @throws IOException in case of an IO error
+     * @throws PGPException if the message is broken
      */
     public static EncryptionInfo determineEncryptionInfoForMessage(InputStream dataIn) throws IOException, PGPException {
         InputStream decoded = ArmorUtils.getDecoderStream(dataIn);

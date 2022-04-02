@@ -43,6 +43,8 @@ public final class SignaturePicker {
      * validationDate or if it is already expired.
      *
      * @param keyRing key ring
+     * @param policy policy
+     * @param validationDate date of signature validation
      * @return most recent, valid key revocation signature
      */
     public static PGPSignature pickCurrentRevocationSelfSignature(PGPKeyRing keyRing, Policy policy, Date validationDate) {
@@ -69,6 +71,7 @@ public final class SignaturePicker {
      * This method might return null, if there is no direct key self-signature which is valid at validationDate.
      *
      * @param keyRing key ring
+     * @param policy policy
      * @param validationDate validation date
      * @return direct-key self-signature
      */
@@ -83,6 +86,7 @@ public final class SignaturePicker {
      *
      * @param signingKey key that created the signature
      * @param signedKey key that carries the signature
+     * @param policy policy
      * @param validationDate validation date
      * @return direct key sig
      */
@@ -110,6 +114,7 @@ public final class SignaturePicker {
      * yet already effective direct-key signature will be returned.
      *
      * @param keyRing key ring
+     * @param policy policy
      * @param validationDate validation date
      * @return latest direct key signature
      */
@@ -126,6 +131,7 @@ public final class SignaturePicker {
      *
      * @param signingKey signing key (key that made the sig)
      * @param signedKey signed key (key that carries the sig)
+     * @param policy policy
      * @param validationDate date of validation
      * @return latest direct key sig
      */
@@ -160,6 +166,7 @@ public final class SignaturePicker {
      *
      * @param keyRing key ring
      * @param userId user-Id that gets revoked
+     * @param policy policy
      * @param validationDate validation date
      * @return revocation signature
      */
@@ -193,6 +200,7 @@ public final class SignaturePicker {
      *
      * @param keyRing keyring
      * @param userId userid
+     * @param policy policy
      * @param validationDate validation date
      * @return user-id certification
      */
@@ -225,6 +233,7 @@ public final class SignaturePicker {
      *
      * @param keyRing keyring
      * @param userId userid
+     * @param policy policy
      * @param validationDate validation date
      * @return user-id certification
      */
@@ -261,6 +270,7 @@ public final class SignaturePicker {
      *
      * @param keyRing keyring
      * @param subkey subkey
+     * @param policy policy
      * @param validationDate validation date
      * @return subkey revocation signature
      */
@@ -293,6 +303,7 @@ public final class SignaturePicker {
      *
      * @param keyRing key ring
      * @param subkey subkey
+     * @param policy policy
      * @param validationDate date of validation
      * @return most recent valid subkey binding signature
      */
@@ -326,6 +337,7 @@ public final class SignaturePicker {
      *
      * @param keyRing key ring
      * @param subkey subkey
+     * @param policy policy
      * @param validationDate validationDate
      * @return subkey binding signature
      */

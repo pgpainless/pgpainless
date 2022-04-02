@@ -107,6 +107,8 @@ public class KeyRingReader {
      * @param inputStream input stream
      * @param maxIterations max iterations before abort
      * @return public key ring
+     *
+     * @throws IOException in case of an IO error or exceeding of max iterations
      */
     public static PGPPublicKeyRing readPublicKeyRing(@Nonnull InputStream inputStream, int maxIterations) throws IOException {
         PGPObjectFactory objectFactory = ImplementationFactory.getInstance().getPGPObjectFactory(
@@ -142,6 +144,9 @@ public class KeyRingReader {
      * @param inputStream input stream
      * @param maxIterations max iterations before abort
      * @return public key ring collection
+     *
+     * @throws IOException in case of an IO error or exceeding of max iterations
+     * @throws PGPException in case of a broken key
      */
     public static PGPPublicKeyRingCollection readPublicKeyRingCollection(@Nonnull InputStream inputStream, int maxIterations)
             throws IOException, PGPException {
@@ -186,6 +191,8 @@ public class KeyRingReader {
      * @param inputStream input stream
      * @param maxIterations max iterations before abort
      * @return public key ring
+     *
+     * @throws IOException in case of an IO error or exceeding of max iterations
      */
     public static PGPSecretKeyRing readSecretKeyRing(@Nonnull InputStream inputStream, int maxIterations) throws IOException {
         InputStream decoderStream = ArmorUtils.getDecoderStream(inputStream);
@@ -222,6 +229,9 @@ public class KeyRingReader {
      * @param inputStream input stream
      * @param maxIterations max iterations before abort
      * @return secret key ring collection
+     *
+     * @throws IOException in case of an IO error or exceeding of max iterations
+     * @throws PGPException in case of a broken secret key
      */
     public static PGPSecretKeyRingCollection readSecretKeyRingCollection(@Nonnull InputStream inputStream,
                                                                          int maxIterations)

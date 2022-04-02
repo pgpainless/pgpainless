@@ -35,7 +35,9 @@ public final class ClearsignedMessageUtil {
      * @param clearsignedInputStream input stream containing a clearsigned message
      * @param messageOutputStream output stream to which the dearmored message shall be written
      * @return signatures
+     *
      * @throws IOException if the message is not clearsigned or some other IO error happens
+     * @throws WrongConsumingMethodException in case the armored message is not cleartext signed
      */
     public static PGPSignatureList detachSignaturesFromInbandClearsignedMessage(InputStream clearsignedInputStream,
                                                                                 OutputStream messageOutputStream)

@@ -114,6 +114,8 @@ public abstract class AbstractSignatureBuilder<B extends AbstractSignatureBuilde
      * and with hashed and unhashed subpackets.
      *
      * @return pgp signature generator
+     *
+     * @throws PGPException if the signature generator cannot be initialized
      */
     protected PGPSignatureGenerator buildAndInitSignatureGenerator() throws PGPException {
         PGPSignatureGenerator generator = new PGPSignatureGenerator(

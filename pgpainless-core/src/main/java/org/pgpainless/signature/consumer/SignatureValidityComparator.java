@@ -31,6 +31,8 @@ public class SignatureValidityComparator implements Comparator<PGPSignature> {
     /**
      * Create a new {@link SignatureValidityComparator} which orders signatures following the passed ordering.
      * Still, hard revocations will come first.
+     *
+     * @param order order of creation dates
      */
     public SignatureValidityComparator(SignatureCreationDateComparator.Order order) {
         this.creationDateComparator = new SignatureCreationDateComparator(order);

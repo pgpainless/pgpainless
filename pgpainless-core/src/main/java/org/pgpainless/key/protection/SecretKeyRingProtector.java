@@ -37,6 +37,8 @@ public interface SecretKeyRingProtector {
      *
      * @param keyId id of the key
      * @return decryptor for the key
+     *
+     * @throws PGPException if the decryptor cannot be created for some reason
      */
     @Nullable PBESecretKeyDecryptor getDecryptor(Long keyId) throws PGPException;
 
@@ -46,6 +48,7 @@ public interface SecretKeyRingProtector {
      *
      * @param keyId id of the key
      * @return encryptor for the key
+     *
      * @throws PGPException if the encryptor cannot be created for some reason
      */
     @Nullable PBESecretKeyEncryptor getEncryptor(Long keyId) throws PGPException;

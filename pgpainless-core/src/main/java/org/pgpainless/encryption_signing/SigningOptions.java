@@ -58,6 +58,7 @@ public final class SigningOptions {
          * The resulting signature will be written into the message itself, together with a one-pass-signature packet.
          *
          * @param signatureGenerator signature generator
+         * @param hashAlgorithm hash algorithm used to generate the signature
          * @return inline signing method
          */
         public static SigningMethod inlineSignature(PGPSignatureGenerator signatureGenerator, HashAlgorithm hashAlgorithm) {
@@ -70,6 +71,7 @@ public final class SigningOptions {
          * to the signed message.
          *
          * @param signatureGenerator signature generator
+         * @param hashAlgorithm hash algorithm used to generate the signature
          * @return detached signing method
          */
         public static SigningMethod detachedSignature(PGPSignatureGenerator signatureGenerator, HashAlgorithm hashAlgorithm) {
