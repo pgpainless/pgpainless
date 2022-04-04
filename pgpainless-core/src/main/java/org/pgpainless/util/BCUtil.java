@@ -15,6 +15,11 @@ public final class BCUtil {
      * test will fail. For best results always pass the expected value
      * as the first parameter.
      *
+     * TODO: This method was proposed as a patch to BC:
+     *  https://github.com/bcgit/bc-java/pull/1141
+     *  Replace usage of this method with upstream eventually.
+     *  Remove once BC 172 gets released, given it contains the patch.
+     *
      * @param expected first array
      * @param supplied second array
      * @return true if arrays equal, false otherwise.
