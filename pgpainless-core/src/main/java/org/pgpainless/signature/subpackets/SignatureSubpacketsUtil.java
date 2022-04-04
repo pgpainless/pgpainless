@@ -438,7 +438,7 @@ public final class SignatureSubpacketsUtil {
     /**
      * Return the notation data subpackets from the signatures unhashed area.
      *
-     * @param signature signture
+     * @param signature signature
      * @return unhashed notations
      */
     public static List<NotationData> getUnhashedNotationData(PGPSignature signature) {
@@ -638,6 +638,12 @@ public final class SignatureSubpacketsUtil {
         }
     }
 
+    /**
+     * Make sure that a key of the given {@link PublicKeyAlgorithm} is able to carry the given key flags.
+     *
+     * @param algorithm key algorithm
+     * @param flags key flags
+     */
     public static void assureKeyCanCarryFlags(PublicKeyAlgorithm algorithm, KeyFlag... flags) {
         final int mask = KeyFlag.toBitmask(flags);
 
