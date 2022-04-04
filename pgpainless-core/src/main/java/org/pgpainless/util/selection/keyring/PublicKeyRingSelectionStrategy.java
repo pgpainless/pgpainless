@@ -13,6 +13,11 @@ import org.bouncycastle.openpgp.PGPPublicKeyRing;
 import org.bouncycastle.openpgp.PGPPublicKeyRingCollection;
 import org.pgpainless.util.MultiMap;
 
+/**
+ * Abstract {@link KeyRingSelectionStrategy} for {@link PGPPublicKeyRing PGPPublicKeyRings}.
+ *
+ * @param <O> Type of identifier
+ */
 public abstract class PublicKeyRingSelectionStrategy<O> implements KeyRingSelectionStrategy<PGPPublicKeyRing, PGPPublicKeyRingCollection, O> {
 
     @Override

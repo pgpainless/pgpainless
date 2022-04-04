@@ -9,10 +9,16 @@ import java.util.HashSet;
 import java.util.Iterator;
 import java.util.Set;
 
+import org.bouncycastle.openpgp.PGPPublicKeyRing;
 import org.bouncycastle.openpgp.PGPSecretKeyRing;
 import org.bouncycastle.openpgp.PGPSecretKeyRingCollection;
 import org.pgpainless.util.MultiMap;
 
+/**
+ * Abstract {@link KeyRingSelectionStrategy} for {@link PGPSecretKeyRing PGPSecretKeyRings}.
+ *
+ * @param <O> Type of identifier
+ */
 public abstract class SecretKeyRingSelectionStrategy<O> implements KeyRingSelectionStrategy<PGPSecretKeyRing, PGPSecretKeyRingCollection, O> {
     @Override
     public Set<PGPSecretKeyRing> selectKeyRingsFromCollection(O identifier, @Nonnull PGPSecretKeyRingCollection keyRingCollection) {

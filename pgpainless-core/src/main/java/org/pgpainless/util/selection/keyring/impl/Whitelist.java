@@ -13,12 +13,25 @@ import org.pgpainless.util.selection.keyring.PublicKeyRingSelectionStrategy;
 import org.pgpainless.util.selection.keyring.SecretKeyRingSelectionStrategy;
 import org.pgpainless.util.MultiMap;
 
+/**
+ * Implementations of {@link org.pgpainless.util.selection.keyring.KeyRingSelectionStrategy} which accept PGP KeyRings
+ * based on a whitelist of acceptable keyIds.
+ */
 public final class Whitelist {
 
     private Whitelist() {
 
     }
 
+    /**
+     * {@link org.pgpainless.util.selection.keyring.KeyRingSelectionStrategy} which accepts
+     * {@link PGPPublicKeyRing PGPPublicKeyRings} if the <pre>whitelist</pre> contains their primary key id.
+     *
+     * If the whitelist contains 123L for "alice@pgpainless.org", the key with primary key id 123L is
+     * acceptable for "alice@pgpainless.org".
+     *
+     * @param <O> Type of identifier for {@link org.bouncycastle.openpgp.PGPPublicKeyRingCollection PGPPublicKeyRingCollections}.
+     */
     public static class PubRingSelectionStrategy<O> extends PublicKeyRingSelectionStrategy<O> {
 
         private final MultiMap<O, Long> whitelist;
@@ -43,6 +56,15 @@ public final class Whitelist {
         }
     }
 
+    /**
+     * {@link org.pgpainless.util.selection.keyring.KeyRingSelectionStrategy} which accepts
+     * {@link PGPSecretKeyRing PGPSecretKeyRings} if the <pre>whitelist</pre> contains their primary key id.
+     *
+     * If the whitelist contains 123L for "alice@pgpainless.org", the key with primary key id 123L is
+     * acceptable for "alice@pgpainless.org".
+     *
+     * @param <O> Type of identifier for {@link org.bouncycastle.openpgp.PGPSecretKeyRingCollection PGPSecretKeyRingCollections}.
+     */
     public static class SecRingSelectionStrategy<O> extends SecretKeyRingSelectionStrategy<O> {
 
         private final MultiMap<O, Long> whitelist;

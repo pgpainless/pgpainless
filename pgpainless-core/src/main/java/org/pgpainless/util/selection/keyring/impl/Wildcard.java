@@ -9,6 +9,9 @@ import org.bouncycastle.openpgp.PGPSecretKeyRing;
 import org.pgpainless.util.selection.keyring.PublicKeyRingSelectionStrategy;
 import org.pgpainless.util.selection.keyring.SecretKeyRingSelectionStrategy;
 
+/**
+ * Implementations of {@link org.pgpainless.util.selection.keyring.KeyRingSelectionStrategy} which accept all keyRings.
+ */
 public final class Wildcard {
 
     private Wildcard() {
