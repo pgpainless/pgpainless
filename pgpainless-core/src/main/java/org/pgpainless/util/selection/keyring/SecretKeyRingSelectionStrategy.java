@@ -4,12 +4,11 @@
 
 package org.pgpainless.util.selection.keyring;
 
-import javax.annotation.Nonnull;
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.Set;
+import javax.annotation.Nonnull;
 
-import org.bouncycastle.openpgp.PGPPublicKeyRing;
 import org.bouncycastle.openpgp.PGPSecretKeyRing;
 import org.bouncycastle.openpgp.PGPSecretKeyRingCollection;
 import org.pgpainless.util.MultiMap;

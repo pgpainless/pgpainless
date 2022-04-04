@@ -9,6 +9,7 @@ import java.util.Set;
 import org.pgpainless.util.MultiMap;
 
 /**
+ * Filter for selecting public / secret key rings based on identifiers (e.g. user-ids).
  *
  * @param <R> Type of {@link org.bouncycastle.openpgp.PGPKeyRing} ({@link org.bouncycastle.openpgp.PGPSecretKeyRing}
  *           or {@link org.bouncycastle.openpgp.PGPPublicKeyRing}).
