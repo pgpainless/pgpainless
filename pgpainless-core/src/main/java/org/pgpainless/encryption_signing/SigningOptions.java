@@ -99,6 +99,21 @@ public final class SigningOptions {
     }
 
     /**
+     * Sign the message using an inline signature made by the provided signing key.
+     *
+     * @param signingKeyProtector protector to unlock the signing key
+     * @param signingKey key ring containing the signing key
+     * @return this
+     *
+     * @throws PGPException if the key cannot be unlocked or a signing method cannot be created
+     */
+    public SigningOptions addSignature(SecretKeyRingProtector signingKeyProtector,
+                                       PGPSecretKeyRing signingKey)
+            throws PGPException {
+        return addInlineSignature(signingKeyProtector, signingKey, DocumentSignatureType.BINARY_DOCUMENT);
+    }
+
+    /**
      * Add inline signatures with all secret key rings in the provided secret key ring collection.
      *
      * @param secrectKeyDecryptor decryptor to unlock the signing secret keys

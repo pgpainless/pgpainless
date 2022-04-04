@@ -55,7 +55,7 @@ public class Sign {
         EncryptionStream signingStream = PGPainless.encryptAndOrSign()
                 .onOutputStream(signedOut)
                 .withOptions(ProducerOptions.sign(SigningOptions.get()
-                                .addInlineSignature(protector, secretKey, DocumentSignatureType.CANONICAL_TEXT_DOCUMENT))
+                                .addSignature(protector, secretKey))
                 );
 
         Streams.pipeAll(messageIn, signingStream);
