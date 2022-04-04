@@ -100,7 +100,7 @@ public class RevokeKeyWithoutPreferredAlgorithmsOnPrimaryKey {
     @ExtendWith(TestAllImplementations.class)
     public void testChangingExpirationTimeWithKeyWithoutPrefAlgos()
             throws IOException, PGPException {
-        Date expirationDate = DateUtil.toSecondsPrecision(new Date());
+        Date expirationDate = DateUtil.now();
         PGPSecretKeyRing secretKeys = PGPainless.readKeyRing().secretKeyRing(KEY);
 
         SecretKeyRingProtector protector = new UnprotectedKeysProtector();
