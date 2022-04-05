@@ -181,7 +181,7 @@ public abstract class SelectUserId {
     }
 
     /**
-     * Filter that filters for user-ids which pass at least one of the given <pre>filters</pre>>.
+     * Filter that filters for user-ids which pass at least one of the given <pre>filters</pre>.
      *
      * @param filters filters
      * @return filter
