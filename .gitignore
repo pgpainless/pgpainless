@@ -17,6 +17,8 @@ libs/
 *.log
 *.jar
 
+local.properties
+
 gradle.properties
 !gradle-wrapper.jar
 
