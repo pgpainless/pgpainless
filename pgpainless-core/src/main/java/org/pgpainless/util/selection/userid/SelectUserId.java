@@ -134,7 +134,7 @@ public abstract class SelectUserId {
      * Note: This only accepts user-ids which properly have the email address surrounded by angle brackets.
      *
      * The argument <pre>email</pre> can both be a plain email address (<pre>"foo@bar.baz"</pre>),
-     * or surrounded by angle brackets (<pre>"<foo@bar.baz>"</pre>, the result of the filter will be the same.
+     * or surrounded by angle brackets ({@code <pre>"<foo@bar.baz>"</pre>}), the result of the filter will be the same.
      *
      * @param email email address
      * @return filter

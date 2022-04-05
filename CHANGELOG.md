@@ -5,7 +5,7 @@ SPDX-License-Identifier: CC0-1.0
 
 # PGPainless Changelog
 
-## 1.1.5-SNAPSHOT
+## 1.1.5
 - SOP encrypt: match signature type when using `encrypt --as=` option
 - `ProducerOptions.setEncoding()`: The encoding is henceforth only considered metadata and will no longer trigger CRLF encoding.
   - This fixes broken signature generation for mismatching (`StreamEncoding`,`DocumentSignatureType`) tuples.
