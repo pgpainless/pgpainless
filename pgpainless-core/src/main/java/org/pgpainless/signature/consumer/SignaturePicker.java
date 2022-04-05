@@ -209,10 +209,15 @@ public final class SignaturePicker {
 
         Iterator<PGPSignature> userIdSigIterator = primaryKey.getSignaturesForID(userId);
         List<PGPSignature> signatures = CollectionUtils.iteratorToList(userIdSigIterator);
+
         Collections.sort(signatures, new SignatureCreationDateComparator());
 
         PGPSignature mostRecentUserIdCertification = null;
         for (PGPSignature signature : signatures) {
+            if (primaryKey.getKeyID() != signature.getKeyID()) {
+                // Signature not made by primary key
+                continue;
+            }
             try {
                 SignatureVerifier.verifyUserIdCertification(userId, signature, primaryKey, policy, validationDate);
             } catch (SignatureValidationException e) {

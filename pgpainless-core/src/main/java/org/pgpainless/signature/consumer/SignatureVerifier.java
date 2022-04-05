@@ -89,6 +89,7 @@ public final class SignatureVerifier {
      */
     public static boolean verifyUserIdCertification(String userId, PGPSignature signature, PGPPublicKey signingKey, PGPPublicKey keyWithUserId, Policy policy, Date validationDate)
             throws SignatureValidationException {
+        SignatureValidator.wasPossiblyMadeByKey(signingKey).verify(signature);
         SignatureValidator.signatureIsCertification().verify(signature);
         SignatureValidator.signatureStructureIsAcceptable(signingKey, policy).verify(signature);
         SignatureValidator.signatureIsEffective(validationDate).verify(signature);
@@ -129,6 +130,7 @@ public final class SignatureVerifier {
      */
     public static boolean verifyUserIdRevocation(String userId, PGPSignature signature, PGPPublicKey signingKey, PGPPublicKey keyWithUserId, Policy policy, Date validationDate)
             throws SignatureValidationException {
+        SignatureValidator.wasPossiblyMadeByKey(signingKey).verify(signature);
         SignatureValidator.signatureIsOfType(SignatureType.CERTIFICATION_REVOCATION).verify(signature);
         SignatureValidator.signatureStructureIsAcceptable(signingKey, policy).verify(signature);
         SignatureValidator.signatureIsEffective(validationDate).verify(signature);
@@ -174,6 +176,7 @@ public final class SignatureVerifier {
                                                             PGPPublicKey keyWithUserAttributes, Policy policy,
                                                             Date validationDate)
             throws SignatureValidationException {
+        SignatureValidator.wasPossiblyMadeByKey(signingKey).verify(signature);
         SignatureValidator.signatureIsCertification().verify(signature);
         SignatureValidator.signatureStructureIsAcceptable(signingKey, policy).verify(signature);
         SignatureValidator.signatureIsEffective(validationDate).verify(signature);
@@ -219,6 +222,7 @@ public final class SignatureVerifier {
                                                          PGPPublicKey keyWithUserAttributes, Policy policy,
                                                          Date validationDate)
             throws SignatureValidationException {
+        SignatureValidator.wasPossiblyMadeByKey(signingKey).verify(signature);
         SignatureValidator.signatureIsOfType(SignatureType.CERTIFICATION_REVOCATION).verify(signature);
         SignatureValidator.signatureStructureIsAcceptable(signingKey, policy).verify(signature);
         SignatureValidator.signatureIsEffective(validationDate).verify(signature);

@@ -94,6 +94,10 @@ public final class KeyRingValidator {
             List<PGPSignature> signatures = CollectionUtils.iteratorToList(userIdSigs);
             Collections.sort(signatures, new SignatureCreationDateComparator(SignatureCreationDateComparator.Order.NEW_TO_OLD));
             for (PGPSignature signature : signatures) {
+                if (signature.getKeyID() != primaryKey.getKeyID()) {
+                    // Signature was not made by primary key
+                    continue;
+                }
                 try {
                     if (SignatureType.valueOf(signature.getSignatureType()) == SignatureType.CERTIFICATION_REVOCATION) {
                         if (SignatureVerifier.verifyUserIdRevocation(userId, signature, primaryKey, policy, validationDate)) {
@@ -116,6 +120,10 @@ public final class KeyRingValidator {
             Iterator<PGPSignature> userAttributeSignatureIterator = primaryKey.getSignaturesForUserAttribute(userAttribute);
             while (userAttributeSignatureIterator.hasNext()) {
                 PGPSignature signature = userAttributeSignatureIterator.next();
+                if (signature.getKeyID() != primaryKey.getKeyID()) {
+                    // Signature was not made by primary key
+                    continue;
+                }
                 try {
                     if (SignatureType.valueOf(signature.getSignatureType()) == SignatureType.CERTIFICATION_REVOCATION) {
                         if (SignatureVerifier.verifyUserAttributesRevocation(userAttribute, signature, primaryKey, policy, validationDate)) {
