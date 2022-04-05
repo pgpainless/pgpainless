@@ -461,7 +461,7 @@ public abstract class SignatureValidator {
                     if (!valid) {
                         throw new SignatureValidationException("Signature is not correct.");
                     }
-                } catch (PGPException e) {
+                } catch (PGPException | ClassCastException e) {
                     throw new SignatureValidationException("Cannot verify subkey binding signature correctness", e);
                 }
             }
@@ -485,7 +485,7 @@ public abstract class SignatureValidator {
                     if (!valid) {
                         throw new SignatureValidationException("Primary Key Binding Signature is not correct.");
                     }
-                } catch (PGPException e) {
+                } catch (PGPException | ClassCastException e) {
                     throw new SignatureValidationException("Cannot verify primary key binding signature correctness", e);
                 }
             }
@@ -514,7 +514,7 @@ public abstract class SignatureValidator {
                     if (!valid) {
                         throw new SignatureValidationException("Signature is not correct.");
                     }
-                } catch (PGPException e) {
+                } catch (PGPException | ClassCastException e) {
                     throw new SignatureValidationException("Cannot verify direct-key signature correctness", e);
                 }
             }
@@ -577,7 +577,7 @@ public abstract class SignatureValidator {
                     if (!valid) {
                         throw new SignatureValidationException("Signature over user-id '" + userId + "' is not correct.");
                     }
-                } catch (PGPException e) {
+                } catch (PGPException | ClassCastException e) {
                     throw new SignatureValidationException("Cannot verify signature over user-id '" + userId + "'.", e);
                 }
             }
@@ -602,7 +602,7 @@ public abstract class SignatureValidator {
                     if (!valid) {
                         throw new SignatureValidationException("Signature over user-attribute vector is not correct.");
                     }
-                } catch (PGPException e) {
+                } catch (PGPException | ClassCastException e) {
                     throw new SignatureValidationException("Cannot verify signature over user-attribute vector.", e);
                 }
             }
