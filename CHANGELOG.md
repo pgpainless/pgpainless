@@ -10,6 +10,9 @@ SPDX-License-Identifier: CC0-1.0
 - `ProducerOptions.setEncoding()`: The encoding is henceforth only considered metadata and will no longer trigger CRLF encoding.
   - This fixes broken signature generation for mismatching (`StreamEncoding`,`DocumentSignatureType`) tuples.
   - Applications that rely on CRLF-encoding can request PGPainless to apply this encoding by calling `ProducerOptions.applyCRLFEncoding(true)`.
+- Rename `KeyRingUtils.removeSecretKey()` to `stripSecretKey()`.
+- Add handy `SignatureOptions.addSignature()` method.
+- Fix `ClassCastException` when evaluating a certificate with third party signatures. Thanks @p-barabas for the initial report and bug fix!
 
 ## 1.1.4
 - Add utility method `KeyRingUtils.removeSecretKey()` to remove secret key part from key ring
