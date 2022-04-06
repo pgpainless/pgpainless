@@ -31,6 +31,12 @@ Implementation of the [Web Key Directory](https://www.ietf.org/archive/id/draft-
 * `wkd-java-cli` - CLI application implementing WKD discovery using PGPainless
 * `wkd-test-suite` - Generator for test vectors for testing WKD implementations
 
+## [VKS-Java](https://github.com/pgpainless/vks-java)
+
+Client-side API for communicating with Verifying Key Servers, such as https://keys.openpgp.org/.
+
+* `vks-java` - VKS client implementation
+
 ## [Cert-D-Java](https://github.com/pgpainless/cert-d-java)
 
 Implementations of the [Shared OpenPGP Certificate Directory specification](https://sequoia-pgp.gitlab.io/pgp-cert-d/).
