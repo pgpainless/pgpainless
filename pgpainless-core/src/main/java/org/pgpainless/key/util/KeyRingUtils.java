@@ -355,7 +355,6 @@ public final class KeyRingUtils {
      * Inject a {@link PGPPublicKey} into the given key ring.
      *
      * Note: Right now this method is broken and will throw a {@link NotYetImplementedException}.
-     * TODO: Fix with BC 171
      *
      * @param keyRing key ring
      * @param publicKey public key
@@ -365,10 +364,6 @@ public final class KeyRingUtils {
     @Nonnull
     public static <T extends PGPKeyRing> T keysPlusPublicKey(@Nonnull T keyRing,
                                                              @Nonnull PGPPublicKey publicKey) {
-        if (true)
-            // Is currently broken beyond repair
-            throw new NotYetImplementedException();
-
         PGPSecretKeyRing secretKeys = null;
         PGPPublicKeyRing publicKeys;
         if (keyRing instanceof PGPSecretKeyRing) {
@@ -382,11 +377,7 @@ public final class KeyRingUtils {
         if (secretKeys == null) {
             return (T) publicKeys;
         } else {
-            // TODO: Replace with PGPSecretKeyRing.insertOrReplacePublicKey() once available
-            //  Right now replacePublicKeys looses extra public keys.
-            //  See https://github.com/bcgit/bc-java/pull/1068 for a possible fix
-            //  Fix once BC 171 gets released.
-            secretKeys = PGPSecretKeyRing.replacePublicKeys(secretKeys, publicKeys);
+            secretKeys = PGPSecretKeyRing.insertOrReplacePublicKey(secretKeys, publicKey);
             return (T) secretKeys;
         }
     }
