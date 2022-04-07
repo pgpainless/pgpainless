@@ -12,6 +12,7 @@ import org.bouncycastle.bcpg.sig.IntendedRecipientFingerprint;
 import org.bouncycastle.bcpg.sig.KeyExpirationTime;
 import org.bouncycastle.bcpg.sig.KeyFlags;
 import org.bouncycastle.bcpg.sig.NotationData;
+import org.bouncycastle.bcpg.sig.PolicyURI;
 import org.bouncycastle.bcpg.sig.PreferredAlgorithms;
 import org.bouncycastle.bcpg.sig.PrimaryUserID;
 import org.bouncycastle.bcpg.sig.Revocable;
@@ -114,11 +115,14 @@ public class SignatureSubpacketsHelper {
                     IntendedRecipientFingerprint intendedRecipientFingerprint = (IntendedRecipientFingerprint) subpacket;
                     subpackets.addIntendedRecipientFingerprint(intendedRecipientFingerprint);
                     break;
+                case policyUrl:
+                    PolicyURI policyURI = (PolicyURI) subpacket;
+                    subpackets.setPolicyUrl(policyURI);
+                    break;
 
                 case regularExpression:
                 case keyServerPreferences:
                 case preferredKeyServers:
-                case policyUrl:
                 case placeholder:
                 case preferredAEADAlgorithms:
                 case attestedCertification:
@@ -135,6 +139,7 @@ public class SignatureSubpacketsHelper {
         addSubpacket(generator, subpackets.getSignatureCreationTimeSubpacket());
         addSubpacket(generator, subpackets.getSignatureExpirationTimeSubpacket());
         addSubpacket(generator, subpackets.getExportableSubpacket());
+        addSubpacket(generator, subpackets.getPolicyURI());
         for (NotationData notationData : subpackets.getNotationDataSubpackets()) {
             addSubpacket(generator, notationData);
         }

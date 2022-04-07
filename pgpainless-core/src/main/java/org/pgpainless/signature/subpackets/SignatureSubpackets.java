@@ -5,6 +5,7 @@
 package org.pgpainless.signature.subpackets;
 
 import java.io.IOException;
+import java.net.URL;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Date;
@@ -26,6 +27,7 @@ import org.bouncycastle.bcpg.sig.IssuerKeyID;
 import org.bouncycastle.bcpg.sig.KeyExpirationTime;
 import org.bouncycastle.bcpg.sig.KeyFlags;
 import org.bouncycastle.bcpg.sig.NotationData;
+import org.bouncycastle.bcpg.sig.PolicyURI;
 import org.bouncycastle.bcpg.sig.PreferredAlgorithms;
 import org.bouncycastle.bcpg.sig.PrimaryUserID;
 import org.bouncycastle.bcpg.sig.Revocable;
@@ -68,6 +70,7 @@ public class SignatureSubpackets
     private final List<EmbeddedSignature> embeddedSignatureList = new ArrayList<>();
     private SignerUserID signerUserId;
     private KeyExpirationTime keyExpirationTime;
+    private PolicyURI policyURI;
     private PrimaryUserID primaryUserId;
     private Revocable revocable;
     private RevocationReason revocationReason;
@@ -483,6 +486,26 @@ public class SignatureSubpackets
 
     public Exportable getExportableSubpacket() {
         return exportable;
+    }
+
+    @Override
+    public BaseSignatureSubpackets setPolicyUrl(@Nullable URL policyUrl) {
+        return policyUrl == null ? setPolicyUrl((PolicyURI) null) : setPolicyUrl(false, policyUrl);
+    }
+
+    @Override
+    public BaseSignatureSubpackets setPolicyUrl(boolean isCritical, @Nonnull URL policyUrl) {
+        return setPolicyUrl(new PolicyURI(isCritical, policyUrl.toString()));
+    }
+
+    @Override
+    public BaseSignatureSubpackets setPolicyUrl(@Nullable PolicyURI policyUrl) {
+        this.policyURI = policyUrl;
+        return this;
+    }
+
+    public PolicyURI getPolicyURI() {
+        return policyURI;
     }
 
     @Override
