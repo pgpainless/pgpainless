@@ -17,6 +17,7 @@ import org.bouncycastle.bcpg.sig.IssuerFingerprint;
 import org.bouncycastle.bcpg.sig.IssuerKeyID;
 import org.bouncycastle.bcpg.sig.NotationData;
 import org.bouncycastle.bcpg.sig.PolicyURI;
+import org.bouncycastle.bcpg.sig.RegularExpression;
 import org.bouncycastle.bcpg.sig.Revocable;
 import org.bouncycastle.bcpg.sig.SignatureCreationTime;
 import org.bouncycastle.bcpg.sig.SignatureExpirationTime;
@@ -95,6 +96,12 @@ public interface BaseSignatureSubpackets {
     BaseSignatureSubpackets setPolicyUrl(boolean isCritical, @Nonnull URL policyUrl);
 
     BaseSignatureSubpackets setPolicyUrl(@Nullable PolicyURI policyUrl);
+
+    BaseSignatureSubpackets setRegularExpression(@Nonnull String regex);
+
+    BaseSignatureSubpackets setRegularExpression(boolean isCritical, @Nonnull String regex);
+
+    BaseSignatureSubpackets setRegularExpression(@Nullable RegularExpression regex);
 
     BaseSignatureSubpackets setRevocable(boolean revocable);
 

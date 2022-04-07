@@ -30,6 +30,7 @@ import org.bouncycastle.bcpg.sig.NotationData;
 import org.bouncycastle.bcpg.sig.PolicyURI;
 import org.bouncycastle.bcpg.sig.PreferredAlgorithms;
 import org.bouncycastle.bcpg.sig.PrimaryUserID;
+import org.bouncycastle.bcpg.sig.RegularExpression;
 import org.bouncycastle.bcpg.sig.Revocable;
 import org.bouncycastle.bcpg.sig.RevocationKey;
 import org.bouncycastle.bcpg.sig.RevocationReason;
@@ -72,6 +73,7 @@ public class SignatureSubpackets
     private KeyExpirationTime keyExpirationTime;
     private PolicyURI policyURI;
     private PrimaryUserID primaryUserId;
+    private RegularExpression regularExpression;
     private Revocable revocable;
     private RevocationReason revocationReason;
     private final List<SignatureSubpacket> residualSubpackets = new ArrayList<>();
@@ -506,6 +508,26 @@ public class SignatureSubpackets
 
     public PolicyURI getPolicyURI() {
         return policyURI;
+    }
+
+    @Override
+    public BaseSignatureSubpackets setRegularExpression(@Nonnull String regex) {
+        return setRegularExpression(false, regex);
+    }
+
+    @Override
+    public BaseSignatureSubpackets setRegularExpression(boolean isCritical, @Nonnull String regex) {
+        return setRegularExpression(new RegularExpression(isCritical, regex));
+    }
+
+    @Override
+    public BaseSignatureSubpackets setRegularExpression(@Nullable RegularExpression regex) {
+        this.regularExpression = regex;
+        return this;
+    }
+
+    public RegularExpression getRegularExpression() {
+        return regularExpression;
     }
 
     @Override

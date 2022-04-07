@@ -15,6 +15,7 @@ import org.bouncycastle.bcpg.sig.NotationData;
 import org.bouncycastle.bcpg.sig.PolicyURI;
 import org.bouncycastle.bcpg.sig.PreferredAlgorithms;
 import org.bouncycastle.bcpg.sig.PrimaryUserID;
+import org.bouncycastle.bcpg.sig.RegularExpression;
 import org.bouncycastle.bcpg.sig.Revocable;
 import org.bouncycastle.bcpg.sig.RevocationKey;
 import org.bouncycastle.bcpg.sig.RevocationReason;
@@ -119,8 +120,11 @@ public class SignatureSubpacketsHelper {
                     PolicyURI policyURI = (PolicyURI) subpacket;
                     subpackets.setPolicyUrl(policyURI);
                     break;
-
                 case regularExpression:
+                    RegularExpression regex = (RegularExpression) subpacket;
+                    subpackets.setRegularExpression(regex);
+                    break;
+                    
                 case keyServerPreferences:
                 case preferredKeyServers:
                 case placeholder:
@@ -140,6 +144,7 @@ public class SignatureSubpacketsHelper {
         addSubpacket(generator, subpackets.getSignatureExpirationTimeSubpacket());
         addSubpacket(generator, subpackets.getExportableSubpacket());
         addSubpacket(generator, subpackets.getPolicyURI());
+        addSubpacket(generator, subpackets.getRegularExpression());
         for (NotationData notationData : subpackets.getNotationDataSubpackets()) {
             addSubpacket(generator, notationData);
         }
