@@ -9,6 +9,13 @@ SPDX-License-Identifier: CC0-1.0
 ## 1.2.0-SNAPSHOT
 - Improve exception hierarchy for key-related exceptions
   - See [PR](https://github.com/pgpainless/pgpainless/pull/261) for more information on how to migrate.
+- Bump Bouncy Castle to `1.71`
+  - Switch from `bcpg-jdk15on:1.70` to `bcpg-jdk15to18:1.71`
+  - Switch from `bcprov-jdk15on:1.70` to `bcprov-jdk15to18:1.71`
+- Implement merging of certificate copies
+  - can be used to implement updating certificates from key servers
+- Fix `KeyRingUtils.keysPlusPublicKey()`
+- Add support for adding `PolicyURI` and `RegularExpression` signature subpackets on signatures
 
 ## 1.1.5
 - SOP encrypt: match signature type when using `encrypt --as=` option
