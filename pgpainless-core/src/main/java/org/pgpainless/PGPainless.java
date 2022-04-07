@@ -8,6 +8,7 @@ import java.io.IOException;
 import java.util.Date;
 import javax.annotation.Nonnull;
 
+import org.bouncycastle.openpgp.PGPException;
 import org.bouncycastle.openpgp.PGPKeyRing;
 import org.bouncycastle.openpgp.PGPPublicKeyRing;
 import org.bouncycastle.openpgp.PGPSecretKeyRing;
@@ -64,6 +65,21 @@ public final class PGPainless {
      */
     public static PGPPublicKeyRing extractCertificate(@Nonnull PGPSecretKeyRing secretKey) {
         return KeyRingUtils.publicKeyRingFrom(secretKey);
+    }
+
+    /**
+     * Merge two copies of the same certificate (e.g. an old copy, and one retrieved from a key server) together.
+     *
+     * @param originalCopy local, older copy of the cert
+     * @param updatedCopy updated, newer copy of the cert
+     * @return merged certificate
+     * @throws PGPException in case of an error
+     */
+    public static PGPPublicKeyRing mergeCertificate(
+            @Nonnull PGPPublicKeyRing originalCopy,
+            @Nonnull PGPPublicKeyRing updatedCopy)
+            throws PGPException {
+        return PGPPublicKeyRing.join(originalCopy, updatedCopy);
     }
 
     /**
