@@ -7,6 +7,7 @@ plugins {
 }
 
 dependencies {
+    // JUnit
     testImplementation "org.junit.jupiter:junit-jupiter-api:$junitVersion"
     testImplementation "org.junit.jupiter:junit-jupiter-params:$junitVersion"
     testRuntimeOnly "org.junit.jupiter:junit-jupiter-engine:$junitVersion"
@@ -19,6 +20,6 @@ dependencies {
     api "org.bouncycastle:bcprov-jdk15to18:$bouncyCastleVersion"
     api "org.bouncycastle:bcpg-jdk15to18:$bouncyCastleVersion"
 
-    // https://mvnrepository.com/artifact/com.google.code.findbugs/jsr305
-    implementation group: 'com.google.code.findbugs', name: 'jsr305', version: '3.0.2'
+    // @Nullable, @Nonnull annotations
+    implementation "com.google.code.findbugs:jsr305:3.0.2"
 }
