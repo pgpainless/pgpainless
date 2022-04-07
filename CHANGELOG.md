@@ -6,7 +6,7 @@ SPDX-License-Identifier: CC0-1.0
 # PGPainless Changelog
 
 
-## 1.2.0-SNAPSHOT
+## 1.2.0
 - Improve exception hierarchy for key-related exceptions
   - See [PR](https://github.com/pgpainless/pgpainless/pull/261) for more information on how to migrate.
 - Bump Bouncy Castle to `1.71`
