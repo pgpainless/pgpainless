@@ -596,15 +596,6 @@ public final class SignatureSubpacketsUtil {
         }
 
         org.bouncycastle.bcpg.SignatureSubpacket last = allPackets[allPackets.length - 1];
-
-        if (type == SignatureSubpacket.revocationKey) {
-            // RevocationKey subpackets are not castable for some reason
-            // See https://github.com/bcgit/bc-java/pull/1085 for an upstreamed fix
-            // We need to manually construct the new object for now.
-            // TODO: Remove workaround when BC 1.71 is released (and has our fix)
-            return (P) new RevocationKey(last.isCritical(), last.isLongLength(), last.getData());
-        }
-
         return (P) last;
     }
 
