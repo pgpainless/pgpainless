@@ -489,8 +489,8 @@ public class SignatureSubpackets
     }
 
     @Override
-    public BaseSignatureSubpackets setPolicyUrl(@Nullable URL policyUrl) {
-        return policyUrl == null ? setPolicyUrl((PolicyURI) null) : setPolicyUrl(false, policyUrl);
+    public BaseSignatureSubpackets setPolicyUrl(@Nonnull URL policyUrl) {
+        return setPolicyUrl(false, policyUrl);
     }
 
     @Override

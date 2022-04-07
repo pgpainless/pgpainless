@@ -90,7 +90,7 @@ public interface BaseSignatureSubpackets {
 
     BaseSignatureSubpackets setExportable(@Nullable Exportable exportable);
 
-    BaseSignatureSubpackets setPolicyUrl(@Nullable URL policyUrl);
+    BaseSignatureSubpackets setPolicyUrl(@Nonnull URL policyUrl);
 
     BaseSignatureSubpackets setPolicyUrl(boolean isCritical, @Nonnull URL policyUrl);
 
