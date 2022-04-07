@@ -124,7 +124,7 @@ public class SignatureSubpacketsHelper {
                     RegularExpression regex = (RegularExpression) subpacket;
                     subpackets.setRegularExpression(regex);
                     break;
-                    
+
                 case keyServerPreferences:
                 case preferredKeyServers:
                 case placeholder:
