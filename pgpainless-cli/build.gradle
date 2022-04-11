@@ -48,6 +48,10 @@ dependencies {
 
 mainClassName = 'org.pgpainless.cli.PGPainlessCLI'
 
+application {
+    mainClass = mainClassName
+}
+
 jar {
     duplicatesStrategy(DuplicatesStrategy.EXCLUDE)
     manifest {
