@@ -80,7 +80,12 @@ public enum HashAlgorithm {
      */
     @Nullable
     public static HashAlgorithm fromName(String name) {
-        return NAME_MAP.get(name);
+        String algorithmName = name.toUpperCase();
+        HashAlgorithm algorithm = NAME_MAP.get(algorithmName);
+        if (algorithm == null) {
+            algorithm = NAME_MAP.get(algorithmName.replace("-", ""));
+        }
+        return algorithm;
     }
 
     private final int algorithmId;
