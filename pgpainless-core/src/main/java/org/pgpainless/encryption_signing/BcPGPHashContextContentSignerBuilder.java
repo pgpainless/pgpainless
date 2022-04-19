@@ -2,9 +2,8 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
-package org.pgpainless.signature.builder;
+package org.pgpainless.encryption_signing;
 
-import java.io.IOException;
 import java.io.OutputStream;
 import java.security.MessageDigest;
 
@@ -37,13 +36,13 @@ import org.pgpainless.algorithm.PublicKeyAlgorithm;
  * This can come in handy to sign data, which was already processed to calculate the hash context, without the
  * need to process it again to calculate the OpenPGP signature.
  */
-public class HashContextPGPContentSignerBuilder implements PGPContentSignerBuilder {
+class BcPGPHashContextContentSignerBuilder extends PGPHashContextContentSignerBuilder {
 
     private final BcPGPKeyConverter keyConverter = new BcPGPKeyConverter();
     private final MessageDigest messageDigest;
     private final HashAlgorithm hashAlgorithm;
 
-    public HashContextPGPContentSignerBuilder(MessageDigest messageDigest) {
+    public BcPGPHashContextContentSignerBuilder(MessageDigest messageDigest) {
         this.messageDigest = messageDigest;
         this.hashAlgorithm = HashAlgorithm.fromName(messageDigest.getAlgorithm());
         if (hashAlgorithm == null) {
@@ -76,7 +75,7 @@ public class HashContextPGPContentSignerBuilder implements PGPContentSignerBuild
             }
 
             public OutputStream getOutputStream() {
-                return new SignerOutputStream(signer);
+                return new PGPHashContextContentSignerBuilder.SignerOutputStream(signer);
             }
 
             public byte[] getSignature() {
@@ -114,49 +113,6 @@ public class HashContextPGPContentSignerBuilder implements PGPContentSignerBuild
                 return new EdDsaSigner(new Ed448Signer(new byte[0]), staticDigest);
             default:
                 throw new PGPException("cannot recognise keyAlgorithm: " + keyAlgorithm);
-        }
-    }
-
-    static class ExistingMessageDigest implements Digest {
-
-        private final MessageDigest digest;
-
-        ExistingMessageDigest(MessageDigest messageDigest) {
-            this.digest = messageDigest;
-        }
-
-        @Override
-        public void update(byte in) {
-            digest.update(in);
-        }
-
-        @Override
-        public void update(byte[] in, int inOff, int len) {
-            digest.update(in, inOff, len);
-        }
-
-        @Override
-        public int doFinal(byte[] out, int outOff) {
-            byte[] hash = digest.digest();
-            System.arraycopy(hash, 0, out, outOff, hash.length);
-            return getDigestSize();
-        }
-
-        @Override
-        public void reset() {
-            // Nope!
-            // We cannot reset, since BCs signer classes are resetting in their init() methods, which would also reset
-            // the messageDigest, losing its state. This would shatter our intention.
-        }
-
-        @Override
-        public String getAlgorithmName() {
-            return digest.getAlgorithm();
-        }
-
-        @Override
-        public int getDigestSize() {
-            return digest.getDigestLength();
         }
     }
 
@@ -210,28 +166,4 @@ public class HashContextPGPContentSignerBuilder implements PGPContentSignerBuild
         }
     }
 
-    // Copied from BC, required since BCs class is package visible only
-    static class SignerOutputStream
-            extends OutputStream {
-        private Signer sig;
-
-        SignerOutputStream(Signer sig) {
-            this.sig = sig;
-        }
-
-        public void write(byte[] bytes, int off, int len)
-                throws IOException {
-            sig.update(bytes, off, len);
-        }
-
-        public void write(byte[] bytes)
-                throws IOException {
-            sig.update(bytes, 0, bytes.length);
-        }
-
-        public void write(int b)
-                throws IOException {
-            sig.update((byte) b);
-        }
-    }
 }

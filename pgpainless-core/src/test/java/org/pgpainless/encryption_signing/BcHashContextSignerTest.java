@@ -2,7 +2,7 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
-package org.pgpainless.signature;
+package org.pgpainless.encryption_signing;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
@@ -17,7 +17,6 @@ import java.security.NoSuchAlgorithmException;
 
 import org.bouncycastle.jce.provider.BouncyCastleProvider;
 import org.bouncycastle.openpgp.PGPException;
-import org.bouncycastle.openpgp.PGPPrivateKey;
 import org.bouncycastle.openpgp.PGPPublicKeyRing;
 import org.bouncycastle.openpgp.PGPSecretKeyRing;
 import org.bouncycastle.openpgp.PGPSignature;
@@ -30,11 +29,9 @@ import org.pgpainless.decryption_verification.ConsumerOptions;
 import org.pgpainless.decryption_verification.DecryptionStream;
 import org.pgpainless.decryption_verification.OpenPgpMetadata;
 import org.pgpainless.key.generation.type.rsa.RsaLength;
-import org.pgpainless.key.protection.UnlockSecretKey;
-import org.pgpainless.signature.builder.HashContextSigner;
-import org.pgpainless.util.Passphrase;
+import org.pgpainless.key.protection.SecretKeyRingProtector;
 
-public class HashContextSignerTest {
+public class BcHashContextSignerTest {
 
     private static final String message = "Hello, World!\n";
     private static final String KEY = "-----BEGIN PGP PRIVATE KEY BLOCK-----\n" +
@@ -88,15 +85,14 @@ public class HashContextSignerTest {
         }
     }
 
-    private void signFromContext(PGPSecretKeyRing secretKeys, HashAlgorithm hashAlgorithm) throws PGPException, NoSuchAlgorithmException, IOException {
+    private void signFromContext(PGPSecretKeyRing secretKeys, HashAlgorithm hashAlgorithm)
+            throws PGPException, NoSuchAlgorithmException, IOException {
         PGPPublicKeyRing certificate = PGPainless.extractCertificate(secretKeys);
-        long signingKeyId = PGPainless.inspectKeyRing(certificate).getSigningSubkeys().get(0).getKeyID();
-        PGPPrivateKey signingKey = UnlockSecretKey.unlockSecretKey(secretKeys.getSecretKey(signingKeyId), Passphrase.emptyPassphrase());
 
         byte[] messageBytes = message.getBytes(StandardCharsets.UTF_8);
         ByteArrayInputStream messageIn = new ByteArrayInputStream(messageBytes);
 
-        PGPSignature signature = signMessage(messageBytes, hashAlgorithm, signingKey);
+        PGPSignature signature = signMessage(messageBytes, hashAlgorithm, secretKeys);
         assertEquals(hashAlgorithm.getAlgorithmId(), signature.getHashAlgorithm());
 
         DecryptionStream decryptionStream = PGPainless.decryptAndOrVerify()
@@ -113,13 +109,13 @@ public class HashContextSignerTest {
         assertTrue(metadata.isVerified());
     }
 
-    private PGPSignature signMessage(byte[] message, HashAlgorithm hashAlgorithm, PGPPrivateKey signingKey)
+    private PGPSignature signMessage(byte[] message, HashAlgorithm hashAlgorithm, PGPSecretKeyRing secretKeys)
             throws NoSuchAlgorithmException, PGPException {
         // Prepare the hash context
         // This would be done by the caller application
         MessageDigest messageDigest = MessageDigest.getInstance(hashAlgorithm.getAlgorithmName(), new BouncyCastleProvider());
         messageDigest.update(message);
 
-        return HashContextSigner.signHashContext(messageDigest, SignatureType.BINARY_DOCUMENT, signingKey);
+        return BcHashContextSigner.signHashContext(messageDigest, SignatureType.BINARY_DOCUMENT, secretKeys, SecretKeyRingProtector.unprotectedKeys());
     }
 }
