@@ -5,6 +5,21 @@ SPDX-License-Identifier: CC0-1.0
 
 # PGPainless Changelog
 
+## 1.2.1-SNAPSHOT
+- Bump `sop-java` dependency to `1.2.2`
+- Add experimental support for creating signatures over pre-calculated `MessageDigest` objects.
+  - `BcHashContextSigner.signHashContext()` can be used to create OpenPGP signatures over manually hashed data.  
+    This allows applications to do the hashing themselves.
+- Harden detection of binary/ascii armored/non-OpenPGP data
+- Add `ConsumerOptions.forceNonOpenPgpData()` to force PGPainless to handle data as non-OpenPGP data
+  - This is a workaround for when PGPainless accidentally mistakes non-OpenPGP data for binary OpenPGP data
+- Implement "smart" hash algorithm policies, which take the 'usage-date' for algorithms into account
+  - This allows for fine-grained signature hash algorithm policing with usage termination dates
+- Switch to smart signature hash algorithm policies by default
+  - PGPainless now accepts SHA-1 signatures if they were made before 2013-02-01
+  - We also now accept RIPEMD160 signatures if they were made before 2013-02-01
+  - We further accept MD5 signatures made prior to 1997-02-01
+ 
 
 ## 1.2.0
 - Improve exception hierarchy for key-related exceptions
