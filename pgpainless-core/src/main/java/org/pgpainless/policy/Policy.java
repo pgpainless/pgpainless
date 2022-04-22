@@ -468,33 +468,7 @@ public final class Policy {
          * @return default revocation signature hash algorithm policy
          */
         public static HashAlgorithmPolicy defaultRevocationSignatureHashAlgorithmPolicy() {
-            return smartRevocationSignatureHashAlgorithmPolicy();
-        }
-
-        /**
-         * Revocation Signature {@link HashAlgorithmPolicy} which takes the date of the algorithm usage
-         * into consideration.
-         * If the policy has a termination date for a given algorithm, and the usage date is after that termination
-         * date, the algorithm is rejected.
-         *
-         * This policy is inspired by Sequoia-PGP's collision resistant algorithm policy.
-         *
-         * @see <a href="https://gitlab.com/sequoia-pgp/sequoia/-/blob/main/openpgp/src/policy.rs#L604">
-         *     Sequoia-PGP's Collision Resistant Algorithm Policy</a>
-         *
-         * @return smart signature revocation algorithm policy
-         */
-        public static HashAlgorithmPolicy smartRevocationSignatureHashAlgorithmPolicy() {
-            Map<HashAlgorithm, Date> algorithmDateMap = new HashMap<>();
-
-            algorithmDateMap.put(HashAlgorithm.SHA1, DateUtil.parseUTCDate("2013-02-01 00:00:00 UTC"));
-            algorithmDateMap.put(HashAlgorithm.RIPEMD160, DateUtil.parseUTCDate("2013-02-01 00:00:00 UTC"));
-            algorithmDateMap.put(HashAlgorithm.SHA224, null);
-            algorithmDateMap.put(HashAlgorithm.SHA256, null);
-            algorithmDateMap.put(HashAlgorithm.SHA384, null);
-            algorithmDateMap.put(HashAlgorithm.SHA512, null);
-
-            return new HashAlgorithmPolicy(HashAlgorithm.SHA512, algorithmDateMap);
+            return smartSignatureHashAlgorithmPolicy();
         }
 
         /**
