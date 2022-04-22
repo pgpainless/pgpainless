@@ -4,7 +4,6 @@
 
 package org.pgpainless.util;
 
-import java.io.BufferedInputStream;
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
@@ -14,6 +13,8 @@ import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
 import java.util.regex.Pattern;
+import javax.annotation.Nonnull;
+import javax.annotation.Nullable;
 
 import org.bouncycastle.bcpg.ArmoredInputStream;
 import org.bouncycastle.bcpg.ArmoredOutputStream;
@@ -29,10 +30,8 @@ import org.bouncycastle.openpgp.PGPUtil;
 import org.bouncycastle.openpgp.operator.KeyFingerPrintCalculator;
 import org.bouncycastle.util.io.Streams;
 import org.pgpainless.algorithm.HashAlgorithm;
+import org.pgpainless.decryption_verification.OpenPgpInputStream;
 import org.pgpainless.key.OpenPgpFingerprint;
-
-import javax.annotation.Nonnull;
-import javax.annotation.Nullable;
 
 public final class ArmorUtils {
 
@@ -550,16 +549,12 @@ public final class ArmorUtils {
     @Nonnull
     public static InputStream getDecoderStream(@Nonnull InputStream inputStream)
             throws IOException {
-        BufferedInputStream buf = new BufferedInputStream(inputStream, 512);
-        InputStream decoderStream = PGPUtilWrapper.getDecoderStream(buf);
-        // Data is not armored -> return
-        if (decoderStream instanceof BufferedInputStream) {
-            return decoderStream;
+        OpenPgpInputStream openPgpIn = new OpenPgpInputStream(inputStream);
+        if (openPgpIn.isAsciiArmored()) {
+            ArmoredInputStream armorIn = ArmoredInputStreamFactory.get(openPgpIn);
+            return PGPUtil.getDecoderStream(armorIn);
         }
-        // Wrap armored input stream with fix for #159
-        decoderStream = CRCingArmoredInputStreamWrapper.possiblyWrap(decoderStream);
 
-        decoderStream = PGPUtil.getDecoderStream(decoderStream);
-        return decoderStream;
+        return openPgpIn;
     }
 }

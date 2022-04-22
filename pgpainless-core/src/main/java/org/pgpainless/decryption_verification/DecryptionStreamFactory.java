@@ -4,8 +4,6 @@
 
 package org.pgpainless.decryption_verification;
 
-import java.io.BufferedInputStream;
-import java.io.EOFException;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.ArrayList;
@@ -66,8 +64,6 @@ import org.pgpainless.signature.SignatureUtils;
 import org.pgpainless.signature.consumer.DetachedSignatureCheck;
 import org.pgpainless.signature.consumer.OnePassSignatureCheck;
 import org.pgpainless.util.ArmoredInputStreamFactory;
-import org.pgpainless.util.CRCingArmoredInputStreamWrapper;
-import org.pgpainless.util.PGPUtilWrapper;
 import org.pgpainless.util.Passphrase;
 import org.pgpainless.util.SessionKey;
 import org.pgpainless.util.Tuple;
@@ -80,9 +76,6 @@ public final class DecryptionStreamFactory {
     private static final Logger LOGGER = LoggerFactory.getLogger(DecryptionStreamFactory.class);
     // Maximum nesting depth of packets (e.g. compression, encryption...)
     private static final int MAX_PACKET_NESTING_DEPTH = 16;
-
-    // Buffer Size for BufferedInputStreams
-    public static int BUFFER_SIZE = 4096;
 
     private final ConsumerOptions options;
     private final OpenPgpMetadata.Builder resultBuilder = OpenPgpMetadata.getBuilder();
@@ -99,8 +92,8 @@ public final class DecryptionStreamFactory {
                                           @Nonnull ConsumerOptions options)
             throws PGPException, IOException {
         DecryptionStreamFactory factory = new DecryptionStreamFactory(options);
-        BufferedInputStream bufferedIn = new BufferedInputStream(inputStream, BUFFER_SIZE);
-        return factory.parseOpenPGPDataAndCreateDecryptionStream(bufferedIn);
+        OpenPgpInputStream openPgpIn = new OpenPgpInputStream(inputStream);
+        return factory.parseOpenPGPDataAndCreateDecryptionStream(openPgpIn);
     }
 
     public DecryptionStreamFactory(ConsumerOptions options) {
@@ -133,68 +126,51 @@ public final class DecryptionStreamFactory {
         }
     }
 
-    private DecryptionStream parseOpenPGPDataAndCreateDecryptionStream(BufferedInputStream bufferedIn)
+    private DecryptionStream parseOpenPGPDataAndCreateDecryptionStream(OpenPgpInputStream openPgpIn)
             throws IOException, PGPException {
+
         InputStream pgpInStream;
         InputStream outerDecodingStream;
         PGPObjectFactory objectFactory;
 
-        try {
-            outerDecodingStream = PGPUtilWrapper.getDecoderStream(bufferedIn);
-            outerDecodingStream = CRCingArmoredInputStreamWrapper.possiblyWrap(outerDecodingStream);
+        // Non-OpenPGP data. We are probably verifying detached signatures
+        if (openPgpIn.isNonOpenPgp()) {
+            outerDecodingStream = openPgpIn;
+            pgpInStream = wrapInVerifySignatureStream(outerDecodingStream, null);
+            return new DecryptionStream(pgpInStream, resultBuilder, integrityProtectedEncryptedInputStream, null);
+        }
 
-            if (outerDecodingStream instanceof ArmoredInputStream) {
-                ArmoredInputStream armor = (ArmoredInputStream) outerDecodingStream;
-
-                // Cleartext Signed Message
-                // Throw a WrongConsumingMethodException to delegate preparation (extraction of signatures)
-                // to the CleartextSignatureProcessor which will call us again (see comment above)
-                if (armor.isClearText()) {
-                    bufferedIn.reset();
-                    return parseCleartextSignedMessage(bufferedIn);
-                }
-            }
-
+        if (openPgpIn.isBinaryOpenPgp()) {
+            outerDecodingStream = openPgpIn;
             objectFactory = ImplementationFactory.getInstance().getPGPObjectFactory(outerDecodingStream);
             // Parse OpenPGP message
             pgpInStream = processPGPPackets(objectFactory, 1);
             return new DecryptionStream(pgpInStream,
-                    resultBuilder, integrityProtectedEncryptedInputStream,
-                    (outerDecodingStream instanceof ArmoredInputStream) ? outerDecodingStream : null);
-        } catch (EOFException | FinalIOException e) {
-            // Broken message or invalid decryption session key
-            throw e;
-        } catch (MissingLiteralDataException e) {
-            // Not an OpenPGP message.
-            //  Reset the buffered stream to parse the message as arbitrary binary data
-            //  to allow for detached signature verification.
-            LOGGER.debug("The message appears to not be an OpenPGP message. This is probably data signed with detached signatures?");
-            bufferedIn.reset();
-            outerDecodingStream = bufferedIn;
-            objectFactory = ImplementationFactory.getInstance().getPGPObjectFactory(outerDecodingStream);
-            pgpInStream = wrapInVerifySignatureStream(bufferedIn, objectFactory);
-        } catch (IOException e) {
-            if (e.getMessage().contains("invalid armor") || e.getMessage().contains("invalid header encountered")) {
-                // We falsely assumed the data to be armored.
-                LOGGER.debug("The message is apparently not armored.");
-                bufferedIn.reset();
-                outerDecodingStream = CRCingArmoredInputStreamWrapper.possiblyWrap(bufferedIn);
-                pgpInStream = wrapInVerifySignatureStream(outerDecodingStream, null);
+                    resultBuilder, integrityProtectedEncryptedInputStream, null);
+        }
+
+        if (openPgpIn.isAsciiArmored()) {
+            ArmoredInputStream armoredInputStream = ArmoredInputStreamFactory.get(openPgpIn);
+            if (armoredInputStream.isClearText()) {
+                return parseCleartextSignedMessage(armoredInputStream);
             } else {
-                throw new FinalIOException(e);
+                outerDecodingStream = armoredInputStream;
+                objectFactory = ImplementationFactory.getInstance().getPGPObjectFactory(outerDecodingStream);
+                // Parse OpenPGP message
+                pgpInStream = processPGPPackets(objectFactory, 1);
+                return new DecryptionStream(pgpInStream,
+                        resultBuilder, integrityProtectedEncryptedInputStream,
+                        outerDecodingStream);
             }
         }
 
-        return new DecryptionStream(pgpInStream, resultBuilder, integrityProtectedEncryptedInputStream,
-                (outerDecodingStream instanceof ArmoredInputStream) ? outerDecodingStream : null);
+        throw new PGPException("Not sure how to handle the input stream.");
     }
 
-    private DecryptionStream parseCleartextSignedMessage(BufferedInputStream in)
+    private DecryptionStream parseCleartextSignedMessage(ArmoredInputStream armorIn)
             throws IOException, PGPException {
         resultBuilder.setCompressionAlgorithm(CompressionAlgorithm.UNCOMPRESSED)
                 .setFileEncoding(StreamEncoding.TEXT);
-
-        ArmoredInputStream armorIn = ArmoredInputStreamFactory.get(in);
 
         MultiPassStrategy multiPassStrategy = options.getMultiPassStrategy();
         PGPSignatureList signatures = ClearsignedMessageUtil.detachSignaturesFromInbandClearsignedMessage(armorIn, multiPassStrategy.getMessageOutputStream());
