@@ -42,7 +42,7 @@ class BcPGPHashContextContentSignerBuilder extends PGPHashContextContentSignerBu
     private final MessageDigest messageDigest;
     private final HashAlgorithm hashAlgorithm;
 
-    public BcPGPHashContextContentSignerBuilder(MessageDigest messageDigest) {
+    BcPGPHashContextContentSignerBuilder(MessageDigest messageDigest) {
         this.messageDigest = messageDigest;
         this.hashAlgorithm = HashAlgorithm.fromName(messageDigest.getAlgorithm());
         if (hashAlgorithm == null) {
