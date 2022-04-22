@@ -134,7 +134,7 @@ public final class DecryptionStreamFactory {
         PGPObjectFactory objectFactory;
 
         // Non-OpenPGP data. We are probably verifying detached signatures
-        if (openPgpIn.isNonOpenPgp()) {
+        if (openPgpIn.isNonOpenPgp() || options.isForceNonOpenPgpData()) {
             outerDecodingStream = openPgpIn;
             pgpInStream = wrapInVerifySignatureStream(outerDecodingStream, null);
             return new DecryptionStream(pgpInStream, resultBuilder, integrityProtectedEncryptedInputStream, null);
