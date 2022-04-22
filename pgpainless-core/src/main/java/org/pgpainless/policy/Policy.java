@@ -6,7 +6,9 @@ package org.pgpainless.policy;
 
 import java.util.Arrays;
 import java.util.Collections;
+import java.util.Date;
 import java.util.EnumMap;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.NoSuchElementException;
@@ -18,6 +20,7 @@ import org.pgpainless.algorithm.CompressionAlgorithm;
 import org.pgpainless.algorithm.HashAlgorithm;
 import org.pgpainless.algorithm.PublicKeyAlgorithm;
 import org.pgpainless.algorithm.SymmetricKeyAlgorithm;
+import org.pgpainless.util.DateUtil;
 import org.pgpainless.util.NotationRegistry;
 
 /**
@@ -301,11 +304,39 @@ public final class Policy {
     public static final class HashAlgorithmPolicy {
 
         private final HashAlgorithm defaultHashAlgorithm;
-        private final List<HashAlgorithm> acceptableHashAlgorithms;
+        private final Map<HashAlgorithm, Date> acceptableHashAlgorithmsAndTerminationDates;
 
-        public HashAlgorithmPolicy(HashAlgorithm defaultHashAlgorithm, List<HashAlgorithm> acceptableHashAlgorithms) {
+        /**
+         * Create a {@link HashAlgorithmPolicy} which accepts all {@link HashAlgorithm HashAlgorithms} from the
+         * given map, if the queried usage date is BEFORE the respective termination date.
+         * A termination date value of <pre>null</pre> means no termination, resulting in the algorithm being
+         * acceptable, regardless of usage date.
+         *
+         * @param defaultHashAlgorithm default hash algorithm
+         * @param algorithmTerminationDates map of acceptable algorithms and their termination dates
+         */
+        public HashAlgorithmPolicy(@Nonnull HashAlgorithm defaultHashAlgorithm, @Nonnull Map<HashAlgorithm, Date> algorithmTerminationDates) {
             this.defaultHashAlgorithm = defaultHashAlgorithm;
-            this.acceptableHashAlgorithms = Collections.unmodifiableList(acceptableHashAlgorithms);
+            this.acceptableHashAlgorithmsAndTerminationDates = algorithmTerminationDates;
+        }
+
+        /**
+         * Create a {@link HashAlgorithmPolicy} which accepts all {@link HashAlgorithm HashAlgorithms} listed in
+         * the given list, regardless of usage date.
+         *
+         * @param defaultHashAlgorithm default hash algorithm (e.g. used as fallback if negotiation fails)
+         * @param acceptableHashAlgorithms list of acceptable hash algorithms
+         */
+        public HashAlgorithmPolicy(@Nonnull HashAlgorithm defaultHashAlgorithm, @Nonnull List<HashAlgorithm> acceptableHashAlgorithms) {
+            this(defaultHashAlgorithm, Collections.unmodifiableMap(listToMap(acceptableHashAlgorithms)));
+        }
+
+        private static Map<HashAlgorithm, Date> listToMap(@Nonnull List<HashAlgorithm> algorithms) {
+            Map<HashAlgorithm, Date> algorithmsAndTerminationDates = new HashMap<>();
+            for (HashAlgorithm algorithm : algorithms) {
+                algorithmsAndTerminationDates.put(algorithm, null);
+            }
+            return algorithmsAndTerminationDates;
         }
 
         /**
@@ -319,17 +350,17 @@ public final class Policy {
         }
 
         /**
-         * Return true if the given hash algorithm is acceptable by this policy.
+         * Return true if the given hash algorithm is currently acceptable by this policy.
          *
          * @param hashAlgorithm hash algorithm
          * @return true if the hash algorithm is acceptable, false otherwise
          */
-        public boolean isAcceptable(HashAlgorithm hashAlgorithm) {
-            return acceptableHashAlgorithms.contains(hashAlgorithm);
+        public boolean isAcceptable(@Nonnull HashAlgorithm hashAlgorithm) {
+            return isAcceptable(hashAlgorithm, new Date());
         }
 
         /**
-         * Return true if the given hash algorithm is acceptable by this policy.
+         * Return true if the given hash algorithm is currently acceptable by this policy.
          *
          * @param algorithmId hash algorithm
          * @return true if the hash algorithm is acceptable, false otherwise
@@ -345,6 +376,39 @@ public final class Policy {
         }
 
         /**
+         * Return true, if the given algorithm is acceptable for the given usage date.
+         *
+         * @param hashAlgorithm algorithm
+         * @param usageDate usage date (e.g. signature creation time)
+         *
+         * @return acceptance
+         */
+        public boolean isAcceptable(@Nonnull HashAlgorithm hashAlgorithm, @Nonnull Date usageDate) {
+            if (!acceptableHashAlgorithmsAndTerminationDates.containsKey(hashAlgorithm)) {
+                return false;
+            }
+
+            // Check termination date
+            Date terminationDate = acceptableHashAlgorithmsAndTerminationDates.get(hashAlgorithm);
+            if (terminationDate == null) {
+                return true;
+            }
+
+            // Reject if usage date is past termination date
+            return terminationDate.after(usageDate);
+        }
+
+        public boolean isAcceptable(int algorithmId, @Nonnull Date usageDate) {
+            try {
+                HashAlgorithm algorithm = HashAlgorithm.requireFromId(algorithmId);
+                return isAcceptable(algorithm, usageDate);
+            } catch (NoSuchElementException e) {
+                // Unknown algorithm is not acceptable
+                return false;
+            }
+        }
+
+        /**
          * The default signature hash algorithm policy of PGPainless.
          * Note that this policy is only used for non-revocation signatures.
          * For revocation signatures {@link #defaultRevocationSignatureHashAlgorithmPolicy()} is used instead.
@@ -352,6 +416,44 @@ public final class Policy {
          * @return default signature hash algorithm policy
          */
         public static HashAlgorithmPolicy defaultSignatureAlgorithmPolicy() {
+            return smartSignatureHashAlgorithmPolicy();
+        }
+
+        /**
+         * {@link HashAlgorithmPolicy} which takes the date of the algorithm usage into consideration.
+         * If the policy has a termination date for a given algorithm, and the usage date is after that termination
+         * date, the algorithm is rejected.
+         *
+         * This policy is inspired by Sequoia-PGP's collision resistant algorithm policy.
+         *
+         * @see <a href="https://gitlab.com/sequoia-pgp/sequoia/-/blob/main/openpgp/src/policy.rs#L604">
+         *     Sequoia-PGP's Collision Resistant Algorithm Policy</a>
+         *
+         * @return smart signature algorithm policy
+         */
+        public static HashAlgorithmPolicy smartSignatureHashAlgorithmPolicy() {
+            Map<HashAlgorithm, Date> algorithmDateMap = new HashMap<>();
+
+            algorithmDateMap.put(HashAlgorithm.MD5, DateUtil.parseUTCDate("1997-02-01 00:00:00 UTC"));
+            algorithmDateMap.put(HashAlgorithm.SHA1, DateUtil.parseUTCDate("2013-02-01 00:00:00 UTC"));
+            algorithmDateMap.put(HashAlgorithm.RIPEMD160, DateUtil.parseUTCDate("2013-02-01 00:00:00 UTC"));
+            algorithmDateMap.put(HashAlgorithm.SHA224, null);
+            algorithmDateMap.put(HashAlgorithm.SHA256, null);
+            algorithmDateMap.put(HashAlgorithm.SHA384, null);
+            algorithmDateMap.put(HashAlgorithm.SHA512, null);
+
+            return new HashAlgorithmPolicy(HashAlgorithm.SHA512, algorithmDateMap);
+        }
+
+        /**
+         * {@link HashAlgorithmPolicy} which only accepts signatures made using algorithms which are acceptable
+         * according to 2022 standards.
+         *
+         * Particularly this policy only accepts algorithms from the SHA2 family.
+         *
+         * @return static signature algorithm policy
+         */
+        public static HashAlgorithmPolicy static2022SignatureAlgorithmPolicy() {
             return new HashAlgorithmPolicy(HashAlgorithm.SHA512, Arrays.asList(
                     HashAlgorithm.SHA224,
                     HashAlgorithm.SHA256,
@@ -366,6 +468,41 @@ public final class Policy {
          * @return default revocation signature hash algorithm policy
          */
         public static HashAlgorithmPolicy defaultRevocationSignatureHashAlgorithmPolicy() {
+            return smartRevocationSignatureHashAlgorithmPolicy();
+        }
+
+        /**
+         * Revocation Signature {@link HashAlgorithmPolicy} which takes the date of the algorithm usage
+         * into consideration.
+         * If the policy has a termination date for a given algorithm, and the usage date is after that termination
+         * date, the algorithm is rejected.
+         *
+         * This policy is inspired by Sequoia-PGP's collision resistant algorithm policy.
+         *
+         * @see <a href="https://gitlab.com/sequoia-pgp/sequoia/-/blob/main/openpgp/src/policy.rs#L604">
+         *     Sequoia-PGP's Collision Resistant Algorithm Policy</a>
+         *
+         * @return smart signature revocation algorithm policy
+         */
+        public static HashAlgorithmPolicy smartRevocationSignatureHashAlgorithmPolicy() {
+            Map<HashAlgorithm, Date> algorithmDateMap = new HashMap<>();
+
+            algorithmDateMap.put(HashAlgorithm.SHA1, DateUtil.parseUTCDate("2013-02-01 00:00:00 UTC"));
+            algorithmDateMap.put(HashAlgorithm.RIPEMD160, DateUtil.parseUTCDate("2013-02-01 00:00:00 UTC"));
+            algorithmDateMap.put(HashAlgorithm.SHA224, null);
+            algorithmDateMap.put(HashAlgorithm.SHA256, null);
+            algorithmDateMap.put(HashAlgorithm.SHA384, null);
+            algorithmDateMap.put(HashAlgorithm.SHA512, null);
+
+            return new HashAlgorithmPolicy(HashAlgorithm.SHA512, algorithmDateMap);
+        }
+
+        /**
+         * Hash algorithm policy for revocation signatures, which accepts SHA1 & SHA2 algorithms, as well as RIPEMD160.
+         *
+         * @return static revocation signature hash algorithm policy
+         */
+        public static HashAlgorithmPolicy static2022RevocationSignatureHashAlgorithmPolicy() {
             return new HashAlgorithmPolicy(HashAlgorithm.SHA512, Arrays.asList(
                     HashAlgorithm.RIPEMD160,
                     HashAlgorithm.SHA1,

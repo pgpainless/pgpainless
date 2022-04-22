@@ -9,6 +9,9 @@ import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import java.util.Arrays;
+import java.util.Date;
+import java.util.HashMap;
+import java.util.Map;
 
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
@@ -16,6 +19,7 @@ import org.pgpainless.algorithm.CompressionAlgorithm;
 import org.pgpainless.algorithm.HashAlgorithm;
 import org.pgpainless.algorithm.PublicKeyAlgorithm;
 import org.pgpainless.algorithm.SymmetricKeyAlgorithm;
+import org.pgpainless.util.DateUtil;
 
 public class PolicyTest {
 
@@ -33,11 +37,23 @@ public class PolicyTest {
         policy.setSymmetricKeyDecryptionAlgorithmPolicy(new Policy.SymmetricKeyAlgorithmPolicy(SymmetricKeyAlgorithm.AES_256,
                 Arrays.asList(SymmetricKeyAlgorithm.AES_256, SymmetricKeyAlgorithm.AES_192, SymmetricKeyAlgorithm.AES_128, SymmetricKeyAlgorithm.BLOWFISH)));
 
-        policy.setSignatureHashAlgorithmPolicy(new Policy.HashAlgorithmPolicy(HashAlgorithm.SHA512,
-                Arrays.asList(HashAlgorithm.SHA512, HashAlgorithm.SHA384, HashAlgorithm.SHA256)));
+        Map<HashAlgorithm, Date> sigHashAlgoMap = new HashMap<>();
+        sigHashAlgoMap.put(HashAlgorithm.SHA512, null);
+        sigHashAlgoMap.put(HashAlgorithm.SHA384, null);
+        sigHashAlgoMap.put(HashAlgorithm.SHA256, null);
+        sigHashAlgoMap.put(HashAlgorithm.SHA224, null);
+        sigHashAlgoMap.put(HashAlgorithm.SHA1, DateUtil.parseUTCDate("2013-02-01 00:00:00 UTC"));
+        policy.setSignatureHashAlgorithmPolicy(new Policy.HashAlgorithmPolicy(HashAlgorithm.SHA512, sigHashAlgoMap));
 
+        Map<HashAlgorithm, Date> revHashAlgoMap = new HashMap<>();
+        revHashAlgoMap.put(HashAlgorithm.SHA512, null);
+        revHashAlgoMap.put(HashAlgorithm.SHA384, null);
+        revHashAlgoMap.put(HashAlgorithm.SHA256, null);
+        revHashAlgoMap.put(HashAlgorithm.SHA224, null);
+        revHashAlgoMap.put(HashAlgorithm.SHA1, DateUtil.parseUTCDate("2013-02-01 00:00:00 UTC"));
+        revHashAlgoMap.put(HashAlgorithm.RIPEMD160, DateUtil.parseUTCDate("2013-02-01 00:00:00 UTC"));
         policy.setRevocationSignatureHashAlgorithmPolicy(new Policy.HashAlgorithmPolicy(HashAlgorithm.SHA512,
-                Arrays.asList(HashAlgorithm.SHA512, HashAlgorithm.SHA384, HashAlgorithm.SHA256, HashAlgorithm.SHA224, HashAlgorithm.SHA1)));
+                revHashAlgoMap));
 
         policy.setPublicKeyAlgorithmPolicy(Policy.PublicKeyAlgorithmPolicy.defaultPublicKeyAlgorithmPolicy());
     }
@@ -92,12 +108,17 @@ public class PolicyTest {
     public void testAcceptableSignatureHashAlgorithm() {
         assertTrue(policy.getSignatureHashAlgorithmPolicy().isAcceptable(HashAlgorithm.SHA512));
         assertTrue(policy.getSignatureHashAlgorithmPolicy().isAcceptable(HashAlgorithm.SHA512.getAlgorithmId()));
+        // Usage date before termination date -> acceptable
+        assertTrue(policy.getSignatureHashAlgorithmPolicy().isAcceptable(HashAlgorithm.SHA1, DateUtil.parseUTCDate("2000-01-01 00:00:00 UTC")));
+        assertTrue(policy.getSignatureHashAlgorithmPolicy().isAcceptable(HashAlgorithm.SHA1.getAlgorithmId(), DateUtil.parseUTCDate("2000-01-01 00:00:00 UTC")));
     }
 
     @Test
     public void testUnacceptableSignatureHashAlgorithm() {
         assertFalse(policy.getSignatureHashAlgorithmPolicy().isAcceptable(HashAlgorithm.SHA1));
         assertFalse(policy.getSignatureHashAlgorithmPolicy().isAcceptable(HashAlgorithm.SHA1.getAlgorithmId()));
+        assertFalse(policy.getSignatureHashAlgorithmPolicy().isAcceptable(HashAlgorithm.SHA1, DateUtil.parseUTCDate("2020-01-01 00:00:00 UTC")));
+        assertFalse(policy.getSignatureHashAlgorithmPolicy().isAcceptable(HashAlgorithm.SHA1.getAlgorithmId(), DateUtil.parseUTCDate("2020-01-01 00:00:00 UTC")));
     }
 
     @Test
@@ -109,12 +130,16 @@ public class PolicyTest {
     public void testAcceptableRevocationSignatureHashAlgorithm() {
         assertTrue(policy.getRevocationSignatureHashAlgorithmPolicy().isAcceptable(HashAlgorithm.SHA384));
         assertTrue(policy.getRevocationSignatureHashAlgorithmPolicy().isAcceptable(HashAlgorithm.SHA384.getAlgorithmId()));
+        assertTrue(policy.getSignatureHashAlgorithmPolicy().isAcceptable(HashAlgorithm.SHA1, DateUtil.parseUTCDate("2000-01-01 00:00:00 UTC")));
+        assertTrue(policy.getSignatureHashAlgorithmPolicy().isAcceptable(HashAlgorithm.SHA1.getAlgorithmId(), DateUtil.parseUTCDate("2000-01-01 00:00:00 UTC")));
     }
 
     @Test
     public void testUnacceptableRevocationSignatureHashAlgorithm() {
         assertFalse(policy.getRevocationSignatureHashAlgorithmPolicy().isAcceptable(HashAlgorithm.RIPEMD160));
         assertFalse(policy.getRevocationSignatureHashAlgorithmPolicy().isAcceptable(HashAlgorithm.RIPEMD160.getAlgorithmId()));
+        assertFalse(policy.getSignatureHashAlgorithmPolicy().isAcceptable(HashAlgorithm.SHA1, DateUtil.parseUTCDate("2020-01-01 00:00:00 UTC")));
+        assertFalse(policy.getSignatureHashAlgorithmPolicy().isAcceptable(HashAlgorithm.SHA1.getAlgorithmId(), DateUtil.parseUTCDate("2020-01-01 00:00:00 UTC")));
     }
 
     @Test

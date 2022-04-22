@@ -195,8 +195,9 @@ public abstract class SignatureValidator {
                 try {
                     HashAlgorithm hashAlgorithm = HashAlgorithm.requireFromId(signature.getHashAlgorithm());
                     Policy.HashAlgorithmPolicy hashAlgorithmPolicy = getHashAlgorithmPolicyForSignature(signature, policy);
-                    if (!hashAlgorithmPolicy.isAcceptable(signature.getHashAlgorithm())) {
-                        throw new SignatureValidationException("Signature uses unacceptable hash algorithm " + hashAlgorithm);
+                    if (!hashAlgorithmPolicy.isAcceptable(signature.getHashAlgorithm(), signature.getCreationTime())) {
+                        throw new SignatureValidationException("Signature uses unacceptable hash algorithm " + hashAlgorithm +
+                                " (Signature creation time: " + DateUtil.formatUTCDate(signature.getCreationTime()) + ")");
                     }
                 } catch (NoSuchElementException e) {
                     throw new SignatureValidationException("Signature uses unknown hash algorithm " + signature.getHashAlgorithm());
