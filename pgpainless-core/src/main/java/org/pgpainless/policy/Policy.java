@@ -472,7 +472,7 @@ public final class Policy {
         }
 
         /**
-         * Hash algorithm policy for revocation signatures, which accepts SHA1 & SHA2 algorithms, as well as RIPEMD160.
+         * Hash algorithm policy for revocation signatures, which accepts SHA1 and SHA2 algorithms, as well as RIPEMD160.
          *
          * @return static revocation signature hash algorithm policy
          */
