@@ -7,6 +7,8 @@ SPDX-License-Identifier: CC0-1.0
 
 ## 1.2.1-SNAPSHOT
 - Bump `sop-java` dependency to `1.2.2`
+- Bump `slf4j` dependency to `1.7.36`
+- Bump `logback` dependency to `1.2.11`
 - Add experimental support for creating signatures over pre-calculated `MessageDigest` objects.
   - `BcHashContextSigner.signHashContext()` can be used to create OpenPGP signatures over manually hashed data.  
     This allows applications to do the hashing themselves.
