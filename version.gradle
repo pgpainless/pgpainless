@@ -9,7 +9,7 @@ allprojects {
         pgpainlessMinAndroidSdk = 10
         javaSourceCompatibility = 1.8
         bouncyCastleVersion = '1.71'
-        slf4jVersion = '1.7.32'
+        slf4jVersion = '1.7.36'
         logbackVersion = '1.2.9'
         junitVersion = '5.8.2'
         sopJavaVersion = '1.2.2'
