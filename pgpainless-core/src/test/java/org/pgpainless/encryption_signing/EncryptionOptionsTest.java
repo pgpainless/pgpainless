@@ -117,6 +117,14 @@ public class EncryptionOptionsTest {
     }
 
     @Test
+    public void testAddEmptyRecipientsFails() {
+        EncryptionOptions options = new EncryptionOptions();
+        assertThrows(IllegalArgumentException.class, () -> options.addRecipients(Collections.emptyList()));
+        assertThrows(IllegalArgumentException.class, () -> options.addRecipients(Collections.emptyList(),
+                encryptionCapableKeys -> encryptionCapableKeys));
+    }
+
+    @Test
     public void testAddEmptyPassphraseFails() {
         EncryptionOptions options = new EncryptionOptions();
         assertThrows(IllegalArgumentException.class, () ->

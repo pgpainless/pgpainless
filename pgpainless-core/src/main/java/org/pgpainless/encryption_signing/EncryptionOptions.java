@@ -107,6 +107,9 @@ public class EncryptionOptions {
      * @return this
      */
     public EncryptionOptions addRecipients(Iterable<PGPPublicKeyRing> keys) {
+        if (!keys.iterator().hasNext()) {
+            throw new IllegalArgumentException("Set of recipient keys cannot be empty.");
+        }
         for (PGPPublicKeyRing key : keys) {
             addRecipient(key);
         }
@@ -122,6 +125,9 @@ public class EncryptionOptions {
      * @return this
      */
     public EncryptionOptions addRecipients(@Nonnull Iterable<PGPPublicKeyRing> keys, @Nonnull EncryptionKeySelector selector) {
+        if (!keys.iterator().hasNext()) {
+            throw new IllegalArgumentException("Set of recipient keys cannot be empty.");
+        }
         for (PGPPublicKeyRing key : keys) {
             addRecipient(key, selector);
         }
