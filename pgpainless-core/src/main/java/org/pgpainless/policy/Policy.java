@@ -31,17 +31,17 @@ public final class Policy {
     private static Policy INSTANCE;
 
     private HashAlgorithmPolicy signatureHashAlgorithmPolicy =
-            HashAlgorithmPolicy.defaultSignatureAlgorithmPolicy();
+            HashAlgorithmPolicy.smartSignatureHashAlgorithmPolicy();
     private HashAlgorithmPolicy revocationSignatureHashAlgorithmPolicy =
-            HashAlgorithmPolicy.defaultRevocationSignatureHashAlgorithmPolicy();
+            HashAlgorithmPolicy.smartSignatureHashAlgorithmPolicy();
     private SymmetricKeyAlgorithmPolicy symmetricKeyEncryptionAlgorithmPolicy =
-            SymmetricKeyAlgorithmPolicy.defaultSymmetricKeyEncryptionAlgorithmPolicy();
+            SymmetricKeyAlgorithmPolicy.symmetricKeyEncryptionPolicy2022();
     private SymmetricKeyAlgorithmPolicy symmetricKeyDecryptionAlgorithmPolicy =
-            SymmetricKeyAlgorithmPolicy.defaultSymmetricKeyDecryptionAlgorithmPolicy();
+            SymmetricKeyAlgorithmPolicy.symmetricKeyDecryptionPolicy2022();
     private CompressionAlgorithmPolicy compressionAlgorithmPolicy =
-            CompressionAlgorithmPolicy.defaultCompressionAlgorithmPolicy();
+            CompressionAlgorithmPolicy.anyCompressionAlgorithmPolicy();
     private PublicKeyAlgorithmPolicy publicKeyAlgorithmPolicy =
-            PublicKeyAlgorithmPolicy.defaultPublicKeyAlgorithmPolicy();
+            PublicKeyAlgorithmPolicy.bsi2021PublicKeyAlgorithmPolicy();
     private final NotationRegistry notationRegistry = new NotationRegistry();
 
     private AlgorithmSuite keyGenerationAlgorithmSuite = AlgorithmSuite.getDefaultAlgorithmSuite();
@@ -249,8 +249,20 @@ public final class Policy {
          * The default symmetric encryption algorithm policy of PGPainless.
          *
          * @return default symmetric encryption algorithm policy
+         * @deprecated not expressive - will be removed in a future release
          */
+        @Deprecated
         public static SymmetricKeyAlgorithmPolicy defaultSymmetricKeyEncryptionAlgorithmPolicy() {
+            return symmetricKeyEncryptionPolicy2022();
+        }
+
+        /**
+         * Policy for symmetric encryption algorithms in the context of message production (encryption).
+         * This suite contains algorithms that are deemed safe to use in 2022.
+         *
+         * @return 2022 symmetric key encryption algorithm policy
+         */
+        public static SymmetricKeyAlgorithmPolicy symmetricKeyEncryptionPolicy2022() {
             return new SymmetricKeyAlgorithmPolicy(SymmetricKeyAlgorithm.AES_256, Arrays.asList(
                     // Reject: Unencrypted, IDEA, TripleDES, CAST5, Blowfish
                     SymmetricKeyAlgorithm.AES_256,
@@ -267,8 +279,20 @@ public final class Policy {
          * The default symmetric decryption algorithm policy of PGPainless.
          *
          * @return default symmetric decryption algorithm policy
+         * @deprecated not expressive - will be removed in a future update
          */
+        @Deprecated
         public static SymmetricKeyAlgorithmPolicy defaultSymmetricKeyDecryptionAlgorithmPolicy() {
+            return symmetricKeyDecryptionPolicy2022();
+        }
+
+        /**
+         * Policy for symmetric key encryption algorithms in the context of message consumption (decryption).
+         * This suite contains algorithms that are deemed safe to use in 2022.
+         *
+         * @return 2022 symmetric key decryption algorithm policy
+         */
+        public static SymmetricKeyAlgorithmPolicy symmetricKeyDecryptionPolicy2022() {
             return new SymmetricKeyAlgorithmPolicy(SymmetricKeyAlgorithm.AES_256, Arrays.asList(
                     // Reject: Unencrypted, IDEA, TripleDES, Blowfish
                     SymmetricKeyAlgorithm.CAST5,
@@ -414,7 +438,9 @@ public final class Policy {
          * For revocation signatures {@link #defaultRevocationSignatureHashAlgorithmPolicy()} is used instead.
          *
          * @return default signature hash algorithm policy
+         * @deprecated not expressive - will be removed in an upcoming release
          */
+        @Deprecated
         public static HashAlgorithmPolicy defaultSignatureAlgorithmPolicy() {
             return smartSignatureHashAlgorithmPolicy();
         }
@@ -453,7 +479,7 @@ public final class Policy {
          *
          * @return static signature algorithm policy
          */
-        public static HashAlgorithmPolicy static2022SignatureAlgorithmPolicy() {
+        public static HashAlgorithmPolicy static2022SignatureHashAlgorithmPolicy() {
             return new HashAlgorithmPolicy(HashAlgorithm.SHA512, Arrays.asList(
                     HashAlgorithm.SHA224,
                     HashAlgorithm.SHA256,
@@ -466,7 +492,9 @@ public final class Policy {
          * The default revocation signature hash algorithm policy of PGPainless.
          *
          * @return default revocation signature hash algorithm policy
+         * @deprecated not expressive - will be removed in an upcoming release
          */
+        @Deprecated
         public static HashAlgorithmPolicy defaultRevocationSignatureHashAlgorithmPolicy() {
             return smartSignatureHashAlgorithmPolicy();
         }
@@ -517,7 +545,25 @@ public final class Policy {
             return acceptableCompressionAlgorithms.contains(compressionAlgorithm);
         }
 
+        /**
+         * Default {@link CompressionAlgorithmPolicy} of PGPainless.
+         * The default compression algorithm policy accepts any compression algorithm.
+         *
+         * @return default algorithm policy
+         * @deprecated not expressive - might be removed in a future release
+         */
+        @Deprecated
         public static CompressionAlgorithmPolicy defaultCompressionAlgorithmPolicy() {
+            return anyCompressionAlgorithmPolicy();
+        }
+
+        /**
+         * Policy that accepts any known compression algorithm and offers {@link CompressionAlgorithm#ZIP} as
+         * default algorithm.
+         *
+         * @return compression algorithm policy
+         */
+        public static CompressionAlgorithmPolicy anyCompressionAlgorithmPolicy() {
             return new CompressionAlgorithmPolicy(CompressionAlgorithm.ZIP, Arrays.asList(
                     CompressionAlgorithm.UNCOMPRESSED,
                     CompressionAlgorithm.ZIP,
@@ -558,6 +604,17 @@ public final class Policy {
          * Return PGPainless' default public key algorithm policy.
          * This policy is based upon recommendations made by the German Federal Office for Information Security (BSI).
          *
+         * @return default algorithm policy
+         * @deprecated not expressive - might be removed in a future release
+         */
+        @Deprecated
+        public static PublicKeyAlgorithmPolicy defaultPublicKeyAlgorithmPolicy() {
+            return bsi2021PublicKeyAlgorithmPolicy();
+        }
+
+        /**
+         * This policy is based upon recommendations made by the German Federal Office for Information Security (BSI).
+         *
          * Basically this policy requires keys based on elliptic curves to have a bit strength of at least 250,
          * and keys based on prime number factorization / discrete logarithm problems to have a strength of at least 2000 bits.
          *
@@ -567,7 +624,7 @@ public final class Policy {
          *
          * @return default algorithm policy
          */
-        public static PublicKeyAlgorithmPolicy defaultPublicKeyAlgorithmPolicy() {
+        public static PublicKeyAlgorithmPolicy bsi2021PublicKeyAlgorithmPolicy() {
             Map<PublicKeyAlgorithm, Integer> minimalBitStrengths = new EnumMap<>(PublicKeyAlgorithm.class);
             // §5.4.1
             minimalBitStrengths.put(PublicKeyAlgorithm.RSA_GENERAL, 2000);
