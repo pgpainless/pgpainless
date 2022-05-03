@@ -452,8 +452,7 @@ public final class Policy {
          *
          * This policy is inspired by Sequoia-PGP's collision resistant algorithm policy.
          *
-         * @see <a href="https://gitlab.com/sequoia-pgp/sequoia/-/blob/main/openpgp/src/policy.rs#L604">
-         *     Sequoia-PGP's Collision Resistant Algorithm Policy</a>
+         * @see <a href="https://gitlab.com/sequoia-pgp/sequoia/-/blob/main/openpgp/src/policy.rs#L604">Sequoia-PGP's Collision Resistant Algorithm Policy</a>
          *
          * @return smart signature algorithm policy
          */
@@ -618,8 +617,7 @@ public final class Policy {
          * Basically this policy requires keys based on elliptic curves to have a bit strength of at least 250,
          * and keys based on prime number factorization / discrete logarithm problems to have a strength of at least 2000 bits.
          *
-         * @see <a href="https://www.bsi.bund.de/SharedDocs/Downloads/EN/BSI/Publications/TechGuidelines/TG02102/BSI-TR-02102-1.pdf">
-         *     BSI - Technical Guideline - Cryptographic Mechanisms: Recommendations and Key Lengths (2021-01)</a>
+         * @see <a href="https://www.bsi.bund.de/SharedDocs/Downloads/EN/BSI/Publications/TechGuidelines/TG02102/BSI-TR-02102-1.pdf">BSI - Technical Guideline - Cryptographic Mechanisms: Recommendations and Key Lengths (2021-01)</a>
          * @see <a href="https://www.keylength.com/">BlueKrypt | Cryptographic Key Length Recommendation</a>
          *
          * @return default algorithm policy
