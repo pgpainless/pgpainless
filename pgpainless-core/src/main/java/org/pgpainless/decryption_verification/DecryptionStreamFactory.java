@@ -140,7 +140,7 @@ public final class DecryptionStreamFactory {
             return new DecryptionStream(pgpInStream, resultBuilder, integrityProtectedEncryptedInputStream, null);
         }
 
-        if (openPgpIn.isBinaryOpenPgp()) {
+        if (openPgpIn.isLikelyOpenPgpMessage()) {
             outerDecodingStream = openPgpIn;
             objectFactory = ImplementationFactory.getInstance().getPGPObjectFactory(outerDecodingStream);
             // Parse OpenPGP message

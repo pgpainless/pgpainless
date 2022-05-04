@@ -11,18 +11,22 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
+import java.io.OutputStream;
 import java.nio.charset.StandardCharsets;
 import java.util.Random;
 
 import org.bouncycastle.bcpg.ArmoredInputStream;
+import org.bouncycastle.bcpg.CompressionAlgorithmTags;
+import org.bouncycastle.openpgp.PGPCompressedDataGenerator;
 import org.bouncycastle.util.io.Streams;
+import org.junit.jupiter.api.RepeatedTest;
 import org.junit.jupiter.api.Test;
 
 public class OpenPgpInputStreamTest {
 
     private static final Random RANDOM = new Random();
 
-    @Test
+    @RepeatedTest(10)
     public void randomBytesDoNotContainOpenPgpData() throws IOException {
         byte[] randomBytes = new byte[1000000];
         RANDOM.nextBytes(randomBytes);
@@ -30,13 +34,33 @@ public class OpenPgpInputStreamTest {
 
         OpenPgpInputStream openPgpInputStream = new OpenPgpInputStream(randomIn);
         assertFalse(openPgpInputStream.isAsciiArmored());
-        assertFalse(openPgpInputStream.isBinaryOpenPgp());
-        assertTrue(openPgpInputStream.isNonOpenPgp());
+        assertFalse(openPgpInputStream.isLikelyOpenPgpMessage());
 
         ByteArrayOutputStream out = new ByteArrayOutputStream();
         Streams.pipeAll(openPgpInputStream, out);
+        byte[] outBytes = out.toByteArray();
 
-        assertArrayEquals(randomBytes, out.toByteArray());
+        assertArrayEquals(randomBytes, outBytes);
+    }
+
+    @RepeatedTest(10)
+    public void largeCompressedDataIsBinaryOpenPgp() throws IOException {
+        // Since we are compressing RANDOM data, the output will likely be roughly the same size
+        // So we very likely will end up with data larger than the MAX_BUFFER_SIZE
+        byte[] randomBytes = new byte[OpenPgpInputStream.MAX_BUFFER_SIZE * 10];
+        RANDOM.nextBytes(randomBytes);
+
+        ByteArrayOutputStream compressedDataPacket = new ByteArrayOutputStream();
+        PGPCompressedDataGenerator compressedDataGenerator = new PGPCompressedDataGenerator(CompressionAlgorithmTags.ZIP);
+        OutputStream compressor = compressedDataGenerator.open(compressedDataPacket);
+        compressor.write(randomBytes);
+        compressor.close();
+
+        OpenPgpInputStream inputStream = new OpenPgpInputStream(new ByteArrayInputStream(compressedDataPacket.toByteArray()));
+        assertFalse(inputStream.isAsciiArmored());
+        assertFalse(inputStream.isNonOpenPgp());
+        assertTrue(inputStream.isBinaryOpenPgp());
+        assertTrue(inputStream.isLikelyOpenPgpMessage());
     }
 
     @Test
