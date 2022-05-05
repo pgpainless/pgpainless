@@ -188,7 +188,7 @@ repositories {
 }
 
 dependencies {
-	implementation 'org.pgpainless:pgpainless-core:1.2.1'
+	implementation 'org.pgpainless:pgpainless-core:1.2.2'
 }
 ```
 
