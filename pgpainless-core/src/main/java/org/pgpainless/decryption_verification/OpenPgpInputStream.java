@@ -111,6 +111,7 @@ public class OpenPgpInputStream extends BufferedInputStream {
     }
 
     private void nonExhaustiveParseAndCheckPlausibility(ByteArrayInputStream bufferIn) throws IOException {
+        // Read the packet header
         int hdr = bufferIn.read();
         if (hdr < 0 || (hdr & 0x80) == 0) {
             return;
@@ -121,6 +122,7 @@ public class OpenPgpInputStream extends BufferedInputStream {
         int        bodyLen = 0;
         boolean    partial = false;
 
+        // Determine the packet length
         if (newPacket) {
             tag = hdr & 0x3f;
 
@@ -157,10 +159,12 @@ public class OpenPgpInputStream extends BufferedInputStream {
             }
         }
 
+        // Negative body length -> garbage
         if (bodyLen < 0) {
             return;
         }
 
+        // Try to unexhaustively parse the first packet bit by bit and check for plausibility
         BCPGInputStream bcpgIn = new BCPGInputStream(bufferIn);
         switch (tag) {
             case RESERVED:
