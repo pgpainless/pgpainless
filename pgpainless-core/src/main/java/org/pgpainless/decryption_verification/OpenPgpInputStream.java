@@ -77,14 +77,14 @@ public class OpenPgpInputStream extends BufferedInputStream {
     }
 
     private void inspectBuffer() throws IOException {
-        if (determineIsArmored()) {
+        if (checkForAsciiArmor()) {
             return;
         }
 
-        determineIsBinaryOpenPgp();
+        checkForBinaryOpenPgp();
     }
 
-    private boolean determineIsArmored() {
+    private boolean checkForAsciiArmor() {
         if (startsWithIgnoringWhitespace(buffer, ARMOR_HEADER, bufferLen)) {
             containsArmorHeader = true;
             return true;
@@ -100,7 +100,7 @@ public class OpenPgpInputStream extends BufferedInputStream {
      * This breaks down though if we read plausible garbage where the data accidentally makes sense,
      * or valid, yet incomplete packets (remember, we are still only working on a portion of the data).
      */
-    private void determineIsBinaryOpenPgp() throws IOException {
+    private void checkForBinaryOpenPgp() throws IOException {
         if (bufferLen == -1) {
             // Empty data
             return;
@@ -210,7 +210,6 @@ public class OpenPgpInputStream extends BufferedInputStream {
                 }
 
                 containsOpenPgpPackets = true;
-                isLikelyOpenPgpMessage = true;
                 break;
 
             case SYMMETRIC_KEY_ENC_SESSION:
@@ -295,6 +294,8 @@ public class OpenPgpInputStream extends BufferedInputStream {
             case SYMMETRIC_KEY_ENC:
                 // No data to compare :(
                 containsOpenPgpPackets = true;
+                // While this is a valid OpenPGP message, enabling the line below would lead to too many false positives
+                // isLikelyOpenPgpMessage = true;
                 break;
 
             case MARKER:

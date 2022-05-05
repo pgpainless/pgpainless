@@ -13,20 +13,30 @@ import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.OutputStream;
 import java.nio.charset.StandardCharsets;
+import java.security.InvalidAlgorithmParameterException;
+import java.security.NoSuchAlgorithmException;
 import java.util.Random;
 
 import org.bouncycastle.bcpg.ArmoredInputStream;
 import org.bouncycastle.bcpg.CompressionAlgorithmTags;
 import org.bouncycastle.openpgp.PGPCompressedDataGenerator;
+import org.bouncycastle.openpgp.PGPException;
+import org.bouncycastle.openpgp.PGPSecretKeyRing;
 import org.bouncycastle.util.io.Streams;
 import org.junit.jupiter.api.RepeatedTest;
 import org.junit.jupiter.api.Test;
+import org.pgpainless.PGPainless;
+import org.pgpainless.algorithm.CompressionAlgorithm;
+import org.pgpainless.encryption_signing.EncryptionStream;
+import org.pgpainless.encryption_signing.ProducerOptions;
+import org.pgpainless.encryption_signing.SigningOptions;
+import org.pgpainless.key.protection.SecretKeyRingProtector;
 
 public class OpenPgpInputStreamTest {
 
     private static final Random RANDOM = new Random();
 
-    @RepeatedTest(10)
+    @RepeatedTest(100)
     public void randomBytesDoNotContainOpenPgpData() throws IOException {
         byte[] randomBytes = new byte[1000000];
         RANDOM.nextBytes(randomBytes);
@@ -43,7 +53,7 @@ public class OpenPgpInputStreamTest {
         assertArrayEquals(randomBytes, outBytes);
     }
 
-    @RepeatedTest(10)
+    @Test
     public void largeCompressedDataIsBinaryOpenPgp() throws IOException {
         // Since we are compressing RANDOM data, the output will likely be roughly the same size
         // So we very likely will end up with data larger than the MAX_BUFFER_SIZE
@@ -724,5 +734,29 @@ public class OpenPgpInputStreamTest {
         assertFalse(openPgpInputStream.isBinaryOpenPgp());
         assertFalse(openPgpInputStream.isAsciiArmored());
         assertTrue(openPgpInputStream.isNonOpenPgp());
+    }
+
+    @Test
+    public void testSignedMessageConsumption() throws PGPException, InvalidAlgorithmParameterException, NoSuchAlgorithmException, IOException {
+        ByteArrayInputStream plaintext = new ByteArrayInputStream("Hello, World!\n".getBytes(StandardCharsets.UTF_8));
+        PGPSecretKeyRing secretKeys = PGPainless.generateKeyRing()
+                .modernKeyRing("Sigmund <sigmund@exmplample.com>", null);
+
+        ByteArrayOutputStream signedOut = new ByteArrayOutputStream();
+        EncryptionStream signer = PGPainless.encryptAndOrSign()
+                .onOutputStream(signedOut)
+                .withOptions(ProducerOptions.sign(new SigningOptions()
+                                .addSignature(SecretKeyRingProtector.unprotectedKeys(), secretKeys))
+                        .setAsciiArmor(false)
+                        .overrideCompressionAlgorithm(CompressionAlgorithm.UNCOMPRESSED));
+
+        Streams.pipeAll(plaintext, signer);
+        signer.close();
+
+        byte[] binary = signedOut.toByteArray();
+
+        OpenPgpInputStream openPgpIn = new OpenPgpInputStream(new ByteArrayInputStream(binary));
+        assertFalse(openPgpIn.isAsciiArmored());
+        assertTrue(openPgpIn.isLikelyOpenPgpMessage());
     }
 }
