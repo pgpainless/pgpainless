@@ -5,6 +5,12 @@ SPDX-License-Identifier: CC0-1.0
 
 # PGPainless Changelog
 
+## 1.2.2
+- `EncryptionOptions.addRecipients(collection)`: Disallow empty collections to prevent misuse from resulting in unencrypted messages
+- Deprecate default policy factory methods in favor of policy factory methods with expressive names
+- Another fix for OpenPGP data detection
+  - We now inspect the first packet of the data stream to figure out, whether it is plausible OpenPGP data, without exhausting the stream
+
 ## 1.2.1
 - Bump `sop-java` dependency to `1.2.3`
 - Bump `slf4j` dependency to `1.7.36`
