@@ -451,6 +451,11 @@ public final class KeyRingUtils {
     public static PGPSecretKeyRing stripSecretKey(@Nonnull PGPSecretKeyRing secretKeys,
                                                    long secretKeyId)
             throws IOException, PGPException {
+        
+        if (secretKeys.getPublicKey().getKeyID() == secretKeyId) {
+            throw new IllegalArgumentException("Bouncy Castle currently cannot deal with stripped secret primary keys.");
+        }
+
         if (secretKeys.getSecretKey(secretKeyId) == null) {
             throw new NoSuchElementException("PGPSecretKeyRing does not contain secret key " + Long.toHexString(secretKeyId));
         }
