@@ -449,9 +449,9 @@ public final class KeyRingUtils {
      */
     @Nonnull
     public static PGPSecretKeyRing stripSecretKey(@Nonnull PGPSecretKeyRing secretKeys,
-                                                   long secretKeyId)
+                                                  long secretKeyId)
             throws IOException, PGPException {
-        
+
         if (secretKeys.getPublicKey().getKeyID() == secretKeyId) {
             throw new IllegalArgumentException("Bouncy Castle currently cannot deal with stripped secret primary keys.");
         }
