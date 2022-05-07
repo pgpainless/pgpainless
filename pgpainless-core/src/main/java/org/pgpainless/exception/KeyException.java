@@ -38,6 +38,13 @@ public abstract class KeyException extends RuntimeException {
         }
     }
 
+    public static class RevokedKeyException extends KeyException {
+
+        public RevokedKeyException(@Nonnull OpenPgpFingerprint fingerprint) {
+            super("Key " + fingerprint + " appears to be revoked.", fingerprint);
+        }
+    }
+
     public static class UnacceptableEncryptionKeyException extends KeyException {
 
         public UnacceptableEncryptionKeyException(@Nonnull OpenPgpFingerprint fingerprint) {
