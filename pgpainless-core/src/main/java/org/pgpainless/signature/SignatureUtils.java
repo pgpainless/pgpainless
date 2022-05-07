@@ -17,7 +17,6 @@ import org.bouncycastle.bcpg.sig.IssuerKeyID;
 import org.bouncycastle.bcpg.sig.KeyExpirationTime;
 import org.bouncycastle.bcpg.sig.RevocationReason;
 import org.bouncycastle.bcpg.sig.SignatureExpirationTime;
-import org.bouncycastle.openpgp.PGPCompressedData;
 import org.bouncycastle.openpgp.PGPException;
 import org.bouncycastle.openpgp.PGPObjectFactory;
 import org.bouncycastle.openpgp.PGPPublicKey;
@@ -232,7 +231,7 @@ public final class SignatureUtils {
 
     /**
      * Read and return {@link PGPSignature PGPSignatures}.
-     * This method can deal with signatures that may be armored, compressed and may contain marker packets.
+     * This method can deal with signatures that may be binary, armored and may contain marker packets.
      *
      * @param inputStream input stream
      * @param maxIterations number of loop iterations until reading is aborted
@@ -248,11 +247,6 @@ public final class SignatureUtils {
         int i = 0;
         Object nextObject;
         while (i++ < maxIterations && (nextObject = objectFactory.nextObject()) != null) {
-            if (nextObject instanceof PGPCompressedData) {
-                PGPCompressedData compressedData = (PGPCompressedData) nextObject;
-                objectFactory = ImplementationFactory.getInstance().getPGPObjectFactory(compressedData.getDataStream());
-            }
-
             if (nextObject instanceof PGPSignatureList) {
                 PGPSignatureList signatureList = (PGPSignatureList) nextObject;
                 for (PGPSignature s : signatureList) {
