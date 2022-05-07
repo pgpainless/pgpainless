@@ -231,5 +231,10 @@ Please follow the [code of conduct](CODE_OF_CONDUCT.md) if you want to be part o
 
 ## Acknowledgements
 Development on PGPainless is generously sponsored by [FlowCrypt.com](https://flowcrypt.com). Thank you very very very much!
+[![FlowCrypt Logo](https://raw.githubusercontent.com/pgpainless/pgpainless/main/assets/flowcrypt-logo.svg)](https://flowcrypt.com)
+
+Parts of PGPainless development ([project page](https://nlnet.nl/project/PGPainless/)) will be funded by [NGI Assure](https://nlnet.nl/assure/) through [NLNet](https://nlnet.nl).  
+NGI Assure is made possible with financial support from the [European Commission](https://ec.europa.eu/)'s [Next Generation Internet](https://ngi.eu/) programme, under the aegis of [DG Communications Networks, Content and Technology](https://ec.europa.eu/info/departments/communications-networks-content-and-technology_en).
+[![NGI Assure Logo](https://raw.githubusercontent.com/pgpainless/pgpainless/main/assets/NGIAssure_tag.svg)](https://nlnet.nl/assure/)
 
 Continuous Integration is kindly provided by [Travis-CI.com](https://travis-ci.com/).
