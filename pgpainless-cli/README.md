@@ -8,7 +8,7 @@ SPDX-License-Identifier: Apache-2.0
 
 [![javadoc](https://javadoc.io/badge2/org.pgpainless/pgpainless-cli/javadoc.svg)](https://javadoc.io/doc/org.pgpainless/pgpainless-cli)
 
-PGPainless-CLI is an implementation of the [Stateless OpenPGP Command Line Interface](https://tools.ietf.org/html/draft-dkg-openpgp-stateless-cli-01) specification based on PGPainless.
+PGPainless-CLI is an implementation of the [Stateless OpenPGP Command Line Interface](https://datatracker.ietf.org/doc/draft-dkg-openpgp-stateless-cli/) specification based on PGPainless.
 
 It plugs `pgpainless-sop` into `sop-java-picocli`.
 
