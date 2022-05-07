@@ -10,9 +10,10 @@ import org.bouncycastle.openpgp.PGPException;
 import org.bouncycastle.openpgp.PGPPublicKey;
 import org.bouncycastle.openpgp.PGPSecretKey;
 import org.bouncycastle.openpgp.PGPSignature;
+import org.bouncycastle.openpgp.PGPSignatureGenerator;
 import org.pgpainless.algorithm.SignatureType;
 import org.pgpainless.key.protection.SecretKeyRingProtector;
-import org.pgpainless.signature.subpackets.SelfSignatureSubpackets;
+import org.pgpainless.signature.subpackets.CertificationSubpackets;
 
 public class DirectKeySignatureBuilder extends AbstractSignatureBuilder<DirectKeySignatureBuilder> {
 
@@ -25,15 +26,15 @@ public class DirectKeySignatureBuilder extends AbstractSignatureBuilder<DirectKe
         super(SignatureType.DIRECT_KEY, signingKey, protector);
     }
 
-    public SelfSignatureSubpackets getHashedSubpackets() {
+    public CertificationSubpackets getHashedSubpackets() {
         return hashedSubpackets;
     }
 
-    public SelfSignatureSubpackets getUnhashedSubpackets() {
+    public CertificationSubpackets getUnhashedSubpackets() {
         return unhashedSubpackets;
     }
 
-    public void applyCallback(@Nullable SelfSignatureSubpackets.Callback callback) {
+    public void applyCallback(@Nullable CertificationSubpackets.Callback callback) {
         if (callback != null) {
             callback.modifyHashedSubpackets(getHashedSubpackets());
             callback.modifyUnhashedSubpackets(getUnhashedSubpackets());
@@ -41,8 +42,12 @@ public class DirectKeySignatureBuilder extends AbstractSignatureBuilder<DirectKe
     }
 
     public PGPSignature build(PGPPublicKey key) throws PGPException {
-        return buildAndInitSignatureGenerator()
-                .generateCertification(key);
+        PGPSignatureGenerator signatureGenerator = buildAndInitSignatureGenerator();
+        if (key.getKeyID() != publicSigningKey.getKeyID()) {
+            return signatureGenerator.generateCertification(publicSigningKey, key);
+        } else {
+            return signatureGenerator.generateCertification(key);
+        }
     }
 
     @Override

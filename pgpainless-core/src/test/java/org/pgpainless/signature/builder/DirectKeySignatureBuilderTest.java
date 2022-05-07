@@ -40,6 +40,8 @@ public class DirectKeySignatureBuilderTest {
                 secretKeys.getSecretKey(),
                 SecretKeyRingProtector.unprotectedKeys());
 
+        System.out.println("FIXME"); // will cause checkstyle warning, so I remember
+        /*
         dsb.applyCallback(new SelfSignatureSubpackets.Callback() {
             @Override
             public void modifyHashedSubpackets(SelfSignatureSubpackets hashedSubpackets) {
@@ -50,6 +52,7 @@ public class DirectKeySignatureBuilderTest {
                 hashedSubpackets.setFeatures(Feature.MODIFICATION_DETECTION);
             }
         });
+         */
 
         Thread.sleep(1000);
 

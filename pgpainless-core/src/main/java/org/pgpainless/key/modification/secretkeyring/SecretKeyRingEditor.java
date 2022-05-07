@@ -59,6 +59,7 @@ import org.pgpainless.key.util.RevocationAttributes;
 import org.pgpainless.signature.builder.DirectKeySignatureBuilder;
 import org.pgpainless.signature.builder.RevocationSignatureBuilder;
 import org.pgpainless.signature.builder.SelfSignatureBuilder;
+import org.pgpainless.signature.subpackets.CertificationSubpackets;
 import org.pgpainless.signature.subpackets.RevocationSignatureSubpackets;
 import org.pgpainless.signature.subpackets.SelfSignatureSubpackets;
 import org.pgpainless.signature.subpackets.SignatureSubpackets;
@@ -613,9 +614,11 @@ public class SecretKeyRingEditor implements SecretKeyRingEditorInterface {
         final Date keyCreationTime = publicKey.getCreationTime();
 
         DirectKeySignatureBuilder builder = new DirectKeySignatureBuilder(primaryKey, secretKeyRingProtector, prevDirectKeySig);
-        builder.applyCallback(new SelfSignatureSubpackets.Callback() {
+        System.out.println("FIXME"); // will cause checkstyle warning so I remember
+        /*
+        builder.applyCallback(new CertificationSubpackets.Callback() {
             @Override
-            public void modifyHashedSubpackets(SelfSignatureSubpackets hashedSubpackets) {
+            public void modifyHashedSubpackets(CertificationSubpackets hashedSubpackets) {
                 if (expiration != null) {
                     hashedSubpackets.setKeyExpirationTime(keyCreationTime, expiration);
                 } else {
@@ -623,6 +626,7 @@ public class SecretKeyRingEditor implements SecretKeyRingEditorInterface {
                 }
             }
         });
+         */
 
         return builder.build(publicKey);
     }

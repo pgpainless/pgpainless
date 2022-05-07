@@ -165,7 +165,7 @@ public final class PGPainless {
         return Policy.getInstance();
     }
 
-    public static CertifyCertificate certifyCertificate() {
+    public static CertifyCertificate certify() {
         return new CertifyCertificate();
     }
 }

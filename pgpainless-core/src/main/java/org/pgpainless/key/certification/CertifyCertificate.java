@@ -13,111 +13,171 @@ import org.bouncycastle.openpgp.PGPSignature;
 import org.pgpainless.PGPainless;
 import org.pgpainless.algorithm.CertificationType;
 import org.pgpainless.algorithm.KeyFlag;
+import org.pgpainless.algorithm.Trustworthiness;
 import org.pgpainless.exception.KeyException;
 import org.pgpainless.key.OpenPgpFingerprint;
 import org.pgpainless.key.info.KeyRingInfo;
 import org.pgpainless.key.protection.SecretKeyRingProtector;
 import org.pgpainless.key.util.KeyRingUtils;
+import org.pgpainless.signature.builder.DirectKeySignatureBuilder;
 import org.pgpainless.signature.builder.ThirdPartyCertificationSignatureBuilder;
 import org.pgpainless.signature.subpackets.CertificationSubpackets;
 import org.pgpainless.util.DateUtil;
 
+import javax.annotation.Nonnull;
+import javax.annotation.Nullable;
 import java.util.Date;
 
 public class CertifyCertificate {
 
-    CertifyUserId certifyUserId(PGPPublicKeyRing certificate, String userId) {
-        return new CertifyUserId(certificate, userId);
+    CertificationOnUserId userIdOnCertificate(@Nonnull String userId, @Nonnull PGPPublicKeyRing certificate) {
+        return new CertificationOnUserId(userId, certificate, CertificationType.GENERIC);
     }
 
-    public static class CertifyUserId {
+    CertificationOnUserId userIdOnCertificate(@Nonnull String userid, @Nonnull PGPPublicKeyRing certificate, @Nonnull CertificationType certificationType) {
+        return new CertificationOnUserId(userid, certificate, certificationType);
+    }
+
+    DelegationOnCertificate certificate(@Nonnull PGPPublicKeyRing certificate) {
+        return certificate(certificate, null);
+    }
+
+    DelegationOnCertificate certificate(@Nonnull PGPPublicKeyRing certificate, @Nullable Trustworthiness trustworthiness) {
+        return new DelegationOnCertificate(certificate, trustworthiness);
+    }
+
+    public static class CertificationOnUserId {
 
         private final PGPPublicKeyRing certificate;
         private final String userId;
         private final CertificationType certificationType;
 
-        CertifyUserId(PGPPublicKeyRing certificate, String userId) {
-            this(certificate, userId, CertificationType.GENERIC);
-        }
-
-        CertifyUserId(PGPPublicKeyRing certificate, String userId, CertificationType certificationType) {
-            this.certificate = certificate;
+        CertificationOnUserId(@Nonnull String userId, @Nonnull PGPPublicKeyRing certificate, @Nonnull CertificationType certificationType) {
             this.userId = userId;
+            this.certificate = certificate;
             this.certificationType = certificationType;
         }
 
-        CertifyUserIdWithSubpackets withKey(PGPSecretKeyRing certificationKey, SecretKeyRingProtector protector) throws PGPException {
-            Date now = DateUtil.now();
-            KeyRingInfo info = PGPainless.inspectKeyRing(certificationKey, now);
-
-            // We only support certification-capable primary keys
-            OpenPgpFingerprint fingerprint = info.getFingerprint();
-            PGPPublicKey certificationPubKey = info.getPublicKey(fingerprint);
-            if (!info.isKeyValidlyBound(certificationPubKey.getKeyID())) {
-                throw new KeyException.RevokedKeyException(fingerprint);
-            }
-
-            Date expirationDate = info.getExpirationDateForUse(KeyFlag.CERTIFY_OTHER);
-            if (expirationDate != null && expirationDate.before(now)) {
-                throw new KeyException.ExpiredKeyException(fingerprint, expirationDate);
-            }
-
-            PGPSecretKey secretKey = certificationKey.getSecretKey(certificationPubKey.getKeyID());
-            if (secretKey == null) {
-                throw new KeyException.MissingSecretKeyException(fingerprint, certificationPubKey.getKeyID());
-            }
+        CertificationOnUserIdWithSubpackets withKey(@Nonnull PGPSecretKeyRing certificationKey, @Nonnull SecretKeyRingProtector protector) throws PGPException {
+            PGPSecretKey secretKey = getCertificationSecretKey(certificationKey);
 
             ThirdPartyCertificationSignatureBuilder sigBuilder = new ThirdPartyCertificationSignatureBuilder(
                     certificationType.asSignatureType(), secretKey, protector);
 
-            return new CertifyUserIdWithSubpackets(certificate, userId, sigBuilder);
+            return new CertificationOnUserIdWithSubpackets(certificate, userId, sigBuilder);
         }
     }
 
-    public static class CertifyUserIdWithSubpackets {
+    public static class CertificationOnUserIdWithSubpackets {
 
         private final PGPPublicKeyRing certificate;
         private final String userId;
         private final ThirdPartyCertificationSignatureBuilder sigBuilder;
 
-        CertifyUserIdWithSubpackets(PGPPublicKeyRing certificate, String userId, ThirdPartyCertificationSignatureBuilder sigBuilder) {
+        CertificationOnUserIdWithSubpackets(@Nonnull PGPPublicKeyRing certificate, @Nonnull String userId, @Nonnull ThirdPartyCertificationSignatureBuilder sigBuilder) {
             this.certificate = certificate;
             this.userId = userId;
             this.sigBuilder = sigBuilder;
         }
 
-        public CertifyUserIdResult withSubpackets(CertificationSubpackets.Callback subpacketCallback) throws PGPException {
+        public CertificationResult withSubpackets(@Nonnull CertificationSubpackets.Callback subpacketCallback) throws PGPException {
             sigBuilder.applyCallback(subpacketCallback);
             return build();
         }
 
-        public CertifyUserIdResult build() throws PGPException {
+        public CertificationResult build() throws PGPException {
             PGPSignature signature = sigBuilder.build(certificate, userId);
-
-            return new CertifyUserIdResult(certificate, userId, signature);
+            PGPPublicKeyRing certifiedCertificate = KeyRingUtils.injectCertification(certificate, userId, signature);
+            return new CertificationResult(certifiedCertificate, signature);
         }
     }
 
-    public static class CertifyUserIdResult {
+    public static class DelegationOnCertificate {
 
         private final PGPPublicKeyRing certificate;
-        private final String userId;
+        private final Trustworthiness trustworthiness;
+
+        DelegationOnCertificate(@Nonnull PGPPublicKeyRing certificate, @Nullable Trustworthiness trustworthiness) {
+            this.certificate = certificate;
+            this.trustworthiness = trustworthiness;
+        }
+
+        public DelegationOnCertificateWithSubpackets withKey(@Nonnull PGPSecretKeyRing certificationKey, @Nonnull SecretKeyRingProtector protector) throws PGPException {
+            PGPSecretKey secretKey = getCertificationSecretKey(certificationKey);
+
+            DirectKeySignatureBuilder sigBuilder = new DirectKeySignatureBuilder(secretKey, protector);
+            if (trustworthiness != null) {
+                sigBuilder.getHashedSubpackets().setTrust(true, trustworthiness.getDepth(), trustworthiness.getAmount());
+            }
+            return new DelegationOnCertificateWithSubpackets(certificate, sigBuilder);
+        }
+    }
+
+    public static class DelegationOnCertificateWithSubpackets {
+
+        private final PGPPublicKeyRing certificate;
+        private final DirectKeySignatureBuilder sigBuilder;
+
+        public DelegationOnCertificateWithSubpackets(@Nonnull PGPPublicKeyRing certificate, @Nonnull DirectKeySignatureBuilder sigBuilder) {
+            this.certificate = certificate;
+            this.sigBuilder = sigBuilder;
+        }
+
+        public CertificationResult withSubpackets(@Nonnull CertificationSubpackets.Callback subpacketsCallback) throws PGPException {
+            sigBuilder.applyCallback(subpacketsCallback);
+            return build();
+        }
+
+        public CertificationResult build() throws PGPException {
+            PGPPublicKey delegatedKey = certificate.getPublicKey();
+            PGPSignature delegation = sigBuilder.build(delegatedKey);
+            PGPPublicKeyRing delegatedCertificate = KeyRingUtils.injectCertification(certificate, delegatedKey, delegation);
+            return new CertificationResult(delegatedCertificate, delegation);
+        }
+    }
+
+    public static class CertificationResult {
+
+        private final PGPPublicKeyRing certificate;
         private final PGPSignature certification;
 
-        CertifyUserIdResult(PGPPublicKeyRing certificate, String userId, PGPSignature certification) {
+        CertificationResult(@Nonnull PGPPublicKeyRing certificate, @Nonnull PGPSignature certification) {
             this.certificate = certificate;
-            this.userId = userId;
             this.certification = certification;
         }
 
+        @Nonnull
         public PGPSignature getCertification() {
             return certification;
         }
 
+        @Nonnull
         public PGPPublicKeyRing getCertifiedCertificate() {
-            // inject the signature
-            PGPPublicKeyRing certified = KeyRingUtils.injectCertification(certificate, userId, certification);
-            return certified;
+            return certificate;
         }
     }
+
+    private static PGPSecretKey getCertificationSecretKey(PGPSecretKeyRing certificationKey) {
+        Date now = DateUtil.now();
+        KeyRingInfo info = PGPainless.inspectKeyRing(certificationKey, now);
+
+        // We only support certification-capable primary keys
+        OpenPgpFingerprint fingerprint = info.getFingerprint();
+        PGPPublicKey certificationPubKey = info.getPublicKey(fingerprint);
+        if (!info.isKeyValidlyBound(certificationPubKey.getKeyID())) {
+            throw new KeyException.RevokedKeyException(fingerprint);
+        }
+
+        Date expirationDate = info.getExpirationDateForUse(KeyFlag.CERTIFY_OTHER);
+        if (expirationDate != null && expirationDate.before(now)) {
+            throw new KeyException.ExpiredKeyException(fingerprint, expirationDate);
+        }
+
+        PGPSecretKey secretKey = certificationKey.getSecretKey(certificationPubKey.getKeyID());
+        if (secretKey == null) {
+            throw new KeyException.MissingSecretKeyException(fingerprint, certificationPubKey.getKeyID());
+        }
+        return secretKey;
+    }
+
 }
