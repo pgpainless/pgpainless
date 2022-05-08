@@ -16,6 +16,22 @@ import org.junit.jupiter.api.Test;
 public class SignatureUtilsTest {
 
     @Test
+    public void readSignaturesFromCompressedDataDoesNotAttemptDecompression() throws PGPException, IOException {
+        String compressed = "-----BEGIN PGP MESSAGE-----\n" +
+                "Version: PGPainless\n" +
+                "\n" +
+                "owHrKGVhEOZiYGNlSoxcsJtBkVMg3OzZZKnz5jxiiiz+aTG+h46kcR9zinOECZ/o\n" +
+                "YmTYsKve/opb3v/o8J0qq1/MFFBhP9jfEq+/avK6qPMrlh70Zfinu96c+cncX9GK\n" +
+                "B4ui3fUfbUo8tFrVTIRn7kROq69H77hd6cCw9susVdls1as1gNYunnp5V8Qp+wX3\n" +
+                "+jUnwoRB1p4SfPk412lb/cSmShb211fOX07h0JxVH1JXsc/vi2mi5ieG/2Xxb5tk\n" +
+                "LE+r7WwruxSaeXLuLsOmXTPZD0/VtvlqO89RYjsA\n" +
+                "=yZ18\n" +
+                "-----END PGP MESSAGE-----";
+        List<PGPSignature> signatures = SignatureUtils.readSignatures(compressed);
+        assertEquals(0, signatures.size());
+    }
+
+    @Test
     public void noIssuerResultsInKeyId0() throws PGPException, IOException {
         String sig = "-----BEGIN PGP SIGNATURE-----\n" +
                 "\n" +

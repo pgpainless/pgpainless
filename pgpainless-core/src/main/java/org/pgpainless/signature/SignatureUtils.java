@@ -17,6 +17,7 @@ import org.bouncycastle.bcpg.sig.IssuerKeyID;
 import org.bouncycastle.bcpg.sig.KeyExpirationTime;
 import org.bouncycastle.bcpg.sig.RevocationReason;
 import org.bouncycastle.bcpg.sig.SignatureExpirationTime;
+import org.bouncycastle.openpgp.PGPCompressedData;
 import org.bouncycastle.openpgp.PGPException;
 import org.bouncycastle.openpgp.PGPObjectFactory;
 import org.bouncycastle.openpgp.PGPPublicKey;
@@ -26,6 +27,7 @@ import org.bouncycastle.openpgp.PGPSignatureGenerator;
 import org.bouncycastle.openpgp.PGPSignatureList;
 import org.bouncycastle.openpgp.operator.PGPContentSignerBuilder;
 import org.bouncycastle.util.encoders.Hex;
+import org.bouncycastle.util.io.Streams;
 import org.pgpainless.PGPainless;
 import org.pgpainless.algorithm.HashAlgorithm;
 import org.pgpainless.algorithm.SignatureType;
@@ -247,6 +249,11 @@ public final class SignatureUtils {
         int i = 0;
         Object nextObject;
         while (i++ < maxIterations && (nextObject = objectFactory.nextObject()) != null) {
+            if (nextObject instanceof PGPCompressedData) {
+                PGPCompressedData compressedData = (PGPCompressedData) nextObject;
+                Streams.drain(compressedData.getInputStream()); // Skip packet without decompressing
+            }
+
             if (nextObject instanceof PGPSignatureList) {
                 PGPSignatureList signatureList = (PGPSignatureList) nextObject;
                 for (PGPSignature s : signatureList) {
