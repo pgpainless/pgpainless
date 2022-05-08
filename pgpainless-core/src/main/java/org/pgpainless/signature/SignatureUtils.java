@@ -249,8 +249,13 @@ public final class SignatureUtils {
         int i = 0;
         Object nextObject;
         while (i++ < maxIterations && (nextObject = objectFactory.nextObject()) != null) {
+
+            // Since signatures are indistinguishable from randomness, there is no point in having them compressed,
+            //  except for an attacker who is trying to exploit flaws in the decompression algorithm.
+            //  Therefore, we ignore compressed data packets without attempting decompression.
             if (nextObject instanceof PGPCompressedData) {
                 PGPCompressedData compressedData = (PGPCompressedData) nextObject;
+                // getInputStream() does not do decompression, contrary to getDataStream().
                 Streams.drain(compressedData.getInputStream()); // Skip packet without decompressing
             }
 
