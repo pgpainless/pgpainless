@@ -14,6 +14,7 @@ import java.security.InvalidAlgorithmParameterException;
 import java.security.NoSuchAlgorithmException;
 import java.util.List;
 
+import org.bouncycastle.bcpg.sig.TrustSignature;
 import org.bouncycastle.openpgp.PGPException;
 import org.bouncycastle.openpgp.PGPPublicKey;
 import org.bouncycastle.openpgp.PGPPublicKeyRing;
@@ -84,13 +85,19 @@ public class CertifyCertificateTest {
         assertNotNull(signature);
         assertEquals(SignatureType.DIRECT_KEY, SignatureType.valueOf(signature.getSignatureType()));
         assertEquals(alice.getPublicKey().getKeyID(), signature.getKeyID());
+        TrustSignature trustSignaturePacket = signature.getHashedSubPackets().getTrust();
+        assertNotNull(trustSignaturePacket);
+        Trustworthiness trustworthiness = new Trustworthiness(trustSignaturePacket.getTrustAmount(), trustSignaturePacket.getDepth());
+        assertTrue(trustworthiness.isFullyTrusted());
+        assertTrue(trustworthiness.isIntroducer());
+        assertFalse(trustworthiness.canIntroduce(1));
 
         assertTrue(SignatureVerifier.verifyDirectKeySignature(
                 signature, alice.getPublicKey(), bob.getPublicKey(), PGPainless.getPolicy(), DateUtil.now()));
 
         PGPPublicKeyRing bobCertified = result.getCertifiedCertificate();
         PGPPublicKey bobCertifiedKey = bobCertified.getPublicKey();
-        
+
         List<PGPSignature> sigsByAlice = CollectionUtils.iteratorToList(
                 bobCertifiedKey.getSignaturesForKeyID(alice.getPublicKey().getKeyID()));
         assertEquals(1, sigsByAlice.size());

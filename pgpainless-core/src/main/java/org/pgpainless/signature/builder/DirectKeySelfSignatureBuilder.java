@@ -13,28 +13,28 @@ import org.bouncycastle.openpgp.PGPSignature;
 import org.bouncycastle.openpgp.PGPSignatureGenerator;
 import org.pgpainless.algorithm.SignatureType;
 import org.pgpainless.key.protection.SecretKeyRingProtector;
-import org.pgpainless.signature.subpackets.CertificationSubpackets;
+import org.pgpainless.signature.subpackets.SelfSignatureSubpackets;
 
-public class DirectKeySignatureBuilder extends AbstractSignatureBuilder<DirectKeySignatureBuilder> {
+public class DirectKeySelfSignatureBuilder extends AbstractSignatureBuilder<DirectKeySelfSignatureBuilder> {
 
-    public DirectKeySignatureBuilder(PGPSecretKey certificationKey, SecretKeyRingProtector protector, PGPSignature archetypeSignature)
+    public DirectKeySelfSignatureBuilder(PGPSecretKey certificationKey, SecretKeyRingProtector protector, PGPSignature archetypeSignature)
             throws PGPException {
         super(certificationKey, protector, archetypeSignature);
     }
 
-    public DirectKeySignatureBuilder(PGPSecretKey signingKey, SecretKeyRingProtector protector) throws PGPException {
+    public DirectKeySelfSignatureBuilder(PGPSecretKey signingKey, SecretKeyRingProtector protector) throws PGPException {
         super(SignatureType.DIRECT_KEY, signingKey, protector);
     }
 
-    public CertificationSubpackets getHashedSubpackets() {
+    public SelfSignatureSubpackets getHashedSubpackets() {
         return hashedSubpackets;
     }
 
-    public CertificationSubpackets getUnhashedSubpackets() {
+    public SelfSignatureSubpackets getUnhashedSubpackets() {
         return unhashedSubpackets;
     }
 
-    public void applyCallback(@Nullable CertificationSubpackets.Callback callback) {
+    public void applyCallback(@Nullable SelfSignatureSubpackets.Callback callback) {
         if (callback != null) {
             callback.modifyHashedSubpackets(getHashedSubpackets());
             callback.modifyUnhashedSubpackets(getUnhashedSubpackets());

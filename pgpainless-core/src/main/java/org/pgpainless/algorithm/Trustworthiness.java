@@ -10,8 +10,8 @@ public class Trustworthiness {
     private final int depth;
 
     public static final int THRESHOLD_FULLY_CONVINCED = 120;
-    public static final int THRESHOLD_MARGINALLY_CONVINCED = 60;
-    public static final int THRESHOLD_NOT_TRUSTED = 0;
+    public static final int MARGINALLY_CONVINCED = 60;
+    public static final int NOT_TRUSTED = 0;
 
     public Trustworthiness(int amount, int depth) {
         this.amount = capAmount(amount);
@@ -24,6 +24,30 @@ public class Trustworthiness {
 
     public int getDepth() {
         return depth;
+    }
+
+    public boolean isNotTrusted() {
+        return getAmount() == NOT_TRUSTED;
+    }
+
+    public boolean isMarginallyTrusted() {
+        return getAmount() > NOT_TRUSTED;
+    }
+
+    public boolean isFullyTrusted() {
+        return getAmount() >= THRESHOLD_FULLY_CONVINCED;
+    }
+
+    public boolean isIntroducer() {
+        return getDepth() >= 1;
+    }
+
+    public boolean canIntroduce(int otherDepth) {
+        return getDepth() > otherDepth;
+    }
+
+    public boolean canIntroduce(Trustworthiness other) {
+        return canIntroduce(other.getDepth());
     }
 
     /**
@@ -41,7 +65,7 @@ public class Trustworthiness {
      * @return builder
      */
     public static Builder marginallyTrusted() {
-        return new Builder(THRESHOLD_MARGINALLY_CONVINCED);
+        return new Builder(MARGINALLY_CONVINCED);
     }
 
     /**
@@ -51,7 +75,7 @@ public class Trustworthiness {
      * @return builder
      */
     public static Builder untrusted() {
-        return new Builder(THRESHOLD_NOT_TRUSTED);
+        return new Builder(NOT_TRUSTED);
     }
 
     public static final class Builder {

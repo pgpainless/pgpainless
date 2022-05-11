@@ -19,7 +19,7 @@ import org.pgpainless.key.OpenPgpFingerprint;
 import org.pgpainless.key.info.KeyRingInfo;
 import org.pgpainless.key.protection.SecretKeyRingProtector;
 import org.pgpainless.key.util.KeyRingUtils;
-import org.pgpainless.signature.builder.DirectKeySignatureBuilder;
+import org.pgpainless.signature.builder.ThirdPartyDirectKeySignatureBuilder;
 import org.pgpainless.signature.builder.ThirdPartyCertificationSignatureBuilder;
 import org.pgpainless.signature.subpackets.CertificationSubpackets;
 import org.pgpainless.util.DateUtil;
@@ -28,20 +28,60 @@ import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
 import java.util.Date;
 
+/**
+ * API for creating certifications and delegations (Signatures) on keys.
+ * This API can be used to sign another persons OpenPGP key.
+ *
+ * A certification over a user-id is thereby used to attest, that the user believes that the user-id really belongs
+ * to the owner of the certificate.
+ * A delegation over a key can be used to delegate trust by marking the certificate as a trusted introducer.
+ */
 public class CertifyCertificate {
 
+    /**
+     * Create a certification over a User-Id.
+     * By default, this method will use {@link CertificationType#GENERIC} to create the signature.
+     * If you need to create another type of certification, use
+     * {@link #userIdOnCertificate(String, PGPPublicKeyRing, CertificationType)} instead.
+     *
+     * @param userId user-id to certify
+     * @param certificate certificate
+     * @return API
+     */
     CertificationOnUserId userIdOnCertificate(@Nonnull String userId, @Nonnull PGPPublicKeyRing certificate) {
         return new CertificationOnUserId(userId, certificate, CertificationType.GENERIC);
     }
 
+    /**
+     * Create a certification of the given {@link CertificationType} over a User-Id.
+     *
+     * @param userid user-id to certify
+     * @param certificate certificate
+     * @param certificationType type of signature
+     * @return API
+     */
     CertificationOnUserId userIdOnCertificate(@Nonnull String userid, @Nonnull PGPPublicKeyRing certificate, @Nonnull CertificationType certificationType) {
         return new CertificationOnUserId(userid, certificate, certificationType);
     }
 
+    /**
+     * Create a delegation (direct key signature) over a certificate.
+     *
+     * @param certificate certificate
+     * @return API
+     */
     DelegationOnCertificate certificate(@Nonnull PGPPublicKeyRing certificate) {
         return certificate(certificate, null);
     }
 
+    /**
+     * Create a delegation (direct key signature) containing a {@link org.bouncycastle.bcpg.sig.TrustSignature} packet
+     * over a certificate.
+     *
+     * @param certificate certificate
+     * @param trustworthiness trustworthiness of the certificate
+     * @return API
+     */
     DelegationOnCertificate certificate(@Nonnull PGPPublicKeyRing certificate, @Nullable Trustworthiness trustworthiness) {
         return new DelegationOnCertificate(certificate, trustworthiness);
     }
@@ -58,8 +98,16 @@ public class CertifyCertificate {
             this.certificationType = certificationType;
         }
 
+        /**
+         * Create the certification using the given key.
+         *
+         * @param certificationKey key used to create the certification
+         * @param protector protector to unlock the certification key
+         * @return API
+         * @throws PGPException in case of an OpenPGP related error
+         */
         CertificationOnUserIdWithSubpackets withKey(@Nonnull PGPSecretKeyRing certificationKey, @Nonnull SecretKeyRingProtector protector) throws PGPException {
-            PGPSecretKey secretKey = getCertificationSecretKey(certificationKey);
+            PGPSecretKey secretKey = getCertifyingSecretKey(certificationKey);
 
             ThirdPartyCertificationSignatureBuilder sigBuilder = new ThirdPartyCertificationSignatureBuilder(
                     certificationType.asSignatureType(), secretKey, protector);
@@ -80,11 +128,24 @@ public class CertifyCertificate {
             this.sigBuilder = sigBuilder;
         }
 
-        public CertificationResult withSubpackets(@Nonnull CertificationSubpackets.Callback subpacketCallback) throws PGPException {
+        /**
+         * Apply the given signature subpackets and build the certification.
+         *
+         * @param subpacketCallback callback to modify the signatures subpackets
+         * @return result
+         * @throws PGPException in case of an OpenPGP related error
+         */
+        public CertificationResult buildWithSubpackets(@Nonnull CertificationSubpackets.Callback subpacketCallback) throws PGPException {
             sigBuilder.applyCallback(subpacketCallback);
             return build();
         }
 
+        /**
+         * Build the certification signature.
+         *
+         * @return result
+         * @throws PGPException in case of an OpenPGP related error
+         */
         public CertificationResult build() throws PGPException {
             PGPSignature signature = sigBuilder.build(certificate, userId);
             PGPPublicKeyRing certifiedCertificate = KeyRingUtils.injectCertification(certificate, userId, signature);
@@ -102,10 +163,18 @@ public class CertifyCertificate {
             this.trustworthiness = trustworthiness;
         }
 
+        /**
+         * Build the delegation using the given certification key.
+         *
+         * @param certificationKey key to create the certification with
+         * @param protector protector to unlock the certification key
+         * @return API
+         * @throws PGPException in case of an OpenPGP related error
+         */
         public DelegationOnCertificateWithSubpackets withKey(@Nonnull PGPSecretKeyRing certificationKey, @Nonnull SecretKeyRingProtector protector) throws PGPException {
-            PGPSecretKey secretKey = getCertificationSecretKey(certificationKey);
+            PGPSecretKey secretKey = getCertifyingSecretKey(certificationKey);
 
-            DirectKeySignatureBuilder sigBuilder = new DirectKeySignatureBuilder(secretKey, protector);
+            ThirdPartyDirectKeySignatureBuilder sigBuilder = new ThirdPartyDirectKeySignatureBuilder(secretKey, protector);
             if (trustworthiness != null) {
                 sigBuilder.getHashedSubpackets().setTrust(true, trustworthiness.getDepth(), trustworthiness.getAmount());
             }
@@ -116,18 +185,31 @@ public class CertifyCertificate {
     public static class DelegationOnCertificateWithSubpackets {
 
         private final PGPPublicKeyRing certificate;
-        private final DirectKeySignatureBuilder sigBuilder;
+        private final ThirdPartyDirectKeySignatureBuilder sigBuilder;
 
-        public DelegationOnCertificateWithSubpackets(@Nonnull PGPPublicKeyRing certificate, @Nonnull DirectKeySignatureBuilder sigBuilder) {
+        DelegationOnCertificateWithSubpackets(@Nonnull PGPPublicKeyRing certificate, @Nonnull ThirdPartyDirectKeySignatureBuilder sigBuilder) {
             this.certificate = certificate;
             this.sigBuilder = sigBuilder;
         }
 
-        public CertificationResult withSubpackets(@Nonnull CertificationSubpackets.Callback subpacketsCallback) throws PGPException {
+        /**
+         * Apply the given signature subpackets and build the delegation signature.
+         *
+         * @param subpacketsCallback callback to modify the signatures subpackets
+         * @return result
+         * @throws PGPException in case of an OpenPGP related error
+         */
+        public CertificationResult buildWithSubpackets(@Nonnull CertificationSubpackets.Callback subpacketsCallback) throws PGPException {
             sigBuilder.applyCallback(subpacketsCallback);
             return build();
         }
 
+        /**
+         * Build the delegation signature.
+         *
+         * @return result
+         * @throws PGPException in case of an OpenPGP related error
+         */
         public CertificationResult build() throws PGPException {
             PGPPublicKey delegatedKey = certificate.getPublicKey();
             PGPSignature delegation = sigBuilder.build(delegatedKey);
@@ -146,18 +228,28 @@ public class CertifyCertificate {
             this.certification = certification;
         }
 
+        /**
+         * Return the signature.
+         *
+         * @return signature
+         */
         @Nonnull
         public PGPSignature getCertification() {
             return certification;
         }
 
+        /**
+         * Return the certificate, which now contains the signature.
+         *
+         * @return certificate + signature
+         */
         @Nonnull
         public PGPPublicKeyRing getCertifiedCertificate() {
             return certificate;
         }
     }
 
-    private static PGPSecretKey getCertificationSecretKey(PGPSecretKeyRing certificationKey) {
+    private static PGPSecretKey getCertifyingSecretKey(PGPSecretKeyRing certificationKey) {
         Date now = DateUtil.now();
         KeyRingInfo info = PGPainless.inspectKeyRing(certificationKey, now);
 
@@ -179,5 +271,4 @@ public class CertifyCertificate {
         }
         return secretKey;
     }
-
 }

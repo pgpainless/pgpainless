@@ -29,19 +29,17 @@ import org.pgpainless.key.util.KeyRingUtils;
 import org.pgpainless.signature.subpackets.SelfSignatureSubpackets;
 import org.pgpainless.signature.subpackets.SignatureSubpacketsUtil;
 
-public class DirectKeySignatureBuilderTest {
+public class ThirdPartyDirectKeySignatureBuilderTest {
 
     @Test
     public void testDirectKeySignatureBuilding() throws PGPException, InvalidAlgorithmParameterException, NoSuchAlgorithmException, InterruptedException {
         PGPSecretKeyRing secretKeys = PGPainless.generateKeyRing()
                 .modernKeyRing("Alice");
 
-        DirectKeySignatureBuilder dsb = new DirectKeySignatureBuilder(
+        DirectKeySelfSignatureBuilder dsb = new DirectKeySelfSignatureBuilder(
                 secretKeys.getSecretKey(),
                 SecretKeyRingProtector.unprotectedKeys());
 
-        System.out.println("FIXME"); // will cause checkstyle warning, so I remember
-        /*
         dsb.applyCallback(new SelfSignatureSubpackets.Callback() {
             @Override
             public void modifyHashedSubpackets(SelfSignatureSubpackets hashedSubpackets) {
@@ -52,7 +50,6 @@ public class DirectKeySignatureBuilderTest {
                 hashedSubpackets.setFeatures(Feature.MODIFICATION_DETECTION);
             }
         });
-         */
 
         Thread.sleep(1000);
 
