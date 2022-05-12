@@ -71,4 +71,17 @@ public class TrustworthinessTest {
         it = new Trustworthiness(140, 1);
         assertTrue(it.isFullyTrusted());
     }
+
+    @Test
+    public void depthHierarchyTest() {
+        Trustworthiness l1 = Trustworthiness.fullyTrusted().metaIntroducerOfDepth(1);
+        Trustworthiness l2 = Trustworthiness.fullyTrusted().metaIntroducerOfDepth(2);
+        Trustworthiness l3 = Trustworthiness.fullyTrusted().metaIntroducerOfDepth(3);
+
+        assertTrue(l3.canIntroduce(l2));
+        assertTrue(l3.canIntroduce(l1));
+        assertTrue(l2.canIntroduce(l1));
+        assertFalse(l1.canIntroduce(l2));
+        assertFalse(l1.canIntroduce(l3));
+    }
 }
