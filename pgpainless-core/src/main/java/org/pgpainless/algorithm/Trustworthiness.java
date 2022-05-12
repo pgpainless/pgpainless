@@ -14,9 +14,9 @@ public class Trustworthiness {
     private final int amount;
     private final int depth;
 
-    public static final int THRESHOLD_FULLY_CONVINCED = 120;
-    public static final int MARGINALLY_CONVINCED = 60;
-    public static final int NOT_TRUSTED = 0;
+    public static final int THRESHOLD_FULLY_CONVINCED = 120;    // greater or equal is fully trusted
+    public static final int MARGINALLY_CONVINCED = 60;          // default value for marginally convinced
+    public static final int NOT_TRUSTED = 0;                    // 0 is not trusted
 
     public Trustworthiness(int amount, int depth) {
         this.amount = capAmount(amount);
