@@ -193,6 +193,21 @@ public final class KeyRingTemplates {
      * an X25519 XDH encryption subkey and an ed25519 EdDSA signing key.
      *
      * @param userId primary user id
+     * @return key ring
+     *
+     * @throws InvalidAlgorithmParameterException in case of invalid key generation parameters
+     * @throws NoSuchAlgorithmException in case of missing algorithm implementation in the crypto provider
+     * @throws PGPException in case of an OpenPGP related error
+     */
+    public PGPSecretKeyRing modernKeyRing(String userId) throws PGPException, InvalidAlgorithmParameterException, NoSuchAlgorithmException {
+        return modernKeyRing(userId, null);
+    }
+
+    /**
+     * Generate a modern PGP key ring consisting of an ed25519 EdDSA primary key which is used to certify
+     * an X25519 XDH encryption subkey and an ed25519 EdDSA signing key.
+     *
+     * @param userId primary user id
      * @param password passphrase or null if the key should be unprotected.
      * @return key ring
      *
