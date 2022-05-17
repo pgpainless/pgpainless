@@ -9,7 +9,9 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.nio.charset.Charset;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.Date;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Set;
 
@@ -39,6 +41,8 @@ import org.pgpainless.key.util.OpenPgpKeyAttributeUtil;
 import org.pgpainless.key.util.RevocationAttributes;
 import org.pgpainless.signature.subpackets.SignatureSubpacketsUtil;
 import org.pgpainless.util.ArmorUtils;
+
+import javax.annotation.Nonnull;
 
 /**
  * Utility methods related to signatures.
@@ -332,5 +336,37 @@ public final class SignatureUtils {
         }
 
         return fp.equals(issuerFp);
+    }
+
+    /**
+     * Extract all signatures from the given <pre>key</pre> which were issued by <pre>issuerKeyId</pre>
+     * over <pre>userId</pre>.
+     *
+     * @param key public key
+     * @param userId user-id
+     * @param issuerKeyId issuer key-id
+     * @return (potentially empty) list of signatures
+     */
+    public static @Nonnull List<PGPSignature> getSignaturesOverUserIdBy(
+            @Nonnull PGPPublicKey key,
+            @Nonnull String userId,
+            long issuerKeyId) {
+        List<PGPSignature> signaturesByKeyId = new ArrayList<>();
+        Iterator<PGPSignature> userIdSignatures = key.getSignaturesForID(userId);
+
+        // getSignaturesForID() is nullable -.-
+        if (userIdSignatures == null) {
+            return signaturesByKeyId;
+        }
+
+        // filter for signatures by key-id
+        while (userIdSignatures.hasNext()) {
+            PGPSignature signature = userIdSignatures.next();
+            if (signature.getKeyID() == issuerKeyId) {
+                signaturesByKeyId.add(signature);
+            }
+        }
+
+        return Collections.unmodifiableList(signaturesByKeyId);
     }
 }
