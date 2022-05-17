@@ -48,7 +48,7 @@ public class CertifyCertificate {
      * @param certificate certificate
      * @return API
      */
-    CertificationOnUserId userIdOnCertificate(@Nonnull String userId, @Nonnull PGPPublicKeyRing certificate) {
+    public CertificationOnUserId userIdOnCertificate(@Nonnull String userId, @Nonnull PGPPublicKeyRing certificate) {
         return new CertificationOnUserId(userId, certificate, CertificationType.GENERIC);
     }
 
@@ -60,7 +60,7 @@ public class CertifyCertificate {
      * @param certificationType type of signature
      * @return API
      */
-    CertificationOnUserId userIdOnCertificate(@Nonnull String userid, @Nonnull PGPPublicKeyRing certificate, @Nonnull CertificationType certificationType) {
+    public CertificationOnUserId userIdOnCertificate(@Nonnull String userid, @Nonnull PGPPublicKeyRing certificate, @Nonnull CertificationType certificationType) {
         return new CertificationOnUserId(userid, certificate, certificationType);
     }
 
@@ -70,7 +70,7 @@ public class CertifyCertificate {
      * @param certificate certificate
      * @return API
      */
-    DelegationOnCertificate certificate(@Nonnull PGPPublicKeyRing certificate) {
+    public DelegationOnCertificate certificate(@Nonnull PGPPublicKeyRing certificate) {
         return certificate(certificate, null);
     }
 
@@ -82,7 +82,7 @@ public class CertifyCertificate {
      * @param trustworthiness trustworthiness of the certificate
      * @return API
      */
-    DelegationOnCertificate certificate(@Nonnull PGPPublicKeyRing certificate, @Nullable Trustworthiness trustworthiness) {
+    public DelegationOnCertificate certificate(@Nonnull PGPPublicKeyRing certificate, @Nullable Trustworthiness trustworthiness) {
         return new DelegationOnCertificate(certificate, trustworthiness);
     }
 
@@ -106,7 +106,7 @@ public class CertifyCertificate {
          * @return API
          * @throws PGPException in case of an OpenPGP related error
          */
-        CertificationOnUserIdWithSubpackets withKey(@Nonnull PGPSecretKeyRing certificationKey, @Nonnull SecretKeyRingProtector protector) throws PGPException {
+        public CertificationOnUserIdWithSubpackets withKey(@Nonnull PGPSecretKeyRing certificationKey, @Nonnull SecretKeyRingProtector protector) throws PGPException {
             PGPSecretKey secretKey = getCertifyingSecretKey(certificationKey);
 
             ThirdPartyCertificationSignatureBuilder sigBuilder = new ThirdPartyCertificationSignatureBuilder(
