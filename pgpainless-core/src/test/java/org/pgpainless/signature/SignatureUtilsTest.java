@@ -10,8 +10,11 @@ import java.io.IOException;
 import java.util.List;
 
 import org.bouncycastle.openpgp.PGPException;
+import org.bouncycastle.openpgp.PGPPublicKey;
+import org.bouncycastle.openpgp.PGPPublicKeyRing;
 import org.bouncycastle.openpgp.PGPSignature;
 import org.junit.jupiter.api.Test;
+import org.pgpainless.PGPainless;
 
 public class SignatureUtilsTest {
 
@@ -82,5 +85,57 @@ public class SignatureUtilsTest {
                 "-----END PGP SIGNATURE-----\n";
         List<PGPSignature> signatures = SignatureUtils.readSignatures(sigs);
         assertEquals(1, signatures.size()); // first sig gets skipped
+    }
+
+    @Test
+    public void testGetSignaturesOverUserIdBy() throws IOException {
+        String alice = "-----BEGIN PGP PUBLIC KEY BLOCK-----\n" +
+                "Version: PGPainless\n" +
+                "Comment: 9CA2 8D6D DBA6 BCF1 23A4  2775 0EB5 08CD 1714 B46A\n" +
+                "Comment: Alice <alice@exmaple.com>\n" +
+                "Comment: 1 further identity\n" +
+                "\n" +
+                "mDMEYoPLwhYJKwYBBAHaRw8BAQdAnuduN87Gu2qvsfdRxLP83strq+doPNP8Hx2J\n" +
+                "esvaN0+0GUFsaWNlIDxhbGljZUBleG1hcGxlLmNvbT6IjwQTFgoAQQUCYoPLwgkQ\n" +
+                "DrUIzRcUtGoWIQScoo1t26a88SOkJ3UOtQjNFxS0agKeAQKbAQUWAgMBAAQLCQgH\n" +
+                "BRUKCQgLApkBAABRRwD+II62grSOGKDyBYMLTfCNQejcazQYWoSVyJiD308CRxgA\n" +
+                "/2H6kTXaV+Lk2+te/yZ3aeAd1wFBDe2HRelrMy4074gMiHUEEBYKACcFAmKDy8IJ\n" +
+                "EE3a6g4UHIzBFiEE0VukWebIQb/PImHfTdrqDhQcjMEAAOjCAQCcCQySwr/8VgW8\n" +
+                "Ww+pKM21gWWSGMazMqAcDwqnCrebtAEAiU2PtfWGFZc6VVdsMI1GOcRp++fz+AJ5\n" +
+                "fqzWZ+QBBgK0LUFsaWNlIEV4YW1wbGUgPGFsaWNlQGV4YW1wbGUuY29tPiBbZnJv\n" +
+                "bSB3b3JrXYh1BBAWCgAnBQJig8vCCRC2GO3iDTVMtxYhBKl1XHhzEUcOxqNPwLYY\n" +
+                "7eINNUy3AADMFQD+Pcfk5nT7P4KDBxYiLs8Jct3dWLoOMR7dY9jn43d4Q6IBANWy\n" +
+                "DqBF1IsqTeqRaKUVKw8sWrEIZcgFt7SpgcsLTHMOuDgEYoPLwhIKKwYBBAGXVQEF\n" +
+                "AQEHQKY2huLPeGlqnLi4ITEgbtYp/C4ofZjmh6/rKUirtopIAwEIB4h1BBgWCgAd\n" +
+                "BQJig8vCAp4BApsMBRYCAwEABAsJCAcFFQoJCAsACgkQDrUIzRcUtGp9qQD+KuK+\n" +
+                "lWnlioN8gEyh1Rl2b4ABH6hOBdfW6zjUggnvVHwBAN6r6MJdu47c9xsLKypzyhwB\n" +
+                "0RbnyH5NMS6jwsK5zmoOuDMEYoPLwhYJKwYBBAHaRw8BAQdAxst2EY4/drt/MeTU\n" +
+                "RkzQdB8AO1Wc2gnlXavk2a+0DpyI1QQYFgoAfQUCYoPLwgKeAQKbAgUWAgMBAAQL\n" +
+                "CQgHBRUKCQgLXyAEGRYKAAYFAmKDy8IACgkQchAyuqB7Hn2yOAD/cPA01NO5YJPg\n" +
+                "KUuSDLnk872y+e419bvFizrM4LKYbeoA/0aw12mcpi1smQJ3mm9T/oGidatBQJ74\n" +
+                "JIPqTtwHSTIHAAoJEA61CM0XFLRqzj4A+QGjS6ay2AioirHJ9SCA8Eq6L2f/N3RB\n" +
+                "YBOlV32f3zxyAP9fwXlz0hRbBDnnie2O5eXT9ZurnAKGXPwCtlsqrmeTBg==\n" +
+                "=uC3F\n" +
+                "-----END PGP PUBLIC KEY BLOCK-----\n";
+
+        String aliceId = "Alice <alice@exmaple.com>";
+        String charliesPetNameForAlice = "Alice Example <alice@example.com> [from work]";
+
+        long aliceKeyId = 1059762964264170602L;
+        long bobKeyId = 5610053632031231169L;
+        long charlieKeyId = -5325245004225622857L;
+
+        PGPPublicKeyRing aliceCert = PGPainless.readKeyRing().publicKeyRing(alice);
+        PGPPublicKey aliceKey = aliceCert.getPublicKey();
+
+        // alice self-signed her user-id
+        assertEquals(1, SignatureUtils.getSignaturesOverUserIdBy(aliceKey, aliceId, aliceKeyId).size());
+        // Bob signed alices user-id
+        assertEquals(1, SignatureUtils.getSignaturesOverUserIdBy(aliceKey, aliceId, bobKeyId).size());
+        // charlie gave alice a pet name
+        assertEquals(1, SignatureUtils.getSignaturesOverUserIdBy(aliceKey, charliesPetNameForAlice, charlieKeyId).size());
+
+        // Alice did not certify the petname charlie gave her
+        assertEquals(0, SignatureUtils.getSignaturesOverUserIdBy(aliceKey, charliesPetNameForAlice, aliceKeyId).size());
     }
 }
