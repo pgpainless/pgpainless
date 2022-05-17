@@ -6,6 +6,7 @@ package org.pgpainless.util;
 
 import java.lang.reflect.Array;
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.Iterator;
 import java.util.List;
 
@@ -59,5 +60,18 @@ public final class CollectionUtils {
             }
         }
         return false;
+    }
+
+    /**
+     * Add all items from the iterator to the collection.
+     *
+     * @param <T>        type of item
+     * @param iterator   iterator to gather items from
+     * @param collection collection to add items to
+     */
+    public static <T> void addAll(Iterator<T> iterator, Collection<T> collection) {
+        while (iterator.hasNext()) {
+            collection.add(iterator.next());
+        }
     }
 }
