@@ -14,6 +14,7 @@ import java.net.URI;
 import java.net.URISyntaxException;
 
 import org.bouncycastle.openpgp.PGPPublicKey;
+import org.bouncycastle.util.encoders.Hex;
 import org.junit.jupiter.api.Test;
 
 
@@ -101,5 +102,43 @@ public class OpenPgpV4FingerprintTest {
         assertTrue(parsed instanceof OpenPgpV4Fingerprint);
         OpenPgpV4Fingerprint v4fp = (OpenPgpV4Fingerprint) parsed;
         assertEquals(prettyPrint, v4fp.prettyPrint());
+    }
+
+    @Test
+    public void testParseFromBinary() {
+        String hex = "5448452043414B452049532041204C4945212121";
+        byte[] binary = Hex.decode(hex);
+
+        OpenPgpFingerprint fingerprint = OpenPgpFingerprint.parseFromBinary(binary);
+        assertTrue(fingerprint instanceof OpenPgpV4Fingerprint);
+        assertEquals(hex, fingerprint.toString());
+    }
+
+    @Test
+    public void testParseFromBinary_leadingZeros() {
+        String hex = "00000000000000000049532041204C4945212121";
+        byte[] binary = Hex.decode(hex);
+
+        OpenPgpFingerprint fingerprint = OpenPgpFingerprint.parseFromBinary(binary);
+        assertTrue(fingerprint instanceof OpenPgpV4Fingerprint);
+        assertEquals(hex, fingerprint.toString());
+    }
+
+    @Test
+    public void testParseFromBinary_trailingZeros() {
+        String hex = "49532041204C4945212121000000000000000000";
+        byte[] binary = Hex.decode(hex);
+
+        OpenPgpFingerprint fingerprint = OpenPgpFingerprint.parseFromBinary(binary);
+        assertTrue(fingerprint instanceof OpenPgpV4Fingerprint);
+        assertEquals(hex, fingerprint.toString());
+    }
+
+    @Test
+    public void testParseFromBinary_wrongLength() {
+        String hex = "5448452043414B452049532041204C49452121"; // 2 missing digits
+        byte[] binary = Hex.decode(hex);
+
+        assertThrows(IllegalArgumentException.class, () -> OpenPgpFingerprint.parseFromBinary(binary));
     }
 }

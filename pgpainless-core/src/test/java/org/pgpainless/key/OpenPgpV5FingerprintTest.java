@@ -4,9 +4,11 @@
 
 package org.pgpainless.key;
 
+import org.bouncycastle.util.encoders.Hex;
 import org.junit.jupiter.api.Test;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 public class OpenPgpV5FingerprintTest {
@@ -32,5 +34,43 @@ public class OpenPgpV5FingerprintTest {
         assertTrue(parsed instanceof OpenPgpV5Fingerprint);
         OpenPgpV5Fingerprint v5fp = (OpenPgpV5Fingerprint) parsed;
         assertEquals(prettyPrint, v5fp.prettyPrint());
+    }
+
+    @Test
+    public void testParseFromBinary() {
+        String hex = "76543210ABCDEFAB01AB23CD1C0FFEE11EEFF0C1DC32BA10BAFEDCBA01234567";
+        byte[] binary = Hex.decode(hex);
+
+        OpenPgpFingerprint fingerprint = OpenPgpFingerprint.parseFromBinary(binary);
+        assertTrue(fingerprint instanceof OpenPgpV5Fingerprint);
+        assertEquals(hex, fingerprint.toString());
+    }
+
+    @Test
+    public void testParseFromBinary_leadingZeros() {
+        String hex = "000000000000000001AB23CD1C0FFEE11EEFF0C1DC32BA10BAFEDCBA01234567";
+        byte[] binary = Hex.decode(hex);
+
+        OpenPgpFingerprint fingerprint = OpenPgpFingerprint.parseFromBinary(binary);
+        assertTrue(fingerprint instanceof OpenPgpV5Fingerprint);
+        assertEquals(hex, fingerprint.toString());
+    }
+
+    @Test
+    public void testParseFromBinary_trailingZeros() {
+        String hex = "76543210ABCDEFAB01AB23CD1C0FFEE11EEFF0C1DC32BA100000000000000000";
+        byte[] binary = Hex.decode(hex);
+
+        OpenPgpFingerprint fingerprint = OpenPgpFingerprint.parseFromBinary(binary);
+        assertTrue(fingerprint instanceof OpenPgpV5Fingerprint);
+        assertEquals(hex, fingerprint.toString());
+    }
+
+    @Test
+    public void testParseFromBinary_wrongLength() {
+        String hex = "76543210ABCDEFAB01AB23CD1C0FFEE11EEFF0C1DC32BA10BAFEDCBA012345"; // missing 2 digits
+        byte[] binary = Hex.decode(hex);
+
+        assertThrows(IllegalArgumentException.class, () -> OpenPgpFingerprint.parseFromBinary(binary));
     }
 }
