@@ -14,6 +14,7 @@ import java.util.Date;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Set;
+import javax.annotation.Nonnull;
 
 import org.bouncycastle.bcpg.sig.IssuerKeyID;
 import org.bouncycastle.bcpg.sig.KeyExpirationTime;
@@ -36,13 +37,10 @@ import org.pgpainless.algorithm.SignatureType;
 import org.pgpainless.algorithm.negotiation.HashAlgorithmNegotiator;
 import org.pgpainless.implementation.ImplementationFactory;
 import org.pgpainless.key.OpenPgpFingerprint;
-import org.pgpainless.key.OpenPgpV4Fingerprint;
 import org.pgpainless.key.util.OpenPgpKeyAttributeUtil;
 import org.pgpainless.key.util.RevocationAttributes;
 import org.pgpainless.signature.subpackets.SignatureSubpacketsUtil;
 import org.pgpainless.util.ArmorUtils;
-
-import javax.annotation.Nonnull;
 
 /**
  * Utility methods related to signatures.
@@ -325,17 +323,17 @@ public final class SignatureUtils {
     }
 
     public static boolean wasIssuedBy(byte[] fingerprint, PGPSignature signature) {
-        if (fingerprint.length != 20) {
+        try {
+            OpenPgpFingerprint fp = OpenPgpFingerprint.parseFromBinary(fingerprint);
+            OpenPgpFingerprint issuerFp = SignatureSubpacketsUtil.getIssuerFingerprintAsOpenPgpFingerprint(signature);
+            if (issuerFp == null) {
+                return fp.getKeyId() == signature.getKeyID();
+            }
+            return fp.equals(issuerFp);
+        } catch (IllegalArgumentException e) {
             // Unknown fingerprint length
             return false;
         }
-        OpenPgpV4Fingerprint fp = new OpenPgpV4Fingerprint(fingerprint);
-        OpenPgpFingerprint issuerFp = SignatureSubpacketsUtil.getIssuerFingerprintAsOpenPgpFingerprint(signature);
-        if (issuerFp == null) {
-            return fp.getKeyId() == signature.getKeyID();
-        }
-
-        return fp.equals(issuerFp);
     }
 
     /**
@@ -354,7 +352,7 @@ public final class SignatureUtils {
         List<PGPSignature> signaturesByKeyId = new ArrayList<>();
         Iterator<PGPSignature> userIdSignatures = key.getSignaturesForID(userId);
 
-        // getSignaturesForID() is nullable -.-
+        // getSignaturesForID() is nullable for some reason -.-
         if (userIdSignatures == null) {
             return signaturesByKeyId;
         }
