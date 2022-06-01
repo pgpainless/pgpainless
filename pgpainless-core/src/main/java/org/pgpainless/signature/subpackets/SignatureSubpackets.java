@@ -287,6 +287,13 @@ public class SignatureSubpackets
         return setKeyExpirationTime(new KeyExpirationTime(isCritical, secondsFromCreationToExpiration));
     }
 
+    /**
+     * Enforce that <pre>secondsFromCreationToExpiration</pre> is within bounds of an unsigned 32bit number.
+     * Values less than 0 are illegal, as well as values greater 0xffffffff.
+     *
+     * @param secondsFromCreationToExpiration number to check
+     * @throws IllegalArgumentException in case of an under- or overflow
+     */
     private void enforceBounds(long secondsFromCreationToExpiration) {
         if (secondsFromCreationToExpiration < 0) {
             throw new IllegalArgumentException("Seconds from creation to expiration cannot be less than 0.");
