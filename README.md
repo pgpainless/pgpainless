@@ -192,17 +192,9 @@ dependencies {
 }
 ```
 
-## About
-PGPainless is a by-product of my [Summer of Code 2018 project](https://blog.jabberhead.tk/summer-of-code-2018/)
-implementing OpenPGP support for the XMPP client library [Smack](https://github.com/igniterealtime/Smack).
-For that project I was in need of a simple-to-use OpenPGP library.
-
-Originally I was going to use [Bouncy-GPG](https://github.com/neuhalje/bouncy-gpg) for my project,
-but ultimately I decided to create my own OpenPGP library which better fits my needs.
-
-However, PGPainless was heavily influenced by Bouncy-GPG.
-
-To reach out to the development team, feel free to send a mail: info@pgpainless.org
+## Professional Support
+Do you need a custom feature? Are you unsure of what's the best way to integrate PGPainless into your product?
+We offer paid professional services. Don't hesitate to send an inquiry to [info@pgpainless.org](mailto:info@pgpainless.org).
 
 ## Development
 PGPainless is developed in - and accepts contributions from - the following places:
