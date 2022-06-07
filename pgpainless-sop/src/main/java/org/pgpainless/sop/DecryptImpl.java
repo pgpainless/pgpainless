@@ -7,9 +7,12 @@ package org.pgpainless.sop;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
+import java.nio.charset.Charset;
 import java.util.ArrayList;
 import java.util.Date;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 
 import org.bouncycastle.openpgp.PGPException;
 import org.bouncycastle.openpgp.PGPPublicKeyRingCollection;
@@ -23,9 +26,8 @@ import org.pgpainless.decryption_verification.ConsumerOptions;
 import org.pgpainless.decryption_verification.DecryptionStream;
 import org.pgpainless.decryption_verification.OpenPgpMetadata;
 import org.pgpainless.exception.MissingDecryptionMethodException;
+import org.pgpainless.exception.WrongPassphraseException;
 import org.pgpainless.key.SubkeyIdentifier;
-import org.pgpainless.key.info.KeyRingInfo;
-import org.pgpainless.key.protection.SecretKeyRingProtector;
 import org.pgpainless.util.Passphrase;
 import sop.DecryptionResult;
 import sop.ReadyWithResult;
@@ -37,6 +39,8 @@ import sop.operation.Decrypt;
 public class DecryptImpl implements Decrypt {
 
     private final ConsumerOptions consumerOptions = new ConsumerOptions();
+    private final Set<PGPSecretKeyRing> keys = new HashSet<>();
+    private final MatchMakingSecretKeyRingProtector protector = new MatchMakingSecretKeyRingProtector();
 
     @Override
     public DecryptImpl verifyNotBefore(Date timestamp) throws SOPGPException.UnsupportedOption {
@@ -96,19 +100,13 @@ public class DecryptImpl implements Decrypt {
     }
 
     @Override
-    public DecryptImpl withKey(InputStream keyIn) throws SOPGPException.KeyIsProtected, SOPGPException.BadData, SOPGPException.UnsupportedAsymmetricAlgo {
+    public DecryptImpl withKey(InputStream keyIn) throws SOPGPException.BadData, SOPGPException.UnsupportedAsymmetricAlgo {
         try {
-            PGPSecretKeyRingCollection secretKeys = PGPainless.readKeyRing()
+            PGPSecretKeyRingCollection secretKeyCollection = PGPainless.readKeyRing()
                     .secretKeyRingCollection(keyIn);
-
-            for (PGPSecretKeyRing secretKey : secretKeys) {
-                KeyRingInfo info = new KeyRingInfo(secretKey);
-                if (!info.isFullyDecrypted()) {
-                    throw new SOPGPException.KeyIsProtected();
-                }
+            for (PGPSecretKeyRing key : secretKeyCollection) {
+                keys.add(key);
             }
-
-            consumerOptions.addDecryptionKeys(secretKeys, SecretKeyRingProtector.unprotectedKeys());
         } catch (IOException | PGPException e) {
             throw new SOPGPException.BadData(e);
         }
@@ -116,9 +114,20 @@ public class DecryptImpl implements Decrypt {
     }
 
     @Override
+    public Decrypt withKeyPassword(byte[] password) {
+        String string = new String(password, Charset.forName("UTF8"));
+        protector.addPassphrase(Passphrase.fromPassword(string));
+        return this;
+    }
+
+    @Override
     public ReadyWithResult<DecryptionResult> ciphertext(InputStream ciphertext)
             throws SOPGPException.BadData,
             SOPGPException.MissingArg {
+        for (PGPSecretKeyRing key : keys) {
+            protector.addSecretKey(key);
+            consumerOptions.addDecryptionKey(key, protector);
+        }
 
         if (consumerOptions.getDecryptionKeys().isEmpty() && consumerOptions.getDecryptionPassphrases().isEmpty() && consumerOptions.getSessionKey() == null) {
             throw new SOPGPException.MissingArg("Missing decryption key, passphrase or session key.");
@@ -131,8 +140,12 @@ public class DecryptImpl implements Decrypt {
                     .withOptions(consumerOptions);
         } catch (MissingDecryptionMethodException e) {
             throw new SOPGPException.CannotDecrypt();
+        } catch (WrongPassphraseException e) {
+            throw new SOPGPException.KeyIsProtected();
         } catch (PGPException | IOException e) {
             throw new SOPGPException.BadData(e);
+        } finally {
+            protector.clear();
         }
 
         return new ReadyWithResult<DecryptionResult>() {

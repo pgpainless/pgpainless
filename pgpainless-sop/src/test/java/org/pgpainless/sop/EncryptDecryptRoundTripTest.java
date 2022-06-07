@@ -11,6 +11,7 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
+import java.nio.charset.Charset;
 import java.nio.charset.StandardCharsets;
 
 import org.bouncycastle.util.io.Streams;
@@ -24,12 +25,13 @@ import sop.exception.SOPGPException;
 
 public class EncryptDecryptRoundTripTest {
 
+    private static final Charset utf8 = Charset.forName("UTF8");
     private static SOP sop;
     private static byte[] aliceKey;
     private static byte[] aliceCert;
     private static byte[] bobKey;
     private static byte[] bobCert;
-    private static byte[] message = "Hello, World!\n".getBytes(StandardCharsets.UTF_8);
+    private static byte[] message = "Hello, World!\n".getBytes(utf8);
 
     @BeforeAll
     public static void setup() throws IOException {
@@ -218,8 +220,119 @@ public class EncryptDecryptRoundTripTest {
                 "=MUYS\n" +
                 "-----END PGP PRIVATE KEY BLOCK-----";
 
+        String msg = "-----BEGIN PGP MESSAGE-----\n" +
+                "Version: PGPainless\n" +
+                "\n" +
+                "hF4Doj0CaB2GRvISAQdAhV5sjUCxanM68jG9qaq2rep1KKQx2o+9yrK0Rsrtqkww\n" +
+                "mb4uVv/SD3ixDztUSgUset0jeUeZHZAWfTB9cWawX4fiB2BdbcxhxFqQR8VPJ2SZ\n" +
+                "0jcB+wH1gq05AkMaCfoEIio3o3QcZq2In8tqj69U3AFRQApoH/p+ZLDz2pcnFBn+\n" +
+                "x1Y+C6wNg/3g\n" +
+                "=6vge\n" +
+                "-----END PGP MESSAGE-----";
+
         assertThrows(SOPGPException.KeyIsProtected.class, () -> sop.decrypt()
-                .withKey(passwordProtectedKey.getBytes(StandardCharsets.UTF_8)));
+                .withKey(passwordProtectedKey.getBytes(StandardCharsets.UTF_8))
+                .ciphertext(msg.getBytes(utf8)));
+    }
+
+    @Test
+    public void encryptDecryptRoundTripWithProtectedKey() throws IOException {
+        byte[] passphrase = "sw0rdf1sh".getBytes(utf8);
+
+        byte[] key = sop.generateKey()
+                .userId("Alice <alice@pgpainless.org>")
+                .withKeyPassword(passphrase)
+                .generate().getBytes();
+
+        byte[] cert = sop.extractCert()
+                .key(key)
+                .getBytes();
+
+        byte[] plaintext = "Hello, World!\n".getBytes(utf8);
+
+        byte[] ciphertext = sop.encrypt()
+                .withCert(cert)
+                .plaintext(plaintext)
+                .getBytes();
+
+        byte[] decrypted = sop.decrypt()
+                .withKeyPassword(passphrase)
+                .withKey(key)
+                .ciphertext(ciphertext)
+                .toByteArrayAndResult()
+                .getBytes();
+
+        assertArrayEquals(plaintext, decrypted);
+    }
+
+    @Test
+    public void encryptDecryptRoundTripWithTwoProtectedKeysAndOnePassphrase() throws IOException {
+        byte[] passphrase1 = "sw0rdf1sh".getBytes(utf8);
+
+        byte[] key1 = sop.generateKey()
+                .userId("Alice <alice@pgpainless.org>")
+                .withKeyPassword(passphrase1)
+                .generate().getBytes();
+
+        byte[] cert1 = sop.extractCert()
+                .key(key1)
+                .getBytes();
+
+        byte[] passphrase2 = "fooBar".getBytes(utf8);
+
+        byte[] key2 = sop.generateKey()
+                .userId("Bob <bob@pgpainless.org>")
+                .withKeyPassword(passphrase2)
+                .generate().getBytes();
+
+        byte[] cert2 = sop.extractCert()
+                .key(key2)
+                .getBytes();
+
+        byte[] plaintext = "Hello, World!\n".getBytes(utf8);
+
+        byte[] ciphertext = sop.encrypt()
+                .withCert(cert1)
+                .withCert(cert2)
+                .plaintext(plaintext)
+                .getBytes();
+
+        byte[] decrypted = sop.decrypt()
+                .withKey(key1)
+                .withKey(key2)
+                .withKeyPassword(passphrase2)
+                .ciphertext(ciphertext)
+                .toByteArrayAndResult()
+                .getBytes();
+
+        assertArrayEquals(plaintext, decrypted);
+    }
+
+    @Test
+    public void encryptDecryptRoundTripFailsWithProtectedKeyAndWrongPassphrase() throws IOException {
+        byte[] passphrase = "sw0rdf1sh".getBytes(utf8);
+
+        byte[] key = sop.generateKey()
+                .userId("Alice <alice@pgpainless.org>")
+                .withKeyPassword(passphrase)
+                .generate().getBytes();
+
+        byte[] cert = sop.extractCert()
+                .key(key)
+                .getBytes();
+
+        byte[] plaintext = "Hello, World!\n".getBytes(utf8);
+
+        byte[] ciphertext = sop.encrypt()
+                .withCert(cert)
+                .plaintext(plaintext)
+                .getBytes();
+
+        assertThrows(SOPGPException.KeyIsProtected.class,
+                () -> sop.decrypt()
+                        .withKeyPassword("foobar")
+                        .withKey(key)
+                        .ciphertext(ciphertext));
     }
 
     @Test

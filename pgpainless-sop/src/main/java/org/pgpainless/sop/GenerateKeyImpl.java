@@ -19,6 +19,7 @@ import org.pgpainless.PGPainless;
 import org.pgpainless.key.modification.secretkeyring.SecretKeyRingEditorInterface;
 import org.pgpainless.key.protection.SecretKeyRingProtector;
 import org.pgpainless.util.ArmorUtils;
+import org.pgpainless.util.Passphrase;
 import sop.Ready;
 import sop.exception.SOPGPException;
 import sop.operation.GenerateKey;
@@ -27,6 +28,7 @@ public class GenerateKeyImpl implements GenerateKey {
 
     private boolean armor = true;
     private final Set<String> userIds = new LinkedHashSet<>();
+    private Passphrase passphrase;
 
     @Override
     public GenerateKey noArmor() {
@@ -41,6 +43,12 @@ public class GenerateKeyImpl implements GenerateKey {
     }
 
     @Override
+    public GenerateKey withKeyPassword(String password) {
+        this.passphrase = Passphrase.fromPassword(password);
+        return this;
+    }
+
+    @Override
     public Ready generate() throws SOPGPException.MissingArg, SOPGPException.UnsupportedAsymmetricAlgo {
         Iterator<String> userIdIterator = userIds.iterator();
         if (!userIdIterator.hasNext()) {
@@ -50,7 +58,7 @@ public class GenerateKeyImpl implements GenerateKey {
         PGPSecretKeyRing key;
         try {
              key = PGPainless.generateKeyRing()
-                    .modernKeyRing(userIdIterator.next(), null);
+                    .modernKeyRing(userIdIterator.next(), passphrase);
 
             if (userIdIterator.hasNext()) {
                 SecretKeyRingEditorInterface editor = PGPainless.modifyKeyRing(key);

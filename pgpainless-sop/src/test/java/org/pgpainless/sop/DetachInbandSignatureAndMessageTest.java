@@ -58,7 +58,7 @@ public class DetachInbandSignatureAndMessageTest {
         signingStream.close();
 
         // actually detach the message
-        ByteArrayAndResult<Signatures> detachedMsg = sop.detachInbandSignatureAndMessage()
+        ByteArrayAndResult<Signatures> detachedMsg = sop.inlineDetach()
                 .message(out.toByteArray())
                 .toByteArrayAndResult();
 

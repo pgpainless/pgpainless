@@ -7,9 +7,13 @@ package org.pgpainless.sop;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
+import java.nio.charset.Charset;
+import java.util.HashSet;
+import java.util.Set;
 
 import org.bouncycastle.openpgp.PGPException;
 import org.bouncycastle.openpgp.PGPPublicKeyRingCollection;
+import org.bouncycastle.openpgp.PGPSecretKeyRing;
 import org.bouncycastle.openpgp.PGPSecretKeyRingCollection;
 import org.bouncycastle.util.io.Streams;
 import org.pgpainless.PGPainless;
@@ -20,7 +24,6 @@ import org.pgpainless.encryption_signing.EncryptionStream;
 import org.pgpainless.encryption_signing.ProducerOptions;
 import org.pgpainless.encryption_signing.SigningOptions;
 import org.pgpainless.exception.WrongPassphraseException;
-import org.pgpainless.key.protection.SecretKeyRingProtector;
 import org.pgpainless.util.Passphrase;
 import sop.util.ProxyOutputStream;
 import sop.Ready;
@@ -32,6 +35,9 @@ public class EncryptImpl implements Encrypt {
 
     EncryptionOptions encryptionOptions = new EncryptionOptions();
     SigningOptions signingOptions = null;
+
+    Set<PGPSecretKeyRing> signingKeys = new HashSet<>();
+    MatchMakingSecretKeyRingProtector protector = new MatchMakingSecretKeyRingProtector();
 
     private EncryptAs encryptAs = EncryptAs.Binary;
     boolean armor = true;
@@ -49,7 +55,7 @@ public class EncryptImpl implements Encrypt {
     }
 
     @Override
-    public Encrypt signWith(InputStream keyIn) throws SOPGPException.KeyIsProtected, SOPGPException.KeyCannotSign, SOPGPException.UnsupportedAsymmetricAlgo, SOPGPException.BadData {
+    public Encrypt signWith(InputStream keyIn) throws SOPGPException.KeyCannotSign, SOPGPException.UnsupportedAsymmetricAlgo, SOPGPException.BadData {
         try {
             PGPSecretKeyRingCollection keys = PGPainless.readKeyRing().secretKeyRingCollection(keyIn);
             if (keys.size() != 1) {
@@ -59,20 +65,17 @@ public class EncryptImpl implements Encrypt {
             if (signingOptions == null) {
                 signingOptions = SigningOptions.get();
             }
-            try {
-                signingOptions.addInlineSignatures(
-                        SecretKeyRingProtector.unprotectedKeys(),
-                        keys,
-                        (encryptAs == EncryptAs.Binary ? DocumentSignatureType.BINARY_DOCUMENT : DocumentSignatureType.CANONICAL_TEXT_DOCUMENT)
-                );
-            } catch (IllegalArgumentException e) {
-                throw new SOPGPException.KeyCannotSign();
-            } catch (WrongPassphraseException e) {
-                throw new SOPGPException.KeyIsProtected();
-            }
+            signingKeys.add(keys.getKeyRings().next());
         } catch (IOException | PGPException e) {
             throw new SOPGPException.BadData(e);
         }
+        return this;
+    }
+
+    @Override
+    public Encrypt withKeyPassword(byte[] password) {
+        String passphrase = new String(password, Charset.forName("UTF8"));
+        protector.addPassphrase(Passphrase.fromPassword(passphrase));
         return this;
     }
 
@@ -97,6 +100,26 @@ public class EncryptImpl implements Encrypt {
 
     @Override
     public Ready plaintext(InputStream plaintext) throws IOException {
+        for (PGPSecretKeyRing signingKey : signingKeys) {
+            protector.addSecretKey(signingKey);
+        }
+
+        if (signingOptions != null) {
+            try {
+                signingOptions.addInlineSignatures(
+                        protector,
+                        signingKeys,
+                        (encryptAs == EncryptAs.Binary ? DocumentSignatureType.BINARY_DOCUMENT : DocumentSignatureType.CANONICAL_TEXT_DOCUMENT)
+                );
+            } catch (IllegalArgumentException e) {
+                throw new SOPGPException.KeyCannotSign();
+            } catch (WrongPassphraseException e) {
+                throw new SOPGPException.KeyIsProtected();
+            } catch (PGPException e) {
+                throw new SOPGPException.BadData(e);
+            }
+        }
+
         ProducerOptions producerOptions = signingOptions != null ?
                 ProducerOptions.signAndEncrypt(encryptionOptions, signingOptions) :
                 ProducerOptions.encrypt(encryptionOptions);
@@ -125,7 +148,6 @@ public class EncryptImpl implements Encrypt {
     private static StreamEncoding encryptAsToStreamEncoding(EncryptAs encryptAs) {
         switch (encryptAs) {
             case Binary:
-            case MIME:
                 return StreamEncoding.BINARY;
             case Text:
                 return StreamEncoding.UTF8;

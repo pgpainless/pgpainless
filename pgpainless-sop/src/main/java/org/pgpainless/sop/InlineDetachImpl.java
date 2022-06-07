@@ -20,14 +20,14 @@ import org.pgpainless.util.ArmoredOutputStreamFactory;
 import sop.ReadyWithResult;
 import sop.Signatures;
 import sop.exception.SOPGPException;
-import sop.operation.DetachInbandSignatureAndMessage;
+import sop.operation.InlineDetach;
 
-public class DetachInbandSignatureAndMessageImpl implements DetachInbandSignatureAndMessage {
+public class InlineDetachImpl implements InlineDetach {
 
     private boolean armor = true;
 
     @Override
-    public DetachInbandSignatureAndMessage noArmor() {
+    public InlineDetach noArmor() {
         this.armor = false;
         return this;
     }

@@ -200,7 +200,7 @@ public final class KeyRingTemplates {
      * @throws PGPException in case of an OpenPGP related error
      */
     public PGPSecretKeyRing modernKeyRing(String userId) throws PGPException, InvalidAlgorithmParameterException, NoSuchAlgorithmException {
-        return modernKeyRing(userId, null);
+        return modernKeyRing(userId, (Passphrase) null);
     }
 
     /**
@@ -217,13 +217,19 @@ public final class KeyRingTemplates {
      */
     public PGPSecretKeyRing modernKeyRing(String userId, String password)
             throws InvalidAlgorithmParameterException, NoSuchAlgorithmException, PGPException {
+        Passphrase passphrase = (password != null ? Passphrase.fromPassword(password) : null);
+        return modernKeyRing(userId, passphrase);
+    }
+
+    public PGPSecretKeyRing modernKeyRing(String userId, Passphrase passphrase)
+            throws PGPException, InvalidAlgorithmParameterException, NoSuchAlgorithmException {
         KeyRingBuilder builder = PGPainless.buildKeyRing()
                 .setPrimaryKey(KeySpec.getBuilder(KeyType.EDDSA(EdDSACurve._Ed25519), KeyFlag.CERTIFY_OTHER))
                 .addSubkey(KeySpec.getBuilder(KeyType.XDH(XDHSpec._X25519), KeyFlag.ENCRYPT_STORAGE, KeyFlag.ENCRYPT_COMMS))
                 .addSubkey(KeySpec.getBuilder(KeyType.EDDSA(EdDSACurve._Ed25519), KeyFlag.SIGN_DATA))
                 .addUserId(userId);
-        if (!isNullOrEmpty(password)) {
-            builder.setPassphrase(Passphrase.fromPassword(password));
+        if (passphrase != null && !passphrase.isEmpty()) {
+            builder.setPassphrase(passphrase);
         }
         return builder.build();
     }

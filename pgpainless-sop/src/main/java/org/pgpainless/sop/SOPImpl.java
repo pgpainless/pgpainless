@@ -8,12 +8,14 @@ import sop.SOP;
 import sop.operation.Armor;
 import sop.operation.Dearmor;
 import sop.operation.Decrypt;
-import sop.operation.DetachInbandSignatureAndMessage;
+import sop.operation.DetachedSign;
+import sop.operation.DetachedVerify;
+import sop.operation.InlineDetach;
 import sop.operation.Encrypt;
 import sop.operation.ExtractCert;
 import sop.operation.GenerateKey;
-import sop.operation.Sign;
-import sop.operation.Verify;
+import sop.operation.InlineSign;
+import sop.operation.InlineVerify;
 import sop.operation.Version;
 
 public class SOPImpl implements SOP {
@@ -34,13 +36,33 @@ public class SOPImpl implements SOP {
     }
 
     @Override
-    public Sign sign() {
-        return new SignImpl();
+    public DetachedSign sign() {
+        return detachedSign();
     }
 
     @Override
-    public Verify verify() {
-        return new VerifyImpl();
+    public DetachedSign detachedSign() {
+        return new DetachedSignImpl();
+    }
+
+    @Override
+    public InlineSign inlineSign() {
+        return new InlineSignImpl();
+    }
+
+    @Override
+    public DetachedVerify verify() {
+        return detachedVerify();
+    }
+
+    @Override
+    public DetachedVerify detachedVerify() {
+        return new DetachedVerifyImpl();
+    }
+
+    @Override
+    public InlineVerify inlineVerify() {
+        return new InlineVerifyImpl();
     }
 
     @Override
@@ -64,7 +86,7 @@ public class SOPImpl implements SOP {
     }
 
     @Override
-    public DetachInbandSignatureAndMessage detachInbandSignatureAndMessage() {
-        return new DetachInbandSignatureAndMessageImpl();
+    public InlineDetach inlineDetach() {
+        return new InlineDetachImpl();
     }
 }

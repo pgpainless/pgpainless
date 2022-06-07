@@ -32,28 +32,28 @@ import sop.ReadyWithResult;
 import sop.SigningResult;
 import sop.enums.SignAs;
 import sop.exception.SOPGPException;
-import sop.operation.Sign;
+import sop.operation.DetachedSign;
 
-public class SignImpl implements Sign {
+public class DetachedSignImpl implements DetachedSign {
 
     private boolean armor = true;
     private SignAs mode = SignAs.Binary;
     private final SigningOptions signingOptions = new SigningOptions();
 
     @Override
-    public Sign noArmor() {
+    public DetachedSign noArmor() {
         armor = false;
         return this;
     }
 
     @Override
-    public Sign mode(SignAs mode) {
+    public DetachedSign mode(SignAs mode) {
         this.mode = mode;
         return this;
     }
 
     @Override
-    public Sign key(InputStream keyIn) throws SOPGPException.KeyIsProtected, SOPGPException.BadData, IOException {
+    public DetachedSign key(InputStream keyIn) throws SOPGPException.KeyIsProtected, SOPGPException.BadData, IOException {
         try {
             PGPSecretKeyRingCollection keys = PGPainless.readKeyRing().secretKeyRingCollection(keyIn);
 
@@ -68,6 +68,11 @@ public class SignImpl implements Sign {
             throw new SOPGPException.BadData(e);
         }
         return this;
+    }
+
+    @Override
+    public DetachedSign withKeyPassword(byte[] password) {
+        return null;
     }
 
     @Override

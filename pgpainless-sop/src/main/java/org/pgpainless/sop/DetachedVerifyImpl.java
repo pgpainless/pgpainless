@@ -21,26 +21,26 @@ import org.pgpainless.decryption_verification.OpenPgpMetadata;
 import org.pgpainless.key.SubkeyIdentifier;
 import sop.Verification;
 import sop.exception.SOPGPException;
-import sop.operation.Verify;
+import sop.operation.DetachedVerify;
 
-public class VerifyImpl implements Verify {
+public class DetachedVerifyImpl implements DetachedVerify {
 
     private final ConsumerOptions options = new ConsumerOptions();
 
     @Override
-    public Verify notBefore(Date timestamp) throws SOPGPException.UnsupportedOption {
+    public DetachedVerify notBefore(Date timestamp) throws SOPGPException.UnsupportedOption {
         options.verifyNotBefore(timestamp);
         return this;
     }
 
     @Override
-    public Verify notAfter(Date timestamp) throws SOPGPException.UnsupportedOption {
+    public DetachedVerify notAfter(Date timestamp) throws SOPGPException.UnsupportedOption {
         options.verifyNotAfter(timestamp);
         return this;
     }
 
     @Override
-    public Verify cert(InputStream cert) throws SOPGPException.BadData {
+    public DetachedVerify cert(InputStream cert) throws SOPGPException.BadData {
         PGPPublicKeyRingCollection certificates;
         try {
             certificates = PGPainless.readKeyRing().publicKeyRingCollection(cert);
@@ -52,7 +52,7 @@ public class VerifyImpl implements Verify {
     }
 
     @Override
-    public VerifyImpl signatures(InputStream signatures) throws SOPGPException.BadData {
+    public DetachedVerifyImpl signatures(InputStream signatures) throws SOPGPException.BadData {
         try {
             options.addVerificationOfDetachedSignatures(signatures);
         } catch (IOException | PGPException e) {
