@@ -114,7 +114,7 @@ public class AddUserIdTest {
     @Test
     public void addNewPrimaryUserIdTest() throws PGPException, InvalidAlgorithmParameterException, NoSuchAlgorithmException {
         PGPSecretKeyRing secretKeys = PGPainless.generateKeyRing()
-                .modernKeyRing("Alice", null);
+                .modernKeyRing("Alice");
         UserId bob = UserId.newBuilder().withName("Bob").noEmail().noComment().build();
 
         assertNotEquals("Bob", PGPainless.inspectKeyRing(secretKeys).getPrimaryUserId());

@@ -41,7 +41,7 @@ public class KeyGenerationSubpacketsTest {
     @Test
     public void verifyDefaultSubpacketsForUserIdSignatures()
             throws PGPException, InvalidAlgorithmParameterException, NoSuchAlgorithmException, InterruptedException {
-        PGPSecretKeyRing secretKeys = PGPainless.generateKeyRing().modernKeyRing("Alice", null);
+        PGPSecretKeyRing secretKeys = PGPainless.generateKeyRing().modernKeyRing("Alice");
 
         KeyRingInfo info = PGPainless.inspectKeyRing(secretKeys);
         PGPSignature userIdSig = info.getLatestUserIdCertification("Alice");
@@ -108,7 +108,7 @@ public class KeyGenerationSubpacketsTest {
     @Test
     public void verifyDefaultSubpacketsForSubkeyBindingSignatures()
             throws PGPException, InvalidAlgorithmParameterException, NoSuchAlgorithmException, IOException {
-        PGPSecretKeyRing secretKeys = PGPainless.generateKeyRing().modernKeyRing("Alice", null);
+        PGPSecretKeyRing secretKeys = PGPainless.generateKeyRing().modernKeyRing("Alice");
         KeyRingInfo info = PGPainless.inspectKeyRing(secretKeys);
         List<PGPPublicKey> keysBefore = info.getPublicKeys();
 

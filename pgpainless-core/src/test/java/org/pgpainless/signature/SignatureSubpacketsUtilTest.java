@@ -54,7 +54,7 @@ public class SignatureSubpacketsUtilTest {
     @Test
     public void testGetKeyExpirationTimeAsDate() throws PGPException, InvalidAlgorithmParameterException, NoSuchAlgorithmException {
         PGPSecretKeyRing secretKeys = PGPainless.generateKeyRing()
-                .modernKeyRing("Expire", null);
+                .modernKeyRing("Expire");
         Date expiration = Date.from(new Date().toInstant().plus(365, ChronoUnit.DAYS));
         secretKeys = PGPainless.modifyKeyRing(secretKeys)
                 .setExpirationDate(expiration, SecretKeyRingProtector.unprotectedKeys())

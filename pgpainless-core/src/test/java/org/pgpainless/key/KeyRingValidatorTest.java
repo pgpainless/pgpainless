@@ -296,7 +296,7 @@ public class KeyRingValidatorTest {
     @Test
     public void testKeyWithUserAttributes() throws PGPException, InvalidAlgorithmParameterException, NoSuchAlgorithmException {
         PGPSecretKeyRing secretKeys = PGPainless.generateKeyRing()
-                .modernKeyRing("Alice <alice@pgpainless.org>", null);
+                .modernKeyRing("Alice <alice@pgpainless.org>");
         PGPPublicKeyRing publicKeys = PGPainless.extractCertificate(secretKeys);
         PGPPublicKey publicKey = secretKeys.getPublicKey();
         PGPSecretKey secretKey = secretKeys.getSecretKey();

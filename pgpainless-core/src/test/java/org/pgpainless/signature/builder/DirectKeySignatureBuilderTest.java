@@ -34,7 +34,7 @@ public class DirectKeySignatureBuilderTest {
     @Test
     public void testDirectKeySignatureBuilding() throws PGPException, InvalidAlgorithmParameterException, NoSuchAlgorithmException, InterruptedException {
         PGPSecretKeyRing secretKeys = PGPainless.generateKeyRing()
-                .modernKeyRing("Alice", null);
+                .modernKeyRing("Alice");
 
         DirectKeySignatureBuilder dsb = new DirectKeySignatureBuilder(
                 secretKeys.getSecretKey(),

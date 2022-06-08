@@ -37,7 +37,7 @@ public class RefuseToAddWeakSubkeyTest {
         PGPainless.getPolicy().setPublicKeyAlgorithmPolicy(Policy.PublicKeyAlgorithmPolicy.defaultPublicKeyAlgorithmPolicy());
 
         PGPSecretKeyRing secretKeys = PGPainless.generateKeyRing()
-                .modernKeyRing("Alice", null);
+                .modernKeyRing("Alice");
         SecretKeyRingEditorInterface editor = PGPainless.modifyKeyRing(secretKeys);
         KeySpec spec = KeySpec.getBuilder(KeyType.RSA(RsaLength._1024), KeyFlag.ENCRYPT_COMMS).build();
 
@@ -49,7 +49,7 @@ public class RefuseToAddWeakSubkeyTest {
     public void testEditorAllowsToAddWeakSubkeyIfCompliesToPublicKeyAlgorithmPolicy()
             throws PGPException, InvalidAlgorithmParameterException, NoSuchAlgorithmException, IOException {
         PGPSecretKeyRing secretKeys = PGPainless.generateKeyRing()
-                .modernKeyRing("Alice", null);
+                .modernKeyRing("Alice");
 
         // set weak policy
         Map<PublicKeyAlgorithm, Integer> minimalBitStrengths = new EnumMap<>(PublicKeyAlgorithm.class);

@@ -56,8 +56,8 @@ public class OnePassSignatureBracketingTest {
     public void onePassSignaturePacketsAndSignaturesAreBracketedTest()
             throws PGPException, InvalidAlgorithmParameterException, NoSuchAlgorithmException, IOException {
 
-        PGPSecretKeyRing key1 = PGPainless.generateKeyRing().modernKeyRing("Alice", null);
-        PGPSecretKeyRing key2 = PGPainless.generateKeyRing().modernKeyRing("Bob", null);
+        PGPSecretKeyRing key1 = PGPainless.generateKeyRing().modernKeyRing("Alice");
+        PGPSecretKeyRing key2 = PGPainless.generateKeyRing().modernKeyRing("Bob");
         PGPPublicKeyRing cert1 = PGPainless.extractCertificate(key1);
 
         ByteArrayOutputStream out = new ByteArrayOutputStream();

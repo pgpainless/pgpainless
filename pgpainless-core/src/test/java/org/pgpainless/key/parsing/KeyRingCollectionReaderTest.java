@@ -27,8 +27,8 @@ public class KeyRingCollectionReaderTest {
     @Test
     public void writeAndParseKeyRingCollections() throws PGPException, InvalidAlgorithmParameterException, NoSuchAlgorithmException, IOException {
         // secret keys
-        PGPSecretKeyRing alice = PGPainless.generateKeyRing().modernKeyRing("Alice <alice@pgpainless.org>", null);
-        PGPSecretKeyRing bob = PGPainless.generateKeyRing().modernKeyRing("Bob <bob@pgpainless.org>", null);
+        PGPSecretKeyRing alice = PGPainless.generateKeyRing().modernKeyRing("Alice <alice@pgpainless.org>");
+        PGPSecretKeyRing bob = PGPainless.generateKeyRing().modernKeyRing("Bob <bob@pgpainless.org>");
 
         PGPSecretKeyRingCollection collection = KeyRingUtils.keyRingsToKeyRingCollection(alice, bob);
         String ascii = ArmorUtils.toAsciiArmoredString(collection);

@@ -42,7 +42,7 @@ public class AddSubkeyWithModifiedBindingSignatureSubpackets {
     public void bindEncryptionSubkeyAndModifyBindingSignatureHashedSubpackets() throws PGPException, InvalidAlgorithmParameterException, NoSuchAlgorithmException, IOException {
         SecretKeyRingProtector protector = SecretKeyRingProtector.unprotectedKeys();
         PGPSecretKeyRing secretKeys = PGPainless.generateKeyRing()
-                .modernKeyRing("Alice <alice@pgpainless.org>", null);
+                .modernKeyRing("Alice <alice@pgpainless.org>");
         KeyRingInfo before = PGPainless.inspectKeyRing(secretKeys);
 
         PGPKeyPair secretSubkey = KeyRingBuilder.generateKeyPair(

@@ -128,7 +128,7 @@ public class RevokeSubKeyTest {
     @Test
     public void inspectSubpacketsOnDefaultRevocationSignature()
             throws PGPException, InvalidAlgorithmParameterException, NoSuchAlgorithmException {
-        PGPSecretKeyRing secretKeys = PGPainless.generateKeyRing().modernKeyRing("Alice", null);
+        PGPSecretKeyRing secretKeys = PGPainless.generateKeyRing().modernKeyRing("Alice");
         SecretKeyRingProtector protector = SecretKeyRingProtector.unprotectedKeys();
         PGPPublicKey encryptionSubkey = PGPainless.inspectKeyRing(secretKeys)
                 .getEncryptionSubkeys(EncryptionPurpose.ANY).get(0);
@@ -153,7 +153,7 @@ public class RevokeSubKeyTest {
     @Test
     public void inspectSubpacketsOnModifiedRevocationSignature()
             throws PGPException, InvalidAlgorithmParameterException, NoSuchAlgorithmException {
-        PGPSecretKeyRing secretKeys = PGPainless.generateKeyRing().modernKeyRing("Alice", null);
+        PGPSecretKeyRing secretKeys = PGPainless.generateKeyRing().modernKeyRing("Alice");
         SecretKeyRingProtector protector = SecretKeyRingProtector.unprotectedKeys();
         PGPPublicKey encryptionSubkey = PGPainless.inspectKeyRing(secretKeys)
                 .getEncryptionSubkeys(EncryptionPurpose.ANY).get(0);

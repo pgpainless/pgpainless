@@ -515,7 +515,7 @@ public class KeyRingInfoTest {
 
     @Test
     public void getSecretKeyTest() throws PGPException, InvalidAlgorithmParameterException, NoSuchAlgorithmException {
-        PGPSecretKeyRing secretKeys = PGPainless.generateKeyRing().modernKeyRing("Alice", null);
+        PGPSecretKeyRing secretKeys = PGPainless.generateKeyRing().modernKeyRing("Alice");
         KeyRingInfo info = PGPainless.inspectKeyRing(secretKeys);
 
         OpenPgpV4Fingerprint primaryKeyFingerprint = new OpenPgpV4Fingerprint(secretKeys);

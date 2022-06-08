@@ -38,7 +38,7 @@ public class FileInformationTest {
 
     @BeforeAll
     public static void generateKey() throws PGPException, InvalidAlgorithmParameterException, NoSuchAlgorithmException {
-        secretKey = PGPainless.generateKeyRing().modernKeyRing("alice@wonderland.lit", null);
+        secretKey = PGPainless.generateKeyRing().modernKeyRing("alice@wonderland.lit");
         certificate = PGPainless.extractCertificate(secretKey);
     }
 

@@ -455,8 +455,8 @@ class KeyRingReaderTest {
 
     @Test
     public void testReadSecretKeysIgnoresMultipleMarkers() throws PGPException, InvalidAlgorithmParameterException, NoSuchAlgorithmException, IOException {
-        PGPSecretKeyRing alice = PGPainless.generateKeyRing().modernKeyRing("alice@pgpainless.org", null);
-        PGPSecretKeyRing bob = PGPainless.generateKeyRing().modernKeyRing("bob@pgpainless.org", null);
+        PGPSecretKeyRing alice = PGPainless.generateKeyRing().modernKeyRing("alice@pgpainless.org");
+        PGPSecretKeyRing bob = PGPainless.generateKeyRing().modernKeyRing("bob@pgpainless.org");
         MarkerPacket marker = TestUtils.getMarkerPacket();
 
         ByteArrayOutputStream bytes = new ByteArrayOutputStream();
@@ -489,7 +489,7 @@ class KeyRingReaderTest {
     @Test
     public void testReadingSecretKeysExceedsIterationLimit()
             throws PGPException, InvalidAlgorithmParameterException, NoSuchAlgorithmException, IOException {
-        PGPSecretKeyRing alice = PGPainless.generateKeyRing().modernKeyRing("alice@pgpainless.org", null);
+        PGPSecretKeyRing alice = PGPainless.generateKeyRing().modernKeyRing("alice@pgpainless.org");
         MarkerPacket marker = TestUtils.getMarkerPacket();
 
         ByteArrayOutputStream bytes = new ByteArrayOutputStream();
@@ -508,8 +508,8 @@ class KeyRingReaderTest {
     @Test
     public void testReadingSecretKeyCollectionExceedsIterationLimit()
             throws PGPException, InvalidAlgorithmParameterException, NoSuchAlgorithmException, IOException {
-        PGPSecretKeyRing alice = PGPainless.generateKeyRing().modernKeyRing("alice@pgpainless.org", null);
-        PGPSecretKeyRing bob = PGPainless.generateKeyRing().modernKeyRing("bob@pgpainless.org", null);
+        PGPSecretKeyRing alice = PGPainless.generateKeyRing().modernKeyRing("alice@pgpainless.org");
+        PGPSecretKeyRing bob = PGPainless.generateKeyRing().modernKeyRing("bob@pgpainless.org");
         MarkerPacket marker = TestUtils.getMarkerPacket();
 
         ByteArrayOutputStream bytes = new ByteArrayOutputStream();
@@ -530,7 +530,7 @@ class KeyRingReaderTest {
     @Test
     public void testReadingPublicKeysExceedsIterationLimit()
             throws PGPException, InvalidAlgorithmParameterException, NoSuchAlgorithmException, IOException {
-        PGPSecretKeyRing secretKeys = PGPainless.generateKeyRing().modernKeyRing("alice@pgpainless.org", null);
+        PGPSecretKeyRing secretKeys = PGPainless.generateKeyRing().modernKeyRing("alice@pgpainless.org");
         PGPPublicKeyRing alice = PGPainless.extractCertificate(secretKeys);
         MarkerPacket marker = TestUtils.getMarkerPacket();
 
@@ -550,8 +550,8 @@ class KeyRingReaderTest {
     @Test
     public void testReadingPublicKeyCollectionExceedsIterationLimit()
             throws PGPException, InvalidAlgorithmParameterException, NoSuchAlgorithmException, IOException {
-        PGPSecretKeyRing sec1 = PGPainless.generateKeyRing().modernKeyRing("alice@pgpainless.org", null);
-        PGPSecretKeyRing sec2 = PGPainless.generateKeyRing().modernKeyRing("bob@pgpainless.org", null);
+        PGPSecretKeyRing sec1 = PGPainless.generateKeyRing().modernKeyRing("alice@pgpainless.org");
+        PGPSecretKeyRing sec2 = PGPainless.generateKeyRing().modernKeyRing("bob@pgpainless.org");
         PGPPublicKeyRing alice = PGPainless.extractCertificate(sec1);
         PGPPublicKeyRing bob = PGPainless.extractCertificate(sec2);
         MarkerPacket marker = TestUtils.getMarkerPacket();

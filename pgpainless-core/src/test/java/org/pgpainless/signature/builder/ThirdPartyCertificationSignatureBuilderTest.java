@@ -30,7 +30,7 @@ public class ThirdPartyCertificationSignatureBuilderTest {
     @Test
     public void testInvalidSignatureTypeThrows() throws PGPException, InvalidAlgorithmParameterException, NoSuchAlgorithmException {
         PGPSecretKeyRing secretKeys = PGPainless.generateKeyRing()
-                .modernKeyRing("Alice", null);
+                .modernKeyRing("Alice");
         assertThrows(IllegalArgumentException.class, () ->
                 new ThirdPartyCertificationSignatureBuilder(
                         SignatureType.BINARY_DOCUMENT, // invalid type
@@ -41,10 +41,10 @@ public class ThirdPartyCertificationSignatureBuilderTest {
     @Test
     public void testUserIdCertification() throws PGPException, InvalidAlgorithmParameterException, NoSuchAlgorithmException {
         PGPSecretKeyRing secretKeys = PGPainless.generateKeyRing()
-                .modernKeyRing("Alice", null);
+                .modernKeyRing("Alice");
 
         PGPPublicKeyRing bobsPublicKeys = PGPainless.extractCertificate(
-                PGPainless.generateKeyRing().modernKeyRing("Bob", null));
+                PGPainless.generateKeyRing().modernKeyRing("Bob"));
 
         ThirdPartyCertificationSignatureBuilder signatureBuilder = new ThirdPartyCertificationSignatureBuilder(
                 secretKeys.getSecretKey(),

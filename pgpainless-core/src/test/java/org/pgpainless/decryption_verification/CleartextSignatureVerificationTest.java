@@ -214,7 +214,7 @@ public class CleartextSignatureVerificationTest {
             throws PGPException, InvalidAlgorithmParameterException, NoSuchAlgorithmException, IOException {
         String message = randomString(28, 4000);
 
-        PGPSecretKeyRing secretKeys = PGPainless.generateKeyRing().modernKeyRing("Alice", null);
+        PGPSecretKeyRing secretKeys = PGPainless.generateKeyRing().modernKeyRing("Alice");
         ByteArrayOutputStream out = new ByteArrayOutputStream();
         EncryptionStream encryptionStream = PGPainless.encryptAndOrSign()
                 .onOutputStream(out)

@@ -27,7 +27,7 @@ public class ChangePrimaryUserIdAndExpirationDatesTest {
     public void generateA_primaryB_revokeA_cantSecondaryA()
             throws PGPException, InvalidAlgorithmParameterException, NoSuchAlgorithmException, InterruptedException {
         PGPSecretKeyRing secretKeys = PGPainless.generateKeyRing()
-                .modernKeyRing("A", null);
+                .modernKeyRing("A");
         SecretKeyRingProtector protector = SecretKeyRingProtector.unprotectedKeys();
 
         KeyRingInfo info = PGPainless.inspectKeyRing(secretKeys);
@@ -70,7 +70,7 @@ public class ChangePrimaryUserIdAndExpirationDatesTest {
     public void generateA_primaryExpire_isExpired()
             throws PGPException, InvalidAlgorithmParameterException, NoSuchAlgorithmException, InterruptedException {
         PGPSecretKeyRing secretKeys = PGPainless.generateKeyRing()
-                .modernKeyRing("A", null);
+                .modernKeyRing("A");
         SecretKeyRingProtector protector = SecretKeyRingProtector.unprotectedKeys();
 
         KeyRingInfo info = PGPainless.inspectKeyRing(secretKeys);
@@ -92,7 +92,7 @@ public class ChangePrimaryUserIdAndExpirationDatesTest {
     public void generateA_primaryB_primaryExpire_bIsStillPrimary()
             throws PGPException, InvalidAlgorithmParameterException, NoSuchAlgorithmException, InterruptedException {
         PGPSecretKeyRing secretKeys = PGPainless.generateKeyRing()
-                .modernKeyRing("A", null);
+                .modernKeyRing("A");
         SecretKeyRingProtector protector = SecretKeyRingProtector.unprotectedKeys();
 
         KeyRingInfo info = PGPainless.inspectKeyRing(secretKeys);
@@ -130,7 +130,7 @@ public class ChangePrimaryUserIdAndExpirationDatesTest {
 
     @Test
     public void generateA_expire_certify() throws PGPException, InvalidAlgorithmParameterException, NoSuchAlgorithmException, InterruptedException {
-        PGPSecretKeyRing secretKeys = PGPainless.generateKeyRing().modernKeyRing("A", null);
+        PGPSecretKeyRing secretKeys = PGPainless.generateKeyRing().modernKeyRing("A");
         SecretKeyRingProtector protector = SecretKeyRingProtector.unprotectedKeys();
 
         secretKeys = PGPainless.modifyKeyRing(secretKeys)
@@ -151,7 +151,7 @@ public class ChangePrimaryUserIdAndExpirationDatesTest {
     @Test
     public void generateA_expire_primaryB_expire_isPrimaryB()
             throws PGPException, InvalidAlgorithmParameterException, NoSuchAlgorithmException, InterruptedException {
-        PGPSecretKeyRing secretKeys = PGPainless.generateKeyRing().modernKeyRing("A", null);
+        PGPSecretKeyRing secretKeys = PGPainless.generateKeyRing().modernKeyRing("A");
         SecretKeyRingProtector protector = SecretKeyRingProtector.unprotectedKeys();
 
         Thread.sleep(1000);

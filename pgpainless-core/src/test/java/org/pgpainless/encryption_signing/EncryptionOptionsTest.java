@@ -167,7 +167,7 @@ public class EncryptionOptionsTest {
     @Test
     public void testAddRecipients_PGPPublicKeyRingCollection() throws PGPException, InvalidAlgorithmParameterException, NoSuchAlgorithmException, IOException {
         PGPPublicKeyRing secondKeyRing = KeyRingUtils.publicKeyRingFrom(
-                PGPainless.generateKeyRing().modernKeyRing("other@pgpainless.org", null));
+                PGPainless.generateKeyRing().modernKeyRing("other@pgpainless.org"));
 
         PGPPublicKeyRingCollection collection = new PGPPublicKeyRingCollection(
                 Arrays.asList(publicKeys, secondKeyRing));

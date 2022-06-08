@@ -740,7 +740,7 @@ public class OpenPgpInputStreamTest {
     public void testSignedMessageConsumption() throws PGPException, InvalidAlgorithmParameterException, NoSuchAlgorithmException, IOException {
         ByteArrayInputStream plaintext = new ByteArrayInputStream("Hello, World!\n".getBytes(StandardCharsets.UTF_8));
         PGPSecretKeyRing secretKeys = PGPainless.generateKeyRing()
-                .modernKeyRing("Sigmund <sigmund@exmplample.com>", null);
+                .modernKeyRing("Sigmund <sigmund@exmplample.com>");
 
         ByteArrayOutputStream signedOut = new ByteArrayOutputStream();
         EncryptionStream signer = PGPainless.encryptAndOrSign()

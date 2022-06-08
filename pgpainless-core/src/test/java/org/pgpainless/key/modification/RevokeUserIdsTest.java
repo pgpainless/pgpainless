@@ -27,7 +27,7 @@ public class RevokeUserIdsTest {
     @Test
     public void revokeWithSelectUserId() throws PGPException, InvalidAlgorithmParameterException, NoSuchAlgorithmException {
         PGPSecretKeyRing secretKeys = PGPainless.generateKeyRing()
-                .modernKeyRing("Alice <alice@pgpainless.org>", null);
+                .modernKeyRing("Alice <alice@pgpainless.org>");
         SecretKeyRingProtector protector = SecretKeyRingProtector.unprotectedKeys();
 
         secretKeys = PGPainless.modifyKeyRing(secretKeys)
@@ -58,7 +58,7 @@ public class RevokeUserIdsTest {
     @Test
     public void removeUserId() throws PGPException, InvalidAlgorithmParameterException, NoSuchAlgorithmException {
         PGPSecretKeyRing secretKeys = PGPainless.generateKeyRing()
-                .modernKeyRing("Alice <alice@pgpainless.org>", null);
+                .modernKeyRing("Alice <alice@pgpainless.org>");
         SecretKeyRingProtector protector = SecretKeyRingProtector.unprotectedKeys();
 
         secretKeys = PGPainless.modifyKeyRing(secretKeys)
@@ -89,7 +89,7 @@ public class RevokeUserIdsTest {
     @Test
     public void emptySelectionYieldsNoSuchElementException() throws PGPException, InvalidAlgorithmParameterException, NoSuchAlgorithmException {
         PGPSecretKeyRing secretKeys = PGPainless.generateKeyRing()
-                .modernKeyRing("Alice <alice@pgpainless.org>", null);
+                .modernKeyRing("Alice <alice@pgpainless.org>");
 
         assertThrows(NoSuchElementException.class, () ->
                 PGPainless.modifyKeyRing(secretKeys).revokeUserIds(

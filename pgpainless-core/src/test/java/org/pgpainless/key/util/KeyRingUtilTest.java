@@ -33,7 +33,7 @@ public class KeyRingUtilTest {
     @Test
     public void testInjectCertification() throws PGPException, InvalidAlgorithmParameterException, NoSuchAlgorithmException {
         PGPSecretKeyRing secretKeys = PGPainless.generateKeyRing()
-                .modernKeyRing("Alice", null);
+                .modernKeyRing("Alice");
 
         // test preconditions
         assertFalse(secretKeys.getPublicKey().getUserAttributes().hasNext());

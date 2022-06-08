@@ -39,7 +39,7 @@ public class Sign {
 
     @BeforeAll
     public static void prepare() throws PGPException, InvalidAlgorithmParameterException, NoSuchAlgorithmException {
-        secretKey = PGPainless.generateKeyRing().modernKeyRing("Emilia Example <emilia@example.org>", null);
+        secretKey = PGPainless.generateKeyRing().modernKeyRing("Emilia Example <emilia@example.org>");
         protector = SecretKeyRingProtector.unprotectedKeys(); // no password
     }
 

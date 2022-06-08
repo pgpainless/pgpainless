@@ -26,7 +26,7 @@ public class ConvertKeys {
     public void secretKeyToCertificate() throws PGPException, InvalidAlgorithmParameterException, NoSuchAlgorithmException {
         String userId = "alice@wonderland.lit";
         PGPSecretKeyRing secretKey = PGPainless.generateKeyRing()
-                .modernKeyRing(userId, null);
+                .modernKeyRing(userId);
         // Extract certificate (public key) from secret key
         PGPPublicKeyRing certificate = PGPainless.extractCertificate(secretKey);
 
