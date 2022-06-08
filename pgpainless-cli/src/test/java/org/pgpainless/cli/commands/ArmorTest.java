@@ -43,7 +43,7 @@ public class ArmorTest {
     @FailOnSystemExit
     public void armorSecretKey() throws IOException, PGPException, InvalidAlgorithmParameterException, NoSuchAlgorithmException {
         PGPSecretKeyRing secretKey = PGPainless.generateKeyRing()
-                .modernKeyRing("alice@pgpainless.org", null);
+                .modernKeyRing("alice@pgpainless.org");
         byte[] bytes = secretKey.getEncoded();
 
         System.setIn(new ByteArrayInputStream(bytes));
@@ -59,7 +59,7 @@ public class ArmorTest {
     @FailOnSystemExit
     public void armorPublicKey() throws PGPException, InvalidAlgorithmParameterException, NoSuchAlgorithmException, IOException {
         PGPSecretKeyRing secretKey = PGPainless.generateKeyRing()
-                .modernKeyRing("alice@pgpainless.org", null);
+                .modernKeyRing("alice@pgpainless.org");
         PGPPublicKeyRing publicKey = PGPainless.extractCertificate(secretKey);
         byte[] bytes = publicKey.getEncoded();
 

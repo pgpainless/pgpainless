@@ -115,7 +115,7 @@ public class DetachInbandSignatureAndMessageTest {
 
         // Detach
         File tempSigFile = new File(tempDir, "sig.out");
-        PGPainlessCLI.main(new String[] {"detach-inband-signature-and-message", "--signatures-out=" + tempSigFile.getAbsolutePath()});
+        PGPainlessCLI.main(new String[] {"inline-detach", "--signatures-out=" + tempSigFile.getAbsolutePath()});
 
         // Test equality with expected values
         assertEquals(CLEAR_SIGNED_BODY, msgOut.toString());
@@ -150,7 +150,7 @@ public class DetachInbandSignatureAndMessageTest {
 
         // Detach
         File tempSigFile = new File(tempDir, "sig.asc");
-        PGPainlessCLI.main(new String[] {"detach-inband-signature-and-message", "--signatures-out=" + tempSigFile.getAbsolutePath(), "--no-armor"});
+        PGPainlessCLI.main(new String[] {"inline-detach", "--signatures-out=" + tempSigFile.getAbsolutePath(), "--no-armor"});
 
         // Test equality with expected values
         assertEquals(CLEAR_SIGNED_BODY, msgOut.toString());
@@ -187,7 +187,7 @@ public class DetachInbandSignatureAndMessageTest {
         // Detach
         File existingSigFile = new File(tempDir, "sig.existing");
         assertTrue(existingSigFile.createNewFile());
-        PGPainlessCLI.main(new String[] {"detach-inband-signature-and-message", "--signatures-out=" + existingSigFile.getAbsolutePath()});
+        PGPainlessCLI.main(new String[] {"inline-detach", "--signatures-out=" + existingSigFile.getAbsolutePath()});
     }
 
 }

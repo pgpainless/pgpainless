@@ -11,17 +11,13 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
-import java.security.InvalidAlgorithmParameterException;
-import java.security.NoSuchAlgorithmException;
 import java.util.Date;
 import java.util.List;
 
 import org.bouncycastle.openpgp.PGPException;
-import org.bouncycastle.openpgp.PGPSecretKeyRing;
 import org.bouncycastle.openpgp.PGPSignature;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
-import org.pgpainless.PGPainless;
 import org.pgpainless.algorithm.SignatureType;
 import org.pgpainless.signature.SignatureUtils;
 import sop.SOP;
@@ -126,15 +122,6 @@ public class SignTest {
 
         PGPSignature sig = SignatureUtils.readSignatures(signature).get(0);
         assertEquals(SignatureType.CANONICAL_TEXT_DOCUMENT.getCode(), sig.getSignatureType());
-    }
-
-    @Test
-    public void rejectEncryptedKey() throws PGPException, InvalidAlgorithmParameterException, NoSuchAlgorithmException, IOException {
-        PGPSecretKeyRing key = PGPainless.generateKeyRing()
-                .modernKeyRing("Alice", "passphrase");
-        byte[] bytes = key.getEncoded();
-
-        assertThrows(SOPGPException.KeyIsProtected.class, () -> sop.sign().key(bytes));
     }
 
 }

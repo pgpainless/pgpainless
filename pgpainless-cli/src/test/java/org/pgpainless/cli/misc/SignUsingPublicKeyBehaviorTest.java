@@ -134,7 +134,7 @@ public class SignUsingPublicKeyBehaviorTest {
         assertTrue(sigFile.createNewFile());
         FileOutputStream sigOut = new FileOutputStream(sigFile);
         System.setOut(new PrintStream(sigOut));
-        PGPainlessCLI.execute("sign", "--armor", aliceKeyFile.getAbsolutePath());
+        PGPainlessCLI.main(new String[] {"sign", "--armor", aliceKeyFile.getAbsolutePath()});
 
         System.setIn(originalIn);
     }

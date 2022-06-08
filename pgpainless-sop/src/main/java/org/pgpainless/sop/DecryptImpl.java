@@ -10,9 +10,7 @@ import java.io.OutputStream;
 import java.nio.charset.Charset;
 import java.util.ArrayList;
 import java.util.Date;
-import java.util.HashSet;
 import java.util.List;
-import java.util.Set;
 
 import org.bouncycastle.openpgp.PGPException;
 import org.bouncycastle.openpgp.PGPPublicKeyRingCollection;
@@ -39,7 +37,6 @@ import sop.operation.Decrypt;
 public class DecryptImpl implements Decrypt {
 
     private final ConsumerOptions consumerOptions = new ConsumerOptions();
-    private final Set<PGPSecretKeyRing> keys = new HashSet<>();
     private final MatchMakingSecretKeyRingProtector protector = new MatchMakingSecretKeyRingProtector();
 
     @Override
@@ -105,7 +102,8 @@ public class DecryptImpl implements Decrypt {
             PGPSecretKeyRingCollection secretKeyCollection = PGPainless.readKeyRing()
                     .secretKeyRingCollection(keyIn);
             for (PGPSecretKeyRing key : secretKeyCollection) {
-                keys.add(key);
+                protector.addSecretKey(key);
+                consumerOptions.addDecryptionKey(key, protector);
             }
         } catch (IOException | PGPException e) {
             throw new SOPGPException.BadData(e);
@@ -124,10 +122,6 @@ public class DecryptImpl implements Decrypt {
     public ReadyWithResult<DecryptionResult> ciphertext(InputStream ciphertext)
             throws SOPGPException.BadData,
             SOPGPException.MissingArg {
-        for (PGPSecretKeyRing key : keys) {
-            protector.addSecretKey(key);
-            consumerOptions.addDecryptionKey(key, protector);
-        }
 
         if (consumerOptions.getDecryptionKeys().isEmpty() && consumerOptions.getDecryptionPassphrases().isEmpty() && consumerOptions.getSessionKey() == null) {
             throw new SOPGPException.MissingArg("Missing decryption key, passphrase or session key.");
@@ -145,6 +139,7 @@ public class DecryptImpl implements Decrypt {
         } catch (PGPException | IOException e) {
             throw new SOPGPException.BadData(e);
         } finally {
+            // Forget passphrases after decryption
             protector.clear();
         }
 

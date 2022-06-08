@@ -8,8 +8,6 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.nio.charset.Charset;
-import java.util.HashSet;
-import java.util.Set;
 
 import org.bouncycastle.openpgp.PGPException;
 import org.bouncycastle.openpgp.PGPPublicKeyRingCollection;
@@ -25,18 +23,16 @@ import org.pgpainless.encryption_signing.ProducerOptions;
 import org.pgpainless.encryption_signing.SigningOptions;
 import org.pgpainless.exception.WrongPassphraseException;
 import org.pgpainless.util.Passphrase;
-import sop.util.ProxyOutputStream;
 import sop.Ready;
 import sop.enums.EncryptAs;
 import sop.exception.SOPGPException;
 import sop.operation.Encrypt;
+import sop.util.ProxyOutputStream;
 
 public class EncryptImpl implements Encrypt {
 
     EncryptionOptions encryptionOptions = new EncryptionOptions();
     SigningOptions signingOptions = null;
-
-    Set<PGPSecretKeyRing> signingKeys = new HashSet<>();
     MatchMakingSecretKeyRingProtector protector = new MatchMakingSecretKeyRingProtector();
 
     private EncryptAs encryptAs = EncryptAs.Binary;
@@ -55,17 +51,34 @@ public class EncryptImpl implements Encrypt {
     }
 
     @Override
-    public Encrypt signWith(InputStream keyIn) throws SOPGPException.KeyCannotSign, SOPGPException.UnsupportedAsymmetricAlgo, SOPGPException.BadData {
+    public Encrypt signWith(InputStream keyIn)
+            throws SOPGPException.KeyCannotSign, SOPGPException.UnsupportedAsymmetricAlgo, SOPGPException.BadData {
+        if (signingOptions == null) {
+            signingOptions = SigningOptions.get();
+        }
+
         try {
             PGPSecretKeyRingCollection keys = PGPainless.readKeyRing().secretKeyRingCollection(keyIn);
             if (keys.size() != 1) {
                 throw new SOPGPException.BadData(new AssertionError("Exactly one secret key at a time expected. Got " + keys.size()));
             }
 
-            if (signingOptions == null) {
-                signingOptions = SigningOptions.get();
+            PGPSecretKeyRing signingKey = keys.iterator().next();
+            protector.addSecretKey(signingKey);
+
+            try {
+                signingOptions.addInlineSignature(
+                        protector,
+                        signingKey,
+                        (encryptAs == EncryptAs.Binary ? DocumentSignatureType.BINARY_DOCUMENT : DocumentSignatureType.CANONICAL_TEXT_DOCUMENT)
+                );
+            } catch (IllegalArgumentException e) {
+                throw new SOPGPException.KeyCannotSign();
+            } catch (WrongPassphraseException e) {
+                throw new SOPGPException.KeyIsProtected();
+            } catch (PGPException e) {
+                throw new SOPGPException.BadData(e);
             }
-            signingKeys.add(keys.getKeyRings().next());
         } catch (IOException | PGPException e) {
             throw new SOPGPException.BadData(e);
         }
@@ -100,26 +113,6 @@ public class EncryptImpl implements Encrypt {
 
     @Override
     public Ready plaintext(InputStream plaintext) throws IOException {
-        for (PGPSecretKeyRing signingKey : signingKeys) {
-            protector.addSecretKey(signingKey);
-        }
-
-        if (signingOptions != null) {
-            try {
-                signingOptions.addInlineSignatures(
-                        protector,
-                        signingKeys,
-                        (encryptAs == EncryptAs.Binary ? DocumentSignatureType.BINARY_DOCUMENT : DocumentSignatureType.CANONICAL_TEXT_DOCUMENT)
-                );
-            } catch (IllegalArgumentException e) {
-                throw new SOPGPException.KeyCannotSign();
-            } catch (WrongPassphraseException e) {
-                throw new SOPGPException.KeyIsProtected();
-            } catch (PGPException e) {
-                throw new SOPGPException.BadData(e);
-            }
-        }
-
         ProducerOptions producerOptions = signingOptions != null ?
                 ProducerOptions.signAndEncrypt(encryptionOptions, signingOptions) :
                 ProducerOptions.encrypt(encryptionOptions);

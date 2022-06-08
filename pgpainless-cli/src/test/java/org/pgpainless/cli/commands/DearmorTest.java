@@ -43,7 +43,7 @@ public class DearmorTest {
     @FailOnSystemExit
     public void dearmorSecretKey() throws PGPException, InvalidAlgorithmParameterException, NoSuchAlgorithmException, IOException {
         PGPSecretKeyRing secretKey = PGPainless.generateKeyRing()
-                .modernKeyRing("alice@pgpainless.org", null);
+                .modernKeyRing("alice@pgpainless.org");
         String armored = PGPainless.asciiArmor(secretKey);
 
         System.setIn(new ByteArrayInputStream(armored.getBytes(StandardCharsets.UTF_8)));
@@ -59,7 +59,7 @@ public class DearmorTest {
     @FailOnSystemExit
     public void dearmorCertificate() throws PGPException, InvalidAlgorithmParameterException, NoSuchAlgorithmException, IOException {
         PGPSecretKeyRing secretKey = PGPainless.generateKeyRing()
-                .modernKeyRing("alice@pgpainless.org", null);
+                .modernKeyRing("alice@pgpainless.org");
         PGPPublicKeyRing certificate = PGPainless.extractCertificate(secretKey);
         String armored = PGPainless.asciiArmor(certificate);
 

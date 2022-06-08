@@ -59,7 +59,7 @@ public class SignVerifyTest {
         File aliceKeyFile = new File(tempDir, "alice.key");
         assertTrue(aliceKeyFile.createNewFile());
         PGPSecretKeyRing aliceKeys = PGPainless.generateKeyRing()
-                .modernKeyRing("alice", null);
+                .modernKeyRing("alice");
         OutputStream aliceKeyOut = new FileOutputStream(aliceKeyFile);
         Streams.pipeAll(new ByteArrayInputStream(aliceKeys.getEncoded()), aliceKeyOut);
         aliceKeyOut.close();
@@ -108,7 +108,7 @@ public class SignVerifyTest {
         String[] split = verification.split(" ");
         OpenPgpV4Fingerprint primaryKeyFingerprint = new OpenPgpV4Fingerprint(aliceKeys);
         OpenPgpV4Fingerprint signingKeyFingerprint = new OpenPgpV4Fingerprint(new KeyRingInfo(alicePub, new Date()).getSigningSubkeys().get(0));
-        assertEquals(signingKeyFingerprint.toString(), split[1].trim());
+        assertEquals(signingKeyFingerprint.toString(), split[1].trim(), verification);
         assertEquals(primaryKeyFingerprint.toString(), split[2].trim());
 
         // Test micalg output
