@@ -14,20 +14,17 @@ import java.util.List;
 import org.bouncycastle.openpgp.PGPException;
 import org.bouncycastle.openpgp.PGPSecretKeyRing;
 import org.bouncycastle.openpgp.PGPSecretKeyRingCollection;
-import org.bouncycastle.openpgp.PGPSignature;
 import org.bouncycastle.util.io.Streams;
 import org.pgpainless.PGPainless;
 import org.pgpainless.algorithm.DocumentSignatureType;
-import org.pgpainless.encryption_signing.EncryptionResult;
 import org.pgpainless.encryption_signing.EncryptionStream;
 import org.pgpainless.encryption_signing.ProducerOptions;
 import org.pgpainless.encryption_signing.SigningOptions;
 import org.pgpainless.exception.KeyException;
-import org.pgpainless.key.SubkeyIdentifier;
+import org.pgpainless.key.OpenPgpFingerprint;
+import org.pgpainless.key.info.KeyRingInfo;
 import org.pgpainless.util.Passphrase;
-import sop.MicAlg;
-import sop.ReadyWithResult;
-import sop.SigningResult;
+import sop.Ready;
 import sop.enums.InlineSignAs;
 import sop.exception.SOPGPException;
 import sop.operation.InlineSign;
@@ -38,6 +35,7 @@ public class InlineSignImpl implements InlineSign {
     private InlineSignAs mode = InlineSignAs.Binary;
     private final SigningOptions signingOptions = new SigningOptions();
     private final MatchMakingSecretKeyRingProtector protector = new MatchMakingSecretKeyRingProtector();
+    private final List<PGPSecretKeyRing> signingKeys = new ArrayList<>();
 
     @Override
     public InlineSign mode(InlineSignAs mode) throws SOPGPException.UnsupportedOption {
@@ -52,17 +50,17 @@ public class InlineSignImpl implements InlineSign {
     }
 
     @Override
-    public InlineSign key(InputStream keyIn) throws SOPGPException.KeyIsProtected, SOPGPException.BadData, IOException {
+    public InlineSign key(InputStream keyIn) throws SOPGPException.KeyCannotSign, SOPGPException.BadData, IOException {
         try {
             PGPSecretKeyRingCollection keys = PGPainless.readKeyRing().secretKeyRingCollection(keyIn);
 
             for (PGPSecretKeyRing key : keys) {
-                protector.addSecretKey(key);
-                if (mode == InlineSignAs.CleartextSigned) {
-                    signingOptions.addDetachedSignature(protector, key, DocumentSignatureType.BINARY_DOCUMENT);
-                } else {
-                    signingOptions.addInlineSignature(protector, key, modeToSigType(mode));
+                KeyRingInfo info = PGPainless.inspectKeyRing(key);
+                if (!info.isUsableForSigning()) {
+                    throw new SOPGPException.KeyCannotSign("Key " + info.getFingerprint() + " does not have valid, signing capable subkeys.");
                 }
+                protector.addSecretKey(key);
+                signingKeys.add(key);
             }
         } catch (PGPException | KeyException e) {
             throw new SOPGPException.BadData(e);
@@ -78,7 +76,20 @@ public class InlineSignImpl implements InlineSign {
     }
 
     @Override
-    public ReadyWithResult<SigningResult> data(InputStream data) throws IOException, SOPGPException.ExpectedText {
+    public Ready data(InputStream data) throws SOPGPException.KeyIsProtected, IOException, SOPGPException.ExpectedText {
+        for (PGPSecretKeyRing key : signingKeys) {
+            try {
+                if (mode == InlineSignAs.CleartextSigned) {
+                    signingOptions.addDetachedSignature(protector, key, DocumentSignatureType.BINARY_DOCUMENT);
+                } else {
+                    signingOptions.addInlineSignature(protector, key, modeToSigType(mode));
+                }
+            } catch (KeyException.UnacceptableSigningKeyException | KeyException.MissingSecretKeyException e) {
+                throw new SOPGPException.KeyCannotSign("Key " + OpenPgpFingerprint.of(key) + " cannot sign.", e);
+            } catch (PGPException e) {
+                throw new SOPGPException.KeyIsProtected("Key " + OpenPgpFingerprint.of(key) + " cannot be unlocked.", e);
+            }
+        }
 
         ProducerOptions producerOptions = ProducerOptions.sign(signingOptions);
         if (mode == InlineSignAs.CleartextSigned) {
@@ -88,9 +99,9 @@ public class InlineSignImpl implements InlineSign {
             producerOptions.setAsciiArmor(armor);
         }
 
-        return new ReadyWithResult<SigningResult>() {
+        return new Ready() {
             @Override
-            public SigningResult writeTo(OutputStream outputStream) throws IOException, SOPGPException.NoSignature {
+            public void writeTo(OutputStream outputStream) throws IOException, SOPGPException.NoSignature {
                 try {
                     EncryptionStream signingStream = PGPainless.encryptAndOrSign()
                             .onOutputStream(outputStream)
@@ -102,37 +113,14 @@ public class InlineSignImpl implements InlineSign {
 
                     Streams.pipeAll(data, signingStream);
                     signingStream.close();
-                    EncryptionResult encryptionResult = signingStream.getResult();
 
                     // forget passphrases
                     protector.clear();
-
-                    List<PGPSignature> signatures = new ArrayList<>();
-                    for (SubkeyIdentifier key : encryptionResult.getDetachedSignatures().keySet()) {
-                        signatures.addAll(encryptionResult.getDetachedSignatures().get(key));
-                    }
-
-                    return SigningResult.builder()
-                            .setMicAlg(micAlgFromSignatures(signatures))
-                            .build();
                 } catch (PGPException e) {
                     throw new RuntimeException(e);
                 }
             }
         };
-    }
-
-    private MicAlg micAlgFromSignatures(Iterable<PGPSignature> signatures) {
-        int algorithmId = 0;
-        for (PGPSignature signature : signatures) {
-            int sigAlg = signature.getHashAlgorithm();
-            if (algorithmId == 0 || algorithmId == sigAlg) {
-                algorithmId = sigAlg;
-            } else {
-                return MicAlg.empty();
-            }
-        }
-        return algorithmId == 0 ? MicAlg.empty() : MicAlg.fromHashAlgorithmId(algorithmId);
     }
 
     private static DocumentSignatureType modeToSigType(InlineSignAs mode) {

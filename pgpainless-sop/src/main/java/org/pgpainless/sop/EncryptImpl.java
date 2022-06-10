@@ -21,6 +21,7 @@ import org.pgpainless.encryption_signing.EncryptionOptions;
 import org.pgpainless.encryption_signing.EncryptionStream;
 import org.pgpainless.encryption_signing.ProducerOptions;
 import org.pgpainless.encryption_signing.SigningOptions;
+import org.pgpainless.exception.KeyException;
 import org.pgpainless.exception.WrongPassphraseException;
 import org.pgpainless.util.Passphrase;
 import sop.Ready;
@@ -105,6 +106,8 @@ public class EncryptImpl implements Encrypt {
                     .keyRingCollection(cert, false)
                     .getPgpPublicKeyRingCollection();
             encryptionOptions.addRecipients(certificates);
+        } catch (KeyException.UnacceptableEncryptionKeyException e) {
+            throw new SOPGPException.CertCannotEncrypt(e.getMessage(), e);
         } catch (IOException | PGPException e) {
             throw new SOPGPException.BadData(e);
         }

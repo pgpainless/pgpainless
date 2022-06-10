@@ -99,7 +99,7 @@ public class SignUsingPublicKeyBehaviorTest {
     }
 
     @Test
-    @ExpectSystemExitWithStatus(SOPGPException.BadData.EXIT_CODE)
+    @ExpectSystemExitWithStatus(SOPGPException.KeyCannotSign.EXIT_CODE)
     public void testSignatureCreationAndVerification() throws IOException {
         originalSout = System.out;
         InputStream originalIn = System.in;

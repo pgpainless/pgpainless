@@ -25,6 +25,7 @@ import org.pgpainless.encryption_signing.ProducerOptions;
 import org.pgpainless.encryption_signing.SigningOptions;
 import org.pgpainless.exception.KeyException;
 import org.pgpainless.key.SubkeyIdentifier;
+import org.pgpainless.key.info.KeyRingInfo;
 import org.pgpainless.util.ArmoredOutputStreamFactory;
 import org.pgpainless.util.Passphrase;
 import sop.MicAlg;
@@ -54,11 +55,15 @@ public class DetachedSignImpl implements DetachedSign {
     }
 
     @Override
-    public DetachedSign key(InputStream keyIn) throws SOPGPException.KeyIsProtected, SOPGPException.BadData, IOException {
+    public DetachedSign key(InputStream keyIn) throws SOPGPException.KeyCannotSign, SOPGPException.BadData, IOException {
         try {
             PGPSecretKeyRingCollection keys = PGPainless.readKeyRing().secretKeyRingCollection(keyIn);
 
             for (PGPSecretKeyRing key : keys) {
+                KeyRingInfo info = PGPainless.inspectKeyRing(key);
+                if (!info.isUsableForSigning()) {
+                    throw new SOPGPException.KeyCannotSign("Key " + info.getFingerprint() + " does not have valid, signing capable subkeys.");
+                }
                 protector.addSecretKey(key);
                 signingOptions.addDetachedSignature(protector, key, modeToSigType(mode));
             }

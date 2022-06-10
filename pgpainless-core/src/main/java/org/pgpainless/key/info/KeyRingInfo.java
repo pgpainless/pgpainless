@@ -21,6 +21,7 @@ import java.util.regex.Pattern;
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
 
+import org.bouncycastle.bcpg.S2K;
 import org.bouncycastle.bcpg.sig.PrimaryUserID;
 import org.bouncycastle.bcpg.sig.RevocationReason;
 import org.bouncycastle.openpgp.PGPKeyRing;
@@ -1037,6 +1038,32 @@ public class KeyRingInfo {
      */
     public boolean isUsableForEncryption(@Nonnull EncryptionPurpose purpose) {
         return !getEncryptionSubkeys(purpose).isEmpty();
+    }
+
+    public boolean isUsableForSigning() {
+        List<PGPPublicKey> signingKeys = getSigningSubkeys();
+        for (PGPPublicKey pk : signingKeys) {
+            PGPSecretKey sk = getSecretKey(pk.getKeyID());
+            if (sk == null) {
+                // Missing secret key
+                continue;
+            }
+            S2K s2K = sk.getS2K();
+            // Unencrypted key
+            if (s2K == null) {
+                return true;
+            }
+
+            // Secret key on smart-card
+            int s2kType = s2K.getType();
+            if (s2kType >= 100 && s2kType <= 110) {
+                continue;
+            }
+            // protected secret key
+            return true;
+        }
+        // No usable secret key found
+        return false;
     }
 
     private KeyAccessor getKeyAccessor(@Nullable String userId, long keyID) {
