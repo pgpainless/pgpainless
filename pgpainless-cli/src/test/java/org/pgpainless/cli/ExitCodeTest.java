@@ -7,17 +7,18 @@ package org.pgpainless.cli;
 import com.ginsberg.junit.exit.ExpectSystemExitWithStatus;
 import com.ginsberg.junit.exit.FailOnSystemExit;
 import org.junit.jupiter.api.Test;
+import sop.exception.SOPGPException;
 
 public class ExitCodeTest {
 
     @Test
-    @ExpectSystemExitWithStatus(69)
+    @ExpectSystemExitWithStatus(SOPGPException.UnsupportedSubcommand.EXIT_CODE)
     public void testUnknownCommand_69() {
         PGPainlessCLI.main(new String[] {"generate-kex"});
     }
 
     @Test
-    @ExpectSystemExitWithStatus(37)
+    @ExpectSystemExitWithStatus(SOPGPException.UnsupportedOption.EXIT_CODE)
     public void testCommandWithUnknownOption_37() {
         PGPainlessCLI.main(new String[] {"generate-key", "-k", "\"k is unknown\""});
     }
