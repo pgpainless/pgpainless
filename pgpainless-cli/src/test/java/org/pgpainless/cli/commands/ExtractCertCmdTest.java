@@ -23,7 +23,7 @@ import org.pgpainless.PGPainless;
 import org.pgpainless.cli.PGPainlessCLI;
 import org.pgpainless.key.info.KeyRingInfo;
 
-public class ExtractCertTest {
+public class ExtractCertCmdTest {
 
     @Test
     @FailOnSystemExit

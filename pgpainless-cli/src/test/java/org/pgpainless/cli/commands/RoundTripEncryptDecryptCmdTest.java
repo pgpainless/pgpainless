@@ -24,7 +24,7 @@ import org.junit.jupiter.api.Test;
 import org.pgpainless.cli.PGPainlessCLI;
 import org.pgpainless.cli.TestUtils;
 
-public class EncryptDecryptTest {
+public class RoundTripEncryptDecryptCmdTest {
 
     private static File tempDir;
     private static PrintStream originalSout;

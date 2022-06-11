@@ -25,7 +25,7 @@ import org.junit.jupiter.api.Test;
 import org.pgpainless.PGPainless;
 import org.pgpainless.cli.PGPainlessCLI;
 
-public class ArmorTest {
+public class ArmorCmdTest {
 
     private static PrintStream originalSout;
 

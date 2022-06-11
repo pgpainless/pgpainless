@@ -39,7 +39,7 @@ import org.pgpainless.key.OpenPgpV4Fingerprint;
 import org.pgpainless.key.info.KeyRingInfo;
 import org.pgpainless.key.util.KeyRingUtils;
 
-public class SignVerifyTest {
+public class RoundTripSignVerifyCmdTest {
 
     private static File tempDir;
     private static PrintStream originalSout;

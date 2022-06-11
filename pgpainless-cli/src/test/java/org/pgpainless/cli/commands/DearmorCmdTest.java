@@ -25,7 +25,7 @@ import org.junit.jupiter.api.Test;
 import org.pgpainless.PGPainless;
 import org.pgpainless.cli.PGPainlessCLI;
 
-public class DearmorTest {
+public class DearmorCmdTest {
 
     private PrintStream originalSout;
 

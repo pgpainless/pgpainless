@@ -28,7 +28,7 @@ import org.pgpainless.cli.PGPainlessCLI;
 import org.pgpainless.cli.TestUtils;
 import sop.exception.SOPGPException;
 
-public class InlineDetachTest {
+public class InlineDetachCmdTest {
 
     private PrintStream originalSout;
     private static File tempDir;
