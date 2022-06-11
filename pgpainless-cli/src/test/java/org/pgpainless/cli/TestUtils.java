@@ -11,6 +11,7 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.File;
+import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.nio.charset.StandardCharsets;
@@ -38,6 +39,17 @@ public class TestUtils {
         File dir = Files.createTempDirectory(name).toFile();
         // dir.deleteOnExit();
         return dir;
+    }
+
+    public static File writeTempFile(File tempDir, byte[] value) throws IOException {
+        File tempFile = new File(tempDir, randomString(10));
+        tempFile.createNewFile();
+        tempFile.deleteOnExit();
+        FileOutputStream fileOutputStream = new FileOutputStream(tempFile);
+        fileOutputStream.write(value);
+        fileOutputStream.flush();
+        fileOutputStream.close();
+        return tempFile;
     }
 
     private static String randomString(int length) {

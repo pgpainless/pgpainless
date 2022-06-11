@@ -11,12 +11,9 @@ import static org.pgpainless.cli.TestUtils.ARMOR_PRIVATE_KEY_HEADER_BYTES;
 
 import java.io.ByteArrayOutputStream;
 import java.io.File;
-import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.PrintStream;
 import java.nio.charset.StandardCharsets;
-import java.nio.file.Files;
-import java.nio.file.Path;
 import java.util.Arrays;
 
 import com.ginsberg.junit.exit.FailOnSystemExit;
@@ -27,6 +24,7 @@ import org.bouncycastle.openpgp.operator.PBESecretKeyDecryptor;
 import org.junit.jupiter.api.Test;
 import org.pgpainless.PGPainless;
 import org.pgpainless.cli.PGPainlessCLI;
+import org.pgpainless.cli.TestUtils;
 import org.pgpainless.key.info.KeyInfo;
 import org.pgpainless.key.info.KeyRingInfo;
 import org.pgpainless.key.protection.UnlockSecretKey;
@@ -61,14 +59,8 @@ public class GenerateCertCmdTest {
         PrintStream orig = System.out;
         try {
             // Write password to file
-            Path tempDir = Files.createTempDirectory("genkey");
-            File passwordFile = new File(tempDir.toFile(), "password");
-            passwordFile.createNewFile();
-            passwordFile.deleteOnExit();
-            FileOutputStream fileOut = new FileOutputStream(passwordFile);
-            fileOut.write("sw0rdf1sh".getBytes(StandardCharsets.UTF_8));
-            fileOut.flush();
-            fileOut.close();
+            File tempDir = TestUtils.createTempDirectory();
+            File passwordFile = TestUtils.writeTempFile(tempDir, "sw0rdf1sh".getBytes(StandardCharsets.UTF_8));
 
             ByteArrayOutputStream out = new ByteArrayOutputStream();
             System.setOut(new PrintStream(out));
