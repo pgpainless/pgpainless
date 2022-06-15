@@ -4,6 +4,7 @@
 
 package org.pgpainless.sop;
 
+import java.io.BufferedOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
@@ -22,7 +23,9 @@ public class DearmorImpl implements Dearmor {
 
             @Override
             public void writeTo(OutputStream outputStream) throws IOException {
-                Streams.pipeAll(decoder, outputStream);
+                BufferedOutputStream bufferedOutputStream = new BufferedOutputStream(outputStream);
+                Streams.pipeAll(decoder, bufferedOutputStream);
+                bufferedOutputStream.flush();
                 decoder.close();
             }
         };

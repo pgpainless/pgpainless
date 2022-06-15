@@ -4,6 +4,7 @@
 
 package org.pgpainless.sop;
 
+import java.io.BufferedOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
@@ -28,8 +29,11 @@ public class ArmorImpl implements Armor {
         return new Ready() {
             @Override
             public void writeTo(OutputStream outputStream) throws IOException {
-                ArmoredOutputStream armor = ArmoredOutputStreamFactory.get(outputStream);
+                // By buffering the output stream, we can improve performance drastically
+                BufferedOutputStream bufferedOutputStream = new BufferedOutputStream(outputStream);
+                ArmoredOutputStream armor = ArmoredOutputStreamFactory.get(bufferedOutputStream);
                 Streams.pipeAll(data, armor);
+                bufferedOutputStream.flush();
                 armor.close();
             }
         };
