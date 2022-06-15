@@ -46,4 +46,10 @@ public class CRLFGeneratorStream extends OutputStream {
         }
         crlfOut.close();
     }
+
+    @Override
+    public void flush() throws IOException {
+        super.flush();
+        crlfOut.flush();
+    }
 }

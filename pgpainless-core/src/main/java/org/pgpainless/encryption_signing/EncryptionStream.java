@@ -4,6 +4,7 @@
 
 package org.pgpainless.encryption_signing;
 
+import java.io.BufferedOutputStream;
 import java.io.IOException;
 import java.io.OutputStream;
 import java.util.ArrayList;
@@ -182,7 +183,11 @@ public final class EncryptionStream extends OutputStream {
     }
 
     public void prepareInputEncoding() {
-        CRLFGeneratorStream crlfGeneratorStream = new CRLFGeneratorStream(outermostStream,
+        // By buffering here, we drastically improve performance
+        // Reason is that CRLFGeneratorStream only implements write(int), so we need BufferedOutputStream to
+        // "convert" to write(buf) calls again
+        BufferedOutputStream bufferedOutputStream = new BufferedOutputStream(outermostStream);
+        CRLFGeneratorStream crlfGeneratorStream = new CRLFGeneratorStream(bufferedOutputStream,
                 options.isApplyCRLFEncoding() ? StreamEncoding.UTF8 : StreamEncoding.BINARY);
         outermostStream = crlfGeneratorStream;
     }
