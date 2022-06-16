@@ -22,6 +22,7 @@ import org.pgpainless.algorithm.SymmetricKeyAlgorithm;
 import org.pgpainless.decryption_verification.ConsumerOptions;
 import org.pgpainless.decryption_verification.DecryptionStream;
 import org.pgpainless.decryption_verification.OpenPgpMetadata;
+import org.pgpainless.exception.MissingDecryptionMethodException;
 import org.pgpainless.key.SubkeyIdentifier;
 import org.pgpainless.key.info.KeyRingInfo;
 import org.pgpainless.key.protection.SecretKeyRingProtector;
@@ -128,6 +129,8 @@ public class DecryptImpl implements Decrypt {
             decryptionStream = PGPainless.decryptAndOrVerify()
                     .onInputStream(ciphertext)
                     .withOptions(consumerOptions);
+        } catch (MissingDecryptionMethodException e) {
+            throw new SOPGPException.CannotDecrypt();
         } catch (PGPException | IOException e) {
             throw new SOPGPException.BadData(e);
         }
