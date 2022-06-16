@@ -29,12 +29,13 @@ import sop.ByteArrayAndResult;
 import sop.SOP;
 import sop.Signatures;
 import sop.Verification;
+import sop.enums.InlineSignAs;
 
-public class DetachInbandSignatureAndMessageTest {
+public class InlineDetachTest {
 
+    private static final SOP sop = new SOPImpl();
     @Test
-    public void testDetachingOfInbandSignaturesAndMessage() throws IOException, PGPException {
-        SOP sop = new SOPImpl();
+    public void detachCleartextSignedMessage() throws IOException {
         byte[] key = sop.generateKey()
                 .userId("Alice <alice@pgpainless.org>")
                 .generate()
@@ -44,22 +45,15 @@ public class DetachInbandSignatureAndMessageTest {
 
         // Create a cleartext signed message
         byte[] data = "Hello, World\n".getBytes(StandardCharsets.UTF_8);
-        ByteArrayOutputStream out = new ByteArrayOutputStream();
-        EncryptionStream signingStream = PGPainless.encryptAndOrSign()
-                .onOutputStream(out)
-                .withOptions(
-                        ProducerOptions.sign(
-                                SigningOptions.get()
-                                        .addDetachedSignature(SecretKeyRingProtector.unprotectedKeys(),
-                                                secretKey, DocumentSignatureType.BINARY_DOCUMENT)
-                        ).setCleartextSigned());
-
-        Streams.pipeAll(new ByteArrayInputStream(data), signingStream);
-        signingStream.close();
+        byte[] cleartextSigned = sop.inlineSign()
+                .key(key)
+                .withKeyPassword("sw0rdf1sh")
+                .mode(InlineSignAs.CleartextSigned)
+                .data(data).getBytes();
 
         // actually detach the message
         ByteArrayAndResult<Signatures> detachedMsg = sop.inlineDetach()
-                .message(out.toByteArray())
+                .message(cleartextSigned)
                 .toByteArrayAndResult();
 
         byte[] message = detachedMsg.getBytes();
@@ -73,6 +67,37 @@ public class DetachInbandSignatureAndMessageTest {
         assertFalse(verificationList.isEmpty());
         assertEquals(1, verificationList.size());
         assertEquals(new OpenPgpV4Fingerprint(secretKey).toString(), verificationList.get(0).getSigningCertFingerprint());
+        assertArrayEquals(data, message);
+    }
+
+    @Test
+    public void detachInbandSignedMessage() throws IOException {
+        byte[] key = sop.generateKey()
+                .userId("Alice <alice@pgpainless.org>")
+                .generate()
+                .getBytes();
+        byte[] cert = sop.extractCert().key(key).getBytes();
+
+        byte[] data = "Hello, World\n".getBytes(StandardCharsets.UTF_8);
+        byte[] inlineSigned = sop.inlineSign()
+                .key(key)
+                .data(data).getBytes();
+
+        // actually detach the message
+        ByteArrayAndResult<Signatures> detachedMsg = sop.inlineDetach()
+                .message(inlineSigned)
+                .toByteArrayAndResult();
+
+        byte[] message = detachedMsg.getBytes();
+        byte[] signature = detachedMsg.getResult().getBytes();
+
+        List<Verification> verificationList = sop.verify()
+                .cert(cert)
+                .signatures(signature)
+                .data(message);
+
+        assertFalse(verificationList.isEmpty());
+        assertEquals(1, verificationList.size());
         assertArrayEquals(data, message);
     }
 }

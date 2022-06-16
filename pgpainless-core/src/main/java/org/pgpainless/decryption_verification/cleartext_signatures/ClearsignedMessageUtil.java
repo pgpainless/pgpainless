@@ -42,7 +42,13 @@ public final class ClearsignedMessageUtil {
     public static PGPSignatureList detachSignaturesFromInbandClearsignedMessage(InputStream clearsignedInputStream,
                                                                                 OutputStream messageOutputStream)
             throws IOException, WrongConsumingMethodException {
-        ArmoredInputStream in = ArmoredInputStreamFactory.get(clearsignedInputStream);
+        ArmoredInputStream in;
+        if (clearsignedInputStream instanceof ArmoredInputStream) {
+            in = (ArmoredInputStream) clearsignedInputStream;
+        } else {
+            in = ArmoredInputStreamFactory.get(clearsignedInputStream);
+        }
+
         if (!in.isClearText()) {
             throw new WrongConsumingMethodException("Message is not using the Cleartext Signature Framework.");
         }

@@ -25,7 +25,7 @@ import sop.Verification;
 import sop.enums.SignAs;
 import sop.exception.SOPGPException;
 
-public class SignTest {
+public class DetachedSignTest {
 
     private static SOP sop;
     private static byte[] key;
