@@ -41,6 +41,7 @@ public class SignedMessageVerificationWithoutCertIsStillSigned {
 
         OpenPgpMetadata metadata = verificationStream.getResult();
 
+        assertFalse(metadata.isCleartextSigned());
         assertTrue(metadata.isSigned(), "Message is signed, even though we miss the verification cert.");
         assertFalse(metadata.isVerified(), "Message is not verified because we lack the verification cert.");
     }

@@ -16,16 +16,15 @@ import org.bouncycastle.openpgp.PGPException;
 import org.bouncycastle.openpgp.PGPPublicKeyRingCollection;
 import org.bouncycastle.openpgp.PGPSecretKeyRing;
 import org.bouncycastle.openpgp.PGPSecretKeyRingCollection;
-import org.bouncycastle.openpgp.PGPSignature;
 import org.bouncycastle.util.io.Streams;
 import org.pgpainless.PGPainless;
 import org.pgpainless.algorithm.SymmetricKeyAlgorithm;
 import org.pgpainless.decryption_verification.ConsumerOptions;
 import org.pgpainless.decryption_verification.DecryptionStream;
 import org.pgpainless.decryption_verification.OpenPgpMetadata;
+import org.pgpainless.decryption_verification.SignatureVerification;
 import org.pgpainless.exception.MissingDecryptionMethodException;
 import org.pgpainless.exception.WrongPassphraseException;
-import org.pgpainless.key.SubkeyIdentifier;
 import org.pgpainless.util.Passphrase;
 import sop.DecryptionResult;
 import sop.ReadyWithResult;
@@ -151,12 +150,8 @@ public class DecryptImpl implements Decrypt {
                 OpenPgpMetadata metadata = decryptionStream.getResult();
 
                 List<Verification> verificationList = new ArrayList<>();
-                for (SubkeyIdentifier verifiedSigningKey : metadata.getVerifiedSignatures().keySet()) {
-                    PGPSignature signature = metadata.getVerifiedSignatures().get(verifiedSigningKey);
-                    verificationList.add(new Verification(
-                            signature.getCreationTime(),
-                            verifiedSigningKey.getSubkeyFingerprint().toString(),
-                            verifiedSigningKey.getPrimaryKeyFingerprint().toString()));
+                for (SignatureVerification signatureVerification : metadata.getVerifiedInbandSignatures()) {
+                    verificationList.add(map(signatureVerification));
                 }
 
                 if (!consumerOptions.getCertificates().isEmpty()) {
@@ -177,5 +172,11 @@ public class DecryptImpl implements Decrypt {
                 return new DecryptionResult(sessionKey, verificationList);
             }
         };
+    }
+
+    private Verification map(SignatureVerification sigVerification) {
+        return new Verification(sigVerification.getSignature().getCreationTime(),
+                sigVerification.getSigningKey().getSubkeyFingerprint().toString(),
+                sigVerification.getSigningKey().getPrimaryKeyFingerprint().toString());
     }
 }

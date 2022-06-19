@@ -155,6 +155,7 @@ public final class DecryptionStreamFactory {
         if (openPgpIn.isAsciiArmored()) {
             ArmoredInputStream armoredInputStream = ArmoredInputStreamFactory.get(openPgpIn);
             if (armoredInputStream.isClearText()) {
+                resultBuilder.setCleartextSigned();
                 return parseCleartextSignedMessage(armoredInputStream);
             } else {
                 outerDecodingStream = armoredInputStream;

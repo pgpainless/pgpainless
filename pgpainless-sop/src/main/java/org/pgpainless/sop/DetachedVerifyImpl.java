@@ -12,13 +12,12 @@ import java.util.List;
 
 import org.bouncycastle.openpgp.PGPException;
 import org.bouncycastle.openpgp.PGPPublicKeyRingCollection;
-import org.bouncycastle.openpgp.PGPSignature;
 import org.bouncycastle.util.io.Streams;
 import org.pgpainless.PGPainless;
 import org.pgpainless.decryption_verification.ConsumerOptions;
 import org.pgpainless.decryption_verification.DecryptionStream;
 import org.pgpainless.decryption_verification.OpenPgpMetadata;
-import org.pgpainless.key.SubkeyIdentifier;
+import org.pgpainless.decryption_verification.SignatureVerification;
 import sop.Verification;
 import sop.exception.SOPGPException;
 import sop.operation.DetachedVerify;
@@ -75,12 +74,8 @@ public class DetachedVerifyImpl implements DetachedVerify {
             OpenPgpMetadata metadata = decryptionStream.getResult();
             List<Verification> verificationList = new ArrayList<>();
 
-            for (SubkeyIdentifier verifiedSigningKey : metadata.getVerifiedSignatures().keySet()) {
-                PGPSignature signature = metadata.getVerifiedSignatures().get(verifiedSigningKey);
-                verificationList.add(new Verification(
-                        signature.getCreationTime(),
-                        verifiedSigningKey.getSubkeyFingerprint().toString(),
-                        verifiedSigningKey.getPrimaryKeyFingerprint().toString()));
+            for (SignatureVerification signatureVerification : metadata.getVerifiedDetachedSignatures()) {
+                verificationList.add(map(signatureVerification));
             }
 
             if (!options.getCertificates().isEmpty()) {
@@ -93,5 +88,11 @@ public class DetachedVerifyImpl implements DetachedVerify {
         } catch (PGPException e) {
             throw new SOPGPException.BadData(e);
         }
+    }
+
+    private Verification map(SignatureVerification sigVerification) {
+        return new Verification(sigVerification.getSignature().getCreationTime(),
+                sigVerification.getSigningKey().getSubkeyFingerprint().toString(),
+                sigVerification.getSigningKey().getPrimaryKeyFingerprint().toString());
     }
 }

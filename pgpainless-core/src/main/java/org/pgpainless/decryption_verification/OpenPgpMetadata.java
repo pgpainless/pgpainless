@@ -40,6 +40,7 @@ public class OpenPgpMetadata {
     private final String fileName;
     private final Date modificationDate;
     private final StreamEncoding fileEncoding;
+    private final boolean cleartextSigned;
 
     public OpenPgpMetadata(Set<Long> recipientKeyIds,
                            SubkeyIdentifier decryptionKey,
@@ -51,7 +52,8 @@ public class OpenPgpMetadata {
                            List<SignatureVerification.Failure> invalidDetachedSignatures,
                            String fileName,
                            Date modificationDate,
-                           StreamEncoding fileEncoding) {
+                           StreamEncoding fileEncoding,
+                           boolean cleartextSigned) {
 
         this.recipientKeyIds = Collections.unmodifiableSet(recipientKeyIds);
         this.decryptionKey = decryptionKey;
@@ -64,6 +66,7 @@ public class OpenPgpMetadata {
         this.fileName = fileName;
         this.modificationDate = modificationDate;
         this.fileEncoding = fileEncoding;
+        this.cleartextSigned = cleartextSigned;
     }
 
     /**
@@ -269,6 +272,15 @@ public class OpenPgpMetadata {
         return fileEncoding;
     }
 
+    /**
+     * Return true if the message was signed using the cleartext signature framework.
+     *
+     * @return true if cleartext signed.
+     */
+    public boolean isCleartextSigned() {
+        return cleartextSigned;
+    }
+
     public static Builder getBuilder() {
         return new Builder();
     }
@@ -282,6 +294,7 @@ public class OpenPgpMetadata {
         private String fileName;
         private StreamEncoding fileEncoding;
         private Date modificationDate;
+        private boolean cleartextSigned = false;
 
         private final List<SignatureVerification> verifiedInbandSignatures = new ArrayList<>();
         private final List<SignatureVerification> verifiedDetachedSignatures = new ArrayList<>();
@@ -324,29 +337,38 @@ public class OpenPgpMetadata {
             return this;
         }
 
+        public Builder addVerifiedInbandSignature(SignatureVerification signatureVerification) {
+            this.verifiedInbandSignatures.add(signatureVerification);
+            return this;
+        }
+
+        public Builder addVerifiedDetachedSignature(SignatureVerification signatureVerification) {
+            this.verifiedDetachedSignatures.add(signatureVerification);
+            return this;
+        }
+
+        public Builder addInvalidInbandSignature(SignatureVerification signatureVerification, SignatureValidationException e) {
+            this.invalidInbandSignatures.add(new SignatureVerification.Failure(signatureVerification, e));
+            return this;
+        }
+
+        public Builder addInvalidDetachedSignature(SignatureVerification signatureVerification, SignatureValidationException e) {
+            this.invalidDetachedSignatures.add(new SignatureVerification.Failure(signatureVerification, e));
+            return this;
+        }
+
+        public Builder setCleartextSigned() {
+            this.cleartextSigned = true;
+            return this;
+        }
+
         public OpenPgpMetadata build() {
             return new OpenPgpMetadata(
                     recipientFingerprints, decryptionKey,
                     sessionKey, compressionAlgorithm,
                     verifiedInbandSignatures, invalidInbandSignatures,
                     verifiedDetachedSignatures, invalidDetachedSignatures,
-                    fileName, modificationDate, fileEncoding);
-        }
-
-        public void addVerifiedInbandSignature(SignatureVerification signatureVerification) {
-            this.verifiedInbandSignatures.add(signatureVerification);
-        }
-
-        public void addVerifiedDetachedSignature(SignatureVerification signatureVerification) {
-            this.verifiedDetachedSignatures.add(signatureVerification);
-        }
-
-        public void addInvalidInbandSignature(SignatureVerification signatureVerification, SignatureValidationException e) {
-            this.invalidInbandSignatures.add(new SignatureVerification.Failure(signatureVerification, e));
-        }
-
-        public void addInvalidDetachedSignature(SignatureVerification signatureVerification, SignatureValidationException e) {
-            this.invalidDetachedSignatures.add(new SignatureVerification.Failure(signatureVerification, e));
+                    fileName, modificationDate, fileEncoding, cleartextSigned);
         }
     }
 }

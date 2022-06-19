@@ -94,6 +94,7 @@ public class CleartextSignatureVerificationTest {
 
         OpenPgpMetadata result = decryptionStream.getResult();
         assertTrue(result.isVerified());
+        assertTrue(result.isCleartextSigned());
 
         PGPSignature signature = result.getVerifiedSignatures().values().iterator().next();
 

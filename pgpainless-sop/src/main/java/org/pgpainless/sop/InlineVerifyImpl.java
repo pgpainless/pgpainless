@@ -4,26 +4,25 @@
 
 package org.pgpainless.sop;
 
-import org.bouncycastle.openpgp.PGPException;
-import org.bouncycastle.openpgp.PGPPublicKeyRingCollection;
-import org.bouncycastle.openpgp.PGPSignature;
-import org.bouncycastle.util.io.Streams;
-import org.pgpainless.PGPainless;
-import org.pgpainless.decryption_verification.ConsumerOptions;
-import org.pgpainless.decryption_verification.DecryptionStream;
-import org.pgpainless.decryption_verification.OpenPgpMetadata;
-import org.pgpainless.key.SubkeyIdentifier;
-import sop.ReadyWithResult;
-import sop.Verification;
-import sop.exception.SOPGPException;
-import sop.operation.InlineVerify;
-
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
+
+import org.bouncycastle.openpgp.PGPException;
+import org.bouncycastle.openpgp.PGPPublicKeyRingCollection;
+import org.bouncycastle.util.io.Streams;
+import org.pgpainless.PGPainless;
+import org.pgpainless.decryption_verification.ConsumerOptions;
+import org.pgpainless.decryption_verification.DecryptionStream;
+import org.pgpainless.decryption_verification.OpenPgpMetadata;
+import org.pgpainless.decryption_verification.SignatureVerification;
+import sop.ReadyWithResult;
+import sop.Verification;
+import sop.exception.SOPGPException;
+import sop.operation.InlineVerify;
 
 public class InlineVerifyImpl implements InlineVerify {
 
@@ -70,12 +69,12 @@ public class InlineVerifyImpl implements InlineVerify {
                     OpenPgpMetadata metadata = decryptionStream.getResult();
                     List<Verification> verificationList = new ArrayList<>();
 
-                    for (SubkeyIdentifier verifiedSigningKey : metadata.getVerifiedSignatures().keySet()) {
-                        PGPSignature signature = metadata.getVerifiedSignatures().get(verifiedSigningKey);
-                        verificationList.add(new Verification(
-                                signature.getCreationTime(),
-                                verifiedSigningKey.getSubkeyFingerprint().toString(),
-                                verifiedSigningKey.getPrimaryKeyFingerprint().toString()));
+                    List<SignatureVerification> verifications = metadata.isCleartextSigned() ?
+                            metadata.getVerifiedDetachedSignatures() :
+                            metadata.getVerifiedInbandSignatures();
+
+                    for (SignatureVerification signatureVerification : verifications) {
+                        verificationList.add(map(signatureVerification));
                     }
 
                     if (!options.getCertificates().isEmpty()) {
@@ -90,5 +89,11 @@ public class InlineVerifyImpl implements InlineVerify {
                 }
             }
         };
+    }
+
+    private Verification map(SignatureVerification sigVerification) {
+        return new Verification(sigVerification.getSignature().getCreationTime(),
+                sigVerification.getSigningKey().getSubkeyFingerprint().toString(),
+                sigVerification.getSigningKey().getPrimaryKeyFingerprint().toString());
     }
 }
