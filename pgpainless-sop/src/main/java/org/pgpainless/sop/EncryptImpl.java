@@ -8,6 +8,8 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.nio.charset.Charset;
+import java.util.HashSet;
+import java.util.Set;
 
 import org.bouncycastle.openpgp.PGPException;
 import org.bouncycastle.openpgp.PGPPublicKeyRingCollection;
@@ -23,6 +25,8 @@ import org.pgpainless.encryption_signing.ProducerOptions;
 import org.pgpainless.encryption_signing.SigningOptions;
 import org.pgpainless.exception.KeyException;
 import org.pgpainless.exception.WrongPassphraseException;
+import org.pgpainless.key.OpenPgpFingerprint;
+import org.pgpainless.key.info.KeyRingInfo;
 import org.pgpainless.util.Passphrase;
 import sop.Ready;
 import sop.enums.EncryptAs;
@@ -35,6 +39,7 @@ public class EncryptImpl implements Encrypt {
     EncryptionOptions encryptionOptions = new EncryptionOptions();
     SigningOptions signingOptions = null;
     MatchMakingSecretKeyRingProtector protector = new MatchMakingSecretKeyRingProtector();
+    private final Set<PGPSecretKeyRing> signingKeys = new HashSet<>();
 
     private EncryptAs encryptAs = EncryptAs.Binary;
     boolean armor = true;
@@ -63,23 +68,15 @@ public class EncryptImpl implements Encrypt {
             if (keys.size() != 1) {
                 throw new SOPGPException.BadData(new AssertionError("Exactly one secret key at a time expected. Got " + keys.size()));
             }
-
             PGPSecretKeyRing signingKey = keys.iterator().next();
-            protector.addSecretKey(signingKey);
 
-            try {
-                signingOptions.addInlineSignature(
-                        protector,
-                        signingKey,
-                        (encryptAs == EncryptAs.Binary ? DocumentSignatureType.BINARY_DOCUMENT : DocumentSignatureType.CANONICAL_TEXT_DOCUMENT)
-                );
-            } catch (IllegalArgumentException e) {
-                throw new SOPGPException.KeyCannotSign();
-            } catch (WrongPassphraseException e) {
-                throw new SOPGPException.KeyIsProtected();
-            } catch (PGPException e) {
-                throw new SOPGPException.BadData(e);
+            KeyRingInfo info = PGPainless.inspectKeyRing(signingKey);
+            if (info.getSigningSubkeys().isEmpty()) {
+                throw new SOPGPException.KeyCannotSign("Key " + OpenPgpFingerprint.of(signingKey) + " cannot sign.");
             }
+
+            protector.addSecretKey(signingKey);
+            signingKeys.add(signingKey);
         } catch (IOException | PGPException e) {
             throw new SOPGPException.BadData(e);
         }
@@ -121,6 +118,22 @@ public class EncryptImpl implements Encrypt {
                 ProducerOptions.encrypt(encryptionOptions);
         producerOptions.setAsciiArmor(armor);
         producerOptions.setEncoding(encryptAsToStreamEncoding(encryptAs));
+
+        for (PGPSecretKeyRing signingKey : signingKeys) {
+            try {
+                signingOptions.addInlineSignature(
+                        protector,
+                        signingKey,
+                        (encryptAs == EncryptAs.Binary ? DocumentSignatureType.BINARY_DOCUMENT : DocumentSignatureType.CANONICAL_TEXT_DOCUMENT)
+                );
+            } catch (KeyException.UnacceptableSigningKeyException e) {
+                throw new SOPGPException.KeyCannotSign();
+            } catch (WrongPassphraseException e) {
+                throw new SOPGPException.KeyIsProtected();
+            } catch (PGPException e) {
+                throw new SOPGPException.BadData(e);
+            }
+        }
 
         try {
             ProxyOutputStream proxy = new ProxyOutputStream();

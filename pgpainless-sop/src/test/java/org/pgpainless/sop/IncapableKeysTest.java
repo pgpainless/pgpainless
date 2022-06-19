@@ -64,4 +64,9 @@ public class IncapableKeysTest {
         assertThrows(SOPGPException.KeyCannotSign.class, () -> sop.detachedSign().key(nonSigningKey));
         assertThrows(SOPGPException.KeyCannotSign.class, () -> sop.inlineSign().key(nonSigningKey));
     }
+
+    @Test
+    public void encryptAndSignWithNonSigningKeyFails() {
+        assertThrows(SOPGPException.KeyCannotSign.class, () -> sop.encrypt().signWith(nonSigningKey));
+    }
 }

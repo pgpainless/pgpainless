@@ -38,6 +38,7 @@ public class EncryptDecryptRoundTripTest {
         sop = new SOPImpl();
         aliceKey = sop.generateKey()
                 .userId("Alice <alice@pgpainless.org>")
+                .withKeyPassword("wonderland.is.c00l")
                 .generate()
                 .getBytes();
         aliceCert = sop.extractCert()
@@ -56,6 +57,7 @@ public class EncryptDecryptRoundTripTest {
     public void basicRoundTripWithKey() throws IOException, SOPGPException.KeyCannotSign {
         byte[] encrypted = sop.encrypt()
                 .signWith(aliceKey)
+                .withKeyPassword("wonderland.is.c00l")
                 .withCert(aliceCert)
                 .withCert(bobCert)
                 .plaintext(message)
@@ -424,6 +426,15 @@ public class EncryptDecryptRoundTripTest {
         assertEquals(sessionKey, result.getSessionKey().get());
 
         assertArrayEquals(message, bytesAndResult.getBytes());
+    }
+
+    @Test
+    public void testEncryptWithWrongPassphraseThrowsKeyIsProtected() {
+        assertThrows(SOPGPException.KeyIsProtected.class, () -> sop.encrypt()
+                .withKeyPassword("falsePassphrase")
+                .signWith(aliceKey)
+                .withCert(bobCert)
+                .plaintext(message));
     }
 
     @Test
