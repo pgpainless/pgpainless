@@ -12,6 +12,6 @@ allprojects {
         slf4jVersion = '1.7.36'
         logbackVersion = '1.2.11'
         junitVersion = '5.8.2'
-        sopJavaVersion = '1.2.4-SNAPSHOT'
+        sopJavaVersion = '4.0.0'
     }
 }
