@@ -5,6 +5,33 @@ SPDX-License-Identifier: CC0-1.0
 
 # PGPainless Changelog
 
+## 1.3.0
+- Add `RevokedKeyException`
+- `KeyRingUtils.stripSecretKey()`: Disallow stripping of primary secret key
+- Remove support for reading compressed detached signatures
+- Add `PGPainless.generateKeyRing().modernKeyRing(userId)` shortcut method without passphrase
+- Add `CollectionUtils.addAll(Iterator, Collection)`
+- Add `SignatureUtils.getSignaturesForUserIdBy(key, userId, keyId)`
+- Add `OpenPgpFingerprint.parseFromBinary(bytes)`
+- `SignatureUtils.wasIssuedBy()`: Add support for V5 fingerprints
+- Prevent integer overflows when setting expiration dates
+- SOP: Properly throw `KeyCannotDecrypt` exception
+- Fix performance issues of encrypt and sign operations by using buffering
+- Fix performance issues of armor and dearmor operations
+- Bump dependency `sop-java` to `4.0.0`
+- Add support for SOP specification version 04
+  - Implement `inline-sign`
+  - Implement `inline-verify`
+  - Rename `DetachInbandSignatureAndMessageImpl` to `InlineDetachImpl`
+  - Rename `SignImpl` to `DetachedSignImpl`
+  - Rename `VerifyImpl` to `DetachedVerifyImpl`
+  - Add support for `--with-key-password` option in `GenerateKeyImpl`, `DetachedSignImpl`, `DecryptImpl`, `EncryptImpl`.
+  - `InlineDetachImpl` now supports 3 different message types:
+    - Messages using Cleartext Signature Framework
+    - OpenPGP messages using OnePassSignatures
+    - OpenPGP messages without OnePassSignatures
+- Introduce `OpenPgpMetadata.isCleartextSigned()`
+
 ## 1.2.2
 - `EncryptionOptions.addRecipients(collection)`: Disallow empty collections to prevent misuse from resulting in unencrypted messages
 - Deprecate default policy factory methods in favor of policy factory methods with expressive names
