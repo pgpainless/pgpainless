@@ -165,6 +165,11 @@ public final class PGPainless {
         return Policy.getInstance();
     }
 
+    /**
+     * Create different kinds of signatures on other keys.
+     *
+     * @return builder
+     */
     public static CertifyCertificate certify() {
         return new CertifyCertificate();
     }

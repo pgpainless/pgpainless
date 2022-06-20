@@ -35,9 +35,9 @@ public class CertifyCertificateTest {
     @Test
     public void testUserIdCertification() throws PGPException, InvalidAlgorithmParameterException, NoSuchAlgorithmException, IOException {
         SecretKeyRingProtector protector = SecretKeyRingProtector.unprotectedKeys();
-        PGPSecretKeyRing alice = PGPainless.generateKeyRing().modernKeyRing("Alice <alice@pgpainless.org>", null);
+        PGPSecretKeyRing alice = PGPainless.generateKeyRing().modernKeyRing("Alice <alice@pgpainless.org>");
         String bobUserId = "Bob <bob@pgpainless.org>";
-        PGPSecretKeyRing bob = PGPainless.generateKeyRing().modernKeyRing(bobUserId, null);
+        PGPSecretKeyRing bob = PGPainless.generateKeyRing().modernKeyRing(bobUserId);
 
         PGPPublicKeyRing bobCertificate = PGPainless.extractCertificate(bob);
 
@@ -70,8 +70,8 @@ public class CertifyCertificateTest {
     @Test
     public void testKeyDelegation() throws PGPException, InvalidAlgorithmParameterException, NoSuchAlgorithmException, IOException {
         SecretKeyRingProtector protector = SecretKeyRingProtector.unprotectedKeys();
-        PGPSecretKeyRing alice = PGPainless.generateKeyRing().modernKeyRing("Alice <alice@pgpainless.org>", null);
-        PGPSecretKeyRing bob = PGPainless.generateKeyRing().modernKeyRing("Bob <bob@pgpainless.org>", null);
+        PGPSecretKeyRing alice = PGPainless.generateKeyRing().modernKeyRing("Alice <alice@pgpainless.org>");
+        PGPSecretKeyRing bob = PGPainless.generateKeyRing().modernKeyRing("Bob <bob@pgpainless.org>");
 
         PGPPublicKeyRing bobCertificate = PGPainless.extractCertificate(bob);
 
