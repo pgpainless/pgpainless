@@ -26,7 +26,6 @@ import org.bouncycastle.openpgp.PGPSecretKeyRingCollection;
 import org.bouncycastle.openpgp.PGPSignature;
 import org.bouncycastle.openpgp.PGPUserAttributeSubpacketVector;
 import org.pgpainless.PGPainless;
-import org.pgpainless.exception.NotYetImplementedException;
 import org.pgpainless.implementation.ImplementationFactory;
 import org.pgpainless.key.protection.SecretKeyRingProtector;
 import org.pgpainless.key.protection.UnlockSecretKey;
@@ -353,8 +352,6 @@ public final class KeyRingUtils {
 
     /**
      * Inject a {@link PGPPublicKey} into the given key ring.
-     *
-     * Note: Right now this method is broken and will throw a {@link NotYetImplementedException}.
      *
      * @param keyRing key ring
      * @param publicKey public key
