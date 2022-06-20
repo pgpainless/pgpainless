@@ -12,6 +12,9 @@ dependencies {
     testImplementation "org.junit.jupiter:junit-jupiter-params:$junitVersion"
     testRuntimeOnly "org.junit.jupiter:junit-jupiter-engine:$junitVersion"
 
+    // Mocking Components
+    testImplementation "org.mockito:mockito-core:$mockitoVersion"
+
     // Logging
     api "org.slf4j:slf4j-api:$slf4jVersion"
     testImplementation "ch.qos.logback:logback-classic:$logbackVersion"
