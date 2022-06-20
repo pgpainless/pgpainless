@@ -6,6 +6,7 @@ package org.pgpainless.policy;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import java.util.Arrays;
@@ -166,5 +167,42 @@ public class PolicyTest {
         assertFalse(policy.getNotationRegistry().isKnownNotation("notation@pgpainless.org"));
         policy.getNotationRegistry().addKnownNotation("notation@pgpainless.org");
         assertTrue(policy.getNotationRegistry().isKnownNotation("notation@pgpainless.org"));
+    }
+
+    @Test
+    public void testUnknownSymmetricKeyEncryptionAlgorithmIsNotAcceptable() {
+        assertFalse(policy.getSymmetricKeyEncryptionAlgorithmPolicy().isAcceptable(-1));
+    }
+
+    @Test
+    public void testUnknownSymmetricKeyDecryptionAlgorithmIsNotAcceptable() {
+        assertFalse(policy.getSymmetricKeyDecryptionAlgorithmPolicy().isAcceptable(-1));
+    }
+
+    @Test
+    public void testUnknownSignatureHashAlgorithmIsNotAcceptable() {
+        assertFalse(policy.getSignatureHashAlgorithmPolicy().isAcceptable(-1));
+        assertFalse(policy.getSignatureHashAlgorithmPolicy().isAcceptable(-1, new Date()));
+    }
+
+    @Test
+    public void testUnknownRevocationHashAlgorithmIsNotAcceptable() {
+        assertFalse(policy.getRevocationSignatureHashAlgorithmPolicy().isAcceptable(-1));
+        assertFalse(policy.getRevocationSignatureHashAlgorithmPolicy().isAcceptable(-1, new Date()));
+    }
+
+    @Test
+    public void testUnknownCompressionAlgorithmIsNotAcceptable() {
+        assertFalse(policy.getCompressionAlgorithmPolicy().isAcceptable(-1));
+    }
+
+    @Test
+    public void testUnknownPublicKeyAlgorithmIsNotAcceptable() {
+        assertFalse(policy.getPublicKeyAlgorithmPolicy().isAcceptable(-1, 4096));
+    }
+
+    @Test
+    public void setNullSignerUserIdValidationLevelThrows() {
+        assertThrows(NullPointerException.class, () -> policy.setSignerUserIdValidationLevel(null));
     }
 }
