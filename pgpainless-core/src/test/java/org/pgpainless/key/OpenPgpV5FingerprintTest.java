@@ -4,13 +4,20 @@
 
 package org.pgpainless.key;
 
-import org.bouncycastle.util.encoders.Hex;
-import org.junit.jupiter.api.Test;
-
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.when;
+
+import org.bouncycastle.openpgp.PGPKeyRing;
+import org.bouncycastle.openpgp.PGPPublicKey;
+import org.bouncycastle.openpgp.PGPPublicKeyRing;
+import org.bouncycastle.openpgp.PGPSecretKey;
+import org.bouncycastle.openpgp.PGPSecretKeyRing;
+import org.bouncycastle.util.encoders.Hex;
+import org.junit.jupiter.api.Test;
 
 public class OpenPgpV5FingerprintTest {
 
@@ -91,5 +98,82 @@ public class OpenPgpV5FingerprintTest {
         OpenPgpFingerprint parsed2 = new OpenPgpV5Fingerprint(prettyPrint);
         assertEquals(parsed.hashCode(), parsed2.hashCode());
         assertEquals(0, parsed.compareTo(parsed2));
+    }
+
+    @Test
+    public void constructFromMockedPublicKey() {
+        String hex = "76543210ABCDEFAB01AB23CD1C0FFEE11EEFF0C1DC32BA10BAFEDCBA01234567";
+        PGPPublicKey publicKey = getMockedPublicKey(hex);
+
+        OpenPgpFingerprint fingerprint = OpenPgpFingerprint.of(publicKey);
+        assertTrue(fingerprint instanceof OpenPgpV5Fingerprint);
+        assertEquals(5, fingerprint.getVersion());
+        assertEquals(hex, fingerprint.toString());
+    }
+
+    @Test
+    public void constructFromMockedSecretKey() {
+        String hex = "76543210ABCDEFAB01AB23CD1C0FFEE11EEFF0C1DC32BA10BAFEDCBA01234567";
+        PGPPublicKey publicKey = getMockedPublicKey(hex);
+        PGPSecretKey secretKey = mock(PGPSecretKey.class);
+        when(secretKey.getPublicKey()).thenReturn(publicKey);
+
+        OpenPgpFingerprint fingerprint = new OpenPgpV5Fingerprint(secretKey);
+        assertEquals(5, fingerprint.getVersion());
+        assertEquals(hex, fingerprint.toString());
+    }
+
+    @Test
+    public void constructFromMockedPublicKeyRing() {
+        String hex = "76543210ABCDEFAB01AB23CD1C0FFEE11EEFF0C1DC32BA10BAFEDCBA01234567";
+        PGPPublicKey publicKey = getMockedPublicKey(hex);
+        PGPPublicKeyRing publicKeys = mock(PGPPublicKeyRing.class);
+        when(publicKeys.getPublicKey()).thenReturn(publicKey);
+
+        OpenPgpFingerprint fingerprint = OpenPgpFingerprint.of(publicKeys);
+        assertEquals(5, fingerprint.getVersion());
+        assertEquals(hex, fingerprint.toString());
+
+        fingerprint = new OpenPgpV5Fingerprint(publicKeys);
+        assertEquals(hex, fingerprint.toString());
+    }
+
+    @Test
+    public void constructFromMockedSecretKeyRing() {
+        String hex = "76543210ABCDEFAB01AB23CD1C0FFEE11EEFF0C1DC32BA10BAFEDCBA01234567";
+        PGPPublicKey publicKey = getMockedPublicKey(hex);
+        PGPSecretKeyRing secretKeys = mock(PGPSecretKeyRing.class);
+        when(secretKeys.getPublicKey()).thenReturn(publicKey);
+
+        OpenPgpFingerprint fingerprint = OpenPgpFingerprint.of(secretKeys);
+        assertEquals(5, fingerprint.getVersion());
+        assertEquals(hex, fingerprint.toString());
+
+        fingerprint = new OpenPgpV5Fingerprint(secretKeys);
+        assertEquals(hex, fingerprint.toString());
+    }
+
+    @Test
+    public void constructFromMockedKeyRing() {
+        String hex = "76543210ABCDEFAB01AB23CD1C0FFEE11EEFF0C1DC32BA10BAFEDCBA01234567";
+        PGPPublicKey publicKey = getMockedPublicKey(hex);
+        PGPKeyRing keys = mock(PGPKeyRing.class);
+        when(keys.getPublicKey()).thenReturn(publicKey);
+
+        OpenPgpFingerprint fingerprint = OpenPgpFingerprint.of(keys);
+        assertEquals(5, fingerprint.getVersion());
+        assertEquals(hex, fingerprint.toString());
+
+        fingerprint = new OpenPgpV5Fingerprint(keys);
+        assertEquals(hex, fingerprint.toString());
+    }
+
+    private PGPPublicKey getMockedPublicKey(String hex) {
+        byte[] binary = Hex.decode(hex);
+
+        PGPPublicKey mocked = mock(PGPPublicKey.class);
+        when(mocked.getVersion()).thenReturn(5);
+        when(mocked.getFingerprint()).thenReturn(binary);
+        return mocked;
     }
 }
