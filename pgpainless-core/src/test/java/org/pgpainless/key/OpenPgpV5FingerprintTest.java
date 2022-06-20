@@ -8,6 +8,7 @@ import org.bouncycastle.util.encoders.Hex;
 import org.junit.jupiter.api.Test;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNotEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
@@ -34,6 +35,7 @@ public class OpenPgpV5FingerprintTest {
         assertTrue(parsed instanceof OpenPgpV5Fingerprint);
         OpenPgpV5Fingerprint v5fp = (OpenPgpV5Fingerprint) parsed;
         assertEquals(prettyPrint, v5fp.prettyPrint());
+        assertEquals(5, v5fp.getVersion());
     }
 
     @Test
@@ -44,6 +46,9 @@ public class OpenPgpV5FingerprintTest {
         OpenPgpFingerprint fingerprint = OpenPgpFingerprint.parseFromBinary(binary);
         assertTrue(fingerprint instanceof OpenPgpV5Fingerprint);
         assertEquals(hex, fingerprint.toString());
+
+        OpenPgpV5Fingerprint constructed = new OpenPgpV5Fingerprint(binary);
+        assertEquals(fingerprint, constructed);
     }
 
     @Test
@@ -72,5 +77,19 @@ public class OpenPgpV5FingerprintTest {
         byte[] binary = Hex.decode(hex);
 
         assertThrows(IllegalArgumentException.class, () -> OpenPgpFingerprint.parseFromBinary(binary));
+    }
+
+    @Test
+    public void equalsTest() {
+        String prettyPrint = "76543210 ABCDEFAB 01AB23CD 1C0FFEE1  1EEFF0C1 DC32BA10 BAFEDCBA 01234567";
+        OpenPgpFingerprint parsed = OpenPgpFingerprint.parse(prettyPrint);
+
+        assertNotEquals(parsed, null);
+        assertNotEquals(parsed, new Object());
+        assertEquals(parsed, parsed.toString());
+
+        OpenPgpFingerprint parsed2 = new OpenPgpV5Fingerprint(prettyPrint);
+        assertEquals(parsed.hashCode(), parsed2.hashCode());
+        assertEquals(0, parsed.compareTo(parsed2));
     }
 }
