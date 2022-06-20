@@ -6,6 +6,7 @@ package org.pgpainless.decryption_verification;
 
 import static org.junit.jupiter.api.Assertions.assertArrayEquals;
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import java.io.ByteArrayInputStream;
@@ -13,6 +14,7 @@ import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
+import java.io.InputStream;
 import java.nio.charset.StandardCharsets;
 import java.security.InvalidAlgorithmParameterException;
 import java.security.NoSuchAlgorithmException;
@@ -27,11 +29,13 @@ import org.bouncycastle.util.io.Streams;
 import org.junit.jupiter.api.Test;
 import org.pgpainless.PGPainless;
 import org.pgpainless.algorithm.DocumentSignatureType;
+import org.pgpainless.decryption_verification.cleartext_signatures.ClearsignedMessageUtil;
 import org.pgpainless.decryption_verification.cleartext_signatures.InMemoryMultiPassStrategy;
 import org.pgpainless.decryption_verification.cleartext_signatures.MultiPassStrategy;
 import org.pgpainless.encryption_signing.EncryptionStream;
 import org.pgpainless.encryption_signing.ProducerOptions;
 import org.pgpainless.encryption_signing.SigningOptions;
+import org.pgpainless.exception.WrongConsumingMethodException;
 import org.pgpainless.key.TestKeys;
 import org.pgpainless.key.protection.SecretKeyRingProtector;
 import org.pgpainless.signature.consumer.CertificateValidator;
@@ -239,6 +243,29 @@ public class CleartextSignatureVerificationTest {
         out = new ByteArrayOutputStream();
         Streams.pipeAll(decryptionStream, out);
         decryptionStream.close();
+    }
+
+    @Test
+    public void clearsignedMessageUtil_detachSignaturesFromInbandNonClearsignedMessageThrows() {
+        // Message is inband signed, but does not use cleartext signature framework
+        String message = "-----BEGIN PGP MESSAGE-----\n" +
+                "Version: PGPainless\n" +
+                "\n" +
+                "owGbwMvMyCX29UzQdZ1/lUqMpw8YJDGAgJGjd3JgcqJTVUpylpOCmUK+l39asYGl\n" +
+                "k1NkcYSxgkuaR26EQplppGVuREGqn3NBRJRXoVm4T1BuhoJjcllOYV5xhmVKloVz\n" +
+                "UJaZQmhBSbqCr6uhQlVIkL9rqUJgaaWjpalCuVdiXkVhiFNuQHpmeLpChGNqVkG5\n" +
+                "U1iBgqmvo79LXlFVWK5rpEGkh0dBfrB/ngKXj5FhVlZuUpllTk6xb3m5QlWUT3Gh\n" +
+                "o7dCQXGIgnlwZkBYlI9FhEFAprdnkLGFe6KjZ2meQblCXkiWaWhUknl5YmmYb7JC\n" +
+                "noJJeWZYXmJarpFvXkpKpbGXQkcpC6MYF4M6K1PShlmCnAKwsBBTZJktcnnrHYXL\n" +
+                "h1oWr+qECTMw+O9i+KfUs3LXgzOuS102VbY+fLCqwFynLmyqVDE3b4Yu/5x68UCG\n" +
+                "/35qnVwnbYX8YrK6j+UdabAo/HnvZL7jk7pjRg1n3TIy+QE=\n" +
+                "=yFcL\n" +
+                "-----END PGP MESSAGE-----";
+
+        InputStream inputStream = new ByteArrayInputStream(message.getBytes(StandardCharsets.UTF_8));
+        ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
+        assertThrows(WrongConsumingMethodException.class,
+                () -> ClearsignedMessageUtil.detachSignaturesFromInbandClearsignedMessage(inputStream, outputStream));
     }
 
     private String randomString(int maxWordLen, int wordCount) {
