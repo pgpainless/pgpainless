@@ -82,6 +82,9 @@ public final class EncryptionStream extends OutputStream {
             return;
         }
 
+        // ArmoredOutputStream better be buffered
+        outermostStream = new BufferedOutputStream(outermostStream);
+
         LOGGER.debug("Wrap encryption output in ASCII armor");
         armorOutputStream = ArmoredOutputStreamFactory.get(outermostStream);
         if (options.hasComment()) {
