@@ -154,12 +154,6 @@ public class DecryptImpl implements Decrypt {
                     verificationList.add(map(signatureVerification));
                 }
 
-                if (!consumerOptions.getCertificates().isEmpty()) {
-                    if (verificationList.isEmpty()) {
-                        throw new SOPGPException.NoSignature();
-                    }
-                }
-
                 SessionKey sessionKey = null;
                 if (metadata.getSessionKey() != null) {
                     org.pgpainless.util.SessionKey sk = metadata.getSessionKey();
