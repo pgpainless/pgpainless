@@ -166,18 +166,20 @@ public class EncryptDecryptRoundTripTest {
     }
 
     @Test
-    public void encrypt_decryptAndVerifyYieldsNoSignatureException() throws IOException {
+    public void encrypt_decryptAndVerifyYieldsNoVerifications() throws IOException {
         byte[] encrypted = sop.encrypt()
                 .withCert(bobCert)
                 .plaintext(message)
                 .getBytes();
 
-        assertThrows(SOPGPException.NoSignature.class, () -> sop
-                .decrypt()
+        DecryptionResult result = sop.decrypt()
                 .withKey(bobKey)
                 .verifyWithCert(aliceCert)
                 .ciphertext(encrypted)
-                .toByteArrayAndResult());
+                .toByteArrayAndResult()
+                .getResult();
+
+        assertTrue(result.getVerifications().isEmpty());
     }
 
     @Test
