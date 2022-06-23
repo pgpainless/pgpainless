@@ -149,6 +149,10 @@ public class DecryptImpl implements Decrypt {
                 decryptionStream.close();
                 OpenPgpMetadata metadata = decryptionStream.getResult();
 
+                if (!metadata.isEncrypted()) {
+                    throw new SOPGPException.BadData("Data is not encrypted.");
+                }
+
                 List<Verification> verificationList = new ArrayList<>();
                 for (SignatureVerification signatureVerification : metadata.getVerifiedInbandSignatures()) {
                     verificationList.add(map(signatureVerification));

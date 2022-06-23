@@ -515,4 +515,22 @@ public class EncryptDecryptRoundTripTest {
         assertThrows(SOPGPException.BadData.class, () ->
                 sop.decrypt().withSessionKey(wrongSessionKey).ciphertext(ciphertext));
     }
+
+    @Test
+    public void decryptNonEncryptedDataFailsBadData() throws IOException {
+        byte[] signed = sop.inlineSign()
+                .key(aliceKey)
+                .withKeyPassword(alicePassword)
+                .data(message)
+                .getBytes();
+
+        assertThrows(SOPGPException.BadData.class, () ->
+                sop.decrypt()
+                        .verifyWithCert(aliceCert)
+                        .withKey(aliceKey)
+                        .withKeyPassword(alicePassword)
+                        .ciphertext(signed)
+                        .toByteArrayAndResult()
+        );
+    }
 }
