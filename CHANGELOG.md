@@ -5,6 +5,14 @@ SPDX-License-Identifier: CC0-1.0
 
 # PGPainless Changelog
 
+## 1.3.1-SNAPSHOT
+- Fix reproducibility of builds by setting fixed file permissions in archive task
+- Improve encryption performance by buffering streams
+- Fix `OpenPgpMetadata.isEncrypted()` to also return true for symmetrically encrypted messages
+- SOP changes
+  - decrypt: Do not throw `NoSignatures` if no signatures found
+  - decrypt: Throw `BadData` when ciphertext is not encrypted
+
 ## 1.3.0
 - Add `RevokedKeyException`
 - `KeyRingUtils.stripSecretKey()`: Disallow stripping of primary secret key
