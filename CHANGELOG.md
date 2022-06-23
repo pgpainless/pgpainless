@@ -5,7 +5,7 @@ SPDX-License-Identifier: CC0-1.0
 
 # PGPainless Changelog
 
-## 1.3.1-SNAPSHOT
+## 1.3.1
 - Fix reproducibility of builds by setting fixed file permissions in archive task
 - Improve encryption performance by buffering streams
 - Fix `OpenPgpMetadata.isEncrypted()` to also return true for symmetrically encrypted messages
