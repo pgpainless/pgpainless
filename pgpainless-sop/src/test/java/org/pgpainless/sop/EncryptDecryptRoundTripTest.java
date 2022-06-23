@@ -28,6 +28,7 @@ public class EncryptDecryptRoundTripTest {
     private static final Charset utf8 = Charset.forName("UTF8");
     private static SOP sop;
     private static byte[] aliceKey;
+    private static final String alicePassword = "wonderland.is.c00l";
     private static byte[] aliceCert;
     private static byte[] bobKey;
     private static byte[] bobCert;
@@ -38,7 +39,7 @@ public class EncryptDecryptRoundTripTest {
         sop = new SOPImpl();
         aliceKey = sop.generateKey()
                 .userId("Alice <alice@pgpainless.org>")
-                .withKeyPassword("wonderland.is.c00l")
+                .withKeyPassword(alicePassword)
                 .generate()
                 .getBytes();
         aliceCert = sop.extractCert()
@@ -57,7 +58,7 @@ public class EncryptDecryptRoundTripTest {
     public void basicRoundTripWithKey() throws IOException, SOPGPException.KeyCannotSign {
         byte[] encrypted = sop.encrypt()
                 .signWith(aliceKey)
-                .withKeyPassword("wonderland.is.c00l")
+                .withKeyPassword(alicePassword)
                 .withCert(aliceCert)
                 .withCert(bobCert)
                 .plaintext(message)
