@@ -84,7 +84,7 @@ public class OpenPgpMetadata {
      * @return true if encrypted, false otherwise
      */
     public boolean isEncrypted() {
-        return sessionKey != null && sessionKey.getAlgorithm() != SymmetricKeyAlgorithm.NULL && !getRecipientKeyIds().isEmpty();
+        return sessionKey != null && sessionKey.getAlgorithm() != SymmetricKeyAlgorithm.NULL;
     }
 
     /**
