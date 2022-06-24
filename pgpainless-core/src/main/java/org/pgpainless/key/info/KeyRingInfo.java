@@ -86,8 +86,19 @@ public class KeyRingInfo {
      * @param validationDate date of validation
      */
     public KeyRingInfo(PGPKeyRing keys, Date validationDate) {
+        this(keys, PGPainless.getPolicy(), validationDate);
+    }
+
+    /**
+     * Evaluate the key ring at the provided validation date.
+     *
+     * @param keys key ring
+     * @param policy policy
+     * @param validationDate validation date
+     */
+    public KeyRingInfo(PGPKeyRing keys, Policy policy, Date validationDate) {
         this.keys = keys;
-        this.signatures = new Signatures(keys, validationDate, PGPainless.getPolicy());
+        this.signatures = new Signatures(keys, validationDate, policy);
         this.evaluationDate = validationDate;
         this.primaryUserId = findPrimaryUserId();
     }
