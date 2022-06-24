@@ -44,14 +44,15 @@ public abstract class SignatureValidator {
 
     /**
      * Check, whether there is the possibility that the given signature was created by the given key.
-     * {@link #verify(PGPSignature)} throws a {@link SignatureValidationException} if we can say with certainty that the signature
-     * was not created by the given key (e.g. if the sig carries another issuer, issuer fingerprint packet).
+     * {@link #verify(PGPSignature)} throws a {@link SignatureValidationException} if we can say with certainty that
+     * the signature was not created by the given key (e.g. if the sig carries another issuer, issuer fingerprint packet).
      *
      * If there is no information found in the signature about who created it (no issuer, no fingerprint),
      * {@link #verify(PGPSignature)} will simply return since it is plausible that the given key created the sig.
      *
      * @param signingKey signing key
-     * @return validator that throws a {@link SignatureValidationException} if the signature was not possibly made by the given key.
+     * @return validator that throws a {@link SignatureValidationException} if the signature was not possibly made by
+     * the given key.
      */
     public static SignatureValidator wasPossiblyMadeByKey(PGPPublicKey signingKey) {
         return new SignatureValidator() {
@@ -62,14 +63,17 @@ public abstract class SignatureValidator {
                 Long issuer = SignatureSubpacketsUtil.getIssuerKeyIdAsLong(signature);
                 if (issuer != null) {
                     if (issuer != signingKey.getKeyID()) {
-                        throw new SignatureValidationException("Signature was not created by " + signingKeyFingerprint + " (signature issuer: " + Long.toHexString(issuer) + ")");
+                        throw new SignatureValidationException("Signature was not created by " +
+                                signingKeyFingerprint + " (signature issuer: " + Long.toHexString(issuer) + ")");
                     }
                 }
 
-                OpenPgpFingerprint fingerprint = SignatureSubpacketsUtil.getIssuerFingerprintAsOpenPgpFingerprint(signature);
+                OpenPgpFingerprint fingerprint =
+                        SignatureSubpacketsUtil.getIssuerFingerprintAsOpenPgpFingerprint(signature);
                 if (fingerprint != null) {
                     if (!fingerprint.equals(signingKeyFingerprint)) {
-                        throw new SignatureValidationException("Signature was not created by " + signingKeyFingerprint + " (signature fingerprint: " + fingerprint + ")");
+                        throw new SignatureValidationException("Signature was not created by " +
+                                signingKeyFingerprint + " (signature fingerprint: " + fingerprint + ")");
                     }
                 }
 
@@ -86,10 +90,12 @@ public abstract class SignatureValidator {
      * @param primaryKey primary key
      * @param subkey subkey
      * @param policy policy
-     * @param validationDate reference date for signature verification
+     * @param referenceDate reference date for signature verification
      * @return validator
      */
-    public static SignatureValidator hasValidPrimaryKeyBindingSignatureIfRequired(PGPPublicKey primaryKey, PGPPublicKey subkey, Policy policy, Date validationDate) {
+    public static SignatureValidator hasValidPrimaryKeyBindingSignatureIfRequired(PGPPublicKey primaryKey,
+                                                                                  PGPPublicKey subkey, Policy policy,
+                                                                                  Date referenceDate) {
         return new SignatureValidator() {
             @Override
             public void verify(PGPSignature signature) throws SignatureValidationException {
@@ -117,7 +123,7 @@ public abstract class SignatureValidator {
 
                             try {
                                 signatureStructureIsAcceptable(subkey, policy).verify(embedded);
-                                signatureIsEffective(validationDate).verify(embedded);
+                                signatureIsEffective(referenceDate).verify(embedded);
                                 correctPrimaryKeyBindingSignature(primaryKey, subkey).verify(embedded);
 
                                 hasValidPrimaryKeyBinding = true;
@@ -129,7 +135,9 @@ public abstract class SignatureValidator {
                     }
 
                     if (!hasValidPrimaryKeyBinding) {
-                        throw new SignatureValidationException("Missing primary key binding signature on signing capable subkey " + Long.toHexString(subkey.getKeyID()), rejectedEmbeddedSigs);
+                        throw new SignatureValidationException(
+                                "Missing primary key binding signature on signing capable subkey " +
+                                        Long.toHexString(subkey.getKeyID()), rejectedEmbeddedSigs);
                     }
                 } catch (PGPException e) {
                     throw new SignatureValidationException("Cannot process list of embedded signatures.", e);
@@ -165,7 +173,8 @@ public abstract class SignatureValidator {
      * @param signingKey signing key
      * @return validator
      */
-    private static SignatureValidator signatureUsesAcceptablePublicKeyAlgorithm(Policy policy, PGPPublicKey signingKey) {
+    private static SignatureValidator signatureUsesAcceptablePublicKeyAlgorithm(Policy policy,
+                                                                                PGPPublicKey signingKey) {
         return new SignatureValidator() {
             @Override
             public void verify(PGPSignature signature) throws SignatureValidationException {
@@ -176,7 +185,8 @@ public abstract class SignatureValidator {
                     }
                     if (!policy.getPublicKeyAlgorithmPolicy().isAcceptable(algorithm, bitStrength)) {
                         throw new SignatureValidationException("Signature was made using unacceptable key. " +
-                                algorithm + " (" + bitStrength + " bits) is not acceptable according to the public key algorithm policy.");
+                                algorithm + " (" + bitStrength +
+                                " bits) is not acceptable according to the public key algorithm policy.");
                     }
             }
         };
@@ -194,13 +204,16 @@ public abstract class SignatureValidator {
             public void verify(PGPSignature signature) throws SignatureValidationException {
                 try {
                     HashAlgorithm hashAlgorithm = HashAlgorithm.requireFromId(signature.getHashAlgorithm());
-                    Policy.HashAlgorithmPolicy hashAlgorithmPolicy = getHashAlgorithmPolicyForSignature(signature, policy);
+                    Policy.HashAlgorithmPolicy hashAlgorithmPolicy =
+                            getHashAlgorithmPolicyForSignature(signature, policy);
                     if (!hashAlgorithmPolicy.isAcceptable(signature.getHashAlgorithm(), signature.getCreationTime())) {
-                        throw new SignatureValidationException("Signature uses unacceptable hash algorithm " + hashAlgorithm +
-                                " (Signature creation time: " + DateUtil.formatUTCDate(signature.getCreationTime()) + ")");
+                        throw new SignatureValidationException("Signature uses unacceptable hash algorithm " +
+                                hashAlgorithm + " (Signature creation time: " +
+                                DateUtil.formatUTCDate(signature.getCreationTime()) + ")");
                     }
                 } catch (NoSuchElementException e) {
-                    throw new SignatureValidationException("Signature uses unknown hash algorithm " + signature.getHashAlgorithm());
+                    throw new SignatureValidationException("Signature uses unknown hash algorithm " +
+                            signature.getHashAlgorithm());
                 }
             }
         };
@@ -214,10 +227,12 @@ public abstract class SignatureValidator {
      * @param policy revocation policy for revocation sigs, normal policy for non-rev sigs
      * @return policy
      */
-    private static Policy.HashAlgorithmPolicy getHashAlgorithmPolicyForSignature(PGPSignature signature, Policy policy) {
+    private static Policy.HashAlgorithmPolicy getHashAlgorithmPolicyForSignature(PGPSignature signature,
+                                                                                 Policy policy) {
         SignatureType type = SignatureType.valueOf(signature.getSignatureType());
         Policy.HashAlgorithmPolicy hashAlgorithmPolicy;
-        if (type == SignatureType.CERTIFICATION_REVOCATION || type == SignatureType.KEY_REVOCATION || type == SignatureType.SUBKEY_REVOCATION) {
+        if (type == SignatureType.CERTIFICATION_REVOCATION || type == SignatureType.KEY_REVOCATION ||
+                type == SignatureType.SUBKEY_REVOCATION) {
             hashAlgorithmPolicy = policy.getRevocationSignatureHashAlgorithmPolicy();
         } else {
             hashAlgorithmPolicy = policy.getSignatureHashAlgorithmPolicy();
@@ -241,7 +256,8 @@ public abstract class SignatureValidator {
                         continue;
                     }
                     if (!registry.isKnownNotation(notation.getNotationName())) {
-                        throw new SignatureValidationException("Signature contains unknown critical notation '" + notation.getNotationName() + "' in its hashed area.");
+                        throw new SignatureValidationException("Signature contains unknown critical notation '" +
+                                notation.getNotationName() + "' in its hashed area.");
                     }
                 }
             }
@@ -262,7 +278,9 @@ public abstract class SignatureValidator {
                     try {
                         SignatureSubpacket.requireFromCode(criticalTag);
                     } catch (NoSuchElementException e) {
-                        throw new SignatureValidationException("Signature contains unknown critical subpacket of type " + Long.toHexString(criticalTag));
+                        throw new SignatureValidationException(
+                                "Signature contains unknown critical subpacket of type " +
+                                        Long.toHexString(criticalTag));
                     }
                 }
             }
@@ -281,15 +299,15 @@ public abstract class SignatureValidator {
     /**
      * Verify that a signature is effective at the given reference date.
      *
-     * @param validationDate reference date for signature verification
+     * @param referenceDate reference date for signature verification
      * @return validator
      */
-    public static SignatureValidator signatureIsEffective(Date validationDate) {
+    public static SignatureValidator signatureIsEffective(Date referenceDate) {
         return new SignatureValidator() {
             @Override
             public void verify(PGPSignature signature) throws SignatureValidationException {
-                signatureIsAlreadyEffective(validationDate).verify(signature);
-                signatureIsNotYetExpired(validationDate).verify(signature);
+                signatureIsAlreadyEffective(referenceDate).verify(signature);
+                signatureIsNotYetExpired(referenceDate).verify(signature);
             }
         };
     }
@@ -297,10 +315,10 @@ public abstract class SignatureValidator {
     /**
      * Verify that a signature was created prior to the given reference date.
      *
-     * @param validationDate reference date for signature verification
+     * @param referenceDate reference date for signature verification
      * @return validator
      */
-    public static SignatureValidator signatureIsAlreadyEffective(Date validationDate) {
+    public static SignatureValidator signatureIsAlreadyEffective(Date referenceDate) {
         return new SignatureValidator() {
             @Override
             public void verify(PGPSignature signature) throws SignatureValidationException {
@@ -310,8 +328,9 @@ public abstract class SignatureValidator {
                     return;
                 }
 
-                if (signatureCreationTime.after(validationDate)) {
-                    throw new SignatureValidationException("Signature was created at " + signatureCreationTime + " and is therefore not yet valid at " + validationDate);
+                if (signatureCreationTime.after(referenceDate)) {
+                    throw new SignatureValidationException("Signature was created at " + signatureCreationTime +
+                            " and is therefore not yet valid at " + referenceDate);
                 }
             }
         };
@@ -320,10 +339,10 @@ public abstract class SignatureValidator {
     /**
      * Verify that a signature is not yet expired.
      *
-     * @param validationDate reference date for signature verification
+     * @param referenceDate reference date for signature verification
      * @return validator
      */
-    public static SignatureValidator signatureIsNotYetExpired(Date validationDate) {
+    public static SignatureValidator signatureIsNotYetExpired(Date referenceDate) {
         return new SignatureValidator() {
             @Override
             public void verify(PGPSignature signature) throws SignatureValidationException {
@@ -333,8 +352,9 @@ public abstract class SignatureValidator {
                 }
 
                 Date signatureExpirationTime = SignatureSubpacketsUtil.getSignatureExpirationTimeAsDate(signature);
-                if (signatureExpirationTime != null && signatureExpirationTime.before(validationDate)) {
-                    throw new SignatureValidationException("Signature is already expired (expiration: " + signatureExpirationTime + ", validation: " + validationDate + ")");
+                if (signatureExpirationTime != null && signatureExpirationTime.before(referenceDate)) {
+                    throw new SignatureValidationException("Signature is already expired (expiration: " +
+                            signatureExpirationTime + ", validation: " + referenceDate + ")");
                 }
             }
         };
@@ -375,7 +395,8 @@ public abstract class SignatureValidator {
             public void verify(PGPSignature signature) throws SignatureValidationException {
                 SignatureCreationTime creationTime = SignatureSubpacketsUtil.getSignatureCreationTime(signature);
                 if (creationTime == null) {
-                    throw new SignatureValidationException("Malformed signature. Signature has no signature creation time subpacket in its hashed area.");
+                    throw new SignatureValidationException(
+                            "Malformed signature. Signature has no signature creation time subpacket in its hashed area.");
                 }
             }
         };
@@ -405,7 +426,8 @@ public abstract class SignatureValidator {
                 Date signatureCreationTime = signature.getCreationTime();
 
                 if (keyCreationTime.after(signatureCreationTime)) {
-                    throw new SignatureValidationException("Signature predates key (key creation: " + keyCreationTime + ", signature creation: " + signatureCreationTime + ")");
+                    throw new SignatureValidationException("Signature predates key (key creation: " +
+                            keyCreationTime + ", signature creation: " + signatureCreationTime + ")");
                 }
             }
         };
@@ -425,7 +447,8 @@ public abstract class SignatureValidator {
                     return;
                 }
                 boolean predatesBindingSig = true;
-                Iterator<PGPSignature> bindingSignatures = signingKey.getSignaturesOfType(SignatureType.SUBKEY_BINDING.getCode());
+                Iterator<PGPSignature> bindingSignatures =
+                        signingKey.getSignaturesOfType(SignatureType.SUBKEY_BINDING.getCode());
                 if (!bindingSignatures.hasNext()) {
                     throw new SignatureValidationException("Signing subkey does not have a subkey binding signature.");
                 }
@@ -436,7 +459,8 @@ public abstract class SignatureValidator {
                     }
                 }
                 if (predatesBindingSig) {
-                    throw new SignatureValidationException("Signature was created before the signing key was bound to the key ring.");
+                    throw new SignatureValidationException(
+                            "Signature was created before the signing key was bound to the key ring.");
                 }
             }
         };
@@ -457,7 +481,8 @@ public abstract class SignatureValidator {
                     throw new SignatureValidationException("Primary key cannot be its own subkey.");
                 }
                 try {
-                    signature.init(ImplementationFactory.getInstance().getPGPContentVerifierBuilderProvider(), primaryKey);
+                    signature.init(ImplementationFactory.getInstance()
+                            .getPGPContentVerifierBuilderProvider(), primaryKey);
                     boolean valid = signature.verifyCertification(primaryKey, subkey);
                     if (!valid) {
                         throw new SignatureValidationException("Signature is not correct.");
@@ -487,7 +512,8 @@ public abstract class SignatureValidator {
                         throw new SignatureValidationException("Primary Key Binding Signature is not correct.");
                     }
                 } catch (PGPException | ClassCastException e) {
-                    throw new SignatureValidationException("Cannot verify primary key binding signature correctness", e);
+                    throw new SignatureValidationException(
+                            "Cannot verify primary key binding signature correctness", e);
                 }
             }
         };
@@ -554,7 +580,8 @@ public abstract class SignatureValidator {
                     }
                 }
                 if (!valid) {
-                    throw new SignatureValidationException("Signature is of type " + type + " while only " + Arrays.toString(signatureTypes) + " are allowed here.");
+                    throw new SignatureValidationException("Signature is of type " + type + " while only " +
+                            Arrays.toString(signatureTypes) + " are allowed here.");
                 }
             }
         };
@@ -568,18 +595,22 @@ public abstract class SignatureValidator {
      * @param certifyingKey key that created the signature.
      * @return validator
      */
-    public static SignatureValidator correctSignatureOverUserId(String userId, PGPPublicKey certifiedKey, PGPPublicKey certifyingKey) {
+    public static SignatureValidator correctSignatureOverUserId(String userId, PGPPublicKey certifiedKey,
+                                                                PGPPublicKey certifyingKey) {
         return new SignatureValidator() {
             @Override
             public void verify(PGPSignature signature) throws SignatureValidationException {
                 try {
-                    signature.init(ImplementationFactory.getInstance().getPGPContentVerifierBuilderProvider(), certifyingKey);
+                    signature.init(ImplementationFactory.getInstance()
+                            .getPGPContentVerifierBuilderProvider(), certifyingKey);
                     boolean valid = signature.verifyCertification(userId, certifiedKey);
                     if (!valid) {
-                        throw new SignatureValidationException("Signature over user-id '" + userId + "' is not correct.");
+                        throw new SignatureValidationException("Signature over user-id '" + userId +
+                                "' is not correct.");
                     }
                 } catch (PGPException | ClassCastException e) {
-                    throw new SignatureValidationException("Cannot verify signature over user-id '" + userId + "'.", e);
+                    throw new SignatureValidationException("Cannot verify signature over user-id '" +
+                            userId + "'.", e);
                 }
             }
         };
@@ -593,12 +624,15 @@ public abstract class SignatureValidator {
      * @param certifyingKey key that created the certification signature
      * @return validator
      */
-    public static SignatureValidator correctSignatureOverUserAttributes(PGPUserAttributeSubpacketVector userAttributes, PGPPublicKey certifiedKey, PGPPublicKey certifyingKey) {
+    public static SignatureValidator correctSignatureOverUserAttributes(PGPUserAttributeSubpacketVector userAttributes,
+                                                                        PGPPublicKey certifiedKey,
+                                                                        PGPPublicKey certifyingKey) {
         return new SignatureValidator() {
             @Override
             public void verify(PGPSignature signature) throws SignatureValidationException {
                 try {
-                    signature.init(ImplementationFactory.getInstance().getPGPContentVerifierBuilderProvider(), certifyingKey);
+                    signature.init(ImplementationFactory.getInstance()
+                            .getPGPContentVerifierBuilderProvider(), certifyingKey);
                     boolean valid = signature.verifyCertification(userAttributes, certifiedKey);
                     if (!valid) {
                         throw new SignatureValidationException("Signature over user-attribute vector is not correct.");
@@ -616,12 +650,16 @@ public abstract class SignatureValidator {
             public void verify(PGPSignature signature) throws SignatureValidationException {
                 Date timestamp = signature.getCreationTime();
                 if (notBefore != null && timestamp.before(notBefore)) {
-                    throw new SignatureValidationException("Signature was made before the earliest allowed signature creation time. Created: " +
-                            DateUtil.formatUTCDate(timestamp) + " Earliest allowed: " + DateUtil.formatUTCDate(notBefore));
+                    throw new SignatureValidationException(
+                            "Signature was made before the earliest allowed signature creation time. Created: " +
+                            DateUtil.formatUTCDate(timestamp) + " Earliest allowed: " +
+                                    DateUtil.formatUTCDate(notBefore));
                 }
                 if (notAfter != null && timestamp.after(notAfter)) {
-                    throw new SignatureValidationException("Signature was made after the latest allowed signature creation time. Created: " +
-                            DateUtil.formatUTCDate(timestamp) + " Latest allowed: " + DateUtil.formatUTCDate(notAfter));
+                    throw new SignatureValidationException(
+                            "Signature was made after the latest allowed signature creation time. Created: " +
+                            DateUtil.formatUTCDate(timestamp) + " Latest allowed: " +
+                                    DateUtil.formatUTCDate(notAfter));
                 }
             }
         };

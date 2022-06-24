@@ -56,7 +56,7 @@ public class KeyRingInfo {
 
     private final PGPKeyRing keys;
     private final Signatures signatures;
-    private final Date evaluationDate;
+    private final Date referenceDate;
     private final String primaryUserId;
 
     /**
@@ -99,7 +99,7 @@ public class KeyRingInfo {
     public KeyRingInfo(PGPKeyRing keys, Policy policy, Date validationDate) {
         this.keys = keys;
         this.signatures = new Signatures(keys, validationDate, policy);
-        this.evaluationDate = validationDate;
+        this.referenceDate = validationDate;
         this.primaryUserId = findPrimaryUserId();
     }
 
@@ -413,7 +413,7 @@ public class KeyRingInfo {
         }
         if (certification.getHashedSubPackets().isPrimaryUserID()) {
             Date keyExpiration = SignatureSubpacketsUtil.getKeyExpirationTimeAsDate(certification, keys.getPublicKey());
-            if (keyExpiration != null && evaluationDate.after(keyExpiration)) {
+            if (keyExpiration != null && referenceDate.after(keyExpiration)) {
                 return false;
             }
         }
@@ -1097,9 +1097,9 @@ public class KeyRingInfo {
         private final Map<Long, PGPSignature> subkeyRevocations;
         private final Map<Long, PGPSignature> subkeyBindings;
 
-        public Signatures(PGPKeyRing keyRing, Date evaluationDate, Policy policy) {
-            primaryKeyRevocation = SignaturePicker.pickCurrentRevocationSelfSignature(keyRing, policy, evaluationDate);
-            primaryKeySelfSignature = SignaturePicker.pickLatestDirectKeySignature(keyRing, policy, evaluationDate);
+        public Signatures(PGPKeyRing keyRing, Date referenceDate, Policy policy) {
+            primaryKeyRevocation = SignaturePicker.pickCurrentRevocationSelfSignature(keyRing, policy, referenceDate);
+            primaryKeySelfSignature = SignaturePicker.pickLatestDirectKeySignature(keyRing, policy, referenceDate);
             userIdRevocations = new HashMap<>();
             userIdCertifications = new HashMap<>();
             subkeyRevocations = new HashMap<>();
@@ -1107,11 +1107,11 @@ public class KeyRingInfo {
 
             for (Iterator<String> it = keyRing.getPublicKey().getUserIDs(); it.hasNext(); ) {
                 String userId = it.next();
-                PGPSignature revocation = SignaturePicker.pickCurrentUserIdRevocationSignature(keyRing, userId, policy, evaluationDate);
+                PGPSignature revocation = SignaturePicker.pickCurrentUserIdRevocationSignature(keyRing, userId, policy, referenceDate);
                 if (revocation != null) {
                     userIdRevocations.put(userId, revocation);
                 }
-                PGPSignature certification = SignaturePicker.pickLatestUserIdCertificationSignature(keyRing, userId, policy, evaluationDate);
+                PGPSignature certification = SignaturePicker.pickLatestUserIdCertificationSignature(keyRing, userId, policy, referenceDate);
                 if (certification != null) {
                     userIdCertifications.put(userId, certification);
                 }
@@ -1121,11 +1121,11 @@ public class KeyRingInfo {
             keys.next(); // Skip primary key
             while (keys.hasNext()) {
                 PGPPublicKey subkey = keys.next();
-                PGPSignature subkeyRevocation = SignaturePicker.pickCurrentSubkeyBindingRevocationSignature(keyRing, subkey, policy, evaluationDate);
+                PGPSignature subkeyRevocation = SignaturePicker.pickCurrentSubkeyBindingRevocationSignature(keyRing, subkey, policy, referenceDate);
                 if (subkeyRevocation != null) {
                     subkeyRevocations.put(subkey.getKeyID(), subkeyRevocation);
                 }
-                PGPSignature subkeyBinding = SignaturePicker.pickLatestSubkeyBindingSignature(keyRing, subkey, policy, evaluationDate);
+                PGPSignature subkeyBinding = SignaturePicker.pickLatestSubkeyBindingSignature(keyRing, subkey, policy, referenceDate);
                 if (subkeyBinding != null) {
                     subkeyBindings.put(subkey.getKeyID(), subkeyBinding);
                 }

@@ -36,12 +36,13 @@ public final class SignatureVerifier {
      * @param signingKey key that created the certification
      * @param keyWithUserId key carrying the user-id
      * @param policy policy
-     * @param validationDate reference date for signature verification
+     * @param referenceDate reference date for signature verification
      * @return true if signature verification is successful
      *
      * @throws SignatureValidationException if signature verification fails for some reason
      */
-    public static boolean verifySignatureOverUserId(String userId, PGPSignature signature, PGPPublicKey signingKey, PGPPublicKey keyWithUserId, Policy policy, Date validationDate)
+    public static boolean verifySignatureOverUserId(String userId, PGPSignature signature, PGPPublicKey signingKey,
+                                                    PGPPublicKey keyWithUserId, Policy policy, Date referenceDate)
             throws SignatureValidationException {
         SignatureType type = SignatureType.valueOf(signature.getSignatureType());
         switch (type) {
@@ -49,9 +50,9 @@ public final class SignatureVerifier {
             case NO_CERTIFICATION:
             case CASUAL_CERTIFICATION:
             case POSITIVE_CERTIFICATION:
-                return verifyUserIdCertification(userId, signature, signingKey, keyWithUserId, policy, validationDate);
+                return verifyUserIdCertification(userId, signature, signingKey, keyWithUserId, policy, referenceDate);
             case CERTIFICATION_REVOCATION:
-                return verifyUserIdRevocation(userId, signature, signingKey, keyWithUserId, policy, validationDate);
+                return verifyUserIdRevocation(userId, signature, signingKey, keyWithUserId, policy, referenceDate);
             default:
                 throw new SignatureValidationException("Signature is not a valid user-id certification/revocation signature: " + type);
         }
@@ -64,14 +65,15 @@ public final class SignatureVerifier {
      * @param signature certification signature
      * @param primaryKey primary key
      * @param policy policy
-     * @param validationDate reference date for signature verification
+     * @param referenceDate reference date for signature verification
      * @return true if the self-signature is verified successfully
      *
      * @throws SignatureValidationException if signature verification fails for some reason
      */
-    public static boolean verifyUserIdCertification(String userId, PGPSignature signature, PGPPublicKey primaryKey, Policy policy, Date validationDate)
+    public static boolean verifyUserIdCertification(String userId, PGPSignature signature, PGPPublicKey primaryKey,
+                                                    Policy policy, Date referenceDate)
             throws SignatureValidationException {
-        return verifyUserIdCertification(userId, signature, primaryKey, primaryKey, policy, validationDate);
+        return verifyUserIdCertification(userId, signature, primaryKey, primaryKey, policy, referenceDate);
     }
 
     /**
@@ -82,17 +84,18 @@ public final class SignatureVerifier {
      * @param signingKey key that created the certification
      * @param keyWithUserId primary key that carries the user-id
      * @param policy policy
-     * @param validationDate reference date for signature verification
+     * @param referenceDate reference date for signature verification
      * @return true if signature verification is successful
      *
      * @throws SignatureValidationException if signature verification fails for some reason
      */
-    public static boolean verifyUserIdCertification(String userId, PGPSignature signature, PGPPublicKey signingKey, PGPPublicKey keyWithUserId, Policy policy, Date validationDate)
+    public static boolean verifyUserIdCertification(String userId, PGPSignature signature, PGPPublicKey signingKey,
+                                                    PGPPublicKey keyWithUserId, Policy policy, Date referenceDate)
             throws SignatureValidationException {
         SignatureValidator.wasPossiblyMadeByKey(signingKey).verify(signature);
         SignatureValidator.signatureIsCertification().verify(signature);
         SignatureValidator.signatureStructureIsAcceptable(signingKey, policy).verify(signature);
-        SignatureValidator.signatureIsEffective(validationDate).verify(signature);
+        SignatureValidator.signatureIsEffective(referenceDate).verify(signature);
         SignatureValidator.correctSignatureOverUserId(userId, keyWithUserId, signingKey).verify(signature);
 
         return true;
@@ -105,14 +108,15 @@ public final class SignatureVerifier {
      * @param signature user-id revocation signature
      * @param primaryKey primary key
      * @param policy policy
-     * @param validationDate reference date for signature verification
+     * @param referenceDate reference date for signature verification
      * @return true if the user-id revocation signature is successfully verified
      *
      * @throws SignatureValidationException if signature verification fails for some reason
      */
-    public static boolean verifyUserIdRevocation(String userId, PGPSignature signature, PGPPublicKey primaryKey, Policy policy, Date validationDate)
+    public static boolean verifyUserIdRevocation(String userId, PGPSignature signature, PGPPublicKey primaryKey,
+                                                 Policy policy, Date referenceDate)
             throws SignatureValidationException {
-        return verifyUserIdRevocation(userId, signature, primaryKey, primaryKey, policy, validationDate);
+        return verifyUserIdRevocation(userId, signature, primaryKey, primaryKey, policy, referenceDate);
     }
 
     /**
@@ -123,17 +127,18 @@ public final class SignatureVerifier {
      * @param signingKey key that created the revocation signature
      * @param keyWithUserId primary key carrying the user-id
      * @param policy policy
-     * @param validationDate reference date for signature verification
+     * @param referenceDate reference date for signature verification
      * @return true if the user-id revocation signature is successfully verified
      *
      * @throws SignatureValidationException if signature verification fails for some reason
      */
-    public static boolean verifyUserIdRevocation(String userId, PGPSignature signature, PGPPublicKey signingKey, PGPPublicKey keyWithUserId, Policy policy, Date validationDate)
+    public static boolean verifyUserIdRevocation(String userId, PGPSignature signature, PGPPublicKey signingKey,
+                                                 PGPPublicKey keyWithUserId, Policy policy, Date referenceDate)
             throws SignatureValidationException {
         SignatureValidator.wasPossiblyMadeByKey(signingKey).verify(signature);
         SignatureValidator.signatureIsOfType(SignatureType.CERTIFICATION_REVOCATION).verify(signature);
         SignatureValidator.signatureStructureIsAcceptable(signingKey, policy).verify(signature);
-        SignatureValidator.signatureIsEffective(validationDate).verify(signature);
+        SignatureValidator.signatureIsEffective(referenceDate).verify(signature);
         SignatureValidator.correctSignatureOverUserId(userId, keyWithUserId, signingKey).verify(signature);
 
         return true;
@@ -146,16 +151,17 @@ public final class SignatureVerifier {
      * @param signature certification self-signature
      * @param primaryKey primary key that carries the user-attributes
      * @param policy policy
-     * @param validationDate reference date for signature verification
+     * @param referenceDate reference date for signature verification
      * @return true if the signature can be verified successfully
      *
      * @throws SignatureValidationException if signature verification fails for some reason
      */
     public static boolean verifyUserAttributesCertification(PGPUserAttributeSubpacketVector userAttributes,
                                                             PGPSignature signature, PGPPublicKey primaryKey,
-                                                            Policy policy, Date validationDate)
+                                                            Policy policy, Date referenceDate)
             throws SignatureValidationException {
-        return verifyUserAttributesCertification(userAttributes, signature, primaryKey, primaryKey, policy, validationDate);
+        return verifyUserAttributesCertification(userAttributes, signature, primaryKey, primaryKey, policy,
+                referenceDate);
     }
 
     /**
@@ -166,7 +172,7 @@ public final class SignatureVerifier {
      * @param signingKey key that created the user-attributes certification
      * @param keyWithUserAttributes key that carries the user-attributes certification
      * @param policy policy
-     * @param validationDate reference date for signature verification
+     * @param referenceDate reference date for signature verification
      * @return true if the signature can be verified successfully
      *
      * @throws SignatureValidationException if signature verification fails for some reason
@@ -174,13 +180,14 @@ public final class SignatureVerifier {
     public static boolean verifyUserAttributesCertification(PGPUserAttributeSubpacketVector userAttributes,
                                                             PGPSignature signature, PGPPublicKey signingKey,
                                                             PGPPublicKey keyWithUserAttributes, Policy policy,
-                                                            Date validationDate)
+                                                            Date referenceDate)
             throws SignatureValidationException {
         SignatureValidator.wasPossiblyMadeByKey(signingKey).verify(signature);
         SignatureValidator.signatureIsCertification().verify(signature);
         SignatureValidator.signatureStructureIsAcceptable(signingKey, policy).verify(signature);
-        SignatureValidator.signatureIsEffective(validationDate).verify(signature);
-        SignatureValidator.correctSignatureOverUserAttributes(userAttributes, keyWithUserAttributes, signingKey).verify(signature);
+        SignatureValidator.signatureIsEffective(referenceDate).verify(signature);
+        SignatureValidator.correctSignatureOverUserAttributes(userAttributes, keyWithUserAttributes, signingKey)
+                .verify(signature);
 
         return true;
     }
@@ -192,16 +199,16 @@ public final class SignatureVerifier {
      * @param signature user-attributes revocation signature
      * @param primaryKey primary key that carries the user-attributes
      * @param policy policy
-     * @param validationDate reference date for signature verification
+     * @param referenceDate reference date for signature verification
      * @return true if the revocation signature can be verified successfully
      *
      * @throws SignatureValidationException if signature verification fails for some reason
      */
     public static boolean verifyUserAttributesRevocation(PGPUserAttributeSubpacketVector userAttributes,
                                                          PGPSignature signature, PGPPublicKey primaryKey,
-                                                         Policy policy, Date validationDate)
+                                                         Policy policy, Date referenceDate)
             throws SignatureValidationException {
-        return verifyUserAttributesRevocation(userAttributes, signature, primaryKey, primaryKey, policy, validationDate);
+        return verifyUserAttributesRevocation(userAttributes, signature, primaryKey, primaryKey, policy, referenceDate);
     }
 
     /**
@@ -212,7 +219,7 @@ public final class SignatureVerifier {
      * @param signingKey revocation key
      * @param keyWithUserAttributes key that carries the user-attributes
      * @param policy policy
-     * @param validationDate reference date for signature verification
+     * @param referenceDate reference date for signature verification
      * @return true if the revocation signature can be verified successfully
      *
      * @throws SignatureValidationException if signature verification fails for some reason
@@ -220,13 +227,14 @@ public final class SignatureVerifier {
     public static boolean verifyUserAttributesRevocation(PGPUserAttributeSubpacketVector userAttributes,
                                                          PGPSignature signature, PGPPublicKey signingKey,
                                                          PGPPublicKey keyWithUserAttributes, Policy policy,
-                                                         Date validationDate)
+                                                         Date referenceDate)
             throws SignatureValidationException {
         SignatureValidator.wasPossiblyMadeByKey(signingKey).verify(signature);
         SignatureValidator.signatureIsOfType(SignatureType.CERTIFICATION_REVOCATION).verify(signature);
         SignatureValidator.signatureStructureIsAcceptable(signingKey, policy).verify(signature);
-        SignatureValidator.signatureIsEffective(validationDate).verify(signature);
-        SignatureValidator.correctSignatureOverUserAttributes(userAttributes, keyWithUserAttributes, signingKey).verify(signature);
+        SignatureValidator.signatureIsEffective(referenceDate).verify(signature);
+        SignatureValidator.correctSignatureOverUserAttributes(userAttributes, keyWithUserAttributes, signingKey)
+                .verify(signature);
 
         return true;
     }
@@ -238,18 +246,20 @@ public final class SignatureVerifier {
      * @param primaryKey primary key
      * @param subkey subkey
      * @param policy policy
-     * @param validationDate reference date for signature verification
+     * @param referenceDate reference date for signature verification
      * @return true if the binding signature can be verified successfully
      *
      * @throws SignatureValidationException if signature verification fails for some reason
      */
-    public static boolean verifySubkeyBindingSignature(PGPSignature signature, PGPPublicKey primaryKey, PGPPublicKey subkey, Policy policy, Date validationDate)
+    public static boolean verifySubkeyBindingSignature(PGPSignature signature, PGPPublicKey primaryKey,
+                                                       PGPPublicKey subkey, Policy policy, Date referenceDate)
             throws SignatureValidationException {
         SignatureValidator.signatureIsOfType(SignatureType.SUBKEY_BINDING).verify(signature);
         SignatureValidator.signatureStructureIsAcceptable(primaryKey, policy).verify(signature);
         SignatureValidator.signatureDoesNotPredateSignee(subkey).verify(signature);
-        SignatureValidator.signatureIsEffective(validationDate).verify(signature);
-        SignatureValidator.hasValidPrimaryKeyBindingSignatureIfRequired(primaryKey, subkey, policy, validationDate).verify(signature);
+        SignatureValidator.signatureIsEffective(referenceDate).verify(signature);
+        SignatureValidator.hasValidPrimaryKeyBindingSignatureIfRequired(primaryKey, subkey, policy, referenceDate)
+                .verify(signature);
         SignatureValidator.correctSubkeyBindingSignature(primaryKey, subkey).verify(signature);
 
         return true;
@@ -262,16 +272,18 @@ public final class SignatureVerifier {
      * @param primaryKey primary key
      * @param subkey subkey
      * @param policy policy
-     * @param validationDate reference date for signature verification
+     * @param referenceDate reference date for signature verification
      * @return true if the subkey revocation signature can be verified successfully
      *
      * @throws SignatureValidationException if signature verification fails for some reason
      */
-    public static boolean verifySubkeyBindingRevocation(PGPSignature signature, PGPPublicKey primaryKey, PGPPublicKey subkey, Policy policy, Date validationDate) throws SignatureValidationException {
+    public static boolean verifySubkeyBindingRevocation(PGPSignature signature, PGPPublicKey primaryKey,
+                                                        PGPPublicKey subkey, Policy policy, Date referenceDate)
+            throws SignatureValidationException {
         SignatureValidator.signatureIsOfType(SignatureType.SUBKEY_REVOCATION).verify(signature);
         SignatureValidator.signatureStructureIsAcceptable(primaryKey, policy).verify(signature);
         SignatureValidator.signatureDoesNotPredateSignee(subkey).verify(signature);
-        SignatureValidator.signatureIsEffective(validationDate).verify(signature);
+        SignatureValidator.signatureIsEffective(referenceDate).verify(signature);
         SignatureValidator.correctSignatureOverKey(primaryKey, subkey).verify(signature);
 
         return true;
@@ -283,14 +295,15 @@ public final class SignatureVerifier {
      * @param signature signature
      * @param primaryKey primary key
      * @param policy policy
-     * @param validationDate reference date for signature verification
+     * @param referenceDate reference date for signature verification
      * @return true if the signature can be verified successfully
      *
      * @throws SignatureValidationException if signature verification fails for some reason
      */
-    public static boolean verifyDirectKeySignature(PGPSignature signature, PGPPublicKey primaryKey, Policy policy, Date validationDate)
+    public static boolean verifyDirectKeySignature(PGPSignature signature, PGPPublicKey primaryKey,
+                                                   Policy policy, Date referenceDate)
             throws SignatureValidationException {
-        return verifyDirectKeySignature(signature, primaryKey, primaryKey, policy, validationDate);
+        return verifyDirectKeySignature(signature, primaryKey, primaryKey, policy, referenceDate);
     }
 
     /**
@@ -300,17 +313,18 @@ public final class SignatureVerifier {
      * @param signingKey signing key
      * @param signedKey signed key
      * @param policy policy
-     * @param validationDate reference date for signature verification
+     * @param referenceDate reference date for signature verification
      * @return true if signature verification is successful
      *
      * @throws SignatureValidationException if signature verification fails for some reason
      */
-    public static boolean verifyDirectKeySignature(PGPSignature signature, PGPPublicKey signingKey, PGPPublicKey signedKey, Policy policy, Date validationDate)
+    public static boolean verifyDirectKeySignature(PGPSignature signature, PGPPublicKey signingKey,
+                                                   PGPPublicKey signedKey, Policy policy, Date referenceDate)
             throws SignatureValidationException {
         SignatureValidator.signatureIsOfType(SignatureType.DIRECT_KEY).verify(signature);
         SignatureValidator.signatureStructureIsAcceptable(signingKey, policy).verify(signature);
         SignatureValidator.signatureDoesNotPredateSignee(signedKey).verify(signature);
-        SignatureValidator.signatureIsEffective(validationDate).verify(signature);
+        SignatureValidator.signatureIsEffective(referenceDate).verify(signature);
         SignatureValidator.correctSignatureOverKey(signingKey, signedKey).verify(signature);
 
         return true;
@@ -322,16 +336,17 @@ public final class SignatureVerifier {
      * @param signature signature
      * @param primaryKey primary key
      * @param policy policy
-     * @param validationDate reference date for signature verification
+     * @param referenceDate reference date for signature verification
      * @return true if signature verification is successful
      *
      * @throws SignatureValidationException if signature verification fails for some reason
      */
-    public static boolean verifyKeyRevocationSignature(PGPSignature signature, PGPPublicKey primaryKey, Policy policy, Date validationDate)
+    public static boolean verifyKeyRevocationSignature(PGPSignature signature, PGPPublicKey primaryKey,
+                                                       Policy policy, Date referenceDate)
             throws SignatureValidationException {
         SignatureValidator.signatureIsOfType(SignatureType.KEY_REVOCATION).verify(signature);
         SignatureValidator.signatureStructureIsAcceptable(primaryKey, policy).verify(signature);
-        SignatureValidator.signatureIsEffective(validationDate).verify(signature);
+        SignatureValidator.signatureIsEffective(referenceDate).verify(signature);
         SignatureValidator.correctSignatureOverKey(primaryKey, primaryKey).verify(signature);
 
         return true;
@@ -344,14 +359,16 @@ public final class SignatureVerifier {
      * @param signedData input stream containing the signed data
      * @param signingKey the key that created the signature
      * @param policy policy
-     * @param validationDate reference date of signature verification
+     * @param referenceDate reference date of signature verification
      * @return true if the signature is successfully verified
      *
      * @throws SignatureValidationException if the signature verification fails for some reason
      */
-    public static boolean verifyUninitializedSignature(PGPSignature signature, InputStream signedData, PGPPublicKey signingKey, Policy policy, Date validationDate) throws SignatureValidationException {
+    public static boolean verifyUninitializedSignature(PGPSignature signature, InputStream signedData,
+                                                       PGPPublicKey signingKey, Policy policy, Date referenceDate)
+            throws SignatureValidationException {
         initializeSignatureAndUpdateWithSignedData(signature, signedData, signingKey);
-        return verifyInitializedSignature(signature, signingKey, policy, validationDate);
+        return verifyInitializedSignature(signature, signingKey, policy, referenceDate);
     }
 
     /**
@@ -363,7 +380,8 @@ public final class SignatureVerifier {
      *
      * @throws SignatureValidationException in case the signature cannot be verified for some reason
      */
-    public static void initializeSignatureAndUpdateWithSignedData(PGPSignature signature, InputStream signedData, PGPPublicKey signingKey)
+    public static void initializeSignatureAndUpdateWithSignedData(PGPSignature signature, InputStream signedData,
+                                                                  PGPPublicKey signingKey)
             throws SignatureValidationException {
         try {
             signature.init(ImplementationFactory.getInstance().getPGPContentVerifierBuilderProvider(), signingKey);
@@ -399,16 +417,17 @@ public final class SignatureVerifier {
      * @param signature OpenPGP signature
      * @param signingKey key that created the signature
      * @param policy policy
-     * @param validationDate reference date for signature verification
+     * @param referenceDate reference date for signature verification
      * @return true if signature is verified successfully
      *
      * @throws SignatureValidationException if signature verification fails for some reason
      */
-    public static boolean verifyInitializedSignature(PGPSignature signature, PGPPublicKey signingKey, Policy policy, Date validationDate)
+    public static boolean verifyInitializedSignature(PGPSignature signature, PGPPublicKey signingKey, Policy policy,
+                                                     Date referenceDate)
             throws SignatureValidationException {
         SignatureValidator.wasPossiblyMadeByKey(signingKey).verify(signature);
         SignatureValidator.signatureStructureIsAcceptable(signingKey, policy).verify(signature);
-        SignatureValidator.signatureIsEffective(validationDate).verify(signature);
+        SignatureValidator.signatureIsEffective(referenceDate).verify(signature);
 
         try {
             if (!signature.verify()) {
@@ -420,7 +439,8 @@ public final class SignatureVerifier {
         }
     }
 
-    public static boolean verifyOnePassSignature(PGPSignature signature, PGPPublicKey signingKey, OnePassSignatureCheck onePassSignature, Policy policy)
+    public static boolean verifyOnePassSignature(PGPSignature signature, PGPPublicKey signingKey,
+                                                 OnePassSignatureCheck onePassSignature, Policy policy)
             throws SignatureValidationException {
         try {
             SignatureValidator.wasPossiblyMadeByKey(signingKey).verify(signature);
@@ -435,10 +455,12 @@ public final class SignatureVerifier {
                 throw new IllegalStateException("No comparison signature provided.");
             }
             if (!onePassSignature.getOnePassSignature().verify(signature)) {
-                throw new SignatureValidationException("Bad signature of key " + Long.toHexString(signingKey.getKeyID()));
+                throw new SignatureValidationException("Bad signature of key " +
+                        Long.toHexString(signingKey.getKeyID()));
             }
         } catch (PGPException e) {
-            throw new SignatureValidationException("Could not verify correctness of One-Pass-Signature: " + e.getMessage(), e);
+            throw new SignatureValidationException("Could not verify correctness of One-Pass-Signature: " +
+                    e.getMessage(), e);
         }
 
         return true;
@@ -451,13 +473,14 @@ public final class SignatureVerifier {
      * @param signature self-signature
      * @param primaryKey primary key that created the signature
      * @param policy policy
-     * @param validationDate reference date for signature verification
+     * @param referenceDate reference date for signature verification
      * @return true if the signature is successfully verified
      *
      * @throws SignatureValidationException if signature verification fails for some reason
      */
-    public static boolean verifySignatureOverUserId(String userId, PGPSignature signature, PGPPublicKey primaryKey, Policy policy, Date validationDate)
+    public static boolean verifySignatureOverUserId(String userId, PGPSignature signature, PGPPublicKey primaryKey,
+                                                    Policy policy, Date referenceDate)
             throws SignatureValidationException {
-        return verifySignatureOverUserId(userId, signature, primaryKey, primaryKey, policy, validationDate);
+        return verifySignatureOverUserId(userId, signature, primaryKey, primaryKey, policy, referenceDate);
     }
 }
