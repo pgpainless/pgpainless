@@ -16,6 +16,7 @@ import org.pgpainless.decryption_verification.DecryptionBuilder;
 import org.pgpainless.decryption_verification.DecryptionStream;
 import org.pgpainless.encryption_signing.EncryptionBuilder;
 import org.pgpainless.encryption_signing.EncryptionStream;
+import org.pgpainless.key.certification.CertifyCertificate;
 import org.pgpainless.key.generation.KeyRingBuilder;
 import org.pgpainless.key.generation.KeyRingTemplates;
 import org.pgpainless.key.info.KeyRingInfo;
@@ -162,5 +163,14 @@ public final class PGPainless {
      */
     public static Policy getPolicy() {
         return Policy.getInstance();
+    }
+
+    /**
+     * Create different kinds of signatures on other keys.
+     *
+     * @return builder
+     */
+    public static CertifyCertificate certify() {
+        return new CertifyCertificate();
     }
 }
