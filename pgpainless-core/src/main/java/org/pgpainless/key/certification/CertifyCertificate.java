@@ -50,7 +50,7 @@ public class CertifyCertificate {
      */
     public CertificationOnUserId userIdOnCertificate(@Nonnull String userId,
                                                      @Nonnull PGPPublicKeyRing certificate) {
-        return new CertificationOnUserId(userId, certificate, CertificationType.GENERIC);
+        return userIdOnCertificate(userId, certificate, CertificationType.GENERIC);
     }
 
     /**
