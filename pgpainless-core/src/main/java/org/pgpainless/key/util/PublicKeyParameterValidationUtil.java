@@ -38,6 +38,15 @@ import org.pgpainless.algorithm.SymmetricKeyAlgorithm;
 import org.pgpainless.exception.KeyIntegrityException;
 import org.pgpainless.implementation.ImplementationFactory;
 
+/**
+ * Utility class to verify keys against Key Overwriting (KO) attacks.
+ * This class of attacks is only possible if the attacker has access to the (encrypted) secret key material.
+ * To execute the attack, they would modify the unauthenticated parameters of the users public key.
+ * Using the modified public key in combination with the unmodified secret key material can then lead to the
+ * extraction of secret key parameters via weakly crafted messages.
+ *
+ * @see <a href="https://www.kopenpgp.com/">Key Overwriting (KO) Attacks against OpenPGP</a>
+ */
 public class PublicKeyParameterValidationUtil {
 
     public static void verifyPublicKeyParameterIntegrity(PGPPrivateKey privateKey, PGPPublicKey publicKey)
