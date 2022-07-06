@@ -1,0 +1,369 @@
+## SOP API with pgpainless-sop
+
+The Stateless OpenPGP Protocol (SOP) defines a simplistic interface for the most important OpenPGP operations.
+It allows you to encrypt, decrypt, sign and verify messages, generate keys and add/remove ASCII armor from data.
+However, it does not yet provide tools for key management.
+Furthermore, the implementation is deciding for you, which (secure) algorithms to use, and it doesn't let you
+change those.
+
+If you want to read more about the background of the SOP protocol, there is a [whole chapter](../sop) dedicated to it.
+
+### Setup
+
+PGPainless' releases are published to and can be fetched from Maven Central.
+To get started, you first need to include `pgpainless-sop` in your projects build script.
+```
+// If you use Gradle
+...
+dependencies {
+    ...
+    implementation "org.pgpainless:pgpainless-sop:XYZ"
+    ...
+}
+
+// If you use Maven
+...
+<dependencies>
+    ...
+    <dependency>
+        <groupId>org.pgpainless</groupId>
+        <artifactId>pgpainless-sop</artifactId>
+        <version>XYZ</version>
+    </dependency>
+    ...
+</dependencies>
+```
+
+:::{important}
+Replace `XYZ` with the current version, e.g. {{ env.config.version }}!
+:::
+
+The entry point to the API is the `SOP` interface, for which `pgpainless-sop` provides a concrete implementation
+`SOPImpl`.
+
+```java
+// Instantiate the API
+SOP sop = new SOPImpl();
+```
+
+Now you are ready to go!
+
+### Generate a Key
+
+To generate a new OpenPGP key, the method `SOP.generateKey()` is your friend:
+
+```java
+// generate key
+byte[] keyBytes = sop.generateKey()
+        .userId("John Doe <john.doe@pgpainless.org>")
+        .withKeyPassword("f00b4r")
+        .generate()
+        .getBytes();
+```
+
+The call `userId(String userId)` can be called multiple times to add multiple user-ids to the key, but it MUST
+be called at least once.
+The argument given in the first invocation will become the keys primary user-id.
+
+Optionally, the key can be protected with a password by calling `withKeyPassword(String password)`.
+If this method is not called, the key will be unprotected.
+
+The `generate()` method call generates the key and returns a `Ready` object.
+This in turn can be used to write the result to a stream via `writeTo(OutputStream out)`, or to get the result
+as bytes via `getBytes()`.
+In both cases, the resulting output will be the UTF8 encoded, ASCII armored OpenPGP secret key.
+
+To disable ASCII armoring, call `noArmor()` before calling `generate()`.
+
+At the time of writing, the resulting OpenPGP secret key will consist of a certification-capable 256-bits
+ed25519 EdDSA primary key, a 256-bits ed25519 EdDSA subkey used for signing, as well as a 256-bits X25519
+ECDH subkey for encryption.
+
+The whole key does not have an expiration date set.
+
+### Extract a Certificate
+
+Now that you generated your secret key, you probably want to share the public key with your contacts.
+To extract the OpenPGP public key (which we will call *certificate* from now on) from the secret key,
+use the `SOP.extractCert()` method call:
+
+```java
+// extract certificate
+byte[] certificateBytes = sop.extractCert()
+        .key(keyBytes)
+        .getBytes();
+```
+
+The `key(_)` method either takes a byte array (like in the example), or an `InputStream`.
+In both cases it returns another `Ready` object from which the certificate can be accessed, either via
+`writeTo(OutputStream out)` or `getBytes()`.
+
+By default, the resulting certificate will be ASCII armored, regardless of whether the input key was armored or not.
+To disable ASCII armoring, call `noArmor()` before calling `key(_)`.
+
+In our example, `certificateBytes` can now safely be shared with anyone.
+
+### Apply / Remove ASCII Armor
+
+Perhaps you want to print your secret key onto a piece of paper for backup purposes,
+but you accidentally called `noArmor()` when generating the key.
+
+To add ASCII armor to some binary OpenPGP data, the `armor()` API can be used:
+
+```java
+// wrap data in ASCII armor
+byte[] armoredData = sop.armor()
+        .data(binaryData)
+        .getBytes();
+```
+
+The `data(_)` method can either be called by providing a byte array, or an `InputStream`.
+
+:::{note}
+There is a `label(ArmorLabel label)` method, which could theoretically be used to define the label used in the
+ASCII armor header.
+However, this method is not (yet?) supported by `pgpainless-sop` and will currently throw an `UnsupportedOption`
+exception.
+Instead, the implementation will figure out the data type and set the respective label on its own.
+:::
+
+To remove ASCII armor from armored data, simply use the `dearmor()` API:
+
+```java
+// remove ASCII armor
+byte[] binaryData = sop.unarmor()
+        .data(armoredData)
+        .getBytes();
+```
+
+Once again, the `data(_)` method can be called either with a byte array or an `InputStream` as argument.
+
+If the input data is not validly armored OpenPGP data, the `data(_)` method call will throw a `BadData` exception.
+
+### Encrypt a Message
+
+Now lets get to the juicy part and finally encrypt a message!
+In this example, we will assume that Alice is the sender that wants to send a message to Bob.
+Beforehand, Alice acquired Bobs certificate, e.g. by fetching it from a key server.
+
+To encrypt a message, you can make use of the `encrypt()` API:
+
+```java
+// encrypt and sign a message
+byte[] aliceKey = ...;  // Alice' secret key
+byte[] aliceCert = ...; // Alice' certificate (e.g. via extractCert())
+byte[] bobCert = ...;   // Bobs certificate
+
+byte[] plaintext = "Hello, World!\n".getBytes(); // plaintext
+
+byte[] ciphertext = sop.encrypt()
+        // encrypt for each recipient
+        .withCert(bobCert)
+        .withCert(aliceCert)
+        // Optionally: Sign the message
+        .signWith(aliceKey)
+        .withKeyPassword("sw0rdf1sh") // if signing key is protected
+        // provide the plaintext
+        .plaintext(plaintext)
+        .getBytes();
+```
+
+Here you encrypt the message for each recipient (Alice probably wants to be able to decrypt the message too!)
+by calling `withCert(_)` with the recipients certificate as argument. It does not matter, if the certificate
+is ASCII armored or not, and the method can either be called with a byte array or an `InputStream` as argument.
+
+The API not only supports asymmetric encryption via OpenPGP certificates, but it can also encrypt messages
+symmetrically using one or more passwords. Both mechanisms can even be used together in the same message!
+To (additionally or exclusively) encrypt the message for a password, simply call `withPassword(String password)`
+before the `plaintext(_)` method call.
+
+It is recommended (but not required) to sign encrypted messages.
+In order to sign the message before encryption is applied, call `signWith(_)` with the signing key as argument.
+This method call can be repeated multiple times to sign the message with multiple signing keys.
+
+If any keys used for signing are password protected, you need to provide the signing key password via
+`withKeyPassword(_)`.
+It does not matter in which order signing keys and key passwords are provided, the implementation will figure out
+matches on its own. If different key passwords are used, the `withKeyPassword(_)` method can be called multiple times.
+
+By default, the encrypted message will be ASCII armored. To disable ASCII armor, call `noArmor()` before the
+`plaintext(_)` method call.
+
+Lastly, you need to provide the plaintext by calling `plaintext(_)` with either a byte array or an `InputStream`
+as argument.
+The ciphertext can then be accessed from the resulting `Ready` object as usual.
+
+### Decrypt a Message
+
+Now let's switch perspective and help Bob decrypt the message from Alice.
+
+Decrypting encrypted messages is done in a similar fashion using the `decrypt()` API:
+
+```java
+// decrypt a message and verify its signature(s)
+byte[] aliceCert = ...; // Alice' certificate
+byte[] bobKey = ...;    // Bobs secret key 
+byte[] bobCert = ...;   // Bobs certificate
+
+byte[] ciphertext = ...; // the encrypted message
+
+ReadyWithResult<DecryptionResult> readyWithResult = sop.decrypt()
+        .withKey(bobKey)
+        .verifyWith(aliceCert)
+        .withKeyPassword("password123") // if decryption key is protected
+        .ciphertext(ciphertext);
+```
+
+The `ReadyWithResult<DecryptionResult>` can now be processed in two different ways, depending on whether you want the
+plaintext as bytes or simply write it out to an `OutputStream`.
+
+To get the plaintext bytes directly, you shall proceed as follows:
+
+```java
+ByteArrayAndResult<DecryptionResult> bytesAndResult = readyWithResult.toByteArrayAndResult();
+DecryptionResult result = bytesAndResult.getResult();
+byte[] plaintext = bytesAndResult.getBytes();
+```
+
+If you instead want to write the plaintext out to an `OutputStream`, the following code can be used:
+
+```java
+OutputStream out = ...;
+DecryptionResult result = readyWithResult.writeTo(out);
+```
+
+Note, that in both cases you acquire a `DecryptionResult` object. This contains information about the message,
+such as which signatures could successfully be verified.
+
+If you provided the senders certificate for the purpose of signature verification via `verifyWith(_)`, you now
+probably want to check, if the message was actually signed by the sender by checking `result.getVerifications()`.
+
+:::{note}
+Signature verification will be discussed in more detail in section [](#verify-a-signature)
+:::
+
+If the message was encrypted symmetrically using a password, you can also decrypt is symmetrically by calling
+`withPassword(String password)` before the `ciphertext(_)` method call. This method call can be repeated multiple
+times. The implementation will try different passwords until it finds a matching one.
+
+### Sign a Message
+
+There are three different main ways of signing a message:
+* Inline Signatures
+* Cleartext Signatures
+* Detached Signatures
+
+An inline-signature will be part of the message itself (e.g. like with messages that are encrypted *and* signed).
+Inline-signed messages are not human-readable without prior processing.
+
+A cleartext signature makes use of the [cleartext signature framework](https://datatracker.ietf.org/doc/html/rfc4880#section-7).
+Messages signed in this way do have an ASCII armor header and footer, yet the content of the message is still
+human-readable without special software.
+
+Lastly, a detached signature can be distributed as an extra file alongside the message without altering it.
+This is useful if the plaintext itself cannot be modified (e.g. if a binary file is signed).
+
+The SOP API can generate all of those signature types.
+
+#### Inline-Signatures
+
+Let's start with an inline signature:
+
+```java
+byte[] signingKey = ...;
+byte[] message = ...;
+
+byte[] inlineSignedMessage = sop.inlineSign()
+        .mode(InlineSignAs.Text) // or 'Binary'
+        .key(signingKey)
+        .withKeyPassword("fnord")
+        .data(message)
+        .getBytes();
+```
+
+You can choose between two different signature formats which can be set using `mode(InlineSignAs mode)`.
+The default value is `Binary`. You can also set it to `Text` which signals to the receiver that the data is
+UTF8 text.
+
+:::{note}
+For inline signatures, do NOT set the `mode()` to `CleartextSigned`, as that will create message which uses the
+cleartext signature framework (see further below).
+:::
+
+You must provide at least one signing key using `key(_)` in order to be able to sign the message.
+
+If any key is password protected, you need to provide its password using `withKeyPassword(_)` which
+can be called multiple times to provide multiple passwords.
+
+Once you provide the plaintext using `data(_)` with either a byte array or an `InputStream` as argument,
+you will get a `Ready` object back, from which the signed message can be retrieved as usual.
+
+By default, the signed message will be ASCII armored. This can be disabled by calling `noArmor()`
+before the `data(_)` method call.
+
+#### Cleartext Signatures
+
+A cleartext-signed message can be generated in a similar way to an inline-signed message, however,
+there are is one subtle difference:
+
+```java
+byte[] signingKey = ...;
+byte[] message = ...;
+
+byte[] cleartextSignedMessage = sop.inlineSign()
+        .mode(InlineSignAs.CleartextSigned) // This MUST be set
+        .key(signingKey)
+        .withKeyPassword("fnord")
+        .data(message)
+        .getBytes();
+```
+
+:::{important}
+In order to produce a cleartext-signed message, the signature mode MUST be set to `CleartextSigned`
+by calling `mode(InlineSignAs.CleartextSigned)`.
+:::
+
+:::{note}
+Calling `noArmor()` will have no effect for cleartext-signed messages, so such method call will be ignored.
+:::
+
+#### Detached Signatures
+
+As the name suggests, detached signatures are detached from the message itself and can be distributed separately.
+
+To produce a detached signature, the `detachedSign()` API is used:
+
+```java
+byte[] signingKey = ...;
+byte[] message = ...;
+
+ReadyWithResult<SigningResult> readyWithResult = sop.detachedSign()
+        .key(signingKey)
+        .withKeyPassword("fnord")
+        .data(message);
+```
+
+Here you have the choice, how you want to write out the signature.
+If you want to write the signature to an `OutputStream`, you can do the following:
+
+```java
+OutputStream out = ...;
+SigningResult result = readyWithResult.writeTo(out);
+```
+
+If instead you want to get the signature as a byte array, do this instead:
+
+```java
+ByteArrayAndResult<SigningResult> bytesAndResult = readyWithResult.toByteArrayAndResult();
+SigningResult result = bytesAndResult.getResult();
+byte[] detachedSignature = bytesAndResult.getBytes();
+```
+
+In any case, the detached signature can now be distributed alongside the original message.
+
+By default, the resulting detached signature will be ASCII armored. This can be disabled by calling `noArmor()`
+prior to calling `data(_)`.
+
+The `SigningResult` object you got back in both cases contains information about the signature.
+
+### Verify a Signature
