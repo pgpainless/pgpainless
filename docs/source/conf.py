@@ -13,11 +13,8 @@ release = latest_tag
 version = release
 
 myst_substitutions = {
-  "repo_host" : "codeberg.org"
+  "repo_host" : "codeberg.org" # or 'github.com'
 }
-
-
-
 
 # -- General configuration
 
@@ -45,9 +42,11 @@ templates_path = ['_templates']
 
 html_theme = 'sphinx_rtd_theme'
 
-# -- Options for EPUB output
+# Show URLs as footnotes
 #epub_show_urls = 'footnote'
+latex_show_urls = 'footnote'
 
 mermaid_cmd = "./node_modules/.bin/mmdc"
+# 'raw' does not work for epub and pdf, neither does 'svg'
 mermaid_output_format = 'png'
 mermaid_params = ['--theme', 'default', '--width', '800', '--backgroundColor', 'transparent']
