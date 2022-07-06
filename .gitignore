@@ -31,3 +31,5 @@ pgpainless-core/.project
 pgpainless-core/.settings/
 
 push_html.sh
+
+docs/node_modules
