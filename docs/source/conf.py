@@ -7,6 +7,8 @@ project = 'PGPainless'
 copyright = '2022, Paul Schaub'
 author = 'Paul Schaub'
 
+master_doc = 'index'
+
 # https://protips.readthedocs.io/git-tag-version.html
 latest_tag = os.popen('git describe --abbrev=0').read().strip()
 release = latest_tag
