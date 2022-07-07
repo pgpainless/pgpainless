@@ -35,7 +35,7 @@ dependencies {
 ```
 
 :::{important}
-Replace `XYZ` with the current version, e.g. {{ env.config.version }}!
+Replace `XYZ` with the current version, in this case {{ env.config.version }}!
 :::
 
 The entry point to the API is the `SOP` interface, for which `pgpainless-sop` provides a concrete implementation
@@ -367,3 +367,100 @@ prior to calling `data(_)`.
 The `SigningResult` object you got back in both cases contains information about the signature.
 
 ### Verify a Signature
+
+In order to verify signed messages, there are two API endpoints available.
+
+#### Inline and Cleartext Signatures
+
+To verify inline-signed messages, or messages that make use of the cleartext signature framework,
+use the `inlineVerify()` API:
+
+```java
+byte[] signingCert = ...;
+byte[] signedMessage = ...;
+
+ReadyWithResult<List<Verification>> readyWithResult = sop.inlineVerify()
+        .cert(signingCert)
+        .data(signedMessage);
+```
+
+The `cert(_)` method MUST be called at least once. It takes either a byte array or an `InputStream` containing
+an OpenPGP certificate.
+If you are not sure, which certificate was used to sign the message, you can provide multiple certificates.
+
+It is also possible to reject signatures that were not made within a certain time window by calling
+`notBefore(Date timestamp)` and/or `notAfter(Date timestamp)`.
+Signatures made before the `notBefore(_)` or after the `notAfter(_)` constraints will be rejected.
+
+You can now either write out the plaintext message to an `OutputStream`...
+
+```java
+OutputStream out = ...;
+List<Verifications> verifications = readyWithResult.writeTo(out);
+```
+
+... or you can acquire the plaintext message as a byte array directly:
+
+```java
+ByteArrayAndResult<List<Verifications>> bytesAndResult = readyWithResult.toByteArrayAndResult();
+byte[] plaintextMessage = bytesAndResult.getBytes();
+List<Verifications> verifications = bytesAndResult.getResult();
+```
+
+In both cases, the plaintext message will have the signatures stripped.
+
+#### Detached Signatures
+
+To verify detached signatures (signatures that come separate from the message itself), you can use the
+`detachedVerify()` API:
+
+```java
+byte[] signingCert = ...;
+byte[] message = ...;
+byte[] detachedSignature = ...;
+
+List<Verification> verifications = sop.detachedVerify()
+        .cert(signingCert)
+        .signatures(detachedSignature)
+        .data(signedMessage);
+```
+
+You can provide one or more OpenPGP certificates using `cert(_)`, providing either a byte array or an `InputStream`.
+
+The detached signatures need to be provided separately using the `signatures(_)` method call.
+You can provide as many detached signatures as you like, and those can be binary or ASCII armored.
+
+Like with Inline Signatures, you can constrain the time window for signature validity using
+`notAfter(_)` and `notBefore(_)`.
+
+#### Verifications
+
+In all above cases, the `verifications` list will contain `Verification` objects for each verifiable, valid signature.
+Those objects contain information about the signatures:
+`verification.getSigningCertFingerprint()` will return the fingerprint of the certificate that created the signature.
+`verification.getSigningKeyFingerprint()` will return the fingerprint of the used signing subkey within that certificate.
+
+### Detach Signatures from Messages
+
+It is also possible, to detach inline or cleartext signatures from signed messages to transform them into
+detached signatures.
+The same way you can turn inline or cleartext signed messages into plaintext messages.
+
+To detach signatures from messages, use the `inlineDetach()` API:
+
+```java
+byte[] signedMessage = ...;
+
+ReadyWithResult<Signatures> readyWithResult = sop.inlineDetach()
+        .message(signedMessage);
+ByteArrayAndResult<Signatures> bytesAndResult = readyWithResult.toByteArrayAndResult();
+
+byte[] plaintext = bytesAndResult.getBytes();
+Signatures signatures = bytesAndResult.getResult();
+byte[] encodedSignatures = signatures.getBytes();
+```
+
+By default, the signatures output will be ASCII armored. This can be disabled by calling `noArmor()`
+prior to `message(_)`.
+
+The detached signatures can now be verified like in the section above.

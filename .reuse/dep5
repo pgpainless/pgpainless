@@ -9,6 +9,15 @@ Source: https://pgpainless.org
 # Copyright: $YEAR $NAME <$CONTACT>
 # License: ...
 
+# Documentation
+Files: docs/*
+Copyright: 2022 Paul Schaub <info@pgpainless.org>
+License: CC-BY-3.0
+
+Files: .readthedocs.yaml
+Copyright: 2022 Paul Schaub <info@pgpainless.org>
+License: CC0-1.0
+
 # Gradle build tool
 Files: gradle*
 Copyright: 2015 the original author or authors.

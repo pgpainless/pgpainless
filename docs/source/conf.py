@@ -48,7 +48,6 @@ html_theme = 'sphinx_rtd_theme'
 #epub_show_urls = 'footnote'
 latex_show_urls = 'footnote'
 
-mermaid_cmd = "./node_modules/.bin/mmdc"
 # 'raw' does not work for epub and pdf, neither does 'svg'
 mermaid_output_format = 'png'
-mermaid_params = ['--theme', 'default', '--width', '800', '--backgroundColor', 'transparent']
+mermaid_params = ['--theme', 'default', '--width', '1600', '--backgroundColor', 'transparent']

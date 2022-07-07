@@ -2,6 +2,10 @@
 
 Coming soon.
 
+:::{note}
+This chapter is work in progress.
+:::
+
 ### Setup
 bla
 

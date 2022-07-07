@@ -8,12 +8,22 @@ version: 2
 # Set the version of Python and other tools you might need
 build:
   os: ubuntu-20.04
+  # apt_packages:
+    # - libgtk-3-0
+    # - libasound2
+    # - libnss3
+    # - libxss1
+    # - libgbm1
+    # - libxshmfence1
   tools:
     python: "3.9"
     # You can also specify other tool versions:
-    nodejs: "16"
+    # nodejs: "16"
     # rust: "1.55"
     # golang: "1.17"
+  # jobs:
+    # post_install:
+      # - npm install -g @mermaid-js/mermaid-cli
 
 # Build documentation in the docs/ directory with Sphinx
 sphinx:

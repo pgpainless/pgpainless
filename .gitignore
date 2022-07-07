@@ -32,4 +32,4 @@ pgpainless-core/.settings/
 
 push_html.sh
 
-docs/node_modules
+node_modules

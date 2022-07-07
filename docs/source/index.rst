@@ -20,6 +20,6 @@ Contents
 
 .. toctree::
 
-   quickstart.md
    ecosystem.md
+   quickstart.md
    sop.md
