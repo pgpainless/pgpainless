@@ -239,7 +239,7 @@ If you provided the senders certificate for the purpose of signature verificatio
 probably want to check, if the message was actually signed by the sender by checking `result.getVerifications()`.
 
 :::{note}
-Signature verification will be discussed in more detail in section [](#verify-a-signature)
+Signature verification will be discussed in more detail in section [](#verifications)
 :::
 
 If the message was encrypted symmetrically using a password, you can also decrypt is symmetrically by calling
