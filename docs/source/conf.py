@@ -15,7 +15,7 @@ release = latest_tag
 version = release
 
 myst_substitutions = {
-  "repo_host" : "codeberg.org", # or 'github.com'
+  "repo_host" : "codeberg.org",
 #  "repo_host" : "github.com",
   "repo_pgpainless_src" : "codeberg.org/pgpainless/pgpainless/src/branch",
 #  "repo_pgpainless_src" : "github.com/pgpainless/pgpainless/tree",

@@ -1,16 +1,23 @@
 # User Guide for PGPainless
 
+Documentation for PGPainless is built from Markdown using Sphinx and MyST.
+
+A built version of the documentation is available on http://pgpainless.rtfd.io/
+
+## Useful resources
+
+* [Sphix Documentation Generator](https://www.sphinx-doc.org/en/master/)
+* [MyST Markdown Syntax](https://myst-parser.readthedocs.io/en/latest/index.html)
+
 ## Build the Guide
+
+To build:
 
 ```shell
 $ make {html|epub|latexpdf}
 ```
 
-Note: Building requires `mermaid-cli` to be installed in this directory:
+Note: Building diagrams from source requires `mermaid-cli` to be installed.
 ```shell
-$ # Move here
-$ cd pgpainless/docs
-$ npm install @mermaid-js/mermaid-cli
+$ npm install -g @mermaid-js/mermaid-cli
 ```
-
-TODO: This is ugly. Install mermaid-cli globally? Perhaps point to user-installed mermaid-cli in conf.py's mermaid_cmd
