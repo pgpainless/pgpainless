@@ -4,6 +4,7 @@
 
 plugins {
     id 'application'
+    id "com.github.johnrengelman.shadow" version "6.1.0"
 }
 def generatedVersionDir = "${buildDir}/generated-version"
 
@@ -51,7 +52,7 @@ mainClassName = 'org.pgpainless.cli.PGPainlessCLI'
 application {
     mainClass = mainClassName
 }
-
+/**
 jar {
     duplicatesStrategy(DuplicatesStrategy.EXCLUDE)
     manifest {
@@ -66,6 +67,7 @@ jar {
         exclude "META-INF/*.RSA"
     }
 }
+ */
 
 run {
     // https://stackoverflow.com/questions/59445306/pipe-into-gradle-run
@@ -76,4 +78,4 @@ run {
     }
 }
 
-tasks."jar".dependsOn(":pgpainless-core:assemble", ":pgpainless-sop:assemble")
+// tasks."jar".dependsOn(":pgpainless-core:assemble", ":pgpainless-sop:assemble")

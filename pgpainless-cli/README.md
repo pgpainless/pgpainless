@@ -13,14 +13,14 @@ PGPainless-CLI is an implementation of the [Stateless OpenPGP Command Line Inter
 It plugs `pgpainless-sop` into `sop-java-picocli`.
 
 ## Build
-To build an executable, `gradle jar` should be sufficient. The resulting jar file can be found in `pgpainless-sop/build/libs/`.
+To build an executable, `gradle shadowJar` should be sufficient. The resulting jar file can be found in `pgpainless-cli/build/libs/`.
 
 ## Execute
 
 The jar file produced in the step above is executable as is.
 
 ```
-java -jar pgpainless-cli-XXX.jar help
+java -jar pgpainless-cli-XXX-all.jar help
 ```
 
 Alternatively you can use the provided `./pgpainless-cli` script to directly build and execute PGPainless' Stateless Command Line Interface from within Gradle.
