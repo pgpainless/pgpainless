@@ -22,4 +22,5 @@ Contents
 
    ecosystem.md
    quickstart.md
+   pgpainless-cli/usage.md
    sop.md
