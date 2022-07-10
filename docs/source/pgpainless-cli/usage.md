@@ -40,19 +40,20 @@ Stateless OpenPGP Protocol
 Usage: pgpainless-cli [COMMAND]
 
 Commands:
-  help           Stateless OpenPGP Protocol
-  armor          Stateless OpenPGP Protocol
-  dearmor        Stateless OpenPGP Protocol
-  decrypt        Stateless OpenPGP Protocol
-  inline-detach  Stateless OpenPGP Protocol
-  encrypt        Stateless OpenPGP Protocol
-  extract-cert   Stateless OpenPGP Protocol
-  generate-key   Stateless OpenPGP Protocol
-  sign           Stateless OpenPGP Protocol
-  verify         Stateless OpenPGP Protocol
-  inline-sign    Stateless OpenPGP Protocol
-  inline-verify  Stateless OpenPGP Protocol
-  version        Stateless OpenPGP Protocol
+  help           Display usage information for the specified subcommand
+  armor          Add ASCII Armor to standard input
+  dearmor        Remove ASCII Armor from standard input
+  decrypt        Decrypt a message from standard input
+  inline-detach  Split signatures from a clearsigned message
+  encrypt        Encrypt a message from standard input
+  extract-cert   Extract a public key certificate from a secret key from
+                   standard input
+  generate-key   Generate a secret key
+  sign           Create a detached signature on the data from standard input
+  verify         Verify a detached signature over the data from standard input
+  inline-sign    Create an inline-signed message from data on standard input
+  inline-verify  Verify inline-signed data from standard input
+  version        Display version information about the tool
 
 Exit Codes:
    0   Successful program execution.
