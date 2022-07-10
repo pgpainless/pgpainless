@@ -289,15 +289,15 @@ public class KeyRingInfo {
             return null;
         }
 
-        String firstUserId = userIds.get(0);
-        if (userIds.size() == 1) {
-            return firstUserId;
-        }
-
+        String firstUserId = null;
         for (String userId : userIds) {
             PGPSignature certification = signatures.userIdCertifications.get(userId);
             if (certification == null) {
                 continue;
+            }
+
+            if (firstUserId == null) {
+                firstUserId = userId;
             }
             Date creationTime = certification.getCreationTime();
 
