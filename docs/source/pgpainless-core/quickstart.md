@@ -2,6 +2,8 @@
 
 The `pgpainless-core` module contains the bulk of the actual OpenPGP implementation.
 
+This is a quickstart guide. For more in-depth exploration of the API, checkout [](indepth.md).
+
 :::{note}
 This chapter is work in progress.
 :::
@@ -65,7 +67,7 @@ byte[] binary = secretKey.getEncoded();
 ```
 
 ### Generate a Key
-PGPainless comes with a simple to use `KeyRingBuilder` class that helps you to quickly generate modern OpenPGP keys.
+PGPainless comes with a method to quickly generate modern OpenPGP keys.
 There are some predefined key archetypes, but it is possible to fully customize the key generation to fit your needs.
 
 ```java
@@ -76,27 +78,6 @@ PGPSecretKeyRing secretKeys = PGPainless.generateKeyRing()
 // RSA key without additional subkeys
 PGPSecretKeyRing secretKeys = PGPainless.generateKeyRing()
         .simpleRsaKeyRing("Juliet <juliet@montague.lit>", RsaLength._4096);
-```
-
-To generate a customized key, use `PGPainless.buildKeyRing()` instead:
-
-```java
-// Customized key
-PGPSecretKeyRing keyRing = PGPainless.buildKeyRing()
-        .setPrimaryKey(KeySpec.getBuilder(
-                RSA.withLength(RsaLength._8192),
-                KeyFlag.SIGN_DATA, KeyFlag.CERTIFY_OTHER)
-                        .overrideCompressionAlgorithms(CompressionAlgorithm.ZLIB)
-        ).addSubkey(
-                KeySpec.getBuilder(ECDSA.fromCurve(EllipticCurve._P256), KeyFlag.SIGN_DATA)
-        ).addSubkey(
-                KeySpec.getBuilder(
-                        ECDH.fromCurve(EllipticCurve._P256),
-                        KeyFlag.ENCRYPT_COMMS, KeyFlag.ENCRYPT_STORAGE)
-        ).addUserId("Juliet <juliet@montague.lit>")
-        .addUserId("xmpp:juliet@capulet.lit")
-        .setPassphrase(Passphrase.fromPassword("romeo_oh_Romeo<3"))
-        .build();
 ```
 
 As you can see, it is possible to generate all kinds of different keys.

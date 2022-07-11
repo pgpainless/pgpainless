@@ -24,3 +24,4 @@ Contents
    quickstart.md
    pgpainless-cli/usage.md
    sop.md
+   pgpainless-core/indepth.rst
