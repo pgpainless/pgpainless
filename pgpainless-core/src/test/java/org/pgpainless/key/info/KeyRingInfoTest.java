@@ -704,6 +704,8 @@ public class KeyRingInfoTest {
 
     @Test
     public void getEmailsTest() throws IOException {
+        // NOTE: The User-ID Format for the ID "Alice Anderson <alice@email.tld> [Primary Mail Address]" is incorrect.
+        // TODO: Fix?
         String KEY = "-----BEGIN PGP PRIVATE KEY BLOCK-----\n" +
                 "Version: PGPainless\n" +
                 "Comment: B4A8 9FE8 9D59 31E6 BCF7  DC2F 6BA1 2CC7 9A08 8D73\n" +

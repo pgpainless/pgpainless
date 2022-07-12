@@ -119,6 +119,7 @@ public class SignatureUtilsTest {
                 "-----END PGP PUBLIC KEY BLOCK-----\n";
 
         String aliceId = "Alice <alice@exmaple.com>";
+        // TODO: Fix wrong user-id format of pet name
         String charliesPetNameForAlice = "Alice Example <alice@example.com> [from work]";
 
         long aliceKeyId = 1059762964264170602L;

@@ -8,11 +8,10 @@ However, it is agreed upon to use the
 Below is a selection of possible User-IDs:
 
 ```
-Firstname Lastname <email@address.tld> [Comment]
+Firstname Lastname (Comment) <email@address.tld>
 Firstname Lastname
-Firstname Lastname [Comment]
+Firstname Lastname (Comment)
 <email@address.tld>
-<email@address.tld> [Comment]
 ```
 
 PGPainless comes with a builder class `UserId`, which can be used to safely construct User-IDs:
@@ -29,5 +28,5 @@ UserId full = UserId.newBuilder()
         .withEmail("peter@pgpainless.org")
         .withComment("Work Address")
         .build();
-assertEquals("Peter Pattern <peter@pgpainless.org> [Work Address]", full.toString());
+assertEquals("Peter Pattern (Work Address) <peter@pgpainless.org>", full.toString());
 ```
