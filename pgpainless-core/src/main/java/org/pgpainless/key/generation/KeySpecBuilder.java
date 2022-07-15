@@ -64,6 +64,11 @@ public class KeySpecBuilder implements KeySpecBuilderInterface {
     @Override
     public KeySpecBuilder overridePreferredSymmetricKeyAlgorithms(
             @Nonnull SymmetricKeyAlgorithm... preferredSymmetricKeyAlgorithms) {
+        for (SymmetricKeyAlgorithm algo : preferredSymmetricKeyAlgorithms) {
+            if (algo == SymmetricKeyAlgorithm.NULL) {
+                throw new IllegalArgumentException("NULL (unencrypted) is an invalid symmetric key algorithm preference.");
+            }
+        }
         this.preferredSymmetricAlgorithms = new LinkedHashSet<>(Arrays.asList(preferredSymmetricKeyAlgorithms));
         return this;
     }

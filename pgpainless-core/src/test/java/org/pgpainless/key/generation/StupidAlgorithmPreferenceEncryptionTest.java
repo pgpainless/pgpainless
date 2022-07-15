@@ -9,19 +9,33 @@ import org.bouncycastle.openpgp.PGPPublicKeyRing;
 import org.bouncycastle.openpgp.PGPSecretKeyRing;
 import org.junit.jupiter.api.Test;
 import org.pgpainless.PGPainless;
+import org.pgpainless.algorithm.KeyFlag;
+import org.pgpainless.algorithm.SymmetricKeyAlgorithm;
 import org.pgpainless.encryption_signing.EncryptionOptions;
 import org.pgpainless.encryption_signing.EncryptionResult;
 import org.pgpainless.encryption_signing.EncryptionStream;
 import org.pgpainless.encryption_signing.ProducerOptions;
+import org.pgpainless.key.generation.type.KeyType;
+import org.pgpainless.key.generation.type.rsa.RsaLength;
 
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 public class StupidAlgorithmPreferenceEncryptionTest {
+
+    @Test
+    public void testPreventUnencryptedAlgorithmPreferenceDuringKeyGeneration() {
+        KeySpecBuilder specBuilder = KeySpec.getBuilder(KeyType.RSA(RsaLength._4096), KeyFlag.CERTIFY_OTHER);
+        assertThrows(IllegalArgumentException.class, () ->
+                specBuilder.overridePreferredSymmetricKeyAlgorithms(
+                        SymmetricKeyAlgorithm.AES_256, SymmetricKeyAlgorithm.AES_192,
+                        SymmetricKeyAlgorithm.AES_128, SymmetricKeyAlgorithm.NULL));
+    }
 
     // RSA key with symmetric algorithm preference "NULL" (unencrypted).
     private static final String STUPID_KEY = "-----BEGIN PGP PRIVATE KEY BLOCK-----\n" +
