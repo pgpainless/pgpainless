@@ -162,6 +162,25 @@ public final class KeyRingUtils {
     }
 
     /**
+     * Extract {@link PGPPublicKeyRing PGPPublicKeyRings} from all {@link PGPSecretKeyRing PGPSecretKeyRings} in
+     * the given {@link PGPSecretKeyRingCollection} and return them as a {@link PGPPublicKeyRingCollection}.
+     *
+     * @param secretKeyRings secret key ring collection
+     * @return public key ring collection
+     * @throws PGPException TODO: remove
+     * @throws IOException TODO: remove
+     */
+    @Nonnull
+    public static PGPPublicKeyRingCollection publicKeyRingCollectionFrom(@Nonnull PGPSecretKeyRingCollection secretKeyRings)
+            throws PGPException, IOException {
+        List<PGPPublicKeyRing> certificates = new ArrayList<>();
+        for (PGPSecretKeyRing secretKey : secretKeyRings) {
+            certificates.add(PGPainless.extractCertificate(secretKey));
+        }
+        return new PGPPublicKeyRingCollection(certificates);
+    }
+
+    /**
      * Unlock a {@link PGPSecretKey} and return the resulting {@link PGPPrivateKey}.
      *
      * @param secretKey secret key
