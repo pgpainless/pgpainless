@@ -5,16 +5,31 @@
 package org.pgpainless.key.modification;
 
 import org.bouncycastle.openpgp.PGPException;
+import org.bouncycastle.openpgp.PGPPublicKeyRing;
 import org.bouncycastle.openpgp.PGPSecretKeyRing;
+import org.bouncycastle.util.io.Streams;
 import org.junit.jupiter.api.Test;
 import org.pgpainless.PGPainless;
+import org.pgpainless.decryption_verification.ConsumerOptions;
+import org.pgpainless.decryption_verification.DecryptionStream;
+import org.pgpainless.decryption_verification.OpenPgpMetadata;
+import org.pgpainless.encryption_signing.EncryptionOptions;
+import org.pgpainless.encryption_signing.EncryptionResult;
+import org.pgpainless.encryption_signing.EncryptionStream;
+import org.pgpainless.encryption_signing.ProducerOptions;
 import org.pgpainless.key.info.KeyRingInfo;
 import org.pgpainless.key.protection.SecretKeyRingProtector;
 import org.pgpainless.signature.subpackets.SelfSignatureSubpackets;
 
+import java.io.ByteArrayInputStream;
+import java.io.ByteArrayOutputStream;
 import java.io.IOException;
+import java.nio.charset.StandardCharsets;
+import java.util.NoSuchElementException;
 
+import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 /**
@@ -55,7 +70,7 @@ public class FixUserIdDoesNotBreakEncryptionCapabilityTest {
     private static final String userIdAfter = "\"(B)ob (J)ohnson\" <bj@evaluation.test>";
 
     @Test
-    public void replaceUserIdWithFixedVersionDoesNotHinderEncryptionCapability() throws IOException, PGPException {
+    public void manualReplaceUserIdWithFixedVersionDoesNotHinderEncryptionCapability() throws IOException, PGPException {
         PGPSecretKeyRing secretKeys = PGPainless.readKeyRing().secretKeyRing(SECRET_KEY);
         SecretKeyRingProtector protector = SecretKeyRingProtector.unprotectedKeys();
         PGPSecretKeyRing modified = PGPainless.modifyKeyRing(secretKeys)
@@ -80,5 +95,68 @@ public class FixUserIdDoesNotBreakEncryptionCapabilityTest {
         assertTrue(after.isUsableForSigning());
         assertFalse(after.isUserIdValid(userIdBefore));
         assertTrue(after.isUserIdValid(userIdAfter));
+    }
+
+    @Test
+    public void testReplaceUserId_missingOldUserIdThrows() throws IOException {
+        PGPSecretKeyRing secretKeys = PGPainless.readKeyRing().secretKeyRing(SECRET_KEY);
+        assertThrows(NoSuchElementException.class, () -> PGPainless.modifyKeyRing(secretKeys)
+                .replaceUserId("missing", userIdAfter, SecretKeyRingProtector.unprotectedKeys()));
+    }
+
+    @Test
+    public void testReplaceUserId_emptyOldUserIdThrows() throws IOException {
+        PGPSecretKeyRing secretKeys = PGPainless.readKeyRing().secretKeyRing(SECRET_KEY);
+        assertThrows(IllegalArgumentException.class, () -> PGPainless.modifyKeyRing(secretKeys)
+                .replaceUserId("     ", userIdAfter, SecretKeyRingProtector.unprotectedKeys()));
+    }
+
+    @Test
+    public void testReplaceUserId_emptyNewUserIdThrows() throws IOException {
+        PGPSecretKeyRing secretKeys = PGPainless.readKeyRing().secretKeyRing(SECRET_KEY);
+        assertThrows(IllegalArgumentException.class, () -> PGPainless.modifyKeyRing(secretKeys)
+                .replaceUserId(userIdBefore, "     ", SecretKeyRingProtector.unprotectedKeys()));
+    }
+
+    @Test
+    public void testReplaceImplicitUserIdDoesNotBreakStuff() throws IOException, PGPException {
+        PGPSecretKeyRing secretKeys = PGPainless.readKeyRing().secretKeyRing(SECRET_KEY);
+
+        PGPSecretKeyRing edited = PGPainless.modifyKeyRing(secretKeys)
+                .replaceUserId(userIdBefore, userIdAfter, SecretKeyRingProtector.unprotectedKeys())
+                .done();
+
+        KeyRingInfo info = PGPainless.inspectKeyRing(edited);
+        assertTrue(info.isUserIdValid(userIdAfter));
+        assertEquals(userIdAfter, info.getPrimaryUserId());
+
+        assertTrue(info.getLatestUserIdCertification(userIdAfter).getHashedSubPackets().isPrimaryUserID());
+
+        PGPPublicKeyRing cert = PGPainless.extractCertificate(edited);
+
+        ByteArrayOutputStream out = new ByteArrayOutputStream();
+        EncryptionStream encryptionStream = PGPainless.encryptAndOrSign()
+                .onOutputStream(out)
+                .withOptions(ProducerOptions.encrypt(new EncryptionOptions()
+                        .addRecipient(cert)));
+
+        encryptionStream.write("Hello".getBytes(StandardCharsets.UTF_8));
+        encryptionStream.close();
+
+        EncryptionResult result = encryptionStream.getResult();
+        assertTrue(result.isEncryptedFor(cert));
+
+        ByteArrayInputStream in = new ByteArrayInputStream(out.toByteArray());
+        ByteArrayOutputStream plain = new ByteArrayOutputStream();
+        DecryptionStream decryptionStream = PGPainless.decryptAndOrVerify()
+                .onInputStream(in)
+                .withOptions(new ConsumerOptions()
+                        .addDecryptionKey(edited));
+
+        Streams.pipeAll(decryptionStream, plain);
+        decryptionStream.close();
+
+        OpenPgpMetadata metadata = decryptionStream.getResult();
+        assertTrue(metadata.isEncrypted());
     }
 }

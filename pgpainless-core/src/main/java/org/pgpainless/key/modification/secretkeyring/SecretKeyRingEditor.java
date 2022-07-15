@@ -205,10 +205,59 @@ public class SecretKeyRingEditor implements SecretKeyRingEditorInterface {
     @Override
     public SecretKeyRingEditorInterface removeUserId(
             CharSequence userId,
-            SecretKeyRingProtector protector) throws PGPException {
+            SecretKeyRingProtector protector)
+            throws PGPException {
         return removeUserId(
                 SelectUserId.exactMatch(userId.toString()),
                 protector);
+    }
+
+    @Override
+    public SecretKeyRingEditorInterface replaceUserId(@Nonnull CharSequence oldUserId,
+                                                      @Nonnull CharSequence newUserId,
+                                                      @Nonnull SecretKeyRingProtector protector)
+            throws PGPException {
+        String oldUID = oldUserId.toString().trim();
+        String newUID = newUserId.toString().trim();
+        if (oldUID.isEmpty()) {
+            throw new IllegalArgumentException("Old user-id cannot be empty.");
+        }
+
+        if (newUID.isEmpty()) {
+            throw new IllegalArgumentException("New user-id cannot be empty.");
+        }
+
+        KeyRingInfo info = PGPainless.inspectKeyRing(secretKeyRing);
+        if (!info.isUserIdValid(oldUID)) {
+            throw new NoSuchElementException("Key does not carry user-id '" + oldUID + "', or it is not valid.");
+        }
+
+        PGPSignature oldCertification = info.getLatestUserIdCertification(oldUID);
+        if (oldCertification == null) {
+            throw new AssertionError("Certification for old user-id MUST NOT be null.");
+        }
+
+        // Bind new user-id
+        addUserId(newUserId, new SelfSignatureSubpackets.Callback() {
+            @Override
+            public void modifyHashedSubpackets(SelfSignatureSubpackets hashedSubpackets) {
+                SignatureSubpacketsHelper.applyFrom(oldCertification.getHashedSubPackets(), (SignatureSubpackets) hashedSubpackets);
+                // Primary user-id
+                if (oldUID.equals(info.getPrimaryUserId())) {
+                    // Implicit primary user-id
+                    if (!oldCertification.getHashedSubPackets().isPrimaryUserID()) {
+                        hashedSubpackets.setPrimaryUserId();
+                    }
+                }
+            }
+
+            @Override
+            public void modifyUnhashedSubpackets(SelfSignatureSubpackets unhashedSubpackets) {
+                SignatureSubpacketsHelper.applyFrom(oldCertification.getUnhashedSubPackets(), (SignatureSubpackets) unhashedSubpackets);
+            }
+        }, protector);
+
+        return revokeUserId(oldUID, protector);
     }
 
     // TODO: Move to utility class?
