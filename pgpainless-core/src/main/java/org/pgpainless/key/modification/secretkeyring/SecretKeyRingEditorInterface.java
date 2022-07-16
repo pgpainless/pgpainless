@@ -105,6 +105,26 @@ public interface SecretKeyRingEditorInterface {
         throws PGPException;
 
     /**
+     * Replace a user-id on the key with a new one.
+     * The old user-id gets soft revoked and the new user-id gets bound with the same signature subpackets as the
+     * old one, with one exception:
+     * If the old user-id was implicitly primary (did not carry a {@link org.bouncycastle.bcpg.sig.PrimaryUserID} packet,
+     * but effectively was primary, then the new user-id will be explicitly marked as primary.
+     *
+     * @param oldUserId old user-id
+     * @param newUserId new user-id
+     * @param protector protector to unlock the secret key
+     * @return the builder
+     * @throws PGPException in case we cannot generate a revocation and certification signature
+     * @throws java.util.NoSuchElementException if the old user-id was not found on the key; or if the oldUserId
+     *                                          was already invalid
+     */
+    SecretKeyRingEditorInterface replaceUserId(CharSequence oldUserId,
+                                               CharSequence newUserId,
+                                               SecretKeyRingProtector protector)
+        throws PGPException;
+
+    /**
      * Add a subkey to the key ring.
      * The subkey will be generated from the provided {@link KeySpec}.
      *
