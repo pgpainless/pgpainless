@@ -5,6 +5,21 @@ SPDX-License-Identifier: CC0-1.0
 
 # PGPainless Changelog
 
+## 1.3.2
+- Add `KeyRingInfo(Policy)` constructor
+- Delete unused `KeyRingValidator` class
+- Add `PGPainless.certify()` API
+  - `certify().userIdOnCertificate()` can be used to certify other users User-IDs
+  - `certify().certificate()` can be used to create direct-key signatures on other users keys
+- We now have a [User Guide!](https://pgpainless.rtfd.io/)
+- Fixed build script
+  - `pgpainless-cli`s `gradle build` task no longer builds fat jar
+  - Fat jars are now built by dedicated shadow plugin
+- Fix third-party assigned user-ids on keys to accidentally get picked up as primary user-id
+- Add `KeyRingUtils.publicKeyRingCollectionFrom(PGPSecretKeyRingCollection)`
+- Add `SecretKeyRingEditor.replaceUserId(oldUid, newUid, protector)`
+- Prevent adding `SymmetricKeyAlgorithm.NULL` (unencrypted) as encryption algo preference when generating keys
+
 ## 1.3.1
 - Fix reproducibility of builds by setting fixed file permissions in archive task
 - Improve encryption performance by buffering streams
