@@ -70,8 +70,8 @@ public abstract class OpenPgpFingerprint implements CharSequence, Comparable<Ope
     /**
      * Parse a binary OpenPGP fingerprint into an {@link OpenPgpFingerprint} object.
      *
-     * @param binaryFingerprint
-     * @return
+     * @param binaryFingerprint binary representation of the fingerprint
+     * @return parsed fingerprint
      */
     public static OpenPgpFingerprint parseFromBinary(byte[] binaryFingerprint) {
         String hex = Hex.toHexString(binaryFingerprint).toUpperCase();
