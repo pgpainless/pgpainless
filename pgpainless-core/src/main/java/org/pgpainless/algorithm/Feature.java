@@ -23,7 +23,8 @@ import javax.annotation.Nullable;
 public enum Feature {
 
     /**
-     * Support for Symmetrically Encrypted Integrity Protected Data Packets using Modification Detection Code Packets.
+     * Support for Symmetrically Encrypted Integrity Protected Data Packets (version 1) using Modification
+     * Detection Code Packets.
      *
      * @see <a href="https://tools.ietf.org/html/rfc4880#section-5.14">
      *     RFC-4880 §5.14: Modification Detection Code Packet</a>
@@ -35,6 +36,7 @@ public enum Feature {
      * If a key announces this feature, it signals support for consuming AEAD Encrypted Data Packets.
      *
      * NOTE: PGPAINLESS DOES NOT YET SUPPORT THIS FEATURE!!!
+     * NOTE: This value is currently RESERVED.
      *
      * @see <a href="https://openpgp-wg.gitlab.io/rfc4880bis/#name-aead-encrypted-data-packet-">
      *     AEAD Encrypted Data Packet</a>
@@ -49,11 +51,20 @@ public enum Feature {
      * In addition, fingerprints of version 5 keys are calculated differently from version 4 keys.
      *
      * NOTE: PGPAINLESS DOES NOT YET SUPPORT THIS FEATURE!!!
+     * NOTE: This value is currently RESERVED.
      *
      * @see <a href="https://openpgp-wg.gitlab.io/rfc4880bis/#name-public-key-packet-formats">
      *     Public-Key Packet Formats</a>
      */
-    VERSION_5_PUBLIC_KEY(Features.FEATURE_VERSION_5_PUBLIC_KEY)
+    VERSION_5_PUBLIC_KEY(Features.FEATURE_VERSION_5_PUBLIC_KEY),
+
+    /**
+     * Support for Symmetrically Encrypted Integrity Protected Data packet version 2.
+     *
+     * @see <a href="https://www.ietf.org/archive/id/draft-ietf-openpgp-crypto-refresh-06.html#version-two-seipd">
+     *     crypto-refresh-06 §5.13.2. Version 2 Sym. Encrypted Integrity Protected Data Packet Format</a>
+     */
+    MODIFICATION_DETECTION_2((byte) 0x08),
     ;
 
     private static final Map<Byte, Feature> MAP = new ConcurrentHashMap<>();
