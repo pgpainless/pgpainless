@@ -27,6 +27,8 @@ public enum HashAlgorithm {
     SHA384     (HashAlgorithmTags.SHA384, "SHA384"),
     SHA512     (HashAlgorithmTags.SHA512, "SHA512"),
     SHA224     (HashAlgorithmTags.SHA224, "SHA224"),
+    SHA3_256   (12, "SHA3-256"),
+    SHA3_512   (14, "SHA3-512"),
     ;
 
     private static final Map<Integer, HashAlgorithm> ID_MAP = new HashMap<>();
