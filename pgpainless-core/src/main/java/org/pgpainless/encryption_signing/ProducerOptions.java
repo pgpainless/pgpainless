@@ -69,6 +69,12 @@ public final class ProducerOptions {
         return new ProducerOptions(encryptionOptions, null);
     }
 
+    /**
+     * Only wrap the data in an OpenPGP packet.
+     * No encryption or signing will be applied.
+     *
+     * @return builder
+     */
     public static ProducerOptions noEncryptionNoSigning() {
         return new ProducerOptions(null, null);
     }
