@@ -198,6 +198,8 @@ Do you need a custom feature? Are you unsure of what's the best way to integrate
 We offer paid professional services. Don't hesitate to send an inquiry to [info@pgpainless.org](mailto:info@pgpainless.org).
 
 ## Development
+Join the projects IRC channel [**#pgpainless**](ircs://irc.oftc.net:6697/#pgpainless) on OFTC if you have any questions!
+
 PGPainless is developed in - and accepts contributions from - the following places:
 
 * [Github](https://github.com/pgpainless/pgpainless)
