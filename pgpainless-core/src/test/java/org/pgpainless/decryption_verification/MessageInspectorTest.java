@@ -33,7 +33,7 @@ public class MessageInspectorTest {
         assertFalse(info.isSignedOnly());
         assertTrue(info.isEncrypted());
         assertEquals(1, info.getKeyIds().size());
-        assertEquals(KeyIdUtil.fromLongKeyId("4766F6B9D5F21EB6"), info.getKeyIds().get(0));
+        assertEquals(KeyIdUtil.fromLongKeyId("4766F6B9D5F21EB6"), (long) info.getKeyIds().get(0));
     }
 
     @Test

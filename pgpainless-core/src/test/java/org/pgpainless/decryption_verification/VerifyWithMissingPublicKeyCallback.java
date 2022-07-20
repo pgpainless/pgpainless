@@ -66,7 +66,7 @@ public class VerifyWithMissingPublicKeyCallback {
                             @Nullable
                             @Override
                             public PGPPublicKeyRing onMissingPublicKeyEncountered(@Nonnull Long keyId) {
-                                assertEquals(signingKey.getKeyID(), keyId, "Signing key-ID mismatch.");
+                                assertEquals(signingKey.getKeyID(), (long) keyId, "Signing key-ID mismatch.");
                                 return signingPubKeys;
                             }
                         }));
