@@ -14,7 +14,6 @@ import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
-import java.net.URI;
 import java.net.URISyntaxException;
 import java.net.URL;
 import java.nio.charset.StandardCharsets;
@@ -56,31 +55,9 @@ class KeyRingReaderTest {
         return inputStream;
     }
 
-    private URI getResourceURI(String resourceName) {
-        try {
-            URL url = getClass().getClassLoader().getResource(resourceName);
-            if (url == null) {
-                throw new TestAbortedException("Cannot read resource " + resourceName + ": URL is null.");
-            }
-            return url.toURI();
-        } catch (URISyntaxException | IllegalArgumentException e) {
-            throw new TestAbortedException("Cannot read resource " + resourceName, e);
-        }
-    }
-
-    private File getFileFromResource(String resourceName) {
-        URI uri = getResourceURI(resourceName);
-        try {
-            return new File(uri);
-        } catch (IllegalArgumentException e) {
-            // When executing the tests from pgpainless-test.jar, we cannot read resources as
-            //  URI is not hierarchical.
-            throw new TestAbortedException("Cannot read resource " + resourceName, e);
-        }
-    }
-
     private byte[] readFromResource(String resourceName) throws IOException {
-        return Files.readAllBytes(getFileFromResource(resourceName).toPath());
+        InputStream inputStream = requireResource(resourceName);
+        return inputStream.readAllBytes();
     }
 
     @Test
@@ -260,23 +237,19 @@ class KeyRingReaderTest {
         assertEquals(10, getPGPKeyRingsFromResource("10_prv_and_pub_keys_binary.key").size());
     }
 
-    private InputStream getFileInputStreamFromResource(String fileName) throws IOException {
-        return new FileInputStream(getFileFromResource(fileName));
-    }
-
     private PGPKeyRingCollection getPGPKeyRingsFromResource(String fileName)
             throws IOException, PGPException {
-        return PGPainless.readKeyRing().keyRingCollection(getFileInputStreamFromResource(fileName), true);
+        return PGPainless.readKeyRing().keyRingCollection(requireResource(fileName), true);
     }
 
     private PGPPublicKeyRingCollection getPgpPublicKeyRingsFromResource(String fileName)
             throws IOException, PGPException {
-        return PGPainless.readKeyRing().publicKeyRingCollection(getFileInputStreamFromResource(fileName));
+        return PGPainless.readKeyRing().publicKeyRingCollection(requireResource(fileName));
     }
 
     private PGPSecretKeyRingCollection getPgpSecretKeyRingsFromResource(String fileName)
             throws IOException, PGPException {
-        return PGPainless.readKeyRing().secretKeyRingCollection(getFileInputStreamFromResource(fileName));
+        return PGPainless.readKeyRing().secretKeyRingCollection(requireResource(fileName));
     }
 
     @Test
