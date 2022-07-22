@@ -6,9 +6,9 @@ SPDX-License-Identifier: Apache-2.0
 
 # PGPainless - Use OpenPGP Painlessly!
 
-[![Travis (.com)](https://travis-ci.com/pgpainless/pgpainless.svg?branch=master)](https://travis-ci.com/pgpainless/pgpainless)
+[![Travis (.com)](https://travis-ci.com/pgpainless/pgpainless.svg?branch=main)](https://travis-ci.com/pgpainless/pgpainless)
 [![Maven Central](https://badgen.net/maven/v/maven-central/org.pgpainless/pgpainless-core)](https://search.maven.org/artifact/org.pgpainless/pgpainless-core)
-[![Coverage Status](https://coveralls.io/repos/github/pgpainless/pgpainless/badge.svg?branch=master)](https://coveralls.io/github/pgpainless/pgpainless?branch=master)
+[![Coverage Status](https://coveralls.io/repos/github/pgpainless/pgpainless/badge.svg?branch=main)](https://coveralls.io/github/pgpainless/pgpainless?branch=main)
 [![Interoperability Test-Suite](https://badgen.net/badge/Sequoia%20Test%20Suite/%232/green)](https://tests.sequoia-pgp.org/)
 [![PGP](https://img.shields.io/badge/pgp-A027%20DB2F%203E1E%20118A-blue)](https://keyoxide.org/7F9116FEA90A5983936C7CFAA027DB2F3E1E118A)
 [![REUSE status](https://api.reuse.software/badge/github.com/pgpainless/pgpainless)](https://api.reuse.software/info/github.com/pgpainless/pgpainless)
