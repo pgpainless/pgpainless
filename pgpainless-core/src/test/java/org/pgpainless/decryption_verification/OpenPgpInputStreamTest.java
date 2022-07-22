@@ -23,7 +23,6 @@ import org.bouncycastle.openpgp.PGPCompressedDataGenerator;
 import org.bouncycastle.openpgp.PGPException;
 import org.bouncycastle.openpgp.PGPSecretKeyRing;
 import org.bouncycastle.util.io.Streams;
-import org.junit.jupiter.api.RepeatedTest;
 import org.junit.jupiter.api.Test;
 import org.pgpainless.PGPainless;
 import org.pgpainless.algorithm.CompressionAlgorithm;
@@ -36,7 +35,7 @@ public class OpenPgpInputStreamTest {
 
     private static final Random RANDOM = new Random();
 
-    @RepeatedTest(100)
+    @Test
     public void randomBytesDoNotContainOpenPgpData() throws IOException {
         byte[] randomBytes = new byte[1000000];
         RANDOM.nextBytes(randomBytes);
