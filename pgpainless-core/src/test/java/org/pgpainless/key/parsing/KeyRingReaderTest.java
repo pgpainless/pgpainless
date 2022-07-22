@@ -10,14 +10,9 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
-import java.io.File;
-import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
-import java.net.URISyntaxException;
-import java.net.URL;
 import java.nio.charset.StandardCharsets;
-import java.nio.file.Files;
 import java.security.InvalidAlgorithmParameterException;
 import java.security.NoSuchAlgorithmException;
 import java.util.ArrayList;
@@ -34,6 +29,7 @@ import org.bouncycastle.openpgp.PGPSecretKeyRing;
 import org.bouncycastle.openpgp.PGPSecretKeyRingCollection;
 import org.bouncycastle.openpgp.PGPSignature;
 import org.bouncycastle.openpgp.PGPUtil;
+import org.bouncycastle.util.io.Streams;
 import org.junit.jupiter.api.Test;
 import org.opentest4j.TestAbortedException;
 import org.pgpainless.PGPainless;
@@ -57,7 +53,7 @@ class KeyRingReaderTest {
 
     private byte[] readFromResource(String resourceName) throws IOException {
         InputStream inputStream = requireResource(resourceName);
-        return inputStream.readAllBytes();
+        return Streams.readAll(inputStream);
     }
 
     @Test
