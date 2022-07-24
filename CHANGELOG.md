@@ -5,6 +5,11 @@ SPDX-License-Identifier: CC0-1.0
 
 # PGPainless Changelog
 
+## 1.3.3
+- Improve test compatibility against older JUnit versions
+- Fix tests that read from jar-embedded resources (thanks @jcharaoui)
+- `pgpainless-cli help`: Fix i18n strings
+
 ## 1.3.2
 - Add `KeyRingInfo(Policy)` constructor
 - Delete unused `KeyRingValidator` class
