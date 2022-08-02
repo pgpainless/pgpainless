@@ -48,11 +48,11 @@ import org.pgpainless.util.Passphrase;
  * This will cause PGPainless to use the provided algorithm for message encryption, instead of negotiating an algorithm
  * by inspecting the provided recipient keys.
  *
- * By default, PGPainless will only encrypt to a single encryption capable subkey per recipient key.
- * This behavior can be changed, e.g. by calling
+ * By default, PGPainless will encrypt to all suitable, encryption capable subkeys on each recipient's certificate.
+ * This behavior can be changed per recipient, e.g. by calling
  * <pre>
  * {@code
- * opt.addRecipient(aliceKey, EncryptionOptions.encryptToAllCapableSubkeys());
+ * opt.addRecipient(aliceKey, EncryptionOptions.encryptToFirstSubkey());
  * }
  * </pre>
  * when adding the recipient key.
