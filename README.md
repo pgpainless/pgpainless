@@ -232,4 +232,7 @@ Parts of PGPainless development ([project page](https://nlnet.nl/project/PGPainl
 NGI Assure is made possible with financial support from the [European Commission](https://ec.europa.eu/)'s [Next Generation Internet](https://ngi.eu/) programme, under the aegis of [DG Communications Networks, Content and Technology](https://ec.europa.eu/info/departments/communications-networks-content-and-technology_en).
 [![NGI Assure Logo](https://blog.jabberhead.tk/wp-content/uploads/2022/05/NGIAssure_tag.svg)](https://nlnet.nl/assure/)
 
-Continuous Integration is kindly provided by [Travis-CI.com](https://travis-ci.com/).
+Big thank you also to those who decided to support the work by donating!  
+Notably @msfjarvis
+
+You make my day!
