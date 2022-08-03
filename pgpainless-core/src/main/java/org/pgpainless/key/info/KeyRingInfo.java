@@ -1048,10 +1048,14 @@ public class KeyRingInfo {
      * @return true if usable for encryption
      */
     public boolean isUsableForEncryption(@Nonnull EncryptionPurpose purpose) {
-        return !getEncryptionSubkeys(purpose).isEmpty();
+        return isKeyValidlyBound(getKeyId()) && !getEncryptionSubkeys(purpose).isEmpty();
     }
 
     public boolean isUsableForSigning() {
+        if (!isKeyValidlyBound(getKeyId())) {
+            return false;
+        }
+
         List<PGPPublicKey> signingKeys = getSigningSubkeys();
         for (PGPPublicKey pk : signingKeys) {
             PGPSecretKey sk = getSecretKey(pk.getKeyID());
