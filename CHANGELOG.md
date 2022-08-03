@@ -5,6 +5,9 @@ SPDX-License-Identifier: CC0-1.0
 
 # PGPainless Changelog
 
+## 1.3.4-SNAPSHOT
+- Fix `KeyRingInfo.isUsableForEncryption()`, `KeyRingInfo.isUsableForSigning()` not detecting revoked primary keys
+
 ## 1.3.3
 - Improve test compatibility against older JUnit versions
 - Fix tests that read from jar-embedded resources (thanks @jcharaoui)
