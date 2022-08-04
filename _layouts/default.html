@@ -17,7 +17,6 @@ src="//html5shiv.googlecode.com/svn/trunk/html5.js"></script>
   <body>
     <div class="wrapper" style="width: 1060px">
       <header>
-        <h1>{{ site.title | default: site.github.repository_name }}</h1>
 	{% if site.logo %}
           <img src="{{site.logo | relative_url}}" alt="Logo" />
 	{% endif %}
@@ -26,14 +25,13 @@ src="//html5shiv.googlecode.com/svn/trunk/html5.js"></script>
 
         <a href="https://pgpainless.org">Home</a>
         <br>
-	<a
-href="https://search.maven.org/search?q=g:org.pgpainless%20AND%20a:pgpainless-core&core=gav">Releases</a>
-	<br>
-        <a 
-href=" https://javadoc.io/doc/org.pgpainless ">Javadoc</a>
+	    <a href="https://search.maven.org/search?q=g:org.pgpainless%20AND%20a:pgpainless-core&core=gav">Releases</a>
+	    <br>
+        <a href="https://pgpainless.rtfd.io">Documentation</a>
         <br>
-        <a 
-href="https://coveralls.io/github/pgpainless/pgpainless">Coverage</a>
+        <a href=" https://javadoc.io/doc/org.pgpainless ">Javadoc</a>
+        <br>
+        <a href="https://coveralls.io/github/pgpainless/pgpainless">Coverage</a>
         <br>
 
 
