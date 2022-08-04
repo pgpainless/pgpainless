@@ -5,7 +5,7 @@ SPDX-License-Identifier: CC0-1.0
 
 # PGPainless Changelog
 
-## 1.3.4-SNAPSHOT
+## 1.3.4
 - Fix `KeyRingInfo.isUsableForEncryption()`, `KeyRingInfo.isUsableForSigning()` not detecting revoked primary keys
 - Bump `sop-java` and `sop-java-picocli` to `4.0.1`
   - Fixes help text strings being resolved properly while allowing to override executable name
