@@ -1,2 +1,8 @@
 logo: /assets/logo.png
 theme: jekyll-theme-minimal
+
+exclude:
+  - CHANGELOG.md
+  - CODE_OF_CONDUCT.md
+  - SECURITY.md
+  - docs
