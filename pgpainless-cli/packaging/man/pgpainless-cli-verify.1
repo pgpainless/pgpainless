@@ -1,0 +1,153 @@
+'\" t
+.\"     Title: pgpainless-cli-verify
+.\"    Author: [see the "AUTHOR(S)" section]
+.\" Generator: Asciidoctor 2.0.10
+.\"      Date: 2022-08-07
+.\"    Manual: PGPainless-CLI Manual
+.\"    Source: 
+.\"  Language: English
+.\"
+.TH "PGPAINLESS\-CLI\-VERIFY" "1" "2022-08-07" "" "PGPainless\-CLI Manual"
+.ie \n(.g .ds Aq \(aq
+.el       .ds Aq '
+.ss \n[.ss] 0
+.nh
+.ad l
+.de URL
+\fI\\$2\fP <\\$1>\\$3
+..
+.als MTO URL
+.if \n[.g] \{\
+.  mso www.tmac
+.  am URL
+.    ad l
+.  .
+.  am MTO
+.    ad l
+.  .
+.  LINKSTYLE blue R < >
+.\}
+.SH "NAME"
+pgpainless\-cli\-verify \- Verify a detached signature over the data from standard input
+.SH "SYNOPSIS"
+.sp
+\fBpgpainless\-cli verify\fP [\fB\-\-not\-after\fP=\fIDATE\fP] [\fB\-\-not\-before\fP=\fIDATE\fP] \fISIGNATURE\fP \fICERT\fP...
+.SH "DESCRIPTION"
+
+.SH "OPTIONS"
+.sp
+\fB\-\-not\-after\fP=\fIDATE\fP, \fB\-\-not\-before\fP=\fIDATE\fP
+.RS 4
+ISO\-8601 formatted UTC date (e.g. \(aq2020\-11\-23T16:35Z)
+.sp
+Reject signatures with a creation date not in range.
+.sp
+Defaults to beginning of time ("\-").
+.RE
+.SH "ARGUMENTS"
+.sp
+\fISIGNATURE\fP
+.RS 4
+Detached signature
+.RE
+.sp
+\fICERT\fP...
+.RS 4
+Public key certificates for signature verification
+.RE
+.SH "EXIT CODES:"
+.sp
+\fB0\fP
+.RS 4
+Successful program execution
+.RE
+.sp
+\fB1\fP
+.RS 4
+Generic program error
+.RE
+.sp
+\fB3\fP
+.RS 4
+Verification requested but no verifiable signature found
+.RE
+.sp
+\fB13\fP
+.RS 4
+Unsupported asymmetric algorithm
+.RE
+.sp
+\fB17\fP
+.RS 4
+Certificate is not encryption capable
+.RE
+.sp
+\fB19\fP
+.RS 4
+Usage error: Missing argument
+.RE
+.sp
+\fB23\fP
+.RS 4
+Incomplete verification instructions
+.RE
+.sp
+\fB29\fP
+.RS 4
+Unable to decrypt
+.RE
+.sp
+\fB31\fP
+.RS 4
+Password is not human\-readable
+.RE
+.sp
+\fB37\fP
+.RS 4
+Unsupported Option
+.RE
+.sp
+\fB41\fP
+.RS 4
+Invalid data or data of wrong type encountered
+.RE
+.sp
+\fB53\fP
+.RS 4
+Non\-text input received where text was expected
+.RE
+.sp
+\fB59\fP
+.RS 4
+Output file already exists
+.RE
+.sp
+\fB61\fP
+.RS 4
+Input file does not exist
+.RE
+.sp
+\fB67\fP
+.RS 4
+Cannot unlock password protected secret key
+.RE
+.sp
+\fB69\fP
+.RS 4
+Unsupported subcommand
+.RE
+.sp
+\fB71\fP
+.RS 4
+Unsupported special prefix (e.g. "@env/@fd") of indirect parameter
+.RE
+.sp
+\fB73\fP
+.RS 4
+Ambiguous input (a filename matching the designator already exists)
+.RE
+.sp
+\fB79\fP
+.RS 4
+Key is not signing capable
+.RE

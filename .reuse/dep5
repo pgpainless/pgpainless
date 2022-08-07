@@ -60,3 +60,12 @@ License: CC0-1.0
 Files: _layouts/*
 Copyright: 2022 Paul Schaub <info@pgpainless.org>, 2017 Steve Smith
 License: CC-BY-SA-3.0
+
+# Man Pages
+Files: pgpainless-cli/rewriteManPages.sh
+Copyright: 2022 Paul Schaub <info@pgpainless.org>
+License: Apache-2.0
+
+Files: pgpainless-cli/packaging/man/*
+Copyright: 2022 Paul Schaub <info@pgpainless.org>
+License: Apache-2.0
