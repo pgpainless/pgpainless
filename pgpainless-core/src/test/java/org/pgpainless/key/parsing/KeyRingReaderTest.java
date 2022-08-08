@@ -4,6 +4,7 @@
 
 package org.pgpainless.key.parsing;
 
+import static org.junit.jupiter.api.Assertions.assertArrayEquals;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
@@ -23,6 +24,7 @@ import org.bouncycastle.bcpg.ArmoredOutputStream;
 import org.bouncycastle.bcpg.BCPGOutputStream;
 import org.bouncycastle.bcpg.MarkerPacket;
 import org.bouncycastle.openpgp.PGPException;
+import org.bouncycastle.openpgp.PGPKeyRing;
 import org.bouncycastle.openpgp.PGPPublicKeyRing;
 import org.bouncycastle.openpgp.PGPPublicKeyRingCollection;
 import org.bouncycastle.openpgp.PGPSecretKeyRing;
@@ -561,5 +563,55 @@ class KeyRingReaderTest {
 
         assertThrows(IOException.class, () ->
                 KeyRingReader.readPublicKeyRingCollection(new ByteArrayInputStream(bytes.toByteArray()), 512));
+    }
+
+    @Test
+    public void testReadKeyRingWithBinaryPublicKey() throws PGPException, InvalidAlgorithmParameterException, NoSuchAlgorithmException, IOException {
+        PGPSecretKeyRing secretKeys = PGPainless.generateKeyRing().modernKeyRing("Alice <alice@pgpainless.org>");
+        PGPPublicKeyRing publicKeys = PGPainless.extractCertificate(secretKeys);
+        byte[] bytes = publicKeys.getEncoded();
+
+        PGPKeyRing keyRing = PGPainless.readKeyRing()
+                .keyRing(bytes);
+
+        assertTrue(keyRing instanceof PGPPublicKeyRing);
+        assertArrayEquals(keyRing.getEncoded(), publicKeys.getEncoded());
+    }
+
+    @Test
+    public void testReadKeyRingWithBinarySecretKey() throws PGPException, InvalidAlgorithmParameterException, NoSuchAlgorithmException, IOException {
+        PGPSecretKeyRing secretKeys = PGPainless.generateKeyRing().modernKeyRing("Alice <alice@pgpainless.org>");
+        byte[] bytes = secretKeys.getEncoded();
+
+        PGPKeyRing keyRing = PGPainless.readKeyRing()
+                .keyRing(bytes);
+
+        assertTrue(keyRing instanceof PGPSecretKeyRing);
+        assertArrayEquals(keyRing.getEncoded(), secretKeys.getEncoded());
+    }
+
+    @Test
+    public void testReadKeyRingWithArmoredPublicKey() throws PGPException, InvalidAlgorithmParameterException, NoSuchAlgorithmException, IOException {
+        PGPSecretKeyRing secretKeys = PGPainless.generateKeyRing().modernKeyRing("Alice <alice@pgpainless.org>");
+        PGPPublicKeyRing publicKeys = PGPainless.extractCertificate(secretKeys);
+        String armored = PGPainless.asciiArmor(publicKeys);
+
+        PGPKeyRing keyRing = PGPainless.readKeyRing()
+                .keyRing(armored);
+
+        assertTrue(keyRing instanceof PGPPublicKeyRing);
+        assertArrayEquals(keyRing.getEncoded(), publicKeys.getEncoded());
+    }
+
+    @Test
+    public void testReadKeyRingWithArmoredSecretKey() throws PGPException, InvalidAlgorithmParameterException, NoSuchAlgorithmException, IOException {
+        PGPSecretKeyRing secretKeys = PGPainless.generateKeyRing().modernKeyRing("Alice <alice@pgpainless.org>");
+        String armored = PGPainless.asciiArmor(secretKeys);
+
+        PGPKeyRing keyRing = PGPainless.readKeyRing()
+                .keyRing(armored);
+
+        assertTrue(keyRing instanceof PGPSecretKeyRing);
+        assertArrayEquals(keyRing.getEncoded(), secretKeys.getEncoded());
     }
 }
