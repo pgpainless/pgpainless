@@ -14,6 +14,7 @@ import java.util.List;
 import javax.annotation.Nonnull;
 
 import org.bouncycastle.openpgp.PGPException;
+import org.bouncycastle.openpgp.PGPKeyRing;
 import org.bouncycastle.openpgp.PGPMarker;
 import org.bouncycastle.openpgp.PGPObjectFactory;
 import org.bouncycastle.openpgp.PGPPublicKeyRing;
@@ -31,6 +32,42 @@ public class KeyRingReader {
 
     @SuppressWarnings("CharsetObjectCanBeUsed")
     public static final Charset UTF8 = Charset.forName("UTF-8");
+
+    /**
+     * Read a {@link PGPKeyRing} (either {@link PGPSecretKeyRing} or {@link PGPPublicKeyRing}) from the given
+     * {@link InputStream}.
+     *
+     * @param inputStream inputStream containing the OpenPGP key or certificate
+     * @return key ring
+     * @throws IOException in case of an IO error
+     */
+    public PGPKeyRing keyRing(@Nonnull InputStream inputStream) throws IOException {
+        return readKeyRing(inputStream);
+    }
+
+    /**
+     * Read a {@link PGPKeyRing} (either {@link PGPSecretKeyRing} or {@link PGPPublicKeyRing}) from the given
+     * byte array.
+     *
+     * @param bytes byte array containing the OpenPGP key or certificate
+     * @return key ring
+     * @throws IOException in case of an IO error
+     */
+    public PGPKeyRing keyRing(@Nonnull byte[] bytes) throws IOException {
+        return keyRing(new ByteArrayInputStream(bytes));
+    }
+
+    /**
+     * Read a {@link PGPKeyRing} (either {@link PGPSecretKeyRing} or {@link PGPPublicKeyRing}) from the given
+     * ASCII armored string.
+     *
+     * @param asciiArmored ASCII armored OpenPGP key or certificate
+     * @return key ring
+     * @throws IOException in case of an IO error
+     */
+    public PGPKeyRing keyRing(@Nonnull String asciiArmored) throws IOException {
+        return keyRing(asciiArmored.getBytes(UTF8));
+    }
 
     public PGPPublicKeyRing publicKeyRing(@Nonnull InputStream inputStream) throws IOException {
         return readPublicKeyRing(inputStream);
@@ -93,6 +130,55 @@ public class KeyRingReader {
 
     public PGPKeyRingCollection keyRingCollection(@Nonnull String asciiArmored, boolean isSilent) throws IOException, PGPException {
         return keyRingCollection(asciiArmored.getBytes(UTF8), isSilent);
+    }
+
+    /**
+     * Read a {@link PGPKeyRing} (either {@link PGPSecretKeyRing} or {@link PGPPublicKeyRing}) from the given
+     * {@link InputStream}.
+     * This method will attempt to read at most {@link #MAX_ITERATIONS} objects from the stream before aborting.
+     * The first {@link PGPPublicKeyRing} or {@link PGPSecretKeyRing} will be returned.
+     *
+     * @param inputStream inputStream containing the OpenPGP key or certificate
+     * @return key ring
+     * @throws IOException in case of an IO error
+     */
+    public static PGPKeyRing readKeyRing(@Nonnull InputStream inputStream) throws IOException {
+        return readKeyRing(inputStream, MAX_ITERATIONS);
+    }
+
+    /**
+     * Read a {@link PGPKeyRing} (either {@link PGPSecretKeyRing} or {@link PGPPublicKeyRing}) from the given
+     * {@link InputStream}.
+     * This method will attempt to read at most <pre>maxIterations</pre> objects from the stream before aborting.
+     * The first {@link PGPPublicKeyRing} or {@link PGPSecretKeyRing} will be returned.
+     *
+     * @param inputStream inputStream containing the OpenPGP key or certificate
+     * @param maxIterations maximum number of objects that are read before the method will abort
+     * @return key ring
+     * @throws IOException in case of an IO error
+     */
+    public static PGPKeyRing readKeyRing(@Nonnull InputStream inputStream, int maxIterations) throws IOException {
+        PGPObjectFactory objectFactory = ImplementationFactory.getInstance().getPGPObjectFactory(
+                ArmorUtils.getDecoderStream(inputStream));
+        int i = 0;
+        Object next;
+        do {
+            next = objectFactory.nextObject();
+            if (next == null) {
+                return null;
+            }
+            if (next instanceof PGPMarker) {
+                continue;
+            }
+            if (next instanceof PGPSecretKeyRing) {
+                return (PGPSecretKeyRing) next;
+            }
+            if (next instanceof PGPPublicKeyRing) {
+                return (PGPPublicKeyRing) next;
+            }
+        } while (++i < maxIterations);
+
+        throw new IOException("Loop exceeded max iteration count.");
     }
 
     public static PGPPublicKeyRing readPublicKeyRing(@Nonnull InputStream inputStream) throws IOException {
