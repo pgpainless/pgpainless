@@ -4,6 +4,7 @@
 
 package org.pgpainless.encryption_signing;
 
+import java.io.IOException;
 import java.util.Collections;
 import java.util.Date;
 import java.util.HashMap;
@@ -21,6 +22,7 @@ import org.bouncycastle.openpgp.PGPPublicKeyRing;
 import org.bouncycastle.openpgp.PGPPublicKeyRingCollection;
 import org.bouncycastle.openpgp.operator.PBEKeyEncryptionMethodGenerator;
 import org.bouncycastle.openpgp.operator.PGPKeyEncryptionMethodGenerator;
+import org.pgpainless.PGPainless;
 import org.pgpainless.algorithm.EncryptionPurpose;
 import org.pgpainless.algorithm.SymmetricKeyAlgorithm;
 import org.pgpainless.exception.KeyException;
@@ -30,6 +32,10 @@ import org.pgpainless.key.SubkeyIdentifier;
 import org.pgpainless.key.info.KeyAccessor;
 import org.pgpainless.key.info.KeyRingInfo;
 import org.pgpainless.util.Passphrase;
+import pgp.certificate_store.Certificate;
+import pgp.certificate_store.CertificateStore;
+import pgp.certificate_store.exception.BadDataException;
+import pgp.certificate_store.exception.BadNameException;
 
 /**
  * Options for the encryption process.
@@ -233,6 +239,30 @@ public class EncryptionOptions {
         }
 
         return this;
+    }
+
+    /**
+     * Add a recipient by providing a {@link CertificateStore} and the {@link OpenPgpFingerprint} of the recipients key.
+     * If no such certificate is found in the store, a {@link NoSuchElementException is thrown}.
+     *
+     * @param certificateStore certificate store
+     * @param certificateFingerprint fingerprint of the recipient certificate
+     * @return builder
+     * @throws BadDataException if the certificate contains bad data
+     * @throws BadNameException if the fingerprint is not in a recognizable form for the store
+     * @throws IOException in case of an IO error
+     * @throws NoSuchElementException if the store does not contain a certificate for the given fingerprint
+     */
+    public EncryptionOptions addRecipient(@Nonnull CertificateStore certificateStore,
+                                          @Nonnull OpenPgpFingerprint certificateFingerprint)
+            throws BadDataException, BadNameException, IOException {
+        String fingerprint = certificateFingerprint.toString().toLowerCase();
+        Certificate certificateRecord = certificateStore.getCertificate(fingerprint);
+        if (certificateRecord == null) {
+            throw new NoSuchElementException("Cannot find certificate '" + certificateFingerprint + "'");
+        }
+        PGPPublicKeyRing recipientCertificate = PGPainless.readKeyRing().publicKeyRing(certificateRecord.getInputStream());
+        return addRecipient(recipientCertificate);
     }
 
     private void addRecipientKey(PGPPublicKeyRing keyRing, PGPPublicKey key) {
