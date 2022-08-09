@@ -1051,8 +1051,34 @@ public class KeyRingInfo {
         return isKeyValidlyBound(getKeyId()) && !getEncryptionSubkeys(purpose).isEmpty();
     }
 
-    public boolean isUsableForSigning() {
+    /**
+     * Returns true, if the key ring is capable of signing.
+     * Contrary to {@link #isUsableForSigning()}, this method also returns true, if this {@link KeyRingInfo} is based
+     * on a key ring which has at least one valid public key marked for signing.
+     * The secret key is not required for the key ring to qualify as signing capable.
+     *
+     * @return true if key corresponding to the cert is capable of signing
+     */
+    public boolean isSigningCapable() {
+        // check if primary-key is revoked / expired
         if (!isKeyValidlyBound(getKeyId())) {
+            return false;
+        }
+        // check if it has signing-capable key
+        return !getSigningSubkeys().isEmpty();
+    }
+
+    /**
+     * Returns true, if this {@link KeyRingInfo} is based on a {@link PGPSecretKeyRing}, which has a valid signing key
+     * which is ready to be used (i.e. secret key is present and is not on a smart-card).
+     *
+     * If you just want to check, whether a key / certificate has signing capable subkeys,
+     * use {@link #isSigningCapable()} instead.
+     *
+     * @return true if key is ready to be used for signing
+     */
+    public boolean isUsableForSigning() {
+        if (!isSigningCapable()) {
             return false;
         }
 
