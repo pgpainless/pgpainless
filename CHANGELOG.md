@@ -5,7 +5,7 @@ SPDX-License-Identifier: CC0-1.0
 
 # PGPainless Changelog
 
-## 1.3.5-SNAPSHOT
+## 1.3.5
 - Add `KeyRingInfo.isCapableOfSigning()`
 - Add `KeyRingReader.readKeyRing(*)` methods that can take both secret- and public keys
 - Add manpages
