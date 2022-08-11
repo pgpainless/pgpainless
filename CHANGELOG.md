@@ -5,6 +5,13 @@ SPDX-License-Identifier: CC0-1.0
 
 # PGPainless Changelog
 
+## 1.3.5-SNAPSHOT
+- Add `KeyRingInfo.isCapableOfSigning()`
+- Add `KeyRingReader.readKeyRing(*)` methods that can take both secret- and public keys
+- Add manpages
+  - Add script to generate manpages from sop-java-picocli
+- Build website from main branch
+
 ## 1.3.4
 - Fix `KeyRingInfo.isUsableForEncryption()`, `KeyRingInfo.isUsableForSigning()` not detecting revoked primary keys
 - Bump `sop-java` and `sop-java-picocli` to `4.0.1`
