@@ -32,8 +32,8 @@ import org.pgpainless.key.SubkeyIdentifier;
 import org.pgpainless.key.info.KeyAccessor;
 import org.pgpainless.key.info.KeyRingInfo;
 import org.pgpainless.util.Passphrase;
-import pgp.certificate_store.Certificate;
-import pgp.certificate_store.CertificateStore;
+import pgp.certificate_store.PGPCertificateStore;
+import pgp.certificate_store.certificate.Certificate;
 import pgp.certificate_store.exception.BadDataException;
 import pgp.certificate_store.exception.BadNameException;
 
@@ -242,7 +242,7 @@ public class EncryptionOptions {
     }
 
     /**
-     * Add a recipient by providing a {@link CertificateStore} and the {@link OpenPgpFingerprint} of the recipients key.
+     * Add a recipient by providing a {@link PGPCertificateStore} and the {@link OpenPgpFingerprint} of the recipients key.
      * If no such certificate is found in the store, a {@link NoSuchElementException is thrown}.
      *
      * @param certificateStore certificate store
@@ -253,7 +253,7 @@ public class EncryptionOptions {
      * @throws IOException in case of an IO error
      * @throws NoSuchElementException if the store does not contain a certificate for the given fingerprint
      */
-    public EncryptionOptions addRecipient(@Nonnull CertificateStore certificateStore,
+    public EncryptionOptions addRecipient(@Nonnull PGPCertificateStore certificateStore,
                                           @Nonnull OpenPgpFingerprint certificateFingerprint)
             throws BadDataException, BadNameException, IOException {
         String fingerprint = certificateFingerprint.toString().toLowerCase();
@@ -261,7 +261,8 @@ public class EncryptionOptions {
         if (certificateRecord == null) {
             throw new NoSuchElementException("Cannot find certificate '" + certificateFingerprint + "'");
         }
-        PGPPublicKeyRing recipientCertificate = PGPainless.readKeyRing().publicKeyRing(certificateRecord.getInputStream());
+        PGPPublicKeyRing recipientCertificate = PGPainless.readKeyRing()
+                .publicKeyRing(certificateRecord.getInputStream());
         return addRecipient(recipientCertificate);
     }
 
