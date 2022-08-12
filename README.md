@@ -16,6 +16,8 @@ SPDX-License-Identifier: Apache-2.0
 
 **PGPainless is an easy-to-use OpenPGP library for Java and Android applications**
 
+[![Packaging status](https://repology.org/badge/vertical-allrepos/pgpainless.svg)](https://repology.org/project/pgpainless/versions)
+
 ## About
 
 PGPainless aims to make using OpenPGP in Java projects as simple as possible.
