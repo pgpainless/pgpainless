@@ -25,7 +25,8 @@ dependencies {
     // api(files("../libs/bcpg-jdk18on-1.70.jar"))
 
     // certificate store
-    api "org.pgpainless:pgp-certificate-store:$pgpCertificateStoreVersion"
+    api "org.pgpainless:pgp-certificate-store:$pgpCertDJavaVersion"
+    testImplementation "org.pgpainless:pgpainless-cert-d:$pgpainlessCertDVersion"
 
     // @Nullable, @Nonnull annotations
     implementation "com.google.code.findbugs:jsr305:3.0.2"
