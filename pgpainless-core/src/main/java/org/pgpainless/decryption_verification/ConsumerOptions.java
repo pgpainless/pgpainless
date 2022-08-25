@@ -6,10 +6,12 @@ package org.pgpainless.decryption_verification;
 
 import java.io.IOException;
 import java.io.InputStream;
+import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -23,6 +25,7 @@ import org.bouncycastle.openpgp.PGPSecretKeyRing;
 import org.bouncycastle.openpgp.PGPSecretKeyRingCollection;
 import org.bouncycastle.openpgp.PGPSignature;
 import org.bouncycastle.openpgp.operator.PublicKeyDataDecryptorFactory;
+import org.pgpainless.PGPainless;
 import org.pgpainless.decryption_verification.cleartext_signatures.InMemoryMultiPassStrategy;
 import org.pgpainless.decryption_verification.cleartext_signatures.MultiPassStrategy;
 import org.pgpainless.key.SubkeyIdentifier;
@@ -30,6 +33,9 @@ import org.pgpainless.key.protection.SecretKeyRingProtector;
 import org.pgpainless.signature.SignatureUtils;
 import org.pgpainless.util.Passphrase;
 import org.pgpainless.util.SessionKey;
+import pgp.certificate_store.PGPCertificateStore;
+import pgp.certificate_store.certificate.Certificate;
+import pgp.certificate_store.exception.BadDataException;
 
 /**
  * Options for decryption and signature verification.
@@ -43,8 +49,7 @@ public class ConsumerOptions {
     private Date verifyNotBefore = null;
     private Date verifyNotAfter = new Date();
 
-    // Set of verification keys
-    private final Set<PGPPublicKeyRing> certificates = new HashSet<>();
+    private final CertificateSource certificates = new CertificateSource();
     private final Set<PGPSignature> detachedSignatures = new HashSet<>();
     private MissingPublicKeyCallback missingCertificateCallback = null;
 
@@ -113,7 +118,7 @@ public class ConsumerOptions {
      * @return options
      */
     public ConsumerOptions addVerificationCert(PGPPublicKeyRing verificationCert) {
-        this.certificates.add(verificationCert);
+        this.certificates.addCertificate(verificationCert);
         return this;
     }
 
@@ -127,6 +132,11 @@ public class ConsumerOptions {
         for (PGPPublicKeyRing certificate : verificationCerts) {
             addVerificationCert(certificate);
         }
+        return this;
+    }
+
+    public ConsumerOptions addVerificationCerts(PGPCertificateStore certificateStore) {
+        this.certificates.addStore(certificateStore);
         return this;
     }
 
@@ -266,8 +276,19 @@ public class ConsumerOptions {
         return Collections.unmodifiableSet(decryptionPassphrases);
     }
 
+    /**
+     * Return the explicitly set verification certificates.
+     *
+     * @deprecated use {@link #getCertificateSource()} instead.
+     * @return verification certs
+     */
+    @Deprecated
     public @Nonnull Set<PGPPublicKeyRing> getCertificates() {
-        return Collections.unmodifiableSet(certificates);
+        return certificates.getExplicitCertificates();
+    }
+
+    public @Nonnull CertificateSource getCertificateSource() {
+        return certificates;
     }
 
     public @Nullable MissingPublicKeyCallback getMissingCertificateCallback() {
@@ -384,5 +405,69 @@ public class ConsumerOptions {
      */
     public MultiPassStrategy getMultiPassStrategy() {
         return multiPassStrategy;
+    }
+
+    public static class CertificateSource {
+
+        private List<PGPCertificateStore> stores = new ArrayList<>();
+        private Set<PGPPublicKeyRing> explicitCertificates = new HashSet<>();
+
+        /**
+         * Add a certificate store as source for verification certificates.
+         *
+         * @param certificateStore cert store
+         */
+        public void addStore(PGPCertificateStore certificateStore) {
+            this.stores.add(certificateStore);
+        }
+
+        /**
+         * Add a certificate as verification cert explicitly.
+         *
+         * @param certificate certificate
+         */
+        public void addCertificate(PGPPublicKeyRing certificate) {
+            this.explicitCertificates.add(certificate);
+        }
+
+        /**
+         * Return the set of explicitly set verification certificates.
+         * @return explicitly set verification certs
+         */
+        public Set<PGPPublicKeyRing> getExplicitCertificates() {
+            return Collections.unmodifiableSet(explicitCertificates);
+        }
+
+        /**
+         * Return a certificate which contains a subkey with the given keyId.
+         * This method first checks all explicitly set verification certs and if no cert is found it consults
+         * the certificate stores.
+         *
+         * @param keyId key id
+         * @return certificate
+         */
+        public PGPPublicKeyRing getCertificate(long keyId) {
+
+            for (PGPPublicKeyRing cert : explicitCertificates) {
+                if (cert.getPublicKey(keyId) != null) {
+                    return cert;
+                }
+            }
+
+            for (PGPCertificateStore store : stores) {
+                try {
+                    Iterator<Certificate> certs = store.getCertificatesBySubkeyId(keyId);
+                    if (!certs.hasNext()) {
+                        continue;
+                    }
+                    Certificate cert = certs.next();
+                    PGPPublicKeyRing publicKey = PGPainless.readKeyRing().publicKeyRing(cert.getInputStream());
+                    return publicKey;
+                } catch (IOException | BadDataException e) {
+                    continue;
+                }
+            }
+            return null;
+        }
     }
 }

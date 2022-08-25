@@ -76,7 +76,7 @@ public class DetachedVerifyImpl implements DetachedVerify {
                 verificationList.add(map(signatureVerification));
             }
 
-            if (!options.getCertificates().isEmpty()) {
+            if (!options.getCertificateSource().getExplicitCertificates().isEmpty()) {
                 if (verificationList.isEmpty()) {
                     throw new SOPGPException.NoSignature();
                 }
