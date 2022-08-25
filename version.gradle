@@ -15,7 +15,8 @@ allprojects {
         junitVersion = '5.8.2'
         logbackVersion = '1.2.11'
         mockitoVersion = '4.5.1'
-        pgpCertificateStoreVersion = '0.1.2-SNAPSHOT'
+        pgpainlessCertDVersion = '0.1.3-SNAPSHOT'
+        pgpCertDJavaVersion = '0.2.0'
         slf4jVersion = '1.7.36'
         sopJavaVersion = '4.0.5'
     }
