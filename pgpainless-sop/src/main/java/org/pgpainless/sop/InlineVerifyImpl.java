@@ -26,7 +26,7 @@ import sop.operation.InlineVerify;
 
 public class InlineVerifyImpl implements InlineVerify {
 
-    private final ConsumerOptions options = new ConsumerOptions();
+    private final ConsumerOptions options = ConsumerOptions.get();
 
     @Override
     public InlineVerify notBefore(Date timestamp) throws SOPGPException.UnsupportedOption {

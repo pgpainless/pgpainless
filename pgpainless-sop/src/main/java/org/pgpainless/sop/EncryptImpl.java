@@ -36,7 +36,7 @@ import sop.util.ProxyOutputStream;
 
 public class EncryptImpl implements Encrypt {
 
-    EncryptionOptions encryptionOptions = new EncryptionOptions();
+    EncryptionOptions encryptionOptions = EncryptionOptions.get();
     SigningOptions signingOptions = null;
     MatchMakingSecretKeyRingProtector protector = new MatchMakingSecretKeyRingProtector();
     private final Set<PGPSecretKeyRing> signingKeys = new HashSet<>();

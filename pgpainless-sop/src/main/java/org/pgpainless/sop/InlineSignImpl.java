@@ -80,7 +80,7 @@ public class InlineSignImpl implements InlineSign {
         for (PGPSecretKeyRing key : signingKeys) {
             try {
                 if (mode == InlineSignAs.CleartextSigned) {
-                    signingOptions.addDetachedSignature(protector, key, DocumentSignatureType.BINARY_DOCUMENT);
+                    signingOptions.addDetachedSignature(protector, key);
                 } else {
                     signingOptions.addInlineSignature(protector, key, modeToSigType(mode));
                 }

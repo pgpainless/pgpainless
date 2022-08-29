@@ -39,7 +39,7 @@ public class DetachedSignImpl implements DetachedSign {
 
     private boolean armor = true;
     private SignAs mode = SignAs.Binary;
-    private final SigningOptions signingOptions = new SigningOptions();
+    private final SigningOptions signingOptions = SigningOptions.get();
     private final MatchMakingSecretKeyRingProtector protector = new MatchMakingSecretKeyRingProtector();
 
     @Override

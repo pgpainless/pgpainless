@@ -24,7 +24,7 @@ import sop.operation.DetachedVerify;
 
 public class DetachedVerifyImpl implements DetachedVerify {
 
-    private final ConsumerOptions options = new ConsumerOptions();
+    private final ConsumerOptions options = ConsumerOptions.get();
 
     @Override
     public DetachedVerify notBefore(Date timestamp) throws SOPGPException.UnsupportedOption {

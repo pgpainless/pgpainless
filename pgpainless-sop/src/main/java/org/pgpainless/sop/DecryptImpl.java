@@ -35,7 +35,7 @@ import sop.operation.Decrypt;
 
 public class DecryptImpl implements Decrypt {
 
-    private final ConsumerOptions consumerOptions = new ConsumerOptions();
+    private final ConsumerOptions consumerOptions = ConsumerOptions.get();
     private final MatchMakingSecretKeyRingProtector protector = new MatchMakingSecretKeyRingProtector();
 
     @Override
