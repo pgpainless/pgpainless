@@ -22,18 +22,35 @@ public interface SymmetricKeyAlgorithmNegotiator {
 
     /**
      * Negotiate a symmetric encryption algorithm.
+     * If the override is non-null, it will be returned instead of performing an actual negotiation.
+     * Otherwise, the list of ordered sets containing the preferences of different recipient keys will be
+     * used to determine a suitable symmetric encryption algorithm.
      *
      * @param policy algorithm policy
      * @param override algorithm override (if not null, return this)
      * @param keyPreferences list of preferences per key
      * @return negotiated algorithm
      */
-    SymmetricKeyAlgorithm negotiate(Policy.SymmetricKeyAlgorithmPolicy policy, SymmetricKeyAlgorithm override, List<Set<SymmetricKeyAlgorithm>> keyPreferences);
+    SymmetricKeyAlgorithm negotiate(
+            Policy.SymmetricKeyAlgorithmPolicy policy,
+            SymmetricKeyAlgorithm override,
+            List<Set<SymmetricKeyAlgorithm>> keyPreferences);
 
+    /**
+     * Return an instance that negotiates a {@link SymmetricKeyAlgorithm} by selecting the most popular acceptable
+     * algorithm from the list of preferences.
+     *
+     * This negotiator has the best chances to select an algorithm which is understood by all recipients.
+     *
+     * @return negotiator that selects by popularity
+     */
     static SymmetricKeyAlgorithmNegotiator byPopularity() {
         return new SymmetricKeyAlgorithmNegotiator() {
             @Override
-            public SymmetricKeyAlgorithm negotiate(Policy.SymmetricKeyAlgorithmPolicy policy, SymmetricKeyAlgorithm override, List<Set<SymmetricKeyAlgorithm>> preferences) {
+            public SymmetricKeyAlgorithm negotiate(
+                    Policy.SymmetricKeyAlgorithmPolicy policy,
+                    SymmetricKeyAlgorithm override,
+                    List<Set<SymmetricKeyAlgorithm>> preferences) {
                 if (override == SymmetricKeyAlgorithm.NULL) {
                     throw new IllegalArgumentException("Algorithm override cannot be NULL (plaintext).");
                 }
