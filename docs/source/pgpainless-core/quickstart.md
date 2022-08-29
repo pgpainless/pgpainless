@@ -91,15 +91,64 @@ PGPPublicKeyRing certificate = PGPainless.extractCertificate(secretKey);
 ```
 
 ### Apply / Remove ASCII Armor
+ASCII armor is a layer of radix64 encoding that can be used to wrap binary OpenPGP data in order to make it save to
+transport via text-based channels (e.g. email bodies).
+
+The way in which ASCII armor can be applied depends on the type of data that you want to protect.
+The easies way to ASCII armor an OpenPGP key or certificate is by using PGPainless' `asciiArmor()` method:
+
+```java
+PGPPublicKey certificate = ...;
+String asciiArmored = PGPainless.asciiArmor(certificate);
+```
+
+If you want to ASCII armor ciphertext, you can enable ASCII armoring during encrypting/signing by requesting
+PGPainless to armor the result:
+
+```java
+ProducerOptions producerOptions = ...; // prepare as usual (see next section)
+
+producerOptions.setAsciiArmor(true); // enable armoring
+
+EncryptionStream encryptionStream = PGPainless.encryptAndOrSign()
+        .onOutputStream(out)
+        .withOptions(producerOptions);
+
+...
+```
+
+If you have an already encrypted / signed binary message and want to add ASCII armoring retrospectively, you need
+to make use of BouncyCastle's `ArmoredOutputStream` as follows:
+
+```java
+InputStream binaryOpenPgpIn = ...; // e.g. new ByteArrayInputStream(binaryMessage);
+
+OutputStream output = ...; // e.g. new ByteArrayOutputStream();
+ArmoredOutputStream armorOut = ArmoredOutputStreamFactory.get(output);
+
+Streams.pipeAll(binaryOpenPgpIn, armorOut);
+armorOut.close(); // important!
+```
+
+The output stream will now contain the ASCII armored representation of the binary data.
+
+To remove ASCII armor, you can make use of BouncyCastle's `ArmoredInputStream` as follows:
+
+```java
+InputStream input = ...; // e.g. new ByteArrayInputStream(armoredString.getBytes(StandardCharsets.UTF8));
+OutputStream output = ...;
+
+ArmoredInputStream armorIn = new ArmoredInputStream(input);
+Streams.pipeAll(armorIn, output);
+armorIn.close();
+```
+
+The output stream will now contain the binary OpenPGP data.
+
+### Encrypt and/or Sign a Message
 TODO
 
-### Encrypt a Message
-TODO
-
-### Decrypt a Message
-TODO
-
-### Sign a Message
+### Decrypt and/or Verify a Message
 TODO
 
 ### Verify a Signature
