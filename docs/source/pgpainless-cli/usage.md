@@ -10,6 +10,18 @@ You can use it to generate keys, encrypt, sign and decrypt messages, as well as 
 Essentially, `pgpainless-cli` is just a very small composing module, which injects `pgpainless-sop` as a
 concrete implementation of `sop-java` into `sop-java-picocli`.
 
+## Install
+
+The `pgpainless-cli` command line application is available in Debian unstable / Ubuntu 22.10 and can be installed via APT:
+```shell
+$ sudo apt install pgpainless-cli
+```
+
+This method comes with man-pages:
+```shell
+$ man pgpainless-cli
+```
+
 ## Build
 
 To build a standalone *fat*-jar:
