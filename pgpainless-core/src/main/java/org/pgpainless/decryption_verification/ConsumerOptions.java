@@ -55,6 +55,10 @@ public class ConsumerOptions {
 
     private MultiPassStrategy multiPassStrategy = new InMemoryMultiPassStrategy();
 
+    public static ConsumerOptions get() {
+        return new ConsumerOptions();
+    }
+
     /**
      * Consider signatures on the message made before the given timestamp invalid.
      * Null means no limitation.
