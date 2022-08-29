@@ -36,6 +36,7 @@ import org.pgpainless.algorithm.EncryptionPurpose;
 import org.pgpainless.algorithm.HashAlgorithm;
 import org.pgpainless.algorithm.KeyFlag;
 import org.pgpainless.algorithm.PublicKeyAlgorithm;
+import org.pgpainless.algorithm.RevocationState;
 import org.pgpainless.algorithm.SymmetricKeyAlgorithm;
 import org.pgpainless.exception.KeyException;
 import org.pgpainless.key.OpenPgpFingerprint;
@@ -58,6 +59,7 @@ public class KeyRingInfo {
     private final Signatures signatures;
     private final Date referenceDate;
     private final String primaryUserId;
+    private final RevocationState revocationState;
 
     /**
      * Evaluate the key ring at creation time of the given signature.
@@ -101,6 +103,16 @@ public class KeyRingInfo {
         this.signatures = new Signatures(keys, validationDate, policy);
         this.referenceDate = validationDate;
         this.primaryUserId = findPrimaryUserId();
+        this.revocationState = findRevocationState();
+    }
+
+    private RevocationState findRevocationState() {
+        PGPSignature revocation = signatures.primaryKeyRevocation;
+        if (revocation != null) {
+            return SignatureUtils.isHardRevocation(revocation) ?
+                    RevocationState.hardRevoked() : RevocationState.softRevoked(revocation.getCreationTime());
+        }
+        return RevocationState.notRevoked();
     }
 
     /**
@@ -650,13 +662,17 @@ public class KeyRingInfo {
         return mostRecent;
     }
 
+    public RevocationState getRevocationState() {
+        return revocationState;
+    }
+
     /**
      * Return the date on which the primary key was revoked, or null if it has not yet been revoked.
      *
      * @return revocation date or null
      */
     public @Nullable Date getRevocationDate() {
-        return getRevocationSelfSignature() == null ? null : getRevocationSelfSignature().getCreationTime();
+        return getRevocationState().isSoftRevocation() ? getRevocationState().getDate() : null;
     }
 
     /**
