@@ -9,6 +9,11 @@ SPDX-License-Identifier: CC0-1.0
 - Remove deprecated methods
   - `ArmorUtils.createArmoredOutputStreamFor()` -> use `ArmorUtils.toAsciiArmoredStream()` instead
   - `EncryptionResult.getSymmetricKeyAlgorithm()` -> use `EncryptionResult.getEncryptionAlgorithm()` instead
+- Add `KeyRingInfo.getRevocationState()`
+  - Better way to determine whether a key is revoked
+- Add `SigningOptions.addDetachedSignature(protector, key)` shortcut method
+- Add `EncryptionOptions.get()`, `ConsumerOptions.get()` factory methods
+- Add support for generating keys without user-id (only using `PGPainless.buildKeyRing()` for now)
 
 ## 1.3.5
 - Add `KeyRingInfo.isCapableOfSigning()`
