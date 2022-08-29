@@ -138,6 +138,7 @@ public final class CertificateValidator {
         }
 
         boolean anyUserIdValid = false;
+        boolean hasAnyUserIds = !userIdSignatures.keySet().isEmpty();
         for (String userId : userIdSignatures.keySet()) {
             if (!userIdSignatures.get(userId).isEmpty()) {
                 PGPSignature current = userIdSignatures.get(userId).get(0);
@@ -149,7 +150,7 @@ public final class CertificateValidator {
             }
         }
 
-        if (!anyUserIdValid) {
+        if (hasAnyUserIds && !anyUserIdValid) {
             throw new SignatureValidationException("No valid user-id found.", rejections);
         }
 

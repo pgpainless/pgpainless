@@ -143,9 +143,6 @@ public class KeyRingBuilder implements KeyRingBuilderInterface<KeyRingBuilder> {
     @Override
     public PGPSecretKeyRing build() throws NoSuchAlgorithmException, PGPException,
             InvalidAlgorithmParameterException {
-        if (userIds.isEmpty()) {
-            throw new IllegalStateException("At least one user-id is required.");
-        }
         PGPDigestCalculator keyFingerprintCalculator = ImplementationFactory.getInstance().getV4FingerprintCalculator();
         PBESecretKeyEncryptor secretKeyEncryptor = buildSecretKeyEncryptor(keyFingerprintCalculator);
         PBESecretKeyDecryptor secretKeyDecryptor = buildSecretKeyDecryptor();
@@ -157,19 +154,35 @@ public class KeyRingBuilder implements KeyRingBuilderInterface<KeyRingBuilder> {
         PGPContentSignerBuilder signer = buildContentSigner(certKey);
         PGPSignatureGenerator signatureGenerator = new PGPSignatureGenerator(signer);
 
-        // Prepare primary user-id sig
         SignatureSubpackets hashedSubPacketGenerator = primaryKeySpec.getSubpacketGenerator();
         hashedSubPacketGenerator.setIssuerFingerprintAndKeyId(certKey.getPublicKey());
-        hashedSubPacketGenerator.setPrimaryUserId();
         if (expirationDate != null) {
             hashedSubPacketGenerator.setKeyExpirationTime(certKey.getPublicKey(), expirationDate);
         }
+        if (!userIds.isEmpty()) {
+            hashedSubPacketGenerator.setPrimaryUserId();
+        }
+
         PGPSignatureSubpacketGenerator generator = new PGPSignatureSubpacketGenerator();
         SignatureSubpacketsHelper.applyTo(hashedSubPacketGenerator, generator);
         PGPSignatureSubpacketVector hashedSubPackets = generator.generate();
+        PGPKeyRingGenerator ringGenerator;
+        if (userIds.isEmpty()) {
+            ringGenerator = new PGPKeyRingGenerator(
+                    certKey,
+                    keyFingerprintCalculator,
+                    hashedSubPackets,
+                    null,
+                    signer,
+                    secretKeyEncryptor);
+        } else {
+            String primaryUserId = userIds.entrySet().iterator().next().getKey();
+            ringGenerator = new PGPKeyRingGenerator(
+                    SignatureType.POSITIVE_CERTIFICATION.getCode(), certKey,
+                    primaryUserId, keyFingerprintCalculator,
+                    hashedSubPackets, null, signer, secretKeyEncryptor);
+        }
 
-        PGPKeyRingGenerator ringGenerator = buildRingGenerator(
-                certKey, signer, keyFingerprintCalculator, hashedSubPackets, secretKeyEncryptor);
         addSubKeys(certKey, ringGenerator);
 
         // Generate secret key ring with only primary user id
@@ -182,7 +195,9 @@ public class KeyRingBuilder implements KeyRingBuilderInterface<KeyRingBuilder> {
         PGPPrivateKey privateKey = UnlockSecretKey.unlockSecretKey(secretKeyRing.getSecretKey(), secretKeyDecryptor);
         Iterator<Map.Entry<String, SelfSignatureSubpackets.Callback>> userIdIterator =
                 this.userIds.entrySet().iterator();
-        userIdIterator.next(); // Skip primary user id
+        if (userIdIterator.hasNext()) {
+            userIdIterator.next(); // Skip primary user id
+        }
         while (userIdIterator.hasNext()) {
             Map.Entry<String, SelfSignatureSubpackets.Callback> additionalUserId = userIdIterator.next();
             String userIdString = additionalUserId.getKey();
@@ -215,19 +230,6 @@ public class KeyRingBuilder implements KeyRingBuilderInterface<KeyRingBuilder> {
         }
         secretKeyRing = new PGPSecretKeyRing(secretKeyList);
         return secretKeyRing;
-    }
-
-    private PGPKeyRingGenerator buildRingGenerator(PGPKeyPair certKey,
-                                                   PGPContentSignerBuilder signer,
-                                                   PGPDigestCalculator keyFingerprintCalculator,
-                                                   PGPSignatureSubpacketVector hashedSubPackets,
-                                                   PBESecretKeyEncryptor secretKeyEncryptor)
-            throws PGPException {
-        String primaryUserId = userIds.entrySet().iterator().next().getKey();
-        return new PGPKeyRingGenerator(
-                SignatureType.POSITIVE_CERTIFICATION.getCode(), certKey,
-                primaryUserId, keyFingerprintCalculator,
-                hashedSubPackets, null, signer, secretKeyEncryptor);
     }
 
     private void addSubKeys(PGPKeyPair primaryKey, PGPKeyRingGenerator ringGenerator)
