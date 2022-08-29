@@ -48,19 +48,6 @@ public final class EncryptionResult {
 
     /**
      * Return the symmetric encryption algorithm used to encrypt the message.
-     * @return symmetric encryption algorithm
-     *
-     * @deprecated use {@link #getEncryptionAlgorithm()} instead.
-     *
-     * TODO: Remove in 1.2.X
-     */
-    @Deprecated
-    public SymmetricKeyAlgorithm getSymmetricKeyAlgorithm() {
-        return getEncryptionAlgorithm();
-    }
-
-    /**
-     * Return the symmetric encryption algorithm used to encrypt the message.
      *
      * @return symmetric encryption algorithm
      * */
