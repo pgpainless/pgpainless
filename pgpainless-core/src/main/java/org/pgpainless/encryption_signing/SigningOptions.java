@@ -254,6 +254,23 @@ public final class SigningOptions {
 
     /**
      * Create a detached signature.
+     * The signature will be of type {@link DocumentSignatureType#BINARY_DOCUMENT}.
+     *
+     * @param secretKeyDecryptor decryptor to unlock the secret signing key
+     * @param signingKey signing key
+     * @return this
+     *
+     * @throws KeyException if something is wrong with the key
+     * @throws PGPException if the key cannot be validated or unlocked, or if no signature method can be created
+     */
+    public SigningOptions addDetachedSignature(SecretKeyRingProtector secretKeyDecryptor,
+                                               PGPSecretKeyRing signingKey)
+            throws PGPException {
+        return addDetachedSignature(secretKeyDecryptor, signingKey, DocumentSignatureType.BINARY_DOCUMENT);
+    }
+
+    /**
+     * Create a detached signature.
      * Detached signatures are not being added into the PGP message itself.
      * Instead, they can be distributed separately to the message.
      * Detached signatures are useful if the data that is being signed shall not be modified (e.g. when signing a file).
