@@ -10,7 +10,7 @@ import javax.annotation.Nonnull;
 import java.util.Date;
 import java.util.NoSuchElementException;
 
-public class RevocationState implements Comparable<RevocationState> {
+public final class RevocationState implements Comparable<RevocationState> {
 
     private final RevocationStateType type;
     private final Date date;
