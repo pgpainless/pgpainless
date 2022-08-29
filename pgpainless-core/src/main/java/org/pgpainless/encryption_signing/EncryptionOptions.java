@@ -82,6 +82,19 @@ public class EncryptionOptions {
 
     /**
      * Factory method to create an {@link EncryptionOptions} object which will encrypt for keys
+     * which carry either the {@link org.pgpainless.algorithm.KeyFlag#ENCRYPT_COMMS} or
+     * {@link org.pgpainless.algorithm.KeyFlag#ENCRYPT_STORAGE} flag.
+     *
+     * Use this if you are not sure.
+     *
+     * @return encryption options
+     */
+    public static EncryptionOptions get() {
+        return new EncryptionOptions();
+    }
+
+    /**
+     * Factory method to create an {@link EncryptionOptions} object which will encrypt for keys
      * which carry the flag {@link org.pgpainless.algorithm.KeyFlag#ENCRYPT_COMMS}.
      *
      * @return encryption options
