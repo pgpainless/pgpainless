@@ -268,28 +268,6 @@ public final class ArmorUtils {
     }
 
     /**
-     * Return an {@link ArmoredOutputStream} prepared with headers for the given key ring, which wraps the given
-     * {@link OutputStream}.
-     *
-     * The armored output stream can be used to encode the key ring by calling {@link PGPKeyRing#encode(OutputStream)}
-     * with the armored output stream as an argument.
-     *
-     * @param keyRing key ring
-     * @param outputStream wrapped output stream
-     * @return armored output stream
-     *
-     * @deprecated use {@link #toAsciiArmoredStream(PGPKeyRing, OutputStream)} instead
-     *
-     * TODO: Remove in 1.2.X
-     */
-    @Deprecated
-    @Nonnull
-    public static ArmoredOutputStream createArmoredOutputStreamFor(@Nonnull PGPKeyRing keyRing,
-                                                                   @Nonnull OutputStream outputStream) {
-        return toAsciiArmoredStream(keyRing, outputStream);
-    }
-
-    /**
      * Generate a header map for ASCII armor from the given {@link PGPKeyRing}.
      *
      * @param keyRing key ring
