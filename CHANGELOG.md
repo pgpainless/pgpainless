@@ -5,6 +5,11 @@ SPDX-License-Identifier: CC0-1.0
 
 # PGPainless Changelog
 
+## 1.3.6-SNAPSHOT
+- Remove deprecated methods
+  - `ArmorUtils.createArmoredOutputStreamFor()` -> use `ArmorUtils.toAsciiArmoredStream()` instead
+  - `EncryptionResult.getSymmetricKeyAlgorithm()` -> use `EncryptionResult.getEncryptionAlgorithm()` instead
+
 ## 1.3.5
 - Add `KeyRingInfo.isCapableOfSigning()`
 - Add `KeyRingReader.readKeyRing(*)` methods that can take both secret- and public keys
