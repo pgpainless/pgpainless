@@ -42,7 +42,7 @@ There are certain operations that require you to provide the passphrase for a ke
 Examples are decryption of messages, or creating signatures / certifications.
 
 The primary way of telling PGPainless, which password to use for a certain key is the `SecretKeyRingProtector`
-interface.
+interface which maps `Passphrases` to (sub-)keys.
 There are multiple implementations of this interface, which may or may not suite your needs:
 
 ```java
@@ -59,11 +59,29 @@ CachingSecretKeyRingProtector flexible = SecretKeyRingProtector
         .defaultSecretKeyRingProtector(passphraseCallback);
 ```
 
-The last example shows how to instantiate the `CachingSecretKeyRingProtector` with a `SecretKeyPassphraseProvider`.
-As the name suggests, the `CachingSecretKeyRingProtector` caches passphrases in a map.
+`SecretKeyRingProtector.unprotectedKeys()` will return an empty passphrase for any key.
+It is best used when dealing with unencrypted secret keys.
+
+`SecretKeyRingProtector.unlockAnyKeyWith(passphrase)` will return the same exact passphrase for any given key.
+You should use this if you have a single key with a static passphrase.
+
+The last example shows how to instantiate the `CachingSecretKeyRingProtector` with a `SecretKeyPassphraseProvider`
+as argument.
+As the name suggests, the `CachingSecretKeyRingProtector` caches passphrases it knows about in a map.
+That way, you only have to provide the passphrase for a certain key only once, after which it will be remembered.
 If you try to unlock a protected secret key for which no passphrase is cached, the `getPassphraseFor()` method of
-the `SecretKeyPassphraseProvider` will be called to interactively ask for the missing passphrase. Afterwards, the
-acquired passphrase will be cached for future use.
+the `SecretKeyPassphraseProvider` callback will be called to interactively ask for the missing passphrase.
+Afterwards, the acquired passphrase will be cached for future use.
+
+:::{note}
+While especially the `CachingSecretKeyRingProtector` can handle multiple keys without problems, it is advised
+to use individual `SecretKeyRingProtector` objects per key.
+The reason for this is, that internally the 64bit key-id is used to resolve `Passphrase` objects and collisions are not
+unlikely in this key-space.
+Furthermore, multiple OpenPGP keys could contain the same subkey, but with different passphrases set.
+If the same `SecretKeyRingProtector` is used for two OpenPGP keys with the same subkey, but different passwords,
+the key-id collision will cause the password to be overwritten for one of the keys, which might result in issues.
+:::
 
 Most `SecretKeyRingProtector` implementations can be instantiated with custom `KeyRingProtectionSettings`.
 By default, most implementations use `KeyRingProtectionSettings.secureDefaultSettings()` which corresponds to iterated
