@@ -58,3 +58,13 @@ SecretKeyRingProtector singlePassphrase = SecretKeyRingProtector
 CachingSecretKeyRingProtector flexible = SecretKeyRingProtector
         .defaultSecretKeyRingProtector(passphraseCallback);
 ```
+
+The last example shows how to instantiate the `CachingSecretKeyRingProtector` with a `SecretKeyPassphraseProvider`.
+As the name suggests, the `CachingSecretKeyRingProtector` caches passphrases in a map.
+If you try to unlock a protected secret key for which no passphrase is cached, the `getPassphraseFor()` method of
+the `SecretKeyPassphraseProvider` will be called to interactively ask for the missing passphrase. Afterwards, the
+acquired passphrase will be cached for future use.
+
+Most `SecretKeyRingProtector` implementations can be instantiated with custom `KeyRingProtectionSettings`.
+By default, most implementations use `KeyRingProtectionSettings.secureDefaultSettings()` which corresponds to iterated
+and salted S2K using AES256 and SHA256 with an iteration count of 65536.
