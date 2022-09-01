@@ -258,11 +258,6 @@ public class EncryptionOptions {
             throws BadDataException, BadNameException, IOException {
         String fingerprint = certificateFingerprint.toString().toLowerCase();
         Certificate certificateRecord = certificateStore.getCertificate(fingerprint);
-        // TODO: getCertificate throws NSEE automatically in 0.2.2+
-        //  Remove if statement below when bumping
-        if (certificateRecord == null) {
-            throw new NoSuchElementException("Cannot find certificate '" + certificateFingerprint + "'");
-        }
         PGPPublicKeyRing recipientCertificate = PGPainless.readKeyRing()
                 .publicKeyRing(certificateRecord.getInputStream());
         return addRecipient(recipientCertificate);
