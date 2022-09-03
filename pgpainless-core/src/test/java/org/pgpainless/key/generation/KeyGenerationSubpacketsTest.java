@@ -16,6 +16,7 @@ import java.security.InvalidAlgorithmParameterException;
 import java.security.NoSuchAlgorithmException;
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.Date;
 import java.util.List;
 
 import org.bouncycastle.bcpg.sig.IssuerFingerprint;
@@ -40,7 +41,7 @@ public class KeyGenerationSubpacketsTest {
 
     @Test
     public void verifyDefaultSubpacketsForUserIdSignatures()
-            throws PGPException, InvalidAlgorithmParameterException, NoSuchAlgorithmException, InterruptedException {
+            throws PGPException, InvalidAlgorithmParameterException, NoSuchAlgorithmException {
         PGPSecretKeyRing secretKeys = PGPainless.generateKeyRing().modernKeyRing("Alice");
 
         KeyRingInfo info = PGPainless.inspectKeyRing(secretKeys);
@@ -88,10 +89,9 @@ public class KeyGenerationSubpacketsTest {
 
         assertEquals("Bob", info.getPrimaryUserId());
 
-        // wait one sec so that it is clear that the new certification for alice is the most recent one
-        Thread.sleep(1000);
-
-        secretKeys = PGPainless.modifyKeyRing(secretKeys)
+        Date now = new Date();
+        Date t1 = new Date(now.getTime() + 1000 * 60 * 60);
+        secretKeys = PGPainless.modifyKeyRing(secretKeys, t1)
                 .addUserId("Alice", new SelfSignatureSubpackets.Callback() {
                     @Override
                     public void modifyHashedSubpackets(SelfSignatureSubpackets hashedSubpackets) {
@@ -100,7 +100,7 @@ public class KeyGenerationSubpacketsTest {
                     }
                 }, SecretKeyRingProtector.unprotectedKeys())
                 .done();
-        info = PGPainless.inspectKeyRing(secretKeys);
+        info = PGPainless.inspectKeyRing(secretKeys, t1);
         assertEquals("Alice", info.getPrimaryUserId());
         assertEquals(Collections.singleton(HashAlgorithm.SHA1), info.getPreferredHashAlgorithms("Alice"));
     }

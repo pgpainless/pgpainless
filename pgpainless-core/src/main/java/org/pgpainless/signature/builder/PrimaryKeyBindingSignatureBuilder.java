@@ -10,15 +10,26 @@ import org.bouncycastle.openpgp.PGPException;
 import org.bouncycastle.openpgp.PGPPublicKey;
 import org.bouncycastle.openpgp.PGPSecretKey;
 import org.bouncycastle.openpgp.PGPSignature;
+import org.pgpainless.algorithm.HashAlgorithm;
 import org.pgpainless.algorithm.SignatureType;
 import org.pgpainless.key.protection.SecretKeyRingProtector;
 import org.pgpainless.signature.subpackets.SelfSignatureSubpackets;
+import org.pgpainless.signature.subpackets.SignatureSubpackets;
 
 public class PrimaryKeyBindingSignatureBuilder extends AbstractSignatureBuilder<PrimaryKeyBindingSignatureBuilder> {
 
     public PrimaryKeyBindingSignatureBuilder(PGPSecretKey subkey, SecretKeyRingProtector subkeyProtector)
             throws PGPException {
         super(SignatureType.PRIMARYKEY_BINDING, subkey, subkeyProtector);
+    }
+
+    public PrimaryKeyBindingSignatureBuilder(PGPSecretKey secretSubKey,
+                                             SecretKeyRingProtector subkeyProtector,
+                                             HashAlgorithm hashAlgorithm)
+            throws PGPException {
+        super(SignatureType.PRIMARYKEY_BINDING, secretSubKey, subkeyProtector, hashAlgorithm,
+                SignatureSubpackets.createHashedSubpackets(secretSubKey.getPublicKey()),
+                SignatureSubpackets.createEmptySubpackets());
     }
 
     public SelfSignatureSubpackets getHashedSubpackets() {

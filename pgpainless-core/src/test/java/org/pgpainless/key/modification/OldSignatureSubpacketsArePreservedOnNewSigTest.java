@@ -10,7 +10,6 @@ import static org.junit.jupiter.api.Assertions.assertNotEquals;
 
 import java.security.InvalidAlgorithmParameterException;
 import java.security.NoSuchAlgorithmException;
-import java.util.Calendar;
 import java.util.Date;
 
 import org.bouncycastle.openpgp.PGPException;
@@ -23,12 +22,14 @@ import org.pgpainless.PGPainless;
 import org.pgpainless.key.protection.UnprotectedKeysProtector;
 import org.pgpainless.util.TestAllImplementations;
 
-public class OldSignatureSubpacketsArePreservedOnNewSig {
+public class OldSignatureSubpacketsArePreservedOnNewSigTest {
+
+    private static final long millisInHour = 1000 * 60 * 60;
 
     @TestTemplate
     @ExtendWith(TestAllImplementations.class)
     public void verifyOldSignatureSubpacketsArePreservedOnNewExpirationDateSig()
-            throws InvalidAlgorithmParameterException, NoSuchAlgorithmException, PGPException, InterruptedException {
+            throws InvalidAlgorithmParameterException, NoSuchAlgorithmException, PGPException {
         PGPSecretKeyRing secretKeys = PGPainless.generateKeyRing()
                 .simpleEcKeyRing("Alice <alice@wonderland.lit>");
 
@@ -37,17 +38,14 @@ public class OldSignatureSubpacketsArePreservedOnNewSig {
 
         assertEquals(0, oldPackets.getKeyExpirationTime());
 
-        Thread.sleep(1000);
         Date now = new Date();
-        Calendar calendar = Calendar.getInstance();
-        calendar.setTime(now);
-        calendar.add(Calendar.DATE, 5);
-        Date expiration = calendar.getTime(); // in 5 days
+        Date t1 = new Date(now.getTime() + millisInHour);
+        Date expiration = new Date(now.getTime() + 5 * 24 * millisInHour); // in 5 days
 
-        secretKeys = PGPainless.modifyKeyRing(secretKeys)
+        secretKeys = PGPainless.modifyKeyRing(secretKeys, t1)
                 .setExpirationDate(expiration, new UnprotectedKeysProtector())
                 .done();
-        PGPSignature newSignature = PGPainless.inspectKeyRing(secretKeys).getLatestUserIdCertification("Alice <alice@wonderland.lit>");
+        PGPSignature newSignature = PGPainless.inspectKeyRing(secretKeys, t1).getLatestUserIdCertification("Alice <alice@wonderland.lit>");
         PGPSignatureSubpacketVector newPackets = newSignature.getHashedSubPackets();
 
         assertNotEquals(0, newPackets.getKeyExpirationTime());

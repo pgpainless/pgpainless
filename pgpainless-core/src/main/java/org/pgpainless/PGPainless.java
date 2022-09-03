@@ -127,7 +127,11 @@ public final class PGPainless {
      * @return builder
      */
     public static SecretKeyRingEditorInterface modifyKeyRing(PGPSecretKeyRing secretKeys) {
-        return new SecretKeyRingEditor(secretKeys);
+        return modifyKeyRing(secretKeys, null);
+    }
+
+    public static SecretKeyRingEditorInterface modifyKeyRing(PGPSecretKeyRing secretKeys, Date referenceTime) {
+        return new SecretKeyRingEditor(secretKeys, referenceTime);
     }
 
     /**

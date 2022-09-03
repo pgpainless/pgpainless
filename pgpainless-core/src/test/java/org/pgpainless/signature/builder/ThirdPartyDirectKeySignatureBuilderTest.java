@@ -11,6 +11,7 @@ import static org.junit.jupiter.api.Assertions.assertNotNull;
 import java.security.InvalidAlgorithmParameterException;
 import java.security.NoSuchAlgorithmException;
 import java.util.Collections;
+import java.util.Date;
 
 import org.bouncycastle.openpgp.PGPException;
 import org.bouncycastle.openpgp.PGPSecretKeyRing;
@@ -32,7 +33,7 @@ import org.pgpainless.signature.subpackets.SignatureSubpacketsUtil;
 public class ThirdPartyDirectKeySignatureBuilderTest {
 
     @Test
-    public void testDirectKeySignatureBuilding() throws PGPException, InvalidAlgorithmParameterException, NoSuchAlgorithmException, InterruptedException {
+    public void testDirectKeySignatureBuilding() throws PGPException, InvalidAlgorithmParameterException, NoSuchAlgorithmException {
         PGPSecretKeyRing secretKeys = PGPainless.generateKeyRing()
                 .modernKeyRing("Alice");
 
@@ -40,9 +41,12 @@ public class ThirdPartyDirectKeySignatureBuilderTest {
                 secretKeys.getSecretKey(),
                 SecretKeyRingProtector.unprotectedKeys());
 
+        Date now = new Date();
+        Date t1 = new Date(now.getTime() + 1000 * 60 * 60);
         dsb.applyCallback(new SelfSignatureSubpackets.Callback() {
             @Override
             public void modifyHashedSubpackets(SelfSignatureSubpackets hashedSubpackets) {
+                hashedSubpackets.setSignatureCreationTime(t1);
                 hashedSubpackets.setKeyFlags(KeyFlag.CERTIFY_OTHER);
                 hashedSubpackets.setPreferredHashAlgorithms(HashAlgorithm.SHA512);
                 hashedSubpackets.setPreferredCompressionAlgorithms(CompressionAlgorithm.ZIP);
@@ -51,13 +55,11 @@ public class ThirdPartyDirectKeySignatureBuilderTest {
             }
         });
 
-        Thread.sleep(1000);
-
         PGPSignature directKeySig = dsb.build(secretKeys.getPublicKey());
         assertNotNull(directKeySig);
         secretKeys = KeyRingUtils.injectCertification(secretKeys, secretKeys.getPublicKey(), directKeySig);
 
-        KeyRingInfo info = PGPainless.inspectKeyRing(secretKeys);
+        KeyRingInfo info = PGPainless.inspectKeyRing(secretKeys, t1);
         PGPSignature signature = info.getLatestDirectKeySelfSignature();
 
         assertNotNull(signature);
