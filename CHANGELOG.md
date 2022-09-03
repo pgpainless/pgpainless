@@ -14,6 +14,9 @@ SPDX-License-Identifier: CC0-1.0
 - Add `SigningOptions.addDetachedSignature(protector, key)` shortcut method
 - Add `EncryptionOptions.get()`, `ConsumerOptions.get()` factory methods
 - Add support for generating keys without user-id (only using `PGPainless.buildKeyRing()` for now)
+- Switch to `SHA256` as default `S2K` hash algorithm for secret key protection
+- Allow to set custom reference time when modifying secret keys
+- Add diagnostic test to explore system PRNG performance
 
 ## 1.3.5
 - Add `KeyRingInfo.isCapableOfSigning()`
