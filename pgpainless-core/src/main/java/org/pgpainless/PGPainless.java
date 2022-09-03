@@ -118,8 +118,8 @@ public final class PGPainless {
     }
 
     /**
-     * Make changes to a key ring.
-     * This method can be used to change key expiration dates and passphrases, or add/remove/revoke subkeys.
+     * Make changes to a secret key.
+     * This method can be used to change key expiration dates and passphrases, or add/revoke subkeys.
      *
      * After making the desired changes in the builder, the modified key ring can be extracted using {@link SecretKeyRingEditorInterface#done()}.
      *
@@ -130,6 +130,16 @@ public final class PGPainless {
         return modifyKeyRing(secretKeys, null);
     }
 
+    /**
+     * Make changes to a secret key at the given reference time.
+     * This method can be used to change key expiration dates and passphrases, or add/revoke user-ids and subkeys.
+     *
+     * After making the desired changes in the builder, the modified key can be extracted using {@link SecretKeyRingEditorInterface#done()}.
+     *
+     * @param secretKeys secret key ring
+     * @param referenceTime reference time used as signature creation date
+     * @return builder
+     */
     public static SecretKeyRingEditorInterface modifyKeyRing(PGPSecretKeyRing secretKeys, Date referenceTime) {
         return new SecretKeyRingEditor(secretKeys, referenceTime);
     }
