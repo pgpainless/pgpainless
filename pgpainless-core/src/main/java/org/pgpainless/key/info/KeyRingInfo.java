@@ -85,10 +85,10 @@ public class KeyRingInfo {
      * Evaluate the key ring at the provided validation date.
      *
      * @param keys key ring
-     * @param validationDate date of validation
+     * @param referenceDate date of validation
      */
-    public KeyRingInfo(PGPKeyRing keys, Date validationDate) {
-        this(keys, PGPainless.getPolicy(), validationDate);
+    public KeyRingInfo(PGPKeyRing keys, Date referenceDate) {
+        this(keys, PGPainless.getPolicy(), referenceDate);
     }
 
     /**
@@ -96,12 +96,12 @@ public class KeyRingInfo {
      *
      * @param keys key ring
      * @param policy policy
-     * @param validationDate validation date
+     * @param referenceDate validation date
      */
-    public KeyRingInfo(PGPKeyRing keys, Policy policy, Date validationDate) {
+    public KeyRingInfo(PGPKeyRing keys, Policy policy, Date referenceDate) {
+        this.referenceDate = referenceDate != null ? referenceDate : new Date();
         this.keys = keys;
-        this.signatures = new Signatures(keys, validationDate, policy);
-        this.referenceDate = validationDate;
+        this.signatures = new Signatures(keys, this.referenceDate, policy);
         this.primaryUserId = findPrimaryUserId();
         this.revocationState = findRevocationState();
     }
