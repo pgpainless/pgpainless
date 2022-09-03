@@ -163,11 +163,11 @@ public final class PGPainless {
      * This method can be used to determine expiration dates, key flags and other information about a key at a specific time.
      *
      * @param keyRing key ring
-     * @param inspectionDate date of inspection
+     * @param referenceTime date of inspection
      * @return access object
      */
-    public static KeyRingInfo inspectKeyRing(PGPKeyRing keyRing, Date inspectionDate) {
-        return new KeyRingInfo(keyRing, inspectionDate);
+    public static KeyRingInfo inspectKeyRing(PGPKeyRing keyRing, Date referenceTime) {
+        return new KeyRingInfo(keyRing, referenceTime);
     }
 
     /**
