@@ -238,7 +238,21 @@ public final class KeyRingUtils {
     }
 
     /**
-     * Inject a key certification into the given key ring.
+     * Inject a key certification for the primary key into the given key ring.
+     *
+     * @param keyRing key ring
+     * @param certification key signature
+     * @return key ring with injected signature
+     * @param <T> either {@link PGPPublicKeyRing} or {@link PGPSecretKeyRing}
+     */
+    @Nonnull
+    public static <T extends PGPKeyRing> T injectCertification(@Nonnull T keyRing,
+                                                               @Nonnull PGPSignature certification) {
+        return injectCertification(keyRing, keyRing.getPublicKey(), certification);
+    }
+
+    /**
+     * Inject a key certification for the given key into the given key ring.
      *
      * @param keyRing key ring
      * @param certifiedKey signed public key
