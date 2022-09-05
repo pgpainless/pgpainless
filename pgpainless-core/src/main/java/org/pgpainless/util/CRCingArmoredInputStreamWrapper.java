@@ -27,18 +27,6 @@ public class CRCingArmoredInputStreamWrapper extends ArmoredInputStream {
         this.inputStream = inputStream;
     }
 
-    public static InputStream possiblyWrap(InputStream inputStream) throws IOException {
-        if (inputStream instanceof CRCingArmoredInputStreamWrapper) {
-            return inputStream;
-        }
-
-        if (inputStream instanceof ArmoredInputStream) {
-            return new CRCingArmoredInputStreamWrapper((ArmoredInputStream) inputStream);
-        }
-
-        return inputStream;
-    }
-
     @Override
     public boolean isClearText() {
         return inputStream.isClearText();
