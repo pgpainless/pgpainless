@@ -17,7 +17,15 @@ To build:
 $ make {html|epub|latexpdf}
 ```
 
-Note: Building diagrams from source requires `mermaid-cli` to be installed.
+Note: Diagrams are currently not built from source.
+Instead, pre-built image files are used directly, because there are issues with mermaid in CLI systems.
+
+If you want to build the diagrams from source, you need `mermaid-cli` to be installed on your system.
 ```shell
 $ npm install -g @mermaid-js/mermaid-cli
+```
+
+You can then use `mmdc` to build/update single diagram files like this:
+```shell
+mmdc --theme default --width 1600 --backgroundColor transparent -i ecosystem_dia.md -o ecosystem_dia.svg
 ```
