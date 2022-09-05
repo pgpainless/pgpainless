@@ -20,6 +20,11 @@ PGPainless' goal is to empower you to use OpenPGP without needing to write all t
 Bouncy Castle.
 It aims to be secure by default while allowing customization if required.
 
+From its inception in 2018 as part of a `Google Summer of Code project <https://summerofcode.withgoogle.com/archive/2018/projects/6037508810866688>`_,
+the library was steadily advanced.
+Since 2020, FlowCrypt is the primary sponsor of its development.
+In 2022, PGPainless received a `grant from NLnet for creating a Web-of-Trust implementation <https://nlnet.nl/project/PGPainless/>`_ as part of NGI Assure.
+
 
 Contents
 --------
