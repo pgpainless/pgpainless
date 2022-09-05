@@ -81,6 +81,7 @@ unlikely in this key-space.
 Furthermore, multiple OpenPGP keys could contain the same subkey, but with different passphrases set.
 If the same `SecretKeyRingProtector` is used for two OpenPGP keys with the same subkey, but different passwords,
 the key-id collision will cause the password to be overwritten for one of the keys, which might result in issues.
+See `FLO-04-004 WP2` of the [2021 security audit](https://cure53.de/pentest-report_pgpainless.pdf) for more details.
 :::
 
 Most `SecretKeyRingProtector` implementations can be instantiated with custom `KeyRingProtectionSettings`.
