@@ -67,6 +67,7 @@ public abstract class SignatureInputStream extends FilterInputStream {
             final int data = super.read();
             final boolean endOfStream = data == -1;
             if (endOfStream) {
+                parseAndCombineSignatures();
                 verifyOnePassSignatures();
                 verifyDetachedSignatures();
             } else {
