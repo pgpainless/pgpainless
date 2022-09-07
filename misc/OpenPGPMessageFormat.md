@@ -21,12 +21,17 @@ graph LR
     pgpmsg -- "OnePassSignature,m/o" --> ops((One-Pass-Signed Message))
     ops -- "ε,ε/m" --> pgpmsg
     pgpmsg -- "Signature,m/m" --> pgpmsg
-    pgpmsg -. "Compressed Data,m/m" .-> pgpmsg
+    pgpmsg -- "Compressed Data,m/ε" --> comp((Compressed Message))
+    comp -. "ε,ε/m" .-> pgpmsg
+    comp -- "ε,#/ε" --> accept
+    comp -- "Signature,o/ε" --> sig4ops
     pgpmsg -- "SKESK|PKESK,m/k" --> esks((ESKs))
-    pgpmsg -- "Sym. Enc. (Int. Prot.) Data,m/e" --> enc
+    pgpmsg -- "Sym. Enc. (Int. Prot.) Data,m/ε" --> enc
     esks -- "SKESK|PKESK,k/k" --> esks
-    esks -- "Sym. Enc. (Int. Prot.) Data,k/e" --> enc((Encrypted Data))
-    enc -. "ε,e/m" .-> pgpmsg
+    esks -- "Sym. Enc. (Int. Prot.) Data,k/ε" --> enc((Encrypted Message))
+    enc -. "ε,ε/m" .-> pgpmsg
+    enc -- "ε,#/ε" --> accept
+    enc -- "Signature,o/ε" --> sig4ops
 ```
 
 The dotted line indicates a nested transition.
