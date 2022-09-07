@@ -28,3 +28,7 @@ graph LR
     esks -- "Sym. Enc. (Int. Prot.) Data,k/e" --> enc((Encrypted Data))
     enc -. "ε,e/m" .-> pgpmsg
 ```
+
+The dotted line indicates a nested transition.
+For example the arrow `Compressed Data,m/m` indicates, that the content of the Compressed Data packet itself
+is an OpenPGP Message.
