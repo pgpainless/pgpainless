@@ -67,9 +67,7 @@ public abstract class SignatureInputStream extends FilterInputStream {
             final int data = super.read();
             final boolean endOfStream = data == -1;
             if (endOfStream) {
-                parseAndCombineSignatures();
-                verifyOnePassSignatures();
-                verifyDetachedSignatures();
+                finalizeSignatures();
             } else {
                 byte b = (byte) data;
                 updateOnePassSignatures(b);
@@ -84,14 +82,18 @@ public abstract class SignatureInputStream extends FilterInputStream {
 
             final boolean endOfStream = read == -1;
             if (endOfStream) {
-                parseAndCombineSignatures();
-                verifyOnePassSignatures();
-                verifyDetachedSignatures();
+                finalizeSignatures();
             } else {
                 updateOnePassSignatures(b, off, read);
                 updateDetachedSignatures(b, off, read);
             }
             return read;
+        }
+
+        private void finalizeSignatures() {
+            parseAndCombineSignatures();
+            verifyOnePassSignatures();
+            verifyDetachedSignatures();
         }
 
         public void parseAndCombineSignatures() {
