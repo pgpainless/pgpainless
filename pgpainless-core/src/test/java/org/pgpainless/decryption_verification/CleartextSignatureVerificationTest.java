@@ -41,7 +41,7 @@ import org.pgpainless.key.protection.SecretKeyRingProtector;
 import org.pgpainless.signature.consumer.CertificateValidator;
 import org.pgpainless.signature.SignatureUtils;
 import org.pgpainless.signature.consumer.SignatureVerifier;
-import org.pgpainless.util.ArmorUtils;
+import org.pgpainless.ascii_armor.ArmorUtils;
 import org.pgpainless.util.TestUtils;
 
 public class CleartextSignatureVerificationTest {

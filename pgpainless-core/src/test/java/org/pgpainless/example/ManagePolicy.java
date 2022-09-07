@@ -17,7 +17,7 @@ import org.pgpainless.PGPainless;
 import org.pgpainless.algorithm.HashAlgorithm;
 import org.pgpainless.algorithm.PublicKeyAlgorithm;
 import org.pgpainless.policy.Policy;
-import org.pgpainless.util.NotationRegistry;
+import org.pgpainless.policy.NotationRegistry;
 
 /**
  * PGPainless comes with an algorithm policy.

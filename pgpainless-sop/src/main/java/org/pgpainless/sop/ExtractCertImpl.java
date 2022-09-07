@@ -15,7 +15,7 @@ import org.bouncycastle.openpgp.PGPPublicKeyRing;
 import org.bouncycastle.openpgp.PGPSecretKeyRing;
 import org.bouncycastle.openpgp.PGPSecretKeyRingCollection;
 import org.pgpainless.PGPainless;
-import org.pgpainless.util.ArmorUtils;
+import org.pgpainless.ascii_armor.ArmorUtils;
 import sop.Ready;
 import sop.exception.SOPGPException;
 import sop.operation.ExtractCert;

@@ -16,7 +16,7 @@ import org.bouncycastle.openpgp.PGPSecretKeyRing;
 import org.junit.jupiter.api.Test;
 import org.pgpainless.key.TestKeys;
 import org.pgpainless.key.protection.passphrase_provider.MapBasedPassphraseProvider;
-import org.pgpainless.util.Passphrase;
+import org.pgpainless.s2k.Passphrase;
 
 public class MapBasedPassphraseProviderTest {
 

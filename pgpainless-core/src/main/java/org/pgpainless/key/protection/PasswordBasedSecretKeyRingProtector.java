@@ -12,7 +12,7 @@ import org.bouncycastle.openpgp.PGPSecretKey;
 import org.bouncycastle.openpgp.operator.PBESecretKeyDecryptor;
 import org.bouncycastle.openpgp.operator.PBESecretKeyEncryptor;
 import org.pgpainless.key.protection.passphrase_provider.SecretKeyPassphraseProvider;
-import org.pgpainless.util.Passphrase;
+import org.pgpainless.s2k.Passphrase;
 
 /**
  * Provides {@link PBESecretKeyDecryptor} and {@link PBESecretKeyEncryptor} objects while getting the passphrases

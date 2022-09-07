@@ -9,7 +9,7 @@ import org.bouncycastle.openpgp.operator.PBESecretKeyDecryptor;
 import org.bouncycastle.openpgp.operator.PBESecretKeyEncryptor;
 import org.pgpainless.implementation.ImplementationFactory;
 import org.pgpainless.key.protection.passphrase_provider.SecretKeyPassphraseProvider;
-import org.pgpainless.util.Passphrase;
+import org.pgpainless.s2k.Passphrase;
 
 import javax.annotation.Nullable;
 

@@ -38,9 +38,9 @@ import org.pgpainless.algorithm.negotiation.HashAlgorithmNegotiator;
 import org.pgpainless.implementation.ImplementationFactory;
 import org.pgpainless.key.OpenPgpFingerprint;
 import org.pgpainless.key.util.OpenPgpKeyAttributeUtil;
-import org.pgpainless.key.util.RevocationAttributes;
+import org.pgpainless.key.RevocationAttributes;
 import org.pgpainless.signature.subpackets.SignatureSubpacketsUtil;
-import org.pgpainless.util.ArmorUtils;
+import org.pgpainless.ascii_armor.ArmorUtils;
 
 /**
  * Utility methods related to signatures.

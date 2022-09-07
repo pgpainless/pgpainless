@@ -8,6 +8,16 @@ SPDX-License-Identifier: CC0-1.0
 ## 1.3.7-SNAPSHOT
 - Add `KeyRingUtils.injectCertification(keys, certification)`
 - Bugfix: Fix signature verification when `DecryptionStream` is drained byte-by-byte using `read()` call
+- Refactoring:
+  - Move `ArmorUtils` to `org.pgpainless.ascii_armor` package
+  - Move `ArmoredInputStreamFactory` to `org.pgpainless.ascii_armor` package
+  - Move `ArmoredOutputStreamFactory` to `org.pgpainless.ascii_armor` package
+  - Move `CRCingArmoredInputStreamWrwapper` to `org.pgpainless.ascii_armor` package
+  - Move `SessionKey` to `org.pgpainless.s2k` package
+  - Move `RevocationAttributes` to `org.pgpainless.key` package
+  - Move `UserId` to `org.pgpainless.key` package
+  - Move `Passphrase` to `org.pgpainless.s2k` package
+  - Move `NotationRegistry` to `org.pgpainless.policy` package
 
 ## 1.3.6
 - Remove deprecated methods

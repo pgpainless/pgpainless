@@ -16,7 +16,7 @@ import org.bouncycastle.openpgp.PGPSecretKeyRingCollection;
 import org.bouncycastle.openpgp.PGPUtil;
 import org.bouncycastle.openpgp.operator.KeyFingerPrintCalculator;
 import org.bouncycastle.openpgp.operator.bc.BcKeyFingerprintCalculator;
-import org.pgpainless.util.Passphrase;
+import org.pgpainless.s2k.Passphrase;
 
 public class TestKeys {
 

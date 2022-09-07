@@ -19,7 +19,7 @@ import org.junit.jupiter.api.Test;
 import org.pgpainless.PGPainless;
 import org.pgpainless.key.info.KeyRingInfo;
 import org.pgpainless.key.protection.SecretKeyRingProtector;
-import org.pgpainless.key.util.RevocationAttributes;
+import org.pgpainless.key.RevocationAttributes;
 import org.pgpainless.util.selection.userid.SelectUserId;
 
 public class RevokeUserIdsTest {

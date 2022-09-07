@@ -27,7 +27,7 @@ import org.pgpainless.exception.KeyException;
 import org.pgpainless.exception.WrongPassphraseException;
 import org.pgpainless.key.OpenPgpFingerprint;
 import org.pgpainless.key.info.KeyRingInfo;
-import org.pgpainless.util.Passphrase;
+import org.pgpainless.s2k.Passphrase;
 import sop.Ready;
 import sop.enums.EncryptAs;
 import sop.exception.SOPGPException;

@@ -23,7 +23,7 @@ import org.bouncycastle.openpgp.PGPPBEEncryptedData;
 import org.bouncycastle.openpgp.PGPPublicKeyEncryptedData;
 import org.bouncycastle.openpgp.PGPUtil;
 import org.pgpainless.implementation.ImplementationFactory;
-import org.pgpainless.util.ArmorUtils;
+import org.pgpainless.ascii_armor.ArmorUtils;
 
 /**
  * Inspect an OpenPGP message to determine IDs of its encryption keys or whether it is passphrase protected.

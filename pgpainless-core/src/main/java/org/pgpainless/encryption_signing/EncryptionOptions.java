@@ -29,7 +29,7 @@ import org.pgpainless.key.OpenPgpFingerprint;
 import org.pgpainless.key.SubkeyIdentifier;
 import org.pgpainless.key.info.KeyAccessor;
 import org.pgpainless.key.info.KeyRingInfo;
-import org.pgpainless.util.Passphrase;
+import org.pgpainless.s2k.Passphrase;
 
 /**
  * Options for the encryption process.

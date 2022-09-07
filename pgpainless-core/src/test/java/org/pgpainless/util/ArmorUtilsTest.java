@@ -34,11 +34,15 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.pgpainless.PGPainless;
 import org.pgpainless.algorithm.HashAlgorithm;
 import org.pgpainless.algorithm.KeyFlag;
+import org.pgpainless.ascii_armor.ArmorUtils;
+import org.pgpainless.ascii_armor.ArmoredInputStreamFactory;
+import org.pgpainless.ascii_armor.ArmoredOutputStreamFactory;
 import org.pgpainless.implementation.ImplementationFactory;
 import org.pgpainless.key.TestKeys;
 import org.pgpainless.key.generation.KeySpec;
 import org.pgpainless.key.generation.type.ecc.EllipticCurve;
 import org.pgpainless.key.generation.type.ecc.ecdsa.ECDSA;
+import org.pgpainless.s2k.Passphrase;
 
 public class ArmorUtilsTest {
 

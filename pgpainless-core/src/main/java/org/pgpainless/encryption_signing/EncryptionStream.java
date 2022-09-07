@@ -26,8 +26,8 @@ import org.pgpainless.algorithm.StreamEncoding;
 import org.pgpainless.algorithm.SymmetricKeyAlgorithm;
 import org.pgpainless.implementation.ImplementationFactory;
 import org.pgpainless.key.SubkeyIdentifier;
-import org.pgpainless.util.ArmorUtils;
-import org.pgpainless.util.ArmoredOutputStreamFactory;
+import org.pgpainless.ascii_armor.ArmorUtils;
+import org.pgpainless.ascii_armor.ArmoredOutputStreamFactory;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 

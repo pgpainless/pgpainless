@@ -7,7 +7,7 @@ package org.pgpainless.key.protection.passphrase_provider;
 import javax.annotation.Nullable;
 
 import org.bouncycastle.openpgp.PGPSecretKey;
-import org.pgpainless.util.Passphrase;
+import org.pgpainless.s2k.Passphrase;
 
 /**
  * Interface to allow the user to provide a {@link Passphrase} for an encrypted OpenPGP secret key.

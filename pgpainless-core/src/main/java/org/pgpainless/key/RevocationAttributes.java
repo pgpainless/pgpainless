@@ -2,7 +2,7 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
-package org.pgpainless.key.util;
+package org.pgpainless.key;
 
 import javax.annotation.Nonnull;
 import java.util.Map;

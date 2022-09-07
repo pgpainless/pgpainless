@@ -33,7 +33,7 @@ import org.pgpainless.key.generation.type.xdh.XDHSpec;
 import org.pgpainless.key.protection.PasswordBasedSecretKeyRingProtector;
 import org.pgpainless.key.protection.SecretKeyRingProtector;
 import org.pgpainless.key.protection.UnprotectedKeysProtector;
-import org.pgpainless.key.util.RevocationAttributes;
+import org.pgpainless.key.RevocationAttributes;
 
 public class UserIdRevocationTest {
 

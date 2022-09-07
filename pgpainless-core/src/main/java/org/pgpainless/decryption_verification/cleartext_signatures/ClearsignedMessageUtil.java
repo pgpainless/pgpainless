@@ -16,7 +16,7 @@ import org.bouncycastle.openpgp.PGPSignatureList;
 import org.bouncycastle.util.Strings;
 import org.pgpainless.exception.WrongConsumingMethodException;
 import org.pgpainless.implementation.ImplementationFactory;
-import org.pgpainless.util.ArmoredInputStreamFactory;
+import org.pgpainless.ascii_armor.ArmoredInputStreamFactory;
 
 /**
  * Utility class to deal with cleartext-signed messages.

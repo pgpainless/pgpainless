@@ -11,8 +11,8 @@ import javax.annotation.Nonnull;
 
 import org.bouncycastle.openpgp.PGPException;
 import org.bouncycastle.openpgp.PGPSecretKeyRing;
-import org.pgpainless.key.util.UserId;
-import org.pgpainless.util.Passphrase;
+import org.pgpainless.key.UserId;
+import org.pgpainless.s2k.Passphrase;
 
 public interface KeyRingBuilderInterface<B extends KeyRingBuilderInterface<B>> {
 

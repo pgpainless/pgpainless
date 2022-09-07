@@ -21,7 +21,7 @@ import org.pgpainless.PGPainless;
 import org.pgpainless.key.protection.CachingSecretKeyRingProtector;
 import org.pgpainless.key.protection.SecretKeyRingProtector;
 import org.pgpainless.key.protection.passphrase_provider.SecretKeyPassphraseProvider;
-import org.pgpainless.util.Passphrase;
+import org.pgpainless.s2k.Passphrase;
 
 public class PostponeDecryptionUsingKeyWithMissingPassphraseTest {
 

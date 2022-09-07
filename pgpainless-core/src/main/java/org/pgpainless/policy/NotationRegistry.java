@@ -2,7 +2,7 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
-package org.pgpainless.util;
+package org.pgpainless.policy;
 
 import java.util.HashSet;
 import java.util.Set;

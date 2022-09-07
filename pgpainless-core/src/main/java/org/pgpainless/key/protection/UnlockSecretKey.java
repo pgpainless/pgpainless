@@ -13,7 +13,7 @@ import org.pgpainless.exception.KeyIntegrityException;
 import org.pgpainless.exception.WrongPassphraseException;
 import org.pgpainless.key.info.KeyInfo;
 import org.pgpainless.key.util.PublicKeyParameterValidationUtil;
-import org.pgpainless.util.Passphrase;
+import org.pgpainless.s2k.Passphrase;
 
 public final class UnlockSecretKey {
 

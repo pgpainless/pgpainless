@@ -14,7 +14,7 @@ import org.pgpainless.key.generation.KeySpec;
 import org.pgpainless.key.generation.type.KeyType;
 import org.pgpainless.key.generation.type.ecc.EllipticCurve;
 import org.pgpainless.key.generation.type.eddsa.EdDSACurve;
-import org.pgpainless.util.ArmorUtils;
+import org.pgpainless.ascii_armor.ArmorUtils;
 import sop.SOP;
 import sop.exception.SOPGPException;
 

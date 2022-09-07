@@ -32,7 +32,7 @@ import org.pgpainless.key.info.KeyRingInfo;
 import org.pgpainless.key.protection.SecretKeyRingProtector;
 import org.pgpainless.key.protection.UnlockSecretKey;
 import org.pgpainless.util.DateUtil;
-import org.pgpainless.util.Passphrase;
+import org.pgpainless.s2k.Passphrase;
 
 /**
  * PGPainless offers a simple API to modify keys by adding and replacing signatures and/or subkeys.

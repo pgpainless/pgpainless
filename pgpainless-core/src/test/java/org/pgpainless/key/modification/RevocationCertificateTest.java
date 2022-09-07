@@ -18,7 +18,7 @@ import org.pgpainless.PGPainless;
 import org.pgpainless.key.TestKeys;
 import org.pgpainless.key.protection.SecretKeyRingProtector;
 import org.pgpainless.key.util.KeyRingUtils;
-import org.pgpainless.key.util.RevocationAttributes;
+import org.pgpainless.key.RevocationAttributes;
 
 public class RevocationCertificateTest {
 

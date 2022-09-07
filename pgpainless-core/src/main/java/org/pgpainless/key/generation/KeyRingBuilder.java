@@ -50,7 +50,7 @@ import org.pgpainless.provider.ProviderFactory;
 import org.pgpainless.signature.subpackets.SelfSignatureSubpackets;
 import org.pgpainless.signature.subpackets.SignatureSubpackets;
 import org.pgpainless.signature.subpackets.SignatureSubpacketsHelper;
-import org.pgpainless.util.Passphrase;
+import org.pgpainless.s2k.Passphrase;
 
 public class KeyRingBuilder implements KeyRingBuilderInterface<KeyRingBuilder> {
 

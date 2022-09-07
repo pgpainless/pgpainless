@@ -15,7 +15,7 @@ import java.security.NoSuchAlgorithmException;
 import org.bouncycastle.openpgp.PGPException;
 import org.junit.jupiter.api.Test;
 import org.pgpainless.PGPainless;
-import org.pgpainless.util.ArmorUtils;
+import org.pgpainless.ascii_armor.ArmorUtils;
 import sop.enums.ArmorLabel;
 import sop.exception.SOPGPException;
 

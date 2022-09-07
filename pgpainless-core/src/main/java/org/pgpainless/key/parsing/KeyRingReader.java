@@ -24,7 +24,7 @@ import org.bouncycastle.openpgp.PGPSecretKeyRingCollection;
 import org.bouncycastle.util.io.Streams;
 import org.pgpainless.implementation.ImplementationFactory;
 import org.pgpainless.key.collection.PGPKeyRingCollection;
-import org.pgpainless.util.ArmorUtils;
+import org.pgpainless.ascii_armor.ArmorUtils;
 
 public class KeyRingReader {
 

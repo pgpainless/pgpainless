@@ -21,7 +21,6 @@ import org.pgpainless.algorithm.HashAlgorithm;
 import org.pgpainless.algorithm.PublicKeyAlgorithm;
 import org.pgpainless.algorithm.SymmetricKeyAlgorithm;
 import org.pgpainless.util.DateUtil;
-import org.pgpainless.util.NotationRegistry;
 
 /**
  * Policy class used to configure acceptable algorithm suites etc.

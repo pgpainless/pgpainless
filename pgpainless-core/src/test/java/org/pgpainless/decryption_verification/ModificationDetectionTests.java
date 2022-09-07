@@ -25,7 +25,7 @@ import org.pgpainless.exception.MessageNotIntegrityProtectedException;
 import org.pgpainless.exception.ModificationDetectionException;
 import org.pgpainless.key.protection.SecretKeyRingProtector;
 import org.pgpainless.util.TestAllImplementations;
-import org.pgpainless.util.Passphrase;
+import org.pgpainless.s2k.Passphrase;
 
 public class ModificationDetectionTests {
 

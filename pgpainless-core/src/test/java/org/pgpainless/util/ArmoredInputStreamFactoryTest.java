@@ -6,6 +6,8 @@ package org.pgpainless.util;
 
 import org.bouncycastle.bcpg.ArmoredInputStream;
 import org.junit.jupiter.api.Test;
+import org.pgpainless.ascii_armor.ArmoredInputStreamFactory;
+import org.pgpainless.ascii_armor.CRCingArmoredInputStreamWrapper;
 
 import java.io.ByteArrayInputStream;
 import java.io.IOException;

@@ -5,7 +5,6 @@
 package org.pgpainless.key;
 
 import org.junit.jupiter.api.Test;
-import org.pgpainless.key.util.UserId;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotEquals;

@@ -17,7 +17,7 @@ import org.pgpainless.algorithm.KeyFlag;
 import org.pgpainless.key.generation.type.KeyType;
 import org.pgpainless.key.generation.type.rsa.RsaLength;
 import org.pgpainless.util.TestAllImplementations;
-import org.pgpainless.util.Passphrase;
+import org.pgpainless.s2k.Passphrase;
 
 /**
  * Reproduce behavior of https://github.com/pgpainless/pgpainless/issues/16

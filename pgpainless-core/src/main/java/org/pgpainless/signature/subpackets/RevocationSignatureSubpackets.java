@@ -8,7 +8,7 @@ import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
 
 import org.bouncycastle.bcpg.sig.RevocationReason;
-import org.pgpainless.key.util.RevocationAttributes;
+import org.pgpainless.key.RevocationAttributes;
 
 public interface RevocationSignatureSubpackets extends BaseSignatureSubpackets {
 

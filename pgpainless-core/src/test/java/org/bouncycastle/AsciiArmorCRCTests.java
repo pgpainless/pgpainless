@@ -26,8 +26,8 @@ import org.pgpainless.decryption_verification.DecryptionStream;
 import org.pgpainless.key.OpenPgpV4Fingerprint;
 import org.pgpainless.key.protection.SecretKeyRingProtector;
 import org.pgpainless.signature.SignatureUtils;
-import org.pgpainless.util.ArmoredInputStreamFactory;
-import org.pgpainless.util.Passphrase;
+import org.pgpainless.ascii_armor.ArmoredInputStreamFactory;
+import org.pgpainless.s2k.Passphrase;
 
 public class AsciiArmorCRCTests {
 

@@ -5,6 +5,7 @@
 package org.pgpainless.key.util;
 
 import org.junit.jupiter.api.Test;
+import org.pgpainless.key.RevocationAttributes;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;

@@ -35,7 +35,7 @@ import org.pgpainless.key.generation.type.KeyType;
 import org.pgpainless.key.generation.type.eddsa.EdDSACurve;
 import org.pgpainless.key.generation.type.xdh.XDHSpec;
 import org.pgpainless.key.util.KeyRingUtils;
-import org.pgpainless.util.Passphrase;
+import org.pgpainless.s2k.Passphrase;
 
 public class EncryptionOptionsTest {
 

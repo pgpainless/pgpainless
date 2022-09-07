@@ -28,7 +28,7 @@ import org.pgpainless.cli.TestUtils;
 import org.pgpainless.key.info.KeyInfo;
 import org.pgpainless.key.info.KeyRingInfo;
 import org.pgpainless.key.protection.UnlockSecretKey;
-import org.pgpainless.util.Passphrase;
+import org.pgpainless.s2k.Passphrase;
 
 public class GenerateCertCmdTest {
 

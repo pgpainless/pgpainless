@@ -2,7 +2,7 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
-package org.pgpainless.util;
+package org.pgpainless.ascii_armor;
 
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
@@ -32,6 +32,8 @@ import org.bouncycastle.util.io.Streams;
 import org.pgpainless.algorithm.HashAlgorithm;
 import org.pgpainless.decryption_verification.OpenPgpInputStream;
 import org.pgpainless.key.OpenPgpFingerprint;
+import org.pgpainless.util.MultiMap;
+import org.pgpainless.util.Tuple;
 
 public final class ArmorUtils {
 

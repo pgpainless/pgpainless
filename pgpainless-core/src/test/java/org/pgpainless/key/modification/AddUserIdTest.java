@@ -26,9 +26,9 @@ import org.pgpainless.key.info.KeyRingInfo;
 import org.pgpainless.key.protection.PasswordBasedSecretKeyRingProtector;
 import org.pgpainless.key.protection.SecretKeyRingProtector;
 import org.pgpainless.key.protection.UnprotectedKeysProtector;
-import org.pgpainless.key.util.UserId;
+import org.pgpainless.key.UserId;
 import org.pgpainless.util.TestAllImplementations;
-import org.pgpainless.util.Passphrase;
+import org.pgpainless.s2k.Passphrase;
 
 public class AddUserIdTest {
 

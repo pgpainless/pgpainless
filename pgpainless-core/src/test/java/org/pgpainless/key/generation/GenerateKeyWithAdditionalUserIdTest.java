@@ -24,7 +24,7 @@ import org.pgpainless.algorithm.KeyFlag;
 import org.pgpainless.key.generation.type.KeyType;
 import org.pgpainless.key.generation.type.rsa.RsaLength;
 import org.pgpainless.key.util.KeyRingUtils;
-import org.pgpainless.key.util.UserId;
+import org.pgpainless.key.UserId;
 import org.pgpainless.util.DateUtil;
 import org.pgpainless.util.TestAllImplementations;
 

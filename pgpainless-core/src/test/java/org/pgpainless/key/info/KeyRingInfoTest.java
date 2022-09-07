@@ -49,10 +49,10 @@ import org.pgpainless.key.generation.type.eddsa.EdDSACurve;
 import org.pgpainless.key.protection.SecretKeyRingProtector;
 import org.pgpainless.key.protection.UnprotectedKeysProtector;
 import org.pgpainless.key.util.KeyRingUtils;
-import org.pgpainless.key.util.RevocationAttributes;
-import org.pgpainless.key.util.UserId;
+import org.pgpainless.key.RevocationAttributes;
+import org.pgpainless.key.UserId;
 import org.pgpainless.util.DateUtil;
-import org.pgpainless.util.Passphrase;
+import org.pgpainless.s2k.Passphrase;
 import org.pgpainless.util.TestAllImplementations;
 
 public class KeyRingInfoTest {
