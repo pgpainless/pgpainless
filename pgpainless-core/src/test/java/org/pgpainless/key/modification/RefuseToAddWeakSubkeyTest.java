@@ -26,7 +26,7 @@ import org.pgpainless.key.generation.type.rsa.RsaLength;
 import org.pgpainless.key.modification.secretkeyring.SecretKeyRingEditorInterface;
 import org.pgpainless.key.protection.SecretKeyRingProtector;
 import org.pgpainless.policy.Policy;
-import org.pgpainless.util.Passphrase;
+import org.pgpainless.s2k.Passphrase;
 
 public class RefuseToAddWeakSubkeyTest {
 

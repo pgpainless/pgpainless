@@ -16,8 +16,8 @@ import org.pgpainless.key.generation.type.KeyType;
 import org.pgpainless.key.generation.type.eddsa.EdDSACurve;
 import org.pgpainless.key.generation.type.rsa.RsaLength;
 import org.pgpainless.key.generation.type.xdh.XDHSpec;
-import org.pgpainless.key.util.UserId;
-import org.pgpainless.util.Passphrase;
+import org.pgpainless.key.UserId;
+import org.pgpainless.s2k.Passphrase;
 
 public final class KeyRingTemplates {
 

@@ -23,7 +23,7 @@ import org.pgpainless.encryption_signing.SigningOptions;
 import org.pgpainless.exception.KeyException;
 import org.pgpainless.key.OpenPgpFingerprint;
 import org.pgpainless.key.info.KeyRingInfo;
-import org.pgpainless.util.Passphrase;
+import org.pgpainless.s2k.Passphrase;
 import sop.Ready;
 import sop.enums.InlineSignAs;
 import sop.exception.SOPGPException;

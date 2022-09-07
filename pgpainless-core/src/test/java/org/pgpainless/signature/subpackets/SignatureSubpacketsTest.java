@@ -53,9 +53,9 @@ import org.pgpainless.implementation.ImplementationFactory;
 import org.pgpainless.key.OpenPgpFingerprint;
 import org.pgpainless.key.TestKeys;
 import org.pgpainless.key.protection.UnlockSecretKey;
-import org.pgpainless.key.util.RevocationAttributes;
+import org.pgpainless.key.RevocationAttributes;
 import org.pgpainless.util.DateUtil;
-import org.pgpainless.util.Passphrase;
+import org.pgpainless.s2k.Passphrase;
 
 public class SignatureSubpacketsTest {
 

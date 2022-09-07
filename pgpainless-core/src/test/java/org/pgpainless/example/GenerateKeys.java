@@ -30,8 +30,8 @@ import org.pgpainless.key.generation.type.ecc.EllipticCurve;
 import org.pgpainless.key.generation.type.eddsa.EdDSACurve;
 import org.pgpainless.key.generation.type.rsa.RsaLength;
 import org.pgpainless.key.info.KeyRingInfo;
-import org.pgpainless.key.util.UserId;
-import org.pgpainless.util.Passphrase;
+import org.pgpainless.key.UserId;
+import org.pgpainless.s2k.Passphrase;
 
 /**
  * This class demonstrates how to use PGPainless to generate secret keys.

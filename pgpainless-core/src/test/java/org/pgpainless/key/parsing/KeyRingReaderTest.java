@@ -40,7 +40,7 @@ import org.pgpainless.key.OpenPgpV4Fingerprint;
 import org.pgpainless.key.collection.PGPKeyRingCollection;
 import org.pgpainless.key.util.KeyRingUtils;
 import org.pgpainless.signature.SignatureUtils;
-import org.pgpainless.util.ArmoredOutputStreamFactory;
+import org.pgpainless.ascii_armor.ArmoredOutputStreamFactory;
 import org.pgpainless.util.TestUtils;
 
 class KeyRingReaderTest {

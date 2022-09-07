@@ -25,7 +25,7 @@ import org.pgpainless.decryption_verification.OpenPgpMetadata;
 import org.pgpainless.decryption_verification.SignatureVerification;
 import org.pgpainless.exception.MissingDecryptionMethodException;
 import org.pgpainless.exception.WrongPassphraseException;
-import org.pgpainless.util.Passphrase;
+import org.pgpainless.s2k.Passphrase;
 import sop.DecryptionResult;
 import sop.ReadyWithResult;
 import sop.SessionKey;
@@ -70,7 +70,7 @@ public class DecryptImpl implements Decrypt {
     @Override
     public DecryptImpl withSessionKey(SessionKey sessionKey) throws SOPGPException.UnsupportedOption {
         consumerOptions.setSessionKey(
-                new org.pgpainless.util.SessionKey(
+                new org.pgpainless.s2k.SessionKey(
                         SymmetricKeyAlgorithm.requireFromId(sessionKey.getAlgorithm()),
                         sessionKey.getKey()));
         return this;
@@ -160,7 +160,7 @@ public class DecryptImpl implements Decrypt {
 
                 SessionKey sessionKey = null;
                 if (metadata.getSessionKey() != null) {
-                    org.pgpainless.util.SessionKey sk = metadata.getSessionKey();
+                    org.pgpainless.s2k.SessionKey sk = metadata.getSessionKey();
                     sessionKey = new SessionKey(
                             (byte) sk.getAlgorithm().getAlgorithmId(),
                             sk.getKey()

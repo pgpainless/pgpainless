@@ -20,7 +20,7 @@ import org.junit.jupiter.api.Test;
 import org.pgpainless.PGPainless;
 import org.pgpainless.key.OpenPgpV4Fingerprint;
 import org.pgpainless.key.util.KeyRingUtils;
-import org.pgpainless.util.ArmorUtils;
+import org.pgpainless.ascii_armor.ArmorUtils;
 
 public class KeyRingCollectionReaderTest {
 

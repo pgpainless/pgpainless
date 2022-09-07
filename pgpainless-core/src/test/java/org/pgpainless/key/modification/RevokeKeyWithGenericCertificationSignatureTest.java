@@ -18,7 +18,7 @@ import org.junit.jupiter.api.TestTemplate;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.pgpainless.PGPainless;
 import org.pgpainless.key.protection.UnprotectedKeysProtector;
-import org.pgpainless.util.ArmoredOutputStreamFactory;
+import org.pgpainless.ascii_armor.ArmoredOutputStreamFactory;
 import org.pgpainless.util.TestAllImplementations;
 
 /**

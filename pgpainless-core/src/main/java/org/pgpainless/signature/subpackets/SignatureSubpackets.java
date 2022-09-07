@@ -48,7 +48,7 @@ import org.pgpainless.algorithm.HashAlgorithm;
 import org.pgpainless.algorithm.KeyFlag;
 import org.pgpainless.algorithm.PublicKeyAlgorithm;
 import org.pgpainless.algorithm.SymmetricKeyAlgorithm;
-import org.pgpainless.key.util.RevocationAttributes;
+import org.pgpainless.key.RevocationAttributes;
 
 public class SignatureSubpackets
         implements BaseSignatureSubpackets, SelfSignatureSubpackets, CertificationSubpackets, RevocationSignatureSubpackets {

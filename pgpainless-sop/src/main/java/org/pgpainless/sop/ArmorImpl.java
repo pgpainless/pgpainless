@@ -11,7 +11,7 @@ import java.io.OutputStream;
 
 import org.bouncycastle.bcpg.ArmoredOutputStream;
 import org.bouncycastle.util.io.Streams;
-import org.pgpainless.util.ArmoredOutputStreamFactory;
+import org.pgpainless.ascii_armor.ArmoredOutputStreamFactory;
 import sop.Ready;
 import sop.enums.ArmorLabel;
 import sop.exception.SOPGPException;

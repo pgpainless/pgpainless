@@ -2,7 +2,7 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
-package org.pgpainless.util;
+package org.pgpainless.s2k;
 
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;

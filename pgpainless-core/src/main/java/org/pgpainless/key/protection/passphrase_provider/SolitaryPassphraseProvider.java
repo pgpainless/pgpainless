@@ -6,7 +6,7 @@ package org.pgpainless.key.protection.passphrase_provider;
 
 import javax.annotation.Nullable;
 
-import org.pgpainless.util.Passphrase;
+import org.pgpainless.s2k.Passphrase;
 
 /**
  * Implementation of the {@link SecretKeyPassphraseProvider} that holds a single {@link Passphrase}.

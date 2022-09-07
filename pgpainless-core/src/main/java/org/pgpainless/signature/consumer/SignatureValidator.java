@@ -33,7 +33,7 @@ import org.pgpainless.policy.Policy;
 import org.pgpainless.signature.SignatureUtils;
 import org.pgpainless.signature.subpackets.SignatureSubpacketsUtil;
 import org.pgpainless.util.DateUtil;
-import org.pgpainless.util.NotationRegistry;
+import org.pgpainless.policy.NotationRegistry;
 
 /**
  * A collection of validators that perform validation steps over signatures.

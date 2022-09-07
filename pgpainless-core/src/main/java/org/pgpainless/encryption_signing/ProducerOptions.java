@@ -12,6 +12,7 @@ import org.bouncycastle.openpgp.PGPLiteralData;
 import org.pgpainless.PGPainless;
 import org.pgpainless.algorithm.CompressionAlgorithm;
 import org.pgpainless.algorithm.StreamEncoding;
+import org.pgpainless.ascii_armor.ArmoredOutputStreamFactory;
 
 public final class ProducerOptions {
 
@@ -120,7 +121,7 @@ public final class ProducerOptions {
      * The default value is null, which means no comment header is added.
      * Multiline comments are possible using '\\n'.
      *
-     * Note: If a default header comment is set using {@link org.pgpainless.util.ArmoredOutputStreamFactory#setComment(String)},
+     * Note: If a default header comment is set using {@link ArmoredOutputStreamFactory#setComment(String)},
      * then both comments will be written to the produced ASCII armor.
      *
      * @param comment comment header text

@@ -37,7 +37,7 @@ import org.pgpainless.key.protection.UnprotectedKeysProtector;
 import org.pgpainless.key.protection.fixes.S2KUsageFix;
 import org.pgpainless.key.protection.passphrase_provider.SolitaryPassphraseProvider;
 import org.pgpainless.key.util.KeyRingUtils;
-import org.pgpainless.key.util.RevocationAttributes;
+import org.pgpainless.key.RevocationAttributes;
 import org.pgpainless.signature.builder.DirectKeySelfSignatureBuilder;
 import org.pgpainless.signature.builder.PrimaryKeyBindingSignatureBuilder;
 import org.pgpainless.signature.builder.RevocationSignatureBuilder;
@@ -48,7 +48,7 @@ import org.pgpainless.signature.subpackets.SelfSignatureSubpackets;
 import org.pgpainless.signature.subpackets.SignatureSubpackets;
 import org.pgpainless.signature.subpackets.SignatureSubpacketsHelper;
 import org.pgpainless.signature.subpackets.SignatureSubpacketsUtil;
-import org.pgpainless.util.Passphrase;
+import org.pgpainless.s2k.Passphrase;
 import org.pgpainless.util.selection.userid.SelectUserId;
 
 import javax.annotation.Nonnull;

@@ -24,7 +24,7 @@ import org.pgpainless.decryption_verification.OpenPgpInputStream;
 import org.pgpainless.decryption_verification.cleartext_signatures.ClearsignedMessageUtil;
 import org.pgpainless.exception.WrongConsumingMethodException;
 import org.pgpainless.implementation.ImplementationFactory;
-import org.pgpainless.util.ArmoredOutputStreamFactory;
+import org.pgpainless.ascii_armor.ArmoredOutputStreamFactory;
 import sop.ReadyWithResult;
 import sop.Signatures;
 import sop.exception.SOPGPException;

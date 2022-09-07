@@ -25,9 +25,9 @@ import org.bouncycastle.openpgp.PGPSignature;
 import org.pgpainless.decryption_verification.cleartext_signatures.InMemoryMultiPassStrategy;
 import org.pgpainless.decryption_verification.cleartext_signatures.MultiPassStrategy;
 import org.pgpainless.key.protection.SecretKeyRingProtector;
+import org.pgpainless.s2k.SessionKey;
 import org.pgpainless.signature.SignatureUtils;
-import org.pgpainless.util.Passphrase;
-import org.pgpainless.util.SessionKey;
+import org.pgpainless.s2k.Passphrase;
 
 /**
  * Options for decryption and signature verification.

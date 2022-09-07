@@ -20,10 +20,10 @@ import org.pgpainless.key.OpenPgpFingerprint;
 import org.pgpainless.key.generation.KeySpec;
 import org.pgpainless.key.protection.KeyRingProtectionSettings;
 import org.pgpainless.key.protection.SecretKeyRingProtector;
-import org.pgpainless.key.util.RevocationAttributes;
+import org.pgpainless.key.RevocationAttributes;
 import org.pgpainless.signature.subpackets.RevocationSignatureSubpackets;
 import org.pgpainless.signature.subpackets.SelfSignatureSubpackets;
-import org.pgpainless.util.Passphrase;
+import org.pgpainless.s2k.Passphrase;
 import org.pgpainless.util.selection.userid.SelectUserId;
 
 public interface SecretKeyRingEditorInterface {

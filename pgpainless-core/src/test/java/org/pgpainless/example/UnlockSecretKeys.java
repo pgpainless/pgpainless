@@ -16,7 +16,7 @@ import org.pgpainless.key.TestKeys;
 import org.pgpainless.key.protection.CachingSecretKeyRingProtector;
 import org.pgpainless.key.protection.SecretKeyRingProtector;
 import org.pgpainless.key.protection.UnlockSecretKey;
-import org.pgpainless.util.Passphrase;
+import org.pgpainless.s2k.Passphrase;
 
 /**
  * {@link PGPSecretKey PGPSecretKeys} are often password protected to prevent unauthorized access.

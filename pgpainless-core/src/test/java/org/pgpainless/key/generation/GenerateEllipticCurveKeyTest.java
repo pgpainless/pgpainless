@@ -21,7 +21,7 @@ import org.pgpainless.key.generation.type.eddsa.EdDSACurve;
 import org.pgpainless.key.generation.type.xdh.XDHSpec;
 import org.pgpainless.key.protection.SecretKeyRingProtector;
 import org.pgpainless.key.protection.UnlockSecretKey;
-import org.pgpainless.key.util.UserId;
+import org.pgpainless.key.UserId;
 import org.pgpainless.util.TestAllImplementations;
 
 public class GenerateEllipticCurveKeyTest {

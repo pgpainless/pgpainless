@@ -46,7 +46,7 @@ import org.pgpainless.key.protection.SecretKeyRingProtector;
 import org.pgpainless.key.protection.UnprotectedKeysProtector;
 import org.pgpainless.key.util.KeyRingUtils;
 import org.pgpainless.policy.Policy;
-import org.pgpainless.util.ArmoredOutputStreamFactory;
+import org.pgpainless.ascii_armor.ArmoredOutputStreamFactory;
 import org.pgpainless.util.TestAllImplementations;
 
 public class EncryptDecryptTest {

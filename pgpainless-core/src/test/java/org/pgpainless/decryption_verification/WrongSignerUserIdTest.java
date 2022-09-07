@@ -42,7 +42,7 @@ import org.pgpainless.PGPainless;
 import org.pgpainless.algorithm.HashAlgorithm;
 import org.pgpainless.key.protection.UnlockSecretKey;
 import org.pgpainless.policy.Policy;
-import org.pgpainless.util.Passphrase;
+import org.pgpainless.s2k.Passphrase;
 
 public class WrongSignerUserIdTest {
 
