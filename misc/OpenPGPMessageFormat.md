@@ -41,32 +41,32 @@ Formally, the PDA is defined as $M = (\mathcal{Q}, \Sigma, \Upgamma, \delta, q_0
 * $\mathcal{Q}$ is a finite set of states
 * $\Sigma$ is a finite set which is called the input alphabet
 * $\Upgamma$ is a finite set which is called the stack alphabet
-* $\delta$ is a finite set of $\mathcal{Q}\times(\Sigma\cup\{\epsilon\})\times\Upgamma\times\mathcal{Q}\times\Upgamma^*$, the transition relation
+* $\delta$ is a finite set of $\mathcal{Q}\times(\Sigma\cup\textbraceleft\epsilon\textbraceright)\times\Upgamma\times\mathcal{Q}\times\Upgamma^*$, the transition relation
 * $q_0\in\mathcal{Q}$ is the start state
 * $Z\in\Upgamma$ is the initial stack symbol
 * $F\subseteq\mathcal{Q}$ is the set of accepting states
 
-In our diagram, the initial state $q_0$ is called `start`.
-The initial stack symbol $Z$ is `ε` (TODO: Make it `#`?).
-The set of accepting states is $F=\text{valid}$.
+In our diagram, the initial state is $q_0 = \text{start}$.
+The initial stack symbol is $Z=\epsilon$ (TODO: Make it `#`?).
+The set of accepting states is $F=\textbraceleft\text{valid}\textbraceright$.
 $\delta$ is defined by the transitions shown in the graph diagram.
 
-The input alphabet consists of the following OpenPGP packets:
-* `Literal Data`: Literal Data Packet
-* `Signature`: Signature Packet
-* `OnePassSignature`: One-Pass-Signature Packet
-* `Compressed Data`: Compressed Data Packet
-* `SKESK`: Symmetric-Key Encrypted Session Key Packet
-* `PKESK`: Public-Key Encrypted Session Key Packet
-* `Sym. Enc. Data`: Symmetrically Encrypted Data Packet
-* `Sym. Enc. Int. Prot. Data`: Symmetrically Encrypted Integrity Protected Data Packet
+The input alphabet $\Sigma$ consists of the following OpenPGP packets:
+* $\text{Literal Data}$: Literal Data Packet
+* $\text{Signature}$: Signature Packet
+* $\text{OnePassSignature}$: One-Pass-Signature Packet
+* $\text{Compressed Data}$: Compressed Data Packet
+* $\text{SKESK}$: Symmetric-Key Encrypted Session Key Packet
+* $\text{PKESK}$: Public-Key Encrypted Session Key Packet
+* $\text{Sym. Enc. Data}$: Symmetrically Encrypted Data Packet
+* $\text{Sym. Enc. Int. Prot. Data}$: Symmetrically Encrypted Integrity Protected Data Packet
 
-Additionally, `ε` is used to transition without reading OpenPGP packets.
+Additionally, $\epsilon$ is used to transition without reading OpenPGP packets or popping the stack.
 
-The following stack alphabet is used:
-* `m`: OpenPGP Message
-* `o`: One-Pass-Signature packet.
-* `k`: Encrypted Session Key
+The following stack alphabet $\Upgamma$ is used:
+* $m$: OpenPGP Message
+* $o$: One-Pass-Signature packet.
+* $k$: Encrypted Session Key
 * `#`: Terminal for valid OpenPGP messages
 
 Note: The standards document states, that Marker Packets shall be ignored as well.
