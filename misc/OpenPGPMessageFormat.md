@@ -73,5 +73,5 @@ Note: The standards document states, that Marker Packets shall be ignored as wel
 For the sake of readability, those transitions are omitted here.
 
 The dotted line indicates a nested transition.
-For example, the transition `(Compressed Message, ε, ε, OpenPGP Message, m)`  indicates, that the content of the
+For example, the transition $(\text{Compressed Message}, \epsilon, \epsilon, \text{OpenPGP Message}, m)$  indicates, that the content of the
 Compressed Data packet itself is an OpenPGP Message.
