@@ -34,6 +34,27 @@ graph LR
     enc -- "Signature,o/ε" --> sig4ops
 ```
 
+The input alphabet consists of the following OpenPGP packets:
+* `Literal Data`: Literal Data Packet
+* `Signature`: Signature Packet
+* `OnePassSignature`: One-Pass-Signature Packet
+* `Compressed Data`: Compressed Data Packet
+* `SKESK`: Symmetric-Key Encrypted Session Key Packet
+* `PKESK`: Public-Key Encrypted Session Key Packet
+* `Sym. Enc. Data`: Symmetrically Encrypted Data Packet
+* `Sym. Enc. Int. Prot. Data`: Symmetrically Encrypted Integrity Protected Data Packet
+
+Additionally, `ε` is used to transition without reading OpenPGP packets.
+
+The following stack alphabet is used:
+* `m`: OpenPGP Message
+* `o`: One-Pass-Signature packet.
+* `k`: Encrypted Session Key
+* `#`: Terminal for valid OpenPGP messages
+
+Note: The standards document states, that Marker Packets shall be ignored as well.
+For the sake of readability, those transitions are omitted here.
+
 The dotted line indicates a nested transition.
 For example the arrow `Compressed Data,m/m` indicates, that the content of the Compressed Data packet itself
 is an OpenPGP Message.
