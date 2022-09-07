@@ -20,7 +20,8 @@ graph LR
     sig4ops -- "ε,#/ε" --> accept
     pgpmsg -- "OnePassSignature,m/o" --> ops((One-Pass-Signed Message))
     ops -- "ε,ε/m" --> pgpmsg
-    pgpmsg -- "Signature,m/m" --> pgpmsg
+    pgpmsg -- "Signature,m/ε" --> signed((Signed Message))
+    signed -- "ε,ε/m" --> pgpmsg
     pgpmsg -- "Compressed Data,m/ε" --> comp((Compressed Message))
     comp -. "ε,ε/m" .-> pgpmsg
     comp -- "ε,#/ε" --> accept
