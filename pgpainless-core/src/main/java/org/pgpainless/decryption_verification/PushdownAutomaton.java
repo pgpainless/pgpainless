@@ -342,6 +342,12 @@ public class PushdownAutomaton {
         return getState() == State.Valid && stack.isEmpty();
     }
 
+    public void assertValid() throws MalformedOpenPgpMessageException {
+        if (!isValid()) {
+            throw new MalformedOpenPgpMessageException("Pushdown Automaton is not in an acceptable state: " + toString());
+        }
+    }
+
     /**
      * Pop an item from the stack.
      *
