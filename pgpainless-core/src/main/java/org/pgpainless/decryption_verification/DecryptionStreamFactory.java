@@ -34,6 +34,7 @@ import org.bouncycastle.openpgp.PGPPublicKeyRing;
 import org.bouncycastle.openpgp.PGPSecretKey;
 import org.bouncycastle.openpgp.PGPSecretKeyRing;
 import org.bouncycastle.openpgp.PGPSessionKey;
+import org.bouncycastle.openpgp.PGPSessionKeyEncryptedData;
 import org.bouncycastle.openpgp.PGPSignature;
 import org.bouncycastle.openpgp.PGPSignatureList;
 import org.bouncycastle.openpgp.PGPUtil;
@@ -259,25 +260,13 @@ public final class DecryptionStreamFactory {
         PGPSessionKey pgpSessionKey = new PGPSessionKey(sessionKey.getAlgorithm().getAlgorithmId(), sessionKey.getKey());
         SessionKeyDataDecryptorFactory decryptorFactory =
                 ImplementationFactory.getInstance().provideSessionKeyDataDecryptorFactory(pgpSessionKey);
-        InputStream decryptedDataStream = null;
-        PGPEncryptedData encryptedData = null;
-        for (PGPEncryptedData pgpEncryptedData : pgpEncryptedDataList) {
-            encryptedData = pgpEncryptedData;
-            if (!options.isIgnoreMDCErrors() && !encryptedData.isIntegrityProtected()) {
-                throw new MessageNotIntegrityProtectedException();
-            }
 
-            if (encryptedData instanceof PGPPBEEncryptedData) {
-                PGPPBEEncryptedData pbeEncrypted = (PGPPBEEncryptedData) encryptedData;
-                decryptedDataStream = pbeEncrypted.getDataStream(decryptorFactory);
-                break;
-            } else if (encryptedData instanceof PGPPublicKeyEncryptedData) {
-                PGPPublicKeyEncryptedData pkEncrypted = (PGPPublicKeyEncryptedData) encryptedData;
-                decryptedDataStream = pkEncrypted.getDataStream(decryptorFactory);
-                break;
-            }
+        PGPSessionKeyEncryptedData encryptedData = pgpEncryptedDataList.addSessionKeyDecryptionMethod(pgpSessionKey);
+        if (!options.isIgnoreMDCErrors() && !encryptedData.isIntegrityProtected()) {
+            throw new MessageNotIntegrityProtectedException();
         }
 
+        InputStream decryptedDataStream = encryptedData.getDataStream(decryptorFactory);
         if (decryptedDataStream == null) {
             throw new PGPException("No valid PGP data encountered.");
         }
