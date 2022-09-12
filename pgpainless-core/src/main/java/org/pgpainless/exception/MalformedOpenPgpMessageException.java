@@ -28,4 +28,15 @@ public class MalformedOpenPgpMessageException extends PGPException {
                                             PushdownAutomaton.StackAlphabet stackItem) {
         this("Invalid input: There is no legal transition from state '" + state + "' for input '" + input + "' when '" + stackItem + "' is on top of the stack.");
     }
+
+    public RTE toRuntimeException() {
+        return new RTE(this);
+    }
+
+    public static class RTE extends RuntimeException {
+
+        public RTE(MalformedOpenPgpMessageException e) {
+            super(e);
+        }
+    }
 }
