@@ -9,6 +9,9 @@ import static org.pgpainless.decryption_verification.automaton.StackAlphabet.ops
 import static org.pgpainless.decryption_verification.automaton.StackAlphabet.terminus;
 
 public class PDA {
+
+    private static int ID = 0;
+
     /**
      * Set of states of the automaton.
      * Each state defines its valid transitions in their {@link NestingPDA.State#transition(InputAlphabet, NestingPDA)}
@@ -174,18 +177,20 @@ public class PDA {
 
     private final Stack<StackAlphabet> stack = new Stack<>();
     private State state;
+    private int id;
 
     public PDA() {
         state = State.OpenPgpMessage;
         stack.push(terminus);
         stack.push(msg);
+        this.id = ID++;
     }
 
     public void next(InputAlphabet input) throws MalformedOpenPgpMessageException {
         State old = state;
         StackAlphabet stackItem = stack.isEmpty() ? null : stack.peek();
         state = state.transition(input, this);
-        System.out.println("Transition from " + old + " to " + state + " via " + input + " with stack " + stackItem);
+        System.out.println(id + ": Transition from " + old + " to " + state + " via " + input + " with stack " + stackItem);
     }
 
     /**
@@ -232,6 +237,6 @@ public class PDA {
 
     @Override
     public String toString() {
-        return "State: " + state + " Stack: " + stack;
+        return "PDA " + id + ": State: " + state + " Stack: " + stack;
     }
 }
