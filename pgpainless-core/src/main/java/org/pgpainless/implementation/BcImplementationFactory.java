@@ -149,11 +149,6 @@ public class BcImplementationFactory extends ImplementationFactory {
     }
 
     @Override
-    public SessionKeyDataDecryptorFactory provideSessionKeyDataDecryptorFactory(PGPSessionKey sessionKey) {
-        return new BcSessionKeyDataDecryptorFactory(sessionKey);
-    }
-
-    @Override
     public PGPObjectFactory getPGPObjectFactory(byte[] bytes) {
         return new BcPGPObjectFactory(bytes);
     }

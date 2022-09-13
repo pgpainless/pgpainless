@@ -138,11 +138,6 @@ public class JceImplementationFactory extends ImplementationFactory {
     }
 
     @Override
-    public SessionKeyDataDecryptorFactory provideSessionKeyDataDecryptorFactory(PGPSessionKey sessionKey) {
-        return new JceSessionKeyDataDecryptorFactoryBuilder().build(sessionKey);
-    }
-
-    @Override
     public PGPObjectFactory getPGPObjectFactory(InputStream inputStream) {
         return new JcaPGPObjectFactory(inputStream);
     }

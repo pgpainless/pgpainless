@@ -118,8 +118,6 @@ public abstract class ImplementationFactory {
                                                                    HashAlgorithm hashAlgorithm, int s2kCount,
                                                                    Passphrase passphrase) throws PGPException;
 
-    public abstract SessionKeyDataDecryptorFactory provideSessionKeyDataDecryptorFactory(PGPSessionKey sessionKey);
-
     public abstract PGPObjectFactory getPGPObjectFactory(InputStream inputStream);
 
     public abstract PGPObjectFactory getPGPObjectFactory(byte[] bytes);
