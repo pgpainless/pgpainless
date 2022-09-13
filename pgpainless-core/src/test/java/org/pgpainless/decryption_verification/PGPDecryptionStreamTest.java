@@ -7,6 +7,7 @@ import org.bouncycastle.openpgp.PGPCompressedDataGenerator;
 import org.bouncycastle.openpgp.PGPException;
 import org.bouncycastle.openpgp.PGPLiteralData;
 import org.bouncycastle.openpgp.PGPLiteralDataGenerator;
+import org.bouncycastle.openpgp.PGPPublicKeyRing;
 import org.bouncycastle.openpgp.PGPSecretKeyRing;
 import org.bouncycastle.openpgp.PGPSignature;
 import org.bouncycastle.util.io.Streams;
@@ -122,6 +123,17 @@ public class PGPDecryptionStreamTest {
             "jA0ECQMCuZ0qHNXWnGhg0j8Bdm1cxV65sYb7jDgb4rRMtdNpQ1dC4UpSYuk9YWS2\n" +
             "DpNEijbX8b/P1UOK2kJczNDADMRegZuLEI+dNsBnJjk=\n" +
             "=i4Y0\n" +
+            "-----END PGP MESSAGE-----";
+
+    public static final String PENC_COMP_LIT = "" +
+            "-----BEGIN PGP MESSAGE-----\n" +
+            "Version: PGPainless\n" +
+            "\n" +
+            "hF4Dyqa/GWUy6WsSAQdAQ62BwmUt8Iby0+jvrLhMgST79KR/as+dyl0nf1uki2sw\n" +
+            "Thg1Ojtf0hOyJgcpQ4nP2Q0wYFR0F1sCydaIlTGreYZHlGtybP7/Ml6KNZILTRWP\n" +
+            "0kYBkGBgK7oQWRIVyoF2POvEP6EX1X8nvQk7O3NysVdRVbnia7gE3AzRYuha4kxs\n" +
+            "pI6xJkntLMS3K6him1Y9FHINIASFSB+C\n" +
+            "=5p00\n" +
             "-----END PGP MESSAGE-----";
 
     @Test
@@ -325,6 +337,24 @@ public class PGPDecryptionStreamTest {
         ByteArrayOutputStream out = new ByteArrayOutputStream();
         Streams.pipeAll(decIn, out);
         decIn.close();
+
+        System.out.println(out);
+    }
+
+    @Test
+    public void genPENC_COMP_LIT() throws IOException, PGPException {
+        PGPSecretKeyRing secretKeys = PGPainless.readKeyRing().secretKeyRing(KEY);
+        PGPPublicKeyRing cert = PGPainless.extractCertificate(secretKeys);
+
+        ByteArrayOutputStream out = new ByteArrayOutputStream();
+        EncryptionStream enc = PGPainless.encryptAndOrSign()
+                .onOutputStream(out)
+                .withOptions(ProducerOptions.encrypt(EncryptionOptions.get()
+                                .addRecipient(cert))
+                        .overrideCompressionAlgorithm(CompressionAlgorithm.ZLIB));
+
+        Streams.pipeAll(new ByteArrayInputStream(PLAINTEXT.getBytes(StandardCharsets.UTF_8)), enc);
+        enc.close();
 
         System.out.println(out);
     }
