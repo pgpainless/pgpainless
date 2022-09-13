@@ -256,9 +256,8 @@ public final class DecryptionStreamFactory {
             PGPEncryptedDataList pgpEncryptedDataList,
             SessionKey sessionKey)
             throws PGPException {
-        PGPSessionKey pgpSessionKey = new PGPSessionKey(sessionKey.getAlgorithm().getAlgorithmId(), sessionKey.getKey());
-        SessionKeyDataDecryptorFactory decryptorFactory =
-                ImplementationFactory.getInstance().provideSessionKeyDataDecryptorFactory(pgpSessionKey);
+        SessionKeyDataDecryptorFactory decryptorFactory = ImplementationFactory.getInstance()
+                .getSessionKeyDataDecryptorFactory(sessionKey);
         InputStream decryptedDataStream = null;
         PGPEncryptedData encryptedData = null;
         for (PGPEncryptedData pgpEncryptedData : pgpEncryptedDataList) {
