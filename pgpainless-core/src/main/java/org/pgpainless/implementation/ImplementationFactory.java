@@ -50,7 +50,7 @@ public abstract class ImplementationFactory {
     }
 
     public PBESecretKeyEncryptor getPBESecretKeyEncryptor(SymmetricKeyAlgorithm symmetricKeyAlgorithm,
-                                                   Passphrase passphrase)
+                                                          Passphrase passphrase)
             throws PGPException {
         return getPBESecretKeyEncryptor(symmetricKeyAlgorithm,
                 getPGPDigestCalculator(HashAlgorithm.SHA1), passphrase);
@@ -59,8 +59,8 @@ public abstract class ImplementationFactory {
     public abstract PBESecretKeyEncryptor getPBESecretKeyEncryptor(PGPSecretKey secretKey, Passphrase passphrase) throws PGPException;
 
     public abstract PBESecretKeyEncryptor getPBESecretKeyEncryptor(SymmetricKeyAlgorithm symmetricKeyAlgorithm,
-                                                          PGPDigestCalculator digestCalculator,
-                                                          Passphrase passphrase);
+                                                                   PGPDigestCalculator digestCalculator,
+                                                                   Passphrase passphrase);
 
     public abstract PBESecretKeyDecryptor getPBESecretKeyDecryptor(Passphrase passphrase) throws PGPException;
 
