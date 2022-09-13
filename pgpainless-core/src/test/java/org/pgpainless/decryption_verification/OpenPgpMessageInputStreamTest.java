@@ -2,8 +2,10 @@ package org.pgpainless.decryption_verification;
 
 import org.bouncycastle.bcpg.ArmoredInputStream;
 import org.bouncycastle.openpgp.PGPException;
+import org.bouncycastle.openpgp.PGPSecretKeyRing;
 import org.bouncycastle.util.io.Streams;
 import org.junit.jupiter.api.Test;
+import org.pgpainless.PGPainless;
 import org.pgpainless.exception.MalformedOpenPgpMessageException;
 import org.pgpainless.util.ArmoredInputStreamFactory;
 import org.pgpainless.util.Passphrase;
@@ -18,9 +20,11 @@ import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.pgpainless.decryption_verification.PGPDecryptionStreamTest.COMP;
 import static org.pgpainless.decryption_verification.PGPDecryptionStreamTest.COMP_COMP_LIT;
 import static org.pgpainless.decryption_verification.PGPDecryptionStreamTest.COMP_LIT;
+import static org.pgpainless.decryption_verification.PGPDecryptionStreamTest.KEY;
 import static org.pgpainless.decryption_verification.PGPDecryptionStreamTest.LIT;
 import static org.pgpainless.decryption_verification.PGPDecryptionStreamTest.LIT_LIT;
 import static org.pgpainless.decryption_verification.PGPDecryptionStreamTest.PASSPHRASE;
+import static org.pgpainless.decryption_verification.PGPDecryptionStreamTest.PENC_COMP_LIT;
 import static org.pgpainless.decryption_verification.PGPDecryptionStreamTest.PLAINTEXT;
 import static org.pgpainless.decryption_verification.PGPDecryptionStreamTest.SENC_LIT;
 import static org.pgpainless.decryption_verification.PGPDecryptionStreamTest.SIG_LIT;
@@ -66,6 +70,14 @@ public class OpenPgpMessageInputStreamTest {
     @Test
     public void testProcessSENC_LIT() throws PGPException, IOException {
         String plain = process(SENC_LIT, ConsumerOptions.get().addDecryptionPassphrase(Passphrase.fromPassword(PASSPHRASE)));
+        assertEquals(PLAINTEXT, plain);
+    }
+
+    @Test
+    public void testProcessPENC_COMP_LIT() throws IOException, PGPException {
+        PGPSecretKeyRing secretKeys = PGPainless.readKeyRing().secretKeyRing(KEY);
+        String plain = process(PENC_COMP_LIT, ConsumerOptions.get()
+                .addDecryptionKey(secretKeys));
         assertEquals(PLAINTEXT, plain);
     }
 
