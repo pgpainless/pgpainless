@@ -1,17 +1,12 @@
-package org.pgpainless.decryption_verification;
+package org.pgpainless.decryption_verification.automaton;
 
-import org.bouncycastle.openpgp.PGPCompressedData;
-import org.bouncycastle.openpgp.PGPEncryptedDataList;
-import org.bouncycastle.openpgp.PGPLiteralData;
-import org.bouncycastle.openpgp.PGPOnePassSignatureList;
-import org.bouncycastle.openpgp.PGPSignatureList;
 import org.pgpainless.exception.MalformedOpenPgpMessageException;
 
 import java.util.Stack;
 
-import static org.pgpainless.decryption_verification.PushdownAutomaton.StackAlphabet.msg;
-import static org.pgpainless.decryption_verification.PushdownAutomaton.StackAlphabet.ops;
-import static org.pgpainless.decryption_verification.PushdownAutomaton.StackAlphabet.terminus;
+import static org.pgpainless.decryption_verification.automaton.StackAlphabet.msg;
+import static org.pgpainless.decryption_verification.automaton.StackAlphabet.ops;
+import static org.pgpainless.decryption_verification.automaton.StackAlphabet.terminus;
 
 /**
  * Pushdown Automaton to verify the correct syntax of OpenPGP messages during decryption.
@@ -37,71 +32,18 @@ import static org.pgpainless.decryption_verification.PushdownAutomaton.StackAlph
  *
  * @see <a href="https://www.rfc-editor.org/rfc/rfc4880#section-11.3">RFC4880 §11.3. OpenPGP Messages</a>
  */
-public class PushdownAutomaton {
-
-    public enum InputAlphabet {
-        /**
-         * A {@link PGPLiteralData} packet.
-         */
-        LiteralData,
-        /**
-         * A {@link PGPSignatureList} object.
-         */
-        Signatures,
-        /**
-         * A {@link PGPOnePassSignatureList} object.
-         */
-        OnePassSignatures,
-        /**
-         * A {@link PGPCompressedData} packet.
-         * The contents of this packet MUST form a valid OpenPGP message, so a nested PDA is opened to verify
-         * its nested packet sequence.
-         */
-        CompressedData,
-        /**
-         * A {@link PGPEncryptedDataList} object.
-         * This object combines multiple ESKs and the corresponding Symmetrically Encrypted
-         * (possibly Integrity Protected) Data packet.
-         */
-        EncryptedData,
-        /**
-         * Marks the end of a (sub-) sequence.
-         * This input is given if the end of an OpenPGP message is reached.
-         * This might be the case for the end of the whole ciphertext, or the end of a packet with nested contents
-         * (e.g. the end of a Compressed Data packet).
-         */
-        EndOfSequence
-    }
-
-    public enum StackAlphabet {
-        /**
-         * OpenPGP Message.
-         */
-        msg,
-        /**
-         * OnePassSignature (in case of BC this represents a OnePassSignatureList).
-         */
-        ops,
-        /**
-         * ESK. Not used, as BC combines encrypted data with their encrypted session keys.
-         */
-        esk,
-        /**
-         * Special symbol representing the end of the message.
-         */
-        terminus
-    }
+public class NestingPDA {
 
     /**
      * Set of states of the automaton.
-     * Each state defines its valid transitions in their {@link State#transition(InputAlphabet, PushdownAutomaton)}
+     * Each state defines its valid transitions in their {@link State#transition(InputAlphabet, NestingPDA)}
      * method.
      */
     public enum State {
 
         OpenPgpMessage {
             @Override
-            State transition(InputAlphabet input, PushdownAutomaton automaton) throws MalformedOpenPgpMessageException {
+            State transition(InputAlphabet input, NestingPDA automaton) throws MalformedOpenPgpMessageException {
                 StackAlphabet stackItem = automaton.popStack();
                 if (stackItem != msg) {
                     throw new MalformedOpenPgpMessageException(this, input, stackItem);
@@ -135,7 +77,7 @@ public class PushdownAutomaton {
 
         LiteralMessage {
             @Override
-            State transition(InputAlphabet input, PushdownAutomaton automaton) throws MalformedOpenPgpMessageException {
+            State transition(InputAlphabet input, NestingPDA automaton) throws MalformedOpenPgpMessageException {
                 StackAlphabet stackItem = automaton.popStack();
                 switch (input) {
 
@@ -165,7 +107,7 @@ public class PushdownAutomaton {
 
         CompressedMessage {
             @Override
-            State transition(InputAlphabet input, PushdownAutomaton automaton) throws MalformedOpenPgpMessageException {
+            State transition(InputAlphabet input, NestingPDA automaton) throws MalformedOpenPgpMessageException {
                 StackAlphabet stackItem = automaton.popStack();
                 switch (input) {
                     case Signatures:
@@ -194,7 +136,7 @@ public class PushdownAutomaton {
 
         EncryptedMessage {
             @Override
-            State transition(InputAlphabet input, PushdownAutomaton automaton) throws MalformedOpenPgpMessageException {
+            State transition(InputAlphabet input, NestingPDA automaton) throws MalformedOpenPgpMessageException {
                 StackAlphabet stackItem = automaton.popStack();
                 switch (input) {
                     case Signatures:
@@ -223,7 +165,7 @@ public class PushdownAutomaton {
 
         CorrespondingSignature {
             @Override
-            State transition(InputAlphabet input, PushdownAutomaton automaton) throws MalformedOpenPgpMessageException {
+            State transition(InputAlphabet input, NestingPDA automaton) throws MalformedOpenPgpMessageException {
                 StackAlphabet stackItem = automaton.popStack();
                 if (stackItem == terminus && input == InputAlphabet.EndOfSequence && automaton.stack.isEmpty()) {
                     return Valid;
@@ -235,7 +177,7 @@ public class PushdownAutomaton {
 
         Valid {
             @Override
-            State transition(InputAlphabet input, PushdownAutomaton automaton) throws MalformedOpenPgpMessageException {
+            State transition(InputAlphabet input, NestingPDA automaton) throws MalformedOpenPgpMessageException {
                 throw new MalformedOpenPgpMessageException(this, input, null);
             }
         },
@@ -252,15 +194,15 @@ public class PushdownAutomaton {
          * @return new state of the automaton
          * @throws MalformedOpenPgpMessageException in case of an illegal input symbol
          */
-        abstract State transition(InputAlphabet input, PushdownAutomaton automaton) throws MalformedOpenPgpMessageException;
+        abstract State transition(InputAlphabet input, NestingPDA automaton) throws MalformedOpenPgpMessageException;
     }
 
     private final Stack<StackAlphabet> stack = new Stack<>();
     private State state;
     // Some OpenPGP packets have nested contents (e.g. compressed / encrypted data).
-    PushdownAutomaton nestedSequence = null;
+    NestingPDA nestedSequence = null;
 
-    public PushdownAutomaton() {
+    public NestingPDA() {
         state = State.OpenPgpMessage;
         stack.push(terminus);
         stack.push(msg);
@@ -301,7 +243,7 @@ public class PushdownAutomaton {
 
             // If the processed packet contains nested sequence, open nested automaton for it
             if (input == InputAlphabet.CompressedData || input == InputAlphabet.EncryptedData) {
-                nestedSequence = new PushdownAutomaton();
+                nestedSequence = new NestingPDA();
             }
         }
 
