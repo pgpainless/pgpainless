@@ -103,6 +103,12 @@ public class JceImplementationFactory extends ImplementationFactory {
                 .build(privateKey);
     }
 
+    @Override
+    public SessionKeyDataDecryptorFactory getSessionKeyDataDecryptorFactory(PGPSessionKey sessionKey) {
+            return new JceSessionKeyDataDecryptorFactoryBuilder()
+                    .build(sessionKey);
+    }
+
     public PublicKeyKeyEncryptionMethodGenerator getPublicKeyKeyEncryptionMethodGenerator(PGPPublicKey key) {
         return new JcePublicKeyKeyEncryptionMethodGenerator(key)
                 .setProvider(ProviderFactory.getProvider());

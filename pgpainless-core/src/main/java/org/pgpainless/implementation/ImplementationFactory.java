@@ -32,6 +32,7 @@ import org.pgpainless.algorithm.HashAlgorithm;
 import org.pgpainless.algorithm.PublicKeyAlgorithm;
 import org.pgpainless.algorithm.SymmetricKeyAlgorithm;
 import org.pgpainless.util.Passphrase;
+import org.pgpainless.util.SessionKey;
 
 public abstract class ImplementationFactory {
 
@@ -90,6 +91,16 @@ public abstract class ImplementationFactory {
     public abstract PBEDataDecryptorFactory getPBEDataDecryptorFactory(Passphrase passphrase) throws PGPException;
 
     public abstract PublicKeyDataDecryptorFactory getPublicKeyDataDecryptorFactory(PGPPrivateKey privateKey);
+
+    public SessionKeyDataDecryptorFactory getSessionKeyDataDecryptorFactory(SessionKey sessionKey) {
+        PGPSessionKey pgpSessionKey = new PGPSessionKey(
+                sessionKey.getAlgorithm().getAlgorithmId(),
+                sessionKey.getKey()
+        );
+        return getSessionKeyDataDecryptorFactory(pgpSessionKey);
+    }
+
+    public abstract SessionKeyDataDecryptorFactory getSessionKeyDataDecryptorFactory(PGPSessionKey sessionKey);
 
     public abstract PublicKeyKeyEncryptionMethodGenerator getPublicKeyKeyEncryptionMethodGenerator(PGPPublicKey key);
 
