@@ -12,6 +12,8 @@ import org.bouncycastle.openpgp.PGPSignature;
 import org.bouncycastle.util.io.Streams;
 import org.junit.jupiter.api.Test;
 import org.pgpainless.PGPainless;
+import org.pgpainless.algorithm.CompressionAlgorithm;
+import org.pgpainless.encryption_signing.EncryptionOptions;
 import org.pgpainless.encryption_signing.EncryptionResult;
 import org.pgpainless.encryption_signing.EncryptionStream;
 import org.pgpainless.encryption_signing.ProducerOptions;
@@ -19,6 +21,7 @@ import org.pgpainless.encryption_signing.SigningOptions;
 import org.pgpainless.exception.MalformedOpenPgpMessageException;
 import org.pgpainless.key.protection.SecretKeyRingProtector;
 import org.pgpainless.util.ArmoredInputStreamFactory;
+import org.pgpainless.util.Passphrase;
 
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
@@ -33,7 +36,7 @@ import static org.junit.jupiter.api.Assertions.assertThrows;
 
 public class PGPDecryptionStreamTest {
 
-    private static final String KEY = "-----BEGIN PGP PRIVATE KEY BLOCK-----\n" +
+    public static final String KEY = "-----BEGIN PGP PRIVATE KEY BLOCK-----\n" +
             "Version: PGPainless\n" +
             "Comment: DA05 848F 37D4 68E6 F982  C889 7A70 1FC6 904D 3F4C\n" +
             "Comment: Alice <alice@pgpainless.org>\n" +
@@ -58,9 +61,10 @@ public class PGPDecryptionStreamTest {
             "=THgv\n" +
             "-----END PGP PRIVATE KEY BLOCK-----";
 
-    private static final String PLAINTEXT = "Hello, World!\n";
+    public static final String PLAINTEXT = "Hello, World!\n";
+    public static final String PASSPHRASE = "sw0rdf1sh";
 
-    private static final String LIT = "" +
+    public static final String LIT = "" +
             "-----BEGIN PGP MESSAGE-----\n" +
             "Version: PGPainless\n" +
             "\n" +
@@ -68,7 +72,7 @@ public class PGPDecryptionStreamTest {
             "=WGju\n" +
             "-----END PGP MESSAGE-----";
 
-    private static final String LIT_LIT = "" +
+    public static final String LIT_LIT = "" +
             "-----BEGIN PGP MESSAGE-----\n" +
             "Version: BCPG v1.71\n" +
             "\n" +
@@ -76,7 +80,7 @@ public class PGPDecryptionStreamTest {
             "=A91Q\n" +
             "-----END PGP MESSAGE-----";
 
-    private static final String COMP_LIT = "" +
+    public static final String COMP_LIT = "" +
             "-----BEGIN PGP MESSAGE-----\n" +
             "Version: BCPG v1.71\n" +
             "\n" +
@@ -84,7 +88,7 @@ public class PGPDecryptionStreamTest {
             "=ZYDg\n" +
             "-----END PGP MESSAGE-----";
 
-    private static final String COMP = "" +
+    public static final String COMP = "" +
             "-----BEGIN PGP MESSAGE-----\n" +
             "Version: BCPG v1.71\n" +
             "\n" +
@@ -92,7 +96,7 @@ public class PGPDecryptionStreamTest {
             "=MDzg\n" +
             "-----END PGP MESSAGE-----";
 
-    private static final String COMP_COMP_LIT = "" +
+    public static final String COMP_COMP_LIT = "" +
             "-----BEGIN PGP MESSAGE-----\n" +
             "Version: BCPG v1.71\n" +
             "\n" +
@@ -101,7 +105,7 @@ public class PGPDecryptionStreamTest {
             "=K9Zl\n" +
             "-----END PGP MESSAGE-----";
 
-    private static final String SIG_LIT = "" +
+    public static final String SIG_LIT = "" +
             "-----BEGIN PGP MESSAGE-----\n" +
             "Version: BCPG v1.71\n" +
             "\n" +
@@ -109,6 +113,15 @@ public class PGPDecryptionStreamTest {
             "AHkrAP98uPpqrgIix7epgL7MM1cjXXGSxqbDfXHwgptk1YGQlgD/fw89VGcXwFaI\n" +
             "2k7kpXQYy/1BqnovM/jZ3X3mXhhTaAOjATstksQAAh6pOTn5Ogrh+UU5KYpcAA==\n" +
             "=WKPn\n" +
+            "-----END PGP MESSAGE-----";
+
+    public static final String SENC_LIT = "" +
+            "-----BEGIN PGP MESSAGE-----\n" +
+            "Version: PGPainless\n" +
+            "\n" +
+            "jA0ECQMCuZ0qHNXWnGhg0j8Bdm1cxV65sYb7jDgb4rRMtdNpQ1dC4UpSYuk9YWS2\n" +
+            "DpNEijbX8b/P1UOK2kJczNDADMRegZuLEI+dNsBnJjk=\n" +
+            "=i4Y0\n" +
             "-----END PGP MESSAGE-----";
 
     @Test
@@ -125,7 +138,7 @@ public class PGPDecryptionStreamTest {
     public void processLIT() throws IOException, PGPException {
         ByteArrayInputStream bytesIn = new ByteArrayInputStream(LIT.getBytes(StandardCharsets.UTF_8));
         ArmoredInputStream armorIn = ArmoredInputStreamFactory.get(bytesIn);
-        PGPDecryptionStream decIn = new PGPDecryptionStream(armorIn);
+        MessageDecryptionStream decIn = new MessageDecryptionStream(armorIn, ConsumerOptions.get());
 
         ByteArrayOutputStream out = new ByteArrayOutputStream();
         Streams.pipeAll(decIn, out);
@@ -152,10 +165,10 @@ public class PGPDecryptionStreamTest {
     public void processLIT_LIT() throws IOException, PGPException {
         ByteArrayInputStream bytesIn = new ByteArrayInputStream(LIT_LIT.getBytes(StandardCharsets.UTF_8));
         ArmoredInputStream armorIn = ArmoredInputStreamFactory.get(bytesIn);
-        PGPDecryptionStream decIn = new PGPDecryptionStream(armorIn);
+        MessageDecryptionStream decIn = new MessageDecryptionStream(armorIn, ConsumerOptions.get());
 
         ByteArrayOutputStream out = new ByteArrayOutputStream();
-        assertThrows(MalformedOpenPgpMessageException.RTE.class, () -> Streams.pipeAll(decIn, out));
+        assertThrows(MalformedOpenPgpMessageException.class, () -> Streams.pipeAll(decIn, out));
     }
 
     @Test
@@ -175,7 +188,7 @@ public class PGPDecryptionStreamTest {
     public void processCOMP_LIT() throws IOException, PGPException {
         ByteArrayInputStream bytesIn = new ByteArrayInputStream(COMP_LIT.getBytes(StandardCharsets.UTF_8));
         ArmoredInputStream armorIn = ArmoredInputStreamFactory.get(bytesIn);
-        PGPDecryptionStream decIn = new PGPDecryptionStream(armorIn);
+        MessageDecryptionStream decIn = new MessageDecryptionStream(armorIn, ConsumerOptions.get());
 
         ByteArrayOutputStream out = new ByteArrayOutputStream();
         Streams.pipeAll(decIn, out);
@@ -198,8 +211,8 @@ public class PGPDecryptionStreamTest {
     public void processCOMP() throws IOException {
         ByteArrayInputStream bytesIn = new ByteArrayInputStream(COMP.getBytes(StandardCharsets.UTF_8));
         ArmoredInputStream armorIn = ArmoredInputStreamFactory.get(bytesIn);
-        assertThrows(MalformedOpenPgpMessageException.RTE.class, () -> {
-            PGPDecryptionStream decIn = new PGPDecryptionStream(armorIn);
+        assertThrows(MalformedOpenPgpMessageException.class, () -> {
+            MessageDecryptionStream decIn = new MessageDecryptionStream(armorIn, ConsumerOptions.get());
             Streams.drain(decIn);
         });
     }
@@ -228,7 +241,7 @@ public class PGPDecryptionStreamTest {
     public void processCOMP_COMP_LIT() throws PGPException, IOException {
         ByteArrayInputStream bytesIn = new ByteArrayInputStream(COMP_COMP_LIT.getBytes(StandardCharsets.UTF_8));
         ArmoredInputStream armorIn = ArmoredInputStreamFactory.get(bytesIn);
-        PGPDecryptionStream decIn = new PGPDecryptionStream(armorIn);
+        MessageDecryptionStream decIn = new MessageDecryptionStream(armorIn, ConsumerOptions.get());
 
         ByteArrayOutputStream out = new ByteArrayOutputStream();
         Streams.pipeAll(decIn, out);
@@ -279,7 +292,35 @@ public class PGPDecryptionStreamTest {
     public void processSIG_LIT() throws IOException, PGPException {
         ByteArrayInputStream bytesIn = new ByteArrayInputStream(SIG_LIT.getBytes(StandardCharsets.UTF_8));
         ArmoredInputStream armorIn = ArmoredInputStreamFactory.get(bytesIn);
-        PGPDecryptionStream decIn = new PGPDecryptionStream(armorIn);
+        MessageDecryptionStream decIn = new MessageDecryptionStream(armorIn, ConsumerOptions.get());
+
+        ByteArrayOutputStream out = new ByteArrayOutputStream();
+        Streams.pipeAll(decIn, out);
+        decIn.close();
+
+        System.out.println(out);
+    }
+
+    @Test
+    public void genSENC_LIT() throws PGPException, IOException {
+        ByteArrayOutputStream out = new ByteArrayOutputStream();
+        EncryptionStream enc = PGPainless.encryptAndOrSign()
+                .onOutputStream(out)
+                .withOptions(ProducerOptions.encrypt(EncryptionOptions.get()
+                                .addPassphrase(Passphrase.fromPassword(PASSPHRASE)))
+                        .overrideCompressionAlgorithm(CompressionAlgorithm.UNCOMPRESSED));
+        enc.write(PLAINTEXT.getBytes(StandardCharsets.UTF_8));
+        enc.close();
+
+        System.out.println(out);
+    }
+
+    @Test
+    public void processSENC_LIT() throws IOException, PGPException {
+        ByteArrayInputStream bytesIn = new ByteArrayInputStream(SENC_LIT.getBytes(StandardCharsets.UTF_8));
+        ArmoredInputStream armorIn = ArmoredInputStreamFactory.get(bytesIn);
+        MessageDecryptionStream decIn = new MessageDecryptionStream(armorIn, ConsumerOptions.get()
+                .addDecryptionPassphrase(Passphrase.fromPassword(PASSPHRASE)));
 
         ByteArrayOutputStream out = new ByteArrayOutputStream();
         Streams.pipeAll(decIn, out);
