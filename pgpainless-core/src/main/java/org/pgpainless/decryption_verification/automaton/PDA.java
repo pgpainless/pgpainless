@@ -202,6 +202,13 @@ public class PDA {
         return state;
     }
 
+    public StackAlphabet peekStack() {
+        if (stack.isEmpty()) {
+            return null;
+        }
+        return stack.peek();
+    }
+
     /**
      * Return true, if the PDA is in a valid state (the OpenPGP message is valid).
      *
