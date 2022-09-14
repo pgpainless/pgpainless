@@ -38,14 +38,12 @@ import org.pgpainless.implementation.ImplementationFactory;
 import org.pgpainless.key.info.KeyRingInfo;
 import org.pgpainless.key.protection.SecretKeyRingProtector;
 import org.pgpainless.key.protection.UnlockSecretKey;
-import org.pgpainless.signature.consumer.DetachedSignatureCheck;
 import org.pgpainless.util.Passphrase;
 import org.pgpainless.util.Tuple;
 
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
-import java.io.UnsupportedEncodingException;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
@@ -88,6 +86,7 @@ public class OpenPgpMessageInputStream extends InputStream {
      */
     private void consumePackets()
             throws IOException, PGPException {
+        System.out.println("Walk " + automaton);
         int tag;
         loop: while ((tag = bcpgIn.nextPacketTag()) != -1) {
             OpenPgpPacket nextPacket = OpenPgpPacket.requireFromTag(tag);
@@ -237,7 +236,7 @@ public class OpenPgpMessageInputStream extends InputStream {
                 case MOD:
                     throw new MalformedOpenPgpMessageException("Unexpected Packet in Stream: " + nextPacket);
 
-                // Experimental Packets are not supported
+                    // Experimental Packets are not supported
                 case EXP_1:
                 case EXP_2:
                 case EXP_3:
@@ -313,15 +312,19 @@ public class OpenPgpMessageInputStream extends InputStream {
 
     @Override
     public int read() throws IOException {
-        int r = -1;
-        if (in != null) {
-            try {
-                r = in.read();
-            } catch (IOException e) {
-                //
-            }
+        if (in == null) {
+            automaton.assertValid();
+            return -1;
         }
-        if (r != -1) {
+
+        int r;
+        try {
+            r = in.read();
+        } catch (IOException e) {
+            r = -1;
+        }
+        boolean eos = r == -1;
+        if (!eos) {
             byte b = (byte) r;
             signatures.update(b);
         } else {
@@ -330,7 +333,32 @@ public class OpenPgpMessageInputStream extends InputStream {
                 in = null;
             } else {
                 try {
-                    System.out.println("Walk " + automaton);
+                    System.out.println("Read consume");
+                    consumePackets();
+                } catch (PGPException e) {
+                    throw new RuntimeException(e);
+                }
+            }
+        }
+        return r;
+    }
+
+    @Override
+    public int read(byte[] b, int off, int len)
+            throws IOException {
+
+        if (in == null) {
+            automaton.assertValid();
+            return -1;
+        }
+
+        int r = in.read(b, off, len);
+        if (r == -1) {
+            if (in instanceof OpenPgpMessageInputStream) {
+                in.close();
+                in = null;
+            } else {
+                try {
                     consumePackets();
                 } catch (PGPException e) {
                     throw new RuntimeException(e);
@@ -343,6 +371,7 @@ public class OpenPgpMessageInputStream extends InputStream {
     @Override
     public void close() throws IOException {
         if (closed) {
+            automaton.assertValid();
             return;
         }
 
@@ -418,15 +447,15 @@ public class OpenPgpMessageInputStream extends InputStream {
 
         public void update(byte b) {
             /**
-            for (PGPSignature prepended : prependedSignatures) {
-                prepended.update(b);
-            }
-            for (PGPOnePassSignature ops : onePassSignatures) {
-                ops.update(b);
-            }
-            for (PGPSignature detached : detachedSignatures) {
-                detached.update(b);
-            }
+             for (PGPSignature prepended : prependedSignatures) {
+             prepended.update(b);
+             }
+             for (PGPOnePassSignature ops : onePassSignatures) {
+             ops.update(b);
+             }
+             for (PGPSignature detached : detachedSignatures) {
+             detached.update(b);
+             }
              */
         }
 
