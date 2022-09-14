@@ -30,19 +30,24 @@ import org.pgpainless.algorithm.EncryptionPurpose;
 import org.pgpainless.algorithm.OpenPgpPacket;
 import org.pgpainless.decryption_verification.automaton.InputAlphabet;
 import org.pgpainless.decryption_verification.automaton.PDA;
+import org.pgpainless.decryption_verification.automaton.StackAlphabet;
+import org.pgpainless.exception.MalformedOpenPgpMessageException;
 import org.pgpainless.exception.MessageNotIntegrityProtectedException;
 import org.pgpainless.exception.MissingDecryptionMethodException;
 import org.pgpainless.implementation.ImplementationFactory;
 import org.pgpainless.key.info.KeyRingInfo;
 import org.pgpainless.key.protection.SecretKeyRingProtector;
 import org.pgpainless.key.protection.UnlockSecretKey;
+import org.pgpainless.signature.consumer.DetachedSignatureCheck;
 import org.pgpainless.util.Passphrase;
 import org.pgpainless.util.Tuple;
 
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.io.UnsupportedEncodingException;
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.List;
 
 public class OpenPgpMessageInputStream extends InputStream {
@@ -52,12 +57,12 @@ public class OpenPgpMessageInputStream extends InputStream {
     protected final BCPGInputStream bcpgIn;
     protected InputStream in;
 
-    private List<PGPSignature> signatures = new ArrayList<>();
-    private List<PGPOnePassSignature> onePassSignatures = new ArrayList<>();
+    private boolean closed = false;
+
+    private Signatures signatures = new Signatures();
 
     public OpenPgpMessageInputStream(InputStream inputStream, ConsumerOptions options)
             throws IOException, PGPException {
-        this.options = options;
         // TODO: Use BCPGInputStream.wrap(inputStream);
         if (inputStream instanceof BCPGInputStream) {
             this.bcpgIn = (BCPGInputStream) inputStream;
@@ -65,41 +70,61 @@ public class OpenPgpMessageInputStream extends InputStream {
             this.bcpgIn = new BCPGInputStream(inputStream);
         }
 
-        walk();
+        this.options = options;
+        this.signatures.addDetachedSignatures(options.getDetachedSignatures());
+
+        consumePackets();
     }
 
-    private void walk() throws IOException, PGPException {
-        loop: while (true) {
-
-            int tag = bcpgIn.nextPacketTag();
-            if (tag == -1) {
-                break loop;
-            }
-
+    /**
+     * This method consumes OpenPGP packets from the current {@link BCPGInputStream}.
+     * Once it reaches a "nested" OpenPGP packet (Literal Data, Compressed Data, Encrypted Data), it sets <pre>in</pre>
+     * to the nested stream and breaks the loop.
+     * The nested stream is either a simple {@link InputStream} (in case of Literal Data), or another
+     * {@link OpenPgpMessageInputStream} in case of Compressed and Encrypted Data.
+     *
+     * @throws IOException
+     * @throws PGPException
+     */
+    private void consumePackets()
+            throws IOException, PGPException {
+        int tag;
+        loop: while ((tag = bcpgIn.nextPacketTag()) != -1) {
             OpenPgpPacket nextPacket = OpenPgpPacket.requireFromTag(tag);
             switch (nextPacket) {
+
+                // Literal Data - the literal data content is the new input stream
                 case LIT:
                     automaton.next(InputAlphabet.LiteralData);
                     PGPLiteralData literalData = new PGPLiteralData(bcpgIn);
                     in = literalData.getDataStream();
                     break loop;
 
+                // Compressed Data - the content contains another OpenPGP message
                 case COMP:
                     automaton.next(InputAlphabet.CompressedData);
                     PGPCompressedData compressedData = new PGPCompressedData(bcpgIn);
                     in = new OpenPgpMessageInputStream(compressedData.getDataStream(), options);
                     break loop;
 
+                // One Pass Signatures
                 case OPS:
                     automaton.next(InputAlphabet.OnePassSignatures);
-                    readOnePassSignatures();
+                    signatures.addOnePassSignatures(readOnePassSignatures());
                     break;
 
+                // Signatures - either prepended to the message, or corresponding to the One Pass Signatures
                 case SIG:
                     automaton.next(InputAlphabet.Signatures);
-                    readSignatures();
+                    PGPSignatureList signatureList = readSignatures();
+                    if (automaton.peekStack() == StackAlphabet.ops) {
+                        signatures.addOnePassCorrespondingSignatures(signatureList);
+                    } else {
+                        signatures.addPrependedSignatures(signatureList);
+                    }
                     break;
 
+                // Encrypted Data (ESKs and SED/SEIPD are parsed the same by BC)
                 case PKESK:
                 case SKESK:
                 case SED:
@@ -200,6 +225,7 @@ public class OpenPgpMessageInputStream extends InputStream {
                     bcpgIn.readPacket(); // skip marker packet
                     break;
 
+                // Key Packets are illegal in this context
                 case SK:
                 case PK:
                 case SSK:
@@ -209,13 +235,14 @@ public class OpenPgpMessageInputStream extends InputStream {
                 case UATTR:
 
                 case MOD:
-                    break;
+                    throw new MalformedOpenPgpMessageException("Unexpected Packet in Stream: " + nextPacket);
 
+                // Experimental Packets are not supported
                 case EXP_1:
                 case EXP_2:
                 case EXP_3:
                 case EXP_4:
-                    break;
+                    throw new MalformedOpenPgpMessageException("Unsupported Packet in Stream: " + nextPacket);
             }
         }
     }
@@ -247,7 +274,7 @@ public class OpenPgpMessageInputStream extends InputStream {
         return null;
     }
 
-    private void readOnePassSignatures() throws IOException {
+    private PGPOnePassSignatureList readOnePassSignatures() throws IOException {
         ByteArrayOutputStream buf = new ByteArrayOutputStream();
         BCPGOutputStream bcpgOut = new BCPGOutputStream(buf);
         int tag = bcpgIn.nextPacketTag();
@@ -262,12 +289,10 @@ public class OpenPgpMessageInputStream extends InputStream {
 
         PGPObjectFactory objectFactory = ImplementationFactory.getInstance().getPGPObjectFactory(buf.toByteArray());
         PGPOnePassSignatureList signatureList = (PGPOnePassSignatureList) objectFactory.nextObject();
-        for (PGPOnePassSignature ops : signatureList) {
-            onePassSignatures.add(ops);
-        }
+        return signatureList;
     }
 
-    private void readSignatures() throws IOException {
+    private PGPSignatureList readSignatures() throws IOException {
         ByteArrayOutputStream buf = new ByteArrayOutputStream();
         BCPGOutputStream bcpgOut = new BCPGOutputStream(buf);
         int tag = bcpgIn.nextPacketTag();
@@ -283,9 +308,7 @@ public class OpenPgpMessageInputStream extends InputStream {
 
         PGPObjectFactory objectFactory = ImplementationFactory.getInstance().getPGPObjectFactory(buf.toByteArray());
         PGPSignatureList signatureList = (PGPSignatureList) objectFactory.nextObject();
-        for (PGPSignature signature : signatureList) {
-            signatures.add(signature);
-        }
+        return signatureList;
     }
 
     @Override
@@ -298,15 +321,17 @@ public class OpenPgpMessageInputStream extends InputStream {
                 //
             }
         }
-        if (r == -1) {
+        if (r != -1) {
+            byte b = (byte) r;
+            signatures.update(b);
+        } else {
             if (in instanceof OpenPgpMessageInputStream) {
-                System.out.println("Read -1: close " + automaton);
                 in.close();
                 in = null;
             } else {
                 try {
                     System.out.println("Walk " + automaton);
-                    walk();
+                    consumePackets();
                 } catch (PGPException e) {
                     throw new RuntimeException(e);
                 }
@@ -317,25 +342,24 @@ public class OpenPgpMessageInputStream extends InputStream {
 
     @Override
     public void close() throws IOException {
-        if (in == null) {
-            System.out.println("Close " + automaton);
-            automaton.next(InputAlphabet.EndOfSequence);
-            automaton.assertValid();
+        if (closed) {
             return;
         }
-        try {
+
+        if (in != null) {
             in.close();
-            in = null;
-            // Nested streams (except LiteralData) need to be closed.
+            in = null; // TODO: Collect result of in before nulling
             if (automaton.getState() != PDA.State.LiteralMessage) {
                 automaton.next(InputAlphabet.EndOfSequence);
                 automaton.assertValid();
             }
-        } catch (IOException e) {
-            //
+        } else {
+            automaton.next(InputAlphabet.EndOfSequence);
+            automaton.assertValid();
         }
 
         super.close();
+        closed = true;
     }
 
     private static class SortedESKs {
@@ -367,6 +391,55 @@ public class OpenPgpMessageInputStream extends InputStream {
             esks.addAll(pkesks);
             esks.addAll(anonPkesks);
             return esks;
+        }
+    }
+
+    private static class Signatures {
+        List<PGPSignature> detachedSignatures = new ArrayList<>();
+        List<PGPSignature> prependedSignatures = new ArrayList<>();
+        List<PGPOnePassSignature> onePassSignatures = new ArrayList<>();
+        List<PGPSignature> correspondingSignatures = new ArrayList<>();
+
+        void addDetachedSignatures(Collection<PGPSignature> signatures) {
+            this.detachedSignatures.addAll(signatures);
+        }
+
+        void addPrependedSignatures(PGPSignatureList signatures) {
+            for (PGPSignature signature : signatures) {
+                this.prependedSignatures.add(signature);
+            }
+        }
+
+        void addOnePassSignatures(PGPOnePassSignatureList signatures) {
+            for (PGPOnePassSignature ops : signatures) {
+                this.onePassSignatures.add(ops);
+            }
+        }
+
+        void addOnePassCorrespondingSignatures(PGPSignatureList signatures) {
+            for (PGPSignature signature : signatures) {
+                correspondingSignatures.add(signature);
+            }
+        }
+
+        public void update(byte b) {
+            /**
+            for (PGPSignature prepended : prependedSignatures) {
+                prepended.update(b);
+            }
+            for (PGPOnePassSignature ops : onePassSignatures) {
+                ops.update(b);
+            }
+            for (PGPSignature detached : detachedSignatures) {
+                detached.update(b);
+            }
+             */
+        }
+
+        public void finish() {
+            for (PGPSignature detached : detachedSignatures) {
+
+            }
         }
     }
 }
