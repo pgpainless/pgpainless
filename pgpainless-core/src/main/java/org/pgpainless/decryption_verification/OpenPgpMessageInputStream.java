@@ -348,17 +348,11 @@ public class OpenPgpMessageInputStream extends InputStream {
 
         if (in != null) {
             in.close();
-            in = null; // TODO: Collect result of in before nulling
-            if (automaton.getState() != PDA.State.LiteralMessage) {
-                automaton.next(InputAlphabet.EndOfSequence);
-                automaton.assertValid();
-            }
-        } else {
-            automaton.next(InputAlphabet.EndOfSequence);
-            automaton.assertValid();
+            in = null;
         }
 
-        super.close();
+        automaton.next(InputAlphabet.EndOfSequence);
+        automaton.assertValid();
         closed = true;
     }
 
