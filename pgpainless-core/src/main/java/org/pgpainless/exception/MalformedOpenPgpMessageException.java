@@ -5,7 +5,6 @@
 package org.pgpainless.exception;
 
 import org.pgpainless.decryption_verification.automaton.InputAlphabet;
-import org.pgpainless.decryption_verification.automaton.NestingPDA;
 import org.pgpainless.decryption_verification.automaton.PDA;
 import org.pgpainless.decryption_verification.automaton.StackAlphabet;
 
@@ -21,21 +20,7 @@ public class MalformedOpenPgpMessageException extends RuntimeException {
         super(message);
     }
 
-    public MalformedOpenPgpMessageException(String message, MalformedOpenPgpMessageException cause) {
-        super(message, cause);
-    }
-
-    public MalformedOpenPgpMessageException(NestingPDA.State state,
-                                            InputAlphabet input,
-                                            StackAlphabet stackItem) {
-        this("Invalid input: There is no legal transition from state '" + state + "' for input '" + input + "' when '" + stackItem + "' is on top of the stack.");
-    }
-
     public MalformedOpenPgpMessageException(PDA.State state, InputAlphabet input, StackAlphabet stackItem) {
         this("Invalid input: There is no legal transition from state '" + state + "' for input '" + input + "' when '" + stackItem + "' is on top of the stack.");
-    }
-
-    public MalformedOpenPgpMessageException(String message, PDA automaton) {
-        super(message + automaton.toString());
     }
 }
