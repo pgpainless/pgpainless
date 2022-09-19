@@ -29,7 +29,7 @@ public enum OpenPgpPacket {
     PSK(PacketTags.PUBLIC_SUBKEY),
     UATTR(PacketTags.USER_ATTRIBUTE),
     SEIPD(PacketTags.SYM_ENC_INTEGRITY_PRO),
-    MOD(PacketTags.MOD_DETECTION_CODE),
+    MDC(PacketTags.MOD_DETECTION_CODE),
 
     EXP_1(PacketTags.EXPERIMENTAL_1),
     EXP_2(PacketTags.EXPERIMENTAL_2),
