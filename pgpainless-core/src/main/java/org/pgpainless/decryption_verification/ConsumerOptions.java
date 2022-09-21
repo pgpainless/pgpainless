@@ -48,6 +48,7 @@ public class ConsumerOptions {
 
     // Session key for decryption without passphrase/key
     private SessionKey sessionKey = null;
+    private HardwareSecurity.DecryptionCallback hardwareDecryptionCallback = null;
 
     private final Map<PGPSecretKeyRing, SecretKeyRingProtector> decryptionKeys = new HashMap<>();
     private final Set<Passphrase> decryptionPassphrases = new HashSet<>();
@@ -235,6 +236,11 @@ public class ConsumerOptions {
      */
     public ConsumerOptions addDecryptionPassphrase(@Nonnull Passphrase passphrase) {
         decryptionPassphrases.add(passphrase);
+        return this;
+    }
+
+    public ConsumerOptions setHardwareDecryptionCallback(HardwareSecurity.DecryptionCallback callback) {
+        this.hardwareDecryptionCallback = callback;
         return this;
     }
 
