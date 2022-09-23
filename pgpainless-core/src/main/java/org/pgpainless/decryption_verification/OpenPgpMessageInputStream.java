@@ -343,7 +343,8 @@ public class OpenPgpMessageInputStream extends InputStream {
         return null;
     }
 
-    private PGPOnePassSignatureList readOnePassSignatures() throws IOException {
+    private PGPOnePassSignatureListWrapper readOnePassSignatures() throws IOException {
+        List<Boolean> encapsulating = new ArrayList<>();
         ByteArrayOutputStream buf = new ByteArrayOutputStream();
         BCPGOutputStream bcpgOut = new BCPGOutputStream(buf);
         int tag;
@@ -351,14 +352,16 @@ public class OpenPgpMessageInputStream extends InputStream {
             Packet packet = bcpgIn.readPacket();
             if (tag == PacketTags.ONE_PASS_SIGNATURE) {
                 OnePassSignaturePacket sigPacket = (OnePassSignaturePacket) packet;
-                sigPacket.encode(bcpgOut);
+                byte[] bytes = sigPacket.getEncoded();
+                encapsulating.add(bytes[bytes.length - 1] == 1);
+                bcpgOut.write(bytes);
             }
         }
         bcpgOut.close();
 
         PGPObjectFactory objectFactory = ImplementationFactory.getInstance().getPGPObjectFactory(buf.toByteArray());
         PGPOnePassSignatureList signatureList = (PGPOnePassSignatureList) objectFactory.nextObject();
-        return signatureList;
+        return new PGPOnePassSignatureListWrapper(signatureList, encapsulating);
     }
 
     private PGPSignatureList readSignatures() throws IOException {
@@ -490,6 +493,26 @@ public class OpenPgpMessageInputStream extends InputStream {
         }
     }
 
+    /**
+     * Workaround for BC not exposing, whether an OPS is encapsulating or not.
+     * TODO: Remove once our PR is merged
+     *
+     * @see <a href="https://github.com/bcgit/bc-java/pull/1232">PR against BC</a>
+     */
+    private static class PGPOnePassSignatureListWrapper {
+        private final PGPOnePassSignatureList list;
+        private final List<Boolean> encapsulating;
+
+        public PGPOnePassSignatureListWrapper(PGPOnePassSignatureList signatures, List<Boolean> encapsulating) {
+            this.list = signatures;
+            this.encapsulating = encapsulating;
+        }
+
+        public int size() {
+            return list.size();
+        }
+    }
+
     private static class Signatures {
         final ConsumerOptions options;
         List<PGPSignature> detachedSignatures = new ArrayList<>();
@@ -521,9 +544,9 @@ public class OpenPgpMessageInputStream extends InputStream {
             }
         }
 
-        void addOnePassSignatures(PGPOnePassSignatureList signatures) {
+        void addOnePassSignatures(PGPOnePassSignatureListWrapper signatures) {
             System.out.println("Adding " + signatures.size() + " OPSs");
-            for (PGPOnePassSignature ops : signatures) {
+            for (PGPOnePassSignature ops : signatures.list) {
                 PGPPublicKeyRing certificate = findCertificate(ops.getKeyID());
                 initialize(ops, certificate);
                 this.onePassSignatures.add(ops);
