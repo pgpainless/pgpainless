@@ -22,6 +22,7 @@ import org.bouncycastle.openpgp.PGPPublicKeyRingCollection;
 import org.bouncycastle.openpgp.PGPSecretKeyRing;
 import org.bouncycastle.openpgp.PGPSecretKeyRingCollection;
 import org.bouncycastle.openpgp.PGPSignature;
+import org.bouncycastle.openpgp.operator.PublicKeyDataDecryptorFactory;
 import org.pgpainless.decryption_verification.cleartext_signatures.InMemoryMultiPassStrategy;
 import org.pgpainless.decryption_verification.cleartext_signatures.MultiPassStrategy;
 import org.pgpainless.key.protection.SecretKeyRingProtector;
@@ -48,7 +49,7 @@ public class ConsumerOptions {
 
     // Session key for decryption without passphrase/key
     private SessionKey sessionKey = null;
-    private HardwareSecurity.DecryptionCallback hardwareDecryptionCallback = null;
+    private Map<Set<Long>, PublicKeyDataDecryptorFactory> customPublicKeyDataDecryptorFactories = new HashMap<>();
 
     private final Map<PGPSecretKeyRing, SecretKeyRingProtector> decryptionKeys = new HashMap<>();
     private final Set<Passphrase> decryptionPassphrases = new HashSet<>();
@@ -239,9 +240,26 @@ public class ConsumerOptions {
         return this;
     }
 
-    public ConsumerOptions setHardwareDecryptionCallback(HardwareSecurity.DecryptionCallback callback) {
-        this.hardwareDecryptionCallback = callback;
+    /**
+     * Add a custom {@link PublicKeyDataDecryptorFactory} which enable decryption of messages, e.g. using
+     * hardware-backed secret keys.
+     * (See e.g. {@link org.pgpainless.decryption_verification.HardwareSecurity.HardwareDataDecryptorFactory}).
+     *
+     * The set of key-ids determines, whether the decryptor factory shall be consulted to decrypt a given session key.
+     * See for example {@link HardwareSecurity#getIdsOfHardwareBackedKeys(PGPSecretKeyRing)}.
+     *
+     * @param keyIds set of key-ids for which the factory shall be consulted
+     * @param decryptorFactory decryptor factory
+     * @return options
+     */
+    public ConsumerOptions addCustomDecryptorFactory(
+            @Nonnull Set<Long> keyIds, @Nonnull PublicKeyDataDecryptorFactory decryptorFactory) {
+        this.customPublicKeyDataDecryptorFactories.put(keyIds, decryptorFactory);
         return this;
+    }
+
+    Map<Set<Long>, PublicKeyDataDecryptorFactory> getCustomDecryptorFactories() {
+        return new HashMap<>(customPublicKeyDataDecryptorFactories);
     }
 
     public @Nonnull Set<PGPSecretKeyRing> getDecryptionKeys() {
