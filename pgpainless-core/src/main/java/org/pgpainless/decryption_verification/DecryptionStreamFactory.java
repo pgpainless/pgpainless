@@ -392,6 +392,34 @@ public final class DecryptionStreamFactory {
             }
         }
 
+        // Try custom PublicKeyDataDecryptorFactories (e.g. hardware-backed).
+        Map<Set<Long>, PublicKeyDataDecryptorFactory> customFactories = options.getCustomDecryptorFactories();
+        for (PGPPublicKeyEncryptedData publicKeyEncryptedData : publicKeyProtected) {
+            Long keyId = publicKeyEncryptedData.getKeyID();
+            for (Set<Long> keyIds : customFactories.keySet()) {
+                if (!keyIds.contains(keyId)) {
+                    continue;
+                }
+
+                PublicKeyDataDecryptorFactory decryptorFactory = customFactories.get(keyIds);
+                try {
+                    InputStream decryptedDataStream = publicKeyEncryptedData.getDataStream(decryptorFactory);
+                    PGPSessionKey pgpSessionKey = publicKeyEncryptedData.getSessionKey(decryptorFactory);
+                    SessionKey sessionKey = new SessionKey(pgpSessionKey);
+                    resultBuilder.setSessionKey(sessionKey);
+
+                    throwIfAlgorithmIsRejected(sessionKey.getAlgorithm());
+
+                    integrityProtectedEncryptedInputStream =
+                            new IntegrityProtectedInputStream(decryptedDataStream, publicKeyEncryptedData, options);
+
+                    return integrityProtectedEncryptedInputStream;
+                } catch (PGPException e) {
+                    LOGGER.debug("Decryption with custom PublicKeyDataDecryptorFactory failed", e);
+                }
+            }
+        }
+
         // Then try decryption with public key encryption
         for (PGPPublicKeyEncryptedData publicKeyEncryptedData : publicKeyProtected) {
             PGPPrivateKey privateKey = null;
