@@ -187,10 +187,7 @@ public class PDA {
     }
 
     public void next(InputAlphabet input) throws MalformedOpenPgpMessageException {
-        State old = state;
-        StackAlphabet stackItem = stack.isEmpty() ? null : stack.peek();
         state = state.transition(input, this);
-        System.out.println(id + ": Transition from " + old + " to " + state + " via " + input + " with stack " + stackItem);
     }
 
     /**
