@@ -31,11 +31,11 @@ import org.bouncycastle.openpgp.operator.PBEDataDecryptorFactory;
 import org.bouncycastle.openpgp.operator.PGPContentVerifierBuilderProvider;
 import org.bouncycastle.openpgp.operator.PublicKeyDataDecryptorFactory;
 import org.bouncycastle.openpgp.operator.SessionKeyDataDecryptorFactory;
-import org.bouncycastle.pqc.crypto.rainbow.Layer;
 import org.pgpainless.PGPainless;
 import org.pgpainless.algorithm.CompressionAlgorithm;
 import org.pgpainless.algorithm.EncryptionPurpose;
 import org.pgpainless.algorithm.OpenPgpPacket;
+import org.pgpainless.algorithm.StreamEncoding;
 import org.pgpainless.algorithm.SymmetricKeyAlgorithm;
 import org.pgpainless.decryption_verification.automaton.InputAlphabet;
 import org.pgpainless.decryption_verification.automaton.PDA;
@@ -69,14 +69,14 @@ public class OpenPgpMessageInputStream extends InputStream {
     private boolean closed = false;
 
     private Signatures signatures;
-    private LayerMetadata layerMetadata;
+    private MessageMetadata.Layer metadata;
 
     public OpenPgpMessageInputStream(InputStream inputStream, ConsumerOptions options)
             throws IOException, PGPException {
-        this(inputStream, options, null);
+        this(inputStream, options, new MessageMetadata.Message());
     }
 
-    OpenPgpMessageInputStream(InputStream inputStream, ConsumerOptions options, LayerMetadata layerMetadata)
+    OpenPgpMessageInputStream(InputStream inputStream, ConsumerOptions options, MessageMetadata.Layer metadata)
             throws PGPException, IOException {
         // TODO: Use BCPGInputStream.wrap(inputStream);
         if (inputStream instanceof BCPGInputStream) {
@@ -86,33 +86,12 @@ public class OpenPgpMessageInputStream extends InputStream {
         }
 
         this.options = options;
+        this.metadata = metadata;
         this.resultBuilder = OpenPgpMetadata.getBuilder();
         this.signatures = new Signatures(options);
         this.signatures.addDetachedSignatures(options.getDetachedSignatures());
 
-        consumePackets();
-    }
-
-    static class LayerMetadata {
-
-        private CompressionAlgorithm compressionAlgorithm;
-        private SymmetricKeyAlgorithm symmetricKeyAlgorithm;
-        private LayerMetadata child;
-
-        public LayerMetadata setCompressionAlgorithm(CompressionAlgorithm algorithm) {
-            this.compressionAlgorithm = algorithm;
-            return this;
-        }
-
-        public LayerMetadata setSymmetricEncryptionAlgorithm(SymmetricKeyAlgorithm algorithm) {
-            this.symmetricKeyAlgorithm = algorithm;
-            return this;
-        }
-
-        public LayerMetadata setChild(LayerMetadata child) {
-            this.child = child;
-            return this;
-        }
+        consumePackets(); // nom nom nom
     }
 
     /**
@@ -127,27 +106,21 @@ public class OpenPgpMessageInputStream extends InputStream {
      */
     private void consumePackets()
             throws IOException, PGPException {
-        System.out.println("Walk " + automaton);
         int tag;
         loop: while ((tag = nextTag()) != -1) {
             OpenPgpPacket nextPacket = OpenPgpPacket.requireFromTag(tag);
-            System.out.println(nextPacket);
             switch (nextPacket) {
 
                 // Literal Data - the literal data content is the new input stream
                 case LIT:
                     automaton.next(InputAlphabet.LiteralData);
-                    PGPLiteralData literalData = new PGPLiteralData(bcpgIn);
-                    in = literalData.getDataStream();
+                    processLiteralData();
                     break loop;
 
                 // Compressed Data - the content contains another OpenPGP message
                 case COMP:
                     automaton.next(InputAlphabet.CompressedData);
-                    PGPCompressedData compressedData = new PGPCompressedData(bcpgIn);
-                    LayerMetadata compressionLayer = new LayerMetadata();
-                    compressionLayer.setCompressionAlgorithm(CompressionAlgorithm.fromId(compressedData.getAlgorithm()));
-                    in = new OpenPgpMessageInputStream(compressedData.getDataStream(), options, compressionLayer);
+                    processCompressedData();
                     break loop;
 
                 // One Pass Signatures
@@ -160,12 +133,7 @@ public class OpenPgpMessageInputStream extends InputStream {
                 case SIG:
                     boolean isSigForOPS = automaton.peekStack() == StackAlphabet.ops;
                     automaton.next(InputAlphabet.Signatures);
-                    PGPSignatureList signatureList = readSignatures();
-                    if (isSigForOPS) {
-                        signatures.addOnePassCorrespondingSignatures(signatureList);
-                    } else {
-                        signatures.addPrependedSignatures(signatureList);
-                    }
+                    processSignature(isSigForOPS);
                     break;
 
                 // Encrypted Data (ESKs and SED/SEIPD are parsed the same by BC)
@@ -210,6 +178,29 @@ public class OpenPgpMessageInputStream extends InputStream {
         }
     }
 
+    private void processSignature(boolean isSigForOPS) throws IOException {
+        PGPSignatureList signatureList = readSignatures();
+        if (isSigForOPS) {
+            signatures.addOnePassCorrespondingSignatures(signatureList);
+        } else {
+            signatures.addPrependedSignatures(signatureList);
+        }
+    }
+
+    private void processCompressedData() throws IOException, PGPException {
+        PGPCompressedData compressedData = new PGPCompressedData(bcpgIn);
+        MessageMetadata.CompressedData compressionLayer = new MessageMetadata.CompressedData(
+                CompressionAlgorithm.fromId(compressedData.getAlgorithm()));
+        in = new OpenPgpMessageInputStream(compressedData.getDataStream(), options, compressionLayer);
+    }
+
+    private void processLiteralData() throws IOException {
+        PGPLiteralData literalData = new PGPLiteralData(bcpgIn);
+        this.metadata.setChild(new MessageMetadata.LiteralData(literalData.getFileName(), literalData.getModificationTime(),
+                StreamEncoding.requireFromCode(literalData.getFormat())));
+        in = literalData.getDataStream();
+    }
+
     private boolean processEncryptedData() throws IOException, PGPException {
         PGPEncryptedDataList encDataList = new PGPEncryptedDataList(bcpgIn);
 
@@ -227,13 +218,14 @@ public class OpenPgpMessageInputStream extends InputStream {
             // TODO: Replace with encDataList.addSessionKeyDecryptionMethod(sessionKey)
             PGPEncryptedData esk = esks.all().get(0);
             try {
+                MessageMetadata.EncryptedData encryptedData = new MessageMetadata.EncryptedData(options.getSessionKey().getAlgorithm());
                 if (esk instanceof PGPPBEEncryptedData) {
                     PGPPBEEncryptedData skesk = (PGPPBEEncryptedData) esk;
-                    in = skesk.getDataStream(decryptorFactory);
+                    in = new OpenPgpMessageInputStream(skesk.getDataStream(decryptorFactory), options, encryptedData);
                     return true;
                 } else if (esk instanceof PGPPublicKeyEncryptedData) {
                     PGPPublicKeyEncryptedData pkesk = (PGPPublicKeyEncryptedData) esk;
-                    in = pkesk.getDataStream(decryptorFactory);
+                    in = new OpenPgpMessageInputStream(pkesk.getDataStream(decryptorFactory), options, encryptedData);
                     return true;
                 } else {
                     throw new RuntimeException("Unknown ESK class type: " + esk.getClass().getName());
@@ -250,7 +242,9 @@ public class OpenPgpMessageInputStream extends InputStream {
                         .getPBEDataDecryptorFactory(passphrase);
                 try {
                     InputStream decrypted = skesk.getDataStream(decryptorFactory);
-                    in = new OpenPgpMessageInputStream(decrypted, options);
+                    MessageMetadata.EncryptedData encryptedData = new MessageMetadata.EncryptedData(
+                            SymmetricKeyAlgorithm.requireFromId(skesk.getSymmetricAlgorithm(decryptorFactory)));
+                    in = new OpenPgpMessageInputStream(decrypted, options, encryptedData);
                     return true;
                 } catch (PGPException e) {
                     // password mismatch? Try next password
@@ -274,7 +268,9 @@ public class OpenPgpMessageInputStream extends InputStream {
                     .getPublicKeyDataDecryptorFactory(privateKey);
             try {
                 InputStream decrypted = pkesk.getDataStream(decryptorFactory);
-                in = new OpenPgpMessageInputStream(decrypted, options);
+                MessageMetadata.EncryptedData encryptedData = new MessageMetadata.EncryptedData(
+                        SymmetricKeyAlgorithm.requireFromId(pkesk.getSymmetricAlgorithm(decryptorFactory)));
+                in = new OpenPgpMessageInputStream(decrypted, options, encryptedData);
                 return true;
             } catch (PGPException e) {
                 // hm :/
@@ -291,7 +287,9 @@ public class OpenPgpMessageInputStream extends InputStream {
 
                 try {
                     InputStream decrypted = pkesk.getDataStream(decryptorFactory);
-                    in = new OpenPgpMessageInputStream(decrypted, options);
+                    MessageMetadata.EncryptedData encryptedData = new MessageMetadata.EncryptedData(
+                            SymmetricKeyAlgorithm.requireFromId(pkesk.getSymmetricAlgorithm(decryptorFactory)));
+                    in = new OpenPgpMessageInputStream(decrypted, options, encryptedData);
                     return true;
                 } catch (PGPException e) {
                     // hm :/
@@ -402,6 +400,7 @@ public class OpenPgpMessageInputStream extends InputStream {
             signatures.update(b);
         } else {
             in.close();
+            collectMetadata();
             in = null;
 
             try {
@@ -426,6 +425,7 @@ public class OpenPgpMessageInputStream extends InputStream {
         int r = in.read(b, off, len);
         if (r == -1) {
             in.close();
+            collectMetadata();
             in = null;
 
             try {
@@ -447,6 +447,7 @@ public class OpenPgpMessageInputStream extends InputStream {
 
         if (in != null) {
             in.close();
+            collectMetadata();
             in = null;
         }
 
@@ -459,6 +460,21 @@ public class OpenPgpMessageInputStream extends InputStream {
         automaton.next(InputAlphabet.EndOfSequence);
         automaton.assertValid();
         closed = true;
+    }
+
+    private void collectMetadata() {
+        if (in instanceof OpenPgpMessageInputStream) {
+            OpenPgpMessageInputStream child = (OpenPgpMessageInputStream) in;
+            MessageMetadata.Layer childLayer = child.metadata;
+            this.metadata.setChild((MessageMetadata.Nested) childLayer);
+        }
+    }
+
+    public MessageMetadata getMetadata() {
+        if (!closed) {
+            throw new IllegalStateException("Stream must be closed before access to metadata can be granted.");
+        }
+        return new MessageMetadata((MessageMetadata.Message) metadata);
     }
 
     private static class SortedESKs {
