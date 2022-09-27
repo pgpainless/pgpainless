@@ -55,8 +55,8 @@ public class TestDecryptionOfMessageWithoutESKUsingSessionKey {
         assertEquals("Hello, World!\n", out.toString());
     }
 
-    // TODO: Enable when BC 172 gets released with our fix
-    @Disabled("Bug in BC 171. See https://github.com/bcgit/bc-java/pull/1228")
+    // TODO: Enable when BC 173 gets released with our fix
+    @Disabled("Bug in BC 172. See https://github.com/bcgit/bc-java/pull/1228")
     @Test
     public void decryptMessageWithoutSKESK() throws PGPException, IOException {
         ByteArrayInputStream in = new ByteArrayInputStream(encryptedMessageWithoutESK.getBytes(StandardCharsets.UTF_8));
