@@ -9,6 +9,8 @@ import org.bouncycastle.openpgp.PGPException;
 import org.junit.jupiter.api.Test;
 import org.pgpainless.algorithm.OpenPgpPacket;
 import org.pgpainless.util.ArmoredInputStreamFactory;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
@@ -18,6 +20,7 @@ import java.nio.charset.StandardCharsets;
 
 public class TeeBCPGInputStreamTest {
 
+    private static final Logger LOGGER = LoggerFactory.getLogger(TeeBCPGInputStreamTest.class);
     private static final String INBAND_SIGNED = "-----BEGIN PGP MESSAGE-----\n" +
             "Version: PGPainless\n" +
             "\n" +
@@ -48,11 +51,11 @@ public class TeeBCPGInputStreamTest {
 
         int tag;
         while ((tag = nestedTeeIn.nextPacketTag()) != -1) {
-            System.out.println(OpenPgpPacket.requireFromTag(tag));
+            LOGGER.debug(OpenPgpPacket.requireFromTag(tag).toString());
             Packet packet = nestedTeeIn.readPacket();
         }
 
         nestedArmorOut.close();
-        System.out.println(nestedOut);
+        LOGGER.debug(nestedOut.toString());
     }
 }

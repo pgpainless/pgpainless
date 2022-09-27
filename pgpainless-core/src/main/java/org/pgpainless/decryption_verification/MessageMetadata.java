@@ -90,7 +90,7 @@ public class MessageMetadata {
         return (LiteralData) nested;
     }
 
-    public static abstract class Layer {
+    public abstract static class Layer {
         protected final List<SignatureVerification> verifiedSignatures = new ArrayList<>();
         protected final List<SignatureVerification.Failure> failedSignatures = new ArrayList<>();
         protected Nested child;
@@ -198,11 +198,11 @@ public class MessageMetadata {
     }
 
 
-    private static abstract class LayerIterator<O> implements Iterator<O> {
+    private abstract static class LayerIterator<O> implements Iterator<O> {
         private Nested current;
         Layer last = null;
 
-        public LayerIterator(Message message) {
+        LayerIterator(Message message) {
             super();
             this.current = message.child;
             if (matches(current)) {
