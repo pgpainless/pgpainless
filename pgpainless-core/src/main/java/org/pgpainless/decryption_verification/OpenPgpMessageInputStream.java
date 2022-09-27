@@ -50,6 +50,8 @@ import org.pgpainless.key.protection.UnlockSecretKey;
 import org.pgpainless.signature.SignatureUtils;
 import org.pgpainless.util.Passphrase;
 import org.pgpainless.util.Tuple;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
@@ -59,6 +61,8 @@ import java.util.Collection;
 import java.util.List;
 
 public class OpenPgpMessageInputStream extends InputStream {
+
+    private static final Logger LOGGER = LoggerFactory.getLogger(OpenPgpMessageInputStream.class);
 
     protected final PDA automaton = new PDA();
     protected final ConsumerOptions options;
@@ -519,7 +523,7 @@ public class OpenPgpMessageInputStream extends InputStream {
         private final PGPOnePassSignatureList list;
         private final List<Boolean> encapsulating;
 
-        public PGPOnePassSignatureListWrapper(PGPOnePassSignatureList signatures, List<Boolean> encapsulating) {
+        PGPOnePassSignatureListWrapper(PGPOnePassSignatureList signatures, List<Boolean> encapsulating) {
             this.list = signatures;
             this.encapsulating = encapsulating;
         }
@@ -529,7 +533,7 @@ public class OpenPgpMessageInputStream extends InputStream {
         }
     }
 
-    private static class Signatures {
+    private static final class Signatures {
         final ConsumerOptions options;
         List<PGPSignature> detachedSignatures = new ArrayList<>();
         List<PGPSignature> prependedSignatures = new ArrayList<>();
@@ -551,7 +555,6 @@ public class OpenPgpMessageInputStream extends InputStream {
         }
 
         void addPrependedSignatures(PGPSignatureList signatures) {
-            System.out.println("Adding " + signatures.size() + " prepended Signatures");
             for (PGPSignature signature : signatures) {
                 long keyId = SignatureUtils.determineIssuerKeyId(signature);
                 PGPPublicKeyRing certificate = findCertificate(keyId);
@@ -561,7 +564,6 @@ public class OpenPgpMessageInputStream extends InputStream {
         }
 
         void addOnePassSignatures(PGPOnePassSignatureListWrapper signatures) {
-            System.out.println("Adding " + signatures.size() + " OPSs");
             for (PGPOnePassSignature ops : signatures.list) {
                 PGPPublicKeyRing certificate = findCertificate(ops.getKeyID());
                 initialize(ops, certificate);
@@ -570,7 +572,6 @@ public class OpenPgpMessageInputStream extends InputStream {
         }
 
         void addOnePassCorrespondingSignatures(PGPSignatureList signatures) {
-            System.out.println("Adding " + signatures.size() + " Corresponding Signatures");
             for (PGPSignature signature : signatures) {
                 correspondingSignatures.add(signature);
             }
@@ -631,9 +632,9 @@ public class OpenPgpMessageInputStream extends InputStream {
                 try {
                     verified = detached.verify();
                 } catch (PGPException e) {
-                    System.out.println(e.getMessage());
+                    LOGGER.debug("Cannot verify detached signature.", e);
                 }
-                System.out.println("Detached Signature by " + Long.toHexString(detached.getKeyID()) + " is " + (verified ? "verified" : "unverified"));
+                LOGGER.debug("Detached Signature by " + Long.toHexString(detached.getKeyID()) + " is " + (verified ? "verified" : "unverified"));
             }
 
             for (PGPSignature prepended : prependedSignatures) {
@@ -641,9 +642,9 @@ public class OpenPgpMessageInputStream extends InputStream {
                 try {
                     verified = prepended.verify();
                 } catch (PGPException e) {
-                    System.out.println(e.getMessage());
+                    LOGGER.debug("Cannot verify prepended signature.", e);
                 }
-                System.out.println("Prepended Signature by " + Long.toHexString(prepended.getKeyID()) + " is " + (verified ? "verified" : "unverified"));
+                LOGGER.debug("Prepended Signature by " + Long.toHexString(prepended.getKeyID()) + " is " + (verified ? "verified" : "unverified"));
             }
 
 
@@ -654,9 +655,9 @@ public class OpenPgpMessageInputStream extends InputStream {
                 try {
                     verified = ops.verify(signature);
                 } catch (PGPException e) {
-                    System.out.println(e.getMessage());
+                    LOGGER.debug("Cannot verify OPS signature.", e);
                 }
-                System.out.println("One-Pass-Signature by " + Long.toHexString(ops.getKeyID()) + " is " + (verified ? "verified" : "unverified"));
+                LOGGER.debug("One-Pass-Signature by " + Long.toHexString(ops.getKeyID()) + " is " + (verified ? "verified" : "unverified"));
             }
         }
     }
