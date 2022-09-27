@@ -5,9 +5,11 @@
 package org.pgpainless;
 
 import java.io.IOException;
+import java.io.OutputStream;
 import java.util.Date;
 import javax.annotation.Nonnull;
 
+import org.bouncycastle.bcpg.ArmoredOutputStream;
 import org.bouncycastle.openpgp.PGPException;
 import org.bouncycastle.openpgp.PGPKeyRing;
 import org.bouncycastle.openpgp.PGPPublicKeyRing;
@@ -89,14 +91,30 @@ public final class PGPainless {
      * @param key key or certificate
      * @return ascii armored string
      *
-     * @throws IOException in case of an error in the {@link org.bouncycastle.bcpg.ArmoredOutputStream}
+     * @throws IOException in case of an error in the {@link ArmoredOutputStream}
      */
-    public static String asciiArmor(@Nonnull PGPKeyRing key) throws IOException {
+    public static String asciiArmor(@Nonnull PGPKeyRing key)
+            throws IOException {
         if (key instanceof PGPSecretKeyRing) {
             return ArmorUtils.toAsciiArmoredString((PGPSecretKeyRing) key);
         } else {
             return ArmorUtils.toAsciiArmoredString((PGPPublicKeyRing) key);
         }
+    }
+
+    /**
+     * Wrap a key of certificate in ASCII armor and write the result into the given {@link OutputStream}.
+     *
+     * @param key key or certificate
+     * @param outputStream output stream
+     *
+     * @throws IOException in case of an error ion the {@link ArmoredOutputStream}
+     */
+    public static void asciiArmor(@Nonnull PGPKeyRing key, @Nonnull OutputStream outputStream)
+            throws IOException {
+        ArmoredOutputStream armorOut = ArmorUtils.toAsciiArmoredStream(key, outputStream);
+        key.encode(armorOut);
+        armorOut.close();
     }
 
     /**
