@@ -24,6 +24,7 @@ import org.bouncycastle.openpgp.PGPObjectFactory;
 import org.bouncycastle.openpgp.PGPPublicKey;
 import org.bouncycastle.openpgp.PGPPublicKeyRing;
 import org.bouncycastle.openpgp.PGPSecretKeyRing;
+import org.bouncycastle.openpgp.PGPSignature;
 import org.bouncycastle.openpgp.PGPUtil;
 import org.bouncycastle.util.io.Streams;
 import org.junit.jupiter.api.AfterAll;
@@ -39,6 +40,7 @@ import org.pgpainless.key.TestKeys;
 import org.pgpainless.key.generation.KeySpec;
 import org.pgpainless.key.generation.type.ecc.EllipticCurve;
 import org.pgpainless.key.generation.type.ecc.ecdsa.ECDSA;
+import org.pgpainless.signature.SignatureUtils;
 
 public class ArmorUtilsTest {
 
@@ -126,6 +128,21 @@ public class ArmorUtilsTest {
         ByteArrayInputStream in = new ByteArrayInputStream(bytes.toByteArray());
         String ascii = ArmorUtils.toAsciiArmoredString(in);
         assertTrue(ascii.startsWith("-----BEGIN PGP PRIVATE KEY BLOCK-----\n"));
+    }
+
+    @Test
+    public void signatureToAsciiArmoredString() throws PGPException, IOException {
+        String SIG = "-----BEGIN PGP SIGNATURE-----\n" +
+                "Version: PGPainless\n" +
+                "\n" +
+                "iHUEARMKAB0WIQRPZlxNwsRmC8ZCXkFXNuaTGs83DAUCYJ/x5gAKCRBXNuaTGs83\n" +
+                "DFRwAP9/4wMvV3WcX59Clo7mkRce6iwW3VBdiN+yMu3tjmHB2wD/RfE28Q1v4+eo\n" +
+                "ySNgbyvqYYsNr0fnBwaG3aaj+u5ExiE=\n" +
+                "=Z2SO\n" +
+                "-----END PGP SIGNATURE-----\n";
+        PGPSignature signature = SignatureUtils.readSignatures(SIG).get(0);
+        String armored = PGPainless.asciiArmor(signature);
+        assertEquals(SIG, armored);
     }
 
     @Test

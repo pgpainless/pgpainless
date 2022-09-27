@@ -14,6 +14,7 @@ import org.bouncycastle.openpgp.PGPException;
 import org.bouncycastle.openpgp.PGPKeyRing;
 import org.bouncycastle.openpgp.PGPPublicKeyRing;
 import org.bouncycastle.openpgp.PGPSecretKeyRing;
+import org.bouncycastle.openpgp.PGPSignature;
 import org.pgpainless.decryption_verification.DecryptionBuilder;
 import org.pgpainless.decryption_verification.DecryptionStream;
 import org.pgpainless.encryption_signing.EncryptionBuilder;
@@ -27,6 +28,7 @@ import org.pgpainless.key.modification.secretkeyring.SecretKeyRingEditorInterfac
 import org.pgpainless.key.parsing.KeyRingReader;
 import org.pgpainless.key.util.KeyRingUtils;
 import org.pgpainless.policy.Policy;
+import org.pgpainless.signature.SignatureUtils;
 import org.pgpainless.util.ArmorUtils;
 
 public final class PGPainless {
@@ -100,6 +102,19 @@ public final class PGPainless {
         } else {
             return ArmorUtils.toAsciiArmoredString((PGPPublicKeyRing) key);
         }
+    }
+
+    /**
+     * Wrap the detached signature in ASCII armor.
+     *
+     * @param signature detached signature
+     * @return ascii armored string
+     *
+     * @throws IOException in case of an error in the {@link ArmoredOutputStream}
+     */
+    public static String asciiArmor(@Nonnull PGPSignature signature)
+            throws IOException {
+        return ArmorUtils.toAsciiArmoredString(signature);
     }
 
     /**
