@@ -129,6 +129,14 @@ public class ArmorUtilsTest {
     }
 
     @Test
+    public void testAsciiArmorToStream() throws IOException, PGPException {
+        PGPSecretKeyRing secretKeys = TestKeys.getEmilSecretKeyRing();
+        ByteArrayOutputStream bytes = new ByteArrayOutputStream();
+        PGPainless.asciiArmor(secretKeys, bytes);
+        assertTrue(bytes.toString().startsWith("-----BEGIN PGP PRIVATE KEY BLOCK-----\n"));
+    }
+
+    @Test
     public void testSetCustomVersionHeader() throws IOException {
         ArmoredOutputStreamFactory.setVersionInfo("MyVeryFirstOpenPGPProgram 1.0");
         ArmoredOutputStreamFactory.setComment("This is a comment\nThat spans multiple\nLines!");
