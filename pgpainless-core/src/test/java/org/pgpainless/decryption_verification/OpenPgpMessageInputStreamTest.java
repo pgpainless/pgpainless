@@ -4,6 +4,7 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
@@ -377,7 +378,8 @@ public class OpenPgpMessageInputStreamTest {
 
     @ParameterizedTest(name = "Process SIG COMP(LIT) using {0}")
     @MethodSource("provideMessageProcessors")
-    public void testProcessSIG_COMP_LIT(Processor processor) throws PGPException, IOException {
+    public void testProcessSIG_COMP_LIT(Processor processor)
+            throws PGPException, IOException {
         PGPPublicKeyRing cert = PGPainless.extractCertificate(
                 PGPainless.readKeyRing().secretKeyRing(KEY));
 
@@ -392,7 +394,8 @@ public class OpenPgpMessageInputStreamTest {
 
     @ParameterizedTest(name = "Process SENC(LIT) using {0}")
     @MethodSource("provideMessageProcessors")
-    public void testProcessSENC_LIT(Processor processor) throws PGPException, IOException {
+    public void testProcessSENC_LIT(Processor processor)
+            throws PGPException, IOException {
         Tuple<String, MessageMetadata> result = processor.process(SENC_LIT, ConsumerOptions.get()
                 .addDecryptionPassphrase(Passphrase.fromPassword(PASSPHRASE)));
         String plain = result.getA();
@@ -404,7 +407,8 @@ public class OpenPgpMessageInputStreamTest {
 
     @ParameterizedTest(name = "Process PENC(COMP(LIT)) using {0}")
     @MethodSource("provideMessageProcessors")
-    public void testProcessPENC_COMP_LIT(Processor processor) throws IOException, PGPException {
+    public void testProcessPENC_COMP_LIT(Processor processor)
+            throws IOException, PGPException {
         PGPSecretKeyRing secretKeys = PGPainless.readKeyRing().secretKeyRing(KEY);
         Tuple<String, MessageMetadata> result = processor.process(PENC_COMP_LIT, ConsumerOptions.get()
                 .addDecryptionKey(secretKeys));
@@ -417,7 +421,8 @@ public class OpenPgpMessageInputStreamTest {
 
     @ParameterizedTest(name = "Process OPS LIT SIG using {0}")
     @MethodSource("provideMessageProcessors")
-    public void testProcessOPS_LIT_SIG(Processor processor) throws IOException, PGPException {
+    public void testProcessOPS_LIT_SIG(Processor processor)
+            throws IOException, PGPException {
         PGPPublicKeyRing cert = PGPainless.extractCertificate(PGPainless.readKeyRing().secretKeyRing(KEY));
         Tuple<String, MessageMetadata> result = processor.process(OPS_LIT_SIG, ConsumerOptions.get()
                 .addVerificationCert(cert));
@@ -428,7 +433,8 @@ public class OpenPgpMessageInputStreamTest {
         assertNull(metadata.getCompressionAlgorithm());
     }
 
-    private static Tuple<String, MessageMetadata> processReadBuffered(String armoredMessage, ConsumerOptions options) throws PGPException, IOException {
+    private static Tuple<String, MessageMetadata> processReadBuffered(String armoredMessage, ConsumerOptions options)
+            throws PGPException, IOException {
         OpenPgpMessageInputStream in = get(armoredMessage, options);
         ByteArrayOutputStream out = new ByteArrayOutputStream();
         Streams.pipeAll(in, out);
@@ -437,7 +443,8 @@ public class OpenPgpMessageInputStreamTest {
         return new Tuple<>(out.toString(), metadata);
     }
 
-    private static Tuple<String, MessageMetadata> processReadSequential(String armoredMessage, ConsumerOptions options) throws PGPException, IOException {
+    private static Tuple<String, MessageMetadata> processReadSequential(String armoredMessage, ConsumerOptions options)
+            throws PGPException, IOException {
         OpenPgpMessageInputStream in = get(armoredMessage, options);
         ByteArrayOutputStream out = new ByteArrayOutputStream();
 
@@ -451,7 +458,8 @@ public class OpenPgpMessageInputStreamTest {
         return new Tuple<>(out.toString(), metadata);
     }
 
-    private static OpenPgpMessageInputStream get(String armored, ConsumerOptions options) throws IOException, PGPException {
+    private static OpenPgpMessageInputStream get(String armored, ConsumerOptions options)
+            throws IOException, PGPException {
         ByteArrayInputStream bytesIn = new ByteArrayInputStream(armored.getBytes(StandardCharsets.UTF_8));
         ArmoredInputStream armorIn = ArmoredInputStreamFactory.get(bytesIn);
         OpenPgpMessageInputStream pgpIn = new OpenPgpMessageInputStream(armorIn, options);
