@@ -28,7 +28,6 @@ import org.pgpainless.key.modification.secretkeyring.SecretKeyRingEditorInterfac
 import org.pgpainless.key.parsing.KeyRingReader;
 import org.pgpainless.key.util.KeyRingUtils;
 import org.pgpainless.policy.Policy;
-import org.pgpainless.signature.SignatureUtils;
 import org.pgpainless.util.ArmorUtils;
 
 public final class PGPainless {
