@@ -60,6 +60,7 @@ import java.io.OutputStream;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
+import java.util.Stack;
 
 public class OpenPgpMessageInputStream extends InputStream {
 
@@ -577,15 +578,20 @@ public class OpenPgpMessageInputStream extends InputStream {
 
     private static final class Signatures extends OutputStream {
         final ConsumerOptions options;
-        List<PGPSignature> detachedSignatures = new ArrayList<>();
-        List<PGPSignature> prependedSignatures = new ArrayList<>();
-        List<List<PGPOnePassSignature>> onePassSignatures = new ArrayList<>();
-        List<PGPSignature> correspondingSignatures = new ArrayList<>();
+        final List<PGPSignature> detachedSignatures;
+        final List<PGPSignature> prependedSignatures;
+        final Stack<List<PGPOnePassSignature>> onePassSignatures;
+        final List<PGPSignature> correspondingSignatures;
 
         boolean lastOpsIsContaining = true;
 
         private Signatures(ConsumerOptions options) {
             this.options = options;
+            this.detachedSignatures = new ArrayList<>();
+            this.prependedSignatures = new ArrayList<>();
+            this.onePassSignatures = new Stack<>();
+            onePassSignatures.push(new ArrayList<>());
+            this.correspondingSignatures = new ArrayList<>();
         }
 
         void addDetachedSignatures(Collection<PGPSignature> signatures) {
