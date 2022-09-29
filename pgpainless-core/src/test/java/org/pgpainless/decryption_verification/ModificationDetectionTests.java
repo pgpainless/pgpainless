@@ -530,7 +530,7 @@ public class ModificationDetectionTests {
         );
     }
 
-    private PGPSecretKeyRingCollection getDecryptionKey() throws IOException, PGPException {
+    private PGPSecretKeyRingCollection getDecryptionKey() throws IOException {
         PGPSecretKeyRing secretKeys = PGPainless.readKeyRing().secretKeyRing(keyAscii);
         return new PGPSecretKeyRingCollection(Collections.singletonList(secretKeys));
     }

@@ -76,7 +76,7 @@ public class InlineSignImpl implements InlineSign {
     }
 
     @Override
-    public Ready data(InputStream data) throws SOPGPException.KeyIsProtected, IOException, SOPGPException.ExpectedText {
+    public Ready data(InputStream data) throws SOPGPException.KeyIsProtected, SOPGPException.ExpectedText {
         for (PGPSecretKeyRing key : signingKeys) {
             try {
                 if (mode == InlineSignAs.CleartextSigned) {

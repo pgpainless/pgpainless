@@ -327,7 +327,7 @@ public class SecretKeyRingEditor implements SecretKeyRingEditorInterface {
             @Nonnull SecretKeyRingProtector primaryKeyProtector,
             @Nonnull KeyFlag keyFlag,
             KeyFlag... additionalKeyFlags)
-            throws PGPException, IOException, NoSuchAlgorithmException {
+            throws PGPException, IOException {
         KeyFlag[] flags = concat(keyFlag, additionalKeyFlags);
         PublicKeyAlgorithm subkeyAlgorithm = PublicKeyAlgorithm.requireFromId(subkey.getPublicKey().getAlgorithm());
         SignatureSubpacketsUtil.assureKeyCanCarryFlags(subkeyAlgorithm);
