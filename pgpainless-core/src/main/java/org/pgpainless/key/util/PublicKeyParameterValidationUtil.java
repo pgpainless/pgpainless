@@ -237,7 +237,7 @@ public class PublicKeyParameterValidationUtil {
      * Validate ElGamal public key parameters.
      *
      * Original implementation by the openpgpjs authors:
-     * https://github.com/openpgpjs/openpgpjs/blob/main/src/crypto/public_key/elgamal.js#L76-L143
+     * <a href="https://github.com/openpgpjs/openpgpjs/blob/main/src/crypto/public_key/elgamal.js#L76-L143>OpenPGP.js source</a>
      * @param secretKey secret key
      * @param publicKey public key
      * @return true if supposedly valid, false if invalid

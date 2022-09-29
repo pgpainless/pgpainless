@@ -20,7 +20,7 @@ import org.pgpainless.util.TestAllImplementations;
 import org.pgpainless.util.Passphrase;
 
 /**
- * Reproduce behavior of https://github.com/pgpainless/pgpainless/issues/16
+ * Reproduce behavior of <a href="https://github.com/pgpainless/pgpainless/issues/16>this issue</a>
  * and verify that the fix is working.
  *
  * The issue is that the implementation of {@link Passphrase#emptyPassphrase()} would set the underlying

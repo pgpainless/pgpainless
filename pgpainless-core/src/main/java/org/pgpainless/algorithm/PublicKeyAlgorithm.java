@@ -28,7 +28,7 @@ public enum PublicKeyAlgorithm {
     /**
      * RSA with usage encryption.
      *
-     * @deprecated see https://tools.ietf.org/html/rfc4880#section-13.5
+     * @deprecated see <a href="https://tools.ietf.org/html/rfc4880#section-13.5">Deprecation notice</a>
      */
     @Deprecated
     RSA_ENCRYPT     (PublicKeyAlgorithmTags.RSA_ENCRYPT, false, true),
@@ -36,7 +36,7 @@ public enum PublicKeyAlgorithm {
     /**
      * RSA with usage of creating signatures.
      *
-     * @deprecated see https://tools.ietf.org/html/rfc4880#section-13.5
+     * @deprecated see <a href="https://tools.ietf.org/html/rfc4880#section-13.5">Deprecation notice</a>
      */
     @Deprecated
     RSA_SIGN        (PublicKeyAlgorithmTags.RSA_SIGN, true, false),
@@ -71,7 +71,7 @@ public enum PublicKeyAlgorithm {
     /**
      * ElGamal General.
      *
-     * @deprecated see https://tools.ietf.org/html/rfc4880#section-13.8
+     * @deprecated see <a href="https://tools.ietf.org/html/rfc4880#section-13.8">Deprecation notice</a>
      */
     @Deprecated
     ELGAMAL_GENERAL (PublicKeyAlgorithmTags.ELGAMAL_GENERAL, true, true),

@@ -28,7 +28,7 @@ public class PGPPublicKeyRingTest {
      * Learning test to see if BC also makes userids available on subkeys.
      * It does not.
      *
-     * see also https://security.stackexchange.com/questions/92635/is-it-possible-to-assign-different-uids-to-subkeys-for-the-purpose-of-having-mul
+     * @see <a href="https://security.stackexchange.com/questions/92635/is-it-possible-to-assign-different-uids-to-subkeys-for-the-purpose-of-having-mul>Stackexchange link</a>
      */
     @Test
     public void subkeysDoNotHaveUserIDsTest() throws InvalidAlgorithmParameterException, NoSuchAlgorithmException, PGPException {
