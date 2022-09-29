@@ -1,6 +1,7 @@
 package org.pgpainless.decryption_verification;
 
 import org.bouncycastle.bcpg.BCPGInputStream;
+import org.pgpainless.util.ArmorUtils;
 
 import java.io.IOException;
 import java.io.InputStream;
