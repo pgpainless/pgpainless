@@ -13,7 +13,7 @@ import org.pgpainless.PGPainless;
  * This class contains a set of slightly out of spec or weird keys.
  * Those are used to test whether implementations behave correctly when dealing with such keys.
  *
- * Original source: https://gitlab.com/sequoia-pgp/weird-keys
+ * @see <a href="https://gitlab.com/sequoia-pgp/weird-keys">Original Source</a>
  */
 public class WeirdKeys {
 

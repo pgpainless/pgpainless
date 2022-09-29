@@ -20,11 +20,13 @@ public interface MissingPublicKeyCallback {
      * you may not only search for the key-id on the key rings primary key!
      *
      * It would be super cool to provide the OpenPgp fingerprint here, but unfortunately one-pass-signatures
-     * only contain the key id (see https://datatracker.ietf.org/doc/html/rfc4880#section-5.4)
+     * only contain the key id.
      *
      * @param keyId ID of the missing signing (sub)key
      *
      * @return keyring containing the key or null
+     *
+     * @see <a href="https://datatracker.ietf.org/doc/html/rfc4880#section-5.4">RFC</a>
      */
     @Nullable PGPPublicKeyRing onMissingPublicKeyEncountered(@Nonnull Long keyId);
 
