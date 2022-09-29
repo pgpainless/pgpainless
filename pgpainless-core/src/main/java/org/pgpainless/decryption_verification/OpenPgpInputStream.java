@@ -47,6 +47,7 @@ import org.pgpainless.algorithm.SymmetricKeyAlgorithm;
 
 public class OpenPgpInputStream extends BufferedInputStream {
 
+    @SuppressWarnings("CharsetObjectCanBeUsed")
     private static final byte[] ARMOR_HEADER = "-----BEGIN PGP ".getBytes(Charset.forName("UTF8"));
 
     // Buffer beginning bytes of the data
