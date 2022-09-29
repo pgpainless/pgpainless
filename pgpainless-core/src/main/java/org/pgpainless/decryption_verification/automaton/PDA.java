@@ -149,11 +149,19 @@ public class PDA {
             @Override
             State transition(InputAlphabet input, PDA automaton) throws MalformedOpenPgpMessageException {
                 StackAlphabet stackItem = automaton.popStack();
-                if (stackItem == terminus && input == InputAlphabet.EndOfSequence && automaton.stack.isEmpty()) {
-                    return Valid;
-                } else {
-                    throw new MalformedOpenPgpMessageException(this, input, stackItem);
+                if (input == InputAlphabet.EndOfSequence) {
+                    if (stackItem == terminus && automaton.stack.isEmpty()) {
+                        return Valid;
+                    } else {
+                        // premature end of stream
+                        throw new MalformedOpenPgpMessageException(this, input, stackItem);
+                    }
+                } else if (input == InputAlphabet.Signatures) {
+                    if (stackItem == ops) {
+                        return CorrespondingSignature;
+                    }
                 }
+                throw new MalformedOpenPgpMessageException(this, input, stackItem);
             }
         },
 
