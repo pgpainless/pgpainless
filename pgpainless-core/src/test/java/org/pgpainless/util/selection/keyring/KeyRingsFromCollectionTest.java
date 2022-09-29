@@ -56,7 +56,7 @@ public class KeyRingsFromCollectionTest {
     }
 
     @Test
-    public void selectPublicKeyRingFromPublicKeyRingCollectionTest() throws IOException, PGPException {
+    public void selectPublicKeyRingFromPublicKeyRingCollectionTest() throws IOException {
         PGPPublicKeyRing emil = TestKeys.getEmilPublicKeyRing();
         PGPPublicKeyRing juliet = TestKeys.getJulietPublicKeyRing();
         PGPPublicKeyRingCollection collection = new PGPPublicKeyRingCollection(Arrays.asList(emil, juliet));
@@ -68,7 +68,7 @@ public class KeyRingsFromCollectionTest {
     }
 
     @Test
-    public void selectPublicKeyRingMapFromPublicKeyRingCollectionMapTest() throws IOException, PGPException {
+    public void selectPublicKeyRingMapFromPublicKeyRingCollectionMapTest() throws IOException {
         PGPPublicKeyRing emil = TestKeys.getEmilPublicKeyRing();
         PGPPublicKeyRing juliet = TestKeys.getJulietPublicKeyRing();
         MultiMap<String, PGPPublicKeyRingCollection> map = new MultiMap<>();

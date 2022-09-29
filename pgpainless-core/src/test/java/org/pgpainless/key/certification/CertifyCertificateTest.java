@@ -140,7 +140,7 @@ public class CertifyCertificateTest {
     }
 
     @Test
-    public void testScopedDelegation() throws PGPException, InvalidAlgorithmParameterException, NoSuchAlgorithmException, IOException {
+    public void testScopedDelegation() throws PGPException, InvalidAlgorithmParameterException, NoSuchAlgorithmException {
         PGPSecretKeyRing aliceKey = PGPainless.generateKeyRing()
                 .modernKeyRing("Alice <alice@pgpainless.org>");
         PGPSecretKeyRing caKey = PGPainless.generateKeyRing()

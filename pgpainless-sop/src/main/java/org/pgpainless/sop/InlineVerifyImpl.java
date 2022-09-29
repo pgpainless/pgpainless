@@ -49,7 +49,7 @@ public class InlineVerifyImpl implements InlineVerify {
     }
 
     @Override
-    public ReadyWithResult<List<Verification>> data(InputStream data) throws IOException, SOPGPException.NoSignature, SOPGPException.BadData {
+    public ReadyWithResult<List<Verification>> data(InputStream data) throws SOPGPException.NoSignature, SOPGPException.BadData {
         return new ReadyWithResult<List<Verification>>() {
             @Override
             public List<Verification> writeTo(OutputStream outputStream) throws IOException, SOPGPException.NoSignature {

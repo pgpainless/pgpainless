@@ -167,12 +167,9 @@ public final class KeyRingUtils {
      *
      * @param secretKeyRings secret key ring collection
      * @return public key ring collection
-     * @throws PGPException TODO: remove
-     * @throws IOException TODO: remove
      */
     @Nonnull
-    public static PGPPublicKeyRingCollection publicKeyRingCollectionFrom(@Nonnull PGPSecretKeyRingCollection secretKeyRings)
-            throws PGPException, IOException {
+    public static PGPPublicKeyRingCollection publicKeyRingCollectionFrom(@Nonnull PGPSecretKeyRingCollection secretKeyRings) {
         List<PGPPublicKeyRing> certificates = new ArrayList<>();
         for (PGPSecretKeyRing secretKey : secretKeyRings) {
             certificates.add(PGPainless.extractCertificate(secretKey));
@@ -200,13 +197,9 @@ public final class KeyRingUtils {
      *
      * @param rings array of public key rings
      * @return key ring collection
-     *
-     * @throws IOException in case of an io error
-     * @throws PGPException in case of a broken key
      */
     @Nonnull
-    public static PGPPublicKeyRingCollection keyRingsToKeyRingCollection(@Nonnull PGPPublicKeyRing... rings)
-            throws IOException, PGPException {
+    public static PGPPublicKeyRingCollection keyRingsToKeyRingCollection(@Nonnull PGPPublicKeyRing... rings) {
         return new PGPPublicKeyRingCollection(Arrays.asList(rings));
     }
 
@@ -215,13 +208,9 @@ public final class KeyRingUtils {
      *
      * @param rings array of secret key rings
      * @return secret key ring collection
-     *
-     * @throws IOException in case of an io error
-     * @throws PGPException in case of a broken key
      */
     @Nonnull
-    public static PGPSecretKeyRingCollection keyRingsToKeyRingCollection(@Nonnull PGPSecretKeyRing... rings)
-            throws IOException, PGPException {
+    public static PGPSecretKeyRingCollection keyRingsToKeyRingCollection(@Nonnull PGPSecretKeyRing... rings) {
         return new PGPSecretKeyRingCollection(Arrays.asList(rings));
     }
 

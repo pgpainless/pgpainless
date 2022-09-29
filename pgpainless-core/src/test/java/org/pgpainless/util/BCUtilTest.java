@@ -8,7 +8,6 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
-import java.io.IOException;
 import java.security.InvalidAlgorithmParameterException;
 import java.security.NoSuchAlgorithmException;
 import java.util.Iterator;
@@ -36,8 +35,7 @@ public class BCUtilTest {
 
     @Test
     public void keyRingToCollectionTest()
-            throws PGPException, NoSuchAlgorithmException, InvalidAlgorithmParameterException,
-            IOException {
+            throws PGPException, NoSuchAlgorithmException, InvalidAlgorithmParameterException {
         PGPSecretKeyRing sec = PGPainless.buildKeyRing()
                 .setPrimaryKey(KeySpec.getBuilder(
                         KeyType.RSA(RsaLength._3072),
