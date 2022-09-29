@@ -232,10 +232,9 @@ public class KeyRingReader {
      * @return public key ring collection
      *
      * @throws IOException in case of an IO error or exceeding of max iterations
-     * @throws PGPException in case of a broken key
      */
     public static PGPPublicKeyRingCollection readPublicKeyRingCollection(@Nonnull InputStream inputStream, int maxIterations)
-            throws IOException, PGPException {
+            throws IOException {
         PGPObjectFactory objectFactory = ImplementationFactory.getInstance().getPGPObjectFactory(
                 ArmorUtils.getDecoderStream(inputStream));
 
@@ -317,11 +316,10 @@ public class KeyRingReader {
      * @return secret key ring collection
      *
      * @throws IOException in case of an IO error or exceeding of max iterations
-     * @throws PGPException in case of a broken secret key
      */
     public static PGPSecretKeyRingCollection readSecretKeyRingCollection(@Nonnull InputStream inputStream,
                                                                          int maxIterations)
-            throws IOException, PGPException {
+            throws IOException {
         PGPObjectFactory objectFactory = ImplementationFactory.getInstance().getPGPObjectFactory(
                 ArmorUtils.getDecoderStream(inputStream));
 

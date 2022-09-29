@@ -18,7 +18,7 @@ import sop.operation.Dearmor;
 public class DearmorImpl implements Dearmor {
 
     @Override
-    public Ready data(InputStream data) throws IOException {
+    public Ready data(InputStream data) {
         InputStream decoder;
         try {
             decoder = PGPUtil.getDecoderStream(data);

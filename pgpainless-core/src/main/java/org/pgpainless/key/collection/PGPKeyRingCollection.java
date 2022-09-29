@@ -74,7 +74,7 @@ public class PGPKeyRingCollection {
     }
 
     public PGPKeyRingCollection(@Nonnull Collection<PGPKeyRing> collection, boolean isSilent)
-            throws IOException, PGPException {
+            throws PGPException {
         List<PGPSecretKeyRing> secretKeyRings = new ArrayList<>();
         List<PGPPublicKeyRing> publicKeyRings = new ArrayList<>();
 

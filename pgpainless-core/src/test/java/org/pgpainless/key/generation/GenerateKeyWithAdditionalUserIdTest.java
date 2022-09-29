@@ -7,7 +7,6 @@ package org.pgpainless.key.generation;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 
-import java.io.IOException;
 import java.security.InvalidAlgorithmParameterException;
 import java.security.NoSuchAlgorithmException;
 import java.util.Date;
@@ -26,14 +25,15 @@ import org.pgpainless.key.generation.type.rsa.RsaLength;
 import org.pgpainless.key.util.KeyRingUtils;
 import org.pgpainless.key.util.UserId;
 import org.pgpainless.timeframe.TestTimeFrameProvider;
+import org.pgpainless.util.DateUtil;
 import org.pgpainless.util.TestAllImplementations;
 
 public class GenerateKeyWithAdditionalUserIdTest {
 
     @TestTemplate
     @ExtendWith(TestAllImplementations.class)
-    public void test() throws InvalidAlgorithmParameterException, NoSuchAlgorithmException, PGPException, IOException {
-        Date now = new Date();
+    public void test() throws InvalidAlgorithmParameterException, NoSuchAlgorithmException, PGPException {
+        Date now = DateUtil.now();
         Date expiration = TestTimeFrameProvider.defaultExpirationForCreationDate(now);
         PGPSecretKeyRing secretKeys = PGPainless.buildKeyRing()
                 .setPrimaryKey(KeySpec.getBuilder(

@@ -9,7 +9,6 @@ import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
-import java.io.IOException;
 import java.security.InvalidAlgorithmParameterException;
 import java.security.NoSuchAlgorithmException;
 import java.util.Arrays;
@@ -165,7 +164,7 @@ public class EncryptionOptionsTest {
     }
 
     @Test
-    public void testAddRecipients_PGPPublicKeyRingCollection() throws PGPException, InvalidAlgorithmParameterException, NoSuchAlgorithmException, IOException {
+    public void testAddRecipients_PGPPublicKeyRingCollection() throws PGPException, InvalidAlgorithmParameterException, NoSuchAlgorithmException {
         PGPPublicKeyRing secondKeyRing = KeyRingUtils.publicKeyRingFrom(
                 PGPainless.generateKeyRing().modernKeyRing("other@pgpainless.org"));
 
