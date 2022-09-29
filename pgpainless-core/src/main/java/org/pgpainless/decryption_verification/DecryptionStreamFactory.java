@@ -36,7 +36,6 @@ import org.bouncycastle.openpgp.PGPSecretKeyRing;
 import org.bouncycastle.openpgp.PGPSessionKey;
 import org.bouncycastle.openpgp.PGPSignature;
 import org.bouncycastle.openpgp.PGPSignatureList;
-import org.bouncycastle.openpgp.PGPUtil;
 import org.bouncycastle.openpgp.operator.PBEDataDecryptorFactory;
 import org.bouncycastle.openpgp.operator.PGPContentVerifierBuilderProvider;
 import org.bouncycastle.openpgp.operator.PublicKeyDataDecryptorFactory;
@@ -241,14 +240,12 @@ public final class DecryptionStreamFactory {
         SessionKey sessionKey = options.getSessionKey();
         if (sessionKey != null) {
             integrityProtectedEncryptedInputStream = decryptWithProvidedSessionKey(pgpEncryptedDataList, sessionKey);
-            InputStream decodedDataStream = PGPUtil.getDecoderStream(integrityProtectedEncryptedInputStream);
-            PGPObjectFactory factory = ImplementationFactory.getInstance().getPGPObjectFactory(decodedDataStream);
+            PGPObjectFactory factory = ImplementationFactory.getInstance().getPGPObjectFactory(integrityProtectedEncryptedInputStream);
             return processPGPPackets(factory, ++depth);
         }
 
         InputStream decryptedDataStream = decryptSessionKey(pgpEncryptedDataList);
-        InputStream decodedDataStream = PGPUtil.getDecoderStream(decryptedDataStream);
-        PGPObjectFactory factory = ImplementationFactory.getInstance().getPGPObjectFactory(decodedDataStream);
+        PGPObjectFactory factory = ImplementationFactory.getInstance().getPGPObjectFactory(decryptedDataStream);
         return processPGPPackets(factory, ++depth);
     }
 
@@ -299,8 +296,7 @@ public final class DecryptionStreamFactory {
         }
 
         InputStream inflatedDataStream = pgpCompressedData.getDataStream();
-        InputStream decodedDataStream = PGPUtil.getDecoderStream(inflatedDataStream);
-        PGPObjectFactory objectFactory = ImplementationFactory.getInstance().getPGPObjectFactory(decodedDataStream);
+        PGPObjectFactory objectFactory = ImplementationFactory.getInstance().getPGPObjectFactory(inflatedDataStream);
 
         return processPGPPackets(objectFactory, ++depth);
     }
