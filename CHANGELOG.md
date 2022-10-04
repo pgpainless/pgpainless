@@ -8,6 +8,8 @@ SPDX-License-Identifier: CC0-1.0
 ## 1.3.7-SNAPSHOT
 - Add `KeyRingUtils.injectCertification(keys, certification)`
 - Bugfix: Fix signature verification when `DecryptionStream` is drained byte-by-byte using `read()` call
+- Add `PGPainless.asciiArmor(key, outputStream)`
+- Add `PGPainless.asciiArmor(signature)`
 
 ## 1.3.6
 - Remove deprecated methods
