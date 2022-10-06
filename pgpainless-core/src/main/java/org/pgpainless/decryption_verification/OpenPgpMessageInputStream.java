@@ -20,7 +20,6 @@ import org.bouncycastle.openpgp.PGPEncryptedData;
 import org.bouncycastle.openpgp.PGPEncryptedDataList;
 import org.bouncycastle.openpgp.PGPException;
 import org.bouncycastle.openpgp.PGPLiteralData;
-import org.bouncycastle.openpgp.PGPObjectFactory;
 import org.bouncycastle.openpgp.PGPOnePassSignature;
 import org.bouncycastle.openpgp.PGPPBEEncryptedData;
 import org.bouncycastle.openpgp.PGPPrivateKey;
@@ -53,7 +52,6 @@ import org.pgpainless.key.info.KeyRingInfo;
 import org.pgpainless.key.protection.SecretKeyRingProtector;
 import org.pgpainless.key.protection.UnlockSecretKey;
 import org.pgpainless.signature.SignatureUtils;
-import org.pgpainless.util.ArmorUtils;
 import org.pgpainless.util.Passphrase;
 import org.pgpainless.util.Tuple;
 import org.slf4j.Logger;
@@ -68,6 +66,7 @@ public class OpenPgpMessageInputStream extends InputStream {
     protected final OpenPgpMetadata.Builder resultBuilder;
     // Pushdown Automaton to verify validity of OpenPGP packet sequence in an OpenPGP message
     protected final PDA automaton = new PDA();
+    protected final DelayedTeeInputStreamInputStream delayedTee;
     // InputStream of OpenPGP packets of the current layer
     protected final BCPGInputStream packetInputStream;
     // InputStream of a nested data packet
@@ -96,8 +95,9 @@ public class OpenPgpMessageInputStream extends InputStream {
             this.signatures.addDetachedSignatures(options.getDetachedSignatures());
         }
 
-        BCPGInputStream bcpg = BCPGInputStream.wrap(inputStream);
-        this.packetInputStream = new TeeBCPGInputStream(bcpg, signatures);
+        delayedTee = new DelayedTeeInputStreamInputStream(inputStream, signatures);
+        BCPGInputStream bcpg = BCPGInputStream.wrap(delayedTee);
+        this.packetInputStream = bcpg;
 
         // *omnomnom*
         consumePackets();
@@ -121,22 +121,15 @@ public class OpenPgpMessageInputStream extends InputStream {
      */
     private void consumePackets()
             throws IOException, PGPException {
-        int tag;
-        loop: while ((tag = nextTag()) != -1) {
-            OpenPgpPacket nextPacket;
-            try {
-                nextPacket = OpenPgpPacket.requireFromTag(tag);
-            } catch (NoSuchElementException e) {
-                log("Invalid tag: " + tag);
-                throw e;
-            }
-            log(nextPacket.toString());
+        OpenPgpPacket nextPacket;
+        loop: while ((nextPacket = nextPacketTag()) != null) {
             signatures.nextPacket(nextPacket);
             switch (nextPacket) {
 
                 // Literal Data - the literal data content is the new input stream
                 case LIT:
                     automaton.next(InputAlphabet.LiteralData);
+                    delayedTee.squeeze();
                     processLiteralData();
                     break loop;
 
@@ -145,12 +138,14 @@ public class OpenPgpMessageInputStream extends InputStream {
                     automaton.next(InputAlphabet.CompressedData);
                     signatures.commitNested();
                     processCompressedData();
+                    delayedTee.squeeze();
                     break loop;
 
                 // One Pass Signature
                 case OPS:
                     automaton.next(InputAlphabet.OnePassSignatures);
                     PGPOnePassSignature onePassSignature = readOnePassSignature();
+                    delayedTee.squeeze();
                     signatures.addOnePassSignature(onePassSignature);
                     break;
 
@@ -160,6 +155,7 @@ public class OpenPgpMessageInputStream extends InputStream {
                     automaton.next(InputAlphabet.Signatures);
 
                     PGPSignature signature = readSignature();
+                    delayedTee.squeeze();
                     processSignature(signature, isSigForOPS);
 
                     break;
@@ -170,6 +166,7 @@ public class OpenPgpMessageInputStream extends InputStream {
                 case SED:
                 case SEIPD:
                     automaton.next(InputAlphabet.EncryptedData);
+                    delayedTee.squeeze();
                     if (processEncryptedData()) {
                         break loop;
                     }
@@ -179,6 +176,7 @@ public class OpenPgpMessageInputStream extends InputStream {
                     // Marker Packets need to be skipped and ignored
                 case MARKER:
                     packetInputStream.readPacket(); // skip
+                    delayedTee.squeeze();
                     break;
 
                 // Key Packets are illegal in this context
@@ -206,6 +204,23 @@ public class OpenPgpMessageInputStream extends InputStream {
         }
     }
 
+    private OpenPgpPacket nextPacketTag() throws IOException {
+        int tag = nextTag();
+        if (tag == -1) {
+            log("EOF");
+            return null;
+        }
+        OpenPgpPacket packet;
+        try {
+            packet = OpenPgpPacket.requireFromTag(tag);
+        } catch (NoSuchElementException e) {
+            log("Invalid tag: " + tag);
+            throw e;
+        }
+        log(packet.toString());
+        return packet;
+    }
+
     private void processSignature(PGPSignature signature, boolean isSigForOPS) {
         if (isSigForOPS) {
             signatures.popNested();
@@ -227,41 +242,6 @@ public class OpenPgpMessageInputStream extends InputStream {
         this.metadata.setChild(new MessageMetadata.LiteralData(literalData.getFileName(), literalData.getModificationTime(),
                 StreamEncoding.requireFromCode(literalData.getFormat())));
         nestedInputStream = literalData.getDataStream();
-    }
-
-    private void debugEncryptedData() throws PGPException, IOException {
-        PGPEncryptedDataList encDataList = new PGPEncryptedDataList(packetInputStream);
-
-        // TODO: Replace with !encDataList.isIntegrityProtected()
-        if (!encDataList.get(0).isIntegrityProtected()) {
-            throw new MessageNotIntegrityProtectedException();
-        }
-
-        SortedESKs esks = new SortedESKs(encDataList);
-        for (PGPPublicKeyEncryptedData pkesk : esks.pkesks) {
-            long keyId = pkesk.getKeyID();
-            PGPSecretKeyRing decryptionKeys = getDecryptionKey(keyId);
-            if (decryptionKeys == null) {
-                continue;
-            }
-            SecretKeyRingProtector protector = options.getSecretKeyProtector(decryptionKeys);
-            PGPSecretKey decryptionKey = decryptionKeys.getSecretKey(keyId);
-            PGPPrivateKey privateKey = UnlockSecretKey.unlockSecretKey(decryptionKey, protector);
-
-            PublicKeyDataDecryptorFactory decryptorFactory = ImplementationFactory.getInstance()
-                    .getPublicKeyDataDecryptorFactory(privateKey);
-            try {
-                InputStream decrypted = pkesk.getDataStream(decryptorFactory);
-                InputStream decoder = PGPUtil.getDecoderStream(decrypted);
-                PGPObjectFactory objectFactory = ImplementationFactory.getInstance()
-                        .getPGPObjectFactory(decoder);
-                objectFactory.nextObject();
-                objectFactory.nextObject();
-                objectFactory.nextObject();
-            } catch (PGPException e) {
-                // hm :/
-            }
-        }
     }
 
     private boolean processEncryptedData() throws IOException, PGPException {
@@ -553,12 +533,13 @@ public class OpenPgpMessageInputStream extends InputStream {
     //  for literal data. UUUUUGLY!!!!
     private static final class Signatures extends OutputStream {
         final ConsumerOptions options;
-        final List<PGPSignature> detachedSignatures;
-        final List<PGPSignature> prependedSignatures;
+        final List<SIG> detachedSignatures;
+        final List<SIG> prependedSignatures;
         final List<OPS> onePassSignatures;
         final Stack<List<OPS>> opsUpdateStack;
         List<OPS> literalOPS = new ArrayList<>();
         final List<PGPSignature> correspondingSignatures;
+        boolean isLiteral = true;
 
         private Signatures(ConsumerOptions options) {
             this.options = options;
@@ -579,14 +560,14 @@ public class OpenPgpMessageInputStream extends InputStream {
             long keyId = SignatureUtils.determineIssuerKeyId(signature);
             PGPPublicKeyRing certificate = findCertificate(keyId);
             initialize(signature, certificate, keyId);
-            this.detachedSignatures.add(signature);
+            this.detachedSignatures.add(new SIG(signature));
         }
 
         void addPrependedSignature(PGPSignature signature) {
             long keyId = SignatureUtils.determineIssuerKeyId(signature);
             PGPPublicKeyRing certificate = findCertificate(keyId);
             initialize(signature, certificate, keyId);
-            this.prependedSignatures.add(signature);
+            this.prependedSignatures.add(new SIG(signature));
         }
 
         void addOnePassSignature(PGPOnePassSignature signature) {
@@ -630,7 +611,7 @@ public class OpenPgpMessageInputStream extends InputStream {
             opsUpdateStack.pop();
         }
 
-        private void initialize(PGPSignature signature, PGPPublicKeyRing certificate, long keyId) {
+        private static void initialize(PGPSignature signature, PGPPublicKeyRing certificate, long keyId) {
             if (certificate == null) {
                 // SHIT
                 return;
@@ -672,7 +653,7 @@ public class OpenPgpMessageInputStream extends InputStream {
                 ops.update(b);
             }
 
-            for (PGPSignature detached : detachedSignatures) {
+            for (SIG detached : detachedSignatures) {
                 detached.update(b);
             }
         }
@@ -682,13 +663,22 @@ public class OpenPgpMessageInputStream extends InputStream {
                 ops.update(b, off, len);
             }
 
-            for (PGPSignature detached : detachedSignatures) {
+            for (SIG detached : detachedSignatures) {
                 detached.update(b, off, len);
             }
         }
 
         public void updatePacket(byte b) {
-            for (List<OPS> nestedOPSs : opsUpdateStack) {
+            for (SIG detached : detachedSignatures) {
+                detached.update(b);
+            }
+
+            for (SIG prepended : prependedSignatures) {
+                prepended.update(b);
+            }
+
+            for (int i = opsUpdateStack.size() - 1; i >= 0; i--) {
+                List<OPS> nestedOPSs = opsUpdateStack.get(i);
                 for (OPS ops : nestedOPSs) {
                     ops.update(b);
                 }
@@ -696,6 +686,14 @@ public class OpenPgpMessageInputStream extends InputStream {
         }
 
         public void updatePacket(byte[] buf, int off, int len) {
+            for (SIG detached : detachedSignatures) {
+                detached.update(buf, off, len);
+            }
+
+            for (SIG prepended : prependedSignatures) {
+                prepended.update(buf, off, len);
+            }
+
             for (int i = opsUpdateStack.size() - 1; i >= 0; i--) {
                 List<OPS> nestedOPSs = opsUpdateStack.get(i);
                 for (OPS ops : nestedOPSs) {
@@ -705,24 +703,16 @@ public class OpenPgpMessageInputStream extends InputStream {
         }
 
         public void finish() {
-            for (PGPSignature detached : detachedSignatures) {
-                boolean verified = false;
-                try {
-                    verified = detached.verify();
-                } catch (PGPException e) {
-                    log("Cannot verify detached signature.", e);
-                }
-                log("Detached Signature by " + Long.toHexString(detached.getKeyID()) + " is " + (verified ? "verified" : "unverified"));
+            for (SIG detached : detachedSignatures) {
+                boolean verified = detached.verify();
+                log("Detached Signature by " + Long.toHexString(detached.signature.getKeyID()) + " is " + (verified ? "verified" : "unverified"));
+                System.out.println(detached);
             }
 
-            for (PGPSignature prepended : prependedSignatures) {
-                boolean verified = false;
-                try {
-                    verified = prepended.verify();
-                } catch (PGPException e) {
-                    log("Cannot verify prepended signature.", e);
-                }
-                log("Prepended Signature by " + Long.toHexString(prepended.getKeyID()) + " is " + (verified ? "verified" : "unverified"));
+            for (SIG prepended : prependedSignatures) {
+                boolean verified = prepended.verify();
+                log("Prepended Signature by " + Long.toHexString(prepended.signature.getKeyID()) + " is " + (verified ? "verified" : "unverified"));
+                System.out.println(prepended);
             }
         }
 
@@ -738,9 +728,92 @@ public class OpenPgpMessageInputStream extends InputStream {
 
         public void nextPacket(OpenPgpPacket nextPacket) {
             if (nextPacket == OpenPgpPacket.LIT) {
+                isLiteral = true;
                 if (literalOPS.isEmpty() && !opsUpdateStack.isEmpty()) {
                     literalOPS = opsUpdateStack.pop();
                 }
+            } else {
+                isLiteral = false;
+            }
+        }
+
+        static class SIG {
+            ByteArrayOutputStream bytes = new ByteArrayOutputStream();
+            PGPSignature signature;
+            boolean finished;
+            boolean valid;
+
+            public SIG(PGPSignature signature) {
+                this.signature = signature;
+            }
+
+            public void init(PGPPublicKeyRing certificate) {
+                initialize(signature, certificate, signature.getKeyID());
+            }
+
+            public boolean verify() {
+                finished = true;
+                try {
+                    valid = this.signature.verify();
+                } catch (PGPException e) {
+                    log("Cannot verify SIG " + signature.getKeyID());
+                }
+                return valid;
+            }
+
+            public void update(byte b) {
+                if (finished) {
+                    log("Updating finished sig!");
+                    return;
+                }
+                signature.update(b);
+                bytes.write(b);
+            }
+
+            public void update(byte[] bytes, int off, int len) {
+                if (finished) {
+                    log("Updating finished sig!");
+                    return;
+                }
+                signature.update(bytes, off, len);
+                this.bytes.write(bytes, off, len);
+            }
+
+            @Override
+            public String toString() {
+                String OPS = "c40d03000a01fbfcc82a015e733001";
+                String LIT_H = "cb28620000000000";
+                String LIT = "656e637279707420e28898207369676e20e28898207369676e20e28898207369676e";
+                String SIG1 = "c2c10400010a006f058262c806350910fbfcc82a015e7330471400000000001e002073616c74406e6f746174696f6e732e736571756f69612d7067702e6f7267b0409ed8ea96dac66447bdff5b7b60c9f80a0ab91d257029153dc3b6d8c27b98162104d1a66e1a23b182c9980f788cfbfcc82a015e7330000029640c00846b5096d92474fd446cc7edaf9f14572cab93a80e12384c1e829f95debc6e8373c2ce5402be53dc1a18cf92a0ed909e0fb38855713ef8ffb13502ffac7c830fa254cc1aa6c666a97b0cc3bc176538f6913d3b8e8981a65cc42df10e0f39e4d0a06dfe961437b59a71892f4fca1116aed15123ea0d86a7b2ce47dd9d3ef22d920631bc011e82babe03ad5d72b3ba7f95bf646f20ccf6f7a4d95de37397c76c7d53741458e51ab6074007f61181c7b88b7c98f5b7510c8dfa3be01f4841501679478b15c5249d928e2a10d15ec63efa1500b994d5bfb32ffb174a976116930eb97a111e6dfd4c5e43e04a5d76ba74806a62fda63a8c3f53f6eebaf852892340e81dd08bbf348454a2cf525aeb512cf33aeeee78465ee4c442e41cc45ac4e3bb0c3333677aa60332ee7f464d9020f8554b82d619872477cca18d8431888f4ae8abe5894e9720f759c410cd7991db12703dc147040dd0d3758223e0b75de6ceae49c1a0c2c45efedeb7114ae785cc886afdc45c82172e4476e1ab5b86dc4314dd76";
+                String SIG1f = "c2c13b0400010a006f058262c806350910fbfcc82a015e7330471400000000001e002073616c74406e6f746174696f6e732e736571756f69612d7067702e6f7267b0409ed8ea96dac66447bdff5b7b60c9f80a0ab91d257029153dc3b6d8c27b98162104d1a66e1a23b182c9980f788cfbfcc82a015e7330000029640c00846b5096d92474fd446cc7edaf9f14572cab93a80e12384c1e829f95debc6e8373c2ce5402be53dc1a18cf92a0ed909e0fb38855713ef8ffb13502ffac7c830fa254cc1aa6c666a97b0cc3bc176538f6913d3b8e8981a65cc42df10e0f39e4d0a06dfe961437b59a71892f4fca1116aed15123ea0d86a7b2ce47dd9d3ef22d920631bc011e82babe03ad5d72b3ba7f95bf646f20ccf6f7a4d95de37397c76c7d53741458e51ab6074007f61181c7b88b7c98f5b7510c8dfa3be01f4841501679478b15c5249d928e2a10d15ec63efa1500b994d5bfb32ffb174a976116930eb97a111e6dfd4c5e43e04a5d76ba74806a62fda63a8c3f53f6eebaf852892340e81dd08bbf348454a2cf525aeb512cf33aeeee78465ee4c442e41cc45ac4e3bb0c3333677aa60332ee7f464d9020f8554b82d619872477cca18d8431888f4ae8abe5894e9720f759c410cd7991db12703dc147040dd0d3758223e0b75de6ceae49c1a0c2c45efedeb7114ae785cc886afdc45c82172e4476e1ab5b86dc4314dd76";
+                String SIG2 = "c2c10400010a006f058262c806350910fbfcc82a015e7330471400000000001e002073616c74406e6f746174696f6e732e736571756f69612d7067702e6f7267a4d9c117dc7ba3a7e9270856f128d2ab271743eac3cb5750b22a89bd5fd60753162104d1a66e1a23b182c9980f788cfbfcc82a015e73300000b8400bff796c20fa8b25ff7a42686338e06417a2966e85a0fc2723c928bef6cd19d34cf5e7d55ada33080613012dadb79e0278e59d9e7ed7d2d6102912a5f768c2e75b60099225c3d8bfe0c123240188b80dbee89b9b3bd5b13ccc662abc37e2129b6968adac9aba43aa778c0fe4fe337591ee87a96a29a013debc83555293c877144fc676aa1b03782c501949521a320adf6ad96c4f2e036b52a18369c637fdc49033696a84d03a69580b953187fce5aca6fb26fc8815da9f3b513bfe8e304f33ecb4b521aeb7d09c4a284ea66123bd0d6a358b2526d762ca110e1f7f20b3038d774b64d5cfd34e2213765828359d7afc5bf24d5270e99d80c3c1568fa01624b6ea1e9ce4e6890ce9bacf6611a45d41e2671f68f5b096446bf08d27ce75608425b2e3ab92146229ad1fcd8224aca5b5f73960506e7df07bfbf3664348e8ecbfb2eb467b9cfe412cb377a6ee2eb5fd11be9cf9208fe9a74c296f52cfa02a1eb0519ad9a8349bf6ccd6495feb7e391451bf96e08a0798883dee5974e47cbf3b51f111b6d3";
+                String SIG2f = "c2c13b0400010a006f058262c806350910fbfcc82a015e7330471400000000001e002073616c74406e6f746174696f6e732e736571756f69612d7067702e6f7267a4d9c117dc7ba3a7e9270856f128d2ab271743eac3cb5750b22a89bd5fd60753162104d1a66e1a23b182c9980f788cfbfcc82a015e73300000b8400bff796c20fa8b25ff7a42686338e06417a2966e85a0fc2723c928bef6cd19d34cf5e7d55ada33080613012dadb79e0278e59d9e7ed7d2d6102912a5f768c2e75b60099225c3d8bfe0c123240188b80dbee89b9b3bd5b13ccc662abc37e2129b6968adac9aba43aa778c0fe4fe337591ee87a96a29a013debc83555293c877144fc676aa1b03782c501949521a320adf6ad96c4f2e036b52a18369c637fdc49033696a84d03a69580b953187fce5aca6fb26fc8815da9f3b513bfe8e304f33ecb4b521aeb7d09c4a284ea66123bd0d6a358b2526d762ca110e1f7f20b3038d774b64d5cfd34e2213765828359d7afc5bf24d5270e99d80c3c1568fa01624b6ea1e9ce4e6890ce9bacf6611a45d41e2671f68f5b096446bf08d27ce75608425b2e3ab92146229ad1fcd8224aca5b5f73960506e7df07bfbf3664348e8ecbfb2eb467b9cfe412cb377a6ee2eb5fd11be9cf9208fe9a74c296f52cfa02a1eb0519ad9a8349bf6ccd6495feb7e391451bf96e08a0798883dee5974e47cbf3b51f111b6d3";
+                String out = "";
+
+                String hex = Hex.toHexString(bytes.toByteArray());
+                while (hex.contains(OPS)) {
+                    hex = hex.replace(OPS, "[OPS]");
+                }
+                while (hex.contains(LIT_H)) {
+                    hex = hex.replace(LIT_H, "[LIT]");
+                }
+                while (hex.contains(LIT)) {
+                    hex = hex.replace(LIT, "<content>");
+                }
+                while (hex.contains(SIG1)) {
+                    hex = hex.replace(SIG1, "[SIG1]");
+                }
+                while (hex.contains(SIG1f)) {
+                    hex = hex.replace(SIG1f, "[SIG1f]");
+                }
+                while (hex.contains(SIG2)) {
+                    hex = hex.replace(SIG2, "[SIG2]");
+                }
+                while (hex.contains(SIG2f)) {
+                    hex = hex.replace(SIG2f, "[SIG2f]");
+                }
+
+                return out + hex;
             }
         }
 
@@ -796,27 +869,35 @@ public class OpenPgpMessageInputStream extends InputStream {
                 String LIT_H = "cb28620000000000";
                 String LIT = "656e637279707420e28898207369676e20e28898207369676e20e28898207369676e";
                 String SIG1 = "c2c10400010a006f058262c806350910fbfcc82a015e7330471400000000001e002073616c74406e6f746174696f6e732e736571756f69612d7067702e6f7267b0409ed8ea96dac66447bdff5b7b60c9f80a0ab91d257029153dc3b6d8c27b98162104d1a66e1a23b182c9980f788cfbfcc82a015e7330000029640c00846b5096d92474fd446cc7edaf9f14572cab93a80e12384c1e829f95debc6e8373c2ce5402be53dc1a18cf92a0ed909e0fb38855713ef8ffb13502ffac7c830fa254cc1aa6c666a97b0cc3bc176538f6913d3b8e8981a65cc42df10e0f39e4d0a06dfe961437b59a71892f4fca1116aed15123ea0d86a7b2ce47dd9d3ef22d920631bc011e82babe03ad5d72b3ba7f95bf646f20ccf6f7a4d95de37397c76c7d53741458e51ab6074007f61181c7b88b7c98f5b7510c8dfa3be01f4841501679478b15c5249d928e2a10d15ec63efa1500b994d5bfb32ffb174a976116930eb97a111e6dfd4c5e43e04a5d76ba74806a62fda63a8c3f53f6eebaf852892340e81dd08bbf348454a2cf525aeb512cf33aeeee78465ee4c442e41cc45ac4e3bb0c3333677aa60332ee7f464d9020f8554b82d619872477cca18d8431888f4ae8abe5894e9720f759c410cd7991db12703dc147040dd0d3758223e0b75de6ceae49c1a0c2c45efedeb7114ae785cc886afdc45c82172e4476e1ab5b86dc4314dd76";
+                String SIG1f = "c2c13b0400010a006f058262c806350910fbfcc82a015e7330471400000000001e002073616c74406e6f746174696f6e732e736571756f69612d7067702e6f7267b0409ed8ea96dac66447bdff5b7b60c9f80a0ab91d257029153dc3b6d8c27b98162104d1a66e1a23b182c9980f788cfbfcc82a015e7330000029640c00846b5096d92474fd446cc7edaf9f14572cab93a80e12384c1e829f95debc6e8373c2ce5402be53dc1a18cf92a0ed909e0fb38855713ef8ffb13502ffac7c830fa254cc1aa6c666a97b0cc3bc176538f6913d3b8e8981a65cc42df10e0f39e4d0a06dfe961437b59a71892f4fca1116aed15123ea0d86a7b2ce47dd9d3ef22d920631bc011e82babe03ad5d72b3ba7f95bf646f20ccf6f7a4d95de37397c76c7d53741458e51ab6074007f61181c7b88b7c98f5b7510c8dfa3be01f4841501679478b15c5249d928e2a10d15ec63efa1500b994d5bfb32ffb174a976116930eb97a111e6dfd4c5e43e04a5d76ba74806a62fda63a8c3f53f6eebaf852892340e81dd08bbf348454a2cf525aeb512cf33aeeee78465ee4c442e41cc45ac4e3bb0c3333677aa60332ee7f464d9020f8554b82d619872477cca18d8431888f4ae8abe5894e9720f759c410cd7991db12703dc147040dd0d3758223e0b75de6ceae49c1a0c2c45efedeb7114ae785cc886afdc45c82172e4476e1ab5b86dc4314dd76";
                 String SIG2 = "c2c10400010a006f058262c806350910fbfcc82a015e7330471400000000001e002073616c74406e6f746174696f6e732e736571756f69612d7067702e6f7267a4d9c117dc7ba3a7e9270856f128d2ab271743eac3cb5750b22a89bd5fd60753162104d1a66e1a23b182c9980f788cfbfcc82a015e73300000b8400bff796c20fa8b25ff7a42686338e06417a2966e85a0fc2723c928bef6cd19d34cf5e7d55ada33080613012dadb79e0278e59d9e7ed7d2d6102912a5f768c2e75b60099225c3d8bfe0c123240188b80dbee89b9b3bd5b13ccc662abc37e2129b6968adac9aba43aa778c0fe4fe337591ee87a96a29a013debc83555293c877144fc676aa1b03782c501949521a320adf6ad96c4f2e036b52a18369c637fdc49033696a84d03a69580b953187fce5aca6fb26fc8815da9f3b513bfe8e304f33ecb4b521aeb7d09c4a284ea66123bd0d6a358b2526d762ca110e1f7f20b3038d774b64d5cfd34e2213765828359d7afc5bf24d5270e99d80c3c1568fa01624b6ea1e9ce4e6890ce9bacf6611a45d41e2671f68f5b096446bf08d27ce75608425b2e3ab92146229ad1fcd8224aca5b5f73960506e7df07bfbf3664348e8ecbfb2eb467b9cfe412cb377a6ee2eb5fd11be9cf9208fe9a74c296f52cfa02a1eb0519ad9a8349bf6ccd6495feb7e391451bf96e08a0798883dee5974e47cbf3b51f111b6d3";
-                    String out = signature.getKeyID() + " last=" + signature.isContaining() + "\n";
+                String SIG2f = "c2c13b0400010a006f058262c806350910fbfcc82a015e7330471400000000001e002073616c74406e6f746174696f6e732e736571756f69612d7067702e6f7267a4d9c117dc7ba3a7e9270856f128d2ab271743eac3cb5750b22a89bd5fd60753162104d1a66e1a23b182c9980f788cfbfcc82a015e73300000b8400bff796c20fa8b25ff7a42686338e06417a2966e85a0fc2723c928bef6cd19d34cf5e7d55ada33080613012dadb79e0278e59d9e7ed7d2d6102912a5f768c2e75b60099225c3d8bfe0c123240188b80dbee89b9b3bd5b13ccc662abc37e2129b6968adac9aba43aa778c0fe4fe337591ee87a96a29a013debc83555293c877144fc676aa1b03782c501949521a320adf6ad96c4f2e036b52a18369c637fdc49033696a84d03a69580b953187fce5aca6fb26fc8815da9f3b513bfe8e304f33ecb4b521aeb7d09c4a284ea66123bd0d6a358b2526d762ca110e1f7f20b3038d774b64d5cfd34e2213765828359d7afc5bf24d5270e99d80c3c1568fa01624b6ea1e9ce4e6890ce9bacf6611a45d41e2671f68f5b096446bf08d27ce75608425b2e3ab92146229ad1fcd8224aca5b5f73960506e7df07bfbf3664348e8ecbfb2eb467b9cfe412cb377a6ee2eb5fd11be9cf9208fe9a74c296f52cfa02a1eb0519ad9a8349bf6ccd6495feb7e391451bf96e08a0798883dee5974e47cbf3b51f111b6d3";
+                String out = "last=" + signature.isContaining() + "\n";
 
-                    String hex = Hex.toHexString(bytes.toByteArray());
-                    while (hex.contains(OPS)) {
-                        hex = hex.replace(OPS, "[OPS]");
-                    }
-                    while (hex.contains(LIT_H)) {
-                        hex = hex.replace(LIT_H, "[LIT]");
-                    }
-                    while (hex.contains(LIT)) {
-                        hex = hex.replace(LIT, "<content>");
-                    }
-                    while (hex.contains(SIG1)) {
-                        hex = hex.replace(SIG1, "[SIG1]");
-                    }
-                    while (hex.contains(SIG2)) {
-                        hex = hex.replace(SIG2, "[SIG2]");
-                    }
+                String hex = Hex.toHexString(bytes.toByteArray());
+                while (hex.contains(OPS)) {
+                    hex = hex.replace(OPS, "[OPS]");
+                }
+                while (hex.contains(LIT_H)) {
+                    hex = hex.replace(LIT_H, "[LIT]");
+                }
+                while (hex.contains(LIT)) {
+                    hex = hex.replace(LIT, "<content>");
+                }
+                while (hex.contains(SIG1)) {
+                    hex = hex.replace(SIG1, "[SIG1]");
+                }
+                while (hex.contains(SIG1f)) {
+                    hex = hex.replace(SIG1f, "[SIG1f]");
+                }
+                while (hex.contains(SIG2)) {
+                    hex = hex.replace(SIG2, "[SIG2]");
+                }
+                while (hex.contains(SIG2f)) {
+                    hex = hex.replace(SIG2f, "[SIG2f]");
+                }
 
-                    return out + hex;
+                return out + hex;
             }
         }
     }
