@@ -11,7 +11,6 @@ import java.io.OutputStream;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
-import java.util.NoSuchElementException;
 import java.util.Stack;
 
 import org.bouncycastle.bcpg.BCPGInputStream;
@@ -57,6 +56,8 @@ import org.pgpainless.util.Tuple;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import javax.annotation.Nonnull;
+
 public class OpenPgpMessageInputStream extends InputStream {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(OpenPgpMessageInputStream.class);
@@ -66,16 +67,15 @@ public class OpenPgpMessageInputStream extends InputStream {
     protected final OpenPgpMetadata.Builder resultBuilder;
     // Pushdown Automaton to verify validity of OpenPGP packet sequence in an OpenPGP message
     protected final PDA automaton = new PDA();
-    protected final DelayedTeeInputStreamInputStream delayedTee;
-    // InputStream of OpenPGP packets of the current layer
-    protected final BCPGInputStream packetInputStream;
+    // InputStream of OpenPGP packets
+    protected TeeBCPGInputStream packetInputStream;
     // InputStream of a nested data packet
     protected InputStream nestedInputStream;
 
     private boolean closed = false;
 
     private final Signatures signatures;
-    private MessageMetadata.Layer metadata;
+    private final MessageMetadata.Layer metadata;
 
     public OpenPgpMessageInputStream(InputStream inputStream, ConsumerOptions options)
             throws IOException, PGPException {
@@ -95,9 +95,7 @@ public class OpenPgpMessageInputStream extends InputStream {
             this.signatures.addDetachedSignatures(options.getDetachedSignatures());
         }
 
-        delayedTee = new DelayedTeeInputStreamInputStream(inputStream, signatures);
-        BCPGInputStream bcpg = BCPGInputStream.wrap(delayedTee);
-        this.packetInputStream = bcpg;
+        packetInputStream = new TeeBCPGInputStream(BCPGInputStream.wrap(inputStream), signatures);
 
         // *omnomnom*
         consumePackets();
@@ -122,41 +120,36 @@ public class OpenPgpMessageInputStream extends InputStream {
     private void consumePackets()
             throws IOException, PGPException {
         OpenPgpPacket nextPacket;
-        loop: while ((nextPacket = nextPacketTag()) != null) {
+        loop: while ((nextPacket = packetInputStream.nextPacketTag()) != null) {
             signatures.nextPacket(nextPacket);
             switch (nextPacket) {
 
                 // Literal Data - the literal data content is the new input stream
                 case LIT:
                     automaton.next(InputAlphabet.LiteralData);
-                    delayedTee.squeeze();
                     processLiteralData();
                     break loop;
 
                 // Compressed Data - the content contains another OpenPGP message
                 case COMP:
                     automaton.next(InputAlphabet.CompressedData);
-                    signatures.commitNested();
                     processCompressedData();
-                    delayedTee.squeeze();
                     break loop;
 
                 // One Pass Signature
                 case OPS:
-                    automaton.next(InputAlphabet.OnePassSignatures);
+                    automaton.next(InputAlphabet.OnePassSignature);
                     PGPOnePassSignature onePassSignature = readOnePassSignature();
-                    delayedTee.squeeze();
                     signatures.addOnePassSignature(onePassSignature);
                     break;
 
                 // Signature - either prepended to the message, or corresponding to a One Pass Signature
                 case SIG:
+                    // true if Signature corresponds to OnePassSignature
                     boolean isSigForOPS = automaton.peekStack() == StackAlphabet.ops;
-                    automaton.next(InputAlphabet.Signatures);
+                    automaton.next(InputAlphabet.Signature);
 
-                    PGPSignature signature = readSignature();
-                    delayedTee.squeeze();
-                    processSignature(signature, isSigForOPS);
+                    processSignature(isSigForOPS);
 
                     break;
 
@@ -166,7 +159,6 @@ public class OpenPgpMessageInputStream extends InputStream {
                 case SED:
                 case SEIPD:
                     automaton.next(InputAlphabet.EncryptedData);
-                    delayedTee.squeeze();
                     if (processEncryptedData()) {
                         break loop;
                     }
@@ -175,8 +167,7 @@ public class OpenPgpMessageInputStream extends InputStream {
 
                     // Marker Packets need to be skipped and ignored
                 case MARKER:
-                    packetInputStream.readPacket(); // skip
-                    delayedTee.squeeze();
+                    packetInputStream.readMarker();
                     break;
 
                 // Key Packets are illegal in this context
@@ -204,26 +195,10 @@ public class OpenPgpMessageInputStream extends InputStream {
         }
     }
 
-    private OpenPgpPacket nextPacketTag() throws IOException {
-        int tag = nextTag();
-        if (tag == -1) {
-            log("EOF");
-            return null;
-        }
-        OpenPgpPacket packet;
-        try {
-            packet = OpenPgpPacket.requireFromTag(tag);
-        } catch (NoSuchElementException e) {
-            log("Invalid tag: " + tag);
-            throw e;
-        }
-        log(packet.toString());
-        return packet;
-    }
-
-    private void processSignature(PGPSignature signature, boolean isSigForOPS) {
+    private void processSignature(boolean isSigForOPS) throws PGPException, IOException {
+        PGPSignature signature = readSignature();
         if (isSigForOPS) {
-            signatures.popNested();
+            signatures.leaveNesting(); // TODO: Only leave nesting if all OPSs are dealt with
             signatures.addCorrespondingOnePassSignature(signature);
         } else {
             signatures.addPrependedSignature(signature);
@@ -231,21 +206,22 @@ public class OpenPgpMessageInputStream extends InputStream {
     }
 
     private void processCompressedData() throws IOException, PGPException {
-        PGPCompressedData compressedData = new PGPCompressedData(packetInputStream);
+        signatures.enterNesting();
+        PGPCompressedData compressedData = packetInputStream.readCompressedData();
         MessageMetadata.CompressedData compressionLayer = new MessageMetadata.CompressedData(
                 CompressionAlgorithm.fromId(compressedData.getAlgorithm()));
         nestedInputStream = new OpenPgpMessageInputStream(compressedData.getDataStream(), options, compressionLayer);
     }
 
     private void processLiteralData() throws IOException {
-        PGPLiteralData literalData = new PGPLiteralData(packetInputStream);
+        PGPLiteralData literalData = packetInputStream.readLiteralData();
         this.metadata.setChild(new MessageMetadata.LiteralData(literalData.getFileName(), literalData.getModificationTime(),
                 StreamEncoding.requireFromCode(literalData.getFormat())));
         nestedInputStream = literalData.getDataStream();
     }
 
     private boolean processEncryptedData() throws IOException, PGPException {
-        PGPEncryptedDataList encDataList = new PGPEncryptedDataList(packetInputStream);
+        PGPEncryptedDataList encDataList = packetInputStream.readEncryptedDataList();
 
         // TODO: Replace with !encDataList.isIntegrityProtected()
         if (!encDataList.get(0).isIntegrityProtected()) {
@@ -345,19 +321,6 @@ public class OpenPgpMessageInputStream extends InputStream {
         return false;
     }
 
-    private int nextTag() throws IOException {
-        try {
-            return packetInputStream.nextPacketTag();
-        } catch (IOException e) {
-            if ("Stream closed".equals(e.getMessage())) {
-                // ZipInflater Streams sometimes close under our feet -.-
-                // Therefore we catch resulting IOEs and return -1 instead.
-                return -1;
-            }
-            throw e;
-        }
-    }
-
     private List<Tuple<PGPSecretKeyRing, PGPSecretKey>> findPotentialDecryptionKeys(PGPPublicKeyEncryptedData pkesk) {
         int algorithm = pkesk.getAlgorithm();
         List<Tuple<PGPSecretKeyRing, PGPSecretKey>> decryptionKeyCandidates = new ArrayList<>();
@@ -387,12 +350,12 @@ public class OpenPgpMessageInputStream extends InputStream {
 
     private PGPOnePassSignature readOnePassSignature()
             throws PGPException, IOException {
-        return new PGPOnePassSignature(packetInputStream);
+        return packetInputStream.readOnePassSignature();
     }
 
     private PGPSignature readSignature()
             throws PGPException, IOException {
-        return new PGPSignature(packetInputStream);
+        return packetInputStream.readSignature();
     }
 
     @Override
@@ -428,7 +391,7 @@ public class OpenPgpMessageInputStream extends InputStream {
     }
 
     @Override
-    public int read(byte[] b, int off, int len)
+    public int read(@Nonnull byte[] b, int off, int len)
             throws IOException {
 
         if (nestedInputStream == null) {
@@ -482,8 +445,7 @@ public class OpenPgpMessageInputStream extends InputStream {
     private void collectMetadata() {
         if (nestedInputStream instanceof OpenPgpMessageInputStream) {
             OpenPgpMessageInputStream child = (OpenPgpMessageInputStream) nestedInputStream;
-            MessageMetadata.Layer childLayer = child.metadata;
-            this.metadata.setChild((MessageMetadata.Nested) childLayer);
+            this.metadata.setChild((MessageMetadata.Nested) child.metadata);
         }
     }
 
@@ -496,9 +458,9 @@ public class OpenPgpMessageInputStream extends InputStream {
 
     private static class SortedESKs {
 
-        private List<PGPPBEEncryptedData> skesks = new ArrayList<>();
-        private List<PGPPublicKeyEncryptedData> pkesks = new ArrayList<>();
-        private List<PGPPublicKeyEncryptedData> anonPkesks = new ArrayList<>();
+        private final List<PGPPBEEncryptedData> skesks = new ArrayList<>();
+        private final List<PGPPublicKeyEncryptedData> pkesks = new ArrayList<>();
+        private final List<PGPPublicKeyEncryptedData> anonPkesks = new ArrayList<>();
 
         SortedESKs(PGPEncryptedDataList esks) {
             for (PGPEncryptedData esk : esks) {
@@ -526,11 +488,10 @@ public class OpenPgpMessageInputStream extends InputStream {
         }
     }
 
-    // TODO: In 'OPS LIT("Foo") SIG', OPS is only updated with "Foo"
-    //  In 'OPS[1] OPS LIT("Foo") SIG SIG', OPS[1] (nested) is updated with OPS LIT("Foo") SIG.
-    //  Therefore, we need to handle the innermost signature layer differently when updating with Literal data.
-    //  For this we might want to provide two update entries into the Signatures class, one for OpenPGP packets and one
-    //  for literal data. UUUUUGLY!!!!
+    // In 'OPS LIT("Foo") SIG', OPS is only updated with "Foo"
+    // In 'OPS[1] OPS LIT("Foo") SIG SIG', OPS[1] (nested) is updated with OPS LIT("Foo") SIG.
+    // Therefore, we need to handle the innermost signature layer differently when updating with Literal data.
+    // Furthermore, For 'OPS COMP(LIT("Foo")) SIG', the signature is updated with "Foo". CHAOS!!!
     private static final class Signatures extends OutputStream {
         final ConsumerOptions options;
         final List<SIG> detachedSignatures;
@@ -578,7 +539,7 @@ public class OpenPgpMessageInputStream extends InputStream {
 
             literalOPS.add(ops);
             if (signature.isContaining()) {
-                commitNested();
+                enterNesting();
             }
         }
 
@@ -599,12 +560,12 @@ public class OpenPgpMessageInputStream extends InputStream {
             }
         }
 
-        void commitNested() {
+        void enterNesting() {
             opsUpdateStack.push(literalOPS);
             literalOPS = new ArrayList<>();
         }
 
-        void popNested() {
+        void leaveNesting() {
             if (opsUpdateStack.isEmpty()) {
                 return;
             }
@@ -722,7 +683,7 @@ public class OpenPgpMessageInputStream extends InputStream {
         }
 
         @Override
-        public void write(byte[] b, int off, int len) {
+        public void write(@Nonnull byte[] b, int off, int len) {
             updatePacket(b, off, len);
         }
 
