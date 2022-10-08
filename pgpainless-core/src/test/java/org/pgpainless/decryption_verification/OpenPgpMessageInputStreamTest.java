@@ -49,7 +49,6 @@ import org.pgpainless.util.Tuple;
 
 public class OpenPgpMessageInputStreamTest {
 
-
     public static final String KEY = "-----BEGIN PGP PRIVATE KEY BLOCK-----\n" +
             "Version: PGPainless\n" +
             "Comment: DA05 848F 37D4 68E6 F982  C889 7A70 1FC6 904D 3F4C\n" +
@@ -241,7 +240,7 @@ public class OpenPgpMessageInputStreamTest {
                 System.out);
     }
 
-    public static void genSIG_LIT() throws PGPException, IOException {
+    public static void genSIG_COMP_LIT() throws PGPException, IOException {
         PGPSecretKeyRing secretKeys = PGPainless.readKeyRing().secretKeyRing(KEY);
         ByteArrayOutputStream msgOut = new ByteArrayOutputStream();
         EncryptionStream signer = PGPainless.encryptAndOrSign()
