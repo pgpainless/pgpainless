@@ -30,9 +30,9 @@ public class PDATest {
     @Test
     public void testSimpleOpsSignedMesssageIsValid() throws MalformedOpenPgpMessageException {
         PDA automaton = new PDA();
-        automaton.next(InputAlphabet.OnePassSignatures);
+        automaton.next(InputAlphabet.OnePassSignature);
         automaton.next(InputAlphabet.LiteralData);
-        automaton.next(InputAlphabet.Signatures);
+        automaton.next(InputAlphabet.Signature);
         automaton.next(InputAlphabet.EndOfSequence);
 
         assertTrue(automaton.isValid());
@@ -47,7 +47,7 @@ public class PDATest {
     @Test
     public void testSimplePrependSignedMessageIsValid() throws MalformedOpenPgpMessageException {
         PDA automaton = new PDA();
-        automaton.next(InputAlphabet.Signatures);
+        automaton.next(InputAlphabet.Signature);
         automaton.next(InputAlphabet.LiteralData);
         automaton.next(InputAlphabet.EndOfSequence);
 
@@ -63,10 +63,10 @@ public class PDATest {
     @Test
     public void testOPSSignedCompressedMessageIsValid() throws MalformedOpenPgpMessageException {
         PDA automaton = new PDA();
-        automaton.next(InputAlphabet.OnePassSignatures);
+        automaton.next(InputAlphabet.OnePassSignature);
         automaton.next(InputAlphabet.CompressedData);
         // Here would be a nested PDA for the LiteralData packet
-        automaton.next(InputAlphabet.Signatures);
+        automaton.next(InputAlphabet.Signature);
         automaton.next(InputAlphabet.EndOfSequence);
 
         assertTrue(automaton.isValid());

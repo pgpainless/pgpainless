@@ -18,11 +18,11 @@ public enum InputAlphabet {
     /**
      * A {@link PGPSignatureList} object.
      */
-    Signatures,
+    Signature,
     /**
      * A {@link PGPOnePassSignatureList} object.
      */
-    OnePassSignatures,
+    OnePassSignature,
     /**
      * A {@link PGPCompressedData} packet.
      * The contents of this packet MUST form a valid OpenPGP message, so a nested PDA is opened to verify

@@ -35,11 +35,11 @@ public class PDA {
                     case LiteralData:
                         return LiteralMessage;
 
-                    case Signatures:
+                    case Signature:
                         automaton.pushStack(msg);
                         return OpenPgpMessage;
 
-                    case OnePassSignatures:
+                    case OnePassSignature:
                         automaton.pushStack(ops);
                         automaton.pushStack(msg);
                         return OpenPgpMessage;
@@ -63,7 +63,7 @@ public class PDA {
                 StackAlphabet stackItem = automaton.popStack();
                 switch (input) {
 
-                    case Signatures:
+                    case Signature:
                         if (stackItem == ops) {
                             return CorrespondingSignature;
                         } else {
@@ -78,7 +78,7 @@ public class PDA {
                         }
 
                     case LiteralData:
-                    case OnePassSignatures:
+                    case OnePassSignature:
                     case CompressedData:
                     case EncryptedData:
                     default:
@@ -92,7 +92,7 @@ public class PDA {
             State transition(InputAlphabet input, PDA automaton) throws MalformedOpenPgpMessageException {
                 StackAlphabet stackItem = automaton.popStack();
                 switch (input) {
-                    case Signatures:
+                    case Signature:
                         if (stackItem == ops) {
                             return CorrespondingSignature;
                         } else {
@@ -107,7 +107,7 @@ public class PDA {
                         }
 
                     case LiteralData:
-                    case OnePassSignatures:
+                    case OnePassSignature:
                     case CompressedData:
                     case EncryptedData:
                     default:
@@ -121,7 +121,7 @@ public class PDA {
             State transition(InputAlphabet input, PDA automaton) throws MalformedOpenPgpMessageException {
                 StackAlphabet stackItem = automaton.popStack();
                 switch (input) {
-                    case Signatures:
+                    case Signature:
                         if (stackItem == ops) {
                             return CorrespondingSignature;
                         } else {
@@ -136,7 +136,7 @@ public class PDA {
                         }
 
                     case LiteralData:
-                    case OnePassSignatures:
+                    case OnePassSignature:
                     case CompressedData:
                     case EncryptedData:
                     default:
@@ -156,7 +156,7 @@ public class PDA {
                         // premature end of stream
                         throw new MalformedOpenPgpMessageException(this, input, stackItem);
                     }
-                } else if (input == InputAlphabet.Signatures) {
+                } else if (input == InputAlphabet.Signature) {
                     if (stackItem == ops) {
                         return CorrespondingSignature;
                     }
