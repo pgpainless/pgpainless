@@ -393,30 +393,28 @@ public final class DecryptionStreamFactory {
         }
 
         // Try custom PublicKeyDataDecryptorFactories (e.g. hardware-backed).
-        Map<Set<Long>, PublicKeyDataDecryptorFactory> customFactories = options.getCustomDecryptorFactories();
+        Map<Long, PublicKeyDataDecryptorFactory> customFactories = options.getCustomDecryptorFactories();
         for (PGPPublicKeyEncryptedData publicKeyEncryptedData : publicKeyProtected) {
             Long keyId = publicKeyEncryptedData.getKeyID();
-            for (Set<Long> keyIds : customFactories.keySet()) {
-                if (!keyIds.contains(keyId)) {
-                    continue;
-                }
+            if (!customFactories.containsKey(keyId)) {
+                continue;
+            }
 
-                PublicKeyDataDecryptorFactory decryptorFactory = customFactories.get(keyIds);
-                try {
-                    InputStream decryptedDataStream = publicKeyEncryptedData.getDataStream(decryptorFactory);
-                    PGPSessionKey pgpSessionKey = publicKeyEncryptedData.getSessionKey(decryptorFactory);
-                    SessionKey sessionKey = new SessionKey(pgpSessionKey);
-                    resultBuilder.setSessionKey(sessionKey);
+            PublicKeyDataDecryptorFactory decryptorFactory = customFactories.get(keyId);
+            try {
+                InputStream decryptedDataStream = publicKeyEncryptedData.getDataStream(decryptorFactory);
+                PGPSessionKey pgpSessionKey = publicKeyEncryptedData.getSessionKey(decryptorFactory);
+                SessionKey sessionKey = new SessionKey(pgpSessionKey);
+                resultBuilder.setSessionKey(sessionKey);
 
-                    throwIfAlgorithmIsRejected(sessionKey.getAlgorithm());
+                throwIfAlgorithmIsRejected(sessionKey.getAlgorithm());
 
-                    integrityProtectedEncryptedInputStream =
-                            new IntegrityProtectedInputStream(decryptedDataStream, publicKeyEncryptedData, options);
+                integrityProtectedEncryptedInputStream =
+                        new IntegrityProtectedInputStream(decryptedDataStream, publicKeyEncryptedData, options);
 
-                    return integrityProtectedEncryptedInputStream;
-                } catch (PGPException e) {
-                    LOGGER.debug("Decryption with custom PublicKeyDataDecryptorFactory failed", e);
-                }
+                return integrityProtectedEncryptedInputStream;
+            } catch (PGPException e) {
+                LOGGER.debug("Decryption with custom PublicKeyDataDecryptorFactory failed", e);
             }
         }
 

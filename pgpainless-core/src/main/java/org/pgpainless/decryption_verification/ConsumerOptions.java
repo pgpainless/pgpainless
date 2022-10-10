@@ -49,7 +49,7 @@ public class ConsumerOptions {
 
     // Session key for decryption without passphrase/key
     private SessionKey sessionKey = null;
-    private Map<Set<Long>, PublicKeyDataDecryptorFactory> customPublicKeyDataDecryptorFactories = new HashMap<>();
+    private Map<Long, PublicKeyDataDecryptorFactory> customPublicKeyDataDecryptorFactories = new HashMap<>();
 
     private final Map<PGPSecretKeyRing, SecretKeyRingProtector> decryptionKeys = new HashMap<>();
     private final Set<Passphrase> decryptionPassphrases = new HashSet<>();
@@ -245,20 +245,15 @@ public class ConsumerOptions {
      * hardware-backed secret keys.
      * (See e.g. {@link org.pgpainless.decryption_verification.HardwareSecurity.HardwareDataDecryptorFactory}).
      *
-     * The set of key-ids determines, whether the decryptor factory shall be consulted to decrypt a given session key.
-     * See for example {@link HardwareSecurity#getIdsOfHardwareBackedKeys(PGPSecretKeyRing)}.
-     *
-     * @param keyIds set of key-ids for which the factory shall be consulted
-     * @param decryptorFactory decryptor factory
+     * @param factory decryptor factory
      * @return options
      */
-    public ConsumerOptions addCustomDecryptorFactory(
-            @Nonnull Set<Long> keyIds, @Nonnull PublicKeyDataDecryptorFactory decryptorFactory) {
-        this.customPublicKeyDataDecryptorFactories.put(keyIds, decryptorFactory);
+    public ConsumerOptions addCustomDecryptorFactory(@Nonnull CustomPublicKeyDataDecryptorFactory factory) {
+        this.customPublicKeyDataDecryptorFactories.put(factory.getKeyId(), factory);
         return this;
     }
 
-    Map<Set<Long>, PublicKeyDataDecryptorFactory> getCustomDecryptorFactories() {
+    Map<Long, PublicKeyDataDecryptorFactory> getCustomDecryptorFactories() {
         return new HashMap<>(customPublicKeyDataDecryptorFactories);
     }
 
