@@ -49,7 +49,7 @@ public class ConsumerOptions {
 
     // Session key for decryption without passphrase/key
     private SessionKey sessionKey = null;
-    private Map<Long, PublicKeyDataDecryptorFactory> customPublicKeyDataDecryptorFactories = new HashMap<>();
+    private final Map<Long, PublicKeyDataDecryptorFactory> customPublicKeyDataDecryptorFactories = new HashMap<>();
 
     private final Map<PGPSecretKeyRing, SecretKeyRingProtector> decryptionKeys = new HashMap<>();
     private final Set<Passphrase> decryptionPassphrases = new HashSet<>();
