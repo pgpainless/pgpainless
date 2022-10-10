@@ -29,7 +29,6 @@ import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.security.InvalidAlgorithmParameterException;
 import java.security.NoSuchAlgorithmException;
-import java.util.Collections;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
@@ -55,7 +54,7 @@ public class CustomPublicKeyDataDecryptorFactoryTest {
 
         HardwareSecurity.DecryptionCallback hardwareDecryptionCallback = new HardwareSecurity.DecryptionCallback() {
             @Override
-            public byte[] decryptSessionKey(int keyAlgorithm, byte[] sessionKeyData)
+            public byte[] decryptSessionKey(long keyId, int keyAlgorithm, byte[] sessionKeyData)
                     throws HardwareSecurity.HardwareSecurityException {
                 // Emulate hardware decryption.
                 try {
@@ -74,8 +73,9 @@ public class CustomPublicKeyDataDecryptorFactoryTest {
                 .onInputStream(new ByteArrayInputStream(ciphertextOut.toByteArray()))
                 .withOptions(ConsumerOptions.get()
                         .addCustomDecryptorFactory(
-                                Collections.singleton(encryptionKey.getKeyID()),
-                                new HardwareSecurity.HardwareDataDecryptorFactory(hardwareDecryptionCallback)));
+                                new HardwareSecurity.HardwareDataDecryptorFactory(
+                                        encryptionKey.getKeyID(),
+                                        hardwareDecryptionCallback)));
 
         ByteArrayOutputStream decryptedOut = new ByteArrayOutputStream();
         Streams.pipeAll(decryptionStream, decryptedOut);
