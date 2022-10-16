@@ -272,13 +272,15 @@ public class OpenPgpMessageInputStream extends DecryptionStream {
                     PGPPBEEncryptedData skesk = (PGPPBEEncryptedData) esk;
                     InputStream decrypted = skesk.getDataStream(decryptorFactory);
                     encryptedData.sessionKey = sessionKey;
-                    nestedInputStream = new OpenPgpMessageInputStream(buffer(decrypted), options, encryptedData, policy);
+                    IntegrityProtectedInputStream integrityProtected = new IntegrityProtectedInputStream(decrypted, skesk, options);
+                    nestedInputStream = new OpenPgpMessageInputStream(buffer(integrityProtected), options, encryptedData, policy);
                     return true;
                 } else if (esk instanceof PGPPublicKeyEncryptedData) {
                     PGPPublicKeyEncryptedData pkesk = (PGPPublicKeyEncryptedData) esk;
                     InputStream decrypted = pkesk.getDataStream(decryptorFactory);
                     encryptedData.sessionKey = sessionKey;
-                    nestedInputStream = new OpenPgpMessageInputStream(buffer(decrypted), options, encryptedData, policy);
+                    IntegrityProtectedInputStream integrityProtected = new IntegrityProtectedInputStream(decrypted, pkesk, options);
+                    nestedInputStream = new OpenPgpMessageInputStream(buffer(integrityProtected), options, encryptedData, policy);
                     return true;
                 } else {
                     throw new RuntimeException("Unknown ESK class type: " + esk.getClass().getName());
@@ -302,7 +304,8 @@ public class OpenPgpMessageInputStream extends DecryptionStream {
                     throwIfUnacceptable(sessionKey.getAlgorithm());
                     MessageMetadata.EncryptedData encryptedData = new MessageMetadata.EncryptedData(sessionKey.getAlgorithm());
                     encryptedData.sessionKey = sessionKey;
-                    nestedInputStream = new OpenPgpMessageInputStream(buffer(decrypted), options, encryptedData, policy);
+                    IntegrityProtectedInputStream integrityProtected = new IntegrityProtectedInputStream(decrypted, skesk, options);
+                    nestedInputStream = new OpenPgpMessageInputStream(buffer(integrityProtected), options, encryptedData, policy);
                     return true;
                 } catch (UnacceptableAlgorithmException e) {
                     throw e;
@@ -334,7 +337,8 @@ public class OpenPgpMessageInputStream extends DecryptionStream {
                         SymmetricKeyAlgorithm.requireFromId(pkesk.getSymmetricAlgorithm(decryptorFactory)));
                 encryptedData.sessionKey = sessionKey;
 
-                nestedInputStream = new OpenPgpMessageInputStream(buffer(decrypted), options, encryptedData, policy);
+                IntegrityProtectedInputStream integrityProtected = new IntegrityProtectedInputStream(decrypted, pkesk, options);
+                nestedInputStream = new OpenPgpMessageInputStream(buffer(integrityProtected), options, encryptedData, policy);
                 return true;
             } catch (UnacceptableAlgorithmException e) {
                 throw e;
@@ -359,7 +363,9 @@ public class OpenPgpMessageInputStream extends DecryptionStream {
                     MessageMetadata.EncryptedData encryptedData = new MessageMetadata.EncryptedData(
                             SymmetricKeyAlgorithm.requireFromId(pkesk.getSymmetricAlgorithm(decryptorFactory)));
                     encryptedData.sessionKey = sessionKey;
-                    nestedInputStream = new OpenPgpMessageInputStream(buffer(decrypted), options, encryptedData, policy);
+
+                    IntegrityProtectedInputStream integrityProtected = new IntegrityProtectedInputStream(decrypted, pkesk, options);
+                    nestedInputStream = new OpenPgpMessageInputStream(buffer(integrityProtected), options, encryptedData, policy);
                     return true;
                 } catch (PGPException e) {
                     // hm :/
@@ -491,6 +497,7 @@ public class OpenPgpMessageInputStream extends DecryptionStream {
 
         automaton.next(InputAlphabet.EndOfSequence);
         automaton.assertValid();
+        packetInputStream.close();
         closed = true;
     }
 

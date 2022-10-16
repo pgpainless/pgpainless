@@ -96,6 +96,12 @@ public class TeeBCPGInputStream {
         return markerPacket;
     }
 
+
+    public void close() throws IOException {
+        this.packetInputStream.close();
+        this.delayedTee.close();
+    }
+
     public static class DelayedTeeInputStreamInputStream extends InputStream {
 
         private int last = -1;
@@ -112,8 +118,12 @@ public class TeeBCPGInputStream {
             if (last != -1) {
                 outputStream.write(last);
             }
-            last = inputStream.read();
-            return last;
+            try {
+                last = inputStream.read();
+                return last;
+            } catch (IOException e) {
+                return -1;
+            }
         }
 
         /**
@@ -126,6 +136,12 @@ public class TeeBCPGInputStream {
                 outputStream.write(last);
             }
             last = -1;
+        }
+
+        @Override
+        public void close() throws IOException {
+            inputStream.close();
+            outputStream.close();
         }
     }
 }
