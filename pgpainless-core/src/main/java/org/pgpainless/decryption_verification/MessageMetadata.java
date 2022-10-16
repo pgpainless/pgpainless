@@ -91,16 +91,24 @@ public class MessageMetadata {
         };
     }
 
-    public @Nonnull List<SignatureVerification> getVerifiedSignatures() {
+    public List<SignatureVerification> getVerifiedDetachedSignatures() {
+        return new ArrayList<>(message.verifiedDetachedSignatures);
+    }
+
+    public List<SignatureVerification.Failure> getRejectedDetachedSignatures() {
+        return new ArrayList<>(message.rejectedDetachedSignatures);
+    }
+
+    public @Nonnull List<SignatureVerification> getVerifiedInlineSignatures() {
         List<SignatureVerification> verifications = new ArrayList<>();
-        Iterator<List<SignatureVerification>> verificationsByLayer = getVerifiedSignaturesByLayer();
+        Iterator<List<SignatureVerification>> verificationsByLayer = getVerifiedInlineSignaturesByLayer();
         while (verificationsByLayer.hasNext()) {
             verifications.addAll(verificationsByLayer.next());
         }
         return verifications;
     }
 
-    public @Nonnull Iterator<List<SignatureVerification>> getVerifiedSignaturesByLayer() {
+    public @Nonnull Iterator<List<SignatureVerification>> getVerifiedInlineSignaturesByLayer() {
         return new LayerIterator<List<SignatureVerification>>(message) {
             @Override
             boolean matches(Nested layer) {
@@ -114,21 +122,24 @@ public class MessageMetadata {
 
             @Override
             List<SignatureVerification> getProperty(Layer last) {
-                return new ArrayList<>(last.getVerifiedSignatures());
+                List<SignatureVerification> list = new ArrayList<>();
+                list.addAll(last.getVerifiedOnePassSignatures());
+                list.addAll(last.getVerifiedPrependedSignatures());
+                return list;
             }
         };
     }
 
-    public @Nonnull List<SignatureVerification.Failure> getRejectedSignatures() {
+    public @Nonnull List<SignatureVerification.Failure> getRejectedInlineSignatures() {
         List<SignatureVerification.Failure> rejected = new ArrayList<>();
-        Iterator<List<SignatureVerification.Failure>> rejectedByLayer = getRejectedSignaturesByLayer();
+        Iterator<List<SignatureVerification.Failure>> rejectedByLayer = getRejectedInlineSignaturesByLayer();
         while (rejectedByLayer.hasNext()) {
             rejected.addAll(rejectedByLayer.next());
         }
         return rejected;
     }
 
-    public @Nonnull Iterator<List<SignatureVerification.Failure>> getRejectedSignaturesByLayer() {
+    public @Nonnull Iterator<List<SignatureVerification.Failure>> getRejectedInlineSignaturesByLayer() {
         return new LayerIterator<List<SignatureVerification.Failure>>(message) {
             @Override
             boolean matches(Nested layer) {
@@ -142,7 +153,10 @@ public class MessageMetadata {
 
             @Override
             List<SignatureVerification.Failure> getProperty(Layer last) {
-                return new ArrayList<>(last.getFailedSignatures());
+                List<SignatureVerification.Failure> list = new ArrayList<>();
+                list.addAll(last.getRejectedOnePassSignatures());
+                list.addAll(last.getRejectedPrependedSignatures());
+                return list;
             }
         };
     }
@@ -169,8 +183,12 @@ public class MessageMetadata {
     }
 
     public abstract static class Layer {
-        protected final List<SignatureVerification> verifiedSignatures = new ArrayList<>();
-        protected final List<SignatureVerification.Failure> failedSignatures = new ArrayList<>();
+        protected final List<SignatureVerification> verifiedDetachedSignatures = new ArrayList<>();
+        protected final List<SignatureVerification.Failure> rejectedDetachedSignatures = new ArrayList<>();
+        protected final List<SignatureVerification> verifiedOnePassSignatures = new ArrayList<>();
+        protected final List<SignatureVerification.Failure> rejectedOnePassSignatures = new ArrayList<>();
+        protected final List<SignatureVerification> verifiedPrependedSignatures = new ArrayList<>();
+        protected final List<SignatureVerification.Failure> rejectedPrependedSignatures = new ArrayList<>();
         protected Nested child;
 
         public Nested getChild() {
@@ -181,21 +199,54 @@ public class MessageMetadata {
             this.child = child;
         }
 
-        public List<SignatureVerification> getVerifiedSignatures() {
-            return new ArrayList<>(verifiedSignatures);
+        public List<SignatureVerification> getVerifiedDetachedSignatures() {
+            return new ArrayList<>(verifiedDetachedSignatures);
         }
 
-        public List<SignatureVerification.Failure> getFailedSignatures() {
-            return new ArrayList<>(failedSignatures);
+        public List<SignatureVerification.Failure> getRejectedDetachedSignatures() {
+            return new ArrayList<>(rejectedDetachedSignatures);
         }
 
-        void addVerifiedSignature(SignatureVerification signatureVerification) {
-            verifiedSignatures.add(signatureVerification);
+        void addVerifiedDetachedSignature(SignatureVerification signatureVerification) {
+            verifiedDetachedSignatures.add(signatureVerification);
         }
 
-        void addFailedSignature(SignatureVerification.Failure failure) {
-            failedSignatures.add(failure);
+        void addRejectedDetachedSignature(SignatureVerification.Failure failure) {
+            rejectedDetachedSignatures.add(failure);
         }
+
+        public List<SignatureVerification> getVerifiedOnePassSignatures() {
+            return new ArrayList<>(verifiedOnePassSignatures);
+        }
+
+        public List<SignatureVerification.Failure> getRejectedOnePassSignatures() {
+            return new ArrayList<>(rejectedOnePassSignatures);
+        }
+
+        void addVerifiedOnePassSignature(SignatureVerification verifiedOnePassSignature) {
+            this.verifiedOnePassSignatures.add(verifiedOnePassSignature);
+        }
+
+        void addRejectedOnePassSignature(SignatureVerification.Failure rejected) {
+            this.rejectedOnePassSignatures.add(rejected);
+        }
+
+        public List<SignatureVerification> getVerifiedPrependedSignatures() {
+            return new ArrayList<>(verifiedPrependedSignatures);
+        }
+
+        public List<SignatureVerification.Failure> getRejectedPrependedSignatures() {
+            return new ArrayList<>(rejectedPrependedSignatures);
+        }
+
+        void addVerifiedPrependedSignature(SignatureVerification verified) {
+            this.verifiedPrependedSignatures.add(verified);
+        }
+
+        void addRejectedPrependedSignature(SignatureVerification.Failure rejected) {
+            this.rejectedPrependedSignatures.add(rejected);
+        }
+
     }
 
     public interface Nested {
