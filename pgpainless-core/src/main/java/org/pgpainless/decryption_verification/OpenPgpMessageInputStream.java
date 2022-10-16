@@ -29,7 +29,6 @@ import org.bouncycastle.openpgp.PGPPublicKeyEncryptedData;
 import org.bouncycastle.openpgp.PGPPublicKeyRing;
 import org.bouncycastle.openpgp.PGPSecretKey;
 import org.bouncycastle.openpgp.PGPSecretKeyRing;
-import org.bouncycastle.openpgp.PGPSessionKey;
 import org.bouncycastle.openpgp.PGPSignature;
 import org.bouncycastle.openpgp.operator.PBEDataDecryptorFactory;
 import org.bouncycastle.openpgp.operator.PGPContentVerifierBuilderProvider;
@@ -795,7 +794,7 @@ public class OpenPgpMessageInputStream extends DecryptionStream {
             boolean finished;
             boolean valid;
 
-            public DetachedOrPrependedSignature(PGPSignature signature, PGPPublicKeyRing certificate, long keyId) {
+            DetachedOrPrependedSignature(PGPSignature signature, PGPPublicKeyRing certificate, long keyId) {
                 this.signature = signature;
                 this.certificate = certificate;
                 this.keyId = keyId;
@@ -844,7 +843,7 @@ public class OpenPgpMessageInputStream extends DecryptionStream {
             boolean finished;
             boolean valid;
 
-            public OnePassSignature(PGPOnePassSignature signature, PGPPublicKeyRing certificate, long keyId) {
+            OnePassSignature(PGPOnePassSignature signature, PGPPublicKeyRing certificate, long keyId) {
                 this.opSignature = signature;
                 this.certificate = certificate;
                 this.keyId = keyId;
