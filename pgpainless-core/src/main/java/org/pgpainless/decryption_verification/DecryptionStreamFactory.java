@@ -40,6 +40,7 @@ import org.bouncycastle.openpgp.operator.PBEDataDecryptorFactory;
 import org.bouncycastle.openpgp.operator.PGPContentVerifierBuilderProvider;
 import org.bouncycastle.openpgp.operator.PublicKeyDataDecryptorFactory;
 import org.bouncycastle.openpgp.operator.SessionKeyDataDecryptorFactory;
+import org.graalvm.compiler.lir.amd64.AMD64BinaryConsumer;
 import org.pgpainless.PGPainless;
 import org.pgpainless.algorithm.CompressionAlgorithm;
 import org.pgpainless.algorithm.EncryptionPurpose;
@@ -88,8 +89,28 @@ public final class DecryptionStreamFactory {
 
 
     public static DecryptionStream create(@Nonnull InputStream inputStream,
-                                          @Nonnull ConsumerOptions options)
+                                              @Nonnull ConsumerOptions options)
             throws PGPException, IOException {
+        OpenPgpInputStream openPgpInputStream = new OpenPgpInputStream(inputStream);
+        openPgpInputStream.reset();
+        if (openPgpInputStream.isBinaryOpenPgp()) {
+            return new OpenPgpMessageInputStream(openPgpInputStream, options);
+        } else if (openPgpInputStream.isAsciiArmored()) {
+            ArmoredInputStream armorIn = ArmoredInputStreamFactory.get(openPgpInputStream);
+            if (armorIn.isClearText()) {
+                return createOld(openPgpInputStream, options);
+            } else {
+                return new OpenPgpMessageInputStream(armorIn, options);
+            }
+        } else if (openPgpInputStream.isNonOpenPgp()) {
+            return createOld(openPgpInputStream, options);
+        } else {
+            throw new IOException("What?");
+        }
+    }
+
+    public static DecryptionStream createOld(@Nonnull InputStream inputStream,
+                                             @Nonnull ConsumerOptions options) throws IOException, PGPException {
         DecryptionStreamFactory factory = new DecryptionStreamFactory(options);
         OpenPgpInputStream openPgpIn = new OpenPgpInputStream(inputStream);
         return factory.parseOpenPGPDataAndCreateDecryptionStream(openPgpIn);
@@ -136,7 +157,7 @@ public final class DecryptionStreamFactory {
         if (openPgpIn.isNonOpenPgp() || options.isForceNonOpenPgpData()) {
             outerDecodingStream = openPgpIn;
             pgpInStream = wrapInVerifySignatureStream(outerDecodingStream, null);
-            return new DecryptionStream(pgpInStream, resultBuilder, integrityProtectedEncryptedInputStream, null);
+            return new DecryptionStreamImpl(pgpInStream, resultBuilder, integrityProtectedEncryptedInputStream, null);
         }
 
         // Data appears to be OpenPGP message,
@@ -147,7 +168,7 @@ public final class DecryptionStreamFactory {
             objectFactory = ImplementationFactory.getInstance().getPGPObjectFactory(outerDecodingStream);
             // Parse OpenPGP message
             pgpInStream = processPGPPackets(objectFactory, 1);
-            return new DecryptionStream(pgpInStream,
+            return new DecryptionStreamImpl(pgpInStream,
                     resultBuilder, integrityProtectedEncryptedInputStream, null);
         }
 
@@ -161,7 +182,7 @@ public final class DecryptionStreamFactory {
                 objectFactory = ImplementationFactory.getInstance().getPGPObjectFactory(outerDecodingStream);
                 // Parse OpenPGP message
                 pgpInStream = processPGPPackets(objectFactory, 1);
-                return new DecryptionStream(pgpInStream,
+                return new DecryptionStreamImpl(pgpInStream,
                         resultBuilder, integrityProtectedEncryptedInputStream,
                         outerDecodingStream);
             }
@@ -170,7 +191,7 @@ public final class DecryptionStreamFactory {
         throw new PGPException("Not sure how to handle the input stream.");
     }
 
-    private DecryptionStream parseCleartextSignedMessage(ArmoredInputStream armorIn)
+    private DecryptionStreamImpl parseCleartextSignedMessage(ArmoredInputStream armorIn)
             throws IOException, PGPException {
         resultBuilder.setCompressionAlgorithm(CompressionAlgorithm.UNCOMPRESSED)
                 .setFileEncoding(StreamEncoding.TEXT);
@@ -185,7 +206,7 @@ public final class DecryptionStreamFactory {
         initializeDetachedSignatures(options.getDetachedSignatures());
 
         InputStream verifyIn = wrapInVerifySignatureStream(multiPassStrategy.getMessageInputStream(), null);
-        return new DecryptionStream(verifyIn, resultBuilder, integrityProtectedEncryptedInputStream,
+        return new DecryptionStreamImpl(verifyIn, resultBuilder, integrityProtectedEncryptedInputStream,
                 null);
     }
 

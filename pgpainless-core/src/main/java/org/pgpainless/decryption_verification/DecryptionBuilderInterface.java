@@ -13,7 +13,7 @@ import org.bouncycastle.openpgp.PGPException;
 public interface DecryptionBuilderInterface {
 
     /**
-     * Create a {@link DecryptionStream} on an {@link InputStream} which contains the encrypted and/or signed data.
+     * Create a {@link DecryptionStreamImpl} on an {@link InputStream} which contains the encrypted and/or signed data.
      *
      * @param inputStream encrypted and/or signed data.
      * @return api handle
