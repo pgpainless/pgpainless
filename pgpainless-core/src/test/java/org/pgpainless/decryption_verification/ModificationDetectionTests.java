@@ -238,8 +238,10 @@ public class ModificationDetectionTests {
                 );
 
         ByteArrayOutputStream out = new ByteArrayOutputStream();
-        Streams.pipeAll(decryptionStream, out);
-        assertThrows(ModificationDetectionException.class, decryptionStream::close);
+        assertThrows(ModificationDetectionException.class, () -> {
+            Streams.pipeAll(decryptionStream, out);
+            decryptionStream.close();
+        });
     }
 
     @TestTemplate
@@ -269,8 +271,10 @@ public class ModificationDetectionTests {
                 );
 
         ByteArrayOutputStream out = new ByteArrayOutputStream();
-        Streams.pipeAll(decryptionStream, out);
-        assertThrows(ModificationDetectionException.class, decryptionStream::close);
+        assertThrows(ModificationDetectionException.class, () -> {
+            Streams.pipeAll(decryptionStream, out);
+            decryptionStream.close();
+        });
     }
 
     @TestTemplate
@@ -313,8 +317,10 @@ public class ModificationDetectionTests {
                 );
 
         ByteArrayOutputStream out = new ByteArrayOutputStream();
-        Streams.pipeAll(decryptionStream, out);
-        assertThrows(ModificationDetectionException.class, decryptionStream::close);
+        assertThrows(ModificationDetectionException.class, () -> {
+            Streams.pipeAll(decryptionStream, out);
+            decryptionStream.close();
+        });
     }
 
     @TestTemplate
@@ -344,8 +350,10 @@ public class ModificationDetectionTests {
                 );
 
         ByteArrayOutputStream out = new ByteArrayOutputStream();
-        Streams.pipeAll(decryptionStream, out);
-        assertThrows(ModificationDetectionException.class, decryptionStream::close);
+        assertThrows(ModificationDetectionException.class, () -> {
+            Streams.pipeAll(decryptionStream, out);
+            decryptionStream.close();
+        });
     }
 
     @TestTemplate
