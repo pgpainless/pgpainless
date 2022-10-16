@@ -91,6 +91,62 @@ public class MessageMetadata {
         };
     }
 
+    public @Nonnull List<SignatureVerification> getVerifiedSignatures() {
+        List<SignatureVerification> verifications = new ArrayList<>();
+        Iterator<List<SignatureVerification>> verificationsByLayer = getVerifiedSignaturesByLayer();
+        while (verificationsByLayer.hasNext()) {
+            verifications.addAll(verificationsByLayer.next());
+        }
+        return verifications;
+    }
+
+    public @Nonnull Iterator<List<SignatureVerification>> getVerifiedSignaturesByLayer() {
+        return new LayerIterator<List<SignatureVerification>>(message) {
+            @Override
+            boolean matches(Nested layer) {
+                return layer instanceof Layer;
+            }
+
+            @Override
+            boolean matches(Layer layer) {
+                return true;
+            }
+
+            @Override
+            List<SignatureVerification> getProperty(Layer last) {
+                return new ArrayList<>(last.getVerifiedSignatures());
+            }
+        };
+    }
+
+    public @Nonnull List<SignatureVerification.Failure> getRejectedSignatures() {
+        List<SignatureVerification.Failure> rejected = new ArrayList<>();
+        Iterator<List<SignatureVerification.Failure>> rejectedByLayer = getRejectedSignaturesByLayer();
+        while (rejectedByLayer.hasNext()) {
+            rejected.addAll(rejectedByLayer.next());
+        }
+        return rejected;
+    }
+
+    public @Nonnull Iterator<List<SignatureVerification.Failure>> getRejectedSignaturesByLayer() {
+        return new LayerIterator<List<SignatureVerification.Failure>>(message) {
+            @Override
+            boolean matches(Nested layer) {
+                return layer instanceof Layer;
+            }
+
+            @Override
+            boolean matches(Layer layer) {
+                return true;
+            }
+
+            @Override
+            List<SignatureVerification.Failure> getProperty(Layer last) {
+                return new ArrayList<>(last.getFailedSignatures());
+            }
+        };
+    }
+
     public String getFilename() {
         return findLiteralData().getFileName();
     }
@@ -131,6 +187,14 @@ public class MessageMetadata {
 
         public List<SignatureVerification.Failure> getFailedSignatures() {
             return new ArrayList<>(failedSignatures);
+        }
+
+        void addVerifiedSignature(SignatureVerification signatureVerification) {
+            verifiedSignatures.add(signatureVerification);
+        }
+
+        void addFailedSignature(SignatureVerification.Failure failure) {
+            failedSignatures.add(failure);
         }
     }
 
@@ -223,9 +287,11 @@ public class MessageMetadata {
     private abstract static class LayerIterator<O> implements Iterator<O> {
         private Nested current;
         Layer last = null;
+        Message parent;
 
         LayerIterator(Message message) {
             super();
+            this.parent = message;
             this.current = message.child;
             if (matches(current)) {
                 last = (Layer) current;
@@ -234,6 +300,9 @@ public class MessageMetadata {
 
         @Override
         public boolean hasNext() {
+            if (parent != null && matches(parent)) {
+                return true;
+            }
             if (last == null) {
                 findNext();
             }
@@ -242,6 +311,11 @@ public class MessageMetadata {
 
         @Override
         public O next() {
+            if (parent != null && matches(parent)) {
+                O property = getProperty(parent);
+                parent = null;
+                return property;
+            }
             if (last == null) {
                 findNext();
             }
@@ -263,7 +337,16 @@ public class MessageMetadata {
             }
         }
 
-        abstract boolean matches(Nested layer);
+        boolean matches(Nested layer) {
+            return false;
+        }
+
+        boolean matches(Layer layer) {
+            if (layer instanceof Nested) {
+                return matches((Nested) layer);
+            }
+            return false;
+        }
 
         abstract O getProperty(Layer last);
     }

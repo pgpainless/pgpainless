@@ -4,6 +4,7 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
@@ -331,6 +332,8 @@ public class OpenPgpMessageInputStreamTest {
         assertEquals("", metadata.getFilename());
         JUtils.assertDateEquals(new Date(0L), metadata.getModificationDate());
         assertEquals(StreamEncoding.BINARY, metadata.getFormat());
+        assertTrue(metadata.getVerifiedSignatures().isEmpty());
+        assertTrue(metadata.getRejectedSignatures().isEmpty());
     }
 
     @ParameterizedTest(name = "Process LIT LIT using {0}")
@@ -349,6 +352,8 @@ public class OpenPgpMessageInputStreamTest {
         assertEquals(PLAINTEXT, plain);
         MessageMetadata metadata = result.getB();
         assertEquals(CompressionAlgorithm.ZIP, metadata.getCompressionAlgorithm());
+        assertTrue(metadata.getVerifiedSignatures().isEmpty());
+        assertTrue(metadata.getRejectedSignatures().isEmpty());
     }
 
     @ParameterizedTest(name = "Process COMP using {0}")
@@ -372,6 +377,8 @@ public class OpenPgpMessageInputStreamTest {
         assertEquals(CompressionAlgorithm.BZIP2, compressionAlgorithms.next());
         assertFalse(compressionAlgorithms.hasNext());
         assertNull(metadata.getEncryptionAlgorithm());
+        assertTrue(metadata.getVerifiedSignatures().isEmpty());
+        assertTrue(metadata.getRejectedSignatures().isEmpty());
     }
 
     @ParameterizedTest(name = "Process SIG COMP(LIT) using {0}")
@@ -388,6 +395,8 @@ public class OpenPgpMessageInputStreamTest {
         MessageMetadata metadata = result.getB();
         assertEquals(CompressionAlgorithm.ZIP, metadata.getCompressionAlgorithm());
         assertNull(metadata.getEncryptionAlgorithm());
+        assertFalse(metadata.getVerifiedSignatures().isEmpty());
+        assertTrue(metadata.getRejectedSignatures().isEmpty());
     }
 
     @ParameterizedTest(name = "Process SENC(LIT) using {0}")
@@ -401,6 +410,8 @@ public class OpenPgpMessageInputStreamTest {
         MessageMetadata metadata = result.getB();
         assertNull(metadata.getCompressionAlgorithm());
         assertEquals(SymmetricKeyAlgorithm.AES_256, metadata.getEncryptionAlgorithm());
+        assertTrue(metadata.getVerifiedSignatures().isEmpty());
+        assertTrue(metadata.getRejectedSignatures().isEmpty());
     }
 
     @ParameterizedTest(name = "Process PENC(COMP(LIT)) using {0}")
@@ -415,6 +426,8 @@ public class OpenPgpMessageInputStreamTest {
         MessageMetadata metadata = result.getB();
         assertEquals(CompressionAlgorithm.ZLIB, metadata.getCompressionAlgorithm());
         assertEquals(SymmetricKeyAlgorithm.AES_256, metadata.getEncryptionAlgorithm());
+        assertTrue(metadata.getVerifiedSignatures().isEmpty());
+        assertTrue(metadata.getRejectedSignatures().isEmpty());
     }
 
     @ParameterizedTest(name = "Process OPS LIT SIG using {0}")
@@ -429,6 +442,8 @@ public class OpenPgpMessageInputStreamTest {
         MessageMetadata metadata = result.getB();
         assertNull(metadata.getEncryptionAlgorithm());
         assertNull(metadata.getCompressionAlgorithm());
+        assertFalse(metadata.getVerifiedSignatures().isEmpty());
+        assertTrue(metadata.getRejectedSignatures().isEmpty());
     }
 
     String BOB_KEY = "-----BEGIN PGP PRIVATE KEY BLOCK-----\n" +
@@ -564,6 +579,8 @@ public class OpenPgpMessageInputStreamTest {
         MessageMetadata metadata = result.getB();
         assertEquals(SymmetricKeyAlgorithm.AES_256, metadata.getEncryptionAlgorithm());
         assertNull(metadata.getCompressionAlgorithm());
+        assertFalse(metadata.getVerifiedSignatures().isEmpty());
+        assertTrue(metadata.getRejectedSignatures().isEmpty());
     }
 
     @ParameterizedTest(name = "Process PENC(OPS OPS OPS LIT SIG SIG SIG) using {0}")
@@ -627,6 +644,8 @@ public class OpenPgpMessageInputStreamTest {
         MessageMetadata metadata = result.getB();
         assertEquals(SymmetricKeyAlgorithm.AES_256, metadata.getEncryptionAlgorithm());
         assertNull(metadata.getCompressionAlgorithm());
+        assertFalse(metadata.getVerifiedSignatures().isEmpty());
+        assertTrue(metadata.getRejectedSignatures().isEmpty());
     }
 
     private static Tuple<String, MessageMetadata> processReadBuffered(String armoredMessage, ConsumerOptions options)
