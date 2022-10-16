@@ -69,6 +69,28 @@ public class MessageMetadata {
         };
     }
 
+    public @Nullable SessionKey getSessionKey() {
+        Iterator<SessionKey> sessionKeys = getSessionKeys();
+        if (sessionKeys.hasNext()) {
+            return sessionKeys.next();
+        }
+        return null;
+    }
+
+    public @Nonnull Iterator<SessionKey> getSessionKeys() {
+        return new LayerIterator<SessionKey>(message) {
+            @Override
+            boolean matches(Nested layer) {
+                return layer instanceof EncryptedData;
+            }
+
+            @Override
+            SessionKey getProperty(Layer last) {
+                return ((EncryptedData) last).getSessionKey();
+            }
+        };
+    }
+
     public String getFilename() {
         return findLiteralData().getFileName();
     }

@@ -6,6 +6,7 @@ package investigations;
 
 import static org.junit.jupiter.api.Assertions.assertArrayEquals;
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
@@ -32,9 +33,8 @@ import org.pgpainless.algorithm.SignatureType;
 import org.pgpainless.algorithm.SymmetricKeyAlgorithm;
 import org.pgpainless.decryption_verification.ConsumerOptions;
 import org.pgpainless.decryption_verification.DecryptionStream;
-import org.pgpainless.decryption_verification.OpenPgpMetadata;
+import org.pgpainless.exception.MalformedOpenPgpMessageException;
 import org.pgpainless.implementation.ImplementationFactory;
-import org.pgpainless.key.SubkeyIdentifier;
 import org.pgpainless.key.info.KeyRingInfo;
 import org.pgpainless.key.protection.UnlockSecretKey;
 import org.pgpainless.util.Passphrase;
@@ -177,7 +177,7 @@ public class InvestigateMultiSEIPMessageHandlingTest {
     }
 
     @Test
-    public void testDecryptAndVerifyDoesIgnoreAppendedSEIPData() throws IOException, PGPException {
+    public void testDecryptAndVerifyDetectsAppendedSEIPData() throws IOException, PGPException {
         PGPSecretKeyRing ring1 = PGPainless.readKeyRing().secretKeyRing(KEY1);
         PGPSecretKeyRing ring2 = PGPainless.readKeyRing().secretKeyRing(KEY2);
 
@@ -191,15 +191,6 @@ public class InvestigateMultiSEIPMessageHandlingTest {
                 .withOptions(options);
 
         ByteArrayOutputStream out = new ByteArrayOutputStream();
-        Streams.pipeAll(decryptionStream, out);
-        decryptionStream.close();
-
-        assertArrayEquals(data1.getBytes(StandardCharsets.UTF_8), out.toByteArray());
-        OpenPgpMetadata metadata = decryptionStream.getResult();
-        assertEquals(1, metadata.getVerifiedSignatures().size(),
-                "The first SEIP packet is signed exactly only by the signing key of ring1.");
-        assertEquals(
-                new SubkeyIdentifier(ring1, new KeyRingInfo(ring1).getSigningSubkeys().get(0).getKeyID()),
-                metadata.getVerifiedSignatures().keySet().iterator().next());
+        assertThrows(MalformedOpenPgpMessageException.class, () -> Streams.pipeAll(decryptionStream, out));
     }
 }
