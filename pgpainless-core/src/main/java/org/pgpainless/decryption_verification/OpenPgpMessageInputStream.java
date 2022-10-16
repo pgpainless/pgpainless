@@ -4,6 +4,7 @@
 
 package org.pgpainless.decryption_verification;
 
+import java.io.BufferedInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
@@ -12,6 +13,7 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
 import java.util.Stack;
+import javax.annotation.Nonnull;
 
 import org.bouncycastle.bcpg.BCPGInputStream;
 import org.bouncycastle.openpgp.PGPCompressedData;
@@ -28,7 +30,6 @@ import org.bouncycastle.openpgp.PGPPublicKeyRing;
 import org.bouncycastle.openpgp.PGPSecretKey;
 import org.bouncycastle.openpgp.PGPSecretKeyRing;
 import org.bouncycastle.openpgp.PGPSignature;
-import org.bouncycastle.openpgp.PGPUtil;
 import org.bouncycastle.openpgp.operator.PBEDataDecryptorFactory;
 import org.bouncycastle.openpgp.operator.PGPContentVerifierBuilderProvider;
 import org.bouncycastle.openpgp.operator.PublicKeyDataDecryptorFactory;
@@ -46,25 +47,27 @@ import org.pgpainless.decryption_verification.automaton.StackAlphabet;
 import org.pgpainless.exception.MalformedOpenPgpMessageException;
 import org.pgpainless.exception.MessageNotIntegrityProtectedException;
 import org.pgpainless.exception.MissingDecryptionMethodException;
+import org.pgpainless.exception.SignatureValidationException;
+import org.pgpainless.exception.UnacceptableAlgorithmException;
 import org.pgpainless.implementation.ImplementationFactory;
+import org.pgpainless.key.SubkeyIdentifier;
 import org.pgpainless.key.info.KeyRingInfo;
 import org.pgpainless.key.protection.SecretKeyRingProtector;
 import org.pgpainless.key.protection.UnlockSecretKey;
+import org.pgpainless.policy.Policy;
 import org.pgpainless.signature.SignatureUtils;
 import org.pgpainless.util.Passphrase;
+import org.pgpainless.util.SessionKey;
 import org.pgpainless.util.Tuple;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import javax.annotation.Nonnull;
-
-public class OpenPgpMessageInputStream extends InputStream {
+public class OpenPgpMessageInputStream extends DecryptionStream {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(OpenPgpMessageInputStream.class);
 
     // Options to consume the data
     protected final ConsumerOptions options;
-    protected final OpenPgpMetadata.Builder resultBuilder;
     // Pushdown Automaton to verify validity of OpenPGP packet sequence in an OpenPGP message
     protected final PDA automaton = new PDA();
     // InputStream of OpenPGP packets
@@ -76,6 +79,7 @@ public class OpenPgpMessageInputStream extends InputStream {
 
     private final Signatures signatures;
     private final MessageMetadata.Layer metadata;
+    private final Policy policy;
 
     public OpenPgpMessageInputStream(InputStream inputStream, ConsumerOptions options)
             throws IOException, PGPException {
@@ -84,10 +88,11 @@ public class OpenPgpMessageInputStream extends InputStream {
 
     OpenPgpMessageInputStream(InputStream inputStream, ConsumerOptions options, MessageMetadata.Layer metadata)
             throws PGPException, IOException {
+        super(OpenPgpMetadata.getBuilder());
 
+        this.policy = PGPainless.getPolicy();
         this.options = options;
         this.metadata = metadata;
-        this.resultBuilder = OpenPgpMetadata.getBuilder();
         this.signatures = new Signatures(options);
 
         // Add detached signatures only on the outermost OpenPgpMessageInputStream
@@ -210,7 +215,8 @@ public class OpenPgpMessageInputStream extends InputStream {
         PGPCompressedData compressedData = packetInputStream.readCompressedData();
         MessageMetadata.CompressedData compressionLayer = new MessageMetadata.CompressedData(
                 CompressionAlgorithm.fromId(compressedData.getAlgorithm()));
-        nestedInputStream = new OpenPgpMessageInputStream(compressedData.getDataStream(), options, compressionLayer);
+        InputStream decompressed = compressedData.getDataStream();
+        nestedInputStream = new OpenPgpMessageInputStream(buffer(decompressed), options, compressionLayer);
     }
 
     private void processLiteralData() throws IOException {
@@ -232,19 +238,25 @@ public class OpenPgpMessageInputStream extends InputStream {
 
         // Try session key
         if (options.getSessionKey() != null) {
+            SessionKey sessionKey = options.getSessionKey();
+            if (!policy.getSymmetricKeyDecryptionAlgorithmPolicy().isAcceptable(sessionKey.getAlgorithm())) {
+                throw new UnacceptableAlgorithmException("Symmetric algorithm " + sessionKey.getAlgorithm() + " is not acceptable.");
+            }
             SessionKeyDataDecryptorFactory decryptorFactory = ImplementationFactory.getInstance()
-                    .getSessionKeyDataDecryptorFactory(options.getSessionKey());
+                    .getSessionKeyDataDecryptorFactory(sessionKey);
             // TODO: Replace with encDataList.addSessionKeyDecryptionMethod(sessionKey)
             PGPEncryptedData esk = esks.all().get(0);
             try {
-                MessageMetadata.EncryptedData encryptedData = new MessageMetadata.EncryptedData(options.getSessionKey().getAlgorithm());
+                MessageMetadata.EncryptedData encryptedData = new MessageMetadata.EncryptedData(sessionKey.getAlgorithm());
                 if (esk instanceof PGPPBEEncryptedData) {
                     PGPPBEEncryptedData skesk = (PGPPBEEncryptedData) esk;
-                    nestedInputStream = new OpenPgpMessageInputStream(skesk.getDataStream(decryptorFactory), options, encryptedData);
+                    InputStream decrypted = skesk.getDataStream(decryptorFactory);
+                    nestedInputStream = new OpenPgpMessageInputStream(buffer(decrypted), options, encryptedData);
                     return true;
                 } else if (esk instanceof PGPPublicKeyEncryptedData) {
                     PGPPublicKeyEncryptedData pkesk = (PGPPublicKeyEncryptedData) esk;
-                    nestedInputStream = new OpenPgpMessageInputStream(pkesk.getDataStream(decryptorFactory), options, encryptedData);
+                    InputStream decrypted = pkesk.getDataStream(decryptorFactory);
+                    nestedInputStream = new OpenPgpMessageInputStream(buffer(decrypted), options, encryptedData);
                     return true;
                 } else {
                     throw new RuntimeException("Unknown ESK class type: " + esk.getClass().getName());
@@ -263,7 +275,7 @@ public class OpenPgpMessageInputStream extends InputStream {
                     InputStream decrypted = skesk.getDataStream(decryptorFactory);
                     MessageMetadata.EncryptedData encryptedData = new MessageMetadata.EncryptedData(
                             SymmetricKeyAlgorithm.requireFromId(skesk.getSymmetricAlgorithm(decryptorFactory)));
-                    nestedInputStream = new OpenPgpMessageInputStream(decrypted, options, encryptedData);
+                    nestedInputStream = new OpenPgpMessageInputStream(buffer(decrypted), options, encryptedData);
                     return true;
                 } catch (PGPException e) {
                     // password mismatch? Try next password
@@ -286,14 +298,20 @@ public class OpenPgpMessageInputStream extends InputStream {
             PublicKeyDataDecryptorFactory decryptorFactory = ImplementationFactory.getInstance()
                     .getPublicKeyDataDecryptorFactory(privateKey);
             try {
+                SymmetricKeyAlgorithm symAlg = SymmetricKeyAlgorithm.requireFromId(pkesk.getSymmetricAlgorithm(decryptorFactory));
+                if (!policy.getSymmetricKeyDecryptionAlgorithmPolicy().isAcceptable(symAlg)) {
+                    throw new UnacceptableAlgorithmException("Symmetric-key algorithm " + symAlg + " is not acceptable.");
+                }
                 InputStream decrypted = pkesk.getDataStream(decryptorFactory);
                 MessageMetadata.EncryptedData encryptedData = new MessageMetadata.EncryptedData(
                         SymmetricKeyAlgorithm.requireFromId(pkesk.getSymmetricAlgorithm(decryptorFactory)));
 
-                nestedInputStream = new OpenPgpMessageInputStream(PGPUtil.getDecoderStream(decrypted), options, encryptedData);
+                nestedInputStream = new OpenPgpMessageInputStream(buffer(decrypted), options, encryptedData);
                 return true;
             } catch (PGPException e) {
-                // hm :/
+                if (e instanceof UnacceptableAlgorithmException) {
+                    throw e;
+                }
             }
         }
 
@@ -309,7 +327,7 @@ public class OpenPgpMessageInputStream extends InputStream {
                     InputStream decrypted = pkesk.getDataStream(decryptorFactory);
                     MessageMetadata.EncryptedData encryptedData = new MessageMetadata.EncryptedData(
                             SymmetricKeyAlgorithm.requireFromId(pkesk.getSymmetricAlgorithm(decryptorFactory)));
-                    nestedInputStream = new OpenPgpMessageInputStream(decrypted, options, encryptedData);
+                    nestedInputStream = new OpenPgpMessageInputStream(buffer(decrypted), options, encryptedData);
                     return true;
                 } catch (PGPException e) {
                     // hm :/
@@ -319,6 +337,10 @@ public class OpenPgpMessageInputStream extends InputStream {
 
         // we did not yet succeed in decrypting any session key :/
         return false;
+    }
+
+    private static InputStream buffer(InputStream inputStream) {
+        return new BufferedInputStream(inputStream);
     }
 
     private List<Tuple<PGPSecretKeyRing, PGPSecretKey>> findPotentialDecryptionKeys(PGPPublicKeyEncryptedData pkesk) {
@@ -420,6 +442,7 @@ public class OpenPgpMessageInputStream extends InputStream {
 
     @Override
     public void close() throws IOException {
+        super.close();
         if (closed) {
             automaton.assertValid();
             return;
@@ -502,6 +525,8 @@ public class OpenPgpMessageInputStream extends InputStream {
         final List<PGPSignature> correspondingSignatures;
         boolean isLiteral = true;
 
+        final List<PGPSignature> verified = new ArrayList<>();
+
         private Signatures(ConsumerOptions options) {
             this.options = options;
             this.detachedSignatures = new ArrayList<>();
@@ -521,19 +546,19 @@ public class OpenPgpMessageInputStream extends InputStream {
             long keyId = SignatureUtils.determineIssuerKeyId(signature);
             PGPPublicKeyRing certificate = findCertificate(keyId);
             initialize(signature, certificate, keyId);
-            this.detachedSignatures.add(new SIG(signature));
+            this.detachedSignatures.add(new SIG(signature, certificate, keyId));
         }
 
         void addPrependedSignature(PGPSignature signature) {
             long keyId = SignatureUtils.determineIssuerKeyId(signature);
             PGPPublicKeyRing certificate = findCertificate(keyId);
             initialize(signature, certificate, keyId);
-            this.prependedSignatures.add(new SIG(signature));
+            this.prependedSignatures.add(new SIG(signature, certificate, keyId));
         }
 
         void addOnePassSignature(PGPOnePassSignature signature) {
             PGPPublicKeyRing certificate = findCertificate(signature.getKeyID());
-            OPS ops = new OPS(signature);
+            OPS ops = new OPS(signature, certificate, signature.getKeyID());
             ops.init(certificate);
             onePassSignatures.add(ops);
 
@@ -546,7 +571,7 @@ public class OpenPgpMessageInputStream extends InputStream {
         void addCorrespondingOnePassSignature(PGPSignature signature) {
             for (int i = onePassSignatures.size() - 1; i >= 0; i--) {
                 OPS onePassSignature = onePassSignatures.get(i);
-                if (onePassSignature.signature.getKeyID() != signature.getKeyID()) {
+                if (onePassSignature.opSignature.getKeyID() != signature.getKeyID()) {
                     continue;
                 }
                 if (onePassSignature.finished) {
@@ -554,8 +579,8 @@ public class OpenPgpMessageInputStream extends InputStream {
                 }
 
                 boolean verified = onePassSignature.verify(signature);
-                log("One-Pass-Signature by " + Long.toHexString(onePassSignature.signature.getKeyID()) + " is " + (verified ? "verified" : "unverified"));
-                System.out.println(onePassSignature);
+                log("One-Pass-Signature by " + Long.toHexString(onePassSignature.opSignature.getKeyID()) + " is " + (verified ? "verified" : "unverified"));
+                log(onePassSignature.toString());
                 break;
             }
         }
@@ -666,14 +691,20 @@ public class OpenPgpMessageInputStream extends InputStream {
         public void finish() {
             for (SIG detached : detachedSignatures) {
                 boolean verified = detached.verify();
+                if (verified) {
+                    this.verified.add(detached.signature);
+                }
                 log("Detached Signature by " + Long.toHexString(detached.signature.getKeyID()) + " is " + (verified ? "verified" : "unverified"));
-                System.out.println(detached);
+                log(detached.toString());
             }
 
             for (SIG prepended : prependedSignatures) {
                 boolean verified = prepended.verify();
+                if (verified) {
+                    this.verified.add(prepended.signature);
+                }
                 log("Prepended Signature by " + Long.toHexString(prepended.signature.getKeyID()) + " is " + (verified ? "verified" : "unverified"));
-                System.out.println(prepended);
+                log(prepended.toString());
             }
         }
 
@@ -701,11 +732,15 @@ public class OpenPgpMessageInputStream extends InputStream {
         static class SIG {
             ByteArrayOutputStream bytes = new ByteArrayOutputStream();
             PGPSignature signature;
+            PGPPublicKeyRing certificate;
+            long keyId;
             boolean finished;
             boolean valid;
 
-            public SIG(PGPSignature signature) {
+            public SIG(PGPSignature signature, PGPPublicKeyRing certificate, long keyId) {
                 this.signature = signature;
+                this.certificate = certificate;
+                this.keyId = keyId;
             }
 
             public void init(PGPPublicKeyRing certificate) {
@@ -713,6 +748,9 @@ public class OpenPgpMessageInputStream extends InputStream {
             }
 
             public boolean verify() {
+                if (finished) {
+                    throw new IllegalStateException("Already finished.");
+                }
                 finished = true;
                 try {
                     valid = this.signature.verify();
@@ -780,26 +818,32 @@ public class OpenPgpMessageInputStream extends InputStream {
 
         static class OPS {
             ByteArrayOutputStream bytes = new ByteArrayOutputStream();
-            PGPOnePassSignature signature;
+            PGPOnePassSignature opSignature;
+            PGPSignature signature;
+            PGPPublicKeyRing certificate;
+            long keyId;
             boolean finished;
             boolean valid;
 
-            public OPS(PGPOnePassSignature signature) {
-                this.signature = signature;
+            public OPS(PGPOnePassSignature signature, PGPPublicKeyRing certificate, long keyId) {
+                this.opSignature = signature;
+                this.certificate = certificate;
+                this.keyId = keyId;
             }
 
             public void init(PGPPublicKeyRing certificate) {
-                initialize(signature, certificate);
+                initialize(opSignature, certificate);
             }
 
             public boolean verify(PGPSignature signature) {
-                if (this.signature.getKeyID() != signature.getKeyID()) {
+                if (this.opSignature.getKeyID() != signature.getKeyID()) {
                     // nope
                     return false;
                 }
+                this.signature = signature;
                 finished = true;
                 try {
-                    valid = this.signature.verify(signature);
+                    valid = this.opSignature.verify(signature);
                 } catch (PGPException e) {
                     log("Cannot verify OPS " + signature.getKeyID());
                 }
@@ -811,7 +855,7 @@ public class OpenPgpMessageInputStream extends InputStream {
                     log("Updating finished sig!");
                     return;
                 }
-                signature.update(b);
+                opSignature.update(b);
                 bytes.write(b);
             }
 
@@ -820,7 +864,7 @@ public class OpenPgpMessageInputStream extends InputStream {
                     log("Updating finished sig!");
                     return;
                 }
-                signature.update(bytes, off, len);
+                opSignature.update(bytes, off, len);
                 this.bytes.write(bytes, off, len);
             }
 
@@ -833,7 +877,7 @@ public class OpenPgpMessageInputStream extends InputStream {
                 String SIG1f = "c2c13b0400010a006f058262c806350910fbfcc82a015e7330471400000000001e002073616c74406e6f746174696f6e732e736571756f69612d7067702e6f7267b0409ed8ea96dac66447bdff5b7b60c9f80a0ab91d257029153dc3b6d8c27b98162104d1a66e1a23b182c9980f788cfbfcc82a015e7330000029640c00846b5096d92474fd446cc7edaf9f14572cab93a80e12384c1e829f95debc6e8373c2ce5402be53dc1a18cf92a0ed909e0fb38855713ef8ffb13502ffac7c830fa254cc1aa6c666a97b0cc3bc176538f6913d3b8e8981a65cc42df10e0f39e4d0a06dfe961437b59a71892f4fca1116aed15123ea0d86a7b2ce47dd9d3ef22d920631bc011e82babe03ad5d72b3ba7f95bf646f20ccf6f7a4d95de37397c76c7d53741458e51ab6074007f61181c7b88b7c98f5b7510c8dfa3be01f4841501679478b15c5249d928e2a10d15ec63efa1500b994d5bfb32ffb174a976116930eb97a111e6dfd4c5e43e04a5d76ba74806a62fda63a8c3f53f6eebaf852892340e81dd08bbf348454a2cf525aeb512cf33aeeee78465ee4c442e41cc45ac4e3bb0c3333677aa60332ee7f464d9020f8554b82d619872477cca18d8431888f4ae8abe5894e9720f759c410cd7991db12703dc147040dd0d3758223e0b75de6ceae49c1a0c2c45efedeb7114ae785cc886afdc45c82172e4476e1ab5b86dc4314dd76";
                 String SIG2 = "c2c10400010a006f058262c806350910fbfcc82a015e7330471400000000001e002073616c74406e6f746174696f6e732e736571756f69612d7067702e6f7267a4d9c117dc7ba3a7e9270856f128d2ab271743eac3cb5750b22a89bd5fd60753162104d1a66e1a23b182c9980f788cfbfcc82a015e73300000b8400bff796c20fa8b25ff7a42686338e06417a2966e85a0fc2723c928bef6cd19d34cf5e7d55ada33080613012dadb79e0278e59d9e7ed7d2d6102912a5f768c2e75b60099225c3d8bfe0c123240188b80dbee89b9b3bd5b13ccc662abc37e2129b6968adac9aba43aa778c0fe4fe337591ee87a96a29a013debc83555293c877144fc676aa1b03782c501949521a320adf6ad96c4f2e036b52a18369c637fdc49033696a84d03a69580b953187fce5aca6fb26fc8815da9f3b513bfe8e304f33ecb4b521aeb7d09c4a284ea66123bd0d6a358b2526d762ca110e1f7f20b3038d774b64d5cfd34e2213765828359d7afc5bf24d5270e99d80c3c1568fa01624b6ea1e9ce4e6890ce9bacf6611a45d41e2671f68f5b096446bf08d27ce75608425b2e3ab92146229ad1fcd8224aca5b5f73960506e7df07bfbf3664348e8ecbfb2eb467b9cfe412cb377a6ee2eb5fd11be9cf9208fe9a74c296f52cfa02a1eb0519ad9a8349bf6ccd6495feb7e391451bf96e08a0798883dee5974e47cbf3b51f111b6d3";
                 String SIG2f = "c2c13b0400010a006f058262c806350910fbfcc82a015e7330471400000000001e002073616c74406e6f746174696f6e732e736571756f69612d7067702e6f7267a4d9c117dc7ba3a7e9270856f128d2ab271743eac3cb5750b22a89bd5fd60753162104d1a66e1a23b182c9980f788cfbfcc82a015e73300000b8400bff796c20fa8b25ff7a42686338e06417a2966e85a0fc2723c928bef6cd19d34cf5e7d55ada33080613012dadb79e0278e59d9e7ed7d2d6102912a5f768c2e75b60099225c3d8bfe0c123240188b80dbee89b9b3bd5b13ccc662abc37e2129b6968adac9aba43aa778c0fe4fe337591ee87a96a29a013debc83555293c877144fc676aa1b03782c501949521a320adf6ad96c4f2e036b52a18369c637fdc49033696a84d03a69580b953187fce5aca6fb26fc8815da9f3b513bfe8e304f33ecb4b521aeb7d09c4a284ea66123bd0d6a358b2526d762ca110e1f7f20b3038d774b64d5cfd34e2213765828359d7afc5bf24d5270e99d80c3c1568fa01624b6ea1e9ce4e6890ce9bacf6611a45d41e2671f68f5b096446bf08d27ce75608425b2e3ab92146229ad1fcd8224aca5b5f73960506e7df07bfbf3664348e8ecbfb2eb467b9cfe412cb377a6ee2eb5fd11be9cf9208fe9a74c296f52cfa02a1eb0519ad9a8349bf6ccd6495feb7e391451bf96e08a0798883dee5974e47cbf3b51f111b6d3";
-                String out = "last=" + signature.isContaining() + "\n";
+                String out = "last=" + opSignature.isContaining() + "\n";
 
                 String hex = Hex.toHexString(bytes.toByteArray());
                 while (hex.contains(OPS)) {
@@ -863,10 +907,64 @@ public class OpenPgpMessageInputStream extends InputStream {
         }
     }
 
+    @Override
+    public OpenPgpMetadata getResult() {
+        MessageMetadata m = getMetadata();
+        resultBuilder.setCompressionAlgorithm(m.getCompressionAlgorithm());
+        resultBuilder.setModificationDate(m.getModificationDate());
+        resultBuilder.setFileName(m.getFilename());
+        resultBuilder.setFileEncoding(m.getFormat());
+        resultBuilder.setSessionKey(m.getSessionKey());
+
+        for (Signatures.OPS ops : signatures.onePassSignatures) {
+            if (!ops.finished) {
+                continue;
+            }
+
+            SubkeyIdentifier identifier = new SubkeyIdentifier(ops.certificate, ops.keyId);
+            SignatureVerification verification = new SignatureVerification(ops.signature, identifier);
+            if (ops.valid) {
+                resultBuilder.addVerifiedInbandSignature(verification);
+            } else {
+                resultBuilder.addInvalidInbandSignature(verification, new SignatureValidationException("Incorrect signature."));
+            }
+        }
+
+        for (Signatures.SIG prep : signatures.prependedSignatures) {
+            if (!prep.finished) {
+                continue;
+            }
+
+            SubkeyIdentifier identifier = new SubkeyIdentifier(prep.certificate, prep.keyId);
+            SignatureVerification verification = new SignatureVerification(prep.signature, identifier);
+            if (prep.valid) {
+                resultBuilder.addVerifiedInbandSignature(verification);
+            } else {
+                resultBuilder.addInvalidInbandSignature(verification, new SignatureValidationException("Incorrect signature."));
+            }
+        }
+
+        for (Signatures.SIG det : signatures.detachedSignatures) {
+            if (!det.finished) {
+                continue;
+            }
+
+            SubkeyIdentifier identifier = new SubkeyIdentifier(det.certificate, det.keyId);
+            SignatureVerification verification = new SignatureVerification(det.signature, identifier);
+            if (det.valid) {
+                resultBuilder.addVerifiedDetachedSignature(verification);
+            } else {
+                resultBuilder.addInvalidDetachedSignature(verification, new SignatureValidationException("Incorrect signature."));
+            }
+        }
+
+        return resultBuilder.build();
+    }
+
     static void log(String message) {
         LOGGER.debug(message);
         // CHECKSTYLE:OFF
-        System.out.println(message);
+        // System.out.println(message);
         // CHECKSTYLE:ON
     }
 
