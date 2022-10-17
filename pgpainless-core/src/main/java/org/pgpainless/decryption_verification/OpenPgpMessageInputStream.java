@@ -334,6 +334,7 @@ public class OpenPgpMessageInputStream extends DecryptionStream {
 
                 MessageMetadata.EncryptedData encryptedData = new MessageMetadata.EncryptedData(
                         SymmetricKeyAlgorithm.requireFromId(pkesk.getSymmetricAlgorithm(decryptorFactory)));
+                encryptedData.decryptionKey = new SubkeyIdentifier(decryptionKeys, decryptionKey.getKeyID());
                 encryptedData.sessionKey = sessionKey;
 
                 IntegrityProtectedInputStream integrityProtected = new IntegrityProtectedInputStream(decrypted, pkesk, options);
@@ -361,6 +362,7 @@ public class OpenPgpMessageInputStream extends DecryptionStream {
 
                     MessageMetadata.EncryptedData encryptedData = new MessageMetadata.EncryptedData(
                             SymmetricKeyAlgorithm.requireFromId(pkesk.getSymmetricAlgorithm(decryptorFactory)));
+                    encryptedData.decryptionKey = new SubkeyIdentifier(decryptionKeyCandidate.getA(), privateKey.getKeyID());
                     encryptedData.sessionKey = sessionKey;
 
                     IntegrityProtectedInputStream integrityProtected = new IntegrityProtectedInputStream(decrypted, pkesk, options);
@@ -560,8 +562,6 @@ public class OpenPgpMessageInputStream extends DecryptionStream {
         final List<PGPSignature> correspondingSignatures;
         boolean isLiteral = true;
 
-        final List<PGPSignature> verified = new ArrayList<>();
-
         private Signatures(ConsumerOptions options) {
             this.options = options;
             this.detachedSignatures = new ArrayList<>();
@@ -580,24 +580,33 @@ public class OpenPgpMessageInputStream extends DecryptionStream {
         void addDetachedSignature(PGPSignature signature) {
             long keyId = SignatureUtils.determineIssuerKeyId(signature);
             PGPPublicKeyRing certificate = findCertificate(keyId);
-            initialize(signature, certificate, keyId);
-            this.detachedSignatures.add(new DetachedOrPrependedSignature(signature, certificate, keyId));
+
+            if (certificate != null) {
+                initialize(signature, certificate, keyId);
+                this.detachedSignatures.add(new DetachedOrPrependedSignature(signature, certificate, keyId));
+            }
         }
 
         void addPrependedSignature(PGPSignature signature) {
             long keyId = SignatureUtils.determineIssuerKeyId(signature);
             PGPPublicKeyRing certificate = findCertificate(keyId);
-            initialize(signature, certificate, keyId);
-            this.prependedSignatures.add(new DetachedOrPrependedSignature(signature, certificate, keyId));
+
+            if (certificate != null) {
+                initialize(signature, certificate, keyId);
+                this.prependedSignatures.add(new DetachedOrPrependedSignature(signature, certificate, keyId));
+            }
         }
 
         void addOnePassSignature(PGPOnePassSignature signature) {
             PGPPublicKeyRing certificate = findCertificate(signature.getKeyID());
-            OnePassSignature ops = new OnePassSignature(signature, certificate, signature.getKeyID());
-            ops.init(certificate);
-            onePassSignatures.add(ops);
 
-            literalOPS.add(ops);
+            if (certificate != null) {
+                OnePassSignature ops = new OnePassSignature(signature, certificate, signature.getKeyID());
+                ops.init(certificate);
+                onePassSignatures.add(ops);
+
+                literalOPS.add(ops);
+            }
             if (signature.isContaining()) {
                 enterNesting();
             }
@@ -898,6 +907,7 @@ public class OpenPgpMessageInputStream extends DecryptionStream {
         resultBuilder.setFileName(m.getFilename());
         resultBuilder.setFileEncoding(m.getFormat());
         resultBuilder.setSessionKey(m.getSessionKey());
+        resultBuilder.setDecryptionKey(m.getDecryptionKey());
 
         for (SignatureVerification accepted : m.getVerifiedDetachedSignatures()) {
             resultBuilder.addVerifiedDetachedSignature(accepted);
