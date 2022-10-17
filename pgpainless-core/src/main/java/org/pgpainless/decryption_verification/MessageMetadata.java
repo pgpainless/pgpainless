@@ -7,6 +7,7 @@ package org.pgpainless.decryption_verification;
 import org.pgpainless.algorithm.CompressionAlgorithm;
 import org.pgpainless.algorithm.StreamEncoding;
 import org.pgpainless.algorithm.SymmetricKeyAlgorithm;
+import org.pgpainless.key.SubkeyIdentifier;
 import org.pgpainless.util.SessionKey;
 
 import javax.annotation.Nonnull;
@@ -182,6 +183,24 @@ public class MessageMetadata {
         return (LiteralData) nested;
     }
 
+    public SubkeyIdentifier getDecryptionKey() {
+        Iterator<SubkeyIdentifier> iterator = new LayerIterator<SubkeyIdentifier>(message) {
+            @Override
+            public boolean matches(Nested layer) {
+                return layer instanceof EncryptedData;
+            }
+
+            @Override
+            public SubkeyIdentifier getProperty(Layer last) {
+                return ((EncryptedData) last).decryptionKey;
+            }
+        };
+        if (iterator.hasNext()) {
+            return iterator.next();
+        }
+        return null;
+    }
+
     public abstract static class Layer {
         protected final List<SignatureVerification> verifiedDetachedSignatures = new ArrayList<>();
         protected final List<SignatureVerification.Failure> rejectedDetachedSignatures = new ArrayList<>();
@@ -309,6 +328,7 @@ public class MessageMetadata {
 
     public static class EncryptedData extends Layer implements Nested {
         protected final SymmetricKeyAlgorithm algorithm;
+        protected SubkeyIdentifier decryptionKey;
         protected SessionKey sessionKey;
         protected List<Long> recipients;
 
