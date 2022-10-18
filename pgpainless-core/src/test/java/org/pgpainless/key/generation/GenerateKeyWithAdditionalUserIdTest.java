@@ -25,7 +25,7 @@ import org.pgpainless.key.generation.type.KeyType;
 import org.pgpainless.key.generation.type.rsa.RsaLength;
 import org.pgpainless.key.util.KeyRingUtils;
 import org.pgpainless.key.util.UserId;
-import org.pgpainless.util.DateUtil;
+import org.pgpainless.timeframe.TestTimeFrameProvider;
 import org.pgpainless.util.TestAllImplementations;
 
 public class GenerateKeyWithAdditionalUserIdTest {
@@ -33,11 +33,13 @@ public class GenerateKeyWithAdditionalUserIdTest {
     @TestTemplate
     @ExtendWith(TestAllImplementations.class)
     public void test() throws InvalidAlgorithmParameterException, NoSuchAlgorithmException, PGPException, IOException {
-        Date expiration = new Date(DateUtil.now().getTime() + 60 * 1000);
+        Date now = new Date();
+        Date expiration = TestTimeFrameProvider.defaultExpirationForCreationDate(now);
         PGPSecretKeyRing secretKeys = PGPainless.buildKeyRing()
                 .setPrimaryKey(KeySpec.getBuilder(
                         KeyType.RSA(RsaLength._3072),
-                                KeyFlag.CERTIFY_OTHER, KeyFlag.SIGN_DATA, KeyFlag.ENCRYPT_COMMS))
+                                KeyFlag.CERTIFY_OTHER, KeyFlag.SIGN_DATA, KeyFlag.ENCRYPT_COMMS)
+                        .setKeyCreationDate(now))
                 .addUserId(UserId.onlyEmail("primary@user.id"))
                 .addUserId(UserId.onlyEmail("additional@user.id"))
                 .addUserId(UserId.onlyEmail("additional2@user.id"))
@@ -46,7 +48,7 @@ public class GenerateKeyWithAdditionalUserIdTest {
                 .build();
         PGPPublicKeyRing publicKeys = KeyRingUtils.publicKeyRingFrom(secretKeys);
 
-        JUtils.assertEquals(expiration.getTime(), PGPainless.inspectKeyRing(publicKeys).getPrimaryKeyExpirationDate().getTime(), 2000);
+        JUtils.assertDateEquals(expiration, PGPainless.inspectKeyRing(publicKeys).getPrimaryKeyExpirationDate());
 
         Iterator<String> userIds = publicKeys.getPublicKey().getUserIDs();
         assertEquals("primary@user.id", userIds.next());

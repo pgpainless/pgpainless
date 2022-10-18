@@ -15,6 +15,7 @@ import org.pgpainless.algorithm.KeyFlag;
 import org.pgpainless.decryption_verification.ConsumerOptions;
 import org.pgpainless.decryption_verification.DecryptionStream;
 import org.pgpainless.decryption_verification.OpenPgpMetadata;
+import org.pgpainless.decryption_verification.SignatureVerification;
 import org.pgpainless.encryption_signing.EncryptionOptions;
 import org.pgpainless.encryption_signing.EncryptionResult;
 import org.pgpainless.encryption_signing.EncryptionStream;
@@ -25,7 +26,7 @@ import org.pgpainless.key.generation.type.eddsa.EdDSACurve;
 import org.pgpainless.key.generation.type.xdh.XDHSpec;
 import org.pgpainless.key.info.KeyRingInfo;
 import org.pgpainless.key.protection.SecretKeyRingProtector;
-import org.pgpainless.util.DateUtil;
+import org.pgpainless.timeframe.TestTimeFrameProvider;
 
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
@@ -34,6 +35,7 @@ import java.io.InputStream;
 import java.security.InvalidAlgorithmParameterException;
 import java.security.NoSuchAlgorithmException;
 import java.util.Date;
+import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
@@ -42,11 +44,12 @@ public class GenerateKeyWithoutUserIdTest {
 
     @Test
     public void generateKeyWithoutUserId() throws PGPException, InvalidAlgorithmParameterException, NoSuchAlgorithmException, IOException {
-        Date expirationDate = DateUtil.toSecondsPrecision(new Date(DateUtil.now().getTime() + 1000 * 6000));
+        Date now = new Date();
+        Date expirationDate = TestTimeFrameProvider.defaultExpirationForCreationDate(now);
         PGPSecretKeyRing secretKey = PGPainless.buildKeyRing()
-                .setPrimaryKey(KeySpec.getBuilder(KeyType.EDDSA(EdDSACurve._Ed25519), KeyFlag.CERTIFY_OTHER))
-                .addSubkey(KeySpec.getBuilder(KeyType.EDDSA(EdDSACurve._Ed25519), KeyFlag.SIGN_DATA))
-                .addSubkey(KeySpec.getBuilder(KeyType.XDH(XDHSpec._X25519), KeyFlag.ENCRYPT_COMMS, KeyFlag.ENCRYPT_STORAGE))
+                .setPrimaryKey(KeySpec.getBuilder(KeyType.EDDSA(EdDSACurve._Ed25519), KeyFlag.CERTIFY_OTHER).setKeyCreationDate(now))
+                .addSubkey(KeySpec.getBuilder(KeyType.EDDSA(EdDSACurve._Ed25519), KeyFlag.SIGN_DATA).setKeyCreationDate(now))
+                .addSubkey(KeySpec.getBuilder(KeyType.XDH(XDHSpec._X25519), KeyFlag.ENCRYPT_COMMS, KeyFlag.ENCRYPT_STORAGE).setKeyCreationDate(now))
                 .setExpirationDate(expirationDate)
                 .build();
 
@@ -87,7 +90,16 @@ public class GenerateKeyWithoutUserIdTest {
 
         OpenPgpMetadata metadata = decryptionStream.getResult();
 
-        assertTrue(metadata.containsVerifiedSignatureFrom(certificate));
+        assertTrue(metadata.containsVerifiedSignatureFrom(certificate),
+                failuresToString(metadata.getInvalidInbandSignatures()));
         assertTrue(metadata.isEncrypted());
+    }
+
+    private static String failuresToString(List<SignatureVerification.Failure> failureList) {
+        StringBuilder sb = new StringBuilder();
+        for (SignatureVerification.Failure failure : failureList) {
+            sb.append(failure.toString()).append('\n');
+        }
+        return sb.toString();
     }
 }
