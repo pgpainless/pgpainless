@@ -15,6 +15,7 @@ import java.util.List;
 import java.util.Stack;
 import javax.annotation.Nonnull;
 
+import org.bouncycastle.bcpg.ArmoredInputStream;
 import org.bouncycastle.bcpg.BCPGInputStream;
 import org.bouncycastle.openpgp.PGPCompressedData;
 import org.bouncycastle.openpgp.PGPEncryptedData;
@@ -56,6 +57,7 @@ import org.pgpainless.key.protection.UnlockSecretKey;
 import org.pgpainless.policy.Policy;
 import org.pgpainless.signature.SignatureUtils;
 import org.pgpainless.signature.consumer.SignatureValidator;
+import org.pgpainless.util.ArmoredInputStreamFactory;
 import org.pgpainless.util.Passphrase;
 import org.pgpainless.util.SessionKey;
 import org.pgpainless.util.Tuple;
@@ -91,7 +93,7 @@ public class OpenPgpMessageInputStream extends DecryptionStream {
                                      @Nonnull ConsumerOptions options,
                                      @Nonnull Policy policy)
             throws PGPException, IOException {
-        this(inputStream, options, new MessageMetadata.Message(), policy);
+        this(prepareInputStream(inputStream, options), options, new MessageMetadata.Message(), policy);
     }
 
     protected OpenPgpMessageInputStream(@Nonnull InputStream inputStream,
@@ -116,6 +118,26 @@ public class OpenPgpMessageInputStream extends DecryptionStream {
 
         // *omnomnom*
         consumePackets();
+    }
+
+    private static InputStream prepareInputStream(InputStream inputStream, ConsumerOptions options) throws IOException {
+        OpenPgpInputStream openPgpIn = new OpenPgpInputStream(inputStream);
+        openPgpIn.reset();
+
+        if (openPgpIn.isBinaryOpenPgp()) {
+            return openPgpIn;
+        }
+
+        if (openPgpIn.isAsciiArmored()) {
+            ArmoredInputStream armorIn = ArmoredInputStreamFactory.get(openPgpIn);
+            if (armorIn.isClearText()) {
+                return armorIn;
+            } else {
+                return armorIn;
+            }
+        } else {
+            return openPgpIn;
+        }
     }
 
     /**
@@ -219,7 +241,8 @@ public class OpenPgpMessageInputStream extends DecryptionStream {
         signatures.enterNesting();
         PGPCompressedData compressedData = packetInputStream.readCompressedData();
         MessageMetadata.CompressedData compressionLayer = new MessageMetadata.CompressedData(
-                CompressionAlgorithm.fromId(compressedData.getAlgorithm()));
+                CompressionAlgorithm.fromId(compressedData.getAlgorithm()),
+                metadata.depth + 1);
         InputStream decompressed = compressedData.getDataStream();
         nestedInputStream = new OpenPgpMessageInputStream(buffer(decompressed), options, compressionLayer, policy);
     }
@@ -262,7 +285,8 @@ public class OpenPgpMessageInputStream extends DecryptionStream {
 
             SessionKeyDataDecryptorFactory decryptorFactory = ImplementationFactory.getInstance()
                     .getSessionKeyDataDecryptorFactory(sessionKey);
-            MessageMetadata.EncryptedData encryptedData = new MessageMetadata.EncryptedData(sessionKey.getAlgorithm());
+            MessageMetadata.EncryptedData encryptedData = new MessageMetadata.EncryptedData(
+                    sessionKey.getAlgorithm(), metadata.depth + 1);
 
             try {
                 // TODO: Use BCs new API once shipped
@@ -301,7 +325,8 @@ public class OpenPgpMessageInputStream extends DecryptionStream {
                     InputStream decrypted = skesk.getDataStream(decryptorFactory);
                     SessionKey sessionKey = new SessionKey(skesk.getSessionKey(decryptorFactory));
                     throwIfUnacceptable(sessionKey.getAlgorithm());
-                    MessageMetadata.EncryptedData encryptedData = new MessageMetadata.EncryptedData(sessionKey.getAlgorithm());
+                    MessageMetadata.EncryptedData encryptedData = new MessageMetadata.EncryptedData(
+                            sessionKey.getAlgorithm(), metadata.depth + 1);
                     encryptedData.sessionKey = sessionKey;
                     IntegrityProtectedInputStream integrityProtected = new IntegrityProtectedInputStream(decrypted, skesk, options);
                     nestedInputStream = new OpenPgpMessageInputStream(buffer(integrityProtected), options, encryptedData, policy);
@@ -333,7 +358,8 @@ public class OpenPgpMessageInputStream extends DecryptionStream {
                 throwIfUnacceptable(sessionKey.getAlgorithm());
 
                 MessageMetadata.EncryptedData encryptedData = new MessageMetadata.EncryptedData(
-                        SymmetricKeyAlgorithm.requireFromId(pkesk.getSymmetricAlgorithm(decryptorFactory)));
+                        SymmetricKeyAlgorithm.requireFromId(pkesk.getSymmetricAlgorithm(decryptorFactory)),
+                        metadata.depth + 1);
                 encryptedData.decryptionKey = new SubkeyIdentifier(decryptionKeys, decryptionKey.getKeyID());
                 encryptedData.sessionKey = sessionKey;
 
@@ -361,7 +387,8 @@ public class OpenPgpMessageInputStream extends DecryptionStream {
                     throwIfUnacceptable(sessionKey.getAlgorithm());
 
                     MessageMetadata.EncryptedData encryptedData = new MessageMetadata.EncryptedData(
-                            SymmetricKeyAlgorithm.requireFromId(pkesk.getSymmetricAlgorithm(decryptorFactory)));
+                            SymmetricKeyAlgorithm.requireFromId(pkesk.getSymmetricAlgorithm(decryptorFactory)),
+                            metadata.depth + 1);
                     encryptedData.decryptionKey = new SubkeyIdentifier(decryptionKeyCandidate.getA(), privateKey.getKeyID());
                     encryptedData.sessionKey = sessionKey;
 
