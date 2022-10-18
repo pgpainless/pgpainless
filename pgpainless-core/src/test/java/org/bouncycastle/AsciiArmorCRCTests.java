@@ -489,7 +489,7 @@ public class AsciiArmorCRCTests {
     Passphrase passphrase = Passphrase.fromPassword("flowcrypt compatibility tests");
 
     @Test
-    public void testInvalidArmorCRCThrowsOnClose() throws PGPException, IOException {
+    public void testInvalidArmorCRCThrowsOnClose() throws IOException {
         String message = "-----BEGIN PGP MESSAGE-----\n" +
                 "Version: FlowCrypt 5.0.4 Gmail Encryption flowcrypt.com\n" +
                 "Comment: Seamlessly send, receive and search encrypted email\n" +
@@ -542,14 +542,16 @@ public class AsciiArmorCRCTests {
                 "-----END PGP MESSAGE-----\n";
 
         PGPSecretKeyRing key = PGPainless.readKeyRing().secretKeyRing(ASCII_KEY);
-        DecryptionStream decryptionStream = PGPainless.decryptAndOrVerify()
-                .onInputStream(new ByteArrayInputStream(message.getBytes(StandardCharsets.UTF_8)))
-                .withOptions(new ConsumerOptions().addDecryptionKey(
-                        key, SecretKeyRingProtector.unlockAnyKeyWith(passphrase)
-                ));
+        assertThrows(IOException.class, () -> {
+            DecryptionStream decryptionStream = PGPainless.decryptAndOrVerify()
+                    .onInputStream(new ByteArrayInputStream(message.getBytes(StandardCharsets.UTF_8)))
+                    .withOptions(new ConsumerOptions().addDecryptionKey(
+                            key, SecretKeyRingProtector.unlockAnyKeyWith(passphrase)
+                    ));
 
-        ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
-        Streams.pipeAll(decryptionStream, outputStream);
-        assertThrows(IOException.class, decryptionStream::close);
+            ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
+            Streams.pipeAll(decryptionStream, outputStream);
+            decryptionStream.close();
+        });
     }
 }
