@@ -7,6 +7,7 @@ package org.pgpainless.decryption_verification;
 import org.pgpainless.algorithm.CompressionAlgorithm;
 import org.pgpainless.algorithm.StreamEncoding;
 import org.pgpainless.algorithm.SymmetricKeyAlgorithm;
+import org.pgpainless.exception.MalformedOpenPgpMessageException;
 import org.pgpainless.key.SubkeyIdentifier;
 import org.pgpainless.util.SessionKey;
 
@@ -202,6 +203,8 @@ public class MessageMetadata {
     }
 
     public abstract static class Layer {
+        public static final int MAX_LAYER_DEPTH = 16;
+        protected final int depth;
         protected final List<SignatureVerification> verifiedDetachedSignatures = new ArrayList<>();
         protected final List<SignatureVerification.Failure> rejectedDetachedSignatures = new ArrayList<>();
         protected final List<SignatureVerification> verifiedOnePassSignatures = new ArrayList<>();
@@ -209,6 +212,13 @@ public class MessageMetadata {
         protected final List<SignatureVerification> verifiedPrependedSignatures = new ArrayList<>();
         protected final List<SignatureVerification.Failure> rejectedPrependedSignatures = new ArrayList<>();
         protected Nested child;
+
+        public Layer(int depth) {
+            this.depth = depth;
+            if (depth > MAX_LAYER_DEPTH) {
+                throw new MalformedOpenPgpMessageException("Maximum nesting depth exceeded.");
+            }
+        }
 
         public Nested getChild() {
             return child;
@@ -274,6 +284,9 @@ public class MessageMetadata {
 
     public static class Message extends Layer {
 
+        public Message() {
+            super(0);
+        }
     }
 
     public static class LiteralData implements Nested {
@@ -312,7 +325,8 @@ public class MessageMetadata {
     public static class CompressedData extends Layer implements Nested {
         protected final CompressionAlgorithm algorithm;
 
-        public CompressedData(CompressionAlgorithm zip) {
+        public CompressedData(CompressionAlgorithm zip, int depth) {
+            super(depth);
             this.algorithm = zip;
         }
 
@@ -332,7 +346,8 @@ public class MessageMetadata {
         protected SessionKey sessionKey;
         protected List<Long> recipients;
 
-        public EncryptedData(SymmetricKeyAlgorithm algorithm) {
+        public EncryptedData(SymmetricKeyAlgorithm algorithm, int depth) {
+            super(depth);
             this.algorithm = algorithm;
         }
 

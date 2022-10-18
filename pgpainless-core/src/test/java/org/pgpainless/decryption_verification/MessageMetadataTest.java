@@ -28,9 +28,9 @@ public class MessageMetadataTest {
         //  For the sake of testing though, this is okay.
         MessageMetadata.Message message = new MessageMetadata.Message();
 
-        MessageMetadata.CompressedData compressedData = new MessageMetadata.CompressedData(CompressionAlgorithm.ZIP);
-        MessageMetadata.EncryptedData encryptedData = new MessageMetadata.EncryptedData(SymmetricKeyAlgorithm.AES_128);
-        MessageMetadata.EncryptedData encryptedData1 = new MessageMetadata.EncryptedData(SymmetricKeyAlgorithm.AES_256);
+        MessageMetadata.CompressedData compressedData = new MessageMetadata.CompressedData(CompressionAlgorithm.ZIP, message.depth + 1);
+        MessageMetadata.EncryptedData encryptedData = new MessageMetadata.EncryptedData(SymmetricKeyAlgorithm.AES_128, compressedData.depth + 1);
+        MessageMetadata.EncryptedData encryptedData1 = new MessageMetadata.EncryptedData(SymmetricKeyAlgorithm.AES_256, encryptedData.depth + 1);
         MessageMetadata.LiteralData literalData = new MessageMetadata.LiteralData();
 
         message.setChild(compressedData);

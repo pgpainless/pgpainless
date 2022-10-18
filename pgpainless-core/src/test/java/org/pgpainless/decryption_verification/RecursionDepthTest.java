@@ -11,12 +11,12 @@ import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 
-import org.bouncycastle.openpgp.PGPException;
 import org.bouncycastle.openpgp.PGPSecretKeyRing;
 import org.bouncycastle.util.io.Streams;
 import org.junit.jupiter.api.TestTemplate;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.pgpainless.PGPainless;
+import org.pgpainless.exception.MalformedOpenPgpMessageException;
 import org.pgpainless.util.TestAllImplementations;
 
 public class RecursionDepthTest {
@@ -143,7 +143,7 @@ public class RecursionDepthTest {
                 "-----END PGP ARMORED FILE-----\n";
 
 
-        assertThrows(PGPException.class, () -> {
+        assertThrows(MalformedOpenPgpMessageException.class, () -> {
             DecryptionStream decryptionStream = PGPainless.decryptAndOrVerify()
                     .onInputStream(new ByteArrayInputStream(msg.getBytes(StandardCharsets.UTF_8)))
                     .withOptions(new ConsumerOptions().addDecryptionKey(secretKey));
