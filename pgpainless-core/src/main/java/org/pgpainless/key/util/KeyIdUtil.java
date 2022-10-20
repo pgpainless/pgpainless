@@ -30,4 +30,8 @@ public final class KeyIdUtil {
 
         return new BigInteger(longKeyId, 16).longValue();
     }
+
+    public static String formatKeyId(long keyId) {
+        return Long.toHexString(keyId).toUpperCase();
+    }
 }
