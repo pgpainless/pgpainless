@@ -4,9 +4,9 @@
 
 package org.pgpainless.exception;
 
-import org.pgpainless.decryption_verification.automaton.InputAlphabet;
-import org.pgpainless.decryption_verification.automaton.PDA;
-import org.pgpainless.decryption_verification.automaton.StackAlphabet;
+import org.pgpainless.decryption_verification.syntax_check.InputAlphabet;
+import org.pgpainless.decryption_verification.syntax_check.PDA;
+import org.pgpainless.decryption_verification.syntax_check.StackAlphabet;
 
 /**
  * Exception that gets thrown if the OpenPGP message is malformed.

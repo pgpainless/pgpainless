@@ -2,7 +2,7 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
-package org.pgpainless.decryption_verification.automaton;
+package org.pgpainless.decryption_verification.syntax_check;
 
 public enum StackAlphabet {
     /**

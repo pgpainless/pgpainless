@@ -43,9 +43,9 @@ import org.pgpainless.algorithm.EncryptionPurpose;
 import org.pgpainless.algorithm.OpenPgpPacket;
 import org.pgpainless.algorithm.StreamEncoding;
 import org.pgpainless.algorithm.SymmetricKeyAlgorithm;
-import org.pgpainless.decryption_verification.automaton.InputAlphabet;
-import org.pgpainless.decryption_verification.automaton.PDA;
-import org.pgpainless.decryption_verification.automaton.StackAlphabet;
+import org.pgpainless.decryption_verification.syntax_check.InputAlphabet;
+import org.pgpainless.decryption_verification.syntax_check.PDA;
+import org.pgpainless.decryption_verification.syntax_check.StackAlphabet;
 import org.pgpainless.decryption_verification.cleartext_signatures.ClearsignedMessageUtil;
 import org.pgpainless.decryption_verification.cleartext_signatures.MultiPassStrategy;
 import org.pgpainless.exception.MalformedOpenPgpMessageException;
@@ -80,7 +80,7 @@ public class OpenPgpMessageInputStream extends DecryptionStream {
     // Options to consume the data
     protected final ConsumerOptions options;
     // Pushdown Automaton to verify validity of OpenPGP packet sequence in an OpenPGP message
-    protected final PDA automaton = new PDA();
+    protected final PDA syntaxVerifier = new PDA();
     // InputStream of OpenPGP packets
     protected TeeBCPGInputStream packetInputStream;
     // InputStream of a nested data packet
@@ -266,7 +266,7 @@ public class OpenPgpMessageInputStream extends DecryptionStream {
 
     private void processLiteralData() throws IOException {
         LOGGER.debug("Literal Data Packet at depth " + metadata.depth + " encountered");
-        automaton.next(InputAlphabet.LiteralData);
+        syntaxVerifier.next(InputAlphabet.LiteralData);
         PGPLiteralData literalData = packetInputStream.readLiteralData();
         this.metadata.setChild(new MessageMetadata.LiteralData(
                 literalData.getFileName(),
@@ -276,7 +276,7 @@ public class OpenPgpMessageInputStream extends DecryptionStream {
     }
 
     private void processCompressedData() throws IOException, PGPException {
-        automaton.next(InputAlphabet.CompressedData);
+        syntaxVerifier.next(InputAlphabet.CompressedData);
         signatures.enterNesting();
         PGPCompressedData compressedData = packetInputStream.readCompressedData();
         MessageMetadata.CompressedData compressionLayer = new MessageMetadata.CompressedData(
@@ -288,7 +288,7 @@ public class OpenPgpMessageInputStream extends DecryptionStream {
     }
 
     private void processOnePassSignature() throws PGPException, IOException {
-        automaton.next(InputAlphabet.OnePassSignature);
+        syntaxVerifier.next(InputAlphabet.OnePassSignature);
         PGPOnePassSignature onePassSignature = packetInputStream.readOnePassSignature();
         LOGGER.debug("One-Pass-Signature Packet by key " + KeyIdUtil.formatKeyId(onePassSignature.getKeyID()) +
                 "at depth " + metadata.depth + " encountered");
@@ -297,8 +297,8 @@ public class OpenPgpMessageInputStream extends DecryptionStream {
 
     private void processSignature() throws PGPException, IOException {
         // true if Signature corresponds to OnePassSignature
-        boolean isSigForOPS = automaton.peekStack() == StackAlphabet.ops;
-        automaton.next(InputAlphabet.Signature);
+        boolean isSigForOPS = syntaxVerifier.peekStack() == StackAlphabet.ops;
+        syntaxVerifier.next(InputAlphabet.Signature);
         PGPSignature signature = packetInputStream.readSignature();
         long keyId = SignatureUtils.determineIssuerKeyId(signature);
         if (isSigForOPS) {
@@ -317,7 +317,7 @@ public class OpenPgpMessageInputStream extends DecryptionStream {
 
     private boolean processEncryptedData() throws IOException, PGPException {
         LOGGER.debug("Symmetrically Encrypted Data Packet at depth " + metadata.depth + " encountered");
-        automaton.next(InputAlphabet.EncryptedData);
+        syntaxVerifier.next(InputAlphabet.EncryptedData);
         PGPEncryptedDataList encDataList = packetInputStream.readEncryptedDataList();
 
         // TODO: Replace with !encDataList.isIntegrityProtected()
@@ -601,7 +601,7 @@ public class OpenPgpMessageInputStream extends DecryptionStream {
     @Override
     public int read() throws IOException {
         if (nestedInputStream == null) {
-            automaton.assertValid();
+            syntaxVerifier.assertValid();
             return -1;
         }
 
@@ -638,7 +638,7 @@ public class OpenPgpMessageInputStream extends DecryptionStream {
 
         if (nestedInputStream == null) {
             if (packetInputStream != null) {
-                automaton.assertValid();
+                syntaxVerifier.assertValid();
             }
             return -1;
         }
@@ -668,7 +668,7 @@ public class OpenPgpMessageInputStream extends DecryptionStream {
         super.close();
         if (closed) {
             if (packetInputStream != null) {
-                automaton.assertValid();
+                syntaxVerifier.assertValid();
             }
             return;
         }
@@ -686,8 +686,8 @@ public class OpenPgpMessageInputStream extends DecryptionStream {
         }
 
         if (packetInputStream != null) {
-            automaton.next(InputAlphabet.EndOfSequence);
-            automaton.assertValid();
+            syntaxVerifier.next(InputAlphabet.EndOfSequence);
+            syntaxVerifier.assertValid();
             packetInputStream.close();
         }
         closed = true;
@@ -717,7 +717,8 @@ public class OpenPgpMessageInputStream extends DecryptionStream {
             for (PGPEncryptedData esk : esks) {
                 if (esk instanceof PGPPBEEncryptedData) {
                     skesks.add((PGPPBEEncryptedData) esk);
-                } else if (esk instanceof PGPPublicKeyEncryptedData) {
+                }
+                else if (esk instanceof PGPPublicKeyEncryptedData) {
                     PGPPublicKeyEncryptedData pkesk = (PGPPublicKeyEncryptedData) esk;
                     if (pkesk.getKeyID() != 0) {
                         pkesks.add(pkesk);
