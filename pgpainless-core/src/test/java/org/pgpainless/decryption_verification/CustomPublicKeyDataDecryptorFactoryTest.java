@@ -19,6 +19,7 @@ import org.pgpainless.algorithm.EncryptionPurpose;
 import org.pgpainless.encryption_signing.EncryptionOptions;
 import org.pgpainless.encryption_signing.EncryptionStream;
 import org.pgpainless.encryption_signing.ProducerOptions;
+import org.pgpainless.key.SubkeyIdentifier;
 import org.pgpainless.key.info.KeyRingInfo;
 import org.pgpainless.key.protection.UnlockSecretKey;
 import org.pgpainless.util.Passphrase;
@@ -74,7 +75,7 @@ public class CustomPublicKeyDataDecryptorFactoryTest {
                 .withOptions(ConsumerOptions.get()
                         .addCustomDecryptorFactory(
                                 new HardwareSecurity.HardwareDataDecryptorFactory(
-                                        encryptionKey.getKeyID(),
+                                        new SubkeyIdentifier(cert, encryptionKey.getKeyID()),
                                         hardwareDecryptionCallback)));
 
         ByteArrayOutputStream decryptedOut = new ByteArrayOutputStream();

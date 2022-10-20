@@ -409,7 +409,7 @@ public final class DecryptionStreamFactory {
         }
 
         // Try custom PublicKeyDataDecryptorFactories (e.g. hardware-backed).
-        Map<Long, PublicKeyDataDecryptorFactory> customFactories = options.getCustomDecryptorFactories();
+        Map<SubkeyIdentifier, PublicKeyDataDecryptorFactory> customFactories = options.getCustomDecryptorFactories();
         for (PGPPublicKeyEncryptedData publicKeyEncryptedData : publicKeyProtected) {
             Long keyId = publicKeyEncryptedData.getKeyID();
             if (!customFactories.containsKey(keyId)) {
