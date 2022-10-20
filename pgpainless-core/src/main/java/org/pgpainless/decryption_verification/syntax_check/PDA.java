@@ -2,7 +2,7 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
-package org.pgpainless.decryption_verification.automaton;
+package org.pgpainless.decryption_verification.syntax_check;
 
 import org.pgpainless.exception.MalformedOpenPgpMessageException;
 import org.slf4j.Logger;
@@ -10,9 +10,9 @@ import org.slf4j.LoggerFactory;
 
 import java.util.Stack;
 
-import static org.pgpainless.decryption_verification.automaton.StackAlphabet.msg;
-import static org.pgpainless.decryption_verification.automaton.StackAlphabet.ops;
-import static org.pgpainless.decryption_verification.automaton.StackAlphabet.terminus;
+import static org.pgpainless.decryption_verification.syntax_check.StackAlphabet.msg;
+import static org.pgpainless.decryption_verification.syntax_check.StackAlphabet.ops;
+import static org.pgpainless.decryption_verification.syntax_check.StackAlphabet.terminus;
 
 public class PDA {
 

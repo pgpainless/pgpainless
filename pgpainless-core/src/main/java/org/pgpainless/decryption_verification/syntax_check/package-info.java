@@ -5,4 +5,4 @@
 /**
  * Pushdown Automaton to verify validity of packet sequences according to the OpenPGP Message format.
  */
-package org.pgpainless.decryption_verification.automaton;
+package org.pgpainless.decryption_verification.syntax_check;
