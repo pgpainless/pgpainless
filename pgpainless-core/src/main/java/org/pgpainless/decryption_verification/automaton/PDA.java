@@ -5,6 +5,8 @@
 package org.pgpainless.decryption_verification.automaton;
 
 import org.pgpainless.exception.MalformedOpenPgpMessageException;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.util.Stack;
 
@@ -15,11 +17,11 @@ import static org.pgpainless.decryption_verification.automaton.StackAlphabet.ter
 public class PDA {
 
     private static int ID = 0;
+    private static final Logger LOGGER = LoggerFactory.getLogger(PDA.class);
 
     /**
      * Set of states of the automaton.
-     * Each state defines its valid transitions in their {@link NestingPDA.State#transition(InputAlphabet, NestingPDA)}
-     * method.
+     * Each state defines its valid transitions in their {@link State#transition(InputAlphabet, PDA)} method.
      */
     public enum State {
 
@@ -199,7 +201,12 @@ public class PDA {
     }
 
     public void next(InputAlphabet input) throws MalformedOpenPgpMessageException {
-        state = state.transition(input, this);
+        try {
+            state = state.transition(input, this);
+        } catch (MalformedOpenPgpMessageException e) {
+            LOGGER.debug("Unexpected Packet or Token '" + input + "' encountered. Message is malformed.", e);
+            throw e;
+        }
     }
 
     /**
