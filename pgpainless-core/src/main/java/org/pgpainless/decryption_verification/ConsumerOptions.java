@@ -25,6 +25,7 @@ import org.bouncycastle.openpgp.PGPSignature;
 import org.bouncycastle.openpgp.operator.PublicKeyDataDecryptorFactory;
 import org.pgpainless.decryption_verification.cleartext_signatures.InMemoryMultiPassStrategy;
 import org.pgpainless.decryption_verification.cleartext_signatures.MultiPassStrategy;
+import org.pgpainless.key.SubkeyIdentifier;
 import org.pgpainless.key.protection.SecretKeyRingProtector;
 import org.pgpainless.signature.SignatureUtils;
 import org.pgpainless.util.Passphrase;
@@ -49,7 +50,7 @@ public class ConsumerOptions {
 
     // Session key for decryption without passphrase/key
     private SessionKey sessionKey = null;
-    private final Map<Long, PublicKeyDataDecryptorFactory> customPublicKeyDataDecryptorFactories = new HashMap<>();
+    private final Map<SubkeyIdentifier, PublicKeyDataDecryptorFactory> customPublicKeyDataDecryptorFactories = new HashMap<>();
 
     private final Map<PGPSecretKeyRing, SecretKeyRingProtector> decryptionKeys = new HashMap<>();
     private final Set<Passphrase> decryptionPassphrases = new HashSet<>();
@@ -249,11 +250,11 @@ public class ConsumerOptions {
      * @return options
      */
     public ConsumerOptions addCustomDecryptorFactory(@Nonnull CustomPublicKeyDataDecryptorFactory factory) {
-        this.customPublicKeyDataDecryptorFactories.put(factory.getKeyId(), factory);
+        this.customPublicKeyDataDecryptorFactories.put(factory.getSubkeyIdentifier(), factory);
         return this;
     }
 
-    Map<Long, PublicKeyDataDecryptorFactory> getCustomDecryptorFactories() {
+    Map<SubkeyIdentifier, PublicKeyDataDecryptorFactory> getCustomDecryptorFactories() {
         return new HashMap<>(customPublicKeyDataDecryptorFactories);
     }
 
