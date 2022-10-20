@@ -314,6 +314,20 @@ public class OpenPgpMessageInputStream extends DecryptionStream {
 
         SortedESKs esks = new SortedESKs(encDataList);
 
+        // Try custom decryptor factory
+        for (SubkeyIdentifier subkeyIdentifier : options.getCustomDecryptorFactories().keySet()) {
+            PublicKeyDataDecryptorFactory decryptorFactory = options.getCustomDecryptorFactories().get(subkeyIdentifier);
+            for (PGPPublicKeyEncryptedData pkesk : esks.pkesks) {
+                if (pkesk.getKeyID() != subkeyIdentifier.getSubkeyId()) {
+                    continue;
+                }
+
+                if (decryptPKESKAndStream(subkeyIdentifier, decryptorFactory, pkesk)) {
+                    return true;
+                }
+            }
+        }
+
         // Try session key
         if (options.getSessionKey() != null) {
             SessionKey sessionKey = options.getSessionKey();
@@ -357,20 +371,8 @@ public class OpenPgpMessageInputStream extends DecryptionStream {
                 PBEDataDecryptorFactory decryptorFactory = ImplementationFactory.getInstance()
                         .getPBEDataDecryptorFactory(passphrase);
 
-                try {
-                    InputStream decrypted = skesk.getDataStream(decryptorFactory);
-                    SessionKey sessionKey = new SessionKey(skesk.getSessionKey(decryptorFactory));
-                    throwIfUnacceptable(sessionKey.getAlgorithm());
-                    MessageMetadata.EncryptedData encryptedData = new MessageMetadata.EncryptedData(
-                            sessionKey.getAlgorithm(), metadata.depth + 1);
-                    encryptedData.sessionKey = sessionKey;
-                    IntegrityProtectedInputStream integrityProtected = new IntegrityProtectedInputStream(decrypted, skesk, options);
-                    nestedInputStream = new OpenPgpMessageInputStream(buffer(integrityProtected), options, encryptedData, policy);
+                if (decryptSKESKAndStream(skesk, decryptorFactory)) {
                     return true;
-                } catch (UnacceptableAlgorithmException e) {
-                    throw e;
-                } catch (PGPException e) {
-                    // Password mismatch?
                 }
             }
         }
@@ -393,28 +395,13 @@ public class OpenPgpMessageInputStream extends DecryptionStream {
             }
 
             PGPSecretKey decryptionKey = decryptionKeys.getSecretKey(keyId);
+            SubkeyIdentifier decryptionKeyId = new SubkeyIdentifier(decryptionKeys, decryptionKey.getKeyID());
             PGPPrivateKey privateKey = UnlockSecretKey.unlockSecretKey(decryptionKey, protector);
 
             PublicKeyDataDecryptorFactory decryptorFactory = ImplementationFactory.getInstance()
                     .getPublicKeyDataDecryptorFactory(privateKey);
-            try {
-                InputStream decrypted = pkesk.getDataStream(decryptorFactory);
-                SessionKey sessionKey = new SessionKey(pkesk.getSessionKey(decryptorFactory));
-                throwIfUnacceptable(sessionKey.getAlgorithm());
-
-                MessageMetadata.EncryptedData encryptedData = new MessageMetadata.EncryptedData(
-                        SymmetricKeyAlgorithm.requireFromId(pkesk.getSymmetricAlgorithm(decryptorFactory)),
-                        metadata.depth + 1);
-                encryptedData.decryptionKey = new SubkeyIdentifier(decryptionKeys, decryptionKey.getKeyID());
-                encryptedData.sessionKey = sessionKey;
-
-                IntegrityProtectedInputStream integrityProtected = new IntegrityProtectedInputStream(decrypted, pkesk, options);
-                nestedInputStream = new OpenPgpMessageInputStream(buffer(integrityProtected), options, encryptedData, policy);
+            if (decryptPKESKAndStream(decryptionKeyId, decryptorFactory, pkesk)) {
                 return true;
-            } catch (UnacceptableAlgorithmException e) {
-                throw e;
-            } catch (PGPException e) {
-
             }
         }
 
@@ -430,23 +417,10 @@ public class OpenPgpMessageInputStream extends DecryptionStream {
                 PGPPrivateKey privateKey = UnlockSecretKey.unlockSecretKey(decryptionKeyCandidate.getB(), protector);
                 PublicKeyDataDecryptorFactory decryptorFactory = ImplementationFactory.getInstance()
                         .getPublicKeyDataDecryptorFactory(privateKey);
+                SubkeyIdentifier decryptionKeyId = new SubkeyIdentifier(decryptionKeyCandidate.getA(), privateKey.getKeyID());
 
-                try {
-                    InputStream decrypted = pkesk.getDataStream(decryptorFactory);
-                    SessionKey sessionKey = new SessionKey(pkesk.getSessionKey(decryptorFactory));
-                    throwIfUnacceptable(sessionKey.getAlgorithm());
-
-                    MessageMetadata.EncryptedData encryptedData = new MessageMetadata.EncryptedData(
-                            SymmetricKeyAlgorithm.requireFromId(pkesk.getSymmetricAlgorithm(decryptorFactory)),
-                            metadata.depth + 1);
-                    encryptedData.decryptionKey = new SubkeyIdentifier(decryptionKeyCandidate.getA(), privateKey.getKeyID());
-                    encryptedData.sessionKey = sessionKey;
-
-                    IntegrityProtectedInputStream integrityProtected = new IntegrityProtectedInputStream(decrypted, pkesk, options);
-                    nestedInputStream = new OpenPgpMessageInputStream(buffer(integrityProtected), options, encryptedData, policy);
+                if (decryptPKESKAndStream(decryptionKeyId, decryptorFactory, pkesk)) {
                     return true;
-                } catch (PGPException e) {
-                    // hm :/
                 }
             }
         }
@@ -470,26 +444,12 @@ public class OpenPgpMessageInputStream extends DecryptionStream {
                     PGPSecretKeyRing decryptionKey = getDecryptionKey(keyId);
                     SecretKeyRingProtector protector = options.getSecretKeyProtector(decryptionKey);
                     PGPPrivateKey privateKey = UnlockSecretKey.unlockSecretKey(secretKey, protector.getDecryptor(keyId));
-
+                    SubkeyIdentifier decryptionKeyId = new SubkeyIdentifier(decryptionKey, keyId);
                     PublicKeyDataDecryptorFactory decryptorFactory = ImplementationFactory.getInstance()
                             .getPublicKeyDataDecryptorFactory(privateKey);
 
-                    try {
-                        InputStream decrypted = pkesk.getDataStream(decryptorFactory);
-                        SessionKey sessionKey = new SessionKey(pkesk.getSessionKey(decryptorFactory));
-                        throwIfUnacceptable(sessionKey.getAlgorithm());
-
-                        MessageMetadata.EncryptedData encryptedData = new MessageMetadata.EncryptedData(
-                                SymmetricKeyAlgorithm.requireFromId(pkesk.getSymmetricAlgorithm(decryptorFactory)),
-                                metadata.depth + 1);
-                        encryptedData.decryptionKey = new SubkeyIdentifier(decryptionKey, keyId);
-                        encryptedData.sessionKey = sessionKey;
-
-                        IntegrityProtectedInputStream integrityProtected = new IntegrityProtectedInputStream(decrypted, pkesk, options);
-                        nestedInputStream = new OpenPgpMessageInputStream(buffer(integrityProtected), options, encryptedData, policy);
+                    if (decryptPKESKAndStream(decryptionKeyId, decryptorFactory, pkesk)) {
                         return true;
-                    } catch (PGPException e) {
-                        // hm :/
                     }
                 }
             }
@@ -498,6 +458,46 @@ public class OpenPgpMessageInputStream extends DecryptionStream {
         }
 
         // we did not yet succeed in decrypting any session key :/
+        return false;
+    }
+
+    private boolean decryptSKESKAndStream(PGPPBEEncryptedData skesk, PBEDataDecryptorFactory decryptorFactory) throws IOException, UnacceptableAlgorithmException {
+        try {
+            InputStream decrypted = skesk.getDataStream(decryptorFactory);
+            SessionKey sessionKey = new SessionKey(skesk.getSessionKey(decryptorFactory));
+            throwIfUnacceptable(sessionKey.getAlgorithm());
+            MessageMetadata.EncryptedData encryptedData = new MessageMetadata.EncryptedData(
+                    sessionKey.getAlgorithm(), metadata.depth + 1);
+            encryptedData.sessionKey = sessionKey;
+            IntegrityProtectedInputStream integrityProtected = new IntegrityProtectedInputStream(decrypted, skesk, options);
+            nestedInputStream = new OpenPgpMessageInputStream(buffer(integrityProtected), options, encryptedData, policy);
+            return true;
+        } catch (UnacceptableAlgorithmException e) {
+            throw e;
+        } catch (PGPException e) {
+            // Password mismatch?
+        }
+        return false;
+    }
+
+    private boolean decryptPKESKAndStream(SubkeyIdentifier subkeyIdentifier, PublicKeyDataDecryptorFactory decryptorFactory, PGPPublicKeyEncryptedData pkesk) throws IOException {
+        try {
+            InputStream decrypted = pkesk.getDataStream(decryptorFactory);
+            SessionKey sessionKey = new SessionKey(pkesk.getSessionKey(decryptorFactory));
+            throwIfUnacceptable(sessionKey.getAlgorithm());
+
+            MessageMetadata.EncryptedData encryptedData = new MessageMetadata.EncryptedData(
+                    SymmetricKeyAlgorithm.requireFromId(pkesk.getSymmetricAlgorithm(decryptorFactory)),
+                    metadata.depth + 1);
+            encryptedData.decryptionKey = subkeyIdentifier;
+            encryptedData.sessionKey = sessionKey;
+
+            IntegrityProtectedInputStream integrityProtected = new IntegrityProtectedInputStream(decrypted, pkesk, options);
+            nestedInputStream = new OpenPgpMessageInputStream(buffer(integrityProtected), options, encryptedData, policy);
+            return true;
+        } catch (PGPException e) {
+
+        }
         return false;
     }
 
