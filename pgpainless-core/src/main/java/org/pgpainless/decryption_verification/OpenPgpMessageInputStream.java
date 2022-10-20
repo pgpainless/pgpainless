@@ -59,6 +59,7 @@ import org.pgpainless.key.SubkeyIdentifier;
 import org.pgpainless.key.info.KeyRingInfo;
 import org.pgpainless.key.protection.SecretKeyRingProtector;
 import org.pgpainless.key.protection.UnlockSecretKey;
+import org.pgpainless.key.util.KeyIdUtil;
 import org.pgpainless.policy.Policy;
 import org.pgpainless.signature.SignatureUtils;
 import org.pgpainless.signature.consumer.OnePassSignatureCheck;
@@ -234,6 +235,7 @@ public class OpenPgpMessageInputStream extends DecryptionStream {
 
                     // Marker Packets need to be skipped and ignored
                 case MARKER:
+                    LOGGER.debug("Skipping Marker Packet");
                     packetInputStream.readMarker();
                     break;
 
@@ -263,6 +265,7 @@ public class OpenPgpMessageInputStream extends DecryptionStream {
     }
 
     private void processLiteralData() throws IOException {
+        LOGGER.debug("Literal Data Packet at depth " + metadata.depth + " encountered");
         automaton.next(InputAlphabet.LiteralData);
         PGPLiteralData literalData = packetInputStream.readLiteralData();
         this.metadata.setChild(new MessageMetadata.LiteralData(
@@ -279,6 +282,7 @@ public class OpenPgpMessageInputStream extends DecryptionStream {
         MessageMetadata.CompressedData compressionLayer = new MessageMetadata.CompressedData(
                 CompressionAlgorithm.fromId(compressedData.getAlgorithm()),
                 metadata.depth + 1);
+        LOGGER.debug("Compressed Data Packet (" + compressionLayer.algorithm + ") at depth " + metadata.depth + " encountered");
         InputStream decompressed = compressedData.getDataStream();
         nestedInputStream = new OpenPgpMessageInputStream(buffer(decompressed), options, compressionLayer, policy);
     }
@@ -286,6 +290,8 @@ public class OpenPgpMessageInputStream extends DecryptionStream {
     private void processOnePassSignature() throws PGPException, IOException {
         automaton.next(InputAlphabet.OnePassSignature);
         PGPOnePassSignature onePassSignature = packetInputStream.readOnePassSignature();
+        LOGGER.debug("One-Pass-Signature Packet by key " + KeyIdUtil.formatKeyId(onePassSignature.getKeyID()) +
+                "at depth " + metadata.depth + " encountered");
         signatures.addOnePassSignature(onePassSignature);
     }
 
@@ -294,42 +300,59 @@ public class OpenPgpMessageInputStream extends DecryptionStream {
         boolean isSigForOPS = automaton.peekStack() == StackAlphabet.ops;
         automaton.next(InputAlphabet.Signature);
         PGPSignature signature = packetInputStream.readSignature();
+        long keyId = SignatureUtils.determineIssuerKeyId(signature);
         if (isSigForOPS) {
+            LOGGER.debug("Signature Packet corresponding to One-Pass-Signature by key " +
+                    KeyIdUtil.formatKeyId(keyId) +
+                    " at depth " + metadata.depth + " encountered");
             signatures.leaveNesting(); // TODO: Only leave nesting if all OPSs of the nesting layer are dealt with
             signatures.addCorrespondingOnePassSignature(signature, metadata, policy);
         } else {
+            LOGGER.debug("Prepended Signature Packet by key " +
+                    KeyIdUtil.formatKeyId(keyId) +
+                    " at depth " + metadata.depth + " encountered");
             signatures.addPrependedSignature(signature);
         }
     }
 
     private boolean processEncryptedData() throws IOException, PGPException {
+        LOGGER.debug("Symmetrically Encrypted Data Packet at depth " + metadata.depth + " encountered");
         automaton.next(InputAlphabet.EncryptedData);
         PGPEncryptedDataList encDataList = packetInputStream.readEncryptedDataList();
 
         // TODO: Replace with !encDataList.isIntegrityProtected()
         //  once BC ships it
         if (!encDataList.get(0).isIntegrityProtected()) {
+            LOGGER.debug("Symmetrically Encrypted Data Packet is not integrity-protected and is therefore rejected.");
             throw new MessageNotIntegrityProtectedException();
         }
 
         SortedESKs esks = new SortedESKs(encDataList);
+        LOGGER.debug("Symmetrically Encrypted Integrity-Protected Data has " +
+                esks.skesks.size() + " SKESK(s) and " +
+                (esks.pkesks.size() + esks.anonPkesks.size()) + " PKESK(s) from which " +
+                esks.anonPkesks.size() + " PKESK(s) have an anonymous recipient");
 
-        // Try custom decryptor factory
+        // Try custom decryptor factories
         for (SubkeyIdentifier subkeyIdentifier : options.getCustomDecryptorFactories().keySet()) {
+            LOGGER.debug("Attempt decryption with custom decryptor factory with key " + subkeyIdentifier);
             PublicKeyDataDecryptorFactory decryptorFactory = options.getCustomDecryptorFactories().get(subkeyIdentifier);
             for (PGPPublicKeyEncryptedData pkesk : esks.pkesks) {
+                // find matching PKESK
                 if (pkesk.getKeyID() != subkeyIdentifier.getSubkeyId()) {
                     continue;
                 }
 
+                // attempt decryption
                 if (decryptPKESKAndStream(subkeyIdentifier, decryptorFactory, pkesk)) {
                     return true;
                 }
             }
         }
 
-        // Try session key
+        // Try provided session key
         if (options.getSessionKey() != null) {
+            LOGGER.debug("Attempt decryption with provided session key");
             SessionKey sessionKey = options.getSessionKey();
             throwIfUnacceptable(sessionKey.getAlgorithm());
 
@@ -340,6 +363,7 @@ public class OpenPgpMessageInputStream extends DecryptionStream {
 
             try {
                 // TODO: Use BCs new API once shipped
+                //  see https://github.com/bcgit/bc-java/pull/1228 (discussion)
                 PGPEncryptedData esk = esks.all().get(0);
                 if (esk instanceof PGPPBEEncryptedData) {
                     PGPPBEEncryptedData skesk = (PGPPBEEncryptedData) esk;
@@ -347,6 +371,7 @@ public class OpenPgpMessageInputStream extends DecryptionStream {
                     encryptedData.sessionKey = sessionKey;
                     IntegrityProtectedInputStream integrityProtected = new IntegrityProtectedInputStream(decrypted, skesk, options);
                     nestedInputStream = new OpenPgpMessageInputStream(buffer(integrityProtected), options, encryptedData, policy);
+                    LOGGER.debug("Successfully decrypted data with provided session key");
                     return true;
                 } else if (esk instanceof PGPPublicKeyEncryptedData) {
                     PGPPublicKeyEncryptedData pkesk = (PGPPublicKeyEncryptedData) esk;
@@ -354,20 +379,29 @@ public class OpenPgpMessageInputStream extends DecryptionStream {
                     encryptedData.sessionKey = sessionKey;
                     IntegrityProtectedInputStream integrityProtected = new IntegrityProtectedInputStream(decrypted, pkesk, options);
                     nestedInputStream = new OpenPgpMessageInputStream(buffer(integrityProtected), options, encryptedData, policy);
+                    LOGGER.debug("Successfully decrypted data with provided session key");
                     return true;
                 } else {
                     throw new RuntimeException("Unknown ESK class type: " + esk.getClass().getName());
                 }
             } catch (PGPException e) {
                 // Session key mismatch?
+                LOGGER.debug("Decryption using provided session key failed. Mismatched session key and message?", e);
             }
         }
 
         // Try passwords
-        for (PGPPBEEncryptedData skesk : esks.skesks) {
-            SymmetricKeyAlgorithm kekAlgorithm = SymmetricKeyAlgorithm.requireFromId(skesk.getAlgorithm());
-            throwIfUnacceptable(kekAlgorithm);
-            for (Passphrase passphrase : options.getDecryptionPassphrases()) {
+        for (Passphrase passphrase : options.getDecryptionPassphrases()) {
+            for (PGPPBEEncryptedData skesk : esks.skesks) {
+                LOGGER.debug("Attempt decryption with provided passphrase");
+                SymmetricKeyAlgorithm kekAlgorithm = SymmetricKeyAlgorithm.requireFromId(skesk.getAlgorithm());
+                try {
+                    throwIfUnacceptable(kekAlgorithm);
+                } catch (UnacceptableAlgorithmException e) {
+                    LOGGER.debug("Skipping SKESK with unacceptable encapsulation algorithm", e);
+                    continue;
+                }
+
                 PBEDataDecryptorFactory decryptorFactory = ImplementationFactory.getInstance()
                         .getPBEDataDecryptorFactory(passphrase);
 
@@ -381,22 +415,25 @@ public class OpenPgpMessageInputStream extends DecryptionStream {
         // Try (known) secret keys
         for (PGPPublicKeyEncryptedData pkesk : esks.pkesks) {
             long keyId = pkesk.getKeyID();
+            LOGGER.debug("Encountered PKESK with recipient " + KeyIdUtil.formatKeyId(keyId));
             PGPSecretKeyRing decryptionKeys = getDecryptionKey(keyId);
             if (decryptionKeys == null) {
+                LOGGER.debug("Skipping PKESK because no matching key " + KeyIdUtil.formatKeyId(keyId) + " was provided");
                 continue;
             }
             PGPSecretKey secretKey = decryptionKeys.getSecretKey(keyId);
+            SubkeyIdentifier decryptionKeyId = new SubkeyIdentifier(decryptionKeys, secretKey.getKeyID());
+            LOGGER.debug("Attempt decryption using secret key " + decryptionKeyId);
 
             SecretKeyRingProtector protector = options.getSecretKeyProtector(decryptionKeys);
             // Postpone keys with missing passphrase
             if (!protector.hasPassphraseFor(keyId)) {
+                LOGGER.debug("Missing passphrase for key " + decryptionKeyId + ". Postponing decryption until all other keys were tried");
                 postponedDueToMissingPassphrase.add(new Tuple<>(secretKey, pkesk));
                 continue;
             }
 
-            PGPSecretKey decryptionKey = decryptionKeys.getSecretKey(keyId);
-            SubkeyIdentifier decryptionKeyId = new SubkeyIdentifier(decryptionKeys, decryptionKey.getKeyID());
-            PGPPrivateKey privateKey = UnlockSecretKey.unlockSecretKey(decryptionKey, protector);
+            PGPPrivateKey privateKey = UnlockSecretKey.unlockSecretKey(secretKey, protector);
 
             PublicKeyDataDecryptorFactory decryptorFactory = ImplementationFactory.getInstance()
                     .getPublicKeyDataDecryptorFactory(privateKey);
@@ -408,16 +445,19 @@ public class OpenPgpMessageInputStream extends DecryptionStream {
         // try anonymous secret keys
         for (PGPPublicKeyEncryptedData pkesk : esks.anonPkesks) {
             for (Tuple<PGPSecretKeyRing, PGPSecretKey> decryptionKeyCandidate : findPotentialDecryptionKeys(pkesk)) {
+                PGPSecretKeyRing decryptionKeys = decryptionKeyCandidate.getA();
                 PGPSecretKey secretKey = decryptionKeyCandidate.getB();
+                SubkeyIdentifier decryptionKeyId = new SubkeyIdentifier(decryptionKeys, secretKey.getKeyID());
+                LOGGER.debug("Attempt decryption of anonymous PKESK with key " + decryptionKeyId);
                 SecretKeyRingProtector protector = options.getSecretKeyProtector(decryptionKeyCandidate.getA());
                 if (!protector.hasPassphraseFor(secretKey.getKeyID())) {
+                    LOGGER.debug("Missing passphrase for key " + decryptionKeyId + ". Postponing decryption until all other keys were tried.");
                     postponedDueToMissingPassphrase.add(new Tuple<>(secretKey, pkesk));
                     continue;
                 }
                 PGPPrivateKey privateKey = UnlockSecretKey.unlockSecretKey(decryptionKeyCandidate.getB(), protector);
                 PublicKeyDataDecryptorFactory decryptorFactory = ImplementationFactory.getInstance()
                         .getPublicKeyDataDecryptorFactory(privateKey);
-                SubkeyIdentifier decryptionKeyId = new SubkeyIdentifier(decryptionKeyCandidate.getA(), privateKey.getKeyID());
 
                 if (decryptPKESKAndStream(decryptionKeyId, decryptorFactory, pkesk)) {
                     return true;
@@ -442,9 +482,10 @@ public class OpenPgpMessageInputStream extends DecryptionStream {
                     PGPSecretKey secretKey = missingPassphrases.getA();
                     long keyId = secretKey.getKeyID();
                     PGPSecretKeyRing decryptionKey = getDecryptionKey(keyId);
+                    SubkeyIdentifier decryptionKeyId = new SubkeyIdentifier(decryptionKey, keyId);
+                    LOGGER.debug("Attempt decryption with key " + decryptionKeyId + " while interactively requesting its passphrase");
                     SecretKeyRingProtector protector = options.getSecretKeyProtector(decryptionKey);
                     PGPPrivateKey privateKey = UnlockSecretKey.unlockSecretKey(secretKey, protector.getDecryptor(keyId));
-                    SubkeyIdentifier decryptionKeyId = new SubkeyIdentifier(decryptionKey, keyId);
                     PublicKeyDataDecryptorFactory decryptorFactory = ImplementationFactory.getInstance()
                             .getPublicKeyDataDecryptorFactory(privateKey);
 
@@ -458,10 +499,13 @@ public class OpenPgpMessageInputStream extends DecryptionStream {
         }
 
         // we did not yet succeed in decrypting any session key :/
+
+        LOGGER.debug("Failed to decrypt encrypted data packet");
         return false;
     }
 
-    private boolean decryptSKESKAndStream(PGPPBEEncryptedData skesk, PBEDataDecryptorFactory decryptorFactory) throws IOException, UnacceptableAlgorithmException {
+    private boolean decryptSKESKAndStream(PGPPBEEncryptedData skesk, PBEDataDecryptorFactory decryptorFactory)
+            throws IOException, UnacceptableAlgorithmException {
         try {
             InputStream decrypted = skesk.getDataStream(decryptorFactory);
             SessionKey sessionKey = new SessionKey(skesk.getSessionKey(decryptorFactory));
@@ -469,18 +513,19 @@ public class OpenPgpMessageInputStream extends DecryptionStream {
             MessageMetadata.EncryptedData encryptedData = new MessageMetadata.EncryptedData(
                     sessionKey.getAlgorithm(), metadata.depth + 1);
             encryptedData.sessionKey = sessionKey;
+            LOGGER.debug("Successfully decrypted data with passphrase");
             IntegrityProtectedInputStream integrityProtected = new IntegrityProtectedInputStream(decrypted, skesk, options);
             nestedInputStream = new OpenPgpMessageInputStream(buffer(integrityProtected), options, encryptedData, policy);
             return true;
         } catch (UnacceptableAlgorithmException e) {
             throw e;
         } catch (PGPException e) {
-            // Password mismatch?
+            LOGGER.debug("Decryption of encrypted data packet using password failed. Password mismatch?", e);
         }
         return false;
     }
 
-    private boolean decryptPKESKAndStream(SubkeyIdentifier subkeyIdentifier,
+    private boolean decryptPKESKAndStream(SubkeyIdentifier decryptionKeyId,
                                           PublicKeyDataDecryptorFactory decryptorFactory,
                                           PGPPublicKeyEncryptedData pkesk)
             throws IOException, UnacceptableAlgorithmException {
@@ -492,16 +537,17 @@ public class OpenPgpMessageInputStream extends DecryptionStream {
             MessageMetadata.EncryptedData encryptedData = new MessageMetadata.EncryptedData(
                     SymmetricKeyAlgorithm.requireFromId(pkesk.getSymmetricAlgorithm(decryptorFactory)),
                     metadata.depth + 1);
-            encryptedData.decryptionKey = subkeyIdentifier;
+            encryptedData.decryptionKey = decryptionKeyId;
             encryptedData.sessionKey = sessionKey;
 
+            LOGGER.debug("Successfully decrypted data with key " + decryptionKeyId);
             IntegrityProtectedInputStream integrityProtected = new IntegrityProtectedInputStream(decrypted, pkesk, options);
             nestedInputStream = new OpenPgpMessageInputStream(buffer(integrityProtected), options, encryptedData, policy);
             return true;
         } catch (UnacceptableAlgorithmException e) {
             throw e;
         } catch (PGPException e) {
-
+            LOGGER.debug("Decryption of encrypted data packet using secret key failed.", e);
         }
         return false;
     }
@@ -823,8 +869,10 @@ public class OpenPgpMessageInputStream extends DecryptionStream {
                     SignatureValidator.signatureWasCreatedInBounds(options.getVerifyNotBefore(), options.getVerifyNotAfter())
                             .verify(signature);
                     SignatureVerifier.verifyOnePassSignature(signature, onePassSignature.getVerificationKeys().getPublicKey(signature.getKeyID()), onePassSignature, policy);
+                    LOGGER.debug("Acceptable signature by key " + verification.getSigningKey());
                     layer.addVerifiedOnePassSignature(verification);
                 } catch (SignatureValidationException e) {
+                    LOGGER.debug("Rejected signature by key " + verification.getSigningKey(), e);
                     layer.addRejectedOnePassSignature(new SignatureVerification.Failure(verification, e));
                 }
                 break;
@@ -929,8 +977,10 @@ public class OpenPgpMessageInputStream extends DecryptionStream {
                             detached.getSignature(),
                             detached.getSigningKeyRing().getPublicKey(detached.getSigningKeyIdentifier().getKeyId()),
                             policy, detached.getSignature().getCreationTime());
+                    LOGGER.debug("Acceptable signature by key " + verification.getSigningKey());
                     layer.addVerifiedDetachedSignature(verification);
                 } catch (SignatureValidationException e) {
+                    LOGGER.debug("Rejected signature by key " + verification.getSigningKey(), e);
                     layer.addRejectedDetachedSignature(new SignatureVerification.Failure(verification, e));
                 }
             }
@@ -944,8 +994,10 @@ public class OpenPgpMessageInputStream extends DecryptionStream {
                             prepended.getSignature(),
                             prepended.getSigningKeyRing().getPublicKey(prepended.getSigningKeyIdentifier().getKeyId()),
                             policy, prepended.getSignature().getCreationTime());
+                    LOGGER.debug("Acceptable signature by key " + verification.getSigningKey());
                     layer.addVerifiedPrependedSignature(verification);
                 } catch (SignatureValidationException e) {
+                    LOGGER.debug("Rejected signature by key " + verification.getSigningKey(), e);
                     layer.addRejectedPrependedSignature(new SignatureVerification.Failure(verification, e));
                 }
             }
