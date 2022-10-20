@@ -19,7 +19,7 @@ SPDX-License-Identifier: Apache-2.0
         </encoder>
     </appender>
 
-    <logger name="org.pgpainless" level="warn" additivity="false">
+    <logger name="org.pgpainless" level="debug" additivity="false">
         <appender-ref ref="STDOUT" />
     </logger>
 
