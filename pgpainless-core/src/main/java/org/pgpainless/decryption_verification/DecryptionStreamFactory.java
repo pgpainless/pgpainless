@@ -60,7 +60,7 @@ import org.pgpainless.key.info.KeyRingInfo;
 import org.pgpainless.key.protection.SecretKeyRingProtector;
 import org.pgpainless.key.protection.UnlockSecretKey;
 import org.pgpainless.signature.SignatureUtils;
-import org.pgpainless.signature.consumer.DetachedSignatureCheck;
+import org.pgpainless.signature.consumer.SignatureCheck;
 import org.pgpainless.signature.consumer.OnePassSignatureCheck;
 import org.pgpainless.util.ArmoredInputStreamFactory;
 import org.pgpainless.util.Passphrase;
@@ -79,7 +79,7 @@ public final class DecryptionStreamFactory {
     private final ConsumerOptions options;
     private final OpenPgpMetadata.Builder resultBuilder = OpenPgpMetadata.getBuilder();
     private final List<OnePassSignatureCheck> onePassSignatureChecks = new ArrayList<>();
-    private final List<DetachedSignatureCheck> detachedSignatureChecks = new ArrayList<>();
+    private final List<SignatureCheck> signatureChecks = new ArrayList<>();
     private final Map<Long, OnePassSignatureCheck> onePassSignaturesWithMissingCert = new HashMap<>();
 
     private static final PGPContentVerifierBuilderProvider verifierBuilderProvider =
@@ -88,7 +88,7 @@ public final class DecryptionStreamFactory {
 
 
     public static DecryptionStream create(@Nonnull InputStream inputStream,
-                                              @Nonnull ConsumerOptions options)
+                                          @Nonnull ConsumerOptions options)
             throws PGPException, IOException {
         OpenPgpInputStream openPgpInputStream = new OpenPgpInputStream(inputStream);
         openPgpInputStream.reset();
@@ -134,9 +134,9 @@ public final class DecryptionStreamFactory {
             SubkeyIdentifier signingKeyIdentifier = new SubkeyIdentifier(signingKeyRing, signingKey.getKeyID());
             try {
                 signature.init(verifierBuilderProvider, signingKey);
-                DetachedSignatureCheck detachedSignature =
-                        new DetachedSignatureCheck(signature, signingKeyRing, signingKeyIdentifier);
-                detachedSignatureChecks.add(detachedSignature);
+                SignatureCheck detachedSignature =
+                        new SignatureCheck(signature, signingKeyRing, signingKeyIdentifier);
+                signatureChecks.add(detachedSignature);
             } catch (PGPException e) {
                 SignatureValidationException ex = new SignatureValidationException(
                         "Cannot verify detached signature made by " + signingKeyIdentifier + ".", e);
@@ -212,7 +212,7 @@ public final class DecryptionStreamFactory {
     private InputStream wrapInVerifySignatureStream(InputStream bufferedIn, @Nullable PGPObjectFactory objectFactory) {
         return new SignatureInputStream.VerifySignatures(
                 bufferedIn, objectFactory, onePassSignatureChecks,
-                onePassSignaturesWithMissingCert, detachedSignatureChecks, options,
+                onePassSignaturesWithMissingCert, signatureChecks, options,
                 resultBuilder);
     }
 
@@ -348,7 +348,7 @@ public final class DecryptionStreamFactory {
         }
 
         return new SignatureInputStream.VerifySignatures(literalDataInputStream, objectFactory,
-                onePassSignatureChecks, onePassSignaturesWithMissingCert, detachedSignatureChecks, options, resultBuilder) {
+                onePassSignatureChecks, onePassSignaturesWithMissingCert, signatureChecks, options, resultBuilder) {
         };
     }
 

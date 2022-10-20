@@ -5,7 +5,6 @@
 package org.pgpainless.decryption_verification;
 
 import java.io.BufferedInputStream;
-import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
@@ -31,6 +30,7 @@ import org.bouncycastle.openpgp.PGPPublicKeyRing;
 import org.bouncycastle.openpgp.PGPSecretKey;
 import org.bouncycastle.openpgp.PGPSecretKeyRing;
 import org.bouncycastle.openpgp.PGPSignature;
+import org.bouncycastle.openpgp.PGPSignatureList;
 import org.bouncycastle.openpgp.operator.PBEDataDecryptorFactory;
 import org.bouncycastle.openpgp.operator.PGPContentVerifierBuilderProvider;
 import org.bouncycastle.openpgp.operator.PublicKeyDataDecryptorFactory;
@@ -44,6 +44,8 @@ import org.pgpainless.algorithm.SymmetricKeyAlgorithm;
 import org.pgpainless.decryption_verification.automaton.InputAlphabet;
 import org.pgpainless.decryption_verification.automaton.PDA;
 import org.pgpainless.decryption_verification.automaton.StackAlphabet;
+import org.pgpainless.decryption_verification.cleartext_signatures.ClearsignedMessageUtil;
+import org.pgpainless.decryption_verification.cleartext_signatures.MultiPassStrategy;
 import org.pgpainless.exception.MalformedOpenPgpMessageException;
 import org.pgpainless.exception.MessageNotIntegrityProtectedException;
 import org.pgpainless.exception.MissingDecryptionMethodException;
@@ -56,7 +58,9 @@ import org.pgpainless.key.protection.SecretKeyRingProtector;
 import org.pgpainless.key.protection.UnlockSecretKey;
 import org.pgpainless.policy.Policy;
 import org.pgpainless.signature.SignatureUtils;
-import org.pgpainless.signature.consumer.SignatureValidator;
+import org.pgpainless.signature.consumer.OnePassSignatureCheck;
+import org.pgpainless.signature.consumer.SignatureCheck;
+import org.pgpainless.signature.consumer.SignatureVerifier;
 import org.pgpainless.util.ArmoredInputStreamFactory;
 import org.pgpainless.util.Passphrase;
 import org.pgpainless.util.SessionKey;
@@ -93,7 +97,9 @@ public class OpenPgpMessageInputStream extends DecryptionStream {
                                      @Nonnull ConsumerOptions options,
                                      @Nonnull Policy policy)
             throws PGPException, IOException {
-        this(prepareInputStream(inputStream, options), options, new MessageMetadata.Message(), policy);
+        this(
+                prepareInputStream(inputStream, options, policy),
+                options, new MessageMetadata.Message(), policy);
     }
 
     protected OpenPgpMessageInputStream(@Nonnull InputStream inputStream,
@@ -120,7 +126,20 @@ public class OpenPgpMessageInputStream extends DecryptionStream {
         consumePackets();
     }
 
-    private static InputStream prepareInputStream(InputStream inputStream, ConsumerOptions options) throws IOException {
+    protected OpenPgpMessageInputStream(@Nonnull InputStream inputStream,
+                                 @Nonnull Policy policy,
+                                 @Nonnull ConsumerOptions options) {
+        super(OpenPgpMetadata.getBuilder());
+        this.policy = policy;
+        this.options = options;
+        this.metadata = new MessageMetadata.Message();
+        this.signatures = new Signatures(options);
+        this.signatures.addDetachedSignatures(options.getDetachedSignatures());
+        this.packetInputStream = new TeeBCPGInputStream(BCPGInputStream.wrap(inputStream), signatures);
+    }
+
+    private static InputStream prepareInputStream(InputStream inputStream, ConsumerOptions options, Policy policy)
+            throws IOException, PGPException {
         OpenPgpInputStream openPgpIn = new OpenPgpInputStream(inputStream);
         openPgpIn.reset();
 
@@ -131,13 +150,26 @@ public class OpenPgpMessageInputStream extends DecryptionStream {
         if (openPgpIn.isAsciiArmored()) {
             ArmoredInputStream armorIn = ArmoredInputStreamFactory.get(openPgpIn);
             if (armorIn.isClearText()) {
-                return armorIn;
+                return parseCleartextSignedMessage(armorIn, options, policy);
             } else {
                 return armorIn;
             }
         } else {
             return openPgpIn;
         }
+    }
+
+    private static DecryptionStream parseCleartextSignedMessage(ArmoredInputStream armorIn, ConsumerOptions options, Policy policy)
+            throws IOException, PGPException {
+        MultiPassStrategy multiPassStrategy = options.getMultiPassStrategy();
+        PGPSignatureList signatures = ClearsignedMessageUtil.detachSignaturesFromInbandClearsignedMessage(armorIn, multiPassStrategy.getMessageOutputStream());
+
+        for (PGPSignature signature : signatures) {
+            options.addVerificationOfDetachedSignature(signature);
+        }
+
+        options.forceNonOpenPgpData();
+        return new OpenPgpMessageInputStream(multiPassStrategy.getMessageInputStream(), policy, options);
     }
 
     /**
@@ -575,17 +607,58 @@ public class OpenPgpMessageInputStream extends DecryptionStream {
         }
     }
 
+    @Override
+    public OpenPgpMetadata getResult() {
+        MessageMetadata m = getMetadata();
+        resultBuilder.setCompressionAlgorithm(m.getCompressionAlgorithm());
+        resultBuilder.setModificationDate(m.getModificationDate());
+        resultBuilder.setFileName(m.getFilename());
+        resultBuilder.setFileEncoding(m.getFormat());
+        resultBuilder.setSessionKey(m.getSessionKey());
+        resultBuilder.setDecryptionKey(m.getDecryptionKey());
+
+        for (SignatureVerification accepted : m.getVerifiedDetachedSignatures()) {
+            resultBuilder.addVerifiedDetachedSignature(accepted);
+        }
+        for (SignatureVerification.Failure rejected : m.getRejectedDetachedSignatures()) {
+            resultBuilder.addInvalidDetachedSignature(rejected.getSignatureVerification(), rejected.getValidationException());
+        }
+
+        for (SignatureVerification accepted : m.getVerifiedInlineSignatures()) {
+            resultBuilder.addVerifiedInbandSignature(accepted);
+        }
+        for (SignatureVerification.Failure rejected : m.getRejectedInlineSignatures()) {
+            resultBuilder.addInvalidInbandSignature(rejected.getSignatureVerification(), rejected.getValidationException());
+        }
+
+        return resultBuilder.build();
+    }
+
+    static void log(String message) {
+        LOGGER.debug(message);
+        // CHECKSTYLE:OFF
+        System.out.println(message);
+        // CHECKSTYLE:ON
+    }
+
+    static void log(String message, Throwable e) {
+        log(message);
+        // CHECKSTYLE:OFF
+        e.printStackTrace();
+        // CHECKSTYLE:ON
+    }
+
     // In 'OPS LIT("Foo") SIG', OPS is only updated with "Foo"
     // In 'OPS[1] OPS LIT("Foo") SIG SIG', OPS[1] (nested) is updated with OPS LIT("Foo") SIG.
     // Therefore, we need to handle the innermost signature layer differently when updating with Literal data.
     // Furthermore, For 'OPS COMP(LIT("Foo")) SIG', the signature is updated with "Foo". CHAOS!!!
     private static final class Signatures extends OutputStream {
         final ConsumerOptions options;
-        final List<DetachedOrPrependedSignature> detachedSignatures;
-        final List<DetachedOrPrependedSignature> prependedSignatures;
-        final List<OnePassSignature> onePassSignatures;
-        final Stack<List<OnePassSignature>> opsUpdateStack;
-        List<OnePassSignature> literalOPS = new ArrayList<>();
+        final List<SignatureCheck> detachedSignatures;
+        final List<SignatureCheck> prependedSignatures;
+        final List<OnePassSignatureCheck> onePassSignatures;
+        final Stack<List<OnePassSignatureCheck>> opsUpdateStack;
+        List<OnePassSignatureCheck> literalOPS = new ArrayList<>();
         final List<PGPSignature> correspondingSignatures;
         boolean isLiteral = true;
 
@@ -605,31 +678,37 @@ public class OpenPgpMessageInputStream extends DecryptionStream {
         }
 
         void addDetachedSignature(PGPSignature signature) {
-            long keyId = SignatureUtils.determineIssuerKeyId(signature);
-            PGPPublicKeyRing certificate = findCertificate(keyId);
-
-            if (certificate != null) {
-                initialize(signature, certificate, keyId);
-                this.detachedSignatures.add(new DetachedOrPrependedSignature(signature, certificate, keyId));
+            SignatureCheck check = initializeSignature(signature);
+            if (check != null) {
+                detachedSignatures.add(check);
             }
         }
 
         void addPrependedSignature(PGPSignature signature) {
+            SignatureCheck check = initializeSignature(signature);
+            if (check != null) {
+                this.prependedSignatures.add(check);
+            }
+        }
+
+        SignatureCheck initializeSignature(PGPSignature signature) {
             long keyId = SignatureUtils.determineIssuerKeyId(signature);
             PGPPublicKeyRing certificate = findCertificate(keyId);
-
-            if (certificate != null) {
-                initialize(signature, certificate, keyId);
-                this.prependedSignatures.add(new DetachedOrPrependedSignature(signature, certificate, keyId));
+            if (certificate == null) {
+                return null;
             }
+
+            SubkeyIdentifier verifierKey = new SubkeyIdentifier(certificate, keyId);
+            initialize(signature, certificate, keyId);
+            return new SignatureCheck(signature, certificate, verifierKey);
         }
 
         void addOnePassSignature(PGPOnePassSignature signature) {
             PGPPublicKeyRing certificate = findCertificate(signature.getKeyID());
 
             if (certificate != null) {
-                OnePassSignature ops = new OnePassSignature(signature, certificate, signature.getKeyID());
-                ops.init(certificate);
+                OnePassSignatureCheck ops = new OnePassSignatureCheck(signature, certificate);
+                initialize(signature, certificate);
                 onePassSignatures.add(ops);
 
                 literalOPS.add(ops);
@@ -641,38 +720,27 @@ public class OpenPgpMessageInputStream extends DecryptionStream {
 
         void addCorrespondingOnePassSignature(PGPSignature signature, MessageMetadata.Layer layer, Policy policy) {
             for (int i = onePassSignatures.size() - 1; i >= 0; i--) {
-                OnePassSignature onePassSignature = onePassSignatures.get(i);
-                if (onePassSignature.opSignature.getKeyID() != signature.getKeyID()) {
-                    continue;
-                }
-                if (onePassSignature.finished) {
+                OnePassSignatureCheck onePassSignature = onePassSignatures.get(i);
+                if (onePassSignature.getOnePassSignature().getKeyID() != signature.getKeyID()) {
                     continue;
                 }
 
-                boolean correct = onePassSignature.verify(signature);
+                if (onePassSignature.getSignature() != null) {
+                    continue;
+                }
+
+                onePassSignature.setSignature(signature);
                 SignatureVerification verification = new SignatureVerification(signature,
-                        new SubkeyIdentifier(onePassSignature.certificate, onePassSignature.keyId));
-                if (correct) {
-                    PGPPublicKey signingKey = onePassSignature.certificate.getPublicKey(onePassSignature.keyId);
-                    try {
-                        checkSignatureValidity(signature, signingKey, policy);
-                        layer.addVerifiedOnePassSignature(verification);
-                    } catch (SignatureValidationException e) {
-                        layer.addRejectedOnePassSignature(new SignatureVerification.Failure(verification, e));
-                    }
-                } else {
-                    layer.addRejectedOnePassSignature(new SignatureVerification.Failure(verification,
-                            new SignatureValidationException("Bad Signature.")));
+                        new SubkeyIdentifier(onePassSignature.getVerificationKeys(), onePassSignature.getOnePassSignature().getKeyID()));
+
+                try {
+                    SignatureVerifier.verifyOnePassSignature(signature, onePassSignature.getVerificationKeys().getPublicKey(signature.getKeyID()), onePassSignature, policy);
+                    layer.addVerifiedOnePassSignature(verification);
+                } catch (SignatureValidationException e) {
+                    layer.addRejectedOnePassSignature(new SignatureVerification.Failure(verification, e));
                 }
                 break;
             }
-        }
-
-        boolean checkSignatureValidity(PGPSignature signature, PGPPublicKey signingKey, Policy policy) throws SignatureValidationException {
-            SignatureValidator.wasPossiblyMadeByKey(signingKey).verify(signature);
-            SignatureValidator.signatureStructureIsAcceptable(signingKey, policy).verify(signature);
-            SignatureValidator.signatureIsEffective().verify(signature);
-            return true;
         }
 
         void enterNesting() {
@@ -718,85 +786,75 @@ public class OpenPgpMessageInputStream extends DecryptionStream {
         }
 
         public void updateLiteral(byte b) {
-            for (OnePassSignature ops : literalOPS) {
-                ops.update(b);
+            for (OnePassSignatureCheck ops : literalOPS) {
+                ops.getOnePassSignature().update(b);
             }
 
-            for (DetachedOrPrependedSignature detached : detachedSignatures) {
-                detached.update(b);
+            for (SignatureCheck detached : detachedSignatures) {
+                detached.getSignature().update(b);
             }
 
-            for (DetachedOrPrependedSignature prepended : prependedSignatures) {
-                prepended.update(b);
+            for (SignatureCheck prepended : prependedSignatures) {
+                prepended.getSignature().update(b);
             }
         }
 
         public void updateLiteral(byte[] b, int off, int len) {
-            for (OnePassSignature ops : literalOPS) {
-                ops.update(b, off, len);
+            for (OnePassSignatureCheck ops : literalOPS) {
+                ops.getOnePassSignature().update(b, off, len);
             }
 
-            for (DetachedOrPrependedSignature detached : detachedSignatures) {
-                detached.update(b, off, len);
+            for (SignatureCheck detached : detachedSignatures) {
+                detached.getSignature().update(b, off, len);
             }
 
-            for (DetachedOrPrependedSignature prepended : prependedSignatures) {
-                prepended.update(b, off, len);
+            for (SignatureCheck prepended : prependedSignatures) {
+                prepended.getSignature().update(b, off, len);
             }
         }
 
         public void updatePacket(byte b) {
             for (int i = opsUpdateStack.size() - 1; i >= 0; i--) {
-                List<OnePassSignature> nestedOPSs = opsUpdateStack.get(i);
-                for (OnePassSignature ops : nestedOPSs) {
-                    ops.update(b);
+                List<OnePassSignatureCheck> nestedOPSs = opsUpdateStack.get(i);
+                for (OnePassSignatureCheck ops : nestedOPSs) {
+                    ops.getOnePassSignature().update(b);
                 }
             }
         }
 
         public void updatePacket(byte[] buf, int off, int len) {
             for (int i = opsUpdateStack.size() - 1; i >= 0; i--) {
-                List<OnePassSignature> nestedOPSs = opsUpdateStack.get(i);
-                for (OnePassSignature ops : nestedOPSs) {
-                    ops.update(buf, off, len);
+                List<OnePassSignatureCheck> nestedOPSs = opsUpdateStack.get(i);
+                for (OnePassSignatureCheck ops : nestedOPSs) {
+                    ops.getOnePassSignature().update(buf, off, len);
                 }
             }
         }
 
         public void finish(MessageMetadata.Layer layer, Policy policy) {
-            for (DetachedOrPrependedSignature detached : detachedSignatures) {
-                boolean correct = detached.verify();
-                SignatureVerification verification = new SignatureVerification(
-                        detached.signature, new SubkeyIdentifier(detached.certificate, detached.keyId));
-                if (correct) {
-                    try {
-                        PGPPublicKey signingKey = detached.certificate.getPublicKey(detached.keyId);
-                        checkSignatureValidity(detached.signature, signingKey, policy);
-                        layer.addVerifiedDetachedSignature(verification);
-                    } catch (SignatureValidationException e) {
-                        layer.addRejectedDetachedSignature(new SignatureVerification.Failure(verification, e));
-                    }
-                } else {
-                    layer.addRejectedDetachedSignature(new SignatureVerification.Failure(
-                            verification, new SignatureValidationException("Incorrect Signature.")));
+            for (SignatureCheck detached : detachedSignatures) {
+                SignatureVerification verification = new SignatureVerification(detached.getSignature(), detached.getSigningKeyIdentifier());
+                try {
+                    SignatureVerifier.verifyInitializedSignature(
+                            detached.getSignature(),
+                            detached.getSigningKeyRing().getPublicKey(detached.getSigningKeyIdentifier().getKeyId()),
+                            policy, detached.getSignature().getCreationTime());
+                    layer.addVerifiedDetachedSignature(verification);
+                } catch (SignatureValidationException e) {
+                    layer.addRejectedDetachedSignature(new SignatureVerification.Failure(verification, e));
                 }
             }
 
-            for (DetachedOrPrependedSignature prepended : prependedSignatures) {
-                boolean correct = prepended.verify();
-                SignatureVerification verification = new SignatureVerification(
-                        prepended.signature, new SubkeyIdentifier(prepended.certificate, prepended.keyId));
-                if (correct) {
-                    try {
-                        PGPPublicKey signingKey = prepended.certificate.getPublicKey(prepended.keyId);
-                        checkSignatureValidity(prepended.signature, signingKey, policy);
-                        layer.addVerifiedPrependedSignature(verification);
-                    } catch (SignatureValidationException e) {
-                        layer.addRejectedPrependedSignature(new SignatureVerification.Failure(verification, e));
-                    }
-                } else {
-                    layer.addRejectedPrependedSignature(new SignatureVerification.Failure(
-                            verification, new SignatureValidationException("Incorrect Signature.")));
+            for (SignatureCheck prepended : prependedSignatures) {
+                SignatureVerification verification = new SignatureVerification(prepended.getSignature(), prepended.getSigningKeyIdentifier());
+                try {
+                    SignatureVerifier.verifyInitializedSignature(
+                            prepended.getSignature(),
+                            prepended.getSigningKeyRing().getPublicKey(prepended.getSigningKeyIdentifier().getKeyId()),
+                            policy, prepended.getSignature().getCreationTime());
+                    layer.addVerifiedPrependedSignature(verification);
+                } catch (SignatureValidationException e) {
+                    layer.addRejectedPrependedSignature(new SignatureVerification.Failure(verification, e));
                 }
             }
         }
@@ -822,148 +880,5 @@ public class OpenPgpMessageInputStream extends DecryptionStream {
             }
         }
 
-        static class DetachedOrPrependedSignature {
-            ByteArrayOutputStream bytes = new ByteArrayOutputStream();
-            PGPSignature signature;
-            PGPPublicKeyRing certificate;
-            long keyId;
-            boolean finished;
-            boolean valid;
-
-            DetachedOrPrependedSignature(PGPSignature signature, PGPPublicKeyRing certificate, long keyId) {
-                this.signature = signature;
-                this.certificate = certificate;
-                this.keyId = keyId;
-            }
-
-            public void init(PGPPublicKeyRing certificate) {
-                initialize(signature, certificate, signature.getKeyID());
-            }
-
-            public boolean verify() {
-                if (finished) {
-                    throw new IllegalStateException("Already finished.");
-                }
-                finished = true;
-                try {
-                    valid = this.signature.verify();
-                } catch (PGPException e) {
-                    log("Cannot verify SIG " + signature.getKeyID());
-                }
-                return valid;
-            }
-
-            public void update(byte b) {
-                if (finished) {
-                    throw new IllegalStateException("Already finished.");
-                }
-                signature.update(b);
-                bytes.write(b);
-            }
-
-            public void update(byte[] bytes, int off, int len) {
-                if (finished) {
-                    throw new IllegalStateException("Already finished.");
-                }
-                signature.update(bytes, off, len);
-                this.bytes.write(bytes, off, len);
-            }
-        }
-
-        static class OnePassSignature {
-            ByteArrayOutputStream bytes = new ByteArrayOutputStream();
-            PGPOnePassSignature opSignature;
-            PGPSignature signature;
-            PGPPublicKeyRing certificate;
-            long keyId;
-            boolean finished;
-            boolean valid;
-
-            OnePassSignature(PGPOnePassSignature signature, PGPPublicKeyRing certificate, long keyId) {
-                this.opSignature = signature;
-                this.certificate = certificate;
-                this.keyId = keyId;
-            }
-
-            public void init(PGPPublicKeyRing certificate) {
-                initialize(opSignature, certificate);
-            }
-
-            public boolean verify(PGPSignature signature) {
-                if (finished) {
-                    throw new IllegalStateException("Already finished.");
-                }
-
-                if (this.opSignature.getKeyID() != signature.getKeyID()) {
-                    // nope
-                    return false;
-                }
-                this.signature = signature;
-                finished = true;
-                try {
-                    valid = this.opSignature.verify(signature);
-                } catch (PGPException e) {
-                    log("Cannot verify OPS " + signature.getKeyID());
-                }
-                return valid;
-            }
-
-            public void update(byte b) {
-                if (finished) {
-                    throw new IllegalStateException("Already finished.");
-                }
-                opSignature.update(b);
-                bytes.write(b);
-            }
-
-            public void update(byte[] bytes, int off, int len) {
-                if (finished) {
-                    throw new IllegalStateException("Already finished.");
-                }
-                opSignature.update(bytes, off, len);
-                this.bytes.write(bytes, off, len);
-            }
-        }
-    }
-
-    @Override
-    public OpenPgpMetadata getResult() {
-        MessageMetadata m = getMetadata();
-        resultBuilder.setCompressionAlgorithm(m.getCompressionAlgorithm());
-        resultBuilder.setModificationDate(m.getModificationDate());
-        resultBuilder.setFileName(m.getFilename());
-        resultBuilder.setFileEncoding(m.getFormat());
-        resultBuilder.setSessionKey(m.getSessionKey());
-        resultBuilder.setDecryptionKey(m.getDecryptionKey());
-
-        for (SignatureVerification accepted : m.getVerifiedDetachedSignatures()) {
-            resultBuilder.addVerifiedDetachedSignature(accepted);
-        }
-        for (SignatureVerification.Failure rejected : m.getRejectedDetachedSignatures()) {
-            resultBuilder.addInvalidDetachedSignature(rejected.getSignatureVerification(), rejected.getValidationException());
-        }
-
-        for (SignatureVerification accepted : m.getVerifiedInlineSignatures()) {
-            resultBuilder.addVerifiedInbandSignature(accepted);
-        }
-        for (SignatureVerification.Failure rejected : m.getRejectedInlineSignatures()) {
-            resultBuilder.addInvalidInbandSignature(rejected.getSignatureVerification(), rejected.getValidationException());
-        }
-
-        return resultBuilder.build();
-    }
-
-    static void log(String message) {
-        LOGGER.debug(message);
-        // CHECKSTYLE:OFF
-        System.out.println(message);
-        // CHECKSTYLE:ON
-    }
-
-    static void log(String message, Throwable e) {
-        log(message);
-        // CHECKSTYLE:OFF
-        e.printStackTrace();
-        // CHECKSTYLE:ON
     }
 }
