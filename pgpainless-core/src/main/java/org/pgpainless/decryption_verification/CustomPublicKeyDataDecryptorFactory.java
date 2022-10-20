@@ -5,9 +5,10 @@
 package org.pgpainless.decryption_verification;
 
 import org.bouncycastle.openpgp.operator.PublicKeyDataDecryptorFactory;
+import org.pgpainless.key.SubkeyIdentifier;
 
 public interface CustomPublicKeyDataDecryptorFactory extends PublicKeyDataDecryptorFactory {
 
-    long getKeyId();
+    SubkeyIdentifier getSubkeyIdentifier();
 
 }

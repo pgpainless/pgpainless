@@ -11,6 +11,7 @@ import org.bouncycastle.openpgp.PGPSecretKeyRing;
 import org.bouncycastle.openpgp.operator.PGPDataDecryptor;
 import org.bouncycastle.openpgp.operator.PublicKeyDataDecryptorFactory;
 import org.bouncycastle.openpgp.operator.bc.BcPublicKeyDataDecryptorFactory;
+import org.pgpainless.key.SubkeyIdentifier;
 
 import java.util.HashSet;
 import java.util.Set;
@@ -74,16 +75,16 @@ public class HardwareSecurity {
         // luckily we can instantiate the BcPublicKeyDataDecryptorFactory with null as argument.
         private final PublicKeyDataDecryptorFactory factory =
                 new BcPublicKeyDataDecryptorFactory(null);
-        private long keyId;
+        private SubkeyIdentifier subkey;
 
         /**
          * Create a new {@link HardwareDataDecryptorFactory}.
          *
          * @param callback decryption callback
          */
-        public HardwareDataDecryptorFactory(long keyId, DecryptionCallback callback) {
+        public HardwareDataDecryptorFactory(SubkeyIdentifier subkeyIdentifier, DecryptionCallback callback) {
             this.callback = callback;
-            this.keyId = keyId;
+            this.subkey = subkeyIdentifier;
         }
 
         @Override
@@ -91,7 +92,7 @@ public class HardwareSecurity {
                 throws PGPException {
             try {
                 // delegate decryption to the callback
-                return callback.decryptSessionKey(keyId, keyAlgorithm, secKeyData[0]);
+                return callback.decryptSessionKey(subkey.getSubkeyId(), keyAlgorithm, secKeyData[0]);
             } catch (HardwareSecurityException e) {
                 throw new PGPException("Hardware-backed decryption failed.", e);
             }
@@ -104,8 +105,14 @@ public class HardwareSecurity {
         }
 
         @Override
-        public long getKeyId() {
-            return keyId;
+        public PGPDataDecryptor createDataDecryptor(int aeadAlgorithm, byte[] iv, int chunkSize, int encAlgorithm, byte[] key)
+                throws PGPException {
+            return factory.createDataDecryptor(aeadAlgorithm, iv, chunkSize, encAlgorithm, key);
+        }
+
+        @Override
+        public SubkeyIdentifier getSubkeyIdentifier() {
+            return subkey;
         }
     }
 
