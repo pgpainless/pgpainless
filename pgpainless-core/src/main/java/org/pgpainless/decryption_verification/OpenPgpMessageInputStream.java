@@ -10,7 +10,9 @@ import java.io.InputStream;
 import java.io.OutputStream;
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 import java.util.Stack;
 import javax.annotation.Nonnull;
 
@@ -49,6 +51,7 @@ import org.pgpainless.decryption_verification.cleartext_signatures.MultiPassStra
 import org.pgpainless.exception.MalformedOpenPgpMessageException;
 import org.pgpainless.exception.MessageNotIntegrityProtectedException;
 import org.pgpainless.exception.MissingDecryptionMethodException;
+import org.pgpainless.exception.MissingPassphraseException;
 import org.pgpainless.exception.SignatureValidationException;
 import org.pgpainless.exception.UnacceptableAlgorithmException;
 import org.pgpainless.implementation.ImplementationFactory;
@@ -60,6 +63,7 @@ import org.pgpainless.policy.Policy;
 import org.pgpainless.signature.SignatureUtils;
 import org.pgpainless.signature.consumer.OnePassSignatureCheck;
 import org.pgpainless.signature.consumer.SignatureCheck;
+import org.pgpainless.signature.consumer.SignatureValidator;
 import org.pgpainless.signature.consumer.SignatureVerifier;
 import org.pgpainless.util.ArmoredInputStreamFactory;
 import org.pgpainless.util.Passphrase;
@@ -127,8 +131,8 @@ public class OpenPgpMessageInputStream extends DecryptionStream {
     }
 
     protected OpenPgpMessageInputStream(@Nonnull InputStream inputStream,
-                                 @Nonnull Policy policy,
-                                 @Nonnull ConsumerOptions options) {
+                                        @Nonnull Policy policy,
+                                        @Nonnull ConsumerOptions options) {
         super(OpenPgpMetadata.getBuilder());
         this.policy = policy;
         this.options = options;
@@ -371,6 +375,7 @@ public class OpenPgpMessageInputStream extends DecryptionStream {
             }
         }
 
+        List<Tuple<PGPSecretKey, PGPPublicKeyEncryptedData>> postponedDueToMissingPassphrase = new ArrayList<>();
         // Try (known) secret keys
         for (PGPPublicKeyEncryptedData pkesk : esks.pkesks) {
             long keyId = pkesk.getKeyID();
@@ -378,7 +383,15 @@ public class OpenPgpMessageInputStream extends DecryptionStream {
             if (decryptionKeys == null) {
                 continue;
             }
+            PGPSecretKey secretKey = decryptionKeys.getSecretKey(keyId);
+
             SecretKeyRingProtector protector = options.getSecretKeyProtector(decryptionKeys);
+            // Postpone keys with missing passphrase
+            if (!protector.hasPassphraseFor(keyId)) {
+                postponedDueToMissingPassphrase.add(new Tuple<>(secretKey, pkesk));
+                continue;
+            }
+
             PGPSecretKey decryptionKey = decryptionKeys.getSecretKey(keyId);
             PGPPrivateKey privateKey = UnlockSecretKey.unlockSecretKey(decryptionKey, protector);
 
@@ -408,7 +421,12 @@ public class OpenPgpMessageInputStream extends DecryptionStream {
         // try anonymous secret keys
         for (PGPPublicKeyEncryptedData pkesk : esks.anonPkesks) {
             for (Tuple<PGPSecretKeyRing, PGPSecretKey> decryptionKeyCandidate : findPotentialDecryptionKeys(pkesk)) {
+                PGPSecretKey secretKey = decryptionKeyCandidate.getB();
                 SecretKeyRingProtector protector = options.getSecretKeyProtector(decryptionKeyCandidate.getA());
+                if (!protector.hasPassphraseFor(secretKey.getKeyID())) {
+                    postponedDueToMissingPassphrase.add(new Tuple<>(secretKey, pkesk));
+                    continue;
+                }
                 PGPPrivateKey privateKey = UnlockSecretKey.unlockSecretKey(decryptionKeyCandidate.getB(), protector);
                 PublicKeyDataDecryptorFactory decryptorFactory = ImplementationFactory.getInstance()
                         .getPublicKeyDataDecryptorFactory(privateKey);
@@ -433,8 +451,62 @@ public class OpenPgpMessageInputStream extends DecryptionStream {
             }
         }
 
+        if (options.getMissingKeyPassphraseStrategy() == MissingKeyPassphraseStrategy.THROW_EXCEPTION) {
+            // Non-interactive mode: Throw an exception with all locked decryption keys
+            Set<SubkeyIdentifier> keyIds = new HashSet<>();
+            for (Tuple<PGPSecretKey, PGPPublicKeyEncryptedData> k : postponedDueToMissingPassphrase) {
+                PGPSecretKey key = k.getA();
+                keyIds.add(new SubkeyIdentifier(getDecryptionKey(key.getKeyID()), key.getKeyID()));
+            }
+            if (!keyIds.isEmpty()) {
+                throw new MissingPassphraseException(keyIds);
+            }
+        } else if (options.getMissingKeyPassphraseStrategy() == MissingKeyPassphraseStrategy.INTERACTIVE) {
+            for (PGPPublicKeyEncryptedData pkesk : esks.pkesks) {
+                // Interactive mode: Fire protector callbacks to get passphrases interactively
+                for (Tuple<PGPSecretKey, PGPPublicKeyEncryptedData> missingPassphrases : postponedDueToMissingPassphrase) {
+                    PGPSecretKey secretKey = missingPassphrases.getA();
+                    long keyId = secretKey.getKeyID();
+                    PGPSecretKeyRing decryptionKey = getDecryptionKey(keyId);
+                    SecretKeyRingProtector protector = options.getSecretKeyProtector(decryptionKey);
+                    PGPPrivateKey privateKey = UnlockSecretKey.unlockSecretKey(secretKey, protector.getDecryptor(keyId));
+
+                    PublicKeyDataDecryptorFactory decryptorFactory = ImplementationFactory.getInstance()
+                            .getPublicKeyDataDecryptorFactory(privateKey);
+
+                    try {
+                        InputStream decrypted = pkesk.getDataStream(decryptorFactory);
+                        SessionKey sessionKey = new SessionKey(pkesk.getSessionKey(decryptorFactory));
+                        throwIfUnacceptable(sessionKey.getAlgorithm());
+
+                        MessageMetadata.EncryptedData encryptedData = new MessageMetadata.EncryptedData(
+                                SymmetricKeyAlgorithm.requireFromId(pkesk.getSymmetricAlgorithm(decryptorFactory)),
+                                metadata.depth + 1);
+                        encryptedData.decryptionKey = new SubkeyIdentifier(decryptionKey, keyId);
+                        encryptedData.sessionKey = sessionKey;
+
+                        IntegrityProtectedInputStream integrityProtected = new IntegrityProtectedInputStream(decrypted, pkesk, options);
+                        nestedInputStream = new OpenPgpMessageInputStream(buffer(integrityProtected), options, encryptedData, policy);
+                        return true;
+                    } catch (PGPException e) {
+                        // hm :/
+                    }
+                }
+            }
+        } else {
+            throw new IllegalStateException("Invalid PostponedKeysStrategy set in consumer options.");
+        }
+
         // we did not yet succeed in decrypting any session key :/
         return false;
+    }
+
+    private PGPSecretKey getDecryptionKey(PGPSecretKeyRing decryptionKeys, long keyId) {
+        KeyRingInfo info = PGPainless.inspectKeyRing(decryptionKeys);
+        if (info.getEncryptionSubkeys(EncryptionPurpose.ANY).contains(info.getPublicKey(keyId))) {
+            return info.getSecretKey(keyId);
+        }
+        return null;
     }
 
     private void throwIfUnacceptable(SymmetricKeyAlgorithm algorithm)
@@ -497,10 +569,12 @@ public class OpenPgpMessageInputStream extends DecryptionStream {
             collectMetadata();
             nestedInputStream = null;
 
-            try {
-                consumePackets();
-            } catch (PGPException e) {
-                throw new RuntimeException(e);
+            if (packetInputStream != null) {
+                try {
+                    consumePackets();
+                } catch (PGPException e) {
+                    throw new RuntimeException(e);
+                }
             }
             signatures.finish(metadata, policy);
         }
@@ -512,23 +586,26 @@ public class OpenPgpMessageInputStream extends DecryptionStream {
             throws IOException {
 
         if (nestedInputStream == null) {
-            automaton.assertValid();
+            if (packetInputStream != null) {
+                automaton.assertValid();
+            }
             return -1;
         }
 
         int r = nestedInputStream.read(b, off, len);
         if (r != -1) {
             signatures.updateLiteral(b, off, r);
-        }
-        else  {
+        } else  {
             nestedInputStream.close();
             collectMetadata();
             nestedInputStream = null;
 
-            try {
-                consumePackets();
-            } catch (PGPException e) {
-                throw new RuntimeException(e);
+            if (packetInputStream != null) {
+                try {
+                    consumePackets();
+                } catch (PGPException e) {
+                    throw new RuntimeException(e);
+                }
             }
             signatures.finish(metadata, policy);
         }
@@ -539,7 +616,9 @@ public class OpenPgpMessageInputStream extends DecryptionStream {
     public void close() throws IOException {
         super.close();
         if (closed) {
-            automaton.assertValid();
+            if (packetInputStream != null) {
+                automaton.assertValid();
+            }
             return;
         }
 
@@ -555,9 +634,11 @@ public class OpenPgpMessageInputStream extends DecryptionStream {
             throw new RuntimeException(e);
         }
 
-        automaton.next(InputAlphabet.EndOfSequence);
-        automaton.assertValid();
-        packetInputStream.close();
+        if (packetInputStream != null) {
+            automaton.next(InputAlphabet.EndOfSequence);
+            automaton.assertValid();
+            packetInputStream.close();
+        }
         closed = true;
     }
 
@@ -734,6 +815,8 @@ public class OpenPgpMessageInputStream extends DecryptionStream {
                         new SubkeyIdentifier(onePassSignature.getVerificationKeys(), onePassSignature.getOnePassSignature().getKeyID()));
 
                 try {
+                    SignatureValidator.signatureWasCreatedInBounds(options.getVerifyNotBefore(), options.getVerifyNotAfter())
+                            .verify(signature);
                     SignatureVerifier.verifyOnePassSignature(signature, onePassSignature.getVerificationKeys().getPublicKey(signature.getKeyID()), onePassSignature, policy);
                     layer.addVerifiedOnePassSignature(verification);
                 } catch (SignatureValidationException e) {
@@ -835,6 +918,8 @@ public class OpenPgpMessageInputStream extends DecryptionStream {
             for (SignatureCheck detached : detachedSignatures) {
                 SignatureVerification verification = new SignatureVerification(detached.getSignature(), detached.getSigningKeyIdentifier());
                 try {
+                    SignatureValidator.signatureWasCreatedInBounds(options.getVerifyNotBefore(), options.getVerifyNotAfter())
+                            .verify(detached.getSignature());
                     SignatureVerifier.verifyInitializedSignature(
                             detached.getSignature(),
                             detached.getSigningKeyRing().getPublicKey(detached.getSigningKeyIdentifier().getKeyId()),
@@ -848,6 +933,8 @@ public class OpenPgpMessageInputStream extends DecryptionStream {
             for (SignatureCheck prepended : prependedSignatures) {
                 SignatureVerification verification = new SignatureVerification(prepended.getSignature(), prepended.getSigningKeyIdentifier());
                 try {
+                    SignatureValidator.signatureWasCreatedInBounds(options.getVerifyNotBefore(), options.getVerifyNotAfter())
+                            .verify(prepended.getSignature());
                     SignatureVerifier.verifyInitializedSignature(
                             prepended.getSignature(),
                             prepended.getSigningKeyRing().getPublicKey(prepended.getSigningKeyIdentifier().getKeyId()),
