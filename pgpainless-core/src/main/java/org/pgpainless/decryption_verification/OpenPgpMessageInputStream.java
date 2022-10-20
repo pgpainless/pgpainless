@@ -480,7 +480,10 @@ public class OpenPgpMessageInputStream extends DecryptionStream {
         return false;
     }
 
-    private boolean decryptPKESKAndStream(SubkeyIdentifier subkeyIdentifier, PublicKeyDataDecryptorFactory decryptorFactory, PGPPublicKeyEncryptedData pkesk) throws IOException {
+    private boolean decryptPKESKAndStream(SubkeyIdentifier subkeyIdentifier,
+                                          PublicKeyDataDecryptorFactory decryptorFactory,
+                                          PGPPublicKeyEncryptedData pkesk)
+            throws IOException, UnacceptableAlgorithmException {
         try {
             InputStream decrypted = pkesk.getDataStream(decryptorFactory);
             SessionKey sessionKey = new SessionKey(pkesk.getSessionKey(decryptorFactory));
@@ -495,6 +498,8 @@ public class OpenPgpMessageInputStream extends DecryptionStream {
             IntegrityProtectedInputStream integrityProtected = new IntegrityProtectedInputStream(decrypted, pkesk, options);
             nestedInputStream = new OpenPgpMessageInputStream(buffer(integrityProtected), options, encryptedData, policy);
             return true;
+        } catch (UnacceptableAlgorithmException e) {
+            throw e;
         } catch (PGPException e) {
 
         }
