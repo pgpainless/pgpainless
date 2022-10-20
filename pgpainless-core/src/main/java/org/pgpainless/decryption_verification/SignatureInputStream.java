@@ -22,7 +22,7 @@ import org.pgpainless.PGPainless;
 import org.pgpainless.exception.SignatureValidationException;
 import org.pgpainless.policy.Policy;
 import org.pgpainless.signature.consumer.CertificateValidator;
-import org.pgpainless.signature.consumer.DetachedSignatureCheck;
+import org.pgpainless.signature.consumer.SignatureCheck;
 import org.pgpainless.signature.consumer.OnePassSignatureCheck;
 import org.pgpainless.signature.SignatureUtils;
 import org.slf4j.Logger;
@@ -41,7 +41,7 @@ public abstract class SignatureInputStream extends FilterInputStream {
         private final PGPObjectFactory objectFactory;
         private final List<OnePassSignatureCheck> opSignatures;
         private final Map<Long, OnePassSignatureCheck> opSignaturesWithMissingCert;
-        private final List<DetachedSignatureCheck> detachedSignatures;
+        private final List<SignatureCheck> detachedSignatures;
         private final ConsumerOptions options;
         private final OpenPgpMetadata.Builder resultBuilder;
 
@@ -50,7 +50,7 @@ public abstract class SignatureInputStream extends FilterInputStream {
                 @Nullable PGPObjectFactory objectFactory,
                 List<OnePassSignatureCheck> opSignatures,
                 Map<Long, OnePassSignatureCheck> onePassSignaturesWithMissingCert,
-                List<DetachedSignatureCheck> detachedSignatures,
+                List<SignatureCheck> detachedSignatures,
                 ConsumerOptions options,
                 OpenPgpMetadata.Builder resultBuilder) {
             super(literalDataStream);
@@ -170,7 +170,7 @@ public abstract class SignatureInputStream extends FilterInputStream {
 
         private void verifyDetachedSignatures() {
             Policy policy = PGPainless.getPolicy();
-            for (DetachedSignatureCheck s : detachedSignatures) {
+            for (SignatureCheck s : detachedSignatures) {
                 try {
                     signatureWasCreatedInBounds(options.getVerifyNotBefore(),
                             options.getVerifyNotAfter()).verify(s.getSignature());
@@ -200,13 +200,13 @@ public abstract class SignatureInputStream extends FilterInputStream {
         }
 
         private void updateDetachedSignatures(byte b) {
-            for (DetachedSignatureCheck detachedSignature : detachedSignatures) {
+            for (SignatureCheck detachedSignature : detachedSignatures) {
                 detachedSignature.getSignature().update(b);
             }
         }
 
         private void updateDetachedSignatures(byte[] b, int off, int read) {
-            for (DetachedSignatureCheck detachedSignature : detachedSignatures) {
+            for (SignatureCheck detachedSignature : detachedSignatures) {
                 detachedSignature.getSignature().update(b, off, read);
             }
         }
