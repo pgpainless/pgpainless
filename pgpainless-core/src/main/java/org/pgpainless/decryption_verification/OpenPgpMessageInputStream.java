@@ -37,6 +37,8 @@ import org.bouncycastle.openpgp.operator.PBEDataDecryptorFactory;
 import org.bouncycastle.openpgp.operator.PGPContentVerifierBuilderProvider;
 import org.bouncycastle.openpgp.operator.PublicKeyDataDecryptorFactory;
 import org.bouncycastle.openpgp.operator.SessionKeyDataDecryptorFactory;
+import org.bouncycastle.util.io.Streams;
+import org.bouncycastle.util.io.TeeInputStream;
 import org.pgpainless.PGPainless;
 import org.pgpainless.algorithm.CompressionAlgorithm;
 import org.pgpainless.algorithm.EncryptionPurpose;
@@ -79,32 +81,87 @@ public class OpenPgpMessageInputStream extends DecryptionStream {
 
     // Options to consume the data
     protected final ConsumerOptions options;
+
+    private final Policy policy;
     // Pushdown Automaton to verify validity of OpenPGP packet sequence in an OpenPGP message
     protected final PDA syntaxVerifier = new PDA();
     // InputStream of OpenPGP packets
     protected TeeBCPGInputStream packetInputStream;
-    // InputStream of a nested data packet
+    // InputStream of a data packet containing nested data
     protected InputStream nestedInputStream;
 
     private boolean closed = false;
 
     private final Signatures signatures;
     private final MessageMetadata.Layer metadata;
-    private final Policy policy;
 
-    public OpenPgpMessageInputStream(@Nonnull InputStream inputStream,
+    /**
+     * Create an {@link OpenPgpMessageInputStream} suitable for decryption and verification of
+     * OpenPGP messages and signatures.
+     * This constructor will use the global PGPainless {@link Policy}.
+     *
+     * @param inputStream underlying input stream
+     * @param options options for consuming the stream
+     *
+     * @throws IOException in case of an IO error
+     * @throws PGPException in case of an OpenPGP error
+     */
+    public static OpenPgpMessageInputStream create(@Nonnull InputStream inputStream,
                                      @Nonnull ConsumerOptions options)
             throws IOException, PGPException {
-        this(inputStream, options, PGPainless.getPolicy());
+        return create(inputStream, options, PGPainless.getPolicy());
     }
 
-    public OpenPgpMessageInputStream(@Nonnull InputStream inputStream,
+    /**
+     * Create an {@link OpenPgpMessageInputStream} suitable for decryption and verification of
+     * OpenPGP messages and signatures.
+     *
+     * @param inputStream underlying input stream containing the OpenPGP message
+     * @param options options for consuming the message
+     * @param policy policy for acceptable algorithms etc.
+     *
+     * @throws PGPException in case of an OpenPGP error
+     * @throws IOException in case of an IO error
+     */
+    public static OpenPgpMessageInputStream create(@Nonnull InputStream inputStream,
                                      @Nonnull ConsumerOptions options,
                                      @Nonnull Policy policy)
             throws PGPException, IOException {
-        this(
-                prepareInputStream(inputStream, options, policy),
-                options, new MessageMetadata.Message(), policy);
+        return create(inputStream, options, new MessageMetadata.Message(), policy);
+    }
+
+    protected static OpenPgpMessageInputStream create(@Nonnull InputStream inputStream,
+                                                      @Nonnull ConsumerOptions options,
+                                                      @Nonnull MessageMetadata.Layer metadata,
+                                                      @Nonnull Policy policy)
+            throws IOException, PGPException {
+        OpenPgpInputStream openPgpIn = new OpenPgpInputStream(inputStream);
+        openPgpIn.reset();
+
+        if (openPgpIn.isNonOpenPgp() || options.isForceNonOpenPgpData()) {
+            return new OpenPgpMessageInputStream(Type.non_openpgp,
+                    openPgpIn, options, metadata, policy);
+        }
+
+        if (openPgpIn.isBinaryOpenPgp()) {
+            // Simply consume OpenPGP message
+            return new OpenPgpMessageInputStream(Type.standard,
+                    openPgpIn, options, metadata, policy);
+        }
+
+        if (openPgpIn.isAsciiArmored()) {
+            ArmoredInputStream armorIn = ArmoredInputStreamFactory.get(openPgpIn);
+            if (armorIn.isClearText()) {
+                return new OpenPgpMessageInputStream(Type.cleartext_signed,
+                        armorIn, options, metadata, policy);
+            } else {
+                // Simply consume dearmored OpenPGP message
+                return new OpenPgpMessageInputStream(Type.standard,
+                        armorIn, options, metadata, policy);
+            }
+        } else {
+            throw new AssertionError("Huh?");
+        }
     }
 
     protected OpenPgpMessageInputStream(@Nonnull InputStream inputStream,
@@ -131,50 +188,54 @@ public class OpenPgpMessageInputStream extends DecryptionStream {
         consumePackets();
     }
 
-    protected OpenPgpMessageInputStream(@Nonnull InputStream inputStream,
-                                        @Nonnull Policy policy,
-                                        @Nonnull ConsumerOptions options) {
+    enum Type {
+        standard,
+        cleartext_signed,
+        non_openpgp
+    }
+
+    protected OpenPgpMessageInputStream(@Nonnull Type type,
+                                        @Nonnull InputStream inputStream,
+                                        @Nonnull ConsumerOptions options,
+                                        @Nonnull MessageMetadata.Layer metadata,
+                                        @Nonnull Policy policy) throws PGPException, IOException {
         super(OpenPgpMetadata.getBuilder());
         this.policy = policy;
         this.options = options;
-        this.metadata = new MessageMetadata.Message();
+        this.metadata = metadata;
         this.signatures = new Signatures(options);
-        this.signatures.addDetachedSignatures(options.getDetachedSignatures());
-        this.packetInputStream = new TeeBCPGInputStream(BCPGInputStream.wrap(inputStream), signatures);
-    }
 
-    private static InputStream prepareInputStream(InputStream inputStream, ConsumerOptions options, Policy policy)
-            throws IOException, PGPException {
-        OpenPgpInputStream openPgpIn = new OpenPgpInputStream(inputStream);
-        openPgpIn.reset();
-
-        if (openPgpIn.isBinaryOpenPgp()) {
-            return openPgpIn;
+        if (metadata instanceof MessageMetadata.Message) {
+            this.signatures.addDetachedSignatures(options.getDetachedSignatures());
         }
 
-        if (openPgpIn.isAsciiArmored()) {
-            ArmoredInputStream armorIn = ArmoredInputStreamFactory.get(openPgpIn);
-            if (armorIn.isClearText()) {
-                return parseCleartextSignedMessage(armorIn, options, policy);
-            } else {
-                return armorIn;
-            }
-        } else {
-            return openPgpIn;
+        switch (type) {
+            case standard:
+                // tee out packet bytes for signature verification
+                packetInputStream = new TeeBCPGInputStream(BCPGInputStream.wrap(inputStream), this.signatures);
+
+                // *omnomnom*
+                consumePackets();
+                break;
+            case cleartext_signed:
+                MultiPassStrategy multiPassStrategy = options.getMultiPassStrategy();
+                PGPSignatureList detachedSignatures = ClearsignedMessageUtil
+                        .detachSignaturesFromInbandClearsignedMessage(
+                                inputStream, multiPassStrategy.getMessageOutputStream());
+
+                for (PGPSignature signature : detachedSignatures) {
+                    options.addVerificationOfDetachedSignature(signature);
+                }
+
+                options.forceNonOpenPgpData();
+                packetInputStream = null;
+                nestedInputStream = new TeeInputStream(multiPassStrategy.getMessageInputStream(), this.signatures);
+                break;
+            case non_openpgp:
+                packetInputStream = null;
+                nestedInputStream = new TeeInputStream(inputStream, this.signatures);
+                break;
         }
-    }
-
-    private static DecryptionStream parseCleartextSignedMessage(ArmoredInputStream armorIn, ConsumerOptions options, Policy policy)
-            throws IOException, PGPException {
-        MultiPassStrategy multiPassStrategy = options.getMultiPassStrategy();
-        PGPSignatureList signatures = ClearsignedMessageUtil.detachSignaturesFromInbandClearsignedMessage(armorIn, multiPassStrategy.getMessageOutputStream());
-
-        for (PGPSignature signature : signatures) {
-            options.addVerificationOfDetachedSignature(signature);
-        }
-
-        options.forceNonOpenPgpData();
-        return new OpenPgpMessageInputStream(multiPassStrategy.getMessageInputStream(), policy, options);
     }
 
     /**
@@ -196,6 +257,9 @@ public class OpenPgpMessageInputStream extends DecryptionStream {
     private void consumePackets()
             throws IOException, PGPException {
         OpenPgpPacket nextPacket;
+        if (packetInputStream == null) {
+            return;
+        }
 
         loop: // we break this when we go deeper.
         while ((nextPacket = packetInputStream.nextPacketTag()) != null) {
