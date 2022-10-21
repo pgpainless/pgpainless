@@ -4,6 +4,11 @@
 
 package org.pgpainless.decryption_verification;
 
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.OutputStream;
+import java.util.NoSuchElementException;
+
 import org.bouncycastle.bcpg.BCPGInputStream;
 import org.bouncycastle.bcpg.MarkerPacket;
 import org.bouncycastle.bcpg.Packet;
@@ -14,11 +19,6 @@ import org.bouncycastle.openpgp.PGPLiteralData;
 import org.bouncycastle.openpgp.PGPOnePassSignature;
 import org.bouncycastle.openpgp.PGPSignature;
 import org.pgpainless.algorithm.OpenPgpPacket;
-
-import java.io.IOException;
-import java.io.InputStream;
-import java.io.OutputStream;
-import java.util.NoSuchElementException;
 
 /**
  * Since we need to update signatures with data from the underlying stream, this class is used to tee out the data.
@@ -96,7 +96,6 @@ public class TeeBCPGInputStream {
         return markerPacket;
     }
 
-
     public void close() throws IOException {
         this.packetInputStream.close();
         this.delayedTee.close();
@@ -122,6 +121,9 @@ public class TeeBCPGInputStream {
                 last = inputStream.read();
                 return last;
             } catch (IOException e) {
+                if ("crc check failed in armored message.".equals(e.getMessage())) {
+                    throw e;
+                }
                 return -1;
             }
         }
