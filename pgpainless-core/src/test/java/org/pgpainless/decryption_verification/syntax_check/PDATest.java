@@ -74,6 +74,42 @@ public class PDATest {
     }
 
     @Test
+    public void testOPSSignedEncryptedMessageIsValid() {
+        PDA check = new PDA();
+        check.next(InputAlphabet.OnePassSignature);
+        check.next(InputAlphabet.EncryptedData);
+        check.next(InputAlphabet.Signature);
+        check.next(InputAlphabet.EndOfSequence);
+        assertTrue(check.isValid());
+    }
+
+    @Test
+    public void anyInputAfterEOSIsNotValid() {
+        PDA check = new PDA();
+        check.next(InputAlphabet.LiteralData);
+        check.next(InputAlphabet.EndOfSequence);
+        assertThrows(MalformedOpenPgpMessageException.class,
+                () -> check.next(InputAlphabet.Signature));
+    }
+
+    @Test
+    public void testEncryptedMessageWithAppendedStandalongSigIsNotValid() {
+        PDA check = new PDA();
+        check.next(InputAlphabet.EncryptedData);
+        assertThrows(MalformedOpenPgpMessageException.class,
+                () -> check.next(InputAlphabet.Signature));
+    }
+
+    @Test
+    public void testOPSSignedEncryptedMessageWithMissingSigIsNotValid() {
+        PDA check = new PDA();
+        check.next(InputAlphabet.OnePassSignature);
+        check.next(InputAlphabet.EncryptedData);
+        assertThrows(MalformedOpenPgpMessageException.class,
+                () -> check.next(InputAlphabet.EndOfSequence));
+    }
+
+    @Test
     public void testTwoLiteralDataIsNotValid() {
         PDA check = new PDA();
         check.next(InputAlphabet.LiteralData);
@@ -87,6 +123,48 @@ public class PDATest {
         check.next(InputAlphabet.LiteralData);
         assertThrows(MalformedOpenPgpMessageException.class,
                 () -> check.next(InputAlphabet.Signature));
+    }
+
+    @Test
+    public void testOPSAloneIsNotValid() {
+        PDA check = new PDA();
+        check.next(InputAlphabet.OnePassSignature);
+        assertThrows(MalformedOpenPgpMessageException.class,
+                () -> check.next(InputAlphabet.EndOfSequence));
+    }
+
+    @Test
+    public void testOPSLitWithMissingSigIsNotValid() {
+        PDA check = new PDA();
+        check.next(InputAlphabet.OnePassSignature);
+        check.next(InputAlphabet.LiteralData);
+        assertThrows(MalformedOpenPgpMessageException.class,
+                () -> check.next(InputAlphabet.EndOfSequence));
+    }
+
+    @Test
+    public void testCompressedMessageWithStandalongAppendedSigIsNotValid() {
+        PDA check = new PDA();
+        check.next(InputAlphabet.CompressedData);
+        assertThrows(MalformedOpenPgpMessageException.class,
+                () -> check.next(InputAlphabet.Signature));
+    }
+
+    @Test
+    public void testOPSCompressedDataWithMissingSigIsNotValid() {
+        PDA check = new PDA();
+        check.next(InputAlphabet.OnePassSignature);
+        check.next(InputAlphabet.CompressedData);
+        assertThrows(MalformedOpenPgpMessageException.class,
+                () -> check.next(InputAlphabet.EndOfSequence));
+    }
+
+    @Test
+    public void testCompressedMessageFollowedByTrailingLiteralDataIsNotValid() {
+        PDA check = new PDA();
+        check.next(InputAlphabet.CompressedData);
+        assertThrows(MalformedOpenPgpMessageException.class,
+                () -> check.next(InputAlphabet.LiteralData));
     }
 
     @Test
