@@ -31,7 +31,7 @@ public class DecryptionBuilder implements DecryptionBuilderInterface {
                 throw new IllegalArgumentException("Consumer options cannot be null.");
             }
 
-            return DecryptionStreamFactory.create(inputStream, consumerOptions);
+            return OpenPgpMessageInputStream.create(inputStream, consumerOptions);
         }
     }
 }

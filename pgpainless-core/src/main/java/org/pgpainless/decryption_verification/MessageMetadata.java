@@ -164,19 +164,35 @@ public class MessageMetadata {
     }
 
     public String getFilename() {
-        return findLiteralData().getFileName();
+        LiteralData literalData = findLiteralData();
+        if (literalData == null) {
+            return null;
+        }
+        return literalData.getFileName();
     }
 
     public Date getModificationDate() {
-        return findLiteralData().getModificationDate();
+        LiteralData literalData = findLiteralData();
+        if (literalData == null) {
+            return null;
+        }
+        return literalData.getModificationDate();
     }
 
     public StreamEncoding getFormat() {
-        return findLiteralData().getFormat();
+        LiteralData literalData = findLiteralData();
+        if (literalData == null) {
+            return null;
+        }
+        return literalData.getFormat();
     }
 
     private LiteralData findLiteralData() {
         Nested nested = message.child;
+        if (nested == null) {
+            return null;
+        }
+
         while (nested.hasNestedChild()) {
             Layer layer = (Layer) nested;
             nested = layer.child;
