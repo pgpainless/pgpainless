@@ -11,12 +11,17 @@ import javax.annotation.Nonnull;
 import org.bouncycastle.openpgp.PGPEncryptedData;
 import org.bouncycastle.openpgp.PGPException;
 import org.pgpainless.exception.ModificationDetectionException;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 public class IntegrityProtectedInputStream extends InputStream {
+
+    private static final Logger LOGGER = LoggerFactory.getLogger(IntegrityProtectedInputStream.class);
 
     private final InputStream inputStream;
     private final PGPEncryptedData encryptedData;
     private final ConsumerOptions options;
+    private boolean closed = false;
 
     public IntegrityProtectedInputStream(InputStream inputStream, PGPEncryptedData encryptedData, ConsumerOptions options) {
         this.inputStream = inputStream;
@@ -36,11 +41,17 @@ public class IntegrityProtectedInputStream extends InputStream {
 
     @Override
     public void close() throws IOException {
+        if (closed) {
+            return;
+        }
+        closed = true;
+
         if (encryptedData.isIntegrityProtected() && !options.isIgnoreMDCErrors()) {
             try {
                 if (!encryptedData.verify()) {
                     throw new ModificationDetectionException();
                 }
+                LOGGER.debug("Integrity Protection check passed");
             } catch (PGPException e) {
                 throw new IOException("Failed to verify integrity protection", e);
             }
