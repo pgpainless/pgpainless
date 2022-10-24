@@ -18,6 +18,7 @@ import javax.annotation.Nonnull;
 
 import org.bouncycastle.bcpg.ArmoredInputStream;
 import org.bouncycastle.bcpg.BCPGInputStream;
+import org.bouncycastle.bcpg.UnsupportedPacketVersionException;
 import org.bouncycastle.openpgp.PGPCompressedData;
 import org.bouncycastle.openpgp.PGPEncryptedData;
 import org.bouncycastle.openpgp.PGPEncryptedDataList;
@@ -366,7 +367,13 @@ public class OpenPgpMessageInputStream extends DecryptionStream {
         // true if Signature corresponds to OnePassSignature
         boolean isSigForOPS = syntaxVerifier.peekStack() == StackAlphabet.ops;
         syntaxVerifier.next(InputAlphabet.Signature);
-        PGPSignature signature = packetInputStream.readSignature();
+        PGPSignature signature;
+        try {
+            signature = packetInputStream.readSignature();
+        } catch (UnsupportedPacketVersionException e) {
+            LOGGER.debug("Unsupported Signature at depth " + metadata.depth + " encountered.", e);
+            return;
+        }
         long keyId = SignatureUtils.determineIssuerKeyId(signature);
         if (isSigForOPS) {
             LOGGER.debug("Signature Packet corresponding to One-Pass-Signature by key " +
