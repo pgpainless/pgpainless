@@ -144,6 +144,17 @@ public final class KeyRingUtils {
         return secretKey;
     }
 
+    @Nonnull
+    public static PGPPublicKeyRing publicKeys(@Nonnull PGPKeyRing keys) {
+        if (keys instanceof PGPPublicKeyRing) {
+            return (PGPPublicKeyRing) keys;
+        } else if (keys instanceof PGPSecretKeyRing) {
+            return publicKeyRingFrom((PGPSecretKeyRing) keys);
+        } else {
+            throw new IllegalArgumentException("Unknown keys class: " + keys.getClass().getName());
+        }
+    }
+
     /**
      * Extract a {@link PGPPublicKeyRing} containing all public keys from the provided {@link PGPSecretKeyRing}.
      *
