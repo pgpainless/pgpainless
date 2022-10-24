@@ -9,6 +9,7 @@ import java.io.InputStream;
 import java.io.OutputStream;
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Date;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
@@ -60,12 +61,13 @@ import org.pgpainless.key.info.KeyRingInfo;
 import org.pgpainless.key.protection.SecretKeyRingProtector;
 import org.pgpainless.key.protection.UnlockSecretKey;
 import org.pgpainless.key.util.KeyIdUtil;
+import org.pgpainless.key.util.KeyRingUtils;
 import org.pgpainless.policy.Policy;
 import org.pgpainless.signature.SignatureUtils;
+import org.pgpainless.signature.consumer.CertificateValidator;
 import org.pgpainless.signature.consumer.OnePassSignatureCheck;
 import org.pgpainless.signature.consumer.SignatureCheck;
 import org.pgpainless.signature.consumer.SignatureValidator;
-import org.pgpainless.signature.consumer.SignatureVerifier;
 import org.pgpainless.util.ArmoredInputStreamFactory;
 import org.pgpainless.util.Passphrase;
 import org.pgpainless.util.SessionKey;
@@ -654,7 +656,16 @@ public class OpenPgpMessageInputStream extends DecryptionStream {
             if (decryptionKey == null) {
                 continue;
             }
-            return secretKeys;
+            
+            KeyRingInfo info = new KeyRingInfo(secretKeys, policy, new Date());
+            List<PGPPublicKey> encryptionKeys = info.getEncryptionSubkeys(EncryptionPurpose.ANY);
+            for (PGPPublicKey key : encryptionKeys) {
+                if (key.getKeyID() == keyID) {
+                    return secretKeys;
+                }
+            }
+
+            LOGGER.debug("Subkey " + Long.toHexString(keyID) + " cannot be used for decryption.");
         }
         return null;
     }
@@ -951,8 +962,8 @@ public class OpenPgpMessageInputStream extends DecryptionStream {
 
                 try {
                     SignatureValidator.signatureWasCreatedInBounds(options.getVerifyNotBefore(), options.getVerifyNotAfter())
-                            .verify(signature);
-                    SignatureVerifier.verifyOnePassSignature(signature, onePassSignature.getVerificationKeys().getPublicKey(signature.getKeyID()), onePassSignature, policy);
+                        .verify(signature);
+                    CertificateValidator.validateCertificateAndVerifyOnePassSignature(onePassSignature, policy);
                     LOGGER.debug("Acceptable signature by key " + verification.getSigningKey());
                     layer.addVerifiedOnePassSignature(verification);
                 } catch (SignatureValidationException e) {
@@ -1068,10 +1079,8 @@ public class OpenPgpMessageInputStream extends DecryptionStream {
                 try {
                     SignatureValidator.signatureWasCreatedInBounds(options.getVerifyNotBefore(), options.getVerifyNotAfter())
                             .verify(detached.getSignature());
-                    SignatureVerifier.verifyInitializedSignature(
-                            detached.getSignature(),
-                            detached.getSigningKeyRing().getPublicKey(detached.getSigningKeyIdentifier().getKeyId()),
-                            policy, detached.getSignature().getCreationTime());
+                    CertificateValidator.validateCertificateAndVerifyInitializedSignature(
+                            detached.getSignature(), KeyRingUtils.publicKeys(detached.getSigningKeyRing()), policy);
                     LOGGER.debug("Acceptable signature by key " + verification.getSigningKey());
                     layer.addVerifiedDetachedSignature(verification);
                 } catch (SignatureValidationException e) {
@@ -1085,10 +1094,8 @@ public class OpenPgpMessageInputStream extends DecryptionStream {
                 try {
                     SignatureValidator.signatureWasCreatedInBounds(options.getVerifyNotBefore(), options.getVerifyNotAfter())
                             .verify(prepended.getSignature());
-                    SignatureVerifier.verifyInitializedSignature(
-                            prepended.getSignature(),
-                            prepended.getSigningKeyRing().getPublicKey(prepended.getSigningKeyIdentifier().getKeyId()),
-                            policy, prepended.getSignature().getCreationTime());
+                    CertificateValidator.validateCertificateAndVerifyInitializedSignature(
+                            prepended.getSignature(), KeyRingUtils.publicKeys(prepended.getSigningKeyRing()), policy);
                     LOGGER.debug("Acceptable signature by key " + verification.getSigningKey());
                     layer.addVerifiedPrependedSignature(verification);
                 } catch (SignatureValidationException e) {
