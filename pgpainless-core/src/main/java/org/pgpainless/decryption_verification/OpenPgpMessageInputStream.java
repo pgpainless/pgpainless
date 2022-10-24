@@ -656,7 +656,7 @@ public class OpenPgpMessageInputStream extends DecryptionStream {
             if (decryptionKey == null) {
                 continue;
             }
-            
+
             KeyRingInfo info = new KeyRingInfo(secretKeys, policy, new Date());
             List<PGPPublicKey> encryptionKeys = info.getEncryptionSubkeys(EncryptionPurpose.ANY);
             for (PGPPublicKey key : encryptionKeys) {

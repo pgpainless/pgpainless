@@ -19,6 +19,7 @@ import org.pgpainless.decryption_verification.ConsumerOptions;
 import org.pgpainless.decryption_verification.DecryptionStream;
 import org.pgpainless.decryption_verification.OpenPgpMetadata;
 import org.pgpainless.decryption_verification.SignatureVerification;
+import org.pgpainless.exception.MalformedOpenPgpMessageException;
 import org.pgpainless.exception.MissingDecryptionMethodException;
 import sop.ReadyWithResult;
 import sop.Verification;
@@ -82,7 +83,7 @@ public class InlineVerifyImpl implements InlineVerify {
                     return verificationList;
                 } catch (MissingDecryptionMethodException e) {
                     throw new SOPGPException.BadData("Cannot verify encrypted message.", e);
-                } catch (PGPException e) {
+                } catch (MalformedOpenPgpMessageException | PGPException e) {
                     throw new SOPGPException.BadData(e);
                 }
             }
