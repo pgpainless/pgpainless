@@ -18,6 +18,7 @@ import org.pgpainless.decryption_verification.ConsumerOptions;
 import org.pgpainless.decryption_verification.DecryptionStream;
 import org.pgpainless.decryption_verification.OpenPgpMetadata;
 import org.pgpainless.decryption_verification.SignatureVerification;
+import org.pgpainless.exception.MalformedOpenPgpMessageException;
 import sop.Verification;
 import sop.exception.SOPGPException;
 import sop.operation.DetachedVerify;
@@ -82,7 +83,7 @@ public class DetachedVerifyImpl implements DetachedVerify {
             }
 
             return verificationList;
-        } catch (PGPException e) {
+        } catch (MalformedOpenPgpMessageException | PGPException e) {
             throw new SOPGPException.BadData(e);
         }
     }
