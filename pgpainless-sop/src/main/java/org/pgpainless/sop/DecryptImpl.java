@@ -23,6 +23,7 @@ import org.pgpainless.decryption_verification.ConsumerOptions;
 import org.pgpainless.decryption_verification.DecryptionStream;
 import org.pgpainless.decryption_verification.OpenPgpMetadata;
 import org.pgpainless.decryption_verification.SignatureVerification;
+import org.pgpainless.exception.MalformedOpenPgpMessageException;
 import org.pgpainless.exception.MissingDecryptionMethodException;
 import org.pgpainless.exception.WrongPassphraseException;
 import org.pgpainless.util.Passphrase;
@@ -135,7 +136,7 @@ public class DecryptImpl implements Decrypt {
             throw new SOPGPException.CannotDecrypt();
         } catch (WrongPassphraseException e) {
             throw new SOPGPException.KeyIsProtected();
-        } catch (PGPException | IOException e) {
+        } catch (MalformedOpenPgpMessageException | PGPException | IOException e) {
             throw new SOPGPException.BadData(e);
         } finally {
             // Forget passphrases after decryption
