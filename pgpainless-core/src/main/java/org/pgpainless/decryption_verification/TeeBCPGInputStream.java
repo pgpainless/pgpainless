@@ -98,7 +98,6 @@ public class TeeBCPGInputStream {
 
     public void close() throws IOException {
         this.packetInputStream.close();
-        this.delayedTee.close();
     }
 
     public static class DelayedTeeInputStreamInputStream extends InputStream {
