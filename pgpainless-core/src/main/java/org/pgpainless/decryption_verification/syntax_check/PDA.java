@@ -16,7 +16,6 @@ import static org.pgpainless.decryption_verification.syntax_check.StackAlphabet.
 
 public class PDA {
 
-    private static int ID = 0;
     private static final Logger LOGGER = LoggerFactory.getLogger(PDA.class);
 
     /**
@@ -171,13 +170,11 @@ public class PDA {
 
     private final Stack<StackAlphabet> stack = new Stack<>();
     private State state;
-    private int id;
 
     public PDA() {
         state = State.OpenPgpMessage;
         stack.push(terminus);
         stack.push(msg);
-        this.id = ID++;
     }
 
     public void next(InputAlphabet input) throws MalformedOpenPgpMessageException {
@@ -240,6 +237,6 @@ public class PDA {
 
     @Override
     public String toString() {
-        return "PDA " + id + ": State: " + state + " Stack: " + stack;
+        return "State: " + state + " Stack: " + stack;
     }
 }
