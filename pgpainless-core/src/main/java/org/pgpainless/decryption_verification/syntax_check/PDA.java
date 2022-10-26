@@ -8,6 +8,9 @@ import org.pgpainless.exception.MalformedOpenPgpMessageException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.List;
 import java.util.Stack;
 
 import static org.pgpainless.decryption_verification.syntax_check.StackAlphabet.msg;
@@ -169,6 +172,7 @@ public class PDA {
     }
 
     private final Stack<StackAlphabet> stack = new Stack<>();
+    private final List<InputAlphabet> inputs = new ArrayList<>(); // keep track of inputs for debugging / error reporting
     private State state;
 
     public PDA() {
@@ -180,9 +184,12 @@ public class PDA {
     public void next(InputAlphabet input) throws MalformedOpenPgpMessageException {
         try {
             state = state.transition(input, this);
+            inputs.add(input);
         } catch (MalformedOpenPgpMessageException e) {
-            LOGGER.debug("Unexpected Packet or Token '" + input + "' encountered. Message is malformed.", e);
-            throw e;
+            MalformedOpenPgpMessageException wrapped = new MalformedOpenPgpMessageException("Malformed message: After reading stream " + Arrays.toString(inputs.toArray()) +
+                    ", token '" + input + "' is unexpected and illegal.", e);
+            LOGGER.debug("Invalid input '" + input + "'", wrapped);
+            throw wrapped;
         }
     }
 
