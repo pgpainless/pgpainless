@@ -21,6 +21,10 @@ public class MalformedOpenPgpMessageException extends RuntimeException {
     }
 
     public MalformedOpenPgpMessageException(PDA.State state, InputAlphabet input, StackAlphabet stackItem) {
-        this("Invalid input: There is no legal transition from state '" + state + "' for input '" + input + "' when '" + stackItem + "' is on top of the stack.");
+        this("There is no legal transition from state '" + state + "' for input '" + input + "' when '" + stackItem + "' is on top of the stack.");
+    }
+
+    public MalformedOpenPgpMessageException(String s, MalformedOpenPgpMessageException e) {
+        super(s, e);
     }
 }
