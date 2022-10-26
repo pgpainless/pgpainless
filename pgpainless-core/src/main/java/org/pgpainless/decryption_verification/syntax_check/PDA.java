@@ -67,7 +67,7 @@ public class PDA {
 
                     case Signature:
                         if (stackItem == ops) {
-                            return CorrespondingSignature;
+                            return LiteralMessage;
                         } else {
                             throw new MalformedOpenPgpMessageException(this, input, stackItem);
                         }
@@ -96,7 +96,7 @@ public class PDA {
                 switch (input) {
                     case Signature:
                         if (stackItem == ops) {
-                            return CorrespondingSignature;
+                            return CompressedMessage;
                         } else {
                             throw new MalformedOpenPgpMessageException(this, input, stackItem);
                         }
@@ -125,7 +125,7 @@ public class PDA {
                 switch (input) {
                     case Signature:
                         if (stackItem == ops) {
-                            return CorrespondingSignature;
+                            return EncryptedMessage;
                         } else {
                             throw new MalformedOpenPgpMessageException(this, input, stackItem);
                         }
@@ -144,26 +144,6 @@ public class PDA {
                     default:
                         throw new MalformedOpenPgpMessageException(this, input, stackItem);
                 }
-            }
-        },
-
-        CorrespondingSignature {
-            @Override
-            State transition(InputAlphabet input, PDA automaton) throws MalformedOpenPgpMessageException {
-                StackAlphabet stackItem = automaton.popStack();
-                if (input == InputAlphabet.EndOfSequence) {
-                    if (stackItem == terminus && automaton.stack.isEmpty()) {
-                        return Valid;
-                    } else {
-                        // premature end of stream
-                        throw new MalformedOpenPgpMessageException(this, input, stackItem);
-                    }
-                } else if (input == InputAlphabet.Signature) {
-                    if (stackItem == ops) {
-                        return CorrespondingSignature;
-                    }
-                }
-                throw new MalformedOpenPgpMessageException(this, input, stackItem);
             }
         },
 

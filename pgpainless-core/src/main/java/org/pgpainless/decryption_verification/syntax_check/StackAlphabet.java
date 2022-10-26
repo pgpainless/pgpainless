@@ -14,10 +14,6 @@ public enum StackAlphabet {
      */
     ops,
     /**
-     * ESK. Not used, as BC combines encrypted data with their encrypted session keys.
-     */
-    esk,
-    /**
      * Special symbol representing the end of the message.
      */
     terminus
