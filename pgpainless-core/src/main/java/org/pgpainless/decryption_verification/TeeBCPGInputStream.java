@@ -26,20 +26,20 @@ import org.pgpainless.algorithm.OpenPgpPacket;
  * {@link BCPGInputStream#readPacket()} inconsistently calls a mix of {@link BCPGInputStream#read()} and
  * {@link InputStream#read()} of the underlying stream. This would cause the second length byte to get swallowed up.
  *
- * Therefore, this class delegates the teeing to an {@link DelayedTeeInputStreamInputStream} which wraps the underlying
+ * Therefore, this class delegates the teeing to an {@link DelayedTeeInputStream} which wraps the underlying
  * stream. Since calling {@link BCPGInputStream#nextPacketTag()} reads up to and including the next packets tag,
  * we need to delay teeing out that byte to signature verifiers.
  * Hence, the reading methods of the {@link TeeBCPGInputStream} handle pushing this byte to the output stream using
- * {@link DelayedTeeInputStreamInputStream#squeeze()}.
+ * {@link DelayedTeeInputStream#squeeze()}.
  */
 public class TeeBCPGInputStream {
 
-    protected final DelayedTeeInputStreamInputStream delayedTee;
+    protected final DelayedTeeInputStream delayedTee;
     // InputStream of OpenPGP packets of the current layer
     protected final BCPGInputStream packetInputStream;
 
     public TeeBCPGInputStream(BCPGInputStream inputStream, OutputStream outputStream) {
-        this.delayedTee = new DelayedTeeInputStreamInputStream(inputStream, outputStream);
+        this.delayedTee = new DelayedTeeInputStream(inputStream, outputStream);
         this.packetInputStream = BCPGInputStream.wrap(delayedTee);
     }
 
@@ -100,13 +100,13 @@ public class TeeBCPGInputStream {
         this.packetInputStream.close();
     }
 
-    public static class DelayedTeeInputStreamInputStream extends InputStream {
+    public static class DelayedTeeInputStream extends InputStream {
 
         private int last = -1;
         private final InputStream inputStream;
         private final OutputStream outputStream;
 
-        public DelayedTeeInputStreamInputStream(InputStream inputStream, OutputStream outputStream) {
+        public DelayedTeeInputStream(InputStream inputStream, OutputStream outputStream) {
             this.inputStream = inputStream;
             this.outputStream = outputStream;
         }
@@ -126,6 +126,26 @@ public class TeeBCPGInputStream {
                 return -1;
             }
         }
+
+        // TODO: Uncomment, once BC-172.1 is available
+        //  see https://github.com/bcgit/bc-java/issues/1257
+        /*
+        @Override
+        public int read(byte[] b, int off, int len) throws IOException {
+            if (last != -1) {
+                outputStream.write(last);
+            }
+
+            int r = inputStream.read(b, off, len);
+            if (r > 0) {
+                outputStream.write(b, off, r - 1);
+                last = b[off + r - 1];
+            } else {
+                last = -1;
+            }
+            return r;
+        }
+         */
 
         /**
          * Squeeze the last byte out and update the output stream.
