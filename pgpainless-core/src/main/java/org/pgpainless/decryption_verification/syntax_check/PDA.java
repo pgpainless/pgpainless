@@ -13,15 +13,15 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.Stack;
 
-import static org.pgpainless.decryption_verification.syntax_check.StackAlphabet.msg;
-import static org.pgpainless.decryption_verification.syntax_check.StackAlphabet.terminus;
+import static org.pgpainless.decryption_verification.syntax_check.StackSymbol.msg;
+import static org.pgpainless.decryption_verification.syntax_check.StackSymbol.terminus;
 
 public class PDA {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(PDA.class);
 
-    private final Stack<StackAlphabet> stack = new Stack<>();
-    private final List<InputAlphabet> inputs = new ArrayList<>(); // keep track of inputs for debugging / error reporting
+    private final Stack<StackSymbol> stack = new Stack<>();
+    private final List<InputSymbol> inputs = new ArrayList<>(); // keep track of inputs for debugging / error reporting
     private State state;
     private Syntax syntax = new OpenPgpMessageSyntax();
 
@@ -31,12 +31,12 @@ public class PDA {
         pushStack(msg);
     }
 
-    public void next(InputAlphabet input) throws MalformedOpenPgpMessageException {
+    public void next(InputSymbol input) throws MalformedOpenPgpMessageException {
         try {
             Transition transition = syntax.transition(state, input, popStack());
             inputs.add(input);
             state = transition.getNewState();
-            for (StackAlphabet item : transition.getPushedItems()) {
+            for (StackSymbol item : transition.getPushedItems()) {
                 pushStack(item);
             }
         } catch (MalformedOpenPgpMessageException e) {
@@ -56,7 +56,7 @@ public class PDA {
         return state;
     }
 
-    public StackAlphabet peekStack() {
+    public StackSymbol peekStack() {
         if (stack.isEmpty()) {
             return null;
         }
@@ -83,7 +83,7 @@ public class PDA {
      *
      * @return stack item
      */
-    private StackAlphabet popStack() {
+    private StackSymbol popStack() {
         if (stack.isEmpty()) {
             return null;
         }
@@ -95,7 +95,7 @@ public class PDA {
      *
      * @param item item
      */
-    private void pushStack(StackAlphabet item) {
+    private void pushStack(StackSymbol item) {
         stack.push(item);
     }
 
