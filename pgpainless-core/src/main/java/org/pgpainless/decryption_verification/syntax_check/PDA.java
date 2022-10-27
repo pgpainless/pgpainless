@@ -14,177 +14,31 @@ import java.util.List;
 import java.util.Stack;
 
 import static org.pgpainless.decryption_verification.syntax_check.StackAlphabet.msg;
-import static org.pgpainless.decryption_verification.syntax_check.StackAlphabet.ops;
 import static org.pgpainless.decryption_verification.syntax_check.StackAlphabet.terminus;
 
 public class PDA {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(PDA.class);
 
-    /**
-     * Set of states of the automaton.
-     * Each state defines its valid transitions in their {@link State#transition(InputAlphabet, PDA)} method.
-     */
-    public enum State {
-
-        OpenPgpMessage {
-            @Override
-            State transition(InputAlphabet input, PDA automaton) throws MalformedOpenPgpMessageException {
-                StackAlphabet stackItem = automaton.popStack();
-                if (stackItem != msg) {
-                    throw new MalformedOpenPgpMessageException(this, input, stackItem);
-                }
-                switch (input) {
-
-                    case LiteralData:
-                        return LiteralMessage;
-
-                    case Signature:
-                        automaton.pushStack(msg);
-                        return OpenPgpMessage;
-
-                    case OnePassSignature:
-                        automaton.pushStack(ops);
-                        automaton.pushStack(msg);
-                        return OpenPgpMessage;
-
-                    case CompressedData:
-                        return CompressedMessage;
-
-                    case EncryptedData:
-                        return EncryptedMessage;
-
-                    case EndOfSequence:
-                    default:
-                        throw new MalformedOpenPgpMessageException(this, input, stackItem);
-                }
-            }
-        },
-
-        LiteralMessage {
-            @Override
-            State transition(InputAlphabet input, PDA automaton) throws MalformedOpenPgpMessageException {
-                StackAlphabet stackItem = automaton.popStack();
-                switch (input) {
-
-                    case Signature:
-                        if (stackItem == ops) {
-                            return LiteralMessage;
-                        } else {
-                            throw new MalformedOpenPgpMessageException(this, input, stackItem);
-                        }
-
-                    case EndOfSequence:
-                        if (stackItem == terminus && automaton.stack.isEmpty()) {
-                            return Valid;
-                        } else {
-                            throw new MalformedOpenPgpMessageException(this, input, stackItem);
-                        }
-
-                    case LiteralData:
-                    case OnePassSignature:
-                    case CompressedData:
-                    case EncryptedData:
-                    default:
-                        throw new MalformedOpenPgpMessageException(this, input, stackItem);
-                }
-            }
-        },
-
-        CompressedMessage {
-            @Override
-            State transition(InputAlphabet input, PDA automaton) throws MalformedOpenPgpMessageException {
-                StackAlphabet stackItem = automaton.popStack();
-                switch (input) {
-                    case Signature:
-                        if (stackItem == ops) {
-                            return CompressedMessage;
-                        } else {
-                            throw new MalformedOpenPgpMessageException(this, input, stackItem);
-                        }
-
-                    case EndOfSequence:
-                        if (stackItem == terminus && automaton.stack.isEmpty()) {
-                            return Valid;
-                        } else {
-                            throw new MalformedOpenPgpMessageException(this, input, stackItem);
-                        }
-
-                    case LiteralData:
-                    case OnePassSignature:
-                    case CompressedData:
-                    case EncryptedData:
-                    default:
-                        throw new MalformedOpenPgpMessageException(this, input, stackItem);
-                }
-            }
-        },
-
-        EncryptedMessage {
-            @Override
-            State transition(InputAlphabet input, PDA automaton) throws MalformedOpenPgpMessageException {
-                StackAlphabet stackItem = automaton.popStack();
-                switch (input) {
-                    case Signature:
-                        if (stackItem == ops) {
-                            return EncryptedMessage;
-                        } else {
-                            throw new MalformedOpenPgpMessageException(this, input, stackItem);
-                        }
-
-                    case EndOfSequence:
-                        if (stackItem == terminus && automaton.stack.isEmpty()) {
-                            return Valid;
-                        } else {
-                            throw new MalformedOpenPgpMessageException(this, input, stackItem);
-                        }
-
-                    case LiteralData:
-                    case OnePassSignature:
-                    case CompressedData:
-                    case EncryptedData:
-                    default:
-                        throw new MalformedOpenPgpMessageException(this, input, stackItem);
-                }
-            }
-        },
-
-        Valid {
-            @Override
-            State transition(InputAlphabet input, PDA automaton) throws MalformedOpenPgpMessageException {
-                throw new MalformedOpenPgpMessageException(this, input, null);
-            }
-        },
-        ;
-
-        /**
-         * Pop the automatons stack and transition to another state.
-         * If no valid transition from the current state is available given the popped stack item and input symbol,
-         * a {@link MalformedOpenPgpMessageException} is thrown.
-         * Otherwise, the stack is manipulated according to the valid transition and the new state is returned.
-         *
-         * @param input     input symbol
-         * @param automaton automaton
-         * @return new state of the automaton
-         * @throws MalformedOpenPgpMessageException in case of an illegal input symbol
-         */
-        abstract State transition(InputAlphabet input, PDA automaton) throws MalformedOpenPgpMessageException;
-    }
-
     private final Stack<StackAlphabet> stack = new Stack<>();
     private final List<InputAlphabet> inputs = new ArrayList<>(); // keep track of inputs for debugging / error reporting
     private State state;
+    private Syntax syntax = new OpenPgpMessageSyntax();
 
     public PDA() {
         state = State.OpenPgpMessage;
-        stack.push(terminus);
-        stack.push(msg);
+        pushStack(terminus);
+        pushStack(msg);
     }
 
     public void next(InputAlphabet input) throws MalformedOpenPgpMessageException {
         try {
-            state = state.transition(input, this);
+            Transition transition = syntax.transition(state, input, popStack());
             inputs.add(input);
+            state = transition.getNewState();
+            for (StackAlphabet item : transition.getPushedItems()) {
+                pushStack(item);
+            }
         } catch (MalformedOpenPgpMessageException e) {
             MalformedOpenPgpMessageException wrapped = new MalformedOpenPgpMessageException("Malformed message: After reading stream " + Arrays.toString(inputs.toArray()) +
                     ", token '" + input + "' is unexpected and illegal.", e);
@@ -230,6 +84,9 @@ public class PDA {
      * @return stack item
      */
     private StackAlphabet popStack() {
+        if (stack.isEmpty()) {
+            return null;
+        }
         return stack.pop();
     }
 
