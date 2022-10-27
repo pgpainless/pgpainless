@@ -8,6 +8,7 @@ import org.pgpainless.exception.MalformedOpenPgpMessageException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import javax.annotation.Nonnull;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
@@ -23,15 +24,24 @@ public class PDA {
     // right now we implement what rfc4880 specifies.
     // TODO: Consider implementing what we proposed here:
     //  https://mailarchive.ietf.org/arch/msg/openpgp/uepOF6XpSegMO4c59tt9e5H1i4g/
-    private final Syntax syntax = new OpenPgpMessageSyntax();
+    private final Syntax syntax;
     private final Stack<StackSymbol> stack = new Stack<>();
     private final List<InputSymbol> inputs = new ArrayList<>(); // Track inputs for debugging / error reporting
     private State state;
 
+    /**
+     *
+     */
     public PDA() {
-        state = State.OpenPgpMessage;
-        pushStack(terminus);
-        pushStack(msg);
+        this(new OpenPgpMessageSyntax(), State.OpenPgpMessage, terminus, msg);
+    }
+
+    public PDA(@Nonnull Syntax syntax, @Nonnull State initialState, @Nonnull StackSymbol... initialStack) {
+        this.syntax = syntax;
+        this.state = initialState;
+        for (StackSymbol symbol : initialStack) {
+            pushStack(symbol);
+        }
     }
 
     public void next(InputSymbol input) throws MalformedOpenPgpMessageException {
