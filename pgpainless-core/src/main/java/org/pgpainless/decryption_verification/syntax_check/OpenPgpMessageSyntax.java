@@ -6,6 +6,9 @@ package org.pgpainless.decryption_verification.syntax_check;
 
 import org.pgpainless.exception.MalformedOpenPgpMessageException;
 
+import javax.annotation.Nonnull;
+import javax.annotation.Nullable;
+
 /**
  * This class describes the syntax for OpenPGP messages as specified by rfc4880.
  *
@@ -19,7 +22,7 @@ import org.pgpainless.exception.MalformedOpenPgpMessageException;
 public class OpenPgpMessageSyntax implements Syntax {
 
     @Override
-    public Transition transition(State from, InputSymbol input, StackSymbol stackItem)
+    public @Nonnull Transition transition(@Nonnull State from, @Nonnull InputSymbol input, @Nullable StackSymbol stackItem)
             throws MalformedOpenPgpMessageException {
         switch (from) {
             case OpenPgpMessage:
@@ -37,7 +40,7 @@ public class OpenPgpMessageSyntax implements Syntax {
         throw new MalformedOpenPgpMessageException(from, input, stackItem);
     }
 
-    Transition fromOpenPgpMessage(InputSymbol input, StackSymbol stackItem)
+    Transition fromOpenPgpMessage(@Nonnull InputSymbol input, @Nullable StackSymbol stackItem)
             throws MalformedOpenPgpMessageException {
         if (stackItem != StackSymbol.msg) {
             throw new MalformedOpenPgpMessageException(State.OpenPgpMessage, input, stackItem);
@@ -65,7 +68,7 @@ public class OpenPgpMessageSyntax implements Syntax {
         }
     }
 
-    Transition fromLiteralMessage(InputSymbol input, StackSymbol stackItem)
+    Transition fromLiteralMessage(@Nonnull InputSymbol input, @Nullable StackSymbol stackItem)
             throws MalformedOpenPgpMessageException {
         switch (input) {
             case Signature:
@@ -84,7 +87,7 @@ public class OpenPgpMessageSyntax implements Syntax {
         throw new MalformedOpenPgpMessageException(State.LiteralMessage, input, stackItem);
     }
 
-    Transition fromCompressedMessage(InputSymbol input, StackSymbol stackItem)
+    Transition fromCompressedMessage(@Nonnull InputSymbol input, @Nullable StackSymbol stackItem)
             throws MalformedOpenPgpMessageException {
         switch (input) {
             case Signature:
@@ -103,7 +106,7 @@ public class OpenPgpMessageSyntax implements Syntax {
         throw new MalformedOpenPgpMessageException(State.CompressedMessage, input, stackItem);
     }
 
-    Transition fromEncryptedMessage(InputSymbol input, StackSymbol stackItem)
+    Transition fromEncryptedMessage(@Nonnull InputSymbol input, @Nullable StackSymbol stackItem)
             throws MalformedOpenPgpMessageException {
         switch (input) {
             case Signature:
@@ -122,7 +125,7 @@ public class OpenPgpMessageSyntax implements Syntax {
         throw new MalformedOpenPgpMessageException(State.EncryptedMessage, input, stackItem);
     }
 
-    Transition fromValid(InputSymbol input, StackSymbol stackItem)
+    Transition fromValid(@Nonnull InputSymbol input, @Nullable StackSymbol stackItem)
             throws MalformedOpenPgpMessageException {
         // There is no applicable transition rule out of Valid
         throw new MalformedOpenPgpMessageException(State.Valid, input, stackItem);

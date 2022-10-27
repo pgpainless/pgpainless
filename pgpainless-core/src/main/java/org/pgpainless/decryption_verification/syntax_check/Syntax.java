@@ -6,6 +6,9 @@ package org.pgpainless.decryption_verification.syntax_check;
 
 import org.pgpainless.exception.MalformedOpenPgpMessageException;
 
+import javax.annotation.Nonnull;
+import javax.annotation.Nullable;
+
 /**
  * This interface can be used to define a custom syntax for the {@link PDA}.
  */
@@ -25,6 +28,6 @@ public interface Syntax {
      * @return applicable transition rule containing the new state and pushed stack symbols
      * @throws MalformedOpenPgpMessageException if there is no applicable transition rule (the input symbol is illegal)
      */
-    Transition transition(State from, InputSymbol input, StackSymbol stackItem)
+    @Nonnull Transition transition(@Nonnull State from, @Nonnull InputSymbol input, @Nullable StackSymbol stackItem)
         throws MalformedOpenPgpMessageException;
 }
