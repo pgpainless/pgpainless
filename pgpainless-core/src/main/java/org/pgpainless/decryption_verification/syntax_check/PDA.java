@@ -30,7 +30,7 @@ public class PDA {
     private State state;
 
     /**
-     *
+     * Default constructor which initializes the PDA to work with the {@link OpenPgpMessageSyntax}.
      */
     public PDA() {
         this(new OpenPgpMessageSyntax(), State.OpenPgpMessage, terminus, msg);
