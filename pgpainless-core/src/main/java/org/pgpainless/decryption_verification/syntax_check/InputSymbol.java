@@ -10,7 +10,7 @@ import org.bouncycastle.openpgp.PGPLiteralData;
 import org.bouncycastle.openpgp.PGPOnePassSignatureList;
 import org.bouncycastle.openpgp.PGPSignatureList;
 
-public enum InputAlphabet {
+public enum InputSymbol {
     /**
      * A {@link PGPLiteralData} packet.
      */

@@ -10,10 +10,10 @@ import java.util.List;
 
 public class Transition {
 
-    private final List<StackAlphabet> pushedItems = new ArrayList<>();
+    private final List<StackSymbol> pushedItems = new ArrayList<>();
     private final State newState;
 
-    public Transition(State newState, StackAlphabet... pushedItems) {
+    public Transition(State newState, StackSymbol... pushedItems) {
         this.newState = newState;
         this.pushedItems.addAll(Arrays.asList(pushedItems));
     }
@@ -22,7 +22,7 @@ public class Transition {
         return newState;
     }
 
-    public List<StackAlphabet> getPushedItems() {
+    public List<StackSymbol> getPushedItems() {
         return new ArrayList<>(pushedItems);
     }
 }
