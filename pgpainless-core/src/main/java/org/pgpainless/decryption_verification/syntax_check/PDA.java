@@ -20,10 +20,13 @@ public class PDA {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(PDA.class);
 
+    // right now we implement what rfc4880 specifies.
+    // TODO: Consider implementing what we proposed here:
+    //  https://mailarchive.ietf.org/arch/msg/openpgp/uepOF6XpSegMO4c59tt9e5H1i4g/
+    private final Syntax syntax = new OpenPgpMessageSyntax();
     private final Stack<StackSymbol> stack = new Stack<>();
-    private final List<InputSymbol> inputs = new ArrayList<>(); // keep track of inputs for debugging / error reporting
+    private final List<InputSymbol> inputs = new ArrayList<>(); // Track inputs for debugging / error reporting
     private State state;
-    private Syntax syntax = new OpenPgpMessageSyntax();
 
     public PDA() {
         state = State.OpenPgpMessage;
@@ -32,16 +35,20 @@ public class PDA {
     }
 
     public void next(InputSymbol input) throws MalformedOpenPgpMessageException {
+        StackSymbol stackSymbol = popStack();
         try {
-            Transition transition = syntax.transition(state, input, popStack());
-            inputs.add(input);
+            Transition transition = syntax.transition(state, input, stackSymbol);
             state = transition.getNewState();
             for (StackSymbol item : transition.getPushedItems()) {
                 pushStack(item);
             }
+            inputs.add(input);
         } catch (MalformedOpenPgpMessageException e) {
-            MalformedOpenPgpMessageException wrapped = new MalformedOpenPgpMessageException("Malformed message: After reading stream " + Arrays.toString(inputs.toArray()) +
-                    ", token '" + input + "' is unexpected and illegal.", e);
+            MalformedOpenPgpMessageException wrapped = new MalformedOpenPgpMessageException(
+                    "Malformed message: After reading stream " + Arrays.toString(inputs.toArray()) +
+                    ", token '" + input + "' is not allowed." +
+                    "\nNo transition from state '" + state + "' with stack " + Arrays.toString(stack.toArray()) +
+                            (stackSymbol != null ? "||'" + stackSymbol + "'." : "."), e);
             LOGGER.debug("Invalid input '" + input + "'", wrapped);
             throw wrapped;
         }

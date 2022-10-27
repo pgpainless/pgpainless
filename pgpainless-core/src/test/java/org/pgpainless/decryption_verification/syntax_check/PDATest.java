@@ -97,7 +97,7 @@ public class PDATest {
     }
 
     @Test
-    public void testEncryptedMessageWithAppendedStandalongSigIsNotValid() {
+    public void testEncryptedMessageWithAppendedStandaloneSigIsNotValid() {
         PDA check = new PDA();
         check.next(InputSymbol.EncryptedData);
         assertThrows(MalformedOpenPgpMessageException.class,
