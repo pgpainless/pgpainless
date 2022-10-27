@@ -116,6 +116,7 @@ public class OpenPgpMessageInputStream extends DecryptionStream {
     /**
      * Create an {@link OpenPgpMessageInputStream} suitable for decryption and verification of
      * OpenPGP messages and signatures.
+     * This factory method takes a custom {@link Policy} instead of using the global policy object.
      *
      * @param inputStream underlying input stream containing the OpenPGP message
      * @param options options for consuming the message
@@ -161,7 +162,7 @@ public class OpenPgpMessageInputStream extends DecryptionStream {
                         armorIn, options, metadata, policy);
             }
         } else {
-            throw new AssertionError("Huh?");
+            throw new AssertionError("Cannot deduce type of data.");
         }
     }
 
@@ -212,6 +213,7 @@ public class OpenPgpMessageInputStream extends DecryptionStream {
 
         switch (type) {
 
+            // Binary OpenPGP Message
             case standard:
                 // tee out packet bytes for signature verification
                 packetInputStream = new TeeBCPGInputStream(BCPGInputStream.wrap(inputStream), this.signatures);
@@ -220,6 +222,7 @@ public class OpenPgpMessageInputStream extends DecryptionStream {
                 consumePackets();
                 break;
 
+            // Cleartext Signature Framework (probably signed message)
             case cleartext_signed:
                 resultBuilder.setCleartextSigned();
                 MultiPassStrategy multiPassStrategy = options.getMultiPassStrategy();
@@ -235,6 +238,7 @@ public class OpenPgpMessageInputStream extends DecryptionStream {
                 nestedInputStream = new TeeInputStream(multiPassStrategy.getMessageInputStream(), this.signatures);
                 break;
 
+            // Non-OpenPGP Data (e.g. detached signature verification)
             case non_openpgp:
                 packetInputStream = null;
                 nestedInputStream = new TeeInputStream(inputStream, this.signatures);
@@ -265,7 +269,7 @@ public class OpenPgpMessageInputStream extends DecryptionStream {
             return;
         }
 
-        loop: // we break this when we go deeper.
+        loop: // we break this when we enter nested packets and later resume
         while ((nextPacket = packetInputStream.nextPacketTag()) != null) {
             signatures.nextPacket(nextPacket);
             switch (nextPacket) {
@@ -296,6 +300,7 @@ public class OpenPgpMessageInputStream extends DecryptionStream {
                 case SED:
                 case SEIPD:
                     if (processEncryptedData()) {
+                        // Successfully decrypted, enter nested content
                         break loop;
                     }
 
@@ -336,10 +341,12 @@ public class OpenPgpMessageInputStream extends DecryptionStream {
         LOGGER.debug("Literal Data Packet at depth " + metadata.depth + " encountered");
         syntaxVerifier.next(InputSymbol.LiteralData);
         PGPLiteralData literalData = packetInputStream.readLiteralData();
+        // Extract Metadata
         this.metadata.setChild(new MessageMetadata.LiteralData(
                 literalData.getFileName(),
                 literalData.getModificationTime(),
                 StreamEncoding.requireFromCode(literalData.getFormat())));
+
         nestedInputStream = literalData.getDataStream();
     }
 
@@ -347,9 +354,11 @@ public class OpenPgpMessageInputStream extends DecryptionStream {
         syntaxVerifier.next(InputSymbol.CompressedData);
         signatures.enterNesting();
         PGPCompressedData compressedData = packetInputStream.readCompressedData();
+        // Extract Metadata
         MessageMetadata.CompressedData compressionLayer = new MessageMetadata.CompressedData(
                 CompressionAlgorithm.fromId(compressedData.getAlgorithm()),
                 metadata.depth + 1);
+
         LOGGER.debug("Compressed Data Packet (" + compressionLayer.algorithm + ") at depth " + metadata.depth + " encountered");
         InputStream decompressed = compressedData.getDataStream();
         nestedInputStream = new OpenPgpMessageInputStream(decompressed, options, compressionLayer, policy);
@@ -374,6 +383,7 @@ public class OpenPgpMessageInputStream extends DecryptionStream {
             LOGGER.debug("Unsupported Signature at depth " + metadata.depth + " encountered.", e);
             return;
         }
+
         long keyId = SignatureUtils.determineIssuerKeyId(signature);
         if (isSigForOPS) {
             LOGGER.debug("Signature Packet corresponding to One-Pass-Signature by key " +
