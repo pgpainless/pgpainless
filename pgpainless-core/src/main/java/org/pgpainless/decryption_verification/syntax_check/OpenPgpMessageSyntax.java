@@ -6,10 +6,20 @@ package org.pgpainless.decryption_verification.syntax_check;
 
 import org.pgpainless.exception.MalformedOpenPgpMessageException;
 
+/**
+ * This class describes the syntax for OpenPGP messages as specified by rfc4880.
+ *
+ * @see <a href="https://www.rfc-editor.org/rfc/rfc4880#section-11.3">
+ *     rfc4880 - §11.3. OpenPGP Messages</a>
+ * @see <a href="https://blog.jabberhead.tk/2022/09/14/using-pushdown-automata-to-verify-packet-sequences/">
+ *     Blog post about theoretic background and translation of grammar to PDA syntax</a>
+ * @see <a href="https://blog.jabberhead.tk/2022/10/26/implementing-packet-sequence-validation-using-pushdown-automata/">
+ *     Blog post about practically implementing the PDA for packet syntax validation</a>
+ */
 public class OpenPgpMessageSyntax implements Syntax {
 
     @Override
-    public Transition transition(State from, InputAlphabet input, StackAlphabet stackItem)
+    public Transition transition(State from, InputSymbol input, StackSymbol stackItem)
             throws MalformedOpenPgpMessageException {
         switch (from) {
             case OpenPgpMessage:
@@ -27,9 +37,9 @@ public class OpenPgpMessageSyntax implements Syntax {
         throw new MalformedOpenPgpMessageException(from, input, stackItem);
     }
 
-    Transition fromOpenPgpMessage(InputAlphabet input, StackAlphabet stackItem)
+    Transition fromOpenPgpMessage(InputSymbol input, StackSymbol stackItem)
             throws MalformedOpenPgpMessageException {
-        if (stackItem != StackAlphabet.msg) {
+        if (stackItem != StackSymbol.msg) {
             throw new MalformedOpenPgpMessageException(State.OpenPgpMessage, input, stackItem);
         }
 
@@ -38,10 +48,10 @@ public class OpenPgpMessageSyntax implements Syntax {
                 return new Transition(State.LiteralMessage);
 
             case Signature:
-                return new Transition(State.OpenPgpMessage, StackAlphabet.msg);
+                return new Transition(State.OpenPgpMessage, StackSymbol.msg);
 
             case OnePassSignature:
-                return new Transition(State.OpenPgpMessage, StackAlphabet.ops, StackAlphabet.msg);
+                return new Transition(State.OpenPgpMessage, StackSymbol.ops, StackSymbol.msg);
 
             case CompressedData:
                 return new Transition(State.CompressedMessage);
@@ -55,17 +65,17 @@ public class OpenPgpMessageSyntax implements Syntax {
         }
     }
 
-    Transition fromLiteralMessage(InputAlphabet input, StackAlphabet stackItem)
+    Transition fromLiteralMessage(InputSymbol input, StackSymbol stackItem)
             throws MalformedOpenPgpMessageException {
         switch (input) {
             case Signature:
-                if (stackItem == StackAlphabet.ops) {
+                if (stackItem == StackSymbol.ops) {
                     return new Transition(State.LiteralMessage);
                 }
                 break;
 
             case EndOfSequence:
-                if (stackItem == StackAlphabet.terminus) {
+                if (stackItem == StackSymbol.terminus) {
                     return new Transition(State.Valid);
                 }
                 break;
@@ -74,17 +84,17 @@ public class OpenPgpMessageSyntax implements Syntax {
         throw new MalformedOpenPgpMessageException(State.LiteralMessage, input, stackItem);
     }
 
-    Transition fromCompressedMessage(InputAlphabet input, StackAlphabet stackItem)
+    Transition fromCompressedMessage(InputSymbol input, StackSymbol stackItem)
             throws MalformedOpenPgpMessageException {
         switch (input) {
             case Signature:
-                if (stackItem == StackAlphabet.ops) {
+                if (stackItem == StackSymbol.ops) {
                     return new Transition(State.CompressedMessage);
                 }
                 break;
 
             case EndOfSequence:
-                if (stackItem == StackAlphabet.terminus) {
+                if (stackItem == StackSymbol.terminus) {
                     return new Transition(State.Valid);
                 }
                 break;
@@ -93,17 +103,17 @@ public class OpenPgpMessageSyntax implements Syntax {
         throw new MalformedOpenPgpMessageException(State.CompressedMessage, input, stackItem);
     }
 
-    Transition fromEncryptedMessage(InputAlphabet input, StackAlphabet stackItem)
+    Transition fromEncryptedMessage(InputSymbol input, StackSymbol stackItem)
             throws MalformedOpenPgpMessageException {
         switch (input) {
             case Signature:
-                if (stackItem == StackAlphabet.ops) {
+                if (stackItem == StackSymbol.ops) {
                     return new Transition(State.EncryptedMessage);
                 }
                 break;
 
             case EndOfSequence:
-                if (stackItem == StackAlphabet.terminus) {
+                if (stackItem == StackSymbol.terminus) {
                     return new Transition(State.Valid);
                 }
                 break;
@@ -112,8 +122,9 @@ public class OpenPgpMessageSyntax implements Syntax {
         throw new MalformedOpenPgpMessageException(State.EncryptedMessage, input, stackItem);
     }
 
-    Transition fromValid(InputAlphabet input, StackAlphabet stackItem)
+    Transition fromValid(InputSymbol input, StackSymbol stackItem)
             throws MalformedOpenPgpMessageException {
+        // There is no applicable transition rule out of Valid
         throw new MalformedOpenPgpMessageException(State.Valid, input, stackItem);
     }
 }

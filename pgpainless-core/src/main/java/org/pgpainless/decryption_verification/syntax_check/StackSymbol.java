@@ -4,7 +4,7 @@
 
 package org.pgpainless.decryption_verification.syntax_check;
 
-public enum StackAlphabet {
+public enum StackSymbol {
     /**
      * OpenPGP Message.
      */
