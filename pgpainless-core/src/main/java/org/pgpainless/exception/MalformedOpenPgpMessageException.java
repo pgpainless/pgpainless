@@ -5,8 +5,8 @@
 package org.pgpainless.exception;
 
 import org.pgpainless.decryption_verification.syntax_check.InputAlphabet;
-import org.pgpainless.decryption_verification.syntax_check.PDA;
 import org.pgpainless.decryption_verification.syntax_check.StackAlphabet;
+import org.pgpainless.decryption_verification.syntax_check.State;
 
 /**
  * Exception that gets thrown if the OpenPGP message is malformed.
@@ -20,7 +20,7 @@ public class MalformedOpenPgpMessageException extends RuntimeException {
         super(message);
     }
 
-    public MalformedOpenPgpMessageException(PDA.State state, InputAlphabet input, StackAlphabet stackItem) {
+    public MalformedOpenPgpMessageException(State state, InputAlphabet input, StackAlphabet stackItem) {
         this("There is no legal transition from state '" + state + "' for input '" + input + "' when '" + stackItem + "' is on top of the stack.");
     }
 
