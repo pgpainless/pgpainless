@@ -47,8 +47,8 @@ public class HardwareSecurity {
      * @param secretKeys secret keys
      * @return set of keys with S2K type DIVERT_TO_CARD or GNU_DUMMY_S2K
      */
-    public static Set<Long> getIdsOfHardwareBackedKeys(PGPSecretKeyRing secretKeys) {
-        Set<Long> hardwareBackedKeys = new HashSet<>();
+    public static Set<SubkeyIdentifier> getIdsOfHardwareBackedKeys(PGPSecretKeyRing secretKeys) {
+        Set<SubkeyIdentifier> hardwareBackedKeys = new HashSet<>();
         for (PGPSecretKey secretKey : secretKeys) {
             S2K s2K = secretKey.getS2K();
             if (s2K == null) {
@@ -56,9 +56,11 @@ public class HardwareSecurity {
             }
 
             int type = s2K.getType();
+            int mode = s2K.getProtectionMode();
             // TODO: Is GNU_DUMMY_S2K appropriate?
-            if (type == S2K.GNU_PROTECTION_MODE_DIVERT_TO_CARD || type == S2K.GNU_DUMMY_S2K) {
-                hardwareBackedKeys.add(secretKey.getKeyID());
+            if (type == S2K.GNU_DUMMY_S2K && mode == S2K.GNU_PROTECTION_MODE_DIVERT_TO_CARD) {
+                SubkeyIdentifier hardwareBackedKey = new SubkeyIdentifier(secretKeys, secretKey.getKeyID());
+                hardwareBackedKeys.add(hardwareBackedKey);
             }
         }
         return hardwareBackedKeys;
@@ -75,7 +77,7 @@ public class HardwareSecurity {
         // luckily we can instantiate the BcPublicKeyDataDecryptorFactory with null as argument.
         private final PublicKeyDataDecryptorFactory factory =
                 new BcPublicKeyDataDecryptorFactory(null);
-        private SubkeyIdentifier subkey;
+        private final SubkeyIdentifier subkey;
 
         /**
          * Create a new {@link HardwareDataDecryptorFactory}.
