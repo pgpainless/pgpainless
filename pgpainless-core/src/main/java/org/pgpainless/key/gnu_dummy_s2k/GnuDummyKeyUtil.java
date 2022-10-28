@@ -74,7 +74,7 @@ public final class GnuDummyKeyUtil {
          * This method will include the card serial number into the encoded dummy key.
          *
          * NOTE: This method does not actually move any keys to a card.
-         * 
+         *
          * @param filter filter to select keys for removal
          * @param cardSerialNumber serial number of the card (at most 16 bytes long)
          * @return modified key ring
@@ -101,12 +101,12 @@ public final class GnuDummyKeyUtil {
                 PublicKeyPacket publicKeyPacket = secretKey.getPublicKey().getPublicKeyPacket();
                 if (secretKey.isMasterKey()) {
                     SecretKeyPacket keyPacket = new SecretKeyPacket(publicKeyPacket,
-                            0, 255, s2k, null, encodedSerial);
+                            0, SecretKeyPacket.USAGE_SHA1, s2k, null, encodedSerial);
                     PGPSecretKey onCard = new PGPSecretKey(keyPacket, secretKey.getPublicKey());
                     secretKeyList.add(onCard);
                 } else {
                     SecretSubkeyPacket keyPacket = new SecretSubkeyPacket(publicKeyPacket,
-                            0, 255, s2k, null, encodedSerial);
+                            0, SecretKeyPacket.USAGE_SHA1, s2k, null, encodedSerial);
                     PGPSecretKey onCard = new PGPSecretKey(keyPacket, secretKey.getPublicKey());
                     secretKeyList.add(onCard);
                 }
