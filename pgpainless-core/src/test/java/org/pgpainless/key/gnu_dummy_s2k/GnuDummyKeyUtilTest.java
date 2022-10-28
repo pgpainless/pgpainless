@@ -5,6 +5,7 @@
 package org.pgpainless.key.gnu_dummy_s2k;
 
 import org.bouncycastle.bcpg.S2K;
+import org.bouncycastle.bcpg.SecretKeyPacket;
 import org.bouncycastle.openpgp.PGPSecretKey;
 import org.bouncycastle.openpgp.PGPSecretKeyRing;
 import org.junit.jupiter.api.Test;
@@ -54,22 +55,22 @@ public class GnuDummyKeyUtilTest {
             "Comment: Hardy Hardware <hardy@hard.ware>\n" +
             "\n" +
             "lEwEY1vSiBYJKwYBBAHaRw8BAQdAQ58lZn/HOtg+1b1KS18odyQ6M4LaDdbJAyRf\n" +
-            "eBwCeTT/AGUAR05VAhAAAQIDBAUGBwgJCgsMDQ4PtCBIYXJkeSBIYXJkd2FyZSA8\n" +
+            "eBwCeTT+AGUAR05VAhAAAQIDBAUGBwgJCgsMDQ4PtCBIYXJkeSBIYXJkd2FyZSA8\n" +
             "aGFyZHlAaGFyZC53YXJlPoiPBBMWCgBBBQJjW9KICRDDEsl9qfdqTxYhBAH9q2zg\n" +
             "SlB4ef5KGMMSyX2p92pPAp4BApsBBRYCAwEABAsJCAcFFQoJCAsCmQEAAPk2AP92\n" +
             "2T5TQ7hukFlpxX3ThMhieJnECGY5Eqt5U0/vEY1XdgD/eE1Ml9qqx6QGcaNKe8de\n" +
             "Me3EhTant6mS9tqMHp2/3gmcUQRjW9KIEgorBgEEAZdVAQUBAQdAVXBLNvNmFh9K\n" +
-            "X6iLmdNJM28Zc9PGnzEoAD9+T4p0lDwDAQgH/wBlAEdOVQIQAAECAwQFBgcICQoL\n" +
+            "X6iLmdNJM28Zc9PGnzEoAD9+T4p0lDwDAQgH/gBlAEdOVQIQAAECAwQFBgcICQoL\n" +
             "DA0OD4h1BBgWCgAdBQJjW9KIAp4BApsMBRYCAwEABAsJCAcFFQoJCAsACgkQwxLJ\n" +
             "fan3ak/JyQD9GBj0vjtYZAf5Fi0eEKdiAgs0yZrQPkMs6eL+83te770A/jG0DeJy\n" +
             "+88fOfWTj+mixO98PZPnQ0MybWC/1QUTvP0BnEwEY1vSiBYJKwYBBAHaRw8BAQdA\n" +
-            "vSYTD60t8vx10dSEBACUoIfVCpeOB30D6nfwJtbDT0b/AGUAR05VAhAAAQIDBAUG\n" +
+            "vSYTD60t8vx10dSEBACUoIfVCpeOB30D6nfwJtbDT0b+AGUAR05VAhAAAQIDBAUG\n" +
             "BwgJCgsMDQ4PiNUEGBYKAH0FAmNb0ogCngECmwIFFgIDAQAECwkIBwUVCgkIC18g\n" +
             "BBkWCgAGBQJjW9KIAAoJEJQCL6VtwFtJDmMBAKqsGfRFQxJXyPgugWBgEaO5lt9f\n" +
             "MM0yUxa76cmSWe5fAQD2oLSEW1GOgIs64+Z3gvtXopmeupT09HhI7ger98zDAwAK\n" +
             "CRDDEsl9qfdqTwR6AP9Xftw8xZ7/MWhYImk/xheqPy07K4qo3T1pGKUvUqjWQQEA\n" +
             "hE3r0oTcJn+KVCwGjF6AYiLOzO/R1x5bSlYD3FeJ3Qo=\n" +
-            "=wsFa\n" +
+            "=rYoa\n" +
             "-----END PGP PRIVATE KEY BLOCK-----";
 
     public static final String PRIMARY_KEY_ON_CARD = "-----BEGIN PGP PRIVATE KEY BLOCK-----\n" +
@@ -78,7 +79,7 @@ public class GnuDummyKeyUtilTest {
             "Comment: Hardy Hardware <hardy@hard.ware>\n" +
             "\n" +
             "lEwEY1vSiBYJKwYBBAHaRw8BAQdAQ58lZn/HOtg+1b1KS18odyQ6M4LaDdbJAyRf\n" +
-            "eBwCeTT/AGUAR05VAhAAAQIDBAUGBwgJCgsMDQ4PtCBIYXJkeSBIYXJkd2FyZSA8\n" +
+            "eBwCeTT+AGUAR05VAhAAAQIDBAUGBwgJCgsMDQ4PtCBIYXJkeSBIYXJkd2FyZSA8\n" +
             "aGFyZHlAaGFyZC53YXJlPoiPBBMWCgBBBQJjW9KICRDDEsl9qfdqTxYhBAH9q2zg\n" +
             "SlB4ef5KGMMSyX2p92pPAp4BApsBBRYCAwEABAsJCAcFFQoJCAsCmQEAAPk2AP92\n" +
             "2T5TQ7hukFlpxX3ThMhieJnECGY5Eqt5U0/vEY1XdgD/eE1Ml9qqx6QGcaNKe8de\n" +
@@ -94,7 +95,7 @@ public class GnuDummyKeyUtilTest {
             "4+Z3gvtXopmeupT09HhI7ger98zDAwAKCRDDEsl9qfdqTwR6AP9Xftw8xZ7/MWhY\n" +
             "Imk/xheqPy07K4qo3T1pGKUvUqjWQQEAhE3r0oTcJn+KVCwGjF6AYiLOzO/R1x5b\n" +
             "SlYD3FeJ3Qo=\n" +
-            "=s+B1\n" +
+            "=zQLi\n" +
             "-----END PGP PRIVATE KEY BLOCK-----";
 
     public static final String ENCRYPTION_KEY_ON_CARD = "-----BEGIN PGP PRIVATE KEY BLOCK-----\n" +
@@ -108,7 +109,7 @@ public class GnuDummyKeyUtilTest {
             "qfdqTxYhBAH9q2zgSlB4ef5KGMMSyX2p92pPAp4BApsBBRYCAwEABAsJCAcFFQoJ\n" +
             "CAsCmQEAAPk2AP922T5TQ7hukFlpxX3ThMhieJnECGY5Eqt5U0/vEY1XdgD/eE1M\n" +
             "l9qqx6QGcaNKe8deMe3EhTant6mS9tqMHp2/3gmcUQRjW9KIEgorBgEEAZdVAQUB\n" +
-            "AQdAVXBLNvNmFh9KX6iLmdNJM28Zc9PGnzEoAD9+T4p0lDwDAQgH/wBlAEdOVQIQ\n" +
+            "AQdAVXBLNvNmFh9KX6iLmdNJM28Zc9PGnzEoAD9+T4p0lDwDAQgH/gBlAEdOVQIQ\n" +
             "AAECAwQFBgcICQoLDA0OD4h1BBgWCgAdBQJjW9KIAp4BApsMBRYCAwEABAsJCAcF\n" +
             "FQoJCAsACgkQwxLJfan3ak/JyQD9GBj0vjtYZAf5Fi0eEKdiAgs0yZrQPkMs6eL+\n" +
             "83te770A/jG0DeJy+88fOfWTj+mixO98PZPnQ0MybWC/1QUTvP0BnFgEY1vSiBYJ\n" +
@@ -119,7 +120,7 @@ public class GnuDummyKeyUtilTest {
             "4+Z3gvtXopmeupT09HhI7ger98zDAwAKCRDDEsl9qfdqTwR6AP9Xftw8xZ7/MWhY\n" +
             "Imk/xheqPy07K4qo3T1pGKUvUqjWQQEAhE3r0oTcJn+KVCwGjF6AYiLOzO/R1x5b\n" +
             "SlYD3FeJ3Qo=\n" +
-            "=TPAl\n" +
+            "=7OZu\n" +
             "-----END PGP PRIVATE KEY BLOCK-----";
 
     public static final String SIGNATURE_KEY_ON_CARD = "-----BEGIN PGP PRIVATE KEY BLOCK-----\n" +
@@ -138,13 +139,13 @@ public class GnuDummyKeyUtilTest {
             "BRYCAwEABAsJCAcFFQoJCAsACgkQwxLJfan3ak/JyQD9GBj0vjtYZAf5Fi0eEKdi\n" +
             "Ags0yZrQPkMs6eL+83te770A/jG0DeJy+88fOfWTj+mixO98PZPnQ0MybWC/1QUT\n" +
             "vP0BnEwEY1vSiBYJKwYBBAHaRw8BAQdAvSYTD60t8vx10dSEBACUoIfVCpeOB30D\n" +
-            "6nfwJtbDT0b/AGUAR05VAhAAAQIDBAUGBwgJCgsMDQ4PiNUEGBYKAH0FAmNb0ogC\n" +
+            "6nfwJtbDT0b+AGUAR05VAhAAAQIDBAUGBwgJCgsMDQ4PiNUEGBYKAH0FAmNb0ogC\n" +
             "ngECmwIFFgIDAQAECwkIBwUVCgkIC18gBBkWCgAGBQJjW9KIAAoJEJQCL6VtwFtJ\n" +
             "DmMBAKqsGfRFQxJXyPgugWBgEaO5lt9fMM0yUxa76cmSWe5fAQD2oLSEW1GOgIs6\n" +
             "4+Z3gvtXopmeupT09HhI7ger98zDAwAKCRDDEsl9qfdqTwR6AP9Xftw8xZ7/MWhY\n" +
             "Imk/xheqPy07K4qo3T1pGKUvUqjWQQEAhE3r0oTcJn+KVCwGjF6AYiLOzO/R1x5b\n" +
             "SlYD3FeJ3Qo=\n" +
-            "=p8I9\n" +
+            "=GpEw\n" +
             "-----END PGP PRIVATE KEY BLOCK-----";
 
     @Test
@@ -156,7 +157,7 @@ public class GnuDummyKeyUtilTest {
                 .divertPrivateKeysToCard(GnuDummyKeyUtil.KeyFilter.any(), cardSerial);
 
         for (PGPSecretKey key : onCard) {
-            assertEquals(255, key.getS2KUsage());
+            assertEquals(SecretKeyPacket.USAGE_SHA1, key.getS2KUsage());
             S2K s2K = key.getS2K();
             assertEquals(S2K.GNU_PROTECTION_MODE_DIVERT_TO_CARD, s2K.getProtectionMode());
         }
