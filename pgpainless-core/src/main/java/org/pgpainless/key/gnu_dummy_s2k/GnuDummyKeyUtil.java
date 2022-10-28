@@ -11,16 +11,26 @@ import org.bouncycastle.bcpg.SecretSubkeyPacket;
 import org.bouncycastle.openpgp.PGPSecretKey;
 import org.bouncycastle.openpgp.PGPSecretKeyRing;
 
+import javax.annotation.Nonnull;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
 
+/**
+ * This class can be used to remove private keys from secret keys.
+ */
 public final class GnuDummyKeyUtil {
 
     private GnuDummyKeyUtil() {
 
     }
 
+    /**
+     * Modify the given {@link PGPSecretKeyRing}.
+     *
+     * @param secretKeys secret keys
+     * @return builder
+     */
     public static Builder modify(PGPSecretKeyRing secretKeys) {
         return new Builder(secretKeys);
     }
@@ -33,19 +43,50 @@ public final class GnuDummyKeyUtil {
             this.keys = keys;
         }
 
+        /**
+         * Remove all private keys that match the given {@link KeyFilter} from the key ring and replace them with
+         * GNU_DUMMY keys with S2K protection mode {@link GNUExtension#NO_PRIVATE_KEY}.
+         *
+         * @param filter filter to select keys for removal
+         * @return modified key ring
+         */
         public PGPSecretKeyRing removePrivateKeys(KeyFilter filter) {
-            return doIt(GNUExtension.NO_PRIVATE_KEY, null, filter);
+            return replacePrivateKeys(GNUExtension.NO_PRIVATE_KEY, null, filter);
         }
 
+        /**
+         * Remove all private keys that match the given {@link KeyFilter} from the key ring and replace them with
+         * GNU_DUMMY keys with S2K protection mode {@link GNUExtension#DIVERT_TO_CARD}.
+         * This method will set the serial number of the card to 0x00000000000000000000000000000000.
+         *
+         * NOTE: This method does not actually move any keys to a card.
+         *
+         * @param filter filter to select keys for removal
+         * @return modified key ring
+         */
         public PGPSecretKeyRing divertPrivateKeysToCard(KeyFilter filter) {
             return divertPrivateKeysToCard(filter, new byte[16]);
         }
 
+        /**
+         * Remove all private keys that match the given {@link KeyFilter} from the key ring and replace them with
+         * GNU_DUMMY keys with S2K protection mode {@link GNUExtension#DIVERT_TO_CARD}.
+         * This method will include the card serial number into the encoded dummy key.
+         *
+         * NOTE: This method does not actually move any keys to a card.
+         * 
+         * @param filter filter to select keys for removal
+         * @param cardSerialNumber serial number of the card (at most 16 bytes long)
+         * @return modified key ring
+         */
         public PGPSecretKeyRing divertPrivateKeysToCard(KeyFilter filter, byte[] cardSerialNumber) {
-            return doIt(GNUExtension.DIVERT_TO_CARD, cardSerialNumber, filter);
+            if (cardSerialNumber != null && cardSerialNumber.length > 16) {
+                throw new IllegalArgumentException("Card serial number length cannot exceed 16 bytes.");
+            }
+            return replacePrivateKeys(GNUExtension.DIVERT_TO_CARD, cardSerialNumber, filter);
         }
 
-        private PGPSecretKeyRing doIt(GNUExtension extension, byte[] serial, KeyFilter filter) {
+        private PGPSecretKeyRing replacePrivateKeys(GNUExtension extension, byte[] serial, KeyFilter filter) {
             byte[] encodedSerial = serial != null ? encodeSerial(serial) : null;
             S2K s2k = extensionToS2K(extension);
 
@@ -71,21 +112,19 @@ public final class GnuDummyKeyUtil {
                 }
             }
 
-            PGPSecretKeyRing gnuDummyKey = new PGPSecretKeyRing(secretKeyList);
-            return gnuDummyKey;
+            return new PGPSecretKeyRing(secretKeyList);
         }
 
-        private byte[] encodeSerial(byte[] serial) {
+        private byte[] encodeSerial(@Nonnull byte[] serial) {
             byte[] encoded = new byte[serial.length + 1];
-            encoded[0] = 0x10;
+            encoded[0] = (byte) (serial.length & 0xff);
             System.arraycopy(serial, 0, encoded, 1, serial.length);
             return encoded;
         }
 
-        private S2K extensionToS2K(GNUExtension extension) {
-            S2K s2k = S2K.gnuDummyS2K(extension == GNUExtension.DIVERT_TO_CARD ?
+        private S2K extensionToS2K(@Nonnull GNUExtension extension) {
+            return S2K.gnuDummyS2K(extension == GNUExtension.DIVERT_TO_CARD ?
                     S2K.GNUDummyParams.divertToCard() : S2K.GNUDummyParams.noPrivateKey());
-            return s2k;
         }
     }
 
@@ -99,15 +138,32 @@ public final class GnuDummyKeyUtil {
          */
         boolean filter(long keyId);
 
+        /**
+         * Select any key.
+         * @return filter
+         */
         static KeyFilter any() {
             return keyId -> true;
         }
 
+        /**
+         * Select only the given keyId.
+         *
+         * @param onlyKeyId only acceptable key id
+         * @return filter
+         */
         static KeyFilter only(long onlyKeyId) {
             return keyId -> keyId == onlyKeyId;
         }
 
+        /**
+         * Select all keyIds which are contained in the given set of ids.
+         *
+         * @param ids set of acceptable keyIds
+         * @return filter
+         */
         static KeyFilter selected(Collection<Long> ids) {
+            // noinspection Convert2MethodRef
             return keyId -> ids.contains(keyId);
         }
     }
