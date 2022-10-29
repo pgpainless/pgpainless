@@ -17,7 +17,7 @@ import java.io.IOException;
 import static org.junit.jupiter.api.Assertions.assertArrayEquals;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
-public class GnuDummyKeyUtilTest {
+public class GnuPGDummyKeyUtilTest {
     // normal, non-hw-backed key
     private static final String FULL_KEY = "-----BEGIN PGP PRIVATE KEY BLOCK-----\n" +
             "Version: PGPainless\n" +
@@ -153,8 +153,8 @@ public class GnuDummyKeyUtilTest {
         PGPSecretKeyRing secretKeys = PGPainless.readKeyRing().secretKeyRing(FULL_KEY);
         PGPSecretKeyRing expected = PGPainless.readKeyRing().secretKeyRing(ALL_KEYS_ON_CARD);
 
-        PGPSecretKeyRing onCard = GnuDummyKeyUtil.modify(secretKeys)
-                .divertPrivateKeysToCard(GnuDummyKeyUtil.KeyFilter.any(), cardSerial);
+        PGPSecretKeyRing onCard = GnuPGDummyKeyUtil.modify(secretKeys)
+                .divertPrivateKeysToCard(GnuPGDummyKeyUtil.KeyFilter.any(), cardSerial);
 
         for (PGPSecretKey key : onCard) {
             assertEquals(SecretKeyPacket.USAGE_SHA1, key.getS2KUsage());
@@ -170,8 +170,8 @@ public class GnuDummyKeyUtilTest {
         PGPSecretKeyRing secretKeys = PGPainless.readKeyRing().secretKeyRing(FULL_KEY);
         PGPSecretKeyRing expected = PGPainless.readKeyRing().secretKeyRing(PRIMARY_KEY_ON_CARD);
 
-        PGPSecretKeyRing onCard = GnuDummyKeyUtil.modify(secretKeys)
-                .divertPrivateKeysToCard(GnuDummyKeyUtil.KeyFilter.only(primaryKeyId), cardSerial);
+        PGPSecretKeyRing onCard = GnuPGDummyKeyUtil.modify(secretKeys)
+                .divertPrivateKeysToCard(GnuPGDummyKeyUtil.KeyFilter.only(primaryKeyId), cardSerial);
 
         assertArrayEquals(expected.getEncoded(), onCard.getEncoded());
     }
@@ -181,8 +181,8 @@ public class GnuDummyKeyUtilTest {
         PGPSecretKeyRing secretKeys = PGPainless.readKeyRing().secretKeyRing(FULL_KEY);
         PGPSecretKeyRing expected = PGPainless.readKeyRing().secretKeyRing(ENCRYPTION_KEY_ON_CARD);
 
-        PGPSecretKeyRing onCard = GnuDummyKeyUtil.modify(secretKeys)
-                .divertPrivateKeysToCard(GnuDummyKeyUtil.KeyFilter.only(encryptionKeyId), cardSerial);
+        PGPSecretKeyRing onCard = GnuPGDummyKeyUtil.modify(secretKeys)
+                .divertPrivateKeysToCard(GnuPGDummyKeyUtil.KeyFilter.only(encryptionKeyId), cardSerial);
 
         assertArrayEquals(expected.getEncoded(), onCard.getEncoded());
     }
@@ -192,8 +192,8 @@ public class GnuDummyKeyUtilTest {
         PGPSecretKeyRing secretKeys = PGPainless.readKeyRing().secretKeyRing(FULL_KEY);
         PGPSecretKeyRing expected = PGPainless.readKeyRing().secretKeyRing(SIGNATURE_KEY_ON_CARD);
 
-        PGPSecretKeyRing onCard = GnuDummyKeyUtil.modify(secretKeys)
-                .divertPrivateKeysToCard(GnuDummyKeyUtil.KeyFilter.only(signatureKeyId), cardSerial);
+        PGPSecretKeyRing onCard = GnuPGDummyKeyUtil.modify(secretKeys)
+                .divertPrivateKeysToCard(GnuPGDummyKeyUtil.KeyFilter.only(signatureKeyId), cardSerial);
 
         assertArrayEquals(expected.getEncoded(), onCard.getEncoded());
     }

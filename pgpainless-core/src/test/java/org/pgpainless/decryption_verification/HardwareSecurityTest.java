@@ -17,7 +17,7 @@ import org.bouncycastle.openpgp.PGPSecretKeyRing;
 import org.junit.jupiter.api.Test;
 import org.pgpainless.PGPainless;
 import org.pgpainless.key.SubkeyIdentifier;
-import org.pgpainless.key.gnu_dummy_s2k.GnuDummyKeyUtil;
+import org.pgpainless.key.gnu_dummy_s2k.GnuPGDummyKeyUtil;
 import org.pgpainless.key.util.KeyIdUtil;
 
 public class HardwareSecurityTest {
@@ -53,8 +53,8 @@ public class HardwareSecurityTest {
         assertTrue(HardwareSecurity.getIdsOfHardwareBackedKeys(secretKeys).isEmpty());
         long encryptionKeyId = KeyIdUtil.fromLongKeyId("0AAD8F5891262F50");
 
-        PGPSecretKeyRing withHardwareBackedEncryptionKey = GnuDummyKeyUtil.modify(secretKeys)
-                .divertPrivateKeysToCard(GnuDummyKeyUtil.KeyFilter.only(encryptionKeyId));
+        PGPSecretKeyRing withHardwareBackedEncryptionKey = GnuPGDummyKeyUtil.modify(secretKeys)
+                .divertPrivateKeysToCard(GnuPGDummyKeyUtil.KeyFilter.only(encryptionKeyId));
 
         Set<SubkeyIdentifier> hardwareBackedKeys = HardwareSecurity
                 .getIdsOfHardwareBackedKeys(withHardwareBackedEncryptionKey);
@@ -67,8 +67,8 @@ public class HardwareSecurityTest {
         PGPSecretKeyRing secretKeys = PGPainless.readKeyRing().secretKeyRing(KEY);
         assertTrue(HardwareSecurity.getIdsOfHardwareBackedKeys(secretKeys).isEmpty());
 
-        PGPSecretKeyRing withHardwareBackedEncryptionKey = GnuDummyKeyUtil.modify(secretKeys)
-                .divertPrivateKeysToCard(GnuDummyKeyUtil.KeyFilter.any());
+        PGPSecretKeyRing withHardwareBackedEncryptionKey = GnuPGDummyKeyUtil.modify(secretKeys)
+                .divertPrivateKeysToCard(GnuPGDummyKeyUtil.KeyFilter.any());
         Set<SubkeyIdentifier> expected = new HashSet<>();
         for (PGPSecretKey key : secretKeys) {
             expected.add(new SubkeyIdentifier(secretKeys, key.getKeyID()));
