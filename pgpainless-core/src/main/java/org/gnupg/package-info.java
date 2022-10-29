@@ -5,4 +5,4 @@
 /**
  * Utility classes related to creating keys with GNU DUMMY S2K values.
  */
-package org.pgpainless.key.gnu_dummy_s2k;
+package org.gnupg;
