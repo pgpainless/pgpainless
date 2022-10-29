@@ -4,17 +4,11 @@
 
 package org.pgpainless.decryption_verification;
 
-import org.bouncycastle.bcpg.S2K;
 import org.bouncycastle.openpgp.PGPException;
-import org.bouncycastle.openpgp.PGPSecretKey;
-import org.bouncycastle.openpgp.PGPSecretKeyRing;
 import org.bouncycastle.openpgp.operator.PGPDataDecryptor;
 import org.bouncycastle.openpgp.operator.PublicKeyDataDecryptorFactory;
 import org.bouncycastle.openpgp.operator.bc.BcPublicKeyDataDecryptorFactory;
 import org.pgpainless.key.SubkeyIdentifier;
-
-import java.util.HashSet;
-import java.util.Set;
 
 /**
  * Enable integration of hardware-backed OpenPGP keys.
@@ -39,31 +33,6 @@ public class HardwareSecurity {
         byte[] decryptSessionKey(long keyId, int keyAlgorithm, byte[] sessionKeyData)
                 throws HardwareSecurityException;
 
-    }
-
-    /**
-     * Return the key-ids of all keys which appear to be stored on a hardware token / smartcard.
-     *
-     * @param secretKeys secret keys
-     * @return set of keys with S2K type DIVERT_TO_CARD or GNU_DUMMY_S2K
-     */
-    public static Set<SubkeyIdentifier> getIdsOfHardwareBackedKeys(PGPSecretKeyRing secretKeys) {
-        Set<SubkeyIdentifier> hardwareBackedKeys = new HashSet<>();
-        for (PGPSecretKey secretKey : secretKeys) {
-            S2K s2K = secretKey.getS2K();
-            if (s2K == null) {
-                continue;
-            }
-
-            int type = s2K.getType();
-            int mode = s2K.getProtectionMode();
-            // TODO: Is GNU_DUMMY_S2K appropriate?
-            if (type == S2K.GNU_DUMMY_S2K && mode == S2K.GNU_PROTECTION_MODE_DIVERT_TO_CARD) {
-                SubkeyIdentifier hardwareBackedKey = new SubkeyIdentifier(secretKeys, secretKey.getKeyID());
-                hardwareBackedKeys.add(hardwareBackedKey);
-            }
-        }
-        return hardwareBackedKeys;
     }
 
     /**

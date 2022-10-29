@@ -10,11 +10,14 @@ import org.bouncycastle.bcpg.SecretKeyPacket;
 import org.bouncycastle.bcpg.SecretSubkeyPacket;
 import org.bouncycastle.openpgp.PGPSecretKey;
 import org.bouncycastle.openpgp.PGPSecretKeyRing;
+import org.pgpainless.key.SubkeyIdentifier;
 
 import javax.annotation.Nonnull;
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 
 /**
  * This class can be used to remove private keys from secret software-keys by replacing them with
@@ -27,6 +30,33 @@ public final class GnuPGDummyKeyUtil {
 
     private GnuPGDummyKeyUtil() {
 
+    }
+
+    /**
+     * Return the key-ids of all keys which appear to be stored on a hardware token / smartcard by GnuPG.
+     * Note, that this functionality is based on GnuPGs proprietary S2K extensions, which are not strictly required
+     * for dealing with hardware-backed keys.
+     *
+     * @param secretKeys secret keys
+     * @return set of keys with S2K type GNU_DUMMY_S2K and protection mode DIVERT_TO_CARD
+     */
+    public static Set<SubkeyIdentifier> getIdsOfKeysWithGnuPGS2KDivertedToCard(PGPSecretKeyRing secretKeys) {
+        Set<SubkeyIdentifier> hardwareBackedKeys = new HashSet<>();
+        for (PGPSecretKey secretKey : secretKeys) {
+            S2K s2K = secretKey.getS2K();
+            if (s2K == null) {
+                continue;
+            }
+
+            int type = s2K.getType();
+            int mode = s2K.getProtectionMode();
+            // TODO: Is GNU_DUMMY_S2K appropriate?
+            if (type == S2K.GNU_DUMMY_S2K && mode == S2K.GNU_PROTECTION_MODE_DIVERT_TO_CARD) {
+                SubkeyIdentifier hardwareBackedKey = new SubkeyIdentifier(secretKeys, secretKey.getKeyID());
+                hardwareBackedKeys.add(hardwareBackedKey);
+            }
+        }
+        return hardwareBackedKeys;
     }
 
     /**
