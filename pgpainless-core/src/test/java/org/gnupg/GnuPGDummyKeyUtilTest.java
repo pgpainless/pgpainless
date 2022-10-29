@@ -2,12 +2,14 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
-package org.pgpainless.key.gnu_dummy_s2k;
+package org.gnupg;
 
 import org.bouncycastle.bcpg.S2K;
 import org.bouncycastle.bcpg.SecretKeyPacket;
 import org.bouncycastle.openpgp.PGPSecretKey;
 import org.bouncycastle.openpgp.PGPSecretKeyRing;
+import org.gnupg.GnuPGDummyExtension;
+import org.gnupg.GnuPGDummyKeyUtil;
 import org.junit.jupiter.api.Test;
 import org.pgpainless.PGPainless;
 import org.pgpainless.key.SubkeyIdentifier;

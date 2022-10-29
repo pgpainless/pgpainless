@@ -13,7 +13,7 @@ import org.pgpainless.PGPainless;
 import org.pgpainless.encryption_signing.EncryptionOptions;
 import org.pgpainless.encryption_signing.EncryptionStream;
 import org.pgpainless.encryption_signing.ProducerOptions;
-import org.pgpainless.key.gnu_dummy_s2k.GnuPGDummyKeyUtil;
+import org.gnupg.GnuPGDummyKeyUtil;
 
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
