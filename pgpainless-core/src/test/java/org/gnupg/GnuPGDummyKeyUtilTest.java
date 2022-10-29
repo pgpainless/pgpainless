@@ -4,25 +4,23 @@
 
 package org.gnupg;
 
-import org.bouncycastle.bcpg.S2K;
-import org.bouncycastle.bcpg.SecretKeyPacket;
-import org.bouncycastle.openpgp.PGPSecretKey;
-import org.bouncycastle.openpgp.PGPSecretKeyRing;
-import org.gnupg.GnuPGDummyExtension;
-import org.gnupg.GnuPGDummyKeyUtil;
-import org.junit.jupiter.api.Test;
-import org.pgpainless.PGPainless;
-import org.pgpainless.key.SubkeyIdentifier;
-import org.pgpainless.key.util.KeyIdUtil;
+import static org.junit.jupiter.api.Assertions.assertArrayEquals;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import java.io.IOException;
 import java.util.Collections;
 import java.util.HashSet;
 import java.util.Set;
 
-import static org.junit.jupiter.api.Assertions.assertArrayEquals;
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertTrue;
+import org.bouncycastle.bcpg.S2K;
+import org.bouncycastle.bcpg.SecretKeyPacket;
+import org.bouncycastle.openpgp.PGPSecretKey;
+import org.bouncycastle.openpgp.PGPSecretKeyRing;
+import org.junit.jupiter.api.Test;
+import org.pgpainless.PGPainless;
+import org.pgpainless.key.SubkeyIdentifier;
+import org.pgpainless.key.util.KeyIdUtil;
 
 public class GnuPGDummyKeyUtilTest {
     // normal, non-hw-backed key

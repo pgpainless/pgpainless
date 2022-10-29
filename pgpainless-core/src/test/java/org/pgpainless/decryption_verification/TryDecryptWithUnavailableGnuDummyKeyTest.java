@@ -14,6 +14,7 @@ import org.pgpainless.encryption_signing.EncryptionOptions;
 import org.pgpainless.encryption_signing.EncryptionStream;
 import org.pgpainless.encryption_signing.ProducerOptions;
 import org.gnupg.GnuPGDummyKeyUtil;
+import org.pgpainless.exception.MissingDecryptionMethodException;
 
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
@@ -45,7 +46,7 @@ public class TryDecryptWithUnavailableGnuDummyKeyTest {
                 .removePrivateKeys(GnuPGDummyKeyUtil.KeyFilter.any());
 
         ByteArrayInputStream ciphertextIn = new ByteArrayInputStream(ciphertextOut.toByteArray());
-        assertThrows(PGPException.class, () -> PGPainless.decryptAndOrVerify()
+        assertThrows(MissingDecryptionMethodException.class, () -> PGPainless.decryptAndOrVerify()
                 .onInputStream(ciphertextIn)
                 .withOptions(ConsumerOptions.get().addDecryptionKey(removedKeys)));
     }
