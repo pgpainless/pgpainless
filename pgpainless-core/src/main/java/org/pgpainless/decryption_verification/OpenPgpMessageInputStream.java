@@ -18,6 +18,7 @@ import javax.annotation.Nonnull;
 
 import org.bouncycastle.bcpg.ArmoredInputStream;
 import org.bouncycastle.bcpg.BCPGInputStream;
+import org.bouncycastle.bcpg.S2K;
 import org.bouncycastle.bcpg.UnsupportedPacketVersionException;
 import org.bouncycastle.openpgp.PGPCompressedData;
 import org.bouncycastle.openpgp.PGPEncryptedData;
@@ -507,6 +508,14 @@ public class OpenPgpMessageInputStream extends DecryptionStream {
             }
             PGPSecretKey secretKey = decryptionKeys.getSecretKey(keyId);
             SubkeyIdentifier decryptionKeyId = new SubkeyIdentifier(decryptionKeys, secretKey.getKeyID());
+            S2K s2K = secretKey.getS2K();
+            if (s2K != null) {
+                int s2kType = s2K.getType();
+                if (s2kType >= 100 && s2kType <= 110) {
+                    LOGGER.debug("Skipping PKESK because key " + decryptionKeyId + " has unsupported private S2K specifier " + s2kType);
+                    continue;
+                }
+            }
             LOGGER.debug("Attempt decryption using secret key " + decryptionKeyId);
 
             SecretKeyRingProtector protector = options.getSecretKeyProtector(decryptionKeys);
@@ -532,6 +541,14 @@ public class OpenPgpMessageInputStream extends DecryptionStream {
                 PGPSecretKeyRing decryptionKeys = decryptionKeyCandidate.getA();
                 PGPSecretKey secretKey = decryptionKeyCandidate.getB();
                 SubkeyIdentifier decryptionKeyId = new SubkeyIdentifier(decryptionKeys, secretKey.getKeyID());
+                S2K s2K = secretKey.getS2K();
+                if (s2K != null) {
+                    int s2kType = s2K.getType();
+                    if (s2kType >= 100 && s2kType <= 110) {
+                        LOGGER.debug("Skipping PKESK because key " + decryptionKeyId + " has unsupported private S2K specifier " + s2kType);
+                        continue;
+                    }
+                }
                 LOGGER.debug("Attempt decryption of anonymous PKESK with key " + decryptionKeyId);
                 SecretKeyRingProtector protector = options.getSecretKeyProtector(decryptionKeyCandidate.getA());
                 if (!protector.hasPassphraseFor(secretKey.getKeyID())) {
@@ -567,6 +584,14 @@ public class OpenPgpMessageInputStream extends DecryptionStream {
                     long keyId = secretKey.getKeyID();
                     PGPSecretKeyRing decryptionKey = getDecryptionKey(keyId);
                     SubkeyIdentifier decryptionKeyId = new SubkeyIdentifier(decryptionKey, keyId);
+                    S2K s2K = secretKey.getS2K();
+                    if (s2K != null) {
+                        int s2kType = s2K.getType();
+                        if (s2kType >= 100 && s2kType <= 110) {
+                            LOGGER.debug("Skipping PKESK because key " + decryptionKeyId + " has unsupported private S2K specifier " + s2kType);
+                            continue;
+                        }
+                    }
                     LOGGER.debug("Attempt decryption with key " + decryptionKeyId + " while interactively requesting its passphrase");
                     SecretKeyRingProtector protector = options.getSecretKeyProtector(decryptionKey);
                     PGPPrivateKey privateKey = UnlockSecretKey.unlockSecretKey(secretKey, protector.getDecryptor(keyId));
