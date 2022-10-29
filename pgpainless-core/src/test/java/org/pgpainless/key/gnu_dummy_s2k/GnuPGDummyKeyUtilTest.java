@@ -10,12 +10,17 @@ import org.bouncycastle.openpgp.PGPSecretKey;
 import org.bouncycastle.openpgp.PGPSecretKeyRing;
 import org.junit.jupiter.api.Test;
 import org.pgpainless.PGPainless;
+import org.pgpainless.key.SubkeyIdentifier;
 import org.pgpainless.key.util.KeyIdUtil;
 
 import java.io.IOException;
+import java.util.Collections;
+import java.util.HashSet;
+import java.util.Set;
 
 import static org.junit.jupiter.api.Assertions.assertArrayEquals;
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 public class GnuPGDummyKeyUtilTest {
     // normal, non-hw-backed key
@@ -71,6 +76,29 @@ public class GnuPGDummyKeyUtilTest {
             "CRDDEsl9qfdqTwR6AP9Xftw8xZ7/MWhYImk/xheqPy07K4qo3T1pGKUvUqjWQQEA\n" +
             "hE3r0oTcJn+KVCwGjF6AYiLOzO/R1x5bSlYD3FeJ3Qo=\n" +
             "=rYoa\n" +
+            "-----END PGP PRIVATE KEY BLOCK-----";
+
+    public static final String ALL_KEYS_REMOVED = "-----BEGIN PGP PRIVATE KEY BLOCK-----\n" +
+            "Version: PGPainless\n" +
+            "Comment: 01FD AB6C E04A 5078 79FE  4A18 C312 C97D A9F7 6A4F\n" +
+            "Comment: Hardy Hardware <hardy@hard.ware>\n" +
+            "\n" +
+            "lDsEY1vSiBYJKwYBBAHaRw8BAQdAQ58lZn/HOtg+1b1KS18odyQ6M4LaDdbJAyRf\n" +
+            "eBwCeTT+AGUAR05VAbQgSGFyZHkgSGFyZHdhcmUgPGhhcmR5QGhhcmQud2FyZT6I\n" +
+            "jwQTFgoAQQUCY1vSiAkQwxLJfan3ak8WIQQB/ats4EpQeHn+ShjDEsl9qfdqTwKe\n" +
+            "AQKbAQUWAgMBAAQLCQgHBRUKCQgLApkBAAD5NgD/dtk+U0O4bpBZacV904TIYniZ\n" +
+            "xAhmORKreVNP7xGNV3YA/3hNTJfaqsekBnGjSnvHXjHtxIU2p7epkvbajB6dv94J\n" +
+            "nEAEY1vSiBIKKwYBBAGXVQEFAQEHQFVwSzbzZhYfSl+oi5nTSTNvGXPTxp8xKAA/\n" +
+            "fk+KdJQ8AwEIB/4AZQBHTlUBiHUEGBYKAB0FAmNb0ogCngECmwwFFgIDAQAECwkI\n" +
+            "BwUVCgkICwAKCRDDEsl9qfdqT8nJAP0YGPS+O1hkB/kWLR4Qp2ICCzTJmtA+Qyzp\n" +
+            "4v7ze17vvQD+MbQN4nL7zx859ZOP6aLE73w9k+dDQzJtYL/VBRO8/QGcOwRjW9KI\n" +
+            "FgkrBgEEAdpHDwEBB0C9JhMPrS3y/HXR1IQEAJSgh9UKl44HfQPqd/Am1sNPRv4A\n" +
+            "ZQBHTlUBiNUEGBYKAH0FAmNb0ogCngECmwIFFgIDAQAECwkIBwUVCgkIC18gBBkW\n" +
+            "CgAGBQJjW9KIAAoJEJQCL6VtwFtJDmMBAKqsGfRFQxJXyPgugWBgEaO5lt9fMM0y\n" +
+            "Uxa76cmSWe5fAQD2oLSEW1GOgIs64+Z3gvtXopmeupT09HhI7ger98zDAwAKCRDD\n" +
+            "Esl9qfdqTwR6AP9Xftw8xZ7/MWhYImk/xheqPy07K4qo3T1pGKUvUqjWQQEAhE3r\n" +
+            "0oTcJn+KVCwGjF6AYiLOzO/R1x5bSlYD3FeJ3Qo=\n" +
+            "=GEN/\n" +
             "-----END PGP PRIVATE KEY BLOCK-----";
 
     public static final String PRIMARY_KEY_ON_CARD = "-----BEGIN PGP PRIVATE KEY BLOCK-----\n" +
@@ -196,5 +224,54 @@ public class GnuPGDummyKeyUtilTest {
                 .divertPrivateKeysToCard(GnuPGDummyKeyUtil.KeyFilter.only(signatureKeyId), cardSerial);
 
         assertArrayEquals(expected.getEncoded(), onCard.getEncoded());
+    }
+
+    @Test
+    public void testRemoveAllKeys() throws IOException {
+        PGPSecretKeyRing secretKeys = PGPainless.readKeyRing().secretKeyRing(FULL_KEY);
+        PGPSecretKeyRing expected = PGPainless.readKeyRing().secretKeyRing(ALL_KEYS_REMOVED);
+
+        PGPSecretKeyRing removedSecretKeys = GnuPGDummyKeyUtil.modify(secretKeys)
+                .removePrivateKeys(GnuPGDummyKeyUtil.KeyFilter.any());
+
+        for (PGPSecretKey key : removedSecretKeys) {
+            assertEquals(key.getS2KUsage(), SecretKeyPacket.USAGE_SHA1);
+            S2K s2k = key.getS2K();
+            assertEquals(GnuPGDummyExtension.NO_PRIVATE_KEY.getId(), s2k.getProtectionMode());
+        }
+
+        assertArrayEquals(expected.getEncoded(), removedSecretKeys.getEncoded());
+    }
+
+    @Test
+    public void testGetSingleIdOfHardwareBackedKey() throws IOException {
+        PGPSecretKeyRing secretKeys = PGPainless.readKeyRing().secretKeyRing(FULL_KEY);
+        assertTrue(GnuPGDummyKeyUtil.getIdsOfKeysWithGnuPGS2KDivertedToCard(secretKeys).isEmpty());
+
+        PGPSecretKeyRing withHardwareBackedEncryptionKey = GnuPGDummyKeyUtil.modify(secretKeys)
+                .divertPrivateKeysToCard(GnuPGDummyKeyUtil.KeyFilter.only(encryptionKeyId));
+
+        Set<SubkeyIdentifier> hardwareBackedKeys = GnuPGDummyKeyUtil
+                .getIdsOfKeysWithGnuPGS2KDivertedToCard(withHardwareBackedEncryptionKey);
+        assertEquals(Collections.singleton(new SubkeyIdentifier(secretKeys, encryptionKeyId)), hardwareBackedKeys);
+    }
+
+
+    @Test
+    public void testGetIdsOfFullyHardwareBackedKey() throws IOException {
+        PGPSecretKeyRing secretKeys = PGPainless.readKeyRing().secretKeyRing(FULL_KEY);
+        assertTrue(GnuPGDummyKeyUtil.getIdsOfKeysWithGnuPGS2KDivertedToCard(secretKeys).isEmpty());
+
+        PGPSecretKeyRing withHardwareBackedEncryptionKey = GnuPGDummyKeyUtil.modify(secretKeys)
+                .divertPrivateKeysToCard(GnuPGDummyKeyUtil.KeyFilter.any());
+        Set<SubkeyIdentifier> expected = new HashSet<>();
+        for (PGPSecretKey key : secretKeys) {
+            expected.add(new SubkeyIdentifier(secretKeys, key.getKeyID()));
+        }
+
+        Set<SubkeyIdentifier> hardwareBackedKeys = GnuPGDummyKeyUtil
+                .getIdsOfKeysWithGnuPGS2KDivertedToCard(withHardwareBackedEncryptionKey);
+
+        assertEquals(expected, hardwareBackedKeys);
     }
 }
