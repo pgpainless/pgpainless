@@ -17,11 +17,15 @@ import java.util.Collection;
 import java.util.List;
 
 /**
- * This class can be used to remove private keys from secret keys.
+ * This class can be used to remove private keys from secret software-keys by replacing them with
+ * stub secret keys in the style of GnuPGs proprietary extensions.
+ *
+ * @see <a href="https://git.gnupg.org/cgi-bin/gitweb.cgi?p=gnupg.git;a=blob;f=doc/DETAILS;hb=HEAD#l1489">
+ *     GnuPGs doc/DETAILS - GNU extensions to the S2K algorithm</a>
  */
-public final class GnuDummyKeyUtil {
+public final class GnuPGDummyKeyUtil {
 
-    private GnuDummyKeyUtil() {
+    private GnuPGDummyKeyUtil() {
 
     }
 
@@ -45,18 +49,18 @@ public final class GnuDummyKeyUtil {
 
         /**
          * Remove all private keys that match the given {@link KeyFilter} from the key ring and replace them with
-         * GNU_DUMMY keys with S2K protection mode {@link GNUExtension#NO_PRIVATE_KEY}.
+         * GNU_DUMMY keys with S2K protection mode {@link GnuPGDummyExtension#NO_PRIVATE_KEY}.
          *
          * @param filter filter to select keys for removal
          * @return modified key ring
          */
         public PGPSecretKeyRing removePrivateKeys(KeyFilter filter) {
-            return replacePrivateKeys(GNUExtension.NO_PRIVATE_KEY, null, filter);
+            return replacePrivateKeys(GnuPGDummyExtension.NO_PRIVATE_KEY, null, filter);
         }
 
         /**
          * Remove all private keys that match the given {@link KeyFilter} from the key ring and replace them with
-         * GNU_DUMMY keys with S2K protection mode {@link GNUExtension#DIVERT_TO_CARD}.
+         * GNU_DUMMY keys with S2K protection mode {@link GnuPGDummyExtension#DIVERT_TO_CARD}.
          * This method will set the serial number of the card to 0x00000000000000000000000000000000.
          *
          * NOTE: This method does not actually move any keys to a card.
@@ -70,7 +74,7 @@ public final class GnuDummyKeyUtil {
 
         /**
          * Remove all private keys that match the given {@link KeyFilter} from the key ring and replace them with
-         * GNU_DUMMY keys with S2K protection mode {@link GNUExtension#DIVERT_TO_CARD}.
+         * GNU_DUMMY keys with S2K protection mode {@link GnuPGDummyExtension#DIVERT_TO_CARD}.
          * This method will include the card serial number into the encoded dummy key.
          *
          * NOTE: This method does not actually move any keys to a card.
@@ -83,10 +87,10 @@ public final class GnuDummyKeyUtil {
             if (cardSerialNumber != null && cardSerialNumber.length > 16) {
                 throw new IllegalArgumentException("Card serial number length cannot exceed 16 bytes.");
             }
-            return replacePrivateKeys(GNUExtension.DIVERT_TO_CARD, cardSerialNumber, filter);
+            return replacePrivateKeys(GnuPGDummyExtension.DIVERT_TO_CARD, cardSerialNumber, filter);
         }
 
-        private PGPSecretKeyRing replacePrivateKeys(GNUExtension extension, byte[] serial, KeyFilter filter) {
+        private PGPSecretKeyRing replacePrivateKeys(GnuPGDummyExtension extension, byte[] serial, KeyFilter filter) {
             byte[] encodedSerial = serial != null ? encodeSerial(serial) : null;
             S2K s2k = extensionToS2K(extension);
 
@@ -122,12 +126,16 @@ public final class GnuDummyKeyUtil {
             return encoded;
         }
 
-        private S2K extensionToS2K(@Nonnull GNUExtension extension) {
-            return S2K.gnuDummyS2K(extension == GNUExtension.DIVERT_TO_CARD ?
+        private S2K extensionToS2K(@Nonnull GnuPGDummyExtension extension) {
+            return S2K.gnuDummyS2K(extension == GnuPGDummyExtension.DIVERT_TO_CARD ?
                     S2K.GNUDummyParams.divertToCard() : S2K.GNUDummyParams.noPrivateKey());
         }
     }
 
+    /**
+     * Filter for selecting keys.
+     */
+    @FunctionalInterface
     public interface KeyFilter {
 
         /**
@@ -140,6 +148,7 @@ public final class GnuDummyKeyUtil {
 
         /**
          * Select any key.
+         *
          * @return filter
          */
         static KeyFilter any() {
