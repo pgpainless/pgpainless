@@ -6,7 +6,7 @@ package org.pgpainless.key.gnu_dummy_s2k;
 
 import org.bouncycastle.bcpg.S2K;
 
-public enum GNUExtension {
+public enum GnuPGDummyExtension {
 
     /**
      * Do not store the secret part at all.
@@ -21,7 +21,7 @@ public enum GNUExtension {
 
     private final int id;
 
-    GNUExtension(int id) {
+    GnuPGDummyExtension(int id) {
         this.id = id;
     }
 
