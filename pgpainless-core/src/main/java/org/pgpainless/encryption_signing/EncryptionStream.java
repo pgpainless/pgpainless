@@ -86,7 +86,7 @@ public final class EncryptionStream extends OutputStream {
         outermostStream = new BufferedOutputStream(outermostStream);
 
         LOGGER.debug("Wrap encryption output in ASCII armor");
-        armorOutputStream = ArmoredOutputStreamFactory.get(outermostStream);
+        armorOutputStream = ArmoredOutputStreamFactory.get(outermostStream, options);
         if (options.hasComment()) {
             String[] commentLines = options.getComment().split("\n");
             for (String commentLine : commentLines) {

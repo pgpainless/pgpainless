@@ -22,6 +22,7 @@ public final class ProducerOptions {
     private StreamEncoding encodingField = StreamEncoding.BINARY;
     private boolean applyCRLFEncoding = false;
     private boolean cleartextSigned = false;
+    private boolean hideArmorHeaders = false;
 
     private CompressionAlgorithm compressionAlgorithmOverride = PGPainless.getPolicy().getCompressionAlgorithmPolicy()
             .defaultCompressionAlgorithm();
@@ -301,5 +302,23 @@ public final class ProducerOptions {
 
     public @Nullable SigningOptions getSigningOptions() {
         return signingOptions;
+    }
+
+    public boolean isHideArmorHeaders() {
+        return hideArmorHeaders;
+    }
+
+    /**
+     * If set to <pre>true</pre>, armor headers like version or comments will be omitted from armored output.
+     * By default, armor headers are not hidden.
+     * Note: If comments are added via {@link #setComment(String)}, those are not omitted, even if
+     * {@link #hideArmorHeaders} is set to <pre>true</pre>.
+     *
+     * @param hideArmorHeaders true or false
+     * @return this
+     */
+    public ProducerOptions setHideArmorHeaders(boolean hideArmorHeaders) {
+        this.hideArmorHeaders = hideArmorHeaders;
+        return this;
     }
 }

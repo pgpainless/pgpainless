@@ -7,6 +7,7 @@ package org.pgpainless.util;
 import java.io.OutputStream;
 
 import org.bouncycastle.bcpg.ArmoredOutputStream;
+import org.pgpainless.encryption_signing.ProducerOptions;
 
 /**
  * Factory to create configured {@link ArmoredOutputStream ArmoredOutputStreams}.
@@ -35,6 +36,16 @@ public final class ArmoredOutputStreamFactory {
             ArmorUtils.addCommentHeader(armoredOutputStream, comment);
         }
         return armoredOutputStream;
+    }
+
+    public static ArmoredOutputStream get(OutputStream outputStream, ProducerOptions options) {
+        if (options.isHideArmorHeaders()) {
+            ArmoredOutputStream armorOut = new ArmoredOutputStream(outputStream);
+            armorOut.clearHeaders();
+            return armorOut;
+        } else {
+            return get(outputStream);
+        }
     }
 
     /**
