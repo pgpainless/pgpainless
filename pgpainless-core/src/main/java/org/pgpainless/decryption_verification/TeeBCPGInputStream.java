@@ -127,9 +127,6 @@ public class TeeBCPGInputStream {
             }
         }
 
-        // TODO: Uncomment, once BC-172.1 is available
-        //  see https://github.com/bcgit/bc-java/issues/1257
-        /*
         @Override
         public int read(byte[] b, int off, int len) throws IOException {
             if (last != -1) {
@@ -145,7 +142,6 @@ public class TeeBCPGInputStream {
             }
             return r;
         }
-         */
 
         /**
          * Squeeze the last byte out and update the output stream.
