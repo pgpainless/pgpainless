@@ -5,6 +5,12 @@ SPDX-License-Identifier: CC0-1.0
 
 # PGPainless Changelog
 
+## 1.3.8-SNAPSHOT
+- Bump `bcprov` to `1.72`
+- Bump `bcpg` to `1.72.1`
+- Add `ProducerOptions.setHideArmorHeaders(boolean)` to hide automatically added armor headers
+    in encrypted messages
+
 ## 1.3.7
 - Bugfix: Fix signature verification when `DecryptionStream` is drained byte-by-byte using `read()` call
 - Add `KeyRingUtils.injectCertification(keys, certification)`
