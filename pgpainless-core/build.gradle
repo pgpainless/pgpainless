@@ -21,7 +21,8 @@ dependencies {
 
     // Bouncy Castle
     api "org.bouncycastle:bcprov-jdk15to18:$bouncyCastleVersion"
-    api "org.bouncycastle:bcpg-jdk15to18:$bouncyCastleVersion"
+    api "org.bouncycastle:bcpg-jdk15to18:$bouncyPgVersion"
+    // api(files("../libs/bcpg-jdk18on-1.70.jar"))
 
     // @Nullable, @Nonnull annotations
     implementation "com.google.code.findbugs:jsr305:3.0.2"

@@ -8,7 +8,10 @@ allprojects {
         isSnapshot = true
         pgpainlessMinAndroidSdk = 10
         javaSourceCompatibility = 1.8
-        bouncyCastleVersion = '1.71'
+        bouncyCastleVersion = '1.72'
+        // unfortunately we rely on 1.72.1 for a patch for https://github.com/bcgit/bc-java/issues/1257
+        //  which is a bug we introduced with a PR against BC :/ oops
+        bouncyPgVersion = '1.72.1'
         junitVersion = '5.8.2'
         logbackVersion = '1.2.11'
         mockitoVersion = '4.5.1'
