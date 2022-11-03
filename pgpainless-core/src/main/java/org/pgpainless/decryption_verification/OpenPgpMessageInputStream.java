@@ -405,9 +405,7 @@ public class OpenPgpMessageInputStream extends DecryptionStream {
         syntaxVerifier.next(InputSymbol.EncryptedData);
         PGPEncryptedDataList encDataList = packetInputStream.readEncryptedDataList();
 
-        // TODO: Replace with !encDataList.isIntegrityProtected()
-        //  once BC ships it
-        if (!encDataList.get(0).isIntegrityProtected()) {
+        if (!encDataList.isIntegrityProtected()) {
             LOGGER.debug("Symmetrically Encrypted Data Packet is not integrity-protected and is therefore rejected.");
             throw new MessageNotIntegrityProtectedException();
         }
