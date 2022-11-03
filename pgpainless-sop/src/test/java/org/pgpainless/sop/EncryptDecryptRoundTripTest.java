@@ -512,7 +512,7 @@ public class EncryptDecryptRoundTripTest {
                 "-----END PGP MESSAGE-----").getBytes(StandardCharsets.UTF_8);
         SessionKey wrongSessionKey = SessionKey.fromString("9:63F741E7FB60247BE59C64158573308F727236482DB7653908C95839E4166AAE");
 
-        assertThrows(SOPGPException.BadData.class, () ->
+        assertThrows(SOPGPException.CannotDecrypt.class, () ->
                 sop.decrypt().withSessionKey(wrongSessionKey).ciphertext(ciphertext));
     }
 
