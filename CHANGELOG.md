@@ -5,7 +5,7 @@ SPDX-License-Identifier: CC0-1.0
 
 # PGPainless Changelog
 
-## 1.4.0-SNAPSHOT
+## 1.4.0-rc1
 - Reimplement message consumption via new `OpenPgpMessageInputStream`
     - Fix validation of prepended signatures (#314)
     - Fix validation of nested signatures (#319)
