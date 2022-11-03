@@ -178,6 +178,7 @@ public final class ArmorUtils {
      * If it is <pre>false</pre>, the signature will be encoded as-is.
      *
      * @param signature signature
+     * @param export whether to exclude non-exportable subpackets or trust-packets.
      * @return ascii armored string
      *
      * @throws IOException in case of an error in the {@link ArmoredOutputStream}
