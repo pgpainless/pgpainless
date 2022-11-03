@@ -5,6 +5,12 @@ SPDX-License-Identifier: CC0-1.0
 
 # PGPainless Changelog
 
+## 1.4.0-rc2-SNAPSHOT
+- Use BCs `PGPEncryptedDataList.extractSessionKeyEncryptedData()` method
+  to do decryption using session keys. This enables decryption of messages
+  without encrypted session key packets.
+- Use BCs `PGPEncryptedDataList.isIntegrityProtected()` to check for integrity protection
+
 ## 1.4.0-rc1
 - Reimplement message consumption via new `OpenPgpMessageInputStream`
     - Fix validation of prepended signatures (#314)
