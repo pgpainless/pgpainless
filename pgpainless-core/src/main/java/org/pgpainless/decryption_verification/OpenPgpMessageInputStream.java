@@ -33,6 +33,7 @@ import org.bouncycastle.openpgp.PGPPublicKeyEncryptedData;
 import org.bouncycastle.openpgp.PGPPublicKeyRing;
 import org.bouncycastle.openpgp.PGPSecretKey;
 import org.bouncycastle.openpgp.PGPSecretKeyRing;
+import org.bouncycastle.openpgp.PGPSessionKeyEncryptedData;
 import org.bouncycastle.openpgp.PGPSignature;
 import org.bouncycastle.openpgp.PGPSignatureList;
 import org.bouncycastle.openpgp.operator.PBEDataDecryptorFactory;
@@ -444,29 +445,14 @@ public class OpenPgpMessageInputStream extends DecryptionStream {
             MessageMetadata.EncryptedData encryptedData = new MessageMetadata.EncryptedData(
                     sessionKey.getAlgorithm(), metadata.depth + 1);
 
+            PGPSessionKeyEncryptedData sessionKeyEncryptedData = encDataList.extractSessionKeyEncryptedData();
             try {
-                // TODO: Use BCs new API once shipped
-                //  see https://github.com/bcgit/bc-java/pull/1228 (discussion)
-                PGPEncryptedData esk = esks.all().get(0);
-                if (esk instanceof PGPPBEEncryptedData) {
-                    PGPPBEEncryptedData skesk = (PGPPBEEncryptedData) esk;
-                    InputStream decrypted = skesk.getDataStream(decryptorFactory);
-                    encryptedData.sessionKey = sessionKey;
-                    IntegrityProtectedInputStream integrityProtected = new IntegrityProtectedInputStream(decrypted, skesk, options);
-                    nestedInputStream = new OpenPgpMessageInputStream(integrityProtected, options, encryptedData, policy);
-                    LOGGER.debug("Successfully decrypted data with provided session key");
-                    return true;
-                } else if (esk instanceof PGPPublicKeyEncryptedData) {
-                    PGPPublicKeyEncryptedData pkesk = (PGPPublicKeyEncryptedData) esk;
-                    InputStream decrypted = pkesk.getDataStream(decryptorFactory);
-                    encryptedData.sessionKey = sessionKey;
-                    IntegrityProtectedInputStream integrityProtected = new IntegrityProtectedInputStream(decrypted, pkesk, options);
-                    nestedInputStream = new OpenPgpMessageInputStream(integrityProtected, options, encryptedData, policy);
-                    LOGGER.debug("Successfully decrypted data with provided session key");
-                    return true;
-                } else {
-                    throw new RuntimeException("Unknown ESK class type: " + esk.getClass().getName());
-                }
+                InputStream decrypted = sessionKeyEncryptedData.getDataStream(decryptorFactory);
+                encryptedData.sessionKey = sessionKey;
+                IntegrityProtectedInputStream integrityProtected = new IntegrityProtectedInputStream(decrypted, sessionKeyEncryptedData, options);
+                nestedInputStream = new OpenPgpMessageInputStream(integrityProtected, options, encryptedData, policy);
+                LOGGER.debug("Successfully decrypted data with provided session key");
+                return true;
             } catch (PGPException e) {
                 // Session key mismatch?
                 LOGGER.debug("Decryption using provided session key failed. Mismatched session key and message?", e);
