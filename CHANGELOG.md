@@ -5,6 +5,35 @@ SPDX-License-Identifier: CC0-1.0
 
 # PGPainless Changelog
 
+## 1.4.0-SNAPSHOT
+- Reimplement message consumption via new `OpenPgpMessageInputStream`
+    - Fix validation of prepended signatures (#314)
+    - Fix validation of nested signatures (#319)
+    - Reject malformed messages (#237)
+        - Utilize new `PDA` syntax verifier class
+        - Allow for custom message syntax via `Syntax` class
+    - Gracefully handle `UnsupportedPacketVersionException` for signatures
+    - Allow plugin decryption code (e.g. to add support for hardware-backed keys (see #318))
+        - Add `HardwareSecurity` utility class
+        - Add `GnuPGDummyKeyUtil` which can be used to mimic GnuPGs proprietary S2K extensions
+          for keys which were placed on hardware tokens
+    - Add `OpenPgpPacket` enum class to enumerate available packet tags
+    - Remove old decryption classes in favor of new implementation
+        - Removed `DecryptionStream` class and replaced with new abstract class
+        - Removed `DecryptionStreamFactory`
+        - Removed `FinalIOException`
+        - Removed `MissingLiteralDataException` (replaced by `MalformedOpenPgpMessageException`)
+    - Introduce `MessageMetadata` class as potential future replacement for `OpenPgpMetadata`.
+        - can be obtained via `((OpenPgpMessageInputStream) decryptionStream).getMetadata();`
+- Add `CachingBcPublicKeyDataDecryptorFactory` which can be extended to prevent costly decryption
+  of session keys
+- Fix: Only verify message integrity once
+- Remove unnecessary `@throws` declarations on `KeyRingReader` methods
+- Remove unnecessary `@throws` declarations on `KeyRingUtils` methods
+- Add `KeyIdUtil.formatKeyId(long id)` to format hexadecimal key-ids.
+- Add `KeyRingUtils.publicKeys(PGPKeyRing keys)`
+- Remove `BCUtil` class
+
 ## 1.3.13
 - Bump `sop-java` to `4.0.7`
 
