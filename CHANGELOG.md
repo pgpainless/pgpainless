@@ -5,7 +5,7 @@ SPDX-License-Identifier: CC0-1.0
 
 # PGPainless Changelog
 
-## 1.3.8-SNAPSHOT
+## 1.3.8
 - Bump `bcprov` to `1.72`
 - Bump `bcpg` to `1.72.1`
 - Add `ProducerOptions.setHideArmorHeaders(boolean)` to hide automatically added armor headers
