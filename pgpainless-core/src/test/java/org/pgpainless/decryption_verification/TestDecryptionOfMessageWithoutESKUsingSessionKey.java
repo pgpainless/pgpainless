@@ -7,7 +7,6 @@ package org.pgpainless.decryption_verification;
 import org.bouncycastle.openpgp.PGPException;
 import org.bouncycastle.openpgp.PGPSessionKey;
 import org.bouncycastle.util.io.Streams;
-import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 import org.pgpainless.PGPainless;
 import org.pgpainless.util.SessionKey;
@@ -55,8 +54,6 @@ public class TestDecryptionOfMessageWithoutESKUsingSessionKey {
         assertEquals("Hello, World!\n", out.toString());
     }
 
-    // TODO: Enable when BC 173 gets released with our fix
-    @Disabled("Bug in BC 172. See https://github.com/bcgit/bc-java/pull/1228")
     @Test
     public void decryptMessageWithoutSKESK() throws PGPException, IOException {
         ByteArrayInputStream in = new ByteArrayInputStream(encryptedMessageWithoutESK.getBytes(StandardCharsets.UTF_8));
