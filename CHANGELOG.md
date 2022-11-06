@@ -5,6 +5,10 @@ SPDX-License-Identifier: CC0-1.0
 
 # PGPainless Changelog
 
+## 1.3.9-SNAPSHOT
+- Bump `sop-java` to `4.0.2`
+- SOP: Improve exception handling
+
 ## 1.3.8
 - Bump `bcprov` to `1.72`
 - Bump `bcpg` to `1.72.1`
