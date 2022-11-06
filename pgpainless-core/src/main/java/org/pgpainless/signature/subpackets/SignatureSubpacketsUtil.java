@@ -68,7 +68,7 @@ public final class SignatureSubpacketsUtil {
      * @param signature signature
      * @return issuer fingerprint or null
      */
-    public static IssuerFingerprint getIssuerFingerprint(PGPSignature signature) {
+    public static @Nullable IssuerFingerprint getIssuerFingerprint(PGPSignature signature) {
         return hashedOrUnhashed(signature, SignatureSubpacket.issuerFingerprint);
     }
 
@@ -79,7 +79,7 @@ public final class SignatureSubpacketsUtil {
      * @param signature signature
      * @return v4 fingerprint of the issuer, or null
      */
-    public static OpenPgpFingerprint getIssuerFingerprintAsOpenPgpFingerprint(PGPSignature signature) {
+    public static @Nullable OpenPgpFingerprint getIssuerFingerprintAsOpenPgpFingerprint(PGPSignature signature) {
         IssuerFingerprint subpacket = getIssuerFingerprint(signature);
         if (subpacket == null) {
             return null;
@@ -101,7 +101,7 @@ public final class SignatureSubpacketsUtil {
      * @param signature signature
      * @return issuer key-id or null
      */
-    public static IssuerKeyID getIssuerKeyId(PGPSignature signature) {
+    public static @Nullable IssuerKeyID getIssuerKeyId(PGPSignature signature) {
         return hashedOrUnhashed(signature, SignatureSubpacket.issuerKeyId);
     }
 
@@ -112,7 +112,7 @@ public final class SignatureSubpacketsUtil {
      * @param signature signature
      * @return issuer key-id as {@link Long}
      */
-    public static Long getIssuerKeyIdAsLong(PGPSignature signature) {
+    public static @Nullable Long getIssuerKeyIdAsLong(PGPSignature signature) {
         IssuerKeyID keyID = getIssuerKeyId(signature);
         if (keyID == null) {
             return null;
@@ -128,7 +128,7 @@ public final class SignatureSubpacketsUtil {
      * @param signature signature
      * @return revocation reason
      */
-    public static RevocationReason getRevocationReason(PGPSignature signature) {
+    public static @Nullable RevocationReason getRevocationReason(PGPSignature signature) {
         return hashed(signature, SignatureSubpacket.revocationReason);
     }
 
@@ -140,7 +140,7 @@ public final class SignatureSubpacketsUtil {
      * @param signature signature
      * @return signature creation time subpacket
      */
-    public static SignatureCreationTime getSignatureCreationTime(PGPSignature signature) {
+    public static @Nullable SignatureCreationTime getSignatureCreationTime(PGPSignature signature) {
         return hashed(signature, SignatureSubpacket.signatureCreationTime);
     }
 
@@ -151,7 +151,7 @@ public final class SignatureSubpacketsUtil {
      * @param signature signature
      * @return signature expiration time
      */
-    public static SignatureExpirationTime getSignatureExpirationTime(PGPSignature signature) {
+    public static @Nullable SignatureExpirationTime getSignatureExpirationTime(PGPSignature signature) {
         return hashed(signature, SignatureSubpacket.signatureExpirationTime);
     }
 
@@ -163,7 +163,7 @@ public final class SignatureSubpacketsUtil {
      * @param signature signature
      * @return expiration time as date
      */
-    public static Date getSignatureExpirationTimeAsDate(PGPSignature signature) {
+    public static @Nullable Date getSignatureExpirationTimeAsDate(PGPSignature signature) {
         SignatureExpirationTime subpacket = getSignatureExpirationTime(signature);
         if (subpacket == null) {
             return null;
@@ -178,7 +178,7 @@ public final class SignatureSubpacketsUtil {
      * @param signature signature
      * @return key expiration time
      */
-    public static KeyExpirationTime getKeyExpirationTime(PGPSignature signature) {
+    public static @Nullable KeyExpirationTime getKeyExpirationTime(PGPSignature signature) {
         return hashed(signature, SignatureSubpacket.keyExpirationTime);
     }
 
@@ -192,7 +192,7 @@ public final class SignatureSubpacketsUtil {
      * @param signingKey signature creation key
      * @return key expiration time as date
      */
-    public static Date getKeyExpirationTimeAsDate(PGPSignature signature, PGPPublicKey signingKey) {
+    public static @Nullable Date getKeyExpirationTimeAsDate(PGPSignature signature, PGPPublicKey signingKey) {
         if (signature.getKeyID() != signingKey.getKeyID()) {
             throw new IllegalArgumentException("Provided key (" + Long.toHexString(signingKey.getKeyID()) + ") did not create the signature (" + Long.toHexString(signature.getKeyID()) + ")");
         }
@@ -230,7 +230,7 @@ public final class SignatureSubpacketsUtil {
      * @param signature signature
      * @return revocable subpacket
      */
-    public static Revocable getRevocable(PGPSignature signature) {
+    public static @Nullable Revocable getRevocable(PGPSignature signature) {
         return hashed(signature, SignatureSubpacket.revocable);
     }
 
@@ -240,7 +240,7 @@ public final class SignatureSubpacketsUtil {
      * @param signature signature
      * @return symm. algo. prefs
      */
-    public static PreferredAlgorithms getPreferredSymmetricAlgorithms(PGPSignature signature) {
+    public static @Nullable PreferredAlgorithms getPreferredSymmetricAlgorithms(PGPSignature signature) {
         return hashed(signature, SignatureSubpacket.preferredSymmetricAlgorithms);
     }
 
@@ -252,7 +252,7 @@ public final class SignatureSubpacketsUtil {
      * @param signature signature
      * @return ordered set of symmetric key algorithm preferences
      */
-    public static Set<SymmetricKeyAlgorithm> parsePreferredSymmetricKeyAlgorithms(PGPSignature signature) {
+    public static @Nonnull Set<SymmetricKeyAlgorithm> parsePreferredSymmetricKeyAlgorithms(PGPSignature signature) {
         Set<SymmetricKeyAlgorithm> algorithms = new LinkedHashSet<>();
         PreferredAlgorithms preferences = getPreferredSymmetricAlgorithms(signature);
         if (preferences != null) {
@@ -272,7 +272,7 @@ public final class SignatureSubpacketsUtil {
      * @param signature signature
      * @return hash algo prefs
      */
-    public static PreferredAlgorithms getPreferredHashAlgorithms(PGPSignature signature) {
+    public static @Nullable PreferredAlgorithms getPreferredHashAlgorithms(PGPSignature signature) {
         return hashed(signature, SignatureSubpacket.preferredHashAlgorithms);
     }
 
@@ -284,7 +284,7 @@ public final class SignatureSubpacketsUtil {
      * @param signature signature
      * @return ordered set of hash algorithm preferences
      */
-    public static Set<HashAlgorithm> parsePreferredHashAlgorithms(PGPSignature signature) {
+    public static @Nonnull Set<HashAlgorithm> parsePreferredHashAlgorithms(PGPSignature signature) {
         Set<HashAlgorithm> algorithms = new LinkedHashSet<>();
         PreferredAlgorithms preferences = getPreferredHashAlgorithms(signature);
         if (preferences != null) {
@@ -304,7 +304,7 @@ public final class SignatureSubpacketsUtil {
      * @param signature signature
      * @return compression algo prefs
      */
-    public static PreferredAlgorithms getPreferredCompressionAlgorithms(PGPSignature signature) {
+    public static @Nullable PreferredAlgorithms getPreferredCompressionAlgorithms(PGPSignature signature) {
         return hashed(signature, SignatureSubpacket.preferredCompressionAlgorithms);
     }
 
@@ -316,7 +316,7 @@ public final class SignatureSubpacketsUtil {
      * @param signature signature
      * @return ordered set of compression algorithm preferences
      */
-    public static Set<CompressionAlgorithm> parsePreferredCompressionAlgorithms(PGPSignature signature) {
+    public static @Nonnull Set<CompressionAlgorithm> parsePreferredCompressionAlgorithms(PGPSignature signature) {
         Set<CompressionAlgorithm> algorithms = new LinkedHashSet<>();
         PreferredAlgorithms preferences = getPreferredCompressionAlgorithms(signature);
         if (preferences != null) {
@@ -336,7 +336,7 @@ public final class SignatureSubpacketsUtil {
      * @param signature signature
      * @return primary user id
      */
-    public static PrimaryUserID getPrimaryUserId(PGPSignature signature) {
+    public static @Nullable PrimaryUserID getPrimaryUserId(PGPSignature signature) {
         return hashed(signature, SignatureSubpacket.primaryUserId);
     }
 
@@ -346,7 +346,7 @@ public final class SignatureSubpacketsUtil {
      * @param signature signature
      * @return key flags
      */
-    public static KeyFlags getKeyFlags(PGPSignature signature) {
+    public static @Nullable KeyFlags getKeyFlags(PGPSignature signature) {
         return hashed(signature, SignatureSubpacket.keyFlags);
     }
 
@@ -357,7 +357,7 @@ public final class SignatureSubpacketsUtil {
      * @param signature signature
      * @return list of key flags
      */
-    public static List<KeyFlag> parseKeyFlags(@Nullable PGPSignature signature) {
+    public static @Nullable List<KeyFlag> parseKeyFlags(@Nullable PGPSignature signature) {
         if (signature == null) {
             return null;
         }
@@ -374,7 +374,7 @@ public final class SignatureSubpacketsUtil {
      * @param signature signature
      * @return features subpacket
      */
-    public static Features getFeatures(PGPSignature signature) {
+    public static @Nullable Features getFeatures(PGPSignature signature) {
         return hashed(signature, SignatureSubpacket.features);
     }
 
@@ -401,7 +401,7 @@ public final class SignatureSubpacketsUtil {
      * @param signature signature
      * @return signature target
      */
-    public static SignatureTarget getSignatureTarget(PGPSignature signature) {
+    public static @Nullable SignatureTarget getSignatureTarget(PGPSignature signature) {
         return hashedOrUnhashed(signature, SignatureSubpacket.signatureTarget);
     }
 
@@ -411,7 +411,7 @@ public final class SignatureSubpacketsUtil {
      * @param signature signature
      * @return hashed notations
      */
-    public static List<NotationData> getHashedNotationData(PGPSignature signature) {
+    public static @Nonnull List<NotationData> getHashedNotationData(PGPSignature signature) {
         NotationData[] notations = signature.getHashedSubPackets().getNotationDataOccurrences();
         return Arrays.asList(notations);
     }
@@ -424,7 +424,7 @@ public final class SignatureSubpacketsUtil {
      * @param notationName notation name
      * @return list of matching notation data objects
      */
-    public static List<NotationData> getHashedNotationData(PGPSignature signature, String notationName) {
+    public static @Nonnull List<NotationData> getHashedNotationData(PGPSignature signature, String notationName) {
         List<NotationData> allNotations = getHashedNotationData(signature);
         List<NotationData> withName = new ArrayList<>();
         for (NotationData data : allNotations) {
@@ -441,7 +441,7 @@ public final class SignatureSubpacketsUtil {
      * @param signature signature
      * @return unhashed notations
      */
-    public static List<NotationData> getUnhashedNotationData(PGPSignature signature) {
+    public static @Nonnull List<NotationData> getUnhashedNotationData(PGPSignature signature) {
         NotationData[] notations = signature.getUnhashedSubPackets().getNotationDataOccurrences();
         return Arrays.asList(notations);
     }
@@ -454,7 +454,7 @@ public final class SignatureSubpacketsUtil {
      * @param notationName notation name
      * @return list of matching notation data objects
      */
-    public static List<NotationData> getUnhashedNotationData(PGPSignature signature, String notationName) {
+    public static @Nonnull List<NotationData> getUnhashedNotationData(PGPSignature signature, String notationName) {
         List<NotationData> allNotations = getUnhashedNotationData(signature);
         List<NotationData> withName = new ArrayList<>();
         for (NotationData data : allNotations) {
@@ -471,7 +471,7 @@ public final class SignatureSubpacketsUtil {
      * @param signature signature
      * @return revocation key
      */
-    public static RevocationKey getRevocationKey(PGPSignature signature) {
+    public static @Nullable RevocationKey getRevocationKey(PGPSignature signature) {
         return hashed(signature, SignatureSubpacket.revocationKey);
     }
 
@@ -482,7 +482,7 @@ public final class SignatureSubpacketsUtil {
      * @param signature signature
      * @return signers user-id
      */
-    public static SignerUserID getSignerUserID(PGPSignature signature) {
+    public static @Nullable SignerUserID getSignerUserID(PGPSignature signature) {
         return hashed(signature, SignatureSubpacket.signerUserId);
     }
 
@@ -492,7 +492,7 @@ public final class SignatureSubpacketsUtil {
      * @param signature signature
      * @return intended recipient fingerprint subpackets
      */
-    public static List<IntendedRecipientFingerprint> getIntendedRecipientFingerprints(PGPSignature signature) {
+    public static @Nonnull List<IntendedRecipientFingerprint> getIntendedRecipientFingerprints(PGPSignature signature) {
         org.bouncycastle.bcpg.SignatureSubpacket[] subpackets = signature.getHashedSubPackets().getSubpackets(SignatureSubpacket.intendedRecipientFingerprint.getCode());
         List<IntendedRecipientFingerprint> intendedRecipients = new ArrayList<>(subpackets.length);
         for (org.bouncycastle.bcpg.SignatureSubpacket subpacket : subpackets) {
@@ -509,7 +509,7 @@ public final class SignatureSubpacketsUtil {
      *
      * @throws PGPException in case the embedded signatures cannot be parsed
      */
-    public static PGPSignatureList getEmbeddedSignature(PGPSignature signature) throws PGPException {
+    public static @Nullable PGPSignatureList getEmbeddedSignature(PGPSignature signature) throws PGPException {
         PGPSignatureList hashed = signature.getHashedSubPackets().getEmbeddedSignatures();
         if (!hashed.isEmpty()) {
             return hashed;
@@ -523,7 +523,7 @@ public final class SignatureSubpacketsUtil {
      * @param signature signature
      * @return exportable certification subpacket
      */
-    public static Exportable getExportableCertification(PGPSignature signature) {
+    public static @Nullable Exportable getExportableCertification(PGPSignature signature) {
         return hashed(signature, SignatureSubpacket.exportableCertification);
     }
 
@@ -533,7 +533,7 @@ public final class SignatureSubpacketsUtil {
      * @param signature signature
      * @return trust signature subpacket
      */
-    public static TrustSignature getTrustSignature(PGPSignature signature) {
+    public static @Nullable TrustSignature getTrustSignature(PGPSignature signature) {
         return hashed(signature, SignatureSubpacket.trustSignature);
     }
 
@@ -546,7 +546,7 @@ public final class SignatureSubpacketsUtil {
      * @param <P> generic subpacket type
      * @return list of subpackets from the hashed area
      */
-    private static <P extends org.bouncycastle.bcpg.SignatureSubpacket> P hashed(PGPSignature signature, SignatureSubpacket type) {
+    private static @Nullable <P extends org.bouncycastle.bcpg.SignatureSubpacket> P hashed(PGPSignature signature, SignatureSubpacket type) {
         return getSignatureSubpacket(signature.getHashedSubPackets(), type);
     }
 
@@ -559,7 +559,7 @@ public final class SignatureSubpacketsUtil {
      * @param <P> generic subpacket type
      * @return list of subpackets from the unhashed area
      */
-    private static <P extends org.bouncycastle.bcpg.SignatureSubpacket> P unhashed(PGPSignature signature, SignatureSubpacket type) {
+    private static @Nullable <P extends org.bouncycastle.bcpg.SignatureSubpacket> P unhashed(PGPSignature signature, SignatureSubpacket type) {
         return getSignatureSubpacket(signature.getUnhashedSubPackets(), type);
     }
 
@@ -572,7 +572,7 @@ public final class SignatureSubpacketsUtil {
      * @param <P> generic subpacket type
      * @return list of subpackets from the hashed/unhashed area
      */
-    private static <P extends org.bouncycastle.bcpg.SignatureSubpacket> P hashedOrUnhashed(PGPSignature signature, SignatureSubpacket type) {
+    private static @Nullable <P extends org.bouncycastle.bcpg.SignatureSubpacket> P hashedOrUnhashed(PGPSignature signature, SignatureSubpacket type) {
         P hashedSubpacket = hashed(signature, type);
         return hashedSubpacket != null ? hashedSubpacket : unhashed(signature, type);
     }
@@ -585,7 +585,7 @@ public final class SignatureSubpacketsUtil {
      * @param <P> generic return type of the subpacket
      * @return last occurrence of the subpacket in the vector
      */
-    public static <P extends org.bouncycastle.bcpg.SignatureSubpacket> P getSignatureSubpacket(PGPSignatureSubpacketVector vector, SignatureSubpacket type) {
+    public static @Nullable <P extends org.bouncycastle.bcpg.SignatureSubpacket> P getSignatureSubpacket(PGPSignatureSubpacketVector vector, SignatureSubpacket type) {
         if (vector == null) {
             // Almost never happens, but may be caused by broken signatures.
             return null;
