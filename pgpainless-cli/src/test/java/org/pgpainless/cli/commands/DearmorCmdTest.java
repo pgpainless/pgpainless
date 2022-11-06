@@ -6,6 +6,7 @@ package org.pgpainless.cli.commands;
 
 import static org.junit.jupiter.api.Assertions.assertArrayEquals;
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
@@ -87,4 +88,16 @@ public class DearmorCmdTest extends CLITest {
 
         assertEquals("Hello, World\n", out.toString());
     }
+
+    @Test
+    public void dearmorGarbageEmitsEmpty() {
+        String noArmoredData = "This is not armored.";
+        System.setIn(new ByteArrayInputStream(noArmoredData.getBytes(StandardCharsets.UTF_8)));
+        ByteArrayOutputStream out = new ByteArrayOutputStream();
+        System.setOut(new PrintStream(out));
+        PGPainlessCLI.execute("dearmor");
+
+        assertTrue(out.toString().isEmpty());
+    }
+
 }
