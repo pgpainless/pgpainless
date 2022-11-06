@@ -35,6 +35,11 @@ public class ExtractCertImpl implements ExtractCert {
         PGPSecretKeyRingCollection keys;
         try {
             keys = PGPainless.readKeyRing().secretKeyRingCollection(keyInputStream);
+        } catch (IOException e) {
+            if (e.getMessage() != null && e.getMessage().startsWith("unknown object in stream:")) {
+                throw new SOPGPException.BadData(e);
+            }
+            throw e;
         } catch (PGPException e) {
             throw new IOException("Cannot read keys.", e);
         }

@@ -100,8 +100,10 @@ public class EncryptImpl implements Encrypt {
     public Encrypt withCert(InputStream cert) throws SOPGPException.CertCannotEncrypt, SOPGPException.UnsupportedAsymmetricAlgo, SOPGPException.BadData {
         try {
             PGPPublicKeyRingCollection certificates = PGPainless.readKeyRing()
-                    .keyRingCollection(cert, false)
-                    .getPgpPublicKeyRingCollection();
+                            .publicKeyRingCollection(cert);
+            if (certificates.size() == 0) {
+                throw new SOPGPException.BadData("No certificate data found.");
+            }
             encryptionOptions.addRecipients(certificates);
         } catch (KeyException.UnacceptableEncryptionKeyException e) {
             throw new SOPGPException.CertCannotEncrypt(e.getMessage(), e);
