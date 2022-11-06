@@ -2,12 +2,12 @@
 .\"     Title: pgpainless-cli-generate-completion
 .\"    Author: [see the "AUTHOR(S)" section]
 .\" Generator: Asciidoctor 2.0.10
-.\"      Date: 2022-08-07
+.\"      Date: 2022-11-06
 .\"    Manual: PGPainless-CLI Manual
 .\"    Source: generate-completion 4.6.3
 .\"  Language: English
 .\"
-.TH "PGPAINLESS\-CLI\-GENERATE\-COMPLETION" "1" "2022-08-07" "generate\-completion 4.6.3" "PGPainless\-CLI Manual"
+.TH "PGPAINLESS\-CLI\-GENERATE\-COMPLETION" "1" "2022-11-06" "generate\-completion 4.6.3" "PGPainless\-CLI Manual"
 .ie \n(.g .ds Aq \(aq
 .el       .ds Aq '
 .ss \n[.ss] 0
@@ -28,10 +28,10 @@
 .  LINKSTYLE blue R < >
 .\}
 .SH "NAME"
-pgpainless\-cli\-generate\-completion \- Generate bash/zsh completion script for pgpainless\-cli.
+pgpainless\-cli\-generate\-completion \- Stateless OpenPGP Protocol
 .SH "SYNOPSIS"
 .sp
-\fBpgpainless\-cli generate\-completion\fP [\fB\-hV\fP]
+\fBpgpainless\-cli generate\-completion\fP [\fB\-hV\fP] [\fB\-\-stacktrace\fP]
 .SH "DESCRIPTION"
 .sp
 Generate bash/zsh completion script for pgpainless\-cli.
@@ -47,6 +47,11 @@ source <(pgpainless\-cli generate\-completion)
 \fB\-h\fP, \fB\-\-help\fP
 .RS 4
 Show this help message and exit.
+.RE
+.sp
+\fB\-\-stacktrace\fP
+.RS 4
+Print Stacktrace
 .RE
 .sp
 \fB\-V\fP, \fB\-\-version\fP

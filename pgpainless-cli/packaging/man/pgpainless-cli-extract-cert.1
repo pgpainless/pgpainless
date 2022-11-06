@@ -2,12 +2,12 @@
 .\"     Title: pgpainless-cli-extract-cert
 .\"    Author: [see the "AUTHOR(S)" section]
 .\" Generator: Asciidoctor 2.0.10
-.\"      Date: 2022-08-07
+.\"      Date: 2022-11-06
 .\"    Manual: PGPainless-CLI Manual
 .\"    Source: 
 .\"  Language: English
 .\"
-.TH "PGPAINLESS\-CLI\-EXTRACT\-CERT" "1" "2022-08-07" "" "PGPainless\-CLI Manual"
+.TH "PGPAINLESS\-CLI\-EXTRACT\-CERT" "1" "2022-11-06" "" "PGPainless\-CLI Manual"
 .ie \n(.g .ds Aq \(aq
 .el       .ds Aq '
 .ss \n[.ss] 0
@@ -31,7 +31,7 @@
 pgpainless\-cli\-extract\-cert \- Extract a public key certificate from a secret key from standard input
 .SH "SYNOPSIS"
 .sp
-\fBpgpainless\-cli extract\-cert\fP [\fB\-\-[no\-]armor\fP]
+\fBpgpainless\-cli extract\-cert\fP [\fB\-\-[no\-]armor\fP] [\fB\-\-stacktrace\fP]
 .SH "DESCRIPTION"
 
 .SH "OPTIONS"
@@ -40,99 +40,8 @@ pgpainless\-cli\-extract\-cert \- Extract a public key certificate from a secret
 .RS 4
 ASCII armor the output
 .RE
-.SH "EXIT CODES:"
 .sp
-\fB0\fP
+\fB\-\-stacktrace\fP
 .RS 4
-Successful program execution
-.RE
-.sp
-\fB1\fP
-.RS 4
-Generic program error
-.RE
-.sp
-\fB3\fP
-.RS 4
-Verification requested but no verifiable signature found
-.RE
-.sp
-\fB13\fP
-.RS 4
-Unsupported asymmetric algorithm
-.RE
-.sp
-\fB17\fP
-.RS 4
-Certificate is not encryption capable
-.RE
-.sp
-\fB19\fP
-.RS 4
-Usage error: Missing argument
-.RE
-.sp
-\fB23\fP
-.RS 4
-Incomplete verification instructions
-.RE
-.sp
-\fB29\fP
-.RS 4
-Unable to decrypt
-.RE
-.sp
-\fB31\fP
-.RS 4
-Password is not human\-readable
-.RE
-.sp
-\fB37\fP
-.RS 4
-Unsupported Option
-.RE
-.sp
-\fB41\fP
-.RS 4
-Invalid data or data of wrong type encountered
-.RE
-.sp
-\fB53\fP
-.RS 4
-Non\-text input received where text was expected
-.RE
-.sp
-\fB59\fP
-.RS 4
-Output file already exists
-.RE
-.sp
-\fB61\fP
-.RS 4
-Input file does not exist
-.RE
-.sp
-\fB67\fP
-.RS 4
-Cannot unlock password protected secret key
-.RE
-.sp
-\fB69\fP
-.RS 4
-Unsupported subcommand
-.RE
-.sp
-\fB71\fP
-.RS 4
-Unsupported special prefix (e.g. "@env/@fd") of indirect parameter
-.RE
-.sp
-\fB73\fP
-.RS 4
-Ambiguous input (a filename matching the designator already exists)
-.RE
-.sp
-\fB79\fP
-.RS 4
-Key is not signing capable
+Print Stacktrace
 .RE
