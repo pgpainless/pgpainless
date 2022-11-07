@@ -5,6 +5,10 @@ SPDX-License-Identifier: CC0-1.0
 
 # PGPainless Changelog
 
+## 1.3.10-SNAPSHOT
+- Bump `sop-java` to `4.0.3`
+- Fix: Fix NPE when verifying signature made by key without key flags on direct-key signature
+
 ## 1.3.9
 - Bump `sop-java` to `4.0.2`
 - SOP: Improve exception handling
