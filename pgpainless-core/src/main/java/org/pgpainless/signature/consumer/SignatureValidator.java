@@ -375,7 +375,9 @@ public abstract class SignatureValidator {
             public void verify(PGPSignature signature) throws SignatureValidationException {
                 signatureHasHashedCreationTime().verify(signature);
                 signatureDoesNotPredateSigningKey(creator).verify(signature);
-                signatureDoesNotPredateSigningKeyBindingDate(creator).verify(signature);
+                if (signature.getSignatureType() != SignatureType.PRIMARYKEY_BINDING.getCode()) {
+                    signatureDoesNotPredateSigningKeyBindingDate(creator).verify(signature);
+                }
             }
         };
     }
