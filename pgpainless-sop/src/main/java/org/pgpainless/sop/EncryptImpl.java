@@ -58,28 +58,23 @@ public class EncryptImpl implements Encrypt {
 
     @Override
     public Encrypt signWith(InputStream keyIn)
-            throws SOPGPException.KeyCannotSign, SOPGPException.UnsupportedAsymmetricAlgo, SOPGPException.BadData {
+            throws SOPGPException.KeyCannotSign, SOPGPException.UnsupportedAsymmetricAlgo, SOPGPException.BadData, IOException {
         if (signingOptions == null) {
             signingOptions = SigningOptions.get();
         }
-
-        try {
-            PGPSecretKeyRingCollection keys = PGPainless.readKeyRing().secretKeyRingCollection(keyIn);
-            if (keys.size() != 1) {
-                throw new SOPGPException.BadData(new AssertionError("Exactly one secret key at a time expected. Got " + keys.size()));
-            }
-            PGPSecretKeyRing signingKey = keys.iterator().next();
-
-            KeyRingInfo info = PGPainless.inspectKeyRing(signingKey);
-            if (info.getSigningSubkeys().isEmpty()) {
-                throw new SOPGPException.KeyCannotSign("Key " + OpenPgpFingerprint.of(signingKey) + " cannot sign.");
-            }
-
-            protector.addSecretKey(signingKey);
-            signingKeys.add(signingKey);
-        } catch (IOException | PGPException e) {
-            throw new SOPGPException.BadData(e);
+        PGPSecretKeyRingCollection keys = KeyReader.readSecretKeys(keyIn, true);
+        if (keys.size() != 1) {
+            throw new SOPGPException.BadData(new AssertionError("Exactly one secret key at a time expected. Got " + keys.size()));
         }
+        PGPSecretKeyRing signingKey = keys.iterator().next();
+
+        KeyRingInfo info = PGPainless.inspectKeyRing(signingKey);
+        if (info.getSigningSubkeys().isEmpty()) {
+            throw new SOPGPException.KeyCannotSign("Key " + OpenPgpFingerprint.of(signingKey) + " cannot sign.");
+        }
+
+        protector.addSecretKey(signingKey);
+        signingKeys.add(signingKey);
         return this;
     }
 

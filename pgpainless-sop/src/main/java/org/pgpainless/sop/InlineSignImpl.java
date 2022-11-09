@@ -51,19 +51,14 @@ public class InlineSignImpl implements InlineSign {
 
     @Override
     public InlineSign key(InputStream keyIn) throws SOPGPException.KeyCannotSign, SOPGPException.BadData, IOException {
-        try {
-            PGPSecretKeyRingCollection keys = PGPainless.readKeyRing().secretKeyRingCollection(keyIn);
-
-            for (PGPSecretKeyRing key : keys) {
-                KeyRingInfo info = PGPainless.inspectKeyRing(key);
-                if (!info.isUsableForSigning()) {
-                    throw new SOPGPException.KeyCannotSign("Key " + info.getFingerprint() + " does not have valid, signing capable subkeys.");
-                }
-                protector.addSecretKey(key);
-                signingKeys.add(key);
+        PGPSecretKeyRingCollection keys = KeyReader.readSecretKeys(keyIn, true);
+        for (PGPSecretKeyRing key : keys) {
+            KeyRingInfo info = PGPainless.inspectKeyRing(key);
+            if (!info.isUsableForSigning()) {
+                throw new SOPGPException.KeyCannotSign("Key " + info.getFingerprint() + " does not have valid, signing capable subkeys.");
             }
-        } catch (PGPException | KeyException e) {
-            throw new SOPGPException.BadData(e);
+            protector.addSecretKey(key);
+            signingKeys.add(key);
         }
         return this;
     }

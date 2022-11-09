@@ -52,22 +52,9 @@ public class DecryptImpl implements Decrypt {
 
     @Override
     public DecryptImpl verifyWithCert(InputStream certIn) throws SOPGPException.BadData, IOException {
-        try {
-            PGPPublicKeyRingCollection certs = PGPainless.readKeyRing().keyRingCollection(certIn, false)
-                    .getPgpPublicKeyRingCollection();
-            if (certs.size() == 0) {
-                throw new SOPGPException.BadData(new PGPException("No certificates provided."));
-            }
-
+        PGPPublicKeyRingCollection certs = KeyReader.readPublicKeys(certIn, true);
+        if (certs != null) {
             consumerOptions.addVerificationCerts(certs);
-
-        } catch (IOException e) {
-            if (e.getMessage() != null && e.getMessage().startsWith("unknown object in stream:")) {
-                throw new SOPGPException.BadData(e);
-            }
-            throw e;
-        } catch (PGPException e) {
-            throw new SOPGPException.BadData(e);
         }
         return this;
     }
@@ -102,23 +89,11 @@ public class DecryptImpl implements Decrypt {
 
     @Override
     public DecryptImpl withKey(InputStream keyIn) throws SOPGPException.BadData, IOException, SOPGPException.UnsupportedAsymmetricAlgo {
-        try {
-            PGPSecretKeyRingCollection secretKeyCollection = PGPainless.readKeyRing()
-                    .secretKeyRingCollection(keyIn);
-            if (secretKeyCollection.size() == 0) {
-                throw new SOPGPException.BadData("No key data found.");
-            }
-            for (PGPSecretKeyRing key : secretKeyCollection) {
-                protector.addSecretKey(key);
-                consumerOptions.addDecryptionKey(key, protector);
-            }
-        } catch (IOException e) {
-            if (e.getMessage() != null && e.getMessage().startsWith("unknown object in stream:")) {
-                throw new SOPGPException.BadData(e);
-            }
-            throw e;
-        } catch (PGPException e) {
-            throw new SOPGPException.BadData(e);
+        PGPSecretKeyRingCollection secretKeyCollection = KeyReader.readSecretKeys(keyIn, true);
+
+        for (PGPSecretKeyRing key : secretKeyCollection) {
+            protector.addSecretKey(key);
+            consumerOptions.addDecryptionKey(key, protector);
         }
         return this;
     }

@@ -42,13 +42,8 @@ public class InlineVerifyImpl implements InlineVerify {
     }
 
     @Override
-    public InlineVerify cert(InputStream cert) throws SOPGPException.BadData {
-        PGPPublicKeyRingCollection certificates;
-        try {
-            certificates = PGPainless.readKeyRing().publicKeyRingCollection(cert);
-        } catch (IOException | PGPException e) {
-            throw new SOPGPException.BadData(e);
-        }
+    public InlineVerify cert(InputStream cert) throws SOPGPException.BadData, IOException {
+        PGPPublicKeyRingCollection certificates = KeyReader.readPublicKeys(cert, true);
         options.addVerificationCerts(certificates);
         return this;
     }
