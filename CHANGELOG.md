@@ -5,6 +5,12 @@ SPDX-License-Identifier: CC0-1.0
 
 # PGPainless Changelog
 
+## 1.3.11-SNAPSHOT
+- Fix: When verifying subkey binding signatures with embedded recycled primary
+  key binding signatures, do not reject signature if primary key binding
+  predates subkey binding
+- SOP `verify`: Forcefully expect `data()` to be non-OpenPGP data
+
 ## 1.3.10
 - Bump `sop-java` to `4.0.3`
 - Fix: Fix NPE when verifying signature made by key without key flags on direct-key signature
