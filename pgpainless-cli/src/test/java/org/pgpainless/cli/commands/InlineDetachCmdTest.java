@@ -6,33 +6,18 @@ package org.pgpainless.cli.commands;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
-import static org.junit.jupiter.api.Assertions.fail;
 
-import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.File;
-import java.io.FileInputStream;
-import java.io.FileNotFoundException;
-import java.io.FileOutputStream;
 import java.io.IOException;
-import java.io.PrintStream;
 import java.nio.charset.StandardCharsets;
 
-import com.ginsberg.junit.exit.ExpectSystemExitWithStatus;
-import org.bouncycastle.util.io.Streams;
-import org.junit.jupiter.api.AfterEach;
-import org.junit.jupiter.api.BeforeAll;
-import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-import org.pgpainless.cli.PGPainlessCLI;
 import org.pgpainless.cli.TestUtils;
+import org.slf4j.LoggerFactory;
 import sop.exception.SOPGPException;
 
-public class InlineDetachCmdTest {
-
-    private PrintStream originalSout;
-    private static File tempDir;
-    private static File certFile;
+public class InlineDetachCmdTest extends CLITest {
 
     private static final String CERT = "-----BEGIN PGP PUBLIC KEY BLOCK-----\n" +
             "Version: BCPG v1.64\n" +
@@ -48,28 +33,6 @@ public class InlineDetachCmdTest {
             "T5A+LOdevAtzNOUA/RWeKfOGk6D+vKYRNpMJyqsHi/vBeKwXoeN0n6HuExVF\n" +
             "=a1W7\n" +
             "-----END PGP PUBLIC KEY BLOCK-----";
-
-    @BeforeAll
-    public static void createTempDir() throws IOException {
-        tempDir = TestUtils.createTempDirectory();
-
-        certFile = new File(tempDir, "cert.asc");
-        assertTrue(certFile.createNewFile());
-        try (FileOutputStream out = new FileOutputStream(certFile)) {
-            ByteArrayInputStream in = new ByteArrayInputStream(CERT.getBytes(StandardCharsets.UTF_8));
-            Streams.pipeAll(in, out);
-        }
-    }
-
-    @BeforeEach
-    public void saveSout() {
-        this.originalSout = System.out;
-    }
-
-    @AfterEach
-    public void restoreSout() {
-        System.setOut(originalSout);
-    }
 
     private static final String CLEAR_SIGNED_MESSAGE = "-----BEGIN PGP SIGNED MESSAGE-----\n" +
             "Hash: SHA512\n" +
@@ -103,91 +66,67 @@ public class InlineDetachCmdTest {
             "Unfold the imagined happiness that both\n" +
             "Receive in either by this dear encounter.";
 
+    public InlineDetachCmdTest() {
+        super(LoggerFactory.getLogger(InlineDetachCmdTest.class));
+    }
+
     @Test
     public void detachInbandSignatureAndMessage() throws IOException {
-        // Clearsigned In
-        ByteArrayInputStream clearSignedIn = new ByteArrayInputStream(CLEAR_SIGNED_MESSAGE.getBytes(StandardCharsets.UTF_8));
-        System.setIn(clearSignedIn);
+        pipeStringToStdin(CLEAR_SIGNED_MESSAGE);
+        ByteArrayOutputStream msgOut = pipeStdoutToStream();
+        File sigFile = nonExistentFile("sig.out");
 
-        // Plaintext Out
-        ByteArrayOutputStream msgOut = new ByteArrayOutputStream();
-        System.setOut(new PrintStream(msgOut));
-
-        // Detach
-        File tempSigFile = new File(tempDir, "sig.out");
-        PGPainlessCLI.main(new String[] {"inline-detach", "--signatures-out=" + tempSigFile.getAbsolutePath()});
+        assertSuccess(executeCommand("inline-detach", "--signatures-out", sigFile.getAbsolutePath()));
+        assertTrue(sigFile.exists(), "Signature file must have been written.");
 
         // Test equality with expected values
         assertEquals(CLEAR_SIGNED_BODY, msgOut.toString());
-        try (FileInputStream sigIn = new FileInputStream(tempSigFile)) {
-            ByteArrayOutputStream sigBytes = new ByteArrayOutputStream();
-            Streams.pipeAll(sigIn, sigBytes);
-            String sig = sigBytes.toString();
-            TestUtils.assertSignatureIsArmored(sigBytes.toByteArray());
-            TestUtils.assertSignatureEquals(CLEAR_SIGNED_SIGNATURE, sig);
-        } catch (FileNotFoundException e) {
-            fail("Signature File must have been written.", e);
-        }
+        String sig = readStringFromFile(sigFile);
+        TestUtils.assertSignatureIsArmored(sig.getBytes());
+        TestUtils.assertSignatureEquals(CLEAR_SIGNED_SIGNATURE, sig);
 
         // Check if produced signature still checks out
-        System.setIn(new ByteArrayInputStream(msgOut.toByteArray()));
-        ByteArrayOutputStream verifyOut = new ByteArrayOutputStream();
-        System.setOut(new PrintStream(verifyOut));
-        PGPainlessCLI.main(new String[] {"verify", tempSigFile.getAbsolutePath(), certFile.getAbsolutePath()});
-
-        assertEquals("2021-05-15T16:08:06Z 4F665C4DC2C4660BC6425E415736E6931ACF370C 4F665C4DC2C4660BC6425E415736E6931ACF370C\n", verifyOut.toString());
+        File certFile = writeFile("cert.asc", CERT);
+        pipeStringToStdin(msgOut.toString());
+        ByteArrayOutputStream verifyOut = pipeStdoutToStream();
+        assertSuccess(executeCommand("verify", sigFile.getAbsolutePath(), certFile.getAbsolutePath()));
+        assertEquals("2021-05-15T16:08:06Z 4F665C4DC2C4660BC6425E415736E6931ACF370C 4F665C4DC2C4660BC6425E415736E6931ACF370C\n",
+                verifyOut.toString());
     }
 
     @Test
     public void detachInbandSignatureAndMessageNoArmor() throws IOException {
-        // Clearsigned In
-        ByteArrayInputStream clearSignedIn = new ByteArrayInputStream(CLEAR_SIGNED_MESSAGE.getBytes(StandardCharsets.UTF_8));
-        System.setIn(clearSignedIn);
+        pipeStringToStdin(CLEAR_SIGNED_MESSAGE);
+        ByteArrayOutputStream msgOut = pipeStdoutToStream();
+        File sigFile = nonExistentFile("sig.out");
 
-        // Plaintext Out
-        ByteArrayOutputStream msgOut = new ByteArrayOutputStream();
-        System.setOut(new PrintStream(msgOut));
-
-        // Detach
-        File tempSigFile = new File(tempDir, "sig.asc");
-        PGPainlessCLI.main(new String[] {"inline-detach", "--signatures-out=" + tempSigFile.getAbsolutePath(), "--no-armor"});
+        assertSuccess(executeCommand("inline-detach", "--signatures-out", sigFile.getAbsolutePath(), "--no-armor"));
 
         // Test equality with expected values
         assertEquals(CLEAR_SIGNED_BODY, msgOut.toString());
-        try (FileInputStream sigIn = new FileInputStream(tempSigFile)) {
-            ByteArrayOutputStream sigBytes = new ByteArrayOutputStream();
-            Streams.pipeAll(sigIn, sigBytes);
-            byte[] sig = sigBytes.toByteArray();
-            TestUtils.assertSignatureIsNotArmored(sig);
-            TestUtils.assertSignatureEquals(CLEAR_SIGNED_SIGNATURE.getBytes(StandardCharsets.UTF_8), sig);
-        } catch (FileNotFoundException e) {
-            fail("Signature File must have been written.", e);
-        }
+        assertTrue(sigFile.exists(), "Signature file must have been written.");
+        byte[] sig = readBytesFromFile(sigFile);
+
+        TestUtils.assertSignatureIsNotArmored(sig);
+        TestUtils.assertSignatureEquals(CLEAR_SIGNED_SIGNATURE.getBytes(StandardCharsets.UTF_8), sig);
 
         // Check if produced signature still checks out
-        System.setIn(new ByteArrayInputStream(msgOut.toByteArray()));
-        ByteArrayOutputStream verifyOut = new ByteArrayOutputStream();
-        System.setOut(new PrintStream(verifyOut));
-        PGPainlessCLI.main(new String[] {"verify", tempSigFile.getAbsolutePath(), certFile.getAbsolutePath()});
-
-        assertEquals("2021-05-15T16:08:06Z 4F665C4DC2C4660BC6425E415736E6931ACF370C 4F665C4DC2C4660BC6425E415736E6931ACF370C\n", verifyOut.toString());
+        pipeBytesToStdin(msgOut.toByteArray());
+        ByteArrayOutputStream verifyOut = pipeStdoutToStream();
+        File certFile = writeFile("cert.asc", CERT);
+        assertSuccess(executeCommand("verify", sigFile.getAbsolutePath(), certFile.getAbsolutePath()));
+        assertEquals("2021-05-15T16:08:06Z 4F665C4DC2C4660BC6425E415736E6931ACF370C 4F665C4DC2C4660BC6425E415736E6931ACF370C\n",
+                verifyOut.toString());
     }
 
     @Test
-    @ExpectSystemExitWithStatus(SOPGPException.OutputExists.EXIT_CODE)
     public void existingSignatureOutCausesException() throws IOException {
-        // Clearsigned In
-        ByteArrayInputStream clearSignedIn = new ByteArrayInputStream(CLEAR_SIGNED_MESSAGE.getBytes(StandardCharsets.UTF_8));
-        System.setIn(clearSignedIn);
-
-        // Plaintext Out
-        ByteArrayOutputStream msgOut = new ByteArrayOutputStream();
-        System.setOut(new PrintStream(msgOut));
-
-        // Detach
-        File existingSigFile = new File(tempDir, "sig.existing");
-        assertTrue(existingSigFile.createNewFile());
-        PGPainlessCLI.main(new String[] {"inline-detach", "--signatures-out=" + existingSigFile.getAbsolutePath()});
+        pipeStringToStdin(CLEAR_SIGNED_MESSAGE);
+        ByteArrayOutputStream msgOut = pipeStdoutToStream();
+        File existingSigFile = writeFile("sig.asc", CLEAR_SIGNED_SIGNATURE);
+        int exit = executeCommand("inline-detach", "--signatures-out", existingSigFile.getAbsolutePath());
+        assertEquals(SOPGPException.OutputExists.EXIT_CODE, exit);
+        assertEquals(0, msgOut.size());
     }
 
 }

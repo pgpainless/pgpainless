@@ -7,73 +7,73 @@ package org.pgpainless.cli.commands;
 import static org.junit.jupiter.api.Assertions.assertArrayEquals;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
-import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
-import java.io.PrintStream;
-import java.nio.charset.StandardCharsets;
-import java.security.InvalidAlgorithmParameterException;
-import java.security.NoSuchAlgorithmException;
 
-import com.ginsberg.junit.exit.FailOnSystemExit;
-import org.bouncycastle.openpgp.PGPException;
 import org.bouncycastle.openpgp.PGPPublicKeyRing;
 import org.bouncycastle.openpgp.PGPSecretKeyRing;
-import org.junit.jupiter.api.AfterEach;
-import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.pgpainless.PGPainless;
-import org.pgpainless.cli.PGPainlessCLI;
+import org.slf4j.LoggerFactory;
 
-public class DearmorCmdTest {
+public class DearmorCmdTest extends CLITest {
 
-    private PrintStream originalSout;
-
-    @BeforeEach
-    public void saveSout() {
-        this.originalSout = System.out;
+    public DearmorCmdTest() {
+        super(LoggerFactory.getLogger(DearmorCmdTest.class));
     }
 
-    @AfterEach
-    public void restoreSout() {
-        System.setOut(originalSout);
-    }
+    private static final String key = "-----BEGIN PGP PRIVATE KEY BLOCK-----\n" +
+            "Version: PGPainless\n" +
+            "Comment: 62E9 DDA4 F20F 8341 D2BC  4B4C 8B07 5177 01F9 534C\n" +
+            "Comment: alice@pgpainless.org\n" +
+            "\n" +
+            "lFgEY2vOkhYJKwYBBAHaRw8BAQdAqGOtLd1tKnuwaYYcdr2/7C0cPiCCggRMKG+W\n" +
+            "t32QQdEAAP9VaBzjk/AaAqyykZnQHmS1HByEvRLv5/4yJMSr22451BFjtBRhbGlj\n" +
+            "ZUBwZ3BhaW5sZXNzLm9yZ4iOBBMWCgBBBQJja86SCRCLB1F3AflTTBYhBGLp3aTy\n" +
+            "D4NB0rxLTIsHUXcB+VNMAp4BApsBBRYCAwEABAsJCAcFFQoJCAsCmQEAACZhAP4s\n" +
+            "8hn/RBDvyLvGROOd15EYATnWlgyi+b5WXP6cELalJwD1FZy3RROhfNtZWcJPS43f\n" +
+            "G03pYNyb0NXoitIMAaXEB5xdBGNrzpISCisGAQQBl1UBBQEBB0CqCcYethOynfni\n" +
+            "8uRO+r/cZWp9hCLy8pRIExKqzcyEFAMBCAcAAP9sRRLoZkLpDaTNNrtIBovXu2AN\n" +
+            "hL8keUMWtVcuEHnkQA6iiHUEGBYKAB0FAmNrzpICngECmwwFFgIDAQAECwkIBwUV\n" +
+            "CgkICwAKCRCLB1F3AflTTBVpAP491etrjqCMWx2bBaw3K1vP0Mix6U0vF3J4kP9U\n" +
+            "eZm6owEA4kX9VAGESvLgIc7CEiswmxdWjxnLQyCRtWXfjgFmYQucWARja86SFgkr\n" +
+            "BgEEAdpHDwEBB0DBslhDpWC6CV3xJUSo071NSO5Cf4fgOwOj+QHs8mpFbwABAPkQ\n" +
+            "ioSydYiMi04LyfPohyrhhcdJDHallQg+jYHHUb2pEJCI1QQYFgoAfQUCY2vOkgKe\n" +
+            "AQKbAgUWAgMBAAQLCQgHBRUKCQgLXyAEGRYKAAYFAmNrzpIACgkQiHlkvEXh+f1e\n" +
+            "ywEA9A2GLU9LxCJxZf2X4qcZY//YJDChIZHPnY0Vaek1DsMBAN1YILrH2rxQeCXj\n" +
+            "m4bUKfJIRrGt6ZJscwORgNI1dFQFAAoJEIsHUXcB+VNMK3gA/3vvPm57JsHA860w\n" +
+            "lB4D1II71oFNL8TFnJqTAvpSKe1AAP49S4mKB4PE0ElcDo7n+nEYt6ba8IMRDlMo\n" +
+            "rsH85mUgCw==\n" +
+            "=EMKf\n" +
+            "-----END PGP PRIVATE KEY BLOCK-----\n";
 
     @Test
-    @FailOnSystemExit
-    public void dearmorSecretKey() throws PGPException, InvalidAlgorithmParameterException, NoSuchAlgorithmException, IOException {
-        PGPSecretKeyRing secretKey = PGPainless.generateKeyRing()
-                .modernKeyRing("alice@pgpainless.org");
-        String armored = PGPainless.asciiArmor(secretKey);
+    public void dearmorSecretKey() throws IOException {
+        PGPSecretKeyRing secretKey = PGPainless.readKeyRing().secretKeyRing(key);
 
-        System.setIn(new ByteArrayInputStream(armored.getBytes(StandardCharsets.UTF_8)));
-        ByteArrayOutputStream out = new ByteArrayOutputStream();
-        System.setOut(new PrintStream(out));
-        PGPainlessCLI.execute("dearmor");
+        pipeStringToStdin(key);
+        ByteArrayOutputStream dearmored = pipeStdoutToStream();
+        assertSuccess(executeCommand("dearmor"));
 
-        assertArrayEquals(secretKey.getEncoded(), out.toByteArray());
+        assertArrayEquals(secretKey.getEncoded(), dearmored.toByteArray());
     }
 
 
     @Test
-    @FailOnSystemExit
-    public void dearmorCertificate() throws PGPException, InvalidAlgorithmParameterException, NoSuchAlgorithmException, IOException {
-        PGPSecretKeyRing secretKey = PGPainless.generateKeyRing()
-                .modernKeyRing("alice@pgpainless.org");
+    public void dearmorCertificate() throws IOException {
+        PGPSecretKeyRing secretKey = PGPainless.readKeyRing().secretKeyRing(key);
         PGPPublicKeyRing certificate = PGPainless.extractCertificate(secretKey);
-        String armored = PGPainless.asciiArmor(certificate);
+        String armoredCert = PGPainless.asciiArmor(certificate);
 
-        System.setIn(new ByteArrayInputStream(armored.getBytes(StandardCharsets.UTF_8)));
-        ByteArrayOutputStream out = new ByteArrayOutputStream();
-        System.setOut(new PrintStream(out));
-        PGPainlessCLI.execute("dearmor");
+        pipeStringToStdin(armoredCert);
+        ByteArrayOutputStream out = pipeStdoutToStream();
+        assertSuccess(executeCommand("dearmor"));
 
         assertArrayEquals(certificate.getEncoded(), out.toByteArray());
     }
 
     @Test
-    @FailOnSystemExit
-    public void dearmorMessage() {
+    public void dearmorMessage() throws IOException {
         String armored = "-----BEGIN PGP MESSAGE-----\n" +
                 "Version: BCPG v1.69\n" +
                 "\n" +
@@ -81,10 +81,9 @@ public class DearmorCmdTest {
                 "=fkLo\n" +
                 "-----END PGP MESSAGE-----";
 
-        System.setIn(new ByteArrayInputStream(armored.getBytes(StandardCharsets.UTF_8)));
-        ByteArrayOutputStream out = new ByteArrayOutputStream();
-        System.setOut(new PrintStream(out));
-        PGPainlessCLI.execute("dearmor");
+        pipeStringToStdin(armored);
+        ByteArrayOutputStream out = pipeStdoutToStream();
+        assertSuccess(executeCommand("dearmor"));
 
         assertEquals("Hello, World\n", out.toString());
     }
