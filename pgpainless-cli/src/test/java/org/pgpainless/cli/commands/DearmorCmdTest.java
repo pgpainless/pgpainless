@@ -90,13 +90,11 @@ public class DearmorCmdTest extends CLITest {
     }
 
     @Test
-    public void dearmorGarbageEmitsEmpty() {
+    public void dearmorGarbageEmitsEmpty() throws IOException {
         String noArmoredData = "This is not armored.";
-        System.setIn(new ByteArrayInputStream(noArmoredData.getBytes(StandardCharsets.UTF_8)));
-        ByteArrayOutputStream out = new ByteArrayOutputStream();
-        System.setOut(new PrintStream(out));
-        PGPainlessCLI.execute("dearmor");
-
+        pipeStringToStdin(noArmoredData);
+        ByteArrayOutputStream out = pipeStdoutToStream();
+        assertSuccess(executeCommand("dearmor"));
         assertTrue(out.toString().isEmpty());
     }
 
