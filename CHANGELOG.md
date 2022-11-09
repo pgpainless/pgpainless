@@ -10,6 +10,8 @@ SPDX-License-Identifier: CC0-1.0
   key binding signatures, do not reject signature if primary key binding
   predates subkey binding
 - SOP `verify`: Forcefully expect `data()` to be non-OpenPGP data
+- SOP `sign`: Fix matching of keys and passphrases
+- CLI: Added tons of tests \o/
 
 ## 1.3.10
 - Bump `sop-java` to `4.0.3`
