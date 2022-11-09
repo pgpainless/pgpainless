@@ -24,6 +24,7 @@ import org.pgpainless.encryption_signing.EncryptionStream;
 import org.pgpainless.encryption_signing.ProducerOptions;
 import org.pgpainless.encryption_signing.SigningOptions;
 import org.pgpainless.exception.KeyException;
+import org.pgpainless.key.OpenPgpFingerprint;
 import org.pgpainless.key.SubkeyIdentifier;
 import org.pgpainless.key.info.KeyRingInfo;
 import org.pgpainless.util.ArmoredOutputStreamFactory;
@@ -41,6 +42,7 @@ public class DetachedSignImpl implements DetachedSign {
     private SignAs mode = SignAs.Binary;
     private final SigningOptions signingOptions = SigningOptions.get();
     private final MatchMakingSecretKeyRingProtector protector = new MatchMakingSecretKeyRingProtector();
+    private final List<PGPSecretKeyRing> signingKeys = new ArrayList<>();
 
     @Override
     public DetachedSign noArmor() {
@@ -56,19 +58,14 @@ public class DetachedSignImpl implements DetachedSign {
 
     @Override
     public DetachedSign key(InputStream keyIn) throws SOPGPException.KeyCannotSign, SOPGPException.BadData, IOException {
-        try {
-            PGPSecretKeyRingCollection keys = PGPainless.readKeyRing().secretKeyRingCollection(keyIn);
-
-            for (PGPSecretKeyRing key : keys) {
-                KeyRingInfo info = PGPainless.inspectKeyRing(key);
-                if (!info.isUsableForSigning()) {
-                    throw new SOPGPException.KeyCannotSign("Key " + info.getFingerprint() + " does not have valid, signing capable subkeys.");
-                }
-                protector.addSecretKey(key);
-                signingOptions.addDetachedSignature(protector, key, modeToSigType(mode));
+        PGPSecretKeyRingCollection keys = KeyReader.readSecretKeys(keyIn, true);
+        for (PGPSecretKeyRing key : keys) {
+            KeyRingInfo info = PGPainless.inspectKeyRing(key);
+            if (!info.isUsableForSigning()) {
+                throw new SOPGPException.KeyCannotSign("Key " + info.getFingerprint() + " does not have valid, signing capable subkeys.");
             }
-        } catch (PGPException | KeyException e) {
-            throw new SOPGPException.BadData(e);
+            protector.addSecretKey(key);
+            signingKeys.add(key);
         }
         return this;
     }
@@ -82,6 +79,16 @@ public class DetachedSignImpl implements DetachedSign {
 
     @Override
     public ReadyWithResult<SigningResult> data(InputStream data) throws IOException {
+        for (PGPSecretKeyRing key : signingKeys) {
+            try {
+                signingOptions.addDetachedSignature(protector, key, modeToSigType(mode));
+            } catch (KeyException.UnacceptableSigningKeyException | KeyException.MissingSecretKeyException e) {
+                throw new SOPGPException.KeyCannotSign("Key " + OpenPgpFingerprint.of(key) + " cannot sign.", e);
+            } catch (PGPException e) {
+                throw new SOPGPException.KeyIsProtected("Key " + OpenPgpFingerprint.of(key) + " cannot be unlocked.", e);
+            }
+        }
+
         ByteArrayOutputStream buffer = new ByteArrayOutputStream();
         try {
             EncryptionStream signingStream = PGPainless.encryptAndOrSign()
