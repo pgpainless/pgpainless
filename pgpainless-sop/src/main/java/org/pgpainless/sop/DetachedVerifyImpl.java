@@ -62,6 +62,8 @@ public class DetachedVerifyImpl implements DetachedVerify {
 
     @Override
     public List<Verification> data(InputStream data) throws IOException, SOPGPException.NoSignature, SOPGPException.BadData {
+        options.forceNonOpenPgpData();
+
         DecryptionStream decryptionStream;
         try {
             decryptionStream = PGPainless.decryptAndOrVerify()
