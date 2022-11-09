@@ -5,7 +5,7 @@ SPDX-License-Identifier: CC0-1.0
 
 # PGPainless Changelog
 
-## 1.3.11-SNAPSHOT
+## 1.3.11
 - Fix: When verifying subkey binding signatures with embedded recycled primary
   key binding signatures, do not reject signature if primary key binding
   predates subkey binding
