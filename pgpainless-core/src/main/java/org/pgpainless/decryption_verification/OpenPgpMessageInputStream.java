@@ -1018,11 +1018,9 @@ public class OpenPgpMessageInputStream extends DecryptionStream {
         }
 
         private PGPPublicKeyRing findCertificate(long keyId) {
-            for (PGPPublicKeyRing cert : options.getCertificates()) {
-                PGPPublicKey verificationKey = cert.getPublicKey(keyId);
-                if (verificationKey != null) {
-                    return cert;
-                }
+            PGPPublicKeyRing cert = options.getCertificateSource().getCertificate(keyId);
+            if (cert != null) {
+                return cert;
             }
 
             if (options.getMissingCertificateCallback() != null) {
