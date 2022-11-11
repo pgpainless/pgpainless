@@ -36,7 +36,7 @@ public class InlineSignVerifyRoundtripTest {
         byte[] inlineSigned = sop.inlineSign()
                 .key(key)
                 .withKeyPassword("sw0rdf1sh")
-                .mode(InlineSignAs.CleartextSigned)
+                .mode(InlineSignAs.clearsigned)
                 .data(message).getBytes();
 
         ByteArrayAndResult<List<Verification>> result = sop.inlineVerify()

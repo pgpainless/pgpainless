@@ -32,7 +32,7 @@ import sop.operation.InlineSign;
 public class InlineSignImpl implements InlineSign {
 
     private boolean armor = true;
-    private InlineSignAs mode = InlineSignAs.Binary;
+    private InlineSignAs mode = InlineSignAs.binary;
     private final SigningOptions signingOptions = new SigningOptions();
     private final MatchMakingSecretKeyRingProtector protector = new MatchMakingSecretKeyRingProtector();
     private final List<PGPSecretKeyRing> signingKeys = new ArrayList<>();
@@ -74,7 +74,7 @@ public class InlineSignImpl implements InlineSign {
     public Ready data(InputStream data) throws SOPGPException.KeyIsProtected, IOException, SOPGPException.ExpectedText {
         for (PGPSecretKeyRing key : signingKeys) {
             try {
-                if (mode == InlineSignAs.CleartextSigned) {
+                if (mode == InlineSignAs.clearsigned) {
                     signingOptions.addDetachedSignature(protector, key);
                 } else {
                     signingOptions.addInlineSignature(protector, key, modeToSigType(mode));
@@ -87,7 +87,7 @@ public class InlineSignImpl implements InlineSign {
         }
 
         ProducerOptions producerOptions = ProducerOptions.sign(signingOptions);
-        if (mode == InlineSignAs.CleartextSigned) {
+        if (mode == InlineSignAs.clearsigned) {
             producerOptions.setCleartextSigned();
             producerOptions.setAsciiArmor(true);
         } else {
@@ -119,7 +119,7 @@ public class InlineSignImpl implements InlineSign {
     }
 
     private static DocumentSignatureType modeToSigType(InlineSignAs mode) {
-        return mode == InlineSignAs.Binary ? DocumentSignatureType.BINARY_DOCUMENT
+        return mode == InlineSignAs.binary ? DocumentSignatureType.BINARY_DOCUMENT
                 : DocumentSignatureType.CANONICAL_TEXT_DOCUMENT;
     }
 }

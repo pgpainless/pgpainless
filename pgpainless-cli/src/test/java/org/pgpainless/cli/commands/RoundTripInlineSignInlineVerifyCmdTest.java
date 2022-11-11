@@ -134,7 +134,7 @@ public class RoundTripInlineSignInlineVerifyCmdTest extends CLITest {
         pipeStringToStdin(MESSAGE);
         ByteArrayOutputStream ciphertextOut = pipeStdoutToStream();
         assertSuccess(executeCommand("inline-sign",
-                "--as", "cleartextsigned",
+                "--as", "clearsigned",
                 key.getAbsolutePath(),
                 "--with-key-password", password.getAbsolutePath()));
 
@@ -154,7 +154,7 @@ public class RoundTripInlineSignInlineVerifyCmdTest extends CLITest {
         pipeStringToStdin(MESSAGE);
         ByteArrayOutputStream ciphertextOut = pipeStdoutToStream();
         assertSuccess(executeCommand("inline-sign",
-                "--as", "cleartextsigned",
+                "--as", "clearsigned",
                 key.getAbsolutePath(),
                 "--with-key-password", password.getAbsolutePath()));
 
@@ -212,7 +212,7 @@ public class RoundTripInlineSignInlineVerifyCmdTest extends CLITest {
         pipeStringToStdin(MESSAGE);
         ByteArrayOutputStream ciphertextOut = pipeStdoutToStream();
         assertSuccess(executeCommand("inline-sign",
-                "--as", "cleartextsigned",
+                "--as", "clearsigned",
                 key.getAbsolutePath(),
                 "--with-key-password", password.getAbsolutePath()));
 

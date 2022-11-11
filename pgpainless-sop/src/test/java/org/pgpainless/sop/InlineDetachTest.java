@@ -63,7 +63,7 @@ public class InlineDetachTest {
         byte[] cleartextSigned = sop.inlineSign()
                 .key(key)
                 .withKeyPassword("sw0rdf1sh")
-                .mode(InlineSignAs.CleartextSigned)
+                .mode(InlineSignAs.clearsigned)
                 .data(data).getBytes();
 
         // actually detach the message
