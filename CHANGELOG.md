@@ -5,6 +5,12 @@ SPDX-License-Identifier: CC0-1.0
 
 # PGPainless Changelog
 
+## 1.3.12-SNAPSHOT
+- Bump `sop-java` to `4.0.5`
+- Fix: `sop inline-sign`: Adopt `--as=clearsigned` instead of `--as=cleartextsigned`
+- SOP: Hide `Version: PGPainless` armor header in all armored outputs
+- Fix: `sop armor`: Do not re-armor already armored data
+
 ## 1.3.11
 - Fix: When verifying subkey binding signatures with embedded recycled primary
   key binding signatures, do not reject signature if primary key binding
