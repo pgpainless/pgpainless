@@ -55,6 +55,7 @@ public final class ArmoredOutputStreamFactory {
     /**
      * Overwrite the version header of ASCII armors with a custom value.
      * Newlines in the version info string result in multiple version header entries.
+     * If this is set to <pre>null</pre>, then the version header is omitted altogether.
      *
      * @param versionString version string
      */
