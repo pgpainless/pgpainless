@@ -29,7 +29,9 @@ public class ArmorTest {
     @Test
     public void armor() throws PGPException, InvalidAlgorithmParameterException, NoSuchAlgorithmException, IOException {
         byte[] data = PGPainless.generateKeyRing().modernKeyRing("Alice").getEncoded();
-        byte[] knownGoodArmor = ArmorUtils.toAsciiArmoredString(data).getBytes(StandardCharsets.UTF_8);
+        byte[] knownGoodArmor = ArmorUtils.toAsciiArmoredString(data)
+                .replace("Version: PGPainless\n", "") // armor command does not add version anymore
+                .getBytes(StandardCharsets.UTF_8);
         byte[] armored = new SOPImpl()
                 .armor()
                 .data(data)

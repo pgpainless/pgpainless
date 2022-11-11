@@ -11,6 +11,7 @@ import java.io.OutputStream;
 
 import org.bouncycastle.bcpg.ArmoredOutputStream;
 import org.bouncycastle.util.io.Streams;
+import org.pgpainless.decryption_verification.OpenPgpInputStream;
 import org.pgpainless.util.ArmoredOutputStreamFactory;
 import sop.Ready;
 import sop.enums.ArmorLabel;
@@ -31,8 +32,21 @@ public class ArmorImpl implements Armor {
             public void writeTo(OutputStream outputStream) throws IOException {
                 // By buffering the output stream, we can improve performance drastically
                 BufferedOutputStream bufferedOutputStream = new BufferedOutputStream(outputStream);
+
+                // Determine nature of the given data
+                OpenPgpInputStream openPgpIn = new OpenPgpInputStream(data);
+                openPgpIn.reset();
+
+                if (openPgpIn.isAsciiArmored()) {
+                    // armoring already-armored data is an idempotent operation
+                    Streams.pipeAll(openPgpIn, bufferedOutputStream);
+                    bufferedOutputStream.flush();
+                    openPgpIn.close();
+                    return;
+                }
+
                 ArmoredOutputStream armor = ArmoredOutputStreamFactory.get(bufferedOutputStream);
-                Streams.pipeAll(data, armor);
+                Streams.pipeAll(openPgpIn, armor);
                 bufferedOutputStream.flush();
                 armor.close();
             }
