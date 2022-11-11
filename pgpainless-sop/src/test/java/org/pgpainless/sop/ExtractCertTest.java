@@ -18,7 +18,6 @@ import sop.exception.SOPGPException;
 public class ExtractCertTest {
 
     public static final String key = "-----BEGIN PGP PRIVATE KEY BLOCK-----\n" +
-            "Version: PGPainless\n" +
             "Comment: A8D9 9FF4 C8DD BBA6 C610  A6B7 9ACB 2195 A9BC DF5B\n" +
             "Comment: Alice <alice@pgpainless.org>\n" +
             "\n" +
@@ -42,7 +41,6 @@ public class ExtractCertTest {
             "-----END PGP PRIVATE KEY BLOCK-----\n";
 
     public static final String cert = "-----BEGIN PGP PUBLIC KEY BLOCK-----\n" +
-            "Version: PGPainless\n" +
             "Comment: A8D9 9FF4 C8DD BBA6 C610  A6B7 9ACB 2195 A9BC DF5B\n" +
             "Comment: Alice <alice@pgpainless.org>\n" +
             "\n" +

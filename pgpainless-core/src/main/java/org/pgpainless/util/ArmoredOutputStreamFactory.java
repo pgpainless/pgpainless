@@ -31,7 +31,11 @@ public final class ArmoredOutputStreamFactory {
      */
     public static ArmoredOutputStream get(OutputStream outputStream) {
         ArmoredOutputStream armoredOutputStream = new ArmoredOutputStream(outputStream);
-        armoredOutputStream.setHeader(ArmorUtils.HEADER_VERSION, version);
+        armoredOutputStream.clearHeaders();
+        if (version != null && !version.isEmpty()) {
+            armoredOutputStream.setHeader(ArmorUtils.HEADER_VERSION, version);
+        }
+
         for (String comment : comment) {
             ArmorUtils.addCommentHeader(armoredOutputStream, comment);
         }
@@ -55,10 +59,16 @@ public final class ArmoredOutputStreamFactory {
      * @param versionString version string
      */
     public static void setVersionInfo(String versionString) {
-        if (versionString == null || versionString.trim().isEmpty()) {
-            throw new IllegalArgumentException("Version Info MUST NOT be null NOR empty.");
+        if (versionString == null) {
+            version = null;
+            return;
         }
-        version = versionString;
+        String trimmed = versionString.trim();
+        if (trimmed.isEmpty()) {
+            version = null;
+        } else {
+            version = trimmed;
+        }
     }
 
     /**

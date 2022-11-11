@@ -4,6 +4,7 @@
 
 package org.pgpainless.sop;
 
+import org.pgpainless.util.ArmoredOutputStreamFactory;
 import sop.SOP;
 import sop.operation.Armor;
 import sop.operation.Dearmor;
@@ -19,6 +20,10 @@ import sop.operation.InlineVerify;
 import sop.operation.Version;
 
 public class SOPImpl implements SOP {
+
+    static {
+        ArmoredOutputStreamFactory.setVersionInfo(null);
+    }
 
     @Override
     public Version version() {
