@@ -10,6 +10,9 @@ SPDX-License-Identifier: CC0-1.0
   to do decryption using session keys. This enables decryption of messages
   without encrypted session key packets.
 - Use BCs `PGPEncryptedDataList.isIntegrityProtected()` to check for integrity protection
+- Depend on `pgp-certificate-store`
+- Add `ConsumerOptions.addVerificationCerts(PGPCertificateStore)` to allow sourcing certificates from
+  e.g. a [certificate store implementation](https://github.com/pgpainless/cert-d-java).
 
 ## 1.4.0-rc1
 - Reimplement message consumption via new `OpenPgpMessageInputStream`
