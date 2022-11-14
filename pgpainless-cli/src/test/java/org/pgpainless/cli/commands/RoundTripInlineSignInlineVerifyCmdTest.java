@@ -233,4 +233,32 @@ public class RoundTripInlineSignInlineVerifyCmdTest extends CLITest {
         String verificationString = verificationsOut.toString();
         assertTrue(verificationString.contains(CERT_1_SIGNING_KEY));
     }
+
+    @Test
+    public void testUnlockKeyWithOneOfMultiplePasswords() throws IOException {
+        File key = writeFile("key.asc", KEY_1);
+        File wrong1 = writeFile("wrong_1", "BuzzAldr1n");
+        File correct = writeFile("correct", KEY_1_PASSWORD);
+        File wrong2 = writeFile("wrong_2", "NeilArmstr0ng");
+
+        pipeStringToStdin(MESSAGE);
+        ByteArrayOutputStream ciphertextOut = pipeStdoutToStream();
+        assertSuccess(executeCommand("inline-sign",
+                key.getAbsolutePath(),
+                "--with-key-password", wrong1.getAbsolutePath(),
+                "--with-key-password", correct.getAbsolutePath(),
+                "--with-key-password", wrong2.getAbsolutePath()));
+
+        File cert = writeFile("cert.asc", CERT_1);
+        pipeStringToStdin(ciphertextOut.toString());
+        ByteArrayOutputStream msgOut = pipeStdoutToStream();
+        File verificationsFile = nonExistentFile("verifications");
+        assertSuccess(executeCommand("inline-verify",
+                "--verifications-out", verificationsFile.getAbsolutePath(),
+                cert.getAbsolutePath()));
+
+        assertEquals(MESSAGE, msgOut.toString());
+        String verificationString = readStringFromFile(verificationsFile);
+        assertTrue(verificationString.contains(CERT_1_SIGNING_KEY));
+    }
 }
