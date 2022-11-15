@@ -26,7 +26,7 @@ public class GeneratingWeakKeyThrowsTest {
     public void refuseToGenerateWeakPrimaryKeyTest() {
         // ensure we have default public key algorithm policy set
         PGPainless.getPolicy().setPublicKeyAlgorithmPolicy(
-                Policy.PublicKeyAlgorithmPolicy.defaultPublicKeyAlgorithmPolicy());
+                Policy.PublicKeyAlgorithmPolicy.bsi2021PublicKeyAlgorithmPolicy());
 
         assertThrows(IllegalArgumentException.class, () ->
                 PGPainless.buildKeyRing()
@@ -38,7 +38,7 @@ public class GeneratingWeakKeyThrowsTest {
     public void refuseToAddWeakSubkeyDuringGenerationTest() {
         // ensure we have default public key algorithm policy set
         PGPainless.getPolicy().setPublicKeyAlgorithmPolicy(
-                Policy.PublicKeyAlgorithmPolicy.defaultPublicKeyAlgorithmPolicy());
+                Policy.PublicKeyAlgorithmPolicy.bsi2021PublicKeyAlgorithmPolicy());
 
         KeyRingBuilder kb = PGPainless.buildKeyRing()
                 .setPrimaryKey(KeySpec.getBuilder(KeyType.RSA(RsaLength._4096),
@@ -50,7 +50,8 @@ public class GeneratingWeakKeyThrowsTest {
     }
 
     @Test
-    public void allowToAddWeakKeysWithWeakPolicy() throws PGPException, InvalidAlgorithmParameterException, NoSuchAlgorithmException {
+    public void allowToAddWeakKeysWithWeakPolicy()
+            throws PGPException, InvalidAlgorithmParameterException, NoSuchAlgorithmException {
         // set a weak algorithm policy
         Map<PublicKeyAlgorithm, Integer> bitStrengths = new HashMap<>();
         bitStrengths.put(PublicKeyAlgorithm.RSA_GENERAL, 512);
@@ -67,6 +68,7 @@ public class GeneratingWeakKeyThrowsTest {
                 .build();
 
         // reset public key algorithm policy
-        PGPainless.getPolicy().setPublicKeyAlgorithmPolicy(Policy.PublicKeyAlgorithmPolicy.defaultPublicKeyAlgorithmPolicy());
+        PGPainless.getPolicy().setPublicKeyAlgorithmPolicy(
+                Policy.PublicKeyAlgorithmPolicy.bsi2021PublicKeyAlgorithmPolicy());
     }
 }
