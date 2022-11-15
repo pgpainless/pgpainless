@@ -49,7 +49,10 @@ Hereafter, the program will be referred to as `pgpainless-cli`.
 ```
 $ pgpainless-cli help
 Stateless OpenPGP Protocol
-Usage: pgpainless-cli [COMMAND]
+Usage: pgpainless-cli [--stacktrace] [COMMAND]
+
+Options:
+      --stacktrace   Print Stacktrace
 
 Commands:
   help           Display usage information for the specified subcommand
@@ -68,7 +71,7 @@ Commands:
   version        Display version information about the tool
 
 Exit Codes:
-   0   Successful program execution.
+   0   Successful program execution
    1   Generic program error
    3   Verification requested but no verifiable signature found
   13   Unsupported asymmetric algorithm
@@ -87,7 +90,6 @@ Exit Codes:
   71   Unsupported special prefix (e.g. "@ENV/@FD") of indirect parameter
   73   Ambiguous input (a filename matching the designator already exists)
   79   Key is not signing capable
-Powered by picocli
 ```
 
 ## Indirect Data Types
