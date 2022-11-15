@@ -56,7 +56,7 @@ public class PolicyTest {
         policy.setRevocationSignatureHashAlgorithmPolicy(new Policy.HashAlgorithmPolicy(HashAlgorithm.SHA512,
                 revHashAlgoMap));
 
-        policy.setPublicKeyAlgorithmPolicy(Policy.PublicKeyAlgorithmPolicy.defaultPublicKeyAlgorithmPolicy());
+        policy.setPublicKeyAlgorithmPolicy(Policy.PublicKeyAlgorithmPolicy.bsi2021PublicKeyAlgorithmPolicy());
     }
 
     @Test

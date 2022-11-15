@@ -66,9 +66,9 @@ public class EncryptDecryptTest {
     @BeforeEach
     public void setDefaultPolicy() {
         PGPainless.getPolicy().setSymmetricKeyEncryptionAlgorithmPolicy(
-                Policy.SymmetricKeyAlgorithmPolicy.defaultSymmetricKeyEncryptionAlgorithmPolicy());
+                Policy.SymmetricKeyAlgorithmPolicy.symmetricKeyEncryptionPolicy2022());
         PGPainless.getPolicy().setSymmetricKeyDecryptionAlgorithmPolicy(
-                Policy.SymmetricKeyAlgorithmPolicy.defaultSymmetricKeyDecryptionAlgorithmPolicy());
+                Policy.SymmetricKeyAlgorithmPolicy.symmetricKeyDecryptionPolicy2022());
     }
 
     @TestTemplate
