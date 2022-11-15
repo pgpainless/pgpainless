@@ -799,6 +799,33 @@ public class OpenPgpMessageInputStream extends DecryptionStream {
         return new MessageMetadata((MessageMetadata.Message) metadata);
     }
 
+    @Override
+    public OpenPgpMetadata getResult() {
+        MessageMetadata m = getMetadata();
+        resultBuilder.setCompressionAlgorithm(m.getCompressionAlgorithm());
+        resultBuilder.setModificationDate(m.getModificationDate());
+        resultBuilder.setFileName(m.getFilename());
+        resultBuilder.setFileEncoding(m.getFormat());
+        resultBuilder.setSessionKey(m.getSessionKey());
+        resultBuilder.setDecryptionKey(m.getDecryptionKey());
+
+        for (SignatureVerification accepted : m.getVerifiedDetachedSignatures()) {
+            resultBuilder.addVerifiedDetachedSignature(accepted);
+        }
+        for (SignatureVerification.Failure rejected : m.getRejectedDetachedSignatures()) {
+            resultBuilder.addInvalidDetachedSignature(rejected.getSignatureVerification(), rejected.getValidationException());
+        }
+
+        for (SignatureVerification accepted : m.getVerifiedInlineSignatures()) {
+            resultBuilder.addVerifiedInbandSignature(accepted);
+        }
+        for (SignatureVerification.Failure rejected : m.getRejectedInlineSignatures()) {
+            resultBuilder.addInvalidInbandSignature(rejected.getSignatureVerification(), rejected.getValidationException());
+        }
+
+        return resultBuilder.build();
+    }
+
     private static class SortedESKs {
 
         private final List<PGPPBEEncryptedData> skesks = new ArrayList<>();
@@ -830,33 +857,6 @@ public class OpenPgpMessageInputStream extends DecryptionStream {
             esks.addAll(anonPkesks);
             return esks;
         }
-    }
-
-    @Override
-    public OpenPgpMetadata getResult() {
-        MessageMetadata m = getMetadata();
-        resultBuilder.setCompressionAlgorithm(m.getCompressionAlgorithm());
-        resultBuilder.setModificationDate(m.getModificationDate());
-        resultBuilder.setFileName(m.getFilename());
-        resultBuilder.setFileEncoding(m.getFormat());
-        resultBuilder.setSessionKey(m.getSessionKey());
-        resultBuilder.setDecryptionKey(m.getDecryptionKey());
-
-        for (SignatureVerification accepted : m.getVerifiedDetachedSignatures()) {
-            resultBuilder.addVerifiedDetachedSignature(accepted);
-        }
-        for (SignatureVerification.Failure rejected : m.getRejectedDetachedSignatures()) {
-            resultBuilder.addInvalidDetachedSignature(rejected.getSignatureVerification(), rejected.getValidationException());
-        }
-
-        for (SignatureVerification accepted : m.getVerifiedInlineSignatures()) {
-            resultBuilder.addVerifiedInbandSignature(accepted);
-        }
-        for (SignatureVerification.Failure rejected : m.getRejectedInlineSignatures()) {
-            resultBuilder.addInvalidInbandSignature(rejected.getSignatureVerification(), rejected.getValidationException());
-        }
-
-        return resultBuilder.build();
     }
 
     // In 'OPS LIT("Foo") SIG', OPS is only updated with "Foo"
