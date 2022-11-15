@@ -122,6 +122,24 @@ Exit Codes:
   79   Key is not signing capable
 ```
 
+To get help on a subcommand, e.g. `encrypt`, just call the help subcommand followed by the subcommand you
+are interested in (e.g. `pgpainless-cli help encrypt`).
+
+## Examples
+```shell
+$ # Generate a key
+$ pgpainless-cli generate-key "Alice <alice@pgpainless.org>" > key.asc
+$ # Extract a certificate from a key
+$ cat key.asc | pgpainless-cli extract-cert > cert.asc
+$ # Create an encrypted signed message
+$ echo "Hello, World!" | pgpainless-cli encrypt cert.asc --sign-with key.asc > msg.asc
+$ # Decrypt an encrypted message and verify the signature
+$ cat msg.asc | pgpainless-cli decrypt key.asc --verify-with cert.asc --verifications-out verifications.txt
+Hello, World!
+$ cat verifications.txt
+2022-11-15T21:25:48Z 4FF67C69150209ED8139DE22578CB2FABD5D7897 9000235358B8CEA6A368EC86DE56DC2D942ACAA4
+```
+
 ## Indirect Data Types
 
 Some commands take options whose arguments are indirect data types. Those are arguments which are not used directly,
