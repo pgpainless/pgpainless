@@ -42,6 +42,36 @@ $ gradle installDist
 Afterwards, an uncompressed distributable is installed in `build/install/`.
 To execute the application, you can call `build/install/bin/pgpainless-cli{.bat}`
 
+Building / updating man pages is a two-step process.
+The contents of the man pages is largely defined by the `sop-java-picocli` source code.
+
+In order to generate a fresh set of man pages from the `sop-java-picocli` source, you need to clone that repository
+next to the `pgpainless` repository:
+```shell
+$ ls
+pgpainless
+$ git clone https://github.com/pgpainless/sop-java.git
+$ ls
+pgpainless  sop-java
+```
+
+Next, you need to execute the `asciiDoctor` gradle task inside the sop-java repository:
+```shell
+$ cd sop-java
+$ gradle asciiDoctor
+```
+
+This will generate generic sop manpages in `sop-java-picocli/build/docs/manpage/`.
+
+Next, you need to execute a script for converting the `sop` manpages to fit the `pgpainless-cli` command with the help
+of a script in the `pgpainless` repository:
+```shell
+$ cd ../pgpainless/pgpainless-cli
+$ ./rewriteManPages.sh
+```
+
+The resulting updated man pages are placed in `packaging/man/`.
+
 ## Usage
 
 Hereafter, the program will be referred to as `pgpainless-cli`.
