@@ -84,8 +84,24 @@ Exit Codes:
   61   Input file does not exist
   67   Cannot unlock password protected secret key
   69   Unsupported subcommand
-  71   Unsupported special prefix (e.g. "@env/@fd") of indirect parameter
+  71   Unsupported special prefix (e.g. "@ENV/@FD") of indirect parameter
   73   Ambiguous input (a filename matching the designator already exists)
   79   Key is not signing capable
 Powered by picocli
 ```
+
+## Indirect Data Types
+
+Some commands take options whose arguments are indirect data types. Those are arguments which are not used directly,
+but instead they point to a place where the argument value can be sourced from, such as a file, an environment variable
+or a file descriptor.
+
+It is important to keep in mind, that options like `--with-password` or `--with-key-password` are examples for such
+indirect data types. If you want to unlock a key whose password is `sw0rdf1sh`, you *cannot* provide the password
+like `--with-key-password sw0rdf1sh`, but instead you have to either write out the password into a file and provide
+the file's path (e.g. `--with-key-password /path/to/file`), store the password in an environment variable and pass that
+(e.g. `--with-key-password @ENV:myvar`), or provide a numbered file descriptor from which the password can be read
+(e.g. `--with-key-password @FD:4`).
+
+Note, that environment variables and file descriptors can only be used to pass input data to the program.
+For output parameters (e.g. `--verifications-out`) only file paths are allowed.
