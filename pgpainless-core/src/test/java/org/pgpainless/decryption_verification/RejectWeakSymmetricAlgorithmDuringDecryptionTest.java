@@ -22,7 +22,7 @@ import org.pgpainless.exception.UnacceptableAlgorithmException;
  * Test PGPainless' default symmetric key algorithm policy for decryption of messages.
  * The default decryption policy rejects messages encrypted with IDEA and TripleDES, as well as unencrypted messages.
  */
-public class RejectWeakSymmetricAlgorithmDuringDecryption {
+public class RejectWeakSymmetricAlgorithmDuringDecryptionTest {
 
     private static final String key = "-----BEGIN PGP PRIVATE KEY BLOCK-----\n" +
             "   Comment: Bob's OpenPGP Transferable Secret Key\n" +

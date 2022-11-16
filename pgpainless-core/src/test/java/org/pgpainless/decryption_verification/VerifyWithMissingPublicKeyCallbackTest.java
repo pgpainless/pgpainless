@@ -38,7 +38,7 @@ import org.pgpainless.key.util.KeyRingUtils;
  * a signature is encountered which was made by a key that was not provided in
  * {@link ConsumerOptions#addVerificationCert(PGPPublicKeyRing)}.
  */
-public class VerifyWithMissingPublicKeyCallback {
+public class VerifyWithMissingPublicKeyCallbackTest {
 
     @Test
     public void testMissingPublicKeyCallback() throws PGPException, InvalidAlgorithmParameterException, NoSuchAlgorithmException, IOException {

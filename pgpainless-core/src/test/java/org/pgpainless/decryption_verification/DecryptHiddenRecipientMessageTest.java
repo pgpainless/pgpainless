@@ -24,7 +24,7 @@ import org.pgpainless.key.SubkeyIdentifier;
 import org.pgpainless.key.info.KeyRingInfo;
 import org.pgpainless.util.TestAllImplementations;
 
-public class DecryptHiddenRecipientMessage {
+public class DecryptHiddenRecipientMessageTest {
 
     @TestTemplate
     @ExtendWith(TestAllImplementations.class)
