@@ -6,6 +6,9 @@ package org.pgpainless.decryption_verification;
 
 import java.io.InputStream;
 
+/**
+ * Abstract definition of an {@link InputStream} which can be used to decrypt / verify OpenPGP messages.
+ */
 public abstract class DecryptionStream extends InputStream {
 
     /**
