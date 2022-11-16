@@ -17,7 +17,7 @@ import org.bouncycastle.util.io.Streams;
 import org.junit.jupiter.api.Test;
 import org.pgpainless.PGPainless;
 
-public class SignedMessageVerificationWithoutCertIsStillSigned {
+public class SignedMessageVerificationWithoutCertIsStillSignedTest {
 
     private static final String message = "-----BEGIN PGP MESSAGE-----\n" +
             "\n" +
