@@ -300,9 +300,16 @@ public class MessageMetadata {
 
     public static class Message extends Layer {
 
+        protected boolean cleartextSigned;
+
         public Message() {
             super(0);
         }
+
+        public boolean isCleartextSigned() {
+            return cleartextSigned;
+        }
+
     }
 
     public static class LiteralData implements Nested {
@@ -453,4 +460,32 @@ public class MessageMetadata {
         abstract O getProperty(Layer last);
     }
 
+    public OpenPgpMetadata toLegacyMetadata() {
+        OpenPgpMetadata.Builder resultBuilder = OpenPgpMetadata.getBuilder();
+        resultBuilder.setCompressionAlgorithm(getCompressionAlgorithm());
+        resultBuilder.setModificationDate(getModificationDate());
+        resultBuilder.setFileName(getFilename());
+        resultBuilder.setFileEncoding(getFormat());
+        resultBuilder.setSessionKey(getSessionKey());
+        resultBuilder.setDecryptionKey(getDecryptionKey());
+
+        for (SignatureVerification accepted : getVerifiedDetachedSignatures()) {
+            resultBuilder.addVerifiedDetachedSignature(accepted);
+        }
+        for (SignatureVerification.Failure rejected : getRejectedDetachedSignatures()) {
+            resultBuilder.addInvalidDetachedSignature(rejected.getSignatureVerification(), rejected.getValidationException());
+        }
+
+        for (SignatureVerification accepted : getVerifiedInlineSignatures()) {
+            resultBuilder.addVerifiedInbandSignature(accepted);
+        }
+        for (SignatureVerification.Failure rejected : getRejectedInlineSignatures()) {
+            resultBuilder.addInvalidInbandSignature(rejected.getSignatureVerification(), rejected.getValidationException());
+        }
+        if (message.isCleartextSigned()) {
+            resultBuilder.setCleartextSigned();
+        }
+
+        return resultBuilder.build();
+    }
 }
