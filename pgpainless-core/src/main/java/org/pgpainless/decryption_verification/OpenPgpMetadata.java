@@ -27,6 +27,12 @@ import org.pgpainless.key.OpenPgpFingerprint;
 import org.pgpainless.key.SubkeyIdentifier;
 import org.pgpainless.util.SessionKey;
 
+/**
+ * Legacy class containing metadata about an OpenPGP message.
+ * It is advised to use {@link MessageMetadata} instead.
+ *
+ * TODO: Remove in 1.5.X
+ */
 public class OpenPgpMetadata {
 
     private final Set<Long> recipientKeyIds;
