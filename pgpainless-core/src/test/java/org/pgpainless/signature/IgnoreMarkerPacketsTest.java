@@ -33,7 +33,7 @@ import org.pgpainless.key.util.KeyRingUtils;
  *
  * @see <a href="https://tests.sequoia-pgp.org/#Marker_Packet">Sequoia Test-Suite</a>
  */
-public class IgnoreMarkerPackets {
+public class IgnoreMarkerPacketsTest {
 
     private static final String KEY = "-----BEGIN PGP PRIVATE KEY BLOCK-----\n" +
             "Comment: Bob's OpenPGP Transferable Secret Key\n" +
