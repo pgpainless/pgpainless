@@ -156,6 +156,7 @@ public class OpenPgpMessageInputStream extends DecryptionStream {
         if (openPgpIn.isAsciiArmored()) {
             ArmoredInputStream armorIn = ArmoredInputStreamFactory.get(openPgpIn);
             if (armorIn.isClearText()) {
+                ((MessageMetadata.Message) metadata).cleartextSigned = true;
                 return new OpenPgpMessageInputStream(Type.cleartext_signed,
                         armorIn, options, metadata, policy);
             } else {
@@ -173,7 +174,7 @@ public class OpenPgpMessageInputStream extends DecryptionStream {
                                         @Nonnull MessageMetadata.Layer metadata,
                                         @Nonnull Policy policy)
             throws PGPException, IOException {
-        super(OpenPgpMetadata.getBuilder());
+        super();
 
         this.policy = policy;
         this.options = options;
@@ -203,7 +204,7 @@ public class OpenPgpMessageInputStream extends DecryptionStream {
                                         @Nonnull ConsumerOptions options,
                                         @Nonnull MessageMetadata.Layer metadata,
                                         @Nonnull Policy policy) throws PGPException, IOException {
-        super(OpenPgpMetadata.getBuilder());
+        super();
         this.policy = policy;
         this.options = options;
         this.metadata = metadata;
@@ -226,7 +227,6 @@ public class OpenPgpMessageInputStream extends DecryptionStream {
 
             // Cleartext Signature Framework (probably signed message)
             case cleartext_signed:
-                resultBuilder.setCleartextSigned();
                 MultiPassStrategy multiPassStrategy = options.getMultiPassStrategy();
                 PGPSignatureList detachedSignatures = ClearsignedMessageUtil
                         .detachSignaturesFromInbandClearsignedMessage(
@@ -797,33 +797,6 @@ public class OpenPgpMessageInputStream extends DecryptionStream {
         }
 
         return new MessageMetadata((MessageMetadata.Message) metadata);
-    }
-
-    @Override
-    public OpenPgpMetadata getResult() {
-        MessageMetadata m = getMetadata();
-        resultBuilder.setCompressionAlgorithm(m.getCompressionAlgorithm());
-        resultBuilder.setModificationDate(m.getModificationDate());
-        resultBuilder.setFileName(m.getFilename());
-        resultBuilder.setFileEncoding(m.getFormat());
-        resultBuilder.setSessionKey(m.getSessionKey());
-        resultBuilder.setDecryptionKey(m.getDecryptionKey());
-
-        for (SignatureVerification accepted : m.getVerifiedDetachedSignatures()) {
-            resultBuilder.addVerifiedDetachedSignature(accepted);
-        }
-        for (SignatureVerification.Failure rejected : m.getRejectedDetachedSignatures()) {
-            resultBuilder.addInvalidDetachedSignature(rejected.getSignatureVerification(), rejected.getValidationException());
-        }
-
-        for (SignatureVerification accepted : m.getVerifiedInlineSignatures()) {
-            resultBuilder.addVerifiedInbandSignature(accepted);
-        }
-        for (SignatureVerification.Failure rejected : m.getRejectedInlineSignatures()) {
-            resultBuilder.addInvalidInbandSignature(rejected.getSignatureVerification(), rejected.getValidationException());
-        }
-
-        return resultBuilder.build();
     }
 
     private static class SortedESKs {
