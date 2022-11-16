@@ -399,7 +399,7 @@ public class MessageMetadata {
         public Layer(int depth) {
             this.depth = depth;
             if (depth > MAX_LAYER_DEPTH) {
-                throw new MalformedOpenPgpMessageException("Maximum nesting depth exceeded.");
+                throw new MalformedOpenPgpMessageException("Maximum packet nesting depth (" + MAX_LAYER_DEPTH + ") exceeded.");
             }
         }
 
