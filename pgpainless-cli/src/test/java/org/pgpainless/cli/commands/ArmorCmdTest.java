@@ -97,4 +97,14 @@ public class ArmorCmdTest extends CLITest {
         assertEquals(SOPGPException.UnsupportedOption.EXIT_CODE, exitCode);
         assertEquals(0, out.size());
     }
+
+    @Test
+    public void armorAlreadyArmoredDataIsIdempotent() throws IOException {
+        pipeStringToStdin(key);
+        ByteArrayOutputStream armorOut = pipeStdoutToStream();
+        assertSuccess(executeCommand("armor"));
+
+        String armored = armorOut.toString();
+        assertEquals(key, armored);
+    }
 }
