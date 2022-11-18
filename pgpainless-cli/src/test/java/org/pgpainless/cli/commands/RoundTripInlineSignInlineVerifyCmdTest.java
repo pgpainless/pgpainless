@@ -4,16 +4,17 @@
 
 package org.pgpainless.cli.commands;
 
-import org.junit.jupiter.api.Test;
-import org.slf4j.LoggerFactory;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.IOException;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertFalse;
-import static org.junit.jupiter.api.Assertions.assertTrue;
+import org.junit.jupiter.api.Test;
+import org.slf4j.LoggerFactory;
+import sop.exception.SOPGPException;
 
 public class RoundTripInlineSignInlineVerifyCmdTest extends CLITest {
 
@@ -169,6 +170,30 @@ public class RoundTripInlineSignInlineVerifyCmdTest extends CLITest {
         assertEquals(MESSAGE, plaintextOut.toString());
         String verificationString = readStringFromFile(verifications);
         assertTrue(verificationString.contains(CERT_1_SIGNING_KEY));
+    }
+
+    @Test
+    public void createSignedMessageWithKeyAAndVerifyWithKeyBFails() throws IOException {
+        File key = writeFile("key.asc", KEY_1);
+        File password = writeFile("password", KEY_1_PASSWORD);
+        File cert = writeFile("cert.asc", CERT_2); // mismatch
+
+        pipeStringToStdin(MESSAGE);
+        ByteArrayOutputStream ciphertextOut = pipeStdoutToStream();
+        assertSuccess(executeCommand("inline-sign",
+                key.getAbsolutePath(),
+                "--with-key-password", password.getAbsolutePath()));
+
+        File verifications = nonExistentFile("verifications");
+        pipeStringToStdin(ciphertextOut.toString());
+        ByteArrayOutputStream plaintextOut = pipeStdoutToStream();
+        int exitCode = executeCommand("inline-verify",
+                "--verifications-out", verifications.getAbsolutePath(),
+                cert.getAbsolutePath());
+
+        assertEquals(SOPGPException.NoSignature.EXIT_CODE, exitCode);
+        assertEquals(MESSAGE, plaintextOut.toString()); // message is emitted nonetheless
+        assertFalse(verifications.exists(), "Verifications file MUST NOT be written.");
     }
 
     @Test
