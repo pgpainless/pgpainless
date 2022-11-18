@@ -11,8 +11,19 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.IOException;
+import java.nio.charset.StandardCharsets;
 
+import org.bouncycastle.bcpg.ArmoredOutputStream;
+import org.bouncycastle.openpgp.PGPException;
+import org.bouncycastle.openpgp.PGPSecretKeyRing;
+import org.bouncycastle.openpgp.PGPSignature;
 import org.junit.jupiter.api.Test;
+import org.pgpainless.PGPainless;
+import org.pgpainless.algorithm.CompressionAlgorithm;
+import org.pgpainless.encryption_signing.EncryptionStream;
+import org.pgpainless.encryption_signing.ProducerOptions;
+import org.pgpainless.encryption_signing.SigningOptions;
+import org.pgpainless.key.protection.SecretKeyRingProtector;
 import org.slf4j.LoggerFactory;
 import sop.exception.SOPGPException;
 
@@ -310,5 +321,94 @@ public class RoundTripInlineSignInlineVerifyCmdTest extends CLITest {
         assertEquals(MESSAGE, msgOut.toString());
         String verificationString = readStringFromFile(verificationsFile);
         assertTrue(verificationString.contains(CERT_1_SIGNING_KEY));
+    }
+
+    @Test
+    public void cannotVerifyEncryptedMessage() throws IOException {
+        File key = writeFile("key.asc", KEY_2);
+        File cert = writeFile("cert.asc", CERT_2);
+
+        String msg = "Hello, World!\n";
+        pipeStringToStdin(msg);
+        ByteArrayOutputStream ciphertext = pipeStdoutToStream();
+        assertSuccess(executeCommand("encrypt", cert.getAbsolutePath(),
+                "--sign-with", key.getAbsolutePath()));
+
+        File verifications = nonExistentFile("verifications");
+        pipeBytesToStdin(ciphertext.toByteArray());
+        ByteArrayOutputStream out = pipeStdoutToStream();
+        int exitCode = executeCommand("inline-verify", cert.getAbsolutePath(),
+                "--verifications-out", verifications.getAbsolutePath());
+
+        assertEquals(SOPGPException.BadData.EXIT_CODE, exitCode);
+        assertEquals(0, out.size());
+    }
+
+    @Test
+    public void createMalformedMessage() throws IOException, PGPException {
+        String msg = "Hello, World!\n";
+        PGPSecretKeyRing key = PGPainless.readKeyRing().secretKeyRing(KEY_2);
+        ByteArrayOutputStream ciphertext = new ByteArrayOutputStream();
+        EncryptionStream encryptionStream = PGPainless.encryptAndOrSign()
+                .onOutputStream(ciphertext)
+                .withOptions(ProducerOptions.sign(SigningOptions.get()
+                                .addDetachedSignature(SecretKeyRingProtector.unprotectedKeys(), key)
+                        ).overrideCompressionAlgorithm(CompressionAlgorithm.UNCOMPRESSED)
+                        .setAsciiArmor(false));
+        encryptionStream.write(msg.getBytes(StandardCharsets.UTF_8));
+        encryptionStream.close();
+        PGPSignature sig = encryptionStream.getResult().getDetachedSignatures().entrySet()
+                .iterator().next().getValue().iterator().next();
+        ArmoredOutputStream armorOut = new ArmoredOutputStream(System.out);
+        armorOut.write(ciphertext.toByteArray());
+        armorOut.write(sig.getEncoded());
+        armorOut.close();
+    }
+
+    @Test
+    public void cannotVerifyMalformedMessage() throws IOException {
+        // appended signature -> malformed
+        String malformedSignedMessage = "-----BEGIN PGP MESSAGE-----\n" +
+                "Version: BCPG v1.72b04\n" +
+                "\n" +
+                "yxRiAAAAAABIZWxsbywgV29ybGQhCoh1BAAWCgAnBQJjd52aCRCPvdNtAYMWcxYh\n" +
+                "BHoHPt8nPJAnltJZUo+9020BgxZzAACThwD/Vr7CMitMOul40VK12XXjOv5f8vgi\n" +
+                "ksqhrI2ysItID9oA/0Csgf3Sv2YenYVzqnd0hhiPe5IVPl8w4sTZKpriYMIG\n" +
+                "=DPPU\n" +
+                "-----END PGP MESSAGE-----";
+        File cert = writeFile("cert.asc", CERT_2);
+        File verifications = nonExistentFile("verifications");
+
+        pipeStringToStdin(malformedSignedMessage);
+        ByteArrayOutputStream out = pipeStdoutToStream();
+        int exitCode = executeCommand("inline-verify", cert.getAbsolutePath(),
+                "--verifications-out", verifications.getAbsolutePath());
+
+        assertEquals(SOPGPException.BadData.EXIT_CODE, exitCode);
+        assertEquals("Hello, World!\n", out.toString());
+    }
+
+    @Test
+    public void verifyPrependedSignedMessage() throws IOException {
+        // message with prepended signature
+        String malformedSignedMessage = "-----BEGIN PGP SIGNATURE-----\n" +
+                "Version: BCPG v1.72b04\n" +
+                "\n" +
+                "iHUEABYKACcFAmN3nOUJEI+9020BgxZzFiEEegc+3yc8kCeW0llSj73TbQGDFnMA\n" +
+                "ANPKAPkBxLVHvgeCkX/tTHdBH3CDeuUQF2wmtUmGXqhZA1IFtwD/dK0XQBHO3RO+\n" +
+                "GHpzA7fDAroqF0zM72tu2W4PPw04FgKjATstksQAAh6pOTn5Ogrh+UU5KYpcAA==\n" +
+                "=xtik\n" +
+                "-----END PGP SIGNATURE-----";
+        File cert = writeFile("cert.asc", CERT_2);
+        File verifications = nonExistentFile("verifications");
+
+        pipeStringToStdin(malformedSignedMessage);
+        ByteArrayOutputStream out = pipeStdoutToStream();
+        assertSuccess(executeCommand("inline-verify", cert.getAbsolutePath(),
+                "--verifications-out", verifications.getAbsolutePath()));
+        assertEquals("Hello, World!\n", out.toString());
+        String ver = readStringFromFile(verifications);
+        assertEquals(
+                "2022-11-18T14:55:33Z 7A073EDF273C902796D259528FBDD36D01831673 AEA0FD2C899D3FC077815F0026560D2AE53DB86F\n", ver);
     }
 }
