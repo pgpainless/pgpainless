@@ -13,9 +13,11 @@ import java.io.IOException;
 
 import org.bouncycastle.openpgp.PGPPublicKeyRing;
 import org.bouncycastle.openpgp.PGPSecretKeyRing;
+import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 import org.pgpainless.PGPainless;
 import org.slf4j.LoggerFactory;
+import sop.exception.SOPGPException;
 
 public class DearmorCmdTest extends CLITest {
 
@@ -59,6 +61,19 @@ public class DearmorCmdTest extends CLITest {
         assertArrayEquals(secretKey.getEncoded(), dearmored.toByteArray());
     }
 
+    @Test
+    @Disabled("Enable with SOP-Java 4.0.7")
+    // TODO: Enable
+    public void dearmorBrokenArmoredKeyFails() throws IOException {
+        // contains a "-"
+        String invalidBase64 = "lFgEY2vOkhYJKwYBBAHaRw8BAQdAqGOtLd1tKnuwaYYcdr2/7C0cPiCCggRMKG+Wt32QQdEAAP9VaBzjk/AaAqyykZnQHmS1HByEvRLv5/4yJMSr22451BFjtBRhbGljZUBwZ3BhaW5sZXNzLm9yZ4iOBBMWCgBBBQJja86SCRCLB1F3AflTTBYhBGLp3aTyD4NB0rxLT-IsHUXcB+VNMAp4BApsBBRYCAwEABAsJCAcFFQoJCAsCmQEAACZhAP4s8hn/RBDvyLvGROOd15EYATnWlgyi+b5WXP6cELalJwD1FZy3RROhfNtZWcJPS43fG03pYNyb0NXoitIMAaXEB5xdBGNrzpISCisGAQQBl1UBBQEBB0CqCcYethOynfni8uRO+r/cZWp9hCLy8pRIExKqzcyEFAMBCAcAAP9sRRLoZkLpDaTNNrtIBovXu2ANhL8keUMWtVcuEHnkQA6iiHUEGBYKAB0FAmNrzpICngECmwwFFgIDAQAECwkIBwUVCgkICwAKCRCLB1F3AflTTBVpAP491etrjqCMWx2bBaw3K1vP0Mix6U0vF3J4kP9UeZm6owEA4kX9VAGESvLgIc7CEiswmxdWjxnLQyCRtWXfjgFmYQucWARja86SFgkrBgEEAdpHDwEBB0DBslhDpWC6CV3xJUSo071NSO5Cf4fgOwOj+QHs8mpFbwABAPkQioSydYiMi04LyfPohyrhhcdJDHallQg+jYHHUb2pEJCI1QQYFgoAfQUCY2vOkgKeAQKbAgUWAgMBAAQLCQgHBRUKCQgLXyAEGRYKAAYFAmNrzpIACgkQiHlkvEXh+f1eywEA9A2GLU9LxCJxZf2X4qcZY//YJDChIZHPnY0Vaek1DsMBAN1YILrH2rxQeCXjm4bUKfJIRrGt6ZJscwORgNI1dFQFAAoJEIsHUXcB+VNMK3gA/3vvPm57JsHA860wlB4D1II71oFNL8TFnJqTAvpSKe1AAP49S4mKB4PE0ElcDo7n+nEYt6ba8IMRDlMorsH85mUgCw==";
+        pipeStringToStdin(invalidBase64);
+        ByteArrayOutputStream out = pipeStdoutToStream();
+        int exitCode = executeCommand("dearmor");
+
+        assertEquals(SOPGPException.BadData.EXIT_CODE, exitCode);
+        assertEquals(0, out.size());
+    }
 
     @Test
     public void dearmorCertificate() throws IOException {
