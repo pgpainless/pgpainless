@@ -563,4 +563,85 @@ public class RoundTripEncryptDecryptCmdTest extends CLITest {
                 keyFile.getAbsolutePath()));
         assertEquals(msg, out.toString());
     }
+
+    @Test
+    public void decryptMalformedMessageYieldsBadData() throws IOException {
+        // Message contains encrypted data packet which contains the plaintext directly - no literal data packet.
+        // It is therefore malformed.
+        String malformed = "-----BEGIN PGP MESSAGE-----\n" +
+                "Version: BCPG v1.72b04\n" +
+                "\n" +
+                "hF4D831k4umlLu4SAQdApKA6VDKSLQvwS2kbWqlhcXD8XHdFkSccqv5tBptZnBgw\n" +
+                "nZNXVhwUpap0ymb4jPTD+EVPKOfPyy04ouIGZAJKkfYDeSL/8sKcbnPPuQJYYjGQ\n" +
+                "ySDNmidrtTonwcSuwAfRyn74BBqOVhrr8GXkVIfevIlZFQ==\n" +
+                "=wIgl\n" +
+                "-----END PGP MESSAGE-----";
+        File key = writeFile("key.asc", KEY);
+        pipeStringToStdin(malformed);
+        int exitCode = executeCommand("decrypt", key.getAbsolutePath());
+        assertEquals(SOPGPException.BadData.EXIT_CODE, exitCode);
+    }
+
+    @Test
+    public void decryptWithPasswordWithPendingWhitespaceWorks() throws IOException {
+        assertEncryptWithPasswordADecryptWithPasswordBWorks("sw0rdf1sh", "sw0rdf1sh \n");
+    }
+
+    @Test
+    public void encryptWithTrailingWhitespaceDecryptWithoutWorks() throws IOException {
+        assertEncryptWithPasswordADecryptWithPasswordBWorks("sw0rdf1sh \n", "sw0rdf1sh");
+    }
+
+    @Test
+    public void decryptWithWhitespacePasswordWorks() throws IOException {
+        // is encrypted for "sw0rdf1sh \n"
+        String encryptedToPasswordWithTrailingWhitespace = "-----BEGIN PGP MESSAGE-----\n" +
+                "\n" +
+                "jA0ECQMC32tEJug0BCpg0kABfT3dKgA4K8XGpk2ul67BXLZD//fCCSmIQIWnNhE1\n" +
+                "6q97xFQ628K8f/58+XoBzLqLDT+LEz9Bz+Yg9QfzkEFy\n" +
+                "=2Y+K\n" +
+                "-----END PGP MESSAGE-----";
+        pipeStringToStdin(encryptedToPasswordWithTrailingWhitespace);
+        File password = writeFile("password", "sw0rdf1sh \n");
+        ByteArrayOutputStream plaintext = pipeStdoutToStream();
+        assertSuccess(executeCommand("decrypt", "--with-password", password.getAbsolutePath()));
+
+        assertEquals("Hello, World!\n", plaintext.toString());
+    }
+
+    private void assertEncryptWithPasswordADecryptWithPasswordBWorks(String passwordA, String passwordB)
+            throws IOException {
+        File passwordAFile = writeFile("password", passwordA);
+        File passwordBFile = writeFile("passwordWithWS", passwordB);
+
+        String msg = "Hello, World!\n";
+        pipeStringToStdin(msg);
+        ByteArrayOutputStream ciphertext = pipeStdoutToStream();
+        assertSuccess(executeCommand("encrypt", "--with-password", passwordAFile.getAbsolutePath()));
+
+        pipeStringToStdin(ciphertext.toString());
+        ByteArrayOutputStream plaintext = pipeStdoutToStream();
+        assertSuccess(executeCommand("decrypt", "--with-password", passwordBFile.getAbsolutePath()));
+
+        assertEquals(msg, plaintext.toString());
+    }
+
+    @Test
+    public void testDecryptWithoutDecryptionOptionFails() throws IOException {
+        String ciphertext = "-----BEGIN PGP MESSAGE-----\n" +
+                "Version: PGPainless\n" +
+                "\n" +
+                "hF4D831k4umlLu4SAQdAYisjZTDRm217LHQbqjB766tm62CKTkRj3Gd0wYxVRCgw\n" +
+                "48SnOJINCJoPgDsxk2NiJmLCImoiET7IElqxN9htdDXQJwcRK+71r/ZyO4YJpWuX\n" +
+                "0sAAAcEFc3nT+un31sOi8KoBJlc5n+MemntQvcWDs8B87BEW/Ncjrs0s4pJpZKBQ\n" +
+                "/AWc4wLCI3ylfMQJB2pICqaOO3KP3WepgTIw5fuZm6YfriKQi7uZvVx1N+uaCIoa\n" +
+                "K2IVVf/7O9KZJ9GbsGYdpBj9IdaIZiVS3Xi8rwgQl3haI/EeHC3nnCsWyj23Fjt3\n" +
+                "LjbMqpHbSnp8U1cQ8rXavrREaKv69PFeJio6/hRg32TzJqn05dPALRxHMEkxxa4h\n" +
+                "FpVU\n" +
+                "=edS5\n" +
+                "-----END PGP MESSAGE-----";
+        pipeStringToStdin(ciphertext);
+        int exitCode = executeCommand("decrypt");
+        assertEquals(SOPGPException.MissingArg.EXIT_CODE, exitCode);
+    }
 }
