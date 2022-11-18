@@ -189,7 +189,8 @@ public class RoundTripSignVerifyCmdTest extends CLITest {
     }
 
     @Test
-    public void testSignWithIncapableKey() throws IOException, PGPException, InvalidAlgorithmParameterException, NoSuchAlgorithmException {
+    public void testSignWithIncapableKey()
+            throws IOException, PGPException, InvalidAlgorithmParameterException, NoSuchAlgorithmException {
         PGPSecretKeyRing secretKeys = PGPainless.buildKeyRing()
                 .addUserId("Cannot Sign <cannot@sign.key>")
                 .setPrimaryKey(KeySpec.getBuilder(KeyType.EDDSA(EdDSACurve._Ed25519), KeyFlag.CERTIFY_OTHER))
