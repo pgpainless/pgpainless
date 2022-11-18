@@ -173,6 +173,31 @@ public class RoundTripInlineSignInlineVerifyCmdTest extends CLITest {
     }
 
     @Test
+    public void createAndVerifyTextSignedMessage() throws IOException {
+        File key = writeFile("key.asc", KEY_1);
+        File password = writeFile("password", KEY_1_PASSWORD);
+
+        pipeStringToStdin(MESSAGE);
+        ByteArrayOutputStream ciphertextOut = pipeStdoutToStream();
+        assertSuccess(executeCommand("inline-sign",
+                "--as", "text",
+                key.getAbsolutePath(),
+                "--with-key-password", password.getAbsolutePath()));
+
+        File cert = writeFile("cert.asc", CERT_1);
+        File verifications = nonExistentFile("verifications");
+        pipeStringToStdin(ciphertextOut.toString());
+        ByteArrayOutputStream plaintextOut = pipeStdoutToStream();
+        assertSuccess(executeCommand("inline-verify",
+                "--verifications-out", verifications.getAbsolutePath(),
+                cert.getAbsolutePath()));
+
+        assertEquals(MESSAGE, plaintextOut.toString());
+        String verificationString = readStringFromFile(verifications);
+        assertTrue(verificationString.contains(CERT_1_SIGNING_KEY));
+    }
+
+    @Test
     public void createSignedMessageWithKeyAAndVerifyWithKeyBFails() throws IOException {
         File key = writeFile("key.asc", KEY_1);
         File password = writeFile("password", KEY_1_PASSWORD);
