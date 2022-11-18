@@ -168,7 +168,8 @@ public class RoundTripEncryptDecryptCmdTest extends CLITest {
 
         File verifications = nonExistentFile("verifications");
         ByteArrayOutputStream out = pipeStdoutToStream();
-        int exitCode = executeCommand("decrypt", "--verifications-out", verifications.getAbsolutePath(), key.getAbsolutePath());
+        int exitCode = executeCommand("decrypt", "--verifications-out",
+                verifications.getAbsolutePath(), key.getAbsolutePath());
 
         assertEquals(SOPGPException.IncompleteVerification.EXIT_CODE, exitCode);
         assertEquals(0, out.size());
@@ -211,7 +212,8 @@ public class RoundTripEncryptDecryptCmdTest extends CLITest {
 
         pipeStringToStdin(ciphertext);
         ByteArrayOutputStream plaintextOut = pipeStdoutToStream();
-        assertSuccess(executeCommand("decrypt", "--session-key-out", sessionKeyFile.getAbsolutePath(), key.getAbsolutePath()));
+        assertSuccess(executeCommand("decrypt", "--session-key-out",
+                sessionKeyFile.getAbsolutePath(), key.getAbsolutePath()));
 
         assertEquals(plaintext, plaintextOut.toString());
         String resultSessionKey = readStringFromFile(sessionKeyFile);
@@ -300,7 +302,8 @@ public class RoundTripEncryptDecryptCmdTest extends CLITest {
             InvalidAlgorithmParameterException, NoSuchAlgorithmException, IOException {
         PGPSecretKeyRing secretKeys = PGPainless.buildKeyRing()
                 .addUserId("No Crypt <no@crypt.key>")
-                .setPrimaryKey(KeySpec.getBuilder(KeyType.EDDSA(EdDSACurve._Ed25519), KeyFlag.CERTIFY_OTHER, KeyFlag.SIGN_DATA))
+                .setPrimaryKey(KeySpec.getBuilder(KeyType.EDDSA(EdDSACurve._Ed25519),
+                        KeyFlag.CERTIFY_OTHER, KeyFlag.SIGN_DATA))
                 .build();
         PGPPublicKeyRing cert = PGPainless.extractCertificate(secretKeys);
         File certFile = writeFile("cert.pgp", cert.getEncoded());
@@ -314,11 +317,13 @@ public class RoundTripEncryptDecryptCmdTest extends CLITest {
     }
 
     @Test
-    public void testSignWithIncapableKey() throws IOException, PGPException, InvalidAlgorithmParameterException, NoSuchAlgorithmException {
+    public void testSignWithIncapableKey()
+            throws IOException, PGPException, InvalidAlgorithmParameterException, NoSuchAlgorithmException {
         PGPSecretKeyRing secretKeys = PGPainless.buildKeyRing()
                 .addUserId("Cannot Sign <cannot@sign.key>")
                 .setPrimaryKey(KeySpec.getBuilder(KeyType.EDDSA(EdDSACurve._Ed25519), KeyFlag.CERTIFY_OTHER))
-                .addSubkey(KeySpec.getBuilder(KeyType.XDH(XDHSpec._X25519), KeyFlag.ENCRYPT_COMMS, KeyFlag.ENCRYPT_STORAGE))
+                .addSubkey(KeySpec.getBuilder(
+                        KeyType.XDH(XDHSpec._X25519), KeyFlag.ENCRYPT_COMMS, KeyFlag.ENCRYPT_STORAGE))
                 .build();
         File keyFile = writeFile("key.pgp", secretKeys.getEncoded());
         File certFile = writeFile("cert.pgp", PGPainless.extractCertificate(secretKeys).getEncoded());

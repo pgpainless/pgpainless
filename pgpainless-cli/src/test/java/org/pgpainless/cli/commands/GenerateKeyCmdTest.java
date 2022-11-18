@@ -83,7 +83,8 @@ public class GenerateKeyCmdTest extends CLITest {
         KeyRingInfo info = PGPainless.inspectKeyRing(secretKeys);
         assertTrue(info.isFullyEncrypted());
 
-        assertNotNull(UnlockSecretKey.unlockSecretKey(secretKeys.getSecretKey(), Passphrase.fromPassword("sw0rdf1sh")));
+        assertNotNull(UnlockSecretKey
+                .unlockSecretKey(secretKeys.getSecretKey(), Passphrase.fromPassword("sw0rdf1sh")));
     }
 
     @Test
@@ -91,6 +92,7 @@ public class GenerateKeyCmdTest extends CLITest {
         int exit = executeCommand("generate-key",
                 "--with-key-password", "nonexistent", "Alice <alice@pgpainless.org>");
 
-        assertEquals(SOPGPException.MissingInput.EXIT_CODE, exit, "Expected MISSING_INPUT (" + SOPGPException.MissingInput.EXIT_CODE + ")");
+        assertEquals(SOPGPException.MissingInput.EXIT_CODE, exit,
+                "Expected MISSING_INPUT (" + SOPGPException.MissingInput.EXIT_CODE + ")");
     }
 }

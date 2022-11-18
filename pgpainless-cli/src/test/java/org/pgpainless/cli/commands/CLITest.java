@@ -161,6 +161,7 @@ public abstract class CLITest {
     }
 
     public void assertSuccess(int exitCode) {
-        assertEquals(0, exitCode, "Expected successful program execution");
+        assertEquals(0, exitCode,
+                "Expected successful program execution");
     }
 }

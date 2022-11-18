@@ -30,7 +30,8 @@ public class ExtractCertCmdTest extends CLITest {
     }
 
     @Test
-    public void testExtractCert() throws InvalidAlgorithmParameterException, NoSuchAlgorithmException, PGPException, IOException {
+    public void testExtractCert()
+            throws InvalidAlgorithmParameterException, NoSuchAlgorithmException, PGPException, IOException {
         PGPSecretKeyRing secretKeys = PGPainless.generateKeyRing()
                 .simpleEcKeyRing("Juliet Capulet <juliet@capulet.lit>");
 
