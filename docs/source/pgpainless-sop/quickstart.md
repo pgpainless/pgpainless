@@ -209,7 +209,7 @@ byte[] ciphertext = ...; // the encrypted message
 
 ReadyWithResult<DecryptionResult> readyWithResult = sop.decrypt()
         .withKey(bobKey)
-        .verifyWith(aliceCert)
+        .verifyWithCert(aliceCert)
         .withKeyPassword("password123") // if decryption key is protected
         .ciphertext(ciphertext);
 ```
