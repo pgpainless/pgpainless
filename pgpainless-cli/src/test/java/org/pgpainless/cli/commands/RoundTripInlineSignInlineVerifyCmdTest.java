@@ -411,4 +411,52 @@ public class RoundTripInlineSignInlineVerifyCmdTest extends CLITest {
         assertEquals(
                 "2022-11-18T14:55:33Z 7A073EDF273C902796D259528FBDD36D01831673 AEA0FD2C899D3FC077815F0026560D2AE53DB86F\n", ver);
     }
+
+    @Test
+    public void testInlineSignWithMissingSecretKeysFails() throws IOException {
+        String missingSecretKeys = "-----BEGIN PGP PRIVATE KEY BLOCK-----\n" +
+                "Comment: 8677 37CA 1979 28FA 325A  DE56 B455 9329 9882 36BE\n" +
+                "Comment: Mrs. Secret Key <miss@secret.key>\n" +
+                "\n" +
+                "lEwEY3t3pRYJKwYBBAHaRw8BAQdA7lifUc85s7omw7eYNIaIj2mZrGeZ9KkG0WX2\n" +
+                "hAx5qXT+AGUAR05VAhAAAAAAAAAAAAAAAAAAAAAAtCFNcnMuIFNlY3JldCBLZXkg\n" +
+                "PG1pc3NAc2VjcmV0LmtleT6IjwQTFgoAQQUCY3t3pQkQtFWTKZiCNr4WIQSGdzfK\n" +
+                "GXko+jJa3la0VZMpmII2vgKeAQKbAQUWAgMBAAQLCQgHBRUKCQgLApkBAABNTQEA\n" +
+                "uU5L9hJ1QKWxL5wetJwR08rXJTzsuX1LRfy8dlnlJl0BAKPSqydLoTEVlJQ/2sjO\n" +
+                "xQmc6aedoOoXKKVNDW5ibrsEnFEEY3t3pRIKKwYBBAGXVQEFAQEHQA/WdwR+NFaY\n" +
+                "7NeZnRwI3X9sI5fMq0vtEauMLfZjqTc/AwEIB/4AZQBHTlUCEAAAAAAAAAAAAAAA\n" +
+                "AAAAAACIdQQYFgoAHQUCY3t3pQKeAQKbDAUWAgMBAAQLCQgHBRUKCQgLAAoJELRV\n" +
+                "kymYgja+8XMA/1quBVvaSf4QxbB2S7rKt93rAynDLqGQD8hC6wiZc+ihAQC87n2r\n" +
+                "meZ9kiYLYiQuBTGvXyzDBtw5m7wQtMWTfXisBpxMBGN7d6UWCSsGAQQB2kcPAQEH\n" +
+                "QMguDhFon0ZI//CIpC2ZndmtvKdJhcEAeVNkdcsIZajl/gBlAEdOVQIQAAAAAAAA\n" +
+                "AAAAAAAAAAAAAIjVBBgWCgB9BQJje3elAp4BApsCBRYCAwEABAsJCAcFFQoJCAtf\n" +
+                "IAQZFgoABgUCY3t3pQAKCRC14KclsvqqOstPAQDYiL7+4HucWKmd7dcd9XJZpdB6\n" +
+                "lneoK0qku0wvTVjX7gEAtUt2eXMlBE4ox+ZmY964PCc2gEHuC7PBtsAzuF7GSQwA\n" +
+                "CgkQtFWTKZiCNr7JKwEA3aLsOWAYzqvKgiboYSzle+SVBUb3chKlzf3YmckjmwgA\n" +
+                "/3YN1W8CiQFvE9NvetZkr2wXB+QVkuL6cxM0ogEo4lAG\n" +
+                "=9ZMl\n" +
+                "-----END PGP PRIVATE KEY BLOCK-----\n";
+        File key = writeFile("key.asc", missingSecretKeys);
+
+        pipeStringToStdin("Hello, World!\n");
+        ByteArrayOutputStream out = pipeStdoutToStream();
+        int exitCode = executeCommand("inline-sign", key.getAbsolutePath());
+
+        assertEquals(SOPGPException.KeyCannotSign.EXIT_CODE, exitCode);
+        assertEquals(0, out.size());
+    }
+
+    @Test
+    public void signWithProtectedKeyWithWrongPassphraseFails() throws IOException {
+        File key = writeFile("key.asc", KEY_1);
+        File password = writeFile("password.asc", "not_correct!");
+
+        pipeStringToStdin("Hello, World!\n");
+        ByteArrayOutputStream out = pipeStdoutToStream();
+        int exitCode = executeCommand("inline-sign", key.getAbsolutePath(),
+                "--with-key-password", password.getAbsolutePath());
+
+        assertEquals(SOPGPException.KeyIsProtected.EXIT_CODE, exitCode);
+        assertEquals(0, out.size());
+    }
 }
