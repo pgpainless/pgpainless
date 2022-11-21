@@ -129,4 +129,27 @@ public class InlineDetachCmdTest extends CLITest {
         assertEquals(0, msgOut.size());
     }
 
+    @Test
+    public void detachNonOpenPgpDataFails() throws IOException {
+        File sig = nonExistentFile("sig.asc");
+        pipeStringToStdin("This is non-OpenPGP data and therefore we cannot detach any signatures from it.");
+        int exitCode = executeCommand("inline-detach", "--signatures-out", sig.getAbsolutePath());
+
+        assertEquals(SOPGPException.BadData.EXIT_CODE, exitCode);
+    }
+
+    @Test
+    public void detachMissingSignaturesFromCleartextSignedMessageFails() throws IOException {
+        String cleartextSignedNoSigs = "-----BEGIN PGP SIGNED MESSAGE-----\n" +
+                "\n" +
+                "Hello, World!\n" +
+                "What's Up!??\n" +
+                "\n" +
+                "\n";
+        pipeStringToStdin(cleartextSignedNoSigs);
+        File sig = nonExistentFile("sig.asc");
+        int exitCode = executeCommand("inline-detach", "--signatures-out", sig.getAbsolutePath());
+
+        assertEquals(SOPGPException.BadData.EXIT_CODE, exitCode);
+    }
 }
