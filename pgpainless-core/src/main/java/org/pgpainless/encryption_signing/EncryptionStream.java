@@ -8,7 +8,10 @@ import java.io.BufferedOutputStream;
 import java.io.IOException;
 import java.io.OutputStream;
 import java.util.ArrayList;
+import java.util.HashSet;
+import java.util.Iterator;
 import java.util.List;
+import java.util.Set;
 import javax.annotation.Nonnull;
 
 import org.bouncycastle.bcpg.ArmoredOutputStream;
@@ -22,6 +25,7 @@ import org.bouncycastle.openpgp.PGPSignatureGenerator;
 import org.bouncycastle.openpgp.operator.PGPDataEncryptorBuilder;
 import org.bouncycastle.openpgp.operator.PGPKeyEncryptionMethodGenerator;
 import org.pgpainless.algorithm.CompressionAlgorithm;
+import org.pgpainless.algorithm.HashAlgorithm;
 import org.pgpainless.algorithm.StreamEncoding;
 import org.pgpainless.algorithm.SymmetricKeyAlgorithm;
 import org.pgpainless.implementation.ImplementationFactory;
@@ -165,9 +169,8 @@ public final class EncryptionStream extends OutputStream {
 
     private void prepareLiteralDataProcessing() throws IOException {
         if (options.isCleartextSigned()) {
-            // Begin cleartext with hash algorithm of first signing method
-            SigningOptions.SigningMethod firstMethod = options.getSigningOptions().getSigningMethods().values().iterator().next();
-            armorOutputStream.beginClearText(firstMethod.getHashAlgorithm().getAlgorithmId());
+            int[] algorithmIds = collectHashAlgorithmsForCleartextSigning();
+            armorOutputStream.beginClearText(algorithmIds);
             return;
         }
 
@@ -193,6 +196,24 @@ public final class EncryptionStream extends OutputStream {
         CRLFGeneratorStream crlfGeneratorStream = new CRLFGeneratorStream(bufferedOutputStream,
                 options.isApplyCRLFEncoding() ? StreamEncoding.UTF8 : StreamEncoding.BINARY);
         outermostStream = crlfGeneratorStream;
+    }
+
+    private int[] collectHashAlgorithmsForCleartextSigning() {
+        SigningOptions signOpts = options.getSigningOptions();
+        Set<HashAlgorithm> hashAlgorithms = new HashSet<>();
+        if (signOpts != null) {
+            for (SigningOptions.SigningMethod method : signOpts.getSigningMethods().values()) {
+                hashAlgorithms.add(method.getHashAlgorithm());
+            }
+        }
+
+        int[] algorithmIds = new int[hashAlgorithms.size()];
+        Iterator<HashAlgorithm> iterator = hashAlgorithms.iterator();
+        for (int i = 0; i < algorithmIds.length; i++) {
+            algorithmIds[i] = iterator.next().getAlgorithmId();
+        }
+
+        return algorithmIds;
     }
 
     @Override
