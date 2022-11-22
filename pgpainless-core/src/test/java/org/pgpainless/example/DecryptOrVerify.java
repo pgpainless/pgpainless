@@ -24,7 +24,7 @@ import org.pgpainless.PGPainless;
 import org.pgpainless.algorithm.DocumentSignatureType;
 import org.pgpainless.decryption_verification.ConsumerOptions;
 import org.pgpainless.decryption_verification.DecryptionStream;
-import org.pgpainless.decryption_verification.OpenPgpMetadata;
+import org.pgpainless.decryption_verification.MessageMetadata;
 import org.pgpainless.encryption_signing.EncryptionStream;
 import org.pgpainless.encryption_signing.ProducerOptions;
 import org.pgpainless.encryption_signing.SigningOptions;
@@ -168,9 +168,9 @@ public class DecryptOrVerify {
         decryptionStream.close(); // remember to close the stream!
 
         // The metadata object contains information about the message
-        OpenPgpMetadata metadata = decryptionStream.getResult();
+        MessageMetadata metadata = decryptionStream.getMetadata();
         assertTrue(metadata.isEncrypted()); // message was encrypted
-        assertFalse(metadata.isVerified()); // We did not do any signature verification
+        assertFalse(metadata.isVerifiedSigned()); // We did not do any signature verification
 
         // The output stream now contains the decrypted message
         assertEquals(PLAINTEXT, plaintextOut.toString());
@@ -200,11 +200,10 @@ public class DecryptOrVerify {
         decryptionStream.close(); // remember to close the stream to finish signature verification
 
         // metadata with information on the message, like signatures
-        OpenPgpMetadata metadata = decryptionStream.getResult();
+        MessageMetadata metadata = decryptionStream.getMetadata();
         assertTrue(metadata.isEncrypted()); // messages was in fact encrypted
-        assertTrue(metadata.isSigned()); // message contained some signatures
-        assertTrue(metadata.isVerified()); // the signatures were actually correct
-        assertTrue(metadata.containsVerifiedSignatureFrom(certificate)); // the signatures could be verified using the certificate
+        assertTrue(metadata.isVerifiedSigned()); // the signatures were actually correct
+        assertTrue(metadata.isVerifiedSignedBy(certificate)); // the signatures could be verified using the certificate
 
         assertEquals(PLAINTEXT, plaintextOut.toString());
     }
@@ -232,8 +231,8 @@ public class DecryptOrVerify {
             verificationStream.close(); // remember to close the stream to finish sig verification
 
             // Get the metadata object for information about the message
-            OpenPgpMetadata metadata = verificationStream.getResult();
-            assertTrue(metadata.isVerified()); // signatures were verified successfully
+            MessageMetadata metadata = verificationStream.getMetadata();
+            assertTrue(metadata.isVerifiedSigned()); // signatures were verified successfully
             // The output stream we piped to now contains the message
             assertEquals(PLAINTEXT, out.toString());
         }
@@ -286,8 +285,8 @@ public class DecryptOrVerify {
             verificationStream.close(); // as always, remember to close the stream
 
             // Metadata will confirm that the message was in fact signed
-            OpenPgpMetadata metadata = verificationStream.getResult();
-            assertTrue(metadata.isVerified());
+            MessageMetadata metadata = verificationStream.getMetadata();
+            assertTrue(metadata.isVerifiedSigned());
             // compare the plaintext to what we originally signed
             assertArrayEquals(msg.getBytes(StandardCharsets.UTF_8), plain.toByteArray());
         }

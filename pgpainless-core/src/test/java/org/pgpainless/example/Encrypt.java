@@ -21,7 +21,7 @@ import org.pgpainless.PGPainless;
 import org.pgpainless.algorithm.DocumentSignatureType;
 import org.pgpainless.decryption_verification.ConsumerOptions;
 import org.pgpainless.decryption_verification.DecryptionStream;
-import org.pgpainless.decryption_verification.OpenPgpMetadata;
+import org.pgpainless.decryption_verification.MessageMetadata;
 import org.pgpainless.encryption_signing.EncryptionOptions;
 import org.pgpainless.encryption_signing.EncryptionStream;
 import org.pgpainless.encryption_signing.ProducerOptions;
@@ -148,12 +148,12 @@ public class Encrypt {
         EncryptionStream encryptor = PGPainless.encryptAndOrSign()
                 .onOutputStream(ciphertext)
                 .withOptions(ProducerOptions.signAndEncrypt(
-                        // we want to encrypt communication (affects key selection based on key flags)
-                        EncryptionOptions.encryptCommunications()
-                                .addRecipient(certificateBob)
-                                .addRecipient(certificateAlice),
-                        new SigningOptions()
-                                .addInlineSignature(protectorAlice, keyAlice, DocumentSignatureType.CANONICAL_TEXT_DOCUMENT)
+                                // we want to encrypt communication (affects key selection based on key flags)
+                                EncryptionOptions.encryptCommunications()
+                                        .addRecipient(certificateBob)
+                                        .addRecipient(certificateAlice),
+                                new SigningOptions()
+                                        .addInlineSignature(protectorAlice, keyAlice, DocumentSignatureType.CANONICAL_TEXT_DOCUMENT)
                         ).setAsciiArmor(true)
                 );
 
@@ -176,9 +176,9 @@ public class Encrypt {
         decryptor.close();
 
         // Check the metadata to see how the message was encrypted/signed
-        OpenPgpMetadata metadata = decryptor.getResult();
+        MessageMetadata metadata = decryptor.getMetadata();
         assertTrue(metadata.isEncrypted());
-        assertTrue(metadata.containsVerifiedSignatureFrom(certificateAlice));
+        assertTrue(metadata.isVerifiedSignedBy(certificateAlice));
         assertEquals(message, plaintext.toString());
     }
 
@@ -236,10 +236,10 @@ public class Encrypt {
         // plaintext message to encrypt
         String message = "Hello, World!\n";
         String[] comments = {
-        		"This comment was added using options.",
-        		"And it has three lines.",
-        		" ",
-        		"Empty lines are skipped."
+                "This comment was added using options.",
+                "And it has three lines.",
+                " ",
+                "Empty lines are skipped."
         };
         String comment = comments[0] + "\n" + comments[1] + "\n" + comments[2] + "\n" + comments[3];
         ByteArrayOutputStream ciphertext = new ByteArrayOutputStream();
@@ -247,12 +247,12 @@ public class Encrypt {
         EncryptionStream encryptor = PGPainless.encryptAndOrSign()
                 .onOutputStream(ciphertext)
                 .withOptions(ProducerOptions.encrypt(
-                        // we want to encrypt communication (affects key selection based on key flags)
-                        EncryptionOptions.encryptCommunications()
-                                .addRecipient(certificateBob)
-                                .addRecipient(certificateAlice)
-                        ).setAsciiArmor(true)
-                		.setComment(comment)
+                                        // we want to encrypt communication (affects key selection based on key flags)
+                                        EncryptionOptions.encryptCommunications()
+                                                .addRecipient(certificateBob)
+                                                .addRecipient(certificateAlice)
+                                ).setAsciiArmor(true)
+                                .setComment(comment)
                 );
 
         // Pipe data trough and CLOSE the stream (important)
@@ -281,10 +281,8 @@ public class Encrypt {
         decryptor.close();
 
         // Check the metadata to see how the message was encrypted/signed
-        OpenPgpMetadata metadata = decryptor.getResult();
+        MessageMetadata metadata = decryptor.getMetadata();
         assertTrue(metadata.isEncrypted());
         assertEquals(message, plaintext.toString());
     }
-
-
 }
