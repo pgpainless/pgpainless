@@ -4,20 +4,24 @@
 
 package org.pgpainless.decryption_verification;
 
+import java.util.ArrayList;
+import java.util.Date;
+import java.util.Iterator;
+import java.util.List;
+import java.util.NoSuchElementException;
+import java.util.function.Function;
+import javax.annotation.Nonnull;
+import javax.annotation.Nullable;
+
+import org.bouncycastle.openpgp.PGPKeyRing;
+import org.bouncycastle.openpgp.PGPLiteralData;
+import org.bouncycastle.openpgp.PGPPublicKey;
 import org.pgpainless.algorithm.CompressionAlgorithm;
 import org.pgpainless.algorithm.StreamEncoding;
 import org.pgpainless.algorithm.SymmetricKeyAlgorithm;
 import org.pgpainless.exception.MalformedOpenPgpMessageException;
 import org.pgpainless.key.SubkeyIdentifier;
 import org.pgpainless.util.SessionKey;
-
-import javax.annotation.Nonnull;
-import javax.annotation.Nullable;
-import java.util.ArrayList;
-import java.util.Date;
-import java.util.Iterator;
-import java.util.List;
-import java.util.NoSuchElementException;
 
 /**
  * View for extracting metadata about a {@link Message}.
@@ -40,18 +44,9 @@ public class MessageMetadata {
     public @Nonnull OpenPgpMetadata toLegacyMetadata() {
         OpenPgpMetadata.Builder resultBuilder = OpenPgpMetadata.getBuilder();
         resultBuilder.setCompressionAlgorithm(getCompressionAlgorithm());
-        Date modDate = getModificationDate();
-        if (modDate != null) {
-            resultBuilder.setModificationDate(modDate);
-        }
-        String fileName = getFilename();
-        if (fileName != null) {
-            resultBuilder.setFileName(fileName);
-        }
-        StreamEncoding encoding = getFormat();
-        if (encoding != null) {
-            resultBuilder.setFileEncoding(encoding);
-        }
+        resultBuilder.setModificationDate(getModificationDate());
+        resultBuilder.setFileName(getFilename());
+        resultBuilder.setFileEncoding(getLiteralDataEncoding());
         resultBuilder.setSessionKey(getSessionKey());
         resultBuilder.setDecryptionKey(getDecryptionKey());
 
@@ -75,6 +70,39 @@ public class MessageMetadata {
         return resultBuilder.build();
     }
 
+    public boolean isEncrypted() {
+        SymmetricKeyAlgorithm algorithm = getEncryptionAlgorithm();
+        return algorithm != null && algorithm != SymmetricKeyAlgorithm.NULL;
+    }
+
+    public boolean isEncryptedFor(@Nonnull PGPKeyRing keys) {
+        Iterator<EncryptedData> encryptionLayers = getEncryptionLayers();
+        while (encryptionLayers.hasNext()) {
+            EncryptedData encryptedData = encryptionLayers.next();
+            for (long recipient : encryptedData.getRecipients()) {
+                PGPPublicKey key = keys.getPublicKey(recipient);
+                if (key != null) {
+                    return true;
+                }
+            }
+        }
+        return false;
+    }
+
+    public @Nonnull Iterator<EncryptedData> getEncryptionLayers() {
+        return new LayerIterator<EncryptedData>(message) {
+            @Override
+            public boolean matches(Nested layer) {
+                return layer instanceof EncryptedData;
+            }
+
+            @Override
+            public EncryptedData getProperty(Layer last) {
+                return (EncryptedData) last;
+            }
+        };
+    }
+
     /**
      * Return the {@link SymmetricKeyAlgorithm} of the outermost encrypted data packet, or null if message is
      * unencrypted.
@@ -82,11 +110,7 @@ public class MessageMetadata {
      * @return encryption algorithm
      */
     public @Nullable SymmetricKeyAlgorithm getEncryptionAlgorithm() {
-        Iterator<SymmetricKeyAlgorithm> algorithms = getEncryptionAlgorithms();
-        if (algorithms.hasNext()) {
-            return algorithms.next();
-        }
-        return null;
+        return firstOrNull(getEncryptionAlgorithms());
     }
 
     /**
@@ -98,15 +122,19 @@ public class MessageMetadata {
      * @return iterator of symmetric encryption algorithms
      */
     public @Nonnull Iterator<SymmetricKeyAlgorithm> getEncryptionAlgorithms() {
-        return new LayerIterator<SymmetricKeyAlgorithm>(message) {
+        return map(getEncryptionLayers(), encryptedData -> encryptedData.algorithm);
+    }
+
+    public @Nonnull Iterator<CompressedData> getCompressionLayers() {
+        return new LayerIterator<CompressedData>(message) {
             @Override
-            public boolean matches(Nested layer) {
-                return layer instanceof EncryptedData;
+            boolean matches(Layer layer) {
+                return layer instanceof CompressedData;
             }
 
             @Override
-            public SymmetricKeyAlgorithm getProperty(Layer last) {
-                return ((EncryptedData) last).algorithm;
+            CompressedData getProperty(Layer last) {
+                return (CompressedData) last;
             }
         };
     }
@@ -118,11 +146,7 @@ public class MessageMetadata {
      * @return compression algorithm
      */
     public @Nullable CompressionAlgorithm getCompressionAlgorithm() {
-        Iterator<CompressionAlgorithm> algorithms = getCompressionAlgorithms();
-        if (algorithms.hasNext()) {
-            return algorithms.next();
-        }
-        return null;
+        return firstOrNull(getCompressionAlgorithms());
     }
 
     /**
@@ -134,17 +158,7 @@ public class MessageMetadata {
      * @return iterator of compression algorithms
      */
     public @Nonnull Iterator<CompressionAlgorithm> getCompressionAlgorithms() {
-        return new LayerIterator<CompressionAlgorithm>(message) {
-            @Override
-            public boolean matches(Nested layer) {
-                return layer instanceof CompressedData;
-            }
-
-            @Override
-            public CompressionAlgorithm getProperty(Layer last) {
-                return ((CompressedData) last).algorithm;
-            }
-        };
+        return map(getCompressionLayers(), compressionLayer -> compressionLayer.algorithm);
     }
 
     /**
@@ -154,11 +168,7 @@ public class MessageMetadata {
      * @return session key of the message
      */
     public @Nullable SessionKey getSessionKey() {
-        Iterator<SessionKey> sessionKeys = getSessionKeys();
-        if (sessionKeys.hasNext()) {
-            return sessionKeys.next();
-        }
-        return null;
+        return firstOrNull(getSessionKeys());
     }
 
     /**
@@ -170,17 +180,15 @@ public class MessageMetadata {
      * @return iterator of session keys
      */
     public @Nonnull Iterator<SessionKey> getSessionKeys() {
-        return new LayerIterator<SessionKey>(message) {
-            @Override
-            boolean matches(Nested layer) {
-                return layer instanceof EncryptedData;
-            }
+        return map(getEncryptionLayers(), encryptedData -> encryptedData.sessionKey);
+    }
 
-            @Override
-            SessionKey getProperty(Layer last) {
-                return ((EncryptedData) last).getSessionKey();
-            }
-        };
+    public boolean isVerifiedSignedBy(@Nonnull PGPKeyRing keys) {
+        return isVerifiedInlineSignedBy(keys) || isVerifiedDetachedSignedBy(keys);
+    }
+
+    public boolean isVerifiedDetachedSignedBy(@Nonnull PGPKeyRing keys) {
+        return containsSignatureBy(getVerifiedDetachedSignatures(), keys);
     }
 
     /**
@@ -200,6 +208,10 @@ public class MessageMetadata {
      */
     public @Nonnull List<SignatureVerification.Failure> getRejectedDetachedSignatures() {
         return message.getRejectedDetachedSignatures();
+    }
+
+    public boolean isVerifiedInlineSignedBy(@Nonnull PGPKeyRing keys) {
+        return containsSignatureBy(getVerifiedInlineSignatures(), keys);
     }
 
     /**
@@ -291,6 +303,28 @@ public class MessageMetadata {
         };
     }
 
+    private static boolean containsSignatureBy(@Nonnull List<SignatureVerification> verifications,
+                                               @Nonnull PGPKeyRing keys) {
+        for (SignatureVerification verification : verifications) {
+            SubkeyIdentifier issuer = verification.getSigningKey();
+            if (issuer == null) {
+                // No issuer, shouldn't happen, but better be safe and skip...
+                continue;
+            }
+
+            if (keys.getPublicKey().getKeyID() != issuer.getPrimaryKeyId()) {
+                // Wrong cert
+                continue;
+            }
+
+            if (keys.getPublicKey(issuer.getSubkeyId()) != null) {
+                // Matching cert and signing key
+                return true;
+            }
+        }
+        return false;
+    }
+
     /**
      * Return the value of the literal data packet's filename field.
      * This value can be used to store a decrypted file under its original filename,
@@ -300,12 +334,21 @@ public class MessageMetadata {
      * @return filename
      * @see <a href="https://www.rfc-editor.org/rfc/rfc4880#section-5.9">RFC4880 §5.9. Literal Data Packet</a>
      */
-    public @Nullable String getFilename() {
+    public @Nonnull String getFilename() {
         LiteralData literalData = findLiteralData();
         if (literalData == null) {
-            return null;
+            throw new NoSuchElementException("No Literal Data Packet found.");
         }
         return literalData.getFileName();
+    }
+
+    /**
+     * Returns true, if the filename of the literal data packet indicates that the data is intended for your eyes only.
+     *
+     * @return isForYourEyesOnly
+     */
+    public boolean isForYourEyesOnly() {
+        return PGPLiteralData.CONSOLE.equals(getFilename());
     }
 
     /**
@@ -316,10 +359,10 @@ public class MessageMetadata {
      * @return modification date
      * @see <a href="https://www.rfc-editor.org/rfc/rfc4880#section-5.9">RFC4880 §5.9. Literal Data Packet</a>
      */
-    public @Nullable Date getModificationDate() {
+    public @Nonnull Date getModificationDate() {
         LiteralData literalData = findLiteralData();
         if (literalData == null) {
-            return null;
+            throw new NoSuchElementException("No Literal Data Packet found.");
         }
         return literalData.getModificationDate();
     }
@@ -332,10 +375,10 @@ public class MessageMetadata {
      * @return format
      * @see <a href="https://www.rfc-editor.org/rfc/rfc4880#section-5.9">RFC4880 §5.9. Literal Data Packet</a>
      */
-    public @Nullable StreamEncoding getFormat() {
+    public @Nonnull StreamEncoding getLiteralDataEncoding() {
         LiteralData literalData = findLiteralData();
         if (literalData == null) {
-            return null;
+            throw new NoSuchElementException("No Literal Data Packet found.");
         }
         return literalData.getFormat();
     }
@@ -368,21 +411,7 @@ public class MessageMetadata {
      * @return decryption key
      */
     public SubkeyIdentifier getDecryptionKey() {
-        Iterator<SubkeyIdentifier> iterator = new LayerIterator<SubkeyIdentifier>(message) {
-            @Override
-            public boolean matches(Nested layer) {
-                return layer instanceof EncryptedData;
-            }
-
-            @Override
-            public SubkeyIdentifier getProperty(Layer last) {
-                return ((EncryptedData) last).decryptionKey;
-            }
-        };
-        if (iterator.hasNext()) {
-            return iterator.next();
-        }
-        return null;
+        return firstOrNull(map(getEncryptionLayers(), encryptedData -> encryptedData.decryptionKey));
     }
 
     public abstract static class Layer {
@@ -743,5 +772,33 @@ public class MessageMetadata {
         }
 
         abstract O getProperty(Layer last);
+    }
+
+    private static <A,B> Iterator<B> map(Iterator<A> from, Function<A, B> mapping) {
+        return new Iterator<B>() {
+            @Override
+            public boolean hasNext() {
+                return from.hasNext();
+            }
+
+            @Override
+            public B next() {
+                return mapping.apply(from.next());
+            }
+        };
+    }
+
+    private static @Nullable <A> A firstOrNull(Iterator<A> iterator) {
+        if (iterator.hasNext()) {
+            return iterator.next();
+        }
+        return null;
+    }
+
+    private static @Nonnull <A> A firstOr(Iterator<A> iterator, A item) {
+        if (iterator.hasNext()) {
+            return iterator.next();
+        }
+        return item;
     }
 }
