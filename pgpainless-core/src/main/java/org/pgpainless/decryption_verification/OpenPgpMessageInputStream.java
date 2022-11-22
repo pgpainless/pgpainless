@@ -428,7 +428,7 @@ public class OpenPgpMessageInputStream extends DecryptionStream {
                 }
 
                 // attempt decryption
-                if (decryptPKESKAndStream(subkeyIdentifier, decryptorFactory, pkesk)) {
+                if (decryptPKESKAndStream(esks, subkeyIdentifier, decryptorFactory, pkesk)) {
                     return true;
                 }
             }
@@ -473,7 +473,7 @@ public class OpenPgpMessageInputStream extends DecryptionStream {
 
                 PBEDataDecryptorFactory decryptorFactory = ImplementationFactory.getInstance()
                         .getPBEDataDecryptorFactory(passphrase);
-                if (decryptSKESKAndStream(skesk, decryptorFactory)) {
+                if (decryptSKESKAndStream(esks, skesk, decryptorFactory)) {
                     return true;
                 }
             }
@@ -506,7 +506,7 @@ public class OpenPgpMessageInputStream extends DecryptionStream {
             }
 
             PGPPrivateKey privateKey = UnlockSecretKey.unlockSecretKey(secretKey, protector);
-            if (decryptWithPrivateKey(privateKey, decryptionKeyId, pkesk)) {
+            if (decryptWithPrivateKey(esks, privateKey, decryptionKeyId, pkesk)) {
                 return true;
             }
         }
@@ -529,7 +529,7 @@ public class OpenPgpMessageInputStream extends DecryptionStream {
                 }
 
                 PGPPrivateKey privateKey = UnlockSecretKey.unlockSecretKey(secretKey, protector);
-                if (decryptWithPrivateKey(privateKey, decryptionKeyId, pkesk)) {
+                if (decryptWithPrivateKey(esks, privateKey, decryptionKeyId, pkesk)) {
                     return true;
                 }
             }
@@ -561,7 +561,7 @@ public class OpenPgpMessageInputStream extends DecryptionStream {
                     LOGGER.debug("Attempt decryption with key " + decryptionKeyId + " while interactively requesting its passphrase");
                     SecretKeyRingProtector protector = options.getSecretKeyProtector(decryptionKey);
                     PGPPrivateKey privateKey = UnlockSecretKey.unlockSecretKey(secretKey, protector);
-                    if (decryptWithPrivateKey(privateKey, decryptionKeyId, pkesk)) {
+                    if (decryptWithPrivateKey(esks, privateKey, decryptionKeyId, pkesk)) {
                         return true;
                     }
                 }
@@ -576,13 +576,14 @@ public class OpenPgpMessageInputStream extends DecryptionStream {
         return false;
     }
 
-    private boolean decryptWithPrivateKey(PGPPrivateKey privateKey,
+    private boolean decryptWithPrivateKey(SortedESKs esks,
+                                          PGPPrivateKey privateKey,
                                           SubkeyIdentifier decryptionKeyId,
                                           PGPPublicKeyEncryptedData pkesk)
             throws PGPException, IOException {
         PublicKeyDataDecryptorFactory decryptorFactory = ImplementationFactory.getInstance()
                 .getPublicKeyDataDecryptorFactory(privateKey);
-        return decryptPKESKAndStream(decryptionKeyId, decryptorFactory, pkesk);
+        return decryptPKESKAndStream(esks, decryptionKeyId, decryptorFactory, pkesk);
     }
 
     private static boolean hasUnsupportedS2KSpecifier(PGPSecretKey secretKey, SubkeyIdentifier decryptionKeyId) {
@@ -597,17 +598,23 @@ public class OpenPgpMessageInputStream extends DecryptionStream {
         return false;
     }
 
-    private boolean decryptSKESKAndStream(PGPPBEEncryptedData skesk, PBEDataDecryptorFactory decryptorFactory)
+    private boolean decryptSKESKAndStream(SortedESKs esks,
+                                          PGPPBEEncryptedData symEsk,
+                                          PBEDataDecryptorFactory decryptorFactory)
             throws IOException, UnacceptableAlgorithmException {
         try {
-            InputStream decrypted = skesk.getDataStream(decryptorFactory);
-            SessionKey sessionKey = new SessionKey(skesk.getSessionKey(decryptorFactory));
+            InputStream decrypted = symEsk.getDataStream(decryptorFactory);
+            SessionKey sessionKey = new SessionKey(symEsk.getSessionKey(decryptorFactory));
             throwIfUnacceptable(sessionKey.getAlgorithm());
             MessageMetadata.EncryptedData encryptedData = new MessageMetadata.EncryptedData(
                     sessionKey.getAlgorithm(), metadata.depth + 1);
             encryptedData.sessionKey = sessionKey;
+            encryptedData.recipients = new ArrayList<>();
+            for (PGPPublicKeyEncryptedData pkesk : esks.pkesks) {
+                encryptedData.recipients.add(pkesk.getKeyID());
+            }
             LOGGER.debug("Successfully decrypted data with passphrase");
-            IntegrityProtectedInputStream integrityProtected = new IntegrityProtectedInputStream(decrypted, skesk, options);
+            IntegrityProtectedInputStream integrityProtected = new IntegrityProtectedInputStream(decrypted, symEsk, options);
             nestedInputStream = new OpenPgpMessageInputStream(integrityProtected, options, encryptedData, policy);
             return true;
         } catch (UnacceptableAlgorithmException e) {
@@ -618,23 +625,28 @@ public class OpenPgpMessageInputStream extends DecryptionStream {
         return false;
     }
 
-    private boolean decryptPKESKAndStream(SubkeyIdentifier decryptionKeyId,
+    private boolean decryptPKESKAndStream(SortedESKs esks,
+                                          SubkeyIdentifier decryptionKeyId,
                                           PublicKeyDataDecryptorFactory decryptorFactory,
-                                          PGPPublicKeyEncryptedData pkesk)
+                                          PGPPublicKeyEncryptedData asymEsk)
             throws IOException, UnacceptableAlgorithmException {
         try {
-            InputStream decrypted = pkesk.getDataStream(decryptorFactory);
-            SessionKey sessionKey = new SessionKey(pkesk.getSessionKey(decryptorFactory));
+            InputStream decrypted = asymEsk.getDataStream(decryptorFactory);
+            SessionKey sessionKey = new SessionKey(asymEsk.getSessionKey(decryptorFactory));
             throwIfUnacceptable(sessionKey.getAlgorithm());
 
             MessageMetadata.EncryptedData encryptedData = new MessageMetadata.EncryptedData(
-                    SymmetricKeyAlgorithm.requireFromId(pkesk.getSymmetricAlgorithm(decryptorFactory)),
+                    SymmetricKeyAlgorithm.requireFromId(asymEsk.getSymmetricAlgorithm(decryptorFactory)),
                     metadata.depth + 1);
             encryptedData.decryptionKey = decryptionKeyId;
             encryptedData.sessionKey = sessionKey;
+            encryptedData.recipients = new ArrayList<>();
+            for (PGPPublicKeyEncryptedData pkesk : esks.pkesks) {
+                encryptedData.recipients.add(pkesk.getKeyID());
+            }
 
             LOGGER.debug("Successfully decrypted data with key " + decryptionKeyId);
-            IntegrityProtectedInputStream integrityProtected = new IntegrityProtectedInputStream(decrypted, pkesk, options);
+            IntegrityProtectedInputStream integrityProtected = new IntegrityProtectedInputStream(decrypted, asymEsk, options);
             nestedInputStream = new OpenPgpMessageInputStream(integrityProtected, options, encryptedData, policy);
             return true;
         } catch (UnacceptableAlgorithmException e) {

@@ -698,6 +698,9 @@ public class MessageMetadata {
          * @return recipients
          */
         public @Nonnull List<Long> getRecipients() {
+            if (recipients == null) {
+                return new ArrayList<>();
+            }
             return new ArrayList<>(recipients);
         }
 

@@ -170,6 +170,7 @@ public class DecryptOrVerify {
         // The metadata object contains information about the message
         MessageMetadata metadata = decryptionStream.getMetadata();
         assertTrue(metadata.isEncrypted()); // message was encrypted
+        assertTrue(metadata.isEncryptedFor(secretKey));
         assertFalse(metadata.isVerifiedSigned()); // We did not do any signature verification
 
         // The output stream now contains the decrypted message
@@ -202,6 +203,7 @@ public class DecryptOrVerify {
         // metadata with information on the message, like signatures
         MessageMetadata metadata = decryptionStream.getMetadata();
         assertTrue(metadata.isEncrypted()); // messages was in fact encrypted
+        assertTrue(metadata.isEncryptedFor(certificate));
         assertTrue(metadata.isVerifiedSigned()); // the signatures were actually correct
         assertTrue(metadata.isVerifiedSignedBy(certificate)); // the signatures could be verified using the certificate
 
@@ -233,6 +235,7 @@ public class DecryptOrVerify {
             // Get the metadata object for information about the message
             MessageMetadata metadata = verificationStream.getMetadata();
             assertTrue(metadata.isVerifiedSigned()); // signatures were verified successfully
+            assertTrue(metadata.isVerifiedSignedBy(certificate));
             // The output stream we piped to now contains the message
             assertEquals(PLAINTEXT, out.toString());
         }
