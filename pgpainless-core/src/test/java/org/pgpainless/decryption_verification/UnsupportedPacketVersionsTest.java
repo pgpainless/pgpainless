@@ -15,7 +15,6 @@ import org.bouncycastle.openpgp.PGPException;
 import org.bouncycastle.openpgp.PGPPublicKeyRing;
 import org.bouncycastle.openpgp.PGPSecretKeyRing;
 import org.bouncycastle.util.io.Streams;
-import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 import org.pgpainless.PGPainless;
 
@@ -361,13 +360,11 @@ public class UnsupportedPacketVersionsTest {
     }
 
     @Test
-    @Disabled("Enable once https://github.com/bcgit/bc-java/pull/1268 is available")
     public void pkesk3_skesk4Ws2k23_seip() throws PGPException, IOException {
         decryptAndCompare(PKESK3_SKESK4wS2K23_SEIP, "Encrypted using SEIP + MDC.");
     }
 
     @Test
-    @Disabled("Enable once https://github.com/bcgit/bc-java/pull/1268 is available")
     public void skesk4Ws2k23_pkesk3_seip() throws PGPException, IOException {
         decryptAndCompare(SKESK4wS2K23_PKESK3_SEIP, "Encrypted using SEIP + MDC.");
     }
