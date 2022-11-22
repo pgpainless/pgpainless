@@ -287,7 +287,7 @@ public class RoundTripInlineSignInlineVerifyCmdTest extends CLITest {
         File cert = writeFile("cert.asc", CERT_1);
         pipeStringToStdin(msgOut.toString());
         ByteArrayOutputStream verificationsOut = pipeStdoutToStream();
-        assertSuccess(executeCommand("verify",
+        assertSuccess(executeCommand("verify", "--stacktrace",
                 sigFile.getAbsolutePath(),
                 cert.getAbsolutePath()));
 

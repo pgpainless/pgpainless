@@ -328,7 +328,7 @@ public class OpenPgpMetadata {
             return this;
         }
 
-        public Builder setFileName(@Nonnull String fileName) {
+        public Builder setFileName(@Nullable String fileName) {
             this.fileName = fileName;
             return this;
         }

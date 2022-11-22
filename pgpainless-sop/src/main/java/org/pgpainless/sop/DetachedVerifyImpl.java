@@ -16,7 +16,7 @@ import org.bouncycastle.util.io.Streams;
 import org.pgpainless.PGPainless;
 import org.pgpainless.decryption_verification.ConsumerOptions;
 import org.pgpainless.decryption_verification.DecryptionStream;
-import org.pgpainless.decryption_verification.OpenPgpMetadata;
+import org.pgpainless.decryption_verification.MessageMetadata;
 import org.pgpainless.decryption_verification.SignatureVerification;
 import org.pgpainless.exception.MalformedOpenPgpMessageException;
 import sop.Verification;
@@ -69,7 +69,7 @@ public class DetachedVerifyImpl implements DetachedVerify {
             Streams.drain(decryptionStream);
             decryptionStream.close();
 
-            OpenPgpMetadata metadata = decryptionStream.getResult();
+            MessageMetadata metadata = decryptionStream.getMetadata();
             List<Verification> verificationList = new ArrayList<>();
 
             for (SignatureVerification signatureVerification : metadata.getVerifiedDetachedSignatures()) {

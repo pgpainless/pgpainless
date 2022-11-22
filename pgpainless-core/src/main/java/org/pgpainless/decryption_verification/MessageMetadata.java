@@ -9,7 +9,6 @@ import java.util.Date;
 import java.util.Iterator;
 import java.util.List;
 import java.util.NoSuchElementException;
-import java.util.function.Function;
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
 
@@ -92,7 +91,7 @@ public class MessageMetadata {
     public @Nonnull Iterator<EncryptedData> getEncryptionLayers() {
         return new LayerIterator<EncryptedData>(message) {
             @Override
-            public boolean matches(Nested layer) {
+            public boolean matches(Packet layer) {
                 return layer instanceof EncryptedData;
             }
 
@@ -128,7 +127,7 @@ public class MessageMetadata {
     public @Nonnull Iterator<CompressedData> getCompressionLayers() {
         return new LayerIterator<CompressedData>(message) {
             @Override
-            boolean matches(Layer layer) {
+            boolean matches(Packet layer) {
                 return layer instanceof CompressedData;
             }
 
@@ -242,13 +241,8 @@ public class MessageMetadata {
     public @Nonnull Iterator<List<SignatureVerification>> getVerifiedInlineSignaturesByLayer() {
         return new LayerIterator<List<SignatureVerification>>(message) {
             @Override
-            boolean matches(Nested layer) {
+            boolean matches(Packet layer) {
                 return layer instanceof Layer;
-            }
-
-            @Override
-            boolean matches(Layer layer) {
-                return true;
             }
 
             @Override
@@ -284,13 +278,8 @@ public class MessageMetadata {
     public @Nonnull Iterator<List<SignatureVerification.Failure>> getRejectedInlineSignaturesByLayer() {
         return new LayerIterator<List<SignatureVerification.Failure>>(message) {
             @Override
-            boolean matches(Nested layer) {
+            boolean matches(Packet layer) {
                 return layer instanceof Layer;
-            }
-
-            @Override
-            boolean matches(Layer layer) {
-                return true;
             }
 
             @Override
@@ -334,10 +323,10 @@ public class MessageMetadata {
      * @return filename
      * @see <a href="https://www.rfc-editor.org/rfc/rfc4880#section-5.9">RFC4880 §5.9. Literal Data Packet</a>
      */
-    public @Nonnull String getFilename() {
+    public @Nullable String getFilename() {
         LiteralData literalData = findLiteralData();
         if (literalData == null) {
-            throw new NoSuchElementException("No Literal Data Packet found.");
+            return null;
         }
         return literalData.getFileName();
     }
@@ -359,10 +348,10 @@ public class MessageMetadata {
      * @return modification date
      * @see <a href="https://www.rfc-editor.org/rfc/rfc4880#section-5.9">RFC4880 §5.9. Literal Data Packet</a>
      */
-    public @Nonnull Date getModificationDate() {
+    public @Nullable Date getModificationDate() {
         LiteralData literalData = findLiteralData();
         if (literalData == null) {
-            throw new NoSuchElementException("No Literal Data Packet found.");
+            return null;
         }
         return literalData.getModificationDate();
     }
@@ -375,10 +364,10 @@ public class MessageMetadata {
      * @return format
      * @see <a href="https://www.rfc-editor.org/rfc/rfc4880#section-5.9">RFC4880 §5.9. Literal Data Packet</a>
      */
-    public @Nonnull StreamEncoding getLiteralDataEncoding() {
+    public @Nullable StreamEncoding getLiteralDataEncoding() {
         LiteralData literalData = findLiteralData();
         if (literalData == null) {
-            throw new NoSuchElementException("No Literal Data Packet found.");
+            return null;
         }
         return literalData.getFormat();
     }
@@ -414,7 +403,10 @@ public class MessageMetadata {
         return firstOrNull(map(getEncryptionLayers(), encryptedData -> encryptedData.decryptionKey));
     }
 
-    public abstract static class Layer {
+    public interface Packet {
+
+    }
+    public abstract static class Layer implements Packet {
         public static final int MAX_LAYER_DEPTH = 16;
         protected final int depth;
         protected final List<SignatureVerification> verifiedDetachedSignatures = new ArrayList<>();
@@ -562,7 +554,7 @@ public class MessageMetadata {
 
     }
 
-    public interface Nested {
+    public interface Nested extends Packet {
         boolean hasNestedChild();
     }
 
@@ -760,16 +752,7 @@ public class MessageMetadata {
             }
         }
 
-        boolean matches(Nested layer) {
-            return false;
-        }
-
-        boolean matches(Layer layer) {
-            if (layer instanceof Nested) {
-                return matches((Nested) layer);
-            }
-            return false;
-        }
+        abstract boolean matches(Packet layer);
 
         abstract O getProperty(Layer last);
     }
@@ -786,6 +769,10 @@ public class MessageMetadata {
                 return mapping.apply(from.next());
             }
         };
+    }
+
+    public interface Function<A, B> {
+        B apply(A item);
     }
 
     private static @Nullable <A> A firstOrNull(Iterator<A> iterator) {
