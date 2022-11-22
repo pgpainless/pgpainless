@@ -335,7 +335,7 @@ public class OpenPgpMessageInputStreamTest {
         assertNull(metadata.getEncryptionAlgorithm());
         assertEquals("", metadata.getFilename());
         JUtils.assertDateEquals(new Date(0L), metadata.getModificationDate());
-        assertEquals(StreamEncoding.BINARY, metadata.getFormat());
+        assertEquals(StreamEncoding.BINARY, metadata.getLiteralDataEncoding());
         assertTrue(metadata.getVerifiedInlineSignatures().isEmpty());
         assertTrue(metadata.getRejectedInlineSignatures().isEmpty());
     }

@@ -62,7 +62,7 @@ public class MessageMetadataTest {
 
         assertEquals("", metadata.getFilename());
         JUtils.assertDateEquals(new Date(0L), metadata.getModificationDate());
-        assertEquals(StreamEncoding.BINARY, metadata.getFormat());
+        assertEquals(StreamEncoding.BINARY, metadata.getLiteralDataEncoding());
     }
 
     @Test
@@ -79,6 +79,6 @@ public class MessageMetadataTest {
         assertNull(metadata.getEncryptionAlgorithm());
         assertEquals("collateral_murder.zip", metadata.getFilename());
         assertEquals(DateUtil.parseUTCDate("2010-04-05 10:12:03 UTC"), metadata.getModificationDate());
-        assertEquals(StreamEncoding.BINARY, metadata.getFormat());
+        assertEquals(StreamEncoding.BINARY, metadata.getLiteralDataEncoding());
     }
 }
