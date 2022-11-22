@@ -55,7 +55,7 @@ public class PDA {
             inputs.add(input);
         } catch (MalformedOpenPgpMessageException e) {
             MalformedOpenPgpMessageException wrapped = new MalformedOpenPgpMessageException(
-                    "Malformed message: After reading stream " + Arrays.toString(inputs.toArray()) +
+                    "Malformed message: After reading packet sequence " + Arrays.toString(inputs.toArray()) +
                     ", token '" + input + "' is not allowed." +
                     "\nNo transition from state '" + state + "' with stack " + Arrays.toString(stack.toArray()) +
                             (stackSymbol != null ? "||'" + stackSymbol + "'." : "."), e);
