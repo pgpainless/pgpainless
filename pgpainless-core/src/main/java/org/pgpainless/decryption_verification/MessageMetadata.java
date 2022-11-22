@@ -186,6 +186,12 @@ public class MessageMetadata {
         return isVerifiedInlineSignedBy(keys) || isVerifiedDetachedSignedBy(keys);
     }
 
+    public List<SignatureVerification> getVerifiedSignatures() {
+        List<SignatureVerification> allVerifiedSignatures = getVerifiedInlineSignatures();
+        allVerifiedSignatures.addAll(getVerifiedDetachedSignatures());
+        return allVerifiedSignatures;
+    }
+
     public boolean isVerifiedDetachedSignedBy(@Nonnull PGPKeyRing keys) {
         return containsSignatureBy(getVerifiedDetachedSignatures(), keys);
     }
@@ -401,6 +407,10 @@ public class MessageMetadata {
      */
     public SubkeyIdentifier getDecryptionKey() {
         return firstOrNull(map(getEncryptionLayers(), encryptedData -> encryptedData.decryptionKey));
+    }
+
+    public boolean isVerifiedSigned() {
+        return !getVerifiedSignatures().isEmpty();
     }
 
     public interface Packet {
