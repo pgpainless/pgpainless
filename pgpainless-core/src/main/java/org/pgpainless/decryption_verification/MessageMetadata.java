@@ -69,6 +69,10 @@ public class MessageMetadata {
         return resultBuilder.build();
     }
 
+    public boolean isUsingCleartextSignatureFramework() {
+        return message.isCleartextSigned();
+    }
+
     public boolean isEncrypted() {
         SymmetricKeyAlgorithm algorithm = getEncryptionAlgorithm();
         return algorithm != null && algorithm != SymmetricKeyAlgorithm.NULL;

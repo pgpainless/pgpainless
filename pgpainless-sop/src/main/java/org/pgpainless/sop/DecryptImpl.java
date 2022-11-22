@@ -21,7 +21,7 @@ import org.pgpainless.PGPainless;
 import org.pgpainless.algorithm.SymmetricKeyAlgorithm;
 import org.pgpainless.decryption_verification.ConsumerOptions;
 import org.pgpainless.decryption_verification.DecryptionStream;
-import org.pgpainless.decryption_verification.OpenPgpMetadata;
+import org.pgpainless.decryption_verification.MessageMetadata;
 import org.pgpainless.decryption_verification.SignatureVerification;
 import org.pgpainless.exception.MalformedOpenPgpMessageException;
 import org.pgpainless.exception.MissingDecryptionMethodException;
@@ -136,14 +136,14 @@ public class DecryptImpl implements Decrypt {
             public DecryptionResult writeTo(OutputStream outputStream) throws IOException, SOPGPException.NoSignature {
                 Streams.pipeAll(decryptionStream, outputStream);
                 decryptionStream.close();
-                OpenPgpMetadata metadata = decryptionStream.getResult();
+                MessageMetadata metadata = decryptionStream.getMetadata();
 
                 if (!metadata.isEncrypted()) {
                     throw new SOPGPException.BadData("Data is not encrypted.");
                 }
 
                 List<Verification> verificationList = new ArrayList<>();
-                for (SignatureVerification signatureVerification : metadata.getVerifiedInbandSignatures()) {
+                for (SignatureVerification signatureVerification : metadata.getVerifiedInlineSignatures()) {
                     verificationList.add(map(signatureVerification));
                 }
 

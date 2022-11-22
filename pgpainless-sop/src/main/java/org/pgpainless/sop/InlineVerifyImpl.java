@@ -17,7 +17,7 @@ import org.bouncycastle.util.io.Streams;
 import org.pgpainless.PGPainless;
 import org.pgpainless.decryption_verification.ConsumerOptions;
 import org.pgpainless.decryption_verification.DecryptionStream;
-import org.pgpainless.decryption_verification.OpenPgpMetadata;
+import org.pgpainless.decryption_verification.MessageMetadata;
 import org.pgpainless.decryption_verification.SignatureVerification;
 import org.pgpainless.exception.MalformedOpenPgpMessageException;
 import org.pgpainless.exception.MissingDecryptionMethodException;
@@ -63,12 +63,12 @@ public class InlineVerifyImpl implements InlineVerify {
                     Streams.pipeAll(decryptionStream, outputStream);
                     decryptionStream.close();
 
-                    OpenPgpMetadata metadata = decryptionStream.getResult();
+                    MessageMetadata metadata = decryptionStream.getMetadata();
                     List<Verification> verificationList = new ArrayList<>();
 
-                    List<SignatureVerification> verifications = metadata.isCleartextSigned() ?
+                    List<SignatureVerification> verifications = metadata.isUsingCleartextSignatureFramework() ?
                             metadata.getVerifiedDetachedSignatures() :
-                            metadata.getVerifiedInbandSignatures();
+                            metadata.getVerifiedInlineSignatures();
 
                     for (SignatureVerification signatureVerification : verifications) {
                         verificationList.add(map(signatureVerification));
