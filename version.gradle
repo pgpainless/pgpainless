@@ -13,7 +13,7 @@ allprojects {
         // unfortunately we rely on 1.72.1 or 1.72.3 for a patch for https://github.com/bcgit/bc-java/issues/1257
         //  which is a bug we introduced with a PR against BC :/ oops
         // When bouncyCastleVersion is 1.71, bouncyPgVersion can simply be set to 1.71 as well.
-        bouncyPgVersion = '1.72.1'
+        bouncyPgVersion = '1.72.3'
         junitVersion = '5.8.2'
         logbackVersion = '1.2.11'
         mockitoVersion = '4.5.1'
