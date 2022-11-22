@@ -88,7 +88,6 @@ public class ManagePolicy {
         // Per default, non-revocation signatures using SHA-1 are rejected
         assertFalse(sigHashAlgoPolicy.isAcceptable(HashAlgorithm.SHA1));
 
-
         // Create a new custom policy which contains SHA-1
         Policy.HashAlgorithmPolicy customPolicy = new Policy.HashAlgorithmPolicy(
                 // The default hash algorithm will be used when hash algorithm negotiation fails when creating a sig
@@ -97,7 +96,6 @@ public class ManagePolicy {
                 Arrays.asList(HashAlgorithm.SHA512, HashAlgorithm.SHA384, HashAlgorithm.SHA256, HashAlgorithm.SHA224, HashAlgorithm.SHA1));
         // Set the hash algo policy as policy for non-revocation signatures
         policy.setSignatureHashAlgorithmPolicy(customPolicy);
-
 
         sigHashAlgoPolicy = policy.getSignatureHashAlgorithmPolicy();
         assertTrue(sigHashAlgoPolicy.isAcceptable(HashAlgorithm.SHA512));
@@ -122,7 +120,6 @@ public class ManagePolicy {
         assertFalse(pkAlgorithmPolicy.isAcceptable(PublicKeyAlgorithm.RSA_GENERAL, 1024));
         assertTrue(pkAlgorithmPolicy.isAcceptable(PublicKeyAlgorithm.ECDSA, 256));
 
-
         Policy.PublicKeyAlgorithmPolicy customPolicy = new Policy.PublicKeyAlgorithmPolicy(
                 new HashMap<PublicKeyAlgorithm, Integer>(){{
                     // Put minimum bit strengths for acceptable algorithms.
@@ -132,7 +129,6 @@ public class ManagePolicy {
                 }}
         );
         policy.setPublicKeyAlgorithmPolicy(customPolicy);
-
 
         pkAlgorithmPolicy = policy.getPublicKeyAlgorithmPolicy();
         assertTrue(pkAlgorithmPolicy.isAcceptable(PublicKeyAlgorithm.RSA_GENERAL, 4096));
@@ -156,9 +152,7 @@ public class ManagePolicy {
         NotationRegistry notationRegistry = policy.getNotationRegistry();
         assertFalse(notationRegistry.isKnownNotation("unknown@pgpainless.org"));
 
-
         notationRegistry.addKnownNotation("unknown@pgpainless.org");
-
 
         assertTrue(notationRegistry.isKnownNotation("unknown@pgpainless.org"));
     }

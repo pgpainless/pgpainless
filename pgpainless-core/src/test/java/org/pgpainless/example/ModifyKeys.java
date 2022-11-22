@@ -67,7 +67,6 @@ public class ModifyKeys {
         // the certificate consists of only the public keys
         PGPPublicKeyRing certificate = PGPainless.extractCertificate(secretKey);
 
-
         KeyRingInfo info = PGPainless.inspectKeyRing(certificate);
         assertFalse(info.isSecretKey());
     }
@@ -79,10 +78,8 @@ public class ModifyKeys {
     public void toAsciiArmoredString() throws IOException {
         PGPPublicKeyRing certificate = PGPainless.extractCertificate(secretKey);
 
-
         String asciiArmoredSecretKey = PGPainless.asciiArmor(secretKey);
         String asciiArmoredCertificate = PGPainless.asciiArmor(certificate);
-
 
         assertTrue(asciiArmoredSecretKey.startsWith("-----BEGIN PGP PRIVATE KEY BLOCK-----"));
         assertTrue(asciiArmoredCertificate.startsWith("-----BEGIN PGP PUBLIC KEY BLOCK-----"));
@@ -98,7 +95,6 @@ public class ModifyKeys {
                 .withSecureDefaultSettings()
                 .toNewPassphrase(Passphrase.fromPassword("n3wP4ssW0rD"))
                 .done();
-
 
         // Old passphrase no longer works
         assertThrows(WrongPassphraseException.class, () ->
@@ -119,7 +115,6 @@ public class ModifyKeys {
                 .withSecureDefaultSettings()
                 .toNewPassphrase(Passphrase.fromPassword("cryptP4ssphr4s3"))
                 .done();
-
 
         // encryption key can now only be unlocked using the new passphrase
         assertThrows(WrongPassphraseException.class, () ->
@@ -142,7 +137,6 @@ public class ModifyKeys {
         secretKey = PGPainless.modifyKeyRing(secretKey)
                 .addUserId("additional@user.id", protector)
                 .done();
-
 
         KeyRingInfo info = PGPainless.inspectKeyRing(secretKey);
         assertTrue(info.isUserIdValid("additional@user.id"));
@@ -176,7 +170,6 @@ public class ModifyKeys {
                         protector)
                 .done();
 
-
         KeyRingInfo info = PGPainless.inspectKeyRing(secretKey);
         assertEquals(4, info.getSecretKeys().size());
         assertEquals(4, info.getPublicKeys().size());
@@ -198,7 +191,6 @@ public class ModifyKeys {
         secretKey = PGPainless.modifyKeyRing(secretKey)
                 .setExpirationDate(expirationDate, protector)
                 .done();
-
 
         KeyRingInfo info = PGPainless.inspectKeyRing(secretKey);
         assertEquals(DateUtil.formatUTCDate(expirationDate),

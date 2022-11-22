@@ -44,7 +44,6 @@ public class ReadKeys {
         PGPPublicKeyRing publicKey = PGPainless.readKeyRing()
                 .publicKeyRing(certificate);
 
-
         KeyRingInfo keyInfo = new KeyRingInfo(publicKey);
         OpenPgpFingerprint fingerprint = new OpenPgpV4Fingerprint("EB85 BB5F A33A 75E1 5E94  4E63 F231 550C 4F47 E38E");
         assertEquals(fingerprint, keyInfo.getFingerprint());
@@ -76,7 +75,6 @@ public class ReadKeys {
 
         PGPSecretKeyRing secretKey = PGPainless.readKeyRing()
                 .secretKeyRing(key);
-
 
         KeyRingInfo keyInfo = new KeyRingInfo(secretKey);
         OpenPgpFingerprint fingerprint = new OpenPgpV4Fingerprint("EB85 BB5F A33A 75E1 5E94  4E63 F231 550C 4F47 E38E");

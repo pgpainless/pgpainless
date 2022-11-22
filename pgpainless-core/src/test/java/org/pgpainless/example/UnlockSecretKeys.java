@@ -40,7 +40,6 @@ public class UnlockSecretKeys {
         // This protector will only unlock unprotected keys
         SecretKeyRingProtector protector = SecretKeyRingProtector.unprotectedKeys();
 
-
         assertProtectorUnlocksAllSecretKeys(unprotectedKey, protector);
     }
 
@@ -104,7 +103,6 @@ public class UnlockSecretKeys {
         // or via fingerprint
         protector.addPassphrase(new OpenPgpV4Fingerprint("DD8E1195E4B1720E7FB10EF7F60402708E75D941"),
                 Passphrase.fromPassword("s3c0ndsubk3y"));
-
 
         assertProtectorUnlocksAllSecretKeys(secretKey, protector);
     }
