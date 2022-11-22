@@ -6,6 +6,7 @@ SPDX-License-Identifier: CC0-1.0
 # PGPainless Changelog
 
 ## 1.4.0-rc2-SNAPSHOT
+- Bump `bcpg-jdk15to18` to `1.72.3`
 - Use BCs `PGPEncryptedDataList.extractSessionKeyEncryptedData()` method
   to do decryption using session keys. This enables decryption of messages
   without encrypted session key packets.
@@ -13,6 +14,8 @@ SPDX-License-Identifier: CC0-1.0
 - Depend on `pgp-certificate-store`
 - Add `ConsumerOptions.addVerificationCerts(PGPCertificateStore)` to allow sourcing certificates from
   e.g. a [certificate store implementation](https://github.com/pgpainless/cert-d-java).
+- Make `DecryptionStream.getMetadata()` first class
+  - Deprecate `DecryptionStream.getResult()`
 
 ## 1.4.0-rc1
 - Reimplement message consumption via new `OpenPgpMessageInputStream`
