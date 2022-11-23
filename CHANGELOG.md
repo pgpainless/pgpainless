@@ -5,7 +5,7 @@ SPDX-License-Identifier: CC0-1.0
 
 # PGPainless Changelog
 
-## 1.3.13-SNAPSHOT
+## 1.3.13
 - Bump `sop-java` to `4.0.7`
 
 ## 1.3.12
