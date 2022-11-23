@@ -25,6 +25,8 @@ import org.pgpainless.key.info.KeyRingInfo;
 import org.pgpainless.key.protection.SecretKeyRingProtector;
 import org.pgpainless.key.protection.UnlockSecretKey;
 
+import static org.junit.jupiter.api.Assertions.assertEquals;
+
 public class CachingBcPublicKeyDataDecryptorFactoryTest {
 
     private static final String KEY = "-----BEGIN PGP PRIVATE KEY BLOCK-----\n" +
@@ -83,7 +85,9 @@ public class CachingBcPublicKeyDataDecryptorFactoryTest {
         ByteArrayOutputStream out = new ByteArrayOutputStream();
         Streams.pipeAll(decryptionStream, out);
         decryptionStream.close();
+        assertEquals("Hello, World!\n", out.toString());
 
+        ciphertextIn = new ByteArrayInputStream(MSG.getBytes());
         decryptionStream = PGPainless.decryptAndOrVerify()
                 .onInputStream(ciphertextIn)
                 .withOptions(ConsumerOptions.get()
@@ -91,5 +95,8 @@ public class CachingBcPublicKeyDataDecryptorFactoryTest {
         out = new ByteArrayOutputStream();
         Streams.pipeAll(decryptionStream, out);
         decryptionStream.close();
+        assertEquals("Hello, World!\n", out.toString());
+
+        cachingFactory.clear();
     }
 }
