@@ -59,16 +59,20 @@ public class CachingBcPublicKeyDataDecryptorFactory
     }
 
     private byte[] lookupSessionKeyData(byte[][] secKeyData) {
-        byte[] sk = secKeyData[0];
-        String key = Base64.toBase64String(sk);
+        String key = toKey(secKeyData);
         byte[] sessionKey = cachedSessionKeys.get(key);
         return copy(sessionKey);
     }
 
     private void cacheSessionKeyData(byte[][] secKeyData, byte[] sessionKey) {
+        String key = toKey(secKeyData);
+        cachedSessionKeys.put(key, copy(sessionKey));
+    }
+
+    private static String toKey(byte[][] secKeyData) {
         byte[] sk = secKeyData[0];
         String key = Base64.toBase64String(sk);
-        cachedSessionKeys.put(key, copy(sessionKey));
+        return key;
     }
 
     private static byte[] copy(byte[] bytes) {
