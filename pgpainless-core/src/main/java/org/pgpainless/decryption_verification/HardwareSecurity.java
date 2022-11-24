@@ -51,6 +51,7 @@ public class HardwareSecurity {
         /**
          * Create a new {@link HardwareDataDecryptorFactory}.
          *
+         * @param subkeyIdentifier identifier of the decryption subkey
          * @param callback decryption callback
          */
         public HardwareDataDecryptorFactory(SubkeyIdentifier subkeyIdentifier, DecryptionCallback callback) {
