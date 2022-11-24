@@ -53,7 +53,7 @@ public class IntegrityProtectedInputStream extends InputStream {
                 }
                 LOGGER.debug("Integrity Protection check passed");
             } catch (PGPException e) {
-                throw new IOException("Failed to verify integrity protection", e);
+                throw new IOException("Data appears to not be integrity protected.", e);
             }
         }
     }
