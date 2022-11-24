@@ -31,7 +31,7 @@ class KeyReader {
             }
             throw e;
         } catch (PGPException e) {
-            throw new IOException("Cannot read keys.", e);
+            throw new SOPGPException.BadData("Cannot read keys.", e);
         }
 
         if (requireContent && (keys == null || keys.size() == 0)) {
@@ -41,7 +41,8 @@ class KeyReader {
         return keys;
     }
 
-    static PGPPublicKeyRingCollection readPublicKeys(InputStream certIn, boolean requireContent) throws IOException {
+    static PGPPublicKeyRingCollection readPublicKeys(InputStream certIn, boolean requireContent)
+            throws IOException {
         PGPPublicKeyRingCollection certs;
         try {
             certs = PGPainless.readKeyRing().publicKeyRingCollection(certIn);
