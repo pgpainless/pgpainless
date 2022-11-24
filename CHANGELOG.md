@@ -5,7 +5,7 @@ SPDX-License-Identifier: CC0-1.0
 
 # PGPainless Changelog
 
-## 1.4.0-rc2-SNAPSHOT
+## 1.4.0-rc2
 - Bump `bcpg-jdk15to18` to `1.72.3`
 - Use BCs `PGPEncryptedDataList.extractSessionKeyEncryptedData()` method
   to do decryption using session keys. This enables decryption of messages
