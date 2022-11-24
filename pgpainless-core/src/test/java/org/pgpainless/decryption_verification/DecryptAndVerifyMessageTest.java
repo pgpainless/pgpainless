@@ -7,6 +7,7 @@ package org.pgpainless.decryption_verification;
 import static org.junit.jupiter.api.Assertions.assertArrayEquals;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import java.io.ByteArrayInputStream;
@@ -18,14 +19,17 @@ import org.bouncycastle.openpgp.PGPException;
 import org.bouncycastle.openpgp.PGPSecretKeyRing;
 import org.bouncycastle.util.io.Streams;
 import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.TestTemplate;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.pgpainless.PGPainless;
 import org.pgpainless.algorithm.CompressionAlgorithm;
 import org.pgpainless.algorithm.SymmetricKeyAlgorithm;
+import org.pgpainless.exception.MissingDecryptionMethodException;
 import org.pgpainless.key.SubkeyIdentifier;
 import org.pgpainless.key.TestKeys;
 import org.pgpainless.key.util.KeyRingUtils;
+import org.pgpainless.util.Passphrase;
 import org.pgpainless.util.TestAllImplementations;
 
 public class DecryptAndVerifyMessageTest {
@@ -117,5 +121,22 @@ public class DecryptAndVerifyMessageTest {
         assertEquals(1, metadata.getVerifiedSignatures().size());
         assertTrue(metadata.containsVerifiedSignatureFrom(TestKeys.JULIET_FINGERPRINT));
         assertEquals(new SubkeyIdentifier(TestKeys.JULIET_FINGERPRINT), metadata.getDecryptionKey());
+    }
+
+    @Test
+    public void testDecryptMessageWithUnacceptableSymmetricAlgorithm() {
+        String ciphertext = "-----BEGIN PGP MESSAGE-----\n" +
+                "Version: PGPainless\n" +
+                "\n" +
+                "jA0EAQMCZv8glrLeXPhg0jgBpMN+E8dCuEDxJnSi8/e+HOKcdYQbgQh/MG4Kn7NK\n" +
+                "wRM5wNOFKn8jbsoC+JalzjwzMJSV+ZM1aQ==\n" +
+                "=9aCQ\n" +
+                "-----END PGP MESSAGE-----";
+        ByteArrayInputStream ciphertextIn = new ByteArrayInputStream(ciphertext.getBytes());
+        assertThrows(MissingDecryptionMethodException.class,
+                () -> PGPainless.decryptAndOrVerify()
+                        .onInputStream(ciphertextIn)
+                        .withOptions(ConsumerOptions.get()
+                                .addDecryptionPassphrase(Passphrase.fromPassword("sw0rdf1sh"))));
     }
 }
