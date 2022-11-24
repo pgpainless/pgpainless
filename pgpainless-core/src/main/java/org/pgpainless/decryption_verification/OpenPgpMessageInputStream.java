@@ -105,6 +105,7 @@ public class OpenPgpMessageInputStream extends DecryptionStream {
      *
      * @param inputStream underlying input stream
      * @param options options for consuming the stream
+     * @return input stream that consumes OpenPGP messages
      *
      * @throws IOException in case of an IO error
      * @throws PGPException in case of an OpenPGP error
@@ -123,6 +124,7 @@ public class OpenPgpMessageInputStream extends DecryptionStream {
      * @param inputStream underlying input stream containing the OpenPGP message
      * @param options options for consuming the message
      * @param policy policy for acceptable algorithms etc.
+     * @return input stream that consumes OpenPGP messages
      *
      * @throws PGPException in case of an OpenPGP error
      * @throws IOException in case of an IO error
