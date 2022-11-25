@@ -72,6 +72,8 @@ public class RevocationStateTest {
         Date now = new Date();
         assertEquals(RevocationState.softRevoked(now), RevocationState.softRevoked(now));
 
+        assertEquals(1, RevocationState.softRevoked(now).compareTo(RevocationState.notRevoked()));
+
         assertEquals(0, RevocationState.notRevoked().compareTo(RevocationState.notRevoked()));
         assertEquals(0, RevocationState.hardRevoked().compareTo(RevocationState.hardRevoked()));
         assertTrue(RevocationState.hardRevoked().compareTo(RevocationState.notRevoked()) > 0);
@@ -92,5 +94,16 @@ public class RevocationStateTest {
         Collections.sort(states);
 
         assertEquals(states, Arrays.asList(not, not2, laterSoft, earlySoft, hard));
+    }
+
+    @SuppressWarnings({"SimplifiableAssertion", "ConstantConditions", "EqualsWithItself", "EqualsBetweenInconvertibleTypes"})
+    @Test
+    public void equalsTest() {
+        RevocationState rev = RevocationState.hardRevoked();
+        assertFalse(rev.equals(null));
+        assertTrue(rev.equals(rev));
+        assertFalse(rev.equals("not a revocation"));
+        RevocationState other = RevocationState.notRevoked();
+        assertFalse(rev.equals(other));
     }
 }
