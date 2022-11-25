@@ -13,6 +13,7 @@ import org.bouncycastle.openpgp.PGPSecretKeyRing;
 import org.pgpainless.key.SubkeyIdentifier;
 
 import javax.annotation.Nonnull;
+import javax.annotation.Nullable;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashSet;
@@ -40,7 +41,7 @@ public final class GnuPGDummyKeyUtil {
      * @param secretKeys secret keys
      * @return set of keys with S2K type GNU_DUMMY_S2K and protection mode DIVERT_TO_CARD
      */
-    public static Set<SubkeyIdentifier> getIdsOfKeysWithGnuPGS2KDivertedToCard(PGPSecretKeyRing secretKeys) {
+    public static Set<SubkeyIdentifier> getIdsOfKeysWithGnuPGS2KDivertedToCard(@Nonnull PGPSecretKeyRing secretKeys) {
         Set<SubkeyIdentifier> hardwareBackedKeys = new HashSet<>();
         for (PGPSecretKey secretKey : secretKeys) {
             S2K s2K = secretKey.getS2K();
@@ -65,7 +66,7 @@ public final class GnuPGDummyKeyUtil {
      * @param secretKeys secret keys
      * @return builder
      */
-    public static Builder modify(PGPSecretKeyRing secretKeys) {
+    public static Builder modify(@Nonnull PGPSecretKeyRing secretKeys) {
         return new Builder(secretKeys);
     }
 
@@ -73,7 +74,7 @@ public final class GnuPGDummyKeyUtil {
 
         private final PGPSecretKeyRing keys;
 
-        private Builder(PGPSecretKeyRing keys) {
+        private Builder(@Nonnull PGPSecretKeyRing keys) {
             this.keys = keys;
         }
 
@@ -84,7 +85,7 @@ public final class GnuPGDummyKeyUtil {
          * @param filter filter to select keys for removal
          * @return modified key ring
          */
-        public PGPSecretKeyRing removePrivateKeys(KeyFilter filter) {
+        public PGPSecretKeyRing removePrivateKeys(@Nonnull KeyFilter filter) {
             return replacePrivateKeys(GnuPGDummyExtension.NO_PRIVATE_KEY, null, filter);
         }
 
@@ -92,13 +93,12 @@ public final class GnuPGDummyKeyUtil {
          * Remove all private keys that match the given {@link KeyFilter} from the key ring and replace them with
          * GNU_DUMMY keys with S2K protection mode {@link GnuPGDummyExtension#DIVERT_TO_CARD}.
          * This method will set the serial number of the card to 0x00000000000000000000000000000000.
-         *
          * NOTE: This method does not actually move any keys to a card.
          *
          * @param filter filter to select keys for removal
          * @return modified key ring
          */
-        public PGPSecretKeyRing divertPrivateKeysToCard(KeyFilter filter) {
+        public PGPSecretKeyRing divertPrivateKeysToCard(@Nonnull KeyFilter filter) {
             return divertPrivateKeysToCard(filter, new byte[16]);
         }
 
@@ -106,21 +106,22 @@ public final class GnuPGDummyKeyUtil {
          * Remove all private keys that match the given {@link KeyFilter} from the key ring and replace them with
          * GNU_DUMMY keys with S2K protection mode {@link GnuPGDummyExtension#DIVERT_TO_CARD}.
          * This method will include the card serial number into the encoded dummy key.
-         *
          * NOTE: This method does not actually move any keys to a card.
          *
          * @param filter filter to select keys for removal
          * @param cardSerialNumber serial number of the card (at most 16 bytes long)
          * @return modified key ring
          */
-        public PGPSecretKeyRing divertPrivateKeysToCard(KeyFilter filter, byte[] cardSerialNumber) {
+        public PGPSecretKeyRing divertPrivateKeysToCard(@Nonnull KeyFilter filter, @Nullable byte[] cardSerialNumber) {
             if (cardSerialNumber != null && cardSerialNumber.length > 16) {
                 throw new IllegalArgumentException("Card serial number length cannot exceed 16 bytes.");
             }
             return replacePrivateKeys(GnuPGDummyExtension.DIVERT_TO_CARD, cardSerialNumber, filter);
         }
 
-        private PGPSecretKeyRing replacePrivateKeys(GnuPGDummyExtension extension, byte[] serial, KeyFilter filter) {
+        private PGPSecretKeyRing replacePrivateKeys(@Nonnull GnuPGDummyExtension extension,
+                                                    @Nullable byte[] serial,
+                                                    @Nonnull KeyFilter filter) {
             byte[] encodedSerial = serial != null ? encodeSerial(serial) : null;
             S2K s2k = extensionToS2K(extension);
 
