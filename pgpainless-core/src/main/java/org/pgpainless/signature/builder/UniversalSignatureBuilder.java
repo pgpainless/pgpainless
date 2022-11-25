@@ -12,7 +12,6 @@ import org.bouncycastle.openpgp.PGPSignature;
 import org.bouncycastle.openpgp.PGPSignatureGenerator;
 import org.pgpainless.algorithm.SignatureType;
 import org.pgpainless.key.protection.SecretKeyRingProtector;
-import org.pgpainless.signature.subpackets.BaseSignatureSubpackets;
 import org.pgpainless.signature.subpackets.SignatureSubpackets;
 
 /**
@@ -43,7 +42,7 @@ public class UniversalSignatureBuilder extends AbstractSignatureBuilder<Universa
         return unhashedSubpackets;
     }
 
-    public void applyCallback(@Nullable BaseSignatureSubpackets.Callback callback) {
+    public void applyCallback(@Nullable SignatureSubpackets.Callback callback) {
         if (callback != null) {
             callback.modifyHashedSubpackets(getHashedSubpackets());
             callback.modifyUnhashedSubpackets(getUnhashedSubpackets());

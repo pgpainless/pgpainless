@@ -82,6 +82,10 @@ public class SignatureSubpackets
 
     }
 
+    public interface Callback extends SignatureSubpacketCallback<SignatureSubpackets> {
+
+    }
+
     public static SignatureSubpackets refreshHashedSubpackets(PGPPublicKey issuer, PGPSignature oldSignature) {
         return createHashedSubpacketsFrom(issuer, oldSignature.getHashedSubPackets());
     }
