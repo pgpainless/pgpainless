@@ -9,6 +9,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import javax.annotation.Nonnull;
+import javax.annotation.Nullable;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
@@ -17,6 +18,12 @@ import java.util.Stack;
 import static org.pgpainless.decryption_verification.syntax_check.StackSymbol.msg;
 import static org.pgpainless.decryption_verification.syntax_check.StackSymbol.terminus;
 
+/**
+ * Pushdown Automaton for validating context-free languages.
+ * In PGPainless, this class is used to validate OpenPGP message packet sequences against the allowed syntax.
+ *
+ * @see <a href="https://www.rfc-editor.org/rfc/rfc4880#section-11.3">OpenPGP Message Syntax</a>
+ */
 public class PDA {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(PDA.class);
@@ -36,6 +43,13 @@ public class PDA {
         this(new OpenPgpMessageSyntax(), State.OpenPgpMessage, terminus, msg);
     }
 
+    /**
+     * Construct a PDA with a custom {@link Syntax}, initial {@link State} and initial {@link StackSymbol StackSymbols}.
+     *
+     * @param syntax syntax
+     * @param initialState initial state
+     * @param initialStack zero or more initial stack items (get pushed onto the stack in order of appearance)
+     */
     public PDA(@Nonnull Syntax syntax, @Nonnull State initialState, @Nonnull StackSymbol... initialStack) {
         this.syntax = syntax;
         this.state = initialState;
@@ -44,7 +58,16 @@ public class PDA {
         }
     }
 
-    public void next(InputSymbol input) throws MalformedOpenPgpMessageException {
+    /**
+     * Process the next {@link InputSymbol}.
+     * This will either leave the PDA in the next state, or throw a {@link MalformedOpenPgpMessageException} if the
+     * input symbol is rejected.
+     *
+     * @param input input symbol
+     * @throws MalformedOpenPgpMessageException if the input symbol is rejected
+     */
+    public void next(@Nonnull InputSymbol input)
+            throws MalformedOpenPgpMessageException {
         StackSymbol stackSymbol = popStack();
         try {
             Transition transition = syntax.transition(state, input, stackSymbol);
@@ -69,11 +92,16 @@ public class PDA {
      *
      * @return state
      */
-    public State getState() {
+    public @Nonnull State getState() {
         return state;
     }
 
-    public StackSymbol peekStack() {
+    /**
+     * Peek at the stack, returning the topmost stack item without changing the stack.
+     *
+     * @return topmost stack item, or null if stack is empty
+     */
+    public @Nullable StackSymbol peekStack() {
         if (stack.isEmpty()) {
             return null;
         }
@@ -89,6 +117,11 @@ public class PDA {
         return getState() == State.Valid && stack.isEmpty();
     }
 
+    /**
+     * Throw a {@link MalformedOpenPgpMessageException} if the pda is not in a valid state right now.
+     *
+     * @throws MalformedOpenPgpMessageException if the pda is not in an acceptable state
+     */
     public void assertValid() throws MalformedOpenPgpMessageException {
         if (!isValid()) {
             throw new MalformedOpenPgpMessageException("Pushdown Automaton is not in an acceptable state: " + toString());
