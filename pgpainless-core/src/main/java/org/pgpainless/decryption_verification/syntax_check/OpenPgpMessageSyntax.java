@@ -40,6 +40,7 @@ public class OpenPgpMessageSyntax implements Syntax {
         throw new MalformedOpenPgpMessageException(from, input, stackItem);
     }
 
+    @Nonnull
     Transition fromOpenPgpMessage(@Nonnull InputSymbol input, @Nullable StackSymbol stackItem)
             throws MalformedOpenPgpMessageException {
         if (stackItem != StackSymbol.msg) {
@@ -68,6 +69,7 @@ public class OpenPgpMessageSyntax implements Syntax {
         }
     }
 
+    @Nonnull
     Transition fromLiteralMessage(@Nonnull InputSymbol input, @Nullable StackSymbol stackItem)
             throws MalformedOpenPgpMessageException {
         switch (input) {
@@ -87,6 +89,7 @@ public class OpenPgpMessageSyntax implements Syntax {
         throw new MalformedOpenPgpMessageException(State.LiteralMessage, input, stackItem);
     }
 
+    @Nonnull
     Transition fromCompressedMessage(@Nonnull InputSymbol input, @Nullable StackSymbol stackItem)
             throws MalformedOpenPgpMessageException {
         switch (input) {
@@ -106,6 +109,7 @@ public class OpenPgpMessageSyntax implements Syntax {
         throw new MalformedOpenPgpMessageException(State.CompressedMessage, input, stackItem);
     }
 
+    @Nonnull
     Transition fromEncryptedMessage(@Nonnull InputSymbol input, @Nullable StackSymbol stackItem)
             throws MalformedOpenPgpMessageException {
         switch (input) {
@@ -125,6 +129,7 @@ public class OpenPgpMessageSyntax implements Syntax {
         throw new MalformedOpenPgpMessageException(State.EncryptedMessage, input, stackItem);
     }
 
+    @Nonnull
     Transition fromValid(@Nonnull InputSymbol input, @Nullable StackSymbol stackItem)
             throws MalformedOpenPgpMessageException {
         // There is no applicable transition rule out of Valid
