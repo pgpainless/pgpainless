@@ -30,4 +30,7 @@ dependencies {
 
     // @Nullable, @Nonnull annotations
     implementation "com.google.code.findbugs:jsr305:3.0.2"
+
+    // HSRE regex for tests
+    testImplementation project(":hsregex")
 }

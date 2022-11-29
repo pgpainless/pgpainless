@@ -6,5 +6,6 @@ rootProject.name = 'PGPainless'
 
 include 'pgpainless-core',
         'pgpainless-sop',
-        'pgpainless-cli'
+        'pgpainless-cli',
+        'hsregex'
 
