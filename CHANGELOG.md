@@ -11,6 +11,9 @@ SPDX-License-Identifier: CC0-1.0
 - Make countermeasures against KOpenPGP attacks configurable
   - Countermeasures are now disabled by default since they are costly and have a specific threat model
   - Can be enabled by calling `Policy.setEnableKeyParameterValidation(true)`
+- Add support for parsing RegularExpressions
+  - Add module `hsregex` which uses `tcl-regex-java` implementing Henry Spencers Regular Expression library
+
 
 ## 1.4.0-rc2
 - Bump `bcpg-jdk15to18` to `1.72.3`
