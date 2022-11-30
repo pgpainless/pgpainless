@@ -151,15 +151,13 @@ public class UserIdTest {
     @Test
     void testEmailOnlyFormatting() {
         final UserId userId = UserId.onlyEmail("john.smith@example.com");
-        assertEquals("john.smith@example.com", userId.toString());
+        assertEquals("<john.smith@example.com>", userId.toString());
     }
 
     @Test
     void testEmptyNameAndValidEmailFormatting() {
         final UserId userId = UserId.nameAndEmail("", "john.smith@example.com");
-        assertEquals("john.smith@example.com", userId.toString());
-        assertEquals("john.smith@example.com", userId.asString(false));
-        assertEquals("john.smith@example.com", userId.asString(true));
+        assertEquals("<john.smith@example.com>", userId.toString());
     }
 
     @Test
@@ -169,9 +167,7 @@ public class UserIdTest {
                 .withName("")
                 .withEmail("john.smith@example.com")
                 .build();
-        assertEquals(" () <john.smith@example.com>", userId.toString());
-        assertEquals(" () <john.smith@example.com>", userId.asString(false));
-        assertEquals("john.smith@example.com", userId.asString(true));
+        assertEquals("<john.smith@example.com>", userId.toString());
     }
 
     @Test

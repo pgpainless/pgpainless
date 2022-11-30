@@ -51,9 +51,9 @@ public class GenerateKeyWithAdditionalUserIdTest {
         JUtils.assertDateEquals(expiration, PGPainless.inspectKeyRing(publicKeys).getPrimaryKeyExpirationDate());
 
         Iterator<String> userIds = publicKeys.getPublicKey().getUserIDs();
-        assertEquals("primary@user.id", userIds.next());
-        assertEquals("additional@user.id", userIds.next());
-        assertEquals("additional2@user.id", userIds.next());
+        assertEquals("<primary@user.id>", userIds.next());
+        assertEquals("<additional@user.id>", userIds.next());
+        assertEquals("<additional2@user.id>", userIds.next());
         assertEquals("trimThis@user.id", userIds.next());
         assertFalse(userIds.hasNext());
     }

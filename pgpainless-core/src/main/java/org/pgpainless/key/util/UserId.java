@@ -5,6 +5,7 @@
 package org.pgpainless.key.util;
 
 import javax.annotation.Nonnull;
+import javax.annotation.Nullable;
 
 public final class UserId implements CharSequence {
     public static final class Builder {
@@ -64,18 +65,18 @@ public final class UserId implements CharSequence {
     private final String email;
     private long hash = Long.MAX_VALUE;
 
-    private UserId(String name, String comment, String email) {
-        this.name = name;
-        this.comment = comment;
-        this.email = email;
+    private UserId(@Nullable String name, @Nullable String comment, @Nullable String email) {
+        this.name = name == null ? null : name.trim();
+        this.comment = comment == null ? null : comment.trim();
+        this.email = email == null ? null : email.trim();
     }
 
-    public static UserId onlyEmail(String email) {
+    public static UserId onlyEmail(@Nonnull String email) {
         checkNotNull("email", email);
         return new UserId(null, null, email);
     }
 
-    public static UserId nameAndEmail(String name, String email) {
+    public static UserId nameAndEmail(@Nonnull String name, @Nonnull String email) {
         checkNotNull("name", name);
         checkNotNull("email", email);
         return new UserId(name, null, email);
@@ -118,27 +119,29 @@ public final class UserId implements CharSequence {
 
     @Override
     public @Nonnull String toString() {
-        return asString(false);
+        return asString();
     }
 
     /**
      * Returns a string representation of the object.
-     * @param ignoreEmptyValues Flag which indicates that empty string values should not be outputted.
      * @return a string representation of the object.
      */
-    public String asString(boolean ignoreEmptyValues) {
+    public String asString() {
         StringBuilder sb = new StringBuilder();
-        if (name != null && (!ignoreEmptyValues || !name.isEmpty())) {
+        if (name != null && !name.isEmpty()) {
             sb.append(name);
         }
-        if (comment != null && (!ignoreEmptyValues || !comment.isEmpty())) {
-            sb.append(" (").append(comment).append(')');
+        if (comment != null && !comment.isEmpty()) {
+            if (sb.length() > 0) {
+                sb.append(' ');
+            }
+            sb.append('(').append(comment).append(')');
         }
-        if (email != null && (!ignoreEmptyValues || !email.isEmpty())) {
-            final boolean moreThanJustEmail = sb.length() > 0;
-            if (moreThanJustEmail) sb.append(" <");
-            sb.append(email);
-            if (moreThanJustEmail) sb.append('>');
+        if (email != null && !email.isEmpty()) {
+            if (sb.length() > 0) {
+                sb.append(' ');
+            }
+            sb.append('<').append(email).append('>');
         }
         return sb.toString();
     }
