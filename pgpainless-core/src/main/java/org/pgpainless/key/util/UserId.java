@@ -119,14 +119,6 @@ public final class UserId implements CharSequence {
 
     @Override
     public @Nonnull String toString() {
-        return asString();
-    }
-
-    /**
-     * Returns a string representation of the object.
-     * @return a string representation of the object.
-     */
-    public String asString() {
         StringBuilder sb = new StringBuilder();
         if (name != null && !name.isEmpty()) {
             sb.append(name);
@@ -144,6 +136,16 @@ public final class UserId implements CharSequence {
             sb.append('<').append(email).append('>');
         }
         return sb.toString();
+    }
+
+    /**
+     * Returns a string representation of the object.
+     * @return a string representation of the object.
+     * @deprecated use {@link #toString()} instead.
+     */
+    @Deprecated
+    public String asString() {
+        return toString();
     }
 
     @Override
