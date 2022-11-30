@@ -22,20 +22,17 @@ public final class UserId implements CharSequence {
             this.email = email;
         }
 
-        public Builder withName(String name) {
-            checkNotNull("name", name);
+        public Builder withName(@Nonnull String name) {
             this.name = name;
             return this;
         }
 
-        public Builder withComment(String comment) {
-            checkNotNull("comment", comment);
+        public Builder withComment(@Nonnull String comment) {
             this.comment = comment;
             return this;
         }
 
-        public Builder withEmail(String email) {
-            checkNotNull("email", email);
+        public Builder withEmail(@Nonnull String email) {
             this.email = email;
             return this;
         }
@@ -72,13 +69,10 @@ public final class UserId implements CharSequence {
     }
 
     public static UserId onlyEmail(@Nonnull String email) {
-        checkNotNull("email", email);
         return new UserId(null, null, email);
     }
 
     public static UserId nameAndEmail(@Nonnull String name, @Nonnull String email) {
-        checkNotNull("name", name);
-        checkNotNull("email", email);
         return new UserId(name, null, email);
     }
 
@@ -179,11 +173,5 @@ public final class UserId implements CharSequence {
         return (valueIsNull && otherValueIsNull)
                 || (!valueIsNull && !otherValueIsNull
                 && (ignoreCase ? value.equalsIgnoreCase(otherValue) : value.equals(otherValue)));
-    }
-
-    private static void checkNotNull(String paramName, String value) {
-        if (value == null) {
-            throw new IllegalArgumentException(paramName + " must be not null");
-        }
     }
 }

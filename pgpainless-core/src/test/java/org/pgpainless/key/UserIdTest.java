@@ -10,24 +10,8 @@ import org.pgpainless.key.util.UserId;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotEquals;
 import static org.junit.jupiter.api.Assertions.assertNull;
-import static org.junit.jupiter.api.Assertions.assertThrows;
 
 public class UserIdTest {
-
-    @Test
-    public void throwForNullName() {
-        assertThrows(IllegalArgumentException.class, () -> UserId.newBuilder().withName(null));
-    }
-
-    @Test
-    public void throwForNullComment() {
-        assertThrows(IllegalArgumentException.class, () -> UserId.newBuilder().withComment(null));
-    }
-
-    @Test
-    public void throwForNullEmail() {
-        assertThrows(IllegalArgumentException.class, () -> UserId.newBuilder().withEmail(null));
-    }
 
     @Test
     public void testFormatOnlyName() {
@@ -64,11 +48,6 @@ public class UserIdTest {
                         .withEmail("juliet@capulet.lit")
                         .build()
                         .toString());
-    }
-
-    @Test
-    public void throwIfOnlyEmailEmailNull() {
-        assertThrows(IllegalArgumentException.class, () -> UserId.onlyEmail(null));
     }
 
     @Test
