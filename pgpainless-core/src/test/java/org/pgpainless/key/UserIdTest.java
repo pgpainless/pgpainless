@@ -181,4 +181,35 @@ public class UserIdTest {
         final UserId userId2 = UserId.newBuilder().withComment(comment2).withName(name).withEmail(email).build();
         assertNotEquals(userId1, userId2);
     }
+
+    @Test
+    public void testLength() {
+        UserId id = UserId.nameAndEmail("Alice", "alice@pgpainless.org");
+        assertEquals(28, id.length());
+    }
+
+    @Test
+    public void testSubSequence() {
+        UserId id = UserId.onlyEmail("alice@pgpainless.org");
+        assertEquals("alice@pgpainless.org", id.subSequence(1, id.length() - 1));
+    }
+
+    @Test
+    public void asStringTest() {
+        UserId id = UserId.newBuilder()
+                .withName("Alice")
+                .withComment("Work Email")
+                .withEmail("alice@pgpainless.org")
+                .build();
+
+        // noinspection deprecation
+        assertEquals(id.toString(), id.asString());
+    }
+
+    @Test
+    public void charAtTest() {
+        UserId id = UserId.onlyEmail("alice@pgpainless.org");
+        assertEquals('<', id.charAt(0));
+        assertEquals('>', id.charAt(id.length() - 1));
+    }
 }
