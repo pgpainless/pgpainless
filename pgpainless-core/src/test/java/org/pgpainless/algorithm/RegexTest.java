@@ -5,6 +5,7 @@
 package org.pgpainless.algorithm;
 
 import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import java.util.stream.Stream;
@@ -116,5 +117,11 @@ public class RegexTest {
         assertTrue(regex.matches(UserId.nameAndEmail("Alice", "alice@pgpainless.org")));
 
         RegexInterpreterFactory.setInstance(before);
+    }
+
+    @ParameterizedTest
+    @MethodSource("provideRegexInterpreterFactories")
+    public void testInvalidRegex(RegexInterpreterFactory factory) {
+        assertThrows(IllegalArgumentException.class, () -> factory.instantiate("[ab"));
     }
 }
