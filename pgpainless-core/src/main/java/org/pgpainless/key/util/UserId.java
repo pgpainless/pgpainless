@@ -4,6 +4,7 @@
 
 package org.pgpainless.key.util;
 
+import java.util.Comparator;
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
 
@@ -173,5 +174,89 @@ public final class UserId implements CharSequence {
         return (valueIsNull && otherValueIsNull)
                 || (!valueIsNull && !otherValueIsNull
                 && (ignoreCase ? value.equalsIgnoreCase(otherValue) : value.equals(otherValue)));
+    }
+
+    public static int compare(@Nullable UserId o1, @Nullable UserId o2, @Nonnull Comparator<UserId> comparator) {
+        return comparator.compare(o1, o2);
+    }
+
+    public static class DefaultComparator implements Comparator<UserId> {
+
+        @Override
+        public int compare(UserId o1, UserId o2) {
+            if (o1 == o2) {
+                return 0;
+            }
+            if (o1 == null) {
+                return -1;
+            }
+            if (o2 == null) {
+                return 1;
+            }
+
+            NullSafeStringComparator c = new NullSafeStringComparator();
+            int cName = c.compare(o1.getName(), o2.getName());
+            if (cName != 0) {
+                return cName;
+            }
+
+            int cComment = c.compare(o1.getComment(), o2.getComment());
+            if (cComment != 0) {
+                return cComment;
+            }
+
+            return c.compare(o1.getEmail(), o2.getEmail());
+        }
+    }
+
+    public static class DefaultIgnoreCaseComparator implements Comparator<UserId> {
+
+        @Override
+        public int compare(UserId o1, UserId o2) {
+            if (o1 == o2) {
+                return 0;
+            }
+            if (o1 == null) {
+                return -1;
+            }
+            if (o2 == null) {
+                return 1;
+            }
+
+            NullSafeStringComparator c = new NullSafeStringComparator();
+            int cName = c.compare(lower(o1.getName()), lower(o2.getName()));
+            if (cName != 0) {
+                return cName;
+            }
+
+            int cComment = c.compare(lower(o1.getComment()), lower(o2.getComment()));
+            if (cComment != 0) {
+                return cComment;
+            }
+
+            return c.compare(lower(o1.getEmail()), lower(o2.getEmail()));
+        }
+
+        private static String lower(String string) {
+            return string == null ? null : string.toLowerCase();
+        }
+    }
+
+    private static class NullSafeStringComparator implements Comparator<String> {
+
+        @Override
+        public int compare(String o1, String o2) {
+            // noinspection StringEquality
+            if (o1 == o2) {
+                return 0;
+            }
+            if (o1 == null) {
+                return -1;
+            }
+            if (o2 == null) {
+                return 1;
+            }
+            return o1.compareTo(o2);
+        }
     }
 }

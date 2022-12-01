@@ -4,12 +4,14 @@
 
 package org.pgpainless.key;
 
-import org.junit.jupiter.api.Test;
-import org.pgpainless.key.util.UserId;
-
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotEquals;
 import static org.junit.jupiter.api.Assertions.assertNull;
+
+import java.util.Comparator;
+
+import org.junit.jupiter.api.Test;
+import org.pgpainless.key.util.UserId;
 
 public class UserIdTest {
 
@@ -211,5 +213,62 @@ public class UserIdTest {
         UserId id = UserId.onlyEmail("alice@pgpainless.org");
         assertEquals('<', id.charAt(0));
         assertEquals('>', id.charAt(id.length() - 1));
+    }
+
+    @Test
+    public void defaultCompareTest() {
+        UserId id1 = UserId.onlyEmail("alice@pgpainless.org");
+        UserId id2 = UserId.onlyEmail("alice@gnupg.org");
+        UserId id3 = UserId.nameAndEmail("Alice", "alice@pgpainless.org");
+        UserId id3_ = UserId.nameAndEmail("Alice", "alice@pgpainless.org");
+        UserId id4 = UserId.newBuilder().withName("Alice").build();
+        UserId id5 = UserId.newBuilder().withName("Alice").withComment("Work Mail").withEmail("alice@pgpainless.org").build();
+
+        assertEquals(id3.hashCode(), id3_.hashCode());
+        assertNotEquals(id2.hashCode(), id3.hashCode());
+
+        Comparator<UserId> c = new UserId.DefaultComparator();
+        assertEquals(0, UserId.compare(null, null, c));
+        assertEquals(0, UserId.compare(id1, id1, c));
+        assertNotEquals(0, UserId.compare(id1, null, c));
+        assertNotEquals(0, UserId.compare(null, id1, c));
+        assertNotEquals(0, UserId.compare(id1, id2, c));
+        assertNotEquals(0, UserId.compare(id2, id1, c));
+        assertNotEquals(0, UserId.compare(id1, id3, c));
+        assertNotEquals(0, UserId.compare(id1, id4, c));
+        assertNotEquals(0, UserId.compare(id4, id1, c));
+        assertNotEquals(0, UserId.compare(id2, id3, c));
+        assertNotEquals(0, UserId.compare(id1, id5, c));
+        assertNotEquals(0, UserId.compare(id5, id1, c));
+        assertNotEquals(0, UserId.compare(id3, id5, c));
+        assertNotEquals(0, UserId.compare(id5, id3, c));
+        assertEquals(0, UserId.compare(id3, id3, c));
+        assertEquals(0, UserId.compare(id3, id3_, c));
+    }
+
+    @Test
+    public void defaultIgnoreCaseCompareTest() {
+        UserId id1 = UserId.nameAndEmail("Alice", "alice@pgpainless.org");
+        UserId id2 = UserId.nameAndEmail("alice", "alice@pgpainless.org");
+        UserId id3 = UserId.nameAndEmail("Alice", "Alice@Pgpainless.Org");
+        UserId id4 = UserId.newBuilder().withName("Alice").withComment("Work Email").withEmail("Alice@Pgpainless.Org").build();
+        UserId id5 = UserId.newBuilder().withName("alice").withComment("work email").withEmail("alice@pgpainless.org").build();
+        UserId id6 = UserId.nameAndEmail("Bob", "bob@pgpainless.org");
+
+        Comparator<UserId> c = new UserId.DefaultIgnoreCaseComparator();
+        assertEquals(0, UserId.compare(id1, id2, c));
+        assertEquals(0, UserId.compare(id1, id3, c));
+        assertEquals(0, UserId.compare(id2, id3, c));
+        assertEquals(0, UserId.compare(null, null, c));
+        assertEquals(0, UserId.compare(id1, id1, c));
+        assertEquals(0, UserId.compare(id4, id4, c));
+        assertEquals(0, UserId.compare(id4, id5, c));
+        assertEquals(0, UserId.compare(id5, id4, c));
+        assertNotEquals(0, UserId.compare(null, id1, c));
+        assertNotEquals(0, UserId.compare(id1, null, c));
+        assertNotEquals(0, UserId.compare(id1, id4, c));
+        assertNotEquals(0, UserId.compare(id4, id1, c));
+        assertNotEquals(0, UserId.compare(id1, id6, c));
+        assertNotEquals(0, UserId.compare(id6, id1, c));
     }
 }
