@@ -4,8 +4,8 @@
 
 package org.pgpainless.algorithm;
 
-import javax.annotation.Nonnull;
 import java.util.regex.Pattern;
+import javax.annotation.Nonnull;
 
 public abstract class RegexInterpreterFactory {
 
@@ -24,6 +24,32 @@ public abstract class RegexInterpreterFactory {
 
     public static Regex create(String regex) {
         return getInstance().instantiate(regex);
+    }
+
+    /**
+     * Regex that matches any mail address on the given mail server.
+     * For example, calling this method with parameter <pre>pgpainless.org</pre> will return a regex
+     * that matches any of the following user ids:
+     * <pre>
+     *     Alice <alice@pgpainless.org>
+     *     <bob@pgpainless.org>
+     *     Issuer (code signing) <issuer@pgpainless.org>
+     * </pre>
+     * It will however not match the following mail addresses:
+     * <pre>
+     *     Alice <alice@example.org>
+     *     alice@pgpainless.org
+     *     alice@pgpainless.org <alice@example.org>
+     *     Bob <bob@PGPainless.org>
+     * </pre>
+     * Note: This method will not validate the given domain string, so that is your responsibility!
+     *
+     * @param mailDomain domain
+     * @return regex matching the domain
+     */
+    public static Regex createDefaultMailDomainRegex(String mailDomain) {
+        String escaped = mailDomain.replace(".", "\\.");
+        return create("<[^>]+[@.]" + escaped + ">$");
     }
 
     public abstract Regex instantiate(String regex) throws IllegalArgumentException;
