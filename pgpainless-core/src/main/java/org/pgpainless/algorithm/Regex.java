@@ -25,4 +25,13 @@ public interface Regex {
      * @return true if matches, false otherwise
      */
     boolean matches(String string);
+
+    static Regex wildcard() {
+        return new Regex() {
+            @Override
+            public boolean matches(String string) {
+                return true;
+            }
+        };
+    }
 }
