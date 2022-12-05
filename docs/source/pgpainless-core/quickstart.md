@@ -242,7 +242,7 @@ or the passphrase.
 ### Decrypt and/or Verify a Message
 Decryption and verification of a message is both done using the same API.
 Whether a message was actually signed / encrypted can be determined after the message has been processed by checking
-the `OpenPgpMetadata` object which can be obtained from the `DecryptionStream`.
+the `MessageMetadata` object which can be obtained from the `DecryptionStream`.
 
 To configure the decryption / verification process, the `ConsumerOptions` object is used:
 
@@ -283,16 +283,16 @@ Streams.pipeAll(consumerStream, plaintext);
 consumerStream.close(); // important!
 
 // The result will contain metadata of the message
-OpenPgpMetadata result = consumerStream.getResult();
+MessageMetadata result = consumerStream.getMetadata();
 ```
 
-After the message has been processed, you can consult the `OpenPgpMetadata` object to determine the nature of the message:
+After the message has been processed, you can consult the `MessageMetadata` object to determine the nature of the message:
 
 ```java
 boolean wasEncrypted = result.isEncrypted();
 SubkeyIdentifier decryptionKey = result.getDecryptionKey();
-Map<SubkeyIdentifier, PGPSignature> validSignatures = result.getVerifiedSignatures();
-boolean wasSignedByCert = result.containsVerifiedSignatureFrom(certificate);
+List<SignatureVerification> validSignatures = result.getVerifiedSignatures();
+boolean wasSignedByCert = result.isVerifiedSignedBy(certificate);
 
 // For files:
 String fileName = result.getFileName();
@@ -323,6 +323,6 @@ DecryptionStream verificationStream = PGPainless.decryptAndOrVerify()
 Streams.drain(verificationStream); // push all the data through the stream
 verificationStream.close(); // finish verification
 
-OpenPgpMetadata result = verificationStream.getResult(); // get metadata of signed message
-assertTrue(result.containsVerifiedSignatureFrom(certificate)); // check if message was in fact signed
+MessageMetadata result = verificationStream.getMetadata(); // get metadata of signed message
+assertTrue(result.isVerifiedSignedBy(certificate)); // check if message was in fact signed
 ```
