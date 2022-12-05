@@ -257,3 +257,44 @@ task javadocAll(type: Javadoc) {
             "https://docs.oracle.com/javase/${sourceCompatibility.getMajorVersion()}/docs/api/",
     ] as String[]
 }
+
+/**
+ * Fetch sha256 checksums of artifacts published to maven central.
+ *
+ * Example: gradle -Prelease=1.3.13 mavenCentralChecksums
+ */
+task mavenCentralChecksums() {
+    description 'Fetch and display checksums for artifacts published to Maven Central'
+    String ver = project.hasProperty('release') ? release : shortVersion
+    doLast {
+        Process p = "curl -f https://repo1.maven.org/maven2/org/pgpainless/pgpainless-core/${ver}/pgpainless-core-${ver}.jar.sha256".execute()
+        if (p.waitFor() == 0) {
+            print p.text.trim()
+            println "  pgpainless-core/build/libs/pgpainless-core-${ver}.jar"
+        }
+
+        p = "curl -f https://repo1.maven.org/maven2/org/pgpainless/pgpainless-sop/${ver}/pgpainless-sop-${ver}.jar.sha256".execute()
+        if (p.waitFor() == 0) {
+            print p.text.trim()
+            println "  pgpainless-sop/build/libs/pgpainless-sop-${ver}.jar"
+        }
+
+        p = "curl -f https://repo1.maven.org/maven2/org/pgpainless/pgpainless-cli/${ver}/pgpainless-cli-${ver}-all.jar.sha256".execute()
+        if (p.waitFor() == 0) {
+            print p.text.trim()
+            println "  pgpainless-cli/build/libs/pgpainless-cli-${ver}-all.jar"
+        }
+
+        p = "curl -f https://repo1.maven.org/maven2/org/pgpainless/pgpainless-cli/${ver}/pgpainless-cli-${ver}.jar.sha256".execute()
+        if (p.waitFor() == 0) {
+            print p.text.trim()
+            println "  pgpainless-cli/build/libs/pgpainless-cli-${ver}.jar"
+        }
+
+        p = "curl -f https://repo1.maven.org/maven2/org/pgpainless/hsregex/${ver}/hsregex-${ver}.jar.sha256".execute()
+        if (p.waitFor() == 0) {
+            print p.text.trim()
+            println "  hsregex/build/libs/hsregex-${ver}.jar"
+        }
+    }
+}
