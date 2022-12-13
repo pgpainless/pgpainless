@@ -5,6 +5,10 @@ SPDX-License-Identifier: CC0-1.0
 
 # PGPainless Changelog
 
+## 1.3.14-SNAPSHOT
+- Fix DSA key parameter check
+- Use proper method to unlock private signing keys when creating detached signatures
+
 ## 1.3.13
 - Bump `sop-java` to `4.0.7`
 
