@@ -7,7 +7,6 @@ package org.pgpainless.sop;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
-import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import java.io.IOException;
@@ -22,7 +21,6 @@ import org.pgpainless.key.info.KeyRingInfo;
 import org.pgpainless.key.protection.UnlockSecretKey;
 import org.pgpainless.util.Passphrase;
 import sop.SOP;
-import sop.exception.SOPGPException;
 
 public class GenerateKeyTest {
 
@@ -31,11 +29,6 @@ public class GenerateKeyTest {
     @BeforeEach
     public void prepare() {
         sop = new SOPImpl();
-    }
-
-    @Test
-    public void testMissingUserId() {
-        assertThrows(SOPGPException.MissingArg.class, () -> sop.generateKey().generate());
     }
 
     @Test

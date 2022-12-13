@@ -7,6 +7,7 @@ package org.pgpainless.key.generation;
 import java.security.InvalidAlgorithmParameterException;
 import java.security.NoSuchAlgorithmException;
 import javax.annotation.Nonnull;
+import javax.annotation.Nullable;
 
 import org.bouncycastle.openpgp.PGPException;
 import org.bouncycastle.openpgp.PGPSecretKeyRing;
@@ -38,9 +39,9 @@ public final class KeyRingTemplates {
      * @throws NoSuchAlgorithmException in case of missing algorithm implementation in the crypto provider
      * @throws PGPException in case of an OpenPGP related error
      */
-    public PGPSecretKeyRing simpleRsaKeyRing(@Nonnull UserId userId, @Nonnull RsaLength length)
+    public PGPSecretKeyRing simpleRsaKeyRing(@Nullable UserId userId, @Nonnull RsaLength length)
             throws InvalidAlgorithmParameterException, NoSuchAlgorithmException, PGPException {
-        return simpleRsaKeyRing(userId.toString(), length);
+        return simpleRsaKeyRing(userId == null ? null : userId.toString(), length);
     }
 
     /**
@@ -56,7 +57,7 @@ public final class KeyRingTemplates {
      * @throws NoSuchAlgorithmException in case of missing algorithm implementation in the crypto provider
      * @throws PGPException in case of an OpenPGP related error
      */
-    public PGPSecretKeyRing simpleRsaKeyRing(@Nonnull String userId, @Nonnull RsaLength length)
+    public PGPSecretKeyRing simpleRsaKeyRing(@Nullable String userId, @Nonnull RsaLength length)
             throws InvalidAlgorithmParameterException, NoSuchAlgorithmException, PGPException {
         return simpleRsaKeyRing(userId, length, Passphrase.emptyPassphrase());
     }
@@ -75,9 +76,9 @@ public final class KeyRingTemplates {
      * @throws NoSuchAlgorithmException in case of missing algorithm implementation in the crypto provider
      * @throws PGPException in case of an OpenPGP related error
      */
-    public PGPSecretKeyRing simpleRsaKeyRing(@Nonnull UserId userId, @Nonnull RsaLength length, String password)
+    public PGPSecretKeyRing simpleRsaKeyRing(@Nullable UserId userId, @Nonnull RsaLength length, @Nullable String password)
             throws InvalidAlgorithmParameterException, NoSuchAlgorithmException, PGPException {
-        return simpleRsaKeyRing(userId.toString(), length, password);
+        return simpleRsaKeyRing(userId == null ? null : userId.toString(), length, password);
     }
 
     /**
@@ -94,7 +95,7 @@ public final class KeyRingTemplates {
      * @throws NoSuchAlgorithmException in case of missing algorithm implementation in the crypto provider
      * @throws PGPException in case of an OpenPGP related error
      */
-    public PGPSecretKeyRing simpleRsaKeyRing(@Nonnull String userId, @Nonnull RsaLength length, String password)
+    public PGPSecretKeyRing simpleRsaKeyRing(@Nullable String userId, @Nonnull RsaLength length, @Nullable String password)
             throws PGPException, NoSuchAlgorithmException, InvalidAlgorithmParameterException {
         Passphrase passphrase = Passphrase.emptyPassphrase();
         if (!isNullOrEmpty(password)) {
@@ -103,12 +104,14 @@ public final class KeyRingTemplates {
         return simpleRsaKeyRing(userId, length, passphrase);
     }
 
-    public PGPSecretKeyRing simpleRsaKeyRing(@Nonnull String userId, @Nonnull RsaLength length, @Nonnull Passphrase passphrase)
+    public PGPSecretKeyRing simpleRsaKeyRing(@Nullable String userId, @Nonnull RsaLength length, @Nonnull Passphrase passphrase)
             throws PGPException, InvalidAlgorithmParameterException, NoSuchAlgorithmException {
         KeyRingBuilder builder = PGPainless.buildKeyRing()
                 .setPrimaryKey(KeySpec.getBuilder(KeyType.RSA(length), KeyFlag.CERTIFY_OTHER, KeyFlag.SIGN_DATA, KeyFlag.ENCRYPT_COMMS))
-                .addUserId(userId)
                 .setPassphrase(passphrase);
+        if (userId != null) {
+            builder.addUserId(userId);
+        }
         return builder.build();
     }
 
@@ -125,9 +128,9 @@ public final class KeyRingTemplates {
      * @throws NoSuchAlgorithmException in case of missing algorithm implementation in the crypto provider
      * @throws PGPException in case of an OpenPGP related error
      */
-    public PGPSecretKeyRing simpleEcKeyRing(@Nonnull UserId userId)
+    public PGPSecretKeyRing simpleEcKeyRing(@Nullable UserId userId)
             throws InvalidAlgorithmParameterException, NoSuchAlgorithmException, PGPException {
-        return simpleEcKeyRing(userId.toString());
+        return simpleEcKeyRing(userId == null ? null : userId.toString());
     }
 
     /**
@@ -143,7 +146,7 @@ public final class KeyRingTemplates {
      * @throws NoSuchAlgorithmException in case of missing algorithm implementation in the crypto provider
      * @throws PGPException in case of an OpenPGP related error
      */
-    public PGPSecretKeyRing simpleEcKeyRing(@Nonnull String userId)
+    public PGPSecretKeyRing simpleEcKeyRing(@Nullable String userId)
             throws InvalidAlgorithmParameterException, NoSuchAlgorithmException, PGPException {
         return simpleEcKeyRing(userId, Passphrase.emptyPassphrase());
     }
@@ -162,9 +165,9 @@ public final class KeyRingTemplates {
      * @throws NoSuchAlgorithmException in case of missing algorithm implementation in the crypto provider
      * @throws PGPException in case of an OpenPGP related error
      */
-    public PGPSecretKeyRing simpleEcKeyRing(@Nonnull UserId userId, String password)
+    public PGPSecretKeyRing simpleEcKeyRing(@Nullable UserId userId, String password)
             throws InvalidAlgorithmParameterException, NoSuchAlgorithmException, PGPException {
-        return simpleEcKeyRing(userId.toString(), password);
+        return simpleEcKeyRing(userId == null ? null : userId.toString(), password);
     }
 
     /**
@@ -181,7 +184,7 @@ public final class KeyRingTemplates {
      * @throws NoSuchAlgorithmException in case of missing algorithm implementation in the crypto provider
      * @throws PGPException in case of an OpenPGP related error
      */
-    public PGPSecretKeyRing simpleEcKeyRing(@Nonnull String userId, String password)
+    public PGPSecretKeyRing simpleEcKeyRing(@Nullable String userId, String password)
             throws PGPException, NoSuchAlgorithmException, InvalidAlgorithmParameterException {
         Passphrase passphrase = Passphrase.emptyPassphrase();
         if (!isNullOrEmpty(password)) {
@@ -190,13 +193,15 @@ public final class KeyRingTemplates {
         return simpleEcKeyRing(userId, passphrase);
     }
 
-    public PGPSecretKeyRing simpleEcKeyRing(@Nonnull String userId, @Nonnull Passphrase passphrase)
+    public PGPSecretKeyRing simpleEcKeyRing(@Nullable String userId, @Nonnull Passphrase passphrase)
             throws PGPException, InvalidAlgorithmParameterException, NoSuchAlgorithmException {
         KeyRingBuilder builder = PGPainless.buildKeyRing()
                 .setPrimaryKey(KeySpec.getBuilder(KeyType.EDDSA(EdDSACurve._Ed25519), KeyFlag.CERTIFY_OTHER, KeyFlag.SIGN_DATA))
                 .addSubkey(KeySpec.getBuilder(KeyType.XDH(XDHSpec._X25519), KeyFlag.ENCRYPT_STORAGE, KeyFlag.ENCRYPT_COMMS))
-                .addUserId(userId)
                 .setPassphrase(passphrase);
+        if (userId != null) {
+            builder.addUserId(userId);
+        }
         return builder.build();
     }
 
@@ -211,8 +216,8 @@ public final class KeyRingTemplates {
      * @throws NoSuchAlgorithmException in case of missing algorithm implementation in the crypto provider
      * @throws PGPException in case of an OpenPGP related error
      */
-    public PGPSecretKeyRing modernKeyRing(String userId) throws PGPException, InvalidAlgorithmParameterException, NoSuchAlgorithmException {
-        return modernKeyRing(userId, (Passphrase) null);
+    public PGPSecretKeyRing modernKeyRing(@Nullable String userId) throws PGPException, InvalidAlgorithmParameterException, NoSuchAlgorithmException {
+        return modernKeyRing(userId, Passphrase.emptyPassphrase());
     }
 
     /**
@@ -227,21 +232,21 @@ public final class KeyRingTemplates {
      * @throws NoSuchAlgorithmException in case of missing algorithm implementation in the crypto provider
      * @throws PGPException in case of an OpenPGP related error
      */
-    public PGPSecretKeyRing modernKeyRing(String userId, String password)
+    public PGPSecretKeyRing modernKeyRing(@Nullable String userId, @Nullable String password)
             throws InvalidAlgorithmParameterException, NoSuchAlgorithmException, PGPException {
-        Passphrase passphrase = (password != null ? Passphrase.fromPassword(password) : null);
+        Passphrase passphrase = (password != null ? Passphrase.fromPassword(password) : Passphrase.emptyPassphrase());
         return modernKeyRing(userId, passphrase);
     }
 
-    public PGPSecretKeyRing modernKeyRing(String userId, Passphrase passphrase)
+    public PGPSecretKeyRing modernKeyRing(@Nullable String userId, @Nonnull Passphrase passphrase)
             throws PGPException, InvalidAlgorithmParameterException, NoSuchAlgorithmException {
         KeyRingBuilder builder = PGPainless.buildKeyRing()
                 .setPrimaryKey(KeySpec.getBuilder(KeyType.EDDSA(EdDSACurve._Ed25519), KeyFlag.CERTIFY_OTHER))
                 .addSubkey(KeySpec.getBuilder(KeyType.XDH(XDHSpec._X25519), KeyFlag.ENCRYPT_STORAGE, KeyFlag.ENCRYPT_COMMS))
                 .addSubkey(KeySpec.getBuilder(KeyType.EDDSA(EdDSACurve._Ed25519), KeyFlag.SIGN_DATA))
-                .addUserId(userId);
-        if (passphrase != null && !passphrase.isEmpty()) {
-            builder.setPassphrase(passphrase);
+                .setPassphrase(passphrase);
+        if (userId != null) {
+            builder.addUserId(userId);
         }
         return builder.build();
     }
