@@ -5,6 +5,10 @@ SPDX-License-Identifier: CC0-1.0
 
 # PGPainless Changelog
 
+## 1.4.0-rc3-SNAPSHOT
+- `sop generate-key`: Add support for keys without user-ids
+- `sop inline-sign --as=clearsigned`: Make signature in TEXT mode
+
 ## 1.4.0-rc2
 - Bump `bcpg-jdk15to18` to `1.72.3`
 - Use BCs `PGPEncryptedDataList.extractSessionKeyEncryptedData()` method
