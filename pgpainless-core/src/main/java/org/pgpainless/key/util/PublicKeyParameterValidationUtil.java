@@ -195,7 +195,7 @@ public class PublicKeyParameterValidationUtil {
         }
 
         // q > 160 bits
-        boolean qLarge = pQ.getLowestSetBit() > 160;
+        boolean qLarge = pQ.bitLength() > 160;
         if (!qLarge) {
             return false;
         }
