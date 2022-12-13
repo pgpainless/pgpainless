@@ -359,8 +359,7 @@ public final class SigningOptions {
             if (signingSecKey == null) {
                 throw new KeyException.MissingSecretKeyException(OpenPgpFingerprint.of(secretKey), signingPubKey.getKeyID());
             }
-            PGPPrivateKey signingSubkey = signingSecKey.extractPrivateKey(
-                    secretKeyDecryptor.getDecryptor(signingPubKey.getKeyID()));
+            PGPPrivateKey signingSubkey = UnlockSecretKey.unlockSecretKey(signingSecKey, secretKeyDecryptor);
             Set<HashAlgorithm> hashAlgorithms = userId != null ? keyRingInfo.getPreferredHashAlgorithms(userId)
                     : keyRingInfo.getPreferredHashAlgorithms(signingPubKey.getKeyID());
             HashAlgorithm hashAlgorithm = negotiateHashAlgorithm(hashAlgorithms, PGPainless.getPolicy());
