@@ -46,6 +46,11 @@ SPDX-License-Identifier: CC0-1.0
 - Add `KeyRingUtils.publicKeys(PGPKeyRing keys)`
 - Remove `BCUtil` class
 
+## 1.3.14
+- Bump `bcpg` to `1.72.3`
+- Fix DSA key parameter check
+- Use proper method to unlock private signing keys when creating detached signatures
+
 ## 1.3.13
 - Bump `sop-java` to `4.0.7`
 
