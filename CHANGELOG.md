@@ -5,7 +5,7 @@ SPDX-License-Identifier: CC0-1.0
 
 # PGPainless Changelog
 
-## 1.3.14-SNAPSHOT
+## 1.3.14
 - Bump `bcpg` to `1.72.3`
 - Fix DSA key parameter check
 - Use proper method to unlock private signing keys when creating detached signatures
