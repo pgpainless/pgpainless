@@ -75,7 +75,7 @@ public class InlineSignImpl implements InlineSign {
         for (PGPSecretKeyRing key : signingKeys) {
             try {
                 if (mode == InlineSignAs.clearsigned) {
-                    signingOptions.addDetachedSignature(protector, key);
+                    signingOptions.addDetachedSignature(protector, key, DocumentSignatureType.CANONICAL_TEXT_DOCUMENT);
                 } else {
                     signingOptions.addInlineSignature(protector, key, modeToSigType(mode));
                 }
