@@ -51,6 +51,7 @@ public class GenerateKeyImpl implements GenerateKey {
     @Override
     public Ready generate() throws SOPGPException.MissingArg, SOPGPException.UnsupportedAsymmetricAlgo {
         Iterator<String> userIdIterator = userIds.iterator();
+        Passphrase passphraseCopy = new Passphrase(passphrase.getChars()); // generateKeyRing clears the original passphrase
         PGPSecretKeyRing key;
         try {
             String primaryUserId = userIdIterator.hasNext() ? userIdIterator.next() : null;
@@ -61,7 +62,7 @@ public class GenerateKeyImpl implements GenerateKey {
                 SecretKeyRingEditorInterface editor = PGPainless.modifyKeyRing(key);
 
                 while (userIdIterator.hasNext()) {
-                    editor.addUserId(userIdIterator.next(), SecretKeyRingProtector.unprotectedKeys());
+                    editor.addUserId(userIdIterator.next(), SecretKeyRingProtector.unlockAnyKeyWith(passphraseCopy));
                 }
 
                 key = editor.done();

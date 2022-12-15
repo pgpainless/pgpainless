@@ -7,6 +7,8 @@ SPDX-License-Identifier: CC0-1.0
 
 ## 1.4.2-SNAPSHOT
 - Properly decrypt messages without MDC packets when `ConsumerOptions.setIgnoreMDCErrors(true)` is set
+- Fix crash in `sop generate-key --with-key-password` when more than one user-id is given
+
 
 ## 1.4.1
 - Add `UserId.parse()` method to parse user-ids into their components
