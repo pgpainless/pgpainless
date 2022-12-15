@@ -5,7 +5,7 @@ SPDX-License-Identifier: CC0-1.0
 
 # PGPainless Changelog
 
-## 1.3.15-SNAPSHOT
+## 1.3.15
 - Fix crash in `sop generate-key --with-key-password` when more then one user-id is given
 - `sop generate-key`: Allow key generation without user-ids
 - `sop inline-sign --as=clearsigned`: Make signatures of type 'text' instead of 'binary'
