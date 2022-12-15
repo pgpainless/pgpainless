@@ -245,6 +245,7 @@ public final class ProducerOptions {
      * @deprecated options other than the default value of {@link StreamEncoding#BINARY} are discouraged.
      */
     @Deprecated
+    // is used to be compatible with legacy systems
     public ProducerOptions setEncoding(@Nonnull StreamEncoding encoding) {
         this.encodingField = encoding;
         return this;

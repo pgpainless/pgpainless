@@ -287,6 +287,7 @@ public class ConsumerOptions {
      * @return options
      */
     @Deprecated
+    // Is used to be compatible with legacy systems
     public ConsumerOptions setIgnoreMDCErrors(boolean ignoreMDCErrors) {
         this.ignoreMDCErrors = ignoreMDCErrors;
         return this;
