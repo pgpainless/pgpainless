@@ -7,6 +7,8 @@ SPDX-License-Identifier: CC0-1.0
 
 ## 1.3.15-SNAPSHOT
 - Fix crash in `sop generate-key --with-key-password` when more then one user-id is given
+- `sop generate-key`: Allow key generation without user-ids
+- `sop inline-sign --as=clearsigned`: Make signatures of type 'text' instead of 'binary'
 
 ## 1.3.14
 - Bump `bcpg` to `1.72.3`
