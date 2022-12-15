@@ -212,10 +212,12 @@ public class ModifiedPublicKeysInvestigation {
         SecretKeyRingProtector protector = SecretKeyRingProtector.unlockAnyKeyWith(Passphrase.fromPassword("12345678"));
         PGPSecretKeyRing dsa = PGPainless.readKeyRing().secretKeyRing(DSA);
 
+        PGPainless.getPolicy().setEnableKeyParameterValidation(true);
         assertThrows(KeyIntegrityException.class, () ->
                 UnlockSecretKey.unlockSecretKey(dsa.getSecretKey(KeyIdUtil.fromLongKeyId("b1bd1f049ec87f3d")), protector));
         assertThrows(KeyIntegrityException.class, () ->
                 UnlockSecretKey.unlockSecretKey(dsa.getSecretKey(KeyIdUtil.fromLongKeyId("f5ffdf6d71dd5789")), protector));
+        PGPainless.getPolicy().setEnableKeyParameterValidation(false);
     }
 
     @Test
@@ -223,8 +225,10 @@ public class ModifiedPublicKeysInvestigation {
         SecretKeyRingProtector protector = SecretKeyRingProtector.unlockAnyKeyWith(Passphrase.fromPassword("12345678"));
         PGPSecretKeyRing elgamal = PGPainless.readKeyRing().secretKeyRing(ELGAMAL);
 
+        PGPainless.getPolicy().setEnableKeyParameterValidation(true);
         assertThrows(KeyIntegrityException.class, () ->
                 UnlockSecretKey.unlockSecretKey(elgamal.getSecretKey(KeyIdUtil.fromLongKeyId("f5ffdf6d71dd5789")), protector));
+        PGPainless.getPolicy().setEnableKeyParameterValidation(false);
     }
 
     @Test
@@ -232,8 +236,10 @@ public class ModifiedPublicKeysInvestigation {
         PGPSecretKeyRing secretKeys = PGPainless.readKeyRing().secretKeyRing(INJECTED_KEY);
         SecretKeyRingProtector protector = SecretKeyRingProtector.unlockAnyKeyWith(Passphrase.fromPassword("pass"));
 
+        PGPainless.getPolicy().setEnableKeyParameterValidation(true);
         assertThrows(KeyIntegrityException.class, () ->
                 UnlockSecretKey.unlockSecretKey(secretKeys.getSecretKey(), protector));
+        PGPainless.getPolicy().setEnableKeyParameterValidation(false);
     }
 
     @Test

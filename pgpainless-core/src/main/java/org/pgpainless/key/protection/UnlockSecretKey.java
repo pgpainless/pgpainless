@@ -9,6 +9,7 @@ import org.bouncycastle.openpgp.PGPException;
 import org.bouncycastle.openpgp.PGPPrivateKey;
 import org.bouncycastle.openpgp.PGPSecretKey;
 import org.bouncycastle.openpgp.operator.PBESecretKeyDecryptor;
+import org.pgpainless.PGPainless;
 import org.pgpainless.exception.KeyIntegrityException;
 import org.pgpainless.exception.WrongPassphraseException;
 import org.pgpainless.key.info.KeyInfo;
@@ -51,7 +52,9 @@ public final class UnlockSecretKey {
             throw new PGPException("Cannot decrypt secret key.");
         }
 
-        PublicKeyParameterValidationUtil.verifyPublicKeyParameterIntegrity(privateKey, secretKey.getPublicKey());
+        if (PGPainless.getPolicy().isEnableKeyParameterValidation()) {
+            PublicKeyParameterValidationUtil.verifyPublicKeyParameterIntegrity(privateKey, secretKey.getPublicKey());
+        }
 
         return privateKey;
     }

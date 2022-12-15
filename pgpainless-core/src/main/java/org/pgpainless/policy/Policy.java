@@ -49,6 +49,8 @@ public final class Policy {
     // Signers User-ID is soon to be deprecated.
     private SignerUserIdValidationLevel signerUserIdValidationLevel = SignerUserIdValidationLevel.DISABLED;
 
+    private boolean enableKeyParameterValidation = false;
+
     public enum SignerUserIdValidationLevel {
         /**
          * PGPainless will verify {@link org.bouncycastle.bcpg.sig.SignerUserID} subpackets in signatures strictly.
@@ -700,5 +702,32 @@ public final class Policy {
         }
         this.signerUserIdValidationLevel = signerUserIdValidationLevel;
         return this;
+    }
+
+    /**
+     * Enable or disable validation of public key parameters when unlocking private keys.
+     * Disabled by default.
+     * When enabled, PGPainless will validate, whether public key parameters have been tampered with.
+     * This is a countermeasure against possible attacks described in the paper
+     * "Victory by KO: Attacking OpenPGP Using Key Overwriting" by Lara Bruseghini, Daniel Huigens, and Kenneth G. Paterson.
+     * Since these attacks are only possible in very special conditions (attacker has access to the encrypted private key),
+     * and the countermeasures are very costly, they are disabled by default, but can be enabled using this method.
+     *
+     * @see <a href="https://www.kopenpgp.com/#paper">KOpenPGP.com</a>
+     * @param enable boolean
+     * @return this
+     */
+    public Policy setEnableKeyParameterValidation(boolean enable) {
+        this.enableKeyParameterValidation = enable;
+        return this;
+    }
+
+    /**
+     * Return true, if countermeasures against the KOpenPGP attacks are enabled, false otherwise.
+     *
+     * @return true if countermeasures are enabled, false otherwise.
+     */
+    public boolean isEnableKeyParameterValidation() {
+        return enableKeyParameterValidation;
     }
 }
