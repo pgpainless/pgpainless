@@ -265,14 +265,15 @@ public class PublicKeyParameterValidationUtil {
 
         // check g^i mod p != 1 for i < threshold
         BigInteger res = g;
-        BigInteger i = BigInteger.valueOf(1);
-        BigInteger threshold = BigInteger.valueOf(2).shiftLeft(17);
-        while (i.compareTo(threshold) < 0) {
+        // 262144
+        int threshold = 2 << 17;
+        int i = 1;
+        while (i < threshold) {
             res = res.multiply(g).mod(p);
             if (res.equals(one)) {
                 return false;
             }
-            i = i.add(one);
+            i++;
         }
 
         // blinded exponentiation to check y = g^(r*(p-1)+x) mod p
