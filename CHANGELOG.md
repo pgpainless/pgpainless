@@ -8,6 +8,9 @@ SPDX-License-Identifier: CC0-1.0
 ## 1.4.0-rc3-SNAPSHOT
 - `sop generate-key`: Add support for keys without user-ids
 - `sop inline-sign --as=clearsigned`: Make signature in TEXT mode
+- Make countermeasures against KOpenPGP attacks configurable
+  - Countermeasures are now disabled by default since they are costly and have a specific threat model
+  - Can be enabled by calling `Policy.setEnableKeyParameterValidation(true)`
 
 ## 1.4.0-rc2
 - Bump `bcpg-jdk15to18` to `1.72.3`
@@ -49,6 +52,11 @@ SPDX-License-Identifier: CC0-1.0
 - Add `KeyIdUtil.formatKeyId(long id)` to format hexadecimal key-ids.
 - Add `KeyRingUtils.publicKeys(PGPKeyRing keys)`
 - Remove `BCUtil` class
+
+## 1.3.15
+- Fix crash in `sop generate-key --with-key-password` when more than one user-id is given
+- `sop generate-key`: Allow key generation without user-ids
+- `sop inline-sign --as=clearsigned`: Make signatures of type 'text' instead of 'binary'
 
 ## 1.3.14
 - Bump `bcpg` to `1.72.3`
