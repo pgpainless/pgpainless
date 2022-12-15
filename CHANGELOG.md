@@ -5,6 +5,9 @@ SPDX-License-Identifier: CC0-1.0
 
 # PGPainless Changelog
 
+## 1.3.15-SNAPSHOT
+- Fix crash in `sop generate-key --with-key-password` when more then one user-id is given
+
 ## 1.3.14
 - Bump `bcpg` to `1.72.3`
 - Fix DSA key parameter check
