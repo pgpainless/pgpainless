@@ -8,7 +8,7 @@ SPDX-License-Identifier: CC0-1.0
 ## 1.4.0
 - `sop generate-key`: Add support for keys without user-ids
 - `sop inline-sign --as=clearsigned`: Make signature in TEXT mode
-- Make countermeasures against KOpenPGP attacks configurable
+- Make countermeasures against [KOpenPGP](https://kopenpgp.com/) attacks configurable
   - Countermeasures are now disabled by default since they are costly and have a specific threat model
   - Can be enabled by calling `Policy.setEnableKeyParameterValidation(true)`
 
