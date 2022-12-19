@@ -5,10 +5,21 @@
 package org.pgpainless.key.util;
 
 import java.util.Comparator;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
 
 public final class UserId implements CharSequence {
+
+    private static final Pattern emailPattern = Pattern.compile("(?:[\\p{L}\\u0900-\\u097F0-9!#\\$%&'*+/=?^_`{|}~-]+(?:\\.[\\p{L}\\u0900-\\u097F0-9!#\\$%&'*+/=?^_`{|}~-]+)*|\"(?:[\\x01-\\x08\\x0b\\x0c\\x0e-" +
+            "\\x1f\\x21\\x23-\\x5b\\x5d-\\x7f]|\\\\[\\x01-\\x09\\x0b\\x0c\\x0e-\\x7f])*\")@(?:(?:[\\p{L}\\u0900-\\u097F0-9](?:[\\p{L}\\u0900-\\u097F0-9" +
+            "-]*[\\p{L}\\u0900-\\u097F0-9])?\\.)+[\\p{L}\\u0900-\\u097F0-9](?:[\\p{L}\\u0900-\\u097F0-9-]*[\\p{L}\\u0900-\\u097F0-9])?|\\[(?:(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)" +
+            "\\.){3}(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?|[$\\p{L}\\u0900-\\u097F0-9-]*[\\p{L}\\u0900-\\u097F0-9]:(?:[\\x01-\\x08\\x0b\\x0c\\x0e-\\x1f" +
+            "\\x21-\\x5a\\x53-\\x7f]|\\\\[\\x01-\\x09\\x0b\\x0c\\x0e-\\x7f])+)])");
+
+    private static final Pattern nameAddrPattern = Pattern.compile("^((?<name>.+?)\\s)?(\\((?<comment>.+?)\\)\\s)?(<(?<email>.+?)>)?$");
+
     public static final class Builder {
         private String name;
         private String comment;
@@ -58,6 +69,37 @@ public final class UserId implements CharSequence {
         }
     }
 
+    public static UserId parse(@Nonnull String string) {
+        Builder builder = newBuilder();
+        string = string.trim();
+        Matcher matcher = nameAddrPattern.matcher(string);
+        if (matcher.find()) {
+            String name = matcher.group("name");
+            String comment = matcher.group("comment");
+            String mail = matcher.group("email");
+            matcher = emailPattern.matcher(mail);
+            if (!matcher.matches()) {
+                throw new IllegalArgumentException("Malformed email address");
+            }
+
+            if (name != null) {
+                builder.withName(name);
+            }
+            if (comment != null) {
+                builder.withComment(comment);
+            }
+            builder.withEmail(mail);
+        } else {
+            matcher = emailPattern.matcher(string);
+            if (matcher.matches()) {
+                builder.withEmail(string);
+            } else {
+                throw new IllegalArgumentException("Malformed email address");
+            }
+        }
+        return builder.build();
+    }
+
     private final String name;
     private final String comment;
     private final String email;
@@ -86,6 +128,24 @@ public final class UserId implements CharSequence {
     }
 
     public String getName() {
+        return getName(false);
+    }
+
+    public String getName(boolean preserveQuotes) {
+        if (name == null || name.isEmpty()) {
+            return name;
+        }
+
+        if (name.startsWith("\"")) {
+            if (preserveQuotes) {
+                return name;
+            }
+            String withoutQuotes = name.substring(1);
+            if (withoutQuotes.endsWith("\"")) {
+                withoutQuotes = withoutQuotes.substring(0, withoutQuotes.length() - 1);
+            }
+            return withoutQuotes;
+        }
         return name;
     }
 
@@ -116,7 +176,7 @@ public final class UserId implements CharSequence {
     public @Nonnull String toString() {
         StringBuilder sb = new StringBuilder();
         if (name != null && !name.isEmpty()) {
-            sb.append(name);
+            sb.append(getName(true));
         }
         if (comment != null && !comment.isEmpty()) {
             if (sb.length() > 0) {

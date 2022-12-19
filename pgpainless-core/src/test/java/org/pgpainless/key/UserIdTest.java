@@ -271,4 +271,114 @@ public class UserIdTest {
         assertNotEquals(0, UserId.compare(id1, id6, c));
         assertNotEquals(0, UserId.compare(id6, id1, c));
     }
+
+    @Test
+    public void parseNameAndEmail() {
+        UserId id = UserId.parse("Alice <alice@pgpainless.org>");
+
+        assertEquals("Alice", id.getName());
+        assertNull(id.getComment());
+        assertEquals("alice@pgpainless.org", id.getEmail());
+
+        assertEquals("Alice <alice@pgpainless.org>", id.toString());
+    }
+
+    @Test
+    public void parseNameCommentAndEmail() {
+        UserId id = UserId.parse("Alice (work mail) <alice@pgpainless.org>");
+
+        assertEquals("Alice", id.getName());
+        assertEquals("work mail", id.getComment());
+        assertEquals("alice@pgpainless.org", id.getEmail());
+
+        assertEquals("Alice (work mail) <alice@pgpainless.org>", id.toString());
+    }
+
+    @Test
+    public void parseLongNameAndEmail() {
+        UserId id = UserId.parse("Alice von Painleicester <alice@pgpainless.org>");
+
+        assertEquals("Alice von Painleicester", id.getName());
+        assertNull(id.getComment());
+        assertEquals("alice@pgpainless.org", id.getEmail());
+
+        assertEquals("Alice von Painleicester <alice@pgpainless.org>", id.toString());
+    }
+
+    @Test
+    public void parseLongNameCommentAndEmail() {
+        UserId id = UserId.parse("Alice von Painleicester (work email) <alice@pgpainless.org>");
+
+        assertEquals("Alice von Painleicester", id.getName());
+        assertEquals("work email", id.getComment());
+        assertEquals("alice@pgpainless.org", id.getEmail());
+
+        assertEquals("Alice von Painleicester (work email) <alice@pgpainless.org>", id.toString());
+    }
+
+    @Test
+    public void parseQuotedNameAndEmail() {
+        UserId id = UserId.parse("\"Alice\" <alice@pgpainless.org>");
+
+        assertEquals("Alice", id.getName());
+        assertNull(id.getComment());
+        assertEquals("alice@pgpainless.org", id.getEmail());
+
+        assertEquals("\"Alice\" <alice@pgpainless.org>", id.toString());
+    }
+
+    @Test
+    public void parseQuotedNameCommentAndEmail() {
+        UserId id = UserId.parse("\"Alice\" (work email) <alice@pgpainless.org>");
+
+        assertEquals("Alice", id.getName());
+        assertEquals("work email", id.getComment());
+        assertEquals("alice@pgpainless.org", id.getEmail());
+
+        assertEquals("\"Alice\" (work email) <alice@pgpainless.org>", id.toString());
+    }
+
+    @Test
+    public void parseLongQuotedNameAndEmail() {
+        UserId id = UserId.parse("\"Alice Mac Painlester\" <alice@pgpainless.org>");
+
+        assertEquals("Alice Mac Painlester", id.getName());
+        assertNull(id.getComment());
+        assertEquals("alice@pgpainless.org", id.getEmail());
+
+        assertEquals("\"Alice Mac Painlester\" <alice@pgpainless.org>", id.toString());
+    }
+
+    @Test
+    public void parseLongQuotedNameCommentAndEmail() {
+        UserId id = UserId.parse("\"Alice Mac Painlester\" (work email) <alice@pgpainless.org>");
+
+        assertEquals("Alice Mac Painlester", id.getName());
+        assertEquals("work email", id.getComment());
+        assertEquals("alice@pgpainless.org", id.getEmail());
+
+        assertEquals("\"Alice Mac Painlester\" (work email) <alice@pgpainless.org>", id.toString());
+    }
+
+    @Test
+    public void parseEmailOnly() {
+        UserId id = UserId.parse("alice@pgpainless.org");
+
+        assertNull(id.getName());
+        assertNull(id.getComment());
+        assertEquals("alice@pgpainless.org", id.getEmail());
+
+        assertEquals("<alice@pgpainless.org>", id.toString());
+    }
+
+    @Test
+    public void parseBracketedEmailOnly() {
+        UserId id = UserId.parse("<alice@pgpainless.org>");
+
+        assertNull(id.getName());
+        assertNull(id.getComment());
+        assertEquals("alice@pgpainless.org", id.getEmail());
+
+        assertEquals("<alice@pgpainless.org>", id.toString());
+    }
 }
