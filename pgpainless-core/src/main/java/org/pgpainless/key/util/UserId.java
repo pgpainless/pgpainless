@@ -92,9 +92,9 @@ public final class UserId implements CharSequence {
         string = string.trim();
         Matcher matcher = nameAddrPattern.matcher(string);
         if (matcher.find()) {
-            String name = matcher.group("name");
-            String comment = matcher.group("comment");
-            String mail = matcher.group("email");
+            String name = matcher.group(2);
+            String comment = matcher.group(4);
+            String mail = matcher.group(6);
             matcher = emailPattern.matcher(mail);
             if (!matcher.matches()) {
                 throw new IllegalArgumentException("Malformed email address");
