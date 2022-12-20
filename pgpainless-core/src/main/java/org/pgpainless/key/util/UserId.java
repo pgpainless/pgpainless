@@ -69,6 +69,24 @@ public final class UserId implements CharSequence {
         }
     }
 
+    /**
+     * Parse a {@link UserId} from free-form text, <pre>name-addr</pre> or <pre>mailbox</pre> string and split it
+     * up into its components.
+     * Example inputs for this method:
+     * <ul>
+     *     <li><pre>john@pgpainless.org</pre></li>
+     *     <li><pre>&lt;john@pgpainless.org&gt;</pre></li>
+     *     <li><pre>John Doe</pre></li>
+     *     <li><pre>John Doe &lt;john@pgpainless.org&gt;</pre></li>
+     *     <li><pre>John Doe (work email) &lt;john@pgpainless.org&gt;</pre></li>
+     * </ul>
+     * In these cases, {@link #parse(String)} will detect email addresses, names and comments and expose those
+     * via the respective getters.
+     *
+     * @see <a href="https://www.rfc-editor.org/rfc/rfc5322#page-16">RFC5322 §3.4. Address Specification</a>
+     * @param string user-id
+     * @return parsed {@link UserId} object
+     */
     public static UserId parse(@Nonnull String string) {
         Builder builder = newBuilder();
         string = string.trim();
