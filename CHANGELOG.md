@@ -5,6 +5,9 @@ SPDX-License-Identifier: CC0-1.0
 
 # PGPainless Changelog
 
+## 1.4.1
+- Add `UserId.parse()` method to parse user-ids into their components
+
 ## 1.4.0
 - `sop generate-key`: Add support for keys without user-ids
 - `sop inline-sign --as=clearsigned`: Make signature in TEXT mode
