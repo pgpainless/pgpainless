@@ -82,6 +82,12 @@ public final class UserId implements CharSequence {
      * </ul>
      * In these cases, {@link #parse(String)} will detect email addresses, names and comments and expose those
      * via the respective getters.
+     * This method does not support parsing mail addresses of the following formats:
+     * <ul>
+     *     <li>Local domains without TLDs (<pre>user@localdomain1</pre>)</li>
+     *     <li><pre>" "@example.org</pre> (spaces between the quotes)</li>
+     *     <li><pre>"very.(),:;<>[]\".VERY.\"very@\\ \"very\".unusual"@strange.example.com</pre></li>
+     * </ul>
      *
      * @see <a href="https://www.rfc-editor.org/rfc/rfc5322#page-16">RFC5322 §3.4. Address Specification</a>
      * @param string user-id

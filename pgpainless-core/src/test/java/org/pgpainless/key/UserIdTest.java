@@ -441,4 +441,95 @@ public class UserIdTest {
         assertEquals("संपर्क@डाटामेल.भारत", samparka.getEmail());
         assertEquals("संपर्क", samparka.getName());
     }
+
+    @Test
+    public void parseMailWithPlus() {
+        UserId id = UserId.parse("disposable.style.email.with+symbol@example.com");
+        assertEquals("disposable.style.email.with+symbol@example.com", id.getEmail());
+
+        id = UserId.parse("Disposable Mail <disposable.style.email.with+symbol@example.com>");
+        assertEquals("disposable.style.email.with+symbol@example.com", id.getEmail());
+        assertEquals("Disposable Mail", id.getName());
+    }
+
+    @Test
+    public void parseMailWithHyphen() {
+        UserId id = UserId.parse("other.email-with-hyphen@example.com");
+        assertEquals("other.email-with-hyphen@example.com", id.getEmail());
+
+        id = UserId.parse("Other Email <other.email-with-hyphen@example.com>");
+        assertEquals("other.email-with-hyphen@example.com", id.getEmail());
+        assertEquals("Other Email", id.getName());
+    }
+
+    @Test
+    public void parseMailWithTagAndSorting() {
+        UserId id = UserId.parse("user.name+tag+sorting@example.com");
+        assertEquals("user.name+tag+sorting@example.com", id.getEmail());
+
+        id = UserId.parse("User Name <user.name+tag+sorting@example.com>");
+        assertEquals("user.name+tag+sorting@example.com", id.getEmail());
+        assertEquals("User Name", id.getName());
+    }
+
+    @Test
+    public void parseMailWithSlash() {
+        UserId id = UserId.parse("test/test@test.com");
+        assertEquals("test/test@test.com", id.getEmail());
+
+        id = UserId.parse("Who uses Slashes <test/test@test.com>");
+        assertEquals("test/test@test.com", id.getEmail());
+        assertEquals("Who uses Slashes", id.getName());
+    }
+
+    @Test
+    public void parseDoubleDots() {
+        UserId id = UserId.parse("\"john..doe\"@example.org");
+        assertEquals("\"john..doe\"@example.org", id.getEmail());
+
+        id = UserId.parse("John Doe <\"john..doe\"@example.org>");
+        assertEquals("\"john..doe\"@example.org", id.getEmail());
+        assertEquals("John Doe", id.getName());
+    }
+
+    @Test
+    public void parseBangifiedHostRoute() {
+        UserId id = UserId.parse("mailhost!username@example.org");
+        assertEquals("mailhost!username@example.org", id.getEmail());
+
+        id = UserId.parse("Bangified Host Route <mailhost!username@example.org>");
+        assertEquals("mailhost!username@example.org", id.getEmail());
+        assertEquals("Bangified Host Route", id.getName());
+    }
+
+    @Test
+    public void parsePercentRouted() {
+        UserId id = UserId.parse("user%example.com@example.org");
+        assertEquals("user%example.com@example.org", id.getEmail());
+
+        id = UserId.parse("User <user%example.com@example.org>");
+        assertEquals("user%example.com@example.org", id.getEmail());
+        assertEquals("User", id.getName());
+    }
+
+    @Test
+    public void parseLocalPartEndingWithNonAlphanumericCharacter() {
+        UserId id = UserId.parse("user-@example.org");
+        assertEquals("user-@example.org", id.getEmail());
+
+        id = UserId.parse("User <user-@example.org>");
+        assertEquals("user-@example.org", id.getEmail());
+        assertEquals("User", id.getName());
+    }
+
+    @Test
+    public void parseDomainIsIpAddress() {
+        UserId id = UserId.parse("postmaster@[123.123.123.123]");
+        assertEquals("postmaster@[123.123.123.123]", id.getEmail());
+
+        id = UserId.parse("Alice (work email) <postmaster@[123.123.123.123]>");
+        assertEquals("postmaster@[123.123.123.123]", id.getEmail());
+        assertEquals("Alice", id.getName());
+        assertEquals("work email", id.getComment());
+    }
 }
