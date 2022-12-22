@@ -12,12 +12,20 @@ import javax.annotation.Nullable;
 
 public final class UserId implements CharSequence {
 
+    // Email regex: https://emailregex.com/
+    // switched "a-z0-9" to "\p{L}\u0900-\u097F0-9" for better support for international characters
+    // \\p{L} = Unicode Letters
+    // \u0900-\u097F = Hindi Letters
     private static final Pattern emailPattern = Pattern.compile("(?:[\\p{L}\\u0900-\\u097F0-9!#\\$%&'*+/=?^_`{|}~-]+(?:\\.[\\p{L}\\u0900-\\u097F0-9!#\\$%&'*+/=?^_`{|}~-]+)*|\"(?:[\\x01-\\x08\\x0b\\x0c\\x0e-" +
             "\\x1f\\x21\\x23-\\x5b\\x5d-\\x7f]|\\\\[\\x01-\\x09\\x0b\\x0c\\x0e-\\x7f])*\")@(?:(?:[\\p{L}\\u0900-\\u097F0-9](?:[\\p{L}\\u0900-\\u097F0-9" +
             "-]*[\\p{L}\\u0900-\\u097F0-9])?\\.)+[\\p{L}\\u0900-\\u097F0-9](?:[\\p{L}\\u0900-\\u097F0-9-]*[\\p{L}\\u0900-\\u097F0-9])?|\\[(?:(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)" +
             "\\.){3}(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?|[$\\p{L}\\u0900-\\u097F0-9-]*[\\p{L}\\u0900-\\u097F0-9]:(?:[\\x01-\\x08\\x0b\\x0c\\x0e-\\x1f" +
             "\\x21-\\x5a\\x53-\\x7f]|\\\\[\\x01-\\x09\\x0b\\x0c\\x0e-\\x7f])+)])");
 
+    // User-ID Regex
+    // "Firstname Lastname (Comment) <email@example.com>"
+    // All groups are optional
+    // https://www.rfc-editor.org/rfc/rfc5322#page-16
     private static final Pattern nameAddrPattern = Pattern.compile("^((?<name>.+?)\\s)?(\\((?<comment>.+?)\\)\\s)?(<(?<email>.+?)>)?$");
 
     public static final class Builder {
