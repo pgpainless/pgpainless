@@ -381,4 +381,64 @@ public class UserIdTest {
 
         assertEquals("<alice@pgpainless.org>", id.toString());
     }
+
+    @Test
+    public void parseLatinWithDiacritics() {
+        UserId pele = UserId.parse("Pelé@example.com");
+        assertEquals("Pelé@example.com", pele.getEmail());
+
+        pele = UserId.parse("Marquez Pelé <Pelé@example.com>");
+        assertEquals("Pelé@example.com", pele.getEmail());
+        assertEquals("Marquez Pelé", pele.getName());
+    }
+
+    @Test
+    public void parseGreekAlphabet() {
+        UserId dokimi = UserId.parse("δοκιμή@παράδειγμα.δοκιμή");
+        assertEquals("δοκιμή@παράδειγμα.δοκιμή", dokimi.getEmail());
+
+        dokimi = UserId.parse("δοκιμή <δοκιμή@παράδειγμα.δοκιμή>");
+        assertEquals("δοκιμή", dokimi.getName());
+        assertEquals("δοκιμή@παράδειγμα.δοκιμή", dokimi.getEmail());
+    }
+
+    @Test
+    public void parseTraditionalChinese() {
+        UserId womai = UserId.parse("我買@屋企.香港");
+        assertEquals("我買@屋企.香港", womai.getEmail());
+
+        womai = UserId.parse("我買 <我買@屋企.香港>");
+        assertEquals("我買@屋企.香港", womai.getEmail());
+        assertEquals("我買", womai.getName());
+    }
+
+    @Test
+    public void parseJapanese() {
+        UserId ninomiya = UserId.parse("二ノ宮@黒川.日本");
+        assertEquals("二ノ宮@黒川.日本", ninomiya.getEmail());
+
+        ninomiya = UserId.parse("二ノ宮 <二ノ宮@黒川.日本>");
+        assertEquals("二ノ宮@黒川.日本", ninomiya.getEmail());
+        assertEquals("二ノ宮", ninomiya.getName());
+    }
+
+    @Test
+    public void parseCyrillic() {
+        UserId medved = UserId.parse("медведь@с-балалайкой.рф");
+        assertEquals("медведь@с-балалайкой.рф", medved.getEmail());
+
+        medved = UserId.parse("медведь <медведь@с-балалайкой.рф>");
+        assertEquals("медведь@с-балалайкой.рф", medved.getEmail());
+        assertEquals("медведь", medved.getName());
+    }
+
+    @Test
+    public void parseDevanagari() {
+        UserId samparka = UserId.parse("संपर्क@डाटामेल.भारत");
+        assertEquals("संपर्क@डाटामेल.भारत", samparka.getEmail());
+
+        samparka = UserId.parse("संपर्क <संपर्क@डाटामेल.भारत>");
+        assertEquals("संपर्क@डाटामेल.भारत", samparka.getEmail());
+        assertEquals("संपर्क", samparka.getName());
+    }
 }
