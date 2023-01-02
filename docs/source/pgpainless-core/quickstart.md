@@ -326,3 +326,165 @@ verificationStream.close(); // finish verification
 MessageMetadata result = verificationStream.getMetadata(); // get metadata of signed message
 assertTrue(result.isVerifiedSignedBy(certificate)); // check if message was in fact signed
 ```
+
+### Legacy Compatibility
+Out of the box, PGPainless is configured to use secure defaults and perform checks for recommended
+security features. This means that for example messages generated using older OpenPGP
+implementations which do not follow those best practices might fail to decrypt/verify.
+
+It is however possible to circumvent certain security checks to allow processing of such messages.
+
+:::{note}
+It is not recommended to disable security checks, as that might enable certain attacks on the OpenPGP protocol.
+:::
+
+#### Missing / broken MDC (modification detection code)
+RFC4880 has two different types of encrypted data packets. The *Symmetrically Encrypted Data* packet (SED) and the *Symmetrically Encrypted Integrity-Protected Data* packet.
+The latter has an added MDC packet which prevents modifications to the ciphertext.
+
+While implementations are highly encouraged to only use the latter package type, some older implementations still generate
+encrypted data packets which are not integrity protected.
+
+To allow PGPainless to decrypt such messages, you need to set a flag in the `ConsumerOptions` object:
+```java
+ConsumerOptions options = ConsumerOptions.get()
+        .setIgnoreMDCErrors(true) // <-
+        .setDecryptionKey(secretKey)
+        ...
+
+DecryptionStream decryptionStream = PGPainless.decryptAndOrVerify()
+        .onInputStream(ciphertextIn)
+        .withOptions(options);
+...
+```
+
+:::{note}
+It is highly advised to only set this flag if you know what you are doing.
+It might also be a good idea to try decrypting a message without the flag set first and only re-try
+decryption with the flag set in case of a `MessageNotIntegrityProtectedException` (don't forget to rewind the ciphertextInputStream).
+:::
+
+#### Weak keys and broken algorithms
+Some users might cling on to older keys using weak algorithms / small key sizes.
+PGPainless refuses to encrypt to weak certificates and sign with weak keys.
+By default, PGPainless follows the recommendations for acceptable key sizes of [the German BSI in 2021](https://www.bsi.bund.de/SharedDocs/Downloads/EN/BSI/Publications/TechGuidelines/TG02102/BSI-TR-02102-1.pdf).
+It can however be configured to accept older key material / algorithms too.
+
+Minimal key lengths can be configured by changing PGPainless' policy:
+```java
+Map<PublicKeyAlgorithm, Integer> algorithms = new HashMap<>();
+// put all acceptable algorithms and their minimal key length
+algorithms.put(PublicKeyAlgorithm.RSA_GENERAL, 1024);
+algorithms.put(PublicKeyAlgorithm.ECDSA, 100);
+...
+Policy.PublicKeyAlgorithmPolicy pkPolicy = 
+        new Policy.PublicKeyAlgorithmPolicy(algorithms);
+// set the custom algorithm policy
+PGPainless.getPolicy().setPublicKeyAlgorithmPolicy();
+```
+
+Since OpenPGP uses a hybrid encryption scheme of asymmetric and symmetric encryption algorithms,
+it also comes with a policy for symmetric encryption algorithms.
+This list can be modified to allow for weaker algorithms like follows:
+```java
+// default fallback algorithm for message encryption
+SymmetricKeyAlgorithm fallbackAlgorithm = SymmetricKeyAlgorithm.AES_256;
+// acceptable algorithms
+List<SymmetricKeyAlgorithm> algorithms = new ArrayList<>();
+algorithms.add(SymmetricKeyAlgorithm.AES_256);
+algorithms.add(SymmetricKeyAlgorithm.AES_192);
+algorithms.add(SymmetricKeyAlgorithm.AES_128);
+algorithms.add(SymmetricKeyAlgorithm.TWOFISH);
+algorithms.add(SymmetricKeyAlgorithm.BLOWFISH);
+...
+Policy.SymmetricKeyAlgorithmPolicy skPolicy = 
+        new SymmtricKeyAlgorithmPolicy(fallbackAlgorithm, algorithms);
+// set the custom algorithm policy
+// algorithm policy applicable when decrypting messages created by legacy senders:
+PGPainless.getPolicy()
+        .setSymmetricKeyDecryptionAlgorithmPolicy(skPolicy);
+// algorithm policy applicable when generating messages for legacy recipients:
+PGPainless.getPolicy()
+        .setSymmetricKeyEncryptionAlgorithmPolicy(skPolicy);
+```
+
+Hash algorithms are used in OpenPGP to create signatures.
+Since signature verification is an integral part of the OpenPGP protocol, PGPainless comes
+with multiple policies for acceptable hash algorithms, depending on the use-case.
+Revocation signatures are critical, so you might want to handle revocation signatures differently from normal signatures.
+
+By default, PGPainless uses a smart hash algorithm policy for both use-cases, which takes into consideration
+not only the hash algorithm itself, but also the creation date of the signature.
+That way, signatures using SHA-1 are acceptable if they were created before February 2013, but are rejected if their
+creation date is after that point in time.
+
+A custom hash algorithm policy can be set like this:
+```java
+HashAlgorithm fallbackAlgorithm = HashAlgorithm.SHA512;
+Map<HashAlgorithm, Date> algorithms = new HashMap<>();
+// Accept MD5 on signatures made before 1997-02-01
+algorithms.put(HashAlgorithm.MD5,
+        DateUtil.parseUTCDate("1997-02-01 00:00:00 UTC"));
+// Accept SHA-1, regardless of signature creation time
+algorithms.put(HashAlgorithm.SHA1, null);
+...
+Policy.HashAlgorithmPolicy hPolicy =
+        new Policy.HashAlgorithmPolicy(fallbackAlgorithm, algorithms);
+// set policy for revocation signatures
+PGPainless.getPolicy()
+        .setRevocationSignatureHashAlgorithmPolicy(hPolicy);
+// set policy for normal signatures (certifications and document signatures)
+PGPainless.getPolicy()
+        .setSignatureHashAlgorithmPolicy(hPolicy);
+```
+
+Lastly, PGPainless comes with a policy on acceptable compression algorithms, which currently accepts any
+compression algorithm.
+A custom compression algorithm policy can be set in a similar way:
+```java
+CompressionAlgorithm fallback = CompressionAlgorithm.ZIP;
+List<CompressionAlgorithm> algorithms = new ArrayList<>();
+algorithms.add(CompressionAlgorith.ZIP);
+algorithms.add(CompressionAlgorithm.BZIP2);
+...
+Policy.CompressionAlgorithmPolicy cPolicy =
+        new Policy.CompressionAlgorithmPolicy(fallback, algorithms);
+PGPainless.getPolicy()
+        .setCompressionAlgorithmPolicy(cPolicy);
+```
+
+To prevent a class of attacks described in the [paper](https://www.kopenpgp.com/#paper)
+"Victory by KO: Attacking OpenPGP Using Key Overwriting",
+PGPainless offers the option to validate private key material each time before using it,
+to make sure that an attacker didn't tamper with the corresponding public key parameters.
+
+These checks are disabled by default, but they can be enabled as follows:
+```java
+PGPainless.getPolicy()
+        .setEnableKeyParameterValidation(true);
+```
+
+:::{note}
+Validation checks against KOpenPGP attacks are disabled by default, since they are very costly
+and only make sense in certain scenarios.
+Please read and understand the paper to decide, if enabling the checks makes sense for your use-case.
+:::
+
+
+### Known Notations
+In OpenPGP, signatures can contain [notation subpackets](https://www.rfc-editor.org/rfc/rfc4880#section-5.2.3.16).
+A notation can give meaning to a signature, or add additional contextual information.
+Signature subpackets can be marked as critical, meaning an implementation that does not know about
+a certain subpacket MUST reject the signature.
+The same is true for critical notations.
+
+For that reason, PGPainless comes with a `NotationRegistry` class which can be used to register known notations,
+such that a signature containing a critical notation of a certain value is not rejected.
+To register a known notation, you can do the following:
+
+```java
+NotationRegistry registry = PGPainless.getPolicy()
+        .getNotationRegistry();
+
+registry.addKnownNotation("sample@example.com");
+```
