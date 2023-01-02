@@ -409,8 +409,10 @@ public class OpenPgpMessageInputStream extends DecryptionStream {
         PGPEncryptedDataList encDataList = packetInputStream.readEncryptedDataList();
 
         if (!encDataList.isIntegrityProtected()) {
-            LOGGER.debug("Symmetrically Encrypted Data Packet is not integrity-protected and is therefore rejected.");
-            throw new MessageNotIntegrityProtectedException();
+            LOGGER.warn("Symmetrically Encrypted Data Packet is not integrity-protected.");
+            if (!options.isIgnoreMDCErrors()) {
+                throw new MessageNotIntegrityProtectedException();
+            }
         }
 
         SortedESKs esks = new SortedESKs(encDataList);
