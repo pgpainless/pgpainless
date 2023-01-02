@@ -30,3 +30,18 @@ UserId full = UserId.newBuilder()
         .build();
 assertEquals("Peter Pattern (Work Address) <peter@pgpainless.org>", full.toString());
 ```
+
+If you have a User-ID in form of a string (e.g. because a user provided it via a text field),
+you can parse it into its components like this:
+
+```java
+String string = "John Doe <john@doe.corp>";
+UserId userId = UserId.parse(string);
+
+// Now you can access the different components
+assertEquals("John Doe", userId.getName());
+assertEquals("john@doe.corp", userId.getEmail());
+assertNull(userId.getComment());
+```
+
+The method `UserId.parse(String string)` will throw an `IllegalArgumentException` if the User-ID is malformed.
