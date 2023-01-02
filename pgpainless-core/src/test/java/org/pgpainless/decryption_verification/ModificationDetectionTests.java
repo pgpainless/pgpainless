@@ -4,6 +4,7 @@
 
 package org.pgpainless.decryption_verification;
 
+import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 
 import java.io.ByteArrayInputStream;
@@ -374,7 +375,7 @@ public class ModificationDetectionTests {
 
     @TestTemplate
     @ExtendWith(TestAllImplementations.class)
-    public void decryptMessageWithSEDPacket() throws IOException {
+    public void decryptMessageWithSEDPacket() throws IOException, PGPException {
         Passphrase passphrase = Passphrase.fromPassword("flowcrypt compatibility tests");
         String key = "-----BEGIN PGP PRIVATE KEY BLOCK-----\r\n" +
                 "Version: FlowCrypt 6.9.1 Gmail Encryption\r\n" +
@@ -536,6 +537,21 @@ public class ModificationDetectionTests {
                 .withOptions(new ConsumerOptions().addDecryptionKey(secretKeyRing,
                         SecretKeyRingProtector.unlockAnyKeyWith(passphrase)))
         );
+
+        DecryptionStream decryptionStream = PGPainless.decryptAndOrVerify()
+                .onInputStream(new ByteArrayInputStream(ciphertext.getBytes(StandardCharsets.UTF_8)))
+                .withOptions(ConsumerOptions.get().addDecryptionKey(secretKeyRing,
+                        SecretKeyRingProtector.unlockAnyKeyWith(passphrase))
+                        .setIgnoreMDCErrors(true));
+        ByteArrayOutputStream plaintext = new ByteArrayOutputStream();
+        Streams.pipeAll(decryptionStream, plaintext);
+        decryptionStream.close();
+
+        assertEquals("As stated in subject\r\n" +
+                "\r\n" +
+                "Shall not decrypt automatically\r\n" +
+                "\r\n" +
+                "Has to show a warning\r\n", plaintext.toString());
     }
 
     private PGPSecretKeyRingCollection getDecryptionKey() throws IOException {
