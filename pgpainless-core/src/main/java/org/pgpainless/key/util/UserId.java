@@ -96,6 +96,8 @@ public final class UserId implements CharSequence {
      *     <li><pre>" "@example.org</pre> (spaces between the quotes)</li>
      *     <li><pre>"very.(),:;&lt;&gt;[]\".VERY.\"very@\\ \"very\".unusual"@strange.example.com</pre></li>
      * </ul>
+     * Note: This method does not guarantee that <pre>string.equals(UserId.parse(string).toString())</pre> is true.
+     * For example, <pre>UserId.parse("alice@pgpainless.org").toString()</pre> wraps the mail address in angled brackets.
      *
      * @see <a href="https://www.rfc-editor.org/rfc/rfc5322#page-16">RFC5322 §3.4. Address Specification</a>
      * @param string user-id
