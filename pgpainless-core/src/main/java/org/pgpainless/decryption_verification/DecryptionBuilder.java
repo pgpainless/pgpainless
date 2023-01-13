@@ -10,6 +10,11 @@ import javax.annotation.Nonnull;
 
 import org.bouncycastle.openpgp.PGPException;
 
+/**
+ * Builder class that takes an {@link InputStream} of ciphertext (or plaintext signed data)
+ * and combines it with a configured {@link ConsumerOptions} object to form a {@link DecryptionStream} which
+ * can be used to decrypt an OpenPGP message or verify signatures.
+ */
 public class DecryptionBuilder implements DecryptionBuilderInterface {
 
     @Override
