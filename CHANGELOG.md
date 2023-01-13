@@ -5,7 +5,7 @@ SPDX-License-Identifier: CC0-1.0
 
 # PGPainless Changelog
 
-## 1.4.2-SNAPSHOT
+## 1.4.2
 - Properly decrypt messages without MDC packets when `ConsumerOptions.setIgnoreMDCErrors(true)` is set
 - Fix crash in `sop generate-key --with-key-password` when more than one user-id is given
 - Revert integration with `pgp-certificate-store`
