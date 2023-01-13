@@ -6,12 +6,10 @@ package org.pgpainless.decryption_verification;
 
 import java.io.IOException;
 import java.io.InputStream;
-import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.HashSet;
-import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -25,7 +23,6 @@ import org.bouncycastle.openpgp.PGPSecretKeyRing;
 import org.bouncycastle.openpgp.PGPSecretKeyRingCollection;
 import org.bouncycastle.openpgp.PGPSignature;
 import org.bouncycastle.openpgp.operator.PublicKeyDataDecryptorFactory;
-import org.pgpainless.PGPainless;
 import org.pgpainless.decryption_verification.cleartext_signatures.InMemoryMultiPassStrategy;
 import org.pgpainless.decryption_verification.cleartext_signatures.MultiPassStrategy;
 import org.pgpainless.key.SubkeyIdentifier;
@@ -33,9 +30,6 @@ import org.pgpainless.key.protection.SecretKeyRingProtector;
 import org.pgpainless.signature.SignatureUtils;
 import org.pgpainless.util.Passphrase;
 import org.pgpainless.util.SessionKey;
-import pgp.certificate_store.PGPCertificateStore;
-import pgp.certificate_store.certificate.Certificate;
-import pgp.certificate_store.exception.BadDataException;
 
 /**
  * Options for decryption and signature verification.
@@ -132,17 +126,6 @@ public class ConsumerOptions {
         for (PGPPublicKeyRing certificate : verificationCerts) {
             addVerificationCert(certificate);
         }
-        return this;
-    }
-
-    /**
-     * Pass in a {@link PGPCertificateStore} from which certificates can be sourced for signature verification.
-     *
-     * @param certificateStore certificate store
-     * @return options
-     */
-    public ConsumerOptions addVerificationCerts(PGPCertificateStore certificateStore) {
-        this.certificates.addStore(certificateStore);
         return this;
     }
 
@@ -484,17 +467,7 @@ public class ConsumerOptions {
      */
     public static class CertificateSource {
 
-        private List<PGPCertificateStore> stores = new ArrayList<>();
         private Set<PGPPublicKeyRing> explicitCertificates = new HashSet<>();
-
-        /**
-         * Add a certificate store as source for verification certificates.
-         *
-         * @param certificateStore cert store
-         */
-        public void addStore(PGPCertificateStore certificateStore) {
-            this.stores.add(certificateStore);
-        }
 
         /**
          * Add a certificate as verification cert explicitly.
@@ -529,19 +502,6 @@ public class ConsumerOptions {
                 }
             }
 
-            for (PGPCertificateStore store : stores) {
-                try {
-                    Iterator<Certificate> certs = store.getCertificatesBySubkeyId(keyId);
-                    if (!certs.hasNext()) {
-                        continue;
-                    }
-                    Certificate cert = certs.next();
-                    PGPPublicKeyRing publicKey = PGPainless.readKeyRing().publicKeyRing(cert.getInputStream());
-                    return publicKey;
-                } catch (IOException | BadDataException e) {
-                    continue;
-                }
-            }
             return null;
         }
     }
