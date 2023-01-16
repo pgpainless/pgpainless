@@ -23,6 +23,9 @@ import sop.Verification;
 import sop.exception.SOPGPException;
 import sop.operation.DetachedVerify;
 
+/**
+ * Implementation of the <pre>verify</pre> operation using PGPainless.
+ */
 public class DetachedVerifyImpl implements DetachedVerify {
 
     private final ConsumerOptions options = ConsumerOptions.get();

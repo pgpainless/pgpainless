@@ -19,6 +19,9 @@ import sop.Ready;
 import sop.exception.SOPGPException;
 import sop.operation.ExtractCert;
 
+/**
+ * Implementation of the <pre>extract-cert</pre> operation using PGPainless.
+ */
 public class ExtractCertImpl implements ExtractCert {
 
     private boolean armor = true;

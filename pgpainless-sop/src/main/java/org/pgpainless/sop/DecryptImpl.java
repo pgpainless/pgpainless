@@ -34,6 +34,9 @@ import sop.Verification;
 import sop.exception.SOPGPException;
 import sop.operation.Decrypt;
 
+/**
+ * Implementation of the <pre>decrypt</pre> operation using PGPainless.
+ */
 public class DecryptImpl implements Decrypt {
 
     private final ConsumerOptions consumerOptions = ConsumerOptions.get();

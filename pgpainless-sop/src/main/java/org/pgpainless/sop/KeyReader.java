@@ -13,6 +13,9 @@ import sop.exception.SOPGPException;
 import java.io.IOException;
 import java.io.InputStream;
 
+/**
+ * Reader for OpenPGP keys and certificates with error matching according to the SOP spec.
+ */
 class KeyReader {
 
     static PGPSecretKeyRingCollection readSecretKeys(InputStream keyInputStream, boolean requireContent)

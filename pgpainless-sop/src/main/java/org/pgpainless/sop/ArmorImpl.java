@@ -18,6 +18,9 @@ import sop.enums.ArmorLabel;
 import sop.exception.SOPGPException;
 import sop.operation.Armor;
 
+/**
+ * Implementation of the <pre>armor</pre> operation using PGPainless.
+ */
 public class ArmorImpl implements Armor {
 
     @Override

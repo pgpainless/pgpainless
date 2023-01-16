@@ -20,12 +20,21 @@ import org.pgpainless.key.protection.SecretKeyRingProtector;
 import org.pgpainless.key.protection.UnlockSecretKey;
 import org.pgpainless.util.Passphrase;
 
+/**
+ * Implementation of the {@link SecretKeyRingProtector} which can be handed passphrases and keys separately,
+ * and which then matches up passphrases and keys when needed.
+ */
 public class MatchMakingSecretKeyRingProtector implements SecretKeyRingProtector {
 
     private final Set<Passphrase> passphrases = new HashSet<>();
     private final Set<PGPSecretKeyRing> keys = new HashSet<>();
     private final CachingSecretKeyRingProtector protector = new CachingSecretKeyRingProtector();
 
+    /**
+     * Add a single passphrase to the protector.
+     *
+     * @param passphrase passphrase
+     */
     public void addPassphrase(Passphrase passphrase) {
         if (passphrase.isEmpty()) {
             return;
@@ -46,6 +55,11 @@ public class MatchMakingSecretKeyRingProtector implements SecretKeyRingProtector
         }
     }
 
+    /**
+     * Add a single {@link PGPSecretKeyRing} to the protector.
+     *
+     * @param key secret keys
+     */
     public void addSecretKey(PGPSecretKeyRing key) {
         if (!keys.add(key)) {
             return;
@@ -89,6 +103,9 @@ public class MatchMakingSecretKeyRingProtector implements SecretKeyRingProtector
         return protector.getEncryptor(keyId);
     }
 
+    /**
+     * Clear all known passphrases from the protector.
+     */
     public void clear() {
         for (Passphrase passphrase : passphrases) {
             passphrase.clear();

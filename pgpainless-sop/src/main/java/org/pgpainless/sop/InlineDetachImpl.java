@@ -30,6 +30,9 @@ import sop.Signatures;
 import sop.exception.SOPGPException;
 import sop.operation.InlineDetach;
 
+/**
+ * Implementation of the <pre>inline-detach</pre> operation using PGPainless.
+ */
 public class InlineDetachImpl implements InlineDetach {
 
     private boolean armor = true;

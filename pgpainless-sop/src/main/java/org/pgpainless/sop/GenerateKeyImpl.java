@@ -24,6 +24,9 @@ import sop.Ready;
 import sop.exception.SOPGPException;
 import sop.operation.GenerateKey;
 
+/**
+ * Implementation of the <pre>generate-key</pre> operation using PGPainless.
+ */
 public class GenerateKeyImpl implements GenerateKey {
 
     private boolean armor = true;

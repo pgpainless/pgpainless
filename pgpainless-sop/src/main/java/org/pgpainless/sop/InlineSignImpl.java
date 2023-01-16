@@ -29,6 +29,9 @@ import sop.enums.InlineSignAs;
 import sop.exception.SOPGPException;
 import sop.operation.InlineSign;
 
+/**
+ * Implementation of the <pre>inline-sign</pre> operation using PGPainless.
+ */
 public class InlineSignImpl implements InlineSign {
 
     private boolean armor = true;

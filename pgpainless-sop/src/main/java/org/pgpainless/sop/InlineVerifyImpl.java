@@ -26,6 +26,9 @@ import sop.Verification;
 import sop.exception.SOPGPException;
 import sop.operation.InlineVerify;
 
+/**
+ * Implementation of the <pre>inline-verify</pre> operation using PGPainless.
+ */
 public class InlineVerifyImpl implements InlineVerify {
 
     private final ConsumerOptions options = ConsumerOptions.get();

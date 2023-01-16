@@ -18,6 +18,10 @@ public class PGPainlessCLI {
         SopCLI.setSopInstance(new SOPImpl());
     }
 
+    /**
+     * Main method of the CLI application.
+     * @param args arguments
+     */
     public static void main(String[] args) {
         int result = execute(args);
         if (result != 0) {
@@ -25,6 +29,12 @@ public class PGPainlessCLI {
         }
     }
 
+    /**
+     * Execute the given command and return the exit code of the program.
+     *
+     * @param args command string array (e.g. ["pgpainless-cli", "generate-key", "Alice"])
+     * @return exit code
+     */
     public static int execute(String... args) {
         return SopCLI.execute(args);
     }

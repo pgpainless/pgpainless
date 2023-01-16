@@ -34,6 +34,9 @@ import sop.exception.SOPGPException;
 import sop.operation.Encrypt;
 import sop.util.ProxyOutputStream;
 
+/**
+ * Implementation of the <pre>encrypt</pre> operation using PGPainless.
+ */
 public class EncryptImpl implements Encrypt {
 
     EncryptionOptions encryptionOptions = EncryptionOptions.get();

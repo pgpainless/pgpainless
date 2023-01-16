@@ -12,6 +12,9 @@ import java.util.Properties;
 import org.bouncycastle.jce.provider.BouncyCastleProvider;
 import sop.operation.Version;
 
+/**
+ * Implementation of the <pre>version</pre> operation using PGPainless.
+ */
 public class VersionImpl implements Version {
 
     // draft version

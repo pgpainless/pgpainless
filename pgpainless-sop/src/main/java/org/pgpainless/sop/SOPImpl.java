@@ -19,6 +19,12 @@ import sop.operation.InlineSign;
 import sop.operation.InlineVerify;
 import sop.operation.Version;
 
+/**
+ * Implementation of the <pre>sop</pre> API using PGPainless.
+ * <pre> {@code
+ * SOP sop = new SOPImpl();
+ * }</pre>
+ */
 public class SOPImpl implements SOP {
 
     static {

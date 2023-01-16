@@ -36,6 +36,9 @@ import sop.enums.SignAs;
 import sop.exception.SOPGPException;
 import sop.operation.DetachedSign;
 
+/**
+ * Implementation of the <pre>sign</pre> operation using PGPainless.
+ */
 public class DetachedSignImpl implements DetachedSign {
 
     private boolean armor = true;
