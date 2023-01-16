@@ -41,6 +41,11 @@ public enum AEADAlgorithm {
         this.tagLength = tagLength;
     }
 
+    /**
+     * Return the ID of the AEAD algorithm.
+     *
+     * @return algorithm ID
+     */
     public int getAlgorithmId() {
         return algorithmId;
     }

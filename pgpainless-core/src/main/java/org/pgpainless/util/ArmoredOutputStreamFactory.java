@@ -15,6 +15,9 @@ import org.pgpainless.encryption_signing.ProducerOptions;
  */
 public final class ArmoredOutputStreamFactory {
 
+    /**
+     * Name of the program.
+     */
     public static final String PGPAINLESS = "PGPainless";
     private static String version = PGPAINLESS;
     private static String[] comment = new String[0];
@@ -42,6 +45,13 @@ public final class ArmoredOutputStreamFactory {
         return armoredOutputStream;
     }
 
+    /**
+     * Return an instance of the {@link ArmoredOutputStream} which might have pre-populated armor headers.
+     *
+     * @param outputStream output stream
+     * @param options options
+     * @return armored output stream
+     */
     public static ArmoredOutputStream get(OutputStream outputStream, ProducerOptions options) {
         if (options.isHideArmorHeaders()) {
             ArmoredOutputStream armorOut = new ArmoredOutputStream(outputStream);

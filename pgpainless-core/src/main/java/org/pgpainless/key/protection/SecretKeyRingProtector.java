@@ -29,6 +29,12 @@ import org.pgpainless.util.Passphrase;
  */
 public interface SecretKeyRingProtector {
 
+    /**
+     * Returns true, if the protector has a passphrase for the key with the given key-id.
+     *
+     * @param keyId key id
+     * @return true if it has a passphrase, false otherwise
+     */
     boolean hasPassphraseFor(Long keyId);
 
     /**

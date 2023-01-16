@@ -13,15 +13,31 @@ import org.pgpainless.util.Passphrase;
 
 import javax.annotation.Nullable;
 
+/**
+ * Basic {@link SecretKeyRingProtector} implementation that respects the users {@link KeyRingProtectionSettings} when
+ * encrypting keys.
+ */
 public class BaseSecretKeyRingProtector implements SecretKeyRingProtector {
 
     private final SecretKeyPassphraseProvider passphraseProvider;
     private final KeyRingProtectionSettings protectionSettings;
 
+    /**
+     * Constructor that uses the given {@link SecretKeyPassphraseProvider} to retrieve passphrases and PGPainless'
+     * default {@link KeyRingProtectionSettings}.
+     *
+     * @param passphraseProvider provider for passphrases
+     */
     public BaseSecretKeyRingProtector(SecretKeyPassphraseProvider passphraseProvider) {
         this(passphraseProvider, KeyRingProtectionSettings.secureDefaultSettings());
     }
 
+    /**
+     * Constructor that uses the given {@link SecretKeyPassphraseProvider} and {@link KeyRingProtectionSettings}.
+     *
+     * @param passphraseProvider provider for passphrases
+     * @param protectionSettings protection settings
+     */
     public BaseSecretKeyRingProtector(SecretKeyPassphraseProvider passphraseProvider, KeyRingProtectionSettings protectionSettings) {
         this.passphraseProvider = passphraseProvider;
         this.protectionSettings = protectionSettings;

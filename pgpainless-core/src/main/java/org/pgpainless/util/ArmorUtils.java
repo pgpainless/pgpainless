@@ -33,15 +33,33 @@ import org.pgpainless.algorithm.HashAlgorithm;
 import org.pgpainless.decryption_verification.OpenPgpInputStream;
 import org.pgpainless.key.OpenPgpFingerprint;
 
+/**
+ * Utility class for dealing with ASCII armored OpenPGP data.
+ */
 public final class ArmorUtils {
 
     // MessageIDs are 32 printable characters
     private static final Pattern PATTERN_MESSAGE_ID = Pattern.compile("^\\S{32}$");
 
+    /**
+     * Constant armor key for comments.
+     */
     public static final String HEADER_COMMENT = "Comment";
+    /**
+     * Constant armor key for program versions.
+     */
     public static final String HEADER_VERSION = "Version";
+    /**
+     * Constant armor key for message IDs. Useful for split messages.
+     */
     public static final String HEADER_MESSAGEID = "MessageID";
+    /**
+     * Constant armor key for used hash algorithms in clearsigned messages.
+     */
     public static final String HEADER_HASH = "Hash";
+    /**
+     * Constant armor key for message character sets.
+     */
     public static final String HEADER_CHARSET = "Charset";
 
     private ArmorUtils() {
