@@ -5,6 +5,10 @@ SPDX-License-Identifier: CC0-1.0
 
 # PGPainless Changelog
 
+## 1.3.16-SNAPSHOT
+- Bump `sop-java` to `4.1.0`
+- Bump `gradlew` to `7.5`
+
 ## 1.3.15
 - Fix crash in `sop generate-key --with-key-password` when more than one user-id is given
 - `sop generate-key`: Allow key generation without user-ids
