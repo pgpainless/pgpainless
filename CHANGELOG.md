@@ -5,7 +5,7 @@ SPDX-License-Identifier: CC0-1.0
 
 # PGPainless Changelog
 
-## 1.3.16-SNAPSHOT
+## 1.3.16
 - Bump `sop-java` to `4.1.0`
 - Bump `gradlew` to `7.5`
 
