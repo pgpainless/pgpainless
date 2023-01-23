@@ -970,7 +970,7 @@ public class OpenPgpMessageInputStream extends DecryptionStream {
                 LOGGER.debug("No suitable certificate for verification of signature by key " + KeyIdUtil.formatKeyId(keyId) + " found.");
                 inbandSignaturesWithMissingCert.add(new SignatureVerification.Failure(
                         new SignatureVerification(signature, null),
-                        new SignatureValidationException("Missing verification key.")));
+                        new SignatureValidationException("Missing verification key")));
             }
         }
 
