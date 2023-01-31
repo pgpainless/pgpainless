@@ -5,7 +5,7 @@ SPDX-License-Identifier: CC0-1.0
 
 # PGPainless Changelog
 
-## 1.4.3-SNAPSHOT
+## 1.4.3
 - Bump `sop-java` to `4.1.1`
 - Reuse shared test suite of `sop-java`
 - Add `EncryptionOptions.hasEncryptionMethod()`
