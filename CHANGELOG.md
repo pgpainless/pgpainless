@@ -5,6 +5,13 @@ SPDX-License-Identifier: CC0-1.0
 
 # PGPainless Changelog
 
+## 1.4.3-SNAPSHOT
+- Bump `sop-java` to `4.1.1`
+- Reuse shared test suite of `sop-java`
+- Add `EncryptionOptions.hasEncryptionMethod()`
+- SOP `encrypt`: Throw `MissingArg` exception if no encryption method was provided
+- Fix redundant dot in exception message (thanks @DenBond7)
+
 ## 1.4.2
 - Properly decrypt messages without MDC packets when `ConsumerOptions.setIgnoreMDCErrors(true)` is set
 - Fix crash in `sop generate-key --with-key-password` when more than one user-id is given
