@@ -113,6 +113,9 @@ public class EncryptImpl implements Encrypt {
 
     @Override
     public Ready plaintext(InputStream plaintext) throws IOException {
+        if (!encryptionOptions.hasEncryptionMethod()) {
+            throw new SOPGPException.MissingArg("Missing encryption method.");
+        }
         ProducerOptions producerOptions = signingOptions != null ?
                 ProducerOptions.signAndEncrypt(encryptionOptions, signingOptions) :
                 ProducerOptions.encrypt(encryptionOptions);
