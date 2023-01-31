@@ -311,6 +311,16 @@ public class EncryptionOptions {
         return this;
     }
 
+    /**
+     * Return <pre>true</pre> iff the user specified at least one encryption method,
+     * <pre>false</pre> otherwise.
+     *
+     * @return encryption methods is not empty
+     */
+    public boolean hasEncryptionMethod() {
+        return !encryptionMethods.isEmpty();
+    }
+
     public interface EncryptionKeySelector {
         List<PGPPublicKey> selectEncryptionSubkeys(List<PGPPublicKey> encryptionCapableKeys);
     }
