@@ -21,10 +21,14 @@ dependencies {
     // Logging
     testImplementation "ch.qos.logback:logback-classic:$logbackVersion"
 
+    // Depend on "shared" sop-java test suite (fixtures are turned into tests by inheritance inside test sources)
+    testImplementation(testFixtures("org.pgpainless:sop-java:$sopJavaVersion"))
+
     implementation(project(":pgpainless-core"))
     api "org.pgpainless:sop-java:$sopJavaVersion"
 }
 
 test {
     useJUnitPlatform()
+    environment("test.implementation", "sop.testsuite.pgpainless.PGPainlessSopInstanceFactory")
 }
