@@ -141,6 +141,9 @@ public final class SignatureSubpacketsUtil {
      * @return signature creation time subpacket
      */
     public static @Nullable SignatureCreationTime getSignatureCreationTime(PGPSignature signature) {
+        if (signature.getVersion() == 3) {
+            return new SignatureCreationTime(false, signature.getCreationTime());
+        }
         return hashed(signature, SignatureSubpacket.signatureCreationTime);
     }
 
