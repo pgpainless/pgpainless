@@ -158,8 +158,10 @@ public abstract class SignatureValidator {
             @Override
             public void verify(PGPSignature signature) throws SignatureValidationException {
                 signatureIsNotMalformed(signingKey).verify(signature);
-                signatureDoesNotHaveCriticalUnknownNotations(policy.getNotationRegistry()).verify(signature);
-                signatureDoesNotHaveCriticalUnknownSubpackets().verify(signature);
+                if (signature.getVersion() >= 4) {
+                    signatureDoesNotHaveCriticalUnknownNotations(policy.getNotationRegistry()).verify(signature);
+                    signatureDoesNotHaveCriticalUnknownSubpackets().verify(signature);
+                }
                 signatureUsesAcceptableHashAlgorithm(policy).verify(signature);
                 signatureUsesAcceptablePublicKeyAlgorithm(policy, signingKey).verify(signature);
             }
@@ -373,7 +375,9 @@ public abstract class SignatureValidator {
         return new SignatureValidator() {
             @Override
             public void verify(PGPSignature signature) throws SignatureValidationException {
-                signatureHasHashedCreationTime().verify(signature);
+                if (signature.getVersion() >= 4) {
+                    signatureHasHashedCreationTime().verify(signature);
+                }
                 signatureDoesNotPredateSigningKey(creator).verify(signature);
                 if (signature.getSignatureType() != SignatureType.PRIMARYKEY_BINDING.getCode()) {
                     signatureDoesNotPredateSigningKeyBindingDate(creator).verify(signature);
