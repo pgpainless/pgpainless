@@ -5,6 +5,11 @@ SPDX-License-Identifier: CC0-1.0
 
 # PGPainless Changelog
 
+## 1.4.4-SNAPSHOT
+- Fix expectations on subpackets of v3 signatures (thanks @bjansen)
+  - Properly verify v3 signatures, which do not yet have signature subpackets, yet we required them to have  
+    a hashed creation date subpacket.
+
 ## 1.4.3
 - Bump `sop-java` to `4.1.1`
 - Reuse shared test suite of `sop-java`
