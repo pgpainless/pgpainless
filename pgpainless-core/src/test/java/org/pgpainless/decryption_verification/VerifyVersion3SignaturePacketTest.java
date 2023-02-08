@@ -1,3 +1,7 @@
+// SPDX-FileCopyrightText: 2023 Bastien Jansen
+//
+// SPDX-License-Identifier: Apache-2.0
+
 package org.pgpainless.decryption_verification;
 
 import org.bouncycastle.openpgp.PGPException;
