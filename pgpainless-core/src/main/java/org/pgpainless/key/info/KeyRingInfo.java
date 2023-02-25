@@ -611,7 +611,7 @@ public class KeyRingInfo {
      *
      * @return last modification date.
      */
-    public @Nullable Date getLastModified() {
+    public @Nonnull Date getLastModified() {
         PGPSignature mostRecent = getMostRecentSignature();
         if (mostRecent == null) {
             // No sigs found. Return public key creation date instead.
