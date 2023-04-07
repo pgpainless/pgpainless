@@ -691,15 +691,19 @@ public class OpenPgpMessageInputStream extends DecryptionStream {
                 continue;
             }
 
-            KeyRingInfo info = new KeyRingInfo(secretKeys, policy, new Date());
-            List<PGPPublicKey> encryptionKeys = info.getEncryptionSubkeys(EncryptionPurpose.ANY);
-            for (PGPPublicKey key : encryptionKeys) {
-                if (key.getKeyID() == keyID) {
-                    return secretKeys;
+            if (options.isRequireValidDecryptionKey()) {
+                KeyRingInfo info = new KeyRingInfo(secretKeys, policy, new Date());
+                List<PGPPublicKey> encryptionKeys = info.getEncryptionSubkeys(EncryptionPurpose.ANY);
+                for (PGPPublicKey key : encryptionKeys) {
+                    if (key.getKeyID() == keyID) {
+                        return secretKeys;
+                    }
                 }
+                LOGGER.debug("Subkey " + Long.toHexString(keyID) + " cannot be used for decryption.");
+            } else {
+                return secretKeys;
             }
 
-            LOGGER.debug("Subkey " + Long.toHexString(keyID) + " cannot be used for decryption.");
         }
         return null;
     }

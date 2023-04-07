@@ -37,6 +37,7 @@ import org.pgpainless.util.SessionKey;
 public class ConsumerOptions {
 
     private boolean ignoreMDCErrors = false;
+    private boolean requireValidDecryptionKey = true;
     private boolean forceNonOpenPgpData = false;
 
     private Date verifyNotBefore = null;
@@ -389,6 +390,15 @@ public class ConsumerOptions {
      */
     boolean isIgnoreMDCErrors() {
         return ignoreMDCErrors;
+    }
+
+    public ConsumerOptions setRequireValidDecryptionKey(boolean requireValidDecryptionKey) {
+        this.requireValidDecryptionKey = requireValidDecryptionKey;
+        return this;
+    }
+
+    boolean isRequireValidDecryptionKey() {
+        return requireValidDecryptionKey;
     }
 
     /**
