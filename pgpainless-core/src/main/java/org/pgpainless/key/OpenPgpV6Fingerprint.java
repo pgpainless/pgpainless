@@ -1,4 +1,4 @@
-// SPDX-FileCopyrightText: 2022 Paul Schaub <vanitasvitae@fsfe.org>
+// SPDX-FileCopyrightText: 2023 Paul Schaub <vanitasvitae@fsfe.org>
 //
 // SPDX-License-Identifier: Apache-2.0
 
@@ -13,46 +13,46 @@ import org.bouncycastle.openpgp.PGPSecretKey;
 import org.bouncycastle.openpgp.PGPSecretKeyRing;
 
 /**
- * This class represents a hex encoded, upper case OpenPGP v5 fingerprint.
+ * This class represents a hex encoded, upper case OpenPGP v6 fingerprint.
  */
-public class OpenPgpV5Fingerprint extends _64DigitFingerprint {
+public class OpenPgpV6Fingerprint extends _64DigitFingerprint {
 
     /**
-     * Create an {@link OpenPgpV5Fingerprint}.
+     * Create an {@link OpenPgpV6Fingerprint}.
      *
      * @param fingerprint uppercase hexadecimal fingerprint of length 64
      */
-    public OpenPgpV5Fingerprint(@Nonnull String fingerprint) {
+    public OpenPgpV6Fingerprint(@Nonnull String fingerprint) {
         super(fingerprint);
     }
 
-    public OpenPgpV5Fingerprint(@Nonnull byte[] bytes) {
+    public OpenPgpV6Fingerprint(@Nonnull byte[] bytes) {
         super(bytes);
     }
 
-    public OpenPgpV5Fingerprint(@Nonnull PGPPublicKey key) {
+    public OpenPgpV6Fingerprint(@Nonnull PGPPublicKey key) {
         super(key);
     }
 
-    public OpenPgpV5Fingerprint(@Nonnull PGPSecretKey key) {
+    public OpenPgpV6Fingerprint(@Nonnull PGPSecretKey key) {
         this(key.getPublicKey());
     }
 
-    public OpenPgpV5Fingerprint(@Nonnull PGPPublicKeyRing ring) {
+    public OpenPgpV6Fingerprint(@Nonnull PGPPublicKeyRing ring) {
         super(ring);
     }
 
-    public OpenPgpV5Fingerprint(@Nonnull PGPSecretKeyRing ring) {
+    public OpenPgpV6Fingerprint(@Nonnull PGPSecretKeyRing ring) {
         super(ring);
     }
 
-    public OpenPgpV5Fingerprint(@Nonnull PGPKeyRing ring) {
+    public OpenPgpV6Fingerprint(@Nonnull PGPKeyRing ring) {
         super(ring);
     }
 
     @Override
     public int getVersion() {
-        return 5;
+        return 6;
     }
 
 }
