@@ -55,7 +55,9 @@ public abstract class OpenPgpFingerprint implements CharSequence, Comparable<Ope
      *
      * @param fingerprint fingerprint
      * @return parsed fingerprint
+     * @deprecated Use the parse() methods of the versioned fingerprint subclasses instead.
      */
+    @Deprecated
     public static OpenPgpFingerprint parse(String fingerprint) {
         String fp = fingerprint.replace(" ", "").trim().toUpperCase();
         if (fp.matches("^[0-9A-F]{40}$")) {
@@ -72,7 +74,9 @@ public abstract class OpenPgpFingerprint implements CharSequence, Comparable<Ope
      *
      * @param binaryFingerprint binary representation of the fingerprint
      * @return parsed fingerprint
+     * @deprecated use the parse() methods of the versioned fingerprint subclasses instead.
      */
+    @Deprecated
     public static OpenPgpFingerprint parseFromBinary(byte[] binaryFingerprint) {
         String hex = Hex.toHexString(binaryFingerprint).toUpperCase();
         return parse(hex);
