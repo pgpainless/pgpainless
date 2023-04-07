@@ -903,7 +903,7 @@ public class KeyRingInfo {
      */
     public @Nonnull List<PGPPublicKey> getEncryptionSubkeys(EncryptionPurpose purpose) {
         Date primaryExpiration = getPrimaryKeyExpirationDate();
-        if (primaryExpiration != null && primaryExpiration.before(new Date())) {
+        if (primaryExpiration != null && primaryExpiration.before(referenceDate)) {
             return Collections.emptyList();
         }
 
@@ -917,7 +917,7 @@ public class KeyRingInfo {
             }
 
             Date subkeyExpiration = getSubkeyExpirationDate(OpenPgpFingerprint.of(subKey));
-            if (subkeyExpiration != null && subkeyExpiration.before(new Date())) {
+            if (subkeyExpiration != null && subkeyExpiration.before(referenceDate)) {
                 continue;
             }
 
