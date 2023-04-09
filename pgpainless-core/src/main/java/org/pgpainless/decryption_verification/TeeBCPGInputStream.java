@@ -120,7 +120,7 @@ public class TeeBCPGInputStream {
                 last = inputStream.read();
                 return last;
             } catch (IOException e) {
-                if ("crc check failed in armored message.".equals(e.getMessage())) {
+                if (e.getMessage().contains("crc check failed in armored message")) {
                     throw e;
                 }
                 return -1;
