@@ -18,7 +18,7 @@ import sop.operation.Version;
 public class VersionImpl implements Version {
 
     // draft version
-    private static final String SOP_VERSION = "04";
+    private static final String SOP_VERSION = "05";
 
     @Override
     public String getName() {
