@@ -17,6 +17,7 @@ import sop.operation.ExtractCert;
 import sop.operation.GenerateKey;
 import sop.operation.InlineSign;
 import sop.operation.InlineVerify;
+import sop.operation.ListProfiles;
 import sop.operation.Version;
 
 /**
@@ -94,6 +95,11 @@ public class SOPImpl implements SOP {
     @Override
     public Dearmor dearmor() {
         return new DearmorImpl();
+    }
+
+    @Override
+    public ListProfiles listProfiles() {
+        return new ListProfilesImpl();
     }
 
     @Override
