@@ -8,7 +8,9 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.nio.charset.Charset;
+import java.util.Arrays;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Set;
 
 import org.bouncycastle.openpgp.PGPException;
@@ -28,6 +30,7 @@ import org.pgpainless.exception.WrongPassphraseException;
 import org.pgpainless.key.OpenPgpFingerprint;
 import org.pgpainless.key.info.KeyRingInfo;
 import org.pgpainless.util.Passphrase;
+import sop.Profile;
 import sop.Ready;
 import sop.enums.EncryptAs;
 import sop.exception.SOPGPException;
@@ -39,10 +42,15 @@ import sop.util.ProxyOutputStream;
  */
 public class EncryptImpl implements Encrypt {
 
+    private static final Profile DEFAULT_PROFILE = new Profile("default", "Use the implementer's recommendations");
+
+    public static final List<Profile> SUPPORTED_PROFILES = Arrays.asList(DEFAULT_PROFILE);
+
     EncryptionOptions encryptionOptions = EncryptionOptions.get();
     SigningOptions signingOptions = null;
     MatchMakingSecretKeyRingProtector protector = new MatchMakingSecretKeyRingProtector();
     private final Set<PGPSecretKeyRing> signingKeys = new HashSet<>();
+    private String profile = DEFAULT_PROFILE.getName(); // TODO: Use in future releases
 
     private EncryptAs encryptAs = EncryptAs.Binary;
     boolean armor = true;
@@ -109,6 +117,18 @@ public class EncryptImpl implements Encrypt {
             throw new SOPGPException.BadData(e);
         }
         return this;
+    }
+
+    @Override
+    public Encrypt profile(String profileName) {
+        for (Profile profile : SUPPORTED_PROFILES) {
+            if (profile.getName().equals(profileName)) {
+                this.profile = profile.getName();
+                return this;
+            }
+        }
+
+        throw new SOPGPException.UnsupportedProfile("encrypt", profileName);
     }
 
     @Override

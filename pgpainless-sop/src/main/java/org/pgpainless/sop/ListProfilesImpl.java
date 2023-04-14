@@ -22,6 +22,9 @@ public class ListProfilesImpl implements ListProfiles {
             case "generate-key":
                 return GenerateKeyImpl.SUPPORTED_PROFILES;
 
+            case "encrypt":
+                return EncryptImpl.SUPPORTED_PROFILES;
+
             default:
                 throw new SOPGPException.UnsupportedProfile(command);
         }
