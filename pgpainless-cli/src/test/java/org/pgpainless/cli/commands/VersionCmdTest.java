@@ -41,4 +41,12 @@ public class VersionCmdTest extends CLITest {
         assertTrue(info.contains("Bouncy Castle"));
         assertTrue(info.contains("Stateless OpenPGP Protocol"));
     }
+
+    @Test
+    public void testSopSpecVersion() throws IOException {
+        ByteArrayOutputStream out = pipeStdoutToStream();
+        assertSuccess(executeCommand("version", "--sop-spec"));
+        String info = out.toString();
+        assertTrue(info.startsWith("draft-dkg-openpgp-stateless-cli-"));
+    }
 }

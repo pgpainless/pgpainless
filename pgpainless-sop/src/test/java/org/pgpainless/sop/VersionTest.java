@@ -7,6 +7,7 @@ package org.pgpainless.sop;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
@@ -48,5 +49,27 @@ public class VersionTest {
 
         String firstLine = extendedVersion.split("\n")[0];
         assertEquals(sop.version().getName() + " " + sop.version().getVersion(), firstLine);
+    }
+
+    @Test
+    public void testGetSopSpecVersion() {
+        boolean incomplete = sop.version().isSopSpecImplementationIncomplete();
+        int revisionNumber = sop.version().getSopSpecVersionNumber();
+
+        String revisionString = sop.version().getSopSpecRevisionString();
+        assertEquals("draft-dkg-openpgp-stateless-cli-" + String.format("%02d", revisionNumber), revisionString);
+
+        String incompletenessRemarks = sop.version().getSopSpecImplementationIncompletenessRemarks();
+
+        String fullSopSpecVersion = sop.version().getSopSpecVersion();
+        if (incomplete) {
+            assertTrue(fullSopSpecVersion.startsWith("~" + revisionString));
+        } else {
+            assertTrue(fullSopSpecVersion.startsWith(revisionString));
+        }
+
+        if (incompletenessRemarks != null) {
+            assertTrue(fullSopSpecVersion.endsWith(incompletenessRemarks));
+        }
     }
 }

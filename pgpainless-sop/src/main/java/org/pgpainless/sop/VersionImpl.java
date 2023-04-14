@@ -18,7 +18,7 @@ import sop.operation.Version;
 public class VersionImpl implements Version {
 
     // draft version
-    private static final String SOP_VERSION = "06";
+    private static final int SOP_VERSION = 6;
 
     @Override
     public String getName() {
@@ -51,11 +51,12 @@ public class VersionImpl implements Version {
 
     @Override
     public String getExtendedVersion() {
+        String FORMAT_VERSION = String.format("%02d", SOP_VERSION);
         return getName() + " " + getVersion() + "\n" +
                 "https://codeberg.org/PGPainless/pgpainless/src/branch/master/pgpainless-sop\n" +
                 "\n" +
-                "Implementation of the Stateless OpenPGP Protocol Version " + SOP_VERSION + "\n" +
-                "https://datatracker.ietf.org/doc/html/draft-dkg-openpgp-stateless-cli-" + SOP_VERSION + "\n" +
+                "Implementation of the Stateless OpenPGP Protocol Version " + FORMAT_VERSION + "\n" +
+                "https://datatracker.ietf.org/doc/html/draft-dkg-openpgp-stateless-cli-" + FORMAT_VERSION + "\n" +
                 "\n" +
                 "Based on pgpainless-core " + getVersion() + "\n" +
                 "https://pgpainless.org\n" +
@@ -65,7 +66,17 @@ public class VersionImpl implements Version {
     }
 
     @Override
-    public String getSopSpecVersion() {
-        return "draft-dkg-openpgp-stateless-cli-" + SOP_VERSION;
+    public int getSopSpecVersionNumber() {
+        return SOP_VERSION;
+    }
+
+    @Override
+    public boolean isSopSpecImplementationIncomplete() {
+        return false;
+    }
+
+    @Override
+    public String getSopSpecImplementationIncompletenessRemarks() {
+        return null;
     }
 }
