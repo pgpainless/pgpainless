@@ -63,4 +63,9 @@ public class VersionImpl implements Version {
                 "Using " + getBackendVersion() + "\n" +
                 "https://www.bouncycastle.org/java.html";
     }
+
+    @Override
+    public String getSopSpecVersion() {
+        return "draft-dkg-openpgp-stateless-cli-" + SOP_VERSION;
+    }
 }
