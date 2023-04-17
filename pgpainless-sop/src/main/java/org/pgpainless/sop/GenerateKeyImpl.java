@@ -63,13 +63,16 @@ public class GenerateKeyImpl implements GenerateKey {
 
     @Override
     public GenerateKey profile(String profileName) {
+        // Sanitize the profile name to make sure we support the given profile
         for (Profile profile : SUPPORTED_PROFILES) {
             if (profile.getName().equals(profileName)) {
                 this.profile = profileName;
+                // return if we found the profile
                 return this;
             }
         }
 
+        // profile not found, throw
         throw new SOPGPException.UnsupportedProfile("generate-key", profileName);
     }
 
@@ -126,6 +129,7 @@ public class GenerateKeyImpl implements GenerateKey {
                     .simpleRsaKeyRing(primaryUserId, RsaLength._4096, passphrase);
         }
         else {
+            // Missing else-if branch for profile. Oops.
             throw new SOPGPException.UnsupportedProfile("generate-key", profile);
         }
         return key;
