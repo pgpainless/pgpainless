@@ -5,6 +5,14 @@ SPDX-License-Identifier: CC0-1.0
 
 # PGPainless Changelog
 
+## 1.5.0-SNAPSHOT
+- Introduce `OpenPgpv6Fingerprint` class
+- Bump `sop-java` to `5.0.0`, implementing [SOP Spec Revision 05](https://www.ietf.org/archive/id/draft-dkg-openpgp-stateless-cli-05.html)
+  - Add support for `list-profiles` subcommand (`generate-key` only for now)
+  - `generate-key`: Add support for `--profile=` option
+    - Add profile `draft-koch-eddsa-for-openpgp-00` which represents status quo.
+    - Add profile `rfc4880` which generates keys based on 4096-bit RSA.
+
 ## 1.4.4
 - Fix expectations on subpackets of v3 signatures (thanks @bjansen)
   - Properly verify v3 signatures, which do not yet have signature subpackets, yet we required them to have  
