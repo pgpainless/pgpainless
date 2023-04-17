@@ -6,6 +6,8 @@ SPDX-License-Identifier: CC0-1.0
 # PGPainless Changelog
 
 ## 1.5.0-SNAPSHOT
+- Bump `bcpg-jdk15to18` to `1.73`
+- Bump `bcprov-jdk15to18` to `1.73`
 - Introduce `OpenPgpv6Fingerprint` class
 - Bump `sop-java` to `5.0.0`, implementing [SOP Spec Revision 05](https://www.ietf.org/archive/id/draft-dkg-openpgp-stateless-cli-05.html)
   - Add support for `list-profiles` subcommand (`generate-key` only for now)
