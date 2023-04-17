@@ -12,6 +12,10 @@ SPDX-License-Identifier: CC0-1.0
   - `generate-key`: Add support for `--profile=` option
     - Add profile `draft-koch-eddsa-for-openpgp-00` which represents status quo.
     - Add profile `rfc4880` which generates keys based on 4096-bit RSA.
+- Bump `sop-java` to `6.0.0`, implementing [SOP Spec Revision 06](https://www.ietf.org/archive/id/draft-dkg-openpgp-stateless-cli-06.html)
+  - `encrypt`: Add support for `--profile=` option
+    - Add profile `rfc4880` to reflect status quo
+  - `version`: Add support for `--sop-spec` option
 
 ## 1.4.4
 - Fix expectations on subpackets of v3 signatures (thanks @bjansen)
