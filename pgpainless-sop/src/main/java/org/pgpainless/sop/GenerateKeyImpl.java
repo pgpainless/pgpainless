@@ -33,16 +33,15 @@ import sop.operation.GenerateKey;
  */
 public class GenerateKeyImpl implements GenerateKey {
 
-    public static final Profile DEFAULT_PROFILE = new Profile("default", "Generate keys based on XDH and EdDSA");
-    public static final Profile RSA3072_PROFILE = new Profile("rfc4880-rsa3072@pgpainless.org", "Generate 3072-bit RSA keys");
-    public static final Profile RSA4096_PROFILE = new Profile("rfc4880-rsa4096@pgpainless.org", "Generate 4096-bit RSA keys");
+    public static final Profile CURVE25519_PROFILE = new Profile("draft-koch-eddsa-for-openpgp-00", "Generate EdDSA / ECDH keys using Curve25519");
+    public static final Profile RSA4096_PROFILE = new Profile("rfc4880", "Generate 4096-bit RSA keys");
 
-    public static final List<Profile> SUPPORTED_PROFILES = Arrays.asList(DEFAULT_PROFILE, RSA3072_PROFILE, RSA4096_PROFILE);
+    public static final List<Profile> SUPPORTED_PROFILES = Arrays.asList(CURVE25519_PROFILE, RSA4096_PROFILE);
 
     private boolean armor = true;
     private final Set<String> userIds = new LinkedHashSet<>();
     private Passphrase passphrase = Passphrase.emptyPassphrase();
-    private String profile = DEFAULT_PROFILE.getName();
+    private String profile = CURVE25519_PROFILE.getName();
 
     @Override
     public GenerateKey noArmor() {
@@ -117,14 +116,11 @@ public class GenerateKeyImpl implements GenerateKey {
             throws PGPException, InvalidAlgorithmParameterException, NoSuchAlgorithmException {
         PGPSecretKeyRing key;
         // XDH + EdDSA
-        if (profile.equals(DEFAULT_PROFILE.getName())) {
+        if (profile.equals(CURVE25519_PROFILE.getName())) {
             key = PGPainless.generateKeyRing()
                     .modernKeyRing(primaryUserId, passphrase);
         }
-        else if (profile.equals(RSA3072_PROFILE.getName())) {
-            key = PGPainless.generateKeyRing()
-                    .simpleRsaKeyRing(primaryUserId, RsaLength._3072, passphrase);
-        }
+        // RSA 4096
         else if (profile.equals(RSA4096_PROFILE.getName())) {
             key = PGPainless.generateKeyRing()
                     .simpleRsaKeyRing(primaryUserId, RsaLength._4096, passphrase);
