@@ -5,7 +5,7 @@ SPDX-License-Identifier: CC0-1.0
 
 # PGPainless Changelog
 
-## 1.5.0-SNAPSHOT
+## 1.5.0
 - Bump `bcpg-jdk15to18` to `1.73`
 - Bump `bcprov-jdk15to18` to `1.73`
 - Introduce `OpenPgpv6Fingerprint` class
