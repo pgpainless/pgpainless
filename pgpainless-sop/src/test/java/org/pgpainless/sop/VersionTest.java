@@ -54,12 +54,12 @@ public class VersionTest {
     @Test
     public void testGetSopSpecVersion() {
         boolean incomplete = sop.version().isSopSpecImplementationIncomplete();
-        int revisionNumber = sop.version().getSopSpecVersionNumber();
+        int revisionNumber = sop.version().getSopSpecRevisionNumber();
 
-        String revisionString = sop.version().getSopSpecRevisionString();
+        String revisionString = sop.version().getSopSpecRevisionName();
         assertEquals("draft-dkg-openpgp-stateless-cli-" + String.format("%02d", revisionNumber), revisionString);
 
-        String incompletenessRemarks = sop.version().getSopSpecImplementationIncompletenessRemarks();
+        String incompletenessRemarks = sop.version().getSopSpecImplementationRemarks();
 
         String fullSopSpecVersion = sop.version().getSopSpecVersion();
         if (incomplete) {

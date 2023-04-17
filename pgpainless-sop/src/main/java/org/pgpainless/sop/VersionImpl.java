@@ -66,7 +66,7 @@ public class VersionImpl implements Version {
     }
 
     @Override
-    public int getSopSpecVersionNumber() {
+    public int getSopSpecRevisionNumber() {
         return SOP_VERSION;
     }
 
@@ -76,7 +76,8 @@ public class VersionImpl implements Version {
     }
 
     @Override
-    public String getSopSpecImplementationIncompletenessRemarks() {
+    public String getSopSpecImplementationRemarks() {
         return null;
     }
+
 }
