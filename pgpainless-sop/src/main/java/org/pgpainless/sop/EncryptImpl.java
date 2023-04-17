@@ -42,15 +42,15 @@ import sop.util.ProxyOutputStream;
  */
 public class EncryptImpl implements Encrypt {
 
-    private static final Profile DEFAULT_PROFILE = new Profile("default", "Use the implementer's recommendations");
+    private static final Profile RFC4880_PROFILE = new Profile("rfc4880", "Follow the packet format of rfc4880");
 
-    public static final List<Profile> SUPPORTED_PROFILES = Arrays.asList(DEFAULT_PROFILE);
+    public static final List<Profile> SUPPORTED_PROFILES = Arrays.asList(RFC4880_PROFILE);
 
     EncryptionOptions encryptionOptions = EncryptionOptions.get();
     SigningOptions signingOptions = null;
     MatchMakingSecretKeyRingProtector protector = new MatchMakingSecretKeyRingProtector();
     private final Set<PGPSecretKeyRing> signingKeys = new HashSet<>();
-    private String profile = DEFAULT_PROFILE.getName(); // TODO: Use in future releases
+    private String profile = RFC4880_PROFILE.getName(); // TODO: Use in future releases
 
     private EncryptAs encryptAs = EncryptAs.Binary;
     boolean armor = true;
@@ -121,13 +121,16 @@ public class EncryptImpl implements Encrypt {
 
     @Override
     public Encrypt profile(String profileName) {
+        // sanitize profile name to make sure we only accept supported profiles
         for (Profile profile : SUPPORTED_PROFILES) {
             if (profile.getName().equals(profileName)) {
+                // profile is supported, return
                 this.profile = profile.getName();
                 return this;
             }
         }
 
+        // Profile is not supported, throw
         throw new SOPGPException.UnsupportedProfile("encrypt", profileName);
     }
 
