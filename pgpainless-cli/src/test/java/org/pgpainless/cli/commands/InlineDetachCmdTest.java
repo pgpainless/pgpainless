@@ -90,7 +90,7 @@ public class InlineDetachCmdTest extends CLITest {
         pipeStringToStdin(msgOut.toString());
         ByteArrayOutputStream verifyOut = pipeStdoutToStream();
         assertSuccess(executeCommand("verify", sigFile.getAbsolutePath(), certFile.getAbsolutePath()));
-        assertEquals("2021-05-15T16:08:06Z 4F665C4DC2C4660BC6425E415736E6931ACF370C 4F665C4DC2C4660BC6425E415736E6931ACF370C\n",
+        assertEquals("2021-05-15T16:08:06Z 4F665C4DC2C4660BC6425E415736E6931ACF370C 4F665C4DC2C4660BC6425E415736E6931ACF370C mode:text\n",
                 verifyOut.toString());
     }
 
@@ -115,7 +115,7 @@ public class InlineDetachCmdTest extends CLITest {
         ByteArrayOutputStream verifyOut = pipeStdoutToStream();
         File certFile = writeFile("cert.asc", CERT);
         assertSuccess(executeCommand("verify", sigFile.getAbsolutePath(), certFile.getAbsolutePath()));
-        assertEquals("2021-05-15T16:08:06Z 4F665C4DC2C4660BC6425E415736E6931ACF370C 4F665C4DC2C4660BC6425E415736E6931ACF370C\n",
+        assertEquals("2021-05-15T16:08:06Z 4F665C4DC2C4660BC6425E415736E6931ACF370C 4F665C4DC2C4660BC6425E415736E6931ACF370C mode:text\n",
                 verifyOut.toString());
     }
 

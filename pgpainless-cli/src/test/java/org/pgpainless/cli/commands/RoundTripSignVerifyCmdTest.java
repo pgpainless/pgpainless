@@ -94,7 +94,7 @@ public class RoundTripSignVerifyCmdTest extends CLITest {
             "=VWAZ\n" +
             "-----END PGP SIGNATURE-----";
     private static final String BINARY_SIG_VERIFICATION =
-            "2022-11-09T18:40:24Z 444C10AB011EF8424C83F0A9DA9F413986211DC6 9DA09423C9F94BA4CCA30951099B11BF296A373E\n";
+            "2022-11-09T18:40:24Z 444C10AB011EF8424C83F0A9DA9F413986211DC6 9DA09423C9F94BA4CCA30951099B11BF296A373E mode:binary\n";
     private static final String TEXT_SIG = "-----BEGIN PGP SIGNATURE-----\n" +
             "Version: PGPainless\n" +
             "\n" +
@@ -104,7 +104,7 @@ public class RoundTripSignVerifyCmdTest extends CLITest {
             "=s5xn\n" +
             "-----END PGP SIGNATURE-----";
     private static final String TEXT_SIG_VERIFICATION =
-            "2022-11-09T18:41:18Z 444C10AB011EF8424C83F0A9DA9F413986211DC6 9DA09423C9F94BA4CCA30951099B11BF296A373E\n";
+            "2022-11-09T18:41:18Z 444C10AB011EF8424C83F0A9DA9F413986211DC6 9DA09423C9F94BA4CCA30951099B11BF296A373E mode:text\n";
     private static final Date TEXT_SIG_CREATION = UTCUtil.parseUTCDate("2022-11-09T18:41:18Z");
 
     @Test
