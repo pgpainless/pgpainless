@@ -5,6 +5,9 @@ SPDX-License-Identifier: CC0-1.0
 
 # PGPainless Changelog
 
+## 1.5.1-SNAPSHOT
+- SOP: Emit signature `mode:{binary|text}` in `Verification` results
+
 ## 1.5.0
 - Bump `bcpg-jdk15to18` to `1.73`
 - Bump `bcprov-jdk15to18` to `1.73`
