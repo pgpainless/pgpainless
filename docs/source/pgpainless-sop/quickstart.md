@@ -75,9 +75,20 @@ In both cases, the resulting output will be the UTF8 encoded, ASCII armored Open
 
 To disable ASCII armoring, call `noArmor()` before calling `generate()`.
 
-At the time of writing, the resulting OpenPGP secret key will consist of a certification-capable 256-bits
+Revision `05` of the Stateless OpenPGP Protocol specification introduced the concept of profiles for
+certain operations.
+The key generation feature is the first operation to make use of profiles to specify different key algorithms.
+To set a profile, simply call `profile(String profileName)` and pass in one of the available profile identifiers.
+
+To explore, which profiles are available, refer to the dedicated [section](#explore-profiles).
+
+The default profile used by `pgpainless-sop` is called `draft-koch-eddsa-for-openpgp-00`.
+If this profile is used, the resulting OpenPGP secret key will consist of a certification-capable 256-bits
 ed25519 EdDSA primary key, a 256-bits ed25519 EdDSA subkey used for signing, as well as a 256-bits X25519
 ECDH subkey for encryption.
+
+Another profile defined by `pgpainless-sop` is `rfc4880`, which changes the key generation behaviour such that
+the resulting key is a single 4096-bit RSA key capable of certifying, signing and encrypting.
 
 The whole key does not have an expiration date set.
 
@@ -185,6 +196,13 @@ If any keys used for signing are password protected, you need to provide the sig
 `withKeyPassword(_)`.
 It does not matter in which order signing keys and key passwords are provided, the implementation will figure out
 matches on its own. If different key passwords are used, the `withKeyPassword(_)` method can be called multiple times.
+
+You can modify the behaviour of the encrypt operation by switching between different profiles via the
+`profile(String profileName)` method.
+At the time of writing, the only available profile for this operation is `rfc4880` which applies encryption
+as defined in [rfc4880](https://datatracker.ietf.org/doc/html/rfc4880).
+
+To explore, which profiles are available, refer to the dedicated [section](#explore-profiles).
 
 By default, the encrypted message will be ASCII armored. To disable ASCII armor, call `noArmor()` before the
 `plaintext(_)` method call.
@@ -464,3 +482,23 @@ By default, the signatures output will be ASCII armored. This can be disabled by
 prior to `message(_)`.
 
 The detached signatures can now be verified like in the section above.
+
+### Explore Profiles
+
+Certain operations allow modification of their behaviour by selecting between different profiles.
+An example for this is the `generateKey()` operation, where different profiles result in different algorithms used
+during key generation.
+
+To explore, which profiles are supported by a certain operation, you can use the `listProfiles()` operation.
+For example, this is how you can get a list of profiles supported by the `generateKey()` operation:
+
+```java
+List<Profile> profiles = sop.listProfiles().subcommand("generate-key");
+```
+
+:::{note}
+As you can see, the argument passed into the `subcommand()` method must match the operation name as defined in the
+[Stateless OpenPGP Protocol specification](https://datatracker.ietf.org/doc/draft-dkg-openpgp-stateless-cli/).
+:::
+
+At the time of writing (the latest revision of the SOP spec is 06), only `generate-key` and `encrypt` accept profiles.
