@@ -409,7 +409,7 @@ public class RoundTripInlineSignInlineVerifyCmdTest extends CLITest {
         assertEquals("Hello, World!\n", out.toString());
         String ver = readStringFromFile(verifications);
         assertEquals(
-                "2022-11-18T14:55:33Z 7A073EDF273C902796D259528FBDD36D01831673 AEA0FD2C899D3FC077815F0026560D2AE53DB86F\n", ver);
+                "2022-11-18T14:55:33Z 7A073EDF273C902796D259528FBDD36D01831673 AEA0FD2C899D3FC077815F0026560D2AE53DB86F mode:binary\n", ver);
     }
 
     @Test
