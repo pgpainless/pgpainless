@@ -147,7 +147,7 @@ public class DecryptImpl implements Decrypt {
 
                 List<Verification> verificationList = new ArrayList<>();
                 for (SignatureVerification signatureVerification : metadata.getVerifiedInlineSignatures()) {
-                    verificationList.add(map(signatureVerification));
+                    verificationList.add(VerificationHelper.mapVerification(signatureVerification));
                 }
 
                 SessionKey sessionKey = null;
@@ -162,11 +162,5 @@ public class DecryptImpl implements Decrypt {
                 return new DecryptionResult(sessionKey, verificationList);
             }
         };
-    }
-
-    private Verification map(SignatureVerification sigVerification) {
-        return new Verification(sigVerification.getSignature().getCreationTime(),
-                sigVerification.getSigningKey().getSubkeyFingerprint().toString(),
-                sigVerification.getSigningKey().getPrimaryKeyFingerprint().toString());
     }
 }

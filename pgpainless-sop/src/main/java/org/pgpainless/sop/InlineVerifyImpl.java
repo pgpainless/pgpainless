@@ -13,7 +13,6 @@ import java.util.List;
 
 import org.bouncycastle.openpgp.PGPException;
 import org.bouncycastle.openpgp.PGPPublicKeyRingCollection;
-import org.bouncycastle.openpgp.PGPSignature;
 import org.bouncycastle.util.io.Streams;
 import org.pgpainless.PGPainless;
 import org.pgpainless.decryption_verification.ConsumerOptions;
@@ -24,7 +23,6 @@ import org.pgpainless.exception.MalformedOpenPgpMessageException;
 import org.pgpainless.exception.MissingDecryptionMethodException;
 import sop.ReadyWithResult;
 import sop.Verification;
-import sop.enums.SignatureMode;
 import sop.exception.SOPGPException;
 import sop.operation.InlineVerify;
 
@@ -76,7 +74,7 @@ public class InlineVerifyImpl implements InlineVerify {
                             metadata.getVerifiedInlineSignatures();
 
                     for (SignatureVerification signatureVerification : verifications) {
-                        verificationList.add(map(signatureVerification));
+                        verificationList.add(VerificationHelper.mapVerification(signatureVerification));
                     }
 
                     if (!options.getCertificateSource().getExplicitCertificates().isEmpty()) {
@@ -93,24 +91,5 @@ public class InlineVerifyImpl implements InlineVerify {
                 }
             }
         };
-    }
-
-    private Verification map(SignatureVerification sigVerification) {
-        return new Verification(sigVerification.getSignature().getCreationTime(),
-                sigVerification.getSigningKey().getSubkeyFingerprint().toString(),
-                sigVerification.getSigningKey().getPrimaryKeyFingerprint().toString(),
-                getMode(sigVerification.getSignature()),
-                null);
-    }
-
-    private static SignatureMode getMode(PGPSignature signature) {
-        if (signature.getSignatureType() == PGPSignature.BINARY_DOCUMENT) {
-            return SignatureMode.binary;
-        }
-        if (signature.getSignatureType() == PGPSignature.CANONICAL_TEXT_DOCUMENT) {
-            return SignatureMode.text;
-        }
-
-        return null;
     }
 }

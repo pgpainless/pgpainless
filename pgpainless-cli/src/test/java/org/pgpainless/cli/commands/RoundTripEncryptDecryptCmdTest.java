@@ -129,7 +129,7 @@ public class RoundTripEncryptDecryptCmdTest extends CLITest {
         String romeosVerif = readStringFromFile(anotherVerificationsFile);
         assertEquals(julietsVerif, romeosVerif);
         assertFalse(julietsVerif.isEmpty());
-        assertEquals(103, julietsVerif.length()); // 103 is number of symbols in [DATE, FINGER, FINGER] for V4
+        assertEquals(115, julietsVerif.length()); // 115 is number of symbols in [DATE, FINGER, FINGER, MODE] for V4
     }
 
     @Test
@@ -274,7 +274,7 @@ public class RoundTripEncryptDecryptCmdTest extends CLITest {
 
         assertEquals(plaintext, out.toString());
         String verificationString = readStringFromFile(verifications);
-        assertEquals("2022-11-09T17:22:48Z C0DCEC44B1A173664B05DABCECD0BF863F65C9A5 A2EC077FC977E15DD799EFF92C0D3C123CF51C08\n",
+        assertEquals("2022-11-09T17:22:48Z C0DCEC44B1A173664B05DABCECD0BF863F65C9A5 A2EC077FC977E15DD799EFF92C0D3C123CF51C08 mode:binary\n",
                 verificationString);
     }
 
