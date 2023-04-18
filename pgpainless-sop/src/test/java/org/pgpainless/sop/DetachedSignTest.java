@@ -23,6 +23,7 @@ import org.pgpainless.signature.SignatureUtils;
 import sop.SOP;
 import sop.Verification;
 import sop.enums.SignAs;
+import sop.enums.SignatureMode;
 import sop.exception.SOPGPException;
 
 public class DetachedSignTest {
@@ -49,6 +50,7 @@ public class DetachedSignTest {
     public void signArmored() throws IOException {
         byte[] signature = sop.sign()
                 .key(key)
+                .mode(SignAs.Binary)
                 .data(data)
                 .toByteArrayAndResult().getBytes();
 
@@ -62,6 +64,7 @@ public class DetachedSignTest {
                 .data(data);
 
         assertEquals(1, verifications.size());
+        assertEquals(SignatureMode.binary, verifications.get(0).getSignatureMode());
     }
 
     @Test
@@ -82,6 +85,26 @@ public class DetachedSignTest {
                 .data(data);
 
         assertEquals(1, verifications.size());
+    }
+
+    @Test
+    public void textSig() throws IOException {
+        byte[] signature = sop.sign()
+                .key(key)
+                .noArmor()
+                .mode(SignAs.Text)
+                .data(data)
+                .toByteArrayAndResult().getBytes();
+
+        List<Verification> verifications = sop.verify()
+                .cert(cert)
+                .notAfter(new Date(new Date().getTime() + 10000))
+                .notBefore(new Date(new Date().getTime() - 10000))
+                .signatures(signature)
+                .data(data);
+
+        assertEquals(1, verifications.size());
+        assertEquals(SignatureMode.text, verifications.get(0).getSignatureMode());
     }
 
     @Test
