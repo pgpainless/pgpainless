@@ -9,13 +9,14 @@ import sop.ByteArrayAndResult;
 import sop.SOP;
 import sop.Verification;
 import sop.enums.InlineSignAs;
+import sop.enums.SignatureMode;
 
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.assertArrayEquals;
-import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertEquals;
 
 public class InlineSignVerifyRoundtripTest {
 
@@ -46,7 +47,11 @@ public class InlineSignVerifyRoundtripTest {
 
         byte[] verified = result.getBytes();
 
-        assertFalse(result.getResult().isEmpty());
+        List<Verification> verificationList = result.getResult();
+        assertEquals(1, verificationList.size());
+        Verification verification = verificationList.get(0);
+        assertEquals(SignatureMode.text, verification.getSignatureMode());
+
         assertArrayEquals(message, verified);
     }
 
@@ -65,6 +70,7 @@ public class InlineSignVerifyRoundtripTest {
         byte[] inlineSigned = sop.inlineSign()
                 .key(key)
                 .withKeyPassword("sw0rdf1sh")
+                .mode(InlineSignAs.binary)
                 .data(message).getBytes();
 
         ByteArrayAndResult<List<Verification>> result = sop.inlineVerify()
@@ -74,7 +80,45 @@ public class InlineSignVerifyRoundtripTest {
 
         byte[] verified = result.getBytes();
 
-        assertFalse(result.getResult().isEmpty());
+        List<Verification> verificationList = result.getResult();
+        assertEquals(1, verificationList.size());
+        Verification verification = verificationList.get(0);
+        assertEquals(SignatureMode.binary, verification.getSignatureMode());
+
+        assertArrayEquals(message, verified);
+    }
+
+
+    @Test
+    public void testInlineSignAndVerifyWithTextSignatures() throws IOException {
+        byte[] key = sop.generateKey()
+                .userId("Mark")
+                .withKeyPassword("y3110w5ubm4r1n3")
+                .generate().getBytes();
+
+        byte[] cert = sop.extractCert()
+                .key(key).getBytes();
+
+        byte[] message = "Give me a plaintext that I can sign and verify, pls.".getBytes(StandardCharsets.UTF_8);
+
+        byte[] inlineSigned = sop.inlineSign()
+                .key(key)
+                .withKeyPassword("y3110w5ubm4r1n3")
+                .mode(InlineSignAs.text)
+                .data(message).getBytes();
+
+        ByteArrayAndResult<List<Verification>> result = sop.inlineVerify()
+                .cert(cert)
+                .data(inlineSigned)
+                .toByteArrayAndResult();
+
+        byte[] verified = result.getBytes();
+
+        List<Verification> verificationList = result.getResult();
+        assertEquals(1, verificationList.size());
+        Verification verification = verificationList.get(0);
+        assertEquals(SignatureMode.text, verification.getSignatureMode());
+
         assertArrayEquals(message, verified);
     }
 
