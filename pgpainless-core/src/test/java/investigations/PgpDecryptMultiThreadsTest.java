@@ -9,13 +9,21 @@
 package investigations;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
+import java.util.Collections;
+import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicInteger;
 
 import org.bouncycastle.openpgp.PGPException;
 import org.bouncycastle.openpgp.PGPPublicKeyRingCollection;
+import org.bouncycastle.openpgp.PGPSecretKeyRing;
 import org.bouncycastle.openpgp.PGPSecretKeyRingCollection;
 import org.bouncycastle.util.io.Streams;
 import org.junit.jupiter.api.Test;
@@ -87,15 +95,50 @@ public class PgpDecryptMultiThreadsTest {
     private static final String PASSPHRASE = "android";
     private static final String ORIGINAL_TEXT = "Some text";
 
+    private static final PGPSecretKeyRing secretKeyRing;
+
+    static {
+        try {
+            secretKeyRing = PGPainless.readKeyRing().secretKeyRing(
+                    SENDER_PRIVATE_KEY
+            );
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
+    }
+
     @Test
-    public void testDecryptionInMultiThreads() throws PGPException, IOException {
+    public void testDecryptionInMultiThreads() throws InterruptedException {
+        AtomicInteger atomicInteger = new AtomicInteger();
+        int numberOfThreads = 10;
+        int numberOfAttempts = 1000;
+        ExecutorService service = Executors.newFixedThreadPool(numberOfThreads);
+        CountDownLatch latch = new CountDownLatch(numberOfThreads);
+        for (int i = 0; i < numberOfThreads; i++) {
+            service.submit(() -> {
+                for (int j = 0; j < numberOfAttempts; j++) {
+                    try {
+                        doDecryption();
+                        atomicInteger.incrementAndGet();
+                    } catch (Exception e) {
+                        e.printStackTrace();
+                    }
+                }
+                latch.countDown();
+            });
+        }
+
+        assertTrue(latch.await(300, TimeUnit.SECONDS));
+        assertEquals(numberOfThreads * numberOfAttempts, atomicInteger.get());
+    }
+
+    private static void doDecryption() throws IOException, PGPException {
         SecretKeyRingProtector secretKeyRingProtector =
                 SecretKeyRingProtector.unlockAnyKeyWith(Passphrase.fromPassword(PASSPHRASE));
         PGPPublicKeyRingCollection pgpPublicKeyRingCollection = PGPainless.readKeyRing().publicKeyRingCollection(
                 SENDER_PUBLIC_KEY + "\n" + RECEIVER_PUBLIC_KEY);
         PGPSecretKeyRingCollection secretKeyRingCollection =
-                PGPainless.readKeyRing().secretKeyRingCollection(SENDER_PRIVATE_KEY);
-
+                new PGPSecretKeyRingCollection(Collections.singletonList(secretKeyRing));
 
         try (DecryptionStream decryptionStream = PGPainless.decryptAndOrVerify()
                 .onInputStream(new ByteArrayInputStream(ENCRYPTED_TEXT.getBytes()))
