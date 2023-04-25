@@ -14,6 +14,7 @@ import java.nio.charset.StandardCharsets;
 import org.bouncycastle.openpgp.PGPException;
 import org.bouncycastle.openpgp.PGPSecretKeyRing;
 import org.bouncycastle.util.io.Streams;
+import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 import org.pgpainless.PGPainless;
 import org.pgpainless.exception.MissingDecryptionMethodException;
@@ -189,6 +190,23 @@ public class PreventDecryptionUsingNonEncryptionKeyTest {
     }
 
     @Test
+    public void canDecryptMessageDespiteMissingKeyFlag() throws IOException, PGPException {
+        PGPSecretKeyRing secretKeys = PGPainless.readKeyRing().secretKeyRing(ENCRYPTION_INCAPABLE_KEY);
+
+        ByteArrayInputStream msgIn = new ByteArrayInputStream(MSG.getBytes(StandardCharsets.UTF_8));
+        DecryptionStream decryptionStream = PGPainless.decryptAndOrVerify()
+                .onInputStream(msgIn)
+                .withOptions(new ConsumerOptions().addDecryptionKey(secretKeys));
+
+        Streams.drain(decryptionStream);
+        decryptionStream.close();
+        OpenPgpMetadata metadata = decryptionStream.getResult();
+
+        assertEquals(new SubkeyIdentifier(secretKeys, secretKeys.getPublicKey().getKeyID()), metadata.getDecryptionKey());
+    }
+
+    @Test
+    @Disabled
     public void nonEncryptionKeyCannotDecrypt() throws IOException {
         PGPSecretKeyRing secretKeys = PGPainless.readKeyRing().secretKeyRing(ENCRYPTION_INCAPABLE_KEY);
 

@@ -43,15 +43,14 @@ import org.bouncycastle.openpgp.operator.SessionKeyDataDecryptorFactory;
 import org.bouncycastle.util.io.TeeInputStream;
 import org.pgpainless.PGPainless;
 import org.pgpainless.algorithm.CompressionAlgorithm;
-import org.pgpainless.algorithm.EncryptionPurpose;
 import org.pgpainless.algorithm.OpenPgpPacket;
 import org.pgpainless.algorithm.StreamEncoding;
 import org.pgpainless.algorithm.SymmetricKeyAlgorithm;
+import org.pgpainless.decryption_verification.cleartext_signatures.ClearsignedMessageUtil;
+import org.pgpainless.decryption_verification.cleartext_signatures.MultiPassStrategy;
 import org.pgpainless.decryption_verification.syntax_check.InputSymbol;
 import org.pgpainless.decryption_verification.syntax_check.PDA;
 import org.pgpainless.decryption_verification.syntax_check.StackSymbol;
-import org.pgpainless.decryption_verification.cleartext_signatures.ClearsignedMessageUtil;
-import org.pgpainless.decryption_verification.cleartext_signatures.MultiPassStrategy;
 import org.pgpainless.exception.MalformedOpenPgpMessageException;
 import org.pgpainless.exception.MessageNotIntegrityProtectedException;
 import org.pgpainless.exception.MissingDecryptionMethodException;
@@ -674,7 +673,7 @@ public class OpenPgpMessageInputStream extends DecryptionStream {
 
         for (PGPSecretKeyRing secretKeys : options.getDecryptionKeys()) {
             KeyRingInfo info = PGPainless.inspectKeyRing(secretKeys);
-            for (PGPPublicKey publicKey : info.getEncryptionSubkeys(EncryptionPurpose.ANY)) {
+            for (PGPPublicKey publicKey : info.getDecryptionSubkeys()) {
                 if (publicKey.getAlgorithm() == algorithm && info.isSecretKeyAvailable(publicKey.getKeyID())) {
                     PGPSecretKey candidate = secretKeys.getSecretKey(publicKey.getKeyID());
                     decryptionKeyCandidates.add(new Tuple<>(secretKeys, candidate));
@@ -692,7 +691,7 @@ public class OpenPgpMessageInputStream extends DecryptionStream {
             }
 
             KeyRingInfo info = new KeyRingInfo(secretKeys, policy, new Date());
-            List<PGPPublicKey> encryptionKeys = info.getEncryptionSubkeys(EncryptionPurpose.ANY);
+            List<PGPPublicKey> encryptionKeys = info.getDecryptionSubkeys();
             for (PGPPublicKey key : encryptionKeys) {
                 if (key.getKeyID() == keyID) {
                     return secretKeys;

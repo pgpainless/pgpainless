@@ -41,11 +41,15 @@ import org.pgpainless.algorithm.SymmetricKeyAlgorithm;
 import org.pgpainless.exception.KeyException;
 import org.pgpainless.key.OpenPgpFingerprint;
 import org.pgpainless.key.SubkeyIdentifier;
+import org.pgpainless.key.util.KeyIdUtil;
 import org.pgpainless.key.util.RevocationAttributes;
 import org.pgpainless.policy.Policy;
 import org.pgpainless.signature.SignatureUtils;
 import org.pgpainless.signature.consumer.SignaturePicker;
 import org.pgpainless.signature.subpackets.SignatureSubpacketsUtil;
+import org.pgpainless.util.DateUtil;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * Utility class to quickly extract certain information from a {@link PGPPublicKeyRing}/{@link PGPSecretKeyRing}.
@@ -54,6 +58,8 @@ public class KeyRingInfo {
 
     private static final Pattern PATTERN_EMAIL_FROM_USERID = Pattern.compile("<([a-zA-Z0-9_!#$%&'*+/=?`{|}~^.-]+@[a-zA-Z0-9.-]+)>");
     private static final Pattern PATTERN_EMAIL_EXPLICIT = Pattern.compile("^([a-zA-Z0-9_!#$%&'*+/=?`{|}~^.-]+@[a-zA-Z0-9.-]+)$");
+
+    private static final Logger LOGGER = LoggerFactory.getLogger(KeyRingInfo.class);
 
     private final PGPKeyRing keys;
     private final Signatures signatures;
@@ -904,6 +910,7 @@ public class KeyRingInfo {
     public @Nonnull List<PGPPublicKey> getEncryptionSubkeys(EncryptionPurpose purpose) {
         Date primaryExpiration = getPrimaryKeyExpirationDate();
         if (primaryExpiration != null && primaryExpiration.before(referenceDate)) {
+            LOGGER.debug("Certificate is expired: Primary key is expired on " + DateUtil.formatUTCDate(primaryExpiration));
             return Collections.emptyList();
         }
 
@@ -913,15 +920,18 @@ public class KeyRingInfo {
             PGPPublicKey subKey = subkeys.next();
 
             if (!isKeyValidlyBound(subKey.getKeyID())) {
+                LOGGER.debug("(Sub?)-Key " + KeyIdUtil.formatKeyId(subKey.getKeyID()) + " is not validly bound.");
                 continue;
             }
 
             Date subkeyExpiration = getSubkeyExpirationDate(OpenPgpFingerprint.of(subKey));
             if (subkeyExpiration != null && subkeyExpiration.before(referenceDate)) {
+                LOGGER.debug("(Sub?)-Key  " + KeyIdUtil.formatKeyId(subKey.getKeyID()) + " is expired on " + DateUtil.formatUTCDate(subkeyExpiration));
                 continue;
             }
 
             if (!subKey.isEncryptionKey()) {
+                LOGGER.debug("(Sub?)-Key " + KeyIdUtil.formatKeyId(subKey.getKeyID()) + " algorithm is not capable of encryption.");
                 continue;
             }
 
@@ -945,6 +955,42 @@ public class KeyRingInfo {
             }
         }
         return encryptionKeys;
+    }
+
+    /**
+     * Return a list of all subkeys that could potentially be used to decrypt a message.
+     * Contrary to {@link #getEncryptionSubkeys(EncryptionPurpose)}, this method also includes revoked, expired keys,
+     * as well as keys which do not carry any encryption keyflags.
+     * Merely keys which use algorithms that cannot be used for encryption at all are excluded.
+     * That way, decryption of messages produced by faulty implementations can still be decrypted.
+     *
+     * @return decryption keys
+     */
+    public @Nonnull List<PGPPublicKey> getDecryptionSubkeys() {
+        Iterator<PGPPublicKey> subkeys = keys.getPublicKeys();
+        List<PGPPublicKey> decryptionKeys = new ArrayList<>();
+
+        while (subkeys.hasNext()) {
+            PGPPublicKey subKey = subkeys.next();
+
+            // subkeys have been valid at some point
+            if (subKey.getKeyID() != getKeyId()) {
+                PGPSignature binding = signatures.subkeyBindings.get(subKey.getKeyID());
+                if (binding == null) {
+                    LOGGER.debug("Subkey " + KeyIdUtil.formatKeyId(subKey.getKeyID()) + " was never validly bound.");
+                    continue;
+                }
+            }
+
+            // Public-Key algorithm can encrypt
+            if (!subKey.isEncryptionKey()) {
+                LOGGER.debug("(Sub?)-Key " + KeyIdUtil.formatKeyId(subKey.getKeyID()) + " is not encryption-capable.");
+                continue;
+            }
+
+            decryptionKeys.add(subKey);
+        }
+        return decryptionKeys;
     }
 
     /**
