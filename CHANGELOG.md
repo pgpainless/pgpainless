@@ -7,6 +7,10 @@ SPDX-License-Identifier: CC0-1.0
 
 ## 1.5.1-SNAPSHOT
 - SOP: Emit signature `mode:{binary|text}` in `Verification` results
+- core: Relax constraints on decryption subkeys to improve interoperability with broken clients
+    - Allow decryption with revoked keys
+    - Allow decryption with expired keys
+    - Allow decryption with erroneously addressed keys without encryption key flags
 
 ## 1.5.0
 - Bump `bcpg-jdk15to18` to `1.73`
