@@ -5,6 +5,9 @@ SPDX-License-Identifier: CC0-1.0
 
 # PGPainless Changelog
 
+## 1.5.2-SNAPSHOT
+- Bump `sop-java` to `6.1.0`
+
 ## 1.5.1
 - SOP: Emit signature `mode:{binary|text}` in `Verification` results
 - core: Relax constraints on decryption subkeys to improve interoperability with broken clients
