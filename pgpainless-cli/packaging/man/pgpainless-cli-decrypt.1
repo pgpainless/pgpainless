@@ -30,41 +30,21 @@
 pgpainless\-cli\-decrypt \- Decrypt a message from standard input
 .SH "SYNOPSIS"
 .sp
-\fBpgpainless\-cli decrypt\fP [\fB\-\-stacktrace\fP] [\fB\-\-not\-after\fP=\fIDATE\fP] [\fB\-\-not\-before\fP=\fIDATE\fP]
-[\fB\-\-session\-key\-out\fP=\fISESSIONKEY\fP] [\fB\-\-verify\-out\fP=\fIVERIFICATIONS\fP]
-[\fB\-\-verify\-with\fP=\fICERT\fP]... [\fB\-\-with\-key\-password\fP=\fIPASSWORD\fP]...
-[\fB\-\-with\-password\fP=\fIPASSWORD\fP]... [\fB\-\-with\-session\-key\fP=\fISESSIONKEY\fP]...
-[\fIKEY\fP...]
+\fBpgpainless\-cli decrypt\fP [\fB\-\-stacktrace\fP] [\fB\-\-session\-key\-out\fP=\fISESSIONKEY\fP]
+[\fB\-\-verify\-not\-after\fP=\fIDATE\fP] [\fB\-\-verify\-not\-before\fP=\fIDATE\fP]
+[\fB\-\-verify\-out\fP=\fIVERIFICATIONS\fP] [\fB\-\-verify\-with\fP=\fICERT\fP]...
+[\fB\-\-with\-key\-password\fP=\fIPASSWORD\fP]... [\fB\-\-with\-password\fP=\fIPASSWORD\fP]...
+[\fB\-\-with\-session\-key\fP=\fISESSIONKEY\fP]... [\fIKEY\fP...]
 .SH "DESCRIPTION"
 
 .SH "OPTIONS"
-.sp
-\fB\-\-not\-after\fP=\fIDATE\fP
-.RS 4
-ISO\-8601 formatted UTC date (e.g. \(aq2020\-11\-23T16:35Z)
-.sp
-Reject signatures with a creation date not in range.
-.sp
-Defaults to current system time (\(aqnow\(aq).
-.sp
-Accepts special value \(aq\-\(aq for end of time.
-.RE
-.sp
-\fB\-\-not\-before\fP=\fIDATE\fP
-.RS 4
-ISO\-8601 formatted UTC date (e.g. \(aq2020\-11\-23T16:35Z)
-.sp
-Reject signatures with a creation date not in range.
-.sp
-Defaults to beginning of time (\(aq\-\(aq).
-.RE
 .sp
 \fB\-\-session\-key\-out\fP=\fISESSIONKEY\fP
 .RS 4
 Can be used to learn the session key on successful decryption
 .RE
 .sp
-\fB\-\-stacktrace\fP, \fB\-\-verify\-out, \-\-verifications\-out\fP=\fIVERIFICATIONS\fP
+\fB\-\-stacktrace\fP, \fB\-\-verify\-not\-after\fP=\fIDATE\fP, \fB\-\-verify\-not\-before\fP=\fIDATE\fP, \fB\-\-verify\-out, \-\-verifications\-out\fP=\fIVERIFICATIONS\fP
 .RS 4
 Emits signature verification status to the designated output
 .RE
@@ -87,7 +67,7 @@ Symmetric passphrase to decrypt the message with.
 .sp
 Enables decryption based on any "SKESK" packets in the "CIPHERTEXT".
 .sp
-Is an INDIRECT data type (e.g. file, environment variable, file descriptor...)
+Is an INDIRECT data type (e.g. file, environment variable, file descriptor...).
 .RE
 .sp
 \fB\-\-with\-session\-key\fP=\fISESSIONKEY\fP
@@ -96,7 +76,7 @@ Symmetric message key (session key).
 .sp
 Enables decryption of the "CIPHERTEXT" using the session key directly against the "SEIPD" packet.
 .sp
-Is an INDIRECT data type (e.g. file, environment variable, file descriptor...)
+Is an INDIRECT data type (e.g. file, environment variable, file descriptor...).
 .RE
 .SH "ARGUMENTS"
 .sp

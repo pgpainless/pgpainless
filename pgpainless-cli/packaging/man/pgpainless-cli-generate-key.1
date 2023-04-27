@@ -30,8 +30,8 @@
 pgpainless\-cli\-generate\-key \- Generate a secret key
 .SH "SYNOPSIS"
 .sp
-\fBpgpainless\-cli generate\-key\fP [\fB\-\-[no\-]armor\fP] [\fB\-\-stacktrace\fP] [\fB\-\-with\-key\-password\fP=\fIPASSWORD\fP]
-[\fIUSERID\fP...]
+\fBpgpainless\-cli generate\-key\fP [\fB\-\-[no\-]armor\fP] [\fB\-\-stacktrace\fP] [\fB\-\-profile\fP=\fIPROFILE\fP]
+[\fB\-\-with\-key\-password\fP=\fIPASSWORD\fP] [\fIUSERID\fP...]
 .SH "DESCRIPTION"
 
 .SH "OPTIONS"
@@ -39,6 +39,11 @@ pgpainless\-cli\-generate\-key \- Generate a secret key
 \fB\-\-[no\-]armor\fP
 .RS 4
 ASCII armor the output
+.RE
+.sp
+\fB\-\-profile\fP=\fIPROFILE\fP
+.RS 4
+Profile identifier to switch between profiles
 .RE
 .sp
 \fB\-\-stacktrace\fP, \fB\-\-with\-key\-password\fP=\fIPASSWORD\fP

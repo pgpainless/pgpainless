@@ -36,7 +36,18 @@ pgpainless\-cli\-verify \- Verify a detached signature over the data from standa
 
 .SH "OPTIONS"
 .sp
-\fB\-\-not\-after\fP=\fIDATE\fP, \fB\-\-not\-before\fP=\fIDATE\fP
+\fB\-\-not\-after\fP=\fIDATE\fP
+.RS 4
+ISO\-8601 formatted UTC date (e.g. \(aq2020\-11\-23T16:35Z)
+.sp
+Reject signatures with a creation date not in range.
+.sp
+Defaults to current system time ("now").
+.sp
+Accepts special value "\-" for end of time.
+.RE
+.sp
+\fB\-\-not\-before\fP=\fIDATE\fP
 .RS 4
 ISO\-8601 formatted UTC date (e.g. \(aq2020\-11\-23T16:35Z)
 .sp

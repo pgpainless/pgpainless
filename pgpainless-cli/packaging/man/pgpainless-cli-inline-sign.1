@@ -30,20 +30,19 @@
 pgpainless\-cli\-inline\-sign \- Create an inline\-signed message from data on standard input
 .SH "SYNOPSIS"
 .sp
-\fBpgpainless\-cli inline\-sign\fP [\fB\-\-[no\-]armor\fP] [\fB\-\-stacktrace\fP] [\fB\-\-as\fP=
-\fI{binary|text|cleartextsigned}\fP]
+\fBpgpainless\-cli inline\-sign\fP [\fB\-\-[no\-]armor\fP] [\fB\-\-stacktrace\fP] [\fB\-\-as\fP=\fI{binary|text|clearsigned}\fP]
 [\fB\-\-with\-key\-password\fP=\fIPASSWORD\fP]... [\fIKEYS\fP...]
 .SH "DESCRIPTION"
 
 .SH "OPTIONS"
 .sp
-\fB\-\-as\fP=\fI{binary|text|cleartextsigned}\fP
+\fB\-\-as\fP=\fI{binary|text|clearsigned}\fP
 .RS 4
-Specify the signature format of the signed message
+Specify the signature format of the signed message.
 .sp
 \(aqtext\(aq and \(aqbinary\(aq will produce inline\-signed messages.
 .sp
-\(aqcleartextsigned\(aq will make use of the cleartext signature framework.
+\(aqclearsigned\(aq will make use of the cleartext signature framework.
 .sp
 Defaults to \(aqbinary\(aq.
 .sp
