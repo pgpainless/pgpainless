@@ -4,7 +4,7 @@ SCRIPT_DIR=$( cd -- "$( dirname -- "${BASH_SOURCE[0]}" )" &> /dev/null && pwd )
 SOP_DIR=$(realpath $SCRIPT_DIR/../../sop-java)
 [ ! -d "$SOP_DIR" ] && echo "sop-java repository MUST be cloned next to pgpainless repo" && exit 1;
 SRC_DIR=$SOP_DIR/sop-java-picocli/build/docs/manpage
-[ ! -d "$SRC_DIR" ] && echo "No sop manpages found." && exit 1;
+[ ! -d "$SRC_DIR" ] && echo "No sop manpages found. Please run `gradle asciidoctor` in the sop-java repo." && exit 1;
 DEST_DIR=$SCRIPT_DIR/packaging/man
 mkdir -p $DEST_DIR
 
