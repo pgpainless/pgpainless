@@ -25,6 +25,7 @@ import sop.Verification;
 import sop.enums.SignAs;
 import sop.enums.SignatureMode;
 import sop.exception.SOPGPException;
+import sop.testsuite.assertions.VerificationListAssert;
 
 public class DetachedSignTest {
 
@@ -63,8 +64,9 @@ public class DetachedSignTest {
                 .signatures(signature)
                 .data(data);
 
-        assertEquals(1, verifications.size());
-        assertEquals(SignatureMode.binary, verifications.get(0).getSignatureMode());
+        VerificationListAssert.assertThatVerificationList(verifications)
+                .hasSingleItem()
+                .hasMode(SignatureMode.binary);
     }
 
     @Test
@@ -84,7 +86,8 @@ public class DetachedSignTest {
                 .signatures(signature)
                 .data(data);
 
-        assertEquals(1, verifications.size());
+        VerificationListAssert.assertThatVerificationList(verifications)
+                .hasSingleItem();
     }
 
     @Test
@@ -103,8 +106,9 @@ public class DetachedSignTest {
                 .signatures(signature)
                 .data(data);
 
-        assertEquals(1, verifications.size());
-        assertEquals(SignatureMode.text, verifications.get(0).getSignatureMode());
+        VerificationListAssert.assertThatVerificationList(verifications)
+                .hasSingleItem()
+                .hasMode(SignatureMode.text);
     }
 
     @Test

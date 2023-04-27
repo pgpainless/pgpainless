@@ -5,8 +5,6 @@
 package org.pgpainless.sop;
 
 import static org.junit.jupiter.api.Assertions.assertArrayEquals;
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertFalse;
 
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
@@ -34,7 +32,9 @@ import sop.SOP;
 import sop.Signatures;
 import sop.Verification;
 import sop.enums.InlineSignAs;
+import sop.enums.SignatureMode;
 import sop.exception.SOPGPException;
+import sop.testsuite.assertions.VerificationListAssert;
 
 public class InlineDetachTest {
 
@@ -79,9 +79,11 @@ public class InlineDetachTest {
                 .signatures(signature)
                 .data(message);
 
-        assertFalse(verificationList.isEmpty());
-        assertEquals(1, verificationList.size());
-        assertEquals(new OpenPgpV4Fingerprint(secretKey).toString(), verificationList.get(0).getSigningCertFingerprint());
+        VerificationListAssert.assertThatVerificationList(verificationList)
+                .hasSingleItem()
+                .issuedBy(new OpenPgpV4Fingerprint(secretKey).toString())
+                .hasMode(SignatureMode.text);
+
         assertArrayEquals(data, message);
     }
 
@@ -121,8 +123,10 @@ public class InlineDetachTest {
                 .signatures(signature)
                 .data(message);
 
-        assertFalse(verificationList.isEmpty());
-        assertEquals(1, verificationList.size());
+        VerificationListAssert.assertThatVerificationList(verificationList)
+                .hasSingleItem()
+                .hasMode(SignatureMode.binary);
+
         assertArrayEquals(data, message);
     }
 
@@ -191,8 +195,10 @@ public class InlineDetachTest {
                 .signatures(signature)
                 .data(message);
 
-        assertFalse(verificationList.isEmpty());
-        assertEquals(1, verificationList.size());
+        VerificationListAssert.assertThatVerificationList(verificationList)
+                .hasSingleItem()
+                .hasMode(SignatureMode.binary);
+
         assertArrayEquals(data, message);
     }
 }

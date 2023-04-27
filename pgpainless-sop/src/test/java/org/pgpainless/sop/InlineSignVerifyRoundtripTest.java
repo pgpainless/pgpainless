@@ -4,19 +4,19 @@
 
 package org.pgpainless.sop;
 
+import static org.junit.jupiter.api.Assertions.assertArrayEquals;
+
+import java.io.IOException;
+import java.nio.charset.StandardCharsets;
+import java.util.List;
+
 import org.junit.jupiter.api.Test;
 import sop.ByteArrayAndResult;
 import sop.SOP;
 import sop.Verification;
 import sop.enums.InlineSignAs;
 import sop.enums.SignatureMode;
-
-import java.io.IOException;
-import java.nio.charset.StandardCharsets;
-import java.util.List;
-
-import static org.junit.jupiter.api.Assertions.assertArrayEquals;
-import static org.junit.jupiter.api.Assertions.assertEquals;
+import sop.testsuite.assertions.VerificationListAssert;
 
 public class InlineSignVerifyRoundtripTest {
 
@@ -48,9 +48,9 @@ public class InlineSignVerifyRoundtripTest {
         byte[] verified = result.getBytes();
 
         List<Verification> verificationList = result.getResult();
-        assertEquals(1, verificationList.size());
-        Verification verification = verificationList.get(0);
-        assertEquals(SignatureMode.text, verification.getSignatureMode());
+        VerificationListAssert.assertThatVerificationList(verificationList)
+                .hasSingleItem()
+                .hasMode(SignatureMode.text);
 
         assertArrayEquals(message, verified);
     }
@@ -81,9 +81,9 @@ public class InlineSignVerifyRoundtripTest {
         byte[] verified = result.getBytes();
 
         List<Verification> verificationList = result.getResult();
-        assertEquals(1, verificationList.size());
-        Verification verification = verificationList.get(0);
-        assertEquals(SignatureMode.binary, verification.getSignatureMode());
+        VerificationListAssert.assertThatVerificationList(verificationList)
+                .hasSingleItem()
+                .hasMode(SignatureMode.binary);
 
         assertArrayEquals(message, verified);
     }
@@ -115,9 +115,9 @@ public class InlineSignVerifyRoundtripTest {
         byte[] verified = result.getBytes();
 
         List<Verification> verificationList = result.getResult();
-        assertEquals(1, verificationList.size());
-        Verification verification = verificationList.get(0);
-        assertEquals(SignatureMode.text, verification.getSignatureMode());
+        VerificationListAssert.assertThatVerificationList(verificationList)
+                .hasSingleItem()
+                .hasMode(SignatureMode.text);
 
         assertArrayEquals(message, verified);
     }

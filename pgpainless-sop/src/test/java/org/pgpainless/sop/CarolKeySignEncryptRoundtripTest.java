@@ -4,15 +4,15 @@
 
 package org.pgpainless.sop;
 
+import static org.junit.jupiter.api.Assertions.assertArrayEquals;
+
 import java.io.IOException;
 
 import org.junit.jupiter.api.Test;
 import sop.ByteArrayAndResult;
 import sop.DecryptionResult;
 import sop.Ready;
-
-import static org.junit.jupiter.api.Assertions.assertArrayEquals;
-import static org.junit.jupiter.api.Assertions.assertEquals;
+import sop.testsuite.assertions.VerificationListAssert;
 
 public class CarolKeySignEncryptRoundtripTest {
 
@@ -290,6 +290,8 @@ public class CarolKeySignEncryptRoundtripTest {
 
         byte[] plaintext = decryption.getBytes();
         assertArrayEquals(msg, plaintext);
-        assertEquals(1, decryption.getResult().getVerifications().size());
+        VerificationListAssert.assertThatVerificationList(decryption.getResult().getVerifications())
+                .hasSingleItem()
+                .issuedBy("71FFDA004409E5DDB0C3E8F19BA789DC76D6849A", "71FFDA004409E5DDB0C3E8F19BA789DC76D6849A");
     }
 }

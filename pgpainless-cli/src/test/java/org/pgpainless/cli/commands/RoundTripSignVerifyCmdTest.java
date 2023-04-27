@@ -13,6 +13,7 @@ import java.io.File;
 import java.io.IOException;
 import java.security.InvalidAlgorithmParameterException;
 import java.security.NoSuchAlgorithmException;
+import java.text.ParseException;
 import java.util.Date;
 
 import org.bouncycastle.openpgp.PGPException;
@@ -105,7 +106,15 @@ public class RoundTripSignVerifyCmdTest extends CLITest {
             "-----END PGP SIGNATURE-----";
     private static final String TEXT_SIG_VERIFICATION =
             "2022-11-09T18:41:18Z 444C10AB011EF8424C83F0A9DA9F413986211DC6 9DA09423C9F94BA4CCA30951099B11BF296A373E mode:text\n";
-    private static final Date TEXT_SIG_CREATION = UTCUtil.parseUTCDate("2022-11-09T18:41:18Z");
+    private static final Date TEXT_SIG_CREATION;
+
+    static {
+        try {
+            TEXT_SIG_CREATION = UTCUtil.parseUTCDate("2022-11-09T18:41:18Z");
+        } catch (ParseException e) {
+            throw new RuntimeException(e);
+        }
+    }
 
     @Test
     public void createArmoredSignature() throws IOException {

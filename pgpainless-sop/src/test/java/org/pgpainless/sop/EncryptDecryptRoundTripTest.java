@@ -21,7 +21,9 @@ import sop.ByteArrayAndResult;
 import sop.DecryptionResult;
 import sop.SOP;
 import sop.SessionKey;
+import sop.enums.SignatureMode;
 import sop.exception.SOPGPException;
+import sop.testsuite.assertions.VerificationListAssert;
 
 public class EncryptDecryptRoundTripTest {
 
@@ -75,7 +77,8 @@ public class EncryptDecryptRoundTripTest {
         assertArrayEquals(message, decrypted.toByteArray());
 
         DecryptionResult result = bytesAndResult.getResult();
-        assertEquals(1, result.getVerifications().size());
+        VerificationListAssert.assertThatVerificationList(result.getVerifications())
+                .hasSingleItem();
     }
 
     @Test
@@ -106,7 +109,8 @@ public class EncryptDecryptRoundTripTest {
         assertArrayEquals(message, decrypted);
 
         DecryptionResult result = bytesAndResult.getResult();
-        assertEquals(1, result.getVerifications().size());
+        VerificationListAssert.assertThatVerificationList(result.getVerifications())
+                .hasSingleItem();
     }
 
     @Test
@@ -125,7 +129,8 @@ public class EncryptDecryptRoundTripTest {
         assertArrayEquals(message, decrypted);
 
         DecryptionResult result = bytesAndResult.getResult();
-        assertEquals(0, result.getVerifications().size());
+        VerificationListAssert.assertThatVerificationList(result.getVerifications())
+                .isEmpty();
     }
 
     @Test
@@ -144,7 +149,8 @@ public class EncryptDecryptRoundTripTest {
         assertArrayEquals(message, decrypted);
 
         DecryptionResult result = bytesAndResult.getResult();
-        assertEquals(0, result.getVerifications().size());
+        VerificationListAssert.assertThatVerificationList(result.getVerifications())
+                .isEmpty();
     }
 
     @Test
@@ -163,7 +169,8 @@ public class EncryptDecryptRoundTripTest {
         assertArrayEquals(message, decrypted);
 
         DecryptionResult result = bytesAndResult.getResult();
-        assertEquals(0, result.getVerifications().size());
+        VerificationListAssert.assertThatVerificationList(result.getVerifications())
+                .isEmpty();
     }
 
     @Test
@@ -180,7 +187,8 @@ public class EncryptDecryptRoundTripTest {
                 .toByteArrayAndResult()
                 .getResult();
 
-        assertTrue(result.getVerifications().isEmpty());
+        VerificationListAssert.assertThatVerificationList(result.getVerifications())
+                .isEmpty();
     }
 
     @Test
@@ -486,14 +494,19 @@ public class EncryptDecryptRoundTripTest {
                 sop.decrypt().withKey(key).verifyWithCert(cert).ciphertext(ciphertext).toByteArrayAndResult();
         assertEquals(sessionKey, bytesAndResult.getResult().getSessionKey().get().toString());
         assertArrayEquals(plaintext, bytesAndResult.getBytes());
-        assertEquals(1, bytesAndResult.getResult().getVerifications().size());
-
+        VerificationListAssert.assertThatVerificationList(bytesAndResult.getResult().getVerifications())
+                .hasSingleItem()
+                .issuedBy("9C26EFAB1C6500A228E8A9C2658EE420C824D191")
+                .hasMode(SignatureMode.binary);
         // Decrypt with session key
         bytesAndResult = sop.decrypt().withSessionKey(SessionKey.fromString(sessionKey))
                 .verifyWithCert(cert).ciphertext(ciphertext).toByteArrayAndResult();
         assertEquals(sessionKey, bytesAndResult.getResult().getSessionKey().get().toString());
         assertArrayEquals(plaintext, bytesAndResult.getBytes());
-        assertEquals(1, bytesAndResult.getResult().getVerifications().size());
+        VerificationListAssert.assertThatVerificationList(bytesAndResult.getResult().getVerifications())
+                .hasSingleItem()
+                .issuedBy("9C26EFAB1C6500A228E8A9C2658EE420C824D191")
+                .hasMode(SignatureMode.binary);
     }
 
     @Test
