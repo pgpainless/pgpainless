@@ -5,8 +5,11 @@ SPDX-License-Identifier: CC0-1.0
 
 # PGPainless Changelog
 
-## 1.5.2-SNAPSHOT
+## 1.5.2-rc1
 - Bump `sop-java` to `6.1.0`
+- Normalize `OpenPgpMessageInputStream.read()` behaviour when reading past the stream
+  - Instead of throwing a `MalformedOpenPgpMessageException` which could throw off unsuspecting parsers,
+    we now simply return `-1` like every other `InputStream`.
 
 ## 1.5.1
 - SOP: Emit signature `mode:{binary|text}` in `Verification` results
