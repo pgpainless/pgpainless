@@ -132,6 +132,10 @@ public class OpenPgpMessageSyntax implements Syntax {
     @Nonnull
     Transition fromValid(@Nonnull InputSymbol input, @Nullable StackSymbol stackItem)
             throws MalformedOpenPgpMessageException {
+        if (input == InputSymbol.EndOfSequence) {
+            // allow subsequent read() calls.
+            return new Transition(State.Valid);
+        }
         // There is no applicable transition rule out of Valid
         throw new MalformedOpenPgpMessageException(State.Valid, input, stackItem);
     }

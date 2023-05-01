@@ -34,6 +34,7 @@ import org.bouncycastle.openpgp.PGPSignature;
 import org.bouncycastle.util.io.Streams;
 import org.junit.JUtils;
 import org.junit.jupiter.api.Named;
+import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.Arguments;
 import org.junit.jupiter.params.provider.MethodSource;
@@ -650,6 +651,22 @@ public class OpenPgpMessageInputStreamTest {
         assertNull(metadata.getCompressionAlgorithm());
         assertFalse(metadata.getVerifiedInlineSignatures().isEmpty());
         assertTrue(metadata.getRejectedInlineSignatures().isEmpty());
+    }
+
+    @Test
+    public void readAfterCloseTest() throws PGPException, IOException {
+        OpenPgpMessageInputStream pgpIn = get(SENC_LIT, ConsumerOptions.get()
+                .addDecryptionPassphrase(Passphrase.fromPassword(PASSPHRASE)));
+        Streams.drain(pgpIn); // read all
+
+        byte[] buf = new byte[1024];
+        assertEquals(-1, pgpIn.read(buf));
+        assertEquals(-1, pgpIn.read());
+        assertEquals(-1, pgpIn.read(buf));
+        assertEquals(-1, pgpIn.read());
+
+        pgpIn.close();
+        pgpIn.getMetadata();
     }
 
     private static Tuple<String, MessageMetadata> processReadBuffered(String armoredMessage, ConsumerOptions options)
