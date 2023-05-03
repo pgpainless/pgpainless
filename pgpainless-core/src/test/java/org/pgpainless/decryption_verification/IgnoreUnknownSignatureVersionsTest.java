@@ -5,6 +5,7 @@
 package org.pgpainless.decryption_verification;
 
 import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.junit.jupiter.api.Assertions.fail;
 
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
@@ -71,7 +72,7 @@ public class IgnoreUnknownSignatureVersionsTest {
         try {
             cert = PGPainless.readKeyRing().publicKeyRing(CERT);
         } catch (IOException e) {
-
+            fail("Cannot parse certificate.", e);
         }
     }
 
