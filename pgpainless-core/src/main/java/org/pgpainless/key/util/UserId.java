@@ -88,7 +88,7 @@ public final class UserId implements CharSequence {
      *     <li><pre>John Doe &lt;john@pgpainless.org&gt;</pre></li>
      *     <li><pre>John Doe (work email) &lt;john@pgpainless.org&gt;</pre></li>
      * </ul>
-     * In these cases, {@link #parse(String)} will detect email addresses, names and comments and expose those
+     * In these cases, this method will detect email addresses, names and comments and expose those
      * via the respective getters.
      * This method does not support parsing mail addresses of the following formats:
      * <ul>
