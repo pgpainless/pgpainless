@@ -19,6 +19,8 @@ import org.bouncycastle.openpgp.PGPOnePassSignature;
 import org.bouncycastle.openpgp.PGPSignature;
 import org.pgpainless.algorithm.OpenPgpPacket;
 
+import javax.annotation.Nonnull;
+
 /**
  * Since we need to update signatures with data from the underlying stream, this class is used to tee out the data.
  * Unfortunately we cannot simply override {@link BCPGInputStream#read()} to tee the data out though, since
@@ -121,7 +123,7 @@ public class TeeBCPGInputStream {
         }
 
         @Override
-        public int read(byte[] b, int off, int len) throws IOException {
+        public int read(@Nonnull byte[] b, int off, int len) throws IOException {
             if (last != -1) {
                 outputStream.write(last);
             }
