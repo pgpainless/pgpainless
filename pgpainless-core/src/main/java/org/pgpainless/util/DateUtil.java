@@ -4,6 +4,7 @@
 
 package org.pgpainless.util;
 
+import javax.annotation.Nonnull;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.Date;
@@ -16,6 +17,7 @@ public final class DateUtil {
     }
 
     // Java's SimpleDateFormat is not thread-safe, therefore we return a new instance on every invocation.
+    @Nonnull
     public static SimpleDateFormat getParser() {
         SimpleDateFormat parser = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss z");
         parser.setTimeZone(TimeZone.getTimeZone("UTC"));
@@ -28,11 +30,12 @@ public final class DateUtil {
      * @param dateString timestamp
      * @return date
      */
-    public static Date parseUTCDate(String dateString) {
+    @Nonnull
+    public static Date parseUTCDate(@Nonnull String dateString) {
         try {
             return getParser().parse(dateString);
         } catch (ParseException e) {
-            return null;
+            throw new IllegalArgumentException("Malformed UTC timestamp: " + dateString, e);
         }
     }
 
@@ -42,6 +45,7 @@ public final class DateUtil {
      * @param date date
      * @return timestamp
      */
+    @Nonnull
     public static String formatUTCDate(Date date) {
         return getParser().format(date);
     }
@@ -51,7 +55,8 @@ public final class DateUtil {
      * @param date date
      * @return floored date
      */
-    public static Date toSecondsPrecision(Date date) {
+    @Nonnull
+    public static Date toSecondsPrecision(@Nonnull Date date) {
         long millis = date.getTime();
         long seconds = millis / 1000;
         long floored = seconds * 1000;
@@ -63,6 +68,7 @@ public final class DateUtil {
      *
      * @return now
      */
+    @Nonnull
     public static Date now() {
         return toSecondsPrecision(new Date());
     }
