@@ -124,9 +124,7 @@ public class SecretKeyRingEditor implements SecretKeyRingEditorInterface {
         }
 
         SelfSignatureBuilder builder = new SelfSignatureBuilder(primaryKey, protector);
-        if (referenceTime != null) {
-            builder.getHashedSubpackets().setSignatureCreationTime(referenceTime);
-        }
+        builder.getHashedSubpackets().setSignatureCreationTime(referenceTime);
         builder.setSignatureType(SignatureType.POSITIVE_CERTIFICATION);
 
         // Retain signature subpackets of previous signatures
@@ -351,16 +349,12 @@ public class SecretKeyRingEditor implements SecretKeyRingEditorInterface {
                 .getV4FingerprintCalculator(), false, subkeyProtector.getEncryptor(subkey.getKeyID()));
 
         SubkeyBindingSignatureBuilder skBindingBuilder = new SubkeyBindingSignatureBuilder(primaryKey, primaryKeyProtector, hashAlgorithm);
-        if (referenceTime != null) {
-            skBindingBuilder.getHashedSubpackets().setSignatureCreationTime(referenceTime);
-        }
+        skBindingBuilder.getHashedSubpackets().setSignatureCreationTime(referenceTime);
         skBindingBuilder.getHashedSubpackets().setKeyFlags(flags);
 
         if (subkeyAlgorithm.isSigningCapable()) {
             PrimaryKeyBindingSignatureBuilder pkBindingBuilder = new PrimaryKeyBindingSignatureBuilder(secretSubkey, subkeyProtector, hashAlgorithm);
-            if (referenceTime != null) {
-                pkBindingBuilder.getHashedSubpackets().setSignatureCreationTime(referenceTime);
-            }
+            pkBindingBuilder.getHashedSubpackets().setSignatureCreationTime(referenceTime);
             PGPSignature pkBinding = pkBindingBuilder.build(primaryKey.getPublicKey());
             skBindingBuilder.getHashedSubpackets().addEmbeddedSignature(pkBinding);
         }
