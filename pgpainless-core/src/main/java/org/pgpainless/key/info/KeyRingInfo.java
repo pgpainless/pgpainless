@@ -292,7 +292,7 @@ public class KeyRingInfo {
 
     /**
      * Return the current primary user-id of the key ring.
-     *
+     * <p>
      * Note: If no user-id is marked as primary key using a {@link PrimaryUserID} packet,
      * this method returns the first user-id on the key, otherwise null.
      *
@@ -472,7 +472,7 @@ public class KeyRingInfo {
 
     /**
      * Return the latest direct-key self signature.
-     *
+     * <p>
      * Note: This signature might be expired (check with {@link SignatureUtils#isSignatureExpired(PGPSignature)}).
      *
      * @return latest direct key self-signature or null
@@ -782,7 +782,7 @@ public class KeyRingInfo {
      * Return the latest date on which  the key ring is still usable for the given key flag.
      * If only a subkey is carrying the required flag and the primary key expires earlier than the subkey,
      * the expiry date of the primary key is returned.
-     *
+     * <p>
      * This method might return null, if the primary key and a subkey with the required flag does not expire.
      * @param use key flag representing the use case, e.g. {@link KeyFlag#SIGN_DATA} or
      * {@link KeyFlag#ENCRYPT_COMMS}/{@link KeyFlag#ENCRYPT_STORAGE}.
@@ -1133,7 +1133,7 @@ public class KeyRingInfo {
     /**
      * Returns true, if this {@link KeyRingInfo} is based on a {@link PGPSecretKeyRing}, which has a valid signing key
      * which is ready to be used (i.e. secret key is present and is not on a smart-card).
-     *
+     * <p>
      * If you just want to check, whether a key / certificate has signing capable subkeys,
      * use {@link #isSigningCapable()} instead.
      *

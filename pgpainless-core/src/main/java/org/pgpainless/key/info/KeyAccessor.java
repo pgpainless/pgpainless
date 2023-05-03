@@ -28,7 +28,7 @@ public abstract class KeyAccessor {
     /**
      * Depending on the way we address the key (key-id or user-id), return the respective {@link PGPSignature}
      * which contains the algorithm preferences we are going to use.
-     *
+     * <p>
      * If we address a key via its user-id, we want to rely on the algorithm preferences in the user-id certification,
      * while we would instead rely on those in the direct-key signature if we'd address the key by key-id.
      *

@@ -158,7 +158,7 @@ public final class SigningOptions {
      * Add an inline-signature.
      * Inline signatures are being embedded into the message itself and can be processed in one pass, thanks to the use
      * of one-pass-signature packets.
-     *
+     * <p>
      * This method uses the passed in user-id to select user-specific hash algorithms.
      *
      * @param secretKeyDecryptor decryptor to unlock the signing secret key
@@ -182,7 +182,7 @@ public final class SigningOptions {
      * Add an inline-signature.
      * Inline signatures are being embedded into the message itself and can be processed in one pass, thanks to the use
      * of one-pass-signature packets.
-     *
+     * <p>
      * This method uses the passed in user-id to select user-specific hash algorithms.
      *
      * @param secretKeyDecryptor decryptor to unlock the signing secret key
@@ -295,7 +295,7 @@ public final class SigningOptions {
      * Detached signatures are not being added into the PGP message itself.
      * Instead, they can be distributed separately to the message.
      * Detached signatures are useful if the data that is being signed shall not be modified (e.g. when signing a file).
-     *
+     * <p>
      * This method uses the passed in user-id to select user-specific hash algorithms.
      *
      * @param secretKeyDecryptor decryptor to unlock the secret signing key
@@ -320,7 +320,7 @@ public final class SigningOptions {
      * Detached signatures are not being added into the PGP message itself.
      * Instead, they can be distributed separately to the message.
      * Detached signatures are useful if the data that is being signed shall not be modified (e.g. when signing a file).
-     *
+     * <p>
      * This method uses the passed in user-id to select user-specific hash algorithms.
      *
      * @param secretKeyDecryptor decryptor to unlock the secret signing key
@@ -406,7 +406,7 @@ public final class SigningOptions {
 
     /**
      * Negotiate, which hash algorithm to use.
-     *
+     * <p>
      * This method gives the highest priority to the algorithm override, which can be set via {@link #overrideHashAlgorithm(HashAlgorithm)}.
      * After that, the signing keys hash algorithm preferences are iterated to find the first acceptable algorithm.
      * Lastly, should no acceptable algorithm be found, the {@link Policy Policies} default signature hash algorithm is
@@ -451,7 +451,7 @@ public final class SigningOptions {
     /**
      * Override hash algorithm negotiation by dictating which hash algorithm needs to be used.
      * If no override has been set, an accetable algorithm will be negotiated instead.
-     *
+     * <p>
      * Note: To override the hash algorithm for signing, call this method *before* calling
      * {@link #addInlineSignature(SecretKeyRingProtector, PGPSecretKeyRing, DocumentSignatureType)} or
      * {@link #addDetachedSignature(SecretKeyRingProtector, PGPSecretKeyRing, DocumentSignatureType)}.

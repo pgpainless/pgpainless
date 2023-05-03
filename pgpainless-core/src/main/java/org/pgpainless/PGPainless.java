@@ -152,7 +152,7 @@ public final class PGPainless {
     /**
      * Make changes to a secret key.
      * This method can be used to change key expiration dates and passphrases, or add/revoke subkeys.
-     *
+     * <p>
      * After making the desired changes in the builder, the modified key ring can be extracted using {@link SecretKeyRingEditorInterface#done()}.
      *
      * @param secretKeys secret key ring
@@ -165,7 +165,7 @@ public final class PGPainless {
     /**
      * Make changes to a secret key at the given reference time.
      * This method can be used to change key expiration dates and passphrases, or add/revoke user-ids and subkeys.
-     *
+     * <p>
      * After making the desired changes in the builder, the modified key can be extracted using {@link SecretKeyRingEditorInterface#done()}.
      *
      * @param secretKeys secret key ring
@@ -179,7 +179,7 @@ public final class PGPainless {
     /**
      * Quickly access information about a {@link org.bouncycastle.openpgp.PGPPublicKeyRing} / {@link PGPSecretKeyRing}.
      * This method can be used to determine expiration dates, key flags and other information about a key.
-     *
+     * <p>
      * To evaluate a key at a given date (e.g. to determine if the key was allowed to create a certain signature)
      * use {@link #inspectKeyRing(PGPKeyRing, Date)} instead.
      *
