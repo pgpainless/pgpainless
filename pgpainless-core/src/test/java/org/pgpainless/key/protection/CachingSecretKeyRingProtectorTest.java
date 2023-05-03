@@ -129,7 +129,8 @@ public class CachingSecretKeyRingProtectorTest {
 
             Passphrase passphrase = withCallback.getPassphraseFor(x);
             assertNotNull(passphrase);
-            assertEquals(doubled, (long) Long.valueOf(new String(passphrase.getChars())));
+            assertNotNull(passphrase.getChars());
+            assertEquals(doubled, Long.parseLong(new String(passphrase.getChars())));
         }
     }
 

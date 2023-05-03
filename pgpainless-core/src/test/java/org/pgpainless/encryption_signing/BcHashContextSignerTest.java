@@ -27,7 +27,7 @@ import org.pgpainless.algorithm.HashAlgorithm;
 import org.pgpainless.algorithm.SignatureType;
 import org.pgpainless.decryption_verification.ConsumerOptions;
 import org.pgpainless.decryption_verification.DecryptionStream;
-import org.pgpainless.decryption_verification.OpenPgpMetadata;
+import org.pgpainless.decryption_verification.MessageMetadata;
 import org.pgpainless.key.generation.type.rsa.RsaLength;
 import org.pgpainless.key.protection.SecretKeyRingProtector;
 
@@ -105,8 +105,8 @@ public class BcHashContextSignerTest {
         Streams.pipeAll(decryptionStream, out);
         decryptionStream.close();
 
-        OpenPgpMetadata metadata = decryptionStream.getResult();
-        assertTrue(metadata.isVerified());
+        MessageMetadata metadata = decryptionStream.getMetadata();
+        assertTrue(metadata.isVerifiedSigned());
     }
 
     private PGPSignature signMessage(byte[] message, HashAlgorithm hashAlgorithm, PGPSecretKeyRing secretKeys)

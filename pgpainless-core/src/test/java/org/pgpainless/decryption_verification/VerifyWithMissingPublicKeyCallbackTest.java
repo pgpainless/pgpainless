@@ -15,7 +15,6 @@ import java.nio.charset.StandardCharsets;
 import java.security.InvalidAlgorithmParameterException;
 import java.security.NoSuchAlgorithmException;
 import javax.annotation.Nonnull;
-import javax.annotation.Nullable;
 
 import org.bouncycastle.openpgp.PGPException;
 import org.bouncycastle.openpgp.PGPPublicKey;
@@ -63,7 +62,6 @@ public class VerifyWithMissingPublicKeyCallbackTest {
                 .withOptions(new ConsumerOptions()
                         .addVerificationCert(unrelatedKeys)
                         .setMissingCertificateCallback(new MissingPublicKeyCallback() {
-                            @Nullable
                             @Override
                             public PGPPublicKeyRing onMissingPublicKeyEncountered(@Nonnull Long keyId) {
                                 assertEquals(signingKey.getKeyID(), (long) keyId, "Signing key-ID mismatch.");

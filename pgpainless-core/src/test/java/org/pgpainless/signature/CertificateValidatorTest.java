@@ -24,7 +24,7 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.pgpainless.PGPainless;
 import org.pgpainless.decryption_verification.ConsumerOptions;
 import org.pgpainless.decryption_verification.DecryptionStream;
-import org.pgpainless.decryption_verification.OpenPgpMetadata;
+import org.pgpainless.decryption_verification.MessageMetadata;
 import org.pgpainless.exception.SignatureValidationException;
 import org.pgpainless.policy.Policy;
 import org.pgpainless.signature.consumer.CertificateValidator;
@@ -1391,7 +1391,7 @@ public class CertificateValidatorTest {
         Streams.drain(decryptionStream);
 
         decryptionStream.close();
-        OpenPgpMetadata metadata = decryptionStream.getResult();
+        MessageMetadata metadata = decryptionStream.getMetadata();
 
         assertFalse(metadata.getVerifiedSignatures().isEmpty());
     }

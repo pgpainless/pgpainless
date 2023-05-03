@@ -4,22 +4,11 @@
 
 package org.pgpainless.key.modification;
 
-import org.bouncycastle.openpgp.PGPException;
-import org.bouncycastle.openpgp.PGPPublicKeyRing;
-import org.bouncycastle.openpgp.PGPSecretKeyRing;
-import org.bouncycastle.util.io.Streams;
-import org.junit.jupiter.api.Test;
-import org.pgpainless.PGPainless;
-import org.pgpainless.decryption_verification.ConsumerOptions;
-import org.pgpainless.decryption_verification.DecryptionStream;
-import org.pgpainless.decryption_verification.OpenPgpMetadata;
-import org.pgpainless.encryption_signing.EncryptionOptions;
-import org.pgpainless.encryption_signing.EncryptionResult;
-import org.pgpainless.encryption_signing.EncryptionStream;
-import org.pgpainless.encryption_signing.ProducerOptions;
-import org.pgpainless.key.info.KeyRingInfo;
-import org.pgpainless.key.protection.SecretKeyRingProtector;
-import org.pgpainless.signature.subpackets.SelfSignatureSubpackets;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
@@ -27,10 +16,23 @@ import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.util.NoSuchElementException;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertFalse;
-import static org.junit.jupiter.api.Assertions.assertThrows;
-import static org.junit.jupiter.api.Assertions.assertTrue;
+import org.bouncycastle.openpgp.PGPException;
+import org.bouncycastle.openpgp.PGPPublicKeyRing;
+import org.bouncycastle.openpgp.PGPSecretKeyRing;
+import org.bouncycastle.openpgp.PGPSignature;
+import org.bouncycastle.util.io.Streams;
+import org.junit.jupiter.api.Test;
+import org.pgpainless.PGPainless;
+import org.pgpainless.decryption_verification.ConsumerOptions;
+import org.pgpainless.decryption_verification.DecryptionStream;
+import org.pgpainless.decryption_verification.MessageMetadata;
+import org.pgpainless.encryption_signing.EncryptionOptions;
+import org.pgpainless.encryption_signing.EncryptionResult;
+import org.pgpainless.encryption_signing.EncryptionStream;
+import org.pgpainless.encryption_signing.ProducerOptions;
+import org.pgpainless.key.info.KeyRingInfo;
+import org.pgpainless.key.protection.SecretKeyRingProtector;
+import org.pgpainless.signature.subpackets.SelfSignatureSubpackets;
 
 /**
  * Test for #298.
@@ -130,7 +132,9 @@ public class FixUserIdDoesNotBreakEncryptionCapabilityTest {
         assertTrue(info.isUserIdValid(userIdAfter));
         assertEquals(userIdAfter, info.getPrimaryUserId());
 
-        assertTrue(info.getLatestUserIdCertification(userIdAfter).getHashedSubPackets().isPrimaryUserID());
+        PGPSignature latestCertification = info.getLatestUserIdCertification(userIdAfter);
+        assertNotNull(latestCertification);
+        assertTrue(latestCertification.getHashedSubPackets().isPrimaryUserID());
 
         PGPPublicKeyRing cert = PGPainless.extractCertificate(edited);
 
@@ -156,7 +160,7 @@ public class FixUserIdDoesNotBreakEncryptionCapabilityTest {
         Streams.pipeAll(decryptionStream, plain);
         decryptionStream.close();
 
-        OpenPgpMetadata metadata = decryptionStream.getResult();
+        MessageMetadata metadata = decryptionStream.getMetadata();
         assertTrue(metadata.isEncrypted());
     }
 }

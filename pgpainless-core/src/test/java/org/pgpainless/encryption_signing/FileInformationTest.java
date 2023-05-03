@@ -6,6 +6,7 @@ package org.pgpainless.encryption_signing;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import java.io.ByteArrayInputStream;
@@ -123,6 +124,7 @@ public class FileInformationTest {
 
         assertEquals("", decResult.getFilename());
         JUtils.assertDateEquals(PGPLiteralData.NOW, decResult.getModificationDate());
+        assertNotNull(decResult.getLiteralDataEncoding());
         assertEquals(PGPLiteralData.BINARY, decResult.getLiteralDataEncoding().getCode());
         assertFalse(decResult.isForYourEyesOnly());
     }
@@ -164,6 +166,7 @@ public class FileInformationTest {
 
         assertEquals(PGPLiteralData.CONSOLE, decResult.getFilename());
         JUtils.assertDateEquals(PGPLiteralData.NOW, decResult.getModificationDate());
+        assertNotNull(decResult.getLiteralDataEncoding());
         assertEquals(PGPLiteralData.BINARY, decResult.getLiteralDataEncoding().getCode());
         assertTrue(decResult.isForYourEyesOnly());
     }

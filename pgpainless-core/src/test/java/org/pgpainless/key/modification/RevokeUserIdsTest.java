@@ -5,6 +5,7 @@
 package org.pgpainless.key.modification;
 
 import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
@@ -81,6 +82,7 @@ public class RevokeUserIdsTest {
         assertTrue(info.isUserIdValid("Alice <alice@example.org>"));
 
         PGPSignature revocation = info.getUserIdRevocation("Allice <alice@example.org>");
+        assertNotNull(revocation);
 
         assertFalse(RevocationAttributes.Reason.isHardRevocation(
                 revocation.getHashedSubPackets().getRevocationReason().getRevocationReason()));

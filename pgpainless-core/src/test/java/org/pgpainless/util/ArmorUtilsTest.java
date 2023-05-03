@@ -96,7 +96,6 @@ public class ArmorUtilsTest {
         ArmoredOutputStream armor = new ArmoredOutputStream(new ByteArrayOutputStream());
         ArmorUtils.addMessageIdHeader(armor, "abcdefghi01234567890123456789012");
 
-        assertThrows(NullPointerException.class, () -> ArmorUtils.addMessageIdHeader(armor, null));
         assertThrows(IllegalArgumentException.class, () -> ArmorUtils.addMessageIdHeader(armor, "tooShort"));
         assertThrows(IllegalArgumentException.class, () -> ArmorUtils.addMessageIdHeader(armor, "toLooooooooooooooooooooooooooooooooooong"));
         assertThrows(IllegalArgumentException.class, () -> ArmorUtils.addMessageIdHeader(armor, "contains spaces 7890123456789012"));

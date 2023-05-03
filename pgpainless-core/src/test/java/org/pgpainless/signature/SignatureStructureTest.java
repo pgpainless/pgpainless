@@ -5,10 +5,12 @@
 package org.pgpainless.signature;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
 
 import java.io.IOException;
 import java.util.List;
 
+import org.bouncycastle.bcpg.sig.IssuerKeyID;
 import org.bouncycastle.bcpg.sig.NotationData;
 import org.bouncycastle.openpgp.PGPException;
 import org.bouncycastle.openpgp.PGPSignature;
@@ -80,7 +82,9 @@ public class SignatureStructureTest {
 
     @Test
     public void testGetIssuer() {
-        assertEquals(KeyIdUtil.fromLongKeyId("FBFCC82A015E7330"), SignatureSubpacketsUtil.getIssuerKeyId(signature).getKeyID());
+        IssuerKeyID issuerKeyID = SignatureSubpacketsUtil.getIssuerKeyId(signature);
+        assertNotNull(issuerKeyID);
+        assertEquals(KeyIdUtil.fromLongKeyId("FBFCC82A015E7330"), issuerKeyID.getKeyID());
     }
 
     @Test

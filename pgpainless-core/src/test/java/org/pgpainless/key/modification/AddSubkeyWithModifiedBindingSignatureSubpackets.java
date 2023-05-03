@@ -6,6 +6,7 @@ package org.pgpainless.key.modification;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import java.io.IOException;
@@ -65,10 +66,12 @@ public class AddSubkeyWithModifiedBindingSignatureSubpackets {
         assertFalse(signingKeys.isEmpty());
 
         PGPPublicKey newKey = signingKeys.get(0);
+        Date newExpirationDate = after.getSubkeyExpirationDate(new OpenPgpV4Fingerprint(newKey));
+        assertNotNull(newExpirationDate);
         Date now = new Date();
         JUtils.assertEquals(
                 now.getTime() + MILLIS_IN_SEC * secondsUntilExpiration,
-                after.getSubkeyExpirationDate(new OpenPgpV4Fingerprint(newKey)).getTime(), 2 * MILLIS_IN_SEC);
+                newExpirationDate.getTime(), 2 * MILLIS_IN_SEC);
         assertTrue(newKey.getSignatures().hasNext());
         PGPSignature binding = newKey.getSignatures().next();
         List<NotationData> notations = SignatureSubpacketsUtil.getHashedNotationData(binding);

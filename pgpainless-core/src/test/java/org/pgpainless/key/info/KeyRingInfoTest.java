@@ -269,10 +269,13 @@ public class KeyRingInfoTest {
         assertEquals(1, certKeys.size());
         assertEquals(primaryKey.getKeyID(), certKeys.get(0).getKeyID());
 
+        assertNotNull(info.getPrimaryKeyExpirationDate());
         assertEquals(primaryKeyExpiration.getTime(), info.getPrimaryKeyExpirationDate().getTime(), 5);
 
         // Encryption key expires after primary key, so we return primary key expiration instead.
-        assertEquals(primaryKeyExpiration.getTime(), info.getExpirationDateForUse(KeyFlag.ENCRYPT_STORAGE).getTime(), 5);
+        Date encryptExpDate = info.getExpirationDateForUse(KeyFlag.ENCRYPT_STORAGE);
+        assertNotNull(encryptExpDate);
+        assertEquals(primaryKeyExpiration.getTime(), encryptExpDate.getTime(), 5);
 
     }
 
