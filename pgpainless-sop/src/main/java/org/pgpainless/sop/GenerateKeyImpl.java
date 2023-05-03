@@ -126,7 +126,7 @@ public class GenerateKeyImpl implements GenerateKey {
         // RSA 4096
         else if (profile.equals(RSA4096_PROFILE.getName())) {
             key = PGPainless.generateKeyRing()
-                    .simpleRsaKeyRing(primaryUserId, RsaLength._4096, passphrase);
+                    .rsaKeyRing(primaryUserId, RsaLength._4096, passphrase);
         }
         else {
             // Missing else-if branch for profile. Oops.
