@@ -20,6 +20,7 @@ import org.bouncycastle.openpgp.PGPPublicKeyRing;
 import org.bouncycastle.openpgp.PGPPublicKeyRingCollection;
 import org.bouncycastle.openpgp.operator.PBEKeyEncryptionMethodGenerator;
 import org.bouncycastle.openpgp.operator.PGPKeyEncryptionMethodGenerator;
+import org.bouncycastle.openpgp.operator.PublicKeyKeyEncryptionMethodGenerator;
 import org.pgpainless.algorithm.EncryptionPurpose;
 import org.pgpainless.algorithm.SymmetricKeyAlgorithm;
 import org.pgpainless.exception.KeyException;
@@ -182,7 +183,7 @@ public class EncryptionOptions {
             SubkeyIdentifier keyId = new SubkeyIdentifier(key, encryptionSubkey.getKeyID());
             keyRingInfo.put(keyId, info);
             keyViews.put(keyId, new KeyAccessor.ViaUserId(info, keyId, userId.toString()));
-            addRecipientKey(key, encryptionSubkey);
+            addRecipientKey(key, encryptionSubkey, false);
         }
 
         return this;
@@ -207,6 +208,18 @@ public class EncryptionOptions {
      */
     public EncryptionOptions addRecipient(@Nonnull PGPPublicKeyRing key,
                                           @Nonnull EncryptionKeySelector encryptionKeySelectionStrategy) {
+        return addAsRecipient(key, encryptionKeySelectionStrategy, false);
+    }
+
+    public EncryptionOptions addHiddenRecipient(@Nonnull PGPPublicKeyRing key) {
+        return addHiddenRecipient(key, encryptionKeySelector);
+    }
+
+    public EncryptionOptions addHiddenRecipient(PGPPublicKeyRing key, EncryptionKeySelector encryptionKeySelectionStrategy) {
+        return addAsRecipient(key, encryptionKeySelectionStrategy, true);
+    }
+
+    private EncryptionOptions addAsRecipient(PGPPublicKeyRing key, EncryptionKeySelector encryptionKeySelectionStrategy, boolean wildcardKeyId) {
         Date evaluationDate = new Date();
         KeyRingInfo info;
         info = new KeyRingInfo(key, evaluationDate);
@@ -231,17 +244,19 @@ public class EncryptionOptions {
             SubkeyIdentifier keyId = new SubkeyIdentifier(key, encryptionSubkey.getKeyID());
             keyRingInfo.put(keyId, info);
             keyViews.put(keyId, new KeyAccessor.ViaKeyId(info, keyId));
-            addRecipientKey(key, encryptionSubkey);
+            addRecipientKey(key, encryptionSubkey, wildcardKeyId);
         }
 
         return this;
     }
 
     private void addRecipientKey(@Nonnull PGPPublicKeyRing keyRing,
-                                 @Nonnull PGPPublicKey key) {
+                                 @Nonnull PGPPublicKey key,
+                                 boolean wildcardKeyId) {
         encryptionKeys.add(new SubkeyIdentifier(keyRing, key.getKeyID()));
-        PGPKeyEncryptionMethodGenerator encryptionMethod = ImplementationFactory
+        PublicKeyKeyEncryptionMethodGenerator encryptionMethod = ImplementationFactory
                 .getInstance().getPublicKeyKeyEncryptionMethodGenerator(key);
+        encryptionMethod.setUseWildcardKeyID(wildcardKeyId);
         addEncryptionMethod(encryptionMethod);
     }
 
