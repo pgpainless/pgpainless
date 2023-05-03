@@ -5,6 +5,16 @@ SPDX-License-Identifier: CC0-1.0
 
 # PGPainless Changelog
 
+## 1.5.2-SNAPSHOT
+- `KeyRingTemplates`:
+  - Add `rsaKeyRing()` for generating RSA keys with primary key and dedicated signing, encryption subkeys
+  - Reduce number of template methods by replacing `UserId`, `String` arguments with `CharSequence`
+- Add `MessageMetadata.getRecipientKeyIds()`
+- Work towards more null-safe API by annotating methods in `EncryptionOptions`, `SigningOptions`, `KeyRingInfo`, `PGPainless` with `@Nonnull`, `@Nullable`
+- `KeyRingUtils`: Removed `removeSecretKey()` in favour of `stripSecretKey()`
+- General code cleanup
+- SOP: generating keys with `rfc4880` profile now generates key with primary key and subkeys
+
 ## 1.5.2-rc1
 - Bump `sop-java` to `6.1.0`
 - Normalize `OpenPgpMessageInputStream.read()` behaviour when reading past the stream
