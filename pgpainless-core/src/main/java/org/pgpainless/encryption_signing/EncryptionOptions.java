@@ -33,7 +33,7 @@ import org.pgpainless.util.Passphrase;
 /**
  * Options for the encryption process.
  * This class can be used to set encryption parameters, like encryption keys and passphrases, algorithms etc.
- *
+ * <p>
  * A typical use might look like follows:
  * <pre>
  * {@code
@@ -42,11 +42,11 @@ import org.pgpainless.util.Passphrase;
  * opt.addPassphrase(Passphrase.fromPassword("AdditionalDecryptionPassphrase123"));
  * }
  * </pre>
- *
+ *<p>
  * To use a custom symmetric encryption algorithm, use {@link #overrideEncryptionAlgorithm(SymmetricKeyAlgorithm)}.
  * This will cause PGPainless to use the provided algorithm for message encryption, instead of negotiating an algorithm
  * by inspecting the provided recipient keys.
- *
+ * <p>
  * By default, PGPainless will encrypt to all suitable, encryption capable subkeys on each recipient's certificate.
  * This behavior can be changed per recipient, e.g. by calling
  * <pre>
@@ -83,7 +83,7 @@ public class EncryptionOptions {
      * Factory method to create an {@link EncryptionOptions} object which will encrypt for keys
      * which carry either the {@link org.pgpainless.algorithm.KeyFlag#ENCRYPT_COMMS} or
      * {@link org.pgpainless.algorithm.KeyFlag#ENCRYPT_STORAGE} flag.
-     *
+     * <p>
      * Use this if you are not sure.
      *
      * @return encryption options
