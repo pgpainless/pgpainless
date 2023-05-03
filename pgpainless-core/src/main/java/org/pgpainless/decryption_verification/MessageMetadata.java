@@ -92,6 +92,21 @@ public class MessageMetadata {
         return false;
     }
 
+    /**
+     * Return a list containing all recipient keyIDs.
+     *
+     * @return list of recipients
+     */
+    public List<Long> getRecipientKeyIds() {
+        List<Long> keyIds = new ArrayList<>();
+        Iterator<EncryptedData> encLayers = getEncryptionLayers();
+        while (encLayers.hasNext()) {
+            EncryptedData layer = encLayers.next();
+            keyIds.addAll(layer.getRecipients());
+        }
+        return keyIds;
+    }
+
     public @Nonnull Iterator<EncryptedData> getEncryptionLayers() {
         return new LayerIterator<EncryptedData>(message) {
             @Override
