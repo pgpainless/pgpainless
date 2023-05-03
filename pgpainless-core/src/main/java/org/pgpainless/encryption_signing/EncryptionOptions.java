@@ -211,10 +211,25 @@ public class EncryptionOptions {
         return addAsRecipient(key, encryptionKeySelectionStrategy, false);
     }
 
+    /**
+     * Add a certificate as hidden recipient.
+     * The recipients key-id will be obfuscated by setting a wildcard key ID.
+     *
+     * @param key recipient key
+     * @return this
+     */
     public EncryptionOptions addHiddenRecipient(@Nonnull PGPPublicKeyRing key) {
         return addHiddenRecipient(key, encryptionKeySelector);
     }
 
+    /**
+     * Add a certificate as hidden recipient, using the provided {@link EncryptionKeySelector} to select recipient subkeys.
+     * The recipients key-ids will be obfuscated by setting a wildcard key ID instead.
+     *
+     * @param key recipient key
+     * @param encryptionKeySelectionStrategy strategy to select recipient (sub) keys.
+     * @return this
+     */
     public EncryptionOptions addHiddenRecipient(PGPPublicKeyRing key, EncryptionKeySelector encryptionKeySelectionStrategy) {
         return addAsRecipient(key, encryptionKeySelectionStrategy, true);
     }
