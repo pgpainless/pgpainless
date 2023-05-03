@@ -5,6 +5,7 @@
 package org.pgpainless.signature.consumer;
 
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.Date;
 import java.util.Iterator;
 import java.util.List;
@@ -115,6 +116,12 @@ public abstract class SignatureValidator {
 
                 try {
                     PGPSignatureList embeddedSignatures = SignatureSubpacketsUtil.getEmbeddedSignature(signature);
+                    if (embeddedSignatures == null) {
+                        throw new SignatureValidationException(
+                                "Missing primary key binding signature on signing capable subkey " +
+                                        Long.toHexString(subkey.getKeyID()), Collections.emptyMap());
+                    }
+
                     boolean hasValidPrimaryKeyBinding = false;
                     Map<PGPSignature, Exception> rejectedEmbeddedSigs = new ConcurrentHashMap<>();
                     for (PGPSignature embedded : embeddedSignatures) {
