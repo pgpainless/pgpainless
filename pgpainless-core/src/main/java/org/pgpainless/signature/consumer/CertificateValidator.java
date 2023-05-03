@@ -74,6 +74,7 @@ public final class CertificateValidator {
             PGPSignature revocation = primaryKeyRevocationIterator.next();
             if (revocation.getKeyID() != primaryKey.getKeyID()) {
                 // Revocation was not made by primary key, skip
+                continue;
                 // TODO: What about external revocation keys?
             }
             try {
