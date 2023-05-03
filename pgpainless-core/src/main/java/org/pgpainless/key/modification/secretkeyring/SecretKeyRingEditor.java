@@ -182,7 +182,10 @@ public class SecretKeyRingEditor implements SecretKeyRingEditorInterface {
             }
 
             // We need to unmark this user-id as primary
-            if (info.getLatestUserIdCertification(otherUserId).getHashedSubPackets().isPrimaryUserID()) {
+            PGPSignature userIdCertification = info.getLatestUserIdCertification(otherUserId);
+            assert (userIdCertification != null);
+
+            if (userIdCertification.getHashedSubPackets().isPrimaryUserID()) {
                 addUserId(otherUserId, new SelfSignatureSubpackets.Callback() {
                     @Override
                     public void modifyHashedSubpackets(SelfSignatureSubpackets hashedSubpackets) {
@@ -601,6 +604,7 @@ public class SecretKeyRingEditor implements SecretKeyRingEditorInterface {
             }
 
             if (prevUserIdSig.getHashedSubPackets().isPrimaryUserID()) {
+                assert (primaryUserId != null);
                 PGPSignature userIdSig = reissueNonPrimaryUserId(secretKeyRingProtector, userId, prevUserIdSig);
                 secretKeyRing = KeyRingUtils.injectCertification(secretKeyRing, primaryUserId, userIdSig);
             }

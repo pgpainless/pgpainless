@@ -544,6 +544,7 @@ public class OpenPgpMessageInputStream extends DecryptionStream {
             for (Tuple<PGPSecretKey, PGPPublicKeyEncryptedData> k : postponedDueToMissingPassphrase) {
                 PGPSecretKey key = k.getA();
                 PGPSecretKeyRing keys = getDecryptionKey(key.getKeyID());
+                assert (keys != null);
                 keyIds.add(new SubkeyIdentifier(keys, key.getKeyID()));
             }
             if (!keyIds.isEmpty()) {
@@ -556,6 +557,7 @@ public class OpenPgpMessageInputStream extends DecryptionStream {
                     PGPSecretKey secretKey = missingPassphrases.getA();
                     long keyId = secretKey.getKeyID();
                     PGPSecretKeyRing decryptionKey = getDecryptionKey(keyId);
+                    assert (decryptionKey != null);
                     SubkeyIdentifier decryptionKeyId = new SubkeyIdentifier(decryptionKey, keyId);
                     if (hasUnsupportedS2KSpecifier(secretKey, decryptionKeyId)) {
                         continue;

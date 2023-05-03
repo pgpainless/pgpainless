@@ -275,6 +275,7 @@ public class CertifyCertificate {
         // We only support certification-capable primary keys
         OpenPgpFingerprint fingerprint = info.getFingerprint();
         PGPPublicKey certificationPubKey = info.getPublicKey(fingerprint);
+        assert (certificationPubKey != null);
         if (!info.isKeyValidlyBound(certificationPubKey.getKeyID())) {
             throw new KeyException.RevokedKeyException(fingerprint);
         }
