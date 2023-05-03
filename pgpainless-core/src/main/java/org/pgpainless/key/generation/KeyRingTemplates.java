@@ -27,6 +27,78 @@ public final class KeyRingTemplates {
     }
 
     /**
+     * Generate an RSA OpenPGP key consisting of an RSA primary key used for certification,
+     * a dedicated RSA subkey used for signing and a third RSA subkey used for encryption.
+     *
+     * @param userId userId or null
+     * @param length length of the RSA keys
+     * @return key
+     * @throws InvalidAlgorithmParameterException in case of invalid key generation parameters
+     * @throws NoSuchAlgorithmException in case of missing algorithm implementation in the crypto provider
+     * @throws PGPException in case of an OpenPGP related error
+     */
+    public PGPSecretKeyRing rsaKeyRing(@Nullable CharSequence userId,
+                                       @Nonnull RsaLength length)
+            throws PGPException, InvalidAlgorithmParameterException, NoSuchAlgorithmException {
+        return rsaKeyRing(userId, length, Passphrase.emptyPassphrase());
+    }
+
+    /**
+     * Generate an RSA OpenPGP key consisting of an RSA primary key used for certification,
+     * a dedicated RSA subkey used for signing and a third RSA subkey used for encryption.
+     *
+     * @param userId userId or null
+     * @param length length of the RSA keys
+     * @param password passphrase to encrypt the key with
+     * @return key
+     * @throws InvalidAlgorithmParameterException in case of invalid key generation parameters
+     * @throws NoSuchAlgorithmException in case of missing algorithm implementation in the crypto provider
+     * @throws PGPException in case of an OpenPGP related error
+     */
+    public PGPSecretKeyRing rsaKeyRing(@Nullable CharSequence userId,
+                                       @Nonnull RsaLength length,
+                                       @Nonnull String password)
+            throws PGPException, InvalidAlgorithmParameterException, NoSuchAlgorithmException {
+        Passphrase passphrase = Passphrase.emptyPassphrase();
+        if (!isNullOrEmpty(password)) {
+            passphrase = Passphrase.fromPassword(password);
+        }
+        return rsaKeyRing(userId, length, passphrase);
+    }
+
+    /**
+     * Generate an RSA OpenPGP key consisting of an RSA primary key used for certification,
+     * a dedicated RSA subkey used for signing and a third RSA subkey used for encryption.
+     *
+     * @param userId userId or null
+     * @param length length of the RSA keys
+     * @param passphrase passphrase to encrypt the key with
+     * @return key
+     * @throws InvalidAlgorithmParameterException in case of invalid key generation parameters
+     * @throws NoSuchAlgorithmException in case of missing algorithm implementation in the crypto provider
+     * @throws PGPException in case of an OpenPGP related error
+     */
+    public PGPSecretKeyRing rsaKeyRing(@Nullable CharSequence userId,
+                                       @Nonnull RsaLength length,
+                                       @Nonnull Passphrase passphrase)
+            throws PGPException, InvalidAlgorithmParameterException, NoSuchAlgorithmException {
+        KeyRingBuilder builder = PGPainless.buildKeyRing()
+                .setPrimaryKey(KeySpec.getBuilder(KeyType.RSA(length), KeyFlag.CERTIFY_OTHER))
+                .addSubkey(KeySpec.getBuilder(KeyType.RSA(length), KeyFlag.SIGN_DATA))
+                .addSubkey(KeySpec.getBuilder(KeyType.RSA(length), KeyFlag.ENCRYPT_COMMS, KeyFlag.ENCRYPT_STORAGE));
+
+        if (userId != null) {
+            builder.addUserId(userId.toString());
+        }
+
+        if (!passphrase.isEmpty()) {
+            builder.setPassphrase(passphrase);
+        }
+
+        return builder.build();
+    }
+
+    /**
      * Creates a simple, unencrypted RSA KeyPair of length {@code length} with user-id {@code userId}.
      * The KeyPair consists of a single RSA master key which is used for signing, encryption and certification.
      *
