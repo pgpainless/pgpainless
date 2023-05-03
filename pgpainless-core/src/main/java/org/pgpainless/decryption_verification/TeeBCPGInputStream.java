@@ -7,7 +7,6 @@ package org.pgpainless.decryption_verification;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
-import java.util.NoSuchElementException;
 
 import org.bouncycastle.bcpg.BCPGInputStream;
 import org.bouncycastle.bcpg.MarkerPacket;
@@ -49,13 +48,7 @@ public class TeeBCPGInputStream {
             return null;
         }
 
-        OpenPgpPacket packet;
-        try {
-            packet = OpenPgpPacket.requireFromTag(tag);
-        } catch (NoSuchElementException e) {
-            throw e;
-        }
-        return packet;
+        return OpenPgpPacket.requireFromTag(tag);
     }
 
     public Packet readPacket() throws IOException {
