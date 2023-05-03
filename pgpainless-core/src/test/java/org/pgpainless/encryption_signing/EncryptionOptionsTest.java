@@ -36,6 +36,8 @@ import org.pgpainless.key.generation.type.xdh.XDHSpec;
 import org.pgpainless.key.util.KeyRingUtils;
 import org.pgpainless.util.Passphrase;
 
+import javax.annotation.Nonnull;
+
 public class EncryptionOptionsTest {
 
     private static PGPSecretKeyRing secretKeys;
@@ -149,7 +151,7 @@ public class EncryptionOptionsTest {
         assertThrows(KeyException.UnacceptableEncryptionKeyException.class,
                 () -> options.addRecipient(publicKeys, new EncryptionOptions.EncryptionKeySelector() {
                     @Override
-                    public List<PGPPublicKey> selectEncryptionSubkeys(List<PGPPublicKey> encryptionCapableKeys) {
+                    public List<PGPPublicKey> selectEncryptionSubkeys(@Nonnull List<PGPPublicKey> encryptionCapableKeys) {
                         return Collections.emptyList();
                     }
                 }));
@@ -157,7 +159,7 @@ public class EncryptionOptionsTest {
         assertThrows(KeyException.UnacceptableEncryptionKeyException.class,
                 () -> options.addRecipient(publicKeys, "test@pgpainless.org", new EncryptionOptions.EncryptionKeySelector() {
                     @Override
-                    public List<PGPPublicKey> selectEncryptionSubkeys(List<PGPPublicKey> encryptionCapableKeys) {
+                    public List<PGPPublicKey> selectEncryptionSubkeys(@Nonnull List<PGPPublicKey> encryptionCapableKeys) {
                         return Collections.emptyList();
                     }
                 }));
