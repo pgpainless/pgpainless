@@ -56,7 +56,7 @@ public class PGPKeyRingCollectionTest {
     }
 
     @Test
-    public void testConstructorFromCollection() throws PGPException, InvalidAlgorithmParameterException, NoSuchAlgorithmException, IOException {
+    public void testConstructorFromCollection() throws PGPException, InvalidAlgorithmParameterException, NoSuchAlgorithmException {
         PGPSecretKeyRing first = PGPainless.generateKeyRing().simpleEcKeyRing("alice@wonderland.lit");
         PGPSecretKeyRing second = PGPainless.generateKeyRing().simpleEcKeyRing("bob@the-builder.tv");
         PGPPublicKeyRing secondPub = KeyRingUtils.publicKeyRingFrom(second);

@@ -88,12 +88,12 @@ public class KeyRingReader {
     }
 
     public PGPPublicKeyRingCollection publicKeyRingCollection(@Nonnull InputStream inputStream)
-            throws IOException, PGPException {
+            throws IOException {
         return readPublicKeyRingCollection(inputStream);
     }
 
     public PGPPublicKeyRingCollection publicKeyRingCollection(@Nonnull byte[] bytes)
-            throws IOException, PGPException {
+            throws IOException {
         return publicKeyRingCollection(new ByteArrayInputStream(bytes));
     }
 
@@ -118,17 +118,17 @@ public class KeyRingReader {
     }
 
     public PGPSecretKeyRingCollection secretKeyRingCollection(@Nonnull InputStream inputStream)
-            throws IOException, PGPException {
+            throws IOException {
         return readSecretKeyRingCollection(inputStream);
     }
 
     public PGPSecretKeyRingCollection secretKeyRingCollection(@Nonnull byte[] bytes)
-            throws IOException, PGPException {
+            throws IOException {
         return secretKeyRingCollection(new ByteArrayInputStream(bytes));
     }
 
     public PGPSecretKeyRingCollection secretKeyRingCollection(@Nonnull String asciiArmored)
-            throws IOException, PGPException {
+            throws IOException {
         return secretKeyRingCollection(asciiArmored.getBytes(UTF8));
     }
 

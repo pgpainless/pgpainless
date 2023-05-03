@@ -243,7 +243,7 @@ public final class SignatureUtils {
      * @throws IOException in case of a stream error
      * @throws PGPException in case of an OpenPGP error
      */
-    public static List<PGPSignature> readSignatures(InputStream inputStream, int maxIterations) throws IOException, PGPException {
+    public static List<PGPSignature> readSignatures(InputStream inputStream, int maxIterations) throws IOException {
         List<PGPSignature> signatures = new ArrayList<>();
         InputStream pgpIn = ArmorUtils.getDecoderStream(inputStream);
         PGPObjectFactory objectFactory = ImplementationFactory.getInstance().getPGPObjectFactory(pgpIn);

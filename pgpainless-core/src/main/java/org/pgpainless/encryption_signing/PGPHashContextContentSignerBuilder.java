@@ -4,9 +4,9 @@
 
 package org.pgpainless.encryption_signing;
 
-import java.io.IOException;
 import java.io.OutputStream;
 import java.security.MessageDigest;
+import javax.annotation.Nonnull;
 
 import org.bouncycastle.crypto.Digest;
 import org.bouncycastle.crypto.Signer;
@@ -23,18 +23,15 @@ abstract class PGPHashContextContentSignerBuilder implements PGPContentSignerBui
             this.sig = sig;
         }
 
-        public void write(byte[] bytes, int off, int len)
-                throws IOException {
+        public void write(@Nonnull byte[] bytes, int off, int len) {
             sig.update(bytes, off, len);
         }
 
-        public void write(byte[] bytes)
-                throws IOException {
+        public void write(@Nonnull byte[] bytes) {
             sig.update(bytes, 0, bytes.length);
         }
 
-        public void write(int b)
-                throws IOException {
+        public void write(int b) {
             sig.update((byte) b);
         }
     }

@@ -113,7 +113,7 @@ public class EncryptImpl implements Encrypt {
             encryptionOptions.addRecipients(certificates);
         } catch (KeyException.UnacceptableEncryptionKeyException e) {
             throw new SOPGPException.CertCannotEncrypt(e.getMessage(), e);
-        } catch (IOException | PGPException e) {
+        } catch (IOException e) {
             throw new SOPGPException.BadData(e);
         }
         return this;

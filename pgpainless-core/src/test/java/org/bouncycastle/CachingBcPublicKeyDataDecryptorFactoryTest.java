@@ -7,8 +7,6 @@ package org.bouncycastle;
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
-import java.security.InvalidAlgorithmParameterException;
-import java.security.NoSuchAlgorithmException;
 
 import org.bouncycastle.openpgp.PGPException;
 import org.bouncycastle.openpgp.PGPPrivateKey;
@@ -24,8 +22,6 @@ import org.pgpainless.key.SubkeyIdentifier;
 import org.pgpainless.key.info.KeyRingInfo;
 import org.pgpainless.key.protection.SecretKeyRingProtector;
 import org.pgpainless.key.protection.UnlockSecretKey;
-
-import static org.junit.jupiter.api.Assertions.assertEquals;
 
 public class CachingBcPublicKeyDataDecryptorFactoryTest {
 
@@ -64,7 +60,7 @@ public class CachingBcPublicKeyDataDecryptorFactoryTest {
             "-----END PGP MESSAGE-----";
 
     @Test
-    public void test() throws PGPException, InvalidAlgorithmParameterException, NoSuchAlgorithmException, IOException {
+    public void test() throws PGPException, IOException {
         PGPSecretKeyRing secretKeys = PGPainless.readKeyRing().secretKeyRing(KEY);
         SecretKeyRingProtector protector = SecretKeyRingProtector.unprotectedKeys();
         KeyRingInfo info = PGPainless.inspectKeyRing(secretKeys);

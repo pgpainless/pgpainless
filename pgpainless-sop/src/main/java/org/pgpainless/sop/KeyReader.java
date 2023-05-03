@@ -33,8 +33,6 @@ class KeyReader {
                 throw new SOPGPException.BadData(e);
             }
             throw e;
-        } catch (PGPException e) {
-            throw new SOPGPException.BadData("Cannot read keys.", e);
         }
 
         if (requireContent && (keys == null || keys.size() == 0)) {
@@ -54,8 +52,6 @@ class KeyReader {
                 throw new SOPGPException.BadData(e);
             }
             throw e;
-        } catch (PGPException e) {
-            throw new SOPGPException.BadData(e);
         }
         if (requireContent && (certs == null || certs.size() == 0)) {
             throw new SOPGPException.BadData(new PGPException("No cert data found."));
