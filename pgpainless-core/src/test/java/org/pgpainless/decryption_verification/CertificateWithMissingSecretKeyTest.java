@@ -83,7 +83,7 @@ public class CertificateWithMissingSecretKeyTest {
         encryptionSubkeyId = PGPainless.inspectKeyRing(secretKeys)
                 .getEncryptionSubkeys(EncryptionPurpose.ANY).get(0).getKeyID();
         // remove the encryption/decryption secret key
-        missingDecryptionSecKey = KeyRingUtils.removeSecretKey(secretKeys, encryptionSubkeyId);
+        missingDecryptionSecKey = KeyRingUtils.stripSecretKey(secretKeys, encryptionSubkeyId);
     }
 
     @Test
