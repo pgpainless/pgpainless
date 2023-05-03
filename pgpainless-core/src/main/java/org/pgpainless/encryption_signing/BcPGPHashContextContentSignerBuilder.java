@@ -44,10 +44,15 @@ class BcPGPHashContextContentSignerBuilder extends PGPHashContextContentSignerBu
 
     BcPGPHashContextContentSignerBuilder(MessageDigest messageDigest) {
         this.messageDigest = messageDigest;
-        this.hashAlgorithm = HashAlgorithm.fromName(messageDigest.getAlgorithm());
+        this.hashAlgorithm = requireFromName(messageDigest.getAlgorithm());
+    }
+
+    private static HashAlgorithm requireFromName(String digestName) {
+        HashAlgorithm hashAlgorithm = HashAlgorithm.fromName(digestName);
         if (hashAlgorithm == null) {
-            throw new IllegalArgumentException("Cannot recognize OpenPGP Hash Algorithm: " + messageDigest.getAlgorithm());
+            throw new IllegalArgumentException("Cannot recognize OpenPGP Hash Algorithm: " + digestName);
         }
+        return hashAlgorithm;
     }
 
     @Override

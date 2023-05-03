@@ -72,14 +72,12 @@ public class SecretKeyRingEditor implements SecretKeyRingEditorInterface {
     private PGPSecretKeyRing secretKeyRing;
     private final Date referenceTime;
 
-    public SecretKeyRingEditor(PGPSecretKeyRing secretKeyRing) {
-        this(secretKeyRing, null);
+    public SecretKeyRingEditor(@Nonnull PGPSecretKeyRing secretKeyRing) {
+        this(secretKeyRing, new Date());
     }
 
-    public SecretKeyRingEditor(PGPSecretKeyRing secretKeyRing, Date referenceTime) {
-        if (secretKeyRing == null) {
-            throw new NullPointerException("SecretKeyRing MUST NOT be null.");
-        }
+    public SecretKeyRingEditor(@Nonnull PGPSecretKeyRing secretKeyRing,
+                               @Nonnull Date referenceTime) {
         this.secretKeyRing = secretKeyRing;
         this.referenceTime = referenceTime;
     }

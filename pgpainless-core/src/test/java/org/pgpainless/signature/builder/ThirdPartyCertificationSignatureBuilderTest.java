@@ -4,6 +4,7 @@
 
 package org.pgpainless.signature.builder;
 
+import org.bouncycastle.bcpg.sig.Exportable;
 import org.bouncycastle.openpgp.PGPException;
 import org.bouncycastle.openpgp.PGPPublicKeyRing;
 import org.bouncycastle.openpgp.PGPSecretKeyRing;
@@ -22,6 +23,7 @@ import java.security.NoSuchAlgorithmException;
 import static org.junit.jupiter.api.Assertions.assertArrayEquals;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
@@ -61,7 +63,9 @@ public class ThirdPartyCertificationSignatureBuilderTest {
         assertEquals(SignatureType.GENERIC_CERTIFICATION, SignatureType.valueOf(certification.getSignatureType()));
         assertEquals(secretKeys.getPublicKey().getKeyID(), certification.getKeyID());
         assertArrayEquals(secretKeys.getPublicKey().getFingerprint(), certification.getHashedSubPackets().getIssuerFingerprint().getFingerprint());
-        assertFalse(SignatureSubpacketsUtil.getExportableCertification(certification).isExportable());
+        Exportable exportable = SignatureSubpacketsUtil.getExportableCertification(certification);
+        assertNotNull(exportable);
+        assertFalse(exportable.isExportable());
 
         // test sig correctness
         certification.init(ImplementationFactory.getInstance().getPGPContentVerifierBuilderProvider(), secretKeys.getPublicKey());

@@ -61,11 +61,6 @@ public class RevocationStateTest {
     }
 
     @Test
-    public void testSoftRevokedNullDateThrows() {
-        assertThrows(NullPointerException.class, () -> RevocationState.softRevoked(null));
-    }
-
-    @Test
     public void orderTest() {
         assertEquals(RevocationState.notRevoked(), RevocationState.notRevoked());
         assertEquals(RevocationState.hardRevoked(), RevocationState.hardRevoked());

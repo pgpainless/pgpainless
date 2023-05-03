@@ -359,7 +359,7 @@ public class OpenPgpMessageInputStream extends DecryptionStream {
         PGPCompressedData compressedData = packetInputStream.readCompressedData();
         // Extract Metadata
         MessageMetadata.CompressedData compressionLayer = new MessageMetadata.CompressedData(
-                CompressionAlgorithm.fromId(compressedData.getAlgorithm()),
+                CompressionAlgorithm.requireFromId(compressedData.getAlgorithm()),
                 metadata.depth + 1);
 
         LOGGER.debug("Compressed Data Packet (" + compressionLayer.algorithm + ") at depth " + metadata.depth + " encountered");

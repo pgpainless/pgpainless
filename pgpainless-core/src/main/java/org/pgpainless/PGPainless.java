@@ -40,6 +40,7 @@ public final class PGPainless {
      * Generate a fresh OpenPGP key ring from predefined templates.
      * @return templates
      */
+    @Nonnull
     public static KeyRingTemplates generateKeyRing() {
         return new KeyRingTemplates();
     }
@@ -49,6 +50,7 @@ public final class PGPainless {
      *
      * @return builder
      */
+    @Nonnull
     public static KeyRingBuilder buildKeyRing() {
         return new KeyRingBuilder();
     }
@@ -57,6 +59,7 @@ public final class PGPainless {
      * Read an existing OpenPGP key ring.
      * @return builder
      */
+    @Nonnull
     public static KeyRingReader readKeyRing() {
         return new KeyRingReader();
     }
@@ -67,6 +70,7 @@ public final class PGPainless {
      * @param secretKey secret key
      * @return public key certificate
      */
+    @Nonnull
     public static PGPPublicKeyRing extractCertificate(@Nonnull PGPSecretKeyRing secretKey) {
         return KeyRingUtils.publicKeyRingFrom(secretKey);
     }
@@ -79,6 +83,7 @@ public final class PGPainless {
      * @return merged certificate
      * @throws PGPException in case of an error
      */
+    @Nonnull
     public static PGPPublicKeyRing mergeCertificate(
             @Nonnull PGPPublicKeyRing originalCopy,
             @Nonnull PGPPublicKeyRing updatedCopy)
@@ -94,6 +99,7 @@ public final class PGPainless {
      *
      * @throws IOException in case of an error in the {@link ArmoredOutputStream}
      */
+    @Nonnull
     public static String asciiArmor(@Nonnull PGPKeyRing key)
             throws IOException {
         if (key instanceof PGPSecretKeyRing) {
@@ -111,6 +117,7 @@ public final class PGPainless {
      *
      * @throws IOException in case of an error in the {@link ArmoredOutputStream}
      */
+    @Nonnull
     public static String asciiArmor(@Nonnull PGPSignature signature)
             throws IOException {
         return ArmorUtils.toAsciiArmoredString(signature);
@@ -136,6 +143,7 @@ public final class PGPainless {
      *
      * @return builder
      */
+    @Nonnull
     public static EncryptionBuilder encryptAndOrSign() {
         return new EncryptionBuilder();
     }
@@ -145,6 +153,7 @@ public final class PGPainless {
      *
      * @return builder
      */
+    @Nonnull
     public static DecryptionBuilder decryptAndOrVerify() {
         return new DecryptionBuilder();
     }
@@ -158,8 +167,9 @@ public final class PGPainless {
      * @param secretKeys secret key ring
      * @return builder
      */
-    public static SecretKeyRingEditorInterface modifyKeyRing(PGPSecretKeyRing secretKeys) {
-        return modifyKeyRing(secretKeys, null);
+    @Nonnull
+    public static SecretKeyRingEditorInterface modifyKeyRing(@Nonnull PGPSecretKeyRing secretKeys) {
+        return modifyKeyRing(secretKeys, new Date());
     }
 
     /**
@@ -172,7 +182,9 @@ public final class PGPainless {
      * @param referenceTime reference time used as signature creation date
      * @return builder
      */
-    public static SecretKeyRingEditorInterface modifyKeyRing(PGPSecretKeyRing secretKeys, Date referenceTime) {
+    @Nonnull
+    public static SecretKeyRingEditorInterface modifyKeyRing(@Nonnull PGPSecretKeyRing secretKeys,
+                                                             @Nonnull Date referenceTime) {
         return new SecretKeyRingEditor(secretKeys, referenceTime);
     }
 
@@ -186,7 +198,8 @@ public final class PGPainless {
      * @param keyRing key ring
      * @return access object
      */
-    public static KeyRingInfo inspectKeyRing(PGPKeyRing keyRing) {
+    @Nonnull
+    public static KeyRingInfo inspectKeyRing(@Nonnull PGPKeyRing keyRing) {
         return new KeyRingInfo(keyRing);
     }
 
@@ -198,7 +211,8 @@ public final class PGPainless {
      * @param referenceTime date of inspection
      * @return access object
      */
-    public static KeyRingInfo inspectKeyRing(PGPKeyRing keyRing, Date referenceTime) {
+    @Nonnull
+    public static KeyRingInfo inspectKeyRing(@Nonnull PGPKeyRing keyRing, @Nonnull Date referenceTime) {
         return new KeyRingInfo(keyRing, referenceTime);
     }
 
@@ -207,6 +221,7 @@ public final class PGPainless {
      *
      * @return policy
      */
+    @Nonnull
     public static Policy getPolicy() {
         return Policy.getInstance();
     }
@@ -216,6 +231,7 @@ public final class PGPainless {
      *
      * @return builder
      */
+    @Nonnull
     public static CertifyCertificate certify() {
         return new CertifyCertificate();
     }

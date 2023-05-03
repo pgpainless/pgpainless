@@ -20,7 +20,7 @@ public abstract class KeyAccessor {
     protected final KeyRingInfo info;
     protected final SubkeyIdentifier key;
 
-    KeyAccessor(KeyRingInfo info, SubkeyIdentifier key) {
+    KeyAccessor(@Nonnull KeyRingInfo info, @Nonnull SubkeyIdentifier key) {
         this.info = info;
         this.key = key;
     }
@@ -34,13 +34,15 @@ public abstract class KeyAccessor {
      *
      * @return signature
      */
-    public abstract @Nonnull PGPSignature getSignatureWithPreferences();
+    @Nonnull
+    public abstract PGPSignature getSignatureWithPreferences();
 
     /**
      * Return preferred symmetric key encryption algorithms.
      *
      * @return preferred symmetric algorithms
      */
+    @Nonnull
     public Set<SymmetricKeyAlgorithm> getPreferredSymmetricKeyAlgorithms() {
         return SignatureSubpacketsUtil.parsePreferredSymmetricKeyAlgorithms(getSignatureWithPreferences());
     }
@@ -50,6 +52,7 @@ public abstract class KeyAccessor {
      *
      * @return preferred hash algorithms
      */
+    @Nonnull
     public Set<HashAlgorithm> getPreferredHashAlgorithms() {
         return SignatureSubpacketsUtil.parsePreferredHashAlgorithms(getSignatureWithPreferences());
     }
@@ -59,6 +62,7 @@ public abstract class KeyAccessor {
      *
      * @return preferred compression algorithms
      */
+    @Nonnull
     public Set<CompressionAlgorithm> getPreferredCompressionAlgorithms() {
         return SignatureSubpacketsUtil.parsePreferredCompressionAlgorithms(getSignatureWithPreferences());
     }
@@ -78,13 +82,16 @@ public abstract class KeyAccessor {
          * @param key id of the subkey
          * @param userId user-id
          */
-        public ViaUserId(KeyRingInfo info, SubkeyIdentifier key, String userId) {
+        public ViaUserId(@Nonnull KeyRingInfo info,
+                         @Nonnull SubkeyIdentifier key,
+                         @Nonnull String userId) {
             super(info, key);
             this.userId = userId;
         }
 
         @Override
-        public @Nonnull PGPSignature getSignatureWithPreferences() {
+        @Nonnull
+        public PGPSignature getSignatureWithPreferences() {
             PGPSignature signature = info.getLatestUserIdCertification(userId);
             if (signature != null) {
                 return signature;
@@ -104,19 +111,26 @@ public abstract class KeyAccessor {
          * @param info info about the key at a given date
          * @param key key-id
          */
-        public ViaKeyId(KeyRingInfo info, SubkeyIdentifier key) {
+        public ViaKeyId(@Nonnull KeyRingInfo info,
+                        @Nonnull SubkeyIdentifier key) {
             super(info, key);
         }
 
         @Override
-        public @Nonnull PGPSignature getSignatureWithPreferences() {
+        @Nonnull
+        public PGPSignature getSignatureWithPreferences() {
             String primaryUserId = info.getPrimaryUserId();
             // If the key is located by Key ID, the algorithm of the primary User ID of the key provides the
             // preferred symmetric algorithm.
-            PGPSignature signature = info.getLatestUserIdCertification(primaryUserId);
+            PGPSignature signature = null;
+            if (primaryUserId != null) {
+                signature = info.getLatestUserIdCertification(primaryUserId);
+            }
+
             if (signature == null) {
                 signature = info.getLatestDirectKeySelfSignature();
             }
+
             if (signature == null) {
                 throw new IllegalStateException("No valid signature found.");
             }
@@ -126,22 +140,27 @@ public abstract class KeyAccessor {
 
     public static class SubKey extends KeyAccessor {
 
-        public SubKey(KeyRingInfo info, SubkeyIdentifier key) {
+        public SubKey(@Nonnull KeyRingInfo info,
+                      @Nonnull SubkeyIdentifier key) {
             super(info, key);
         }
 
         @Override
-        public @Nonnull PGPSignature getSignatureWithPreferences() {
+        @Nonnull
+        public PGPSignature getSignatureWithPreferences() {
             PGPSignature signature;
             if (key.getPrimaryKeyId() == key.getSubkeyId()) {
                 signature = info.getLatestDirectKeySelfSignature();
-                if (signature == null) {
+                if (signature == null && info.getPrimaryUserId() != null) {
                     signature = info.getLatestUserIdCertification(info.getPrimaryUserId());
                 }
             } else {
                 signature = info.getCurrentSubkeyBindingSignature(key.getSubkeyId());
             }
 
+            if (signature == null) {
+                throw new IllegalStateException("No valid signature found.");
+            }
             return signature;
         }
     }

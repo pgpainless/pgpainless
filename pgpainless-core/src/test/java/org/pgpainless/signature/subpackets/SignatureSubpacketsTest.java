@@ -376,7 +376,7 @@ public class SignatureSubpacketsTest {
     public void testSetSignatureTarget() {
         byte[] hash = new byte[20];
         new Random().nextBytes(hash);
-        wrapper.setSignatureTarget(PublicKeyAlgorithm.fromId(key.getAlgorithm()), HashAlgorithm.SHA512, hash);
+        wrapper.setSignatureTarget(PublicKeyAlgorithm.requireFromId(key.getAlgorithm()), HashAlgorithm.SHA512, hash);
         PGPSignatureSubpacketVector vector = SignatureSubpacketsHelper.toVector(wrapper);
 
         SignatureTarget target = vector.getSignatureTarget();

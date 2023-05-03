@@ -145,6 +145,7 @@ public class SignatureSubpacketsUtilTest {
 
         PGPSignature signature = generator.generateCertification(secretKeys.getPublicKey());
         Set<Feature> featureSet = SignatureSubpacketsUtil.parseFeatures(signature);
+        assertNotNull(featureSet);
         assertEquals(2, featureSet.size());
         assertTrue(featureSet.contains(Feature.MODIFICATION_DETECTION));
         assertTrue(featureSet.contains(Feature.AEAD_ENCRYPTED_DATA));
@@ -216,6 +217,7 @@ public class SignatureSubpacketsUtilTest {
         PGPSignature signature = generator.generateCertification(secretKeys.getPublicKey());
 
         RevocationKey revocationKey = SignatureSubpacketsUtil.getRevocationKey(signature);
+        assertNotNull(revocationKey);
         assertArrayEquals(secretKeys.getPublicKey().getFingerprint(), revocationKey.getFingerprint());
         assertEquals(secretKeys.getPublicKey().getAlgorithm(), revocationKey.getAlgorithm());
     }
@@ -277,6 +279,7 @@ public class SignatureSubpacketsUtilTest {
 
         PGPSignature signature = generator.generateCertification(secretKeys.getPublicKey());
         TrustSignature trustSignature = SignatureSubpacketsUtil.getTrustSignature(signature);
+        assertNotNull(trustSignature);
         assertEquals(10, trustSignature.getDepth());
         assertEquals(3, trustSignature.getTrustAmount());
     }

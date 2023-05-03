@@ -95,6 +95,7 @@ public class UserIdRevocationTest {
         KeyRingInfo info = new KeyRingInfo(secretKeys);
 
         PGPSignature signature = info.getUserIdRevocation("secondary@key.id");
+        assertNotNull(signature);
         RevocationReason reason = (RevocationReason) signature.getHashedSubPackets()
                 .getSubpacket(SignatureSubpacketTags.REVOCATION_REASON);
         assertNotNull(reason);
