@@ -29,7 +29,7 @@ public class VersionCmdTest extends CLITest {
     public void testGetBackendVersion() throws IOException {
         ByteArrayOutputStream out = pipeStdoutToStream();
         assertSuccess(executeCommand("version", "--backend"));
-        assertTrue(out.toString().startsWith("Bouncy Castle "));
+        assertTrue(out.toString().startsWith("PGPainless "));
     }
 
     @Test

@@ -10,6 +10,9 @@ import java.util.Locale;
 import java.util.Properties;
 
 import org.bouncycastle.jce.provider.BouncyCastleProvider;
+import org.pgpainless.PGPainless;
+import org.pgpainless.implementation.ImplementationFactory;
+import org.pgpainless.provider.ProviderFactory;
 import sop.operation.Version;
 
 /**
@@ -45,12 +48,12 @@ public class VersionImpl implements Version {
 
     @Override
     public String getBackendVersion() {
-        double bcVersion = new BouncyCastleProvider().getVersion();
-        return String.format(Locale.US, "Bouncy Castle %.2f", bcVersion);
+        return "PGPainless " + getVersion();
     }
 
     @Override
     public String getExtendedVersion() {
+        double bcVersion = new BouncyCastleProvider().getVersion();
         String FORMAT_VERSION = String.format("%02d", SOP_VERSION);
         return getName() + " " + getVersion() + "\n" +
                 "https://codeberg.org/PGPainless/pgpainless/src/branch/master/pgpainless-sop\n" +
@@ -61,7 +64,7 @@ public class VersionImpl implements Version {
                 "Based on pgpainless-core " + getVersion() + "\n" +
                 "https://pgpainless.org\n" +
                 "\n" +
-                "Using " + getBackendVersion() + "\n" +
+                "Using " + String.format(Locale.US, "Bouncy Castle %.2f", bcVersion) + "\n" +
                 "https://www.bouncycastle.org/java.html";
     }
 
