@@ -30,6 +30,10 @@ allprojects {
     apply plugin: 'jacoco'
     apply plugin: 'checkstyle'
 
+    compileJava {
+        options.release = 8
+    }
+
     // Only generate jar for submodules
     // without this we would generate an empty pgpainless.jar for the project root
     // https://stackoverflow.com/a/25445035
