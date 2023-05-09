@@ -10,9 +10,6 @@ import java.util.Locale;
 import java.util.Properties;
 
 import org.bouncycastle.jce.provider.BouncyCastleProvider;
-import org.pgpainless.PGPainless;
-import org.pgpainless.implementation.ImplementationFactory;
-import org.pgpainless.provider.ProviderFactory;
 import sop.operation.Version;
 
 /**
