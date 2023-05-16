@@ -8,6 +8,9 @@ import java.security.Provider;
 
 import org.bouncycastle.jce.provider.BouncyCastleProvider;
 
+/**
+ * Implementation of {@link ProviderFactory} using a {@link BouncyCastleProvider}.
+ */
 public final class BouncyCastleProviderFactory extends ProviderFactory {
 
     private static final Provider provider = new BouncyCastleProvider();

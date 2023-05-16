@@ -6,6 +6,14 @@ package org.pgpainless.provider;
 
 import java.security.Provider;
 
+/**
+ * Allow the use of different {@link Provider} implementations to provide cryptographic primitives by setting
+ * a {@link ProviderFactory} singleton.
+ * By default, the class is initialized with a {@link BouncyCastleProviderFactory}.
+ * <br>
+ * To make use of your own custom {@link Provider}, call {@link #setFactory(ProviderFactory)}, passing your
+ * own custom {@link ProviderFactory} instance.
+ */
 public abstract class ProviderFactory {
 
     private static ProviderFactory FACTORY;
