@@ -9,6 +9,8 @@ import java.io.InputStream;
 
 import org.bouncycastle.bcpg.ArmoredInputStream;
 
+import javax.annotation.Nonnull;
+
 /**
  * Factory class for instantiating preconfigured {@link ArmoredInputStream ArmoredInputStreams}.
  * {@link #get(InputStream)} will return an {@link ArmoredInputStream} that is set up to properly detect CRC errors.
@@ -26,7 +28,8 @@ public final class ArmoredInputStreamFactory {
      * @return armored input stream
      * @throws IOException in case of an IO error
      */
-    public static ArmoredInputStream get(InputStream inputStream) throws IOException {
+    @Nonnull
+    public static ArmoredInputStream get(@Nonnull InputStream inputStream) throws IOException {
         if (inputStream instanceof CRCingArmoredInputStreamWrapper) {
             return (ArmoredInputStream) inputStream;
         }
