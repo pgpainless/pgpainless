@@ -10,6 +10,10 @@ import sop.Profile;
 import sop.exception.SOPGPException;
 import sop.operation.ListProfiles;
 
+/**
+ * Implementation of the <pre>list-profiles</pre> operation using PGPainless.
+ *
+ */
 public class ListProfilesImpl implements ListProfiles {
 
     @Override
