@@ -13,7 +13,10 @@ import org.pgpainless.key.generation.type.KeyType;
 
 /**
  * ElGamal encryption only key type.
+ *
+ * @deprecated the use of ElGamal is not recommended anymore.
  */
+@Deprecated
 public final class ElGamal implements KeyType {
 
     private final ElGamalLength length;

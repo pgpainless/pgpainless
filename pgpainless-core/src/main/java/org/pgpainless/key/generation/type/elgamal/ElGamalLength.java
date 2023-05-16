@@ -13,7 +13,10 @@ import org.pgpainless.key.generation.type.KeyLength;
  *
  * @see <a href="https://www.ietf.org/rfc/rfc3526.txt">
  *     RFC-3526: More Modular Exponential (MODP) Diffie-Hellman groups for Internet Key Exchange (IKE)</a>
+ *
+ * @deprecated the use of ElGamal keys is no longer recommended.
  */
+@Deprecated
 public enum ElGamalLength implements KeyLength {
 
     /**
