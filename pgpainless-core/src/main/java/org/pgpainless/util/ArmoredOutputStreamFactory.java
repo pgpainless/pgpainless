@@ -9,6 +9,9 @@ import java.io.OutputStream;
 import org.bouncycastle.bcpg.ArmoredOutputStream;
 import org.pgpainless.encryption_signing.ProducerOptions;
 
+import javax.annotation.Nonnull;
+import javax.annotation.Nullable;
+
 /**
  * Factory to create configured {@link ArmoredOutputStream ArmoredOutputStreams}.
  * The configuration entails setting custom version and comment headers.
@@ -32,7 +35,8 @@ public final class ArmoredOutputStreamFactory {
      * @param outputStream inner stream
      * @return armored output stream
      */
-    public static ArmoredOutputStream get(OutputStream outputStream) {
+    @Nonnull
+    public static ArmoredOutputStream get(@Nonnull OutputStream outputStream) {
         ArmoredOutputStream armoredOutputStream = new ArmoredOutputStream(outputStream);
         armoredOutputStream.clearHeaders();
         if (version != null && !version.isEmpty()) {
@@ -52,7 +56,8 @@ public final class ArmoredOutputStreamFactory {
      * @param options options
      * @return armored output stream
      */
-    public static ArmoredOutputStream get(OutputStream outputStream, ProducerOptions options) {
+    @Nonnull
+    public static ArmoredOutputStream get(@Nonnull OutputStream outputStream, @Nonnull ProducerOptions options) {
         if (options.isHideArmorHeaders()) {
             ArmoredOutputStream armorOut = new ArmoredOutputStream(outputStream);
             armorOut.clearHeaders();
@@ -69,7 +74,7 @@ public final class ArmoredOutputStreamFactory {
      *
      * @param versionString version string
      */
-    public static void setVersionInfo(String versionString) {
+    public static void setVersionInfo(@Nullable String versionString) {
         if (versionString == null) {
             version = null;
             return;
@@ -98,7 +103,7 @@ public final class ArmoredOutputStreamFactory {
      *
      * @param commentString comment
      */
-    public static void setComment(String commentString) {
+    public static void setComment(@Nullable String commentString) {
         if (commentString == null) {
             throw new IllegalArgumentException("Comment cannot be null.");
         }
