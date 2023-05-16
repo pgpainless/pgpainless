@@ -12,6 +12,8 @@ import org.pgpainless.key.generation.type.KeyType;
 
 /**
  * Edwards-curve Digital Signature Algorithm (EdDSA).
+ *
+ * @see <a href="https://datatracker.ietf.org/doc/draft-koch-eddsa-for-openpgp/">EdDSA for OpenPGP</a>
  */
 public final class EdDSA implements KeyType {
 
