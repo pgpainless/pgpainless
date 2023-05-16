@@ -35,7 +35,7 @@ class KeyReader {
             throw e;
         }
 
-        if (requireContent && (keys == null || keys.size() == 0)) {
+        if (requireContent && keys.size() == 0) {
             throw new SOPGPException.BadData(new PGPException("No key data found."));
         }
 
@@ -53,7 +53,7 @@ class KeyReader {
             }
             throw e;
         }
-        if (requireContent && (certs == null || certs.size() == 0)) {
+        if (requireContent && certs.size() == 0) {
             throw new SOPGPException.BadData(new PGPException("No cert data found."));
         }
         return certs;
