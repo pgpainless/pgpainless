@@ -4,6 +4,7 @@
 
 package org.pgpainless.util;
 
+import javax.annotation.Nonnull;
 import java.lang.reflect.Array;
 import java.util.ArrayList;
 import java.util.Collection;
@@ -23,7 +24,8 @@ public final class CollectionUtils {
      * @param <I> type
      * @return list
      */
-    public static <I> List<I> iteratorToList(Iterator<I> iterator) {
+    @Nonnull
+    public static <I> List<I> iteratorToList(@Nonnull Iterator<I> iterator) {
         List<I> items = new ArrayList<>();
         while (iterator.hasNext()) {
             I item = iterator.next();
@@ -39,7 +41,8 @@ public final class CollectionUtils {
      * @param <T> type
      * @return t and ts as array
      */
-    public static <T> T[] concat(T t, T[] ts) {
+    @Nonnull
+    public static <T> T[] concat(@Nonnull T t, @Nonnull T[] ts) {
         T[] concat = (T[]) Array.newInstance(t.getClass(), ts.length + 1);
         concat[0] = t;
         System.arraycopy(ts, 0, concat, 1, ts.length);
@@ -53,7 +56,7 @@ public final class CollectionUtils {
      * @param <T> type
      * @return true if ts contains t, false otherwise
      */
-    public static <T> boolean contains(T[] ts, T t) {
+    public static <T> boolean contains(@Nonnull T[] ts, @Nonnull T t) {
         for (T i : ts) {
             if (i.equals(t)) {
                 return true;
@@ -69,7 +72,7 @@ public final class CollectionUtils {
      * @param iterator   iterator to gather items from
      * @param collection collection to add items to
      */
-    public static <T> void addAll(Iterator<T> iterator, Collection<T> collection) {
+    public static <T> void addAll(@Nonnull Iterator<T> iterator, @Nonnull Collection<T> collection) {
         while (iterator.hasNext()) {
             collection.add(iterator.next());
         }
