@@ -67,6 +67,7 @@ graph LR
     enc -. "ε,ε/m" .-> pgpmsg
     enc -- "ε,#/ε" --> accept
     enc -- "Signature,o/ε" --> sig4ops
+    accept -- "ε,ε/ε" --> accept
 ```
 
 Formally, the PDA is defined as $M = (\mathcal{Q}, \Sigma, \Upgamma, \delta, q_0, Z, F)$, where
