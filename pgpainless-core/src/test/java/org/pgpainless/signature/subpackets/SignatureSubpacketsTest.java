@@ -388,7 +388,7 @@ public class SignatureSubpacketsTest {
 
     @Test
     public void testSetFeatures() {
-        wrapper.setFeatures(Feature.MODIFICATION_DETECTION, Feature.AEAD_ENCRYPTED_DATA);
+        wrapper.setFeatures(Feature.MODIFICATION_DETECTION, Feature.GNUGP_AEAD_ENCRYPTED_DATA);
         PGPSignatureSubpacketVector vector = SignatureSubpacketsHelper.toVector(wrapper);
 
         Features features = vector.getFeatures();
@@ -476,7 +476,7 @@ public class SignatureSubpacketsTest {
         subpackets.setKeyFlags(true, KeyFlag.toBitmask(KeyFlag.SIGN_DATA, KeyFlag.CERTIFY_OTHER));
         subpackets.addSignerUserID(false, "alice@test.test");
         subpackets.setRevocationReason(true, RevocationAttributes.Reason.KEY_RETIRED.code(), "Key was retired.");
-        subpackets.setFeature(true, Feature.toBitmask(Feature.MODIFICATION_DETECTION, Feature.AEAD_ENCRYPTED_DATA));
+        subpackets.setFeature(true, Feature.toBitmask(Feature.MODIFICATION_DETECTION, Feature.GNUGP_AEAD_ENCRYPTED_DATA));
         byte[] hash = new byte[128];
         new Random().nextBytes(hash);
         subpackets.setSignatureTarget(false, publicKeys.getPublicKey().getAlgorithm(), HashAlgorithm.SHA512.getAlgorithmId(), hash);
