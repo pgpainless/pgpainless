@@ -140,7 +140,7 @@ public class SignatureSubpacketsUtilTest {
 
         PGPSignatureGenerator generator = getSignatureGenerator(certKey, SignatureType.CASUAL_CERTIFICATION);
         PGPSignatureSubpacketGenerator hashed = new PGPSignatureSubpacketGenerator();
-        hashed.setFeature(true, Feature.toBitmask(Feature.MODIFICATION_DETECTION, Feature.GNUGP_AEAD_ENCRYPTED_DATA));
+        hashed.setFeature(true, Feature.toBitmask(Feature.MODIFICATION_DETECTION, Feature.GNUPG_AEAD_ENCRYPTED_DATA));
         generator.setHashedSubpackets(hashed.generate());
 
         PGPSignature signature = generator.generateCertification(secretKeys.getPublicKey());
@@ -148,7 +148,7 @@ public class SignatureSubpacketsUtilTest {
         assertNotNull(featureSet);
         assertEquals(2, featureSet.size());
         assertTrue(featureSet.contains(Feature.MODIFICATION_DETECTION));
-        assertTrue(featureSet.contains(Feature.GNUGP_AEAD_ENCRYPTED_DATA));
+        assertTrue(featureSet.contains(Feature.GNUPG_AEAD_ENCRYPTED_DATA));
         assertFalse(featureSet.contains(Feature.GNUPG_VERSION_5_PUBLIC_KEY));
     }
 

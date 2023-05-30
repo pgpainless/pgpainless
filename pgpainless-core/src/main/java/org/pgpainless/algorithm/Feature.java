@@ -41,7 +41,7 @@ public enum Feature {
      * @see <a href="https://openpgp-wg.gitlab.io/rfc4880bis/#name-aead-encrypted-data-packet-">
      *     AEAD Encrypted Data Packet</a>
      */
-    GNUGP_AEAD_ENCRYPTED_DATA(Features.FEATURE_AEAD_ENCRYPTED_DATA),
+    GNUPG_AEAD_ENCRYPTED_DATA(Features.FEATURE_AEAD_ENCRYPTED_DATA),
 
     /**
      * If a key announces this feature, it is a version 5 public key.
