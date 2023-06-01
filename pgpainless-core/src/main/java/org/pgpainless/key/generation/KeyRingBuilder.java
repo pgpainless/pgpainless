@@ -63,7 +63,7 @@ public class KeyRingBuilder implements KeyRingBuilderInterface<KeyRingBuilder> {
     private final List<KeySpec> subkeySpecs = new ArrayList<>();
     private final Map<String, SelfSignatureSubpackets.Callback> userIds = new LinkedHashMap<>();
     private Passphrase passphrase = Passphrase.emptyPassphrase();
-    private Date expirationDate = new Date(new Date().getTime() + YEAR_IN_SECONDS * 5); // Expiration in 5 yeras
+    private Date expirationDate = new Date(System.currentTimeMillis() + YEAR_IN_SECONDS * 5); // Expiration in 5 yeras
 
     @Override
     public KeyRingBuilder setPrimaryKey(@Nonnull KeySpec keySpec) {
