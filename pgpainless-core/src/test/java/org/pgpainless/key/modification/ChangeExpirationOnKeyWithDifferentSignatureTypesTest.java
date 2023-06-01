@@ -155,7 +155,7 @@ public class ChangeExpirationOnKeyWithDifferentSignatureTypesTest {
 
     private void executeTestForKeys(PGPSecretKeyRing keys, SecretKeyRingProtector protector)
             throws PGPException {
-        Date expirationDate = new Date(new Date().getTime() + 1000 * 60 * 60 * 24 * 14);
+        Date expirationDate = new Date(System.currentTimeMillis() + 1000 * 60 * 60 * 24 * 14);
         // round date for test stability
         expirationDate = DateUtil.toSecondsPrecision(expirationDate);
 

@@ -59,8 +59,8 @@ public class DetachedSignTest {
 
         List<Verification> verifications = sop.verify()
                 .cert(cert)
-                .notAfter(new Date(new Date().getTime() + 10000))
-                .notBefore(new Date(new Date().getTime() - 10000))
+                .notAfter(new Date(System.currentTimeMillis() + 10000))
+                .notBefore(new Date(System.currentTimeMillis() - 10000))
                 .signatures(signature)
                 .data(data);
 
@@ -81,8 +81,8 @@ public class DetachedSignTest {
 
         List<Verification> verifications = sop.verify()
                 .cert(cert)
-                .notAfter(new Date(new Date().getTime() + 10000))
-                .notBefore(new Date(new Date().getTime() - 10000))
+                .notAfter(new Date(System.currentTimeMillis() + 10000))
+                .notBefore(new Date(System.currentTimeMillis() - 10000))
                 .signatures(signature)
                 .data(data);
 
@@ -101,8 +101,8 @@ public class DetachedSignTest {
 
         List<Verification> verifications = sop.verify()
                 .cert(cert)
-                .notAfter(new Date(new Date().getTime() + 10000))
-                .notBefore(new Date(new Date().getTime() - 10000))
+                .notAfter(new Date(System.currentTimeMillis() + 10000))
+                .notBefore(new Date(System.currentTimeMillis() - 10000))
                 .signatures(signature)
                 .data(data);
 
@@ -120,7 +120,7 @@ public class DetachedSignTest {
 
         assertThrows(SOPGPException.NoSignature.class, () -> sop.verify()
                 .cert(cert)
-                .notAfter(new Date(new Date().getTime() - 10000)) // Sig is older
+                .notAfter(new Date(System.currentTimeMillis() - 10000)) // Sig is older
                 .signatures(signature)
                 .data(data));
     }
@@ -134,7 +134,7 @@ public class DetachedSignTest {
 
         assertThrows(SOPGPException.NoSignature.class, () -> sop.verify()
                 .cert(cert)
-                .notBefore(new Date(new Date().getTime() + 10000)) // Sig is younger
+                .notBefore(new Date(System.currentTimeMillis() + 10000)) // Sig is younger
                 .signatures(signature)
                 .data(data));
     }
