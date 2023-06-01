@@ -5,7 +5,6 @@
 package org.pgpainless.key.modification;
 
 import static org.junit.jupiter.api.Assertions.assertArrayEquals;
-import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 
@@ -38,7 +37,7 @@ public class OldSignatureSubpacketsArePreservedOnNewSigTest {
         assertNotNull(oldSignature);
         PGPSignatureSubpacketVector oldPackets = oldSignature.getHashedSubPackets();
 
-        assertEquals(0, oldPackets.getKeyExpirationTime());
+        long oldExpiration = oldPackets.getKeyExpirationTime();
 
         Date now = new Date();
         Date t1 = new Date(now.getTime() + millisInHour);
@@ -51,7 +50,7 @@ public class OldSignatureSubpacketsArePreservedOnNewSigTest {
         assertNotNull(newSignature);
         PGPSignatureSubpacketVector newPackets = newSignature.getHashedSubPackets();
 
-        assertNotEquals(0, newPackets.getKeyExpirationTime());
+        assertNotEquals(oldExpiration, newPackets.getKeyExpirationTime());
 
         assertArrayEquals(oldPackets.getPreferredHashAlgorithms(), newPackets.getPreferredHashAlgorithms());
     }

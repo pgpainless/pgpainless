@@ -54,6 +54,8 @@ import org.pgpainless.util.Passphrase;
 
 public class KeyRingBuilder implements KeyRingBuilderInterface<KeyRingBuilder> {
 
+    private static final long YEAR_IN_SECONDS = 1000L * 60 * 60 * 24 * 365;
+
     @SuppressWarnings("CharsetObjectCanBeUsed")
     private final Charset UTF8 = Charset.forName("UTF-8");
 
@@ -61,7 +63,7 @@ public class KeyRingBuilder implements KeyRingBuilderInterface<KeyRingBuilder> {
     private final List<KeySpec> subkeySpecs = new ArrayList<>();
     private final Map<String, SelfSignatureSubpackets.Callback> userIds = new LinkedHashMap<>();
     private Passphrase passphrase = Passphrase.emptyPassphrase();
-    private Date expirationDate = null;
+    private Date expirationDate = new Date(new Date().getTime() + YEAR_IN_SECONDS * 5); // Expiration in 5 yeras
 
     @Override
     public KeyRingBuilder setPrimaryKey(@Nonnull KeySpec keySpec) {
@@ -97,7 +99,13 @@ public class KeyRingBuilder implements KeyRingBuilderInterface<KeyRingBuilder> {
     }
 
     @Override
-    public KeyRingBuilder setExpirationDate(@Nonnull Date expirationDate) {
+    public KeyRingBuilder setExpirationDate(@Nullable Date expirationDate) {
+        if (expirationDate == null) {
+            // No expiration
+            this.expirationDate = null;
+            return this;
+        }
+
         Date now = new Date();
         if (now.after(expirationDate)) {
             throw new IllegalArgumentException("Expiration date must be in the future.");
