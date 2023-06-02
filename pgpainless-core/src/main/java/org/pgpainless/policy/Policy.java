@@ -265,7 +265,7 @@ public final class Policy {
          * @return 2022 symmetric key encryption algorithm policy
          */
         public static SymmetricKeyAlgorithmPolicy symmetricKeyEncryptionPolicy2022() {
-            return new SymmetricKeyAlgorithmPolicy(SymmetricKeyAlgorithm.AES_256, Arrays.asList(
+            return new SymmetricKeyAlgorithmPolicy(SymmetricKeyAlgorithm.AES_128, Arrays.asList(
                     // Reject: Unencrypted, IDEA, TripleDES, CAST5, Blowfish
                     SymmetricKeyAlgorithm.AES_256,
                     SymmetricKeyAlgorithm.AES_192,
@@ -295,7 +295,7 @@ public final class Policy {
          * @return 2022 symmetric key decryption algorithm policy
          */
         public static SymmetricKeyAlgorithmPolicy symmetricKeyDecryptionPolicy2022() {
-            return new SymmetricKeyAlgorithmPolicy(SymmetricKeyAlgorithm.AES_256, Arrays.asList(
+            return new SymmetricKeyAlgorithmPolicy(SymmetricKeyAlgorithm.AES_128, Arrays.asList(
                     // Reject: Unencrypted, IDEA, TripleDES, Blowfish
                     SymmetricKeyAlgorithm.CAST5,
                     SymmetricKeyAlgorithm.AES_256,
