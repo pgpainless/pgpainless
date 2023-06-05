@@ -9,14 +9,14 @@
 # This workflow will build a Java project with Gradle and cache/restore any dependencies to improve the workflow execution time
 # For more information see: https://help.github.com/actions/language-and-framework-guides/building-and-testing-java-with-gradle
 
-name: Build
+name: Push
 
 on:
   push:
     branches: [ "main" ]
 
 permissions:
-  contents: write
+  contents: read
 
 jobs:
   build:
@@ -28,8 +28,6 @@ jobs:
         with:
           java-version: '11'
           distribution: 'temurin'
-      - name: Gradle Dependency Submission
-        uses: mikepenz/gradle-dependency-submission@v0.8.6
       - name: Build, Check and Coverage
         uses: gradle/gradle-build-action@67421db6bd0bf253fb4bd25b31ebb98943c375e1
         env:
