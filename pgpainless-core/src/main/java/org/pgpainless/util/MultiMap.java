@@ -100,6 +100,19 @@ public class MultiMap<K, V> {
         return map.entrySet();
     }
 
+    /**
+     * Return all values of the {@link MultiMap} in a single {@link LinkedHashSet}.
+     *
+     * @return set of all values
+     */
+    public Set<V> flatten() {
+        LinkedHashSet<V> flattened = new LinkedHashSet<>();
+        for (Set<V> items : map.values()) {
+            flattened.addAll(items);
+        }
+        return flattened;
+    }
+
     @Override
     public boolean equals(Object o) {
         if (o == null) {
