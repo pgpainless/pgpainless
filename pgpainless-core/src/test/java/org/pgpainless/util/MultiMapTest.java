@@ -160,6 +160,26 @@ public class MultiMapTest {
     }
 
     @Test
+    public void putAll() {
+        MultiMap<String, String> map = new MultiMap<>();
+        map.put("A", "1");
+        map.put("A", "2");
+        map.put("B", "1");
+
+        MultiMap<String, String> other = new MultiMap<>();
+        other.put("A", "1");
+        other.put("B", "2");
+        other.put("C", "3");
+
+        map.putAll(other);
+        assertTrue(map.get("A").contains("1"));
+        assertTrue(map.get("A").contains("2"));
+        assertTrue(map.get("B").contains("1"));
+        assertTrue(map.get("B").contains("2"));
+        assertTrue(map.get("C").contains("3"));
+    }
+
+    @Test
     public void flattenEmptyMap() {
         MultiMap<String, String> empty = new MultiMap<>();
         assertEquals(Collections.emptySet(), empty.flatten());
