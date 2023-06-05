@@ -112,7 +112,7 @@ class KeyRingReaderTest {
     }
 
     /**
-     * One armored pub key
+     * One armored pub key.
      */
     @Test
     void parsePublicKeysSingleArmored() throws IOException, PGPException {
@@ -120,7 +120,7 @@ class KeyRingReaderTest {
     }
 
     /**
-     * One binary pub key
+     * One binary pub key.
      */
     @Test
     void parsePublicKeysSingleBinary() throws IOException, PGPException {
@@ -128,7 +128,7 @@ class KeyRingReaderTest {
     }
 
     /**
-     * Many armored pub keys with a single -----BEGIN PGP PUBLIC KEY BLOCK-----...-----END PGP PUBLIC KEY BLOCK-----
+     * Many armored pub keys with a single -----BEGIN PGP PUBLIC KEY BLOCK-----...-----END PGP PUBLIC KEY BLOCK-----.
      */
     @Test
     void parsePublicKeysMultiplyArmoredSingleHeader() throws IOException, PGPException {
@@ -136,7 +136,7 @@ class KeyRingReaderTest {
     }
 
     /**
-     * Many armored pub keys where each has own -----BEGIN PGP PUBLIC KEY BLOCK-----...-----END PGP PUBLIC KEY BLOCK-----
+     * Many armored pub keys where each has own -----BEGIN PGP PUBLIC KEY BLOCK-----...-----END PGP PUBLIC KEY BLOCK-----.
      */
     @Test
     void parsePublicKeysMultiplyArmoredOwnHeader() throws IOException, PGPException {
@@ -153,7 +153,7 @@ class KeyRingReaderTest {
     }
 
     /**
-     * Many binary pub keys
+     * Many binary pub keys.
      */
     @Test
     void parsePublicKeysMultiplyBinary() throws IOException, PGPException {
@@ -161,7 +161,7 @@ class KeyRingReaderTest {
     }
 
     /**
-     * One armored private key
+     * One armored private key.
      */
     @Test
     void parseSecretKeysSingleArmored() throws IOException, PGPException {
@@ -169,7 +169,7 @@ class KeyRingReaderTest {
     }
 
     /**
-     * One binary private key
+     * One binary private key.
      */
     @Test
     void parseSecretKeysSingleBinary() throws IOException, PGPException {
@@ -177,7 +177,7 @@ class KeyRingReaderTest {
     }
 
     /**
-     * Many armored private keys with a single
+     * Many armored private keys with a single header.
      * -----BEGIN PGP PRIVATE KEY BLOCK-----...-----END PGP PRIVATE KEY BLOCK-----
      */
     @Test
@@ -186,7 +186,7 @@ class KeyRingReaderTest {
     }
 
     /**
-     * Many armored private keys where each has own -----BEGIN PGP PRIVATE KEY BLOCK-----...-----END PGP PRIVATE KEY BLOCK-----
+     * Many armored private keys where each has own -----BEGIN PGP PRIVATE KEY BLOCK-----...-----END PGP PRIVATE KEY BLOCK-----.
      */
     @Test
     void parseSecretKeysMultiplyArmoredOwnHeader() throws IOException, PGPException {
@@ -203,7 +203,7 @@ class KeyRingReaderTest {
     }
 
     /**
-     * Many binary private keys
+     * Many binary private keys.
      */
     @Test
     void parseSecretKeysMultiplyBinary() throws IOException, PGPException {
@@ -211,7 +211,7 @@ class KeyRingReaderTest {
     }
 
     /**
-     * Many armored keys(private or pub) where each has own -----BEGIN PGP ... KEY BLOCK-----...-----END PGP ... KEY BLOCK-----
+     * Many armored keys(private or pub) where each has own -----BEGIN PGP ... KEY BLOCK-----...-----END PGP ... KEY BLOCK-----.
      */
     @Test
     void parseKeysMultiplyArmoredOwnHeader() throws IOException, PGPException {
@@ -219,7 +219,7 @@ class KeyRingReaderTest {
     }
 
     /**
-     * Many armored keys(private or pub) where each has own -----BEGIN PGP ... KEY BLOCK-----...-----END PGP ... KEY BLOCK-----
+     * Many armored keys(private or pub) where each has own -----BEGIN PGP ... KEY BLOCK-----...-----END PGP ... KEY BLOCK-----.
      * Each of those blocks can have a different count of keys.
      */
     @Test
@@ -228,7 +228,7 @@ class KeyRingReaderTest {
     }
 
     /**
-     * Many binary keys(private or pub)
+     * Many binary keys(private or pub).
      */
     @Test
     void parseKeysMultiplyBinary() throws IOException, PGPException {
