@@ -25,10 +25,6 @@ public class ProviderFactoryTest {
             return provider;
         }
 
-        @Override
-        protected String _getProviderName() {
-            return provider.getName();
-        }
     };
 
     @Test

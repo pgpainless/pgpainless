@@ -19,7 +19,10 @@ public abstract class ProviderFactory {
     private static ProviderFactory FACTORY;
 
     protected abstract Provider _getProvider();
-    protected abstract String _getProviderName();
+
+    protected String _getProviderName() {
+        return _getProvider().getName();
+    }
 
     public static void setFactory(ProviderFactory factory) {
         ProviderFactory.FACTORY = factory;

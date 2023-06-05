@@ -20,8 +20,4 @@ public final class BouncyCastleProviderFactory extends ProviderFactory {
         return provider;
     }
 
-    @Override
-    public String _getProviderName() {
-        return _getProvider().getName();
-    }
 }
