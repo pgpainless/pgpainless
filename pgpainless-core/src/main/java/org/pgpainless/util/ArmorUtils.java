@@ -418,6 +418,22 @@ public final class ArmorUtils {
     }
 
     /**
+     * Set the version header entry in the ASCII armor.
+     * If the version info is null or only contains whitespace characters, then the version header will be removed.
+     *
+     * @param armor armored output stream
+     * @param version version header.
+     */
+    public static void setVersionHeader(@Nonnull ArmoredOutputStream armor,
+                                        @Nullable String version) {
+        if (version == null || version.trim().isEmpty()) {
+            armor.setHeader(HEADER_VERSION, null);
+        } else {
+            armor.setHeader(HEADER_VERSION, version);
+        }
+    }
+
+    /**
      * Add an ASCII armor header entry about the used hash algorithm into the {@link ArmoredOutputStream}.
      *
      * @param armor armored output stream

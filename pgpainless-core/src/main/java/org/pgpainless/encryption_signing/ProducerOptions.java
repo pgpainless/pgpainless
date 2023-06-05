@@ -28,6 +28,7 @@ public final class ProducerOptions {
             .defaultCompressionAlgorithm();
     private boolean asciiArmor = true;
     private String comment = null;
+    private String version = null;
 
     private ProducerOptions(EncryptionOptions encryptionOptions, SigningOptions signingOptions) {
         this.encryptionOptions = encryptionOptions;
@@ -120,7 +121,7 @@ public final class ProducerOptions {
      * Set the comment header in ASCII armored output.
      * The default value is null, which means no comment header is added.
      * Multiline comments are possible using '\\n'.
-     *
+     * <br>
      * Note: If a default header comment is set using {@link org.pgpainless.util.ArmoredOutputStreamFactory#setComment(String)},
      * then both comments will be written to the produced ASCII armor.
      *
@@ -128,10 +129,22 @@ public final class ProducerOptions {
      * @return builder
      */
     public ProducerOptions setComment(String comment) {
-        if (!asciiArmor) {
-            throw new IllegalArgumentException("Comment can only be set when ASCII armoring is enabled.");
-        }
         this.comment = comment;
+        return this;
+    }
+
+    /**
+     * Set the version header in ASCII armored output.
+     * The default value is null, which means no version header is added.
+     * <br>
+     * Note: If the value is non-null, then this method overrides the default version header set using
+     * {@link org.pgpainless.util.ArmoredOutputStreamFactory#setVersionInfo(String)}.
+     *
+     * @param version version header, or null for no version info.
+     * @return builder
+     */
+    public ProducerOptions setVersion(String version) {
+        this.version = version;
         return this;
     }
 
@@ -145,12 +158,30 @@ public final class ProducerOptions {
     }
 
     /**
+     * Return the version info header in ascii armored output.
+     *
+     * @return version info
+     */
+    public String getVersion() {
+        return version;
+    }
+
+    /**
      * Return whether a comment was set (!= null).
      *
-     * @return comment
+     * @return true if commend is set
      */
     public boolean hasComment() {
         return comment != null;
+    }
+
+    /**
+     * Return whether a version header was set (!= null).
+     *
+     * @return true if version header is set
+     */
+    public boolean hasVersion() {
+        return version != null;
     }
 
     public ProducerOptions setCleartextSigned() {
@@ -233,7 +264,7 @@ public final class ProducerOptions {
     /**
      * Set format metadata field of the literal data packet.
      * Defaults to {@link StreamEncoding#BINARY}.
-     *
+     * <br>
      * This does not change the encoding of the wrapped data itself.
      * To apply CR/LF encoding to your input data before processing, use {@link #applyCRLFEncoding()} instead.
      *
@@ -257,7 +288,7 @@ public final class ProducerOptions {
     /**
      * Apply special encoding of line endings to the input data.
      * By default, this is disabled, which means that the data is not altered.
-     *
+     * <br>
      * Enabling it will change the line endings to CR/LF.
      * Note: The encoding will not be reversed when decrypting, so applying CR/LF encoding will result in
      * the identity "decrypt(encrypt(data)) == data == verify(sign(data))".

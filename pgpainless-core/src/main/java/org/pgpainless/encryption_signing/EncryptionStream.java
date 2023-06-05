@@ -99,6 +99,12 @@ public final class EncryptionStream extends OutputStream {
                 }
             }
         }
+        if (options.hasVersion()) {
+            String version = options.getVersion().trim();
+            if (!version.isEmpty()) {
+                ArmorUtils.setVersionHeader(armorOutputStream, version);
+            }
+        }
         outermostStream = armorOutputStream;
     }
 
