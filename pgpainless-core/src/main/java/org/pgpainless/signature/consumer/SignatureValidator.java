@@ -535,10 +535,10 @@ public abstract class SignatureValidator {
                 try {
                     signature.init(ImplementationFactory.getInstance().getPGPContentVerifierBuilderProvider(), signer);
                     boolean valid;
-                    if (signer.getKeyID() != signee.getKeyID()) {
-                        valid = signature.verifyCertification(signer, signee);
-                    } else {
+                    if (signer.getKeyID() == signee.getKeyID() || signature.getSignatureType() == PGPSignature.DIRECT_KEY) {
                         valid = signature.verifyCertification(signee);
+                    } else {
+                        valid = signature.verifyCertification(signer, signee);
                     }
                     if (!valid) {
                         throw new SignatureValidationException("Signature is not correct.");

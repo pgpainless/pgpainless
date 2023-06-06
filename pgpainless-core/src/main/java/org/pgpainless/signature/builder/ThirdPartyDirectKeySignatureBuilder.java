@@ -43,11 +43,7 @@ public class ThirdPartyDirectKeySignatureBuilder extends AbstractSignatureBuilde
 
     public PGPSignature build(PGPPublicKey key) throws PGPException {
         PGPSignatureGenerator signatureGenerator = buildAndInitSignatureGenerator();
-        if (key.getKeyID() != publicSigningKey.getKeyID()) {
-            return signatureGenerator.generateCertification(publicSigningKey, key);
-        } else {
-            return signatureGenerator.generateCertification(key);
-        }
+        return signatureGenerator.generateCertification(key);
     }
 
     @Override
