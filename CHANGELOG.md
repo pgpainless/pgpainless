@@ -6,6 +6,7 @@ SPDX-License-Identifier: CC0-1.0
 # PGPainless Changelog
 
 ## 1.5.2-SNAPSHOT
+- Bugfix: Create proper direct-key signatures
 - `KeyRingTemplates`:
   - Add `rsaKeyRing()` for generating RSA keys with primary key and dedicated signing, encryption subkeys
   - Reduce number of template methods by replacing `UserId`, `String` arguments with `CharSequence`
@@ -14,6 +15,10 @@ SPDX-License-Identifier: CC0-1.0
 - `KeyRingUtils`: Removed `removeSecretKey()` in favour of `stripSecretKey()`
 - General code cleanup
 - SOP: generating keys with `rfc4880` profile now generates key with primary key and subkeys
+- Deprecate ElGamal key type
+- Key generation: Set expiration period of 5 years by default
+- Set AES-128 as default fallback symmetric algorithm
+- `ProducerOptions`: Allow setting custom version header when encrypting/signing message
 
 ## 1.5.2-rc1
 - Bump `sop-java` to `6.1.0`
