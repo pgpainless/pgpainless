@@ -5,7 +5,7 @@ SPDX-License-Identifier: CC0-1.0
 
 # PGPainless Changelog
 
-## 1.5.2-SNAPSHOT
+## 1.5.2
 - Bugfix: Create proper direct-key signatures
 - `KeyRingTemplates`:
   - Add `rsaKeyRing()` for generating RSA keys with primary key and dedicated signing, encryption subkeys
