@@ -243,6 +243,69 @@ public final class SigningOptions {
     }
 
     /**
+     * Create a binary inline signature using the signing key with the given keyId.
+     *
+     * @param secretKeyDecryptor decryptor to unlock the secret key
+     * @param secretKey secret key ring
+     * @param keyId keyId of the signing (sub-)key
+     * @return builder
+     * @throws PGPException if the secret key cannot be unlocked or if no signing method can be created.
+     * @throws KeyException.UnacceptableSigningKeyException if the key ring does not carry any signing-capable subkeys
+     * @throws KeyException.MissingSecretKeyException if the key ring does not contain the identified secret key
+     */
+    @Nonnull
+    public SigningOptions addInlineSignature(@Nonnull SecretKeyRingProtector secretKeyDecryptor,
+                                             @Nonnull PGPSecretKeyRing secretKey,
+                                             long keyId) throws PGPException {
+        return addInlineSignature(secretKeyDecryptor, secretKey, keyId, DocumentSignatureType.BINARY_DOCUMENT, null);
+    }
+
+
+    /**
+     * Create an inline signature using the signing key with the given keyId.
+     *
+     * @param secretKeyDecryptor decryptor to unlock the secret key
+     * @param secretKey secret key ring
+     * @param keyId keyId of the signing (sub-)key
+     * @param signatureType signature type
+     * @param subpacketsCallback callback to modify the signatures subpackets
+     * @return builder
+     * @throws PGPException if the secret key cannot be unlocked or if no signing method can be created.
+     * @throws KeyException.UnacceptableSigningKeyException if the key ring does not carry any signing-capable subkeys
+     * @throws KeyException.MissingSecretKeyException if the key ring does not contain the identified secret key
+     */
+    @Nonnull
+    public SigningOptions addInlineSignature(@Nonnull SecretKeyRingProtector secretKeyDecryptor,
+                                             @Nonnull PGPSecretKeyRing secretKey,
+                                             long keyId,
+                                             @Nonnull DocumentSignatureType signatureType,
+                                             @Nullable BaseSignatureSubpackets.Callback subpacketsCallback) throws PGPException {
+        KeyRingInfo keyRingInfo = PGPainless.inspectKeyRing(secretKey);
+
+        List<PGPPublicKey> signingPubKeys = keyRingInfo.getSigningSubkeys();
+        if (signingPubKeys.isEmpty()) {
+            throw new KeyException.UnacceptableSigningKeyException(OpenPgpFingerprint.of(secretKey));
+        }
+
+        for (PGPPublicKey signingPubKey : signingPubKeys) {
+            if (signingPubKey.getKeyID() == keyId) {
+
+                PGPSecretKey signingSecKey = secretKey.getSecretKey(signingPubKey.getKeyID());
+                if (signingSecKey == null) {
+                    throw new KeyException.MissingSecretKeyException(OpenPgpFingerprint.of(secretKey), signingPubKey.getKeyID());
+                }
+                PGPPrivateKey signingSubkey = UnlockSecretKey.unlockSecretKey(signingSecKey, secretKeyDecryptor);
+                Set<HashAlgorithm> hashAlgorithms = keyRingInfo.getPreferredHashAlgorithms(signingPubKey.getKeyID());
+                HashAlgorithm hashAlgorithm = negotiateHashAlgorithm(hashAlgorithms, PGPainless.getPolicy());
+                addSigningMethod(secretKey, signingSubkey, subpacketsCallback, hashAlgorithm, signatureType, false);
+                return this;
+            }
+        }
+
+        throw new KeyException.MissingSecretKeyException(OpenPgpFingerprint.of(secretKey), keyId);
+    }
+
+    /**
      * Add detached signatures with all key rings from the provided secret key ring collection.
      *
      * @param secretKeyDecryptor decryptor to unlock the secret signing keys
@@ -383,6 +446,68 @@ public final class SigningOptions {
         }
 
         return this;
+    }
+
+    /**
+     * Create a detached binary signature using the signing key with the given keyId.
+     *
+     * @param secretKeyDecryptor decryptor to unlock the secret key
+     * @param secretKey secret key ring
+     * @param keyId keyId of the signing (sub-)key
+     * @return builder
+     * @throws PGPException if the secret key cannot be unlocked or if no signing method can be created.
+     * @throws KeyException.UnacceptableSigningKeyException if the key ring does not carry any signing-capable subkeys
+     * @throws KeyException.MissingSecretKeyException if the key ring does not contain the identified secret key
+     */
+    @Nonnull
+    public SigningOptions addDetachedSignature(@Nonnull SecretKeyRingProtector secretKeyDecryptor,
+                                             @Nonnull PGPSecretKeyRing secretKey,
+                                             long keyId) throws PGPException {
+        return addDetachedSignature(secretKeyDecryptor, secretKey, keyId, DocumentSignatureType.BINARY_DOCUMENT, null);
+    }
+
+    /**
+     * Create a detached signature using the signing key with the given keyId.
+     *
+     * @param secretKeyDecryptor decryptor to unlock the secret key
+     * @param secretKey secret key ring
+     * @param keyId keyId of the signing (sub-)key
+     * @param signatureType signature type
+     * @param subpacketsCallback callback to modify the signatures subpackets
+     * @return builder
+     * @throws PGPException if the secret key cannot be unlocked or if no signing method can be created.
+     * @throws KeyException.UnacceptableSigningKeyException if the key ring does not carry any signing-capable subkeys
+     * @throws KeyException.MissingSecretKeyException if the key ring does not contain the identified secret key
+     */
+    @Nonnull
+    public SigningOptions addDetachedSignature(@Nonnull SecretKeyRingProtector secretKeyDecryptor,
+                                             @Nonnull PGPSecretKeyRing secretKey,
+                                             long keyId,
+                                             @Nonnull DocumentSignatureType signatureType,
+                                             @Nullable BaseSignatureSubpackets.Callback subpacketsCallback) throws PGPException {
+        KeyRingInfo keyRingInfo = PGPainless.inspectKeyRing(secretKey);
+
+        List<PGPPublicKey> signingPubKeys = keyRingInfo.getSigningSubkeys();
+        if (signingPubKeys.isEmpty()) {
+            throw new KeyException.UnacceptableSigningKeyException(OpenPgpFingerprint.of(secretKey));
+        }
+
+        for (PGPPublicKey signingPubKey : signingPubKeys) {
+            if (signingPubKey.getKeyID() == keyId) {
+
+                PGPSecretKey signingSecKey = secretKey.getSecretKey(signingPubKey.getKeyID());
+                if (signingSecKey == null) {
+                    throw new KeyException.MissingSecretKeyException(OpenPgpFingerprint.of(secretKey), signingPubKey.getKeyID());
+                }
+                PGPPrivateKey signingSubkey = UnlockSecretKey.unlockSecretKey(signingSecKey, secretKeyDecryptor);
+                Set<HashAlgorithm> hashAlgorithms = keyRingInfo.getPreferredHashAlgorithms(signingPubKey.getKeyID());
+                HashAlgorithm hashAlgorithm = negotiateHashAlgorithm(hashAlgorithms, PGPainless.getPolicy());
+                addSigningMethod(secretKey, signingSubkey, subpacketsCallback, hashAlgorithm, signatureType, true);
+                return this;
+            }
+        }
+
+        throw new KeyException.MissingSecretKeyException(OpenPgpFingerprint.of(secretKey), keyId);
     }
 
     private void addSigningMethod(@Nonnull PGPSecretKeyRing secretKey,
