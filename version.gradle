@@ -4,8 +4,8 @@
 
 allprojects {
     ext {
-        shortVersion = '1.5.2'
-        isSnapshot = false
+        shortVersion = '1.5.3'
+        isSnapshot = true
         pgpainlessMinAndroidSdk = 10
         javaSourceCompatibility = 1.8
         bouncyCastleVersion = '1.73'
