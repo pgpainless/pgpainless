@@ -5,6 +5,10 @@ SPDX-License-Identifier: CC0-1.0
 
 # PGPainless Changelog
 
+## 1.5.3-SNAPSHOT
+- Fix minimal bit-strength check for signing-subkeys accidentally comparing the bit-strength of the primary key
+- `SigningOptions`: Add new methods to add signatures using a single, chosen signing subkey
+
 ## 1.5.2
 - Bugfix: Create proper direct-key signatures
 - `KeyRingTemplates`:
