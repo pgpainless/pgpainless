@@ -395,7 +395,7 @@ public final class SigningOptions {
         SubkeyIdentifier signingKeyIdentifier = new SubkeyIdentifier(secretKey, signingSubkey.getKeyID());
         PGPSecretKey signingSecretKey = secretKey.getSecretKey(signingSubkey.getKeyID());
         PublicKeyAlgorithm publicKeyAlgorithm = PublicKeyAlgorithm.requireFromId(signingSecretKey.getPublicKey().getAlgorithm());
-        int bitStrength = secretKey.getPublicKey().getBitStrength();
+        int bitStrength = signingSecretKey.getPublicKey().getBitStrength();
         if (!PGPainless.getPolicy().getPublicKeyAlgorithmPolicy().isAcceptable(publicKeyAlgorithm, bitStrength)) {
             throw new KeyException.UnacceptableSigningKeyException(
                     new KeyException.PublicKeyAlgorithmPolicyException(
