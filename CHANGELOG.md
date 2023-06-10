@@ -51,7 +51,7 @@ SPDX-License-Identifier: CC0-1.0
     - Add profile `rfc4880` to reflect status quo
   - `version`: Add support for `--sop-spec` option
 
-# 1.4.5
+## 1.4.5
 - Bugfix: Direct-Key signatures are calculated over the signee key only, not the signer key + signee key
 - Security: Fix faulty bit-strength policy check for signing subkeys
 
@@ -123,6 +123,10 @@ SPDX-License-Identifier: CC0-1.0
 - Add `KeyIdUtil.formatKeyId(long id)` to format hexadecimal key-ids.
 - Add `KeyRingUtils.publicKeys(PGPKeyRing keys)`
 - Remove `BCUtil` class
+
+## 1.3.17
+- Bugfix: Direct-Key signatures are calculated over the signee key only, not the signer key + signee key
+- Security: Fix faulty bit-strength policy check for signing subkeys
 
 ## 1.3.16
 - Bump `sop-java` to `4.1.0`
