@@ -16,7 +16,8 @@ currently being supported with security updates.
 |---------|--------------------|
 | 1.5.X   | :white_check_mark: |
 | 1.4.X   | :white_check_mark: |
-| < 1.4.X | :x:                |
+| 1.3.X   | :white_check_mark: |
+| < 1.3.X | :x:                |
 
 ## Reporting a Vulnerability
 
