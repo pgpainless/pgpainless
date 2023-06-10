@@ -51,6 +51,10 @@ SPDX-License-Identifier: CC0-1.0
     - Add profile `rfc4880` to reflect status quo
   - `version`: Add support for `--sop-spec` option
 
+# 1.4.5
+- Bugfix: Direct-Key signatures are calculated over the signee key only, not the signer key + signee key
+- Security: Fix faulty bit-strength policy check for signing subkeys
+
 ## 1.4.4
 - Fix expectations on subpackets of v3 signatures (thanks @bjansen)
   - Properly verify v3 signatures, which do not yet have signature subpackets, yet we required them to have  
