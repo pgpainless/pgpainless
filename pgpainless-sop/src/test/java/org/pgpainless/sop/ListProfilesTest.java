@@ -31,4 +31,10 @@ public class ListProfilesTest {
         assertThrows(SOPGPException.UnsupportedProfile.class, () ->
                 sop.listProfiles().subcommand("help"));
     }
+
+    @Test
+    public void listProfilesOfNullThrows() {
+        assertThrows(SOPGPException.UnsupportedProfile.class, () ->
+                sop.listProfiles().subcommand(null));
+    }
 }
