@@ -23,6 +23,13 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 public class RevocationStateTest {
 
     @Test
+    public void softRevokedRequiresDate() {
+        // noinspection DataFlowIssue, ResultOfMethodCallIgnored
+        assertThrows(NullPointerException.class, () ->
+                RevocationState.softRevoked(null));
+    }
+
+    @Test
     public void testNotRevoked() {
         RevocationState state = RevocationState.notRevoked();
         assertEquals(RevocationStateType.notRevoked, state.getType());
