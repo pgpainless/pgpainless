@@ -546,4 +546,32 @@ public class EncryptDecryptRoundTripTest {
                         .toByteArrayAndResult()
         );
     }
+
+    @Test
+    public void encryptWithUnsupportedProfileFails() {
+        assertThrows(SOPGPException.UnsupportedProfile.class, () -> sop
+                .encrypt()
+                .profile("Unknown"));
+    }
+
+    @Test
+    public void encryptWithSupportedProfileTest() throws IOException {
+        byte[] encrypted = sop.encrypt()
+                .profile("rfc4880")
+                .withCert(bobCert)
+                .plaintext(message)
+                .getBytes();
+
+        ByteArrayAndResult<DecryptionResult> bytesAndResult = sop.decrypt()
+                .withKey(bobKey)
+                .ciphertext(encrypted)
+                .toByteArrayAndResult();
+
+        ByteArrayOutputStream decrypted = new ByteArrayOutputStream();
+        Streams.pipeAll(bytesAndResult.getInputStream(), decrypted);
+        assertArrayEquals(message, decrypted.toByteArray());
+
+        DecryptionResult result = bytesAndResult.getResult();
+        assertTrue(result.getSessionKey().isPresent());
+    }
 }
