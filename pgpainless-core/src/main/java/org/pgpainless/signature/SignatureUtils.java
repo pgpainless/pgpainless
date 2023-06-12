@@ -13,7 +13,6 @@ import java.util.Collections;
 import java.util.Date;
 import java.util.Iterator;
 import java.util.List;
-import java.util.Set;
 import javax.annotation.Nonnull;
 
 import org.bouncycastle.bcpg.sig.IssuerKeyID;
@@ -24,20 +23,13 @@ import org.bouncycastle.openpgp.PGPCompressedData;
 import org.bouncycastle.openpgp.PGPException;
 import org.bouncycastle.openpgp.PGPObjectFactory;
 import org.bouncycastle.openpgp.PGPPublicKey;
-import org.bouncycastle.openpgp.PGPSecretKey;
 import org.bouncycastle.openpgp.PGPSignature;
-import org.bouncycastle.openpgp.PGPSignatureGenerator;
 import org.bouncycastle.openpgp.PGPSignatureList;
-import org.bouncycastle.openpgp.operator.PGPContentSignerBuilder;
 import org.bouncycastle.util.encoders.Hex;
 import org.bouncycastle.util.io.Streams;
-import org.pgpainless.PGPainless;
-import org.pgpainless.algorithm.HashAlgorithm;
 import org.pgpainless.algorithm.SignatureType;
-import org.pgpainless.algorithm.negotiation.HashAlgorithmNegotiator;
 import org.pgpainless.implementation.ImplementationFactory;
 import org.pgpainless.key.OpenPgpFingerprint;
-import org.pgpainless.key.util.OpenPgpKeyAttributeUtil;
 import org.pgpainless.key.util.RevocationAttributes;
 import org.pgpainless.signature.subpackets.SignatureSubpacketsUtil;
 import org.pgpainless.util.ArmorUtils;
@@ -51,49 +43,6 @@ public final class SignatureUtils {
 
     private SignatureUtils() {
 
-    }
-
-    /**
-     * Return a signature generator for the provided signing key.
-     * The signature generator will follow the hash algorithm preferences of the signing key and pick the best algorithm.
-     *
-     * @param singingKey signing key
-     * @return signature generator
-     */
-    public static PGPSignatureGenerator getSignatureGeneratorFor(PGPSecretKey singingKey) {
-        return getSignatureGeneratorFor(singingKey.getPublicKey());
-    }
-
-    /**
-     * Return a signature generator for the provided signing key.
-     * The signature generator will follow the hash algorithm preferences of the signing key and pick the best algorithm.
-     *
-     * @param signingPubKey signing key
-     * @return signature generator
-     */
-    public static PGPSignatureGenerator getSignatureGeneratorFor(PGPPublicKey signingPubKey) {
-        PGPSignatureGenerator signatureGenerator = new PGPSignatureGenerator(
-                getPgpContentSignerBuilderForKey(signingPubKey));
-        return signatureGenerator;
-    }
-
-    /**
-     * Return a content signer builder for the passed public key.
-     *
-     * The content signer will use a hash algorithm derived from the keys' algorithm preferences.
-     * If no preferences can be derived, the key will fall back to the default hash algorithm as set in
-     * the {@link org.pgpainless.policy.Policy}.
-     *
-     * @param publicKey public key
-     * @return content signer builder
-     */
-    public static PGPContentSignerBuilder getPgpContentSignerBuilderForKey(PGPPublicKey publicKey) {
-        Set<HashAlgorithm> hashAlgorithmSet = OpenPgpKeyAttributeUtil.getOrGuessPreferredHashAlgorithms(publicKey);
-
-        HashAlgorithm hashAlgorithm = HashAlgorithmNegotiator.negotiateSignatureHashAlgorithm(PGPainless.getPolicy())
-                .negotiateHashAlgorithm(hashAlgorithmSet);
-
-        return ImplementationFactory.getInstance().getPGPContentSignerBuilder(publicKey.getAlgorithm(), hashAlgorithm.getAlgorithmId());
     }
 
     /**
@@ -311,14 +260,6 @@ public final class SignatureUtils {
      */
     public static String getSignatureDigestPrefix(PGPSignature signature) {
         return Hex.toHexString(signature.getDigestPrefix());
-    }
-
-    public static List<PGPSignature> toList(PGPSignatureList signatures) {
-        List<PGPSignature> list = new ArrayList<>();
-        for (PGPSignature signature : signatures) {
-            list.add(signature);
-        }
-        return list;
     }
 
     public static boolean wasIssuedBy(byte[] fingerprint, PGPSignature signature) {
