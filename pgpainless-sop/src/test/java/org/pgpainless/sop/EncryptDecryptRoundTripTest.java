@@ -556,14 +556,25 @@ public class EncryptDecryptRoundTripTest {
 
     @Test
     public void encryptWithSupportedProfileTest() throws IOException {
+
+        byte[] key = sop.generateKey()
+                .profile("rfc4880")
+                .userId("Alice <alice@pgpainless.org>")
+                .generate()
+                .getBytes();
+
+        byte[] cert = sop.extractCert()
+                .key(key)
+                .getBytes();
+
         byte[] encrypted = sop.encrypt()
                 .profile("rfc4880")
-                .withCert(bobCert)
+                .withCert(cert)
                 .plaintext(message)
                 .getBytes();
 
         ByteArrayAndResult<DecryptionResult> bytesAndResult = sop.decrypt()
-                .withKey(bobKey)
+                .withKey(key)
                 .ciphertext(encrypted)
                 .toByteArrayAndResult();
 
