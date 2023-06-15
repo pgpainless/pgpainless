@@ -649,6 +649,9 @@ public class OpenPgpMessageInputStream extends DecryptionStream {
             for (PGPPublicKeyEncryptedData pkesk : esks.pkesks) {
                 encryptedData.recipients.add(pkesk.getKeyID());
             }
+            for (PGPPublicKeyEncryptedData pkesk : esks.anonPkesks) {
+                encryptedData.recipients.add(pkesk.getKeyID());
+            }
 
             LOGGER.debug("Successfully decrypted data with key " + decryptionKeyId);
             IntegrityProtectedInputStream integrityProtected = new IntegrityProtectedInputStream(decrypted, asymEsk, options);
