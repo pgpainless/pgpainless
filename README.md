@@ -32,7 +32,7 @@ It also checks if signing subkeys are properly bound to their primary key, if ke
 if keys are allowed to create signatures in the first place.
 
 These rigorous checks make PGPainless stand out from other Java-based OpenPGP libraries and are the reason why
-PGPainless currently [*scores second place* on Sequoia-PGPs Interoperability Test-Suite](https://tests.sequoia-pgp.org).
+PGPainless currently [*scores first place* on Sequoia-PGPs Interoperability Test-Suite](https://tests.sequoia-pgp.org).
 
 > At FlowCrypt we are using PGPainless in our Kotlin code bases on Android and on server side.
 > The ergonomics of legacy PGP tooling on Java is not very good, and PGPainless improves it greatly.
