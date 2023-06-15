@@ -4,13 +4,14 @@
 
 package org.pgpainless.key;
 
+import java.io.IOException;
+
 import org.bouncycastle.openpgp.PGPPublicKeyRing;
 import org.bouncycastle.openpgp.PGPSecretKeyRing;
-import org.junit.jupiter.api.Disabled;
-import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.TestTemplate;
+import org.junit.jupiter.api.extension.ExtendWith;
 import org.pgpainless.PGPainless;
-
-import java.io.IOException;
+import org.pgpainless.util.TestAllImplementations;
 
 public class V6OpenPgpKeyTest {
 
@@ -43,12 +44,14 @@ public class V6OpenPgpKeyTest {
             "I8kWVkXU6vFOi+HWvv/ira7ofJu16NnoUkhclkUrk0mXubZvyl4GBg==\n" +
             "-----END PGP PUBLIC KEY BLOCK-----";
 
-    @Test
+    @TestTemplate
+    @ExtendWith(TestAllImplementations.class)
     public void testParseCert() throws IOException {
         PGPPublicKeyRing cert = PGPainless.readKeyRing().publicKeyRing(CERT);
     }
 
-    @Test
+    @TestTemplate
+    @ExtendWith(TestAllImplementations.class)
     public void testParseKey() throws IOException {
         PGPSecretKeyRing key = PGPainless.readKeyRing().secretKeyRing(KEY);
     }

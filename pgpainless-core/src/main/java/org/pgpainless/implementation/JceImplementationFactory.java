@@ -15,7 +15,6 @@ import org.bouncycastle.openpgp.PGPPrivateKey;
 import org.bouncycastle.openpgp.PGPPublicKey;
 import org.bouncycastle.openpgp.PGPSecretKey;
 import org.bouncycastle.openpgp.PGPSessionKey;
-import org.bouncycastle.openpgp.jcajce.JcaPGPObjectFactory;
 import org.bouncycastle.openpgp.operator.KeyFingerPrintCalculator;
 import org.bouncycastle.openpgp.operator.PBEDataDecryptorFactory;
 import org.bouncycastle.openpgp.operator.PBEKeyEncryptionMethodGenerator;
@@ -139,11 +138,11 @@ public class JceImplementationFactory extends ImplementationFactory {
 
     @Override
     public PGPObjectFactory getPGPObjectFactory(InputStream inputStream) {
-        return new JcaPGPObjectFactory(inputStream);
+        return new PGPObjectFactory(inputStream, ImplementationFactory.getInstance().getKeyFingerprintCalculator());
     }
 
     @Override
     public PGPObjectFactory getPGPObjectFactory(byte[] bytes) {
-        return new JcaPGPObjectFactory(bytes);
+        return new PGPObjectFactory(bytes, ImplementationFactory.getInstance().getKeyFingerprintCalculator());
     }
 }
