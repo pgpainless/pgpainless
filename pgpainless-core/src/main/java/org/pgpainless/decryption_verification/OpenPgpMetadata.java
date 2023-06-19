@@ -31,7 +31,7 @@ import org.pgpainless.util.SessionKey;
  * Legacy class containing metadata about an OpenPGP message.
  * It is advised to use {@link MessageMetadata} instead.
  *
- * TODO: Remove in 1.5.X
+ * TODO: Remove in 1.6.X
  */
 public class OpenPgpMetadata {
 

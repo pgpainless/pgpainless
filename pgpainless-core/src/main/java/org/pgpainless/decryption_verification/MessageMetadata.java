@@ -36,7 +36,7 @@ public class MessageMetadata {
     /**
      * Convert this {@link MessageMetadata} object into a legacy {@link OpenPgpMetadata} object.
      * This method is intended to be used for a transition period between the 1.3 / 1.4+ branches.
-     * TODO: Remove in 1.5.X
+     * TODO: Remove in 1.6.X
      *
      * @return converted {@link OpenPgpMetadata} object
      */
