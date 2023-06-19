@@ -172,10 +172,10 @@ This behaviour can be modified though using the `Policy` class.
         decryptionStream.close();
 
         // Result contains information like signature status etc.
-        OpenPgpMetadata metadata = decryptionStream.getResult();
+        MessageMetadata metadata = decryptionStream.getMetadata();
 ```
 
-*After* the `DecryptionStream` was closed, you can get metadata about the processed data by retrieving the `OpenPgpMetadata`.
+*After* the `DecryptionStream` was closed, you can get metadata about the processed data by retrieving the `MessageMetadata`.
 Again, this object will contain information about how the message was encrypted, who signed it and so on.
 
 #### Many more examples can be found in the [examples package](pgpainless-core/src/test/java/org/pgpainless/example)!!!
