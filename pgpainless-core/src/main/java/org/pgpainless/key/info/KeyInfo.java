@@ -98,7 +98,7 @@ public class KeyInfo {
         // see https://github.com/bcgit/bc-java/issues/1087
         // UPDATE: Apparently 1087 is not fixed properly with BC 1.71
         // See https://github.com/bcgit/bc-java/issues/1142
-        // TODO: Remove when BC 1.72 comes out with a fix.
+        // TODO: Remove once BC comes out with a fix.
         if (identifier.equals(GNUObjectIdentifiers.Ed25519)) {
             return EdDSACurve._Ed25519.getName();
         }
