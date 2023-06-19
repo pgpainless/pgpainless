@@ -5,6 +5,14 @@ SPDX-License-Identifier: CC0-1.0
 
 # PGPainless Changelog
 
+## 1.5.4-SNAPSHOT
+- Bump `bcpg-jdk15to18` to `1.74`
+- Bump `bcprov-jdk15to18` to `1.74`
+- Remove unused methods from `SignatureUtils`
+- Encryption: Allow anonymous recipients using wildcard key-IDs
+- Add `SignatureSubpacketsUtil.getRegularExpressions()`
+- Tests, tests, tests
+
 ## 1.5.3
 - Fix minimal bit-strength check for signing-subkeys accidentally comparing the bit-strength of the primary key
 - `SigningOptions`: Add new methods to add signatures using a single, chosen signing subkey
