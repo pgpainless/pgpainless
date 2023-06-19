@@ -5,7 +5,7 @@ SPDX-License-Identifier: CC0-1.0
 
 # PGPainless Changelog
 
-## 1.5.4-SNAPSHOT
+## 1.5.4
 - Bump `bcpg-jdk15to18` to `1.74`
 - Bump `bcprov-jdk15to18` to `1.74`
 - Remove unused methods from `SignatureUtils`
