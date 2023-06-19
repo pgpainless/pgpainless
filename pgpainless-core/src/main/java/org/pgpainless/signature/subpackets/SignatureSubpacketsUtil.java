@@ -23,6 +23,7 @@ import org.bouncycastle.bcpg.sig.KeyFlags;
 import org.bouncycastle.bcpg.sig.NotationData;
 import org.bouncycastle.bcpg.sig.PreferredAlgorithms;
 import org.bouncycastle.bcpg.sig.PrimaryUserID;
+import org.bouncycastle.bcpg.sig.RegularExpression;
 import org.bouncycastle.bcpg.sig.Revocable;
 import org.bouncycastle.bcpg.sig.RevocationKey;
 import org.bouncycastle.bcpg.sig.RevocationReason;
@@ -539,6 +540,23 @@ public final class SignatureSubpacketsUtil {
     public static @Nullable TrustSignature getTrustSignature(PGPSignature signature) {
         return hashed(signature, SignatureSubpacket.trustSignature);
     }
+
+    /**
+     * Return all regular expression subpackets from the hashed area of the given signature.
+     *
+     * @param signature signature
+     * @return list of regular expressions
+     */
+    public static List<RegularExpression> getRegularExpressions(PGPSignature signature) {
+        org.bouncycastle.bcpg.SignatureSubpacket[] subpackets = signature.getHashedSubPackets()
+                .getSubpackets(SignatureSubpacket.regularExpression.getCode());
+        List<RegularExpression> regularExpressions = new ArrayList<>(subpackets.length);
+        for (org.bouncycastle.bcpg.SignatureSubpacket subpacket : subpackets) {
+            regularExpressions.add((RegularExpression) subpacket);
+        }
+        return regularExpressions;
+    }
+
 
     /**
      * Select a list of all signature subpackets of the given type, which are present in the hashed area of
