@@ -485,4 +485,13 @@ public final class KeyRingUtils {
         // Parse the key back into an object
         return new PGPSecretKeyRing(encoded.toByteArray(), ImplementationFactory.getInstance().getKeyFingerprintCalculator());
     }
+
+    /**
+     * Strip all user-ids, user-attributes and signatures from the given public key.
+     * @param bloatedKey public key
+     * @return stripped public key
+     */
+    public static PGPPublicKey getStrippedDownPublicKey(PGPPublicKey bloatedKey) throws PGPException {
+        return new PGPPublicKey(bloatedKey.getPublicKeyPacket(), ImplementationFactory.getInstance().getKeyFingerprintCalculator());
+    }
 }

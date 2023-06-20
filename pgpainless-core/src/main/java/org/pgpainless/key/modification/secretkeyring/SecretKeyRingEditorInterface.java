@@ -13,6 +13,7 @@ import javax.annotation.Nullable;
 
 import org.bouncycastle.openpgp.PGPException;
 import org.bouncycastle.openpgp.PGPKeyPair;
+import org.bouncycastle.openpgp.PGPPublicKeyRing;
 import org.bouncycastle.openpgp.PGPSecretKeyRing;
 import org.bouncycastle.openpgp.PGPSignature;
 import org.pgpainless.algorithm.KeyFlag;
@@ -459,6 +460,22 @@ public interface SecretKeyRingEditorInterface {
             @Nullable Date expiration,
             @Nonnull SecretKeyRingProtector secretKeyRingProtector)
             throws PGPException;
+
+    /**
+     * Create a minimal, self-authorizing revocation certificate, containing only the primary key
+     * and a revocation signature.
+     * This type of revocation certificates was introduced in OpenPGP v6.
+     * This method has no side effects on the original key and will leave it intact.
+     *
+     * @param secretKeyRingProtector protector to unlock the primary key.
+     * @param keyRevocationAttributes reason for the revocation (key revocation)
+     * @return minimal revocation certificate
+     *
+     * @throws PGPException in case we cannot generate a revocation signature
+     */
+    PGPPublicKeyRing createMinimalRevocationCertificate(@Nonnull SecretKeyRingProtector secretKeyRingProtector,
+                                                        @Nullable RevocationAttributes keyRevocationAttributes)
+    throws PGPException;
 
     /**
      * Create a detached revocation certificate, which can be used to revoke the whole key.

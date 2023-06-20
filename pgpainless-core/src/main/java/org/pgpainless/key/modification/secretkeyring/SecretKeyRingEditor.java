@@ -10,6 +10,7 @@ import org.bouncycastle.bcpg.sig.KeyExpirationTime;
 import org.bouncycastle.openpgp.PGPException;
 import org.bouncycastle.openpgp.PGPKeyPair;
 import org.bouncycastle.openpgp.PGPPublicKey;
+import org.bouncycastle.openpgp.PGPPublicKeyRing;
 import org.bouncycastle.openpgp.PGPSecretKey;
 import org.bouncycastle.openpgp.PGPSecretKeyRing;
 import org.bouncycastle.openpgp.PGPSignature;
@@ -154,7 +155,7 @@ public class SecretKeyRingEditor implements SecretKeyRingEditorInterface {
         PGPSignature signature = primaryUserId == null ?
                 info.getLatestDirectKeySelfSignature() : info.getLatestUserIdCertification(primaryUserId);
         final Date previousKeyExpiration = signature == null ? null :
-            SignatureSubpacketsUtil.getKeyExpirationTimeAsDate(signature, primaryKey);
+                SignatureSubpacketsUtil.getKeyExpirationTimeAsDate(signature, primaryKey);
 
         // Add new primary user-id signature
         addUserId(
@@ -605,6 +606,23 @@ public class SecretKeyRingEditor implements SecretKeyRingEditorInterface {
         }
 
         return this;
+    }
+
+    @Override
+    public PGPPublicKeyRing createMinimalRevocationCertificate(
+            @Nonnull SecretKeyRingProtector secretKeyRingProtector,
+            @Nullable RevocationAttributes keyRevocationAttributes)
+            throws PGPException {
+        // Check reason
+        if (keyRevocationAttributes != null && !RevocationAttributes.Reason.isKeyRevocation(keyRevocationAttributes.getReason())) {
+            throw new IllegalArgumentException("Revocation reason MUST be applicable to a key revocation.");
+        }
+
+        PGPSignature revocation = createRevocation(secretKeyRingProtector, keyRevocationAttributes);
+        PGPPublicKey primaryKey = secretKeyRing.getSecretKey().getPublicKey();
+        primaryKey = KeyRingUtils.getStrippedDownPublicKey(primaryKey);
+        primaryKey = PGPPublicKey.addCertification(primaryKey, revocation);
+        return new PGPPublicKeyRing(Collections.singletonList(primaryKey));
     }
 
     private PGPSignature reissueNonPrimaryUserId(

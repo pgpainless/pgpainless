@@ -100,6 +100,25 @@ public final class RevocationAttributes {
             return isHardRevocation(reason.reasonCode);
         }
 
+        /**
+         * Return true if the given {@link Reason} denotes a key revocation.
+         * @param reason reason
+         * @return is key revocation
+         */
+        public static boolean isKeyRevocation(@Nonnull Reason reason) {
+            return isKeyRevocation(reason.code());
+        }
+
+        /**
+         * Return true if the given reason code denotes a key revocation.
+         * @param code reason code
+         * @return is key revocation
+         */
+        public static boolean isKeyRevocation(byte code) {
+            Reason reason = MAP.get(code);
+            return reason != USER_ID_NO_LONGER_VALID;
+        }
+
         private final byte reasonCode;
 
         Reason(byte reasonCode) {
