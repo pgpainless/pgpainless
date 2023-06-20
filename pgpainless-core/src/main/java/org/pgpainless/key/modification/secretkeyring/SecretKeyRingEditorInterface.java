@@ -462,6 +462,7 @@ public interface SecretKeyRingEditorInterface {
 
     /**
      * Create a detached revocation certificate, which can be used to revoke the whole key.
+     * The original key will not be modified by this method.
      *
      * @param secretKeyRingProtector protector to unlock the primary key.
      * @param revocationAttributes reason for the revocation
@@ -469,13 +470,14 @@ public interface SecretKeyRingEditorInterface {
      *
      * @throws PGPException in case we cannot generate a revocation certificate
      */
-    PGPSignature createRevocationCertificate(
+    PGPSignature createRevocation(
             @Nonnull SecretKeyRingProtector secretKeyRingProtector,
             @Nullable RevocationAttributes revocationAttributes)
             throws PGPException;
 
     /**
      * Create a detached revocation certificate, which can be used to revoke the specified subkey.
+     * The original key will not be modified by this method.
      *
      * @param subkeyId id of the subkey to be revoked
      * @param secretKeyRingProtector protector to unlock the primary key.
@@ -484,7 +486,7 @@ public interface SecretKeyRingEditorInterface {
      *
      * @throws PGPException in case we cannot generate a revocation certificate
      */
-    PGPSignature createRevocationCertificate(
+    PGPSignature createRevocation(
             long subkeyId,
             @Nonnull SecretKeyRingProtector secretKeyRingProtector,
             @Nullable RevocationAttributes revocationAttributes)
@@ -492,6 +494,7 @@ public interface SecretKeyRingEditorInterface {
 
     /**
      * Create a detached revocation certificate, which can be used to revoke the specified subkey.
+     * The original key will not be modified by this method.
      *
      * @param subkeyId id of the subkey to be revoked
      * @param secretKeyRingProtector protector to unlock the primary key.
@@ -500,7 +503,7 @@ public interface SecretKeyRingEditorInterface {
      *
      * @throws PGPException in case we cannot generate a revocation certificate
      */
-    PGPSignature createRevocationCertificate(
+    PGPSignature createRevocation(
             long subkeyId,
             @Nonnull SecretKeyRingProtector secretKeyRingProtector,
             @Nullable RevocationSignatureSubpackets.Callback certificateSubpacketsCallback)
@@ -508,6 +511,7 @@ public interface SecretKeyRingEditorInterface {
 
     /**
      * Create a detached revocation certificate, which can be used to revoke the specified subkey.
+     * The original key will not be modified by this method.
      *
      * @param subkeyFingerprint fingerprint of the subkey to be revoked
      * @param secretKeyRingProtector protector to unlock the primary key.
@@ -516,13 +520,13 @@ public interface SecretKeyRingEditorInterface {
      *
      * @throws PGPException in case we cannot generate a revocation certificate
      */
-    default PGPSignature createRevocationCertificate(
+    default PGPSignature createRevocation(
             OpenPgpFingerprint subkeyFingerprint,
             SecretKeyRingProtector secretKeyRingProtector,
             @Nullable RevocationAttributes revocationAttributes)
             throws PGPException {
 
-        return createRevocationCertificate(
+        return createRevocation(
                 subkeyFingerprint.getKeyId(),
                 secretKeyRingProtector,
                 revocationAttributes);

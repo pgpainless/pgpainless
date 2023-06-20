@@ -75,7 +75,7 @@ public class RevokeSubKeyTest {
         SecretKeyRingProtector protector = PasswordBasedSecretKeyRingProtector.forKey(secretKeys, Passphrase.fromPassword("password123"));
 
         PGPSignature revocationCertificate = PGPainless.modifyKeyRing(secretKeys)
-                .createRevocationCertificate(fingerprint, protector, RevocationAttributes.createKeyRevocation()
+                .createRevocation(fingerprint, protector, RevocationAttributes.createKeyRevocation()
                         .withReason(RevocationAttributes.Reason.KEY_RETIRED)
                         .withDescription("Key no longer used."));
 
@@ -98,8 +98,8 @@ public class RevokeSubKeyTest {
                 .forKey(secretKeys, Passphrase.fromPassword("password123"));
 
         SecretKeyRingEditorInterface editor = PGPainless.modifyKeyRing(secretKeys);
-        PGPSignature keyRevocation = editor.createRevocationCertificate(primaryKey.getKeyID(), protector, (RevocationAttributes) null);
-        PGPSignature subkeyRevocation = editor.createRevocationCertificate(subKey.getKeyID(), protector, (RevocationAttributes) null);
+        PGPSignature keyRevocation = editor.createRevocation(primaryKey.getKeyID(), protector, (RevocationAttributes) null);
+        PGPSignature subkeyRevocation = editor.createRevocation(subKey.getKeyID(), protector, (RevocationAttributes) null);
 
         assertEquals(SignatureType.KEY_REVOCATION.getCode(), keyRevocation.getSignatureType());
         assertEquals(SignatureType.SUBKEY_REVOCATION.getCode(), subkeyRevocation.getSignatureType());

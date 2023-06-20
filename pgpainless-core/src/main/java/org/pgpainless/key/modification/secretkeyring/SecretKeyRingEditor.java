@@ -407,8 +407,8 @@ public class SecretKeyRingEditor implements SecretKeyRingEditorInterface {
     }
 
     @Override
-    public PGPSignature createRevocationCertificate(@Nonnull SecretKeyRingProtector secretKeyRingProtector,
-                                                    @Nullable RevocationAttributes revocationAttributes)
+    public PGPSignature createRevocation(@Nonnull SecretKeyRingProtector secretKeyRingProtector,
+                                         @Nullable RevocationAttributes revocationAttributes)
             throws PGPException {
         PGPPublicKey revokeeSubKey = secretKeyRing.getPublicKey();
         PGPSignature revocationCertificate = generateRevocation(
@@ -417,7 +417,7 @@ public class SecretKeyRingEditor implements SecretKeyRingEditorInterface {
     }
 
     @Override
-    public PGPSignature createRevocationCertificate(
+    public PGPSignature createRevocation(
             long subkeyId,
             @Nonnull SecretKeyRingProtector secretKeyRingProtector,
             @Nullable RevocationAttributes revocationAttributes)
@@ -428,7 +428,7 @@ public class SecretKeyRingEditor implements SecretKeyRingEditorInterface {
     }
 
     @Override
-    public PGPSignature createRevocationCertificate(
+    public PGPSignature createRevocation(
             long subkeyId,
             @Nonnull SecretKeyRingProtector secretKeyRingProtector,
             @Nullable RevocationSignatureSubpackets.Callback certificateSubpacketsCallback)

@@ -27,7 +27,7 @@ public class RevocationCertificateTest {
         PGPSecretKeyRing secretKeys = TestKeys.getEmilSecretKeyRing();
 
         PGPSignature revocation = PGPainless.modifyKeyRing(secretKeys)
-                .createRevocationCertificate(SecretKeyRingProtector.unprotectedKeys(),
+                .createRevocation(SecretKeyRingProtector.unprotectedKeys(),
                         RevocationAttributes.createKeyRevocation()
                                 .withReason(RevocationAttributes.Reason.KEY_RETIRED)
                                 .withoutDescription());
