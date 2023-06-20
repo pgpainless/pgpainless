@@ -67,6 +67,11 @@ public class RevocationCertificateTest {
         assertFalse(key.getUserIDs().hasNext());
         assertFalse(key.getUserAttributes().hasNext());
         assertNull(key.getTrustData());
+
+        PGPPublicKeyRing originalCert = PGPainless.extractCertificate(secretKeys);
+        PGPPublicKeyRing mergedCert = PGPainless.mergeCertificate(originalCert, minimalRevocationCert);
+
+        assertTrue(PGPainless.inspectKeyRing(mergedCert).getRevocationState().isSoftRevocation());
     }
 
     @Test
@@ -85,6 +90,11 @@ public class RevocationCertificateTest {
         assertFalse(key.getUserIDs().hasNext());
         assertFalse(key.getUserAttributes().hasNext());
         assertNull(key.getTrustData());
+
+        PGPPublicKeyRing originalCert = PGPainless.extractCertificate(secretKeys);
+        PGPPublicKeyRing mergedCert = PGPainless.mergeCertificate(originalCert, minimalRevocationCert);
+
+        assertTrue(PGPainless.inspectKeyRing(mergedCert).getRevocationState().isSoftRevocation());
     }
 
     @Test
