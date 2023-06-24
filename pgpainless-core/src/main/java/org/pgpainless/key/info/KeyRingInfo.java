@@ -118,6 +118,26 @@ public class KeyRingInfo {
         this.revocationState = findRevocationState();
     }
 
+    /**
+     * Return the underlying {@link PGPKeyRing}.
+     * @return keys
+     */
+    public PGPKeyRing getKeys() {
+        return keys;
+    }
+
+    public List<PGPPublicKey> getValidSubkeys() {
+        List<PGPPublicKey> subkeys = new ArrayList<>();
+        Iterator<PGPPublicKey> iterator = getKeys().getPublicKeys();
+        while (iterator.hasNext()) {
+            PGPPublicKey key = iterator.next();
+            if (isKeyValidlyBound(key.getKeyID())) {
+                subkeys.add(key);
+            }
+        }
+        return subkeys;
+    }
+
     @Nonnull
     private RevocationState findRevocationState() {
         PGPSignature revocation = signatures.primaryKeyRevocation;
