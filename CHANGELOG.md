@@ -5,6 +5,13 @@ SPDX-License-Identifier: CC0-1.0
 
 # PGPainless Changelog
 
+## 1.5.5-SNAPSHOT
+- Bump `bcpg-jdk15to18` to `1.75`
+- Bump `bcprov-jdk15to18` to `1.75`
+- `SecretKeyRingEditor`:
+  - Rename `createRevocationCertificate()` to `createRevocation()`
+  - Add `createMinimalRevocationCertificate()` method to generate OpenPGP v6-style self-certifying revocation certificates
+
 ## 1.5.4
 - Bump `bcpg-jdk15to18` to `1.74`
 - Bump `bcprov-jdk15to18` to `1.74`
