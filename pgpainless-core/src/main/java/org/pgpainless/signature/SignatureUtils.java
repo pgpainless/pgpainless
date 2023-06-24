@@ -23,6 +23,7 @@ import org.bouncycastle.openpgp.PGPCompressedData;
 import org.bouncycastle.openpgp.PGPException;
 import org.bouncycastle.openpgp.PGPObjectFactory;
 import org.bouncycastle.openpgp.PGPPublicKey;
+import org.bouncycastle.openpgp.PGPPublicKeyRing;
 import org.bouncycastle.openpgp.PGPSignature;
 import org.bouncycastle.openpgp.PGPSignatureList;
 import org.bouncycastle.util.encoders.Hex;
@@ -306,5 +307,54 @@ public final class SignatureUtils {
         }
 
         return Collections.unmodifiableList(signaturesByKeyId);
+    }
+
+    public static @Nonnull List<PGPSignature> getDelegations(PGPPublicKeyRing key) {
+        List<PGPSignature> delegations = new ArrayList<>();
+        PGPPublicKey primaryKey = key.getPublicKey();
+        Iterator<PGPSignature> signatures = primaryKey.getKeySignatures();
+        outerloop: while (signatures.hasNext()) {
+            PGPSignature signature = signatures.next();
+            Iterator<PGPPublicKey> subkeys = key.getPublicKeys();
+            while (subkeys.hasNext()) {
+                if (signature.getKeyID() == subkeys.next().getKeyID()) {
+                    continue outerloop;
+                }
+            }
+            delegations.add(signature);
+        }
+
+        return delegations;
+    }
+
+    public static @Nonnull List<PGPSignature> get3rdPartyCertificationsFor(String userId, PGPPublicKeyRing key) {
+        PGPPublicKey primaryKey = key.getPublicKey();
+        List<PGPSignature> certifications = new ArrayList<>();
+        Iterator<PGPSignature> it = primaryKey.getSignaturesForID(userId);
+        while (it.hasNext()) {
+            PGPSignature sig = it.next();
+            if (sig.getKeyID() != primaryKey.getKeyID()) {
+                certifications.add(sig);
+            }
+        }
+        return certifications;
+    }
+
+    public static class Certification {
+        private final String userId;
+        private final PGPSignature signature;
+
+        public Certification(String userId, PGPSignature signature) {
+            this.userId = userId;
+            this.signature = signature;
+        }
+
+        public String getUserId() {
+            return userId;
+        }
+
+        public PGPSignature getSignature() {
+            return signature;
+        }
     }
 }
