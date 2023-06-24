@@ -231,6 +231,15 @@ EncryptionOptions encOptions = EncryptionOptions.get()
 
 Once again, it is possible to add multiple recipients by repeating the `addRecipient()` method call.
 
+In order to prevent metadata leaks, you might want to add recipients anonymously.
+Anonymous recipients have their key-id hidden by replacing it with a wildcard.
+That way, it is not easily possible for an attacker to deduce the recipients of a message without further
+analysis of additional metadata.
+Anonymous recipients can be added like follows:
+```java
+encOptions.addHiddenRecipient(certificate);
+```
+
 You can also encrypt a message to a password like this:
 ```java
 encOptions.addPassphrase(Passphrase.fromPassword("sw0rdf1sh"));
