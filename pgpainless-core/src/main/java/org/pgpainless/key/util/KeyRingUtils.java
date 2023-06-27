@@ -488,8 +488,10 @@ public final class KeyRingUtils {
 
     /**
      * Strip all user-ids, user-attributes and signatures from the given public key.
+     *
      * @param bloatedKey public key
      * @return stripped public key
+     * @throws PGPException if the packet is faulty or the required calculations fail
      */
     public static PGPPublicKey getStrippedDownPublicKey(PGPPublicKey bloatedKey) throws PGPException {
         return new PGPPublicKey(bloatedKey.getPublicKeyPacket(), ImplementationFactory.getInstance().getKeyFingerprintCalculator());
