@@ -13,7 +13,6 @@ import org.bouncycastle.openpgp.PGPKeyPair;
 import org.bouncycastle.openpgp.PGPObjectFactory;
 import org.bouncycastle.openpgp.PGPPrivateKey;
 import org.bouncycastle.openpgp.PGPPublicKey;
-import org.bouncycastle.openpgp.PGPSecretKey;
 import org.bouncycastle.openpgp.PGPSessionKey;
 import org.bouncycastle.openpgp.operator.KeyFingerPrintCalculator;
 import org.bouncycastle.openpgp.operator.PBEDataDecryptorFactory;
@@ -48,12 +47,6 @@ import org.pgpainless.provider.ProviderFactory;
 import org.pgpainless.util.Passphrase;
 
 public class JceImplementationFactory extends ImplementationFactory {
-
-    public PBESecretKeyEncryptor getPBESecretKeyEncryptor(PGPSecretKey secretKey, Passphrase passphrase) {
-        return new JcePBESecretKeyEncryptorBuilder(secretKey.getKeyEncryptionAlgorithm())
-                .setProvider(ProviderFactory.getProvider())
-                .build(passphrase.getChars());
-    }
 
     public PBESecretKeyEncryptor getPBESecretKeyEncryptor(SymmetricKeyAlgorithm symmetricKeyAlgorithm, PGPDigestCalculator digestCalculator, Passphrase passphrase) {
         return new JcePBESecretKeyEncryptorBuilder(symmetricKeyAlgorithm.getAlgorithmId(), digestCalculator)

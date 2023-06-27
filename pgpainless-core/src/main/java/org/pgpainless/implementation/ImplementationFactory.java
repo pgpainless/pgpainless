@@ -13,7 +13,6 @@ import org.bouncycastle.openpgp.PGPKeyPair;
 import org.bouncycastle.openpgp.PGPObjectFactory;
 import org.bouncycastle.openpgp.PGPPrivateKey;
 import org.bouncycastle.openpgp.PGPPublicKey;
-import org.bouncycastle.openpgp.PGPSecretKey;
 import org.bouncycastle.openpgp.PGPSessionKey;
 import org.bouncycastle.openpgp.operator.KeyFingerPrintCalculator;
 import org.bouncycastle.openpgp.operator.PBEDataDecryptorFactory;
@@ -48,15 +47,6 @@ public abstract class ImplementationFactory {
         }
         return FACTORY_IMPLEMENTATION;
     }
-
-    public PBESecretKeyEncryptor getPBESecretKeyEncryptor(SymmetricKeyAlgorithm symmetricKeyAlgorithm,
-                                                          Passphrase passphrase)
-            throws PGPException {
-        return getPBESecretKeyEncryptor(symmetricKeyAlgorithm,
-                getPGPDigestCalculator(HashAlgorithm.SHA1), passphrase);
-    }
-
-    public abstract PBESecretKeyEncryptor getPBESecretKeyEncryptor(PGPSecretKey secretKey, Passphrase passphrase) throws PGPException;
 
     public abstract PBESecretKeyEncryptor getPBESecretKeyEncryptor(SymmetricKeyAlgorithm symmetricKeyAlgorithm,
                                                                    PGPDigestCalculator digestCalculator,

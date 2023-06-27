@@ -15,7 +15,6 @@ import org.bouncycastle.openpgp.PGPKeyPair;
 import org.bouncycastle.openpgp.PGPObjectFactory;
 import org.bouncycastle.openpgp.PGPPrivateKey;
 import org.bouncycastle.openpgp.PGPPublicKey;
-import org.bouncycastle.openpgp.PGPSecretKey;
 import org.bouncycastle.openpgp.PGPSessionKey;
 import org.bouncycastle.openpgp.bc.BcPGPObjectFactory;
 import org.bouncycastle.openpgp.operator.KeyFingerPrintCalculator;
@@ -51,23 +50,6 @@ import org.pgpainless.algorithm.SymmetricKeyAlgorithm;
 import org.pgpainless.util.Passphrase;
 
 public class BcImplementationFactory extends ImplementationFactory {
-
-    @Override
-    public PBESecretKeyEncryptor getPBESecretKeyEncryptor(PGPSecretKey secretKey, Passphrase passphrase)
-            throws PGPException {
-        int keyEncryptionAlgorithm = secretKey.getKeyEncryptionAlgorithm();
-
-        if (secretKey.getS2K() == null) {
-            return getPBESecretKeyEncryptor(SymmetricKeyAlgorithm.requireFromId(keyEncryptionAlgorithm), passphrase);
-        }
-
-        int hashAlgorithm = secretKey.getS2K().getHashAlgorithm();
-        PGPDigestCalculator digestCalculator = getPGPDigestCalculator(hashAlgorithm);
-        long iterationCount = secretKey.getS2K().getIterationCount();
-
-        return new BcPBESecretKeyEncryptorBuilder(keyEncryptionAlgorithm, digestCalculator, (int) iterationCount)
-                .build(passphrase.getChars());
-    }
 
     @Override
     public PBESecretKeyEncryptor getPBESecretKeyEncryptor(SymmetricKeyAlgorithm symmetricKeyAlgorithm,
