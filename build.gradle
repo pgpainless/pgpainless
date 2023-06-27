@@ -55,7 +55,7 @@ allprojects {
 
     // checkstyle
     checkstyle {
-        toolVersion = '8.45.1'
+        toolVersion = '10.12.1'
     }
 
     group 'org.pgpainless'
