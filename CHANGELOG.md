@@ -8,6 +8,7 @@ SPDX-License-Identifier: CC0-1.0
 ## 1.5.5-SNAPSHOT
 - Bump `bcpg-jdk15to18` to `1.75`
 - Bump `bcprov-jdk15to18` to `1.75`
+- Bump `checkstyle` to `10.12.1` to fix build dependency on [vulnerable guava](https://github.com/pgpainless/pgpainless/security/dependabot/6).
 - `SecretKeyRingEditor`:
   - Rename `createRevocationCertificate()` to `createRevocation()`
   - Add `createMinimalRevocationCertificate()` method to generate OpenPGP v6-style self-certifying revocation certificates
