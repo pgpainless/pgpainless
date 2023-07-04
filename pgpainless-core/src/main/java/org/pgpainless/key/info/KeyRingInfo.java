@@ -42,6 +42,7 @@ import org.pgpainless.exception.KeyException;
 import org.pgpainless.key.OpenPgpFingerprint;
 import org.pgpainless.key.SubkeyIdentifier;
 import org.pgpainless.key.util.KeyIdUtil;
+import org.pgpainless.key.util.KeyRingUtils;
 import org.pgpainless.key.util.RevocationAttributes;
 import org.pgpainless.policy.Policy;
 import org.pgpainless.signature.SignatureUtils;
@@ -362,8 +363,7 @@ public class KeyRingInfo {
      */
     @Nonnull
     public List<String> getUserIds() {
-        Iterator<String> iterator = getPublicKey().getUserIDs();
-        return iteratorToList(iterator);
+        return KeyRingUtils.getUserIdsIgnoringInvalidUTF8(keys.getPublicKey());
     }
 
     /**
@@ -1264,8 +1264,8 @@ public class KeyRingInfo {
             subkeyRevocations = new HashMap<>();
             subkeyBindings = new HashMap<>();
 
-            for (Iterator<String> it = keyRing.getPublicKey().getUserIDs(); it.hasNext(); ) {
-                String userId = it.next();
+            List<String> userIds = KeyRingUtils.getUserIdsIgnoringInvalidUTF8(keyRing.getPublicKey());
+            for (String userId : userIds) {
                 PGPSignature revocation = SignaturePicker.pickCurrentUserIdRevocationSignature(keyRing, userId, policy, referenceDate);
                 if (revocation != null) {
                     userIdRevocations.put(userId, revocation);
