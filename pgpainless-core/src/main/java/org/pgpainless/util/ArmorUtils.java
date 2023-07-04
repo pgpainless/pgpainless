@@ -32,6 +32,7 @@ import org.bouncycastle.util.io.Streams;
 import org.pgpainless.algorithm.HashAlgorithm;
 import org.pgpainless.decryption_verification.OpenPgpInputStream;
 import org.pgpainless.key.OpenPgpFingerprint;
+import org.pgpainless.key.util.KeyRingUtils;
 
 /**
  * Utility class for dealing with ASCII armored OpenPGP data.
@@ -388,13 +389,12 @@ public final class ArmorUtils {
         // Quickly determine the primary user-id + number of total user-ids
         // NOTE: THIS METHOD DOES NOT CRYPTOGRAPHICALLY VERIFY THE SIGNATURES
         // DO NOT RELY ON IT!
-        Iterator<String> userIds = publicKey.getUserIDs();
+        List<String> userIds = KeyRingUtils.getUserIdsIgnoringInvalidUTF8(publicKey);
         int countIdentities = 0;
         String first = null;
         String primary = null;
-        while (userIds.hasNext()) {
+        for (String userId : userIds) {
             countIdentities++;
-            String userId = userIds.next();
             // remember the first user-id
             if (first == null) {
                 first = userId;

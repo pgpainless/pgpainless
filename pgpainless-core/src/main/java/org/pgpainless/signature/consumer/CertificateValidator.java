@@ -23,6 +23,7 @@ import org.bouncycastle.openpgp.PGPSignature;
 import org.pgpainless.algorithm.KeyFlag;
 import org.pgpainless.algorithm.SignatureType;
 import org.pgpainless.exception.SignatureValidationException;
+import org.pgpainless.key.util.KeyRingUtils;
 import org.pgpainless.policy.Policy;
 import org.pgpainless.signature.SignatureUtils;
 import org.pgpainless.signature.subpackets.SignatureSubpacketsUtil;
@@ -113,11 +114,10 @@ public final class CertificateValidator {
         }
 
         // User-ID signatures (certifications, revocations)
-        Iterator<String> userIds = primaryKey.getUserIDs();
+        List<String> userIds = KeyRingUtils.getUserIdsIgnoringInvalidUTF8(primaryKey);
         Map<String, List<PGPSignature>> userIdSignatures = new ConcurrentHashMap<>();
-        while (userIds.hasNext()) {
+        for (String userId : userIds) {
             List<PGPSignature> signaturesOnUserId = new ArrayList<>();
-            String userId = userIds.next();
             Iterator<PGPSignature> userIdSigs = primaryKey.getSignaturesForID(userId);
             while (userIdSigs.hasNext()) {
                 PGPSignature userIdSig = userIdSigs.next();

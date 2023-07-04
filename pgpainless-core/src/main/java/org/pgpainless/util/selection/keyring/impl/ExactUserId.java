@@ -4,10 +4,11 @@
 
 package org.pgpainless.util.selection.keyring.impl;
 
-import java.util.Iterator;
+import java.util.List;
 
 import org.bouncycastle.openpgp.PGPPublicKeyRing;
 import org.bouncycastle.openpgp.PGPSecretKeyRing;
+import org.pgpainless.key.util.KeyRingUtils;
 import org.pgpainless.util.selection.keyring.PublicKeyRingSelectionStrategy;
 import org.pgpainless.util.selection.keyring.SecretKeyRingSelectionStrategy;
 
@@ -29,9 +30,9 @@ public final class ExactUserId {
 
         @Override
         public boolean accept(String identifier, PGPPublicKeyRing keyRing) {
-            Iterator<String> userIds = keyRing.getPublicKey().getUserIDs();
-            while (userIds.hasNext()) {
-                if (userIds.next().equals(identifier)) return true;
+            List<String> userIds = KeyRingUtils.getUserIdsIgnoringInvalidUTF8(keyRing.getPublicKey());
+            for (String userId : userIds) {
+                if (userId.equals(identifier)) return true;
             }
             return false;
         }
@@ -45,9 +46,9 @@ public final class ExactUserId {
 
         @Override
         public boolean accept(String identifier, PGPSecretKeyRing keyRing) {
-            Iterator<String> userIds = keyRing.getPublicKey().getUserIDs();
-            while (userIds.hasNext()) {
-                if (userIds.next().equals(identifier)) return true;
+            List<String> userIds = KeyRingUtils.getUserIdsIgnoringInvalidUTF8(keyRing.getPublicKey());
+            for (String userId : userIds) {
+                if (userId.equals(identifier)) return true;
             }
             return false;
         }

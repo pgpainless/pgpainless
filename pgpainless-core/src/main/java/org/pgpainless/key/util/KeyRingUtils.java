@@ -25,16 +25,21 @@ import org.bouncycastle.openpgp.PGPSecretKeyRing;
 import org.bouncycastle.openpgp.PGPSecretKeyRingCollection;
 import org.bouncycastle.openpgp.PGPSignature;
 import org.bouncycastle.openpgp.PGPUserAttributeSubpacketVector;
+import org.bouncycastle.util.Strings;
 import org.pgpainless.PGPainless;
 import org.pgpainless.implementation.ImplementationFactory;
 import org.pgpainless.key.protection.SecretKeyRingProtector;
 import org.pgpainless.key.protection.UnlockSecretKey;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 public final class KeyRingUtils {
 
     private KeyRingUtils() {
 
     }
+
+    private static final Logger LOGGER = LoggerFactory.getLogger(KeyRingUtils.class);
 
     /**
      * Return the primary {@link PGPSecretKey} from the provided {@link PGPSecretKeyRing}.
@@ -495,5 +500,19 @@ public final class KeyRingUtils {
      */
     public static PGPPublicKey getStrippedDownPublicKey(PGPPublicKey bloatedKey) throws PGPException {
         return new PGPPublicKey(bloatedKey.getPublicKeyPacket(), ImplementationFactory.getInstance().getKeyFingerprintCalculator());
+    }
+
+    public static List<String> getUserIdsIgnoringInvalidUTF8(PGPPublicKey key) {
+        List<String> userIds = new ArrayList<>();
+        Iterator<byte[]> it = key.getRawUserIDs();
+        while (it.hasNext()) {
+            byte[] rawUserId = it.next();
+            try {
+                userIds.add(Strings.fromUTF8ByteArray(rawUserId));
+            } catch (IllegalArgumentException e) {
+                LOGGER.warn("Invalid UTF-8 user-ID encountered: " + new String(rawUserId));
+            }
+        }
+        return userIds;
     }
 }
