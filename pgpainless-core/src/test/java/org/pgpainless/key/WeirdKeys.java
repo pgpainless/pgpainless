@@ -4,10 +4,32 @@
 
 package org.pgpainless.key;
 
-import java.io.IOException;
+import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
+import java.io.ByteArrayOutputStream;
+import java.io.IOException;
+import java.security.InvalidAlgorithmParameterException;
+import java.security.NoSuchAlgorithmException;
+import java.util.Collections;
+
+import org.bouncycastle.bcpg.HashAlgorithmTags;
+import org.bouncycastle.openpgp.PGPException;
+import org.bouncycastle.openpgp.PGPPrivateKey;
+import org.bouncycastle.openpgp.PGPPublicKey;
+import org.bouncycastle.openpgp.PGPPublicKeyRing;
+import org.bouncycastle.openpgp.PGPSecretKey;
 import org.bouncycastle.openpgp.PGPSecretKeyRing;
+import org.bouncycastle.openpgp.PGPSignature;
+import org.bouncycastle.openpgp.PGPSignatureGenerator;
+import org.bouncycastle.util.Strings;
+import org.junit.jupiter.api.Test;
 import org.pgpainless.PGPainless;
+import org.pgpainless.algorithm.SignatureType;
+import org.pgpainless.implementation.ImplementationFactory;
+import org.pgpainless.key.info.KeyRingInfo;
+import org.pgpainless.key.protection.UnlockSecretKey;
+import org.pgpainless.util.Passphrase;
 
 /**
  * This class contains a set of slightly out of spec or weird keys.
@@ -78,5 +100,56 @@ public class WeirdKeys {
 
     public static PGPSecretKeyRing getArchiveCommsSubkeysKey() throws IOException {
         return PGPainless.readKeyRing().secretKeyRing(ARCHIVE_COMMS_SUBKEYS);
+    }
+
+    @Test
+    public void generateCertAndTestWithNonUTF8UserId()
+            throws PGPException, InvalidAlgorithmParameterException, NoSuchAlgorithmException, IOException {
+        PGPSecretKeyRing nakedKey = PGPainless.generateKeyRing().modernKeyRing(null);
+        PGPPublicKey pubKey = nakedKey.getPublicKey();
+        PGPSecretKey secKey = nakedKey.getSecretKey();
+        PGPPrivateKey privKey = UnlockSecretKey.unlockSecretKey(secKey, Passphrase.emptyPassphrase());
+
+        // Non-UTF8 User-ID
+        ByteArrayOutputStream bOut = new ByteArrayOutputStream();
+        for (int i = 0xc0; i <= 0xdf; i++) {
+            bOut.write(i);
+            bOut.write(" ".getBytes());
+        }
+        byte[] idBytes = bOut.toByteArray();
+
+        // Check that this is in fact not a valid UTF8 String
+        assertThrows(IllegalArgumentException.class, () -> Strings.fromUTF8ByteArray(idBytes));
+
+        PGPSignatureGenerator sigGen = new PGPSignatureGenerator(
+                ImplementationFactory.getInstance().getPGPContentSignerBuilder(
+                        pubKey.getAlgorithm(),
+                        HashAlgorithmTags.SHA512));
+        sigGen.init(SignatureType.GENERIC_CERTIFICATION.getCode(), privKey);
+
+        // We have to manually generate the signature over the user-ID
+        // updateWithKey()
+        byte[] keyBytes = pubKey.getPublicKeyPacket().getEncodedContents();
+        sigGen.update((byte) 0x99);
+        sigGen.update((byte) (keyBytes.length >> 8));
+        sigGen.update((byte) (keyBytes.length));
+        sigGen.update(keyBytes);
+
+        // Update with ID data
+        sigGen.update((byte) 0xb4);
+        sigGen.update((byte) (idBytes.length >> 24));
+        sigGen.update((byte) (idBytes.length >> 16));
+        sigGen.update((byte) (idBytes.length >> 8));
+        sigGen.update((byte) (idBytes.length));
+        sigGen.update(idBytes);
+
+        PGPSignature signature = sigGen.generate();
+        pubKey = PGPPublicKey.addCertification(pubKey, idBytes, signature);
+
+        PGPPublicKeyRing cert = new PGPPublicKeyRing(Collections.singletonList(pubKey));
+
+        // This might fail
+        KeyRingInfo info = PGPainless.inspectKeyRing(cert);
+        assertTrue(info.getUserIds().isEmpty()); // Malformed ID is ignored
     }
 }
