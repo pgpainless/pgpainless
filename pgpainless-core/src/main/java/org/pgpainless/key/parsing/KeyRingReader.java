@@ -23,6 +23,7 @@ import org.bouncycastle.openpgp.PGPPublicKeyRingCollection;
 import org.bouncycastle.openpgp.PGPSecretKeyRing;
 import org.bouncycastle.openpgp.PGPSecretKeyRingCollection;
 import org.bouncycastle.util.io.Streams;
+import org.pgpainless.PGPainless;
 import org.pgpainless.implementation.ImplementationFactory;
 import org.pgpainless.key.collection.PGPKeyRingCollection;
 import org.pgpainless.util.ArmorUtils;
@@ -295,6 +296,12 @@ public class KeyRingReader {
             }
             if (next instanceof PGPPublicKeyRing) {
                 rings.add((PGPPublicKeyRing) next);
+                continue;
+            }
+            // Parse public keys from secret keys
+            if (next instanceof PGPSecretKeyRing) {
+                rings.add(PGPainless.extractCertificate((PGPSecretKeyRing) next));
+                continue;
             }
             if (next instanceof PGPPublicKeyRingCollection) {
                 PGPPublicKeyRingCollection collection = (PGPPublicKeyRingCollection) next;
