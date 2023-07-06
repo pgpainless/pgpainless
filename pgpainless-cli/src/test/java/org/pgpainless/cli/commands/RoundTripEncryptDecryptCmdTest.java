@@ -18,6 +18,7 @@ import com.ginsberg.junit.exit.FailOnSystemExit;
 import org.bouncycastle.openpgp.PGPException;
 import org.bouncycastle.openpgp.PGPPublicKeyRing;
 import org.bouncycastle.openpgp.PGPSecretKeyRing;
+import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 import org.pgpainless.PGPainless;
 import org.pgpainless.algorithm.KeyFlag;
@@ -139,6 +140,7 @@ public class RoundTripEncryptDecryptCmdTest extends CLITest {
     }
 
     @Test
+    @Disabled("Disabled, since we now read certificates from secret keys")
     public void testEncryptingForKeyFails() throws IOException {
         File notACert = writeFile("key.asc", KEY);
 
