@@ -9,6 +9,15 @@ SPDX-License-Identifier: CC0-1.0
 - Bump `jacoco` to `0.8.8` (thanks @hkos)
 - Ignore malformed, non-UTF8 user-IDs on certificates
 - `KeyRingReader.readPublicKeyRingCollection()`: Extract and return public keys from encountered secret keys
+- Add some utility methods to `KeyRingInfo`:
+  - `getValidSubkeys()` only returns validly bound sub-keys
+- Add some utility methods to `SignatureUtils`:
+  - `getDelegations()` returns all third-party signatures made over the primary key
+  - `get3rdPartyCertificationsFor(userId)` returns all third-party certification signatures made over the given user-id
+- Add some utility methods to `SignatureSubpacketsUtil`:
+  - `isExportable()` will return true if the signature is *not* marked as non-exportable
+  - `getTrustDepthOr()` returns the signatures trust-depth, or a default value if there is no trust-signature subpacket
+  - `getTrustAmountOr()` returns the signatures trust-amount, or a default value if there is no trust-signature subpacket
 
 ## 1.5.5
 - Bump `bcpg-jdk15to18` to `1.75`
