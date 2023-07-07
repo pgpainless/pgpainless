@@ -339,22 +339,4 @@ public final class SignatureUtils {
         }
         return certifications;
     }
-
-    public static class Certification {
-        private final String userId;
-        private final PGPSignature signature;
-
-        public Certification(String userId, PGPSignature signature) {
-            this.userId = userId;
-            this.signature = signature;
-        }
-
-        public String getUserId() {
-            return userId;
-        }
-
-        public PGPSignature getSignature() {
-            return signature;
-        }
-    }
 }
