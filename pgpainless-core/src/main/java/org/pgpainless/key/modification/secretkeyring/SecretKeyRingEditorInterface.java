@@ -30,6 +30,14 @@ import org.pgpainless.util.selection.userid.SelectUserId;
 public interface SecretKeyRingEditorInterface {
 
     /**
+     * Return the editors reference time.
+     *
+     * @return reference time
+     */
+    @Nonnull
+    Date getReferenceTime();
+
+    /**
      * Add a user-id to the key ring.
      *
      * @param userId user-id

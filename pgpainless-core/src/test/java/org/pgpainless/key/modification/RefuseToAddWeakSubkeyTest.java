@@ -76,7 +76,9 @@ public class RefuseToAddWeakSubkeyTest {
         PGPainless.getPolicy().setPublicKeyAlgorithmPolicy(new Policy.PublicKeyAlgorithmPolicy(minimalBitStrengths));
 
         SecretKeyRingEditorInterface editor = PGPainless.modifyKeyRing(secretKeys);
-        KeySpec spec = KeySpec.getBuilder(KeyType.RSA(RsaLength._1024), KeyFlag.ENCRYPT_COMMS).build();
+        KeySpec spec = KeySpec.getBuilder(KeyType.RSA(RsaLength._1024), KeyFlag.ENCRYPT_COMMS)
+                .setKeyCreationDate(editor.getReferenceTime()) // The key gets created after we instantiate the editor.
+                .build();
 
         secretKeys = editor.addSubKey(spec, Passphrase.emptyPassphrase(), SecretKeyRingProtector.unprotectedKeys())
                 .done();

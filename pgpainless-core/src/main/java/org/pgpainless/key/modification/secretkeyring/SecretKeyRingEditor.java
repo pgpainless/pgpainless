@@ -83,6 +83,12 @@ public class SecretKeyRingEditor implements SecretKeyRingEditorInterface {
         this.referenceTime = referenceTime;
     }
 
+    @Nonnull
+    @Override
+    public Date getReferenceTime() {
+        return referenceTime;
+    }
+
     @Override
     public SecretKeyRingEditorInterface addUserId(
             @Nonnull CharSequence userId,
