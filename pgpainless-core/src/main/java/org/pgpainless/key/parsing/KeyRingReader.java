@@ -270,6 +270,7 @@ public class KeyRingReader {
      * Read a public key ring collection from the provided {@link InputStream}.
      * If more than maxIterations PGP packets are encountered before the stream is exhausted,
      * an {@link IOException} is thrown.
+     * If the stream contain secret key packets, their public key parts are extracted and returned.
      *
      * @param inputStream input stream
      * @param maxIterations max iterations before abort
