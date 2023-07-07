@@ -5,7 +5,7 @@ SPDX-License-Identifier: CC0-1.0
 
 # PGPainless Changelog
 
-## 1.5.6-SNAPSHOT
+## 1.5.6
 - Bump `jacoco` to `0.8.8` (thanks @hkos)
 - Ignore malformed, non-UTF8 user-IDs on certificates
 - `KeyRingReader.readPublicKeyRingCollection()`: Extract and return public keys from encountered secret keys
