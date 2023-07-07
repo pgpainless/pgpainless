@@ -531,6 +531,11 @@ public final class SignatureSubpacketsUtil {
         return hashed(signature, SignatureSubpacket.exportableCertification);
     }
 
+    public static boolean isExportable(PGPSignature signature) {
+        Exportable exportable = getExportableCertification(signature);
+        return exportable == null || exportable.isExportable();
+    }
+
     /**
      * Return the trust signature packet from the signatures hashed area.
      *
@@ -539,6 +544,22 @@ public final class SignatureSubpacketsUtil {
      */
     public static @Nullable TrustSignature getTrustSignature(PGPSignature signature) {
         return hashed(signature, SignatureSubpacket.trustSignature);
+    }
+
+    public static int getTrustDepthOr(PGPSignature signature, int defaultDepth) {
+        TrustSignature packet = getTrustSignature(signature);
+        if (packet != null) {
+            return packet.getDepth();
+        }
+        return defaultDepth;
+    }
+
+    public static int getTrustAmountOr(PGPSignature signature, int defaultAmount) {
+        TrustSignature packet = getTrustSignature(signature);
+        if (packet != null) {
+            return packet.getTrustAmount();
+        }
+        return defaultAmount;
     }
 
     /**
