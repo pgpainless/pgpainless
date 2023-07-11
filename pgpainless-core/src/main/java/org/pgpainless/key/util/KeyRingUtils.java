@@ -14,6 +14,8 @@ import java.util.NoSuchElementException;
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
 
+import org.bouncycastle.bcpg.S2K;
+import org.bouncycastle.bcpg.SecretKeyPacket;
 import org.bouncycastle.openpgp.PGPException;
 import org.bouncycastle.openpgp.PGPKeyRing;
 import org.bouncycastle.openpgp.PGPPrivateKey;
@@ -25,11 +27,14 @@ import org.bouncycastle.openpgp.PGPSecretKeyRing;
 import org.bouncycastle.openpgp.PGPSecretKeyRingCollection;
 import org.bouncycastle.openpgp.PGPSignature;
 import org.bouncycastle.openpgp.PGPUserAttributeSubpacketVector;
+import org.bouncycastle.openpgp.operator.PBESecretKeyDecryptor;
+import org.bouncycastle.openpgp.operator.PBESecretKeyEncryptor;
 import org.bouncycastle.util.Strings;
 import org.pgpainless.PGPainless;
 import org.pgpainless.implementation.ImplementationFactory;
 import org.pgpainless.key.protection.SecretKeyRingProtector;
 import org.pgpainless.key.protection.UnlockSecretKey;
+import org.pgpainless.key.protection.fixes.S2KUsageFix;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -514,5 +519,71 @@ public final class KeyRingUtils {
             }
         }
         return userIds;
+    }
+
+    public static PGPSecretKeyRing changePassphrase(Long keyId,
+                                              PGPSecretKeyRing secretKeys,
+                                              SecretKeyRingProtector oldProtector,
+                                              SecretKeyRingProtector newProtector)
+            throws PGPException {
+        List<PGPSecretKey> secretKeyList = new ArrayList<>();
+        if (keyId == null) {
+            // change passphrase of whole key ring
+            Iterator<PGPSecretKey> secretKeyIterator = secretKeys.getSecretKeys();
+            while (secretKeyIterator.hasNext()) {
+                PGPSecretKey secretKey = secretKeyIterator.next();
+                secretKey = KeyRingUtils.reencryptPrivateKey(secretKey, oldProtector, newProtector);
+                secretKeyList.add(secretKey);
+            }
+        } else {
+            // change passphrase of selected subkey only
+            Iterator<PGPSecretKey> secretKeyIterator = secretKeys.getSecretKeys();
+            while (secretKeyIterator.hasNext()) {
+                PGPSecretKey secretKey = secretKeyIterator.next();
+                if (secretKey.getPublicKey().getKeyID() == keyId) {
+                    // Re-encrypt only the selected subkey
+                    secretKey = KeyRingUtils.reencryptPrivateKey(secretKey, oldProtector, newProtector);
+                }
+                secretKeyList.add(secretKey);
+            }
+        }
+
+        PGPSecretKeyRing newRing = new PGPSecretKeyRing(secretKeyList);
+        newRing = s2kUsageFixIfNecessary(newRing, newProtector);
+        return newRing;
+    }
+
+
+    public static PGPSecretKey reencryptPrivateKey(
+            PGPSecretKey secretKey,
+            SecretKeyRingProtector oldProtector,
+            SecretKeyRingProtector newProtector)
+            throws PGPException {
+        S2K s2k = secretKey.getS2K();
+        // If the key uses GNU_DUMMY_S2K, we leave it as is and skip this block
+        if (s2k == null || s2k.getType() != S2K.GNU_DUMMY_S2K) {
+            long secretKeyId = secretKey.getKeyID();
+            PBESecretKeyDecryptor decryptor = oldProtector.getDecryptor(secretKeyId);
+            PBESecretKeyEncryptor encryptor = newProtector.getEncryptor(secretKeyId);
+            secretKey = PGPSecretKey.copyWithNewPassword(secretKey, decryptor, encryptor);
+        }
+        return secretKey;
+    }
+
+
+    public static PGPSecretKeyRing s2kUsageFixIfNecessary(PGPSecretKeyRing secretKeys, SecretKeyRingProtector protector)
+            throws PGPException {
+        boolean hasS2KUsageChecksum = false;
+        for (PGPSecretKey secKey : secretKeys) {
+            if (secKey.getS2KUsage() == SecretKeyPacket.USAGE_CHECKSUM) {
+                hasS2KUsageChecksum = true;
+                break;
+            }
+        }
+        if (hasS2KUsageChecksum) {
+            secretKeys = S2KUsageFix.replaceUsageChecksumWithUsageSha1(
+                    secretKeys, protector, true);
+        }
+        return secretKeys;
     }
 }
