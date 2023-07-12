@@ -66,7 +66,7 @@ public class RevokeKeyImpl implements RevokeKey {
     public Ready keys(InputStream keys) throws SOPGPException.BadData {
         PGPSecretKeyRingCollection secretKeyRings;
         try {
-            secretKeyRings = PGPainless.readKeyRing().secretKeyRingCollection(keys);
+            secretKeyRings = KeyReader.readSecretKeys(keys, true);
         } catch (IOException e) {
             throw new SOPGPException.BadData("Cannot decode secret keys.", e);
         }

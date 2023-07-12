@@ -14,7 +14,6 @@ import org.bouncycastle.bcpg.ArmoredOutputStream;
 import org.bouncycastle.openpgp.PGPException;
 import org.bouncycastle.openpgp.PGPSecretKeyRing;
 import org.bouncycastle.openpgp.PGPSecretKeyRingCollection;
-import org.pgpainless.PGPainless;
 import org.pgpainless.exception.MissingPassphraseException;
 import org.pgpainless.key.OpenPgpFingerprint;
 import org.pgpainless.key.protection.SecretKeyRingProtector;
@@ -54,7 +53,7 @@ public class ChangeKeyPasswordImpl implements ChangeKeyPassword {
         SecretKeyRingProtector newProtector = SecretKeyRingProtector.unlockAnyKeyWith(newPassphrase);
         PGPSecretKeyRingCollection secretKeyRingCollection;
         try {
-            secretKeyRingCollection = PGPainless.readKeyRing().secretKeyRingCollection(inputStream);
+            secretKeyRingCollection = KeyReader.readSecretKeys(inputStream, true);
         } catch (IOException e) {
             throw new SOPGPException.BadData(e);
         }
