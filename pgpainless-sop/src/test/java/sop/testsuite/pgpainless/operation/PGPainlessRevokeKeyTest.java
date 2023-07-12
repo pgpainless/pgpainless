@@ -35,6 +35,6 @@ public class PGPainlessRevokeKeyTest extends RevokeKeyTest {
         assertTrue(certificate instanceof PGPPublicKeyRing);
 
         KeyRingInfo info = PGPainless.inspectKeyRing(certificate);
-        assertTrue(info.getRevocationState().isSoftRevocation());
+        assertTrue(info.getRevocationState().isHardRevocation());
     }
 }
