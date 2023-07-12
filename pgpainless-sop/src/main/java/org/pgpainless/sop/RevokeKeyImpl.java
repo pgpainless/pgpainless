@@ -79,7 +79,7 @@ public class RevokeKeyImpl implements RevokeKey {
             SecretKeyRingEditorInterface editor = PGPainless.modifyKeyRing(secretKeys);
             try {
                 RevocationAttributes revocationAttributes = RevocationAttributes.createKeyRevocation()
-                        .withReason(RevocationAttributes.Reason.KEY_RETIRED)
+                        .withReason(RevocationAttributes.Reason.NO_REASON)
                         .withoutDescription();
                 if (secretKeys.getPublicKey().getVersion() == PublicKeyPacket.VERSION_6) {
                     PGPPublicKeyRing revocation = editor.createMinimalRevocationCertificate(protector, revocationAttributes);
