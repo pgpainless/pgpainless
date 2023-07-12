@@ -6,7 +6,6 @@ package org.pgpainless.key.generation;
 
 
 import java.io.IOException;
-import java.nio.charset.Charset;
 import java.security.InvalidAlgorithmParameterException;
 import java.security.KeyPair;
 import java.security.KeyPairGenerator;
@@ -36,6 +35,7 @@ import org.bouncycastle.openpgp.operator.PBESecretKeyDecryptor;
 import org.bouncycastle.openpgp.operator.PBESecretKeyEncryptor;
 import org.bouncycastle.openpgp.operator.PGPContentSignerBuilder;
 import org.bouncycastle.openpgp.operator.PGPDigestCalculator;
+import org.bouncycastle.util.Strings;
 import org.pgpainless.PGPainless;
 import org.pgpainless.algorithm.HashAlgorithm;
 import org.pgpainless.algorithm.KeyFlag;
@@ -55,9 +55,6 @@ import org.pgpainless.util.Passphrase;
 public class KeyRingBuilder implements KeyRingBuilderInterface<KeyRingBuilder> {
 
     private static final long YEAR_IN_SECONDS = 1000L * 60 * 60 * 24 * 365;
-
-    @SuppressWarnings("CharsetObjectCanBeUsed")
-    private final Charset UTF8 = Charset.forName("UTF-8");
 
     private KeySpec primaryKeySpec;
     private final List<KeySpec> subkeySpecs = new ArrayList<>();
@@ -95,7 +92,7 @@ public class KeyRingBuilder implements KeyRingBuilderInterface<KeyRingBuilder> {
 
     @Override
     public KeyRingBuilder addUserId(@Nonnull byte[] userId) {
-        return addUserId(new String(userId, UTF8));
+        return addUserId(Strings.fromUTF8ByteArray(userId));
     }
 
     @Override
