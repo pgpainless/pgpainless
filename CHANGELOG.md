@@ -5,7 +5,7 @@ SPDX-License-Identifier: CC0-1.0
 
 # PGPainless Changelog
 
-## 1.6.0-SNAPSHOT
+## 1.6.0
 - Bump `sop-java` to `7.0.0`, implementing [SOP Spec Revision 07](https://www.ietf.org/archive/id/draft-dkg-openpgp-stateless-cli-07.html)
   - Implement `revoke-key` subcommand and API
   - Implement `change-key-password` subcommand and API
