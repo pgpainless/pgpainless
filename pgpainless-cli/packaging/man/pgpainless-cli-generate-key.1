@@ -30,8 +30,8 @@
 pgpainless\-cli\-generate\-key \- Generate a secret key
 .SH "SYNOPSIS"
 .sp
-\fBpgpainless\-cli generate\-key\fP [\fB\-\-[no\-]armor\fP] [\fB\-\-stacktrace\fP] [\fB\-\-profile\fP=\fIPROFILE\fP]
-[\fB\-\-with\-key\-password\fP=\fIPASSWORD\fP] [\fIUSERID\fP...]
+\fBpgpainless\-cli generate\-key\fP [\fB\-\-[no\-]armor\fP] [\fB\-\-signing\-only\fP] [\fB\-\-stacktrace\fP]
+[\fB\-\-profile\fP=\fIPROFILE\fP] [\fB\-\-with\-key\-password\fP=\fIPASSWORD\fP] [\fIUSERID\fP...]
 .SH "DESCRIPTION"
 
 .SH "OPTIONS"
@@ -46,7 +46,17 @@ ASCII armor the output
 Profile identifier to switch between profiles
 .RE
 .sp
-\fB\-\-stacktrace\fP, \fB\-\-with\-key\-password\fP=\fIPASSWORD\fP
+\fB\-\-signing\-only\fP
+.RS 4
+Generate a key that can only be used for signing
+.RE
+.sp
+\fB\-\-stacktrace\fP
+.RS 4
+Print stacktrace
+.RE
+.sp
+\fB\-\-with\-key\-password\fP=\fIPASSWORD\fP
 .RS 4
 Password to protect the private key with
 .sp

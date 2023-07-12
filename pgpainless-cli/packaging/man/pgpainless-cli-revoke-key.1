@@ -1,12 +1,12 @@
 '\" t
-.\"     Title: pgpainless-cli-extract-cert
+.\"     Title: pgpainless-cli-revoke-key
 .\"    Author: [see the "AUTHOR(S)" section]
 .\" Generator: Asciidoctor 2.0.10
 .\"    Manual: PGPainless-CLI Manual
 .\"    Source: 
 .\"  Language: English
 .\"
-.TH "PGPAINLESS\-CLI\-EXTRACT\-CERT" "1" "" "" "PGPainless\-CLI Manual"
+.TH "PGPAINLESS\-CLI\-REVOKE\-KEY" "1" "" "" "PGPainless\-CLI Manual"
 .ie \n(.g .ds Aq \(aq
 .el       .ds Aq '
 .ss \n[.ss] 0
@@ -27,13 +27,13 @@
 .  LINKSTYLE blue R < >
 .\}
 .SH "NAME"
-pgpainless\-cli\-extract\-cert \- Extract a public key certificate from a secret key
+pgpainless\-cli\-revoke\-key \- Generate revocation certificates
 .SH "SYNOPSIS"
 .sp
-\fBpgpainless\-cli extract\-cert\fP [\fB\-\-[no\-]armor\fP] [\fB\-\-stacktrace\fP]
+\fBpgpainless\-cli revoke\-key\fP [\fB\-\-[no\-]armor\fP] [\fB\-\-stacktrace\fP] [\fB\-\-with\-key\-password\fP=\fIPASSWORD\fP]
 .SH "DESCRIPTION"
 .sp
-Read a secret key from STDIN and emit the public key certificate to STDOUT.
+Emit revocation certificates for secret keys from STDIN to STDOUT.
 .SH "OPTIONS"
 .sp
 \fB\-\-[no\-]armor\fP
@@ -44,4 +44,11 @@ ASCII armor the output
 \fB\-\-stacktrace\fP
 .RS 4
 Print stacktrace
+.RE
+.sp
+\fB\-\-with\-key\-password\fP=\fIPASSWORD\fP
+.RS 4
+Passphrase to unlock the secret key(s).
+.sp
+Is an INDIRECT data type (e.g. file, environment variable, file descriptor...).
 .RE

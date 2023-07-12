@@ -27,7 +27,7 @@
 .  LINKSTYLE blue R < >
 .\}
 .SH "NAME"
-pgpainless\-cli\-inline\-sign \- Create an inline\-signed message from data on standard input
+pgpainless\-cli\-inline\-sign \- Create an inline\-signed message
 .SH "SYNOPSIS"
 .sp
 \fBpgpainless\-cli inline\-sign\fP [\fB\-\-[no\-]armor\fP] [\fB\-\-stacktrace\fP] [\fB\-\-as\fP=\fI{binary|text|clearsigned}\fP]
@@ -54,7 +54,12 @@ If \(aq\-\-as=text\(aq and the input data is not valid UTF\-8, inline\-sign fail
 ASCII armor the output
 .RE
 .sp
-\fB\-\-stacktrace\fP, \fB\-\-with\-key\-password\fP=\fIPASSWORD\fP
+\fB\-\-stacktrace\fP
+.RS 4
+Print stacktrace
+.RE
+.sp
+\fB\-\-with\-key\-password\fP=\fIPASSWORD\fP
 .RS 4
 Passphrase to unlock the secret key(s).
 .sp

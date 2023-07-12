@@ -27,11 +27,11 @@
 .  LINKSTYLE blue R < >
 .\}
 .SH "NAME"
-pgpainless\-cli\-inline\-verify \- Verify inline\-signed data from standard input
+pgpainless\-cli\-inline\-verify \- Verify an inline\-signed message
 .SH "SYNOPSIS"
 .sp
 \fBpgpainless\-cli inline\-verify\fP [\fB\-\-stacktrace\fP] [\fB\-\-not\-after\fP=\fIDATE\fP] [\fB\-\-not\-before\fP=\fIDATE\fP]
-[\fB\-\-verifications\-out\fP=\fI<verificationsOut>\fP] [\fICERT\fP...]
+[\fB\-\-verifications\-out\fP=\fIVERIFICATIONS\fP] [\fICERT\fP...]
 .SH "DESCRIPTION"
 
 .SH "OPTIONS"
@@ -56,7 +56,12 @@ Reject signatures with a creation date not in range.
 Defaults to beginning of time ("\-").
 .RE
 .sp
-\fB\-\-stacktrace\fP, \fB\-\-verifications\-out\fP=\fI<verificationsOut>\fP
+\fB\-\-stacktrace\fP
+.RS 4
+Print stacktrace
+.RE
+.sp
+\fB\-\-verifications\-out\fP=\fIVERIFICATIONS\fP
 .RS 4
 File to write details over successful verifications to
 .RE

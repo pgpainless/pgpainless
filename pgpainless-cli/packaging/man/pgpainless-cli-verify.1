@@ -27,13 +27,14 @@
 .  LINKSTYLE blue R < >
 .\}
 .SH "NAME"
-pgpainless\-cli\-verify \- Verify a detached signature over the data from standard input
+pgpainless\-cli\-verify \- Verify a detached signature
 .SH "SYNOPSIS"
 .sp
 \fBpgpainless\-cli verify\fP [\fB\-\-stacktrace\fP] [\fB\-\-not\-after\fP=\fIDATE\fP] [\fB\-\-not\-before\fP=\fIDATE\fP] \fISIGNATURE\fP
 \fICERT\fP...
 .SH "DESCRIPTION"
-
+.sp
+Verify a detached signature over some data from STDIN.
 .SH "OPTIONS"
 .sp
 \fB\-\-not\-after\fP=\fIDATE\fP
@@ -58,6 +59,7 @@ Defaults to beginning of time ("\-").
 .sp
 \fB\-\-stacktrace\fP
 .RS 4
+Print stacktrace
 .RE
 .SH "ARGUMENTS"
 .sp
@@ -68,4 +70,5 @@ Detached signature
 .sp
 \fICERT\fP...
 .RS 4
+Public key certificates for signature verification
 .RE

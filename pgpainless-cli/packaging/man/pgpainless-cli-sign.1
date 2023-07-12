@@ -27,7 +27,7 @@
 .  LINKSTYLE blue R < >
 .\}
 .SH "NAME"
-pgpainless\-cli\-sign \- Create a detached signature on the data from standard input
+pgpainless\-cli\-sign \- Create a detached message signature
 .SH "SYNOPSIS"
 .sp
 \fBpgpainless\-cli sign\fP [\fB\-\-[no\-]armor\fP] [\fB\-\-stacktrace\fP] [\fB\-\-as\fP=\fI{binary|text}\fP]
@@ -55,7 +55,12 @@ Emits the digest algorithm used to the specified file in a way that can be used 
 ASCII armor the output
 .RE
 .sp
-\fB\-\-stacktrace\fP, \fB\-\-with\-key\-password\fP=\fIPASSWORD\fP
+\fB\-\-stacktrace\fP
+.RS 4
+Print stacktrace
+.RE
+.sp
+\fB\-\-with\-key\-password\fP=\fIPASSWORD\fP
 .RS 4
 Passphrase to unlock the secret key(s).
 .sp

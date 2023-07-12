@@ -41,9 +41,69 @@ Print stacktrace
 .RE
 .SH "COMMANDS"
 .sp
-\fBhelp\fP
+\fBversion\fP
 .RS 4
-Stateless OpenPGP Protocol
+Display version information about the tool
+.RE
+.sp
+\fBlist\-profiles\fP
+.RS 4
+Emit a list of profiles supported by the identified subcommand
+.RE
+.sp
+\fBgenerate\-key\fP
+.RS 4
+Generate a secret key
+.RE
+.sp
+\fBchange\-key\-password\fP
+.RS 4
+Update the password of a key
+.RE
+.sp
+\fBrevoke\-key\fP
+.RS 4
+Generate revocation certificates
+.RE
+.sp
+\fBextract\-cert\fP
+.RS 4
+Extract a public key certificate from a secret key
+.RE
+.sp
+\fBsign\fP
+.RS 4
+Create a detached message signature
+.RE
+.sp
+\fBverify\fP
+.RS 4
+Verify a detached signature
+.RE
+.sp
+\fBencrypt\fP
+.RS 4
+Encrypt a message from standard input
+.RE
+.sp
+\fBdecrypt\fP
+.RS 4
+Decrypt a message
+.RE
+.sp
+\fBinline\-detach\fP
+.RS 4
+Split signatures from a clearsigned message
+.RE
+.sp
+\fBinline\-sign\fP
+.RS 4
+Create an inline\-signed message
+.RE
+.sp
+\fBinline\-verify\fP
+.RS 4
+Verify an inline\-signed message
 .RE
 .sp
 \fBarmor\fP
@@ -56,59 +116,9 @@ Add ASCII Armor to standard input
 Remove ASCII Armor from standard input
 .RE
 .sp
-\fBdecrypt\fP
+\fBhelp\fP
 .RS 4
-Decrypt a message from standard input
-.RE
-.sp
-\fBinline\-detach\fP
-.RS 4
-Split signatures from a clearsigned message
-.RE
-.sp
-\fBencrypt\fP
-.RS 4
-Encrypt a message from standard input
-.RE
-.sp
-\fBextract\-cert\fP
-.RS 4
-Extract a public key certificate from a secret key from standard input
-.RE
-.sp
-\fBgenerate\-key\fP
-.RS 4
-Generate a secret key
-.RE
-.sp
-\fBsign\fP
-.RS 4
-Create a detached signature on the data from standard input
-.RE
-.sp
-\fBverify\fP
-.RS 4
-Verify a detached signature over the data from standard input
-.RE
-.sp
-\fBinline\-sign\fP
-.RS 4
-Create an inline\-signed message from data on standard input
-.RE
-.sp
-\fBinline\-verify\fP
-.RS 4
-Verify inline\-signed data from standard input
-.RE
-.sp
-\fBlist\-profiles\fP
-.RS 4
-Emit a list of profiles supported by the identified subcommand
-.RE
-.sp
-\fBversion\fP
-.RS 4
-Display version information about the tool
+Stateless OpenPGP Protocol
 .RE
 .sp
 \fBgenerate\-completion\fP

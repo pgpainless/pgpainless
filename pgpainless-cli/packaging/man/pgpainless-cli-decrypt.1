@@ -27,7 +27,7 @@
 .  LINKSTYLE blue R < >
 .\}
 .SH "NAME"
-pgpainless\-cli\-decrypt \- Decrypt a message from standard input
+pgpainless\-cli\-decrypt \- Decrypt a message
 .SH "SYNOPSIS"
 .sp
 \fBpgpainless\-cli decrypt\fP [\fB\-\-stacktrace\fP] [\fB\-\-session\-key\-out\fP=\fISESSIONKEY\fP]
@@ -44,7 +44,32 @@ pgpainless\-cli\-decrypt \- Decrypt a message from standard input
 Can be used to learn the session key on successful decryption
 .RE
 .sp
-\fB\-\-stacktrace\fP, \fB\-\-verify\-not\-after\fP=\fIDATE\fP, \fB\-\-verify\-not\-before\fP=\fIDATE\fP, \fB\-\-verify\-out, \-\-verifications\-out\fP=\fIVERIFICATIONS\fP
+\fB\-\-stacktrace\fP
+.RS 4
+Print stacktrace
+.RE
+.sp
+\fB\-\-verify\-not\-after\fP=\fIDATE\fP
+.RS 4
+ISO\-8601 formatted UTC date (e.g. \(aq2020\-11\-23T16:35Z)
+.sp
+Reject signatures with a creation date not in range.
+.sp
+Defaults to current system time (\(aqnow\(aq).
+.sp
+Accepts special value \(aq\-\(aq for end of time.
+.RE
+.sp
+\fB\-\-verify\-not\-before\fP=\fIDATE\fP
+.RS 4
+ISO\-8601 formatted UTC date (e.g. \(aq2020\-11\-23T16:35Z)
+.sp
+Reject signatures with a creation date not in range.
+.sp
+Defaults to beginning of time (\(aq\-\(aq).
+.RE
+.sp
+\fB\-\-verify\-out, \-\-verifications\-out\fP=\fIVERIFICATIONS\fP
 .RS 4
 Emits signature verification status to the designated output
 .RE
