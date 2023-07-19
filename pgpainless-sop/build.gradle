@@ -14,7 +14,6 @@ repositories {
 }
 
 dependencies {
-    implementation 'org.jetbrains:annotations:20.1.0'
     testImplementation "org.junit.jupiter:junit-jupiter-api:$junitVersion"
     testImplementation "org.junit.jupiter:junit-jupiter-params:$junitVersion"
     testRuntimeOnly "org.junit.jupiter:junit-jupiter-engine:$junitVersion"
@@ -27,6 +26,8 @@ dependencies {
 
     implementation(project(":pgpainless-core"))
     api "org.pgpainless:sop-java:$sopJavaVersion"
+
+    implementation "com.google.code.findbugs:jsr305:3.0.2"
 }
 
 test {
