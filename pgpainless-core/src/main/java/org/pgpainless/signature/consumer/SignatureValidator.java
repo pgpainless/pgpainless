@@ -182,7 +182,7 @@ public abstract class SignatureValidator {
      * @param signingKey signing key
      * @return validator
      */
-    private static SignatureValidator signatureUsesAcceptablePublicKeyAlgorithm(Policy policy,
+    public static SignatureValidator signatureUsesAcceptablePublicKeyAlgorithm(Policy policy,
                                                                                 PGPPublicKey signingKey) {
         return new SignatureValidator() {
             @Override
@@ -207,7 +207,7 @@ public abstract class SignatureValidator {
      * @param policy policy
      * @return validator
      */
-    private static SignatureValidator signatureUsesAcceptableHashAlgorithm(Policy policy) {
+    public static SignatureValidator signatureUsesAcceptableHashAlgorithm(Policy policy) {
         return new SignatureValidator() {
             @Override
             public void verify(PGPSignature signature) throws SignatureValidationException {
