@@ -33,7 +33,7 @@ public interface CertificateAuthority {
                                          int targetAmount);
 
     /**
-     * Identify certificates, which carry a trustworthy binding to the given userId.
+     * Lookup certificates, which carry a trustworthy binding to the given userId.
      *
      * @param userId userId
      * @param email if true, the user-ID will be treated as an email address and all user-IDs containing
@@ -43,8 +43,8 @@ public interface CertificateAuthority {
      *                     60 = partially authenticated...)
      * @return list of identified bindings
      */
-    List<CertificateAuthenticity> identify(@Nonnull String userId,
-                                           boolean email,
-                                           @Nonnull Date referenceTime,
-                                           int targetAmount);
+    List<CertificateAuthenticity> lookup(@Nonnull String userId,
+                                         boolean email,
+                                         @Nonnull Date referenceTime,
+                                         int targetAmount);
 }
