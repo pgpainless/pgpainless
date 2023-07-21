@@ -54,4 +54,18 @@ public interface CertificateAuthority {
                                          boolean email,
                                          @Nonnull Date referenceTime,
                                          int targetAmount);
+
+    /**
+     * Identify trustworthy bindings for a certificate.
+     * The result is a list of authenticatable userIds on the certificate.
+     *
+     * @param fingerprint fingerprint of the certificate
+     * @param referenceTime reference time for trust calculations
+     * @param targetAmount target trust amount (120 = fully authenticated, 240 = doubly authenticated,
+     *                     60 = partially authenticated...)
+     * @return list of identified bindings
+     */
+    List<CertificateAuthenticity> identify(@Nonnull OpenPgpFingerprint fingerprint,
+                                           @Nonnull Date referenceTime,
+                                           int targetAmount);
 }
