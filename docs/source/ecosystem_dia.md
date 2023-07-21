@@ -27,6 +27,13 @@ flowchart LR
     subgraph VKS-JAVA
     vks-java-cli-->vks-java
     end
+    subgraph PGPAINLESS-WOT
+    wot-test-suite-->pgpainless-wot
+    pgpainless-wot-->wot-dijkstra
+    pgpainless-wot-cli-->pgpainless-wot
+    pgpainless-wot-->pgpainless-core
+    pgpainless-wot-cli-->pgpainless-cert-d
+    end
     subgraph PGPEASY
     pgpeasy-->pgpainless-cli
     pgpeasy-->wkd-java-cli

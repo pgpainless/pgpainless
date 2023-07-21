@@ -47,6 +47,13 @@ The diagram below shows, how the different projects relate to one another.
     * `pgpainless-cert-d` - PGPainless-based implementation of `pgp-cert-d-java`
     * `pgpainless-cert-d-cli` - CLI frontend for `pgpainless-cert-d`
 
+* {{ '[PGPainless-WOT](https://{}/pgpainless/pgpainless-wot)'.format(repo_host) }}
+  Implementation of the [OpenPGP Web of Trust specification](https://sequoia-pgp.gitlab.io/sequoia-wot/) using PGPainless.
+    * `pgpainless-wot` - Parse OpenPGP keyrings into a generic `Network` object
+    * `wot-dijkstra` - Perform queries to find paths inside a `Network` object
+    * `pgpainless-wot-cli` - CLI frontend for `pgpainless-wot` and `wot-dijkstra`
+    * `wot-test-suite` - Test vectors ported from [Sequoia-PGPs WoT implementation](https://gitlab.com/sequoia-pgp/sequoia-wot/-/tree/main/tests/data)
+
 * {{ '[PGPeasy](https://{}/pgpainless/pgpeasy)'.format(repo_host) }}  
   Prototypical, comprehensive OpenPGP CLI application
   * `pgpeasy` - CLI application
