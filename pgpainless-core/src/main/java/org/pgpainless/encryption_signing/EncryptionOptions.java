@@ -127,7 +127,7 @@ public class EncryptionOptions {
      * @return encryption options
      */
     public EncryptionOptions addAuthenticatableRecipients(String userId, boolean email, CertificateAuthority authority, int targetAmount) {
-        List<CertificateAuthenticity> identifiedCertificates = authority.lookup(userId, email, new Date(), targetAmount);
+        List<CertificateAuthenticity> identifiedCertificates = authority.lookupByUserId(userId, email, new Date(), targetAmount);
         boolean foundAcceptable = false;
         for (CertificateAuthenticity candidate : identifiedCertificates) {
             if (candidate.isAuthenticated()) {

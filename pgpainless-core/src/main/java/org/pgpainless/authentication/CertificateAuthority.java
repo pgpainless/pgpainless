@@ -33,11 +33,11 @@ public interface CertificateAuthority {
      *                    60 = partially authenticated...)
      * @return information about the authenticity of the binding
      */
-    CertificateAuthenticity authenticate(@Nonnull OpenPgpFingerprint fingerprint,
-                                         @Nonnull String userId,
-                                         boolean email,
-                                         @Nonnull Date referenceTime,
-                                         int targetAmount);
+    CertificateAuthenticity authenticateBinding(@Nonnull OpenPgpFingerprint fingerprint,
+                                                @Nonnull String userId,
+                                                boolean email,
+                                                @Nonnull Date referenceTime,
+                                                int targetAmount);
 
     /**
      * Lookup certificates, which carry a trustworthy binding to the given userId.
@@ -50,10 +50,10 @@ public interface CertificateAuthority {
      *                     60 = partially authenticated...)
      * @return list of identified bindings
      */
-    List<CertificateAuthenticity> lookup(@Nonnull String userId,
-                                         boolean email,
-                                         @Nonnull Date referenceTime,
-                                         int targetAmount);
+    List<CertificateAuthenticity> lookupByUserId(@Nonnull String userId,
+                                                 boolean email,
+                                                 @Nonnull Date referenceTime,
+                                                 int targetAmount);
 
     /**
      * Identify trustworthy bindings for a certificate.
@@ -65,7 +65,7 @@ public interface CertificateAuthority {
      *                     60 = partially authenticated...)
      * @return list of identified bindings
      */
-    List<CertificateAuthenticity> identify(@Nonnull OpenPgpFingerprint fingerprint,
-                                           @Nonnull Date referenceTime,
-                                           int targetAmount);
+    List<CertificateAuthenticity> identifyByFingerprint(@Nonnull OpenPgpFingerprint fingerprint,
+                                                        @Nonnull Date referenceTime,
+                                                        int targetAmount);
 }
