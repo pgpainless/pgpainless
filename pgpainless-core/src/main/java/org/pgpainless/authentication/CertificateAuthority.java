@@ -10,6 +10,13 @@ import javax.annotation.Nonnull;
 import java.util.Date;
 import java.util.List;
 
+/**
+ * Interface for a CA that can authenticate trust-worthy certificates.
+ * Such a CA might be a fixed list of trustworthy certificates, or a dynamic implementation like the Web-of-Trust.
+ *
+ * @see <a href="https://github.com/pgpainless/pgpainless-wot">PGPainless-WOT</a>
+ * @see <a href="https://sequoia-pgp.gitlab.io/sequoia-wot/">OpenPGP Web of Trust</a>
+ */
 public interface CertificateAuthority {
 
     /**
