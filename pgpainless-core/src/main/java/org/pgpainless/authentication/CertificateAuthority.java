@@ -8,6 +8,7 @@ import org.pgpainless.key.OpenPgpFingerprint;
 
 import javax.annotation.Nonnull;
 import java.util.Date;
+import java.util.List;
 
 public interface CertificateAuthority {
 
@@ -30,4 +31,20 @@ public interface CertificateAuthority {
                                          boolean email,
                                          @Nonnull Date referenceTime,
                                          int targetAmount);
+
+    /**
+     * Identify certificates, which carry a trustworthy binding to the given userId.
+     *
+     * @param userId userId
+     * @param email if true, the user-ID will be treated as an email address and all user-IDs containing
+     *             the email address will be matched.
+     * @param referenceTime reference time at which the binding shall be evaluated
+     * @param targetAmount target trust amount (120 = fully authenticated, 240 = doubly authenticated,
+     *                     60 = partially authenticated...)
+     * @return list of identified bindings
+     */
+    List<CertificateAuthenticity> identify(@Nonnull String userId,
+                                           boolean email,
+                                           @Nonnull Date referenceTime,
+                                           int targetAmount);
 }

@@ -23,6 +23,8 @@ import org.bouncycastle.openpgp.operator.PGPKeyEncryptionMethodGenerator;
 import org.bouncycastle.openpgp.operator.PublicKeyKeyEncryptionMethodGenerator;
 import org.pgpainless.algorithm.EncryptionPurpose;
 import org.pgpainless.algorithm.SymmetricKeyAlgorithm;
+import org.pgpainless.authentication.CertificateAuthenticity;
+import org.pgpainless.authentication.CertificateAuthority;
 import org.pgpainless.exception.KeyException;
 import org.pgpainless.implementation.ImplementationFactory;
 import org.pgpainless.key.OpenPgpFingerprint;
@@ -111,6 +113,32 @@ public class EncryptionOptions {
      */
     public static EncryptionOptions encryptDataAtRest() {
         return new EncryptionOptions(EncryptionPurpose.STORAGE);
+    }
+
+    /**
+     * Identify authenticatable certificates for the given user-ID by querying the {@link CertificateAuthority} for
+     * identifiable bindings.
+     * Add all acceptable bindings, whose trust amount is larger or equal to the target amount to the list of recipients.
+     * @param userId userId
+     * @param email if true, treat the user-ID as an email address and match all user-IDs containing the mail address
+     * @param authority certificate authority
+     * @param targetAmount target amount (120 = fully authenticated, 240 = doubly authenticated,
+     *                    60 = partially authenticated...)
+     * @return encryption options
+     */
+    public EncryptionOptions addAuthenticatableRecipients(String userId, boolean email, CertificateAuthority authority, int targetAmount) {
+        List<CertificateAuthenticity> identifiedCertificates = authority.identify(userId, email, new Date(), targetAmount);
+        boolean foundAcceptable = false;
+        for (CertificateAuthenticity candidate : identifiedCertificates) {
+            if (candidate.isAuthenticated()) {
+                addRecipient(candidate.getCertificate());
+                foundAcceptable = true;
+            }
+        }
+        if (!foundAcceptable) {
+            throw new IllegalArgumentException("Could not identify any trust-worthy certificates for '" + userId + "' and target trust amount " + targetAmount);
+        }
+        return this;
     }
 
     /**
