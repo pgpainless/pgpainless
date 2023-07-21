@@ -122,6 +122,19 @@ public class EncryptionOptions {
      * @param userId userId
      * @param email if true, treat the user-ID as an email address and match all user-IDs containing the mail address
      * @param authority certificate authority
+     * @return encryption options
+     */
+    public EncryptionOptions addAuthenticatableRecipients(String userId, boolean email, CertificateAuthority authority) {
+        return addAuthenticatableRecipients(userId, email, authority, 120);
+    }
+
+    /**
+     * Identify authenticatable certificates for the given user-ID by querying the {@link CertificateAuthority} for
+     * identifiable bindings.
+     * Add all acceptable bindings, whose trust amount is larger or equal to the target amount to the list of recipients.
+     * @param userId userId
+     * @param email if true, treat the user-ID as an email address and match all user-IDs containing the mail address
+     * @param authority certificate authority
      * @param targetAmount target amount (120 = fully authenticated, 240 = doubly authenticated,
      *                    60 = partially authenticated...)
      * @return encryption options

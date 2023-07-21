@@ -107,7 +107,7 @@ public class MessageMetadata {
     }
 
     /**
-     * Return true, if the message was signed by a certificate for which we can authenticate a binding to the given userId.
+     * Return true, if the message was verifiably signed by a certificate for which we can authenticate a binding to the given userId.
      *
      * @param userId userId
      * @param email if true, treat the user-id as an email address and match all userIDs containing this address
