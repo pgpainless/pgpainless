@@ -18,6 +18,8 @@ import org.bouncycastle.openpgp.PGPPublicKey;
 import org.pgpainless.algorithm.CompressionAlgorithm;
 import org.pgpainless.algorithm.StreamEncoding;
 import org.pgpainless.algorithm.SymmetricKeyAlgorithm;
+import org.pgpainless.authentication.CertificateAuthenticity;
+import org.pgpainless.authentication.CertificateAuthority;
 import org.pgpainless.exception.MalformedOpenPgpMessageException;
 import org.pgpainless.key.SubkeyIdentifier;
 import org.pgpainless.util.SessionKey;
@@ -87,6 +89,39 @@ public class MessageMetadata {
                 if (key != null) {
                     return true;
                 }
+            }
+        }
+        return false;
+    }
+
+    /**
+     * Return true, if the message was signed by a certificate for which we can authenticate a binding to the given userId.
+     *
+     * @param userId userId
+     * @param email if true, treat the user-id as an email address and match all userIDs containing this address
+     * @param certificateAuthority certificate authority
+     * @return true, if we can authenticate a binding for a signing key with sufficient evidence
+     */
+    public boolean isAuthenticatablySignedBy(String userId, boolean email, CertificateAuthority certificateAuthority) {
+        return isAuthenticatablySignedBy(userId, email, certificateAuthority, 120);
+    }
+
+    /**
+     * Return true, if the message was signed by a certificate for which we can authenticate a binding to the given userId.
+     *
+     * @param userId userId
+     * @param email if true, treat the user-id as an email address and match all userIDs containing this address
+     * @param certificateAuthority certificate authority
+     * @param targetAmount target trust amount
+     * @return true, if we can authenticate a binding for a signing key with sufficient evidence
+     */
+    public boolean isAuthenticatablySignedBy(String userId, boolean email, CertificateAuthority certificateAuthority, int targetAmount) {
+        for (SignatureVerification verification : getVerifiedSignatures()) {
+            CertificateAuthenticity authenticity = certificateAuthority.authenticateBinding(
+                    verification.getSigningKey().getFingerprint(), userId, email,
+                    verification.getSignature().getCreationTime(), targetAmount);
+            if (authenticity.isAuthenticated()) {
+                return true;
             }
         }
         return false;
