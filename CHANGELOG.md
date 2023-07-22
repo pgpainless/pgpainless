@@ -5,6 +5,13 @@ SPDX-License-Identifier: CC0-1.0
 
 # PGPainless Changelog
 
+# 1.6.1-SNAPSHOT
+- `KeyRingBuilder`: Require UTF8 when adding user-ID via `addUserId(byte[])`
+- `pgpainless-sop`: Remove dependency on jetbrains annotations
+- Add `CertificateAuthority` interface to allow integration with [`pgpainless-wot`](https://github.com/pgpainless/pgpainless-wot)
+  - Add `EncryptionOptions.addAuthenticatableRecipients()` method
+  - Add `MessageMetadata.isAuthenticatablySignedBy()` method
+
 ## 1.6.0
 - Bump `sop-java` to `7.0.0`, implementing [SOP Spec Revision 07](https://www.ietf.org/archive/id/draft-dkg-openpgp-stateless-cli-07.html)
   - Implement `revoke-key` subcommand and API
