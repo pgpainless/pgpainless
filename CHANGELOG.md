@@ -5,7 +5,7 @@ SPDX-License-Identifier: CC0-1.0
 
 # PGPainless Changelog
 
-# 1.6.1-SNAPSHOT
+# 1.6.1
 - `KeyRingBuilder`: Require UTF8 when adding user-ID via `addUserId(byte[])`
 - `pgpainless-sop`: Remove dependency on jetbrains annotations
 - Add `CertificateAuthority` interface to allow integration with [`pgpainless-wot`](https://github.com/pgpainless/pgpainless-wot)
