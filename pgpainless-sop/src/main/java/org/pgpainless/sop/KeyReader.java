@@ -48,7 +48,8 @@ class KeyReader {
         try {
             certs = PGPainless.readKeyRing().publicKeyRingCollection(certIn);
         } catch (IOException e) {
-            if (e.getMessage() != null && e.getMessage().startsWith("unknown object in stream:")) {
+            String msg = e.getMessage();
+            if (msg != null && (msg.startsWith("unknown object in stream:") || msg.startsWith("invalid header encountered"))) {
                 throw new SOPGPException.BadData(e);
             }
             throw e;
