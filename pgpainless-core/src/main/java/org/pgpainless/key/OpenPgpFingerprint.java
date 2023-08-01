@@ -10,6 +10,7 @@ import javax.annotation.Nonnull;
 import org.bouncycastle.openpgp.PGPKeyRing;
 import org.bouncycastle.openpgp.PGPPublicKey;
 import org.bouncycastle.openpgp.PGPPublicKeyRing;
+import org.bouncycastle.openpgp.PGPSecretKey;
 import org.bouncycastle.openpgp.PGPSecretKeyRing;
 import org.bouncycastle.util.encoders.Hex;
 
@@ -21,6 +22,17 @@ public abstract class OpenPgpFingerprint implements CharSequence, Comparable<Ope
     @SuppressWarnings("CharsetObjectCanBeUsed")
     protected static final Charset utf8 = Charset.forName("UTF-8");
     protected final String fingerprint;
+
+    /**
+     * Return the fingerprint of the given key.
+     * This method automatically matches key versions to fingerprint implementations.
+     *
+     * @param key key
+     * @return fingerprint
+     */
+    public static OpenPgpFingerprint of(PGPSecretKey key) {
+        return of(key.getPublicKey());
+    }
 
     /**
      * Return the fingerprint of the given key.
