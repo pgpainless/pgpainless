@@ -29,6 +29,18 @@ public final class ArmoredOutputStreamFactory {
 
     }
 
+    private static ArmoredOutputStream.Builder getBuilder() {
+        ArmoredOutputStream.Builder builder = ArmoredOutputStream.builder();
+        builder.clearHeaders();
+        if (version != null && !version.isEmpty()) {
+            builder.setVersion(version);
+        }
+        for (String comment : comment) {
+            builder.addComment(comment);
+        }
+        return builder;
+    }
+
     /**
      * Wrap an {@link OutputStream} inside a preconfigured {@link ArmoredOutputStream}.
      *
@@ -37,16 +49,7 @@ public final class ArmoredOutputStreamFactory {
      */
     @Nonnull
     public static ArmoredOutputStream get(@Nonnull OutputStream outputStream) {
-        ArmoredOutputStream armoredOutputStream = new ArmoredOutputStream(outputStream);
-        armoredOutputStream.clearHeaders();
-        if (version != null && !version.isEmpty()) {
-            armoredOutputStream.setHeader(ArmorUtils.HEADER_VERSION, version);
-        }
-
-        for (String comment : comment) {
-            ArmorUtils.addCommentHeader(armoredOutputStream, comment);
-        }
-        return armoredOutputStream;
+        return getBuilder().build(outputStream);
     }
 
     /**
@@ -58,13 +61,17 @@ public final class ArmoredOutputStreamFactory {
      */
     @Nonnull
     public static ArmoredOutputStream get(@Nonnull OutputStream outputStream, @Nonnull ProducerOptions options) {
+        ArmoredOutputStream.Builder builder = getBuilder();
         if (options.isHideArmorHeaders()) {
-            ArmoredOutputStream armorOut = new ArmoredOutputStream(outputStream);
-            armorOut.clearHeaders();
-            return armorOut;
-        } else {
-            return get(outputStream);
+            builder.clearHeaders();
         }
+        if (options.hasVersion()) {
+            builder.setVersion(options.getVersion());
+        }
+        if (options.hasComment()) {
+            builder.setComment(options.getComment());
+        }
+        return builder.build(outputStream);
     }
 
     /**
