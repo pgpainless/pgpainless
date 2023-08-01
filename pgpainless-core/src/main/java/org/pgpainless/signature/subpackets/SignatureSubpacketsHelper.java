@@ -32,6 +32,9 @@ import org.pgpainless.algorithm.KeyFlag;
 import org.pgpainless.algorithm.PublicKeyAlgorithm;
 import org.pgpainless.key.util.RevocationAttributes;
 
+import java.util.ArrayList;
+import java.util.List;
+
 public class SignatureSubpacketsHelper {
 
     public static SignatureSubpackets applyFrom(PGPSignatureSubpacketVector vector, SignatureSubpackets subpackets) {
@@ -81,6 +84,19 @@ public class SignatureSubpacketsHelper {
                     subpackets.setPreferredCompressionAlgorithms((PreferredAlgorithms) subpacket);
                     break;
                 case preferredAEADAlgorithms:
+                    // Workaround for https://github.com/pgpainless/pgpainless/pull/399
+                    // TODO: Remove when BC 1.77 is released
+                    if (subpacket instanceof PreferredAlgorithms) {
+                        List<PreferredAEADCiphersuites.Combination> combinationList = new ArrayList<>();
+                        int[] algorithms = ((PreferredAlgorithms) subpacket).getPreferences();
+                        for (int i = 0; i < algorithms.length; i += 2) {
+                            combinationList.add(new PreferredAEADCiphersuites.Combination(algorithms[i], algorithms[i + 1]));
+                        }
+                        PreferredAEADCiphersuites aead = new PreferredAEADCiphersuites(
+                                subpacket.isCritical(), combinationList.toArray(new PreferredAEADCiphersuites.Combination[0]));
+                        subpackets.setPreferredAEADCiphersuites(aead);
+                        break;
+                    }
                     subpackets.setPreferredAEADCiphersuites((PreferredAEADCiphersuites) subpacket);
                     break;
                 case primaryUserId:
