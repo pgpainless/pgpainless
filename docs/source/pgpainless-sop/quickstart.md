@@ -120,10 +120,10 @@ OpenPGP keys can (but don't need to) be password protected.
 The `changeKeyPassword()` API can be used to add, change or remove password protection from OpenPGP keys.
 While the input to this operation can be keys with different per-subkey passwords, the output will use at most one password.
 
-Using `oldKeyPassphrase()` multiple decryption passphrase candidates can be provided.
+Via `oldKeyPassphrase()`, multiple decryption passphrase candidates can be provided.
 These are tried one after another to unlock protected subkeys.
 
-In order to successfully change the passphrase of an OpenPGP key, the all subkeys needs to be decrypted.
+In order to successfully change the passphrase of an OpenPGP key, all of its subkeys needs to be successfully decrypted.
 If one or more subkeys cannot be decrypted, the operation fails with a `KeyIsProtected` exception.
 The result is either fully encrypted for a single passphrase (passed via `newKeyPassphrase()`),
 or unprotected if the new key passphrase is omitted.
