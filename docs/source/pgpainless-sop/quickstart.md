@@ -114,6 +114,56 @@ To disable ASCII armoring, call `noArmor()` before calling `key(_)`.
 
 In our example, `certificateBytes` can now safely be shared with anyone.
 
+### Change Key Password
+
+OpenPGP keys can (but don't need to) be password protected.
+The `changeKeyPassword()` API can be used to add, change or remove password protection from OpenPGP keys.
+While the input to this operation can be keys with different per-subkey passwords, the output will use at most one password.
+
+Using `oldKeyPassphrase()` multiple decryption passphrase candidates can be provided.
+These are tried one after another to unlock protected subkeys.
+
+In order to successfully change the passphrase of an OpenPGP key, the all subkeys needs to be decrypted.
+If one or more subkeys cannot be decrypted, the operation fails with a `KeyIsProtected` exception.
+The result is either fully encrypted for a single passphrase (passed via `newKeyPassphrase()`),
+or unprotected if the new key passphrase is omitted.
+
+
+```java
+byte[] keyBefore = ...
+byte[] keyAfter = sop.changeKeyPassword()
+        // Provide old passphrases - all subkeys need to be decryptable,
+        //  otherwise KeyIsProtected exception will be thrown
+        .oldKeyPassphrase("4d4m5m1th")
+        .oldKeyPassphrase("d4v1dR1c4rd0")
+        // Provide the new passphrase - if omitted, key will be unprotected
+        .newKeyPassphrase("fr1edr1ch3n93l5")
+        .keys(keyBefore)
+        .getBytes();
+```
+
+### Generate Revocation Certificates
+
+You might want to generate a revocation certificate for your OpenPGP key.
+This certificate can be published to a key server to let your contacts known that your key is no longer
+trustworthy.
+The `revokeKey()` API can be used to generate a "hard-revocation", which retroactively invalidates all
+signatures previously issued by the key.
+
+If the input secret key is an OpenPGP v6 key, the result will be a minimal revocation certificate,
+consisting of only the bare primary public key and a revocation signature. For v4 keys, the result
+will consist of the whole public certificate plus a revocation signature.
+
+```java
+byte[] keys = ...
+byte[] revoked = sop.revokeKey()
+        // primary key password(s) if the key(s) are protected
+        .withKeyPassword("5w0rdf1sh")
+        // one or more secret keys
+        .keys(keys)
+        .getBytes();
+```
+
 ### Apply / Remove ASCII Armor
 
 Perhaps you want to print your secret key onto a piece of paper for backup purposes,
