@@ -68,6 +68,7 @@ public class EncryptionOptions {
     private final Map<SubkeyIdentifier, KeyAccessor> keyViews = new HashMap<>();
     private final EncryptionKeySelector encryptionKeySelector = encryptToAllCapableSubkeys();
     private boolean allowEncryptionWithMissingKeyFlags = false;
+    private Date evaluationDate = new Date();
 
     private SymmetricKeyAlgorithm encryptionAlgorithmOverride = null;
 
@@ -94,6 +95,17 @@ public class EncryptionOptions {
      */
     public static EncryptionOptions get() {
         return new EncryptionOptions();
+    }
+
+    /**
+     * Override the evaluation date for recipient keys with the given date.
+     *
+     * @param evaluationDate new evaluation date
+     * @return this
+     */
+    public EncryptionOptions setEvaluationDate(@Nonnull Date evaluationDate) {
+        this.evaluationDate = evaluationDate;
+        return this;
     }
 
     /**
@@ -141,7 +153,7 @@ public class EncryptionOptions {
      * @return encryption options
      */
     public EncryptionOptions addAuthenticatableRecipients(String userId, boolean email, CertificateAuthority authority, int targetAmount) {
-        List<CertificateAuthenticity> identifiedCertificates = authority.lookupByUserId(userId, email, new Date(), targetAmount);
+        List<CertificateAuthenticity> identifiedCertificates = authority.lookupByUserId(userId, email, evaluationDate, targetAmount);
         boolean foundAcceptable = false;
         for (CertificateAuthenticity candidate : identifiedCertificates) {
             if (candidate.isAuthenticated()) {
@@ -213,7 +225,7 @@ public class EncryptionOptions {
     public EncryptionOptions addRecipient(@Nonnull PGPPublicKeyRing key,
                                           @Nonnull CharSequence userId,
                                           @Nonnull EncryptionKeySelector encryptionKeySelectionStrategy) {
-        KeyRingInfo info = new KeyRingInfo(key, new Date());
+        KeyRingInfo info = new KeyRingInfo(key, evaluationDate);
 
         List<PGPPublicKey> encryptionSubkeys = encryptionKeySelectionStrategy
                 .selectEncryptionSubkeys(info.getEncryptionSubkeys(userId.toString(), purpose));
@@ -277,7 +289,6 @@ public class EncryptionOptions {
     }
 
     private EncryptionOptions addAsRecipient(PGPPublicKeyRing key, EncryptionKeySelector encryptionKeySelectionStrategy, boolean wildcardKeyId) {
-        Date evaluationDate = new Date();
         KeyRingInfo info = new KeyRingInfo(key, evaluationDate);
 
         Date primaryKeyExpiration;
