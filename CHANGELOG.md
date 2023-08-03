@@ -8,6 +8,8 @@ SPDX-License-Identifier: CC0-1.0
 # 1.6.2-SNAPSHOT
 - Bump `bcpg-jdk15to18` to `1.76`
 - Bump `bcprov-jdk15to18` to `1.76`
+- Add `EncryptionOptions.setAllowEncryptionWithMissingKeyFlags()` to properly allow
+    encrypting to legacy keys which do not carry any key flags.
 
 # 1.6.1
 - `KeyRingBuilder`: Require UTF8 when adding user-ID via `addUserId(byte[])`
