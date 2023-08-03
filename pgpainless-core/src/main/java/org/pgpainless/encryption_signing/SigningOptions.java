@@ -97,10 +97,22 @@ public final class SigningOptions {
 
     private final Map<SubkeyIdentifier, SigningMethod> signingMethods = new HashMap<>();
     private HashAlgorithm hashAlgorithmOverride;
+    private Date evaluationDate = new Date();
 
     @Nonnull
     public static SigningOptions get() {
         return new SigningOptions();
+    }
+
+    /**
+     * Override the evaluation date for signing keys with the given date.
+     *
+     * @param evaluationDate new evaluation date
+     * @return this
+     */
+    public SigningOptions setEvaluationDate(@Nonnull Date evaluationDate) {
+        this.evaluationDate = evaluationDate;
+        return this;
     }
 
     /**
@@ -212,7 +224,7 @@ public final class SigningOptions {
                                              @Nonnull DocumentSignatureType signatureType,
                                              @Nullable BaseSignatureSubpackets.Callback subpacketsCallback)
             throws KeyException, PGPException {
-        KeyRingInfo keyRingInfo = new KeyRingInfo(secretKey, new Date());
+        KeyRingInfo keyRingInfo = PGPainless.inspectKeyRing(secretKey, evaluationDate);
         if (userId != null && !keyRingInfo.isUserIdValid(userId)) {
             throw new KeyException.UnboundUserIdException(
                     OpenPgpFingerprint.of(secretKey),
@@ -280,7 +292,7 @@ public final class SigningOptions {
                                              long keyId,
                                              @Nonnull DocumentSignatureType signatureType,
                                              @Nullable BaseSignatureSubpackets.Callback subpacketsCallback) throws PGPException {
-        KeyRingInfo keyRingInfo = PGPainless.inspectKeyRing(secretKey);
+        KeyRingInfo keyRingInfo = PGPainless.inspectKeyRing(secretKey, evaluationDate);
 
         List<PGPPublicKey> signingPubKeys = keyRingInfo.getSigningSubkeys();
         if (signingPubKeys.isEmpty()) {
@@ -418,7 +430,7 @@ public final class SigningOptions {
                                                @Nonnull DocumentSignatureType signatureType,
                                                @Nullable BaseSignatureSubpackets.Callback subpacketCallback)
             throws PGPException {
-        KeyRingInfo keyRingInfo = new KeyRingInfo(secretKey, new Date());
+        KeyRingInfo keyRingInfo = PGPainless.inspectKeyRing(secretKey, evaluationDate);
         if (userId != null && !keyRingInfo.isUserIdValid(userId)) {
             throw new KeyException.UnboundUserIdException(
                     OpenPgpFingerprint.of(secretKey),
@@ -485,7 +497,7 @@ public final class SigningOptions {
                                              long keyId,
                                              @Nonnull DocumentSignatureType signatureType,
                                              @Nullable BaseSignatureSubpackets.Callback subpacketsCallback) throws PGPException {
-        KeyRingInfo keyRingInfo = PGPainless.inspectKeyRing(secretKey);
+        KeyRingInfo keyRingInfo = PGPainless.inspectKeyRing(secretKey, evaluationDate);
 
         List<PGPPublicKey> signingPubKeys = keyRingInfo.getSigningSubkeys();
         if (signingPubKeys.isEmpty()) {
