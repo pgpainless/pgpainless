@@ -45,6 +45,9 @@ import org.pgpainless.algorithm.SignatureType;
 import org.pgpainless.algorithm.StreamEncoding;
 import org.pgpainless.algorithm.SymmetricKeyAlgorithm;
 
+/**
+ * InputStream used to determine the nature of potential OpenPGP data.
+ */
 public class OpenPgpInputStream extends BufferedInputStream {
 
     @SuppressWarnings("CharsetObjectCanBeUsed")
