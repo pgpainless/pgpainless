@@ -67,6 +67,7 @@ public class EncryptionOptions {
     private final Map<SubkeyIdentifier, KeyRingInfo> keyRingInfo = new HashMap<>();
     private final Map<SubkeyIdentifier, KeyAccessor> keyViews = new HashMap<>();
     private final EncryptionKeySelector encryptionKeySelector = encryptToAllCapableSubkeys();
+    private boolean allowEncryptionWithMissingKeyFlags = false;
 
     private SymmetricKeyAlgorithm encryptionAlgorithmOverride = null;
 
@@ -277,8 +278,7 @@ public class EncryptionOptions {
 
     private EncryptionOptions addAsRecipient(PGPPublicKeyRing key, EncryptionKeySelector encryptionKeySelectionStrategy, boolean wildcardKeyId) {
         Date evaluationDate = new Date();
-        KeyRingInfo info;
-        info = new KeyRingInfo(key, evaluationDate);
+        KeyRingInfo info = new KeyRingInfo(key, evaluationDate);
 
         Date primaryKeyExpiration;
         try {
@@ -292,6 +292,23 @@ public class EncryptionOptions {
 
         List<PGPPublicKey> encryptionSubkeys = encryptionKeySelectionStrategy
                 .selectEncryptionSubkeys(info.getEncryptionSubkeys(purpose));
+
+        // There are some legacy keys around without key flags.
+        // If we allow encryption for those keys, we add valid keys without any key flags, if they are
+        // capable of encryption by means of their algorithm
+        if (encryptionSubkeys.isEmpty() && allowEncryptionWithMissingKeyFlags) {
+            List<PGPPublicKey> validSubkeys = info.getValidSubkeys();
+            for (PGPPublicKey validSubkey : validSubkeys) {
+                if (!validSubkey.isEncryptionKey()) {
+                    continue;
+                }
+                // only add encryption keys with no key flags.
+                if (info.getKeyFlagsOf(validSubkey.getKeyID()).isEmpty()) {
+                    encryptionSubkeys.add(validSubkey);
+                }
+            }
+        }
+
         if (encryptionSubkeys.isEmpty()) {
             throw new KeyException.UnacceptableEncryptionKeyException(OpenPgpFingerprint.of(key));
         }
@@ -383,6 +400,19 @@ public class EncryptionOptions {
             throw new IllegalArgumentException("Plaintext encryption can only be used to denote unencrypted secret keys.");
         }
         this.encryptionAlgorithmOverride = encryptionAlgorithm;
+        return this;
+    }
+
+    /**
+     * If this method is called, subsequent calls to {@link #addRecipient(PGPPublicKeyRing)} will allow encryption
+     * for subkeys that do not carry any {@link org.pgpainless.algorithm.KeyFlag} subpacket.
+     * This is a workaround for dealing with legacy keys that have no key flags subpacket but rely on the key algorithm
+     * type to convey the subkeys use.
+     *
+     * @return this
+     */
+    public EncryptionOptions setAllowEncryptionWithMissingKeyFlags() {
+        this.allowEncryptionWithMissingKeyFlags = true;
         return this;
     }
 
