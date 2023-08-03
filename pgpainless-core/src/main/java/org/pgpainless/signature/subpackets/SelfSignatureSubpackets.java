@@ -18,13 +18,12 @@ import org.bouncycastle.bcpg.sig.PreferredAlgorithms;
 import org.bouncycastle.bcpg.sig.PrimaryUserID;
 import org.bouncycastle.bcpg.sig.RevocationKey;
 import org.bouncycastle.openpgp.PGPPublicKey;
-import org.pgpainless.algorithm.AEADAlgorithm;
+import org.pgpainless.algorithm.AEADAlgorithmCombination;
 import org.pgpainless.algorithm.CompressionAlgorithm;
 import org.pgpainless.algorithm.Feature;
 import org.pgpainless.algorithm.HashAlgorithm;
 import org.pgpainless.algorithm.KeyFlag;
 import org.pgpainless.algorithm.SymmetricKeyAlgorithm;
-import org.pgpainless.util.Tuple;
 
 public interface SelfSignatureSubpackets extends BaseSignatureSubpackets {
 
@@ -59,11 +58,11 @@ public interface SelfSignatureSubpackets extends BaseSignatureSubpackets {
 
     SelfSignatureSubpackets setKeyExpirationTime(@Nullable KeyExpirationTime keyExpirationTime);
 
-    SelfSignatureSubpackets setPreferredAEADCiphersuites(Tuple<SymmetricKeyAlgorithm, AEADAlgorithm>... algorithms);
+    SelfSignatureSubpackets setPreferredAEADCiphersuites(AEADAlgorithmCombination... algorithms);
 
-    SelfSignatureSubpackets setPreferredAEADCiphersuites(Set<Tuple<SymmetricKeyAlgorithm, AEADAlgorithm>> algorithms);
+    SelfSignatureSubpackets setPreferredAEADCiphersuites(Set<AEADAlgorithmCombination> algorithms);
 
-    SelfSignatureSubpackets setPreferredAEADCiphersuites(boolean isCritical, Set<Tuple<SymmetricKeyAlgorithm, AEADAlgorithm>> algorithms);
+    SelfSignatureSubpackets setPreferredAEADCiphersuites(boolean isCritical, Set<AEADAlgorithmCombination> algorithms);
 
     SelfSignatureSubpackets setPreferredAEADCiphersuites(@Nullable PreferredAEADCiphersuites algorithms);
 

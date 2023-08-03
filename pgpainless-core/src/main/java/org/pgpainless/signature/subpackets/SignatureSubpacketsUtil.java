@@ -21,6 +21,7 @@ import org.bouncycastle.bcpg.sig.IssuerKeyID;
 import org.bouncycastle.bcpg.sig.KeyExpirationTime;
 import org.bouncycastle.bcpg.sig.KeyFlags;
 import org.bouncycastle.bcpg.sig.NotationData;
+import org.bouncycastle.bcpg.sig.PreferredAEADCiphersuites;
 import org.bouncycastle.bcpg.sig.PreferredAlgorithms;
 import org.bouncycastle.bcpg.sig.PrimaryUserID;
 import org.bouncycastle.bcpg.sig.RegularExpression;
@@ -37,6 +38,7 @@ import org.bouncycastle.openpgp.PGPPublicKey;
 import org.bouncycastle.openpgp.PGPSignature;
 import org.bouncycastle.openpgp.PGPSignatureList;
 import org.bouncycastle.openpgp.PGPSignatureSubpacketVector;
+import org.pgpainless.algorithm.AEADAlgorithmCombination;
 import org.pgpainless.algorithm.CompressionAlgorithm;
 import org.pgpainless.algorithm.Feature;
 import org.pgpainless.algorithm.HashAlgorithm;
@@ -329,6 +331,39 @@ public final class SignatureSubpacketsUtil {
                 if (algorithm != null) {
                     algorithms.add(algorithm);
                 }
+            }
+        }
+        return algorithms;
+    }
+
+    public static @Nullable PreferredAEADCiphersuites getPreferredAEADAlgorithms(PGPSignature signature) {
+        org.bouncycastle.bcpg.SignatureSubpacket subpacket = hashed(signature, SignatureSubpacket.preferredAEADAlgorithms);
+        if (subpacket == null) {
+            return null;
+        }
+
+        // Workaround for https://github.com/pgpainless/pgpainless/pull/399
+        // TODO: Remove when BC 1.77 is released
+        if (subpacket instanceof PreferredAlgorithms) {
+            List<PreferredAEADCiphersuites.Combination> combinationList = new ArrayList<>();
+            int[] algorithms = ((PreferredAlgorithms) subpacket).getPreferences();
+            for (int i = 0; i < algorithms.length; i += 2) {
+                combinationList.add(new PreferredAEADCiphersuites.Combination(algorithms[i], algorithms[i + 1]));
+            }
+            PreferredAEADCiphersuites aead = new PreferredAEADCiphersuites(
+                    subpacket.isCritical(), combinationList.toArray(new PreferredAEADCiphersuites.Combination[0]));
+            return aead;
+        }
+
+        return (PreferredAEADCiphersuites) subpacket;
+    }
+
+    public static @Nonnull Set<AEADAlgorithmCombination> parsePreferredAEADAlgorithms(PGPSignature signature) {
+        Set<AEADAlgorithmCombination> algorithms = new LinkedHashSet<>();
+        PreferredAEADCiphersuites preferences = getPreferredAEADAlgorithms(signature);
+        if (preferences != null) {
+            for (PreferredAEADCiphersuites.Combination combination : preferences.getAlgorithms()) {
+                algorithms.add(AEADAlgorithmCombination.from(combination));
             }
         }
         return algorithms;
