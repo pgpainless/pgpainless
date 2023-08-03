@@ -12,6 +12,7 @@ import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
+import java.util.Date;
 
 import org.bouncycastle.openpgp.PGPException;
 import org.bouncycastle.openpgp.PGPPublicKeyRing;
@@ -23,6 +24,7 @@ import org.pgpainless.decryption_verification.ConsumerOptions;
 import org.pgpainless.decryption_verification.DecryptionStream;
 import org.pgpainless.decryption_verification.MessageMetadata;
 import org.pgpainless.exception.KeyException;
+import org.pgpainless.util.DateUtil;
 
 public class EncryptionWithMissingKeyFlagsTest {
 
@@ -135,6 +137,8 @@ public class EncryptionWithMissingKeyFlagsTest {
             "=TKhx\n" +
             "-----END PGP PRIVATE KEY BLOCK-----";
 
+    // Above key expires in 5 years, so we fix the evaluation date to a known-good value
+    private static final Date evaluationDate = DateUtil.parseUTCDate("2023-08-03 12:50:06 UTC");
     private static final String MESSAGE = "Hello, World!\n";
 
     @Test
@@ -145,7 +149,9 @@ public class EncryptionWithMissingKeyFlagsTest {
         PGPPublicKeyRing publicKeys = PGPainless.extractCertificate(secretKeys);
 
         assertThrows(KeyException.UnacceptableEncryptionKeyException.class, () ->
-                EncryptionOptions.get().addRecipient(publicKeys));
+                EncryptionOptions.get()
+                        .setEvaluationDate(evaluationDate)
+                        .addRecipient(publicKeys));
     }
 
 
@@ -161,6 +167,7 @@ public class EncryptionWithMissingKeyFlagsTest {
         EncryptionStream encOut = PGPainless.encryptAndOrSign()
                 .onOutputStream(out)
                 .withOptions(ProducerOptions.encrypt(EncryptionOptions.get()
+                        .setEvaluationDate(evaluationDate)
                         .setAllowEncryptionWithMissingKeyFlags() // Workaround
                         .addRecipient(publicKeys)));
 
