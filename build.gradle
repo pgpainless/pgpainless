@@ -19,6 +19,7 @@ buildscript {
 
 plugins {
     id 'ru.vyarus.animalsniffer' version '1.5.3'
+    id 'org.jetbrains.kotlin.jvm' version "1.8.10"
 }
 
 apply from: 'version.gradle'
@@ -29,6 +30,7 @@ allprojects {
     apply plugin: 'eclipse'
     apply plugin: 'jacoco'
     apply plugin: 'checkstyle'
+    apply plugin: 'kotlin'
 
     compileJava {
         options.release = 8
