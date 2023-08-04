@@ -26,7 +26,14 @@ public final class AEADAlgorithmCombination {
     private AEADAlgorithmCombination(@Nonnull SymmetricKeyAlgorithm symmetricKeyAlgorithm,
                                     @Nonnull AEADAlgorithm aeadAlgorithm) {
         this.aeadAlgorithm = aeadAlgorithm;
-        this.symmetricKeyAlgorithm = symmetricKeyAlgorithm;
+        this.symmetricKeyAlgorithm = requireNotUnencrypted(symmetricKeyAlgorithm);
+    }
+
+    private static SymmetricKeyAlgorithm requireNotUnencrypted(SymmetricKeyAlgorithm algorithm) {
+        if (algorithm == SymmetricKeyAlgorithm.NULL) {
+            throw new IllegalArgumentException("Symmetric Key Algorithm MUST NOT be NULL (unencrypted).");
+        }
+        return algorithm;
     }
 
     @Nonnull
