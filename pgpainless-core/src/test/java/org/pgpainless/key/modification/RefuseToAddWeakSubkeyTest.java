@@ -72,7 +72,6 @@ public class RefuseToAddWeakSubkeyTest {
         minimalBitStrengths.put(PublicKeyAlgorithm.DIFFIE_HELLMAN, 2000);
         // §7.2.2
         minimalBitStrengths.put(PublicKeyAlgorithm.ECDH, 250);
-        minimalBitStrengths.put(PublicKeyAlgorithm.EC, 250);
         PGPainless.getPolicy().setPublicKeyAlgorithmPolicy(new Policy.PublicKeyAlgorithmPolicy(minimalBitStrengths));
 
         SecretKeyRingEditorInterface editor = PGPainless.modifyKeyRing(secretKeys);
