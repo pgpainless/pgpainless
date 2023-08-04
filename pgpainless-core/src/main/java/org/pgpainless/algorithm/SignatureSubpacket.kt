@@ -1,77 +1,40 @@
-// SPDX-FileCopyrightText: 2021 Paul Schaub <vanitasvitae@fsfe.org>
+// SPDX-FileCopyrightText: 2023 Paul Schaub <vanitasvitae@fsfe.org>
 //
 // SPDX-License-Identifier: Apache-2.0
 
-package org.pgpainless.algorithm;
+package org.pgpainless.algorithm
 
-import javax.annotation.Nonnull;
-import javax.annotation.Nullable;
-
-import static org.bouncycastle.bcpg.SignatureSubpacketTags.ATTESTED_CERTIFICATIONS;
-import static org.bouncycastle.bcpg.SignatureSubpacketTags.CREATION_TIME;
-import static org.bouncycastle.bcpg.SignatureSubpacketTags.EMBEDDED_SIGNATURE;
-import static org.bouncycastle.bcpg.SignatureSubpacketTags.EXPIRE_TIME;
-import static org.bouncycastle.bcpg.SignatureSubpacketTags.EXPORTABLE;
-import static org.bouncycastle.bcpg.SignatureSubpacketTags.FEATURES;
-import static org.bouncycastle.bcpg.SignatureSubpacketTags.INTENDED_RECIPIENT_FINGERPRINT;
-import static org.bouncycastle.bcpg.SignatureSubpacketTags.ISSUER_FINGERPRINT;
-import static org.bouncycastle.bcpg.SignatureSubpacketTags.ISSUER_KEY_ID;
-import static org.bouncycastle.bcpg.SignatureSubpacketTags.KEY_EXPIRE_TIME;
-import static org.bouncycastle.bcpg.SignatureSubpacketTags.KEY_FLAGS;
-import static org.bouncycastle.bcpg.SignatureSubpacketTags.KEY_SERVER_PREFS;
-import static org.bouncycastle.bcpg.SignatureSubpacketTags.NOTATION_DATA;
-import static org.bouncycastle.bcpg.SignatureSubpacketTags.PLACEHOLDER;
-import static org.bouncycastle.bcpg.SignatureSubpacketTags.POLICY_URL;
-import static org.bouncycastle.bcpg.SignatureSubpacketTags.PREFERRED_AEAD_ALGORITHMS;
-import static org.bouncycastle.bcpg.SignatureSubpacketTags.PREFERRED_COMP_ALGS;
-import static org.bouncycastle.bcpg.SignatureSubpacketTags.PREFERRED_HASH_ALGS;
-import static org.bouncycastle.bcpg.SignatureSubpacketTags.PREFERRED_KEY_SERV;
-import static org.bouncycastle.bcpg.SignatureSubpacketTags.PREFERRED_SYM_ALGS;
-import static org.bouncycastle.bcpg.SignatureSubpacketTags.PRIMARY_USER_ID;
-import static org.bouncycastle.bcpg.SignatureSubpacketTags.REG_EXP;
-import static org.bouncycastle.bcpg.SignatureSubpacketTags.REVOCABLE;
-import static org.bouncycastle.bcpg.SignatureSubpacketTags.REVOCATION_KEY;
-import static org.bouncycastle.bcpg.SignatureSubpacketTags.REVOCATION_REASON;
-import static org.bouncycastle.bcpg.SignatureSubpacketTags.SIGNATURE_TARGET;
-import static org.bouncycastle.bcpg.SignatureSubpacketTags.SIGNER_USER_ID;
-import static org.bouncycastle.bcpg.SignatureSubpacketTags.TRUST_SIG;
-
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Map;
-import java.util.NoSuchElementException;
-import java.util.concurrent.ConcurrentHashMap;
+import org.bouncycastle.bcpg.SignatureSubpacketTags.*
 
 /**
  * Enumeration of possible subpackets that might be found in the hashed and unhashed area of an OpenPGP signature.
  *
- * @see <a href="https://tools.ietf.org/html/rfc4880#section-5.2.3.1">RFC4880: Signature Subpacket Specification</a>
+ * See [RFC4880: Signature Subpacket Specification](https://tools.ietf.org/html/rfc4880#section-5.2.3.1)
  */
-public enum SignatureSubpacket {
-
+enum class SignatureSubpacket(val code: Int) {
     /**
      * The time the signature was made.
      * MUST be present in the hashed area of the signature.
      *
-     * @see <a href="https://tools.ietf.org/html/rfc4880#section-5.2.3.4">Signature Creation Time</a>
+     * See [Signature Creation Time](https://tools.ietf.org/html/rfc4880#section-5.2.3.4)
      */
-    signatureCreationTime(CREATION_TIME),
+    signatureCreationTime(2),
 
     /**
      * The validity period of the signature.  This is the number of seconds
      * after the signature creation time that the signature expires.  If
      * this is not present or has a value of zero, it never expires.
      *
-     * @see <a href="https://tools.ietf.org/html/rfc4880#section-5.2.3.10">Signature Expiration Time</a>
+     * See [Signature Expiration Time](https://tools.ietf.org/html/rfc4880#section-5.2.3.10)
      */
-    signatureExpirationTime(EXPIRE_TIME),
+    signatureExpirationTime(3),
 
     /**
      * Denotes whether the signature is exportable for other users.
      *
-     * @see <a href="https://tools.ietf.org/html/rfc4880#section-5.2.3.11">Exportable Certification</a>
+     * See [Exportable Certification](https://tools.ietf.org/html/rfc4880#section-5.2.3.11)
      */
-    exportableCertification(EXPORTABLE),
+    exportableCertification(4),
 
     /**
      * Signer asserts that the key is not only valid but also trustworthy at
@@ -87,9 +50,9 @@ public enum SignatureSubpacket {
      * greater indicate complete trust.  Implementations SHOULD emit values
      * of 60 for partial trust and 120 for complete trust.
      *
-     * @see <a href="https://tools.ietf.org/html/rfc4880#section-5.2.3.13">Trust Signature</a>
+     * See [Trust Signature](https://tools.ietf.org/html/rfc4880#section-5.2.3.13)
      */
-    trustSignature(TRUST_SIG),
+    trustSignature(5),
 
     /**
      * Used in conjunction with trust Signature packets (of level greater 0) to
@@ -100,9 +63,9 @@ public enum SignatureSubpacket {
      * "almost public domain" regular expression [REGEX] package.  A
      * description of the syntax is found in Section 8 below.
      *
-     * @see <a href="https://tools.ietf.org/html/rfc4880#section-5.2.3.14">Regular Expression</a>
+     * See [Regular Expression](https://tools.ietf.org/html/rfc4880#section-5.2.3.14)
      */
-    regularExpression(REG_EXP),
+    regularExpression(6),
 
     /**
      * Signature's revocability status.  The packet body contains a Boolean
@@ -112,9 +75,9 @@ public enum SignatureSubpacket {
      * signature for the life of his key.  If this packet is not present,
      * the signature is revocable.
      *
-     * @see <a href="https://tools.ietf.org/html/rfc4880#section-5.2.3.12">Revocable</a>
+     * See [Revocable](https://tools.ietf.org/html/rfc4880#section-5.2.3.12)
      */
-    revocable(REVOCABLE),
+    revocable(7),
 
     /**
      * The validity period of the key.  This is the number of seconds after
@@ -122,14 +85,14 @@ public enum SignatureSubpacket {
      * or has a value of zero, the key never expires.  This is found only on
      * a self-signature.
      *
-     * @see <a href="https://tools.ietf.org/html/rfc4880#section-5.2.3.6">Key Expiration Time</a>
+     * See [Key Expiration Time](https://tools.ietf.org/html/rfc4880#section-5.2.3.6)
      */
-    keyExpirationTime(KEY_EXPIRE_TIME),
+    keyExpirationTime(9),
 
     /**
      * Placeholder for backwards compatibility.
      */
-    placeholder(PLACEHOLDER),
+    placeholder(10),
 
     /**
      *  Symmetric algorithm numbers that indicate which algorithms the keyholder
@@ -138,9 +101,9 @@ public enum SignatureSubpacket {
      *  algorithms listed are supported by the recipient's software.
      *  This is only found on a self-signature.
      *
-     * @see <a href="https://tools.ietf.org/html/rfc4880#section-5.2.3.7">Preferred Symmetric Algorithms</a>
+     * See [Preferred Symmetric Algorithms](https://tools.ietf.org/html/rfc4880#section-5.2.3.7)
      */
-    preferredSymmetricAlgorithms(PREFERRED_SYM_ALGS),
+    preferredSymmetricAlgorithms(11),
 
     /**
      * Authorizes the specified key to issue revocation signatures for this
@@ -159,16 +122,16 @@ public enum SignatureSubpacket {
      * isolate this subpacket within a separate signature so that it is not
      * combined with other subpackets that need to be exported.
      *
-     * @see <a href="https://tools.ietf.org/html/rfc4880#section-5.2.3.15">Revocation Key</a>
+     * See [Revocation Key](https://tools.ietf.org/html/rfc4880#section-5.2.3.15)
      */
-    revocationKey(REVOCATION_KEY),
+    revocationKey(12),
 
     /**
      * The OpenPGP Key ID of the key issuing the signature.
      *
-     * @see <a href="https://tools.ietf.org/html/rfc4880#section-5.2.3.5">Issuer Key ID</a>
+     * See [Issuer Key ID](https://tools.ietf.org/html/rfc4880#section-5.2.3.5)
      */
-    issuerKeyId(ISSUER_KEY_ID),
+    issuerKeyId(16),
 
     /**
      * This subpacket describes a "notation" on the signature that the
@@ -178,9 +141,9 @@ public enum SignatureSubpacket {
      * the signature cares to make.  The "flags" field holds four octets of
      * flags.
      *
-     * @see <a href="https://tools.ietf.org/html/rfc4880#section-5.2.3.16">Notation Data</a>
+     * See [Notation Data](https://tools.ietf.org/html/rfc4880#section-5.2.3.16)
      */
-    notationData(NOTATION_DATA),
+    notationData(20),
 
     /**
      * Message digest algorithm numbers that indicate which algorithms the
@@ -188,9 +151,9 @@ public enum SignatureSubpacket {
      * algorithms, the list is ordered.
      * This is only found on a self-signature.
      *
-     * @see <a href="https://tools.ietf.org/html/rfc4880#section-5.2.3.8">Preferred Hash Algorithms</a>
+     * See [Preferred Hash Algorithms](https://tools.ietf.org/html/rfc4880#section-5.2.3.8)
      */
-    preferredHashAlgorithms(PREFERRED_HASH_ALGS),
+    preferredHashAlgorithms(21),
 
     /**
      * Compression algorithm numbers that indicate which algorithms the
@@ -200,9 +163,9 @@ public enum SignatureSubpacket {
      * software might have no compression software in that implementation.
      * This is only found on a self-signature.
      *
-     * @see <a href="https://tools.ietf.org/html/rfc4880#section-5.2.3.9">Preferred Compressio Algorithms</a>
+     * See [Preferred Compressio Algorithms](https://tools.ietf.org/html/rfc4880#section-5.2.3.9)
      */
-    preferredCompressionAlgorithms(PREFERRED_COMP_ALGS),
+    preferredCompressionAlgorithms(22),
 
     /**
      * This is a list of one-bit flags that indicate preferences that the
@@ -210,9 +173,9 @@ public enum SignatureSubpacket {
      * undefined flags MUST be zero.
      * This is found only on a self-signature.
      *
-     * @see <a href="https://tools.ietf.org/html/rfc4880#section-5.2.3.17">Key Server Preferences</a>
+     * See [Key Server Preferences](https://tools.ietf.org/html/rfc4880#section-5.2.3.17)
      */
-    keyServerPreferences(KEY_SERVER_PREFS),
+    keyServerPreferences(23),
 
     /**
      * This is a URI of a key server that the keyholder prefers be used for
@@ -221,9 +184,9 @@ public enum SignatureSubpacket {
      * key server can actually be a copy of the key retrieved by ftp, http,
      * finger, etc.
      *
-     * @see <a href="https://tools.ietf.org/html/rfc4880#section-5.2.3.18">Preferred Key Server</a>
+     * See [Preferred Key Server](https://tools.ietf.org/html/rfc4880#section-5.2.3.18)
      */
-    preferredKeyServers(PREFERRED_KEY_SERV),
+    preferredKeyServers(24),
 
     /**
      * This is a flag in a User ID's self-signature that states whether this
@@ -242,17 +205,17 @@ public enum SignatureSubpacket {
      * different and independent "primaries" -- one for User IDs, and one
      * for User Attributes.
      *
-     * @see <a href="https://tools.ietf.org/html/rfc4880#section-5.2.3.19">Primary User-ID</a>
+     * See [Primary User-ID](https://tools.ietf.org/html/rfc4880#section-5.2.3.19)
      */
-    primaryUserId(PRIMARY_USER_ID),
+    primaryUserId(25),
 
     /**
      * This subpacket contains a URI of a document that describes the policy
      * under which the signature was issued.
      *
-     * @see <a href="https://tools.ietf.org/html/rfc4880#section-5.2.3.20">Policy URL</a>
+     * See [Policy URL](https://tools.ietf.org/html/rfc4880#section-5.2.3.20)
      */
-    policyUrl(POLICY_URL),
+    policyUrl(26),
 
     /**
      * This subpacket contains a list of binary flags that hold information
@@ -261,9 +224,9 @@ public enum SignatureSubpacket {
      * list is shorter than an implementation expects, the unstated flags
      * are considered to be zero.
      *
-     * @see <a href="https://tools.ietf.org/html/rfc4880#section-5.2.3.21">Key Flags</a>
+     * See [Key Flags](https://tools.ietf.org/html/rfc4880#section-5.2.3.21)
      */
-    keyFlags(KEY_FLAGS),
+    keyFlags(27),
 
     /**
      * This subpacket allows a keyholder to state which User ID is
@@ -272,9 +235,9 @@ public enum SignatureSubpacket {
      * personal communications.  This subpacket allows such a keyholder to
      * state which of their roles is making a signature.
      *
-     * @see <a href="https://tools.ietf.org/html/rfc4880#section-5.2.3.22">Signer's User ID</a>
+     * See [Signer's User ID](https://tools.ietf.org/html/rfc4880#section-5.2.3.22)
      */
-    signerUserId(SIGNER_USER_ID),
+    signerUserId(28),
 
     /**
      * This subpacket is used only in key revocation and certification
@@ -291,9 +254,9 @@ public enum SignatureSubpacket {
      *         32 - User ID information is no longer valid (cert revocations)
      *    100-110 - Private Use
      *
-     * @see <a href="https://tools.ietf.org/html/rfc4880#section-5.2.3.23">Reason for Revocation</a>
+     * See [Reason for Revocation](https://tools.ietf.org/html/rfc4880#section-5.2.3.23)
      */
-    revocationReason(REVOCATION_REASON),
+    revocationReason(29),
 
     /**
      * The Features subpacket denotes which advanced OpenPGP features a
@@ -305,9 +268,9 @@ public enum SignatureSubpacket {
      * This subpacket is similar to a preferences subpacket, and only
      * appears in a self-signature.
      *
-     * @see <a href="https://tools.ietf.org/html/rfc4880#section-5.2.3.24">Features</a>
+     * See [Features](https://tools.ietf.org/html/rfc4880#section-5.2.3.24)
      */
-    features(FEATURES),
+    features(30),
 
     /**
      * This subpacket identifies a specific target signature to which a
@@ -321,18 +284,18 @@ public enum SignatureSubpacket {
      * signature.  For example, a target signature with a SHA-1 hash MUST
      * have 20 octets of hash data.
      *
-     * @see <a href="https://tools.ietf.org/html/rfc4880#section-5.2.3.25">Signature Target</a>
+     * See [Signature Target](https://tools.ietf.org/html/rfc4880#section-5.2.3.25)
      */
-    signatureTarget(SIGNATURE_TARGET),
+    signatureTarget(31),
 
     /**
      * This subpacket contains a complete Signature packet body as
      * specified in Section 5.2 above.  It is useful when one signature
      * needs to refer to, or be incorporated in, another signature.
      *
-     * @see <a href="https://tools.ietf.org/html/rfc4880#section-5.2.3.26">Embedded Signature</a>
+     * See [Embedded Signature](https://tools.ietf.org/html/rfc4880#section-5.2.3.26)
      */
-    embeddedSignature(EMBEDDED_SIGNATURE),
+    embeddedSignature(32),
 
     /**
      * The OpenPGP Key fingerprint of the key issuing the signature.  This
@@ -344,9 +307,9 @@ public enum SignatureSubpacket {
      * Note that the length N of the fingerprint for a version 4 key is 20
      * octets; for a version 5 key N is 32.
      *
-     * @see <a href="https://tools.ietf.org/html/draft-ietf-openpgp-rfc4880bis-10#section-5.2.3.28">Issuer Fingerprint</a>
+     * See [Issuer Fingerprint](https://tools.ietf.org/html/draft-ietf-openpgp-rfc4880bis-10#section-5.2.3.28)
      */
-    issuerFingerprint(ISSUER_FINGERPRINT),
+    issuerFingerprint(33),
 
     /**
      * AEAD algorithm numbers that indicate which AEAD algorithms the
@@ -357,9 +320,9 @@ public enum SignatureSubpacket {
      * Note that support for the AEAD Encrypted Data packet in the general
      * is indicated by a Feature Flag.
      *
-     * @see <a href="https://tools.ietf.org/html/draft-ietf-openpgp-rfc4880bis-10#section-5.2.3.8">Preferred AEAD Algorithms</a>
+     * See [Preferred AEAD Algorithms](https://tools.ietf.org/html/draft-ietf-openpgp-rfc4880bis-10#section-5.2.3.8)
      */
-    preferredAEADAlgorithms(PREFERRED_AEAD_ALGORITHMS),
+    preferredAEADAlgorithms(39),
 
     /**
      * The OpenPGP Key fingerprint of the intended recipient primary key.
@@ -372,9 +335,9 @@ public enum SignatureSubpacket {
      * Note that the length N of the fingerprint for a version 4 key is 20
      * octets; for a version 5 key N is 32.
      *
-     * @see <a href="https://tools.ietf.org/html/draft-ietf-openpgp-rfc4880bis-10#section-5.2.3.29">Intended Recipient Fingerprint</a>
+     * See [Intended Recipient Fingerprint](https://tools.ietf.org/html/draft-ietf-openpgp-rfc4880bis-10#section-5.2.3.29)
      */
-    intendedRecipientFingerprint(INTENDED_RECIPIENT_FINGERPRINT),
+    intendedRecipientFingerprint(35),
 
     /**
      * This subpacket MUST only appear as a hashed subpacket of an
@@ -388,75 +351,51 @@ public enum SignatureSubpacket {
      * Attested Certification subpacket in any generated Attestation Key
      * Signature.
      *
-     * @see <a href="https://tools.ietf.org/html/draft-ietf-openpgp-rfc4880bis-10#section-5.2.3.30">Attested Certification</a>
+     * See [Attested Certification](https://tools.ietf.org/html/draft-ietf-openpgp-rfc4880bis-10#section-5.2.3.30)
      */
-    attestedCertification(ATTESTED_CERTIFICATIONS)
+    attestedCertification(37)
     ;
-
-    private static final Map<Integer, SignatureSubpacket> MAP = new ConcurrentHashMap<>();
-    static {
-        for (SignatureSubpacket p : values()) {
-            MAP.put(p.code, p);
-        }
-    }
-
-    private final int code;
-
-    SignatureSubpacket(int code) {
-        this.code = code;
-    }
-
-    /**
-     * Return the numerical identifier of the {@link SignatureSubpacket}.
-     * @return id
-     */
-    public int getCode() {
-        return code;
-    }
-
-    /**
-     * Return the {@link SignatureSubpacket} that corresponds to the provided id.
-     * If an unmatched code is presented, return null.
-     *
-     * @param code id
-     * @return signature subpacket
-     */
-    @Nullable
-    public static SignatureSubpacket fromCode(int code) {
-        return MAP.get(code);
-    }
-
-    /**
-     * Return the {@link SignatureSubpacket} that corresponds to the provided code.
-     *
-     * @param code code
-     * @return signature subpacket
-     * @throws NoSuchElementException in case of an unmatched subpacket tag
-     */
-    @Nonnull
-    public static SignatureSubpacket requireFromCode(int code) {
-        SignatureSubpacket tag = fromCode(code);
-        if (tag == null) {
-            throw new NoSuchElementException("No SignatureSubpacket tag found with code " + code);
-        }
-        return tag;
-    }
-
-    /**
-     * Convert an array of signature subpacket tags into a list of {@link SignatureSubpacket SignatureSubpackets}.
-     *
-     * @param codes array of codes
-     * @return list of subpackets
-     */
-    public static List<SignatureSubpacket> fromCodes(int[] codes) {
-        List<SignatureSubpacket> tags = new ArrayList<>();
-        for (int code : codes) {
-            try {
-                tags.add(requireFromCode(code));
-            } catch (NoSuchElementException e) {
-                // skip
+    
+    companion object {
+        
+        /**
+         * Return the [SignatureSubpacket] that corresponds to the provided id.
+         * If an unmatched code is presented, return null.
+         *
+         * @param code id
+         * @return signature subpacket
+         */
+        @JvmStatic
+        fun fromCode(code: Int): SignatureSubpacket? {
+            return values().firstOrNull { 
+                it.code == code
             }
         }
-        return tags;
+
+        /**
+         * Return the [SignatureSubpacket] that corresponds to the provided code.
+         *
+         * @param code code
+         * @return signature subpacket
+         * @throws NoSuchElementException in case of an unmatched subpacket tag
+         */
+        @JvmStatic
+        fun requireFromCode(code: Int): SignatureSubpacket {
+            return fromCode(code) ?:
+            throw NoSuchElementException("No SignatureSubpacket tag found with code $code")
+        }
+
+        /**
+         * Convert an array of signature subpacket tags into a list of [SignatureSubpacket SignatureSubpackets].
+         *
+         * @param codes array of codes
+         * @return list of subpackets
+         */
+        @JvmStatic
+        fun fromCodes(vararg codes: Int): List<SignatureSubpacket> {
+            return codes.toList().mapNotNull {
+                fromCode(it)
+            }
+        }
     }
 }
