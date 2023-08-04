@@ -1,29 +1,25 @@
-// SPDX-FileCopyrightText: 2020 Paul Schaub <vanitasvitae@fsfe.org>
+// SPDX-FileCopyrightText: 2023 Paul Schaub <vanitasvitae@fsfe.org>
 //
 // SPDX-License-Identifier: Apache-2.0
 
-package org.pgpainless.algorithm;
+package org.pgpainless.algorithm
 
-import org.bouncycastle.openpgp.PGPSignature;
-
-import javax.annotation.Nonnull;
-import java.util.Map;
-import java.util.concurrent.ConcurrentHashMap;
+import org.bouncycastle.openpgp.PGPSignature
 
 /**
  * Enum that enlists all the Signature Types defined in rfc4880 section 5.2.1
- * See {@link org.bouncycastle.openpgp.PGPSignature} for comparison.
+ * See [PGPSignature] for comparison.
  *
- * @see <a href="https://tools.ietf.org/html/rfc4880#section-5.11">rfc4880 §5.2.1. Signature Types</a>
+ * See [rfc4880 §5.2.1. Signature Types](https://tools.ietf.org/html/rfc4880#section-5.11)
  */
-public enum SignatureType {
+enum class SignatureType(val code: Int) {
 
     /**
      * Signature of a binary document.
      * This means the signer owns it, created it, or certifies that it
      * has not been modified.
      */
-    BINARY_DOCUMENT(PGPSignature.BINARY_DOCUMENT),
+    BINARY_DOCUMENT(0x00),
 
     /**
      * Signature of a canonical text document.
@@ -31,7 +27,7 @@ public enum SignatureType {
      * has not been modified.  The signature is calculated over the text
      * data with its line endings converted to {@code <CR><LF>}.
      */
-    CANONICAL_TEXT_DOCUMENT(PGPSignature.CANONICAL_TEXT_DOCUMENT),
+    CANONICAL_TEXT_DOCUMENT(0x01),
 
     /**
      * Standalone signature.
@@ -40,7 +36,7 @@ public enum SignatureType {
      * binary document.  Note that it doesn't make sense to have a V3
      * standalone signature.
      */
-    STANDALONE(PGPSignature.STAND_ALONE),
+    STANDALONE(0x02),
 
     /**
      * Generic certification of a User ID and Public-Key packet.
@@ -48,28 +44,28 @@ public enum SignatureType {
      * assertion as to how well the certifier has checked that the owner
      * of the key is in fact the person described by the User ID.
      */
-    GENERIC_CERTIFICATION(PGPSignature.DEFAULT_CERTIFICATION),
+    GENERIC_CERTIFICATION(0x10),
 
     /**
      * Persona certification of a User ID and Public-Key packet.
      * The issuer of this certification has not done any verification of
      * the claim that the owner of this key is the User ID specified.
      */
-    NO_CERTIFICATION(PGPSignature.NO_CERTIFICATION),
+    NO_CERTIFICATION(0x11),
 
     /**
      * Casual certification of a User ID and Public-Key packet.
      * The issuer of this certification has done some casual
      * verification of the claim of identity.
      */
-    CASUAL_CERTIFICATION(PGPSignature.CASUAL_CERTIFICATION),
+    CASUAL_CERTIFICATION(0x12),
 
     /**
      * Positive certification of a User ID and Public-Key packet.
      * The issuer of this certification has done substantial
      * verification of the claim of identity.
      */
-    POSITIVE_CERTIFICATION(PGPSignature.POSITIVE_CERTIFICATION),
+    POSITIVE_CERTIFICATION(0x13),
 
     /**
      * Subkey Binding Signature.
@@ -78,20 +74,20 @@ public enum SignatureType {
      * directly on the primary key and subkey, and not on any User ID or
      * other packets.  A signature that binds a signing subkey MUST have
      * an Embedded Signature subpacket in this binding signature that
-     * contains a {@link #PRIMARYKEY_BINDING} signature made by the
+     * contains a [#PRIMARYKEY_BINDING] signature made by the
      * signing subkey on the primary key and subkey.
      */
-    SUBKEY_BINDING(PGPSignature.SUBKEY_BINDING),
+    SUBKEY_BINDING(0x18),
 
     /**
      * Primary Key Binding Signature
      * This signature is a statement by a signing subkey, indicating
      * that it is owned by the primary key and subkey.  This signature
-     * is calculated the same way as a {@link #SUBKEY_BINDING} signature:
+     * is calculated the same way as a [#SUBKEY_BINDING] signature:
      * directly on the primary key and subkey, and not on any User ID or
      * other packets.
      */
-    PRIMARYKEY_BINDING(PGPSignature.PRIMARYKEY_BINDING),
+    PRIMARYKEY_BINDING(0x19),
 
     /**
      * Signature directly on a key
@@ -103,7 +99,7 @@ public enum SignatureType {
      * about the key itself, rather than the binding between a key and a
      * name.
      */
-    DIRECT_KEY(PGPSignature.DIRECT_KEY),
+    DIRECT_KEY(0x1f),
 
     /**
      * Key revocation signature
@@ -112,7 +108,7 @@ public enum SignatureType {
      * key being revoked, or by an authorized revocation key, should be
      * considered valid revocation signatures.
      */
-    KEY_REVOCATION(PGPSignature.KEY_REVOCATION),
+    KEY_REVOCATION(0x20),
 
     /**
      * Subkey revocation signature
@@ -122,26 +118,26 @@ public enum SignatureType {
      * by an authorized revocation key, should be considered valid
      * revocation signatures.
      */
-    SUBKEY_REVOCATION(PGPSignature.SUBKEY_REVOCATION),
+    SUBKEY_REVOCATION(0x28),
 
     /**
      * Certification revocation signature
      * This signature revokes an earlier User ID certification signature
-     * (signature class 0x10 through 0x13) or signature {@link #DIRECT_KEY}.
+     * (signature class 0x10 through 0x13) or signature [#DIRECT_KEY].
      * It should be issued by the same key that issued the
      * revoked signature or an authorized revocation key.  The signature
      * is computed over the same data as the certificate that it
      * revokes, and should have a later creation date than that
      * certificate.
      */
-    CERTIFICATION_REVOCATION(PGPSignature.CERTIFICATION_REVOCATION),
+    CERTIFICATION_REVOCATION(0x30),
 
     /**
      * Timestamp signature.
      * This signature is only meaningful for the timestamp contained in
      * it.
      */
-    TIMESTAMP(PGPSignature.TIMESTAMP),
+    TIMESTAMP(0x40),
 
     /**
      * Third-Party Confirmation signature.
@@ -156,70 +152,77 @@ public enum SignatureType {
     THIRD_PARTY_CONFIRMATION(0x50)
     ;
 
-    private static final Map<Integer, SignatureType> map = new ConcurrentHashMap<>();
-    static {
-        for (SignatureType sigType : SignatureType.values()) {
-            map.put(sigType.getCode(), sigType);
+    companion object {
+
+        /**
+         * Convert a numerical id into a [SignatureType].
+         *
+         * @param code numeric id
+         * @return signature type enum
+         */
+        @JvmStatic
+        fun fromCode(code: Int): SignatureType? {
+            return values().firstOrNull {
+                it.code == code
+            }
+        }
+
+        /**
+         * Convert a numerical id into a [SignatureType].
+         *
+         * @param code numeric id
+         * @return signature type enum
+         * @throws NoSuchElementException in case of an unmatched signature type code
+         */
+        @JvmStatic
+        fun requireFromCode(code: Int): SignatureType {
+            return fromCode(code) ?:
+            throw NoSuchElementException("Signature type 0x${Integer.toHexString(code)} appears to be invalid.")
+        }
+
+        /**
+         * Convert a numerical id into a [SignatureType].
+         *
+         * @param code numeric id
+         * @return signature type enum
+         * @throws IllegalArgumentException in case of an unmatched signature type code
+         */
+        @JvmStatic
+        @Deprecated("Deprecated in favor of requireFromCode",
+                ReplaceWith("requireFromCode"))
+        fun valueOf(code: Int): SignatureType {
+            try {
+                return requireFromCode(code)
+            } catch (e: NoSuchElementException) {
+                throw IllegalArgumentException(e.message)
+            }
+        }
+        
+        @JvmStatic
+        fun isRevocationSignature(signatureType: Int): Boolean {
+            return isRevocationSignature(valueOf(signatureType))
+        }
+        
+        @JvmStatic
+        fun isRevocationSignature(signatureType: SignatureType): Boolean {
+            return when (signatureType) {
+                BINARY_DOCUMENT,
+                CANONICAL_TEXT_DOCUMENT,
+                STANDALONE,
+                GENERIC_CERTIFICATION,
+                NO_CERTIFICATION,
+                CASUAL_CERTIFICATION,
+                POSITIVE_CERTIFICATION,
+                SUBKEY_BINDING,
+                PRIMARYKEY_BINDING,
+                DIRECT_KEY,
+                TIMESTAMP,
+                THIRD_PARTY_CONFIRMATION -> false
+                KEY_REVOCATION, 
+                SUBKEY_REVOCATION, 
+                CERTIFICATION_REVOCATION -> true
+                else -> throw IllegalArgumentException("Unknown signature type: $signatureType")
+            }
         }
     }
-
-    /**
-     * Convert a numerical id into a {@link SignatureType}.
-     *
-     * @param code numeric id
-     * @return signature type enum
-     * @throws IllegalArgumentException in case of an unmatched signature type code
-     */
-    @Nonnull
-    public static SignatureType valueOf(int code) {
-        SignatureType type = map.get(code);
-        if (type != null) {
-            return type;
-        }
-        throw new IllegalArgumentException("Signature type 0x" + Integer.toHexString(code) + " appears to be invalid.");
-    }
-
-    private final int code;
-
-    SignatureType(int code) {
-        this.code = code;
-    }
-
-    /**
-     * Return the numeric id of the signature type enum.
-     *
-     * @return numeric id
-     */
-    public int getCode() {
-        return code;
-    }
-
-    public static boolean isRevocationSignature(int signatureType) {
-        return isRevocationSignature(SignatureType.valueOf(signatureType));
-    }
-
-    public static boolean isRevocationSignature(SignatureType signatureType) {
-        switch (signatureType) {
-            case BINARY_DOCUMENT:
-            case CANONICAL_TEXT_DOCUMENT:
-            case STANDALONE:
-            case GENERIC_CERTIFICATION:
-            case NO_CERTIFICATION:
-            case CASUAL_CERTIFICATION:
-            case POSITIVE_CERTIFICATION:
-            case SUBKEY_BINDING:
-            case PRIMARYKEY_BINDING:
-            case DIRECT_KEY:
-            case TIMESTAMP:
-            case THIRD_PARTY_CONFIRMATION:
-                return false;
-            case KEY_REVOCATION:
-            case SUBKEY_REVOCATION:
-            case CERTIFICATION_REVOCATION:
-                return true;
-            default:
-                throw new IllegalArgumentException("Unknown signature type: " + signatureType);
-        }
-    }
-
 }
