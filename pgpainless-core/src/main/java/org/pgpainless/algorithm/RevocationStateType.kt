@@ -1,11 +1,10 @@
-// SPDX-FileCopyrightText: 2022 Paul Schaub <vanitasvitae@fsfe.org>
+// SPDX-FileCopyrightText: 2023 Paul Schaub <vanitasvitae@fsfe.org>
 //
 // SPDX-License-Identifier: Apache-2.0
 
-package org.pgpainless.algorithm;
+package org.pgpainless.algorithm
 
-public enum RevocationStateType {
-
+enum class RevocationStateType {
     /**
      * Certificate is not revoked.
      */
