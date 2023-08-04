@@ -1,16 +1,12 @@
-// SPDX-FileCopyrightText: 2022 Paul Schaub <vanitasvitae@fsfe.org>
+// SPDX-FileCopyrightText: 2023 Paul Schaub <vanitasvitae@fsfe.org>
 //
 // SPDX-License-Identifier: Apache-2.0
 
-package org.pgpainless.algorithm;
+package org.pgpainless.algorithm
 
-import javax.annotation.Nonnull;
-
-/**
- * Subset of {@link SignatureType}, reduced to certification types.
- */
-public enum CertificationType {
-
+enum class CertificationType(
+        val signatureType: SignatureType
+) {
     /**
      * The issuer of this certification does not make any particular assertion as to how well the certifier has
      * checked that the owner of the key is in fact the person described by the User ID.
@@ -34,13 +30,5 @@ public enum CertificationType {
     POSITIVE(SignatureType.POSITIVE_CERTIFICATION),
     ;
 
-    private final SignatureType signatureType;
-
-    CertificationType(@Nonnull SignatureType signatureType) {
-        this.signatureType = signatureType;
-    }
-
-    public @Nonnull SignatureType asSignatureType() {
-        return signatureType;
-    }
+    fun asSignatureType() = signatureType
 }
