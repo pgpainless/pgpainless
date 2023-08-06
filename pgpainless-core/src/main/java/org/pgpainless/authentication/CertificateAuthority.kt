@@ -4,11 +4,8 @@
 
 package org.pgpainless.authentication;
 
-import org.pgpainless.key.OpenPgpFingerprint;
-
-import javax.annotation.Nonnull;
-import java.util.Date;
-import java.util.List;
+import org.pgpainless.key.OpenPgpFingerprint
+import java.util.*
 
 /**
  * Interface for a CA that can authenticate trust-worthy certificates.
@@ -17,7 +14,7 @@ import java.util.List;
  * @see <a href="https://github.com/pgpainless/pgpainless-wot">PGPainless-WOT</a>
  * @see <a href="https://sequoia-pgp.gitlab.io/sequoia-wot/">OpenPGP Web of Trust</a>
  */
-public interface CertificateAuthority {
+interface CertificateAuthority {
 
     /**
      * Determine the authenticity of the binding between the given fingerprint and the userId.
@@ -33,11 +30,11 @@ public interface CertificateAuthority {
      *                    60 = partially authenticated...)
      * @return information about the authenticity of the binding
      */
-    CertificateAuthenticity authenticateBinding(@Nonnull OpenPgpFingerprint fingerprint,
-                                                @Nonnull String userId,
-                                                boolean email,
-                                                @Nonnull Date referenceTime,
-                                                int targetAmount);
+    fun authenticateBinding(fingerprint: OpenPgpFingerprint,
+                            userId: String,
+                            email: Boolean,
+                            referenceTime: Date,
+                            targetAmount: Int): CertificateAuthenticity;
 
     /**
      * Lookup certificates, which carry a trustworthy binding to the given userId.
@@ -50,10 +47,10 @@ public interface CertificateAuthority {
      *                     60 = partially authenticated...)
      * @return list of identified bindings
      */
-    List<CertificateAuthenticity> lookupByUserId(@Nonnull String userId,
-                                                 boolean email,
-                                                 @Nonnull Date referenceTime,
-                                                 int targetAmount);
+    fun lookupByUserId(userId: String,
+                       email: Boolean,
+                       referenceTime: Date,
+                       targetAmount: Int): List<CertificateAuthenticity>
 
     /**
      * Identify trustworthy bindings for a certificate.
@@ -65,7 +62,7 @@ public interface CertificateAuthority {
      *                     60 = partially authenticated...)
      * @return list of identified bindings
      */
-    List<CertificateAuthenticity> identifyByFingerprint(@Nonnull OpenPgpFingerprint fingerprint,
-                                                        @Nonnull Date referenceTime,
-                                                        int targetAmount);
+    fun identifyByFingerprint(fingerprint: OpenPgpFingerprint,
+                              referenceTime: Date,
+                              targetAmount: Int): List<CertificateAuthenticity>
 }
