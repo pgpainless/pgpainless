@@ -18,7 +18,6 @@ buildscript {
 }
 
 plugins {
-    id 'ru.vyarus.animalsniffer' version '1.5.3'
     id 'org.jetbrains.kotlin.jvm' version "1.8.10"
 }
 
@@ -41,18 +40,6 @@ allprojects {
     // https://stackoverflow.com/a/25445035
     jar {
         onlyIf { !sourceSets.main.allSource.files.isEmpty() }
-    }
-
-    // For library modules, enable android api compatibility check
-    if (it.name != 'pgpainless-cli') {
-        // animalsniffer
-        apply plugin: 'ru.vyarus.animalsniffer'
-        dependencies {
-            signature "net.sf.androidscents.signature:android-api-level-${pgpainlessMinAndroidSdk}:2.3.3_r2@signature"
-        }
-        animalsniffer {
-            sourceSets = [sourceSets.main]
-        }
     }
 
     // checkstyle
