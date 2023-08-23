@@ -62,10 +62,12 @@ class Trustworthiness(amount: Int, depth: Int) {
     fun canIntroduce(other: Trustworthiness) = canIntroduce(other.depth)
 
     companion object {
-
         const val THRESHOLD_FULLY_CONVINCED = 120 // greater or equal is fully trusted
         const val MARGINALLY_CONVINCED = 60 // default value for marginally convinced
         const val NOT_TRUSTED = 0 // 0 is not trusted
+
+        @JvmStatic
+        private val validRange = 0..255
 
         /**
          * This means that we are fully convinced of the trustworthiness of the key.
@@ -94,7 +96,7 @@ class Trustworthiness(amount: Int, depth: Int) {
 
         @JvmStatic
         private fun capAmount(amount: Int): Int {
-            if (amount !in 0..255) {
+            if (amount !in validRange) {
                 throw IllegalArgumentException("Trust amount MUST be a value between 0 and 255")
             }
             return amount
@@ -102,7 +104,7 @@ class Trustworthiness(amount: Int, depth: Int) {
 
         @JvmStatic
         private fun capDepth(depth: Int): Int {
-            if (depth !in 0..255) {
+            if (depth !in validRange) {
                 throw IllegalArgumentException("Trust depth MUST be a value between 0 and 255")
             }
             return depth
