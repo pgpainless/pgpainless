@@ -1,36 +1,30 @@
-// SPDX-FileCopyrightText: 2022 Paul Schaub <vanitasvitae@fsfe.org>
+// SPDX-FileCopyrightText: 2023 Paul Schaub <vanitasvitae@fsfe.org>
 //
 // SPDX-License-Identifier: Apache-2.0
 
-package org.pgpainless.decryption_verification.syntax_check;
+package org.pgpainless.decryption_verification.syntax_check
 
-import org.bouncycastle.openpgp.PGPCompressedData;
-import org.bouncycastle.openpgp.PGPEncryptedDataList;
-import org.bouncycastle.openpgp.PGPLiteralData;
-import org.bouncycastle.openpgp.PGPOnePassSignatureList;
-import org.bouncycastle.openpgp.PGPSignatureList;
-
-public enum InputSymbol {
+enum class InputSymbol {
     /**
-     * A {@link PGPLiteralData} packet.
+     * A [PGPLiteralData] packet.
      */
     LiteralData,
     /**
-     * A {@link PGPSignatureList} object.
+     * A [PGPSignatureList] object.
      */
     Signature,
     /**
-     * A {@link PGPOnePassSignatureList} object.
+     * A [PGPOnePassSignatureList] object.
      */
     OnePassSignature,
     /**
-     * A {@link PGPCompressedData} packet.
+     * A [PGPCompressedData] packet.
      * The contents of this packet MUST form a valid OpenPGP message, so a nested PDA is opened to verify
      * its nested packet sequence.
      */
     CompressedData,
     /**
-     * A {@link PGPEncryptedDataList} object.
+     * A [PGPEncryptedDataList] object.
      * This object combines multiple ESKs and the corresponding Symmetrically Encrypted
      * (possibly Integrity Protected) Data packet.
      */
