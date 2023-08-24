@@ -17,72 +17,72 @@ class OpenPgpMessageSyntax : Syntax {
 
     override fun transition(from: State, input: InputSymbol, stackItem: StackSymbol?): Transition {
         return when (from) {
-            State.OpenPgpMessage -> fromOpenPgpMessage(input, stackItem)
-            State.LiteralMessage -> fromLiteralMessage(input, stackItem)
-            State.CompressedMessage -> fromCompressedMessage(input, stackItem)
-            State.EncryptedMessage -> fromEncryptedMessage(input, stackItem)
-            State.Valid -> fromValid(input, stackItem)
+            State.OPENPGP_MESSAGE -> fromOpenPgpMessage(input, stackItem)
+            State.LITERAL_MESSAGE -> fromLiteralMessage(input, stackItem)
+            State.COMPRESSED_MESSAGE -> fromCompressedMessage(input, stackItem)
+            State.ENCRYPTED_MESSAGE -> fromEncryptedMessage(input, stackItem)
+            State.VALID -> fromValid(input, stackItem)
             else -> throw MalformedOpenPgpMessageException(from, input, stackItem)
         }
     }
 
     fun fromOpenPgpMessage(input: InputSymbol, stackItem: StackSymbol?): Transition {
-        if (stackItem !== StackSymbol.msg) {
-            throw MalformedOpenPgpMessageException(State.OpenPgpMessage, input, stackItem)
+        if (stackItem !== StackSymbol.MSG) {
+            throw MalformedOpenPgpMessageException(State.OPENPGP_MESSAGE, input, stackItem)
         }
         return when (input) {
-            InputSymbol.LiteralData -> Transition(State.LiteralMessage)
-            InputSymbol.Signature -> Transition(State.OpenPgpMessage, StackSymbol.msg)
-            InputSymbol.OnePassSignature -> Transition(State.OpenPgpMessage, StackSymbol.ops, StackSymbol.msg)
-            InputSymbol.CompressedData -> Transition(State.CompressedMessage)
-            InputSymbol.EncryptedData -> Transition(State.EncryptedMessage)
-            InputSymbol.EndOfSequence -> throw MalformedOpenPgpMessageException(State.OpenPgpMessage, input, stackItem)
-            else -> throw MalformedOpenPgpMessageException(State.OpenPgpMessage, input, stackItem)
+            InputSymbol.LITERAL_DATA -> Transition(State.LITERAL_MESSAGE)
+            InputSymbol.SIGNATURE -> Transition(State.OPENPGP_MESSAGE, StackSymbol.MSG)
+            InputSymbol.ONE_PASS_SIGNATURE -> Transition(State.OPENPGP_MESSAGE, StackSymbol.OPS, StackSymbol.MSG)
+            InputSymbol.COMPRESSED_DATA -> Transition(State.COMPRESSED_MESSAGE)
+            InputSymbol.ENCRYPTED_DATA -> Transition(State.ENCRYPTED_MESSAGE)
+            InputSymbol.END_OF_SEQUENCE -> throw MalformedOpenPgpMessageException(State.OPENPGP_MESSAGE, input, stackItem)
+            else -> throw MalformedOpenPgpMessageException(State.OPENPGP_MESSAGE, input, stackItem)
         }
     }
 
     @Throws(MalformedOpenPgpMessageException::class)
     fun fromLiteralMessage(input: InputSymbol, stackItem: StackSymbol?): Transition {
-        if (input == InputSymbol.Signature && stackItem == StackSymbol.ops) {
-            return Transition(State.LiteralMessage)
+        if (input == InputSymbol.SIGNATURE && stackItem == StackSymbol.OPS) {
+            return Transition(State.LITERAL_MESSAGE)
         }
-        if (input == InputSymbol.EndOfSequence && stackItem == StackSymbol.terminus) {
-            return Transition(State.Valid)
+        if (input == InputSymbol.END_OF_SEQUENCE && stackItem == StackSymbol.TERMINUS) {
+            return Transition(State.VALID)
         }
 
-        throw MalformedOpenPgpMessageException(State.LiteralMessage, input, stackItem)
+        throw MalformedOpenPgpMessageException(State.LITERAL_MESSAGE, input, stackItem)
     }
 
     @Throws(MalformedOpenPgpMessageException::class)
     fun fromCompressedMessage(input: InputSymbol, stackItem: StackSymbol?): Transition {
-        if (input == InputSymbol.Signature && stackItem == StackSymbol.ops) {
-            return Transition(State.CompressedMessage)
+        if (input == InputSymbol.SIGNATURE && stackItem == StackSymbol.OPS) {
+            return Transition(State.COMPRESSED_MESSAGE)
         }
-        if (input == InputSymbol.EndOfSequence && stackItem == StackSymbol.terminus) {
-            return Transition(State.Valid)
+        if (input == InputSymbol.END_OF_SEQUENCE && stackItem == StackSymbol.TERMINUS) {
+            return Transition(State.VALID)
         }
 
-        throw MalformedOpenPgpMessageException(State.CompressedMessage, input, stackItem)
+        throw MalformedOpenPgpMessageException(State.COMPRESSED_MESSAGE, input, stackItem)
     }
 
     @Throws(MalformedOpenPgpMessageException::class)
     fun fromEncryptedMessage(input: InputSymbol, stackItem: StackSymbol?): Transition {
-        if (input == InputSymbol.Signature && stackItem == StackSymbol.ops) {
-            return Transition(State.EncryptedMessage)
+        if (input == InputSymbol.SIGNATURE && stackItem == StackSymbol.OPS) {
+            return Transition(State.ENCRYPTED_MESSAGE)
         }
-        if (input == InputSymbol.EndOfSequence && stackItem == StackSymbol.terminus) {
-            return Transition(State.Valid)
+        if (input == InputSymbol.END_OF_SEQUENCE && stackItem == StackSymbol.TERMINUS) {
+            return Transition(State.VALID)
         }
 
-        throw MalformedOpenPgpMessageException(State.EncryptedMessage, input, stackItem)
+        throw MalformedOpenPgpMessageException(State.ENCRYPTED_MESSAGE, input, stackItem)
     }
 
     @Throws(MalformedOpenPgpMessageException::class)
     fun fromValid(input: InputSymbol, stackItem: StackSymbol?): Transition {
-        if (input == InputSymbol.EndOfSequence) {
+        if (input == InputSymbol.END_OF_SEQUENCE) {
             // allow subsequent read() calls.
-            return Transition(State.Valid)
+            return Transition(State.VALID)
         }
-        throw MalformedOpenPgpMessageException(State.Valid, input, stackItem)
+        throw MalformedOpenPgpMessageException(State.VALID, input, stackItem)
     }
 }

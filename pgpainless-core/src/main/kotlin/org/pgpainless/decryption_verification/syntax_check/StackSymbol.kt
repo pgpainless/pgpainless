@@ -8,13 +8,13 @@ enum class StackSymbol {
     /**
      * OpenPGP Message.
      */
-    msg,
+    MSG,
     /**
      * OnePassSignature (in case of BC this represents a OnePassSignatureList).
      */
-    ops,
+    OPS,
     /**
      * Special symbol representing the end of the message.
      */
-    terminus
+    TERMINUS
 }

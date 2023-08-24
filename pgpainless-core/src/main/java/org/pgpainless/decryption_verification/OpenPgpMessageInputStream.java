@@ -342,7 +342,7 @@ public class OpenPgpMessageInputStream extends DecryptionStream {
 
     private void processLiteralData() throws IOException {
         LOGGER.debug("Literal Data Packet at depth " + metadata.depth + " encountered");
-        syntaxVerifier.next(InputSymbol.LiteralData);
+        syntaxVerifier.next(InputSymbol.LITERAL_DATA);
         PGPLiteralData literalData = packetInputStream.readLiteralData();
         // Extract Metadata
         this.metadata.setChild(new MessageMetadata.LiteralData(
@@ -354,7 +354,7 @@ public class OpenPgpMessageInputStream extends DecryptionStream {
     }
 
     private void processCompressedData() throws IOException, PGPException {
-        syntaxVerifier.next(InputSymbol.CompressedData);
+        syntaxVerifier.next(InputSymbol.COMPRESSED_DATA);
         signatures.enterNesting();
         PGPCompressedData compressedData = packetInputStream.readCompressedData();
         // Extract Metadata
@@ -368,7 +368,7 @@ public class OpenPgpMessageInputStream extends DecryptionStream {
     }
 
     private void processOnePassSignature() throws PGPException, IOException {
-        syntaxVerifier.next(InputSymbol.OnePassSignature);
+        syntaxVerifier.next(InputSymbol.ONE_PASS_SIGNATURE);
         PGPOnePassSignature onePassSignature = packetInputStream.readOnePassSignature();
         LOGGER.debug("One-Pass-Signature Packet by key " + KeyIdUtil.formatKeyId(onePassSignature.getKeyID()) +
                 " at depth " + metadata.depth + " encountered");
@@ -377,8 +377,8 @@ public class OpenPgpMessageInputStream extends DecryptionStream {
 
     private void processSignature() throws PGPException, IOException {
         // true if Signature corresponds to OnePassSignature
-        boolean isSigForOPS = syntaxVerifier.peekStack() == StackSymbol.ops;
-        syntaxVerifier.next(InputSymbol.Signature);
+        boolean isSigForOPS = syntaxVerifier.peekStack() == StackSymbol.OPS;
+        syntaxVerifier.next(InputSymbol.SIGNATURE);
         PGPSignature signature;
         try {
             signature = packetInputStream.readSignature();
@@ -404,7 +404,7 @@ public class OpenPgpMessageInputStream extends DecryptionStream {
 
     private boolean processEncryptedData() throws IOException, PGPException {
         LOGGER.debug("Symmetrically Encrypted Data Packet at depth " + metadata.depth + " encountered");
-        syntaxVerifier.next(InputSymbol.EncryptedData);
+        syntaxVerifier.next(InputSymbol.ENCRYPTED_DATA);
         PGPEncryptedDataList encDataList = packetInputStream.readEncryptedDataList();
 
         if (!encDataList.isIntegrityProtected()) {
@@ -749,7 +749,7 @@ public class OpenPgpMessageInputStream extends DecryptionStream {
             throws IOException {
         if (nestedInputStream == null) {
             if (packetInputStream != null) {
-                syntaxVerifier.next(InputSymbol.EndOfSequence);
+                syntaxVerifier.next(InputSymbol.END_OF_SEQUENCE);
                 syntaxVerifier.assertValid();
             }
             return -1;
@@ -780,7 +780,7 @@ public class OpenPgpMessageInputStream extends DecryptionStream {
         super.close();
         if (closed) {
             if (packetInputStream != null) {
-                syntaxVerifier.next(InputSymbol.EndOfSequence);
+                syntaxVerifier.next(InputSymbol.END_OF_SEQUENCE);
                 syntaxVerifier.assertValid();
             }
             return;
@@ -799,7 +799,7 @@ public class OpenPgpMessageInputStream extends DecryptionStream {
         }
 
         if (packetInputStream != null) {
-            syntaxVerifier.next(InputSymbol.EndOfSequence);
+            syntaxVerifier.next(InputSymbol.END_OF_SEQUENCE);
             syntaxVerifier.assertValid();
             packetInputStream.close();
         }
