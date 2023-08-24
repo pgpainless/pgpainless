@@ -33,7 +33,7 @@ class PDA constructor(
     /**
      * Default constructor which initializes the PDA to work with the [OpenPgpMessageSyntax].
      */
-    constructor(): this(OpenPgpMessageSyntax(), State.OpenPgpMessage, StackSymbol.terminus, StackSymbol.msg)
+    constructor(): this(OpenPgpMessageSyntax(), State.OPENPGP_MESSAGE, StackSymbol.TERMINUS, StackSymbol.MSG)
 
     /**
      * Process the next [InputSymbol].
@@ -78,7 +78,7 @@ class PDA constructor(
      *
      * @return true if valid, false otherwise
      */
-    fun isValid(): Boolean = state == State.Valid && stack.isEmpty()
+    fun isValid(): Boolean = state == State.VALID && stack.isEmpty()
 
     /**
      * Throw a [MalformedOpenPgpMessageException] if the pda is not in a valid state right now.
