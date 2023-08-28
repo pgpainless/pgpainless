@@ -24,7 +24,7 @@ class SignatureUtils {
 
         /**
          * Extract and return the key expiration date value from the given signature.
-         * If the signature does not carry a {@link KeyExpirationTime} subpacket, return null.
+         * If the signature does not carry a [KeyExpirationTime] subpacket, return null.
          *
          * @param keyCreationDate creation date of the key
          * @param signature signature
@@ -32,24 +32,24 @@ class SignatureUtils {
          */
         @JvmStatic
         fun getKeyExpirationDate(keyCreationDate: Date, signature: PGPSignature): Date? {
-            val expirationPacket: KeyExpirationTime? = SignatureSubpacketsUtil.getKeyExpirationTime(signature)
-            val expiresInSeconds = expirationPacket?.time ?: 0
+            val expirationPacket: KeyExpirationTime = SignatureSubpacketsUtil.getKeyExpirationTime(signature) ?: return null
+            val expiresInSeconds = expirationPacket.time
             return datePlusSeconds(keyCreationDate, expiresInSeconds)
         }
 
         /**
          * Return the expiration date of the signature.
-         * If the signature has no expiration date, {@link #datePlusSeconds(Date, long)} will return null.
+         * If the signature has no expiration date, [datePlusSeconds] will return null.
          *
          * @param signature signature
          * @return expiration date of the signature, or null if it does not expire.
          */
         @JvmStatic
         fun  getSignatureExpirationDate(signature: PGPSignature): Date? {
-            val creationTime = signature.creationTime
-            val expirationTime = SignatureSubpacketsUtil.getSignatureExpirationTime(signature)
-            val expiresInSeconds = expirationTime?.time ?: 0
-            return datePlusSeconds(creationTime, expiresInSeconds)
+            val expirationTime = SignatureSubpacketsUtil.getSignatureExpirationTime(signature) ?: return null
+
+            val expiresInSeconds = expirationTime.time
+            return datePlusSeconds(signature.creationTime, expiresInSeconds)
         }
 
         /**
@@ -71,7 +71,7 @@ class SignatureUtils {
         }
 
         /**
-         * Return true, if the expiration date of the {@link PGPSignature} lays in the past.
+         * Return true, if the expiration date of the [PGPSignature] lays in the past.
          * If no expiration date is present in the signature, it is considered non-expired.
          *
          * @param signature signature
@@ -83,7 +83,7 @@ class SignatureUtils {
         }
 
         /**
-         * Return true, if the expiration date of the given {@link PGPSignature} is past the given comparison {@link Date}.
+         * Return true, if the expiration date of the given [PGPSignature] is past the given comparison [Date].
          * If no expiration date is present in the signature, it is considered non-expiring.
          *
          * @param signature signature
@@ -92,15 +92,14 @@ class SignatureUtils {
          */
         @JvmStatic
         fun isSignatureExpired(signature: PGPSignature, referenceTime: Date): Boolean {
-            val expirationDate = getSignatureExpirationDate(signature)
-            return expirationDate != null && referenceTime >= expirationDate
+            val expirationDate = getSignatureExpirationDate(signature) ?: return false
+            return referenceTime >= expirationDate
         }
 
         /**
          * Return true if the provided signature is a hard revocation.
          * Hard revocations are revocation signatures which either carry a revocation reason of
-         * {@link RevocationAttributes.Reason#KEY_COMPROMISED} or {@link RevocationAttributes.Reason#NO_REASON},
-         * or no reason at all.
+         * [Reason.KEY_COMPROMISED] or [Reason.NO_REASON], or no reason at all.
          *
          * @param signature signature
          * @return true if signature is a hard revocation
@@ -133,7 +132,7 @@ class SignatureUtils {
         }
 
         /**
-         * Read and return {@link PGPSignature PGPSignatures}.
+         * Read and return [PGPSignatures][PGPSignature].
          * This method can deal with signatures that may be binary, armored and may contain marker packets.
          *
          * @param inputStream input stream
@@ -171,9 +170,9 @@ class SignatureUtils {
         }
 
         /**
-         * Determine the issuer key-id of a {@link PGPSignature}.
-         * This method first inspects the {@link IssuerKeyID} subpacket of the signature and returns the key-id if present.
-         * If not, it inspects the {@link org.bouncycastle.bcpg.sig.IssuerFingerprint} packet and retrieves the key-id from the fingerprint.
+         * Determine the issuer key-id of a [PGPSignature].
+         * This method first inspects the [org.bouncycastle.bcpg.sig.IssuerKeyID] subpacket of the signature and returns the key-id if present.
+         * If not, it inspects the [org.bouncycastle.bcpg.sig.IssuerFingerprint] packet and retrieves the key-id from the fingerprint.
          *
          * Otherwise, it returns 0.
          * @param signature signature
@@ -238,10 +237,11 @@ class SignatureUtils {
          */
         @JvmStatic
         fun getSignaturesOverUserIdBy(key: PGPPublicKey, userId: String, issuer: Long): List<PGPSignature> {
-            return key.getSignaturesForID(userId)
-                    ?.asSequence()
-                    ?.filter { it.keyID == issuer }
-                    ?.toList() ?: listOf()
+            val signatures = key.getSignaturesForID(userId) ?: return listOf()
+            return signatures
+                    .asSequence()
+                    .filter { it.keyID == issuer }
+                    .toList()
         }
 
         @JvmStatic
