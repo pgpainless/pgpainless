@@ -20,8 +20,8 @@ dependencies {
     testImplementation "ch.qos.logback:logback-classic:$logbackVersion"
 
     // Bouncy Castle
-    api "org.bouncycastle:bcprov-jdk15to18:$bouncyCastleVersion"
-    api "org.bouncycastle:bcpg-jdk15to18:$bouncyPgVersion"
+    api "org.bouncycastle:bcprov-jdk18on:$bouncyCastleVersion"
+    api "org.bouncycastle:bcpg-jdk18on:$bouncyPgVersion"
     // api(files("../libs/bcpg-jdk18on-1.70.jar"))
 
     // @Nullable, @Nonnull annotations
