@@ -40,7 +40,7 @@ class OpenPgpMessageInputStream(
         type: Type,
         inputStream: InputStream,
         private val options: ConsumerOptions,
-        private val metadata: Layer,
+        private val layerMetadata: Layer,
         private val policy: Policy) : DecryptionStream() {
 
     private val signatures: Signatures = Signatures(options)
@@ -52,7 +52,7 @@ class OpenPgpMessageInputStream(
     init {
 
         // Add detached signatures only on the outermost OpenPgpMessageInputStream
-        if (metadata is Message) {
+        if (layerMetadata is Message) {
             signatures.addDetachedSignatures(options.getDetachedSignatures())
         }
 
@@ -151,12 +151,12 @@ class OpenPgpMessageInputStream(
     }
 
     private fun processLiteralData() {
-        LOGGER.debug("Literal Data Packet at depth ${metadata.depth} encountered.")
+        LOGGER.debug("Literal Data Packet at depth ${layerMetadata.depth} encountered.")
         syntaxVerifier.next(InputSymbol.LITERAL_DATA)
         val literalData = packetInputStream!!.readLiteralData()
 
         // Extract Metadata
-        metadata.setChild(LiteralData(
+        layerMetadata.setChild(LiteralData(
                 literalData.fileName, literalData.modificationTime,
                 StreamEncoding.requireFromCode(literalData.format)))
 
@@ -171,16 +171,16 @@ class OpenPgpMessageInputStream(
         // Extract Metadata
         val compressionLayer = CompressedData(
                 CompressionAlgorithm.requireFromId(compressedData.algorithm),
-                metadata.depth + 1)
+                layerMetadata.depth + 1)
 
-        LOGGER.debug("Compressed Data Packet (${compressionLayer.algorithm}) at depth ${metadata.depth} encountered.")
+        LOGGER.debug("Compressed Data Packet (${compressionLayer.algorithm}) at depth ${layerMetadata.depth} encountered.")
         nestedInputStream = OpenPgpMessageInputStream(compressedData.dataStream, options, compressionLayer, policy)
     }
 
     private fun processOnePassSignature() {
         syntaxVerifier.next(InputSymbol.ONE_PASS_SIGNATURE)
         val ops = packetInputStream!!.readOnePassSignature()
-        LOGGER.debug("One-Pass-Signature Packet by key ${KeyIdUtil.formatKeyId(ops.keyID)} at depth ${metadata.depth} encountered.")
+        LOGGER.debug("One-Pass-Signature Packet by key ${KeyIdUtil.formatKeyId(ops.keyID)} at depth ${layerMetadata.depth} encountered.")
         signatures.addOnePassSignature(ops)
     }
 
@@ -191,23 +191,23 @@ class OpenPgpMessageInputStream(
         val signature = try {
             packetInputStream!!.readSignature()
         } catch (e : UnsupportedPacketVersionException) {
-            LOGGER.debug("Unsupported Signature at depth ${metadata.depth} encountered.", e)
+            LOGGER.debug("Unsupported Signature at depth ${layerMetadata.depth} encountered.", e)
             return
         }
 
         val keyId = SignatureUtils.determineIssuerKeyId(signature)
         if (isSigForOps) {
-            LOGGER.debug("Signature Packet corresponding to One-Pass-Signature by key ${KeyIdUtil.formatKeyId(keyId)} at depth ${metadata.depth} encountered.")
+            LOGGER.debug("Signature Packet corresponding to One-Pass-Signature by key ${KeyIdUtil.formatKeyId(keyId)} at depth ${layerMetadata.depth} encountered.")
             signatures.leaveNesting() // TODO: Only leave nesting if all OPSs of the nesting layer are dealt with
-            signatures.addCorrespondingOnePassSignature(signature, metadata, policy)
+            signatures.addCorrespondingOnePassSignature(signature, layerMetadata, policy)
         } else {
-            LOGGER.debug("Prepended Signature Packet by key ${KeyIdUtil.formatKeyId(keyId)} at depth ${metadata.depth} encountered.")
+            LOGGER.debug("Prepended Signature Packet by key ${KeyIdUtil.formatKeyId(keyId)} at depth ${layerMetadata.depth} encountered.")
             signatures.addPrependedSignature(signature)
         }
     }
 
     private fun processEncryptedData(): Boolean {
-        LOGGER.debug("Symmetrically Encrypted Data Packet at depth ${metadata.depth} encountered.")
+        LOGGER.debug("Symmetrically Encrypted Data Packet at depth ${layerMetadata.depth} encountered.")
         syntaxVerifier.next(InputSymbol.ENCRYPTED_DATA)
         val encDataList = packetInputStream!!.readEncryptedDataList()
         if (!encDataList.isIntegrityProtected) {
@@ -244,7 +244,7 @@ class OpenPgpMessageInputStream(
 
             val decryptorFactory = ImplementationFactory.getInstance()
                     .getSessionKeyDataDecryptorFactory(sk)
-            val layer = EncryptedData(sk.algorithm, metadata.depth + 1)
+            val layer = EncryptedData(sk.algorithm, layerMetadata.depth + 1)
             val skEncData = encDataList.extractSessionKeyEncryptedData()
             try {
                 val decrypted = skEncData.getDataStream(decryptorFactory)
@@ -392,7 +392,7 @@ class OpenPgpMessageInputStream(
             val decrypted = skesk.getDataStream(decryptorFactory)
             val sessionKey = SessionKey(skesk.getSessionKey(decryptorFactory))
             throwIfUnacceptable(sessionKey.algorithm)
-            val encryptedData = EncryptedData(sessionKey.algorithm, metadata.depth + 1)
+            val encryptedData = EncryptedData(sessionKey.algorithm, layerMetadata.depth + 1)
             encryptedData.sessionKey = sessionKey
             encryptedData.recipients = esks.pkesks.map { it.keyID }
             LOGGER.debug("Successfully decrypted data with passphrase")
@@ -418,7 +418,7 @@ class OpenPgpMessageInputStream(
 
             val encryptedData = EncryptedData(
                     SymmetricKeyAlgorithm.requireFromId(pkesk.getSymmetricAlgorithm(decryptorFactory)),
-                    metadata.depth + 1)
+                    layerMetadata.depth + 1)
             encryptedData.decryptionKey = decryptionKeyId
             encryptedData.sessionKey = sessionKey
             encryptedData.recipients = esks.pkesks.plus(esks.anonPkesks).map { it.keyID }
@@ -460,7 +460,7 @@ class OpenPgpMessageInputStream(
                     throw RuntimeException(e)
                 }
             }
-            signatures.finish(metadata, policy)
+            signatures.finish(layerMetadata, policy)
         }
         return r
     }
@@ -487,7 +487,7 @@ class OpenPgpMessageInputStream(
                     throw RuntimeException(e)
                 }
             }
-            signatures.finish(metadata, policy)
+            signatures.finish(layerMetadata, policy)
         }
         return r
     }
@@ -522,15 +522,16 @@ class OpenPgpMessageInputStream(
     private fun collectMetadata() {
         if (nestedInputStream is OpenPgpMessageInputStream) {
             val child = nestedInputStream as OpenPgpMessageInputStream
-            metadata.setChild(child.metadata as Nested)
+            layerMetadata.setChild(child.layerMetadata as Nested)
         }
     }
 
-    override fun getMetadata(): MessageMetadata {
-        check(closed) { "Stream must be closed before access to metadata can be granted." }
+    override val metadata: MessageMetadata
+        get() {
+            check(closed) { "Stream must be closed before access to metadata can be granted." }
 
-        return MessageMetadata((metadata as Message))
-    }
+            return MessageMetadata((layerMetadata as Message))
+        }
 
     private fun getDecryptionKey(keyId: Long): PGPSecretKeyRing? = options.getDecryptionKeys().firstOrNull {
         it.any {
