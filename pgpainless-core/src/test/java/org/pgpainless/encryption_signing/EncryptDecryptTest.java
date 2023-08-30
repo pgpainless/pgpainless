@@ -33,7 +33,7 @@ import org.pgpainless.algorithm.KeyFlag;
 import org.pgpainless.algorithm.SymmetricKeyAlgorithm;
 import org.pgpainless.decryption_verification.ConsumerOptions;
 import org.pgpainless.decryption_verification.DecryptionStream;
-import org.pgpainless.decryption_verification.OpenPgpMetadata;
+import org.pgpainless.decryption_verification.MessageMetadata;
 import org.pgpainless.exception.KeyException;
 import org.pgpainless.key.SubkeyIdentifier;
 import org.pgpainless.key.TestKeys;
@@ -185,11 +185,10 @@ public class EncryptDecryptTest {
         decryptor.close();
 
         assertArrayEquals(secretMessage, decryptedSecretMessage.toByteArray());
-        OpenPgpMetadata result = decryptor.getResult();
-        assertTrue(result.containsVerifiedSignatureFrom(senderPub));
-        assertTrue(result.isSigned());
+        MessageMetadata result = decryptor.getMetadata();
+        assertTrue(result.isVerifiedSignedBy(senderPub));
         assertTrue(result.isEncrypted());
-        assertTrue(result.isVerified());
+        assertTrue(result.isVerifiedSigned());
     }
 
     @TestTemplate
@@ -233,7 +232,7 @@ public class EncryptDecryptTest {
         Streams.pipeAll(verifier, dummyOut);
         verifier.close();
 
-        OpenPgpMetadata decryptionResult = verifier.getResult();
+        MessageMetadata decryptionResult = verifier.getMetadata();
         assertFalse(decryptionResult.getVerifiedSignatures().isEmpty());
     }
 
@@ -263,7 +262,7 @@ public class EncryptDecryptTest {
         Streams.pipeAll(verifier, signOut);
         verifier.close();
 
-        OpenPgpMetadata metadata = verifier.getResult();
+        MessageMetadata metadata = verifier.getMetadata();
         assertFalse(metadata.getVerifiedSignatures().isEmpty());
     }
 

@@ -18,16 +18,4 @@ abstract class DecryptionStream: InputStream() {
      * @return message metadata
      */
     abstract val metadata: MessageMetadata
-
-    /**
-     * Return a [OpenPgpMetadata] object containing information about the decrypted / verified message.
-     * The [DecryptionStream] MUST be closed via [close] before the metadata object can be accessed.
-     *
-     * @return message metadata
-     * @deprecated use [metadata] instead.
-     */
-    @Deprecated("Use of OpenPgpMetadata is discouraged.",
-            ReplaceWith("metadata"))
-    val result: OpenPgpMetadata
-        get() = metadata.toLegacyMetadata()
 }

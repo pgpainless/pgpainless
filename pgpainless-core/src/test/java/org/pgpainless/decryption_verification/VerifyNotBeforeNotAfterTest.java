@@ -68,8 +68,8 @@ public class VerifyNotBeforeNotAfterTest {
                 .onInputStream(new ByteArrayInputStream(inlineSigned))
                 .withOptions(options);
 
-        OpenPgpMetadata metadata = processSignedData(verifier);
-        assertTrue(metadata.getVerifiedSignatures().containsKey(new SubkeyIdentifier(certificate)));
+        MessageMetadata metadata = processSignedData(verifier);
+        assertTrue(metadata.isVerifiedSignedBy(certificate));
     }
 
     @Test
@@ -81,8 +81,8 @@ public class VerifyNotBeforeNotAfterTest {
                 .onInputStream(new ByteArrayInputStream(data))
                 .withOptions(options);
 
-        OpenPgpMetadata metadata = processSignedData(verifier);
-        assertTrue(metadata.containsVerifiedSignatureFrom(certificate));
+        MessageMetadata metadata = processSignedData(verifier);
+        assertTrue(metadata.isVerifiedSignedBy(certificate));
     }
 
     @Test
@@ -93,8 +93,8 @@ public class VerifyNotBeforeNotAfterTest {
         DecryptionStream verifier = PGPainless.decryptAndOrVerify()
                 .onInputStream(new ByteArrayInputStream(inlineSigned))
                 .withOptions(options);
-        OpenPgpMetadata metadata = processSignedData(verifier);
-        assertTrue(metadata.getVerifiedSignatures().containsKey(signingKey));
+        MessageMetadata metadata = processSignedData(verifier);
+        assertTrue(metadata.isVerifiedSignedBy(certificate));
     }
 
     @Test
@@ -106,8 +106,8 @@ public class VerifyNotBeforeNotAfterTest {
         DecryptionStream verifier = PGPainless.decryptAndOrVerify()
                 .onInputStream(new ByteArrayInputStream(data))
                 .withOptions(options);
-        OpenPgpMetadata metadata = processSignedData(verifier);
-        assertTrue(metadata.getVerifiedSignatures().containsKey(signingKey));
+        MessageMetadata metadata = processSignedData(verifier);
+        assertTrue(metadata.isVerifiedSignedBy(certificate));
     }
 
     @Test
@@ -118,8 +118,8 @@ public class VerifyNotBeforeNotAfterTest {
         DecryptionStream verifier = PGPainless.decryptAndOrVerify()
                 .onInputStream(new ByteArrayInputStream(inlineSigned))
                 .withOptions(options);
-        OpenPgpMetadata metadata = processSignedData(verifier);
-        assertFalse(metadata.getVerifiedSignatures().containsKey(signingKey));
+        MessageMetadata metadata = processSignedData(verifier);
+        assertFalse(metadata.isVerifiedInlineSignedBy(certificate));
     }
 
     @Test
@@ -131,8 +131,8 @@ public class VerifyNotBeforeNotAfterTest {
         DecryptionStream verifier = PGPainless.decryptAndOrVerify()
                 .onInputStream(new ByteArrayInputStream(data))
                 .withOptions(options);
-        OpenPgpMetadata metadata = processSignedData(verifier);
-        assertFalse(metadata.getVerifiedSignatures().containsKey(signingKey));
+        MessageMetadata metadata = processSignedData(verifier);
+        assertFalse(metadata.isVerifiedSignedBy(certificate));
     }
 
     @Test
@@ -143,8 +143,8 @@ public class VerifyNotBeforeNotAfterTest {
         DecryptionStream verifier = PGPainless.decryptAndOrVerify()
                 .onInputStream(new ByteArrayInputStream(inlineSigned))
                 .withOptions(options);
-        OpenPgpMetadata metadata = processSignedData(verifier);
-        assertTrue(metadata.getVerifiedSignatures().containsKey(signingKey));
+        MessageMetadata metadata = processSignedData(verifier);
+        assertTrue(metadata.isVerifiedSignedBy(certificate));
     }
 
     @Test
@@ -156,8 +156,8 @@ public class VerifyNotBeforeNotAfterTest {
         DecryptionStream verifier = PGPainless.decryptAndOrVerify()
                 .onInputStream(new ByteArrayInputStream(data))
                 .withOptions(options);
-        OpenPgpMetadata metadata = processSignedData(verifier);
-        assertTrue(metadata.getVerifiedSignatures().containsKey(signingKey));
+        MessageMetadata metadata = processSignedData(verifier);
+        assertTrue(metadata.isVerifiedSignedBy(certificate));
     }
 
     @Test
@@ -168,8 +168,8 @@ public class VerifyNotBeforeNotAfterTest {
         DecryptionStream verifier = PGPainless.decryptAndOrVerify()
                 .onInputStream(new ByteArrayInputStream(inlineSigned))
                 .withOptions(options);
-        OpenPgpMetadata metadata = processSignedData(verifier);
-        assertFalse(metadata.getVerifiedSignatures().containsKey(signingKey));
+        MessageMetadata metadata = processSignedData(verifier);
+        assertFalse(metadata.isVerifiedSignedBy(certificate));
     }
 
     @Test
@@ -181,13 +181,13 @@ public class VerifyNotBeforeNotAfterTest {
         DecryptionStream verifier = PGPainless.decryptAndOrVerify()
                 .onInputStream(new ByteArrayInputStream(data))
                 .withOptions(options);
-        OpenPgpMetadata metadata = processSignedData(verifier);
-        assertFalse(metadata.getVerifiedSignatures().containsKey(signingKey));
+        MessageMetadata metadata = processSignedData(verifier);
+        assertFalse(metadata.isVerifiedSignedBy(certificate));
     }
 
-    private OpenPgpMetadata processSignedData(DecryptionStream verifier) throws IOException {
+    private MessageMetadata processSignedData(DecryptionStream verifier) throws IOException {
         Streams.drain(verifier);
         verifier.close();
-        return verifier.getResult();
+        return verifier.getMetadata();
     }
 }

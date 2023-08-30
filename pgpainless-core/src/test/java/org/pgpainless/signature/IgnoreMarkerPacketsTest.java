@@ -24,7 +24,7 @@ import org.junit.jupiter.api.Test;
 import org.pgpainless.PGPainless;
 import org.pgpainless.decryption_verification.ConsumerOptions;
 import org.pgpainless.decryption_verification.DecryptionStream;
-import org.pgpainless.decryption_verification.OpenPgpMetadata;
+import org.pgpainless.decryption_verification.MessageMetadata;
 import org.pgpainless.key.OpenPgpV4Fingerprint;
 import org.pgpainless.key.util.KeyRingUtils;
 
@@ -154,8 +154,8 @@ public class IgnoreMarkerPacketsTest {
         Streams.pipeAll(decryptionStream, outputStream);
 
         decryptionStream.close();
-        OpenPgpMetadata metadata = decryptionStream.getResult();
-        assertTrue(metadata.containsVerifiedSignatureFrom(new OpenPgpV4Fingerprint("D1A66E1A23B182C9980F788CFBFCC82A015E7330")));
+        MessageMetadata metadata = decryptionStream.getMetadata();
+        assertTrue(metadata.isVerifiedSignedBy(new OpenPgpV4Fingerprint("D1A66E1A23B182C9980F788CFBFCC82A015E7330")));
     }
 
     @Test
@@ -204,8 +204,8 @@ public class IgnoreMarkerPacketsTest {
 
         decryptionStream.close();
         assertArrayEquals(data.getBytes(StandardCharsets.UTF_8), outputStream.toByteArray());
-        OpenPgpMetadata metadata = decryptionStream.getResult();
-        assertTrue(metadata.containsVerifiedSignatureFrom(new OpenPgpV4Fingerprint("D1A66E1A23B182C9980F788CFBFCC82A015E7330")));
+        MessageMetadata metadata = decryptionStream.getMetadata();
+        assertTrue(metadata.isVerifiedSignedBy(new OpenPgpV4Fingerprint("D1A66E1A23B182C9980F788CFBFCC82A015E7330")));
     }
 
     @Test

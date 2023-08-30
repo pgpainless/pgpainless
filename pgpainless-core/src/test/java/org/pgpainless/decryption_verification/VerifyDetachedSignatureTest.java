@@ -65,8 +65,8 @@ public class VerifyDetachedSignatureTest {
 
         Streams.drain(verifier);
         verifier.close();
-        OpenPgpMetadata metadata = verifier.getResult();
-        assertTrue(metadata.isVerified());
+        MessageMetadata metadata = verifier.getMetadata();
+        assertTrue(metadata.isVerifiedSigned());
     }
 
     @Test
@@ -140,7 +140,7 @@ public class VerifyDetachedSignatureTest {
 
         Streams.drain(verifier);
         verifier.close();
-        OpenPgpMetadata metadata = verifier.getResult();
-        assertTrue(metadata.isVerified());
+        MessageMetadata metadata = verifier.getMetadata();
+        assertTrue(metadata.isVerifiedSigned());
     }
 }

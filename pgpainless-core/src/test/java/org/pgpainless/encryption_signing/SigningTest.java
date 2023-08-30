@@ -34,7 +34,7 @@ import org.pgpainless.algorithm.HashAlgorithm;
 import org.pgpainless.algorithm.KeyFlag;
 import org.pgpainless.decryption_verification.ConsumerOptions;
 import org.pgpainless.decryption_verification.DecryptionStream;
-import org.pgpainless.decryption_verification.OpenPgpMetadata;
+import org.pgpainless.decryption_verification.MessageMetadata;
 import org.pgpainless.exception.KeyException;
 import org.pgpainless.key.SubkeyIdentifier;
 import org.pgpainless.key.TestKeys;
@@ -106,12 +106,11 @@ public class SigningTest {
         Streams.pipeAll(decryptionStream, plaintextOut);
         decryptionStream.close();
 
-        OpenPgpMetadata metadata = decryptionStream.getResult();
+        MessageMetadata metadata = decryptionStream.getMetadata();
         assertTrue(metadata.isEncrypted());
-        assertTrue(metadata.isSigned());
-        assertTrue(metadata.isVerified());
-        assertTrue(metadata.containsVerifiedSignatureFrom(KeyRingUtils.publicKeyRingFrom(cryptieKeys)));
-        assertFalse(metadata.containsVerifiedSignatureFrom(julietKeys));
+        assertTrue(metadata.isVerifiedSigned());
+        assertTrue(metadata.isVerifiedSignedBy(KeyRingUtils.publicKeyRingFrom(cryptieKeys)));
+        assertFalse(metadata.isVerifiedSignedBy(julietKeys));
     }
 
     @TestTemplate

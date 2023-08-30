@@ -122,9 +122,9 @@ public class CanonicalizedDataEncryptionTest {
     @Test
     public void noInputEncodingBinaryDataBinarySig() throws PGPException, IOException {
         String msg = encryptAndSign(message, DocumentSignatureType.BINARY_DOCUMENT, StreamEncoding.BINARY, false);
-        OpenPgpMetadata metadata = decryptAndVerify(msg);
+        MessageMetadata metadata = decryptAndVerify(msg);
 
-        if (!metadata.isVerified()) {
+        if (!metadata.isVerifiedSigned()) {
             // CHECKSTYLE:OFF
             System.out.println("Not verified. Session-Key: " + metadata.getSessionKey());
             System.out.println(msg);
@@ -136,9 +136,9 @@ public class CanonicalizedDataEncryptionTest {
     @Test
     public void noInputEncodingBinaryDataTextSig() throws PGPException, IOException {
         String msg = encryptAndSign(message, DocumentSignatureType.CANONICAL_TEXT_DOCUMENT, StreamEncoding.BINARY, false);
-        OpenPgpMetadata metadata = decryptAndVerify(msg);
+        MessageMetadata metadata = decryptAndVerify(msg);
 
-        if (!metadata.isVerified()) {
+        if (!metadata.isVerifiedSigned()) {
             // CHECKSTYLE:OFF
             System.out.println("Not verified. Session-Key: " + metadata.getSessionKey());
             System.out.println(msg);
@@ -150,9 +150,9 @@ public class CanonicalizedDataEncryptionTest {
     @Test
     public void noInputEncodingTextDataBinarySig() throws PGPException, IOException {
         String msg = encryptAndSign(message, DocumentSignatureType.BINARY_DOCUMENT, StreamEncoding.TEXT, false);
-        OpenPgpMetadata metadata = decryptAndVerify(msg);
+        MessageMetadata metadata = decryptAndVerify(msg);
 
-        if (!metadata.isVerified()) {
+        if (!metadata.isVerifiedSigned()) {
             // CHECKSTYLE:OFF
             System.out.println("Not verified. Session-Key: " + metadata.getSessionKey());
             System.out.println(msg);
@@ -164,9 +164,9 @@ public class CanonicalizedDataEncryptionTest {
     @Test
     public void noInputEncodingTextDataTextSig() throws PGPException, IOException {
         String msg = encryptAndSign(message, DocumentSignatureType.CANONICAL_TEXT_DOCUMENT, StreamEncoding.TEXT, false);
-        OpenPgpMetadata metadata = decryptAndVerify(msg);
+        MessageMetadata metadata = decryptAndVerify(msg);
 
-        if (!metadata.isVerified()) {
+        if (!metadata.isVerifiedSigned()) {
             // CHECKSTYLE:OFF
             System.out.println("Not verified. Session-Key: " + metadata.getSessionKey());
             System.out.println(msg);
@@ -178,9 +178,9 @@ public class CanonicalizedDataEncryptionTest {
     @Test
     public void noInputEncodingUtf8DataBinarySig() throws PGPException, IOException {
         String msg = encryptAndSign(message, DocumentSignatureType.BINARY_DOCUMENT, StreamEncoding.UTF8, false);
-        OpenPgpMetadata metadata = decryptAndVerify(msg);
+        MessageMetadata metadata = decryptAndVerify(msg);
 
-        if (!metadata.isVerified()) {
+        if (!metadata.isVerifiedSigned()) {
             // CHECKSTYLE:OFF
             System.out.println("Not verified. Session-Key: " + metadata.getSessionKey());
             System.out.println(msg);
@@ -192,9 +192,9 @@ public class CanonicalizedDataEncryptionTest {
     @Test
     public void noInputEncodingUtf8DataTextSig() throws PGPException, IOException {
         String msg = encryptAndSign(message, DocumentSignatureType.CANONICAL_TEXT_DOCUMENT, StreamEncoding.UTF8, false);
-        OpenPgpMetadata metadata = decryptAndVerify(msg);
+        MessageMetadata metadata = decryptAndVerify(msg);
 
-        if (!metadata.isVerified()) {
+        if (!metadata.isVerifiedSigned()) {
             // CHECKSTYLE:OFF
             System.out.println("Not verified. Session-Key: " + metadata.getSessionKey());
             System.out.println(msg);
@@ -207,9 +207,9 @@ public class CanonicalizedDataEncryptionTest {
     @Test
     public void inputEncodingBinaryDataBinarySig() throws PGPException, IOException {
         String msg = encryptAndSign(message, DocumentSignatureType.BINARY_DOCUMENT, StreamEncoding.BINARY, true);
-        OpenPgpMetadata metadata = decryptAndVerify(msg);
+        MessageMetadata metadata = decryptAndVerify(msg);
 
-        if (!metadata.isVerified()) {
+        if (!metadata.isVerifiedSigned()) {
             // CHECKSTYLE:OFF
             System.out.println("Not verified. Session-Key: " + metadata.getSessionKey());
             System.out.println(msg);
@@ -221,9 +221,9 @@ public class CanonicalizedDataEncryptionTest {
     @Test
     public void inputEncodingBinaryDataTextSig() throws PGPException, IOException {
         String msg = encryptAndSign(message, DocumentSignatureType.CANONICAL_TEXT_DOCUMENT, StreamEncoding.BINARY, true);
-        OpenPgpMetadata metadata = decryptAndVerify(msg);
+        MessageMetadata metadata = decryptAndVerify(msg);
 
-        if (!metadata.isVerified()) {
+        if (!metadata.isVerifiedSigned()) {
             // CHECKSTYLE:OFF
             System.out.println("Not verified. Session-Key: " + metadata.getSessionKey());
             System.out.println(msg);
@@ -235,9 +235,9 @@ public class CanonicalizedDataEncryptionTest {
     @Test
     public void inputEncodingTextDataBinarySig() throws PGPException, IOException {
         String msg = encryptAndSign(message, DocumentSignatureType.BINARY_DOCUMENT, StreamEncoding.TEXT, true);
-        OpenPgpMetadata metadata = decryptAndVerify(msg);
+        MessageMetadata metadata = decryptAndVerify(msg);
 
-        if (!metadata.isVerified()) {
+        if (!metadata.isVerifiedSigned()) {
             // CHECKSTYLE:OFF
             System.out.println("Not verified. Session-Key: " + metadata.getSessionKey());
             System.out.println(msg);
@@ -249,9 +249,9 @@ public class CanonicalizedDataEncryptionTest {
     @Test
     public void inputEncodingTextDataTextSig() throws PGPException, IOException {
         String msg = encryptAndSign(message, DocumentSignatureType.CANONICAL_TEXT_DOCUMENT, StreamEncoding.TEXT, true);
-        OpenPgpMetadata metadata = decryptAndVerify(msg);
+        MessageMetadata metadata = decryptAndVerify(msg);
 
-        if (!metadata.isVerified()) {
+        if (!metadata.isVerifiedSigned()) {
             // CHECKSTYLE:OFF
             System.out.println("Not verified. Session-Key: " + metadata.getSessionKey());
             System.out.println(msg);
@@ -263,9 +263,9 @@ public class CanonicalizedDataEncryptionTest {
     @Test
     public void inputEncodingUtf8DataBinarySig() throws PGPException, IOException {
         String msg = encryptAndSign(message, DocumentSignatureType.BINARY_DOCUMENT, StreamEncoding.UTF8, true);
-        OpenPgpMetadata metadata = decryptAndVerify(msg);
+        MessageMetadata metadata = decryptAndVerify(msg);
 
-        if (!metadata.isVerified()) {
+        if (!metadata.isVerifiedSigned()) {
             // CHECKSTYLE:OFF
             System.out.println("Not verified. Session-Key: " + metadata.getSessionKey());
             System.out.println(msg);
@@ -277,9 +277,9 @@ public class CanonicalizedDataEncryptionTest {
     @Test
     public void inputEncodingUtf8DataTextSig() throws PGPException, IOException {
         String msg = encryptAndSign(message, DocumentSignatureType.CANONICAL_TEXT_DOCUMENT, StreamEncoding.UTF8, true);
-        OpenPgpMetadata metadata = decryptAndVerify(msg);
+        MessageMetadata metadata = decryptAndVerify(msg);
 
-        if (!metadata.isVerified()) {
+        if (!metadata.isVerifiedSigned()) {
             // CHECKSTYLE:OFF
             System.out.println("Not verified. Session-Key: " + metadata.getSessionKey());
             System.out.println(msg);
@@ -360,7 +360,7 @@ public class CanonicalizedDataEncryptionTest {
         return msg;
     }
 
-    private OpenPgpMetadata decryptAndVerify(String msg) throws PGPException, IOException {
+    private MessageMetadata decryptAndVerify(String msg) throws PGPException, IOException {
         ByteArrayInputStream in = new ByteArrayInputStream(msg.getBytes(StandardCharsets.UTF_8));
         DecryptionStream decryptionStream = PGPainless.decryptAndOrVerify()
                 .onInputStream(in)
@@ -371,7 +371,7 @@ public class CanonicalizedDataEncryptionTest {
         Streams.drain(decryptionStream);
         decryptionStream.close();
 
-        return decryptionStream.getResult();
+        return decryptionStream.getMetadata();
     }
 
     @Test
@@ -439,8 +439,8 @@ public class CanonicalizedDataEncryptionTest {
 
         Streams.pipeAll(decryptionStream, decrypted);
         decryptionStream.close();
-        OpenPgpMetadata metadata = decryptionStream.getResult();
-        assertTrue(metadata.isVerified(), "Not verified! Sig Type: " + sigType + " StreamEncoding: " + streamEncoding);
+        MessageMetadata metadata = decryptionStream.getMetadata();
+        assertTrue(metadata.isVerifiedSigned(), "Not verified! Sig Type: " + sigType + " StreamEncoding: " + streamEncoding);
 
         assertArrayEquals(msg, decrypted.toByteArray());
     }

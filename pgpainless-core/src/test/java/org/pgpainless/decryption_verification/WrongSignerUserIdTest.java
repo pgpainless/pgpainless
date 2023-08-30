@@ -102,12 +102,12 @@ public class WrongSignerUserIdTest {
         Streams.pipeAll(decryptionStream, out);
 
         decryptionStream.close();
-        OpenPgpMetadata metadata = decryptionStream.getResult();
+        MessageMetadata metadata = decryptionStream.getMetadata();
 
         if (expectSuccessfulVerification) {
-            assertTrue(metadata.isVerified());
+            assertTrue(metadata.isVerifiedSigned());
         } else {
-            assertFalse(metadata.isVerified());
+            assertFalse(metadata.isVerifiedSigned());
         }
 
     }
