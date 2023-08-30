@@ -5,7 +5,7 @@ SPDX-License-Identifier: CC0-1.0
 
 # PGPainless Changelog
 
-# 1.6.2-SNAPSHOT
+# 1.6.2
 - Switch `bcpg` and `bcprov` artifacts from `-jdk15to18`variant to `-jdk18on`
 - Bump `bcpg-jdk8on` to `1.76`
 - Bump `bcprov-jdk18on` to `1.76`
