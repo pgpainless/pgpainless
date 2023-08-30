@@ -21,6 +21,7 @@ import org.pgpainless.algorithm.SymmetricKeyAlgorithm;
 import org.pgpainless.authentication.CertificateAuthenticity;
 import org.pgpainless.authentication.CertificateAuthority;
 import org.pgpainless.exception.MalformedOpenPgpMessageException;
+import org.pgpainless.key.OpenPgpFingerprint;
 import org.pgpainless.key.SubkeyIdentifier;
 import org.pgpainless.util.SessionKey;
 
@@ -33,42 +34,6 @@ public class MessageMetadata {
 
     public MessageMetadata(@Nonnull Message message) {
         this.message = message;
-    }
-
-    /**
-     * Convert this {@link MessageMetadata} object into a legacy {@link OpenPgpMetadata} object.
-     * This method is intended to be used for a transition period between the 1.3 / 1.4+ branches.
-     * TODO: Remove in 1.6.X
-     *
-     * @return converted {@link OpenPgpMetadata} object
-     */
-    public @Nonnull OpenPgpMetadata toLegacyMetadata() {
-        OpenPgpMetadata.Builder resultBuilder = OpenPgpMetadata.getBuilder();
-        resultBuilder.setCompressionAlgorithm(getCompressionAlgorithm());
-        resultBuilder.setModificationDate(getModificationDate());
-        resultBuilder.setFileName(getFilename());
-        resultBuilder.setFileEncoding(getLiteralDataEncoding());
-        resultBuilder.setSessionKey(getSessionKey());
-        resultBuilder.setDecryptionKey(getDecryptionKey());
-
-        for (SignatureVerification accepted : getVerifiedDetachedSignatures()) {
-            resultBuilder.addVerifiedDetachedSignature(accepted);
-        }
-        for (SignatureVerification.Failure rejected : getRejectedDetachedSignatures()) {
-            resultBuilder.addInvalidDetachedSignature(rejected.getSignatureVerification(), rejected.getValidationException());
-        }
-
-        for (SignatureVerification accepted : getVerifiedInlineSignatures()) {
-            resultBuilder.addVerifiedInbandSignature(accepted);
-        }
-        for (SignatureVerification.Failure rejected : getRejectedInlineSignatures()) {
-            resultBuilder.addInvalidInbandSignature(rejected.getSignatureVerification(), rejected.getValidationException());
-        }
-        if (message.isCleartextSigned()) {
-            resultBuilder.setCleartextSigned();
-        }
-
-        return resultBuilder.build();
     }
 
     public boolean isUsingCleartextSignatureFramework() {
@@ -240,6 +205,28 @@ public class MessageMetadata {
         return isVerifiedInlineSignedBy(keys) || isVerifiedDetachedSignedBy(keys);
     }
 
+    /**
+     * Return true, if the message was verifiable signed by a certificate that either has the given fingerprint
+     * as primary key, or as the signing subkey.
+     *
+     * @param fingerprint fingerprint
+     * @return true if message was signed by a cert identified by the given fingerprint
+     */
+    public boolean isVerifiedSignedBy(@Nonnull OpenPgpFingerprint fingerprint) {
+        List<SignatureVerification> verifications = getVerifiedSignatures();
+        for (SignatureVerification verification : verifications) {
+            if (verification.getSigningKey() == null) {
+                continue;
+            }
+
+            if (fingerprint.equals(verification.getSigningKey().getPrimaryKeyFingerprint()) ||
+                    fingerprint.equals(verification.getSigningKey().getSubkeyFingerprint())) {
+                return true;
+            }
+        }
+        return false;
+    }
+
     public List<SignatureVerification> getVerifiedSignatures() {
         List<SignatureVerification> allVerifiedSignatures = getVerifiedInlineSignatures();
         allVerifiedSignatures.addAll(getVerifiedDetachedSignatures());
@@ -267,6 +254,30 @@ public class MessageMetadata {
      */
     public @Nonnull List<SignatureVerification.Failure> getRejectedDetachedSignatures() {
         return message.getRejectedDetachedSignatures();
+    }
+
+    /**
+     * Return a list of all rejected signatures.
+     *
+     * @return rejected signatures
+     */
+    public @Nonnull List<SignatureVerification.Failure> getRejectedSignatures() {
+        List<SignatureVerification.Failure> rejected = new ArrayList<>();
+        rejected.addAll(getRejectedInlineSignatures());
+        rejected.addAll(getRejectedDetachedSignatures());
+        return rejected;
+    }
+
+    public boolean hasRejectedSignatures() {
+        return !getRejectedSignatures().isEmpty();
+    }
+
+    /**
+     * Return true, if the message contains any (verified or rejected) signature.
+     * @return true if message has signature
+     */
+    public boolean hasSignature() {
+        return isVerifiedSigned() || hasRejectedSignatures();
     }
 
     public boolean isVerifiedInlineSignedBy(@Nonnull PGPKeyRing keys) {
