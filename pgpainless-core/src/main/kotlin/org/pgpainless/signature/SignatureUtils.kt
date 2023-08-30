@@ -14,6 +14,7 @@ import org.pgpainless.key.OpenPgpFingerprint
 import org.pgpainless.key.util.RevocationAttributes.Reason
 import org.pgpainless.signature.subpackets.SignatureSubpacketsUtil
 import org.pgpainless.util.ArmorUtils
+import java.io.IOException
 import java.io.InputStream
 import java.util.*
 
@@ -127,6 +128,7 @@ class SignatureUtils {
         }
 
         @JvmStatic
+        @Throws(IOException::class, PGPException::class)
         fun readSignatures(inputStream: InputStream): List<PGPSignature> {
             return readSignatures(inputStream, MAX_ITERATIONS)
         }

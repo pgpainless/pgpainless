@@ -53,7 +53,7 @@ class OpenPgpMessageInputStream(
 
         // Add detached signatures only on the outermost OpenPgpMessageInputStream
         if (metadata is Message) {
-            signatures.addDetachedSignatures(options.detachedSignatures)
+            signatures.addDetachedSignatures(options.getDetachedSignatures())
         }
 
         when(type) {
@@ -67,7 +67,7 @@ class OpenPgpMessageInputStream(
             }
 
             Type.cleartext_signed -> {
-                val multiPassStrategy = options.multiPassStrategy
+                val multiPassStrategy = options.getMultiPassStrategy()
                 val detachedSignatures = ClearsignedMessageUtil.detachSignaturesFromInbandClearsignedMessage(
                         inputStream, multiPassStrategy.messageOutputStream)
 
@@ -75,7 +75,7 @@ class OpenPgpMessageInputStream(
                     signatures.addDetachedSignature(signature)
                 }
 
-                options.forceNonOpenPgpData()
+                options.isForceNonOpenPgpData()
                 nestedInputStream = TeeInputStream(multiPassStrategy.messageInputStream, this.signatures)
             }
 
@@ -212,7 +212,7 @@ class OpenPgpMessageInputStream(
         val encDataList = packetInputStream!!.readEncryptedDataList()
         if (!encDataList.isIntegrityProtected) {
             LOGGER.warn("Symmetrically Encrypted Data Packet is not integrity-protected.")
-            if (!options.isIgnoreMDCErrors) {
+            if (!options.isIgnoreMDCErrors()) {
                 throw MessageNotIntegrityProtectedException()
             }
         }
@@ -223,7 +223,7 @@ class OpenPgpMessageInputStream(
                 " have an anonymous recipient.")
 
         // try custom decryptor factories
-        for ((key, decryptorFactory) in options.customDecryptorFactories) {
+        for ((key, decryptorFactory) in options.getCustomDecryptorFactories()) {
             LOGGER.debug("Attempt decryption with custom decryptor factory with key $key.")
             esks.pkesks.filter {
                 // find matching PKESK
@@ -237,8 +237,8 @@ class OpenPgpMessageInputStream(
         }
 
         // try provided session key
-        if (options.sessionKey != null) {
-            val sk = options.sessionKey!!
+        if (options.getSessionKey() != null) {
+            val sk = options.getSessionKey()!!
             LOGGER.debug("Attempt decryption with provided session key.")
             throwIfUnacceptable(sk.algorithm)
 
@@ -260,7 +260,7 @@ class OpenPgpMessageInputStream(
         }
 
         // try passwords
-        for (passphrase in options.decryptionPassphrases) {
+        for (passphrase in options.getDecryptionPassphrases()) {
             for (skesk in esks.skesks) {
                 LOGGER.debug("Attempt decryption with provided passphrase")
                 val algorithm = SymmetricKeyAlgorithm.requireFromId(skesk.algorithm)
@@ -295,7 +295,7 @@ class OpenPgpMessageInputStream(
             }
 
             LOGGER.debug("Attempt decryption using secret key $decryptionKeyId")
-            val protector = options.getSecretKeyProtector(decryptionKeys)
+            val protector = options.getSecretKeyProtector(decryptionKeys) ?: continue
             if (!protector.hasPassphraseFor(keyId)) {
                 LOGGER.debug("Missing passphrase for key $decryptionKeyId. Postponing decryption until all other keys were tried.")
                 postponedDueToMissingPassphrase.add(secretKey to pkesk)
@@ -317,7 +317,7 @@ class OpenPgpMessageInputStream(
                 }
 
                 LOGGER.debug("Attempt decryption of anonymous PKESK with key $decryptionKeyId.")
-                val protector = options.getSecretKeyProtector(decryptionKeys)
+                val protector = options.getSecretKeyProtector(decryptionKeys) ?: continue
 
                 if (!protector.hasPassphraseFor(secretKey.keyID)) {
                     LOGGER.debug("Missing passphrase for key $decryptionKeyId. Postponing decryption until all other keys were tried.")
@@ -332,7 +332,7 @@ class OpenPgpMessageInputStream(
             }
         }
 
-        if (options.missingKeyPassphraseStrategy == MissingKeyPassphraseStrategy.THROW_EXCEPTION) {
+        if (options.getMissingKeyPassphraseStrategy() == MissingKeyPassphraseStrategy.THROW_EXCEPTION) {
             // Non-interactive mode: Throw an exception with all locked decryption keys
             postponedDueToMissingPassphrase.map {
                 SubkeyIdentifier(getDecryptionKey(it.first.keyID)!!, it.first.keyID)
@@ -340,7 +340,7 @@ class OpenPgpMessageInputStream(
                 if (it.isNotEmpty())
                     throw MissingPassphraseException(it.toSet())
             }
-        } else if (options.missingKeyPassphraseStrategy == MissingKeyPassphraseStrategy.INTERACTIVE) {
+        } else if (options.getMissingKeyPassphraseStrategy() == MissingKeyPassphraseStrategy.INTERACTIVE) {
             for ((secretKey, pkesk) in postponedDueToMissingPassphrase) {
                 val keyId = secretKey.keyID
                 val decryptionKeys = getDecryptionKey(keyId)!!
@@ -532,7 +532,7 @@ class OpenPgpMessageInputStream(
         return MessageMetadata((metadata as Message))
     }
 
-    private fun getDecryptionKey(keyId: Long): PGPSecretKeyRing? = options.decryptionKeys.firstOrNull {
+    private fun getDecryptionKey(keyId: Long): PGPSecretKeyRing? = options.getDecryptionKeys().firstOrNull {
         it.any {
             k -> k.keyID == keyId
         }.and(PGPainless.inspectKeyRing(it).decryptionSubkeys.any {
@@ -543,7 +543,7 @@ class OpenPgpMessageInputStream(
     private fun findPotentialDecryptionKeys(pkesk: PGPPublicKeyEncryptedData): List<Pair<PGPSecretKeyRing, PGPSecretKey>> {
         val algorithm = pkesk.algorithm
         val candidates = mutableListOf<Pair<PGPSecretKeyRing, PGPSecretKey>>()
-        options.decryptionKeys.forEach {
+        options.getDecryptionKeys().forEach {
             val info = PGPainless.inspectKeyRing(it)
             for (key in info.decryptionSubkeys) {
                 if (key.algorithm == algorithm && info.isSecretKeyAvailable(key.keyID)) {
@@ -679,7 +679,7 @@ class OpenPgpMessageInputStream(
                         SubkeyIdentifier(check.verificationKeys, check.onePassSignature.keyID))
 
                 try {
-                    SignatureValidator.signatureWasCreatedInBounds(options.verifyNotBefore, options.verifyNotAfter)
+                    SignatureValidator.signatureWasCreatedInBounds(options.getVerifyNotBefore(), options.getVerifyNotAfter())
                             .verify(signature)
                     CertificateValidator.validateCertificateAndVerifyOnePassSignature(check, policy)
                     LOGGER.debug("Acceptable signature by key ${verification.signingKey}")
@@ -713,13 +713,13 @@ class OpenPgpMessageInputStream(
         }
 
         fun findCertificate(keyId: Long): PGPPublicKeyRing? {
-            val cert = options.certificateSource.getCertificate(keyId)
+            val cert = options.getCertificateSource().getCertificate(keyId)
             if (cert != null) {
                 return cert
             }
 
-            if (options.missingCertificateCallback != null) {
-                return options.missingCertificateCallback!!.onMissingPublicKeyEncountered(keyId)
+            if (options.getMissingCertificateCallback() != null) {
+                return options.getMissingCertificateCallback()!!.onMissingPublicKeyEncountered(keyId)
             }
             return null // TODO: Missing cert for sig
         }
@@ -772,7 +772,7 @@ class OpenPgpMessageInputStream(
             for (detached in detachedSignatures) {
                 val verification = SignatureVerification(detached.signature, detached.signingKeyIdentifier)
                 try {
-                    SignatureValidator.signatureWasCreatedInBounds(options.verifyNotBefore, options.verifyNotAfter)
+                    SignatureValidator.signatureWasCreatedInBounds(options.getVerifyNotBefore(), options.getVerifyNotAfter())
                             .verify(detached.signature)
                     CertificateValidator.validateCertificateAndVerifyInitializedSignature(
                             detached.signature, KeyRingUtils.publicKeys(detached.signingKeyRing), policy)
@@ -787,7 +787,7 @@ class OpenPgpMessageInputStream(
             for (prepended in prependedSignatures) {
                 val verification = SignatureVerification(prepended.signature, prepended.signingKeyIdentifier)
                 try {
-                    SignatureValidator.signatureWasCreatedInBounds(options.verifyNotBefore, options.verifyNotAfter)
+                    SignatureValidator.signatureWasCreatedInBounds(options.getVerifyNotBefore(), options.getVerifyNotAfter())
                             .verify(prepended.signature)
                     CertificateValidator.validateCertificateAndVerifyInitializedSignature(
                             prepended.signature, KeyRingUtils.publicKeys(prepended.signingKeyRing), policy)
@@ -877,7 +877,7 @@ class OpenPgpMessageInputStream(
             val openPgpIn = OpenPgpInputStream(inputStream)
             openPgpIn.reset()
 
-            if (openPgpIn.isNonOpenPgp || options.isForceNonOpenPgpData) {
+            if (openPgpIn.isNonOpenPgp || options.isForceNonOpenPgpData()) {
                 return OpenPgpMessageInputStream(Type.non_openpgp, openPgpIn, options, metadata, policy)
             }
 
