@@ -74,7 +74,7 @@ public class VerifyWithMissingPublicKeyCallbackTest {
         verificationStream.close();
 
         assertArrayEquals(msg.getBytes(StandardCharsets.UTF_8), plainOut.toByteArray());
-        OpenPgpMetadata metadata = verificationStream.getResult();
-        assertTrue(metadata.containsVerifiedSignatureFrom(signingPubKeys));
+        MessageMetadata metadata = verificationStream.getMetadata();
+        assertTrue(metadata.isVerifiedSignedBy(signingPubKeys));
     }
 }

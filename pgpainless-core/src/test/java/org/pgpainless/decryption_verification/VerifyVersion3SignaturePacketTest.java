@@ -43,8 +43,8 @@ class VerifyVersion3SignaturePacketTest {
                 .onInputStream(new ByteArrayInputStream(DATA))
                 .withOptions(options);
 
-        OpenPgpMetadata metadata = processSignedData(verifier);
-        assertTrue(metadata.containsVerifiedSignatureFrom(TestKeys.getEmilPublicKeyRing()));
+        MessageMetadata metadata = processSignedData(verifier);
+        assertTrue(metadata.isVerifiedSignedBy(TestKeys.getEmilPublicKeyRing()));
     }
 
     private static PGPSignature generateV3Signature() throws IOException, PGPException {
@@ -61,9 +61,9 @@ class VerifyVersion3SignaturePacketTest {
         return signatureGenerator.generate();
     }
 
-    private OpenPgpMetadata processSignedData(DecryptionStream verifier) throws IOException {
+    private MessageMetadata processSignedData(DecryptionStream verifier) throws IOException {
         Streams.drain(verifier);
         verifier.close();
-        return verifier.getResult();
+        return verifier.getMetadata();
     }
 }

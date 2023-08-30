@@ -184,7 +184,7 @@ public class PreventDecryptionUsingNonEncryptionKeyTest {
 
         Streams.drain(decryptionStream);
         decryptionStream.close();
-        OpenPgpMetadata metadata = decryptionStream.getResult();
+        MessageMetadata metadata = decryptionStream.getMetadata();
 
         assertEquals(new SubkeyIdentifier(secretKeys, secretKeys.getPublicKey().getKeyID()), metadata.getDecryptionKey());
     }
@@ -200,7 +200,7 @@ public class PreventDecryptionUsingNonEncryptionKeyTest {
 
         Streams.drain(decryptionStream);
         decryptionStream.close();
-        OpenPgpMetadata metadata = decryptionStream.getResult();
+        MessageMetadata metadata = decryptionStream.getMetadata();
 
         assertEquals(new SubkeyIdentifier(secretKeys, secretKeys.getPublicKey().getKeyID()), metadata.getDecryptionKey());
     }

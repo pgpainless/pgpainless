@@ -139,8 +139,9 @@ public class DecryptHiddenRecipientMessageTest {
         Streams.pipeAll(decryptionStream, out);
         decryptionStream.close();
 
-        OpenPgpMetadata metadata = decryptionStream.getResult();
-        assertEquals(0, metadata.getRecipientKeyIds().size());
+        MessageMetadata metadata = decryptionStream.getMetadata();
+        assertEquals(1, metadata.getRecipientKeyIds().size());
+        assertEquals(0L, metadata.getRecipientKeyIds().get(0));
 
         KeyRingInfo info = new KeyRingInfo(secretKeys);
         List<PGPPublicKey> encryptionKeys = info.getEncryptionSubkeys(EncryptionPurpose.ANY);
