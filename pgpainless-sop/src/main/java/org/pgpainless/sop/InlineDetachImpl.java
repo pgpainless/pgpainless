@@ -69,7 +69,7 @@ public class InlineDetachImpl implements InlineDetach {
                     if (armorIn.isClearText()) {
                         try {
                             signatures = ClearsignedMessageUtil.detachSignaturesFromInbandClearsignedMessage(armorIn, messageOutputStream);
-                            if (signatures == null) {
+                            if (signatures.isEmpty()) {
                                 throw new SOPGPException.BadData("Data did not contain OpenPGP signatures.");
                             }
                         } catch (WrongConsumingMethodException e) {
