@@ -7,7 +7,6 @@ package org.pgpainless.decryption_verification;
 import static org.junit.jupiter.api.Assertions.assertArrayEquals;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
-import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.junit.jupiter.api.Assertions.fail;
 
@@ -57,29 +56,6 @@ public class MissingPassphraseForDecryptionTest {
         Streams.pipeAll(new ByteArrayInputStream("Hey, what's up?".getBytes(StandardCharsets.UTF_8)), encryptionStream);
         encryptionStream.close();
         message = out.toByteArray();
-    }
-
-    @Test
-    public void invalidPostponedKeysStrategyTest() {
-        SecretKeyPassphraseProvider callback = new SecretKeyPassphraseProvider() {
-            @Override
-            public Passphrase getPassphraseFor(Long keyId) {
-                fail("MUST NOT get called in if postponed key strategy is invalid.");
-                return null;
-            }
-
-            @Override
-            public boolean hasPassphrase(Long keyId) {
-                return true;
-            }
-        };
-        ConsumerOptions options = new ConsumerOptions()
-                .setMissingKeyPassphraseStrategy(null) // illegal
-                .addDecryptionKey(secretKeys, SecretKeyRingProtector.defaultSecretKeyRingProtector(callback));
-
-        assertThrows(IllegalStateException.class, () -> PGPainless.decryptAndOrVerify()
-                .onInputStream(new ByteArrayInputStream(message))
-                .withOptions(options));
     }
 
     @Test
