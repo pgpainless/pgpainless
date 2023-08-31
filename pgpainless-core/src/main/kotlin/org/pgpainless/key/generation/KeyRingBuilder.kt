@@ -25,7 +25,6 @@ import java.io.IOException
 import java.security.KeyPairGenerator
 import java.util.*
 
-const val MILLIS_IN_YEAR = 1000L * 60 * 60 * 24 * 365
 
 class KeyRingBuilder : KeyRingBuilderInterface<KeyRingBuilder> {
 
@@ -225,6 +224,8 @@ class KeyRingBuilder : KeyRingBuilderInterface<KeyRingBuilder> {
     }
 
     companion object {
+        const val MILLIS_IN_YEAR = 1000L * 60 * 60 * 24 * 365
+
         @JvmStatic
         fun generateKeyPair(spec: KeySpec): PGPKeyPair {
             spec.keyType.let { type ->
