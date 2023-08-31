@@ -350,7 +350,7 @@ class OpenPgpMessageInputStream(
                 }
 
                 LOGGER.debug("Attempt decryption with key $decryptionKeyId while interactively requesting its passphrase.")
-                val protector = options.getSecretKeyProtector(decryptionKeys)
+                val protector = options.getSecretKeyProtector(decryptionKeys) ?: continue
                 val privateKey = UnlockSecretKey.unlockSecretKey(secretKey, protector)
                 if (decryptWithPrivateKey(esks, privateKey, decryptionKeyId, pkesk)) {
                     return true
