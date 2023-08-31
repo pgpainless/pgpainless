@@ -32,13 +32,13 @@ public class CachingSecretKeyRingProtectorTest {
     // Dummy passphrase callback that returns the doubled key-id as passphrase
     private final SecretKeyPassphraseProvider dummyCallback = new SecretKeyPassphraseProvider() {
         @Override
-        public Passphrase getPassphraseFor(Long keyId) {
+        public Passphrase getPassphraseFor(long keyId) {
             long doubled = keyId * 2;
             return Passphrase.fromPassword(Long.toString(doubled));
         }
 
         @Override
-        public boolean hasPassphrase(Long keyId) {
+        public boolean hasPassphrase(long keyId) {
             return true;
         }
     };

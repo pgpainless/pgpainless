@@ -34,7 +34,7 @@ public interface SecretKeyPassphraseProvider {
      * @param keyId if of the secret key
      * @return passphrase or null, if no passphrase record has been found.
      */
-    @Nullable Passphrase getPassphraseFor(Long keyId);
+    @Nullable Passphrase getPassphraseFor(long keyId);
 
-    boolean hasPassphrase(Long keyId);
+    boolean hasPassphrase(long keyId);
 }

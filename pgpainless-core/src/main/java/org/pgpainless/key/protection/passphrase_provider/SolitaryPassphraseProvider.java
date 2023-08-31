@@ -21,13 +21,13 @@ public class SolitaryPassphraseProvider implements SecretKeyPassphraseProvider {
 
     @Nullable
     @Override
-    public Passphrase getPassphraseFor(Long keyId) {
+    public Passphrase getPassphraseFor(long keyId) {
         // always return the same passphrase.
         return passphrase;
     }
 
     @Override
-    public boolean hasPassphrase(Long keyId) {
+    public boolean hasPassphrase(long keyId) {
         return true;
     }
 }

@@ -31,12 +31,12 @@ public class MapBasedPassphraseProvider implements SecretKeyPassphraseProvider {
 
     @Nullable
     @Override
-    public Passphrase getPassphraseFor(Long keyId) {
+    public Passphrase getPassphraseFor(long keyId) {
         return map.get(keyId);
     }
 
     @Override
-    public boolean hasPassphrase(Long keyId) {
+    public boolean hasPassphrase(long keyId) {
         return map.containsKey(keyId);
     }
 }
