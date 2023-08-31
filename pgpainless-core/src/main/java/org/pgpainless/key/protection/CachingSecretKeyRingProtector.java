@@ -60,12 +60,12 @@ public class CachingSecretKeyRingProtector implements SecretKeyRingProtector, Se
      * containing a key with the same key-id but different passphrases.
      *
      * If you can ensure that there will be no key-id clash, and you want to replace the passphrase, you can use
-     * {@link #replacePassphrase(Long, Passphrase)} to replace the passphrase.
+     * {@link #replacePassphrase(long, Passphrase)} to replace the passphrase.
      *
      * @param keyId id of the key
      * @param passphrase passphrase
      */
-    public void addPassphrase(@Nonnull Long keyId, @Nonnull Passphrase passphrase) {
+    public void addPassphrase(long keyId, @Nonnull Passphrase passphrase) {
         if (this.cache.containsKey(keyId)) {
             throw new IllegalArgumentException("The cache already holds a passphrase for ID " + Long.toHexString(keyId) + ".\n" +
                     "If you want to replace the passphrase, use replacePassphrase(Long, Passphrase) instead.");
@@ -79,7 +79,7 @@ public class CachingSecretKeyRingProtector implements SecretKeyRingProtector, Se
      * @param keyId keyId
      * @param passphrase passphrase
      */
-    public void replacePassphrase(@Nonnull Long keyId, @Nonnull Passphrase passphrase) {
+    public void replacePassphrase(long keyId, @Nonnull Passphrase passphrase) {
         this.cache.put(keyId, passphrase);
     }
 
@@ -152,7 +152,7 @@ public class CachingSecretKeyRingProtector implements SecretKeyRingProtector, Se
      *
      * @param keyId id of the key
      */
-    public void forgetPassphrase(@Nonnull Long keyId) {
+    public void forgetPassphrase(long keyId) {
         Passphrase passphrase = cache.remove(keyId);
         if (passphrase != null) {
             passphrase.clear();
@@ -183,7 +183,7 @@ public class CachingSecretKeyRingProtector implements SecretKeyRingProtector, Se
 
     @Override
     @Nullable
-    public Passphrase getPassphraseFor(Long keyId) {
+    public Passphrase getPassphraseFor(long keyId) {
         Passphrase passphrase = cache.get(keyId);
         if (passphrase == null || !passphrase.isValid()) {
             if (provider == null) {
@@ -198,25 +198,25 @@ public class CachingSecretKeyRingProtector implements SecretKeyRingProtector, Se
     }
 
     @Override
-    public boolean hasPassphrase(Long keyId) {
+    public boolean hasPassphrase(long keyId) {
         Passphrase passphrase = cache.get(keyId);
         return passphrase != null && passphrase.isValid();
     }
 
     @Override
-    public boolean hasPassphraseFor(Long keyId) {
+    public boolean hasPassphraseFor(long keyId) {
         return hasPassphrase(keyId);
     }
 
     @Override
     @Nullable
-    public PBESecretKeyDecryptor getDecryptor(@Nonnull Long keyId) throws PGPException {
+    public PBESecretKeyDecryptor getDecryptor(long keyId) throws PGPException {
         return protector.getDecryptor(keyId);
     }
 
     @Override
     @Nullable
-    public PBESecretKeyEncryptor getEncryptor(@Nonnull Long keyId) throws PGPException {
+    public PBESecretKeyEncryptor getEncryptor(long keyId) throws PGPException {
         return protector.getEncryptor(keyId);
     }
 }

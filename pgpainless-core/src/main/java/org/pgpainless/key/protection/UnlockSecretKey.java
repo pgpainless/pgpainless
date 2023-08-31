@@ -61,6 +61,7 @@ public final class UnlockSecretKey {
 
     public static PGPPrivateKey unlockSecretKey(PGPSecretKey secretKey, Passphrase passphrase)
             throws PGPException, KeyIntegrityException {
-        return unlockSecretKey(secretKey, SecretKeyRingProtector.unlockSingleKeyWith(passphrase, secretKey));
+        return unlockSecretKey(secretKey, SecretKeyRingProtector.unlockSingleKeyWith(
+                passphrase == null ? Passphrase.emptyPassphrase() : passphrase, secretKey));
     }
 }

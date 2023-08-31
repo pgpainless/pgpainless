@@ -44,13 +44,13 @@ public class BaseSecretKeyRingProtector implements SecretKeyRingProtector {
     }
 
     @Override
-    public boolean hasPassphraseFor(Long keyId) {
+    public boolean hasPassphraseFor(long keyId) {
         return passphraseProvider.hasPassphrase(keyId);
     }
 
     @Override
     @Nullable
-    public PBESecretKeyDecryptor getDecryptor(Long keyId) throws PGPException {
+    public PBESecretKeyDecryptor getDecryptor(long keyId) throws PGPException {
         Passphrase passphrase = passphraseProvider.getPassphraseFor(keyId);
         return passphrase == null || passphrase.isEmpty() ? null :
                 ImplementationFactory.getInstance().getPBESecretKeyDecryptor(passphrase);
@@ -58,7 +58,7 @@ public class BaseSecretKeyRingProtector implements SecretKeyRingProtector {
 
     @Override
     @Nullable
-    public PBESecretKeyEncryptor getEncryptor(Long keyId) throws PGPException {
+    public PBESecretKeyEncryptor getEncryptor(long keyId) throws PGPException {
         Passphrase passphrase = passphraseProvider.getPassphraseFor(keyId);
         return passphrase == null || passphrase.isEmpty() ? null :
                 ImplementationFactory.getInstance().getPBESecretKeyEncryptor(

@@ -40,12 +40,12 @@ public class PasswordBasedSecretKeyRingProtector extends BaseSecretKeyRingProtec
         SecretKeyPassphraseProvider passphraseProvider = new SecretKeyPassphraseProvider() {
             @Override
             @Nullable
-            public Passphrase getPassphraseFor(Long keyId) {
+            public Passphrase getPassphraseFor(long keyId) {
                 return hasPassphrase(keyId) ? passphrase : null;
             }
 
             @Override
-            public boolean hasPassphrase(Long keyId) {
+            public boolean hasPassphrase(long keyId) {
                 return keyRing.getPublicKey(keyId) != null;
             }
         };
@@ -60,7 +60,7 @@ public class PasswordBasedSecretKeyRingProtector extends BaseSecretKeyRingProtec
         SecretKeyPassphraseProvider passphraseProvider = new SecretKeyPassphraseProvider() {
             @Nullable
             @Override
-            public Passphrase getPassphraseFor(Long keyId) {
+            public Passphrase getPassphraseFor(long keyId) {
                 if (keyId == singleKeyId) {
                     return passphrase;
                 }
@@ -68,7 +68,7 @@ public class PasswordBasedSecretKeyRingProtector extends BaseSecretKeyRingProtec
             }
 
             @Override
-            public boolean hasPassphrase(Long keyId) {
+            public boolean hasPassphrase(long keyId) {
                 return keyId == singleKeyId;
             }
         };

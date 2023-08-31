@@ -108,12 +108,12 @@ public class SecretKeyRingProtectorTest {
         CachingSecretKeyRingProtector protector = new CachingSecretKeyRingProtector(passphraseMap,
                 KeyRingProtectionSettings.secureDefaultSettings(), new SecretKeyPassphraseProvider() {
             @Override
-            public Passphrase getPassphraseFor(Long keyId) {
+            public Passphrase getPassphraseFor(long keyId) {
                 return Passphrase.fromPassword("missingP455w0rd");
             }
 
             @Override
-            public boolean hasPassphrase(Long keyId) {
+            public boolean hasPassphrase(long keyId) {
                 return true;
             }
         });

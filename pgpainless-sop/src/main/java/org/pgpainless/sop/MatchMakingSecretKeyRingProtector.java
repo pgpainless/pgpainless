@@ -88,19 +88,19 @@ public class MatchMakingSecretKeyRingProtector implements SecretKeyRingProtector
     }
 
     @Override
-    public boolean hasPassphraseFor(Long keyId) {
+    public boolean hasPassphraseFor(long keyId) {
         return protector.hasPassphrase(keyId);
     }
 
     @Nullable
     @Override
-    public PBESecretKeyDecryptor getDecryptor(Long keyId) throws PGPException {
+    public PBESecretKeyDecryptor getDecryptor(long keyId) throws PGPException {
         return protector.getDecryptor(keyId);
     }
 
     @Nullable
     @Override
-    public PBESecretKeyEncryptor getEncryptor(Long keyId) throws PGPException {
+    public PBESecretKeyEncryptor getEncryptor(long keyId) throws PGPException {
         return protector.getEncryptor(keyId);
     }
 
