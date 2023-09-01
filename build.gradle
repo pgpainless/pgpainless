@@ -67,6 +67,13 @@ allprojects {
         fileMode = 0644
     }
 
+    // Compatibility of default implementations in kotlin interfaces with Java implementations.
+    tasks.withType(org.jetbrains.kotlin.gradle.tasks.KotlinCompile).configureEach {
+        kotlinOptions {
+            freeCompilerArgs += ["-Xjvm-default=all-compatibility"]
+        }
+    }
+
     project.ext {
         rootConfigDir = new File(rootDir, 'config')
         gitCommit = getGitCommit()
