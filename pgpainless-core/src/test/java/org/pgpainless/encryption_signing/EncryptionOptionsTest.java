@@ -11,6 +11,7 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import java.security.InvalidAlgorithmParameterException;
 import java.security.NoSuchAlgorithmException;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.Iterator;
@@ -22,6 +23,7 @@ import org.bouncycastle.openpgp.PGPPublicKey;
 import org.bouncycastle.openpgp.PGPPublicKeyRing;
 import org.bouncycastle.openpgp.PGPPublicKeyRingCollection;
 import org.bouncycastle.openpgp.PGPSecretKeyRing;
+import org.jetbrains.annotations.NotNull;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 import org.pgpainless.PGPainless;
@@ -122,7 +124,7 @@ public class EncryptionOptionsTest {
         EncryptionOptions options = new EncryptionOptions();
         assertThrows(IllegalArgumentException.class, () -> options.addRecipients(Collections.emptyList()));
         assertThrows(IllegalArgumentException.class, () -> options.addRecipients(Collections.emptyList(),
-                encryptionCapableKeys -> encryptionCapableKeys));
+                ArrayList::new));
     }
 
     @Test
@@ -150,8 +152,9 @@ public class EncryptionOptionsTest {
 
         assertThrows(KeyException.UnacceptableEncryptionKeyException.class,
                 () -> options.addRecipient(publicKeys, new EncryptionOptions.EncryptionKeySelector() {
+                    @NotNull
                     @Override
-                    public List<PGPPublicKey> selectEncryptionSubkeys(@Nonnull List<PGPPublicKey> encryptionCapableKeys) {
+                    public List<PGPPublicKey> selectEncryptionSubkeys(@NotNull List<? extends PGPPublicKey> encryptionCapableKeys) {
                         return Collections.emptyList();
                     }
                 }));
@@ -159,7 +162,7 @@ public class EncryptionOptionsTest {
         assertThrows(KeyException.UnacceptableEncryptionKeyException.class,
                 () -> options.addRecipient(publicKeys, "test@pgpainless.org", new EncryptionOptions.EncryptionKeySelector() {
                     @Override
-                    public List<PGPPublicKey> selectEncryptionSubkeys(@Nonnull List<PGPPublicKey> encryptionCapableKeys) {
+                    public List<PGPPublicKey> selectEncryptionSubkeys(@Nonnull List<? extends PGPPublicKey> encryptionCapableKeys) {
                         return Collections.emptyList();
                     }
                 }));
