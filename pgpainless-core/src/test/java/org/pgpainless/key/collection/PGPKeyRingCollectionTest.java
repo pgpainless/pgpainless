@@ -52,7 +52,7 @@ public class PGPKeyRingCollectionTest {
         // silent = true -> No exception, but not keys either
         PGPKeyRingCollection collection = new PGPKeyRingCollection(bytes, true);
         assertEquals(0, collection.getPgpPublicKeyRingCollection().size());
-        assertEquals(0, collection.getPGPSecretKeyRingCollection().size());
+        assertEquals(0, collection.getPgpSecretKeyRingCollection().size());
     }
 
     @Test
@@ -63,7 +63,7 @@ public class PGPKeyRingCollectionTest {
         Collection<PGPKeyRing> keys = Arrays.asList(first, second, secondPub);
 
         PGPKeyRingCollection collection = new PGPKeyRingCollection(keys, true);
-        assertEquals(2, collection.getPGPSecretKeyRingCollection().size());
+        assertEquals(2, collection.getPgpSecretKeyRingCollection().size());
         assertEquals(1, collection.getPgpPublicKeyRingCollection().size());
     }
 }
