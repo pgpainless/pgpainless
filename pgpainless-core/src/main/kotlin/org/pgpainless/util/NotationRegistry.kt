@@ -1,11 +1,8 @@
-// SPDX-FileCopyrightText: 2021 Paul Schaub <vanitasvitae@fsfe.org>
+// SPDX-FileCopyrightText: 2023 Paul Schaub <vanitasvitae@fsfe.org>
 //
 // SPDX-License-Identifier: Apache-2.0
 
-package org.pgpainless.util;
-
-import java.util.HashSet;
-import java.util.Set;
+package org.pgpainless.util
 
 /**
  * Registry for known notations.
@@ -14,9 +11,12 @@ import java.util.Set;
  *
  * To add a notation name, call {@link #addKnownNotation(String)}.
  */
-public class NotationRegistry {
+class NotationRegistry constructor(notations: Set<String> = setOf()) {
+    private val knownNotations: MutableSet<String>
 
-    private final Set<String> knownNotations = new HashSet<>();
+    init {
+        knownNotations = notations.toMutableSet()
+    }
 
     /**
      * Add a known notation name into the registry.
@@ -24,11 +24,8 @@ public class NotationRegistry {
      *
      * @param notationName name of the notation
      */
-    public void addKnownNotation(String notationName) {
-        if (notationName == null) {
-            throw new NullPointerException("Notation name MUST NOT be null.");
-        }
-        knownNotations.add(notationName);
+    fun addKnownNotation(notationName: String): NotationRegistry = apply {
+        knownNotations.add(notationName)
     }
 
     /**
@@ -37,14 +34,12 @@ public class NotationRegistry {
      * @param notationName name of the notation
      * @return true if notation is known, false otherwise.
      */
-    public boolean isKnownNotation(String notationName) {
-        return knownNotations.contains(notationName);
-    }
+    fun isKnownNotation(notationName: String): Boolean = knownNotations.contains(notationName)
 
     /**
      * Clear all known notations from the registry.
      */
-    public void clear() {
-        knownNotations.clear();
+    fun clear() {
+        knownNotations.clear()
     }
 }
