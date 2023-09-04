@@ -5,6 +5,7 @@
 
 package org.pgpainless.key.protection
 
+import _kotlin.hexKeyId
 import org.bouncycastle.openpgp.PGPException
 import org.bouncycastle.openpgp.PGPPrivateKey
 import org.bouncycastle.openpgp.PGPSecretKey
@@ -13,7 +14,6 @@ import org.pgpainless.PGPainless
 import org.pgpainless.exception.KeyIntegrityException
 import org.pgpainless.exception.WrongPassphraseException
 import org.pgpainless.key.info.KeyInfo
-import org.pgpainless.key.util.KeyIdUtil
 import org.pgpainless.key.util.PublicKeyParameterValidationUtil
 import org.pgpainless.util.Passphrase
 import kotlin.jvm.Throws
@@ -43,7 +43,7 @@ class UnlockSecretKey {
 
             if (privateKey == null) {
                 if (secretKey.s2K.type in 100..110) {
-                    throw PGPException("Cannot decrypt secret key ${KeyIdUtil.formatKeyId(secretKey.keyID)}: \n" +
+                    throw PGPException("Cannot decrypt secret key ${secretKey.keyID.hexKeyId()}: \n" +
                             "Unsupported private S2K type ${secretKey.s2K.type}")
                 }
                 throw PGPException("Cannot decrypt secret key.")

@@ -4,6 +4,7 @@
 
 package org.pgpainless.decryption_verification
 
+import _kotlin.hexKeyId
 import org.bouncycastle.bcpg.BCPGInputStream
 import org.bouncycastle.bcpg.UnsupportedPacketVersionException
 import org.bouncycastle.openpgp.*
@@ -21,7 +22,6 @@ import org.pgpainless.exception.*
 import org.pgpainless.implementation.ImplementationFactory
 import org.pgpainless.key.SubkeyIdentifier
 import org.pgpainless.key.protection.UnlockSecretKey
-import org.pgpainless.key.util.KeyIdUtil
 import org.pgpainless.key.util.KeyRingUtils
 import org.pgpainless.policy.Policy
 import org.pgpainless.signature.SignatureUtils
@@ -180,7 +180,7 @@ class OpenPgpMessageInputStream(
     private fun processOnePassSignature() {
         syntaxVerifier.next(InputSymbol.ONE_PASS_SIGNATURE)
         val ops = packetInputStream!!.readOnePassSignature()
-        LOGGER.debug("One-Pass-Signature Packet by key ${KeyIdUtil.formatKeyId(ops.keyID)} at depth ${layerMetadata.depth} encountered.")
+        LOGGER.debug("One-Pass-Signature Packet by key ${ops.keyID.hexKeyId()} at depth ${layerMetadata.depth} encountered.")
         signatures.addOnePassSignature(ops)
     }
 
@@ -197,11 +197,11 @@ class OpenPgpMessageInputStream(
 
         val keyId = SignatureUtils.determineIssuerKeyId(signature)
         if (isSigForOps) {
-            LOGGER.debug("Signature Packet corresponding to One-Pass-Signature by key ${KeyIdUtil.formatKeyId(keyId)} at depth ${layerMetadata.depth} encountered.")
+            LOGGER.debug("Signature Packet corresponding to One-Pass-Signature by key ${keyId.hexKeyId()} at depth ${layerMetadata.depth} encountered.")
             signatures.leaveNesting() // TODO: Only leave nesting if all OPSs of the nesting layer are dealt with
             signatures.addCorrespondingOnePassSignature(signature, layerMetadata, policy)
         } else {
-            LOGGER.debug("Prepended Signature Packet by key ${KeyIdUtil.formatKeyId(keyId)} at depth ${layerMetadata.depth} encountered.")
+            LOGGER.debug("Prepended Signature Packet by key ${keyId.hexKeyId()} at depth ${layerMetadata.depth} encountered.")
             signatures.addPrependedSignature(signature)
         }
     }
@@ -282,10 +282,10 @@ class OpenPgpMessageInputStream(
         // try (known) secret keys
         for (pkesk in esks.pkesks) {
             val keyId = pkesk.keyID
-            LOGGER.debug("Encountered PKESK for recipient ${KeyIdUtil.formatKeyId(keyId)}")
+            LOGGER.debug("Encountered PKESK for recipient ${keyId.hexKeyId()}")
             val decryptionKeys = getDecryptionKey(keyId)
             if (decryptionKeys == null) {
-                LOGGER.debug("Skipping PKESK because no matching key ${KeyIdUtil.formatKeyId(keyId)} was provided.")
+                LOGGER.debug("Skipping PKESK because no matching key ${keyId.hexKeyId()} was provided.")
                 continue
             }
             val secretKey = decryptionKeys.getSecretKey(keyId)
@@ -618,7 +618,7 @@ class OpenPgpMessageInputStream(
             if (check != null) {
                 detachedSignatures.add(check)
             } else {
-                LOGGER.debug("No suitable certificate for verification of signature by key ${KeyIdUtil.formatKeyId(keyId)} found.")
+                LOGGER.debug("No suitable certificate for verification of signature by key ${keyId.hexKeyId()} found.")
                 detachedSignaturesWithMissingCert.add(SignatureVerification.Failure(
                         SignatureVerification(signature, null),
                         SignatureValidationException("Missing verification key.")))
@@ -631,7 +631,7 @@ class OpenPgpMessageInputStream(
             if (check != null) {
                 prependedSignatures.add(check)
             } else {
-                LOGGER.debug("No suitable certificate for verification of signature by key ${KeyIdUtil.formatKeyId(keyId)} found.")
+                LOGGER.debug("No suitable certificate for verification of signature by key ${keyId.hexKeyId()} found.")
                 prependedSignaturesWithMissingCert.add(SignatureVerification.Failure(
                         SignatureVerification(signature, null),
                         SignatureValidationException("Missing verification key")
@@ -693,7 +693,7 @@ class OpenPgpMessageInputStream(
             }
 
             if (!found) {
-                LOGGER.debug("No suitable certificate for verification of signature by key ${KeyIdUtil.formatKeyId(keyId)} found.")
+                LOGGER.debug("No suitable certificate for verification of signature by key ${keyId.hexKeyId()} found.")
                 inbandSignaturesWithMissingCert.add(SignatureVerification.Failure(
                         SignatureVerification(signature, null),
                         SignatureValidationException("Missing verification key.")
