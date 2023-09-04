@@ -32,6 +32,6 @@ public final class KeyIdUtil {
     }
 
     public static String formatKeyId(long keyId) {
-        return Long.toHexString(keyId).toUpperCase();
+        return String.format("%016X", keyId);
     }
 }
