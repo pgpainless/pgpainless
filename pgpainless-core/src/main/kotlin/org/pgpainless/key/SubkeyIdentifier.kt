@@ -4,9 +4,9 @@
 
 package org.pgpainless.key
 
+import _kotlin.hexKeyId
 import org.bouncycastle.openpgp.PGPKeyRing
 import org.bouncycastle.openpgp.PGPPublicKey
-import org.pgpainless.key.util.KeyIdUtil
 
 /**
  * Tuple class used to identify a subkey by fingerprints of the primary key of the subkeys key ring,
@@ -22,7 +22,7 @@ class SubkeyIdentifier(
     constructor(keys: PGPKeyRing, keyId: Long): this(
                     OpenPgpFingerprint.of(keys.publicKey),
                     OpenPgpFingerprint.of(keys.getPublicKey(keyId) ?:
-                    throw NoSuchElementException("OpenPGP key does not contain subkey ${KeyIdUtil.formatKeyId(keyId)}")))
+                    throw NoSuchElementException("OpenPGP key does not contain subkey ${keyId.hexKeyId()}")))
     constructor(keys: PGPKeyRing, subkeyFingerprint: OpenPgpFingerprint): this(OpenPgpFingerprint.of(keys), subkeyFingerprint)
 
     val keyId = subkeyFingerprint.keyId
@@ -42,7 +42,7 @@ class SubkeyIdentifier(
             return false
         }
 
-        return primaryKeyFingerprint.equals(other.primaryKeyFingerprint) && subkeyFingerprint.equals(other.subkeyFingerprint)
+        return primaryKeyFingerprint == other.primaryKeyFingerprint && subkeyFingerprint == other.subkeyFingerprint
     }
 
     override fun hashCode(): Int {

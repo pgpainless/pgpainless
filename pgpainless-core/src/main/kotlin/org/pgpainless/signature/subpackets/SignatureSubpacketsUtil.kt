@@ -4,6 +4,7 @@
 
 package org.pgpainless.signature.subpackets
 
+import _kotlin.hexKeyId
 import org.bouncycastle.bcpg.sig.*
 import org.bouncycastle.openpgp.PGPPublicKey
 import org.bouncycastle.openpgp.PGPSignature
@@ -17,7 +18,6 @@ import org.pgpainless.key.OpenPgpV4Fingerprint
 import org.pgpainless.key.OpenPgpV5Fingerprint
 import org.pgpainless.key.OpenPgpV6Fingerprint
 import org.pgpainless.key.generation.type.KeyType
-import org.pgpainless.key.util.KeyIdUtil
 import org.pgpainless.signature.SignatureUtils
 import java.util.*
 
@@ -143,7 +143,7 @@ class SignatureSubpacketsUtil {
         @JvmStatic
         fun getKeyExpirationTimeAsDate(signature: PGPSignature, signingKey: PGPPublicKey): Date? =
                 require(signature.keyID == signingKey.keyID) {
-                    "Provided key (${KeyIdUtil.formatKeyId(signingKey.keyID)}) did not create the signature (${KeyIdUtil.formatKeyId(signature.keyID)})"
+                    "Provided key (${signingKey.keyID.hexKeyId()}) did not create the signature (${signature.keyID.hexKeyId()})"
                 }.run {
                     getKeyExpirationTime(signature)?.let {
                         SignatureUtils.datePlusSeconds(signingKey.creationTime, it.time)

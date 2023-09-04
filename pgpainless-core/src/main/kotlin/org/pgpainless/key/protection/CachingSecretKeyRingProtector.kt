@@ -4,11 +4,11 @@
 
 package org.pgpainless.key.protection
 
+import _kotlin.hexKeyId
 import org.bouncycastle.openpgp.PGPKeyRing
 import org.bouncycastle.openpgp.PGPPublicKey
 import org.pgpainless.key.OpenPgpFingerprint
 import org.pgpainless.key.protection.passphrase_provider.SecretKeyPassphraseProvider
-import org.pgpainless.key.util.KeyIdUtil
 import org.pgpainless.util.Passphrase
 
 /**
@@ -54,7 +54,7 @@ class CachingSecretKeyRingProtector : SecretKeyRingProtector, SecretKeyPassphras
      */
     fun addPassphrase(keyId: Long, passphrase: Passphrase) = apply {
         require(!cache.containsKey(keyId)) {
-            "The cache already holds a passphrase for ID ${KeyIdUtil.formatKeyId(keyId)}.\n" +
+            "The cache already holds a passphrase for ID ${keyId.hexKeyId()}.\n" +
                     "If you want to replace this passphrase, use replacePassphrase(Long, Passphrase) instead."
         }
         cache[keyId] = passphrase
@@ -90,7 +90,7 @@ class CachingSecretKeyRingProtector : SecretKeyRingProtector, SecretKeyPassphras
         // check for existing passphrases before doing anything
         keyRing.publicKeys.forEach {
             require(!cache.containsKey(it.keyID)) {
-                "The cache already holds a passphrase for the key with ID ${KeyIdUtil.formatKeyId(it.keyID)}.\n" +
+                "The cache already holds a passphrase for the key with ID ${it.keyID.hexKeyId()}.\n" +
                         "If you want to replace the passphrase, use replacePassphrase(PGPKeyRing, Passphrase) instead."
             }
         }
