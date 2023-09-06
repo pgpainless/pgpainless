@@ -22,12 +22,12 @@ import org.pgpainless.signature.SignatureUtils
  */
 data class SignatureVerification(
         val signature: PGPSignature,
-        val signingKey: SubkeyIdentifier?
+        val signingKey: SubkeyIdentifier
 ) {
 
     override fun toString(): String {
         return "Signature: ${SignatureUtils.getSignatureDigestPrefix(signature)};" +
-                " Key: ${signingKey?.toString() ?: "null"};"
+                " Key: $signingKey;"
     }
 
     /**
@@ -38,11 +38,16 @@ data class SignatureVerification(
      * @param validationException exception that caused the verification to fail
      */
     data class Failure(
-            val signatureVerification: SignatureVerification,
+            val signature: PGPSignature,
+            val signingKey: SubkeyIdentifier?,
             val validationException: SignatureValidationException
     ) {
+
+        constructor(verification: SignatureVerification, validationException: SignatureValidationException):
+                this(verification.signature, verification.signingKey, validationException)
+
         override fun toString(): String {
-            return "$signatureVerification Failure: ${validationException.message}"
+            return "Signature: ${SignatureUtils.getSignatureDigestPrefix(signature)}; Key: ${signingKey?.toString() ?: "null"}; Failure: ${validationException.message}"
         }
     }
 }

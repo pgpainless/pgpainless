@@ -156,9 +156,9 @@ class OpenPgpMessageInputStream(
         val literalData = packetInputStream!!.readLiteralData()
 
         // Extract Metadata
-        layerMetadata.setChild(LiteralData(
+        layerMetadata.child = LiteralData(
                 literalData.fileName, literalData.modificationTime,
-                StreamEncoding.requireFromCode(literalData.format)))
+                StreamEncoding.requireFromCode(literalData.format))
 
         nestedInputStream = literalData.inputStream
     }
@@ -394,7 +394,7 @@ class OpenPgpMessageInputStream(
             throwIfUnacceptable(sessionKey.algorithm)
             val encryptedData = EncryptedData(sessionKey.algorithm, layerMetadata.depth + 1)
             encryptedData.sessionKey = sessionKey
-            encryptedData.recipients = esks.pkesks.map { it.keyID }
+            encryptedData.addRecipients(esks.pkesks.map { it.keyID })
             LOGGER.debug("Successfully decrypted data with passphrase")
             val integrityProtected = IntegrityProtectedInputStream(decrypted, skesk, options)
             nestedInputStream = OpenPgpMessageInputStream(integrityProtected, options, encryptedData, policy)
@@ -421,7 +421,7 @@ class OpenPgpMessageInputStream(
                     layerMetadata.depth + 1)
             encryptedData.decryptionKey = decryptionKeyId
             encryptedData.sessionKey = sessionKey
-            encryptedData.recipients = esks.pkesks.plus(esks.anonPkesks).map { it.keyID }
+            encryptedData.addRecipients(esks.pkesks.plus(esks.anonPkesks).map { it.keyID })
             LOGGER.debug("Successfully decrypted data with key $decryptionKeyId")
             val integrityProtected = IntegrityProtectedInputStream(decrypted, pkesk, options)
             nestedInputStream = OpenPgpMessageInputStream(integrityProtected, options, encryptedData, policy)
@@ -522,7 +522,7 @@ class OpenPgpMessageInputStream(
     private fun collectMetadata() {
         if (nestedInputStream is OpenPgpMessageInputStream) {
             val child = nestedInputStream as OpenPgpMessageInputStream
-            layerMetadata.setChild(child.layerMetadata as Nested)
+            layerMetadata.child = (child.layerMetadata as Nested)
         }
     }
 
@@ -620,8 +620,7 @@ class OpenPgpMessageInputStream(
             } else {
                 LOGGER.debug("No suitable certificate for verification of signature by key ${keyId.openPgpKeyId()} found.")
                 detachedSignaturesWithMissingCert.add(SignatureVerification.Failure(
-                        SignatureVerification(signature, null),
-                        SignatureValidationException("Missing verification key.")))
+                        signature, null, SignatureValidationException("Missing verification key.")))
             }
         }
 
@@ -633,8 +632,7 @@ class OpenPgpMessageInputStream(
             } else {
                 LOGGER.debug("No suitable certificate for verification of signature by key ${keyId.openPgpKeyId()} found.")
                 prependedSignaturesWithMissingCert.add(SignatureVerification.Failure(
-                        SignatureVerification(signature, null),
-                        SignatureValidationException("Missing verification key")
+                        signature, null, SignatureValidationException("Missing verification key")
                 ))
             }
         }
@@ -695,8 +693,7 @@ class OpenPgpMessageInputStream(
             if (!found) {
                 LOGGER.debug("No suitable certificate for verification of signature by key ${keyId.openPgpKeyId()} found.")
                 inbandSignaturesWithMissingCert.add(SignatureVerification.Failure(
-                        SignatureVerification(signature, null),
-                        SignatureValidationException("Missing verification key.")
+                        signature, null, SignatureValidationException("Missing verification key.")
                 ))
             }
         }
@@ -890,7 +887,7 @@ class OpenPgpMessageInputStream(
             return if (openPgpIn.isAsciiArmored) {
                 val armorIn = ArmoredInputStreamFactory.get(openPgpIn)
                 if (armorIn.isClearText) {
-                    (metadata as Message).cleartextSigned = true
+                    (metadata as Message).setCleartextSigned()
                     OpenPgpMessageInputStream(Type.cleartext_signed, armorIn, options, metadata, policy)
                 } else {
                     // Simply consume dearmored OpenPGP message
