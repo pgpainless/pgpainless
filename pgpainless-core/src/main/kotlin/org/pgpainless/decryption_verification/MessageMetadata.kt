@@ -4,6 +4,7 @@
 
 package org.pgpainless.decryption_verification
 
+import org.bouncycastle.extensions.matches
 import org.bouncycastle.openpgp.PGPKeyRing
 import org.bouncycastle.openpgp.PGPLiteralData
 import org.pgpainless.algorithm.CompressionAlgorithm
@@ -227,10 +228,9 @@ class MessageMetadata(
      */
     @JvmOverloads
     fun isAuthenticatablySignedBy(userId: String, email: Boolean, certificateAuthority: CertificateAuthority, targetAmount: Int = 120): Boolean {
-        return verifiedSignatures.any {
-            certificateAuthority.authenticateBinding(
-                    it.signingKey.fingerprint, userId, email, it.signature.creationTime, targetAmount
-            ).authenticated
+        return verifiedSignatures.any { certificateAuthority
+                .authenticateBinding(it.signingKey.fingerprint, userId, email, it.signature.creationTime, targetAmount)
+                .authenticated
         }
     }
 
@@ -241,31 +241,23 @@ class MessageMetadata(
      * @param fingerprint fingerprint
      * @return true if message was signed by a cert identified by the given fingerprint
      */
-    fun isVerifiedSignedBy(fingerprint: OpenPgpFingerprint) = verifiedSignatures.any {
-        it.signingKey.primaryKeyFingerprint == fingerprint || it.signingKey.subkeyFingerprint == fingerprint
-    }
+    fun isVerifiedSignedBy(fingerprint: OpenPgpFingerprint) =
+            verifiedSignatures.any { it.signingKey.matches(fingerprint) }
 
-    fun isVerifiedSignedBy(keys: PGPKeyRing) = containsSignatureBy(verifiedSignatures, keys)
+    fun isVerifiedSignedBy(keys: PGPKeyRing) =
+            verifiedSignatures.any { keys.matches(it.signingKey) }
 
-    fun isVerifiedDetachedSignedBy(fingerprint: OpenPgpFingerprint) = verifiedDetachedSignatures.any {
-        it.signingKey.primaryKeyFingerprint == fingerprint || it.signingKey.subkeyFingerprint == fingerprint
-    }
+    fun isVerifiedDetachedSignedBy(fingerprint: OpenPgpFingerprint) =
+            verifiedDetachedSignatures.any { it.signingKey.matches(fingerprint) }
 
-    fun isVerifiedDetachedSignedBy(keys: PGPKeyRing) = containsSignatureBy(verifiedDetachedSignatures, keys)
+    fun isVerifiedDetachedSignedBy(keys: PGPKeyRing) =
+            verifiedDetachedSignatures.any { keys.matches(it.signingKey) }
 
-    fun isVerifiedInlineSignedBy(fingerprint: OpenPgpFingerprint) = verifiedInlineSignatures.any {
-        it.signingKey.primaryKeyFingerprint == fingerprint || it.signingKey.subkeyFingerprint == fingerprint
-    }
+    fun isVerifiedInlineSignedBy(fingerprint: OpenPgpFingerprint) =
+            verifiedInlineSignatures.any { it.signingKey.matches(fingerprint) }
 
-    fun isVerifiedInlineSignedBy(keys: PGPKeyRing) = containsSignatureBy(verifiedInlineSignatures, keys)
-
-    private fun containsSignatureBy(signatures: List<SignatureVerification>, keys: PGPKeyRing) =
-            signatures.any {
-                // Match certificate by primary key id
-                keys.publicKey.keyID == it.signingKey.primaryKeyId &&
-                        // match signing subkey
-                        keys.getPublicKey(it.signingKey.subkeyId) != null
-            }
+    fun isVerifiedInlineSignedBy(keys: PGPKeyRing) =
+            verifiedInlineSignatures.any { keys.matches(it.signingKey) }
 
     // ################################################################################################################
     // ###                                             Literal Data                                                 ###

@@ -4,6 +4,7 @@
 
 package org.pgpainless.encryption_signing
 
+import org.bouncycastle.extensions.matches
 import org.bouncycastle.openpgp.PGPLiteralData
 import org.bouncycastle.openpgp.PGPPublicKeyRing
 import org.bouncycastle.openpgp.PGPSignature
@@ -39,10 +40,7 @@ data class EncryptionResult(
      * @param certificate certificate
      * @return true if encrypted for 1+ subkeys, false otherwise.
      */
-    fun isEncryptedFor(certificate: PGPPublicKeyRing) = recipients.any {
-        certificate.publicKey.keyID == it.primaryKeyId &&
-                certificate.getPublicKey(it.subkeyId) != null
-    }
+    fun isEncryptedFor(certificate: PGPPublicKeyRing) = recipients.any { certificate.matches(it) }
 
     companion object {
         /**
