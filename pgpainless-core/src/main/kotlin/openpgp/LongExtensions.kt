@@ -2,19 +2,19 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
-package _kotlin
+package openpgp
 
 /**
- * Format this Long as a 16 digit uppercase hex number.
+ * Format this Long as an OpenPGP key-ID (16 digit uppercase hex number).
  */
-fun Long.hexKeyId(): String {
+fun Long.openPgpKeyId(): String {
     return String.format("%016X", this).uppercase()
 }
 
 /**
- * Parse a 16 digit hex number into a Long.
+ * Parse a Long form a 16 digit hex encoded OpenPgp key-ID.
  */
-fun Long.Companion.fromHexKeyId(hexKeyId: String): Long {
+fun Long.Companion.fromOpenPgpKeyId(hexKeyId: String): Long {
     require("^[0-9A-Fa-f]{16}$".toRegex().matches(hexKeyId)) {
         "Provided long key-id does not match expected format. " +
                 "A long key-id consists of 16 hexadecimal characters."

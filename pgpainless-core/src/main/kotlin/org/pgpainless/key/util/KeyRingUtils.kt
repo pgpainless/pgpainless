@@ -4,7 +4,7 @@
 
 package org.pgpainless.key.util
 
-import _kotlin.hexKeyId
+import openpgp.openPgpKeyId
 import org.bouncycastle.bcpg.S2K
 import org.bouncycastle.bcpg.SecretKeyPacket
 import org.bouncycastle.extensions.certificate
@@ -100,7 +100,7 @@ class KeyRingUtils {
         @JvmStatic
         fun requirePublicKeyFrom(keyRing: PGPKeyRing, subKeyId: Long): PGPPublicKey {
             return keyRing.getPublicKey(subKeyId)
-                    ?: throw NoSuchElementException("KeyRing does not contain public key with keyId ${subKeyId.hexKeyId()}.")
+                    ?: throw NoSuchElementException("KeyRing does not contain public key with keyId ${subKeyId.openPgpKeyId()}.")
         }
 
         /**
@@ -114,7 +114,7 @@ class KeyRingUtils {
         @JvmStatic
         fun requireSecretKeyFrom(keyRing: PGPSecretKeyRing, subKeyId: Long): PGPSecretKey {
             return keyRing.getSecretKey(subKeyId)
-                    ?: throw NoSuchElementException("KeyRing does not contain secret key with keyID ${subKeyId.hexKeyId()}.")
+                    ?: throw NoSuchElementException("KeyRing does not contain secret key with keyID ${subKeyId.openPgpKeyId()}.")
         }
 
         @JvmStatic
@@ -233,7 +233,7 @@ class KeyRingUtils {
             var certificate: PGPPublicKeyRing = secretAndPublicKeys.second
 
             if (!keyRingContainsKeyWithId(certificate, certifiedKey.keyID)) {
-                throw NoSuchElementException("Cannot find public key with id ${certifiedKey.keyID.hexKeyId()} in the provided key ring.")
+                throw NoSuchElementException("Cannot find public key with id ${certifiedKey.keyID.openPgpKeyId()} in the provided key ring.")
             }
 
             certificate = PGPPublicKeyRing(
@@ -389,7 +389,7 @@ class KeyRingUtils {
                 "Bouncy Castle currently cannot deal with stripped primary secret keys."
             }
             if (secretKeys.getSecretKey(keyId) == null) {
-                throw NoSuchElementException("PGPSecretKeyRing does not contain secret key ${keyId.hexKeyId()}.")
+                throw NoSuchElementException("PGPSecretKeyRing does not contain secret key ${keyId.openPgpKeyId()}.")
             }
 
             val out = ByteArrayOutputStream()
