@@ -4,8 +4,8 @@
 
 package org.pgpainless.key.util
 
-import _kotlin.fromHexKeyId
-import _kotlin.hexKeyId
+import openpgp.fromOpenPgpKeyId
+import openpgp.openPgpKeyId
 
 class KeyIdUtil {
 
@@ -21,7 +21,7 @@ class KeyIdUtil {
         @JvmStatic
         @Deprecated("Superseded by Long extension method.",
                 ReplaceWith("Long.fromHexKeyId(longKeyId)"))
-        fun fromLongKeyId(longKeyId: String) = Long.fromHexKeyId(longKeyId)
+        fun fromLongKeyId(longKeyId: String) = Long.fromOpenPgpKeyId(longKeyId)
 
         /**
          * Format a long key-ID as upper-case hex string.
@@ -31,6 +31,6 @@ class KeyIdUtil {
         @JvmStatic
         @Deprecated("Superseded by Long extension method.",
                 ReplaceWith("keyId.hexKeyId()"))
-        fun formatKeyId(keyId: Long) = keyId.hexKeyId()
+        fun formatKeyId(keyId: Long) = keyId.openPgpKeyId()
     }
 }
