@@ -6,5 +6,5 @@ package org.pgpainless.key.generation.type
 
 interface KeyLength {
 
-    fun getLength(): Int
+    val length: Int
 }
