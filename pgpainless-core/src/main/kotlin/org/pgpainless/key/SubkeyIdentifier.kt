@@ -31,7 +31,7 @@ class SubkeyIdentifier(
     val subkeyId = subkeyFingerprint.keyId
     val primaryKeyId = primaryKeyFingerprint.keyId
 
-    val isPrimaryKey = keyId == subkeyId
+    val isPrimaryKey = primaryKeyId == subkeyId
 
     fun matches(fingerprint: OpenPgpFingerprint) =
             primaryKeyFingerprint == fingerprint || subkeyFingerprint == fingerprint
