@@ -6,6 +6,7 @@
 package org.pgpainless.key.protection
 
 import openpgp.openPgpKeyId
+import org.bouncycastle.extensions.isEncrypted
 import org.bouncycastle.openpgp.PGPException
 import org.bouncycastle.openpgp.PGPPrivateKey
 import org.bouncycastle.openpgp.PGPSecretKey
@@ -13,7 +14,6 @@ import org.bouncycastle.openpgp.operator.PBESecretKeyDecryptor
 import org.pgpainless.PGPainless
 import org.pgpainless.exception.KeyIntegrityException
 import org.pgpainless.exception.WrongPassphraseException
-import org.pgpainless.key.info.KeyInfo
 import org.pgpainless.key.util.PublicKeyParameterValidationUtil
 import org.pgpainless.util.Passphrase
 import kotlin.jvm.Throws
@@ -25,7 +25,7 @@ class UnlockSecretKey {
         @JvmStatic
         @Throws(PGPException::class, KeyIntegrityException::class)
         fun unlockSecretKey(secretKey: PGPSecretKey, protector: SecretKeyRingProtector): PGPPrivateKey {
-            return if (KeyInfo.isEncrypted(secretKey)) {
+            return if (secretKey.isEncrypted()) {
                 unlockSecretKey(secretKey, protector.getDecryptor(secretKey.keyID))
             } else {
                 unlockSecretKey(secretKey, null as PBESecretKeyDecryptor?)
