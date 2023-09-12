@@ -5,6 +5,7 @@
 package org.pgpainless.signature.subpackets
 
 import openpgp.openPgpKeyId
+import openpgp.plusSeconds
 import org.bouncycastle.bcpg.sig.*
 import org.bouncycastle.openpgp.PGPPublicKey
 import org.bouncycastle.openpgp.PGPSignature
@@ -116,7 +117,7 @@ class SignatureSubpacketsUtil {
         @JvmStatic
         fun getSignatureExpirationTimeAsDate(signature: PGPSignature): Date? =
                 getSignatureExpirationTime(signature)?.let {
-                    SignatureUtils.datePlusSeconds(signature.creationTime, it.time)
+                    signature.creationTime.plusSeconds(it.time)
                 }
 
         /**
@@ -146,7 +147,7 @@ class SignatureSubpacketsUtil {
                     "Provided key (${signingKey.keyID.openPgpKeyId()}) did not create the signature (${signature.keyID.openPgpKeyId()})"
                 }.run {
                     getKeyExpirationTime(signature)?.let {
-                        SignatureUtils.datePlusSeconds(signingKey.creationTime, it.time)
+                        signingKey.creationTime.plusSeconds(it.time)
                     }
                 }
 

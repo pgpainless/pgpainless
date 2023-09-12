@@ -14,17 +14,12 @@ import org.pgpainless.key.OpenPgpFingerprint
 import org.pgpainless.key.SubkeyIdentifier
 import org.pgpainless.key.util.KeyRingUtils
 import org.pgpainless.policy.Policy
-import org.pgpainless.signature.SignatureUtils
-import org.pgpainless.signature.SignatureUtils.Companion.isHardRevocation
-import org.pgpainless.signature.SignatureUtils.Companion.isSignatureExpired
 import org.pgpainless.signature.consumer.SignaturePicker
 import org.pgpainless.signature.subpackets.SignatureSubpacketsUtil
 import org.pgpainless.signature.subpackets.SignatureSubpacketsUtil.Companion.getKeyExpirationTimeAsDate
 import org.pgpainless.util.DateUtil
 import org.slf4j.LoggerFactory
-import java.security.Key
 import java.util.*
-import kotlin.NoSuchElementException
 
 class KeyRingInfo(
         val keys: PGPKeyRing,
@@ -237,7 +232,7 @@ class KeyRingInfo(
         if (publicKey.keyID == keyId) return primaryKeyExpirationDate
         val subkey = getPublicKey(keyId) ?: throw NoSuchElementException("No subkey with key-ID ${keyId.openPgpKeyId()} found.")
         val bindingSig = getCurrentSubkeyBindingSignature(keyId) ?: throw AssertionError("Subkey has no valid binding signature.")
-        return SignatureUtils.getKeyExpirationDate(subkey.creationTime, bindingSig)
+        return bindingSig.getKeyExpirationDate(subkey.creationTime)
     }
 
     /**
@@ -560,7 +555,7 @@ class KeyRingInfo(
 
         // Primary key -> Check Primary Key Revocation
         if (publicKey.keyID == this.publicKey.keyID) {
-            return if (signatures.primaryKeyRevocation != null && isHardRevocation(signatures.primaryKeyRevocation)) {
+            return if (signatures.primaryKeyRevocation != null && signatures.primaryKeyRevocation.isHardRevocation) {
                 false
             } else signatures.primaryKeyRevocation == null
         }
@@ -570,18 +565,18 @@ class KeyRingInfo(
         val revocation = signatures.subkeyRevocations[keyId]
 
         // No valid binding
-        if (binding == null || isSignatureExpired(binding)) {
+        if (binding == null || binding.isExpired(referenceDate)) {
             return false
         }
 
         // Revocation
         return if (revocation != null) {
-            if (isHardRevocation(revocation)) {
+            if (revocation.isHardRevocation) {
                 // Subkey is hard revoked
                 false
             } else {
                 // Key is soft-revoked, not yet re-bound
-                (isSignatureExpired(revocation) || !revocation.creationTime.after(binding.creationTime))
+                (revocation.isExpired(referenceDate) || !revocation.creationTime.after(binding.creationTime))
             }
         } else true
     }
