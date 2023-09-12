@@ -8,7 +8,6 @@ import openpgp.openPgpKeyId
 import org.bouncycastle.bcpg.S2K
 import org.bouncycastle.bcpg.SecretKeyPacket
 import org.bouncycastle.extensions.certificate
-import org.bouncycastle.extensions.unlock
 import org.bouncycastle.openpgp.*
 import org.bouncycastle.util.Strings
 import org.pgpainless.exception.MissingPassphraseException
@@ -152,22 +151,6 @@ class KeyRingUtils {
                     secretKeyRings.keyRings.asSequence()
                             .map { it.certificate }
                             .toList())
-        }
-
-        /**
-         * Unlock a {@link PGPSecretKey} and return the resulting {@link PGPPrivateKey}.
-         *
-         * @param secretKey secret key
-         * @param protector protector to unlock the secret key
-         * @return private key
-         *
-         * @throws PGPException if something goes wrong (e.g. wrong passphrase)
-         */
-        @JvmStatic
-        @Deprecated("Deprecated in favor of secretKey.unlock(protector)",
-                ReplaceWith("secretKey.unlock(protector)"))
-        fun unlockSecretKey(secretKey: PGPSecretKey, protector: SecretKeyRingProtector): PGPPrivateKey {
-            return secretKey.unlock(protector)
         }
 
         /**
