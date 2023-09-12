@@ -4,6 +4,7 @@
 
 package org.pgpainless.decryption_verification
 
+import org.bouncycastle.extensions.getPublicKeyFor
 import org.bouncycastle.openpgp.*
 import org.bouncycastle.openpgp.operator.PublicKeyDataDecryptorFactory
 import org.pgpainless.decryption_verification.cleartext_signatures.InMemoryMultiPassStrategy
@@ -385,6 +386,11 @@ class ConsumerOptions {
         fun getCertificate(keyId: Long): PGPPublicKeyRing? {
             return explicitCertificates.firstOrNull { it.getPublicKey(keyId) != null }
         }
+
+        fun getCertificate(signature: PGPSignature): PGPPublicKeyRing? =
+                explicitCertificates.firstOrNull {
+                    it.getPublicKeyFor(signature) != null
+                }
     }
 
     companion object {
