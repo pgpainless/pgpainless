@@ -16,6 +16,7 @@ import java.nio.charset.Charset
  */
 abstract class OpenPgpFingerprint : CharSequence, Comparable<OpenPgpFingerprint> {
     val fingerprint: String
+    val bytes: ByteArray
 
     /**
      * Return the version of the fingerprint.
@@ -41,6 +42,7 @@ abstract class OpenPgpFingerprint : CharSequence, Comparable<OpenPgpFingerprint>
             throw IllegalArgumentException("Fingerprint '$fingerprint' does not appear to be a valid OpenPGP V${getVersion()} fingerprint.")
         }
         this.fingerprint = prep
+        this.bytes = Hex.decode(prep)
     }
 
     constructor(bytes: ByteArray): this(Hex.toHexString(bytes))

@@ -8,6 +8,7 @@ import org.bouncycastle.openpgp.PGPSignature
 import org.pgpainless.algorithm.RevocationState
 import org.pgpainless.key.OpenPgpFingerprint
 import org.pgpainless.signature.SignatureUtils
+import org.pgpainless.signature.subpackets.SignatureSubpacketsUtil
 import java.util.*
 
 /**
@@ -51,3 +52,6 @@ fun PGPSignature?.toRevocationState() =
         else
             if (isHardRevocation()) RevocationState.hardRevoked()
             else RevocationState.softRevoked(creationTime)
+
+fun PGPSignature.getFingerprint(): OpenPgpFingerprint? =
+        SignatureSubpacketsUtil.getIssuerFingerprintAsOpenPgpFingerprint(this)

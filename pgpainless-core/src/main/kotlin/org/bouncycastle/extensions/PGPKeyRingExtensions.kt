@@ -5,6 +5,10 @@
 package org.bouncycastle.extensions
 
 import org.bouncycastle.openpgp.PGPKeyRing
+import org.bouncycastle.openpgp.PGPOnePassSignature
+import org.bouncycastle.openpgp.PGPPublicKey
+import org.bouncycastle.openpgp.PGPSignature
+import org.pgpainless.key.OpenPgpFingerprint
 import org.pgpainless.key.SubkeyIdentifier
 
 /**
@@ -13,3 +17,45 @@ import org.pgpainless.key.SubkeyIdentifier
 fun PGPKeyRing.matches(subkeyIdentifier: SubkeyIdentifier): Boolean =
         this.publicKey.keyID == subkeyIdentifier.primaryKeyId &&
                 this.getPublicKey(subkeyIdentifier.subkeyId) != null
+
+/**
+ * Return true, if the [PGPKeyRing] contains a public key with the given key-ID.
+ *
+ * @param keyId keyId
+ * @return true if key with the given key-ID is present, false otherwise
+ */
+fun PGPKeyRing.hasPublicKey(keyId: Long): Boolean =
+        this.getPublicKey(keyId) != null
+
+/**
+ * Return true, if the [PGPKeyRing] contains a public key with the given fingerprint.
+ *
+ * @param fingerprint fingerprint
+ * @return true if key with the given fingerprint is present, false otherwise
+ */
+fun PGPKeyRing.hasPublicKey(fingerprint: OpenPgpFingerprint): Boolean =
+        this.getPublicKey(fingerprint) != null
+
+/**
+ * Return the [PGPPublicKey] with the given [OpenPgpFingerprint] or null, if no such key is present.
+ *
+ * @param fingerprint fingerprint
+ * @return public key
+ */
+fun PGPKeyRing.getPublicKey(fingerprint: OpenPgpFingerprint): PGPPublicKey? =
+        this.getPublicKey(fingerprint.bytes)
+
+/**
+ * Return the [PGPPublicKey] that matches the [OpenPgpFingerprint] of the given [PGPSignature].
+ * If the [PGPSignature] does not carry an issuer-fingerprint subpacket, fall back to the issuer-keyID subpacket to
+ * identify the [PGPPublicKey] via its key-ID.
+ */
+fun PGPKeyRing.getPublicKeyFor(signature: PGPSignature): PGPPublicKey? =
+        signature.getFingerprint()?.let { this.getPublicKey(it) } ?:
+        this.getPublicKey(signature.keyID)
+
+/**
+ * Return the [PGPPublicKey] that matches the key-ID of the given [PGPOnePassSignature] packet.
+ */
+fun PGPKeyRing.getPublicKeyFor(onePassSignature: PGPOnePassSignature): PGPPublicKey? =
+        this.getPublicKey(onePassSignature.keyID)
