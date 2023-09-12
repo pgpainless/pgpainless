@@ -121,7 +121,7 @@ class KeyRingInfo(
     val validAndExpiredUserIds: List<String> = userIds.filter {
         val certification = signatures.userIdCertifications[it] ?: return@filter false
         val revocation = signatures.userIdRevocations[it] ?: return@filter true
-        return@filter !revocation.isHardRevocation() && certification.creationTime > revocation.creationTime
+        return@filter !revocation.isHardRevocation && certification.creationTime > revocation.creationTime
     }
 
     /**
@@ -272,7 +272,7 @@ class KeyRingInfo(
      * @return true, if the given user-ID is hard-revoked.
      */
     fun isHardRevoked(userId: CharSequence): Boolean {
-        return signatures.userIdRevocations[userId]?.isHardRevocation() ?: false
+        return signatures.userIdRevocations[userId]?.isHardRevocation ?: false
     }
 
     /**
@@ -632,7 +632,7 @@ class KeyRingInfo(
                     }
                 }
                 signatures.userIdRevocations[userId]?.let { rev ->
-                    if (rev.isHardRevocation()) {
+                    if (rev.isHardRevocation) {
                         return false // hard revoked -> invalid
                     }
                     sig.creationTime > rev.creationTime// re-certification after soft revocation?

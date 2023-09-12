@@ -4,7 +4,9 @@
 
 package org.pgpainless.signature
 
+import openpgp.plusSeconds
 import org.bouncycastle.bcpg.sig.KeyExpirationTime
+import org.bouncycastle.extensions.*
 import org.bouncycastle.openpgp.*
 import org.bouncycastle.util.encoders.Hex
 import org.bouncycastle.util.io.Streams
@@ -17,6 +19,7 @@ import org.pgpainless.util.ArmorUtils
 import java.io.IOException
 import java.io.InputStream
 import java.util.*
+import kotlin.math.sign
 
 const val MAX_ITERATIONS = 10000
 
@@ -32,10 +35,10 @@ class SignatureUtils {
          * @return key expiration date as given by the signature
          */
         @JvmStatic
+        @Deprecated("Deprecated in favor of PGPSignature extension method.",
+                ReplaceWith("signature.getKeyExpirationDate(keyCreationDate)"))
         fun getKeyExpirationDate(keyCreationDate: Date, signature: PGPSignature): Date? {
-            val expirationPacket: KeyExpirationTime = SignatureSubpacketsUtil.getKeyExpirationTime(signature) ?: return null
-            val expiresInSeconds = expirationPacket.time
-            return datePlusSeconds(keyCreationDate, expiresInSeconds)
+            return signature.getKeyExpirationDate(keyCreationDate)
         }
 
         /**
@@ -46,12 +49,9 @@ class SignatureUtils {
          * @return expiration date of the signature, or null if it does not expire.
          */
         @JvmStatic
-        fun  getSignatureExpirationDate(signature: PGPSignature): Date? {
-            val expirationTime = SignatureSubpacketsUtil.getSignatureExpirationTime(signature) ?: return null
-
-            val expiresInSeconds = expirationTime.time
-            return datePlusSeconds(signature.creationTime, expiresInSeconds)
-        }
+        @Deprecated("Deprecated in favor of PGPSignature extension method.",
+                ReplaceWith("signature.signatureExpirationDate"))
+        fun getSignatureExpirationDate(signature: PGPSignature): Date? = signature.signatureExpirationDate
 
         /**
          * Return a new date which represents the given date plus the given amount of seconds added.
@@ -64,11 +64,10 @@ class SignatureUtils {
          * @return date plus seconds or null if seconds is '0'
          */
         @JvmStatic
+        @Deprecated("Deprecated in favor of Date extension method.",
+                ReplaceWith("date.plusSeconds(seconds)"))
         fun datePlusSeconds(date: Date, seconds: Long): Date? {
-            if (seconds == 0L) {
-                return null
-            }
-            return Date(date.time + 1000 * seconds)
+            return date.plusSeconds(seconds)
         }
 
         /**
@@ -79,8 +78,10 @@ class SignatureUtils {
          * @return true if expired, false otherwise
          */
         @JvmStatic
+        @Deprecated("Deprecated in favor of PGPSignature extension method.",
+                ReplaceWith("signature.isExpired()"))
         fun isSignatureExpired(signature: PGPSignature): Boolean {
-            return isSignatureExpired(signature, Date())
+            return signature.isExpired()
         }
 
         /**
@@ -92,9 +93,10 @@ class SignatureUtils {
          * @return true if sig is expired at reference date, false otherwise
          */
         @JvmStatic
+        @Deprecated("Deprecated in favor of PGPSignature extension method.",
+                ReplaceWith("signature.isExpired(referenceTime)"))
         fun isSignatureExpired(signature: PGPSignature, referenceTime: Date): Boolean {
-            val expirationDate = getSignatureExpirationDate(signature) ?: return false
-            return referenceTime >= expirationDate
+            return signature.isExpired(referenceTime)
         }
 
         /**
@@ -106,15 +108,10 @@ class SignatureUtils {
          * @return true if signature is a hard revocation
          */
         @JvmStatic
+        @Deprecated("Deprecated in favor of PGPSignature extension function.",
+                ReplaceWith("signature.isHardRevocation()"))
         fun isHardRevocation(signature: PGPSignature): Boolean {
-            val type = SignatureType.requireFromCode(signature.signatureType)
-            if (type != SignatureType.KEY_REVOCATION && type != SignatureType.SUBKEY_REVOCATION && type != SignatureType.CERTIFICATION_REVOCATION) {
-                // Not a revocation
-                return false
-            }
-
-            val reason = SignatureSubpacketsUtil.getRevocationReason(signature) ?: return true // no reason -> hard revocation
-            return Reason.isHardRevocation(reason.revocationReason)
+            return signature.isHardRevocation
         }
 
         @JvmStatic
@@ -181,22 +178,10 @@ class SignatureUtils {
          * @return signatures issuing key id
          */
         @JvmStatic
+        @Deprecated("Deprecated in favor of PGPSignature extension method.",
+                ReplaceWith("signature.issuerKeyId"))
         fun determineIssuerKeyId(signature: PGPSignature): Long {
-            if (signature.version == 3) {
-                // V3 sigs do not contain subpackets
-                return signature.keyID
-            }
-
-            val issuerKeyId = SignatureSubpacketsUtil.getIssuerKeyId(signature)
-            val issuerFingerprint = SignatureSubpacketsUtil.getIssuerFingerprintAsOpenPgpFingerprint(signature)
-
-            if (issuerKeyId != null && issuerKeyId.keyID != 0L) {
-                return issuerKeyId.keyID
-            }
-            if (issuerKeyId == null && issuerFingerprint != null) {
-                return issuerFingerprint.keyId
-            }
-            return 0
+            return signature.issuerKeyId
         }
 
         /**
@@ -211,21 +196,17 @@ class SignatureUtils {
         }
 
         @JvmStatic
+        @Deprecated("Deprecated in favor of PGPSignature extension method",
+                ReplaceWith("signature.wasIssuedBy(fingerprint)"))
         fun wasIssuedBy(fingerprint: ByteArray, signature: PGPSignature): Boolean {
-            return try {
-                val pgpFingerprint = OpenPgpFingerprint.parseFromBinary(fingerprint)
-                wasIssuedBy(pgpFingerprint, signature)
-            } catch (e : IllegalArgumentException) {
-                // Unknown fingerprint length
-                false
-            }
+            return signature.wasIssuedBy(fingerprint)
         }
 
         @JvmStatic
+        @Deprecated("Deprecated in favor of PGPSignature extension method",
+                ReplaceWith("signature.wasIssuedBy(fingerprint)"))
         fun wasIssuedBy(fingerprint: OpenPgpFingerprint, signature: PGPSignature): Boolean {
-            val issuerFp = SignatureSubpacketsUtil.getIssuerFingerprintAsOpenPgpFingerprint(signature)
-                    ?: return fingerprint.keyId == signature.keyID
-            return fingerprint == issuerFp
+            return signature.wasIssuedBy(fingerprint)
         }
 
         /**
