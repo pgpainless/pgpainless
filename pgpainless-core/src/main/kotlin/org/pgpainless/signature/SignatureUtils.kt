@@ -10,16 +10,13 @@ import org.bouncycastle.extensions.*
 import org.bouncycastle.openpgp.*
 import org.bouncycastle.util.encoders.Hex
 import org.bouncycastle.util.io.Streams
-import org.pgpainless.algorithm.SignatureType
 import org.pgpainless.implementation.ImplementationFactory
 import org.pgpainless.key.OpenPgpFingerprint
 import org.pgpainless.key.util.RevocationAttributes.Reason
-import org.pgpainless.signature.subpackets.SignatureSubpacketsUtil
 import org.pgpainless.util.ArmorUtils
 import java.io.IOException
 import java.io.InputStream
 import java.util.*
-import kotlin.math.sign
 
 const val MAX_ITERATIONS = 10000
 
@@ -36,21 +33,21 @@ class SignatureUtils {
          */
         @JvmStatic
         @Deprecated("Deprecated in favor of PGPSignature extension method.",
-                ReplaceWith("signature.getKeyExpirationDate(keyCreationDate)"))
+                ReplaceWith("signature.getKeyExpirationDate(keyCreationDate)", "org.bouncycastle.extensions.getKeyExpirationDate"))
         fun getKeyExpirationDate(keyCreationDate: Date, signature: PGPSignature): Date? {
             return signature.getKeyExpirationDate(keyCreationDate)
         }
 
         /**
          * Return the expiration date of the signature.
-         * If the signature has no expiration date, [datePlusSeconds] will return null.
+         * If the signature has no expiration date, this will return null.
          *
          * @param signature signature
          * @return expiration date of the signature, or null if it does not expire.
          */
         @JvmStatic
         @Deprecated("Deprecated in favor of PGPSignature extension method.",
-                ReplaceWith("signature.signatureExpirationDate"))
+                ReplaceWith("signature.signatureExpirationDate", "org.bouncycastle.extensions.signatureExpirationDate"))
         fun getSignatureExpirationDate(signature: PGPSignature): Date? = signature.signatureExpirationDate
 
         /**
@@ -65,7 +62,7 @@ class SignatureUtils {
          */
         @JvmStatic
         @Deprecated("Deprecated in favor of Date extension method.",
-                ReplaceWith("date.plusSeconds(seconds)"))
+                ReplaceWith("date.plusSeconds(seconds)", "openpgp.plusSeconds"))
         fun datePlusSeconds(date: Date, seconds: Long): Date? {
             return date.plusSeconds(seconds)
         }
@@ -79,7 +76,7 @@ class SignatureUtils {
          */
         @JvmStatic
         @Deprecated("Deprecated in favor of PGPSignature extension method.",
-                ReplaceWith("signature.isExpired()"))
+                ReplaceWith("signature.isExpired()", "org.bouncycastle.extensions.isExpired"))
         fun isSignatureExpired(signature: PGPSignature): Boolean {
             return signature.isExpired()
         }
@@ -94,7 +91,7 @@ class SignatureUtils {
          */
         @JvmStatic
         @Deprecated("Deprecated in favor of PGPSignature extension method.",
-                ReplaceWith("signature.isExpired(referenceTime)"))
+                ReplaceWith("signature.isExpired(referenceTime)", "org.bouncycastle.extensions.isExpired"))
         fun isSignatureExpired(signature: PGPSignature, referenceTime: Date): Boolean {
             return signature.isExpired(referenceTime)
         }
@@ -109,7 +106,7 @@ class SignatureUtils {
          */
         @JvmStatic
         @Deprecated("Deprecated in favor of PGPSignature extension function.",
-                ReplaceWith("signature.isHardRevocation()"))
+                ReplaceWith("signature.isHardRevocation", "org.bouncycastle.extensions.isHardRevocation"))
         fun isHardRevocation(signature: PGPSignature): Boolean {
             return signature.isHardRevocation
         }
@@ -179,7 +176,7 @@ class SignatureUtils {
          */
         @JvmStatic
         @Deprecated("Deprecated in favor of PGPSignature extension method.",
-                ReplaceWith("signature.issuerKeyId"))
+                ReplaceWith("signature.issuerKeyId", "org.bouncycastle.extensions.issuerKeyId"))
         fun determineIssuerKeyId(signature: PGPSignature): Long {
             return signature.issuerKeyId
         }
@@ -197,14 +194,14 @@ class SignatureUtils {
 
         @JvmStatic
         @Deprecated("Deprecated in favor of PGPSignature extension method",
-                ReplaceWith("signature.wasIssuedBy(fingerprint)"))
+                ReplaceWith("signature.wasIssuedBy(fingerprint)", "org.bouncycastle.extensions.wasIssuedBy"))
         fun wasIssuedBy(fingerprint: ByteArray, signature: PGPSignature): Boolean {
             return signature.wasIssuedBy(fingerprint)
         }
 
         @JvmStatic
         @Deprecated("Deprecated in favor of PGPSignature extension method",
-                ReplaceWith("signature.wasIssuedBy(fingerprint)"))
+                ReplaceWith("signature.wasIssuedBy(fingerprint)", "org.bouncycastle.extensions.wasIssuedBy"))
         fun wasIssuedBy(fingerprint: OpenPgpFingerprint, signature: PGPSignature): Boolean {
             return signature.wasIssuedBy(fingerprint)
         }

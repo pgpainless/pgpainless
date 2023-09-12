@@ -9,6 +9,7 @@ import org.bouncycastle.bcpg.BCPGInputStream
 import org.bouncycastle.bcpg.UnsupportedPacketVersionException
 import org.bouncycastle.extensions.getPublicKeyFor
 import org.bouncycastle.extensions.getSecretKeyFor
+import org.bouncycastle.extensions.issuerKeyId
 import org.bouncycastle.extensions.unlock
 import org.bouncycastle.openpgp.*
 import org.bouncycastle.openpgp.operator.PBEDataDecryptorFactory
@@ -26,7 +27,6 @@ import org.pgpainless.implementation.ImplementationFactory
 import org.pgpainless.key.SubkeyIdentifier
 import org.pgpainless.key.util.KeyRingUtils
 import org.pgpainless.policy.Policy
-import org.pgpainless.signature.SignatureUtils
 import org.pgpainless.signature.consumer.CertificateValidator
 import org.pgpainless.signature.consumer.OnePassSignatureCheck
 import org.pgpainless.signature.consumer.SignatureCheck
@@ -197,7 +197,7 @@ class OpenPgpMessageInputStream(
             return
         }
 
-        val keyId = SignatureUtils.determineIssuerKeyId(signature)
+        val keyId = signature.issuerKeyId
         if (isSigForOps) {
             LOGGER.debug("Signature Packet corresponding to One-Pass-Signature by key ${keyId.openPgpKeyId()} at depth ${layerMetadata.depth} encountered.")
             signatures.leaveNesting() // TODO: Only leave nesting if all OPSs of the nesting layer are dealt with
@@ -632,7 +632,7 @@ class OpenPgpMessageInputStream(
 
         fun addDetachedSignature(signature: PGPSignature) {
             val check = initializeSignature(signature)
-            val keyId = SignatureUtils.determineIssuerKeyId(signature)
+            val keyId = signature.issuerKeyId
             if (check != null) {
                 detachedSignatures.add(check)
             } else {
@@ -644,7 +644,7 @@ class OpenPgpMessageInputStream(
 
         fun addPrependedSignature(signature: PGPSignature) {
             val check = initializeSignature(signature)
-            val keyId = SignatureUtils.determineIssuerKeyId(signature)
+            val keyId = signature.issuerKeyId
             if (check != null) {
                 prependedSignatures.add(check)
             } else {
@@ -682,7 +682,7 @@ class OpenPgpMessageInputStream(
 
         fun addCorrespondingOnePassSignature(signature: PGPSignature, layer: Layer, policy: Policy) {
             var found = false
-            val keyId = SignatureUtils.determineIssuerKeyId(signature)
+            val keyId = signature.issuerKeyId
             for ((i, check) in onePassSignatures.withIndex().reversed()) {
                 if (check.onePassSignature.keyID != keyId) {
                     continue
