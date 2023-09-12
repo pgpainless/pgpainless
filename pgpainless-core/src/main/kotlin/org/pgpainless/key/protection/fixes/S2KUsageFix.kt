@@ -5,13 +5,13 @@
 package org.pgpainless.key.protection.fixes
 
 import org.bouncycastle.bcpg.SecretKeyPacket
+import org.bouncycastle.extensions.unlock
 import org.bouncycastle.openpgp.PGPSecretKey
 import org.bouncycastle.openpgp.PGPSecretKeyRing
 import org.pgpainless.algorithm.HashAlgorithm
 import org.pgpainless.exception.WrongPassphraseException
 import org.pgpainless.implementation.ImplementationFactory
 import org.pgpainless.key.protection.SecretKeyRingProtector
-import org.pgpainless.key.protection.UnlockSecretKey.Companion.unlockSecretKey
 
 /**
  * Repair class to fix keys which use S2K usage of value [SecretKeyPacket.USAGE_CHECKSUM].
@@ -62,7 +62,7 @@ class S2KUsageFix {
                     throw WrongPassphraseException("Missing passphrase for key with ID " + java.lang.Long.toHexString(keyId))
                 }
 
-                val privateKey = unlockSecretKey(key, protector)
+                val privateKey = key.unlock(protector)
                 // This constructor makes use of USAGE_SHA1 by default
                 val fixedKey = PGPSecretKey(
                         privateKey,
