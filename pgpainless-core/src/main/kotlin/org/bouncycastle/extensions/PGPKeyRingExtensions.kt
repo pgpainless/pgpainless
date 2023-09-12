@@ -8,6 +8,7 @@ import org.bouncycastle.openpgp.PGPKeyRing
 import org.bouncycastle.openpgp.PGPOnePassSignature
 import org.bouncycastle.openpgp.PGPPublicKey
 import org.bouncycastle.openpgp.PGPSignature
+import org.pgpainless.PGPainless
 import org.pgpainless.key.OpenPgpFingerprint
 import org.pgpainless.key.SubkeyIdentifier
 
@@ -51,7 +52,7 @@ fun PGPKeyRing.getPublicKey(fingerprint: OpenPgpFingerprint): PGPPublicKey? =
  * identify the [PGPPublicKey] via its key-ID.
  */
 fun PGPKeyRing.getPublicKeyFor(signature: PGPSignature): PGPPublicKey? =
-        signature.getFingerprint()?.let { this.getPublicKey(it) } ?:
+        signature.fingerprint?.let { this.getPublicKey(it) } ?:
         this.getPublicKey(signature.keyID)
 
 /**
@@ -59,3 +60,14 @@ fun PGPKeyRing.getPublicKeyFor(signature: PGPSignature): PGPPublicKey? =
  */
 fun PGPKeyRing.getPublicKeyFor(onePassSignature: PGPOnePassSignature): PGPPublicKey? =
         this.getPublicKey(onePassSignature.keyID)
+
+/**
+ * Return the [OpenPgpFingerprint] of this OpenPGP key.
+ */
+val PGPKeyRing.openPgpFingerprint: OpenPgpFingerprint
+    get() = OpenPgpFingerprint.of(this)
+
+/**
+ * Return this OpenPGP key as an ASCII armored String.
+ */
+fun PGPKeyRing.toAsciiArmor(): String = PGPainless.asciiArmor(this)

@@ -11,6 +11,7 @@ import org.bouncycastle.bcpg.EdDSAPublicBCPGKey
 import org.bouncycastle.jcajce.provider.asymmetric.util.ECUtil
 import org.bouncycastle.openpgp.PGPPublicKey
 import org.pgpainless.algorithm.PublicKeyAlgorithm
+import org.pgpainless.key.OpenPgpFingerprint
 import org.pgpainless.key.generation.type.eddsa.EdDSACurve
 
 /**
@@ -35,3 +36,15 @@ fun PGPPublicKey.getCurveName(): String {
             .let { it to ECUtil.getCurveName(it) }
             .let { if (it.second != null) return it.second else throw IllegalArgumentException("Unknown curve: ${it.first}") }
 }
+
+/**
+ * Return the [PublicKeyAlgorithm] of this key.
+ */
+val PGPPublicKey.publicKeyAlgorithm: PublicKeyAlgorithm
+    get() = PublicKeyAlgorithm.requireFromId(algorithm)
+
+/**
+ * Return the [OpenPgpFingerprint] of this key.
+ */
+val PGPPublicKey.openPgpFingerprint: OpenPgpFingerprint
+    get() = OpenPgpFingerprint.of(this)

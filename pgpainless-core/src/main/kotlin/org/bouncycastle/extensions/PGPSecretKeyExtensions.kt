@@ -7,10 +7,13 @@ package org.bouncycastle.extensions
 import org.bouncycastle.bcpg.S2K
 import org.bouncycastle.openpgp.PGPException
 import org.bouncycastle.openpgp.PGPPrivateKey
+import org.bouncycastle.openpgp.PGPPublicKey
 import org.bouncycastle.openpgp.PGPSecretKey
 import org.bouncycastle.openpgp.operator.PBESecretKeyDecryptor
+import org.pgpainless.algorithm.PublicKeyAlgorithm
 import org.pgpainless.exception.KeyIntegrityException
 import org.pgpainless.exception.WrongPassphraseException
+import org.pgpainless.key.OpenPgpFingerprint
 import org.pgpainless.key.protection.SecretKeyRingProtector
 import org.pgpainless.key.protection.UnlockSecretKey
 import org.pgpainless.util.Passphrase
@@ -70,3 +73,15 @@ fun PGPSecretKey?.isDecrypted(): Boolean = (this == null) || (s2KUsage == 0)
  * @return true if secret key has S2K of type GNU_DUMMY_S2K, false otherwise.
  */
 fun PGPSecretKey?.hasDummyS2K(): Boolean = (this != null) && (s2K?.type == S2K.GNU_DUMMY_S2K)
+
+/**
+ * Return the [PublicKeyAlgorithm] of this key.
+ */
+val PGPSecretKey.publicKeyAlgorithm: PublicKeyAlgorithm
+    get() = publicKey.publicKeyAlgorithm
+
+/**
+ * Return the [OpenPgpFingerprint] of this key.
+ */
+val PGPSecretKey.openPgpFingerprint: OpenPgpFingerprint
+    get() = OpenPgpFingerprint.of(this)

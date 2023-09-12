@@ -4,6 +4,7 @@
 
 package org.bouncycastle.extensions
 
+import openpgp.openPgpKeyId
 import org.bouncycastle.openpgp.*
 import org.pgpainless.key.OpenPgpFingerprint
 
@@ -41,12 +42,28 @@ fun PGPSecretKeyRing.getSecretKey(fingerprint: OpenPgpFingerprint): PGPSecretKey
         this.getSecretKey(fingerprint.bytes)
 
 /**
+ * Return the [PGPSecretKey] with the given key-ID.
+ *
+ * @throws NoSuchElementException if the OpenPGP key doesn't contain a secret key with the given key-ID
+ */
+fun PGPSecretKeyRing.requireSecretKey(keyId: Long): PGPSecretKey =
+        getSecretKey(keyId) ?: throw NoSuchElementException("OpenPGP key does not contain key with id ${keyId.openPgpKeyId()}.")
+
+/**
+ * Return the [PGPSecretKey] with the given fingerprint.
+ *
+ * @throws NoSuchElementException of the OpenPGP key doesn't contain a secret key with the given fingerprint
+ */
+fun PGPSecretKeyRing.requireSecretKey(fingerprint: OpenPgpFingerprint): PGPSecretKey =
+        getSecretKey(fingerprint) ?: throw NoSuchElementException("OpenPGP key does not contain key with fingerprint $fingerprint.")
+
+/**
  * Return the [PGPSecretKey] that matches the [OpenPgpFingerprint] of the given [PGPSignature].
  * If the [PGPSignature] does not carry an issuer-fingerprint subpacket, fall back to the issuer-keyID subpacket to
  * identify the [PGPSecretKey] via its key-ID.
  */
 fun PGPSecretKeyRing.getSecretKeyFor(signature: PGPSignature): PGPSecretKey? =
-        signature.getFingerprint()?.let { this.getSecretKey(it) } ?:
+        signature.fingerprint?.let { this.getSecretKey(it) } ?:
         this.getSecretKey(signature.keyID)
 
 /**

@@ -8,6 +8,7 @@ import openpgp.openPgpKeyId
 import org.bouncycastle.bcpg.S2K
 import org.bouncycastle.bcpg.SecretKeyPacket
 import org.bouncycastle.extensions.certificate
+import org.bouncycastle.extensions.requireSecretKey
 import org.bouncycastle.openpgp.*
 import org.bouncycastle.util.Strings
 import org.pgpainless.exception.MissingPassphraseException
@@ -34,9 +35,10 @@ class KeyRingUtils {
          * @return primary secret key
          */
         @JvmStatic
+        @Deprecated("Deprecated in favor of PGPSecretKeyRing extension function.",
+                ReplaceWith("secretKeys.requireSecretKey(keyId)"))
         fun requirePrimarySecretKeyFrom(secretKeys: PGPSecretKeyRing): PGPSecretKey {
-            return getPrimarySecretKeyFrom(secretKeys)
-                    ?: throw NoSuchElementException("Provided PGPSecretKeyRing has no primary secret key.")
+            return secretKeys.requireSecretKey(secretKeys.publicKey.keyID)
         }
 
         /**
