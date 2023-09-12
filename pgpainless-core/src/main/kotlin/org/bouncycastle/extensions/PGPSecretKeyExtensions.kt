@@ -5,7 +5,50 @@
 package org.bouncycastle.extensions
 
 import org.bouncycastle.bcpg.S2K
+import org.bouncycastle.openpgp.PGPException
+import org.bouncycastle.openpgp.PGPPrivateKey
 import org.bouncycastle.openpgp.PGPSecretKey
+import org.bouncycastle.openpgp.operator.PBESecretKeyDecryptor
+import org.pgpainless.exception.KeyIntegrityException
+import org.pgpainless.exception.WrongPassphraseException
+import org.pgpainless.key.protection.SecretKeyRingProtector
+import org.pgpainless.key.protection.UnlockSecretKey
+import org.pgpainless.util.Passphrase
+
+/**
+ * Unlock the secret key to get its [PGPPrivateKey].
+ *
+ * @param passphrase passphrase to unlock the secret key with.
+ * @throws PGPException if the key cannot be unlocked
+ * @throws KeyIntegrityException if the public key part was tampered with
+ * @throws WrongPassphraseException
+ */
+@Throws(PGPException::class, KeyIntegrityException::class)
+fun PGPSecretKey.unlock(passphrase: Passphrase): PGPPrivateKey =
+        UnlockSecretKey.unlockSecretKey(this, passphrase)
+
+/**
+ * Unlock the secret key to get its [PGPPrivateKey].
+ *
+ * @param protector protector to unlock the secret key.
+ * @throws PGPException if the key cannot be unlocked
+ * @throws KeyIntegrityException if the public key part was tampered with
+ */
+@Throws(PGPException::class, KeyIntegrityException::class)
+@JvmOverloads
+fun PGPSecretKey.unlock(protector: SecretKeyRingProtector = SecretKeyRingProtector.unprotectedKeys()): PGPPrivateKey =
+        UnlockSecretKey.unlockSecretKey(this, protector)
+
+/**
+ * Unlock the secret key to get its [PGPPrivateKey].
+ *
+ * @param decryptor decryptor to unlock the secret key.
+ * @throws PGPException if the key cannot be unlocked
+ * @throws KeyIntegrityException if the public key part was tampered with
+ */
+@Throws(PGPException::class, KeyIntegrityException::class)
+fun PGPSecretKey.unlock(decryptor: PBESecretKeyDecryptor?): PGPPrivateKey =
+    UnlockSecretKey.unlockSecretKey(this, decryptor)
 
 /**
  * Returns indication that the secret key is encrypted.

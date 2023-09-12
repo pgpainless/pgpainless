@@ -7,6 +7,7 @@ package org.pgpainless.decryption_verification
 import openpgp.openPgpKeyId
 import org.bouncycastle.bcpg.BCPGInputStream
 import org.bouncycastle.bcpg.UnsupportedPacketVersionException
+import org.bouncycastle.extensions.unlock
 import org.bouncycastle.openpgp.*
 import org.bouncycastle.openpgp.operator.PBEDataDecryptorFactory
 import org.bouncycastle.openpgp.operator.PublicKeyDataDecryptorFactory
@@ -21,7 +22,6 @@ import org.pgpainless.decryption_verification.syntax_check.StackSymbol
 import org.pgpainless.exception.*
 import org.pgpainless.implementation.ImplementationFactory
 import org.pgpainless.key.SubkeyIdentifier
-import org.pgpainless.key.protection.UnlockSecretKey
 import org.pgpainless.key.util.KeyRingUtils
 import org.pgpainless.policy.Policy
 import org.pgpainless.signature.SignatureUtils
@@ -302,7 +302,7 @@ class OpenPgpMessageInputStream(
                 continue
             }
 
-            val privateKey = UnlockSecretKey.unlockSecretKey(secretKey, protector)
+            val privateKey = secretKey.unlock(protector)
             if (decryptWithPrivateKey(esks, privateKey, decryptionKeyId, pkesk)) {
                 return true
             }
@@ -325,7 +325,7 @@ class OpenPgpMessageInputStream(
                     continue
                 }
 
-                val privateKey = UnlockSecretKey.unlockSecretKey(secretKey, protector)
+                val privateKey = secretKey.unlock(protector)
                 if (decryptWithPrivateKey(esks, privateKey, decryptionKeyId, pkesk)) {
                     return true
                 }
@@ -351,7 +351,7 @@ class OpenPgpMessageInputStream(
 
                 LOGGER.debug("Attempt decryption with key $decryptionKeyId while interactively requesting its passphrase.")
                 val protector = options.getSecretKeyProtector(decryptionKeys) ?: continue
-                val privateKey = UnlockSecretKey.unlockSecretKey(secretKey, protector)
+                val privateKey = secretKey.unlock(protector)
                 if (decryptWithPrivateKey(esks, privateKey, decryptionKeyId, pkesk)) {
                     return true
                 }

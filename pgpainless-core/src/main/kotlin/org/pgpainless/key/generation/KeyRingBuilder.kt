@@ -4,6 +4,7 @@
 
 package org.pgpainless.key.generation
 
+import org.bouncycastle.extensions.unlock
 import org.bouncycastle.openpgp.*
 import org.bouncycastle.openpgp.operator.PBESecretKeyDecryptor
 import org.bouncycastle.openpgp.operator.PBESecretKeyEncryptor
@@ -14,7 +15,6 @@ import org.pgpainless.PGPainless
 import org.pgpainless.algorithm.KeyFlag
 import org.pgpainless.algorithm.SignatureType
 import org.pgpainless.implementation.ImplementationFactory
-import org.pgpainless.key.protection.UnlockSecretKey
 import org.pgpainless.policy.Policy
 import org.pgpainless.provider.ProviderFactory
 import org.pgpainless.signature.subpackets.SelfSignatureSubpackets
@@ -137,7 +137,7 @@ class KeyRingBuilder : KeyRingBuilderInterface<KeyRingBuilder> {
 
         // Attempt to add additional user-ids to the primary public key
         var primaryPubKey = secretKeys.next().publicKey
-        val privateKey = UnlockSecretKey.unlockSecretKey(secretKeyRing.secretKey, secretKeyDecryptor)
+        val privateKey = secretKeyRing.secretKey.unlock(secretKeyDecryptor)
         val userIdIterator = userIds.entries.iterator()
         if (userIdIterator.hasNext()) {
             userIdIterator.next() // Skip primary userId
