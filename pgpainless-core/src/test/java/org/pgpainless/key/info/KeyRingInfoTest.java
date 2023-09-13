@@ -149,7 +149,7 @@ public class KeyRingInfoTest {
 
     private static PGPSecretKeyRing encryptSecretKeys(PGPSecretKeyRing secretKeys) throws PGPException {
         return PGPainless.modifyKeyRing(secretKeys)
-                .changePassphraseFromOldPassphrase(null)
+                .changePassphraseFromOldPassphrase(Passphrase.emptyPassphrase())
                 .withSecureDefaultSettings()
                 .toNewPassphrase(Passphrase.fromPassword("sw0rdf1sh"))
                 .done();
