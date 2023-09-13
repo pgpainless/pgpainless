@@ -4,6 +4,7 @@
 
 package org.bouncycastle.extensions
 
+import openpgp.openPgpKeyId
 import org.bouncycastle.openpgp.PGPKeyRing
 import org.bouncycastle.openpgp.PGPOnePassSignature
 import org.bouncycastle.openpgp.PGPPublicKey
@@ -45,6 +46,12 @@ fun PGPKeyRing.hasPublicKey(fingerprint: OpenPgpFingerprint): Boolean =
  */
 fun PGPKeyRing.getPublicKey(fingerprint: OpenPgpFingerprint): PGPPublicKey? =
         this.getPublicKey(fingerprint.bytes)
+
+fun PGPKeyRing.requirePublicKey(keyId: Long): PGPPublicKey =
+        getPublicKey(keyId) ?: throw NoSuchElementException("OpenPGP key does not contain key with id ${keyId.openPgpKeyId()}.")
+
+fun PGPKeyRing.requirePublicKey(fingerprint: OpenPgpFingerprint): PGPPublicKey =
+        getPublicKey(fingerprint) ?: throw NoSuchElementException("OpenPGP key does not contain key with fingerprint $fingerprint.")
 
 /**
  * Return the [PGPPublicKey] that matches the [OpenPgpFingerprint] of the given [PGPSignature].

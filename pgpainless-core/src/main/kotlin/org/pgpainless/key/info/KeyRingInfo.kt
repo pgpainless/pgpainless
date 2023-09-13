@@ -213,6 +213,48 @@ class KeyRingInfo(
     }
 
     /**
+     * List of all subkeys that can be used to sign a message.
+     */
+    val signingSubkeys: List<PGPPublicKey> = validSubkeys.filter { getKeyFlagsOf(it.keyID).contains(KeyFlag.SIGN_DATA) }
+
+    /**
+     * Whether the key is usable for encryption.
+     */
+    val isUsableForEncryption: Boolean = isUsableForEncryption(EncryptionPurpose.ANY)
+
+    /**
+     * Whether the key is capable of signing messages.
+     * This field is also true, if the key contains a subkey that is capable of signing messages, but where the secret
+     * key is unavailable, e.g. because it was moved to a smart-card.
+     *
+     * To check for keys that are actually usable to sign messages, use [isUsableForSigning].
+     */
+    val isSigningCapable: Boolean = isKeyValidlyBound(keyId) && signingSubkeys.isNotEmpty()
+
+    /**
+     * Whether the key is actually usable to sign messages.
+     */
+    val isUsableForSigning: Boolean = isSigningCapable && signingSubkeys.any { isSecretKeyAvailable(it.keyID) }
+
+    /**
+     * [HashAlgorithm] preferences of the primary user-ID or if absent, of the primary key.
+     */
+    val preferredHashAlgorithms: Set<HashAlgorithm>
+        get() = primaryUserId?.let { getPreferredHashAlgorithms(it) } ?: getPreferredHashAlgorithms(keyId)
+
+    /**
+     * [SymmetricKeyAlgorithm] preferences of the primary user-ID or if absent of the primary key.
+     */
+    val preferredSymmetricKeyAlgorithms: Set<SymmetricKeyAlgorithm>
+        get() = primaryUserId?.let { getPreferredSymmetricKeyAlgorithms(it) } ?: getPreferredSymmetricKeyAlgorithms(keyId)
+
+    /**
+     * [CompressionAlgorithm] preferences of the primary user-ID or if absent, the primary key.
+     */
+    val preferredCompressionAlgorithms: Set<CompressionAlgorithm>
+        get() = primaryUserId?.let { getPreferredCompressionAlgorithms(it) } ?: getPreferredCompressionAlgorithms(keyId)
+
+    /**
      * Return the expiration date of the subkey with the provided fingerprint.
      *
      * @param fingerprint subkey fingerprint
@@ -332,16 +374,6 @@ class KeyRingInfo(
     }
 
     /**
-     * List of all subkeys that can be used to sign a message.
-     */
-    val signingSubkeys: List<PGPPublicKey> = validSubkeys.filter { getKeyFlagsOf(it.keyID).contains(KeyFlag.SIGN_DATA) }
-
-    /**
-     * Whether the key is usable for encryption.
-     */
-    val isUsableForEncryption: Boolean = isUsableForEncryption(EncryptionPurpose.ANY)
-
-    /**
      * Return, whether the key is usable for encryption, given the purpose.
      *
      * @return true, if the key can be used to encrypt a message according to the encryption-purpose.
@@ -349,20 +381,6 @@ class KeyRingInfo(
     fun isUsableForEncryption(purpose: EncryptionPurpose): Boolean {
         return isKeyValidlyBound(keyId) && getEncryptionSubkeys(purpose).isNotEmpty()
     }
-
-    /**
-     * Whether the key is capable of signing messages.
-     * This field is also true, if the key contains a subkey that is capable of signing messages, but where the secret
-     * key is unavailable, e.g. because it was moved to a smart-card.
-     *
-     * To check for keys that are actually usable to sign messages, use [isUsableForSigning].
-     */
-    val isSigningCapable: Boolean = isKeyValidlyBound(keyId) && signingSubkeys.isNotEmpty()
-
-    /**
-     * Whether the key is actually usable to sign messages.
-     */
-    val isUsableForSigning: Boolean = isSigningCapable && signingSubkeys.any { isSecretKeyAvailable(it.keyID) }
 
     /**
      * Return the primary user-ID, even if it is possibly expired.
@@ -621,7 +639,7 @@ class KeyRingInfo(
                     return false
                 }
                 if (sig.hashedSubPackets.isPrimaryUserID) {
-                    SignatureSubpacketsUtil.getKeyExpirationTimeAsDate(sig, publicKey)?.let { expirationDate ->
+                    getKeyExpirationTimeAsDate(sig, publicKey)?.let { expirationDate ->
                         // key expired?
                         if (expirationDate < referenceDate) return false
                     }
@@ -633,12 +651,6 @@ class KeyRingInfo(
                     sig.creationTime > rev.creationTime// re-certification after soft revocation?
                 } ?: true // certification, but no revocation
             } ?: false // no certification
-
-    /**
-     * [HashAlgorithm] preferences of the primary user-ID or if absent, of the primary key.
-     */
-    val preferredHashAlgorithms: Set<HashAlgorithm>
-        get() = primaryUserId?.let { getPreferredHashAlgorithms(it) } ?: getPreferredHashAlgorithms(keyId)
 
     /**
      * [HashAlgorithm] preferences of the given user-ID.
@@ -655,12 +667,6 @@ class KeyRingInfo(
     }
 
     /**
-     * [SymmetricKeyAlgorithm] preferences of the primary user-ID or if absent of the primary key.
-     */
-    val preferredSymmetricKeyAlgorithms: Set<SymmetricKeyAlgorithm>
-        get() = primaryUserId?.let { getPreferredSymmetricKeyAlgorithms(it) } ?: getPreferredSymmetricKeyAlgorithms(keyId)
-
-    /**
      * [SymmetricKeyAlgorithm] preferences of the given user-ID.
      */
     fun getPreferredSymmetricKeyAlgorithms(userId: CharSequence): Set<SymmetricKeyAlgorithm> {
@@ -673,12 +679,6 @@ class KeyRingInfo(
     fun getPreferredSymmetricKeyAlgorithms(keyId: Long): Set<SymmetricKeyAlgorithm> {
         return KeyAccessor.SubKey(this, SubkeyIdentifier(keys, keyId)).preferredSymmetricKeyAlgorithms
     }
-
-    /**
-     * [CompressionAlgorithm] preferences of the primary user-ID or if absent, the primary key.
-     */
-    val preferredCompressionAlgorithms: Set<CompressionAlgorithm>
-        get() = primaryUserId?.let { getPreferredCompressionAlgorithms(it) } ?: getPreferredCompressionAlgorithms(keyId)
 
     /**
      * [CompressionAlgorithm] preferences of the given user-ID.

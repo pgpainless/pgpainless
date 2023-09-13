@@ -84,7 +84,7 @@ public class S2KUsageFixTest {
         }
 
         PGPSecretKeyRing after = PGPainless.modifyKeyRing(unprotected)
-                .changePassphraseFromOldPassphrase(null)
+                .changePassphraseFromOldPassphrase(Passphrase.emptyPassphrase())
                 .withSecureDefaultSettings()
                 .toNewPassphrase(Passphrase.fromPassword("after"))
                 .done();
