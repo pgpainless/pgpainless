@@ -31,7 +31,9 @@ import org.pgpainless.signature.subpackets.*
 import org.pgpainless.util.Passphrase
 import org.pgpainless.util.selection.userid.SelectUserId
 import java.util.*
+import java.util.function.Predicate
 import javax.annotation.Nonnull
+import kotlin.NoSuchElementException
 
 class SecretKeyRingEditor(
         var secretKeyRing: PGPSecretKeyRing,
@@ -109,14 +111,22 @@ class SecretKeyRingEditor(
         return this
     }
 
+    @Deprecated("Use of SelectUserId class is deprecated.", replaceWith = ReplaceWith("removeUserId(protector, predicate)"))
     override fun removeUserId(selector: SelectUserId, protector: SecretKeyRingProtector): SecretKeyRingEditorInterface {
         return revokeUserIds(selector, protector, RevocationAttributes.createCertificateRevocation()
                 .withReason(RevocationAttributes.Reason.USER_ID_NO_LONGER_VALID)
                 .withoutDescription())
     }
 
+    override fun removeUserId(protector: SecretKeyRingProtector, predicate: (String) -> Boolean): SecretKeyRingEditorInterface {
+        return revokeUserIds(protector, RevocationAttributes.createCertificateRevocation()
+                .withReason(RevocationAttributes.Reason.USER_ID_NO_LONGER_VALID)
+                .withoutDescription(),
+                predicate)
+    }
+
     override fun removeUserId(userId: CharSequence, protector: SecretKeyRingProtector): SecretKeyRingEditorInterface {
-        return removeUserId(SelectUserId.exactMatch(userId), protector)
+        return removeUserId(protector) { uid -> userId == uid }
     }
 
     override fun replaceUserId(oldUserId: CharSequence, newUserId: CharSequence, protector: SecretKeyRingProtector): SecretKeyRingEditorInterface {
@@ -246,21 +256,23 @@ class SecretKeyRingEditor(
     }
 
     override fun revokeUserId(userId: CharSequence, protector: SecretKeyRingProtector, callback: RevocationSignatureSubpackets.Callback?): SecretKeyRingEditorInterface {
-        return revokeUserIds(SelectUserId.exactMatch(sanitizeUserId(userId)), protector, callback)
+        return revokeUserIds(protector, callback, SelectUserId.exactMatch(sanitizeUserId(userId)))
     }
 
-    override fun revokeUserIds(selector: SelectUserId, protector: SecretKeyRingProtector, revocationAttributes: RevocationAttributes?): SecretKeyRingEditorInterface {
-        return revokeUserIds(selector, protector, object : RevocationSignatureSubpackets.Callback {
+    override fun revokeUserIds(protector: SecretKeyRingProtector,
+                               revocationAttributes: RevocationAttributes?,
+                               predicate: (String) -> Boolean): SecretKeyRingEditorInterface {
+        return revokeUserIds(protector, object : RevocationSignatureSubpackets.Callback {
             override fun modifyHashedSubpackets(hashedSubpackets: RevocationSignatureSubpackets) {
-                if (revocationAttributes != null) {
-                    hashedSubpackets.setRevocationReason(revocationAttributes)
-                }
+                if (revocationAttributes != null) hashedSubpackets.setRevocationReason(revocationAttributes)
             }
-        })
+        }, predicate)
     }
 
-    override fun revokeUserIds(selector: SelectUserId, protector: SecretKeyRingProtector, callback: RevocationSignatureSubpackets.Callback?): SecretKeyRingEditorInterface {
-        selector.selectUserIds(secretKeyRing).also {
+    override fun revokeUserIds(protector: SecretKeyRingProtector,
+                               callback: RevocationSignatureSubpackets.Callback?,
+                               predicate: (String) -> Boolean): SecretKeyRingEditorInterface {
+        selectUserIds(predicate).also {
             if (it.isEmpty()) throw NoSuchElementException("No matching user-ids found on the key.")
         }.forEach { userId -> doRevokeUserId(userId, protector, callback) }
         return this
@@ -348,7 +360,7 @@ class SecretKeyRingEditor(
 
     private fun sanitizeUserId(userId: CharSequence): CharSequence =
     // TODO: Further research how to sanitize user IDs.
-            //  eg. what about newlines?
+            //  e.g. what about newlines?
             userId.toString().trim()
 
     private fun callbackFromRevocationAttributes(attributes: RevocationAttributes?) =
@@ -453,6 +465,9 @@ class SecretKeyRingEditor(
                     })
                 }.build(secretKeyRing.publicKey)
     }
+
+    private fun selectUserIds(predicate: Predicate<String>): List<String> =
+            inspectKeyRing(secretKeyRing).validUserIds.filter { predicate.test(it) }
 
     private class WithKeyRingEncryptionSettingsImpl(
             private val editor: SecretKeyRingEditor,

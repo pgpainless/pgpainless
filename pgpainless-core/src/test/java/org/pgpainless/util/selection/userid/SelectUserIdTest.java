@@ -4,6 +4,15 @@
 
 package org.pgpainless.util.selection.userid;
 
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertTrue;
+
+import java.util.Arrays;
+import java.util.Collections;
+import java.util.List;
+import java.util.stream.Collectors;
+
 import org.bouncycastle.openpgp.PGPException;
 import org.bouncycastle.openpgp.PGPSecretKeyRing;
 import org.junit.jupiter.api.Test;
@@ -11,20 +20,10 @@ import org.pgpainless.PGPainless;
 import org.pgpainless.key.protection.SecretKeyRingProtector;
 import org.pgpainless.key.util.UserId;
 
-import java.security.InvalidAlgorithmParameterException;
-import java.security.NoSuchAlgorithmException;
-import java.util.Arrays;
-import java.util.Collections;
-import java.util.List;
-
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertNull;
-import static org.junit.jupiter.api.Assertions.assertTrue;
-
 public class SelectUserIdTest {
 
     @Test
-    public void testSelectUserIds() throws InvalidAlgorithmParameterException, NoSuchAlgorithmException, PGPException {
+    public void testSelectUserIds() throws PGPException {
         PGPSecretKeyRing secretKeys = PGPainless.generateKeyRing()
                 .simpleEcKeyRing("<alice@wonderland.lit>");
         secretKeys = PGPainless.modifyKeyRing(secretKeys)
@@ -34,48 +33,53 @@ public class SelectUserIdTest {
                         SecretKeyRingProtector.unprotectedKeys())
                 .done();
 
-        List<String> validEmail = SelectUserId.and(
+        List<String> userIds = PGPainless.inspectKeyRing(secretKeys).getValidUserIds();
+        List<String> validEmail = userIds.stream().filter(SelectUserId.and(
                 SelectUserId.validUserId(secretKeys),
                 SelectUserId.containsEmailAddress("alice@wonderland.lit")
-        ).selectUserIds(secretKeys);
+        )).collect(Collectors.toList());
 
         assertEquals(Collections.singletonList("<alice@wonderland.lit>"), validEmail);
 
-        List<String> startsWithAlice = SelectUserId.startsWith("Alice").selectUserIds(secretKeys);
+        List<String> startsWithAlice = userIds.stream().filter(SelectUserId.startsWith("Alice")).collect(Collectors.toList());
         assertEquals(Collections.singletonList("Alice Liddell <crazy@the-rabbit.hole>"), startsWithAlice);
 
-        List<String> exactMatch = SelectUserId.or(
+        List<String> exactMatch = userIds.stream().filter(SelectUserId.or(
                 SelectUserId.exactMatch("<alice@wonderland.lit>"),
                 SelectUserId.startsWith("Not Found")
-        ).selectUserIds(secretKeys);
+        )).collect(Collectors.toList());
         assertEquals(Collections.singletonList("<alice@wonderland.lit>"), exactMatch);
     }
 
     @Test
-    public void testContainsSubstring() throws InvalidAlgorithmParameterException, NoSuchAlgorithmException, PGPException {
+    public void testContainsSubstring() throws PGPException {
         PGPSecretKeyRing secretKeys = PGPainless.generateKeyRing().simpleEcKeyRing("wine drinker");
         secretKeys = PGPainless.modifyKeyRing(secretKeys)
                 .addUserId("this is not a quine", SecretKeyRingProtector.unprotectedKeys())
                 .addUserId("this is not a crime", SecretKeyRingProtector.unprotectedKeys())
                 .done();
 
-        List<String> containSubstring = SelectUserId.containsSubstring("ine")
-                .selectUserIds(secretKeys);
+        List<String> userIds = PGPainless.inspectKeyRing(secretKeys).getValidUserIds();
+
+        List<String> containSubstring = userIds.stream().filter(SelectUserId.containsSubstring("ine")).collect(Collectors.toList());
         assertEquals(Arrays.asList("wine drinker", "this is not a quine"), containSubstring);
     }
 
     @Test
-    public void testContainsEmailAddress() throws InvalidAlgorithmParameterException, NoSuchAlgorithmException, PGPException {
+    public void testContainsEmailAddress() {
         PGPSecretKeyRing secretKeys = PGPainless.generateKeyRing().simpleEcKeyRing("Alice <alice@wonderland.lit>");
+        List<String> userIds = PGPainless.inspectKeyRing(secretKeys).getValidUserIds();
 
-        assertEquals("Alice <alice@wonderland.lit>", SelectUserId.containsEmailAddress("alice@wonderland.lit").firstMatch(secretKeys));
-        assertEquals("Alice <alice@wonderland.lit>", SelectUserId.containsEmailAddress("<alice@wonderland.lit>").firstMatch(secretKeys));
+        assertEquals("Alice <alice@wonderland.lit>", userIds.stream().filter(
+                SelectUserId.containsEmailAddress("alice@wonderland.lit")).findFirst().get());
+        assertEquals("Alice <alice@wonderland.lit>", userIds.stream().filter(
+                SelectUserId.containsEmailAddress("<alice@wonderland.lit>")).findFirst().get());
 
-        assertNull(SelectUserId.containsEmailAddress("mad@hatter.lit").firstMatch(secretKeys));
+        assertFalse(userIds.stream().anyMatch(SelectUserId.containsEmailAddress("mad@hatter.lit")));
     }
 
     @Test
-    public void testAndOrNot() throws InvalidAlgorithmParameterException, NoSuchAlgorithmException, PGPException {
+    public void testAndOrNot() throws PGPException {
         PGPSecretKeyRing secretKeys = PGPainless.generateKeyRing().simpleEcKeyRing("Alice <alice@wonderland.lit>");
         secretKeys = PGPainless.modifyKeyRing(secretKeys)
                 .addUserId("Alice <another@email.address>", SecretKeyRingProtector.unprotectedKeys())
@@ -83,34 +87,32 @@ public class SelectUserIdTest {
                 .addUserId("Crazy Girl <alice@wonderland.lit>", SecretKeyRingProtector.unprotectedKeys())
                 .done();
 
-        List<String> or = SelectUserId.or(
+        List<String> userIds = PGPainless.inspectKeyRing(secretKeys).getValidUserIds();
+
+        List<String> or = userIds.stream().filter(SelectUserId.or(
                 SelectUserId.containsEmailAddress("alice@wonderland.lit"),
-                SelectUserId.startsWith("Alice"))
-                .selectUserIds(secretKeys);
+                SelectUserId.startsWith("Alice"))).collect(Collectors.toList());
         assertEquals(Arrays.asList("Alice <alice@wonderland.lit>", "Alice <another@email.address>", "Crazy Girl <alice@wonderland.lit>"), or);
 
-        List<String> and = SelectUserId.and(
+        List<String> and = userIds.stream().filter(SelectUserId.and(
                 SelectUserId.containsEmailAddress("alice@wonderland.lit"),
-                SelectUserId.startsWith("Alice"))
-                .selectUserIds(secretKeys);
+                SelectUserId.startsWith("Alice"))).collect(Collectors.toList());
         assertEquals(Collections.singletonList("Alice <alice@wonderland.lit>"), and);
 
-        List<String> not = SelectUserId.not(
-                SelectUserId.startsWith("Alice"))
-                .selectUserIds(secretKeys);
+        List<String> not = userIds.stream().filter(SelectUserId.not(
+                SelectUserId.startsWith("Alice"))).collect(Collectors.toList());
         assertEquals(Arrays.asList("<crazy@the-rabbit.hole>", "Crazy Girl <alice@wonderland.lit>"), not);
     }
 
     @Test
-    public void testFirstMatch() throws InvalidAlgorithmParameterException, NoSuchAlgorithmException, PGPException {
+    public void testFirstMatch() throws PGPException {
         PGPSecretKeyRing secretKeys = PGPainless.generateKeyRing().simpleEcKeyRing("First UserID");
         secretKeys = PGPainless.modifyKeyRing(secretKeys)
                 .addUserId("Second UserID", SecretKeyRingProtector.unprotectedKeys())
                 .done();
-        assertEquals("First UserID", SelectUserId.validUserId(secretKeys).firstMatch(secretKeys));
-        assertEquals("Second UserID", SelectUserId.containsSubstring("Second").firstMatch(
-                PGPainless.inspectKeyRing(secretKeys).getUserIds()
-        ));
+        List<String> userIds = PGPainless.inspectKeyRing(secretKeys).getValidUserIds();
+        assertEquals("First UserID", userIds.stream().filter(SelectUserId.validUserId(secretKeys)).findFirst().get());
+        assertEquals("Second UserID", userIds.stream().filter(SelectUserId.containsSubstring("Second")).findFirst().get());
     }
 
     @Test
