@@ -4,11 +4,7 @@
 
 package org.pgpainless.key.modification.secretkeyring
 
-import org.bouncycastle.openpgp.PGPException
-import org.bouncycastle.openpgp.PGPKeyPair
-import org.bouncycastle.openpgp.PGPPublicKeyRing
-import org.bouncycastle.openpgp.PGPSecretKeyRing
-import org.bouncycastle.openpgp.PGPSignature
+import org.bouncycastle.openpgp.*
 import org.pgpainless.algorithm.KeyFlag
 import org.pgpainless.key.OpenPgpFingerprint
 import org.pgpainless.key.generation.KeySpec
@@ -23,6 +19,7 @@ import java.io.IOException
 import java.security.InvalidAlgorithmParameterException
 import java.security.NoSuchAlgorithmException
 import java.util.*
+import java.util.function.Predicate
 
 interface SecretKeyRingEditorInterface {
 
@@ -82,8 +79,25 @@ interface SecretKeyRingEditorInterface {
      *
      * @throws PGPException in case we cannot generate a revocation signature for the user-id
      */
+    @Deprecated("Use of SelectUserId class is deprecated.",
+            ReplaceWith("removeUserId(protector, predicate)"))
     @Throws(PGPException::class)
-    fun removeUserId(selector: SelectUserId, protector: SecretKeyRingProtector): SecretKeyRingEditorInterface
+    fun removeUserId(selector: SelectUserId, protector: SecretKeyRingProtector) =
+            removeUserId(protector, selector)
+
+    /**
+     * Convenience method to revoke selected user-ids using soft revocation signatures.
+     * The revocation will use [RevocationAttributes.Reason.USER_ID_NO_LONGER_VALID], so that the user-id
+     * can be re-certified at a later point.
+     *
+     * @param protector protector to unlock the primary key
+     * @param predicate predicate to select user-ids for revocation
+     * @return the builder
+     *
+     * @throws PGPException in case we cannot generate a revocation signature for the user-id
+     */
+    @Throws(PGPException::class)
+    fun removeUserId(protector: SecretKeyRingProtector, predicate: (String) -> Boolean): SecretKeyRingEditorInterface
 
     /**
      * Convenience method to revoke a single user-id using a soft revocation signature.
@@ -342,9 +356,32 @@ interface SecretKeyRingEditorInterface {
      * @throws PGPException in case we cannot generate a revocation signature for the user-id
      */
     @Throws(PGPException::class)
+    @Deprecated("Use of SelectUserId class is deprecated.",
+            ReplaceWith("revokeUserIds(protector, revocationAttributes, predicate)"))
     fun revokeUserIds(selector: SelectUserId,
                       protector: SecretKeyRingProtector,
-                      revocationAttributes: RevocationAttributes?): SecretKeyRingEditorInterface
+                      revocationAttributes: RevocationAttributes?) =
+            revokeUserIds(protector, revocationAttributes, selector)
+
+    /**
+     * Revoke all user-ids that match the provided [SelectUserId] filter.
+     * The provided [RevocationAttributes] will be set as reason for revocation in each
+     * revocation signature.
+     *
+     * Note: If you intend to re-certify these user-ids at a later point, make sure to choose
+     * a soft revocation reason. See [RevocationAttributes.Reason] for more information.
+     *
+     * @param protector protector to unlock the primary secret key
+     * @param revocationAttributes revocation attributes
+     * @param predicate to select user-ids for revocation
+     * @return builder
+     *
+     * @throws PGPException in case we cannot generate a revocation signature for the user-id
+     */
+    @Throws(PGPException::class)
+    fun revokeUserIds(protector: SecretKeyRingProtector,
+                      revocationAttributes: RevocationAttributes?,
+                      predicate: (String) -> Boolean): SecretKeyRingEditorInterface
 
     /**
      * Revoke all user-ids that match the provided [SelectUserId] filter.
@@ -364,9 +401,34 @@ interface SecretKeyRingEditorInterface {
      * @throws PGPException in case we cannot generate a revocation signature for the user-id
      */
     @Throws(PGPException::class)
+    @Deprecated("Use of SelectUserId class is deprecated.",
+            ReplaceWith("revokeUserIds(protector, callback, predicate)"))
     fun revokeUserIds(selector: SelectUserId,
                       protector: SecretKeyRingProtector,
-                      callback: RevocationSignatureSubpackets.Callback?): SecretKeyRingEditorInterface
+                      callback: RevocationSignatureSubpackets.Callback?) =
+            revokeUserIds(protector, callback, selector)
+
+    /**
+     * Revoke all user-ids that match the provided [SelectUserId] filter.
+     * The provided [RevocationSignatureSubpackets.Callback] will be used to modify the
+     * revocation signatures subpackets.
+     *
+     * Note: If you intend to re-certify these user-ids at a later point, make sure to set
+     * a soft revocation reason in the revocation signatures hashed subpacket area using the callback.
+     *
+     * See [RevocationAttributes.Reason] for more information.
+     *
+     * @param protector protector to unlock the primary secret key
+     * @param callback callback to modify the revocations subpackets
+     * @param predicate to select user-ids for revocation
+     * @return builder
+     *
+     * @throws PGPException in case we cannot generate a revocation signature for the user-id
+     */
+    @Throws(PGPException::class)
+    fun revokeUserIds(protector: SecretKeyRingProtector,
+                      callback: RevocationSignatureSubpackets.Callback?,
+                      predicate: (String) -> Boolean): SecretKeyRingEditorInterface
 
     /**
      * Set the expiration date for the primary key of the key ring.
