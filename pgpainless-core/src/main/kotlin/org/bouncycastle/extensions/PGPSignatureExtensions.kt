@@ -5,6 +5,7 @@
 package org.bouncycastle.extensions
 
 import openpgp.plusSeconds
+import org.bouncycastle.openpgp.PGPPublicKey
 import org.bouncycastle.openpgp.PGPSignature
 import org.pgpainless.algorithm.RevocationState
 import org.pgpainless.algorithm.SignatureType
@@ -68,6 +69,9 @@ fun PGPSignature.wasIssuedBy(fingerprint: ByteArray): Boolean =
             // Unknown fingerprint length / format
             false
         }
+
+fun PGPSignature.wasIssuedBy(key: PGPPublicKey): Boolean =
+        wasIssuedBy(OpenPgpFingerprint.of(key))
 
 /**
  * Return true, if this signature is a hard revocation.
