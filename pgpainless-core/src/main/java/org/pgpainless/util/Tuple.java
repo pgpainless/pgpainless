@@ -4,6 +4,14 @@
 
 package org.pgpainless.util;
 
+/**
+ * Helper class pairing together two values.
+ * @param <A> type of the first value
+ * @param <B> type of the second value
+ * @deprecated Scheduled for removal.
+ * TODO: Remove
+ */
+@Deprecated
 public class Tuple<A, B> {
 
     private final A a;
