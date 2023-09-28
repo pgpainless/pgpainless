@@ -7,6 +7,7 @@ package org.pgpainless.util.selection.keyring;
 import javax.annotation.Nonnull;
 import java.util.HashSet;
 import java.util.Iterator;
+import java.util.Map;
 import java.util.Set;
 
 import org.bouncycastle.openpgp.PGPPublicKeyRing;
@@ -33,9 +34,9 @@ public abstract class PublicKeyRingSelectionStrategy<O> implements KeyRingSelect
     @Override
     public MultiMap<O, PGPPublicKeyRing> selectKeyRingsFromCollections(@Nonnull MultiMap<O, PGPPublicKeyRingCollection> keyRingCollections) {
         MultiMap<O, PGPPublicKeyRing> keyRings = new MultiMap<>();
-        for (O identifier : keyRingCollections.keySet()) {
-            for (PGPPublicKeyRingCollection collection : keyRingCollections.get(identifier)) {
-                keyRings.put(identifier, selectKeyRingsFromCollection(identifier, collection));
+        for (Map.Entry<O, Set<PGPPublicKeyRingCollection>> entry : keyRingCollections.entrySet()) {
+            for (PGPPublicKeyRingCollection collection : entry.getValue()) {
+                keyRings.plus(entry.getKey(), selectKeyRingsFromCollection(entry.getKey(), collection));
             }
         }
         return keyRings;

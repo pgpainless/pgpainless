@@ -41,7 +41,37 @@ public class MultiMapTest {
         assertTrue(multiMap.containsKey("alice"));
         assertTrue(multiMap.containsValue("wonderland"));
         assertNotNull(multiMap.get("alice"));
-        assertTrue(multiMap.get("alice").contains("wonderland"));
+        assertTrue(multiMap.contains("alice", "wonderland"));
+    }
+
+    @Test
+    public void putOverwritesExistingElements() {
+        MultiMap<String, String> map = new MultiMap<>();
+        map.put("alice", "wonderland");
+        map.put("alice", "whothefrickisalice");
+        assertFalse(map.containsValue("wonderland"));
+    }
+
+    @Test
+    public void plusDoesNotOverwriteButAdd() {
+        MultiMap<String, String> map = new MultiMap<>();
+        map.put("alice", "wonderland");
+        map.plus("alice", "whothefrickisalice");
+        assertTrue(map.containsValue("wonderland"));
+        assertTrue(map.containsValue("whothefrickisalice"));
+    }
+
+    @Test
+    public void containsWorks() {
+        MultiMap<String, String> map = new MultiMap<>();
+        map.put("alice", "wonderland");
+        map.plus("alice", "bar");
+        map.put("bob", "builder");
+
+        assertTrue(map.contains("alice", "wonderland"));
+        assertTrue(map.contains("alice", "bar"));
+        assertTrue(map.contains("bob", "builder"));
+        assertFalse(map.contains("bob", "bar"));
     }
 
     @Test
@@ -104,7 +134,7 @@ public class MultiMapTest {
     @Test
     public void emptyAfterClear() {
         MultiMap<String, String> map = new MultiMap<>();
-        map.put("test", "foo");
+        map.plus("test", "foo");
         assertFalse(map.isEmpty());
         map.clear();
         assertTrue(map.isEmpty());
@@ -113,8 +143,8 @@ public class MultiMapTest {
     @Test
     public void addTwoRemoveOneWorks() {
         MultiMap<String, String> map = new MultiMap<>();
-        map.put("alice", "wonderland");
-        map.put("bob", "builder");
+        map.plus("alice", "wonderland");
+        map.plus("bob", "builder");
         map.removeAll("alice");
 
         assertFalse(map.containsKey("alice"));
@@ -125,11 +155,11 @@ public class MultiMapTest {
     @Test
     public void addMultiValue() {
         MultiMap<String, String> addOneByOne = new MultiMap<>();
-        addOneByOne.put("foo", "bar");
-        addOneByOne.put("foo", "baz");
+        addOneByOne.plus("foo", "bar");
+        addOneByOne.plus("foo", "baz");
 
         MultiMap<String, String> addOnce = new MultiMap<>();
-        addOnce.put("foo", new HashSet<>(Arrays.asList("baz", "bar")));
+        addOnce.plus("foo", new HashSet<>(Arrays.asList("baz", "bar")));
 
         assertEquals(addOneByOne, addOnce);
     }
@@ -138,7 +168,7 @@ public class MultiMapTest {
     public void addMultiValueRemoveSingle() {
         MultiMap<String, String> map = new MultiMap<>();
         map.put("foo", "bar");
-        map.put("foo", "baz");
+        map.plus("foo", "baz");
 
         map.remove("foo", "bar");
         assertFalse(map.isEmpty());
@@ -149,9 +179,9 @@ public class MultiMapTest {
     @Test
     public void addMultiValueRemoveAll() {
         MultiMap<String, String> map = new MultiMap<>();
-        map.put("foo", "bar");
-        map.put("foo", "baz");
-        map.put("bingo", "bango");
+        map.plus("foo", "bar");
+        map.plus("foo", "baz");
+        map.plus("bingo", "bango");
 
         map.removeAll("foo");
         assertFalse(map.isEmpty());
@@ -160,23 +190,23 @@ public class MultiMapTest {
     }
 
     @Test
-    public void putAll() {
+    public void plusAll() {
         MultiMap<String, String> map = new MultiMap<>();
-        map.put("A", "1");
-        map.put("A", "2");
-        map.put("B", "1");
+        map.plus("A", "1");
+        map.plus("A", "2");
+        map.plus("B", "1");
 
         MultiMap<String, String> other = new MultiMap<>();
-        other.put("A", "1");
-        other.put("B", "2");
-        other.put("C", "3");
+        other.plus("A", "1");
+        other.plus("B", "2");
+        other.plus("C", "3");
 
-        map.putAll(other);
-        assertTrue(map.get("A").contains("1"));
-        assertTrue(map.get("A").contains("2"));
-        assertTrue(map.get("B").contains("1"));
-        assertTrue(map.get("B").contains("2"));
-        assertTrue(map.get("C").contains("3"));
+        map.plusAll(other);
+        assertTrue(map.contains("A", "1"));
+        assertTrue(map.contains("A", "2"));
+        assertTrue(map.contains("B", "1"));
+        assertTrue(map.contains("B", "2"));
+        assertTrue(map.contains("C", "3"));
     }
 
     @Test
@@ -188,9 +218,9 @@ public class MultiMapTest {
     @Test
     public void flattenMap() {
         MultiMap<String, String> map = new MultiMap<>();
-        map.put("A", "1");
-        map.put("A", "2");
-        map.put("B", "1");
+        map.plus("A", "1");
+        map.plus("A", "2");
+        map.plus("B", "1");
 
         Set<String> expected = new LinkedHashSet<>();
         expected.add("1");
