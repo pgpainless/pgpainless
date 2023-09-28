@@ -35,6 +35,15 @@ public interface BaseSignatureSubpackets {
 
     }
 
+    /**
+     * Add both an {@link IssuerKeyID} and {@link IssuerFingerprint} subpacket pointing to the given key.
+     *
+     * @param key key
+     * @return this
+     *
+     * @deprecated this method MUST NOT be used for OpenPGP v6, since v6 signatures MUST NOT contain any
+     * {@link IssuerKeyID} packets.
+     */
     BaseSignatureSubpackets setIssuerFingerprintAndKeyId(PGPPublicKey key);
 
     BaseSignatureSubpackets setIssuerKeyId(long keyId);
