@@ -17,6 +17,8 @@ import javax.annotation.Nonnull;
  *
  * Furthermore, this class swallows exceptions from BC's ArmoredInputStream that are caused
  * by missing CRC checksums.
+ *
+ * TODO: Validate whether this class is still needed.
  */
 public class CRCingArmoredInputStreamWrapper extends ArmoredInputStream {
 
