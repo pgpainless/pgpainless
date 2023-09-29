@@ -24,6 +24,7 @@ import java.util.*
 class ConsumerOptions {
 
     private var ignoreMDCErrors = false
+    var isDisableAsciiArmorCRC = false
     private var forceNonOpenPgpData = false
     private var verifyNotBefore: Date? = null
     private var verifyNotAfter: Date? = Date()

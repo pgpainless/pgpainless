@@ -5,6 +5,7 @@
 package org.pgpainless.util
 
 import org.bouncycastle.bcpg.ArmoredInputStream
+import org.pgpainless.decryption_verification.ConsumerOptions
 import java.io.IOException
 import java.io.InputStream
 
@@ -24,12 +25,19 @@ class ArmoredInputStreamFactory {
          * @throws IOException in case of an IO error
          */
         @JvmStatic
+        @JvmOverloads
         @Throws(IOException::class)
-        fun get(inputStream: InputStream): ArmoredInputStream {
+        fun get(inputStream: InputStream, options: ConsumerOptions? = null): ArmoredInputStream {
             return when (inputStream) {
                 is CRCingArmoredInputStreamWrapper -> inputStream
                 is ArmoredInputStream -> CRCingArmoredInputStreamWrapper(inputStream)
-                else -> CRCingArmoredInputStreamWrapper(ArmoredInputStream(inputStream))
+                else -> CRCingArmoredInputStreamWrapper(
+                        ArmoredInputStream.builder().apply {
+                            setParseForHeaders(true)
+                            options?.let {
+                                setIgnoreCRC(it.isDisableAsciiArmorCRC)
+                            }
+                        }.build(inputStream))
             }
         }
     }

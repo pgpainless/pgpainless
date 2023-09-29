@@ -20,6 +20,7 @@ class ProducerOptions private constructor(
     private var applyCRLFEncoding = false
     private var cleartextSigned = false
     private var _hideArmorHeaders = false
+    var isDisableAsciiArmorCRC = false
 
     private var _compressionAlgorithmOverride: CompressionAlgorithm = PGPainless.getPolicy().compressionAlgorithmPolicy.defaultCompressionAlgorithm
     private var asciiArmor = true
