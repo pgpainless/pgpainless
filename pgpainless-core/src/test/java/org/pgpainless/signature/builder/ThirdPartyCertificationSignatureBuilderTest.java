@@ -68,7 +68,7 @@ public class ThirdPartyCertificationSignatureBuilderTest {
         assertFalse(exportable.isExportable());
 
         // test sig correctness
-        certification.init(ImplementationFactory.getInstance().getPGPContentVerifierBuilderProvider(), secretKeys.getPublicKey());
+        certification.init(ImplementationFactory.getInstance().getPgpContentVerifierBuilderProvider(), secretKeys.getPublicKey());
         assertTrue(certification.verifyCertification("Bob", bobsPublicKeys.getPublicKey()));
     }
 }

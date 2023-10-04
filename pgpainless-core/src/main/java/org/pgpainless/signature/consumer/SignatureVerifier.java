@@ -384,7 +384,7 @@ public final class SignatureVerifier {
                                                                   PGPPublicKey signingKey)
             throws SignatureValidationException {
         try {
-            signature.init(ImplementationFactory.getInstance().getPGPContentVerifierBuilderProvider(), signingKey);
+            signature.init(ImplementationFactory.getInstance().getPgpContentVerifierBuilderProvider(), signingKey);
             int read;
             byte[] buf = new byte[8192];
             byte lastByte = -1;

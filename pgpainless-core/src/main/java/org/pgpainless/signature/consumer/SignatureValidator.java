@@ -495,7 +495,7 @@ public abstract class SignatureValidator {
                 }
                 try {
                     signature.init(ImplementationFactory.getInstance()
-                            .getPGPContentVerifierBuilderProvider(), primaryKey);
+                            .getPgpContentVerifierBuilderProvider(), primaryKey);
                     boolean valid = signature.verifyCertification(primaryKey, subkey);
                     if (!valid) {
                         throw new SignatureValidationException("Signature is not correct.");
@@ -519,7 +519,7 @@ public abstract class SignatureValidator {
             @Override
             public void verify(PGPSignature signature) throws SignatureValidationException {
                 try {
-                    signature.init(ImplementationFactory.getInstance().getPGPContentVerifierBuilderProvider(), subkey);
+                    signature.init(ImplementationFactory.getInstance().getPgpContentVerifierBuilderProvider(), subkey);
                     boolean valid = signature.verifyCertification(primaryKey, subkey);
                     if (!valid) {
                         throw new SignatureValidationException("Primary Key Binding Signature is not correct.");
@@ -544,7 +544,7 @@ public abstract class SignatureValidator {
             @Override
             public void verify(PGPSignature signature) throws SignatureValidationException {
                 try {
-                    signature.init(ImplementationFactory.getInstance().getPGPContentVerifierBuilderProvider(), signer);
+                    signature.init(ImplementationFactory.getInstance().getPgpContentVerifierBuilderProvider(), signer);
                     boolean valid;
                     if (signer.getKeyID() == signee.getKeyID() || signature.getSignatureType() == PGPSignature.DIRECT_KEY) {
                         valid = signature.verifyCertification(signee);
@@ -615,7 +615,7 @@ public abstract class SignatureValidator {
             public void verify(PGPSignature signature) throws SignatureValidationException {
                 try {
                     signature.init(ImplementationFactory.getInstance()
-                            .getPGPContentVerifierBuilderProvider(), certifyingKey);
+                            .getPgpContentVerifierBuilderProvider(), certifyingKey);
                     boolean valid = signature.verifyCertification(userId, certifiedKey);
                     if (!valid) {
                         throw new SignatureValidationException("Signature over user-id '" + userId +
@@ -645,7 +645,7 @@ public abstract class SignatureValidator {
             public void verify(PGPSignature signature) throws SignatureValidationException {
                 try {
                     signature.init(ImplementationFactory.getInstance()
-                            .getPGPContentVerifierBuilderProvider(), certifyingKey);
+                            .getPgpContentVerifierBuilderProvider(), certifyingKey);
                     boolean valid = signature.verifyCertification(userAttributes, certifiedKey);
                     if (!valid) {
                         throw new SignatureValidationException("Signature over user-attribute vector is not correct.");

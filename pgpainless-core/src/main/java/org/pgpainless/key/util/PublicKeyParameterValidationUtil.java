@@ -120,7 +120,7 @@ public class PublicKeyParameterValidationUtil {
             signatureGenerator.update(data);
             PGPSignature sig = signatureGenerator.generate();
 
-            sig.init(ImplementationFactory.getInstance().getPGPContentVerifierBuilderProvider(), publicKey);
+            sig.init(ImplementationFactory.getInstance().getPgpContentVerifierBuilderProvider(), publicKey);
             sig.update(data);
             return sig.verify();
         } catch (PGPException e) {
