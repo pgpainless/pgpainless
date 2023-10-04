@@ -21,7 +21,7 @@ public class ProviderFactoryTest {
         };
 
         @Override
-        protected Provider _getProvider() {
+        protected Provider getSecurityProvider() {
             return provider;
         }
 

@@ -31,20 +31,20 @@ import java.util.*
 class JceImplementationFactory : ImplementationFactory() {
     override val pgpDigestCalculatorProvider: PGPDigestCalculatorProvider =
             JcaPGPDigestCalculatorProviderBuilder()
-                    .setProvider(ProviderFactory.getProvider())
+                    .setProvider(ProviderFactory.provider)
                     .build()
     override val pgpContentVerifierBuilderProvider: PGPContentVerifierBuilderProvider =
             JcaPGPContentVerifierBuilderProvider()
-                    .setProvider(ProviderFactory.getProvider())
+                    .setProvider(ProviderFactory.provider)
     override val keyFingerprintCalculator: KeyFingerPrintCalculator =
             JcaKeyFingerprintCalculator()
-                    .setProvider(ProviderFactory.getProvider())
+                    .setProvider(ProviderFactory.provider)
 
     override fun getPBESecretKeyEncryptor(symmetricKeyAlgorithm: SymmetricKeyAlgorithm,
                                           digestCalculator: PGPDigestCalculator,
                                           passphrase: Passphrase): PBESecretKeyEncryptor =
             JcePBESecretKeyEncryptorBuilder(symmetricKeyAlgorithm.algorithmId, digestCalculator)
-                    .setProvider(ProviderFactory.getProvider())
+                    .setProvider(ProviderFactory.provider)
                     .build(passphrase.getChars())
 
     override fun getPBESecretKeyEncryptor(encryptionAlgorithm: SymmetricKeyAlgorithm,
@@ -55,44 +55,44 @@ class JceImplementationFactory : ImplementationFactory() {
                     encryptionAlgorithm.algorithmId,
                     getPGPDigestCalculator(hashAlgorithm),
                     s2kCount)
-                    .setProvider(ProviderFactory.getProvider())
+                    .setProvider(ProviderFactory.provider)
                     .build(passphrase.getChars())
 
     override fun getPBESecretKeyDecryptor(passphrase: Passphrase): PBESecretKeyDecryptor =
             JcePBESecretKeyDecryptorBuilder(pgpDigestCalculatorProvider)
-                    .setProvider(ProviderFactory.getProvider())
+                    .setProvider(ProviderFactory.provider)
                     .build(passphrase.getChars())
 
     override fun getPGPContentSignerBuilder(keyAlgorithm: Int, hashAlgorithm: Int): PGPContentSignerBuilder =
             JcaPGPContentSignerBuilder(keyAlgorithm, hashAlgorithm)
-                    .setProvider(ProviderFactory.getProvider())
+                    .setProvider(ProviderFactory.provider)
 
     override fun getPBEDataDecryptorFactory(passphrase: Passphrase): PBEDataDecryptorFactory =
             JcePBEDataDecryptorFactoryBuilder(pgpDigestCalculatorProvider)
-                    .setProvider(ProviderFactory.getProvider())
+                    .setProvider(ProviderFactory.provider)
                     .build(passphrase.getChars())
 
     override fun getPublicKeyDataDecryptorFactory(privateKey: PGPPrivateKey): PublicKeyDataDecryptorFactory =
             JcePublicKeyDataDecryptorFactoryBuilder()
-                    .setProvider(ProviderFactory.getProvider())
+                    .setProvider(ProviderFactory.provider)
                     .build(privateKey)
 
     override fun getSessionKeyDataDecryptorFactory(sessionKey: PGPSessionKey): SessionKeyDataDecryptorFactory =
             JceSessionKeyDataDecryptorFactoryBuilder()
-                    .setProvider(ProviderFactory.getProvider())
+                    .setProvider(ProviderFactory.provider)
                     .build(sessionKey)
 
     override fun getPublicKeyKeyEncryptionMethodGenerator(key: PGPPublicKey): PublicKeyKeyEncryptionMethodGenerator =
             JcePublicKeyKeyEncryptionMethodGenerator(key)
-                    .setProvider(ProviderFactory.getProvider())
+                    .setProvider(ProviderFactory.provider)
 
     override fun getPBEKeyEncryptionMethodGenerator(passphrase: Passphrase): PBEKeyEncryptionMethodGenerator =
             JcePBEKeyEncryptionMethodGenerator(passphrase.getChars())
-                    .setProvider(ProviderFactory.getProvider())
+                    .setProvider(ProviderFactory.provider)
 
     override fun getPGPDataEncryptorBuilder(symmetricKeyAlgorithm: Int): PGPDataEncryptorBuilder =
             JcePGPDataEncryptorBuilder(symmetricKeyAlgorithm)
-                    .setProvider(ProviderFactory.getProvider())
+                    .setProvider(ProviderFactory.provider)
 
     override fun getPGPKeyPair(publicKeyAlgorithm: PublicKeyAlgorithm, keyPair: KeyPair, creationDate: Date): PGPKeyPair =
             JcaPGPKeyPair(publicKeyAlgorithm.algorithmId, keyPair, creationDate)
