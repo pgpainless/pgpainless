@@ -230,7 +230,7 @@ class KeyRingBuilder : KeyRingBuilderInterface<KeyRingBuilder> {
         fun generateKeyPair(spec: KeySpec): PGPKeyPair {
             spec.keyType.let { type ->
                 // Create raw Key Pair
-                val keyPair = KeyPairGenerator.getInstance(type.name, ProviderFactory.getProvider())
+                val keyPair = KeyPairGenerator.getInstance(type.name, ProviderFactory.provider)
                 .also { it.initialize(type.algorithmSpec) }
                 .generateKeyPair()
 
