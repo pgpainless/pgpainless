@@ -12,6 +12,13 @@ import org.bouncycastle.openpgp.PGPSignature
 import org.pgpainless.PGPainless
 import org.pgpainless.key.OpenPgpFingerprint
 import org.pgpainless.key.SubkeyIdentifier
+import java.util.*
+import kotlin.NoSuchElementException
+import kotlin.math.max
+import kotlin.reflect.KProperty
+
+val PGPKeyRing.primaryPublicKey: PGPPublicKey
+    get() = requireNotNull(publicKey).also { require(it.isMasterKey) }
 
 /**
  * Return true, if this [PGPKeyRing] contains the subkey identified by the [SubkeyIdentifier].
@@ -72,9 +79,44 @@ fun PGPKeyRing.getPublicKeyFor(onePassSignature: PGPOnePassSignature): PGPPublic
  * Return the [OpenPgpFingerprint] of this OpenPGP key.
  */
 val PGPKeyRing.openPgpFingerprint: OpenPgpFingerprint
-    get() = OpenPgpFingerprint.of(this)
+    get() = OpenPgpFingerprint.of(primaryPublicKey)
 
 /**
  * Return this OpenPGP key as an ASCII armored String.
  */
 fun PGPKeyRing.toAsciiArmor(): String = PGPainless.asciiArmor(this)
+
+val PGPKeyRing.goodDirectKeySignatures: List<PGPSignature> by LazyPGPKeyRing {
+    it.primaryPublicKey.goodDirectKeySignatures
+}
+
+val PGPKeyRing.goodDirectKeySignature: PGPSignature? by LazyPGPKeyRing {
+    it.primaryPublicKey.goodDirectKeySignature
+}
+
+val PGPKeyRing.expirationDate: Date? by LazyPGPKeyRing {
+    val dkExp = it.goodDirectKeySignature?.getKeyExpirationDate(it.primaryPublicKey.creationTime)
+    val puExp = it.primaryPublicKey.goodUserIds[it.primaryPublicKey.primaryUserId]
+                    ?.getKeyExpirationDate(it.primaryPublicKey.creationTime)
+
+    dkExp ?: return@LazyPGPKeyRing puExp // direct-key exp null ? -> userId exp
+    puExp ?: return@LazyPGPKeyRing dkExp // userId exp null ? -> direct-key exp
+
+    return@LazyPGPKeyRing if (dkExp < puExp) dkExp else puExp // max direct-key exp, userId exp
+}
+
+
+internal class LazyPGPKeyRing<T>(val function: (PGPKeyRing) -> T) {
+    private var value: Result<T>? = null
+
+    operator fun getValue(keys: PGPKeyRing, property: KProperty<*>): T {
+        if (value == null) {
+            value = try {
+                Result.success(function(keys))
+            } catch (e : Throwable) {
+                Result.failure(e)
+            }
+        }
+        return value!!.getOrThrow()
+    }
+}

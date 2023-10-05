@@ -4,6 +4,7 @@
 
 package org.bouncycastle.extensions
 
+import openpgp.filterNotNullValues
 import org.bouncycastle.asn1.gnu.GNUObjectIdentifiers
 import org.bouncycastle.bcpg.ECDHPublicBCPGKey
 import org.bouncycastle.bcpg.ECDSAPublicBCPGKey
@@ -12,11 +13,8 @@ import org.bouncycastle.jcajce.provider.asymmetric.util.ECUtil
 import org.bouncycastle.openpgp.PGPPublicKey
 import org.bouncycastle.openpgp.PGPSignature
 import org.pgpainless.PGPainless
-import org.pgpainless.algorithm.KeyFlag
 import org.pgpainless.algorithm.PublicKeyAlgorithm
 import org.pgpainless.algorithm.SignatureType
-import org.pgpainless.decryption_verification.SignatureVerification
-import org.pgpainless.exception.SignatureValidationException
 import org.pgpainless.key.OpenPgpFingerprint
 import org.pgpainless.key.generation.type.eddsa.EdDSACurve
 import org.pgpainless.signature.consumer.SignatureVerifier
@@ -55,9 +53,9 @@ val PGPPublicKey.publicKeyAlgorithm: PublicKeyAlgorithm
 /**
  * Return the [OpenPgpFingerprint] of this key.
  */
-val PGPPublicKey.openPgpFingerprint: OpenPgpFingerprint by Lazy { OpenPgpFingerprint.of(it) }
+val PGPPublicKey.openPgpFingerprint: OpenPgpFingerprint by LazyPGPPublicKey { OpenPgpFingerprint.of(it) }
 
-val PGPPublicKey.goodDirectKeySignatures: List<PGPSignature> by Lazy { key ->
+val PGPPublicKey.goodDirectKeySignatures: List<PGPSignature> by LazyPGPPublicKey { key ->
     key.getSignaturesOfType(SignatureType.DIRECT_KEY.code)
             .asSequence()
             .filter { it.keyID == key.keyID }
@@ -69,13 +67,13 @@ val PGPPublicKey.goodDirectKeySignatures: List<PGPSignature> by Lazy { key ->
             .toList()
 }
 
-val PGPPublicKey.goodDirectKeySignature: PGPSignature? by Lazy {
+val PGPPublicKey.goodDirectKeySignature: PGPSignature? by LazyPGPPublicKey {
     it.goodDirectKeySignatures
             .sortedBy { sig -> sig.creationTime }
             .lastOrNull()
 }
 
-val PGPPublicKey.goodKeyRevocations: List<PGPSignature> by Lazy { key ->
+val PGPPublicKey.goodKeyRevocations: List<PGPSignature> by LazyPGPPublicKey { key ->
     key.getSignaturesOfType(SignatureType.KEY_REVOCATION.code)
             .asSequence()
             .filter { it.keyID == key.keyID }
@@ -87,13 +85,34 @@ val PGPPublicKey.goodKeyRevocations: List<PGPSignature> by Lazy { key ->
             .toList()
 }
 
-val PGPPublicKey.goodKeyRevocation: PGPSignature? by Lazy {
+val PGPPublicKey.goodKeyRevocation: PGPSignature? by LazyPGPPublicKey {
     it.goodKeyRevocations
             .sortedBy { sig -> sig.creationTime }
             .lastOrNull()
 }
 
-internal class Lazy<T>(val function: (PGPPublicKey) -> T) {
+val PGPPublicKey.goodUserIds: Map<String, PGPSignature> by LazyPGPPublicKey { it.getGoodUserIds(Date()) }
+
+fun PGPPublicKey.getGoodUserIds(referenceTime: Date): Map<String, PGPSignature> {
+    return userIDs.asSequence().associateWith { userId ->
+        getSignaturesForID(userId).asSequence()
+                .filter { it.wasIssuedBy(this) }
+                .filter { it.isCertification }
+                .filter { it.isEffective(referenceTime)}
+                .sortedBy { it.creationTime }
+                .lastOrNull()
+    }.filterNotNullValues()
+}
+
+val PGPPublicKey.primaryUserId: String? by LazyPGPPublicKey { it.getPrimaryUserId(Date()) }
+
+fun PGPPublicKey.getPrimaryUserId(referenceTime: Date): String? =
+        getGoodUserIds(referenceTime).entries
+                .sortedBy { it.value.creationTime }
+                .lastOrNull { it.value.hashedSubPackets.isPrimaryUserID }?.key // latest primary User ID
+                ?: getGoodUserIds(referenceTime).keys.firstOrNull() // else first User ID
+
+internal class LazyPGPPublicKey<T>(val function: (PGPPublicKey) -> T) {
     private var value: Result<T>? = null
 
     operator fun getValue(pgpPublicKey: PGPPublicKey, property: KProperty<*>): T {
