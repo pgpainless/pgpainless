@@ -36,6 +36,9 @@ val PGPSignature.signatureExpirationDate: Date?
 fun PGPSignature.isExpired(referenceTime: Date = Date()) =
         signatureExpirationDate?.let { referenceTime >= it } ?: false
 
+fun PGPSignature.isEffective(referenceTime: Date = Date()) =
+        !isExpired(referenceTime) && creationTime < referenceTime
+
 /**
  * Return the key-ID of the issuer, determined by examining the IssuerKeyId and IssuerFingerprint
  * subpackets of the signature.
