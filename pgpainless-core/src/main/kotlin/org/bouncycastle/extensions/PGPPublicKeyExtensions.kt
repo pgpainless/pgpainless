@@ -10,9 +10,18 @@ import org.bouncycastle.bcpg.ECDSAPublicBCPGKey
 import org.bouncycastle.bcpg.EdDSAPublicBCPGKey
 import org.bouncycastle.jcajce.provider.asymmetric.util.ECUtil
 import org.bouncycastle.openpgp.PGPPublicKey
+import org.bouncycastle.openpgp.PGPSignature
+import org.pgpainless.PGPainless
+import org.pgpainless.algorithm.KeyFlag
 import org.pgpainless.algorithm.PublicKeyAlgorithm
+import org.pgpainless.algorithm.SignatureType
+import org.pgpainless.decryption_verification.SignatureVerification
+import org.pgpainless.exception.SignatureValidationException
 import org.pgpainless.key.OpenPgpFingerprint
 import org.pgpainless.key.generation.type.eddsa.EdDSACurve
+import org.pgpainless.signature.consumer.SignatureVerifier
+import java.util.*
+import kotlin.reflect.KProperty
 
 /**
  * For secret keys of types [PublicKeyAlgorithm.ECDSA], [PublicKeyAlgorithm.ECDH] and [PublicKeyAlgorithm.EDDSA],
@@ -46,5 +55,55 @@ val PGPPublicKey.publicKeyAlgorithm: PublicKeyAlgorithm
 /**
  * Return the [OpenPgpFingerprint] of this key.
  */
-val PGPPublicKey.openPgpFingerprint: OpenPgpFingerprint
-    get() = OpenPgpFingerprint.of(this)
+val PGPPublicKey.openPgpFingerprint: OpenPgpFingerprint by Lazy { OpenPgpFingerprint.of(it) }
+
+val PGPPublicKey.goodDirectKeySignatures: List<PGPSignature> by Lazy { key ->
+    key.getSignaturesOfType(SignatureType.DIRECT_KEY.code)
+            .asSequence()
+            .filter { it.keyID == key.keyID }
+            .filter {
+                runCatching {
+                    SignatureVerifier.verifyDirectKeySignature(it, key, PGPainless.getPolicy(), Date())
+                }.getOrElse { false }
+            }
+            .toList()
+}
+
+val PGPPublicKey.goodDirectKeySignature: PGPSignature? by Lazy {
+    it.goodDirectKeySignatures
+            .sortedBy { sig -> sig.creationTime }
+            .lastOrNull()
+}
+
+val PGPPublicKey.goodKeyRevocations: List<PGPSignature> by Lazy { key ->
+    key.getSignaturesOfType(SignatureType.KEY_REVOCATION.code)
+            .asSequence()
+            .filter { it.keyID == key.keyID }
+            .filter {
+                runCatching {
+                    SignatureVerifier.verifyKeyRevocationSignature(it, key, PGPainless.getPolicy(), Date())
+                }.getOrElse { false }
+            }
+            .toList()
+}
+
+val PGPPublicKey.goodKeyRevocation: PGPSignature? by Lazy {
+    it.goodKeyRevocations
+            .sortedBy { sig -> sig.creationTime }
+            .lastOrNull()
+}
+
+internal class Lazy<T>(val function: (PGPPublicKey) -> T) {
+    private var value: Result<T>? = null
+
+    operator fun getValue(pgpPublicKey: PGPPublicKey, property: KProperty<*>): T {
+        if (value == null) {
+            value = try {
+                Result.success(function(pgpPublicKey))
+            } catch (e : Throwable) {
+                Result.failure(e)
+            }
+        }
+        return value!!.getOrThrow()
+    }
+}
