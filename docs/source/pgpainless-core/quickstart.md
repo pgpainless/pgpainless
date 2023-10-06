@@ -50,9 +50,15 @@ There is a very good chance that you can find code examples there that fit your 
 Reading keys from ASCII armored strings or from binary files is easy:
 
 ```java
+// Secret Keys
 String key = "-----BEGIN PGP PRIVATE KEY BLOCK-----\n"...;
 PGPSecretKeyRing secretKey = PGPainless.readKeyRing()
         .secretKeyRing(key);
+
+// Certificates (Public Keys)
+String cert = "-----BEGIN PGP PUBLIC KEY BLOCK-----\n...";
+PGPPublicKeyRing certificate = PGPainless.readKeyRing()
+        .publicKeyRing(cert);
 ```
 
 Similarly, keys or certificates can quickly be exported:
