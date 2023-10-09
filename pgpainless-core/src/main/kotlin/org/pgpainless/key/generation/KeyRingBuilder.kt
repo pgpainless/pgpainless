@@ -82,7 +82,7 @@ class KeyRingBuilder : KeyRingBuilderInterface<KeyRingBuilder> {
         }
     }
 
-    private fun keyIsCertificationCapable(keySpec: KeySpec) = keySpec.keyType.canCertify()
+    private fun keyIsCertificationCapable(keySpec: KeySpec) = keySpec.keyType.canCertify
 
     override fun build(): PGPSecretKeyRing {
         val keyFingerprintCalculator = ImplementationFactory.getInstance()
