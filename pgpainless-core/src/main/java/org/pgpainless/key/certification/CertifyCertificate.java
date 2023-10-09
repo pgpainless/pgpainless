@@ -280,6 +280,10 @@ public class CertifyCertificate {
             throw new KeyException.RevokedKeyException(fingerprint);
         }
 
+        if (!info.isUsableForThirdPartyCertification()) {
+            throw new KeyException.UnacceptableThirdPartyCertificationKeyException(fingerprint);
+        }
+
         Date expirationDate = info.getExpirationDateForUse(KeyFlag.CERTIFY_OTHER);
         if (expirationDate != null && expirationDate.before(now)) {
             throw new KeyException.ExpiredKeyException(fingerprint, expirationDate);

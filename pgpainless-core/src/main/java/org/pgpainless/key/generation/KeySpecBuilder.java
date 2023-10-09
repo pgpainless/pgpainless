@@ -21,7 +21,6 @@ import org.pgpainless.key.generation.type.KeyType;
 import org.pgpainless.signature.subpackets.SelfSignatureSubpackets;
 import org.pgpainless.signature.subpackets.SignatureSubpackets;
 import org.pgpainless.signature.subpackets.SignatureSubpacketsUtil;
-import org.pgpainless.util.CollectionUtils;
 
 public class KeySpecBuilder implements KeySpecBuilderInterface {
 
@@ -34,17 +33,14 @@ public class KeySpecBuilder implements KeySpecBuilderInterface {
     private Set<SymmetricKeyAlgorithm> preferredSymmetricAlgorithms = algorithmSuite.getSymmetricKeyAlgorithms();
     private Date keyCreationDate;
 
-    KeySpecBuilder(@Nonnull KeyType type, KeyFlag flag, KeyFlag... flags) {
-        if (flag == null) {
-            throw new IllegalArgumentException("Key MUST carry at least one key flag");
-        }
+    KeySpecBuilder(@Nonnull KeyType type, KeyFlag... flags) {
         if (flags == null) {
-            throw new IllegalArgumentException("List of additional flags MUST NOT be null.");
+            this.keyFlags = new KeyFlag[0];
+        } else {
+            SignatureSubpacketsUtil.assureKeyCanCarryFlags(type, flags);
+            this.keyFlags = flags;
         }
-        flags = CollectionUtils.concat(flag, flags);
-        SignatureSubpacketsUtil.assureKeyCanCarryFlags(type, flags);
         this.type = type;
-        this.keyFlags = flags;
     }
 
     @Override

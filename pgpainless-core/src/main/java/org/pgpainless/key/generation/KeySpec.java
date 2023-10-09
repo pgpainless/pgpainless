@@ -56,7 +56,7 @@ public class KeySpec {
         return keyCreationDate;
     }
 
-    public static KeySpecBuilder getBuilder(KeyType type, KeyFlag flag, KeyFlag... flags) {
-        return new KeySpecBuilder(type, flag, flags);
+    public static KeySpecBuilder getBuilder(KeyType type, KeyFlag... flags) {
+        return new KeySpecBuilder(type, flags);
     }
 }

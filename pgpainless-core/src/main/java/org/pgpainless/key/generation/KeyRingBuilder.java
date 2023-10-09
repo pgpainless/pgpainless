@@ -19,7 +19,6 @@ import java.util.Map;
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
 
-import org.bouncycastle.bcpg.sig.KeyFlags;
 import org.bouncycastle.openpgp.PGPException;
 import org.bouncycastle.openpgp.PGPKeyPair;
 import org.bouncycastle.openpgp.PGPKeyRingGenerator;
@@ -128,17 +127,9 @@ public class KeyRingBuilder implements KeyRingBuilderInterface<KeyRingBuilder> {
     }
 
     private void verifyMasterKeyCanCertify(KeySpec spec) {
-        if (!hasCertifyOthersFlag(spec)) {
-            throw new IllegalArgumentException("Certification Key MUST have KeyFlag CERTIFY_OTHER");
-        }
         if (!keyIsCertificationCapable(spec)) {
             throw new IllegalArgumentException("Key algorithm " + spec.getKeyType().getName() + " is not capable of creating certifications.");
         }
-    }
-
-    private boolean hasCertifyOthersFlag(KeySpec keySpec) {
-        KeyFlags keyFlags = keySpec.getSubpacketGenerator().getKeyFlagsSubpacket();
-        return keyFlags != null && KeyFlag.hasKeyFlag(keyFlags.getFlags(), KeyFlag.CERTIFY_OTHER);
     }
 
     private boolean keyIsCertificationCapable(KeySpec keySpec) {

@@ -18,7 +18,7 @@ import org.bouncycastle.bcpg.sig.KeyFlags;
 public enum KeyFlag {
 
     /**
-     * This key may be used to certify other keys.
+     * This key may be used to certify third-party keys.
      */
     CERTIFY_OTHER  (KeyFlags.CERTIFY_OTHER),
 

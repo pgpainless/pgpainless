@@ -67,6 +67,13 @@ public abstract class KeyException extends RuntimeException {
         }
     }
 
+    public static class UnacceptableThirdPartyCertificationKeyException extends KeyException {
+
+        public UnacceptableThirdPartyCertificationKeyException(@Nonnull OpenPgpFingerprint fingerprint) {
+            super("Key " + fingerprint + " has no acceptable certification key.", fingerprint);
+        }
+    }
+
     public static class UnacceptableSelfSignatureException extends KeyException {
 
         public UnacceptableSelfSignatureException(@Nonnull OpenPgpFingerprint fingerprint) {

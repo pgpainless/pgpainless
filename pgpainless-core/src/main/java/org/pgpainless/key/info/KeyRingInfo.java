@@ -1170,6 +1170,10 @@ public class KeyRingInfo {
         return new KeyAccessor.SubKey(this, new SubkeyIdentifier(keys, keyId)).getPreferredCompressionAlgorithms();
     }
 
+    public boolean isUsableForThirdPartyCertification() {
+        return isKeyValidlyBound(getKeyId()) && getKeyFlagsOf(getKeyId()).contains(KeyFlag.CERTIFY_OTHER);
+    }
+
     /**
      * Returns true, if the certificate has at least one usable encryption subkey.
      *
