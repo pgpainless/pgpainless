@@ -5,6 +5,7 @@
 package org.bouncycastle.extensions
 
 import org.bouncycastle.openpgp.PGPSignature
+import org.pgpainless.algorithm.RevocationState
 import org.pgpainless.key.OpenPgpFingerprint
 import org.pgpainless.signature.SignatureUtils
 import java.util.*
@@ -44,3 +45,9 @@ fun PGPSignature.wasIssuedBy(fingerprint: OpenPgpFingerprint) = SignatureUtils.w
  * Return true, if this signature is a hard revocation.
  */
 fun PGPSignature.isHardRevocation() = SignatureUtils.isHardRevocation(this)
+
+fun PGPSignature?.toRevocationState() =
+        if (this == null) RevocationState.notRevoked()
+        else
+            if (isHardRevocation()) RevocationState.hardRevoked()
+            else RevocationState.softRevoked(creationTime)
