@@ -10,6 +10,7 @@ import org.bouncycastle.openpgp.operator.PGPKeyEncryptionMethodGenerator
 import org.pgpainless.algorithm.EncryptionPurpose
 import org.pgpainless.algorithm.SymmetricKeyAlgorithm
 import org.pgpainless.authentication.CertificateAuthority
+import org.pgpainless.encryption_signing.EncryptionOptions.EncryptionKeySelector
 import org.pgpainless.exception.KeyException
 import org.pgpainless.exception.KeyException.*
 import org.pgpainless.implementation.ImplementationFactory
@@ -19,7 +20,6 @@ import org.pgpainless.key.info.KeyAccessor
 import org.pgpainless.key.info.KeyRingInfo
 import org.pgpainless.util.Passphrase
 import java.util.*
-import javax.annotation.Nonnull
 
 
 class EncryptionOptions(
@@ -144,8 +144,8 @@ class EncryptionOptions(
 
         for (subkey in subkeys) {
             val keyId = SubkeyIdentifier(key, subkey.keyID)
-            (_keyRingInfo as MutableMap)[keyId] = info
-            (_keyViews as MutableMap)[keyId] = KeyAccessor.ViaUserId(info, keyId, userId.toString())
+            _keyRingInfo[keyId] = info
+            _keyViews[keyId] = KeyAccessor.ViaUserId(info, keyId, userId.toString())
             addRecipientKey(key, subkey, false)
         }
     }
@@ -188,8 +188,8 @@ class EncryptionOptions(
 
         for (subkey in encryptionSubkeys) {
             val keyId = SubkeyIdentifier(key, subkey.keyID)
-            (_keyRingInfo as MutableMap)[keyId] = info
-            (_keyViews as MutableMap)[keyId] = KeyAccessor.ViaKeyId(info, keyId)
+            _keyRingInfo[keyId] = info
+            _keyViews[keyId] = KeyAccessor.ViaKeyId(info, keyId)
             addRecipientKey(key, subkey, wildcardKeyId)
         }
     }
@@ -197,7 +197,7 @@ class EncryptionOptions(
     private fun addRecipientKey(certificate: PGPPublicKeyRing,
                                 key: PGPPublicKey,
                                 wildcardKeyId: Boolean) {
-        (_encryptionKeyIdentifiers as MutableSet).add(SubkeyIdentifier(certificate, key.keyID))
+        _encryptionKeyIdentifiers.add(SubkeyIdentifier(certificate, key.keyID))
         addEncryptionMethod(ImplementationFactory.getInstance()
                 .getPublicKeyKeyEncryptionMethodGenerator(key)
                 .also { it.setUseWildcardKeyID(wildcardKeyId) })
@@ -228,7 +228,7 @@ class EncryptionOptions(
      * @return this
      */
     fun addEncryptionMethod(encryptionMethod: PGPKeyEncryptionMethodGenerator) = apply {
-        (_encryptionMethods as MutableSet).add(encryptionMethod)
+        _encryptionMethods.add(encryptionMethod)
     }
 
     /**
