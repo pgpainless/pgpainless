@@ -4,6 +4,7 @@
 
 package org.pgpainless.algorithm;
 
+import javax.annotation.Nonnull;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.LinkedHashSet;
@@ -16,33 +17,71 @@ import java.util.Set;
  */
 public class AlgorithmSuite {
 
+    private static final List<SymmetricKeyAlgorithm> defaultSymmetricAlgorithms = Arrays.asList(
+            SymmetricKeyAlgorithm.AES_256,
+            SymmetricKeyAlgorithm.AES_192,
+            SymmetricKeyAlgorithm.AES_128);
+    private static final List<HashAlgorithm> defaultHashAlgorithms = Arrays.asList(
+            HashAlgorithm.SHA512,
+            HashAlgorithm.SHA384,
+            HashAlgorithm.SHA256,
+            HashAlgorithm.SHA224);
+    private static final List<CompressionAlgorithm> defaultCompressionAlgorithms = Arrays.asList(
+            CompressionAlgorithm.ZLIB,
+            CompressionAlgorithm.BZIP2,
+            CompressionAlgorithm.ZIP,
+            CompressionAlgorithm.UNCOMPRESSED);
+    private static final List<AEADAlgorithmCombination> defaultAEADAlgorithms = Arrays.asList(
+            AEADAlgorithmCombination.from(SymmetricKeyAlgorithm.AES_256, AEADAlgorithm.OCB),
+            AEADAlgorithmCombination.from(SymmetricKeyAlgorithm.AES_256, AEADAlgorithm.EAX),
+            AEADAlgorithmCombination.from(SymmetricKeyAlgorithm.AES_256, AEADAlgorithm.GCM),
+            AEADAlgorithmCombination.from(SymmetricKeyAlgorithm.AES_192, AEADAlgorithm.OCB),
+            AEADAlgorithmCombination.from(SymmetricKeyAlgorithm.AES_192, AEADAlgorithm.EAX),
+            AEADAlgorithmCombination.from(SymmetricKeyAlgorithm.AES_192, AEADAlgorithm.GCM),
+            AEADAlgorithmCombination.from(SymmetricKeyAlgorithm.AES_128, AEADAlgorithm.OCB),
+            AEADAlgorithmCombination.from(SymmetricKeyAlgorithm.AES_128, AEADAlgorithm.EAX),
+            AEADAlgorithmCombination.from(SymmetricKeyAlgorithm.AES_128, AEADAlgorithm.GCM));
     private static final AlgorithmSuite defaultAlgorithmSuite = new AlgorithmSuite(
-            Arrays.asList(
-                    SymmetricKeyAlgorithm.AES_256,
-                    SymmetricKeyAlgorithm.AES_192,
-                    SymmetricKeyAlgorithm.AES_128),
-            Arrays.asList(
-                    HashAlgorithm.SHA512,
-                    HashAlgorithm.SHA384,
-                    HashAlgorithm.SHA256,
-                    HashAlgorithm.SHA224),
-            Arrays.asList(
-                    CompressionAlgorithm.ZLIB,
-                    CompressionAlgorithm.BZIP2,
-                    CompressionAlgorithm.ZIP,
-                    CompressionAlgorithm.UNCOMPRESSED)
-    );
+            defaultSymmetricAlgorithms,
+            defaultHashAlgorithms,
+            defaultCompressionAlgorithms,
+            defaultAEADAlgorithms);
 
     private final Set<SymmetricKeyAlgorithm> symmetricKeyAlgorithms;
     private final Set<HashAlgorithm> hashAlgorithms;
     private final Set<CompressionAlgorithm> compressionAlgorithms;
+    private final Set<AEADAlgorithmCombination> aeadAlgorithms;
 
-    public AlgorithmSuite(List<SymmetricKeyAlgorithm> symmetricKeyAlgorithms,
-                          List<HashAlgorithm> hashAlgorithms,
-                          List<CompressionAlgorithm> compressionAlgorithms) {
+    /**
+     * Create a new AlgorithmSuite.
+     *
+     * @deprecated use {@link AlgorithmSuite#AlgorithmSuite(List, List, List, List)} instead.
+     * @param symmetricKeyAlgorithms preferred symmetric algorithms
+     * @param hashAlgorithms preferred hash algorithms
+     * @param compressionAlgorithms preferred compression algorithms
+     */
+    @Deprecated
+    public AlgorithmSuite(@Nonnull List<SymmetricKeyAlgorithm> symmetricKeyAlgorithms,
+                          @Nonnull List<HashAlgorithm> hashAlgorithms,
+                          @Nonnull List<CompressionAlgorithm> compressionAlgorithms) {
+        this(symmetricKeyAlgorithms, hashAlgorithms, compressionAlgorithms, defaultAEADAlgorithms);
+    }
+
+    /**
+     * Create a new AlgorithmSuite.
+     * @param symmetricKeyAlgorithms preferred symmetric algorithms
+     * @param hashAlgorithms preferred hash algorithms
+     * @param compressionAlgorithms preferred compression algorithms
+     * @param aeadAlgorithms preferred AEAD algorithm combinations
+     */
+    public AlgorithmSuite(@Nonnull List<SymmetricKeyAlgorithm> symmetricKeyAlgorithms,
+                          @Nonnull List<HashAlgorithm> hashAlgorithms,
+                          @Nonnull List<CompressionAlgorithm> compressionAlgorithms,
+                          @Nonnull List<AEADAlgorithmCombination> aeadAlgorithms) {
         this.symmetricKeyAlgorithms = Collections.unmodifiableSet(new LinkedHashSet<>(symmetricKeyAlgorithms));
         this.hashAlgorithms = Collections.unmodifiableSet(new LinkedHashSet<>(hashAlgorithms));
         this.compressionAlgorithms = Collections.unmodifiableSet(new LinkedHashSet<>(compressionAlgorithms));
+        this.aeadAlgorithms = Collections.unmodifiableSet(new LinkedHashSet<>(aeadAlgorithms));
     }
 
     public Set<SymmetricKeyAlgorithm> getSymmetricKeyAlgorithms() {
@@ -57,7 +96,12 @@ public class AlgorithmSuite {
         return new LinkedHashSet<>(compressionAlgorithms);
     }
 
+    public Set<AEADAlgorithmCombination> getAEADAlgorithms() {
+        return new LinkedHashSet<>(aeadAlgorithms);
+    }
+
     public static AlgorithmSuite getDefaultAlgorithmSuite() {
         return defaultAlgorithmSuite;
     }
+
 }

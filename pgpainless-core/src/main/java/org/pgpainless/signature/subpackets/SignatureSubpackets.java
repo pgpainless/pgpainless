@@ -28,6 +28,7 @@ import org.bouncycastle.bcpg.sig.KeyExpirationTime;
 import org.bouncycastle.bcpg.sig.KeyFlags;
 import org.bouncycastle.bcpg.sig.NotationData;
 import org.bouncycastle.bcpg.sig.PolicyURI;
+import org.bouncycastle.bcpg.sig.PreferredAEADCiphersuites;
 import org.bouncycastle.bcpg.sig.PreferredAlgorithms;
 import org.bouncycastle.bcpg.sig.PrimaryUserID;
 import org.bouncycastle.bcpg.sig.RegularExpression;
@@ -42,6 +43,7 @@ import org.bouncycastle.bcpg.sig.TrustSignature;
 import org.bouncycastle.openpgp.PGPPublicKey;
 import org.bouncycastle.openpgp.PGPSignature;
 import org.bouncycastle.openpgp.PGPSignatureSubpacketVector;
+import org.pgpainless.algorithm.AEADAlgorithmCombination;
 import org.pgpainless.algorithm.CompressionAlgorithm;
 import org.pgpainless.algorithm.Feature;
 import org.pgpainless.algorithm.HashAlgorithm;
@@ -68,6 +70,7 @@ public class SignatureSubpackets
     private PreferredAlgorithms preferredCompressionAlgorithms;
     private PreferredAlgorithms preferredSymmetricKeyAlgorithms;
     private PreferredAlgorithms preferredHashAlgorithms;
+    private PreferredAEADCiphersuites preferredAEADCiphersuites;
     private final List<EmbeddedSignature> embeddedSignatureList = new ArrayList<>();
     private SignerUserID signerUserId;
     private KeyExpirationTime keyExpirationTime;
@@ -311,6 +314,41 @@ public class SignatureSubpackets
     public SignatureSubpackets setKeyExpirationTime(@Nullable KeyExpirationTime keyExpirationTime) {
         this.keyExpirationTime = keyExpirationTime;
         return this;
+    }
+
+    @Override
+    public SelfSignatureSubpackets setPreferredAEADCiphersuites(AEADAlgorithmCombination... algorithms) {
+        return setPreferredAEADCiphersuites(new LinkedHashSet<>(Arrays.asList(algorithms)));
+    }
+
+    @Override
+    public SelfSignatureSubpackets setPreferredAEADCiphersuites(Set<AEADAlgorithmCombination> algorithms) {
+        return setPreferredAEADCiphersuites(false, algorithms);
+    }
+
+    @Override
+    public SelfSignatureSubpackets setPreferredAEADCiphersuites(boolean isCritical, Set<AEADAlgorithmCombination> algorithms) {
+        List<PreferredAEADCiphersuites.Combination> combinations = new ArrayList<>();
+        Iterator<AEADAlgorithmCombination> iterator = algorithms.iterator();
+        while (iterator.hasNext()) {
+            AEADAlgorithmCombination combination = iterator.next();
+            combinations.add(new PreferredAEADCiphersuites.Combination(
+                    combination.getSymmetricKeyAlgorithm().getAlgorithmId(),
+                    combination.getAeadAlgorithm().getAlgorithmId()));
+        }
+        PreferredAEADCiphersuites subpacket = new PreferredAEADCiphersuites(
+                isCritical, combinations.toArray(new PreferredAEADCiphersuites.Combination[0]));
+        return setPreferredAEADCiphersuites(subpacket);
+    }
+
+    @Override
+    public SelfSignatureSubpackets setPreferredAEADCiphersuites(@Nullable PreferredAEADCiphersuites algorithms) {
+        this.preferredAEADCiphersuites = algorithms;
+        return this;
+    }
+
+    public PreferredAEADCiphersuites getPreferredAEADCiphersuites() {
+        return preferredAEADCiphersuites;
     }
 
     public KeyExpirationTime getKeyExpirationTimeSubpacket() {

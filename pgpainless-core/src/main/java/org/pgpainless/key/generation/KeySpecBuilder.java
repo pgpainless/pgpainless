@@ -11,6 +11,7 @@ import java.util.Set;
 import javax.annotation.Nonnull;
 
 import org.pgpainless.PGPainless;
+import org.pgpainless.algorithm.AEADAlgorithmCombination;
 import org.pgpainless.algorithm.AlgorithmSuite;
 import org.pgpainless.algorithm.CompressionAlgorithm;
 import org.pgpainless.algorithm.Feature;
@@ -31,6 +32,7 @@ public class KeySpecBuilder implements KeySpecBuilderInterface {
     private Set<CompressionAlgorithm> preferredCompressionAlgorithms = algorithmSuite.getCompressionAlgorithms();
     private Set<HashAlgorithm> preferredHashAlgorithms = algorithmSuite.getHashAlgorithms();
     private Set<SymmetricKeyAlgorithm> preferredSymmetricAlgorithms = algorithmSuite.getSymmetricKeyAlgorithms();
+    private Set<AEADAlgorithmCombination> preferredAEADAlgorithms = algorithmSuite.getAEADAlgorithms();
     private Date keyCreationDate;
 
     KeySpecBuilder(@Nonnull KeyType type, KeyFlag... flags) {
@@ -70,6 +72,13 @@ public class KeySpecBuilder implements KeySpecBuilderInterface {
     }
 
     @Override
+    public KeySpecBuilder overridePreferredAEADAlgorithms(
+            @Nonnull AEADAlgorithmCombination... preferredAEADAlgorithms) {
+        this.preferredAEADAlgorithms = new LinkedHashSet<>(Arrays.asList(preferredAEADAlgorithms));
+        return this;
+    }
+
+    @Override
     public KeySpecBuilder setKeyCreationDate(@Nonnull Date creationDate) {
         this.keyCreationDate = creationDate;
         return this;
@@ -81,6 +90,7 @@ public class KeySpecBuilder implements KeySpecBuilderInterface {
         this.hashedSubpackets.setPreferredCompressionAlgorithms(preferredCompressionAlgorithms);
         this.hashedSubpackets.setPreferredHashAlgorithms(preferredHashAlgorithms);
         this.hashedSubpackets.setPreferredSymmetricKeyAlgorithms(preferredSymmetricAlgorithms);
+        this.hashedSubpackets.setPreferredAEADCiphersuites(preferredAEADAlgorithms);
         this.hashedSubpackets.setFeatures(Feature.MODIFICATION_DETECTION);
 
         return new KeySpec(type, (SignatureSubpackets) hashedSubpackets, false, keyCreationDate);

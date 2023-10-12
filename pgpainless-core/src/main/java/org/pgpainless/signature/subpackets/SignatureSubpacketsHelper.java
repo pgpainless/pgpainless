@@ -13,6 +13,7 @@ import org.bouncycastle.bcpg.sig.KeyExpirationTime;
 import org.bouncycastle.bcpg.sig.KeyFlags;
 import org.bouncycastle.bcpg.sig.NotationData;
 import org.bouncycastle.bcpg.sig.PolicyURI;
+import org.bouncycastle.bcpg.sig.PreferredAEADCiphersuites;
 import org.bouncycastle.bcpg.sig.PreferredAlgorithms;
 import org.bouncycastle.bcpg.sig.PrimaryUserID;
 import org.bouncycastle.bcpg.sig.RegularExpression;
@@ -30,6 +31,9 @@ import org.pgpainless.algorithm.HashAlgorithm;
 import org.pgpainless.algorithm.KeyFlag;
 import org.pgpainless.algorithm.PublicKeyAlgorithm;
 import org.pgpainless.key.util.RevocationAttributes;
+
+import java.util.ArrayList;
+import java.util.List;
 
 public class SignatureSubpacketsHelper {
 
@@ -78,6 +82,22 @@ public class SignatureSubpacketsHelper {
                     break;
                 case preferredCompressionAlgorithms:
                     subpackets.setPreferredCompressionAlgorithms((PreferredAlgorithms) subpacket);
+                    break;
+                case preferredAEADAlgorithms:
+                    // Workaround for https://github.com/pgpainless/pgpainless/pull/399
+                    // TODO: Remove when BC 1.77 is released
+                    if (subpacket instanceof PreferredAlgorithms) {
+                        List<PreferredAEADCiphersuites.Combination> combinationList = new ArrayList<>();
+                        int[] algorithms = ((PreferredAlgorithms) subpacket).getPreferences();
+                        for (int i = 0; i < algorithms.length; i += 2) {
+                            combinationList.add(new PreferredAEADCiphersuites.Combination(algorithms[i], algorithms[i + 1]));
+                        }
+                        PreferredAEADCiphersuites aead = new PreferredAEADCiphersuites(
+                                subpacket.isCritical(), combinationList.toArray(new PreferredAEADCiphersuites.Combination[0]));
+                        subpackets.setPreferredAEADCiphersuites(aead);
+                        break;
+                    }
+                    subpackets.setPreferredAEADCiphersuites((PreferredAEADCiphersuites) subpacket);
                     break;
                 case primaryUserId:
                     PrimaryUserID primaryUserID = (PrimaryUserID) subpacket;
@@ -128,7 +148,6 @@ public class SignatureSubpacketsHelper {
                 case keyServerPreferences:
                 case preferredKeyServers:
                 case placeholder:
-                case preferredAEADAlgorithms:
                 case attestedCertification:
                     subpackets.addResidualSubpacket(subpacket);
                     break;
@@ -161,6 +180,7 @@ public class SignatureSubpacketsHelper {
         addSubpacket(generator, subpackets.getPreferredCompressionAlgorithmsSubpacket());
         addSubpacket(generator, subpackets.getPreferredSymmetricKeyAlgorithmsSubpacket());
         addSubpacket(generator, subpackets.getPreferredHashAlgorithmsSubpacket());
+        addSubpacket(generator, subpackets.getPreferredAEADCiphersuites());
         for (EmbeddedSignature embeddedSignature : subpackets.getEmbeddedSignatureSubpackets()) {
             addSubpacket(generator, embeddedSignature);
         }

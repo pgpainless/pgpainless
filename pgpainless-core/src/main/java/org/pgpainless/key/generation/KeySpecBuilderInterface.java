@@ -6,6 +6,7 @@ package org.pgpainless.key.generation;
 
 import javax.annotation.Nonnull;
 
+import org.pgpainless.algorithm.AEADAlgorithmCombination;
 import org.pgpainless.algorithm.CompressionAlgorithm;
 import org.pgpainless.algorithm.HashAlgorithm;
 import org.pgpainless.algorithm.SymmetricKeyAlgorithm;
@@ -19,6 +20,8 @@ public interface KeySpecBuilderInterface {
     KeySpecBuilder overridePreferredHashAlgorithms(@Nonnull HashAlgorithm... preferredHashAlgorithms);
 
     KeySpecBuilder overridePreferredSymmetricKeyAlgorithms(@Nonnull SymmetricKeyAlgorithm... preferredSymmetricKeyAlgorithms);
+
+    KeySpecBuilder overridePreferredAEADAlgorithms(@Nonnull AEADAlgorithmCombination... preferredAEADAlgorithms);
 
     KeySpecBuilder setKeyCreationDate(@Nonnull Date creationDate);
 

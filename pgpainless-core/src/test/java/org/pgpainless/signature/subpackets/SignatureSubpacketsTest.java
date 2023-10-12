@@ -17,12 +17,15 @@ import java.util.Date;
 import java.util.Iterator;
 import java.util.Random;
 
+import org.bouncycastle.bcpg.AEADAlgorithmTags;
 import org.bouncycastle.bcpg.SignatureSubpacket;
 import org.bouncycastle.bcpg.SignatureSubpacketTags;
+import org.bouncycastle.bcpg.SymmetricKeyAlgorithmTags;
 import org.bouncycastle.bcpg.sig.Exportable;
 import org.bouncycastle.bcpg.sig.Features;
 import org.bouncycastle.bcpg.sig.IssuerFingerprint;
 import org.bouncycastle.bcpg.sig.NotationData;
+import org.bouncycastle.bcpg.sig.PreferredAEADCiphersuites;
 import org.bouncycastle.bcpg.sig.PreferredAlgorithms;
 import org.bouncycastle.bcpg.sig.Revocable;
 import org.bouncycastle.bcpg.sig.RevocationKey;
@@ -481,9 +484,14 @@ public class SignatureSubpacketsTest {
         new Random().nextBytes(hash);
         subpackets.setSignatureTarget(false, publicKeys.getPublicKey().getAlgorithm(), HashAlgorithm.SHA512.getAlgorithmId(), hash);
         subpackets.addIntendedRecipientFingerprint(true, publicKeys.getPublicKey());
-        PreferredAlgorithms aead = new PreferredAlgorithms(SignatureSubpacketTags.PREFERRED_AEAD_ALGORITHMS, false, new int[] {2});
-        subpackets.addCustomSubpacket(aead);
-
+        PreferredAEADCiphersuites.Combination[] aead = new PreferredAEADCiphersuites.Combination[] {
+            new PreferredAEADCiphersuites.Combination(SymmetricKeyAlgorithmTags.AES_256, AEADAlgorithmTags.OCB),
+            new PreferredAEADCiphersuites.Combination(SymmetricKeyAlgorithmTags.AES_128, AEADAlgorithmTags.EAX)
+        };
+        subpackets.setPreferredAEADAlgorithms(false, new int[] {
+                aead[0].getSymmetricAlgorithm(), aead[0].getAeadAlgorithm(),
+                aead[1].getSymmetricAlgorithm(), aead[1].getAeadAlgorithm()
+        });
 
         SignatureSubpackets wrapper = SignatureSubpackets.createSubpacketsFrom(subpackets.generate());
         PGPSignatureSubpacketVector vector = SignatureSubpacketsHelper.toVector(wrapper);
@@ -530,7 +538,7 @@ public class SignatureSubpacketsTest {
         assertEquals(HashAlgorithm.SHA512.getAlgorithmId(), signatureTarget.getHashAlgorithm());
         assertArrayEquals(hash, signatureTarget.getHashData());
         assertArrayEquals(publicKeys.getPublicKey().getFingerprint(), vector.getIntendedRecipientFingerprint().getFingerprint());
-        PreferredAlgorithms aeadAlgorithms = (PreferredAlgorithms) vector.getSubpacket(SignatureSubpacketTags.PREFERRED_AEAD_ALGORITHMS);
-        assertArrayEquals(aead.getPreferences(), aeadAlgorithms.getPreferences());
+        PreferredAEADCiphersuites aeadAlgorithms = (PreferredAEADCiphersuites) vector.getSubpacket(SignatureSubpacketTags.PREFERRED_AEAD_ALGORITHMS);
+        assertArrayEquals(aead, aeadAlgorithms.getRawAlgorithms());
     }
 }
