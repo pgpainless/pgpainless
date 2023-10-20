@@ -70,16 +70,12 @@ class SignatureSubpackets
 
         @JvmStatic
         fun createSubpacketsFrom(base: PGPSignatureSubpacketVector): SignatureSubpackets {
-            return SignatureSubpackets().apply {
-                SignatureSubpacketsHelper.applyFrom(base, this)
-            }
+            return SignatureSubpacketsHelper.applyFrom(base, SignatureSubpackets())
         }
 
         @JvmStatic
         fun createHashedSubpackets(issuer: PGPPublicKey): SignatureSubpackets {
-            return SignatureSubpackets().apply {
-                setIssuerFingerprintAndKeyId(issuer)
-            }
+            return createEmptySubpackets().setIssuerFingerprintAndKeyId(issuer)
         }
 
         @JvmStatic
