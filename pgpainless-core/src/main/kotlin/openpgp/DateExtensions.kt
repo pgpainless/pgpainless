@@ -24,11 +24,21 @@ fun Date.plusSeconds(seconds: Long): Date? {
     else Date(this.time + 1000 * seconds)
 }
 
+val Date.asSeconds: Long
+    get() = time / 1000
+
+fun Date.secondsTill(later: Date): Long {
+    require(this <= later) {
+        "Timestamp MUST be before the later timestamp."
+    }
+    return later.asSeconds - this.asSeconds
+}
+
 /**
  * Return a new [Date] instance with this instance's time floored down to seconds precision.
  */
 fun Date.toSecondsPrecision(): Date {
-    return Date((time / 1000) * 1000)
+    return Date(asSeconds * 1000)
 }
 
 internal val parser: SimpleDateFormat

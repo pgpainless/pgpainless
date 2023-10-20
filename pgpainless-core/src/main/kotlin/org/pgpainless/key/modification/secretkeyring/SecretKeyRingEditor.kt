@@ -144,14 +144,14 @@ class SecretKeyRingEditor(
                 ?: throw AssertionError("Certification for old user-ID MUST NOT be null.")
 
         addUserId(newUID, object : SelfSignatureSubpackets.Callback {
-            override fun modifyHashedSubpackets(hashedSubpackets: SelfSignatureSubpackets?) {
+            override fun modifyHashedSubpackets(hashedSubpackets: SelfSignatureSubpackets) {
                 SignatureSubpacketsHelper.applyFrom(oldCertification.hashedSubPackets, hashedSubpackets as SignatureSubpackets)
                 if (oldUID == info.primaryUserId && !oldCertification.hashedSubPackets.isPrimaryUserID) {
                     hashedSubpackets.setPrimaryUserId()
                 }
             }
 
-            override fun modifyUnhashedSubpackets(unhashedSubpackets: SelfSignatureSubpackets?) {
+            override fun modifyUnhashedSubpackets(unhashedSubpackets: SelfSignatureSubpackets) {
                 SignatureSubpacketsHelper.applyFrom(oldCertification.unhashedSubPackets, unhashedSubpackets as SignatureSubpackets)
             }
         }, protector)
@@ -163,7 +163,7 @@ class SecretKeyRingEditor(
                            subkeyPassphrase: Passphrase,
                            protector: SecretKeyRingProtector): SecretKeyRingEditorInterface {
         val callback = object : SelfSignatureSubpackets.Callback {
-            override fun modifyHashedSubpackets(hashedSubpackets: SelfSignatureSubpackets?) {
+            override fun modifyHashedSubpackets(hashedSubpackets: SelfSignatureSubpackets) {
                 SignatureSubpacketsHelper.applyFrom(keySpec.subpackets, hashedSubpackets as SignatureSubpackets)
             }
         }

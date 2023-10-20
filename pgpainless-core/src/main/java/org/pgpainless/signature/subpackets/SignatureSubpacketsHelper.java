@@ -143,8 +143,8 @@ public class SignatureSubpacketsHelper {
         addSubpacket(generator, subpackets.getSignatureCreationTimeSubpacket());
         addSubpacket(generator, subpackets.getSignatureExpirationTimeSubpacket());
         addSubpacket(generator, subpackets.getExportableSubpacket());
-        addSubpacket(generator, subpackets.getPolicyURI());
-        addSubpacket(generator, subpackets.getRegularExpression());
+        addSubpacket(generator, subpackets.getPolicyURISubpacket());
+        addSubpacket(generator, subpackets.getRegularExpressionSubpacket());
         for (NotationData notationData : subpackets.getNotationDataSubpackets()) {
             addSubpacket(generator, notationData);
         }
