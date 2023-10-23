@@ -19,6 +19,7 @@ buildscript {
 
 plugins {
     id 'org.jetbrains.kotlin.jvm' version "1.8.10"
+    id 'com.diffplug.spotless' version '6.22.0' apply false
 }
 
 apply from: 'version.gradle'
@@ -30,6 +31,7 @@ allprojects {
     apply plugin: 'jacoco'
     apply plugin: 'checkstyle'
     apply plugin: 'kotlin'
+    apply plugin: 'com.diffplug.spotless'
 
     compileJava {
         options.release = 8
@@ -45,6 +47,12 @@ allprojects {
     // checkstyle
     checkstyle {
         toolVersion = '10.12.1'
+    }
+
+    spotless {
+      kotlin {
+        ktfmt().dropboxStyle()
+      }
     }
 
     group 'org.pgpainless'
