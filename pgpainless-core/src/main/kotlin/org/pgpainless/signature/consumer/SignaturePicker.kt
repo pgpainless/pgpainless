@@ -4,8 +4,8 @@
 
 package org.pgpainless.signature.consumer
 
+import java.util.Date
 import org.bouncycastle.extensions.getPublicKeyFor
-import org.bouncycastle.extensions.hasPublicKey
 import org.bouncycastle.extensions.isExpired
 import org.bouncycastle.extensions.wasIssuedBy
 import org.bouncycastle.openpgp.PGPKeyRing
@@ -14,30 +14,24 @@ import org.bouncycastle.openpgp.PGPSignature
 import org.pgpainless.algorithm.SignatureType
 import org.pgpainless.exception.SignatureValidationException
 import org.pgpainless.policy.Policy
-import java.util.Date
-import kotlin.math.sign
 
 /**
  * Pick signatures from keys.
  *
  * The format of a V4 OpenPGP key is:
  *
- * Primary-Key
- *    [Revocation Self Signature]
- *    [Direct Key Signature...]
- *     User ID [Signature ...]
- *    [User ID [Signature ...] ...]
- *    [User Attribute [Signature ...] ...]
- *    [[Subkey [Binding-Signature-Revocation] Primary-Key-Binding-Signature] ...]
+ * Primary-Key [Revocation Self Signature] [Direct Key Signature...] User ID [Signature ...] [User
+ * ID [Signature ...] ...] [User Attribute [Signature ...] ...] [[Subkey
+ * [Binding-Signature-Revocation] Primary-Key-Binding-Signature] ...]
  */
 class SignaturePicker {
 
     companion object {
 
         /**
-         * Pick the at validation date most recent valid key revocation signature.
-         * If there are hard revocation signatures, the latest hard revocation sig is picked, even if it was created after
-         * validationDate or if it is already expired.
+         * Pick the at validation date most recent valid key revocation signature. If there are hard
+         * revocation signatures, the latest hard revocation sig is picked, even if it was created
+         * after validationDate or if it is already expired.
          *
          * @param keyRing key ring
          * @param policy policy
@@ -45,21 +39,26 @@ class SignaturePicker {
          * @return most recent, valid key revocation signature
          */
         @JvmStatic
-        fun pickCurrentRevocationSelfSignature(keyRing: PGPKeyRing, policy: Policy, referenceTime: Date): PGPSignature? {
+        fun pickCurrentRevocationSelfSignature(
+            keyRing: PGPKeyRing,
+            policy: Policy,
+            referenceTime: Date
+        ): PGPSignature? {
             val primaryKey = keyRing.publicKey
             return getSortedSignaturesOfType(primaryKey, SignatureType.KEY_REVOCATION).lastOrNull {
                 return@lastOrNull try {
-                    SignatureVerifier.verifyKeyRevocationSignature(it, primaryKey, policy, referenceTime)
+                    SignatureVerifier.verifyKeyRevocationSignature(
+                        it, primaryKey, policy, referenceTime)
                     true // valid
-                } catch (e : SignatureValidationException) {
+                } catch (e: SignatureValidationException) {
                     false // not valid
                 }
             }
         }
 
         /**
-         * Pick the at validationDate most recent, valid direct key signature.
-         * This method might return null, if there is no direct key self-signature which is valid at validationDate.
+         * Pick the at validationDate most recent, valid direct key signature. This method might
+         * return null, if there is no direct key self-signature which is valid at validationDate.
          *
          * @param keyRing key ring
          * @param policy policy
@@ -67,28 +66,38 @@ class SignaturePicker {
          * @return direct-key self-signature
          */
         @JvmStatic
-        fun pickCurrentDirectKeySelfSignature(keyRing: PGPKeyRing, policy: Policy, referenceTime: Date): PGPSignature? {
+        fun pickCurrentDirectKeySelfSignature(
+            keyRing: PGPKeyRing,
+            policy: Policy,
+            referenceTime: Date
+        ): PGPSignature? {
             val primaryKey = keyRing.publicKey
             return pickCurrentDirectKeySignature(primaryKey, primaryKey, policy, referenceTime)
         }
 
         @JvmStatic
-        fun pickCurrentDirectKeySignature(signingKey: PGPPublicKey, signedKey: PGPPublicKey, policy: Policy, referenceTime: Date): PGPSignature? {
+        fun pickCurrentDirectKeySignature(
+            signingKey: PGPPublicKey,
+            signedKey: PGPPublicKey,
+            policy: Policy,
+            referenceTime: Date
+        ): PGPSignature? {
             return getSortedSignaturesOfType(signedKey, SignatureType.DIRECT_KEY).lastOrNull {
                 return@lastOrNull try {
-                    SignatureVerifier.verifyDirectKeySignature(it, signingKey, signedKey, policy, referenceTime)
+                    SignatureVerifier.verifyDirectKeySignature(
+                        it, signingKey, signedKey, policy, referenceTime)
                     true
-                } catch (e : SignatureValidationException) {
+                } catch (e: SignatureValidationException) {
                     false
                 }
             }
         }
 
         /**
-         * Pick the at validationDate latest direct key signature.
-         * This method might return an expired signature.
-         * If there are more than one direct-key signature, and some of those are not expired, the latest non-expired
-         * yet already effective direct-key signature will be returned.
+         * Pick the at validationDate latest direct key signature. This method might return an
+         * expired signature. If there are more than one direct-key signature, and some of those are
+         * not expired, the latest non-expired yet already effective direct-key signature will be
+         * returned.
          *
          * @param keyRing key ring
          * @param policy policy
@@ -96,15 +105,20 @@ class SignaturePicker {
          * @return latest direct key signature
          */
         @JvmStatic
-        fun pickLatestDirectKeySignature(keyRing: PGPKeyRing, policy: Policy, referenceTime: Date): PGPSignature? {
-            return pickLatestDirectKeySignature(keyRing.publicKey, keyRing.publicKey, policy, referenceTime)
+        fun pickLatestDirectKeySignature(
+            keyRing: PGPKeyRing,
+            policy: Policy,
+            referenceTime: Date
+        ): PGPSignature? {
+            return pickLatestDirectKeySignature(
+                keyRing.publicKey, keyRing.publicKey, policy, referenceTime)
         }
 
         /**
          * Pick the at validationDate latest direct key signature made by signingKey on signedKey.
-         * This method might return an expired signature.
-         * If a non-expired direct-key signature exists, the latest non-expired yet already effective direct-key
-         * signature will be returned.
+         * This method might return an expired signature. If a non-expired direct-key signature
+         * exists, the latest non-expired yet already effective direct-key signature will be
+         * returned.
          *
          * @param signingKey signing key (key that made the sig)
          * @param signedKey signed key (key that carries the sig)
@@ -113,7 +127,12 @@ class SignaturePicker {
          * @return latest direct key sig
          */
         @JvmStatic
-        fun pickLatestDirectKeySignature(signingKey: PGPPublicKey, signedKey: PGPPublicKey, policy: Policy, referenceTime: Date): PGPSignature? {
+        fun pickLatestDirectKeySignature(
+            signingKey: PGPPublicKey,
+            signedKey: PGPPublicKey,
+            policy: Policy,
+            referenceTime: Date
+        ): PGPSignature? {
             var latest: PGPSignature? = null
             return getSortedSignaturesOfType(signedKey, SignatureType.DIRECT_KEY).lastOrNull {
                 try {
@@ -126,16 +145,16 @@ class SignaturePicker {
                     SignatureValidator.correctSignatureOverKey(signingKey, signedKey).verify(it)
                     latest = it
                     true
-                } catch (e : SignatureValidationException) {
+                } catch (e: SignatureValidationException) {
                     false
                 }
             }
         }
 
         /**
-         * Pick the at validationDate most recent, valid user-id revocation signature.
-         * If there are hard revocation signatures, the latest hard revocation sig is picked, even if it was created after
-         * validationDate or if it is already expired.
+         * Pick the at validationDate most recent, valid user-id revocation signature. If there are
+         * hard revocation signatures, the latest hard revocation sig is picked, even if it was
+         * created after validationDate or if it is already expired.
          *
          * @param keyRing key ring
          * @param userId user-Id that gets revoked
@@ -144,23 +163,31 @@ class SignaturePicker {
          * @return revocation signature
          */
         @JvmStatic
-        fun pickCurrentUserIdRevocationSignature(keyRing: PGPKeyRing, userId: CharSequence, policy: Policy, referenceTime: Date): PGPSignature? {
+        fun pickCurrentUserIdRevocationSignature(
+            keyRing: PGPKeyRing,
+            userId: CharSequence,
+            policy: Policy,
+            referenceTime: Date
+        ): PGPSignature? {
             val primaryKey = keyRing.publicKey
-            return getSortedSignaturesOfType(primaryKey, SignatureType.CERTIFICATION_REVOCATION).lastOrNull {
-                keyRing.getPublicKeyFor(it) ?: return@lastOrNull false // signature made by external key. skip.
-                return@lastOrNull try {
-                    SignatureVerifier.verifyUserIdRevocation(userId.toString(), it, primaryKey, policy, referenceTime)
-                    true
-                } catch (e : SignatureValidationException) {
-                    false // signature not valid
+            return getSortedSignaturesOfType(primaryKey, SignatureType.CERTIFICATION_REVOCATION)
+                .lastOrNull {
+                    keyRing.getPublicKeyFor(it)
+                        ?: return@lastOrNull false // signature made by external key. skip.
+                    return@lastOrNull try {
+                        SignatureVerifier.verifyUserIdRevocation(
+                            userId.toString(), it, primaryKey, policy, referenceTime)
+                        true
+                    } catch (e: SignatureValidationException) {
+                        false // signature not valid
+                    }
                 }
-            }
         }
 
         /**
-         * Pick the at validationDate latest, valid certification self-signature for the given user-id.
-         * This method might return null, if there is no certification self signature for that user-id which is valid
-         * at validationDate.
+         * Pick the at validationDate latest, valid certification self-signature for the given
+         * user-id. This method might return null, if there is no certification self signature for
+         * that user-id which is valid at validationDate.
          *
          * @param keyRing keyring
          * @param userId userid
@@ -169,25 +196,34 @@ class SignaturePicker {
          * @return user-id certification
          */
         @JvmStatic
-        fun pickCurrentUserIdCertificationSignature(keyRing: PGPKeyRing, userId: CharSequence, policy: Policy, referenceTime: Date): PGPSignature? {
+        fun pickCurrentUserIdCertificationSignature(
+            keyRing: PGPKeyRing,
+            userId: CharSequence,
+            policy: Policy,
+            referenceTime: Date
+        ): PGPSignature? {
             val primaryKey = keyRing.publicKey
-            return primaryKey.getSignaturesForID(userId.toString()).asSequence()
-                    .sortedWith(SignatureCreationDateComparator())
-                    .lastOrNull {
-                        return@lastOrNull it.wasIssuedBy(primaryKey) && try {
-                            SignatureVerifier.verifyUserIdCertification(userId.toString(), it, primaryKey, policy, referenceTime)
+            return primaryKey
+                .getSignaturesForID(userId.toString())
+                .asSequence()
+                .sortedWith(SignatureCreationDateComparator())
+                .lastOrNull {
+                    return@lastOrNull it.wasIssuedBy(primaryKey) &&
+                        try {
+                            SignatureVerifier.verifyUserIdCertification(
+                                userId.toString(), it, primaryKey, policy, referenceTime)
                             true
-                        } catch (e : SignatureValidationException) {
+                        } catch (e: SignatureValidationException) {
                             false
                         }
-                    }
+                }
         }
 
         /**
          * Pick the at validationDate latest certification self-signature for the given user-id.
-         * This method might return an expired signature.
-         * If a non-expired user-id certification signature exists, the latest non-expired yet already effective
-         * user-id certification signature for the given user-id will be returned.
+         * This method might return an expired signature. If a non-expired user-id certification
+         * signature exists, the latest non-expired yet already effective user-id certification
+         * signature for the given user-id will be returned.
          *
          * @param keyRing keyring
          * @param userId userid
@@ -196,28 +232,38 @@ class SignaturePicker {
          * @return user-id certification
          */
         @JvmStatic
-        fun pickLatestUserIdCertificationSignature(keyRing: PGPKeyRing, userId: CharSequence, policy: Policy, referenceTime: Date): PGPSignature? {
+        fun pickLatestUserIdCertificationSignature(
+            keyRing: PGPKeyRing,
+            userId: CharSequence,
+            policy: Policy,
+            referenceTime: Date
+        ): PGPSignature? {
             val primaryKey = keyRing.publicKey
-            return primaryKey.getSignaturesForID(userId.toString()).asSequence()
-                    .sortedWith(SignatureCreationDateComparator())
-                    .lastOrNull {
-                        return@lastOrNull try {
-                            SignatureValidator.wasPossiblyMadeByKey(primaryKey).verify(it)
-                            SignatureValidator.signatureIsCertification().verify(it)
-                            SignatureValidator.signatureStructureIsAcceptable(primaryKey, policy).verify(it)
-                            SignatureValidator.signatureIsAlreadyEffective(referenceTime).verify(it)
-                            SignatureValidator.correctSignatureOverUserId(userId.toString(), primaryKey, primaryKey).verify(it)
-                            true
-                        } catch (e : SignatureValidationException) {
-                            false
-                        }
+            return primaryKey
+                .getSignaturesForID(userId.toString())
+                .asSequence()
+                .sortedWith(SignatureCreationDateComparator())
+                .lastOrNull {
+                    return@lastOrNull try {
+                        SignatureValidator.wasPossiblyMadeByKey(primaryKey).verify(it)
+                        SignatureValidator.signatureIsCertification().verify(it)
+                        SignatureValidator.signatureStructureIsAcceptable(primaryKey, policy)
+                            .verify(it)
+                        SignatureValidator.signatureIsAlreadyEffective(referenceTime).verify(it)
+                        SignatureValidator.correctSignatureOverUserId(
+                                userId.toString(), primaryKey, primaryKey)
+                            .verify(it)
+                        true
+                    } catch (e: SignatureValidationException) {
+                        false
                     }
+                }
         }
 
         /**
-         * Pick the at validationDate most recent, valid subkey revocation signature.
-         * If there are hard revocation signatures, the latest hard revocation sig is picked, even if it was created after
-         * validationDate or if it is already expired.
+         * Pick the at validationDate most recent, valid subkey revocation signature. If there are
+         * hard revocation signatures, the latest hard revocation sig is picked, even if it was
+         * created after validationDate or if it is already expired.
          *
          * @param keyRing keyring
          * @param subkey subkey
@@ -226,14 +272,22 @@ class SignaturePicker {
          * @return subkey revocation signature
          */
         @JvmStatic
-        fun pickCurrentSubkeyBindingRevocationSignature(keyRing: PGPKeyRing, subkey: PGPPublicKey, policy: Policy, referenceTime: Date): PGPSignature? {
+        fun pickCurrentSubkeyBindingRevocationSignature(
+            keyRing: PGPKeyRing,
+            subkey: PGPPublicKey,
+            policy: Policy,
+            referenceTime: Date
+        ): PGPSignature? {
             val primaryKey = keyRing.publicKey
-            require(primaryKey.keyID != subkey.keyID) { "Primary key cannot have subkey binding revocations." }
+            require(primaryKey.keyID != subkey.keyID) {
+                "Primary key cannot have subkey binding revocations."
+            }
             return getSortedSignaturesOfType(subkey, SignatureType.SUBKEY_REVOCATION).lastOrNull {
                 return@lastOrNull try {
-                    SignatureVerifier.verifySubkeyBindingRevocation(it, primaryKey, subkey, policy, referenceTime)
+                    SignatureVerifier.verifySubkeyBindingRevocation(
+                        it, primaryKey, subkey, policy, referenceTime)
                     true
-                } catch (e : SignatureValidationException) {
+                } catch (e: SignatureValidationException) {
                     false
                 }
             }
@@ -241,8 +295,8 @@ class SignaturePicker {
 
         /**
          * Pick the at validationDate latest, valid subkey binding signature for the given subkey.
-         * This method might return null, if there is no subkey binding signature which is valid
-         * at validationDate.
+         * This method might return null, if there is no subkey binding signature which is valid at
+         * validationDate.
          *
          * @param keyRing key ring
          * @param subkey subkey
@@ -251,24 +305,32 @@ class SignaturePicker {
          * @return most recent valid subkey binding signature
          */
         @JvmStatic
-        fun pickCurrentSubkeyBindingSignature(keyRing: PGPKeyRing, subkey: PGPPublicKey, policy: Policy, referenceTime: Date): PGPSignature? {
+        fun pickCurrentSubkeyBindingSignature(
+            keyRing: PGPKeyRing,
+            subkey: PGPPublicKey,
+            policy: Policy,
+            referenceTime: Date
+        ): PGPSignature? {
             val primaryKey = keyRing.publicKey
-            require(primaryKey.keyID != subkey.keyID) { "Primary key cannot have subkey binding signatures." }
+            require(primaryKey.keyID != subkey.keyID) {
+                "Primary key cannot have subkey binding signatures."
+            }
             return getSortedSignaturesOfType(subkey, SignatureType.SUBKEY_BINDING).lastOrNull {
                 return@lastOrNull try {
-                    SignatureVerifier.verifySubkeyBindingSignature(it, primaryKey, subkey, policy, referenceTime)
+                    SignatureVerifier.verifySubkeyBindingSignature(
+                        it, primaryKey, subkey, policy, referenceTime)
                     true
-                } catch (e : SignatureValidationException) {
+                } catch (e: SignatureValidationException) {
                     false
                 }
             }
         }
 
         /**
-         * Pick the at validationDate latest subkey binding signature for the given subkey.
-         * This method might return an expired signature.
-         * If a non-expired subkey binding signature exists, the latest non-expired yet already effective
-         * subkey binding signature for the given subkey will be returned.
+         * Pick the at validationDate latest subkey binding signature for the given subkey. This
+         * method might return an expired signature. If a non-expired subkey binding signature
+         * exists, the latest non-expired yet already effective subkey binding signature for the
+         * given subkey will be returned.
          *
          * @param keyRing key ring
          * @param subkey subkey
@@ -277,9 +339,16 @@ class SignaturePicker {
          * @return subkey binding signature
          */
         @JvmStatic
-        fun pickLatestSubkeyBindingSignature(keyRing: PGPKeyRing, subkey: PGPPublicKey, policy: Policy, referenceTime: Date): PGPSignature? {
+        fun pickLatestSubkeyBindingSignature(
+            keyRing: PGPKeyRing,
+            subkey: PGPPublicKey,
+            policy: Policy,
+            referenceTime: Date
+        ): PGPSignature? {
             val primaryKey = keyRing.publicKey
-            require(primaryKey.keyID != subkey.keyID) { "Primary key cannot have subkey binding signatures." }
+            require(primaryKey.keyID != subkey.keyID) {
+                "Primary key cannot have subkey binding signatures."
+            }
             var latest: PGPSignature? = null
             return getSortedSignaturesOfType(subkey, SignatureType.SUBKEY_BINDING).lastOrNull {
                 return@lastOrNull try {
@@ -287,24 +356,28 @@ class SignaturePicker {
                     SignatureValidator.signatureStructureIsAcceptable(primaryKey, policy).verify(it)
                     SignatureValidator.signatureDoesNotPredateSignee(subkey).verify(it)
                     SignatureValidator.signatureIsAlreadyEffective(referenceTime).verify(it)
-                    // if the currently latest signature is not yet expired, check if the next candidate is not yet expired
+                    // if the currently latest signature is not yet expired, check if the next
+                    // candidate is not yet expired
                     if (latest != null && !latest!!.isExpired(referenceTime)) {
                         SignatureValidator.signatureIsNotYetExpired(referenceTime).verify(it)
                     }
                     SignatureValidator.correctSubkeyBindingSignature(primaryKey, subkey).verify(it)
                     latest = it
                     true
-                } catch (e : SignatureValidationException) {
+                } catch (e: SignatureValidationException) {
                     false
                 }
             }
         }
 
         @JvmStatic
-        private fun getSortedSignaturesOfType(key: PGPPublicKey, type: SignatureType): List<PGPSignature> =
-                key.getSignaturesOfType(type.code).asSequence()
-                        .sortedWith(SignatureCreationDateComparator())
-                        .toList()
+        private fun getSortedSignaturesOfType(
+            key: PGPPublicKey,
+            type: SignatureType
+        ): List<PGPSignature> =
+            key.getSignaturesOfType(type.code)
+                .asSequence()
+                .sortedWith(SignatureCreationDateComparator())
+                .toList()
     }
-
 }

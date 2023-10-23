@@ -5,16 +5,10 @@
 package org.pgpainless.decryption_verification.syntax_check
 
 enum class StackSymbol {
-    /**
-     * OpenPGP Message.
-     */
+    /** OpenPGP Message. */
     MSG,
-    /**
-     * OnePassSignature (in case of BC this represents a OnePassSignatureList).
-     */
+    /** OnePassSignature (in case of BC this represents a OnePassSignatureList). */
     OPS,
-    /**
-     * Special symbol representing the end of the message.
-     */
+    /** Special symbol representing the end of the message. */
     TERMINUS
 }

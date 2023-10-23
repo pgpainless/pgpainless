@@ -13,17 +13,30 @@ import org.bouncycastle.openpgp.PGPPublicKey
  * as well as the subkeys fingerprint.
  */
 class SubkeyIdentifier(
-        val primaryKeyFingerprint: OpenPgpFingerprint,
-        val subkeyFingerprint: OpenPgpFingerprint) {
+    val primaryKeyFingerprint: OpenPgpFingerprint,
+    val subkeyFingerprint: OpenPgpFingerprint
+) {
 
-    constructor(fingerprint: OpenPgpFingerprint): this(fingerprint, fingerprint)
-    constructor(keys: PGPKeyRing): this(keys.publicKey)
-    constructor(key: PGPPublicKey): this(OpenPgpFingerprint.of(key))
-    constructor(keys: PGPKeyRing, keyId: Long): this(
-                    OpenPgpFingerprint.of(keys.publicKey),
-                    OpenPgpFingerprint.of(keys.getPublicKey(keyId) ?:
-                    throw NoSuchElementException("OpenPGP key does not contain subkey ${keyId.openPgpKeyId()}")))
-    constructor(keys: PGPKeyRing, subkeyFingerprint: OpenPgpFingerprint): this(OpenPgpFingerprint.of(keys), subkeyFingerprint)
+    constructor(fingerprint: OpenPgpFingerprint) : this(fingerprint, fingerprint)
+
+    constructor(keys: PGPKeyRing) : this(keys.publicKey)
+
+    constructor(key: PGPPublicKey) : this(OpenPgpFingerprint.of(key))
+
+    constructor(
+        keys: PGPKeyRing,
+        keyId: Long
+    ) : this(
+        OpenPgpFingerprint.of(keys.publicKey),
+        OpenPgpFingerprint.of(
+            keys.getPublicKey(keyId)
+                ?: throw NoSuchElementException(
+                    "OpenPGP key does not contain subkey ${keyId.openPgpKeyId()}")))
+
+    constructor(
+        keys: PGPKeyRing,
+        subkeyFingerprint: OpenPgpFingerprint
+    ) : this(OpenPgpFingerprint.of(keys), subkeyFingerprint)
 
     val keyId = subkeyFingerprint.keyId
     val fingerprint = subkeyFingerprint
@@ -34,7 +47,7 @@ class SubkeyIdentifier(
     val isPrimaryKey = primaryKeyId == subkeyId
 
     fun matches(fingerprint: OpenPgpFingerprint) =
-            primaryKeyFingerprint == fingerprint || subkeyFingerprint == fingerprint
+        primaryKeyFingerprint == fingerprint || subkeyFingerprint == fingerprint
 
     override fun equals(other: Any?): Boolean {
         if (other == null) {
@@ -47,7 +60,8 @@ class SubkeyIdentifier(
             return false
         }
 
-        return primaryKeyFingerprint == other.primaryKeyFingerprint && subkeyFingerprint == other.subkeyFingerprint
+        return primaryKeyFingerprint == other.primaryKeyFingerprint &&
+            subkeyFingerprint == other.subkeyFingerprint
     }
 
     override fun hashCode(): Int {

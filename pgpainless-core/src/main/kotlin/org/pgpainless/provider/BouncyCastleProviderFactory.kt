@@ -4,8 +4,8 @@
 
 package org.pgpainless.provider
 
-import org.bouncycastle.jce.provider.BouncyCastleProvider
 import java.security.Provider
+import org.bouncycastle.jce.provider.BouncyCastleProvider
 
 class BouncyCastleProviderFactory : ProviderFactory() {
     override val securityProvider: Provider = BouncyCastleProvider()

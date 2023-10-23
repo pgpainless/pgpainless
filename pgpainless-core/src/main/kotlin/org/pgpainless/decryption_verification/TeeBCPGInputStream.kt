@@ -4,6 +4,9 @@
 
 package org.pgpainless.decryption_verification
 
+import java.io.IOException
+import java.io.InputStream
+import java.io.OutputStream
 import org.bouncycastle.bcpg.BCPGInputStream
 import org.bouncycastle.bcpg.MarkerPacket
 import org.bouncycastle.bcpg.Packet
@@ -13,25 +16,21 @@ import org.bouncycastle.openpgp.PGPLiteralData
 import org.bouncycastle.openpgp.PGPOnePassSignature
 import org.bouncycastle.openpgp.PGPSignature
 import org.pgpainless.algorithm.OpenPgpPacket
-import java.io.IOException
-import java.io.InputStream
-import java.io.OutputStream
 
 /**
- * Since we need to update signatures with data from the underlying stream, this class is used to tee out the data.
- * Unfortunately we cannot simply override [BCPGInputStream.read] to tee the data out though, since
- * [BCPGInputStream.readPacket] inconsistently calls a mix of [BCPGInputStream.read] and
- * [InputStream.read] of the underlying stream. This would cause the second length byte to get swallowed up.
+ * Since we need to update signatures with data from the underlying stream, this class is used to
+ * tee out the data. Unfortunately we cannot simply override [BCPGInputStream.read] to tee the data
+ * out though, since [BCPGInputStream.readPacket] inconsistently calls a mix of
+ * [BCPGInputStream.read] and [InputStream.read] of the underlying stream. This would cause the
+ * second length byte to get swallowed up.
  *
- * Therefore, this class delegates the teeing to an [DelayedTeeInputStream] which wraps the underlying
- * stream. Since calling [BCPGInputStream.nextPacketTag] reads up to and including the next packets tag,
- * we need to delay teeing out that byte to signature verifiers.
- * Hence, the reading methods of the [TeeBCPGInputStream] handle pushing this byte to the output stream using
+ * Therefore, this class delegates the teeing to an [DelayedTeeInputStream] which wraps the
+ * underlying stream. Since calling [BCPGInputStream.nextPacketTag] reads up to and including the
+ * next packets tag, we need to delay teeing out that byte to signature verifiers. Hence, the
+ * reading methods of the [TeeBCPGInputStream] handle pushing this byte to the output stream using
  * [DelayedTeeInputStream.squeeze].
  */
-class TeeBCPGInputStream(
-        inputStream: BCPGInputStream,
-        outputStream: OutputStream) {
+class TeeBCPGInputStream(inputStream: BCPGInputStream, outputStream: OutputStream) {
 
     private val delayedTee: DelayedTeeInputStream
     private val packetInputStream: BCPGInputStream
@@ -43,8 +42,7 @@ class TeeBCPGInputStream(
 
     fun nextPacketTag(): OpenPgpPacket? {
         return packetInputStream.nextPacketTag().let {
-            if (it == -1) null
-            else OpenPgpPacket.requireFromTag(it)
+            if (it == -1) null else OpenPgpPacket.requireFromTag(it)
         }
     }
 
@@ -82,8 +80,8 @@ class TeeBCPGInputStream(
     }
 
     class DelayedTeeInputStream(
-            private val inputStream: InputStream,
-            private val outputStream: OutputStream
+        private val inputStream: InputStream,
+        private val outputStream: OutputStream
     ) : InputStream() {
         private var last: Int = -1
 
@@ -94,7 +92,7 @@ class TeeBCPGInputStream(
             return try {
                 last = inputStream.read()
                 last
-            } catch (e : IOException) {
+            } catch (e: IOException) {
                 if (e.message?.contains("crc check failed in armored message") == true) {
                     throw e
                 }
@@ -108,19 +106,18 @@ class TeeBCPGInputStream(
             }
 
             inputStream.read(b, off, len).let { r ->
-                last = if (r > 0) {
-                    outputStream.write(b, off, r - 1)
-                    b[off + r - 1].toInt()
-                } else {
-                    -1
-                }
+                last =
+                    if (r > 0) {
+                        outputStream.write(b, off, r - 1)
+                        b[off + r - 1].toInt()
+                    } else {
+                        -1
+                    }
                 return r
             }
         }
 
-        /**
-         * Squeeze the last byte out and update the output stream.
-         */
+        /** Squeeze the last byte out and update the output stream. */
         fun squeeze() {
             if (last != -1) {
                 outputStream.write(last)

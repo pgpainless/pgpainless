@@ -4,18 +4,18 @@
 
 package org.pgpainless.key.generation
 
+import java.util.*
 import org.bouncycastle.openpgp.PGPSignatureSubpacketVector
 import org.pgpainless.algorithm.KeyFlag
 import org.pgpainless.key.generation.type.KeyType
 import org.pgpainless.signature.subpackets.SignatureSubpackets
 import org.pgpainless.signature.subpackets.SignatureSubpacketsHelper
-import java.util.*
 
 data class KeySpec(
-        val keyType: KeyType,
-        val subpacketGenerator: SignatureSubpackets,
-        val isInheritedSubPackets: Boolean,
-        val keyCreationDate: Date
+    val keyType: KeyType,
+    val subpacketGenerator: SignatureSubpackets,
+    val isInheritedSubPackets: Boolean,
+    val keyCreationDate: Date
 ) {
 
     val subpackets: PGPSignatureSubpacketVector

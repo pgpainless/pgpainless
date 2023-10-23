@@ -7,7 +7,6 @@ package org.bouncycastle.extensions
 import org.bouncycastle.bcpg.S2K
 import org.bouncycastle.openpgp.PGPException
 import org.bouncycastle.openpgp.PGPPrivateKey
-import org.bouncycastle.openpgp.PGPPublicKey
 import org.bouncycastle.openpgp.PGPSecretKey
 import org.bouncycastle.openpgp.operator.PBESecretKeyDecryptor
 import org.pgpainless.algorithm.PublicKeyAlgorithm
@@ -28,7 +27,7 @@ import org.pgpainless.util.Passphrase
  */
 @Throws(PGPException::class, KeyIntegrityException::class)
 fun PGPSecretKey.unlock(passphrase: Passphrase): PGPPrivateKey =
-        UnlockSecretKey.unlockSecretKey(this, passphrase)
+    UnlockSecretKey.unlockSecretKey(this, passphrase)
 
 /**
  * Unlock the secret key to get its [PGPPrivateKey].
@@ -39,8 +38,9 @@ fun PGPSecretKey.unlock(passphrase: Passphrase): PGPPrivateKey =
  */
 @Throws(PGPException::class, KeyIntegrityException::class)
 @JvmOverloads
-fun PGPSecretKey.unlock(protector: SecretKeyRingProtector = SecretKeyRingProtector.unprotectedKeys()): PGPPrivateKey =
-        UnlockSecretKey.unlockSecretKey(this, protector)
+fun PGPSecretKey.unlock(
+    protector: SecretKeyRingProtector = SecretKeyRingProtector.unprotectedKeys()
+): PGPPrivateKey = UnlockSecretKey.unlockSecretKey(this, protector)
 
 /**
  * Unlock the secret key to get its [PGPPrivateKey].
@@ -74,14 +74,10 @@ fun PGPSecretKey?.isDecrypted(): Boolean = (this == null) || (s2KUsage == 0)
  */
 fun PGPSecretKey?.hasDummyS2K(): Boolean = (this != null) && (s2K?.type == S2K.GNU_DUMMY_S2K)
 
-/**
- * Return the [PublicKeyAlgorithm] of this key.
- */
+/** Return the [PublicKeyAlgorithm] of this key. */
 val PGPSecretKey.publicKeyAlgorithm: PublicKeyAlgorithm
     get() = publicKey.publicKeyAlgorithm
 
-/**
- * Return the [OpenPgpFingerprint] of this key.
- */
+/** Return the [OpenPgpFingerprint] of this key. */
 val PGPSecretKey.openPgpFingerprint: OpenPgpFingerprint
     get() = OpenPgpFingerprint.of(this)

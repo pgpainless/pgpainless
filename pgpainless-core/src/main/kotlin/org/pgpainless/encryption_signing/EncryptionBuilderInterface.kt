@@ -4,9 +4,9 @@
 
 package org.pgpainless.encryption_signing
 
-import org.bouncycastle.openpgp.PGPException
 import java.io.IOException
 import java.io.OutputStream
+import org.bouncycastle.openpgp.PGPException
 
 fun interface EncryptionBuilderInterface {
 
@@ -26,9 +26,9 @@ fun interface EncryptionBuilderInterface {
          *
          * @param options options
          * @return encryption stream
-         *
          * @throws PGPException if something goes wrong during encryption stream preparation
-         * @throws IOException if something goes wrong during encryption stream preparation (writing headers)
+         * @throws IOException if something goes wrong during encryption stream preparation (writing
+         *   headers)
          */
         @Throws(PGPException::class, IOException::class)
         fun withOptions(options: ProducerOptions): EncryptionStream

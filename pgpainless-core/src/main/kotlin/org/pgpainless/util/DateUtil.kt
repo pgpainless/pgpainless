@@ -4,10 +4,10 @@
 
 package org.pgpainless.util
 
+import java.util.*
 import openpgp.formatUTC
 import openpgp.parseUTC
 import openpgp.toSecondsPrecision
-import java.util.*
 
 class DateUtil {
 
@@ -19,8 +19,7 @@ class DateUtil {
          * @param dateString timestamp
          * @return date
          */
-        @JvmStatic
-        fun parseUTCDate(dateString: String): Date = dateString.parseUTC()
+        @JvmStatic fun parseUTCDate(dateString: String): Date = dateString.parseUTC()
 
         /**
          * Format a date as UTC timestamp.
@@ -28,23 +27,21 @@ class DateUtil {
          * @param date date
          * @return timestamp
          */
-        @JvmStatic
-        fun formatUTCDate(date: Date): String = date.formatUTC()
+        @JvmStatic fun formatUTCDate(date: Date): String = date.formatUTC()
 
         /**
          * Floor a date down to seconds precision.
+         *
          * @param date date
          * @return floored date
          */
-        @JvmStatic
-        fun toSecondsPrecision(date: Date): Date = date.toSecondsPrecision()
+        @JvmStatic fun toSecondsPrecision(date: Date): Date = date.toSecondsPrecision()
 
         /**
          * Return the current date "floored" to UTC precision.
          *
          * @return now
          */
-        @JvmStatic
-        fun now() = toSecondsPrecision(Date())
+        @JvmStatic fun now() = toSecondsPrecision(Date())
     }
 }

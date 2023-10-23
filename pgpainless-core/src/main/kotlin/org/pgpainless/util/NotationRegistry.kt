@@ -5,9 +5,9 @@
 package org.pgpainless.util
 
 /**
- * Registry for known notations.
- * Since signature verification must reject signatures with critical notations that are not known to the application,
- * there must be some way to tell PGPainless which notations actually are known.
+ * Registry for known notations. Since signature verification must reject signatures with critical
+ * notations that are not known to the application, there must be some way to tell PGPainless which
+ * notations actually are known.
  *
  * To add a notation name, call {@link #addKnownNotation(String)}.
  */
@@ -19,8 +19,8 @@ class NotationRegistry constructor(notations: Set<String> = setOf()) {
     }
 
     /**
-     * Add a known notation name into the registry.
-     * This will cause critical notations with that name to no longer invalidate the signature.
+     * Add a known notation name into the registry. This will cause critical notations with that
+     * name to no longer invalidate the signature.
      *
      * @param notationName name of the notation
      */
@@ -36,9 +36,7 @@ class NotationRegistry constructor(notations: Set<String> = setOf()) {
      */
     fun isKnownNotation(notationName: String): Boolean = knownNotations.contains(notationName)
 
-    /**
-     * Clear all known notations from the registry.
-     */
+    /** Clear all known notations from the registry. */
     fun clear() {
         knownNotations.clear()
     }

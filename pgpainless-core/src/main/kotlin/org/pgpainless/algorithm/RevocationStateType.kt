@@ -5,18 +5,12 @@
 package org.pgpainless.algorithm
 
 enum class RevocationStateType {
-    /**
-     * Certificate is not revoked.
-     */
+    /** Certificate is not revoked. */
     notRevoked,
 
-    /**
-     * Certificate is revoked with a soft revocation.
-     */
+    /** Certificate is revoked with a soft revocation. */
     softRevoked,
 
-    /**
-     * Certificate is revoked with a hard revocation.
-     */
+    /** Certificate is revoked with a hard revocation. */
     hardRevoked
 }

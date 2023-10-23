@@ -10,21 +10,22 @@ import org.pgpainless.algorithm.SymmetricKeyAlgorithm
 
 /**
  * A [SessionKey] is the symmetric key that is used to encrypt/decrypt an OpenPGP message payload.
- * The OpenPGP message header contains a copy of the session key, encrypted for the public key of each recipient.
+ * The OpenPGP message header contains a copy of the session key, encrypted for the public key of
+ * each recipient.
  *
  * @param algorithm symmetric key algorithm
  * @param key bytes of the key
  */
-data class SessionKey(val algorithm: SymmetricKeyAlgorithm,
-        val key: ByteArray) {
+data class SessionKey(val algorithm: SymmetricKeyAlgorithm, val key: ByteArray) {
 
     /**
      * Constructor to create a session key from a BC [PGPSessionKey] object.
      *
      * @param sessionKey BC session key
      */
-    constructor(sessionKey: PGPSessionKey):
-            this(SymmetricKeyAlgorithm.requireFromId(sessionKey.algorithm), sessionKey.key)
+    constructor(
+        sessionKey: PGPSessionKey
+    ) : this(SymmetricKeyAlgorithm.requireFromId(sessionKey.algorithm), sessionKey.key)
 
     override fun toString(): String {
         return "${algorithm.algorithmId}:${Hex.toHexString(key)}"

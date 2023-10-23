@@ -7,5 +7,4 @@ package org.pgpainless.signature.subpackets
 interface CertificationSubpackets : BaseSignatureSubpackets {
 
     interface Callback : SignatureSubpacketCallback<CertificationSubpackets>
-
 }

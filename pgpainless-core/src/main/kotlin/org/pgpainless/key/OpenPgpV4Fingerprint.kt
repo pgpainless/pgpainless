@@ -4,22 +4,26 @@
 
 package org.pgpainless.key
 
-import org.bouncycastle.openpgp.PGPKeyRing
-import org.bouncycastle.openpgp.PGPPublicKey
-import org.bouncycastle.openpgp.PGPSecretKey
-import org.bouncycastle.util.encoders.Hex
 import java.net.URI
 import java.nio.Buffer
 import java.nio.ByteBuffer
 import java.nio.charset.Charset
+import org.bouncycastle.openpgp.PGPKeyRing
+import org.bouncycastle.openpgp.PGPPublicKey
+import org.bouncycastle.openpgp.PGPSecretKey
+import org.bouncycastle.util.encoders.Hex
 
-class OpenPgpV4Fingerprint: OpenPgpFingerprint {
+class OpenPgpV4Fingerprint : OpenPgpFingerprint {
 
-    constructor(fingerprint: String): super(fingerprint)
-    constructor(bytes: ByteArray): super(bytes)
-    constructor(key: PGPPublicKey): super(key)
-    constructor(key: PGPSecretKey): super(key)
-    constructor(keys: PGPKeyRing): super(keys)
+    constructor(fingerprint: String) : super(fingerprint)
+
+    constructor(bytes: ByteArray) : super(bytes)
+
+    constructor(key: PGPPublicKey) : super(key)
+
+    constructor(key: PGPSecretKey) : super(key)
+
+    constructor(keys: PGPKeyRing) : super(keys)
 
     override fun getVersion() = 4
 
@@ -47,7 +51,7 @@ class OpenPgpV4Fingerprint: OpenPgpFingerprint {
                 append(fingerprint, i * 4, (i + 1) * 4).append(' ')
             }
             append(' ')
-            for (i in 5 .. 8) {
+            for (i in 5..8) {
                 append(fingerprint, i * 4, (i + 1) * 4).append(' ')
             }
             append(fingerprint, 36, 40)
@@ -55,8 +59,7 @@ class OpenPgpV4Fingerprint: OpenPgpFingerprint {
     }
 
     companion object {
-        @JvmStatic
-        val SCHEME = "openpgp4fpr"
+        @JvmStatic val SCHEME = "openpgp4fpr"
 
         @JvmStatic
         fun fromUri(uri: URI): OpenPgpV4Fingerprint {

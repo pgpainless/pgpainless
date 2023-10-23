@@ -11,11 +11,20 @@ interface RevocationSignatureSubpackets : BaseSignatureSubpackets {
 
     interface Callback : SignatureSubpacketCallback<RevocationSignatureSubpackets>
 
-    fun setRevocationReason(revocationAttributes: RevocationAttributes): RevocationSignatureSubpackets
+    fun setRevocationReason(
+        revocationAttributes: RevocationAttributes
+    ): RevocationSignatureSubpackets
 
-    fun setRevocationReason(isCritical: Boolean, revocationAttributes: RevocationAttributes): RevocationSignatureSubpackets
+    fun setRevocationReason(
+        isCritical: Boolean,
+        revocationAttributes: RevocationAttributes
+    ): RevocationSignatureSubpackets
 
-    fun setRevocationReason(isCritical: Boolean, reason: RevocationAttributes.Reason, description: CharSequence): RevocationSignatureSubpackets
+    fun setRevocationReason(
+        isCritical: Boolean,
+        reason: RevocationAttributes.Reason,
+        description: CharSequence
+    ): RevocationSignatureSubpackets
 
     fun setRevocationReason(reason: RevocationReason?): RevocationSignatureSubpackets
 }

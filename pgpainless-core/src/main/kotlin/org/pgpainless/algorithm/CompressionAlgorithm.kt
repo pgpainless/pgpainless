@@ -20,22 +20,20 @@ enum class CompressionAlgorithm(val algorithmId: Int) {
     companion object {
 
         /**
-         * Return the [CompressionAlgorithm] value that corresponds to the provided numerical id.
-         * If an invalid id is provided, null is returned.
+         * Return the [CompressionAlgorithm] value that corresponds to the provided numerical id. If
+         * an invalid id is provided, null is returned.
          *
          * @param id id
          * @return compression algorithm
          */
         @JvmStatic
         fun fromId(id: Int): CompressionAlgorithm? {
-            return values().firstOrNull {
-                c -> c.algorithmId == id
-            }
+            return values().firstOrNull { c -> c.algorithmId == id }
         }
 
         /**
-         * Return the [CompressionAlgorithm] value that corresponds to the provided numerical id.
-         * If an invalid id is provided, throw an [NoSuchElementException].
+         * Return the [CompressionAlgorithm] value that corresponds to the provided numerical id. If
+         * an invalid id is provided, throw an [NoSuchElementException].
          *
          * @param id id
          * @return compression algorithm
@@ -43,8 +41,8 @@ enum class CompressionAlgorithm(val algorithmId: Int) {
          */
         @JvmStatic
         fun requireFromId(id: Int): CompressionAlgorithm {
-            return fromId(id) ?:
-            throw NoSuchElementException("No CompressionAlgorithm found for id $id")
+            return fromId(id)
+                ?: throw NoSuchElementException("No CompressionAlgorithm found for id $id")
         }
     }
 }

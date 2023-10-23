@@ -4,10 +4,7 @@
 
 package org.pgpainless.algorithm
 
-enum class AEADAlgorithm(
-        val algorithmId: Int,
-        val ivLength: Int,
-        val tagLength: Int) {
+enum class AEADAlgorithm(val algorithmId: Int, val ivLength: Int, val tagLength: Int) {
     EAX(1, 16, 16),
     OCB(2, 15, 16),
     GCM(3, 12, 16),
@@ -16,15 +13,12 @@ enum class AEADAlgorithm(
     companion object {
         @JvmStatic
         fun fromId(id: Int): AEADAlgorithm? {
-            return values().firstOrNull {
-                algorithm -> algorithm.algorithmId == id
-            }
+            return values().firstOrNull { algorithm -> algorithm.algorithmId == id }
         }
 
         @JvmStatic
         fun requireFromId(id: Int): AEADAlgorithm {
-            return fromId(id) ?:
-            throw NoSuchElementException("No AEADAlgorithm found for id $id")
+            return fromId(id) ?: throw NoSuchElementException("No AEADAlgorithm found for id $id")
         }
     }
 }

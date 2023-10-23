@@ -4,9 +4,7 @@
 
 package org.pgpainless.key.generation.type.eddsa
 
-enum class EdDSACurve(
-        val curveName: String,
-        val bitStrength: Int) {
+enum class EdDSACurve(val curveName: String, val bitStrength: Int) {
     _Ed25519("ed25519", 256),
     ;
 

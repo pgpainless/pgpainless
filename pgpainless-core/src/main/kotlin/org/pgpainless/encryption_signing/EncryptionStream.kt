@@ -4,6 +4,9 @@
 
 package org.pgpainless.encryption_signing
 
+import java.io.BufferedOutputStream
+import java.io.IOException
+import java.io.OutputStream
 import org.bouncycastle.bcpg.ArmoredOutputStream
 import org.bouncycastle.bcpg.BCPGOutputStream
 import org.bouncycastle.openpgp.PGPCompressedDataGenerator
@@ -16,9 +19,6 @@ import org.pgpainless.algorithm.SymmetricKeyAlgorithm
 import org.pgpainless.implementation.ImplementationFactory
 import org.pgpainless.util.ArmoredOutputStreamFactory
 import org.slf4j.LoggerFactory
-import java.io.BufferedOutputStream
-import java.io.IOException
-import java.io.OutputStream
 
 // 1 << 8 causes wrong partial body length encoding
 //  1 << 9 fixes this.
@@ -30,11 +30,13 @@ const val BUFFER_SIZE = 1 shl 9
  * depending on its configuration.
  *
  * This class is based upon Jens Neuhalfen's Bouncy-GPG PGPEncryptingStream.
- * @see <a href="https://github.com/neuhalje/bouncy-gpg/blob/master/src/main/java/name/neuhalfen/projects/crypto/bouncycastle/openpgp/encrypting/PGPEncryptingStream.java">Source</a>
+ *
+ * @see <a
+ *   href="https://github.com/neuhalje/bouncy-gpg/blob/master/src/main/java/name/neuhalfen/projects/crypto/bouncycastle/openpgp/encrypting/PGPEncryptingStream.java">Source</a>
  */
 class EncryptionStream(
-        private var outermostStream: OutputStream,
-        private val options: ProducerOptions,
+    private var outermostStream: OutputStream,
+    private val options: ProducerOptions,
 ) : OutputStream() {
 
     private val resultBuilder: EncryptionResult.Builder = EncryptionResult.builder()
@@ -66,8 +68,8 @@ class EncryptionStream(
 
         outermostStream = BufferedOutputStream(outermostStream)
         LOGGER.debug("Wrap encryption output in ASCII armor.")
-        armorOutputStream = ArmoredOutputStreamFactory.get(outermostStream, options)
-                .also { outermostStream = it }
+        armorOutputStream =
+            ArmoredOutputStreamFactory.get(outermostStream, options).also { outermostStream = it }
     }
 
     @Throws(IOException::class, PGPException::class)
@@ -84,9 +86,11 @@ class EncryptionStream(
         EncryptionBuilder.negotiateSymmetricEncryptionAlgorithm(options.encryptionOptions).let {
             resultBuilder.setEncryptionAlgorithm(it)
             LOGGER.debug("Encrypt message using symmetric algorithm $it.")
-            val encryptedDataGenerator = PGPEncryptedDataGenerator(
-                    ImplementationFactory.getInstance().getPGPDataEncryptorBuilder(it)
-                            .apply { setWithIntegrityPacket(true) })
+            val encryptedDataGenerator =
+                PGPEncryptedDataGenerator(
+                    ImplementationFactory.getInstance().getPGPDataEncryptorBuilder(it).apply {
+                        setWithIntegrityPacket(true)
+                    })
             options.encryptionOptions.encryptionMethods.forEach { m ->
                 encryptedDataGenerator.addMethod(m)
             }
@@ -94,8 +98,11 @@ class EncryptionStream(
                 resultBuilder.addRecipient(r)
             }
 
-            publicKeyEncryptedStream = encryptedDataGenerator.open(outermostStream, ByteArray(BUFFER_SIZE))
-                    .also { stream -> outermostStream = stream }
+            publicKeyEncryptedStream =
+                encryptedDataGenerator.open(outermostStream, ByteArray(BUFFER_SIZE)).also { stream
+                    ->
+                    outermostStream = stream
+                }
         }
     }
 
@@ -107,8 +114,10 @@ class EncryptionStream(
             if (it == CompressionAlgorithm.UNCOMPRESSED) return
 
             LOGGER.debug("Compress using $it.")
-            basicCompressionStream = BCPGOutputStream(compressedDataGenerator!!.open(outermostStream))
-                    .also { stream -> outermostStream = stream }
+            basicCompressionStream =
+                BCPGOutputStream(compressedDataGenerator!!.open(outermostStream)).also { stream ->
+                    outermostStream = stream
+                }
         }
     }
 
@@ -138,12 +147,17 @@ class EncryptionStream(
             return
         }
 
-        literalDataGenerator = PGPLiteralDataGenerator().also { gen ->
-            literalDataStream = gen.open(outermostStream, options.encoding.code, options.fileName,
-                    options.modificationDate, ByteArray(BUFFER_SIZE)).also { stream ->
-                outermostStream = stream
+        literalDataGenerator =
+            PGPLiteralDataGenerator().also { gen ->
+                literalDataStream =
+                    gen.open(
+                            outermostStream,
+                            options.encoding.code,
+                            options.fileName,
+                            options.modificationDate,
+                            ByteArray(BUFFER_SIZE))
+                        .also { stream -> outermostStream = stream }
             }
-        }
         resultBuilder.apply {
             setFileName(options.fileName)
             setModificationDate(options.modificationDate)
@@ -156,39 +170,47 @@ class EncryptionStream(
     }
 
     private fun prepareInputEncoding() {
-        outermostStream = CRLFGeneratorStream(
+        outermostStream =
+            CRLFGeneratorStream(
                 // By buffering here, we drastically improve performance
-                // Reason is that CRLFGeneratorStream only implements write(int), so we need BufferedOutputStream to
+                // Reason is that CRLFGeneratorStream only implements write(int), so we need
+                // BufferedOutputStream to
                 // "convert" to write(buf) calls again
                 BufferedOutputStream(outermostStream),
                 if (options.isApplyCRLFEncoding) StreamEncoding.UTF8 else StreamEncoding.BINARY)
     }
 
     private fun collectHashAlgorithmsForCleartextSigning(): Array<Int> {
-        return options.signingOptions?.signingMethods?.values
-                ?.map { it.hashAlgorithm }?.toSet()
-                ?.map { it.algorithmId }?.toTypedArray()
-                ?: arrayOf()
+        return options.signingOptions
+            ?.signingMethods
+            ?.values
+            ?.map { it.hashAlgorithm }
+            ?.toSet()
+            ?.map { it.algorithmId }
+            ?.toTypedArray()
+            ?: arrayOf()
     }
 
-    @Throws(IOException::class)
-    override fun write(data: Int) = outermostStream.write(data)
+    @Throws(IOException::class) override fun write(data: Int) = outermostStream.write(data)
 
     @Throws(IOException::class)
     override fun write(buffer: ByteArray) = write(buffer, 0, buffer.size)
 
     @Throws(IOException::class)
-    override fun write(buffer: ByteArray, off: Int, len: Int) = outermostStream.write(buffer, off, len)
+    override fun write(buffer: ByteArray, off: Int, len: Int) =
+        outermostStream.write(buffer, off, len)
 
-    @Throws(IOException::class)
-    override fun flush() = outermostStream.flush()
+    @Throws(IOException::class) override fun flush() = outermostStream.flush()
 
     @Throws(IOException::class)
     override fun close() {
         if (closed) return
 
         outermostStream.close()
-        literalDataStream?.apply { flush(); close() }
+        literalDataStream?.apply {
+            flush()
+            close()
+        }
         literalDataGenerator?.close()
 
         if (options.isCleartextSigned) {
@@ -201,7 +223,7 @@ class EncryptionStream(
 
         try {
             writeSignatures()
-        } catch (e : PGPException) {
+        } catch (e: PGPException) {
             throw IOException("Exception while writing signatures.", e)
         }
 
@@ -238,14 +260,14 @@ class EncryptionStream(
     }
 
     val result: EncryptionResult
-        get() = check(closed) { "EncryptionStream must be closed before accessing the result." }
+        get() =
+            check(closed) { "EncryptionStream must be closed before accessing the result." }
                 .let { resultBuilder.build() }
 
     val isClosed
         get() = closed
 
     companion object {
-        @JvmStatic
-        private val LOGGER = LoggerFactory.getLogger(EncryptionStream::class.java)
+        @JvmStatic private val LOGGER = LoggerFactory.getLogger(EncryptionStream::class.java)
     }
 }

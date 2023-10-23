@@ -4,6 +4,10 @@
 
 package org.pgpainless.signature.subpackets
 
+import java.lang.IllegalArgumentException
+import java.net.URL
+import java.util.*
+import kotlin.experimental.or
 import openpgp.secondsTill
 import openpgp.toSecondsPrecision
 import org.bouncycastle.bcpg.SignatureSubpacket
@@ -14,13 +18,12 @@ import org.bouncycastle.openpgp.PGPSignature
 import org.bouncycastle.openpgp.PGPSignatureSubpacketVector
 import org.pgpainless.algorithm.*
 import org.pgpainless.key.util.RevocationAttributes
-import java.lang.IllegalArgumentException
-import java.net.URL
-import java.util.*
-import kotlin.experimental.or
 
-class SignatureSubpackets
-    : BaseSignatureSubpackets, SelfSignatureSubpackets, CertificationSubpackets, RevocationSignatureSubpackets {
+class SignatureSubpackets :
+    BaseSignatureSubpackets,
+    SelfSignatureSubpackets,
+    CertificationSubpackets,
+    RevocationSignatureSubpackets {
 
     interface Callback : SignatureSubpacketCallback<SignatureSubpackets>
 
@@ -52,7 +55,10 @@ class SignatureSubpackets
     companion object {
 
         @JvmStatic
-        fun refreshHashedSubpackets(issuer: PGPPublicKey, oldSignature: PGPSignature): SignatureSubpackets {
+        fun refreshHashedSubpackets(
+            issuer: PGPPublicKey,
+            oldSignature: PGPSignature
+        ): SignatureSubpackets {
             return createHashedSubpacketsFrom(issuer, oldSignature.hashedSubPackets)
         }
 
@@ -62,10 +68,11 @@ class SignatureSubpackets
         }
 
         @JvmStatic
-        fun createHashedSubpacketsFrom(issuer: PGPPublicKey, base: PGPSignatureSubpacketVector): SignatureSubpackets {
-            return createSubpacketsFrom(base).apply {
-                setIssuerFingerprintAndKeyId(issuer)
-            }
+        fun createHashedSubpacketsFrom(
+            issuer: PGPPublicKey,
+            base: PGPSignatureSubpacketVector
+        ): SignatureSubpackets {
+            return createSubpacketsFrom(base).apply { setIssuerFingerprintAndKeyId(issuer) }
         }
 
         @JvmStatic
@@ -84,15 +91,23 @@ class SignatureSubpackets
         }
     }
 
-    override fun setRevocationReason(revocationAttributes: RevocationAttributes): SignatureSubpackets = apply {
-        setRevocationReason(false, revocationAttributes)
+    override fun setRevocationReason(
+        revocationAttributes: RevocationAttributes
+    ): SignatureSubpackets = apply { setRevocationReason(false, revocationAttributes) }
+
+    override fun setRevocationReason(
+        isCritical: Boolean,
+        revocationAttributes: RevocationAttributes
+    ): SignatureSubpackets = apply {
+        setRevocationReason(
+            isCritical, revocationAttributes.reason, revocationAttributes.description)
     }
 
-    override fun setRevocationReason(isCritical: Boolean, revocationAttributes: RevocationAttributes): SignatureSubpackets = apply {
-        setRevocationReason(isCritical, revocationAttributes.reason, revocationAttributes.description)
-    }
-
-    override fun setRevocationReason(isCritical: Boolean, reason: RevocationAttributes.Reason, description: CharSequence): SignatureSubpackets = apply {
+    override fun setRevocationReason(
+        isCritical: Boolean,
+        reason: RevocationAttributes.Reason,
+        description: CharSequence
+    ): SignatureSubpackets = apply {
         setRevocationReason(RevocationReason(isCritical, reason.code, description.toString()))
     }
 
@@ -108,17 +123,16 @@ class SignatureSubpackets
         setKeyFlags(true, *keyFlags.toTypedArray())
     }
 
-    override fun setKeyFlags(isCritical: Boolean, vararg keyFlags: KeyFlag): SignatureSubpackets = apply {
-        setKeyFlags(KeyFlags(isCritical, KeyFlag.toBitmask(*keyFlags)))
-    }
+    override fun setKeyFlags(isCritical: Boolean, vararg keyFlags: KeyFlag): SignatureSubpackets =
+        apply {
+            setKeyFlags(KeyFlags(isCritical, KeyFlag.toBitmask(*keyFlags)))
+        }
 
     override fun setKeyFlags(keyFlags: KeyFlags?): SignatureSubpackets = apply {
         this.keyFlagsSubpacket = keyFlags
     }
 
-    override fun setPrimaryUserId(): SignatureSubpackets = apply {
-        setPrimaryUserId(true)
-    }
+    override fun setPrimaryUserId(): SignatureSubpackets = apply { setPrimaryUserId(true) }
 
     override fun setPrimaryUserId(isCritical: Boolean): SignatureSubpackets = apply {
         setPrimaryUserId(PrimaryUserID(isCritical, true))
@@ -128,15 +142,23 @@ class SignatureSubpackets
         this.primaryUserIdSubpacket = primaryUserID
     }
 
-    override fun setKeyExpirationTime(key: PGPPublicKey, keyExpirationTime: Date?): SignatureSubpackets = apply {
-        setKeyExpirationTime(key.creationTime, keyExpirationTime)
-    }
+    override fun setKeyExpirationTime(
+        key: PGPPublicKey,
+        keyExpirationTime: Date?
+    ): SignatureSubpackets = apply { setKeyExpirationTime(key.creationTime, keyExpirationTime) }
 
-    override fun setKeyExpirationTime(keyCreationTime: Date, keyExpirationTime: Date?): SignatureSubpackets = apply {
+    override fun setKeyExpirationTime(
+        keyCreationTime: Date,
+        keyExpirationTime: Date?
+    ): SignatureSubpackets = apply {
         setKeyExpirationTime(true, keyCreationTime, keyExpirationTime)
     }
 
-    override fun setKeyExpirationTime(isCritical: Boolean, keyCreationTime: Date, keyExpirationTime: Date?): SignatureSubpackets = apply {
+    override fun setKeyExpirationTime(
+        isCritical: Boolean,
+        keyCreationTime: Date,
+        keyExpirationTime: Date?
+    ): SignatureSubpackets = apply {
         if (keyExpirationTime == null) {
             setKeyExpirationTime(isCritical, 0)
         } else {
@@ -144,94 +166,124 @@ class SignatureSubpackets
         }
     }
 
-    override fun setKeyExpirationTime(isCritical: Boolean, secondsFromCreationToExpiration: Long): SignatureSubpackets = apply {
+    override fun setKeyExpirationTime(
+        isCritical: Boolean,
+        secondsFromCreationToExpiration: Long
+    ): SignatureSubpackets = apply {
         enforceExpirationBounds(secondsFromCreationToExpiration)
         setKeyExpirationTime(KeyExpirationTime(isCritical, secondsFromCreationToExpiration))
     }
 
-    override fun setKeyExpirationTime(keyExpirationTime: KeyExpirationTime?): SignatureSubpackets = apply {
-        this.keyExpirationTimeSubpacket = keyExpirationTime
-    }
+    override fun setKeyExpirationTime(keyExpirationTime: KeyExpirationTime?): SignatureSubpackets =
+        apply {
+            this.keyExpirationTimeSubpacket = keyExpirationTime
+        }
 
-    override fun setPreferredCompressionAlgorithms(vararg algorithms: CompressionAlgorithm): SignatureSubpackets = apply {
-        setPreferredCompressionAlgorithms(setOf(*algorithms))
-    }
+    override fun setPreferredCompressionAlgorithms(
+        vararg algorithms: CompressionAlgorithm
+    ): SignatureSubpackets = apply { setPreferredCompressionAlgorithms(setOf(*algorithms)) }
 
-    override fun setPreferredCompressionAlgorithms(algorithms: Collection<CompressionAlgorithm>): SignatureSubpackets = apply {
-        setPreferredCompressionAlgorithms(false, algorithms)
-    }
+    override fun setPreferredCompressionAlgorithms(
+        algorithms: Collection<CompressionAlgorithm>
+    ): SignatureSubpackets = apply { setPreferredCompressionAlgorithms(false, algorithms) }
 
-    override fun setPreferredCompressionAlgorithms(isCritical: Boolean, algorithms: Collection<CompressionAlgorithm>): SignatureSubpackets = apply {
-        setPreferredCompressionAlgorithms(PreferredAlgorithms(
+    override fun setPreferredCompressionAlgorithms(
+        isCritical: Boolean,
+        algorithms: Collection<CompressionAlgorithm>
+    ): SignatureSubpackets = apply {
+        setPreferredCompressionAlgorithms(
+            PreferredAlgorithms(
                 SignatureSubpacketTags.PREFERRED_COMP_ALGS,
                 isCritical,
                 algorithms.map { it.algorithmId }.toIntArray()))
     }
 
-    override fun setPreferredCompressionAlgorithms(algorithms: PreferredAlgorithms?): SignatureSubpackets = apply {
-        require(algorithms == null || algorithms.type == SignatureSubpacketTags.PREFERRED_COMP_ALGS) {
-            "Invalid preferred compression algorithms type."
-        }
+    override fun setPreferredCompressionAlgorithms(
+        algorithms: PreferredAlgorithms?
+    ): SignatureSubpackets = apply {
+        require(
+            algorithms == null || algorithms.type == SignatureSubpacketTags.PREFERRED_COMP_ALGS) {
+                "Invalid preferred compression algorithms type."
+            }
         this.preferredCompressionAlgorithmsSubpacket = algorithms
     }
 
-    override fun setPreferredSymmetricKeyAlgorithms(vararg algorithms: SymmetricKeyAlgorithm): SignatureSubpackets = apply {
-        setPreferredSymmetricKeyAlgorithms(setOf(*algorithms))
-    }
+    override fun setPreferredSymmetricKeyAlgorithms(
+        vararg algorithms: SymmetricKeyAlgorithm
+    ): SignatureSubpackets = apply { setPreferredSymmetricKeyAlgorithms(setOf(*algorithms)) }
 
-    override fun setPreferredSymmetricKeyAlgorithms(algorithms: Collection<SymmetricKeyAlgorithm>): SignatureSubpackets = apply {
-        setPreferredSymmetricKeyAlgorithms(false, algorithms)
-    }
+    override fun setPreferredSymmetricKeyAlgorithms(
+        algorithms: Collection<SymmetricKeyAlgorithm>
+    ): SignatureSubpackets = apply { setPreferredSymmetricKeyAlgorithms(false, algorithms) }
 
-    override fun setPreferredSymmetricKeyAlgorithms(isCritical: Boolean, algorithms: Collection<SymmetricKeyAlgorithm>): SignatureSubpackets = apply {
-        setPreferredSymmetricKeyAlgorithms(PreferredAlgorithms(
+    override fun setPreferredSymmetricKeyAlgorithms(
+        isCritical: Boolean,
+        algorithms: Collection<SymmetricKeyAlgorithm>
+    ): SignatureSubpackets = apply {
+        setPreferredSymmetricKeyAlgorithms(
+            PreferredAlgorithms(
                 SignatureSubpacketTags.PREFERRED_SYM_ALGS,
                 isCritical,
-                algorithms.map { it.algorithmId }.toIntArray()
-        ))
+                algorithms.map { it.algorithmId }.toIntArray()))
     }
 
-    override fun setPreferredSymmetricKeyAlgorithms(algorithms: PreferredAlgorithms?): SignatureSubpackets = apply {
-        require(algorithms == null || algorithms.type == SignatureSubpacketTags.PREFERRED_SYM_ALGS) {
-            "Invalid preferred symmetric algorithms type."
-        }
+    override fun setPreferredSymmetricKeyAlgorithms(
+        algorithms: PreferredAlgorithms?
+    ): SignatureSubpackets = apply {
+        require(
+            algorithms == null || algorithms.type == SignatureSubpacketTags.PREFERRED_SYM_ALGS) {
+                "Invalid preferred symmetric algorithms type."
+            }
         this.preferredSymmetricKeyAlgorithmsSubpacket = algorithms
     }
 
-    override fun setPreferredHashAlgorithms(vararg algorithms: HashAlgorithm): SignatureSubpackets = apply {
-        setPreferredHashAlgorithms(setOf(*algorithms))
-    }
+    override fun setPreferredHashAlgorithms(vararg algorithms: HashAlgorithm): SignatureSubpackets =
+        apply {
+            setPreferredHashAlgorithms(setOf(*algorithms))
+        }
 
-    override fun setPreferredHashAlgorithms(algorithms: Collection<HashAlgorithm>): SignatureSubpackets = apply {
-        setPreferredHashAlgorithms(false, algorithms)
-    }
+    override fun setPreferredHashAlgorithms(
+        algorithms: Collection<HashAlgorithm>
+    ): SignatureSubpackets = apply { setPreferredHashAlgorithms(false, algorithms) }
 
-    override fun setPreferredHashAlgorithms(isCritical: Boolean, algorithms: Collection<HashAlgorithm>): SignatureSubpackets = apply {
-        setPreferredHashAlgorithms(PreferredAlgorithms(
+    override fun setPreferredHashAlgorithms(
+        isCritical: Boolean,
+        algorithms: Collection<HashAlgorithm>
+    ): SignatureSubpackets = apply {
+        setPreferredHashAlgorithms(
+            PreferredAlgorithms(
                 SignatureSubpacketTags.PREFERRED_HASH_ALGS,
                 isCritical,
-                algorithms.map { it.algorithmId }.toIntArray()
-        ))
+                algorithms.map { it.algorithmId }.toIntArray()))
     }
 
-    override fun setPreferredHashAlgorithms(algorithms: PreferredAlgorithms?): SignatureSubpackets = apply {
-        require(algorithms == null || algorithms.type == SignatureSubpacketTags.PREFERRED_HASH_ALGS) {
-            "Invalid preferred hash algorithms type."
+    override fun setPreferredHashAlgorithms(algorithms: PreferredAlgorithms?): SignatureSubpackets =
+        apply {
+            require(
+                algorithms == null ||
+                    algorithms.type == SignatureSubpacketTags.PREFERRED_HASH_ALGS) {
+                    "Invalid preferred hash algorithms type."
+                }
+            this.preferredHashAlgorithmsSubpacket = algorithms
         }
-        this.preferredHashAlgorithmsSubpacket = algorithms
-    }
 
     override fun addRevocationKey(revocationKey: PGPPublicKey): SignatureSubpackets = apply {
         addRevocationKey(true, revocationKey)
     }
 
-    override fun addRevocationKey(isCritical: Boolean, revocationKey: PGPPublicKey): SignatureSubpackets = apply {
-        addRevocationKey(isCritical, false, revocationKey)
-    }
+    override fun addRevocationKey(
+        isCritical: Boolean,
+        revocationKey: PGPPublicKey
+    ): SignatureSubpackets = apply { addRevocationKey(isCritical, false, revocationKey) }
 
-    override fun addRevocationKey(isCritical: Boolean, isSensitive: Boolean, revocationKey: PGPPublicKey): SignatureSubpackets = apply {
+    override fun addRevocationKey(
+        isCritical: Boolean,
+        isSensitive: Boolean,
+        revocationKey: PGPPublicKey
+    ): SignatureSubpackets = apply {
         val clazz = 0x80.toByte() or if (isSensitive) 0x40.toByte() else 0x00.toByte()
-        addRevocationKey(RevocationKey(isCritical, clazz, revocationKey.algorithm, revocationKey.fingerprint))
+        addRevocationKey(
+            RevocationKey(isCritical, clazz, revocationKey.algorithm, revocationKey.fingerprint))
     }
 
     override fun addRevocationKey(revocationKey: RevocationKey): SignatureSubpackets = apply {
@@ -246,9 +298,10 @@ class SignatureSubpackets
         setFeatures(true, *features)
     }
 
-    override fun setFeatures(isCritical: Boolean, vararg features: Feature): SignatureSubpackets = apply {
-        setFeatures(Features(isCritical, Feature.toBitmask(*features)))
-    }
+    override fun setFeatures(isCritical: Boolean, vararg features: Feature): SignatureSubpackets =
+        apply {
+            setFeatures(Features(isCritical, Feature.toBitmask(*features)))
+        }
 
     override fun setFeatures(features: Features?): SignatureSubpackets = apply {
         this.featuresSubpacket = features
@@ -271,7 +324,10 @@ class SignatureSubpackets
         this.issuerKeyIdSubpacket = issuerKeyID
     }
 
-    override fun setIssuerFingerprint(isCritical: Boolean, issuer: PGPPublicKey): SignatureSubpackets = apply {
+    override fun setIssuerFingerprint(
+        isCritical: Boolean,
+        issuer: PGPPublicKey
+    ): SignatureSubpackets = apply {
         setIssuerFingerprint(IssuerFingerprint(isCritical, issuer.version, issuer.fingerprint))
     }
 
@@ -279,44 +335,60 @@ class SignatureSubpackets
         setIssuerFingerprint(false, issuer)
     }
 
-    override fun setIssuerFingerprint(fingerprint: IssuerFingerprint?): SignatureSubpackets = apply {
-        this.issuerFingerprintSubpacket = fingerprint
-    }
+    override fun setIssuerFingerprint(fingerprint: IssuerFingerprint?): SignatureSubpackets =
+        apply {
+            this.issuerFingerprintSubpacket = fingerprint
+        }
 
     override fun setSignatureCreationTime(creationTime: Date): SignatureSubpackets = apply {
         setSignatureCreationTime(true, creationTime)
     }
 
-    override fun setSignatureCreationTime(isCritical: Boolean, creationTime: Date): SignatureSubpackets = apply {
+    override fun setSignatureCreationTime(
+        isCritical: Boolean,
+        creationTime: Date
+    ): SignatureSubpackets = apply {
         setSignatureCreationTime(SignatureCreationTime(isCritical, creationTime))
     }
 
-    override fun setSignatureCreationTime(creationTime: SignatureCreationTime?): SignatureSubpackets = apply {
-        this.signatureCreationTimeSubpacket = creationTime
-    }
-    override fun setSignatureExpirationTime(creationTime: Date, expirationTime: Date?): SignatureSubpackets = apply {
+    override fun setSignatureCreationTime(
+        creationTime: SignatureCreationTime?
+    ): SignatureSubpackets = apply { this.signatureCreationTimeSubpacket = creationTime }
+
+    override fun setSignatureExpirationTime(
+        creationTime: Date,
+        expirationTime: Date?
+    ): SignatureSubpackets = apply {
         setSignatureExpirationTime(true, creationTime, expirationTime)
     }
 
-    override fun setSignatureExpirationTime(isCritical: Boolean, creationTime: Date, expirationTime: Date?): SignatureSubpackets = apply {
+    override fun setSignatureExpirationTime(
+        isCritical: Boolean,
+        creationTime: Date,
+        expirationTime: Date?
+    ): SignatureSubpackets = apply {
         if (expirationTime != null) {
             require(creationTime.toSecondsPrecision() < expirationTime.toSecondsPrecision()) {
                 "Expiration time MUST NOT be less or equal the creation time."
             }
-            setSignatureExpirationTime(SignatureExpirationTime(isCritical, creationTime.secondsTill(expirationTime)))
+            setSignatureExpirationTime(
+                SignatureExpirationTime(isCritical, creationTime.secondsTill(expirationTime)))
         } else {
             setSignatureExpirationTime(SignatureExpirationTime(isCritical, 0))
         }
     }
 
-    override fun setSignatureExpirationTime(isCritical: Boolean, seconds: Long): SignatureSubpackets = apply {
+    override fun setSignatureExpirationTime(
+        isCritical: Boolean,
+        seconds: Long
+    ): SignatureSubpackets = apply {
         enforceExpirationBounds(seconds)
         setSignatureExpirationTime(SignatureExpirationTime(isCritical, seconds))
     }
 
     /**
-     * Enforce that <pre>seconds</pre> is within bounds of an unsigned 32bit number.
-     * Values less than 0 are illegal, as well as values greater 0xffffffff.
+     * Enforce that <pre>seconds</pre> is within bounds of an unsigned 32bit number. Values less
+     * than 0 are illegal, as well as values greater 0xffffffff.
      *
      * @param seconds number to check
      * @throws IllegalArgumentException in case of an under- or overflow
@@ -325,32 +397,40 @@ class SignatureSubpackets
         require(seconds <= 0xffffffffL) {
             "Integer overflow. Seconds from creation to expiration (${seconds}) cannot be larger than ${0xffffffffL}."
         }
-        require(seconds >= 0) {
-            "Seconds from creation to expiration cannot be less than 0."
-        }
+        require(seconds >= 0) { "Seconds from creation to expiration cannot be less than 0." }
     }
 
-    override fun setSignatureExpirationTime(expirationTime: SignatureExpirationTime?): SignatureSubpackets = apply {
-        this.signatureExpirationTimeSubpacket = expirationTime
-    }
+    override fun setSignatureExpirationTime(
+        expirationTime: SignatureExpirationTime?
+    ): SignatureSubpackets = apply { this.signatureExpirationTimeSubpacket = expirationTime }
 
     override fun setSignerUserId(userId: CharSequence): SignatureSubpackets = apply {
         setSignerUserId(false, userId)
     }
 
-    override fun setSignerUserId(isCritical: Boolean, userId: CharSequence): SignatureSubpackets = apply {
-        setSignerUserId(SignerUserID(isCritical, userId.toString()))
-    }
+    override fun setSignerUserId(isCritical: Boolean, userId: CharSequence): SignatureSubpackets =
+        apply {
+            setSignerUserId(SignerUserID(isCritical, userId.toString()))
+        }
 
     override fun setSignerUserId(signerUserID: SignerUserID?): SignatureSubpackets = apply {
         this.signerUserIdSubpacket = signerUserID
     }
 
-    override fun addNotationData(isCritical: Boolean, notationName: String, notationValue: String): SignatureSubpackets = apply {
+    override fun addNotationData(
+        isCritical: Boolean,
+        notationName: String,
+        notationValue: String
+    ): SignatureSubpackets = apply {
         addNotationData(isCritical, true, notationName, notationValue)
     }
 
-    override fun addNotationData(isCritical: Boolean, isHumanReadable: Boolean, notationName: String, notationValue: String): SignatureSubpackets = apply {
+    override fun addNotationData(
+        isCritical: Boolean,
+        isHumanReadable: Boolean,
+        notationName: String,
+        notationValue: String
+    ): SignatureSubpackets = apply {
         addNotationData(NotationData(isCritical, isHumanReadable, notationName, notationValue))
     }
 
@@ -362,15 +442,23 @@ class SignatureSubpackets
         (this.notationDataSubpackets as MutableList).clear()
     }
 
-    override fun addIntendedRecipientFingerprint(recipientKey: PGPPublicKey): SignatureSubpackets = apply {
-        addIntendedRecipientFingerprint(false, recipientKey)
+    override fun addIntendedRecipientFingerprint(recipientKey: PGPPublicKey): SignatureSubpackets =
+        apply {
+            addIntendedRecipientFingerprint(false, recipientKey)
+        }
+
+    override fun addIntendedRecipientFingerprint(
+        isCritical: Boolean,
+        recipientKey: PGPPublicKey
+    ): SignatureSubpackets = apply {
+        addIntendedRecipientFingerprint(
+            IntendedRecipientFingerprint(
+                isCritical, recipientKey.version, recipientKey.fingerprint))
     }
 
-    override fun addIntendedRecipientFingerprint(isCritical: Boolean, recipientKey: PGPPublicKey): SignatureSubpackets = apply {
-        addIntendedRecipientFingerprint(IntendedRecipientFingerprint(isCritical, recipientKey.version, recipientKey.fingerprint))
-    }
-
-    override fun addIntendedRecipientFingerprint(intendedRecipient: IntendedRecipientFingerprint): SignatureSubpackets = apply {
+    override fun addIntendedRecipientFingerprint(
+        intendedRecipient: IntendedRecipientFingerprint
+    ): SignatureSubpackets = apply {
         (this.intendedRecipientFingerprintSubpackets as MutableList).add(intendedRecipient)
     }
 
@@ -378,17 +466,16 @@ class SignatureSubpackets
         (this.intendedRecipientFingerprintSubpackets as MutableList).clear()
     }
 
-    override fun setExportable(): SignatureSubpackets = apply {
-        setExportable(true)
-    }
+    override fun setExportable(): SignatureSubpackets = apply { setExportable(true) }
 
     override fun setExportable(isExportable: Boolean): SignatureSubpackets = apply {
         setExportable(true, isExportable)
     }
 
-    override fun setExportable(isCritical: Boolean, isExportable: Boolean): SignatureSubpackets = apply {
-        setExportable(Exportable(isCritical, isExportable))
-    }
+    override fun setExportable(isCritical: Boolean, isExportable: Boolean): SignatureSubpackets =
+        apply {
+            setExportable(Exportable(isCritical, isExportable))
+        }
 
     override fun setExportable(exportable: Exportable?): SignatureSubpackets = apply {
         this.exportableSubpacket = exportable
@@ -410,7 +497,10 @@ class SignatureSubpackets
         setRegularExpression(false, regex)
     }
 
-    override fun setRegularExpression(isCritical: Boolean, regex: CharSequence): SignatureSubpackets = apply {
+    override fun setRegularExpression(
+        isCritical: Boolean,
+        regex: CharSequence
+    ): SignatureSubpackets = apply {
         setRegularExpression(RegularExpression(isCritical, regex.toString()))
     }
 
@@ -418,41 +508,53 @@ class SignatureSubpackets
         this.regularExpressionSubpacket = regex
     }
 
-    override fun setRevocable(): SignatureSubpackets = apply {
-        setRevocable(true)
-    }
+    override fun setRevocable(): SignatureSubpackets = apply { setRevocable(true) }
 
     override fun setRevocable(isRevocable: Boolean): SignatureSubpackets = apply {
         setRevocable(true, isRevocable)
     }
 
-    override fun setRevocable(isCritical: Boolean, isRevocable: Boolean): SignatureSubpackets = apply {
-        setRevocable(Revocable(isCritical, isRevocable))
-    }
+    override fun setRevocable(isCritical: Boolean, isRevocable: Boolean): SignatureSubpackets =
+        apply {
+            setRevocable(Revocable(isCritical, isRevocable))
+        }
 
     override fun setRevocable(revocable: Revocable?): SignatureSubpackets = apply {
         this.revocableSubpacket = revocable
     }
 
-    override fun setSignatureTarget(keyAlgorithm: PublicKeyAlgorithm, hashAlgorithm: HashAlgorithm, hashData: ByteArray): SignatureSubpackets = apply {
+    override fun setSignatureTarget(
+        keyAlgorithm: PublicKeyAlgorithm,
+        hashAlgorithm: HashAlgorithm,
+        hashData: ByteArray
+    ): SignatureSubpackets = apply {
         setSignatureTarget(true, keyAlgorithm, hashAlgorithm, hashData)
     }
 
-    override fun setSignatureTarget(isCritical: Boolean, keyAlgorithm: PublicKeyAlgorithm, hashAlgorithm: HashAlgorithm, hashData: ByteArray): SignatureSubpackets = apply {
-        setSignatureTarget(SignatureTarget(isCritical, keyAlgorithm.algorithmId, hashAlgorithm.algorithmId, hashData))
+    override fun setSignatureTarget(
+        isCritical: Boolean,
+        keyAlgorithm: PublicKeyAlgorithm,
+        hashAlgorithm: HashAlgorithm,
+        hashData: ByteArray
+    ): SignatureSubpackets = apply {
+        setSignatureTarget(
+            SignatureTarget(
+                isCritical, keyAlgorithm.algorithmId, hashAlgorithm.algorithmId, hashData))
     }
 
-    override fun setSignatureTarget(signatureTarget: SignatureTarget?): SignatureSubpackets = apply {
-        this.signatureTargetSubpacket = signatureTarget
-    }
+    override fun setSignatureTarget(signatureTarget: SignatureTarget?): SignatureSubpackets =
+        apply {
+            this.signatureTargetSubpacket = signatureTarget
+        }
 
     override fun setTrust(depth: Int, amount: Int): SignatureSubpackets = apply {
         setTrust(true, depth, amount)
     }
 
-    override fun setTrust(isCritical: Boolean, depth: Int, amount: Int): SignatureSubpackets = apply {
-        setTrust(TrustSignature(isCritical, depth, amount))
-    }
+    override fun setTrust(isCritical: Boolean, depth: Int, amount: Int): SignatureSubpackets =
+        apply {
+            setTrust(TrustSignature(isCritical, depth, amount))
+        }
 
     override fun setTrust(trust: TrustSignature?): SignatureSubpackets = apply {
         this.trustSubpacket = trust
@@ -462,26 +564,31 @@ class SignatureSubpackets
         addEmbeddedSignature(true, signature)
     }
 
-    override fun addEmbeddedSignature(isCritical: Boolean, signature: PGPSignature): SignatureSubpackets = apply {
+    override fun addEmbeddedSignature(
+        isCritical: Boolean,
+        signature: PGPSignature
+    ): SignatureSubpackets = apply {
         val sig = signature.encoded
-        val data = if (sig.size - 1 > 256) {
-            ByteArray(sig.size - 3)
-        } else {
-            ByteArray(sig.size - 2)
-        }
+        val data =
+            if (sig.size - 1 > 256) {
+                ByteArray(sig.size - 3)
+            } else {
+                ByteArray(sig.size - 2)
+            }
         System.arraycopy(sig, sig.size - data.size, data, 0, data.size)
         addEmbeddedSignature(EmbeddedSignature(isCritical, false, data))
     }
 
-    override fun addEmbeddedSignature(embeddedSignature: EmbeddedSignature): SignatureSubpackets = apply {
-        (this.embeddedSignatureSubpackets as MutableList).add(embeddedSignature)
-    }
+    override fun addEmbeddedSignature(embeddedSignature: EmbeddedSignature): SignatureSubpackets =
+        apply {
+            (this.embeddedSignatureSubpackets as MutableList).add(embeddedSignature)
+        }
 
     override fun clearEmbeddedSignatures(): SignatureSubpackets = apply {
         (this.embeddedSignatureSubpackets as MutableList).clear()
     }
 
-    fun addResidualSubpacket(subpacket: org.bouncycastle.bcpg.SignatureSubpacket): SignatureSubpackets = apply {
-        (residualSubpackets as MutableList).add(subpacket)
-    }
+    fun addResidualSubpacket(
+        subpacket: org.bouncycastle.bcpg.SignatureSubpacket
+    ): SignatureSubpackets = apply { (residualSubpackets as MutableList).add(subpacket) }
 }

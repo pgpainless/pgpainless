@@ -22,7 +22,6 @@ enum class OpenPgpPacket(val tag: Int) {
     UATTR(17),
     SEIPD(18),
     MDC(19),
-
     EXP_1(60),
     EXP_2(61),
     EXP_3(62),
@@ -32,15 +31,13 @@ enum class OpenPgpPacket(val tag: Int) {
     companion object {
         @JvmStatic
         fun fromTag(tag: Int): OpenPgpPacket? {
-            return values().firstOrNull {
-                it.tag == tag
-            }
+            return values().firstOrNull { it.tag == tag }
         }
 
         @JvmStatic
         fun requireFromTag(tag: Int): OpenPgpPacket {
-            return fromTag(tag) ?:
-            throw NoSuchElementException("No OpenPGP packet known for tag $tag")
+            return fromTag(tag)
+                ?: throw NoSuchElementException("No OpenPGP packet known for tag $tag")
         }
     }
 }

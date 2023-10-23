@@ -4,6 +4,8 @@
 
 package org.pgpainless
 
+import java.io.OutputStream
+import java.util.*
 import org.bouncycastle.openpgp.PGPKeyRing
 import org.bouncycastle.openpgp.PGPPublicKeyRing
 import org.bouncycastle.openpgp.PGPSecretKeyRing
@@ -19,8 +21,6 @@ import org.pgpainless.key.parsing.KeyRingReader
 import org.pgpainless.key.util.KeyRingUtils
 import org.pgpainless.policy.Policy
 import org.pgpainless.util.ArmorUtils
-import java.io.OutputStream
-import java.util.*
 
 class PGPainless private constructor() {
 
@@ -28,25 +28,24 @@ class PGPainless private constructor() {
 
         /**
          * Generate a fresh OpenPGP key ring from predefined templates.
+         *
          * @return templates
          */
-        @JvmStatic
-        fun generateKeyRing() = KeyRingTemplates()
+        @JvmStatic fun generateKeyRing() = KeyRingTemplates()
 
         /**
          * Build a custom OpenPGP key ring.
          *
          * @return builder
          */
-        @JvmStatic
-        fun buildKeyRing() = KeyRingBuilder()
+        @JvmStatic fun buildKeyRing() = KeyRingBuilder()
 
         /**
          * Read an existing OpenPGP key ring.
+         *
          * @return builder
          */
-        @JvmStatic
-        fun readKeyRing() = KeyRingReader()
+        @JvmStatic fun readKeyRing() = KeyRingReader()
 
         /**
          * Extract a public key certificate from a secret key.
@@ -56,10 +55,11 @@ class PGPainless private constructor() {
          */
         @JvmStatic
         fun extractCertificate(secretKey: PGPSecretKeyRing) =
-                KeyRingUtils.publicKeyRingFrom(secretKey)
+            KeyRingUtils.publicKeyRingFrom(secretKey)
 
         /**
-         * Merge two copies of the same certificate (e.g. an old copy, and one retrieved from a key server) together.
+         * Merge two copies of the same certificate (e.g. an old copy, and one retrieved from a key
+         * server) together.
          *
          * @param originalCopy local, older copy of the cert
          * @param updatedCopy updated, newer copy of the cert
@@ -67,31 +67,27 @@ class PGPainless private constructor() {
          * @throws PGPException in case of an error
          */
         @JvmStatic
-        fun mergeCertificate(originalCopy: PGPPublicKeyRing,
-                             updatedCopy: PGPPublicKeyRing) =
-                PGPPublicKeyRing.join(originalCopy, updatedCopy)
+        fun mergeCertificate(originalCopy: PGPPublicKeyRing, updatedCopy: PGPPublicKeyRing) =
+            PGPPublicKeyRing.join(originalCopy, updatedCopy)
 
         /**
          * Wrap a key or certificate in ASCII armor.
          *
          * @param key key or certificate
          * @return ascii armored string
-         *
          * @throws IOException in case of an error during the armoring process
          */
         @JvmStatic
         fun asciiArmor(key: PGPKeyRing) =
-                if (key is PGPSecretKeyRing)
-                    ArmorUtils.toAsciiArmoredString(key)
-                else
-                    ArmorUtils.toAsciiArmoredString(key as PGPPublicKeyRing)
+            if (key is PGPSecretKeyRing) ArmorUtils.toAsciiArmoredString(key)
+            else ArmorUtils.toAsciiArmoredString(key as PGPPublicKeyRing)
 
         /**
-         * Wrap a key of certificate in ASCII armor and write the result into the given [OutputStream].
+         * Wrap a key of certificate in ASCII armor and write the result into the given
+         * [OutputStream].
          *
          * @param key key or certificate
          * @param outputStream output stream
-         *
          * @throws IOException in case of an error during the armoring process
          */
         @JvmStatic
@@ -106,33 +102,34 @@ class PGPainless private constructor() {
          *
          * @param signature detached signature
          * @return ascii armored string
-         *
          * @throws IOException in case of an error during the armoring process
          */
         @JvmStatic
         fun asciiArmor(signature: PGPSignature) = ArmorUtils.toAsciiArmoredString(signature)
 
         /**
-         * Create an [EncryptionBuilder], which can be used to encrypt and/or sign data using OpenPGP.
+         * Create an [EncryptionBuilder], which can be used to encrypt and/or sign data using
+         * OpenPGP.
          *
          * @return builder
          */
-        @JvmStatic
-        fun encryptAndOrSign() = EncryptionBuilder()
+        @JvmStatic fun encryptAndOrSign() = EncryptionBuilder()
 
         /**
-         * Create a [DecryptionBuilder], which can be used to decrypt and/or verify data using OpenPGP.
+         * Create a [DecryptionBuilder], which can be used to decrypt and/or verify data using
+         * OpenPGP.
          *
          * @return builder
          */
-        @JvmStatic
-        fun decryptAndOrVerify() = DecryptionBuilder()
+        @JvmStatic fun decryptAndOrVerify() = DecryptionBuilder()
 
         /**
-         * Make changes to a secret key at the given reference time.
-         * This method can be used to change key expiration dates and passphrases, or add/revoke user-ids and subkeys.
+         * Make changes to a secret key at the given reference time. This method can be used to
+         * change key expiration dates and passphrases, or add/revoke user-ids and subkeys.
+         *
          * <p>
-         * After making the desired changes in the builder, the modified key can be extracted using {@link SecretKeyRingEditorInterface#done()}.
+         * After making the desired changes in the builder, the modified key can be extracted using
+         * {@link SecretKeyRingEditorInterface#done()}.
          *
          * @param secretKeys secret key ring
          * @param referenceTime reference time used as signature creation date
@@ -141,11 +138,12 @@ class PGPainless private constructor() {
         @JvmStatic
         @JvmOverloads
         fun modifyKeyRing(secretKey: PGPSecretKeyRing, referenceTime: Date = Date()) =
-                SecretKeyRingEditor(secretKey, referenceTime)
+            SecretKeyRingEditor(secretKey, referenceTime)
 
         /**
-         * Quickly access information about a [org.bouncycastle.openpgp.PGPPublicKeyRing] / [PGPSecretKeyRing].
-         * This method can be used to determine expiration dates, key flags and other information about a key at a specific time.
+         * Quickly access information about a [org.bouncycastle.openpgp.PGPPublicKeyRing] /
+         * [PGPSecretKeyRing]. This method can be used to determine expiration dates, key flags and
+         * other information about a key at a specific time.
          *
          * @param keyRing key ring
          * @param referenceTime date of inspection
@@ -154,22 +152,20 @@ class PGPainless private constructor() {
         @JvmStatic
         @JvmOverloads
         fun inspectKeyRing(key: PGPKeyRing, referenceTime: Date = Date()) =
-                KeyRingInfo(key, referenceTime)
+            KeyRingInfo(key, referenceTime)
 
         /**
          * Access, and make changes to PGPainless policy on acceptable/default algorithms etc.
          *
          * @return policy
          */
-        @JvmStatic
-        fun getPolicy() = Policy.getInstance()
+        @JvmStatic fun getPolicy() = Policy.getInstance()
 
         /**
          * Create different kinds of signatures on other keys.
          *
          * @return builder
          */
-        @JvmStatic
-        fun certify() = CertifyCertificate()
+        @JvmStatic fun certify() = CertifyCertificate()
     }
 }

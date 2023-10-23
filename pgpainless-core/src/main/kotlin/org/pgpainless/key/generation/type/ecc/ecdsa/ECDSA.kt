@@ -16,7 +16,6 @@ class ECDSA private constructor(val curve: EllipticCurve) : KeyType {
     override val algorithmSpec = ECNamedCurveGenParameterSpec(curve.curveName)
 
     companion object {
-        @JvmStatic
-        fun fromCurve(curve: EllipticCurve) = ECDSA(curve)
+        @JvmStatic fun fromCurve(curve: EllipticCurve) = ECDSA(curve)
     }
 }

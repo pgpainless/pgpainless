@@ -4,9 +4,7 @@
 
 package org.pgpainless.decryption_verification.syntax_check
 
-/**
- * Set of states of the automaton.
- */
+/** Set of states of the automaton. */
 enum class State {
     OPENPGP_MESSAGE,
     LITERAL_MESSAGE,

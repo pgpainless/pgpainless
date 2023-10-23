@@ -4,10 +4,7 @@
 
 package org.pgpainless.key.generation.type.xdh
 
-enum class XDHSpec(
-        val algorithmName: String,
-        val curveName: String,
-        val bitStrength: Int) {
+enum class XDHSpec(val algorithmName: String, val curveName: String, val bitStrength: Int) {
     _X25519("X25519", "curve25519", 256),
     ;
 

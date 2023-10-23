@@ -7,18 +7,15 @@ package org.pgpainless.decryption_verification.cleartext_signatures
 import java.io.*
 
 /**
- * Implementation of the [MultiPassStrategy].
- * When processing signed data the first time, the data is being written out into a file.
- * For the second pass, that file is being read again.
+ * Implementation of the [MultiPassStrategy]. When processing signed data the first time, the data
+ * is being written out into a file. For the second pass, that file is being read again.
  *
- * This strategy is recommended when larger amounts of data need to be processed.
- * For smaller files, [InMemoryMultiPassStrategy] yields higher efficiency.
+ * This strategy is recommended when larger amounts of data need to be processed. For smaller files,
+ * [InMemoryMultiPassStrategy] yields higher efficiency.
  *
  * @param file file to write the data to and read from
  */
-class WriteToFileMultiPassStrategy(
-        private val file: File
-) : MultiPassStrategy {
+class WriteToFileMultiPassStrategy(private val file: File) : MultiPassStrategy {
 
     override val messageOutputStream: OutputStream
         @Throws(IOException::class)
@@ -39,5 +36,4 @@ class WriteToFileMultiPassStrategy(
             }
             return FileInputStream(file)
         }
-
 }

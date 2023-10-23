@@ -11,9 +11,7 @@ import org.bouncycastle.util.Arrays
  *
  * @param chars may be null for empty passwords.
  */
-class Passphrase(
-        chars: CharArray?
-) {
+class Passphrase(chars: CharArray?) {
     private val lock = Any()
     private var valid = true
     private val chars: CharArray?
@@ -23,17 +21,17 @@ class Passphrase(
     }
 
     /**
-     * Return a copy of the underlying char array.
-     * A return value of null represents an empty password.
+     * Return a copy of the underlying char array. A return value of null represents an empty
+     * password.
      *
      * @return passphrase chars.
-     *
      * @throws IllegalStateException in case the password has been cleared at this point.
      */
-    fun getChars(): CharArray? = synchronized(lock) {
-        check(valid) { "Passphrase has been cleared." }
-        chars?.copyOf()
-    }
+    fun getChars(): CharArray? =
+        synchronized(lock) {
+            check(valid) { "Passphrase has been cleared." }
+            chars?.copyOf()
+        }
 
     /**
      * Return true if the passphrase has not yet been cleared.
@@ -51,23 +49,20 @@ class Passphrase(
     val isEmpty: Boolean
         get() = synchronized(lock) { valid && chars == null }
 
-    /**
-     * Overwrite the char array with spaces and mark the [Passphrase] as invalidated.
-     */
-    fun clear() = synchronized(lock) {
-        chars?.fill(' ')
-        valid = false
-    }
+    /** Overwrite the char array with spaces and mark the [Passphrase] as invalidated. */
+    fun clear() =
+        synchronized(lock) {
+            chars?.fill(' ')
+            valid = false
+        }
 
     override fun equals(other: Any?): Boolean {
-        return if (other == null)
-            false
-        else if (this === other)
-            true
-        else if (other !is Passphrase)
-            false
+        return if (other == null) false
+        else if (this === other) true
+        else if (other !is Passphrase) false
         else
-            getChars() == null && other.getChars() == null || Arrays.constantTimeAreEqual(getChars(), other.getChars())
+            getChars() == null && other.getChars() == null ||
+                Arrays.constantTimeAreEqual(getChars(), other.getChars())
     }
 
     override fun hashCode(): Int = getChars()?.let { String(it) }.hashCode()
@@ -83,23 +78,23 @@ class Passphrase(
         @JvmStatic
         fun fromPassword(password: CharSequence) = Passphrase(password.toString().toCharArray())
 
-        @JvmStatic
-        fun emptyPassphrase() = Passphrase(null)
+        @JvmStatic fun emptyPassphrase() = Passphrase(null)
 
         /**
-         * Return a copy of the passed in char array, with leading and trailing whitespace characters removed.
-         * If the passed in char array is null, return null.
-         * If the resulting char array is empty, return null as well.
+         * Return a copy of the passed in char array, with leading and trailing whitespace
+         * characters removed. If the passed in char array is null, return null. If the resulting
+         * char array is empty, return null as well.
          *
          * @param chars char array
          * @return copy of char array with leading and trailing whitespace characters removed
          */
         @JvmStatic
         private fun trimWhitespace(chars: CharArray?): CharArray? {
-            return chars?.dropWhile { it.isWhitespace() }
-                    ?.dropLastWhile { it.isWhitespace() }
-                    ?.toCharArray()
-                    ?.let { if (it.isEmpty()) null else it }
+            return chars
+                ?.dropWhile { it.isWhitespace() }
+                ?.dropLastWhile { it.isWhitespace() }
+                ?.toCharArray()
+                ?.let { if (it.isEmpty()) null else it }
         }
     }
 }

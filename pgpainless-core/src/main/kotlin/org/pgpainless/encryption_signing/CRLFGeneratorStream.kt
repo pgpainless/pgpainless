@@ -5,17 +5,15 @@
 
 package org.pgpainless.encryption_signing
 
-import org.pgpainless.algorithm.StreamEncoding
 import java.io.OutputStream
+import org.pgpainless.algorithm.StreamEncoding
 
 /**
- * [OutputStream] which applies CR-LF encoding of its input data, based on the desired [StreamEncoding].
- * This implementation originates from the Bouncy Castle library.
+ * [OutputStream] which applies CR-LF encoding of its input data, based on the desired
+ * [StreamEncoding]. This implementation originates from the Bouncy Castle library.
  */
-class CRLFGeneratorStream(
-        private val crlfOut: OutputStream,
-        encoding: StreamEncoding
-) : OutputStream() {
+class CRLFGeneratorStream(private val crlfOut: OutputStream, encoding: StreamEncoding) :
+    OutputStream() {
 
     private val isBinary: Boolean
     private var lastB = 0
@@ -26,9 +24,9 @@ class CRLFGeneratorStream(
 
     override fun write(b: Int) {
         if (!isBinary) {
-            if (b == '\n'.code && lastB != '\r'.code) {     // Unix
+            if (b == '\n'.code && lastB != '\r'.code) { // Unix
                 crlfOut.write('\r'.code)
-            } else if (lastB == '\r'.code) {                // MAC
+            } else if (lastB == '\r'.code) { // MAC
                 if (b != '\n'.code) {
                     crlfOut.write('\n'.code)
                 }

@@ -15,7 +15,6 @@ class EdDSA private constructor(val curve: EdDSACurve) : KeyType {
     override val algorithmSpec = ECNamedCurveGenParameterSpec(curve.curveName)
 
     companion object {
-        @JvmStatic
-        fun fromCurve(curve: EdDSACurve) = EdDSA(curve)
+        @JvmStatic fun fromCurve(curve: EdDSACurve) = EdDSA(curve)
     }
 }

@@ -4,14 +4,15 @@
 
 package org.pgpainless.decryption_verification
 
-import org.bouncycastle.openpgp.PGPException
 import java.io.IOException
 import java.io.InputStream
+import org.bouncycastle.openpgp.PGPException
 
 interface DecryptionBuilderInterface {
 
     /**
-     * Create a [DecryptionStream] on an [InputStream] which contains the encrypted and/or signed data.
+     * Create a [DecryptionStream] on an [InputStream] which contains the encrypted and/or signed
+     * data.
      *
      * @param inputStream encrypted and/or signed data.
      * @return api handle

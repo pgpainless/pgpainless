@@ -4,16 +4,13 @@
 
 package org.pgpainless.key
 
+import java.nio.charset.Charset
 import org.bouncycastle.openpgp.PGPKeyRing
 import org.bouncycastle.openpgp.PGPPublicKey
 import org.bouncycastle.openpgp.PGPSecretKey
 import org.bouncycastle.util.encoders.Hex
-import java.nio.charset.Charset
 
-/**
- * Abstract super class of different version OpenPGP fingerprints.
- *
- */
+/** Abstract super class of different version OpenPGP fingerprints. */
 abstract class OpenPgpFingerprint : CharSequence, Comparable<OpenPgpFingerprint> {
     val fingerprint: String
     val bytes: ByteArray
@@ -26,39 +23,41 @@ abstract class OpenPgpFingerprint : CharSequence, Comparable<OpenPgpFingerprint>
     abstract fun getVersion(): Int
 
     /**
-     * Return the key id of the OpenPGP public key this {@link OpenPgpFingerprint} belongs to.
-     * This method can be implemented for V4 and V5 fingerprints.
-     * V3 key-IDs cannot be derived from the fingerprint, but we don't care, since V3 is deprecated.
+     * Return the key id of the OpenPGP public key this {@link OpenPgpFingerprint} belongs to. This
+     * method can be implemented for V4 and V5 fingerprints. V3 key-IDs cannot be derived from the
+     * fingerprint, but we don't care, since V3 is deprecated.
      *
-     * @see <a href="https://tools.ietf.org/html/rfc4880#section-12.2">
-     *     RFC-4880 §12.2: Key IDs and Fingerprints</a>
      * @return key id
+     * @see <a href="https://tools.ietf.org/html/rfc4880#section-12.2"> RFC-4880 §12.2: Key IDs and
+     *   Fingerprints</a>
      */
     abstract val keyId: Long
 
     constructor(fingerprint: String) {
         val prep = fingerprint.replace(" ", "").trim().uppercase()
         if (!isValid(prep)) {
-            throw IllegalArgumentException("Fingerprint '$fingerprint' does not appear to be a valid OpenPGP V${getVersion()} fingerprint.")
+            throw IllegalArgumentException(
+                "Fingerprint '$fingerprint' does not appear to be a valid OpenPGP V${getVersion()} fingerprint.")
         }
         this.fingerprint = prep
         this.bytes = Hex.decode(prep)
     }
 
-    constructor(bytes: ByteArray): this(Hex.toHexString(bytes))
+    constructor(bytes: ByteArray) : this(Hex.toHexString(bytes))
 
-    constructor(key: PGPPublicKey): this(key.fingerprint) {
+    constructor(key: PGPPublicKey) : this(key.fingerprint) {
         if (key.version != getVersion()) {
             throw IllegalArgumentException("Key is not a v${getVersion()} OpenPgp key.")
         }
     }
 
-    constructor(key: PGPSecretKey): this(key.publicKey)
+    constructor(key: PGPSecretKey) : this(key.publicKey)
 
-    constructor(keys: PGPKeyRing): this(keys.publicKey)
+    constructor(keys: PGPKeyRing) : this(keys.publicKey)
 
     /**
      * Check, whether the fingerprint consists of 40 valid hexadecimal characters.
+     *
      * @param fp fingerprint to check.
      * @return true if fingerprint is valid.
      */
@@ -69,7 +68,9 @@ abstract class OpenPgpFingerprint : CharSequence, Comparable<OpenPgpFingerprint>
 
     override fun get(index: Int) = fingerprint.get(index)
 
-    override fun subSequence(startIndex: Int, endIndex: Int) = fingerprint.subSequence(startIndex, endIndex)
+    override fun subSequence(startIndex: Int, endIndex: Int) =
+        fingerprint.subSequence(startIndex, endIndex)
+
     override fun compareTo(other: OpenPgpFingerprint): Int {
         return fingerprint.compareTo(other.fingerprint)
     }
@@ -87,49 +88,49 @@ abstract class OpenPgpFingerprint : CharSequence, Comparable<OpenPgpFingerprint>
     abstract fun prettyPrint(): String
 
     companion object {
-        @JvmStatic
-        val utf8: Charset = Charset.forName("UTF-8")
+        @JvmStatic val utf8: Charset = Charset.forName("UTF-8")
 
         /**
-         * Return the fingerprint of the given key.
-         * This method automatically matches key versions to fingerprint implementations.
+         * Return the fingerprint of the given key. This method automatically matches key versions
+         * to fingerprint implementations.
+         *
+         * @param key key
+         * @return fingerprint
+         */
+        @JvmStatic fun of(key: PGPSecretKey): OpenPgpFingerprint = of(key.publicKey)
+
+        /**
+         * Return the fingerprint of the given key. This method automatically matches key versions
+         * to fingerprint implementations.
          *
          * @param key key
          * @return fingerprint
          */
         @JvmStatic
-        fun of(key: PGPSecretKey): OpenPgpFingerprint = of(key.publicKey)
+        fun of(key: PGPPublicKey): OpenPgpFingerprint =
+            when (key.version) {
+                4 -> OpenPgpV4Fingerprint(key)
+                5 -> OpenPgpV5Fingerprint(key)
+                6 -> OpenPgpV6Fingerprint(key)
+                else ->
+                    throw IllegalArgumentException(
+                        "OpenPGP keys of version ${key.version} are not supported.")
+            }
 
         /**
-         * Return the fingerprint of the given key.
-         * This method automatically matches key versions to fingerprint implementations.
-         *
-         * @param key key
-         * @return fingerprint
-         */
-        @JvmStatic
-        fun of (key: PGPPublicKey): OpenPgpFingerprint = when(key.version) {
-            4 -> OpenPgpV4Fingerprint(key)
-            5 -> OpenPgpV5Fingerprint(key)
-            6 -> OpenPgpV6Fingerprint(key)
-            else -> throw IllegalArgumentException("OpenPGP keys of version ${key.version} are not supported.")
-        }
-
-        /**
-         * Return the fingerprint of the primary key of the given key ring.
-         * This method automatically matches key versions to fingerprint implementations.
+         * Return the fingerprint of the primary key of the given key ring. This method
+         * automatically matches key versions to fingerprint implementations.
          *
          * @param ring key ring
          * @return fingerprint
          */
-        @JvmStatic
-        fun of (keys: PGPKeyRing): OpenPgpFingerprint = of(keys.publicKey)
+        @JvmStatic fun of(keys: PGPKeyRing): OpenPgpFingerprint = of(keys.publicKey)
 
         /**
-         * Try to parse an {@link OpenPgpFingerprint} from the given fingerprint string.
-         * If the trimmed fingerprint without whitespace is 64 characters long, it is either a v5 or v6 fingerprint.
-         * In this case, we return a {@link _64DigitFingerprint}. Since this is ambiguous, it is generally recommended
-         * to know the version of the key beforehand.
+         * Try to parse an {@link OpenPgpFingerprint} from the given fingerprint string. If the
+         * trimmed fingerprint without whitespace is 64 characters long, it is either a v5 or v6
+         * fingerprint. In this case, we return a {@link _64DigitFingerprint}. Since this is
+         * ambiguous, it is generally recommended to know the version of the key beforehand.
          *
          * @param fingerprint fingerprint
          * @return parsed fingerprint
@@ -146,7 +147,8 @@ abstract class OpenPgpFingerprint : CharSequence, Comparable<OpenPgpFingerprint>
                 // Might be v5 or v6 :/
                 return _64DigitFingerprint(prep)
             }
-            throw IllegalArgumentException("Fingerprint does not appear to match any known fingerprint pattern.")
+            throw IllegalArgumentException(
+                "Fingerprint does not appear to match any known fingerprint pattern.")
         }
 
         /**
@@ -159,6 +161,6 @@ abstract class OpenPgpFingerprint : CharSequence, Comparable<OpenPgpFingerprint>
         @JvmStatic
         @Deprecated("use the parse() methods of the versioned fingerprint subclasses instead.")
         fun parseFromBinary(binaryFingerprint: ByteArray): OpenPgpFingerprint =
-                parse(Hex.toHexString(binaryFingerprint))
+            parse(Hex.toHexString(binaryFingerprint))
     }
 }

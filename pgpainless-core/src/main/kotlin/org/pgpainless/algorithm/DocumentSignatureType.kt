@@ -6,15 +6,11 @@ package org.pgpainless.algorithm
 
 enum class DocumentSignatureType(val signatureType: SignatureType) {
 
-    /**
-     * Signature is calculated over the unchanged binary data.
-     */
+    /** Signature is calculated over the unchanged binary data. */
     BINARY_DOCUMENT(SignatureType.BINARY_DOCUMENT),
 
     /**
-     * The signature is calculated over the text data with its line endings
-     * converted to `<CR><LF>`.
+     * The signature is calculated over the text data with its line endings converted to `<CR><LF>`.
      */
     CANONICAL_TEXT_DOCUMENT(SignatureType.CANONICAL_TEXT_DOCUMENT),
-    ;
 }

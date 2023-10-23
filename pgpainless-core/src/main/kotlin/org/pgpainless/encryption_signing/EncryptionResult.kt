@@ -4,6 +4,7 @@
 
 package org.pgpainless.encryption_signing
 
+import java.util.*
 import org.bouncycastle.extensions.matches
 import org.bouncycastle.openpgp.PGPLiteralData
 import org.bouncycastle.openpgp.PGPPublicKeyRing
@@ -13,21 +14,20 @@ import org.pgpainless.algorithm.StreamEncoding
 import org.pgpainless.algorithm.SymmetricKeyAlgorithm
 import org.pgpainless.key.SubkeyIdentifier
 import org.pgpainless.util.MultiMap
-import java.util.*
 
 data class EncryptionResult(
-        val encryptionAlgorithm: SymmetricKeyAlgorithm,
-        val compressionAlgorithm: CompressionAlgorithm,
-        val detachedSignatures: MultiMap<SubkeyIdentifier, PGPSignature>,
-        val recipients: Set<SubkeyIdentifier>,
-        val fileName: String,
-        val modificationDate: Date,
-        val fileEncoding: StreamEncoding
+    val encryptionAlgorithm: SymmetricKeyAlgorithm,
+    val compressionAlgorithm: CompressionAlgorithm,
+    val detachedSignatures: MultiMap<SubkeyIdentifier, PGPSignature>,
+    val recipients: Set<SubkeyIdentifier>,
+    val fileName: String,
+    val modificationDate: Date,
+    val fileEncoding: StreamEncoding
 ) {
 
     /**
-     * Return true, if the message is marked as for-your-eyes-only.
-     * This is typically done by setting the filename "_CONSOLE".
+     * Return true, if the message is marked as for-your-eyes-only. This is typically done by
+     * setting the filename "_CONSOLE".
      *
      * @return is message for your eyes only?
      */
@@ -48,8 +48,7 @@ data class EncryptionResult(
          *
          * @return builder
          */
-        @JvmStatic
-        fun builder() = Builder()
+        @JvmStatic fun builder() = Builder()
     }
 
     class Builder {
@@ -70,32 +69,35 @@ data class EncryptionResult(
             _compressionAlgorithm = compressionAlgorithm
         }
 
-        fun setFileName(fileName: String) = apply {
-            _fileName = fileName
-        }
+        fun setFileName(fileName: String) = apply { _fileName = fileName }
 
         fun setModificationDate(modificationDate: Date) = apply {
             _modificationDate = modificationDate
         }
 
-        fun setFileEncoding(encoding: StreamEncoding) = apply {
-            _encoding = encoding
-        }
+        fun setFileEncoding(encoding: StreamEncoding) = apply { _encoding = encoding }
 
         fun addRecipient(recipient: SubkeyIdentifier) = apply {
             (recipients as MutableSet).add(recipient)
         }
 
-        fun addDetachedSignature(signingSubkeyIdentifier: SubkeyIdentifier, detachedSignature: PGPSignature) = apply {
-            detachedSignatures.put(signingSubkeyIdentifier, detachedSignature)
-        }
+        fun addDetachedSignature(
+            signingSubkeyIdentifier: SubkeyIdentifier,
+            detachedSignature: PGPSignature
+        ) = apply { detachedSignatures.put(signingSubkeyIdentifier, detachedSignature) }
 
         fun build(): EncryptionResult {
             checkNotNull(_encryptionAlgorithm) { "Encryption algorithm not set." }
             checkNotNull(_compressionAlgorithm) { "Compression algorithm not set." }
 
-            return EncryptionResult(_encryptionAlgorithm!!, _compressionAlgorithm!!, detachedSignatures, recipients,
-                    _fileName, _modificationDate, _encoding)
+            return EncryptionResult(
+                _encryptionAlgorithm!!,
+                _compressionAlgorithm!!,
+                detachedSignatures,
+                recipients,
+                _fileName,
+                _modificationDate,
+                _encoding)
         }
     }
 }

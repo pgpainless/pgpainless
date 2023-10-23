@@ -11,61 +11,52 @@ package org.pgpainless.algorithm
  */
 enum class StreamEncoding(val code: Char) {
 
-    /**
-     * The Literal packet contains binary data.
-     */
+    /** The Literal packet contains binary data. */
     BINARY('b'),
 
     /**
-     * The Literal packet contains text data, and thus may need line ends converted to local form, or other
-     * text-mode changes.
+     * The Literal packet contains text data, and thus may need line ends converted to local form,
+     * or other text-mode changes.
      */
     TEXT('t'),
 
-    /**
-     * Indication that the implementation believes that the literal data contains UTF-8 text.
-     */
+    /** Indication that the implementation believes that the literal data contains UTF-8 text. */
     UTF8('u'),
 
     /**
-     * Early versions of PGP also defined a value of 'l' as a 'local' mode for machine-local conversions.
-     * RFC 1991 [RFC1991] incorrectly stated this local mode flag as '1' (ASCII numeral one).
-     * Both of these local modes are deprecated.
+     * Early versions of PGP also defined a value of 'l' as a 'local' mode for machine-local
+     * conversions. RFC 1991 [RFC1991] incorrectly stated this local mode flag as '1' (ASCII numeral
+     * one). Both of these local modes are deprecated.
      */
-    @Deprecated("LOCAL is deprecated.")
-    LOCAL('l'),
+    @Deprecated("LOCAL is deprecated.") LOCAL('l'),
     ;
 
-    
     companion object {
         /**
-         * Return the [StreamEncoding] corresponding to the provided code identifier.
-         * If no matching encoding is found, return null.
+         * Return the [StreamEncoding] corresponding to the provided code identifier. If no matching
+         * encoding is found, return null.
          *
          * @param code identifier
          * @return encoding enum
          */
         @JvmStatic
         fun fromCode(code: Int): StreamEncoding? {
-            return values().firstOrNull {
-                it.code == code.toChar()
-            } ?: if (code == 1) return LOCAL else null
+            return values().firstOrNull { it.code == code.toChar() }
+                ?: if (code == 1) return LOCAL else null
         }
 
         /**
-         * Return the [StreamEncoding] corresponding to the provided code identifier.
-         * If no matching encoding is found, throw a [NoSuchElementException].
+         * Return the [StreamEncoding] corresponding to the provided code identifier. If no matching
+         * encoding is found, throw a [NoSuchElementException].
          *
          * @param code identifier
          * @return encoding enum
-         *
          * @throws NoSuchElementException in case of an unmatched identifier
          */
         @JvmStatic
         fun requireFromCode(code: Int): StreamEncoding {
-            return fromCode(code) ?:
-            throw NoSuchElementException("No StreamEncoding found for code $code")
+            return fromCode(code)
+                ?: throw NoSuchElementException("No StreamEncoding found for code $code")
         }
     }
-
 }

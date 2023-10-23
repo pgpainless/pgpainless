@@ -10,18 +10,19 @@ import org.bouncycastle.openpgp.PGPSignature
 import org.pgpainless.key.SubkeyIdentifier
 
 /**
- * Tuple-class that bundles together a [PGPOnePassSignature] object, a [PGPPublicKeyRing]
- * destined to verify the signature, the [PGPSignature] itself and a record of whether the signature
- * was verified.
+ * Tuple-class that bundles together a [PGPOnePassSignature] object, a [PGPPublicKeyRing] destined
+ * to verify the signature, the [PGPSignature] itself and a record of whether the signature was
+ * verified.
  *
  * @param onePassSignature the one-pass-signature packet
  * @param verificationKeys certificate containing the signing subkey
  * @param signature the signature packet
  */
 data class OnePassSignatureCheck(
-        val onePassSignature: PGPOnePassSignature,
-        val verificationKeys: PGPPublicKeyRing,
-        var signature: PGPSignature? = null) {
+    val onePassSignature: PGPOnePassSignature,
+    val verificationKeys: PGPPublicKeyRing,
+    var signature: PGPSignature? = null
+) {
 
     /**
      * Return an identifier for the signing key.

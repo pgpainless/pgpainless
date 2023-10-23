@@ -4,32 +4,38 @@
 
 package org.pgpainless.key.collection
 
+import java.io.InputStream
 import org.bouncycastle.openpgp.*
 import org.pgpainless.implementation.ImplementationFactory
 import org.pgpainless.util.ArmorUtils
-import java.io.InputStream
 
 /**
- * This class describes a logic of handling a collection of different [PGPKeyRing]. The logic was inspired by
- * [PGPSecretKeyRingCollection] and [PGPPublicKeyRingCollection].
+ * This class describes a logic of handling a collection of different [PGPKeyRing]. The logic was
+ * inspired by [PGPSecretKeyRingCollection] and [PGPPublicKeyRingCollection].
  */
 class PGPKeyRingCollection(
-        val pgpSecretKeyRingCollection: PGPSecretKeyRingCollection,
-        val pgpPublicKeyRingCollection: PGPPublicKeyRingCollection
+    val pgpSecretKeyRingCollection: PGPSecretKeyRingCollection,
+    val pgpPublicKeyRingCollection: PGPPublicKeyRingCollection
 ) {
 
-    constructor(encoding: ByteArray, isSilent: Boolean): this(encoding.inputStream(), isSilent)
+    constructor(encoding: ByteArray, isSilent: Boolean) : this(encoding.inputStream(), isSilent)
 
-    constructor(inputStream: InputStream, isSilent: Boolean): this(parse(inputStream, isSilent))
+    constructor(inputStream: InputStream, isSilent: Boolean) : this(parse(inputStream, isSilent))
 
-    constructor(collection: Collection<PGPKeyRing>, isSilent: Boolean): this(segment(collection, isSilent))
+    constructor(
+        collection: Collection<PGPKeyRing>,
+        isSilent: Boolean
+    ) : this(segment(collection, isSilent))
 
-    private constructor(arguments: Pair<PGPSecretKeyRingCollection, PGPPublicKeyRingCollection>): this(arguments.first, arguments.second)
+    private constructor(
+        arguments: Pair<PGPSecretKeyRingCollection, PGPPublicKeyRingCollection>
+    ) : this(arguments.first, arguments.second)
 
     /**
      * The number of rings in this collection.
      *
-     * @return total size of [PGPSecretKeyRingCollection] plus [PGPPublicKeyRingCollection] in this collection
+     * @return total size of [PGPSecretKeyRingCollection] plus [PGPPublicKeyRingCollection] in this
+     *   collection
      */
     val size: Int
         get() = pgpSecretKeyRingCollection.size() + pgpPublicKeyRingCollection.size()
@@ -41,11 +47,16 @@ class PGPKeyRingCollection(
 
     companion object {
         @JvmStatic
-        private fun parse(inputStream: InputStream, isSilent: Boolean): Pair<PGPSecretKeyRingCollection, PGPPublicKeyRingCollection> {
+        private fun parse(
+            inputStream: InputStream,
+            isSilent: Boolean
+        ): Pair<PGPSecretKeyRingCollection, PGPPublicKeyRingCollection> {
             val secretKeyRings = mutableListOf<PGPSecretKeyRing>()
             val certificates = mutableListOf<PGPPublicKeyRing>()
             // Double getDecoderStream because of #96
-            val objectFactory = ImplementationFactory.getInstance().getPGPObjectFactory(ArmorUtils.getDecoderStream(inputStream))
+            val objectFactory =
+                ImplementationFactory.getInstance()
+                    .getPGPObjectFactory(ArmorUtils.getDecoderStream(inputStream))
 
             for (obj in objectFactory) {
                 if (obj == null) {
@@ -68,16 +79,21 @@ class PGPKeyRingCollection(
                 }
 
                 if (!isSilent) {
-                    throw PGPException("${obj.javaClass.name} found where ${PGPSecretKeyRing::class.java.simpleName}" +
+                    throw PGPException(
+                        "${obj.javaClass.name} found where ${PGPSecretKeyRing::class.java.simpleName}" +
                             " or ${PGPPublicKeyRing::class.java.simpleName} expected")
                 }
             }
 
-            return PGPSecretKeyRingCollection(secretKeyRings) to PGPPublicKeyRingCollection(certificates)
+            return PGPSecretKeyRingCollection(secretKeyRings) to
+                PGPPublicKeyRingCollection(certificates)
         }
 
         @JvmStatic
-        private fun segment(collection: Collection<PGPKeyRing>, isSilent: Boolean): Pair<PGPSecretKeyRingCollection, PGPPublicKeyRingCollection> {
+        private fun segment(
+            collection: Collection<PGPKeyRing>,
+            isSilent: Boolean
+        ): Pair<PGPSecretKeyRingCollection, PGPPublicKeyRingCollection> {
             val secretKeyRings = mutableListOf<PGPSecretKeyRing>()
             val certificates = mutableListOf<PGPPublicKeyRing>()
 
@@ -87,12 +103,14 @@ class PGPKeyRingCollection(
                 } else if (keyRing is PGPPublicKeyRing) {
                     certificates.add(keyRing)
                 } else if (!isSilent) {
-                    throw PGPException("${keyRing.javaClass.name} found where ${PGPSecretKeyRing::class.java.simpleName}" +
+                    throw PGPException(
+                        "${keyRing.javaClass.name} found where ${PGPSecretKeyRing::class.java.simpleName}" +
                             " or ${PGPPublicKeyRing::class.java.simpleName} expected")
                 }
             }
 
-            return PGPSecretKeyRingCollection(secretKeyRings) to PGPPublicKeyRingCollection(certificates)
+            return PGPSecretKeyRingCollection(secretKeyRings) to
+                PGPPublicKeyRingCollection(certificates)
         }
     }
 }

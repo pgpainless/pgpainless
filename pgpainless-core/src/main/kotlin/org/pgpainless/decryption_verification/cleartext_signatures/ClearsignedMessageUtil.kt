@@ -4,47 +4,49 @@
 
 package org.pgpainless.decryption_verification.cleartext_signatures
 
+import java.io.*
+import kotlin.jvm.Throws
 import org.bouncycastle.bcpg.ArmoredInputStream
 import org.bouncycastle.openpgp.PGPSignatureList
 import org.bouncycastle.util.Strings
 import org.pgpainless.exception.WrongConsumingMethodException
 import org.pgpainless.implementation.ImplementationFactory
 import org.pgpainless.util.ArmoredInputStreamFactory
-import java.io.*
-import kotlin.jvm.Throws
 
 /**
- * Utility class to deal with cleartext-signed messages.
- * Based on Bouncycastle's [org.bouncycastle.openpgp.examples.ClearSignedFileProcessor].
+ * Utility class to deal with cleartext-signed messages. Based on Bouncycastle's
+ * [org.bouncycastle.openpgp.examples.ClearSignedFileProcessor].
  */
 class ClearsignedMessageUtil {
 
     companion object {
 
         /**
-         * Dearmor a clearsigned message, detach the inband signatures and write the plaintext message to the provided
-         * messageOutputStream.
+         * Dearmor a clearsigned message, detach the inband signatures and write the plaintext
+         * message to the provided messageOutputStream.
          *
          * @param clearsignedInputStream input stream containing a clearsigned message
          * @param messageOutputStream output stream to which the dearmored message shall be written
          * @return signatures
-         *
          * @throws IOException if the message is not clearsigned or some other IO error happens
          * @throws WrongConsumingMethodException in case the armored message is not cleartext signed
          */
         @JvmStatic
         @Throws(WrongConsumingMethodException::class, IOException::class)
         fun detachSignaturesFromInbandClearsignedMessage(
-                clearsignedInputStream: InputStream,
-                messageOutputStream: OutputStream): PGPSignatureList {
-            val input: ArmoredInputStream = if (clearsignedInputStream is ArmoredInputStream) {
-                clearsignedInputStream
-            } else {
-                ArmoredInputStreamFactory.get(clearsignedInputStream)
-            }
+            clearsignedInputStream: InputStream,
+            messageOutputStream: OutputStream
+        ): PGPSignatureList {
+            val input: ArmoredInputStream =
+                if (clearsignedInputStream is ArmoredInputStream) {
+                    clearsignedInputStream
+                } else {
+                    ArmoredInputStreamFactory.get(clearsignedInputStream)
+                }
 
             if (!input.isClearText) {
-                throw WrongConsumingMethodException("Message isn't using the Cleartext Signature Framework.")
+                throw WrongConsumingMethodException(
+                    "Message isn't using the Cleartext Signature Framework.")
             }
 
             BufferedOutputStream(messageOutputStream).use { output ->
@@ -94,7 +96,11 @@ class ClearsignedMessageUtil {
         }
 
         @JvmStatic
-        private fun readInputLine(bOut: ByteArrayOutputStream, lookAhead: Int, fIn: InputStream): Int {
+        private fun readInputLine(
+            bOut: ByteArrayOutputStream,
+            lookAhead: Int,
+            fIn: InputStream
+        ): Int {
             var mLookAhead = lookAhead
             bOut.reset()
             var ch = mLookAhead

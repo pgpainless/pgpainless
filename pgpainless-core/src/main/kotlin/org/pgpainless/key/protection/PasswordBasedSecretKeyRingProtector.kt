@@ -10,54 +10,64 @@ import org.pgpainless.key.protection.passphrase_provider.SecretKeyPassphraseProv
 import org.pgpainless.util.Passphrase
 
 /**
- * Provides [PBESecretKeyDecryptor] and [PBESecretKeyEncryptor] objects while getting the passphrases
- * from a [SecretKeyPassphraseProvider] and using settings from an [KeyRingProtectionSettings].
+ * Provides [PBESecretKeyDecryptor] and [PBESecretKeyEncryptor] objects while getting the
+ * passphrases from a [SecretKeyPassphraseProvider] and using settings from an
+ * [KeyRingProtectionSettings].
  */
 class PasswordBasedSecretKeyRingProtector : BaseSecretKeyRingProtector {
 
-    constructor(passphraseProvider: SecretKeyPassphraseProvider): super(passphraseProvider)
+    constructor(passphraseProvider: SecretKeyPassphraseProvider) : super(passphraseProvider)
 
     /**
-     * Constructor.
-     * Passphrases for keys are sourced from the `passphraseProvider` and decryptors/encryptors are constructed
-     * following the settings given in `settings`.
+     * Constructor. Passphrases for keys are sourced from the `passphraseProvider` and
+     * decryptors/encryptors are constructed following the settings given in `settings`.
      *
      * @param settings S2K settings etc.
      * @param passphraseProvider provider which provides passphrases.
      */
-    constructor(settings: KeyRingProtectionSettings,
-                passphraseProvider: SecretKeyPassphraseProvider): super(passphraseProvider, settings)
+    constructor(
+        settings: KeyRingProtectionSettings,
+        passphraseProvider: SecretKeyPassphraseProvider
+    ) : super(passphraseProvider, settings)
 
     companion object {
         @JvmStatic
-        fun forKey(keyRing: PGPKeyRing, passphrase: Passphrase): PasswordBasedSecretKeyRingProtector {
+        fun forKey(
+            keyRing: PGPKeyRing,
+            passphrase: Passphrase
+        ): PasswordBasedSecretKeyRingProtector {
             return object : SecretKeyPassphraseProvider {
 
-                override fun getPassphraseFor(keyId: Long): Passphrase? {
-                    return if (hasPassphrase(keyId)) passphrase else null
-                }
+                    override fun getPassphraseFor(keyId: Long): Passphrase? {
+                        return if (hasPassphrase(keyId)) passphrase else null
+                    }
 
-                override fun hasPassphrase(keyId: Long): Boolean {
-                    return keyRing.getPublicKey(keyId) != null
+                    override fun hasPassphrase(keyId: Long): Boolean {
+                        return keyRing.getPublicKey(keyId) != null
+                    }
                 }
-            }.let { PasswordBasedSecretKeyRingProtector(it) }
+                .let { PasswordBasedSecretKeyRingProtector(it) }
         }
 
         @JvmStatic
         fun forKey(key: PGPSecretKey, passphrase: Passphrase): PasswordBasedSecretKeyRingProtector =
-                forKeyId(key.publicKey.keyID, passphrase)
+            forKeyId(key.publicKey.keyID, passphrase)
 
         @JvmStatic
-        fun forKeyId(singleKeyId: Long, passphrase: Passphrase): PasswordBasedSecretKeyRingProtector {
+        fun forKeyId(
+            singleKeyId: Long,
+            passphrase: Passphrase
+        ): PasswordBasedSecretKeyRingProtector {
             return object : SecretKeyPassphraseProvider {
-                override fun getPassphraseFor(keyId: Long): Passphrase? {
-                    return if (hasPassphrase(keyId)) passphrase else null
-                }
+                    override fun getPassphraseFor(keyId: Long): Passphrase? {
+                        return if (hasPassphrase(keyId)) passphrase else null
+                    }
 
-                override fun hasPassphrase(keyId: Long): Boolean {
-                    return keyId == singleKeyId
+                    override fun hasPassphrase(keyId: Long): Boolean {
+                        return keyId == singleKeyId
+                    }
                 }
-            }.let { PasswordBasedSecretKeyRingProtector(it) }
+                .let { PasswordBasedSecretKeyRingProtector(it) }
         }
     }
 }

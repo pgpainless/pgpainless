@@ -22,7 +22,6 @@ class ElGamal private constructor(length: ElGamalLength) : KeyType {
     override val algorithmSpec = ElGamalParameterSpec(length.p, length.g)
 
     companion object {
-        @JvmStatic
-        fun withLength(length: ElGamalLength) = ElGamal(length)
+        @JvmStatic fun withLength(length: ElGamalLength) = ElGamal(length)
     }
 }

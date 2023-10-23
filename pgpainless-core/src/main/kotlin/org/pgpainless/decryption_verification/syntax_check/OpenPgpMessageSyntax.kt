@@ -9,9 +9,10 @@ import org.pgpainless.exception.MalformedOpenPgpMessageException
 /**
  * This class describes the syntax for OpenPGP messages as specified by rfc4880.
  *
- * See [rfc4880 - §11.3. OpenPGP Messages](https://www.rfc-editor.org/rfc/rfc4880#section-11.3)
- * See [Blog post about theoretic background and translation of grammar to PDA syntax](https://blog.jabberhead.tk/2022/09/14/using-pushdown-automata-to-verify-packet-sequences/)
- * See [Blog post about practically implementing the PDA for packet syntax validation](https://blog.jabberhead.tk/2022/10/26/implementing-packet-sequence-validation-using-pushdown-automata/)
+ * See [rfc4880 - §11.3. OpenPGP Messages](https://www.rfc-editor.org/rfc/rfc4880#section-11.3) See
+ * [Blog post about theoretic background and translation of grammar to PDA syntax](https://blog.jabberhead.tk/2022/09/14/using-pushdown-automata-to-verify-packet-sequences/)
+ * See
+ * [Blog post about practically implementing the PDA for packet syntax validation](https://blog.jabberhead.tk/2022/10/26/implementing-packet-sequence-validation-using-pushdown-automata/)
  */
 class OpenPgpMessageSyntax : Syntax {
 
@@ -33,10 +34,12 @@ class OpenPgpMessageSyntax : Syntax {
         return when (input) {
             InputSymbol.LITERAL_DATA -> Transition(State.LITERAL_MESSAGE)
             InputSymbol.SIGNATURE -> Transition(State.OPENPGP_MESSAGE, StackSymbol.MSG)
-            InputSymbol.ONE_PASS_SIGNATURE -> Transition(State.OPENPGP_MESSAGE, StackSymbol.OPS, StackSymbol.MSG)
+            InputSymbol.ONE_PASS_SIGNATURE ->
+                Transition(State.OPENPGP_MESSAGE, StackSymbol.OPS, StackSymbol.MSG)
             InputSymbol.COMPRESSED_DATA -> Transition(State.COMPRESSED_MESSAGE)
             InputSymbol.ENCRYPTED_DATA -> Transition(State.ENCRYPTED_MESSAGE)
-            InputSymbol.END_OF_SEQUENCE -> throw MalformedOpenPgpMessageException(State.OPENPGP_MESSAGE, input, stackItem)
+            InputSymbol.END_OF_SEQUENCE ->
+                throw MalformedOpenPgpMessageException(State.OPENPGP_MESSAGE, input, stackItem)
             else -> throw MalformedOpenPgpMessageException(State.OPENPGP_MESSAGE, input, stackItem)
         }
     }

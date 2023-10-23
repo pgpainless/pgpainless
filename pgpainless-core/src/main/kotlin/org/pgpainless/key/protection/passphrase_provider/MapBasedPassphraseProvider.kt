@@ -7,10 +7,11 @@ package org.pgpainless.key.protection.passphrase_provider
 import org.pgpainless.util.Passphrase
 
 /**
- * Implementation of the [SecretKeyPassphraseProvider] that holds a map of key-IDs and respective [Passphrase].
- * It will return the right passphrase depending on the key-id.
+ * Implementation of the [SecretKeyPassphraseProvider] that holds a map of key-IDs and respective
+ * [Passphrase]. It will return the right passphrase depending on the key-id.
  *
  * Note: This provider might return null!
+ *
  * TODO: Make this null-safe and throw an exception instead?
  */
 class MapBasedPassphraseProvider(val map: Map<Long, Passphrase>) : SecretKeyPassphraseProvider {

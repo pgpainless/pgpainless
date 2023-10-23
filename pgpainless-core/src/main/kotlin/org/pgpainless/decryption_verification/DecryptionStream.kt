@@ -9,11 +9,11 @@ import java.io.InputStream
 /**
  * Abstract definition of an [InputStream] which can be used to decrypt / verify OpenPGP messages.
  */
-abstract class DecryptionStream: InputStream() {
+abstract class DecryptionStream : InputStream() {
 
     /**
-     * Return [MessageMetadata] about the decrypted / verified message.
-     * The [DecryptionStream] MUST be closed via [close] before the metadata object can be accessed.
+     * Return [MessageMetadata] about the decrypted / verified message. The [DecryptionStream] MUST
+     * be closed via [close] before the metadata object can be accessed.
      *
      * @return message metadata
      */

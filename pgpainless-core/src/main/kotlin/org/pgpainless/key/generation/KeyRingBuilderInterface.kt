@@ -4,12 +4,12 @@
 
 package org.pgpainless.key.generation
 
-import org.bouncycastle.openpgp.PGPException
-import org.bouncycastle.openpgp.PGPSecretKeyRing
-import org.pgpainless.util.Passphrase
 import java.security.InvalidAlgorithmParameterException
 import java.security.NoSuchAlgorithmException
 import java.util.*
+import org.bouncycastle.openpgp.PGPException
+import org.bouncycastle.openpgp.PGPSecretKeyRing
+import org.pgpainless.util.Passphrase
 
 interface KeyRingBuilderInterface<B : KeyRingBuilderInterface<B>> {
 
@@ -29,6 +29,9 @@ interface KeyRingBuilderInterface<B : KeyRingBuilderInterface<B>> {
 
     fun setPassphrase(passphrase: Passphrase): B
 
-    @Throws(NoSuchAlgorithmException::class, PGPException::class, InvalidAlgorithmParameterException::class)
+    @Throws(
+        NoSuchAlgorithmException::class,
+        PGPException::class,
+        InvalidAlgorithmParameterException::class)
     fun build(): PGPSecretKeyRing
 }

@@ -8,37 +8,41 @@ import org.pgpainless.exception.MalformedOpenPgpMessageException
 import org.slf4j.LoggerFactory
 
 /**
- * Pushdown Automaton for validating context-free languages.
- * In PGPainless, this class is used to validate OpenPGP message packet sequences against the allowed syntax.
+ * Pushdown Automaton for validating context-free languages. In PGPainless, this class is used to
+ * validate OpenPGP message packet sequences against the allowed syntax.
  *
  * See [OpenPGP Message Syntax](https://www.rfc-editor.org/rfc/rfc4880#section-11.3)
  */
-class PDA constructor(
-        private val syntax: Syntax,
-        private val stack: ArrayDeque<StackSymbol>,
-        private val inputs: MutableList<InputSymbol>,
-        private var state: State
+class PDA
+constructor(
+    private val syntax: Syntax,
+    private val stack: ArrayDeque<StackSymbol>,
+    private val inputs: MutableList<InputSymbol>,
+    private var state: State
 ) {
 
     /**
-     * Construct a PDA with a custom [Syntax], initial [State] and initial [StackSymbols][StackSymbol].
+     * Construct a PDA with a custom [Syntax], initial [State] and initial
+     * [StackSymbols][StackSymbol].
      *
      * @param syntax syntax
      * @param initialState initial state
-     * @param initialStack zero or more initial stack items (get pushed onto the stack in order of appearance)
+     * @param initialStack zero or more initial stack items (get pushed onto the stack in order of
+     *   appearance)
      */
-    constructor(syntax: Syntax, initialState: State, vararg initialStack: StackSymbol): this (
-            syntax, ArrayDeque(initialStack.toList().reversed()), mutableListOf(), initialState)
+    constructor(
+        syntax: Syntax,
+        initialState: State,
+        vararg initialStack: StackSymbol
+    ) : this(syntax, ArrayDeque(initialStack.toList().reversed()), mutableListOf(), initialState)
+
+    /** Default constructor which initializes the PDA to work with the [OpenPgpMessageSyntax]. */
+    constructor() :
+        this(OpenPgpMessageSyntax(), State.OPENPGP_MESSAGE, StackSymbol.TERMINUS, StackSymbol.MSG)
 
     /**
-     * Default constructor which initializes the PDA to work with the [OpenPgpMessageSyntax].
-     */
-    constructor(): this(OpenPgpMessageSyntax(), State.OPENPGP_MESSAGE, StackSymbol.TERMINUS, StackSymbol.MSG)
-
-    /**
-     * Process the next [InputSymbol].
-     * This will either leave the PDA in the next state, or throw a [MalformedOpenPgpMessageException] if the
-     * input symbol is rejected.
+     * Process the next [InputSymbol]. This will either leave the PDA in the next state, or throw a
+     * [MalformedOpenPgpMessageException] if the input symbol is rejected.
      *
      * @param input input symbol
      * @throws MalformedOpenPgpMessageException if the input symbol is rejected
@@ -53,14 +57,17 @@ class PDA constructor(
             }
             inputs.add(input)
         } catch (e: MalformedOpenPgpMessageException) {
-            val stackFormat = if (stackSymbol != null) {
-                "${stack.joinToString()}||$stackSymbol"
-            } else {
-                stack.joinToString()
-            }
-            val wrapped = MalformedOpenPgpMessageException(
+            val stackFormat =
+                if (stackSymbol != null) {
+                    "${stack.joinToString()}||$stackSymbol"
+                } else {
+                    stack.joinToString()
+                }
+            val wrapped =
+                MalformedOpenPgpMessageException(
                     "Malformed message: After reading packet sequence ${inputs.joinToString()}, token '$input' is not allowed.\n" +
-                            "No transition from state '$state' with stack $stackFormat", e)
+                        "No transition from state '$state' with stack $stackFormat",
+                    e)
             LOGGER.debug("Invalid input '$input'", wrapped)
             throw wrapped
         }
@@ -87,7 +94,8 @@ class PDA constructor(
      */
     fun assertValid() {
         if (!isValid()) {
-            throw MalformedOpenPgpMessageException("Pushdown Automaton is not in an acceptable state: ${toString()}")
+            throw MalformedOpenPgpMessageException(
+                "Pushdown Automaton is not in an acceptable state: ${toString()}")
         }
     }
 
@@ -114,7 +122,6 @@ class PDA constructor(
     }
 
     companion object {
-        @JvmStatic
-        private val LOGGER = LoggerFactory.getLogger(PDA::class.java)
+        @JvmStatic private val LOGGER = LoggerFactory.getLogger(PDA::class.java)
     }
 }

@@ -4,6 +4,9 @@
 
 package org.pgpainless.key.generation
 
+import java.io.IOException
+import java.security.KeyPairGenerator
+import java.util.*
 import org.bouncycastle.extensions.unlock
 import org.bouncycastle.openpgp.*
 import org.bouncycastle.openpgp.operator.PBESecretKeyDecryptor
@@ -21,10 +24,6 @@ import org.pgpainless.signature.subpackets.SelfSignatureSubpackets
 import org.pgpainless.signature.subpackets.SignatureSubpackets
 import org.pgpainless.signature.subpackets.SignatureSubpacketsHelper
 import org.pgpainless.util.Passphrase
-import java.io.IOException
-import java.security.KeyPairGenerator
-import java.util.*
-
 
 class KeyRingBuilder : KeyRingBuilderInterface<KeyRingBuilder> {
 
@@ -49,19 +48,19 @@ class KeyRingBuilder : KeyRingBuilderInterface<KeyRingBuilder> {
         userIds[userId.toString().trim()] = null
     }
 
-    override fun addUserId(userId: ByteArray): KeyRingBuilder = addUserId(Strings.fromUTF8ByteArray(userId))
+    override fun addUserId(userId: ByteArray): KeyRingBuilder =
+        addUserId(Strings.fromUTF8ByteArray(userId))
 
     override fun setExpirationDate(expirationDate: Date?): KeyRingBuilder = apply {
         if (expirationDate == null) {
             this.expirationDate = null
             return@apply
         }
-        this.expirationDate = expirationDate.let {
-            require(Date() < expirationDate) {
-                "Expiration date must be in the future."
+        this.expirationDate =
+            expirationDate.let {
+                require(Date() < expirationDate) { "Expiration date must be in the future." }
+                expirationDate
             }
-            expirationDate
-        }
     }
 
     override fun setPassphrase(passphrase: Passphrase): KeyRingBuilder = apply {
@@ -85,17 +84,14 @@ class KeyRingBuilder : KeyRingBuilderInterface<KeyRingBuilder> {
     private fun keyIsCertificationCapable(keySpec: KeySpec) = keySpec.keyType.canCertify
 
     override fun build(): PGPSecretKeyRing {
-        val keyFingerprintCalculator = ImplementationFactory.getInstance()
-                .v4FingerprintCalculator
+        val keyFingerprintCalculator = ImplementationFactory.getInstance().v4FingerprintCalculator
         val secretKeyEncryptor = buildSecretKeyEncryptor(keyFingerprintCalculator)
         val secretKeyDecryptor = buildSecretKeyDecryptor()
 
         passphrase.clear() // Passphrase was used above, so we can get rid of it
 
         // generate primary key
-        requireNotNull(primaryKeySpec) {
-            "Primary Key spec required."
-        }
+        requireNotNull(primaryKeySpec) { "Primary Key spec required." }
         val certKey = generateKeyPair(primaryKeySpec!!)
         val signer = buildContentSigner(certKey)
         val signatureGenerator = PGPSignatureGenerator(signer)
@@ -110,16 +106,28 @@ class KeyRingBuilder : KeyRingBuilderInterface<KeyRingBuilder> {
         val generator = PGPSignatureSubpacketGenerator()
         SignatureSubpacketsHelper.applyTo(hashedSubPacketGenerator, generator)
         val hashedSubPackets = generator.generate()
-        val ringGenerator = if (userIds.isEmpty()) {
-            PGPKeyRingGenerator(certKey, keyFingerprintCalculator, hashedSubPackets, null, signer,
+        val ringGenerator =
+            if (userIds.isEmpty()) {
+                PGPKeyRingGenerator(
+                    certKey,
+                    keyFingerprintCalculator,
+                    hashedSubPackets,
+                    null,
+                    signer,
                     secretKeyEncryptor)
-        } else {
-            userIds.keys.first().let { primaryUserId ->
-                PGPKeyRingGenerator(SignatureType.POSITIVE_CERTIFICATION.code, certKey, primaryUserId,
-                        keyFingerprintCalculator, hashedSubPackets, null, signer,
+            } else {
+                userIds.keys.first().let { primaryUserId ->
+                    PGPKeyRingGenerator(
+                        SignatureType.POSITIVE_CERTIFICATION.code,
+                        certKey,
+                        primaryUserId,
+                        keyFingerprintCalculator,
+                        hashedSubPackets,
+                        null,
+                        signer,
                         secretKeyEncryptor)
+                }
             }
-        }
 
         addSubKeys(certKey, ringGenerator)
 
@@ -138,20 +146,26 @@ class KeyRingBuilder : KeyRingBuilderInterface<KeyRingBuilder> {
             val additionalUserId = userIdIterator.next()
             val userIdString = additionalUserId.key
             val callback = additionalUserId.value
-            val subpackets = if (callback == null) {
-                hashedSubPacketGenerator.also { it.setPrimaryUserId(null) }
-            } else {
-                SignatureSubpackets.createHashedSubpackets(primaryPubKey).also { callback.modifyHashedSubpackets(it) }
-            }
+            val subpackets =
+                if (callback == null) {
+                    hashedSubPacketGenerator.also { it.setPrimaryUserId(null) }
+                } else {
+                    SignatureSubpackets.createHashedSubpackets(primaryPubKey).also {
+                        callback.modifyHashedSubpackets(it)
+                    }
+                }
             signatureGenerator.init(SignatureType.POSITIVE_CERTIFICATION.code, privateKey)
-            signatureGenerator.setHashedSubpackets(
-                    SignatureSubpacketsHelper.toVector(subpackets))
-            val additionalUserIdSignature = signatureGenerator.generateCertification(userIdString, primaryPubKey)
-            primaryPubKey = PGPPublicKey.addCertification(primaryPubKey, userIdString, additionalUserIdSignature)
+            signatureGenerator.setHashedSubpackets(SignatureSubpacketsHelper.toVector(subpackets))
+            val additionalUserIdSignature =
+                signatureGenerator.generateCertification(userIdString, primaryPubKey)
+            primaryPubKey =
+                PGPPublicKey.addCertification(
+                    primaryPubKey, userIdString, additionalUserIdSignature)
         }
 
         // Reassemble secret key ring with modified primary key
-        val primarySecretKey = PGPSecretKey(
+        val primarySecretKey =
+            PGPSecretKey(
                 privateKey, primaryPubKey, keyFingerprintCalculator, true, secretKeyEncryptor)
         val secretKeyList = mutableListOf(primarySecretKey)
         while (secretKeys.hasNext()) {
@@ -168,25 +182,34 @@ class KeyRingBuilder : KeyRingBuilderInterface<KeyRingBuilder> {
             } else {
                 var hashedSubpackets = subKeySpec.subpackets
                 try {
-                    hashedSubpackets = addPrimaryKeyBindingSignatureIfNecessary(primaryKey, subKey, hashedSubpackets)
+                    hashedSubpackets =
+                        addPrimaryKeyBindingSignatureIfNecessary(
+                            primaryKey, subKey, hashedSubpackets)
                 } catch (e: IOException) {
-                    throw PGPException("Exception while adding primary key binding signature to signing subkey.", e)
+                    throw PGPException(
+                        "Exception while adding primary key binding signature to signing subkey.",
+                        e)
                 }
                 ringGenerator.addSubKey(subKey, hashedSubpackets, null)
             }
         }
     }
 
-    private fun addPrimaryKeyBindingSignatureIfNecessary(primaryKey: PGPKeyPair, subKey: PGPKeyPair, hashedSubpackets: PGPSignatureSubpacketVector): PGPSignatureSubpacketVector {
+    private fun addPrimaryKeyBindingSignatureIfNecessary(
+        primaryKey: PGPKeyPair,
+        subKey: PGPKeyPair,
+        hashedSubpackets: PGPSignatureSubpacketVector
+    ): PGPSignatureSubpacketVector {
         val keyFlagMask = hashedSubpackets.keyFlags
         if (!KeyFlag.hasKeyFlag(keyFlagMask, KeyFlag.SIGN_DATA) &&
-                !KeyFlag.hasKeyFlag(keyFlagMask, KeyFlag.CERTIFY_OTHER)) {
+            !KeyFlag.hasKeyFlag(keyFlagMask, KeyFlag.CERTIFY_OTHER)) {
             return hashedSubpackets
         }
 
         val bindingSignatureGenerator = PGPSignatureGenerator(buildContentSigner(subKey))
         bindingSignatureGenerator.init(SignatureType.PRIMARYKEY_BINDING.code, subKey.privateKey)
-        val primaryKeyBindingSig = bindingSignatureGenerator.generateCertification(primaryKey.publicKey, subKey.publicKey)
+        val primaryKeyBindingSig =
+            bindingSignatureGenerator.generateCertification(primaryKey.publicKey, subKey.publicKey)
         val subpacketGenerator = PGPSignatureSubpacketGenerator(hashedSubpackets)
         subpacketGenerator.addEmbeddedSignature(false, primaryKeyBindingSig)
         return subpacketGenerator.generate()
@@ -194,25 +217,29 @@ class KeyRingBuilder : KeyRingBuilderInterface<KeyRingBuilder> {
 
     private fun buildContentSigner(certKey: PGPKeyPair): PGPContentSignerBuilder {
         val hashAlgorithm = PGPainless.getPolicy().signatureHashAlgorithmPolicy.defaultHashAlgorithm
-        return ImplementationFactory.getInstance().getPGPContentSignerBuilder(
-                certKey.publicKey.algorithm, hashAlgorithm.algorithmId)
+        return ImplementationFactory.getInstance()
+            .getPGPContentSignerBuilder(certKey.publicKey.algorithm, hashAlgorithm.algorithmId)
     }
 
-    private fun buildSecretKeyEncryptor(keyFingerprintCalculator: PGPDigestCalculator): PBESecretKeyEncryptor? {
-        val keyEncryptionAlgorithm = PGPainless.getPolicy().symmetricKeyEncryptionAlgorithmPolicy.defaultSymmetricKeyAlgorithm
-        check(passphrase.isValid) {
-            "Passphrase was cleared."
-        }
-        return if (passphrase.isEmpty) null else ImplementationFactory.getInstance()
-                .getPBESecretKeyEncryptor(keyEncryptionAlgorithm, keyFingerprintCalculator, passphrase)
+    private fun buildSecretKeyEncryptor(
+        keyFingerprintCalculator: PGPDigestCalculator
+    ): PBESecretKeyEncryptor? {
+        val keyEncryptionAlgorithm =
+            PGPainless.getPolicy()
+                .symmetricKeyEncryptionAlgorithmPolicy
+                .defaultSymmetricKeyAlgorithm
+        check(passphrase.isValid) { "Passphrase was cleared." }
+        return if (passphrase.isEmpty) null
+        else
+            ImplementationFactory.getInstance()
+                .getPBESecretKeyEncryptor(
+                    keyEncryptionAlgorithm, keyFingerprintCalculator, passphrase)
     }
 
     private fun buildSecretKeyDecryptor(): PBESecretKeyDecryptor? {
-        check(passphrase.isValid) {
-            "Passphrase was cleared."
-        }
-        return if (passphrase.isEmpty) null else ImplementationFactory.getInstance()
-                .getPBESecretKeyDecryptor(passphrase)
+        check(passphrase.isValid) { "Passphrase was cleared." }
+        return if (passphrase.isEmpty) null
+        else ImplementationFactory.getInstance().getPBESecretKeyDecryptor(passphrase)
     }
 
     companion object {
@@ -222,16 +249,16 @@ class KeyRingBuilder : KeyRingBuilderInterface<KeyRingBuilder> {
         fun generateKeyPair(spec: KeySpec): PGPKeyPair {
             spec.keyType.let { type ->
                 // Create raw Key Pair
-                val keyPair = KeyPairGenerator.getInstance(type.name, ProviderFactory.provider)
-                .also { it.initialize(type.algorithmSpec) }
-                .generateKeyPair()
+                val keyPair =
+                    KeyPairGenerator.getInstance(type.name, ProviderFactory.provider)
+                        .also { it.initialize(type.algorithmSpec) }
+                        .generateKeyPair()
 
                 val keyCreationDate = spec.keyCreationDate ?: Date()
                 // Form PGP Key Pair
                 return ImplementationFactory.getInstance()
-                        .getPGPKeyPair(type.algorithm, keyPair, keyCreationDate)
+                    .getPGPKeyPair(type.algorithm, keyPair, keyCreationDate)
             }
         }
     }
-
 }

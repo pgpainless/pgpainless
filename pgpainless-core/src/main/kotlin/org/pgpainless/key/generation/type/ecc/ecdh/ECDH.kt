@@ -16,7 +16,6 @@ class ECDH private constructor(val curve: EllipticCurve) : KeyType {
     override val algorithmSpec = ECNamedCurveGenParameterSpec(curve.curveName)
 
     companion object {
-        @JvmStatic
-        fun fromCurve(curve: EllipticCurve) = ECDH(curve)
+        @JvmStatic fun fromCurve(curve: EllipticCurve) = ECDH(curve)
     }
 }

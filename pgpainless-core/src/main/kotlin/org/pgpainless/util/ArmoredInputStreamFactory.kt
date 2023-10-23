@@ -4,14 +4,14 @@
 
 package org.pgpainless.util
 
-import org.bouncycastle.bcpg.ArmoredInputStream
-import org.pgpainless.decryption_verification.ConsumerOptions
 import java.io.IOException
 import java.io.InputStream
+import org.bouncycastle.bcpg.ArmoredInputStream
+import org.pgpainless.decryption_verification.ConsumerOptions
 
 /**
- * Factory class for instantiating preconfigured [ArmoredInputStream] instances.
- * [get] will return an [ArmoredInputStream] that is set up to properly detect CRC errors v4 style.
+ * Factory class for instantiating preconfigured [ArmoredInputStream] instances. [get] will return
+ * an [ArmoredInputStream] that is set up to properly detect CRC errors v4 style.
  */
 class ArmoredInputStreamFactory {
 
@@ -31,13 +31,14 @@ class ArmoredInputStreamFactory {
             return when (inputStream) {
                 is CRCingArmoredInputStreamWrapper -> inputStream
                 is ArmoredInputStream -> CRCingArmoredInputStreamWrapper(inputStream)
-                else -> CRCingArmoredInputStreamWrapper(
-                        ArmoredInputStream.builder().apply {
-                            setParseForHeaders(true)
-                            options?.let {
-                                setIgnoreCRC(it.isDisableAsciiArmorCRC)
+                else ->
+                    CRCingArmoredInputStreamWrapper(
+                        ArmoredInputStream.builder()
+                            .apply {
+                                setParseForHeaders(true)
+                                options?.let { setIgnoreCRC(it.isDisableAsciiArmorCRC) }
                             }
-                        }.build(inputStream))
+                            .build(inputStream))
             }
         }
     }

@@ -4,6 +4,10 @@
 
 package org.pgpainless.key.util
 
+import java.io.ByteArrayOutputStream
+import java.io.IOException
+import java.math.BigInteger
+import java.security.SecureRandom
 import org.bouncycastle.bcpg.*
 import org.bouncycastle.extensions.publicKeyAlgorithm
 import org.bouncycastle.openpgp.*
@@ -15,16 +19,12 @@ import org.pgpainless.algorithm.SignatureType
 import org.pgpainless.algorithm.SymmetricKeyAlgorithm
 import org.pgpainless.exception.KeyIntegrityException
 import org.pgpainless.implementation.ImplementationFactory.Companion.getInstance
-import java.io.ByteArrayOutputStream
-import java.io.IOException
-import java.math.BigInteger
-import java.security.SecureRandom
 
 /**
- * Utility class to verify keys against Key Overwriting (KO) attacks.
- * This class of attacks is only possible if the attacker has access to the (encrypted) secret key material.
- * To execute the attack, they would modify the unauthenticated parameters of the users public key.
- * Using the modified public key in combination with the unmodified secret key material can then lead to the
+ * Utility class to verify keys against Key Overwriting (KO) attacks. This class of attacks is only
+ * possible if the attacker has access to the (encrypted) secret key material. To execute the
+ * attack, they would modify the unauthenticated parameters of the users public key. Using the
+ * modified public key in combination with the unmodified secret key material can then lead to the
  * extraction of secret key parameters via weakly crafted messages.
  *
  * @see <a href="https://www.kopenpgp.com/">Key Overwriting (KO) Attacks against OpenPGP</a>
@@ -41,19 +41,32 @@ class PublicKeyParameterValidationUtil {
             val key = privateKey.privateKeyDataPacket
             when (privateKey.privateKeyDataPacket) {
                 is RSASecretBCPGKey ->
-                    valid = verifyRSAKeyIntegrity(key as RSASecretBCPGKey, publicKey.publicKeyPacket.key as RSAPublicBCPGKey)
+                    valid =
+                        verifyRSAKeyIntegrity(
+                            key as RSASecretBCPGKey,
+                            publicKey.publicKeyPacket.key as RSAPublicBCPGKey)
                 is EdSecretBCPGKey ->
-                    valid = verifyEdDsaKeyIntegrity(key as EdSecretBCPGKey, publicKey.publicKeyPacket.key as EdDSAPublicBCPGKey)
+                    valid =
+                        verifyEdDsaKeyIntegrity(
+                            key as EdSecretBCPGKey,
+                            publicKey.publicKeyPacket.key as EdDSAPublicBCPGKey)
                 is DSASecretBCPGKey ->
-                    valid = verifyDsaKeyIntegrity(key as DSASecretBCPGKey, publicKey.publicKeyPacket.key as DSAPublicBCPGKey)
+                    valid =
+                        verifyDsaKeyIntegrity(
+                            key as DSASecretBCPGKey,
+                            publicKey.publicKeyPacket.key as DSAPublicBCPGKey)
                 is ElGamalSecretBCPGKey ->
-                    valid = verifyElGamalKeyIntegrity(key as ElGamalSecretBCPGKey, publicKey.publicKeyPacket.key as ElGamalPublicBCPGKey)
+                    valid =
+                        verifyElGamalKeyIntegrity(
+                            key as ElGamalSecretBCPGKey,
+                            publicKey.publicKeyPacket.key as ElGamalPublicBCPGKey)
             }
 
             if (!valid) throw KeyIntegrityException()
 
             // Additional to the algorithm-specific tests further above, we also perform
-            // generic functionality tests with the key, such as whether it is able to decrypt encrypted data
+            // generic functionality tests with the key, such as whether it is able to decrypt
+            // encrypted data
             // or verify signatures.
             // These tests should be more or less constant time.
             if (algorithm.isSigningCapable()) {
@@ -68,21 +81,30 @@ class PublicKeyParameterValidationUtil {
 
         @JvmStatic
         @Throws(KeyIntegrityException::class)
-        private fun verifyRSAKeyIntegrity(secretKey: RSASecretBCPGKey, publicKey: RSAPublicBCPGKey): Boolean {
+        private fun verifyRSAKeyIntegrity(
+            secretKey: RSASecretBCPGKey,
+            publicKey: RSAPublicBCPGKey
+        ): Boolean {
             // Verify that the public keys N is equal to private keys p*q
             return publicKey.modulus.equals(secretKey.primeP.multiply(secretKey.primeQ))
         }
 
         @JvmStatic
         @Throws(KeyIntegrityException::class)
-        private fun verifyEdDsaKeyIntegrity(secretKey: EdSecretBCPGKey, publicKey: EdDSAPublicBCPGKey): Boolean {
+        private fun verifyEdDsaKeyIntegrity(
+            secretKey: EdSecretBCPGKey,
+            publicKey: EdDSAPublicBCPGKey
+        ): Boolean {
             // TODO: Implement
             return true
         }
 
         @JvmStatic
         @Throws(KeyIntegrityException::class)
-        private fun verifyDsaKeyIntegrity(privateKey: DSASecretBCPGKey, publicKey: DSAPublicBCPGKey): Boolean {
+        private fun verifyDsaKeyIntegrity(
+            privateKey: DSASecretBCPGKey,
+            publicKey: DSAPublicBCPGKey
+        ): Boolean {
             // Not sure what value to put here in order to have a "robust" primality check
             // I went with 40, since that's what SO recommends:
             // https://stackoverflow.com/a/6330138
@@ -134,15 +156,20 @@ class PublicKeyParameterValidationUtil {
         /**
          * Validate ElGamal public key parameters.
          *
-         * Original implementation by the openpgpjs authors:
-         * <a href="https://github.com/openpgpjs/openpgpjs/blob/main/src/crypto/public_key/elgamal.js#L76-L143>OpenPGP.js source</a>
+         * Original implementation by the openpgpjs authors: <a
+         * href="https://github.com/openpgpjs/openpgpjs/blob/main/src/crypto/public_key/elgamal.js#L76-L143>OpenPGP.js
+         * source</a>
+         *
          * @param secretKey secret key
          * @param publicKey public key
          * @return true if supposedly valid, false if invalid
          */
         @JvmStatic
         @Throws(KeyIntegrityException::class)
-        private fun verifyElGamalKeyIntegrity(secretKey: ElGamalSecretBCPGKey, publicKey: ElGamalPublicBCPGKey): Boolean {
+        private fun verifyElGamalKeyIntegrity(
+            secretKey: ElGamalSecretBCPGKey,
+            publicKey: ElGamalPublicBCPGKey
+        ): Boolean {
             val p = publicKey.p
             val g = publicKey.g
             val y = publicKey.y
@@ -185,7 +212,9 @@ class PublicKeyParameterValidationUtil {
         }
 
         /**
-         * Verify that the public key can be used to successfully verify a signature made by the private key.
+         * Verify that the public key can be used to successfully verify a signature made by the
+         * private key.
+         *
          * @param privateKey private key
          * @param publicKey public key
          * @return false if signature verification fails
@@ -193,16 +222,23 @@ class PublicKeyParameterValidationUtil {
         @JvmStatic
         private fun verifyCanSign(privateKey: PGPPrivateKey, publicKey: PGPPublicKey): Boolean {
             val data = ByteArray(512).also { SecureRandom().nextBytes(it) }
-            val signatureGenerator = PGPSignatureGenerator(
-                    getInstance().getPGPContentSignerBuilder(requireFromId(publicKey.algorithm), HashAlgorithm.SHA256))
+            val signatureGenerator =
+                PGPSignatureGenerator(
+                    getInstance()
+                        .getPGPContentSignerBuilder(
+                            requireFromId(publicKey.algorithm), HashAlgorithm.SHA256))
             return try {
-                signatureGenerator.apply {
-                    init(SignatureType.TIMESTAMP.code, privateKey)
-                    update(data)
-                }.generate().apply {
-                    init(getInstance().pgpContentVerifierBuilderProvider, publicKey)
-                    update(data)
-                }.verify()
+                signatureGenerator
+                    .apply {
+                        init(SignatureType.TIMESTAMP.code, privateKey)
+                        update(data)
+                    }
+                    .generate()
+                    .apply {
+                        init(getInstance().pgpContentVerifierBuilderProvider, publicKey)
+                        update(data)
+                    }
+                    .verify()
             } catch (e: PGPException) {
                 false
             }
@@ -211,6 +247,7 @@ class PublicKeyParameterValidationUtil {
         /**
          * Verify that the public key can be used to encrypt a message which can successfully be
          * decrypted using the private key.
+         *
          * @param privateKey private key
          * @param publicKey public key
          * @return false if decryption of a message encrypted with the public key fails
@@ -218,10 +255,12 @@ class PublicKeyParameterValidationUtil {
         @JvmStatic
         private fun verifyCanDecrypt(privateKey: PGPPrivateKey, publicKey: PGPPublicKey): Boolean {
             val data = ByteArray(1024).also { SecureRandom().nextBytes(it) }
-            val encryptedDataGenerator = PGPEncryptedDataGenerator(
-                    getInstance().getPGPDataEncryptorBuilder(SymmetricKeyAlgorithm.AES_256)).apply {
-                addMethod(getInstance().getPublicKeyKeyEncryptionMethodGenerator(publicKey))
-            }
+            val encryptedDataGenerator =
+                PGPEncryptedDataGenerator(
+                        getInstance().getPGPDataEncryptorBuilder(SymmetricKeyAlgorithm.AES_256))
+                    .apply {
+                        addMethod(getInstance().getPublicKeyKeyEncryptionMethodGenerator(publicKey))
+                    }
 
             var out = ByteArrayOutputStream()
             try {
@@ -230,7 +269,8 @@ class PublicKeyParameterValidationUtil {
                 encryptedDataGenerator.close()
                 val encryptedDataList = PGPEncryptedDataList(out.toByteArray())
                 val decryptorFactory = getInstance().getPublicKeyDataDecryptorFactory(privateKey)
-                val encryptedData = encryptedDataList.encryptedDataObjects.next() as PGPPublicKeyEncryptedData
+                val encryptedData =
+                    encryptedDataList.encryptedDataObjects.next() as PGPPublicKeyEncryptedData
                 val decrypted = encryptedData.getDataStream(decryptorFactory)
                 out = ByteArrayOutputStream()
                 Streams.pipeAll(decrypted, out)

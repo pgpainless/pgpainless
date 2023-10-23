@@ -4,7 +4,8 @@
 package org.pgpainless.key.protection
 
 /**
- * Implementation of the [SecretKeyRingProtector] which assumes that all handled keys are not password protected.
+ * Implementation of the [SecretKeyRingProtector] which assumes that all handled keys are not
+ * password protected.
  */
 class UnprotectedKeysProtector : SecretKeyRingProtector {
     override fun hasPassphraseFor(keyId: Long) = true

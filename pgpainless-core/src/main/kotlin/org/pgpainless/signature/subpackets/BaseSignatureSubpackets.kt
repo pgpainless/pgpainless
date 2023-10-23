@@ -4,14 +4,14 @@
 
 package org.pgpainless.signature.subpackets
 
+import java.io.IOException
+import java.net.URL
+import java.util.*
 import org.bouncycastle.bcpg.sig.*
 import org.bouncycastle.openpgp.PGPPublicKey
 import org.bouncycastle.openpgp.PGPSignature
 import org.pgpainless.algorithm.HashAlgorithm
 import org.pgpainless.algorithm.PublicKeyAlgorithm
-import java.io.IOException
-import java.net.URL
-import java.util.*
 
 interface BaseSignatureSubpackets {
 
@@ -22,9 +22,8 @@ interface BaseSignatureSubpackets {
      *
      * @param key key
      * @return this
-     *
-     * @deprecated this method MUST NOT be used for OpenPGP v6, since v6 signatures MUST NOT contain any
-     * [IssuerKeyID] packets.
+     * @deprecated this method MUST NOT be used for OpenPGP v6, since v6 signatures MUST NOT contain
+     *   any [IssuerKeyID] packets.
      */
     fun setIssuerFingerprintAndKeyId(key: PGPPublicKey): BaseSignatureSubpackets
 
@@ -46,13 +45,22 @@ interface BaseSignatureSubpackets {
 
     fun setSignatureCreationTime(creationTime: SignatureCreationTime?): BaseSignatureSubpackets
 
-    fun setSignatureExpirationTime(creationTime: Date, expirationTime: Date?): BaseSignatureSubpackets
+    fun setSignatureExpirationTime(
+        creationTime: Date,
+        expirationTime: Date?
+    ): BaseSignatureSubpackets
 
-    fun setSignatureExpirationTime(isCritical: Boolean, creationTime: Date, expirationTime: Date?): BaseSignatureSubpackets
+    fun setSignatureExpirationTime(
+        isCritical: Boolean,
+        creationTime: Date,
+        expirationTime: Date?
+    ): BaseSignatureSubpackets
 
     fun setSignatureExpirationTime(isCritical: Boolean, seconds: Long): BaseSignatureSubpackets
 
-    fun setSignatureExpirationTime(expirationTime: SignatureExpirationTime?): BaseSignatureSubpackets
+    fun setSignatureExpirationTime(
+        expirationTime: SignatureExpirationTime?
+    ): BaseSignatureSubpackets
 
     fun setSignerUserId(userId: CharSequence): BaseSignatureSubpackets
 
@@ -60,9 +68,18 @@ interface BaseSignatureSubpackets {
 
     fun setSignerUserId(signerUserID: SignerUserID?): BaseSignatureSubpackets
 
-    fun addNotationData(isCritical: Boolean, notationName: String, notationValue: String): BaseSignatureSubpackets
+    fun addNotationData(
+        isCritical: Boolean,
+        notationName: String,
+        notationValue: String
+    ): BaseSignatureSubpackets
 
-    fun addNotationData(isCritical: Boolean, isHumanReadable: Boolean, notationName: String, notationValue: String): BaseSignatureSubpackets
+    fun addNotationData(
+        isCritical: Boolean,
+        isHumanReadable: Boolean,
+        notationName: String,
+        notationValue: String
+    ): BaseSignatureSubpackets
 
     fun addNotationData(notationData: NotationData): BaseSignatureSubpackets
 
@@ -70,9 +87,14 @@ interface BaseSignatureSubpackets {
 
     fun addIntendedRecipientFingerprint(recipientKey: PGPPublicKey): BaseSignatureSubpackets
 
-    fun addIntendedRecipientFingerprint(isCritical: Boolean, recipientKey: PGPPublicKey): BaseSignatureSubpackets
+    fun addIntendedRecipientFingerprint(
+        isCritical: Boolean,
+        recipientKey: PGPPublicKey
+    ): BaseSignatureSubpackets
 
-    fun addIntendedRecipientFingerprint(intendedRecipient: IntendedRecipientFingerprint): BaseSignatureSubpackets
+    fun addIntendedRecipientFingerprint(
+        intendedRecipient: IntendedRecipientFingerprint
+    ): BaseSignatureSubpackets
 
     fun clearIntendedRecipientFingerprints(): BaseSignatureSubpackets
 
@@ -104,9 +126,18 @@ interface BaseSignatureSubpackets {
 
     fun setRevocable(revocable: Revocable?): BaseSignatureSubpackets
 
-    fun setSignatureTarget(keyAlgorithm: PublicKeyAlgorithm, hashAlgorithm: HashAlgorithm, hashData: ByteArray): BaseSignatureSubpackets
+    fun setSignatureTarget(
+        keyAlgorithm: PublicKeyAlgorithm,
+        hashAlgorithm: HashAlgorithm,
+        hashData: ByteArray
+    ): BaseSignatureSubpackets
 
-    fun setSignatureTarget(isCritical: Boolean, keyAlgorithm: PublicKeyAlgorithm, hashAlgorithm: HashAlgorithm, hashData: ByteArray): BaseSignatureSubpackets
+    fun setSignatureTarget(
+        isCritical: Boolean,
+        keyAlgorithm: PublicKeyAlgorithm,
+        hashAlgorithm: HashAlgorithm,
+        hashData: ByteArray
+    ): BaseSignatureSubpackets
 
     fun setSignatureTarget(signatureTarget: SignatureTarget?): BaseSignatureSubpackets
 
