@@ -9,6 +9,11 @@ Source: https://pgpainless.org
 # Copyright: $YEAR $NAME <$CONTACT>
 # License: ...
 
+# GitBlameIgnore
+Files: .git-blame-ignore-revs
+Copyright: 2023 Paul Schaub <info@pgpainless.org>
+License: CC0-1.0
+
 # Documentation
 Files: docs/*
 Copyright: 2022 Paul Schaub <info@pgpainless.org>
@@ -21,6 +26,11 @@ License: CC0-1.0
 # Gradle build tool
 Files: gradle*
 Copyright: 2015 the original author or authors.
+License: Apache-2.0
+
+# Editorconfig
+Files: .editorconfig
+Copyright: Facebook
 License: Apache-2.0
 
 # PGPainless Logo
