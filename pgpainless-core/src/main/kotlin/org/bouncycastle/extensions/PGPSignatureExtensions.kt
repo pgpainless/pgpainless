@@ -8,6 +8,8 @@ import java.util.*
 import openpgp.plusSeconds
 import org.bouncycastle.openpgp.PGPPublicKey
 import org.bouncycastle.openpgp.PGPSignature
+import org.pgpainless.algorithm.HashAlgorithm
+import org.pgpainless.algorithm.PublicKeyAlgorithm
 import org.pgpainless.algorithm.RevocationState
 import org.pgpainless.algorithm.SignatureType
 import org.pgpainless.key.OpenPgpFingerprint
@@ -94,3 +96,12 @@ fun PGPSignature?.toRevocationState() =
 
 val PGPSignature.fingerprint: OpenPgpFingerprint?
     get() = SignatureSubpacketsUtil.getIssuerFingerprintAsOpenPgpFingerprint(this)
+
+val PGPSignature.publicKeyAlgorithm: PublicKeyAlgorithm
+    get() = PublicKeyAlgorithm.requireFromId(keyAlgorithm)
+
+val PGPSignature.signatureHashAlgorithm: HashAlgorithm
+    get() = HashAlgorithm.requireFromId(hashAlgorithm)
+
+fun PGPSignature.isOfType(type: SignatureType): Boolean =
+    SignatureType.requireFromCode(signatureType) == type
