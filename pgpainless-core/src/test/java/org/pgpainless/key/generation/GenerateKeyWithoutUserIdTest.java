@@ -14,7 +14,7 @@ import org.pgpainless.PGPainless;
 import org.pgpainless.algorithm.KeyFlag;
 import org.pgpainless.decryption_verification.ConsumerOptions;
 import org.pgpainless.decryption_verification.DecryptionStream;
-import org.pgpainless.decryption_verification.OpenPgpMetadata;
+import org.pgpainless.decryption_verification.MessageMetadata;
 import org.pgpainless.decryption_verification.SignatureVerification;
 import org.pgpainless.encryption_signing.EncryptionOptions;
 import org.pgpainless.encryption_signing.EncryptionResult;
@@ -88,10 +88,10 @@ public class GenerateKeyWithoutUserIdTest {
         Streams.pipeAll(decryptionStream, plaintextOut);
         decryptionStream.close();
 
-        OpenPgpMetadata metadata = decryptionStream.getResult();
+        MessageMetadata metadata = decryptionStream.getMetadata();
 
-        assertTrue(metadata.containsVerifiedSignatureFrom(certificate),
-                failuresToString(metadata.getInvalidInbandSignatures()));
+        assertTrue(metadata.isVerifiedSignedBy(certificate),
+                failuresToString(metadata.getRejectedInlineSignatures()));
         assertTrue(metadata.isEncrypted());
     }
 

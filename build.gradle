@@ -18,7 +18,8 @@ buildscript {
 }
 
 plugins {
-    id 'ru.vyarus.animalsniffer' version '1.5.3'
+    id 'org.jetbrains.kotlin.jvm' version "1.8.10"
+    id 'com.diffplug.spotless' version '6.22.0' apply false
 }
 
 apply from: 'version.gradle'
@@ -29,6 +30,8 @@ allprojects {
     apply plugin: 'eclipse'
     apply plugin: 'jacoco'
     apply plugin: 'checkstyle'
+    apply plugin: 'kotlin'
+    apply plugin: 'com.diffplug.spotless'
 
     compileJava {
         options.release = 8
@@ -41,21 +44,15 @@ allprojects {
         onlyIf { !sourceSets.main.allSource.files.isEmpty() }
     }
 
-    // For library modules, enable android api compatibility check
-    if (it.name != 'pgpainless-cli') {
-        // animalsniffer
-        apply plugin: 'ru.vyarus.animalsniffer'
-        dependencies {
-            signature "net.sf.androidscents.signature:android-api-level-${pgpainlessMinAndroidSdk}:2.3.3_r2@signature"
-        }
-        animalsniffer {
-            sourceSets = [sourceSets.main]
-        }
-    }
-
     // checkstyle
     checkstyle {
         toolVersion = '10.12.1'
+    }
+
+    spotless {
+      kotlin {
+        ktfmt().dropboxStyle()
+      }
     }
 
     group 'org.pgpainless'
@@ -76,6 +73,13 @@ allprojects {
 
         dirMode = 0755
         fileMode = 0644
+    }
+
+    // Compatibility of default implementations in kotlin interfaces with Java implementations.
+    tasks.withType(org.jetbrains.kotlin.gradle.tasks.KotlinCompile).configureEach {
+        kotlinOptions {
+            freeCompilerArgs += ["-Xjvm-default=all-compatibility"]
+        }
     }
 
     project.ext {

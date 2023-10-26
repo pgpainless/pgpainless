@@ -104,9 +104,9 @@ public class IgnoreUnknownSignatureVersionsTest {
                 "ou1uiXJaDzZ6wQfB\n" +
                 "=uHRc\n" +
                 "-----END PGP SIGNATURE-----\n";
-        OpenPgpMetadata metadata = verifySignature(cert, BASE_CASE);
+        MessageMetadata metadata = verifySignature(cert, BASE_CASE);
 
-        assertTrue(metadata.isVerified());
+        assertTrue(metadata.isVerifiedSigned());
     }
 
     @Test
@@ -137,9 +137,9 @@ public class IgnoreUnknownSignatureVersionsTest {
                 "ou1uiXJaDzZ6wQfB\n" +
                 "=/JL1\n" +
                 "-----END PGP SIGNATURE-----\n";
-        OpenPgpMetadata metadata = verifySignature(cert, SIG4SIG23);
+        MessageMetadata metadata = verifySignature(cert, SIG4SIG23);
 
-        assertTrue(metadata.isVerified());
+        assertTrue(metadata.isVerifiedSigned());
     }
 
     @Test
@@ -170,12 +170,12 @@ public class IgnoreUnknownSignatureVersionsTest {
                 "ou1uiXJaDzZ6wQfB\n" +
                 "=Yc8d\n" +
                 "-----END PGP SIGNATURE-----\n";
-        OpenPgpMetadata metadata = verifySignature(cert, SIG23SIG4);
+        MessageMetadata metadata = verifySignature(cert, SIG23SIG4);
 
-        assertTrue(metadata.isVerified());
+        assertTrue(metadata.isVerifiedSigned());
     }
 
-    private OpenPgpMetadata verifySignature(PGPPublicKeyRing cert, String BASE_CASE) throws PGPException, IOException {
+    private MessageMetadata verifySignature(PGPPublicKeyRing cert, String BASE_CASE) throws PGPException, IOException {
         DecryptionStream decryptionStream = PGPainless.decryptAndOrVerify().onInputStream(new ByteArrayInputStream(message.getBytes(StandardCharsets.UTF_8)))
                 .withOptions(new ConsumerOptions()
                         .addVerificationCert(cert)
@@ -184,6 +184,6 @@ public class IgnoreUnknownSignatureVersionsTest {
         Streams.drain(decryptionStream);
         decryptionStream.close();
 
-        return decryptionStream.getResult();
+        return decryptionStream.getMetadata();
     }
 }

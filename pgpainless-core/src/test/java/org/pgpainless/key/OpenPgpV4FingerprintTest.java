@@ -4,6 +4,7 @@
 
 package org.pgpainless.key;
 
+import static org.junit.jupiter.api.Assertions.assertArrayEquals;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
@@ -112,6 +113,7 @@ public class OpenPgpV4FingerprintTest {
         OpenPgpFingerprint fingerprint = OpenPgpFingerprint.parseFromBinary(binary);
         assertTrue(fingerprint instanceof OpenPgpV4Fingerprint);
         assertEquals(hex, fingerprint.toString());
+        assertArrayEquals(binary, fingerprint.getBytes());
     }
 
     @Test
@@ -122,6 +124,7 @@ public class OpenPgpV4FingerprintTest {
         OpenPgpFingerprint fingerprint = OpenPgpFingerprint.parseFromBinary(binary);
         assertTrue(fingerprint instanceof OpenPgpV4Fingerprint);
         assertEquals(hex, fingerprint.toString());
+        assertArrayEquals(binary, fingerprint.getBytes());
     }
 
     @Test

@@ -120,13 +120,13 @@ public class PostponeDecryptionUsingKeyWithMissingPassphraseTest {
     public void missingPassphraseFirst() throws PGPException, IOException {
         SecretKeyRingProtector protector1 = new CachingSecretKeyRingProtector(new SecretKeyPassphraseProvider() {
             @Override
-            public Passphrase getPassphraseFor(Long keyId) {
+            public Passphrase getPassphraseFor(long keyId) {
                 fail("Although the first PKESK is for k1, we should have skipped it and tried k2 first, which has passphrase available.");
                 return null;
             }
 
             @Override
-            public boolean hasPassphrase(Long keyId) {
+            public boolean hasPassphrase(long keyId) {
                 return false;
             }
         });
@@ -150,13 +150,13 @@ public class PostponeDecryptionUsingKeyWithMissingPassphraseTest {
         SecretKeyRingProtector protector1 = SecretKeyRingProtector.unlockEachKeyWith(p1, k1);
         SecretKeyRingProtector protector2 = new CachingSecretKeyRingProtector(new SecretKeyPassphraseProvider() {
             @Override
-            public Passphrase getPassphraseFor(Long keyId) {
+            public Passphrase getPassphraseFor(long keyId) {
                 fail("This callback should not get called, since the first PKESK is for k1, which has a passphrase available.");
                 return null;
             }
 
             @Override
-            public boolean hasPassphrase(Long keyId) {
+            public boolean hasPassphrase(long keyId) {
                 return false;
             }
         });
@@ -178,13 +178,13 @@ public class PostponeDecryptionUsingKeyWithMissingPassphraseTest {
     public void messagePassphraseFirst() throws PGPException, IOException {
         SecretKeyPassphraseProvider provider = new SecretKeyPassphraseProvider() {
             @Override
-            public Passphrase getPassphraseFor(Long keyId) {
+            public Passphrase getPassphraseFor(long keyId) {
                 fail("Since we provide a decryption passphrase, we should not try to decrypt any key.");
                 return null;
             }
 
             @Override
-            public boolean hasPassphrase(Long keyId) {
+            public boolean hasPassphrase(long keyId) {
                 return false;
             }
         };

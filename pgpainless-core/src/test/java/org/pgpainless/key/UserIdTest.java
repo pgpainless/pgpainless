@@ -197,15 +197,14 @@ public class UserIdTest {
     }
 
     @Test
-    public void asStringTest() {
-        UserId id = UserId.newBuilder()
+    public void toStringTest() {
+        UserId id = UserId.builder()
                 .withName("Alice")
                 .withComment("Work Email")
                 .withEmail("alice@pgpainless.org")
                 .build();
 
-        // noinspection deprecation
-        assertEquals(id.toString(), id.asString());
+        assertEquals(id.toString(), id.toString());
     }
 
     @Test

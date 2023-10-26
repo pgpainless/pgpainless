@@ -5,7 +5,7 @@
 package org.pgpainless.util.selection.keyring;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertNull;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import java.io.IOException;
 import java.util.Arrays;
@@ -19,8 +19,8 @@ import org.bouncycastle.openpgp.PGPSecretKeyRing;
 import org.bouncycastle.openpgp.PGPSecretKeyRingCollection;
 import org.junit.jupiter.api.Test;
 import org.pgpainless.key.TestKeys;
-import org.pgpainless.util.selection.keyring.impl.ExactUserId;
 import org.pgpainless.util.MultiMap;
+import org.pgpainless.util.selection.keyring.impl.ExactUserId;
 
 public class KeyRingsFromCollectionTest {
 
@@ -52,7 +52,7 @@ public class KeyRingsFromCollectionTest {
         MultiMap<String, PGPSecretKeyRing> selected = strategy.selectKeyRingsFromCollections(map);
         assertEquals(1, selected.get(TestKeys.JULIET_UID).size());
         assertEquals(1, selected.get(TestKeys.EMIL_UID).size());
-        assertNull(selected.get("invalidId"));
+        assertTrue(selected.get("invalidId").isEmpty());
     }
 
     @Test
@@ -73,16 +73,16 @@ public class KeyRingsFromCollectionTest {
         PGPPublicKeyRing juliet = TestKeys.getJulietPublicKeyRing();
         MultiMap<String, PGPPublicKeyRingCollection> map = new MultiMap<>();
         PGPPublicKeyRingCollection julietCollection = new PGPPublicKeyRingCollection(Arrays.asList(emil, juliet));
-        map.put(TestKeys.JULIET_UID, julietCollection);
+        map.plus(TestKeys.JULIET_UID, julietCollection);
         PGPPublicKeyRingCollection emilCollection = new PGPPublicKeyRingCollection(Collections.singletonList(emil));
-        map.put(TestKeys.EMIL_UID, emilCollection);
+        map.plus(TestKeys.EMIL_UID, emilCollection);
         assertEquals(2, julietCollection.size());
-        map.put("invalidId", emilCollection);
+        map.plus("invalidId", emilCollection);
 
         PublicKeyRingSelectionStrategy<String> strategy = new ExactUserId.PubRingSelectionStrategy();
         MultiMap<String, PGPPublicKeyRing> selected = strategy.selectKeyRingsFromCollections(map);
         assertEquals(1, selected.get(TestKeys.JULIET_UID).size());
         assertEquals(1, selected.get(TestKeys.EMIL_UID).size());
-        assertNull(selected.get("invalidId"));
+        assertTrue(selected.get("invalidId").isEmpty());
     }
 }

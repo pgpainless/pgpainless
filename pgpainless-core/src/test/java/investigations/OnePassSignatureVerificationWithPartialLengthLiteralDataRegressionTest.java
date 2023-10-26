@@ -130,6 +130,6 @@ public class OnePassSignatureVerificationWithPartialLengthLiteralDataRegressionT
 
         Streams.pipeAll(decryptionStream, out);
         decryptionStream.close();
-        decryptionStream.getResult();
+        decryptionStream.getMetadata();
     }
 }

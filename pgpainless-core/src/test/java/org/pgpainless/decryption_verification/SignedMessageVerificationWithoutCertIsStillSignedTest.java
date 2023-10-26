@@ -39,10 +39,10 @@ public class SignedMessageVerificationWithoutCertIsStillSignedTest {
         Streams.pipeAll(verificationStream, out);
         verificationStream.close();
 
-        OpenPgpMetadata metadata = verificationStream.getResult();
+        MessageMetadata metadata = verificationStream.getMetadata();
 
-        assertFalse(metadata.isCleartextSigned());
-        assertTrue(metadata.isSigned(), "Message is signed, even though we miss the verification cert.");
-        assertFalse(metadata.isVerified(), "Message is not verified because we lack the verification cert.");
+        assertFalse(metadata.isUsingCleartextSignatureFramework());
+        assertTrue(metadata.hasRejectedSignatures(), "Message is signed, even though we miss the verification cert.");
+        assertFalse(metadata.isVerifiedSigned(), "Message is not verified because we lack the verification cert.");
     }
 }

@@ -96,11 +96,11 @@ public class CleartextSignatureVerificationTest {
         Streams.pipeAll(decryptionStream, out);
         decryptionStream.close();
 
-        OpenPgpMetadata result = decryptionStream.getResult();
-        assertTrue(result.isVerified());
-        assertTrue(result.isCleartextSigned());
+        MessageMetadata result = decryptionStream.getMetadata();
+        assertTrue(result.isVerifiedSigned());
+        assertTrue(result.isUsingCleartextSignatureFramework());
 
-        PGPSignature signature = result.getVerifiedSignatures().values().iterator().next();
+        PGPSignature signature = result.getVerifiedSignatures().iterator().next().getSignature();
 
         assertEquals(signature.getKeyID(), signingKeys.getPublicKey().getKeyID());
         assertArrayEquals(MESSAGE_BODY, out.toByteArray());
@@ -125,10 +125,10 @@ public class CleartextSignatureVerificationTest {
         Streams.pipeAll(decryptionStream, out);
         decryptionStream.close();
 
-        OpenPgpMetadata result = decryptionStream.getResult();
-        assertTrue(result.isVerified());
+        MessageMetadata result = decryptionStream.getMetadata();
+        assertTrue(result.isVerifiedSigned());
 
-        PGPSignature signature = result.getVerifiedSignatures().values().iterator().next();
+        PGPSignature signature = result.getVerifiedSignatures().iterator().next().getSignature();
 
         assertEquals(signature.getKeyID(), signingKeys.getPublicKey().getKeyID());
         FileInputStream fileIn = new FileInputStream(file);
@@ -178,7 +178,7 @@ public class CleartextSignatureVerificationTest {
         Streams.pipeAll(decryptionStream, out);
         decryptionStream.close();
 
-        OpenPgpMetadata metadata = decryptionStream.getResult();
+        MessageMetadata metadata = decryptionStream.getMetadata();
         assertEquals(1, metadata.getVerifiedSignatures().size());
     }
 
@@ -210,8 +210,8 @@ public class CleartextSignatureVerificationTest {
         Streams.pipeAll(verificationStream, msgOut);
         verificationStream.close();
 
-        OpenPgpMetadata metadata = verificationStream.getResult();
-        assertTrue(metadata.isVerified());
+        MessageMetadata metadata = verificationStream.getMetadata();
+        assertTrue(metadata.isVerifiedSigned());
     }
 
     @Test

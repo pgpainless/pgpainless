@@ -7,7 +7,6 @@ package org.pgpainless.decryption_verification;
 import static org.junit.jupiter.api.Assertions.assertArrayEquals;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
-import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.junit.jupiter.api.Assertions.fail;
 
@@ -60,40 +59,17 @@ public class MissingPassphraseForDecryptionTest {
     }
 
     @Test
-    public void invalidPostponedKeysStrategyTest() {
-        SecretKeyPassphraseProvider callback = new SecretKeyPassphraseProvider() {
-            @Override
-            public Passphrase getPassphraseFor(Long keyId) {
-                fail("MUST NOT get called in if postponed key strategy is invalid.");
-                return null;
-            }
-
-            @Override
-            public boolean hasPassphrase(Long keyId) {
-                return true;
-            }
-        };
-        ConsumerOptions options = new ConsumerOptions()
-                .setMissingKeyPassphraseStrategy(null) // illegal
-                .addDecryptionKey(secretKeys, SecretKeyRingProtector.defaultSecretKeyRingProtector(callback));
-
-        assertThrows(IllegalStateException.class, () -> PGPainless.decryptAndOrVerify()
-                .onInputStream(new ByteArrayInputStream(message))
-                .withOptions(options));
-    }
-
-    @Test
     public void interactiveStrategy() throws PGPException, IOException {
         // interactive callback
         SecretKeyPassphraseProvider callback = new SecretKeyPassphraseProvider() {
             @Override
-            public Passphrase getPassphraseFor(Long keyId) {
+            public Passphrase getPassphraseFor(long keyId) {
                 // is called in interactive mode
                 return Passphrase.fromPassword(passphrase);
             }
 
             @Override
-            public boolean hasPassphrase(Long keyId) {
+            public boolean hasPassphrase(long keyId) {
                 return true;
             }
         };
@@ -119,13 +95,13 @@ public class MissingPassphraseForDecryptionTest {
 
         SecretKeyPassphraseProvider callback = new SecretKeyPassphraseProvider() {
             @Override
-            public Passphrase getPassphraseFor(Long keyId) {
+            public Passphrase getPassphraseFor(long keyId) {
                 fail("MUST NOT get called in non-interactive mode.");
                 return null;
             }
 
             @Override
-            public boolean hasPassphrase(Long keyId) {
+            public boolean hasPassphrase(long keyId) {
                 return true;
             }
         };

@@ -14,7 +14,6 @@ import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.security.InvalidAlgorithmParameterException;
 import java.security.NoSuchAlgorithmException;
-import javax.annotation.Nonnull;
 
 import org.bouncycastle.openpgp.PGPException;
 import org.bouncycastle.openpgp.PGPPublicKey;
@@ -63,8 +62,8 @@ public class VerifyWithMissingPublicKeyCallbackTest {
                         .addVerificationCert(unrelatedKeys)
                         .setMissingCertificateCallback(new MissingPublicKeyCallback() {
                             @Override
-                            public PGPPublicKeyRing onMissingPublicKeyEncountered(@Nonnull Long keyId) {
-                                assertEquals(signingKey.getKeyID(), (long) keyId, "Signing key-ID mismatch.");
+                            public PGPPublicKeyRing onMissingPublicKeyEncountered(long keyId) {
+                                assertEquals(signingKey.getKeyID(), keyId, "Signing key-ID mismatch.");
                                 return signingPubKeys;
                             }
                         }));
@@ -74,7 +73,7 @@ public class VerifyWithMissingPublicKeyCallbackTest {
         verificationStream.close();
 
         assertArrayEquals(msg.getBytes(StandardCharsets.UTF_8), plainOut.toByteArray());
-        OpenPgpMetadata metadata = verificationStream.getResult();
-        assertTrue(metadata.containsVerifiedSignatureFrom(signingPubKeys));
+        MessageMetadata metadata = verificationStream.getMetadata();
+        assertTrue(metadata.isVerifiedSignedBy(signingPubKeys));
     }
 }

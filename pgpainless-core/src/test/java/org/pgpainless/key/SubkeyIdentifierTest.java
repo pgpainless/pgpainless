@@ -5,8 +5,10 @@
 package org.pgpainless.key;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNotEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import java.io.IOException;
 import java.util.NoSuchElementException;
@@ -100,6 +102,15 @@ public class SubkeyIdentifierTest {
 
         assertNotEquals(id1, PRIMARY_FP);
         assertNotEquals(id1, null);
+    }
+
+    @Test
+    public void testIsPrimaryKey() {
+        SubkeyIdentifier primaryKey = new SubkeyIdentifier(PRIMARY_FP);
+        assertTrue(primaryKey.isPrimaryKey());
+
+        SubkeyIdentifier subKey = new SubkeyIdentifier(PRIMARY_FP, SUBKEY_FP);
+        assertFalse(subKey.isPrimaryKey());
     }
 
     @Test
