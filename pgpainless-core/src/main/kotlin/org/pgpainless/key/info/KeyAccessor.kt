@@ -67,9 +67,11 @@ abstract class KeyAccessor(protected val info: KeyRingInfo, protected val key: S
                     info.getLatestUserIdCertification(userId).let { if (it != null) return it }
                 }
 
-                return checkNotNull(info.latestDirectKeySelfSignature) {
-                    "No valid signature found."
+                if (info.latestDirectKeySelfSignature != null) {
+                    return info.latestDirectKeySelfSignature
                 }
+
+                return info.getCurrentSubkeyBindingSignature(key.subkeyId)!!
             }
     }
 
