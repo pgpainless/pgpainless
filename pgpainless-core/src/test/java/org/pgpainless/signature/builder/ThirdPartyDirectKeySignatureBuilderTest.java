@@ -8,8 +8,6 @@ import static org.junit.jupiter.api.Assertions.assertArrayEquals;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 
-import java.security.InvalidAlgorithmParameterException;
-import java.security.NoSuchAlgorithmException;
 import java.util.Collections;
 import java.util.Date;
 
@@ -33,7 +31,7 @@ import org.pgpainless.signature.subpackets.SignatureSubpacketsUtil;
 public class ThirdPartyDirectKeySignatureBuilderTest {
 
     @Test
-    public void testDirectKeySignatureBuilding() throws PGPException, InvalidAlgorithmParameterException, NoSuchAlgorithmException {
+    public void testDirectKeySignatureBuilding() throws PGPException {
         PGPSecretKeyRing secretKeys = PGPainless.generateKeyRing()
                 .modernKeyRing("Alice");
 
@@ -55,7 +53,7 @@ public class ThirdPartyDirectKeySignatureBuilderTest {
             }
         });
 
-        PGPSignature directKeySig = dsb.build(secretKeys.getPublicKey());
+        PGPSignature directKeySig = dsb.build();
         assertNotNull(directKeySig);
         secretKeys = KeyRingUtils.injectCertification(secretKeys, secretKeys.getPublicKey(), directKeySig);
 

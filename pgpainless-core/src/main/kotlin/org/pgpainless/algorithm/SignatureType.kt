@@ -157,7 +157,9 @@ enum class SignatureType(val code: Int) {
          * @throws IllegalArgumentException in case of an unmatched signature type code
          */
         @JvmStatic
-        @Deprecated("Deprecated in favor of requireFromCode", ReplaceWith("requireFromCode"))
+        @Deprecated(
+            "Deprecated in favor of requireFromCode",
+            ReplaceWith("SignatureType.requireFromCode(code)"))
         fun valueOf(code: Int): SignatureType {
             try {
                 return requireFromCode(code)

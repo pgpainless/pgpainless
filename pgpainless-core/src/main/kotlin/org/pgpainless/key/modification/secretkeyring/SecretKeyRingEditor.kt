@@ -84,10 +84,7 @@ class SecretKeyRingEditor(
         }
         builder.applyCallback(callback)
         secretKeyRing =
-            injectCertification(
-                secretKeyRing,
-                sanitizedUserId,
-                builder.build(primaryKey.publicKey, sanitizedUserId))
+            injectCertification(secretKeyRing, sanitizedUserId, builder.build(sanitizedUserId))
         return this
     }
 
@@ -620,7 +617,7 @@ class SecretKeyRingEditor(
                     hashedSubpackets.setPrimaryUserId(null)
                 }
             })
-        return builder.build(secretKeyRing.publicKey, userId)
+        return builder.build(userId)
     }
 
     @Throws(PGPException::class)
@@ -648,7 +645,7 @@ class SecretKeyRingEditor(
                         }
                     })
             }
-            .build(secretKeyRing.publicKey, primaryUserId)
+            .build(primaryUserId)
     }
 
     @Throws(PGPException::class)
@@ -675,7 +672,7 @@ class SecretKeyRingEditor(
                         }
                     })
             }
-            .build(secretKeyRing.publicKey)
+            .build()
     }
 
     private fun selectUserIds(predicate: Predicate<String>): List<String> =
