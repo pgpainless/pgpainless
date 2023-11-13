@@ -29,16 +29,14 @@ class ArmoredInputStreamFactory {
         @Throws(IOException::class)
         fun get(inputStream: InputStream, options: ConsumerOptions? = null): ArmoredInputStream {
             return when (inputStream) {
-                is CRCingArmoredInputStreamWrapper -> inputStream
-                is ArmoredInputStream -> CRCingArmoredInputStreamWrapper(inputStream)
+                is ArmoredInputStream -> inputStream
                 else ->
-                    CRCingArmoredInputStreamWrapper(
-                        ArmoredInputStream.builder()
-                            .apply {
-                                setParseForHeaders(true)
-                                options?.let { setIgnoreCRC(it.isDisableAsciiArmorCRC) }
-                            }
-                            .build(inputStream))
+                    ArmoredInputStream.builder()
+                        .apply {
+                            setParseForHeaders(true)
+                            options?.let { setIgnoreCRC(it.isDisableAsciiArmorCRC) }
+                        }
+                        .build(inputStream)
             }
         }
     }
