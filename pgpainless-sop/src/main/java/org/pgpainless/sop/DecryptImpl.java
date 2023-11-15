@@ -7,7 +7,6 @@ package org.pgpainless.sop;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
-import java.nio.charset.Charset;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
@@ -33,6 +32,9 @@ import sop.SessionKey;
 import sop.Verification;
 import sop.exception.SOPGPException;
 import sop.operation.Decrypt;
+import sop.util.UTF8Util;
+
+import javax.annotation.Nonnull;
 
 /**
  * Implementation of the <pre>decrypt</pre> operation using PGPainless.
@@ -42,20 +44,23 @@ public class DecryptImpl implements Decrypt {
     private final ConsumerOptions consumerOptions = ConsumerOptions.get();
     private final MatchMakingSecretKeyRingProtector protector = new MatchMakingSecretKeyRingProtector();
 
+    @Nonnull
     @Override
-    public DecryptImpl verifyNotBefore(Date timestamp) throws SOPGPException.UnsupportedOption {
+    public DecryptImpl verifyNotBefore(@Nonnull Date timestamp) throws SOPGPException.UnsupportedOption {
         consumerOptions.verifyNotBefore(timestamp);
         return this;
     }
 
+    @Nonnull
     @Override
-    public DecryptImpl verifyNotAfter(Date timestamp) throws SOPGPException.UnsupportedOption {
+    public DecryptImpl verifyNotAfter(@Nonnull Date timestamp) throws SOPGPException.UnsupportedOption {
         consumerOptions.verifyNotAfter(timestamp);
         return this;
     }
 
+    @Nonnull
     @Override
-    public DecryptImpl verifyWithCert(InputStream certIn) throws SOPGPException.BadData, IOException {
+    public DecryptImpl verifyWithCert(@Nonnull InputStream certIn) throws SOPGPException.BadData, IOException {
         PGPPublicKeyRingCollection certs = KeyReader.readPublicKeys(certIn, true);
         if (certs != null) {
             consumerOptions.addVerificationCerts(certs);
@@ -63,8 +68,9 @@ public class DecryptImpl implements Decrypt {
         return this;
     }
 
+    @Nonnull
     @Override
-    public DecryptImpl withSessionKey(SessionKey sessionKey) throws SOPGPException.UnsupportedOption {
+    public DecryptImpl withSessionKey(@Nonnull SessionKey sessionKey) throws SOPGPException.UnsupportedOption {
         consumerOptions.setSessionKey(
                 new org.pgpainless.util.SessionKey(
                         SymmetricKeyAlgorithm.requireFromId(sessionKey.getAlgorithm()),
@@ -72,8 +78,9 @@ public class DecryptImpl implements Decrypt {
         return this;
     }
 
+    @Nonnull
     @Override
-    public DecryptImpl withPassword(String password) {
+    public DecryptImpl withPassword(@Nonnull String password) {
         consumerOptions.addDecryptionPassphrase(Passphrase.fromPassword(password));
         String withoutTrailingWhitespace = removeTrailingWhitespace(password);
         if (!password.equals(withoutTrailingWhitespace)) {
@@ -91,8 +98,9 @@ public class DecryptImpl implements Decrypt {
         return passphrase.substring(0, i);
     }
 
+    @Nonnull
     @Override
-    public DecryptImpl withKey(InputStream keyIn) throws SOPGPException.BadData, IOException, SOPGPException.UnsupportedAsymmetricAlgo {
+    public DecryptImpl withKey(@Nonnull InputStream keyIn) throws SOPGPException.BadData, IOException, SOPGPException.UnsupportedAsymmetricAlgo {
         PGPSecretKeyRingCollection secretKeyCollection = KeyReader.readSecretKeys(keyIn, true);
 
         for (PGPSecretKeyRing key : secretKeyCollection) {
@@ -102,15 +110,17 @@ public class DecryptImpl implements Decrypt {
         return this;
     }
 
+    @Nonnull
     @Override
-    public Decrypt withKeyPassword(byte[] password) {
-        String string = new String(password, Charset.forName("UTF8"));
+    public Decrypt withKeyPassword(@Nonnull byte[] password) {
+        String string = new String(password, UTF8Util.UTF8);
         protector.addPassphrase(Passphrase.fromPassword(string));
         return this;
     }
 
+    @Nonnull
     @Override
-    public ReadyWithResult<DecryptionResult> ciphertext(InputStream ciphertext)
+    public ReadyWithResult<DecryptionResult> ciphertext(@Nonnull InputStream ciphertext)
             throws SOPGPException.BadData,
             SOPGPException.MissingArg {
 
@@ -136,7 +146,7 @@ public class DecryptImpl implements Decrypt {
 
         return new ReadyWithResult<DecryptionResult>() {
             @Override
-            public DecryptionResult writeTo(OutputStream outputStream) throws IOException, SOPGPException.NoSignature {
+            public DecryptionResult writeTo(@Nonnull OutputStream outputStream) throws IOException, SOPGPException.NoSignature {
                 Streams.pipeAll(decryptionStream, outputStream);
                 decryptionStream.close();
                 MessageMetadata metadata = decryptionStream.getMetadata();

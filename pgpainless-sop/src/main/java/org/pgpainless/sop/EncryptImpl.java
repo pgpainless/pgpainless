@@ -7,7 +7,6 @@ package org.pgpainless.sop;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
-import java.nio.charset.Charset;
 import java.util.Arrays;
 import java.util.HashSet;
 import java.util.List;
@@ -30,12 +29,16 @@ import org.pgpainless.exception.WrongPassphraseException;
 import org.pgpainless.key.OpenPgpFingerprint;
 import org.pgpainless.key.info.KeyRingInfo;
 import org.pgpainless.util.Passphrase;
+import sop.EncryptionResult;
 import sop.Profile;
-import sop.Ready;
+import sop.ReadyWithResult;
 import sop.enums.EncryptAs;
 import sop.exception.SOPGPException;
 import sop.operation.Encrypt;
 import sop.util.ProxyOutputStream;
+import sop.util.UTF8Util;
+
+import javax.annotation.Nonnull;
 
 /**
  * Implementation of the <pre>encrypt</pre> operation using PGPainless.
@@ -52,23 +55,26 @@ public class EncryptImpl implements Encrypt {
     private final Set<PGPSecretKeyRing> signingKeys = new HashSet<>();
     private String profile = RFC4880_PROFILE.getName(); // TODO: Use in future releases
 
-    private EncryptAs encryptAs = EncryptAs.Binary;
+    private EncryptAs encryptAs = EncryptAs.binary;
     boolean armor = true;
 
+    @Nonnull
     @Override
     public Encrypt noArmor() {
         armor = false;
         return this;
     }
 
+    @Nonnull
     @Override
-    public Encrypt mode(EncryptAs mode) throws SOPGPException.UnsupportedOption {
+    public Encrypt mode(@Nonnull EncryptAs mode) throws SOPGPException.UnsupportedOption {
         this.encryptAs = mode;
         return this;
     }
 
+    @Nonnull
     @Override
-    public Encrypt signWith(InputStream keyIn)
+    public Encrypt signWith(@Nonnull InputStream keyIn)
             throws SOPGPException.KeyCannotSign, SOPGPException.UnsupportedAsymmetricAlgo, SOPGPException.BadData, IOException {
         if (signingOptions == null) {
             signingOptions = SigningOptions.get();
@@ -89,21 +95,24 @@ public class EncryptImpl implements Encrypt {
         return this;
     }
 
+    @Nonnull
     @Override
-    public Encrypt withKeyPassword(byte[] password) {
-        String passphrase = new String(password, Charset.forName("UTF8"));
+    public Encrypt withKeyPassword(@Nonnull byte[] password) {
+        String passphrase = new String(password, UTF8Util.UTF8);
         protector.addPassphrase(Passphrase.fromPassword(passphrase));
         return this;
     }
 
+    @Nonnull
     @Override
-    public Encrypt withPassword(String password) throws SOPGPException.PasswordNotHumanReadable, SOPGPException.UnsupportedOption {
+    public Encrypt withPassword(@Nonnull String password) throws SOPGPException.PasswordNotHumanReadable, SOPGPException.UnsupportedOption {
         encryptionOptions.addPassphrase(Passphrase.fromPassword(password));
         return this;
     }
 
+    @Nonnull
     @Override
-    public Encrypt withCert(InputStream cert) throws SOPGPException.CertCannotEncrypt, SOPGPException.UnsupportedAsymmetricAlgo, SOPGPException.BadData {
+    public Encrypt withCert(@Nonnull InputStream cert) throws SOPGPException.CertCannotEncrypt, SOPGPException.UnsupportedAsymmetricAlgo, SOPGPException.BadData {
         try {
             PGPPublicKeyRingCollection certificates = KeyReader.readPublicKeys(cert, true);
             encryptionOptions.addRecipients(certificates);
@@ -115,8 +124,9 @@ public class EncryptImpl implements Encrypt {
         return this;
     }
 
+    @Nonnull
     @Override
-    public Encrypt profile(String profileName) {
+    public Encrypt profile(@Nonnull String profileName) {
         // sanitize profile name to make sure we only accept supported profiles
         for (Profile profile : SUPPORTED_PROFILES) {
             if (profile.getName().equals(profileName)) {
@@ -130,8 +140,9 @@ public class EncryptImpl implements Encrypt {
         throw new SOPGPException.UnsupportedProfile("encrypt", profileName);
     }
 
+    @Nonnull
     @Override
-    public Ready plaintext(InputStream plaintext) throws IOException {
+    public ReadyWithResult<sop.EncryptionResult> plaintext(@Nonnull InputStream plaintext) throws IOException {
         if (!encryptionOptions.hasEncryptionMethod()) {
             throw new SOPGPException.MissingArg("Missing encryption method.");
         }
@@ -146,7 +157,7 @@ public class EncryptImpl implements Encrypt {
                 signingOptions.addInlineSignature(
                         protector,
                         signingKey,
-                        (encryptAs == EncryptAs.Binary ? DocumentSignatureType.BINARY_DOCUMENT : DocumentSignatureType.CANONICAL_TEXT_DOCUMENT)
+                        (encryptAs == EncryptAs.binary ? DocumentSignatureType.BINARY_DOCUMENT : DocumentSignatureType.CANONICAL_TEXT_DOCUMENT)
                 );
             } catch (KeyException.UnacceptableSigningKeyException e) {
                 throw new SOPGPException.KeyCannotSign();
@@ -163,12 +174,14 @@ public class EncryptImpl implements Encrypt {
                     .onOutputStream(proxy)
                     .withOptions(producerOptions);
 
-            return new Ready() {
+            return new ReadyWithResult<EncryptionResult>() {
                 @Override
-                public void writeTo(OutputStream outputStream) throws IOException {
+                public EncryptionResult writeTo(@Nonnull OutputStream outputStream) throws IOException {
                     proxy.replaceOutputStream(outputStream);
                     Streams.pipeAll(plaintext, encryptionStream);
                     encryptionStream.close();
+                    // TODO: Extract and emit SessionKey
+                    return new EncryptionResult(null);
                 }
             };
         } catch (PGPException e) {
@@ -178,9 +191,9 @@ public class EncryptImpl implements Encrypt {
 
     private static StreamEncoding encryptAsToStreamEncoding(EncryptAs encryptAs) {
         switch (encryptAs) {
-            case Binary:
+            case binary:
                 return StreamEncoding.BINARY;
-            case Text:
+            case text:
                 return StreamEncoding.UTF8;
         }
         throw new IllegalArgumentException("Invalid value encountered: " + encryptAs);

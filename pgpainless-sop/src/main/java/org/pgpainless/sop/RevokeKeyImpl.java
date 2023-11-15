@@ -32,11 +32,15 @@ import sop.exception.SOPGPException;
 import sop.operation.RevokeKey;
 import sop.util.UTF8Util;
 
+import javax.annotation.Nonnull;
+
 public class RevokeKeyImpl implements RevokeKey {
 
     private final MatchMakingSecretKeyRingProtector protector = new MatchMakingSecretKeyRingProtector();
     private boolean armor = true;
 
+    @Override
+    @Nonnull
     public RevokeKey noArmor() {
         this.armor = false;
         return this;
@@ -50,7 +54,9 @@ public class RevokeKeyImpl implements RevokeKey {
      * @throws sop.exception.SOPGPException.UnsupportedOption if the implementation does not support key passwords
      * @throws sop.exception.SOPGPException.PasswordNotHumanReadable if the password is not human-readable
      */
-    public RevokeKey withKeyPassword(byte[] password)
+    @Override
+    @Nonnull
+    public RevokeKey withKeyPassword(@Nonnull byte[] password)
             throws SOPGPException.UnsupportedOption,
             SOPGPException.PasswordNotHumanReadable {
         String string;
@@ -63,7 +69,9 @@ public class RevokeKeyImpl implements RevokeKey {
         return this;
     }
 
-    public Ready keys(InputStream keys) throws SOPGPException.BadData {
+    @Override
+    @Nonnull
+    public Ready keys(@Nonnull InputStream keys) throws SOPGPException.BadData {
         PGPSecretKeyRingCollection secretKeyRings;
         try {
             secretKeyRings = KeyReader.readSecretKeys(keys, true);
@@ -100,7 +108,7 @@ public class RevokeKeyImpl implements RevokeKey {
 
         return new Ready() {
             @Override
-            public void writeTo(OutputStream outputStream) throws IOException {
+            public void writeTo(@Nonnull OutputStream outputStream) throws IOException {
                 PGPPublicKeyRingCollection certificateCollection = new PGPPublicKeyRingCollection(revocationCertificates);
                 if (armor) {
                     ArmoredOutputStream out = ArmoredOutputStreamFactory.get(outputStream);

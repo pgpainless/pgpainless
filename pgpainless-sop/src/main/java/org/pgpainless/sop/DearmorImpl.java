@@ -15,13 +15,16 @@ import sop.Ready;
 import sop.exception.SOPGPException;
 import sop.operation.Dearmor;
 
+import javax.annotation.Nonnull;
+
 /**
  * Implementation of the <pre>dearmor</pre> operation using PGPainless.
  */
 public class DearmorImpl implements Dearmor {
 
+    @Nonnull
     @Override
-    public Ready data(InputStream data) {
+    public Ready data(@Nonnull InputStream data) {
         InputStream decoder;
         try {
             decoder = PGPUtil.getDecoderStream(data);
@@ -31,7 +34,7 @@ public class DearmorImpl implements Dearmor {
         return new Ready() {
 
             @Override
-            public void writeTo(OutputStream outputStream) throws IOException {
+            public void writeTo(@Nonnull OutputStream outputStream) throws IOException {
                 BufferedOutputStream bufferedOutputStream = new BufferedOutputStream(outputStream);
                 Streams.pipeAll(decoder, bufferedOutputStream);
                 bufferedOutputStream.flush();

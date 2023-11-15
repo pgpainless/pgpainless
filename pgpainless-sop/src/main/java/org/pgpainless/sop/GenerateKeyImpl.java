@@ -31,6 +31,8 @@ import sop.Ready;
 import sop.exception.SOPGPException;
 import sop.operation.GenerateKey;
 
+import javax.annotation.Nonnull;
+
 /**
  * Implementation of the <pre>generate-key</pre> operation using PGPainless.
  */
@@ -48,25 +50,29 @@ public class GenerateKeyImpl implements GenerateKey {
     private String profile = CURVE25519_PROFILE.getName();
 
     @Override
+    @Nonnull
     public GenerateKey noArmor() {
         this.armor = false;
         return this;
     }
 
     @Override
-    public GenerateKey userId(String userId) {
+    @Nonnull
+    public GenerateKey userId(@Nonnull String userId) {
         this.userIds.add(userId);
         return this;
     }
 
     @Override
-    public GenerateKey withKeyPassword(String password) {
+    @Nonnull
+    public GenerateKey withKeyPassword(@Nonnull String password) {
         this.passphrase = Passphrase.fromPassword(password);
         return this;
     }
 
     @Override
-    public GenerateKey profile(String profileName) {
+    @Nonnull
+    public GenerateKey profile(@Nonnull String profileName) {
         // Sanitize the profile name to make sure we support the given profile
         for (Profile profile : SUPPORTED_PROFILES) {
             if (profile.getName().equals(profileName)) {
@@ -81,18 +87,20 @@ public class GenerateKeyImpl implements GenerateKey {
     }
 
     @Override
+    @Nonnull
     public GenerateKey signingOnly() {
         signingOnly = true;
         return this;
     }
 
     @Override
+    @Nonnull
     public Ready generate() throws SOPGPException.MissingArg, SOPGPException.UnsupportedAsymmetricAlgo {
         try {
             final PGPSecretKeyRing key = generateKeyWithProfile(profile, userIds, passphrase, signingOnly);
             return new Ready() {
                 @Override
-                public void writeTo(OutputStream outputStream) throws IOException {
+                public void writeTo(@Nonnull OutputStream outputStream) throws IOException {
                     if (armor) {
                         ArmoredOutputStream armoredOutputStream = ArmorUtils.toAsciiArmoredStream(key, outputStream);
                         key.encode(armoredOutputStream);

@@ -19,6 +19,8 @@ import sop.Ready;
 import sop.exception.SOPGPException;
 import sop.operation.ExtractCert;
 
+import javax.annotation.Nonnull;
+
 /**
  * Implementation of the <pre>extract-cert</pre> operation using PGPainless.
  */
@@ -27,13 +29,15 @@ public class ExtractCertImpl implements ExtractCert {
     private boolean armor = true;
 
     @Override
+    @Nonnull
     public ExtractCert noArmor() {
         armor = false;
         return this;
     }
 
     @Override
-    public Ready key(InputStream keyInputStream) throws IOException, SOPGPException.BadData {
+    @Nonnull
+    public Ready key(@Nonnull InputStream keyInputStream) throws IOException, SOPGPException.BadData {
         PGPSecretKeyRingCollection keys = KeyReader.readSecretKeys(keyInputStream, true);
 
         List<PGPPublicKeyRing> certs = new ArrayList<>();
@@ -44,7 +48,7 @@ public class ExtractCertImpl implements ExtractCert {
 
         return new Ready() {
             @Override
-            public void writeTo(OutputStream outputStream) throws IOException {
+            public void writeTo(@Nonnull OutputStream outputStream) throws IOException {
 
                 for (PGPPublicKeyRing cert : certs) {
                     OutputStream out = armor ? ArmorUtils.toAsciiArmoredStream(cert, outputStream) : outputStream;

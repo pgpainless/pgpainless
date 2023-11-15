@@ -8,7 +8,6 @@ import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
-import java.nio.charset.Charset;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -35,6 +34,9 @@ import sop.SigningResult;
 import sop.enums.SignAs;
 import sop.exception.SOPGPException;
 import sop.operation.DetachedSign;
+import sop.util.UTF8Util;
+
+import javax.annotation.Nonnull;
 
 /**
  * Implementation of the <pre>sign</pre> operation using PGPainless.
@@ -42,7 +44,7 @@ import sop.operation.DetachedSign;
 public class DetachedSignImpl implements DetachedSign {
 
     private boolean armor = true;
-    private SignAs mode = SignAs.Binary;
+    private SignAs mode = SignAs.binary;
     private final SigningOptions signingOptions = SigningOptions.get();
     private final MatchMakingSecretKeyRingProtector protector = new MatchMakingSecretKeyRingProtector();
     private final List<PGPSecretKeyRing> signingKeys = new ArrayList<>();
@@ -54,13 +56,15 @@ public class DetachedSignImpl implements DetachedSign {
     }
 
     @Override
-    public DetachedSign mode(SignAs mode) {
+    @Nonnull
+    public DetachedSign mode(@Nonnull SignAs mode) {
         this.mode = mode;
         return this;
     }
 
     @Override
-    public DetachedSign key(InputStream keyIn) throws SOPGPException.KeyCannotSign, SOPGPException.BadData, IOException {
+    @Nonnull
+    public DetachedSign key(@Nonnull InputStream keyIn) throws SOPGPException.KeyCannotSign, SOPGPException.BadData, IOException {
         PGPSecretKeyRingCollection keys = KeyReader.readSecretKeys(keyIn, true);
         for (PGPSecretKeyRing key : keys) {
             KeyRingInfo info = PGPainless.inspectKeyRing(key);
@@ -74,14 +78,16 @@ public class DetachedSignImpl implements DetachedSign {
     }
 
     @Override
-    public DetachedSign withKeyPassword(byte[] password) {
-        String string = new String(password, Charset.forName("UTF8"));
+    @Nonnull
+    public DetachedSign withKeyPassword(@Nonnull byte[] password) {
+        String string = new String(password, UTF8Util.UTF8);
         protector.addPassphrase(Passphrase.fromPassword(string));
         return this;
     }
 
     @Override
-    public ReadyWithResult<SigningResult> data(InputStream data) throws IOException {
+    @Nonnull
+    public ReadyWithResult<SigningResult> data(@Nonnull InputStream data) throws IOException {
         for (PGPSecretKeyRing key : signingKeys) {
             try {
                 signingOptions.addDetachedSignature(protector, key, modeToSigType(mode));
@@ -101,7 +107,7 @@ public class DetachedSignImpl implements DetachedSign {
 
             return new ReadyWithResult<SigningResult>() {
                 @Override
-                public SigningResult writeTo(OutputStream outputStream) throws IOException {
+                public SigningResult writeTo(@Nonnull OutputStream outputStream) throws IOException {
 
                     if (signingStream.isClosed()) {
                         throw new IllegalStateException("EncryptionStream is already closed.");
@@ -157,7 +163,7 @@ public class DetachedSignImpl implements DetachedSign {
     }
 
     private static DocumentSignatureType modeToSigType(SignAs mode) {
-        return mode == SignAs.Binary ? DocumentSignatureType.BINARY_DOCUMENT
+        return mode == SignAs.binary ? DocumentSignatureType.BINARY_DOCUMENT
                 : DocumentSignatureType.CANONICAL_TEXT_DOCUMENT;
     }
 }

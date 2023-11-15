@@ -18,21 +18,26 @@ import sop.enums.ArmorLabel;
 import sop.exception.SOPGPException;
 import sop.operation.Armor;
 
+import javax.annotation.Nonnull;
+
 /**
  * Implementation of the <pre>armor</pre> operation using PGPainless.
  */
 public class ArmorImpl implements Armor {
 
+    @Nonnull
     @Override
-    public Armor label(ArmorLabel label) throws SOPGPException.UnsupportedOption {
+    @Deprecated
+    public Armor label(@Nonnull ArmorLabel label) throws SOPGPException.UnsupportedOption {
         throw new SOPGPException.UnsupportedOption("Setting custom Armor labels not supported.");
     }
 
+    @Nonnull
     @Override
-    public Ready data(InputStream data) throws SOPGPException.BadData {
+    public Ready data(@Nonnull InputStream data) throws SOPGPException.BadData {
         return new Ready() {
             @Override
-            public void writeTo(OutputStream outputStream) throws IOException {
+            public void writeTo(@Nonnull OutputStream outputStream) throws IOException {
                 // By buffering the output stream, we can improve performance drastically
                 BufferedOutputStream bufferedOutputStream = new BufferedOutputStream(outputStream);
 

@@ -26,6 +26,8 @@ import sop.Verification;
 import sop.exception.SOPGPException;
 import sop.operation.InlineVerify;
 
+import javax.annotation.Nonnull;
+
 /**
  * Implementation of the <pre>inline-verify</pre> operation using PGPainless.
  */
@@ -34,29 +36,33 @@ public class InlineVerifyImpl implements InlineVerify {
     private final ConsumerOptions options = ConsumerOptions.get();
 
     @Override
-    public InlineVerify notBefore(Date timestamp) throws SOPGPException.UnsupportedOption {
+    @Nonnull
+    public InlineVerify notBefore(@Nonnull Date timestamp) throws SOPGPException.UnsupportedOption {
         options.verifyNotBefore(timestamp);
         return this;
     }
 
     @Override
-    public InlineVerify notAfter(Date timestamp) throws SOPGPException.UnsupportedOption {
+    @Nonnull
+    public InlineVerify notAfter(@Nonnull Date timestamp) throws SOPGPException.UnsupportedOption {
         options.verifyNotAfter(timestamp);
         return this;
     }
 
     @Override
-    public InlineVerify cert(InputStream cert) throws SOPGPException.BadData, IOException {
+    @Nonnull
+    public InlineVerify cert(@Nonnull InputStream cert) throws SOPGPException.BadData, IOException {
         PGPPublicKeyRingCollection certificates = KeyReader.readPublicKeys(cert, true);
         options.addVerificationCerts(certificates);
         return this;
     }
 
     @Override
-    public ReadyWithResult<List<Verification>> data(InputStream data) throws SOPGPException.NoSignature, SOPGPException.BadData {
+    @Nonnull
+    public ReadyWithResult<List<Verification>> data(@Nonnull InputStream data) throws SOPGPException.NoSignature, SOPGPException.BadData {
         return new ReadyWithResult<List<Verification>>() {
             @Override
-            public List<Verification> writeTo(OutputStream outputStream) throws IOException, SOPGPException.NoSignature {
+            public List<Verification> writeTo(@Nonnull OutputStream outputStream) throws IOException, SOPGPException.NoSignature {
                 DecryptionStream decryptionStream;
                 try {
                     decryptionStream = PGPainless.decryptAndOrVerify()

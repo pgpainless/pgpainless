@@ -24,32 +24,38 @@ import sop.Ready;
 import sop.exception.SOPGPException;
 import sop.operation.ChangeKeyPassword;
 
+import javax.annotation.Nonnull;
+
 public class ChangeKeyPasswordImpl implements ChangeKeyPassword {
 
     private final MatchMakingSecretKeyRingProtector oldProtector = new MatchMakingSecretKeyRingProtector();
     private Passphrase newPassphrase = Passphrase.emptyPassphrase();
     private boolean armor = true;
 
+    @Nonnull
     @Override
     public ChangeKeyPassword noArmor() {
         armor = false;
         return this;
     }
 
+    @Nonnull
     @Override
-    public ChangeKeyPassword oldKeyPassphrase(String oldPassphrase) {
+    public ChangeKeyPassword oldKeyPassphrase(@Nonnull String oldPassphrase) {
         oldProtector.addPassphrase(Passphrase.fromPassword(oldPassphrase));
         return this;
     }
 
+    @Nonnull
     @Override
-    public ChangeKeyPassword newKeyPassphrase(String newPassphrase) {
+    public ChangeKeyPassword newKeyPassphrase(@Nonnull String newPassphrase) {
         this.newPassphrase = Passphrase.fromPassword(newPassphrase);
         return this;
     }
 
+    @Nonnull
     @Override
-    public Ready keys(InputStream inputStream) throws SOPGPException.KeyIsProtected {
+    public Ready keys(@Nonnull InputStream inputStream) throws SOPGPException.KeyIsProtected {
         SecretKeyRingProtector newProtector = SecretKeyRingProtector.unlockAnyKeyWith(newPassphrase);
         PGPSecretKeyRingCollection secretKeyRingCollection;
         try {
@@ -76,7 +82,7 @@ public class ChangeKeyPasswordImpl implements ChangeKeyPassword {
         final PGPSecretKeyRingCollection changedSecretKeyCollection = new PGPSecretKeyRingCollection(updatedSecretKeys);
         return new Ready() {
             @Override
-            public void writeTo(OutputStream outputStream) throws IOException {
+            public void writeTo(@Nonnull OutputStream outputStream) throws IOException {
                 if (armor) {
                     ArmoredOutputStream armorOut = ArmoredOutputStreamFactory.get(outputStream);
                     changedSecretKeyCollection.encode(armorOut);

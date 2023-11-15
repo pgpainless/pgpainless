@@ -30,6 +30,8 @@ import sop.Signatures;
 import sop.exception.SOPGPException;
 import sop.operation.InlineDetach;
 
+import javax.annotation.Nonnull;
+
 /**
  * Implementation of the <pre>inline-detach</pre> operation using PGPainless.
  */
@@ -38,20 +40,22 @@ public class InlineDetachImpl implements InlineDetach {
     private boolean armor = true;
 
     @Override
+    @Nonnull
     public InlineDetach noArmor() {
         this.armor = false;
         return this;
     }
 
     @Override
-    public ReadyWithResult<Signatures> message(InputStream messageInputStream) {
+    @Nonnull
+    public ReadyWithResult<Signatures> message(@Nonnull InputStream messageInputStream) {
 
         return new ReadyWithResult<Signatures>() {
 
             private final ByteArrayOutputStream sigOut = new ByteArrayOutputStream();
 
             @Override
-            public Signatures writeTo(OutputStream messageOutputStream)
+            public Signatures writeTo(@Nonnull OutputStream messageOutputStream)
                     throws SOPGPException.NoSignature, IOException {
 
                 PGPSignatureList signatures = null;
@@ -142,7 +146,7 @@ public class InlineDetachImpl implements InlineDetach {
 
                 return new Signatures() {
                     @Override
-                    public void writeTo(OutputStream signatureOutputStream) throws IOException {
+                    public void writeTo(@Nonnull OutputStream signatureOutputStream) throws IOException {
                         Streams.pipeAll(new ByteArrayInputStream(sigOut.toByteArray()), signatureOutputStream);
                     }
                 };

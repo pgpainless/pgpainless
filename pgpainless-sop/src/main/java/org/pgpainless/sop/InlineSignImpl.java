@@ -7,7 +7,6 @@ package org.pgpainless.sop;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
-import java.nio.charset.Charset;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -28,6 +27,9 @@ import sop.Ready;
 import sop.enums.InlineSignAs;
 import sop.exception.SOPGPException;
 import sop.operation.InlineSign;
+import sop.util.UTF8Util;
+
+import javax.annotation.Nonnull;
 
 /**
  * Implementation of the <pre>inline-sign</pre> operation using PGPainless.
@@ -41,19 +43,22 @@ public class InlineSignImpl implements InlineSign {
     private final List<PGPSecretKeyRing> signingKeys = new ArrayList<>();
 
     @Override
-    public InlineSign mode(InlineSignAs mode) throws SOPGPException.UnsupportedOption {
+    @Nonnull
+    public InlineSign mode(@Nonnull InlineSignAs mode) throws SOPGPException.UnsupportedOption {
         this.mode = mode;
         return this;
     }
 
     @Override
+    @Nonnull
     public InlineSign noArmor() {
         this.armor = false;
         return this;
     }
 
     @Override
-    public InlineSign key(InputStream keyIn) throws SOPGPException.KeyCannotSign, SOPGPException.BadData, IOException {
+    @Nonnull
+    public InlineSign key(@Nonnull InputStream keyIn) throws SOPGPException.KeyCannotSign, SOPGPException.BadData, IOException {
         PGPSecretKeyRingCollection keys = KeyReader.readSecretKeys(keyIn, true);
         for (PGPSecretKeyRing key : keys) {
             KeyRingInfo info = PGPainless.inspectKeyRing(key);
@@ -67,14 +72,16 @@ public class InlineSignImpl implements InlineSign {
     }
 
     @Override
-    public InlineSign withKeyPassword(byte[] password) {
-        String string = new String(password, Charset.forName("UTF8"));
+    @Nonnull
+    public InlineSign withKeyPassword(@Nonnull byte[] password) {
+        String string = new String(password, UTF8Util.UTF8);
         protector.addPassphrase(Passphrase.fromPassword(string));
         return this;
     }
 
     @Override
-    public Ready data(InputStream data) throws SOPGPException.KeyIsProtected, SOPGPException.ExpectedText {
+    @Nonnull
+    public Ready data(@Nonnull InputStream data) throws SOPGPException.KeyIsProtected, SOPGPException.ExpectedText {
         for (PGPSecretKeyRing key : signingKeys) {
             try {
                 if (mode == InlineSignAs.clearsigned) {
@@ -99,7 +106,7 @@ public class InlineSignImpl implements InlineSign {
 
         return new Ready() {
             @Override
-            public void writeTo(OutputStream outputStream) throws IOException, SOPGPException.NoSignature {
+            public void writeTo(@Nonnull OutputStream outputStream) throws IOException, SOPGPException.NoSignature {
                 try {
                     EncryptionStream signingStream = PGPainless.encryptAndOrSign()
                             .onOutputStream(outputStream)

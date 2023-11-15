@@ -10,6 +10,8 @@ import sop.Profile;
 import sop.exception.SOPGPException;
 import sop.operation.ListProfiles;
 
+import javax.annotation.Nonnull;
+
 /**
  * Implementation of the <pre>list-profiles</pre> operation using PGPainless.
  *
@@ -17,10 +19,8 @@ import sop.operation.ListProfiles;
 public class ListProfilesImpl implements ListProfiles {
 
     @Override
-    public List<Profile> subcommand(String command) {
-        if (command == null) {
-            throw new SOPGPException.UnsupportedProfile("null");
-        }
+    @Nonnull
+    public List<Profile> subcommand(@Nonnull String command) {
 
         switch (command) {
             case "generate-key":

@@ -23,6 +23,8 @@ import sop.Verification;
 import sop.exception.SOPGPException;
 import sop.operation.DetachedVerify;
 
+import javax.annotation.Nonnull;
+
 /**
  * Implementation of the <pre>verify</pre> operation using PGPainless.
  */
@@ -31,26 +33,30 @@ public class DetachedVerifyImpl implements DetachedVerify {
     private final ConsumerOptions options = ConsumerOptions.get();
 
     @Override
-    public DetachedVerify notBefore(Date timestamp) throws SOPGPException.UnsupportedOption {
+    @Nonnull
+    public DetachedVerify notBefore(@Nonnull Date timestamp) throws SOPGPException.UnsupportedOption {
         options.verifyNotBefore(timestamp);
         return this;
     }
 
     @Override
-    public DetachedVerify notAfter(Date timestamp) throws SOPGPException.UnsupportedOption {
+    @Nonnull
+    public DetachedVerify notAfter(@Nonnull Date timestamp) throws SOPGPException.UnsupportedOption {
         options.verifyNotAfter(timestamp);
         return this;
     }
 
     @Override
-    public DetachedVerify cert(InputStream cert) throws SOPGPException.BadData, IOException {
+    @Nonnull
+    public DetachedVerify cert(@Nonnull InputStream cert) throws SOPGPException.BadData, IOException {
         PGPPublicKeyRingCollection certificates = KeyReader.readPublicKeys(cert, true);
         options.addVerificationCerts(certificates);
         return this;
     }
 
     @Override
-    public DetachedVerifyImpl signatures(InputStream signatures) throws SOPGPException.BadData {
+    @Nonnull
+    public DetachedVerifyImpl signatures(@Nonnull InputStream signatures) throws SOPGPException.BadData {
         try {
             options.addVerificationOfDetachedSignatures(signatures);
         } catch (IOException | PGPException e) {
@@ -60,7 +66,8 @@ public class DetachedVerifyImpl implements DetachedVerify {
     }
 
     @Override
-    public List<Verification> data(InputStream data) throws IOException, SOPGPException.NoSignature, SOPGPException.BadData {
+    @Nonnull
+    public List<Verification> data(@Nonnull InputStream data) throws IOException, SOPGPException.NoSignature, SOPGPException.BadData {
         options.forceNonOpenPgpData();
 
         DecryptionStream decryptionStream;
