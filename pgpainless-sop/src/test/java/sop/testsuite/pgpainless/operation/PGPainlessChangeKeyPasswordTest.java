@@ -75,6 +75,7 @@ public class PGPainlessChangeKeyPasswordTest extends ChangeKeyPasswordTest {
                 .withKeyPassword(p4)
                 .withCert(cert)
                 .plaintext(TestData.PLAINTEXT.getBytes(StandardCharsets.UTF_8))
+                .toByteArrayAndResult()
                 .getBytes();
         byte[] plaintext = sop.decrypt()
                 .verifyWithCert(cert)

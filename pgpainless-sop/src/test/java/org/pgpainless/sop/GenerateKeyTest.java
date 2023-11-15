@@ -100,10 +100,4 @@ public class GenerateKeyTest {
         assertThrows(SOPGPException.UnsupportedProfile.class, () ->
                 sop.generateKey().profile("invalid"));
     }
-
-    @Test
-    public void nullProfile() {
-        assertThrows(SOPGPException.UnsupportedProfile.class, () ->
-                sop.generateKey().profile((String) null));
-    }
 }

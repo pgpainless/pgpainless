@@ -11,7 +11,8 @@ import java.io.IOException;
 import org.junit.jupiter.api.Test;
 import sop.ByteArrayAndResult;
 import sop.DecryptionResult;
-import sop.Ready;
+import sop.EncryptionResult;
+import sop.ReadyWithResult;
 import sop.testsuite.assertions.VerificationListAssert;
 
 public class CarolKeySignEncryptRoundtripTest {
@@ -276,11 +277,11 @@ public class CarolKeySignEncryptRoundtripTest {
     public void regressionTest() throws IOException {
         SOPImpl sop = new SOPImpl();
         byte[] msg = "Hello, World!\n".getBytes();
-        Ready encryption = sop.encrypt()
+        ReadyWithResult<EncryptionResult> encryption = sop.encrypt()
                 .signWith(CAROL_KEY.getBytes())
                 .withCert(BOB_CERT.getBytes())
                 .plaintext(msg);
-        byte[] ciphertext = encryption.getBytes();
+        byte[] ciphertext = encryption.toByteArrayAndResult().getBytes();
 
         ByteArrayAndResult<DecryptionResult> decryption = sop.decrypt()
                 .withKey(BOB_KEY.getBytes())

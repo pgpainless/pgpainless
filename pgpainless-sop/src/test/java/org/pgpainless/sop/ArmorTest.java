@@ -4,30 +4,27 @@
 
 package org.pgpainless.sop;
 
-import static org.junit.jupiter.api.Assertions.assertArrayEquals;
-import static org.junit.jupiter.api.Assertions.assertThrows;
-
-import java.io.IOException;
-import java.nio.charset.StandardCharsets;
-import java.security.InvalidAlgorithmParameterException;
-import java.security.NoSuchAlgorithmException;
-
-import org.bouncycastle.openpgp.PGPException;
 import org.junit.jupiter.api.Test;
 import org.pgpainless.PGPainless;
 import org.pgpainless.util.ArmorUtils;
 import sop.enums.ArmorLabel;
 import sop.exception.SOPGPException;
 
+import java.io.IOException;
+import java.nio.charset.StandardCharsets;
+
+import static org.junit.jupiter.api.Assertions.assertArrayEquals;
+import static org.junit.jupiter.api.Assertions.assertThrows;
+
 public class ArmorTest {
 
     @Test
     public void labelIsNotSupported() {
-        assertThrows(SOPGPException.UnsupportedOption.class, () -> new SOPImpl().armor().label(ArmorLabel.Sig));
+        assertThrows(SOPGPException.UnsupportedOption.class, () -> new SOPImpl().armor().label(ArmorLabel.sig));
     }
 
     @Test
-    public void armor() throws PGPException, InvalidAlgorithmParameterException, NoSuchAlgorithmException, IOException {
+    public void armor() throws IOException {
         byte[] data = PGPainless.generateKeyRing().modernKeyRing("Alice").getEncoded();
         byte[] knownGoodArmor = ArmorUtils.toAsciiArmoredString(data)
                 .replace("Version: PGPainless\n", "") // armor command does not add version anymore

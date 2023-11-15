@@ -51,7 +51,7 @@ public class DetachedSignTest {
     public void signArmored() throws IOException {
         byte[] signature = sop.sign()
                 .key(key)
-                .mode(SignAs.Binary)
+                .mode(SignAs.binary)
                 .data(data)
                 .toByteArrayAndResult().getBytes();
 
@@ -95,7 +95,7 @@ public class DetachedSignTest {
         byte[] signature = sop.sign()
                 .key(key)
                 .noArmor()
-                .mode(SignAs.Text)
+                .mode(SignAs.text)
                 .data(data)
                 .toByteArrayAndResult().getBytes();
 
@@ -142,7 +142,7 @@ public class DetachedSignTest {
     @Test
     public void mode() throws IOException, PGPException {
         byte[] signature = sop.sign()
-                .mode(SignAs.Text)
+                .mode(SignAs.text)
                 .key(key)
                 .data(data)
                 .toByteArrayAndResult().getBytes();
