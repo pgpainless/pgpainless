@@ -5,7 +5,15 @@ SPDX-License-Identifier: CC0-1.0
 
 # PGPainless Changelog
 
-# 1.6.2
+## 2.0.0-SNAPSHOT
+- `pgpainless-core`
+  - Rewrote most of the codebase in Kotlin
+  - Removed `OpenPgpMetadata` (`decryptionStream.getResult()`) in favor of `MessageMetadata` (`decryptionStream.getMetadata()`)
+- `pgpainless-sop`, `pgpainless-cli`
+  - Bump `sop-java` to `8.0.0`, implementing [SOP Spec Revision 08](https://www.ietf.org/archive/id/draft-dkg-openpgp-stateless-cli-08.html)
+  - Change API of `sop.encrypt` to return a `ReadyWithResult<EncryptionResult>` to expose the session key
+
+## 1.6.2
 - Switch `bcpg` and `bcprov` artifacts from `-jdk15to18`variant to `-jdk18on`
 - Bump `bcpg-jdk8on` to `1.76`
 - Bump `bcprov-jdk18on` to `1.76`
@@ -13,7 +21,7 @@ SPDX-License-Identifier: CC0-1.0
     encrypting to legacy keys which do not carry any key flags.
 - Allow overriding of reference time in `EncryptionOptions` and `SigningOptions`.
 
-# 1.6.1
+## 1.6.1
 - `KeyRingBuilder`: Require UTF8 when adding user-ID via `addUserId(byte[])`
 - `pgpainless-sop`: Remove dependency on jetbrains annotations
 - Add `CertificateAuthority` interface to allow integration with [`pgpainless-wot`](https://github.com/pgpainless/pgpainless-wot)
