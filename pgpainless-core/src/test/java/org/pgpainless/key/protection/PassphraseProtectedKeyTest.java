@@ -31,7 +31,7 @@ public class PassphraseProtectedKeyTest {
             new SecretKeyPassphraseProvider() {
                 @Nullable
                 @Override
-                public Passphrase getPassphraseFor(long keyId) {
+                public Passphrase getPassphraseFor(Long keyId) {
                     if (keyId == TestKeys.CRYPTIE_KEY_ID) {
                         return new Passphrase(TestKeys.CRYPTIE_PASSWORD.toCharArray());
                     } else {
@@ -40,7 +40,7 @@ public class PassphraseProtectedKeyTest {
                 }
 
                 @Override
-                public boolean hasPassphrase(long keyId) {
+                public boolean hasPassphrase(Long keyId) {
                     return keyId == TestKeys.CRYPTIE_KEY_ID;
                 }
             });

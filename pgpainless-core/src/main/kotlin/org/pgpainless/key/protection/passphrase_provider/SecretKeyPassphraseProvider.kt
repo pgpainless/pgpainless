@@ -30,7 +30,7 @@ interface SecretKeyPassphraseProvider {
      * @param keyId if of the secret key
      * @return passphrase or null, if no passphrase record has been found.
      */
-    fun getPassphraseFor(keyId: Long): Passphrase?
+    fun getPassphraseFor(keyId: Long?): Passphrase?
 
-    fun hasPassphrase(keyId: Long): Boolean
+    fun hasPassphrase(keyId: Long?): Boolean
 }

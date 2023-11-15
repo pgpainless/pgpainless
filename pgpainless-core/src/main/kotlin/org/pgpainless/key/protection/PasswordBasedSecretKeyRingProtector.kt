@@ -38,12 +38,12 @@ class PasswordBasedSecretKeyRingProtector : BaseSecretKeyRingProtector {
         ): PasswordBasedSecretKeyRingProtector {
             return object : SecretKeyPassphraseProvider {
 
-                    override fun getPassphraseFor(keyId: Long): Passphrase? {
+                    override fun getPassphraseFor(keyId: Long?): Passphrase? {
                         return if (hasPassphrase(keyId)) passphrase else null
                     }
 
-                    override fun hasPassphrase(keyId: Long): Boolean {
-                        return keyRing.getPublicKey(keyId) != null
+                    override fun hasPassphrase(keyId: Long?): Boolean {
+                        return keyId != null && keyRing.getPublicKey(keyId) != null
                     }
                 }
                 .let { PasswordBasedSecretKeyRingProtector(it) }
@@ -59,11 +59,11 @@ class PasswordBasedSecretKeyRingProtector : BaseSecretKeyRingProtector {
             passphrase: Passphrase
         ): PasswordBasedSecretKeyRingProtector {
             return object : SecretKeyPassphraseProvider {
-                    override fun getPassphraseFor(keyId: Long): Passphrase? {
+                    override fun getPassphraseFor(keyId: Long?): Passphrase? {
                         return if (hasPassphrase(keyId)) passphrase else null
                     }
 
-                    override fun hasPassphrase(keyId: Long): Boolean {
+                    override fun hasPassphrase(keyId: Long?): Boolean {
                         return keyId == singleKeyId
                     }
                 }

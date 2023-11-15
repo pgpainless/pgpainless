@@ -63,13 +63,13 @@ public class MissingPassphraseForDecryptionTest {
         // interactive callback
         SecretKeyPassphraseProvider callback = new SecretKeyPassphraseProvider() {
             @Override
-            public Passphrase getPassphraseFor(long keyId) {
+            public Passphrase getPassphraseFor(Long keyId) {
                 // is called in interactive mode
                 return Passphrase.fromPassword(passphrase);
             }
 
             @Override
-            public boolean hasPassphrase(long keyId) {
+            public boolean hasPassphrase(Long keyId) {
                 return true;
             }
         };
@@ -95,13 +95,13 @@ public class MissingPassphraseForDecryptionTest {
 
         SecretKeyPassphraseProvider callback = new SecretKeyPassphraseProvider() {
             @Override
-            public Passphrase getPassphraseFor(long keyId) {
+            public Passphrase getPassphraseFor(Long keyId) {
                 fail("MUST NOT get called in non-interactive mode.");
                 return null;
             }
 
             @Override
-            public boolean hasPassphrase(long keyId) {
+            public boolean hasPassphrase(Long keyId) {
                 return true;
             }
         };

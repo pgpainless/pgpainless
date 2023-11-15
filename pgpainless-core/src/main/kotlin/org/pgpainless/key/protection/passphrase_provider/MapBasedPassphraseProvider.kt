@@ -14,9 +14,9 @@ import org.pgpainless.util.Passphrase
  *
  * TODO: Make this null-safe and throw an exception instead?
  */
-class MapBasedPassphraseProvider(val map: Map<Long, Passphrase>) : SecretKeyPassphraseProvider {
+class MapBasedPassphraseProvider(val map: Map<Long?, Passphrase>) : SecretKeyPassphraseProvider {
 
-    override fun getPassphraseFor(keyId: Long): Passphrase? = map[keyId]
+    override fun getPassphraseFor(keyId: Long?): Passphrase? = map[keyId]
 
-    override fun hasPassphrase(keyId: Long): Boolean = map.containsKey(keyId)
+    override fun hasPassphrase(keyId: Long?): Boolean = map.containsKey(keyId)
 }

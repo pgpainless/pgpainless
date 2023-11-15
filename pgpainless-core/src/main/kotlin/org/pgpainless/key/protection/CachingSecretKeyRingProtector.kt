@@ -21,7 +21,7 @@ import org.pgpainless.util.Passphrase
  */
 class CachingSecretKeyRingProtector : SecretKeyRingProtector, SecretKeyPassphraseProvider {
 
-    private val cache: MutableMap<Long, Passphrase>
+    private val cache: MutableMap<Long?, Passphrase>
     private val protector: SecretKeyRingProtector
     private val provider: SecretKeyPassphraseProvider?
 
@@ -152,12 +152,12 @@ class CachingSecretKeyRingProtector : SecretKeyRingProtector, SecretKeyPassphras
      */
     fun forgetPassphrase(key: PGPPublicKey) = apply { forgetPassphrase(key.keyID) }
 
-    override fun getPassphraseFor(keyId: Long): Passphrase? {
+    override fun getPassphraseFor(keyId: Long?): Passphrase? {
         return if (hasPassphrase(keyId)) cache[keyId]
         else provider?.getPassphraseFor(keyId)?.also { cache[keyId] = it }
     }
 
-    override fun hasPassphrase(keyId: Long) = cache[keyId]?.isValid ?: false
+    override fun hasPassphrase(keyId: Long?) = cache[keyId]?.isValid ?: false
 
     override fun hasPassphraseFor(keyId: Long) = hasPassphrase(keyId)
 
