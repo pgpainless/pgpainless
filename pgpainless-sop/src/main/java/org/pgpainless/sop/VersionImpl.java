@@ -20,7 +20,7 @@ import javax.annotation.Nonnull;
 public class VersionImpl implements Version {
 
     // draft version
-    private static final int SOP_VERSION = 7;
+    private static final int SOP_VERSION = 8;
 
     @Override
     @Nonnull
