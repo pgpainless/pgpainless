@@ -5,7 +5,11 @@ SPDX-License-Identifier: CC0-1.0
 
 # PGPainless Changelog
 
-# 1.4.5
+## 1.4.6
+- Bump `sop-java` to `4.1.2`
+- Fix `decrypt --verify-with` to not throw `NoSignature` exception (exit code 3) if `VERIFICAIONS` is empty.
+
+## 1.4.5
 - Bugfix: Direct-Key signatures are calculated over the signee key only, not the signer key + signee key
 - Security: Fix faulty bit-strength policy check for signing subkeys
 
