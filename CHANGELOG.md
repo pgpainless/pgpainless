@@ -40,6 +40,10 @@ SPDX-License-Identifier: CC0-1.0
   - `generate-key`: Add support for new `--signing-only` option
 - Move some methods related to password changing from `SecretKeyRingEditor` to `KeyRingUtils`
 
+## 1.5.7
+- Bump `sop-java` to `6.1.1`
+- `decrypt --verify-with`: Fix to not throw `NoSignature` exception (exit code 3) if `VERIFICATIONS` is empty
+
 ## 1.5.6
 - Bump `jacoco` to `0.8.8` (thanks @hkos)
 - Ignore malformed, non-UTF8 user-IDs on certificates
