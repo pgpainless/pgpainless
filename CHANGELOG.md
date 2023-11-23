@@ -9,7 +9,7 @@ SPDX-License-Identifier: CC0-1.0
 - Bump `sop-java` to `7.0.1`
 - `decrypt --verify-with`: Fix to not throw `NoSignature` exception (exit code 3) if `VERIFICATIONS` is empty
 
-# 1.6.2
+## 1.6.2
 - Switch `bcpg` and `bcprov` artifacts from `-jdk15to18`variant to `-jdk18on`
 - Bump `bcpg-jdk8on` to `1.76`
 - Bump `bcprov-jdk18on` to `1.76`
@@ -17,7 +17,7 @@ SPDX-License-Identifier: CC0-1.0
     encrypting to legacy keys which do not carry any key flags.
 - Allow overriding of reference time in `EncryptionOptions` and `SigningOptions`.
 
-# 1.6.1
+## 1.6.1
 - `KeyRingBuilder`: Require UTF8 when adding user-ID via `addUserId(byte[])`
 - `pgpainless-sop`: Remove dependency on jetbrains annotations
 - Add `CertificateAuthority` interface to allow integration with [`pgpainless-wot`](https://github.com/pgpainless/pgpainless-wot)
