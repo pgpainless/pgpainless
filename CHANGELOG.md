@@ -5,6 +5,10 @@ SPDX-License-Identifier: CC0-1.0
 
 # PGPainless Changelog
 
+## 1.6.3
+- Bump `sop-java` to `7.0.1`
+- `decrypt --verify-with`: Fix to not throw `NoSignature` exception (exit code 3) if `VERIFICATIONS` is empty
+
 # 1.6.2
 - Switch `bcpg` and `bcprov` artifacts from `-jdk15to18`variant to `-jdk18on`
 - Bump `bcpg-jdk8on` to `1.76`
