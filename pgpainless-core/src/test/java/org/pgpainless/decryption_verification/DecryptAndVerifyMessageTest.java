@@ -85,6 +85,24 @@ public class DecryptAndVerifyMessageTest {
 
     @TestTemplate
     @ExtendWith(TestAllImplementations.class)
+    public void decryptMessageAndReadBeyondEndTest() throws Exception {
+        final String encryptedMessage = TestKeys.MSG_SIGN_CRYPT_JULIET_JULIET;
+
+        final ConsumerOptions options = new ConsumerOptions()
+                .addDecryptionKey(juliet)
+                .addVerificationCert(KeyRingUtils.publicKeyRingFrom(juliet));
+
+        try (final DecryptionStream decryptor = PGPainless.decryptAndOrVerify()
+                .onInputStream(new ByteArrayInputStream(encryptedMessage.getBytes()))
+                .withOptions(options);
+             final ByteArrayOutputStream toPlain = new ByteArrayOutputStream()) {
+            Streams.pipeAll(decryptor, toPlain);
+            assertEquals(-1, decryptor.read());
+        }
+    }
+
+    @TestTemplate
+    @ExtendWith(TestAllImplementations.class)
     public void decryptMessageAndVerifySignatureByteByByteTest() throws Exception {
         String encryptedMessage = TestKeys.MSG_SIGN_CRYPT_JULIET_JULIET;
 
