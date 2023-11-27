@@ -92,10 +92,10 @@ public class DecryptAndVerifyMessageTest {
                 .addDecryptionKey(juliet)
                 .addVerificationCert(KeyRingUtils.publicKeyRingFrom(juliet));
 
-        try (final DecryptionStream decryptor = PGPainless.decryptAndOrVerify()
+        try (DecryptionStream decryptor = PGPainless.decryptAndOrVerify()
                 .onInputStream(new ByteArrayInputStream(encryptedMessage.getBytes()))
                 .withOptions(options);
-             final ByteArrayOutputStream toPlain = new ByteArrayOutputStream()) {
+             ByteArrayOutputStream toPlain = new ByteArrayOutputStream()) {
             Streams.pipeAll(decryptor, toPlain);
             assertEquals(-1, decryptor.read());
         }
