@@ -13,6 +13,7 @@ SPDX-License-Identifier: CC0-1.0
   - Bump `sop-java` to `8.0.1`, implementing [SOP Spec Revision 08](https://www.ietf.org/archive/id/draft-dkg-openpgp-stateless-cli-08.html)
   - Change API of `sop.encrypt` to return a `ReadyWithResult<EncryptionResult>` to expose the session key
   - `decrypt --verify-with`: Fix to not throw `NoSignature` exception (exit code 3) if `VERIFICATIONS` is empty
+- Properly update the push down automaton with an EOS token when reaching the end of a packet stream using `OpenPgpMessageInputStream.read()`. Thanks @iNPUTmice for the report.
 
 ## 1.6.3
 - Bump `sop-java` to `7.0.1`
