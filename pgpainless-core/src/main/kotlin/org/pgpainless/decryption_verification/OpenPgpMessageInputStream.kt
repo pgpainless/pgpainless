@@ -486,6 +486,7 @@ class OpenPgpMessageInputStream(
     override fun read(): Int {
         if (nestedInputStream == null) {
             if (packetInputStream != null) {
+                syntaxVerifier.next(InputSymbol.END_OF_SEQUENCE)
                 syntaxVerifier.assertValid()
             }
             return -1
