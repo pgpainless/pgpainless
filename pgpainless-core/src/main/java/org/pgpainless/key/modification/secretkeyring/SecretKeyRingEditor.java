@@ -290,6 +290,7 @@ public class SecretKeyRingEditor implements SecretKeyRingEditorInterface {
             @Override
             public void modifyHashedSubpackets(SelfSignatureSubpackets hashedSubpackets) {
                 SignatureSubpacketsHelper.applyFrom(keySpec.getSubpackets(), (SignatureSubpackets) hashedSubpackets);
+                hashedSubpackets.setSignatureCreationTime(referenceTime);
             }
         };
 
@@ -307,7 +308,7 @@ public class SecretKeyRingEditor implements SecretKeyRingEditorInterface {
             @Nullable SelfSignatureSubpackets.Callback subpacketsCallback,
             @Nonnull SecretKeyRingProtector secretKeyRingProtector)
             throws PGPException, InvalidAlgorithmParameterException, NoSuchAlgorithmException, IOException {
-        PGPKeyPair keyPair = KeyRingBuilder.generateKeyPair(keySpec);
+        PGPKeyPair keyPair = KeyRingBuilder.generateKeyPair(keySpec, referenceTime);
 
         SecretKeyRingProtector subKeyProtector = PasswordBasedSecretKeyRingProtector
                 .forKeyId(keyPair.getKeyID(), subkeyPassphrase);

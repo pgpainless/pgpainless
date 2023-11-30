@@ -304,6 +304,16 @@ public class KeyRingBuilder implements KeyRingBuilderInterface<KeyRingBuilder> {
     public static PGPKeyPair generateKeyPair(KeySpec spec)
             throws NoSuchAlgorithmException, PGPException,
             InvalidAlgorithmParameterException {
+        Date keyCreationDate = spec.getKeyCreationDate();
+        if (keyCreationDate == null) {
+            keyCreationDate = new Date();
+        }
+        return generateKeyPair(spec, keyCreationDate);
+    }
+
+    public static PGPKeyPair generateKeyPair(KeySpec spec, Date keyCreationDate)
+            throws NoSuchAlgorithmException, PGPException,
+            InvalidAlgorithmParameterException {
         KeyType type = spec.getKeyType();
         KeyPairGenerator certKeyGenerator = KeyPairGenerator.getInstance(type.getName(),
                 ProviderFactory.getProvider());
@@ -311,8 +321,6 @@ public class KeyRingBuilder implements KeyRingBuilderInterface<KeyRingBuilder> {
 
         // Create raw Key Pair
         KeyPair keyPair = certKeyGenerator.generateKeyPair();
-
-        Date keyCreationDate = spec.getKeyCreationDate() != null ? spec.getKeyCreationDate() : new Date();
 
         // Form PGP key pair
         PGPKeyPair pgpKeyPair = ImplementationFactory.getInstance()
