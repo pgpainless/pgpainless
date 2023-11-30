@@ -5,6 +5,14 @@ SPDX-License-Identifier: CC0-1.0
 
 # PGPainless Changelog
 
+## 1.6.4-SNAPSHOT
+- Bump `bcpg-jdk8on` to `1.77`
+- Bump `bcprov-jdk18on` to `1.77`
+- Bump `logback-core` and `logback-classic` to `1.4.13`
+- Properly feed EOS tokens to the pushdown automaton when reaching the end of stream (thanks @iNPUTmice)
+- Do not choke on unknown signature subpackets (thanks @Jerbell)
+- Prevent timing issues resuting in subkey binding signatures predating the subkey (@thanks Jerbell)
+
 ## 1.6.3
 - Bump `sop-java` to `7.0.1`
 - `decrypt --verify-with`: Fix to not throw `NoSignature` exception (exit code 3) if `VERIFICATIONS` is empty
