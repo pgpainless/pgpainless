@@ -231,6 +231,7 @@ class SecretKeyRingEditor(
                 override fun modifyHashedSubpackets(hashedSubpackets: SelfSignatureSubpackets) {
                     SignatureSubpacketsHelper.applyFrom(
                         keySpec.subpackets, hashedSubpackets as SignatureSubpackets)
+                    hashedSubpackets.setSignatureCreationTime(referenceTime)
                 }
             }
         return addSubKey(keySpec, subkeyPassphrase, callback, protector)
@@ -242,7 +243,7 @@ class SecretKeyRingEditor(
         callback: SelfSignatureSubpackets.Callback?,
         protector: SecretKeyRingProtector
     ): SecretKeyRingEditorInterface {
-        val keyPair = KeyRingBuilder.generateKeyPair(keySpec)
+        val keyPair = KeyRingBuilder.generateKeyPair(keySpec, referenceTime)
         val subkeyProtector =
             PasswordBasedSecretKeyRingProtector.forKeyId(keyPair.keyID, subkeyPassphrase)
         val keyFlags = KeyFlag.fromBitmask(keySpec.subpackets.keyFlags).toMutableList()

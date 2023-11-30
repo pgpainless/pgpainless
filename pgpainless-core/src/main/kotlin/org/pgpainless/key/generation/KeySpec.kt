@@ -15,7 +15,7 @@ data class KeySpec(
     val keyType: KeyType,
     val subpacketGenerator: SignatureSubpackets,
     val isInheritedSubPackets: Boolean,
-    val keyCreationDate: Date
+    val keyCreationDate: Date?
 ) {
 
     val subpackets: PGPSignatureSubpacketVector

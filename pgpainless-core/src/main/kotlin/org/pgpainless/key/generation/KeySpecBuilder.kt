@@ -25,7 +25,7 @@ constructor(
     private var preferredHashAlgorithms: Set<HashAlgorithm> = algorithmSuite.hashAlgorithms
     private var preferredSymmetricAlgorithms: Set<SymmetricKeyAlgorithm> =
         algorithmSuite.symmetricKeyAlgorithms
-    private var keyCreationDate = Date()
+    private var keyCreationDate: Date? = null
 
     constructor(type: KeyType, vararg keyFlags: KeyFlag) : this(type, listOf(*keyFlags))
 

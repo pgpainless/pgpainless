@@ -246,7 +246,11 @@ class KeyRingBuilder : KeyRingBuilderInterface<KeyRingBuilder> {
         const val MILLIS_IN_YEAR = 1000L * 60 * 60 * 24 * 365
 
         @JvmStatic
-        fun generateKeyPair(spec: KeySpec): PGPKeyPair {
+        @JvmOverloads
+        fun generateKeyPair(
+            spec: KeySpec,
+            creationTime: Date = spec.keyCreationDate ?: Date()
+        ): PGPKeyPair {
             spec.keyType.let { type ->
                 // Create raw Key Pair
                 val keyPair =
@@ -254,10 +258,9 @@ class KeyRingBuilder : KeyRingBuilderInterface<KeyRingBuilder> {
                         .also { it.initialize(type.algorithmSpec) }
                         .generateKeyPair()
 
-                val keyCreationDate = spec.keyCreationDate ?: Date()
                 // Form PGP Key Pair
                 return ImplementationFactory.getInstance()
-                    .getPGPKeyPair(type.algorithm, keyPair, keyCreationDate)
+                    .getPGPKeyPair(type.algorithm, keyPair, creationTime)
             }
         }
     }
