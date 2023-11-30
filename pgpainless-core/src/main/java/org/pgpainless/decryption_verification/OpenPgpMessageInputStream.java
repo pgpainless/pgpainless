@@ -712,6 +712,7 @@ public class OpenPgpMessageInputStream extends DecryptionStream {
     public int read() throws IOException {
         if (nestedInputStream == null) {
             if (packetInputStream != null) {
+                syntaxVerifier.next(InputSymbol.EndOfSequence);
                 syntaxVerifier.assertValid();
             }
             return -1;
