@@ -6,6 +6,9 @@ SPDX-License-Identifier: CC0-1.0
 # PGPainless Changelog
 
 ## 2.0.0-SNAPSHOT
+- Bump `bcpg-jdk8on` to `1.77`
+- Bump `bcprov-jdk18on` to `1.77`
+- Bump `logback-core` and `logback-classic` to `1.4.13`
 - `pgpainless-core`
   - Rewrote most of the codebase in Kotlin
   - Removed `OpenPgpMetadata` (`decryptionStream.getResult()`) in favor of `MessageMetadata` (`decryptionStream.getMetadata()`)
@@ -13,7 +16,17 @@ SPDX-License-Identifier: CC0-1.0
   - Bump `sop-java` to `8.0.1`, implementing [SOP Spec Revision 08](https://www.ietf.org/archive/id/draft-dkg-openpgp-stateless-cli-08.html)
   - Change API of `sop.encrypt` to return a `ReadyWithResult<EncryptionResult>` to expose the session key
   - `decrypt --verify-with`: Fix to not throw `NoSignature` exception (exit code 3) if `VERIFICATIONS` is empty
-- Properly update the push down automaton with an EOS token when reaching the end of a packet stream using `OpenPgpMessageInputStream.read()`. Thanks @iNPUTmice for the report.
+- Properly feed EOS tokens to the pushdown automaton when reaching the end of stream (thanks @iNPUTmice)
+- Do not choke on unknown signature subpackets (thanks @Jerbell)
+- Prevent timing issues resuting in subkey binding signatures predating the subkey (@thanks Jerbell)
+
+## 1.6.4
+- Bump `bcpg-jdk8on` to `1.77`
+- Bump `bcprov-jdk18on` to `1.77`
+- Bump `logback-core` and `logback-classic` to `1.4.13`
+- Properly feed EOS tokens to the pushdown automaton when reaching the end of stream (thanks @iNPUTmice)
+- Do not choke on unknown signature subpackets (thanks @Jerbell)
+- Prevent timing issues resuting in subkey binding signatures predating the subkey (@thanks Jerbell)
 
 ## 1.6.3
 - Bump `sop-java` to `7.0.1`
