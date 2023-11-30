@@ -35,7 +35,13 @@ public class SignatureSubpacketsHelper {
 
     public static SignatureSubpackets applyFrom(PGPSignatureSubpacketVector vector, SignatureSubpackets subpackets) {
         for (SignatureSubpacket subpacket : vector.toArray()) {
-            org.pgpainless.algorithm.SignatureSubpacket type = org.pgpainless.algorithm.SignatureSubpacket.requireFromCode(subpacket.getType());
+            org.pgpainless.algorithm.SignatureSubpacket type = org.pgpainless.algorithm.SignatureSubpacket.fromCode(subpacket.getType());
+            if (type == null) {
+                // Unknown subpacket, ignore and just add to the residuals
+                subpackets.addResidualSubpacket(subpacket);
+                continue;
+            }
+
             switch (type) {
                 case signatureCreationTime:
                 case issuerKeyId:
