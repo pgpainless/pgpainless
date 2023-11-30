@@ -5,7 +5,7 @@ SPDX-License-Identifier: CC0-1.0
 
 # PGPainless Changelog
 
-## 1.6.4-SNAPSHOT
+## 1.6.4
 - Bump `bcpg-jdk8on` to `1.77`
 - Bump `bcprov-jdk18on` to `1.77`
 - Bump `logback-core` and `logback-classic` to `1.4.13`
