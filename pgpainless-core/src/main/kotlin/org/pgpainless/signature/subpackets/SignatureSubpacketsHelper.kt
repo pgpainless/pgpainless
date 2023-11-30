@@ -17,7 +17,7 @@ class SignatureSubpacketsHelper {
         fun applyFrom(vector: PGPSignatureSubpacketVector, subpackets: SignatureSubpackets) =
             subpackets.apply {
                 for (subpacket in vector.toArray()) {
-                    val type = SignatureSubpacket.requireFromCode(subpacket.type)
+                    val type = SignatureSubpacket.fromCode(subpacket.type)
                     when (type) {
                         SignatureSubpacket.signatureCreationTime,
                         SignatureSubpacket.issuerKeyId,
@@ -134,6 +134,7 @@ class SignatureSubpacketsHelper {
                         SignatureSubpacket.preferredAEADAlgorithms,
                         SignatureSubpacket.attestedCertification ->
                             subpackets.addResidualSubpacket(subpacket)
+                        else -> subpackets.addResidualSubpacket(subpacket)
                     }
                 }
             }
