@@ -271,18 +271,22 @@ public class SignatureSubpackets
     }
 
     @Override
-    public SignatureSubpackets setKeyExpirationTime(@Nonnull PGPPublicKey key, @Nonnull Date keyExpirationTime) {
+    public SignatureSubpackets setKeyExpirationTime(@Nonnull PGPPublicKey key, @Nullable Date keyExpirationTime) {
         return setKeyExpirationTime(key.getCreationTime(), keyExpirationTime);
     }
 
     @Override
-    public SignatureSubpackets setKeyExpirationTime(@Nonnull Date keyCreationTime, @Nonnull Date keyExpirationTime) {
+    public SignatureSubpackets setKeyExpirationTime(@Nonnull Date keyCreationTime, @Nullable Date keyExpirationTime) {
         return setKeyExpirationTime(true, keyCreationTime, keyExpirationTime);
     }
 
     @Override
-    public SignatureSubpackets setKeyExpirationTime(boolean isCritical, @Nonnull Date keyCreationTime, @Nonnull Date keyExpirationTime) {
-        return setKeyExpirationTime(isCritical, (keyExpirationTime.getTime() / 1000) - (keyCreationTime.getTime() / 1000));
+    public SignatureSubpackets setKeyExpirationTime(boolean isCritical, @Nonnull Date keyCreationTime, @Nullable Date keyExpirationTime) {
+        if (keyExpirationTime != null) {
+            return setKeyExpirationTime(isCritical, (keyExpirationTime.getTime() / 1000) - (keyCreationTime.getTime() / 1000));
+        } else {
+            return setKeyExpirationTime(isCritical, 0L);
+        }
     }
 
     @Override

@@ -46,11 +46,11 @@ public interface SelfSignatureSubpackets extends BaseSignatureSubpackets {
 
     SelfSignatureSubpackets setPrimaryUserId(@Nullable PrimaryUserID primaryUserId);
 
-    SelfSignatureSubpackets setKeyExpirationTime(@Nonnull PGPPublicKey key, @Nonnull Date keyExpirationTime);
+    SelfSignatureSubpackets setKeyExpirationTime(@Nonnull PGPPublicKey key, @Nullable Date keyExpirationTime);
 
-    SelfSignatureSubpackets setKeyExpirationTime(@Nonnull Date keyCreationTime, @Nonnull Date keyExpirationTime);
+    SelfSignatureSubpackets setKeyExpirationTime(@Nonnull Date keyCreationTime, @Nullable Date keyExpirationTime);
 
-    SelfSignatureSubpackets setKeyExpirationTime(boolean isCritical, @Nonnull Date keyCreationTime, @Nonnull Date keyExpirationTime);
+    SelfSignatureSubpackets setKeyExpirationTime(boolean isCritical, @Nonnull Date keyCreationTime, @Nullable Date keyExpirationTime);
 
     SelfSignatureSubpackets setKeyExpirationTime(boolean isCritical, long secondsFromCreationToExpiration);
 
