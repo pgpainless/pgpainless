@@ -470,6 +470,23 @@ public interface SecretKeyRingEditorInterface {
             throws PGPException;
 
     /**
+     * Set the expiration date for the subkey identified by the given keyId to the given expiration date.
+     * If the key is supposed to never expire, then an expiration date of null is expected.
+     *
+     * @param expiration new expiration date of null
+     * @param keyId id of the subkey
+     * @param secretKeyRingProtector to unlock the secret key
+     * @return the builder
+     * @throws PGPException in case we cannot generate a new subkey-binding or self-signature with the
+     *                      changed expiration date
+     */
+    SecretKeyRingEditorInterface setExpirationDateOfSubkey(
+            @Nullable Date expiration,
+            long keyId,
+            @Nonnull SecretKeyRingProtector secretKeyRingProtector)
+        throws PGPException;
+
+    /**
      * Create a minimal, self-authorizing revocation certificate, containing only the primary key
      * and a revocation signature.
      * This type of revocation certificates was introduced in OpenPGP v6.

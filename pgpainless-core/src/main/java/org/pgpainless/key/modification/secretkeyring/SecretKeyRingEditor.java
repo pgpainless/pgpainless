@@ -47,6 +47,7 @@ import org.pgpainless.key.protection.PasswordBasedSecretKeyRingProtector;
 import org.pgpainless.key.protection.SecretKeyRingProtector;
 import org.pgpainless.key.protection.UnprotectedKeysProtector;
 import org.pgpainless.key.protection.passphrase_provider.SolitaryPassphraseProvider;
+import org.pgpainless.key.util.KeyIdUtil;
 import org.pgpainless.key.util.KeyRingUtils;
 import org.pgpainless.key.util.RevocationAttributes;
 import org.pgpainless.signature.builder.DirectKeySelfSignatureBuilder;
@@ -610,6 +611,25 @@ public class SecretKeyRingEditor implements SecretKeyRingEditorInterface {
     }
 
     @Override
+    public SecretKeyRingEditorInterface setExpirationDateOfSubkey(@Nullable Date expiration, long keyId, @Nonnull SecretKeyRingProtector secretKeyRingProtector) throws PGPException {
+        // is primary key
+        if (keyId == secretKeyRing.getPublicKey().getKeyID()) {
+            return setExpirationDate(expiration, secretKeyRingProtector);
+        }
+
+        // is subkey
+        PGPPublicKey subkey = secretKeyRing.getPublicKey(keyId);
+        if (subkey != null) {
+            PGPSignature prevBinding = PGPainless.inspectKeyRing(secretKeyRing).getCurrentSubkeyBindingSignature(keyId);
+            PGPSignature bindingSig = reissueSubkeyBindingSignature(subkey, expiration, secretKeyRingProtector, prevBinding);
+            secretKeyRing = KeyRingUtils.injectCertification(secretKeyRing, subkey, bindingSig);
+        } else {
+            throw new NoSuchElementException("No subkey with ID " + KeyIdUtil.formatKeyId(keyId) + " found.");
+        }
+        return this;
+    }
+
+    @Override
     public PGPPublicKeyRing createMinimalRevocationCertificate(
             @Nonnull SecretKeyRingProtector secretKeyRingProtector,
             @Nullable RevocationAttributes keyRevocationAttributes)
@@ -697,6 +717,57 @@ public class SecretKeyRingEditor implements SecretKeyRingEditorInterface {
         });
 
         return builder.build(publicKey);
+    }
+
+    private PGPSignature reissueSubkeyBindingSignature(
+            PGPPublicKey subkey,
+            Date expiration,
+            SecretKeyRingProtector secretKeyRingProtector,
+            PGPSignature prevSubkeyBindingSignature)
+        throws PGPException {
+        if (subkey == null) {
+            throw new IllegalArgumentException("Subkey MUST NOT be null.");
+        }
+        if (prevSubkeyBindingSignature == null) {
+            throw new IllegalArgumentException("Previous subkey binding signature for "
+                    + KeyIdUtil.formatKeyId(subkey.getKeyID()) + " MUST NOT be null.");
+        }
+        PGPPublicKey primaryKey = secretKeyRing.getPublicKey();
+        PGPSecretKey secretPrimaryKey = secretKeyRing.getSecretKey();
+        PGPSecretKey secretSubkey = secretKeyRing.getSecretKey(subkey.getKeyID());
+
+        if (secretPrimaryKey == null) {
+            throw new NoSuchElementException("Secret Key Ring does not contain secret-key component for the primary key.");
+        }
+
+        SubkeyBindingSignatureBuilder builder = new SubkeyBindingSignatureBuilder(
+                secretPrimaryKey, secretKeyRingProtector, prevSubkeyBindingSignature);
+        SelfSignatureSubpackets subpackets = builder.getHashedSubpackets();
+        if (referenceTime != null) {
+            subpackets.setSignatureCreationTime(referenceTime);
+        }
+        // Set expiration
+        subpackets.setKeyExpirationTime(subkey, expiration);
+        subpackets.setSignatureExpirationTime(null); // avoid copying sig exp time
+
+        List<KeyFlag> previousKeyFlags = SignatureSubpacketsUtil.parseKeyFlags(prevSubkeyBindingSignature);
+        if (previousKeyFlags != null && previousKeyFlags.contains(KeyFlag.SIGN_DATA)) {
+            if (secretSubkey == null) {
+                throw new NoSuchElementException("Secret keyring does not contain secret-key component for subkey " +
+                        KeyIdUtil.formatKeyId(subkey.getKeyID()));
+            }
+
+            // Create new embedded back-sig
+            subpackets.clearEmbeddedSignatures();
+            try {
+                subpackets.addEmbeddedSignature(
+                        new PrimaryKeyBindingSignatureBuilder(secretSubkey, secretKeyRingProtector)
+                                .build(primaryKey));
+            } catch (IOException e) {
+                throw new PGPException("Cannot add embedded primary-key back signature.", e);
+            }
+        }
+        return builder.build(subkey);
     }
 
     private PGPSignature getPreviousDirectKeySignature() {
