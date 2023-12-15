@@ -8,6 +8,7 @@ import java.util.*
 import java.util.function.Predicate
 import javax.annotation.Nonnull
 import kotlin.NoSuchElementException
+import openpgp.openPgpKeyId
 import org.bouncycastle.bcpg.sig.KeyExpirationTime
 import org.bouncycastle.extensions.getKeyExpirationDate
 import org.bouncycastle.extensions.publicKeyAlgorithm
@@ -460,6 +461,28 @@ class SecretKeyRingEditor(
         return this
     }
 
+    override fun setExpirationDateOfSubkey(
+        expiration: Date?,
+        keyId: Long,
+        protector: SecretKeyRingProtector
+    ): SecretKeyRingEditorInterface = apply {
+        // is primary key
+        if (keyId == secretKeyRing.publicKey.keyID) {
+            return setExpirationDate(expiration, protector)
+        }
+
+        // is subkey
+        val subkey =
+            secretKeyRing.getPublicKey(keyId)
+                ?: throw NoSuchElementException("No subkey with ID ${keyId.openPgpKeyId()} found.")
+        val prevBinding =
+            inspectKeyRing(secretKeyRing).getCurrentSubkeyBindingSignature(keyId)
+                ?: throw NoSuchElementException(
+                    "Previous subkey binding signaure for ${keyId.openPgpKeyId()} MUST NOT be null.")
+        val bindingSig = reissueSubkeyBindingSignature(subkey, expiration, protector, prevBinding)
+        secretKeyRing = injectCertification(secretKeyRing, subkey, bindingSig)
+    }
+
     override fun createMinimalRevocationCertificate(
         protector: SecretKeyRingProtector,
         revocationAttributes: RevocationAttributes?
@@ -674,6 +697,45 @@ class SecretKeyRingEditor(
                     })
             }
             .build()
+    }
+
+    private fun reissueSubkeyBindingSignature(
+        subkey: PGPPublicKey,
+        expiration: Date?,
+        protector: SecretKeyRingProtector,
+        prevSubkeyBindingSignature: PGPSignature
+    ): PGPSignature {
+        val primaryKey = secretKeyRing.publicKey
+        val secretPrimaryKey = secretKeyRing.secretKey
+        val secretSubkey: PGPSecretKey? = secretKeyRing.getSecretKey(subkey.keyID)
+
+        val builder =
+            SubkeyBindingSignatureBuilder(secretPrimaryKey, protector, prevSubkeyBindingSignature)
+        builder.hashedSubpackets.apply {
+            // set expiration
+            setSignatureCreationTime(referenceTime)
+            setKeyExpirationTime(subkey, expiration)
+            setSignatureExpirationTime(null) // avoid copying sig exp time
+
+            // signing-capable subkeys need embedded primary key binding sig
+            SignatureSubpacketsUtil.parseKeyFlags(prevSubkeyBindingSignature)?.let { flags ->
+                if (flags.contains(KeyFlag.SIGN_DATA)) {
+                    if (secretSubkey == null) {
+                        throw NoSuchElementException(
+                            "Secret key does not contain secret-key" +
+                                " component for subkey ${subkey.keyID.openPgpKeyId()}")
+                    }
+
+                    // create new embedded back-sig
+                    clearEmbeddedSignatures()
+                    addEmbeddedSignature(
+                        PrimaryKeyBindingSignatureBuilder(secretSubkey, protector)
+                            .build(primaryKey))
+                }
+            }
+        }
+
+        return builder.build(subkey)
     }
 
     private fun selectUserIds(predicate: Predicate<String>): List<String> =
