@@ -5,7 +5,7 @@ SPDX-License-Identifier: CC0-1.0
 
 # PGPainless Changelog
 
-## 1.6.5-SNAPSHOT
+## 1.6.5
 - Add `SecretKeyRingEditor.setExpirationDateOfSubkey()`
 
 ## 1.6.4
@@ -14,7 +14,7 @@ SPDX-License-Identifier: CC0-1.0
 - Bump `logback-core` and `logback-classic` to `1.4.13`
 - Properly feed EOS tokens to the pushdown automaton when reaching the end of stream (thanks @iNPUTmice)
 - Do not choke on unknown signature subpackets (thanks @Jerbell)
-- Prevent timing issues resuting in subkey binding signatures predating the subkey (@thanks Jerbell)
+- Prevent timing issues resulting in subkey binding signatures predating the subkey (@thanks Jerbell)
 
 ## 1.6.3
 - Bump `sop-java` to `7.0.1`
