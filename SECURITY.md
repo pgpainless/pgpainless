@@ -12,13 +12,13 @@ SPDX-License-Identifier: Apache-2.0
 Use this section to tell people about which versions of your project are
 currently being supported with security updates.
 
-| Version | Supported          |
-|---------|--------------------|
-| 1.6.X   | :white_check_mark: |
-| 1.5.X   | :white_check_mark: |
-| 1.4.X   | :white_check_mark: |
-| 1.3.X   | :white_check_mark: |
-| < 1.3.X | :x:                |
+| Version | Supported          | Note       |
+|---------|--------------------|------------|
+| 1.6.X   | :white_check_mark: | LTS branch |
+| 1.5.X   | :white_check_mark: |            |
+| 1.4.X   | :white_check_mark: |            |
+| 1.3.X   | :white_check_mark: | LTS branch |
+| < 1.3.X | :x:                |            |
 
 ## Reporting a Vulnerability
 
