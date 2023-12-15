@@ -20,6 +20,9 @@ SPDX-License-Identifier: CC0-1.0
 - Do not choke on unknown signature subpackets (thanks @Jerbell)
 - Prevent timing issues resuting in subkey binding signatures predating the subkey (@thanks Jerbell)
 
+## 1.6.5
+- Add `SecretKeyRingEditor.setExpirationDateOfSubkey()`
+
 ## 1.6.4
 - Bump `bcpg-jdk8on` to `1.77`
 - Bump `bcprov-jdk18on` to `1.77`
