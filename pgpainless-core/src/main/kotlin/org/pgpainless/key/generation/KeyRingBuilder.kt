@@ -216,7 +216,8 @@ class KeyRingBuilder : KeyRingBuilderInterface<KeyRingBuilder> {
     }
 
     private fun buildContentSigner(certKey: PGPKeyPair): PGPContentSignerBuilder {
-        val hashAlgorithm = PGPainless.getPolicy().signatureHashAlgorithmPolicy.defaultHashAlgorithm
+        val hashAlgorithm =
+            PGPainless.getPolicy().certificationSignatureHashAlgorithmPolicy.defaultHashAlgorithm
         return ImplementationFactory.getInstance()
             .getPGPContentSignerBuilder(certKey.publicKey.algorithm, hashAlgorithm.algorithmId)
     }

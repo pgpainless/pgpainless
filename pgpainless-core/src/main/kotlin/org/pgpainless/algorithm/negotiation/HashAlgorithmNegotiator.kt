@@ -34,7 +34,7 @@ interface HashAlgorithmNegotiator {
          */
         @JvmStatic
         fun negotiateSignatureHashAlgorithm(policy: Policy): HashAlgorithmNegotiator {
-            return negotiateByPolicy(policy.signatureHashAlgorithmPolicy)
+            return negotiateByPolicy(policy.dataSignatureHashAlgorithmPolicy)
         }
 
         /**

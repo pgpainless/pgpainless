@@ -16,9 +16,15 @@ import org.pgpainless.algorithm.PublicKeyAlgorithm;
 public class PolicySetterTest {
 
     @Test
-    public void testSetSignatureHashAlgorithmPolicy_NullFails() {
+    public void testSetCertificationSignatureHashAlgorithmPolicy_NullFails() {
         Policy policy = Policy.getInstance();
-        assertThrows(NullPointerException.class, () -> policy.setSignatureHashAlgorithmPolicy(null));
+        assertThrows(NullPointerException.class, () -> policy.setCertificationSignatureHashAlgorithmPolicy(null));
+    }
+
+    @Test
+    public void testSetDataSignatureHashAlgorithmPolicy_NullFails() {
+        Policy policy = Policy.getInstance();
+        assertThrows(NullPointerException.class, () -> policy.setDataSignatureHashAlgorithmPolicy(null));
     }
 
     @Test

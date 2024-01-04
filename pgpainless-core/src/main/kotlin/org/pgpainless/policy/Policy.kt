@@ -10,8 +10,9 @@ import org.pgpainless.util.DateUtil
 import org.pgpainless.util.NotationRegistry
 
 class Policy(
-    var signatureHashAlgorithmPolicy: HashAlgorithmPolicy,
+    var certificationSignatureHashAlgorithmPolicy: HashAlgorithmPolicy,
     var revocationSignatureHashAlgorithmPolicy: HashAlgorithmPolicy,
+    var dataSignatureHashAlgorithmPolicy: HashAlgorithmPolicy,
     var symmetricKeyEncryptionAlgorithmPolicy: SymmetricKeyAlgorithmPolicy,
     var symmetricKeyDecryptionAlgorithmPolicy: SymmetricKeyAlgorithmPolicy,
     var compressionAlgorithmPolicy: CompressionAlgorithmPolicy,
@@ -21,8 +22,9 @@ class Policy(
 
     constructor() :
         this(
-            HashAlgorithmPolicy.smartSignatureHashAlgorithmPolicy(),
-            HashAlgorithmPolicy.smartSignatureHashAlgorithmPolicy(),
+            HashAlgorithmPolicy.smartCertificationSignatureHashAlgorithmPolicy(),
+            HashAlgorithmPolicy.smartCertificationSignatureHashAlgorithmPolicy(),
+            HashAlgorithmPolicy.smartDataSignatureHashAlgorithmPolicy(),
             SymmetricKeyAlgorithmPolicy.symmetricKeyEncryptionPolicy2022(),
             SymmetricKeyAlgorithmPolicy.symmetricKeyDecryptionPolicy2022(),
             CompressionAlgorithmPolicy.anyCompressionAlgorithmPolicy(),
@@ -89,6 +91,30 @@ class Policy(
         fun defaultHashAlgorithm() = defaultHashAlgorithm
 
         companion object {
+            // https://sequoia-pgp.org/blog/2023/02/01/202302-happy-sha1-day/
+            // signature data which is not attacker-controlled is acceptable before 2023-02-01
+            @JvmStatic
+            fun smartCertificationSignatureHashAlgorithmPolicy() =
+                HashAlgorithmPolicy(
+                    HashAlgorithm.SHA512,
+                    buildMap {
+                        put(HashAlgorithm.SHA3_512, null)
+                        put(HashAlgorithm.SHA3_512, null)
+                        put(HashAlgorithm.SHA3_256, null)
+                        put(HashAlgorithm.SHA512, null)
+                        put(HashAlgorithm.SHA384, null)
+                        put(HashAlgorithm.SHA256, null)
+                        put(HashAlgorithm.SHA224, null)
+                        put(
+                            HashAlgorithm.RIPEMD160,
+                            DateUtil.parseUTCDate("2023-02-01 00:00:00 UTC"))
+                        put(HashAlgorithm.SHA1, DateUtil.parseUTCDate("2023-02-01 00:00:00 UTC"))
+                        put(HashAlgorithm.MD5, DateUtil.parseUTCDate("1997-02-01 00:00:00 UTC"))
+                    })
+
+            @JvmStatic
+            fun smartDataSignatureHashAlgorithmPolicy() = smartSignatureHashAlgorithmPolicy()
+
             @JvmStatic
             fun smartSignatureHashAlgorithmPolicy() =
                 HashAlgorithmPolicy(

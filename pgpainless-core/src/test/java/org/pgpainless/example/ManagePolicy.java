@@ -43,7 +43,10 @@ public class ManagePolicy {
     @AfterEach
     public void resetPolicy() {
         // Policy for hash algorithms in non-revocation signatures
-        PGPainless.getPolicy().setSignatureHashAlgorithmPolicy(
+        PGPainless.getPolicy().setCertificationSignatureHashAlgorithmPolicy(
+                Policy.HashAlgorithmPolicy.static2022SignatureHashAlgorithmPolicy());
+        // Policy for hash algorithms in data signatures
+        PGPainless.getPolicy().setDataSignatureHashAlgorithmPolicy(
                 Policy.HashAlgorithmPolicy.static2022SignatureHashAlgorithmPolicy());
         // Policy for hash algorithms in revocation signatures
         PGPainless.getPolicy().setRevocationSignatureHashAlgorithmPolicy(
@@ -83,7 +86,7 @@ public class ManagePolicy {
         // Get PGPainless' policy singleton
         Policy policy = PGPainless.getPolicy();
 
-        Policy.HashAlgorithmPolicy sigHashAlgoPolicy = policy.getSignatureHashAlgorithmPolicy();
+        Policy.HashAlgorithmPolicy sigHashAlgoPolicy = policy.getDataSignatureHashAlgorithmPolicy();
         assertTrue(sigHashAlgoPolicy.isAcceptable(HashAlgorithm.SHA512));
         // Per default, non-revocation signatures using SHA-1 are rejected
         assertFalse(sigHashAlgoPolicy.isAcceptable(HashAlgorithm.SHA1));
@@ -95,9 +98,9 @@ public class ManagePolicy {
                 // List of acceptable hash algorithms
                 Arrays.asList(HashAlgorithm.SHA512, HashAlgorithm.SHA384, HashAlgorithm.SHA256, HashAlgorithm.SHA224, HashAlgorithm.SHA1));
         // Set the hash algo policy as policy for non-revocation signatures
-        policy.setSignatureHashAlgorithmPolicy(customPolicy);
+        policy.setDataSignatureHashAlgorithmPolicy(customPolicy);
 
-        sigHashAlgoPolicy = policy.getSignatureHashAlgorithmPolicy();
+        sigHashAlgoPolicy = policy.getDataSignatureHashAlgorithmPolicy();
         assertTrue(sigHashAlgoPolicy.isAcceptable(HashAlgorithm.SHA512));
         // SHA-1 is now acceptable as well
         assertTrue(sigHashAlgoPolicy.isAcceptable(HashAlgorithm.SHA1));

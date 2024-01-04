@@ -235,12 +235,18 @@ abstract class SignatureValidator {
             signature: PGPSignature,
             policy: Policy
         ): Policy.HashAlgorithmPolicy {
-            val type = SignatureType.requireFromCode(signature.signatureType)
-            return when (type) {
+            return when (SignatureType.requireFromCode(signature.signatureType)) {
                 SignatureType.CERTIFICATION_REVOCATION,
                 SignatureType.KEY_REVOCATION,
                 SignatureType.SUBKEY_REVOCATION -> policy.revocationSignatureHashAlgorithmPolicy
-                else -> policy.signatureHashAlgorithmPolicy
+                SignatureType.GENERIC_CERTIFICATION,
+                SignatureType.NO_CERTIFICATION,
+                SignatureType.CASUAL_CERTIFICATION,
+                SignatureType.POSITIVE_CERTIFICATION,
+                SignatureType.DIRECT_KEY,
+                SignatureType.SUBKEY_BINDING,
+                SignatureType.PRIMARYKEY_BINDING -> policy.certificationSignatureHashAlgorithmPolicy
+                else -> policy.dataSignatureHashAlgorithmPolicy
             }
         }
 

@@ -207,7 +207,7 @@ public class SigningTest {
         SubkeyIdentifier signingKey = sigs.keySet().iterator().next();
         PGPSignature signature = sigs.get(signingKey).iterator().next();
 
-        assertEquals(PGPainless.getPolicy().getSignatureHashAlgorithmPolicy().defaultHashAlgorithm().getAlgorithmId(),
+        assertEquals(PGPainless.getPolicy().getDataSignatureHashAlgorithmPolicy().defaultHashAlgorithm().getAlgorithmId(),
                 signature.getHashAlgorithm());
     }
 
@@ -237,7 +237,7 @@ public class SigningTest {
         SubkeyIdentifier signingKey = sigs.keySet().iterator().next();
         PGPSignature signature = sigs.get(signingKey).iterator().next();
 
-        assertEquals(PGPainless.getPolicy().getSignatureHashAlgorithmPolicy().defaultHashAlgorithm().getAlgorithmId(),
+        assertEquals(PGPainless.getPolicy().getDataSignatureHashAlgorithmPolicy().defaultHashAlgorithm().getAlgorithmId(),
                 signature.getHashAlgorithm());
     }
 
