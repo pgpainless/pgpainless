@@ -101,7 +101,7 @@ class JceImplementationFactory : ImplementationFactory() {
     override fun getPGPDataEncryptorBuilder(symmetricKeyAlgorithm: Int): PGPDataEncryptorBuilder =
         JcePGPDataEncryptorBuilder(symmetricKeyAlgorithm).setProvider(ProviderFactory.provider)
 
-    override fun getPGPKeyPair(
+    override fun getPGPV4KeyPair(
         publicKeyAlgorithm: PublicKeyAlgorithm,
         keyPair: KeyPair,
         creationDate: Date

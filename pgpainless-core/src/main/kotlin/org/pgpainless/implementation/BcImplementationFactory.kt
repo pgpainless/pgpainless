@@ -86,7 +86,7 @@ class BcImplementationFactory : ImplementationFactory() {
     override fun getPGPDataEncryptorBuilder(symmetricKeyAlgorithm: Int): PGPDataEncryptorBuilder =
         BcPGPDataEncryptorBuilder(symmetricKeyAlgorithm)
 
-    override fun getPGPKeyPair(
+    override fun getPGPV4KeyPair(
         publicKeyAlgorithm: PublicKeyAlgorithm,
         keyPair: KeyPair,
         creationDate: Date
