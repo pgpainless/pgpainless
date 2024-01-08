@@ -55,6 +55,20 @@ abstract class AbstractSignatureBuilder<B : AbstractSignatureBuilder<B>>(
 
     @Throws(PGPException::class)
     constructor(
+        privateSigningKey: PGPPrivateKey,
+        publicSigningKey: PGPPublicKey,
+        archetypeSignature: PGPSignature
+    ) : this(
+        privateSigningKey,
+        publicSigningKey,
+        negotiateHashAlgorithm(publicSigningKey),
+        SignatureType.requireFromCode(archetypeSignature.signatureType),
+        SignatureSubpackets.refreshHashedSubpackets(publicSigningKey, archetypeSignature),
+        SignatureSubpackets.refreshUnhashedSubpackets(archetypeSignature)
+    )
+
+    @Throws(PGPException::class)
+    constructor(
         signatureType: SignatureType,
         signingKey: PGPSecretKey,
         protector: SecretKeyRingProtector

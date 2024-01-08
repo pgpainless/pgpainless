@@ -4,14 +4,18 @@
 
 package org.pgpainless.signature.builder
 
-import java.util.function.Predicate
 import org.bouncycastle.openpgp.PGPException
+import org.bouncycastle.openpgp.PGPPrivateKey
+import org.bouncycastle.openpgp.PGPPublicKey
 import org.bouncycastle.openpgp.PGPSecretKey
 import org.bouncycastle.openpgp.PGPSignature
 import org.bouncycastle.openpgp.PGPUserAttributeSubpacketVector
+import org.pgpainless.algorithm.HashAlgorithm
 import org.pgpainless.algorithm.SignatureType
 import org.pgpainless.key.protection.SecretKeyRingProtector
 import org.pgpainless.signature.subpackets.SelfSignatureSubpackets
+import org.pgpainless.signature.subpackets.SignatureSubpackets
+import java.util.function.Predicate
 
 /**
  * [AbstractSignatureBuilder] devoted to all types of self-certifications. Self-certifications are
@@ -48,6 +52,28 @@ class SelfSignatureBuilder : AbstractSignatureBuilder<SelfSignatureBuilder> {
         primaryKeyProtector: SecretKeyRingProtector,
         oldCertification: PGPSignature
     ) : super(primaryKey, primaryKeyProtector, oldCertification)
+
+    @Throws(PGPException::class)
+    constructor(
+        privatePrimaryKey: PGPPrivateKey,
+                publicPrimaryKey: PGPPublicKey,
+        oldCertification: PGPSignature
+    ) : super(privatePrimaryKey, publicPrimaryKey, oldCertification)
+
+    @Throws(PGPException::class)
+    constructor(
+        privatePrimaryKey: PGPPrivateKey,
+        publicPrimaryKey: PGPPublicKey,
+        signatureType: SignatureType = SignatureType.POSITIVE_CERTIFICATION,
+        hashAlgorithm: HashAlgorithm,
+    ) : super(
+        privatePrimaryKey,
+        publicPrimaryKey,
+        hashAlgorithm,
+        signatureType,
+        SignatureSubpackets.createHashedSubpackets(publicPrimaryKey),
+        SignatureSubpackets.createEmptySubpackets()
+    )
 
     val hashedSubpackets: SelfSignatureSubpackets = _hashedSubpackets
     val unhashedSubpackets: SelfSignatureSubpackets = _unhashedSubpackets

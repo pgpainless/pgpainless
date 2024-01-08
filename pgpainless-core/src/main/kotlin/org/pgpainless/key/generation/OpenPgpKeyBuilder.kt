@@ -1,15 +1,22 @@
 package org.pgpainless.key.generation
 
+import org.bouncycastle.bcpg.PublicSubkeyPacket
 import org.bouncycastle.openpgp.PGPKeyPair
-import org.bouncycastle.openpgp.PGPSecretKeyRing
+import org.bouncycastle.openpgp.PGPPrivateKey
+import org.bouncycastle.openpgp.PGPPublicKey
+import org.pgpainless.algorithm.HashAlgorithm
+import org.pgpainless.algorithm.SignatureType
 import org.pgpainless.implementation.ImplementationFactory
 import org.pgpainless.key.generation.type.KeyType
 import org.pgpainless.key.generation.type.eddsa.EdDSACurve
 import org.pgpainless.key.generation.type.rsa.RsaLength
 import org.pgpainless.key.generation.type.xdh.XDHSpec
 import org.pgpainless.provider.ProviderFactory
+import org.pgpainless.signature.builder.SelfSignatureBuilder
+import org.pgpainless.signature.builder.SubkeyBindingSignatureBuilder
+import org.pgpainless.signature.subpackets.SelfSignatureSubpackets
 import java.security.KeyPairGenerator
-import java.util.Date
+import java.util.*
 
 class OpenPgpKeyBuilder {
 
@@ -19,34 +26,19 @@ class OpenPgpKeyBuilder {
     ): V4PrimaryKeyBuilder = V4PrimaryKeyBuilder(type, creationTime)
 
     abstract class V4KeyBuilder<T: V4KeyBuilder<T>>(
-        protected val type: KeyType,
-        protected val creationTime: Date,
+        val type: KeyType,
+        val creationTime: Date,
         val certificateCreationTime: Date = Date()
     ) {
 
-        internal val keyPair = generateKeyPair()
+        internal var key = generateKeyPair()
 
         fun subkey(
             type: KeyType,
             creationTime: Date = certificateCreationTime
-        ): V4SubkeyBuilder = V4SubkeyBuilder(type, creationTime, this)
+        ): V4SubkeyBuilder = V4SubkeyBuilder(type, creationTime, primaryKey())
 
-        fun generate(): PGPSecretKeyRing {
-            val keys = collectKeysForGeneration()
-
-            assert(keys.first() is V4PrimaryKeyBuilder)
-            assert(keys.drop(1).all { it is V4SubkeyBuilder })
-
-            val primaryKey: V4PrimaryKeyBuilder = keys.first() as V4PrimaryKeyBuilder
-
-        }
-
-        private fun collectKeysForGeneration(): List<V4KeyBuilder<*>> =
-            if (this is V4SubkeyBuilder) {
-                predecessor.collectKeysForGeneration().plus(this)
-            } else {
-                listOf(this)
-            }
+        internal abstract fun primaryKey(): V4PrimaryKeyBuilder
 
         private fun generateKeyPair(): PGPKeyPair {
             // Create raw Key Pair
@@ -57,7 +49,12 @@ class OpenPgpKeyBuilder {
             // Form PGP Key Pair
             return ImplementationFactory.getInstance()
                 .getPGPV4KeyPair(type.algorithm, keyPair, creationTime)
+                .let {
+                    adjustKeyPacket(it)
+                }
         }
+
+        protected abstract fun adjustKeyPacket(keyPair: PGPKeyPair): PGPKeyPair
     }
 
     class V4PrimaryKeyBuilder(
@@ -65,35 +62,73 @@ class OpenPgpKeyBuilder {
         creationTime: Date
     ): V4KeyBuilder<V4PrimaryKeyBuilder>(type, creationTime) {
 
-        fun userId(userId: CharSequence) = userId(userId, OpenPgpV4KeyGenerator.Preferences())
+        fun userId(
+            userId: CharSequence,
+            bindingTime: Date = creationTime,
+            hashAlgorithm: HashAlgorithm = HashAlgorithm.SHA512,
+            subpacketsCallback: SelfSignatureSubpackets.Callback =
+                object : SelfSignatureSubpackets.Callback {
 
-        fun userId(userId: CharSequence, preferences: OpenPgpV4KeyGenerator.Preferences) = apply {
-            keyPair.publicKey.
+                }
+        ) = apply {
+            val sig = SelfSignatureBuilder(
+                key.privateKey,
+                key.publicKey,
+                SignatureType.POSITIVE_CERTIFICATION,
+                hashAlgorithm)
+                .applyCallback(subpacketsCallback)
+                .build(userId)
+            key = PGPKeyPair(
+                PGPPublicKey.addCertification(key.publicKey, userId.toString(), sig),
+                key.privateKey
+            )
         }
 
-        fun selfSignature(preferences: OpenPgpV4KeyGenerator.Preferences) = apply {
-
+        override fun adjustKeyPacket(keyPair: PGPKeyPair): PGPKeyPair {
+            return keyPair // is already a secret key packet
         }
+
+        override fun primaryKey() = this
     }
 
     class V4SubkeyBuilder(
         type: KeyType,
         creationTime: Date,
-        internal val predecessor: V4KeyBuilder<*>,
-    ): V4KeyBuilder<V4SubkeyBuilder>(type, creationTime, predecessor.certificateCreationTime) {
-        fun bindingSignature(preferences: OpenPgpV4KeyGenerator.Preferences) = apply {
+        private val primaryKeyBuilder: V4PrimaryKeyBuilder
+    ): V4KeyBuilder<V4SubkeyBuilder>(type, creationTime) {
 
+        fun bindingSignature(subpacketCallback: SelfSignatureSubpackets.Callback) = apply {
+            SubkeyBindingSignatureBuilder(primaryKeyBuilder.key.privateKey, primaryKeyBuilder.key.publicKey)
+                .applyCallback(subpacketCallback)
+                .build(key.publicKey)
+                .let {
+                    key = PGPKeyPair(
+                        PGPPublicKey.addCertification(key.publicKey, it),
+                        key.privateKey)
+                }
         }
-    }
-}
 
-fun test() {
-    OpenPgpKeyBuilder()
-        .buildV4Key(KeyType.RSA(RsaLength._4096))
-        .selfSignature(OpenPgpV4KeyGenerator.Preferences())
-        .userId("Alice", OpenPgpV4KeyGenerator.Preferences())
-        .subkey(KeyType.EDDSA(EdDSACurve._Ed25519))
-        .bindingSignature(OpenPgpV4KeyGenerator.Preferences())
-        .subkey(KeyType.XDH(XDHSpec._X25519))
-        .bindingSignature(OpenPgpV4KeyGenerator.Preferences())
+        override fun adjustKeyPacket(keyPair: PGPKeyPair): PGPKeyPair {
+            val fpCalc = ImplementationFactory.getInstance().keyFingerprintCalculator
+            val pubkey = keyPair.publicKey
+            val privkey = keyPair.privateKey
+            // form subkey packet
+            val subkey = PublicSubkeyPacket(pubkey.algorithm,
+                pubkey.creationTime, pubkey.publicKeyPacket.key)
+            return PGPKeyPair(
+                PGPPublicKey(subkey, fpCalc),
+                PGPPrivateKey(pubkey.keyID, subkey, privkey.privateKeyDataPacket)
+            )
+        }
+
+        override fun primaryKey() = primaryKeyBuilder.primaryKey()
+
+        fun bindingSignature(
+            bindingTime: Date = creationTime
+        ): V4SubkeyBuilder = bindingSignature(object : SelfSignatureSubpackets.Callback {
+            override fun modifyHashedSubpackets(hashedSubpackets: SelfSignatureSubpackets) {
+                hashedSubpackets.setSignatureCreationTime(bindingTime)
+            }
+        })
+    }
 }

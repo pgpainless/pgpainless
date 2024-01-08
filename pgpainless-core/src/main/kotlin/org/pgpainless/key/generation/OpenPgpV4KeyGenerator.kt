@@ -1,117 +1,79 @@
 package org.pgpainless.key.generation
 
+import org.bouncycastle.openpgp.PGPSecretKey
 import org.bouncycastle.openpgp.PGPSecretKeyRing
+import org.pgpainless.algorithm.HashAlgorithm
 import org.pgpainless.algorithm.KeyFlag
+import org.pgpainless.implementation.ImplementationFactory
 import org.pgpainless.key.generation.type.KeyType
+import org.pgpainless.key.protection.SecretKeyRingProtector
 import org.pgpainless.policy.Policy
+import org.pgpainless.signature.subpackets.SelfSignatureSubpackets
 import java.util.*
 
 class OpenPgpV4KeyGenerator(
+    keyType: KeyType,
     private val policy: Policy,
     private val referenceTime: Date = Date()
 ) {
 
-    fun primaryKey(
-        type: KeyType,
-        vararg flag: KeyFlag = arrayOf(KeyFlag.CERTIFY_OTHER, KeyFlag.SIGN_DATA)
-    ) = primaryKey(type, referenceTime, *flag)
+    private val primaryKey = OpenPgpKeyBuilder.V4PrimaryKeyBuilder(keyType, referenceTime)
+    private val subkeys = mutableListOf<OpenPgpKeyBuilder.V4SubkeyBuilder>()
 
-    fun primaryKey(
-        type: KeyType,
-        creationTime: Date,
-        vararg flag: KeyFlag = arrayOf(KeyFlag.CERTIFY_OTHER, KeyFlag.SIGN_DATA)
-    ) = WithSubkeys(
-        KeyDescription(type, creationTime, flag.toList()),
-        policy,
-        referenceTime
-    )
-
-    class WithSubkeys(
-        private val primaryKey: KeyDescription,
-        private val policy: Policy,
-        private val referenceTime: Date
-    ) {
-
-        val builder = OpenPgpKeyBuilder()
-            .buildV4Key(primaryKey.type)
-            .
-
-        init {
-
-        }
-
-        fun encryptionSubkey(
-            type: KeyType,
-            vararg flag: KeyFlag = arrayOf(KeyFlag.ENCRYPT_COMMS, KeyFlag.ENCRYPT_STORAGE)
-        ) = encryptionSubkey(type, referenceTime, *flag)
-
-        fun encryptionSubkey(
-            type: KeyType,
-            creationTime: Date,
-            vararg flag: KeyFlag = arrayOf(KeyFlag.ENCRYPT_COMMS, KeyFlag.ENCRYPT_STORAGE)
-        ) = subkey(type, creationTime, *flag)
-
-        fun signingSubkey(
-            type: KeyType
-        ) = signingSubkey(type, referenceTime)
-
-        fun signingSubkey(
-            type: KeyType,
-            creationTime: Date
-        ) = subkey(type, creationTime, KeyFlag.SIGN_DATA)
-
-        fun subkey(
-            type: KeyType,
-            vararg flag: KeyFlag
-        ) = subkey(type, referenceTime, *flag)
-
-        fun subkey(
-            type: KeyType,
-            creationTime: Date = referenceTime,
-            vararg flag: KeyFlag
-        ) = apply {
-
-        }
-
-        fun noUserId(
-            preferences: Preferences
-        ): PGPSecretKeyRing {
-
-        }
-
-        fun userId(
-            userId: CharSequence,
-            preferences: Preferences
-        ): WithUserIds = WithUserIds().apply {
-            userId(userId, preferences)
-        }
+    fun addUserId(
+        userId: CharSequence,
+        bindingTime: Date = referenceTime
+    ) = apply {
+        primaryKey.userId(userId, bindingTime)
     }
 
-    class WithUserIds {
-        fun userId(
-            userId: CharSequence,
-            preferences: Preferences
-        ): WithUserIds {
+    fun addSubkey(
+        keyType: KeyType,
+        creationTime: Date = referenceTime,
+        bindingTime: Date = creationTime
+    ) = addSubkey(OpenPgpKeyBuilder.V4SubkeyBuilder(keyType, creationTime, primaryKey), bindingTime)
 
-        }
-
-        fun done(): PGPSecretKeyRing {
-
-        }
-
-        fun directKeySignature(
-            preferences: Preferences
-        ): PGPSecretKeyRing {
-
-        }
+    fun addSubkey(
+        subkeyBuilder: OpenPgpKeyBuilder.V4SubkeyBuilder,
+        bindingTime: Date = subkeyBuilder.creationTime
+    ) = apply {
+        subkeys.add(subkeyBuilder)
     }
 
-    data class KeyDescription(
-        val type: KeyType,
-        val creationTime: Date,
-        val flags: List<KeyFlag>
+    fun addEncryptionSubkey(
+        keyType: KeyType,
+        creationTime: Date = referenceTime,
+        bindingTime: Date  = creationTime
+    ) = addSubkey(OpenPgpKeyBuilder.V4SubkeyBuilder(keyType, creationTime, primaryKey)
+        .bindingSignature(object: SelfSignatureSubpackets.Callback {
+            override fun modifyHashedSubpackets(hashedSubpackets: SelfSignatureSubpackets) {
+                hashedSubpackets.setSignatureCreationTime(bindingTime)
+                hashedSubpackets.setKeyFlags(KeyFlag.ENCRYPT_STORAGE, KeyFlag.ENCRYPT_COMMS)
+            }
+        })
     )
 
-    data class Preferences()
-
+    fun build(protector: SecretKeyRingProtector): PGPSecretKeyRing {
+        return PGPSecretKeyRing(
+            mutableListOf(
+                PGPSecretKey(
+                    primaryKey.key.privateKey,
+                    primaryKey.key.publicKey,
+                    ImplementationFactory.getInstance().getPGPDigestCalculator(HashAlgorithm.SHA1),
+                    true,
+                    protector.getEncryptor(primaryKey.key.keyID)
+                )
+            ).plus(
+                subkeys.map {
+                    PGPSecretKey(
+                        it.key.privateKey,
+                        it.key.publicKey,
+                        ImplementationFactory.getInstance().getPGPDigestCalculator(HashAlgorithm.SHA1),
+                        false,
+                        protector.getEncryptor(it.key.keyID)
+                    )
+                }
+            )
+        )
+    }
 }
