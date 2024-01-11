@@ -7,11 +7,13 @@ package org.pgpainless.signature.subpackets
 import java.io.IOException
 import java.net.URL
 import java.util.*
+import openpgp.plusSeconds
 import org.bouncycastle.bcpg.sig.*
 import org.bouncycastle.openpgp.PGPPublicKey
 import org.bouncycastle.openpgp.PGPSignature
 import org.pgpainless.algorithm.HashAlgorithm
 import org.pgpainless.algorithm.PublicKeyAlgorithm
+import org.pgpainless.key.OpenPgpFingerprint
 
 interface BaseSignatureSubpackets {
 
@@ -33,17 +35,30 @@ interface BaseSignatureSubpackets {
 
     fun setIssuerKeyId(issuerKeyID: IssuerKeyID?): BaseSignatureSubpackets
 
+    fun getIssuerKeyId(): Long? = getIssuerKeyIdPacket()?.keyID
+
+    fun getIssuerKeyIdPacket(): IssuerKeyID?
+
     fun setIssuerFingerprint(isCritical: Boolean, issuer: PGPPublicKey): BaseSignatureSubpackets
 
     fun setIssuerFingerprint(issuer: PGPPublicKey): BaseSignatureSubpackets
 
     fun setIssuerFingerprint(fingerprint: IssuerFingerprint?): BaseSignatureSubpackets
 
+    fun getIssuerFingerprint(): OpenPgpFingerprint? =
+        getIssuerFingerprintPacket()?.let { OpenPgpFingerprint.of(it.keyVersion, it.fingerprint) }
+
+    fun getIssuerFingerprintPacket(): IssuerFingerprint?
+
     fun setSignatureCreationTime(creationTime: Date): BaseSignatureSubpackets
 
     fun setSignatureCreationTime(isCritical: Boolean, creationTime: Date): BaseSignatureSubpackets
 
     fun setSignatureCreationTime(creationTime: SignatureCreationTime?): BaseSignatureSubpackets
+
+    fun getSignatureCreationTime(): Date? = getSignatureCreationTimePacket()?.time
+
+    fun getSignatureCreationTimePacket(): SignatureCreationTime?
 
     fun setSignatureExpirationTime(
         creationTime: Date,
@@ -62,11 +77,28 @@ interface BaseSignatureSubpackets {
         expirationTime: SignatureExpirationTime?
     ): BaseSignatureSubpackets
 
+    fun getSignatureExpirationTimeInSeconds(): Long? = getSignatureExpirationTimePacket()?.time
+
+    fun getSignatureExpirationTime(creationTime: Date): Date? =
+        getSignatureExpirationTimeInSeconds()?.let {
+            if (it == 0L) {
+                null
+            } else {
+                creationTime.plusSeconds(it)
+            }
+        }
+
+    fun getSignatureExpirationTimePacket(): SignatureExpirationTime?
+
     fun setSignerUserId(userId: CharSequence): BaseSignatureSubpackets
 
     fun setSignerUserId(isCritical: Boolean, userId: CharSequence): BaseSignatureSubpackets
 
     fun setSignerUserId(signerUserID: SignerUserID?): BaseSignatureSubpackets
+
+    fun getSignerUserId(): CharSequence? = getSignerUserIdPacket()?.id
+
+    fun getSignerUserIdPacket(): SignerUserID?
 
     fun addNotationData(
         isCritical: Boolean,
@@ -83,6 +115,8 @@ interface BaseSignatureSubpackets {
 
     fun addNotationData(notationData: NotationData): BaseSignatureSubpackets
 
+    fun getNotationDataPackets(): List<NotationData>
+
     fun clearNotationData(): BaseSignatureSubpackets
 
     fun addIntendedRecipientFingerprint(recipientKey: PGPPublicKey): BaseSignatureSubpackets
@@ -96,6 +130,13 @@ interface BaseSignatureSubpackets {
         intendedRecipient: IntendedRecipientFingerprint
     ): BaseSignatureSubpackets
 
+    fun getIntendedRecipientFingerprints(): List<OpenPgpFingerprint> =
+        getIntendedRecipientFingerprintPackets().map {
+            OpenPgpFingerprint.of(it.keyVersion, it.fingerprint)
+        }
+
+    fun getIntendedRecipientFingerprintPackets(): List<IntendedRecipientFingerprint>
+
     fun clearIntendedRecipientFingerprints(): BaseSignatureSubpackets
 
     fun setExportable(): BaseSignatureSubpackets
@@ -106,17 +147,29 @@ interface BaseSignatureSubpackets {
 
     fun setExportable(exportable: Exportable?): BaseSignatureSubpackets
 
+    fun getExportable(): Boolean? = getExportablePacket()?.isExportable
+
+    fun getExportablePacket(): Exportable?
+
     fun setPolicyUrl(policyUrl: URL): BaseSignatureSubpackets
 
     fun setPolicyUrl(isCritical: Boolean, policyUrl: URL): BaseSignatureSubpackets
 
     fun setPolicyUrl(policyUrl: PolicyURI?): BaseSignatureSubpackets
 
+    fun getPolicyUrl(): CharSequence? = getPolicyUrlPacket()?.uri
+
+    fun getPolicyUrlPacket(): PolicyURI?
+
     fun setRegularExpression(regex: CharSequence): BaseSignatureSubpackets
 
     fun setRegularExpression(isCritical: Boolean, regex: CharSequence): BaseSignatureSubpackets
 
     fun setRegularExpression(regex: RegularExpression?): BaseSignatureSubpackets
+
+    fun getRegularExpression(): CharSequence? = getRegularExpressionPacket()?.regex
+
+    fun getRegularExpressionPacket(): RegularExpression?
 
     fun setRevocable(): BaseSignatureSubpackets
 
@@ -125,6 +178,10 @@ interface BaseSignatureSubpackets {
     fun setRevocable(isCritical: Boolean, isRevocable: Boolean): BaseSignatureSubpackets
 
     fun setRevocable(revocable: Revocable?): BaseSignatureSubpackets
+
+    fun getRevocable(): Boolean? = getRevocablePacket()?.isRevocable
+
+    fun getRevocablePacket(): Revocable?
 
     fun setSignatureTarget(
         keyAlgorithm: PublicKeyAlgorithm,
@@ -141,11 +198,15 @@ interface BaseSignatureSubpackets {
 
     fun setSignatureTarget(signatureTarget: SignatureTarget?): BaseSignatureSubpackets
 
+    fun getSignatureTargetPacket(): SignatureTarget?
+
     fun setTrust(depth: Int, amount: Int): BaseSignatureSubpackets
 
     fun setTrust(isCritical: Boolean, depth: Int, amount: Int): BaseSignatureSubpackets
 
     fun setTrust(trust: TrustSignature?): BaseSignatureSubpackets
+
+    fun getTrustPacket(): TrustSignature?
 
     @Throws(IOException::class)
     fun addEmbeddedSignature(signature: PGPSignature): BaseSignatureSubpackets
@@ -154,6 +215,8 @@ interface BaseSignatureSubpackets {
     fun addEmbeddedSignature(isCritical: Boolean, signature: PGPSignature): BaseSignatureSubpackets
 
     fun addEmbeddedSignature(embeddedSignature: EmbeddedSignature): BaseSignatureSubpackets
+
+    fun getEmbeddedSignaturePackets(): List<EmbeddedSignature>
 
     fun clearEmbeddedSignatures(): BaseSignatureSubpackets
 

@@ -177,6 +177,8 @@ class SignatureSubpackets :
         this.keyFlagsSubpacket = keyFlags
     }
 
+    override fun getKeyFlagsPacket(): KeyFlags? = keyFlagsSubpacket
+
     override fun setPrimaryUserId(): SignatureSubpackets = apply { setPrimaryUserId(true) }
 
     override fun setPrimaryUserId(isCritical: Boolean): SignatureSubpackets = apply {
@@ -186,6 +188,8 @@ class SignatureSubpackets :
     override fun setPrimaryUserId(primaryUserID: PrimaryUserID?): SignatureSubpackets = apply {
         this.primaryUserIdSubpacket = primaryUserID
     }
+
+    override fun getPrimaryUserIdPacket(): PrimaryUserID? = primaryUserIdSubpacket
 
     override fun setKeyExpirationTime(
         key: PGPPublicKey,
@@ -224,6 +228,8 @@ class SignatureSubpackets :
             this.keyExpirationTimeSubpacket = keyExpirationTime
         }
 
+    override fun getKeyExpirationTimePacket(): KeyExpirationTime? = keyExpirationTimeSubpacket
+
     override fun setPreferredCompressionAlgorithms(
         vararg algorithms: CompressionAlgorithm
     ): SignatureSubpackets = apply { setPreferredCompressionAlgorithms(setOf(*algorithms)) }
@@ -253,6 +259,9 @@ class SignatureSubpackets :
         this.preferredCompressionAlgorithmsSubpacket = algorithms
     }
 
+    override fun getPreferredCompressionAlgorithmsPacket(): PreferredAlgorithms? =
+        preferredCompressionAlgorithmsSubpacket
+
     override fun setPreferredSymmetricKeyAlgorithms(
         vararg algorithms: SymmetricKeyAlgorithm
     ): SignatureSubpackets = apply { setPreferredSymmetricKeyAlgorithms(setOf(*algorithms)) }
@@ -281,6 +290,9 @@ class SignatureSubpackets :
             }
         this.preferredSymmetricKeyAlgorithmsSubpacket = algorithms
     }
+
+    override fun getPreferredSymmetricKeyAlgorithmsPacket(): PreferredAlgorithms? =
+        preferredSymmetricKeyAlgorithmsSubpacket
 
     override fun setPreferredHashAlgorithms(vararg algorithms: HashAlgorithm): SignatureSubpackets =
         apply {
@@ -312,6 +324,9 @@ class SignatureSubpackets :
             this.preferredHashAlgorithmsSubpacket = algorithms
         }
 
+    override fun getPreferredHashAlgorithmsPacket(): PreferredAlgorithms? =
+        preferredHashAlgorithmsSubpacket
+
     override fun addRevocationKey(revocationKey: PGPPublicKey): SignatureSubpackets = apply {
         addRevocationKey(true, revocationKey)
     }
@@ -335,6 +350,8 @@ class SignatureSubpackets :
         (this.revocationKeySubpackets as MutableList).add(revocationKey)
     }
 
+    override fun getRevocationKeyPackets(): List<RevocationKey> = revocationKeySubpackets
+
     override fun clearRevocationKeys(): SignatureSubpackets = apply {
         (this.revocationKeySubpackets as MutableList).clear()
     }
@@ -351,6 +368,8 @@ class SignatureSubpackets :
     override fun setFeatures(features: Features?): SignatureSubpackets = apply {
         this.featuresSubpacket = features
     }
+
+    override fun getFeaturesPacket(): Features? = featuresSubpacket
 
     override fun setIssuerFingerprintAndKeyId(key: PGPPublicKey): SignatureSubpackets = apply {
         setIssuerKeyId(key.keyID)
@@ -369,6 +388,8 @@ class SignatureSubpackets :
         this.issuerKeyIdSubpacket = issuerKeyID
     }
 
+    override fun getIssuerKeyIdPacket(): IssuerKeyID? = issuerKeyIdSubpacket
+
     override fun setIssuerFingerprint(
         isCritical: Boolean,
         issuer: PGPPublicKey
@@ -385,6 +406,8 @@ class SignatureSubpackets :
             this.issuerFingerprintSubpacket = fingerprint
         }
 
+    override fun getIssuerFingerprintPacket(): IssuerFingerprint? = issuerFingerprintSubpacket
+
     override fun setSignatureCreationTime(creationTime: Date): SignatureSubpackets = apply {
         setSignatureCreationTime(true, creationTime)
     }
@@ -399,6 +422,9 @@ class SignatureSubpackets :
     override fun setSignatureCreationTime(
         creationTime: SignatureCreationTime?
     ): SignatureSubpackets = apply { this.signatureCreationTimeSubpacket = creationTime }
+
+    override fun getSignatureCreationTimePacket(): SignatureCreationTime? =
+        signatureCreationTimeSubpacket
 
     override fun setSignatureExpirationTime(
         creationTime: Date,
@@ -449,6 +475,9 @@ class SignatureSubpackets :
         expirationTime: SignatureExpirationTime?
     ): SignatureSubpackets = apply { this.signatureExpirationTimeSubpacket = expirationTime }
 
+    override fun getSignatureExpirationTimePacket(): SignatureExpirationTime? =
+        signatureExpirationTimeSubpacket
+
     override fun setSignerUserId(userId: CharSequence): SignatureSubpackets = apply {
         setSignerUserId(false, userId)
     }
@@ -461,6 +490,8 @@ class SignatureSubpackets :
     override fun setSignerUserId(signerUserID: SignerUserID?): SignatureSubpackets = apply {
         this.signerUserIdSubpacket = signerUserID
     }
+
+    override fun getSignerUserIdPacket(): SignerUserID? = signerUserIdSubpacket
 
     override fun addNotationData(
         isCritical: Boolean,
@@ -482,6 +513,8 @@ class SignatureSubpackets :
     override fun addNotationData(notationData: NotationData): SignatureSubpackets = apply {
         (this.notationDataSubpackets as MutableList).add(notationData)
     }
+
+    override fun getNotationDataPackets(): List<NotationData> = notationDataSubpackets
 
     override fun clearNotationData(): SignatureSubpackets = apply {
         (this.notationDataSubpackets as MutableList).clear()
@@ -507,6 +540,9 @@ class SignatureSubpackets :
         (this.intendedRecipientFingerprintSubpackets as MutableList).add(intendedRecipient)
     }
 
+    override fun getIntendedRecipientFingerprintPackets(): List<IntendedRecipientFingerprint> =
+        intendedRecipientFingerprintSubpackets
+
     override fun clearIntendedRecipientFingerprints(): SignatureSubpackets = apply {
         (this.intendedRecipientFingerprintSubpackets as MutableList).clear()
     }
@@ -526,6 +562,8 @@ class SignatureSubpackets :
         this.exportableSubpacket = exportable
     }
 
+    override fun getExportablePacket(): Exportable? = exportableSubpacket
+
     override fun setPolicyUrl(policyUrl: URL): SignatureSubpackets = apply {
         setPolicyUrl(false, policyUrl)
     }
@@ -537,6 +575,8 @@ class SignatureSubpackets :
     override fun setPolicyUrl(policyUrl: PolicyURI?): SignatureSubpackets = apply {
         this.policyURISubpacket = policyURISubpacket
     }
+
+    override fun getPolicyUrlPacket(): PolicyURI? = policyURISubpacket
 
     override fun setRegularExpression(regex: CharSequence): SignatureSubpackets = apply {
         setRegularExpression(false, regex)
@@ -553,6 +593,8 @@ class SignatureSubpackets :
         this.regularExpressionSubpacket = regex
     }
 
+    override fun getRegularExpressionPacket(): RegularExpression? = regularExpressionSubpacket
+
     override fun setRevocable(): SignatureSubpackets = apply { setRevocable(true) }
 
     override fun setRevocable(isRevocable: Boolean): SignatureSubpackets = apply {
@@ -567,6 +609,8 @@ class SignatureSubpackets :
     override fun setRevocable(revocable: Revocable?): SignatureSubpackets = apply {
         this.revocableSubpacket = revocable
     }
+
+    override fun getRevocablePacket(): Revocable? = revocableSubpacket
 
     override fun setSignatureTarget(
         keyAlgorithm: PublicKeyAlgorithm,
@@ -592,6 +636,8 @@ class SignatureSubpackets :
             this.signatureTargetSubpacket = signatureTarget
         }
 
+    override fun getSignatureTargetPacket(): SignatureTarget? = signatureTargetSubpacket
+
     override fun setTrust(depth: Int, amount: Int): SignatureSubpackets = apply {
         setTrust(true, depth, amount)
     }
@@ -604,6 +650,8 @@ class SignatureSubpackets :
     override fun setTrust(trust: TrustSignature?): SignatureSubpackets = apply {
         this.trustSubpacket = trust
     }
+
+    override fun getTrustPacket(): TrustSignature? = trustSubpacket
 
     override fun addEmbeddedSignature(signature: PGPSignature): SignatureSubpackets = apply {
         addEmbeddedSignature(true, signature)
@@ -628,6 +676,9 @@ class SignatureSubpackets :
         apply {
             (this.embeddedSignatureSubpackets as MutableList).add(embeddedSignature)
         }
+
+    override fun getEmbeddedSignaturePackets(): List<EmbeddedSignature> =
+        embeddedSignatureSubpackets
 
     override fun clearEmbeddedSignatures(): SignatureSubpackets = apply {
         (this.embeddedSignatureSubpackets as MutableList).clear()

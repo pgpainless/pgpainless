@@ -106,15 +106,17 @@ abstract class OpenPgpFingerprint : CharSequence, Comparable<OpenPgpFingerprint>
          * @param key key
          * @return fingerprint
          */
+        @JvmStatic fun of(key: PGPPublicKey): OpenPgpFingerprint = of(key.version, key.fingerprint)
+
         @JvmStatic
-        fun of(key: PGPPublicKey): OpenPgpFingerprint =
-            when (key.version) {
-                4 -> OpenPgpV4Fingerprint(key)
-                5 -> OpenPgpV5Fingerprint(key)
-                6 -> OpenPgpV6Fingerprint(key)
+        fun of(keyVersion: Int, binaryFingerprint: ByteArray): OpenPgpFingerprint =
+            when (keyVersion) {
+                4 -> OpenPgpV4Fingerprint(binaryFingerprint)
+                5 -> OpenPgpV5Fingerprint(binaryFingerprint)
+                6 -> OpenPgpV6Fingerprint(binaryFingerprint)
                 else ->
                     throw IllegalArgumentException(
-                        "OpenPGP keys of version ${key.version} are not supported.")
+                        "OpenPGP keys of version $keyVersion are not supported.")
             }
 
         /**

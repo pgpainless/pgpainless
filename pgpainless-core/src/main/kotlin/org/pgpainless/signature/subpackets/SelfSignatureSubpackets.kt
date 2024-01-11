@@ -5,6 +5,7 @@
 package org.pgpainless.signature.subpackets
 
 import java.util.*
+import openpgp.plusSeconds
 import org.bouncycastle.bcpg.sig.Features
 import org.bouncycastle.bcpg.sig.KeyExpirationTime
 import org.bouncycastle.bcpg.sig.KeyFlags
@@ -41,11 +42,19 @@ interface SelfSignatureSubpackets : BaseSignatureSubpackets {
 
     fun setKeyFlags(keyFlags: KeyFlags?): SelfSignatureSubpackets
 
+    fun getKeyFlags(): List<KeyFlag>? = getKeyFlagsPacket()?.let { KeyFlag.fromBitmask(it.flags) }
+
+    fun getKeyFlagsPacket(): KeyFlags?
+
     fun setPrimaryUserId(): SelfSignatureSubpackets
 
     fun setPrimaryUserId(isCritical: Boolean): SelfSignatureSubpackets
 
     fun setPrimaryUserId(primaryUserID: PrimaryUserID?): SelfSignatureSubpackets
+
+    fun getPrimaryUserId(): Boolean? = getPrimaryUserIdPacket()?.isPrimaryUserID
+
+    fun getPrimaryUserIdPacket(): PrimaryUserID?
 
     fun setKeyExpirationTime(key: PGPPublicKey, keyExpirationTime: Date?): SelfSignatureSubpackets
 
@@ -67,6 +76,17 @@ interface SelfSignatureSubpackets : BaseSignatureSubpackets {
 
     fun setKeyExpirationTime(keyExpirationTime: KeyExpirationTime?): SelfSignatureSubpackets
 
+    fun getKeyExpirationTime(keyCreationTime: Date): Date? =
+        getKeyExpirationTimePacket()?.let {
+            if (it.time == 0L) {
+                null
+            } else {
+                keyCreationTime.plusSeconds(it.time)
+            }
+        }
+
+    fun getKeyExpirationTimePacket(): KeyExpirationTime?
+
     fun setPreferredCompressionAlgorithms(
         vararg algorithms: CompressionAlgorithm
     ): SelfSignatureSubpackets
@@ -83,6 +103,12 @@ interface SelfSignatureSubpackets : BaseSignatureSubpackets {
     fun setPreferredCompressionAlgorithms(
         preferredAlgorithms: PreferredAlgorithms?
     ): SelfSignatureSubpackets
+
+    fun getPreferredCompressionAlgorithms(): Set<CompressionAlgorithm> =
+        SignatureSubpacketsUtil.parsePreferredCompressionAlgorithms(
+            getPreferredCompressionAlgorithmsPacket())
+
+    fun getPreferredCompressionAlgorithmsPacket(): PreferredAlgorithms?
 
     fun setPreferredSymmetricKeyAlgorithms(
         vararg algorithms: SymmetricKeyAlgorithm
@@ -101,6 +127,12 @@ interface SelfSignatureSubpackets : BaseSignatureSubpackets {
         algorithms: PreferredAlgorithms?
     ): SelfSignatureSubpackets
 
+    fun getPreferredSymmetricKeyAlgorithms(): Set<SymmetricKeyAlgorithm> =
+        SignatureSubpacketsUtil.parsePreferredSymmetricKeyAlgorithms(
+            getPreferredSymmetricKeyAlgorithmsPacket())
+
+    fun getPreferredSymmetricKeyAlgorithmsPacket(): PreferredAlgorithms?
+
     fun setPreferredHashAlgorithms(vararg algorithms: HashAlgorithm): SelfSignatureSubpackets
 
     fun setPreferredHashAlgorithms(algorithms: Collection<HashAlgorithm>): SelfSignatureSubpackets
@@ -111,6 +143,11 @@ interface SelfSignatureSubpackets : BaseSignatureSubpackets {
     ): SelfSignatureSubpackets
 
     fun setPreferredHashAlgorithms(algorithms: PreferredAlgorithms?): SelfSignatureSubpackets
+
+    fun getPreferredHashAlgorithms(): Set<HashAlgorithm> =
+        SignatureSubpacketsUtil.parsePreferredHashAlgorithms(getPreferredHashAlgorithmsPacket())
+
+    fun getPreferredHashAlgorithmsPacket(): PreferredAlgorithms?
 
     fun addRevocationKey(revocationKey: PGPPublicKey): SelfSignatureSubpackets
 
@@ -123,6 +160,8 @@ interface SelfSignatureSubpackets : BaseSignatureSubpackets {
     ): SelfSignatureSubpackets
 
     fun addRevocationKey(revocationKey: RevocationKey): SelfSignatureSubpackets
+
+    fun getRevocationKeyPackets(): List<RevocationKey>
 
     fun clearRevocationKeys(): SelfSignatureSubpackets
 
@@ -178,5 +217,7 @@ interface SelfSignatureSubpackets : BaseSignatureSubpackets {
                 }
             }
         }
+
+        @JvmStatic fun defaultCallback() = object : Callback {}
     }
 }

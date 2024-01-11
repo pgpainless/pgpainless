@@ -64,8 +64,7 @@ abstract class AbstractSignatureBuilder<B : AbstractSignatureBuilder<B>>(
         negotiateHashAlgorithm(publicSigningKey),
         SignatureType.requireFromCode(archetypeSignature.signatureType),
         SignatureSubpackets.refreshHashedSubpackets(publicSigningKey, archetypeSignature),
-        SignatureSubpackets.refreshUnhashedSubpackets(archetypeSignature)
-    )
+        SignatureSubpackets.refreshUnhashedSubpackets(archetypeSignature))
 
     @Throws(PGPException::class)
     constructor(

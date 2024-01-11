@@ -100,7 +100,8 @@ abstract class ImplementationFactory {
     abstract fun getPGPDataEncryptorBuilder(symmetricKeyAlgorithm: Int): PGPDataEncryptorBuilder
 
     @Throws(PGPException::class)
-    @Deprecated("Replace with versioned getter method, such as getPGPV4KeyPair()",
+    @Deprecated(
+        "Replace with versioned getter method, such as getPGPV4KeyPair()",
         replaceWith = ReplaceWith("getPGPV4KeyPair"))
     fun getPGPKeyPair(
         publicKeyAlgorithm: PublicKeyAlgorithm,

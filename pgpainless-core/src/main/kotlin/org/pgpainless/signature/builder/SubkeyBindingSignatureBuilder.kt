@@ -29,13 +29,14 @@ class SubkeyBindingSignatureBuilder : AbstractSignatureBuilder<SubkeyBindingSign
     constructor(
         signingKey: PGPPrivateKey,
         publicSigningKey: PGPPublicKey,
-    ) : super(signingKey,
+        hashAlgorithm: HashAlgorithm = negotiateHashAlgorithm(publicSigningKey)
+    ) : super(
+        signingKey,
         publicSigningKey,
-        negotiateHashAlgorithm(publicSigningKey),
+        hashAlgorithm,
         SignatureType.SUBKEY_BINDING,
         SignatureSubpackets.createHashedSubpackets(publicSigningKey),
-        SignatureSubpackets.createEmptySubpackets()
-    )
+        SignatureSubpackets.createEmptySubpackets())
 
     @Throws(PGPException::class)
     constructor(

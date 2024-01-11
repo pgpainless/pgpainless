@@ -203,7 +203,13 @@ class SignatureSubpacketsUtil {
         fun parsePreferredSymmetricKeyAlgorithms(
             signature: PGPSignature
         ): Set<SymmetricKeyAlgorithm> =
-            getPreferredSymmetricAlgorithms(signature)
+            parsePreferredSymmetricKeyAlgorithms(getPreferredSymmetricAlgorithms(signature))
+
+        @JvmStatic
+        fun parsePreferredSymmetricKeyAlgorithms(
+            preferredAlgorithms: PreferredAlgorithms?
+        ): Set<SymmetricKeyAlgorithm> =
+            preferredAlgorithms
                 ?.preferences
                 ?.map { SymmetricKeyAlgorithm.fromId(it) }
                 ?.filterNotNull()
@@ -231,7 +237,13 @@ class SignatureSubpacketsUtil {
          */
         @JvmStatic
         fun parsePreferredHashAlgorithms(signature: PGPSignature): Set<HashAlgorithm> =
-            getPreferredHashAlgorithms(signature)
+            parsePreferredHashAlgorithms(getPreferredHashAlgorithms(signature))
+
+        @JvmStatic
+        fun parsePreferredHashAlgorithms(
+            preferredAlgorithms: PreferredAlgorithms?
+        ): Set<HashAlgorithm> =
+            preferredAlgorithms
                 ?.preferences
                 ?.map { HashAlgorithm.fromId(it) }
                 ?.filterNotNull()
@@ -262,7 +274,13 @@ class SignatureSubpacketsUtil {
         fun parsePreferredCompressionAlgorithms(
             signature: PGPSignature
         ): Set<CompressionAlgorithm> =
-            getPreferredCompressionAlgorithms(signature)
+            parsePreferredCompressionAlgorithms(getPreferredCompressionAlgorithms(signature))
+
+        @JvmStatic
+        fun parsePreferredCompressionAlgorithms(
+            preferredAlgorithms: PreferredAlgorithms?
+        ): Set<CompressionAlgorithm> =
+            preferredAlgorithms
                 ?.preferences
                 ?.map { CompressionAlgorithm.fromId(it) }
                 ?.filterNotNull()
