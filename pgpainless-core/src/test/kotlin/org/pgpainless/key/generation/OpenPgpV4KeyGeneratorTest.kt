@@ -1,5 +1,7 @@
 package org.pgpainless.key.generation
 
+import org.bouncycastle.bcpg.attr.ImageAttribute
+import org.bouncycastle.openpgp.PGPUserAttributeSubpacketVectorGenerator
 import org.junit.jupiter.api.Test
 import org.pgpainless.PGPainless
 import org.pgpainless.key.generation.type.KeyType
@@ -18,6 +20,10 @@ class OpenPgpV4KeyGeneratorTest {
             OpenPgpV4KeyGenerator(
                     KeyType.EDDSA(EdDSACurve._Ed25519), Policy.getInstance(), referenceTime = date)
                 .addUserId("Alice")
+                .addUserAttribute(
+                    PGPUserAttributeSubpacketVectorGenerator().apply {
+                        setImageAttribute(ImageAttribute.JPEG, byteArrayOf())
+                    }.generate())
                 .addEncryptionSubkey(KeyType.XDH(XDHSpec._X25519))
                 .addSigningSubkey(KeyType.EDDSA(EdDSACurve._Ed25519))
                 .build(SecretKeyRingProtector.unprotectedKeys())

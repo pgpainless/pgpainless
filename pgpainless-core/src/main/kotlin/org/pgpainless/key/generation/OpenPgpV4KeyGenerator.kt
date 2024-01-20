@@ -3,6 +3,7 @@ package org.pgpainless.key.generation
 import java.util.*
 import org.bouncycastle.openpgp.PGPSecretKey
 import org.bouncycastle.openpgp.PGPSecretKeyRing
+import org.bouncycastle.openpgp.PGPUserAttributeSubpacketVector
 import org.pgpainless.algorithm.AlgorithmSuite
 import org.pgpainless.algorithm.KeyFlag
 import org.pgpainless.implementation.ImplementationFactory
@@ -26,6 +27,14 @@ class OpenPgpV4KeyGenerator(
         subpacketsCallback: SelfSignatureSubpackets.Callback =
             SelfSignatureSubpackets.defaultCallback()
     ) = apply { primaryKey.userId(userId, subpacketsCallback = subpacketsCallback) }
+
+    fun addUserAttribute(
+        attribute: PGPUserAttributeSubpacketVector,
+        subpacketsCallback: SelfSignatureSubpackets.Callback =
+            SelfSignatureSubpackets.defaultCallback()
+    ) = apply {
+        primaryKey.userAttribute(attribute, subpacketsCallback = subpacketsCallback)
+    }
 
     fun addSubkey(
         keyType: KeyType,
