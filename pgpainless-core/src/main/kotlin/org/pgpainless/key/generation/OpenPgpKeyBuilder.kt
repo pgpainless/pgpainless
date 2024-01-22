@@ -109,6 +109,12 @@ open class OpenPgpKeyBuilder(
         fun build(
             protector: SecretKeyRingProtector = SecretKeyRingProtector.unprotectedKeys()
         ): PGPSecretKeyRing {
+
+            // Add DK sig in case of no user-id
+            if (primaryKey.isWithoutUserIds()) {
+                primaryKey.directKeySignature()
+            }
+
             return PGPSecretKeyRing(
                 mutableListOf(
                         PGPSecretKey(

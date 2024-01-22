@@ -67,9 +67,11 @@ class BaseOpenPgpKeyBuilder {
     class BaseV4PrimaryKeyBuilder(type: KeyType, creationTime: Date, policy: Policy) :
         BaseV4KeyBuilder<BaseV4PrimaryKeyBuilder>(type, creationTime, policy = policy) {
 
+        internal fun isWithoutUserIds() = !key.publicKey.userIDs.hasNext()
+
         fun userId(
             userId: CharSequence,
-            algorithmSuite: AlgorithmSuite,
+            algorithmSuite: AlgorithmSuite = policy.keyGenerationAlgorithmSuite,
             certificationType: CertificationType = CertificationType.POSITIVE,
             bindingTime: Date = creationTime,
             hashAlgorithm: HashAlgorithm =
@@ -109,7 +111,7 @@ class BaseOpenPgpKeyBuilder {
 
         fun userAttribute(
             userAttribute: PGPUserAttributeSubpacketVector,
-            algorithmSuite: AlgorithmSuite,
+            algorithmSuite: AlgorithmSuite = policy.keyGenerationAlgorithmSuite,
             certificationType: CertificationType = CertificationType.POSITIVE,
             bindingTime: Date = creationTime,
             hashAlgorithm: HashAlgorithm =
@@ -154,24 +156,32 @@ class BaseOpenPgpKeyBuilder {
 
         fun directKeySignature(
             bindingTime: Date = creationTime,
+            algorithmSuite: AlgorithmSuite = policy.keyGenerationAlgorithmSuite,
             hashAlgorithm: HashAlgorithm =
                 policy.certificationSignatureHashAlgorithmPolicy.defaultHashAlgorithm(),
             subpacketsCallback: SelfSignatureSubpackets.Callback =
                 SelfSignatureSubpackets.defaultCallback()
         ) = apply {
-            val sig = buildDirectKeySignature(bindingTime, hashAlgorithm, subpacketsCallback)
+            val sig = buildDirectKeySignature(bindingTime, algorithmSuite, hashAlgorithm, subpacketsCallback)
             key = PGPKeyPair(PGPPublicKey.addCertification(key.publicKey, sig), key.privateKey)
         }
 
         fun buildDirectKeySignature(
             bindingTime: Date,
+            algorithmSuite: AlgorithmSuite,
             hashAlgorithm: HashAlgorithm,
             subpacketsCallback: SelfSignatureSubpackets.Callback
         ): PGPSignature {
             val builder =
                 DirectKeySelfSignatureBuilder(key.privateKey, key.publicKey, hashAlgorithm)
 
-            builder.hashedSubpackets.setSignatureCreationTime(bindingTime)
+            builder.hashedSubpackets.apply {
+                setSignatureCreationTime(bindingTime)
+                setPreferredHashAlgorithms(algorithmSuite.hashAlgorithms)
+                setPreferredSymmetricKeyAlgorithms(algorithmSuite.symmetricKeyAlgorithms)
+                setPreferredCompressionAlgorithms(algorithmSuite.compressionAlgorithms)
+            }
+
             builder.applyCallback(subpacketsCallback)
 
             return builder.build()

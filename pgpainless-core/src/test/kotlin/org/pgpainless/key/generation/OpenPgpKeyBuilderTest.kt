@@ -36,4 +36,13 @@ class OpenPgpKeyBuilderTest {
             .build()
         println(PGPainless.asciiArmor(key))
     }
+
+    @Test
+    fun minimalWithUserId() {
+        val key = OpenPgpKeyBuilder(Policy.getInstance())
+            .buildV4Key(KeyType.EDDSA(EdDSACurve._Ed25519))
+            .addUserId("Alice <alice@pgpainless.org>")
+            .build()
+        println(PGPainless.asciiArmor(key))
+    }
 }
