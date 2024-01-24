@@ -10,26 +10,22 @@ import org.pgpainless.util.DateUtil
 import org.pgpainless.util.NotationRegistry
 
 class Policy(
-    var certificationSignatureHashAlgorithmPolicy: HashAlgorithmPolicy,
-    var revocationSignatureHashAlgorithmPolicy: HashAlgorithmPolicy,
-    var dataSignatureHashAlgorithmPolicy: HashAlgorithmPolicy,
-    var symmetricKeyEncryptionAlgorithmPolicy: SymmetricKeyAlgorithmPolicy,
-    var symmetricKeyDecryptionAlgorithmPolicy: SymmetricKeyAlgorithmPolicy,
-    var compressionAlgorithmPolicy: CompressionAlgorithmPolicy,
-    var publicKeyAlgorithmPolicy: PublicKeyAlgorithmPolicy,
-    var notationRegistry: NotationRegistry
+    var certificationSignatureHashAlgorithmPolicy: HashAlgorithmPolicy =
+        HashAlgorithmPolicy.smartCertificationSignatureHashAlgorithmPolicy(),
+    var revocationSignatureHashAlgorithmPolicy: HashAlgorithmPolicy =
+        certificationSignatureHashAlgorithmPolicy,
+    var dataSignatureHashAlgorithmPolicy: HashAlgorithmPolicy =
+        HashAlgorithmPolicy.smartDataSignatureHashAlgorithmPolicy(),
+    var symmetricKeyEncryptionAlgorithmPolicy: SymmetricKeyAlgorithmPolicy =
+        SymmetricKeyAlgorithmPolicy.symmetricKeyEncryptionPolicy2022(),
+    var symmetricKeyDecryptionAlgorithmPolicy: SymmetricKeyAlgorithmPolicy =
+        symmetricKeyEncryptionAlgorithmPolicy,
+    var compressionAlgorithmPolicy: CompressionAlgorithmPolicy =
+        CompressionAlgorithmPolicy.anyCompressionAlgorithmPolicy(),
+    var publicKeyAlgorithmPolicy: PublicKeyAlgorithmPolicy =
+        PublicKeyAlgorithmPolicy.bsi2021PublicKeyAlgorithmPolicy(),
+    var notationRegistry: NotationRegistry = NotationRegistry()
 ) {
-
-    constructor() :
-        this(
-            HashAlgorithmPolicy.smartCertificationSignatureHashAlgorithmPolicy(),
-            HashAlgorithmPolicy.smartCertificationSignatureHashAlgorithmPolicy(),
-            HashAlgorithmPolicy.smartDataSignatureHashAlgorithmPolicy(),
-            SymmetricKeyAlgorithmPolicy.symmetricKeyEncryptionPolicy2022(),
-            SymmetricKeyAlgorithmPolicy.symmetricKeyDecryptionPolicy2022(),
-            CompressionAlgorithmPolicy.anyCompressionAlgorithmPolicy(),
-            PublicKeyAlgorithmPolicy.bsi2021PublicKeyAlgorithmPolicy(),
-            NotationRegistry())
 
     var keyGenerationAlgorithmSuite = AlgorithmSuite.defaultAlgorithmSuite
     var signerUserIdValidationLevel = SignerUserIdValidationLevel.DISABLED

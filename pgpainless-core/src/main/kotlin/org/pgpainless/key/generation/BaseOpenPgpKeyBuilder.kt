@@ -44,6 +44,7 @@ class BaseOpenPgpKeyBuilder {
 
         internal abstract fun primaryKey(): BaseV4PrimaryKeyBuilder
 
+        // Note: The result is a *primary* key pair, so subkeys need adjustment (toPrimaryOrSubkey)
         private fun generateKeyPair(): PGPKeyPair {
             // Create raw Key Pair
             val keyPair =
@@ -54,14 +55,14 @@ class BaseOpenPgpKeyBuilder {
             // Form PGP Key Pair
             return ImplementationFactory.getInstance()
                 .getPGPV4KeyPair(type.algorithm, keyPair, creationTime)
-                .let { adjustKeyPacket(it) }
+                .let { toPrimaryOrSubkey(it) }
         }
 
         /**
          * Make sure, the PGP key packet is a subkey packet for subkeys, and a primary key packet
          * for primary keys.
          */
-        protected abstract fun adjustKeyPacket(keyPair: PGPKeyPair): PGPKeyPair
+        protected abstract fun toPrimaryOrSubkey(keyPair: PGPKeyPair): PGPKeyPair
     }
 
     class BaseV4PrimaryKeyBuilder(type: KeyType, creationTime: Date, policy: Policy) :
@@ -76,12 +77,16 @@ class BaseOpenPgpKeyBuilder {
             bindingTime: Date = creationTime,
             hashAlgorithm: HashAlgorithm =
                 policy.certificationSignatureHashAlgorithmPolicy.defaultHashAlgorithm,
-            subpacketsCallback: SelfSignatureSubpackets.Callback =
-                SelfSignatureSubpackets.defaultCallback()
+            subpacketsCallback: SelfSignatureSubpackets.Callback = SelfSignatureSubpackets.nop()
         ) = apply {
             val sig =
                 buildCertificationFor(
-                    userId, algorithmSuite, certificationType, bindingTime, hashAlgorithm, subpacketsCallback)
+                    userId,
+                    algorithmSuite,
+                    certificationType,
+                    bindingTime,
+                    hashAlgorithm,
+                    subpacketsCallback)
             key =
                 PGPKeyPair(
                     PGPPublicKey.addCertification(key.publicKey, userId.toString(), sig),
@@ -116,8 +121,7 @@ class BaseOpenPgpKeyBuilder {
             bindingTime: Date = creationTime,
             hashAlgorithm: HashAlgorithm =
                 policy.certificationSignatureHashAlgorithmPolicy.defaultHashAlgorithm,
-            subpacketsCallback: SelfSignatureSubpackets.Callback =
-                SelfSignatureSubpackets.defaultCallback()
+            subpacketsCallback: SelfSignatureSubpackets.Callback = SelfSignatureSubpackets.nop()
         ) = apply {
             val sig =
                 buildCertificationFor(
@@ -159,10 +163,11 @@ class BaseOpenPgpKeyBuilder {
             algorithmSuite: AlgorithmSuite = policy.keyGenerationAlgorithmSuite,
             hashAlgorithm: HashAlgorithm =
                 policy.certificationSignatureHashAlgorithmPolicy.defaultHashAlgorithm(),
-            subpacketsCallback: SelfSignatureSubpackets.Callback =
-                SelfSignatureSubpackets.defaultCallback()
+            subpacketsCallback: SelfSignatureSubpackets.Callback = SelfSignatureSubpackets.nop()
         ) = apply {
-            val sig = buildDirectKeySignature(bindingTime, algorithmSuite, hashAlgorithm, subpacketsCallback)
+            val sig =
+                buildDirectKeySignature(
+                    bindingTime, algorithmSuite, hashAlgorithm, subpacketsCallback)
             key = PGPKeyPair(PGPPublicKey.addCertification(key.publicKey, sig), key.privateKey)
         }
 
@@ -187,7 +192,9 @@ class BaseOpenPgpKeyBuilder {
             return builder.build()
         }
 
-        override fun adjustKeyPacket(keyPair: PGPKeyPair): PGPKeyPair {
+        override fun toPrimaryOrSubkey(keyPair: PGPKeyPair) = toPrimaryKey(keyPair)
+
+        private fun toPrimaryKey(keyPair: PGPKeyPair): PGPKeyPair {
             return keyPair // is already a secret key packet
         }
 
@@ -205,8 +212,7 @@ class BaseOpenPgpKeyBuilder {
             bindingTime: Date = creationTime,
             hashAlgorithm: HashAlgorithm =
                 policy.certificationSignatureHashAlgorithmPolicy.defaultHashAlgorithm,
-            subpacketsCallback: SelfSignatureSubpackets.Callback =
-                SelfSignatureSubpackets.defaultCallback()
+            subpacketsCallback: SelfSignatureSubpackets.Callback = SelfSignatureSubpackets.nop()
         ) = apply {
             val sig = buildBindingSignature(bindingTime, hashAlgorithm, subpacketsCallback)
             key = PGPKeyPair(PGPPublicKey.addCertification(key.publicKey, sig), key.privateKey)
@@ -216,8 +222,7 @@ class BaseOpenPgpKeyBuilder {
             bindingTime: Date = creationTime,
             hashAlgorithm: HashAlgorithm =
                 policy.certificationSignatureHashAlgorithmPolicy.defaultHashAlgorithm,
-            subpacketsCallback: SelfSignatureSubpackets.Callback =
-                SelfSignatureSubpackets.defaultCallback()
+            subpacketsCallback: SelfSignatureSubpackets.Callback = SelfSignatureSubpackets.nop()
         ): PGPSignature {
             val builder =
                 SubkeyBindingSignatureBuilder(
@@ -245,7 +250,9 @@ class BaseOpenPgpKeyBuilder {
             return builder.build(key.publicKey)
         }
 
-        override fun adjustKeyPacket(keyPair: PGPKeyPair): PGPKeyPair {
+        override fun toPrimaryOrSubkey(keyPair: PGPKeyPair) = toSubkey(keyPair)
+
+        private fun toSubkey(keyPair: PGPKeyPair): PGPKeyPair {
             val fpCalc = ImplementationFactory.getInstance().keyFingerprintCalculator
             val pubkey = keyPair.publicKey
             val privkey = keyPair.privateKey

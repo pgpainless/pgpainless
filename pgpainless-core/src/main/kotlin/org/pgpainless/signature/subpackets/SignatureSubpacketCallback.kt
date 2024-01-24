@@ -23,24 +23,4 @@ interface SignatureSubpacketCallback<S : BaseSignatureSubpackets> {
     fun modifyUnhashedSubpackets(unhashedSubpackets: S) {
         // Empty default implementation to allow for cleaner overriding
     }
-
-    /**
-     * Return a new [SignatureSubpacketCallback] which first applies the current callback instance,
-     * followed by the passed in [nextCallback].
-     * This is useful to composite different [SignatureSubpacketCallback] instances.
-     */
-    fun then(nextCallback: SignatureSubpacketCallback<S>): SignatureSubpacketCallback<S> {
-        val currCallback = this
-        return object : SignatureSubpacketCallback<S> {
-            override fun modifyHashedSubpackets(hashedSubpackets: S) {
-                currCallback.modifyHashedSubpackets(hashedSubpackets)
-                nextCallback.modifyHashedSubpackets(hashedSubpackets)
-            }
-
-            override fun modifyUnhashedSubpackets(unhashedSubpackets: S) {
-                currCallback.modifyUnhashedSubpackets(unhashedSubpackets)
-                nextCallback.modifyUnhashedSubpackets(unhashedSubpackets)
-            }
-        }
-    }
 }

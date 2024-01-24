@@ -217,7 +217,5 @@ interface SelfSignatureSubpackets : BaseSignatureSubpackets {
                 }
             }
         }
-
-        @JvmStatic fun defaultCallback() = object : Callback {}
     }
 }

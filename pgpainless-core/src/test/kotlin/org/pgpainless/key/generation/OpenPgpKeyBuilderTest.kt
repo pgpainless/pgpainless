@@ -16,8 +16,9 @@ class OpenPgpKeyBuilderTest {
     @Test
     fun test() {
         val date = DateUtil.parseUTCDate("2020-04-01 10:00:00 UTC")
-        val key = OpenPgpKeyBuilder(Policy.getInstance(), date)
-            .buildV4Key(KeyType.EDDSA(EdDSACurve._Ed25519))
+        val key =
+            OpenPgpKeyBuilder(Policy.getInstance(), date)
+                .buildV4Key(KeyType.EDDSA(EdDSACurve._Ed25519))
                 .addUserId("Alice")
                 .addUserAttribute(
                     PGPUserAttributeSubpacketVectorGenerator()
@@ -31,18 +32,20 @@ class OpenPgpKeyBuilderTest {
 
     @Test
     fun minimal() {
-        val key = OpenPgpKeyBuilder(Policy.getInstance())
-            .buildV4Key(KeyType.EDDSA(EdDSACurve._Ed25519))
-            .build()
+        val key =
+            OpenPgpKeyBuilder(Policy.getInstance())
+                .buildV4Key(KeyType.EDDSA(EdDSACurve._Ed25519))
+                .build()
         println(PGPainless.asciiArmor(key))
     }
 
     @Test
     fun minimalWithUserId() {
-        val key = OpenPgpKeyBuilder(Policy.getInstance())
-            .buildV4Key(KeyType.EDDSA(EdDSACurve._Ed25519))
-            .addUserId("Alice <alice@pgpainless.org>")
-            .build()
+        val key =
+            OpenPgpKeyBuilder(Policy.getInstance())
+                .buildV4Key(KeyType.EDDSA(EdDSACurve._Ed25519))
+                .addUserId("Alice <alice@pgpainless.org>")
+                .build()
         println(PGPainless.asciiArmor(key))
     }
 }

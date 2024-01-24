@@ -43,16 +43,19 @@ open class OpenPgpKeyBuilder(
         fun addUserId(
             userId: CharSequence,
             algorithmSuite: AlgorithmSuite = keyGenerationPolicy,
-            subpacketsCallback: SelfSignatureSubpackets.Callback =
-                SelfSignatureSubpackets.defaultCallback()
-        ) = apply { primaryKey.userId(userId, algorithmSuite, subpacketsCallback = subpacketsCallback) }
+            subpacketsCallback: SelfSignatureSubpackets.Callback = SelfSignatureSubpackets.nop()
+        ) = apply {
+            primaryKey.userId(userId, algorithmSuite, subpacketsCallback = subpacketsCallback)
+        }
 
         fun addUserAttribute(
             attribute: PGPUserAttributeSubpacketVector,
             algorithmSuite: AlgorithmSuite = keyGenerationPolicy,
-            subpacketsCallback: SelfSignatureSubpackets.Callback =
-                SelfSignatureSubpackets.defaultCallback()
-        ) = apply { primaryKey.userAttribute(attribute, algorithmSuite, subpacketsCallback = subpacketsCallback) }
+            subpacketsCallback: SelfSignatureSubpackets.Callback = SelfSignatureSubpackets.nop()
+        ) = apply {
+            primaryKey.userAttribute(
+                attribute, algorithmSuite, subpacketsCallback = subpacketsCallback)
+        }
 
         fun addSubkey(
             keyType: KeyType,
@@ -112,7 +115,8 @@ open class OpenPgpKeyBuilder(
 
             // Add DK sig in case of no user-id
             if (primaryKey.isWithoutUserIds()) {
-                primaryKey.directKeySignature()
+                primaryKey.directKeySignature(
+                    subpacketsCallback = defaultPrimarySubpacketsCallback())
             }
 
             return PGPSecretKeyRing(
@@ -139,7 +143,8 @@ open class OpenPgpKeyBuilder(
                 override fun modifyHashedSubpackets(hashedSubpackets: SelfSignatureSubpackets) {
                     hashedSubpackets.apply {
                         setPreferredHashAlgorithms(keyGenerationPolicy.hashAlgorithms)
-                        setPreferredSymmetricKeyAlgorithms(keyGenerationPolicy.symmetricKeyAlgorithms)
+                        setPreferredSymmetricKeyAlgorithms(
+                            keyGenerationPolicy.symmetricKeyAlgorithms)
                         setPreferredCompressionAlgorithms(keyGenerationPolicy.compressionAlgorithms)
                         setKeyFlags(KeyFlag.CERTIFY_OTHER)
                     }
