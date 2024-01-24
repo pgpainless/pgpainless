@@ -19,6 +19,9 @@ SPDX-License-Identifier: CC0-1.0
 - Properly feed EOS tokens to the pushdown automaton when reaching the end of stream (thanks @iNPUTmice)
 - Do not choke on unknown signature subpackets (thanks @Jerbell)
 - Prevent timing issues resuting in subkey binding signatures predating the subkey (@thanks Jerbell)
+- Rename LibrePGP-related `Feature` enums:
+  - `GNUPG_AEAD_ENCRYPTED_DATA` -> `LIBREPGP_OCB_ENCRYPTED_DATA`
+  - `GNUPG_VERSION_5_PUBLIC_KEY` -> `LIBREPGP_VERSION_5_PUBLIC_KEY`
 
 ## 1.6.5
 - Add `SecretKeyRingEditor.setExpirationDateOfSubkey()`
