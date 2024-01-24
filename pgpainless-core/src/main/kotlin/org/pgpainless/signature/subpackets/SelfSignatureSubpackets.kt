@@ -171,9 +171,8 @@ interface SelfSignatureSubpackets : BaseSignatureSubpackets {
 
     fun setFeatures(features: Features?): SelfSignatureSubpackets
 
-    fun getFeatures(): List<Feature> = getFeaturesPacket()
-        ?.let { Feature.fromBitmask(it.features.toInt()) }
-        .orEmpty()
+    fun getFeatures(): List<Feature> =
+        getFeaturesPacket()?.let { Feature.fromBitmask(it.features.toInt()) }.orEmpty()
 
     fun getFeaturesPacket(): Features?
 
