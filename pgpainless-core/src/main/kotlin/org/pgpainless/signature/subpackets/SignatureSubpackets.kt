@@ -89,6 +89,51 @@ class SignatureSubpackets :
         fun createEmptySubpackets(): SignatureSubpackets {
             return SignatureSubpackets()
         }
+
+        /** Factory method for a [Callback] that does nothing. */
+        @JvmStatic fun nop() = object : Callback {}
+
+        /**
+         * Factory function with receiver, which returns a [Callback] that modifies the hashed
+         * subpacket area of a [SignatureSubpackets] object.
+         *
+         * Can be called like this:
+         * ```
+         * val callback = SignatureSubpackets.applyHashed {
+         *     setCreationTime(date)
+         *     ...
+         * }
+         * ```
+         */
+        @JvmStatic
+        fun applyHashed(function: SignatureSubpackets.() -> Unit): Callback {
+            return object : Callback {
+                override fun modifyHashedSubpackets(hashedSubpackets: SignatureSubpackets) {
+                    function(hashedSubpackets)
+                }
+            }
+        }
+
+        /**
+         * Factory function with receiver, which returns a [Callback] that modifies the unhashed
+         * subpacket area of a [SignatureSubpackets] object.
+         *
+         * Can be called like this:
+         * ```
+         * val callback = SignatureSubpackets.applyUnhashed {
+         *     setCreationTime(date)
+         *     ...
+         * }
+         * ```
+         */
+        @JvmStatic
+        fun applyUnhashed(function: SignatureSubpackets.() -> Unit): Callback {
+            return object : Callback {
+                override fun modifyUnhashedSubpackets(unhashedSubpackets: SignatureSubpackets) {
+                    function(unhashedSubpackets)
+                }
+            }
+        }
     }
 
     override fun setRevocationReason(

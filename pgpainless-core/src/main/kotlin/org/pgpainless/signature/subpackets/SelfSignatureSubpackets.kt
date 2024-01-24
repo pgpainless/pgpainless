@@ -16,7 +16,22 @@ import org.pgpainless.algorithm.*
 
 interface SelfSignatureSubpackets : BaseSignatureSubpackets {
 
-    interface Callback : SignatureSubpacketCallback<SelfSignatureSubpackets>
+    interface Callback : SignatureSubpacketCallback<SelfSignatureSubpackets> {
+        fun then(nextCallback: SignatureSubpacketCallback<SelfSignatureSubpackets>): Callback {
+            val currCallback = this
+            return object : Callback {
+                override fun modifyHashedSubpackets(hashedSubpackets: SelfSignatureSubpackets) {
+                    currCallback.modifyHashedSubpackets(hashedSubpackets)
+                    nextCallback.modifyHashedSubpackets(hashedSubpackets)
+                }
+
+                override fun modifyUnhashedSubpackets(unhashedSubpackets: SelfSignatureSubpackets) {
+                    currCallback.modifyUnhashedSubpackets(unhashedSubpackets)
+                    nextCallback.modifyUnhashedSubpackets(unhashedSubpackets)
+                }
+            }
+        }
+    }
 
     fun setKeyFlags(vararg keyflags: KeyFlag): SelfSignatureSubpackets
 
@@ -116,4 +131,52 @@ interface SelfSignatureSubpackets : BaseSignatureSubpackets {
     fun setFeatures(isCritical: Boolean, vararg features: Feature): SelfSignatureSubpackets
 
     fun setFeatures(features: Features?): SelfSignatureSubpackets
+
+    companion object {
+
+        /** Factory method for a [Callback] that does nothing. */
+        @JvmStatic fun nop() = object : Callback {}
+
+        /**
+         * Factory function with receiver, which returns a [Callback] that modifies the hashed
+         * subpacket area of a [SelfSignatureSubpackets] object.
+         *
+         * Can be called like this:
+         * ```
+         * val callback = SelfSignatureSubpackets.applyHashed {
+         *     setCreationTime(date)
+         *     ...
+         * }
+         * ```
+         */
+        @JvmStatic
+        fun applyHashed(function: SelfSignatureSubpackets.() -> Unit): Callback {
+            return object : Callback {
+                override fun modifyHashedSubpackets(hashedSubpackets: SelfSignatureSubpackets) {
+                    function(hashedSubpackets)
+                }
+            }
+        }
+
+        /**
+         * Factory function with receiver, which returns a [Callback] that modifies the unhashed
+         * subpacket area of a [SelfSignatureSubpackets] object.
+         *
+         * Can be called like this:
+         * ```
+         * val callback = SelfSignatureSubpackets.applyUnhashed {
+         *     setCreationTime(date)
+         *     ...
+         * }
+         * ```
+         */
+        @JvmStatic
+        fun applyUnhashed(function: SelfSignatureSubpackets.() -> Unit): Callback {
+            return object : Callback {
+                override fun modifyUnhashedSubpackets(unhashedSubpackets: SelfSignatureSubpackets) {
+                    function(unhashedSubpackets)
+                }
+            }
+        }
+    }
 }

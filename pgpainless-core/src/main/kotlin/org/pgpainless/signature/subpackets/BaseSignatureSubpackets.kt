@@ -156,4 +156,52 @@ interface BaseSignatureSubpackets {
     fun addEmbeddedSignature(embeddedSignature: EmbeddedSignature): BaseSignatureSubpackets
 
     fun clearEmbeddedSignatures(): BaseSignatureSubpackets
+
+    companion object {
+
+        /** Factory method for a [Callback] that does nothing. */
+        @JvmStatic fun nop() = object : Callback {}
+
+        /**
+         * Factory function with receiver, which returns a [Callback] that modifies the hashed
+         * subpacket area of a [BaseSignatureSubpackets] object.
+         *
+         * Can be called like this:
+         * ```
+         * val callback = BaseSignatureSubpackets.applyHashed {
+         *     setCreationTime(date)
+         *     ...
+         * }
+         * ```
+         */
+        @JvmStatic
+        fun applyHashed(function: BaseSignatureSubpackets.() -> Unit): Callback {
+            return object : Callback {
+                override fun modifyHashedSubpackets(hashedSubpackets: BaseSignatureSubpackets) {
+                    function(hashedSubpackets)
+                }
+            }
+        }
+
+        /**
+         * Factory function with receiver, which returns a [Callback] that modifies the unhashed
+         * subpacket area of a [BaseSignatureSubpackets] object.
+         *
+         * Can be called like this:
+         * ```
+         * val callback = BaseSignatureSubpackets.applyUnhashed {
+         *     setCreationTime(date)
+         *     ...
+         * }
+         * ```
+         */
+        @JvmStatic
+        fun applyUnhashed(function: BaseSignatureSubpackets.() -> Unit): Callback {
+            return object : Callback {
+                override fun modifyUnhashedSubpackets(unhashedSubpackets: BaseSignatureSubpackets) {
+                    function(unhashedSubpackets)
+                }
+            }
+        }
+    }
 }
