@@ -68,11 +68,8 @@ class BaseOpenPgpKeyBuilder {
     class BaseV4PrimaryKeyBuilder(type: KeyType, creationTime: Date, policy: Policy) :
         BaseV4KeyBuilder<BaseV4PrimaryKeyBuilder>(type, creationTime, policy = policy) {
 
-        internal fun isWithoutUserIds() = !key.publicKey.userIDs.hasNext()
-
         fun userId(
             userId: CharSequence,
-            algorithmSuite: AlgorithmSuite = policy.keyGenerationAlgorithmSuite,
             certificationType: CertificationType = CertificationType.POSITIVE,
             bindingTime: Date = creationTime,
             hashAlgorithm: HashAlgorithm =
@@ -81,12 +78,7 @@ class BaseOpenPgpKeyBuilder {
         ) = apply {
             val sig =
                 buildCertificationFor(
-                    userId,
-                    algorithmSuite,
-                    certificationType,
-                    bindingTime,
-                    hashAlgorithm,
-                    subpacketsCallback)
+                    userId, certificationType, bindingTime, hashAlgorithm, subpacketsCallback)
             key =
                 PGPKeyPair(
                     PGPPublicKey.addCertification(key.publicKey, userId.toString(), sig),
@@ -95,7 +87,6 @@ class BaseOpenPgpKeyBuilder {
 
         fun buildCertificationFor(
             userId: CharSequence,
-            algorithmSuite: AlgorithmSuite,
             certificationType: CertificationType,
             bindingTime: Date,
             hashAlgorithm: HashAlgorithm,
@@ -104,19 +95,13 @@ class BaseOpenPgpKeyBuilder {
             val builder =
                 SelfSignatureBuilder(
                     key.privateKey, key.publicKey, certificationType.signatureType, hashAlgorithm)
-            builder.hashedSubpackets.apply {
-                setSignatureCreationTime(bindingTime)
-                setPreferredHashAlgorithms(algorithmSuite.hashAlgorithms)
-                setPreferredSymmetricKeyAlgorithms(algorithmSuite.symmetricKeyAlgorithms)
-                setPreferredCompressionAlgorithms(algorithmSuite.compressionAlgorithms)
-            }
+            builder.hashedSubpackets.apply { setSignatureCreationTime(bindingTime) }
             builder.applyCallback(subpacketsCallback)
             return builder.build(userId)
         }
 
         fun userAttribute(
             userAttribute: PGPUserAttributeSubpacketVector,
-            algorithmSuite: AlgorithmSuite = policy.keyGenerationAlgorithmSuite,
             certificationType: CertificationType = CertificationType.POSITIVE,
             bindingTime: Date = creationTime,
             hashAlgorithm: HashAlgorithm =
@@ -126,7 +111,6 @@ class BaseOpenPgpKeyBuilder {
             val sig =
                 buildCertificationFor(
                     userAttribute,
-                    algorithmSuite,
                     certificationType,
                     bindingTime,
                     hashAlgorithm,
@@ -139,7 +123,6 @@ class BaseOpenPgpKeyBuilder {
 
         fun buildCertificationFor(
             userAttribute: PGPUserAttributeSubpacketVector,
-            algorithmSuite: AlgorithmSuite,
             certificationType: CertificationType,
             bindingTime: Date,
             hashAlgorithm: HashAlgorithm,
@@ -148,12 +131,7 @@ class BaseOpenPgpKeyBuilder {
             val builder =
                 SelfSignatureBuilder(
                     key.privateKey, key.publicKey, certificationType.signatureType, hashAlgorithm)
-            builder.hashedSubpackets.apply {
-                setSignatureCreationTime(bindingTime)
-                setPreferredHashAlgorithms(algorithmSuite.hashAlgorithms)
-                setPreferredSymmetricKeyAlgorithms(algorithmSuite.symmetricKeyAlgorithms)
-                setPreferredCompressionAlgorithms(algorithmSuite.compressionAlgorithms)
-            }
+            builder.hashedSubpackets.apply { setSignatureCreationTime(bindingTime) }
             builder.applyCallback(subpacketsCallback)
             return builder.build(userAttribute)
         }

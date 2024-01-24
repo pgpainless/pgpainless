@@ -4,6 +4,7 @@ import org.bouncycastle.bcpg.attr.ImageAttribute
 import org.bouncycastle.openpgp.PGPUserAttributeSubpacketVectorGenerator
 import org.junit.jupiter.api.Test
 import org.pgpainless.PGPainless
+import org.pgpainless.algorithm.KeyFlag
 import org.pgpainless.key.generation.type.KeyType
 import org.pgpainless.key.generation.type.eddsa.EdDSACurve
 import org.pgpainless.key.generation.type.xdh.XDHSpec
@@ -18,7 +19,7 @@ class OpenPgpKeyBuilderTest {
         val date = DateUtil.parseUTCDate("2020-04-01 10:00:00 UTC")
         val key =
             OpenPgpKeyBuilder(Policy.getInstance(), date)
-                .buildV4Key(KeyType.EDDSA(EdDSACurve._Ed25519))
+                .buildV4Key(KeyType.EDDSA(EdDSACurve._Ed25519), listOf(KeyFlag.CERTIFY_OTHER))
                 .addUserId("Alice")
                 .addUserAttribute(
                     PGPUserAttributeSubpacketVectorGenerator()
@@ -34,7 +35,7 @@ class OpenPgpKeyBuilderTest {
     fun minimal() {
         val key =
             OpenPgpKeyBuilder(Policy.getInstance())
-                .buildV4Key(KeyType.EDDSA(EdDSACurve._Ed25519))
+                .buildV4Key(KeyType.EDDSA(EdDSACurve._Ed25519), listOf(KeyFlag.CERTIFY_OTHER))
                 .build()
         println(PGPainless.asciiArmor(key))
     }
@@ -43,7 +44,7 @@ class OpenPgpKeyBuilderTest {
     fun minimalWithUserId() {
         val key =
             OpenPgpKeyBuilder(Policy.getInstance())
-                .buildV4Key(KeyType.EDDSA(EdDSACurve._Ed25519))
+                .buildV4Key(KeyType.EDDSA(EdDSACurve._Ed25519), listOf(KeyFlag.CERTIFY_OTHER))
                 .addUserId("Alice <alice@pgpainless.org>")
                 .build()
         println(PGPainless.asciiArmor(key))
