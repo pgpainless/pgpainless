@@ -24,31 +24,51 @@ import org.pgpainless.signature.subpackets.SelfSignatureSubpackets
  * @param referenceTime reference time for key generation
  * @param preferences set of preferred algorithms and enabled features
  */
-open class OpenPgpKeyBuilder(
-    protected val policy: Policy,
-    protected val referenceTime: Date = Date(),
-    protected val preferences: AlgorithmSuite = policy.keyGenerationAlgorithmSuite
+open class GenerateOpenPgpKey(
+    private val policy: Policy,
+    private val referenceTime: Date = Date(),
+    private val preferences: AlgorithmSuite = policy.keyGenerationAlgorithmSuite
 ) {
+
+    abstract class OpenPgpKeyBuilder(
+        protected val policy: Policy,
+        protected val referenceTime: Date,
+        protected val preferences: AlgorithmSuite
+    ) {
+
+        /**
+         * Make sure, that the chosen [KeyType] is allowed.
+         */
+        open fun sanitizePublicKeyAlgorithms(keyType: KeyType, policy: Policy) {
+            verifyAlgorithmComplianceWithPolicy(keyType, policy)
+        }
+
+        /**
+         * Make sure, that the chosen [KeyType] complies to the given [Policy] by comparing it to the
+         * [Policy.PublicKeyAlgorithmPolicy].
+         *
+         * @throws IllegalArgumentException if [keyType] fails to be accepted by [policy]
+         */
+        private fun verifyAlgorithmComplianceWithPolicy(keyType: KeyType, policy: Policy) {
+            val algorithm = keyType.algorithm
+            val bitStrength = keyType.bitStrength
+            require(policy.publicKeyAlgorithmPolicy.isAcceptable(algorithm, bitStrength)) {
+                "Public key algorithm policy violation: $algorithm with bit strength $bitStrength is not acceptable."
+            }
+        }
+    }
 
     /**
      * Build an OpenPGP v4 key. The result will be a key compliant to RFC4880, RFC6637.
      *
      * @param keyType type of the primary key
      * @param flags key flags for the primary key. Defaults to [KeyFlag.CERTIFY_OTHER].
-     * @return [V4OpenPgpKeyBuilder] which can be further modified, e.g. add subkeys, user-ids etc.
+     * @return [V4GenerateOpenPgpKey] which can be further modified, e.g. add subkeys, user-ids etc.
      */
     fun buildV4Key(
         keyType: KeyType,
         flags: List<KeyFlag>? = listOf(KeyFlag.CERTIFY_OTHER)
-    ): V4OpenPgpKeyBuilder = V4OpenPgpKeyBuilder(keyType, flags, policy, referenceTime, preferences)
-
-    internal fun verifyAlgorithmComplianceWithPolicy(keyType: KeyType, policy: Policy) {
-        val algorithm = keyType.algorithm
-        val bitStrength = keyType.bitStrength
-        require(policy.publicKeyAlgorithmPolicy.isAcceptable(algorithm, bitStrength)) {
-            "Public key algorithm policy violation: $algorithm with bit strength $bitStrength is not acceptable."
-        }
-    }
+    ): V4GenerateOpenPgpKey = V4GenerateOpenPgpKey(keyType, flags, policy, referenceTime, preferences)
 
     /**
      * Builder for version 4 OpenPGP keys.
@@ -59,7 +79,7 @@ open class OpenPgpKeyBuilder(
      * @param referenceTime reference time for key generation
      * @param preferences set of algorithm preferences and enabled features for the key
      */
-    class V4OpenPgpKeyBuilder
+    class V4GenerateOpenPgpKey
     internal constructor(
         primaryKeyType: KeyType,
         primaryFlags: List<KeyFlag>?,
@@ -69,7 +89,7 @@ open class OpenPgpKeyBuilder(
     ) : OpenPgpKeyBuilder(policy, referenceTime, preferences) {
 
         init {
-            verifyAlgorithmComplianceWithPolicy(primaryKeyType, policy)
+            sanitizePublicKeyAlgorithms(primaryKeyType, policy)
         }
 
         private val primaryKey =
@@ -152,7 +172,7 @@ open class OpenPgpKeyBuilder(
             subkeyBuilder: BaseOpenPgpKeyBuilder.BaseV4SubkeyBuilder,
             subpacketsCallback: SelfSignatureSubpackets.Callback = SelfSignatureSubpackets.nop()
         ) = apply {
-            verifyAlgorithmComplianceWithPolicy(subkeyBuilder.type, policy)
+            sanitizePublicKeyAlgorithms(subkeyBuilder.type, policy)
             subkeys.add(subkeyBuilder.bindingSignature(subpacketsCallback = subpacketsCallback))
         }
 

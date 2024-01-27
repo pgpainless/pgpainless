@@ -15,13 +15,13 @@ import org.pgpainless.key.protection.SecretKeyRingProtector
 import org.pgpainless.policy.Policy
 import org.pgpainless.util.DateUtil
 
-class OpenPgpKeyBuilderTest {
+class GenerateOpenPgpKeyTest {
 
     @Test
     fun test() {
         val date = DateUtil.parseUTCDate("2020-04-01 10:00:00 UTC")
         val key =
-            OpenPgpKeyBuilder(Policy.getInstance(), date)
+            GenerateOpenPgpKey(Policy.getInstance(), date)
                 .buildV4Key(KeyType.EDDSA(EdDSACurve._Ed25519), listOf(KeyFlag.CERTIFY_OTHER))
                 .addUserId("Alice")
                 .addUserAttribute(
@@ -37,7 +37,7 @@ class OpenPgpKeyBuilderTest {
     @Test
     fun minimal() {
         val key =
-            OpenPgpKeyBuilder(Policy.getInstance())
+            GenerateOpenPgpKey(Policy.getInstance())
                 .buildV4Key(KeyType.EDDSA(EdDSACurve._Ed25519), listOf(KeyFlag.CERTIFY_OTHER))
                 .build()
         println(PGPainless.asciiArmor(key))
@@ -46,7 +46,7 @@ class OpenPgpKeyBuilderTest {
     @Test
     fun minimalWithUserId() {
         val key =
-            OpenPgpKeyBuilder(Policy.getInstance())
+            GenerateOpenPgpKey(Policy.getInstance())
                 .buildV4Key(KeyType.EDDSA(EdDSACurve._Ed25519), listOf(KeyFlag.CERTIFY_OTHER))
                 .addUserId("Alice <alice@pgpainless.org>")
                 .build()
@@ -60,7 +60,7 @@ class OpenPgpKeyBuilderTest {
             Policy(
                 publicKeyAlgorithmPolicy =
                     Policy.PublicKeyAlgorithmPolicy(mapOf(PublicKeyAlgorithm.RSA_GENERAL to 4096)))
-        val builder = OpenPgpKeyBuilder(policy)
+        val builder = GenerateOpenPgpKey(policy)
 
         assertThrows<IllegalArgumentException> {
             builder.buildV4Key(KeyType.RSA(RsaLength._3072)) // too weak
