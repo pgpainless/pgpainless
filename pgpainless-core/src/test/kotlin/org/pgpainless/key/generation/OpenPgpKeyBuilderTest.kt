@@ -3,10 +3,13 @@ package org.pgpainless.key.generation
 import org.bouncycastle.bcpg.attr.ImageAttribute
 import org.bouncycastle.openpgp.PGPUserAttributeSubpacketVectorGenerator
 import org.junit.jupiter.api.Test
+import org.junit.jupiter.api.assertThrows
 import org.pgpainless.PGPainless
 import org.pgpainless.algorithm.KeyFlag
+import org.pgpainless.algorithm.PublicKeyAlgorithm
 import org.pgpainless.key.generation.type.KeyType
 import org.pgpainless.key.generation.type.eddsa.EdDSACurve
+import org.pgpainless.key.generation.type.rsa.RsaLength
 import org.pgpainless.key.generation.type.xdh.XDHSpec
 import org.pgpainless.key.protection.SecretKeyRingProtector
 import org.pgpainless.policy.Policy
@@ -48,5 +51,24 @@ class OpenPgpKeyBuilderTest {
                 .addUserId("Alice <alice@pgpainless.org>")
                 .build()
         println(PGPainless.asciiArmor(key))
+    }
+
+    @Test
+    fun testKeyGenerationWithUnacceptablePKAlgorithmFails() {
+        // Policy only allows RSA 4096 algorithms
+        val policy =
+            Policy(
+                publicKeyAlgorithmPolicy =
+                    Policy.PublicKeyAlgorithmPolicy(mapOf(PublicKeyAlgorithm.RSA_GENERAL to 4096)))
+        val builder = OpenPgpKeyBuilder(policy)
+
+        assertThrows<IllegalArgumentException> {
+            builder.buildV4Key(KeyType.RSA(RsaLength._3072)) // too weak
+        }
+
+        val v4Builder = builder.buildV4Key(KeyType.RSA(RsaLength._4096)) // ok
+        assertThrows<IllegalArgumentException> {
+            v4Builder.addSigningSubkey(KeyType.RSA(RsaLength._2048)) // too weak
+        }
     }
 }

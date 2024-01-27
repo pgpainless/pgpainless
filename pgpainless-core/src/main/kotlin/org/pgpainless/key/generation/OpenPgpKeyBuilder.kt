@@ -42,6 +42,14 @@ open class OpenPgpKeyBuilder(
         flags: List<KeyFlag>? = listOf(KeyFlag.CERTIFY_OTHER)
     ): V4OpenPgpKeyBuilder = V4OpenPgpKeyBuilder(keyType, flags, policy, referenceTime, preferences)
 
+    internal fun verifyAlgorithmComplianceWithPolicy(keyType: KeyType, policy: Policy) {
+        val algorithm = keyType.algorithm
+        val bitStrength = keyType.bitStrength
+        require(policy.publicKeyAlgorithmPolicy.isAcceptable(algorithm, bitStrength)) {
+            "Public key algorithm policy violation: $algorithm with bit strength $bitStrength is not acceptable."
+        }
+    }
+
     /**
      * Builder for version 4 OpenPGP keys.
      *
@@ -59,6 +67,10 @@ open class OpenPgpKeyBuilder(
         referenceTime: Date,
         preferences: AlgorithmSuite
     ) : OpenPgpKeyBuilder(policy, referenceTime, preferences) {
+
+        init {
+            verifyAlgorithmComplianceWithPolicy(primaryKeyType, policy)
+        }
 
         private val primaryKey =
             BaseOpenPgpKeyBuilder.BaseV4PrimaryKeyBuilder(primaryKeyType, referenceTime, policy)
@@ -140,6 +152,7 @@ open class OpenPgpKeyBuilder(
             subkeyBuilder: BaseOpenPgpKeyBuilder.BaseV4SubkeyBuilder,
             subpacketsCallback: SelfSignatureSubpackets.Callback = SelfSignatureSubpackets.nop()
         ) = apply {
+            verifyAlgorithmComplianceWithPolicy(subkeyBuilder.type, policy)
             subkeys.add(subkeyBuilder.bindingSignature(subpacketsCallback = subpacketsCallback))
         }
 
