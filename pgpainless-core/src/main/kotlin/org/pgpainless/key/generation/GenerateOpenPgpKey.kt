@@ -216,12 +216,17 @@ open class GenerateOpenPgpKey(
             keyType: KeyType,
             creationTime: Date = referenceTime,
             bindingTime: Date = creationTime
-        ) =
+        ) = apply {
+            require(keyType.canEncryptCommunication || keyType.canEncryptStorage) {
+                "KeyType $keyType cannot be used for encryption keys."
+            }
             addSubkey(
                 keyType,
                 creationTime,
                 bindingTime,
-                listOf(KeyFlag.ENCRYPT_STORAGE, KeyFlag.ENCRYPT_COMMS))
+                listOf(KeyFlag.ENCRYPT_STORAGE, KeyFlag.ENCRYPT_COMMS)
+            )
+        }
 
         /**
          * Add a new subkey to be used for creating data signatures.
@@ -236,7 +241,12 @@ open class GenerateOpenPgpKey(
             keyType: KeyType,
             creationTime: Date = referenceTime,
             bindingTime: Date = creationTime
-        ) = addSubkey(keyType, creationTime, bindingTime, listOf(KeyFlag.SIGN_DATA))
+        ) = apply {
+            require(keyType.canSign) {
+                "KeyType $keyType cannot be used for signing keys."
+            }
+            addSubkey(keyType, creationTime, bindingTime, listOf(KeyFlag.SIGN_DATA))
+        }
 
         /**
          * Build the finished OpenPGP key.
