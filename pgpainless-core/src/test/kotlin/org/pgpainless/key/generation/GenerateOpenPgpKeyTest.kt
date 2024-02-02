@@ -60,8 +60,8 @@ class GenerateOpenPgpKeyTest {
     fun primaryKeyMustBeCertificationCapable() {
         assertThrows<IllegalArgumentException> {
             GenerateOpenPgpKey(Policy.getInstance())
-                .buildV4Key(
-                    KeyType.XDH(XDHSpec._X25519)) // XDH is not signing/certification capable
+                // XDH is not signing/certification capable
+                .buildV4Key(KeyType.XDH(XDHSpec._X25519))
         }
     }
 
