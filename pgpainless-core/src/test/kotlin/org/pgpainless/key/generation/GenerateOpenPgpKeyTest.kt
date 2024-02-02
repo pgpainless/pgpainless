@@ -1,9 +1,15 @@
+// SPDX-FileCopyrightText: 2024 Paul Schaub <vanitasvitae@fsfe.org>
+//
+// SPDX-License-Identifier: Apache-2.0
+
 package org.pgpainless.key.generation
 
 import org.bouncycastle.bcpg.attr.ImageAttribute
 import org.bouncycastle.openpgp.PGPUserAttributeSubpacketVectorGenerator
+import org.junit.jupiter.api.Assertions.assertTrue
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.assertThrows
+import org.opentest4j.TestAbortedException
 import org.pgpainless.PGPainless
 import org.pgpainless.algorithm.KeyFlag
 import org.pgpainless.algorithm.PublicKeyAlgorithm
@@ -14,6 +20,7 @@ import org.pgpainless.key.generation.type.xdh.XDHSpec
 import org.pgpainless.key.protection.SecretKeyRingProtector
 import org.pgpainless.policy.Policy
 import org.pgpainless.util.DateUtil
+import java.io.InputStream
 
 class GenerateOpenPgpKeyTest {
 
@@ -27,7 +34,8 @@ class GenerateOpenPgpKeyTest {
                 .addUserAttribute(
                     PGPUserAttributeSubpacketVectorGenerator()
                         .apply { setImageAttribute(ImageAttribute.JPEG, byteArrayOf()) }
-                        .generate())
+                        .generate(),
+                )
                 .addEncryptionSubkey(KeyType.XDH(XDHSpec._X25519))
                 .addSigningSubkey(KeyType.EDDSA(EdDSACurve._Ed25519))
                 .build(SecretKeyRingProtector.unprotectedKeys())
@@ -59,7 +67,8 @@ class GenerateOpenPgpKeyTest {
         val policy =
             Policy(
                 publicKeyAlgorithmPolicy =
-                    Policy.PublicKeyAlgorithmPolicy(mapOf(PublicKeyAlgorithm.RSA_GENERAL to 4096)))
+                Policy.PublicKeyAlgorithmPolicy(mapOf(PublicKeyAlgorithm.RSA_GENERAL to 4096)),
+            )
         val builder = GenerateOpenPgpKey(policy)
 
         assertThrows<IllegalArgumentException> {
@@ -74,8 +83,17 @@ class GenerateOpenPgpKeyTest {
 
     @Test
     fun testKeyGenerationWithJPEGAttribute() {
-        GenerateOpenPgpKey(Policy.getInstance())
+        val key = GenerateOpenPgpKey(Policy.getInstance())
             .buildV4Key(KeyType.EDDSA(EdDSACurve._Ed25519))
-            .addJpegImage()
+            .addJpegImage(requireResource("suzanne.jpg"))
+            .build()
+
+        assertTrue(key.publicKey.userAttributes.hasNext())
+    }
+
+    private fun requireResource(resourceName: String): InputStream {
+        return javaClass.classLoader.getResourceAsStream(resourceName)
+            ?: throw TestAbortedException(
+                "Cannot read resource $resourceName: InputStream is null.")
     }
 }

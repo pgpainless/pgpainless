@@ -4,8 +4,10 @@
 
 package org.pgpainless.key.generation
 
-import org.bouncycastle.bcpg.attr.ImageAttribute
+import java.io.IOException
+import java.io.InputStream
 import java.util.*
+import org.bouncycastle.bcpg.attr.ImageAttribute
 import org.bouncycastle.openpgp.PGPSecretKey
 import org.bouncycastle.openpgp.PGPSecretKeyRing
 import org.bouncycastle.openpgp.PGPUserAttributeSubpacketVector
@@ -19,8 +21,6 @@ import org.pgpainless.key.generation.type.KeyType
 import org.pgpainless.key.protection.SecretKeyRingProtector
 import org.pgpainless.policy.Policy
 import org.pgpainless.signature.subpackets.SelfSignatureSubpackets
-import java.io.File
-import java.io.IOException
 
 /**
  * OpenPGP key builder. This implementation supersedes the old [KeyRingBuilder].
@@ -41,16 +41,14 @@ open class GenerateOpenPgpKey(
         protected val preferences: AlgorithmSuite
     ) {
 
-        /**
-         * Make sure, that the chosen [KeyType] is allowed.
-         */
+        /** Make sure, that the chosen [KeyType] is allowed. */
         open fun sanitizePublicKeyAlgorithms(keyType: KeyType, policy: Policy) {
             verifyAlgorithmComplianceWithPolicy(keyType, policy)
         }
 
         /**
-         * Make sure, that the chosen [KeyType] complies to the given [Policy] by comparing it to the
-         * [Policy.PublicKeyAlgorithmPolicy].
+         * Make sure, that the chosen [KeyType] complies to the given [Policy] by comparing it to
+         * the [Policy.PublicKeyAlgorithmPolicy].
          *
          * @throws IllegalArgumentException if [keyType] fails to be accepted by [policy]
          */
@@ -73,7 +71,8 @@ open class GenerateOpenPgpKey(
     fun buildV4Key(
         keyType: KeyType,
         flags: List<KeyFlag>? = listOf(KeyFlag.CERTIFY_OTHER)
-    ): V4GenerateOpenPgpKey = V4GenerateOpenPgpKey(keyType, flags, policy, referenceTime, preferences)
+    ): V4GenerateOpenPgpKey =
+        V4GenerateOpenPgpKey(keyType, flags, policy, referenceTime, preferences)
 
     /**
      * Builder for version 4 OpenPGP keys.
@@ -146,24 +145,22 @@ open class GenerateOpenPgpKey(
         }
 
         /**
-         * Add the contents of a JPEG file as image attribute to the key.
+         * Add the contents of a JPEG input stream as image attribute to the key.
          *
-         * @param jpegFile file containing a JPEG image
-         * @param subpacketsCallback callback to modify the user-attribute binding signature subpackets.
+         * @param jpegInputStream input stream containing a JPEG image
+         * @param subpacketsCallback callback to modify the user-attribute binding signature
+         *   subpackets.
          * @return this
          */
         @Throws(IOException::class)
         fun addJpegImage(
-            jpegFile: File,
+            jpegInputStream: InputStream,
             subpacketsCallback: SelfSignatureSubpackets.Callback = SelfSignatureSubpackets.nop()
         ) = apply {
-            jpegFile.inputStream()
-                .let { Streams.readAll(it) }
-                .let {
-                    PGPUserAttributeSubpacketVectorGenerator().apply {
-                        setImageAttribute(ImageAttribute.JPEG, it)
-                    }.generate()
-                }.let { addUserAttribute(it, subpacketsCallback) }
+            PGPUserAttributeSubpacketVectorGenerator()
+                .apply { setImageAttribute(ImageAttribute.JPEG, Streams.readAll(jpegInputStream)) }
+                .generate()
+                .let { addUserAttribute(it, subpacketsCallback) }
         }
 
         /**
