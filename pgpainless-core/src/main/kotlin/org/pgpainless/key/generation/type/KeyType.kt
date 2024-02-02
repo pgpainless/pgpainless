@@ -100,8 +100,18 @@ interface KeyType {
 
         @JvmStatic fun ECDSA(curve: EllipticCurve): ECDSA = ECDSA.fromCurve(curve)
 
+        /**
+         * Legacy EdDSA using Ed25519.
+         * For OpenPGP v4 only.
+         */
         @JvmStatic fun EDDSA(curve: EdDSACurve): EdDSA = EdDSA.fromCurve(curve)
 
+        /**
+         * Legacy ECDH using Curve25519.
+         * For OpenPGP v4 only.
+         */
         @JvmStatic fun XDH(curve: XDHSpec): XDH = XDH.fromSpec(curve)
+
+        // TODO: Add crypto-refresh X25519, X448, Ed25519, Ed448
     }
 }
