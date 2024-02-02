@@ -4,8 +4,11 @@
 
 package org.pgpainless.key.generation
 
+import java.io.InputStream
 import org.bouncycastle.bcpg.attr.ImageAttribute
 import org.bouncycastle.openpgp.PGPUserAttributeSubpacketVectorGenerator
+import org.bouncycastle.util.io.Streams
+import org.junit.jupiter.api.Assertions.assertArrayEquals
 import org.junit.jupiter.api.Assertions.assertTrue
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.assertThrows
@@ -20,7 +23,6 @@ import org.pgpainless.key.generation.type.xdh.XDHSpec
 import org.pgpainless.key.protection.SecretKeyRingProtector
 import org.pgpainless.policy.Policy
 import org.pgpainless.util.DateUtil
-import java.io.InputStream
 
 class GenerateOpenPgpKeyTest {
 
@@ -67,7 +69,7 @@ class GenerateOpenPgpKeyTest {
         val policy =
             Policy(
                 publicKeyAlgorithmPolicy =
-                Policy.PublicKeyAlgorithmPolicy(mapOf(PublicKeyAlgorithm.RSA_GENERAL to 4096)),
+                    Policy.PublicKeyAlgorithmPolicy(mapOf(PublicKeyAlgorithm.RSA_GENERAL to 4096)),
             )
         val builder = GenerateOpenPgpKey(policy)
 
@@ -83,12 +85,16 @@ class GenerateOpenPgpKeyTest {
 
     @Test
     fun testKeyGenerationWithJPEGAttribute() {
-        val key = GenerateOpenPgpKey(Policy.getInstance())
-            .buildV4Key(KeyType.EDDSA(EdDSACurve._Ed25519))
-            .addJpegImage(requireResource("suzanne.jpg"))
-            .build()
+        val key =
+            GenerateOpenPgpKey(Policy.getInstance())
+                .buildV4Key(KeyType.EDDSA(EdDSACurve._Ed25519))
+                .addJpegImage(requireResource("suzanne.jpg"))
+                .build()
 
         assertTrue(key.publicKey.userAttributes.hasNext())
+        assertArrayEquals(
+            Streams.readAll(requireResource("suzanne.jpg")),
+            key.publicKey.userAttributes.next().imageAttribute.imageData)
     }
 
     private fun requireResource(resourceName: String): InputStream {
