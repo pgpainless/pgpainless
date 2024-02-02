@@ -5,6 +5,7 @@ SPDX-License-Identifier: CC0-1.0
 
 # PGPainless Changelog
 
+
 ## 2.0.0-SNAPSHOT
 - Bump `bcpg-jdk8on` to `1.77`
 - Bump `bcprov-jdk18on` to `1.77`
@@ -22,6 +23,9 @@ SPDX-License-Identifier: CC0-1.0
 - Rename LibrePGP-related `Feature` enums:
   - `GNUPG_AEAD_ENCRYPTED_DATA` -> `LIBREPGP_OCB_ENCRYPTED_DATA`
   - `GNUPG_VERSION_5_PUBLIC_KEY` -> `LIBREPGP_VERSION_5_PUBLIC_KEY`
+
+## 1.6.6
+- Downgrade `logback-core` and `logback-classic` to `1.2.13` to fix #426
 
 ## 1.6.5
 - Add `SecretKeyRingEditor.setExpirationDateOfSubkey()`
