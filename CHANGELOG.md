@@ -5,6 +5,9 @@ SPDX-License-Identifier: CC0-1.0
 
 # PGPainless Changelog
 
+## 1.6.6
+- Downgrade `logback-core` and `logback-classic` to `1.2.13` to fix #426
+
 ## 1.6.5
 - Add `SecretKeyRingEditor.setExpirationDateOfSubkey()`
 
