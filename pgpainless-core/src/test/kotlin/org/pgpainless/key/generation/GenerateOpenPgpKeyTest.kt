@@ -71,4 +71,11 @@ class GenerateOpenPgpKeyTest {
             v4Builder.addSigningSubkey(KeyType.RSA(RsaLength._2048)) // too weak
         }
     }
+
+    @Test
+    fun testKeyGenerationWithJPEGAttribute() {
+        GenerateOpenPgpKey(Policy.getInstance())
+            .buildV4Key(KeyType.EDDSA(EdDSACurve._Ed25519))
+            .addJpegImage()
+    }
 }

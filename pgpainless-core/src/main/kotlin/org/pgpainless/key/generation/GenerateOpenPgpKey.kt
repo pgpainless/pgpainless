@@ -4,11 +4,14 @@
 
 package org.pgpainless.key.generation
 
+import org.bouncycastle.bcpg.attr.ImageAttribute
 import java.util.*
 import org.bouncycastle.openpgp.PGPSecretKey
 import org.bouncycastle.openpgp.PGPSecretKeyRing
 import org.bouncycastle.openpgp.PGPUserAttributeSubpacketVector
+import org.bouncycastle.openpgp.PGPUserAttributeSubpacketVectorGenerator
 import org.bouncycastle.openpgp.operator.PBESecretKeyEncryptor
+import org.bouncycastle.util.io.Streams
 import org.pgpainless.algorithm.AlgorithmSuite
 import org.pgpainless.algorithm.KeyFlag
 import org.pgpainless.implementation.ImplementationFactory
@@ -16,6 +19,8 @@ import org.pgpainless.key.generation.type.KeyType
 import org.pgpainless.key.protection.SecretKeyRingProtector
 import org.pgpainless.policy.Policy
 import org.pgpainless.signature.subpackets.SelfSignatureSubpackets
+import java.io.File
+import java.io.IOException
 
 /**
  * OpenPGP key builder. This implementation supersedes the old [KeyRingBuilder].
@@ -138,6 +143,27 @@ open class GenerateOpenPgpKey(
         ) = apply {
             primaryKey.userAttribute(
                 attribute, subpacketsCallback = preferencesCallback.then(subpacketsCallback))
+        }
+
+        /**
+         * Add the contents of a JPEG file as image attribute to the key.
+         *
+         * @param jpegFile file containing a JPEG image
+         * @param subpacketsCallback callback to modify the user-attribute binding signature subpackets.
+         * @return this
+         */
+        @Throws(IOException::class)
+        fun addJpegImage(
+            jpegFile: File,
+            subpacketsCallback: SelfSignatureSubpackets.Callback = SelfSignatureSubpackets.nop()
+        ) = apply {
+            jpegFile.inputStream()
+                .let { Streams.readAll(it) }
+                .let {
+                    PGPUserAttributeSubpacketVectorGenerator().apply {
+                        setImageAttribute(ImageAttribute.JPEG, it)
+                    }.generate()
+                }.let { addUserAttribute(it, subpacketsCallback) }
         }
 
         /**
