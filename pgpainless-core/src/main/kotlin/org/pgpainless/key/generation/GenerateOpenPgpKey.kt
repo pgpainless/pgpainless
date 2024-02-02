@@ -270,6 +270,14 @@ open class GenerateOpenPgpKey(
                         }))
         }
 
+        /**
+         * Convert a [OpenPgpComponentKeyBuilder.V4ComponentKeyBuilder] to a version 4
+         * [PGPSecretKey].
+         *
+         * @param key builder
+         * @param isPrimaryKey if true, the result will be a primary key, a subkey otherwise.
+         * @param encryptor encryptor to protect the secret key. Can be null for unencrypted keys.
+         */
         private fun toSecretKey(
             key: OpenPgpComponentKeyBuilder.V4ComponentKeyBuilder<*>,
             isPrimaryKey: Boolean,

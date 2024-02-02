@@ -8,10 +8,7 @@ import org.bouncycastle.jce.spec.ECNamedCurveGenParameterSpec
 import org.pgpainless.algorithm.PublicKeyAlgorithm
 import org.pgpainless.key.generation.type.KeyType
 
-/**
- * Legacy EdDSA using Ed25519.
- * For use with OpenPGP v4 only.
- */
+/** Legacy EdDSA using Ed25519. For use with OpenPGP v4 only. */
 class EdDSA private constructor(val curve: EdDSACurve) : KeyType {
     override val name = "EdDSA"
     override val algorithm = PublicKeyAlgorithm.EDDSA
