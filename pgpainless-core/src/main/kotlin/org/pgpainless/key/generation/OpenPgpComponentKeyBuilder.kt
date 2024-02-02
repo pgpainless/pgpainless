@@ -26,9 +26,9 @@ import org.pgpainless.signature.builder.SelfSignatureBuilder
 import org.pgpainless.signature.builder.SubkeyBindingSignatureBuilder
 import org.pgpainless.signature.subpackets.SelfSignatureSubpackets
 
-class BaseOpenPgpKeyBuilder {
+class OpenPgpComponentKeyBuilder {
 
-    abstract class BaseV4KeyBuilder<T : BaseV4KeyBuilder<T>>(
+    abstract class V4ComponentKeyBuilder<T : V4ComponentKeyBuilder<T>>(
         val type: KeyType,
         val creationTime: Date,
         val certificateCreationTime: Date = Date(),
@@ -40,9 +40,9 @@ class BaseOpenPgpKeyBuilder {
         fun subkey(
             type: KeyType,
             creationTime: Date = certificateCreationTime
-        ): BaseV4SubkeyBuilder = BaseV4SubkeyBuilder(type, creationTime, policy, primaryKey())
+        ): V4SubkeyBuilder = V4SubkeyBuilder(type, creationTime, policy, primaryKey())
 
-        internal abstract fun primaryKey(): BaseV4PrimaryKeyBuilder
+        internal abstract fun primaryKey(): V4PrimaryKeyBuilder
 
         // Note: The result is a *primary* key pair, so subkeys need adjustment (toPrimaryOrSubkey)
         private fun generateKeyPair(): PGPKeyPair {
@@ -65,8 +65,8 @@ class BaseOpenPgpKeyBuilder {
         protected abstract fun toPrimaryOrSubkey(keyPair: PGPKeyPair): PGPKeyPair
     }
 
-    class BaseV4PrimaryKeyBuilder(type: KeyType, creationTime: Date, policy: Policy) :
-        BaseV4KeyBuilder<BaseV4PrimaryKeyBuilder>(type, creationTime, policy = policy) {
+    class V4PrimaryKeyBuilder(type: KeyType, creationTime: Date, policy: Policy) :
+        V4ComponentKeyBuilder<V4PrimaryKeyBuilder>(type, creationTime, policy = policy) {
 
         fun userId(
             userId: CharSequence,
@@ -179,12 +179,12 @@ class BaseOpenPgpKeyBuilder {
         override fun primaryKey() = this
     }
 
-    class BaseV4SubkeyBuilder(
+    class V4SubkeyBuilder(
         type: KeyType,
         creationTime: Date,
         policy: Policy,
-        private val primaryKeyBuilder: BaseV4PrimaryKeyBuilder
-    ) : BaseV4KeyBuilder<BaseV4SubkeyBuilder>(type, creationTime, policy = policy) {
+        private val primaryKeyBuilder: V4PrimaryKeyBuilder
+    ) : V4ComponentKeyBuilder<V4SubkeyBuilder>(type, creationTime, policy = policy) {
 
         fun bindingSignature(
             bindingTime: Date = creationTime,
