@@ -37,10 +37,8 @@ class OpenPgpComponentKeyBuilder {
 
         internal var key = generateKeyPair()
 
-        fun subkey(
-            type: KeyType,
-            creationTime: Date = certificateCreationTime
-        ): V4SubkeyBuilder = V4SubkeyBuilder(type, creationTime, policy, primaryKey())
+        fun subkey(type: KeyType, creationTime: Date = certificateCreationTime): V4SubkeyBuilder =
+            V4SubkeyBuilder(type, creationTime, policy, primaryKey())
 
         internal abstract fun primaryKey(): V4PrimaryKeyBuilder
 

@@ -35,9 +35,7 @@ open class GenerateOpenPgpKey(
     private val preferences: AlgorithmSuite = policy.keyGenerationAlgorithmSuite
 ) {
 
-    /**
-     * Builder for OpenPGP secret keys.
-     */
+    /** Builder for OpenPGP secret keys. */
     abstract class OpenPgpKeyBuilder(
         protected val policy: Policy,
         protected val referenceTime: Date,
@@ -96,6 +94,9 @@ open class GenerateOpenPgpKey(
     ) : OpenPgpKeyBuilder(policy, referenceTime, preferences) {
 
         init {
+            require(primaryKeyType.canCertify) {
+                "KeyType $primaryKeyType MUST be certification capable."
+            }
             sanitizePublicKeyAlgorithms(primaryKeyType, policy)
         }
 
@@ -203,9 +204,8 @@ open class GenerateOpenPgpKey(
         }
 
         /**
-         * Add a new subkey to be used for encryption.
-         * The binding signature will mark the key as encryption-capable using both
-         * [KeyFlag.ENCRYPT_COMMS] and [KeyFlag.ENCRYPT_STORAGE].
+         * Add a new subkey to be used for encryption. The binding signature will mark the key as
+         * encryption-capable using both [KeyFlag.ENCRYPT_COMMS] and [KeyFlag.ENCRYPT_STORAGE].
          *
          * @param keyType type of the encryption subkey
          * @param creationTime time of creation of the subkey
@@ -224,13 +224,12 @@ open class GenerateOpenPgpKey(
                 keyType,
                 creationTime,
                 bindingTime,
-                listOf(KeyFlag.ENCRYPT_STORAGE, KeyFlag.ENCRYPT_COMMS)
-            )
+                listOf(KeyFlag.ENCRYPT_STORAGE, KeyFlag.ENCRYPT_COMMS))
         }
 
         /**
-         * Add a new subkey to be used for creating data signatures.
-         * The binding signature will mark the key as signing-capable using [KeyFlag.SIGN_DATA].
+         * Add a new subkey to be used for creating data signatures. The binding signature will mark
+         * the key as signing-capable using [KeyFlag.SIGN_DATA].
          *
          * @param keyType type of the signing subkey
          * @param creationTime time of creation of the subkey
@@ -242,20 +241,17 @@ open class GenerateOpenPgpKey(
             creationTime: Date = referenceTime,
             bindingTime: Date = creationTime
         ) = apply {
-            require(keyType.canSign) {
-                "KeyType $keyType cannot be used for signing keys."
-            }
+            require(keyType.canSign) { "KeyType $keyType cannot be used for signing keys." }
             addSubkey(keyType, creationTime, bindingTime, listOf(KeyFlag.SIGN_DATA))
         }
 
         /**
-         * Build the finished OpenPGP key.
-         * By default, the key will not be protected using passphrases.
-         * To set a passphrase, you can provide [SecretKeyRingProtector.unlockAnyKeyWith] with
-         * a passphrase of your choice.
+         * Build the finished OpenPGP key. By default, the key will not be protected using
+         * passphrases. To set a passphrase, you can provide
+         * [SecretKeyRingProtector.unlockAnyKeyWith] with a passphrase of your choice.
          *
-         * @param protector protector to secure the secret keys using passphrases.
-         * Defaults to [SecretKeyRingProtector.unprotectedKeys].
+         * @param protector protector to secure the secret keys using passphrases. Defaults to
+         *   [SecretKeyRingProtector.unprotectedKeys].
          * @return OpenPGP Secret Key
          */
         fun build(

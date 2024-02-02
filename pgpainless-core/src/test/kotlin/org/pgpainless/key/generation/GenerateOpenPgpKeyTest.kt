@@ -5,8 +5,6 @@
 package org.pgpainless.key.generation
 
 import java.io.InputStream
-import org.bouncycastle.bcpg.attr.ImageAttribute
-import org.bouncycastle.openpgp.PGPUserAttributeSubpacketVectorGenerator
 import org.bouncycastle.util.io.Streams
 import org.junit.jupiter.api.Assertions.assertArrayEquals
 import org.junit.jupiter.api.Assertions.assertTrue
@@ -33,11 +31,6 @@ class GenerateOpenPgpKeyTest {
             GenerateOpenPgpKey(Policy.getInstance(), date)
                 .buildV4Key(KeyType.EDDSA(EdDSACurve._Ed25519), listOf(KeyFlag.CERTIFY_OTHER))
                 .addUserId("Alice")
-                .addUserAttribute(
-                    PGPUserAttributeSubpacketVectorGenerator()
-                        .apply { setImageAttribute(ImageAttribute.JPEG, byteArrayOf()) }
-                        .generate(),
-                )
                 .addEncryptionSubkey(KeyType.XDH(XDHSpec._X25519))
                 .addSigningSubkey(KeyType.EDDSA(EdDSACurve._Ed25519))
                 .build(SecretKeyRingProtector.unprotectedKeys())
@@ -61,6 +54,35 @@ class GenerateOpenPgpKeyTest {
                 .addUserId("Alice <alice@pgpainless.org>")
                 .build()
         println(PGPainless.asciiArmor(key))
+    }
+
+    @Test
+    fun primaryKeyMustBeCertificationCapable() {
+        assertThrows<IllegalArgumentException> {
+            GenerateOpenPgpKey(Policy.getInstance())
+                .buildV4Key(
+                    KeyType.XDH(XDHSpec._X25519)) // XDH is not signing/certification capable
+        }
+    }
+
+    @Test
+    fun encryptionSubkeyMustBeEncryptionCapable() {
+        val builder =
+            GenerateOpenPgpKey(Policy.getInstance()).buildV4Key(KeyType.EDDSA(EdDSACurve._Ed25519))
+
+        assertThrows<IllegalArgumentException> {
+            builder.addEncryptionSubkey(KeyType.EDDSA(EdDSACurve._Ed25519))
+        }
+    }
+
+    @Test
+    fun signingSubkeysMustBeSigningCapable() {
+        val builder =
+            GenerateOpenPgpKey(Policy.getInstance()).buildV4Key(KeyType.EDDSA(EdDSACurve._Ed25519))
+
+        assertThrows<IllegalArgumentException> {
+            builder.addSigningSubkey(KeyType.XDH(XDHSpec._X25519))
+        }
     }
 
     @Test
