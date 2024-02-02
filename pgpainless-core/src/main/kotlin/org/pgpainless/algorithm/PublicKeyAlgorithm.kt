@@ -59,7 +59,10 @@ enum class PublicKeyAlgorithm(
     /** Diffie-Hellman key exchange algorithm. */
     DIFFIE_HELLMAN(21, false, true),
 
-    /** Digital Signature Algorithm based on twisted Edwards Curves. */
+    /**
+     * Digital Signature Algorithm based on twisted Edwards Curves.
+     * For OpenPGP v4 only.
+     */
     EDDSA(22, true, false),
     ;
 
