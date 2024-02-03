@@ -150,10 +150,10 @@ open class GenerateOpenPgpKey(
             primaryKey.userId(
                 userId,
                 subpacketsCallback =
-                    preferencesCallback.then(adjustPrimaryUserId()).then(subpacketsCallback))
+                    preferencesCallback.then(markFirstPrimaryUserId()).then(subpacketsCallback))
         }
 
-        private fun adjustPrimaryUserId() =
+        private fun markFirstPrimaryUserId() =
             SelfSignatureSubpackets.applyHashed {
                 if (primaryKeyHasPrimaryUserId()) {
                     setPrimaryUserId(null)
