@@ -114,6 +114,12 @@ open class GenerateOpenPgpKey(
                 primaryFlags?.let { setKeyFlags(*it.toTypedArray()) }
             }
 
+        /**
+         * Add a direct-key signature to the primary key. If this method is called, the automatic
+         * addition of a direct-key signature in the final build-step will be omitted.
+         *
+         * @param subpacketsCallback callback to modify the subpackets of the direct-key signature.
+         */
         fun directKeySignature(
             subpacketsCallback: SelfSignatureSubpackets.Callback = SelfSignatureSubpackets.nop()
         ) = apply {
@@ -122,6 +128,10 @@ open class GenerateOpenPgpKey(
                 subpacketsCallback = preferencesCallback.then(subpacketsCallback))
         }
 
+        /**
+         * If this method is called, the automatic addition of a direct-key signature in the final
+         * build-step will be omitted.
+         */
         fun noDirectKeySignature() = apply { addDirectKeySignature = false }
 
         /**
@@ -137,8 +147,24 @@ open class GenerateOpenPgpKey(
             userId: CharSequence,
             subpacketsCallback: SelfSignatureSubpackets.Callback = SelfSignatureSubpackets.nop()
         ) = apply {
+            val hasPrimaryUID =
+                primaryKey.key.publicKey.userIDs.asSequence().any { uid ->
+                    primaryKey.key.publicKey.getSignaturesForID(uid).asSequence().any {
+                        it.hashedSubPackets.isPrimaryUserID
+                    }
+                }
+            val setPrimaryUID =
+                SelfSignatureSubpackets.applyHashed {
+                    if (hasPrimaryUID) {
+                        setPrimaryUserId(null)
+                    } else {
+                        setPrimaryUserId()
+                    }
+                }
             primaryKey.userId(
-                userId, subpacketsCallback = preferencesCallback.then(subpacketsCallback))
+                userId,
+                subpacketsCallback =
+                    preferencesCallback.then(setPrimaryUID).then(subpacketsCallback))
         }
 
         /**
