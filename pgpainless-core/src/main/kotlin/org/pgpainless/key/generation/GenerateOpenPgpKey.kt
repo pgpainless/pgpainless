@@ -103,6 +103,7 @@ open class GenerateOpenPgpKey(
         private val primaryKey =
             OpenPgpComponentKeyBuilder.V4PrimaryKeyBuilder(primaryKeyType, referenceTime, policy)
         private val subkeys = mutableListOf<OpenPgpComponentKeyBuilder.V4SubkeyBuilder>()
+        private var addDirectKeySignature = true
 
         private val preferencesCallback =
             SelfSignatureSubpackets.applyHashed {
@@ -112,6 +113,16 @@ open class GenerateOpenPgpKey(
                 setFeatures(*preferences.features.toTypedArray())
                 primaryFlags?.let { setKeyFlags(*it.toTypedArray()) }
             }
+
+        fun directKeySignature(
+            subpacketsCallback: SelfSignatureSubpackets.Callback = SelfSignatureSubpackets.nop()
+        ) = apply {
+            addDirectKeySignature = false
+            primaryKey.directKeySignature(
+                subpacketsCallback = preferencesCallback.then(subpacketsCallback))
+        }
+
+        fun noDirectKeySignature() = apply { addDirectKeySignature = false }
 
         /**
          * Add a user-id to the key. The subpackets of the binding signature are prepopulated,
@@ -259,7 +270,9 @@ open class GenerateOpenPgpKey(
         ): PGPSecretKeyRing {
 
             // add a direct key sig with preferences
-            primaryKey.directKeySignature(subpacketsCallback = preferencesCallback)
+            if (addDirectKeySignature) {
+                primaryKey.directKeySignature(subpacketsCallback = preferencesCallback)
+            }
 
             return PGPSecretKeyRing(
                 mutableListOf(
