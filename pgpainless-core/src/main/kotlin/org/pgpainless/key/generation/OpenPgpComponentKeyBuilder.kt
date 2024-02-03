@@ -215,7 +215,8 @@ class OpenPgpComponentKeyBuilder {
 
                 // Create back-sig
                 val backSigBuilder =
-                    PrimaryKeyBindingSignatureBuilder(pair.privateKey, pair.publicKey, hashAlgorithm)
+                    PrimaryKeyBindingSignatureBuilder(
+                        pair.privateKey, pair.publicKey, hashAlgorithm)
 
                 backSigBuilder.hashedSubpackets.setSignatureCreationTime(bindingTime)
 

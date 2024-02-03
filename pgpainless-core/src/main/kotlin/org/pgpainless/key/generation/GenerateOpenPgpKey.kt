@@ -147,25 +147,29 @@ open class GenerateOpenPgpKey(
             userId: CharSequence,
             subpacketsCallback: SelfSignatureSubpackets.Callback = SelfSignatureSubpackets.nop()
         ) = apply {
-            val hasPrimaryUID =
-                primaryKey.pair.publicKey.userIDs.asSequence().any { uid ->
-                    primaryKey.pair.publicKey.getSignaturesForID(uid).asSequence().any {
-                        it.hashedSubPackets.isPrimaryUserID
-                    }
-                }
-            val setPrimaryUID =
-                SelfSignatureSubpackets.applyHashed {
-                    if (hasPrimaryUID) {
-                        setPrimaryUserId(null)
-                    } else {
-                        setPrimaryUserId()
-                    }
-                }
             primaryKey.userId(
                 userId,
                 subpacketsCallback =
-                    preferencesCallback.then(setPrimaryUID).then(subpacketsCallback))
+                    preferencesCallback.then(adjustPrimaryUserId()).then(subpacketsCallback))
         }
+
+        private fun adjustPrimaryUserId() =
+            SelfSignatureSubpackets.applyHashed {
+                if (primaryKeyHasPrimaryUserId()) {
+                    setPrimaryUserId(null)
+                } else {
+                    setPrimaryUserId()
+                }
+            }
+
+        private fun primaryKeyHasPrimaryUserId() =
+            primaryKey.pair.publicKey.let { pk ->
+                pk.userIDs.asSequence().any { uid ->
+                    pk.getSignaturesForID(uid).asSequence().any {
+                        it.hashedSubPackets.isPrimaryUserID
+                    }
+                }
+            }
 
         /**
          * Add a user-attribute to the key. The subpackets of the binding signature are
@@ -302,7 +306,8 @@ open class GenerateOpenPgpKey(
 
             return PGPSecretKeyRing(
                 mutableListOf(
-                        toSecretKey(primaryKey, true, protector.getEncryptor(primaryKey.pair.keyID)))
+                        toSecretKey(
+                            primaryKey, true, protector.getEncryptor(primaryKey.pair.keyID)))
                     .plus(
                         subkeys.map {
                             toSecretKey(it, false, protector.getEncryptor(it.pair.keyID))
