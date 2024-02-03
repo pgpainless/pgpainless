@@ -5,6 +5,7 @@
 package org.pgpainless.key.generation
 
 import org.bouncycastle.openpgp.PGPSecretKeyRing
+import org.pgpainless.PGPainless
 import org.pgpainless.PGPainless.Companion.buildKeyRing
 import org.pgpainless.algorithm.KeyFlag
 import org.pgpainless.key.generation.KeySpec.Companion.getBuilder
@@ -12,6 +13,7 @@ import org.pgpainless.key.generation.type.KeyType
 import org.pgpainless.key.generation.type.eddsa.EdDSACurve
 import org.pgpainless.key.generation.type.rsa.RsaLength
 import org.pgpainless.key.generation.type.xdh.XDHSpec
+import org.pgpainless.key.protection.SecretKeyRingProtector
 import org.pgpainless.util.Passphrase
 
 class KeyRingTemplates {
@@ -177,21 +179,18 @@ class KeyRingTemplates {
         userId: CharSequence?,
         passphrase: Passphrase = Passphrase.emptyPassphrase()
     ): PGPSecretKeyRing =
-        buildKeyRing()
+        GenerateOpenPgpKey(PGPainless.getPolicy())
+            .buildV4Key(KeyType.EDDSA(EdDSACurve._Ed25519))
             .apply {
-                setPrimaryKey(getBuilder(KeyType.EDDSA(EdDSACurve._Ed25519), KeyFlag.CERTIFY_OTHER))
-                addSubkey(
-                    getBuilder(
-                        KeyType.XDH(XDHSpec._X25519),
-                        KeyFlag.ENCRYPT_COMMS,
-                        KeyFlag.ENCRYPT_STORAGE))
-                addSubkey(getBuilder(KeyType.EDDSA(EdDSACurve._Ed25519), KeyFlag.SIGN_DATA))
-                setPassphrase(passphrase)
                 if (userId != null) {
                     addUserId(userId)
                 }
+                addEncryptionSubkey(KeyType.XDH(XDHSpec._X25519))
+                addSigningSubkey(KeyType.EDDSA(EdDSACurve._Ed25519))
             }
-            .build()
+            .build(
+                if (passphrase.isEmpty) SecretKeyRingProtector.unprotectedKeys()
+                else SecretKeyRingProtector.unlockAnyKeyWith(passphrase))
 
     /**
      * Generate a modern PGP key ring consisting of an ed25519 EdDSA primary key which is used to
