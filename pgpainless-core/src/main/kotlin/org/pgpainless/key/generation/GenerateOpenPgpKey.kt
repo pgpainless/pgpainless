@@ -148,8 +148,8 @@ open class GenerateOpenPgpKey(
             subpacketsCallback: SelfSignatureSubpackets.Callback = SelfSignatureSubpackets.nop()
         ) = apply {
             val hasPrimaryUID =
-                primaryKey.key.publicKey.userIDs.asSequence().any { uid ->
-                    primaryKey.key.publicKey.getSignaturesForID(uid).asSequence().any {
+                primaryKey.pair.publicKey.userIDs.asSequence().any { uid ->
+                    primaryKey.pair.publicKey.getSignaturesForID(uid).asSequence().any {
                         it.hashedSubPackets.isPrimaryUserID
                     }
                 }
@@ -302,10 +302,10 @@ open class GenerateOpenPgpKey(
 
             return PGPSecretKeyRing(
                 mutableListOf(
-                        toSecretKey(primaryKey, true, protector.getEncryptor(primaryKey.key.keyID)))
+                        toSecretKey(primaryKey, true, protector.getEncryptor(primaryKey.pair.keyID)))
                     .plus(
                         subkeys.map {
-                            toSecretKey(it, false, protector.getEncryptor(it.key.keyID))
+                            toSecretKey(it, false, protector.getEncryptor(it.pair.keyID))
                         }))
         }
 
@@ -323,8 +323,8 @@ open class GenerateOpenPgpKey(
             encryptor: PBESecretKeyEncryptor?
         ): PGPSecretKey {
             return PGPSecretKey(
-                key.key.privateKey,
-                key.key.publicKey,
+                key.pair.privateKey,
+                key.pair.publicKey,
                 ImplementationFactory.getInstance().v4FingerprintCalculator,
                 isPrimaryKey,
                 encryptor)

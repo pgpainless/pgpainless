@@ -35,7 +35,7 @@ class OpenPgpComponentKeyBuilder {
         val policy: Policy
     ) {
 
-        internal var key = generateKeyPair()
+        internal var pair = generateKeyPair()
 
         fun subkey(type: KeyType, creationTime: Date = certificateCreationTime): V4SubkeyBuilder =
             V4SubkeyBuilder(type, creationTime, policy, primaryKey())
@@ -77,10 +77,10 @@ class OpenPgpComponentKeyBuilder {
             val sig =
                 buildCertificationFor(
                     userId, certificationType, bindingTime, hashAlgorithm, subpacketsCallback)
-            key =
+            pair =
                 PGPKeyPair(
-                    PGPPublicKey.addCertification(key.publicKey, userId.toString(), sig),
-                    key.privateKey)
+                    PGPPublicKey.addCertification(pair.publicKey, userId.toString(), sig),
+                    pair.privateKey)
         }
 
         fun buildCertificationFor(
@@ -92,7 +92,7 @@ class OpenPgpComponentKeyBuilder {
         ): PGPSignature {
             val builder =
                 SelfSignatureBuilder(
-                    key.privateKey, key.publicKey, certificationType.signatureType, hashAlgorithm)
+                    pair.privateKey, pair.publicKey, certificationType.signatureType, hashAlgorithm)
             builder.hashedSubpackets.apply { setSignatureCreationTime(bindingTime) }
             builder.applyCallback(subpacketsCallback)
             return builder.build(userId)
@@ -113,10 +113,10 @@ class OpenPgpComponentKeyBuilder {
                     bindingTime,
                     hashAlgorithm,
                     subpacketsCallback)
-            key =
+            pair =
                 PGPKeyPair(
-                    PGPPublicKey.addCertification(key.publicKey, userAttribute, sig),
-                    key.privateKey)
+                    PGPPublicKey.addCertification(pair.publicKey, userAttribute, sig),
+                    pair.privateKey)
         }
 
         fun buildCertificationFor(
@@ -128,7 +128,7 @@ class OpenPgpComponentKeyBuilder {
         ): PGPSignature {
             val builder =
                 SelfSignatureBuilder(
-                    key.privateKey, key.publicKey, certificationType.signatureType, hashAlgorithm)
+                    pair.privateKey, pair.publicKey, certificationType.signatureType, hashAlgorithm)
             builder.hashedSubpackets.apply { setSignatureCreationTime(bindingTime) }
             builder.applyCallback(subpacketsCallback)
             return builder.build(userAttribute)
@@ -144,7 +144,7 @@ class OpenPgpComponentKeyBuilder {
             val sig =
                 buildDirectKeySignature(
                     bindingTime, algorithmSuite, hashAlgorithm, subpacketsCallback)
-            key = PGPKeyPair(PGPPublicKey.addCertification(key.publicKey, sig), key.privateKey)
+            pair = PGPKeyPair(PGPPublicKey.addCertification(pair.publicKey, sig), pair.privateKey)
         }
 
         fun buildDirectKeySignature(
@@ -154,7 +154,7 @@ class OpenPgpComponentKeyBuilder {
             subpacketsCallback: SelfSignatureSubpackets.Callback
         ): PGPSignature {
             val builder =
-                DirectKeySelfSignatureBuilder(key.privateKey, key.publicKey, hashAlgorithm)
+                DirectKeySelfSignatureBuilder(pair.privateKey, pair.publicKey, hashAlgorithm)
 
             builder.hashedSubpackets.apply {
                 setSignatureCreationTime(bindingTime)
@@ -191,7 +191,7 @@ class OpenPgpComponentKeyBuilder {
             subpacketsCallback: SelfSignatureSubpackets.Callback = SelfSignatureSubpackets.nop()
         ) = apply {
             val sig = buildBindingSignature(bindingTime, hashAlgorithm, subpacketsCallback)
-            key = PGPKeyPair(PGPPublicKey.addCertification(key.publicKey, sig), key.privateKey)
+            pair = PGPKeyPair(PGPPublicKey.addCertification(pair.publicKey, sig), pair.privateKey)
         }
 
         fun buildBindingSignature(
@@ -202,8 +202,8 @@ class OpenPgpComponentKeyBuilder {
         ): PGPSignature {
             val builder =
                 SubkeyBindingSignatureBuilder(
-                    primaryKeyBuilder.key.privateKey,
-                    primaryKeyBuilder.key.publicKey,
+                    primaryKeyBuilder.pair.privateKey,
+                    primaryKeyBuilder.pair.publicKey,
                     hashAlgorithm)
 
             builder.hashedSubpackets.setSignatureCreationTime(bindingTime)
@@ -215,15 +215,15 @@ class OpenPgpComponentKeyBuilder {
 
                 // Create back-sig
                 val backSigBuilder =
-                    PrimaryKeyBindingSignatureBuilder(key.privateKey, key.publicKey, hashAlgorithm)
+                    PrimaryKeyBindingSignatureBuilder(pair.privateKey, pair.publicKey, hashAlgorithm)
 
                 backSigBuilder.hashedSubpackets.setSignatureCreationTime(bindingTime)
 
-                val backSig = backSigBuilder.build(primaryKey().key.publicKey)
+                val backSig = backSigBuilder.build(primaryKey().pair.publicKey)
                 builder.hashedSubpackets.addEmbeddedSignature(backSig)
             }
 
-            return builder.build(key.publicKey)
+            return builder.build(pair.publicKey)
         }
 
         override fun toPrimaryOrSubkey(keyPair: PGPKeyPair) = toSubkey(keyPair)
