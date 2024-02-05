@@ -36,7 +36,7 @@ open class GenerateOpenPgpKey(
 ) {
 
     /** Builder for OpenPGP secret keys. */
-    abstract class OpenPgpKeyBuilder(
+    abstract class OpinionatedPgpKeyBuilder(
         protected val policy: Policy,
         protected val referenceTime: Date,
         protected val preferences: AlgorithmSuite
@@ -67,13 +67,13 @@ open class GenerateOpenPgpKey(
      *
      * @param keyType type of the primary key
      * @param flags key flags for the primary key. Defaults to [KeyFlag.CERTIFY_OTHER].
-     * @return [V4GenerateOpenPgpKey] which can be further modified, e.g. add subkeys, user-ids etc.
+     * @return [OpinionatedV4KeyBuilder] which can be further modified, e.g. add subkeys, user-ids etc.
      */
     fun buildV4Key(
         keyType: KeyType,
         flags: List<KeyFlag>? = listOf(KeyFlag.CERTIFY_OTHER)
-    ): V4GenerateOpenPgpKey =
-        V4GenerateOpenPgpKey(keyType, flags, policy, referenceTime, preferences)
+    ): OpinionatedV4KeyBuilder =
+        OpinionatedV4KeyBuilder(keyType, flags, policy, referenceTime, preferences)
 
     /**
      * Builder for version 4 OpenPGP keys.
@@ -84,14 +84,14 @@ open class GenerateOpenPgpKey(
      * @param referenceTime reference time for key generation
      * @param preferences set of algorithm preferences and enabled features for the key
      */
-    class V4GenerateOpenPgpKey
+    class OpinionatedV4KeyBuilder
     internal constructor(
         primaryKeyType: KeyType,
         primaryFlags: List<KeyFlag>?,
         policy: Policy,
         referenceTime: Date,
         preferences: AlgorithmSuite
-    ) : OpenPgpKeyBuilder(policy, referenceTime, preferences) {
+    ) : OpinionatedPgpKeyBuilder(policy, referenceTime, preferences) {
 
         init {
             require(primaryKeyType.canCertify) {

@@ -124,4 +124,42 @@ class GenerateOpenPgpKeyTest {
             ?: throw TestAbortedException(
                 "Cannot read resource $resourceName: InputStream is null.")
     }
+
+    fun testAround() {
+        GenerateOpenPgpKey(Policy.getInstance())
+            .buildKeyV4()
+            .primaryKey(RSA, listOf(KeyFlag.CERTIFY_OTHER))
+
+        GenerateOpenPgpKey(Policy.getInstance())
+            .buildKey()
+            .unopinionated()
+            .apply {
+                primaryKey(RSA, creationTime)
+                    .directKeySignature(callback)
+            }
+
+    }
+
+    interface TestInterface<T : TestInterface<T>> {
+        fun doSomething(): T
+    }
+
+    class LowerTestClass : TestInterface<LowerTestClass> {
+        override fun doSomething(): LowerTestClass {
+            TODO("Not yet implemented")
+        }
+
+    }
+
+    class TestClass : TestInterface<TestClass> {
+
+        override fun doSomething(): TestClass {
+            TODO("Not yet implemented")
+        }
+
+        fun lower(): LowerTestClass {
+            return LowerTestClass()
+        }
+
+    }
 }
