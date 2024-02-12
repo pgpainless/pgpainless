@@ -1,5 +1,8 @@
 package org.pgpainless.key.generation
 
+import java.security.KeyPair
+import java.security.KeyPairGenerator
+import java.util.*
 import org.bouncycastle.bcpg.PublicSubkeyPacket
 import org.bouncycastle.openpgp.PGPKeyPair
 import org.bouncycastle.openpgp.PGPPrivateKey
@@ -7,13 +10,8 @@ import org.bouncycastle.openpgp.PGPPublicKey
 import org.pgpainless.implementation.ImplementationFactory
 import org.pgpainless.key.generation.type.KeyType
 import org.pgpainless.provider.ProviderFactory
-import java.security.KeyPair
-import java.security.KeyPairGenerator
-import java.util.*
 
-/**
- * Generator interface for [PGPKeyPair] objects.
- */
+/** Generator interface for [PGPKeyPair] objects. */
 internal interface OpenPgpKeyPairGenerator {
 
     /**
@@ -25,7 +23,6 @@ internal interface OpenPgpKeyPairGenerator {
      */
     fun generatePrimaryKey(type: KeyType, creationTime: Date): PGPKeyPair
 
-
     /**
      * Generate a [PGPKeyPair] in subkey format.
      *
@@ -35,9 +32,7 @@ internal interface OpenPgpKeyPairGenerator {
      */
     fun generateSubkey(type: KeyType, creationTime: Date): PGPKeyPair
 
-    /**
-     * Implementation of [OpenPgpKeyPairGenerator] which generates OpenPGP v4 keys.
-     */
+    /** Implementation of [OpenPgpKeyPairGenerator] which generates OpenPGP v4 keys. */
     class V4 : OpenPgpKeyPairGenerator {
 
         /**
@@ -83,8 +78,7 @@ internal interface OpenPgpKeyPairGenerator {
             // return as PGP key pair
             return PGPKeyPair(
                 PGPPublicKey(subkey, fpCalc),
-                PGPPrivateKey(pubkey.keyID, subkey, privkey.privateKeyDataPacket)
-            )
+                PGPPrivateKey(pubkey.keyID, subkey, privkey.privateKeyDataPacket))
         }
     }
 }

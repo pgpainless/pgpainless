@@ -360,6 +360,9 @@ class SignatureSubpackets :
         setFeatures(true, *features)
     }
 
+    override fun setFeatures(features: Collection<Feature>): SelfSignatureSubpackets =
+        setFeatures(*features.toTypedArray())
+
     override fun setFeatures(isCritical: Boolean, vararg features: Feature): SignatureSubpackets =
         apply {
             setFeatures(Features(isCritical, Feature.toBitmask(*features)))

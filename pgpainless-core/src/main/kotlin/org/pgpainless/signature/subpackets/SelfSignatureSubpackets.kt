@@ -167,6 +167,8 @@ interface SelfSignatureSubpackets : BaseSignatureSubpackets {
 
     fun setFeatures(vararg features: Feature): SelfSignatureSubpackets
 
+    fun setFeatures(features: Collection<Feature>): SelfSignatureSubpackets
+
     fun setFeatures(isCritical: Boolean, vararg features: Feature): SelfSignatureSubpackets
 
     fun setFeatures(features: Features?): SelfSignatureSubpackets

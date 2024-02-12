@@ -67,7 +67,8 @@ open class GenerateOpenPgpKey(
      *
      * @param keyType type of the primary key
      * @param flags key flags for the primary key. Defaults to [KeyFlag.CERTIFY_OTHER].
-     * @return [OpinionatedV4KeyBuilder] which can be further modified, e.g. add subkeys, user-ids etc.
+     * @return [OpinionatedV4KeyBuilder] which can be further modified, e.g. add subkeys, user-ids
+     *   etc.
      */
     fun buildV4Key(
         keyType: KeyType,

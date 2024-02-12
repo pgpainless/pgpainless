@@ -133,7 +133,6 @@ class GenerateOpenPgpKeyTest {
         override fun doSomething(): LowerTestClass {
             TODO("Not yet implemented")
         }
-
     }
 
     class TestClass : TestInterface<TestClass> {
@@ -145,6 +144,5 @@ class GenerateOpenPgpKeyTest {
         fun lower(): LowerTestClass {
             return LowerTestClass()
         }
-
     }
 }
