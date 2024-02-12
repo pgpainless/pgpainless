@@ -125,21 +125,6 @@ class GenerateOpenPgpKeyTest {
                 "Cannot read resource $resourceName: InputStream is null.")
     }
 
-    fun testAround() {
-        GenerateOpenPgpKey(Policy.getInstance())
-            .buildKeyV4()
-            .primaryKey(RSA, listOf(KeyFlag.CERTIFY_OTHER))
-
-        GenerateOpenPgpKey(Policy.getInstance())
-            .buildKey()
-            .unopinionated()
-            .apply {
-                primaryKey(RSA, creationTime)
-                    .directKeySignature(callback)
-            }
-
-    }
-
     interface TestInterface<T : TestInterface<T>> {
         fun doSomething(): T
     }
