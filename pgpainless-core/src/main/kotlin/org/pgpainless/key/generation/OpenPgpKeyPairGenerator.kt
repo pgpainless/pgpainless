@@ -3,10 +3,9 @@ package org.pgpainless.key.generation
 import java.security.KeyPair
 import java.security.KeyPairGenerator
 import java.util.*
-import org.bouncycastle.bcpg.PublicSubkeyPacket
+import org.pgpainless.bouncycastle.extensions.toPrimaryKeyFormat
+import org.pgpainless.bouncycastle.extensions.toSubkeyFormat
 import org.bouncycastle.openpgp.PGPKeyPair
-import org.bouncycastle.openpgp.PGPPrivateKey
-import org.bouncycastle.openpgp.PGPPublicKey
 import org.pgpainless.implementation.ImplementationFactory
 import org.pgpainless.key.generation.type.KeyType
 import org.pgpainless.provider.ProviderFactory
@@ -61,24 +60,11 @@ internal interface OpenPgpKeyPairGenerator {
 
         override fun generatePrimaryKey(type: KeyType, creationTime: Date): PGPKeyPair {
             // already in primary key format
-            return generatePgpKeyPair(type, creationTime)
+            return generatePgpKeyPair(type, creationTime).toPrimaryKeyFormat()
         }
 
         override fun generateSubkey(type: KeyType, creationTime: Date): PGPKeyPair {
-            val keyPair = generatePgpKeyPair(type, creationTime)
-
-            // We need to convert the keyPair which is in primary key format into subkey format
-            val fpCalc = ImplementationFactory.getInstance().keyFingerprintCalculator
-            val pubkey = keyPair.publicKey
-            val privkey = keyPair.privateKey
-            // transform to subkey packet
-            val subkey =
-                PublicSubkeyPacket(
-                    pubkey.algorithm, pubkey.creationTime, pubkey.publicKeyPacket.key)
-            // return as PGP key pair
-            return PGPKeyPair(
-                PGPPublicKey(subkey, fpCalc),
-                PGPPrivateKey(pubkey.keyID, subkey, privkey.privateKeyDataPacket))
+            return generatePgpKeyPair(type, creationTime).toSubkeyFormat()
         }
     }
 }

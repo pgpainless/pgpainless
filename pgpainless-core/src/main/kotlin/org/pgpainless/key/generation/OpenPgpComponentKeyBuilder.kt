@@ -6,9 +6,9 @@ package org.pgpainless.key.generation
 
 import java.security.KeyPairGenerator
 import java.util.*
-import org.bouncycastle.bcpg.PublicSubkeyPacket
+import org.pgpainless.bouncycastle.extensions.toPrimaryKeyFormat
+import org.pgpainless.bouncycastle.extensions.toSubkeyFormat
 import org.bouncycastle.openpgp.PGPKeyPair
-import org.bouncycastle.openpgp.PGPPrivateKey
 import org.bouncycastle.openpgp.PGPPublicKey
 import org.bouncycastle.openpgp.PGPSignature
 import org.bouncycastle.openpgp.PGPUserAttributeSubpacketVector
@@ -168,11 +168,7 @@ class OpenPgpComponentKeyBuilder {
             return builder.build()
         }
 
-        override fun toPrimaryOrSubkey(keyPair: PGPKeyPair) = toPrimaryKey(keyPair)
-
-        private fun toPrimaryKey(keyPair: PGPKeyPair): PGPKeyPair {
-            return keyPair // is already a secret key packet
-        }
+        override fun toPrimaryOrSubkey(keyPair: PGPKeyPair) = keyPair.toPrimaryKeyFormat()
 
         override fun primaryKey() = this
     }
@@ -227,20 +223,7 @@ class OpenPgpComponentKeyBuilder {
             return builder.build(pair.publicKey)
         }
 
-        override fun toPrimaryOrSubkey(keyPair: PGPKeyPair) = toSubkey(keyPair)
-
-        private fun toSubkey(keyPair: PGPKeyPair): PGPKeyPair {
-            val fpCalc = ImplementationFactory.getInstance().keyFingerprintCalculator
-            val pubkey = keyPair.publicKey
-            val privkey = keyPair.privateKey
-            // form subkey packet
-            val subkey =
-                PublicSubkeyPacket(
-                    pubkey.algorithm, pubkey.creationTime, pubkey.publicKeyPacket.key)
-            return PGPKeyPair(
-                PGPPublicKey(subkey, fpCalc),
-                PGPPrivateKey(pubkey.keyID, subkey, privkey.privateKeyDataPacket))
-        }
+        override fun toPrimaryOrSubkey(keyPair: PGPKeyPair) = keyPair.toSubkeyFormat()
 
         override fun primaryKey() = primaryKeyBuilder.primaryKey()
     }
