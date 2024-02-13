@@ -1,8 +1,6 @@
 package org.pgpainless.key.generation
 
 import org.bouncycastle.bcpg.attr.ImageAttribute
-import java.security.KeyPair
-import java.security.KeyPairGenerator
 import java.util.Date
 import org.bouncycastle.openpgp.PGPKeyPair
 import org.bouncycastle.openpgp.PGPPublicKey
@@ -23,7 +21,6 @@ import org.pgpainless.key.generation.type.eddsa.EdDSACurve
 import org.pgpainless.key.generation.type.rsa.RsaLength
 import org.pgpainless.key.generation.type.xdh.XDHSpec
 import org.pgpainless.policy.Policy
-import org.pgpainless.provider.ProviderFactory
 import org.pgpainless.signature.builder.DirectKeySelfSignatureBuilder
 import org.pgpainless.signature.builder.SelfSignatureBuilder
 import org.pgpainless.signature.builder.SubkeyBindingSignatureBuilder
@@ -35,6 +32,7 @@ import java.io.InputStream
  *
  * @param policy policy to ensure algorithm compliance and to determine default algorithms
  * @param creationTime creation time for the secret key
+ * @param preferences suite of algorithm preferences and enabled features
  */
 fun buildV4(
     policy: Policy = PGPainless.getPolicy(),
@@ -53,7 +51,7 @@ fun buildV4(
 fun buildV6(
     policy: Policy = PGPainless.getPolicy(),
     creationTime: Date = Date(),
-    preferences: AlgorithmSuite = policy.keyGenerationAlgorithmSuite
+    preferences: AlgorithmSuite = AlgorithmSuite.v6AlgorithmSuite
 ): OpinionatedDefinePrimaryKey.V6 {
     return OpinionatedDefinePrimaryKey.V6(policy, creationTime, preferences)
 }
@@ -167,7 +165,10 @@ abstract class OpinionatedDefinePrimaryKey<
                     " for the current public key algorithm policy."
             }
 
-            val applier = applyToPrimaryKey ?: { addDirectKeySignature(preferencesSubpackets()) }
+            val applier = applyToPrimaryKey ?: {
+                // Add default direct-key signature containing preferences
+                addDirectKeySignature(preferencesSubpackets())
+            }
 
             val unopinionatedSubkeys = unopinionated().setPrimaryKey(type, creationTime, applier)
             return OpinionatedDefineSubkeys.V4(
@@ -234,10 +235,15 @@ abstract class UnopinionatedDefinePrimaryKey<U : UnopinionatedDefineSubkeys>(
             creationTime: Date,
             applyToPrimaryKey: (ApplyToPrimaryKey.() -> PGPKeyPair)?
         ): UnopinionatedDefineSubkeys.V4 {
+            // generate primary key
             var primaryKey = OpenPgpKeyPairGenerator.V4().generatePrimaryKey(type, creationTime)
+
+            // add user-ids and direct-key signatures if requested
             if (applyToPrimaryKey != null) {
                 primaryKey = ApplyToPrimaryKey.V4(primaryKey, this).applyToPrimaryKey()
             }
+
+            // return builder for adding subkeys
             return UnopinionatedDefineSubkeys.V4(primaryKey, policy, creationTime)
         }
     }
@@ -267,13 +273,13 @@ abstract class DefineSubkeys<B : DefineSubkeys<B>>(val policy: Policy, val creat
      *
      * @param type subkey type
      * @param creationTime creation time of the subkey
-     * @param function function to apply to the subkey. Used to add binding signatures.
+     * @param applyToSubkey function to apply to the subkey. Used to add binding signatures.
      * @return this
      */
     abstract fun addSubkey(
         type: KeyType,
         creationTime: Date = this.creationTime,
-        function: (ApplyToSubkey.() -> PGPKeyPair)? = null
+        applyToSubkey: (ApplyToSubkey.() -> PGPKeyPair)? = null
     ): B
 
     /**
@@ -287,6 +293,7 @@ abstract class DefineSubkeys<B : DefineSubkeys<B>>(val policy: Policy, val creat
 abstract class OpinionatedDefineSubkeys(policy: Policy, creationTime: Date) :
     DefineSubkeys<OpinionatedDefineSubkeys>(policy, creationTime) {
 
+    // unopinionated builder
     abstract val unopinionated: UnopinionatedDefineSubkeys
 
     override fun build(): PGPSecretKeyRing = unopinionated.build()
@@ -340,8 +347,8 @@ abstract class OpinionatedDefineSubkeys(policy: Policy, creationTime: Date) :
         override fun addSubkey(
             type: KeyType,
             creationTime: Date,
-            function: (ApplyToSubkey.() -> PGPKeyPair)?
-        ): V6 = apply { unopinionated.addSubkey(type, creationTime, function) }
+            applyToSubkey: (ApplyToSubkey.() -> PGPKeyPair)?
+        ): V6 = apply { unopinionated.addSubkey(type, creationTime, applyToSubkey) }
     }
 }
 
@@ -397,11 +404,10 @@ abstract class UnopinionatedDefineSubkeys(policy: Policy, creationTime: Date) :
         override fun addSubkey(
             type: KeyType,
             creationTime: Date,
-            function: (ApplyToSubkey.() -> PGPKeyPair)?
-        ): V6 =
-            apply {
-                // Add Key
-            }
+            applyToSubkey: (ApplyToSubkey.() -> PGPKeyPair)?
+        ): V6 {
+            TODO("Not yet implemented")
+        }
 
         override fun build(): PGPSecretKeyRing {
             TODO("Not yet implemented")
