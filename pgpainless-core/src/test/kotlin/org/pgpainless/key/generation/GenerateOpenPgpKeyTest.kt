@@ -28,7 +28,7 @@ class GenerateOpenPgpKeyTest {
     fun test() {
         val date = DateUtil.parseUTCDate("2020-04-01 10:00:00 UTC")
         val key =
-            GenerateOpenPgpKey(Policy.getInstance(), date)
+            GenerateOpenPgpKey(Policy(), date)
                 .buildV4Key(KeyType.EDDSA(EdDSACurve._Ed25519), listOf(KeyFlag.CERTIFY_OTHER))
                 .addUserId("Alice")
                 .addEncryptionSubkey(KeyType.XDH(XDHSpec._X25519))
@@ -40,7 +40,7 @@ class GenerateOpenPgpKeyTest {
     @Test
     fun minimal() {
         val key =
-            GenerateOpenPgpKey(Policy.getInstance())
+            GenerateOpenPgpKey(Policy())
                 .buildV4Key(KeyType.EDDSA(EdDSACurve._Ed25519), listOf(KeyFlag.CERTIFY_OTHER))
                 .build()
         println(PGPainless.asciiArmor(key))
@@ -49,7 +49,7 @@ class GenerateOpenPgpKeyTest {
     @Test
     fun minimalWithUserId() {
         val key =
-            GenerateOpenPgpKey(Policy.getInstance())
+            GenerateOpenPgpKey(Policy())
                 .buildV4Key(KeyType.EDDSA(EdDSACurve._Ed25519), listOf(KeyFlag.CERTIFY_OTHER))
                 .addUserId("Alice <alice@pgpainless.org>")
                 .build()
@@ -59,7 +59,7 @@ class GenerateOpenPgpKeyTest {
     @Test
     fun primaryKeyMustBeCertificationCapable() {
         assertThrows<IllegalArgumentException> {
-            GenerateOpenPgpKey(Policy.getInstance())
+            GenerateOpenPgpKey(Policy())
                 // XDH is not signing/certification capable
                 .buildV4Key(KeyType.XDH(XDHSpec._X25519))
         }
@@ -68,7 +68,7 @@ class GenerateOpenPgpKeyTest {
     @Test
     fun encryptionSubkeyMustBeEncryptionCapable() {
         val builder =
-            GenerateOpenPgpKey(Policy.getInstance()).buildV4Key(KeyType.EDDSA(EdDSACurve._Ed25519))
+            GenerateOpenPgpKey(Policy()).buildV4Key(KeyType.EDDSA(EdDSACurve._Ed25519))
 
         assertThrows<IllegalArgumentException> {
             builder.addEncryptionSubkey(KeyType.EDDSA(EdDSACurve._Ed25519))
@@ -78,7 +78,7 @@ class GenerateOpenPgpKeyTest {
     @Test
     fun signingSubkeysMustBeSigningCapable() {
         val builder =
-            GenerateOpenPgpKey(Policy.getInstance()).buildV4Key(KeyType.EDDSA(EdDSACurve._Ed25519))
+            GenerateOpenPgpKey(Policy()).buildV4Key(KeyType.EDDSA(EdDSACurve._Ed25519))
 
         assertThrows<IllegalArgumentException> {
             builder.addSigningSubkey(KeyType.XDH(XDHSpec._X25519))
@@ -108,7 +108,7 @@ class GenerateOpenPgpKeyTest {
     @Test
     fun testKeyGenerationWithJPEGAttribute() {
         val key =
-            GenerateOpenPgpKey(Policy.getInstance())
+            GenerateOpenPgpKey(Policy())
                 .buildV4Key(KeyType.EDDSA(EdDSACurve._Ed25519))
                 .addJpegImage(requireResource("suzanne.jpg"))
                 .build()

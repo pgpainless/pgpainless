@@ -17,43 +17,43 @@ public class PolicySetterTest {
 
     @Test
     public void testSetCertificationSignatureHashAlgorithmPolicy_NullFails() {
-        Policy policy = Policy.getInstance();
+        Policy policy = new Policy();
         assertThrows(NullPointerException.class, () -> policy.setCertificationSignatureHashAlgorithmPolicy(null));
     }
 
     @Test
     public void testSetDataSignatureHashAlgorithmPolicy_NullFails() {
-        Policy policy = Policy.getInstance();
+        Policy policy = new Policy();
         assertThrows(NullPointerException.class, () -> policy.setDataSignatureHashAlgorithmPolicy(null));
     }
 
     @Test
     public void testSetRevocationSignatureHashAlgorithmPolicy_NullFails() {
-        Policy policy = Policy.getInstance();
+        Policy policy = new Policy();
         assertThrows(NullPointerException.class, () -> policy.setRevocationSignatureHashAlgorithmPolicy(null));
     }
 
     @Test
     public void testSetSymmetricKeyEncryptionAlgorithmPolicy_NullFails() {
-        Policy policy = Policy.getInstance();
+        Policy policy = new Policy();
         assertThrows(NullPointerException.class, () -> policy.setSymmetricKeyEncryptionAlgorithmPolicy(null));
     }
 
     @Test
     public void testSetSymmetricKeyDecryptionAlgorithmPolicy_NullFails() {
-        Policy policy = Policy.getInstance();
+        Policy policy = new Policy();
         assertThrows(NullPointerException.class, () -> policy.setSymmetricKeyDecryptionAlgorithmPolicy(null));
     }
 
     @Test
     public void testSetCompressionAlgorithmPolicy_NullFails() {
-        Policy policy = Policy.getInstance();
+        Policy policy = new Policy();
         assertThrows(NullPointerException.class, () -> policy.setCompressionAlgorithmPolicy(null));
     }
 
     @Test
     public void testSetPublicKeyAlgorithmPolicy_NullFails() {
-        Policy policy = Policy.getInstance();
+        Policy policy = new Policy();
         assertThrows(NullPointerException.class, () -> policy.setPublicKeyAlgorithmPolicy(null));
     }
 

@@ -61,7 +61,7 @@ public class SignatureSubpacketsUtilTest {
                 .done();
 
         PGPSignature expirationSig = SignaturePicker.pickCurrentUserIdCertificationSignature(
-                secretKeys, "Expire", Policy.getInstance(), new Date());
+                secretKeys, "Expire", PGPainless.getPolicy(), new Date());
         PGPPublicKey notTheRightKey = PGPainless.inspectKeyRing(secretKeys).getSigningSubkeys().get(0);
 
         assertThrows(IllegalArgumentException.class, () ->

@@ -24,7 +24,7 @@ class MalformedKeyGenerationTest {
     fun malformedPrimaryUserIdSubpacket() {
         val userId = "Alice <alice@pgpainless.org>"
         val key =
-            GenerateOpenPgpKey(Policy.getInstance())
+            GenerateOpenPgpKey(Policy())
                 .buildV4Key(KeyType.EDDSA(EdDSACurve._Ed25519))
                 .addUserId(
                     userId,
@@ -42,7 +42,7 @@ class MalformedKeyGenerationTest {
     @Test
     fun malformedExportableSubpacket() {
         val key =
-            GenerateOpenPgpKey(Policy.getInstance())
+            GenerateOpenPgpKey(Policy())
                 .buildV4Key(KeyType.EDDSA(EdDSACurve._Ed25519))
                 .addUserId(
                     "Alice <alice@pgpainless.org>",
@@ -60,7 +60,7 @@ class MalformedKeyGenerationTest {
     @Test
     fun malformedRevocableSubpacket() {
         val key =
-            GenerateOpenPgpKey(Policy.getInstance())
+            GenerateOpenPgpKey(Policy())
                 .buildV4Key(KeyType.EDDSA(EdDSACurve._Ed25519))
                 .addUserId(
                     "Alice <alice@pgpainless.org>",
@@ -77,7 +77,7 @@ class MalformedKeyGenerationTest {
 
     @Test
     fun primaryUserIdOnDirectKeySig() {
-        val policy = Policy.getInstance()
+        val policy = Policy()
         val key =
             GenerateOpenPgpKey(policy)
                 .buildV4Key(

@@ -112,13 +112,27 @@ class OpenPgpKeyGeneratorTest {
 
     @Test
     fun `key generation with too weak PK algorithms fails`() {
-        val policy = Policy.getInstance()
+        val policy = Policy()
         policy.publicKeyAlgorithmPolicy = Policy.PublicKeyAlgorithmPolicy(
             buildMap { put(PublicKeyAlgorithm.RSA_GENERAL, 3072) }
         )
 
         assertThrows<IllegalArgumentException> {
-            buildV4(policy).setPrimaryKey(KeyType.RSA(RsaLength._2048))
+            buildV4(policy)
+                // opinionated builder verifies PK parameters
+                .setPrimaryKey(KeyType.RSA(RsaLength._2048)) // too weak
         }
+    }
+
+    @Test
+    fun `unopionionated key generation with too weak PK algorithm does not fail`() {
+        val policy = Policy()
+        policy.publicKeyAlgorithmPolicy = Policy.PublicKeyAlgorithmPolicy(
+            buildMap { put(PublicKeyAlgorithm.RSA_GENERAL, 3072) }
+        )
+
+        buildV4(policy)
+            .unopinionated() // unopinionated builder allows for non-compliant configurations
+            .setPrimaryKey(KeyType.RSA(RsaLength._2048))
     }
 }
