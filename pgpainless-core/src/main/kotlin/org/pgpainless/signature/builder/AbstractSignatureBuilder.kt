@@ -6,6 +6,7 @@ package org.pgpainless.signature.builder
 
 import java.util.function.Predicate
 import org.bouncycastle.openpgp.PGPException
+import org.bouncycastle.openpgp.PGPKeyPair
 import org.bouncycastle.openpgp.PGPPrivateKey
 import org.bouncycastle.openpgp.PGPPublicKey
 import org.bouncycastle.openpgp.PGPSecretKey
@@ -52,6 +53,27 @@ abstract class AbstractSignatureBuilder<B : AbstractSignatureBuilder<B>>(
         signatureType,
         hashedSubpackets,
         unhashedSubpackets)
+
+    @Throws(PGPException::class)
+    constructor(
+        signatureType: SignatureType,
+        signingKey: PGPKeyPair,
+        hashAlgorithm: HashAlgorithm,
+        hashedSubpackets: SignatureSubpackets,
+        unhashedSubpackets: SignatureSubpackets
+    ) : this(
+        signingKey.privateKey,
+        signingKey.publicKey,
+        hashAlgorithm,
+        signatureType,
+        hashedSubpackets,
+        unhashedSubpackets)
+
+    @Throws(PGPException::class)
+    constructor(
+        signingKey: PGPKeyPair,
+        archetypeSignature: PGPSignature
+    ) : this(signingKey.privateKey, signingKey.publicKey, archetypeSignature)
 
     @Throws(PGPException::class)
     constructor(

@@ -6,12 +6,15 @@ package org.pgpainless.signature.builder
 
 import java.util.function.Predicate
 import org.bouncycastle.openpgp.PGPException
+import org.bouncycastle.openpgp.PGPKeyPair
 import org.bouncycastle.openpgp.PGPPublicKey
 import org.bouncycastle.openpgp.PGPSecretKey
 import org.bouncycastle.openpgp.PGPSignature
+import org.pgpainless.algorithm.HashAlgorithm
 import org.pgpainless.algorithm.SignatureType
 import org.pgpainless.key.protection.SecretKeyRingProtector
 import org.pgpainless.signature.subpackets.RevocationSignatureSubpackets
+import org.pgpainless.signature.subpackets.SignatureSubpackets
 
 /** [AbstractSignatureBuilder] subclass devoted to revocation signatures. */
 class RevocationSignatureBuilder : AbstractSignatureBuilder<RevocationSignatureBuilder> {
@@ -25,6 +28,18 @@ class RevocationSignatureBuilder : AbstractSignatureBuilder<RevocationSignatureB
                         SignatureType.SUBKEY_REVOCATION,
                         SignatureType.CERTIFICATION_REVOCATION)
             }
+
+    @Throws(PGPException::class)
+    constructor(
+        signatureType: SignatureType,
+        signingKey: PGPKeyPair,
+        hashAlgorithm: HashAlgorithm
+    ) : super(
+        signatureType,
+        signingKey,
+        hashAlgorithm,
+        SignatureSubpackets.createHashedSubpackets(signingKey.publicKey),
+        SignatureSubpackets.createEmptySubpackets())
 
     @Throws(PGPException::class)
     constructor(
@@ -44,6 +59,9 @@ class RevocationSignatureBuilder : AbstractSignatureBuilder<RevocationSignatureB
             it.modifyUnhashedSubpackets(unhashedSubpackets)
         }
     }
+
+    @Throws(PGPException::class)
+    fun build(revokeeKey: PGPKeyPair): PGPSignature = build(revokeeKey.publicKey)
 
     @Throws(PGPException::class)
     fun build(revokeeKey: PGPPublicKey): PGPSignature =

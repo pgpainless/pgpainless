@@ -6,6 +6,7 @@ package org.pgpainless.signature.builder
 
 import java.util.function.Predicate
 import org.bouncycastle.openpgp.PGPException
+import org.bouncycastle.openpgp.PGPKeyPair
 import org.bouncycastle.openpgp.PGPPrivateKey
 import org.bouncycastle.openpgp.PGPPublicKey
 import org.bouncycastle.openpgp.PGPSecretKey
@@ -55,10 +56,23 @@ class SelfSignatureBuilder : AbstractSignatureBuilder<SelfSignatureBuilder> {
 
     @Throws(PGPException::class)
     constructor(
+        primaryKey: PGPKeyPair,
+        oldCertification: PGPSignature
+    ) : this(primaryKey.privateKey, primaryKey.publicKey, oldCertification)
+
+    @Throws(PGPException::class)
+    constructor(
         privatePrimaryKey: PGPPrivateKey,
         publicPrimaryKey: PGPPublicKey,
         oldCertification: PGPSignature
     ) : super(privatePrimaryKey, publicPrimaryKey, oldCertification)
+
+    @Throws(PGPException::class)
+    constructor(
+        primaryKey: PGPKeyPair,
+        signatureType: SignatureType = SignatureType.POSITIVE_CERTIFICATION,
+        hashAlgorithm: HashAlgorithm
+    ) : this(primaryKey.privateKey, primaryKey.publicKey, signatureType, hashAlgorithm)
 
     @Throws(PGPException::class)
     constructor(

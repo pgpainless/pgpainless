@@ -23,6 +23,7 @@ import org.pgpainless.key.generation.type.rsa.RsaLength
 import org.pgpainless.key.generation.type.xdh.XDHSpec
 import org.pgpainless.policy.Policy
 import org.pgpainless.signature.builder.DirectKeySelfSignatureBuilder
+import org.pgpainless.signature.builder.PrimaryKeyBindingSignatureBuilder
 import org.pgpainless.signature.builder.SelfSignatureBuilder
 import org.pgpainless.signature.builder.SubkeyBindingSignatureBuilder
 import org.pgpainless.signature.subpackets.SelfSignatureSubpackets
@@ -738,14 +739,27 @@ abstract class ApplyToSubkey(
             bindingTime: Date,
             subpacketsCallback: SelfSignatureSubpackets.Callback
         ): PGPSignature {
-            return SubkeyBindingSignatureBuilder(
-                    primaryKey.privateKey, primaryKey.publicKey, hashAlgorithm)
+            return SubkeyBindingSignatureBuilder(primaryKey, hashAlgorithm)
                 .applyCallback(
-                    subpacketsCallback.then(
-                        SelfSignatureSubpackets.applyHashed {
-                            setSignatureCreationTime(bindingTime)
-                        }))
-                .build(subkey.publicKey)
+                    subpacketsCallback
+                        .then(
+                            SelfSignatureSubpackets.applyHashed {
+                                setSignatureCreationTime(bindingTime)
+                            })
+                        .then(
+                            SelfSignatureSubpackets.applyHashed {
+                                if (isSigningCapable(getKeyFlags())) {
+                                    addEmbeddedSignature(
+                                        PrimaryKeyBindingSignatureBuilder(subkey, hashAlgorithm)
+                                            .build(primaryKey))
+                                }
+                            }))
+                .build(subkey)
+        }
+
+        private fun isSigningCapable(flags: List<KeyFlag>?): Boolean {
+            val signCapableFlags = listOf(KeyFlag.SIGN_DATA, KeyFlag.CERTIFY_OTHER)
+            return flags?.any { signCapableFlags.contains(it) } ?: false
         }
     }
 }

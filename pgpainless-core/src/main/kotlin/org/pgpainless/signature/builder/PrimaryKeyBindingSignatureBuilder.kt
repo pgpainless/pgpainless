@@ -6,6 +6,7 @@ package org.pgpainless.signature.builder
 
 import java.util.function.Predicate
 import org.bouncycastle.openpgp.PGPException
+import org.bouncycastle.openpgp.PGPKeyPair
 import org.bouncycastle.openpgp.PGPPrivateKey
 import org.bouncycastle.openpgp.PGPPublicKey
 import org.bouncycastle.openpgp.PGPSecretKey
@@ -33,6 +34,13 @@ class PrimaryKeyBindingSignatureBuilder :
         subkeyProtector: SecretKeyRingProtector
     ) : super(SignatureType.PRIMARYKEY_BINDING, signingSubkey, subkeyProtector)
 
+    @Throws(PGPException::class)
+    constructor(
+        subkey: PGPKeyPair,
+        hashAlgorithm: HashAlgorithm
+    ) : this(subkey.privateKey, subkey.publicKey, hashAlgorithm)
+
+    @Throws(PGPException::class)
     constructor(
         privateSubkey: PGPPrivateKey,
         publicSubkey: PGPPublicKey,
@@ -71,4 +79,7 @@ class PrimaryKeyBindingSignatureBuilder :
     @Throws(PGPException::class)
     fun build(primaryKey: PGPPublicKey): PGPSignature =
         buildAndInitSignatureGenerator().generateCertification(primaryKey, publicSigningKey)
+
+    @Throws(PGPException::class)
+    fun build(primaryKey: PGPKeyPair): PGPSignature = build(primaryKey.publicKey)
 }

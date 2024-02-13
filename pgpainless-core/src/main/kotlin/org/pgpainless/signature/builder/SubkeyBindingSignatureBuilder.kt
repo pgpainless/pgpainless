@@ -6,6 +6,7 @@ package org.pgpainless.signature.builder
 
 import java.util.function.Predicate
 import org.bouncycastle.openpgp.PGPException
+import org.bouncycastle.openpgp.PGPKeyPair
 import org.bouncycastle.openpgp.PGPPrivateKey
 import org.bouncycastle.openpgp.PGPPublicKey
 import org.bouncycastle.openpgp.PGPSecretKey
@@ -24,6 +25,12 @@ class SubkeyBindingSignatureBuilder : AbstractSignatureBuilder<SubkeyBindingSign
 
     override val signatureTypePredicate: Predicate<SignatureType>
         get() = Predicate<SignatureType> { it == SignatureType.SUBKEY_BINDING }
+
+    @Throws(PGPException::class)
+    constructor(
+        signingKey: PGPKeyPair,
+        hashAlgorithm: HashAlgorithm = negotiateHashAlgorithm(signingKey.publicKey)
+    ) : this(signingKey.privateKey, signingKey.publicKey, hashAlgorithm)
 
     @Throws(PGPException::class)
     constructor(
@@ -84,4 +91,7 @@ class SubkeyBindingSignatureBuilder : AbstractSignatureBuilder<SubkeyBindingSign
     @Throws(PGPException::class)
     fun build(subkey: PGPPublicKey): PGPSignature =
         buildAndInitSignatureGenerator().generateCertification(publicSigningKey, subkey)
+
+    @Throws(PGPException::class)
+    fun build(subkey: PGPKeyPair): PGPSignature = build(subkey.publicKey)
 }
