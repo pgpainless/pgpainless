@@ -3,8 +3,8 @@ package org.pgpainless.key.generation
 import java.io.InputStream
 import java.util.Date
 import org.bouncycastle.bcpg.attr.ImageAttribute
+import org.bouncycastle.extensions.plusCertification
 import org.bouncycastle.openpgp.PGPKeyPair
-import org.bouncycastle.openpgp.PGPPublicKey
 import org.bouncycastle.openpgp.PGPSecretKey
 import org.bouncycastle.openpgp.PGPSecretKeyRing
 import org.bouncycastle.openpgp.PGPSignature
@@ -535,10 +535,7 @@ abstract class ApplyToPrimaryKey(var keyPair: PGPKeyPair, val builder: DefinePri
                     hashAlgorithm,
                     subpacketsCallback)
 
-            keyPair =
-                PGPKeyPair(
-                    PGPPublicKey.addCertification(keyPair.publicKey, userId.toString(), sig),
-                    keyPair.privateKey)
+            keyPair = keyPair.plusCertification(userId, sig)
             return keyPair
         }
 
@@ -558,11 +555,7 @@ abstract class ApplyToPrimaryKey(var keyPair: PGPKeyPair, val builder: DefinePri
                     hashAlgorithm,
                     subpacketsCallback)
 
-            keyPair =
-                PGPKeyPair(
-                    PGPPublicKey.addCertification(keyPair.publicKey, userAttribute, sig),
-                    keyPair.privateKey)
-
+            keyPair = keyPair.plusCertification(userAttribute, sig)
             return keyPair
         }
 
@@ -579,9 +572,7 @@ abstract class ApplyToPrimaryKey(var keyPair: PGPKeyPair, val builder: DefinePri
                         SelfSignatureSubpackets.applyHashed {
                             setSignatureCreationTime(bindingTime)
                         }))
-            keyPair =
-                PGPKeyPair(
-                    PGPPublicKey.addCertification(keyPair.publicKey, sig), keyPair.privateKey)
+            keyPair = keyPair.plusCertification(sig)
             return keyPair
         }
 
@@ -680,7 +671,7 @@ abstract class ApplyToPrimaryKey(var keyPair: PGPKeyPair, val builder: DefinePri
  */
 abstract class ApplyToSubkey(
     val primaryKey: PGPKeyPair,
-    val subkey: PGPKeyPair,
+    var subkey: PGPKeyPair,
     val builder: DefineSubkeys<*>
 ) {
 
@@ -718,8 +709,8 @@ abstract class ApplyToSubkey(
                 buildBindingSignature(
                     primaryKey, subkey, hashAlgorithm, bindingTime, subpacketsCallback)
 
-            return PGPKeyPair(
-                PGPPublicKey.addCertification(subkey.publicKey, sig), subkey.privateKey)
+            subkey = subkey.plusCertification(sig)
+            return subkey
         }
 
         /**
@@ -890,7 +881,6 @@ class OpenPgpKeyTemplates {
                                 KeyFlag.ENCRYPT_COMMS,
                                 KeyFlag.ENCRYPT_STORAGE)
                         })
-                    keyPair
                 }
                 .build()
     }

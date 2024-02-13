@@ -9,6 +9,8 @@ import org.bouncycastle.bcpg.PublicSubkeyPacket
 import org.bouncycastle.openpgp.PGPKeyPair
 import org.bouncycastle.openpgp.PGPPrivateKey
 import org.bouncycastle.openpgp.PGPPublicKey
+import org.bouncycastle.openpgp.PGPSignature
+import org.bouncycastle.openpgp.PGPUserAttributeSubpacketVector
 import org.pgpainless.implementation.ImplementationFactory
 
 fun PGPKeyPair.toPrimaryKeyFormat(): PGPKeyPair {
@@ -30,3 +32,16 @@ fun PGPKeyPair.toSubkeyFormat(): PGPKeyPair {
         PGPPublicKey(subkey, fpCalc),
         PGPPrivateKey(publicKey.keyID, subkey, privateKey.privateKeyDataPacket))
 }
+
+fun PGPKeyPair.plusCertification(userId: CharSequence, certification: PGPSignature): PGPKeyPair =
+    PGPKeyPair(
+        PGPPublicKey.addCertification(publicKey, userId.toString(), certification), privateKey)
+
+fun PGPKeyPair.plusCertification(
+    userAttribute: PGPUserAttributeSubpacketVector,
+    certification: PGPSignature
+): PGPKeyPair =
+    PGPKeyPair(PGPPublicKey.addCertification(publicKey, userAttribute, certification), privateKey)
+
+fun PGPKeyPair.plusCertification(certification: PGPSignature): PGPKeyPair =
+    PGPKeyPair(PGPPublicKey.addCertification(publicKey, certification), privateKey)
