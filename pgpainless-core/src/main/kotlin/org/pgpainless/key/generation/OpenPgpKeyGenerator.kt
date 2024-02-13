@@ -1,5 +1,6 @@
 package org.pgpainless.key.generation
 
+import org.bouncycastle.bcpg.attr.ImageAttribute
 import java.security.KeyPair
 import java.security.KeyPairGenerator
 import java.util.Date
@@ -9,6 +10,8 @@ import org.bouncycastle.openpgp.PGPSecretKey
 import org.bouncycastle.openpgp.PGPSecretKeyRing
 import org.bouncycastle.openpgp.PGPSignature
 import org.bouncycastle.openpgp.PGPUserAttributeSubpacketVector
+import org.bouncycastle.openpgp.PGPUserAttributeSubpacketVectorGenerator
+import org.bouncycastle.util.io.Streams
 import org.pgpainless.PGPainless
 import org.pgpainless.algorithm.AlgorithmSuite
 import org.pgpainless.algorithm.CertificationType
@@ -25,6 +28,7 @@ import org.pgpainless.signature.builder.DirectKeySelfSignatureBuilder
 import org.pgpainless.signature.builder.SelfSignatureBuilder
 import org.pgpainless.signature.builder.SubkeyBindingSignatureBuilder
 import org.pgpainless.signature.subpackets.SelfSignatureSubpackets
+import java.io.InputStream
 
 /**
  * Build a version 4 OpenPGP secret key.
@@ -157,6 +161,11 @@ abstract class OpinionatedDefinePrimaryKey<
             creationTime: Date,
             applyToPrimaryKey: (ApplyToPrimaryKey.() -> PGPKeyPair)?
         ): OpinionatedDefineSubkeys.V4 {
+
+            require(policy.publicKeyAlgorithmPolicy.isAcceptable(type.algorithm, type.bitStrength)) {
+                "Public Key algorithm ${type.algorithm} with ${type.bitStrength} is too weak" +
+                    " for the current public key algorithm policy."
+            }
 
             val applier = applyToPrimaryKey ?: { addDirectKeySignature(preferencesSubpackets()) }
 
@@ -400,7 +409,12 @@ abstract class UnopinionatedDefineSubkeys(policy: Policy, creationTime: Date) :
     }
 }
 
-/** Function that can be applied to the primary key. */
+/**
+ * Function that can be applied to the primary key.
+ *
+ * @param keyPair primary key pair
+ * @param builder builder instance that generated the primary key
+ */
 abstract class ApplyToPrimaryKey(var keyPair: PGPKeyPair, val builder: DefinePrimaryKey<*>) {
 
     /**
@@ -408,6 +422,11 @@ abstract class ApplyToPrimaryKey(var keyPair: PGPKeyPair, val builder: DefinePri
      *
      * @param userId UserID to be bound to the primary key
      * @param subpacketsCallback callback to modify the binding signatures subpackets
+     * @param certificationType type of the certification signature. Defaults to [CertificationType.POSITIVE]
+     * @param hashAlgorithm hash algorithm to be used during signature calculation
+     * @param bindingTime creation time of the binding signature
+     *
+     * @return modified key pair
      */
     abstract fun addUserId(
         userId: CharSequence,
@@ -417,6 +436,52 @@ abstract class ApplyToPrimaryKey(var keyPair: PGPKeyPair, val builder: DefinePri
             builder.policy.certificationSignatureHashAlgorithmPolicy.defaultHashAlgorithm,
         bindingTime: Date = builder.creationTime
     ): PGPKeyPair
+
+    /**
+     * Add a UserAttribute to the primary key.
+     *
+     * @param userAttribute UserAttribute to be bound to the primary key
+     * @param subpacketsCallback callback to modify the binding signature subpackets
+     * @param certificationType type of the binding signature. Default to [CertificationType.POSITIVE]
+     * @param hashAlgorithm hash algorithm to be used during signature calculation
+     * @param bindingTime creation time of the binding signature
+     *
+     * @return modified key pair
+     */
+    abstract fun addUserAttribute(
+        userAttribute: PGPUserAttributeSubpacketVector,
+        subpacketsCallback: SelfSignatureSubpackets.Callback = SelfSignatureSubpackets.nop(),
+        certificationType: CertificationType = CertificationType.POSITIVE,
+        hashAlgorithm: HashAlgorithm = builder.policy.certificationSignatureHashAlgorithmPolicy.defaultHashAlgorithm,
+        bindingTime: Date = builder.creationTime
+    ): PGPKeyPair
+
+    /**
+     * Add a JPEG image as UserAttribute to the primary key.
+     * This may for example be a profile picture of the key owner.
+     *
+     * @param jpegInputStream input stream containing the JPEG encoded image
+     * @param subpacketsCallback callback to modify the subpackets of the binding signature
+     * @param certificationType type of the binding signature. Defaults to [CertificationType.POSITIVE]
+     * @param hashAlgorithm hash algorithm to be used during signature calculation
+     * @param bindingTime creation time of the binding signature
+     *
+     * @return modified key pair
+     */
+    fun addImageAttribute(
+        jpegInputStream: InputStream,
+        subpacketsCallback: SelfSignatureSubpackets.Callback = SelfSignatureSubpackets.nop(),
+        certificationType: CertificationType = CertificationType.POSITIVE,
+        hashAlgorithm: HashAlgorithm = builder.policy.certificationSignatureHashAlgorithmPolicy.defaultHashAlgorithm,
+        bindingTime: Date = builder.creationTime
+    ): PGPKeyPair = addUserAttribute(
+        PGPUserAttributeSubpacketVectorGenerator().apply {
+            setImageAttribute(ImageAttribute.JPEG, Streams.readAll(jpegInputStream))
+        }.generate(),
+        subpacketsCallback,
+        certificationType,
+        hashAlgorithm,
+        bindingTime)
 
     /**
      * Add a DirectKeySignature to the primary key. Such a signature usually carries information
@@ -429,6 +494,13 @@ abstract class ApplyToPrimaryKey(var keyPair: PGPKeyPair, val builder: DefinePri
         bindingTime: Date = builder.creationTime
     ): PGPKeyPair
 
+    /**
+     * Schedule the execution of another [ApplyToPrimaryKey] function instance right after
+     * this one has been executed.
+     *
+     * @param other second instance
+     * @return modified key pair after this and [other] have been executed
+     */
     abstract fun then(other: (ApplyToPrimaryKey.() -> PGPKeyPair)?): PGPKeyPair
 
     class V4(keyPair: PGPKeyPair, builder: DefinePrimaryKey<*>) :
@@ -454,6 +526,28 @@ abstract class ApplyToPrimaryKey(var keyPair: PGPKeyPair, val builder: DefinePri
                 PGPKeyPair(
                     PGPPublicKey.addCertification(keyPair.publicKey, userId.toString(), sig),
                     keyPair.privateKey)
+            return keyPair
+        }
+
+        override fun addUserAttribute(
+            userAttribute: PGPUserAttributeSubpacketVector,
+            subpacketsCallback: SelfSignatureSubpackets.Callback,
+            certificationType: CertificationType,
+            hashAlgorithm: HashAlgorithm,
+            bindingTime: Date
+        ): PGPKeyPair {
+            val sig = buildCertificationFor(
+                keyPair,
+                userAttribute,
+                certificationType,
+                bindingTime,
+                hashAlgorithm,
+                subpacketsCallback)
+
+            keyPair = PGPKeyPair(
+                PGPPublicKey.addCertification(keyPair.publicKey, userAttribute, sig),
+                keyPair.privateKey)
+
             return keyPair
         }
 
@@ -483,6 +577,19 @@ abstract class ApplyToPrimaryKey(var keyPair: PGPKeyPair, val builder: DefinePri
             return keyPair
         }
 
+        /**
+         * Build a certification signature that binds the given [userId] to the given
+         * primary key [pair].
+         *
+         * @param pair primary key pair
+         * @param userId UserID to be bound
+         * @param certificationType type of the binding signature
+         * @param bindingTime creation time of the binding signature
+         * @param hashAlgorithm hash algorithm to be used during signature calculation
+         * @param subpacketsCallback callback to modify the binding signatures subpackets
+         *
+         * @return binding signature
+         */
         fun buildCertificationFor(
             pair: PGPKeyPair,
             userId: CharSequence,
@@ -499,6 +606,20 @@ abstract class ApplyToPrimaryKey(var keyPair: PGPKeyPair, val builder: DefinePri
             return builder.build(userId)
         }
 
+
+        /**
+         * Build a certification signature that binds the given [userAttribute] to the given
+         * primary key [pair].
+         *
+         * @param pair primary key pair
+         * @param userAttribute UserAttribute to be bound
+         * @param certificationType type of the binding signature
+         * @param bindingTime creation time of the binding signature
+         * @param hashAlgorithm hash algorithm to be used during signature calculation
+         * @param subpacketsCallback callback to modify the binding signatures subpackets
+         *
+         * @return binding signature
+         */
         fun buildCertificationFor(
             pair: PGPKeyPair,
             userAttribute: PGPUserAttributeSubpacketVector,
@@ -515,6 +636,15 @@ abstract class ApplyToPrimaryKey(var keyPair: PGPKeyPair, val builder: DefinePri
             return builder.build(userAttribute)
         }
 
+        /**
+         * Build a DirectKey self signature over the primary key [pair].
+         *
+         * @param pair primary key pair
+         * @param hashAlgorithm hash algorithm to be used during signature calculation
+         * @param subpacketsCallback callback to modify the subpackets of the direct-key signature
+         *
+         * @return direct-key self signature
+         */
         fun buildDirectKeySignature(
             pair: PGPKeyPair,
             hashAlgorithm: HashAlgorithm,
@@ -530,7 +660,13 @@ abstract class ApplyToPrimaryKey(var keyPair: PGPKeyPair, val builder: DefinePri
     }
 }
 
-/** Function that can be applied to subkeys. */
+/**
+ * Function that can be applied to subkeys.
+ *
+ * @param primaryKey primary key pair
+ * @param subkey subkey pair
+ * @param builder builder instance that generated the subkey
+ */
 abstract class ApplyToSubkey(
     val primaryKey: PGPKeyPair,
     val subkey: PGPKeyPair,
@@ -541,6 +677,10 @@ abstract class ApplyToSubkey(
      * Add a binding signature to the subkey.
      *
      * @param subpacketsCallback callback to modify the binding signatures subpackets
+     * @param hashAlgorithm hash algorithm to be used during signature calculation
+     * @param bindingTime creation time of the binding signature
+     *
+     * @return modified subkey pair
      */
     abstract fun addBindingSignature(
         subpacketsCallback: SelfSignatureSubpackets.Callback = SelfSignatureSubpackets.nop(),
@@ -549,6 +689,13 @@ abstract class ApplyToSubkey(
         bindingTime: Date = subkey.publicKey.creationTime
     ): PGPKeyPair
 
+    /**
+     * Implementation of the [ApplyToSubkey] function tailored to OpenPGP v4 keys.
+     *
+     * @param primaryKey primary key pair
+     * @param subkey subkey pair
+     * @param builder builder instance that generated the subkey
+     */
     class V4(primaryKey: PGPKeyPair, subkey: PGPKeyPair, builder: DefineSubkeys<*>) :
         ApplyToSubkey(primaryKey, subkey, builder) {
 
@@ -565,6 +712,17 @@ abstract class ApplyToSubkey(
                 PGPPublicKey.addCertification(subkey.publicKey, sig), subkey.privateKey)
         }
 
+        /**
+         * Generate a version 4 binding signature that binds the [subkey] to the [primaryKey].
+         *
+         * @param primaryKey primary key pair
+         * @param subkey subkey pair
+         * @param hashAlgorithm hash algorithm to be used during signature calculation
+         * @param bindingTime creation time of the subkey
+         * @param subpacketsCallback callback to modify the subpackets of the binding signature
+         *
+         * @return subkey binding signature
+         */
         fun buildBindingSignature(
             primaryKey: PGPKeyPair,
             subkey: PGPKeyPair,
@@ -573,7 +731,7 @@ abstract class ApplyToSubkey(
             subpacketsCallback: SelfSignatureSubpackets.Callback
         ): PGPSignature {
             return SubkeyBindingSignatureBuilder(
-                    primaryKey.privateKey, primaryKey.publicKey, hashAlgorithm)
+                primaryKey.privateKey, primaryKey.publicKey, hashAlgorithm)
                 .applyCallback(
                     subpacketsCallback.then(
                         SelfSignatureSubpackets.applyHashed {
@@ -584,35 +742,60 @@ abstract class ApplyToSubkey(
     }
 }
 
-internal fun generateKeyPair(type: KeyType): KeyPair =
-    KeyPairGenerator.getInstance(type.name, ProviderFactory.provider)
-        .also { it.initialize(type.algorithmSpec) }
-        .generateKeyPair()
-
+/**
+ * Templates for OpenPGP key generation.
+ */
 class OpenPgpKeyTemplates {
 
     companion object {
+
+        /**
+         * Templates for version 4 OpenPGP keys.
+         *
+         * @return templates
+         */
         @JvmStatic fun v4() = V4()
     }
 
+    /**
+     * Templates for version 4 OpenPGP keys.
+     * Version 4 keys are compliant to RFC4880.
+     */
     class V4 {
 
+        /**
+         * Generate an OpenPGP key that consists of an Ed25519 primary key used for certification
+         * of third-party keys, a dedicated Ed25519 subkey for message signing, and an X25519
+         * subkey used for message encryption.
+         *
+         * @param userId an arbitrary number of user-ids. The first UserID will be marked as primary
+         * @param creationTime creation time for the OpenPGP key
+         */
         fun ed25519Curve25519(
             vararg userId: CharSequence,
             creationTime: Date = Date()
         ): PGPSecretKeyRing =
             buildV4(creationTime = creationTime)
-                // .setCertificationKey(KeyType.EDDSA(EdDSACurve._Ed25519))
                 .setPrimaryKey(KeyType.EDDSA(EdDSACurve._Ed25519)) {
-                    userId.forEach { addUserId(it) }
+                    // Add UserIDs
+                    userId.forEachIndexed { index, uid ->
+                        if (index == 0) {
+                            // Mark first UserID as primary
+                            addUserId(uid, SelfSignatureSubpackets.applyHashed { setPrimaryUserId() })
+                        } else {
+                            addUserId(uid)
+                        }
+                    }
+                    // Add Direct-Key signature with preferences and keyFlags
                     addDirectKeySignature(
                         SelfSignatureSubpackets.applyHashed { setKeyFlags(KeyFlag.CERTIFY_OTHER) })
-                    keyPair
                 }
+                // singing key
                 .addSubkey(KeyType.EDDSA(EdDSACurve._Ed25519)) {
                     addBindingSignature(
                         SelfSignatureSubpackets.applyHashed { setKeyFlags(KeyFlag.SIGN_DATA) })
                 }
+                // encryption key
                 .addSubkey(KeyType.XDH(XDHSpec._X25519)) {
                     addBindingSignature(
                         SelfSignatureSubpackets.applyHashed {
@@ -621,6 +804,15 @@ class OpenPgpKeyTemplates {
                 }
                 .build()
 
+        /**
+         * Generate an OpenPGP key that consists of an RSA primary key used for certification
+         * of third-party keys, a dedicated RSA subkey for message signing, and an RSA
+         * subkey used for message encryption.
+         *
+         * @param userId an arbitrary number of user-ids. The first UserID will be marked as primary
+         * @param creationTime creation time for the OpenPGP key
+         * @param length RSA bit strength
+         */
         fun composedRsa(
             vararg userId: CharSequence,
             creationTime: Date = Date(),
@@ -628,15 +820,25 @@ class OpenPgpKeyTemplates {
         ): PGPSecretKeyRing =
             buildV4(creationTime = creationTime)
                 .setPrimaryKey(KeyType.RSA(length)) {
-                    userId.forEach { addUserId(it) }
+                    // Add UserIDs
+                    userId.forEachIndexed { index, uid ->
+                        if (index == 0) {
+                            // Mark first UserID as primary
+                            addUserId(uid, SelfSignatureSubpackets.applyHashed { setPrimaryUserId() })
+                        } else {
+                            addUserId(uid)
+                        }
+                    }
+                    // Add Direct-Key signature with preferences and keyFlags
                     addDirectKeySignature(
                         SelfSignatureSubpackets.applyHashed { setKeyFlags(KeyFlag.CERTIFY_OTHER) })
-                    keyPair
                 }
+                // signing key
                 .addSubkey(KeyType.RSA(length)) {
                     addBindingSignature(
                         SelfSignatureSubpackets.applyHashed { setKeyFlags(KeyFlag.SIGN_DATA) })
                 }
+                // encryption key
                 .addSubkey(KeyType.RSA(length)) {
                     addBindingSignature(
                         SelfSignatureSubpackets.applyHashed {
@@ -645,6 +847,14 @@ class OpenPgpKeyTemplates {
                 }
                 .build()
 
+        /**
+         * Generate an OpenPGP key consisting of a single RSA key that is used for certification of
+         * third-party keys, signing and encryption of messages.
+         *
+         * @param userId an arbitrary number of UserIDs. The first one will be marked as primary.
+         * @param creationTime creation time of the OpenPGP key
+         * @param length bit-strength of the RSA key
+         */
         fun singleRsa(
             vararg userId: CharSequence,
             creationTime: Date = Date(),

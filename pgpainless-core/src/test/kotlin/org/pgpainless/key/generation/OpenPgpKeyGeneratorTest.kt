@@ -4,10 +4,14 @@ import org.bouncycastle.extensions.toAsciiArmor
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Assertions.assertFalse
 import org.junit.jupiter.api.Test
+import org.junit.jupiter.api.assertThrows
+import org.pgpainless.PGPainless
+import org.pgpainless.algorithm.PublicKeyAlgorithm
 import org.pgpainless.key.generation.type.KeyType
 import org.pgpainless.key.generation.type.eddsa.EdDSACurve
 import org.pgpainless.key.generation.type.rsa.RsaLength
 import org.pgpainless.key.generation.type.xdh.XDHSpec
+import org.pgpainless.policy.Policy
 import org.pgpainless.util.DateUtil
 
 class OpenPgpKeyGeneratorTest {
@@ -103,6 +107,18 @@ class OpenPgpKeyGeneratorTest {
     fun test() {
         buildV4().setCertificationKey(KeyType.RSA(RsaLength._3072)).build().toAsciiArmor().let {
             println(it)
+        }
+    }
+
+    @Test
+    fun `key generation with too weak PK algorithms fails`() {
+        val policy = Policy.getInstance()
+        policy.publicKeyAlgorithmPolicy = Policy.PublicKeyAlgorithmPolicy(
+            buildMap { put(PublicKeyAlgorithm.RSA_GENERAL, 3072) }
+        )
+
+        assertThrows<IllegalArgumentException> {
+            buildV4(policy).setPrimaryKey(KeyType.RSA(RsaLength._2048))
         }
     }
 }
