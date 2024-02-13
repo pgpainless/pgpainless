@@ -5,7 +5,6 @@ import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Assertions.assertFalse
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.assertThrows
-import org.pgpainless.PGPainless
 import org.pgpainless.algorithm.PublicKeyAlgorithm
 import org.pgpainless.key.generation.type.KeyType
 import org.pgpainless.key.generation.type.eddsa.EdDSACurve
@@ -113,9 +112,8 @@ class OpenPgpKeyGeneratorTest {
     @Test
     fun `key generation with too weak PK algorithms fails`() {
         val policy = Policy()
-        policy.publicKeyAlgorithmPolicy = Policy.PublicKeyAlgorithmPolicy(
-            buildMap { put(PublicKeyAlgorithm.RSA_GENERAL, 3072) }
-        )
+        policy.publicKeyAlgorithmPolicy =
+            Policy.PublicKeyAlgorithmPolicy(buildMap { put(PublicKeyAlgorithm.RSA_GENERAL, 3072) })
 
         assertThrows<IllegalArgumentException> {
             buildV4(policy)
@@ -127,9 +125,8 @@ class OpenPgpKeyGeneratorTest {
     @Test
     fun `unopionionated key generation with too weak PK algorithm does not fail`() {
         val policy = Policy()
-        policy.publicKeyAlgorithmPolicy = Policy.PublicKeyAlgorithmPolicy(
-            buildMap { put(PublicKeyAlgorithm.RSA_GENERAL, 3072) }
-        )
+        policy.publicKeyAlgorithmPolicy =
+            Policy.PublicKeyAlgorithmPolicy(buildMap { put(PublicKeyAlgorithm.RSA_GENERAL, 3072) })
 
         buildV4(policy)
             .unopinionated() // unopinionated builder allows for non-compliant configurations

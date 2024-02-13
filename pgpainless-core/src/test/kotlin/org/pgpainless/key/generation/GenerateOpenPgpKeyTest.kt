@@ -67,8 +67,7 @@ class GenerateOpenPgpKeyTest {
 
     @Test
     fun encryptionSubkeyMustBeEncryptionCapable() {
-        val builder =
-            GenerateOpenPgpKey(Policy()).buildV4Key(KeyType.EDDSA(EdDSACurve._Ed25519))
+        val builder = GenerateOpenPgpKey(Policy()).buildV4Key(KeyType.EDDSA(EdDSACurve._Ed25519))
 
         assertThrows<IllegalArgumentException> {
             builder.addEncryptionSubkey(KeyType.EDDSA(EdDSACurve._Ed25519))
@@ -77,8 +76,7 @@ class GenerateOpenPgpKeyTest {
 
     @Test
     fun signingSubkeysMustBeSigningCapable() {
-        val builder =
-            GenerateOpenPgpKey(Policy()).buildV4Key(KeyType.EDDSA(EdDSACurve._Ed25519))
+        val builder = GenerateOpenPgpKey(Policy()).buildV4Key(KeyType.EDDSA(EdDSACurve._Ed25519))
 
         assertThrows<IllegalArgumentException> {
             builder.addSigningSubkey(KeyType.XDH(XDHSpec._X25519))
