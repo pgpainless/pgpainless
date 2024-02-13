@@ -1,3 +1,7 @@
+// SPDX-FileCopyrightText: 2024 Paul Schaub <vanitasvitae@fsfe.org>
+//
+// SPDX-License-Identifier: Apache-2.0
+
 package org.pgpainless.key.generation
 
 import java.io.InputStream
@@ -21,40 +25,49 @@ import org.pgpainless.key.generation.type.KeyType
 import org.pgpainless.key.generation.type.eddsa.EdDSACurve
 import org.pgpainless.key.generation.type.rsa.RsaLength
 import org.pgpainless.key.generation.type.xdh.XDHSpec
+import org.pgpainless.key.protection.SecretKeyRingProtector
 import org.pgpainless.policy.Policy
 import org.pgpainless.signature.builder.DirectKeySelfSignatureBuilder
 import org.pgpainless.signature.builder.PrimaryKeyBindingSignatureBuilder
 import org.pgpainless.signature.builder.SelfSignatureBuilder
 import org.pgpainless.signature.builder.SubkeyBindingSignatureBuilder
 import org.pgpainless.signature.subpackets.SelfSignatureSubpackets
+import org.pgpainless.util.Passphrase
 
-/**
- * Build a version 4 OpenPGP secret key.
- *
- * @param policy policy to ensure algorithm compliance and to determine default algorithms
- * @param creationTime creation time for the secret key
- * @param preferences suite of algorithm preferences and enabled features
- */
-fun buildV4(
-    policy: Policy = PGPainless.getPolicy(),
-    creationTime: Date = Date(),
-    preferences: AlgorithmSuite = policy.keyGenerationAlgorithmSuite
-): OpinionatedDefinePrimaryKey.V4 {
-    return OpinionatedDefinePrimaryKey.V4(policy, creationTime, preferences)
-}
+class OpenPgpKeyGenerator internal constructor() {
 
-/**
- * Build a version 6 OpenPGP secret key.
- *
- * @param policy policy to ensure algorithm compliance and to determine default algorithms
- * @param creationTime creation time for the secret key
- */
-fun buildV6(
-    policy: Policy = PGPainless.getPolicy(),
-    creationTime: Date = Date(),
-    preferences: AlgorithmSuite = AlgorithmSuite.v6AlgorithmSuite
-): OpinionatedDefinePrimaryKey.V6 {
-    return OpinionatedDefinePrimaryKey.V6(policy, creationTime, preferences)
+    companion object {
+        /**
+         * Build a version 4 OpenPGP secret key.
+         *
+         * @param policy policy to ensure algorithm compliance and to determine default algorithms
+         * @param creationTime creation time for the secret key
+         * @param preferences suite of algorithm preferences and enabled features
+         */
+        @JvmStatic
+        fun buildV4(
+            policy: Policy = PGPainless.getPolicy(),
+            creationTime: Date = Date(),
+            preferences: AlgorithmSuite = policy.keyGenerationAlgorithmSuite
+        ): OpinionatedDefinePrimaryKey.V4 {
+            return OpinionatedDefinePrimaryKey.V4(policy, creationTime, preferences)
+        }
+
+        /**
+         * Build a version 6 OpenPGP secret key.
+         *
+         * @param policy policy to ensure algorithm compliance and to determine default algorithms
+         * @param creationTime creation time for the secret key
+         */
+        @JvmStatic
+        fun buildV6(
+            policy: Policy = PGPainless.getPolicy(),
+            creationTime: Date = Date(),
+            preferences: AlgorithmSuite = AlgorithmSuite.v6AlgorithmSuite
+        ): OpinionatedDefinePrimaryKey.V6 {
+            return OpinionatedDefinePrimaryKey.V6(policy, creationTime, preferences)
+        }
+    }
 }
 
 /**
@@ -63,7 +76,8 @@ fun buildV6(
  * @param policy algorithm policy
  * @param creationTime default value for the creation time of the primary key.
  */
-abstract class DefinePrimaryKey<B : DefineSubkeys<B>>(
+abstract class DefinePrimaryKey<B : DefineSubkeys<B>>
+internal constructor(
     val policy: Policy,
     val creationTime: Date,
 ) {
@@ -84,7 +98,7 @@ abstract class DefinePrimaryKey<B : DefineSubkeys<B>>(
         applyToPrimaryKey: (ApplyToPrimaryKey.() -> PGPKeyPair)? = null // default: do nothing
     ): B
 
-    abstract fun preferencesSubpackets(): SelfSignatureSubpackets.Callback
+    internal abstract fun preferencesSubpackets(): SelfSignatureSubpackets.Callback
 }
 
 /**
@@ -100,7 +114,8 @@ abstract class DefinePrimaryKey<B : DefineSubkeys<B>>(
  * @param U unopinionated builder type
  */
 abstract class OpinionatedDefinePrimaryKey<
-    B : OpinionatedDefineSubkeys, U : UnopinionatedDefineSubkeys>(
+    B : OpinionatedDefineSubkeys, U : UnopinionatedDefineSubkeys>
+internal constructor(
     policy: Policy,
     creationTime: Date,
     val preferences: AlgorithmSuite,
@@ -145,7 +160,7 @@ abstract class OpinionatedDefinePrimaryKey<
      * @param policy policy for algorithm compliance and fallbacks
      * @param creationTime creation time of the primary key
      */
-    class V4(policy: Policy, creationTime: Date, preferences: AlgorithmSuite) :
+    class V4 internal constructor(policy: Policy, creationTime: Date, preferences: AlgorithmSuite) :
         OpinionatedDefinePrimaryKey<OpinionatedDefineSubkeys.V4, UnopinionatedDefineSubkeys.V4>(
             policy,
             creationTime,
@@ -186,7 +201,7 @@ abstract class OpinionatedDefinePrimaryKey<
      * @param policy policy for algorithm compliance and fallbacks
      * @param creationTime creation time of the primary key
      */
-    class V6(policy: Policy, creationTime: Date, preferences: AlgorithmSuite) :
+    class V6 internal constructor(policy: Policy, creationTime: Date, preferences: AlgorithmSuite) :
         OpinionatedDefinePrimaryKey<OpinionatedDefineSubkeys.V6, UnopinionatedDefineSubkeys.V6>(
             policy,
             creationTime,
@@ -218,7 +233,8 @@ abstract class OpinionatedDefinePrimaryKey<
  * @param creationTime creation time of the primary key
  * @param U unopinionated builder type
  */
-abstract class UnopinionatedDefinePrimaryKey<U : UnopinionatedDefineSubkeys>(
+abstract class UnopinionatedDefinePrimaryKey<U : UnopinionatedDefineSubkeys>
+internal constructor(
     policy: Policy,
     creationTime: Date,
 ) : DefinePrimaryKey<UnopinionatedDefineSubkeys>(policy, creationTime) {
@@ -231,7 +247,7 @@ abstract class UnopinionatedDefinePrimaryKey<U : UnopinionatedDefineSubkeys>(
      *
      * @param creationTime creation time of the primary key
      */
-    class V4(policy: Policy, creationTime: Date) :
+    class V4 internal constructor(policy: Policy, creationTime: Date) :
         UnopinionatedDefinePrimaryKey<UnopinionatedDefineSubkeys.V4>(policy, creationTime) {
 
         override fun setPrimaryKey(
@@ -257,7 +273,7 @@ abstract class UnopinionatedDefinePrimaryKey<U : UnopinionatedDefineSubkeys>(
      *
      * @param creationTime creation time of the primary key
      */
-    class V6(policy: Policy, creationTime: Date) :
+    class V6 internal constructor(policy: Policy, creationTime: Date) :
         UnopinionatedDefinePrimaryKey<UnopinionatedDefineSubkeys.V6>(policy, creationTime) {
         override fun setPrimaryKey(
             type: KeyType,
@@ -269,8 +285,14 @@ abstract class UnopinionatedDefinePrimaryKey<U : UnopinionatedDefineSubkeys>(
     }
 }
 
-/** Interface for key builder that can */
-abstract class DefineSubkeys<B : DefineSubkeys<B>>(val policy: Policy, val creationTime: Date) {
+/**
+ * Interface for key builder that can be used to add additional subkeys to an OpenPGP key.
+ *
+ * @param policy policy to sanitize algorithms against
+ * @param creationTime creation time of the OpenPGP key
+ */
+abstract class DefineSubkeys<B : DefineSubkeys<B>>
+internal constructor(val policy: Policy, val creationTime: Date) {
 
     /**
      * Add a subkey to the OpenPGP key.
@@ -289,20 +311,48 @@ abstract class DefineSubkeys<B : DefineSubkeys<B>>(val policy: Policy, val creat
     /**
      * Finish the key generation and return the OpenPGP [PGPSecretKeyRing].
      *
+     * @param protector protector to protect the OpenPGP key's secret components with
      * @return finished [PGPSecretKeyRing]
      */
-    abstract fun build(): PGPSecretKeyRing
+    abstract fun build(
+        protector: SecretKeyRingProtector = SecretKeyRingProtector.unprotectedKeys()
+    ): PGPSecretKeyRing
+
+    /**
+     * Finish the key generation and return the OpenPGP [PGPSecretKeyRing] protected with the given
+     * [passphrase].
+     *
+     * @param passphrase passphrase to protect the OpenPGP key's secret components with
+     * @return finished [PGPSecretKeyRing]
+     */
+    fun build(passphrase: Passphrase) = build(SecretKeyRingProtector.unlockAnyKeyWith(passphrase))
 }
 
-abstract class OpinionatedDefineSubkeys(policy: Policy, creationTime: Date) :
+/**
+ * Opinionated builder for adding subkeys to an OpenPGP key.
+ *
+ * @param policy policy to sanitize algorithms with
+ * @param creationTime creation time of the OpenPGP key
+ */
+abstract class OpinionatedDefineSubkeys internal constructor(policy: Policy, creationTime: Date) :
     DefineSubkeys<OpinionatedDefineSubkeys>(policy, creationTime) {
 
     // unopinionated builder
     abstract val unopinionated: UnopinionatedDefineSubkeys
 
-    override fun build(): PGPSecretKeyRing = unopinionated.build()
+    override fun build(protector: SecretKeyRingProtector): PGPSecretKeyRing =
+        unopinionated.build(protector)
 
-    class V4(
+    /**
+     * Implementation of an [OpinionatedDefineSubkeys] builder for version 4 OpenPGP keys.
+     *
+     * @param primaryKey version 4 OpenPGP primary key
+     * @param policy policy
+     * @param creationTime creation time of the OpenPGP key
+     * @param unopinionated unopinionated variant of this builder
+     */
+    class V4
+    internal constructor(
         primaryKey: PGPKeyPair,
         policy: Policy,
         creationTime: Date,
@@ -341,7 +391,8 @@ abstract class OpinionatedDefineSubkeys(policy: Policy, creationTime: Date) :
         ) = addSubkey(type, creationTime, applyToSubkey)
     }
 
-    class V6(
+    class V6
+    internal constructor(
         policy: Policy,
         creationTime: Date,
         override val unopinionated: UnopinionatedDefineSubkeys.V6 =
@@ -356,13 +407,13 @@ abstract class OpinionatedDefineSubkeys(policy: Policy, creationTime: Date) :
     }
 }
 
-abstract class UnopinionatedDefineSubkeys(policy: Policy, creationTime: Date) :
+abstract class UnopinionatedDefineSubkeys internal constructor(policy: Policy, creationTime: Date) :
     DefineSubkeys<UnopinionatedDefineSubkeys>(policy, creationTime) {
 
-    class V4(val primaryKey: PGPKeyPair, policy: Policy, creationTime: Date) :
+    class V4 internal constructor(val primaryKey: PGPKeyPair, policy: Policy, creationTime: Date) :
         UnopinionatedDefineSubkeys(policy, creationTime) {
 
-        val subkeys: MutableList<PGPKeyPair> = mutableListOf()
+        private val subkeys: MutableList<PGPKeyPair> = mutableListOf()
 
         override fun addSubkey(
             type: KeyType,
@@ -378,14 +429,14 @@ abstract class UnopinionatedDefineSubkeys(policy: Policy, creationTime: Date) :
                 })
         }
 
-        override fun build(): PGPSecretKeyRing {
+        override fun build(protector: SecretKeyRingProtector): PGPSecretKeyRing {
             val primary =
                 PGPSecretKey(
                     primaryKey.privateKey,
                     primaryKey.publicKey,
                     ImplementationFactory.getInstance().v4FingerprintCalculator,
                     true,
-                    null)
+                    protector.getEncryptor(primaryKey.keyID))
             return PGPSecretKeyRing(
                 buildList {
                     add(primary)
@@ -396,13 +447,13 @@ abstract class UnopinionatedDefineSubkeys(policy: Policy, creationTime: Date) :
                                 it.publicKey,
                                 ImplementationFactory.getInstance().v4FingerprintCalculator,
                                 false,
-                                null))
+                                protector.getEncryptor(it.keyID)))
                     }
                 })
         }
     }
 
-    class V6(policy: Policy, creationTime: Date) :
+    class V6 internal constructor(policy: Policy, creationTime: Date) :
         UnopinionatedDefineSubkeys(policy, creationTime) {
 
         override fun addSubkey(
@@ -413,7 +464,7 @@ abstract class UnopinionatedDefineSubkeys(policy: Policy, creationTime: Date) :
             TODO("Not yet implemented")
         }
 
-        override fun build(): PGPSecretKeyRing {
+        override fun build(protector: SecretKeyRingProtector): PGPSecretKeyRing {
             TODO("Not yet implemented")
         }
     }
@@ -425,7 +476,8 @@ abstract class UnopinionatedDefineSubkeys(policy: Policy, creationTime: Date) :
  * @param keyPair primary key pair
  * @param builder builder instance that generated the primary key
  */
-abstract class ApplyToPrimaryKey(var keyPair: PGPKeyPair, val builder: DefinePrimaryKey<*>) {
+abstract class ApplyToPrimaryKey
+internal constructor(var keyPair: PGPKeyPair, val builder: DefinePrimaryKey<*>) {
 
     /**
      * Add a UserID to the primary key.
@@ -516,7 +568,7 @@ abstract class ApplyToPrimaryKey(var keyPair: PGPKeyPair, val builder: DefinePri
      */
     abstract fun then(other: (ApplyToPrimaryKey.() -> PGPKeyPair)?): PGPKeyPair
 
-    class V4(keyPair: PGPKeyPair, builder: DefinePrimaryKey<*>) :
+    class V4 internal constructor(keyPair: PGPKeyPair, builder: DefinePrimaryKey<*>) :
         ApplyToPrimaryKey(keyPair, builder) {
 
         override fun addUserId(
@@ -595,7 +647,7 @@ abstract class ApplyToPrimaryKey(var keyPair: PGPKeyPair, val builder: DefinePri
          * @param subpacketsCallback callback to modify the binding signatures subpackets
          * @return binding signature
          */
-        fun buildCertificationFor(
+        private fun buildCertificationFor(
             pair: PGPKeyPair,
             userId: CharSequence,
             certificationType: CertificationType,
@@ -623,7 +675,7 @@ abstract class ApplyToPrimaryKey(var keyPair: PGPKeyPair, val builder: DefinePri
          * @param subpacketsCallback callback to modify the binding signatures subpackets
          * @return binding signature
          */
-        fun buildCertificationFor(
+        private fun buildCertificationFor(
             pair: PGPKeyPair,
             userAttribute: PGPUserAttributeSubpacketVector,
             certificationType: CertificationType,
@@ -647,7 +699,7 @@ abstract class ApplyToPrimaryKey(var keyPair: PGPKeyPair, val builder: DefinePri
          * @param subpacketsCallback callback to modify the subpackets of the direct-key signature
          * @return direct-key self signature
          */
-        fun buildDirectKeySignature(
+        private fun buildDirectKeySignature(
             pair: PGPKeyPair,
             hashAlgorithm: HashAlgorithm,
             subpacketsCallback: SelfSignatureSubpackets.Callback
@@ -669,7 +721,8 @@ abstract class ApplyToPrimaryKey(var keyPair: PGPKeyPair, val builder: DefinePri
  * @param subkey subkey pair
  * @param builder builder instance that generated the subkey
  */
-abstract class ApplyToSubkey(
+abstract class ApplyToSubkey
+internal constructor(
     val primaryKey: PGPKeyPair,
     var subkey: PGPKeyPair,
     val builder: DefineSubkeys<*>
@@ -697,7 +750,8 @@ abstract class ApplyToSubkey(
      * @param subkey subkey pair
      * @param builder builder instance that generated the subkey
      */
-    class V4(primaryKey: PGPKeyPair, subkey: PGPKeyPair, builder: DefineSubkeys<*>) :
+    class V4
+    internal constructor(primaryKey: PGPKeyPair, subkey: PGPKeyPair, builder: DefineSubkeys<*>) :
         ApplyToSubkey(primaryKey, subkey, builder) {
 
         override fun addBindingSignature(
@@ -723,7 +777,7 @@ abstract class ApplyToSubkey(
          * @param subpacketsCallback callback to modify the subpackets of the binding signature
          * @return subkey binding signature
          */
-        fun buildBindingSignature(
+        private fun buildBindingSignature(
             primaryKey: PGPKeyPair,
             subkey: PGPKeyPair,
             hashAlgorithm: HashAlgorithm,
@@ -756,7 +810,7 @@ abstract class ApplyToSubkey(
 }
 
 /** Templates for OpenPGP key generation. */
-class OpenPgpKeyTemplates {
+class OpenPgpKeyTemplates private constructor() {
 
     companion object {
 
@@ -769,7 +823,7 @@ class OpenPgpKeyTemplates {
     }
 
     /** Templates for version 4 OpenPGP keys. Version 4 keys are compliant to RFC4880. */
-    class V4 {
+    class V4 internal constructor() {
 
         /**
          * Generate an OpenPGP key that consists of an Ed25519 primary key used for certification of
@@ -783,7 +837,7 @@ class OpenPgpKeyTemplates {
             vararg userId: CharSequence,
             creationTime: Date = Date()
         ): PGPSecretKeyRing =
-            buildV4(creationTime = creationTime)
+            OpenPgpKeyGenerator.buildV4(creationTime = creationTime)
                 .setPrimaryKey(KeyType.EDDSA(EdDSACurve._Ed25519)) {
                     // Add UserIDs
                     userId.forEachIndexed { index, uid ->
@@ -827,7 +881,7 @@ class OpenPgpKeyTemplates {
             creationTime: Date = Date(),
             length: RsaLength = RsaLength._4096
         ): PGPSecretKeyRing =
-            buildV4(creationTime = creationTime)
+            OpenPgpKeyGenerator.buildV4(creationTime = creationTime)
                 .setPrimaryKey(KeyType.RSA(length)) {
                     // Add UserIDs
                     userId.forEachIndexed { index, uid ->
@@ -870,7 +924,7 @@ class OpenPgpKeyTemplates {
             creationTime: Date = Date(),
             length: RsaLength = RsaLength._4096
         ): PGPSecretKeyRing =
-            buildV4(creationTime = creationTime)
+            OpenPgpKeyGenerator.buildV4(creationTime = creationTime)
                 .setPrimaryKey(KeyType.RSA(length)) {
                     userId.forEach { addUserId(it) }
                     addDirectKeySignature(

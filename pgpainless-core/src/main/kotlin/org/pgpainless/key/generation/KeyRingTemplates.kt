@@ -5,7 +5,6 @@
 package org.pgpainless.key.generation
 
 import org.bouncycastle.openpgp.PGPSecretKeyRing
-import org.pgpainless.PGPainless
 import org.pgpainless.PGPainless.Companion.buildKeyRing
 import org.pgpainless.algorithm.KeyFlag
 import org.pgpainless.key.generation.KeySpec.Companion.getBuilder
@@ -179,15 +178,15 @@ class KeyRingTemplates {
         userId: CharSequence?,
         passphrase: Passphrase = Passphrase.emptyPassphrase()
     ): PGPSecretKeyRing =
-        GenerateOpenPgpKey(PGPainless.getPolicy())
-            .buildV4Key(KeyType.EDDSA(EdDSACurve._Ed25519))
-            .apply {
+        OpenPgpKeyGenerator.buildV4()
+            .setCertificationKey(KeyType.EDDSA(EdDSACurve._Ed25519)) {
                 if (userId != null) {
                     addUserId(userId)
                 }
-                addEncryptionSubkey(KeyType.XDH(XDHSpec._X25519))
-                addSigningSubkey(KeyType.EDDSA(EdDSACurve._Ed25519))
+                keyPair
             }
+            .addEncryptionSubkey(KeyType.XDH(XDHSpec._X25519))
+            .addSigningSubkey(KeyType.EDDSA(EdDSACurve._Ed25519))
             .build(
                 if (passphrase.isEmpty) SecretKeyRingProtector.unprotectedKeys()
                 else SecretKeyRingProtector.unlockAnyKeyWith(passphrase))

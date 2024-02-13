@@ -17,7 +17,8 @@ class OpenPgpKeyGeneratorTest {
 
     @Test
     fun `minimal call with opinionated builder adds a default DK sig but no user info`() {
-        val key = buildV4().setPrimaryKey(KeyType.EDDSA(EdDSACurve._Ed25519)).build()
+        val key =
+            OpenPgpKeyGenerator.buildV4().setPrimaryKey(KeyType.EDDSA(EdDSACurve._Ed25519)).build()
 
         assertFalse(key.publicKey.userIDs.hasNext(), "Key MUST NOT have a UserID")
         assertFalse(key.publicKey.userAttributes.hasNext(), "Key MUST NOT have a UserAttribute")
@@ -32,7 +33,10 @@ class OpenPgpKeyGeneratorTest {
     @Test
     fun `minimal call with unopinionated builder does not add a default DK sig`() {
         val key =
-            buildV4().unopinionated().setPrimaryKey(KeyType.EDDSA(EdDSACurve._Ed25519)).build()
+            OpenPgpKeyGenerator.buildV4()
+                .unopinionated()
+                .setPrimaryKey(KeyType.EDDSA(EdDSACurve._Ed25519))
+                .build()
 
         assertFalse(key.publicKey.keySignatures.hasNext())
 
@@ -42,7 +46,7 @@ class OpenPgpKeyGeneratorTest {
     @Test
     fun `adding a direct-key signature with the opinionated builder omits the default DK sig`() {
         val key =
-            buildV4()
+            OpenPgpKeyGenerator.buildV4()
                 .setPrimaryKey(KeyType.EDDSA(EdDSACurve._Ed25519)) {
                     addDirectKeySignature() // "overwrites" the default dk sig
                 }
@@ -56,7 +60,7 @@ class OpenPgpKeyGeneratorTest {
     @Test
     fun testUnopinionatedV4() {
         // Unopinionated
-        buildV4()
+        OpenPgpKeyGenerator.buildV4()
             .unopinionated()
             .setPrimaryKey(KeyType.EDDSA(EdDSACurve._Ed25519)) {
                 addDirectKeySignature()
@@ -71,7 +75,7 @@ class OpenPgpKeyGeneratorTest {
     fun testOpinionatedV4() {
         // Opinionated
         val time = DateUtil.parseUTCDate("2024-01-01 00:00:00 UTC")
-        buildV4(creationTime = time)
+        OpenPgpKeyGenerator.buildV4(creationTime = time)
             .setCertificationKey(KeyType.EDDSA(EdDSACurve._Ed25519)) {
                 addUserId("Alice <alice@pgpainless.org>")
             }
@@ -104,9 +108,11 @@ class OpenPgpKeyGeneratorTest {
 
     @Test
     fun test() {
-        buildV4().setCertificationKey(KeyType.RSA(RsaLength._3072)).build().toAsciiArmor().let {
-            println(it)
-        }
+        OpenPgpKeyGenerator.buildV4()
+            .setCertificationKey(KeyType.RSA(RsaLength._3072))
+            .build()
+            .toAsciiArmor()
+            .let { println(it) }
     }
 
     @Test
@@ -116,7 +122,7 @@ class OpenPgpKeyGeneratorTest {
             Policy.PublicKeyAlgorithmPolicy(buildMap { put(PublicKeyAlgorithm.RSA_GENERAL, 3072) })
 
         assertThrows<IllegalArgumentException> {
-            buildV4(policy)
+            OpenPgpKeyGenerator.buildV4(policy)
                 // opinionated builder verifies PK parameters
                 .setPrimaryKey(KeyType.RSA(RsaLength._2048)) // too weak
         }
@@ -128,7 +134,7 @@ class OpenPgpKeyGeneratorTest {
         policy.publicKeyAlgorithmPolicy =
             Policy.PublicKeyAlgorithmPolicy(buildMap { put(PublicKeyAlgorithm.RSA_GENERAL, 3072) })
 
-        buildV4(policy)
+        OpenPgpKeyGenerator.buildV4(policy)
             .unopinionated() // unopinionated builder allows for non-compliant configurations
             .setPrimaryKey(KeyType.RSA(RsaLength._2048))
     }
