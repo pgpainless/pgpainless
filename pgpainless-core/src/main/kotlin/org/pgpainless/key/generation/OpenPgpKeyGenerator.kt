@@ -49,8 +49,8 @@ class OpenPgpKeyGenerator internal constructor() {
             policy: Policy = PGPainless.getPolicy(),
             creationTime: Date = Date(),
             preferences: AlgorithmSuite = policy.keyGenerationAlgorithmSuite
-        ): OpinionatedDefinePrimaryKey.V4 {
-            return OpinionatedDefinePrimaryKey.V4(policy, creationTime, preferences)
+        ): OpinionatedDefinePrimaryKeyV4 {
+            return OpinionatedDefinePrimaryKeyV4(policy, creationTime, preferences)
         }
 
         /**
@@ -64,8 +64,8 @@ class OpenPgpKeyGenerator internal constructor() {
             policy: Policy = PGPainless.getPolicy(),
             creationTime: Date = Date(),
             preferences: AlgorithmSuite = AlgorithmSuite.v6AlgorithmSuite
-        ): OpinionatedDefinePrimaryKey.V6 {
-            return OpinionatedDefinePrimaryKey.V6(policy, creationTime, preferences)
+        ): OpinionatedDefinePrimaryKeyV6 {
+            return OpinionatedDefinePrimaryKeyV6(policy, creationTime, preferences)
         }
     }
 }
@@ -153,76 +153,71 @@ internal constructor(
         }
             as B
     }
+}
 
-    /**
-     * Implementation of an [OpinionatedDefinePrimaryKey] for OpenPGP v4 keys.
-     *
-     * @param policy policy for algorithm compliance and fallbacks
-     * @param creationTime creation time of the primary key
-     */
-    class V4 internal constructor(policy: Policy, creationTime: Date, preferences: AlgorithmSuite) :
-        OpinionatedDefinePrimaryKey<OpinionatedDefineSubkeys.V4, UnopinionatedDefineSubkeys.V4>(
-            policy,
-            creationTime,
-            preferences,
-            UnopinionatedDefinePrimaryKey.V4(policy, creationTime)) {
+/**
+ * Implementation of an [OpinionatedDefinePrimaryKey] for OpenPGP v4 keys.
+ *
+ * @param policy policy for algorithm compliance and fallbacks
+ * @param creationTime creation time of the primary key
+ */
+class OpinionatedDefinePrimaryKeyV4
+internal constructor(policy: Policy, creationTime: Date, preferences: AlgorithmSuite) :
+    OpinionatedDefinePrimaryKey<OpinionatedDefineSubkeysV4, UnopinionatedDefineSubkeysV4>(
+        policy, creationTime, preferences, UnopinionatedDefinePrimaryKeyV4(policy, creationTime)) {
 
-        override fun unopinionated(): UnopinionatedDefinePrimaryKey.V4 =
-            unopinionated as UnopinionatedDefinePrimaryKey.V4
+    override fun unopinionated(): UnopinionatedDefinePrimaryKeyV4 =
+        unopinionated as UnopinionatedDefinePrimaryKeyV4
 
-        override fun setPrimaryKey(
-            type: KeyType,
-            creationTime: Date,
-            applyToPrimaryKey: (ApplyToPrimaryKey.() -> PGPKeyPair)?
-        ): OpinionatedDefineSubkeys.V4 {
+    override fun setPrimaryKey(
+        type: KeyType,
+        creationTime: Date,
+        applyToPrimaryKey: (ApplyToPrimaryKey.() -> PGPKeyPair)?
+    ): OpinionatedDefineSubkeysV4 {
 
-            require(
-                policy.publicKeyAlgorithmPolicy.isAcceptable(type.algorithm, type.bitStrength)) {
-                    "Public Key algorithm ${type.algorithm} with ${type.bitStrength} is too weak" +
-                        " for the current public key algorithm policy."
+        require(policy.publicKeyAlgorithmPolicy.isAcceptable(type.algorithm, type.bitStrength)) {
+            "Public Key algorithm ${type.algorithm} with ${type.bitStrength} is too weak" +
+                " for the current public key algorithm policy."
+        }
+
+        val applier =
+            applyToPrimaryKey
+                ?: {
+                    // Add default direct-key signature containing preferences
+                    addDirectKeySignature(preferencesSubpackets())
                 }
 
-            val applier =
-                applyToPrimaryKey
-                    ?: {
-                        // Add default direct-key signature containing preferences
-                        addDirectKeySignature(preferencesSubpackets())
-                    }
-
-            val unopinionatedSubkeys = unopinionated().setPrimaryKey(type, creationTime, applier)
-            return OpinionatedDefineSubkeys.V4(
-                unopinionatedSubkeys.primaryKey, policy, creationTime, unopinionatedSubkeys)
-        }
+        val unopinionatedSubkeys = unopinionated().setPrimaryKey(type, creationTime, applier)
+        return OpinionatedDefineSubkeysV4(
+            unopinionatedSubkeys.primaryKey, policy, creationTime, unopinionatedSubkeys)
     }
+}
 
-    /**
-     * Implementation of an [OpinionatedDefinePrimaryKey] for OpenPGP v6 keys.
-     *
-     * @param policy policy for algorithm compliance and fallbacks
-     * @param creationTime creation time of the primary key
-     */
-    class V6 internal constructor(policy: Policy, creationTime: Date, preferences: AlgorithmSuite) :
-        OpinionatedDefinePrimaryKey<OpinionatedDefineSubkeys.V6, UnopinionatedDefineSubkeys.V6>(
+/**
+ * Implementation of an [OpinionatedDefinePrimaryKey] for OpenPGP v6 keys.
+ *
+ * @param policy policy for algorithm compliance and fallbacks
+ * @param creationTime creation time of the primary key
+ */
+class OpinionatedDefinePrimaryKeyV6
+internal constructor(policy: Policy, creationTime: Date, preferences: AlgorithmSuite) :
+    OpinionatedDefinePrimaryKey<OpinionatedDefineSubkeysV6, UnopinionatedDefineSubkeysV6>(
+        policy, creationTime, preferences, UnopinionatedDefinePrimaryKeyV6(policy, creationTime)) {
+
+    override fun unopinionated(): UnopinionatedDefinePrimaryKeyV6 =
+        unopinionated as UnopinionatedDefinePrimaryKeyV6
+
+    override fun setPrimaryKey(
+        type: KeyType,
+        creationTime: Date,
+        applyToPrimaryKey: (ApplyToPrimaryKey.() -> PGPKeyPair)?
+    ): OpinionatedDefineSubkeysV6 {
+        val applier = applyToPrimaryKey ?: { addDirectKeySignature(preferencesSubpackets()) }
+        return OpinionatedDefineSubkeysV6(
             policy,
             creationTime,
-            preferences,
-            UnopinionatedDefinePrimaryKey.V6(policy, creationTime)) {
-
-        override fun unopinionated(): UnopinionatedDefinePrimaryKey.V6 =
-            unopinionated as UnopinionatedDefinePrimaryKey.V6
-
-        override fun setPrimaryKey(
-            type: KeyType,
-            creationTime: Date,
-            applyToPrimaryKey: (ApplyToPrimaryKey.() -> PGPKeyPair)?
-        ): OpinionatedDefineSubkeys.V6 {
-            val applier = applyToPrimaryKey ?: { addDirectKeySignature(preferencesSubpackets()) }
-            return OpinionatedDefineSubkeys.V6(
-                policy,
-                creationTime,
-                unopinionated.setPrimaryKey(type, creationTime, applier)
-                    as UnopinionatedDefineSubkeys.V6)
-        }
+            unopinionated.setPrimaryKey(type, creationTime, applier)
+                as UnopinionatedDefineSubkeysV6)
     }
 }
 
@@ -241,47 +236,47 @@ internal constructor(
 
     override fun preferencesSubpackets(): SelfSignatureSubpackets.Callback =
         SelfSignatureSubpackets.nop()
+}
 
-    /**
-     * Implementation of an [UnopinionatedDefinePrimaryKey] for OpenPGP v4 keys.
-     *
-     * @param creationTime creation time of the primary key
-     */
-    class V4 internal constructor(policy: Policy, creationTime: Date) :
-        UnopinionatedDefinePrimaryKey<UnopinionatedDefineSubkeys.V4>(policy, creationTime) {
+/**
+ * Implementation of an [UnopinionatedDefinePrimaryKey] for OpenPGP v4 keys.
+ *
+ * @param creationTime creation time of the primary key
+ */
+class UnopinionatedDefinePrimaryKeyV4 internal constructor(policy: Policy, creationTime: Date) :
+    UnopinionatedDefinePrimaryKey<UnopinionatedDefineSubkeysV4>(policy, creationTime) {
 
-        override fun setPrimaryKey(
-            type: KeyType,
-            creationTime: Date,
-            applyToPrimaryKey: (ApplyToPrimaryKey.() -> PGPKeyPair)?
-        ): UnopinionatedDefineSubkeys.V4 {
-            // generate primary key
-            var primaryKey = OpenPgpKeyPairGenerator.V4().generatePrimaryKey(type, creationTime)
+    override fun setPrimaryKey(
+        type: KeyType,
+        creationTime: Date,
+        applyToPrimaryKey: (ApplyToPrimaryKey.() -> PGPKeyPair)?
+    ): UnopinionatedDefineSubkeysV4 {
+        // generate primary key
+        var primaryKey = OpenPgpKeyPairGenerator.V4().generatePrimaryKey(type, creationTime)
 
-            // add user-ids and direct-key signatures if requested
-            if (applyToPrimaryKey != null) {
-                primaryKey = ApplyToPrimaryKey.V4(primaryKey, this).applyToPrimaryKey()
-            }
-
-            // return builder for adding subkeys
-            return UnopinionatedDefineSubkeys.V4(primaryKey, policy, creationTime)
+        // add user-ids and direct-key signatures if requested
+        if (applyToPrimaryKey != null) {
+            primaryKey = ApplyToPrimaryKeyV4(primaryKey, this).applyToPrimaryKey()
         }
+
+        // return builder for adding subkeys
+        return UnopinionatedDefineSubkeysV4(primaryKey, policy, creationTime)
     }
+}
 
-    /**
-     * Implementation of an [UnopinionatedDefinePrimaryKey] for OpenPGP v6 keys.
-     *
-     * @param creationTime creation time of the primary key
-     */
-    class V6 internal constructor(policy: Policy, creationTime: Date) :
-        UnopinionatedDefinePrimaryKey<UnopinionatedDefineSubkeys.V6>(policy, creationTime) {
-        override fun setPrimaryKey(
-            type: KeyType,
-            creationTime: Date,
-            applyToPrimaryKey: (ApplyToPrimaryKey.() -> PGPKeyPair)?
-        ): UnopinionatedDefineSubkeys.V6 {
-            return UnopinionatedDefineSubkeys.V6(policy, creationTime)
-        }
+/**
+ * Implementation of an [UnopinionatedDefinePrimaryKey] for OpenPGP v6 keys.
+ *
+ * @param creationTime creation time of the primary key
+ */
+class UnopinionatedDefinePrimaryKeyV6 internal constructor(policy: Policy, creationTime: Date) :
+    UnopinionatedDefinePrimaryKey<UnopinionatedDefineSubkeysV6>(policy, creationTime) {
+    override fun setPrimaryKey(
+        type: KeyType,
+        creationTime: Date,
+        applyToPrimaryKey: (ApplyToPrimaryKey.() -> PGPKeyPair)?
+    ): UnopinionatedDefineSubkeysV6 {
+        return UnopinionatedDefineSubkeysV6(policy, creationTime)
     }
 }
 
@@ -342,131 +337,135 @@ abstract class OpinionatedDefineSubkeys internal constructor(policy: Policy, cre
 
     override fun build(protector: SecretKeyRingProtector): PGPSecretKeyRing =
         unopinionated.build(protector)
+}
 
-    /**
-     * Implementation of an [OpinionatedDefineSubkeys] builder for version 4 OpenPGP keys.
-     *
-     * @param primaryKey version 4 OpenPGP primary key
-     * @param policy policy
-     * @param creationTime creation time of the OpenPGP key
-     * @param unopinionated unopinionated variant of this builder
-     */
-    class V4
-    internal constructor(
-        primaryKey: PGPKeyPair,
-        policy: Policy,
+/**
+ * Implementation of an [OpinionatedDefineSubkeys] builder for version 4 OpenPGP keys.
+ *
+ * @param primaryKey version 4 OpenPGP primary key
+ * @param policy policy
+ * @param creationTime creation time of the OpenPGP key
+ * @param unopinionated unopinionated variant of this builder
+ */
+class OpinionatedDefineSubkeysV4
+internal constructor(
+    primaryKey: PGPKeyPair,
+    policy: Policy,
+    creationTime: Date,
+    override val unopinionated: UnopinionatedDefineSubkeysV4 =
+        UnopinionatedDefineSubkeysV4(primaryKey, policy, creationTime)
+) : OpinionatedDefineSubkeys(policy, creationTime) {
+
+    override fun addSubkey(
+        type: KeyType,
         creationTime: Date,
-        override val unopinionated: UnopinionatedDefineSubkeys.V4 =
-            UnopinionatedDefineSubkeys.V4(primaryKey, policy, creationTime)
-    ) : OpinionatedDefineSubkeys(policy, creationTime) {
-
-        override fun addSubkey(
-            type: KeyType,
-            creationTime: Date,
-            applyToSubkey: (ApplyToSubkey.() -> PGPKeyPair)?
-        ): V4 = apply { unopinionated.addSubkey(type, creationTime, applyToSubkey) }
-
-        fun addSigningSubkey(
-            type: KeyType,
-            creationTime: Date = this.creationTime,
-            applyToSubkey: (ApplyToSubkey.() -> PGPKeyPair)? = {
-                addBindingSignature(
-                    SelfSignatureSubpackets.applyHashed {
-                        setSignatureCreationTime(creationTime)
-                        setKeyFlags(KeyFlag.SIGN_DATA)
-                    })
-            }
-        ) = addSubkey(type, creationTime, applyToSubkey)
-
-        fun addEncryptionSubkey(
-            type: KeyType,
-            creationTime: Date = this.creationTime,
-            applyToSubkey: (ApplyToSubkey.() -> PGPKeyPair)? = {
-                addBindingSignature(
-                    SelfSignatureSubpackets.applyHashed {
-                        setSignatureCreationTime(creationTime)
-                        setKeyFlags(KeyFlag.ENCRYPT_COMMS, KeyFlag.ENCRYPT_STORAGE)
-                    })
-            }
-        ) = addSubkey(type, creationTime, applyToSubkey)
+        applyToSubkey: (ApplyToSubkey.() -> PGPKeyPair)?
+    ): OpinionatedDefineSubkeysV4 = apply {
+        unopinionated.addSubkey(type, creationTime, applyToSubkey)
     }
 
-    class V6
-    internal constructor(
-        policy: Policy,
-        creationTime: Date,
-        override val unopinionated: UnopinionatedDefineSubkeys.V6 =
-            UnopinionatedDefineSubkeys.V6(policy, creationTime)
-    ) : OpinionatedDefineSubkeys(policy, creationTime) {
+    fun addSigningSubkey(
+        type: KeyType,
+        creationTime: Date = this.creationTime,
+        applyToSubkey: (ApplyToSubkey.() -> PGPKeyPair)? = {
+            addBindingSignature(
+                SelfSignatureSubpackets.applyHashed {
+                    setSignatureCreationTime(creationTime)
+                    setKeyFlags(KeyFlag.SIGN_DATA)
+                })
+        }
+    ) = addSubkey(type, creationTime, applyToSubkey)
 
-        override fun addSubkey(
-            type: KeyType,
-            creationTime: Date,
-            applyToSubkey: (ApplyToSubkey.() -> PGPKeyPair)?
-        ): V6 = apply { unopinionated.addSubkey(type, creationTime, applyToSubkey) }
+    fun addEncryptionSubkey(
+        type: KeyType,
+        creationTime: Date = this.creationTime,
+        applyToSubkey: (ApplyToSubkey.() -> PGPKeyPair)? = {
+            addBindingSignature(
+                SelfSignatureSubpackets.applyHashed {
+                    setSignatureCreationTime(creationTime)
+                    setKeyFlags(KeyFlag.ENCRYPT_COMMS, KeyFlag.ENCRYPT_STORAGE)
+                })
+        }
+    ) = addSubkey(type, creationTime, applyToSubkey)
+}
+
+class OpinionatedDefineSubkeysV6
+internal constructor(
+    policy: Policy,
+    creationTime: Date,
+    override val unopinionated: UnopinionatedDefineSubkeysV6 =
+        UnopinionatedDefineSubkeysV6(policy, creationTime)
+) : OpinionatedDefineSubkeys(policy, creationTime) {
+
+    override fun addSubkey(
+        type: KeyType,
+        creationTime: Date,
+        applyToSubkey: (ApplyToSubkey.() -> PGPKeyPair)?
+    ): OpinionatedDefineSubkeysV6 = apply {
+        unopinionated.addSubkey(type, creationTime, applyToSubkey)
     }
 }
 
 abstract class UnopinionatedDefineSubkeys internal constructor(policy: Policy, creationTime: Date) :
-    DefineSubkeys<UnopinionatedDefineSubkeys>(policy, creationTime) {
+    DefineSubkeys<UnopinionatedDefineSubkeys>(policy, creationTime)
 
-    class V4 internal constructor(val primaryKey: PGPKeyPair, policy: Policy, creationTime: Date) :
-        UnopinionatedDefineSubkeys(policy, creationTime) {
+class UnopinionatedDefineSubkeysV4
+internal constructor(val primaryKey: PGPKeyPair, policy: Policy, creationTime: Date) :
+    UnopinionatedDefineSubkeys(policy, creationTime) {
 
-        private val subkeys: MutableList<PGPKeyPair> = mutableListOf()
+    private val subkeys: MutableList<PGPKeyPair> = mutableListOf()
 
-        override fun addSubkey(
-            type: KeyType,
-            creationTime: Date,
-            applyToSubkey: (ApplyToSubkey.() -> PGPKeyPair)?
-        ): V4 = apply {
-            val subkey = OpenPgpKeyPairGenerator.V4().generateSubkey(type, creationTime)
-            subkeys.add(
-                if (applyToSubkey == null) {
-                    subkey
-                } else {
-                    ApplyToSubkey.V4(primaryKey, subkey, this).applyToSubkey()
-                })
-        }
-
-        override fun build(protector: SecretKeyRingProtector): PGPSecretKeyRing {
-            val primary =
-                PGPSecretKey(
-                    primaryKey.privateKey,
-                    primaryKey.publicKey,
-                    ImplementationFactory.getInstance().v4FingerprintCalculator,
-                    true,
-                    protector.getEncryptor(primaryKey.keyID))
-            return PGPSecretKeyRing(
-                buildList {
-                    add(primary)
-                    subkeys.forEach {
-                        add(
-                            PGPSecretKey(
-                                it.privateKey,
-                                it.publicKey,
-                                ImplementationFactory.getInstance().v4FingerprintCalculator,
-                                false,
-                                protector.getEncryptor(it.keyID)))
-                    }
-                })
-        }
+    override fun addSubkey(
+        type: KeyType,
+        creationTime: Date,
+        applyToSubkey: (ApplyToSubkey.() -> PGPKeyPair)?
+    ): UnopinionatedDefineSubkeysV4 = apply {
+        val subkey = OpenPgpKeyPairGenerator.V4().generateSubkey(type, creationTime)
+        subkeys.add(
+            if (applyToSubkey == null) {
+                subkey
+            } else {
+                ApplyToSubkeyV4(primaryKey, subkey, this).applyToSubkey()
+            })
     }
 
-    class V6 internal constructor(policy: Policy, creationTime: Date) :
-        UnopinionatedDefineSubkeys(policy, creationTime) {
+    override fun build(protector: SecretKeyRingProtector): PGPSecretKeyRing {
+        val primary =
+            PGPSecretKey(
+                primaryKey.privateKey,
+                primaryKey.publicKey,
+                ImplementationFactory.getInstance().v4FingerprintCalculator,
+                true,
+                protector.getEncryptor(primaryKey.keyID))
+        return PGPSecretKeyRing(
+            buildList {
+                add(primary)
+                subkeys.forEach {
+                    add(
+                        PGPSecretKey(
+                            it.privateKey,
+                            it.publicKey,
+                            ImplementationFactory.getInstance().v4FingerprintCalculator,
+                            false,
+                            protector.getEncryptor(it.keyID)))
+                }
+            })
+    }
+}
 
-        override fun addSubkey(
-            type: KeyType,
-            creationTime: Date,
-            applyToSubkey: (ApplyToSubkey.() -> PGPKeyPair)?
-        ): V6 {
-            TODO("Not yet implemented")
-        }
+class UnopinionatedDefineSubkeysV6 internal constructor(policy: Policy, creationTime: Date) :
+    UnopinionatedDefineSubkeys(policy, creationTime) {
 
-        override fun build(protector: SecretKeyRingProtector): PGPSecretKeyRing {
-            TODO("Not yet implemented")
-        }
+    override fun addSubkey(
+        type: KeyType,
+        creationTime: Date,
+        applyToSubkey: (ApplyToSubkey.() -> PGPKeyPair)?
+    ): UnopinionatedDefineSubkeysV6 {
+        TODO("Not yet implemented")
+    }
+
+    override fun build(protector: SecretKeyRingProtector): PGPSecretKeyRing {
+        TODO("Not yet implemented")
     }
 }
 
@@ -567,150 +566,142 @@ internal constructor(var keyPair: PGPKeyPair, val builder: DefinePrimaryKey<*>) 
      * @return modified key pair after this and [other] have been executed
      */
     abstract fun then(other: (ApplyToPrimaryKey.() -> PGPKeyPair)?): PGPKeyPair
+}
 
-    class V4 internal constructor(keyPair: PGPKeyPair, builder: DefinePrimaryKey<*>) :
-        ApplyToPrimaryKey(keyPair, builder) {
+class ApplyToPrimaryKeyV4 internal constructor(keyPair: PGPKeyPair, builder: DefinePrimaryKey<*>) :
+    ApplyToPrimaryKey(keyPair, builder) {
 
-        override fun addUserId(
-            userId: CharSequence,
-            subpacketsCallback: SelfSignatureSubpackets.Callback,
-            certificationType: CertificationType,
-            hashAlgorithm: HashAlgorithm,
-            bindingTime: Date
-        ): PGPKeyPair {
-            val sig =
-                buildCertificationFor(
-                    keyPair,
-                    userId,
-                    certificationType,
-                    bindingTime,
-                    hashAlgorithm,
-                    subpacketsCallback)
+    override fun addUserId(
+        userId: CharSequence,
+        subpacketsCallback: SelfSignatureSubpackets.Callback,
+        certificationType: CertificationType,
+        hashAlgorithm: HashAlgorithm,
+        bindingTime: Date
+    ): PGPKeyPair {
+        val sig =
+            buildCertificationFor(
+                keyPair, userId, certificationType, bindingTime, hashAlgorithm, subpacketsCallback)
 
-            keyPair = keyPair.plusCertification(userId, sig)
-            return keyPair
+        keyPair = keyPair.plusCertification(userId, sig)
+        return keyPair
+    }
+
+    override fun addUserAttribute(
+        userAttribute: PGPUserAttributeSubpacketVector,
+        subpacketsCallback: SelfSignatureSubpackets.Callback,
+        certificationType: CertificationType,
+        hashAlgorithm: HashAlgorithm,
+        bindingTime: Date
+    ): PGPKeyPair {
+        val sig =
+            buildCertificationFor(
+                keyPair,
+                userAttribute,
+                certificationType,
+                bindingTime,
+                hashAlgorithm,
+                subpacketsCallback)
+
+        keyPair = keyPair.plusCertification(userAttribute, sig)
+        return keyPair
+    }
+
+    override fun addDirectKeySignature(
+        subpacketsCallback: SelfSignatureSubpackets.Callback,
+        hashAlgorithm: HashAlgorithm,
+        bindingTime: Date
+    ): PGPKeyPair {
+        val sig =
+            buildDirectKeySignature(
+                keyPair,
+                hashAlgorithm,
+                subpacketsCallback.then(
+                    SelfSignatureSubpackets.applyHashed { setSignatureCreationTime(bindingTime) }))
+        keyPair = keyPair.plusCertification(sig)
+        return keyPair
+    }
+
+    override fun then(other: (ApplyToPrimaryKey.() -> PGPKeyPair)?): PGPKeyPair {
+        if (other != null) {
+            keyPair = ApplyToPrimaryKeyV4(keyPair, builder).other()
         }
+        return keyPair
+    }
 
-        override fun addUserAttribute(
-            userAttribute: PGPUserAttributeSubpacketVector,
-            subpacketsCallback: SelfSignatureSubpackets.Callback,
-            certificationType: CertificationType,
-            hashAlgorithm: HashAlgorithm,
-            bindingTime: Date
-        ): PGPKeyPair {
-            val sig =
-                buildCertificationFor(
-                    keyPair,
-                    userAttribute,
-                    certificationType,
-                    bindingTime,
-                    hashAlgorithm,
-                    subpacketsCallback)
+    /**
+     * Build a certification signature that binds the given [userId] to the given primary key
+     * [pair].
+     *
+     * @param pair primary key pair
+     * @param userId UserID to be bound
+     * @param certificationType type of the binding signature
+     * @param bindingTime creation time of the binding signature
+     * @param hashAlgorithm hash algorithm to be used during signature calculation
+     * @param subpacketsCallback callback to modify the binding signatures subpackets
+     * @return binding signature
+     */
+    private fun buildCertificationFor(
+        pair: PGPKeyPair,
+        userId: CharSequence,
+        certificationType: CertificationType,
+        bindingTime: Date,
+        hashAlgorithm: HashAlgorithm,
+        subpacketsCallback: SelfSignatureSubpackets.Callback
+    ): PGPSignature {
+        val builder =
+            SelfSignatureBuilder(
+                pair.privateKey, pair.publicKey, certificationType.signatureType, hashAlgorithm)
+        builder.hashedSubpackets.apply { setSignatureCreationTime(bindingTime) }
+        builder.applyCallback(subpacketsCallback)
+        return builder.build(userId)
+    }
 
-            keyPair = keyPair.plusCertification(userAttribute, sig)
-            return keyPair
-        }
+    /**
+     * Build a certification signature that binds the given [userAttribute] to the given primary key
+     * [pair].
+     *
+     * @param pair primary key pair
+     * @param userAttribute UserAttribute to be bound
+     * @param certificationType type of the binding signature
+     * @param bindingTime creation time of the binding signature
+     * @param hashAlgorithm hash algorithm to be used during signature calculation
+     * @param subpacketsCallback callback to modify the binding signatures subpackets
+     * @return binding signature
+     */
+    private fun buildCertificationFor(
+        pair: PGPKeyPair,
+        userAttribute: PGPUserAttributeSubpacketVector,
+        certificationType: CertificationType,
+        bindingTime: Date,
+        hashAlgorithm: HashAlgorithm,
+        subpacketsCallback: SelfSignatureSubpackets.Callback
+    ): PGPSignature {
+        val builder =
+            SelfSignatureBuilder(
+                pair.privateKey, pair.publicKey, certificationType.signatureType, hashAlgorithm)
+        builder.hashedSubpackets.apply { setSignatureCreationTime(bindingTime) }
+        builder.applyCallback(subpacketsCallback)
+        return builder.build(userAttribute)
+    }
 
-        override fun addDirectKeySignature(
-            subpacketsCallback: SelfSignatureSubpackets.Callback,
-            hashAlgorithm: HashAlgorithm,
-            bindingTime: Date
-        ): PGPKeyPair {
-            val sig =
-                buildDirectKeySignature(
-                    keyPair,
-                    hashAlgorithm,
-                    subpacketsCallback.then(
-                        SelfSignatureSubpackets.applyHashed {
-                            setSignatureCreationTime(bindingTime)
-                        }))
-            keyPair = keyPair.plusCertification(sig)
-            return keyPair
-        }
+    /**
+     * Build a DirectKey self signature over the primary key [pair].
+     *
+     * @param pair primary key pair
+     * @param hashAlgorithm hash algorithm to be used during signature calculation
+     * @param subpacketsCallback callback to modify the subpackets of the direct-key signature
+     * @return direct-key self signature
+     */
+    private fun buildDirectKeySignature(
+        pair: PGPKeyPair,
+        hashAlgorithm: HashAlgorithm,
+        subpacketsCallback: SelfSignatureSubpackets.Callback
+    ): PGPSignature {
+        val builder = DirectKeySelfSignatureBuilder(pair.privateKey, pair.publicKey, hashAlgorithm)
 
-        override fun then(other: (ApplyToPrimaryKey.() -> PGPKeyPair)?): PGPKeyPair {
-            if (other != null) {
-                keyPair = V4(keyPair, builder).other()
-            }
-            return keyPair
-        }
+        builder.applyCallback(subpacketsCallback)
 
-        /**
-         * Build a certification signature that binds the given [userId] to the given primary key
-         * [pair].
-         *
-         * @param pair primary key pair
-         * @param userId UserID to be bound
-         * @param certificationType type of the binding signature
-         * @param bindingTime creation time of the binding signature
-         * @param hashAlgorithm hash algorithm to be used during signature calculation
-         * @param subpacketsCallback callback to modify the binding signatures subpackets
-         * @return binding signature
-         */
-        private fun buildCertificationFor(
-            pair: PGPKeyPair,
-            userId: CharSequence,
-            certificationType: CertificationType,
-            bindingTime: Date,
-            hashAlgorithm: HashAlgorithm,
-            subpacketsCallback: SelfSignatureSubpackets.Callback
-        ): PGPSignature {
-            val builder =
-                SelfSignatureBuilder(
-                    pair.privateKey, pair.publicKey, certificationType.signatureType, hashAlgorithm)
-            builder.hashedSubpackets.apply { setSignatureCreationTime(bindingTime) }
-            builder.applyCallback(subpacketsCallback)
-            return builder.build(userId)
-        }
-
-        /**
-         * Build a certification signature that binds the given [userAttribute] to the given primary
-         * key [pair].
-         *
-         * @param pair primary key pair
-         * @param userAttribute UserAttribute to be bound
-         * @param certificationType type of the binding signature
-         * @param bindingTime creation time of the binding signature
-         * @param hashAlgorithm hash algorithm to be used during signature calculation
-         * @param subpacketsCallback callback to modify the binding signatures subpackets
-         * @return binding signature
-         */
-        private fun buildCertificationFor(
-            pair: PGPKeyPair,
-            userAttribute: PGPUserAttributeSubpacketVector,
-            certificationType: CertificationType,
-            bindingTime: Date,
-            hashAlgorithm: HashAlgorithm,
-            subpacketsCallback: SelfSignatureSubpackets.Callback
-        ): PGPSignature {
-            val builder =
-                SelfSignatureBuilder(
-                    pair.privateKey, pair.publicKey, certificationType.signatureType, hashAlgorithm)
-            builder.hashedSubpackets.apply { setSignatureCreationTime(bindingTime) }
-            builder.applyCallback(subpacketsCallback)
-            return builder.build(userAttribute)
-        }
-
-        /**
-         * Build a DirectKey self signature over the primary key [pair].
-         *
-         * @param pair primary key pair
-         * @param hashAlgorithm hash algorithm to be used during signature calculation
-         * @param subpacketsCallback callback to modify the subpackets of the direct-key signature
-         * @return direct-key self signature
-         */
-        private fun buildDirectKeySignature(
-            pair: PGPKeyPair,
-            hashAlgorithm: HashAlgorithm,
-            subpacketsCallback: SelfSignatureSubpackets.Callback
-        ): PGPSignature {
-            val builder =
-                DirectKeySelfSignatureBuilder(pair.privateKey, pair.publicKey, hashAlgorithm)
-
-            builder.applyCallback(subpacketsCallback)
-
-            return builder.build()
-        }
+        return builder.build()
     }
 }
 
@@ -742,70 +733,70 @@ internal constructor(
             builder.policy.certificationSignatureHashAlgorithmPolicy.defaultHashAlgorithm,
         bindingTime: Date = subkey.publicKey.creationTime
     ): PGPKeyPair
+}
+
+/**
+ * Implementation of the [ApplyToSubkey] function tailored to OpenPGP v4 keys.
+ *
+ * @param primaryKey primary key pair
+ * @param subkey subkey pair
+ * @param builder builder instance that generated the subkey
+ */
+class ApplyToSubkeyV4
+internal constructor(primaryKey: PGPKeyPair, subkey: PGPKeyPair, builder: DefineSubkeys<*>) :
+    ApplyToSubkey(primaryKey, subkey, builder) {
+
+    override fun addBindingSignature(
+        subpacketsCallback: SelfSignatureSubpackets.Callback,
+        hashAlgorithm: HashAlgorithm,
+        bindingTime: Date
+    ): PGPKeyPair {
+        val sig =
+            buildBindingSignature(
+                primaryKey, subkey, hashAlgorithm, bindingTime, subpacketsCallback)
+
+        subkey = subkey.plusCertification(sig)
+        return subkey
+    }
 
     /**
-     * Implementation of the [ApplyToSubkey] function tailored to OpenPGP v4 keys.
+     * Generate a version 4 binding signature that binds the [subkey] to the [primaryKey].
      *
      * @param primaryKey primary key pair
      * @param subkey subkey pair
-     * @param builder builder instance that generated the subkey
+     * @param hashAlgorithm hash algorithm to be used during signature calculation
+     * @param bindingTime creation time of the subkey
+     * @param subpacketsCallback callback to modify the subpackets of the binding signature
+     * @return subkey binding signature
      */
-    class V4
-    internal constructor(primaryKey: PGPKeyPair, subkey: PGPKeyPair, builder: DefineSubkeys<*>) :
-        ApplyToSubkey(primaryKey, subkey, builder) {
+    private fun buildBindingSignature(
+        primaryKey: PGPKeyPair,
+        subkey: PGPKeyPair,
+        hashAlgorithm: HashAlgorithm,
+        bindingTime: Date,
+        subpacketsCallback: SelfSignatureSubpackets.Callback
+    ): PGPSignature {
+        return SubkeyBindingSignatureBuilder(primaryKey, hashAlgorithm)
+            .applyCallback(
+                subpacketsCallback
+                    .then(
+                        SelfSignatureSubpackets.applyHashed {
+                            setSignatureCreationTime(bindingTime)
+                        })
+                    .then(
+                        SelfSignatureSubpackets.applyHashed {
+                            if (isSigningCapable(getKeyFlags())) {
+                                addEmbeddedSignature(
+                                    PrimaryKeyBindingSignatureBuilder(subkey, hashAlgorithm)
+                                        .build(primaryKey))
+                            }
+                        }))
+            .build(subkey)
+    }
 
-        override fun addBindingSignature(
-            subpacketsCallback: SelfSignatureSubpackets.Callback,
-            hashAlgorithm: HashAlgorithm,
-            bindingTime: Date
-        ): PGPKeyPair {
-            val sig =
-                buildBindingSignature(
-                    primaryKey, subkey, hashAlgorithm, bindingTime, subpacketsCallback)
-
-            subkey = subkey.plusCertification(sig)
-            return subkey
-        }
-
-        /**
-         * Generate a version 4 binding signature that binds the [subkey] to the [primaryKey].
-         *
-         * @param primaryKey primary key pair
-         * @param subkey subkey pair
-         * @param hashAlgorithm hash algorithm to be used during signature calculation
-         * @param bindingTime creation time of the subkey
-         * @param subpacketsCallback callback to modify the subpackets of the binding signature
-         * @return subkey binding signature
-         */
-        private fun buildBindingSignature(
-            primaryKey: PGPKeyPair,
-            subkey: PGPKeyPair,
-            hashAlgorithm: HashAlgorithm,
-            bindingTime: Date,
-            subpacketsCallback: SelfSignatureSubpackets.Callback
-        ): PGPSignature {
-            return SubkeyBindingSignatureBuilder(primaryKey, hashAlgorithm)
-                .applyCallback(
-                    subpacketsCallback
-                        .then(
-                            SelfSignatureSubpackets.applyHashed {
-                                setSignatureCreationTime(bindingTime)
-                            })
-                        .then(
-                            SelfSignatureSubpackets.applyHashed {
-                                if (isSigningCapable(getKeyFlags())) {
-                                    addEmbeddedSignature(
-                                        PrimaryKeyBindingSignatureBuilder(subkey, hashAlgorithm)
-                                            .build(primaryKey))
-                                }
-                            }))
-                .build(subkey)
-        }
-
-        private fun isSigningCapable(flags: List<KeyFlag>?): Boolean {
-            val signCapableFlags = listOf(KeyFlag.SIGN_DATA, KeyFlag.CERTIFY_OTHER)
-            return flags?.any { signCapableFlags.contains(it) } ?: false
-        }
+    private fun isSigningCapable(flags: List<KeyFlag>?): Boolean {
+        val signCapableFlags = listOf(KeyFlag.SIGN_DATA, KeyFlag.CERTIFY_OTHER)
+        return flags?.any { signCapableFlags.contains(it) } ?: false
     }
 }
 
