@@ -58,7 +58,7 @@ class OpenPgpKeyGenerator internal constructor() {
          * @param preferences suite of algorithm preferences and enabled features
          */
         @JvmStatic
-        fun buildV4(
+        fun buildV4Key(
             policy: Policy = PGPainless.getPolicy(),
             creationTime: Date = Date(),
             preferences: AlgorithmSuite = policy.keyGenerationAlgorithmSuite
@@ -933,7 +933,7 @@ class OpenPgpKeyTemplates private constructor() {
             vararg userId: CharSequence,
             creationTime: Date = Date()
         ): PGPSecretKeyRing =
-            OpenPgpKeyGenerator.buildV4(creationTime = creationTime)
+            OpenPgpKeyGenerator.buildV4Key(creationTime = creationTime)
                 .setPrimaryKey(KeyType.EDDSA(EdDSACurve._Ed25519)) {
                     // Add UserIDs
                     userId.forEachIndexed { index, uid ->
@@ -977,7 +977,7 @@ class OpenPgpKeyTemplates private constructor() {
             creationTime: Date = Date(),
             length: RsaLength = RsaLength._4096
         ): PGPSecretKeyRing =
-            OpenPgpKeyGenerator.buildV4(creationTime = creationTime)
+            OpenPgpKeyGenerator.buildV4Key(creationTime = creationTime)
                 .setPrimaryKey(KeyType.RSA(length)) {
                     // Add UserIDs
                     userId.forEachIndexed { index, uid ->
@@ -1020,7 +1020,7 @@ class OpenPgpKeyTemplates private constructor() {
             creationTime: Date = Date(),
             length: RsaLength = RsaLength._4096
         ): PGPSecretKeyRing =
-            OpenPgpKeyGenerator.buildV4(creationTime = creationTime)
+            OpenPgpKeyGenerator.buildV4Key(creationTime = creationTime)
                 .setPrimaryKey(KeyType.RSA(length)) {
                     userId.forEach { addUserId(it) }
                     addDirectKeySignature(

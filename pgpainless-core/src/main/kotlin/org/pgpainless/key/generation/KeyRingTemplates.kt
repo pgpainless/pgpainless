@@ -30,7 +30,7 @@ class KeyRingTemplates {
         length: RsaLength,
         passphrase: Passphrase = Passphrase.emptyPassphrase()
     ): PGPSecretKeyRing =
-        OpenPgpKeyGenerator.buildV4()
+        OpenPgpKeyGenerator.buildV4Key()
             .setPrimaryKey(KeyType.RSA(length), listOf(KeyFlag.CERTIFY_OTHER)) {
                 if (userId != null) {
                     addUserId(userId)
@@ -76,7 +76,7 @@ class KeyRingTemplates {
         length: RsaLength,
         passphrase: Passphrase = Passphrase.emptyPassphrase()
     ): PGPSecretKeyRing =
-        OpenPgpKeyGenerator.buildV4()
+        OpenPgpKeyGenerator.buildV4Key()
             .setPrimaryKey(
                 KeyType.RSA(length),
                 listOf(
@@ -124,7 +124,7 @@ class KeyRingTemplates {
         userId: CharSequence?,
         passphrase: Passphrase = Passphrase.emptyPassphrase()
     ): PGPSecretKeyRing =
-        OpenPgpKeyGenerator.buildV4()
+        OpenPgpKeyGenerator.buildV4Key()
             .setPrimaryKey(
                 KeyType.EDDSA(EdDSACurve._Ed25519),
                 listOf(KeyFlag.CERTIFY_OTHER, KeyFlag.SIGN_DATA)) {
@@ -167,7 +167,7 @@ class KeyRingTemplates {
         userId: CharSequence?,
         passphrase: Passphrase = Passphrase.emptyPassphrase()
     ): PGPSecretKeyRing =
-        OpenPgpKeyGenerator.buildV4()
+        OpenPgpKeyGenerator.buildV4Key()
             .setPrimaryKey(KeyType.EDDSA(EdDSACurve._Ed25519), listOf(KeyFlag.CERTIFY_OTHER)) {
                 if (userId != null) {
                     addUserId(userId)
