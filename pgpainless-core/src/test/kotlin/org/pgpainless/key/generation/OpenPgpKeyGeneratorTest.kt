@@ -170,7 +170,7 @@ class OpenPgpKeyGeneratorTest {
     }
 
     @Test
-    fun `unopionionated key generation with too weak PK algorithm does not fail`() {
+    fun `unopinionated key generation with too weak PK algorithm does not fail`() {
         val policy = Policy()
         policy.publicKeyAlgorithmPolicy =
             Policy.PublicKeyAlgorithmPolicy(buildMap { put(PublicKeyAlgorithm.RSA_GENERAL, 3072) })
