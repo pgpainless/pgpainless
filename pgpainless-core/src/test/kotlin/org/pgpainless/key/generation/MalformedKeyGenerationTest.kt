@@ -1,6 +1,6 @@
-// SPDX-FileCopyrightText: 2024 Paul Schaub <vanitasvitae@fsfe.org>
+//  SPDX-FileCopyrightText: 2024 Paul Schaub <vanitasvitae@fsfe.org>
 //
-// SPDX-License-Identifier: Apache-2.0
+//  SPDX-License-Identifier: Apache-2.0
 
 package org.pgpainless.key.generation
 
@@ -24,13 +24,14 @@ class MalformedKeyGenerationTest {
     fun malformedPrimaryUserIdSubpacket() {
         val userId = "Alice <alice@pgpainless.org>"
         val key =
-            GenerateOpenPgpKey(Policy())
-                .buildV4Key(KeyType.EDDSA(EdDSACurve._Ed25519))
-                .addUserId(
-                    userId,
-                    SelfSignatureSubpackets.applyHashed {
-                        setPrimaryUserId(PrimaryUserID(false, false, byteArrayOf(0x02)))
-                    })
+            OpenPgpKeyGenerator.buildV4(Policy())
+                .setPrimaryKey(KeyType.EDDSA(EdDSACurve._Ed25519)) {
+                    addUserId(
+                        userId,
+                        SelfSignatureSubpackets.applyHashed {
+                            setPrimaryUserId(PrimaryUserID(false, false, byteArrayOf(0x02)))
+                        })
+                }
                 .build()
 
         println(PGPainless.asciiArmor(key))
@@ -42,13 +43,14 @@ class MalformedKeyGenerationTest {
     @Test
     fun malformedExportableSubpacket() {
         val key =
-            GenerateOpenPgpKey(Policy())
-                .buildV4Key(KeyType.EDDSA(EdDSACurve._Ed25519))
-                .addUserId(
-                    "Alice <alice@pgpainless.org>",
-                    SelfSignatureSubpackets.applyHashed {
-                        setExportable(Exportable(false, false, byteArrayOf(0x03)))
-                    })
+            OpenPgpKeyGenerator.buildV4(Policy())
+                .setPrimaryKey(KeyType.EDDSA(EdDSACurve._Ed25519)) {
+                    addUserId(
+                        "Alice <alice@pgpainless.org>",
+                        SelfSignatureSubpackets.applyHashed {
+                            setExportable(Exportable(false, false, byteArrayOf(0x03)))
+                        })
+                }
                 .build()
 
         println(PGPainless.asciiArmor(key))
@@ -60,13 +62,14 @@ class MalformedKeyGenerationTest {
     @Test
     fun malformedRevocableSubpacket() {
         val key =
-            GenerateOpenPgpKey(Policy())
-                .buildV4Key(KeyType.EDDSA(EdDSACurve._Ed25519))
-                .addUserId(
-                    "Alice <alice@pgpainless.org>",
-                    SelfSignatureSubpackets.applyHashed {
-                        setRevocable(Revocable(false, false, byteArrayOf(0x04)))
-                    })
+            OpenPgpKeyGenerator.buildV4(Policy())
+                .setPrimaryKey(KeyType.EDDSA(EdDSACurve._Ed25519)) {
+                    addUserId(
+                        "Alice <alice@pgpainless.org>",
+                        SelfSignatureSubpackets.applyHashed {
+                            setRevocable(Revocable(false, false, byteArrayOf(0x04)))
+                        })
+                }
                 .build()
 
         println(PGPainless.asciiArmor(key))
@@ -79,27 +82,28 @@ class MalformedKeyGenerationTest {
     fun primaryUserIdOnDirectKeySig() {
         val policy = Policy()
         val key =
-            GenerateOpenPgpKey(policy)
-                .buildV4Key(
+            OpenPgpKeyGenerator.buildV4(policy)
+                .setPrimaryKey(
                     KeyType.EDDSA(EdDSACurve._Ed25519),
-                    listOf(KeyFlag.CERTIFY_OTHER, KeyFlag.SIGN_DATA))
-                .directKeySignature(
-                    SelfSignatureSubpackets.applyHashed {
-                        setPrimaryUserId()
-                        setPreferredHashAlgorithms(HashAlgorithm.SHA224)
-                    })
-                .addUserId(
-                    "Alice <alice@pgpainless.org>",
-                    SelfSignatureSubpackets.applyHashed {
-                        setPrimaryUserId(null)
-                        setPreferredHashAlgorithms(HashAlgorithm.SHA256)
-                    })
-                .addUserId(
-                    "Bob <bob@pgpainless.org>",
-                    SelfSignatureSubpackets.applyHashed {
-                        setPrimaryUserId()
-                        setPreferredHashAlgorithms(HashAlgorithm.SHA384)
-                    })
+                    listOf(KeyFlag.CERTIFY_OTHER, KeyFlag.SIGN_DATA)) {
+                        addDirectKeySignature(
+                            SelfSignatureSubpackets.applyHashed {
+                                setPrimaryUserId()
+                                setPreferredHashAlgorithms(HashAlgorithm.SHA224)
+                            })
+                        addUserId(
+                            "Alice <alice@pgpainless.org>",
+                            SelfSignatureSubpackets.applyHashed {
+                                setPrimaryUserId(null)
+                                setPreferredHashAlgorithms(HashAlgorithm.SHA256)
+                            })
+                        addUserId(
+                            "Bob <bob@pgpainless.org>",
+                            SelfSignatureSubpackets.applyHashed {
+                                setPrimaryUserId()
+                                setPreferredHashAlgorithms(HashAlgorithm.SHA384)
+                            })
+                    }
                 .addEncryptionSubkey(KeyType.XDH(XDHSpec._X25519))
                 .build()
         println(key.toAsciiArmor())
