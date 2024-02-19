@@ -5,9 +5,7 @@
 package org.pgpainless.key.generation
 
 import org.bouncycastle.openpgp.PGPSecretKeyRing
-import org.pgpainless.PGPainless.Companion.buildKeyRing
 import org.pgpainless.algorithm.KeyFlag
-import org.pgpainless.key.generation.KeySpec.Companion.getBuilder
 import org.pgpainless.key.generation.type.KeyType
 import org.pgpainless.key.generation.type.eddsa.EdDSACurve
 import org.pgpainless.key.generation.type.rsa.RsaLength
@@ -32,18 +30,16 @@ class KeyRingTemplates {
         length: RsaLength,
         passphrase: Passphrase = Passphrase.emptyPassphrase()
     ): PGPSecretKeyRing =
-        buildKeyRing()
-            .apply {
-                setPrimaryKey(getBuilder(KeyType.RSA(length), KeyFlag.CERTIFY_OTHER))
-                addSubkey(getBuilder(KeyType.RSA(length), KeyFlag.SIGN_DATA))
-                addSubkey(
-                    getBuilder(KeyType.RSA(length), KeyFlag.ENCRYPT_COMMS, KeyFlag.ENCRYPT_STORAGE))
-                setPassphrase(passphrase)
+        OpenPgpKeyGenerator.buildV4()
+            .setPrimaryKey(KeyType.RSA(length), listOf(KeyFlag.CERTIFY_OTHER)) {
                 if (userId != null) {
                     addUserId(userId)
                 }
+                keyPair
             }
-            .build()
+            .addSigningSubkey(KeyType.RSA(length))
+            .addEncryptionSubkey(KeyType.RSA(length))
+            .build(passphrase)
 
     /**
      * Generate an RSA OpenPGP key consisting of an RSA primary key used for certification, a
@@ -71,7 +67,7 @@ class KeyRingTemplates {
      *
      * @param userId user id.
      * @param length length in bits.
-     * @param password Password of the key. Can be empty for unencrypted keys.
+     * @param passphrase Password of the key. Can be empty for unencrypted keys.
      * @return {@link PGPSecretKeyRing} containing the KeyPair.
      */
     @JvmOverloads
@@ -80,20 +76,20 @@ class KeyRingTemplates {
         length: RsaLength,
         passphrase: Passphrase = Passphrase.emptyPassphrase()
     ): PGPSecretKeyRing =
-        buildKeyRing()
-            .apply {
-                setPrimaryKey(
-                    getBuilder(
-                        KeyType.RSA(length),
-                        KeyFlag.CERTIFY_OTHER,
-                        KeyFlag.SIGN_DATA,
-                        KeyFlag.ENCRYPT_COMMS))
-                setPassphrase(passphrase)
-                if (userId != null) {
-                    addUserId(userId.toString())
+        OpenPgpKeyGenerator.buildV4()
+            .setPrimaryKey(
+                KeyType.RSA(length),
+                listOf(
+                    KeyFlag.CERTIFY_OTHER,
+                    KeyFlag.SIGN_DATA,
+                    KeyFlag.ENCRYPT_COMMS,
+                    KeyFlag.ENCRYPT_STORAGE)) {
+                    if (userId != null) {
+                        addUserId(userId)
+                    }
+                    keyPair
                 }
-            }
-            .build()
+            .build(passphrase)
 
     /**
      * Creates a simple RSA KeyPair of length {@code length} with user-id {@code userId}. The
@@ -128,24 +124,17 @@ class KeyRingTemplates {
         userId: CharSequence?,
         passphrase: Passphrase = Passphrase.emptyPassphrase()
     ): PGPSecretKeyRing =
-        buildKeyRing()
-            .apply {
-                setPrimaryKey(
-                    getBuilder(
-                        KeyType.EDDSA(EdDSACurve._Ed25519),
-                        KeyFlag.CERTIFY_OTHER,
-                        KeyFlag.SIGN_DATA))
-                addSubkey(
-                    getBuilder(
-                        KeyType.XDH(XDHSpec._X25519),
-                        KeyFlag.ENCRYPT_STORAGE,
-                        KeyFlag.ENCRYPT_COMMS))
-                setPassphrase(passphrase)
-                if (userId != null) {
-                    addUserId(userId.toString())
+        OpenPgpKeyGenerator.buildV4()
+            .setPrimaryKey(
+                KeyType.EDDSA(EdDSACurve._Ed25519),
+                listOf(KeyFlag.CERTIFY_OTHER, KeyFlag.SIGN_DATA)) {
+                    if (userId != null) {
+                        addUserId(userId)
+                    }
+                    keyPair
                 }
-            }
-            .build()
+            .addEncryptionSubkey(KeyType.XDH(XDHSpec._X25519))
+            .build(passphrase)
 
     /**
      * Creates a key ring consisting of an ed25519 EdDSA primary key and a X25519 XDH subkey. The
@@ -153,7 +142,7 @@ class KeyRingTemplates {
      * used for encryption and decryption of messages.
      *
      * @param userId user-id
-     * @param passphrase Password of the private key. Can be null or blank for an unencrypted key.
+     * @param password Password of the private key. Can be null or blank for an unencrypted key.
      * @return {@link PGPSecretKeyRing} containing the key pairs.
      */
     fun simpleEcKeyRing(userId: CharSequence?, password: String?): PGPSecretKeyRing =
