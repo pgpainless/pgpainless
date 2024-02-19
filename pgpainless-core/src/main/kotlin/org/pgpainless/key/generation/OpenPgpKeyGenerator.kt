@@ -34,6 +34,19 @@ import org.pgpainless.signature.builder.SubkeyBindingSignatureBuilder
 import org.pgpainless.signature.subpackets.SelfSignatureSubpackets
 import org.pgpainless.util.Passphrase
 
+/**
+ * API for generating OpenPGP keys. The API allows to generate keys of different OpenPGP protocol
+ * versions (currently only v4). The API is divided into an opinionated and unopinionated
+ * implementation.
+ *
+ * The opinionated implementation will sanitize algorithms and key sizes and will furthermore make
+ * sure that required signatures (e.g. direct-key or binding signatures) are placed on the key,
+ * while the unopinionated API allows for the use of weak algorithms and does not add any signatures
+ * by itself.
+ *
+ * You can switch from the opinionated API to the unopinionated API by calling `unopinionated()` on
+ * the builder.
+ */
 class OpenPgpKeyGenerator internal constructor() {
 
     companion object {
@@ -125,7 +138,13 @@ internal constructor(val policy: Policy, val creationTime: Date, val preferences
     ): PGPKeyPair
 
     /**
-     * Define the primary key for the OpenPGP key.
+     * Define the primary key for the OpenPGP key. Example:
+     * ```
+     * setPrimaryKey(KeyType.EDDSA(EdDSACurve._Ed25519)) {
+     *     addUserId("Alice <alice@example.com>")
+     *     addUserId("Bob <bob@example.com>")
+     * }
+     * ```
      *
      * @param type primary key type
      * @param keyFlags list of key flags that denote the primary keys capabilities
