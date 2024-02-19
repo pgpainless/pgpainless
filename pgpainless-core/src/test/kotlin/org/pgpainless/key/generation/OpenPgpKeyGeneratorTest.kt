@@ -1,16 +1,24 @@
+//  SPDX-FileCopyrightText: 2024 Paul Schaub <vanitasvitae@fsfe.org>
+//
+//  SPDX-License-Identifier: Apache-2.0
+
 package org.pgpainless.key.generation
 
+import org.bouncycastle.bcpg.sig.PrimaryUserID
 import org.bouncycastle.extensions.toAsciiArmor
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Assertions.assertFalse
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.assertThrows
+import org.pgpainless.PGPainless
+import org.pgpainless.algorithm.KeyFlag
 import org.pgpainless.algorithm.PublicKeyAlgorithm
 import org.pgpainless.key.generation.type.KeyType
 import org.pgpainless.key.generation.type.eddsa.EdDSACurve
 import org.pgpainless.key.generation.type.rsa.RsaLength
 import org.pgpainless.key.generation.type.xdh.XDHSpec
 import org.pgpainless.policy.Policy
+import org.pgpainless.signature.subpackets.SelfSignatureSubpackets
 import org.pgpainless.util.DateUtil
 
 class OpenPgpKeyGeneratorTest {
@@ -58,6 +66,39 @@ class OpenPgpKeyGeneratorTest {
     }
 
     @Test
+    fun `adding two user-ids will mark the first one as primary`() {
+        val key =
+            OpenPgpKeyGenerator.buildV4()
+                .setPrimaryKey(KeyType.EDDSA(EdDSACurve._Ed25519)) {
+                    addUserId("Primary <primary@example.com>")
+                    addUserId("Non Primary <non-primary@example.com>")
+                }
+                .build()
+
+        val info = PGPainless.inspectKeyRing(key)
+        assertEquals("Primary <primary@example.com>", info.primaryUserId)
+    }
+
+    @Test
+    fun `adding two user-ids but mark the first as non-primary will mark the second one as primary`() {
+        val key =
+            OpenPgpKeyGenerator.buildV4()
+                .setPrimaryKey(KeyType.EDDSA(EdDSACurve._Ed25519)) {
+                    addUserId(
+                        "Non Primary <non-primary@example.com>",
+                        SelfSignatureSubpackets.applyHashed {
+                            // Not primary
+                            setPrimaryUserId(PrimaryUserID(false, false))
+                        })
+                    addUserId("Primary <primary@example.com>")
+                }
+                .build()
+
+        val info = PGPainless.inspectKeyRing(key)
+        assertEquals("Primary <primary@example.com>", info.primaryUserId)
+    }
+
+    @Test
     fun testUnopinionatedV4() {
         // Unopinionated
         OpenPgpKeyGenerator.buildV4()
@@ -76,7 +117,7 @@ class OpenPgpKeyGeneratorTest {
         // Opinionated
         val time = DateUtil.parseUTCDate("2024-01-01 00:00:00 UTC")
         OpenPgpKeyGenerator.buildV4(creationTime = time)
-            .setCertificationKey(KeyType.EDDSA(EdDSACurve._Ed25519)) {
+            .setPrimaryKey(KeyType.EDDSA(EdDSACurve._Ed25519), listOf(KeyFlag.CERTIFY_OTHER)) {
                 addUserId("Alice <alice@pgpainless.org>")
             }
             .addSigningSubkey(KeyType.EDDSA(EdDSACurve._Ed25519))
@@ -109,7 +150,7 @@ class OpenPgpKeyGeneratorTest {
     @Test
     fun test() {
         OpenPgpKeyGenerator.buildV4()
-            .setCertificationKey(KeyType.RSA(RsaLength._3072))
+            .setPrimaryKey(KeyType.RSA(RsaLength._3072), keyFlags = listOf(KeyFlag.CERTIFY_OTHER))
             .build()
             .toAsciiArmor()
             .let { println(it) }
@@ -137,5 +178,20 @@ class OpenPgpKeyGeneratorTest {
         OpenPgpKeyGenerator.buildV4(policy)
             .unopinionated() // unopinionated builder allows for non-compliant configurations
             .setPrimaryKey(KeyType.RSA(RsaLength._2048))
+    }
+
+    @Test
+    fun `skip default DirectKey signature will not add one`() {
+        val key =
+            OpenPgpKeyGenerator.buildV4()
+                .setPrimaryKey(KeyType.EDDSA(EdDSACurve._Ed25519)) { skipDefaultSignature() }
+                .build()
+
+        assertFalse(key.publicKey.keySignatures.hasNext())
+    }
+
+    @Test
+    fun testModernKeyGeneration() {
+        println(KeyRingTemplates().modernKeyRing("null").toAsciiArmor())
     }
 }

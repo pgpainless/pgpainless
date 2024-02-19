@@ -23,7 +23,7 @@ class KeyRingTemplates {
      *
      * @param userId userId or null
      * @param length length of the RSA keys
-     * @param passphrase passphrase to encrypt the key with. Can be empty for an unencrytped key.
+     * @param passphrase passphrase to encrypt the key with. Can be empty for an unencrypted key.
      * @return key
      */
     @JvmOverloads
@@ -179,7 +179,7 @@ class KeyRingTemplates {
         passphrase: Passphrase = Passphrase.emptyPassphrase()
     ): PGPSecretKeyRing =
         OpenPgpKeyGenerator.buildV4()
-            .setCertificationKey(KeyType.EDDSA(EdDSACurve._Ed25519)) {
+            .setPrimaryKey(KeyType.EDDSA(EdDSACurve._Ed25519), listOf(KeyFlag.CERTIFY_OTHER)) {
                 if (userId != null) {
                     addUserId(userId)
                 }

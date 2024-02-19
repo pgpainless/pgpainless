@@ -45,7 +45,6 @@ import org.pgpainless.implementation.ImplementationFactory;
 import org.pgpainless.key.TestKeys;
 import org.pgpainless.key.protection.SecretKeyRingProtector;
 import org.pgpainless.key.protection.UnlockSecretKey;
-import org.pgpainless.policy.Policy;
 import org.pgpainless.signature.consumer.SignaturePicker;
 import org.pgpainless.signature.subpackets.SignatureSubpacketsUtil;
 
