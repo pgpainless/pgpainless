@@ -25,7 +25,7 @@ import org.pgpainless.algorithm.KeyFlag;
 import org.pgpainless.key.generation.KeySpec;
 import org.pgpainless.key.generation.type.KeyType;
 import org.pgpainless.key.generation.type.eddsa_legacy.EdDSALegacyCurve;
-import org.pgpainless.key.generation.type.xdh.XDHSpec;
+import org.pgpainless.key.generation.type.xdh_legacy.XDHLegacySpec;
 import org.slf4j.LoggerFactory;
 import sop.exception.SOPGPException;
 
@@ -325,7 +325,7 @@ public class RoundTripEncryptDecryptCmdTest extends CLITest {
                 .addUserId("Cannot Sign <cannot@sign.key>")
                 .setPrimaryKey(KeySpec.getBuilder(KeyType.EDDSA_LEGACY(EdDSALegacyCurve._Ed25519), KeyFlag.CERTIFY_OTHER))
                 .addSubkey(KeySpec.getBuilder(
-                        KeyType.XDH(XDHSpec._X25519), KeyFlag.ENCRYPT_COMMS, KeyFlag.ENCRYPT_STORAGE))
+                        KeyType.XDH_LEGACY(XDHLegacySpec._X25519), KeyFlag.ENCRYPT_COMMS, KeyFlag.ENCRYPT_STORAGE))
                 .build();
         File keyFile = writeFile("key.pgp", secretKeys.getEncoded());
         File certFile = writeFile("cert.pgp", PGPainless.extractCertificate(secretKeys).getEncoded());

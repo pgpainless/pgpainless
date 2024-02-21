@@ -12,7 +12,7 @@ import org.pgpainless.PGPainless;
 import org.pgpainless.algorithm.KeyFlag;
 import org.pgpainless.key.generation.type.KeyType;
 import org.pgpainless.key.generation.type.ecc.EllipticCurve;
-import org.pgpainless.key.generation.type.xdh.XDHSpec;
+import org.pgpainless.key.generation.type.xdh_legacy.XDHLegacySpec;
 import org.pgpainless.util.TestAllImplementations;
 
 public class CertificationKeyMustBeAbleToCertifyTest {
@@ -29,7 +29,7 @@ public class CertificationKeyMustBeAbleToCertifyTest {
                 KeyType.ECDH(EllipticCurve._P256),
                 KeyType.ECDH(EllipticCurve._P384),
                 KeyType.ECDH(EllipticCurve._P521),
-                KeyType.XDH(XDHSpec._X25519)
+                KeyType.XDH_LEGACY(XDHLegacySpec._X25519)
         };
         for (KeyType type : typesIncapableOfCreatingVerifications) {
             assertThrows(IllegalArgumentException.class, () -> PGPainless

@@ -31,7 +31,7 @@ import org.pgpainless.algorithm.HashAlgorithm;
 import org.pgpainless.algorithm.KeyFlag;
 import org.pgpainless.key.generation.type.KeyType;
 import org.pgpainless.key.generation.type.eddsa_legacy.EdDSALegacyCurve;
-import org.pgpainless.key.generation.type.xdh.XDHSpec;
+import org.pgpainless.key.generation.type.xdh_legacy.XDHLegacySpec;
 import org.pgpainless.key.info.KeyRingInfo;
 import org.pgpainless.key.protection.SecretKeyRingProtector;
 import org.pgpainless.signature.subpackets.SelfSignatureSubpackets;
@@ -130,7 +130,7 @@ public class KeyGenerationSubpacketsTest {
         assertNotNull(bindingSig.getHashedSubPackets().getEmbeddedSignatures().get(0));
 
         secretKeys = PGPainless.modifyKeyRing(secretKeys)
-                .addSubKey(KeySpec.getBuilder(KeyType.XDH(XDHSpec._X25519), KeyFlag.ENCRYPT_COMMS).build(),
+                .addSubKey(KeySpec.getBuilder(KeyType.XDH_LEGACY(XDHLegacySpec._X25519), KeyFlag.ENCRYPT_COMMS).build(),
                         Passphrase.emptyPassphrase(),
                         new SelfSignatureSubpackets.Callback() {
                             @Override

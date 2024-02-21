@@ -11,7 +11,7 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.pgpainless.algorithm.KeyFlag;
 import org.pgpainless.key.generation.type.KeyType;
 import org.pgpainless.key.generation.type.eddsa_legacy.EdDSALegacyCurve;
-import org.pgpainless.key.generation.type.xdh.XDHSpec;
+import org.pgpainless.key.generation.type.xdh_legacy.XDHLegacySpec;
 import org.pgpainless.util.TestAllImplementations;
 
 public class IllegalKeyFlagsTest {
@@ -20,13 +20,13 @@ public class IllegalKeyFlagsTest {
     @ExtendWith(TestAllImplementations.class)
     public void testKeyCannotCarryFlagsTest() {
         assertThrows(IllegalArgumentException.class, () -> KeySpec.getBuilder(
-                KeyType.XDH(XDHSpec._X25519), KeyFlag.SIGN_DATA));
+                KeyType.XDH_LEGACY(XDHLegacySpec._X25519), KeyFlag.SIGN_DATA));
 
         assertThrows(IllegalArgumentException.class, () -> KeySpec.getBuilder(
-                KeyType.XDH(XDHSpec._X25519), KeyFlag.CERTIFY_OTHER));
+                KeyType.XDH_LEGACY(XDHLegacySpec._X25519), KeyFlag.CERTIFY_OTHER));
 
         assertThrows(IllegalArgumentException.class, () -> KeySpec.getBuilder(
-                KeyType.XDH(XDHSpec._X25519), KeyFlag.AUTHENTICATION));
+                KeyType.XDH_LEGACY(XDHLegacySpec._X25519), KeyFlag.AUTHENTICATION));
 
         assertThrows(IllegalArgumentException.class, () -> KeySpec.getBuilder(
                 KeyType.EDDSA_LEGACY(EdDSALegacyCurve._Ed25519), KeyFlag.ENCRYPT_COMMS));

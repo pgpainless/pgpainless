@@ -13,8 +13,8 @@ import org.pgpainless.key.generation.type.eddsa_legacy.EdDSALegacy
 import org.pgpainless.key.generation.type.eddsa_legacy.EdDSALegacyCurve
 import org.pgpainless.key.generation.type.rsa.RSA
 import org.pgpainless.key.generation.type.rsa.RsaLength
-import org.pgpainless.key.generation.type.xdh.XDH
-import org.pgpainless.key.generation.type.xdh.XDHSpec
+import org.pgpainless.key.generation.type.xdh_legacy.XDHLegacy
+import org.pgpainless.key.generation.type.xdh_legacy.XDHLegacySpec
 
 @Suppress("INAPPLICABLE_JVM_NAME") // https://youtrack.jetbrains.com/issue/KT-31420
 interface KeyType {
@@ -103,6 +103,6 @@ interface KeyType {
         @JvmStatic
         fun EDDSA_LEGACY(curve: EdDSALegacyCurve): EdDSALegacy = EdDSALegacy.fromCurve(curve)
 
-        @JvmStatic fun XDH(curve: XDHSpec): XDH = XDH.fromSpec(curve)
+        @JvmStatic fun XDH_LEGACY(curve: XDHLegacySpec): XDHLegacy = XDHLegacy.fromSpec(curve)
     }
 }

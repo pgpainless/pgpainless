@@ -19,7 +19,7 @@ import org.pgpainless.encryption_signing.SigningOptions
 import org.pgpainless.key.generation.KeySpec
 import org.pgpainless.key.generation.type.KeyType
 import org.pgpainless.key.generation.type.eddsa_legacy.EdDSALegacyCurve
-import org.pgpainless.key.generation.type.xdh.XDHSpec
+import org.pgpainless.key.generation.type.xdh_legacy.XDHLegacySpec
 import org.pgpainless.key.protection.SecretKeyRingProtector
 
 class KeyWithoutSelfSigsTest {
@@ -62,7 +62,7 @@ class KeyWithoutSelfSigsTest {
                         KeyType.EDDSA_LEGACY(EdDSALegacyCurve._Ed25519), KeyFlag.SIGN_DATA))
                 .addSubkey(
                     KeySpec.getBuilder(
-                        KeyType.XDH(XDHSpec._X25519),
+                        KeyType.XDH_LEGACY(XDHLegacySpec._X25519),
                         KeyFlag.ENCRYPT_STORAGE,
                         KeyFlag.ENCRYPT_COMMS))
                 .build()

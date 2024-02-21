@@ -11,7 +11,7 @@ import org.pgpainless.key.generation.KeySpec.Companion.getBuilder
 import org.pgpainless.key.generation.type.KeyType
 import org.pgpainless.key.generation.type.eddsa_legacy.EdDSALegacyCurve
 import org.pgpainless.key.generation.type.rsa.RsaLength
-import org.pgpainless.key.generation.type.xdh.XDHSpec
+import org.pgpainless.key.generation.type.xdh_legacy.XDHLegacySpec
 import org.pgpainless.util.Passphrase
 
 class KeyRingTemplates {
@@ -136,7 +136,7 @@ class KeyRingTemplates {
                         KeyFlag.SIGN_DATA))
                 addSubkey(
                     getBuilder(
-                        KeyType.XDH(XDHSpec._X25519),
+                        KeyType.XDH_LEGACY(XDHLegacySpec._X25519),
                         KeyFlag.ENCRYPT_STORAGE,
                         KeyFlag.ENCRYPT_COMMS))
                 setPassphrase(passphrase)
@@ -184,7 +184,7 @@ class KeyRingTemplates {
                         KeyType.EDDSA_LEGACY(EdDSALegacyCurve._Ed25519), KeyFlag.CERTIFY_OTHER))
                 addSubkey(
                     getBuilder(
-                        KeyType.XDH(XDHSpec._X25519),
+                        KeyType.XDH_LEGACY(XDHLegacySpec._X25519),
                         KeyFlag.ENCRYPT_COMMS,
                         KeyFlag.ENCRYPT_STORAGE))
                 addSubkey(
