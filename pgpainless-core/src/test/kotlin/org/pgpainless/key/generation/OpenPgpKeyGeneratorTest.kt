@@ -7,6 +7,8 @@ package org.pgpainless.key.generation
 import org.bouncycastle.bcpg.sig.PrimaryUserID
 import org.bouncycastle.extensions.toAsciiArmor
 import org.bouncycastle.openpgp.PGPUserAttributeSubpacketVectorGenerator
+import org.bouncycastle.util.encoders.Hex
+import org.junit.jupiter.api.Assertions.assertArrayEquals
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Assertions.assertFalse
 import org.junit.jupiter.api.Test
@@ -438,5 +440,22 @@ class OpenPgpKeyGeneratorTest {
             .addSubkey(KeyType.XDH(XDHSpec._X25519)) {
                 addBindingSignature(hashAlgorithm = HashAlgorithm.SHA1)
             }
+    }
+
+    @Test
+    fun `add image attribute to key`() {
+        // smallest JPEG according to https://stackoverflow.com/a/2349470/11150851
+        val jpegBytes =
+            Hex.decode(
+                "ffd8ffe000104a46494600010101004800480000ffdb004300030202020202030202020303030304060404040404080606050609080a0a090809090a0c0f0c0a0b0e0b09090d110d0e0f101011100a0c12131210130f101010ffc9000b080001000101011100ffcc000600101005ffda0008010100003f00d2cf20ffd9")
+
+        val key =
+            OpenPgpKeyGenerator.buildV4Key()
+                .setPrimaryKey(KeyType.EDDSA(EdDSACurve._Ed25519)) {
+                    addImageAttribute(jpegBytes.inputStream())
+                }
+                .build()
+
+        assertArrayEquals(jpegBytes, key.publicKey.userAttributes.next().imageAttribute.imageData)
     }
 }
