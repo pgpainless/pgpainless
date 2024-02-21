@@ -5,7 +5,7 @@
 package org.pgpainless.key.generation
 
 import java.io.InputStream
-import java.util.Date
+import java.util.*
 import openpgp.formatUTC
 import org.bouncycastle.bcpg.attr.ImageAttribute
 import org.bouncycastle.extensions.plusCertification
@@ -58,6 +58,7 @@ class OpenPgpKeyGenerator internal constructor() {
          * @param preferences suite of algorithm preferences and enabled features
          */
         @JvmStatic
+        @JvmOverloads
         fun buildV4Key(
             policy: Policy = PGPainless.getPolicy(),
             creationTime: Date = Date(),
@@ -80,12 +81,12 @@ abstract class DefinePrimaryKey<O : DefineSubkeys<O>>
 internal constructor(val policy: Policy, val creationTime: Date, val preferences: AlgorithmSuite) {
 
     // If set to true, no default direct-key signature will be added to the key
-    internal var skipDefaultDirectKeySignature = false
+    protected var skipDefaultDirectKeySignature = false
 
     // The key flags are set with the setPrimaryKey method
     // It can be reused (e.g. by the v4 builder) to populate direct-key and self-certification
     //  signatures with the intended key flags.
-    internal var keyFlags: List<KeyFlag>? = null
+    protected var keyFlags: List<KeyFlag>? = null
 
     /**
      * Callback to set preferences on the key and user-ids, such as algorithm preferences, features
@@ -93,14 +94,14 @@ internal constructor(val policy: Policy, val creationTime: Date, val preferences
      *
      * @return callback
      */
-    internal abstract fun preferencesSubpackets(): SelfSignatureSubpackets.Callback
+    protected abstract fun preferencesSubpackets(): SelfSignatureSubpackets.Callback
 
     /**
      * Builder-provided subpackets for direct-key signatures.
      *
      * @return callback
      */
-    internal fun directKeySignatureSubpackets() = preferencesSubpackets()
+    protected fun directKeySignatureSubpackets() = preferencesSubpackets()
 
     /**
      * Builder-provided subpackets for UserID binding signatures.
@@ -108,7 +109,9 @@ internal constructor(val policy: Policy, val creationTime: Date, val preferences
      * @param primaryKey primary key
      * @return callback
      */
-    internal abstract fun userIdSubpackets(primaryKey: PGPKeyPair): SelfSignatureSubpackets.Callback
+    protected abstract fun userIdSubpackets(
+        primaryKey: PGPKeyPair
+    ): SelfSignatureSubpackets.Callback
 
     /**
      * Builder-provided subpackets for UserAttribute binding signatures.
@@ -116,7 +119,7 @@ internal constructor(val policy: Policy, val creationTime: Date, val preferences
      * @param primaryKey primary key
      * @return callback
      */
-    internal abstract fun userAttributeSubpackets(
+    protected abstract fun userAttributeSubpackets(
         primaryKey: PGPKeyPair
     ): SelfSignatureSubpackets.Callback
 
@@ -125,14 +128,14 @@ internal constructor(val policy: Policy, val creationTime: Date, val preferences
      *
      * @return primary key
      */
-    internal abstract fun generatePrimaryKey(type: KeyType, creationTime: Date): PGPKeyPair
+    protected abstract fun generatePrimaryKey(type: KeyType, creationTime: Date): PGPKeyPair
 
     /**
      * Apply a [ApplyToPrimaryKey] instance to the given [PGPKeyPair].
      *
      * @return altered [PGPKeyPair]
      */
-    internal abstract fun applyToPrimaryKey(
+    protected abstract fun applyToPrimaryKey(
         primaryKey: PGPKeyPair,
         applyToPrimaryKey: (ApplyToPrimaryKey.() -> PGPKeyPair)?
     ): PGPKeyPair
@@ -154,11 +157,22 @@ internal constructor(val policy: Policy, val creationTime: Date, val preferences
      * @param applyToPrimaryKey function block to apply to the primary key
      * @return subkey builder
      */
-    abstract fun setPrimaryKey(
+    @JvmOverloads
+    fun setPrimaryKey(
         type: KeyType,
         keyFlags: List<KeyFlag>? = listOf(KeyFlag.CERTIFY_OTHER),
         creationTime: Date = this.creationTime,
         applyToPrimaryKey: (ApplyToPrimaryKey.() -> PGPKeyPair)? = null
+    ): O = doSetPrimaryKey(type, keyFlags, creationTime, applyToPrimaryKey)
+
+    fun setPrimaryKey(type: KeyType, applyToPrimaryKey: (ApplyToPrimaryKey.() -> PGPKeyPair)?): O =
+        setPrimaryKey(type, listOf(KeyFlag.CERTIFY_OTHER), this.creationTime, applyToPrimaryKey)
+
+    protected abstract fun doSetPrimaryKey(
+        type: KeyType,
+        keyFlags: List<KeyFlag>?,
+        creationTime: Date,
+        applyToPrimaryKey: (ApplyToPrimaryKey.() -> PGPKeyPair)?
     ): O
 
     /**
@@ -166,7 +180,7 @@ internal constructor(val policy: Policy, val creationTime: Date, val preferences
      *
      * @param algorithm hash algorithm
      */
-    internal open fun sanitizeHashAlgorithm(algorithm: HashAlgorithm) {
+    protected open fun sanitizeHashAlgorithm(algorithm: HashAlgorithm) {
         // Do nothing
     }
 
@@ -176,8 +190,195 @@ internal constructor(val policy: Policy, val creationTime: Date, val preferences
      * @param bindingTime signature creation time
      * @param primaryKey primary key
      */
-    internal open fun sanitizeBindingTime(bindingTime: Date, primaryKey: PGPKeyPair) {
+    protected open fun sanitizeBindingTime(bindingTime: Date, primaryKey: PGPKeyPair) {
         // Do nothing
+    }
+
+    /**
+     * Function that can be applied to the primary key.
+     *
+     * @param keyPair primary key pair
+     * @param builder builder instance that generated the primary key
+     */
+    abstract class ApplyToPrimaryKey
+    internal constructor(var keyPair: PGPKeyPair, val builder: DefinePrimaryKey<*>) {
+
+        /**
+         * Add a UserID to the primary key.
+         *
+         * @param userId UserID to be bound to the primary key
+         * @param subpacketsCallback callback to modify the binding signatures subpackets Note: The
+         *   user-provided changes are applied over builder-provided subpackets
+         * @param certificationType type of the certification signature. Defaults to
+         *   [CertificationType.POSITIVE]
+         * @param hashAlgorithm hash algorithm to be used during signature calculation
+         * @param bindingTime creation time of the binding signature
+         * @return modified key pair
+         */
+        fun addUserId(
+            userId: CharSequence,
+            subpacketsCallback: SelfSignatureSubpackets.Callback = builder.preferencesSubpackets(),
+            certificationType: CertificationType = CertificationType.POSITIVE,
+            hashAlgorithm: HashAlgorithm =
+                builder.policy.certificationSignatureHashAlgorithmPolicy.defaultHashAlgorithm,
+            bindingTime: Date = builder.creationTime
+        ): PGPKeyPair {
+            builder.sanitizeHashAlgorithm(hashAlgorithm)
+            builder.sanitizeBindingTime(bindingTime, keyPair)
+
+            val callback = builder.userIdSubpackets(keyPair).then(subpacketsCallback)
+            return doAddUserId(userId, callback, certificationType, hashAlgorithm, bindingTime)
+        }
+
+        /**
+         * Actually add a UserID to the primary key.
+         *
+         * @param userId UserId
+         * @param subpacketsCallback callback to modify the subpackets of the binding signature with
+         * @param certificationType signature type of the binding signature (certification level)
+         * @param hashAlgorithm hash algorithm to be used to calculate the signature
+         * @param bindingTime creation time of the binding signature
+         * @return modified primary key
+         */
+        protected abstract fun doAddUserId(
+            userId: CharSequence,
+            subpacketsCallback: SelfSignatureSubpackets.Callback,
+            certificationType: CertificationType,
+            hashAlgorithm: HashAlgorithm,
+            bindingTime: Date
+        ): PGPKeyPair
+
+        /**
+         * Add a UserAttribute to the primary key.
+         *
+         * @param userAttribute UserAttribute to be bound to the primary key
+         * @param subpacketsCallback user-provided callback to modify the binding signature
+         *   subpackets Note: The user-provided changes are applied over subpackets provided by the
+         *   builder
+         * @param certificationType type of the binding signature. Default to
+         *   [CertificationType.POSITIVE]
+         * @param hashAlgorithm hash algorithm to be used during signature calculation
+         * @param bindingTime creation time of the binding signature
+         * @return modified key pair
+         */
+        fun addUserAttribute(
+            userAttribute: PGPUserAttributeSubpacketVector,
+            subpacketsCallback: SelfSignatureSubpackets.Callback = SelfSignatureSubpackets.nop(),
+            certificationType: CertificationType = CertificationType.POSITIVE,
+            hashAlgorithm: HashAlgorithm =
+                builder.policy.certificationSignatureHashAlgorithmPolicy.defaultHashAlgorithm,
+            bindingTime: Date = builder.creationTime
+        ): PGPKeyPair {
+            builder.sanitizeHashAlgorithm(hashAlgorithm)
+            builder.sanitizeBindingTime(bindingTime, keyPair)
+
+            val callback = builder.userAttributeSubpackets(keyPair).then(subpacketsCallback)
+            return doAddUserAttribute(
+                userAttribute, callback, certificationType, hashAlgorithm, bindingTime)
+        }
+
+        /**
+         * Actually add the UserAttribute to the primary key.
+         *
+         * @param userAttribute UserAttribute to be added to the primary key
+         * @param subpacketsCallback callback to modify the subpackets of the binding signature with
+         * @param certificationType signature type (certification level)
+         * @param hashAlgorithm hash algorithm to calculate the binding signature with
+         * @param bindingTime creation time of the binding signature
+         * @return modified primary key
+         */
+        protected abstract fun doAddUserAttribute(
+            userAttribute: PGPUserAttributeSubpacketVector,
+            subpacketsCallback: SelfSignatureSubpackets.Callback,
+            certificationType: CertificationType,
+            hashAlgorithm: HashAlgorithm,
+            bindingTime: Date
+        ): PGPKeyPair
+
+        /**
+         * Add a JPEG image as UserAttribute to the primary key. This may for example be a profile
+         * picture of the key owner.
+         *
+         * @param jpegInputStream input stream containing the JPEG encoded image
+         * @param subpacketsCallback callback to modify the subpackets of the binding signature
+         * @param certificationType type of the binding signature. Defaults to
+         *   [CertificationType.POSITIVE]
+         * @param hashAlgorithm hash algorithm to be used during signature calculation
+         * @param bindingTime creation time of the binding signature
+         * @return modified key pair
+         */
+        fun addImageAttribute(
+            jpegInputStream: InputStream,
+            subpacketsCallback: SelfSignatureSubpackets.Callback = SelfSignatureSubpackets.nop(),
+            certificationType: CertificationType = CertificationType.POSITIVE,
+            hashAlgorithm: HashAlgorithm =
+                builder.policy.certificationSignatureHashAlgorithmPolicy.defaultHashAlgorithm,
+            bindingTime: Date = builder.creationTime
+        ): PGPKeyPair =
+            addUserAttribute(
+                PGPUserAttributeSubpacketVectorGenerator()
+                    .apply {
+                        setImageAttribute(ImageAttribute.JPEG, Streams.readAll(jpegInputStream))
+                    }
+                    .generate(),
+                subpacketsCallback,
+                certificationType,
+                hashAlgorithm,
+                bindingTime)
+
+        /**
+         * Add a DirectKeySignature to the primary key. Such a signature usually carries information
+         * that applies to the whole OpenPGP key, such as algorithm preferences etc.
+         *
+         * @param subpacketsCallback callback to modify the direct-key signatures subpackets with
+         *   Note, that the user-provided changed subpackets are applied over builder-provided
+         *   subpackets.
+         * @param hashAlgorithm hash algorithm to calculate the signature with
+         * @param bindingTime signature creation time
+         * @return modified primary key
+         */
+        fun addDirectKeySignature(
+            subpacketsCallback: SelfSignatureSubpackets.Callback = SelfSignatureSubpackets.nop(),
+            hashAlgorithm: HashAlgorithm =
+                builder.policy.certificationSignatureHashAlgorithmPolicy.defaultHashAlgorithm,
+            bindingTime: Date = builder.creationTime
+        ): PGPKeyPair {
+            builder.sanitizeHashAlgorithm(hashAlgorithm)
+            builder.sanitizeBindingTime(bindingTime, keyPair)
+
+            skipDefaultSignature()
+            val callback = builder.directKeySignatureSubpackets().then(subpacketsCallback)
+            return doAddDirectKeySignature(callback, hashAlgorithm, bindingTime)
+        }
+
+        /**
+         * Actually add a direct-key signature to the primary key.
+         *
+         * @param subpacketsCallback callback to modify the direct-key signatures subpackets with
+         * @param hashAlgorithm hash algorithm to calculate the signature with
+         * @param bindingTime creation time for the direct-key signature
+         * @return modified primary key
+         */
+        protected abstract fun doAddDirectKeySignature(
+            subpacketsCallback: SelfSignatureSubpackets.Callback,
+            hashAlgorithm: HashAlgorithm,
+            bindingTime: Date
+        ): PGPKeyPair
+
+        /** Do not add the default direct-key signature automatically. */
+        fun skipDefaultSignature(): PGPKeyPair {
+            builder.skipDefaultDirectKeySignature = true
+            return keyPair
+        }
+
+        /**
+         * Schedule the execution of another [ApplyToPrimaryKey] function instance right after this
+         * one has been executed.
+         *
+         * @param other second instance
+         * @return modified key pair after this and [other] have been executed
+         */
+        abstract fun then(other: (ApplyToPrimaryKey.() -> PGPKeyPair)?): PGPKeyPair
     }
 }
 
@@ -229,6 +430,7 @@ internal constructor(
      * @param applyToSubkey function to apply to the subkey. Used to add binding signatures.
      * @return this
      */
+    @JvmOverloads
     fun addSubkey(
         type: KeyType,
         creationTime: Date = this.creationTime,
@@ -249,7 +451,7 @@ internal constructor(
      * @param applyToSubkey function block
      * @return modified subkey
      */
-    internal abstract fun applyToSubkey(
+    protected abstract fun applyToSubkey(
         subkey: PGPKeyPair,
         applyToSubkey: (ApplyToSubkey.() -> PGPKeyPair)?
     ): PGPKeyPair
@@ -260,7 +462,7 @@ internal constructor(
      * @param type subkey type
      * @param creationTime subkey creation time
      */
-    internal abstract fun generateSubkey(
+    protected abstract fun generateSubkey(
         type: KeyType,
         creationTime: Date = this.creationTime
     ): PGPKeyPair
@@ -271,9 +473,7 @@ internal constructor(
      * @param protector protector to protect the OpenPGP key's secret components with
      * @return finished [PGPSecretKeyRing]
      */
-    abstract fun build(
-        protector: SecretKeyRingProtector = SecretKeyRingProtector.unprotectedKeys()
-    ): PGPSecretKeyRing
+    abstract fun build(protector: SecretKeyRingProtector): PGPSecretKeyRing
 
     /**
      * Finish the key generation and return the OpenPGP [PGPSecretKeyRing] protected with the given
@@ -284,12 +484,14 @@ internal constructor(
      */
     fun build(passphrase: Passphrase) = build(SecretKeyRingProtector.unlockAnyKeyWith(passphrase))
 
+    fun build() = build(SecretKeyRingProtector.unprotectedKeys())
+
     /**
      * Sanitize the [HashAlgorithm] used for creating a signature by comparing it to the [Policy].
      *
      * @param algorithm hash algorithm
      */
-    internal open fun sanitizeHashAlgorithm(algorithm: HashAlgorithm) {
+    protected open fun sanitizeHashAlgorithm(algorithm: HashAlgorithm) {
         // Do nothing
     }
 
@@ -299,7 +501,7 @@ internal constructor(
      * @param bindingTime creation time of the binding signature
      * @param subkey subkey
      */
-    internal open fun sanitizeBindingTime(bindingTime: Date, subkey: PGPKeyPair) {
+    protected open fun sanitizeBindingTime(bindingTime: Date, subkey: PGPKeyPair) {
         // Do nothing
     }
 
@@ -309,8 +511,52 @@ internal constructor(
      * @param subkeyCreationTime creation time of the subkey
      * @param primaryKey primary key
      */
-    internal open fun sanitizeSubkeyCreationTime(subkeyCreationTime: Date, primaryKey: PGPKeyPair) {
+    protected open fun sanitizeSubkeyCreationTime(
+        subkeyCreationTime: Date,
+        primaryKey: PGPKeyPair
+    ) {
         // Do nothing
+    }
+
+    /**
+     * Function that can be applied to subkeys.
+     *
+     * @param primaryKey primary key pair
+     * @param subkey subkey pair
+     * @param builder builder instance that generated the subkey
+     */
+    abstract class ApplyToSubkey
+    internal constructor(
+        val primaryKey: PGPKeyPair,
+        var subkey: PGPKeyPair,
+        val builder: DefineSubkeys<*>
+    ) {
+
+        /**
+         * Add a binding signature to the subkey.
+         *
+         * @param subpacketsCallback callback to modify the binding signatures subpackets
+         * @param hashAlgorithm hash algorithm to be used during signature calculation
+         * @param bindingTime creation time of the binding signature
+         * @return modified subkey pair
+         */
+        fun addBindingSignature(
+            subpacketsCallback: SelfSignatureSubpackets.Callback = SelfSignatureSubpackets.nop(),
+            hashAlgorithm: HashAlgorithm =
+                builder.policy.certificationSignatureHashAlgorithmPolicy.defaultHashAlgorithm,
+            bindingTime: Date = subkey.publicKey.creationTime
+        ): PGPKeyPair {
+            builder.sanitizeHashAlgorithm(hashAlgorithm)
+            builder.sanitizeBindingTime(bindingTime, subkey)
+
+            return doAddBindingSignature(subpacketsCallback, hashAlgorithm, bindingTime)
+        }
+
+        abstract fun doAddBindingSignature(
+            subpacketsCallback: SelfSignatureSubpackets.Callback,
+            hashAlgorithm: HashAlgorithm,
+            bindingTime: Date
+        ): PGPKeyPair
     }
 }
 
@@ -431,7 +677,7 @@ internal constructor(policy: Policy, creationTime: Date, preferences: AlgorithmS
                 })
     }
 
-    override fun setPrimaryKey(
+    override fun doSetPrimaryKey(
         type: KeyType,
         keyFlags: List<KeyFlag>?,
         creationTime: Date,
@@ -507,7 +753,7 @@ internal constructor(policy: Policy, creationTime: Date, preferences: AlgorithmS
         return preferencesSubpackets()
     }
 
-    override fun setPrimaryKey(
+    override fun doSetPrimaryKey(
         type: KeyType,
         keyFlags: List<KeyFlag>?,
         creationTime: Date,
@@ -643,192 +889,9 @@ internal constructor(
     }
 }
 
-/**
- * Function that can be applied to the primary key.
- *
- * @param keyPair primary key pair
- * @param builder builder instance that generated the primary key
- */
-abstract class ApplyToPrimaryKey
-internal constructor(var keyPair: PGPKeyPair, val builder: DefinePrimaryKey<*>) {
-
-    /**
-     * Add a UserID to the primary key.
-     *
-     * @param userId UserID to be bound to the primary key
-     * @param subpacketsCallback callback to modify the binding signatures subpackets Note: The
-     *   user-provided changes are applied over builder-provided subpackets
-     * @param certificationType type of the certification signature. Defaults to
-     *   [CertificationType.POSITIVE]
-     * @param hashAlgorithm hash algorithm to be used during signature calculation
-     * @param bindingTime creation time of the binding signature
-     * @return modified key pair
-     */
-    fun addUserId(
-        userId: CharSequence,
-        subpacketsCallback: SelfSignatureSubpackets.Callback = builder.preferencesSubpackets(),
-        certificationType: CertificationType = CertificationType.POSITIVE,
-        hashAlgorithm: HashAlgorithm =
-            builder.policy.certificationSignatureHashAlgorithmPolicy.defaultHashAlgorithm,
-        bindingTime: Date = builder.creationTime
-    ): PGPKeyPair {
-        builder.sanitizeHashAlgorithm(hashAlgorithm)
-        builder.sanitizeBindingTime(bindingTime, keyPair)
-
-        val callback = builder.userIdSubpackets(keyPair).then(subpacketsCallback)
-        return doAddUserId(userId, callback, certificationType, hashAlgorithm, bindingTime)
-    }
-
-    /**
-     * Actually add a UserID to the primary key.
-     *
-     * @param userId UserId
-     * @param subpacketsCallback callback to modify the subpackets of the binding signature with
-     * @param certificationType signature type of the binding signature (certification level)
-     * @param hashAlgorithm hash algorithm to be used to calculate the signature
-     * @param bindingTime creation time of the binding signature
-     * @return modified primary key
-     */
-    internal abstract fun doAddUserId(
-        userId: CharSequence,
-        subpacketsCallback: SelfSignatureSubpackets.Callback,
-        certificationType: CertificationType,
-        hashAlgorithm: HashAlgorithm,
-        bindingTime: Date
-    ): PGPKeyPair
-
-    /**
-     * Add a UserAttribute to the primary key.
-     *
-     * @param userAttribute UserAttribute to be bound to the primary key
-     * @param subpacketsCallback user-provided callback to modify the binding signature subpackets
-     *   Note: The user-provided changes are applied over subpackets provided by the builder
-     * @param certificationType type of the binding signature. Default to
-     *   [CertificationType.POSITIVE]
-     * @param hashAlgorithm hash algorithm to be used during signature calculation
-     * @param bindingTime creation time of the binding signature
-     * @return modified key pair
-     */
-    fun addUserAttribute(
-        userAttribute: PGPUserAttributeSubpacketVector,
-        subpacketsCallback: SelfSignatureSubpackets.Callback = SelfSignatureSubpackets.nop(),
-        certificationType: CertificationType = CertificationType.POSITIVE,
-        hashAlgorithm: HashAlgorithm =
-            builder.policy.certificationSignatureHashAlgorithmPolicy.defaultHashAlgorithm,
-        bindingTime: Date = builder.creationTime
-    ): PGPKeyPair {
-        builder.sanitizeHashAlgorithm(hashAlgorithm)
-        builder.sanitizeBindingTime(bindingTime, keyPair)
-
-        val callback = builder.userAttributeSubpackets(keyPair).then(subpacketsCallback)
-        return doAddUserAttribute(
-            userAttribute, callback, certificationType, hashAlgorithm, bindingTime)
-    }
-
-    /**
-     * Actually add the UserAttribute to the primary key.
-     *
-     * @param userAttribute UserAttribute to be added to the primary key
-     * @param subpacketsCallback callback to modify the subpackets of the binding signature with
-     * @param certificationType signature type (certification level)
-     * @param hashAlgorithm hash algorithm to calculate the binding signature with
-     * @param bindingTime creation time of the binding signature
-     * @return modified primary key
-     */
-    abstract fun doAddUserAttribute(
-        userAttribute: PGPUserAttributeSubpacketVector,
-        subpacketsCallback: SelfSignatureSubpackets.Callback,
-        certificationType: CertificationType,
-        hashAlgorithm: HashAlgorithm,
-        bindingTime: Date
-    ): PGPKeyPair
-
-    /**
-     * Add a JPEG image as UserAttribute to the primary key. This may for example be a profile
-     * picture of the key owner.
-     *
-     * @param jpegInputStream input stream containing the JPEG encoded image
-     * @param subpacketsCallback callback to modify the subpackets of the binding signature
-     * @param certificationType type of the binding signature. Defaults to
-     *   [CertificationType.POSITIVE]
-     * @param hashAlgorithm hash algorithm to be used during signature calculation
-     * @param bindingTime creation time of the binding signature
-     * @return modified key pair
-     */
-    fun addImageAttribute(
-        jpegInputStream: InputStream,
-        subpacketsCallback: SelfSignatureSubpackets.Callback = SelfSignatureSubpackets.nop(),
-        certificationType: CertificationType = CertificationType.POSITIVE,
-        hashAlgorithm: HashAlgorithm =
-            builder.policy.certificationSignatureHashAlgorithmPolicy.defaultHashAlgorithm,
-        bindingTime: Date = builder.creationTime
-    ): PGPKeyPair =
-        addUserAttribute(
-            PGPUserAttributeSubpacketVectorGenerator()
-                .apply { setImageAttribute(ImageAttribute.JPEG, Streams.readAll(jpegInputStream)) }
-                .generate(),
-            subpacketsCallback,
-            certificationType,
-            hashAlgorithm,
-            bindingTime)
-
-    /**
-     * Add a DirectKeySignature to the primary key. Such a signature usually carries information
-     * that applies to the whole OpenPGP key, such as algorithm preferences etc.
-     *
-     * @param subpacketsCallback callback to modify the direct-key signatures subpackets with Note,
-     *   that the user-provided changed subpackets are applied over builder-provided subpackets.
-     * @param hashAlgorithm hash algorithm to calculate the signature with
-     * @param bindingTime signature creation time
-     * @return modified primary key
-     */
-    fun addDirectKeySignature(
-        subpacketsCallback: SelfSignatureSubpackets.Callback = SelfSignatureSubpackets.nop(),
-        hashAlgorithm: HashAlgorithm =
-            builder.policy.certificationSignatureHashAlgorithmPolicy.defaultHashAlgorithm,
-        bindingTime: Date = builder.creationTime
-    ): PGPKeyPair {
-        builder.sanitizeHashAlgorithm(hashAlgorithm)
-        builder.sanitizeBindingTime(bindingTime, keyPair)
-
-        skipDefaultSignature()
-        val callback = builder.directKeySignatureSubpackets().then(subpacketsCallback)
-        return doAddDirectKeySignature(callback, hashAlgorithm, bindingTime)
-    }
-
-    /**
-     * Actually add a direct-key signature to the primary key.
-     *
-     * @param subpacketsCallback callback to modify the direct-key signatures subpackets with
-     * @param hashAlgorithm hash algorithm to calculate the signature with
-     * @param bindingTime creation time for the direct-key signature
-     * @return modified primary key
-     */
-    protected abstract fun doAddDirectKeySignature(
-        subpacketsCallback: SelfSignatureSubpackets.Callback,
-        hashAlgorithm: HashAlgorithm,
-        bindingTime: Date
-    ): PGPKeyPair
-
-    /** Do not add the default direct-key signature automatically. */
-    fun skipDefaultSignature(): PGPKeyPair {
-        builder.skipDefaultDirectKeySignature = true
-        return keyPair
-    }
-
-    /**
-     * Schedule the execution of another [ApplyToPrimaryKey] function instance right after this one
-     * has been executed.
-     *
-     * @param other second instance
-     * @return modified key pair after this and [other] have been executed
-     */
-    abstract fun then(other: (ApplyToPrimaryKey.() -> PGPKeyPair)?): PGPKeyPair
-}
-
 /** Implementation of [ApplyToPrimaryKey] tailored to version 4 OpenPGP keys. */
 class ApplyToPrimaryKeyV4 internal constructor(keyPair: PGPKeyPair, builder: DefinePrimaryKey<*>) :
-    ApplyToPrimaryKey(keyPair, builder) {
+    DefinePrimaryKey.ApplyToPrimaryKey(keyPair, builder) {
 
     override fun doAddUserId(
         userId: CharSequence,
@@ -895,53 +958,12 @@ class ApplyToPrimaryKeyV4 internal constructor(keyPair: PGPKeyPair, builder: Def
         return SelfSignatureSubpackets.applyHashed { setSignatureCreationTime(bindingTime) }
     }
 
-    override fun then(other: (ApplyToPrimaryKey.() -> PGPKeyPair)?): PGPKeyPair {
+    override fun then(other: (DefinePrimaryKey.ApplyToPrimaryKey.() -> PGPKeyPair)?): PGPKeyPair {
         if (other != null) {
             keyPair = ApplyToPrimaryKeyV4(keyPair, builder).other()
         }
         return keyPair
     }
-}
-
-/**
- * Function that can be applied to subkeys.
- *
- * @param primaryKey primary key pair
- * @param subkey subkey pair
- * @param builder builder instance that generated the subkey
- */
-abstract class ApplyToSubkey
-internal constructor(
-    val primaryKey: PGPKeyPair,
-    var subkey: PGPKeyPair,
-    val builder: DefineSubkeys<*>
-) {
-
-    /**
-     * Add a binding signature to the subkey.
-     *
-     * @param subpacketsCallback callback to modify the binding signatures subpackets
-     * @param hashAlgorithm hash algorithm to be used during signature calculation
-     * @param bindingTime creation time of the binding signature
-     * @return modified subkey pair
-     */
-    fun addBindingSignature(
-        subpacketsCallback: SelfSignatureSubpackets.Callback = SelfSignatureSubpackets.nop(),
-        hashAlgorithm: HashAlgorithm =
-            builder.policy.certificationSignatureHashAlgorithmPolicy.defaultHashAlgorithm,
-        bindingTime: Date = subkey.publicKey.creationTime
-    ): PGPKeyPair {
-        builder.sanitizeHashAlgorithm(hashAlgorithm)
-        builder.sanitizeBindingTime(bindingTime, subkey)
-
-        return doAddBindingSignature(subpacketsCallback, hashAlgorithm, bindingTime)
-    }
-
-    abstract fun doAddBindingSignature(
-        subpacketsCallback: SelfSignatureSubpackets.Callback,
-        hashAlgorithm: HashAlgorithm,
-        bindingTime: Date
-    ): PGPKeyPair
 }
 
 /**
@@ -953,7 +975,7 @@ internal constructor(
  */
 class ApplyToSubkeyV4
 internal constructor(primaryKey: PGPKeyPair, subkey: PGPKeyPair, builder: DefineSubkeys<*>) :
-    ApplyToSubkey(primaryKey, subkey, builder) {
+    DefineSubkeys.ApplyToSubkey(primaryKey, subkey, builder) {
 
     override fun doAddBindingSignature(
         subpacketsCallback: SelfSignatureSubpackets.Callback,
