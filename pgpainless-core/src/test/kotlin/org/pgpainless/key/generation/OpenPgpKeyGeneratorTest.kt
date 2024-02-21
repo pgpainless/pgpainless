@@ -103,6 +103,28 @@ class OpenPgpKeyGeneratorTest {
     }
 
     @Test
+    fun `adding signing key will add embedded back-signature`() {
+        val key =
+            OpenPgpKeyGenerator.buildV4Key()
+                .setPrimaryKey(KeyType.EDDSA(EdDSACurve._Ed25519))
+                .addSubkey(KeyType.EDDSA(EdDSACurve._Ed25519)) {
+                    addBindingSignature(
+                        SelfSignatureSubpackets.applyHashed { setKeyFlags(KeyFlag.SIGN_DATA) })
+                }
+                .build()
+
+        assertFalse(
+            key.publicKeys
+                .asSequence()
+                .last()
+                .signatures
+                .next()
+                .hashedSubPackets
+                .embeddedSignatures
+                .isEmpty)
+    }
+
+    @Test
     fun testUnopinionatedV4() {
         // Unopinionated
         OpenPgpKeyGenerator.buildV4Key()
