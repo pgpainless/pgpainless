@@ -138,10 +138,14 @@ internal constructor(val policy: Policy, val creationTime: Date, val preferences
     ): PGPKeyPair
 
     /**
-     * Define the primary key for the OpenPGP key. Example:
+     * Define the primary key for the OpenPGP key.
+     * The [applyToPrimaryKey] function block can be used to add UserIDs and preferences to
+     * the key.
+     * Example:
      * ```
      * setPrimaryKey(KeyType.EDDSA(EdDSACurve._Ed25519)) {
-     *     addUserId("Alice <alice@example.com>")
+     *     addDirectKeySignature(...)
+     *     addUserId("Alice <alice@example.com>") // first user-id is primary
      *     addUserId("Bob <bob@example.com>")
      * }
      * ```
