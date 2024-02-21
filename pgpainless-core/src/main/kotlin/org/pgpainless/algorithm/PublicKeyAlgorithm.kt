@@ -61,6 +61,18 @@ enum class PublicKeyAlgorithm(
 
     /** Digital Signature Algorithm based on twisted Edwards Curves. */
     EDDSA_LEGACY(22, true, false),
+
+    /** X25519. */
+    X25519(25, false, true),
+
+    /** X448. */
+    X448(26, false, true),
+
+    /** Ed25519. Note: Legacy OpenPGP uses [EDDSA_LEGACY] instead. */
+    Ed25519(27, true, false),
+
+    /** Ed448. */
+    Ed448(28, true, false),
     ;
 
     fun isSigningCapable(): Boolean = signingCapable
