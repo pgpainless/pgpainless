@@ -16,7 +16,7 @@ import org.pgpainless.key.generation.type.eddsa.EdDSACurve
 
 /**
  * For secret keys of types [PublicKeyAlgorithm.ECDSA], [PublicKeyAlgorithm.ECDH] and
- * [PublicKeyAlgorithm.EDDSA], this method returns the name of the underlying elliptic curve.
+ * [PublicKeyAlgorithm.EDDSA_LEGACY], this method returns the name of the underlying elliptic curve.
  *
  * For other key types or unknown curves, this method throws an [IllegalArgumentException].
  *
@@ -28,7 +28,7 @@ fun PGPPublicKey.getCurveName(): String {
             when (it) {
                 PublicKeyAlgorithm.ECDSA -> publicKeyPacket.key as ECDSAPublicBCPGKey
                 PublicKeyAlgorithm.ECDH -> publicKeyPacket.key as ECDHPublicBCPGKey
-                PublicKeyAlgorithm.EDDSA -> publicKeyPacket.key as EdDSAPublicBCPGKey
+                PublicKeyAlgorithm.EDDSA_LEGACY -> publicKeyPacket.key as EdDSAPublicBCPGKey
                 else -> throw IllegalArgumentException("No an elliptic curve public key ($it).")
             }
         }

@@ -74,9 +74,9 @@ public class GenerateKeys {
         KeyRingInfo keyInfo = new KeyRingInfo(secretKey);
         assertEquals(3, keyInfo.getSecretKeys().size());
         assertEquals(userId, keyInfo.getPrimaryUserId());
-        assertEquals(PublicKeyAlgorithm.EDDSA.getAlgorithmId(),
+        assertEquals(PublicKeyAlgorithm.EDDSA_LEGACY.getAlgorithmId(),
                 keyInfo.getPublicKey().getAlgorithm());
-        assertEquals(PublicKeyAlgorithm.EDDSA.getAlgorithmId(),
+        assertEquals(PublicKeyAlgorithm.EDDSA_LEGACY.getAlgorithmId(),
                 keyInfo.getSigningSubkeys().get(0).getAlgorithm());
         assertEquals(PublicKeyAlgorithm.ECDH.getAlgorithmId(),
                 keyInfo.getEncryptionSubkeys(EncryptionPurpose.ANY).get(0).getAlgorithm());

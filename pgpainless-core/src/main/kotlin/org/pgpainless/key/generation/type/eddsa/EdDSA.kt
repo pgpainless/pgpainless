@@ -10,7 +10,7 @@ import org.pgpainless.key.generation.type.KeyType
 
 class EdDSA private constructor(val curve: EdDSACurve) : KeyType {
     override val name = "EdDSA"
-    override val algorithm = PublicKeyAlgorithm.EDDSA
+    override val algorithm = PublicKeyAlgorithm.EDDSA_LEGACY
     override val bitStrength = curve.bitStrength
     override val algorithmSpec = ECNamedCurveGenParameterSpec(curve.curveName)
 

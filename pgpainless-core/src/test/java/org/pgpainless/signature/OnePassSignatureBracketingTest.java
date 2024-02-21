@@ -144,7 +144,7 @@ public class OnePassSignatureBracketingTest {
             // 4 is hash algo
             assertEquals(HashAlgorithm.SHA512.getAlgorithmId(), encoded[4]);
             // 5 is public key algo
-            assertEquals(PublicKeyAlgorithm.EDDSA.getAlgorithmId(), encoded[5]);
+            assertEquals(PublicKeyAlgorithm.EDDSA_LEGACY.getAlgorithmId(), encoded[5]);
             // [6,7,8,9,10,11,12,13] are key-id
 
             boolean last = i == signatures.size() - 1;

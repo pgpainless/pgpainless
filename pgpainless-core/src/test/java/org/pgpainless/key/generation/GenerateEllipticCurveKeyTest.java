@@ -38,7 +38,7 @@ public class GenerateEllipticCurveKeyTest {
                 .addUserId(UserId.onlyEmail("alice@wonderland.lit").toString())
                 .build();
 
-        assertEquals(PublicKeyAlgorithm.EDDSA.getAlgorithmId(), keyRing.getPublicKey().getAlgorithm());
+        assertEquals(PublicKeyAlgorithm.EDDSA_LEGACY.getAlgorithmId(), keyRing.getPublicKey().getAlgorithm());
         UnlockSecretKey.unlockSecretKey(keyRing.getSecretKey(), SecretKeyRingProtector.unprotectedKeys());
     }
 }
