@@ -8,12 +8,6 @@ import java.lang.Exception
 import java.util.Date
 import openpgp.formatUTC
 import openpgp.openPgpKeyId
-import org.bouncycastle.extensions.fingerprint
-import org.bouncycastle.extensions.isHardRevocation
-import org.bouncycastle.extensions.isOfType
-import org.bouncycastle.extensions.publicKeyAlgorithm
-import org.bouncycastle.extensions.signatureExpirationDate
-import org.bouncycastle.extensions.signatureHashAlgorithm
 import org.bouncycastle.openpgp.PGPException
 import org.bouncycastle.openpgp.PGPPublicKey
 import org.bouncycastle.openpgp.PGPSignature
@@ -21,6 +15,12 @@ import org.bouncycastle.openpgp.PGPUserAttributeSubpacketVector
 import org.pgpainless.algorithm.KeyFlag
 import org.pgpainless.algorithm.SignatureSubpacket
 import org.pgpainless.algorithm.SignatureType
+import org.pgpainless.bouncycastle.extensions.fingerprint
+import org.pgpainless.bouncycastle.extensions.isHardRevocation
+import org.pgpainless.bouncycastle.extensions.isOfType
+import org.pgpainless.bouncycastle.extensions.publicKeyAlgorithm
+import org.pgpainless.bouncycastle.extensions.signatureExpirationDate
+import org.pgpainless.bouncycastle.extensions.signatureHashAlgorithm
 import org.pgpainless.exception.SignatureValidationException
 import org.pgpainless.implementation.ImplementationFactory
 import org.pgpainless.key.OpenPgpFingerprint

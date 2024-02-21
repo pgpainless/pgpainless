@@ -10,9 +10,6 @@ import javax.annotation.Nonnull
 import kotlin.NoSuchElementException
 import openpgp.openPgpKeyId
 import org.bouncycastle.bcpg.sig.KeyExpirationTime
-import org.bouncycastle.extensions.getKeyExpirationDate
-import org.bouncycastle.extensions.publicKeyAlgorithm
-import org.bouncycastle.extensions.requirePublicKey
 import org.bouncycastle.openpgp.*
 import org.pgpainless.PGPainless
 import org.pgpainless.PGPainless.Companion.inspectKeyRing
@@ -21,6 +18,9 @@ import org.pgpainless.algorithm.Feature
 import org.pgpainless.algorithm.KeyFlag
 import org.pgpainless.algorithm.SignatureType
 import org.pgpainless.algorithm.negotiation.HashAlgorithmNegotiator
+import org.pgpainless.bouncycastle.extensions.getKeyExpirationDate
+import org.pgpainless.bouncycastle.extensions.publicKeyAlgorithm
+import org.pgpainless.bouncycastle.extensions.requirePublicKey
 import org.pgpainless.implementation.ImplementationFactory
 import org.pgpainless.key.OpenPgpFingerprint
 import org.pgpainless.key.generation.KeyRingBuilder

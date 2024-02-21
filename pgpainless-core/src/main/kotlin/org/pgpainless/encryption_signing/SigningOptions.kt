@@ -5,7 +5,6 @@
 package org.pgpainless.encryption_signing
 
 import java.util.*
-import org.bouncycastle.extensions.unlock
 import org.bouncycastle.openpgp.*
 import org.pgpainless.PGPainless.Companion.getPolicy
 import org.pgpainless.PGPainless.Companion.inspectKeyRing
@@ -13,6 +12,7 @@ import org.pgpainless.algorithm.DocumentSignatureType
 import org.pgpainless.algorithm.HashAlgorithm
 import org.pgpainless.algorithm.PublicKeyAlgorithm.Companion.requireFromId
 import org.pgpainless.algorithm.negotiation.HashAlgorithmNegotiator.Companion.negotiateSignatureHashAlgorithm
+import org.pgpainless.bouncycastle.extensions.unlock
 import org.pgpainless.exception.KeyException
 import org.pgpainless.exception.KeyException.*
 import org.pgpainless.implementation.ImplementationFactory

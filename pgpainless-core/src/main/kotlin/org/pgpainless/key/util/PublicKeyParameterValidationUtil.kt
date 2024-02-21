@@ -9,7 +9,6 @@ import java.io.IOException
 import java.math.BigInteger
 import java.security.SecureRandom
 import org.bouncycastle.bcpg.*
-import org.bouncycastle.extensions.publicKeyAlgorithm
 import org.bouncycastle.openpgp.*
 import org.bouncycastle.util.Arrays
 import org.bouncycastle.util.io.Streams
@@ -17,6 +16,7 @@ import org.pgpainless.algorithm.HashAlgorithm
 import org.pgpainless.algorithm.PublicKeyAlgorithm.Companion.requireFromId
 import org.pgpainless.algorithm.SignatureType
 import org.pgpainless.algorithm.SymmetricKeyAlgorithm
+import org.pgpainless.bouncycastle.extensions.publicKeyAlgorithm
 import org.pgpainless.exception.KeyIntegrityException
 import org.pgpainless.implementation.ImplementationFactory.Companion.getInstance
 

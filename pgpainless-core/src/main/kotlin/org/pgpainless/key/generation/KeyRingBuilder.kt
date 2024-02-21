@@ -7,7 +7,6 @@ package org.pgpainless.key.generation
 import java.io.IOException
 import java.security.KeyPairGenerator
 import java.util.*
-import org.bouncycastle.extensions.unlock
 import org.bouncycastle.openpgp.*
 import org.bouncycastle.openpgp.operator.PBESecretKeyDecryptor
 import org.bouncycastle.openpgp.operator.PBESecretKeyEncryptor
@@ -17,6 +16,7 @@ import org.bouncycastle.util.Strings
 import org.pgpainless.PGPainless
 import org.pgpainless.algorithm.KeyFlag
 import org.pgpainless.algorithm.SignatureType
+import org.pgpainless.bouncycastle.extensions.unlock
 import org.pgpainless.implementation.ImplementationFactory
 import org.pgpainless.policy.Policy
 import org.pgpainless.provider.ProviderFactory

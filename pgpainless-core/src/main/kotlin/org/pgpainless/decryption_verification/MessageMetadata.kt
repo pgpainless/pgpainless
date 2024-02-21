@@ -6,13 +6,13 @@ package org.pgpainless.decryption_verification
 
 import java.util.*
 import javax.annotation.Nonnull
-import org.bouncycastle.extensions.matches
 import org.bouncycastle.openpgp.PGPKeyRing
 import org.bouncycastle.openpgp.PGPLiteralData
 import org.pgpainless.algorithm.CompressionAlgorithm
 import org.pgpainless.algorithm.StreamEncoding
 import org.pgpainless.algorithm.SymmetricKeyAlgorithm
 import org.pgpainless.authentication.CertificateAuthority
+import org.pgpainless.bouncycastle.extensions.matches
 import org.pgpainless.exception.MalformedOpenPgpMessageException
 import org.pgpainless.key.OpenPgpFingerprint
 import org.pgpainless.key.SubkeyIdentifier

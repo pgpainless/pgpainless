@@ -5,7 +5,6 @@
 package org.pgpainless.encryption_signing
 
 import java.security.MessageDigest
-import org.bouncycastle.extensions.unlock
 import org.bouncycastle.openpgp.PGPException
 import org.bouncycastle.openpgp.PGPPrivateKey
 import org.bouncycastle.openpgp.PGPSecretKeyRing
@@ -13,6 +12,7 @@ import org.bouncycastle.openpgp.PGPSignature
 import org.bouncycastle.openpgp.PGPSignatureGenerator
 import org.pgpainless.PGPainless
 import org.pgpainless.algorithm.SignatureType
+import org.pgpainless.bouncycastle.extensions.unlock
 import org.pgpainless.key.protection.SecretKeyRingProtector
 
 class BcHashContextSigner {

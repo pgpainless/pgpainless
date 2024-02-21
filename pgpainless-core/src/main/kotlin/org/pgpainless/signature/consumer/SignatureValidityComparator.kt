@@ -4,8 +4,8 @@
 
 package org.pgpainless.signature.consumer
 
-import org.bouncycastle.extensions.isHardRevocation
 import org.bouncycastle.openpgp.PGPSignature
+import org.pgpainless.bouncycastle.extensions.isHardRevocation
 
 /**
  * Comparator which sorts signatures based on an ordering and on revocation hardness.

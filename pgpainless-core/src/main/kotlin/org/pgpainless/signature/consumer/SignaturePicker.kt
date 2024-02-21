@@ -5,13 +5,13 @@
 package org.pgpainless.signature.consumer
 
 import java.util.Date
-import org.bouncycastle.extensions.getPublicKeyFor
-import org.bouncycastle.extensions.isExpired
-import org.bouncycastle.extensions.wasIssuedBy
 import org.bouncycastle.openpgp.PGPKeyRing
 import org.bouncycastle.openpgp.PGPPublicKey
 import org.bouncycastle.openpgp.PGPSignature
 import org.pgpainless.algorithm.SignatureType
+import org.pgpainless.bouncycastle.extensions.getPublicKeyFor
+import org.pgpainless.bouncycastle.extensions.isExpired
+import org.pgpainless.bouncycastle.extensions.wasIssuedBy
 import org.pgpainless.exception.SignatureValidationException
 import org.pgpainless.policy.Policy
 

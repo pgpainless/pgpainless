@@ -9,10 +9,10 @@ import kotlin.jvm.Throws
 import openpgp.openPgpKeyId
 import org.bouncycastle.bcpg.S2K
 import org.bouncycastle.bcpg.SecretKeyPacket
-import org.bouncycastle.extensions.certificate
-import org.bouncycastle.extensions.requireSecretKey
 import org.bouncycastle.openpgp.*
 import org.bouncycastle.util.Strings
+import org.pgpainless.bouncycastle.extensions.certificate
+import org.pgpainless.bouncycastle.extensions.requireSecretKey
 import org.pgpainless.exception.MissingPassphraseException
 import org.pgpainless.implementation.ImplementationFactory
 import org.pgpainless.key.protection.SecretKeyRingProtector

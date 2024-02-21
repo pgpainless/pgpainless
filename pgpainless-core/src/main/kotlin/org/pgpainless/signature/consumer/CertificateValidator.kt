@@ -7,13 +7,13 @@ package org.pgpainless.signature.consumer
 import java.io.InputStream
 import java.util.*
 import openpgp.openPgpKeyId
-import org.bouncycastle.extensions.issuerKeyId
 import org.bouncycastle.openpgp.PGPPublicKey
 import org.bouncycastle.openpgp.PGPPublicKeyRing
 import org.bouncycastle.openpgp.PGPSignature
 import org.pgpainless.PGPainless
 import org.pgpainless.algorithm.KeyFlag
 import org.pgpainless.algorithm.SignatureType
+import org.pgpainless.bouncycastle.extensions.issuerKeyId
 import org.pgpainless.exception.SignatureValidationException
 import org.pgpainless.key.util.KeyRingUtils
 import org.pgpainless.policy.Policy

@@ -2,7 +2,7 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
-package org.bouncycastle.extensions
+package org.pgpainless.bouncycastle.extensions
 
 import org.bouncycastle.asn1.gnu.GNUObjectIdentifiers
 import org.bouncycastle.bcpg.ECDHPublicBCPGKey

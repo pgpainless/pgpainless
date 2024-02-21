@@ -4,12 +4,12 @@
 
 package org.pgpainless.key.info
 
-import org.bouncycastle.extensions.getCurveName
-import org.bouncycastle.extensions.hasDummyS2K
-import org.bouncycastle.extensions.isDecrypted
-import org.bouncycastle.extensions.isEncrypted
 import org.bouncycastle.openpgp.PGPPublicKey
 import org.bouncycastle.openpgp.PGPSecretKey
+import org.pgpainless.bouncycastle.extensions.getCurveName
+import org.pgpainless.bouncycastle.extensions.hasDummyS2K
+import org.pgpainless.bouncycastle.extensions.isDecrypted
+import org.pgpainless.bouncycastle.extensions.isEncrypted
 
 @Deprecated("Deprecated in favor of extension functions to PGPSecretKey and PGPPublicKey.")
 class KeyInfo private constructor(val secretKey: PGPSecretKey?, val publicKey: PGPPublicKey) {

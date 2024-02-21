@@ -7,12 +7,12 @@ package org.pgpainless.key.protection
 
 import kotlin.jvm.Throws
 import openpgp.openPgpKeyId
-import org.bouncycastle.extensions.isEncrypted
 import org.bouncycastle.openpgp.PGPException
 import org.bouncycastle.openpgp.PGPPrivateKey
 import org.bouncycastle.openpgp.PGPSecretKey
 import org.bouncycastle.openpgp.operator.PBESecretKeyDecryptor
 import org.pgpainless.PGPainless
+import org.pgpainless.bouncycastle.extensions.isEncrypted
 import org.pgpainless.exception.KeyIntegrityException
 import org.pgpainless.exception.WrongPassphraseException
 import org.pgpainless.key.util.PublicKeyParameterValidationUtil

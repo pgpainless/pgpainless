@@ -2,7 +2,7 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
-package org.bouncycastle.extensions
+package org.pgpainless.bouncycastle.extensions
 
 import org.bouncycastle.bcpg.S2K
 import org.bouncycastle.openpgp.PGPException

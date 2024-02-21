@@ -5,13 +5,13 @@
 package org.pgpainless.encryption_signing
 
 import java.util.*
-import org.bouncycastle.extensions.matches
 import org.bouncycastle.openpgp.PGPLiteralData
 import org.bouncycastle.openpgp.PGPPublicKeyRing
 import org.bouncycastle.openpgp.PGPSignature
 import org.pgpainless.algorithm.CompressionAlgorithm
 import org.pgpainless.algorithm.StreamEncoding
 import org.pgpainless.algorithm.SymmetricKeyAlgorithm
+import org.pgpainless.bouncycastle.extensions.matches
 import org.pgpainless.key.SubkeyIdentifier
 import org.pgpainless.util.MultiMap
 

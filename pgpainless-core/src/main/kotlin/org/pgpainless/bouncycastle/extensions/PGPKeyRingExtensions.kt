@@ -2,7 +2,7 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
-package org.bouncycastle.extensions
+package org.pgpainless.bouncycastle.extensions
 
 import openpgp.openPgpKeyId
 import org.bouncycastle.openpgp.PGPKeyRing

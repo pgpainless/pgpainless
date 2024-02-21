@@ -9,10 +9,10 @@ import java.io.InputStream
 import java.util.*
 import openpgp.plusSeconds
 import org.bouncycastle.bcpg.sig.KeyExpirationTime
-import org.bouncycastle.extensions.*
 import org.bouncycastle.openpgp.*
 import org.bouncycastle.util.encoders.Hex
 import org.bouncycastle.util.io.Streams
+import org.pgpainless.bouncycastle.extensions.*
 import org.pgpainless.implementation.ImplementationFactory
 import org.pgpainless.key.OpenPgpFingerprint
 import org.pgpainless.key.util.RevocationAttributes.Reason

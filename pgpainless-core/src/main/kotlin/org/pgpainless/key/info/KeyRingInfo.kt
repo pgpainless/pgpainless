@@ -6,10 +6,10 @@ package org.pgpainless.key.info
 
 import java.util.*
 import openpgp.openPgpKeyId
-import org.bouncycastle.extensions.*
 import org.bouncycastle.openpgp.*
 import org.pgpainless.PGPainless
 import org.pgpainless.algorithm.*
+import org.pgpainless.bouncycastle.extensions.*
 import org.pgpainless.exception.KeyException.UnboundUserIdException
 import org.pgpainless.key.OpenPgpFingerprint
 import org.pgpainless.key.SubkeyIdentifier

@@ -5,10 +5,10 @@
 package org.pgpainless.key.protection.fixes
 
 import org.bouncycastle.bcpg.SecretKeyPacket
-import org.bouncycastle.extensions.unlock
 import org.bouncycastle.openpgp.PGPSecretKey
 import org.bouncycastle.openpgp.PGPSecretKeyRing
 import org.pgpainless.algorithm.HashAlgorithm
+import org.pgpainless.bouncycastle.extensions.unlock
 import org.pgpainless.exception.WrongPassphraseException
 import org.pgpainless.implementation.ImplementationFactory
 import org.pgpainless.key.protection.SecretKeyRingProtector

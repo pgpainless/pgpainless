@@ -7,9 +7,9 @@ package org.pgpainless.decryption_verification
 import java.io.IOException
 import java.io.InputStream
 import java.util.*
-import org.bouncycastle.extensions.getPublicKeyFor
 import org.bouncycastle.openpgp.*
 import org.bouncycastle.openpgp.operator.PublicKeyDataDecryptorFactory
+import org.pgpainless.bouncycastle.extensions.getPublicKeyFor
 import org.pgpainless.decryption_verification.cleartext_signatures.InMemoryMultiPassStrategy
 import org.pgpainless.decryption_verification.cleartext_signatures.MultiPassStrategy
 import org.pgpainless.key.SubkeyIdentifier
