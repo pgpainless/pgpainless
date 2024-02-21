@@ -414,4 +414,29 @@ class OpenPgpKeyGeneratorTest {
             .setPrimaryKey(KeyType.EDDSA(EdDSACurve._Ed25519))
             .addSubkey(KeyType.XDH(XDHSpec._X25519)) { addBindingSignature(bindingTime = t0) }
     }
+
+    @Test
+    fun `opinionated add subkey with weak binding signature hash algorithm fails`() {
+        val policy = Policy()
+
+        assertThrows<IllegalArgumentException> {
+            OpenPgpKeyGenerator.buildV4Key(policy)
+                .setPrimaryKey(KeyType.EDDSA(EdDSACurve._Ed25519))
+                .addSubkey(KeyType.XDH(XDHSpec._X25519)) {
+                    addBindingSignature(hashAlgorithm = HashAlgorithm.SHA1)
+                }
+        }
+    }
+
+    @Test
+    fun `unopinionated add subkey with weak binding signature hash algorithm is okay`() {
+        val policy = Policy()
+
+        OpenPgpKeyGenerator.buildV4Key(policy)
+            .setPrimaryKey(KeyType.EDDSA(EdDSACurve._Ed25519))
+            .unopinionated()
+            .addSubkey(KeyType.XDH(XDHSpec._X25519)) {
+                addBindingSignature(hashAlgorithm = HashAlgorithm.SHA1)
+            }
+    }
 }
