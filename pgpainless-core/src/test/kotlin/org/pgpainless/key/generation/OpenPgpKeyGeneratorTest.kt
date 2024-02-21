@@ -28,7 +28,9 @@ class OpenPgpKeyGeneratorTest {
     @Test
     fun `minimal call with opinionated builder adds a default DK sig but no user info`() {
         val key =
-            OpenPgpKeyGenerator.buildV4Key().setPrimaryKey(KeyType.EDDSA(EdDSACurve._Ed25519)).build()
+            OpenPgpKeyGenerator.buildV4Key()
+                .setPrimaryKey(KeyType.EDDSA(EdDSACurve._Ed25519))
+                .build()
 
         assertFalse(key.publicKey.userIDs.hasNext(), "Key MUST NOT have a UserID")
         assertFalse(key.publicKey.userAttributes.hasNext(), "Key MUST NOT have a UserAttribute")
@@ -201,16 +203,17 @@ class OpenPgpKeyGeneratorTest {
     fun `opinionated add UserID with weak hash algorithm fails`() {
         val policy = Policy()
         assertThrows<IllegalArgumentException> {
-            OpenPgpKeyGenerator.buildV4(policy).setPrimaryKey(KeyType.EDDSA(EdDSACurve._Ed25519)) {
-                addUserId("Alice <alice@example.org>", hashAlgorithm = HashAlgorithm.SHA1)
-            }
+            OpenPgpKeyGenerator.buildV4Key(policy).setPrimaryKey(
+                KeyType.EDDSA(EdDSACurve._Ed25519)) {
+                    addUserId("Alice <alice@example.org>", hashAlgorithm = HashAlgorithm.SHA1)
+                }
         }
     }
 
     @Test
     fun `unopinionated add UserID with weak hash algorithm is okay`() {
         val policy = Policy()
-        OpenPgpKeyGenerator.buildV4(policy).unopinionated().setPrimaryKey(
+        OpenPgpKeyGenerator.buildV4Key(policy).unopinionated().setPrimaryKey(
             KeyType.EDDSA(EdDSACurve._Ed25519)) {
                 addUserId("Alice <alice@example.org>", hashAlgorithm = HashAlgorithm.SHA1)
             }
@@ -220,18 +223,19 @@ class OpenPgpKeyGeneratorTest {
     fun `opinionated add UserAttribute with weak hash algorithm fails`() {
         val policy = Policy()
         assertThrows<IllegalArgumentException> {
-            OpenPgpKeyGenerator.buildV4(policy).setPrimaryKey(KeyType.EDDSA(EdDSACurve._Ed25519)) {
-                addUserAttribute(
-                    PGPUserAttributeSubpacketVectorGenerator().generate(),
-                    hashAlgorithm = HashAlgorithm.SHA1)
-            }
+            OpenPgpKeyGenerator.buildV4Key(policy).setPrimaryKey(
+                KeyType.EDDSA(EdDSACurve._Ed25519)) {
+                    addUserAttribute(
+                        PGPUserAttributeSubpacketVectorGenerator().generate(),
+                        hashAlgorithm = HashAlgorithm.SHA1)
+                }
         }
     }
 
     @Test
     fun `unopinionated add UserAttribute with weak hash algorithm is okay`() {
         val policy = Policy()
-        OpenPgpKeyGenerator.buildV4(policy).unopinionated().setPrimaryKey(
+        OpenPgpKeyGenerator.buildV4Key(policy).unopinionated().setPrimaryKey(
             KeyType.EDDSA(EdDSACurve._Ed25519)) {
                 addUserAttribute(
                     PGPUserAttributeSubpacketVectorGenerator().generate(),
@@ -243,16 +247,17 @@ class OpenPgpKeyGeneratorTest {
     fun `opinionated add DK sig with weak hash algorithm fails`() {
         val policy = Policy()
         assertThrows<IllegalArgumentException> {
-            OpenPgpKeyGenerator.buildV4(policy).setPrimaryKey(KeyType.EDDSA(EdDSACurve._Ed25519)) {
-                addDirectKeySignature(hashAlgorithm = HashAlgorithm.SHA1)
-            }
+            OpenPgpKeyGenerator.buildV4Key(policy).setPrimaryKey(
+                KeyType.EDDSA(EdDSACurve._Ed25519)) {
+                    addDirectKeySignature(hashAlgorithm = HashAlgorithm.SHA1)
+                }
         }
     }
 
     @Test
     fun `unopinionated add DK sig with weak hash algorithm is okay`() {
         val policy = Policy()
-        OpenPgpKeyGenerator.buildV4(policy).unopinionated().setPrimaryKey(
+        OpenPgpKeyGenerator.buildV4Key(policy).unopinionated().setPrimaryKey(
             KeyType.EDDSA(EdDSACurve._Ed25519)) {
                 addDirectKeySignature(hashAlgorithm = HashAlgorithm.SHA1)
             }
@@ -265,7 +270,7 @@ class OpenPgpKeyGeneratorTest {
         val t1 = DateUtil.parseUTCDate("2024-02-01 00:00:00 UTC")
 
         assertThrows<IllegalArgumentException> {
-            OpenPgpKeyGenerator.buildV4(policy, t1).setPrimaryKey(
+            OpenPgpKeyGenerator.buildV4Key(policy, t1).setPrimaryKey(
                 KeyType.EDDSA(EdDSACurve._Ed25519)) {
                     addUserId("Alice <alice@example.org>", bindingTime = t0)
                 }
@@ -278,7 +283,7 @@ class OpenPgpKeyGeneratorTest {
         val t0 = DateUtil.parseUTCDate("2024-01-01 00:00:00 UTC")
         val t1 = DateUtil.parseUTCDate("2024-02-01 00:00:00 UTC")
 
-        OpenPgpKeyGenerator.buildV4(policy, t1).unopinionated().setPrimaryKey(
+        OpenPgpKeyGenerator.buildV4Key(policy, t1).unopinionated().setPrimaryKey(
             KeyType.EDDSA(EdDSACurve._Ed25519)) {
                 addUserId("Alice <alice@example.org>", bindingTime = t0)
             }
@@ -291,7 +296,7 @@ class OpenPgpKeyGeneratorTest {
         val t1 = DateUtil.parseUTCDate("2024-02-01 00:00:00 UTC")
 
         assertThrows<IllegalArgumentException> {
-            OpenPgpKeyGenerator.buildV4(policy, t1).setPrimaryKey(
+            OpenPgpKeyGenerator.buildV4Key(policy, t1).setPrimaryKey(
                 KeyType.EDDSA(EdDSACurve._Ed25519)) {
                     addUserAttribute(
                         PGPUserAttributeSubpacketVectorGenerator().generate(), bindingTime = t0)
@@ -305,7 +310,7 @@ class OpenPgpKeyGeneratorTest {
         val t0 = DateUtil.parseUTCDate("2024-01-01 00:00:00 UTC")
         val t1 = DateUtil.parseUTCDate("2024-02-01 00:00:00 UTC")
 
-        OpenPgpKeyGenerator.buildV4(policy, t1).unopinionated().setPrimaryKey(
+        OpenPgpKeyGenerator.buildV4Key(policy, t1).unopinionated().setPrimaryKey(
             KeyType.EDDSA(EdDSACurve._Ed25519)) {
                 addUserAttribute(
                     PGPUserAttributeSubpacketVectorGenerator().generate(), bindingTime = t0)
@@ -319,7 +324,7 @@ class OpenPgpKeyGeneratorTest {
         val t1 = DateUtil.parseUTCDate("2024-02-01 00:00:00 UTC")
 
         assertThrows<IllegalArgumentException> {
-            OpenPgpKeyGenerator.buildV4(policy, t1).setPrimaryKey(
+            OpenPgpKeyGenerator.buildV4Key(policy, t1).setPrimaryKey(
                 KeyType.EDDSA(EdDSACurve._Ed25519)) {
                     addDirectKeySignature(bindingTime = t0)
                 }
@@ -332,7 +337,7 @@ class OpenPgpKeyGeneratorTest {
         val t0 = DateUtil.parseUTCDate("2024-01-01 00:00:00 UTC")
         val t1 = DateUtil.parseUTCDate("2024-02-01 00:00:00 UTC")
 
-        OpenPgpKeyGenerator.buildV4(policy, t1).unopinionated().setPrimaryKey(
+        OpenPgpKeyGenerator.buildV4Key(policy, t1).unopinionated().setPrimaryKey(
             KeyType.EDDSA(EdDSACurve._Ed25519)) {
                 addDirectKeySignature(bindingTime = t0)
             }
@@ -345,7 +350,7 @@ class OpenPgpKeyGeneratorTest {
         val t1 = DateUtil.parseUTCDate("2024-02-01 00:00:00 UTC")
 
         assertThrows<IllegalArgumentException> {
-            OpenPgpKeyGenerator.buildV4(policy, t1)
+            OpenPgpKeyGenerator.buildV4Key(policy, t1)
                 .setPrimaryKey(KeyType.EDDSA(EdDSACurve._Ed25519))
                 .addSubkey(KeyType.XDH(XDHSpec._X25519), t0)
         }
@@ -357,7 +362,7 @@ class OpenPgpKeyGeneratorTest {
         val t0 = DateUtil.parseUTCDate("2024-01-01 00:00:00 UTC")
         val t1 = DateUtil.parseUTCDate("2024-02-01 00:00:00 UTC")
 
-        OpenPgpKeyGenerator.buildV4(policy, t1)
+        OpenPgpKeyGenerator.buildV4Key(policy, t1)
             .unopinionated()
             .setPrimaryKey(KeyType.EDDSA(EdDSACurve._Ed25519))
             .addSubkey(KeyType.XDH(XDHSpec._X25519), t0)
@@ -370,7 +375,7 @@ class OpenPgpKeyGeneratorTest {
         val t1 = DateUtil.parseUTCDate("2024-02-01 00:00:00 UTC")
 
         assertThrows<IllegalArgumentException> {
-            OpenPgpKeyGenerator.buildV4(policy, t1)
+            OpenPgpKeyGenerator.buildV4Key(policy, t1)
                 .setPrimaryKey(KeyType.EDDSA(EdDSACurve._Ed25519))
                 .addSubkey(KeyType.XDH(XDHSpec._X25519)) { addBindingSignature(bindingTime = t0) }
         }
@@ -382,7 +387,7 @@ class OpenPgpKeyGeneratorTest {
         val t0 = DateUtil.parseUTCDate("2024-01-01 00:00:00 UTC")
         val t1 = DateUtil.parseUTCDate("2024-02-01 00:00:00 UTC")
 
-        OpenPgpKeyGenerator.buildV4(policy, t1)
+        OpenPgpKeyGenerator.buildV4Key(policy, t1)
             .unopinionated()
             .setPrimaryKey(KeyType.EDDSA(EdDSACurve._Ed25519))
             .addSubkey(KeyType.XDH(XDHSpec._X25519)) { addBindingSignature(bindingTime = t0) }
