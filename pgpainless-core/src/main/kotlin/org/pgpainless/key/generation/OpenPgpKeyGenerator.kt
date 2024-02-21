@@ -12,7 +12,6 @@ import org.bouncycastle.extensions.plusCertification
 import org.bouncycastle.openpgp.PGPKeyPair
 import org.bouncycastle.openpgp.PGPSecretKey
 import org.bouncycastle.openpgp.PGPSecretKeyRing
-import org.bouncycastle.openpgp.PGPSignature
 import org.bouncycastle.openpgp.PGPUserAttributeSubpacketVector
 import org.bouncycastle.openpgp.PGPUserAttributeSubpacketVectorGenerator
 import org.bouncycastle.util.io.Streams
@@ -926,11 +925,22 @@ internal constructor(
      * @param bindingTime creation time of the binding signature
      * @return modified subkey pair
      */
-    abstract fun addBindingSignature(
+    fun addBindingSignature(
         subpacketsCallback: SelfSignatureSubpackets.Callback = SelfSignatureSubpackets.nop(),
         hashAlgorithm: HashAlgorithm =
             builder.policy.certificationSignatureHashAlgorithmPolicy.defaultHashAlgorithm,
         bindingTime: Date = subkey.publicKey.creationTime
+    ): PGPKeyPair {
+        builder.sanitizeHashAlgorithm(hashAlgorithm)
+        builder.sanitizeBindingTime(bindingTime, subkey)
+
+        return doAddBindingSignature(subpacketsCallback, hashAlgorithm, bindingTime)
+    }
+
+    abstract fun doAddBindingSignature(
+        subpacketsCallback: SelfSignatureSubpackets.Callback,
+        hashAlgorithm: HashAlgorithm,
+        bindingTime: Date
     ): PGPKeyPair
 }
 
@@ -945,55 +955,27 @@ class ApplyToSubkeyV4
 internal constructor(primaryKey: PGPKeyPair, subkey: PGPKeyPair, builder: DefineSubkeys<*>) :
     ApplyToSubkey(primaryKey, subkey, builder) {
 
-    override fun addBindingSignature(
+    override fun doAddBindingSignature(
         subpacketsCallback: SelfSignatureSubpackets.Callback,
         hashAlgorithm: HashAlgorithm,
         bindingTime: Date
     ): PGPKeyPair {
-        builder.sanitizeHashAlgorithm(hashAlgorithm)
-        builder.sanitizeBindingTime(bindingTime, subkey)
-
-        val sig =
-            buildBindingSignature(
-                primaryKey, subkey, hashAlgorithm, bindingTime, subpacketsCallback)
+        val sigBuilder = SubkeyBindingSignatureBuilder(primaryKey, hashAlgorithm)
+        sigBuilder.applyCallback(
+            subpacketsCallback
+                .then(SelfSignatureSubpackets.applyHashed { setSignatureCreationTime(bindingTime) })
+                .then(
+                    SelfSignatureSubpackets.applyHashed {
+                        if (isSigningCapable(getKeyFlags())) {
+                            addEmbeddedSignature(
+                                PrimaryKeyBindingSignatureBuilder(subkey, hashAlgorithm)
+                                    .build(primaryKey))
+                        }
+                    }))
+        val sig = sigBuilder.build(subkey)
 
         subkey = subkey.plusCertification(sig)
         return subkey
-    }
-
-    /**
-     * Generate a version 4 binding signature that binds the [subkey] to the [primaryKey].
-     *
-     * @param primaryKey primary key pair
-     * @param subkey subkey pair
-     * @param hashAlgorithm hash algorithm to be used during signature calculation
-     * @param bindingTime creation time of the subkey
-     * @param subpacketsCallback callback to modify the subpackets of the binding signature
-     * @return subkey binding signature
-     */
-    private fun buildBindingSignature(
-        primaryKey: PGPKeyPair,
-        subkey: PGPKeyPair,
-        hashAlgorithm: HashAlgorithm,
-        bindingTime: Date,
-        subpacketsCallback: SelfSignatureSubpackets.Callback
-    ): PGPSignature {
-        return SubkeyBindingSignatureBuilder(primaryKey, hashAlgorithm)
-            .applyCallback(
-                subpacketsCallback
-                    .then(
-                        SelfSignatureSubpackets.applyHashed {
-                            setSignatureCreationTime(bindingTime)
-                        })
-                    .then(
-                        SelfSignatureSubpackets.applyHashed {
-                            if (isSigningCapable(getKeyFlags())) {
-                                addEmbeddedSignature(
-                                    PrimaryKeyBindingSignatureBuilder(subkey, hashAlgorithm)
-                                        .build(primaryKey))
-                            }
-                        }))
-            .build(subkey)
     }
 
     /**
