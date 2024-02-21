@@ -12,7 +12,7 @@ import org.bouncycastle.jcajce.provider.asymmetric.util.ECUtil
 import org.bouncycastle.openpgp.PGPPublicKey
 import org.pgpainless.algorithm.PublicKeyAlgorithm
 import org.pgpainless.key.OpenPgpFingerprint
-import org.pgpainless.key.generation.type.eddsa.EdDSACurve
+import org.pgpainless.key.generation.type.eddsa_legacy.EdDSALegacyCurve
 
 /**
  * For secret keys of types [PublicKeyAlgorithm.ECDSA], [PublicKeyAlgorithm.ECDH] and
@@ -33,7 +33,8 @@ fun PGPPublicKey.getCurveName(): String {
             }
         }
         .let {
-            if (it.curveOID == GNUObjectIdentifiers.Ed25519) return EdDSACurve._Ed25519.curveName
+            if (it.curveOID == GNUObjectIdentifiers.Ed25519)
+                return EdDSALegacyCurve._Ed25519.curveName
             else it.curveOID
         }
         .let { it to ECUtil.getCurveName(it) }

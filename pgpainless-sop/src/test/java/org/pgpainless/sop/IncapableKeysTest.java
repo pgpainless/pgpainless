@@ -13,7 +13,7 @@ import org.pgpainless.algorithm.KeyFlag;
 import org.pgpainless.key.generation.KeySpec;
 import org.pgpainless.key.generation.type.KeyType;
 import org.pgpainless.key.generation.type.ecc.EllipticCurve;
-import org.pgpainless.key.generation.type.eddsa.EdDSACurve;
+import org.pgpainless.key.generation.type.eddsa_legacy.EdDSALegacyCurve;
 import org.pgpainless.util.ArmorUtils;
 import sop.SOP;
 import sop.exception.SOPGPException;
@@ -38,15 +38,15 @@ public class IncapableKeysTest {
     public static void generateKeys() throws PGPException, InvalidAlgorithmParameterException, NoSuchAlgorithmException, IOException {
         PGPSecretKeyRing key = PGPainless.buildKeyRing()
                 .addSubkey(KeySpec.getBuilder(KeyType.ECDH(EllipticCurve._P256), KeyFlag.ENCRYPT_COMMS, KeyFlag.ENCRYPT_STORAGE))
-                .setPrimaryKey(KeySpec.getBuilder(KeyType.EDDSA(EdDSACurve._Ed25519), KeyFlag.CERTIFY_OTHER))
+                .setPrimaryKey(KeySpec.getBuilder(KeyType.EDDSA_LEGACY(EdDSALegacyCurve._Ed25519), KeyFlag.CERTIFY_OTHER))
                 .addUserId("Non Signing <non@signing.key>")
                 .build();
         nonSigningKey = ArmorUtils.toAsciiArmoredString(key).getBytes(StandardCharsets.UTF_8);
         nonSigningCert = sop.extractCert().key(nonSigningKey).getBytes();
 
         key = PGPainless.buildKeyRing()
-                .addSubkey(KeySpec.getBuilder(KeyType.EDDSA(EdDSACurve._Ed25519), KeyFlag.SIGN_DATA))
-                .setPrimaryKey(KeySpec.getBuilder(KeyType.EDDSA(EdDSACurve._Ed25519), KeyFlag.CERTIFY_OTHER))
+                .addSubkey(KeySpec.getBuilder(KeyType.EDDSA_LEGACY(EdDSALegacyCurve._Ed25519), KeyFlag.SIGN_DATA))
+                .setPrimaryKey(KeySpec.getBuilder(KeyType.EDDSA_LEGACY(EdDSALegacyCurve._Ed25519), KeyFlag.CERTIFY_OTHER))
                 .addUserId("Non Encryption <non@encryption.key>")
                 .build();
         nonEncryptionKey = ArmorUtils.toAsciiArmoredString(key).getBytes(StandardCharsets.UTF_8);

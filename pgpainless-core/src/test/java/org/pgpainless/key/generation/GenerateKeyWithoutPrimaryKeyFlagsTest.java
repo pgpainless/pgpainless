@@ -34,7 +34,7 @@ import org.pgpainless.encryption_signing.SigningOptions;
 import org.pgpainless.exception.KeyException;
 import org.pgpainless.key.TestKeys;
 import org.pgpainless.key.generation.type.KeyType;
-import org.pgpainless.key.generation.type.eddsa.EdDSACurve;
+import org.pgpainless.key.generation.type.eddsa_legacy.EdDSALegacyCurve;
 import org.pgpainless.key.generation.type.xdh.XDHSpec;
 import org.pgpainless.key.info.KeyRingInfo;
 import org.pgpainless.key.protection.SecretKeyRingProtector;
@@ -43,8 +43,8 @@ public class GenerateKeyWithoutPrimaryKeyFlagsTest {
 
     @Test
     public void generateKeyWithoutCertifyKeyFlag_cannotCertifyThirdParties() throws PGPException, InvalidAlgorithmParameterException, NoSuchAlgorithmException, IOException {
-        PGPSecretKeyRing secretKeys = PGPainless.buildKeyRing().setPrimaryKey(KeySpec.getBuilder(KeyType.EDDSA(EdDSACurve._Ed25519)))
-                .addSubkey(KeySpec.getBuilder(KeyType.EDDSA(EdDSACurve._Ed25519), KeyFlag.SIGN_DATA))
+        PGPSecretKeyRing secretKeys = PGPainless.buildKeyRing().setPrimaryKey(KeySpec.getBuilder(KeyType.EDDSA_LEGACY(EdDSALegacyCurve._Ed25519)))
+                .addSubkey(KeySpec.getBuilder(KeyType.EDDSA_LEGACY(EdDSALegacyCurve._Ed25519), KeyFlag.SIGN_DATA))
                 .addSubkey(KeySpec.getBuilder(KeyType.XDH(XDHSpec._X25519), KeyFlag.ENCRYPT_STORAGE, KeyFlag.ENCRYPT_COMMS))
                 .addUserId("Alice")
                 .build();

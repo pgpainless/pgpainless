@@ -27,7 +27,7 @@ import org.pgpainless.key.generation.KeySpec;
 import org.pgpainless.key.generation.KeySpecBuilder;
 import org.pgpainless.key.generation.type.KeyType;
 import org.pgpainless.key.generation.type.ecc.EllipticCurve;
-import org.pgpainless.key.generation.type.eddsa.EdDSACurve;
+import org.pgpainless.key.generation.type.eddsa_legacy.EdDSALegacyCurve;
 import org.pgpainless.key.generation.type.rsa.RsaLength;
 import org.pgpainless.key.info.KeyRingInfo;
 import org.pgpainless.key.util.UserId;
@@ -180,7 +180,7 @@ public class GenerateKeys {
         Passphrase passphrase = Passphrase.fromPassword("1nters3x");
 
         PGPSecretKeyRing secretKey = PGPainless.buildKeyRing()
-                .setPrimaryKey(KeySpec.getBuilder(KeyType.EDDSA(EdDSACurve._Ed25519),
+                .setPrimaryKey(KeySpec.getBuilder(KeyType.EDDSA_LEGACY(EdDSALegacyCurve._Ed25519),
                         // The primary key MUST carry the CERTIFY_OTHER flag, but CAN carry additional flags
                         KeyFlag.CERTIFY_OTHER))
                 // Add the first subkey (in this case encryption)

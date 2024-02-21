@@ -9,8 +9,8 @@ import org.pgpainless.algorithm.PublicKeyAlgorithm
 import org.pgpainless.key.generation.type.ecc.EllipticCurve
 import org.pgpainless.key.generation.type.ecc.ecdh.ECDH
 import org.pgpainless.key.generation.type.ecc.ecdsa.ECDSA
-import org.pgpainless.key.generation.type.eddsa.EdDSA
-import org.pgpainless.key.generation.type.eddsa.EdDSACurve
+import org.pgpainless.key.generation.type.eddsa_legacy.EdDSALegacy
+import org.pgpainless.key.generation.type.eddsa_legacy.EdDSALegacyCurve
 import org.pgpainless.key.generation.type.rsa.RSA
 import org.pgpainless.key.generation.type.rsa.RsaLength
 import org.pgpainless.key.generation.type.xdh.XDH
@@ -100,7 +100,8 @@ interface KeyType {
 
         @JvmStatic fun ECDSA(curve: EllipticCurve): ECDSA = ECDSA.fromCurve(curve)
 
-        @JvmStatic fun EDDSA(curve: EdDSACurve): EdDSA = EdDSA.fromCurve(curve)
+        @JvmStatic
+        fun EDDSA_LEGACY(curve: EdDSALegacyCurve): EdDSALegacy = EdDSALegacy.fromCurve(curve)
 
         @JvmStatic fun XDH(curve: XDHSpec): XDH = XDH.fromSpec(curve)
     }

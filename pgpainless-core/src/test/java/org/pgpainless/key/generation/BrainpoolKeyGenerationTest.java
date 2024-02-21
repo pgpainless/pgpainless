@@ -24,7 +24,7 @@ import org.pgpainless.algorithm.KeyFlag;
 import org.pgpainless.algorithm.PublicKeyAlgorithm;
 import org.pgpainless.key.generation.type.KeyType;
 import org.pgpainless.key.generation.type.ecc.EllipticCurve;
-import org.pgpainless.key.generation.type.eddsa.EdDSACurve;
+import org.pgpainless.key.generation.type.eddsa_legacy.EdDSALegacyCurve;
 import org.pgpainless.key.generation.type.rsa.RsaLength;
 import org.pgpainless.key.generation.type.xdh.XDHSpec;
 import org.pgpainless.key.info.KeyInfo;
@@ -71,7 +71,7 @@ public class BrainpoolKeyGenerationTest {
         PGPSecretKeyRing secretKeys = PGPainless.buildKeyRing()
                 .setPrimaryKey(KeySpec.getBuilder(
                         KeyType.ECDSA(EllipticCurve._BRAINPOOLP384R1), KeyFlag.CERTIFY_OTHER))
-                .addSubkey(KeySpec.getBuilder(KeyType.EDDSA(EdDSACurve._Ed25519), KeyFlag.SIGN_DATA))
+                .addSubkey(KeySpec.getBuilder(KeyType.EDDSA_LEGACY(EdDSALegacyCurve._Ed25519), KeyFlag.SIGN_DATA))
                 .addSubkey(KeySpec.getBuilder(
                         KeyType.XDH(XDHSpec._X25519), KeyFlag.ENCRYPT_COMMS, KeyFlag.ENCRYPT_STORAGE))
                 .addSubkey(KeySpec.getBuilder(
@@ -99,7 +99,7 @@ public class BrainpoolKeyGenerationTest {
 
         PGPSecretKey eddsaSub = iterator.next();
         KeyInfo eddsaInfo = new KeyInfo(eddsaSub);
-        assertEquals(EdDSACurve._Ed25519.getName(), eddsaInfo.getCurveName());
+        assertEquals(EdDSALegacyCurve._Ed25519.getName(), eddsaInfo.getCurveName());
         assertEquals(256, eddsaSub.getPublicKey().getBitStrength());
 
         PGPSecretKey xdhSub = iterator.next();

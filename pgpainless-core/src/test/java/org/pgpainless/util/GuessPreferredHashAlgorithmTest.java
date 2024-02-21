@@ -21,7 +21,7 @@ import org.pgpainless.algorithm.KeyFlag;
 import org.pgpainless.algorithm.SymmetricKeyAlgorithm;
 import org.pgpainless.key.generation.KeySpec;
 import org.pgpainless.key.generation.type.KeyType;
-import org.pgpainless.key.generation.type.eddsa.EdDSACurve;
+import org.pgpainless.key.generation.type.eddsa_legacy.EdDSALegacyCurve;
 import org.pgpainless.key.util.OpenPgpKeyAttributeUtil;
 
 public class GuessPreferredHashAlgorithmTest {
@@ -30,7 +30,7 @@ public class GuessPreferredHashAlgorithmTest {
     public void guessPreferredHashAlgorithmsAssumesHashAlgoUsedBySelfSig()
             throws InvalidAlgorithmParameterException, NoSuchAlgorithmException, PGPException {
         PGPSecretKeyRing secretKeys = PGPainless.buildKeyRing()
-                .setPrimaryKey(KeySpec.getBuilder(KeyType.EDDSA(EdDSACurve._Ed25519),
+                .setPrimaryKey(KeySpec.getBuilder(KeyType.EDDSA_LEGACY(EdDSALegacyCurve._Ed25519),
                                 KeyFlag.CERTIFY_OTHER, KeyFlag.SIGN_DATA)
                         .overridePreferredHashAlgorithms(new HashAlgorithm[] {})
                         .overridePreferredSymmetricKeyAlgorithms(new SymmetricKeyAlgorithm[] {})

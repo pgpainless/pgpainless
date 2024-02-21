@@ -2,9 +2,9 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
-package org.pgpainless.key.generation.type.eddsa
+package org.pgpainless.key.generation.type.eddsa_legacy
 
-enum class EdDSACurve(val curveName: String, val bitStrength: Int) {
+enum class EdDSALegacyCurve(val curveName: String, val bitStrength: Int) {
     _Ed25519("ed25519", 256),
     ;
 

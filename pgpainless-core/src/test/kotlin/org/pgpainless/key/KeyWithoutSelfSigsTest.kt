@@ -18,7 +18,7 @@ import org.pgpainless.encryption_signing.ProducerOptions
 import org.pgpainless.encryption_signing.SigningOptions
 import org.pgpainless.key.generation.KeySpec
 import org.pgpainless.key.generation.type.KeyType
-import org.pgpainless.key.generation.type.eddsa.EdDSACurve
+import org.pgpainless.key.generation.type.eddsa_legacy.EdDSALegacyCurve
 import org.pgpainless.key.generation.type.xdh.XDHSpec
 import org.pgpainless.key.protection.SecretKeyRingProtector
 
@@ -56,9 +56,10 @@ class KeyWithoutSelfSigsTest {
     fun generateKey() {
         val key =
             PGPainless.buildKeyRing()
-                .setPrimaryKey(KeySpec.getBuilder(KeyType.EDDSA(EdDSACurve._Ed25519)))
+                .setPrimaryKey(KeySpec.getBuilder(KeyType.EDDSA_LEGACY(EdDSALegacyCurve._Ed25519)))
                 .addSubkey(
-                    KeySpec.getBuilder(KeyType.EDDSA(EdDSACurve._Ed25519), KeyFlag.SIGN_DATA))
+                    KeySpec.getBuilder(
+                        KeyType.EDDSA_LEGACY(EdDSALegacyCurve._Ed25519), KeyFlag.SIGN_DATA))
                 .addSubkey(
                     KeySpec.getBuilder(
                         KeyType.XDH(XDHSpec._X25519),

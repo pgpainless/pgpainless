@@ -10,7 +10,7 @@ import org.junit.jupiter.api.TestTemplate;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.pgpainless.algorithm.KeyFlag;
 import org.pgpainless.key.generation.type.KeyType;
-import org.pgpainless.key.generation.type.eddsa.EdDSACurve;
+import org.pgpainless.key.generation.type.eddsa_legacy.EdDSALegacyCurve;
 import org.pgpainless.key.generation.type.xdh.XDHSpec;
 import org.pgpainless.util.TestAllImplementations;
 
@@ -29,9 +29,9 @@ public class IllegalKeyFlagsTest {
                 KeyType.XDH(XDHSpec._X25519), KeyFlag.AUTHENTICATION));
 
         assertThrows(IllegalArgumentException.class, () -> KeySpec.getBuilder(
-                KeyType.EDDSA(EdDSACurve._Ed25519), KeyFlag.ENCRYPT_COMMS));
+                KeyType.EDDSA_LEGACY(EdDSALegacyCurve._Ed25519), KeyFlag.ENCRYPT_COMMS));
 
         assertThrows(IllegalArgumentException.class, () -> KeySpec.getBuilder(
-                KeyType.EDDSA(EdDSACurve._Ed25519), KeyFlag.ENCRYPT_STORAGE));
+                KeyType.EDDSA_LEGACY(EdDSALegacyCurve._Ed25519), KeyFlag.ENCRYPT_STORAGE));
     }
 }
