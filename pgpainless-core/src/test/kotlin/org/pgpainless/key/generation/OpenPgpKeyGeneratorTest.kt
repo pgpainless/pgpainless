@@ -6,11 +6,13 @@ package org.pgpainless.key.generation
 
 import org.bouncycastle.bcpg.sig.PrimaryUserID
 import org.bouncycastle.extensions.toAsciiArmor
+import org.bouncycastle.openpgp.PGPUserAttributeSubpacketVectorGenerator
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Assertions.assertFalse
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.assertThrows
 import org.pgpainless.PGPainless
+import org.pgpainless.algorithm.HashAlgorithm
 import org.pgpainless.algorithm.KeyFlag
 import org.pgpainless.algorithm.PublicKeyAlgorithm
 import org.pgpainless.key.generation.type.KeyType
@@ -193,5 +195,196 @@ class OpenPgpKeyGeneratorTest {
     @Test
     fun testModernKeyGeneration() {
         println(KeyRingTemplates().modernKeyRing("null").toAsciiArmor())
+    }
+
+    @Test
+    fun `opinionated add UserID with weak hash algorithm fails`() {
+        val policy = Policy()
+        assertThrows<IllegalArgumentException> {
+            OpenPgpKeyGenerator.buildV4(policy).setPrimaryKey(KeyType.EDDSA(EdDSACurve._Ed25519)) {
+                addUserId("Alice <alice@example.org>", hashAlgorithm = HashAlgorithm.SHA1)
+            }
+        }
+    }
+
+    @Test
+    fun `unopinionated add UserID with weak hash algorithm is okay`() {
+        val policy = Policy()
+        OpenPgpKeyGenerator.buildV4(policy).unopinionated().setPrimaryKey(
+            KeyType.EDDSA(EdDSACurve._Ed25519)) {
+                addUserId("Alice <alice@example.org>", hashAlgorithm = HashAlgorithm.SHA1)
+            }
+    }
+
+    @Test
+    fun `opinionated add UserAttribute with weak hash algorithm fails`() {
+        val policy = Policy()
+        assertThrows<IllegalArgumentException> {
+            OpenPgpKeyGenerator.buildV4(policy).setPrimaryKey(KeyType.EDDSA(EdDSACurve._Ed25519)) {
+                addUserAttribute(
+                    PGPUserAttributeSubpacketVectorGenerator().generate(),
+                    hashAlgorithm = HashAlgorithm.SHA1)
+            }
+        }
+    }
+
+    @Test
+    fun `unopinionated add UserAttribute with weak hash algorithm is okay`() {
+        val policy = Policy()
+        OpenPgpKeyGenerator.buildV4(policy).unopinionated().setPrimaryKey(
+            KeyType.EDDSA(EdDSACurve._Ed25519)) {
+                addUserAttribute(
+                    PGPUserAttributeSubpacketVectorGenerator().generate(),
+                    hashAlgorithm = HashAlgorithm.SHA1)
+            }
+    }
+
+    @Test
+    fun `opinionated add DK sig with weak hash algorithm fails`() {
+        val policy = Policy()
+        assertThrows<IllegalArgumentException> {
+            OpenPgpKeyGenerator.buildV4(policy).setPrimaryKey(KeyType.EDDSA(EdDSACurve._Ed25519)) {
+                addDirectKeySignature(hashAlgorithm = HashAlgorithm.SHA1)
+            }
+        }
+    }
+
+    @Test
+    fun `unopinionated add DK sig with weak hash algorithm is okay`() {
+        val policy = Policy()
+        OpenPgpKeyGenerator.buildV4(policy).unopinionated().setPrimaryKey(
+            KeyType.EDDSA(EdDSACurve._Ed25519)) {
+                addDirectKeySignature(hashAlgorithm = HashAlgorithm.SHA1)
+            }
+    }
+
+    @Test
+    fun `opinionated add UserID with predating binding time fails`() {
+        val policy = Policy()
+        val t0 = DateUtil.parseUTCDate("2024-01-01 00:00:00 UTC")
+        val t1 = DateUtil.parseUTCDate("2024-02-01 00:00:00 UTC")
+
+        assertThrows<IllegalArgumentException> {
+            OpenPgpKeyGenerator.buildV4(policy, t1).setPrimaryKey(
+                KeyType.EDDSA(EdDSACurve._Ed25519)) {
+                    addUserId("Alice <alice@example.org>", bindingTime = t0)
+                }
+        }
+    }
+
+    @Test
+    fun `unopinionated add UserID with predating binding time is okay`() {
+        val policy = Policy()
+        val t0 = DateUtil.parseUTCDate("2024-01-01 00:00:00 UTC")
+        val t1 = DateUtil.parseUTCDate("2024-02-01 00:00:00 UTC")
+
+        OpenPgpKeyGenerator.buildV4(policy, t1).unopinionated().setPrimaryKey(
+            KeyType.EDDSA(EdDSACurve._Ed25519)) {
+                addUserId("Alice <alice@example.org>", bindingTime = t0)
+            }
+    }
+
+    @Test
+    fun `opinionated add UserAttribute with predating binding time fails`() {
+        val policy = Policy()
+        val t0 = DateUtil.parseUTCDate("2024-01-01 00:00:00 UTC")
+        val t1 = DateUtil.parseUTCDate("2024-02-01 00:00:00 UTC")
+
+        assertThrows<IllegalArgumentException> {
+            OpenPgpKeyGenerator.buildV4(policy, t1).setPrimaryKey(
+                KeyType.EDDSA(EdDSACurve._Ed25519)) {
+                    addUserAttribute(
+                        PGPUserAttributeSubpacketVectorGenerator().generate(), bindingTime = t0)
+                }
+        }
+    }
+
+    @Test
+    fun `unopinionated add UserAttribute with predating binding time is okay`() {
+        val policy = Policy()
+        val t0 = DateUtil.parseUTCDate("2024-01-01 00:00:00 UTC")
+        val t1 = DateUtil.parseUTCDate("2024-02-01 00:00:00 UTC")
+
+        OpenPgpKeyGenerator.buildV4(policy, t1).unopinionated().setPrimaryKey(
+            KeyType.EDDSA(EdDSACurve._Ed25519)) {
+                addUserAttribute(
+                    PGPUserAttributeSubpacketVectorGenerator().generate(), bindingTime = t0)
+            }
+    }
+
+    @Test
+    fun `opinionated add DK sig with predating binding time fails`() {
+        val policy = Policy()
+        val t0 = DateUtil.parseUTCDate("2024-01-01 00:00:00 UTC")
+        val t1 = DateUtil.parseUTCDate("2024-02-01 00:00:00 UTC")
+
+        assertThrows<IllegalArgumentException> {
+            OpenPgpKeyGenerator.buildV4(policy, t1).setPrimaryKey(
+                KeyType.EDDSA(EdDSACurve._Ed25519)) {
+                    addDirectKeySignature(bindingTime = t0)
+                }
+        }
+    }
+
+    @Test
+    fun `unopinionated add DK sig with predating binding time is okay`() {
+        val policy = Policy()
+        val t0 = DateUtil.parseUTCDate("2024-01-01 00:00:00 UTC")
+        val t1 = DateUtil.parseUTCDate("2024-02-01 00:00:00 UTC")
+
+        OpenPgpKeyGenerator.buildV4(policy, t1).unopinionated().setPrimaryKey(
+            KeyType.EDDSA(EdDSACurve._Ed25519)) {
+                addDirectKeySignature(bindingTime = t0)
+            }
+    }
+
+    @Test
+    fun `opinionated add subkey with predating creation time fails`() {
+        val policy = Policy()
+        val t0 = DateUtil.parseUTCDate("2024-01-01 00:00:00 UTC")
+        val t1 = DateUtil.parseUTCDate("2024-02-01 00:00:00 UTC")
+
+        assertThrows<IllegalArgumentException> {
+            OpenPgpKeyGenerator.buildV4(policy, t1)
+                .setPrimaryKey(KeyType.EDDSA(EdDSACurve._Ed25519))
+                .addSubkey(KeyType.XDH(XDHSpec._X25519), t0)
+        }
+    }
+
+    @Test
+    fun `unopinionated add subkey with predating creation time is okay`() {
+        val policy = Policy()
+        val t0 = DateUtil.parseUTCDate("2024-01-01 00:00:00 UTC")
+        val t1 = DateUtil.parseUTCDate("2024-02-01 00:00:00 UTC")
+
+        OpenPgpKeyGenerator.buildV4(policy, t1)
+            .unopinionated()
+            .setPrimaryKey(KeyType.EDDSA(EdDSACurve._Ed25519))
+            .addSubkey(KeyType.XDH(XDHSpec._X25519), t0)
+    }
+
+    @Test
+    fun `opinionated add subkey with predating binding time fails`() {
+        val policy = Policy()
+        val t0 = DateUtil.parseUTCDate("2024-01-01 00:00:00 UTC")
+        val t1 = DateUtil.parseUTCDate("2024-02-01 00:00:00 UTC")
+
+        assertThrows<IllegalArgumentException> {
+            OpenPgpKeyGenerator.buildV4(policy, t1)
+                .setPrimaryKey(KeyType.EDDSA(EdDSACurve._Ed25519))
+                .addSubkey(KeyType.XDH(XDHSpec._X25519)) { addBindingSignature(bindingTime = t0) }
+        }
+    }
+
+    @Test
+    fun `unopinionated add subkey with predating binding time is okay`() {
+        val policy = Policy()
+        val t0 = DateUtil.parseUTCDate("2024-01-01 00:00:00 UTC")
+        val t1 = DateUtil.parseUTCDate("2024-02-01 00:00:00 UTC")
+
+        OpenPgpKeyGenerator.buildV4(policy, t1)
+            .unopinionated()
+            .setPrimaryKey(KeyType.EDDSA(EdDSACurve._Ed25519))
+            .addSubkey(KeyType.XDH(XDHSpec._X25519)) { addBindingSignature(bindingTime = t0) }
     }
 }

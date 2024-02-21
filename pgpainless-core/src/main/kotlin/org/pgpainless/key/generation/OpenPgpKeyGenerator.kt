@@ -6,6 +6,7 @@ package org.pgpainless.key.generation
 
 import java.io.InputStream
 import java.util.Date
+import openpgp.formatUTC
 import org.bouncycastle.bcpg.attr.ImageAttribute
 import org.bouncycastle.extensions.plusCertification
 import org.bouncycastle.openpgp.PGPKeyPair
@@ -138,10 +139,8 @@ internal constructor(val policy: Policy, val creationTime: Date, val preferences
     ): PGPKeyPair
 
     /**
-     * Define the primary key for the OpenPGP key.
-     * The [applyToPrimaryKey] function block can be used to add UserIDs and preferences to
-     * the key.
-     * Example:
+     * Define the primary key for the OpenPGP key. The [applyToPrimaryKey] function block can be
+     * used to add UserIDs and preferences to the key. Example:
      * ```
      * setPrimaryKey(KeyType.EDDSA(EdDSACurve._Ed25519)) {
      *     addDirectKeySignature(...)
@@ -162,6 +161,25 @@ internal constructor(val policy: Policy, val creationTime: Date, val preferences
         creationTime: Date = this.creationTime,
         applyToPrimaryKey: (ApplyToPrimaryKey.() -> PGPKeyPair)? = null
     ): O
+
+    /**
+     * Sanitize the [HashAlgorithm] used for creating a signature by comparing it to the [Policy].
+     *
+     * @param algorithm hash algorithm
+     */
+    internal open fun sanitizeHashAlgorithm(algorithm: HashAlgorithm) {
+        // Do nothing
+    }
+
+    /**
+     * Sanitize the creation time of a self-certification signature.
+     *
+     * @param bindingTime signature creation time
+     * @param primaryKey primary key
+     */
+    internal open fun sanitizeBindingTime(bindingTime: Date, primaryKey: PGPKeyPair) {
+        // Do nothing
+    }
 }
 
 /** Implementation of [DefinePrimaryKey] build for version 4 OpenPGP keys. */
@@ -218,6 +236,8 @@ internal constructor(
         applyToSubkey: (ApplyToSubkey.() -> PGPKeyPair)? = null
     ): B =
         apply {
+            sanitizeSubkeyCreationTime(creationTime, primaryKey)
+
             val subkey = generateSubkey(type, creationTime)
             subkeys.add(applyToSubkey(subkey, applyToSubkey))
         }
@@ -264,6 +284,35 @@ internal constructor(
      * @return finished [PGPSecretKeyRing]
      */
     fun build(passphrase: Passphrase) = build(SecretKeyRingProtector.unlockAnyKeyWith(passphrase))
+
+    /**
+     * Sanitize the [HashAlgorithm] used for creating a signature by comparing it to the [Policy].
+     *
+     * @param algorithm hash algorithm
+     */
+    internal open fun sanitizeHashAlgorithm(algorithm: HashAlgorithm) {
+        // Do nothing
+    }
+
+    /**
+     * Sanitize the signature creation time of a subkey binding signature.
+     *
+     * @param bindingTime creation time of the binding signature
+     * @param subkey subkey
+     */
+    internal open fun sanitizeBindingTime(bindingTime: Date, subkey: PGPKeyPair) {
+        // Do nothing
+    }
+
+    /**
+     * Sanitize the creation time of the subkey.
+     *
+     * @param subkeyCreationTime creation time of the subkey
+     * @param primaryKey primary key
+     */
+    internal open fun sanitizeSubkeyCreationTime(subkeyCreationTime: Date, primaryKey: PGPKeyPair) {
+        // Do nothing
+    }
 }
 
 /**
@@ -411,6 +460,21 @@ internal constructor(policy: Policy, creationTime: Date, preferences: AlgorithmS
 
         return OpinionatedDefineSubkeysV4(key, policy, creationTime)
     }
+
+    override fun sanitizeHashAlgorithm(algorithm: HashAlgorithm) {
+        require(policy.certificationSignatureHashAlgorithmPolicy.isAcceptable(algorithm)) {
+            "Unacceptable Hash Algorithm. $algorithm cannot be used to generate self-certifications" +
+                " as per the current hash algorithm policy."
+        }
+    }
+
+    override fun sanitizeBindingTime(bindingTime: Date, primaryKey: PGPKeyPair) {
+        require(!bindingTime.before(primaryKey.publicKey.creationTime)) {
+            "Signature creation time predates primary key creation time. " +
+                "Signature was created at ${bindingTime.formatUTC()}, " +
+                "key was created at ${primaryKey.publicKey.creationTime.formatUTC()}."
+        }
+    }
 }
 
 /**
@@ -513,6 +577,29 @@ internal constructor(primaryKey: PGPKeyPair, policy: Policy, creationTime: Date)
                 })
         }
     ) = addSubkey(type, creationTime, applyToSubkey)
+
+    override fun sanitizeHashAlgorithm(algorithm: HashAlgorithm) {
+        require(policy.certificationSignatureHashAlgorithmPolicy.isAcceptable(algorithm)) {
+            "Unacceptable Hash Algorithm. $algorithm cannot be used to generate self-certifications" +
+                " as per the current hash algorithm policy."
+        }
+    }
+
+    override fun sanitizeBindingTime(bindingTime: Date, subkey: PGPKeyPair) {
+        require(!bindingTime.before(subkey.publicKey.creationTime)) {
+            "Creation time of binding signature predates subkey creation time. " +
+                "Signature was created at ${bindingTime.formatUTC()}, " +
+                "Subkey was created at ${subkey.publicKey.creationTime.formatUTC()}."
+        }
+    }
+
+    override fun sanitizeSubkeyCreationTime(subkeyCreationTime: Date, primaryKey: PGPKeyPair) {
+        require(!subkeyCreationTime.before(primaryKey.publicKey.creationTime)) {
+            "Subkey creation time predates primary key creation time. " +
+                "Subkey was created at ${subkeyCreationTime.formatUTC()}, " +
+                "Primary key was created at ${primaryKey.publicKey.creationTime.formatUTC()}."
+        }
+    }
 }
 
 /**
@@ -586,6 +673,9 @@ internal constructor(var keyPair: PGPKeyPair, val builder: DefinePrimaryKey<*>) 
             builder.policy.certificationSignatureHashAlgorithmPolicy.defaultHashAlgorithm,
         bindingTime: Date = builder.creationTime
     ): PGPKeyPair {
+        builder.sanitizeHashAlgorithm(hashAlgorithm)
+        builder.sanitizeBindingTime(bindingTime, keyPair)
+
         val callback = builder.userIdSubpackets(keyPair).then(subpacketsCallback)
         return doAddUserId(userId, callback, certificationType, hashAlgorithm, bindingTime)
     }
@@ -628,8 +718,10 @@ internal constructor(var keyPair: PGPKeyPair, val builder: DefinePrimaryKey<*>) 
             builder.policy.certificationSignatureHashAlgorithmPolicy.defaultHashAlgorithm,
         bindingTime: Date = builder.creationTime
     ): PGPKeyPair {
-        val callback = builder.userAttributeSubpackets(keyPair).then(subpacketsCallback)
+        builder.sanitizeHashAlgorithm(hashAlgorithm)
+        builder.sanitizeBindingTime(bindingTime, keyPair)
 
+        val callback = builder.userAttributeSubpackets(keyPair).then(subpacketsCallback)
         return doAddUserAttribute(
             userAttribute, callback, certificationType, hashAlgorithm, bindingTime)
     }
@@ -697,6 +789,9 @@ internal constructor(var keyPair: PGPKeyPair, val builder: DefinePrimaryKey<*>) 
             builder.policy.certificationSignatureHashAlgorithmPolicy.defaultHashAlgorithm,
         bindingTime: Date = builder.creationTime
     ): PGPKeyPair {
+        builder.sanitizeHashAlgorithm(hashAlgorithm)
+        builder.sanitizeBindingTime(bindingTime, keyPair)
+
         skipDefaultSignature()
         val callback = builder.directKeySignatureSubpackets().then(subpacketsCallback)
         return doAddDirectKeySignature(callback, hashAlgorithm, bindingTime)
@@ -855,6 +950,9 @@ internal constructor(primaryKey: PGPKeyPair, subkey: PGPKeyPair, builder: Define
         hashAlgorithm: HashAlgorithm,
         bindingTime: Date
     ): PGPKeyPair {
+        builder.sanitizeHashAlgorithm(hashAlgorithm)
+        builder.sanitizeBindingTime(bindingTime, subkey)
+
         val sig =
             buildBindingSignature(
                 primaryKey, subkey, hashAlgorithm, bindingTime, subpacketsCallback)
