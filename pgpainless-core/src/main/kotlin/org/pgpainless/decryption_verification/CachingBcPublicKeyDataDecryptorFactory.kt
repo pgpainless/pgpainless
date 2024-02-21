@@ -1,13 +1,12 @@
-// SPDX-FileCopyrightText: 2023 Paul Schaub <vanitasvitae@fsfe.org>
+//  SPDX-FileCopyrightText: 2024 Paul Schaub <vanitasvitae@fsfe.org>
 //
-// SPDX-License-Identifier: Apache-2.0
+//  SPDX-License-Identifier: Apache-2.0
 
-package org.pgpainless.bouncycastle
+package org.pgpainless.decryption_verification
 
 import org.bouncycastle.openpgp.PGPPrivateKey
 import org.bouncycastle.openpgp.operator.bc.BcPublicKeyDataDecryptorFactory
 import org.bouncycastle.util.encoders.Base64
-import org.pgpainless.decryption_verification.CustomPublicKeyDataDecryptorFactory
 import org.pgpainless.key.SubkeyIdentifier
 
 /**
