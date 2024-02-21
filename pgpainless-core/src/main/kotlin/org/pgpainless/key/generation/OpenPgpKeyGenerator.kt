@@ -962,20 +962,44 @@ internal constructor(primaryKey: PGPKeyPair, subkey: PGPKeyPair, builder: Define
     ): PGPKeyPair {
         val sigBuilder = SubkeyBindingSignatureBuilder(primaryKey, hashAlgorithm)
         sigBuilder.applyCallback(
+            // sets key flags
             subpacketsCallback
-                .then(SelfSignatureSubpackets.applyHashed { setSignatureCreationTime(bindingTime) })
-                .then(
-                    SelfSignatureSubpackets.applyHashed {
-                        if (isSigningCapable(getKeyFlags())) {
-                            addEmbeddedSignature(
-                                PrimaryKeyBindingSignatureBuilder(subkey, hashAlgorithm)
-                                    .build(primaryKey))
-                        }
-                    }))
+                .then(setCreationTime(bindingTime))
+                // adds back sig if key flags contain sign or certify
+                .then(addBackSignatureIfNecessary(hashAlgorithm)))
         val sig = sigBuilder.build(subkey)
 
         subkey = subkey.plusCertification(sig)
         return subkey
+    }
+
+    /**
+     * Return a [SelfSignatureSubpackets.Callback] that sets the signature creation time to the
+     * given [bindingTime].
+     *
+     * @param bindingTime signature creation time
+     * @return callback
+     */
+    private fun setCreationTime(bindingTime: Date): SelfSignatureSubpackets.Callback {
+        return SelfSignatureSubpackets.applyHashed { setSignatureCreationTime(bindingTime) }
+    }
+
+    /**
+     * Return a [SelfSignatureSubpackets.Callback] that adds a PrimaryKeyBinding Signature
+     * (back-signature) if the subkey is signing capable.
+     *
+     * @param hashAlgorithm hash algorithm to calculate the back-sig with
+     * @return callback
+     */
+    private fun addBackSignatureIfNecessary(
+        hashAlgorithm: HashAlgorithm
+    ): SelfSignatureSubpackets.Callback {
+        return SelfSignatureSubpackets.applyHashed {
+            if (isSigningCapable(getKeyFlags())) {
+                addEmbeddedSignature(
+                    PrimaryKeyBindingSignatureBuilder(subkey, hashAlgorithm).build(primaryKey))
+            }
+        }
     }
 
     /**
