@@ -35,7 +35,6 @@ class KeyRingTemplates {
                 if (userId != null) {
                     addUserId(userId)
                 }
-                keyPair
             }
             .addSigningSubkey(KeyType.RSA(length))
             .addEncryptionSubkey(KeyType.RSA(length))
@@ -87,7 +86,6 @@ class KeyRingTemplates {
                     if (userId != null) {
                         addUserId(userId)
                     }
-                    keyPair
                 }
             .build(passphrase)
 
@@ -131,7 +129,6 @@ class KeyRingTemplates {
                     if (userId != null) {
                         addUserId(userId)
                     }
-                    keyPair
                 }
             .addEncryptionSubkey(KeyType.XDH(XDHSpec._X25519))
             .build(passphrase)
@@ -172,7 +169,6 @@ class KeyRingTemplates {
                 if (userId != null) {
                     addUserId(userId)
                 }
-                keyPair
             }
             .addEncryptionSubkey(KeyType.XDH(XDHSpec._X25519))
             .addSigningSubkey(KeyType.EDDSA(EdDSACurve._Ed25519))
