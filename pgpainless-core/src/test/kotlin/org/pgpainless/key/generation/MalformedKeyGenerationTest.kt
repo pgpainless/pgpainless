@@ -7,11 +7,11 @@ package org.pgpainless.key.generation
 import org.bouncycastle.bcpg.sig.Exportable
 import org.bouncycastle.bcpg.sig.PrimaryUserID
 import org.bouncycastle.bcpg.sig.Revocable
-import org.bouncycastle.extensions.toAsciiArmor
 import org.junit.jupiter.api.Test
 import org.pgpainless.PGPainless
 import org.pgpainless.algorithm.HashAlgorithm
 import org.pgpainless.algorithm.KeyFlag
+import org.pgpainless.bouncycastle.extensions.toAsciiArmor
 import org.pgpainless.key.generation.type.KeyType
 import org.pgpainless.key.generation.type.eddsa.EdDSACurve
 import org.pgpainless.key.generation.type.xdh.XDHSpec

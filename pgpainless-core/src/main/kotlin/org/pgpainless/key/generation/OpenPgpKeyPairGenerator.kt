@@ -3,9 +3,9 @@ package org.pgpainless.key.generation
 import java.security.KeyPair
 import java.security.KeyPairGenerator
 import java.util.*
+import org.bouncycastle.openpgp.PGPKeyPair
 import org.pgpainless.bouncycastle.extensions.toPrimaryKeyFormat
 import org.pgpainless.bouncycastle.extensions.toSubkeyFormat
-import org.bouncycastle.openpgp.PGPKeyPair
 import org.pgpainless.implementation.ImplementationFactory
 import org.pgpainless.key.generation.type.KeyType
 import org.pgpainless.provider.ProviderFactory

@@ -8,7 +8,6 @@ import java.io.InputStream
 import java.util.*
 import openpgp.formatUTC
 import org.bouncycastle.bcpg.attr.ImageAttribute
-import org.bouncycastle.extensions.plusCertification
 import org.bouncycastle.openpgp.PGPKeyPair
 import org.bouncycastle.openpgp.PGPSecretKey
 import org.bouncycastle.openpgp.PGPSecretKeyRing
@@ -21,6 +20,7 @@ import org.pgpainless.algorithm.CertificationType
 import org.pgpainless.algorithm.HashAlgorithm
 import org.pgpainless.algorithm.KeyFlag
 import org.pgpainless.algorithm.PublicKeyAlgorithm
+import org.pgpainless.bouncycastle.extensions.plusCertification
 import org.pgpainless.implementation.ImplementationFactory
 import org.pgpainless.key.generation.DefinePrimaryKey.PrimaryKeyBuilder
 import org.pgpainless.key.generation.DefineSubkeys.SubkeyBuilder

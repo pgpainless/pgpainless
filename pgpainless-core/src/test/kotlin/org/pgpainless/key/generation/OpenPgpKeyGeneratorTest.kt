@@ -5,7 +5,6 @@
 package org.pgpainless.key.generation
 
 import org.bouncycastle.bcpg.sig.PrimaryUserID
-import org.bouncycastle.extensions.toAsciiArmor
 import org.bouncycastle.openpgp.PGPUserAttributeSubpacketVectorGenerator
 import org.bouncycastle.util.encoders.Hex
 import org.junit.jupiter.api.Assertions.assertArrayEquals
@@ -17,6 +16,7 @@ import org.pgpainless.PGPainless
 import org.pgpainless.algorithm.HashAlgorithm
 import org.pgpainless.algorithm.KeyFlag
 import org.pgpainless.algorithm.PublicKeyAlgorithm
+import org.pgpainless.bouncycastle.extensions.toAsciiArmor
 import org.pgpainless.key.generation.type.KeyType
 import org.pgpainless.key.generation.type.eddsa.EdDSACurve
 import org.pgpainless.key.generation.type.rsa.RsaLength
