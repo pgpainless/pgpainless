@@ -13,10 +13,13 @@ import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import java.io.IOException;
+import java.time.Duration;
+import java.time.temporal.ChronoUnit;
 import java.util.Date;
 import java.util.Iterator;
 import java.util.Random;
 
+import kotlin.Unit;
 import org.bouncycastle.bcpg.SignatureSubpacket;
 import org.bouncycastle.bcpg.SignatureSubpacketTags;
 import org.bouncycastle.bcpg.sig.Exportable;
@@ -532,5 +535,29 @@ public class SignatureSubpacketsTest {
         assertArrayEquals(publicKeys.getPublicKey().getFingerprint(), vector.getIntendedRecipientFingerprint().getFingerprint());
         PreferredAlgorithms aeadAlgorithms = (PreferredAlgorithms) vector.getSubpacket(SignatureSubpacketTags.PREFERRED_AEAD_ALGORITHMS);
         assertArrayEquals(aead.getPreferences(), aeadAlgorithms.getPreferences());
+    }
+
+    @Test
+    public void keyExpirationWithNegativeDurationFails() {
+        assertThrows(IllegalArgumentException.class, () ->
+                SelfSignatureSubpackets.applyHashed(
+                        hashed -> {
+                            hashed.setKeyExpirationTime(true, Duration.of(-1, ChronoUnit.DAYS));
+                            return Unit.INSTANCE;
+                        }
+                ).modifyHashedSubpackets(new SignatureSubpackets())
+        );
+    }
+
+    @Test
+    public void signatureExpirationWithNegativeDurationFails() {
+        assertThrows(IllegalArgumentException.class, () ->
+                SelfSignatureSubpackets.applyHashed(
+                        hashed -> {
+                            hashed.setSignatureExpirationTime(true, Duration.of(-1, ChronoUnit.DAYS));
+                            return Unit.INSTANCE;
+                        }
+                ).modifyHashedSubpackets(new SignatureSubpackets())
+        );
     }
 }

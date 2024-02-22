@@ -6,6 +6,7 @@ package org.pgpainless.signature.subpackets
 
 import java.io.IOException
 import java.net.URL
+import java.time.Duration
 import java.util.*
 import openpgp.plusSeconds
 import org.bouncycastle.bcpg.sig.*
@@ -72,6 +73,14 @@ interface BaseSignatureSubpackets {
     ): BaseSignatureSubpackets
 
     fun setSignatureExpirationTime(isCritical: Boolean, seconds: Long): BaseSignatureSubpackets
+
+    fun setSignatureExpirationTime(
+        isCritical: Boolean,
+        duration: Duration
+    ): BaseSignatureSubpackets {
+        require(!duration.isNegative) { "Signature Expiration Time cannot be negative." }
+        return setSignatureExpirationTime(isCritical, duration.seconds)
+    }
 
     fun setSignatureExpirationTime(
         expirationTime: SignatureExpirationTime?

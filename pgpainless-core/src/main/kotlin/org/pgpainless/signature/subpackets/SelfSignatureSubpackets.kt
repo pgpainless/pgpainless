@@ -4,6 +4,7 @@
 
 package org.pgpainless.signature.subpackets
 
+import java.time.Duration
 import java.util.*
 import openpgp.plusSeconds
 import org.bouncycastle.bcpg.sig.Features
@@ -73,6 +74,11 @@ interface SelfSignatureSubpackets : BaseSignatureSubpackets {
         isCritical: Boolean,
         secondsFromCreationToExpiration: Long
     ): SelfSignatureSubpackets
+
+    fun setKeyExpirationTime(isCritical: Boolean, duration: Duration): SelfSignatureSubpackets {
+        require(!duration.isNegative) { "Key Expiration Time cannot be negative." }
+        return setKeyExpirationTime(isCritical, duration.seconds)
+    }
 
     fun setKeyExpirationTime(keyExpirationTime: KeyExpirationTime?): SelfSignatureSubpackets
 
