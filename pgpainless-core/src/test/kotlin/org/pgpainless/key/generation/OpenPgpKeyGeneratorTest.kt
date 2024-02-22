@@ -4,6 +4,8 @@
 
 package org.pgpainless.key.generation
 
+import java.time.Duration
+import java.time.temporal.ChronoUnit
 import org.bouncycastle.bcpg.sig.PrimaryUserID
 import org.bouncycastle.openpgp.PGPUserAttributeSubpacketVectorGenerator
 import org.bouncycastle.util.encoders.Hex
@@ -39,7 +41,9 @@ class OpenPgpKeyGeneratorTest {
 
         assertFalse(key.publicKey.userIDs.hasNext(), "Key MUST NOT have a UserID")
         assertFalse(key.publicKey.userAttributes.hasNext(), "Key MUST NOT have a UserAttribute")
-        assertEquals(1, key.publicKey.directKeySignatures.count(),
+        assertEquals(
+            1,
+            key.publicKey.directKeySignatures.count(),
             "Opinionated builder adds exactly one DirectKey signature")
 
         println(key.toAsciiArmor())
@@ -136,6 +140,7 @@ class OpenPgpKeyGeneratorTest {
             .addSubkey(KeyType.EDDSA(EdDSACurve._Ed25519)) { addBindingSignature() }
             .addSubkey(KeyType.XDH(XDHSpec._X25519)) { addBindingSignature() }
             .build()
+            .let { println(it.toAsciiArmor()) }
     }
 
     @Test
@@ -485,6 +490,32 @@ class OpenPgpKeyGeneratorTest {
     }
 
     @Test
+    fun `opinionated add sign-only sukey but with additional encryption flag fails`() {
+        val policy = Policy()
+
+        assertThrows<IllegalArgumentException> {
+            OpenPgpKeyGenerator.buildV4Key(policy)
+                .setPrimaryKey(KeyType.EDDSA(EdDSACurve._Ed25519))
+                .addSubkey(
+                    KeyType.EDDSA(EdDSACurve._Ed25519),
+                    listOf(KeyFlag.SIGN_DATA, KeyFlag.ENCRYPT_COMMS, KeyFlag.ENCRYPT_STORAGE))
+        }
+    }
+
+    @Test
+    fun `unopinionated add sign-only sukey but with additional encryption flag is okay`() {
+        val policy = Policy()
+
+        OpenPgpKeyGenerator.buildV4Key(policy)
+            .setPrimaryKey(KeyType.EDDSA(EdDSACurve._Ed25519))
+            .unopinionated()
+            .addSubkey(
+                KeyType.EDDSA(EdDSACurve._Ed25519),
+                listOf(KeyFlag.SIGN_DATA, KeyFlag.ENCRYPT_COMMS, KeyFlag.ENCRYPT_STORAGE))
+            .build()
+    }
+
+    @Test
     fun `add image attribute to key`() {
         // smallest JPEG according to https://stackoverflow.com/a/2349470/11150851
         val jpegBytes =
@@ -499,5 +530,22 @@ class OpenPgpKeyGeneratorTest {
                 .build()
 
         assertArrayEquals(jpegBytes, key.publicKey.userAttributes.next().imageAttribute.imageData)
+    }
+
+    @Test
+    fun `generate key with expiration time`() {
+        val policy = Policy()
+
+        OpenPgpKeyGenerator.buildV4Key(policy)
+            .setPrimaryKey(KeyType.EDDSA(EdDSACurve._Ed25519)) {
+                addDirectKeySignature(
+                    SelfSignatureSubpackets.applyHashed {
+                        setKeyExpirationTime(true, Duration.of(5 * 365, ChronoUnit.DAYS))
+                    })
+                addUserId("Bob")
+            }
+            .addEncryptionSubkey(KeyType.XDH(XDHSpec._X25519))
+            .build()
+            .let { println(it.toAsciiArmor()) }
     }
 }
