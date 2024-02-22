@@ -403,6 +403,7 @@ internal constructor(
      * @param block function to apply to the subkey. Used to add binding signatures.
      * @return this
      */
+    @Suppress("UNCHECKED_CAST")
     @JvmOverloads
     fun addSubkey(
         type: KeyType,
