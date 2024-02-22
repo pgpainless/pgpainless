@@ -10,6 +10,7 @@ import org.bouncycastle.bcpg.ECDSAPublicBCPGKey
 import org.bouncycastle.bcpg.EdDSAPublicBCPGKey
 import org.bouncycastle.jcajce.provider.asymmetric.util.ECUtil
 import org.bouncycastle.openpgp.PGPPublicKey
+import org.bouncycastle.openpgp.PGPSignature
 import org.pgpainless.algorithm.PublicKeyAlgorithm
 import org.pgpainless.key.OpenPgpFingerprint
 import org.pgpainless.key.generation.type.eddsa.EdDSACurve
@@ -50,3 +51,21 @@ val PGPPublicKey.publicKeyAlgorithm: PublicKeyAlgorithm
 /** Return the [OpenPgpFingerprint] of this key. */
 val PGPPublicKey.openPgpFingerprint: OpenPgpFingerprint
     get() = OpenPgpFingerprint.of(this)
+
+val PGPPublicKey.directKeySignatures: Sequence<PGPSignature>
+    get() = signatures.asSequence().filter { it.signatureType == PGPSignature.DIRECT_KEY }
+
+val PGPPublicKey.directKeySelfSignatures: Sequence<PGPSignature>
+    get() = directKeySignatures.filter { it.issuerKeyId == keyID }
+
+val PGPPublicKey.keyRevocationSignatures: Sequence<PGPSignature>
+    get() = signatures.asSequence().filter { it.signatureType == PGPSignature.KEY_REVOCATION }
+
+val PGPPublicKey.keyRevocationSelfSignatures: Sequence<PGPSignature>
+    get() = keyRevocationSignatures.filter { it.issuerKeyId == keyID }
+
+val PGPPublicKey.subkeyBindingSignatures: Sequence<PGPSignature>
+    get() = signatures.asSequence().filter { it.signatureType == PGPSignature.SUBKEY_BINDING }
+
+val PGPPublicKey.subkeyRevocationSignatures: Sequence<PGPSignature>
+    get() = signatures.asSequence().filter { it.signatureType == PGPSignature.SUBKEY_REVOCATION }

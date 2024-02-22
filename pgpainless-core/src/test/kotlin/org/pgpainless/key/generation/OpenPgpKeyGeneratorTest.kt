@@ -10,12 +10,15 @@ import org.bouncycastle.util.encoders.Hex
 import org.junit.jupiter.api.Assertions.assertArrayEquals
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Assertions.assertFalse
+import org.junit.jupiter.api.Assertions.assertTrue
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.assertThrows
 import org.pgpainless.PGPainless
 import org.pgpainless.algorithm.HashAlgorithm
 import org.pgpainless.algorithm.KeyFlag
 import org.pgpainless.algorithm.PublicKeyAlgorithm
+import org.pgpainless.bouncycastle.extensions.directKeySignatures
+import org.pgpainless.bouncycastle.extensions.subkeyBindingSignatures
 import org.pgpainless.bouncycastle.extensions.toAsciiArmor
 import org.pgpainless.key.generation.type.KeyType
 import org.pgpainless.key.generation.type.eddsa.EdDSACurve
@@ -36,9 +39,7 @@ class OpenPgpKeyGeneratorTest {
 
         assertFalse(key.publicKey.userIDs.hasNext(), "Key MUST NOT have a UserID")
         assertFalse(key.publicKey.userAttributes.hasNext(), "Key MUST NOT have a UserAttribute")
-        assertEquals(
-            1,
-            key.publicKey.keySignatures.asSequence().toList().size,
+        assertEquals(1, key.publicKey.directKeySignatures.count(),
             "Opinionated builder adds exactly one DirectKey signature")
 
         println(key.toAsciiArmor())
@@ -52,7 +53,7 @@ class OpenPgpKeyGeneratorTest {
                 .setPrimaryKey(KeyType.EDDSA(EdDSACurve._Ed25519))
                 .build()
 
-        assertFalse(key.publicKey.keySignatures.hasNext())
+        assertTrue(key.publicKey.directKeySignatures.none())
 
         println(key.toAsciiArmor())
     }
@@ -66,7 +67,7 @@ class OpenPgpKeyGeneratorTest {
                 }
                 .build()
 
-        assertEquals(1, key.publicKey.keySignatures.asSequence().toList().size)
+        assertEquals(1, key.publicKey.directKeySignatures.count())
 
         println(key.toAsciiArmor())
     }
@@ -116,8 +117,8 @@ class OpenPgpKeyGeneratorTest {
             key.publicKeys
                 .asSequence()
                 .last()
-                .signatures
-                .next()
+                .subkeyBindingSignatures
+                .single()
                 .hashedSubPackets
                 .embeddedSignatures
                 .isEmpty)
@@ -212,7 +213,7 @@ class OpenPgpKeyGeneratorTest {
                 .setPrimaryKey(KeyType.EDDSA(EdDSACurve._Ed25519)) { skipDefaultSignature() }
                 .build()
 
-        assertFalse(key.publicKey.keySignatures.hasNext())
+        assertTrue(key.publicKey.directKeySignatures.none())
     }
 
     @Test
