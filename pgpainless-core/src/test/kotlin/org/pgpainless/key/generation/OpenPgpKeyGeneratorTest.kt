@@ -109,10 +109,7 @@ class OpenPgpKeyGeneratorTest {
         val key =
             OpenPgpKeyGenerator.buildV4Key()
                 .setPrimaryKey(KeyType.EDDSA(EdDSACurve._Ed25519))
-                .addSubkey(KeyType.EDDSA(EdDSACurve._Ed25519)) {
-                    addBindingSignature(
-                        SelfSignatureSubpackets.applyHashed { setKeyFlags(KeyFlag.SIGN_DATA) })
-                }
+                .addSubkey(KeyType.EDDSA(EdDSACurve._Ed25519), listOf(KeyFlag.SIGN_DATA))
                 .build()
 
         assertFalse(
@@ -376,7 +373,7 @@ class OpenPgpKeyGeneratorTest {
         assertThrows<IllegalArgumentException> {
             OpenPgpKeyGenerator.buildV4Key(policy, t1)
                 .setPrimaryKey(KeyType.EDDSA(EdDSACurve._Ed25519))
-                .addSubkey(KeyType.XDH(XDHSpec._X25519), t0)
+                .addSubkey(KeyType.XDH(XDHSpec._X25519), null, t0)
         }
     }
 
@@ -389,7 +386,7 @@ class OpenPgpKeyGeneratorTest {
         OpenPgpKeyGenerator.buildV4Key(policy, t1)
             .unopinionated()
             .setPrimaryKey(KeyType.EDDSA(EdDSACurve._Ed25519))
-            .addSubkey(KeyType.XDH(XDHSpec._X25519), t0)
+            .addSubkey(KeyType.XDH(XDHSpec._X25519), null, t0)
     }
 
     @Test
@@ -440,6 +437,50 @@ class OpenPgpKeyGeneratorTest {
             .addSubkey(KeyType.XDH(XDHSpec._X25519)) {
                 addBindingSignature(hashAlgorithm = HashAlgorithm.SHA1)
             }
+    }
+
+    @Test
+    fun `opinionated set primary key to encryption key fails`() {
+        val policy = Policy()
+
+        assertThrows<IllegalArgumentException> {
+            OpenPgpKeyGenerator.buildV4Key(policy).setPrimaryKey(KeyType.XDH(XDHSpec._X25519))
+        }
+    }
+
+    @Test
+    fun `opinionated set primary key to sign-only algorithm but with encryption flag fails`() {
+        val policy = Policy()
+
+        assertThrows<IllegalArgumentException> {
+            OpenPgpKeyGenerator.buildV4Key(policy)
+                .setPrimaryKey(
+                    KeyType.EDDSA(EdDSACurve._Ed25519),
+                    listOf(KeyFlag.CERTIFY_OTHER, KeyFlag.ENCRYPT_STORAGE))
+        }
+    }
+
+    @Test
+    fun `unopinionated set primary key to sign-only algorithm but with encryption flag is okay`() {
+        val policy = Policy()
+
+        OpenPgpKeyGenerator.buildV4Key(policy)
+            .unopinionated()
+            .setPrimaryKey(
+                KeyType.EDDSA(EdDSACurve._Ed25519),
+                listOf(KeyFlag.CERTIFY_OTHER, KeyFlag.ENCRYPT_STORAGE))
+    }
+
+    @Test
+    fun `opinionated add encryption-only subkey with additional sign flag fails`() {
+        val policy = Policy()
+
+        assertThrows<IllegalArgumentException> {
+            OpenPgpKeyGenerator.buildV4Key(policy)
+                .setPrimaryKey(KeyType.EDDSA(EdDSACurve._Ed25519))
+                .addSubkey(
+                    KeyType.XDH(XDHSpec._X25519), listOf(KeyFlag.ENCRYPT_COMMS, KeyFlag.SIGN_DATA))
+        }
     }
 
     @Test

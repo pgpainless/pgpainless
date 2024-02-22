@@ -20,6 +20,7 @@ import org.pgpainless.algorithm.AlgorithmSuite
 import org.pgpainless.algorithm.CertificationType
 import org.pgpainless.algorithm.HashAlgorithm
 import org.pgpainless.algorithm.KeyFlag
+import org.pgpainless.algorithm.PublicKeyAlgorithm
 import org.pgpainless.implementation.ImplementationFactory
 import org.pgpainless.key.generation.DefinePrimaryKey.PrimaryKeyBuilder
 import org.pgpainless.key.generation.DefineSubkeys.SubkeyBuilder
@@ -169,7 +170,13 @@ internal constructor(val policy: Policy, val creationTime: Date, val preferences
         keyFlags: List<KeyFlag>? = listOf(KeyFlag.CERTIFY_OTHER),
         creationTime: Date = this.creationTime,
         block: PrimaryKeyBlock? = null
-    ): O = doSetPrimaryKey(type, keyFlags, creationTime, block)
+    ): O {
+        require(type.canCertify) {
+            "Primary key cannot use algorithm ${type.algorithm} because it needs to be " +
+                "signing capable."
+        }
+        return doSetPrimaryKey(type, keyFlags, creationTime, block)
+    }
 
     fun setPrimaryKey(type: KeyType, block: PrimaryKeyBlock?): O =
         setPrimaryKey(type, listOf(KeyFlag.CERTIFY_OTHER), this.creationTime, block)
@@ -197,6 +204,10 @@ internal constructor(val policy: Policy, val creationTime: Date, val preferences
      * @param primaryKey primary key
      */
     protected open fun sanitizeBindingTime(bindingTime: Date, primaryKey: PGPKeyPair) {
+        // Do nothing
+    }
+
+    protected open fun sanitizeKeyFlags(algorithm: PublicKeyAlgorithm, keyFlags: List<KeyFlag>?) {
         // Do nothing
     }
 
@@ -407,14 +418,23 @@ internal constructor(
     @JvmOverloads
     fun addSubkey(
         type: KeyType,
+        flags: List<KeyFlag>? = null,
         creationTime: Date = this.creationTime,
         block: SubkeyBlock? = null
     ): B =
         apply {
+            sanitizeKeyFlags(type.algorithm, flags)
             sanitizeSubkeyCreationTime(creationTime, primaryKey)
 
             var subkey = generateSubkey(type, creationTime)
-            subkey = invokeOnSubkey(subkey, block)
+            val subkeyBlock =
+                block
+                    ?: {
+                        addBindingSignature(
+                            SelfSignatureSubpackets.applyHashed { flags?.let { setKeyFlags(it) } },
+                            bindingTime = creationTime)
+                    }
+            subkey = invokeOnSubkey(subkey, subkeyBlock)
             subkeys.add(subkey)
         }
             as B
@@ -487,6 +507,10 @@ internal constructor(
         subkeyCreationTime: Date,
         primaryKey: PGPKeyPair
     ) {
+        // Do nothing
+    }
+
+    protected open fun sanitizeKeyFlags(algorithm: PublicKeyAlgorithm, keyFlags: List<KeyFlag>?) {
         // Do nothing
     }
 
@@ -723,14 +747,15 @@ internal constructor(policy: Policy, creationTime: Date, preferences: AlgorithmS
         creationTime: Date,
         block: PrimaryKeyBlock?
     ): OpinionatedDefineSubkeysV4 {
-        // Check algorithm is signing capable
-        require(type.algorithm.isSigningCapable()) { "Primary Key MUST be capable of signing." }
 
         // Check key strength
         require(policy.publicKeyAlgorithmPolicy.isAcceptable(type.algorithm, type.bitStrength)) {
             "Public Key algorithm ${type.algorithm} with ${type.bitStrength} is too weak" +
                 " for the current public key algorithm policy."
         }
+
+        // Sanitize key flags
+        sanitizeKeyFlags(type.algorithm, keyFlags)
 
         // Remember flags for DK and UID signatures
         this.keyFlags = keyFlags
@@ -760,6 +785,27 @@ internal constructor(policy: Policy, creationTime: Date, preferences: AlgorithmS
             "Signature creation time predates primary key creation time. " +
                 "Signature was created at ${bindingTime.formatUTC()}, " +
                 "key was created at ${primaryKey.publicKey.creationTime.formatUTC()}."
+        }
+    }
+
+    override fun sanitizeKeyFlags(algorithm: PublicKeyAlgorithm, keyFlags: List<KeyFlag>?) {
+        keyFlags?.forEach { flag ->
+            when (flag) {
+                KeyFlag.CERTIFY_OTHER,
+                KeyFlag.SIGN_DATA,
+                KeyFlag.AUTHENTICATION ->
+                    require(algorithm.isSigningCapable()) {
+                        "Primary key cannot carry key flag $flag because the " +
+                            "algorithm $algorithm is not signing capable."
+                    }
+                KeyFlag.ENCRYPT_COMMS,
+                KeyFlag.ENCRYPT_STORAGE ->
+                    require(algorithm.isEncryptionCapable()) {
+                        "Primary key cannot carry key flag $flag because the " +
+                            "algorithm $algorithm is not encryption capable."
+                    }
+                else -> {} // no special requirements for SPLIT and SHARED
+            }
         }
     }
 }
@@ -842,11 +888,10 @@ internal constructor(primaryKey: PGPKeyPair, policy: Policy, creationTime: Date)
     fun addSigningSubkey(
         type: KeyType,
         creationTime: Date = this.creationTime,
-        block: SubkeyBlock? = {
-            addBindingSignature(
-                SelfSignatureSubpackets.applyHashed { setKeyFlags(KeyFlag.SIGN_DATA) })
-        }
-    ) = addSubkey(type, creationTime, block)
+        block: SubkeyBlock? = null
+    ): OpinionatedDefineSubkeysV4 {
+        return addSubkey(type, listOf(KeyFlag.SIGN_DATA), creationTime, block)
+    }
 
     /**
      * Add a subkey for signing messages to the OpenPGP key.
@@ -868,13 +913,11 @@ internal constructor(primaryKey: PGPKeyPair, policy: Policy, creationTime: Date)
     fun addEncryptionSubkey(
         type: KeyType,
         creationTime: Date = this.creationTime,
-        block: SubkeyBlock? = {
-            addBindingSignature(
-                SelfSignatureSubpackets.applyHashed {
-                    setKeyFlags(KeyFlag.ENCRYPT_COMMS, KeyFlag.ENCRYPT_STORAGE)
-                })
-        }
-    ) = addSubkey(type, creationTime, block)
+        block: SubkeyBlock? = null,
+    ): OpinionatedDefineSubkeysV4 {
+        return addSubkey(
+            type, listOf(KeyFlag.ENCRYPT_COMMS, KeyFlag.ENCRYPT_STORAGE), creationTime, block)
+    }
 
     /**
      * Add a subkey for message encryption to the OpenPGP key.
@@ -905,6 +948,27 @@ internal constructor(primaryKey: PGPKeyPair, policy: Policy, creationTime: Date)
             "Subkey creation time predates primary key creation time. " +
                 "Subkey was created at ${subkeyCreationTime.formatUTC()}, " +
                 "Primary key was created at ${primaryKey.publicKey.creationTime.formatUTC()}."
+        }
+    }
+
+    override fun sanitizeKeyFlags(algorithm: PublicKeyAlgorithm, keyFlags: List<KeyFlag>?) {
+        keyFlags?.forEach { flag ->
+            when (flag) {
+                KeyFlag.CERTIFY_OTHER,
+                KeyFlag.SIGN_DATA,
+                KeyFlag.AUTHENTICATION ->
+                    require(algorithm.isSigningCapable()) {
+                        "Subkey cannot carry key flag $flag because the " +
+                            "algorithm $algorithm is not signing capable."
+                    }
+                KeyFlag.ENCRYPT_COMMS,
+                KeyFlag.ENCRYPT_STORAGE ->
+                    require(algorithm.isEncryptionCapable()) {
+                        "Subkey cannot carry key flag $flag because the " +
+                            "algorithm $algorithm is not encryption capable."
+                    }
+                else -> {} // no special requirements for SPLIT and SHARED
+            }
         }
     }
 }
@@ -1078,17 +1142,9 @@ class OpenPgpKeyTemplates private constructor() {
                         SelfSignatureSubpackets.applyHashed { setKeyFlags(KeyFlag.CERTIFY_OTHER) })
                 }
                 // singing key
-                .addSubkey(KeyType.EDDSA(EdDSACurve._Ed25519)) {
-                    addBindingSignature(
-                        SelfSignatureSubpackets.applyHashed { setKeyFlags(KeyFlag.SIGN_DATA) })
-                }
+                .addSigningSubkey(KeyType.EDDSA(EdDSACurve._Ed25519))
                 // encryption key
-                .addSubkey(KeyType.XDH(XDHSpec._X25519)) {
-                    addBindingSignature(
-                        SelfSignatureSubpackets.applyHashed {
-                            setKeyFlags(KeyFlag.ENCRYPT_COMMS, KeyFlag.ENCRYPT_STORAGE)
-                        })
-                }
+                .addEncryptionSubkey(KeyType.XDH(XDHSpec._X25519))
                 .build()
 
         /**
@@ -1122,17 +1178,9 @@ class OpenPgpKeyTemplates private constructor() {
                         SelfSignatureSubpackets.applyHashed { setKeyFlags(KeyFlag.CERTIFY_OTHER) })
                 }
                 // signing key
-                .addSubkey(KeyType.RSA(length)) {
-                    addBindingSignature(
-                        SelfSignatureSubpackets.applyHashed { setKeyFlags(KeyFlag.SIGN_DATA) })
-                }
+                .addSigningSubkey(KeyType.RSA(length))
                 // encryption key
-                .addSubkey(KeyType.RSA(length)) {
-                    addBindingSignature(
-                        SelfSignatureSubpackets.applyHashed {
-                            setKeyFlags(KeyFlag.ENCRYPT_COMMS, KeyFlag.ENCRYPT_STORAGE)
-                        })
-                }
+                .addEncryptionSubkey(KeyType.RSA(length))
                 .build()
 
         /**
