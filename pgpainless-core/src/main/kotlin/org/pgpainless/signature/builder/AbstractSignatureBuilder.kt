@@ -14,6 +14,7 @@ import org.bouncycastle.openpgp.PGPSignature
 import org.bouncycastle.openpgp.PGPSignatureGenerator
 import org.pgpainless.PGPainless
 import org.pgpainless.algorithm.HashAlgorithm
+import org.pgpainless.algorithm.PublicKeyAlgorithm
 import org.pgpainless.algorithm.SignatureType
 import org.pgpainless.algorithm.negotiation.HashAlgorithmNegotiator
 import org.pgpainless.implementation.ImplementationFactory
@@ -35,6 +36,9 @@ abstract class AbstractSignatureBuilder<B : AbstractSignatureBuilder<B>>(
     protected abstract val signatureTypePredicate: Predicate<SignatureType>
 
     init {
+        val algorithm =
+            PublicKeyAlgorithm.requireFromId(privateSigningKey.publicKeyPacket.algorithm)
+        require(algorithm.isSigningCapable()) { "Key is not signing capable: $algorithm" }
         require(signatureTypePredicate.test(_signatureType)) { "Invalid signature type." }
     }
 
