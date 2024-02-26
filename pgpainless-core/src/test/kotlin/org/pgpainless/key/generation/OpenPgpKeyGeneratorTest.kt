@@ -12,6 +12,7 @@ import org.bouncycastle.util.encoders.Hex
 import org.junit.jupiter.api.Assertions.assertArrayEquals
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Assertions.assertFalse
+import org.junit.jupiter.api.Assertions.assertNull
 import org.junit.jupiter.api.Assertions.assertTrue
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.assertThrows
@@ -28,6 +29,7 @@ import org.pgpainless.key.generation.type.rsa.RsaLength
 import org.pgpainless.key.generation.type.xdh.XDHSpec
 import org.pgpainless.policy.Policy
 import org.pgpainless.signature.subpackets.SelfSignatureSubpackets
+import org.pgpainless.signature.subpackets.SignatureSubpacketsUtil
 import org.pgpainless.util.DateUtil
 
 class OpenPgpKeyGeneratorTest {
@@ -475,6 +477,17 @@ class OpenPgpKeyGeneratorTest {
             .setPrimaryKey(
                 KeyType.EDDSA(EdDSACurve._Ed25519),
                 listOf(KeyFlag.CERTIFY_OTHER, KeyFlag.ENCRYPT_STORAGE))
+    }
+
+    @Test
+    fun `opinionated set primary key without any key flags is okay`() {
+        val policy = Policy()
+
+        val key = OpenPgpKeyGenerator.buildV4Key(policy)
+            .setPrimaryKey(KeyType.EDDSA(EdDSACurve._Ed25519), keyFlags = null)
+            .build()
+
+        assertNull(SignatureSubpacketsUtil.getKeyFlags(key.publicKey.signatures.next()))
     }
 
     @Test

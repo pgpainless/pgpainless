@@ -727,7 +727,7 @@ internal constructor(policy: Policy, creationTime: Date, preferences: AlgorithmS
     override fun userAttributeSubpackets(primaryKey: PGPKeyPair): SelfSignatureSubpackets.Callback {
         return preferencesSubpackets()
             .then(
-                // if key has primary User-IDs already, do nothing
+                // if key has primary user-attributes already, do nothing
                 if (primaryKey.publicKey.userAttributes.asSequence().any { attr ->
                     primaryKey.publicKey.getSignaturesForUserAttribute(attr).asSequence().any { sig
                         ->
@@ -736,7 +736,7 @@ internal constructor(policy: Policy, creationTime: Date, preferences: AlgorithmS
                 }) {
                     SelfSignatureSubpackets.nop()
                 } else {
-                    // else set this user-id as primary
+                    // else set this user-attribute as primary
                     SelfSignatureSubpackets.applyHashed { setPrimaryUserId() }
                 })
     }
