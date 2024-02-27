@@ -6,6 +6,7 @@ package org.pgpainless.key.generation
 
 import java.time.Duration
 import java.time.temporal.ChronoUnit
+import org.bouncycastle.bcpg.attr.ImageAttribute
 import org.bouncycastle.bcpg.sig.PrimaryUserID
 import org.bouncycastle.openpgp.PGPUserAttributeSubpacketVectorGenerator
 import org.bouncycastle.util.encoders.Hex
@@ -109,6 +110,77 @@ class OpenPgpKeyGeneratorTest {
 
         val info = PGPainless.inspectKeyRing(key)
         assertEquals("Primary <primary@example.com>", info.primaryUserId)
+    }
+
+    @Test
+    fun `adding two user-attributes will mark the first one as primary`() {
+        val policy = Policy()
+
+        val attr1 =
+            PGPUserAttributeSubpacketVectorGenerator()
+                .apply { setImageAttribute(ImageAttribute.JPEG, byteArrayOf(0x01b)) }
+                .generate()
+        val attr2 =
+            PGPUserAttributeSubpacketVectorGenerator()
+                .apply { setImageAttribute(ImageAttribute.JPEG, byteArrayOf(0x02b)) }
+                .generate()
+
+        val key =
+            OpenPgpKeyGenerator.buildV4Key(policy)
+                .setPrimaryKey(KeyType.EDDSA(EdDSACurve._Ed25519)) {
+                    addUserAttribute(attr1) // primary, since it is the first
+                    addUserAttribute(attr2) // non-primary
+                }
+                .build()
+
+        assertTrue(
+            key.publicKey
+                .getSignaturesForUserAttribute(attr1)
+                .asSequence()
+                .single()
+                .hashedSubPackets
+                .isPrimaryUserID)
+        assertFalse(
+            key.publicKey
+                .getSignaturesForUserAttribute(attr2)
+                .asSequence()
+                .single()
+                .hashedSubPackets
+                .isPrimaryUserID)
+    }
+
+    @Test
+    fun `adding single user-id and single user-attribute will mark both as primary`() {
+        val policy = Policy()
+
+        val userId = "Alice <alice@pgpainless.org>"
+        val userAttribute =
+            PGPUserAttributeSubpacketVectorGenerator()
+                .apply { setImageAttribute(ImageAttribute.JPEG, byteArrayOf(0x01b)) }
+                .generate()
+
+        val key =
+            OpenPgpKeyGenerator.buildV4Key(policy)
+                .setPrimaryKey(KeyType.EDDSA(EdDSACurve._Ed25519)) {
+                    addUserId(userId)
+                    addUserAttribute(userAttribute)
+                }
+                .build()
+
+        assertTrue(
+            key.publicKey
+                .getSignaturesForUserAttribute(userAttribute)
+                .asSequence()
+                .single()
+                .hashedSubPackets
+                .isPrimaryUserID)
+        assertTrue(
+            key.publicKey
+                .getSignaturesForID(userId)
+                .asSequence()
+                .single()
+                .hashedSubPackets
+                .isPrimaryUserID)
     }
 
     @Test
@@ -483,9 +555,10 @@ class OpenPgpKeyGeneratorTest {
     fun `opinionated set primary key without any key flags is okay`() {
         val policy = Policy()
 
-        val key = OpenPgpKeyGenerator.buildV4Key(policy)
-            .setPrimaryKey(KeyType.EDDSA(EdDSACurve._Ed25519), keyFlags = null)
-            .build()
+        val key =
+            OpenPgpKeyGenerator.buildV4Key(policy)
+                .setPrimaryKey(KeyType.EDDSA(EdDSACurve._Ed25519), keyFlags = null)
+                .build()
 
         assertNull(SignatureSubpacketsUtil.getKeyFlags(key.publicKey.signatures.next()))
     }
