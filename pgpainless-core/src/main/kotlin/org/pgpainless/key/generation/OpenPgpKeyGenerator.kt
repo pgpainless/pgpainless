@@ -24,6 +24,7 @@ import org.pgpainless.bouncycastle.extensions.plusCertification
 import org.pgpainless.implementation.ImplementationFactory
 import org.pgpainless.key.generation.DefinePrimaryKey.PrimaryKeyBuilder
 import org.pgpainless.key.generation.DefineSubkeys.SubkeyBuilder
+import org.pgpainless.key.generation.OpenPgpKeyTemplates.Companion.v4
 import org.pgpainless.key.generation.type.KeyType
 import org.pgpainless.key.generation.type.eddsa.EdDSACurve
 import org.pgpainless.key.generation.type.rsa.RsaLength
@@ -37,8 +38,16 @@ import org.pgpainless.signature.builder.SubkeyBindingSignatureBuilder
 import org.pgpainless.signature.subpackets.SelfSignatureSubpackets
 import org.pgpainless.util.Passphrase
 
+/**
+ * Function block that is applied to the OpenPGP [PrimaryKeyBuilder]. Within this block, you add
+ * User-IDs, User-Attributes and Direct-Key signatures on the primary key.
+ */
 typealias PrimaryKeyBlock = (PrimaryKeyBuilder.() -> Unit)
 
+/**
+ * Function block that is applied to an OpenPGP [SubkeyBuilder]. Here you typically add
+ * subkey-binding signatures.
+ */
 typealias SubkeyBlock = (SubkeyBuilder.() -> Unit)
 
 /**
@@ -54,25 +63,20 @@ typealias SubkeyBlock = (SubkeyBuilder.() -> Unit)
  * You can switch from the opinionated API to the unopinionated API by calling `unopinionated()` on
  * the builder.
  */
-class OpenPgpKeyGenerator internal constructor() {
+class OpenPgpKeyGenerator(private val policy: Policy = PGPainless.getPolicy()) {
 
-    companion object {
-        /**
-         * Build a version 4 OpenPGP secret key.
-         *
-         * @param policy policy to ensure algorithm compliance and to determine default algorithms
-         * @param creationTime creation time for the secret key
-         * @param preferences suite of algorithm preferences and enabled features
-         */
-        @JvmStatic
-        @JvmOverloads
-        fun buildV4Key(
-            policy: Policy = PGPainless.getPolicy(),
-            creationTime: Date = Date(),
-            preferences: AlgorithmSuite = policy.keyGenerationAlgorithmSuite
-        ): OpinionatedDefinePrimaryKeyV4 {
-            return OpinionatedDefinePrimaryKeyV4(policy, creationTime, preferences)
-        }
+    /**
+     * Build a version 4 OpenPGP secret key.
+     *
+     * @param creationTime creation time for the secret key
+     * @param preferences suite of algorithm preferences and enabled features
+     */
+    @JvmOverloads
+    fun buildV4Key(
+        creationTime: Date = Date(),
+        preferences: AlgorithmSuite = policy.keyGenerationAlgorithmSuite
+    ): OpinionatedDefinePrimaryKeyV4 {
+        return OpinionatedDefinePrimaryKeyV4(policy, creationTime, preferences)
     }
 }
 
@@ -210,6 +214,14 @@ internal constructor(val policy: Policy, val creationTime: Date, val preferences
     protected open fun sanitizeKeyFlags(algorithm: PublicKeyAlgorithm, keyFlags: List<KeyFlag>?) {
         // Do nothing
     }
+
+    /**
+     * Return a [OpenPgpKeyTemplates] object which provides factory methods for generating OpenPGP
+     * keys from templates.
+     *
+     * @return templates
+     */
+    abstract fun fromTemplate(): OpenPgpKeyTemplates
 
     /**
      * Function that can be applied to the primary key.
@@ -1094,11 +1106,13 @@ class PrimaryKeyBuilderV4 internal constructor(keyPair: PGPKeyPair, builder: Def
                 this.keyPair
             }
         }
+
+        override fun fromTemplate(): OpenPgpKeyTemplates.V4 = v4()
     }
 }
 
 /** Templates for OpenPGP key generation. */
-class OpenPgpKeyTemplates private constructor() {
+open class OpenPgpKeyTemplates private constructor() {
 
     companion object {
 
@@ -1111,7 +1125,7 @@ class OpenPgpKeyTemplates private constructor() {
     }
 
     /** Templates for version 4 OpenPGP keys. Version 4 keys are compliant to RFC4880. */
-    class V4 internal constructor() {
+    class V4 : OpenPgpKeyTemplates() {
 
         /**
          * Generate an OpenPGP key that consists of an Ed25519 primary key used for certification of
@@ -1123,9 +1137,11 @@ class OpenPgpKeyTemplates private constructor() {
          */
         fun ed25519Curve25519(
             vararg userId: CharSequence,
-            creationTime: Date = Date()
+            creationTime: Date = Date(),
+            protector: SecretKeyRingProtector = SecretKeyRingProtector.unprotectedKeys()
         ): PGPSecretKeyRing =
-            OpenPgpKeyGenerator.buildV4Key(creationTime = creationTime)
+            OpenPgpKeyGenerator()
+                .buildV4Key(creationTime = creationTime)
                 .setPrimaryKey(KeyType.EDDSA(EdDSACurve._Ed25519)) {
                     // Add UserIDs
                     userId.forEachIndexed { index, uid ->
@@ -1145,7 +1161,7 @@ class OpenPgpKeyTemplates private constructor() {
                 .addSigningSubkey(KeyType.EDDSA(EdDSACurve._Ed25519))
                 // encryption key
                 .addEncryptionSubkey(KeyType.XDH(XDHSpec._X25519))
-                .build()
+                .build(protector)
 
         /**
          * Generate an OpenPGP key that consists of an RSA primary key used for certification of
@@ -1159,9 +1175,11 @@ class OpenPgpKeyTemplates private constructor() {
         fun composedRsa(
             vararg userId: CharSequence,
             creationTime: Date = Date(),
-            length: RsaLength = RsaLength._4096
+            length: RsaLength = RsaLength._4096,
+            protector: SecretKeyRingProtector = SecretKeyRingProtector.unprotectedKeys()
         ): PGPSecretKeyRing =
-            OpenPgpKeyGenerator.buildV4Key(creationTime = creationTime)
+            OpenPgpKeyGenerator()
+                .buildV4Key(creationTime = creationTime)
                 .setPrimaryKey(KeyType.RSA(length)) {
                     // Add UserIDs
                     userId.forEachIndexed { index, uid ->
@@ -1181,7 +1199,7 @@ class OpenPgpKeyTemplates private constructor() {
                 .addSigningSubkey(KeyType.RSA(length))
                 // encryption key
                 .addEncryptionSubkey(KeyType.RSA(length))
-                .build()
+                .build(protector)
 
         /**
          * Generate an OpenPGP key consisting of a single RSA key that is used for certification of
@@ -1194,9 +1212,11 @@ class OpenPgpKeyTemplates private constructor() {
         fun singleRsa(
             vararg userId: CharSequence,
             creationTime: Date = Date(),
-            length: RsaLength = RsaLength._4096
+            length: RsaLength = RsaLength._4096,
+            protector: SecretKeyRingProtector = SecretKeyRingProtector.unprotectedKeys()
         ): PGPSecretKeyRing =
-            OpenPgpKeyGenerator.buildV4Key(creationTime = creationTime)
+            OpenPgpKeyGenerator()
+                .buildV4Key(creationTime = creationTime)
                 .setPrimaryKey(KeyType.RSA(length)) {
                     userId.forEach { addUserId(it) }
                     addDirectKeySignature(
@@ -1208,6 +1228,6 @@ class OpenPgpKeyTemplates private constructor() {
                                 KeyFlag.ENCRYPT_STORAGE)
                         })
                 }
-                .build()
+                .build(protector)
     }
 }

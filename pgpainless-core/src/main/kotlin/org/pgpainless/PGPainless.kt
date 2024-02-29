@@ -15,6 +15,7 @@ import org.pgpainless.encryption_signing.EncryptionBuilder
 import org.pgpainless.key.certification.CertifyCertificate
 import org.pgpainless.key.generation.KeyRingBuilder
 import org.pgpainless.key.generation.KeyRingTemplates
+import org.pgpainless.key.generation.OpenPgpKeyGenerator
 import org.pgpainless.key.info.KeyRingInfo
 import org.pgpainless.key.modification.secretkeyring.SecretKeyRingEditor
 import org.pgpainless.key.parsing.KeyRingReader
@@ -26,19 +27,30 @@ class PGPainless private constructor() {
 
     companion object {
 
+        /** Generate an OpenPGP key. */
+        @JvmOverloads
+        @JvmStatic
+        fun generateOpenPgpKey(policy: Policy = getPolicy()) = OpenPgpKeyGenerator(policy)
+
         /**
          * Generate a fresh OpenPGP key ring from predefined templates.
          *
          * @return templates
          */
-        @JvmStatic fun generateKeyRing() = KeyRingTemplates()
+        @Deprecated(
+            "Deprecated in favor of new API",
+            ReplaceWith("generateOpenPgpKey().buildV4Key().fromTemplate()"))
+        @JvmStatic
+        fun generateKeyRing() = KeyRingTemplates()
 
         /**
          * Build a custom OpenPGP key ring.
          *
          * @return builder
          */
-        @JvmStatic fun buildKeyRing() = KeyRingBuilder()
+        @Deprecated("Deprecated in favor of new API", ReplaceWith("generateOpenPgpKey()"))
+        @JvmStatic
+        fun buildKeyRing() = KeyRingBuilder()
 
         /**
          * Read an existing OpenPGP key ring.

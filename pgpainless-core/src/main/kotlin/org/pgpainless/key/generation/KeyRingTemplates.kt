@@ -4,6 +4,8 @@
 
 package org.pgpainless.key.generation
 
+import openpgp.toArray
+import openpgp.toPassphrase
 import org.bouncycastle.openpgp.PGPSecretKeyRing
 import org.pgpainless.algorithm.KeyFlag
 import org.pgpainless.key.generation.type.KeyType
@@ -30,15 +32,13 @@ class KeyRingTemplates {
         length: RsaLength,
         passphrase: Passphrase = Passphrase.emptyPassphrase()
     ): PGPSecretKeyRing =
-        OpenPgpKeyGenerator.buildV4Key()
-            .setPrimaryKey(KeyType.RSA(length), listOf(KeyFlag.CERTIFY_OTHER)) {
-                if (userId != null) {
-                    addUserId(userId)
-                }
-            }
-            .addSigningSubkey(KeyType.RSA(length))
-            .addEncryptionSubkey(KeyType.RSA(length))
-            .build(passphrase)
+        OpenPgpKeyGenerator()
+            .buildV4Key()
+            .fromTemplate()
+            .composedRsa(
+                userId = userId.toArray(),
+                length = length,
+                protector = SecretKeyRingProtector.unlockAnyKeyWith(passphrase))
 
     /**
      * Generate an RSA OpenPGP key consisting of an RSA primary key used for certification, a
@@ -50,14 +50,11 @@ class KeyRingTemplates {
      *   keys.
      * @return key
      */
-    fun rsaKeyRing(userId: CharSequence?, length: RsaLength, password: String?): PGPSecretKeyRing =
-        password.let {
-            if (it.isNullOrBlank()) {
-                rsaKeyRing(userId, length, Passphrase.emptyPassphrase())
-            } else {
-                rsaKeyRing(userId, length, Passphrase.fromPassword(it))
-            }
-        }
+    fun rsaKeyRing(
+        userId: CharSequence?,
+        length: RsaLength,
+        password: CharSequence?
+    ): PGPSecretKeyRing = rsaKeyRing(userId, length, password.toPassphrase())
 
     /**
      * Creates a simple RSA KeyPair of length {@code length} with user-id {@code userId}. The
@@ -75,19 +72,13 @@ class KeyRingTemplates {
         length: RsaLength,
         passphrase: Passphrase = Passphrase.emptyPassphrase()
     ): PGPSecretKeyRing =
-        OpenPgpKeyGenerator.buildV4Key()
-            .setPrimaryKey(
-                KeyType.RSA(length),
-                listOf(
-                    KeyFlag.CERTIFY_OTHER,
-                    KeyFlag.SIGN_DATA,
-                    KeyFlag.ENCRYPT_COMMS,
-                    KeyFlag.ENCRYPT_STORAGE)) {
-                    if (userId != null) {
-                        addUserId(userId)
-                    }
-                }
-            .build(passphrase)
+        OpenPgpKeyGenerator()
+            .buildV4Key()
+            .fromTemplate()
+            .singleRsa(
+                userId = userId.toArray(),
+                length = length,
+                protector = SecretKeyRingProtector.unlockAnyKeyWith(passphrase))
 
     /**
      * Creates a simple RSA KeyPair of length {@code length} with user-id {@code userId}. The
@@ -99,14 +90,8 @@ class KeyRingTemplates {
      * @param password Password of the key. Can be null or blank for unencrypted keys.
      * @return {@link PGPSecretKeyRing} containing the KeyPair.
      */
-    fun simpleRsaKeyRing(userId: CharSequence?, length: RsaLength, password: String?) =
-        password.let {
-            if (it.isNullOrBlank()) {
-                simpleRsaKeyRing(userId, length, Passphrase.emptyPassphrase())
-            } else {
-                simpleRsaKeyRing(userId, length, Passphrase.fromPassword(it))
-            }
-        }
+    fun simpleRsaKeyRing(userId: CharSequence?, length: RsaLength, password: CharSequence?) =
+        simpleRsaKeyRing(userId, length, password.toPassphrase())
 
     /**
      * Creates a key ring consisting of an ed25519 EdDSA primary key and a X25519 XDH subkey. The
@@ -122,7 +107,8 @@ class KeyRingTemplates {
         userId: CharSequence?,
         passphrase: Passphrase = Passphrase.emptyPassphrase()
     ): PGPSecretKeyRing =
-        OpenPgpKeyGenerator.buildV4Key()
+        OpenPgpKeyGenerator()
+            .buildV4Key()
             .setPrimaryKey(
                 KeyType.EDDSA(EdDSACurve._Ed25519),
                 listOf(KeyFlag.CERTIFY_OTHER, KeyFlag.SIGN_DATA)) {
@@ -142,14 +128,8 @@ class KeyRingTemplates {
      * @param password Password of the private key. Can be null or blank for an unencrypted key.
      * @return {@link PGPSecretKeyRing} containing the key pairs.
      */
-    fun simpleEcKeyRing(userId: CharSequence?, password: String?): PGPSecretKeyRing =
-        password.let {
-            if (it.isNullOrBlank()) {
-                simpleEcKeyRing(userId, Passphrase.emptyPassphrase())
-            } else {
-                simpleEcKeyRing(userId, Passphrase.fromPassword(it))
-            }
-        }
+    fun simpleEcKeyRing(userId: CharSequence?, password: CharSequence?): PGPSecretKeyRing =
+        simpleEcKeyRing(userId, password.toPassphrase())
 
     /**
      * Generate a modern PGP key ring consisting of an ed25519 EdDSA primary key which is used to
@@ -164,17 +144,12 @@ class KeyRingTemplates {
         userId: CharSequence?,
         passphrase: Passphrase = Passphrase.emptyPassphrase()
     ): PGPSecretKeyRing =
-        OpenPgpKeyGenerator.buildV4Key()
-            .setPrimaryKey(KeyType.EDDSA(EdDSACurve._Ed25519), listOf(KeyFlag.CERTIFY_OTHER)) {
-                if (userId != null) {
-                    addUserId(userId)
-                }
-            }
-            .addEncryptionSubkey(KeyType.XDH(XDHSpec._X25519))
-            .addSigningSubkey(KeyType.EDDSA(EdDSACurve._Ed25519))
-            .build(
-                if (passphrase.isEmpty) SecretKeyRingProtector.unprotectedKeys()
-                else SecretKeyRingProtector.unlockAnyKeyWith(passphrase))
+        OpenPgpKeyGenerator()
+            .buildV4Key()
+            .fromTemplate()
+            .ed25519Curve25519(
+                userId = userId.toArray(),
+                protector = SecretKeyRingProtector.unlockAnyKeyWith(passphrase))
 
     /**
      * Generate a modern PGP key ring consisting of an ed25519 EdDSA primary key which is used to
@@ -184,12 +159,6 @@ class KeyRingTemplates {
      * @param password passphrase for the private key. Can be null or blank for an unencrypted key.
      * @return key ring
      */
-    fun modernKeyRing(userId: CharSequence?, password: String?): PGPSecretKeyRing =
-        password.let {
-            if (it.isNullOrBlank()) {
-                modernKeyRing(userId, Passphrase.emptyPassphrase())
-            } else {
-                modernKeyRing(userId, Passphrase.fromPassword(it))
-            }
-        }
+    fun modernKeyRing(userId: CharSequence?, password: CharSequence?): PGPSecretKeyRing =
+        modernKeyRing(userId, password.toPassphrase())
 }
