@@ -407,6 +407,10 @@ internal constructor(val policy: Policy, val creationTime: Date, val preferences
          * Set a dedicated [Passphrase] for the primary key. This is useful, if each (sub-) key of
          * this OpenPGP key is intended to use a different passphrase.
          *
+         * If you want to use a single passphrase for the whole OpenPGP key (primary key + subkeys)
+         * it is advised to pass in the passphrase in the last builder step ([DefineSubkeys.build])
+         * instead.
+         *
          * @param passphrase passphrase to protect the primary key with
          */
         fun setPrimaryKeyPassphrase(passphrase: Passphrase) =
@@ -415,6 +419,10 @@ internal constructor(val policy: Policy, val creationTime: Date, val preferences
         /**
          * Set a dedicated [SecretKeyRingProtector] for the primary key. This is useful, if each
          * (sub-) key of this OpenPGP key is intended to use a different passphrase.
+         *
+         * If you want to use the same protection for the whole OpenPGP key (primary key + subkeys)
+         * it is advised to pass in the protector in the last builder step ([DefineSubkeys.build])
+         * instead.
          *
          * @param protector protector to protect the primary key with
          */
@@ -621,9 +629,29 @@ internal constructor(
             bindingTime: Date
         )
 
+        /**
+         * Set a dedicated [Passphrase] for the subkey. This is useful, if each (sub-) key of this
+         * OpenPGP key is intended to use a different passphrase.
+         *
+         * If you want to use a single passphrase for the whole OpenPGP key (primary key + subkeys)
+         * it is advised to pass in the passphrase in the last builder step ([DefineSubkeys.build])
+         * instead.
+         *
+         * @param passphrase passphrase to protect the subkey with
+         */
         fun setSubkeyPassphrase(passphrase: Passphrase) =
             setSubkeyProtector(SecretKeyRingProtector.unlockAnyKeyWith(passphrase))
 
+        /**
+         * Set a dedicated [SecretKeyRingProtector] for the subkey. This is useful, if each (sub-)
+         * key of this OpenPGP key is intended to use a different protection method.
+         *
+         * If you want to use the same protection for the whole OpenPGP key (primary key + subkeys)
+         * it is advised to pass in the protector in the last builder step ([DefineSubkeys.build])
+         * instead.
+         *
+         * @param protector protector to protect the subkey with
+         */
         fun setSubkeyProtector(protector: SecretKeyRingProtector) {
             builder.subkeyProtectors[OpenPgpFingerprint.of(subkey)] = protector
         }
