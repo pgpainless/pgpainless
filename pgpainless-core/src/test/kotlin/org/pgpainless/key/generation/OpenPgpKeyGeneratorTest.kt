@@ -17,6 +17,7 @@ import org.junit.jupiter.api.Assertions.assertNull
 import org.junit.jupiter.api.Assertions.assertTrue
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.assertThrows
+import org.junit.jupiter.api.fail
 import org.pgpainless.PGPainless
 import org.pgpainless.algorithm.HashAlgorithm
 import org.pgpainless.algorithm.KeyFlag
@@ -28,10 +29,13 @@ import org.pgpainless.key.generation.type.KeyType
 import org.pgpainless.key.generation.type.eddsa.EdDSACurve
 import org.pgpainless.key.generation.type.rsa.RsaLength
 import org.pgpainless.key.generation.type.xdh.XDHSpec
+import org.pgpainless.key.protection.SecretKeyRingProtector
+import org.pgpainless.key.protection.UnlockSecretKey
 import org.pgpainless.policy.Policy
 import org.pgpainless.signature.subpackets.SelfSignatureSubpackets
 import org.pgpainless.signature.subpackets.SignatureSubpacketsUtil
 import org.pgpainless.util.DateUtil
+import org.pgpainless.util.Passphrase
 
 class OpenPgpKeyGeneratorTest {
 
@@ -663,5 +667,131 @@ class OpenPgpKeyGeneratorTest {
             .addEncryptionSubkey(KeyType.XDH(XDHSpec._X25519))
             .build()
             .let { println(it.toAsciiArmor()) }
+    }
+
+    @Test
+    fun `generate key with unbound subkey`() {
+        val policy = Policy()
+
+        val key =
+            PGPainless.generateOpenPgpKey(policy)
+                .buildV4Key()
+                .setPrimaryKey(KeyType.EDDSA(EdDSACurve._Ed25519))
+                .addSigningSubkey(KeyType.EDDSA(EdDSACurve._Ed25519)) {
+                    skipDefaultBindingSignature()
+                }
+                .build()
+
+        val subkey = key.secretKeys.asSequence().last()
+        assertFalse(PGPainless.inspectKeyRing(key).isKeyValidlyBound(subkey.keyID))
+    }
+
+    @Test
+    fun `generate key with a single passphrase for all subkeys`() {
+        val policy = Policy()
+
+        val key =
+            PGPainless.generateOpenPgpKey(policy)
+                .buildV4Key()
+                .setPrimaryKey(KeyType.EDDSA(EdDSACurve._Ed25519))
+                .addSigningSubkey(KeyType.EDDSA(EdDSACurve._Ed25519))
+                .addEncryptionSubkey(KeyType.XDH(XDHSpec._X25519))
+                .build(Passphrase.fromPassword("sw0rdf1sh"))
+
+        assertTrue(PGPainless.inspectKeyRing(key).isFullyEncrypted)
+
+        for (subkey in key.secretKeys) {
+            UnlockSecretKey.unlockSecretKey(subkey, Passphrase.fromPassword("sw0rdf1sh"))
+        }
+    }
+
+    @Test
+    fun `generate key with dedicated passphrases for all subkeys`() {
+        val policy = Policy()
+
+        val key =
+            PGPainless.generateOpenPgpKey(policy)
+                .buildV4Key()
+                .setPrimaryKey(KeyType.EDDSA(EdDSACurve._Ed25519)) {
+                    setPrimaryKeyPassphrase(Passphrase.fromPassword("MyColorIsRed"))
+                }
+                .addSigningSubkey(KeyType.EDDSA(EdDSACurve._Ed25519)) {
+                    setSubkeyPassphrase(Passphrase.fromPassword("MyColorIsGreen"))
+                }
+                .addEncryptionSubkey(KeyType.XDH(XDHSpec._X25519)) {
+                    setSubkeyPassphrase(Passphrase.fromPassword("MyColorIsBlue"))
+                }
+                .build()
+
+        assertTrue(PGPainless.inspectKeyRing(key).isFullyEncrypted)
+
+        key.secretKeys.asSequence().forEachIndexed { index, subkey ->
+            UnlockSecretKey.unlockSecretKey(
+                subkey,
+                when (index) {
+                    0 -> Passphrase.fromPassword("MyColorIsRed")
+                    1 -> Passphrase.fromPassword("MyColorIsGreen")
+                    2 -> Passphrase.fromPassword("MyColorIsBlue")
+                    else -> fail { "Unexpected secret key at index $index" }
+                })
+        }
+    }
+
+    @Test
+    fun `generate key with dedicated subkey passphrase and catch-all primary key protection`() {
+        val policy = Policy()
+
+        val key =
+            PGPainless.generateOpenPgpKey(policy)
+                .buildV4Key()
+                .setPrimaryKey(KeyType.EDDSA(EdDSACurve._Ed25519))
+                .addSigningSubkey(KeyType.EDDSA(EdDSACurve._Ed25519)) {
+                    setSubkeyPassphrase(Passphrase.fromPassword("Yin"))
+                }
+                .build(Passphrase.fromPassword("Yang"))
+
+        assertTrue(PGPainless.inspectKeyRing(key).isFullyEncrypted)
+
+        key.secretKeys.asSequence().forEachIndexed { index, subkey ->
+            UnlockSecretKey.unlockSecretKey(
+                subkey,
+                when (index) {
+                    0 -> Passphrase.fromPassword("Yang")
+                    1 -> Passphrase.fromPassword("Yin")
+                    else -> fail { "Unexpected secret key at index $index" }
+                })
+        }
+    }
+
+    @Test
+    fun `generate key with unprotected subkey and other keys protected through catch-all`() {
+        val policy = Policy()
+
+        val key =
+            PGPainless.generateOpenPgpKey(policy)
+                .buildV4Key()
+                .setPrimaryKey(KeyType.EDDSA(EdDSACurve._Ed25519))
+                .addSigningSubkey(KeyType.EDDSA(EdDSACurve._Ed25519)) {
+                    // Only the signing subkey is unprotected
+                    setSubkeyProtector(SecretKeyRingProtector.unprotectedKeys())
+                }
+                .addEncryptionSubkey(KeyType.XDH(XDHSpec._X25519))
+                // All other keys are protected
+                .build(Passphrase.fromPassword("sw0rdf1sh"))
+
+        val info = PGPainless.inspectKeyRing(key)
+        assertFalse(info.isFullyEncrypted)
+        assertFalse(info.isFullyDecrypted)
+
+        key.secretKeys.asSequence().forEachIndexed { index, subkey ->
+            UnlockSecretKey.unlockSecretKey(
+                subkey,
+                when (index) {
+                    0,
+                    2 -> Passphrase.fromPassword("sw0rdf1sh")
+                    1 -> Passphrase.emptyPassphrase()
+                    else -> fail { "Unexpected subkey at index $index" }
+                })
+        }
     }
 }

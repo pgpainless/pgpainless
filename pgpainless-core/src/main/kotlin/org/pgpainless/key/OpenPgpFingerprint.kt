@@ -5,6 +5,7 @@
 package org.pgpainless.key
 
 import java.nio.charset.Charset
+import org.bouncycastle.openpgp.PGPKeyPair
 import org.bouncycastle.openpgp.PGPKeyRing
 import org.bouncycastle.openpgp.PGPPublicKey
 import org.bouncycastle.openpgp.PGPSecretKey
@@ -107,6 +108,8 @@ abstract class OpenPgpFingerprint : CharSequence, Comparable<OpenPgpFingerprint>
          * @return fingerprint
          */
         @JvmStatic fun of(key: PGPPublicKey): OpenPgpFingerprint = of(key.version, key.fingerprint)
+
+        @JvmStatic fun of(key: PGPKeyPair): OpenPgpFingerprint = of(key.publicKey)
 
         @JvmStatic
         fun of(keyVersion: Int, binaryFingerprint: ByteArray): OpenPgpFingerprint =

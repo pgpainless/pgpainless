@@ -22,6 +22,7 @@ import org.pgpainless.algorithm.KeyFlag
 import org.pgpainless.algorithm.PublicKeyAlgorithm
 import org.pgpainless.bouncycastle.extensions.plusCertification
 import org.pgpainless.implementation.ImplementationFactory
+import org.pgpainless.key.OpenPgpFingerprint
 import org.pgpainless.key.generation.DefinePrimaryKey.PrimaryKeyBuilder
 import org.pgpainless.key.generation.DefineSubkeys.SubkeyBuilder
 import org.pgpainless.key.generation.OpenPgpKeyTemplates.Companion.v4
@@ -98,6 +99,9 @@ internal constructor(val policy: Policy, val creationTime: Date, val preferences
     // It can be reused (e.g. by the v4 builder) to populate direct-key and self-certification
     //  signatures with the intended key flags.
     protected var keyFlags: List<KeyFlag>? = null
+
+    // Dedicated protector for the primary key.
+    protected var primaryKeyProtector: SecretKeyRingProtector? = null
 
     /**
      * Callback to set preferences on the key and user-ids, such as algorithm preferences, features
@@ -398,6 +402,25 @@ internal constructor(val policy: Policy, val creationTime: Date, val preferences
         fun skipDefaultSignature() {
             builder.skipDefaultDirectKeySignature = true
         }
+
+        /**
+         * Set a dedicated [Passphrase] for the primary key. This is useful, if each (sub-) key of
+         * this OpenPGP key is intended to use a different passphrase.
+         *
+         * @param passphrase passphrase to protect the primary key with
+         */
+        fun setPrimaryKeyPassphrase(passphrase: Passphrase) =
+            setPrimaryKeyProtector(SecretKeyRingProtector.unlockAnyKeyWith(passphrase))
+
+        /**
+         * Set a dedicated [SecretKeyRingProtector] for the primary key. This is useful, if each
+         * (sub-) key of this OpenPGP key is intended to use a different passphrase.
+         *
+         * @param protector protector to protect the primary key with
+         */
+        fun setPrimaryKeyProtector(protector: SecretKeyRingProtector) {
+            builder.primaryKeyProtector = protector
+        }
     }
 }
 
@@ -412,14 +435,19 @@ internal constructor(val policy: Policy, val creationTime: Date, val preferences
  */
 abstract class DefineSubkeys<B : DefineSubkeys<B>>
 internal constructor(
-    internal var primaryKey: PGPKeyPair,
+    internal val primaryKey: PGPKeyPair,
+    internal val primaryKeyProtector: SecretKeyRingProtector?,
     internal val policy: Policy,
     internal val creationTime: Date,
-    internal val subkeys: MutableList<PGPKeyPair> = mutableListOf()
+    internal val subkeys: MutableList<PGPKeyPair> = mutableListOf(),
+    internal val subkeyProtectors: MutableMap<OpenPgpFingerprint, SecretKeyRingProtector> =
+        mutableMapOf(),
+    internal val skipDefaultBindingSignatureFor: MutableList<OpenPgpFingerprint> = mutableListOf()
 ) {
 
     /**
-     * Add a subkey to the OpenPGP key.
+     * Add a subkey to the OpenPGP key. If no explicit binding signature is set inside [block], the
+     * key will be bound using a default binding signature containing the given [flags].
      *
      * @param type subkey type
      * @param creationTime creation time of the subkey
@@ -439,14 +467,23 @@ internal constructor(
             sanitizeSubkeyCreationTime(creationTime, primaryKey)
 
             var subkey = generateSubkey(type, creationTime)
-            val subkeyBlock =
-                block
-                    ?: {
-                        addBindingSignature(
-                            SelfSignatureSubpackets.applyHashed { flags?.let { setKeyFlags(it) } },
-                            bindingTime = creationTime)
-                    }
+
+            // Default function block will only set appropriate key flags
+            val defaultBlock: SubkeyBlock = {
+                addBindingSignature(
+                    SelfSignatureSubpackets.applyHashed { flags?.let { setKeyFlags(it) } },
+                    bindingTime = creationTime)
+            }
+            // if no custom function block is given, simply set key flags
+            val subkeyBlock = block ?: defaultBlock
+
             subkey = invokeOnSubkey(subkey, subkeyBlock)
+
+            // If no binding signature was added yet, add a default binding sig using the default
+            // block
+            if (!skipDefaultBindingSignatureFor.contains(OpenPgpFingerprint.of(subkey))) {
+                subkey = invokeOnSubkey(subkey, defaultBlock)
+            }
             subkeys.add(subkey)
         }
             as B
@@ -472,7 +509,9 @@ internal constructor(
     ): PGPKeyPair
 
     /**
-     * Finish the key generation and return the OpenPGP [PGPSecretKeyRing].
+     * Finish the key generation and return the OpenPGP [PGPSecretKeyRing]. The [protector] is used
+     * as a catch-all to protect any keys where the user did not specify protection explicitly
+     * otherwise.
      *
      * @param protector protector to protect the OpenPGP key's secret components with
      * @return finished [PGPSecretKeyRing]
@@ -481,7 +520,8 @@ internal constructor(
 
     /**
      * Finish the key generation and return the OpenPGP [PGPSecretKeyRing] protected with the given
-     * [passphrase].
+     * [passphrase]. The [passphrase] is used as a catch-all to protect any keys where the user did
+     * not specify protection explicitly otherwise.
      *
      * @param passphrase passphrase to protect the OpenPGP key's secret components with
      * @return finished [PGPSecretKeyRing]
@@ -543,6 +583,10 @@ internal constructor(
         /**
          * Add a binding signature to the subkey.
          *
+         * If this method is not explicitly called at least once while adding a subkey, the subkey
+         * will be bound using a default binding signature. To prevent adding this default
+         * signature, call [skipDefaultBindingSignatureFor].
+         *
          * @param subpacketsCallback callback to modify the binding signatures subpackets
          * @param hashAlgorithm hash algorithm to be used during signature calculation
          * @param bindingTime creation time of the binding signature
@@ -559,6 +603,16 @@ internal constructor(
             builder.sanitizeBindingTime(bindingTime, subkey)
 
             doAddBindingSignature(subpacketsCallback, hashAlgorithm, bindingTime)
+            skipDefaultBindingSignature()
+        }
+
+        /**
+         * Do not bind the key using a default binding signature, even if the user did not add an
+         * explicit binding signature. This method is useful mostly for testing to generate keys
+         * with unbound subkeys.
+         */
+        fun skipDefaultBindingSignature() {
+            builder.skipDefaultBindingSignatureFor.add(OpenPgpFingerprint.of(subkey))
         }
 
         abstract fun doAddBindingSignature(
@@ -566,6 +620,13 @@ internal constructor(
             hashAlgorithm: HashAlgorithm,
             bindingTime: Date
         )
+
+        fun setSubkeyPassphrase(passphrase: Passphrase) =
+            setSubkeyProtector(SecretKeyRingProtector.unlockAnyKeyWith(passphrase))
+
+        fun setSubkeyProtector(protector: SecretKeyRingProtector) {
+            builder.subkeyProtectors[OpenPgpFingerprint.of(subkey)] = protector
+        }
     }
 }
 
@@ -646,10 +707,13 @@ internal constructor(primaryKey: PGPKeyPair, subkey: PGPKeyPair, builder: Define
      */
     abstract class DefineSubkeysV4<O : DefineSubkeys<O>>(
         primaryKey: PGPKeyPair,
+        primaryKeyProtector: SecretKeyRingProtector?,
         policy: Policy,
         creationTime: Date,
         subkeys: List<PGPKeyPair>
-    ) : DefineSubkeys<O>(primaryKey, policy, creationTime, subkeys.toMutableList()) {
+    ) :
+        DefineSubkeys<O>(
+            primaryKey, primaryKeyProtector, policy, creationTime, subkeys.toMutableList()) {
 
         override fun generateSubkey(type: KeyType, creationTime: Date): PGPKeyPair {
             return OpenPgpKeyPairGenerator.V4().generateSubkey(type, creationTime)
@@ -674,7 +738,7 @@ internal constructor(primaryKey: PGPKeyPair, subkey: PGPKeyPair, builder: Define
                             primaryKey.publicKey,
                             ImplementationFactory.getInstance().v4FingerprintCalculator,
                             true,
-                            protector.getEncryptor(primaryKey.keyID)))
+                            (primaryKeyProtector ?: protector).getEncryptor(primaryKey.keyID)))
 
                     // Subkeys
                     subkeys.forEach {
@@ -684,7 +748,9 @@ internal constructor(primaryKey: PGPKeyPair, subkey: PGPKeyPair, builder: Define
                                 it.publicKey,
                                 ImplementationFactory.getInstance().v4FingerprintCalculator,
                                 false,
-                                protector.getEncryptor(it.keyID)))
+                                subkeyProtectors
+                                    .getOrDefault(OpenPgpFingerprint.of(it), protector)
+                                    .getEncryptor(it.keyID)))
                     }
                 })
         }
@@ -782,7 +848,7 @@ internal constructor(policy: Policy, creationTime: Date, preferences: AlgorithmS
                 invokeOnPrimaryKey(primaryKey) { addDirectKeySignature(preferencesSubpackets()) }
         }
 
-        return OpinionatedDefineSubkeysV4(primaryKey, policy, creationTime)
+        return OpinionatedDefineSubkeysV4(primaryKey, primaryKeyProtector, policy, creationTime)
     }
 
     override fun sanitizeHashAlgorithm(algorithm: HashAlgorithm) {
@@ -866,7 +932,7 @@ internal constructor(policy: Policy, creationTime: Date, preferences: AlgorithmS
         primaryKey = invokeOnPrimaryKey(primaryKey, block)
 
         // return builder for adding subkeys
-        return UnopinionatedDefineSubkeysV4(primaryKey, policy, creationTime)
+        return UnopinionatedDefineSubkeysV4(primaryKey, primaryKeyProtector, policy, creationTime)
     }
 }
 
@@ -878,9 +944,14 @@ internal constructor(policy: Policy, creationTime: Date, preferences: AlgorithmS
  * @param creationTime creation time of the OpenPGP key
  */
 class OpinionatedDefineSubkeysV4
-internal constructor(primaryKey: PGPKeyPair, policy: Policy, creationTime: Date) :
+internal constructor(
+    primaryKey: PGPKeyPair,
+    primaryKeyProtector: SecretKeyRingProtector?,
+    policy: Policy,
+    creationTime: Date
+) :
     SubkeyBuilderV4.DefineSubkeysV4<OpinionatedDefineSubkeysV4>(
-        primaryKey, policy, creationTime, listOf()) {
+        primaryKey, primaryKeyProtector, policy, creationTime, listOf()) {
 
     /**
      * Return an unopinionated implementation of this builder.
@@ -890,7 +961,9 @@ internal constructor(primaryKey: PGPKeyPair, policy: Policy, creationTime: Date)
     fun unopinionated() = UnopinionatedDefineSubkeysV4(this)
 
     /**
-     * Add a subkey for signing messages to the OpenPGP key.
+     * Add a subkey for signing messages to the OpenPGP key. If no explicit binding signature is set
+     * inside [block], the key will be bound using a default binding signature marking the key as
+     * signing capable.
      *
      * @param type signing key type
      * @param creationTime creation time of the signing subkey
@@ -906,7 +979,9 @@ internal constructor(primaryKey: PGPKeyPair, policy: Policy, creationTime: Date)
     }
 
     /**
-     * Add a subkey for signing messages to the OpenPGP key.
+     * Add a subkey for signing messages to the OpenPGP key. If no explicit binding signature is set
+     * inside [block], the key will be bound using a default binding signature marking the key as
+     * signing capable.
      *
      * @param type signing key type
      * @param block function block to add binding signatures to the subkey
@@ -915,7 +990,9 @@ internal constructor(primaryKey: PGPKeyPair, policy: Policy, creationTime: Date)
         addSigningSubkey(type, this.creationTime, block)
 
     /**
-     * Add a subkey for message encryption to the OpenPGP key.
+     * Add a subkey for message encryption to the OpenPGP key. If no explicit binding signature is
+     * set inside [block], the key will be bound using a default binding signature marking the key
+     * as encryption capable.
      *
      * @param type encryption key type
      * @param creationTime creation time of the encryption key
@@ -932,7 +1009,9 @@ internal constructor(primaryKey: PGPKeyPair, policy: Policy, creationTime: Date)
     }
 
     /**
-     * Add a subkey for message encryption to the OpenPGP key.
+     * Add a subkey for message encryption to the OpenPGP key. If no explicit binding signature is
+     * set inside [block], the key will be bound using a default binding signature marking the key
+     * as encryption capable.
      *
      * @param type encryption key type
      * @param block function block to add binding signatures to the subkey
@@ -996,12 +1075,13 @@ internal constructor(primaryKey: PGPKeyPair, policy: Policy, creationTime: Date)
 class UnopinionatedDefineSubkeysV4
 internal constructor(
     primaryKey: PGPKeyPair,
+    primaryKeyProtector: SecretKeyRingProtector?,
     policy: Policy,
     creationTime: Date,
     subkeys: List<PGPKeyPair> = mutableListOf()
 ) :
     SubkeyBuilderV4.DefineSubkeysV4<UnopinionatedDefineSubkeysV4>(
-        primaryKey, policy, creationTime, subkeys) {
+        primaryKey, primaryKeyProtector, policy, creationTime, subkeys) {
 
     /**
      * Constructor to build an unopinionated variant of the given [OpinionatedDefineSubkeysV4].
@@ -1011,7 +1091,11 @@ internal constructor(
     internal constructor(
         opinionated: OpinionatedDefineSubkeysV4
     ) : this(
-        opinionated.primaryKey, opinionated.policy, opinionated.creationTime, opinionated.subkeys)
+        opinionated.primaryKey,
+        opinionated.primaryKeyProtector,
+        opinionated.policy,
+        opinionated.creationTime,
+        opinionated.subkeys)
 
     override fun generateSubkey(type: KeyType, creationTime: Date): PGPKeyPair {
         return OpenPgpKeyPairGenerator.V4().generateSubkey(type, creationTime)
