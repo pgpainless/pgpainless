@@ -79,3 +79,8 @@ License: Apache-2.0
 Files: pgpainless-cli/packaging/man/*
 Copyright: 2022 Paul Schaub <info@pgpainless.org>
 License: Apache-2.0
+
+# Github Issue Templates
+Files: .github/ISSUE_TEMPLATE/*
+Copyright: 2024 Paul Schaub <info@pgpainless.org>
+License: CC0-1.0
