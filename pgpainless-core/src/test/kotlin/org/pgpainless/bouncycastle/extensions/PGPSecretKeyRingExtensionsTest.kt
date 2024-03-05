@@ -4,6 +4,7 @@
 
 package org.pgpainless.bouncycastle.extensions
 
+import java.io.ByteArrayOutputStream
 import org.junit.jupiter.api.Assertions.assertFalse
 import org.junit.jupiter.api.Assertions.assertNotNull
 import org.junit.jupiter.api.Assertions.assertNull
@@ -15,7 +16,6 @@ import org.pgpainless.encryption_signing.ProducerOptions
 import org.pgpainless.encryption_signing.SigningOptions
 import org.pgpainless.key.TestKeys
 import org.pgpainless.key.protection.SecretKeyRingProtector
-import java.io.ByteArrayOutputStream
 
 class PGPSecretKeyRingExtensionsTest {
 
@@ -35,24 +35,20 @@ class PGPSecretKeyRingExtensionsTest {
         assertNotNull(key.requireSecretKey(TestKeys.EMIL_KEY_ID))
         assertNotNull(key.requireSecretKey(TestKeys.EMIL_FINGERPRINT))
 
-        assertThrows<NoSuchElementException> {
-            key.requireSecretKey(TestKeys.ROMEO_KEY_ID)
-        }
-        assertThrows<NoSuchElementException> {
-            key.requireSecretKey(TestKeys.ROMEO_FINGERPRINT)
-        }
+        assertThrows<NoSuchElementException> { key.requireSecretKey(TestKeys.ROMEO_KEY_ID) }
+        assertThrows<NoSuchElementException> { key.requireSecretKey(TestKeys.ROMEO_FINGERPRINT) }
     }
 
     @Test
     fun testGetSecretKeyForSignature() {
         val key = TestKeys.getEmilSecretKeyRing()
-        val signer = PGPainless.encryptAndOrSign()
-            .onOutputStream(ByteArrayOutputStream())
-            .withOptions(
-                ProducerOptions.sign(SigningOptions.get()
-                    .addDetachedSignature(SecretKeyRingProtector.unprotectedKeys(), key)
-                )
-            )
+        val signer =
+            PGPainless.encryptAndOrSign()
+                .onOutputStream(ByteArrayOutputStream())
+                .withOptions(
+                    ProducerOptions.sign(
+                        SigningOptions.get()
+                            .addDetachedSignature(SecretKeyRingProtector.unprotectedKeys(), key)))
         signer.write("Hello, World!\n".toByteArray())
         signer.close()
         val sig = signer.result.detachedSignatures.first().value.first()

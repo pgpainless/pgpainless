@@ -21,9 +21,7 @@ class PGPSecretKeyExtensionsTest {
         val key = TestKeys.getCryptieSecretKeyRing()
         val secKey = key.secretKey
 
-        val privKey = assertDoesNotThrow {
-            secKey.unlock(TestKeys.CRYPTIE_PASSPHRASE)
-        }
+        val privKey = assertDoesNotThrow { secKey.unlock(TestKeys.CRYPTIE_PASSPHRASE) }
         assertNotNull(privKey)
     }
 
@@ -32,9 +30,7 @@ class PGPSecretKeyExtensionsTest {
         val key = TestKeys.getCryptieSecretKeyRing()
         val secKey = key.secretKey
 
-        assertThrows<WrongPassphraseException> {
-            secKey.unlock(Passphrase.emptyPassphrase())
-        }
+        assertThrows<WrongPassphraseException> { secKey.unlock(Passphrase.emptyPassphrase()) }
     }
 
     @Test
@@ -42,9 +38,7 @@ class PGPSecretKeyExtensionsTest {
         val key = TestKeys.getEmilSecretKeyRing()
         val secKey = key.secretKey
 
-        val privKey = assertDoesNotThrow {
-            secKey.unlock()
-        }
+        val privKey = assertDoesNotThrow { secKey.unlock() }
         assertNotNull(privKey)
     }
 
@@ -53,9 +47,7 @@ class PGPSecretKeyExtensionsTest {
         val key = TestKeys.getEmilSecretKeyRing()
         val secKey = key.secretKey
 
-        val privKey = assertDoesNotThrow {
-            secKey.unlock(Passphrase.emptyPassphrase())
-        }
+        val privKey = assertDoesNotThrow { secKey.unlock(Passphrase.emptyPassphrase()) }
         assertNotNull(privKey)
     }
 

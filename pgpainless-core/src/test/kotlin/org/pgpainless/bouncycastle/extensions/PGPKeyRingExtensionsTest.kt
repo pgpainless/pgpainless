@@ -37,36 +37,20 @@ class PGPKeyRingExtensionsTest {
     @Test
     fun `test requirePublicKey on secret key ring`() {
         val key = TestKeys.getJulietSecretKeyRing()
-        assertNotNull(assertDoesNotThrow {
-            key.requirePublicKey(TestKeys.JULIET_KEY_ID)
-        })
-        assertNotNull(assertDoesNotThrow {
-            key.requirePublicKey(TestKeys.JULIET_FINGERPRINT)
-        })
+        assertNotNull(assertDoesNotThrow { key.requirePublicKey(TestKeys.JULIET_KEY_ID) })
+        assertNotNull(assertDoesNotThrow { key.requirePublicKey(TestKeys.JULIET_FINGERPRINT) })
 
-        assertThrows<NoSuchElementException> {
-            key.requirePublicKey(TestKeys.ROMEO_KEY_ID)
-        }
-        assertThrows<NoSuchElementException> {
-            key.requirePublicKey(TestKeys.ROMEO_FINGERPRINT)
-        }
+        assertThrows<NoSuchElementException> { key.requirePublicKey(TestKeys.ROMEO_KEY_ID) }
+        assertThrows<NoSuchElementException> { key.requirePublicKey(TestKeys.ROMEO_FINGERPRINT) }
     }
 
     @Test
     fun `test requirePublicKey on public key ring`() {
         val key = TestKeys.getJulietPublicKeyRing()
-        assertNotNull(assertDoesNotThrow {
-            key.requirePublicKey(TestKeys.JULIET_KEY_ID)
-        })
-        assertNotNull(assertDoesNotThrow {
-            key.requirePublicKey(TestKeys.JULIET_FINGERPRINT)
-        })
+        assertNotNull(assertDoesNotThrow { key.requirePublicKey(TestKeys.JULIET_KEY_ID) })
+        assertNotNull(assertDoesNotThrow { key.requirePublicKey(TestKeys.JULIET_FINGERPRINT) })
 
-        assertThrows<NoSuchElementException> {
-            key.requirePublicKey(TestKeys.ROMEO_KEY_ID)
-        }
-        assertThrows<NoSuchElementException> {
-            key.requirePublicKey(TestKeys.ROMEO_FINGERPRINT)
-        }
+        assertThrows<NoSuchElementException> { key.requirePublicKey(TestKeys.ROMEO_KEY_ID) }
+        assertThrows<NoSuchElementException> { key.requirePublicKey(TestKeys.ROMEO_FINGERPRINT) }
     }
 }
