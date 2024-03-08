@@ -120,7 +120,7 @@ internal constructor(primaryKey: PGPKeyPair, subkey: PGPKeyPair, builder: Define
             return OpenPgpKeyPairGenerator.V4().generateSubkey(type, creationTime)
         }
 
-        override fun invokeOnSubkey(subkey: PGPKeyPair, block: SubkeyBlock?): PGPKeyPair {
+        override fun invokeOnSubkey(subkey: PGPKeyPair, block: SubkeyBuilderBlock?): PGPKeyPair {
             return with(SubkeyBuilderV4(primaryKey, subkey, this)) {
                 if (block != null) {
                     block()
@@ -224,7 +224,7 @@ internal constructor(policy: Policy, creationTime: Date, preferences: AlgorithmS
         type: KeyType,
         keyFlags: List<KeyFlag>?,
         creationTime: Date,
-        block: PrimaryKeyBlock?
+        block: PrimaryKeyBuilderBlock?
     ): OpinionatedDefineSubkeysV4 {
 
         // Check key strength
@@ -325,7 +325,7 @@ internal constructor(policy: Policy, creationTime: Date, preferences: AlgorithmS
         type: KeyType,
         keyFlags: List<KeyFlag>?,
         creationTime: Date,
-        block: PrimaryKeyBlock?
+        block: PrimaryKeyBuilderBlock?
     ): UnopinionatedDefineSubkeysV4 {
 
         // Add user-provided signatures
@@ -374,7 +374,7 @@ internal constructor(
     fun addSigningSubkey(
         type: KeyType,
         creationTime: Date = this.creationTime,
-        block: SubkeyBlock? = null
+        block: SubkeyBuilderBlock? = null
     ): OpinionatedDefineSubkeysV4 {
         return addSubkey(type, listOf(KeyFlag.SIGN_DATA), creationTime, block)
     }
@@ -387,7 +387,7 @@ internal constructor(
      * @param type signing key type
      * @param block function block to add binding signatures to the subkey
      */
-    fun addSigningSubkey(type: KeyType, block: SubkeyBlock?) =
+    fun addSigningSubkey(type: KeyType, block: SubkeyBuilderBlock?) =
         addSigningSubkey(type, this.creationTime, block)
 
     /**
@@ -403,7 +403,7 @@ internal constructor(
     fun addEncryptionSubkey(
         type: KeyType,
         creationTime: Date = this.creationTime,
-        block: SubkeyBlock? = null,
+        block: SubkeyBuilderBlock? = null,
     ): OpinionatedDefineSubkeysV4 {
         return addSubkey(
             type, listOf(KeyFlag.ENCRYPT_COMMS, KeyFlag.ENCRYPT_STORAGE), creationTime, block)
@@ -417,7 +417,7 @@ internal constructor(
      * @param type encryption key type
      * @param block function block to add binding signatures to the subkey
      */
-    fun addEncryptionSubkey(type: KeyType, block: SubkeyBlock?) =
+    fun addEncryptionSubkey(type: KeyType, block: SubkeyBuilderBlock?) =
         addEncryptionSubkey(type, this.creationTime, block)
 
     override fun sanitizeHashAlgorithm(algorithm: HashAlgorithm) {
@@ -582,7 +582,7 @@ class PrimaryKeyBuilderV4 internal constructor(keyPair: PGPKeyPair, builder: Def
 
         override fun invokeOnPrimaryKey(
             primaryKey: PGPKeyPair,
-            block: PrimaryKeyBlock?
+            block: PrimaryKeyBuilderBlock?
         ): PGPKeyPair {
             return with(PrimaryKeyBuilderV4(primaryKey, this)) {
                 if (block != null) {

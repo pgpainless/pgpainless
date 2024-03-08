@@ -31,13 +31,13 @@ import org.pgpainless.util.Passphrase
  * Function block that is applied to the OpenPGP [PrimaryKeyBuilder]. Within this block, you add
  * User-IDs, User-Attributes and Direct-Key signatures on the primary key.
  */
-typealias PrimaryKeyBlock = (PrimaryKeyBuilder.() -> Unit)
+typealias PrimaryKeyBuilderBlock = (PrimaryKeyBuilder.() -> Unit)
 
 /**
  * Function block that is applied to an OpenPGP [SubkeyBuilder]. Here you typically add
  * subkey-binding signatures.
  */
-typealias SubkeyBlock = (SubkeyBuilder.() -> Unit)
+typealias SubkeyBuilderBlock = (SubkeyBuilder.() -> Unit)
 
 /**
  * API for generating OpenPGP keys. The API allows to generate keys of different OpenPGP protocol
@@ -140,7 +140,7 @@ internal constructor(val policy: Policy, val creationTime: Date, val preferences
      */
     protected abstract fun invokeOnPrimaryKey(
         primaryKey: PGPKeyPair,
-        block: PrimaryKeyBlock?
+        block: PrimaryKeyBuilderBlock?
     ): PGPKeyPair
 
     /**
@@ -165,7 +165,7 @@ internal constructor(val policy: Policy, val creationTime: Date, val preferences
         type: KeyType,
         keyFlags: List<KeyFlag>? = listOf(KeyFlag.CERTIFY_OTHER),
         creationTime: Date = this.creationTime,
-        block: PrimaryKeyBlock? = null
+        block: PrimaryKeyBuilderBlock? = null
     ): O {
         require(type.canCertify) {
             "Primary key cannot use algorithm ${type.algorithm} because it needs to be " +
@@ -174,14 +174,14 @@ internal constructor(val policy: Policy, val creationTime: Date, val preferences
         return doSetPrimaryKey(type, keyFlags, creationTime, block)
     }
 
-    fun setPrimaryKey(type: KeyType, block: PrimaryKeyBlock?): O =
+    fun setPrimaryKey(type: KeyType, block: PrimaryKeyBuilderBlock?): O =
         setPrimaryKey(type, listOf(KeyFlag.CERTIFY_OTHER), this.creationTime, block)
 
     protected abstract fun doSetPrimaryKey(
         type: KeyType,
         keyFlags: List<KeyFlag>?,
         creationTime: Date,
-        block: PrimaryKeyBlock?
+        block: PrimaryKeyBuilderBlock?
     ): O
 
     /**
@@ -456,7 +456,7 @@ internal constructor(
         type: KeyType,
         flags: List<KeyFlag>? = null,
         creationTime: Date = this.creationTime,
-        block: SubkeyBlock? = null
+        block: SubkeyBuilderBlock? = null
     ): B =
         apply {
             sanitizeKeyFlags(type.algorithm, flags)
@@ -465,7 +465,7 @@ internal constructor(
             var subkey = generateSubkey(type, creationTime)
 
             // Default function block will only set appropriate key flags
-            val defaultBlock: SubkeyBlock = {
+            val defaultBlock: SubkeyBuilderBlock = {
                 addBindingSignature(
                     SelfSignatureSubpackets.applyHashed { flags?.let { setKeyFlags(it) } },
                     bindingTime = creationTime)
@@ -491,7 +491,7 @@ internal constructor(
      * @param block function block
      * @return modified subkey
      */
-    protected abstract fun invokeOnSubkey(subkey: PGPKeyPair, block: SubkeyBlock?): PGPKeyPair
+    protected abstract fun invokeOnSubkey(subkey: PGPKeyPair, block: SubkeyBuilderBlock?): PGPKeyPair
 
     /**
      * Generate an OpenPGP subkey.
