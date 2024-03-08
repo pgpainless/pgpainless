@@ -592,7 +592,7 @@ class PrimaryKeyBuilderV4 internal constructor(keyPair: PGPKeyPair, builder: Def
             }
         }
 
-        override fun fromTemplate(): OpenPgpV4KeyTemplates = OpenPgpKeyTemplates.v4()
+        override fun fromTemplate(): OpenPgpV4KeyTemplates = OpenPgpV4KeyTemplates()
     }
 }
 
