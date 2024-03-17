@@ -6,7 +6,7 @@ SPDX-License-Identifier: Apache-2.0
 
 # PGPainless-SOP
 
-[![Spec Revision: 8](https://img.shields.io/badge/Spec%20Revision-8-blue)](https://datatracker.ietf.org/doc/draft-dkg-openpgp-stateless-cli/)
+[![Spec Revision: 10](https://img.shields.io/badge/Spec%20Revision-10-blue)](https://datatracker.ietf.org/doc/draft-dkg-openpgp-stateless-cli/)
 [![Maven Central](https://badgen.net/maven/v/maven-central/org.pgpainless/pgpainless-sop)](https://search.maven.org/artifact/org.pgpainless/pgpainless-sop)
 [![javadoc](https://javadoc.io/badge2/org.pgpainless/pgpainless-sop/javadoc.svg)](https://javadoc.io/doc/org.pgpainless/pgpainless-sop)
 

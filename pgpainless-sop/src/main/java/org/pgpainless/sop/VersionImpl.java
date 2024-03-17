@@ -10,6 +10,8 @@ import java.util.Locale;
 import java.util.Properties;
 
 import org.bouncycastle.jce.provider.BouncyCastleProvider;
+import org.jetbrains.annotations.NotNull;
+import sop.exception.SOPGPException;
 import sop.operation.Version;
 
 import javax.annotation.Nonnull;
@@ -20,7 +22,9 @@ import javax.annotation.Nonnull;
 public class VersionImpl implements Version {
 
     // draft version
-    private static final int SOP_VERSION = 8;
+    private static final int SOP_VERSION = 10;
+
+    private static final String SOPV_VERSION = "1.0";
 
     @Override
     @Nonnull
@@ -86,4 +90,9 @@ public class VersionImpl implements Version {
         return null;
     }
 
+    @NotNull
+    @Override
+    public String getSopVVersion() throws SOPGPException.UnsupportedOption {
+        return SOPV_VERSION;
+    }
 }

@@ -72,4 +72,11 @@ public class VersionTest {
             assertTrue(fullSopSpecVersion.endsWith(incompletenessRemarks));
         }
     }
+
+    @Test
+    public void testGetSopVVersion() {
+        String sopVVersion = sop.version().getSopVVersion();
+        assertNotNull(sopVVersion);
+        assertTrue(sopVVersion.matches("\\d+\\.\\d+(\\.\\d+)*")); // X.Y or X.Y.Z... etc.
+    }
 }
