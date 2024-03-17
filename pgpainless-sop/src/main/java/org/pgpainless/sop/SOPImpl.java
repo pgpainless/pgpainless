@@ -6,6 +6,7 @@ package org.pgpainless.sop;
 
 import org.pgpainless.util.ArmoredOutputStreamFactory;
 import sop.SOP;
+import sop.SOPV;
 import sop.operation.Armor;
 import sop.operation.ChangeKeyPassword;
 import sop.operation.Dearmor;
@@ -36,10 +37,12 @@ public class SOPImpl implements SOP {
         ArmoredOutputStreamFactory.setVersionInfo(null);
     }
 
+    private final SOPV sopv = new SOPVImpl();
+
     @Override
     @Nonnull
     public Version version() {
-        return new VersionImpl();
+        return sopv.version();
     }
 
     @Override
@@ -81,13 +84,13 @@ public class SOPImpl implements SOP {
     @Override
     @Nonnull
     public DetachedVerify detachedVerify() {
-        return new DetachedVerifyImpl();
+        return sopv.detachedVerify();
     }
 
     @Override
     @Nonnull
     public InlineVerify inlineVerify() {
-        return new InlineVerifyImpl();
+        return sopv.inlineVerify();
     }
 
     @Override
