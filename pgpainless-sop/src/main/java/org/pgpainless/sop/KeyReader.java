@@ -6,8 +6,10 @@ package org.pgpainless.sop;
 
 import org.bouncycastle.openpgp.PGPException;
 import org.bouncycastle.openpgp.PGPPublicKeyRingCollection;
+import org.bouncycastle.openpgp.PGPRuntimeOperationException;
 import org.bouncycastle.openpgp.PGPSecretKeyRingCollection;
 import org.pgpainless.PGPainless;
+import org.pgpainless.key.collection.PGPKeyRingCollection;
 import sop.exception.SOPGPException;
 
 import java.io.IOException;
@@ -44,19 +46,24 @@ class KeyReader {
 
     static PGPPublicKeyRingCollection readPublicKeys(InputStream certIn, boolean requireContent)
             throws IOException {
-        PGPPublicKeyRingCollection certs;
+        PGPKeyRingCollection certs;
         try {
-            certs = PGPainless.readKeyRing().publicKeyRingCollection(certIn);
+            certs = PGPainless.readKeyRing().keyRingCollection(certIn, false);
         } catch (IOException e) {
             String msg = e.getMessage();
             if (msg != null && (msg.startsWith("unknown object in stream:") || msg.startsWith("invalid header encountered"))) {
                 throw new SOPGPException.BadData(e);
             }
             throw e;
+        } catch (PGPRuntimeOperationException e) {
+            throw new SOPGPException.BadData(e);
         }
-        if (requireContent && certs.size() == 0) {
+        if (certs.getPgpSecretKeyRingCollection().size() != 0) {
+            throw new SOPGPException.BadData("Secret key components encountered, while certificates were expected.");
+        }
+        if (requireContent && certs.getPgpPublicKeyRingCollection().size() == 0) {
             throw new SOPGPException.BadData(new PGPException("No cert data found."));
         }
-        return certs;
+        return certs.getPgpPublicKeyRingCollection();
     }
 }
