@@ -4,7 +4,6 @@
 
 package org.pgpainless.sop;
 
-import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
@@ -92,10 +91,10 @@ public class DetachedSignImpl implements DetachedSign {
             }
         }
 
-        ByteArrayOutputStream buffer = new ByteArrayOutputStream();
+        OutputStream sink = new NullOutputStream();
         try {
             EncryptionStream signingStream = PGPainless.encryptAndOrSign()
-                    .onOutputStream(buffer)
+                    .onOutputStream(sink)
                     .withOptions(ProducerOptions.sign(signingOptions)
                             .setAsciiArmor(armor));
 
