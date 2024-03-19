@@ -34,3 +34,10 @@ test {
     useJUnitPlatform()
     environment("test.implementation", "sop.testsuite.pgpainless.PGPainlessSopInstanceFactory")
 }
+
+// https://docs.gradle.org/current/userguide/java_library_plugin.html#sec:java_library_modular_auto
+tasks.named('jar') {
+    manifest {
+        attributes('Automatic-Module-Name': 'org.pgpainless.sop')
+    }
+}
