@@ -18,6 +18,7 @@ import org.bouncycastle.util.io.Streams;
 import org.junit.jupiter.api.Test;
 import org.pgpainless.PGPainless;
 import org.pgpainless.algorithm.EncryptionPurpose;
+import org.pgpainless.decryption_verification.CachingBcPublicKeyDataDecryptorFactory;
 import org.pgpainless.decryption_verification.ConsumerOptions;
 import org.pgpainless.decryption_verification.DecryptionStream;
 import org.pgpainless.key.SubkeyIdentifier;
