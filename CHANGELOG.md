@@ -14,9 +14,12 @@ SPDX-License-Identifier: CC0-1.0
   - Rewrote most of the codebase in Kotlin
   - Removed `OpenPgpMetadata` (`decryptionStream.getResult()`) in favor of `MessageMetadata` (`decryptionStream.getMetadata()`)
 - `pgpainless-sop`, `pgpainless-cli`
-  - Bump `sop-java` to `8.0.1`, implementing [SOP Spec Revision 08](https://www.ietf.org/archive/id/draft-dkg-openpgp-stateless-cli-08.html)
+  - Bump `sop-java` to `10.0.0`, implementing [SOP Spec Revision 10](https://www.ietf.org/archive/id/draft-dkg-openpgp-stateless-cli-10.html)
   - Change API of `sop.encrypt` to return a `ReadyWithResult<EncryptionResult>` to expose the session key
   - `decrypt --verify-with`: Fix to not throw `NoSignature` exception (exit code 3) if `VERIFICATIONS` is empty
+  - Separate signature verification operations into `SOPV` interface
+  - Add `version --sopv` option
+  - Throw `BadData` error when passing KEYS where CERTS are expected.
 - Properly feed EOS tokens to the pushdown automaton when reaching the end of stream (thanks @iNPUTmice)
 - Do not choke on unknown signature subpackets (thanks @Jerbell)
 - Prevent timing issues resuting in subkey binding signatures predating the subkey (@thanks Jerbell)
