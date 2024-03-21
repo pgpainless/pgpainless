@@ -5,7 +5,7 @@ SPDX-License-Identifier: CC0-1.0
 
 # PGPainless Changelog
 
-## 1.6.7-SNAPSHOT
+## 1.6.7
 - SOP: Fix OOM error when detached-signing large amounts of data (fix #432)
 - Move `CachingBcPublicKeyDataDecryptorFactory` from `org.bouncycastle` packet to `org.pgpainless.decryption_verification` to avoid package split (partially addresses #428)
 - Basic support for Java Modules for `pgpainless-core` and `pgpainless-sop`
