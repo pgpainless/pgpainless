@@ -24,6 +24,12 @@ SPDX-License-Identifier: CC0-1.0
   - `GNUPG_AEAD_ENCRYPTED_DATA` -> `LIBREPGP_OCB_ENCRYPTED_DATA`
   - `GNUPG_VERSION_5_PUBLIC_KEY` -> `LIBREPGP_VERSION_5_PUBLIC_KEY`
 
+## 1.6.7
+- SOP: Fix OOM error when detached-signing large amounts of data (fix #432)
+- Move `CachingBcPublicKeyDataDecryptorFactory` from `org.bouncycastle` packet to `org.pgpainless.decryption_verification` to avoid package split (partially addresses #428)
+- Basic support for Java Modules for `pgpainless-core` and `pgpainless-sop`
+  - Added `Automatic-Module-Name` directive to gradle build files
+
 ## 1.6.6
 - Downgrade `logback-core` and `logback-classic` to `1.2.13` to fix #426
 
