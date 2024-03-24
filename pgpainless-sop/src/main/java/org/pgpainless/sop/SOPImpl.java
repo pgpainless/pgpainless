@@ -30,6 +30,8 @@ import javax.annotation.Nonnull;
  * <pre> {@code
  * SOP sop = new SOPImpl();
  * }</pre>
+ *
+ * For a slimmed down interface that merely focuses on signature verification, see {@link SOPVImpl}.
  */
 public class SOPImpl implements SOP {
 
@@ -37,11 +39,13 @@ public class SOPImpl implements SOP {
         ArmoredOutputStreamFactory.setVersionInfo(null);
     }
 
+    // Delegate for sig verification operations
     private final SOPV sopv = new SOPVImpl();
 
     @Override
     @Nonnull
     public Version version() {
+        // Delegate to SOPV
         return sopv.version();
     }
 
@@ -84,12 +88,14 @@ public class SOPImpl implements SOP {
     @Override
     @Nonnull
     public DetachedVerify detachedVerify() {
+        // Delegate to SOPV
         return sopv.detachedVerify();
     }
 
     @Override
     @Nonnull
     public InlineVerify inlineVerify() {
+        // Delegate to SOPV
         return sopv.inlineVerify();
     }
 
