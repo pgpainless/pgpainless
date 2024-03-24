@@ -31,9 +31,9 @@ pgpainless\-cli\-encrypt \- Encrypt a message from standard input
 .SH "SYNOPSIS"
 .sp
 \fBpgpainless\-cli encrypt\fP [\fB\-\-[no\-]armor\fP] [\fB\-\-stacktrace\fP] [\fB\-\-as\fP=\fI{binary|text}\fP]
-[\fB\-\-profile\fP=\fIPROFILE\fP] [\fB\-\-sign\-with\fP=\fIKEY\fP]...
-[\fB\-\-with\-key\-password\fP=\fIPASSWORD\fP]... [\fB\-\-with\-password\fP=\fIPASSWORD\fP]...
-[\fICERTS\fP...]
+[\fB\-\-profile\fP=\fIPROFILE\fP] [\fB\-\-session\-key\-out\fP=\fISESSIONKEY\fP]
+[\fB\-\-sign\-with\fP=\fIKEY\fP]... [\fB\-\-with\-key\-password\fP=\fIPASSWORD\fP]...
+[\fB\-\-with\-password\fP=\fIPASSWORD\fP]... [\fICERTS\fP...]
 .SH "DESCRIPTION"
 
 .SH "OPTIONS"
@@ -53,7 +53,7 @@ ASCII armor the output
 Profile identifier to switch between profiles
 .RE
 .sp
-\fB\-\-sign\-with\fP=\fIKEY\fP
+\fB\-\-session\-key\-out\fP=\fISESSIONKEY\fP, \fB\-\-sign\-with\fP=\fIKEY\fP
 .RS 4
 Sign the output with a private key
 .RE

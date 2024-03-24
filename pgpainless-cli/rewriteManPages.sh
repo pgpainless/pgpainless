@@ -13,12 +13,14 @@ do
     SRC="${page##*/}"
     DEST="${SRC/sop/pgpainless-cli}"
     sed \
+        -e 's/sopv/PLACEHOLDERV/g' \
         -e 's#.\\"     Title: sop#.\\"     Title: pgpainless-cli#g' \
         -e 's/Manual: Sop Manual/Manual: PGPainless-CLI Manual/g' \
         -e 's/.TH "SOP/.TH "PGPAINLESS\\-CLI/g' \
         -e 's/"Sop Manual"/"PGPainless\\-CLI Manual"/g' \
         -e 's/\\fBsop/\\fBpgpainless\\-cli/g' \
         -e 's/sop/pgpainless\\-cli/g' \
+        -e 's/PLACEHOLDERV/sopv/g' \
         $page > $DEST_DIR/$DEST
 done
 
