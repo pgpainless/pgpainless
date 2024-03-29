@@ -9,6 +9,7 @@ import org.pgpainless.PGPainless.Companion.getPolicy
 import org.pgpainless.algorithm.CompressionAlgorithm
 import org.pgpainless.algorithm.SymmetricKeyAlgorithm
 import org.pgpainless.algorithm.negotiation.SymmetricKeyAlgorithmNegotiator.Companion.byPopularity
+import org.pgpainless.util.NullOutputStream
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 
@@ -17,6 +18,10 @@ class EncryptionBuilder : EncryptionBuilderInterface {
         outputStream: OutputStream
     ): EncryptionBuilderInterface.WithOptions {
         return WithOptionsImpl(outputStream)
+    }
+
+    override fun discardOutput(): EncryptionBuilderInterface.WithOptions {
+        return onOutputStream(NullOutputStream())
     }
 
     class WithOptionsImpl(val outputStream: OutputStream) : EncryptionBuilderInterface.WithOptions {

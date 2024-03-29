@@ -8,7 +8,7 @@ import java.io.IOException
 import java.io.OutputStream
 import org.bouncycastle.openpgp.PGPException
 
-fun interface EncryptionBuilderInterface {
+interface EncryptionBuilderInterface {
 
     /**
      * Create a [EncryptionStream] wrapping an [OutputStream]. Data that is piped through the
@@ -18,6 +18,16 @@ fun interface EncryptionBuilderInterface {
      * @return api handle
      */
     fun onOutputStream(outputStream: OutputStream): WithOptions
+
+    /**
+     * Create an [EncryptionStream] that discards the data after processing it. This is useful, e.g.
+     * for generating detached signatures, where the resulting signature is retrieved from the
+     * [EncryptionResult] once the operation is finished. In this case, the plaintext data does not
+     * need to be retained.
+     *
+     * @return api handle
+     */
+    fun discardOutput(): WithOptions
 
     fun interface WithOptions {
 

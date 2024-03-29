@@ -53,15 +53,10 @@ class DetachedSignImpl : DetachedSign {
             }
         }
 
-        // When creating a detached signature, the output of the signing stream is actually
-        //  the unmodified plaintext data, so we can discard it.
-        //  The detached signature will later be retrieved from the metadata object instead.
-        val sink = NullOutputStream()
-
         try {
             val signingStream =
                 PGPainless.encryptAndOrSign()
-                    .onOutputStream(sink)
+                    .discardOutput()
                     .withOptions(ProducerOptions.sign(signingOptions).setAsciiArmor(armor))
 
             return object : ReadyWithResult<SigningResult>() {
