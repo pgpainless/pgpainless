@@ -180,14 +180,6 @@ byte[] armoredData = sop.armor()
 
 The `data(_)` method can either be called by providing a byte array, or an `InputStream`.
 
-:::{note}
-There is a `label(ArmorLabel label)` method, which could theoretically be used to define the label used in the
-ASCII armor header.
-However, this method is not (yet?) supported by `pgpainless-sop` and will currently throw an `UnsupportedOption`
-exception.
-Instead, the implementation will figure out the data type and set the respective label on its own.
-:::
-
 To remove ASCII armor from armored data, simply use the `dearmor()` API:
 
 ```java
