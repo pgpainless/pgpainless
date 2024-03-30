@@ -7,21 +7,13 @@ package org.pgpainless.sop;
 import org.junit.jupiter.api.Test;
 import org.pgpainless.PGPainless;
 import org.pgpainless.util.ArmorUtils;
-import sop.enums.ArmorLabel;
-import sop.exception.SOPGPException;
 
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 
 import static org.junit.jupiter.api.Assertions.assertArrayEquals;
-import static org.junit.jupiter.api.Assertions.assertThrows;
 
 public class ArmorTest {
-
-    @Test
-    public void labelIsNotSupported() {
-        assertThrows(SOPGPException.UnsupportedOption.class, () -> new SOPImpl().armor().label(ArmorLabel.sig));
-    }
 
     @Test
     public void armor() throws IOException {

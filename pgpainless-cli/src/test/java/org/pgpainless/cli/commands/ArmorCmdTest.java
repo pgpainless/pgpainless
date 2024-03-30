@@ -16,7 +16,6 @@ import org.bouncycastle.openpgp.PGPSecretKeyRing;
 import org.junit.jupiter.api.Test;
 import org.pgpainless.PGPainless;
 import org.slf4j.LoggerFactory;
-import sop.exception.SOPGPException;
 
 public class ArmorCmdTest extends CLITest {
 
@@ -87,15 +86,6 @@ public class ArmorCmdTest extends CLITest {
         String armored = armorOut.toString();
         assertTrue(armored.startsWith("-----BEGIN PGP MESSAGE-----\n"));
         assertTrue(armored.contains("SGVsbG8sIFdvcmxkIQo="));
-    }
-
-    @Test
-    public void labelNotYetSupported() throws IOException {
-        pipeStringToStdin("Hello, World!\n");
-        ByteArrayOutputStream out = pipeStdoutToStream();
-        int exitCode = executeCommand("armor", "--label", "Message");
-        assertEquals(SOPGPException.UnsupportedOption.EXIT_CODE, exitCode);
-        assertEquals(0, out.size());
     }
 
     @Test
