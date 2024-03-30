@@ -82,23 +82,26 @@ Stateless OpenPGP Protocol
 Usage: pgpainless-cli [--stacktrace] [COMMAND]
 
 Options:
-      --stacktrace   Print Stacktrace
+      --stacktrace   Print stacktrace
 
 Commands:
-  help           Display usage information for the specified subcommand
-  armor          Add ASCII Armor to standard input
-  dearmor        Remove ASCII Armor from standard input
-  decrypt        Decrypt a message from standard input
-  inline-detach  Split signatures from a clearsigned message
-  encrypt        Encrypt a message from standard input
-  extract-cert   Extract a public key certificate from a secret key from
-                   standard input
-  generate-key   Generate a secret key
-  sign           Create a detached signature on the data from standard input
-  verify         Verify a detached signature over the data from standard input
-  inline-sign    Create an inline-signed message from data on standard input
-  inline-verify  Verify inline-signed data from standard input
-  version        Display version information about the tool
+  version              Display version information about the tool
+  list-profiles        Emit a list of profiles supported by the identified
+                         subcommand
+  generate-key         Generate a secret key
+  change-key-password  Update the password of a key
+  revoke-key           Generate revocation certificates
+  extract-cert         Extract a public key certificate from a secret key
+  sign                 Create a detached message signature
+  verify               Verify a detached signature
+  encrypt              Encrypt a message from standard input
+  decrypt              Decrypt a message
+  inline-detach        Split signatures from a clearsigned message
+  inline-sign          Create an inline-signed message
+  inline-verify        Verify an inline-signed message
+  armor                Add ASCII Armor to standard input
+  dearmor              Remove ASCII Armor from standard input
+  help                 Display usage information for the specified subcommand
 
 Exit Codes:
    0   Successful program execution
@@ -120,6 +123,9 @@ Exit Codes:
   71   Unsupported special prefix (e.g. "@ENV/@FD") of indirect parameter
   73   Ambiguous input (a filename matching the designator already exists)
   79   Key is not signing capable
+  83   Options were supplied that are incompatible with each other
+  89   The requested profile is unsupported, or the indicated subcommand does
+         not accept profiles
 ```
 
 To get help on a subcommand, e.g. `encrypt`, just call the help subcommand followed by the subcommand you
