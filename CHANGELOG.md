@@ -7,12 +7,13 @@ SPDX-License-Identifier: CC0-1.0
 
 
 ## 2.0.0-SNAPSHOT
-- Bump `bcpg-jdk8on` to `1.77`
-- Bump `bcprov-jdk18on` to `1.77`
+- Bump `bcpg-jdk8on` to `1.78.1`
+- Bump `bcprov-jdk18on` to `1.78.1`
 - Bump `logback-core` and `logback-classic` to `1.4.13`
 - `pgpainless-core`
   - Rewrote most of the codebase in Kotlin
   - Removed `OpenPgpMetadata` (`decryptionStream.getResult()`) in favor of `MessageMetadata` (`decryptionStream.getMetadata()`)
+  - Removed support for generating EC keys over non-standard curve `secp256k1`
 - `pgpainless-sop`, `pgpainless-cli`
   - Bump `sop-java` to `10.0.0`, implementing [SOP Spec Revision 10](https://www.ietf.org/archive/id/draft-dkg-openpgp-stateless-cli-10.html)
   - Change API of `sop.encrypt` to return a `ReadyWithResult<EncryptionResult>` to expose the session key
