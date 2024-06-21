@@ -144,6 +144,10 @@ class OpenPgpMessageInputStream(
                     LOGGER.debug("Skipping Marker Packet")
                     pIn.readMarker()
                 }
+                OpenPgpPacket.PADDING -> {
+                    LOGGER.debug("Skipping Padding Packet")
+                    pIn.readPacket()
+                }
                 OpenPgpPacket.SK,
                 OpenPgpPacket.PK,
                 OpenPgpPacket.SSK,
