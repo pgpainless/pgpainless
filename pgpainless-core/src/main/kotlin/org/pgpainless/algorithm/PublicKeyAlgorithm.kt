@@ -61,6 +61,18 @@ enum class PublicKeyAlgorithm(
 
     /** Digital Signature Algorithm based on twisted Edwards Curves. */
     EDDSA_LEGACY(22, true, false),
+
+    /** X25519 encryption algorithm. */
+    X25519(25, false, true),
+
+    /** X448 encryption algorithm. */
+    X448(26, false, true),
+
+    /** Ed25519 signature algorithm. */
+    ED25519(27, true, false),
+
+    /** Ed448 signature algorithm. */
+    ED448(28, true, false),
     ;
 
     fun isSigningCapable(): Boolean = signingCapable
