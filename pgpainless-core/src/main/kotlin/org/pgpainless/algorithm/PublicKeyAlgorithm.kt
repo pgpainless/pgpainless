@@ -60,7 +60,7 @@ enum class PublicKeyAlgorithm(
     DIFFIE_HELLMAN(21, false, true),
 
     /** Digital Signature Algorithm based on twisted Edwards Curves. */
-    EDDSA(22, true, false),
+    EDDSA_LEGACY(22, true, false),
     ;
 
     fun isSigningCapable(): Boolean = signingCapable

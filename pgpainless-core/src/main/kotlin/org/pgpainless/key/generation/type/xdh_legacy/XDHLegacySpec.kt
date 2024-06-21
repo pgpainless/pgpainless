@@ -2,9 +2,9 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
-package org.pgpainless.key.generation.type.xdh
+package org.pgpainless.key.generation.type.xdh_legacy
 
-enum class XDHSpec(val algorithmName: String, val curveName: String, val bitStrength: Int) {
+enum class XDHLegacySpec(val algorithmName: String, val curveName: String, val bitStrength: Int) {
     _X25519("X25519", "curve25519", 256),
     ;
 

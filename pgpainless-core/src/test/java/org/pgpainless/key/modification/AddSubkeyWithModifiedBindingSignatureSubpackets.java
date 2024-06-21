@@ -29,7 +29,7 @@ import org.pgpainless.key.OpenPgpV4Fingerprint;
 import org.pgpainless.key.generation.KeyRingBuilder;
 import org.pgpainless.key.generation.KeySpec;
 import org.pgpainless.key.generation.type.KeyType;
-import org.pgpainless.key.generation.type.eddsa.EdDSACurve;
+import org.pgpainless.key.generation.type.eddsa_legacy.EdDSALegacyCurve;
 import org.pgpainless.key.info.KeyRingInfo;
 import org.pgpainless.key.protection.SecretKeyRingProtector;
 import org.pgpainless.signature.subpackets.SelfSignatureSubpackets;
@@ -47,7 +47,7 @@ public class AddSubkeyWithModifiedBindingSignatureSubpackets {
         KeyRingInfo before = PGPainless.inspectKeyRing(secretKeys);
 
         PGPKeyPair secretSubkey = KeyRingBuilder.generateKeyPair(
-                KeySpec.getBuilder(KeyType.EDDSA(EdDSACurve._Ed25519), KeyFlag.SIGN_DATA).build());
+                KeySpec.getBuilder(KeyType.EDDSA_LEGACY(EdDSALegacyCurve._Ed25519), KeyFlag.SIGN_DATA).build());
 
         long secondsUntilExpiration = 1000;
         secretKeys = PGPainless.modifyKeyRing(secretKeys)

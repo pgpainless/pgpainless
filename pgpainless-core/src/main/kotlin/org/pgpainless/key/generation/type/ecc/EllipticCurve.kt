@@ -7,7 +7,7 @@ package org.pgpainless.key.generation.type.ecc
 /**
  * Elliptic curves for use with [org.pgpainless.key.generation.type.ecc.ecdh.ECDH] and
  * [org.pgpainless.key.generation.type.ecc.ecdsa.ECDSA]. For curve25519 related curve definitions
- * see [XDHSpec] and [org.pgpainless.key.generation.type.eddsa.EdDSACurve].
+ * see [XDHSpec] and [org.pgpainless.key.generation.type.eddsa_legacy.EdDSALegacyCurve].
  */
 enum class EllipticCurve(val curveName: String, val bitStrength: Int) {
     _P256("prime256v1", 256), // prime256v1 is equivalent to P-256, see

@@ -40,7 +40,7 @@ import org.pgpainless.key.SubkeyIdentifier;
 import org.pgpainless.key.TestKeys;
 import org.pgpainless.key.generation.KeySpec;
 import org.pgpainless.key.generation.type.KeyType;
-import org.pgpainless.key.generation.type.eddsa.EdDSACurve;
+import org.pgpainless.key.generation.type.eddsa_legacy.EdDSALegacyCurve;
 import org.pgpainless.key.info.KeyRingInfo;
 import org.pgpainless.key.protection.SecretKeyRingProtector;
 import org.pgpainless.key.util.KeyRingUtils;
@@ -187,7 +187,7 @@ public class SigningTest {
             throws PGPException, InvalidAlgorithmParameterException, NoSuchAlgorithmException, IOException {
         PGPSecretKeyRing secretKeys = PGPainless.buildKeyRing()
                 .setPrimaryKey(KeySpec.getBuilder(
-                        KeyType.EDDSA(EdDSACurve._Ed25519), KeyFlag.CERTIFY_OTHER, KeyFlag.SIGN_DATA)
+                        KeyType.EDDSA_LEGACY(EdDSALegacyCurve._Ed25519), KeyFlag.CERTIFY_OTHER, KeyFlag.SIGN_DATA)
                         .overridePreferredHashAlgorithms())
                 .addUserId("Alice")
                 .build();
@@ -217,7 +217,7 @@ public class SigningTest {
             throws PGPException, InvalidAlgorithmParameterException, NoSuchAlgorithmException, IOException {
         PGPSecretKeyRing secretKeys = PGPainless.buildKeyRing()
                 .setPrimaryKey(
-                        KeySpec.getBuilder(KeyType.EDDSA(EdDSACurve._Ed25519), KeyFlag.CERTIFY_OTHER, KeyFlag.SIGN_DATA)
+                        KeySpec.getBuilder(KeyType.EDDSA_LEGACY(EdDSALegacyCurve._Ed25519), KeyFlag.CERTIFY_OTHER, KeyFlag.SIGN_DATA)
                         .overridePreferredHashAlgorithms(HashAlgorithm.MD5))
                 .addUserId("Alice")
                 .build();
@@ -246,7 +246,7 @@ public class SigningTest {
     public void signingWithNonCapableKeyThrowsKeyCannotSignException()
             throws PGPException, InvalidAlgorithmParameterException, NoSuchAlgorithmException {
         PGPSecretKeyRing secretKeys = PGPainless.buildKeyRing()
-                .setPrimaryKey(KeySpec.getBuilder(KeyType.EDDSA(EdDSACurve._Ed25519), KeyFlag.CERTIFY_OTHER))
+                .setPrimaryKey(KeySpec.getBuilder(KeyType.EDDSA_LEGACY(EdDSALegacyCurve._Ed25519), KeyFlag.CERTIFY_OTHER))
                 .addUserId("Alice")
                 .build();
 
@@ -262,7 +262,7 @@ public class SigningTest {
     public void signWithInvalidUserIdThrowsKeyValidationError()
             throws PGPException, InvalidAlgorithmParameterException, NoSuchAlgorithmException {
         PGPSecretKeyRing secretKeys = PGPainless.buildKeyRing()
-                .setPrimaryKey(KeySpec.getBuilder(KeyType.EDDSA(EdDSACurve._Ed25519),
+                .setPrimaryKey(KeySpec.getBuilder(KeyType.EDDSA_LEGACY(EdDSALegacyCurve._Ed25519),
                         KeyFlag.CERTIFY_OTHER, KeyFlag.SIGN_DATA))
                 .addUserId("Alice")
                 .build();

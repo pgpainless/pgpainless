@@ -45,7 +45,7 @@ import org.pgpainless.key.TestKeys;
 import org.pgpainless.key.generation.KeySpec;
 import org.pgpainless.key.generation.type.KeyType;
 import org.pgpainless.key.generation.type.ecc.EllipticCurve;
-import org.pgpainless.key.generation.type.eddsa.EdDSACurve;
+import org.pgpainless.key.generation.type.eddsa_legacy.EdDSALegacyCurve;
 import org.pgpainless.key.protection.SecretKeyRingProtector;
 import org.pgpainless.key.protection.UnprotectedKeysProtector;
 import org.pgpainless.key.util.KeyRingUtils;
@@ -224,7 +224,7 @@ public class KeyRingInfoTest {
 
         PGPSecretKeyRing secretKeys = PGPainless.buildKeyRing()
                 .setPrimaryKey(KeySpec.getBuilder(
-                        KeyType.EDDSA(EdDSACurve._Ed25519), KeyFlag.CERTIFY_OTHER))
+                        KeyType.EDDSA_LEGACY(EdDSALegacyCurve._Ed25519), KeyFlag.CERTIFY_OTHER))
                 .addSubkey(KeySpec.getBuilder(
                         KeyType.ECDH(EllipticCurve._BRAINPOOLP384R1),
                         KeyFlag.ENCRYPT_STORAGE))
@@ -560,7 +560,7 @@ public class KeyRingInfoTest {
     public void testGetExpirationDateForUse_NoSuchKey() throws PGPException, InvalidAlgorithmParameterException, NoSuchAlgorithmException {
         PGPSecretKeyRing secretKeys = PGPainless.buildKeyRing()
                 .addUserId("Alice")
-                .setPrimaryKey(KeySpec.getBuilder(KeyType.EDDSA(EdDSACurve._Ed25519), KeyFlag.CERTIFY_OTHER))
+                .setPrimaryKey(KeySpec.getBuilder(KeyType.EDDSA_LEGACY(EdDSALegacyCurve._Ed25519), KeyFlag.CERTIFY_OTHER))
                 .build();
 
         KeyRingInfo info = PGPainless.inspectKeyRing(secretKeys);

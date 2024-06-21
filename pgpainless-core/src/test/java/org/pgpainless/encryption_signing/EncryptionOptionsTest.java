@@ -33,8 +33,8 @@ import org.pgpainless.exception.KeyException;
 import org.pgpainless.key.SubkeyIdentifier;
 import org.pgpainless.key.generation.KeySpec;
 import org.pgpainless.key.generation.type.KeyType;
-import org.pgpainless.key.generation.type.eddsa.EdDSACurve;
-import org.pgpainless.key.generation.type.xdh.XDHSpec;
+import org.pgpainless.key.generation.type.eddsa_legacy.EdDSALegacyCurve;
+import org.pgpainless.key.generation.type.xdh_legacy.XDHLegacySpec;
 import org.pgpainless.key.util.KeyRingUtils;
 import org.pgpainless.util.Passphrase;
 
@@ -51,11 +51,11 @@ public class EncryptionOptionsTest {
     @BeforeAll
     public static void generateKey() throws PGPException, InvalidAlgorithmParameterException, NoSuchAlgorithmException {
         secretKeys = PGPainless.buildKeyRing()
-                .setPrimaryKey(KeySpec.getBuilder(KeyType.EDDSA(EdDSACurve._Ed25519), KeyFlag.CERTIFY_OTHER)
+                .setPrimaryKey(KeySpec.getBuilder(KeyType.EDDSA_LEGACY(EdDSALegacyCurve._Ed25519), KeyFlag.CERTIFY_OTHER)
                         .build())
-                .addSubkey(KeySpec.getBuilder(KeyType.XDH(XDHSpec._X25519), KeyFlag.ENCRYPT_COMMS)
+                .addSubkey(KeySpec.getBuilder(KeyType.XDH_LEGACY(XDHLegacySpec._X25519), KeyFlag.ENCRYPT_COMMS)
                         .build())
-                .addSubkey(KeySpec.getBuilder(KeyType.XDH(XDHSpec._X25519), KeyFlag.ENCRYPT_STORAGE)
+                .addSubkey(KeySpec.getBuilder(KeyType.XDH_LEGACY(XDHLegacySpec._X25519), KeyFlag.ENCRYPT_STORAGE)
                         .build())
                 .addUserId("test@pgpainless.org")
                 .build();
@@ -138,7 +138,7 @@ public class EncryptionOptionsTest {
     public void testAddRecipient_KeyWithoutEncryptionKeyFails() throws PGPException, InvalidAlgorithmParameterException, NoSuchAlgorithmException {
         EncryptionOptions options = new EncryptionOptions();
         PGPSecretKeyRing secretKeys = PGPainless.buildKeyRing()
-                .setPrimaryKey(KeySpec.getBuilder(KeyType.EDDSA(EdDSACurve._Ed25519), KeyFlag.CERTIFY_OTHER, KeyFlag.SIGN_DATA))
+                .setPrimaryKey(KeySpec.getBuilder(KeyType.EDDSA_LEGACY(EdDSALegacyCurve._Ed25519), KeyFlag.CERTIFY_OTHER, KeyFlag.SIGN_DATA))
                 .addUserId("test@pgpainless.org")
                 .build();
         PGPPublicKeyRing publicKeys = KeyRingUtils.publicKeyRingFrom(secretKeys);

@@ -25,8 +25,8 @@ import org.pgpainless.algorithm.KeyFlag;
 import org.pgpainless.key.OpenPgpV4Fingerprint;
 import org.pgpainless.key.generation.KeySpec;
 import org.pgpainless.key.generation.type.KeyType;
-import org.pgpainless.key.generation.type.eddsa.EdDSACurve;
-import org.pgpainless.key.generation.type.xdh.XDHSpec;
+import org.pgpainless.key.generation.type.eddsa_legacy.EdDSALegacyCurve;
+import org.pgpainless.key.generation.type.xdh_legacy.XDHLegacySpec;
 import org.pgpainless.key.info.KeyRingInfo;
 import org.slf4j.LoggerFactory;
 import sop.exception.SOPGPException;
@@ -202,8 +202,8 @@ public class RoundTripSignVerifyCmdTest extends CLITest {
             throws IOException, PGPException, InvalidAlgorithmParameterException, NoSuchAlgorithmException {
         PGPSecretKeyRing secretKeys = PGPainless.buildKeyRing()
                 .addUserId("Cannot Sign <cannot@sign.key>")
-                .setPrimaryKey(KeySpec.getBuilder(KeyType.EDDSA(EdDSACurve._Ed25519), KeyFlag.CERTIFY_OTHER))
-                .addSubkey(KeySpec.getBuilder(KeyType.XDH(XDHSpec._X25519), KeyFlag.ENCRYPT_COMMS, KeyFlag.ENCRYPT_STORAGE))
+                .setPrimaryKey(KeySpec.getBuilder(KeyType.EDDSA_LEGACY(EdDSALegacyCurve._Ed25519), KeyFlag.CERTIFY_OTHER))
+                .addSubkey(KeySpec.getBuilder(KeyType.XDH_LEGACY(XDHLegacySpec._X25519), KeyFlag.ENCRYPT_COMMS, KeyFlag.ENCRYPT_STORAGE))
                 .build();
         File keyFile = writeFile("key.pgp", secretKeys.getEncoded());
 

@@ -67,7 +67,7 @@ public class RefuseToAddWeakSubkeyTest {
         minimalBitStrengths.put(PublicKeyAlgorithm.ECDSA, 250);
         // Note: EdDSA is not mentioned in the BSI document.
         //  We assume that the requirements are similar to other EC algorithms.
-        minimalBitStrengths.put(PublicKeyAlgorithm.EDDSA, 250);
+        minimalBitStrengths.put(PublicKeyAlgorithm.EDDSA_LEGACY, 250);
         // §7.2.1
         minimalBitStrengths.put(PublicKeyAlgorithm.DIFFIE_HELLMAN, 2000);
         // §7.2.2

@@ -2,19 +2,19 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
-package org.pgpainless.key.generation.type.eddsa
+package org.pgpainless.key.generation.type.eddsa_legacy
 
 import org.bouncycastle.jce.spec.ECNamedCurveGenParameterSpec
 import org.pgpainless.algorithm.PublicKeyAlgorithm
 import org.pgpainless.key.generation.type.KeyType
 
-class EdDSA private constructor(val curve: EdDSACurve) : KeyType {
+class EdDSALegacy private constructor(val curve: EdDSALegacyCurve) : KeyType {
     override val name = "EdDSA"
-    override val algorithm = PublicKeyAlgorithm.EDDSA
+    override val algorithm = PublicKeyAlgorithm.EDDSA_LEGACY
     override val bitStrength = curve.bitStrength
     override val algorithmSpec = ECNamedCurveGenParameterSpec(curve.curveName)
 
     companion object {
-        @JvmStatic fun fromCurve(curve: EdDSACurve) = EdDSA(curve)
+        @JvmStatic fun fromCurve(curve: EdDSALegacyCurve) = EdDSALegacy(curve)
     }
 }

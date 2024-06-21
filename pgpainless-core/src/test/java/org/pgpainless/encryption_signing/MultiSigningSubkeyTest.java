@@ -21,9 +21,9 @@ import org.pgpainless.decryption_verification.SignatureVerification;
 import org.pgpainless.key.SubkeyIdentifier;
 import org.pgpainless.key.generation.KeySpec;
 import org.pgpainless.key.generation.type.KeyType;
-import org.pgpainless.key.generation.type.eddsa.EdDSACurve;
+import org.pgpainless.key.generation.type.eddsa_legacy.EdDSALegacyCurve;
 import org.pgpainless.key.generation.type.rsa.RsaLength;
-import org.pgpainless.key.generation.type.xdh.XDHSpec;
+import org.pgpainless.key.generation.type.xdh_legacy.XDHLegacySpec;
 import org.pgpainless.key.protection.SecretKeyRingProtector;
 import org.pgpainless.util.MultiMap;
 
@@ -52,10 +52,10 @@ public class MultiSigningSubkeyTest {
     @BeforeAll
     public static void generateKey() throws PGPException, InvalidAlgorithmParameterException, NoSuchAlgorithmException {
         signingKey = PGPainless.buildKeyRing()
-                .setPrimaryKey(KeySpec.getBuilder(KeyType.EDDSA(EdDSACurve._Ed25519), KeyFlag.CERTIFY_OTHER, KeyFlag.SIGN_DATA))
-                .addSubkey(KeySpec.getBuilder(KeyType.EDDSA(EdDSACurve._Ed25519), KeyFlag.SIGN_DATA))
+                .setPrimaryKey(KeySpec.getBuilder(KeyType.EDDSA_LEGACY(EdDSALegacyCurve._Ed25519), KeyFlag.CERTIFY_OTHER, KeyFlag.SIGN_DATA))
+                .addSubkey(KeySpec.getBuilder(KeyType.EDDSA_LEGACY(EdDSALegacyCurve._Ed25519), KeyFlag.SIGN_DATA))
                 .addSubkey(KeySpec.getBuilder(KeyType.RSA(RsaLength._3072), KeyFlag.SIGN_DATA))
-                .addSubkey(KeySpec.getBuilder(KeyType.XDH(XDHSpec._X25519), KeyFlag.ENCRYPT_COMMS, KeyFlag.ENCRYPT_STORAGE))
+                .addSubkey(KeySpec.getBuilder(KeyType.XDH_LEGACY(XDHLegacySpec._X25519), KeyFlag.ENCRYPT_COMMS, KeyFlag.ENCRYPT_STORAGE))
                 .addUserId("Alice <alice@pgpainless.org>")
                 .build();
         signingCert = PGPainless.extractCertificate(signingKey);

@@ -13,7 +13,7 @@ import org.pgpainless.key.TestKeys
 import org.pgpainless.key.generation.KeySpec
 import org.pgpainless.key.generation.type.KeyType
 import org.pgpainless.key.generation.type.ecc.EllipticCurve
-import org.pgpainless.key.generation.type.eddsa.EdDSACurve
+import org.pgpainless.key.generation.type.eddsa_legacy.EdDSALegacyCurve
 
 class PGPPublicKeyExtensionsTest {
 
@@ -32,10 +32,10 @@ class PGPPublicKeyExtensionsTest {
 
     @Test
     fun `test getCurveName for legacy EdDSA curves`() {
-        for (curve in EdDSACurve.values()) {
+        for (curve in EdDSALegacyCurve.values()) {
             val key =
                 PGPainless.buildKeyRing()
-                    .setPrimaryKey(KeySpec.getBuilder(KeyType.EDDSA(curve)))
+                    .setPrimaryKey(KeySpec.getBuilder(KeyType.EDDSA_LEGACY(curve)))
                     .build()
                     .publicKey
 

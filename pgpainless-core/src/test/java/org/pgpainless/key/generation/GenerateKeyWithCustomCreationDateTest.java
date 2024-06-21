@@ -22,8 +22,8 @@ import org.pgpainless.PGPainless;
 import org.pgpainless.algorithm.KeyFlag;
 import org.pgpainless.key.generation.type.KeyType;
 import org.pgpainless.key.generation.type.ecc.EllipticCurve;
-import org.pgpainless.key.generation.type.eddsa.EdDSACurve;
-import org.pgpainless.key.generation.type.xdh.XDHSpec;
+import org.pgpainless.key.generation.type.eddsa_legacy.EdDSALegacyCurve;
+import org.pgpainless.key.generation.type.xdh_legacy.XDHLegacySpec;
 import org.pgpainless.util.DateUtil;
 
 public class GenerateKeyWithCustomCreationDateTest {
@@ -33,8 +33,8 @@ public class GenerateKeyWithCustomCreationDateTest {
             throws PGPException, InvalidAlgorithmParameterException, NoSuchAlgorithmException {
         Date creationDate = DateUtil.parseUTCDate("2018-06-11 14:12:09 UTC");
         PGPSecretKeyRing secretKeys = PGPainless.buildKeyRing()
-                .addSubkey(KeySpec.getBuilder(KeyType.XDH(XDHSpec._X25519), KeyFlag.ENCRYPT_COMMS, KeyFlag.ENCRYPT_STORAGE))
-                .setPrimaryKey(KeySpec.getBuilder(KeyType.EDDSA(EdDSACurve._Ed25519), KeyFlag.CERTIFY_OTHER, KeyFlag.SIGN_DATA)
+                .addSubkey(KeySpec.getBuilder(KeyType.XDH_LEGACY(XDHLegacySpec._X25519), KeyFlag.ENCRYPT_COMMS, KeyFlag.ENCRYPT_STORAGE))
+                .setPrimaryKey(KeySpec.getBuilder(KeyType.EDDSA_LEGACY(EdDSALegacyCurve._Ed25519), KeyFlag.CERTIFY_OTHER, KeyFlag.SIGN_DATA)
                         .setKeyCreationDate(creationDate)) // primary key with custom creation time
                 .addUserId("Alice")
                 .build();

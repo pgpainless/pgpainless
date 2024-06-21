@@ -15,9 +15,9 @@ import org.pgpainless.algorithm.KeyFlag
 import org.pgpainless.key.generation.KeyRingBuilder
 import org.pgpainless.key.generation.KeySpec
 import org.pgpainless.key.generation.type.KeyType
-import org.pgpainless.key.generation.type.eddsa.EdDSACurve
+import org.pgpainless.key.generation.type.eddsa_legacy.EdDSALegacyCurve
 import org.pgpainless.key.generation.type.rsa.RsaLength
-import org.pgpainless.key.generation.type.xdh.XDHSpec
+import org.pgpainless.key.generation.type.xdh_legacy.XDHLegacySpec
 import org.pgpainless.util.ArmorUtils
 import org.pgpainless.util.Passphrase
 import sop.Profile
@@ -95,15 +95,16 @@ class GenerateKeyImpl : GenerateKey {
                     PGPainless.buildKeyRing()
                         .setPrimaryKey(
                             KeySpec.getBuilder(
-                                KeyType.EDDSA(EdDSACurve._Ed25519), KeyFlag.CERTIFY_OTHER))
+                                KeyType.EDDSA_LEGACY(EdDSALegacyCurve._Ed25519),
+                                KeyFlag.CERTIFY_OTHER))
                         .addSubkey(
                             KeySpec.getBuilder(
-                                KeyType.EDDSA(EdDSACurve._Ed25519), KeyFlag.SIGN_DATA))
+                                KeyType.EDDSA_LEGACY(EdDSALegacyCurve._Ed25519), KeyFlag.SIGN_DATA))
                         .apply {
                             if (!signingOnly) {
                                 addSubkey(
                                     KeySpec.getBuilder(
-                                        KeyType.XDH(XDHSpec._X25519),
+                                        KeyType.XDH_LEGACY(XDHLegacySpec._X25519),
                                         KeyFlag.ENCRYPT_COMMS,
                                         KeyFlag.ENCRYPT_STORAGE))
                             }

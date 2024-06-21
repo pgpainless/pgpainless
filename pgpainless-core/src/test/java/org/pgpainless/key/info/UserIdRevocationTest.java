@@ -28,8 +28,8 @@ import org.pgpainless.algorithm.KeyFlag;
 import org.pgpainless.key.TestKeys;
 import org.pgpainless.key.generation.KeySpec;
 import org.pgpainless.key.generation.type.KeyType;
-import org.pgpainless.key.generation.type.eddsa.EdDSACurve;
-import org.pgpainless.key.generation.type.xdh.XDHSpec;
+import org.pgpainless.key.generation.type.eddsa_legacy.EdDSALegacyCurve;
+import org.pgpainless.key.generation.type.xdh_legacy.XDHLegacySpec;
 import org.pgpainless.key.protection.PasswordBasedSecretKeyRingProtector;
 import org.pgpainless.key.protection.SecretKeyRingProtector;
 import org.pgpainless.key.protection.UnprotectedKeysProtector;
@@ -41,10 +41,10 @@ public class UserIdRevocationTest {
     public void testRevocationWithoutRevocationAttributes() throws PGPException, InvalidAlgorithmParameterException, NoSuchAlgorithmException {
         PGPSecretKeyRing secretKeys = PGPainless.buildKeyRing()
                 .setPrimaryKey(KeySpec.getBuilder(
-                        KeyType.EDDSA(EdDSACurve._Ed25519),
+                        KeyType.EDDSA_LEGACY(EdDSALegacyCurve._Ed25519),
                         KeyFlag.SIGN_DATA, KeyFlag.CERTIFY_OTHER))
                 .addSubkey(KeySpec.getBuilder(
-                        KeyType.XDH(XDHSpec._X25519), KeyFlag.ENCRYPT_COMMS))
+                        KeyType.XDH_LEGACY(XDHLegacySpec._X25519), KeyFlag.ENCRYPT_COMMS))
                 .addUserId("primary@key.id")
                 .addUserId("secondary@key.id")
                 .build();
@@ -79,9 +79,9 @@ public class UserIdRevocationTest {
     public void testRevocationWithRevocationReason() throws InvalidAlgorithmParameterException, NoSuchAlgorithmException, PGPException {
         PGPSecretKeyRing secretKeys = PGPainless.buildKeyRing()
                 .setPrimaryKey(KeySpec.getBuilder(
-                        KeyType.EDDSA(EdDSACurve._Ed25519),
+                        KeyType.EDDSA_LEGACY(EdDSALegacyCurve._Ed25519),
                         KeyFlag.SIGN_DATA, KeyFlag.CERTIFY_OTHER))
-                .addSubkey(KeySpec.getBuilder(KeyType.XDH(XDHSpec._X25519), KeyFlag.ENCRYPT_COMMS))
+                .addSubkey(KeySpec.getBuilder(KeyType.XDH_LEGACY(XDHLegacySpec._X25519), KeyFlag.ENCRYPT_COMMS))
                 .addUserId("primary@key.id")
                 .addUserId("secondary@key.id")
                 .build();
