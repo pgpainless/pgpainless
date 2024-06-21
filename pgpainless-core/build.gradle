@@ -20,9 +20,14 @@ dependencies {
     testImplementation "ch.qos.logback:logback-classic:$logbackVersion"
 
     // Bouncy Castle
+    /*
     api "org.bouncycastle:bcprov-jdk18on:$bouncyCastleVersion"
     api "org.bouncycastle:bcpg-jdk18on:$bouncyPgVersion"
-    // api(files("../libs/bcpg-jdk18on-1.70.jar"))
+    /*/
+    api(files("../../../bc-java/pg/build/libs/bcpg-jdk18on-${bouncyCastleVersion}.jar"))
+    api(files("../../../bc-java/prov/build/libs/bcprov-jdk18on-${bouncyCastleVersion}.jar"))
+    api(files("../../../bc-java/util/build/libs/bcutil-jdk18on-${bouncyCastleVersion}.jar"))
+    //*/
 
     // @Nullable, @Nonnull annotations
     implementation "com.google.code.findbugs:jsr305:3.0.2"
