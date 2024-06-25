@@ -379,6 +379,10 @@ class Policy(
                         put(PublicKeyAlgorithm.DIFFIE_HELLMAN, 2000)
                         // §7.2.2
                         put(PublicKeyAlgorithm.ECDH, 250)
+                        put(PublicKeyAlgorithm.ED25519, 0)
+                        put(PublicKeyAlgorithm.ED448, 0)
+                        put(PublicKeyAlgorithm.X25519, 0)
+                        put(PublicKeyAlgorithm.X448, 0)
                     })
         }
     }
