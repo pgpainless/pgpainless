@@ -226,7 +226,8 @@ class PublicKeyParameterValidationUtil {
                 PGPSignatureGenerator(
                     getInstance()
                         .getPGPContentSignerBuilder(
-                            requireFromId(publicKey.algorithm), HashAlgorithm.SHA256))
+                            requireFromId(publicKey.algorithm), HashAlgorithm.SHA256),
+                    publicKey)
             return try {
                 signatureGenerator
                     .apply {
