@@ -111,7 +111,8 @@ abstract class AbstractSignatureBuilder<B : AbstractSignatureBuilder<B>>(
         PGPSignatureGenerator(
                 ImplementationFactory.getInstance()
                     .getPGPContentSignerBuilder(
-                        publicSigningKey.algorithm, hashAlgorithm.algorithmId))
+                        publicSigningKey.algorithm, hashAlgorithm.algorithmId),
+                publicSigningKey)
             .apply {
                 setUnhashedSubpackets(SignatureSubpacketsHelper.toVector(_unhashedSubpackets))
                 setHashedSubpackets(SignatureSubpacketsHelper.toVector(_hashedSubpackets))

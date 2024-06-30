@@ -7,6 +7,7 @@ package org.pgpainless.encryption_signing
 import java.security.MessageDigest
 import org.bouncycastle.openpgp.PGPException
 import org.bouncycastle.openpgp.PGPPrivateKey
+import org.bouncycastle.openpgp.PGPPublicKey
 import org.bouncycastle.openpgp.PGPSecretKeyRing
 import org.bouncycastle.openpgp.PGPSignature
 import org.bouncycastle.openpgp.PGPSignatureGenerator
@@ -29,7 +30,9 @@ class BcHashContextSigner {
             return info.signingSubkeys
                 .mapNotNull { info.getSecretKey(it.keyID) }
                 .firstOrNull()
-                ?.let { signHashContext(hashContext, signatureType, it.unlock(protector)) }
+                ?.let {
+                    signHashContext(hashContext, signatureType, it.unlock(protector), it.publicKey)
+                }
                 ?: throw PGPException("Key does not contain suitable signing subkey.")
         }
 
@@ -45,9 +48,11 @@ class BcHashContextSigner {
         internal fun signHashContext(
             hashContext: MessageDigest,
             signatureType: SignatureType,
-            privateKey: PGPPrivateKey
+            privateKey: PGPPrivateKey,
+            publicKey: PGPPublicKey
         ): PGPSignature {
-            return PGPSignatureGenerator(BcPGPHashContextContentSignerBuilder(hashContext))
+            return PGPSignatureGenerator(
+                    BcPGPHashContextContentSignerBuilder(hashContext), publicKey)
                 .apply { init(signatureType.code, privateKey) }
                 .generate()
         }

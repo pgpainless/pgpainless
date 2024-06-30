@@ -6,7 +6,6 @@ package org.pgpainless.key
 
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Assertions.assertNotNull
-import org.junit.jupiter.api.Disabled
 import org.junit.jupiter.api.Test
 import org.pgpainless.PGPainless
 

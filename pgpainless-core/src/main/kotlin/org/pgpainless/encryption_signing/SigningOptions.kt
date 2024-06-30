@@ -385,7 +385,7 @@ class SigningOptions {
         val generator: PGPSignatureGenerator =
             createSignatureGenerator(
                 signingSubkey,
-                signingKey.getPublicKey(signingSubkey.keyID).version,
+                signingKey.getPublicKey(signingSubkey.keyID),
                 hashAlgorithm,
                 signatureType)
 
@@ -429,7 +429,7 @@ class SigningOptions {
     @Throws(PGPException::class)
     private fun createSignatureGenerator(
         privateKey: PGPPrivateKey,
-        signatureVersion: Int,
+        publicKey: PGPPublicKey,
         hashAlgorithm: HashAlgorithm,
         signatureType: DocumentSignatureType
     ): PGPSignatureGenerator {
@@ -437,7 +437,7 @@ class SigningOptions {
             .getPGPContentSignerBuilder(
                 privateKey.publicKeyPacket.algorithm, hashAlgorithm.algorithmId)
             .let { csb ->
-                PGPSignatureGenerator(csb, signatureVersion).also {
+                PGPSignatureGenerator(csb, publicKey).also {
                     it.init(signatureType.signatureType.code, privateKey)
                 }
             }
