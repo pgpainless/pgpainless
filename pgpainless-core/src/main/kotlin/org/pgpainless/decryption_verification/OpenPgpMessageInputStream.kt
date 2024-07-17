@@ -4,28 +4,57 @@
 
 package org.pgpainless.decryption_verification
 
+import java.io.EOFException
 import java.io.IOException
 import java.io.InputStream
 import java.io.OutputStream
+import java.util.zip.Inflater
+import java.util.zip.InflaterInputStream
 import openpgp.openPgpKeyId
 import org.bouncycastle.bcpg.BCPGInputStream
+import org.bouncycastle.bcpg.CompressionAlgorithmTags
 import org.bouncycastle.bcpg.UnsupportedPacketVersionException
-import org.bouncycastle.openpgp.*
+import org.bouncycastle.openpgp.PGPCompressedData
+import org.bouncycastle.openpgp.PGPEncryptedData
+import org.bouncycastle.openpgp.PGPEncryptedDataList
+import org.bouncycastle.openpgp.PGPException
+import org.bouncycastle.openpgp.PGPOnePassSignature
+import org.bouncycastle.openpgp.PGPPBEEncryptedData
+import org.bouncycastle.openpgp.PGPPrivateKey
+import org.bouncycastle.openpgp.PGPPublicKey
+import org.bouncycastle.openpgp.PGPPublicKeyEncryptedData
+import org.bouncycastle.openpgp.PGPPublicKeyRing
+import org.bouncycastle.openpgp.PGPSecretKey
+import org.bouncycastle.openpgp.PGPSecretKeyRing
+import org.bouncycastle.openpgp.PGPSignature
 import org.bouncycastle.openpgp.operator.PBEDataDecryptorFactory
 import org.bouncycastle.openpgp.operator.PublicKeyDataDecryptorFactory
 import org.bouncycastle.util.io.TeeInputStream
 import org.pgpainless.PGPainless
-import org.pgpainless.algorithm.*
+import org.pgpainless.algorithm.CompressionAlgorithm
+import org.pgpainless.algorithm.OpenPgpPacket
+import org.pgpainless.algorithm.StreamEncoding
+import org.pgpainless.algorithm.SymmetricKeyAlgorithm
 import org.pgpainless.bouncycastle.extensions.getPublicKeyFor
 import org.pgpainless.bouncycastle.extensions.getSecretKeyFor
 import org.pgpainless.bouncycastle.extensions.issuerKeyId
 import org.pgpainless.bouncycastle.extensions.unlock
-import org.pgpainless.decryption_verification.MessageMetadata.*
+import org.pgpainless.decryption_verification.MessageMetadata.CompressedData
+import org.pgpainless.decryption_verification.MessageMetadata.EncryptedData
+import org.pgpainless.decryption_verification.MessageMetadata.Layer
+import org.pgpainless.decryption_verification.MessageMetadata.LiteralData
+import org.pgpainless.decryption_verification.MessageMetadata.Message
+import org.pgpainless.decryption_verification.MessageMetadata.Nested
 import org.pgpainless.decryption_verification.cleartext_signatures.ClearsignedMessageUtil
 import org.pgpainless.decryption_verification.syntax_check.InputSymbol
 import org.pgpainless.decryption_verification.syntax_check.PDA
 import org.pgpainless.decryption_verification.syntax_check.StackSymbol
-import org.pgpainless.exception.*
+import org.pgpainless.exception.MalformedOpenPgpMessageException
+import org.pgpainless.exception.MessageNotIntegrityProtectedException
+import org.pgpainless.exception.MissingDecryptionMethodException
+import org.pgpainless.exception.MissingPassphraseException
+import org.pgpainless.exception.SignatureValidationException
+import org.pgpainless.exception.UnacceptableAlgorithmException
 import org.pgpainless.implementation.ImplementationFactory
 import org.pgpainless.key.SubkeyIdentifier
 import org.pgpainless.key.util.KeyRingUtils
@@ -196,7 +225,53 @@ class OpenPgpMessageInputStream(
         LOGGER.debug(
             "Compressed Data Packet (${compressionLayer.algorithm}) at depth ${layerMetadata.depth} encountered.")
         nestedInputStream =
-            OpenPgpMessageInputStream(compressedData.dataStream, options, compressionLayer, policy)
+            OpenPgpMessageInputStream(decompress(compressedData), options, compressionLayer, policy)
+    }
+
+    private fun decompress(compressedData: PGPCompressedData): InputStream {
+        return when (compressedData.algorithm) {
+            CompressionAlgorithmTags.ZIP ->
+                object : InflaterInputStream(compressedData.inputStream, Inflater(true)) {
+                    private var eof = false
+
+                    override fun fill() {
+                        if (eof) {
+                            throw EOFException("Unexpected end of ZIP input stream")
+                        }
+
+                        len = `in`.read(buf, 0, buf.size)
+
+                        if (len == -1) {
+                            buf[0] = 0
+                            len = 0
+                            eof = true
+                        }
+
+                        inf.setInput(buf, 0, len)
+                    }
+                }
+            CompressionAlgorithmTags.ZLIB ->
+                object : InflaterInputStream(compressedData.inputStream) {
+                    private var eof = false
+
+                    override fun fill() {
+                        if (eof) {
+                            throw EOFException("Unexpected end of ZIP input stream")
+                        }
+
+                        len = `in`.read(buf, 0, buf.size)
+
+                        if (len == -1) {
+                            buf[0] = 0
+                            len = 0
+                            eof = true
+                        }
+
+                        inf.setInput(buf, 0, len)
+                    }
+                }
+            else -> compressedData.dataStream
+        }
     }
 
     private fun processOnePassSignature() {
