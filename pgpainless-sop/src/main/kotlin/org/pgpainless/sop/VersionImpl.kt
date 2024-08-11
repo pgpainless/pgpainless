@@ -4,10 +4,7 @@
 
 package org.pgpainless.sop
 
-import java.io.IOException
-import java.io.InputStream
 import java.util.*
-import org.bouncycastle.jce.provider.BouncyCastleProvider
 import sop.operation.Version
 
 /** Implementation of the `version` operation using PGPainless. */
@@ -21,8 +18,9 @@ class VersionImpl : Version {
     override fun getBackendVersion(): String = "PGPainless ${getVersion()}"
 
     override fun getExtendedVersion(): String {
-        val bcVersion =
-            String.format(Locale.US, "Bouncy Castle %.2f", BouncyCastleProvider().version)
+        // val bcVersion =
+        //    String.format(Locale.US, "Bouncy Castle %.2f", BouncyCastleProvider().version)
+        val bcVersion = "Bouncy Castle 1.79 + V6-Patches"
         val specVersion = String.format("%02d", SOP_VERSION)
         return """${getName()} ${getVersion()}
 https://codeberg.org/PGPainless/pgpainless/src/branch/master/pgpainless-sop
@@ -46,7 +44,9 @@ https://www.bouncycastle.org/java.html"""
     override fun getSopVVersion(): String = SOPV_VERSION
 
     override fun getVersion(): String {
+        return "1.7.0-V6_PREVIEW"
         // See https://stackoverflow.com/a/50119235
+        /*
         return try {
             val resourceIn: InputStream =
                 javaClass.getResourceAsStream("/version.properties")
@@ -57,6 +57,7 @@ https://www.bouncycastle.org/java.html"""
         } catch (e: IOException) {
             "DEVELOPMENT"
         }
+         */
     }
 
     override fun isSopSpecImplementationIncomplete(): Boolean = false
