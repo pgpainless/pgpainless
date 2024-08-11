@@ -49,7 +49,7 @@ class KeyReader {
         ): PGPPublicKeyRingCollection {
             val certs =
                 try {
-                    PGPainless.readKeyRing().keyRingCollection(certIn, false)
+                    PGPainless.readKeyRing().keyRingCollection(certIn, true)
                 } catch (e: IOException) {
                     if (e.message == null) {
                         throw e
