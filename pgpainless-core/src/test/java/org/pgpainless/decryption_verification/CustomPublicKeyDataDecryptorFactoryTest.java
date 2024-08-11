@@ -62,7 +62,7 @@ public class CustomPublicKeyDataDecryptorFactoryTest {
                     PGPSecretKey decryptionKey = secretKey.getSecretKey(encryptionKey.getKeyID());
                     PGPPrivateKey privateKey = UnlockSecretKey.unlockSecretKey(decryptionKey, Passphrase.emptyPassphrase());
                     PublicKeyDataDecryptorFactory internal = new BcPublicKeyDataDecryptorFactory(privateKey);
-                    return internal.recoverSessionData(keyAlgorithm, new byte[][] {sessionKeyData});
+                    return internal.recoverSessionData(keyAlgorithm, new byte[][] {sessionKeyData}, 3);
                 } catch (PGPException e) {
                     throw new HardwareSecurity.HardwareSecurityException();
                 }
