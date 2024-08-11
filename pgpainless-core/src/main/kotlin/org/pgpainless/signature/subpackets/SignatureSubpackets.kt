@@ -72,7 +72,7 @@ class SignatureSubpackets :
             issuer: PGPPublicKey,
             base: PGPSignatureSubpacketVector
         ): SignatureSubpackets {
-            return createSubpacketsFrom(base).apply { setIssuerFingerprintAndKeyId(issuer) }
+            return createSubpacketsFrom(base).apply { setIssuer(issuer) }
         }
 
         @JvmStatic
@@ -82,7 +82,7 @@ class SignatureSubpackets :
 
         @JvmStatic
         fun createHashedSubpackets(issuer: PGPPublicKey): SignatureSubpackets {
-            return createEmptySubpackets().setIssuerFingerprintAndKeyId(issuer)
+            return createEmptySubpackets().setIssuer(issuer)
         }
 
         @JvmStatic
@@ -350,6 +350,14 @@ class SignatureSubpackets :
 
     override fun setFeatures(features: Features?): SignatureSubpackets = apply {
         this.featuresSubpacket = features
+    }
+
+    override fun setIssuer(key: PGPPublicKey): SignatureSubpackets = apply {
+        if (key.version == 6) {
+            setIssuerFingerprint(key)
+        } else {
+            setIssuerFingerprintAndKeyId(key)
+        }
     }
 
     override fun setIssuerFingerprintAndKeyId(key: PGPPublicKey): SignatureSubpackets = apply {
