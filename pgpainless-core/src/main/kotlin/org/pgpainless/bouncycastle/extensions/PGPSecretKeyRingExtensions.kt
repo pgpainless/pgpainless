@@ -70,10 +70,15 @@ fun PGPSecretKeyRing.getSecretKeyFor(signature: PGPSignature): PGPSecretKey? =
 
 /** Return the [PGPSecretKey] that matches the key-ID of the given [PGPOnePassSignature] packet. */
 fun PGPSecretKeyRing.getSecretKeyFor(onePassSignature: PGPOnePassSignature): PGPSecretKey? =
-    this.getSecretKey(onePassSignature.keyID)
+    when (onePassSignature.version) {
+        3 -> this.getSecretKey(onePassSignature.keyID)
+        6 -> this.getSecretKey(onePassSignature.fingerprint)
+        else -> throw NotImplementedError("Version ${onePassSignature.version} OPSs are not yet supported.")
+    }
 
 fun PGPSecretKeyRing.getSecretKeyFor(pkesk: PGPPublicKeyEncryptedData): PGPSecretKey? =
     when (pkesk.version) {
         3 -> this.getSecretKey(pkesk.keyID)
-        else -> throw NotImplementedError("Version 6 PKESKs are not yet supported.")
+        6 -> this.getSecretKey(pkesk.fingerprint)
+        else -> throw NotImplementedError("Version ${pkesk.version} PKESKs are not yet supported.")
     }
