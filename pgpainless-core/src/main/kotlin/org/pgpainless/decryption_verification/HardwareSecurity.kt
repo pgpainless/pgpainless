@@ -9,6 +9,7 @@ import org.bouncycastle.bcpg.AEADEncDataPacket
 import org.bouncycastle.bcpg.SymmetricEncIntegrityPacket
 import org.bouncycastle.openpgp.PGPException
 import org.bouncycastle.openpgp.PGPSessionKey
+import org.bouncycastle.openpgp.operator.AbstractPublicKeyDataDecryptorFactory
 import org.bouncycastle.openpgp.operator.PGPDataDecryptor
 import org.bouncycastle.openpgp.operator.PublicKeyDataDecryptorFactory
 import org.bouncycastle.openpgp.operator.bc.BcPublicKeyDataDecryptorFactory
@@ -44,7 +45,7 @@ class HardwareSecurity {
     class HardwareDataDecryptorFactory(
         override val subkeyIdentifier: SubkeyIdentifier,
         private val callback: DecryptionCallback,
-    ) : CustomPublicKeyDataDecryptorFactory {
+    ) : AbstractPublicKeyDataDecryptorFactory(), CustomPublicKeyDataDecryptorFactory {
 
         // luckily we can instantiate the BcPublicKeyDataDecryptorFactory with null as argument.
         private val factory: PublicKeyDataDecryptorFactory = BcPublicKeyDataDecryptorFactory(null)
@@ -73,7 +74,8 @@ class HardwareSecurity {
 
         override fun recoverSessionData(
             keyAlgorithm: Int,
-            secKeyData: Array<out ByteArray>
+            secKeyData: Array<out ByteArray>,
+            pkeskVersion: Int
         ): ByteArray {
             return try {
                 callback.decryptSessionKey(subkeyIdentifier.subkeyId, keyAlgorithm, secKeyData[0])
