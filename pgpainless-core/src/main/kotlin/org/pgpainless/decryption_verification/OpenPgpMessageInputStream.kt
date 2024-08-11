@@ -684,7 +684,8 @@ class OpenPgpMessageInputStream(
                 PGPainless.inspectKeyRing(it).decryptionSubkeys.any { subkey ->
                     when (pkesk.version) {
                         3 -> pkesk.keyID == subkey.keyID
-                        else -> throw NotImplementedError("Version 6 PKESK not yet supported.")
+                        6 -> pkesk.fingerprint.contentEquals(subkey.fingerprint)
+                        else -> false
                     }
                 }
         }
@@ -695,7 +696,8 @@ class OpenPgpMessageInputStream(
                 PGPainless.inspectKeyRing(it).decryptionSubkeys.any { subkey ->
                     when (pkesk.version) {
                         3 -> pkesk.keyID == subkey.keyID
-                        else -> throw NotImplementedError("Version 6 PKESK not yet supported.")
+                        6 -> pkesk.fingerprint.contentEquals(subkey.fingerprint)
+                        else -> false
                     }
                 }
         }
