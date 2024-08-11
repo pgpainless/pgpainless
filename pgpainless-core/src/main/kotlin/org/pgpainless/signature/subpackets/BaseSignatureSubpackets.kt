@@ -18,6 +18,15 @@ interface BaseSignatureSubpackets {
     interface Callback : SignatureSubpacketCallback<BaseSignatureSubpackets>
 
     /**
+     * Depending on the key version, set appropriate issuer information (issuer key-id / issuer
+     * fingerprint).
+     *
+     * @param key issuer key
+     * @return signature subpackets
+     */
+    fun setIssuer(key: PGPPublicKey): BaseSignatureSubpackets
+
+    /**
      * Add both an [IssuerKeyID] and [IssuerFingerprint] subpacket pointing to the given key.
      *
      * @param key key
