@@ -27,10 +27,11 @@ class CachingBcPublicKeyDataDecryptorFactory(
 
     override fun recoverSessionData(
         keyAlgorithm: Int,
-        secKeyData: Array<out ByteArray>
+        secKeyData: Array<out ByteArray>,
+        pkeskVersion: Int
     ): ByteArray =
         lookupSessionKeyData(secKeyData)
-            ?: costlyRecoverSessionData(keyAlgorithm, secKeyData).also {
+            ?: costlyRecoverSessionData(keyAlgorithm, secKeyData, pkeskVersion).also {
                 cacheSessionKeyData(secKeyData, it)
             }
 
@@ -39,8 +40,9 @@ class CachingBcPublicKeyDataDecryptorFactory(
 
     private fun costlyRecoverSessionData(
         keyAlgorithm: Int,
-        secKeyData: Array<out ByteArray>
-    ): ByteArray = super.recoverSessionData(keyAlgorithm, secKeyData)
+        secKeyData: Array<out ByteArray>,
+        pkeskVersion: Int
+    ): ByteArray = super.recoverSessionData(keyAlgorithm, secKeyData, pkeskVersion)
 
     private fun cacheSessionKeyData(secKeyData: Array<out ByteArray>, sessionKey: ByteArray) {
         cachedSessions[toKey(secKeyData)] = sessionKey.clone()
