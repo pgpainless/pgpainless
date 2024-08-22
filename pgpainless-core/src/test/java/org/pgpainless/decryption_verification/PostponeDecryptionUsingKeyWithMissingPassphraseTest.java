@@ -193,7 +193,7 @@ public class PostponeDecryptionUsingKeyWithMissingPassphraseTest {
         DecryptionStream decryptionStream = PGPainless.decryptAndOrVerify()
                 .onInputStream(new ByteArrayInputStream(ENCRYPTED_FOR_K2_PASS_K1.getBytes(StandardCharsets.UTF_8)))
                 .withOptions(new ConsumerOptions()
-                        .addDecryptionPassphrase(PASSPHRASE)
+                        .addMessagePassphrase(PASSPHRASE)
                         .addDecryptionKey(k1, protector)
                         .addDecryptionKey(k2, protector));
 

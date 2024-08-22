@@ -53,7 +53,7 @@ public class SymmetricEncryptionTest {
                 .onOutputStream(ciphertextOut)
                 .withOptions(ProducerOptions.encrypt(
                         EncryptionOptions.encryptCommunications()
-                                .addPassphrase(encryptionPassphrase)
+                                .addMessagePassphrase(encryptionPassphrase)
                                 .addRecipient(encryptionKey)
                 ));
 
@@ -66,7 +66,7 @@ public class SymmetricEncryptionTest {
         DecryptionStream decryptor = PGPainless.decryptAndOrVerify()
                 .onInputStream(new ByteArrayInputStream(ciphertext))
                 .withOptions(new ConsumerOptions()
-                        .addDecryptionPassphrase(encryptionPassphrase));
+                        .addMessagePassphrase(encryptionPassphrase));
 
         ByteArrayOutputStream decrypted = new ByteArrayOutputStream();
 
@@ -103,7 +103,7 @@ public class SymmetricEncryptionTest {
         EncryptionStream encryptor = PGPainless.encryptAndOrSign().onOutputStream(ciphertextOut)
                 .withOptions(ProducerOptions.encrypt(
                         EncryptionOptions.encryptCommunications()
-                                .addPassphrase(Passphrase.fromPassword("mellon"))));
+                                .addMessagePassphrase(Passphrase.fromPassword("mellon"))));
 
         Streams.pipeAll(new ByteArrayInputStream(bytes), encryptor);
         encryptor.close();
@@ -112,6 +112,6 @@ public class SymmetricEncryptionTest {
                 .onInputStream(new ByteArrayInputStream(ciphertextOut.toByteArray()))
                 .withOptions(new ConsumerOptions()
                         .setMissingKeyPassphraseStrategy(MissingKeyPassphraseStrategy.THROW_EXCEPTION)
-                        .addDecryptionPassphrase(Passphrase.fromPassword("meldir"))));
+                        .addMessagePassphrase(Passphrase.fromPassword("meldir"))));
     }
 }

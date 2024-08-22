@@ -35,8 +35,8 @@ public class MultiPassphraseSymmetricEncryptionTest {
                 .onOutputStream(ciphertextOut)
                 .withOptions(ProducerOptions.encrypt(
                         EncryptionOptions.encryptCommunications()
-                        .addPassphrase(Passphrase.fromPassword("p1"))
-                        .addPassphrase(Passphrase.fromPassword("p2"))
+                        .addMessagePassphrase(Passphrase.fromPassword("p1"))
+                        .addMessagePassphrase(Passphrase.fromPassword("p2"))
                 ).setAsciiArmor(false));
 
         Streams.pipeAll(plaintextIn, encryptor);
@@ -49,7 +49,7 @@ public class MultiPassphraseSymmetricEncryptionTest {
             DecryptionStream decryptor = PGPainless.decryptAndOrVerify()
                     .onInputStream(new ByteArrayInputStream(ciphertext))
                     .withOptions(new ConsumerOptions()
-                    .addDecryptionPassphrase(passphrase));
+                    .addMessagePassphrase(passphrase));
 
             ByteArrayOutputStream plaintextOut = new ByteArrayOutputStream();
 

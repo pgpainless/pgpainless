@@ -195,7 +195,7 @@ public class Encrypt {
                 .onOutputStream(ciphertext)
                 .withOptions(ProducerOptions
                         .encrypt(EncryptionOptions.encryptCommunications()
-                                .addPassphrase(Passphrase.fromPassword("p4ssphr4s3"))
+                                .addMessagePassphrase(Passphrase.fromPassword("p4ssphr4s3"))
                         ).setAsciiArmor(true)
                 );
 
@@ -207,7 +207,7 @@ public class Encrypt {
         // Decrypt
         DecryptionStream decryptor = PGPainless.decryptAndOrVerify()
                 .onInputStream(new ByteArrayInputStream(asciiCiphertext.getBytes(StandardCharsets.UTF_8)))
-                .withOptions(new ConsumerOptions().addDecryptionPassphrase(Passphrase.fromPassword("p4ssphr4s3")));
+                .withOptions(new ConsumerOptions().addMessagePassphrase(Passphrase.fromPassword("p4ssphr4s3")));
 
         ByteArrayOutputStream plaintext = new ByteArrayOutputStream();
         Streams.pipeAll(decryptor, plaintext);

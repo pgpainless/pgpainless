@@ -131,7 +131,7 @@ public class EncryptionOptionsTest {
     public void testAddEmptyPassphraseFails() {
         EncryptionOptions options = new EncryptionOptions();
         assertThrows(IllegalArgumentException.class, () ->
-                options.addPassphrase(Passphrase.emptyPassphrase()));
+                options.addMessagePassphrase(Passphrase.emptyPassphrase()));
     }
 
     @Test

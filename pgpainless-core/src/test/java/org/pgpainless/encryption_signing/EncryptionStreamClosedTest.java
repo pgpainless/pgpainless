@@ -26,7 +26,7 @@ public class EncryptionStreamClosedTest {
         EncryptionStream stream = PGPainless.encryptAndOrSign()
                 .onOutputStream(out)
                 .withOptions(ProducerOptions.encrypt(EncryptionOptions.encryptCommunications()
-                .addPassphrase(Passphrase.fromPassword("dummy"))));
+                .addMessagePassphrase(Passphrase.fromPassword("dummy"))));
 
         // No close() called => getResult throws
         assertThrows(IllegalStateException.class, stream::getResult);

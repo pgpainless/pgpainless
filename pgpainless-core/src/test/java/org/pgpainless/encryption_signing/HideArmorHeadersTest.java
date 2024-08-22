@@ -23,7 +23,7 @@ public class HideArmorHeadersTest {
                 .onOutputStream(out)
                 .withOptions(ProducerOptions.encrypt(
                         EncryptionOptions.get()
-                                .addPassphrase(Passphrase.fromPassword("sw0rdf1sh")))
+                                .addMessagePassphrase(Passphrase.fromPassword("sw0rdf1sh")))
                         .setHideArmorHeaders(true));
 
         encryptionStream.write("Hello, World!\n".getBytes());

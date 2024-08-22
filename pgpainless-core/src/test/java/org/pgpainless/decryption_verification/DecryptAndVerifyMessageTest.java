@@ -153,6 +153,6 @@ public class DecryptAndVerifyMessageTest {
                 () -> PGPainless.decryptAndOrVerify()
                         .onInputStream(ciphertextIn)
                         .withOptions(ConsumerOptions.get()
-                                .addDecryptionPassphrase(Passphrase.fromPassword("sw0rdf1sh"))));
+                                .addMessagePassphrase(Passphrase.fromPassword("sw0rdf1sh"))));
     }
 }

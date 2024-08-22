@@ -282,7 +282,7 @@ public class OpenPgpMessageInputStreamTest {
         EncryptionStream enc = PGPainless.encryptAndOrSign()
                 .onOutputStream(System.out)
                 .withOptions(ProducerOptions.encrypt(EncryptionOptions.get()
-                                .addPassphrase(Passphrase.fromPassword(PASSPHRASE)))
+                                .addMessagePassphrase(Passphrase.fromPassword(PASSPHRASE)))
                         .overrideCompressionAlgorithm(CompressionAlgorithm.UNCOMPRESSED));
         enc.write(PLAINTEXT.getBytes(StandardCharsets.UTF_8));
         enc.close();
@@ -409,7 +409,7 @@ public class OpenPgpMessageInputStreamTest {
     public void testProcessSENC_LIT(Processor processor)
             throws PGPException, IOException {
         Tuple<String, MessageMetadata> result = processor.process(SENC_LIT, ConsumerOptions.get()
-                .addDecryptionPassphrase(Passphrase.fromPassword(PASSPHRASE)));
+                .addMessagePassphrase(Passphrase.fromPassword(PASSPHRASE)));
         String plain = result.getA();
         assertEquals(PLAINTEXT, plain);
         MessageMetadata metadata = result.getB();
@@ -656,7 +656,7 @@ public class OpenPgpMessageInputStreamTest {
     @Test
     public void readAfterCloseTest() throws PGPException, IOException {
         OpenPgpMessageInputStream pgpIn = get(SENC_LIT, ConsumerOptions.get()
-                .addDecryptionPassphrase(Passphrase.fromPassword(PASSPHRASE)));
+                .addMessagePassphrase(Passphrase.fromPassword(PASSPHRASE)));
         Streams.drain(pgpIn); // read all
 
         byte[] buf = new byte[1024];
