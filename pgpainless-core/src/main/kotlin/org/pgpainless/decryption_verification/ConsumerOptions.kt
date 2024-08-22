@@ -196,7 +196,22 @@ class ConsumerOptions {
      * @param passphrase passphrase
      * @return options
      */
-    fun addDecryptionPassphrase(passphrase: Passphrase) = apply {
+    @Deprecated(
+        "Deprecated in favor of addMessagePassphrase",
+        ReplaceWith("addMessagePassphrase(passphrase)"))
+    fun addDecryptionPassphrase(passphrase: Passphrase) = addMessagePassphrase(passphrase)
+
+    /**
+     * Add a passphrase for message decryption. This passphrase will be used to try to decrypt
+     * messages which were symmetrically encrypted for a passphrase.
+     *
+     * See
+     * [Symmetrically Encrypted Data Packet](https://datatracker.ietf.org/doc/html/rfc4880#section-5.7)
+     *
+     * @param passphrase passphrase
+     * @return options
+     */
+    fun addMessagePassphrase(passphrase: Passphrase) = apply {
         decryptionPassphrases.add(passphrase)
     }
 

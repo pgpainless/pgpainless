@@ -227,7 +227,18 @@ class EncryptionOptions(private val purpose: EncryptionPurpose) {
      * @param passphrase passphrase
      * @return this
      */
-    fun addPassphrase(passphrase: Passphrase) = apply {
+    @Deprecated(
+        "Deprecated in favor of addMessagePassphrase",
+        ReplaceWith("addMessagePassphrase(passphrase)"))
+    fun addPassphrase(passphrase: Passphrase) = addMessagePassphrase(passphrase)
+
+    /**
+     * Add a symmetric passphrase which the message will be encrypted to.
+     *
+     * @param passphrase passphrase
+     * @return this
+     */
+    fun addMessagePassphrase(passphrase: Passphrase) = apply {
         require(!passphrase.isEmpty) { "Passphrase MUST NOT be empty." }
         addEncryptionMethod(
             ImplementationFactory.getInstance().getPBEKeyEncryptionMethodGenerator(passphrase))
