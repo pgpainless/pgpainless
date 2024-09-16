@@ -60,7 +60,7 @@ fun PGPKeyRing.requirePublicKey(fingerprint: OpenPgpFingerprint): PGPPublicKey =
  * subpacket to identify the [PGPPublicKey] via its key-ID.
  */
 fun PGPKeyRing.getPublicKeyFor(signature: PGPSignature): PGPPublicKey? =
-    signature.fingerprint?.let { this.getPublicKey(it) } ?: this.getPublicKey(signature.keyID)
+    signature.pgpFingerprint?.let { this.getPublicKey(it) } ?: this.getPublicKey(signature.keyID)
 
 /** Return the [PGPPublicKey] that matches the key-ID of the given [PGPOnePassSignature] packet. */
 fun PGPKeyRing.getPublicKeyFor(onePassSignature: PGPOnePassSignature): PGPPublicKey? =
