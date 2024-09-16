@@ -20,7 +20,7 @@ import org.bouncycastle.util.encoders.Hex
 open class _64DigitFingerprint : OpenPgpFingerprint {
 
     /**
-     * Create an {@link _64DigitFingerprint}.
+     * Create a [_64DigitFingerprint].
      *
      * @param fingerprint uppercase hexadecimal fingerprint of length 64
      */

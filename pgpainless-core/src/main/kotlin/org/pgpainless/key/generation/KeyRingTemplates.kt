@@ -64,14 +64,13 @@ class KeyRingTemplates {
         }
 
     /**
-     * Creates a simple RSA KeyPair of length {@code length} with user-id {@code userId}. The
-     * KeyPair consists of a single RSA master key which is used for signing, encryption and
-     * certification.
+     * Creates a simple RSA KeyPair of length `length` with user-id `userId`. The KeyPair consists
+     * of a single RSA master key which is used for signing, encryption and certification.
      *
      * @param userId user id.
      * @param length length in bits.
      * @param password Password of the key. Can be empty for unencrypted keys.
-     * @return {@link PGPSecretKeyRing} containing the KeyPair.
+     * @return [PGPSecretKeyRing] containing the KeyPair.
      */
     @JvmOverloads
     fun simpleRsaKeyRing(
@@ -95,14 +94,13 @@ class KeyRingTemplates {
             .build()
 
     /**
-     * Creates a simple RSA KeyPair of length {@code length} with user-id {@code userId}. The
-     * KeyPair consists of a single RSA master key which is used for signing, encryption and
-     * certification.
+     * Creates a simple RSA KeyPair of length `length` with user-id `userId`. The KeyPair consists
+     * of a single RSA master key which is used for signing, encryption and certification.
      *
      * @param userId user id.
      * @param length length in bits.
      * @param password Password of the key. Can be null or blank for unencrypted keys.
-     * @return {@link PGPSecretKeyRing} containing the KeyPair.
+     * @return [PGPSecretKeyRing] containing the KeyPair.
      */
     fun simpleRsaKeyRing(userId: CharSequence?, length: RsaLength, password: String?) =
         password.let {
@@ -120,7 +118,7 @@ class KeyRingTemplates {
      *
      * @param userId user-id
      * @param passphrase Password of the private key. Can be empty for an unencrypted key.
-     * @return {@link PGPSecretKeyRing} containing the key pairs.
+     * @return [PGPSecretKeyRing] containing the key pairs.
      */
     @JvmOverloads
     fun simpleEcKeyRing(
@@ -153,7 +151,7 @@ class KeyRingTemplates {
      *
      * @param userId user-id
      * @param passphrase Password of the private key. Can be null or blank for an unencrypted key.
-     * @return {@link PGPSecretKeyRing} containing the key pairs.
+     * @return [PGPSecretKeyRing] containing the key pairs.
      */
     fun simpleEcKeyRing(userId: CharSequence?, password: String?): PGPSecretKeyRing =
         password.let {

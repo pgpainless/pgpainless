@@ -27,8 +27,8 @@ class KeyRingUtils {
         @JvmStatic private val LOGGER: Logger = LoggerFactory.getLogger(KeyRingUtils::class.java)
 
         /**
-         * Return the primary {@link PGPSecretKey} from the provided {@link PGPSecretKeyRing}. If it
-         * has no primary secret key, throw a {@link NoSuchElementException}.
+         * Return the primary [PGPSecretKey] from the provided [PGPSecretKeyRing]. If it has no
+         * primary secret key, throw a [NoSuchElementException].
          *
          * @param secretKeys secret keys
          * @return primary secret key
@@ -61,8 +61,8 @@ class KeyRingUtils {
         }
 
         /**
-         * Return the primary {@link PGPPublicKey} from the provided key ring. Throws a {@link
-         * NoSuchElementException} if the key ring has no primary public key.
+         * Return the primary [PGPPublicKey] from the provided key ring. Throws a
+         * [NoSuchElementException] if the key ring has no primary public key.
          *
          * @param keyRing key ring
          * @return primary public key
@@ -74,8 +74,7 @@ class KeyRingUtils {
         }
 
         /**
-         * Return the primary {@link PGPPublicKey} from the provided key ring or null if it has
-         * none.
+         * Return the primary [PGPPublicKey] from the provided key ring or null if it has none.
          *
          * @param keyRing key ring
          * @return primary public key
@@ -93,7 +92,7 @@ class KeyRingUtils {
 
         /**
          * Require the public key with the given subKeyId from the keyRing. If no such subkey
-         * exists, throw an {@link NoSuchElementException}.
+         * exists, throw an [NoSuchElementException].
          *
          * @param keyRing key ring
          * @param subKeyId subkey id
@@ -108,7 +107,7 @@ class KeyRingUtils {
 
         /**
          * Require the secret key with the given secret subKeyId from the secret keyRing. If no such
-         * subkey exists, throw an {@link NoSuchElementException}.
+         * subkey exists, throw an [NoSuchElementException].
          *
          * @param keyRing secret key ring
          * @param subKeyId subkey id
@@ -131,8 +130,8 @@ class KeyRingUtils {
         }
 
         /**
-         * Extract a {@link PGPPublicKeyRing} containing all public keys from the provided {@link
-         * PGPSecretKeyRing}.
+         * Extract a [PGPPublicKeyRing] containing all public keys from the provided
+         * [PGPSecretKeyRing].
          *
          * @param secretKeys secret key ring
          * @return public key ring
@@ -146,9 +145,9 @@ class KeyRingUtils {
         }
 
         /**
-         * Extract {@link PGPPublicKeyRing PGPPublicKeyRings} from all {@link PGPSecretKeyRing
-         * PGPSecretKeyRings} in the given {@link PGPSecretKeyRingCollection} and return them as a
-         * {@link PGPPublicKeyRingCollection}.
+         * Extract [PGPPublicKeyRings][PGPPublicKeyRing] from all
+         * [PGPSecretKeyRings][PGPSecretKeyRing] in the given [PGPSecretKeyRingCollection] and
+         * return them as a [PGPPublicKeyRingCollection].
          *
          * @param secretKeyRings secret key ring collection
          * @return public key ring collection
@@ -162,8 +161,8 @@ class KeyRingUtils {
         }
 
         /**
-         * Create a new {@link PGPPublicKeyRingCollection} from an array of {@link PGPPublicKeyRing
-         * PGPPublicKeyRings}.
+         * Create a new [PGPPublicKeyRingCollection] from an array of
+         * [PGPPublicKeyRings][PGPPublicKeyRing].
          *
          * @param certificates array of public key rings
          * @return key ring collection
@@ -176,8 +175,8 @@ class KeyRingUtils {
         }
 
         /**
-         * Create a new {@link PGPSecretKeyRingCollection} from an array of {@link PGPSecretKeyRing
-         * PGPSecretKeyRings}.
+         * Create a new [PGPSecretKeyRingCollection] from an array of
+         * [PGPSecretKeyRings][PGPSecretKeyRing].
          *
          * @param secretKeys array of secret key rings
          * @return secret key ring collection
@@ -190,8 +189,8 @@ class KeyRingUtils {
         }
 
         /**
-         * Return true, if the given {@link PGPPublicKeyRing} contains a {@link PGPPublicKey} for
-         * the given key id.
+         * Return true, if the given [PGPPublicKeyRing] contains a [PGPPublicKey] for the given key
+         * id.
          *
          * @param certificate public key ring
          * @param keyId id of the key in question
@@ -207,7 +206,7 @@ class KeyRingUtils {
          *
          * @param keyRing key ring
          * @param certification key signature
-         * @param <T> either {@link PGPPublicKeyRing} or {@link PGPSecretKeyRing}
+         * @param <T> either [PGPPublicKeyRing] or [PGPSecretKeyRing]
          * @return key ring with injected signature
          */
         @JvmStatic
@@ -221,7 +220,7 @@ class KeyRingUtils {
          * @param keyRing key ring
          * @param certifiedKey signed public key
          * @param certification key signature
-         * @param <T> either {@link PGPPublicKeyRing} or {@link PGPSecretKeyRing}
+         * @param <T> either [PGPPublicKeyRing] or [PGPSecretKeyRing]
          * @return key ring with injected signature
          * @throws NoSuchElementException in case that the signed key is not part of the key ring
          */
@@ -265,7 +264,7 @@ class KeyRingUtils {
          * @param keyRing key ring
          * @param userId signed user-id
          * @param certification signature
-         * @param <T> either {@link PGPPublicKeyRing} or {@link PGPSecretKeyRing}
+         * @param <T> either [PGPPublicKeyRing] or [PGPSecretKeyRing]
          * @return key ring with injected certification
          */
         @JvmStatic
@@ -300,7 +299,7 @@ class KeyRingUtils {
          * @param keyRing key ring
          * @param userAttributes certified user attributes
          * @param certification certification signature
-         * @param <T> either {@link PGPPublicKeyRing} or {@link PGPSecretKeyRing}
+         * @param <T> either [PGPPublicKeyRing] or [PGPSecretKeyRing]
          * @return key ring with injected user-attribute certification
          */
         @JvmStatic
@@ -330,11 +329,11 @@ class KeyRingUtils {
         }
 
         /**
-         * Inject a {@link PGPPublicKey} into the given key ring.
+         * Inject a [PGPPublicKey] into the given key ring.
          *
          * @param keyRing key ring
          * @param publicKey public key
-         * @param <T> either {@link PGPPublicKeyRing} or {@link PGPSecretKeyRing}
+         * @param <T> either [PGPPublicKeyRing] or [PGPSecretKeyRing]
          * @return key ring with injected public key
          */
         @JvmStatic
@@ -372,7 +371,7 @@ class KeyRingUtils {
         }
 
         /**
-         * Inject a {@link PGPSecretKey} into a {@link PGPSecretKeyRing}.
+         * Inject a [PGPSecretKey] into a [PGPSecretKeyRing].
          *
          * @param secretKeys secret key ring
          * @param secretKey secret key

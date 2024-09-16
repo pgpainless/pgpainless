@@ -64,7 +64,7 @@ class SignatureSubpacketsUtil {
          * such packet is present, return null.
          *
          * @param signature signature
-         * @return issuer key-id as {@link Long}
+         * @return issuer key-id as [Long]
          */
         @JvmStatic
         fun getIssuerKeyIdAsLong(signature: PGPSignature): Long? = getIssuerKeyId(signature)?.keyID

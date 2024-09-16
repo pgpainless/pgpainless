@@ -42,7 +42,7 @@ enum class KeyFlag(val flag: Int) {
         }
 
         /**
-         * Encode a list of {@link KeyFlag KeyFlags} into a bitmask.
+         * Encode a list of [KeyFlags][KeyFlag] into a bitmask.
          *
          * @param flags list of flags
          * @return bitmask

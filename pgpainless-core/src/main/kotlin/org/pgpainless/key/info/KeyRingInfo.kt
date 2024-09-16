@@ -35,7 +35,7 @@ class KeyRingInfo(
 
     private val signatures: Signatures = Signatures(keys, referenceDate, policy)
 
-    /** Primary {@link PGPPublicKey}.´ */
+    /** Primary [PGPPublicKey]. */
     val publicKey: PGPPublicKey = KeyRingUtils.requirePrimaryPublicKeyFrom(keys)
 
     /** Primary key ID. */
@@ -73,8 +73,8 @@ class KeyRingInfo(
     val version: Int = publicKey.version
 
     /**
-     * Return all {@link PGPPublicKey PGPPublicKeys} of this key ring. The first key in the list
-     * being the primary key. Note that the list is unmodifiable.
+     * Return all [PGPPublicKeys][PGPPublicKey] of this key ring. The first key in the list being
+     * the primary key. Note that the list is unmodifiable.
      *
      * @return list of public keys
      */
@@ -448,7 +448,7 @@ class KeyRingInfo(
         signatures.subkeyRevocations[keyId]
 
     /**
-     * Return a list of {@link KeyFlag KeyFlags} that apply to the subkey with the provided key id.
+     * Return a list of [KeyFlags][KeyFlag] that apply to the subkey with the provided key id.
      *
      * @param keyId key-id
      * @return list of key flags
@@ -478,7 +478,7 @@ class KeyRingInfo(
         }
 
     /**
-     * Return a list of {@link KeyFlag KeyFlags} that apply to the given user-id.
+     * Return a list of [KeyFlags][KeyFlag] that apply to the given user-id.
      *
      * @param userId user-id
      * @return key flags
@@ -622,8 +622,8 @@ class KeyRingInfo(
      * Return the current primary user-id of the key ring.
      *
      * <p>
-     * Note: If no user-id is marked as primary key using a {@link PrimaryUserID} packet, this
-     * method returns the first user-id on the key, otherwise null.
+     * Note: If no user-id is marked as primary key using a [PrimaryUserID] packet, this method
+     * returns the first user-id on the key, otherwise null.
      *
      * @return primary user-id or null
      */

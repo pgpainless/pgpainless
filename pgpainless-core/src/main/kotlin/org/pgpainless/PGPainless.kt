@@ -129,7 +129,7 @@ class PGPainless private constructor() {
          *
          * <p>
          * After making the desired changes in the builder, the modified key can be extracted using
-         * {@link SecretKeyRingEditorInterface#done()}.
+         * [org.pgpainless.key.modification.secretkeyring.SecretKeyRingEditorInterface.done].
          *
          * @param secretKeys secret key ring
          * @param referenceTime reference time used as signature creation date
