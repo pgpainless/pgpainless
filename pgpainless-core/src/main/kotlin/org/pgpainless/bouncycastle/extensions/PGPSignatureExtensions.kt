@@ -50,13 +50,13 @@ val PGPSignature.issuerKeyId: Long
                 SignatureSubpacketsUtil.getIssuerKeyIdAsLong(this)?.let {
                     if (it != 0L) it else null
                 }
-                    ?: fingerprint?.keyId ?: 0L
+                    ?: pgpFingerprint?.keyId ?: 0L
             }
         }
 
 /** Return true, if the signature was likely issued by a key with the given fingerprint. */
 fun PGPSignature.wasIssuedBy(fingerprint: OpenPgpFingerprint): Boolean =
-    this.fingerprint?.let { it.keyId == fingerprint.keyId } ?: (keyID == fingerprint.keyId)
+    this.pgpFingerprint?.let { it.keyId == fingerprint.keyId } ?: (keyID == fingerprint.keyId)
 
 /**
  * Return true, if the signature was likely issued by a key with the given fingerprint.
@@ -94,7 +94,7 @@ fun PGPSignature?.toRevocationState() =
     else if (isHardRevocation) RevocationState.hardRevoked()
     else RevocationState.softRevoked(creationTime)
 
-val PGPSignature.fingerprint: OpenPgpFingerprint?
+val PGPSignature.pgpFingerprint: OpenPgpFingerprint?
     get() = SignatureSubpacketsUtil.getIssuerFingerprintAsOpenPgpFingerprint(this)
 
 val PGPSignature.publicKeyAlgorithm: PublicKeyAlgorithm
