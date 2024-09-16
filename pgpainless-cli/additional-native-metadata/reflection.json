@@ -1,0 +1,17 @@
+[
+  {
+    "name" : "org.bouncycastle.jce.provider.BouncyCastleProvider",
+    "allDeclaredMethods" : true,
+    "allDeclaredConstructors" : true
+  },
+  {
+    "name" : "org.bouncycastle.openpgp.*",
+    "allDeclaredMethods" : true,
+    "allDeclaredConstructors" : true
+  },
+  {
+    "name": "org.bouncycastle.crypto.digests.SHA256Digest",
+    "allDeclaredConstructors": true,
+    "allDeclaredMethods": true
+  }
+]

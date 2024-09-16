@@ -5,6 +5,7 @@
 plugins {
     id 'application'
     id "com.github.johnrengelman.shadow" version "6.1.0"
+    id 'org.graalvm.buildtools.native' version '0.10.3'
 }
 def generatedVersionDir = "${buildDir}/generated-version"
 
@@ -75,6 +76,30 @@ run {
     // https://discuss.gradle.org/t/how-can-i-provide-command-line-args-to-application-started-with-gradle-run/6474/5
     if (project.hasProperty("appArgs")) {
         args Eval.me(appArgs)
+    }
+}
+
+graalvmNative {
+    binaries {
+        main {
+            imageName = "GraalVM-Native-pgpainless"
+            mainClass = "$mainClassName"
+            buildArgs.add("-O4")
+            buildArgs.add('-H:ConfigurationFileDirectories=../../../build/resources/main/META-INF/native-image/')
+            buildArgs.add('--no-fallback')
+            buildArgs.add('--verbose')
+            buildArgs.add('-H:+BuildReport')
+            buildArgs.add('-J-XshowSettings:vm')
+            buildArgs.add('--report-unsupported-elements-at-runtime')
+            buildArgs.add('-H:+ReportExceptionStackTraces')
+            buildArgs.add('--initialize-at-build-time=org.bouncycastle')
+            buildArgs.add('--initialize-at-build-time=org.bouncycastle.jce.provider.BouncyCastleProvider')
+            buildArgs.add('-H:ReflectionConfigurationFiles=../../../additional-native-metadata/reflection.json')
+            buildArgs.add('-H:ResourceConfigurationFiles=../../../additional-native-metadata/include-resources.json')
+        }
+    }
+    binaries.all {
+        buildArgs.add("--verbose")
     }
 }
 
