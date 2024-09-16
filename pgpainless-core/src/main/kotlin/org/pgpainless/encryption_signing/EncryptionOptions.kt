@@ -50,16 +50,16 @@ class EncryptionOptions(private val purpose: EncryptionPurpose) {
     constructor() : this(EncryptionPurpose.ANY)
 
     /**
-     * Factory method to create an {@link EncryptionOptions} object which will encrypt for keys
-     * which carry the flag {@link org.pgpainless.algorithm.KeyFlag#ENCRYPT_COMMS}.
+     * Factory method to create an [EncryptionOptions] object which will encrypt for keys which
+     * carry the flag [org.pgpainless.algorithm.KeyFlag.ENCRYPT_COMMS].
      *
      * @return encryption options
      */
     fun setEvaluationDate(evaluationDate: Date) = apply { this.evaluationDate = evaluationDate }
 
     /**
-     * Identify authenticatable certificates for the given user-ID by querying the {@link
-     * CertificateAuthority} for identifiable bindings. Add all acceptable bindings, whose trust
+     * Identify authenticatable certificates for the given user-ID by querying the
+     * [CertificateAuthority] for identifiable bindings. Add all acceptable bindings, whose trust
      * amount is larger or equal to the target amount to the list of recipients.
      *
      * @param userId userId
@@ -88,8 +88,8 @@ class EncryptionOptions(private val purpose: EncryptionPurpose) {
     }
 
     /**
-     * Add all key rings in the provided {@link Iterable} (e.g. {@link PGPPublicKeyRingCollection})
-     * as recipients.
+     * Add all key rings in the provided [Iterable] (e.g.
+     * [org.bouncycastle.openpgp.PGPPublicKeyRingCollection]) as recipients.
      *
      * @param keys keys
      * @return this
@@ -102,9 +102,9 @@ class EncryptionOptions(private val purpose: EncryptionPurpose) {
     }
 
     /**
-     * Add all key rings in the provided {@link Iterable} (e.g. {@link PGPPublicKeyRingCollection})
-     * as recipients. Per key ring, the selector is applied to select one or more encryption
-     * subkeys.
+     * Add all key rings in the provided [Iterable] (e.g.
+     * [org.bouncycastle.openpgp.PGPPublicKeyRingCollection]) as recipients. Per key ring, the
+     * selector is applied to select one or more encryption subkeys.
      *
      * @param keys keys
      * @param selector encryption key selector
@@ -245,9 +245,9 @@ class EncryptionOptions(private val purpose: EncryptionPurpose) {
     }
 
     /**
-     * Add an {@link PGPKeyEncryptionMethodGenerator} which will be used to encrypt the message.
-     * Method generators are either {@link PBEKeyEncryptionMethodGenerator} (passphrase) or {@link
-     * PGPKeyEncryptionMethodGenerator} (public key).
+     * Add a [PGPKeyEncryptionMethodGenerator] which will be used to encrypt the message. Method
+     * generators are either [org.bouncycastle.openpgp.operator.PBEKeyEncryptionMethodGenerator]
+     * (passphrase) or [PGPKeyEncryptionMethodGenerator] (public key).
      *
      * This method is intended for advanced users to allow encryption for specific subkeys. This can
      * come in handy for example if data needs to be encrypted to a subkey that's ignored by
@@ -278,10 +278,10 @@ class EncryptionOptions(private val purpose: EncryptionPurpose) {
     }
 
     /**
-     * If this method is called, subsequent calls to {@link #addRecipient(PGPPublicKeyRing)} will
-     * allow encryption for subkeys that do not carry any {@link org.pgpainless.algorithm.KeyFlag}
-     * subpacket. This is a workaround for dealing with legacy keys that have no key flags subpacket
-     * but rely on the key algorithm type to convey the subkeys use.
+     * If this method is called, subsequent calls to [addRecipient] will allow encryption for
+     * subkeys that do not carry any [org.pgpainless.algorithm.KeyFlag] subpacket. This is a
+     * workaround for dealing with legacy keys that have no key flags subpacket but rely on the key
+     * algorithm type to convey the subkeys use.
      *
      * @return this
      */

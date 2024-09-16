@@ -15,7 +15,7 @@ class KeyIdUtil {
          * Convert a long key-id into a key-id. A long key-id is a 16 digit hex string.
          *
          * @param longKeyId 16-digit hexadecimal string
-         * @return key-id converted to {@link Long}.
+         * @return key-id converted to [Long].
          */
         @JvmStatic
         @Deprecated(

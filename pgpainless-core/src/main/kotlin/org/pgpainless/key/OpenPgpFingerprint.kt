@@ -23,8 +23,8 @@ abstract class OpenPgpFingerprint : CharSequence, Comparable<OpenPgpFingerprint>
     abstract fun getVersion(): Int
 
     /**
-     * Return the key id of the OpenPGP public key this {@link OpenPgpFingerprint} belongs to. This
-     * method can be implemented for V4 and V5 fingerprints. V3 key-IDs cannot be derived from the
+     * Return the key id of the OpenPGP public key this [OpenPgpFingerprint] belongs to. This method
+     * can be implemented for V4 and V5 fingerprints. V3 key-IDs cannot be derived from the
      * fingerprint, but we don't care, since V3 is deprecated.
      *
      * @return key id
@@ -127,10 +127,10 @@ abstract class OpenPgpFingerprint : CharSequence, Comparable<OpenPgpFingerprint>
         @JvmStatic fun of(keys: PGPKeyRing): OpenPgpFingerprint = of(keys.publicKey)
 
         /**
-         * Try to parse an {@link OpenPgpFingerprint} from the given fingerprint string. If the
-         * trimmed fingerprint without whitespace is 64 characters long, it is either a v5 or v6
-         * fingerprint. In this case, we return a {@link _64DigitFingerprint}. Since this is
-         * ambiguous, it is generally recommended to know the version of the key beforehand.
+         * Try to parse an [OpenPgpFingerprint] from the given fingerprint string. If the trimmed
+         * fingerprint without whitespace is 64 characters long, it is either a v5 or v6
+         * fingerprint. In this case, we return a [_64DigitFingerprint]. Since this is ambiguous, it
+         * is generally recommended to know the version of the key beforehand.
          *
          * @param fingerprint fingerprint
          * @return parsed fingerprint
@@ -152,7 +152,7 @@ abstract class OpenPgpFingerprint : CharSequence, Comparable<OpenPgpFingerprint>
         }
 
         /**
-         * Parse a binary OpenPGP fingerprint into an {@link OpenPgpFingerprint} object.
+         * Parse a binary OpenPGP fingerprint into an [OpenPgpFingerprint] object.
          *
          * @param binaryFingerprint binary representation of the fingerprint
          * @return parsed fingerprint

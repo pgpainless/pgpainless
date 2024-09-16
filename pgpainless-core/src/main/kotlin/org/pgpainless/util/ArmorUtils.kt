@@ -153,8 +153,8 @@ class ArmorUtils {
         ): String = toAsciiArmoredString(bytes.inputStream(), header)
 
         /**
-         * Return the ASCII armored encoding of the OpenPGP data from the given {@link InputStream}.
-         * The ASCII armor will include armor headers from the given header map.
+         * Return the ASCII armored encoding of the OpenPGP data from the given [InputStream]. The
+         * ASCII armor will include armor headers from the given header map.
          *
          * @param inputStream input stream of OpenPGP data
          * @param header ASCII armor header map
@@ -179,7 +179,7 @@ class ArmorUtils {
 
         /**
          * Return an [ArmoredOutputStream] prepared with headers for the given key ring, which wraps
-         * the given {@link OutputStream}.
+         * the given [OutputStream].
          *
          * The armored output stream can be used to encode the key ring by calling
          * [PGPKeyRing.encode] with the armored output stream as an argument.

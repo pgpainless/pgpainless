@@ -176,8 +176,7 @@ private constructor(
      * @return this
      * @see <a href="https://datatracker.ietf.org/doc/html/rfc4880#section-5.9">RFC4880 §5.9.
      *   Literal Data Packet</a>
-     * @deprecated options other than the default value of {@link StreamEncoding#BINARY} are
-     *   discouraged.
+     * @deprecated options other than the default value of [StreamEncoding.BINARY] are discouraged.
      */
     @Deprecated("Options other than BINARY are discouraged.")
     fun setEncoding(encoding: StreamEncoding) = apply { encodingField = encoding }

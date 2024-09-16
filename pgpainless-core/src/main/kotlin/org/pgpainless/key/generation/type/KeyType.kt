@@ -41,8 +41,7 @@ interface KeyType {
     val bitStrength: Int
 
     /**
-     * Return an implementation of {@link AlgorithmParameterSpec} that can be used to generate the
-     * key.
+     * Return an implementation of [AlgorithmParameterSpec] that can be used to generate the key.
      *
      * @return algorithm parameter spec
      */
@@ -50,7 +49,7 @@ interface KeyType {
 
     /**
      * Return true if the key that is generated from this type is able to carry the SIGN_DATA key
-     * flag. See {@link org.pgpainless.algorithm.KeyFlag#SIGN_DATA}.
+     * flag. See [org.pgpainless.algorithm.KeyFlag.SIGN_DATA].
      *
      * @return true if the key can sign.
      */
@@ -59,7 +58,7 @@ interface KeyType {
 
     /**
      * Return true if the key that is generated from this type is able to carry the CERTIFY_OTHER
-     * key flag. See {@link org.pgpainless.algorithm.KeyFlag#CERTIFY_OTHER}.
+     * key flag. See [org.pgpainless.algorithm.KeyFlag.CERTIFY_OTHER].
      *
      * @return true if the key is able to certify other keys
      */
@@ -68,7 +67,7 @@ interface KeyType {
 
     /**
      * Return true if the key that is generated from this type is able to carry the AUTHENTICATION
-     * key flag. See {@link org.pgpainless.algorithm.KeyFlag#AUTHENTICATION}.
+     * key flag. See [org.pgpainless.algorithm.KeyFlag.AUTHENTICATION].
      *
      * @return true if the key can be used for authentication purposes.
      */
@@ -77,7 +76,7 @@ interface KeyType {
 
     /**
      * Return true if the key that is generated from this type is able to carry the ENCRYPT_COMMS
-     * key flag. See {@link org.pgpainless.algorithm.KeyFlag#ENCRYPT_COMMS}.
+     * key flag. See [org.pgpainless.algorithm.KeyFlag.ENCRYPT_COMMS].
      *
      * @return true if the key can encrypt communication
      */
@@ -86,7 +85,7 @@ interface KeyType {
 
     /**
      * Return true if the key that is generated from this type is able to carry the ENCRYPT_STORAGE
-     * key flag. See {@link org.pgpainless.algorithm.KeyFlag#ENCRYPT_STORAGE}.
+     * key flag. See [org.pgpainless.algorithm.KeyFlag.ENCRYPT_STORAGE].
      *
      * @return true if the key can encrypt for storage
      */

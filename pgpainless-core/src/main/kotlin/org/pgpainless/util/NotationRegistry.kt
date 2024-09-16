@@ -9,7 +9,7 @@ package org.pgpainless.util
  * notations that are not known to the application, there must be some way to tell PGPainless which
  * notations actually are known.
  *
- * To add a notation name, call {@link #addKnownNotation(String)}.
+ * To add a notation name, call [addKnownNotation].
  */
 class NotationRegistry constructor(notations: Set<String> = setOf()) {
     private val knownNotations: MutableSet<String>

@@ -284,8 +284,8 @@ class Policy(
         companion object {
 
             /**
-             * Default {@link CompressionAlgorithmPolicy} of PGPainless. The default compression
-             * algorithm policy accepts any compression algorithm.
+             * Default [CompressionAlgorithmPolicy] of PGPainless. The default compression algorithm
+             * policy accepts any compression algorithm.
              *
              * @return default algorithm policy
              * @deprecated not expressive - might be removed in a future release
@@ -385,17 +385,16 @@ class Policy(
 
     enum class SignerUserIdValidationLevel {
         /**
-         * PGPainless will verify {@link org.bouncycastle.bcpg.sig.SignerUserID} subpackets in
-         * signatures strictly. This means, that signatures with Signer's User-ID subpackets
-         * containing a value that does not match the signer key's user-id exactly, will be
-         * rejected. E.g. Signer's user-id "alice@pgpainless.org", User-ID: "Alice
-         * &lt;alice@pgpainless.org&gt;" does not match exactly and is therefore rejected.
+         * PGPainless will verify [org.bouncycastle.bcpg.sig.SignerUserID] subpackets in signatures
+         * strictly. This means, that signatures with Signer's User-ID subpackets containing a value
+         * that does not match the signer key's user-id exactly, will be rejected. E.g. Signer's
+         * user-id "alice@pgpainless.org", User-ID: "Alice &lt;alice@pgpainless.org&gt;" does not
+         * match exactly and is therefore rejected.
          */
         STRICT,
 
         /**
-         * PGPainless will ignore {@link org.bouncycastle.bcpg.sig.SignerUserID} subpackets on
-         * signature.
+         * PGPainless will ignore [org.bouncycastle.bcpg.sig.SignerUserID] subpackets on signature.
          */
         DISABLED
     }
