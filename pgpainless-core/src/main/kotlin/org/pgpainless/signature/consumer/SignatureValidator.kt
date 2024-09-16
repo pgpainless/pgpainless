@@ -15,9 +15,9 @@ import org.bouncycastle.openpgp.PGPUserAttributeSubpacketVector
 import org.pgpainless.algorithm.KeyFlag
 import org.pgpainless.algorithm.SignatureSubpacket
 import org.pgpainless.algorithm.SignatureType
-import org.pgpainless.bouncycastle.extensions.fingerprint
 import org.pgpainless.bouncycastle.extensions.isHardRevocation
 import org.pgpainless.bouncycastle.extensions.isOfType
+import org.pgpainless.bouncycastle.extensions.pgpFingerprint
 import org.pgpainless.bouncycastle.extensions.publicKeyAlgorithm
 import org.pgpainless.bouncycastle.extensions.signatureExpirationDate
 import org.pgpainless.bouncycastle.extensions.signatureHashAlgorithm
@@ -63,11 +63,11 @@ abstract class SignatureValidator {
                         }
                     }
 
-                    if (signature.fingerprint != null &&
-                        signature.fingerprint != signingKeyFingerprint) {
+                    if (signature.pgpFingerprint != null &&
+                        signature.pgpFingerprint != signingKeyFingerprint) {
                         throw SignatureValidationException(
                             "Signature was not created by" +
-                                " $signingKeyFingerprint (signature fingerprint: ${signature.fingerprint})")
+                                " $signingKeyFingerprint (signature fingerprint: ${signature.pgpFingerprint})")
                     }
                 }
 
