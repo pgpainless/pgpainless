@@ -680,7 +680,7 @@ class OpenPgpMessageInputStream(
                 PGPainless.inspectKeyRing(it).decryptionSubkeys.any { subkey ->
                     when (pkesk.version) {
                         3 -> pkesk.keyID == subkey.keyID
-                        6 -> pkesk.fingerprint.contentEquals(subkey.fingerprint)
+                        6 -> pkesk.keyIdentifier.fingerprint.contentEquals(subkey.fingerprint)
                         else -> false
                     }
                 }
@@ -692,7 +692,7 @@ class OpenPgpMessageInputStream(
                 PGPainless.inspectKeyRing(it).decryptionSubkeys.any { subkey ->
                     when (pkesk.version) {
                         3 -> pkesk.keyID == subkey.keyID
-                        6 -> pkesk.fingerprint.contentEquals(subkey.fingerprint)
+                        6 -> pkesk.keyIdentifier.fingerprint.contentEquals(subkey.fingerprint)
                         else -> false
                     }
                 }
