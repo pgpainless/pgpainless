@@ -14,7 +14,7 @@ import sop.operation.Version
 class VersionImpl : Version {
 
     companion object {
-        const val SOP_VERSION = 10
+        const val SOP_VERSION = 11
         const val SOPV_VERSION = "1.0"
     }
 
