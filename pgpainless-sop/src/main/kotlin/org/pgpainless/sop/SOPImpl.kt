@@ -7,6 +7,7 @@ package org.pgpainless.sop
 import sop.SOP
 import sop.SOPV
 import sop.operation.Armor
+import sop.operation.CertifyUserId
 import sop.operation.ChangeKeyPassword
 import sop.operation.Dearmor
 import sop.operation.Decrypt
@@ -19,38 +20,49 @@ import sop.operation.InlineDetach
 import sop.operation.InlineSign
 import sop.operation.InlineVerify
 import sop.operation.ListProfiles
+import sop.operation.MergeCerts
 import sop.operation.RevokeKey
+import sop.operation.UpdateKey
+import sop.operation.ValidateUserId
 import sop.operation.Version
 
 class SOPImpl(private val sopv: SOPV = SOPVImpl()) : SOP {
 
-    override fun armor(): Armor = ArmorImpl()
+    override fun armor() = ArmorImpl()
 
-    override fun changeKeyPassword(): ChangeKeyPassword = ChangeKeyPasswordImpl()
+    override fun certifyUserId() = null
 
-    override fun dearmor(): Dearmor = DearmorImpl()
+    override fun changeKeyPassword() = ChangeKeyPasswordImpl()
 
-    override fun decrypt(): Decrypt = DecryptImpl()
+    override fun dearmor() = DearmorImpl()
 
-    override fun detachedSign(): DetachedSign = DetachedSignImpl()
+    override fun decrypt() = DecryptImpl()
 
-    override fun detachedVerify(): DetachedVerify = sopv.detachedVerify()
+    override fun detachedSign() = DetachedSignImpl()
 
-    override fun encrypt(): Encrypt = EncryptImpl()
+    override fun detachedVerify() = sopv.detachedVerify()
 
-    override fun extractCert(): ExtractCert = ExtractCertImpl()
+    override fun encrypt() = EncryptImpl()
 
-    override fun generateKey(): GenerateKey = GenerateKeyImpl()
+    override fun extractCert() = ExtractCertImpl()
 
-    override fun inlineDetach(): InlineDetach = InlineDetachImpl()
+    override fun generateKey() = GenerateKeyImpl()
 
-    override fun inlineSign(): InlineSign = InlineSignImpl()
+    override fun inlineDetach() = InlineDetachImpl()
 
-    override fun inlineVerify(): InlineVerify = sopv.inlineVerify()
+    override fun inlineSign() = InlineSignImpl()
 
-    override fun listProfiles(): ListProfiles = ListProfilesImpl()
+    override fun inlineVerify() = sopv.inlineVerify()
 
-    override fun revokeKey(): RevokeKey = RevokeKeyImpl()
+    override fun listProfiles() = ListProfilesImpl()
 
-    override fun version(): Version = sopv.version()
+    override fun mergeCerts() = null
+
+    override fun revokeKey() = RevokeKeyImpl()
+
+    override fun updateKey() = null
+
+    override fun validateUserId() = null
+
+    override fun version() = sopv.version()
 }

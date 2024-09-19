@@ -16,9 +16,9 @@ class SOPVImpl : SOPV {
         ArmoredOutputStreamFactory.setVersionInfo(null)
     }
 
-    override fun detachedVerify(): DetachedVerify = DetachedVerifyImpl()
+    override fun detachedVerify(): DetachedVerify? = DetachedVerifyImpl()
 
-    override fun inlineVerify(): InlineVerify = InlineVerifyImpl()
+    override fun inlineVerify(): InlineVerify? = InlineVerifyImpl()
 
-    override fun version(): Version = VersionImpl()
+    override fun version(): Version? = VersionImpl()
 }
