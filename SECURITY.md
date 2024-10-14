@@ -14,6 +14,7 @@ currently being supported with security updates.
 
 | Version | Supported          | Note       |
 |---------|--------------------|------------|
+| 1.7.X   | :white_check_mark: |            |
 | 1.6.X   | :white_check_mark: | LTS branch |
 | 1.5.X   | :white_check_mark: |            |
 | 1.4.X   | :white_check_mark: |            |
