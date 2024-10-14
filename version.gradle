@@ -4,8 +4,8 @@
 
 allprojects {
     ext {
-        shortVersion = '1.6.7'
-        isSnapshot = true
+        shortVersion = '1.7.0'
+        isSnapshot = false
         pgpainlessMinAndroidSdk = 10
         javaSourceCompatibility = 1.8
         bouncyCastleVersion = '1.78.1'
@@ -14,6 +14,6 @@ allprojects {
         logbackVersion = '1.4.14'
         mockitoVersion = '4.5.1'
         slf4jVersion = '1.7.36'
-        sopJavaVersion = '10.0.0'
+        sopJavaVersion = '10.0.1'
     }
 }
