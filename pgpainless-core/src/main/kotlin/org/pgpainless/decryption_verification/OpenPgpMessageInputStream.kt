@@ -163,7 +163,8 @@ class OpenPgpMessageInputStream(
                 OpenPgpPacket.PKESK,
                 OpenPgpPacket.SKESK,
                 OpenPgpPacket.SED,
-                OpenPgpPacket.SEIPD -> {
+                OpenPgpPacket.SEIPD,
+                OpenPgpPacket.OED -> {
                     if (processEncryptedData()) {
                         break@layer
                     }
@@ -185,6 +186,10 @@ class OpenPgpMessageInputStream(
                 OpenPgpPacket.UID,
                 OpenPgpPacket.UATTR ->
                     throw MalformedOpenPgpMessageException("Illegal Packet in Stream: $packet")
+                OpenPgpPacket.PADDING -> {
+                    LOGGER.debug("Padding packet")
+                    pIn.readPadding()
+                }
                 OpenPgpPacket.EXP_1,
                 OpenPgpPacket.EXP_2,
                 OpenPgpPacket.EXP_3,
@@ -319,7 +324,7 @@ class OpenPgpMessageInputStream(
             "Symmetrically Encrypted Data Packet at depth ${layerMetadata.depth} encountered.")
         syntaxVerifier.next(InputSymbol.ENCRYPTED_DATA)
         val encDataList = packetInputStream!!.readEncryptedDataList()
-        if (!encDataList.isIntegrityProtected) {
+        if (!encDataList.isIntegrityProtected && !encDataList.get(0).isAEAD) {
             LOGGER.warn("Symmetrically Encrypted Data Packet is not integrity-protected.")
             if (!options.isIgnoreMDCErrors()) {
                 throw MessageNotIntegrityProtectedException()

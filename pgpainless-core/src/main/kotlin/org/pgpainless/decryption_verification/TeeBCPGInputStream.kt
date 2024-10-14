@@ -14,6 +14,7 @@ import org.bouncycastle.openpgp.PGPCompressedData
 import org.bouncycastle.openpgp.PGPEncryptedDataList
 import org.bouncycastle.openpgp.PGPLiteralData
 import org.bouncycastle.openpgp.PGPOnePassSignature
+import org.bouncycastle.openpgp.PGPPadding
 import org.bouncycastle.openpgp.PGPSignature
 import org.pgpainless.algorithm.OpenPgpPacket
 
@@ -73,6 +74,10 @@ class TeeBCPGInputStream(inputStream: BCPGInputStream, outputStream: OutputStrea
 
     fun readMarker(): MarkerPacket {
         return (readPacket() as MarkerPacket).also { delayedTee.squeeze() }
+    }
+
+    fun readPadding(): PGPPadding {
+        return PGPPadding(packetInputStream).also { delayedTee.squeeze() }
     }
 
     fun close() {

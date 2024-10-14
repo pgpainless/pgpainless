@@ -22,6 +22,7 @@ enum class OpenPgpPacket(val tag: Int) {
     UATTR(17),
     SEIPD(18),
     MDC(19),
+    OED(20),
     PADDING(21),
     EXP_1(60),
     EXP_2(61),
