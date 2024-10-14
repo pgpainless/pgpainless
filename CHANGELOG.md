@@ -5,6 +5,10 @@ SPDX-License-Identifier: CC0-1.0
 
 # PGPainless Changelog
 
+## 1.7.1
+- Bump `sop-java` to `10.0.2`
+- Downgrade `logback-core` and `logback-classic` to `1.2.13` (fix CLI spam)
+
 
 ## 1.7.0
 - Bump `bcpg-jdk8on` to `1.78.1`
