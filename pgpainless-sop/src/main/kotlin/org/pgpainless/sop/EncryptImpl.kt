@@ -136,7 +136,7 @@ class EncryptImpl : Encrypt {
     }
 
     override fun withPassword(password: String): Encrypt = apply {
-        encryptionOptions.addPassphrase(Passphrase.fromPassword(password))
+        encryptionOptions.addMessagePassphrase(Passphrase.fromPassword(password))
     }
 
     private fun modeToStreamEncoding(mode: EncryptAs): StreamEncoding {

@@ -92,7 +92,7 @@ class DecryptImpl : Decrypt {
     }
 
     override fun verifyWithCert(cert: InputStream): Decrypt = apply {
-        KeyReader.readPublicKeys(cert, true)?.let { consumerOptions.addVerificationCerts(it) }
+        KeyReader.readPublicKeys(cert, true).let { consumerOptions.addVerificationCerts(it) }
     }
 
     override fun withKey(key: InputStream): Decrypt = apply {
@@ -107,10 +107,10 @@ class DecryptImpl : Decrypt {
     }
 
     override fun withPassword(password: String): Decrypt = apply {
-        consumerOptions.addDecryptionPassphrase(Passphrase.fromPassword(password))
+        consumerOptions.addMessagePassphrase(Passphrase.fromPassword(password))
         password.trimEnd().let {
             if (it != password) {
-                consumerOptions.addDecryptionPassphrase(Passphrase.fromPassword(it))
+                consumerOptions.addMessagePassphrase(Passphrase.fromPassword(it))
             }
         }
     }

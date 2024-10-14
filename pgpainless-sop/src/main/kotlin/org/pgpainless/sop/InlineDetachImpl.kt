@@ -34,7 +34,7 @@ class InlineDetachImpl : InlineDetach {
 
             private val sigOut = ByteArrayOutputStream()
 
-            override fun writeTo(messageOutputStream: OutputStream): Signatures {
+            override fun writeTo(outputStream: OutputStream): Signatures {
                 var pgpIn = OpenPgpInputStream(messageInputStream)
                 if (pgpIn.isNonOpenPgp) {
                     throw SOPGPException.BadData("Data appears to be non-OpenPGP.")
@@ -50,7 +50,7 @@ class InlineDetachImpl : InlineDetach {
                         try {
                             signatures =
                                 ClearsignedMessageUtil.detachSignaturesFromInbandClearsignedMessage(
-                                    armorIn, messageOutputStream)
+                                    armorIn, outputStream)
                             if (signatures.isEmpty) {
                                 throw SOPGPException.BadData(
                                     "Data did not contain OpenPGP signatures.")
@@ -86,7 +86,7 @@ class InlineDetachImpl : InlineDetach {
                         if (next is PGPLiteralData) {
                             // Write out contents of Literal Data packet
                             val literalIn = (next as PGPLiteralData).dataStream
-                            Streams.pipeAll(literalIn, messageOutputStream)
+                            Streams.pipeAll(literalIn, outputStream)
                             literalIn.close()
                             continue
                         }
