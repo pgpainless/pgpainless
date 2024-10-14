@@ -6,7 +6,7 @@ SPDX-License-Identifier: CC0-1.0
 # PGPainless Changelog
 
 
-## 1.7.0-SNAPSHOT
+## 1.7.0
 - Bump `bcpg-jdk8on` to `1.78.1`
 - Bump `bcprov-jdk18on` to `1.78.1`
 - Bump `logback-core` and `logback-classic` to `1.4.14`
@@ -27,7 +27,7 @@ SPDX-License-Identifier: CC0-1.0
   - Do not choke on LibrePGP OED packets
   - Supersede `addPassphrase()`/`addDecryptionPassphrase()` methods with more clear `addMessagePassphrase()`
 - `pgpainless-sop`, `pgpainless-cli`
-  - Bump `sop-java` to `10.0.0`, implementing [SOP Spec Revision 10](https://www.ietf.org/archive/id/draft-dkg-openpgp-stateless-cli-10.html)
+  - Bump `sop-java` to `10.0.1`, implementing [SOP Spec Revision 10](https://www.ietf.org/archive/id/draft-dkg-openpgp-stateless-cli-10.html)
   - Change API of `sop.encrypt` to return a `ReadyWithResult<EncryptionResult>` to expose the session key
   - `decrypt --verify-with`: Fix to not throw `NoSignature` exception (exit code 3) if `VERIFICATIONS` is empty
   - Separate signature verification operations into `SOPV` interface
