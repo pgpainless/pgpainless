@@ -405,7 +405,7 @@ class KeyRingInfo(
             .plus(signatures.userIdRevocations.values)
             .plus(signatures.subkeyBindings.values)
             .plus(signatures.subkeyRevocations.values)
-            .maxByOrNull { creationDate }
+            .maxByOrNull { it.creationTime }
     /**
      * Return the creation time of the latest added subkey.
      *
