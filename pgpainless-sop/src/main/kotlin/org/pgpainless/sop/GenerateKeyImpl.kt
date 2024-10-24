@@ -10,6 +10,8 @@ import java.security.InvalidAlgorithmParameterException
 import java.security.NoSuchAlgorithmException
 import org.bouncycastle.openpgp.PGPException
 import org.bouncycastle.openpgp.PGPSecretKeyRing
+import org.bouncycastle.openpgp.api.bc.BcOpenPGPV6KeyGenerator
+import org.bouncycastle.openpgp.operator.PGPKeyPairGenerator
 import org.pgpainless.PGPainless
 import org.pgpainless.algorithm.KeyFlag
 import org.pgpainless.key.generation.KeyRingBuilder
@@ -34,8 +36,10 @@ class GenerateKeyImpl : GenerateKey {
             Profile(
                 "draft-koch-eddsa-for-openpgp-00", "Generate EdDSA / ECDH keys using Curve25519")
         @JvmField val RSA4096_PROFILE = Profile("rfc4880", "Generate 4096-bit RSA keys")
+        @JvmField val RFC9580_25519_PROFILE = Profile("rfc9580", "Generate a version 6 EdDSA / ECDH keys using Curve25519")
+        @JvmField val RFC9580_448_PROFILE = Profile("rfc9580-curve448", "Generate a version 6 EdDSA / ECDH keys using Curve448")
 
-        @JvmField val SUPPORTED_PROFILES = listOf(CURVE25519_PROFILE, RSA4096_PROFILE)
+        @JvmField val SUPPORTED_PROFILES = listOf(CURVE25519_PROFILE, RSA4096_PROFILE, RFC9580_25519_PROFILE, RFC9580_448_PROFILE)
     }
 
     private val userIds = mutableSetOf<String>()
@@ -124,6 +128,40 @@ class GenerateKeyImpl : GenerateKey {
                                         KeyFlag.ENCRYPT_STORAGE))
                             }
                         }
+                }
+                RFC9580_25519_PROFILE.name -> {
+                    val gen = BcOpenPGPV6KeyGenerator()
+                        .withPrimaryKey(PGPKeyPairGenerator::generateEd25519KeyPair)
+                        .addSigningSubkey(PGPKeyPairGenerator::generateEd25519KeyPair)
+                    if (!signingOnly) {
+                        gen.addEncryptionSubkey(PGPKeyPairGenerator::generateX25519KeyPair)
+                    }
+                    userIds.forEach {
+                        gen.addUserId(it)
+                    }
+
+                    if (!passphrase.isEmpty) {
+                        return gen.build(passphrase.getChars())
+                    } else {
+                        return gen.build()
+                    }
+                }
+                RFC9580_448_PROFILE.name -> {
+                    val gen = BcOpenPGPV6KeyGenerator()
+                        .withPrimaryKey(PGPKeyPairGenerator::generateEd448KeyPair)
+                        .addSigningSubkey(PGPKeyPairGenerator::generateEd448KeyPair)
+                    if (!signingOnly) {
+                        gen.addEncryptionSubkey(PGPKeyPairGenerator::generateX448KeyPair)
+                    }
+                    userIds.forEach {
+                        gen.addUserId(it)
+                    }
+
+                    if (!passphrase.isEmpty) {
+                        return gen.build(passphrase.getChars())
+                    } else {
+                        return gen.build()
+                    }
                 }
                 else -> throw SOPGPException.UnsupportedProfile("generate-key", profile)
             }
