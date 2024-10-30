@@ -36,10 +36,16 @@ class GenerateKeyImpl : GenerateKey {
             Profile(
                 "draft-koch-eddsa-for-openpgp-00", "Generate EdDSA / ECDH keys using Curve25519")
         @JvmField val RSA4096_PROFILE = Profile("rfc4880", "Generate 4096-bit RSA keys")
-        @JvmField val RFC9580_25519_PROFILE = Profile("rfc9580", "Generate a version 6 EdDSA / ECDH keys using Curve25519")
-        @JvmField val RFC9580_448_PROFILE = Profile("rfc9580-curve448", "Generate a version 6 EdDSA / ECDH keys using Curve448")
+        @JvmField
+        val RFC9580_25519_PROFILE =
+            Profile("rfc9580", "Generate a version 6 EdDSA / ECDH keys using Curve25519")
+        @JvmField
+        val RFC9580_448_PROFILE =
+            Profile("rfc9580-curve448", "Generate a version 6 EdDSA / ECDH keys using Curve448")
 
-        @JvmField val SUPPORTED_PROFILES = listOf(CURVE25519_PROFILE, RSA4096_PROFILE, RFC9580_25519_PROFILE, RFC9580_448_PROFILE)
+        @JvmField
+        val SUPPORTED_PROFILES =
+            listOf(CURVE25519_PROFILE, RSA4096_PROFILE, RFC9580_25519_PROFILE, RFC9580_448_PROFILE)
     }
 
     private val userIds = mutableSetOf<String>()
@@ -130,15 +136,14 @@ class GenerateKeyImpl : GenerateKey {
                         }
                 }
                 RFC9580_25519_PROFILE.name -> {
-                    val gen = BcOpenPGPV6KeyGenerator()
-                        .withPrimaryKey(PGPKeyPairGenerator::generateEd25519KeyPair)
-                        .addSigningSubkey(PGPKeyPairGenerator::generateEd25519KeyPair)
+                    val gen =
+                        BcOpenPGPV6KeyGenerator()
+                            .withPrimaryKey(PGPKeyPairGenerator::generateEd25519KeyPair)
+                            .addSigningSubkey(PGPKeyPairGenerator::generateEd25519KeyPair)
                     if (!signingOnly) {
                         gen.addEncryptionSubkey(PGPKeyPairGenerator::generateX25519KeyPair)
                     }
-                    userIds.forEach {
-                        gen.addUserId(it)
-                    }
+                    userIds.forEach { gen.addUserId(it) }
 
                     if (!passphrase.isEmpty) {
                         return gen.build(passphrase.getChars())
@@ -147,15 +152,14 @@ class GenerateKeyImpl : GenerateKey {
                     }
                 }
                 RFC9580_448_PROFILE.name -> {
-                    val gen = BcOpenPGPV6KeyGenerator()
-                        .withPrimaryKey(PGPKeyPairGenerator::generateEd448KeyPair)
-                        .addSigningSubkey(PGPKeyPairGenerator::generateEd448KeyPair)
+                    val gen =
+                        BcOpenPGPV6KeyGenerator()
+                            .withPrimaryKey(PGPKeyPairGenerator::generateEd448KeyPair)
+                            .addSigningSubkey(PGPKeyPairGenerator::generateEd448KeyPair)
                     if (!signingOnly) {
                         gen.addEncryptionSubkey(PGPKeyPairGenerator::generateX448KeyPair)
                     }
-                    userIds.forEach {
-                        gen.addUserId(it)
-                    }
+                    userIds.forEach { gen.addUserId(it) }
 
                     if (!passphrase.isEmpty) {
                         return gen.build(passphrase.getChars())
