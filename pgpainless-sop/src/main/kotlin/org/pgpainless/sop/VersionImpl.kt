@@ -44,7 +44,7 @@ https://www.bouncycastle.org/java.html"""
     override fun getSopVVersion(): String = SOPV_VERSION
 
     override fun getVersion(): String {
-        return "1.7.0-V6_PREVIEW"
+        return "1.7.2+V6_PREVIEW"
         // See https://stackoverflow.com/a/50119235
         /*
         return try {
