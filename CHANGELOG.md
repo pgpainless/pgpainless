@@ -5,6 +5,11 @@ SPDX-License-Identifier: CC0-1.0
 
 # PGPainless Changelog
 
+## 1.6.8-SNAPSHOT
+- Bump `sop-java` to `7.0.2`
+- SOP `change-key-password`: Fix reading password from indirect parameter instead of erroneously passing filename (fixes #453)
+- SOP `revoke-key`: Allow for multiple `--with-key-password` options
+
 ## 1.6.7
 - SOP: Fix OOM error when detached-signing large amounts of data (fix #432)
 - Move `CachingBcPublicKeyDataDecryptorFactory` from `org.bouncycastle` packet to `org.pgpainless.decryption_verification` to avoid package split (partially addresses #428)
