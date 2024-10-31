@@ -5,7 +5,7 @@ SPDX-License-Identifier: CC0-1.0
 
 # PGPainless Changelog
 
-## 1.7.2-SNAPSHOT
+## 1.7.2
 - Fix bug in `KeyRingInfo.lastModified` (thanks to @Jerbell, @sosnovsky for reporting)
 - Bump `sop-java` to `10.0.3`
   - allow multiple arguments `--with-key-password` in `revoke-key` command
