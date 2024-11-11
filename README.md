@@ -164,7 +164,7 @@ This behaviour can be modified though using the `Policy` class.
         DecryptionStream decryptionStream = PGPainless.decryptAndOrVerify()
                 .onInputStream(encryptedInputStream)
                 .withOptions(new ConsumerOptions()
-                        .addMessagePassphrase(bobSecKeys, secretKeyProtector)
+                        .addDecryptionKey(bobSecKeys, secretKeyProtector)
                         .addVerificationCert(alicePubKeys)
                 );
 
