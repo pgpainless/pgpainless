@@ -71,7 +71,9 @@ abstract class KeyAccessor(protected val info: KeyRingInfo, protected val key: S
                     return info.latestDirectKeySelfSignature
                 }
 
-                return info.getCurrentSubkeyBindingSignature(key.subkeyId)!!
+                return info.getCurrentSubkeyBindingSignature(key.subkeyId)
+                    ?: throw NoSuchElementException(
+                        "Key does not carry acceptable self-signature signature.")
             }
     }
 
