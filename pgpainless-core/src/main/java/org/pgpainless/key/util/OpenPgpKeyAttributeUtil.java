@@ -34,7 +34,11 @@ public final class OpenPgpKeyAttributeUtil {
                 continue;
             }
 
-            SignatureType signatureType = SignatureType.valueOf(signature.getSignatureType());
+            SignatureType signatureType = SignatureType.fromCode(signature.getSignatureType());
+            if (signatureType == null) {
+                // unknown signature type
+                continue;
+            }
             if (signatureType == SignatureType.POSITIVE_CERTIFICATION
                     || signatureType == SignatureType.GENERIC_CERTIFICATION) {
                 int[] hashAlgos = signature.getHashedSubPackets().getPreferredHashAlgorithms();
@@ -71,8 +75,8 @@ public final class OpenPgpKeyAttributeUtil {
                 continue;
             }
 
-            SignatureType signatureType = SignatureType.valueOf(signature.getSignatureType());
-            if (signatureType != SignatureType.POSITIVE_CERTIFICATION
+            SignatureType signatureType = SignatureType.fromCode(signature.getSignatureType());
+            if (signatureType == null || signatureType != SignatureType.POSITIVE_CERTIFICATION
                     && signatureType != SignatureType.GENERIC_CERTIFICATION) {
                 continue;
             }

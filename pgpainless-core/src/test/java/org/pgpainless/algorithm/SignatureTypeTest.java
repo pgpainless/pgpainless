@@ -5,7 +5,6 @@
 package org.pgpainless.algorithm;
 
 import static org.junit.jupiter.api.Assertions.assertFalse;
-import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import org.junit.jupiter.api.Test;
@@ -31,6 +30,6 @@ public class SignatureTypeTest {
         assertFalse(SignatureType.isRevocationSignature(SignatureType.STANDALONE.getCode()));
         assertFalse(SignatureType.isRevocationSignature(SignatureType.TIMESTAMP.getCode()));
 
-        assertThrows(IllegalArgumentException.class, () -> SignatureType.isRevocationSignature(-3));
+        assertFalse(SignatureType.isRevocationSignature(-3));
     }
 }

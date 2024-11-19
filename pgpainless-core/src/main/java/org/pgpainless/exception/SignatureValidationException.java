@@ -28,7 +28,14 @@ public class SignatureValidationException extends PGPException {
         StringBuilder sb = new StringBuilder();
         sb.append(rejections.size()).append(" rejected signatures:\n");
         for (PGPSignature signature : rejections.keySet()) {
-            sb.append(SignatureType.valueOf(signature.getSignatureType())).append(' ')
+            String typeString;
+            SignatureType type = SignatureType.fromCode(signature.getSignatureType());
+            if (type == null) {
+                typeString = "0x" + Long.toHexString(signature.getSignatureType());
+            } else {
+                typeString = type.toString();
+            }
+            sb.append(typeString).append(' ')
                     .append(signature.getCreationTime()).append(": ")
                     .append(rejections.get(signature).getMessage()).append('\n');
         }

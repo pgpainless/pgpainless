@@ -77,7 +77,8 @@ fun PGPSignature.wasIssuedBy(key: PGPPublicKey): Boolean = wasIssuedBy(OpenPgpFi
 /** Return true, if this signature is a hard revocation. */
 val PGPSignature.isHardRevocation
     get() =
-        when (SignatureType.requireFromCode(signatureType)) {
+        when (SignatureType.fromCode(signatureType)) {
+            null -> false
             SignatureType.KEY_REVOCATION,
             SignatureType.SUBKEY_REVOCATION,
             SignatureType.CERTIFICATION_REVOCATION -> {
@@ -104,4 +105,4 @@ val PGPSignature.signatureHashAlgorithm: HashAlgorithm
     get() = HashAlgorithm.requireFromId(hashAlgorithm)
 
 fun PGPSignature.isOfType(type: SignatureType): Boolean =
-    SignatureType.requireFromCode(signatureType) == type
+    SignatureType.fromCode(signatureType) == type

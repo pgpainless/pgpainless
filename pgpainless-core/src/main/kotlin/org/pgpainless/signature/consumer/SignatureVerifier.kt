@@ -59,12 +59,13 @@ class SignatureVerifier {
             policy: Policy,
             referenceTime: Date
         ): Boolean {
-            val type = SignatureType.requireFromCode(signature.signatureType)
+            val type = SignatureType.fromCode(signature.signatureType)
             return when (type) {
                 SignatureType.GENERIC_CERTIFICATION,
                 SignatureType.NO_CERTIFICATION,
                 SignatureType.CASUAL_CERTIFICATION,
-                SignatureType.POSITIVE_CERTIFICATION ->
+                SignatureType.POSITIVE_CERTIFICATION,
+                null ->
                     verifyUserIdCertification(
                         userId, signature, signingKey, keyWithUserId, policy, referenceTime)
                 SignatureType.CERTIFICATION_REVOCATION ->

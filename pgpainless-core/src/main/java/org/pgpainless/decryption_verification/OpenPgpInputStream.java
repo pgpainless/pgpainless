@@ -32,6 +32,7 @@ import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.nio.charset.Charset;
+import java.util.NoSuchElementException;
 
 import org.bouncycastle.bcpg.BCPGInputStream;
 import org.bouncycastle.openpgp.PGPCompressedData;
@@ -208,8 +209,8 @@ public class OpenPgpInputStream extends BufferedInputStream {
                 }
 
                 try {
-                    SignatureType.valueOf(sigType);
-                } catch (IllegalArgumentException e) {
+                    SignatureType.requireFromCode(sigType);
+                } catch (NoSuchElementException e) {
                     return;
                 }
 
@@ -236,8 +237,8 @@ public class OpenPgpInputStream extends BufferedInputStream {
                 if (opsVersion == 3) {
                     int opsSigType = bcpgIn.read();
                     try {
-                        SignatureType.valueOf(opsSigType);
-                    } catch (IllegalArgumentException e) {
+                        SignatureType.requireFromCode(opsSigType);
+                    } catch (NoSuchElementException e) {
                         return;
                     }
                     int opsHashAlg = bcpgIn.read();

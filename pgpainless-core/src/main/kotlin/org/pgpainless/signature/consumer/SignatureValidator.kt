@@ -235,7 +235,8 @@ abstract class SignatureValidator {
             signature: PGPSignature,
             policy: Policy
         ): Policy.HashAlgorithmPolicy {
-            return when (SignatureType.requireFromCode(signature.signatureType)) {
+            return when (SignatureType.fromCode(signature.signatureType)) {
+                null -> policy.certificationSignatureHashAlgorithmPolicy
                 SignatureType.CERTIFICATION_REVOCATION,
                 SignatureType.KEY_REVOCATION,
                 SignatureType.SUBKEY_REVOCATION -> policy.revocationSignatureHashAlgorithmPolicy
@@ -598,7 +599,8 @@ abstract class SignatureValidator {
                     if (signatureType.none { signature.isOfType(it) }) {
                         throw SignatureValidationException(
                             "Signature is of type" +
-                                " ${SignatureType.requireFromCode(signature.signatureType)}, " +
+                                " ${SignatureType.fromCode(signature.signatureType) ?:
+                                ("0x" + signature.signatureType.toString(16))}, " +
                                 "while only ${signatureType.contentToString()} are allowed here.")
                     }
                 }

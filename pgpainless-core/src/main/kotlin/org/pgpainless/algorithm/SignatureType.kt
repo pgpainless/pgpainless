@@ -170,7 +170,8 @@ enum class SignatureType(val code: Int) {
 
         @JvmStatic
         fun isRevocationSignature(signatureType: Int): Boolean {
-            return isRevocationSignature(valueOf(signatureType))
+            val sigType = fromCode(signatureType)
+            return sigType?.let { isRevocationSignature(it) } ?: false
         }
 
         @JvmStatic
