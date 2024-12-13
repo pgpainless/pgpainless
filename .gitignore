@@ -10,6 +10,9 @@ build/
 bin/
 libs/
 
+target/
+*/target/
+
 *.iws
 *.iml
 *.ipr
