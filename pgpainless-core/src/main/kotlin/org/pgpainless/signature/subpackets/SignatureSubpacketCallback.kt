@@ -11,6 +11,7 @@ interface SignatureSubpacketCallback<S : BaseSignatureSubpackets> {
      *
      * @param hashedSubpackets hashed subpackets
      */
+    @JvmDefault
     fun modifyHashedSubpackets(hashedSubpackets: S) {
         // Empty default implementation to allow for cleaner overriding
     }
@@ -20,6 +21,7 @@ interface SignatureSubpacketCallback<S : BaseSignatureSubpackets> {
      *
      * @param unhashedSubpackets unhashed subpackets
      */
+    @JvmDefault
     fun modifyUnhashedSubpackets(unhashedSubpackets: S) {
         // Empty default implementation to allow for cleaner overriding
     }

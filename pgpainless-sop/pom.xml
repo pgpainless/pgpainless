@@ -21,7 +21,6 @@
             <groupId>org.pgpainless</groupId>
             <artifactId>pgpainless-core</artifactId>
             <version>${project.version}</version>
-            <scope>runtime</scope>
         </dependency>
         <dependency>
             <groupId>com.google.code.findbugs</groupId>
@@ -31,6 +30,7 @@
     </dependencies>
 
     <build>
+        <sourceDirectory>${project.basedir}/src/main/kotlin</sourceDirectory>
         <plugins>
             <plugin>
                 <groupId>org.jetbrains.kotlin</groupId>
