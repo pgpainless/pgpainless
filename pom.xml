@@ -11,9 +11,8 @@
 
     <modules>
         <module>pgpainless-core</module>
-
-        <!--
         <module>pgpainless-sop</module>
+        <!--
         <module>pgpainless-cli</module>
         -->
     </modules>
@@ -42,9 +41,8 @@
         <url>https://github.com/pgpainless/pgpainless</url>
     </scm>
 
-
     <properties>
-        <java.version>11</java.version>
+        <java.version>1.8</java.version>
         <kotlin.version>1.8.10</kotlin.version>
 
         <maven.compiler.source>${java.version}</maven.compiler.source>
@@ -98,6 +96,11 @@
             <dependency>
                 <groupId>org.pgpainless</groupId>
                 <artifactId>sop-java</artifactId>
+                <version>${sop-java.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>org.pgpainless</groupId>
+                <artifactId>sop-java-testfixtures</artifactId>
                 <version>${sop-java.version}</version>
             </dependency>
             <dependency>
@@ -184,7 +187,6 @@
                                 <sourceDirs>
                                     <source>src/main/java</source>
                                     <source>src/main/kotlin</source>
-                                    <source>src/main/resources</source>
                                 </sourceDirs>
                             </configuration>
                         </execution>
@@ -206,9 +208,8 @@
                     <configuration>
                         <jvmTarget>${java.version}</jvmTarget>
                         <args>
-                            <arg>-Xjvm-default=all</arg>
+                            <arg>-Xjvm-default=all-compatibility</arg>
                         </args>
-
                     </configuration>
                 </plugin>
 
@@ -243,29 +244,6 @@
                         <source>${java.version}</source>
                         <target>${java.version}</target>
                     </configuration>
-                </plugin>
-
-                <plugin>
-                    <groupId>org.apache.maven.plugins</groupId>
-                    <artifactId>maven-assembly-plugin</artifactId>
-                    <version>2.6</version>
-                    <executions>
-                        <execution>
-                            <id>make-assembly</id>
-                            <phase>package</phase>
-                            <goals> <goal>single</goal> </goals>
-                            <configuration>
-                                <archive>
-                                    <manifest>
-                                        <!--<mainClass>${main.class}</mainClass>-->
-                                    </manifest>
-                                </archive>
-                                <descriptorRefs>
-                                    <descriptorRef>jar-with-dependencies</descriptorRef>
-                                </descriptorRefs>
-                            </configuration>
-                        </execution>
-                    </executions>
                 </plugin>
             </plugins>
         </pluginManagement>
