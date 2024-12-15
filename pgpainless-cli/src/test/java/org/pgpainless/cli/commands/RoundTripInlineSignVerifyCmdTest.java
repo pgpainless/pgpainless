@@ -17,7 +17,6 @@ import java.io.OutputStream;
 import java.io.PrintStream;
 import java.nio.charset.StandardCharsets;
 
-import com.ginsberg.junit.exit.FailOnSystemExit;
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
@@ -34,7 +33,6 @@ public class RoundTripInlineSignVerifyCmdTest {
     }
 
     @Test
-    @FailOnSystemExit
     public void encryptAndDecryptAMessage() throws IOException {
         originalSout = System.out;
         File sigmundKeyFile = new File(tempDir, "sigmund.key");
@@ -57,9 +55,9 @@ public class RoundTripInlineSignVerifyCmdTest {
         // generate key
         OutputStream sigmundKeyOut = new FileOutputStream(sigmundKeyFile);
         System.setOut(new PrintStream(sigmundKeyOut));
-        PGPainlessCLI.execute("generate-key",
+        assertEquals(0, PGPainlessCLI.execute("generate-key",
                 "--with-key-password=" + passwordFile.getAbsolutePath(),
-                "Sigmund Freud <sigmund@pgpainless.org>");
+                "Sigmund Freud <sigmund@pgpainless.org>"));
         sigmundKeyOut.close();
 
         // extract cert
@@ -67,7 +65,7 @@ public class RoundTripInlineSignVerifyCmdTest {
         System.setIn(sigmundKeyIn);
         OutputStream sigmundCertOut = new FileOutputStream(sigmundCertFile);
         System.setOut(new PrintStream(sigmundCertOut));
-        PGPainlessCLI.execute("extract-cert");
+        assertEquals(0, PGPainlessCLI.execute("extract-cert"));
         sigmundKeyIn.close();
         sigmundCertOut.close();
 
@@ -77,9 +75,9 @@ public class RoundTripInlineSignVerifyCmdTest {
         System.setIn(msgIn);
         OutputStream msgAscOut = new FileOutputStream(msgFile);
         System.setOut(new PrintStream(msgAscOut));
-        PGPainlessCLI.execute("inline-sign",
+        assertEquals(0, PGPainlessCLI.execute("inline-sign",
                 "--with-key-password=" + passwordFile.getAbsolutePath(),
-                sigmundKeyFile.getAbsolutePath());
+                sigmundKeyFile.getAbsolutePath()));
         msgAscOut.close();
 
         File verifyFile = new File(tempDir, "verify.txt");
@@ -89,9 +87,9 @@ public class RoundTripInlineSignVerifyCmdTest {
         ByteArrayOutputStream out = new ByteArrayOutputStream();
         PrintStream pOut = new PrintStream(out);
         System.setOut(pOut);
-        PGPainlessCLI.execute("inline-verify",
+        assertEquals(0, PGPainlessCLI.execute("inline-verify",
                 "--verifications-out", verifyFile.getAbsolutePath(),
-                sigmundCertFile.getAbsolutePath());
+                sigmundCertFile.getAbsolutePath()));
         msgAscIn.close();
 
         assertEquals(msg, out.toString());

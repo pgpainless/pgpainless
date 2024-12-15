@@ -4,6 +4,7 @@
 
 package org.pgpainless.cli.misc;
 
+import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import java.io.ByteArrayInputStream;
@@ -16,7 +17,6 @@ import java.io.OutputStream;
 import java.io.PrintStream;
 import java.nio.charset.StandardCharsets;
 
-import com.ginsberg.junit.exit.ExpectSystemExitWithStatus;
 import org.bouncycastle.util.io.Streams;
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeAll;
@@ -99,7 +99,6 @@ public class SignUsingPublicKeyBehaviorTest {
     }
 
     @Test
-    @ExpectSystemExitWithStatus(SOPGPException.KeyCannotSign.EXIT_CODE)
     public void testSignatureCreationAndVerification() throws IOException {
         originalSout = System.out;
         InputStream originalIn = System.in;
@@ -134,8 +133,8 @@ public class SignUsingPublicKeyBehaviorTest {
         assertTrue(sigFile.createNewFile());
         FileOutputStream sigOut = new FileOutputStream(sigFile);
         System.setOut(new PrintStream(sigOut));
-        PGPainlessCLI.main(new String[] {"sign", "--armor", aliceKeyFile.getAbsolutePath()});
-
+        assertEquals(SOPGPException.KeyCannotSign.EXIT_CODE,
+                PGPainlessCLI.execute("sign", "--armor", aliceKeyFile.getAbsolutePath()));
         System.setIn(originalIn);
     }
 

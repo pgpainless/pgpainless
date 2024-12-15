@@ -4,28 +4,27 @@
 
 package org.pgpainless.cli;
 
-import com.ginsberg.junit.exit.ExpectSystemExitWithStatus;
-import com.ginsberg.junit.exit.FailOnSystemExit;
 import org.junit.jupiter.api.Test;
 import sop.exception.SOPGPException;
+
+import static org.junit.jupiter.api.Assertions.assertEquals;
 
 public class ExitCodeTest {
 
     @Test
-    @ExpectSystemExitWithStatus(SOPGPException.UnsupportedSubcommand.EXIT_CODE)
     public void testUnknownCommand_69() {
-        PGPainlessCLI.main(new String[] {"generate-kex"});
+        assertEquals(SOPGPException.UnsupportedSubcommand.EXIT_CODE,
+                PGPainlessCLI.execute("unsupported-subcommand"));
     }
 
     @Test
-    @ExpectSystemExitWithStatus(SOPGPException.UnsupportedOption.EXIT_CODE)
     public void testCommandWithUnknownOption_37() {
-        PGPainlessCLI.main(new String[] {"generate-key", "-k", "\"k is unknown\""});
+        assertEquals(SOPGPException.UnsupportedOption.EXIT_CODE,
+                PGPainlessCLI.execute("generate-key", "-k", "\"k is unknown\""));
     }
 
     @Test
-    @FailOnSystemExit
     public void successfulExecutionDoesNotTerminateJVM() {
-        PGPainlessCLI.main(new String[] {"version"});
+        assertEquals(0, PGPainlessCLI.execute("version"));
     }
 }
