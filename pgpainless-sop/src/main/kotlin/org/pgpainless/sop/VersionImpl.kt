@@ -8,6 +8,7 @@ import java.io.IOException
 import java.io.InputStream
 import java.util.*
 import org.bouncycastle.jce.provider.BouncyCastleProvider
+import sop.SOP
 import sop.operation.Version
 
 /** Implementation of the `version` operation using PGPainless. */
@@ -32,7 +33,7 @@ https://datatracker.ietf.org/doc/html/draft-dkg-openpgp-stateless-cli-$specVersi
 
 Based on pgpainless-core ${getVersion()}
 https://pgpainless.org
-
+${formatSopJavaVersion()}
 Using $bcVersion
 https://www.bouncycastle.org/java.html"""
     }
@@ -49,13 +50,37 @@ https://www.bouncycastle.org/java.html"""
         // See https://stackoverflow.com/a/50119235
         return try {
             val resourceIn: InputStream =
-                javaClass.getResourceAsStream("/pgpainless-sop.properties")
-                    ?: throw IOException("File version.properties not found.")
+                SOP::class.java.getResourceAsStream("/pgpainless-sop.properties")
+                    ?: throw IOException("File pgpainless-sop.properties not found.")
 
             val properties = Properties().apply { load(resourceIn) }
             properties.getProperty("pgpainless-sop-version")
         } catch (e: IOException) {
             "DEVELOPMENT"
+        }
+    }
+
+    private fun formatSopJavaVersion(): String {
+        return getSopJavaVersion()?.let {
+            """
+            
+            sop-java $it
+            
+        """
+                .trimIndent()
+        }
+            ?: ""
+    }
+
+    private fun getSopJavaVersion(): String? {
+        return try {
+            val resourceIn: InputStream =
+                javaClass.getResourceAsStream("/sop-java-version.properties")
+                    ?: throw IOException("File sop-java-version.properties not found.")
+            val properties = Properties().apply { load(resourceIn) }
+            properties.getProperty("sop-java-version")
+        } catch (e: IOException) {
+            null
         }
     }
 
