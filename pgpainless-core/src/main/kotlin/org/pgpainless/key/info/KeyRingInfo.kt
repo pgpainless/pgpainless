@@ -172,11 +172,8 @@ class KeyRingInfo(
                 primaryUserIdCertification?.let { getKeyExpirationTimeAsDate(it, publicKey) }
 
             if (latestDirectKeySelfSignature == null && primaryUserIdCertification == null) {
-                /*
                 throw NoSuchElementException(
                     "No direct-key signature and no user-id signature found.")
-                 */
-                return null
             }
             if (directKeyExpirationDate != null && userIdExpirationDate == null) {
                 return directKeyExpirationDate
