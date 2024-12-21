@@ -14,6 +14,10 @@ import sop.cli.picocli.SopCLI;
 public class PGPainlessCLI {
 
     static {
+        // Prevent slf4j initialization logging
+        // https://github.com/qos-ch/slf4j/issues/422#issuecomment-2277280185
+        System.setProperty("slf4j.internal.verbosity", "WARN");
+
         SopCLI.EXECUTABLE_NAME = "pgpainless-cli";
         SopCLI.setSopInstance(new SOPImpl());
     }
