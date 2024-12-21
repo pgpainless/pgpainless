@@ -45,6 +45,7 @@ allprojects {
     // without this we would generate an empty pgpainless.jar for the project root
     // https://stackoverflow.com/a/25445035
     jar {
+        reproducibleFileOrder = true
         onlyIf { !sourceSets.main.allSource.files.isEmpty() }
     }
 
