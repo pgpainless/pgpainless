@@ -14,7 +14,6 @@ import java.io.IOException;
 import java.security.InvalidAlgorithmParameterException;
 import java.security.NoSuchAlgorithmException;
 
-import com.ginsberg.junit.exit.FailOnSystemExit;
 import org.bouncycastle.openpgp.PGPException;
 import org.bouncycastle.openpgp.PGPPublicKeyRing;
 import org.bouncycastle.openpgp.PGPSecretKeyRing;
@@ -83,7 +82,6 @@ public class RoundTripEncryptDecryptCmdTest extends CLITest {
             "-----END PGP PUBLIC KEY BLOCK-----";
 
     @Test
-    @FailOnSystemExit
     public void encryptAndDecryptAMessage() throws IOException {
         // Juliets key and cert
         File julietKeyFile = pipeStdoutToFile("juliet.key");

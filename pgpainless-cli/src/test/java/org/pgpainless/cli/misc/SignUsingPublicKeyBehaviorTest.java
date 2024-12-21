@@ -4,28 +4,18 @@
 
 package org.pgpainless.cli.misc;
 
+import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
-import java.io.ByteArrayInputStream;
 import java.io.File;
-import java.io.FileInputStream;
-import java.io.FileOutputStream;
 import java.io.IOException;
-import java.io.InputStream;
-import java.io.OutputStream;
-import java.io.PrintStream;
-import java.nio.charset.StandardCharsets;
 
-import com.ginsberg.junit.exit.ExpectSystemExitWithStatus;
-import org.bouncycastle.util.io.Streams;
-import org.junit.jupiter.api.AfterAll;
-import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
-import org.pgpainless.cli.PGPainlessCLI;
-import org.pgpainless.cli.TestUtils;
+import org.pgpainless.cli.commands.CLITest;
+import org.slf4j.LoggerFactory;
 import sop.exception.SOPGPException;
 
-public class SignUsingPublicKeyBehaviorTest {
+public class SignUsingPublicKeyBehaviorTest extends CLITest {
 
     public static final String KEY_THAT_IS_A_CERT = "" +
             "-----BEGIN PGP PUBLIC KEY BLOCK-----\n" +
@@ -89,61 +79,24 @@ public class SignUsingPublicKeyBehaviorTest {
             "=oJQ2\n" +
             "-----END PGP PUBLIC KEY BLOCK-----";
 
-
-    private static File tempDir;
-    private static PrintStream originalSout;
-
-    @BeforeAll
-    public static void prepare() throws IOException {
-        tempDir = TestUtils.createTempDirectory();
+    public SignUsingPublicKeyBehaviorTest() {
+        super(LoggerFactory.getLogger(SignUsingPublicKeyBehaviorTest.class));
     }
 
     @Test
-    @ExpectSystemExitWithStatus(SOPGPException.KeyCannotSign.EXIT_CODE)
     public void testSignatureCreationAndVerification() throws IOException {
-        originalSout = System.out;
-        InputStream originalIn = System.in;
-
         // Write alice key to disc
-        File aliceKeyFile = new File(tempDir, "alice.key");
-        assertTrue(aliceKeyFile.createNewFile());
-        OutputStream aliceKeyOut = new FileOutputStream(aliceKeyFile);
-        Streams.pipeAll(new ByteArrayInputStream(KEY_THAT_IS_A_CERT.getBytes(StandardCharsets.UTF_8)), aliceKeyOut);
-        aliceKeyOut.close();
-
-        // Write alice pub key to disc
-        File aliceCertFile = new File(tempDir, "alice.pub");
-        assertTrue(aliceCertFile.createNewFile());
-        OutputStream aliceCertOut = new FileOutputStream(aliceCertFile);
-        Streams.pipeAll(new ByteArrayInputStream(KEY_THAT_IS_A_CERT.getBytes(StandardCharsets.UTF_8)), aliceCertOut);
-        aliceCertOut.close();
+        File aliceKeyFile = writeFile("alice.key", KEY_THAT_IS_A_CERT);
 
         // Write test data to disc
-        String data = "If privacy is outlawed, only outlaws will have privacy.\n";
-
-        File dataFile = new File(tempDir, "data");
-        assertTrue(dataFile.createNewFile());
-        FileOutputStream dataOut = new FileOutputStream(dataFile);
-        Streams.pipeAll(new ByteArrayInputStream(data.getBytes(StandardCharsets.UTF_8)), dataOut);
-        dataOut.close();
+        File dataFile = writeFile("data", "If privacy is outlawed, only outlaws will have privacy.\n");
 
         // Sign test data
-        FileInputStream dataIn = new FileInputStream(dataFile);
-        System.setIn(dataIn);
-        File sigFile = new File(tempDir, "sig.asc");
-        assertTrue(sigFile.createNewFile());
-        FileOutputStream sigOut = new FileOutputStream(sigFile);
-        System.setOut(new PrintStream(sigOut));
-        PGPainlessCLI.main(new String[] {"sign", "--armor", aliceKeyFile.getAbsolutePath()});
+        File sigFile = pipeStdoutToFile("sig.asc");
+        pipeFileToStdin(dataFile);
+        assertEquals(SOPGPException.KeyCannotSign.EXIT_CODE,
+                executeCommand("sign", "--armor", aliceKeyFile.getAbsolutePath()));
 
-        System.setIn(originalIn);
-    }
-
-    @AfterAll
-    public static void after() {
-        System.setOut(originalSout);
-        // CHECKSTYLE:OFF
-        System.out.println(tempDir.getAbsolutePath());
-        // CHECKSTYLE:ON
+        assertTrue(readStringFromFile(sigFile).trim().isEmpty());
     }
 }
