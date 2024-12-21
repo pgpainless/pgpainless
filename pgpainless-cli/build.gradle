@@ -6,25 +6,6 @@ plugins {
     id 'application'
     id "com.github.johnrengelman.shadow" version "6.1.0"
 }
-def generatedVersionDir = "${buildDir}/generated-version"
-
-sourceSets {
-    main {
-        output.dir(generatedVersionDir, builtBy: 'generateVersionProperties')
-    }
-}
-
-task generateVersionProperties {
-    doLast {
-        def propertiesFile = file "$generatedVersionDir/version.properties"
-        propertiesFile.parentFile.mkdirs()
-        propertiesFile.createNewFile()
-        // Instead of using a Properties object here, we directly write to the file
-        //  since Properties adds a timestamp, ruining reproducibility
-        propertiesFile.write("version="+rootProject.version.toString())
-    }
-}
-processResources.dependsOn generateVersionProperties
 
 dependencies {
 

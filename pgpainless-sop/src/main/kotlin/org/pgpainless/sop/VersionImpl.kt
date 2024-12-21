@@ -49,11 +49,11 @@ https://www.bouncycastle.org/java.html"""
         // See https://stackoverflow.com/a/50119235
         return try {
             val resourceIn: InputStream =
-                javaClass.getResourceAsStream("/version.properties")
+                javaClass.getResourceAsStream("/pgpainless-sop.properties")
                     ?: throw IOException("File version.properties not found.")
 
             val properties = Properties().apply { load(resourceIn) }
-            properties.getProperty("version")
+            properties.getProperty("pgpainless-sop-version")
         } catch (e: IOException) {
             "DEVELOPMENT"
         }
