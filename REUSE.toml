@@ -1,0 +1,106 @@
+version = 1
+SPDX-PackageName = "PGPainless"
+SPDX-PackageSupplier = "Paul Schaub <info@pgpainless.org>"
+SPDX-PackageDownloadLocation = "https://pgpainless.org"
+
+[[annotations]]
+path = ".git-blame-ignore-revs"
+precedence = "aggregate"
+SPDX-FileCopyrightText = "2023 Paul Schaub <info@pgpainless.org>"
+SPDX-License-Identifier = "CC0-1.0"
+
+[[annotations]]
+path = "docs/**"
+precedence = "aggregate"
+SPDX-FileCopyrightText = "2022 Paul Schaub <info@pgpainless.org>"
+SPDX-License-Identifier = "CC-BY-3.0"
+
+[[annotations]]
+path = ".readthedocs.yaml"
+precedence = "aggregate"
+SPDX-FileCopyrightText = "2022 Paul Schaub <info@pgpainless.org>"
+SPDX-License-Identifier = "CC0-1.0"
+
+[[annotations]]
+path = "gradle**"
+precedence = "aggregate"
+SPDX-FileCopyrightText = "2015 the original author or authors."
+SPDX-License-Identifier = "Apache-2.0"
+
+[[annotations]]
+path = ".editorconfig"
+precedence = "aggregate"
+SPDX-FileCopyrightText = "Facebook"
+SPDX-License-Identifier = "Apache-2.0"
+
+[[annotations]]
+path = "assets/repository-open-graph.png"
+precedence = "aggregate"
+SPDX-FileCopyrightText = "2021 Paul Schaub <info@pgpainless.org>"
+SPDX-License-Identifier = "CC-BY-3.0"
+
+[[annotations]]
+path = "assets/pgpainless.svg"
+precedence = "aggregate"
+SPDX-FileCopyrightText = "2021 Paul Schaub <info@pgpainless.org>"
+SPDX-License-Identifier = "CC-BY-3.0"
+
+[[annotations]]
+path = "assets/logo.png"
+precedence = "aggregate"
+SPDX-FileCopyrightText = "2022 Paul Schaub <info@pgpainless.org>"
+SPDX-License-Identifier = "CC-BY-3.0"
+
+[[annotations]]
+path = "assets/test_vectors/**"
+precedence = "aggregate"
+SPDX-FileCopyrightText = "2018 Paul Schaub <info@pgpainless.org>"
+SPDX-License-Identifier = "CC0-1.0"
+
+[[annotations]]
+path = "pgpainless-core/src/test/resources/**"
+precedence = "aggregate"
+SPDX-FileCopyrightText = "2020 Paul Schaub <info@pgpainless.org>"
+SPDX-License-Identifier = "CC0-1.0"
+
+[[annotations]]
+path = "audit/**"
+precedence = "aggregate"
+SPDX-FileCopyrightText = "2021 Paul Schaub <info@pgpainless.org>"
+SPDX-License-Identifier = "CC0-1.0"
+
+[[annotations]]
+path = "CNAME"
+precedence = "aggregate"
+SPDX-FileCopyrightText = "2022 Paul Schaub <info@pgpainless.org>"
+SPDX-License-Identifier = "CC0-1.0"
+
+[[annotations]]
+path = "_config.yml"
+precedence = "aggregate"
+SPDX-FileCopyrightText = "2022 Paul Schaub <info@pgpainless.org>"
+SPDX-License-Identifier = "CC0-1.0"
+
+[[annotations]]
+path = "_layouts/**"
+precedence = "aggregate"
+SPDX-FileCopyrightText = "2022 Paul Schaub <info@pgpainless.org>, 2017 Steve Smith"
+SPDX-License-Identifier = "CC-BY-SA-3.0"
+
+[[annotations]]
+path = "pgpainless-cli/rewriteManPages.sh"
+precedence = "aggregate"
+SPDX-FileCopyrightText = "2022 Paul Schaub <info@pgpainless.org>"
+SPDX-License-Identifier = "Apache-2.0"
+
+[[annotations]]
+path = "pgpainless-cli/packaging/man/**"
+precedence = "aggregate"
+SPDX-FileCopyrightText = "2022 Paul Schaub <info@pgpainless.org>"
+SPDX-License-Identifier = "Apache-2.0"
+
+[[annotations]]
+path = ".github/ISSUE_TEMPLATE/**"
+precedence = "aggregate"
+SPDX-FileCopyrightText = "2024 Paul Schaub <info@pgpainless.org>"
+SPDX-License-Identifier = "CC0-1.0"
