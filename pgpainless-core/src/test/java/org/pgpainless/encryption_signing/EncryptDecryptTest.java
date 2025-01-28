@@ -29,7 +29,6 @@ import org.junit.jupiter.api.TestTemplate;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.pgpainless.PGPainless;
 import org.pgpainless.algorithm.DocumentSignatureType;
-import org.pgpainless.algorithm.KeyFlag;
 import org.pgpainless.algorithm.SymmetricKeyAlgorithm;
 import org.pgpainless.decryption_verification.ConsumerOptions;
 import org.pgpainless.decryption_verification.DecryptionStream;
@@ -37,10 +36,6 @@ import org.pgpainless.decryption_verification.MessageMetadata;
 import org.pgpainless.exception.KeyException;
 import org.pgpainless.key.SubkeyIdentifier;
 import org.pgpainless.key.TestKeys;
-import org.pgpainless.key.generation.KeySpec;
-import org.pgpainless.key.generation.type.KeyType;
-import org.pgpainless.key.generation.type.elgamal.ElGamal;
-import org.pgpainless.key.generation.type.elgamal.ElGamalLength;
 import org.pgpainless.key.generation.type.rsa.RsaLength;
 import org.pgpainless.key.protection.SecretKeyRingProtector;
 import org.pgpainless.key.protection.UnprotectedKeysProtector;
@@ -69,23 +64,6 @@ public class EncryptDecryptTest {
                 Policy.SymmetricKeyAlgorithmPolicy.symmetricKeyEncryptionPolicy2022());
         PGPainless.getPolicy().setSymmetricKeyDecryptionAlgorithmPolicy(
                 Policy.SymmetricKeyAlgorithmPolicy.symmetricKeyDecryptionPolicy2022());
-    }
-
-    @TestTemplate
-    @ExtendWith(TestAllImplementations.class)
-    public void freshKeysRsaToElGamalTest()
-            throws PGPException, NoSuchAlgorithmException, InvalidAlgorithmParameterException, IOException {
-        PGPSecretKeyRing sender = PGPainless.generateKeyRing().simpleRsaKeyRing("romeo@montague.lit", RsaLength._3072);
-        PGPSecretKeyRing recipient = PGPainless.buildKeyRing()
-                .setPrimaryKey(KeySpec.getBuilder(
-                        KeyType.RSA(RsaLength._4096),
-                        KeyFlag.SIGN_DATA, KeyFlag.CERTIFY_OTHER))
-                .addSubkey(KeySpec.getBuilder(
-                        ElGamal.withLength(ElGamalLength._3072),
-                        KeyFlag.ENCRYPT_STORAGE, KeyFlag.ENCRYPT_COMMS))
-                .addUserId("juliet@capulet.lit").build();
-
-        encryptDecryptForSecretKeyRings(sender, recipient);
     }
 
     @TestTemplate

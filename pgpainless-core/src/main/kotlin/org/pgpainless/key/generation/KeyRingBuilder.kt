@@ -5,9 +5,10 @@
 package org.pgpainless.key.generation
 
 import java.io.IOException
-import java.security.KeyPairGenerator
 import java.util.*
+import org.bouncycastle.bcpg.PublicKeyPacket
 import org.bouncycastle.openpgp.*
+import org.bouncycastle.openpgp.api.OpenPGPImplementation
 import org.bouncycastle.openpgp.operator.PBESecretKeyDecryptor
 import org.bouncycastle.openpgp.operator.PBESecretKeyEncryptor
 import org.bouncycastle.openpgp.operator.PGPContentSignerBuilder
@@ -19,7 +20,6 @@ import org.pgpainless.algorithm.SignatureType
 import org.pgpainless.bouncycastle.extensions.unlock
 import org.pgpainless.implementation.ImplementationFactory
 import org.pgpainless.policy.Policy
-import org.pgpainless.provider.ProviderFactory
 import org.pgpainless.signature.subpackets.SelfSignatureSubpackets
 import org.pgpainless.signature.subpackets.SignatureSubpackets
 import org.pgpainless.signature.subpackets.SignatureSubpacketsHelper
@@ -252,17 +252,12 @@ class KeyRingBuilder : KeyRingBuilderInterface<KeyRingBuilder> {
             spec: KeySpec,
             creationTime: Date = spec.keyCreationDate ?: Date()
         ): PGPKeyPair {
-            spec.keyType.let { type ->
-                // Create raw Key Pair
-                val keyPair =
-                    KeyPairGenerator.getInstance(type.name, ProviderFactory.provider)
-                        .also { it.initialize(type.algorithmSpec) }
-                        .generateKeyPair()
+            val gen =
+                OpenPGPImplementation.getInstance()
+                    .pgpKeyPairGeneratorProvider()
+                    .get(PublicKeyPacket.VERSION_4, creationTime)
 
-                // Form PGP Key Pair
-                return ImplementationFactory.getInstance()
-                    .getPGPKeyPair(type.algorithm, keyPair, creationTime)
-            }
+            return spec.keyType.generateKeyPair(gen)
         }
     }
 }
