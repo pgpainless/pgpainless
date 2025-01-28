@@ -5,6 +5,8 @@
 package org.pgpainless.key.generation.type
 
 import java.security.spec.AlgorithmParameterSpec
+import org.bouncycastle.openpgp.PGPKeyPair
+import org.bouncycastle.openpgp.operator.PGPKeyPairGenerator
 import org.pgpainless.algorithm.PublicKeyAlgorithm
 import org.pgpainless.key.generation.type.ecc.EllipticCurve
 import org.pgpainless.key.generation.type.ecc.ecdh.ECDH
@@ -91,6 +93,8 @@ interface KeyType {
      */
     val canEncryptStorage: Boolean
         @JvmName("canEncryptStorage") get() = algorithm.encryptionCapable
+
+    fun generateKeyPair(generator: PGPKeyPairGenerator): PGPKeyPair
 
     companion object {
         @JvmStatic fun RSA(length: RsaLength): RSA = RSA.withLength(length)
