@@ -8,12 +8,12 @@ allprojects {
         isSnapshot = true
         pgpainlessMinAndroidSdk = 10
         javaSourceCompatibility = 1.8
-        bouncyCastleVersion = '1.78.1'
+        bouncyCastleVersion = '1.80-SNAPSHOT'
         bouncyPgVersion = bouncyCastleVersion
         junitVersion = '5.8.2'
         logbackVersion = '1.5.13'
         mockitoVersion = '4.5.1'
         slf4jVersion = '1.7.36'
-        sopJavaVersion = '10.0.3'
+        sopJavaVersion = '10.1.0-SNAPSHOT'
     }
 }

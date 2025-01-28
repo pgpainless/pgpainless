@@ -12,7 +12,6 @@ import org.bouncycastle.util.io.Streams
 import org.pgpainless.decryption_verification.OpenPgpInputStream
 import org.pgpainless.util.ArmoredOutputStreamFactory
 import sop.Ready
-import sop.enums.ArmorLabel
 import sop.exception.SOPGPException
 import sop.operation.Armor
 
@@ -45,10 +44,5 @@ class ArmorImpl : Armor {
                 openPgpIn.close()
             }
         }
-    }
-
-    @Deprecated("Setting custom labels is not supported.")
-    override fun label(label: ArmorLabel): Armor {
-        throw SOPGPException.UnsupportedOption("Setting custom Armor labels not supported.")
     }
 }
