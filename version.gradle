@@ -4,7 +4,7 @@
 
 allprojects {
     ext {
-        shortVersion = '1.7.6'
+        shortVersion = '2.0.0-SNAPSHOT'
         isSnapshot = true
         javaSourceCompatibility = 11
         bouncyCastleVersion = '1.80-SNAPSHOT'
