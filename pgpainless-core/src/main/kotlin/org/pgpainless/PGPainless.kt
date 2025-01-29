@@ -10,6 +10,7 @@ import org.bouncycastle.openpgp.PGPKeyRing
 import org.bouncycastle.openpgp.PGPPublicKeyRing
 import org.bouncycastle.openpgp.PGPSecretKeyRing
 import org.bouncycastle.openpgp.PGPSignature
+import org.pgpainless.algorithm.OpenPGPKeyVersion
 import org.pgpainless.decryption_verification.DecryptionBuilder
 import org.pgpainless.encryption_signing.EncryptionBuilder
 import org.pgpainless.key.certification.CertifyCertificate
@@ -31,14 +32,20 @@ class PGPainless private constructor() {
          *
          * @return templates
          */
-        @JvmStatic fun generateKeyRing() = KeyRingTemplates()
+        @JvmStatic
+        @JvmOverloads
+        fun generateKeyRing(version: OpenPGPKeyVersion = OpenPGPKeyVersion.v4) =
+            KeyRingTemplates(version)
 
         /**
          * Build a custom OpenPGP key ring.
          *
          * @return builder
          */
-        @JvmStatic fun buildKeyRing() = KeyRingBuilder()
+        @JvmStatic
+        @JvmOverloads
+        fun buildKeyRing(version: OpenPGPKeyVersion = OpenPGPKeyVersion.v4) =
+            KeyRingBuilder(version)
 
         /**
          * Read an existing OpenPGP key ring.
