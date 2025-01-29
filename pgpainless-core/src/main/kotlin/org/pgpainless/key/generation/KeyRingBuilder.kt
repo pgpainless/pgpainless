@@ -52,12 +52,8 @@ class KeyRingBuilder : KeyRingBuilderInterface<KeyRingBuilder> {
         addUserId(Strings.fromUTF8ByteArray(userId))
 
     override fun setExpirationDate(expirationDate: Date?): KeyRingBuilder = apply {
-        if (expirationDate == null) {
-            this.expirationDate = null
-            return@apply
-        }
         this.expirationDate =
-            expirationDate.let {
+            expirationDate?.let {
                 require(Date() < expirationDate) { "Expiration date must be in the future." }
                 expirationDate
             }
