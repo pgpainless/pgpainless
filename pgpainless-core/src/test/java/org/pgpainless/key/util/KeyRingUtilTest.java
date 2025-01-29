@@ -18,6 +18,7 @@ import org.junit.jupiter.api.Test;
 import org.pgpainless.PGPainless;
 import org.pgpainless.algorithm.HashAlgorithm;
 import org.pgpainless.algorithm.KeyFlag;
+import org.pgpainless.algorithm.OpenPGPKeyVersion;
 import org.pgpainless.algorithm.SignatureType;
 import org.pgpainless.implementation.ImplementationFactory;
 import org.pgpainless.key.generation.KeyRingBuilder;
@@ -28,8 +29,6 @@ import org.pgpainless.key.protection.SecretKeyRingProtector;
 import org.pgpainless.key.protection.UnlockSecretKey;
 import org.pgpainless.util.CollectionUtils;
 
-import java.security.InvalidAlgorithmParameterException;
-import java.security.NoSuchAlgorithmException;
 import java.util.Random;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -40,7 +39,7 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 public class KeyRingUtilTest {
 
     @Test
-    public void testInjectCertification() throws PGPException, InvalidAlgorithmParameterException, NoSuchAlgorithmException {
+    public void testInjectCertification() throws PGPException {
         PGPSecretKeyRing secretKeys = PGPainless.generateKeyRing()
                 .modernKeyRing("Alice");
 
@@ -73,12 +72,13 @@ public class KeyRingUtilTest {
     }
 
     @Test
-    public void testKeysPlusPublicKey() throws PGPException, InvalidAlgorithmParameterException, NoSuchAlgorithmException {
+    public void testKeysPlusPublicKey() {
         PGPSecretKeyRing secretKeys = PGPainless.generateKeyRing().modernKeyRing("Alice");
         PGPPublicKeyRing publicKeys = PGPainless.extractCertificate(secretKeys);
 
         PGPKeyPair keyPair = KeyRingBuilder.generateKeyPair(KeySpec.getBuilder(
-                KeyType.ECDH(EllipticCurve._P256), KeyFlag.ENCRYPT_COMMS, KeyFlag.ENCRYPT_STORAGE).build());
+                KeyType.ECDH(EllipticCurve._P256), KeyFlag.ENCRYPT_COMMS, KeyFlag.ENCRYPT_STORAGE).build(),
+                OpenPGPKeyVersion.v4);
         PGPPublicKey pubkey = keyPair.getPublicKey();
         assertFalse(pubkey.isMasterKey());
 

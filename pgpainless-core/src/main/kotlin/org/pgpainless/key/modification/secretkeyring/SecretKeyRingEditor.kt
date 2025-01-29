@@ -16,6 +16,7 @@ import org.pgpainless.PGPainless.Companion.inspectKeyRing
 import org.pgpainless.algorithm.AlgorithmSuite
 import org.pgpainless.algorithm.Feature
 import org.pgpainless.algorithm.KeyFlag
+import org.pgpainless.algorithm.OpenPGPKeyVersion
 import org.pgpainless.algorithm.SignatureType
 import org.pgpainless.algorithm.negotiation.HashAlgorithmNegotiator
 import org.pgpainless.bouncycastle.extensions.getKeyExpirationDate
@@ -244,7 +245,8 @@ class SecretKeyRingEditor(
         callback: SelfSignatureSubpackets.Callback?,
         protector: SecretKeyRingProtector
     ): SecretKeyRingEditorInterface {
-        val keyPair = KeyRingBuilder.generateKeyPair(keySpec, referenceTime)
+        val version = OpenPGPKeyVersion.from(secretKeyRing.getPublicKey().version)
+        val keyPair = KeyRingBuilder.generateKeyPair(keySpec, OpenPGPKeyVersion.v4, referenceTime)
         val subkeyProtector =
             PasswordBasedSecretKeyRingProtector.forKeyId(keyPair.keyID, subkeyPassphrase)
         val keyFlags = KeyFlag.fromBitmask(keySpec.subpackets.keyFlags).toMutableList()
