@@ -125,25 +125,25 @@ class KeyRingTemplates(private val version: OpenPGPKeyVersion) {
     fun simpleEcKeyRing(
         userId: CharSequence?,
         passphrase: Passphrase = Passphrase.emptyPassphrase()
-    ): PGPSecretKeyRing =
-        buildKeyRing(version)
+    ): PGPSecretKeyRing {
+        val signingKeyType =
+            if (version == OpenPGPKeyVersion.v6) KeyType.Ed25519()
+            else KeyType.EDDSA_LEGACY(EdDSALegacyCurve._Ed25519)
+        val encryptionKeyType =
+            if (version == OpenPGPKeyVersion.v6) KeyType.X25519()
+            else KeyType.XDH_LEGACY(XDHLegacySpec._X25519)
+        return buildKeyRing(version)
             .apply {
-                setPrimaryKey(
-                    getBuilder(
-                        KeyType.EDDSA_LEGACY(EdDSALegacyCurve._Ed25519),
-                        KeyFlag.CERTIFY_OTHER,
-                        KeyFlag.SIGN_DATA))
+                setPrimaryKey(getBuilder(signingKeyType, KeyFlag.CERTIFY_OTHER, KeyFlag.SIGN_DATA))
                 addSubkey(
-                    getBuilder(
-                        KeyType.XDH_LEGACY(XDHLegacySpec._X25519),
-                        KeyFlag.ENCRYPT_STORAGE,
-                        KeyFlag.ENCRYPT_COMMS))
+                    getBuilder(encryptionKeyType, KeyFlag.ENCRYPT_STORAGE, KeyFlag.ENCRYPT_COMMS))
                 setPassphrase(passphrase)
                 if (userId != null) {
                     addUserId(userId.toString())
                 }
             }
             .build()
+    }
 
     /**
      * Creates a key ring consisting of an ed25519 EdDSA primary key and a X25519 XDH subkey. The
@@ -175,25 +175,26 @@ class KeyRingTemplates(private val version: OpenPGPKeyVersion) {
     fun modernKeyRing(
         userId: CharSequence?,
         passphrase: Passphrase = Passphrase.emptyPassphrase()
-    ): PGPSecretKeyRing =
-        buildKeyRing(version)
+    ): PGPSecretKeyRing {
+        val signingKeyType =
+            if (version == OpenPGPKeyVersion.v6) KeyType.Ed25519()
+            else KeyType.EDDSA_LEGACY(EdDSALegacyCurve._Ed25519)
+        val encryptionKeyType =
+            if (version == OpenPGPKeyVersion.v6) KeyType.X25519()
+            else KeyType.XDH_LEGACY(XDHLegacySpec._X25519)
+        return buildKeyRing(version)
             .apply {
-                setPrimaryKey(
-                    getBuilder(
-                        KeyType.EDDSA_LEGACY(EdDSALegacyCurve._Ed25519), KeyFlag.CERTIFY_OTHER))
+                setPrimaryKey(getBuilder(signingKeyType, KeyFlag.CERTIFY_OTHER))
                 addSubkey(
-                    getBuilder(
-                        KeyType.XDH_LEGACY(XDHLegacySpec._X25519),
-                        KeyFlag.ENCRYPT_COMMS,
-                        KeyFlag.ENCRYPT_STORAGE))
-                addSubkey(
-                    getBuilder(KeyType.EDDSA_LEGACY(EdDSALegacyCurve._Ed25519), KeyFlag.SIGN_DATA))
+                    getBuilder(encryptionKeyType, KeyFlag.ENCRYPT_COMMS, KeyFlag.ENCRYPT_STORAGE))
+                addSubkey(getBuilder(signingKeyType, KeyFlag.SIGN_DATA))
                 setPassphrase(passphrase)
                 if (userId != null) {
                     addUserId(userId)
                 }
             }
             .build()
+    }
 
     /**
      * Generate a modern PGP key ring consisting of an ed25519 EdDSA primary key which is used to
