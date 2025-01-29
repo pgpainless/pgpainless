@@ -91,7 +91,7 @@ class KeyRingBuilder(private val version: OpenPGPKeyVersion) :
         requireNotNull(primaryKeySpec) { "Primary Key spec required." }
         val certKey = generateKeyPair(primaryKeySpec!!, version)
         val signer = buildContentSigner(certKey)
-        val signatureGenerator = PGPSignatureGenerator(signer)
+        val signatureGenerator = PGPSignatureGenerator(signer, certKey.publicKey)
 
         val hashedSubPacketGenerator = primaryKeySpec!!.subpacketGenerator
         hashedSubPacketGenerator.setIssuerFingerprintAndKeyId(certKey.publicKey)
@@ -203,7 +203,8 @@ class KeyRingBuilder(private val version: OpenPGPKeyVersion) :
             return hashedSubpackets
         }
 
-        val bindingSignatureGenerator = PGPSignatureGenerator(buildContentSigner(subKey))
+        val bindingSignatureGenerator =
+            PGPSignatureGenerator(buildContentSigner(subKey), subKey.publicKey)
         bindingSignatureGenerator.init(SignatureType.PRIMARYKEY_BINDING.code, subKey.privateKey)
         val primaryKeyBindingSig =
             bindingSignatureGenerator.generateCertification(primaryKey.publicKey, subKey.publicKey)
