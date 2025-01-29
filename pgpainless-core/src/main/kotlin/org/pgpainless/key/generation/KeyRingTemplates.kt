@@ -7,6 +7,7 @@ package org.pgpainless.key.generation
 import org.bouncycastle.openpgp.PGPSecretKeyRing
 import org.pgpainless.PGPainless.Companion.buildKeyRing
 import org.pgpainless.algorithm.KeyFlag
+import org.pgpainless.algorithm.OpenPGPKeyVersion
 import org.pgpainless.key.generation.KeySpec.Companion.getBuilder
 import org.pgpainless.key.generation.type.KeyType
 import org.pgpainless.key.generation.type.eddsa_legacy.EdDSALegacyCurve
@@ -14,7 +15,7 @@ import org.pgpainless.key.generation.type.rsa.RsaLength
 import org.pgpainless.key.generation.type.xdh_legacy.XDHLegacySpec
 import org.pgpainless.util.Passphrase
 
-class KeyRingTemplates {
+class KeyRingTemplates(private val version: OpenPGPKeyVersion) {
 
     /**
      * Generate an RSA OpenPGP key consisting of an RSA primary key used for certification, a
@@ -31,7 +32,7 @@ class KeyRingTemplates {
         length: RsaLength,
         passphrase: Passphrase = Passphrase.emptyPassphrase()
     ): PGPSecretKeyRing =
-        buildKeyRing()
+        buildKeyRing(version)
             .apply {
                 setPrimaryKey(getBuilder(KeyType.RSA(length), KeyFlag.CERTIFY_OTHER))
                 addSubkey(getBuilder(KeyType.RSA(length), KeyFlag.SIGN_DATA))
@@ -78,7 +79,7 @@ class KeyRingTemplates {
         length: RsaLength,
         passphrase: Passphrase = Passphrase.emptyPassphrase()
     ): PGPSecretKeyRing =
-        buildKeyRing()
+        buildKeyRing(version)
             .apply {
                 setPrimaryKey(
                     getBuilder(
@@ -125,7 +126,7 @@ class KeyRingTemplates {
         userId: CharSequence?,
         passphrase: Passphrase = Passphrase.emptyPassphrase()
     ): PGPSecretKeyRing =
-        buildKeyRing()
+        buildKeyRing(version)
             .apply {
                 setPrimaryKey(
                     getBuilder(
@@ -175,7 +176,7 @@ class KeyRingTemplates {
         userId: CharSequence?,
         passphrase: Passphrase = Passphrase.emptyPassphrase()
     ): PGPSecretKeyRing =
-        buildKeyRing()
+        buildKeyRing(version)
             .apply {
                 setPrimaryKey(
                     getBuilder(

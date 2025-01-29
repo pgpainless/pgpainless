@@ -16,6 +16,7 @@ import org.bouncycastle.openpgp.operator.PGPDigestCalculator
 import org.bouncycastle.util.Strings
 import org.pgpainless.PGPainless
 import org.pgpainless.algorithm.KeyFlag
+import org.pgpainless.algorithm.OpenPGPKeyVersion
 import org.pgpainless.algorithm.SignatureType
 import org.pgpainless.bouncycastle.extensions.unlock
 import org.pgpainless.implementation.ImplementationFactory
@@ -25,7 +26,8 @@ import org.pgpainless.signature.subpackets.SignatureSubpackets
 import org.pgpainless.signature.subpackets.SignatureSubpacketsHelper
 import org.pgpainless.util.Passphrase
 
-class KeyRingBuilder : KeyRingBuilderInterface<KeyRingBuilder> {
+class KeyRingBuilder(private val version: OpenPGPKeyVersion) :
+    KeyRingBuilderInterface<KeyRingBuilder> {
 
     private var primaryKeySpec: KeySpec? = null
     private val subKeySpecs = mutableListOf<KeySpec>()
