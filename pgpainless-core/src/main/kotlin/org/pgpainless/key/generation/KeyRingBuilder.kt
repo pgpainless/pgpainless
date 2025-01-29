@@ -6,7 +6,6 @@ package org.pgpainless.key.generation
 
 import java.io.IOException
 import java.util.*
-import org.bouncycastle.bcpg.PublicKeyPacket
 import org.bouncycastle.openpgp.*
 import org.bouncycastle.openpgp.api.OpenPGPImplementation
 import org.bouncycastle.openpgp.operator.PBESecretKeyDecryptor
@@ -90,7 +89,7 @@ class KeyRingBuilder(private val version: OpenPGPKeyVersion) :
 
         // generate primary key
         requireNotNull(primaryKeySpec) { "Primary Key spec required." }
-        val certKey = generateKeyPair(primaryKeySpec!!)
+        val certKey = generateKeyPair(primaryKeySpec!!, version)
         val signer = buildContentSigner(certKey)
         val signatureGenerator = PGPSignatureGenerator(signer)
 
@@ -174,7 +173,7 @@ class KeyRingBuilder(private val version: OpenPGPKeyVersion) :
 
     private fun addSubKeys(primaryKey: PGPKeyPair, ringGenerator: PGPKeyRingGenerator) {
         for (subKeySpec in subKeySpecs) {
-            val subKey = generateKeyPair(subKeySpec)
+            val subKey = generateKeyPair(subKeySpec, version)
             if (subKeySpec.isInheritedSubPackets) {
                 ringGenerator.addSubKey(subKey)
             } else {
@@ -248,12 +247,13 @@ class KeyRingBuilder(private val version: OpenPGPKeyVersion) :
         @JvmOverloads
         fun generateKeyPair(
             spec: KeySpec,
+            version: OpenPGPKeyVersion,
             creationTime: Date = spec.keyCreationDate ?: Date()
         ): PGPKeyPair {
             val gen =
                 OpenPGPImplementation.getInstance()
                     .pgpKeyPairGeneratorProvider()
-                    .get(PublicKeyPacket.VERSION_4, creationTime)
+                    .get(version.numeric, creationTime)
 
             return spec.keyType.generateKeyPair(gen)
         }
