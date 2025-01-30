@@ -5,6 +5,7 @@
 package org.pgpainless.key
 
 import openpgp.openPgpKeyId
+import org.bouncycastle.bcpg.KeyIdentifier
 import org.bouncycastle.openpgp.PGPKeyRing
 import org.bouncycastle.openpgp.PGPPublicKey
 
@@ -38,13 +39,17 @@ class SubkeyIdentifier(
         subkeyFingerprint: OpenPgpFingerprint
     ) : this(OpenPgpFingerprint.of(keys), subkeyFingerprint)
 
-    val keyId = subkeyFingerprint.keyId
+    val keyIdentifier = KeyIdentifier(subkeyFingerprint.bytes)
+    val subkeyIdentifier = keyIdentifier
+    val primaryKeyIdentifier = KeyIdentifier(primaryKeyFingerprint.bytes)
+
+    @Deprecated("Use of key-ids is discouraged.") val keyId = keyIdentifier.keyId
     val fingerprint = subkeyFingerprint
 
-    val subkeyId = subkeyFingerprint.keyId
-    val primaryKeyId = primaryKeyFingerprint.keyId
+    @Deprecated("Use of key-ids is discouraged.") val subkeyId = subkeyIdentifier.keyId
+    @Deprecated("Use of key-ids is discouraged.") val primaryKeyId = primaryKeyIdentifier.keyId
 
-    val isPrimaryKey = primaryKeyId == subkeyId
+    val isPrimaryKey = primaryKeyIdentifier == subkeyIdentifier
 
     fun matches(fingerprint: OpenPgpFingerprint) =
         primaryKeyFingerprint == fingerprint || subkeyFingerprint == fingerprint
