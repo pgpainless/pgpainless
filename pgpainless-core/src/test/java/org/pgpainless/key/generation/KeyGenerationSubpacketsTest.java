@@ -11,9 +11,6 @@ import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
-import java.io.IOException;
-import java.security.InvalidAlgorithmParameterException;
-import java.security.NoSuchAlgorithmException;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Date;
@@ -41,9 +38,9 @@ public class KeyGenerationSubpacketsTest {
 
     @Test
     public void verifyDefaultSubpacketsForUserIdSignatures()
-            throws PGPException, InvalidAlgorithmParameterException, NoSuchAlgorithmException {
+            throws PGPException {
         PGPSecretKeyRing secretKeys = PGPainless.generateKeyRing().modernKeyRing("Alice");
-
+        Date plus1Sec = new Date(secretKeys.getPublicKey().getCreationTime().getTime() + 1000);
         KeyRingInfo info = PGPainless.inspectKeyRing(secretKeys);
         PGPSignature userIdSig = info.getLatestUserIdCertification("Alice");
         assertNotNull(userIdSig);
@@ -56,7 +53,7 @@ public class KeyGenerationSubpacketsTest {
 
         assertEquals("Alice", info.getPrimaryUserId());
 
-        secretKeys = PGPainless.modifyKeyRing(secretKeys)
+        secretKeys = PGPainless.modifyKeyRing(secretKeys, plus1Sec)
                 .addUserId("Bob",
                         new SelfSignatureSubpackets.Callback() {
                             @Override
@@ -68,7 +65,7 @@ public class KeyGenerationSubpacketsTest {
                 .addUserId("Alice", SecretKeyRingProtector.unprotectedKeys())
                 .done();
 
-        info = PGPainless.inspectKeyRing(secretKeys);
+        info = PGPainless.inspectKeyRing(secretKeys, plus1Sec);
 
         userIdSig = info.getLatestUserIdCertification("Alice");
         assertNotNull(userIdSig);
@@ -89,7 +86,7 @@ public class KeyGenerationSubpacketsTest {
 
         assertEquals("Bob", info.getPrimaryUserId());
 
-        Date now = new Date();
+        Date now = plus1Sec;
         Date t1 = new Date(now.getTime() + 1000 * 60 * 60);
         secretKeys = PGPainless.modifyKeyRing(secretKeys, t1)
                 .addUserId("Alice", new SelfSignatureSubpackets.Callback() {
@@ -107,7 +104,7 @@ public class KeyGenerationSubpacketsTest {
 
     @Test
     public void verifyDefaultSubpacketsForSubkeyBindingSignatures()
-            throws PGPException, InvalidAlgorithmParameterException, NoSuchAlgorithmException, IOException {
+            throws PGPException {
         PGPSecretKeyRing secretKeys = PGPainless.generateKeyRing().modernKeyRing("Alice");
         KeyRingInfo info = PGPainless.inspectKeyRing(secretKeys);
         List<PGPPublicKey> keysBefore = info.getPublicKeys();
