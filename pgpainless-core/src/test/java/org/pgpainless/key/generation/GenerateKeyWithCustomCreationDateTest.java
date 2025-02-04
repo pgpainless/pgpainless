@@ -6,13 +6,10 @@ package org.pgpainless.key.generation;
 
 import static org.junit.jupiter.api.Assertions.assertFalse;
 
-import java.security.InvalidAlgorithmParameterException;
-import java.security.NoSuchAlgorithmException;
 import java.util.Calendar;
 import java.util.Date;
 import java.util.Iterator;
 
-import org.bouncycastle.openpgp.PGPException;
 import org.bouncycastle.openpgp.PGPPublicKey;
 import org.bouncycastle.openpgp.PGPSecretKey;
 import org.bouncycastle.openpgp.PGPSecretKeyRing;
@@ -29,8 +26,7 @@ import org.pgpainless.util.DateUtil;
 public class GenerateKeyWithCustomCreationDateTest {
 
     @Test
-    public void generateKeyWithCustomCreationDateTest()
-            throws PGPException, InvalidAlgorithmParameterException, NoSuchAlgorithmException {
+    public void generateKeyWithCustomCreationDateTest() {
         Date creationDate = DateUtil.parseUTCDate("2018-06-11 14:12:09 UTC");
         PGPSecretKeyRing secretKeys = PGPainless.buildKeyRing()
                 .addSubkey(KeySpec.getBuilder(KeyType.XDH_LEGACY(XDHLegacySpec._X25519), KeyFlag.ENCRYPT_COMMS, KeyFlag.ENCRYPT_STORAGE))
@@ -49,7 +45,7 @@ public class GenerateKeyWithCustomCreationDateTest {
     }
 
     @Test
-    public void generateSubkeyWithFutureKeyCreationDate() throws PGPException, InvalidAlgorithmParameterException, NoSuchAlgorithmException {
+    public void generateSubkeyWithFutureKeyCreationDate() {
         Calendar calendar = Calendar.getInstance();
         calendar.add(Calendar.YEAR, 20);
         Date future = calendar.getTime();
