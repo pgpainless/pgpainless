@@ -183,7 +183,7 @@ public class ModifyKeys {
      * The provided expiration date will be set on each user-id certification signature.
      */
     @Test
-    public void setKeyExpirationDate() throws PGPException {
+    public void setKeyExpirationDate() {
         Date expirationDate = DateUtil.parseUTCDate("2030-06-24 12:44:56 UTC");
 
         SecretKeyRingProtector protector = SecretKeyRingProtector
