@@ -88,6 +88,9 @@ public class FixUserIdDoesNotBreakEncryptionCapabilityTest {
         KeyRingInfo before = PGPainless.inspectKeyRing(secretKeys);
         KeyRingInfo after = PGPainless.inspectKeyRing(modified);
 
+        assertEquals(userIdBefore, before.getPrimaryUserId());
+        assertEquals(userIdAfter, after.getPrimaryUserId());
+        assertTrue(after.isKeyValidlyBound(after.getKeyId()));
         assertTrue(before.isUsableForEncryption());
         assertTrue(before.isUsableForSigning());
         assertTrue(before.isUserIdValid(userIdBefore));
