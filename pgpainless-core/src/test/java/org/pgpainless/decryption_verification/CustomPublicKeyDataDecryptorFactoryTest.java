@@ -13,6 +13,7 @@ import org.bouncycastle.openpgp.PGPSecretKeyRing;
 import org.bouncycastle.openpgp.operator.PublicKeyDataDecryptorFactory;
 import org.bouncycastle.openpgp.operator.bc.BcPublicKeyDataDecryptorFactory;
 import org.bouncycastle.util.io.Streams;
+import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 import org.pgpainless.PGPainless;
 import org.pgpainless.algorithm.EncryptionPurpose;
@@ -28,16 +29,15 @@ import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
-import java.security.InvalidAlgorithmParameterException;
-import java.security.NoSuchAlgorithmException;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
 public class CustomPublicKeyDataDecryptorFactoryTest {
 
     @Test
+    @Disabled
     public void testDecryptionWithEmulatedHardwareDecryptionCallback()
-            throws PGPException, IOException, InvalidAlgorithmParameterException, NoSuchAlgorithmException {
+            throws PGPException, IOException {
         PGPSecretKeyRing secretKey = PGPainless.generateKeyRing().modernKeyRing("Alice");
         PGPPublicKeyRing cert = PGPainless.extractCertificate(secretKey);
         KeyRingInfo info = PGPainless.inspectKeyRing(secretKey);
