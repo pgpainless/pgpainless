@@ -97,10 +97,10 @@ class KeyRingInfo(
 
     /** List of valid public subkeys. */
     val validSubkeys: List<PGPPublicKey> =
-        keys.pgpKeyRing.publicKeys.asSequence().filter { isKeyValidlyBound(it.keyID) }.toList()
+        keys.publicKeys.values.filter { it.isBoundAt(referenceDate) }.map { it.pgpPublicKey }
 
     /** List of valid user-IDs. */
-    val validUserIds: List<String> = userIds.filter { isUserIdBound(it) }
+    val validUserIds: List<String> = keys.getValidUserIds(referenceDate).map { it.userId }
 
     /** List of valid and expired user-IDs. */
     val validAndExpiredUserIds: List<String> =
@@ -136,7 +136,7 @@ class KeyRingInfo(
     val creationDate: Date = publicKey.creationTime!!
 
     /** Latest date at which the key was modified (either by adding a subkey or self-signature). */
-    val lastModified: Date = getMostRecentSignature()?.creationTime ?: getLatestKeyCreationDate()
+    val lastModified: Date = keys.lastModificationDate
 
     /** True, if the underlying keyring is a [PGPSecretKeyRing]. */
     val isSecretKey: Boolean = keys.pgpKeyRing is PGPSecretKeyRing
@@ -195,10 +195,11 @@ class KeyRingInfo(
 
     /** List of all subkeys that can be used to sign a message. */
     val signingSubkeys: List<PGPPublicKey> =
-        validSubkeys.filter { getKeyFlagsOf(it.keyID).contains(KeyFlag.SIGN_DATA) }
+        keys.getSigningKeys(referenceDate).map { it.pgpPublicKey }
 
     /** Whether the key is usable for encryption. */
-    val isUsableForEncryption: Boolean = isUsableForEncryption(EncryptionPurpose.ANY)
+    val isUsableForEncryption: Boolean =
+        keys.getComponentKeysWithFlag(referenceDate, EncryptionPurpose.ANY.code).isNotEmpty()
 
     /**
      * Whether the key is capable of signing messages. This field is also true, if the key contains
@@ -417,7 +418,7 @@ class KeyRingInfo(
      * @return latest key creation time
      */
     fun getLatestKeyCreationDate(): Date =
-        validSubkeys.maxByOrNull { creationDate }?.creationTime
+        keys.getValidKeys(referenceDate).maxByOrNull { it.creationTime }?.creationTime
             ?: throw AssertionError("Apparently there is no validly bound key in this key ring.")
 
     /**
@@ -426,7 +427,7 @@ class KeyRingInfo(
      * @return latest self-certification for the given user-ID.
      */
     fun getLatestUserIdCertification(userId: CharSequence): PGPSignature? =
-        signatures.userIdCertifications[userId]
+        keys.getUserId(userId.toString())?.getCertification(referenceDate)?.signature
 
     /**
      * Return the latest revocation self-signature for the given user-ID
@@ -434,7 +435,7 @@ class KeyRingInfo(
      * @return latest user-ID revocation for the given user-ID
      */
     fun getUserIdRevocation(userId: CharSequence): PGPSignature? =
-        signatures.userIdRevocations[userId]
+        keys.getUserId(userId.toString())?.getRevocation(referenceDate)?.signature
 
     /**
      * Return the current binding signature for the subkey with the given key-ID.
