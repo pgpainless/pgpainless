@@ -66,8 +66,8 @@ public class KeyRingInfoTest {
         KeyRingInfo sInfo = PGPainless.inspectKeyRing(secretKeys);
         KeyRingInfo pInfo = PGPainless.inspectKeyRing(publicKeys);
 
-        assertEquals(TestKeys.EMIL_KEY_ID, sInfo.getKeyId());
-        assertEquals(TestKeys.EMIL_KEY_ID, pInfo.getKeyId());
+        assertEquals(TestKeys.EMIL_KEY_ID, sInfo.getKeyIdentifier().getKeyId());
+        assertEquals(TestKeys.EMIL_KEY_ID, pInfo.getKeyIdentifier().getKeyId());
         assertEquals(TestKeys.EMIL_FINGERPRINT, sInfo.getFingerprint());
         assertEquals(TestKeys.EMIL_FINGERPRINT, pInfo.getFingerprint());
         assertEquals(PublicKeyAlgorithm.ECDSA, sInfo.getAlgorithm());

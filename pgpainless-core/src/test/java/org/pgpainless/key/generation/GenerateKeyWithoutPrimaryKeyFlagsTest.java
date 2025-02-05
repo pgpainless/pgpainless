@@ -15,6 +15,7 @@ import java.nio.charset.StandardCharsets;
 import java.security.InvalidAlgorithmParameterException;
 import java.security.NoSuchAlgorithmException;
 
+import org.bouncycastle.bcpg.KeyIdentifier;
 import org.bouncycastle.openpgp.PGPException;
 import org.bouncycastle.openpgp.PGPPublicKeyRing;
 import org.bouncycastle.openpgp.PGPSecretKeyRing;
@@ -53,9 +54,9 @@ public class GenerateKeyWithoutPrimaryKeyFlagsTest {
         KeyRingInfo info = PGPainless.inspectKeyRing(secretKeys);
         assertTrue(info.getValidUserIds().contains("Alice"));
 
-        long primaryKeyId = info.getKeyId();
+        KeyIdentifier primaryKeyIdentifier = info.getKeyIdentifier();
         assertTrue(info.getKeyFlagsOf("Alice").isEmpty());
-        assertTrue(info.getKeyFlagsOf(primaryKeyId).isEmpty());
+        assertTrue(info.getKeyFlagsOf(primaryKeyIdentifier).isEmpty());
         assertFalse(info.isUsableForThirdPartyCertification());
 
         // Key without CERTIFY_OTHER flag cannot be used to certify other keys
