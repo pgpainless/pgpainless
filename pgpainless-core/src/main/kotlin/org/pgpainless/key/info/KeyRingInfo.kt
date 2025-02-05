@@ -43,8 +43,8 @@ class KeyRingInfo(
 
     private val signatures: Signatures = Signatures(keys.pgpKeyRing, referenceDate, policy)
 
-    /** Primary [PGPPublicKey]. */
-    val publicKey: PGPPublicKey = keys.primaryKey.pgpPublicKey
+    /** Primary [OpenPGPCertificate.OpenPGPPrimaryKey]. */
+    val publicKey: OpenPGPCertificate.OpenPGPPrimaryKey = keys.primaryKey
 
     /** Primary key ID. */
     val keyIdentifier: KeyIdentifier = publicKey.keyIdentifier
@@ -55,10 +55,10 @@ class KeyRingInfo(
     val keyId: Long = keyIdentifier.keyId
 
     /** Primary key fingerprint. */
-    val fingerprint: OpenPgpFingerprint = OpenPgpFingerprint.of(publicKey)
+    val fingerprint: OpenPgpFingerprint = OpenPgpFingerprint.of(publicKey.pgpPublicKey)
 
     /** All User-IDs (valid, expired, revoked). */
-    val userIds: List<String> = KeyRingUtils.getUserIdsIgnoringInvalidUTF8(publicKey)
+    val userIds: List<String> = KeyRingUtils.getUserIdsIgnoringInvalidUTF8(publicKey.pgpPublicKey)
 
     /** Primary User-ID. */
     val primaryUserId = keys.getPrimaryUserId(referenceDate)?.userId
@@ -102,8 +102,7 @@ class KeyRingInfo(
         }
 
     /** List of valid public subkeys. */
-    val validSubkeys: List<PGPPublicKey> =
-        keys.publicKeys.values.filter { it.isBoundAt(referenceDate) }.map { it.pgpPublicKey }
+    val validSubkeys: List<PGPPublicKey> = keys.getValidKeys(referenceDate).map { it.pgpPublicKey }
 
     /** List of valid user-IDs. */
     val validUserIds: List<String> = keys.getValidUserIds(referenceDate).map { it.userId }
@@ -136,7 +135,8 @@ class KeyRingInfo(
     val revocationSelfSignature: PGPSignature? = signatures.primaryKeyRevocation
 
     /** Public-key encryption-algorithm of the primary key. */
-    val algorithm: PublicKeyAlgorithm = PublicKeyAlgorithm.requireFromId(publicKey.algorithm)
+    val algorithm: PublicKeyAlgorithm =
+        PublicKeyAlgorithm.requireFromId(publicKey.pgpPublicKey.algorithm)
 
     /** Creation date of the primary key. */
     val creationDate: Date = publicKey.creationTime!!
@@ -178,12 +178,16 @@ class KeyRingInfo(
     val primaryKeyExpirationDate: Date?
         get() {
             val directKeyExpirationDate: Date? =
-                latestDirectKeySelfSignature?.let { getKeyExpirationTimeAsDate(it, publicKey) }
+                latestDirectKeySelfSignature?.let {
+                    getKeyExpirationTimeAsDate(it, publicKey.pgpPublicKey)
+                }
             val possiblyExpiredPrimaryUserId = getPossiblyExpiredPrimaryUserId()
             val primaryUserIdCertification =
                 possiblyExpiredPrimaryUserId?.let { getLatestUserIdCertification(it) }
             val userIdExpirationDate: Date? =
-                primaryUserIdCertification?.let { getKeyExpirationTimeAsDate(it, publicKey) }
+                primaryUserIdCertification?.let {
+                    getKeyExpirationTimeAsDate(it, publicKey.pgpPublicKey)
+                }
 
             if (latestDirectKeySelfSignature == null && primaryUserIdCertification == null) {
                 throw NoSuchElementException(
@@ -257,7 +261,7 @@ class KeyRingInfo(
      * @return expiration date
      */
     fun getSubkeyExpirationDate(keyId: Long): Date? {
-        if (publicKey.keyID == keyId) return primaryKeyExpirationDate
+        if (publicKey.keyIdentifier.keyId == keyId) return primaryKeyExpirationDate
         val subkey =
             getPublicKey(keyId)
                 ?: throw NoSuchElementException(
@@ -328,7 +332,7 @@ class KeyRingInfo(
     ): List<PGPPublicKey> {
         if (userId != null && !isUserIdValid(userId)) {
             throw UnboundUserIdException(
-                OpenPgpFingerprint.of(publicKey),
+                OpenPgpFingerprint.of(publicKey.pgpPublicKey),
                 userId.toString(),
                 getLatestUserIdCertification(userId),
                 getUserIdRevocation(userId))
@@ -469,7 +473,7 @@ class KeyRingInfo(
      * @return list of key flags
      */
     fun getKeyFlagsOf(keyId: Long): List<KeyFlag> =
-        if (keyId == publicKey.keyID) {
+        if (keyId == publicKey.keyIdentifier.keyId) {
             latestDirectKeySelfSignature?.let { sig ->
                 SignatureSubpacketsUtil.parseKeyFlags(sig)?.let { flags ->
                     return flags
@@ -684,7 +688,7 @@ class KeyRingInfo(
                 return false
             }
             if (sig.hashedSubPackets.isPrimaryUserID) {
-                getKeyExpirationTimeAsDate(sig, publicKey)?.let { expirationDate ->
+                getKeyExpirationTimeAsDate(sig, publicKey.pgpPublicKey)?.let { expirationDate ->
                     // key expired?
                     if (expirationDate < referenceDate) return false
                 }
