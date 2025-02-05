@@ -72,9 +72,9 @@ public class GenerateKeys {
         assertEquals(PublicKeyAlgorithm.EDDSA_LEGACY.getAlgorithmId(),
                 keyInfo.getAlgorithm().getAlgorithmId());
         assertEquals(PublicKeyAlgorithm.EDDSA_LEGACY.getAlgorithmId(),
-                keyInfo.getSigningSubkeys().get(0).getAlgorithm());
+                keyInfo.getSigningSubkeys().get(0).getPGPPublicKey().getAlgorithm());
         assertEquals(PublicKeyAlgorithm.ECDH.getAlgorithmId(),
-                keyInfo.getEncryptionSubkeys(EncryptionPurpose.ANY).get(0).getAlgorithm());
+                keyInfo.getEncryptionSubkeys(EncryptionPurpose.ANY).get(0).getPGPPublicKey().getAlgorithm());
     }
 
     /**

@@ -27,9 +27,11 @@ class BcHashContextSigner {
         ): PGPSignature {
             val info = PGPainless.inspectKeyRing(secretKey)
             return info.signingSubkeys
-                .mapNotNull { info.getSecretKey(it.keyID) }
+                .mapNotNull { info.getSecretKey(it.keyIdentifier) }
                 .firstOrNull()
-                ?.let { signHashContext(hashContext, signatureType, it.unlock(protector)) }
+                ?.let {
+                    signHashContext(hashContext, signatureType, it.pgpSecretKey.unlock(protector))
+                }
                 ?: throw PGPException("Key does not contain suitable signing subkey.")
         }
 
