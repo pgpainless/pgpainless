@@ -14,9 +14,9 @@ import java.util.List;
 
 import org.bouncycastle.bcpg.sig.NotationData;
 import org.bouncycastle.openpgp.PGPKeyPair;
-import org.bouncycastle.openpgp.PGPPublicKey;
 import org.bouncycastle.openpgp.PGPSecretKeyRing;
 import org.bouncycastle.openpgp.PGPSignature;
+import org.bouncycastle.openpgp.api.OpenPGPCertificate;
 import org.junit.JUtils;
 import org.junit.jupiter.api.Test;
 import org.pgpainless.PGPainless;
@@ -59,19 +59,19 @@ public class AddSubkeyWithModifiedBindingSignatureSubpacketsTest {
                 .done();
 
         KeyRingInfo after = PGPainless.inspectKeyRing(secretKeys);
-        List<PGPPublicKey> signingKeys = after.getSigningSubkeys();
+        List<OpenPGPCertificate.OpenPGPComponentKey> signingKeys = after.getSigningSubkeys();
         signingKeys.removeAll(before.getSigningSubkeys());
         assertFalse(signingKeys.isEmpty());
 
-        PGPPublicKey newKey = signingKeys.get(0);
-        Date newExpirationDate = after.getSubkeyExpirationDate(new OpenPgpV4Fingerprint(newKey));
+        OpenPGPCertificate.OpenPGPComponentKey newKey = signingKeys.get(0);
+        Date newExpirationDate = after.getSubkeyExpirationDate(new OpenPgpV4Fingerprint(newKey.getPGPPublicKey()));
         assertNotNull(newExpirationDate);
         Date now = new Date();
         JUtils.assertEquals(
                 now.getTime() + MILLIS_IN_SEC * secondsUntilExpiration,
                 newExpirationDate.getTime(), 2 * MILLIS_IN_SEC);
-        assertTrue(newKey.getSignatures().hasNext());
-        PGPSignature binding = newKey.getSignatures().next();
+        assertTrue(newKey.getPGPPublicKey().getSignatures().hasNext());
+        PGPSignature binding = newKey.getPGPPublicKey().getSignatures().next();
         List<NotationData> notations = SignatureSubpacketsUtil.getHashedNotationData(binding);
         assertEquals(1, notations.size());
         assertEquals("test@test.test", notations.get(0).getNotationName());

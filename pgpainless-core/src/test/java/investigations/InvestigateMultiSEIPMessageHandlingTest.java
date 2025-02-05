@@ -120,11 +120,11 @@ public class InvestigateMultiSEIPMessageHandlingTest {
     public void generateTestMessage() throws PGPException, IOException {
         PGPSecretKeyRing ring1 = PGPainless.readKeyRing().secretKeyRing(KEY1);
         KeyRingInfo info1 = PGPainless.inspectKeyRing(ring1);
-        PGPPublicKey cryptKey1 = info1.getEncryptionSubkeys(EncryptionPurpose.ANY).get(0);
-        PGPSecretKey signKey1 = ring1.getSecretKey(info1.getSigningSubkeys().get(0).getKeyID());
+        PGPPublicKey cryptKey1 = info1.getEncryptionSubkeys(EncryptionPurpose.ANY).get(0).getPGPPublicKey();
+        PGPSecretKey signKey1 = ring1.getSecretKey(info1.getSigningSubkeys().get(0).getKeyIdentifier());
         PGPSecretKeyRing ring2 = PGPainless.readKeyRing().secretKeyRing(KEY2);
         KeyRingInfo info2 = PGPainless.inspectKeyRing(ring2);
-        PGPSecretKey signKey2 = ring2.getSecretKey(info2.getSigningSubkeys().get(0).getKeyID());
+        PGPSecretKey signKey2 = ring2.getSecretKey(info2.getSigningSubkeys().get(0).getKeyIdentifier());
 
         ByteArrayOutputStream out = new ByteArrayOutputStream();
         ArmoredOutputStream armorOut = new ArmoredOutputStream(out);

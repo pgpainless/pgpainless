@@ -15,10 +15,11 @@ import java.security.NoSuchAlgorithmException;
 import java.util.Date;
 import java.util.List;
 
+import org.bouncycastle.bcpg.KeyIdentifier;
 import org.bouncycastle.openpgp.PGPException;
-import org.bouncycastle.openpgp.PGPPublicKey;
 import org.bouncycastle.openpgp.PGPPublicKeyRing;
 import org.bouncycastle.openpgp.PGPSecretKeyRing;
+import org.bouncycastle.openpgp.api.OpenPGPCertificate;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.pgpainless.PGPainless;
@@ -44,19 +45,18 @@ public class ModifyKeys {
     private final String originalPassphrase = "p4ssw0rd";
     private PGPSecretKeyRing secretKey;
     private long primaryKeyId;
-    private long encryptionSubkeyId;
-    private long signingSubkeyId;
+    private KeyIdentifier encryptionSubkeyId;
+    private KeyIdentifier signingSubkeyId;
 
     @BeforeEach
-    public void generateKey()
-            throws PGPException, InvalidAlgorithmParameterException, NoSuchAlgorithmException {
+    public void generateKey() {
         secretKey = PGPainless.generateKeyRing()
                 .modernKeyRing(userId, originalPassphrase);
 
         KeyRingInfo info = PGPainless.inspectKeyRing(secretKey);
         primaryKeyId = info.getKeyIdentifier().getKeyId();
-        encryptionSubkeyId = info.getEncryptionSubkeys(EncryptionPurpose.ANY).get(0).getKeyID();
-        signingSubkeyId = info.getSigningSubkeys().get(0).getKeyID();
+        encryptionSubkeyId = info.getEncryptionSubkeys(EncryptionPurpose.ANY).get(0).getKeyIdentifier();
+        signingSubkeyId = info.getSigningSubkeys().get(0).getKeyIdentifier();
     }
 
     /**
@@ -75,7 +75,7 @@ public class ModifyKeys {
      * This example demonstrates how to export a secret key or certificate to an ASCII armored string.
      */
     @Test
-    public void toAsciiArmoredString() throws IOException {
+    public void toAsciiArmoredString() {
         PGPPublicKeyRing certificate = PGPainless.extractCertificate(secretKey);
 
         String asciiArmoredSecretKey = PGPainless.asciiArmor(secretKey);
@@ -111,7 +111,7 @@ public class ModifyKeys {
     public void changeSingleSubkeyPassphrase() throws PGPException {
         secretKey = PGPainless.modifyKeyRing(secretKey)
                 // Here we change the passphrase of the encryption subkey
-                .changeSubKeyPassphraseFromOldPassphrase(encryptionSubkeyId, Passphrase.fromPassword(originalPassphrase))
+                .changeSubKeyPassphraseFromOldPassphrase(encryptionSubkeyId.getKeyId(), Passphrase.fromPassword(originalPassphrase))
                 .withSecureDefaultSettings()
                 .toNewPassphrase(Passphrase.fromPassword("cryptP4ssphr4s3"))
                 .done();
@@ -147,13 +147,13 @@ public class ModifyKeys {
      * This example demonstrates how to add an additional subkey to an existing key.
      * Prerequisites are a {@link SecretKeyRingProtector} that is capable of unlocking the primary key of the existing key,
      * and a {@link Passphrase} for the new subkey.
-     *
+     * <p>
      * There are two ways to add a subkey into an existing key;
      * Either the subkey gets generated on the fly (see below),
      * or the subkey already exists. In the latter case, the user has to provide
      * {@link org.bouncycastle.openpgp.PGPSignatureSubpacketVector PGPSignatureSubpacketVectors} for the binding signature
      * manually.
-     *
+     * <p>
      * Once the subkey is added, it can be decrypted using the provided subkey passphrase.
      */
     @Test
@@ -173,9 +173,9 @@ public class ModifyKeys {
         KeyRingInfo info = PGPainless.inspectKeyRing(secretKey);
         assertEquals(4, info.getSecretKeys().size());
         assertEquals(4, info.getPublicKeys().size());
-        List<PGPPublicKey> encryptionSubkeys = info.getEncryptionSubkeys(EncryptionPurpose.COMMUNICATIONS);
+        List<OpenPGPCertificate.OpenPGPComponentKey> encryptionSubkeys = info.getEncryptionSubkeys(EncryptionPurpose.COMMUNICATIONS);
         assertEquals(2, encryptionSubkeys.size());
-        UnlockSecretKey.unlockSecretKey(secretKey.getSecretKey(encryptionSubkeys.get(1).getKeyID()), subkeyPassphrase);
+        UnlockSecretKey.unlockSecretKey(secretKey.getSecretKey(encryptionSubkeys.get(1).getKeyIdentifier()), subkeyPassphrase);
     }
 
     /**

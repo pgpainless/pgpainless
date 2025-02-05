@@ -18,10 +18,10 @@ import java.util.List;
 
 import org.bouncycastle.bcpg.sig.IssuerFingerprint;
 import org.bouncycastle.openpgp.PGPException;
-import org.bouncycastle.openpgp.PGPPublicKey;
 import org.bouncycastle.openpgp.PGPSecretKeyRing;
 import org.bouncycastle.openpgp.PGPSignature;
 import org.bouncycastle.openpgp.PGPSignatureSubpacketVector;
+import org.bouncycastle.openpgp.api.OpenPGPCertificate;
 import org.junit.jupiter.api.Test;
 import org.pgpainless.PGPainless;
 import org.pgpainless.algorithm.HashAlgorithm;
@@ -107,7 +107,7 @@ public class KeyGenerationSubpacketsTest {
             throws PGPException {
         PGPSecretKeyRing secretKeys = PGPainless.generateKeyRing().modernKeyRing("Alice");
         KeyRingInfo info = PGPainless.inspectKeyRing(secretKeys);
-        List<PGPPublicKey> keysBefore = info.getPublicKeys();
+        List<OpenPGPCertificate.OpenPGPComponentKey> keysBefore = info.getPublicKeys();
 
         secretKeys = PGPainless.modifyKeyRing(secretKeys)
                 .addSubKey(KeySpec.getBuilder(KeyType.EDDSA_LEGACY(EdDSALegacyCurve._Ed25519), KeyFlag.SIGN_DATA).build(),
@@ -116,12 +116,12 @@ public class KeyGenerationSubpacketsTest {
 
 
         info = PGPainless.inspectKeyRing(secretKeys);
-        List<PGPPublicKey> keysAfter = new ArrayList<>(info.getPublicKeys());
+        List<OpenPGPCertificate.OpenPGPComponentKey> keysAfter = new ArrayList<>(info.getPublicKeys());
         keysAfter.removeAll(keysBefore);
         assertEquals(1, keysAfter.size());
-        PGPPublicKey newSigningKey = keysAfter.get(0);
+        OpenPGPCertificate.OpenPGPComponentKey newSigningKey = keysAfter.get(0);
 
-        PGPSignature bindingSig = info.getCurrentSubkeyBindingSignature(newSigningKey.getKeyID());
+        PGPSignature bindingSig = info.getCurrentSubkeyBindingSignature(newSigningKey.getKeyIdentifier().getKeyId());
         assertNotNull(bindingSig);
         assureSignatureHasDefaultSubpackets(bindingSig, secretKeys, KeyFlag.SIGN_DATA);
         assertNotNull(bindingSig.getHashedSubPackets().getEmbeddedSignatures().get(0));
@@ -142,8 +142,8 @@ public class KeyGenerationSubpacketsTest {
         keysAfter.removeAll(keysBefore);
         keysAfter.remove(newSigningKey);
         assertEquals(1, keysAfter.size());
-        PGPPublicKey newEncryptionKey = keysAfter.get(0);
-        bindingSig = info.getCurrentSubkeyBindingSignature(newEncryptionKey.getKeyID());
+        OpenPGPCertificate.OpenPGPComponentKey newEncryptionKey = keysAfter.get(0);
+        bindingSig = info.getCurrentSubkeyBindingSignature(newEncryptionKey.getKeyIdentifier().getKeyId());
         assertNotNull(bindingSig);
         assertNull(bindingSig.getHashedSubPackets().getIssuerFingerprint());
         assertEquals(KeyFlag.toBitmask(KeyFlag.ENCRYPT_COMMS), bindingSig.getHashedSubPackets().getKeyFlags());

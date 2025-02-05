@@ -14,9 +14,8 @@ import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
-import java.security.InvalidAlgorithmParameterException;
-import java.security.NoSuchAlgorithmException;
 
+import org.bouncycastle.bcpg.KeyIdentifier;
 import org.bouncycastle.openpgp.PGPException;
 import org.bouncycastle.openpgp.PGPPublicKeyRing;
 import org.bouncycastle.openpgp.PGPSecretKeyRing;
@@ -66,14 +65,14 @@ public class CertificateWithMissingSecretKeyTest {
     private static final long signingSubkeyId = -7647663290973502178L;
     private static PGPSecretKeyRing missingSigningSecKey;
 
-    private static long encryptionSubkeyId;
+    private static KeyIdentifier encryptionSubkeyId;
     private static PGPSecretKeyRing missingDecryptionSecKey;
 
     private static final SecretKeyRingProtector protector = SecretKeyRingProtector.unprotectedKeys();
 
 
     @BeforeAll
-    public static void prepare() throws IOException, PGPException, InvalidAlgorithmParameterException, NoSuchAlgorithmException {
+    public static void prepare() throws IOException {
         // missing signing sec key we read from bytes
         missingSigningSecKey = PGPainless.readKeyRing().secretKeyRing(MISSING_SIGNING_SECKEY);
 
@@ -81,9 +80,9 @@ public class CertificateWithMissingSecretKeyTest {
         PGPSecretKeyRing secretKeys = PGPainless.generateKeyRing()
                 .modernKeyRing("Missing Decryption Key <missing@decryption.key>");
         encryptionSubkeyId = PGPainless.inspectKeyRing(secretKeys)
-                .getEncryptionSubkeys(EncryptionPurpose.ANY).get(0).getKeyID();
+                .getEncryptionSubkeys(EncryptionPurpose.ANY).get(0).getKeyIdentifier();
         // remove the encryption/decryption secret key
-        missingDecryptionSecKey = KeyRingUtils.stripSecretKey(secretKeys, encryptionSubkeyId);
+        missingDecryptionSecKey = KeyRingUtils.stripSecretKey(secretKeys, encryptionSubkeyId.getKeyId());
     }
 
     @Test
