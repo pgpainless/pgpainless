@@ -90,7 +90,7 @@ public class FixUserIdDoesNotBreakEncryptionCapabilityTest {
 
         assertEquals(userIdBefore, before.getPrimaryUserId());
         assertEquals(userIdAfter, after.getPrimaryUserId());
-        assertTrue(after.isKeyValidlyBound(after.getKeyId()));
+        assertTrue(after.isKeyValidlyBound(after.getKeyIdentifier()));
         assertTrue(before.isUsableForEncryption());
         assertTrue(before.isUsableForSigning());
         assertTrue(before.isUserIdValid(userIdBefore));
