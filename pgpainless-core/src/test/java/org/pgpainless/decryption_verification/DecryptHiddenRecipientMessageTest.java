@@ -13,8 +13,8 @@ import java.nio.charset.StandardCharsets;
 import java.util.List;
 
 import org.bouncycastle.openpgp.PGPException;
-import org.bouncycastle.openpgp.PGPPublicKey;
 import org.bouncycastle.openpgp.PGPSecretKeyRing;
+import org.bouncycastle.openpgp.api.OpenPGPCertificate;
 import org.bouncycastle.util.io.Streams;
 import org.junit.jupiter.api.TestTemplate;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -144,10 +144,11 @@ public class DecryptHiddenRecipientMessageTest {
         assertEquals(0L, metadata.getRecipientKeyIds().get(0));
 
         KeyRingInfo info = new KeyRingInfo(secretKeys);
-        List<PGPPublicKey> encryptionKeys = info.getEncryptionSubkeys(EncryptionPurpose.ANY);
+        List<OpenPGPCertificate.OpenPGPComponentKey> encryptionKeys =
+                info.getEncryptionSubkeys(EncryptionPurpose.ANY);
         assertEquals(1, encryptionKeys.size());
 
-        assertEquals(new SubkeyIdentifier(secretKeys, encryptionKeys.get(0).getKeyID()), metadata.getDecryptionKey());
+        assertEquals(new SubkeyIdentifier(secretKeys, encryptionKeys.get(0).getKeyIdentifier()), metadata.getDecryptionKey());
         assertEquals("Hello Recipient :)", out.toString());
     }
 }

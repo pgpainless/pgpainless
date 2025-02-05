@@ -675,17 +675,17 @@ class OpenPgpMessageInputStream(
     private fun getDecryptionKey(keyId: Long): PGPSecretKeyRing? =
         options.getDecryptionKeys().firstOrNull {
             it.any { k -> k.keyID == keyId }
-                .and(PGPainless.inspectKeyRing(it).decryptionSubkeys.any { k -> k.keyID == keyId })
+                .and(
+                    PGPainless.inspectKeyRing(it).decryptionSubkeys.any { k ->
+                        k.keyIdentifier.keyId == keyId
+                    })
         }
 
     private fun getDecryptionKey(pkesk: PGPPublicKeyEncryptedData): PGPSecretKeyRing? =
         options.getDecryptionKeys().firstOrNull {
             it.getSecretKeyFor(pkesk) != null &&
                 PGPainless.inspectKeyRing(it).decryptionSubkeys.any { subkey ->
-                    when (pkesk.version) {
-                        3 -> pkesk.keyID == subkey.keyID
-                        else -> throw NotImplementedError("Version 6 PKESK not yet supported.")
-                    }
+                    pkesk.keyIdentifier.matches(subkey.keyIdentifier)
                 }
         }
 
@@ -693,10 +693,7 @@ class OpenPgpMessageInputStream(
         options.getDecryptionKeys().filter {
             it.getSecretKeyFor(pkesk) != null &&
                 PGPainless.inspectKeyRing(it).decryptionSubkeys.any { subkey ->
-                    when (pkesk.version) {
-                        3 -> pkesk.keyID == subkey.keyID
-                        else -> throw NotImplementedError("Version 6 PKESK not yet supported.")
-                    }
+                    pkesk.keyIdentifier.matches(subkey.keyIdentifier)
                 }
         }
 
@@ -708,8 +705,9 @@ class OpenPgpMessageInputStream(
         options.getDecryptionKeys().forEach {
             val info = PGPainless.inspectKeyRing(it)
             for (key in info.decryptionSubkeys) {
-                if (key.algorithm == algorithm && info.isSecretKeyAvailable(key.keyID)) {
-                    candidates.add(it to it.getSecretKey(key.keyID))
+                if (key.pgpPublicKey.algorithm == algorithm &&
+                    info.isSecretKeyAvailable(key.keyIdentifier)) {
+                    candidates.add(it to it.getSecretKey(key.keyIdentifier))
                 }
             }
         }

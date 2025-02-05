@@ -5,10 +5,10 @@
 package org.pgpainless.encryption_signing;
 
 import org.bouncycastle.openpgp.PGPException;
-import org.bouncycastle.openpgp.PGPPublicKey;
 import org.bouncycastle.openpgp.PGPPublicKeyRing;
 import org.bouncycastle.openpgp.PGPSecretKeyRing;
 import org.bouncycastle.openpgp.PGPSignature;
+import org.bouncycastle.openpgp.api.OpenPGPCertificate;
 import org.bouncycastle.util.io.Streams;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
@@ -31,8 +31,6 @@ import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
-import java.security.InvalidAlgorithmParameterException;
-import java.security.NoSuchAlgorithmException;
 import java.util.Iterator;
 import java.util.List;
 import java.util.stream.Collectors;
@@ -50,7 +48,7 @@ public class MultiSigningSubkeyTest {
     private static SecretKeyRingProtector protector;
 
     @BeforeAll
-    public static void generateKey() throws PGPException, InvalidAlgorithmParameterException, NoSuchAlgorithmException {
+    public static void generateKey() {
         signingKey = PGPainless.buildKeyRing()
                 .setPrimaryKey(KeySpec.getBuilder(KeyType.EDDSA_LEGACY(EdDSALegacyCurve._Ed25519), KeyFlag.CERTIFY_OTHER, KeyFlag.SIGN_DATA))
                 .addSubkey(KeySpec.getBuilder(KeyType.EDDSA_LEGACY(EdDSALegacyCurve._Ed25519), KeyFlag.SIGN_DATA))
@@ -59,10 +57,10 @@ public class MultiSigningSubkeyTest {
                 .addUserId("Alice <alice@pgpainless.org>")
                 .build();
         signingCert = PGPainless.extractCertificate(signingKey);
-        Iterator<PGPPublicKey> signingSubkeys = PGPainless.inspectKeyRing(signingKey).getSigningSubkeys().listIterator();
-        primaryKey = new SubkeyIdentifier(signingKey, signingSubkeys.next().getKeyID());
-        signingKey1 = new SubkeyIdentifier(signingKey, signingSubkeys.next().getKeyID());
-        signingKey2 = new SubkeyIdentifier(signingKey, signingSubkeys.next().getKeyID());
+        Iterator<OpenPGPCertificate.OpenPGPComponentKey> signingSubkeys = PGPainless.inspectKeyRing(signingKey).getSigningSubkeys().listIterator();
+        primaryKey = new SubkeyIdentifier(signingKey, signingSubkeys.next().getKeyIdentifier());
+        signingKey1 = new SubkeyIdentifier(signingKey, signingSubkeys.next().getKeyIdentifier());
+        signingKey2 = new SubkeyIdentifier(signingKey, signingSubkeys.next().getKeyIdentifier());
         protector = SecretKeyRingProtector.unprotectedKeys();
     }
 
