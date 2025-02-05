@@ -6,6 +6,7 @@ package org.pgpainless.key.info
 
 import java.util.*
 import openpgp.openPgpKeyId
+import org.bouncycastle.bcpg.KeyIdentifier
 import org.bouncycastle.openpgp.*
 import org.bouncycastle.openpgp.api.OpenPGPCertificate
 import org.pgpainless.PGPainless
@@ -46,7 +47,12 @@ class KeyRingInfo(
     val publicKey: PGPPublicKey = keys.primaryKey.pgpPublicKey
 
     /** Primary key ID. */
-    val keyId: Long = publicKey.keyID
+    val keyIdentifier: KeyIdentifier = publicKey.keyIdentifier
+
+    @Deprecated(
+        "Use of raw key-ids is deprecated in favor of key-identifiers",
+        replaceWith = ReplaceWith("keyIdentifier"))
+    val keyId: Long = keyIdentifier.keyId
 
     /** Primary key fingerprint. */
     val fingerprint: OpenPgpFingerprint = OpenPgpFingerprint.of(publicKey)
@@ -154,7 +160,7 @@ class KeyRingInfo(
         keys.pgpKeyRing.publicKeys
             .asSequence()
             .filter {
-                if (it.keyID != keyId) {
+                if (!it.keyIdentifier.matches(keyIdentifier)) {
                     if (signatures.subkeyBindings[it.keyID] == null) {
                         LOGGER.debug("Subkey ${it.keyID.openPgpKeyId()} has no binding signature.")
                         return@filter false
@@ -208,7 +214,7 @@ class KeyRingInfo(
      *
      * To check for keys that are actually usable to sign messages, use [isUsableForSigning].
      */
-    val isSigningCapable: Boolean = isKeyValidlyBound(keyId) && signingSubkeys.isNotEmpty()
+    val isSigningCapable: Boolean = isKeyValidlyBound(keyIdentifier) && signingSubkeys.isNotEmpty()
 
     /** Whether the key is actually usable to sign messages. */
     val isUsableForSigning: Boolean =
@@ -218,7 +224,7 @@ class KeyRingInfo(
     val preferredHashAlgorithms: Set<HashAlgorithm>
         get() =
             primaryUserId?.let { getPreferredHashAlgorithms(it) }
-                ?: getPreferredHashAlgorithms(keyId)
+                ?: getPreferredHashAlgorithms(keyIdentifier)
 
     /**
      * [SymmetricKeyAlgorithm] preferences of the primary user-ID or if absent of the primary key.
@@ -226,13 +232,13 @@ class KeyRingInfo(
     val preferredSymmetricKeyAlgorithms: Set<SymmetricKeyAlgorithm>
         get() =
             primaryUserId?.let { getPreferredSymmetricKeyAlgorithms(it) }
-                ?: getPreferredSymmetricKeyAlgorithms(keyId)
+                ?: getPreferredSymmetricKeyAlgorithms(keyIdentifier)
 
     /** [CompressionAlgorithm] preferences of the primary user-ID or if absent, the primary key. */
     val preferredCompressionAlgorithms: Set<CompressionAlgorithm>
         get() =
             primaryUserId?.let { getPreferredCompressionAlgorithms(it) }
-                ?: getPreferredCompressionAlgorithms(keyId)
+                ?: getPreferredCompressionAlgorithms(keyIdentifier)
 
     /**
      * Return the expiration date of the subkey with the provided fingerprint.
@@ -387,7 +393,7 @@ class KeyRingInfo(
      *   encryption-purpose.
      */
     fun isUsableForEncryption(purpose: EncryptionPurpose): Boolean {
-        return isKeyValidlyBound(keyId) && getEncryptionSubkeys(purpose).isNotEmpty()
+        return isKeyValidlyBound(keyIdentifier) && getEncryptionSubkeys(purpose).isNotEmpty()
     }
 
     /**
@@ -452,6 +458,9 @@ class KeyRingInfo(
      */
     fun getSubkeyRevocationSignature(keyId: Long): PGPSignature? =
         signatures.subkeyRevocations[keyId]
+
+    fun getKeyFlagsOf(keyIdentifier: KeyIdentifier): List<KeyFlag> =
+        getKeyFlagsOf(keyIdentifier.keyId)
 
     /**
      * Return a list of [KeyFlags][KeyFlag] that apply to the subkey with the provided key id.
@@ -541,7 +550,7 @@ class KeyRingInfo(
      * @return public key or null
      */
     fun getPublicKey(fingerprint: OpenPgpFingerprint): PGPPublicKey? =
-        keys.pgpKeyRing.getPublicKey(fingerprint.keyId)
+        keys.pgpKeyRing.getPublicKey(fingerprint.bytes)
 
     /**
      * Return the secret key with the given fingerprint.
@@ -552,9 +561,13 @@ class KeyRingInfo(
     fun getSecretKey(fingerprint: OpenPgpFingerprint): PGPSecretKey? =
         when (keys.pgpKeyRing) {
             is PGPSecretKeyRing ->
-                (keys.pgpKeyRing as PGPSecretKeyRing).getSecretKey(fingerprint.keyId)
+                (keys.pgpKeyRing as PGPSecretKeyRing).getSecretKey(fingerprint.bytes)
             else -> null
         }
+
+    fun getPublicKey(keyIdentifier: KeyIdentifier): PGPPublicKey? {
+        return keys.pgpKeyRing.getPublicKey(keyIdentifier)
+    }
 
     /**
      * Return the public key matching the given [SubkeyIdentifier].
@@ -564,10 +577,10 @@ class KeyRingInfo(
      *   key of the key.
      */
     fun getPublicKey(identifier: SubkeyIdentifier): PGPPublicKey? {
-        require(identifier.primaryKeyIdentifier.keyId == publicKey.keyID) {
+        require(publicKey.keyIdentifier.equals(identifier.keyIdentifier)) {
             "Mismatching primary key ID."
         }
-        return getPublicKey(identifier.subkeyId)
+        return keys.pgpKeyRing.getPublicKey(identifier.subkeyIdentifier)
     }
 
     /**
@@ -580,13 +593,17 @@ class KeyRingInfo(
     fun getSecretKey(identifier: SubkeyIdentifier): PGPSecretKey? =
         when (keys.pgpKeyRing) {
             is PGPSecretKeyRing -> {
-                require(identifier.primaryKeyIdentifier.keyId == publicKey.keyID) {
+                require(publicKey.keyIdentifier.equals(identifier.keyIdentifier)) {
                     "Mismatching primary key ID."
                 }
                 (keys.pgpKeyRing as PGPSecretKeyRing).getSecretKey(identifier.subkeyIdentifier)
             }
             else -> null
         }
+
+    fun isKeyValidlyBound(keyIdentifier: KeyIdentifier): Boolean {
+        return isKeyValidlyBound(keyIdentifier.keyId)
+    }
 
     /**
      * Return true if the public key with the given key id is bound to the key ring properly.
@@ -598,7 +615,7 @@ class KeyRingInfo(
         val publicKey = keys.pgpKeyRing.getPublicKey(keyId) ?: return false
 
         // Primary key -> Check Primary Key Revocation
-        if (publicKey.keyID == this.publicKey.keyID) {
+        if (publicKey.keyIdentifier.matches(this.publicKey.keyIdentifier)) {
             return if (signatures.primaryKeyRevocation != null &&
                 signatures.primaryKeyRevocation.isHardRevocation) {
                 false
@@ -631,8 +648,9 @@ class KeyRingInfo(
      * Return the current primary user-id of the key ring.
      *
      * <p>
-     * Note: If no user-id is marked as primary key using a [PrimaryUserID] packet, this method
-     * returns the first user-id on the key, otherwise null.
+     * Note: If no user-id is marked as primary key using a
+     * [org.bouncycastle.bcpg.sig.PrimaryUserID] packet, this method returns the first user-id on
+     * the key, otherwise null.
      *
      * @return primary user-id or null
      */
@@ -683,7 +701,11 @@ class KeyRingInfo(
 
     /** [HashAlgorithm] preferences of the given user-ID. */
     fun getPreferredHashAlgorithms(userId: CharSequence): Set<HashAlgorithm> {
-        return getKeyAccessor(userId, keyId).preferredHashAlgorithms
+        return getKeyAccessor(userId, keyIdentifier).preferredHashAlgorithms
+    }
+
+    fun getPreferredHashAlgorithms(keyIdentifier: KeyIdentifier): Set<HashAlgorithm> {
+        return getPreferredHashAlgorithms(keyIdentifier.keyId)
     }
 
     /** [HashAlgorithm] preferences of the given key. */
@@ -694,7 +716,13 @@ class KeyRingInfo(
 
     /** [SymmetricKeyAlgorithm] preferences of the given user-ID. */
     fun getPreferredSymmetricKeyAlgorithms(userId: CharSequence): Set<SymmetricKeyAlgorithm> {
-        return getKeyAccessor(userId, keyId).preferredSymmetricKeyAlgorithms
+        return getKeyAccessor(userId, keyIdentifier).preferredSymmetricKeyAlgorithms
+    }
+
+    fun getPreferredSymmetricKeyAlgorithms(
+        keyIdentifier: KeyIdentifier
+    ): Set<SymmetricKeyAlgorithm> {
+        return getPreferredSymmetricKeyAlgorithms(keyIdentifier.keyId)
     }
 
     /** [SymmetricKeyAlgorithm] preferences of the given key. */
@@ -705,7 +733,11 @@ class KeyRingInfo(
 
     /** [CompressionAlgorithm] preferences of the given user-ID. */
     fun getPreferredCompressionAlgorithms(userId: CharSequence): Set<CompressionAlgorithm> {
-        return getKeyAccessor(userId, keyId).preferredCompressionAlgorithms
+        return getKeyAccessor(userId, keyIdentifier).preferredCompressionAlgorithms
+    }
+
+    fun getPreferredCompressionAlgorithms(keyIdentifier: KeyIdentifier): Set<CompressionAlgorithm> {
+        return getPreferredCompressionAlgorithms(keyIdentifier.keyId)
     }
 
     /** [CompressionAlgorithm] preferences of the given key. */
@@ -715,20 +747,21 @@ class KeyRingInfo(
     }
 
     val isUsableForThirdPartyCertification: Boolean =
-        isKeyValidlyBound(keyId) && getKeyFlagsOf(keyId).contains(KeyFlag.CERTIFY_OTHER)
+        isKeyValidlyBound(keyIdentifier) &&
+            getKeyFlagsOf(keyIdentifier).contains(KeyFlag.CERTIFY_OTHER)
 
-    private fun getKeyAccessor(userId: CharSequence?, keyId: Long): KeyAccessor {
-        if (getPublicKey(keyId) == null) {
-            throw NoSuchElementException(
-                "No subkey with key-id ${keyId.openPgpKeyId()} found on this key.")
+    private fun getKeyAccessor(userId: CharSequence?, keyIdentifier: KeyIdentifier): KeyAccessor {
+        if (getPublicKey(keyIdentifier) == null) {
+            throw NoSuchElementException("No subkey with key-id $keyIdentifier found on this key.")
         }
         if (userId != null && !userIds.contains(userId)) {
             throw NoSuchElementException("No user-id '$userId' found on this key.")
         }
         return if (userId != null) {
-            KeyAccessor.ViaUserId(this, SubkeyIdentifier(keys.pgpKeyRing, keyId), userId)
+            KeyAccessor.ViaUserId(
+                this, SubkeyIdentifier(keys.pgpKeyRing, keyIdentifier.keyId), userId)
         } else {
-            KeyAccessor.ViaKeyId(this, SubkeyIdentifier(keys.pgpKeyRing, keyId))
+            KeyAccessor.ViaKeyId(this, SubkeyIdentifier(keys.pgpKeyRing, keyIdentifier.keyId))
         }
     }
 
