@@ -6,10 +6,10 @@ package org.pgpainless.decryption_verification;
 
 import org.bouncycastle.openpgp.PGPException;
 import org.bouncycastle.openpgp.PGPPrivateKey;
-import org.bouncycastle.openpgp.PGPPublicKey;
 import org.bouncycastle.openpgp.PGPPublicKeyRing;
 import org.bouncycastle.openpgp.PGPSecretKey;
 import org.bouncycastle.openpgp.PGPSecretKeyRing;
+import org.bouncycastle.openpgp.api.OpenPGPCertificate;
 import org.bouncycastle.openpgp.operator.PublicKeyDataDecryptorFactory;
 import org.bouncycastle.openpgp.operator.bc.BcPublicKeyDataDecryptorFactory;
 import org.bouncycastle.util.io.Streams;
@@ -41,7 +41,8 @@ public class CustomPublicKeyDataDecryptorFactoryTest {
         PGPSecretKeyRing secretKey = PGPainless.generateKeyRing().modernKeyRing("Alice");
         PGPPublicKeyRing cert = PGPainless.extractCertificate(secretKey);
         KeyRingInfo info = PGPainless.inspectKeyRing(secretKey);
-        PGPPublicKey encryptionKey = info.getEncryptionSubkeys(EncryptionPurpose.ANY).get(0);
+        OpenPGPCertificate.OpenPGPComponentKey encryptionKey =
+                info.getEncryptionSubkeys(EncryptionPurpose.ANY).get(0);
 
         // Encrypt a test message
         String plaintext = "Hello, World!\n";
@@ -59,7 +60,7 @@ public class CustomPublicKeyDataDecryptorFactoryTest {
                     throws HardwareSecurity.HardwareSecurityException {
                 // Emulate hardware decryption.
                 try {
-                    PGPSecretKey decryptionKey = secretKey.getSecretKey(encryptionKey.getKeyID());
+                    PGPSecretKey decryptionKey = secretKey.getSecretKey(encryptionKey.getKeyIdentifier());
                     PGPPrivateKey privateKey = UnlockSecretKey.unlockSecretKey(decryptionKey, Passphrase.emptyPassphrase());
                     PublicKeyDataDecryptorFactory internal = new BcPublicKeyDataDecryptorFactory(privateKey);
                     return internal.recoverSessionData(keyAlgorithm, new byte[][] {sessionKeyData}, pkeskVersion);
@@ -75,7 +76,7 @@ public class CustomPublicKeyDataDecryptorFactoryTest {
                 .withOptions(ConsumerOptions.get()
                         .addCustomDecryptorFactory(
                                 new HardwareSecurity.HardwareDataDecryptorFactory(
-                                        new SubkeyIdentifier(cert, encryptionKey.getKeyID()),
+                                        new SubkeyIdentifier(cert, encryptionKey.getKeyIdentifier()),
                                         hardwareDecryptionCallback)));
 
         ByteArrayOutputStream decryptedOut = new ByteArrayOutputStream();
