@@ -225,7 +225,7 @@ class CertifyCertificate {
             val fingerprint = info.fingerprint
             val certificationPubKey = info.getPublicKey(fingerprint)
             requireNotNull(certificationPubKey) { "Primary key cannot be null." }
-            if (!info.isKeyValidlyBound(certificationPubKey.keyID)) {
+            if (!info.isKeyValidlyBound(certificationPubKey.keyIdentifier)) {
                 throw RevokedKeyException(fingerprint)
             }
 
@@ -238,8 +238,9 @@ class CertifyCertificate {
                 throw ExpiredKeyException(fingerprint, expirationDate)
             }
 
-            return certificationKey.getSecretKey(certificationPubKey.keyID)
-                ?: throw MissingSecretKeyException(fingerprint, certificationPubKey.keyID)
+            return certificationKey.getSecretKey(certificationPubKey.keyIdentifier)
+                ?: throw MissingSecretKeyException(
+                    fingerprint, certificationPubKey.keyIdentifier.keyId)
         }
     }
 }

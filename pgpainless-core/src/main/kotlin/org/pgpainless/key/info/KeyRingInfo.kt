@@ -9,6 +9,9 @@ import openpgp.openPgpKeyId
 import org.bouncycastle.bcpg.KeyIdentifier
 import org.bouncycastle.openpgp.*
 import org.bouncycastle.openpgp.api.OpenPGPCertificate
+import org.bouncycastle.openpgp.api.OpenPGPCertificate.OpenPGPComponentKey
+import org.bouncycastle.openpgp.api.OpenPGPKey
+import org.bouncycastle.openpgp.api.OpenPGPKey.OpenPGPSecretKey
 import org.pgpainless.PGPainless
 import org.pgpainless.algorithm.*
 import org.pgpainless.bouncycastle.extensions.*
@@ -33,7 +36,10 @@ class KeyRingInfo(
         keys: PGPKeyRing,
         policy: Policy = PGPainless.getPolicy(),
         referenceDate: Date = Date()
-    ) : this(OpenPGPCertificate(keys), policy, referenceDate)
+    ) : this(
+        if (keys is PGPSecretKeyRing) OpenPGPKey(keys) else OpenPGPCertificate(keys),
+        policy,
+        referenceDate)
 
     @JvmOverloads
     constructor(
@@ -74,35 +80,32 @@ class KeyRingInfo(
         if (revocationState.isSoftRevocation()) revocationState.date else null
 
     /**
-     * Primary [PGPSecretKey] of this key ring or null if the key ring is not a [PGPSecretKeyRing].
+     * Primary [OpenPGPSecretKey] of this key ring or null if the key ring is not a [OpenPGPKey].
      */
-    val secretKey: PGPSecretKey? =
-        when (keys.pgpKeyRing) {
-            is PGPSecretKeyRing -> (keys.pgpKeyRing as PGPSecretKeyRing).secretKey!!
-            else -> null
-        }
+    val secretKey: OpenPGPSecretKey? =
+        if (keys.isSecretKey) {
+            (keys as OpenPGPKey).primarySecretKey
+        } else null
 
     /** OpenPGP key version. */
     val version: Int = publicKey.version
 
     /**
-     * Return all [PGPPublicKeys][PGPPublicKey] of this key ring. The first key in the list being
-     * the primary key. Note that the list is unmodifiable.
+     * Return all [public component keys][OpenPGPComponentKey] of this key ring. The first key in
+     * the list being the primary key. Note that the list is unmodifiable.
      *
      * @return list of public keys
      */
-    val publicKeys: List<PGPPublicKey> = keys.pgpKeyRing.publicKeys.asSequence().toList()
+    val publicKeys: List<OpenPGPComponentKey> = keys.keys
 
-    /** All secret keys. If the key ring is a [PGPPublicKeyRing], then return an empty list. */
-    val secretKeys: List<PGPSecretKey> =
-        when (keys.pgpKeyRing) {
-            is PGPSecretKeyRing ->
-                (keys.pgpKeyRing as PGPSecretKeyRing).secretKeys.asSequence().toList()
-            else -> listOf()
-        }
+    /** All secret keys. If the key ring is not an [OpenPGPKey], then return an empty list. */
+    val secretKeys: List<OpenPGPSecretKey> =
+        if (keys.isSecretKey) {
+            (keys as OpenPGPKey).secretKeys.values.toList()
+        } else listOf()
 
-    /** List of valid public subkeys. */
-    val validSubkeys: List<PGPPublicKey> = keys.getValidKeys(referenceDate).map { it.pgpPublicKey }
+    /** List of valid public component keys. */
+    val validSubkeys: List<OpenPGPComponentKey> = keys.getValidKeys(referenceDate)
 
     /** List of valid user-IDs. */
     val validUserIds: List<String> = keys.getValidUserIds(referenceDate).map { it.userId }
@@ -144,30 +147,32 @@ class KeyRingInfo(
     /** Latest date at which the key was modified (either by adding a subkey or self-signature). */
     val lastModified: Date = keys.lastModificationDate
 
-    /** True, if the underlying keyring is a [PGPSecretKeyRing]. */
-    val isSecretKey: Boolean = keys.pgpKeyRing is PGPSecretKeyRing
+    /** True, if the underlying key is a [OpenPGPKey]. */
+    val isSecretKey: Boolean = keys.isSecretKey
 
     /** True, if there are no encrypted secret keys. */
     val isFullyDecrypted: Boolean =
-        !isSecretKey || secretKeys.all { it.hasDummyS2K() || it.isDecrypted() }
+        !isSecretKey ||
+            secretKeys.all { it.pgpSecretKey.hasDummyS2K() || it.pgpSecretKey.isDecrypted() }
 
     /** True, if there are only encrypted secret keys. */
     val isFullyEncrypted: Boolean =
-        isSecretKey && secretKeys.none { !it.hasDummyS2K() && it.isDecrypted() }
+        isSecretKey &&
+            secretKeys.none { !it.pgpSecretKey.hasDummyS2K() && it.pgpSecretKey.isDecrypted() }
 
     /** List of public keys, whose secret key counterparts can be used to decrypt messages. */
-    val decryptionSubkeys: List<PGPPublicKey> =
-        keys.pgpKeyRing.publicKeys
+    val decryptionSubkeys: List<OpenPGPComponentKey> =
+        keys.keys
             .asSequence()
             .filter {
                 if (!it.keyIdentifier.matches(keyIdentifier)) {
-                    if (signatures.subkeyBindings[it.keyID] == null) {
-                        LOGGER.debug("Subkey ${it.keyID.openPgpKeyId()} has no binding signature.")
+                    if (signatures.subkeyBindings[it.keyIdentifier.keyId] == null) {
+                        LOGGER.debug("Subkey ${it.keyIdentifier} has no binding signature.")
                         return@filter false
                     }
                 }
-                if (!it.isEncryptionKey) {
-                    LOGGER.debug("(Sub-?)Key ${it.keyID.openPgpKeyId()} is not encryption-capable.")
+                if (!it.pgpPublicKey.isEncryptionKey) {
+                    LOGGER.debug("(Sub-?)Key ${it.keyIdentifier} is not encryption-capable.")
                     return@filter false
                 }
                 return@filter true
@@ -204,8 +209,7 @@ class KeyRingInfo(
         }
 
     /** List of all subkeys that can be used to sign a message. */
-    val signingSubkeys: List<PGPPublicKey> =
-        keys.getSigningKeys(referenceDate).map { it.pgpPublicKey }
+    val signingSubkeys: List<OpenPGPComponentKey> = keys.getSigningKeys(referenceDate)
 
     /** Whether the key is usable for encryption. */
     val isUsableForEncryption: Boolean =
@@ -222,7 +226,7 @@ class KeyRingInfo(
 
     /** Whether the key is actually usable to sign messages. */
     val isUsableForSigning: Boolean =
-        isSigningCapable && signingSubkeys.any { isSecretKeyAvailable(it.keyID) }
+        isSigningCapable && signingSubkeys.any { isSecretKeyAvailable(it.keyIdentifier) }
 
     /** [HashAlgorithm] preferences of the primary user-ID or if absent, of the primary key. */
     val preferredHashAlgorithms: Set<HashAlgorithm>
@@ -252,6 +256,10 @@ class KeyRingInfo(
      */
     fun getSubkeyExpirationDate(fingerprint: OpenPgpFingerprint): Date? {
         return getSubkeyExpirationDate(fingerprint.keyId)
+    }
+
+    fun getSubkeyExpirationDate(keyIdentifier: KeyIdentifier): Date? {
+        return getSubkeyExpirationDate(keyIdentifier.keyId)
     }
 
     /**
@@ -284,7 +292,7 @@ class KeyRingInfo(
         }
 
         val primaryKeyExpiration = primaryKeyExpirationDate
-        val keysWithFlag: List<PGPPublicKey> = getKeysWithKeyFlag(use)
+        val keysWithFlag: List<OpenPGPComponentKey> = getKeysWithKeyFlag(use)
         if (keysWithFlag.isEmpty())
             throw NoSuchElementException("No key with the required key flag found.")
 
@@ -292,7 +300,9 @@ class KeyRingInfo(
         val latestSubkeyExpiration =
             keysWithFlag
                 .map { key ->
-                    getSubkeyExpirationDate(key.keyID).also { if (it == null) nonExpiring = true }
+                    getSubkeyExpirationDate(key.keyIdentifier).also {
+                        if (it == null) nonExpiring = true
+                    }
                 }
                 .filterNotNull()
                 .maxByOrNull { it }
@@ -318,8 +328,8 @@ class KeyRingInfo(
      * @param flag flag
      * @return keys with flag
      */
-    fun getKeysWithKeyFlag(flag: KeyFlag): List<PGPPublicKey> =
-        publicKeys.filter { getKeyFlagsOf(it.keyID).contains(flag) }
+    fun getKeysWithKeyFlag(flag: KeyFlag): List<OpenPGPComponentKey> =
+        publicKeys.filter { getKeyFlagsOf(it.keyIdentifier).contains(flag) }
 
     /**
      * Return a list of all subkeys which can be used to encrypt a message for the given user-ID.
@@ -329,7 +339,7 @@ class KeyRingInfo(
     fun getEncryptionSubkeys(
         userId: CharSequence?,
         purpose: EncryptionPurpose
-    ): List<PGPPublicKey> {
+    ): List<OpenPGPComponentKey> {
         if (userId != null && !isUserIdValid(userId)) {
             throw UnboundUserIdException(
                 OpenPgpFingerprint.of(publicKey.pgpPublicKey),
@@ -345,7 +355,7 @@ class KeyRingInfo(
      *
      * @return subkeys which can be used for encryption
      */
-    fun getEncryptionSubkeys(purpose: EncryptionPurpose): List<PGPPublicKey> {
+    fun getEncryptionSubkeys(purpose: EncryptionPurpose): List<OpenPGPComponentKey> {
         primaryKeyExpirationDate?.let {
             if (it < referenceDate) {
                 LOGGER.debug(
@@ -354,29 +364,29 @@ class KeyRingInfo(
             }
         }
 
-        return keys.pgpKeyRing.publicKeys
+        return keys.keys
             .asSequence()
             .filter {
-                if (!isKeyValidlyBound(it.keyID)) {
-                    LOGGER.debug("(Sub?)-Key ${it.keyID.openPgpKeyId()} is not validly bound.")
+                if (!isKeyValidlyBound(it.keyIdentifier)) {
+                    LOGGER.debug("(Sub?)-Key ${it.keyIdentifier} is not validly bound.")
                     return@filter false
                 }
 
-                getSubkeyExpirationDate(it.keyID)?.let { exp ->
+                getSubkeyExpirationDate(it.keyIdentifier)?.let { exp ->
                     if (exp < referenceDate) {
                         LOGGER.debug(
-                            "(Sub?)-Key ${it.keyID.openPgpKeyId()} is expired on ${DateUtil.formatUTCDate(exp)}.")
+                            "(Sub?)-Key ${it.keyIdentifier} is expired on ${DateUtil.formatUTCDate(exp)}.")
                         return@filter false
                     }
                 }
 
-                if (!it.isEncryptionKey) {
+                if (!it.pgpPublicKey.isEncryptionKey) {
                     LOGGER.debug(
-                        "(Sub?)-Key ${it.keyID.openPgpKeyId()} algorithm is not capable of encryption.")
+                        "(Sub?)-Key ${it.keyIdentifier} algorithm is not capable of encryption.")
                     return@filter false
                 }
 
-                val keyFlags = getKeyFlagsOf(it.keyID)
+                val keyFlags = getKeyFlagsOf(it.keyIdentifier)
                 when (purpose) {
                     EncryptionPurpose.COMMUNICATIONS ->
                         return@filter keyFlags.contains(KeyFlag.ENCRYPT_COMMS)
@@ -519,7 +529,7 @@ class KeyRingInfo(
      * @param keyId key id
      * @return public key or null
      */
-    fun getPublicKey(keyId: Long): PGPPublicKey? = keys.pgpKeyRing.getPublicKey(keyId)
+    fun getPublicKey(keyId: Long): OpenPGPComponentKey? = keys.getKey(KeyIdentifier(keyId))
 
     /**
      * Return the secret key with the given key id.
@@ -527,11 +537,16 @@ class KeyRingInfo(
      * @param keyId key id
      * @return secret key or null
      */
-    fun getSecretKey(keyId: Long): PGPSecretKey? =
-        when (keys.pgpKeyRing) {
-            is PGPSecretKeyRing -> (keys.pgpKeyRing as PGPSecretKeyRing).getSecretKey(keyId)
-            else -> null
-        }
+    fun getSecretKey(keyId: Long): OpenPGPSecretKey? = getSecretKey(KeyIdentifier(keyId))
+
+    fun getSecretKey(keyIdentifier: KeyIdentifier): OpenPGPSecretKey? =
+        if (keys.isSecretKey) {
+            (keys as OpenPGPKey).getSecretKey(keyIdentifier)
+        } else null
+
+    fun isSecretKeyAvailable(keyId: Long): Boolean {
+        return isSecretKeyAvailable(KeyIdentifier(keyId))
+    }
 
     /**
      * Return true, if the secret-key with the given key-ID is available (i.e. not moved to a
@@ -539,10 +554,10 @@ class KeyRingInfo(
      *
      * @return availability of the secret key
      */
-    fun isSecretKeyAvailable(keyId: Long): Boolean {
-        return getSecretKey(keyId)?.let {
-            return if (it.s2K == null) true // Unencrypted key
-            else it.s2K.type !in 100..110 // Secret key on smart-card
+    fun isSecretKeyAvailable(keyIdentifier: KeyIdentifier): Boolean {
+        return getSecretKey(keyIdentifier)?.let {
+            return if (it.pgpSecretKey.s2K == null) true // Unencrypted key
+            else it.pgpSecretKey.s2K.type !in 100..110 // Secret key on smart-card
         }
             ?: false // Missing secret key
     }
@@ -553,8 +568,8 @@ class KeyRingInfo(
      * @param fingerprint fingerprint
      * @return public key or null
      */
-    fun getPublicKey(fingerprint: OpenPgpFingerprint): PGPPublicKey? =
-        keys.pgpKeyRing.getPublicKey(fingerprint.bytes)
+    fun getPublicKey(fingerprint: OpenPgpFingerprint): OpenPGPComponentKey? =
+        keys.getKey(KeyIdentifier(fingerprint.bytes))
 
     /**
      * Return the secret key with the given fingerprint.
@@ -562,15 +577,11 @@ class KeyRingInfo(
      * @param fingerprint fingerprint
      * @return secret key or null
      */
-    fun getSecretKey(fingerprint: OpenPgpFingerprint): PGPSecretKey? =
-        when (keys.pgpKeyRing) {
-            is PGPSecretKeyRing ->
-                (keys.pgpKeyRing as PGPSecretKeyRing).getSecretKey(fingerprint.bytes)
-            else -> null
-        }
+    fun getSecretKey(fingerprint: OpenPgpFingerprint): OpenPGPSecretKey? =
+        getSecretKey(KeyIdentifier(fingerprint.bytes))
 
-    fun getPublicKey(keyIdentifier: KeyIdentifier): PGPPublicKey? {
-        return keys.pgpKeyRing.getPublicKey(keyIdentifier)
+    fun getPublicKey(keyIdentifier: KeyIdentifier): OpenPGPComponentKey? {
+        return keys.getKey(keyIdentifier)
     }
 
     /**
@@ -580,11 +591,11 @@ class KeyRingInfo(
      * @throws IllegalArgumentException if the identifier's primary key does not match the primary
      *   key of the key.
      */
-    fun getPublicKey(identifier: SubkeyIdentifier): PGPPublicKey? {
+    fun getPublicKey(identifier: SubkeyIdentifier): OpenPGPComponentKey? {
         require(publicKey.keyIdentifier.equals(identifier.keyIdentifier)) {
             "Mismatching primary key ID."
         }
-        return keys.pgpKeyRing.getPublicKey(identifier.subkeyIdentifier)
+        return getPublicKey(identifier.subkeyIdentifier)
     }
 
     /**
@@ -594,16 +605,8 @@ class KeyRingInfo(
      * @throws IllegalArgumentException if the identifier's primary key does not match the primary
      *   key of the key.
      */
-    fun getSecretKey(identifier: SubkeyIdentifier): PGPSecretKey? =
-        when (keys.pgpKeyRing) {
-            is PGPSecretKeyRing -> {
-                require(publicKey.keyIdentifier.equals(identifier.keyIdentifier)) {
-                    "Mismatching primary key ID."
-                }
-                (keys.pgpKeyRing as PGPSecretKeyRing).getSecretKey(identifier.subkeyIdentifier)
-            }
-            else -> null
-        }
+    fun getSecretKey(identifier: SubkeyIdentifier): OpenPGPComponentKey? =
+        getSecretKey(identifier.subkeyIdentifier)
 
     fun isKeyValidlyBound(keyIdentifier: KeyIdentifier): Boolean {
         return isKeyValidlyBound(keyIdentifier.keyId)

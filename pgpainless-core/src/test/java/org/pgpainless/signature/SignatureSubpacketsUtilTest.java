@@ -13,8 +13,6 @@ import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import java.io.IOException;
-import java.security.InvalidAlgorithmParameterException;
-import java.security.NoSuchAlgorithmException;
 import java.time.temporal.ChronoUnit;
 import java.util.Arrays;
 import java.util.Date;
@@ -30,11 +28,11 @@ import org.bouncycastle.bcpg.sig.RevocationKey;
 import org.bouncycastle.bcpg.sig.TrustSignature;
 import org.bouncycastle.openpgp.PGPException;
 import org.bouncycastle.openpgp.PGPPrivateKey;
-import org.bouncycastle.openpgp.PGPPublicKey;
 import org.bouncycastle.openpgp.PGPSecretKeyRing;
 import org.bouncycastle.openpgp.PGPSignature;
 import org.bouncycastle.openpgp.PGPSignatureGenerator;
 import org.bouncycastle.openpgp.PGPSignatureSubpacketGenerator;
+import org.bouncycastle.openpgp.api.OpenPGPCertificate;
 import org.junit.jupiter.api.Test;
 import org.pgpainless.PGPainless;
 import org.pgpainless.algorithm.CompressionAlgorithm;
@@ -52,7 +50,7 @@ import org.pgpainless.signature.subpackets.SignatureSubpacketsUtil;
 public class SignatureSubpacketsUtilTest {
 
     @Test
-    public void testGetKeyExpirationTimeAsDate() throws PGPException, InvalidAlgorithmParameterException, NoSuchAlgorithmException {
+    public void testGetKeyExpirationTimeAsDate() {
         PGPSecretKeyRing secretKeys = PGPainless.generateKeyRing()
                 .modernKeyRing("Expire");
         Date expiration = Date.from(new Date().toInstant().plus(365, ChronoUnit.DAYS));
@@ -62,10 +60,10 @@ public class SignatureSubpacketsUtilTest {
 
         PGPSignature expirationSig = SignaturePicker.pickCurrentUserIdCertificationSignature(
                 secretKeys, "Expire", Policy.getInstance(), new Date());
-        PGPPublicKey notTheRightKey = PGPainless.inspectKeyRing(secretKeys).getSigningSubkeys().get(0);
+        OpenPGPCertificate.OpenPGPComponentKey notTheRightKey = PGPainless.inspectKeyRing(secretKeys).getSigningSubkeys().get(0);
 
         assertThrows(IllegalArgumentException.class, () ->
-                SignatureSubpacketsUtil.getKeyExpirationTimeAsDate(expirationSig, notTheRightKey));
+                SignatureSubpacketsUtil.getKeyExpirationTimeAsDate(expirationSig, notTheRightKey.getPGPPublicKey()));
     }
 
     @Test

@@ -5,6 +5,7 @@
 package org.pgpainless.encryption_signing
 
 import java.util.*
+import org.bouncycastle.bcpg.KeyIdentifier
 import org.bouncycastle.openpgp.*
 import org.pgpainless.PGPainless.Companion.getPolicy
 import org.pgpainless.PGPainless.Companion.inspectKeyRing
@@ -153,12 +154,13 @@ class SigningOptions {
 
         for (signingPubKey in signingPubKeys) {
             val signingSecKey: PGPSecretKey =
-                signingKey.getSecretKey(signingPubKey.keyID)
-                    ?: throw MissingSecretKeyException(of(signingKey), signingPubKey.keyID)
+                signingKey.getSecretKey(signingPubKey.keyIdentifier)
+                    ?: throw MissingSecretKeyException(
+                        of(signingKey), signingPubKey.keyIdentifier.keyId)
             val signingSubkey: PGPPrivateKey = signingSecKey.unlock(signingKeyProtector)
             val hashAlgorithms =
                 if (userId != null) keyRingInfo.getPreferredHashAlgorithms(userId)
-                else keyRingInfo.getPreferredHashAlgorithms(signingPubKey.keyID)
+                else keyRingInfo.getPreferredHashAlgorithms(signingPubKey.keyIdentifier)
             val hashAlgorithm: HashAlgorithm = negotiateHashAlgorithm(hashAlgorithms, getPolicy())
             addSigningMethod(
                 signingKey, signingSubkey, hashAlgorithm, signatureType, false, subpacketsCallback)
@@ -197,15 +199,16 @@ class SigningOptions {
         }
 
         for (signingPubKey in signingPubKeys) {
-            if (signingPubKey.keyID != keyId) {
+            if (!signingPubKey.keyIdentifier.matches(KeyIdentifier(keyId))) {
                 continue
             }
 
             val signingSecKey =
-                signingKey.getSecretKey(signingPubKey.keyID)
-                    ?: throw MissingSecretKeyException(of(signingKey), signingPubKey.keyID)
+                signingKey.getSecretKey(signingPubKey.keyIdentifier)
+                    ?: throw MissingSecretKeyException(
+                        of(signingKey), signingPubKey.keyIdentifier.keyId)
             val signingSubkey = signingSecKey.unlock(signingKeyProtector)
-            val hashAlgorithms = keyRingInfo.getPreferredHashAlgorithms(signingPubKey.keyID)
+            val hashAlgorithms = keyRingInfo.getPreferredHashAlgorithms(signingPubKey.keyIdentifier)
             val hashAlgorithm: HashAlgorithm = negotiateHashAlgorithm(hashAlgorithms, getPolicy())
             addSigningMethod(
                 signingKey, signingSubkey, hashAlgorithm, signatureType, false, subpacketsCallback)
@@ -297,12 +300,13 @@ class SigningOptions {
 
         for (signingPubKey in signingPubKeys) {
             val signingSecKey: PGPSecretKey =
-                signingKey.getSecretKey(signingPubKey.keyID)
-                    ?: throw MissingSecretKeyException(of(signingKey), signingPubKey.keyID)
+                signingKey.getSecretKey(signingPubKey.keyIdentifier)
+                    ?: throw MissingSecretKeyException(
+                        of(signingKey), signingPubKey.keyIdentifier.keyId)
             val signingSubkey: PGPPrivateKey = signingSecKey.unlock(signingKeyProtector)
             val hashAlgorithms =
                 if (userId != null) keyRingInfo.getPreferredHashAlgorithms(userId)
-                else keyRingInfo.getPreferredHashAlgorithms(signingPubKey.keyID)
+                else keyRingInfo.getPreferredHashAlgorithms(signingPubKey.keyIdentifier)
             val hashAlgorithm: HashAlgorithm = negotiateHashAlgorithm(hashAlgorithms, getPolicy())
             addSigningMethod(
                 signingKey, signingSubkey, hashAlgorithm, signatureType, true, subpacketCallback)
@@ -342,12 +346,14 @@ class SigningOptions {
         }
 
         for (signingPubKey in signingPubKeys) {
-            if (signingPubKey.keyID == keyId) {
+            if (signingPubKey.keyIdentifier.matches(KeyIdentifier(keyId))) {
                 val signingSecKey: PGPSecretKey =
-                    signingKey.getSecretKey(signingPubKey.keyID)
-                        ?: throw MissingSecretKeyException(of(signingKey), signingPubKey.keyID)
+                    signingKey.getSecretKey(signingPubKey.keyIdentifier)
+                        ?: throw MissingSecretKeyException(
+                            of(signingKey), signingPubKey.keyIdentifier.keyId)
                 val signingSubkey: PGPPrivateKey = signingSecKey.unlock(signingKeyProtector)
-                val hashAlgorithms = keyRingInfo.getPreferredHashAlgorithms(signingPubKey.keyID)
+                val hashAlgorithms =
+                    keyRingInfo.getPreferredHashAlgorithms(signingPubKey.keyIdentifier)
                 val hashAlgorithm: HashAlgorithm =
                     negotiateHashAlgorithm(hashAlgorithms, getPolicy())
                 addSigningMethod(

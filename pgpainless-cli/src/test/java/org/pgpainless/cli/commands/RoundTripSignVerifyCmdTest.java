@@ -252,7 +252,7 @@ public class RoundTripSignVerifyCmdTest extends CLITest {
         String verification = verificationsOut.toString();
         String[] split = verification.split(" ");
         OpenPgpV4Fingerprint primaryKeyFingerprint = new OpenPgpV4Fingerprint(cert);
-        OpenPgpV4Fingerprint signingKeyFingerprint = new OpenPgpV4Fingerprint(info.getSigningSubkeys().get(0));
+        OpenPgpV4Fingerprint signingKeyFingerprint = new OpenPgpV4Fingerprint(info.getSigningSubkeys().get(0).getPGPPublicKey());
         assertEquals(signingKeyFingerprint.toString(), split[1].trim(), verification);
         assertEquals(primaryKeyFingerprint.toString(), split[2].trim());
 

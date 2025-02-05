@@ -12,13 +12,11 @@ import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
-import java.security.InvalidAlgorithmParameterException;
-import java.security.NoSuchAlgorithmException;
 
 import org.bouncycastle.openpgp.PGPException;
-import org.bouncycastle.openpgp.PGPPublicKey;
 import org.bouncycastle.openpgp.PGPPublicKeyRing;
 import org.bouncycastle.openpgp.PGPSecretKeyRing;
+import org.bouncycastle.openpgp.api.OpenPGPCertificate;
 import org.bouncycastle.util.io.Streams;
 import org.junit.jupiter.api.Test;
 import org.pgpainless.PGPainless;
@@ -39,9 +37,10 @@ import org.pgpainless.key.util.KeyRingUtils;
 public class VerifyWithMissingPublicKeyCallbackTest {
 
     @Test
-    public void testMissingPublicKeyCallback() throws PGPException, InvalidAlgorithmParameterException, NoSuchAlgorithmException, IOException {
+    public void testMissingPublicKeyCallback() throws PGPException, IOException {
         PGPSecretKeyRing signingSecKeys = PGPainless.generateKeyRing().modernKeyRing("alice");
-        PGPPublicKey signingKey = new KeyRingInfo(signingSecKeys).getSigningSubkeys().get(0);
+        OpenPGPCertificate.OpenPGPComponentKey signingKey =
+                new KeyRingInfo(signingSecKeys).getSigningSubkeys().get(0);
         PGPPublicKeyRing signingPubKeys = KeyRingUtils.publicKeyRingFrom(signingSecKeys);
         PGPPublicKeyRing unrelatedKeys = TestKeys.getJulietPublicKeyRing();
 
@@ -63,7 +62,7 @@ public class VerifyWithMissingPublicKeyCallbackTest {
                         .setMissingCertificateCallback(new MissingPublicKeyCallback() {
                             @Override
                             public PGPPublicKeyRing onMissingPublicKeyEncountered(long keyId) {
-                                assertEquals(signingKey.getKeyID(), keyId, "Signing key-ID mismatch.");
+                                assertEquals(signingKey.getKeyIdentifier().getKeyId(), keyId, "Signing key-ID mismatch.");
                                 return signingPubKeys;
                             }
                         }));

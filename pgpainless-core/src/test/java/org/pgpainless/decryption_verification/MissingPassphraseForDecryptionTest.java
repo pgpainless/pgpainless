@@ -14,14 +14,12 @@ import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
-import java.security.InvalidAlgorithmParameterException;
-import java.security.NoSuchAlgorithmException;
 import java.util.List;
 
 import org.bouncycastle.openpgp.PGPException;
-import org.bouncycastle.openpgp.PGPPublicKey;
 import org.bouncycastle.openpgp.PGPPublicKeyRing;
 import org.bouncycastle.openpgp.PGPSecretKeyRing;
+import org.bouncycastle.openpgp.api.OpenPGPCertificate;
 import org.bouncycastle.util.io.Streams;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -44,7 +42,7 @@ public class MissingPassphraseForDecryptionTest {
     private byte[] message;
 
     @BeforeEach
-    public void setup() throws PGPException, InvalidAlgorithmParameterException, NoSuchAlgorithmException, IOException {
+    public void setup() throws PGPException, IOException {
         secretKeys = PGPainless.generateKeyRing().modernKeyRing("Test", passphrase);
         PGPPublicKeyRing certificate = PGPainless.extractCertificate(secretKeys);
         ByteArrayOutputStream out = new ByteArrayOutputStream();
@@ -91,7 +89,8 @@ public class MissingPassphraseForDecryptionTest {
     @Test
     public void throwExceptionStrategy() throws PGPException, IOException {
         KeyRingInfo info = PGPainless.inspectKeyRing(secretKeys);
-        List<PGPPublicKey> encryptionKeys = info.getEncryptionSubkeys(EncryptionPurpose.ANY);
+        List<OpenPGPCertificate.OpenPGPComponentKey> encryptionKeys =
+                info.getEncryptionSubkeys(EncryptionPurpose.ANY);
 
         SecretKeyPassphraseProvider callback = new SecretKeyPassphraseProvider() {
             @Override
@@ -118,8 +117,8 @@ public class MissingPassphraseForDecryptionTest {
         } catch (MissingPassphraseException e) {
             assertFalse(e.getKeyIds().isEmpty());
             assertEquals(encryptionKeys.size(), e.getKeyIds().size());
-            for (PGPPublicKey encryptionKey : encryptionKeys) {
-                assertTrue(e.getKeyIds().contains(new SubkeyIdentifier(secretKeys, encryptionKey.getKeyID())));
+            for (OpenPGPCertificate.OpenPGPComponentKey encryptionKey : encryptionKeys) {
+                assertTrue(e.getKeyIds().contains(new SubkeyIdentifier(secretKeys, encryptionKey.getKeyIdentifier())));
             }
         }
     }
