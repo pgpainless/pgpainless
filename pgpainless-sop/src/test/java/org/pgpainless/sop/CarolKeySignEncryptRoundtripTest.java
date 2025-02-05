@@ -8,6 +8,7 @@ import static org.junit.jupiter.api.Assertions.assertArrayEquals;
 
 import java.io.IOException;
 
+import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 import sop.ByteArrayAndResult;
 import sop.DecryptionResult;
@@ -15,6 +16,7 @@ import sop.EncryptionResult;
 import sop.ReadyWithResult;
 import sop.testsuite.assertions.VerificationListAssert;
 
+@Disabled("Carol is an ElGamal key, which are no longer supported.")
 public class CarolKeySignEncryptRoundtripTest {
 
     private static final String CAROL_KEY = "-----BEGIN PGP PRIVATE KEY BLOCK-----\n" +
