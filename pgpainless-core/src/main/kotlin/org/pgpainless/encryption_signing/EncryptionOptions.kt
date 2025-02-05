@@ -144,7 +144,7 @@ class EncryptionOptions(private val purpose: EncryptionPurpose) {
         val info = KeyRingInfo(key, evaluationDate)
         val subkeys =
             encryptionKeySelector.selectEncryptionSubkeys(
-                info.getEncryptionSubkeys(userId, purpose))
+                info.getEncryptionSubkeys(userId, purpose).map { it.pgpPublicKey })
         if (subkeys.isEmpty()) {
             throw KeyException.UnacceptableEncryptionKeyException(OpenPgpFingerprint.of(key))
         }
@@ -184,7 +184,9 @@ class EncryptionOptions(private val purpose: EncryptionPurpose) {
             throw ExpiredKeyException(OpenPgpFingerprint.of(key), primaryKeyExpiration)
         }
 
-        var encryptionSubkeys = selector.selectEncryptionSubkeys(info.getEncryptionSubkeys(purpose))
+        var encryptionSubkeys =
+            selector.selectEncryptionSubkeys(
+                info.getEncryptionSubkeys(purpose).map { it.pgpPublicKey })
 
         // There are some legacy keys around without key flags.
         // If we allow encryption for those keys, we add valid keys without any key flags, if they
@@ -193,8 +195,9 @@ class EncryptionOptions(private val purpose: EncryptionPurpose) {
         if (encryptionSubkeys.isEmpty() && allowEncryptionWithMissingKeyFlags) {
             encryptionSubkeys =
                 info.validSubkeys
-                    .filter { it.isEncryptionKey }
-                    .filter { info.getKeyFlagsOf(it.keyID).isEmpty() }
+                    .filter { it.pgpPublicKey.isEncryptionKey }
+                    .filter { info.getKeyFlagsOf(it.keyIdentifier).isEmpty() }
+                    .map { it.pgpPublicKey }
         }
 
         if (encryptionSubkeys.isEmpty()) {

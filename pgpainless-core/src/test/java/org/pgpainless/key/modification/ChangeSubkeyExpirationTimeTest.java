@@ -4,8 +4,8 @@
 
 package org.pgpainless.key.modification;
 
-import org.bouncycastle.openpgp.PGPPublicKey;
 import org.bouncycastle.openpgp.PGPSecretKeyRing;
+import org.bouncycastle.openpgp.api.OpenPGPCertificate;
 import org.junit.JUtils;
 import org.junit.jupiter.api.Test;
 import org.pgpainless.PGPainless;
@@ -28,17 +28,17 @@ public class ChangeSubkeyExpirationTimeTest {
         PGPSecretKeyRing secretKeys = PGPainless.generateKeyRing().modernKeyRing("Alice");
         Date now = secretKeys.getPublicKey().getCreationTime();
         Date inAnHour = new Date(now.getTime() + 1000 * 60 * 60);
-        PGPPublicKey encryptionKey = PGPainless.inspectKeyRing(secretKeys)
+        OpenPGPCertificate.OpenPGPComponentKey encryptionKey = PGPainless.inspectKeyRing(secretKeys)
                 .getEncryptionSubkeys(EncryptionPurpose.ANY).get(0);
         secretKeys = PGPainless.modifyKeyRing(secretKeys)
                 .setExpirationDateOfSubkey(
                         inAnHour,
-                        encryptionKey.getKeyID(),
+                        encryptionKey.getKeyIdentifier().getKeyId(),
                         SecretKeyRingProtector.unprotectedKeys())
                 .done();
 
         JUtils.assertDateEquals(inAnHour, PGPainless.inspectKeyRing(secretKeys)
-                .getSubkeyExpirationDate(OpenPgpFingerprint.of(encryptionKey)));
+                .getSubkeyExpirationDate(OpenPgpFingerprint.of(encryptionKey.getPGPPublicKey())));
     }
 
     @Test

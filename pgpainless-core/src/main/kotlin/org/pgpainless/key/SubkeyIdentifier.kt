@@ -4,7 +4,6 @@
 
 package org.pgpainless.key
 
-import openpgp.openPgpKeyId
 import org.bouncycastle.bcpg.KeyIdentifier
 import org.bouncycastle.openpgp.PGPKeyRing
 import org.bouncycastle.openpgp.PGPPublicKey
@@ -24,20 +23,22 @@ class SubkeyIdentifier(
 
     constructor(key: PGPPublicKey) : this(OpenPgpFingerprint.of(key))
 
-    constructor(
-        keys: PGPKeyRing,
-        keyId: Long
-    ) : this(
-        OpenPgpFingerprint.of(keys.publicKey),
-        OpenPgpFingerprint.of(
-            keys.getPublicKey(keyId)
-                ?: throw NoSuchElementException(
-                    "OpenPGP key does not contain subkey ${keyId.openPgpKeyId()}")))
+    constructor(keys: PGPKeyRing, keyId: Long) : this(keys, KeyIdentifier(keyId))
 
     constructor(
         keys: PGPKeyRing,
         subkeyFingerprint: OpenPgpFingerprint
     ) : this(OpenPgpFingerprint.of(keys), subkeyFingerprint)
+
+    constructor(
+        keys: PGPKeyRing,
+        subkeyIdentifier: KeyIdentifier
+    ) : this(
+        OpenPgpFingerprint.of(keys),
+        OpenPgpFingerprint.of(
+            keys.getPublicKey(subkeyIdentifier)
+                ?: throw NoSuchElementException(
+                    "OpenPGP key does not contain subkey $subkeyIdentifier")))
 
     val keyIdentifier = KeyIdentifier(subkeyFingerprint.bytes)
     val subkeyIdentifier = keyIdentifier
