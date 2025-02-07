@@ -34,7 +34,9 @@ abstract class AbstractSignatureBuilder<B : AbstractSignatureBuilder<B>>(
     protected abstract val signatureTypePredicate: Predicate<SignatureType>
 
     init {
-        require(signatureTypePredicate.test(_signatureType)) { "Invalid signature type." }
+        require(signatureTypePredicate.test(_signatureType)) {
+            "Invalid signature type: $_signatureType"
+        }
     }
 
     @Throws(PGPException::class)
