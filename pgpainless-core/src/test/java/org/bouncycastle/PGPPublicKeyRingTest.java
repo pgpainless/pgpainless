@@ -8,12 +8,9 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
-import java.security.InvalidAlgorithmParameterException;
-import java.security.NoSuchAlgorithmException;
 import java.util.Iterator;
 import java.util.List;
 
-import org.bouncycastle.openpgp.PGPException;
 import org.bouncycastle.openpgp.PGPPublicKey;
 import org.bouncycastle.openpgp.PGPPublicKeyRing;
 import org.bouncycastle.openpgp.PGPSecretKeyRing;
@@ -31,7 +28,7 @@ public class PGPPublicKeyRingTest {
      * @see <a href="https://security.stackexchange.com/questions/92635/is-it-possible-to-assign-different-uids-to-subkeys-for-the-purpose-of-having-mul>Stackexchange link</a>
      */
     @Test
-    public void subkeysDoNotHaveUserIDsTest() throws InvalidAlgorithmParameterException, NoSuchAlgorithmException, PGPException {
+    public void subkeysDoNotHaveUserIDsTest() {
         PGPSecretKeyRing secretKeys = PGPainless.generateKeyRing().simpleEcKeyRing("primary@user.id");
         PGPPublicKeyRing publicKeys = KeyRingUtils.publicKeyRingFrom(secretKeys);
         PGPPublicKey primaryKey = publicKeys.getPublicKey();
@@ -45,7 +42,7 @@ public class PGPPublicKeyRingTest {
     }
 
     @Test
-    public void removeUserIdTest() throws PGPException, InvalidAlgorithmParameterException, NoSuchAlgorithmException {
+    public void removeUserIdTest() {
         String userId = "alice@wonderland.lit";
         PGPSecretKeyRing secretKeyRing = PGPainless.generateKeyRing().simpleEcKeyRing(userId);
         PGPPublicKeyRing publicKeys = KeyRingUtils.publicKeyRingFrom(secretKeyRing);
