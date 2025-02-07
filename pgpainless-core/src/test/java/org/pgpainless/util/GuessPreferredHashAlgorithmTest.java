@@ -6,11 +6,8 @@ package org.pgpainless.util;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
-import java.security.InvalidAlgorithmParameterException;
-import java.security.NoSuchAlgorithmException;
 import java.util.Collections;
 
-import org.bouncycastle.openpgp.PGPException;
 import org.bouncycastle.openpgp.PGPPublicKey;
 import org.bouncycastle.openpgp.PGPSecretKeyRing;
 import org.junit.jupiter.api.Test;
@@ -27,8 +24,7 @@ import org.pgpainless.key.util.OpenPgpKeyAttributeUtil;
 public class GuessPreferredHashAlgorithmTest {
 
     @Test
-    public void guessPreferredHashAlgorithmsAssumesHashAlgoUsedBySelfSig()
-            throws InvalidAlgorithmParameterException, NoSuchAlgorithmException, PGPException {
+    public void guessPreferredHashAlgorithmsAssumesHashAlgoUsedBySelfSig() {
         PGPSecretKeyRing secretKeys = PGPainless.buildKeyRing()
                 .setPrimaryKey(KeySpec.getBuilder(KeyType.EDDSA_LEGACY(EdDSALegacyCurve._Ed25519),
                                 KeyFlag.CERTIFY_OTHER, KeyFlag.SIGN_DATA)

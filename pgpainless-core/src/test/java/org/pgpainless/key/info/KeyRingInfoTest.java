@@ -12,8 +12,6 @@ import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import java.io.IOException;
-import java.security.InvalidAlgorithmParameterException;
-import java.security.NoSuchAlgorithmException;
 import java.util.Arrays;
 import java.util.Calendar;
 import java.util.Collections;
@@ -558,7 +556,7 @@ public class KeyRingInfoTest {
     }
 
     @Test
-    public void testGetExpirationDateForUse_NoSuchKey() throws PGPException, InvalidAlgorithmParameterException, NoSuchAlgorithmException {
+    public void testGetExpirationDateForUse_NoSuchKey() {
         PGPSecretKeyRing secretKeys = PGPainless.buildKeyRing()
                 .addUserId("Alice")
                 .setPrimaryKey(KeySpec.getBuilder(KeyType.EDDSA_LEGACY(EdDSALegacyCurve._Ed25519), KeyFlag.CERTIFY_OTHER))

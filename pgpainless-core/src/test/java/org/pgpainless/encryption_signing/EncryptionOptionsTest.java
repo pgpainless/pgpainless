@@ -9,8 +9,6 @@ import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
-import java.security.InvalidAlgorithmParameterException;
-import java.security.NoSuchAlgorithmException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
@@ -18,7 +16,6 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Set;
 
-import org.bouncycastle.openpgp.PGPException;
 import org.bouncycastle.openpgp.PGPPublicKey;
 import org.bouncycastle.openpgp.PGPPublicKeyRing;
 import org.bouncycastle.openpgp.PGPPublicKeyRingCollection;
@@ -49,7 +46,7 @@ public class EncryptionOptionsTest {
     private static SubkeyIdentifier encryptStorage;
 
     @BeforeAll
-    public static void generateKey() throws PGPException, InvalidAlgorithmParameterException, NoSuchAlgorithmException {
+    public static void generateKey() {
         secretKeys = PGPainless.buildKeyRing()
                 .setPrimaryKey(KeySpec.getBuilder(KeyType.EDDSA_LEGACY(EdDSALegacyCurve._Ed25519), KeyFlag.CERTIFY_OTHER)
                         .build())
@@ -135,7 +132,7 @@ public class EncryptionOptionsTest {
     }
 
     @Test
-    public void testAddRecipient_KeyWithoutEncryptionKeyFails() throws PGPException, InvalidAlgorithmParameterException, NoSuchAlgorithmException {
+    public void testAddRecipient_KeyWithoutEncryptionKeyFails() {
         EncryptionOptions options = new EncryptionOptions();
         PGPSecretKeyRing secretKeys = PGPainless.buildKeyRing()
                 .setPrimaryKey(KeySpec.getBuilder(KeyType.EDDSA_LEGACY(EdDSALegacyCurve._Ed25519), KeyFlag.CERTIFY_OTHER, KeyFlag.SIGN_DATA))
@@ -169,7 +166,7 @@ public class EncryptionOptionsTest {
     }
 
     @Test
-    public void testAddRecipients_PGPPublicKeyRingCollection() throws PGPException, InvalidAlgorithmParameterException, NoSuchAlgorithmException {
+    public void testAddRecipients_PGPPublicKeyRingCollection() {
         PGPPublicKeyRing secondKeyRing = KeyRingUtils.publicKeyRingFrom(
                 PGPainless.generateKeyRing().modernKeyRing("other@pgpainless.org"));
 

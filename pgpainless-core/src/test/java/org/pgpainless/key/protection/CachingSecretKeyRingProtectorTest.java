@@ -10,8 +10,6 @@ import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 
 import java.io.IOException;
-import java.security.InvalidAlgorithmParameterException;
-import java.security.NoSuchAlgorithmException;
 import java.util.Iterator;
 import java.util.Random;
 
@@ -51,13 +49,13 @@ public class CachingSecretKeyRingProtectorTest {
     }
 
     @Test
-    public void noCallbackReturnsNullForUnknownKeyId() throws PGPException {
+    public void noCallbackReturnsNullForUnknownKeyId() {
         assertNull(protector.getDecryptor(123L));
         assertNull(protector.getEncryptor(123L));
     }
 
     @Test
-    public void testAddPassphrase() throws PGPException {
+    public void testAddPassphrase() {
         Passphrase passphrase = Passphrase.fromPassword("HelloWorld");
         protector.addPassphrase(123L, passphrase);
         assertEquals(passphrase, protector.getPassphraseFor(123L));
@@ -77,7 +75,7 @@ public class CachingSecretKeyRingProtectorTest {
     }
 
     @Test
-    public void testAddPassphraseForKeyRing() throws PGPException, InvalidAlgorithmParameterException, NoSuchAlgorithmException {
+    public void testAddPassphraseForKeyRing() {
         PGPSecretKeyRing keys = PGPainless.generateKeyRing()
                 .modernKeyRing("test@test.test", "Passphrase123");
         Passphrase passphrase = Passphrase.fromPassword("Passphrase123");

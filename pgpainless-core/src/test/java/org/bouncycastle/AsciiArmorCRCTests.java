@@ -15,7 +15,6 @@ import java.nio.charset.StandardCharsets;
 import java.util.List;
 
 import org.bouncycastle.bcpg.ArmoredInputStream;
-import org.bouncycastle.openpgp.PGPException;
 import org.bouncycastle.openpgp.PGPSecretKeyRing;
 import org.bouncycastle.openpgp.PGPSignature;
 import org.bouncycastle.util.io.Streams;
@@ -270,7 +269,7 @@ public class AsciiArmorCRCTests {
             "-----END PGP SIGNATURE-----";
 
     @Test
-    public void assertMissingCRCSumInSignatureArmorIsOkay() throws PGPException, IOException {
+    public void assertMissingCRCSumInSignatureArmorIsOkay() {
         List<PGPSignature> signatureList = SignatureUtils.readSignatures(ARMORED_SIGNATURE_WITH_MISSING_CRC_SUM);
         assertEquals(1, signatureList.size());
     }

@@ -9,9 +9,6 @@ import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
-import java.io.IOException;
-import java.security.InvalidAlgorithmParameterException;
-import java.security.NoSuchAlgorithmException;
 import java.util.Date;
 import java.util.List;
 
@@ -157,7 +154,7 @@ public class ModifyKeys {
      * Once the subkey is added, it can be decrypted using the provided subkey passphrase.
      */
     @Test
-    public void addSubkey() throws PGPException, InvalidAlgorithmParameterException, NoSuchAlgorithmException, IOException {
+    public void addSubkey() {
         // Protector for unlocking the existing secret key
         SecretKeyRingProtector protector =
                 SecretKeyRingProtector.unlockEachKeyWith(Passphrase.fromPassword(originalPassphrase), secretKey);

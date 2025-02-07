@@ -7,13 +7,9 @@ package org.pgpainless.key.modification;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 
-import java.io.IOException;
-import java.security.InvalidAlgorithmParameterException;
-import java.security.NoSuchAlgorithmException;
 import java.util.EnumMap;
 import java.util.Map;
 
-import org.bouncycastle.openpgp.PGPException;
 import org.bouncycastle.openpgp.PGPSecretKeyRing;
 import org.junit.jupiter.api.Test;
 import org.pgpainless.PGPainless;
@@ -31,8 +27,7 @@ import org.pgpainless.util.Passphrase;
 public class RefuseToAddWeakSubkeyTest {
 
     @Test
-    public void testEditorRefusesToAddWeakSubkey()
-            throws PGPException, InvalidAlgorithmParameterException, NoSuchAlgorithmException {
+    public void testEditorRefusesToAddWeakSubkey() {
         // ensure default policy is set
         PGPainless.getPolicy().setPublicKeyAlgorithmPolicy(Policy.PublicKeyAlgorithmPolicy.bsi2021PublicKeyAlgorithmPolicy());
 
@@ -46,8 +41,7 @@ public class RefuseToAddWeakSubkeyTest {
     }
 
     @Test
-    public void testEditorAllowsToAddWeakSubkeyIfCompliesToPublicKeyAlgorithmPolicy()
-            throws PGPException, InvalidAlgorithmParameterException, NoSuchAlgorithmException, IOException {
+    public void testEditorAllowsToAddWeakSubkeyIfCompliesToPublicKeyAlgorithmPolicy() {
         PGPSecretKeyRing secretKeys = PGPainless.generateKeyRing()
                 .modernKeyRing("Alice");
 

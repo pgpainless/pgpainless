@@ -11,7 +11,6 @@ import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
-import java.security.InvalidAlgorithmParameterException;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 
@@ -66,13 +65,13 @@ public class BcHashContextSignerTest {
     }
 
     @Test
-    public void signContextWithRSAKeys() throws PGPException, InvalidAlgorithmParameterException, NoSuchAlgorithmException, IOException {
+    public void signContextWithRSAKeys() throws PGPException, NoSuchAlgorithmException, IOException {
         PGPSecretKeyRing secretKeys = PGPainless.generateKeyRing().simpleRsaKeyRing("Sigfried", RsaLength._3072);
         signWithKeys(secretKeys);
     }
 
     @Test
-    public void signContextWithEcKeys() throws PGPException, InvalidAlgorithmParameterException, NoSuchAlgorithmException, IOException {
+    public void signContextWithEcKeys() throws PGPException, NoSuchAlgorithmException, IOException {
         PGPSecretKeyRing secretKeys = PGPainless.generateKeyRing().simpleEcKeyRing("Sigfried");
         signWithKeys(secretKeys);
     }
@@ -110,7 +109,7 @@ public class BcHashContextSignerTest {
     }
 
     private PGPSignature signMessage(byte[] message, HashAlgorithm hashAlgorithm, PGPSecretKeyRing secretKeys)
-            throws NoSuchAlgorithmException, PGPException {
+            throws NoSuchAlgorithmException {
         // Prepare the hash context
         // This would be done by the caller application
         MessageDigest messageDigest = MessageDigest.getInstance(hashAlgorithm.getAlgorithmName(), new BouncyCastleProvider());

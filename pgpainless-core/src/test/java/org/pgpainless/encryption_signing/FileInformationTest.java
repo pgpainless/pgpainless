@@ -13,8 +13,6 @@ import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
-import java.security.InvalidAlgorithmParameterException;
-import java.security.NoSuchAlgorithmException;
 import java.util.Date;
 
 import org.bouncycastle.openpgp.PGPException;
@@ -38,7 +36,7 @@ public class FileInformationTest {
     private static PGPPublicKeyRing certificate;
 
     @BeforeAll
-    public static void generateKey() throws PGPException, InvalidAlgorithmParameterException, NoSuchAlgorithmException {
+    public static void generateKey() {
         secretKey = PGPainless.generateKeyRing().modernKeyRing("alice@wonderland.lit");
         certificate = PGPainless.extractCertificate(secretKey);
     }

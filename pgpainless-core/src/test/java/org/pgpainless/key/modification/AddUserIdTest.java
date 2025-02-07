@@ -10,8 +10,6 @@ import static org.junit.jupiter.api.Assertions.assertNotEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 
 import java.io.IOException;
-import java.security.InvalidAlgorithmParameterException;
-import java.security.NoSuchAlgorithmException;
 import java.util.Date;
 import java.util.Iterator;
 import java.util.NoSuchElementException;
@@ -37,7 +35,7 @@ public class AddUserIdTest {
     @TestTemplate
     @ExtendWith(TestAllImplementations.class)
     public void addUserIdToExistingKeyRing()
-            throws InvalidAlgorithmParameterException, NoSuchAlgorithmException, PGPException {
+            throws PGPException {
         PGPSecretKeyRing secretKeys = PGPainless.generateKeyRing().simpleEcKeyRing("alice@wonderland.lit", "rabb1th0le");
 
         KeyRingInfo info = PGPainless.inspectKeyRing(secretKeys);
@@ -114,7 +112,7 @@ public class AddUserIdTest {
     }
 
     @Test
-    public void addNewPrimaryUserIdTest() throws PGPException, InvalidAlgorithmParameterException, NoSuchAlgorithmException {
+    public void addNewPrimaryUserIdTest() {
         Date now = new Date();
         PGPSecretKeyRing secretKeys = PGPainless.generateKeyRing()
                 .modernKeyRing("Alice");

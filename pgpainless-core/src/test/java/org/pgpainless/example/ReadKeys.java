@@ -8,7 +8,6 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 
 import java.io.IOException;
 
-import org.bouncycastle.openpgp.PGPException;
 import org.bouncycastle.openpgp.PGPPublicKeyRing;
 import org.bouncycastle.openpgp.PGPPublicKeyRingCollection;
 import org.bouncycastle.openpgp.PGPSecretKeyRing;
@@ -89,7 +88,7 @@ public class ReadKeys {
      * and a single public key block containing multiple public key packets.
      */
     @Test
-    public void readKeyRingCollection() throws PGPException, IOException {
+    public void readKeyRingCollection() throws IOException {
         String certificateCollection = "-----BEGIN PGP PUBLIC KEY BLOCK-----\n" +
                 "Comment: Alice's OpenPGP certificate\n" +
                 "\n" +

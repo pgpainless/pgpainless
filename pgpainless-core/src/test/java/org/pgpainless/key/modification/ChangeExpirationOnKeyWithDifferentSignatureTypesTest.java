@@ -7,7 +7,6 @@ package org.pgpainless.key.modification;
 import java.io.IOException;
 import java.util.Date;
 
-import org.bouncycastle.openpgp.PGPException;
 import org.bouncycastle.openpgp.PGPSecretKeyRing;
 import org.junit.JUtils;
 import org.junit.jupiter.api.TestTemplate;
@@ -138,7 +137,7 @@ public class ChangeExpirationOnKeyWithDifferentSignatureTypesTest {
     @TestTemplate
     @ExtendWith(TestAllImplementations.class)
     public void setExpirationDate_keyHasSigClass10()
-            throws PGPException, IOException {
+            throws IOException {
         PGPSecretKeyRing keys = PGPainless.readKeyRing().secretKeyRing(keyWithGenericCertification);
         SecretKeyRingProtector protector = SecretKeyRingProtector.unprotectedKeys();
         executeTestForKeys(keys, protector);
@@ -147,14 +146,13 @@ public class ChangeExpirationOnKeyWithDifferentSignatureTypesTest {
     @TestTemplate
     @ExtendWith(TestAllImplementations.class)
     public void setExpirationDate_keyHasSigClass12()
-            throws PGPException, IOException {
+            throws IOException {
         PGPSecretKeyRing keys = PGPainless.readKeyRing().secretKeyRing(keyWithCasualCertification);
         SecretKeyRingProtector protector = SecretKeyRingProtector.unprotectedKeys();
         executeTestForKeys(keys, protector);
     }
 
-    private void executeTestForKeys(PGPSecretKeyRing keys, SecretKeyRingProtector protector)
-            throws PGPException {
+    private void executeTestForKeys(PGPSecretKeyRing keys, SecretKeyRingProtector protector) {
         Date expirationDate = new Date(System.currentTimeMillis() + 1000 * 60 * 60 * 24 * 14);
         // round date for test stability
         expirationDate = DateUtil.toSecondsPrecision(expirationDate);

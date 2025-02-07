@@ -12,8 +12,6 @@ import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.nio.charset.StandardCharsets;
-import java.security.InvalidAlgorithmParameterException;
-import java.security.NoSuchAlgorithmException;
 
 import org.bouncycastle.openpgp.PGPCompressedData;
 import org.bouncycastle.openpgp.PGPEncryptedData;
@@ -54,7 +52,7 @@ public class OnePassSignatureBracketingTest {
     @TestTemplate
     @ExtendWith(TestAllImplementations.class)
     public void onePassSignaturePacketsAndSignaturesAreBracketedTest()
-            throws PGPException, InvalidAlgorithmParameterException, NoSuchAlgorithmException, IOException {
+            throws PGPException, IOException {
 
         PGPSecretKeyRing key1 = PGPainless.generateKeyRing().modernKeyRing("Alice");
         PGPSecretKeyRing key2 = PGPainless.generateKeyRing().modernKeyRing("Bob");
