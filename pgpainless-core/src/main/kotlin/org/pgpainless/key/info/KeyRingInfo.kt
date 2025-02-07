@@ -20,7 +20,6 @@ import org.pgpainless.key.OpenPgpFingerprint
 import org.pgpainless.key.SubkeyIdentifier
 import org.pgpainless.key.util.KeyRingUtils
 import org.pgpainless.policy.Policy
-import org.pgpainless.signature.consumer.SignaturePicker
 import org.pgpainless.signature.subpackets.SignatureSubpacketsUtil
 import org.pgpainless.signature.subpackets.SignatureSubpacketsUtil.Companion.getKeyExpirationTimeAsDate
 import org.pgpainless.util.DateUtil
@@ -47,7 +46,7 @@ class KeyRingInfo(
         referenceDate: Date = Date()
     ) : this(keys, PGPainless.getPolicy(), referenceDate)
 
-    private val signatures: Signatures = Signatures(keys.pgpKeyRing, referenceDate, policy)
+    // private val signatures: Signatures = Signatures(keys.pgpKeyRing, referenceDate, policy)
 
     /** Primary [OpenPGPCertificate.OpenPGPPrimaryKey]. */
     val publicKey: OpenPGPCertificate.OpenPGPPrimaryKey = keys.primaryKey
@@ -67,10 +66,16 @@ class KeyRingInfo(
     val userIds: List<String> = KeyRingUtils.getUserIdsIgnoringInvalidUTF8(publicKey.pgpPublicKey)
 
     /** Primary User-ID. */
-    val primaryUserId = keys.getPrimaryUserId(referenceDate)?.userId
+    val primaryUserId: String? = keys.getPrimaryUserId(referenceDate)?.userId
 
     /** Revocation State. */
-    val revocationState = signatures.primaryKeyRevocation.toRevocationState()
+    val revocationState: RevocationState =
+        publicKey.getLatestSelfSignature(referenceDate)?.let {
+            if (!it.isRevocation) RevocationState.notRevoked()
+            else if (it.isHardRevocation) RevocationState.hardRevoked()
+            else RevocationState.softRevoked(it.creationTime)
+        }
+            ?: RevocationState.notRevoked()
     /**
      * Return the date on which the primary key was revoked, or null if it has not yet been revoked.
      *
@@ -111,13 +116,7 @@ class KeyRingInfo(
     val validUserIds: List<String> = keys.getValidUserIds(referenceDate).map { it.userId }
 
     /** List of valid and expired user-IDs. */
-    val validAndExpiredUserIds: List<String> =
-        userIds.filter {
-            val certification = signatures.userIdCertifications[it] ?: return@filter false
-            val revocation = signatures.userIdRevocations[it] ?: return@filter true
-            return@filter !revocation.isHardRevocation &&
-                certification.creationTime > revocation.creationTime
-        }
+    val validAndExpiredUserIds: List<String> = userIds
 
     /** List of email addresses that can be extracted from the user-IDs. */
     val emailAddresses: List<String> =
@@ -132,10 +131,12 @@ class KeyRingInfo(
         }
 
     /** Newest direct-key self-signature on the primary key. */
-    val latestDirectKeySelfSignature: PGPSignature? = signatures.primaryKeySelfSignature
+    val latestDirectKeySelfSignature: PGPSignature? =
+        publicKey.getLatestDirectKeySelfSignature(referenceDate)?.signature
 
     /** Newest primary-key revocation self-signature. */
-    val revocationSelfSignature: PGPSignature? = signatures.primaryKeyRevocation
+    val revocationSelfSignature: PGPSignature? =
+        publicKey.getLatestKeyRevocationSignature(referenceDate)?.signature
 
     /** Public-key encryption-algorithm of the primary key. */
     val algorithm: PublicKeyAlgorithm =
@@ -166,7 +167,7 @@ class KeyRingInfo(
             .asSequence()
             .filter {
                 if (!it.keyIdentifier.matches(keyIdentifier)) {
-                    if (signatures.subkeyBindings[it.keyIdentifier.keyId] == null) {
+                    if (it.getLatestSelfSignature(referenceDate) == null) {
                         LOGGER.debug("Subkey ${it.keyIdentifier} has no binding signature.")
                         return@filter false
                     }
@@ -319,7 +320,11 @@ class KeyRingInfo(
      * @return true, if the given user-ID is hard-revoked.
      */
     fun isHardRevoked(userId: CharSequence): Boolean {
-        return signatures.userIdRevocations[userId]?.isHardRevocation ?: false
+        return keys
+            .getUserId(userId.toString())
+            ?.getLatestSelfSignature(referenceDate)
+            ?.isHardRevocation
+            ?: false
     }
 
     /**
@@ -425,13 +430,7 @@ class KeyRingInfo(
 
     /** Return the most-recently created self-signature on the key. */
     private fun getMostRecentSignature(): PGPSignature? =
-        setOfNotNull(latestDirectKeySelfSignature, revocationSelfSignature)
-            .asSequence()
-            .plus(signatures.userIdCertifications.values)
-            .plus(signatures.userIdRevocations.values)
-            .plus(signatures.subkeyBindings.values)
-            .plus(signatures.subkeyRevocations.values)
-            .maxByOrNull { it.creationTime }
+        keys.components.map { it.latestSelfSignature }.maxByOrNull { it.creationTime }?.signature
     /**
      * Return the creation time of the latest added subkey.
      *
@@ -463,7 +462,7 @@ class KeyRingInfo(
      * @return current subkey binding signature
      */
     fun getCurrentSubkeyBindingSignature(keyId: Long): PGPSignature? =
-        signatures.subkeyBindings[keyId]
+        keys.getKey(KeyIdentifier(keyId))?.getCertification(referenceDate)?.signature
 
     /**
      * Return the current revocation signature for the subkey with the given key-ID.
@@ -471,7 +470,7 @@ class KeyRingInfo(
      * @return current subkey revocation signature
      */
     fun getSubkeyRevocationSignature(keyId: Long): PGPSignature? =
-        signatures.subkeyRevocations[keyId]
+        keys.getKey(KeyIdentifier(keyId))?.getRevocation(referenceDate)?.signature
 
     fun getKeyFlagsOf(keyIdentifier: KeyIdentifier): List<KeyFlag> =
         getKeyFlagsOf(keyIdentifier.keyId)
@@ -619,36 +618,7 @@ class KeyRingInfo(
      * @return true if key is bound validly
      */
     fun isKeyValidlyBound(keyId: Long): Boolean {
-        val publicKey = keys.pgpKeyRing.getPublicKey(keyId) ?: return false
-
-        // Primary key -> Check Primary Key Revocation
-        if (publicKey.keyIdentifier.matches(this.publicKey.keyIdentifier)) {
-            return if (signatures.primaryKeyRevocation != null &&
-                signatures.primaryKeyRevocation.isHardRevocation) {
-                false
-            } else signatures.primaryKeyRevocation == null
-        }
-
-        // Else Subkey -> Check Subkey Revocation
-        val binding = signatures.subkeyBindings[keyId]
-        val revocation = signatures.subkeyRevocations[keyId]
-
-        // No valid binding
-        if (binding == null || binding.isExpired(referenceDate)) {
-            return false
-        }
-
-        // Revocation
-        return if (revocation != null) {
-            if (revocation.isHardRevocation) {
-                // Subkey is hard revoked
-                false
-            } else {
-                // Key is soft-revoked, not yet re-bound
-                (revocation.isExpired(referenceDate) ||
-                    !revocation.creationTime.after(binding.creationTime))
-            }
-        } else true
+        return keys.getKey(KeyIdentifier(keyId))?.isBoundAt(referenceDate) ?: false
     }
 
     /**
@@ -662,49 +632,20 @@ class KeyRingInfo(
      * @return primary user-id or null
      */
     private fun findPrimaryUserId(): String? {
-        if (userIds.isEmpty()) {
-            return null
-        }
-
-        return signatures.userIdCertifications
-            .filter { (_, certification) -> certification.hashedSubPackets.isPrimaryUserID }
-            .entries
-            .maxByOrNull { (_, certification) -> certification.creationTime }
-            ?.key
-            ?: signatures.userIdCertifications.keys.firstOrNull()
+        return keys.primaryKey.getExplicitOrImplicitPrimaryUserId(referenceDate)?.userId
     }
 
     /** Return true, if the primary user-ID, as well as the given user-ID are valid and bound. */
-    fun isUserIdValid(userId: CharSequence) =
-        if (primaryUserId == null) {
-            false
-        } else {
-            isUserIdBound(primaryUserId) &&
-                (if (userId == primaryUserId) true else isUserIdBound(userId))
-        }
+    fun isUserIdValid(userId: CharSequence): Boolean {
+        var valid = isUserIdBound(userId)
+        if (primaryUserId != null) valid = valid && isUserIdBound(primaryUserId)
+        valid = valid && isKeyValidlyBound(publicKey.keyIdentifier)
+        return valid
+    }
 
     /** Return true, if the given user-ID is validly bound. */
-    fun isUserIdBound(userId: CharSequence) =
-        signatures.userIdCertifications[userId]?.let { sig ->
-            if (sig.isExpired(referenceDate)) {
-                // certification expired
-                return false
-            }
-            if (sig.hashedSubPackets.isPrimaryUserID) {
-                getKeyExpirationTimeAsDate(sig, publicKey.pgpPublicKey)?.let { expirationDate ->
-                    // key expired?
-                    if (expirationDate < referenceDate) return false
-                }
-            }
-            signatures.userIdRevocations[userId]?.let { rev ->
-                if (rev.isHardRevocation) {
-                    return false // hard revoked -> invalid
-                }
-                sig.creationTime > rev.creationTime // re-certification after soft revocation?
-            }
-                ?: true // certification, but no revocation
-        }
-            ?: false // no certification
+    fun isUserIdBound(userId: CharSequence): Boolean =
+        keys.getUserId(userId.toString())?.isBoundAt(referenceDate) ?: false
 
     /** [HashAlgorithm] preferences of the given user-ID. */
     fun getPreferredHashAlgorithms(userId: CharSequence): Set<HashAlgorithm> {
@@ -785,35 +726,5 @@ class KeyRingInfo(
             "^([a-zA-Z0-9_!#$%&'*+/=?`{|}~^.-]+@[a-zA-Z0-9.-]+)$".toPattern()
 
         @JvmStatic private val LOGGER = LoggerFactory.getLogger(KeyRingInfo::class.java)
-    }
-
-    private class Signatures(val keys: PGPKeyRing, val referenceDate: Date, val policy: Policy) {
-        val primaryKeyRevocation: PGPSignature? =
-            SignaturePicker.pickCurrentRevocationSelfSignature(keys, policy, referenceDate)
-        val primaryKeySelfSignature: PGPSignature? =
-            SignaturePicker.pickLatestDirectKeySignature(keys, policy, referenceDate)
-        val userIdRevocations = mutableMapOf<String, PGPSignature>()
-        val userIdCertifications = mutableMapOf<String, PGPSignature>()
-        val subkeyRevocations = mutableMapOf<Long, PGPSignature>()
-        val subkeyBindings = mutableMapOf<Long, PGPSignature>()
-
-        init {
-            KeyRingUtils.getUserIdsIgnoringInvalidUTF8(keys.publicKey).forEach { userId ->
-                SignaturePicker.pickCurrentUserIdRevocationSignature(
-                        keys, userId, policy, referenceDate)
-                    ?.let { userIdRevocations[userId] = it }
-                SignaturePicker.pickLatestUserIdCertificationSignature(
-                        keys, userId, policy, referenceDate)
-                    ?.let { userIdCertifications[userId] = it }
-            }
-            keys.publicKeys.asSequence().drop(1).forEach { subkey ->
-                SignaturePicker.pickCurrentSubkeyBindingRevocationSignature(
-                        keys, subkey, policy, referenceDate)
-                    ?.let { subkeyRevocations[subkey.keyID] = it }
-                SignaturePicker.pickLatestSubkeyBindingSignature(
-                        keys, subkey, policy, referenceDate)
-                    ?.let { subkeyBindings[subkey.keyID] = it }
-            }
-        }
     }
 }
