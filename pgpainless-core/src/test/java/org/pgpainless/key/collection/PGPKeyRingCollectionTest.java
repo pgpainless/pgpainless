@@ -7,10 +7,7 @@ package org.pgpainless.key.collection;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 
-import java.io.IOException;
 import java.nio.charset.StandardCharsets;
-import java.security.InvalidAlgorithmParameterException;
-import java.security.NoSuchAlgorithmException;
 import java.util.Arrays;
 import java.util.Collection;
 
@@ -25,7 +22,7 @@ import org.pgpainless.key.util.KeyRingUtils;
 public class PGPKeyRingCollectionTest {
 
     @Test
-    public void constructorThrowsForInvalidInput() throws PGPException, IOException {
+    public void constructorThrowsForInvalidInput() {
         // This is neither a public key, nor a private key
         String invalidKeyRing = "-----BEGIN PGP SIGNATURE-----\n" +
                 "\n" +
@@ -56,7 +53,7 @@ public class PGPKeyRingCollectionTest {
     }
 
     @Test
-    public void testConstructorFromCollection() throws PGPException, InvalidAlgorithmParameterException, NoSuchAlgorithmException {
+    public void testConstructorFromCollection() {
         PGPSecretKeyRing first = PGPainless.generateKeyRing().simpleEcKeyRing("alice@wonderland.lit");
         PGPSecretKeyRing second = PGPainless.generateKeyRing().simpleEcKeyRing("bob@the-builder.tv");
         PGPPublicKeyRing secondPub = KeyRingUtils.publicKeyRingFrom(second);

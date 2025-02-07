@@ -11,8 +11,6 @@ import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
-import java.security.InvalidAlgorithmParameterException;
-import java.security.NoSuchAlgorithmException;
 
 import org.bouncycastle.openpgp.PGPException;
 import org.bouncycastle.openpgp.PGPPublicKeyRing;
@@ -31,7 +29,7 @@ import org.pgpainless.key.SubkeyIdentifier;
 public class HiddenRecipientEncryptionTest {
 
     @Test
-    public void testAnonymousRecipientRoundtrip() throws PGPException, InvalidAlgorithmParameterException, NoSuchAlgorithmException, IOException {
+    public void testAnonymousRecipientRoundtrip() throws PGPException, IOException {
         PGPSecretKeyRing secretKeys = PGPainless.generateKeyRing()
                 .modernKeyRing("Alice <alice@pgpainless.org>");
         PGPPublicKeyRing certificate = PGPainless.extractCertificate(secretKeys);

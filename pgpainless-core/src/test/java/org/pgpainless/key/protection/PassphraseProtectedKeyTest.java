@@ -7,8 +7,6 @@ package org.pgpainless.key.protection;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertNull;
 
-import java.security.InvalidAlgorithmParameterException;
-import java.security.NoSuchAlgorithmException;
 import java.util.Iterator;
 import javax.annotation.Nullable;
 
@@ -46,19 +44,19 @@ public class PassphraseProtectedKeyTest {
             });
 
     @Test
-    public void testReturnsNonNullDecryptorEncryptorForPassword() throws PGPException {
+    public void testReturnsNonNullDecryptorEncryptorForPassword() {
         assertNotNull(protector.getEncryptor(TestKeys.CRYPTIE_KEY_ID));
         assertNotNull(protector.getDecryptor(TestKeys.CRYPTIE_KEY_ID));
     }
 
     @Test
-    public void testReturnsNullDecryptorEncryptorForNoPassword() throws PGPException {
+    public void testReturnsNullDecryptorEncryptorForNoPassword() {
         assertNull(protector.getEncryptor(TestKeys.JULIET_KEY_ID));
         assertNull(protector.getDecryptor(TestKeys.JULIET_KEY_ID));
     }
 
     @Test
-    public void testReturnsNonNullDecryptorForSubkeys() throws InvalidAlgorithmParameterException, NoSuchAlgorithmException, PGPException {
+    public void testReturnsNonNullDecryptorForSubkeys() throws PGPException {
         PGPSecretKeyRing secretKeys = PGPainless.generateKeyRing().modernKeyRing("alice", "passphrase");
         SecretKeyRingProtector protector = PasswordBasedSecretKeyRingProtector.forKey(secretKeys, Passphrase.fromPassword("passphrase"));
         for (Iterator<PGPPublicKey> it = secretKeys.getPublicKeys(); it.hasNext(); ) {

@@ -12,8 +12,6 @@ import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import java.io.IOException;
-import java.security.InvalidAlgorithmParameterException;
-import java.security.NoSuchAlgorithmException;
 
 import org.bouncycastle.openpgp.PGPException;
 import org.bouncycastle.openpgp.PGPPublicKey;
@@ -75,8 +73,7 @@ public class RevocationCertificateTest {
     }
 
     @Test
-    public void createMinimalRevocationCertificateForFreshKeyTest()
-            throws PGPException, InvalidAlgorithmParameterException, NoSuchAlgorithmException {
+    public void createMinimalRevocationCertificateForFreshKeyTest() {
         PGPSecretKeyRing secretKeys = PGPainless.generateKeyRing().modernKeyRing("Alice <alice@example.org>");
 
         PGPPublicKeyRing minimalRevocationCert = PGPainless.modifyKeyRing(secretKeys).createMinimalRevocationCertificate(

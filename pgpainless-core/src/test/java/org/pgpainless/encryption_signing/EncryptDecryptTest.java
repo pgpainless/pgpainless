@@ -14,8 +14,6 @@ import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.nio.charset.Charset;
-import java.security.InvalidAlgorithmParameterException;
-import java.security.NoSuchAlgorithmException;
 import java.util.Set;
 
 import org.bouncycastle.bcpg.ArmoredOutputStream;
@@ -69,7 +67,7 @@ public class EncryptDecryptTest {
     @TestTemplate
     @ExtendWith(TestAllImplementations.class)
     public void freshKeysRsaToRsaTest()
-            throws PGPException, NoSuchAlgorithmException, InvalidAlgorithmParameterException, IOException {
+            throws PGPException, IOException {
         PGPSecretKeyRing sender = PGPainless.generateKeyRing().simpleRsaKeyRing("romeo@montague.lit", RsaLength._3072);
         PGPSecretKeyRing recipient = PGPainless.generateKeyRing().simpleRsaKeyRing("juliet@capulet.lit", RsaLength._3072);
 
@@ -79,7 +77,7 @@ public class EncryptDecryptTest {
     @TestTemplate
     @ExtendWith(TestAllImplementations.class)
     public void freshKeysEcToEcTest()
-            throws IOException, PGPException, NoSuchAlgorithmException, InvalidAlgorithmParameterException {
+            throws IOException, PGPException {
         PGPSecretKeyRing sender = PGPainless.generateKeyRing().simpleEcKeyRing("romeo@montague.lit");
         PGPSecretKeyRing recipient = PGPainless.generateKeyRing().simpleEcKeyRing("juliet@capulet.lit");
 
@@ -89,7 +87,7 @@ public class EncryptDecryptTest {
     @TestTemplate
     @ExtendWith(TestAllImplementations.class)
     public void freshKeysEcToRsaTest()
-            throws PGPException, NoSuchAlgorithmException, InvalidAlgorithmParameterException, IOException {
+            throws PGPException, IOException {
         PGPSecretKeyRing sender = PGPainless.generateKeyRing().simpleEcKeyRing("romeo@montague.lit");
         PGPSecretKeyRing recipient = PGPainless.generateKeyRing().simpleRsaKeyRing("juliet@capulet.lit", RsaLength._3072);
 
@@ -99,7 +97,7 @@ public class EncryptDecryptTest {
     @TestTemplate
     @ExtendWith(TestAllImplementations.class)
     public void freshKeysRsaToEcTest()
-            throws PGPException, NoSuchAlgorithmException, InvalidAlgorithmParameterException, IOException {
+            throws PGPException, IOException {
         PGPSecretKeyRing sender = PGPainless.generateKeyRing().simpleRsaKeyRing("romeo@montague.lit", RsaLength._3072);
         PGPSecretKeyRing recipient = PGPainless.generateKeyRing().simpleEcKeyRing("juliet@capulet.lit");
 

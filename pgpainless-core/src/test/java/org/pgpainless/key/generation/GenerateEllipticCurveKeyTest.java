@@ -6,9 +6,6 @@ package org.pgpainless.key.generation;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
-import java.security.InvalidAlgorithmParameterException;
-import java.security.NoSuchAlgorithmException;
-
 import org.bouncycastle.openpgp.PGPException;
 import org.bouncycastle.openpgp.PGPSecretKeyRing;
 import org.junit.jupiter.api.TestTemplate;
@@ -29,7 +26,7 @@ public class GenerateEllipticCurveKeyTest {
     @TestTemplate
     @ExtendWith(TestAllImplementations.class)
     public void generateEllipticCurveKeys()
-            throws InvalidAlgorithmParameterException, NoSuchAlgorithmException, PGPException {
+            throws PGPException {
         PGPSecretKeyRing keyRing = PGPainless.buildKeyRing()
                 .setPrimaryKey(KeySpec.getBuilder(
                         KeyType.EDDSA_LEGACY(EdDSALegacyCurve._Ed25519),
