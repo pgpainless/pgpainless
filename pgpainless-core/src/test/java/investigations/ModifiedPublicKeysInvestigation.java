@@ -8,8 +8,6 @@ import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 
 import java.io.IOException;
-import java.security.InvalidAlgorithmParameterException;
-import java.security.NoSuchAlgorithmException;
 
 import org.bouncycastle.openpgp.PGPException;
 import org.bouncycastle.openpgp.PGPSecretKey;
@@ -252,7 +250,7 @@ public class ModifiedPublicKeysInvestigation {
     }
 
     @Test
-    public void assertUnmodifiedRSAKeyDoesNotThrow() throws PGPException, InvalidAlgorithmParameterException, NoSuchAlgorithmException {
+    public void assertUnmodifiedRSAKeyDoesNotThrow() {
         PGPSecretKeyRing secretKeys = PGPainless.generateKeyRing()
                 .simpleRsaKeyRing("Unmodified", RsaLength._4096, "987654321");
         SecretKeyRingProtector protector = SecretKeyRingProtector.unlockAnyKeyWith(Passphrase.fromPassword("987654321"));
@@ -264,7 +262,7 @@ public class ModifiedPublicKeysInvestigation {
     }
 
     @Test
-    public void assertUnmodifiedECKeyDoesNotThrow() throws PGPException, InvalidAlgorithmParameterException, NoSuchAlgorithmException {
+    public void assertUnmodifiedECKeyDoesNotThrow() {
         PGPSecretKeyRing secretKeys = PGPainless.generateKeyRing()
                 .simpleEcKeyRing("Unmodified", "987654321");
         SecretKeyRingProtector protector = SecretKeyRingProtector.unlockAnyKeyWith(Passphrase.fromPassword("987654321"));
@@ -276,7 +274,7 @@ public class ModifiedPublicKeysInvestigation {
     }
 
     @Test
-    public void assertUnmodifiedModernKeyDoesNotThrow() throws PGPException, InvalidAlgorithmParameterException, NoSuchAlgorithmException {
+    public void assertUnmodifiedModernKeyDoesNotThrow() {
         PGPSecretKeyRing secretKeys = PGPainless.generateKeyRing()
                 .modernKeyRing("Unmodified", "987654321");
         SecretKeyRingProtector protector = SecretKeyRingProtector.unlockAnyKeyWith(Passphrase.fromPassword("987654321"));

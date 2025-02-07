@@ -17,9 +17,6 @@ import org.pgpainless.key.protection.SecretKeyRingProtector;
 import org.pgpainless.signature.subpackets.CertificationSubpackets;
 import org.pgpainless.signature.subpackets.SignatureSubpacketsUtil;
 
-import java.security.InvalidAlgorithmParameterException;
-import java.security.NoSuchAlgorithmException;
-
 import static org.junit.jupiter.api.Assertions.assertArrayEquals;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
@@ -30,7 +27,7 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 public class ThirdPartyCertificationSignatureBuilderTest {
 
     @Test
-    public void testInvalidSignatureTypeThrows() throws PGPException, InvalidAlgorithmParameterException, NoSuchAlgorithmException {
+    public void testInvalidSignatureTypeThrows() {
         PGPSecretKeyRing secretKeys = PGPainless.generateKeyRing()
                 .modernKeyRing("Alice");
         assertThrows(IllegalArgumentException.class, () ->
@@ -41,7 +38,7 @@ public class ThirdPartyCertificationSignatureBuilderTest {
     }
 
     @Test
-    public void testUserIdCertification() throws PGPException, InvalidAlgorithmParameterException, NoSuchAlgorithmException {
+    public void testUserIdCertification() throws PGPException {
         PGPSecretKeyRing secretKeys = PGPainless.generateKeyRing()
                 .modernKeyRing("Alice");
 

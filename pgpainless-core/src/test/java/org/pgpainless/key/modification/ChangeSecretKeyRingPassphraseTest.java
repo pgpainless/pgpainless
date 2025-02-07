@@ -11,8 +11,6 @@ import static org.junit.jupiter.api.Assertions.assertThrows;
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
-import java.security.InvalidAlgorithmParameterException;
-import java.security.NoSuchAlgorithmException;
 import java.util.Iterator;
 
 import org.bouncycastle.openpgp.PGPException;
@@ -39,7 +37,7 @@ public class ChangeSecretKeyRingPassphraseTest {
 
     private final PGPSecretKeyRing keyRing = PGPainless.generateKeyRing().simpleEcKeyRing("password@encryp.ted", "weakPassphrase");
 
-    public ChangeSecretKeyRingPassphraseTest() throws InvalidAlgorithmParameterException, NoSuchAlgorithmException, PGPException {
+    public ChangeSecretKeyRingPassphraseTest() {
     }
 
     @TestTemplate

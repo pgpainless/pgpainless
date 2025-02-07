@@ -15,8 +15,6 @@ import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.OutputStream;
 import java.nio.charset.StandardCharsets;
-import java.security.InvalidAlgorithmParameterException;
-import java.security.NoSuchAlgorithmException;
 import java.util.Date;
 import java.util.Iterator;
 import java.util.stream.Stream;
@@ -240,7 +238,7 @@ public class OpenPgpMessageInputStreamTest {
         armorOut.close();
     }
 
-    public static void genKey() throws PGPException, InvalidAlgorithmParameterException, NoSuchAlgorithmException, IOException {
+    public static void genKey() {
         PGPainless.asciiArmor(
                 PGPainless.generateKeyRing().modernKeyRing("Alice <alice@pgpainless.org>"),
                 System.out);
@@ -654,7 +652,7 @@ public class OpenPgpMessageInputStreamTest {
     }
 
     @Test
-    public void readAfterCloseTest() throws PGPException, IOException {
+    public void readAfterCloseTest() throws IOException {
         OpenPgpMessageInputStream pgpIn = get(SENC_LIT, ConsumerOptions.get()
                 .addMessagePassphrase(Passphrase.fromPassword(PASSPHRASE)));
         Streams.drain(pgpIn); // read all
@@ -670,7 +668,7 @@ public class OpenPgpMessageInputStreamTest {
     }
 
     private static Tuple<String, MessageMetadata> processReadBuffered(String armoredMessage, ConsumerOptions options)
-            throws PGPException, IOException {
+            throws IOException {
         OpenPgpMessageInputStream in = get(armoredMessage, options);
         ByteArrayOutputStream out = new ByteArrayOutputStream();
         Streams.pipeAll(in, out);
@@ -680,7 +678,7 @@ public class OpenPgpMessageInputStreamTest {
     }
 
     private static Tuple<String, MessageMetadata> processReadSequential(String armoredMessage, ConsumerOptions options)
-            throws PGPException, IOException {
+            throws IOException {
         OpenPgpMessageInputStream in = get(armoredMessage, options);
         ByteArrayOutputStream out = new ByteArrayOutputStream();
 
@@ -695,7 +693,7 @@ public class OpenPgpMessageInputStreamTest {
     }
 
     private static OpenPgpMessageInputStream get(String armored, ConsumerOptions options)
-            throws IOException, PGPException {
+            throws IOException {
         ByteArrayInputStream bytesIn = new ByteArrayInputStream(armored.getBytes(StandardCharsets.UTF_8));
         ArmoredInputStream armorIn = ArmoredInputStreamFactory.get(bytesIn);
         OpenPgpMessageInputStream pgpIn = OpenPgpMessageInputStream.create(armorIn, options);

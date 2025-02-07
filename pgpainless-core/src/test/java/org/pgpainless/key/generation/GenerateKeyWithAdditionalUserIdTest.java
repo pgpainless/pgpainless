@@ -7,12 +7,9 @@ package org.pgpainless.key.generation;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 
-import java.security.InvalidAlgorithmParameterException;
-import java.security.NoSuchAlgorithmException;
 import java.util.Date;
 import java.util.Iterator;
 
-import org.bouncycastle.openpgp.PGPException;
 import org.bouncycastle.openpgp.PGPPublicKeyRing;
 import org.bouncycastle.openpgp.PGPSecretKeyRing;
 import org.junit.JUtils;
@@ -32,7 +29,7 @@ public class GenerateKeyWithAdditionalUserIdTest {
 
     @TestTemplate
     @ExtendWith(TestAllImplementations.class)
-    public void test() throws InvalidAlgorithmParameterException, NoSuchAlgorithmException, PGPException {
+    public void test() {
         Date now = DateUtil.now();
         Date expiration = TestTimeFrameProvider.defaultExpirationForCreationDate(now);
         PGPSecretKeyRing secretKeys = PGPainless.buildKeyRing()

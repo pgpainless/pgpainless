@@ -6,12 +6,9 @@ package org.pgpainless.key.generation;
 
 import static org.junit.jupiter.api.Assertions.assertThrows;
 
-import java.security.InvalidAlgorithmParameterException;
-import java.security.NoSuchAlgorithmException;
 import java.util.HashMap;
 import java.util.Map;
 
-import org.bouncycastle.openpgp.PGPException;
 import org.junit.jupiter.api.Test;
 import org.pgpainless.PGPainless;
 import org.pgpainless.algorithm.KeyFlag;
@@ -50,8 +47,7 @@ public class GeneratingWeakKeyThrowsTest {
     }
 
     @Test
-    public void allowToAddWeakKeysWithWeakPolicy()
-            throws PGPException, InvalidAlgorithmParameterException, NoSuchAlgorithmException {
+    public void allowToAddWeakKeysWithWeakPolicy() {
         // set a weak algorithm policy
         Map<PublicKeyAlgorithm, Integer> bitStrengths = new HashMap<>();
         bitStrengths.put(PublicKeyAlgorithm.RSA_GENERAL, 512);

@@ -9,11 +9,8 @@ import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
-import java.security.InvalidAlgorithmParameterException;
-import java.security.NoSuchAlgorithmException;
 import java.util.Iterator;
 
-import org.bouncycastle.openpgp.PGPException;
 import org.bouncycastle.openpgp.PGPPublicKey;
 import org.bouncycastle.openpgp.PGPSecretKey;
 import org.bouncycastle.openpgp.PGPSecretKeyRing;
@@ -36,8 +33,7 @@ public class BrainpoolKeyGenerationTest {
 
     @TestTemplate
     @ExtendWith(TestAllImplementations.class)
-    public void generateEcKeysTest()
-            throws InvalidAlgorithmParameterException, NoSuchAlgorithmException, PGPException {
+    public void generateEcKeysTest() {
 
         for (EllipticCurve curve : EllipticCurve.values()) {
             PGPSecretKeyRing secretKeys = generateKey(
@@ -65,8 +61,7 @@ public class BrainpoolKeyGenerationTest {
 
     @TestTemplate
     @ExtendWith(TestAllImplementations.class)
-    public void generateEdDSAKeyTest()
-            throws PGPException, InvalidAlgorithmParameterException, NoSuchAlgorithmException {
+    public void generateEdDSAKeyTest() {
 
         PGPSecretKeyRing secretKeys = PGPainless.buildKeyRing()
                 .setPrimaryKey(KeySpec.getBuilder(
@@ -113,7 +108,7 @@ public class BrainpoolKeyGenerationTest {
         assertEquals(3072, rsaSub.getPublicKey().getBitStrength());
     }
 
-    public PGPSecretKeyRing generateKey(KeySpec primaryKey, KeySpec subKey, String userId) throws InvalidAlgorithmParameterException, NoSuchAlgorithmException, PGPException {
+    public PGPSecretKeyRing generateKey(KeySpec primaryKey, KeySpec subKey, String userId) {
         PGPSecretKeyRing secretKeys = PGPainless.buildKeyRing()
                 .setPrimaryKey(primaryKey)
                 .addSubkey(subKey)

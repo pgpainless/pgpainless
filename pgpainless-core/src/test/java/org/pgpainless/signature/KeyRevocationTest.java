@@ -27,7 +27,7 @@ public class KeyRevocationTest {
 
     @TestTemplate
     @ExtendWith(TestAllImplementations.class)
-    public void subkeySignsPrimaryKeyRevokedNoReason() throws IOException, PGPException {
+    public void subkeySignsPrimaryKeyRevokedNoReason() throws IOException {
 
         String key = "-----BEGIN PGP ARMORED FILE-----\n" +
                 "Comment: ASCII Armor added by openpgp-interoperability-test-suite\n" +
