@@ -130,7 +130,7 @@ public class ArmorUtilsTest {
     }
 
     @Test
-    public void signatureToAsciiArmoredString() throws PGPException, IOException {
+    public void signatureToAsciiArmoredString() {
         String SIG = "-----BEGIN PGP SIGNATURE-----\n" +
                 "Version: PGPainless\n" +
                 "\n" +

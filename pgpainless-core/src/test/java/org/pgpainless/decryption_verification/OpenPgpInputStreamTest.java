@@ -13,8 +13,6 @@ import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.OutputStream;
 import java.nio.charset.StandardCharsets;
-import java.security.InvalidAlgorithmParameterException;
-import java.security.NoSuchAlgorithmException;
 import java.util.Random;
 
 import org.bouncycastle.bcpg.ArmoredInputStream;
@@ -736,7 +734,7 @@ public class OpenPgpInputStreamTest {
     }
 
     @Test
-    public void testSignedMessageConsumption() throws PGPException, InvalidAlgorithmParameterException, NoSuchAlgorithmException, IOException {
+    public void testSignedMessageConsumption() throws PGPException, IOException {
         ByteArrayInputStream plaintext = new ByteArrayInputStream("Hello, World!\n".getBytes(StandardCharsets.UTF_8));
         PGPSecretKeyRing secretKeys = PGPainless.generateKeyRing()
                 .modernKeyRing("Sigmund <sigmund@exmplample.com>");

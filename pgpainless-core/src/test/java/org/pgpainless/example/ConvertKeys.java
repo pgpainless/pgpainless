@@ -7,10 +7,6 @@ package org.pgpainless.example;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
-import java.security.InvalidAlgorithmParameterException;
-import java.security.NoSuchAlgorithmException;
-
-import org.bouncycastle.openpgp.PGPException;
 import org.bouncycastle.openpgp.PGPPublicKeyRing;
 import org.bouncycastle.openpgp.PGPSecretKeyRing;
 import org.junit.jupiter.api.Test;
@@ -23,7 +19,7 @@ public class ConvertKeys {
      * This example demonstrates how to extract a public key certificate from a secret key.
      */
     @Test
-    public void secretKeyToCertificate() throws PGPException, InvalidAlgorithmParameterException, NoSuchAlgorithmException {
+    public void secretKeyToCertificate() {
         String userId = "alice@wonderland.lit";
         PGPSecretKeyRing secretKey = PGPainless.generateKeyRing()
                 .modernKeyRing(userId);
