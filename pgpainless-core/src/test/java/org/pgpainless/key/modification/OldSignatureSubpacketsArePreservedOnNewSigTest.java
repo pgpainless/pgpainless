@@ -28,8 +28,7 @@ public class OldSignatureSubpacketsArePreservedOnNewSigTest {
 
     @TestTemplate
     @ExtendWith(TestAllImplementations.class)
-    public void verifyOldSignatureSubpacketsArePreservedOnNewExpirationDateSig()
-            throws InvalidAlgorithmParameterException, NoSuchAlgorithmException, PGPException {
+    public void verifyOldSignatureSubpacketsArePreservedOnNewExpirationDateSig() {
         PGPSecretKeyRing secretKeys = PGPainless.generateKeyRing()
                 .simpleEcKeyRing("Alice <alice@wonderland.lit>");
 
