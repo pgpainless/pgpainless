@@ -10,8 +10,6 @@ import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 
 import java.io.IOException;
-import java.security.InvalidAlgorithmParameterException;
-import java.security.NoSuchAlgorithmException;
 import java.util.Iterator;
 import java.util.Map;
 import java.util.Random;
@@ -35,7 +33,7 @@ public class SecretKeyRingProtectorTest {
     @TestTemplate
     @ExtendWith(TestAllImplementations.class)
     public void testUnlockAllKeysWithSamePassword()
-            throws IOException, PGPException, InvalidAlgorithmParameterException, NoSuchAlgorithmException {
+            throws IOException, PGPException {
 
         PGPSecretKeyRing secretKeys = TestKeys.getCryptieSecretKeyRing();
         SecretKeyRingProtector protector =

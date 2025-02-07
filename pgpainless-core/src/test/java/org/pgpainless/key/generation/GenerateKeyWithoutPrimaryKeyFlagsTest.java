@@ -12,8 +12,6 @@ import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
-import java.security.InvalidAlgorithmParameterException;
-import java.security.NoSuchAlgorithmException;
 
 import org.bouncycastle.bcpg.KeyIdentifier;
 import org.bouncycastle.openpgp.PGPException;
@@ -43,7 +41,7 @@ import org.pgpainless.key.protection.SecretKeyRingProtector;
 public class GenerateKeyWithoutPrimaryKeyFlagsTest {
 
     @Test
-    public void generateKeyWithoutCertifyKeyFlag_cannotCertifyThirdParties() throws PGPException, InvalidAlgorithmParameterException, NoSuchAlgorithmException, IOException {
+    public void generateKeyWithoutCertifyKeyFlag_cannotCertifyThirdParties() throws PGPException, IOException {
         PGPSecretKeyRing secretKeys = PGPainless.buildKeyRing().setPrimaryKey(KeySpec.getBuilder(KeyType.EDDSA_LEGACY(EdDSALegacyCurve._Ed25519)))
                 .addSubkey(KeySpec.getBuilder(KeyType.EDDSA_LEGACY(EdDSALegacyCurve._Ed25519), KeyFlag.SIGN_DATA))
                 .addSubkey(KeySpec.getBuilder(KeyType.XDH_LEGACY(XDHLegacySpec._X25519), KeyFlag.ENCRYPT_STORAGE, KeyFlag.ENCRYPT_COMMS))

@@ -7,11 +7,8 @@ package org.pgpainless.key.parsing;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
 import java.io.IOException;
-import java.security.InvalidAlgorithmParameterException;
-import java.security.NoSuchAlgorithmException;
 import java.util.Iterator;
 
-import org.bouncycastle.openpgp.PGPException;
 import org.bouncycastle.openpgp.PGPPublicKeyRing;
 import org.bouncycastle.openpgp.PGPPublicKeyRingCollection;
 import org.bouncycastle.openpgp.PGPSecretKeyRing;
@@ -25,7 +22,7 @@ import org.pgpainless.util.ArmorUtils;
 public class KeyRingCollectionReaderTest {
 
     @Test
-    public void writeAndParseKeyRingCollections() throws PGPException, InvalidAlgorithmParameterException, NoSuchAlgorithmException, IOException {
+    public void writeAndParseKeyRingCollections() throws IOException {
         // secret keys
         PGPSecretKeyRing alice = PGPainless.generateKeyRing().modernKeyRing("Alice <alice@pgpainless.org>");
         PGPSecretKeyRing bob = PGPainless.generateKeyRing().modernKeyRing("Bob <bob@pgpainless.org>");
@@ -48,7 +45,7 @@ public class KeyRingCollectionReaderTest {
     }
 
     @Test
-    public void parseSeparatedSecretKeyRingCollection() throws PGPException, IOException {
+    public void parseSeparatedSecretKeyRingCollection() throws IOException {
         String ascii = "-----BEGIN PGP PRIVATE KEY BLOCK-----\n" +
                 "Version: PGPainless\n" +
                 "Comment: 58F2 0119 232F BBC0 B624  CCA7 7BED B6B3 2279 0657\n" +
@@ -107,7 +104,7 @@ public class KeyRingCollectionReaderTest {
     }
 
     @Test
-    public void parseConcatenatedSecretKeyRingCollection() throws PGPException, IOException {
+    public void parseConcatenatedSecretKeyRingCollection() throws IOException {
         // same key ring collection as above, but concatenated in a single armor block
         String ascii = "-----BEGIN PGP PRIVATE KEY BLOCK-----\n" +
                 "Version: BCPG v1.68\n" +

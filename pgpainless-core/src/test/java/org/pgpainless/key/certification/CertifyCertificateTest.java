@@ -10,8 +10,6 @@ import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import java.io.IOException;
-import java.security.InvalidAlgorithmParameterException;
-import java.security.NoSuchAlgorithmException;
 import java.util.List;
 
 import org.bouncycastle.bcpg.sig.TrustSignature;
@@ -36,7 +34,7 @@ import org.pgpainless.util.DateUtil;
 public class CertifyCertificateTest {
 
     @Test
-    public void testUserIdCertification() throws PGPException, InvalidAlgorithmParameterException, NoSuchAlgorithmException, IOException {
+    public void testUserIdCertification() throws PGPException, IOException {
         SecretKeyRingProtector protector = SecretKeyRingProtector.unprotectedKeys();
         PGPSecretKeyRing alice = PGPainless.generateKeyRing().modernKeyRing("Alice <alice@pgpainless.org>");
         String bobUserId = "Bob <bob@pgpainless.org>";
@@ -71,7 +69,7 @@ public class CertifyCertificateTest {
     }
 
     @Test
-    public void testKeyDelegation() throws PGPException, InvalidAlgorithmParameterException, NoSuchAlgorithmException, IOException {
+    public void testKeyDelegation() throws PGPException, IOException {
         SecretKeyRingProtector protector = SecretKeyRingProtector.unprotectedKeys();
         PGPSecretKeyRing alice = PGPainless.generateKeyRing().modernKeyRing("Alice <alice@pgpainless.org>");
         PGPSecretKeyRing bob = PGPainless.generateKeyRing().modernKeyRing("Bob <bob@pgpainless.org>");
@@ -110,7 +108,7 @@ public class CertifyCertificateTest {
     }
 
     @Test
-    public void testPetNameCertification() throws PGPException, InvalidAlgorithmParameterException, NoSuchAlgorithmException {
+    public void testPetNameCertification() {
         PGPSecretKeyRing aliceKey = PGPainless.generateKeyRing()
                 .modernKeyRing("Alice <alice@pgpainless.org>");
         PGPSecretKeyRing bobKey = PGPainless.generateKeyRing()
@@ -140,7 +138,7 @@ public class CertifyCertificateTest {
     }
 
     @Test
-    public void testScopedDelegation() throws PGPException, InvalidAlgorithmParameterException, NoSuchAlgorithmException {
+    public void testScopedDelegation() {
         PGPSecretKeyRing aliceKey = PGPainless.generateKeyRing()
                 .modernKeyRing("Alice <alice@pgpainless.org>");
         PGPSecretKeyRing caKey = PGPainless.generateKeyRing()
