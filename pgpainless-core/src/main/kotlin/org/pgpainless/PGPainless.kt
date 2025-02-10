@@ -10,7 +10,9 @@ import org.bouncycastle.openpgp.PGPKeyRing
 import org.bouncycastle.openpgp.PGPPublicKeyRing
 import org.bouncycastle.openpgp.PGPSecretKeyRing
 import org.bouncycastle.openpgp.PGPSignature
+import org.bouncycastle.openpgp.api.OpenPGPImplementation
 import org.pgpainless.algorithm.OpenPGPKeyVersion
+import org.pgpainless.bouncycastle.PolicyAdapter
 import org.pgpainless.decryption_verification.DecryptionBuilder
 import org.pgpainless.encryption_signing.EncryptionBuilder
 import org.pgpainless.key.certification.CertifyCertificate
@@ -23,9 +25,23 @@ import org.pgpainless.key.util.KeyRingUtils
 import org.pgpainless.policy.Policy
 import org.pgpainless.util.ArmorUtils
 
-class PGPainless private constructor() {
+class PGPainless(
+    val implementation: OpenPGPImplementation = OpenPGPImplementation.getInstance(),
+    val algorithmPolicy: Policy = Policy.getInstance()
+) {
+
+    init {
+        implementation.setPolicy(
+            PolicyAdapter(algorithmPolicy)) // adapt PGPainless' Policy to BCs OpenPGPPolicy
+    }
 
     companion object {
+
+        @Volatile private var instance: PGPainless? = null
+
+        @JvmStatic
+        fun getInstance() =
+            instance ?: synchronized(this) { instance ?: PGPainless().also { instance = it } }
 
         /**
          * Generate a fresh OpenPGP key ring from predefined templates.
@@ -166,7 +182,7 @@ class PGPainless private constructor() {
          *
          * @return policy
          */
-        @JvmStatic fun getPolicy() = Policy.getInstance()
+        @JvmStatic fun getPolicy() = getInstance().algorithmPolicy
 
         /**
          * Create different kinds of signatures on other keys.
