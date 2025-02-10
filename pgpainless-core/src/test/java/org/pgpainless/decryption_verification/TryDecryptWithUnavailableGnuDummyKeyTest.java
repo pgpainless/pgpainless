@@ -28,7 +28,8 @@ public class TryDecryptWithUnavailableGnuDummyKeyTest {
     public void testAttemptToDecryptWithRemovedPrivateKeysThrows()
             throws PGPException, IOException {
         PGPSecretKeyRing secretKeys = PGPainless.generateKeyRing()
-                .modernKeyRing("Hardy Hardware <hardy@hard.ware>");
+                .modernKeyRing("Hardy Hardware <hardy@hard.ware>")
+                .getPGPSecretKeyRing();
         PGPPublicKeyRing certificate = PGPainless.extractCertificate(secretKeys);
 
         ByteArrayOutputStream ciphertextOut = new ByteArrayOutputStream();

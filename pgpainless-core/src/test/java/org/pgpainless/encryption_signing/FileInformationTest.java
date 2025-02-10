@@ -37,7 +37,8 @@ public class FileInformationTest {
 
     @BeforeAll
     public static void generateKey() {
-        secretKey = PGPainless.generateKeyRing().modernKeyRing("alice@wonderland.lit");
+        secretKey = PGPainless.generateKeyRing().modernKeyRing("alice@wonderland.lit")
+                .getPGPSecretKeyRing();
         certificate = PGPainless.extractCertificate(secretKey);
     }
 

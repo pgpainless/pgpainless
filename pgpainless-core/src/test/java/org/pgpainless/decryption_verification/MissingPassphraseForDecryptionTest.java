@@ -43,7 +43,8 @@ public class MissingPassphraseForDecryptionTest {
 
     @BeforeEach
     public void setup() throws PGPException, IOException {
-        secretKeys = PGPainless.generateKeyRing().modernKeyRing("Test", passphrase);
+        secretKeys = PGPainless.generateKeyRing().modernKeyRing("Test", passphrase)
+                .getPGPSecretKeyRing();
         PGPPublicKeyRing certificate = PGPainless.extractCertificate(secretKeys);
         ByteArrayOutputStream out = new ByteArrayOutputStream();
         EncryptionStream encryptionStream = PGPainless.encryptAndOrSign()

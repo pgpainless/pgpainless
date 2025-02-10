@@ -73,7 +73,8 @@ public class BrainpoolKeyGenerationTest {
                         KeyType.RSA(RsaLength._3072), KeyFlag.SIGN_DATA))
                 .addUserId(UserId.nameAndEmail("Alice", "alice@pgpainless.org"))
                 .setPassphrase(Passphrase.fromPassword("passphrase"))
-                .build();
+                .build()
+                .getPGPSecretKeyRing();
 
         for (PGPSecretKey key : secretKeys) {
             KeyInfo info = new KeyInfo(key);
@@ -113,7 +114,8 @@ public class BrainpoolKeyGenerationTest {
                 .setPrimaryKey(primaryKey)
                 .addSubkey(subKey)
                 .addUserId(userId)
-                .build();
+                .build()
+                .getPGPSecretKeyRing();
         return secretKeys;
     }
 }

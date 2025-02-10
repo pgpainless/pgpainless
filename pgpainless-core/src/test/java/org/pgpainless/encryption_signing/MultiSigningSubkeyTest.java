@@ -55,7 +55,8 @@ public class MultiSigningSubkeyTest {
                 .addSubkey(KeySpec.getBuilder(KeyType.RSA(RsaLength._3072), KeyFlag.SIGN_DATA))
                 .addSubkey(KeySpec.getBuilder(KeyType.XDH_LEGACY(XDHLegacySpec._X25519), KeyFlag.ENCRYPT_COMMS, KeyFlag.ENCRYPT_STORAGE))
                 .addUserId("Alice <alice@pgpainless.org>")
-                .build();
+                .build()
+                .getPGPSecretKeyRing();
         signingCert = PGPainless.extractCertificate(signingKey);
         Iterator<OpenPGPCertificate.OpenPGPComponentKey> signingSubkeys = PGPainless.inspectKeyRing(signingKey).getSigningSubkeys().listIterator();
         primaryKey = new SubkeyIdentifier(signingKey, signingSubkeys.next().getKeyIdentifier());
