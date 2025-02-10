@@ -4,15 +4,17 @@
 
 package org.pgpainless.key.protection
 
-import kotlin.jvm.Throws
+import org.bouncycastle.bcpg.KeyIdentifier
 import org.bouncycastle.openpgp.PGPException
 import org.bouncycastle.openpgp.PGPSecretKey
 import org.bouncycastle.openpgp.PGPSecretKeyRing
+import org.bouncycastle.openpgp.api.KeyPassphraseProvider
 import org.bouncycastle.openpgp.operator.PBESecretKeyDecryptor
 import org.bouncycastle.openpgp.operator.PBESecretKeyEncryptor
 import org.pgpainless.key.protection.passphrase_provider.SecretKeyPassphraseProvider
 import org.pgpainless.key.protection.passphrase_provider.SolitaryPassphraseProvider
 import org.pgpainless.util.Passphrase
+import kotlin.Throws
 
 /**
  * Task of the [SecretKeyRingProtector] is to map encryptor/decryptor objects to key-ids.
@@ -22,7 +24,7 @@ import org.pgpainless.util.Passphrase
  * While it is easy to create an implementation of this interface that fits your needs, there are a
  * bunch of implementations ready for use.
  */
-interface SecretKeyRingProtector {
+interface SecretKeyRingProtector : KeyPassphraseProvider {
 
     /**
      * Returns true, if the protector has a passphrase for the key with the given key-id.
@@ -30,7 +32,9 @@ interface SecretKeyRingProtector {
      * @param keyId key id
      * @return true if it has a passphrase, false otherwise
      */
-    fun hasPassphraseFor(keyId: Long): Boolean
+    fun hasPassphraseFor(keyId: Long): Boolean = hasPassphraseFor(KeyIdentifier(keyId))
+
+    fun hasPassphraseFor(keyIdentifier: KeyIdentifier): Boolean
 
     /**
      * Return a decryptor for the key of id `keyId`. This method returns null if the key is
@@ -39,7 +43,10 @@ interface SecretKeyRingProtector {
      * @param keyId id of the key
      * @return decryptor for the key
      */
-    @Throws(PGPException::class) fun getDecryptor(keyId: Long): PBESecretKeyDecryptor?
+    @Throws(PGPException::class) fun getDecryptor(keyId: Long): PBESecretKeyDecryptor? =
+        getDecryptor(KeyIdentifier(keyId))
+
+    @Throws(PGPException::class) fun getDecryptor(keyIdentifier: KeyIdentifier): PBESecretKeyDecryptor?
 
     /**
      * Return an encryptor for the key of id `keyId`. This method returns null if the key is
@@ -48,7 +55,10 @@ interface SecretKeyRingProtector {
      * @param keyId id of the key
      * @return encryptor for the key
      */
-    @Throws(PGPException::class) fun getEncryptor(keyId: Long): PBESecretKeyEncryptor?
+    @Throws(PGPException::class) fun getEncryptor(keyId: Long): PBESecretKeyEncryptor? =
+        getEncryptor(KeyIdentifier(keyId))
+
+    @Throws(PGPException::class) fun getEncryptor(keyIdentifier: KeyIdentifier): PBESecretKeyEncryptor?
 
     companion object {
 

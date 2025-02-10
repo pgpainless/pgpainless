@@ -3,14 +3,21 @@
 // SPDX-License-Identifier: Apache-2.0
 package org.pgpainless.key.protection
 
+import org.bouncycastle.bcpg.KeyIdentifier
+import org.bouncycastle.openpgp.api.OpenPGPKey
+import org.bouncycastle.openpgp.operator.PBESecretKeyDecryptor
+import org.bouncycastle.openpgp.operator.PBESecretKeyEncryptor
+
 /**
  * Implementation of the [SecretKeyRingProtector] which assumes that all handled keys are not
  * password protected.
  */
 class UnprotectedKeysProtector : SecretKeyRingProtector {
-    override fun hasPassphraseFor(keyId: Long) = true
+    override fun hasPassphraseFor(keyIdentifier: KeyIdentifier): Boolean = true
 
-    override fun getDecryptor(keyId: Long) = null
+    override fun getDecryptor(keyIdentifier: KeyIdentifier): PBESecretKeyDecryptor? = null
 
-    override fun getEncryptor(keyId: Long) = null
+    override fun getEncryptor(keyIdentifier: KeyIdentifier): PBESecretKeyEncryptor? = null
+
+    override fun getKeyPassword(p0: OpenPGPKey.OpenPGPSecretKey?): CharArray? = null
 }
