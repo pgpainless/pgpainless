@@ -4,10 +4,12 @@
 
 package org.pgpainless.decryption_verification
 
+import org.bouncycastle.bcpg.KeyIdentifier
 import java.util.*
 import javax.annotation.Nonnull
 import org.bouncycastle.openpgp.PGPKeyRing
 import org.bouncycastle.openpgp.PGPLiteralData
+import org.bouncycastle.openpgp.api.OpenPGPCertificate
 import org.pgpainless.algorithm.CompressionAlgorithm
 import org.pgpainless.algorithm.StreamEncoding
 import org.pgpainless.algorithm.SymmetricKeyAlgorithm
@@ -47,9 +49,15 @@ class MessageMetadata(val message: Message) {
             if (encryptionAlgorithm == null) false
             else encryptionAlgorithm != SymmetricKeyAlgorithm.NULL
 
-    fun isEncryptedFor(keys: PGPKeyRing): Boolean {
+    fun isEncryptedFor(cert: OpenPGPCertificate): Boolean {
         return encryptionLayers.asSequence().any {
-            it.recipients.any { keyId -> keys.getPublicKey(keyId) != null }
+            it.recipients.any { keyId -> cert.getKey(KeyIdentifier(keyId)) != null }
+        }
+    }
+
+    fun isEncryptedFor(cert: PGPKeyRing): Boolean {
+        return encryptionLayers.asSequence().any {
+            it.recipients.any { keyId -> cert.getPublicKey(keyId) != null }
         }
     }
 
@@ -269,6 +277,9 @@ class MessageMetadata(val message: Message) {
 
     fun isVerifiedSignedBy(keys: PGPKeyRing) =
         verifiedSignatures.any { keys.matches(it.signingKey) }
+
+    fun isVerifiedSignedBy(cert: OpenPGPCertificate) =
+        verifiedSignatures.any { cert.pgpKeyRing.matches(it.signingKey) }
 
     fun isVerifiedDetachedSignedBy(fingerprint: OpenPgpFingerprint) =
         verifiedDetachedSignatures.any { it.signingKey.matches(fingerprint) }

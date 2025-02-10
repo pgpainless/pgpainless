@@ -11,7 +11,10 @@ import org.bouncycastle.openpgp.PGPPublicKeyRing
 import org.bouncycastle.openpgp.PGPSecretKeyRing
 import org.bouncycastle.openpgp.PGPSignature
 import org.bouncycastle.openpgp.api.OpenPGPApi
+import org.bouncycastle.openpgp.api.OpenPGPCertificate
 import org.bouncycastle.openpgp.api.OpenPGPImplementation
+import org.bouncycastle.openpgp.api.OpenPGPKey
+import org.bouncycastle.openpgp.api.OpenPGPKeyReader
 import org.bouncycastle.openpgp.api.bc.BcOpenPGPApi
 import org.pgpainless.algorithm.OpenPGPKeyVersion
 import org.pgpainless.bouncycastle.PolicyAdapter
@@ -42,6 +45,14 @@ class PGPainless(
 
     fun generateKey(version: OpenPGPKeyVersion = OpenPGPKeyVersion.v4): KeyRingTemplates =
         KeyRingTemplates(version)
+
+    fun readKey(): OpenPGPKeyReader = api.readKeyOrCertificate()
+
+    fun toKey(secretKeyRing: PGPSecretKeyRing): OpenPGPKey =
+        OpenPGPKey(secretKeyRing, implementation)
+
+    fun toCertificate(publicKeyRing: PGPPublicKeyRing): OpenPGPCertificate =
+        OpenPGPCertificate(publicKeyRing, implementation)
 
     companion object {
 
@@ -81,7 +92,9 @@ class PGPainless(
          *
          * @return builder
          */
-        @JvmStatic fun readKeyRing() = KeyRingReader()
+        @Deprecated("Use readKey() instead.", replaceWith = ReplaceWith("readKey()"))
+        @JvmStatic
+        fun readKeyRing() = KeyRingReader()
 
         /**
          * Extract a public key certificate from a secret key.
@@ -90,6 +103,7 @@ class PGPainless(
          * @return public key certificate
          */
         @JvmStatic
+        @Deprecated("Use toKey() and then .toCertificate() instead.")
         fun extractCertificate(secretKey: PGPSecretKeyRing) =
             KeyRingUtils.publicKeyRingFrom(secretKey)
 
@@ -189,6 +203,9 @@ class PGPainless(
         @JvmOverloads
         fun inspectKeyRing(key: PGPKeyRing, referenceTime: Date = Date()) =
             KeyRingInfo(key, referenceTime)
+
+        fun inspectKeyRing(key: OpenPGPKey, referenceTime: Date = Date()) =
+            KeyRingInfo(key, getPolicy(), referenceTime)
 
         /**
          * Access, and make changes to PGPainless policy on acceptable/default algorithms etc.

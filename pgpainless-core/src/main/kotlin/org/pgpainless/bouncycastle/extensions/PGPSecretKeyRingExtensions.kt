@@ -73,7 +73,4 @@ fun PGPSecretKeyRing.getSecretKeyFor(onePassSignature: PGPOnePassSignature): PGP
     this.getSecretKey(onePassSignature.keyID)
 
 fun PGPSecretKeyRing.getSecretKeyFor(pkesk: PGPPublicKeyEncryptedData): PGPSecretKey? =
-    when (pkesk.version) {
-        3 -> this.getSecretKey(pkesk.keyID)
-        else -> throw NotImplementedError("Version 6 PKESKs are not yet supported.")
-    }
+    this.getSecretKey(pkesk.keyIdentifier)
