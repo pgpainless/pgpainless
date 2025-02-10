@@ -54,8 +54,10 @@ public class OnePassSignatureBracketingTest {
     public void onePassSignaturePacketsAndSignaturesAreBracketedTest()
             throws PGPException, IOException {
 
-        PGPSecretKeyRing key1 = PGPainless.generateKeyRing().modernKeyRing("Alice");
-        PGPSecretKeyRing key2 = PGPainless.generateKeyRing().modernKeyRing("Bob");
+        PGPSecretKeyRing key1 = PGPainless.generateKeyRing().modernKeyRing("Alice")
+                .getPGPSecretKeyRing();
+        PGPSecretKeyRing key2 = PGPainless.generateKeyRing().modernKeyRing("Bob")
+                .getPGPSecretKeyRing();
         PGPPublicKeyRing cert1 = PGPainless.extractCertificate(key1);
 
         ByteArrayOutputStream out = new ByteArrayOutputStream();

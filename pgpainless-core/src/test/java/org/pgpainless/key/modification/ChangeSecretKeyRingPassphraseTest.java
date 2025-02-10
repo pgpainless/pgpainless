@@ -35,7 +35,8 @@ import org.pgpainless.util.Passphrase;
 
 public class ChangeSecretKeyRingPassphraseTest {
 
-    private final PGPSecretKeyRing keyRing = PGPainless.generateKeyRing().simpleEcKeyRing("password@encryp.ted", "weakPassphrase");
+    private final PGPSecretKeyRing keyRing = PGPainless.generateKeyRing().simpleEcKeyRing("password@encryp.ted", "weakPassphrase")
+            .getPGPSecretKeyRing();
 
     public ChangeSecretKeyRingPassphraseTest() {
     }

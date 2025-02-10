@@ -48,7 +48,8 @@ public class ModifyKeys {
     @BeforeEach
     public void generateKey() {
         secretKey = PGPainless.generateKeyRing()
-                .modernKeyRing(userId, originalPassphrase);
+                .modernKeyRing(userId, originalPassphrase)
+                .getPGPSecretKeyRing();
 
         KeyRingInfo info = PGPainless.inspectKeyRing(secretKey);
         primaryKeyId = info.getKeyIdentifier().getKeyId();

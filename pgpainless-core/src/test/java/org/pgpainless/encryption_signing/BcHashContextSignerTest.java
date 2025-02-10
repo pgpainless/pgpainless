@@ -66,13 +66,15 @@ public class BcHashContextSignerTest {
 
     @Test
     public void signContextWithRSAKeys() throws PGPException, NoSuchAlgorithmException, IOException {
-        PGPSecretKeyRing secretKeys = PGPainless.generateKeyRing().simpleRsaKeyRing("Sigfried", RsaLength._3072);
+        PGPSecretKeyRing secretKeys = PGPainless.generateKeyRing().simpleRsaKeyRing("Sigfried", RsaLength._3072)
+                .getPGPSecretKeyRing();
         signWithKeys(secretKeys);
     }
 
     @Test
     public void signContextWithEcKeys() throws PGPException, NoSuchAlgorithmException, IOException {
-        PGPSecretKeyRing secretKeys = PGPainless.generateKeyRing().simpleEcKeyRing("Sigfried");
+        PGPSecretKeyRing secretKeys = PGPainless.generateKeyRing().simpleEcKeyRing("Sigfried")
+                .getPGPSecretKeyRing();
         signWithKeys(secretKeys);
     }
 
