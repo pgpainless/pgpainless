@@ -78,7 +78,8 @@ public class CertificateWithMissingSecretKeyTest {
 
         // missing encryption sec key we generate on the fly
         PGPSecretKeyRing secretKeys = PGPainless.generateKeyRing()
-                .modernKeyRing("Missing Decryption Key <missing@decryption.key>");
+                .modernKeyRing("Missing Decryption Key <missing@decryption.key>")
+                .getPGPSecretKeyRing();
         encryptionSubkeyId = PGPainless.inspectKeyRing(secretKeys)
                 .getEncryptionSubkeys(EncryptionPurpose.ANY).get(0).getKeyIdentifier();
         // remove the encryption/decryption secret key

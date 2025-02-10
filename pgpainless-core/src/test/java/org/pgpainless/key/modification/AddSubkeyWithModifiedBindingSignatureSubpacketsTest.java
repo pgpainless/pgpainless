@@ -40,7 +40,8 @@ public class AddSubkeyWithModifiedBindingSignatureSubpacketsTest {
     public void bindEncryptionSubkeyAndModifyBindingSignatureHashedSubpackets() {
         SecretKeyRingProtector protector = SecretKeyRingProtector.unprotectedKeys();
         PGPSecretKeyRing secretKeys = PGPainless.generateKeyRing()
-                .modernKeyRing("Alice <alice@pgpainless.org>");
+                .modernKeyRing("Alice <alice@pgpainless.org>")
+                .getPGPSecretKeyRing();
         KeyRingInfo before = PGPainless.inspectKeyRing(secretKeys);
 
         PGPKeyPair secretSubkey = KeyRingBuilder.generateKeyPair(

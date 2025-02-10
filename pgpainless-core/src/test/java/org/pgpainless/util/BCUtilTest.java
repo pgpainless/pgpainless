@@ -38,7 +38,8 @@ public class BCUtilTest {
                         KeyFlag.CERTIFY_OTHER, KeyFlag.SIGN_DATA))
                 .addSubkey(KeySpec.getBuilder(KeyType.RSA(RsaLength._3072), KeyFlag.ENCRYPT_COMMS))
                 .addUserId("donald@duck.tails")
-                .build();
+                .build()
+                .getPGPSecretKeyRing();
 
         PGPPublicKeyRing pub = KeyRingUtils.publicKeyRingFrom(sec);
 

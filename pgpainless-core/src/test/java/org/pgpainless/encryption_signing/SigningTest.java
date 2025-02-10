@@ -115,7 +115,8 @@ public class SigningTest {
     @ExtendWith(TestAllImplementations.class)
     public void testSignWithInvalidUserIdFails() {
         PGPSecretKeyRing secretKeys = PGPainless.generateKeyRing()
-                .modernKeyRing("alice", "password123");
+                .modernKeyRing("alice", "password123")
+                .getPGPSecretKeyRing();
         SecretKeyRingProtector protector = SecretKeyRingProtector.unlockAnyKeyWith(Passphrase.fromPassword("password123"));
 
         SigningOptions opts = new SigningOptions();
@@ -130,7 +131,8 @@ public class SigningTest {
     public void testSignWithRevokedUserIdFails()
             throws PGPException {
         PGPSecretKeyRing secretKeys = PGPainless.generateKeyRing()
-                .modernKeyRing("alice", "password123");
+                .modernKeyRing("alice", "password123")
+                .getPGPSecretKeyRing();
         SecretKeyRingProtector protector = SecretKeyRingProtector.unlockAnyKeyWith(
                 Passphrase.fromPassword("password123"));
         secretKeys = PGPainless.modifyKeyRing(secretKeys)
@@ -187,7 +189,8 @@ public class SigningTest {
                         KeyType.EDDSA_LEGACY(EdDSALegacyCurve._Ed25519), KeyFlag.CERTIFY_OTHER, KeyFlag.SIGN_DATA)
                         .overridePreferredHashAlgorithms())
                 .addUserId("Alice")
-                .build();
+                .build()
+                .getPGPSecretKeyRing();
 
         SigningOptions options = new SigningOptions()
                 .addDetachedSignature(SecretKeyRingProtector.unprotectedKeys(), secretKeys,
@@ -217,7 +220,8 @@ public class SigningTest {
                         KeySpec.getBuilder(KeyType.EDDSA_LEGACY(EdDSALegacyCurve._Ed25519), KeyFlag.CERTIFY_OTHER, KeyFlag.SIGN_DATA)
                         .overridePreferredHashAlgorithms(HashAlgorithm.MD5))
                 .addUserId("Alice")
-                .build();
+                .build()
+                .getPGPSecretKeyRing();
 
         SigningOptions options = new SigningOptions()
                 .addDetachedSignature(SecretKeyRingProtector.unprotectedKeys(), secretKeys,
@@ -244,7 +248,8 @@ public class SigningTest {
         PGPSecretKeyRing secretKeys = PGPainless.buildKeyRing()
                 .setPrimaryKey(KeySpec.getBuilder(KeyType.EDDSA_LEGACY(EdDSALegacyCurve._Ed25519), KeyFlag.CERTIFY_OTHER))
                 .addUserId("Alice")
-                .build();
+                .build()
+                .getPGPSecretKeyRing();
 
         SigningOptions options = new SigningOptions();
         assertThrows(KeyException.UnacceptableSigningKeyException.class, () -> options.addDetachedSignature(
@@ -260,7 +265,8 @@ public class SigningTest {
                 .setPrimaryKey(KeySpec.getBuilder(KeyType.EDDSA_LEGACY(EdDSALegacyCurve._Ed25519),
                         KeyFlag.CERTIFY_OTHER, KeyFlag.SIGN_DATA))
                 .addUserId("Alice")
-                .build();
+                .build()
+                .getPGPSecretKeyRing();
 
         SigningOptions options = new SigningOptions();
         assertThrows(KeyException.UnboundUserIdException.class, () ->

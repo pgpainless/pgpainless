@@ -27,7 +27,8 @@ public class ChangePrimaryUserIdAndExpirationDatesTest {
     public void generateA_primaryB_revokeA_cantSecondaryA()
             throws PGPException {
         PGPSecretKeyRing secretKeys = PGPainless.generateKeyRing()
-                .modernKeyRing("A");
+                .modernKeyRing("A")
+                .getPGPSecretKeyRing();
         SecretKeyRingProtector protector = SecretKeyRingProtector.unprotectedKeys();
 
         Date now = new Date();
@@ -72,7 +73,8 @@ public class ChangePrimaryUserIdAndExpirationDatesTest {
     @Test
     public void generateA_primaryExpire_isExpired() {
         PGPSecretKeyRing secretKeys = PGPainless.generateKeyRing()
-                .modernKeyRing("A");
+                .modernKeyRing("A")
+                .getPGPSecretKeyRing();
         SecretKeyRingProtector protector = SecretKeyRingProtector.unprotectedKeys();
 
         KeyRingInfo info = PGPainless.inspectKeyRing(secretKeys);
@@ -94,7 +96,8 @@ public class ChangePrimaryUserIdAndExpirationDatesTest {
     @Test
     public void generateA_primaryB_primaryExpire_bIsStillPrimary() {
         PGPSecretKeyRing secretKeys = PGPainless.generateKeyRing()
-                .modernKeyRing("A");
+                .modernKeyRing("A")
+                .getPGPSecretKeyRing();
         SecretKeyRingProtector protector = SecretKeyRingProtector.unprotectedKeys();
 
         Date now = new Date();
@@ -134,7 +137,8 @@ public class ChangePrimaryUserIdAndExpirationDatesTest {
 
     @Test
     public void generateA_expire_certify() {
-        PGPSecretKeyRing secretKeys = PGPainless.generateKeyRing().modernKeyRing("A");
+        PGPSecretKeyRing secretKeys = PGPainless.generateKeyRing().modernKeyRing("A")
+                .getPGPSecretKeyRing();
         SecretKeyRingProtector protector = SecretKeyRingProtector.unprotectedKeys();
 
         Date now = new Date();
@@ -157,7 +161,8 @@ public class ChangePrimaryUserIdAndExpirationDatesTest {
     @Test
     public void generateA_expire_primaryB_expire_isPrimaryB()
             throws PGPException {
-        PGPSecretKeyRing secretKeys = PGPainless.generateKeyRing().modernKeyRing("A");
+        PGPSecretKeyRing secretKeys = PGPainless.generateKeyRing().modernKeyRing("A")
+                .getPGPSecretKeyRing();
         SecretKeyRingProtector protector = SecretKeyRingProtector.unprotectedKeys();
 
         Date now = new Date();

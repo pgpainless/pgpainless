@@ -30,7 +30,8 @@ public class TestEncryptCommsStorageFlagsDifferentiated {
                                 KeyFlag.ENCRYPT_STORAGE // no ENCRYPT_COMMS
                         ))
                 .addUserId("cannot@encrypt.comms")
-                .build();
+                .build()
+                .getPGPSecretKeyRing();
 
         PGPPublicKeyRing publicKeys = KeyRingUtils.publicKeyRingFrom(secretKeys);
 

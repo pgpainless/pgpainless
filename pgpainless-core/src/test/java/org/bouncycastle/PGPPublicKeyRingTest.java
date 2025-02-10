@@ -29,7 +29,8 @@ public class PGPPublicKeyRingTest {
      */
     @Test
     public void subkeysDoNotHaveUserIDsTest() {
-        PGPSecretKeyRing secretKeys = PGPainless.generateKeyRing().simpleEcKeyRing("primary@user.id");
+        PGPSecretKeyRing secretKeys = PGPainless.generateKeyRing().simpleEcKeyRing("primary@user.id")
+                .getPGPSecretKeyRing();
         PGPPublicKeyRing publicKeys = KeyRingUtils.publicKeyRingFrom(secretKeys);
         PGPPublicKey primaryKey = publicKeys.getPublicKey();
         for (PGPPublicKey subkey : publicKeys) {
@@ -44,7 +45,8 @@ public class PGPPublicKeyRingTest {
     @Test
     public void removeUserIdTest() {
         String userId = "alice@wonderland.lit";
-        PGPSecretKeyRing secretKeyRing = PGPainless.generateKeyRing().simpleEcKeyRing(userId);
+        PGPSecretKeyRing secretKeyRing = PGPainless.generateKeyRing().simpleEcKeyRing(userId)
+                .getPGPSecretKeyRing();
         PGPPublicKeyRing publicKeys = KeyRingUtils.publicKeyRingFrom(secretKeyRing);
 
         List<String> userIds = CollectionUtils.iteratorToList(publicKeys.getPublicKey().getUserIDs());
