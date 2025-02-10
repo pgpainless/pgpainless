@@ -33,7 +33,8 @@ public class GenerateKeyWithCustomCreationDateTest {
                 .setPrimaryKey(KeySpec.getBuilder(KeyType.EDDSA_LEGACY(EdDSALegacyCurve._Ed25519), KeyFlag.CERTIFY_OTHER, KeyFlag.SIGN_DATA)
                         .setKeyCreationDate(creationDate)) // primary key with custom creation time
                 .addUserId("Alice")
-                .build();
+                .build()
+                .getPGPSecretKeyRing();
 
         Iterator<PGPSecretKey> iterator = secretKeys.iterator();
         PGPPublicKey primaryKey = iterator.next().getPublicKey();
@@ -54,7 +55,8 @@ public class GenerateKeyWithCustomCreationDateTest {
                 .addSubkey(KeySpec.getBuilder(KeyType.ECDH(EllipticCurve._P384), KeyFlag.ENCRYPT_COMMS, KeyFlag.ENCRYPT_STORAGE).setKeyCreationDate(future))
                 .setPrimaryKey(KeySpec.getBuilder(KeyType.ECDSA(EllipticCurve._P384), KeyFlag.CERTIFY_OTHER, KeyFlag.SIGN_DATA))
                 .addUserId("Captain Future <cpt@futu.re>")
-                .build();
+                .build()
+                .getPGPSecretKeyRing();
 
         // Subkey has future key creation date, so its binding will predate the key -> no usable encryption key left
         assertFalse(PGPainless.inspectKeyRing(secretKeys)

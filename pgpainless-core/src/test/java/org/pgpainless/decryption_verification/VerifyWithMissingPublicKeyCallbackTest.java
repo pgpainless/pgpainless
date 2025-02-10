@@ -38,7 +38,8 @@ public class VerifyWithMissingPublicKeyCallbackTest {
 
     @Test
     public void testMissingPublicKeyCallback() throws PGPException, IOException {
-        PGPSecretKeyRing signingSecKeys = PGPainless.generateKeyRing().modernKeyRing("alice");
+        PGPSecretKeyRing signingSecKeys = PGPainless.generateKeyRing().modernKeyRing("alice")
+                .getPGPSecretKeyRing();
         OpenPGPCertificate.OpenPGPComponentKey signingKey =
                 new KeyRingInfo(signingSecKeys).getSigningSubkeys().get(0);
         PGPPublicKeyRing signingPubKeys = KeyRingUtils.publicKeyRingFrom(signingSecKeys);

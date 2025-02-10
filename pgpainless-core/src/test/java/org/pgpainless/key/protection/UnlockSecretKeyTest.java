@@ -21,7 +21,8 @@ public class UnlockSecretKeyTest {
     @Test
     public void testUnlockSecretKey() throws PGPException {
         PGPSecretKeyRing secretKeyRing = PGPainless.generateKeyRing()
-                .simpleEcKeyRing("alice@wonderland.lit", "heureka!");
+                .simpleEcKeyRing("alice@wonderland.lit", "heureka!")
+                .getPGPSecretKeyRing();
         PGPSecretKey secretKey = secretKeyRing.getSecretKey();
 
         SecretKeyRingProtector correctPassphrase = SecretKeyRingProtector

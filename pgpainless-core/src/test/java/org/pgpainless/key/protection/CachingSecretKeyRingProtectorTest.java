@@ -77,7 +77,8 @@ public class CachingSecretKeyRingProtectorTest {
     @Test
     public void testAddPassphraseForKeyRing() {
         PGPSecretKeyRing keys = PGPainless.generateKeyRing()
-                .modernKeyRing("test@test.test", "Passphrase123");
+                .modernKeyRing("test@test.test", "Passphrase123")
+                .getPGPSecretKeyRing();
         Passphrase passphrase = Passphrase.fromPassword("Passphrase123");
 
         protector.addPassphrase(keys, passphrase);

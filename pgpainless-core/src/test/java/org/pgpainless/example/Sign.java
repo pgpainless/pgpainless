@@ -37,7 +37,8 @@ public class Sign {
 
     @BeforeAll
     public static void prepare() {
-        secretKey = PGPainless.generateKeyRing().modernKeyRing("Emilia Example <emilia@example.org>");
+        secretKey = PGPainless.generateKeyRing().modernKeyRing("Emilia Example <emilia@example.org>")
+                .getPGPSecretKeyRing();
         protector = SecretKeyRingProtector.unprotectedKeys(); // no password
     }
 
