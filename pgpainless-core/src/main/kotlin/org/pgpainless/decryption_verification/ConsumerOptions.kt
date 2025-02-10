@@ -4,11 +4,16 @@
 
 package org.pgpainless.decryption_verification
 
+import org.bouncycastle.bcpg.KeyIdentifier
 import java.io.IOException
 import java.io.InputStream
 import java.util.*
 import org.bouncycastle.openpgp.*
+import org.bouncycastle.openpgp.api.OpenPGPCertificate
+import org.bouncycastle.openpgp.api.OpenPGPImplementation
+import org.bouncycastle.openpgp.api.OpenPGPKey
 import org.bouncycastle.openpgp.operator.PublicKeyDataDecryptorFactory
+import org.pgpainless.PGPainless
 import org.pgpainless.bouncycastle.extensions.getPublicKeyFor
 import org.pgpainless.decryption_verification.cleartext_signatures.InMemoryMultiPassStrategy
 import org.pgpainless.decryption_verification.cleartext_signatures.MultiPassStrategy
@@ -19,7 +24,9 @@ import org.pgpainless.util.Passphrase
 import org.pgpainless.util.SessionKey
 
 /** Options for decryption and signature verification. */
-class ConsumerOptions {
+class ConsumerOptions(
+    private val implementation: OpenPGPImplementation
+) {
 
     private var ignoreMDCErrors = false
     var isDisableAsciiArmorCRC = false
@@ -34,7 +41,7 @@ class ConsumerOptions {
     private var sessionKey: SessionKey? = null
     private val customDecryptorFactories =
         mutableMapOf<SubkeyIdentifier, PublicKeyDataDecryptorFactory>()
-    private val decryptionKeys = mutableMapOf<PGPSecretKeyRing, SecretKeyRingProtector>()
+    private val decryptionKeys = mutableMapOf<OpenPGPKey, SecretKeyRingProtector>()
     private val decryptionPassphrases = mutableSetOf<Passphrase>()
     private var missingKeyPassphraseStrategy = MissingKeyPassphraseStrategy.INTERACTIVE
     private var multiPassStrategy: MultiPassStrategy = InMemoryMultiPassStrategy()
@@ -64,6 +71,10 @@ class ConsumerOptions {
     }
 
     fun getVerifyNotAfter() = verifyNotAfter
+
+    fun addVerificationCert(verificationCert: OpenPGPCertificate): ConsumerOptions = apply {
+        this.certificates.addCertificate(verificationCert)
+    }
 
     /**
      * Add a certificate (public key ring) for signature verification.
@@ -155,6 +166,12 @@ class ConsumerOptions {
 
     fun getSessionKey() = sessionKey
 
+    @JvmOverloads
+    fun addDecryptionKey(
+        key: OpenPGPKey,
+        protector: SecretKeyRingProtector = SecretKeyRingProtector.unprotectedKeys()
+    ) = apply { decryptionKeys[key] = protector }
+
     /**
      * Add a key for message decryption. If the key is encrypted, the [SecretKeyRingProtector] is
      * used to decrypt it when needed.
@@ -167,7 +184,7 @@ class ConsumerOptions {
     fun addDecryptionKey(
         key: PGPSecretKeyRing,
         protector: SecretKeyRingProtector = SecretKeyRingProtector.unprotectedKeys()
-    ) = apply { decryptionKeys[key] = protector }
+    ) = addDecryptionKey(OpenPGPKey(key, implementation), protector)
 
     /**
      * Add the keys in the provided key collection for message decryption.
@@ -270,7 +287,7 @@ class ConsumerOptions {
      * @param decryptionKeyRing secret key
      * @return protector for that particular secret key
      */
-    fun getSecretKeyProtector(decryptionKeyRing: PGPSecretKeyRing): SecretKeyRingProtector? {
+    fun getSecretKeyProtector(decryptionKeyRing: OpenPGPKey): SecretKeyRingProtector? {
         return decryptionKeys[decryptionKeyRing]
     }
 
@@ -378,14 +395,20 @@ class ConsumerOptions {
      * available signer certificates.
      */
     class CertificateSource {
-        private val explicitCertificates: MutableSet<PGPPublicKeyRing> = mutableSetOf()
+        private val explicitCertificates: MutableSet<OpenPGPCertificate> = mutableSetOf()
 
         /**
          * Add a certificate as verification cert explicitly.
          *
          * @param certificate certificate
          */
-        fun addCertificate(certificate: PGPPublicKeyRing) {
+        fun addCertificate(certificate: PGPPublicKeyRing,
+                           implementation: OpenPGPImplementation = PGPainless.getInstance().implementation
+        ) {
+            explicitCertificates.add(OpenPGPCertificate(certificate, implementation))
+        }
+
+        fun addCertificate(certificate: OpenPGPCertificate) {
             explicitCertificates.add(certificate)
         }
 
@@ -394,7 +417,7 @@ class ConsumerOptions {
          *
          * @return explicitly set verification certs
          */
-        fun getExplicitCertificates(): Set<PGPPublicKeyRing> {
+        fun getExplicitCertificates(): Set<OpenPGPCertificate> {
             return explicitCertificates.toSet()
         }
 
@@ -406,15 +429,23 @@ class ConsumerOptions {
          * @param keyId key id
          * @return certificate
          */
-        fun getCertificate(keyId: Long): PGPPublicKeyRing? {
-            return explicitCertificates.firstOrNull { it.getPublicKey(keyId) != null }
+        fun getCertificate(keyId: Long): OpenPGPCertificate? {
+            return getCertificate(KeyIdentifier(keyId))
         }
 
-        fun getCertificate(signature: PGPSignature): PGPPublicKeyRing? =
-            explicitCertificates.firstOrNull { it.getPublicKeyFor(signature) != null }
+        fun getCertificate(identifier: KeyIdentifier): OpenPGPCertificate? {
+            return explicitCertificates.firstOrNull { it.getKey(identifier) != null }
+        }
+
+        fun getCertificate(signature: PGPSignature): OpenPGPCertificate? =
+            explicitCertificates.firstOrNull { it.getSigningKeyFor(signature) != null }
     }
 
     companion object {
-        @JvmStatic fun get() = ConsumerOptions()
+        @JvmStatic
+        @JvmOverloads
+        fun get(
+            implementation: OpenPGPImplementation = PGPainless.getInstance().implementation
+        ) = ConsumerOptions(implementation)
     }
 }

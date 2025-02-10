@@ -10,6 +10,7 @@ import org.bouncycastle.bcpg.SecretKeyPacket;
 import org.bouncycastle.bcpg.SecretSubkeyPacket;
 import org.bouncycastle.openpgp.PGPSecretKey;
 import org.bouncycastle.openpgp.PGPSecretKeyRing;
+import org.bouncycastle.openpgp.api.OpenPGPKey;
 import org.pgpainless.key.SubkeyIdentifier;
 
 import javax.annotation.Nonnull;
@@ -58,6 +59,11 @@ public final class GnuPGDummyKeyUtil {
             }
         }
         return hardwareBackedKeys;
+    }
+
+    public static Builder modify(@Nonnull OpenPGPKey key)
+    {
+        return modify(key.getPGPSecretKeyRing());
     }
 
     /**
