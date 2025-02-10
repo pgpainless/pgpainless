@@ -7,6 +7,9 @@ package org.pgpainless.signature.consumer
 import org.bouncycastle.openpgp.PGPOnePassSignature
 import org.bouncycastle.openpgp.PGPPublicKeyRing
 import org.bouncycastle.openpgp.PGPSignature
+import org.bouncycastle.openpgp.api.OpenPGPCertificate
+import org.bouncycastle.openpgp.api.OpenPGPCertificate.OpenPGPComponentKey
+import org.pgpainless.bouncycastle.extensions.getSigningKeyFor
 import org.pgpainless.key.SubkeyIdentifier
 
 /**
@@ -20,7 +23,7 @@ import org.pgpainless.key.SubkeyIdentifier
  */
 data class OnePassSignatureCheck(
     val onePassSignature: PGPOnePassSignature,
-    val verificationKeys: PGPPublicKeyRing,
+    val verificationKeys: OpenPGPCertificate,
     var signature: PGPSignature? = null
 ) {
 
@@ -30,5 +33,5 @@ data class OnePassSignatureCheck(
      * @return signing key fingerprint
      */
     val signingKey: SubkeyIdentifier
-        get() = SubkeyIdentifier(verificationKeys, onePassSignature.keyID)
+        get() = SubkeyIdentifier(verificationKeys.pgpPublicKeyRing, onePassSignature.keyID)
 }
