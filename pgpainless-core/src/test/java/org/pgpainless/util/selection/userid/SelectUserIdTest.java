@@ -25,7 +25,8 @@ public class SelectUserIdTest {
     @Test
     public void testSelectUserIds() throws PGPException {
         PGPSecretKeyRing secretKeys = PGPainless.generateKeyRing()
-                .simpleEcKeyRing("<alice@wonderland.lit>");
+                .simpleEcKeyRing("<alice@wonderland.lit>")
+                .getPGPSecretKeyRing();
         secretKeys = PGPainless.modifyKeyRing(secretKeys)
                 .addUserId(
                         UserId.newBuilder().withName("Alice Liddell").noComment()
@@ -53,7 +54,8 @@ public class SelectUserIdTest {
 
     @Test
     public void testContainsSubstring() throws PGPException {
-        PGPSecretKeyRing secretKeys = PGPainless.generateKeyRing().simpleEcKeyRing("wine drinker");
+        PGPSecretKeyRing secretKeys = PGPainless.generateKeyRing().simpleEcKeyRing("wine drinker")
+                .getPGPSecretKeyRing();
         secretKeys = PGPainless.modifyKeyRing(secretKeys)
                 .addUserId("this is not a quine", SecretKeyRingProtector.unprotectedKeys())
                 .addUserId("this is not a crime", SecretKeyRingProtector.unprotectedKeys())
@@ -67,7 +69,8 @@ public class SelectUserIdTest {
 
     @Test
     public void testContainsEmailAddress() {
-        PGPSecretKeyRing secretKeys = PGPainless.generateKeyRing().simpleEcKeyRing("Alice <alice@wonderland.lit>");
+        PGPSecretKeyRing secretKeys = PGPainless.generateKeyRing().simpleEcKeyRing("Alice <alice@wonderland.lit>")
+                .getPGPSecretKeyRing();
         List<String> userIds = PGPainless.inspectKeyRing(secretKeys).getValidUserIds();
 
         assertEquals("Alice <alice@wonderland.lit>", userIds.stream().filter(
@@ -80,7 +83,8 @@ public class SelectUserIdTest {
 
     @Test
     public void testAndOrNot() throws PGPException {
-        PGPSecretKeyRing secretKeys = PGPainless.generateKeyRing().simpleEcKeyRing("Alice <alice@wonderland.lit>");
+        PGPSecretKeyRing secretKeys = PGPainless.generateKeyRing().simpleEcKeyRing("Alice <alice@wonderland.lit>")
+                .getPGPSecretKeyRing();
         secretKeys = PGPainless.modifyKeyRing(secretKeys)
                 .addUserId("Alice <another@email.address>", SecretKeyRingProtector.unprotectedKeys())
                 .addUserId("<crazy@the-rabbit.hole>", SecretKeyRingProtector.unprotectedKeys())
@@ -106,7 +110,8 @@ public class SelectUserIdTest {
 
     @Test
     public void testFirstMatch() throws PGPException {
-        PGPSecretKeyRing secretKeys = PGPainless.generateKeyRing().simpleEcKeyRing("First UserID");
+        PGPSecretKeyRing secretKeys = PGPainless.generateKeyRing().simpleEcKeyRing("First UserID")
+                .getPGPSecretKeyRing();
         secretKeys = PGPainless.modifyKeyRing(secretKeys)
                 .addUserId("Second UserID", SecretKeyRingProtector.unprotectedKeys())
                 .done();

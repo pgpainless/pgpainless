@@ -17,7 +17,10 @@ public class ArmorTest {
 
     @Test
     public void armor() throws IOException {
-        byte[] data = PGPainless.generateKeyRing().modernKeyRing("Alice").getEncoded();
+        byte[] data = PGPainless.generateKeyRing()
+                .modernKeyRing("Alice")
+                .getPGPSecretKeyRing()
+                .getEncoded();
         byte[] knownGoodArmor = ArmorUtils.toAsciiArmoredString(data)
                 .replace("Version: PGPainless\n", "") // armor command does not add version anymore
                 .getBytes(StandardCharsets.UTF_8);

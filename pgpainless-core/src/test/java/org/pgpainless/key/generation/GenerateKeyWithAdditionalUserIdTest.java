@@ -42,7 +42,8 @@ public class GenerateKeyWithAdditionalUserIdTest {
                 .addUserId(UserId.onlyEmail("additional2@user.id"))
                 .addUserId("\ttrimThis@user.id     ")
                 .setExpirationDate(expiration)
-                .build();
+                .build()
+                .getPGPSecretKeyRing();
         PGPPublicKeyRing publicKeys = KeyRingUtils.publicKeyRingFrom(secretKeys);
 
         JUtils.assertDateEquals(expiration, PGPainless.inspectKeyRing(publicKeys).getPrimaryKeyExpirationDate());

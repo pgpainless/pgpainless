@@ -33,7 +33,8 @@ public class ThirdPartyDirectKeySignatureBuilderTest {
     @Test
     public void testDirectKeySignatureBuilding() throws PGPException {
         PGPSecretKeyRing secretKeys = PGPainless.generateKeyRing()
-                .modernKeyRing("Alice");
+                .modernKeyRing("Alice")
+                .getPGPSecretKeyRing();
 
         DirectKeySelfSignatureBuilder dsb = new DirectKeySelfSignatureBuilder(
                 secretKeys.getSecretKey(),

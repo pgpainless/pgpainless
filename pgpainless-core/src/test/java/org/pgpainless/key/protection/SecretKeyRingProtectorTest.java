@@ -44,7 +44,8 @@ public class SecretKeyRingProtectorTest {
             secretKey.extractPrivateKey(decryptor);
         }
         PGPSecretKeyRing unrelatedKeys = PGPainless.generateKeyRing().simpleEcKeyRing("unrelated",
-                "SecurePassword");
+                "SecurePassword")
+                .getPGPSecretKeyRing();
         for (PGPSecretKey unrelatedKey : unrelatedKeys) {
             PBESecretKeyDecryptor decryptor = protector.getDecryptor(unrelatedKey.getKeyID());
             assertNull(decryptor);

@@ -11,10 +11,7 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.IOException;
-import java.security.InvalidAlgorithmParameterException;
-import java.security.NoSuchAlgorithmException;
 
-import org.bouncycastle.openpgp.PGPException;
 import org.bouncycastle.openpgp.PGPPublicKeyRing;
 import org.bouncycastle.openpgp.PGPSecretKeyRing;
 import org.junit.jupiter.api.Test;
@@ -31,9 +28,10 @@ public class ExtractCertCmdTest extends CLITest {
 
     @Test
     public void testExtractCert()
-            throws InvalidAlgorithmParameterException, NoSuchAlgorithmException, PGPException, IOException {
+            throws IOException {
         PGPSecretKeyRing secretKeys = PGPainless.generateKeyRing()
-                .simpleEcKeyRing("Juliet Capulet <juliet@capulet.lit>");
+                .simpleEcKeyRing("Juliet Capulet <juliet@capulet.lit>")
+                .getPGPSecretKeyRing();
 
         pipeBytesToStdin(secretKeys.getEncoded());
         ByteArrayOutputStream out = pipeStdoutToStream();

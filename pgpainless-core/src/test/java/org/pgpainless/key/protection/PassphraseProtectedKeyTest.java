@@ -57,7 +57,8 @@ public class PassphraseProtectedKeyTest {
 
     @Test
     public void testReturnsNonNullDecryptorForSubkeys() throws PGPException {
-        PGPSecretKeyRing secretKeys = PGPainless.generateKeyRing().modernKeyRing("alice", "passphrase");
+        PGPSecretKeyRing secretKeys = PGPainless.generateKeyRing().modernKeyRing("alice", "passphrase")
+                .getPGPSecretKeyRing();
         SecretKeyRingProtector protector = PasswordBasedSecretKeyRingProtector.forKey(secretKeys, Passphrase.fromPassword("passphrase"));
         for (Iterator<PGPPublicKey> it = secretKeys.getPublicKeys(); it.hasNext(); ) {
             PGPPublicKey subkey = it.next();
