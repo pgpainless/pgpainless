@@ -252,7 +252,8 @@ public class ModifiedPublicKeysInvestigation {
     @Test
     public void assertUnmodifiedRSAKeyDoesNotThrow() {
         PGPSecretKeyRing secretKeys = PGPainless.generateKeyRing()
-                .simpleRsaKeyRing("Unmodified", RsaLength._4096, "987654321");
+                .simpleRsaKeyRing("Unmodified", RsaLength._4096, "987654321")
+                .getPGPSecretKeyRing();
         SecretKeyRingProtector protector = SecretKeyRingProtector.unlockAnyKeyWith(Passphrase.fromPassword("987654321"));
 
         for (PGPSecretKey secretKey : secretKeys) {
@@ -264,7 +265,8 @@ public class ModifiedPublicKeysInvestigation {
     @Test
     public void assertUnmodifiedECKeyDoesNotThrow() {
         PGPSecretKeyRing secretKeys = PGPainless.generateKeyRing()
-                .simpleEcKeyRing("Unmodified", "987654321");
+                .simpleEcKeyRing("Unmodified", "987654321")
+                .getPGPSecretKeyRing();
         SecretKeyRingProtector protector = SecretKeyRingProtector.unlockAnyKeyWith(Passphrase.fromPassword("987654321"));
 
         for (PGPSecretKey secretKey : secretKeys) {
@@ -276,7 +278,8 @@ public class ModifiedPublicKeysInvestigation {
     @Test
     public void assertUnmodifiedModernKeyDoesNotThrow() {
         PGPSecretKeyRing secretKeys = PGPainless.generateKeyRing()
-                .modernKeyRing("Unmodified", "987654321");
+                .modernKeyRing("Unmodified", "987654321")
+                .getPGPSecretKeyRing();
         SecretKeyRingProtector protector = SecretKeyRingProtector.unlockAnyKeyWith(Passphrase.fromPassword("987654321"));
 
         for (PGPSecretKey secretKey : secretKeys) {

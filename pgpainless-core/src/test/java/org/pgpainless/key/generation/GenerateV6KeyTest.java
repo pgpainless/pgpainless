@@ -16,7 +16,8 @@ public class GenerateV6KeyTest {
     @Test
     public void generateModernV6Key() {
         PGPSecretKeyRing secretKey = PGPainless.generateKeyRing(OpenPGPKeyVersion.v6)
-                .modernKeyRing("Alice <alice@example.org>");
+                .modernKeyRing("Alice <alice@example.org>")
+                .getPGPSecretKeyRing();
         assertEquals(6, secretKey.getPublicKey().getVersion());
     }
 }

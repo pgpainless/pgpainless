@@ -36,9 +36,11 @@ public class CertifyCertificateTest {
     @Test
     public void testUserIdCertification() throws PGPException, IOException {
         SecretKeyRingProtector protector = SecretKeyRingProtector.unprotectedKeys();
-        PGPSecretKeyRing alice = PGPainless.generateKeyRing().modernKeyRing("Alice <alice@pgpainless.org>");
+        PGPSecretKeyRing alice = PGPainless.generateKeyRing().modernKeyRing("Alice <alice@pgpainless.org>")
+                .getPGPSecretKeyRing();
         String bobUserId = "Bob <bob@pgpainless.org>";
-        PGPSecretKeyRing bob = PGPainless.generateKeyRing().modernKeyRing(bobUserId);
+        PGPSecretKeyRing bob = PGPainless.generateKeyRing().modernKeyRing(bobUserId)
+                .getPGPSecretKeyRing();
 
         PGPPublicKeyRing bobCertificate = PGPainless.extractCertificate(bob);
 
@@ -71,8 +73,10 @@ public class CertifyCertificateTest {
     @Test
     public void testKeyDelegation() throws PGPException, IOException {
         SecretKeyRingProtector protector = SecretKeyRingProtector.unprotectedKeys();
-        PGPSecretKeyRing alice = PGPainless.generateKeyRing().modernKeyRing("Alice <alice@pgpainless.org>");
-        PGPSecretKeyRing bob = PGPainless.generateKeyRing().modernKeyRing("Bob <bob@pgpainless.org>");
+        PGPSecretKeyRing alice = PGPainless.generateKeyRing().modernKeyRing("Alice <alice@pgpainless.org>")
+                .getPGPSecretKeyRing();
+        PGPSecretKeyRing bob = PGPainless.generateKeyRing().modernKeyRing("Bob <bob@pgpainless.org>")
+                .getPGPSecretKeyRing();
 
         PGPPublicKeyRing bobCertificate = PGPainless.extractCertificate(bob);
 
@@ -110,9 +114,11 @@ public class CertifyCertificateTest {
     @Test
     public void testPetNameCertification() {
         PGPSecretKeyRing aliceKey = PGPainless.generateKeyRing()
-                .modernKeyRing("Alice <alice@pgpainless.org>");
+                .modernKeyRing("Alice <alice@pgpainless.org>")
+                .getPGPSecretKeyRing();
         PGPSecretKeyRing bobKey = PGPainless.generateKeyRing()
-                .modernKeyRing("Bob <bob@pgpainless.org>");
+                .modernKeyRing("Bob <bob@pgpainless.org>")
+                .getPGPSecretKeyRing();
 
         PGPPublicKeyRing bobCert = PGPainless.extractCertificate(bobKey);
         String petName = "Bobby";
@@ -140,9 +146,11 @@ public class CertifyCertificateTest {
     @Test
     public void testScopedDelegation() {
         PGPSecretKeyRing aliceKey = PGPainless.generateKeyRing()
-                .modernKeyRing("Alice <alice@pgpainless.org>");
+                .modernKeyRing("Alice <alice@pgpainless.org>")
+                .getPGPSecretKeyRing();
         PGPSecretKeyRing caKey = PGPainless.generateKeyRing()
-                .modernKeyRing("CA <ca@example.com>");
+                .modernKeyRing("CA <ca@example.com>")
+                .getPGPSecretKeyRing();
         PGPPublicKeyRing caCert = PGPainless.extractCertificate(caKey);
 
         CertifyCertificate.CertificationResult result = PGPainless.certify()

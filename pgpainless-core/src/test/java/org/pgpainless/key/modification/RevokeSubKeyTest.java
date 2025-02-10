@@ -126,7 +126,8 @@ public class RevokeSubKeyTest {
     @Test
     public void inspectSubpacketsOnDefaultRevocationSignature()
             throws PGPException {
-        PGPSecretKeyRing secretKeys = PGPainless.generateKeyRing().modernKeyRing("Alice");
+        PGPSecretKeyRing secretKeys = PGPainless.generateKeyRing().modernKeyRing("Alice")
+                .getPGPSecretKeyRing();
         SecretKeyRingProtector protector = SecretKeyRingProtector.unprotectedKeys();
         PGPPublicKey encryptionSubkey = PGPainless.inspectKeyRing(secretKeys)
                 .getEncryptionSubkeys(EncryptionPurpose.ANY).get(0).getPGPPublicKey();
@@ -150,7 +151,8 @@ public class RevokeSubKeyTest {
 
     @Test
     public void inspectSubpacketsOnModifiedRevocationSignature() {
-        PGPSecretKeyRing secretKeys = PGPainless.generateKeyRing().modernKeyRing("Alice");
+        PGPSecretKeyRing secretKeys = PGPainless.generateKeyRing().modernKeyRing("Alice")
+                .getPGPSecretKeyRing();
         SecretKeyRingProtector protector = SecretKeyRingProtector.unprotectedKeys();
         PGPPublicKey encryptionSubkey = PGPainless.inspectKeyRing(secretKeys)
                 .getEncryptionSubkeys(EncryptionPurpose.ANY).get(0).getPGPPublicKey();

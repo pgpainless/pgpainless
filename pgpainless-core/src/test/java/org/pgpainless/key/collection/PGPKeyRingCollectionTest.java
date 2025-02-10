@@ -54,8 +54,10 @@ public class PGPKeyRingCollectionTest {
 
     @Test
     public void testConstructorFromCollection() {
-        PGPSecretKeyRing first = PGPainless.generateKeyRing().simpleEcKeyRing("alice@wonderland.lit");
-        PGPSecretKeyRing second = PGPainless.generateKeyRing().simpleEcKeyRing("bob@the-builder.tv");
+        PGPSecretKeyRing first = PGPainless.generateKeyRing().simpleEcKeyRing("alice@wonderland.lit")
+                .getPGPSecretKeyRing();
+        PGPSecretKeyRing second = PGPainless.generateKeyRing().simpleEcKeyRing("bob@the-builder.tv")
+                .getPGPSecretKeyRing();
         PGPPublicKeyRing secondPub = KeyRingUtils.publicKeyRingFrom(second);
         Collection<PGPKeyRing> keys = Arrays.asList(first, second, secondPub);
 

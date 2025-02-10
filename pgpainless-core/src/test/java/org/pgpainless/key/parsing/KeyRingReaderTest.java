@@ -79,7 +79,8 @@ class KeyRingReaderTest {
         Collection<PGPPublicKeyRing> collection = new ArrayList<>();
 
         for (int i = 0; i < 10; i++) {
-            PGPSecretKeyRing secretKeys = PGPainless.generateKeyRing().simpleEcKeyRing("user_" + i + "@encrypted.key");
+            PGPSecretKeyRing secretKeys = PGPainless.generateKeyRing().simpleEcKeyRing("user_" + i + "@encrypted.key")
+                    .getPGPSecretKeyRing();
             collection.add(KeyRingUtils.publicKeyRingFrom(secretKeys));
         }
 
@@ -447,8 +448,10 @@ class KeyRingReaderTest {
 
     @Test
     public void testReadSecretKeysIgnoresMultipleMarkers() throws IOException {
-        PGPSecretKeyRing alice = PGPainless.generateKeyRing().modernKeyRing("alice@pgpainless.org");
-        PGPSecretKeyRing bob = PGPainless.generateKeyRing().modernKeyRing("bob@pgpainless.org");
+        PGPSecretKeyRing alice = PGPainless.generateKeyRing().modernKeyRing("alice@pgpainless.org")
+                .getPGPSecretKeyRing();
+        PGPSecretKeyRing bob = PGPainless.generateKeyRing().modernKeyRing("bob@pgpainless.org")
+                .getPGPSecretKeyRing();
         MarkerPacket marker = TestUtils.getMarkerPacket();
 
         ByteArrayOutputStream bytes = new ByteArrayOutputStream();
@@ -481,7 +484,8 @@ class KeyRingReaderTest {
     @Test
     public void testReadingSecretKeysExceedsIterationLimit()
             throws IOException {
-        PGPSecretKeyRing alice = PGPainless.generateKeyRing().modernKeyRing("alice@pgpainless.org");
+        PGPSecretKeyRing alice = PGPainless.generateKeyRing().modernKeyRing("alice@pgpainless.org")
+                .getPGPSecretKeyRing();
         MarkerPacket marker = TestUtils.getMarkerPacket();
 
         ByteArrayOutputStream bytes = new ByteArrayOutputStream();
@@ -500,8 +504,10 @@ class KeyRingReaderTest {
     @Test
     public void testReadingSecretKeyCollectionExceedsIterationLimit()
             throws IOException {
-        PGPSecretKeyRing alice = PGPainless.generateKeyRing().modernKeyRing("alice@pgpainless.org");
-        PGPSecretKeyRing bob = PGPainless.generateKeyRing().modernKeyRing("bob@pgpainless.org");
+        PGPSecretKeyRing alice = PGPainless.generateKeyRing().modernKeyRing("alice@pgpainless.org")
+                .getPGPSecretKeyRing();
+        PGPSecretKeyRing bob = PGPainless.generateKeyRing().modernKeyRing("bob@pgpainless.org")
+                .getPGPSecretKeyRing();
         MarkerPacket marker = TestUtils.getMarkerPacket();
 
         ByteArrayOutputStream bytes = new ByteArrayOutputStream();
@@ -522,7 +528,8 @@ class KeyRingReaderTest {
     @Test
     public void testReadingPublicKeysExceedsIterationLimit()
             throws IOException {
-        PGPSecretKeyRing secretKeys = PGPainless.generateKeyRing().modernKeyRing("alice@pgpainless.org");
+        PGPSecretKeyRing secretKeys = PGPainless.generateKeyRing().modernKeyRing("alice@pgpainless.org")
+                .getPGPSecretKeyRing();
         PGPPublicKeyRing alice = PGPainless.extractCertificate(secretKeys);
         MarkerPacket marker = TestUtils.getMarkerPacket();
 
@@ -542,8 +549,10 @@ class KeyRingReaderTest {
     @Test
     public void testReadingPublicKeyCollectionExceedsIterationLimit()
             throws IOException {
-        PGPSecretKeyRing sec1 = PGPainless.generateKeyRing().modernKeyRing("alice@pgpainless.org");
-        PGPSecretKeyRing sec2 = PGPainless.generateKeyRing().modernKeyRing("bob@pgpainless.org");
+        PGPSecretKeyRing sec1 = PGPainless.generateKeyRing().modernKeyRing("alice@pgpainless.org")
+                .getPGPSecretKeyRing();
+        PGPSecretKeyRing sec2 = PGPainless.generateKeyRing().modernKeyRing("bob@pgpainless.org")
+                .getPGPSecretKeyRing();
         PGPPublicKeyRing alice = PGPainless.extractCertificate(sec1);
         PGPPublicKeyRing bob = PGPainless.extractCertificate(sec2);
         MarkerPacket marker = TestUtils.getMarkerPacket();
@@ -564,7 +573,8 @@ class KeyRingReaderTest {
 
     @Test
     public void testReadKeyRingWithBinaryPublicKey() throws IOException {
-        PGPSecretKeyRing secretKeys = PGPainless.generateKeyRing().modernKeyRing("Alice <alice@pgpainless.org>");
+        PGPSecretKeyRing secretKeys = PGPainless.generateKeyRing().modernKeyRing("Alice <alice@pgpainless.org>")
+                .getPGPSecretKeyRing();
         PGPPublicKeyRing publicKeys = PGPainless.extractCertificate(secretKeys);
         byte[] bytes = publicKeys.getEncoded();
 
@@ -577,7 +587,8 @@ class KeyRingReaderTest {
 
     @Test
     public void testReadKeyRingWithBinarySecretKey() throws IOException {
-        PGPSecretKeyRing secretKeys = PGPainless.generateKeyRing().modernKeyRing("Alice <alice@pgpainless.org>");
+        PGPSecretKeyRing secretKeys = PGPainless.generateKeyRing().modernKeyRing("Alice <alice@pgpainless.org>")
+                .getPGPSecretKeyRing();
         byte[] bytes = secretKeys.getEncoded();
 
         PGPKeyRing keyRing = PGPainless.readKeyRing()
@@ -589,7 +600,8 @@ class KeyRingReaderTest {
 
     @Test
     public void testReadKeyRingWithArmoredPublicKey() throws IOException {
-        PGPSecretKeyRing secretKeys = PGPainless.generateKeyRing().modernKeyRing("Alice <alice@pgpainless.org>");
+        PGPSecretKeyRing secretKeys = PGPainless.generateKeyRing().modernKeyRing("Alice <alice@pgpainless.org>")
+                .getPGPSecretKeyRing();
         PGPPublicKeyRing publicKeys = PGPainless.extractCertificate(secretKeys);
         String armored = PGPainless.asciiArmor(publicKeys);
 
@@ -602,7 +614,8 @@ class KeyRingReaderTest {
 
     @Test
     public void testReadKeyRingWithArmoredSecretKey() throws IOException {
-        PGPSecretKeyRing secretKeys = PGPainless.generateKeyRing().modernKeyRing("Alice <alice@pgpainless.org>");
+        PGPSecretKeyRing secretKeys = PGPainless.generateKeyRing().modernKeyRing("Alice <alice@pgpainless.org>")
+                .getPGPSecretKeyRing();
         String armored = PGPainless.asciiArmor(secretKeys);
 
         PGPKeyRing keyRing = PGPainless.readKeyRing()

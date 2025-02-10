@@ -39,7 +39,8 @@ public class KeyGenerationSubpacketsTest {
     @Test
     public void verifyDefaultSubpacketsForUserIdSignatures()
             throws PGPException {
-        PGPSecretKeyRing secretKeys = PGPainless.generateKeyRing().modernKeyRing("Alice");
+        PGPSecretKeyRing secretKeys = PGPainless.generateKeyRing().modernKeyRing("Alice")
+                .getPGPSecretKeyRing();
         Date plus1Sec = new Date(secretKeys.getPublicKey().getCreationTime().getTime() + 1000);
         KeyRingInfo info = PGPainless.inspectKeyRing(secretKeys);
         PGPSignature userIdSig = info.getLatestUserIdCertification("Alice");
@@ -105,7 +106,8 @@ public class KeyGenerationSubpacketsTest {
     @Test
     public void verifyDefaultSubpacketsForSubkeyBindingSignatures()
             throws PGPException {
-        PGPSecretKeyRing secretKeys = PGPainless.generateKeyRing().modernKeyRing("Alice");
+        PGPSecretKeyRing secretKeys = PGPainless.generateKeyRing().modernKeyRing("Alice")
+                .getPGPSecretKeyRing();
         KeyRingInfo info = PGPainless.inspectKeyRing(secretKeys);
         List<OpenPGPCertificate.OpenPGPComponentKey> keysBefore = info.getPublicKeys();
 

@@ -229,7 +229,8 @@ public class KeyRingInfoTest {
                 .addSubkey(KeySpec.getBuilder(
                         KeyType.ECDSA(EllipticCurve._BRAINPOOLP384R1), KeyFlag.SIGN_DATA))
                 .addUserId(UserId.builder().withName("Alice").withEmail("alice@pgpainless.org").build())
-                .build();
+                .build()
+                .getPGPSecretKeyRing();
 
         Iterator<PGPSecretKey> keys = secretKeys.iterator();
         Date now = DateUtil.now();
@@ -522,7 +523,8 @@ public class KeyRingInfoTest {
 
     @Test
     public void getSecretKeyTest() {
-        PGPSecretKeyRing secretKeys = PGPainless.generateKeyRing().modernKeyRing("Alice");
+        PGPSecretKeyRing secretKeys = PGPainless.generateKeyRing().modernKeyRing("Alice")
+                .getPGPSecretKeyRing();
         OpenPGPKey key = new OpenPGPKey(secretKeys);
         KeyRingInfo info = PGPainless.inspectKeyRing(secretKeys);
 
@@ -560,7 +562,8 @@ public class KeyRingInfoTest {
         PGPSecretKeyRing secretKeys = PGPainless.buildKeyRing()
                 .addUserId("Alice")
                 .setPrimaryKey(KeySpec.getBuilder(KeyType.EDDSA_LEGACY(EdDSALegacyCurve._Ed25519), KeyFlag.CERTIFY_OTHER))
-                .build();
+                .build()
+                .getPGPSecretKeyRing();
 
         KeyRingInfo info = PGPainless.inspectKeyRing(secretKeys);
 

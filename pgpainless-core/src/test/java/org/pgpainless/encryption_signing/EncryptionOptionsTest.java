@@ -55,7 +55,8 @@ public class EncryptionOptionsTest {
                 .addSubkey(KeySpec.getBuilder(KeyType.XDH_LEGACY(XDHLegacySpec._X25519), KeyFlag.ENCRYPT_STORAGE)
                         .build())
                 .addUserId("test@pgpainless.org")
-                .build();
+                .build()
+                .getPGPSecretKeyRing();
 
         publicKeys = KeyRingUtils.publicKeyRingFrom(secretKeys);
 
@@ -137,7 +138,8 @@ public class EncryptionOptionsTest {
         PGPSecretKeyRing secretKeys = PGPainless.buildKeyRing()
                 .setPrimaryKey(KeySpec.getBuilder(KeyType.EDDSA_LEGACY(EdDSALegacyCurve._Ed25519), KeyFlag.CERTIFY_OTHER, KeyFlag.SIGN_DATA))
                 .addUserId("test@pgpainless.org")
-                .build();
+                .build()
+                .getPGPSecretKeyRing();
         PGPPublicKeyRing publicKeys = KeyRingUtils.publicKeyRingFrom(secretKeys);
 
         assertThrows(KeyException.UnacceptableEncryptionKeyException.class, () -> options.addRecipient(publicKeys));
@@ -168,7 +170,8 @@ public class EncryptionOptionsTest {
     @Test
     public void testAddRecipients_PGPPublicKeyRingCollection() {
         PGPPublicKeyRing secondKeyRing = KeyRingUtils.publicKeyRingFrom(
-                PGPainless.generateKeyRing().modernKeyRing("other@pgpainless.org"));
+                PGPainless.generateKeyRing().modernKeyRing("other@pgpainless.org")
+                        .getPGPSecretKeyRing());
 
         PGPPublicKeyRingCollection collection = new PGPPublicKeyRingCollection(
                 Arrays.asList(publicKeys, secondKeyRing));

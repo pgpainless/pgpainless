@@ -33,7 +33,8 @@ public class GenerateEllipticCurveKeyTest {
                         KeyFlag.CERTIFY_OTHER, KeyFlag.SIGN_DATA))
                 .addSubkey(KeySpec.getBuilder(KeyType.XDH_LEGACY(XDHLegacySpec._X25519), KeyFlag.ENCRYPT_COMMS))
                 .addUserId(UserId.onlyEmail("alice@wonderland.lit").toString())
-                .build();
+                .build()
+                .getPGPSecretKeyRing();
 
         assertEquals(PublicKeyAlgorithm.EDDSA_LEGACY.getAlgorithmId(), keyRing.getPublicKey().getAlgorithm());
         UnlockSecretKey.unlockSecretKey(keyRing.getSecretKey(), SecretKeyRingProtector.unprotectedKeys());

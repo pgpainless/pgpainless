@@ -32,7 +32,8 @@ public class GuessPreferredHashAlgorithmTest {
                         .overridePreferredSymmetricKeyAlgorithms(new SymmetricKeyAlgorithm[] {})
                         .overridePreferredCompressionAlgorithms(new CompressionAlgorithm[] {}))
                 .addUserId("test@test.test")
-                .build();
+                .build()
+                .getPGPSecretKeyRing();
 
         PGPPublicKey publicKey = secretKeys.getPublicKey();
         assertEquals(Collections.emptyList(),

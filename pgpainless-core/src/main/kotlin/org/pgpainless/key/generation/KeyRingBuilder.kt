@@ -8,6 +8,7 @@ import java.io.IOException
 import java.util.*
 import org.bouncycastle.openpgp.*
 import org.bouncycastle.openpgp.api.OpenPGPImplementation
+import org.bouncycastle.openpgp.api.OpenPGPKey
 import org.bouncycastle.openpgp.operator.PBESecretKeyDecryptor
 import org.bouncycastle.openpgp.operator.PBESecretKeyEncryptor
 import org.bouncycastle.openpgp.operator.PGPContentSignerBuilder
@@ -25,8 +26,10 @@ import org.pgpainless.signature.subpackets.SignatureSubpackets
 import org.pgpainless.signature.subpackets.SignatureSubpacketsHelper
 import org.pgpainless.util.Passphrase
 
-class KeyRingBuilder(private val version: OpenPGPKeyVersion) :
-    KeyRingBuilderInterface<KeyRingBuilder> {
+class KeyRingBuilder(
+    private val version: OpenPGPKeyVersion,
+    private val implementation: OpenPGPImplementation
+) : KeyRingBuilderInterface<KeyRingBuilder> {
 
     private var primaryKeySpec: KeySpec? = null
     private val subKeySpecs = mutableListOf<KeySpec>()
@@ -80,7 +83,7 @@ class KeyRingBuilder(private val version: OpenPGPKeyVersion) :
 
     private fun keyIsCertificationCapable(keySpec: KeySpec) = keySpec.keyType.canCertify
 
-    override fun build(): PGPSecretKeyRing {
+    override fun build(): OpenPGPKey {
         val keyFingerprintCalculator = ImplementationFactory.getInstance().v4FingerprintCalculator
         val secretKeyEncryptor = buildSecretKeyEncryptor(keyFingerprintCalculator)
         val secretKeyDecryptor = buildSecretKeyDecryptor()
@@ -168,7 +171,8 @@ class KeyRingBuilder(private val version: OpenPGPKeyVersion) :
         while (secretKeys.hasNext()) {
             secretKeyList.add(secretKeys.next())
         }
-        return PGPSecretKeyRing(secretKeyList)
+        val pgpSecretKeyRing = PGPSecretKeyRing(secretKeyList)
+        return OpenPGPKey(pgpSecretKeyRing, implementation)
     }
 
     private fun addSubKeys(primaryKey: PGPKeyPair, ringGenerator: PGPKeyRingGenerator) {

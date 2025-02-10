@@ -67,7 +67,8 @@ public class S2KUsageFixTest {
     @Test
     public void verifyOutFixInChangePassphraseWorks()
             throws PGPException {
-        PGPSecretKeyRing before = PGPainless.generateKeyRing().modernKeyRing("Alice", "before");
+        PGPSecretKeyRing before = PGPainless.generateKeyRing().modernKeyRing("Alice", "before")
+                .getPGPSecretKeyRing();
         for (PGPSecretKey key : before) {
             assertEquals(SecretKeyPacket.USAGE_SHA1, key.getS2KUsage());
         }

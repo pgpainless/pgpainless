@@ -103,7 +103,8 @@ public class WeirdKeys {
     @Test
     public void generateCertAndTestWithNonUTF8UserId()
             throws PGPException, IOException {
-        PGPSecretKeyRing nakedKey = PGPainless.generateKeyRing().modernKeyRing(null);
+        PGPSecretKeyRing nakedKey = PGPainless.generateKeyRing().modernKeyRing(null)
+                .getPGPSecretKeyRing();
         PGPPublicKey pubKey = nakedKey.getPublicKey();
         PGPSecretKey secKey = nakedKey.getSecretKey();
         PGPPrivateKey privKey = UnlockSecretKey.unlockSecretKey(secKey, Passphrase.emptyPassphrase());

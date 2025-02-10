@@ -16,7 +16,8 @@ public class PrimaryUserIdTest {
 
     @Test
     public void testGetPrimaryUserId() throws PGPException {
-        PGPSecretKeyRing secretKeys = PGPainless.generateKeyRing().simpleEcKeyRing("alice@wonderland.lit");
+        PGPSecretKeyRing secretKeys = PGPainless.generateKeyRing().simpleEcKeyRing("alice@wonderland.lit")
+                .getPGPSecretKeyRing();
         secretKeys = PGPainless.modifyKeyRing(secretKeys)
                 .addUserId("mad_alice@wonderland.lit", SecretKeyRingProtector.unprotectedKeys())
                 .done();

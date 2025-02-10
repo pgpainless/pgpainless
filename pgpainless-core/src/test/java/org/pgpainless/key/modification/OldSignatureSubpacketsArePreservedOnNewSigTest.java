@@ -27,7 +27,8 @@ public class OldSignatureSubpacketsArePreservedOnNewSigTest {
     @ExtendWith(TestAllImplementations.class)
     public void verifyOldSignatureSubpacketsArePreservedOnNewExpirationDateSig() {
         PGPSecretKeyRing secretKeys = PGPainless.generateKeyRing()
-                .simpleEcKeyRing("Alice <alice@wonderland.lit>");
+                .simpleEcKeyRing("Alice <alice@wonderland.lit>")
+                .getPGPSecretKeyRing();
 
         PGPSignature oldSignature = PGPainless.inspectKeyRing(secretKeys).getLatestUserIdCertification("Alice <alice@wonderland.lit>");
         assertNotNull(oldSignature);

@@ -36,7 +36,9 @@ public class AddUserIdTest {
     @ExtendWith(TestAllImplementations.class)
     public void addUserIdToExistingKeyRing()
             throws PGPException {
-        PGPSecretKeyRing secretKeys = PGPainless.generateKeyRing().simpleEcKeyRing("alice@wonderland.lit", "rabb1th0le");
+        PGPSecretKeyRing secretKeys = PGPainless.generateKeyRing()
+                .simpleEcKeyRing("alice@wonderland.lit", "rabb1th0le")
+                .getPGPSecretKeyRing();
 
         KeyRingInfo info = PGPainless.inspectKeyRing(secretKeys);
         Iterator<String> userIds = info.getValidUserIds().iterator();
@@ -115,7 +117,8 @@ public class AddUserIdTest {
     public void addNewPrimaryUserIdTest() {
         Date now = new Date();
         PGPSecretKeyRing secretKeys = PGPainless.generateKeyRing()
-                .modernKeyRing("Alice");
+                .modernKeyRing("Alice")
+                .getPGPSecretKeyRing();
         UserId bob = UserId.newBuilder().withName("Bob").noEmail().noComment().build();
 
         assertNotEquals("Bob", PGPainless.inspectKeyRing(secretKeys).getPrimaryUserId());

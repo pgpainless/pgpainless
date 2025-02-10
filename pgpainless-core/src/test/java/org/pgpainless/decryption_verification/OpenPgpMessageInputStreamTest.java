@@ -240,7 +240,8 @@ public class OpenPgpMessageInputStreamTest {
 
     public static void genKey() {
         PGPainless.asciiArmor(
-                PGPainless.generateKeyRing().modernKeyRing("Alice <alice@pgpainless.org>"),
+                PGPainless.generateKeyRing().modernKeyRing("Alice <alice@pgpainless.org>")
+                        .getPGPSecretKeyRing(),
                 System.out);
     }
 

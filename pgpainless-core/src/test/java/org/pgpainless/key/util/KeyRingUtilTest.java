@@ -41,7 +41,8 @@ public class KeyRingUtilTest {
     @Test
     public void testInjectCertification() throws PGPException {
         PGPSecretKeyRing secretKeys = PGPainless.generateKeyRing()
-                .modernKeyRing("Alice");
+                .modernKeyRing("Alice")
+                .getPGPSecretKeyRing();
 
         // test preconditions
         assertFalse(secretKeys.getPublicKey().getUserAttributes().hasNext());
@@ -73,7 +74,8 @@ public class KeyRingUtilTest {
 
     @Test
     public void testKeysPlusPublicKey() {
-        PGPSecretKeyRing secretKeys = PGPainless.generateKeyRing().modernKeyRing("Alice");
+        PGPSecretKeyRing secretKeys = PGPainless.generateKeyRing().modernKeyRing("Alice")
+                .getPGPSecretKeyRing();
         PGPPublicKeyRing publicKeys = PGPainless.extractCertificate(secretKeys);
 
         PGPKeyPair keyPair = KeyRingBuilder.generateKeyPair(KeySpec.getBuilder(

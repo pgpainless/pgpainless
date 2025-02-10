@@ -46,7 +46,8 @@ public class GenerateKeyWithoutPrimaryKeyFlagsTest {
                 .addSubkey(KeySpec.getBuilder(KeyType.EDDSA_LEGACY(EdDSALegacyCurve._Ed25519), KeyFlag.SIGN_DATA))
                 .addSubkey(KeySpec.getBuilder(KeyType.XDH_LEGACY(XDHLegacySpec._X25519), KeyFlag.ENCRYPT_STORAGE, KeyFlag.ENCRYPT_COMMS))
                 .addUserId("Alice")
-                .build();
+                .build()
+                .getPGPSecretKeyRing();
         PGPPublicKeyRing cert = PGPainless.extractCertificate(secretKeys);
 
         KeyRingInfo info = PGPainless.inspectKeyRing(secretKeys);

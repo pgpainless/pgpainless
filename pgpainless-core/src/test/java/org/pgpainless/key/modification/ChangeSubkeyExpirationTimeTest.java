@@ -25,7 +25,8 @@ public class ChangeSubkeyExpirationTimeTest {
 
     @Test
     public void changeExpirationTimeOfSubkey() {
-        PGPSecretKeyRing secretKeys = PGPainless.generateKeyRing().modernKeyRing("Alice");
+        PGPSecretKeyRing secretKeys = PGPainless.generateKeyRing().modernKeyRing("Alice")
+                .getPGPSecretKeyRing();
         Date now = secretKeys.getPublicKey().getCreationTime();
         Date inAnHour = new Date(now.getTime() + 1000 * 60 * 60);
         OpenPGPCertificate.OpenPGPComponentKey encryptionKey = PGPainless.inspectKeyRing(secretKeys)

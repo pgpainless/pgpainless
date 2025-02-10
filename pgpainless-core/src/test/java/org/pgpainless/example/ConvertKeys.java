@@ -22,7 +22,8 @@ public class ConvertKeys {
     public void secretKeyToCertificate() {
         String userId = "alice@wonderland.lit";
         PGPSecretKeyRing secretKey = PGPainless.generateKeyRing()
-                .modernKeyRing(userId);
+                .modernKeyRing(userId)
+                .getPGPSecretKeyRing();
         // Extract certificate (public key) from secret key
         PGPPublicKeyRing certificate = PGPainless.extractCertificate(secretKey);
 

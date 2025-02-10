@@ -27,7 +27,8 @@ public class RevokeUserIdsTest {
     @Test
     public void revokeWithSelectUserId() throws PGPException {
         PGPSecretKeyRing secretKeys = PGPainless.generateKeyRing()
-                .modernKeyRing("Alice <alice@pgpainless.org>");
+                .modernKeyRing("Alice <alice@pgpainless.org>")
+                .getPGPSecretKeyRing();
         SecretKeyRingProtector protector = SecretKeyRingProtector.unprotectedKeys();
 
         secretKeys = PGPainless.modifyKeyRing(secretKeys)
@@ -60,7 +61,8 @@ public class RevokeUserIdsTest {
     @Test
     public void removeUserId() throws PGPException {
         PGPSecretKeyRing secretKeys = PGPainless.generateKeyRing()
-                .modernKeyRing("Alice <alice@pgpainless.org>");
+                .modernKeyRing("Alice <alice@pgpainless.org>")
+                .getPGPSecretKeyRing();
         SecretKeyRingProtector protector = SecretKeyRingProtector.unprotectedKeys();
 
         secretKeys = PGPainless.modifyKeyRing(secretKeys)
@@ -94,7 +96,8 @@ public class RevokeUserIdsTest {
     @Test
     public void emptySelectionYieldsNoSuchElementException() {
         PGPSecretKeyRing secretKeys = PGPainless.generateKeyRing()
-                .modernKeyRing("Alice <alice@pgpainless.org>");
+                .modernKeyRing("Alice <alice@pgpainless.org>")
+                .getPGPSecretKeyRing();
 
         assertThrows(NoSuchElementException.class, () ->
                 PGPainless.modifyKeyRing(secretKeys).revokeUserIds(

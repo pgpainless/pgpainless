@@ -59,7 +59,8 @@ public class GenerateKeys {
         String password = "ra1nb0w";
         // Generate the OpenPGP key
         PGPSecretKeyRing secretKey = PGPainless.generateKeyRing()
-                .modernKeyRing(userId, password);
+                .modernKeyRing(userId, password)
+                .getPGPSecretKeyRing();
         // Extract public key
         PGPPublicKeyRing publicKey = PGPainless.extractCertificate(secretKey);
         // Encode the public key to an ASCII armored string ready for sharing
@@ -91,7 +92,8 @@ public class GenerateKeys {
         String password = "b1angl3s";
         // Generate the OpenPGP key
         PGPSecretKeyRing secretKey = PGPainless.generateKeyRing()
-                .simpleRsaKeyRing(userId, RsaLength._4096, password);
+                .simpleRsaKeyRing(userId, RsaLength._4096, password)
+                .getPGPSecretKeyRing();
 
         KeyRingInfo keyInfo = new KeyRingInfo(secretKey);
         assertEquals(1, keyInfo.getSecretKeys().size());
@@ -114,7 +116,8 @@ public class GenerateKeys {
         String password = "tr4ns";
         // Generate the OpenPGP key
         PGPSecretKeyRing secretKey = PGPainless.generateKeyRing()
-                .simpleEcKeyRing(userId, password);
+                .simpleEcKeyRing(userId, password)
+                .getPGPSecretKeyRing();
 
 
         KeyRingInfo keyInfo = new KeyRingInfo(secretKey);
@@ -201,7 +204,8 @@ public class GenerateKeys {
                 .addUserId(additionalUserId)
                 // Set passphrase. Alternatively use .withoutPassphrase() to leave key unprotected.
                 .setPassphrase(passphrase)
-                .build();
+                .build()
+                .getPGPSecretKeyRing();
 
 
         KeyRingInfo keyInfo = new KeyRingInfo(secretKey);

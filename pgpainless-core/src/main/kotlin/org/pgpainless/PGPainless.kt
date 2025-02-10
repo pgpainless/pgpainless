@@ -74,7 +74,7 @@ class PGPainless(
         @JvmStatic
         @JvmOverloads
         fun buildKeyRing(version: OpenPGPKeyVersion = OpenPGPKeyVersion.v4) =
-            KeyRingBuilder(version)
+            KeyRingBuilder(version, getInstance().implementation)
 
         /**
          * Read an existing OpenPGP key ring.

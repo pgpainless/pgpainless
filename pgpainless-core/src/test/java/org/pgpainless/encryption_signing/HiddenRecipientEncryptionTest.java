@@ -31,7 +31,8 @@ public class HiddenRecipientEncryptionTest {
     @Test
     public void testAnonymousRecipientRoundtrip() throws PGPException, IOException {
         PGPSecretKeyRing secretKeys = PGPainless.generateKeyRing()
-                .modernKeyRing("Alice <alice@pgpainless.org>");
+                .modernKeyRing("Alice <alice@pgpainless.org>")
+                .getPGPSecretKeyRing();
         PGPPublicKeyRing certificate = PGPainless.extractCertificate(secretKeys);
 
         String msg = "Hello, World!\n";

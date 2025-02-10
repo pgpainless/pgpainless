@@ -183,7 +183,8 @@ public class ArmorUtilsTest {
                 .addUserId("Juliet <juliet@montague.lit>")
                 .addUserId("xmpp:juliet@capulet.lit")
                 .setPassphrase(Passphrase.fromPassword("test"))
-                .build();
+                .build()
+                .getPGPSecretKeyRing();
         PGPPublicKey publicKey = secretKeyRing.getPublicKey();
         PGPPublicKeyRing publicKeyRing = PGPainless.readKeyRing().publicKeyRing(publicKey.getEncoded());
         String armored = PGPainless.asciiArmor(publicKeyRing);
@@ -199,7 +200,8 @@ public class ArmorUtilsTest {
                 .addUserId("xmpp:juliet@capulet.lit")
                 .addUserId("Juliet Montague <j@montague.lit>")
                 .setPassphrase(Passphrase.fromPassword("test"))
-                .build();
+                .build()
+                .getPGPSecretKeyRing();
         PGPPublicKey publicKey = secretKeyRing.getPublicKey();
         PGPPublicKeyRing publicKeyRing = PGPainless.readKeyRing().publicKeyRing(publicKey.getEncoded());
         String armored = PGPainless.asciiArmor(publicKeyRing);
@@ -214,7 +216,8 @@ public class ArmorUtilsTest {
                 .setPrimaryKey(KeySpec.getBuilder(ECDSA.fromCurve(EllipticCurve._P256), KeyFlag.SIGN_DATA, KeyFlag.CERTIFY_OTHER))
                 .addUserId("Juliet <juliet@montague.lit>")
                 .setPassphrase(Passphrase.fromPassword("test"))
-                .build();
+                .build()
+                .getPGPSecretKeyRing();
         PGPPublicKey publicKey = secretKeyRing.getPublicKey();
         PGPPublicKeyRing publicKeyRing = PGPainless.readKeyRing().publicKeyRing(publicKey.getEncoded());
         String armored = PGPainless.asciiArmor(publicKeyRing);

@@ -24,8 +24,10 @@ public class KeyRingCollectionReaderTest {
     @Test
     public void writeAndParseKeyRingCollections() throws IOException {
         // secret keys
-        PGPSecretKeyRing alice = PGPainless.generateKeyRing().modernKeyRing("Alice <alice@pgpainless.org>");
-        PGPSecretKeyRing bob = PGPainless.generateKeyRing().modernKeyRing("Bob <bob@pgpainless.org>");
+        PGPSecretKeyRing alice = PGPainless.generateKeyRing().modernKeyRing("Alice <alice@pgpainless.org>")
+                .getPGPSecretKeyRing();
+        PGPSecretKeyRing bob = PGPainless.generateKeyRing().modernKeyRing("Bob <bob@pgpainless.org>")
+                .getPGPSecretKeyRing();
 
         PGPSecretKeyRingCollection collection = KeyRingUtils.keyRingsToKeyRingCollection(alice, bob);
         String ascii = ArmorUtils.toAsciiArmoredString(collection);

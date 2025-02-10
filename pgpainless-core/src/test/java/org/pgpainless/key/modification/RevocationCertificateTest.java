@@ -74,7 +74,8 @@ public class RevocationCertificateTest {
 
     @Test
     public void createMinimalRevocationCertificateForFreshKeyTest() {
-        PGPSecretKeyRing secretKeys = PGPainless.generateKeyRing().modernKeyRing("Alice <alice@example.org>");
+        PGPSecretKeyRing secretKeys = PGPainless.generateKeyRing().modernKeyRing("Alice <alice@example.org>")
+                .getPGPSecretKeyRing();
 
         PGPPublicKeyRing minimalRevocationCert = PGPainless.modifyKeyRing(secretKeys).createMinimalRevocationCertificate(
                 SecretKeyRingProtector.unprotectedKeys(),

@@ -11,10 +11,7 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.IOException;
-import java.security.InvalidAlgorithmParameterException;
-import java.security.NoSuchAlgorithmException;
 
-import org.bouncycastle.openpgp.PGPException;
 import org.bouncycastle.openpgp.PGPPublicKeyRing;
 import org.bouncycastle.openpgp.PGPSecretKeyRing;
 import org.junit.jupiter.api.Disabled;
@@ -298,13 +295,13 @@ public class RoundTripEncryptDecryptCmdTest extends CLITest {
     }
 
     @Test
-    public void testEncryptWithIncapableCert() throws PGPException,
-            InvalidAlgorithmParameterException, NoSuchAlgorithmException, IOException {
+    public void testEncryptWithIncapableCert() throws IOException {
         PGPSecretKeyRing secretKeys = PGPainless.buildKeyRing()
                 .addUserId("No Crypt <no@crypt.key>")
                 .setPrimaryKey(KeySpec.getBuilder(KeyType.EDDSA_LEGACY(EdDSALegacyCurve._Ed25519),
                         KeyFlag.CERTIFY_OTHER, KeyFlag.SIGN_DATA))
-                .build();
+                .build()
+                .getPGPSecretKeyRing();
         PGPPublicKeyRing cert = PGPainless.extractCertificate(secretKeys);
         File certFile = writeFile("cert.pgp", cert.getEncoded());
 
@@ -318,13 +315,14 @@ public class RoundTripEncryptDecryptCmdTest extends CLITest {
 
     @Test
     public void testSignWithIncapableKey()
-            throws IOException, PGPException, InvalidAlgorithmParameterException, NoSuchAlgorithmException {
+            throws IOException {
         PGPSecretKeyRing secretKeys = PGPainless.buildKeyRing()
                 .addUserId("Cannot Sign <cannot@sign.key>")
                 .setPrimaryKey(KeySpec.getBuilder(KeyType.EDDSA_LEGACY(EdDSALegacyCurve._Ed25519), KeyFlag.CERTIFY_OTHER))
                 .addSubkey(KeySpec.getBuilder(
                         KeyType.XDH_LEGACY(XDHLegacySpec._X25519), KeyFlag.ENCRYPT_COMMS, KeyFlag.ENCRYPT_STORAGE))
-                .build();
+                .build()
+                .getPGPSecretKeyRing();
         File keyFile = writeFile("key.pgp", secretKeys.getEncoded());
         File certFile = writeFile("cert.pgp", PGPainless.extractCertificate(secretKeys).getEncoded());
 

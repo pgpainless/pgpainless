@@ -38,7 +38,8 @@ public class CustomPublicKeyDataDecryptorFactoryTest {
     @Disabled
     public void testDecryptionWithEmulatedHardwareDecryptionCallback()
             throws PGPException, IOException {
-        PGPSecretKeyRing secretKey = PGPainless.generateKeyRing().modernKeyRing("Alice");
+        PGPSecretKeyRing secretKey = PGPainless.generateKeyRing().modernKeyRing("Alice")
+                .getPGPSecretKeyRing();
         PGPPublicKeyRing cert = PGPainless.extractCertificate(secretKey);
         KeyRingInfo info = PGPainless.inspectKeyRing(secretKey);
         OpenPGPCertificate.OpenPGPComponentKey encryptionKey =

@@ -45,7 +45,8 @@ public class UserIdRevocationTest {
                         KeyType.XDH_LEGACY(XDHLegacySpec._X25519), KeyFlag.ENCRYPT_COMMS))
                 .addUserId("primary@key.id")
                 .addUserId("secondary@key.id")
-                .build();
+                .build()
+                .getPGPSecretKeyRing();
 
         // make a copy with revoked subkey
         PGPSecretKeyRing revoked = PGPainless.modifyKeyRing(secretKeys)
@@ -82,7 +83,8 @@ public class UserIdRevocationTest {
                 .addSubkey(KeySpec.getBuilder(KeyType.XDH_LEGACY(XDHLegacySpec._X25519), KeyFlag.ENCRYPT_COMMS))
                 .addUserId("primary@key.id")
                 .addUserId("secondary@key.id")
-                .build();
+                .build()
+                .getPGPSecretKeyRing();
 
         secretKeys = PGPainless.modifyKeyRing(secretKeys)
                 .revokeUserId("secondary@key.id", new UnprotectedKeysProtector(),
