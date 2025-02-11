@@ -97,7 +97,7 @@ public class ChangeSecretKeyRingPassphraseTest {
         extractPrivateKey(subKey, Passphrase.fromPassword("weakPassphrase"));
 
         PGPSecretKeyRing secretKeys = PGPainless.modifyKeyRing(keyRing)
-                .changeSubKeyPassphraseFromOldPassphrase(subKey.getPublicKey().getKeyID(),
+                .changeSubKeyPassphraseFromOldPassphrase(subKey.getPublicKey().getKeyIdentifier(),
                         Passphrase.fromPassword("weakPassphrase"))
                 .withSecureDefaultSettings()
                 .toNewPassphrase(Passphrase.fromPassword("subKeyPassphrase"))
@@ -130,7 +130,7 @@ public class ChangeSecretKeyRingPassphraseTest {
         PGPSecretKey subKey = keys.next();
 
         PGPSecretKeyRing secretKeys = PGPainless.modifyKeyRing(keyRing)
-                .changeSubKeyPassphraseFromOldPassphrase(subKey.getKeyID(), Passphrase.fromPassword("weakPassphrase"))
+                .changeSubKeyPassphraseFromOldPassphrase(subKey.getKeyIdentifier(), Passphrase.fromPassword("weakPassphrase"))
                 .withSecureDefaultSettings()
                 .toNoPassphrase()
                 .done();

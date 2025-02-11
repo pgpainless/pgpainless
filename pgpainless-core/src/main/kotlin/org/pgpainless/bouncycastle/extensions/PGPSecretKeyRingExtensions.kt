@@ -6,6 +6,9 @@ package org.pgpainless.bouncycastle.extensions
 
 import openpgp.openPgpKeyId
 import org.bouncycastle.openpgp.*
+import org.bouncycastle.openpgp.api.OpenPGPImplementation
+import org.bouncycastle.openpgp.api.OpenPGPKey
+import org.pgpainless.PGPainless
 import org.pgpainless.key.OpenPgpFingerprint
 
 /** OpenPGP certificate containing the public keys of this OpenPGP key. */
@@ -74,3 +77,10 @@ fun PGPSecretKeyRing.getSecretKeyFor(onePassSignature: PGPOnePassSignature): PGP
 
 fun PGPSecretKeyRing.getSecretKeyFor(pkesk: PGPPublicKeyEncryptedData): PGPSecretKey? =
     this.getSecretKey(pkesk.keyIdentifier)
+
+@Deprecated("Use toOpenPGPKey(implementation) instead.")
+fun PGPSecretKeyRing.toOpenPGPKey(): OpenPGPKey =
+    toOpenPGPKey(PGPainless.getInstance().implementation)
+
+fun PGPSecretKeyRing.toOpenPGPKey(implementation: OpenPGPImplementation): OpenPGPKey =
+    OpenPGPKey(this, implementation)

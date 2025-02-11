@@ -7,6 +7,7 @@ package org.pgpainless.key.util
 import java.io.ByteArrayOutputStream
 import kotlin.jvm.Throws
 import openpgp.openPgpKeyId
+import org.bouncycastle.bcpg.KeyIdentifier
 import org.bouncycastle.bcpg.S2K
 import org.bouncycastle.bcpg.SecretKeyPacket
 import org.bouncycastle.openpgp.*
@@ -468,7 +469,7 @@ class KeyRingUtils {
         @JvmStatic
         @Throws(MissingPassphraseException::class, PGPException::class)
         fun changePassphrase(
-            keyId: Long?,
+            keyId: KeyIdentifier?,
             secretKeys: PGPSecretKeyRing,
             oldProtector: SecretKeyRingProtector,
             newProtector: SecretKeyRingProtector
@@ -484,7 +485,7 @@ class KeyRingUtils {
                         secretKeys.secretKeys
                             .asSequence()
                             .map {
-                                if (it.keyID == keyId) {
+                                if (it.keyIdentifier.matches(keyId)) {
                                     reencryptPrivateKey(it, oldProtector, newProtector)
                                 } else {
                                     it

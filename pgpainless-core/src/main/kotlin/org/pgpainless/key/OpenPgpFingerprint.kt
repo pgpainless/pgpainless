@@ -5,6 +5,7 @@
 package org.pgpainless.key
 
 import java.nio.charset.Charset
+import org.bouncycastle.bcpg.KeyIdentifier
 import org.bouncycastle.openpgp.PGPKeyRing
 import org.bouncycastle.openpgp.PGPPublicKey
 import org.bouncycastle.openpgp.PGPSecretKey
@@ -54,6 +55,8 @@ abstract class OpenPgpFingerprint : CharSequence, Comparable<OpenPgpFingerprint>
     constructor(key: PGPSecretKey) : this(key.publicKey)
 
     constructor(keys: PGPKeyRing) : this(keys.publicKey)
+
+    abstract val keyIdentifier: KeyIdentifier
 
     /**
      * Check, whether the fingerprint consists of 40 valid hexadecimal characters.
