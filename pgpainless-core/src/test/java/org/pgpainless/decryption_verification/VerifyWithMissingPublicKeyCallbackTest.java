@@ -13,21 +13,23 @@ import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 
+import org.bouncycastle.bcpg.KeyIdentifier;
 import org.bouncycastle.openpgp.PGPException;
 import org.bouncycastle.openpgp.PGPPublicKeyRing;
-import org.bouncycastle.openpgp.PGPSecretKeyRing;
 import org.bouncycastle.openpgp.api.OpenPGPCertificate;
+import org.bouncycastle.openpgp.api.OpenPGPKey;
 import org.bouncycastle.util.io.Streams;
 import org.junit.jupiter.api.Test;
 import org.pgpainless.PGPainless;
 import org.pgpainless.algorithm.DocumentSignatureType;
+import org.pgpainless.algorithm.OpenPGPKeyVersion;
 import org.pgpainless.encryption_signing.EncryptionStream;
 import org.pgpainless.encryption_signing.ProducerOptions;
 import org.pgpainless.encryption_signing.SigningOptions;
 import org.pgpainless.key.TestKeys;
-import org.pgpainless.key.info.KeyRingInfo;
 import org.pgpainless.key.protection.SecretKeyRingProtector;
-import org.pgpainless.key.util.KeyRingUtils;
+
+import javax.annotation.Nonnull;
 
 /**
  * Test functionality of the {@link MissingPublicKeyCallback} which is called when during signature verification,
@@ -38,11 +40,12 @@ public class VerifyWithMissingPublicKeyCallbackTest {
 
     @Test
     public void testMissingPublicKeyCallback() throws PGPException, IOException {
-        PGPSecretKeyRing signingSecKeys = PGPainless.generateKeyRing().modernKeyRing("alice")
-                .getPGPSecretKeyRing();
+        PGPainless api = PGPainless.getInstance();
+
+        OpenPGPKey signingSecKeys = api.generateKey(OpenPGPKeyVersion.v4).modernKeyRing("alice");
         OpenPGPCertificate.OpenPGPComponentKey signingKey =
-                new KeyRingInfo(signingSecKeys).getSigningSubkeys().get(0);
-        PGPPublicKeyRing signingPubKeys = KeyRingUtils.publicKeyRingFrom(signingSecKeys);
+                signingSecKeys.getSigningKeys().get(0);
+        OpenPGPCertificate signingPubKeys = signingSecKeys.toCertificate();
         PGPPublicKeyRing unrelatedKeys = TestKeys.getJulietPublicKeyRing();
 
         String msg = "Arguing that you don't care about the right to privacy because you have nothing to hide" +
@@ -51,7 +54,7 @@ public class VerifyWithMissingPublicKeyCallbackTest {
         EncryptionStream signingStream = PGPainless.encryptAndOrSign().onOutputStream(signOut)
                 .withOptions(ProducerOptions.sign(new SigningOptions().addInlineSignature(
                         SecretKeyRingProtector.unprotectedKeys(),
-                        signingSecKeys, DocumentSignatureType.CANONICAL_TEXT_DOCUMENT
+                        signingSecKeys.getPGPSecretKeyRing(), DocumentSignatureType.CANONICAL_TEXT_DOCUMENT
                 )));
         Streams.pipeAll(new ByteArrayInputStream(msg.getBytes(StandardCharsets.UTF_8)), signingStream);
         signingStream.close();
@@ -62,8 +65,8 @@ public class VerifyWithMissingPublicKeyCallbackTest {
                         .addVerificationCert(unrelatedKeys)
                         .setMissingCertificateCallback(new MissingPublicKeyCallback() {
                             @Override
-                            public PGPPublicKeyRing onMissingPublicKeyEncountered(long keyId) {
-                                assertEquals(signingKey.getKeyIdentifier().getKeyId(), keyId, "Signing key-ID mismatch.");
+                            public OpenPGPCertificate onMissingPublicKeyEncountered(@Nonnull KeyIdentifier keyIdentifier) {
+                                assertEquals(signingKey.getKeyIdentifier(), keyIdentifier, "Signing key-ID mismatch.");
                                 return signingPubKeys;
                             }
                         }));
