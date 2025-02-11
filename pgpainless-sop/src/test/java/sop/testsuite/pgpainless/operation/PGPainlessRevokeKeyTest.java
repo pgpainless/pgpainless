@@ -4,6 +4,7 @@
 
 package sop.testsuite.pgpainless.operation;
 
+import static java.lang.Thread.sleep;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
@@ -28,6 +29,11 @@ public class PGPainlessRevokeKeyTest extends RevokeKeyTest {
         super.revokeUnprotectedKey(sop);
 
         byte[] key = sop.generateKey().generate().getBytes();
+        try {
+            sleep(1000);
+        } catch (InterruptedException e) {
+            throw new RuntimeException(e);
+        }
         byte[] revokedKey = sop.revokeKey().keys(key).getBytes();
 
         PGPKeyRing certificate = PGPainless.readKeyRing().keyRing(revokedKey);
