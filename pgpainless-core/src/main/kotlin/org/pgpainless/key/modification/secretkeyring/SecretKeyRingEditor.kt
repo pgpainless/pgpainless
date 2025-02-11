@@ -9,6 +9,7 @@ import java.util.function.Predicate
 import javax.annotation.Nonnull
 import kotlin.NoSuchElementException
 import openpgp.openPgpKeyId
+import org.bouncycastle.bcpg.KeyIdentifier
 import org.bouncycastle.bcpg.sig.KeyExpirationTime
 import org.bouncycastle.openpgp.*
 import org.pgpainless.PGPainless
@@ -248,7 +249,7 @@ class SecretKeyRingEditor(
         val version = OpenPGPKeyVersion.from(secretKeyRing.getPublicKey().version)
         val keyPair = KeyRingBuilder.generateKeyPair(keySpec, OpenPGPKeyVersion.v4, referenceTime)
         val subkeyProtector =
-            PasswordBasedSecretKeyRingProtector.forKeyId(keyPair.keyID, subkeyPassphrase)
+            PasswordBasedSecretKeyRingProtector.forKeyId(keyPair.keyIdentifier, subkeyPassphrase)
         val keyFlags = KeyFlag.fromBitmask(keySpec.subpackets.keyFlags).toMutableList()
         return addSubKey(
             keyPair,
@@ -555,15 +556,15 @@ class SecretKeyRingEditor(
     }
 
     override fun changeSubKeyPassphraseFromOldPassphrase(
-        keyId: Long,
+        keyIdentifier: KeyIdentifier,
         oldPassphrase: Passphrase,
         oldProtectionSettings: KeyRingProtectionSettings
     ): SecretKeyRingEditorInterface.WithKeyRingEncryptionSettings {
         return WithKeyRingEncryptionSettingsImpl(
             this,
-            keyId,
+            keyIdentifier,
             CachingSecretKeyRingProtector(
-                mapOf(keyId to oldPassphrase), oldProtectionSettings, null))
+                mapOf(keyIdentifier to oldPassphrase), oldProtectionSettings, null))
     }
 
     override fun done(): PGPSecretKeyRing {
@@ -746,7 +747,7 @@ class SecretKeyRingEditor(
 
     private class WithKeyRingEncryptionSettingsImpl(
         private val editor: SecretKeyRingEditor,
-        private val keyId: Long?,
+        private val keyId: KeyIdentifier?,
         private val oldProtector: SecretKeyRingProtector
     ) : SecretKeyRingEditorInterface.WithKeyRingEncryptionSettings {
 
@@ -763,7 +764,7 @@ class SecretKeyRingEditor(
 
     private class WithPassphraseImpl(
         private val editor: SecretKeyRingEditor,
-        private val keyId: Long?,
+        private val keyId: KeyIdentifier?,
         private val oldProtector: SecretKeyRingProtector,
         private val newProtectionSettings: KeyRingProtectionSettings
     ) : SecretKeyRingEditorInterface.WithPassphrase {

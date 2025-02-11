@@ -124,7 +124,7 @@ public class OnePassSignatureVerificationWithPartialLengthLiteralDataRegressionT
 
         DecryptionStream decryptionStream = PGPainless.decryptAndOrVerify()
                 .onInputStream(in)
-                .withOptions(new ConsumerOptions()
+                .withOptions(ConsumerOptions.get()
                         .addVerificationCert(cert)
                         .addDecryptionKey(secretKeys));
 

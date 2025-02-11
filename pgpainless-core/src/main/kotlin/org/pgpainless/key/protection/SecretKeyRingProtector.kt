@@ -4,6 +4,7 @@
 
 package org.pgpainless.key.protection
 
+import kotlin.Throws
 import org.bouncycastle.bcpg.KeyIdentifier
 import org.bouncycastle.openpgp.PGPException
 import org.bouncycastle.openpgp.PGPSecretKey
@@ -14,7 +15,6 @@ import org.bouncycastle.openpgp.operator.PBESecretKeyEncryptor
 import org.pgpainless.key.protection.passphrase_provider.SecretKeyPassphraseProvider
 import org.pgpainless.key.protection.passphrase_provider.SolitaryPassphraseProvider
 import org.pgpainless.util.Passphrase
-import kotlin.Throws
 
 /**
  * Task of the [SecretKeyRingProtector] is to map encryptor/decryptor objects to key-ids.
@@ -43,10 +43,11 @@ interface SecretKeyRingProtector : KeyPassphraseProvider {
      * @param keyId id of the key
      * @return decryptor for the key
      */
-    @Throws(PGPException::class) fun getDecryptor(keyId: Long): PBESecretKeyDecryptor? =
-        getDecryptor(KeyIdentifier(keyId))
+    @Throws(PGPException::class)
+    fun getDecryptor(keyId: Long): PBESecretKeyDecryptor? = getDecryptor(KeyIdentifier(keyId))
 
-    @Throws(PGPException::class) fun getDecryptor(keyIdentifier: KeyIdentifier): PBESecretKeyDecryptor?
+    @Throws(PGPException::class)
+    fun getDecryptor(keyIdentifier: KeyIdentifier): PBESecretKeyDecryptor?
 
     /**
      * Return an encryptor for the key of id `keyId`. This method returns null if the key is
@@ -55,10 +56,11 @@ interface SecretKeyRingProtector : KeyPassphraseProvider {
      * @param keyId id of the key
      * @return encryptor for the key
      */
-    @Throws(PGPException::class) fun getEncryptor(keyId: Long): PBESecretKeyEncryptor? =
-        getEncryptor(KeyIdentifier(keyId))
+    @Throws(PGPException::class)
+    fun getEncryptor(keyId: Long): PBESecretKeyEncryptor? = getEncryptor(KeyIdentifier(keyId))
 
-    @Throws(PGPException::class) fun getEncryptor(keyIdentifier: KeyIdentifier): PBESecretKeyEncryptor?
+    @Throws(PGPException::class)
+    fun getEncryptor(keyIdentifier: KeyIdentifier): PBESecretKeyEncryptor?
 
     companion object {
 
@@ -97,7 +99,7 @@ interface SecretKeyRingProtector : KeyPassphraseProvider {
             passphrase: Passphrase,
             keys: PGPSecretKeyRing
         ): SecretKeyRingProtector =
-            fromPassphraseMap(keys.map { it.keyID }.associateWith { passphrase })
+            fromPassphraseMap(keys.map { it.keyIdentifier }.associateWith { passphrase })
 
         /**
          * Use the provided passphrase to unlock any key.
@@ -132,12 +134,15 @@ interface SecretKeyRingProtector : KeyPassphraseProvider {
          * Otherwise, this protector will always return null.
          *
          * @param passphrase passphrase
-         * @param keyId id of the key to lock/unlock
+         * @param keyIdentifier id of the key to lock/unlock
          * @return protector
          */
         @JvmStatic
-        fun unlockSingleKeyWith(passphrase: Passphrase, keyId: Long): SecretKeyRingProtector =
-            PasswordBasedSecretKeyRingProtector.forKeyId(keyId, passphrase)
+        fun unlockSingleKeyWith(
+            passphrase: Passphrase,
+            keyIdentifier: KeyIdentifier
+        ): SecretKeyRingProtector =
+            PasswordBasedSecretKeyRingProtector.forKeyId(keyIdentifier, passphrase)
 
         /**
          * Protector for unprotected keys. This protector returns null for all
@@ -159,7 +164,9 @@ interface SecretKeyRingProtector : KeyPassphraseProvider {
          * @return protector
          */
         @JvmStatic
-        fun fromPassphraseMap(passphraseMap: Map<Long, Passphrase>): SecretKeyRingProtector =
+        fun fromPassphraseMap(
+            passphraseMap: Map<KeyIdentifier, Passphrase>
+        ): SecretKeyRingProtector =
             CachingSecretKeyRingProtector(
                 passphraseMap, KeyRingProtectionSettings.secureDefaultSettings(), null)
     }

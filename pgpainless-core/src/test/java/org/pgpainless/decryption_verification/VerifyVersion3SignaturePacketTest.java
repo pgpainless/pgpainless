@@ -35,7 +35,7 @@ class VerifyVersion3SignaturePacketTest {
     void verifyDetachedVersion3Signature() throws PGPException, IOException {
         PGPSignature version3Signature = generateV3Signature();
 
-        ConsumerOptions options = new ConsumerOptions()
+        ConsumerOptions options = ConsumerOptions.get()
                 .addVerificationCert(TestKeys.getEmilPublicKeyRing())
                 .addVerificationOfDetachedSignatures(new ByteArrayInputStream(version3Signature.getEncoded()));
 

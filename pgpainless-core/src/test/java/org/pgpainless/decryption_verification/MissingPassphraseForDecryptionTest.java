@@ -16,11 +16,13 @@ import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.util.List;
 
+import org.bouncycastle.bcpg.KeyIdentifier;
 import org.bouncycastle.openpgp.PGPException;
 import org.bouncycastle.openpgp.PGPPublicKeyRing;
 import org.bouncycastle.openpgp.PGPSecretKeyRing;
 import org.bouncycastle.openpgp.api.OpenPGPCertificate;
 import org.bouncycastle.util.io.Streams;
+import org.jetbrains.annotations.NotNull;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.pgpainless.PGPainless;
@@ -62,13 +64,13 @@ public class MissingPassphraseForDecryptionTest {
         // interactive callback
         SecretKeyPassphraseProvider callback = new SecretKeyPassphraseProvider() {
             @Override
-            public Passphrase getPassphraseFor(Long keyId) {
+            public Passphrase getPassphraseFor(@NotNull KeyIdentifier keyIdentifier) {
                 // is called in interactive mode
                 return Passphrase.fromPassword(passphrase);
             }
 
             @Override
-            public boolean hasPassphrase(Long keyId) {
+            public boolean hasPassphrase(@NotNull KeyIdentifier keyIdentifier) {
                 return true;
             }
         };
@@ -95,13 +97,13 @@ public class MissingPassphraseForDecryptionTest {
 
         SecretKeyPassphraseProvider callback = new SecretKeyPassphraseProvider() {
             @Override
-            public Passphrase getPassphraseFor(Long keyId) {
+            public Passphrase getPassphraseFor(@NotNull KeyIdentifier keyIdentifier) {
                 fail("MUST NOT get called in non-interactive mode.");
                 return null;
             }
 
             @Override
-            public boolean hasPassphrase(Long keyId) {
+            public boolean hasPassphrase(@NotNull KeyIdentifier keyIdentifier) {
                 return true;
             }
         };

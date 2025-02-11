@@ -4,9 +4,11 @@
 
 package org.pgpainless.sop
 
+import org.bouncycastle.bcpg.KeyIdentifier
 import org.bouncycastle.openpgp.PGPException
 import org.bouncycastle.openpgp.PGPSecretKey
 import org.bouncycastle.openpgp.PGPSecretKeyRing
+import org.bouncycastle.openpgp.api.OpenPGPKey
 import org.bouncycastle.openpgp.operator.PBESecretKeyDecryptor
 import org.bouncycastle.openpgp.operator.PBESecretKeyEncryptor
 import org.pgpainless.bouncycastle.extensions.isDecrypted
@@ -41,7 +43,7 @@ class MatchMakingSecretKeyRingProtector : SecretKeyRingProtector {
                 }
 
                 if (testPassphrase(passphrase, subkey)) {
-                    protector.addPassphrase(subkey.keyID, passphrase)
+                    protector.addPassphrase(subkey.keyIdentifier, passphrase)
                 }
             }
         }
@@ -54,11 +56,11 @@ class MatchMakingSecretKeyRingProtector : SecretKeyRingProtector {
 
         key.forEach { subkey ->
             if (subkey.isDecrypted()) {
-                protector.addPassphrase(subkey.keyID, Passphrase.emptyPassphrase())
+                protector.addPassphrase(subkey.keyIdentifier, Passphrase.emptyPassphrase())
             } else {
                 passphrases.forEach { passphrase ->
                     if (testPassphrase(passphrase, subkey)) {
-                        protector.addPassphrase(subkey.keyID, passphrase)
+                        protector.addPassphrase(subkey.keyIdentifier, passphrase)
                     }
                 }
             }
@@ -74,11 +76,17 @@ class MatchMakingSecretKeyRingProtector : SecretKeyRingProtector {
             false
         }
 
-    override fun hasPassphraseFor(keyId: Long): Boolean = protector.hasPassphrase(keyId)
+    override fun hasPassphraseFor(keyIdentifier: KeyIdentifier): Boolean =
+        protector.hasPassphrase(keyIdentifier)
 
-    override fun getDecryptor(keyId: Long): PBESecretKeyDecryptor? = protector.getDecryptor(keyId)
+    override fun getDecryptor(keyIdentifier: KeyIdentifier): PBESecretKeyDecryptor? =
+        protector.getDecryptor(keyIdentifier)
 
-    override fun getEncryptor(keyId: Long): PBESecretKeyEncryptor? = protector.getEncryptor(keyId)
+    override fun getEncryptor(keyIdentifier: KeyIdentifier): PBESecretKeyEncryptor? =
+        protector.getEncryptor(keyIdentifier)
+
+    override fun getKeyPassword(p0: OpenPGPKey.OpenPGPSecretKey): CharArray? =
+        protector.getKeyPassword(p0)
 
     /** Clear all known passphrases from the protector. */
     fun clear() {

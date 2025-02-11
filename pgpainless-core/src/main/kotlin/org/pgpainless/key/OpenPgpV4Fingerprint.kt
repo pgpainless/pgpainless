@@ -8,6 +8,7 @@ import java.net.URI
 import java.nio.Buffer
 import java.nio.ByteBuffer
 import java.nio.charset.Charset
+import org.bouncycastle.bcpg.KeyIdentifier
 import org.bouncycastle.openpgp.PGPKeyRing
 import org.bouncycastle.openpgp.PGPPublicKey
 import org.bouncycastle.openpgp.PGPSecretKey
@@ -38,6 +39,8 @@ class OpenPgpV4Fingerprint : OpenPgpFingerprint {
             (buf as Buffer).position(12) // 20 - 8 bytes = offset 12
             return buf.getLong()
         }
+
+    override val keyIdentifier: KeyIdentifier = KeyIdentifier(bytes)
 
     override fun isValid(fingerprint: String): Boolean {
         return fingerprint.matches("^[0-9A-F]{40}$".toRegex())

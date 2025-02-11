@@ -7,6 +7,7 @@ package org.pgpainless.key
 import org.bouncycastle.bcpg.KeyIdentifier
 import org.bouncycastle.openpgp.PGPKeyRing
 import org.bouncycastle.openpgp.PGPPublicKey
+import org.bouncycastle.openpgp.api.OpenPGPCertificate.OpenPGPComponentKey
 
 /**
  * Tuple class used to identify a subkey by fingerprints of the primary key of the subkeys key ring,
@@ -24,6 +25,12 @@ class SubkeyIdentifier(
     constructor(key: PGPPublicKey) : this(OpenPgpFingerprint.of(key))
 
     constructor(keys: PGPKeyRing, keyId: Long) : this(keys, KeyIdentifier(keyId))
+
+    constructor(
+        key: OpenPGPComponentKey
+    ) : this(
+        OpenPgpFingerprint.of(key.certificate.pgpPublicKeyRing),
+        OpenPgpFingerprint.of(key.pgpPublicKey))
 
     constructor(
         keys: PGPKeyRing,
