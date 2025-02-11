@@ -4,6 +4,7 @@
 
 package sop.testsuite.pgpainless.operation;
 
+import org.bouncycastle.bcpg.KeyIdentifier;
 import org.bouncycastle.openpgp.PGPException;
 import org.bouncycastle.openpgp.PGPPublicKey;
 import org.bouncycastle.openpgp.PGPSecretKeyRing;
@@ -38,9 +39,9 @@ public class PGPainlessChangeKeyPasswordTest extends ChangeKeyPasswordTest {
                 .build()
                 .getPGPSecretKeyRing();
         Iterator<PGPPublicKey> keys = secretKeys.getPublicKeys();
-        long primaryKeyId = keys.next().getKeyID();
-        long signingKeyId = keys.next().getKeyID();
-        long encryptKeyId = keys.next().getKeyID();
+        KeyIdentifier primaryKeyId = keys.next().getKeyIdentifier();
+        KeyIdentifier signingKeyId = keys.next().getKeyIdentifier();
+        KeyIdentifier encryptKeyId = keys.next().getKeyIdentifier();
 
         String p1 = "sw0rdf1sh";
         String p2 = "0r4ng3";

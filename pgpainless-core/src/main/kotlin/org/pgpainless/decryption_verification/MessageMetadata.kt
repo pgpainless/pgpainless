@@ -4,9 +4,9 @@
 
 package org.pgpainless.decryption_verification
 
-import org.bouncycastle.bcpg.KeyIdentifier
 import java.util.*
 import javax.annotation.Nonnull
+import org.bouncycastle.bcpg.KeyIdentifier
 import org.bouncycastle.openpgp.PGPKeyRing
 import org.bouncycastle.openpgp.PGPLiteralData
 import org.bouncycastle.openpgp.api.OpenPGPCertificate

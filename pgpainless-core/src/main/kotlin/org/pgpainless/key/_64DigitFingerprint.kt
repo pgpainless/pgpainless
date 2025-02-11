@@ -7,6 +7,7 @@ package org.pgpainless.key
 import java.nio.Buffer
 import java.nio.ByteBuffer
 import java.nio.charset.Charset
+import org.bouncycastle.bcpg.KeyIdentifier
 import org.bouncycastle.openpgp.PGPKeyRing
 import org.bouncycastle.openpgp.PGPPublicKey
 import org.bouncycastle.openpgp.PGPSecretKey
@@ -50,6 +51,8 @@ open class _64DigitFingerprint : OpenPgpFingerprint {
     override fun getVersion(): Int {
         return -1 // might be v5 or v6
     }
+
+    override val keyIdentifier: KeyIdentifier = KeyIdentifier(bytes)
 
     override fun isValid(fingerprint: String): Boolean {
         return fingerprint.matches(("^[0-9A-F]{64}$".toRegex()))

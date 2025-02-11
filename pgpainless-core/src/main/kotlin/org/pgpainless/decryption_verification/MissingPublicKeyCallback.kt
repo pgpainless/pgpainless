@@ -4,7 +4,8 @@
 
 package org.pgpainless.decryption_verification
 
-import org.bouncycastle.openpgp.PGPPublicKeyRing
+import org.bouncycastle.bcpg.KeyIdentifier
+import org.bouncycastle.openpgp.api.OpenPGPCertificate
 
 fun interface MissingPublicKeyCallback {
 
@@ -14,14 +15,14 @@ fun interface MissingPublicKeyCallback {
      * here. PGPainless will then continue verification with the next signature.
      *
      * Note: The key-id might belong to a subkey, so be aware that when looking up the
-     * [PGPPublicKeyRing], you may not only search for the key-id on the key rings primary key!
+     * [OpenPGPCertificate], you may not only search for the key-id on the key rings primary key!
      *
      * It would be super cool to provide the OpenPgp fingerprint here, but unfortunately
      * one-pass-signatures only contain the key id.
      *
-     * @param keyId ID of the missing signing (sub)key
+     * @param keyIdentifier ID of the missing signing (sub)key
      * @return keyring containing the key or null
      * @see <a href="https://datatracker.ietf.org/doc/html/rfc4880#section-5.4">RFC</a>
      */
-    fun onMissingPublicKeyEncountered(keyId: Long): PGPPublicKeyRing?
+    fun onMissingPublicKeyEncountered(keyIdentifier: KeyIdentifier): OpenPGPCertificate?
 }

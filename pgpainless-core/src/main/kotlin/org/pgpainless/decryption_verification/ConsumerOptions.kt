@@ -4,17 +4,16 @@
 
 package org.pgpainless.decryption_verification
 
-import org.bouncycastle.bcpg.KeyIdentifier
 import java.io.IOException
 import java.io.InputStream
 import java.util.*
+import org.bouncycastle.bcpg.KeyIdentifier
 import org.bouncycastle.openpgp.*
 import org.bouncycastle.openpgp.api.OpenPGPCertificate
 import org.bouncycastle.openpgp.api.OpenPGPImplementation
 import org.bouncycastle.openpgp.api.OpenPGPKey
 import org.bouncycastle.openpgp.operator.PublicKeyDataDecryptorFactory
 import org.pgpainless.PGPainless
-import org.pgpainless.bouncycastle.extensions.getPublicKeyFor
 import org.pgpainless.decryption_verification.cleartext_signatures.InMemoryMultiPassStrategy
 import org.pgpainless.decryption_verification.cleartext_signatures.MultiPassStrategy
 import org.pgpainless.key.SubkeyIdentifier
@@ -24,9 +23,7 @@ import org.pgpainless.util.Passphrase
 import org.pgpainless.util.SessionKey
 
 /** Options for decryption and signature verification. */
-class ConsumerOptions(
-    private val implementation: OpenPGPImplementation
-) {
+class ConsumerOptions {
 
     private var ignoreMDCErrors = false
     var isDisableAsciiArmorCRC = false
@@ -183,7 +180,8 @@ class ConsumerOptions(
     @JvmOverloads
     fun addDecryptionKey(
         key: PGPSecretKeyRing,
-        protector: SecretKeyRingProtector = SecretKeyRingProtector.unprotectedKeys()
+        protector: SecretKeyRingProtector = SecretKeyRingProtector.unprotectedKeys(),
+        implementation: OpenPGPImplementation = PGPainless.getInstance().implementation
     ) = addDecryptionKey(OpenPGPKey(key, implementation), protector)
 
     /**
@@ -402,8 +400,10 @@ class ConsumerOptions(
          *
          * @param certificate certificate
          */
-        fun addCertificate(certificate: PGPPublicKeyRing,
-                           implementation: OpenPGPImplementation = PGPainless.getInstance().implementation
+        @JvmOverloads
+        fun addCertificate(
+            certificate: PGPPublicKeyRing,
+            implementation: OpenPGPImplementation = PGPainless.getInstance().implementation
         ) {
             explicitCertificates.add(OpenPGPCertificate(certificate, implementation))
         }
@@ -442,10 +442,6 @@ class ConsumerOptions(
     }
 
     companion object {
-        @JvmStatic
-        @JvmOverloads
-        fun get(
-            implementation: OpenPGPImplementation = PGPainless.getInstance().implementation
-        ) = ConsumerOptions(implementation)
+        @JvmStatic fun get() = ConsumerOptions()
     }
 }

@@ -8,8 +8,6 @@ import org.bouncycastle.openpgp.PGPOnePassSignature
 import org.bouncycastle.openpgp.PGPPublicKeyRing
 import org.bouncycastle.openpgp.PGPSignature
 import org.bouncycastle.openpgp.api.OpenPGPCertificate
-import org.bouncycastle.openpgp.api.OpenPGPCertificate.OpenPGPComponentKey
-import org.pgpainless.bouncycastle.extensions.getSigningKeyFor
 import org.pgpainless.key.SubkeyIdentifier
 
 /**

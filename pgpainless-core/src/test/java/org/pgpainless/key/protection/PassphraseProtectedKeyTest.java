@@ -10,9 +10,11 @@ import static org.junit.jupiter.api.Assertions.assertNull;
 import java.util.Iterator;
 import javax.annotation.Nullable;
 
+import org.bouncycastle.bcpg.KeyIdentifier;
 import org.bouncycastle.openpgp.PGPException;
 import org.bouncycastle.openpgp.PGPPublicKey;
 import org.bouncycastle.openpgp.PGPSecretKeyRing;
+import org.jetbrains.annotations.NotNull;
 import org.junit.jupiter.api.Test;
 import org.pgpainless.PGPainless;
 import org.pgpainless.key.TestKeys;
@@ -29,8 +31,8 @@ public class PassphraseProtectedKeyTest {
             new SecretKeyPassphraseProvider() {
                 @Nullable
                 @Override
-                public Passphrase getPassphraseFor(Long keyId) {
-                    if (keyId == TestKeys.CRYPTIE_KEY_ID) {
+                public Passphrase getPassphraseFor(@NotNull KeyIdentifier keyIdentifier) {
+                    if (keyIdentifier.getKeyId() == TestKeys.CRYPTIE_KEY_ID) {
                         return new Passphrase(TestKeys.CRYPTIE_PASSWORD.toCharArray());
                     } else {
                         return null;
@@ -38,19 +40,19 @@ public class PassphraseProtectedKeyTest {
                 }
 
                 @Override
-                public boolean hasPassphrase(Long keyId) {
-                    return keyId == TestKeys.CRYPTIE_KEY_ID;
+                public boolean hasPassphrase(@NotNull KeyIdentifier keyIdentifier) {
+                    return keyIdentifier.getKeyId() == TestKeys.CRYPTIE_KEY_ID;
                 }
             });
 
     @Test
-    public void testReturnsNonNullDecryptorEncryptorForPassword() {
+    public void testReturnsNonNullDecryptorEncryptorForPassword() throws PGPException {
         assertNotNull(protector.getEncryptor(TestKeys.CRYPTIE_KEY_ID));
         assertNotNull(protector.getDecryptor(TestKeys.CRYPTIE_KEY_ID));
     }
 
     @Test
-    public void testReturnsNullDecryptorEncryptorForNoPassword() {
+    public void testReturnsNullDecryptorEncryptorForNoPassword() throws PGPException {
         assertNull(protector.getEncryptor(TestKeys.JULIET_KEY_ID));
         assertNull(protector.getDecryptor(TestKeys.JULIET_KEY_ID));
     }

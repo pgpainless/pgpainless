@@ -13,11 +13,13 @@ import java.io.IOException;
 import java.util.Iterator;
 import java.util.Random;
 
+import org.bouncycastle.bcpg.KeyIdentifier;
 import org.bouncycastle.openpgp.PGPException;
 import org.bouncycastle.openpgp.PGPKeyRing;
 import org.bouncycastle.openpgp.PGPPublicKey;
 import org.bouncycastle.openpgp.PGPSecretKey;
 import org.bouncycastle.openpgp.PGPSecretKeyRing;
+import org.jetbrains.annotations.NotNull;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.pgpainless.PGPainless;
@@ -30,13 +32,13 @@ public class CachingSecretKeyRingProtectorTest {
     // Dummy passphrase callback that returns the doubled key-id as passphrase
     private final SecretKeyPassphraseProvider dummyCallback = new SecretKeyPassphraseProvider() {
         @Override
-        public Passphrase getPassphraseFor(Long keyId) {
-            long doubled = keyId * 2;
+        public Passphrase getPassphraseFor(@NotNull KeyIdentifier keyIdentifier) {
+            long doubled = keyIdentifier.getKeyId() * 2;
             return Passphrase.fromPassword(Long.toString(doubled));
         }
 
         @Override
-        public boolean hasPassphrase(Long keyId) {
+        public boolean hasPassphrase(@NotNull KeyIdentifier keyIdentifier) {
             return true;
         }
     };
@@ -49,15 +51,15 @@ public class CachingSecretKeyRingProtectorTest {
     }
 
     @Test
-    public void noCallbackReturnsNullForUnknownKeyId() {
+    public void noCallbackReturnsNullForUnknownKeyId() throws PGPException {
         assertNull(protector.getDecryptor(123L));
         assertNull(protector.getEncryptor(123L));
     }
 
     @Test
-    public void testAddPassphrase() {
+    public void testAddPassphrase() throws PGPException {
         Passphrase passphrase = Passphrase.fromPassword("HelloWorld");
-        protector.addPassphrase(123L, passphrase);
+        protector.addPassphrase(new KeyIdentifier(123L), passphrase);
         assertEquals(passphrase, protector.getPassphraseFor(123L));
         assertNotNull(protector.getEncryptor(123L));
         assertNotNull(protector.getDecryptor(123L));
@@ -75,7 +77,7 @@ public class CachingSecretKeyRingProtectorTest {
     }
 
     @Test
-    public void testAddPassphraseForKeyRing() {
+    public void testAddPassphraseForKeyRing() throws PGPException {
         PGPSecretKeyRing keys = PGPainless.generateKeyRing()
                 .modernKeyRing("test@test.test", "Passphrase123")
                 .getPGPSecretKeyRing();

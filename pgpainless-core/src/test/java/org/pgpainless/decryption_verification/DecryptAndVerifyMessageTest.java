@@ -52,7 +52,7 @@ public class DecryptAndVerifyMessageTest {
     public void decryptMessageAndVerifySignatureTest() throws Exception {
         String encryptedMessage = TestKeys.MSG_SIGN_CRYPT_JULIET_JULIET;
 
-        ConsumerOptions options = new ConsumerOptions()
+        ConsumerOptions options = ConsumerOptions.get()
                 .addDecryptionKey(juliet)
                 .addVerificationCert(KeyRingUtils.publicKeyRingFrom(juliet));
 
@@ -87,7 +87,7 @@ public class DecryptAndVerifyMessageTest {
     public void decryptMessageAndReadBeyondEndTest() throws Exception {
         final String encryptedMessage = TestKeys.MSG_SIGN_CRYPT_JULIET_JULIET;
 
-        final ConsumerOptions options = new ConsumerOptions()
+        final ConsumerOptions options = ConsumerOptions.get()
                 .addDecryptionKey(juliet)
                 .addVerificationCert(KeyRingUtils.publicKeyRingFrom(juliet));
 
@@ -105,7 +105,7 @@ public class DecryptAndVerifyMessageTest {
     public void decryptMessageAndVerifySignatureByteByByteTest() throws Exception {
         String encryptedMessage = TestKeys.MSG_SIGN_CRYPT_JULIET_JULIET;
 
-        ConsumerOptions options = new ConsumerOptions()
+        ConsumerOptions options = ConsumerOptions.get()
                 .addDecryptionKey(juliet)
                 .addVerificationCert(KeyRingUtils.publicKeyRingFrom(juliet));
 

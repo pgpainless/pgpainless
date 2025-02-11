@@ -544,7 +544,7 @@ public class AsciiArmorCRCTests {
         assertThrows(IOException.class, () -> {
             DecryptionStream decryptionStream = PGPainless.decryptAndOrVerify()
                     .onInputStream(new ByteArrayInputStream(message.getBytes(StandardCharsets.UTF_8)))
-                    .withOptions(new ConsumerOptions().addDecryptionKey(
+                    .withOptions(ConsumerOptions.get().addDecryptionKey(
                             key, SecretKeyRingProtector.unlockAnyKeyWith(passphrase)
                     ));
 

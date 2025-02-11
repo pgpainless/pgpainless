@@ -13,6 +13,7 @@ import org.bouncycastle.openpgp.PGPSignature
 import org.pgpainless.PGPainless
 import org.pgpainless.algorithm.KeyFlag
 import org.pgpainless.algorithm.SignatureType
+import org.pgpainless.bouncycastle.extensions.getPublicKey
 import org.pgpainless.bouncycastle.extensions.issuerKeyId
 import org.pgpainless.exception.SignatureValidationException
 import org.pgpainless.key.util.KeyRingUtils
@@ -303,10 +304,12 @@ class CertificateValidator {
             policy: Policy
         ): Boolean {
             return validateCertificate(
-                onePassSignature.signature!!, onePassSignature.verificationKeys, policy) &&
+                onePassSignature.signature!!,
+                onePassSignature.verificationKeys.pgpPublicKeyRing,
+                policy) &&
                 SignatureVerifier.verifyOnePassSignature(
                     onePassSignature.signature!!,
-                    onePassSignature.verificationKeys.getPublicKey(
+                    onePassSignature.verificationKeys.pgpKeyRing.getPublicKey(
                         onePassSignature.signature!!.issuerKeyId),
                     onePassSignature,
                     policy)

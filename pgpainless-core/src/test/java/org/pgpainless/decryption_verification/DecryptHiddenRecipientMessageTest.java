@@ -128,7 +128,7 @@ public class DecryptHiddenRecipientMessageTest {
                 "=1knQ\n" +
                 "-----END PGP MESSAGE-----\n";
         ByteArrayInputStream messageIn = new ByteArrayInputStream(message.getBytes(StandardCharsets.UTF_8));
-        ConsumerOptions options = new ConsumerOptions()
+        ConsumerOptions options = ConsumerOptions.get()
                 .addDecryptionKey(secretKeys);
 
         DecryptionStream decryptionStream = PGPainless.decryptAndOrVerify()
