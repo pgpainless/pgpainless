@@ -21,6 +21,7 @@ import org.bouncycastle.openpgp.PGPPublicKey;
 import org.bouncycastle.openpgp.PGPSecretKey;
 import org.bouncycastle.openpgp.PGPSecretKeyRing;
 import org.bouncycastle.openpgp.PGPSignatureGenerator;
+import org.bouncycastle.openpgp.api.OpenPGPKey;
 import org.bouncycastle.openpgp.operator.PGPDataEncryptorBuilder;
 import org.bouncycastle.util.io.Streams;
 import org.junit.jupiter.api.Test;
@@ -176,12 +177,13 @@ public class InvestigateMultiSEIPMessageHandlingTest {
 
     @Test
     public void testDecryptAndVerifyDetectsAppendedSEIPData() throws IOException, PGPException {
-        PGPSecretKeyRing ring1 = PGPainless.readKeyRing().secretKeyRing(KEY1);
-        PGPSecretKeyRing ring2 = PGPainless.readKeyRing().secretKeyRing(KEY2);
+        PGPainless api = PGPainless.getInstance();
+        OpenPGPKey ring1 = api.readKey().parseKey(KEY1);
+        OpenPGPKey ring2 = api.readKey().parseKey(KEY2);
 
-        ConsumerOptions options = new ConsumerOptions()
-                .addVerificationCert(PGPainless.extractCertificate(ring1))
-                .addVerificationCert(PGPainless.extractCertificate(ring2))
+        ConsumerOptions options = ConsumerOptions.get()
+                .addVerificationCert(ring2)
+                .addVerificationCert(ring2)
                         .addDecryptionKey(ring1);
 
         DecryptionStream decryptionStream = PGPainless.decryptAndOrVerify()

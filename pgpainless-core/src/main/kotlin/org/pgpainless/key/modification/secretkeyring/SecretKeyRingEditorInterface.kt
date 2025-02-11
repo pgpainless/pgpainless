@@ -8,6 +8,7 @@ import java.io.IOException
 import java.security.InvalidAlgorithmParameterException
 import java.security.NoSuchAlgorithmException
 import java.util.*
+import org.bouncycastle.bcpg.KeyIdentifier
 import org.bouncycastle.openpgp.*
 import org.pgpainless.algorithm.KeyFlag
 import org.pgpainless.key.OpenPgpFingerprint
@@ -592,19 +593,9 @@ interface SecretKeyRingEditorInterface {
             KeyRingProtectionSettings.secureDefaultSettings()
     ): WithKeyRingEncryptionSettings
 
-    /**
-     * Change the passphrase of a single subkey in the key ring.
-     *
-     * Note: While it is a valid use-case to have different passphrases per subKey, this is one of
-     * the reasons why OpenPGP sucks in practice.
-     *
-     * @param keyId id of the subkey
-     * @param oldPassphrase old passphrase (empty if the key was unprotected)
-     * @return next builder step
-     */
+    @Deprecated("Pass KeyIdentifier instead.")
     fun changeSubKeyPassphraseFromOldPassphrase(keyId: Long, oldPassphrase: Passphrase) =
-        changeSubKeyPassphraseFromOldPassphrase(
-            keyId, oldPassphrase, KeyRingProtectionSettings.secureDefaultSettings())
+        changeSubKeyPassphraseFromOldPassphrase(KeyIdentifier(keyId), oldPassphrase)
 
     /**
      * Change the passphrase of a single subkey in the key ring.
@@ -612,13 +603,30 @@ interface SecretKeyRingEditorInterface {
      * Note: While it is a valid use-case to have different passphrases per subKey, this is one of
      * the reasons why OpenPGP sucks in practice.
      *
-     * @param keyId id of the subkey
+     * @param keyIdentifier id of the subkey
+     * @param oldPassphrase old passphrase (empty if the key was unprotected)
+     * @return next builder step
+     */
+    fun changeSubKeyPassphraseFromOldPassphrase(
+        keyIdentifier: KeyIdentifier,
+        oldPassphrase: Passphrase
+    ) =
+        changeSubKeyPassphraseFromOldPassphrase(
+            keyIdentifier, oldPassphrase, KeyRingProtectionSettings.secureDefaultSettings())
+
+    /**
+     * Change the passphrase of a single subkey in the key ring.
+     *
+     * Note: While it is a valid use-case to have different passphrases per subKey, this is one of
+     * the reasons why OpenPGP sucks in practice.
+     *
+     * @param keyIdentifier id of the subkey
      * @param oldPassphrase old passphrase (empty if the key was unprotected)
      * @param oldProtectionSettings custom settings for the old passphrase
      * @return next builder step
      */
     fun changeSubKeyPassphraseFromOldPassphrase(
-        keyId: Long,
+        keyIdentifier: KeyIdentifier,
         oldPassphrase: Passphrase,
         oldProtectionSettings: KeyRingProtectionSettings
     ): WithKeyRingEncryptionSettings
