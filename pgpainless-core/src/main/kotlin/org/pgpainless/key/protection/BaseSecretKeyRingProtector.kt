@@ -4,6 +4,8 @@
 
 package org.pgpainless.key.protection
 
+import org.bouncycastle.bcpg.KeyIdentifier
+import org.bouncycastle.openpgp.api.OpenPGPKey
 import org.bouncycastle.openpgp.operator.PBESecretKeyDecryptor
 import org.bouncycastle.openpgp.operator.PBESecretKeyEncryptor
 import org.pgpainless.implementation.ImplementationFactory
@@ -22,16 +24,21 @@ open class BaseSecretKeyRingProtector(
         passphraseProvider: SecretKeyPassphraseProvider
     ) : this(passphraseProvider, KeyRingProtectionSettings.secureDefaultSettings())
 
-    override fun hasPassphraseFor(keyId: Long): Boolean = passphraseProvider.hasPassphrase(keyId)
+    override fun hasPassphraseFor(keyIdentifier: KeyIdentifier): Boolean {
+        return passphraseProvider.hasPassphrase(keyIdentifier)
+    }
 
     override fun getDecryptor(keyId: Long): PBESecretKeyDecryptor? =
-        passphraseProvider.getPassphraseFor(keyId)?.let {
+        getDecryptor(KeyIdentifier(keyId))
+
+    override fun getDecryptor(keyIdentifier: KeyIdentifier): PBESecretKeyDecryptor? =
+        passphraseProvider.getPassphraseFor(keyIdentifier)?.let {
             if (it.isEmpty) null
             else ImplementationFactory.getInstance().getPBESecretKeyDecryptor(it)
         }
 
-    override fun getEncryptor(keyId: Long): PBESecretKeyEncryptor? =
-        passphraseProvider.getPassphraseFor(keyId)?.let {
+    override fun getEncryptor(keyIdentifier: KeyIdentifier): PBESecretKeyEncryptor? {
+        return passphraseProvider.getPassphraseFor(keyIdentifier)?.let {
             if (it.isEmpty) null
             else
                 ImplementationFactory.getInstance()
@@ -41,4 +48,9 @@ open class BaseSecretKeyRingProtector(
                         protectionSettings.s2kCount,
                         it)
         }
+    }
+
+    override fun getKeyPassword(p0: OpenPGPKey.OpenPGPSecretKey): CharArray? {
+        return passphraseProvider.getPassphraseFor(p0.keyIdentifier)?.getChars()
+    }
 }

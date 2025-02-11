@@ -61,8 +61,7 @@ public final class GnuPGDummyKeyUtil {
         return hardwareBackedKeys;
     }
 
-    public static Builder modify(@Nonnull OpenPGPKey key)
-    {
+    public static Builder modify(@Nonnull OpenPGPKey key) {
         return modify(key.getPGPSecretKeyRing());
     }
 
