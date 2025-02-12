@@ -26,6 +26,7 @@ import org.bouncycastle.openpgp.PGPPublicKeyEncryptedData
 import org.bouncycastle.openpgp.PGPSignature
 import org.bouncycastle.openpgp.api.OpenPGPCertificate
 import org.bouncycastle.openpgp.api.OpenPGPKey
+import org.bouncycastle.openpgp.api.OpenPGPKey.OpenPGPPrivateKey
 import org.bouncycastle.openpgp.api.OpenPGPKey.OpenPGPSecretKey
 import org.bouncycastle.openpgp.api.OpenPGPSignature.OpenPGPDocumentSignature
 import org.bouncycastle.openpgp.operator.PBEDataDecryptorFactory
@@ -58,6 +59,7 @@ import org.pgpainless.exception.UnacceptableAlgorithmException
 import org.pgpainless.exception.WrongPassphraseException
 import org.pgpainless.implementation.ImplementationFactory
 import org.pgpainless.key.SubkeyIdentifier
+import org.pgpainless.key.protection.UnlockSecretKey.Companion.unlockSecretKey
 import org.pgpainless.policy.Policy
 import org.pgpainless.signature.consumer.CertificateValidator
 import org.pgpainless.signature.consumer.OnePassSignatureCheck
@@ -420,10 +422,15 @@ class OpenPgpMessageInputStream(
                     continue
                 }
 
-                val privateKey = secretKey.unlock(protector)
+                val privateKey =
+                    try {
+                        unlockSecretKey(secretKey, protector)
+                    } catch (e: PGPException) {
+                        throw WrongPassphraseException(secretKey.keyIdentifier, e)
+                    }
                 if (decryptWithPrivateKey(
                     esks,
-                    privateKey,
+                    privateKey.unlockedKey,
                     SubkeyIdentifier(
                         secretKey.openPGPKey.pgpSecretKeyRing, secretKey.keyIdentifier),
                     pkesk)) {
@@ -451,7 +458,7 @@ class OpenPgpMessageInputStream(
 
                 val privateKey = decryptionKey.unlock(protector)
                 if (decryptWithPrivateKey(
-                    esks, privateKey, SubkeyIdentifier(decryptionKey), pkesk)) {
+                    esks, privateKey.unlockedKey, SubkeyIdentifier(decryptionKey), pkesk)) {
                     return true
                 }
             }
@@ -476,13 +483,13 @@ class OpenPgpMessageInputStream(
                 LOGGER.debug(
                     "Attempt decryption with key $decryptionKeyId while interactively requesting its passphrase.")
                 val protector = options.getSecretKeyProtector(decryptionKeys) ?: continue
-                val privateKey =
+                val privateKey: OpenPGPPrivateKey =
                     try {
-                        secretKey.unlock(protector)
+                        unlockSecretKey(secretKey, protector)
                     } catch (e: PGPException) {
                         throw WrongPassphraseException(secretKey.keyIdentifier, e)
                     }
-                if (decryptWithPrivateKey(esks, privateKey, decryptionKeyId, pkesk)) {
+                if (decryptWithPrivateKey(esks, privateKey.unlockedKey, decryptionKeyId, pkesk)) {
                     return true
                 }
             }

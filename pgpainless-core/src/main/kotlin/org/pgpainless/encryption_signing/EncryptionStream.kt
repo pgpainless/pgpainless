@@ -17,6 +17,7 @@ import org.pgpainless.algorithm.CompressionAlgorithm
 import org.pgpainless.algorithm.StreamEncoding
 import org.pgpainless.algorithm.SymmetricKeyAlgorithm
 import org.pgpainless.implementation.ImplementationFactory
+import org.pgpainless.key.SubkeyIdentifier
 import org.pgpainless.util.ArmoredOutputStreamFactory
 import org.slf4j.LoggerFactory
 
@@ -250,7 +251,7 @@ class EncryptionStream(
         options.signingOptions.signingMethods.entries.reversed().forEach { (key, method) ->
             method.signatureGenerator.generate().let { sig ->
                 if (method.isDetached) {
-                    resultBuilder.addDetachedSignature(key, sig)
+                    resultBuilder.addDetachedSignature(SubkeyIdentifier(key), sig)
                 }
                 if (!method.isDetached || options.isCleartextSigned) {
                     sig.encode(signatureLayerStream)
