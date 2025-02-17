@@ -450,8 +450,7 @@ class SigningOptions {
         }
 
         val generator: PGPSignatureGenerator =
-            createSignatureGenerator(
-                signingKey.unlockedKey.privateKey, hashAlgorithm, signatureType)
+            createSignatureGenerator(signingKey.keyPair.privateKey, hashAlgorithm, signatureType)
 
         // Subpackets
         val hashedSubpackets =
