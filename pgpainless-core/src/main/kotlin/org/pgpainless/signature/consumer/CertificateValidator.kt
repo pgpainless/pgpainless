@@ -164,7 +164,7 @@ class CertificateValidator {
 
             if (signingSubkey.keyID == primaryKey.keyID) { // signing key is primary key
                 if (directKeyAndRevSigs.isNotEmpty()) {
-                    val directKeySig = directKeyAndRevSigs[0]!!
+                    val directKeySig = directKeyAndRevSigs[0]
                     val flags = SignatureSubpacketsUtil.getKeyFlags(directKeySig)
                     if (flags != null && KeyFlag.hasKeyFlag(flags.flags, KeyFlag.SIGN_DATA)) {
                         return true
