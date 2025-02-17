@@ -690,7 +690,7 @@ abstract class SignatureValidator {
                     }
                     if (notAfter != null && timestamp > notAfter) {
                         throw SignatureValidationException(
-                            "Signature was made before the latest allowed signature creation time." +
+                            "Signature was made after the latest allowed signature creation time." +
                                 " Created: ${timestamp.formatUTC()}," +
                                 " latest allowed: ${notAfter.formatUTC()}")
                     }
