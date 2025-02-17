@@ -204,7 +204,7 @@ class PGPainless(
         fun inspectKeyRing(key: PGPKeyRing, referenceTime: Date = Date()) =
             KeyRingInfo(key, referenceTime)
 
-        fun inspectKeyRing(key: OpenPGPKey, referenceTime: Date = Date()) =
+        fun inspectKeyRing(key: OpenPGPCertificate, referenceTime: Date = Date()) =
             KeyRingInfo(key, getPolicy(), referenceTime)
 
         /**
