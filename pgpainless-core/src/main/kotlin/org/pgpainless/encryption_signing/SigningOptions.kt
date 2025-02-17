@@ -149,7 +149,7 @@ class SigningOptions {
         val keyRingInfo = inspectKeyRing(signingKey, evaluationDate)
         if (userId != null && !keyRingInfo.isUserIdValid(userId)) {
             throw UnboundUserIdException(
-                of(signingKey.pgpSecretKeyRing),
+                of(signingKey),
                 userId.toString(),
                 keyRingInfo.getLatestUserIdCertification(userId),
                 keyRingInfo.getUserIdRevocation(userId))
@@ -157,14 +157,14 @@ class SigningOptions {
 
         val signingPubKeys = keyRingInfo.signingSubkeys
         if (signingPubKeys.isEmpty()) {
-            throw UnacceptableSigningKeyException(of(signingKey.pgpSecretKeyRing))
+            throw UnacceptableSigningKeyException(of(signingKey))
         }
 
         for (signingPubKey in signingPubKeys) {
             val signingSecKey: OpenPGPSecretKey =
                 signingKey.getSecretKey(signingPubKey)
                     ?: throw MissingSecretKeyException(
-                        of(signingKey.pgpSecretKeyRing), signingPubKey.keyIdentifier.keyId)
+                        of(signingKey), signingPubKey.keyIdentifier.keyId)
             val signingPrivKey: OpenPGPPrivateKey =
                 unlockSecretKey(signingSecKey, signingKeyProtector)
             val hashAlgorithms =
@@ -220,12 +220,12 @@ class SigningOptions {
         val keyRingInfo = inspectKeyRing(openPGPKey, evaluationDate)
         val signingPubKeys = keyRingInfo.signingSubkeys
         if (signingPubKeys.isEmpty()) {
-            throw UnacceptableSigningKeyException(of(openPGPKey.pgpSecretKeyRing))
+            throw UnacceptableSigningKeyException(of(openPGPKey))
         }
 
         if (!signingPubKeys.any { it.keyIdentifier.matches(signingKey.keyIdentifier) }) {
             throw MissingSecretKeyException(
-                of(openPGPKey.pgpSecretKeyRing), signingKey.keyIdentifier.keyId)
+                of(openPGPKey), signingKey.keyIdentifier.keyId)
         }
 
         val signingPrivKey = unlockSecretKey(signingKey, signingKeyProtector)
@@ -324,7 +324,7 @@ class SigningOptions {
         val keyRingInfo = inspectKeyRing(signingKey, evaluationDate)
         if (userId != null && !keyRingInfo.isUserIdValid(userId)) {
             throw UnboundUserIdException(
-                of(signingKey.pgpSecretKeyRing),
+                of(signingKey),
                 userId.toString(),
                 keyRingInfo.getLatestUserIdCertification(userId),
                 keyRingInfo.getUserIdRevocation(userId))
@@ -332,14 +332,14 @@ class SigningOptions {
 
         val signingPubKeys = keyRingInfo.signingSubkeys
         if (signingPubKeys.isEmpty()) {
-            throw UnacceptableSigningKeyException(of(signingKey.pgpSecretKeyRing))
+            throw UnacceptableSigningKeyException(of(signingKey))
         }
 
         for (signingPubKey in signingPubKeys) {
             val signingSecKey: OpenPGPSecretKey =
                 signingKey.getSecretKey(signingPubKey.keyIdentifier)
                     ?: throw MissingSecretKeyException(
-                        of(signingKey.pgpSecretKeyRing), signingPubKey.keyIdentifier.keyId)
+                        of(signingKey), signingPubKey.keyIdentifier.keyId)
             addDetachedSignature(
                 signingKeyProtector, signingSecKey, userId, signatureType, subpacketCallback)
         }
@@ -443,7 +443,7 @@ class SigningOptions {
         if (!getPolicy().publicKeyAlgorithmPolicy.isAcceptable(publicKeyAlgorithm, bitStrength)) {
             throw UnacceptableSigningKeyException(
                 PublicKeyAlgorithmPolicyException(
-                    of(signingKey.secretKey.pgpSecretKey),
+                    of(signingKey),
                     signingSecretKey.keyID,
                     publicKeyAlgorithm,
                     bitStrength))
