@@ -25,6 +25,7 @@ import org.pgpainless.util.Passphrase
 
 class EncryptionOptions(private val purpose: EncryptionPurpose) {
     private val _encryptionMethods: MutableSet<PGPKeyEncryptionMethodGenerator> = mutableSetOf()
+    private val _encryptionKeys: MutableSet<OpenPGPComponentKey> = mutableSetOf()
     private val _encryptionKeyIdentifiers: MutableSet<SubkeyIdentifier> = mutableSetOf()
     private val _keyRingInfo: MutableMap<SubkeyIdentifier, KeyRingInfo> = mutableMapOf()
     private val _keyViews: MutableMap<SubkeyIdentifier, KeyAccessor> = mutableMapOf()
@@ -39,6 +40,9 @@ class EncryptionOptions(private val purpose: EncryptionPurpose) {
 
     val encryptionKeyIdentifiers
         get() = _encryptionKeyIdentifiers.toSet()
+
+    val encryptionKeys
+        get() = _encryptionKeys.toSet()
 
     val keyRingInfo
         get() = _keyRingInfo.toMap()
@@ -326,6 +330,7 @@ class EncryptionOptions(private val purpose: EncryptionPurpose) {
     }
 
     private fun addRecipientKey(key: OpenPGPComponentKey, wildcardKeyId: Boolean) {
+        _encryptionKeys.add(key)
         _encryptionKeyIdentifiers.add(SubkeyIdentifier(key))
         addEncryptionMethod(
             ImplementationFactory.getInstance()
