@@ -4,7 +4,9 @@
 
 package org.pgpainless.exception;
 
+import org.bouncycastle.bcpg.KeyIdentifier;
 import org.bouncycastle.openpgp.PGPSignature;
+import org.bouncycastle.openpgp.api.OpenPGPCertificate;
 import org.pgpainless.algorithm.PublicKeyAlgorithm;
 import org.pgpainless.key.OpenPgpFingerprint;
 import org.pgpainless.util.DateUtil;
@@ -33,6 +35,10 @@ public abstract class KeyException extends RuntimeException {
 
     public static class ExpiredKeyException extends KeyException {
 
+        public ExpiredKeyException(@Nonnull OpenPGPCertificate cert, @Nonnull Date expirationDate) {
+            this(OpenPgpFingerprint.of(cert), expirationDate);
+        }
+
         public ExpiredKeyException(@Nonnull OpenPgpFingerprint fingerprint, @Nonnull Date expirationDate) {
             super("Key " + fingerprint + " is expired. Expiration date: " + DateUtil.formatUTCDate(expirationDate), fingerprint);
         }
@@ -43,9 +49,28 @@ public abstract class KeyException extends RuntimeException {
         public RevokedKeyException(@Nonnull OpenPgpFingerprint fingerprint) {
             super("Key " + fingerprint + " appears to be revoked.", fingerprint);
         }
+
+        public RevokedKeyException(@Nonnull OpenPGPCertificate.OpenPGPComponentKey key) {
+            super("Subkey " + key.getKeyIdentifier() + " appears to be revoked.",
+                    OpenPgpFingerprint.of(key));
+        }
+
+        public RevokedKeyException(@Nonnull OpenPGPCertificate cert) {
+            super("Key or certificate " + cert.getKeyIdentifier() + " appears to be revoked.",
+                    OpenPgpFingerprint.of(cert));
+        }
     }
 
     public static class UnacceptableEncryptionKeyException extends KeyException {
+
+        public UnacceptableEncryptionKeyException(@Nonnull OpenPGPCertificate cert) {
+            this(OpenPgpFingerprint.of(cert));
+        }
+
+        public UnacceptableEncryptionKeyException(@Nonnull OpenPGPCertificate.OpenPGPComponentKey subkey) {
+            super("Subkey " + subkey.getKeyIdentifier() + " is not an acceptable encryption key.",
+                    OpenPgpFingerprint.of(subkey));
+        }
 
         public UnacceptableEncryptionKeyException(@Nonnull OpenPgpFingerprint fingerprint) {
             super("Key " + fingerprint + " has no acceptable encryption key.", fingerprint);
@@ -57,6 +82,14 @@ public abstract class KeyException extends RuntimeException {
     }
 
     public static class UnacceptableSigningKeyException extends KeyException {
+
+        public UnacceptableSigningKeyException(OpenPGPCertificate certificate) {
+            this(OpenPgpFingerprint.of(certificate));
+        }
+
+        public UnacceptableSigningKeyException(OpenPGPCertificate.OpenPGPComponentKey subkey) {
+            this(OpenPgpFingerprint.of(subkey));
+        }
 
         public UnacceptableSigningKeyException(@Nonnull OpenPgpFingerprint fingerprint) {
             super("Key " + fingerprint + " has no acceptable signing key.", fingerprint);
@@ -76,6 +109,10 @@ public abstract class KeyException extends RuntimeException {
 
     public static class UnacceptableSelfSignatureException extends KeyException {
 
+        public UnacceptableSelfSignatureException(@Nonnull OpenPGPCertificate cert) {
+            this(OpenPgpFingerprint.of(cert));
+        }
+
         public UnacceptableSelfSignatureException(@Nonnull OpenPgpFingerprint fingerprint) {
             super("Key " + fingerprint + " does not have a valid/acceptable signature to derive an expiration date from.", fingerprint);
         }
@@ -83,29 +120,50 @@ public abstract class KeyException extends RuntimeException {
 
     public static class MissingSecretKeyException extends KeyException {
 
-        private final long missingSecretKeyId;
+        private final KeyIdentifier missingSecretKeyIdentifier;
 
-        public MissingSecretKeyException(@Nonnull OpenPgpFingerprint fingerprint, long keyId) {
-            super("Key " + fingerprint + " does not contain a secret key for public key " + Long.toHexString(keyId), fingerprint);
-            this.missingSecretKeyId = keyId;
+        public MissingSecretKeyException(@Nonnull OpenPGPCertificate.OpenPGPComponentKey publicKey) {
+            this(OpenPgpFingerprint.of(publicKey.getCertificate()), publicKey.getKeyIdentifier());
         }
 
-        public long getMissingSecretKeyId() {
-            return missingSecretKeyId;
+        public MissingSecretKeyException(@Nonnull OpenPgpFingerprint fingerprint, KeyIdentifier keyIdentifier) {
+            super("Key " + fingerprint + " does not contain a secret key for public key " + keyIdentifier, fingerprint);
+            this.missingSecretKeyIdentifier = keyIdentifier;
+        }
+
+        @Deprecated
+        public MissingSecretKeyException(@Nonnull OpenPgpFingerprint fingerprint, long keyId) {
+            this(fingerprint, new KeyIdentifier(keyId));
+        }
+
+        public KeyIdentifier getMissingSecretKeyIdentifier() {
+            return missingSecretKeyIdentifier;
         }
     }
 
     public static class PublicKeyAlgorithmPolicyException extends KeyException {
 
-        private final long violatingSubkeyId;
+        private final KeyIdentifier violatingSubkeyId;
 
-        public PublicKeyAlgorithmPolicyException(@Nonnull OpenPgpFingerprint fingerprint, long keyId, @Nonnull PublicKeyAlgorithm algorithm, int bitSize) {
-            super("Subkey " + Long.toHexString(keyId) + " of key " + fingerprint + " is violating the Public Key Algorithm Policy:\n" +
-                    algorithm + " of size " + bitSize + " is not acceptable.", fingerprint);
-            this.violatingSubkeyId = keyId;
+        public PublicKeyAlgorithmPolicyException(@Nonnull OpenPGPCertificate.OpenPGPComponentKey subkey,
+                                                 @Nonnull PublicKeyAlgorithm algorithm,
+                                                 int bitSize) {
+            super("Subkey " + subkey.getKeyIdentifier() + " of key " + subkey.getCertificate().getKeyIdentifier() +
+                    " is violating the Public Key Algorithm Policy:\n" +
+                    algorithm + " of size " + bitSize + " is not acceptable.", OpenPgpFingerprint.of(subkey));
+            this.violatingSubkeyId = subkey.getKeyIdentifier();
         }
 
-        public long getViolatingSubkeyId() {
+        public PublicKeyAlgorithmPolicyException(@Nonnull OpenPgpFingerprint fingerprint,
+                                                 long keyId,
+                                                 @Nonnull PublicKeyAlgorithm algorithm,
+                                                 int bitSize) {
+            super("Subkey " + Long.toHexString(keyId) + " of key " + fingerprint + " is violating the Public Key Algorithm Policy:\n" +
+                    algorithm + " of size " + bitSize + " is not acceptable.", fingerprint);
+            this.violatingSubkeyId = new KeyIdentifier(keyId);
+        }
+
+        public KeyIdentifier getViolatingSubkeyId() {
              return violatingSubkeyId;
         }
     }
