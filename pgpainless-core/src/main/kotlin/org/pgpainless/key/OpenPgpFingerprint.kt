@@ -132,17 +132,13 @@ abstract class OpenPgpFingerprint : CharSequence, Comparable<OpenPgpFingerprint>
          */
         @JvmStatic fun of(keys: PGPKeyRing): OpenPgpFingerprint = of(keys.publicKey)
 
-        /**
-         * Return the [OpenPgpFingerprint] of the primary key of the given [OpenPGPCertificate].
-         */
+        /** Return the [OpenPgpFingerprint] of the primary key of the given [OpenPGPCertificate]. */
         @JvmStatic fun of(cert: OpenPGPCertificate): OpenPgpFingerprint = of(cert.pgpPublicKeyRing)
 
-        /**
-         * Return the [OpenPgpFingerprint] of the given [OpenPGPComponentKey].
-         */
-        @JvmStatic fun of (key: OpenPGPComponentKey): OpenPgpFingerprint = of(key.pgpPublicKey)
+        /** Return the [OpenPgpFingerprint] of the given [OpenPGPComponentKey]. */
+        @JvmStatic fun of(key: OpenPGPComponentKey): OpenPgpFingerprint = of(key.pgpPublicKey)
 
-        @JvmStatic fun of (key: OpenPGPPrivateKey): OpenPgpFingerprint = of(key.secretKey)
+        @JvmStatic fun of(key: OpenPGPPrivateKey): OpenPgpFingerprint = of(key.secretKey)
 
         /**
          * Try to parse an [OpenPgpFingerprint] from the given fingerprint string. If the trimmed

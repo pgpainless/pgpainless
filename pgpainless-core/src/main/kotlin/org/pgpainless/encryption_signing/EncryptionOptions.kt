@@ -17,7 +17,6 @@ import org.pgpainless.bouncycastle.extensions.toOpenPGPCertificate
 import org.pgpainless.encryption_signing.EncryptionOptions.EncryptionKeySelector
 import org.pgpainless.exception.KeyException.*
 import org.pgpainless.implementation.ImplementationFactory
-import org.pgpainless.key.OpenPgpFingerprint
 import org.pgpainless.key.SubkeyIdentifier
 import org.pgpainless.key.info.KeyAccessor
 import org.pgpainless.key.info.KeyRingInfo
@@ -197,7 +196,7 @@ class EncryptionOptions(private val purpose: EncryptionPurpose) {
             encryptionKeySelector.selectEncryptionSubkeys(
                 info.getEncryptionSubkeys(userId, purpose))
         if (subkeys.isEmpty()) {
-            throw UnacceptableEncryptionKeyException(OpenPgpFingerprint.of(cert))
+            throw UnacceptableEncryptionKeyException(cert)
         }
 
         for (subkey in subkeys) {
@@ -295,13 +294,11 @@ class EncryptionOptions(private val purpose: EncryptionPurpose) {
             try {
                 info.primaryKeyExpirationDate
             } catch (e: NoSuchElementException) {
-                throw UnacceptableSelfSignatureException(
-                    OpenPgpFingerprint.of(cert))
+                throw UnacceptableSelfSignatureException(cert)
             }
 
         if (primaryKeyExpiration != null && primaryKeyExpiration < evaluationDate) {
-            throw ExpiredKeyException(
-                OpenPgpFingerprint.of(cert), primaryKeyExpiration)
+            throw ExpiredKeyException(cert, primaryKeyExpiration)
         }
 
         var encryptionSubkeys = selector.selectEncryptionSubkeys(info.getEncryptionSubkeys(purpose))
@@ -318,7 +315,7 @@ class EncryptionOptions(private val purpose: EncryptionPurpose) {
         }
 
         if (encryptionSubkeys.isEmpty()) {
-            throw UnacceptableEncryptionKeyException(OpenPgpFingerprint.of(cert))
+            throw UnacceptableEncryptionKeyException(cert)
         }
 
         for (subkey in encryptionSubkeys) {
