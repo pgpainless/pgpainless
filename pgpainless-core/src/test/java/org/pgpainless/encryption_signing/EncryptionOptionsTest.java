@@ -16,11 +16,10 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Set;
 
-import org.bouncycastle.openpgp.PGPPublicKey;
 import org.bouncycastle.openpgp.PGPPublicKeyRing;
 import org.bouncycastle.openpgp.PGPPublicKeyRingCollection;
-import org.bouncycastle.openpgp.PGPSecretKeyRing;
 import org.bouncycastle.openpgp.api.OpenPGPCertificate;
+import org.bouncycastle.openpgp.api.OpenPGPKey;
 import org.jetbrains.annotations.NotNull;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
@@ -28,7 +27,6 @@ import org.pgpainless.PGPainless;
 import org.pgpainless.algorithm.KeyFlag;
 import org.pgpainless.algorithm.SymmetricKeyAlgorithm;
 import org.pgpainless.exception.KeyException;
-import org.pgpainless.key.SubkeyIdentifier;
 import org.pgpainless.key.generation.KeySpec;
 import org.pgpainless.key.generation.type.KeyType;
 import org.pgpainless.key.generation.type.eddsa_legacy.EdDSALegacyCurve;
@@ -40,11 +38,11 @@ import javax.annotation.Nonnull;
 
 public class EncryptionOptionsTest {
 
-    private static PGPSecretKeyRing secretKeys;
-    private static PGPPublicKeyRing publicKeys;
-    private static SubkeyIdentifier primaryKey;
-    private static SubkeyIdentifier encryptComms;
-    private static SubkeyIdentifier encryptStorage;
+    private static OpenPGPKey secretKeys;
+    private static OpenPGPCertificate publicKeys;
+    private static OpenPGPCertificate.OpenPGPComponentKey primaryKey;
+    private static OpenPGPCertificate.OpenPGPComponentKey encryptComms;
+    private static OpenPGPCertificate.OpenPGPComponentKey encryptStorage;
 
     @BeforeAll
     public static void generateKey() {
@@ -56,15 +54,14 @@ public class EncryptionOptionsTest {
                 .addSubkey(KeySpec.getBuilder(KeyType.XDH_LEGACY(XDHLegacySpec._X25519), KeyFlag.ENCRYPT_STORAGE)
                         .build())
                 .addUserId("test@pgpainless.org")
-                .build()
-                .getPGPSecretKeyRing();
+                .build();
 
-        publicKeys = KeyRingUtils.publicKeyRingFrom(secretKeys);
+        publicKeys = secretKeys.toCertificate();
 
-        Iterator<PGPPublicKey> iterator = publicKeys.iterator();
-        primaryKey = new SubkeyIdentifier(publicKeys, iterator.next().getKeyID());
-        encryptComms = new SubkeyIdentifier(publicKeys, iterator.next().getKeyID());
-        encryptStorage = new SubkeyIdentifier(publicKeys, iterator.next().getKeyID());
+        Iterator<OpenPGPCertificate.OpenPGPComponentKey> iterator = publicKeys.getKeys().iterator();
+        primaryKey = iterator.next();
+        encryptComms = iterator.next();
+        encryptStorage = iterator.next();
     }
 
     @Test
@@ -91,7 +88,7 @@ public class EncryptionOptionsTest {
         EncryptionOptions options = EncryptionOptions.encryptCommunications();
         options.addRecipient(publicKeys);
 
-        Set<SubkeyIdentifier> encryptionKeys = options.getEncryptionKeyIdentifiers();
+        Set<OpenPGPCertificate.OpenPGPComponentKey> encryptionKeys = options.getEncryptionKeys();
         assertEquals(1, encryptionKeys.size());
         assertEquals(encryptComms, encryptionKeys.iterator().next());
     }
@@ -101,7 +98,7 @@ public class EncryptionOptionsTest {
         EncryptionOptions options = EncryptionOptions.encryptDataAtRest();
         options.addRecipient(publicKeys);
 
-        Set<SubkeyIdentifier> encryptionKeys = options.getEncryptionKeyIdentifiers();
+        Set<OpenPGPCertificate.OpenPGPComponentKey> encryptionKeys = options.getEncryptionKeys();
         assertEquals(1, encryptionKeys.size());
         assertEquals(encryptStorage, encryptionKeys.iterator().next());
     }
@@ -111,7 +108,7 @@ public class EncryptionOptionsTest {
         EncryptionOptions options = new EncryptionOptions();
         options.addRecipient(publicKeys, EncryptionOptions.encryptToAllCapableSubkeys());
 
-        Set<SubkeyIdentifier> encryptionKeys = options.getEncryptionKeyIdentifiers();
+        Set<OpenPGPCertificate.OpenPGPComponentKey> encryptionKeys = options.getEncryptionKeys();
 
         assertEquals(2, encryptionKeys.size());
         assertTrue(encryptionKeys.contains(encryptComms));
@@ -136,12 +133,11 @@ public class EncryptionOptionsTest {
     @Test
     public void testAddRecipient_KeyWithoutEncryptionKeyFails() {
         EncryptionOptions options = new EncryptionOptions();
-        PGPSecretKeyRing secretKeys = PGPainless.buildKeyRing()
+        OpenPGPKey secretKeys = PGPainless.buildKeyRing()
                 .setPrimaryKey(KeySpec.getBuilder(KeyType.EDDSA_LEGACY(EdDSALegacyCurve._Ed25519), KeyFlag.CERTIFY_OTHER, KeyFlag.SIGN_DATA))
                 .addUserId("test@pgpainless.org")
-                .build()
-                .getPGPSecretKeyRing();
-        PGPPublicKeyRing publicKeys = KeyRingUtils.publicKeyRingFrom(secretKeys);
+                .build();
+        OpenPGPCertificate publicKeys = secretKeys.toCertificate();
 
         assertThrows(KeyException.UnacceptableEncryptionKeyException.class, () -> options.addRecipient(publicKeys));
     }
@@ -175,7 +171,7 @@ public class EncryptionOptionsTest {
                         .getPGPSecretKeyRing());
 
         PGPPublicKeyRingCollection collection = new PGPPublicKeyRingCollection(
-                Arrays.asList(publicKeys, secondKeyRing));
+                Arrays.asList(publicKeys.getPGPPublicKeyRing(), secondKeyRing));
 
         EncryptionOptions options = new EncryptionOptions();
         options.addRecipients(collection, EncryptionOptions.encryptToFirstSubkey());
