@@ -132,6 +132,8 @@ class PGPainless(
             if (key is PGPSecretKeyRing) ArmorUtils.toAsciiArmoredString(key)
             else ArmorUtils.toAsciiArmoredString(key as PGPPublicKeyRing)
 
+        @JvmStatic fun asciiArmor(cert: OpenPGPCertificate) = asciiArmor(cert.pgpKeyRing)
+
         /**
          * Wrap a key of certificate in ASCII armor and write the result into the given
          * [OutputStream].
@@ -204,6 +206,8 @@ class PGPainless(
         fun inspectKeyRing(key: PGPKeyRing, referenceTime: Date = Date()) =
             KeyRingInfo(key, referenceTime)
 
+        @JvmStatic
+        @JvmOverloads
         fun inspectKeyRing(key: OpenPGPCertificate, referenceTime: Date = Date()) =
             KeyRingInfo(key, getPolicy(), referenceTime)
 
