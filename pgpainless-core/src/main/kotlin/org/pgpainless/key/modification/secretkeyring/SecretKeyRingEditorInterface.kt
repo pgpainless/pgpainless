@@ -10,6 +10,7 @@ import java.security.NoSuchAlgorithmException
 import java.util.*
 import org.bouncycastle.bcpg.KeyIdentifier
 import org.bouncycastle.openpgp.*
+import org.bouncycastle.openpgp.api.OpenPGPKey
 import org.pgpainless.algorithm.KeyFlag
 import org.pgpainless.key.OpenPgpFingerprint
 import org.pgpainless.key.generation.KeySpec
@@ -19,7 +20,6 @@ import org.pgpainless.key.util.RevocationAttributes
 import org.pgpainless.signature.subpackets.RevocationSignatureSubpackets
 import org.pgpainless.signature.subpackets.SelfSignatureSubpackets
 import org.pgpainless.util.Passphrase
-import org.pgpainless.util.selection.userid.SelectUserId
 
 interface SecretKeyRingEditorInterface {
 
@@ -33,28 +33,23 @@ interface SecretKeyRingEditorInterface {
      * Add a user-id to the key ring.
      *
      * @param userId user-id
-     * @param protector protector to unlock the secret key
      * @return the builder
      * @throws PGPException in case we cannot generate a signature for the user-id
      */
-    @Throws(PGPException::class)
-    fun addUserId(userId: CharSequence, protector: SecretKeyRingProtector) =
-        addUserId(userId, null, protector)
+    @Throws(PGPException::class) fun addUserId(userId: CharSequence) = addUserId(userId, null)
 
     /**
      * Add a user-id to the key ring.
      *
      * @param userId user-id
      * @param callback callback to modify the self-signature subpackets
-     * @param protector protector to unlock the secret key
      * @return the builder
      * @throws PGPException in case we cannot generate a signature for the user-id
      */
     @Throws(PGPException::class)
     fun addUserId(
         userId: CharSequence,
-        callback: SelfSignatureSubpackets.Callback? = null,
-        protector: SecretKeyRingProtector
+        callback: SelfSignatureSubpackets.Callback? = null
     ): SecretKeyRingEditorInterface
 
     /**
@@ -62,48 +57,23 @@ interface SecretKeyRingEditorInterface {
      * new certification signature will be created.
      *
      * @param userId user id
-     * @param protector protector to unlock the secret key
      * @return the builder
      * @throws PGPException in case we cannot generate a signature for the user-id
      */
     @Throws(PGPException::class)
-    fun addPrimaryUserId(
-        userId: CharSequence,
-        protector: SecretKeyRingProtector
-    ): SecretKeyRingEditorInterface
+    fun addPrimaryUserId(userId: CharSequence): SecretKeyRingEditorInterface
 
     /**
      * Convenience method to revoke selected user-ids using soft revocation signatures. The
      * revocation will use [RevocationAttributes.Reason.USER_ID_NO_LONGER_VALID], so that the
      * user-id can be re-certified at a later point.
      *
-     * @param selector selector to select user-ids
-     * @param protector protector to unlock the primary key
-     * @return the builder
-     * @throws PGPException in case we cannot generate a revocation signature for the user-id
-     */
-    @Deprecated(
-        "Use of SelectUserId class is deprecated.",
-        ReplaceWith("removeUserId(protector, predicate)"))
-    @Throws(PGPException::class)
-    fun removeUserId(selector: SelectUserId, protector: SecretKeyRingProtector) =
-        removeUserId(protector, selector)
-
-    /**
-     * Convenience method to revoke selected user-ids using soft revocation signatures. The
-     * revocation will use [RevocationAttributes.Reason.USER_ID_NO_LONGER_VALID], so that the
-     * user-id can be re-certified at a later point.
-     *
-     * @param protector protector to unlock the primary key
      * @param predicate predicate to select user-ids for revocation
      * @return the builder
      * @throws PGPException in case we cannot generate a revocation signature for the user-id
      */
     @Throws(PGPException::class)
-    fun removeUserId(
-        protector: SecretKeyRingProtector,
-        predicate: (String) -> Boolean
-    ): SecretKeyRingEditorInterface
+    fun removeUserId(predicate: (String) -> Boolean): SecretKeyRingEditorInterface
 
     /**
      * Convenience method to revoke a single user-id using a soft revocation signature. The
@@ -111,15 +81,11 @@ interface SecretKeyRingEditorInterface {
      * can be re-certified at a later point.
      *
      * @param userId user-id to revoke
-     * @param protector protector to unlock the primary key
      * @return the builder
      * @throws PGPException in case we cannot generate a revocation signature for the user-id
      */
     @Throws(PGPException::class)
-    fun removeUserId(
-        userId: CharSequence,
-        protector: SecretKeyRingProtector
-    ): SecretKeyRingEditorInterface
+    fun removeUserId(userId: CharSequence): SecretKeyRingEditorInterface
 
     /**
      * Replace a user-id on the key with a new one. The old user-id gets soft revoked and the new
@@ -130,7 +96,6 @@ interface SecretKeyRingEditorInterface {
      *
      * @param oldUserId old user-id
      * @param newUserId new user-id
-     * @param protector protector to unlock the secret key
      * @return the builder
      * @throws PGPException in case we cannot generate a revocation and certification signature
      * @throws java.util.NoSuchElementException if the old user-id was not found on the key; or if
@@ -139,8 +104,7 @@ interface SecretKeyRingEditorInterface {
     @Throws(PGPException::class)
     fun replaceUserId(
         oldUserId: CharSequence,
-        newUserId: CharSequence,
-        protector: SecretKeyRingProtector
+        newUserId: CharSequence
     ): SecretKeyRingEditorInterface
 
     /**
@@ -149,7 +113,6 @@ interface SecretKeyRingEditorInterface {
      * @param keySpec key specification
      * @param subkeyPassphrase passphrase to encrypt the sub key
      * @param callback callback to modify the subpackets of the subkey binding signature
-     * @param protector protector to unlock the secret key of the key ring
      * @return the builder
      * @throws InvalidAlgorithmParameterException in case the user wants to use invalid parameters
      *   for the key
@@ -162,11 +125,10 @@ interface SecretKeyRingEditorInterface {
         IOException::class,
         InvalidAlgorithmParameterException::class,
         NoSuchAlgorithmException::class)
-    fun addSubKey(
+    fun addSubkey(
         keySpec: KeySpec,
         subkeyPassphrase: Passphrase,
-        callback: SelfSignatureSubpackets.Callback? = null,
-        protector: SecretKeyRingProtector
+        callback: SelfSignatureSubpackets.Callback? = null
     ): SecretKeyRingEditorInterface
 
     /**
@@ -175,7 +137,6 @@ interface SecretKeyRingEditorInterface {
      * @param subkey subkey key pair
      * @param callback callback to modify the subpackets of the subkey binding signature
      * @param subkeyProtector protector to unlock and encrypt the subkey
-     * @param primaryKeyProtector protector to unlock the primary key
      * @param keyFlag first mandatory key flag for the subkey
      * @param keyFlags optional additional key flags
      * @return builder
@@ -183,11 +144,10 @@ interface SecretKeyRingEditorInterface {
      * @throws IOException in case of an IO error
      */
     @Throws(PGPException::class, IOException::class)
-    fun addSubKey(
+    fun addSubkey(
         subkey: PGPKeyPair,
         callback: SelfSignatureSubpackets.Callback?,
         subkeyProtector: SecretKeyRingProtector,
-        primaryKeyProtector: SecretKeyRingProtector,
         keyFlag: KeyFlag,
         vararg keyFlags: KeyFlag
     ): SecretKeyRingEditorInterface
@@ -195,42 +155,60 @@ interface SecretKeyRingEditorInterface {
     /**
      * Revoke the key ring using a hard revocation.
      *
-     * @param protector protector of the primary key
      * @return the builder
      * @throws PGPException in case we cannot generate a revocation signature
      */
-    @Throws(PGPException::class)
-    fun revoke(protector: SecretKeyRingProtector) = revoke(protector, null as RevocationAttributes?)
+    @Throws(PGPException::class) fun revoke() = revoke(null as RevocationAttributes?)
 
     /**
      * Revoke the key ring using the provided revocation attributes. The attributes define, whether
      * the revocation was a hard revocation or not.
      *
-     * @param protector protector of the primary key
      * @param revocationAttributes reason for the revocation
      * @return the builder
      * @throws PGPException in case we cannot generate a revocation signature
      */
     @Throws(PGPException::class)
-    fun revoke(
-        protector: SecretKeyRingProtector,
-        revocationAttributes: RevocationAttributes? = null
-    ): SecretKeyRingEditorInterface
+    fun revoke(revocationAttributes: RevocationAttributes? = null): SecretKeyRingEditorInterface
 
     /**
      * Revoke the key ring. You can use the [RevocationSignatureSubpackets.Callback] to modify the
      * revocation signatures subpackets, e.g. in order to define whether this is a hard or soft
      * revocation.
      *
-     * @param protector protector to unlock the primary secret key
      * @param callback callback to modify the revocations subpackets
      * @return builder
      * @throws PGPException in case we cannot generate a revocation signature
      */
     @Throws(PGPException::class)
-    fun revoke(
-        protector: SecretKeyRingProtector,
-        callback: RevocationSignatureSubpackets.Callback?
+    fun revoke(callback: RevocationSignatureSubpackets.Callback?): SecretKeyRingEditorInterface
+
+    fun revokeSubkey(subkeyIdentifier: KeyIdentifier) = revokeSubkey(subkeyIdentifier, null)
+
+    /**
+     * Revoke the subkey binding signature of a subkey. The subkey with the provided fingerprint
+     * will be revoked. If no suitable subkey is found, a [NoSuchElementException] will be thrown.
+     *
+     * @param fingerprint fingerprint of the subkey to be revoked
+     * @return the builder
+     * @throws PGPException in case we cannot generate a revocation signature for the subkey
+     */
+    @Throws(PGPException::class)
+    @Deprecated("Pass in the subkeys KeyIdentifier instead.")
+    fun revokeSubkey(fingerprint: OpenPgpFingerprint) = revokeSubkey(fingerprint.keyIdentifier)
+
+    /**
+     * Revoke the subkey binding signature of a subkey. The subkey with the provided fingerprint
+     * will be revoked. If no suitable subkey is found, a [NoSuchElementException] will be thrown.
+     *
+     * @param subkeyIdentifier identifier of the subkey to be revoked
+     * @return the builder
+     * @throws PGPException in case we cannot generate a revocation signature for the subkey
+     */
+    @Throws(PGPException::class)
+    fun revokeSubkey(
+        subkeyIdentifier: KeyIdentifier,
+        revocationAttributes: RevocationAttributes? = null
     ): SecretKeyRingEditorInterface
 
     /**
@@ -238,61 +216,44 @@ interface SecretKeyRingEditorInterface {
      * will be revoked. If no suitable subkey is found, a [NoSuchElementException] will be thrown.
      *
      * @param fingerprint fingerprint of the subkey to be revoked
-     * @param protector protector to unlock the primary key
-     * @return the builder
-     * @throws PGPException in case we cannot generate a revocation signature for the subkey
-     */
-    @Throws(PGPException::class)
-    fun revokeSubKey(fingerprint: OpenPgpFingerprint, protector: SecretKeyRingProtector) =
-        revokeSubKey(fingerprint, protector, null)
-
-    /**
-     * Revoke the subkey binding signature of a subkey. The subkey with the provided fingerprint
-     * will be revoked. If no suitable subkey is found, a [NoSuchElementException] will be thrown.
-     *
-     * @param fingerprint fingerprint of the subkey to be revoked
-     * @param protector protector to unlock the primary key
      * @param revocationAttributes reason for the revocation
      * @return the builder
      * @throws PGPException in case we cannot generate a revocation signature for the subkey
      */
     @Throws(PGPException::class)
-    fun revokeSubKey(
+    @Deprecated("Pass in the subkeys KeyIdentifier instead.")
+    fun revokeSubkey(
         fingerprint: OpenPgpFingerprint,
-        protector: SecretKeyRingProtector,
         revocationAttributes: RevocationAttributes? = null
-    ): SecretKeyRingEditorInterface =
-        revokeSubKey(fingerprint.keyId, protector, revocationAttributes)
+    ): SecretKeyRingEditorInterface = revokeSubkey(fingerprint.keyIdentifier, revocationAttributes)
 
     /**
      * Revoke the subkey binding signature of a subkey. The subkey with the provided key-id will be
      * revoked. If no suitable subkey is found, a [NoSuchElementException] will be thrown.
      *
      * @param subkeyId id of the subkey
-     * @param protector protector to unlock the primary key
      * @return the builder
      * @throws PGPException in case we cannot generate a revocation signature for the subkey
      */
     @Throws(PGPException::class)
-    fun revokeSubKey(subkeyId: Long, protector: SecretKeyRingProtector) =
-        revokeSubKey(subkeyId, protector, null as RevocationAttributes?)
+    @Deprecated("Pass in the keys KeyIdentifier instead.")
+    fun revokeSubkey(subkeyId: Long) =
+        revokeSubkey(KeyIdentifier(subkeyId), null as RevocationAttributes?)
 
     /**
      * Revoke the subkey binding signature of a subkey. The subkey with the provided key-id will be
      * revoked. If no suitable subkey is found, a [NoSuchElementException] will be thrown.
      *
      * @param subkeyId id of the subkey
-     * @param protector protector to unlock the primary key
      * @param revocationAttributes reason for the revocation
      * @return the builder
      * @throws PGPException in case we cannot generate a revocation signature for the subkey
      */
     @Throws(PGPException::class)
-    fun revokeSubKey(
+    fun revokeSubkey(
         subkeyId: Long,
-        protector: SecretKeyRingProtector,
         revocationAttributes: RevocationAttributes? = null
-    ): SecretKeyRingEditorInterface
+    ): SecretKeyRingEditorInterface = revokeSubkey(KeyIdentifier(subkeyId), revocationAttributes)
 
     /**
      * Revoke the subkey binding signature of a subkey. The subkey with the provided key-id will be
@@ -301,16 +262,14 @@ interface SecretKeyRingEditorInterface {
      * The provided subpackets callback is used to modify the revocation signatures subpackets.
      *
      * @param subkeyId id of the subkey
-     * @param protector protector to unlock the secret key ring
      * @param callback callback which can be used to modify the subpackets of the revocation
      *   signature
      * @return the builder
      * @throws PGPException in case we cannot generate a revocation signature for the subkey
      */
     @Throws(PGPException::class)
-    fun revokeSubKey(
+    fun revokeSubkey(
         subkeyId: Long,
-        protector: SecretKeyRingProtector,
         callback: RevocationSignatureSubpackets.Callback?
     ): SecretKeyRingEditorInterface
 
@@ -318,19 +277,16 @@ interface SecretKeyRingEditorInterface {
      * Hard-revoke the given userID.
      *
      * @param userId userId to revoke
-     * @param protector protector to unlock the primary key
      * @return the builder
      * @throws PGPException in case we cannot generate a revocation signature for the user-id
      */
     @Throws(PGPException::class)
-    fun revokeUserId(userId: CharSequence, protector: SecretKeyRingProtector) =
-        revokeUserId(userId, protector, null as RevocationAttributes?)
+    fun revokeUserId(userId: CharSequence) = revokeUserId(userId, null as RevocationAttributes?)
 
     /**
      * Revoke the given userID using the provided revocation attributes.
      *
      * @param userId userId to revoke
-     * @param protector protector to unlock the primary key
      * @param revocationAttributes reason for the revocation
      * @return the builder
      * @throws PGPException in case we cannot generate a revocation signature for the user-id
@@ -338,7 +294,6 @@ interface SecretKeyRingEditorInterface {
     @Throws(PGPException::class)
     fun revokeUserId(
         userId: CharSequence,
-        protector: SecretKeyRingProtector,
         revocationAttributes: RevocationAttributes? = null
     ): SecretKeyRingEditorInterface
 
@@ -350,7 +305,6 @@ interface SecretKeyRingEditorInterface {
      * revocation reason in the signatures hashed area using the subpacket callback.
      *
      * @param userId userid to be revoked
-     * @param protector protector to unlock the primary secret key
      * @param callback callback to modify the revocations subpackets
      * @return builder
      * @throws PGPException in case we cannot generate a revocation signature for the user-id
@@ -358,41 +312,16 @@ interface SecretKeyRingEditorInterface {
     @Throws(PGPException::class)
     fun revokeUserId(
         userId: CharSequence,
-        protector: SecretKeyRingProtector,
         callback: RevocationSignatureSubpackets.Callback?
     ): SecretKeyRingEditorInterface
 
     /**
-     * Revoke all user-ids that match the provided [SelectUserId] filter. The provided
-     * [RevocationAttributes] will be set as reason for revocation in each revocation signature.
+     * Revoke all user-ids that match the provided [predicate]. The provided [RevocationAttributes]
+     * will be set as reason for revocation in each revocation signature.
      *
      * Note: If you intend to re-certify these user-ids at a later point, make sure to choose a soft
      * revocation reason. See [RevocationAttributes.Reason] for more information.
      *
-     * @param selector user-id selector
-     * @param protector protector to unlock the primary secret key
-     * @param revocationAttributes revocation attributes
-     * @return builder
-     * @throws PGPException in case we cannot generate a revocation signature for the user-id
-     */
-    @Throws(PGPException::class)
-    @Deprecated(
-        "Use of SelectUserId class is deprecated.",
-        ReplaceWith("revokeUserIds(protector, revocationAttributes, predicate)"))
-    fun revokeUserIds(
-        selector: SelectUserId,
-        protector: SecretKeyRingProtector,
-        revocationAttributes: RevocationAttributes?
-    ) = revokeUserIds(protector, revocationAttributes, selector)
-
-    /**
-     * Revoke all user-ids that match the provided [SelectUserId] filter. The provided
-     * [RevocationAttributes] will be set as reason for revocation in each revocation signature.
-     *
-     * Note: If you intend to re-certify these user-ids at a later point, make sure to choose a soft
-     * revocation reason. See [RevocationAttributes.Reason] for more information.
-     *
-     * @param protector protector to unlock the primary secret key
      * @param revocationAttributes revocation attributes
      * @param predicate to select user-ids for revocation
      * @return builder
@@ -400,13 +329,12 @@ interface SecretKeyRingEditorInterface {
      */
     @Throws(PGPException::class)
     fun revokeUserIds(
-        protector: SecretKeyRingProtector,
         revocationAttributes: RevocationAttributes?,
         predicate: (String) -> Boolean
     ): SecretKeyRingEditorInterface
 
     /**
-     * Revoke all user-ids that match the provided [SelectUserId] filter. The provided
+     * Revoke all user-ids that match the provided [predicate]. The provided
      * [RevocationSignatureSubpackets.Callback] will be used to modify the revocation signatures
      * subpackets.
      *
@@ -415,33 +343,6 @@ interface SecretKeyRingEditorInterface {
      *
      * See [RevocationAttributes.Reason] for more information.
      *
-     * @param selector user-id selector
-     * @param protector protector to unlock the primary secret key
-     * @param callback callback to modify the revocations subpackets
-     * @return builder
-     * @throws PGPException in case we cannot generate a revocation signature for the user-id
-     */
-    @Throws(PGPException::class)
-    @Deprecated(
-        "Use of SelectUserId class is deprecated.",
-        ReplaceWith("revokeUserIds(protector, callback, predicate)"))
-    fun revokeUserIds(
-        selector: SelectUserId,
-        protector: SecretKeyRingProtector,
-        callback: RevocationSignatureSubpackets.Callback?
-    ) = revokeUserIds(protector, callback, selector)
-
-    /**
-     * Revoke all user-ids that match the provided [SelectUserId] filter. The provided
-     * [RevocationSignatureSubpackets.Callback] will be used to modify the revocation signatures
-     * subpackets.
-     *
-     * Note: If you intend to re-certify these user-ids at a later point, make sure to set a soft
-     * revocation reason in the revocation signatures hashed subpacket area using the callback.
-     *
-     * See [RevocationAttributes.Reason] for more information.
-     *
-     * @param protector protector to unlock the primary secret key
      * @param callback callback to modify the revocations subpackets
      * @param predicate to select user-ids for revocation
      * @return builder
@@ -449,7 +350,6 @@ interface SecretKeyRingEditorInterface {
      */
     @Throws(PGPException::class)
     fun revokeUserIds(
-        protector: SecretKeyRingProtector,
         callback: RevocationSignatureSubpackets.Callback?,
         predicate: (String) -> Boolean
     ): SecretKeyRingEditorInterface
@@ -459,15 +359,28 @@ interface SecretKeyRingEditorInterface {
      * expire, then an expiration date of null is expected.
      *
      * @param expiration new expiration date or null
-     * @param protector to unlock the secret key
      * @return the builder
      * @throws PGPException in case we cannot generate a new self-signature with the changed
      *   expiration date
      */
     @Throws(PGPException::class)
-    fun setExpirationDate(
+    fun setExpirationDate(expiration: Date?): SecretKeyRingEditorInterface
+
+    /**
+     * Set the expiration date for the subkey identified by the given [KeyIdentifier] to the given
+     * expiration date. If the key is supposed to never expire, then an expiration date of null is
+     * expected.
+     *
+     * @param expiration new expiration date of null
+     * @param keyIdentifier identifier of the subkey
+     * @return the builder
+     * @throws PGPException in case we cannot generate a new subkey-binding or self-signature with
+     *   the changed expiration date
+     */
+    @Throws(PGPException::class)
+    fun setExpirationDateOfSubkey(
         expiration: Date?,
-        protector: SecretKeyRingProtector
+        keyIdentifier: KeyIdentifier
     ): SecretKeyRingEditorInterface
 
     /**
@@ -476,31 +389,26 @@ interface SecretKeyRingEditorInterface {
      *
      * @param expiration new expiration date of null
      * @param keyId id of the subkey
-     * @param protector to unlock the secret key
      * @return the builder
      * @throws PGPException in case we cannot generate a new subkey-binding or self-signature with
      *   the changed expiration date
      */
     @Throws(PGPException::class)
-    fun setExpirationDateOfSubkey(
-        expiration: Date?,
-        keyId: Long,
-        protector: SecretKeyRingProtector
-    ): SecretKeyRingEditorInterface
+    @Deprecated("Pass in the subkeys KeyIdentifier instead.")
+    fun setExpirationDateOfSubkey(expiration: Date?, keyId: Long): SecretKeyRingEditorInterface =
+        setExpirationDateOfSubkey(expiration, KeyIdentifier(keyId))
 
     /**
      * Create a minimal, self-authorizing revocation certificate, containing only the primary key
      * and a revocation signature. This type of revocation certificates was introduced in OpenPGP
      * v6. This method has no side effects on the original key and will leave it intact.
      *
-     * @param protector protector to unlock the primary key.
      * @param revocationAttributes reason for the revocation (key revocation)
      * @return minimal revocation certificate
      * @throws PGPException in case we cannot generate a revocation signature
      */
     @Throws(PGPException::class)
     fun createMinimalRevocationCertificate(
-        protector: SecretKeyRingProtector,
         revocationAttributes: RevocationAttributes?
     ): PGPPublicKeyRing
 
@@ -508,14 +416,25 @@ interface SecretKeyRingEditorInterface {
      * Create a detached revocation certificate, which can be used to revoke the whole key. The
      * original key will not be modified by this method.
      *
-     * @param protector protector to unlock the primary key.
+     * @param revocationAttributes reason for the revocation
+     * @return revocation certificate
+     * @throws PGPException in case we cannot generate a revocation certificate
+     */
+    @Throws(PGPException::class)
+    fun createRevocation(revocationAttributes: RevocationAttributes?): PGPSignature
+
+    /**
+     * Create a detached revocation certificate, which can be used to revoke the specified subkey.
+     * The original key will not be modified by this method.
+     *
+     * @param subkeyIdentifier identifier of the subkey to be revoked
      * @param revocationAttributes reason for the revocation
      * @return revocation certificate
      * @throws PGPException in case we cannot generate a revocation certificate
      */
     @Throws(PGPException::class)
     fun createRevocation(
-        protector: SecretKeyRingProtector,
+        subkeyIdentifier: KeyIdentifier,
         revocationAttributes: RevocationAttributes?
     ): PGPSignature
 
@@ -524,32 +443,29 @@ interface SecretKeyRingEditorInterface {
      * The original key will not be modified by this method.
      *
      * @param subkeyId id of the subkey to be revoked
-     * @param protector protector to unlock the primary key.
      * @param revocationAttributes reason for the revocation
      * @return revocation certificate
      * @throws PGPException in case we cannot generate a revocation certificate
      */
     @Throws(PGPException::class)
+    @Deprecated("Pass in the subkeys KeyIdentifier instead.")
     fun createRevocation(
         subkeyId: Long,
-        protector: SecretKeyRingProtector,
         revocationAttributes: RevocationAttributes?
-    ): PGPSignature
+    ): PGPSignature = createRevocation(KeyIdentifier(subkeyId), revocationAttributes)
 
     /**
      * Create a detached revocation certificate, which can be used to revoke the specified subkey.
      * The original key will not be modified by this method.
      *
-     * @param subkeyId id of the subkey to be revoked
-     * @param protector protector to unlock the primary key.
+     * @param subkeyIdentifier identifier of the subkey to be revoked
      * @param callback callback to modify the subpackets of the revocation certificate.
      * @return revocation certificate
      * @throws PGPException in case we cannot generate a revocation certificate
      */
     @Throws(PGPException::class)
     fun createRevocation(
-        subkeyId: Long,
-        protector: SecretKeyRingProtector,
+        subkeyIdentifier: KeyIdentifier,
         callback: RevocationSignatureSubpackets.Callback?
     ): PGPSignature
 
@@ -557,18 +473,33 @@ interface SecretKeyRingEditorInterface {
      * Create a detached revocation certificate, which can be used to revoke the specified subkey.
      * The original key will not be modified by this method.
      *
+     * @param subkeyId id of the subkey to be revoked
+     * @param callback callback to modify the subpackets of the revocation certificate.
+     * @return revocation certificate
+     * @throws PGPException in case we cannot generate a revocation certificate
+     */
+    @Throws(PGPException::class)
+    @Deprecated("Pass in the subkeys KeyIdentifier instead.")
+    fun createRevocation(
+        subkeyId: Long,
+        callback: RevocationSignatureSubpackets.Callback?
+    ): PGPSignature = createRevocation(KeyIdentifier(subkeyId), callback)
+
+    /**
+     * Create a detached revocation certificate, which can be used to revoke the specified subkey.
+     * The original key will not be modified by this method.
+     *
      * @param subkeyFingerprint fingerprint of the subkey to be revoked
-     * @param protector protector to unlock the primary key.
      * @param revocationAttributes reason for the revocation
      * @return revocation certificate
      * @throws PGPException in case we cannot generate a revocation certificate
      */
     @Throws(PGPException::class)
+    @Deprecated("Pass in the subkey KeyIdentifier instead.")
     fun createRevocation(
         subkeyFingerprint: OpenPgpFingerprint,
-        protector: SecretKeyRingProtector,
         revocationAttributes: RevocationAttributes?
-    ): PGPSignature
+    ): PGPSignature = createRevocation(subkeyFingerprint.keyIdentifier, revocationAttributes)
 
     /**
      * Change the passphrase of the whole key ring.
@@ -676,11 +607,7 @@ interface SecretKeyRingEditorInterface {
      *
      * @return the key
      */
-    fun done(): PGPSecretKeyRing
+    fun done(): OpenPGPKey
 
-    fun addSubKey(
-        keySpec: KeySpec,
-        subkeyPassphrase: Passphrase,
-        protector: SecretKeyRingProtector
-    ): SecretKeyRingEditorInterface
+    fun addSubkey(keySpec: KeySpec, subkeyPassphrase: Passphrase): SecretKeyRingEditorInterface
 }

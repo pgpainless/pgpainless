@@ -38,7 +38,7 @@ public class RefuseToAddWeakSubkeyTest {
         KeySpec spec = KeySpec.getBuilder(KeyType.RSA(RsaLength._1024), KeyFlag.ENCRYPT_COMMS).build();
 
         assertThrows(IllegalArgumentException.class, () ->
-                editor.addSubKey(spec, Passphrase.emptyPassphrase(), SecretKeyRingProtector.unprotectedKeys()));
+                editor.addSubkey(spec, Passphrase.emptyPassphrase(), SecretKeyRingProtector.unprotectedKeys()));
     }
 
     @Test
@@ -75,7 +75,7 @@ public class RefuseToAddWeakSubkeyTest {
                 .setKeyCreationDate(editor.getReferenceTime()) // The key gets created after we instantiate the editor.
                 .build();
 
-        secretKeys = editor.addSubKey(spec, Passphrase.emptyPassphrase(), SecretKeyRingProtector.unprotectedKeys())
+        secretKeys = editor.addSubkey(spec, Passphrase.emptyPassphrase(), SecretKeyRingProtector.unprotectedKeys())
                 .done();
 
         assertEquals(2, PGPainless.inspectKeyRing(secretKeys).getEncryptionSubkeys(EncryptionPurpose.ANY).size());

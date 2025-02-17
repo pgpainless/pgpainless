@@ -109,7 +109,7 @@ public class UserIdRevocationTest {
                 .forKey(secretKeys.getSecretKey(), TestKeys.CRYPTIE_PASSPHRASE);
 
         assertThrows(NoSuchElementException.class, () -> PGPainless.modifyKeyRing(secretKeys)
-                .revokeSubKey(1L, protector));
+                .revokeSubkey(1L, protector));
     }
 
     @Test

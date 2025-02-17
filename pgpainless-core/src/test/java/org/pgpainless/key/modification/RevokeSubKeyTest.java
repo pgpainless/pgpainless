@@ -56,7 +56,7 @@ public class RevokeSubKeyTest {
                 .forKey(secretKeys, Passphrase.fromPassword("password123"));
 
         secretKeys = PGPainless.modifyKeyRing(secretKeys)
-                .revokeSubKey(new OpenPgpV4Fingerprint(subKey), protector)
+                .revokeSubkey(new OpenPgpV4Fingerprint(subKey), protector)
                 .done();
         keysIterator = secretKeys.iterator();
         primaryKey = keysIterator.next();
@@ -133,7 +133,7 @@ public class RevokeSubKeyTest {
                 .getEncryptionSubkeys(EncryptionPurpose.ANY).get(0).getPGPPublicKey();
 
         secretKeys = PGPainless.modifyKeyRing(secretKeys)
-                .revokeSubKey(encryptionSubkey.getKeyID(), protector)
+                .revokeSubkey(encryptionSubkey.getKeyID(), protector)
                 .done();
 
         encryptionSubkey = secretKeys.getPublicKey(encryptionSubkey.getKeyID());
@@ -158,7 +158,7 @@ public class RevokeSubKeyTest {
                 .getEncryptionSubkeys(EncryptionPurpose.ANY).get(0).getPGPPublicKey();
 
         secretKeys = PGPainless.modifyKeyRing(secretKeys)
-                .revokeSubKey(encryptionSubkey.getKeyID(), protector, new RevocationSignatureSubpackets.Callback() {
+                .revokeSubkey(encryptionSubkey.getKeyID(), protector, new RevocationSignatureSubpackets.Callback() {
                     @Override
                     public void modifyHashedSubpackets(RevocationSignatureSubpackets hashedSubpackets) {
                         hashedSubpackets.setRevocationReason(

@@ -54,6 +54,9 @@ class PGPainless(
     fun toCertificate(publicKeyRing: PGPPublicKeyRing): OpenPGPCertificate =
         OpenPGPCertificate(publicKeyRing, implementation)
 
+    fun modifyKey(key: OpenPGPKey, referenceTime: Date = Date()): SecretKeyRingEditor =
+        SecretKeyRingEditor(key, referenceTime)
+
     companion object {
 
         @Volatile private var instance: PGPainless? = null
