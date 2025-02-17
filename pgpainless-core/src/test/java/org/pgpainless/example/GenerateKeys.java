@@ -9,8 +9,8 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import java.util.Date;
 
-import org.bouncycastle.openpgp.PGPPublicKeyRing;
-import org.bouncycastle.openpgp.PGPSecretKeyRing;
+import org.bouncycastle.openpgp.api.OpenPGPCertificate;
+import org.bouncycastle.openpgp.api.OpenPGPKey;
 import org.junit.jupiter.api.Test;
 import org.pgpainless.PGPainless;
 import org.pgpainless.algorithm.CompressionAlgorithm;
@@ -58,16 +58,16 @@ public class GenerateKeys {
         // Set a password to protect the secret key
         String password = "ra1nb0w";
         // Generate the OpenPGP key
-        PGPSecretKeyRing secretKey = PGPainless.generateKeyRing()
-                .modernKeyRing(userId, password)
-                .getPGPSecretKeyRing();
+        OpenPGPKey secretKey = PGPainless.generateKeyRing()
+                .modernKeyRing(userId, password);
+
         // Extract public key
-        PGPPublicKeyRing publicKey = PGPainless.extractCertificate(secretKey);
+        OpenPGPCertificate publicKey = secretKey.toCertificate();
         // Encode the public key to an ASCII armored string ready for sharing
         String asciiArmoredPublicKey = PGPainless.asciiArmor(publicKey);
         assertTrue(asciiArmoredPublicKey.startsWith("-----BEGIN PGP PUBLIC KEY BLOCK-----"));
 
-        KeyRingInfo keyInfo = new KeyRingInfo(secretKey);
+        KeyRingInfo keyInfo = PGPainless.inspectKeyRing(secretKey);
         assertEquals(3, keyInfo.getSecretKeys().size());
         assertEquals(userId, keyInfo.getPrimaryUserId());
         assertEquals(PublicKeyAlgorithm.EDDSA_LEGACY.getAlgorithmId(),
@@ -91,11 +91,10 @@ public class GenerateKeys {
         // Set a password to protect the secret key
         String password = "b1angl3s";
         // Generate the OpenPGP key
-        PGPSecretKeyRing secretKey = PGPainless.generateKeyRing()
-                .simpleRsaKeyRing(userId, RsaLength._4096, password)
-                .getPGPSecretKeyRing();
+        OpenPGPKey secretKey = PGPainless.generateKeyRing()
+                .simpleRsaKeyRing(userId, RsaLength._4096, password);
 
-        KeyRingInfo keyInfo = new KeyRingInfo(secretKey);
+        KeyRingInfo keyInfo = PGPainless.inspectKeyRing(secretKey);
         assertEquals(1, keyInfo.getSecretKeys().size());
         assertEquals(userId, keyInfo.getPrimaryUserId());
         assertEquals(PublicKeyAlgorithm.RSA_GENERAL.getAlgorithmId(), keyInfo.getAlgorithm().getAlgorithmId());
@@ -115,12 +114,11 @@ public class GenerateKeys {
         // Set a password to protect the secret key
         String password = "tr4ns";
         // Generate the OpenPGP key
-        PGPSecretKeyRing secretKey = PGPainless.generateKeyRing()
-                .simpleEcKeyRing(userId, password)
-                .getPGPSecretKeyRing();
+        OpenPGPKey secretKey = PGPainless.generateKeyRing()
+                .simpleEcKeyRing(userId, password);
 
 
-        KeyRingInfo keyInfo = new KeyRingInfo(secretKey);
+        KeyRingInfo keyInfo = PGPainless.inspectKeyRing(secretKey);
         assertEquals(2, keyInfo.getSecretKeys().size());
         assertEquals(userId, keyInfo.getPrimaryUserId());
     }
@@ -174,7 +172,7 @@ public class GenerateKeys {
         // It is recommended to use the Passphrase class, as it can be used to safely invalidate passwords from memory
         Passphrase passphrase = Passphrase.fromPassword("1nters3x");
 
-        PGPSecretKeyRing secretKey = PGPainless.buildKeyRing()
+        OpenPGPKey secretKey = PGPainless.buildKeyRing()
                 .setPrimaryKey(KeySpec.getBuilder(KeyType.EDDSA_LEGACY(EdDSALegacyCurve._Ed25519),
                         // The primary key MUST carry the CERTIFY_OTHER flag, but CAN carry additional flags
                         KeyFlag.CERTIFY_OTHER))
@@ -204,11 +202,10 @@ public class GenerateKeys {
                 .addUserId(additionalUserId)
                 // Set passphrase. Alternatively use .withoutPassphrase() to leave key unprotected.
                 .setPassphrase(passphrase)
-                .build()
-                .getPGPSecretKeyRing();
+                .build();
 
 
-        KeyRingInfo keyInfo = new KeyRingInfo(secretKey);
+        KeyRingInfo keyInfo = PGPainless.inspectKeyRing(secretKey);
         assertEquals(3, keyInfo.getSecretKeys().size());
         assertEquals("Morgan Carpenter (Pride!) <mcarpenter@pgpainless.org>", keyInfo.getPrimaryUserId());
         assertTrue(keyInfo.isUserIdValid(additionalUserId));

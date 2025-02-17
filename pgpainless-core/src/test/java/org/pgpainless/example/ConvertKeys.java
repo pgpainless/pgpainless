@@ -9,6 +9,8 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import org.bouncycastle.openpgp.PGPPublicKeyRing;
 import org.bouncycastle.openpgp.PGPSecretKeyRing;
+import org.bouncycastle.openpgp.api.OpenPGPCertificate;
+import org.bouncycastle.openpgp.api.OpenPGPKey;
 import org.junit.jupiter.api.Test;
 import org.pgpainless.PGPainless;
 import org.pgpainless.key.info.KeyRingInfo;
@@ -21,11 +23,11 @@ public class ConvertKeys {
     @Test
     public void secretKeyToCertificate() {
         String userId = "alice@wonderland.lit";
-        PGPSecretKeyRing secretKey = PGPainless.generateKeyRing()
-                .modernKeyRing(userId)
-                .getPGPSecretKeyRing();
+        OpenPGPKey secretKey = PGPainless.generateKeyRing()
+                .modernKeyRing(userId);
+
         // Extract certificate (public key) from secret key
-        PGPPublicKeyRing certificate = PGPainless.extractCertificate(secretKey);
+        OpenPGPCertificate certificate = secretKey.toCertificate();
 
 
         KeyRingInfo secretKeyInfo = PGPainless.inspectKeyRing(secretKey);
