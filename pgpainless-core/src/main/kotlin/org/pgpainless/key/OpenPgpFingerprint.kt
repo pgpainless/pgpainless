@@ -9,6 +9,9 @@ import org.bouncycastle.bcpg.KeyIdentifier
 import org.bouncycastle.openpgp.PGPKeyRing
 import org.bouncycastle.openpgp.PGPPublicKey
 import org.bouncycastle.openpgp.PGPSecretKey
+import org.bouncycastle.openpgp.api.OpenPGPCertificate
+import org.bouncycastle.openpgp.api.OpenPGPCertificate.OpenPGPComponentKey
+import org.bouncycastle.openpgp.api.OpenPGPKey.OpenPGPPrivateKey
 import org.bouncycastle.util.encoders.Hex
 
 /** Abstract super class of different version OpenPGP fingerprints. */
@@ -128,6 +131,18 @@ abstract class OpenPgpFingerprint : CharSequence, Comparable<OpenPgpFingerprint>
          * @return fingerprint
          */
         @JvmStatic fun of(keys: PGPKeyRing): OpenPgpFingerprint = of(keys.publicKey)
+
+        /**
+         * Return the [OpenPgpFingerprint] of the primary key of the given [OpenPGPCertificate].
+         */
+        @JvmStatic fun of(cert: OpenPGPCertificate): OpenPgpFingerprint = of(cert.pgpPublicKeyRing)
+
+        /**
+         * Return the [OpenPgpFingerprint] of the given [OpenPGPComponentKey].
+         */
+        @JvmStatic fun of (key: OpenPGPComponentKey): OpenPgpFingerprint = of(key.pgpPublicKey)
+
+        @JvmStatic fun of (key: OpenPGPPrivateKey): OpenPgpFingerprint = of(key.secretKey)
 
         /**
          * Try to parse an [OpenPgpFingerprint] from the given fingerprint string. If the trimmed
