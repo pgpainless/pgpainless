@@ -61,7 +61,7 @@ class UnlockSecretKey {
 
             if (PGPainless.getPolicy().isEnableKeyParameterValidation()) {
                 PublicKeyParameterValidationUtil.verifyPublicKeyParameterIntegrity(
-                    privateKey.unlockedKey.privateKey, privateKey.unlockedKey.publicKey)
+                    privateKey.keyPair.privateKey, privateKey.keyPair.publicKey)
             }
 
             return privateKey
