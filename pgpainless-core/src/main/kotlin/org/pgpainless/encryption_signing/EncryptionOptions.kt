@@ -197,7 +197,7 @@ class EncryptionOptions(private val purpose: EncryptionPurpose) {
             encryptionKeySelector.selectEncryptionSubkeys(
                 info.getEncryptionSubkeys(userId, purpose))
         if (subkeys.isEmpty()) {
-            throw UnacceptableEncryptionKeyException(OpenPgpFingerprint.of(cert.pgpPublicKeyRing))
+            throw UnacceptableEncryptionKeyException(OpenPgpFingerprint.of(cert))
         }
 
         for (subkey in subkeys) {
@@ -296,12 +296,12 @@ class EncryptionOptions(private val purpose: EncryptionPurpose) {
                 info.primaryKeyExpirationDate
             } catch (e: NoSuchElementException) {
                 throw UnacceptableSelfSignatureException(
-                    OpenPgpFingerprint.of(cert.pgpPublicKeyRing))
+                    OpenPgpFingerprint.of(cert))
             }
 
         if (primaryKeyExpiration != null && primaryKeyExpiration < evaluationDate) {
             throw ExpiredKeyException(
-                OpenPgpFingerprint.of(cert.pgpPublicKeyRing), primaryKeyExpiration)
+                OpenPgpFingerprint.of(cert), primaryKeyExpiration)
         }
 
         var encryptionSubkeys = selector.selectEncryptionSubkeys(info.getEncryptionSubkeys(purpose))
@@ -318,7 +318,7 @@ class EncryptionOptions(private val purpose: EncryptionPurpose) {
         }
 
         if (encryptionSubkeys.isEmpty()) {
-            throw UnacceptableEncryptionKeyException(OpenPgpFingerprint.of(cert.pgpPublicKeyRing))
+            throw UnacceptableEncryptionKeyException(OpenPgpFingerprint.of(cert))
         }
 
         for (subkey in encryptionSubkeys) {
