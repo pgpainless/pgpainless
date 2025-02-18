@@ -5,14 +5,11 @@
 package org.pgpainless.key
 
 import java.net.URI
-import java.nio.Buffer
-import java.nio.ByteBuffer
-import java.nio.charset.Charset
+import org.bouncycastle.bcpg.FingerprintUtil
 import org.bouncycastle.bcpg.KeyIdentifier
 import org.bouncycastle.openpgp.PGPKeyRing
 import org.bouncycastle.openpgp.PGPPublicKey
 import org.bouncycastle.openpgp.PGPSecretKey
-import org.bouncycastle.util.encoders.Hex
 
 class OpenPgpV4Fingerprint : OpenPgpFingerprint {
 
@@ -28,17 +25,7 @@ class OpenPgpV4Fingerprint : OpenPgpFingerprint {
 
     override fun getVersion() = 4
 
-    override val keyId: Long
-        get() {
-            val bytes = Hex.decode(toString().toByteArray(Charset.forName("UTF-8")))
-            val buf = ByteBuffer.wrap(bytes)
-
-            // The key id is the right-most 8 bytes (conveniently a long)
-            // We have to cast here in order to be compatible with java 8
-            // https://github.com/eclipse/jetty.project/issues/3244
-            (buf as Buffer).position(12) // 20 - 8 bytes = offset 12
-            return buf.getLong()
-        }
+    override val keyId: Long = FingerprintUtil.keyIdFromV4Fingerprint(bytes)
 
     override val keyIdentifier: KeyIdentifier = KeyIdentifier(bytes)
 
