@@ -43,6 +43,7 @@ class ConsumerOptions {
     private val decryptionPassphrases = mutableSetOf<Passphrase>()
     private var missingKeyPassphraseStrategy = MissingKeyPassphraseStrategy.INTERACTIVE
     private var multiPassStrategy: MultiPassStrategy = InMemoryMultiPassStrategy()
+    private var allowDecryptionWithNonEncryptionKey: Boolean = false
 
     /**
      * Consider signatures on the message made before the given timestamp invalid. Null means no
@@ -327,6 +328,14 @@ class ConsumerOptions {
     }
 
     fun isIgnoreMDCErrors(): Boolean = ignoreMDCErrors
+
+    fun setAllowDecryptionWithNonEncryptionKey(allow: Boolean): ConsumerOptions = apply {
+        allowDecryptionWithNonEncryptionKey = allow
+    }
+
+    fun getAllowDecryptionWithNonEncryptionKey(): Boolean {
+        return allowDecryptionWithNonEncryptionKey
+    }
 
     /**
      * Force PGPainless to handle the data provided by the [InputStream] as non-OpenPGP data. This
