@@ -7,10 +7,10 @@ package org.pgpainless.example;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
 import java.io.IOException;
+import java.util.List;
 
-import org.bouncycastle.openpgp.PGPPublicKeyRing;
-import org.bouncycastle.openpgp.PGPPublicKeyRingCollection;
-import org.bouncycastle.openpgp.PGPSecretKeyRing;
+import org.bouncycastle.openpgp.api.OpenPGPCertificate;
+import org.bouncycastle.openpgp.api.OpenPGPKey;
 import org.junit.jupiter.api.Test;
 import org.pgpainless.PGPainless;
 import org.pgpainless.key.OpenPgpFingerprint;
@@ -40,10 +40,9 @@ public class ReadKeys {
                 "=iIGO\n" +
                 "-----END PGP PUBLIC KEY BLOCK-----";
 
-        PGPPublicKeyRing publicKey = PGPainless.readKeyRing()
-                .publicKeyRing(certificate);
+        OpenPGPCertificate publicKey = PGPainless.getInstance().readKey().parseCertificate(certificate);
 
-        KeyRingInfo keyInfo = new KeyRingInfo(publicKey);
+        KeyRingInfo keyInfo = PGPainless.inspectKeyRing(publicKey);
         OpenPgpFingerprint fingerprint = new OpenPgpV4Fingerprint("EB85 BB5F A33A 75E1 5E94  4E63 F231 550C 4F47 E38E");
         assertEquals(fingerprint, keyInfo.getFingerprint());
         assertEquals("Alice Lovelace <alice@openpgp.example>", keyInfo.getPrimaryUserId());
@@ -72,10 +71,9 @@ public class ReadKeys {
                 "=n8OM\n" +
                 "-----END PGP PRIVATE KEY BLOCK-----";
 
-        PGPSecretKeyRing secretKey = PGPainless.readKeyRing()
-                .secretKeyRing(key);
+        OpenPGPKey secretKey = PGPainless.getInstance().readKey().parseKey(key);
 
-        KeyRingInfo keyInfo = new KeyRingInfo(secretKey);
+        KeyRingInfo keyInfo = PGPainless.inspectKeyRing(secretKey);
         OpenPgpFingerprint fingerprint = new OpenPgpV4Fingerprint("EB85 BB5F A33A 75E1 5E94  4E63 F231 550C 4F47 E38E");
         assertEquals(fingerprint, keyInfo.getFingerprint());
         assertEquals("Alice Lovelace <alice@openpgp.example>", keyInfo.getPrimaryUserId());
@@ -83,7 +81,7 @@ public class ReadKeys {
 
     /**
      * This example demonstrates how to read a collection of multiple OpenPGP public keys (certificates) at once.
-     *
+     * <p>
      * Note, that a public key collection can both be a concatenation of public key blocks (like below),
      * and a single public key block containing multiple public key packets.
      */
@@ -147,8 +145,7 @@ public class ReadKeys {
                 "=NXei\n" +
                 "-----END PGP PUBLIC KEY BLOCK-----";
 
-        PGPPublicKeyRingCollection collection = PGPainless.readKeyRing()
-                .publicKeyRingCollection(certificateCollection);
+        List<OpenPGPCertificate> collection = PGPainless.getInstance().readKey().parseKeysOrCertificates(certificateCollection);
         assertEquals(2, collection.size());
     }
 }
