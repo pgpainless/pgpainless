@@ -24,7 +24,7 @@ public class MessageMetadataTest {
     @Test
     public void processTestMessage_COMP_ENC_ENC_LIT() {
         // Note: COMP of ENC does not make sense, since ENC is indistinguishable from randomness
-        //  and randomness cannot be encrypted.
+        //  and randomness cannot be compressed.
         //  For the sake of testing though, this is okay.
         MessageMetadata.Message message = new MessageMetadata.Message();
 
