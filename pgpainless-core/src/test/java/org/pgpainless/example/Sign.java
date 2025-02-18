@@ -14,9 +14,9 @@ import java.io.InputStream;
 import java.nio.charset.StandardCharsets;
 
 import org.bouncycastle.openpgp.PGPException;
-import org.bouncycastle.openpgp.PGPSecretKeyRing;
 import org.bouncycastle.openpgp.PGPSignature;
 import org.bouncycastle.openpgp.api.OpenPGPCertificate;
+import org.bouncycastle.openpgp.api.OpenPGPKey;
 import org.bouncycastle.util.io.Streams;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
@@ -32,13 +32,13 @@ import org.pgpainless.util.ArmorUtils;
 
 public class Sign {
 
-    private static PGPSecretKeyRing secretKey;
+    private static OpenPGPKey secretKey;
     private static SecretKeyRingProtector protector;
 
     @BeforeAll
     public static void prepare() {
-        secretKey = PGPainless.generateKeyRing().modernKeyRing("Emilia Example <emilia@example.org>")
-                .getPGPSecretKeyRing();
+        secretKey = PGPainless.generateKeyRing()
+                .modernKeyRing("Emilia Example <emilia@example.org>");
         protector = SecretKeyRingProtector.unprotectedKeys(); // no password
     }
 
@@ -94,7 +94,7 @@ public class Sign {
         EncryptionResult result = signingStream.getResult();
 
         OpenPGPCertificate.OpenPGPComponentKey signingKey = PGPainless.inspectKeyRing(secretKey).getSigningSubkeys().get(0);
-        PGPSignature signature = result.getDetachedSignatures().get(new SubkeyIdentifier(secretKey, signingKey.getKeyIdentifier())).iterator().next();
+        PGPSignature signature = result.getDetachedSignatures().get(new SubkeyIdentifier(signingKey)).iterator().next();
         String detachedSignature = ArmorUtils.toAsciiArmoredString(signature.getEncoded());
 
         assertTrue(detachedSignature.startsWith("-----BEGIN PGP SIGNATURE-----"));

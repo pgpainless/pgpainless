@@ -6,9 +6,10 @@ package org.pgpainless.example;
 
 import java.io.IOException;
 
+import org.bouncycastle.bcpg.KeyIdentifier;
 import org.bouncycastle.openpgp.PGPException;
 import org.bouncycastle.openpgp.PGPSecretKey;
-import org.bouncycastle.openpgp.PGPSecretKeyRing;
+import org.bouncycastle.openpgp.api.OpenPGPKey;
 import org.junit.jupiter.api.Test;
 import org.pgpainless.PGPainless;
 import org.pgpainless.key.OpenPgpV4Fingerprint;
@@ -22,11 +23,11 @@ import org.pgpainless.util.Passphrase;
  * {@link PGPSecretKey PGPSecretKeys} are often password protected to prevent unauthorized access.
  * To perform certain actions with secret keys, such as creating signatures or decrypting encrypted messages,
  * the secret key needs to be unlocked to access the underlying {@link org.bouncycastle.openpgp.PGPPrivateKey}.
- *
+ * <p>
  * Providing the required {@link org.bouncycastle.openpgp.operator.PBESecretKeyEncryptor}/{@link org.bouncycastle.openpgp.operator.PBESecretKeyDecryptor}
  * is a task that needs to be performed by the {@link SecretKeyRingProtector}.
  * There are different implementations available that implement this interface.
- *
+ * <p>
  * Below are some examples of how to use these implementations in different scenarios.
  */
 public class UnlockSecretKeys {
@@ -36,7 +37,7 @@ public class UnlockSecretKeys {
      */
     @Test
     public void unlockUnprotectedKeys() throws PGPException, IOException {
-        PGPSecretKeyRing unprotectedKey = TestKeys.getJulietSecretKeyRing();
+        OpenPGPKey unprotectedKey = PGPainless.getInstance().toKey(TestKeys.getJulietSecretKeyRing());
         // This protector will only unlock unprotected keys
         SecretKeyRingProtector protector = SecretKeyRingProtector.unprotectedKeys();
 
@@ -49,7 +50,7 @@ public class UnlockSecretKeys {
      */
     @Test
     public void unlockWholeKeyWithSamePassphrase() throws PGPException, IOException {
-        PGPSecretKeyRing secretKey = TestKeys.getCryptieSecretKeyRing();
+        OpenPGPKey secretKey = PGPainless.getInstance().toKey(TestKeys.getCryptieSecretKeyRing());
         Passphrase passphrase = TestKeys.CRYPTIE_PASSPHRASE;
 
         // Unlock all subkeys in the secret key with the same passphrase
@@ -91,14 +92,14 @@ public class UnlockSecretKeys {
                 "UPPI6jsYqxEHzRGex8t971atnDAjvDiS31YN\n" +
                 "=fTmB\n" +
                 "-----END PGP PRIVATE KEY BLOCK-----";
-        PGPSecretKeyRing secretKey = PGPainless.readKeyRing().secretKeyRing(pgpPrivateKeyBlock);
+        OpenPGPKey secretKey = PGPainless.getInstance().readKey().parseKey(pgpPrivateKeyBlock);
 
         CachingSecretKeyRingProtector protector = SecretKeyRingProtector.defaultSecretKeyRingProtector(null);
         // Add passphrases for subkeys via public key
-        protector.addPassphrase(secretKey.getPublicKey(),
+        protector.addPassphrase(secretKey.getPrimaryKey().getKeyIdentifier(),
                 Passphrase.fromPassword("pr1maryK3y"));
         // or via subkey-id
-        protector.addPassphrase(3907509425258753406L,
+        protector.addPassphrase(new KeyIdentifier(3907509425258753406L),
                 Passphrase.fromPassword("f1rs7subk3y"));
         // or via fingerprint
         protector.addPassphrase(new OpenPgpV4Fingerprint("DD8E1195E4B1720E7FB10EF7F60402708E75D941"),
@@ -107,10 +108,10 @@ public class UnlockSecretKeys {
         assertProtectorUnlocksAllSecretKeys(secretKey, protector);
     }
 
-    private void assertProtectorUnlocksAllSecretKeys(PGPSecretKeyRing secretKey, SecretKeyRingProtector protector)
+    private void assertProtectorUnlocksAllSecretKeys(OpenPGPKey key, SecretKeyRingProtector protector)
             throws PGPException {
-        for (PGPSecretKey key : secretKey) {
-            UnlockSecretKey.unlockSecretKey(key, protector);
+        for (OpenPGPKey.OpenPGPSecretKey componentKey : key.getSecretKeys().values()) {
+            UnlockSecretKey.unlockSecretKey(componentKey, protector);
         }
     }
 }
