@@ -43,6 +43,7 @@ public class AddSubkeyWithModifiedBindingSignatureSubpacketsTest {
                 .modernKeyRing("Alice <alice@pgpainless.org>")
                 .getPGPSecretKeyRing();
         KeyRingInfo before = PGPainless.inspectKeyRing(secretKeys);
+        List<OpenPGPCertificate.OpenPGPComponentKey> signingKeysBefore = before.getSigningSubkeys();
 
         PGPKeyPair secretSubkey = KeyRingBuilder.generateKeyPair(
                 KeySpec.getBuilder(KeyType.EDDSA_LEGACY(EdDSALegacyCurve._Ed25519), KeyFlag.SIGN_DATA).build(),
@@ -60,11 +61,11 @@ public class AddSubkeyWithModifiedBindingSignatureSubpacketsTest {
                 .done();
 
         KeyRingInfo after = PGPainless.inspectKeyRing(secretKeys);
-        List<OpenPGPCertificate.OpenPGPComponentKey> signingKeys = after.getSigningSubkeys();
-        signingKeys.removeAll(before.getSigningSubkeys());
-        assertFalse(signingKeys.isEmpty());
+        List<OpenPGPCertificate.OpenPGPComponentKey> signingKeysAfter = after.getSigningSubkeys();
+        signingKeysAfter.removeAll(signingKeysBefore);
+        assertFalse(signingKeysAfter.isEmpty());
 
-        OpenPGPCertificate.OpenPGPComponentKey newKey = signingKeys.get(0);
+        OpenPGPCertificate.OpenPGPComponentKey newKey = signingKeysAfter.get(0);
         Date newExpirationDate = after.getSubkeyExpirationDate(new OpenPgpV4Fingerprint(newKey.getPGPPublicKey()));
         assertNotNull(newExpirationDate);
         Date now = new Date();

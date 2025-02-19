@@ -66,7 +66,7 @@ public class ThirdPartyDirectKeySignatureBuilderTest {
         PGPSignature signature = info.getLatestDirectKeySelfSignature();
 
         assertNotNull(signature);
-        assertEquals(directKeySig, signature);
+        assertEquals(directKeySig.getSignature(), signature);
 
         assertEquals(SignatureType.DIRECT_KEY, SignatureType.valueOf(signature.getSignatureType()));
         assertEquals(Collections.singletonList(KeyFlag.CERTIFY_OTHER), SignatureSubpacketsUtil.parseKeyFlags(signature));
