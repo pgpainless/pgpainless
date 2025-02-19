@@ -14,10 +14,10 @@ import java.util.HashSet;
 import java.util.Set;
 
 import org.bouncycastle.openpgp.PGPException;
-import org.bouncycastle.openpgp.PGPSecretKey;
 import org.bouncycastle.openpgp.PGPSecretKeyRing;
 import org.bouncycastle.openpgp.PGPSignature;
 import org.bouncycastle.openpgp.api.OpenPGPCertificate;
+import org.bouncycastle.openpgp.api.OpenPGPKey;
 import org.junit.jupiter.api.Test;
 import org.pgpainless.PGPainless;
 import org.pgpainless.algorithm.EncryptionPurpose;
@@ -33,10 +33,10 @@ public class SubkeyAndPrimaryKeyBindingSignatureTest {
 
     @Test
     public void testRebindSubkey() throws PGPException, IOException {
-        PGPSecretKeyRing secretKeys = TestKeys.getEmilSecretKeyRing();
+        OpenPGPKey secretKeys = PGPainless.getInstance().toKey(TestKeys.getEmilSecretKeyRing());
         KeyRingInfo info = PGPainless.inspectKeyRing(secretKeys);
 
-        PGPSecretKey primaryKey = secretKeys.getSecretKey();
+        OpenPGPKey.OpenPGPSecretKey primaryKey = secretKeys.getPrimarySecretKey();
         OpenPGPCertificate.OpenPGPComponentKey encryptionSubkey =
                 info.getEncryptionSubkeys(EncryptionPurpose.ANY).get(0);
         assertNotNull(encryptionSubkey);
@@ -57,9 +57,9 @@ public class SubkeyAndPrimaryKeyBindingSignatureTest {
         });
 
         PGPSignature binding = sbb.build(encryptionSubkey.getPGPPublicKey());
-        secretKeys = KeyRingUtils.injectCertification(secretKeys, encryptionSubkey.getPGPPublicKey(), binding);
+        PGPSecretKeyRing secretKeyRing = KeyRingUtils.injectCertification(secretKeys.getPGPKeyRing(), encryptionSubkey.getPGPPublicKey(), binding);
 
-        info = PGPainless.inspectKeyRing(secretKeys);
+        info = PGPainless.inspectKeyRing(secretKeyRing);
         assertEquals(Collections.singleton(HashAlgorithm.SHA512), info.getPreferredHashAlgorithms(encryptionSubkey.getKeyIdentifier()));
     }
 }

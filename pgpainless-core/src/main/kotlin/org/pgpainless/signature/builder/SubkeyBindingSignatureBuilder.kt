@@ -7,8 +7,8 @@ package org.pgpainless.signature.builder
 import java.util.function.Predicate
 import org.bouncycastle.openpgp.PGPException
 import org.bouncycastle.openpgp.PGPPublicKey
-import org.bouncycastle.openpgp.PGPSecretKey
 import org.bouncycastle.openpgp.PGPSignature
+import org.bouncycastle.openpgp.api.OpenPGPKey
 import org.pgpainless.algorithm.HashAlgorithm
 import org.pgpainless.algorithm.SignatureType
 import org.pgpainless.key.protection.SecretKeyRingProtector
@@ -26,13 +26,13 @@ class SubkeyBindingSignatureBuilder : AbstractSignatureBuilder<SubkeyBindingSign
 
     @Throws(PGPException::class)
     constructor(
-        signingKey: PGPSecretKey,
+        signingKey: OpenPGPKey.OpenPGPSecretKey,
         protector: SecretKeyRingProtector
     ) : super(SignatureType.SUBKEY_BINDING, signingKey, protector)
 
     @Throws(PGPException::class)
     constructor(
-        signingKey: PGPSecretKey,
+        signingKey: OpenPGPKey.OpenPGPSecretKey,
         protector: SecretKeyRingProtector,
         hashAlgorithm: HashAlgorithm
     ) : super(
@@ -40,12 +40,12 @@ class SubkeyBindingSignatureBuilder : AbstractSignatureBuilder<SubkeyBindingSign
         signingKey,
         protector,
         hashAlgorithm,
-        SignatureSubpackets.createHashedSubpackets(signingKey.publicKey),
+        SignatureSubpackets.createHashedSubpackets(signingKey.publicKey.pgpPublicKey),
         SignatureSubpackets.createEmptySubpackets())
 
     @Throws(PGPException::class)
     constructor(
-        signingKey: PGPSecretKey,
+        signingKey: OpenPGPKey.OpenPGPSecretKey,
         protector: SecretKeyRingProtector,
         oldSubkeyBinding: PGPSignature
     ) : super(
@@ -69,5 +69,6 @@ class SubkeyBindingSignatureBuilder : AbstractSignatureBuilder<SubkeyBindingSign
 
     @Throws(PGPException::class)
     fun build(subkey: PGPPublicKey): PGPSignature =
-        buildAndInitSignatureGenerator().generateCertification(publicSigningKey, subkey)
+        buildAndInitSignatureGenerator()
+            .generateCertification(signingKey.publicKey.pgpPublicKey, subkey)
 }
