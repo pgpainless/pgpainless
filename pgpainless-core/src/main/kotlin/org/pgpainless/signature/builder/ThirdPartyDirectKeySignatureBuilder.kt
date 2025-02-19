@@ -8,8 +8,13 @@ import java.util.function.Predicate
 import org.bouncycastle.openpgp.PGPException
 import org.bouncycastle.openpgp.PGPPublicKey
 import org.bouncycastle.openpgp.PGPPublicKeyRing
-import org.bouncycastle.openpgp.PGPSecretKey
 import org.bouncycastle.openpgp.PGPSignature
+import org.bouncycastle.openpgp.api.OpenPGPCertificate
+import org.bouncycastle.openpgp.api.OpenPGPCertificate.OpenPGPComponentKey
+import org.bouncycastle.openpgp.api.OpenPGPCertificate.OpenPGPComponentSignature
+import org.bouncycastle.openpgp.api.OpenPGPKey
+import org.bouncycastle.openpgp.api.OpenPGPSignature
+import org.pgpainless.PGPainless
 import org.pgpainless.algorithm.SignatureType
 import org.pgpainless.key.protection.SecretKeyRingProtector
 import org.pgpainless.signature.subpackets.CertificationSubpackets
@@ -27,13 +32,13 @@ class ThirdPartyDirectKeySignatureBuilder :
 
     @Throws(PGPException::class)
     constructor(
-        signingKey: PGPSecretKey,
+        signingKey: OpenPGPKey.OpenPGPSecretKey,
         protector: SecretKeyRingProtector
     ) : super(SignatureType.DIRECT_KEY, signingKey, protector)
 
     @Throws(PGPException::class)
     constructor(
-        signingKey: PGPSecretKey,
+        signingKey: OpenPGPKey.OpenPGPSecretKey,
         protector: SecretKeyRingProtector,
         archetypeSignature: PGPSignature
     ) : super(signingKey, protector, archetypeSignature)
@@ -48,9 +53,20 @@ class ThirdPartyDirectKeySignatureBuilder :
         }
     }
 
-    @Throws(PGPException::class)
-    fun build(certificate: PGPPublicKeyRing): PGPSignature = build(certificate.publicKey)
+    fun build(certificate: OpenPGPCertificate): OpenPGPSignature = build(certificate.primaryKey)
 
+    fun build(componentKey: OpenPGPComponentKey): OpenPGPSignature =
+        OpenPGPComponentSignature(
+            buildAndInitSignatureGenerator().generateCertification(componentKey.pgpPublicKey),
+            signingKey.publicKey,
+            componentKey)
+
+    @Throws(PGPException::class)
+    @Deprecated("Pass in an OpenPGPCertificate instead.")
+    fun build(certificate: PGPPublicKeyRing): PGPSignature =
+        build(PGPainless.getInstance().toCertificate(certificate)).signature
+
+    @Deprecated("Pass in an OpenPGPComponentKey instead.")
     @Throws(PGPException::class)
     fun build(certifiedKey: PGPPublicKey): PGPSignature =
         buildAndInitSignatureGenerator().generateCertification(certifiedKey)
