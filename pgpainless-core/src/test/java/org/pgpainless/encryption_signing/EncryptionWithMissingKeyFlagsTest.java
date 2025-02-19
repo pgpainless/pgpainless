@@ -179,7 +179,9 @@ public class EncryptionWithMissingKeyFlagsTest {
         ByteArrayInputStream in = new ByteArrayInputStream(out.toByteArray());
         DecryptionStream decryptionStream = PGPainless.decryptAndOrVerify()
                 .onInputStream(in)
-                .withOptions(ConsumerOptions.get().addDecryptionKey(secretKeys));
+                .withOptions(ConsumerOptions.get()
+                        .setAllowDecryptionWithMissingKeyFlags()
+                        .addDecryptionKey(secretKeys));
         ByteArrayOutputStream plain = new ByteArrayOutputStream();
 
         // Decrypt
