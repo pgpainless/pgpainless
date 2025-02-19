@@ -594,7 +594,7 @@ class KeyRingInfo(
         require(publicKey.keyIdentifier.equals(identifier.keyIdentifier)) {
             "Mismatching primary key ID."
         }
-        return getPublicKey(identifier.subkeyIdentifier)
+        return getPublicKey(identifier.componentKeyIdentifier)
     }
 
     /**
@@ -605,7 +605,7 @@ class KeyRingInfo(
      *   key of the key.
      */
     fun getSecretKey(identifier: SubkeyIdentifier): OpenPGPComponentKey? =
-        getSecretKey(identifier.subkeyIdentifier)
+        getSecretKey(identifier.componentKeyIdentifier)
 
     fun isKeyValidlyBound(keyIdentifier: KeyIdentifier): Boolean {
         return isKeyValidlyBound(keyIdentifier.keyId)
