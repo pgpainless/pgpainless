@@ -329,8 +329,8 @@ class ConsumerOptions {
 
     fun isIgnoreMDCErrors(): Boolean = ignoreMDCErrors
 
-    fun setAllowDecryptionWithNonEncryptionKey(allow: Boolean): ConsumerOptions = apply {
-        allowDecryptionWithNonEncryptionKey = allow
+    fun setAllowDecryptionWithMissingKeyFlags(): ConsumerOptions = apply {
+        allowDecryptionWithNonEncryptionKey = true
     }
 
     fun getAllowDecryptionWithNonEncryptionKey(): Boolean {
