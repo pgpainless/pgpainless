@@ -11,8 +11,8 @@ import org.bouncycastle.openpgp.api.OpenPGPCertificate.OpenPGPComponentKey
 import org.bouncycastle.openpgp.api.OpenPGPKey.OpenPGPPrivateKey
 
 /**
- * Tuple class used to identify a subkey (component key) by fingerprints of the certificate,
- * as well as the component keys fingerprint.
+ * Tuple class used to identify a subkey (component key) by fingerprints of the certificate, as well
+ * as the component keys fingerprint.
  */
 class SubkeyIdentifier(
     val certificateFingerprint: OpenPgpFingerprint,
@@ -22,9 +22,12 @@ class SubkeyIdentifier(
     /**
      * Constructor for a [SubkeyIdentifier] pointing to the primary key identified by the
      * [certificateFingerprint].
+     *
      * @param certificateFingerprint primary key fingerprint
      */
-    constructor(certificateFingerprint: OpenPgpFingerprint) : this(certificateFingerprint, certificateFingerprint)
+    constructor(
+        certificateFingerprint: OpenPgpFingerprint
+    ) : this(certificateFingerprint, certificateFingerprint)
 
     /**
      * Constructor for a [SubkeyIdentifier] pointing to the primary key of the given [PGPKeyRing].
@@ -45,7 +48,10 @@ class SubkeyIdentifier(
      * [componentKeyId]) from the given [certificate].
      */
     @Deprecated("Pass in a KeyIdentifier instead of a keyId.")
-    constructor(certificate: PGPKeyRing, componentKeyId: Long) : this(certificate, KeyIdentifier(componentKeyId))
+    constructor(
+        certificate: PGPKeyRing,
+        componentKeyId: Long
+    ) : this(certificate, KeyIdentifier(componentKeyId))
 
     /**
      * Constructor for a [SubkeyIdentifier] pointing to the given [componentKey].
@@ -54,18 +60,14 @@ class SubkeyIdentifier(
      */
     constructor(
         componentKey: OpenPGPComponentKey
-    ) : this(
-        OpenPgpFingerprint.of(componentKey.certificate),
-        OpenPgpFingerprint.of(componentKey))
+    ) : this(OpenPgpFingerprint.of(componentKey.certificate), OpenPgpFingerprint.of(componentKey))
 
-    /**
-     * Constructor for a [SubkeyIdentifier] pointing to the given [componentKey].
-     */
+    /** Constructor for a [SubkeyIdentifier] pointing to the given [componentKey]. */
     constructor(componentKey: OpenPGPPrivateKey) : this(componentKey.secretKey)
 
     /**
-     * Constructor for a [SubkeyIdentifier] pointing to a component key (identified by
-     * the [componentKeyFingerprint]) of the given [certificate].
+     * Constructor for a [SubkeyIdentifier] pointing to a component key (identified by the
+     * [componentKeyFingerprint]) of the given [certificate].
      *
      * @param certificate certificate
      * @param componentKeyFingerprint fingerprint of the component key
@@ -92,48 +94,34 @@ class SubkeyIdentifier(
                 ?: throw NoSuchElementException(
                     "OpenPGP key does not contain subkey $componentKeyIdentifier")))
 
-    @Deprecated("Use certificateFingerprint instead.",
-        replaceWith = ReplaceWith("certificateFingerprint")
-    )
+    @Deprecated(
+        "Use certificateFingerprint instead.", replaceWith = ReplaceWith("certificateFingerprint"))
     val primaryKeyFingerprint: OpenPgpFingerprint = certificateFingerprint
 
-    @Deprecated("Use componentKeyFingerprint instead.",
+    @Deprecated(
+        "Use componentKeyFingerprint instead.",
         replaceWith = ReplaceWith("componentKeyFingerprint"))
     val subkeyFingerprint: OpenPgpFingerprint = componentKeyFingerprint
 
-    /**
-     * [KeyIdentifier] of the component key.
-     */
+    /** [KeyIdentifier] of the component key. */
     val keyIdentifier = componentKeyFingerprint.keyIdentifier
 
-    /**
-     * [KeyIdentifier] of the component key.
-     */
+    /** [KeyIdentifier] of the component key. */
     val componentKeyIdentifier = keyIdentifier
 
-    /**
-     * [KeyIdentifier] of the primary key of the certificate the component key belongs to.
-     */
+    /** [KeyIdentifier] of the primary key of the certificate the component key belongs to. */
     val certificateIdentifier = certificateFingerprint.keyIdentifier
 
-    /**
-     * Key-ID of the component key.
-     */
+    /** Key-ID of the component key. */
     @Deprecated("Use of key-ids is discouraged.") val keyId = keyIdentifier.keyId
 
-    /**
-     * Fingerprint of the component key.
-     */
+    /** Fingerprint of the component key. */
     val fingerprint = componentKeyFingerprint
 
-    /**
-     * Key-ID of the component key.
-     */
+    /** Key-ID of the component key. */
     @Deprecated("Use of key-ids is discouraged.") val subkeyId = componentKeyIdentifier.keyId
 
-    /**
-     * Key-ID of the primary key of the certificate the component key belongs to.
-     */
+    /** Key-ID of the primary key of the certificate the component key belongs to. */
     @Deprecated("Use of key-ids is discouraged.") val primaryKeyId = certificateIdentifier.keyId
 
     val isPrimaryKey = certificateIdentifier.matches(componentKeyIdentifier)

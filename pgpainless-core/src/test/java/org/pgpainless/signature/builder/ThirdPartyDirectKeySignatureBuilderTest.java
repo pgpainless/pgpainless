@@ -14,6 +14,8 @@ import java.util.Date;
 import org.bouncycastle.openpgp.PGPException;
 import org.bouncycastle.openpgp.PGPSecretKeyRing;
 import org.bouncycastle.openpgp.PGPSignature;
+import org.bouncycastle.openpgp.api.OpenPGPKey;
+import org.bouncycastle.openpgp.api.OpenPGPSignature;
 import org.junit.jupiter.api.Test;
 import org.pgpainless.PGPainless;
 import org.pgpainless.algorithm.CompressionAlgorithm;
@@ -32,12 +34,11 @@ public class ThirdPartyDirectKeySignatureBuilderTest {
 
     @Test
     public void testDirectKeySignatureBuilding() throws PGPException {
-        PGPSecretKeyRing secretKeys = PGPainless.generateKeyRing()
-                .modernKeyRing("Alice")
-                .getPGPSecretKeyRing();
+        OpenPGPKey secretKeys = PGPainless.generateKeyRing()
+                .modernKeyRing("Alice");
 
         DirectKeySelfSignatureBuilder dsb = new DirectKeySelfSignatureBuilder(
-                secretKeys.getSecretKey(),
+                secretKeys.getPrimarySecretKey(),
                 SecretKeyRingProtector.unprotectedKeys());
 
         Date now = new Date();
@@ -54,11 +55,14 @@ public class ThirdPartyDirectKeySignatureBuilderTest {
             }
         });
 
-        PGPSignature directKeySig = dsb.build();
+        OpenPGPSignature directKeySig = dsb.build();
         assertNotNull(directKeySig);
-        secretKeys = KeyRingUtils.injectCertification(secretKeys, secretKeys.getPublicKey(), directKeySig);
+        PGPSecretKeyRing secretKeyRing = KeyRingUtils.injectCertification(
+                secretKeys.getPGPSecretKeyRing(),
+                secretKeys.getPrimaryKey().getPGPPublicKey(),
+                directKeySig.getSignature());
 
-        KeyRingInfo info = PGPainless.inspectKeyRing(secretKeys, t1);
+        KeyRingInfo info = PGPainless.inspectKeyRing(secretKeyRing, t1);
         PGPSignature signature = info.getLatestDirectKeySelfSignature();
 
         assertNotNull(signature);
@@ -69,7 +73,7 @@ public class ThirdPartyDirectKeySignatureBuilderTest {
         assertEquals(Collections.singleton(HashAlgorithm.SHA512), SignatureSubpacketsUtil.parsePreferredHashAlgorithms(signature));
         assertEquals(Collections.singleton(CompressionAlgorithm.ZIP), SignatureSubpacketsUtil.parsePreferredCompressionAlgorithms(signature));
         assertEquals(Collections.singleton(SymmetricKeyAlgorithm.AES_256), SignatureSubpacketsUtil.parsePreferredSymmetricKeyAlgorithms(signature));
-        assertEquals(secretKeys.getPublicKey().getKeyID(), signature.getKeyID());
-        assertArrayEquals(secretKeys.getPublicKey().getFingerprint(), signature.getHashedSubPackets().getIssuerFingerprint().getFingerprint());
+        assertEquals(secretKeyRing.getPublicKey().getKeyID(), signature.getKeyID());
+        assertArrayEquals(secretKeyRing.getPublicKey().getFingerprint(), signature.getHashedSubPackets().getIssuerFingerprint().getFingerprint());
     }
 }

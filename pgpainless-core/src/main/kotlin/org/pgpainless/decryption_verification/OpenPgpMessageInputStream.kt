@@ -409,7 +409,8 @@ class OpenPgpMessageInputStream(
             val decryptionKeyCandidates = getDecryptionKeys(pkesk)
             for (decryptionKeys in decryptionKeyCandidates) {
                 val secretKey = decryptionKeys.getSecretKeyFor(pkesk)!!
-                if (!secretKey.isEncryptionKey && !options.getAllowDecryptionWithNonEncryptionKey()) {
+                if (!secretKey.isEncryptionKey &&
+                    !options.getAllowDecryptionWithNonEncryptionKey()) {
                     LOGGER.debug(
                         "Message is encrypted for ${secretKey.keyIdentifier}, but the key is not encryption capable.")
                     continue
