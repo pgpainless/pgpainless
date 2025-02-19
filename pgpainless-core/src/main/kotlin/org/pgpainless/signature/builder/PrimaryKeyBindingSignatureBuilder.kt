@@ -7,8 +7,8 @@ package org.pgpainless.signature.builder
 import java.util.function.Predicate
 import org.bouncycastle.openpgp.PGPException
 import org.bouncycastle.openpgp.PGPPublicKey
-import org.bouncycastle.openpgp.PGPSecretKey
 import org.bouncycastle.openpgp.PGPSignature
+import org.bouncycastle.openpgp.api.OpenPGPKey
 import org.pgpainless.algorithm.HashAlgorithm
 import org.pgpainless.algorithm.SignatureType
 import org.pgpainless.key.protection.SecretKeyRingProtector
@@ -28,13 +28,13 @@ class PrimaryKeyBindingSignatureBuilder :
 
     @Throws(PGPException::class)
     constructor(
-        signingSubkey: PGPSecretKey,
+        signingSubkey: OpenPGPKey.OpenPGPSecretKey,
         subkeyProtector: SecretKeyRingProtector
     ) : super(SignatureType.PRIMARYKEY_BINDING, signingSubkey, subkeyProtector)
 
     @Throws(PGPException::class)
     constructor(
-        signingSubkey: PGPSecretKey,
+        signingSubkey: OpenPGPKey.OpenPGPSecretKey,
         subkeyProtector: SecretKeyRingProtector,
         hashAlgorithm: HashAlgorithm
     ) : super(
@@ -42,7 +42,7 @@ class PrimaryKeyBindingSignatureBuilder :
         signingSubkey,
         subkeyProtector,
         hashAlgorithm,
-        SignatureSubpackets.createHashedSubpackets(signingSubkey.publicKey),
+        SignatureSubpackets.createHashedSubpackets(signingSubkey.publicKey.pgpPublicKey),
         SignatureSubpackets.createEmptySubpackets())
 
     val hashedSubpackets: SelfSignatureSubpackets = _hashedSubpackets
@@ -57,5 +57,6 @@ class PrimaryKeyBindingSignatureBuilder :
 
     @Throws(PGPException::class)
     fun build(primaryKey: PGPPublicKey): PGPSignature =
-        buildAndInitSignatureGenerator().generateCertification(primaryKey, publicSigningKey)
+        buildAndInitSignatureGenerator()
+            .generateCertification(primaryKey, signingKey.publicKey.pgpPublicKey)
 }
