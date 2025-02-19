@@ -310,7 +310,7 @@ class SecretKeyRingEditor(var key: OpenPGPKey, override val referenceTime: Date 
             if (subkeyAlgorithm.isSigningCapable()) {
                 val pkBindingBuilder =
                     PrimaryKeyBindingSignatureBuilder(
-                        key.primarySecretKey, subkeyProtector, hashAlgorithm)
+                        key.primarySecretKey, primaryKeyProtector, hashAlgorithm)
                 pkBindingBuilder.hashedSubpackets.setSignatureCreationTime(referenceTime)
                 hashedSubpackets.addEmbeddedSignature(pkBindingBuilder.build(primaryKey.publicKey))
             }

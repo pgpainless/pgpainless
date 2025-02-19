@@ -195,7 +195,9 @@ public class PreventDecryptionUsingNonEncryptionKeyTest {
         ByteArrayInputStream msgIn = new ByteArrayInputStream(MSG.getBytes(StandardCharsets.UTF_8));
         DecryptionStream decryptionStream = PGPainless.decryptAndOrVerify()
                 .onInputStream(msgIn)
-                .withOptions(ConsumerOptions.get().addDecryptionKey(secretKeys));
+                .withOptions(ConsumerOptions.get()
+                        .setAllowDecryptionWithMissingKeyFlags()
+                        .addDecryptionKey(secretKeys));
 
         Streams.drain(decryptionStream);
         decryptionStream.close();
@@ -225,7 +227,7 @@ public class PreventDecryptionUsingNonEncryptionKeyTest {
         DecryptionStream decryptionStream = PGPainless.decryptAndOrVerify()
                 .onInputStream(msgIn)
                 .withOptions(ConsumerOptions.get()
-                        .setAllowDecryptionWithNonEncryptionKey(true)
+                        .setAllowDecryptionWithMissingKeyFlags()
                         .addDecryptionKey(secretKeys));
 
         byte[] decrypted = Streams.readAll(decryptionStream);
