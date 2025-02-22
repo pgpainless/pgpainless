@@ -12,6 +12,7 @@ import org.bouncycastle.openpgp.PGPSecretKeyRing
 import org.bouncycastle.util.io.Streams
 import org.pgpainless.PGPainless
 import org.pgpainless.algorithm.DocumentSignatureType
+import org.pgpainless.algorithm.StreamEncoding
 import org.pgpainless.bouncycastle.extensions.openPgpFingerprint
 import org.pgpainless.encryption_signing.ProducerOptions
 import org.pgpainless.encryption_signing.SigningOptions
@@ -56,11 +57,20 @@ class InlineSignImpl : InlineSign {
 
         val producerOptions =
             ProducerOptions.sign(signingOptions).apply {
-                if (mode == InlineSignAs.clearsigned) {
-                    setCleartextSigned()
-                    setAsciiArmor(true) // CSF is always armored
-                } else {
-                    setAsciiArmor(armor)
+                when (mode) {
+                    InlineSignAs.clearsigned -> {
+                        setCleartextSigned()
+                        setAsciiArmor(true) // CSF is always armored
+                        setEncoding(StreamEncoding.TEXT)
+                        applyCRLFEncoding()
+                    }
+                    InlineSignAs.text -> {
+                        setEncoding(StreamEncoding.TEXT)
+                        applyCRLFEncoding()
+                    }
+                    else -> {
+                        setAsciiArmor(armor)
+                    }
                 }
             }
 
