@@ -138,6 +138,10 @@ public class RoundTripInlineSignInlineVerifyCmdTest extends CLITest {
             "\n" +
             "There is only one Lord of the Keys, only one who can bend them to his will. And he does not share power.";
 
+    private static final String MESSAGE_CRLF = "One does not simply use OpenPGP!\r\n" +
+            "\r\n" +
+            "There is only one Lord of the Keys, only one who can bend them to his will. And he does not share power.";
+
     @Test
     public void createCleartextSignedMessage() throws IOException {
         File key = writeFile("key.asc", KEY_1);
@@ -153,7 +157,7 @@ public class RoundTripInlineSignInlineVerifyCmdTest extends CLITest {
         String cleartextSigned = ciphertextOut.toString();
         assertTrue(cleartextSigned.startsWith("-----BEGIN PGP SIGNED MESSAGE-----\n" +
                 "Hash: "));
-        assertTrue(cleartextSigned.contains(MESSAGE));
+        assertTrue(cleartextSigned.contains(MESSAGE_CRLF));
         assertTrue(cleartextSigned.contains("\n-----BEGIN PGP SIGNATURE-----\n"));
         assertTrue(cleartextSigned.endsWith("-----END PGP SIGNATURE-----\n"));
     }
@@ -203,7 +207,7 @@ public class RoundTripInlineSignInlineVerifyCmdTest extends CLITest {
                 "--verifications-out", verifications.getAbsolutePath(),
                 cert.getAbsolutePath()));
 
-        assertEquals(MESSAGE, plaintextOut.toString());
+        assertEquals(MESSAGE_CRLF, plaintextOut.toString());
         String verificationString = readStringFromFile(verifications);
         assertTrue(verificationString.contains(CERT_1_SIGNING_KEY));
     }
