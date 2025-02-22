@@ -65,6 +65,10 @@ class EncryptImpl : Encrypt {
                 .setAsciiArmor(armor)
                 .setEncoding(modeToStreamEncoding(mode))
 
+        if (modeToStreamEncoding(mode) != StreamEncoding.BINARY) {
+            options.applyCRLFEncoding()
+        }
+
         signingKeys.forEach {
             try {
                 signingOptions!!.addInlineSignature(protector, it, modeToSignatureType(mode))
