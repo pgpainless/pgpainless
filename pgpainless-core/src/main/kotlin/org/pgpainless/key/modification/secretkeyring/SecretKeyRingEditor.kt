@@ -12,7 +12,9 @@ import openpgp.openPgpKeyId
 import org.bouncycastle.bcpg.KeyIdentifier
 import org.bouncycastle.bcpg.sig.KeyExpirationTime
 import org.bouncycastle.openpgp.*
+import org.bouncycastle.openpgp.api.OpenPGPCertificate.OpenPGPSubkey
 import org.bouncycastle.openpgp.api.OpenPGPKey
+import org.bouncycastle.openpgp.api.OpenPGPKey.OpenPGPSecretKey
 import org.bouncycastle.openpgp.api.OpenPGPSignature
 import org.pgpainless.PGPainless
 import org.pgpainless.PGPainless.Companion.inspectKeyRing
@@ -302,6 +304,13 @@ class SecretKeyRingEditor(var key: OpenPGPKey, override val referenceTime: Date 
                 ImplementationFactory.getInstance().v4FingerprintCalculator,
                 false,
                 subkeyProtector.getEncryptor(subkey.keyID))
+
+        val componentKey =
+            OpenPGPSecretKey(
+                OpenPGPSubkey(subkey.publicKey, key),
+                secretSubkey,
+                PGPainless.getInstance().implementation.pbeSecretKeyDecryptorBuilderProvider())
+
         val skBindingBuilder =
             SubkeyBindingSignatureBuilder(key.primarySecretKey, primaryKeyProtector, hashAlgorithm)
         skBindingBuilder.apply {
@@ -309,8 +318,7 @@ class SecretKeyRingEditor(var key: OpenPGPKey, override val referenceTime: Date 
             hashedSubpackets.setKeyFlags(flags)
             if (subkeyAlgorithm.isSigningCapable()) {
                 val pkBindingBuilder =
-                    PrimaryKeyBindingSignatureBuilder(
-                        key.primarySecretKey, primaryKeyProtector, hashAlgorithm)
+                    PrimaryKeyBindingSignatureBuilder(componentKey, subkeyProtector, hashAlgorithm)
                 pkBindingBuilder.hashedSubpackets.setSignatureCreationTime(referenceTime)
                 hashedSubpackets.addEmbeddedSignature(pkBindingBuilder.build(primaryKey.publicKey))
             }
