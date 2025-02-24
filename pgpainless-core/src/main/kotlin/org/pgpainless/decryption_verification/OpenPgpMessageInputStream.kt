@@ -5,6 +5,7 @@
 package org.pgpainless.decryption_verification
 
 import java.io.EOFException
+import java.io.FilterInputStream
 import java.io.IOException
 import java.io.InputStream
 import java.io.OutputStream
@@ -18,6 +19,7 @@ import org.bouncycastle.openpgp.PGPCompressedData
 import org.bouncycastle.openpgp.PGPEncryptedData
 import org.bouncycastle.openpgp.PGPEncryptedDataList
 import org.bouncycastle.openpgp.PGPException
+import org.bouncycastle.openpgp.PGPLiteralData
 import org.bouncycastle.openpgp.PGPOnePassSignature
 import org.bouncycastle.openpgp.PGPPBEEncryptedData
 import org.bouncycastle.openpgp.PGPPrivateKey
