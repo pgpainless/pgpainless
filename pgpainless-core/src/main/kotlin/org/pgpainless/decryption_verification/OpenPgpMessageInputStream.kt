@@ -912,7 +912,7 @@ class OpenPgpMessageInputStream(
             if (options.getMissingCertificateCallback() != null) {
                 return options
                     .getMissingCertificateCallback()!!
-                    .onMissingPublicKeyEncountered(signature.keyIdentifiers.first())
+                    .provide(signature.keyIdentifiers.first())
             }
             return null // TODO: Missing cert for sig
         }
@@ -924,9 +924,7 @@ class OpenPgpMessageInputStream(
             }
 
             if (options.getMissingCertificateCallback() != null) {
-                return options
-                    .getMissingCertificateCallback()!!
-                    .onMissingPublicKeyEncountered(signature.keyIdentifier)
+                return options.getMissingCertificateCallback()!!.provide(signature.keyIdentifier)
             }
             return null // TODO: Missing cert for sig
         }
