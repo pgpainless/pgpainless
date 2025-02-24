@@ -5,6 +5,7 @@
 package org.pgpainless.key.info
 
 import org.bouncycastle.openpgp.PGPSignature
+import org.pgpainless.algorithm.AEADCipherMode
 import org.pgpainless.algorithm.CompressionAlgorithm
 import org.pgpainless.algorithm.HashAlgorithm
 import org.pgpainless.algorithm.SymmetricKeyAlgorithm
@@ -39,6 +40,9 @@ abstract class KeyAccessor(protected val info: KeyRingInfo, protected val key: S
     val preferredCompressionAlgorithms: Set<CompressionAlgorithm>
         get() =
             SignatureSubpacketsUtil.parsePreferredCompressionAlgorithms(signatureWithPreferences)
+
+    val preferredAEADCipherSuites: Set<AEADCipherMode>
+        get() = SignatureSubpacketsUtil.parsePreferredAEADCipherSuites(signatureWithPreferences)
 
     /**
      * Address the key via a user-id (e.g. `Alice <alice@wonderland.lit>`). In this case we are
