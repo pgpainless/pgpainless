@@ -12,6 +12,7 @@ import org.bouncycastle.openpgp.*
 import org.bouncycastle.openpgp.api.OpenPGPCertificate
 import org.bouncycastle.openpgp.api.OpenPGPImplementation
 import org.bouncycastle.openpgp.api.OpenPGPKey
+import org.bouncycastle.openpgp.api.OpenPGPKeyMaterialProvider.OpenPGPCertificateProvider
 import org.bouncycastle.openpgp.api.OpenPGPSignature.OpenPGPDocumentSignature
 import org.bouncycastle.openpgp.operator.PublicKeyDataDecryptorFactory
 import org.pgpainless.PGPainless
@@ -34,7 +35,7 @@ class ConsumerOptions {
 
     private val certificates = CertificateSource()
     private val detachedSignatures = mutableSetOf<PGPSignature>()
-    private var missingCertificateCallback: MissingPublicKeyCallback? = null
+    private var missingCertificateCallback: OpenPGPCertificateProvider? = null
 
     private var sessionKey: SessionKey? = null
     private val customDecryptorFactories =
@@ -164,9 +165,10 @@ class ConsumerOptions {
      * @param callback callback
      * @return options
      */
-    fun setMissingCertificateCallback(callback: MissingPublicKeyCallback): ConsumerOptions = apply {
-        this.missingCertificateCallback = callback
-    }
+    fun setMissingCertificateCallback(callback: OpenPGPCertificateProvider): ConsumerOptions =
+        apply {
+            this.missingCertificateCallback = callback
+        }
 
     /**
      * Attempt decryption using a session key.
@@ -283,7 +285,7 @@ class ConsumerOptions {
      *
      * @return missing public key callback
      */
-    fun getMissingCertificateCallback(): MissingPublicKeyCallback? = missingCertificateCallback
+    fun getMissingCertificateCallback(): OpenPGPCertificateProvider? = missingCertificateCallback
 
     /**
      * Return the [SecretKeyRingProtector] for the given [PGPSecretKeyRing].
