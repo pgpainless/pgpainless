@@ -18,6 +18,7 @@ import org.bouncycastle.openpgp.PGPException;
 import org.bouncycastle.openpgp.PGPPublicKeyRing;
 import org.bouncycastle.openpgp.api.OpenPGPCertificate;
 import org.bouncycastle.openpgp.api.OpenPGPKey;
+import org.bouncycastle.openpgp.api.OpenPGPKeyMaterialProvider;
 import org.bouncycastle.util.io.Streams;
 import org.junit.jupiter.api.Test;
 import org.pgpainless.PGPainless;
@@ -32,9 +33,9 @@ import org.pgpainless.key.protection.SecretKeyRingProtector;
 import javax.annotation.Nonnull;
 
 /**
- * Test functionality of the {@link MissingPublicKeyCallback} which is called when during signature verification,
- * a signature is encountered which was made by a key that was not provided in
- * {@link ConsumerOptions#addVerificationCert(PGPPublicKeyRing)}.
+ * Test functionality of the {@link org.bouncycastle.openpgp.api.OpenPGPKeyMaterialProvider.OpenPGPCertificateProvider}
+ * which is called when during signature verification, a signature is encountered which was made by a key that was
+ * not provided in {@link ConsumerOptions#addVerificationCert(PGPPublicKeyRing)}.
  */
 public class VerifyWithMissingPublicKeyCallbackTest {
 
@@ -63,9 +64,9 @@ public class VerifyWithMissingPublicKeyCallbackTest {
                 .onInputStream(new ByteArrayInputStream(signOut.toByteArray()))
                 .withOptions(new ConsumerOptions()
                         .addVerificationCert(unrelatedKeys)
-                        .setMissingCertificateCallback(new MissingPublicKeyCallback() {
+                        .setMissingCertificateCallback(new OpenPGPKeyMaterialProvider.OpenPGPCertificateProvider() {
                             @Override
-                            public OpenPGPCertificate onMissingPublicKeyEncountered(@Nonnull KeyIdentifier keyIdentifier) {
+                            public OpenPGPCertificate provide(@Nonnull KeyIdentifier keyIdentifier) {
                                 assertEquals(signingKey.getKeyIdentifier(), keyIdentifier, "Signing key-ID mismatch.");
                                 return signingPubKeys;
                             }
