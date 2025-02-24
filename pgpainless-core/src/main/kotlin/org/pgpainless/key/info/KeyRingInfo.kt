@@ -5,6 +5,7 @@
 package org.pgpainless.key.info
 
 import java.util.*
+import kotlin.NoSuchElementException
 import openpgp.openPgpKeyId
 import org.bouncycastle.bcpg.KeyIdentifier
 import org.bouncycastle.openpgp.*
@@ -248,6 +249,11 @@ class KeyRingInfo(
         get() =
             primaryUserId?.let { getPreferredCompressionAlgorithms(it) }
                 ?: getPreferredCompressionAlgorithms(keyIdentifier)
+
+    val preferredAEADCipherSuites: Set<AEADCipherMode>
+        get() =
+            primaryUserId?.let { getPreferredAEADCipherSuites(it) }
+                ?: getPreferredAEADCipherSuites(keyIdentifier)
 
     /**
      * Return the expiration date of the subkey with the provided fingerprint.
@@ -649,69 +655,102 @@ class KeyRingInfo(
 
     /** [HashAlgorithm] preferences of the given user-ID. */
     fun getPreferredHashAlgorithms(userId: CharSequence): Set<HashAlgorithm> {
-        return getKeyAccessor(userId, keyIdentifier).preferredHashAlgorithms
+        return keys
+            .getUserId(userId.toString())
+            ?.getHashAlgorithmPreferences(referenceDate)
+            ?.toHashAlgorithms()
+            ?: throw NoSuchElementException("No user-id '$userId' found on this key.")
     }
 
     fun getPreferredHashAlgorithms(keyIdentifier: KeyIdentifier): Set<HashAlgorithm> {
-        return getPreferredHashAlgorithms(keyIdentifier.keyId)
+        return keys
+            .getKey(keyIdentifier)
+            ?.getHashAlgorithmPreferences(referenceDate)
+            ?.toHashAlgorithms()
+            ?: throw NoSuchElementException(
+                "No subkey with key-id $keyIdentifier found on this key.")
     }
 
     /** [HashAlgorithm] preferences of the given key. */
+    @Deprecated("Pass KeyIdentifier instead.")
     fun getPreferredHashAlgorithms(keyId: Long): Set<HashAlgorithm> {
-        return KeyAccessor.SubKey(this, SubkeyIdentifier(keys.pgpKeyRing, keyId))
-            .preferredHashAlgorithms
+        return getPreferredHashAlgorithms(KeyIdentifier(keyId))
     }
 
     /** [SymmetricKeyAlgorithm] preferences of the given user-ID. */
     fun getPreferredSymmetricKeyAlgorithms(userId: CharSequence): Set<SymmetricKeyAlgorithm> {
-        return getKeyAccessor(userId, keyIdentifier).preferredSymmetricKeyAlgorithms
+        return keys
+            .getUserId(userId.toString())
+            ?.getSymmetricCipherPreferences(referenceDate)
+            ?.toSymmetricKeyAlgorithms()
+            ?: throw NoSuchElementException("No user-id '$userId' found on this key.")
     }
 
     fun getPreferredSymmetricKeyAlgorithms(
         keyIdentifier: KeyIdentifier
     ): Set<SymmetricKeyAlgorithm> {
-        return getPreferredSymmetricKeyAlgorithms(keyIdentifier.keyId)
+        return keys
+            .getKey(keyIdentifier)
+            ?.getSymmetricCipherPreferences(referenceDate)
+            ?.toSymmetricKeyAlgorithms()
+            ?: throw NoSuchElementException(
+                "No subkey with key-id $keyIdentifier found on this key.")
     }
 
     /** [SymmetricKeyAlgorithm] preferences of the given key. */
+    @Deprecated("Pass KeyIdentifier instead.")
     fun getPreferredSymmetricKeyAlgorithms(keyId: Long): Set<SymmetricKeyAlgorithm> {
-        return KeyAccessor.SubKey(this, SubkeyIdentifier(keys.pgpKeyRing, keyId))
-            .preferredSymmetricKeyAlgorithms
+        return getPreferredSymmetricKeyAlgorithms(KeyIdentifier(keyId))
     }
 
     /** [CompressionAlgorithm] preferences of the given user-ID. */
     fun getPreferredCompressionAlgorithms(userId: CharSequence): Set<CompressionAlgorithm> {
-        return getKeyAccessor(userId, keyIdentifier).preferredCompressionAlgorithms
+        return keys
+            .getUserId(userId.toString())
+            ?.getCompressionAlgorithmPreferences(referenceDate)
+            ?.toCompressionAlgorithms()
+            ?: throw NoSuchElementException("No user-id '$userId' found on this key.")
     }
 
     fun getPreferredCompressionAlgorithms(keyIdentifier: KeyIdentifier): Set<CompressionAlgorithm> {
-        return getPreferredCompressionAlgorithms(keyIdentifier.keyId)
+        return keys
+            .getKey(keyIdentifier)
+            ?.getCompressionAlgorithmPreferences(referenceDate)
+            ?.toCompressionAlgorithms()
+            ?: throw NoSuchElementException(
+                "No subkey with key-id $keyIdentifier found on this key.")
     }
 
     /** [CompressionAlgorithm] preferences of the given key. */
     fun getPreferredCompressionAlgorithms(keyId: Long): Set<CompressionAlgorithm> {
-        return KeyAccessor.SubKey(this, SubkeyIdentifier(keys.pgpKeyRing, keyId))
-            .preferredCompressionAlgorithms
+        return getPreferredCompressionAlgorithms(KeyIdentifier(keyId))
+    }
+
+    fun getPreferredAEADCipherSuites(userId: CharSequence): Set<AEADCipherMode> {
+        return keys
+            .getUserId(userId.toString())
+            ?.getAEADCipherSuitePreferences(referenceDate)
+            ?.toAEADCipherModes()
+            ?: throw NoSuchElementException("No user-id '$userId' found on this key.")
+    }
+
+    fun getPreferredAEADCipherSuites(keyIdentifier: KeyIdentifier): Set<AEADCipherMode> {
+        return keys
+            .getKey(keyIdentifier)
+            ?.getAEADCipherSuitePreferences(referenceDate)
+            ?.toAEADCipherModes()
+            ?: throw NoSuchElementException(
+                "No subkey with key-id $keyIdentifier found on this key.")
+    }
+
+    @Deprecated("Pass KeyIdentifier instead.")
+    fun getPreferredAEADCipherSuites(keyId: Long): Set<AEADCipherMode> {
+        return getPreferredAEADCipherSuites(KeyIdentifier(keyId))
     }
 
     val isUsableForThirdPartyCertification: Boolean =
         isKeyValidlyBound(keyIdentifier) &&
             getKeyFlagsOf(keyIdentifier).contains(KeyFlag.CERTIFY_OTHER)
-
-    private fun getKeyAccessor(userId: CharSequence?, keyIdentifier: KeyIdentifier): KeyAccessor {
-        if (getPublicKey(keyIdentifier) == null) {
-            throw NoSuchElementException("No subkey with key-id $keyIdentifier found on this key.")
-        }
-        if (userId != null && !userIds.contains(userId)) {
-            throw NoSuchElementException("No user-id '$userId' found on this key.")
-        }
-        return if (userId != null) {
-            KeyAccessor.ViaUserId(
-                this, SubkeyIdentifier(keys.pgpKeyRing, keyIdentifier.keyId), userId)
-        } else {
-            KeyAccessor.ViaKeyId(this, SubkeyIdentifier(keys.pgpKeyRing, keyIdentifier.keyId))
-        }
-    }
 
     companion object {
 
