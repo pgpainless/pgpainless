@@ -15,7 +15,13 @@ import org.bouncycastle.openpgp.api.OpenPGPKey.OpenPGPPrivateKey
  * as the component keys fingerprint.
  */
 class SubkeyIdentifier(
+    /**
+     * Fingerprint of the certificate.
+     */
     val certificateFingerprint: OpenPgpFingerprint,
+    /**
+     * Fingerprint of the target component key.
+     */
     val componentKeyFingerprint: OpenPgpFingerprint
 ) {
 
@@ -124,8 +130,13 @@ class SubkeyIdentifier(
     /** Key-ID of the primary key of the certificate the component key belongs to. */
     @Deprecated("Use of key-ids is discouraged.") val primaryKeyId = certificateIdentifier.keyId
 
+    /** True, if the component key is the primary key. */
     val isPrimaryKey = certificateIdentifier.matches(componentKeyIdentifier)
 
+    /**
+     * Return true, if the provided [fingerprint] matches either the [certificateFingerprint]
+     * or [componentKeyFingerprint].
+     */
     fun matches(fingerprint: OpenPgpFingerprint) =
         certificateFingerprint == fingerprint || componentKeyFingerprint == fingerprint
 
