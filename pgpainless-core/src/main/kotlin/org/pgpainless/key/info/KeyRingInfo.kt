@@ -47,13 +47,15 @@ class KeyRingInfo(
         referenceDate: Date = Date()
     ) : this(keys, PGPainless.getPolicy(), referenceDate)
 
-    // private val signatures: Signatures = Signatures(keys.pgpKeyRing, referenceDate, policy)
+    /** Primary [OpenPGPCertificate.OpenPGPPrimaryKey]. */
+    val primaryKey: OpenPGPCertificate.OpenPGPPrimaryKey = keys.primaryKey
 
     /** Primary [OpenPGPCertificate.OpenPGPPrimaryKey]. */
-    val publicKey: OpenPGPCertificate.OpenPGPPrimaryKey = keys.primaryKey
+    @Deprecated("Use primaryKey instead.", replaceWith = ReplaceWith("primaryKey"))
+    val publicKey: OpenPGPCertificate.OpenPGPPrimaryKey = primaryKey
 
     /** Primary key ID. */
-    val keyIdentifier: KeyIdentifier = publicKey.keyIdentifier
+    val keyIdentifier: KeyIdentifier = primaryKey.keyIdentifier
 
     @Deprecated(
         "Use of raw key-ids is deprecated in favor of key-identifiers",
@@ -61,17 +63,17 @@ class KeyRingInfo(
     val keyId: Long = keyIdentifier.keyId
 
     /** Primary key fingerprint. */
-    val fingerprint: OpenPgpFingerprint = OpenPgpFingerprint.of(publicKey.pgpPublicKey)
+    val fingerprint: OpenPgpFingerprint = OpenPgpFingerprint.of(primaryKey.pgpPublicKey)
 
     /** All User-IDs (valid, expired, revoked). */
-    val userIds: List<String> = KeyRingUtils.getUserIdsIgnoringInvalidUTF8(publicKey.pgpPublicKey)
+    val userIds: List<String> = KeyRingUtils.getUserIdsIgnoringInvalidUTF8(primaryKey.pgpPublicKey)
 
     /** Primary User-ID. */
     val primaryUserId: String? = keys.getPrimaryUserId(referenceDate)?.userId
 
     /** Revocation State. */
     val revocationState: RevocationState =
-        publicKey.getLatestSelfSignature(referenceDate)?.let {
+        primaryKey.getLatestSelfSignature(referenceDate)?.let {
             if (!it.isRevocation) RevocationState.notRevoked()
             else if (it.isHardRevocation) RevocationState.hardRevoked()
             else RevocationState.softRevoked(it.creationTime)
@@ -94,7 +96,7 @@ class KeyRingInfo(
         } else null
 
     /** OpenPGP key version. */
-    val version: Int = publicKey.version
+    val version: Int = primaryKey.version
 
     /**
      * Return all [public component keys][OpenPGPComponentKey] of this key ring. The first key in
@@ -133,18 +135,18 @@ class KeyRingInfo(
 
     /** Newest direct-key self-signature on the primary key. */
     val latestDirectKeySelfSignature: PGPSignature? =
-        publicKey.getLatestDirectKeySelfSignature(referenceDate)?.signature
+        primaryKey.getLatestDirectKeySelfSignature(referenceDate)?.signature
 
     /** Newest primary-key revocation self-signature. */
     val revocationSelfSignature: PGPSignature? =
-        publicKey.getLatestKeyRevocationSignature(referenceDate)?.signature
+        primaryKey.getLatestKeyRevocationSignature(referenceDate)?.signature
 
     /** Public-key encryption-algorithm of the primary key. */
     val algorithm: PublicKeyAlgorithm =
-        PublicKeyAlgorithm.requireFromId(publicKey.pgpPublicKey.algorithm)
+        PublicKeyAlgorithm.requireFromId(primaryKey.pgpPublicKey.algorithm)
 
     /** Creation date of the primary key. */
-    val creationDate: Date = publicKey.creationTime!!
+    val creationDate: Date = primaryKey.creationTime!!
 
     /** Latest date at which the key was modified (either by adding a subkey or self-signature). */
     val lastModified: Date = keys.lastModificationDate
@@ -186,14 +188,14 @@ class KeyRingInfo(
         get() {
             val directKeyExpirationDate: Date? =
                 latestDirectKeySelfSignature?.let {
-                    getKeyExpirationTimeAsDate(it, publicKey.pgpPublicKey)
+                    getKeyExpirationTimeAsDate(it, primaryKey.pgpPublicKey)
                 }
             val possiblyExpiredPrimaryUserId = getPossiblyExpiredPrimaryUserId()
             val primaryUserIdCertification =
                 possiblyExpiredPrimaryUserId?.let { getLatestUserIdCertification(it) }
             val userIdExpirationDate: Date? =
                 primaryUserIdCertification?.let {
-                    getKeyExpirationTimeAsDate(it, publicKey.pgpPublicKey)
+                    getKeyExpirationTimeAsDate(it, primaryKey.pgpPublicKey)
                 }
 
             if (latestDirectKeySelfSignature == null && primaryUserIdCertification == null) {
@@ -276,7 +278,7 @@ class KeyRingInfo(
      * @return expiration date
      */
     fun getSubkeyExpirationDate(keyId: Long): Date? {
-        if (publicKey.keyIdentifier.keyId == keyId) return primaryKeyExpirationDate
+        if (primaryKey.keyIdentifier.keyId == keyId) return primaryKeyExpirationDate
         val subkey =
             getPublicKey(keyId)
                 ?: throw NoSuchElementException(
@@ -353,7 +355,7 @@ class KeyRingInfo(
     ): List<OpenPGPComponentKey> {
         if (userId != null && !isUserIdValid(userId)) {
             throw UnboundUserIdException(
-                OpenPgpFingerprint.of(publicKey.pgpPublicKey),
+                OpenPgpFingerprint.of(primaryKey.pgpPublicKey),
                 userId.toString(),
                 getLatestUserIdCertification(userId),
                 getUserIdRevocation(userId))
@@ -488,7 +490,7 @@ class KeyRingInfo(
      * @return list of key flags
      */
     fun getKeyFlagsOf(keyId: Long): List<KeyFlag> =
-        if (keyId == publicKey.keyIdentifier.keyId) {
+        if (keyId == primaryKey.keyIdentifier.keyId) {
             latestDirectKeySelfSignature?.let { sig ->
                 SignatureSubpacketsUtil.parseKeyFlags(sig)?.let { flags ->
                     return flags
@@ -597,7 +599,7 @@ class KeyRingInfo(
      *   key of the key.
      */
     fun getPublicKey(identifier: SubkeyIdentifier): OpenPGPComponentKey? {
-        require(publicKey.keyIdentifier.equals(identifier.keyIdentifier)) {
+        require(primaryKey.keyIdentifier.equals(identifier.keyIdentifier)) {
             "Mismatching primary key ID."
         }
         return getPublicKey(identifier.componentKeyIdentifier)
@@ -645,7 +647,7 @@ class KeyRingInfo(
     fun isUserIdValid(userId: CharSequence): Boolean {
         var valid = isUserIdBound(userId)
         if (primaryUserId != null) valid = valid && isUserIdBound(primaryUserId)
-        valid = valid && isKeyValidlyBound(publicKey.keyIdentifier)
+        valid = valid && isKeyValidlyBound(primaryKey.keyIdentifier)
         return valid
     }
 
