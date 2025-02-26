@@ -41,6 +41,7 @@ abstract class KeyAccessor(protected val info: KeyRingInfo, protected val key: S
         get() =
             SignatureSubpacketsUtil.parsePreferredCompressionAlgorithms(signatureWithPreferences)
 
+    /** Preferred AEAD algorithm suites. */
     val preferredAEADCipherSuites: Set<AEADCipherMode>
         get() = SignatureSubpacketsUtil.parsePreferredAEADCipherSuites(signatureWithPreferences)
 
@@ -64,30 +65,19 @@ abstract class KeyAccessor(protected val info: KeyRingInfo, protected val key: S
     class ViaKeyId(info: KeyRingInfo, key: SubkeyIdentifier) : KeyAccessor(info, key) {
         override val signatureWithPreferences: PGPSignature
             get() {
-                // If the key is located by Key ID, the algorithm of the primary User ID of the key
-                // provides the
-                // preferred symmetric algorithm.
-                info.primaryUserId?.let { userId ->
-                    info.getLatestUserIdCertification(userId).let { if (it != null) return it }
+                if (key.isPrimaryKey) {
+                    // If the key is located by Key ID, the algorithm of the primary User ID of the
+                    // key
+                    // provides the
+                    // preferred symmetric algorithm.
+                    info.primaryUserId?.let { userId ->
+                        info.getLatestUserIdCertification(userId).let { if (it != null) return it }
+                    }
                 }
 
-                return info.getCurrentSubkeyBindingSignature(key.subkeyId)
+                return info.getCurrentSubkeyBindingSignature(key.keyIdentifier)
                     ?: throw NoSuchElementException(
                         "Key does not carry acceptable self-signature signature.")
             }
-    }
-
-    class SubKey(info: KeyRingInfo, key: SubkeyIdentifier) : KeyAccessor(info, key) {
-        override val signatureWithPreferences: PGPSignature
-            get() =
-                checkNotNull(
-                    if (key.isPrimaryKey) {
-                        info.latestDirectKeySelfSignature
-                            ?: info.primaryUserId?.let { info.getLatestUserIdCertification(it) }
-                    } else {
-                        info.getCurrentSubkeyBindingSignature(key.subkeyId)
-                    }) {
-                        "No valid signature found."
-                    }
     }
 }
