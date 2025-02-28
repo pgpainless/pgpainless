@@ -36,3 +36,4 @@ Contents
    pgpainless-cli/usage.md
    sop.md
    pgpainless-core/indepth.rst
+   pgpainless-core/migration_2.0.md
