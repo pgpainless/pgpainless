@@ -32,8 +32,6 @@ import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
-import java.security.InvalidAlgorithmParameterException;
-import java.security.NoSuchAlgorithmException;
 import java.util.Date;
 import java.util.List;
 
@@ -43,7 +41,7 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 public class GenerateKeyWithoutUserIdTest {
 
     @Test
-    public void generateKeyWithoutUserId() throws PGPException, InvalidAlgorithmParameterException, NoSuchAlgorithmException, IOException {
+    public void generateKeyWithoutUserId() throws PGPException, IOException {
         Date now = new Date();
         Date expirationDate = TestTimeFrameProvider.defaultExpirationForCreationDate(now);
         PGPSecretKeyRing secretKey = PGPainless.buildKeyRing()
@@ -51,7 +49,8 @@ public class GenerateKeyWithoutUserIdTest {
                 .addSubkey(KeySpec.getBuilder(KeyType.EDDSA_LEGACY(EdDSALegacyCurve._Ed25519), KeyFlag.SIGN_DATA).setKeyCreationDate(now))
                 .addSubkey(KeySpec.getBuilder(KeyType.XDH_LEGACY(XDHLegacySpec._X25519), KeyFlag.ENCRYPT_COMMS, KeyFlag.ENCRYPT_STORAGE).setKeyCreationDate(now))
                 .setExpirationDate(expirationDate)
-                .build();
+                .build()
+                .getPGPSecretKeyRing();
 
         KeyRingInfo info = PGPainless.inspectKeyRing(secretKey);
         assertNull(info.getPrimaryUserId());

@@ -14,8 +14,6 @@ import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
-import java.security.InvalidAlgorithmParameterException;
-import java.security.NoSuchAlgorithmException;
 import java.util.Arrays;
 
 import org.bouncycastle.openpgp.PGPException;
@@ -60,7 +58,7 @@ public class SigningTest {
 
         PGPSecretKeyRing cryptieKeys = TestKeys.getCryptieSecretKeyRing();
         KeyRingInfo cryptieInfo = new KeyRingInfo(cryptieKeys);
-        PGPSecretKey cryptieSigningKey = cryptieKeys.getSecretKey(cryptieInfo.getSigningSubkeys().get(0).getKeyID());
+        PGPSecretKey cryptieSigningKey = cryptieKeys.getSecretKey(cryptieInfo.getSigningSubkeys().get(0).getKeyIdentifier());
 
         PGPPublicKeyRingCollection keys = new PGPPublicKeyRingCollection(Arrays.asList(julietKeys, romeoKeys));
 
@@ -115,10 +113,10 @@ public class SigningTest {
 
     @TestTemplate
     @ExtendWith(TestAllImplementations.class)
-    public void testSignWithInvalidUserIdFails()
-            throws PGPException, InvalidAlgorithmParameterException, NoSuchAlgorithmException {
+    public void testSignWithInvalidUserIdFails() {
         PGPSecretKeyRing secretKeys = PGPainless.generateKeyRing()
-                .modernKeyRing("alice", "password123");
+                .modernKeyRing("alice", "password123")
+                .getPGPSecretKeyRing();
         SecretKeyRingProtector protector = SecretKeyRingProtector.unlockAnyKeyWith(Passphrase.fromPassword("password123"));
 
         SigningOptions opts = new SigningOptions();
@@ -131,9 +129,10 @@ public class SigningTest {
     @TestTemplate
     @ExtendWith(TestAllImplementations.class)
     public void testSignWithRevokedUserIdFails()
-            throws PGPException, InvalidAlgorithmParameterException, NoSuchAlgorithmException {
+            throws PGPException {
         PGPSecretKeyRing secretKeys = PGPainless.generateKeyRing()
-                .modernKeyRing("alice", "password123");
+                .modernKeyRing("alice", "password123")
+                .getPGPSecretKeyRing();
         SecretKeyRingProtector protector = SecretKeyRingProtector.unlockAnyKeyWith(
                 Passphrase.fromPassword("password123"));
         secretKeys = PGPainless.modifyKeyRing(secretKeys)
@@ -184,13 +183,14 @@ public class SigningTest {
     @TestTemplate
     @ExtendWith(TestAllImplementations.class)
     public void negotiateHashAlgorithmChoseFallbackIfEmptyPreferences()
-            throws PGPException, InvalidAlgorithmParameterException, NoSuchAlgorithmException, IOException {
+            throws PGPException, IOException {
         PGPSecretKeyRing secretKeys = PGPainless.buildKeyRing()
                 .setPrimaryKey(KeySpec.getBuilder(
                         KeyType.EDDSA_LEGACY(EdDSALegacyCurve._Ed25519), KeyFlag.CERTIFY_OTHER, KeyFlag.SIGN_DATA)
                         .overridePreferredHashAlgorithms())
                 .addUserId("Alice")
-                .build();
+                .build()
+                .getPGPSecretKeyRing();
 
         SigningOptions options = new SigningOptions()
                 .addDetachedSignature(SecretKeyRingProtector.unprotectedKeys(), secretKeys,
@@ -214,13 +214,14 @@ public class SigningTest {
     @TestTemplate
     @ExtendWith(TestAllImplementations.class)
     public void negotiateHashAlgorithmChoseFallbackIfUnacceptablePreferences()
-            throws PGPException, InvalidAlgorithmParameterException, NoSuchAlgorithmException, IOException {
+            throws PGPException, IOException {
         PGPSecretKeyRing secretKeys = PGPainless.buildKeyRing()
                 .setPrimaryKey(
                         KeySpec.getBuilder(KeyType.EDDSA_LEGACY(EdDSALegacyCurve._Ed25519), KeyFlag.CERTIFY_OTHER, KeyFlag.SIGN_DATA)
                         .overridePreferredHashAlgorithms(HashAlgorithm.MD5))
                 .addUserId("Alice")
-                .build();
+                .build()
+                .getPGPSecretKeyRing();
 
         SigningOptions options = new SigningOptions()
                 .addDetachedSignature(SecretKeyRingProtector.unprotectedKeys(), secretKeys,
@@ -243,12 +244,12 @@ public class SigningTest {
 
     @TestTemplate
     @ExtendWith(TestAllImplementations.class)
-    public void signingWithNonCapableKeyThrowsKeyCannotSignException()
-            throws PGPException, InvalidAlgorithmParameterException, NoSuchAlgorithmException {
+    public void signingWithNonCapableKeyThrowsKeyCannotSignException() {
         PGPSecretKeyRing secretKeys = PGPainless.buildKeyRing()
                 .setPrimaryKey(KeySpec.getBuilder(KeyType.EDDSA_LEGACY(EdDSALegacyCurve._Ed25519), KeyFlag.CERTIFY_OTHER))
                 .addUserId("Alice")
-                .build();
+                .build()
+                .getPGPSecretKeyRing();
 
         SigningOptions options = new SigningOptions();
         assertThrows(KeyException.UnacceptableSigningKeyException.class, () -> options.addDetachedSignature(
@@ -259,13 +260,13 @@ public class SigningTest {
 
     @TestTemplate
     @ExtendWith(TestAllImplementations.class)
-    public void signWithInvalidUserIdThrowsKeyValidationError()
-            throws PGPException, InvalidAlgorithmParameterException, NoSuchAlgorithmException {
+    public void signWithInvalidUserIdThrowsKeyValidationError() {
         PGPSecretKeyRing secretKeys = PGPainless.buildKeyRing()
                 .setPrimaryKey(KeySpec.getBuilder(KeyType.EDDSA_LEGACY(EdDSALegacyCurve._Ed25519),
                         KeyFlag.CERTIFY_OTHER, KeyFlag.SIGN_DATA))
                 .addUserId("Alice")
-                .build();
+                .build()
+                .getPGPSecretKeyRing();
 
         SigningOptions options = new SigningOptions();
         assertThrows(KeyException.UnboundUserIdException.class, () ->

@@ -10,7 +10,6 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import java.io.IOException;
 
-import org.bouncycastle.openpgp.PGPException;
 import org.bouncycastle.openpgp.PGPPublicKeyRing;
 import org.bouncycastle.openpgp.PGPSecretKeyRing;
 import org.junit.jupiter.api.Test;
@@ -162,7 +161,7 @@ public class SelfCertifyingRevocationTest {
     }
 
     @Test
-    public void mergeCertificatesResultsInRevokedKey() throws IOException, PGPException {
+    public void mergeCertificatesResultsInRevokedKey() throws IOException {
         PGPSecretKeyRing secretKeys = PGPainless.readKeyRing().secretKeyRing(SECRET_KEY);
         assertNotNull(secretKeys);
         PGPPublicKeyRing publicKeys = PGPainless.extractCertificate(secretKeys);

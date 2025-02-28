@@ -8,8 +8,6 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotEquals;
 
 import java.io.IOException;
-import java.security.InvalidAlgorithmParameterException;
-import java.security.NoSuchAlgorithmException;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Iterator;
@@ -39,7 +37,7 @@ public class AddSubKeyTest {
     @TestTemplate
     @ExtendWith(TestAllImplementations.class)
     public void testAddSubKey()
-            throws IOException, PGPException, InvalidAlgorithmParameterException, NoSuchAlgorithmException {
+            throws IOException, PGPException {
         PGPSecretKeyRing secretKeys = TestKeys.getCryptieSecretKeyRing();
 
         List<Long> keyIdsBefore = new ArrayList<>();

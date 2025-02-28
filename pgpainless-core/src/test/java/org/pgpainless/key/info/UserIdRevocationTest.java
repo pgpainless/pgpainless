@@ -11,8 +11,6 @@ import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import java.io.IOException;
-import java.security.InvalidAlgorithmParameterException;
-import java.security.NoSuchAlgorithmException;
 import java.util.Arrays;
 import java.util.List;
 import java.util.NoSuchElementException;
@@ -38,7 +36,7 @@ import org.pgpainless.key.util.RevocationAttributes;
 public class UserIdRevocationTest {
 
     @Test
-    public void testRevocationWithoutRevocationAttributes() throws PGPException, InvalidAlgorithmParameterException, NoSuchAlgorithmException {
+    public void testRevocationWithoutRevocationAttributes() throws PGPException {
         PGPSecretKeyRing secretKeys = PGPainless.buildKeyRing()
                 .setPrimaryKey(KeySpec.getBuilder(
                         KeyType.EDDSA_LEGACY(EdDSALegacyCurve._Ed25519),
@@ -47,7 +45,8 @@ public class UserIdRevocationTest {
                         KeyType.XDH_LEGACY(XDHLegacySpec._X25519), KeyFlag.ENCRYPT_COMMS))
                 .addUserId("primary@key.id")
                 .addUserId("secondary@key.id")
-                .build();
+                .build()
+                .getPGPSecretKeyRing();
 
         // make a copy with revoked subkey
         PGPSecretKeyRing revoked = PGPainless.modifyKeyRing(secretKeys)
@@ -76,7 +75,7 @@ public class UserIdRevocationTest {
     }
 
     @Test
-    public void testRevocationWithRevocationReason() throws InvalidAlgorithmParameterException, NoSuchAlgorithmException, PGPException {
+    public void testRevocationWithRevocationReason() {
         PGPSecretKeyRing secretKeys = PGPainless.buildKeyRing()
                 .setPrimaryKey(KeySpec.getBuilder(
                         KeyType.EDDSA_LEGACY(EdDSALegacyCurve._Ed25519),
@@ -84,7 +83,8 @@ public class UserIdRevocationTest {
                 .addSubkey(KeySpec.getBuilder(KeyType.XDH_LEGACY(XDHLegacySpec._X25519), KeyFlag.ENCRYPT_COMMS))
                 .addUserId("primary@key.id")
                 .addUserId("secondary@key.id")
-                .build();
+                .build()
+                .getPGPSecretKeyRing();
 
         secretKeys = PGPainless.modifyKeyRing(secretKeys)
                 .revokeUserId("secondary@key.id", new UnprotectedKeysProtector(),

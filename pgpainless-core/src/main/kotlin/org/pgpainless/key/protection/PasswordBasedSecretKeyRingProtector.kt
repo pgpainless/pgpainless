@@ -4,6 +4,7 @@
 
 package org.pgpainless.key.protection
 
+import org.bouncycastle.bcpg.KeyIdentifier
 import org.bouncycastle.openpgp.PGPKeyRing
 import org.bouncycastle.openpgp.PGPSecretKey
 import org.pgpainless.key.protection.passphrase_provider.SecretKeyPassphraseProvider
@@ -38,12 +39,12 @@ class PasswordBasedSecretKeyRingProtector : BaseSecretKeyRingProtector {
         ): PasswordBasedSecretKeyRingProtector {
             return object : SecretKeyPassphraseProvider {
 
-                    override fun getPassphraseFor(keyId: Long?): Passphrase? {
-                        return if (hasPassphrase(keyId)) passphrase else null
+                    override fun getPassphraseFor(keyIdentifier: KeyIdentifier): Passphrase? {
+                        return if (hasPassphrase(keyIdentifier)) passphrase else null
                     }
 
-                    override fun hasPassphrase(keyId: Long?): Boolean {
-                        return keyId != null && keyRing.getPublicKey(keyId) != null
+                    override fun hasPassphrase(keyIdentifier: KeyIdentifier): Boolean {
+                        return keyRing.getPublicKey(keyIdentifier) != null
                     }
                 }
                 .let { PasswordBasedSecretKeyRingProtector(it) }
@@ -51,20 +52,20 @@ class PasswordBasedSecretKeyRingProtector : BaseSecretKeyRingProtector {
 
         @JvmStatic
         fun forKey(key: PGPSecretKey, passphrase: Passphrase): PasswordBasedSecretKeyRingProtector =
-            forKeyId(key.publicKey.keyID, passphrase)
+            forKeyId(key.publicKey.keyIdentifier, passphrase)
 
         @JvmStatic
         fun forKeyId(
-            singleKeyId: Long,
+            singleKeyIdentifier: KeyIdentifier,
             passphrase: Passphrase
         ): PasswordBasedSecretKeyRingProtector {
             return object : SecretKeyPassphraseProvider {
-                    override fun getPassphraseFor(keyId: Long?): Passphrase? {
-                        return if (hasPassphrase(keyId)) passphrase else null
+                    override fun getPassphraseFor(keyIdentifier: KeyIdentifier): Passphrase? {
+                        return if (hasPassphrase(keyIdentifier)) passphrase else null
                     }
 
-                    override fun hasPassphrase(keyId: Long?): Boolean {
-                        return keyId == singleKeyId
+                    override fun hasPassphrase(keyIdentifier: KeyIdentifier): Boolean {
+                        return keyIdentifier.matches(singleKeyIdentifier)
                     }
                 }
                 .let { PasswordBasedSecretKeyRingProtector(it) }
