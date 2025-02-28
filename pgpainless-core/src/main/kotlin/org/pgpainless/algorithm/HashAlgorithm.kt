@@ -11,15 +11,19 @@ package org.pgpainless.algorithm
  */
 enum class HashAlgorithm(val algorithmId: Int, val algorithmName: String) {
 
+    // 0 is reserved
     @Deprecated("MD5 is deprecated") MD5(1, "MD5"),
     SHA1(2, "SHA1"),
     RIPEMD160(3, "RIPEMD160"),
+    // 4 - 7 are reserved
     SHA256(8, "SHA256"),
     SHA384(9, "SHA384"),
     SHA512(10, "SHA512"),
     SHA224(11, "SHA224"),
     SHA3_256(12, "SHA3-256"),
+    // 13 is reserved
     SHA3_512(14, "SHA3-512"),
+    // 100 - 110 are private / experimental
     ;
 
     companion object {
@@ -57,12 +61,14 @@ enum class HashAlgorithm(val algorithmId: Int, val algorithmName: String) {
          * for a list of algorithms and names.
          *
          * @param name text name
-         * @return enum value
+         * @return enum value or null
          */
         @JvmStatic
         fun fromName(name: String): HashAlgorithm? {
             return name.uppercase().let { algoName ->
+                // find value where it.algorithmName == ALGO-NAME
                 values().firstOrNull { it.algorithmName == algoName }
+                    // else, find value where it.algorithmName == ALGONAME
                     ?: values().firstOrNull { it.algorithmName == algoName.replace("-", "") }
             }
         }
