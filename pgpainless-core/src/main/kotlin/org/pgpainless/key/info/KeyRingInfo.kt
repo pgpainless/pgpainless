@@ -95,7 +95,7 @@ class KeyRingInfo(
         } else null
 
     /** OpenPGP key version. */
-    val version: Int = primaryKey.version
+    val version: OpenPGPKeyVersion = keys.getKeyVersion()
 
     /**
      * Return all [public component keys][OpenPGPComponentKey] of this key ring. The first key in
