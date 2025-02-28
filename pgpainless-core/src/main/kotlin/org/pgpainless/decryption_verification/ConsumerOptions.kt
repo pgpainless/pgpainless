@@ -417,6 +417,7 @@ class ConsumerOptions {
          * @param certificate certificate
          */
         @JvmOverloads
+        @Deprecated("Pass in an OpenPGPCertificate instead.")
         fun addCertificate(
             certificate: PGPPublicKeyRing,
             implementation: OpenPGPImplementation = PGPainless.getInstance().implementation
@@ -424,6 +425,11 @@ class ConsumerOptions {
             explicitCertificates.add(OpenPGPCertificate(certificate, implementation))
         }
 
+        /**
+         * Add a certificate as explicitly provided verification cert.
+         *
+         * @param certificate explicit verification cert
+         */
         fun addCertificate(certificate: OpenPGPCertificate) {
             explicitCertificates.add(certificate)
         }
@@ -445,14 +451,24 @@ class ConsumerOptions {
          * @param keyId key id
          * @return certificate
          */
+        @Deprecated("Pass in a KeyIdentifier instead.")
         fun getCertificate(keyId: Long): OpenPGPCertificate? {
             return getCertificate(KeyIdentifier(keyId))
         }
 
+        /**
+         * Return a certificate which contains a component key for the given [identifier]. This
+         * method first checks all explicitly provided verification certs and if no cert is found it
+         * consults the certificate stores.
+         *
+         * @param identifier key identifier
+         * @return certificate or null if no match is found
+         */
         fun getCertificate(identifier: KeyIdentifier): OpenPGPCertificate? {
             return explicitCertificates.firstOrNull { it.getKey(identifier) != null }
         }
 
+        /** Find a certificate containing the issuer component key for the given [signature]. */
         fun getCertificate(signature: PGPSignature): OpenPGPCertificate? =
             explicitCertificates.firstOrNull { it.getSigningKeyFor(signature) != null }
     }
