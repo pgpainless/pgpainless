@@ -68,8 +68,8 @@ enum class HashAlgorithm(val algorithmId: Int, val algorithmName: String) {
             return name.uppercase().let { algoName ->
                 // find value where it.algorithmName == ALGO-NAME
                 values().firstOrNull { it.algorithmName == algoName }
-                    // else, find value where it.algorithmName == ALGONAME
-                    ?: values().firstOrNull { it.algorithmName == algoName.replace("-", "") }
+                // else, find value where it.algorithmName == ALGONAME
+                ?: values().firstOrNull { it.algorithmName == algoName.replace("-", "") }
             }
         }
     }
