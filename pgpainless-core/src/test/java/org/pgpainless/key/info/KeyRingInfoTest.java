@@ -37,6 +37,7 @@ import org.pgpainless.algorithm.CompressionAlgorithm;
 import org.pgpainless.algorithm.EncryptionPurpose;
 import org.pgpainless.algorithm.HashAlgorithm;
 import org.pgpainless.algorithm.KeyFlag;
+import org.pgpainless.algorithm.OpenPGPKeyVersion;
 import org.pgpainless.algorithm.PublicKeyAlgorithm;
 import org.pgpainless.algorithm.SymmetricKeyAlgorithm;
 import org.pgpainless.key.OpenPgpV4Fingerprint;
@@ -87,8 +88,8 @@ public class KeyRingInfoTest {
         assertEquals(Collections.singletonList("<emil@email.user>"), pInfo.getUserIds());
         assertEquals(Collections.singletonList("emil@email.user"), sInfo.getEmailAddresses());
         assertEquals(Collections.singletonList("emil@email.user"), pInfo.getEmailAddresses());
-        assertEquals(4, sInfo.getVersion());
-        assertEquals(4, pInfo.getVersion());
+        assertEquals(OpenPGPKeyVersion.v4, sInfo.getVersion());
+        assertEquals(OpenPGPKeyVersion.v4, pInfo.getVersion());
 
         assertTrue(sInfo.isSecretKey());
         assertFalse(pInfo.isSecretKey());
