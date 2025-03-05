@@ -360,7 +360,8 @@ class SignatureSubpackets :
         when (version) {
             OpenPGPKeyVersion.v3 -> setIssuerKeyId(key.keyID)
             OpenPGPKeyVersion.v4 -> setIssuerFingerprintAndKeyId(key)
-            OpenPGPKeyVersion.librePgp, OpenPGPKeyVersion.v6 -> setIssuerFingerprint(key)
+            OpenPGPKeyVersion.librePgp,
+            OpenPGPKeyVersion.v6 -> setIssuerFingerprint(key)
         }
     }
 
