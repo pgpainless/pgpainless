@@ -112,6 +112,8 @@ interface SelfSignatureSubpackets : BaseSignatureSubpackets {
 
     fun setPreferredHashAlgorithms(algorithms: PreferredAlgorithms?): SelfSignatureSubpackets
 
+    fun setPreferredAEADCiphersuites(aeadAlgorithms: Set<AEADCipherMode>)
+
     fun addRevocationKey(revocationKey: PGPPublicKey): SelfSignatureSubpackets
 
     fun addRevocationKey(isCritical: Boolean, revocationKey: PGPPublicKey): SelfSignatureSubpackets

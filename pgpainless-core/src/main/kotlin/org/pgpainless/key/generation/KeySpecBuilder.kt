@@ -20,11 +20,12 @@ constructor(
 
     private val hashedSubpackets: SelfSignatureSubpackets = SignatureSubpackets()
     private val algorithmSuite: AlgorithmSuite = PGPainless.getPolicy().keyGenerationAlgorithmSuite
-    private var preferredCompressionAlgorithms: Set<CompressionAlgorithm> =
+    private var preferredCompressionAlgorithms: Set<CompressionAlgorithm>? =
         algorithmSuite.compressionAlgorithms
-    private var preferredHashAlgorithms: Set<HashAlgorithm> = algorithmSuite.hashAlgorithms
-    private var preferredSymmetricAlgorithms: Set<SymmetricKeyAlgorithm> =
+    private var preferredHashAlgorithms: Set<HashAlgorithm>? = algorithmSuite.hashAlgorithms
+    private var preferredSymmetricAlgorithms: Set<SymmetricKeyAlgorithm>? =
         algorithmSuite.symmetricKeyAlgorithms
+    private var preferredAEADAlgorithms: Set<AEADCipherMode>? = algorithmSuite.aeadAlgorithms
     private var keyCreationDate: Date? = null
 
     constructor(type: KeyType, vararg keyFlags: KeyFlag) : this(type, listOf(*keyFlags))
@@ -59,9 +60,10 @@ constructor(
         return hashedSubpackets
             .apply {
                 setKeyFlags(keyFlags)
-                setPreferredCompressionAlgorithms(preferredCompressionAlgorithms)
-                setPreferredHashAlgorithms(preferredHashAlgorithms)
-                setPreferredSymmetricKeyAlgorithms(preferredSymmetricAlgorithms)
+                preferredCompressionAlgorithms?.let { setPreferredCompressionAlgorithms(it) }
+                preferredHashAlgorithms?.let { setPreferredHashAlgorithms(it) }
+                preferredSymmetricAlgorithms?.let { setPreferredSymmetricKeyAlgorithms(it) }
+                preferredAEADAlgorithms?.let { setPreferredAEADCiphersuites(it) }
                 setFeatures(Feature.MODIFICATION_DETECTION)
             }
             .let { KeySpec(type, hashedSubpackets as SignatureSubpackets, false, keyCreationDate) }
