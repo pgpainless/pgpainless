@@ -4,6 +4,7 @@
 
 package org.pgpainless.key.generation
 
+import java.util.*
 import org.bouncycastle.openpgp.api.OpenPGPKey
 import org.pgpainless.PGPainless.Companion.buildKeyRing
 import org.pgpainless.algorithm.KeyFlag
@@ -15,7 +16,10 @@ import org.pgpainless.key.generation.type.rsa.RsaLength
 import org.pgpainless.key.generation.type.xdh_legacy.XDHLegacySpec
 import org.pgpainless.util.Passphrase
 
-class KeyRingTemplates(private val version: OpenPGPKeyVersion) {
+class KeyRingTemplates(
+    private val version: OpenPGPKeyVersion,
+    private val creationTime: Date = Date()
+) {
 
     /**
      * Generate an RSA OpenPGP key consisting of an RSA primary key used for certification, a
