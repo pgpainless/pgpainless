@@ -97,7 +97,7 @@ class KeyRingBuilder(
         val signatureGenerator = PGPSignatureGenerator(signer, certKey.publicKey)
 
         val hashedSubPacketGenerator = primaryKeySpec!!.subpacketGenerator
-        hashedSubPacketGenerator.setIssuerFingerprintAndKeyId(certKey.publicKey)
+        hashedSubPacketGenerator.setAppropriateIssuerInfo(certKey.publicKey, version)
         expirationDate?.let { hashedSubPacketGenerator.setKeyExpirationTime(certKey.publicKey, it) }
         if (userIds.isNotEmpty()) {
             hashedSubPacketGenerator.setPrimaryUserId()
