@@ -21,14 +21,17 @@ interface BaseSignatureSubpackets {
     fun setAppropriateIssuerInfo(key: PGPPublicKey): BaseSignatureSubpackets
 
     /**
-     * Depending on the given [version], use the appropriate means of setting issuer information.
-     * V6 signatures for example MUST NOT contain an [IssuerKeyID] packet.
+     * Depending on the given [version], use the appropriate means of setting issuer information. V6
+     * signatures for example MUST NOT contain an [IssuerKeyID] packet.
      *
      * @param key issuer key
      * @param version signature version
      * @return this
      */
-    fun setAppropriateIssuerInfo(key: PGPPublicKey, version: OpenPGPKeyVersion): BaseSignatureSubpackets
+    fun setAppropriateIssuerInfo(
+        key: PGPPublicKey,
+        version: OpenPGPKeyVersion
+    ): BaseSignatureSubpackets
 
     /**
      * Add both an [IssuerKeyID] and [IssuerFingerprint] subpacket pointing to the given key.

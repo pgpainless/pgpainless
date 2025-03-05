@@ -14,6 +14,7 @@ import org.bouncycastle.openpgp.api.OpenPGPApi
 import org.bouncycastle.openpgp.api.OpenPGPCertificate
 import org.bouncycastle.openpgp.api.OpenPGPImplementation
 import org.bouncycastle.openpgp.api.OpenPGPKey
+import org.bouncycastle.openpgp.api.OpenPGPKeyGenerator
 import org.bouncycastle.openpgp.api.OpenPGPKeyReader
 import org.bouncycastle.openpgp.api.bc.BcOpenPGPApi
 import org.pgpainless.algorithm.OpenPGPKeyVersion
@@ -43,8 +44,23 @@ class PGPainless(
         api = BcOpenPGPApi(implementation)
     }
 
-    fun generateKey(version: OpenPGPKeyVersion = OpenPGPKeyVersion.v4): KeyRingTemplates =
-        KeyRingTemplates(version)
+    @JvmOverloads
+    fun generateKey(
+        version: OpenPGPKeyVersion = OpenPGPKeyVersion.v4,
+        creationTime: Date = Date()
+    ): KeyRingTemplates = KeyRingTemplates(version, creationTime)
+
+    @JvmOverloads
+    fun buildKey(
+        version: OpenPGPKeyVersion = OpenPGPKeyVersion.v4,
+        creationTime: Date = Date()
+    ): OpenPGPKeyGenerator =
+        OpenPGPKeyGenerator(
+                implementation, version.numeric, version == OpenPGPKeyVersion.v6, creationTime)
+            .apply {
+                val genAlgs = algorithmPolicy.keyGenerationAlgorithmSuite
+                setDefaultFeatures(genAlgs.features.toSignatureSubpacketsFunction(true))
+            }
 
     fun readKey(): OpenPGPKeyReader = api.readKeyOrCertificate()
 
