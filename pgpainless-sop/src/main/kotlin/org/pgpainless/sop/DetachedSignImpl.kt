@@ -11,6 +11,7 @@ import org.bouncycastle.openpgp.PGPSecretKeyRing
 import org.bouncycastle.openpgp.PGPSignature
 import org.bouncycastle.util.io.Streams
 import org.pgpainless.PGPainless
+import org.pgpainless.algorithm.CompressionAlgorithm
 import org.pgpainless.algorithm.DocumentSignatureType
 import org.pgpainless.algorithm.HashAlgorithm
 import org.pgpainless.bouncycastle.extensions.openPgpFingerprint
@@ -57,7 +58,10 @@ class DetachedSignImpl : DetachedSign {
             val signingStream =
                 PGPainless.encryptAndOrSign()
                     .discardOutput()
-                    .withOptions(ProducerOptions.sign(signingOptions).setAsciiArmor(armor))
+                    .withOptions(
+                        ProducerOptions.sign(signingOptions)
+                            .setAsciiArmor(armor)
+                            .overrideCompressionAlgorithm(CompressionAlgorithm.UNCOMPRESSED))
 
             return object : ReadyWithResult<SigningResult>() {
                 override fun writeTo(outputStream: OutputStream): SigningResult {

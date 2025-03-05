@@ -11,6 +11,7 @@ import org.bouncycastle.openpgp.PGPException
 import org.bouncycastle.openpgp.PGPSecretKeyRing
 import org.bouncycastle.util.io.Streams
 import org.pgpainless.PGPainless
+import org.pgpainless.algorithm.CompressionAlgorithm
 import org.pgpainless.algorithm.DocumentSignatureType
 import org.pgpainless.algorithm.StreamEncoding
 import org.pgpainless.bouncycastle.extensions.openPgpFingerprint
@@ -72,6 +73,7 @@ class InlineSignImpl : InlineSign {
                         setAsciiArmor(armor)
                     }
                 }
+                overrideCompressionAlgorithm(CompressionAlgorithm.UNCOMPRESSED)
             }
 
         return object : Ready() {
