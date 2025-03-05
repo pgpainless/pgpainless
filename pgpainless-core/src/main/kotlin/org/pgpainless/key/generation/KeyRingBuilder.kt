@@ -5,9 +5,10 @@
 package org.pgpainless.key.generation
 
 import java.io.IOException
-import java.security.KeyPairGenerator
 import java.util.*
 import org.bouncycastle.openpgp.*
+import org.bouncycastle.openpgp.api.OpenPGPImplementation
+import org.bouncycastle.openpgp.api.OpenPGPKey
 import org.bouncycastle.openpgp.operator.PBESecretKeyDecryptor
 import org.bouncycastle.openpgp.operator.PBESecretKeyEncryptor
 import org.bouncycastle.openpgp.operator.PGPContentSignerBuilder
@@ -15,17 +16,20 @@ import org.bouncycastle.openpgp.operator.PGPDigestCalculator
 import org.bouncycastle.util.Strings
 import org.pgpainless.PGPainless
 import org.pgpainless.algorithm.KeyFlag
+import org.pgpainless.algorithm.OpenPGPKeyVersion
 import org.pgpainless.algorithm.SignatureType
 import org.pgpainless.bouncycastle.extensions.unlock
 import org.pgpainless.implementation.ImplementationFactory
 import org.pgpainless.policy.Policy
-import org.pgpainless.provider.ProviderFactory
 import org.pgpainless.signature.subpackets.SelfSignatureSubpackets
 import org.pgpainless.signature.subpackets.SignatureSubpackets
 import org.pgpainless.signature.subpackets.SignatureSubpacketsHelper
 import org.pgpainless.util.Passphrase
 
-class KeyRingBuilder : KeyRingBuilderInterface<KeyRingBuilder> {
+class KeyRingBuilder(
+    private val version: OpenPGPKeyVersion,
+    private val implementation: OpenPGPImplementation
+) : KeyRingBuilderInterface<KeyRingBuilder> {
 
     private var primaryKeySpec: KeySpec? = null
     private val subKeySpecs = mutableListOf<KeySpec>()
@@ -52,12 +56,8 @@ class KeyRingBuilder : KeyRingBuilderInterface<KeyRingBuilder> {
         addUserId(Strings.fromUTF8ByteArray(userId))
 
     override fun setExpirationDate(expirationDate: Date?): KeyRingBuilder = apply {
-        if (expirationDate == null) {
-            this.expirationDate = null
-            return@apply
-        }
         this.expirationDate =
-            expirationDate.let {
+            expirationDate?.let {
                 require(Date() < expirationDate) { "Expiration date must be in the future." }
                 expirationDate
             }
@@ -83,7 +83,7 @@ class KeyRingBuilder : KeyRingBuilderInterface<KeyRingBuilder> {
 
     private fun keyIsCertificationCapable(keySpec: KeySpec) = keySpec.keyType.canCertify
 
-    override fun build(): PGPSecretKeyRing {
+    override fun build(): OpenPGPKey {
         val keyFingerprintCalculator = ImplementationFactory.getInstance().v4FingerprintCalculator
         val secretKeyEncryptor = buildSecretKeyEncryptor(keyFingerprintCalculator)
         val secretKeyDecryptor = buildSecretKeyDecryptor()
@@ -92,12 +92,12 @@ class KeyRingBuilder : KeyRingBuilderInterface<KeyRingBuilder> {
 
         // generate primary key
         requireNotNull(primaryKeySpec) { "Primary Key spec required." }
-        val certKey = generateKeyPair(primaryKeySpec!!)
+        val certKey = generateKeyPair(primaryKeySpec!!, version)
         val signer = buildContentSigner(certKey)
-        val signatureGenerator = PGPSignatureGenerator(signer)
+        val signatureGenerator = PGPSignatureGenerator(signer, certKey.publicKey)
 
         val hashedSubPacketGenerator = primaryKeySpec!!.subpacketGenerator
-        hashedSubPacketGenerator.setIssuerFingerprintAndKeyId(certKey.publicKey)
+        hashedSubPacketGenerator.setAppropriateIssuerInfo(certKey.publicKey, version)
         expirationDate?.let { hashedSubPacketGenerator.setKeyExpirationTime(certKey.publicKey, it) }
         if (userIds.isNotEmpty()) {
             hashedSubPacketGenerator.setPrimaryUserId()
@@ -171,12 +171,13 @@ class KeyRingBuilder : KeyRingBuilderInterface<KeyRingBuilder> {
         while (secretKeys.hasNext()) {
             secretKeyList.add(secretKeys.next())
         }
-        return PGPSecretKeyRing(secretKeyList)
+        val pgpSecretKeyRing = PGPSecretKeyRing(secretKeyList)
+        return OpenPGPKey(pgpSecretKeyRing, implementation)
     }
 
     private fun addSubKeys(primaryKey: PGPKeyPair, ringGenerator: PGPKeyRingGenerator) {
         for (subKeySpec in subKeySpecs) {
-            val subKey = generateKeyPair(subKeySpec)
+            val subKey = generateKeyPair(subKeySpec, version)
             if (subKeySpec.isInheritedSubPackets) {
                 ringGenerator.addSubKey(subKey)
             } else {
@@ -206,7 +207,8 @@ class KeyRingBuilder : KeyRingBuilderInterface<KeyRingBuilder> {
             return hashedSubpackets
         }
 
-        val bindingSignatureGenerator = PGPSignatureGenerator(buildContentSigner(subKey))
+        val bindingSignatureGenerator =
+            PGPSignatureGenerator(buildContentSigner(subKey), subKey.publicKey)
         bindingSignatureGenerator.init(SignatureType.PRIMARYKEY_BINDING.code, subKey.privateKey)
         val primaryKeyBindingSig =
             bindingSignatureGenerator.generateCertification(primaryKey.publicKey, subKey.publicKey)
@@ -250,19 +252,15 @@ class KeyRingBuilder : KeyRingBuilderInterface<KeyRingBuilder> {
         @JvmOverloads
         fun generateKeyPair(
             spec: KeySpec,
+            version: OpenPGPKeyVersion,
             creationTime: Date = spec.keyCreationDate ?: Date()
         ): PGPKeyPair {
-            spec.keyType.let { type ->
-                // Create raw Key Pair
-                val keyPair =
-                    KeyPairGenerator.getInstance(type.name, ProviderFactory.provider)
-                        .also { it.initialize(type.algorithmSpec) }
-                        .generateKeyPair()
+            val gen =
+                OpenPGPImplementation.getInstance()
+                    .pgpKeyPairGeneratorProvider()
+                    .get(version.numeric, creationTime)
 
-                // Form PGP Key Pair
-                return ImplementationFactory.getInstance()
-                    .getPGPKeyPair(type.algorithm, keyPair, creationTime)
-            }
+            return spec.keyType.generateKeyPair(gen)
         }
     }
 }

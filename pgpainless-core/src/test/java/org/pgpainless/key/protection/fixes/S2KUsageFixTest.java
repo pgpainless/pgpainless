@@ -11,8 +11,6 @@ import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
-import java.security.InvalidAlgorithmParameterException;
-import java.security.NoSuchAlgorithmException;
 
 import org.bouncycastle.bcpg.SecretKeyPacket;
 import org.bouncycastle.openpgp.PGPException;
@@ -68,8 +66,9 @@ public class S2KUsageFixTest {
 
     @Test
     public void verifyOutFixInChangePassphraseWorks()
-            throws PGPException, InvalidAlgorithmParameterException, NoSuchAlgorithmException {
-        PGPSecretKeyRing before = PGPainless.generateKeyRing().modernKeyRing("Alice", "before");
+            throws PGPException {
+        PGPSecretKeyRing before = PGPainless.generateKeyRing().modernKeyRing("Alice", "before")
+                .getPGPSecretKeyRing();
         for (PGPSecretKey key : before) {
             assertEquals(SecretKeyPacket.USAGE_SHA1, key.getS2KUsage());
         }

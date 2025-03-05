@@ -9,8 +9,6 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
-import java.security.InvalidAlgorithmParameterException;
-import java.security.NoSuchAlgorithmException;
 import java.util.Collections;
 
 import org.bouncycastle.bcpg.HashAlgorithmTags;
@@ -104,8 +102,9 @@ public class WeirdKeys {
 
     @Test
     public void generateCertAndTestWithNonUTF8UserId()
-            throws PGPException, InvalidAlgorithmParameterException, NoSuchAlgorithmException, IOException {
-        PGPSecretKeyRing nakedKey = PGPainless.generateKeyRing().modernKeyRing(null);
+            throws PGPException, IOException {
+        PGPSecretKeyRing nakedKey = PGPainless.generateKeyRing().modernKeyRing(null)
+                .getPGPSecretKeyRing();
         PGPPublicKey pubKey = nakedKey.getPublicKey();
         PGPSecretKey secKey = nakedKey.getSecretKey();
         PGPPrivateKey privKey = UnlockSecretKey.unlockSecretKey(secKey, Passphrase.emptyPassphrase());

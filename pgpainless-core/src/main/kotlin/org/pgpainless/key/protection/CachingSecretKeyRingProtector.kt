@@ -4,9 +4,12 @@
 
 package org.pgpainless.key.protection
 
-import openpgp.openPgpKeyId
+import org.bouncycastle.bcpg.KeyIdentifier
 import org.bouncycastle.openpgp.PGPKeyRing
 import org.bouncycastle.openpgp.PGPPublicKey
+import org.bouncycastle.openpgp.api.OpenPGPKey
+import org.bouncycastle.openpgp.operator.PBESecretKeyDecryptor
+import org.bouncycastle.openpgp.operator.PBESecretKeyEncryptor
 import org.pgpainless.key.OpenPgpFingerprint
 import org.pgpainless.key.protection.passphrase_provider.SecretKeyPassphraseProvider
 import org.pgpainless.util.Passphrase
@@ -21,7 +24,7 @@ import org.pgpainless.util.Passphrase
  */
 class CachingSecretKeyRingProtector : SecretKeyRingProtector, SecretKeyPassphraseProvider {
 
-    private val cache: MutableMap<Long?, Passphrase>
+    private val cache: MutableMap<KeyIdentifier?, Passphrase>
     private val protector: SecretKeyRingProtector
     private val provider: SecretKeyPassphraseProvider?
 
@@ -30,12 +33,12 @@ class CachingSecretKeyRingProtector : SecretKeyRingProtector, SecretKeyPassphras
     constructor(
         missingPassphraseCallback: SecretKeyPassphraseProvider?
     ) : this(
-        mapOf<Long, Passphrase>(),
+        mapOf<KeyIdentifier, Passphrase>(),
         KeyRingProtectionSettings.secureDefaultSettings(),
         missingPassphraseCallback)
 
     constructor(
-        passphrases: Map<Long, Passphrase>,
+        passphrases: Map<KeyIdentifier, Passphrase>,
         protectionSettings: KeyRingProtectionSettings,
         missingPassphraseCallback: SecretKeyPassphraseProvider?
     ) {
@@ -43,6 +46,10 @@ class CachingSecretKeyRingProtector : SecretKeyRingProtector, SecretKeyPassphras
         this.protector = PasswordBasedSecretKeyRingProtector(protectionSettings, this)
         this.provider = missingPassphraseCallback
     }
+
+    @Deprecated("Pass KeyIdentifier instead.")
+    fun addPassphrase(keyId: Long, passphrase: Passphrase) =
+        addPassphrase(KeyIdentifier(keyId), passphrase)
 
     /**
      * Add a passphrase to the cache. If the cache already contains a passphrase for the given
@@ -53,16 +60,20 @@ class CachingSecretKeyRingProtector : SecretKeyRingProtector, SecretKeyPassphras
      * If you can ensure that there will be no key-id clash, and you want to replace the passphrase,
      * you can use [replacePassphrase] to replace the passphrase.
      *
-     * @param keyId id of the key
+     * @param keyIdentifier id of the key
      * @param passphrase passphrase
      */
-    fun addPassphrase(keyId: Long, passphrase: Passphrase) = apply {
-        require(!cache.containsKey(keyId)) {
-            "The cache already holds a passphrase for ID ${keyId.openPgpKeyId()}.\n" +
+    fun addPassphrase(keyIdentifier: KeyIdentifier, passphrase: Passphrase) = apply {
+        require(!cache.containsKey(keyIdentifier)) {
+            "The cache already holds a passphrase for ID ${keyIdentifier}.\n" +
                 "If you want to replace this passphrase, use replacePassphrase(Long, Passphrase) instead."
         }
-        cache[keyId] = passphrase
+        cache[keyIdentifier] = passphrase
     }
+
+    @Deprecated("Pass KeyIdentifier instead.")
+    fun replacePassphrase(keyId: Long, passphrase: Passphrase) =
+        replacePassphrase(KeyIdentifier(keyId), passphrase)
 
     /**
      * Replace the passphrase for the given key-id in the cache.
@@ -70,7 +81,9 @@ class CachingSecretKeyRingProtector : SecretKeyRingProtector, SecretKeyPassphras
      * @param keyId keyId
      * @param passphrase passphrase
      */
-    fun replacePassphrase(keyId: Long, passphrase: Passphrase) = apply { cache[keyId] = passphrase }
+    fun replacePassphrase(keyId: KeyIdentifier, passphrase: Passphrase) = apply {
+        cache[keyId] = passphrase
+    }
 
     /**
      * Remember the given passphrase for all keys in the given key ring. If for the key-id of any
@@ -91,14 +104,14 @@ class CachingSecretKeyRingProtector : SecretKeyRingProtector, SecretKeyPassphras
     fun addPassphrase(keyRing: PGPKeyRing, passphrase: Passphrase) = apply {
         // check for existing passphrases before doing anything
         keyRing.publicKeys.forEach {
-            require(!cache.containsKey(it.keyID)) {
-                "The cache already holds a passphrase for the key with ID ${it.keyID.openPgpKeyId()}.\n" +
+            require(!cache.containsKey(it.keyIdentifier)) {
+                "The cache already holds a passphrase for the key with ID ${it.keyIdentifier}.\n" +
                     "If you want to replace the passphrase, use replacePassphrase(PGPKeyRing, Passphrase) instead."
             }
         }
 
         // only then instert
-        keyRing.publicKeys.forEach { cache[it.keyID] = passphrase }
+        keyRing.publicKeys.forEach { cache[it.keyIdentifier] = passphrase }
     }
 
     /**
@@ -108,7 +121,7 @@ class CachingSecretKeyRingProtector : SecretKeyRingProtector, SecretKeyPassphras
      * @param passphrase passphrase
      */
     fun replacePassphrase(keyRing: PGPKeyRing, passphrase: Passphrase) = apply {
-        keyRing.publicKeys.forEach { cache[it.keyID] = passphrase }
+        keyRing.publicKeys.forEach { cache[it.keyIdentifier] = passphrase }
     }
 
     /**
@@ -118,7 +131,7 @@ class CachingSecretKeyRingProtector : SecretKeyRingProtector, SecretKeyPassphras
      * @param passphrase passphrase
      */
     fun addPassphrase(key: PGPPublicKey, passphrase: Passphrase) =
-        addPassphrase(key.keyID, passphrase)
+        addPassphrase(key.keyIdentifier, passphrase)
 
     /**
      * Remember the given passphrase for the key with the given fingerprint.
@@ -127,14 +140,17 @@ class CachingSecretKeyRingProtector : SecretKeyRingProtector, SecretKeyPassphras
      * @param passphrase passphrase
      */
     fun addPassphrase(fingerprint: OpenPgpFingerprint, passphrase: Passphrase) =
-        addPassphrase(fingerprint.keyId, passphrase)
+        addPassphrase(fingerprint.keyIdentifier, passphrase)
+
+    @Deprecated("Pass KeyIdentifier instead.")
+    fun forgetPassphrase(keyId: Long) = forgetPassphrase(KeyIdentifier(keyId))
 
     /**
      * Remove a passphrase from the cache. The passphrase will be cleared and then removed.
      *
      * @param keyId id of the key
      */
-    fun forgetPassphrase(keyId: Long) = apply { cache.remove(keyId)?.clear() }
+    fun forgetPassphrase(keyId: KeyIdentifier) = apply { cache.remove(keyId)?.clear() }
 
     /**
      * Forget the passphrase to all keys in the provided key ring.
@@ -150,18 +166,27 @@ class CachingSecretKeyRingProtector : SecretKeyRingProtector, SecretKeyPassphras
      *
      * @param key key
      */
-    fun forgetPassphrase(key: PGPPublicKey) = apply { forgetPassphrase(key.keyID) }
+    fun forgetPassphrase(key: PGPPublicKey) = apply { forgetPassphrase(key.keyIdentifier) }
 
-    override fun getPassphraseFor(keyId: Long?): Passphrase? {
-        return if (hasPassphrase(keyId)) cache[keyId]
-        else provider?.getPassphraseFor(keyId)?.also { cache[keyId] = it }
+    override fun getPassphraseFor(keyIdentifier: KeyIdentifier): Passphrase? {
+        return if (hasPassphrase(keyIdentifier)) cache[keyIdentifier]
+        else provider?.getPassphraseFor(keyIdentifier)?.also { cache[keyIdentifier] = it }
     }
 
-    override fun hasPassphrase(keyId: Long?) = cache[keyId]?.isValid ?: false
+    override fun hasPassphraseFor(keyIdentifier: KeyIdentifier): Boolean {
+        return hasPassphrase(keyIdentifier)
+    }
 
-    override fun hasPassphraseFor(keyId: Long) = hasPassphrase(keyId)
+    override fun hasPassphrase(keyIdentifier: KeyIdentifier): Boolean {
+        return cache[keyIdentifier]?.isValid ?: false
+    }
 
-    override fun getDecryptor(keyId: Long) = protector.getDecryptor(keyId)
+    override fun getDecryptor(keyIdentifier: KeyIdentifier): PBESecretKeyDecryptor? =
+        protector.getDecryptor(keyIdentifier)
 
-    override fun getEncryptor(keyId: Long) = protector.getEncryptor(keyId)
+    override fun getEncryptor(keyIdentifier: KeyIdentifier): PBESecretKeyEncryptor? =
+        protector.getEncryptor(keyIdentifier)
+
+    override fun getKeyPassword(p0: OpenPGPKey.OpenPGPSecretKey): CharArray? =
+        getPassphraseFor(p0.keyIdentifier)?.getChars()
 }

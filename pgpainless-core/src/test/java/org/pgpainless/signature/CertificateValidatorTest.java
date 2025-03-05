@@ -39,7 +39,7 @@ public class CertificateValidatorTest {
      */
     @TestTemplate
     @ExtendWith(TestAllImplementations.class)
-    public void testPrimaryKeySignsAndIsHardRevokedUnknown() throws IOException, PGPException {
+    public void testPrimaryKeySignsAndIsHardRevokedUnknown() throws IOException {
 
         String key = "-----BEGIN PGP ARMORED FILE-----\n" +
                 "Comment: ASCII Armor added by openpgp-interoperability-test-suite\n" +
@@ -190,7 +190,7 @@ public class CertificateValidatorTest {
      */
     @TestTemplate
     @ExtendWith(TestAllImplementations.class)
-    public void testSubkeySignsPrimaryKeyIsHardRevokedUnknown() throws IOException, PGPException {
+    public void testSubkeySignsPrimaryKeyIsHardRevokedUnknown() throws IOException {
 
         String key = "-----BEGIN PGP ARMORED FILE-----\n" +
                 "Comment: ASCII Armor added by openpgp-interoperability-test-suite\n" +
@@ -342,7 +342,7 @@ public class CertificateValidatorTest {
      */
     @TestTemplate
     @ExtendWith(TestAllImplementations.class)
-    public void testSubkeySignsAndIsHardRevokedUnknown() throws IOException, PGPException {
+    public void testSubkeySignsAndIsHardRevokedUnknown() throws IOException {
 
         String keyWithHardRev = "-----BEGIN PGP ARMORED FILE-----\n" +
                 "Comment: ASCII Armor added by openpgp-interoperability-test-suite\n" +
@@ -494,7 +494,7 @@ public class CertificateValidatorTest {
      */
     @TestTemplate
     @ExtendWith(TestAllImplementations.class)
-    public void testPrimaryKeySignsAndIsSoftRevokedSuperseded() throws IOException, PGPException {
+    public void testPrimaryKeySignsAndIsSoftRevokedSuperseded() throws IOException {
 
         String keyWithSoftRev = "-----BEGIN PGP ARMORED FILE-----\n" +
                 "Comment: ASCII Armor added by openpgp-interoperability-test-suite\n" +
@@ -651,7 +651,7 @@ public class CertificateValidatorTest {
      */
     @TestTemplate
     @ExtendWith(TestAllImplementations.class)
-    public void testSubkeySignsPrimaryKeyIsSoftRevokedSuperseded() throws IOException, PGPException {
+    public void testSubkeySignsPrimaryKeyIsSoftRevokedSuperseded() throws IOException {
 
         String key = "-----BEGIN PGP ARMORED FILE-----\n" +
                 "Comment: ASCII Armor added by openpgp-interoperability-test-suite\n" +
@@ -804,7 +804,7 @@ public class CertificateValidatorTest {
      */
     @TestTemplate
     @ExtendWith(TestAllImplementations.class)
-    public void testPrimaryKeySignsAndIsSoftRevokedRetired() throws IOException, PGPException {
+    public void testPrimaryKeySignsAndIsSoftRevokedRetired() throws IOException {
 
         String key = "-----BEGIN PGP ARMORED FILE-----\n" +
                 "Comment: ASCII Armor added by openpgp-interoperability-test-suite\n" +
@@ -957,7 +957,7 @@ public class CertificateValidatorTest {
      */
     @TestTemplate
     @ExtendWith(TestAllImplementations.class)
-    public void testTemporaryValidity() throws IOException, PGPException {
+    public void testTemporaryValidity() throws IOException {
 
         String keyA = "-----BEGIN PGP PUBLIC KEY BLOCK-----\n" +
                 "Comment: D1A6 6E1A 23B1 82C9 980F  788C FBFC C82A 015E 7330\n" +

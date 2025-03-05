@@ -7,14 +7,14 @@ package org.pgpainless.key.protection;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertNull;
 
-import java.security.InvalidAlgorithmParameterException;
-import java.security.NoSuchAlgorithmException;
 import java.util.Iterator;
 import javax.annotation.Nullable;
 
+import org.bouncycastle.bcpg.KeyIdentifier;
 import org.bouncycastle.openpgp.PGPException;
 import org.bouncycastle.openpgp.PGPPublicKey;
 import org.bouncycastle.openpgp.PGPSecretKeyRing;
+import org.jetbrains.annotations.NotNull;
 import org.junit.jupiter.api.Test;
 import org.pgpainless.PGPainless;
 import org.pgpainless.key.TestKeys;
@@ -31,8 +31,8 @@ public class PassphraseProtectedKeyTest {
             new SecretKeyPassphraseProvider() {
                 @Nullable
                 @Override
-                public Passphrase getPassphraseFor(Long keyId) {
-                    if (keyId == TestKeys.CRYPTIE_KEY_ID) {
+                public Passphrase getPassphraseFor(@NotNull KeyIdentifier keyIdentifier) {
+                    if (keyIdentifier.getKeyId() == TestKeys.CRYPTIE_KEY_ID) {
                         return new Passphrase(TestKeys.CRYPTIE_PASSWORD.toCharArray());
                     } else {
                         return null;
@@ -40,8 +40,8 @@ public class PassphraseProtectedKeyTest {
                 }
 
                 @Override
-                public boolean hasPassphrase(Long keyId) {
-                    return keyId == TestKeys.CRYPTIE_KEY_ID;
+                public boolean hasPassphrase(@NotNull KeyIdentifier keyIdentifier) {
+                    return keyIdentifier.getKeyId() == TestKeys.CRYPTIE_KEY_ID;
                 }
             });
 
@@ -58,8 +58,9 @@ public class PassphraseProtectedKeyTest {
     }
 
     @Test
-    public void testReturnsNonNullDecryptorForSubkeys() throws InvalidAlgorithmParameterException, NoSuchAlgorithmException, PGPException {
-        PGPSecretKeyRing secretKeys = PGPainless.generateKeyRing().modernKeyRing("alice", "passphrase");
+    public void testReturnsNonNullDecryptorForSubkeys() throws PGPException {
+        PGPSecretKeyRing secretKeys = PGPainless.generateKeyRing().modernKeyRing("alice", "passphrase")
+                .getPGPSecretKeyRing();
         SecretKeyRingProtector protector = PasswordBasedSecretKeyRingProtector.forKey(secretKeys, Passphrase.fromPassword("passphrase"));
         for (Iterator<PGPPublicKey> it = secretKeys.getPublicKeys(); it.hasNext(); ) {
             PGPPublicKey subkey = it.next();

@@ -11,8 +11,6 @@ import static org.junit.jupiter.api.Assertions.assertThrows;
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
-import java.security.InvalidAlgorithmParameterException;
-import java.security.NoSuchAlgorithmException;
 import java.util.Iterator;
 
 import org.bouncycastle.openpgp.PGPException;
@@ -37,9 +35,10 @@ import org.pgpainless.util.Passphrase;
 
 public class ChangeSecretKeyRingPassphraseTest {
 
-    private final PGPSecretKeyRing keyRing = PGPainless.generateKeyRing().simpleEcKeyRing("password@encryp.ted", "weakPassphrase");
+    private final PGPSecretKeyRing keyRing = PGPainless.generateKeyRing().simpleEcKeyRing("password@encryp.ted", "weakPassphrase")
+            .getPGPSecretKeyRing();
 
-    public ChangeSecretKeyRingPassphraseTest() throws InvalidAlgorithmParameterException, NoSuchAlgorithmException, PGPException {
+    public ChangeSecretKeyRingPassphraseTest() {
     }
 
     @TestTemplate
@@ -98,7 +97,7 @@ public class ChangeSecretKeyRingPassphraseTest {
         extractPrivateKey(subKey, Passphrase.fromPassword("weakPassphrase"));
 
         PGPSecretKeyRing secretKeys = PGPainless.modifyKeyRing(keyRing)
-                .changeSubKeyPassphraseFromOldPassphrase(subKey.getPublicKey().getKeyID(),
+                .changeSubKeyPassphraseFromOldPassphrase(subKey.getPublicKey().getKeyIdentifier(),
                         Passphrase.fromPassword("weakPassphrase"))
                 .withSecureDefaultSettings()
                 .toNewPassphrase(Passphrase.fromPassword("subKeyPassphrase"))
@@ -131,7 +130,7 @@ public class ChangeSecretKeyRingPassphraseTest {
         PGPSecretKey subKey = keys.next();
 
         PGPSecretKeyRing secretKeys = PGPainless.modifyKeyRing(keyRing)
-                .changeSubKeyPassphraseFromOldPassphrase(subKey.getKeyID(), Passphrase.fromPassword("weakPassphrase"))
+                .changeSubKeyPassphraseFromOldPassphrase(subKey.getKeyIdentifier(), Passphrase.fromPassword("weakPassphrase"))
                 .withSecureDefaultSettings()
                 .toNoPassphrase()
                 .done();

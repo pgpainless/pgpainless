@@ -9,6 +9,8 @@ import org.bouncycastle.openpgp.PGPKeyRing
 import org.bouncycastle.openpgp.PGPOnePassSignature
 import org.bouncycastle.openpgp.PGPPublicKey
 import org.bouncycastle.openpgp.PGPSignature
+import org.bouncycastle.openpgp.api.OpenPGPCertificate
+import org.bouncycastle.openpgp.api.OpenPGPImplementation
 import org.pgpainless.PGPainless
 import org.pgpainless.key.OpenPgpFingerprint
 import org.pgpainless.key.SubkeyIdentifier
@@ -72,3 +74,10 @@ val PGPKeyRing.openPgpFingerprint: OpenPgpFingerprint
 
 /** Return this OpenPGP key as an ASCII armored String. */
 fun PGPKeyRing.toAsciiArmor(): String = PGPainless.asciiArmor(this)
+
+@Deprecated("Use toOpenPGPCertificate(implementation) instead.")
+fun PGPKeyRing.toOpenPGPCertificate(): OpenPGPCertificate =
+    toOpenPGPCertificate(PGPainless.getInstance().implementation)
+
+fun PGPKeyRing.toOpenPGPCertificate(implementation: OpenPGPImplementation): OpenPGPCertificate =
+    OpenPGPCertificate(this, implementation)
