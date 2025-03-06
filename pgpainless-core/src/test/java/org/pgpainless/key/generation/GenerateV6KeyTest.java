@@ -96,6 +96,8 @@ public class GenerateV6KeyTest {
         OpenPGPCertificate certificate = key.toCertificate();
         assertFalse(certificate.isSecretKey());
 
+        // CHECKSTYLE:OFF
         System.out.println(certificate.toAsciiArmoredString());
+        // CHECKSTYLE:ON
     }
 }
