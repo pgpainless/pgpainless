@@ -42,6 +42,7 @@ class SignatureSubpackets :
     var preferredCompressionAlgorithmsSubpacket: PreferredAlgorithms? = null
     var preferredSymmetricKeyAlgorithmsSubpacket: PreferredAlgorithms? = null
     var preferredHashAlgorithmsSubpacket: PreferredAlgorithms? = null
+    var preferredAEADCiphersuites: List<AEADCipherMode>? = null
     val embeddedSignatureSubpackets: List<EmbeddedSignature> = mutableListOf()
     var signerUserIdSubpacket: SignerUserID? = null
     var keyExpirationTimeSubpacket: KeyExpirationTime? = null
@@ -311,6 +312,10 @@ class SignatureSubpackets :
                 }
             this.preferredHashAlgorithmsSubpacket = algorithms
         }
+
+    override fun setPreferredAEADCiphersuites(
+        aeadAlgorithms: Set<AEADCipherMode>
+    ): SignatureSubpackets = apply { this.preferredAEADCiphersuites = aeadAlgorithms.toList() }
 
     override fun addRevocationKey(revocationKey: PGPPublicKey): SignatureSubpackets = apply {
         addRevocationKey(true, revocationKey)
