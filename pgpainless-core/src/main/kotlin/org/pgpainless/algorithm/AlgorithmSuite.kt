@@ -4,8 +4,6 @@
 
 package org.pgpainless.algorithm
 
-import org.bouncycastle.openpgp.api.SignatureSubpacketsFunction
-
 class AlgorithmSuite(
     symmetricKeyAlgorithms: List<SymmetricKeyAlgorithm>?,
     hashAlgorithms: List<HashAlgorithm>?,
@@ -18,16 +16,7 @@ class AlgorithmSuite(
     val hashAlgorithms: Set<HashAlgorithm>? = hashAlgorithms?.toSet()
     val compressionAlgorithms: Set<CompressionAlgorithm>? = compressionAlgorithms?.toSet()
     val aeadAlgorithms: Set<AEADCipherMode>? = aeadAlgorithms?.toSet()
-    val features: FeatureSet = FeatureSet(features.toSet())
-
-    class FeatureSet(val features: Set<Feature>) {
-        fun toSignatureSubpacketsFunction(critical: Boolean = true): SignatureSubpacketsFunction {
-            return SignatureSubpacketsFunction {
-                val b = Feature.toBitmask(*features.toTypedArray())
-                it.apply { setFeature(critical, b) }
-            }
-        }
-    }
+    val features: Set<Feature> = features.toSet()
 
     companion object {
 

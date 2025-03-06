@@ -19,6 +19,7 @@ import org.bouncycastle.openpgp.api.OpenPGPKeyReader
 import org.bouncycastle.openpgp.api.bc.BcOpenPGPApi
 import org.pgpainless.algorithm.OpenPGPKeyVersion
 import org.pgpainless.bouncycastle.PolicyAdapter
+import org.pgpainless.bouncycastle.helpers.SignatureSubpacketsFunctionHelper
 import org.pgpainless.decryption_verification.DecryptionBuilder
 import org.pgpainless.encryption_signing.EncryptionBuilder
 import org.pgpainless.key.certification.CertifyCertificate
@@ -59,7 +60,21 @@ class PGPainless(
                 implementation, version.numeric, version == OpenPGPKeyVersion.v6, creationTime)
             .apply {
                 val genAlgs = algorithmPolicy.keyGenerationAlgorithmSuite
-                setDefaultFeatures(genAlgs.features.toSignatureSubpacketsFunction(true))
+                // Set default algorithm preferences from AlgorithmSuite
+                setDefaultFeatures(
+                    SignatureSubpacketsFunctionHelper.applyFeatures(true, genAlgs.features))
+                setDefaultSymmetricKeyPreferences(
+                    SignatureSubpacketsFunctionHelper.applySymmetricAlgorithmPreferences(
+                        true, genAlgs.symmetricKeyAlgorithms))
+                setDefaultHashAlgorithmPreferences(
+                    SignatureSubpacketsFunctionHelper.applyHashAlgorithmPreferences(
+                        true, genAlgs.hashAlgorithms))
+                setDefaultCompressionAlgorithmPreferences(
+                    SignatureSubpacketsFunctionHelper.applyCompressionAlgorithmPreferences(
+                        true, genAlgs.compressionAlgorithms))
+                setDefaultAeadAlgorithmPreferences(
+                    SignatureSubpacketsFunctionHelper.applyAEADAlgorithmSuites(
+                        false, genAlgs.aeadAlgorithms))
             }
 
     fun readKey(): OpenPGPKeyReader = api.readKeyOrCertificate()
