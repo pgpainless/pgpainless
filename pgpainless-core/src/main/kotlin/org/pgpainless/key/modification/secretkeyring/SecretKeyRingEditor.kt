@@ -90,9 +90,9 @@ class SecretKeyRingEditor(var key: OpenPGPKey, override val referenceTime: Date 
             }
         builder.hashedSubpackets.apply {
             setKeyFlags(info.getKeyFlagsOf(primaryKey.keyID))
-            setPreferredHashAlgorithms(hashAlgorithmPreferences)
-            setPreferredSymmetricKeyAlgorithms(symmetricKeyAlgorithmPreferences)
-            setPreferredCompressionAlgorithms(compressionAlgorithmPreferences)
+            hashAlgorithmPreferences?.let { setPreferredHashAlgorithms(it) }
+            symmetricKeyAlgorithmPreferences?.let { setPreferredSymmetricKeyAlgorithms(it) }
+            compressionAlgorithmPreferences?.let { setPreferredCompressionAlgorithms(it) }
             setFeatures(Feature.MODIFICATION_DETECTION)
         }
         builder.applyCallback(callback)
