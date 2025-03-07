@@ -305,7 +305,7 @@ class Policy(
             @JvmStatic
             fun anyCompressionAlgorithmPolicy() =
                 CompressionAlgorithmPolicy(
-                    CompressionAlgorithm.ZIP,
+                    CompressionAlgorithm.UNCOMPRESSED,
                     listOf(
                         CompressionAlgorithm.UNCOMPRESSED,
                         CompressionAlgorithm.ZIP,
