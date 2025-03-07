@@ -7,7 +7,7 @@ package org.pgpainless.decryption_verification
 import java.io.IOException
 import java.io.InputStream
 import org.bouncycastle.openpgp.*
-import org.pgpainless.implementation.ImplementationFactory
+import org.bouncycastle.openpgp.api.OpenPGPImplementation
 import org.pgpainless.util.ArmorUtils
 
 /**
@@ -68,7 +68,7 @@ class MessageInspector {
         @JvmStatic
         @Throws(PGPException::class, IOException::class)
         private fun processMessage(inputStream: InputStream): EncryptionInfo {
-            var objectFactory = ImplementationFactory.getInstance().getPGPObjectFactory(inputStream)
+            var objectFactory = OpenPGPImplementation.getInstance().pgpObjectFactory(inputStream)
 
             var n: Any?
             while (objectFactory.nextObject().also { n = it } != null) {
@@ -94,8 +94,8 @@ class MessageInspector {
                     }
                     is PGPCompressedData -> {
                         objectFactory =
-                            ImplementationFactory.getInstance()
-                                .getPGPObjectFactory(PGPUtil.getDecoderStream(next.dataStream))
+                            OpenPGPImplementation.getInstance()
+                                .pgpObjectFactory(PGPUtil.getDecoderStream(next.dataStream))
                         continue
                     }
                     is PGPLiteralData -> {

@@ -96,13 +96,13 @@ public class MatchMakingSecretKeyRingProtectorTest {
         MatchMakingSecretKeyRingProtector protector = new MatchMakingSecretKeyRingProtector();
         protector.addSecretKey(unprotectedKey);
         assertTrue(protector.hasPassphraseFor(unprotectedKey.getPublicKey().getKeyID()));
-        assertNull(protector.getEncryptor(unprotectedKey.getPublicKey().getKeyID()));
+        assertNull(protector.getEncryptor(unprotectedKey.getPublicKey()));
         assertNull(protector.getDecryptor(unprotectedKey.getPublicKey().getKeyID()));
 
         PGPSecretKeyRing protectedKey = PGPainless.readKeyRing().secretKeyRing(PROTECTED_KEY);
         protector.addSecretKey(protectedKey);
         protector.addPassphrase(Passphrase.fromPassword(PASSWORD));
-        assertNotNull(protector.getEncryptor(protectedKey.getPublicKey().getKeyID()));
+        assertNotNull(protector.getEncryptor(protectedKey.getPublicKey()));
         assertNotNull(protector.getDecryptor(protectedKey.getPublicKey().getKeyID()));
     }
 }

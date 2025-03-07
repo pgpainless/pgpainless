@@ -6,20 +6,19 @@ package org.pgpainless.key.generation
 
 import java.io.IOException
 import java.util.*
+import org.bouncycastle.bcpg.HashAlgorithmTags
 import org.bouncycastle.openpgp.*
 import org.bouncycastle.openpgp.api.OpenPGPImplementation
 import org.bouncycastle.openpgp.api.OpenPGPKey
 import org.bouncycastle.openpgp.operator.PBESecretKeyDecryptor
 import org.bouncycastle.openpgp.operator.PBESecretKeyEncryptor
 import org.bouncycastle.openpgp.operator.PGPContentSignerBuilder
-import org.bouncycastle.openpgp.operator.PGPDigestCalculator
 import org.bouncycastle.util.Strings
 import org.pgpainless.PGPainless
 import org.pgpainless.algorithm.KeyFlag
 import org.pgpainless.algorithm.OpenPGPKeyVersion
 import org.pgpainless.algorithm.SignatureType
 import org.pgpainless.bouncycastle.extensions.unlock
-import org.pgpainless.implementation.ImplementationFactory
 import org.pgpainless.policy.Policy
 import org.pgpainless.signature.subpackets.SelfSignatureSubpackets
 import org.pgpainless.signature.subpackets.SignatureSubpackets
@@ -84,15 +83,20 @@ class KeyRingBuilder(
     private fun keyIsCertificationCapable(keySpec: KeySpec) = keySpec.keyType.canCertify
 
     override fun build(): OpenPGPKey {
-        val keyFingerprintCalculator = ImplementationFactory.getInstance().v4FingerprintCalculator
-        val secretKeyEncryptor = buildSecretKeyEncryptor(keyFingerprintCalculator)
-        val secretKeyDecryptor = buildSecretKeyDecryptor()
-
-        passphrase.clear() // Passphrase was used above, so we can get rid of it
+        val keyFingerprintCalculator =
+            OpenPGPImplementation.getInstance()
+                .pgpDigestCalculatorProvider()
+                .get(HashAlgorithmTags.SHA1)
 
         // generate primary key
         requireNotNull(primaryKeySpec) { "Primary Key spec required." }
         val certKey = generateKeyPair(primaryKeySpec!!, version)
+
+        val secretKeyEncryptor = buildSecretKeyEncryptor(certKey.publicKey, false)
+        val secretKeyDecryptor = buildSecretKeyDecryptor()
+
+        passphrase.clear() // Passphrase was used above, so we can get rid of it
+
         val signer = buildContentSigner(certKey)
         val signatureGenerator = PGPSignatureGenerator(signer, certKey.publicKey)
 
@@ -220,29 +224,30 @@ class KeyRingBuilder(
     private fun buildContentSigner(certKey: PGPKeyPair): PGPContentSignerBuilder {
         val hashAlgorithm =
             PGPainless.getPolicy().certificationSignatureHashAlgorithmPolicy.defaultHashAlgorithm
-        return ImplementationFactory.getInstance()
-            .getPGPContentSignerBuilder(certKey.publicKey.algorithm, hashAlgorithm.algorithmId)
+        return OpenPGPImplementation.getInstance()
+            .pgpContentSignerBuilder(certKey.publicKey.algorithm, hashAlgorithm.algorithmId)
     }
 
     private fun buildSecretKeyEncryptor(
-        keyFingerprintCalculator: PGPDigestCalculator
+        publicKey: PGPPublicKey,
+        aead: Boolean
     ): PBESecretKeyEncryptor? {
-        val keyEncryptionAlgorithm =
-            PGPainless.getPolicy()
-                .symmetricKeyEncryptionAlgorithmPolicy
-                .defaultSymmetricKeyAlgorithm
         check(passphrase.isValid) { "Passphrase was cleared." }
         return if (passphrase.isEmpty) null
         else
-            ImplementationFactory.getInstance()
-                .getPBESecretKeyEncryptor(
-                    keyEncryptionAlgorithm, keyFingerprintCalculator, passphrase)
+            OpenPGPImplementation.getInstance()
+                .pbeSecretKeyEncryptorFactory(aead)
+                .build(passphrase.getChars(), publicKey.publicKeyPacket)
     }
 
     private fun buildSecretKeyDecryptor(): PBESecretKeyDecryptor? {
         check(passphrase.isValid) { "Passphrase was cleared." }
         return if (passphrase.isEmpty) null
-        else ImplementationFactory.getInstance().getPBESecretKeyDecryptor(passphrase)
+        else
+            OpenPGPImplementation.getInstance()
+                .pbeSecretKeyDecryptorBuilderProvider()
+                .provide()
+                .build(passphrase.getChars())
     }
 
     companion object {

@@ -22,10 +22,10 @@ import org.bouncycastle.openpgp.PGPObjectFactory;
 import org.bouncycastle.openpgp.PGPSecretKeyRing;
 import org.bouncycastle.openpgp.PGPSignature;
 import org.bouncycastle.openpgp.PGPSignatureList;
+import org.bouncycastle.openpgp.api.OpenPGPImplementation;
 import org.bouncycastle.util.io.Streams;
 import org.junit.jupiter.api.Test;
 import org.pgpainless.PGPainless;
-import org.pgpainless.implementation.ImplementationFactory;
 import org.pgpainless.key.OpenPgpV4Fingerprint;
 import sop.ByteArrayAndResult;
 import sop.SOP;
@@ -153,13 +153,13 @@ public class InlineDetachTest {
 
         ByteArrayOutputStream literalDataAndSignatures = new ByteArrayOutputStream();
         ArmoredInputStream armorIn = new ArmoredInputStream(new ByteArrayInputStream(inlineSigned));
-        PGPObjectFactory objectFactory = ImplementationFactory.getInstance().getPGPObjectFactory(armorIn);
+        PGPObjectFactory objectFactory = OpenPGPImplementation.getInstance().pgpObjectFactory(armorIn);
         Object next;
         while ((next = objectFactory.nextObject()) != null) {
             if (next instanceof PGPCompressedData) {
                 PGPCompressedData compressedData = (PGPCompressedData) next;
                 try {
-                    objectFactory = ImplementationFactory.getInstance().getPGPObjectFactory(compressedData.getDataStream());
+                    objectFactory = OpenPGPImplementation.getInstance().pgpObjectFactory(compressedData.getDataStream());
                 } catch (PGPException e) {
                     throw new SOPGPException.BadData("Cannot decompress compressed data", e);
                 }

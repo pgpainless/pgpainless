@@ -33,13 +33,13 @@ import org.bouncycastle.openpgp.PGPSignature;
 import org.bouncycastle.openpgp.PGPSignatureGenerator;
 import org.bouncycastle.openpgp.PGPSignatureSubpacketGenerator;
 import org.bouncycastle.openpgp.api.OpenPGPCertificate;
+import org.bouncycastle.openpgp.api.OpenPGPImplementation;
 import org.junit.jupiter.api.Test;
 import org.pgpainless.PGPainless;
 import org.pgpainless.algorithm.CompressionAlgorithm;
 import org.pgpainless.algorithm.Feature;
 import org.pgpainless.algorithm.HashAlgorithm;
 import org.pgpainless.algorithm.SignatureType;
-import org.pgpainless.implementation.ImplementationFactory;
 import org.pgpainless.key.TestKeys;
 import org.pgpainless.key.protection.SecretKeyRingProtector;
 import org.pgpainless.key.protection.UnlockSecretKey;
@@ -286,7 +286,7 @@ public class SignatureSubpacketsUtilTest {
     private PGPSignatureGenerator getSignatureGenerator(PGPPrivateKey signingKey,
                                         SignatureType signatureType) throws PGPException {
         PGPSignatureGenerator signatureGenerator = new PGPSignatureGenerator(
-                ImplementationFactory.getInstance().getPGPContentSignerBuilder(
+                OpenPGPImplementation.getInstance().pgpContentSignerBuilder(
                         signingKey.getPublicKeyPacket().getAlgorithm(),
                         HashAlgorithm.SHA512.getAlgorithmId()));
         signatureGenerator.init(signatureType.getCode(), signingKey);
