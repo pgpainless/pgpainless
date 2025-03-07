@@ -9,12 +9,12 @@ import org.bouncycastle.bcpg.sig.Exportable;
 import org.bouncycastle.openpgp.PGPException;
 import org.bouncycastle.openpgp.PGPSignature;
 import org.bouncycastle.openpgp.api.OpenPGPCertificate;
+import org.bouncycastle.openpgp.api.OpenPGPImplementation;
 import org.bouncycastle.openpgp.api.OpenPGPKey;
 import org.bouncycastle.openpgp.api.OpenPGPSignature;
 import org.junit.jupiter.api.Test;
 import org.pgpainless.PGPainless;
 import org.pgpainless.algorithm.SignatureType;
-import org.pgpainless.implementation.ImplementationFactory;
 import org.pgpainless.key.protection.SecretKeyRingProtector;
 import org.pgpainless.signature.subpackets.CertificationSubpackets;
 import org.pgpainless.signature.subpackets.SignatureSubpacketsUtil;
@@ -70,7 +70,7 @@ public class ThirdPartyCertificationSignatureBuilderTest {
         assertFalse(exportable.isExportable());
 
         // test sig correctness
-        signature.init(ImplementationFactory.getInstance().getPgpContentVerifierBuilderProvider(),
+        signature.init(OpenPGPImplementation.getInstance().pgpContentVerifierBuilderProvider(),
                 secretKeys.getPrimaryKey().getPGPPublicKey());
         assertTrue(signature.verifyCertification("Bob", bobsPublicKeys.getPrimaryKey().getPGPPublicKey()));
     }

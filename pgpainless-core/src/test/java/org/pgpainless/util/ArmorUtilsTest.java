@@ -26,6 +26,7 @@ import org.bouncycastle.openpgp.PGPPublicKeyRing;
 import org.bouncycastle.openpgp.PGPSecretKeyRing;
 import org.bouncycastle.openpgp.PGPSignature;
 import org.bouncycastle.openpgp.PGPUtil;
+import org.bouncycastle.openpgp.api.OpenPGPImplementation;
 import org.bouncycastle.util.io.Streams;
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.Assertions;
@@ -35,7 +36,6 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.pgpainless.PGPainless;
 import org.pgpainless.algorithm.HashAlgorithm;
 import org.pgpainless.algorithm.KeyFlag;
-import org.pgpainless.implementation.ImplementationFactory;
 import org.pgpainless.key.TestKeys;
 import org.pgpainless.key.generation.KeySpec;
 import org.pgpainless.key.generation.type.ecc.EllipticCurve;
@@ -257,9 +257,9 @@ public class ArmorUtilsTest {
                 "-----END PGP MESSAGE-----";
         InputStream inputStream = PGPUtil.getDecoderStream(new ByteArrayInputStream(armored.getBytes(StandardCharsets.UTF_8)));
 
-        PGPObjectFactory factory = ImplementationFactory.getInstance().getPGPObjectFactory(inputStream);
+        PGPObjectFactory factory = OpenPGPImplementation.getInstance().pgpObjectFactory(inputStream);
         PGPCompressedData compressed = (PGPCompressedData) factory.nextObject();
-        factory = ImplementationFactory.getInstance().getPGPObjectFactory(compressed.getDataStream());
+        factory = OpenPGPImplementation.getInstance().pgpObjectFactory(compressed.getDataStream());
         PGPLiteralData literal = (PGPLiteralData) factory.nextObject();
         ByteArrayOutputStream out = new ByteArrayOutputStream();
         assertEquals("_CONSOLE", literal.getFileName());

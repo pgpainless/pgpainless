@@ -19,12 +19,12 @@ import org.bouncycastle.openpgp.PGPSignature;
 import org.bouncycastle.openpgp.PGPSignatureGenerator;
 import org.bouncycastle.openpgp.PGPUserAttributeSubpacketVector;
 import org.bouncycastle.openpgp.PGPUserAttributeSubpacketVectorGenerator;
+import org.bouncycastle.openpgp.api.OpenPGPImplementation;
 import org.junit.jupiter.api.Test;
 import org.pgpainless.PGPainless;
 import org.pgpainless.algorithm.HashAlgorithm;
 import org.pgpainless.algorithm.SignatureType;
 import org.pgpainless.exception.SignatureValidationException;
-import org.pgpainless.implementation.ImplementationFactory;
 import org.pgpainless.key.TestKeys;
 import org.pgpainless.key.protection.SecretKeyRingProtector;
 import org.pgpainless.key.protection.UnlockSecretKey;
@@ -58,8 +58,9 @@ public class SignatureOverUserAttributesTest {
         PGPPrivateKey privateKey = UnlockSecretKey.unlockSecretKey(secretKey, SecretKeyRingProtector.unprotectedKeys());
 
         PGPSignatureGenerator generator = new PGPSignatureGenerator(
-                ImplementationFactory.getInstance()
-                        .getPGPContentSignerBuilder(secretKey.getPublicKey().getAlgorithm(), HashAlgorithm.SHA512.getAlgorithmId()));
+                OpenPGPImplementation.getInstance()
+                        .pgpContentSignerBuilder(secretKey.getPublicKey().getAlgorithm(), HashAlgorithm.SHA512.getAlgorithmId()),
+                secretKey.getPublicKey());
         generator.init(SignatureType.CASUAL_CERTIFICATION.getCode(), privateKey);
 
         PGPSignature signature = generator.generateCertification(attribute, publicKey);
@@ -78,8 +79,9 @@ public class SignatureOverUserAttributesTest {
         PGPPrivateKey privateKey = UnlockSecretKey.unlockSecretKey(secretKey, SecretKeyRingProtector.unprotectedKeys());
 
         PGPSignatureGenerator generator = new PGPSignatureGenerator(
-                ImplementationFactory.getInstance()
-                        .getPGPContentSignerBuilder(secretKey.getPublicKey().getAlgorithm(), HashAlgorithm.SHA512.getAlgorithmId()));
+                OpenPGPImplementation.getInstance()
+                        .pgpContentSignerBuilder(secretKey.getPublicKey().getAlgorithm(), HashAlgorithm.SHA512.getAlgorithmId()),
+                secretKey.getPublicKey());
         generator.init(SignatureType.CERTIFICATION_REVOCATION.getCode(), privateKey);
 
         PGPSignature signature = generator.generateCertification(attribute, publicKey);

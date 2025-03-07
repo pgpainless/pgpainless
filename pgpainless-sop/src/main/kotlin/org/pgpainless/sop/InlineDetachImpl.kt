@@ -13,11 +13,11 @@ import org.bouncycastle.openpgp.PGPException
 import org.bouncycastle.openpgp.PGPLiteralData
 import org.bouncycastle.openpgp.PGPOnePassSignatureList
 import org.bouncycastle.openpgp.PGPSignatureList
+import org.bouncycastle.openpgp.api.OpenPGPImplementation
 import org.bouncycastle.util.io.Streams
 import org.pgpainless.decryption_verification.OpenPgpInputStream
 import org.pgpainless.decryption_verification.cleartext_signatures.ClearsignedMessageUtil
 import org.pgpainless.exception.WrongConsumingMethodException
-import org.pgpainless.implementation.ImplementationFactory
 import org.pgpainless.util.ArmoredOutputStreamFactory
 import sop.ReadyWithResult
 import sop.Signatures
@@ -72,8 +72,7 @@ class InlineDetachImpl : InlineDetach {
                     }
 
                     // handle binary OpenPGP data
-                    var objectFactory =
-                        ImplementationFactory.getInstance().getPGPObjectFactory(pgpIn)
+                    var objectFactory = OpenPGPImplementation.getInstance().pgpObjectFactory(pgpIn)
                     var next: Any?
 
                     while (objectFactory.nextObject().also { next = it } != null) {
@@ -95,8 +94,8 @@ class InlineDetachImpl : InlineDetach {
                             // Decompress compressed data
                             try {
                                 objectFactory =
-                                    ImplementationFactory.getInstance()
-                                        .getPGPObjectFactory((next as PGPCompressedData).dataStream)
+                                    OpenPGPImplementation.getInstance()
+                                        .pgpObjectFactory((next as PGPCompressedData).dataStream)
                             } catch (e: PGPException) {
                                 throw SOPGPException.BadData(
                                     "Cannot decompress PGPCompressedData", e)
