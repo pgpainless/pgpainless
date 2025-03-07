@@ -184,8 +184,8 @@ class CachingSecretKeyRingProtector : SecretKeyRingProtector, SecretKeyPassphras
     override fun getDecryptor(keyIdentifier: KeyIdentifier): PBESecretKeyDecryptor? =
         protector.getDecryptor(keyIdentifier)
 
-    override fun getEncryptor(keyIdentifier: KeyIdentifier): PBESecretKeyEncryptor? =
-        protector.getEncryptor(keyIdentifier)
+    override fun getEncryptor(key: PGPPublicKey): PBESecretKeyEncryptor? =
+        protector.getEncryptor(key)
 
     override fun getKeyPassword(p0: OpenPGPKey.OpenPGPSecretKey): CharArray? =
         getPassphraseFor(p0.keyIdentifier)?.getChars()

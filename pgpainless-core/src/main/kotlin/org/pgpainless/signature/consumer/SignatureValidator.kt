@@ -12,17 +12,16 @@ import org.bouncycastle.openpgp.PGPException
 import org.bouncycastle.openpgp.PGPPublicKey
 import org.bouncycastle.openpgp.PGPSignature
 import org.bouncycastle.openpgp.PGPUserAttributeSubpacketVector
+import org.bouncycastle.openpgp.api.OpenPGPImplementation
 import org.pgpainless.algorithm.KeyFlag
 import org.pgpainless.algorithm.SignatureSubpacket
 import org.pgpainless.algorithm.SignatureType
 import org.pgpainless.bouncycastle.extensions.fingerprint
-import org.pgpainless.bouncycastle.extensions.isHardRevocation
 import org.pgpainless.bouncycastle.extensions.isOfType
 import org.pgpainless.bouncycastle.extensions.publicKeyAlgorithm
 import org.pgpainless.bouncycastle.extensions.signatureExpirationDate
 import org.pgpainless.bouncycastle.extensions.signatureHashAlgorithm
 import org.pgpainless.exception.SignatureValidationException
-import org.pgpainless.implementation.ImplementationFactory
 import org.pgpainless.key.OpenPgpFingerprint
 import org.pgpainless.policy.Policy
 import org.pgpainless.signature.subpackets.SignatureSubpacketsUtil
@@ -486,7 +485,7 @@ abstract class SignatureValidator {
                     }
                     try {
                         signature.init(
-                            ImplementationFactory.getInstance().pgpContentVerifierBuilderProvider,
+                            OpenPGPImplementation.getInstance().pgpContentVerifierBuilderProvider(),
                             primaryKey)
                         if (!signature.verifyCertification(primaryKey, subkey)) {
                             throw SignatureValidationException("Signature is not correct.")
@@ -521,7 +520,7 @@ abstract class SignatureValidator {
                     }
                     try {
                         signature.init(
-                            ImplementationFactory.getInstance().pgpContentVerifierBuilderProvider,
+                            OpenPGPImplementation.getInstance().pgpContentVerifierBuilderProvider(),
                             subkey)
                         if (!signature.verifyCertification(primaryKey, subkey)) {
                             throw SignatureValidationException(
@@ -554,7 +553,7 @@ abstract class SignatureValidator {
                 override fun verify(signature: PGPSignature) {
                     try {
                         signature.init(
-                            ImplementationFactory.getInstance().pgpContentVerifierBuilderProvider,
+                            OpenPGPImplementation.getInstance().pgpContentVerifierBuilderProvider(),
                             signingKey)
                         val valid =
                             if (signingKey.keyID == signedKey.keyID ||
@@ -625,7 +624,7 @@ abstract class SignatureValidator {
                 override fun verify(signature: PGPSignature) {
                     try {
                         signature.init(
-                            ImplementationFactory.getInstance().pgpContentVerifierBuilderProvider,
+                            OpenPGPImplementation.getInstance().pgpContentVerifierBuilderProvider(),
                             certifyingKey)
                         if (!signature.verifyCertification(userId.toString(), certifiedKey)) {
                             throw SignatureValidationException(
@@ -660,7 +659,7 @@ abstract class SignatureValidator {
                 override fun verify(signature: PGPSignature) {
                     try {
                         signature.init(
-                            ImplementationFactory.getInstance().pgpContentVerifierBuilderProvider,
+                            OpenPGPImplementation.getInstance().pgpContentVerifierBuilderProvider(),
                             certifyingKey)
                         if (!signature.verifyCertification(userAttributes, certifiedKey)) {
                             throw SignatureValidationException(

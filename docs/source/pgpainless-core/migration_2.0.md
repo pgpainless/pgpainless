@@ -86,6 +86,12 @@ Consequently, `KeyIdentifier` is now also the preferred way to reference keys in
 previously a key-id or fingerprint was expected, now also accept `KeyIdentifier` objects.
 In places, where you need to access a 64-bit key-id, you can call `keyIdentifier.getKeyId()`.
 
+## `SecretKeyRingProtector`
+
+When an OpenPGP v6 key is encrypted, the public key parts are incorporated as authenticated data into the encryption
+process. Therefore, when instantiating a `PBESecretKeyEncryptor`, the public key needs to be passed in.
+As a consequence, the API of `SecretKeyRingProtector` changed and now a `PGPPublicKey` needs to be passed in,
+instead of merely a key-id or `KeyIdentifier`.
 
 ## Differences between BCs high-level API and PGPainless
 

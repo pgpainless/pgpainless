@@ -29,11 +29,11 @@ import org.bouncycastle.openpgp.PGPSecretKeyRing;
 import org.bouncycastle.openpgp.PGPSecretKeyRingCollection;
 import org.bouncycastle.openpgp.PGPSignature;
 import org.bouncycastle.openpgp.PGPUtil;
+import org.bouncycastle.openpgp.api.OpenPGPImplementation;
 import org.bouncycastle.util.io.Streams;
 import org.junit.jupiter.api.Test;
 import org.opentest4j.TestAbortedException;
 import org.pgpainless.PGPainless;
-import org.pgpainless.implementation.ImplementationFactory;
 import org.pgpainless.key.OpenPgpV4Fingerprint;
 import org.pgpainless.key.collection.PGPKeyRingCollection;
 import org.pgpainless.key.util.KeyRingUtils;
@@ -63,7 +63,7 @@ class KeyRingReaderTest {
         InputStream possiblyArmored = PGPUtil.getDecoderStream(PGPUtil.getDecoderStream(inputStream));
 
         PGPPublicKeyRingCollection collection = new PGPPublicKeyRingCollection(
-                possiblyArmored, ImplementationFactory.getInstance().getKeyFingerprintCalculator());
+                possiblyArmored, OpenPGPImplementation.getInstance().keyFingerPrintCalculator());
         assertEquals(10, collection.size());
     }
 

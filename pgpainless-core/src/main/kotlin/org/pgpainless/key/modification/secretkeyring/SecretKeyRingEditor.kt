@@ -9,10 +9,12 @@ import java.util.function.Predicate
 import javax.annotation.Nonnull
 import kotlin.NoSuchElementException
 import openpgp.openPgpKeyId
+import org.bouncycastle.bcpg.HashAlgorithmTags
 import org.bouncycastle.bcpg.KeyIdentifier
 import org.bouncycastle.bcpg.sig.KeyExpirationTime
 import org.bouncycastle.openpgp.*
 import org.bouncycastle.openpgp.api.OpenPGPCertificate.OpenPGPSubkey
+import org.bouncycastle.openpgp.api.OpenPGPImplementation
 import org.bouncycastle.openpgp.api.OpenPGPKey
 import org.bouncycastle.openpgp.api.OpenPGPKey.OpenPGPSecretKey
 import org.bouncycastle.openpgp.api.OpenPGPSignature
@@ -27,7 +29,6 @@ import org.pgpainless.algorithm.negotiation.HashAlgorithmNegotiator
 import org.pgpainless.bouncycastle.extensions.getKeyExpirationDate
 import org.pgpainless.bouncycastle.extensions.publicKeyAlgorithm
 import org.pgpainless.bouncycastle.extensions.requirePublicKey
-import org.pgpainless.implementation.ImplementationFactory
 import org.pgpainless.key.OpenPgpFingerprint
 import org.pgpainless.key.generation.KeyRingBuilder
 import org.pgpainless.key.generation.KeySpec
@@ -302,9 +303,11 @@ class SecretKeyRingEditor(var key: OpenPGPKey, override val referenceTime: Date 
             PGPSecretKey(
                 subkey.privateKey,
                 subkey.publicKey,
-                ImplementationFactory.getInstance().v4FingerprintCalculator,
+                OpenPGPImplementation.getInstance()
+                    .pgpDigestCalculatorProvider()
+                    .get(HashAlgorithmTags.SHA1),
                 false,
-                subkeyProtector.getEncryptor(subkey.keyID))
+                subkeyProtector.getEncryptor(subkey.publicKey))
 
         val componentKey =
             OpenPGPSecretKey(
