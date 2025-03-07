@@ -7,9 +7,11 @@ package org.pgpainless.key.protection
 import kotlin.Throws
 import org.bouncycastle.bcpg.KeyIdentifier
 import org.bouncycastle.openpgp.PGPException
+import org.bouncycastle.openpgp.PGPPublicKey
 import org.bouncycastle.openpgp.PGPSecretKey
 import org.bouncycastle.openpgp.PGPSecretKeyRing
 import org.bouncycastle.openpgp.api.KeyPassphraseProvider
+import org.bouncycastle.openpgp.api.OpenPGPCertificate.OpenPGPComponentKey
 import org.bouncycastle.openpgp.operator.PBESecretKeyDecryptor
 import org.bouncycastle.openpgp.operator.PBESecretKeyEncryptor
 import org.pgpainless.key.protection.passphrase_provider.SecretKeyPassphraseProvider
@@ -32,8 +34,15 @@ interface SecretKeyRingProtector : KeyPassphraseProvider {
      * @param keyId key id
      * @return true if it has a passphrase, false otherwise
      */
+    @Deprecated("Pass in a KeyIdentifier instead.")
     fun hasPassphraseFor(keyId: Long): Boolean = hasPassphraseFor(KeyIdentifier(keyId))
 
+    /**
+     * Returns true, if the protector has a passphrase for the key with the given [keyIdentifier].
+     *
+     * @param keyIdentifier key identifier
+     * @return true if it has a passphrase, false otherwise
+     */
     fun hasPassphraseFor(keyIdentifier: KeyIdentifier): Boolean
 
     /**
@@ -43,24 +52,37 @@ interface SecretKeyRingProtector : KeyPassphraseProvider {
      * @param keyId id of the key
      * @return decryptor for the key
      */
+    @Deprecated("Pass in a KeyIdentifier instead.")
     @Throws(PGPException::class)
     fun getDecryptor(keyId: Long): PBESecretKeyDecryptor? = getDecryptor(KeyIdentifier(keyId))
 
+    /**
+     * Return a decryptor for the key with the given [keyIdentifier]. This method returns null if
+     * the key is unprotected.
+     *
+     * @param keyIdentifier identifier of the key
+     * @return decryptor for the key
+     */
     @Throws(PGPException::class)
     fun getDecryptor(keyIdentifier: KeyIdentifier): PBESecretKeyDecryptor?
 
     /**
-     * Return an encryptor for the key of id `keyId`. This method returns null if the key is
-     * unprotected.
+     * Return an encryptor for the given key.
      *
-     * @param keyId id of the key
-     * @return encryptor for the key
+     * @param key component key
+     * @return encryptor or null if the key shall not be encrypted
      */
     @Throws(PGPException::class)
-    fun getEncryptor(keyId: Long): PBESecretKeyEncryptor? = getEncryptor(KeyIdentifier(keyId))
+    fun getEncryptor(key: OpenPGPComponentKey): PBESecretKeyEncryptor? =
+        getEncryptor(key.pgpPublicKey)
 
-    @Throws(PGPException::class)
-    fun getEncryptor(keyIdentifier: KeyIdentifier): PBESecretKeyEncryptor?
+    /**
+     * Return an encryptor for the given key.
+     *
+     * @param key component key
+     * @return encryptor or null if the key shall not be encrypted
+     */
+    @Throws(PGPException::class) fun getEncryptor(key: PGPPublicKey): PBESecretKeyEncryptor?
 
     companion object {
 

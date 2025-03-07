@@ -10,12 +10,12 @@ import org.bouncycastle.openpgp.PGPPublicKey
 import org.bouncycastle.openpgp.PGPSignature
 import org.bouncycastle.openpgp.PGPSignatureGenerator
 import org.bouncycastle.openpgp.api.OpenPGPCertificate.OpenPGPComponentKey
+import org.bouncycastle.openpgp.api.OpenPGPImplementation
 import org.bouncycastle.openpgp.api.OpenPGPKey
 import org.pgpainless.PGPainless
 import org.pgpainless.algorithm.HashAlgorithm
 import org.pgpainless.algorithm.SignatureType
 import org.pgpainless.algorithm.negotiation.HashAlgorithmNegotiator
-import org.pgpainless.implementation.ImplementationFactory
 import org.pgpainless.key.protection.SecretKeyRingProtector
 import org.pgpainless.key.protection.UnlockSecretKey
 import org.pgpainless.key.util.OpenPgpKeyAttributeUtil
@@ -110,9 +110,10 @@ abstract class AbstractSignatureBuilder<B : AbstractSignatureBuilder<B>>(
     @Throws(PGPException::class)
     protected fun buildAndInitSignatureGenerator(): PGPSignatureGenerator =
         PGPSignatureGenerator(
-                ImplementationFactory.getInstance()
-                    .getPGPContentSignerBuilder(
-                        signingKey.publicKey.pgpPublicKey.algorithm, hashAlgorithm.algorithmId))
+                OpenPGPImplementation.getInstance()
+                    .pgpContentSignerBuilder(
+                        signingKey.keyPair.publicKey.algorithm, hashAlgorithm.algorithmId),
+                signingKey.keyPair.publicKey)
             .apply {
                 setUnhashedSubpackets(SignatureSubpacketsHelper.toVector(_unhashedSubpackets))
                 setHashedSubpackets(SignatureSubpacketsHelper.toVector(_hashedSubpackets))

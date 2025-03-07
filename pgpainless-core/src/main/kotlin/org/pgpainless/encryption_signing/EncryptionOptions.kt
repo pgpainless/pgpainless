@@ -8,6 +8,7 @@ import java.util.*
 import org.bouncycastle.openpgp.PGPPublicKeyRing
 import org.bouncycastle.openpgp.api.OpenPGPCertificate
 import org.bouncycastle.openpgp.api.OpenPGPCertificate.OpenPGPComponentKey
+import org.bouncycastle.openpgp.api.OpenPGPImplementation
 import org.bouncycastle.openpgp.operator.PGPKeyEncryptionMethodGenerator
 import org.pgpainless.PGPainless.Companion.inspectKeyRing
 import org.pgpainless.algorithm.EncryptionPurpose
@@ -16,7 +17,6 @@ import org.pgpainless.authentication.CertificateAuthority
 import org.pgpainless.bouncycastle.extensions.toOpenPGPCertificate
 import org.pgpainless.encryption_signing.EncryptionOptions.EncryptionKeySelector
 import org.pgpainless.exception.KeyException.*
-import org.pgpainless.implementation.ImplementationFactory
 import org.pgpainless.key.SubkeyIdentifier
 import org.pgpainless.key.info.KeyAccessor
 import org.pgpainless.key.info.KeyRingInfo
@@ -326,13 +326,13 @@ class EncryptionOptions(private val purpose: EncryptionPurpose) {
         }
     }
 
-    private fun addRecipientKey(key: OpenPGPComponentKey, wildcardKeyId: Boolean) {
+    private fun addRecipientKey(key: OpenPGPComponentKey, wildcardRecipient: Boolean) {
         _encryptionKeys.add(key)
         _encryptionKeyIdentifiers.add(SubkeyIdentifier(key))
         addEncryptionMethod(
-            ImplementationFactory.getInstance()
-                .getPublicKeyKeyEncryptionMethodGenerator(key.pgpPublicKey)
-                .also { it.setUseWildcardKeyID(wildcardKeyId) })
+            OpenPGPImplementation.getInstance()
+                .publicKeyKeyEncryptionMethodGenerator(key.pgpPublicKey)
+                .also { it.setUseWildcardRecipient(wildcardRecipient) })
     }
 
     /**
@@ -355,7 +355,8 @@ class EncryptionOptions(private val purpose: EncryptionPurpose) {
     fun addMessagePassphrase(passphrase: Passphrase) = apply {
         require(!passphrase.isEmpty) { "Passphrase MUST NOT be empty." }
         addEncryptionMethod(
-            ImplementationFactory.getInstance().getPBEKeyEncryptionMethodGenerator(passphrase))
+            OpenPGPImplementation.getInstance()
+                .pbeKeyEncryptionMethodGenerator(passphrase.getChars()))
     }
 
     /**

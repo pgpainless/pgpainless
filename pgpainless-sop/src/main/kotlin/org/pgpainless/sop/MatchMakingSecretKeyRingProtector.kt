@@ -6,6 +6,7 @@ package org.pgpainless.sop
 
 import org.bouncycastle.bcpg.KeyIdentifier
 import org.bouncycastle.openpgp.PGPException
+import org.bouncycastle.openpgp.PGPPublicKey
 import org.bouncycastle.openpgp.PGPSecretKey
 import org.bouncycastle.openpgp.PGPSecretKeyRing
 import org.bouncycastle.openpgp.api.OpenPGPKey
@@ -82,8 +83,8 @@ class MatchMakingSecretKeyRingProtector : SecretKeyRingProtector {
     override fun getDecryptor(keyIdentifier: KeyIdentifier): PBESecretKeyDecryptor? =
         protector.getDecryptor(keyIdentifier)
 
-    override fun getEncryptor(keyIdentifier: KeyIdentifier): PBESecretKeyEncryptor? =
-        protector.getEncryptor(keyIdentifier)
+    override fun getEncryptor(key: PGPPublicKey): PBESecretKeyEncryptor? =
+        protector.getEncryptor(key)
 
     override fun getKeyPassword(p0: OpenPGPKey.OpenPGPSecretKey): CharArray? =
         protector.getKeyPassword(p0)

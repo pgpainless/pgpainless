@@ -13,10 +13,10 @@ import org.bouncycastle.openpgp.PGPCompressedDataGenerator
 import org.bouncycastle.openpgp.PGPEncryptedDataGenerator
 import org.bouncycastle.openpgp.PGPException
 import org.bouncycastle.openpgp.PGPLiteralDataGenerator
+import org.bouncycastle.openpgp.api.OpenPGPImplementation
 import org.pgpainless.algorithm.CompressionAlgorithm
 import org.pgpainless.algorithm.StreamEncoding
 import org.pgpainless.algorithm.SymmetricKeyAlgorithm
-import org.pgpainless.implementation.ImplementationFactory
 import org.pgpainless.key.SubkeyIdentifier
 import org.pgpainless.util.ArmoredOutputStreamFactory
 import org.slf4j.LoggerFactory
@@ -89,9 +89,9 @@ class EncryptionStream(
             LOGGER.debug("Encrypt message using symmetric algorithm $it.")
             val encryptedDataGenerator =
                 PGPEncryptedDataGenerator(
-                    ImplementationFactory.getInstance().getPGPDataEncryptorBuilder(it).apply {
-                        setWithIntegrityPacket(true)
-                    })
+                    OpenPGPImplementation.getInstance()
+                        .pgpDataEncryptorBuilder(it.algorithmId)
+                        .apply { setWithIntegrityPacket(true) })
             options.encryptionOptions.encryptionMethods.forEach { m ->
                 encryptedDataGenerator.addMethod(m)
             }

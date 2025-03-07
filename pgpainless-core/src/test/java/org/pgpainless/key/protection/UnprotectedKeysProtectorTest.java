@@ -17,9 +17,4 @@ public class UnprotectedKeysProtectorTest {
     public void testKeyProtectorReturnsNullDecryptor() throws PGPException {
         assertNull(protector.getDecryptor(0L));
     }
-
-    @Test
-    public void testKeyProtectorReturnsNullEncryptor() throws PGPException {
-        assertNull(protector.getEncryptor(0L));
-    }
 }

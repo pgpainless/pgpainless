@@ -16,6 +16,7 @@ import java.util.Iterator;
 import org.bouncycastle.openpgp.PGPException;
 import org.bouncycastle.openpgp.PGPSecretKey;
 import org.bouncycastle.openpgp.PGPSecretKeyRing;
+import org.bouncycastle.openpgp.api.OpenPGPImplementation;
 import org.bouncycastle.openpgp.operator.PBESecretKeyDecryptor;
 import org.bouncycastle.util.io.Streams;
 import org.junit.jupiter.api.TestTemplate;
@@ -26,7 +27,6 @@ import org.pgpainless.algorithm.SymmetricKeyAlgorithm;
 import org.pgpainless.encryption_signing.EncryptionStream;
 import org.pgpainless.encryption_signing.ProducerOptions;
 import org.pgpainless.encryption_signing.SigningOptions;
-import org.pgpainless.implementation.ImplementationFactory;
 import org.pgpainless.key.protection.KeyRingProtectionSettings;
 import org.pgpainless.key.protection.PasswordBasedSecretKeyRingProtector;
 import org.pgpainless.key.protection.UnlockSecretKey;
@@ -166,7 +166,12 @@ public class ChangeSecretKeyRingPassphraseTest {
         } else if (!passphrase.isEmpty() && secretKey.getKeyEncryptionAlgorithm() == SymmetricKeyAlgorithm.NULL.getAlgorithmId()) {
             throw new PGPException("Cannot unlock unprotected private key with non-empty passphrase.");
         }
-        PBESecretKeyDecryptor decryptor = passphrase.isEmpty() ? null : ImplementationFactory.getInstance().getPBESecretKeyDecryptor(passphrase);
+        PBESecretKeyDecryptor decryptor = passphrase.isEmpty() ?
+                null :
+                OpenPGPImplementation.getInstance()
+                        .pbeSecretKeyDecryptorBuilderProvider()
+                        .provide()
+                        .build(passphrase.getChars());
 
         UnlockSecretKey.unlockSecretKey(secretKey, decryptor);
     }

@@ -20,11 +20,11 @@ import org.bouncycastle.openpgp.PGPSecretKey;
 import org.bouncycastle.openpgp.PGPSecretKeyRing;
 import org.bouncycastle.openpgp.PGPSignature;
 import org.bouncycastle.openpgp.PGPSignatureGenerator;
+import org.bouncycastle.openpgp.api.OpenPGPImplementation;
 import org.bouncycastle.util.Strings;
 import org.junit.jupiter.api.Test;
 import org.pgpainless.PGPainless;
 import org.pgpainless.algorithm.SignatureType;
-import org.pgpainless.implementation.ImplementationFactory;
 import org.pgpainless.key.info.KeyRingInfo;
 import org.pgpainless.key.protection.UnlockSecretKey;
 import org.pgpainless.util.Passphrase;
@@ -121,9 +121,10 @@ public class WeirdKeys {
         assertThrows(IllegalArgumentException.class, () -> Strings.fromUTF8ByteArray(idBytes));
 
         PGPSignatureGenerator sigGen = new PGPSignatureGenerator(
-                ImplementationFactory.getInstance().getPGPContentSignerBuilder(
+                OpenPGPImplementation.getInstance().pgpContentSignerBuilder(
                         pubKey.getAlgorithm(),
-                        HashAlgorithmTags.SHA512));
+                        HashAlgorithmTags.SHA512),
+                pubKey);
         sigGen.init(SignatureType.GENERIC_CERTIFICATION.getCode(), privKey);
 
         // We have to manually generate the signature over the user-ID
