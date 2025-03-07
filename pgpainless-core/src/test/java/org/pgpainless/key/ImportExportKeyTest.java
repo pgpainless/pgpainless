@@ -12,10 +12,10 @@ import java.io.IOException;
 import org.bouncycastle.openpgp.PGPException;
 import org.bouncycastle.openpgp.PGPPublicKeyRing;
 import org.bouncycastle.openpgp.PGPSecretKeyRing;
+import org.bouncycastle.openpgp.api.OpenPGPImplementation;
 import org.bouncycastle.openpgp.operator.KeyFingerPrintCalculator;
 import org.junit.jupiter.api.TestTemplate;
 import org.junit.jupiter.api.extension.ExtendWith;
-import org.pgpainless.implementation.ImplementationFactory;
 import org.pgpainless.util.TestAllImplementations;
 
 public class ImportExportKeyTest {
@@ -29,7 +29,7 @@ public class ImportExportKeyTest {
     public void testExportImportPublicKeyRing() throws IOException {
         PGPPublicKeyRing publicKeys = TestKeys.getJulietPublicKeyRing();
 
-        KeyFingerPrintCalculator calc = ImplementationFactory.getInstance().getKeyFingerprintCalculator();
+        KeyFingerPrintCalculator calc = OpenPGPImplementation.getInstance().keyFingerPrintCalculator();
         byte[] bytes = publicKeys.getEncoded();
         PGPPublicKeyRing parsed = new PGPPublicKeyRing(bytes, calc);
         assertArrayEquals(publicKeys.getEncoded(), parsed.getEncoded());
@@ -40,7 +40,7 @@ public class ImportExportKeyTest {
     public void testExportImportSecretKeyRing() throws IOException, PGPException {
         PGPSecretKeyRing secretKeys = TestKeys.getRomeoSecretKeyRing();
 
-        KeyFingerPrintCalculator calc = ImplementationFactory.getInstance().getKeyFingerprintCalculator();
+        KeyFingerPrintCalculator calc = OpenPGPImplementation.getInstance().keyFingerPrintCalculator();
         byte[] bytes = secretKeys.getEncoded();
         PGPSecretKeyRing parsed = new PGPSecretKeyRing(bytes, calc);
         assertArrayEquals(secretKeys.getEncoded(), parsed.getEncoded());

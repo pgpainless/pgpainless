@@ -14,13 +14,13 @@ import org.bouncycastle.openpgp.PGPSignature;
 import org.bouncycastle.openpgp.PGPSignatureGenerator;
 import org.bouncycastle.openpgp.PGPUserAttributeSubpacketVector;
 import org.bouncycastle.openpgp.PGPUserAttributeSubpacketVectorGenerator;
+import org.bouncycastle.openpgp.api.OpenPGPImplementation;
 import org.junit.jupiter.api.Test;
 import org.pgpainless.PGPainless;
 import org.pgpainless.algorithm.HashAlgorithm;
 import org.pgpainless.algorithm.KeyFlag;
 import org.pgpainless.algorithm.OpenPGPKeyVersion;
 import org.pgpainless.algorithm.SignatureType;
-import org.pgpainless.implementation.ImplementationFactory;
 import org.pgpainless.key.generation.KeyRingBuilder;
 import org.pgpainless.key.generation.KeySpec;
 import org.pgpainless.key.generation.type.KeyType;
@@ -57,9 +57,9 @@ public class KeyRingUtilTest {
 
         // create sig
         PGPSignatureGenerator sigGen = new PGPSignatureGenerator(
-                ImplementationFactory.getInstance().getPGPContentSignerBuilder(
+                OpenPGPImplementation.getInstance().pgpContentSignerBuilder(
                         secretKeys.getPublicKey().getAlgorithm(), HashAlgorithm.SHA512.getAlgorithmId()
-                ));
+                ), secretKeys.getPublicKey());
         sigGen.init(
                 SignatureType.POSITIVE_CERTIFICATION.getCode(),
                 UnlockSecretKey.unlockSecretKey(secretKeys.getSecretKey(), SecretKeyRingProtector.unprotectedKeys()));

@@ -6,7 +6,6 @@ package org.pgpainless.key.generation;
 
 import org.bouncycastle.bcpg.SignatureSubpacketTags;
 import org.bouncycastle.openpgp.PGPException;
-import org.bouncycastle.openpgp.PGPSecretKeyRing;
 import org.bouncycastle.openpgp.api.OpenPGPCertificate;
 import org.bouncycastle.openpgp.api.OpenPGPKey;
 import org.bouncycastle.openpgp.api.SignatureParameters;
@@ -16,6 +15,7 @@ import org.pgpainless.PGPainless;
 import org.pgpainless.algorithm.KeyFlag;
 import org.pgpainless.algorithm.OpenPGPKeyVersion;
 import org.pgpainless.algorithm.PublicKeyAlgorithm;
+import org.pgpainless.key.generation.type.rsa.RsaLength;
 
 import java.io.IOException;
 
@@ -27,10 +27,25 @@ public class GenerateV6KeyTest {
 
     @Test
     public void generateModernV6Key() {
-        PGPSecretKeyRing secretKey = PGPainless.generateKeyRing(OpenPGPKeyVersion.v6)
-                .modernKeyRing("Alice <alice@example.org>")
-                .getPGPSecretKeyRing();
-        assertEquals(6, secretKey.getPublicKey().getVersion());
+        OpenPGPKey key = PGPainless.generateKeyRing(OpenPGPKeyVersion.v6)
+                .modernKeyRing("Alice <alice@example.org>");
+        assertEquals(3, key.getKeys().size());
+
+        OpenPGPCertificate.OpenPGPPrimaryKey primaryKey = key.getPrimaryKey();
+        assertEquals(primaryKey, key.getCertificationKeys().get(0));
+        assertEquals(6, primaryKey.getVersion());
+        assertEquals(PublicKeyAlgorithm.ED25519.getAlgorithmId(),
+                primaryKey.getAlgorithm());
+
+        OpenPGPCertificate.OpenPGPComponentKey signingKey = key.getSigningKeys().get(0);
+        assertEquals(6, signingKey.getVersion());
+        assertEquals(PublicKeyAlgorithm.ED25519.getAlgorithmId(),
+                signingKey.getAlgorithm());
+
+        OpenPGPCertificate.OpenPGPComponentKey encryptionKey = key.getEncryptionKeys().get(0);
+        assertEquals(6, encryptionKey.getVersion());
+        assertEquals(PublicKeyAlgorithm.X25519.getAlgorithmId(),
+                encryptionKey.getAlgorithm());
     }
 
     @Test
@@ -53,9 +68,11 @@ public class GenerateV6KeyTest {
 
         assertEquals(1, key.getKeys().size());
         OpenPGPCertificate.OpenPGPPrimaryKey primaryKey = key.getPrimaryKey();
+        assertTrue(key.getCertificationKeys().isEmpty());
         assertEquals(6, primaryKey.getVersion());
         assertTrue(primaryKey.isPrimaryKey());
-        assertEquals(PublicKeyAlgorithm.ED25519.getAlgorithmId(), primaryKey.getPGPPublicKey().getAlgorithm());
+        assertEquals(PublicKeyAlgorithm.ED25519.getAlgorithmId(),
+                primaryKey.getAlgorithm());
         assertEquals(primaryKey, key.getSigningKeys().get(0));
         assertTrue(key.getEncryptionKeys().isEmpty());
 
@@ -76,7 +93,8 @@ public class GenerateV6KeyTest {
         assertTrue(key.isSecretKey());
         assertEquals(3, key.getKeys().size());
         OpenPGPCertificate.OpenPGPPrimaryKey primaryKey = key.getPrimaryKey();
-        assertEquals(PublicKeyAlgorithm.ED25519.getAlgorithmId(), primaryKey.getPGPPublicKey().getAlgorithm());
+        assertEquals(primaryKey, key.getCertificationKeys().get(0));
+        assertEquals(PublicKeyAlgorithm.ED25519.getAlgorithmId(), primaryKey.getAlgorithm());
         assertEquals(6, primaryKey.getVersion());
         assertTrue(primaryKey.isPrimaryKey());
         assertEquals(primaryKey, key.getKeys().get(0));
@@ -84,13 +102,13 @@ public class GenerateV6KeyTest {
         OpenPGPCertificate.OpenPGPComponentKey signingKey = key.getKeys().get(1);
         assertTrue(key.getSigningKeys().contains(signingKey));
         assertEquals(6, signingKey.getVersion());
-        assertEquals(PublicKeyAlgorithm.ED25519.getAlgorithmId(), signingKey.getPGPPublicKey().getAlgorithm());
+        assertEquals(PublicKeyAlgorithm.ED25519.getAlgorithmId(), signingKey.getAlgorithm());
         assertFalse(signingKey.isPrimaryKey());
 
         OpenPGPCertificate.OpenPGPComponentKey encryptionKey = key.getKeys().get(2);
         assertTrue(key.getEncryptionKeys().contains(encryptionKey));
         assertEquals(6, encryptionKey.getVersion());
-        assertEquals(PublicKeyAlgorithm.X25519.getAlgorithmId(), encryptionKey.getPGPPublicKey().getAlgorithm());
+        assertEquals(PublicKeyAlgorithm.X25519.getAlgorithmId(), encryptionKey.getAlgorithm());
         assertFalse(encryptionKey.isPrimaryKey());
 
         OpenPGPCertificate certificate = key.toCertificate();
@@ -99,5 +117,33 @@ public class GenerateV6KeyTest {
         // CHECKSTYLE:OFF
         System.out.println(certificate.toAsciiArmoredString());
         // CHECKSTYLE:ON
+    }
+
+    @Test
+    public void buildMonolithicRSAKey() {
+        OpenPGPKey key = PGPainless.getInstance().generateKey(OpenPGPKeyVersion.v6)
+                .simpleRsaKeyRing("Alice <alice@example.org>", RsaLength._4096);
+
+        OpenPGPCertificate.OpenPGPPrimaryKey primaryKey = key.getPrimaryKey();
+        // Primary key is used for all purposes
+        assertEquals(primaryKey, key.getCertificationKeys().get(0));
+        assertEquals(primaryKey, key.getSigningKeys().get(0));
+        assertEquals(primaryKey, key.getEncryptionKeys().get(0));
+    }
+
+    @Test
+    public void generateAEADProtectedModernKey()
+            throws IOException {
+        OpenPGPKey key = PGPainless.getInstance()
+                .generateKey(OpenPGPKeyVersion.v6)
+                .modernKeyRing("Alice <alice@example.com>", "p455w0rd");
+
+        String armored = key.toAsciiArmoredString();
+
+        OpenPGPKey parsed = PGPainless.getInstance().readKey().parseKey(armored);
+
+        OpenPGPKey.OpenPGPSecretKey primaryKey = key.getPrimarySecretKey();
+
+        assertEquals(armored, parsed.toAsciiArmoredString());
     }
 }

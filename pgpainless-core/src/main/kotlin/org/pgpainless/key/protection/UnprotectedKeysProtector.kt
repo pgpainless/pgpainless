@@ -4,6 +4,7 @@
 package org.pgpainless.key.protection
 
 import org.bouncycastle.bcpg.KeyIdentifier
+import org.bouncycastle.openpgp.PGPPublicKey
 import org.bouncycastle.openpgp.api.OpenPGPKey
 import org.bouncycastle.openpgp.operator.PBESecretKeyDecryptor
 import org.bouncycastle.openpgp.operator.PBESecretKeyEncryptor
@@ -17,7 +18,7 @@ class UnprotectedKeysProtector : SecretKeyRingProtector {
 
     override fun getDecryptor(keyIdentifier: KeyIdentifier): PBESecretKeyDecryptor? = null
 
-    override fun getEncryptor(keyIdentifier: KeyIdentifier): PBESecretKeyEncryptor? = null
+    override fun getEncryptor(key: PGPPublicKey): PBESecretKeyEncryptor? = null
 
     override fun getKeyPassword(p0: OpenPGPKey.OpenPGPSecretKey?): CharArray? = null
 }

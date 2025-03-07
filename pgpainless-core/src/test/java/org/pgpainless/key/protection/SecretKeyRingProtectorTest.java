@@ -62,7 +62,6 @@ public class SecretKeyRingProtectorTest {
         SecretKeyRingProtector protector = SecretKeyRingProtector.unprotectedKeys();
         for (int i = 0; i < 10; i++) {
             Long keyId = random.nextLong();
-            assertNull(protector.getEncryptor(keyId));
             assertNull(protector.getDecryptor(keyId));
         }
     }
@@ -80,8 +79,8 @@ public class SecretKeyRingProtectorTest {
         SecretKeyRingProtector protector =
                 SecretKeyRingProtector.unlockSingleKeyWith(TestKeys.CRYPTIE_PASSPHRASE, secretKey);
         assertNotNull(protector.getDecryptor(secretKey.getKeyID()));
-        assertNotNull(protector.getEncryptor(secretKey.getKeyID()));
-        assertNull(protector.getEncryptor(subKey.getKeyID()));
+        assertNotNull(protector.getEncryptor(secretKey.getPublicKey()));
+        assertNull(protector.getEncryptor(subKey.getPublicKey()));
         assertNull(protector.getDecryptor(subKey.getKeyID()));
     }
 

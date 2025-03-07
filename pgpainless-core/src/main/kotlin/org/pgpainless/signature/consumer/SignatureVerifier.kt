@@ -12,9 +12,9 @@ import org.bouncycastle.openpgp.PGPException
 import org.bouncycastle.openpgp.PGPPublicKey
 import org.bouncycastle.openpgp.PGPSignature
 import org.bouncycastle.openpgp.PGPUserAttributeSubpacketVector
+import org.bouncycastle.openpgp.api.OpenPGPImplementation
 import org.pgpainless.algorithm.SignatureType
 import org.pgpainless.exception.SignatureValidationException
-import org.pgpainless.implementation.ImplementationFactory.Companion.getInstance
 import org.pgpainless.policy.Policy
 import org.pgpainless.signature.consumer.SignatureValidator.Companion.correctSignatureOverKey
 import org.pgpainless.signature.consumer.SignatureValidator.Companion.correctSignatureOverUserAttributes
@@ -479,7 +479,7 @@ class SignatureVerifier {
         ) {
             try {
                 signature.init(
-                    getInstance().pgpContentVerifierBuilderProvider,
+                    OpenPGPImplementation.getInstance().pgpContentVerifierBuilderProvider(),
                     signingKey,
                 )
                 var read: Int
