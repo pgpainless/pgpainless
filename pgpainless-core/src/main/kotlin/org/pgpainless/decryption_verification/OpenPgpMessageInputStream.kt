@@ -23,8 +23,10 @@ import org.bouncycastle.openpgp.PGPOnePassSignature
 import org.bouncycastle.openpgp.PGPPBEEncryptedData
 import org.bouncycastle.openpgp.PGPPublicKey
 import org.bouncycastle.openpgp.PGPPublicKeyEncryptedData
+import org.bouncycastle.openpgp.PGPSessionKey
 import org.bouncycastle.openpgp.PGPSignature
 import org.bouncycastle.openpgp.api.OpenPGPCertificate
+import org.bouncycastle.openpgp.api.OpenPGPImplementation
 import org.bouncycastle.openpgp.api.OpenPGPKey
 import org.bouncycastle.openpgp.api.OpenPGPKey.OpenPGPPrivateKey
 import org.bouncycastle.openpgp.api.OpenPGPKey.OpenPGPSecretKey
@@ -57,7 +59,6 @@ import org.pgpainless.exception.MissingPassphraseException
 import org.pgpainless.exception.SignatureValidationException
 import org.pgpainless.exception.UnacceptableAlgorithmException
 import org.pgpainless.exception.WrongPassphraseException
-import org.pgpainless.implementation.ImplementationFactory
 import org.pgpainless.key.SubkeyIdentifier
 import org.pgpainless.key.protection.UnlockSecretKey.Companion.unlockSecretKey
 import org.pgpainless.policy.Policy
@@ -360,8 +361,9 @@ class OpenPgpMessageInputStream(
             LOGGER.debug("Attempt decryption with provided session key.")
             throwIfUnacceptable(sk.algorithm)
 
+            val pgpSk = PGPSessionKey(sk.algorithm.algorithmId, sk.key)
             val decryptorFactory =
-                ImplementationFactory.getInstance().getSessionKeyDataDecryptorFactory(sk)
+                OpenPGPImplementation.getInstance().sessionKeyDataDecryptorFactory(pgpSk)
             val layer = EncryptedData(sk.algorithm, layerMetadata.depth + 1)
             val skEncData = encDataList.extractSessionKeyEncryptedData()
             try {
@@ -393,7 +395,8 @@ class OpenPgpMessageInputStream(
                 }
 
                 val decryptorFactory =
-                    ImplementationFactory.getInstance().getPBEDataDecryptorFactory(passphrase)
+                    OpenPGPImplementation.getInstance()
+                        .pbeDataDecryptorFactory(passphrase.getChars())
                 if (decryptSKESKAndStream(esks, skesk, decryptorFactory)) {
                     return true
                 }
@@ -515,8 +518,7 @@ class OpenPgpMessageInputStream(
         pkesk: PGPPublicKeyEncryptedData
     ): Boolean {
         val decryptorFactory =
-            ImplementationFactory.getInstance()
-                .getPublicKeyDataDecryptorFactory(privateKey.privateKey)
+            OpenPGPImplementation.getInstance().publicKeyDataDecryptorFactory(privateKey.privateKey)
         return decryptPKESKAndStream(esks, decryptionKeyId, decryptorFactory, pkesk)
     }
 
@@ -1046,7 +1048,7 @@ class OpenPgpMessageInputStream(
             @JvmStatic
             private fun initialize(signature: PGPSignature, publicKey: PGPPublicKey) {
                 val verifierProvider =
-                    ImplementationFactory.getInstance().pgpContentVerifierBuilderProvider
+                    OpenPGPImplementation.getInstance().pgpContentVerifierBuilderProvider()
                 try {
                     signature.init(verifierProvider, publicKey)
                 } catch (e: PGPException) {
@@ -1057,7 +1059,7 @@ class OpenPgpMessageInputStream(
             @JvmStatic
             private fun initialize(ops: PGPOnePassSignature, publicKey: PGPPublicKey) {
                 val verifierProvider =
-                    ImplementationFactory.getInstance().pgpContentVerifierBuilderProvider
+                    OpenPGPImplementation.getInstance().pgpContentVerifierBuilderProvider()
                 try {
                     ops.init(verifierProvider, publicKey)
                 } catch (e: PGPException) {

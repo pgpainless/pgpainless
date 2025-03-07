@@ -14,6 +14,7 @@ import java.nio.charset.StandardCharsets;
 import java.util.Date;
 
 import org.bouncycastle.bcpg.ArmoredOutputStream;
+import org.bouncycastle.bcpg.SymmetricKeyAlgorithmTags;
 import org.bouncycastle.openpgp.PGPEncryptedDataGenerator;
 import org.bouncycastle.openpgp.PGPException;
 import org.bouncycastle.openpgp.PGPLiteralDataGenerator;
@@ -21,6 +22,7 @@ import org.bouncycastle.openpgp.PGPPublicKey;
 import org.bouncycastle.openpgp.PGPSecretKey;
 import org.bouncycastle.openpgp.PGPSecretKeyRing;
 import org.bouncycastle.openpgp.PGPSignatureGenerator;
+import org.bouncycastle.openpgp.api.OpenPGPImplementation;
 import org.bouncycastle.openpgp.api.OpenPGPKey;
 import org.bouncycastle.openpgp.operator.PGPDataEncryptorBuilder;
 import org.bouncycastle.util.io.Streams;
@@ -29,11 +31,9 @@ import org.pgpainless.PGPainless;
 import org.pgpainless.algorithm.EncryptionPurpose;
 import org.pgpainless.algorithm.HashAlgorithm;
 import org.pgpainless.algorithm.SignatureType;
-import org.pgpainless.algorithm.SymmetricKeyAlgorithm;
 import org.pgpainless.decryption_verification.ConsumerOptions;
 import org.pgpainless.decryption_verification.DecryptionStream;
 import org.pgpainless.exception.MalformedOpenPgpMessageException;
-import org.pgpainless.implementation.ImplementationFactory;
 import org.pgpainless.key.info.KeyRingInfo;
 import org.pgpainless.key.protection.UnlockSecretKey;
 import org.pgpainless.util.Passphrase;
@@ -130,7 +130,7 @@ public class InvestigateMultiSEIPMessageHandlingTest {
         ByteArrayOutputStream out = new ByteArrayOutputStream();
         ArmoredOutputStream armorOut = new ArmoredOutputStream(out);
 
-        PGPDataEncryptorBuilder cryptBuilder = ImplementationFactory.getInstance().getPGPDataEncryptorBuilder(SymmetricKeyAlgorithm.AES_256);
+        PGPDataEncryptorBuilder cryptBuilder = OpenPGPImplementation.getInstance().pgpDataEncryptorBuilder(SymmetricKeyAlgorithmTags.AES_256);
         cryptBuilder.setWithIntegrityPacket(true);
 
         encryptAndSign(cryptKey1, signKey1, armorOut, data1.getBytes(StandardCharsets.UTF_8));
@@ -145,15 +145,16 @@ public class InvestigateMultiSEIPMessageHandlingTest {
 
     private void encryptAndSign(PGPPublicKey cryptKey, PGPSecretKey signKey, ArmoredOutputStream armorOut, byte[] data) throws IOException, PGPException {
 
-        PGPDataEncryptorBuilder cryptBuilder = ImplementationFactory.getInstance().getPGPDataEncryptorBuilder(SymmetricKeyAlgorithm.AES_256);
+        PGPDataEncryptorBuilder cryptBuilder = OpenPGPImplementation.getInstance().pgpDataEncryptorBuilder(SymmetricKeyAlgorithmTags.AES_256);
         cryptBuilder.setWithIntegrityPacket(true);
 
         PGPEncryptedDataGenerator cryptGen = new PGPEncryptedDataGenerator(cryptBuilder);
-        cryptGen.addMethod(ImplementationFactory.getInstance().getPublicKeyKeyEncryptionMethodGenerator(cryptKey));
+        cryptGen.addMethod(OpenPGPImplementation.getInstance().publicKeyKeyEncryptionMethodGenerator(cryptKey));
         OutputStream cryptStream = cryptGen.open(armorOut, new byte[512]);
 
-        PGPSignatureGenerator sigGen = new PGPSignatureGenerator(ImplementationFactory.getInstance()
-                .getPGPContentSignerBuilder(signKey.getPublicKey().getAlgorithm(), HashAlgorithm.SHA512.getAlgorithmId()));
+        PGPSignatureGenerator sigGen = new PGPSignatureGenerator(OpenPGPImplementation.getInstance()
+                .pgpContentSignerBuilder(signKey.getPublicKey().getAlgorithm(), HashAlgorithm.SHA512.getAlgorithmId()),
+                signKey.getPublicKey());
         sigGen.init(SignatureType.BINARY_DOCUMENT.getCode(), UnlockSecretKey
                 .unlockSecretKey(signKey, (Passphrase) null));
 

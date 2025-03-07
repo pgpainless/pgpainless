@@ -10,10 +10,10 @@ import java.util.*
 import openpgp.plusSeconds
 import org.bouncycastle.bcpg.sig.KeyExpirationTime
 import org.bouncycastle.openpgp.*
+import org.bouncycastle.openpgp.api.OpenPGPImplementation
 import org.bouncycastle.util.encoders.Hex
 import org.bouncycastle.util.io.Streams
 import org.pgpainless.bouncycastle.extensions.*
-import org.pgpainless.implementation.ImplementationFactory
 import org.pgpainless.key.OpenPgpFingerprint
 import org.pgpainless.key.util.RevocationAttributes.Reason
 import org.pgpainless.util.ArmorUtils
@@ -153,7 +153,7 @@ class SignatureUtils {
         fun readSignatures(inputStream: InputStream, maxIterations: Int): List<PGPSignature> {
             val signatures = mutableListOf<PGPSignature>()
             val pgpIn = ArmorUtils.getDecoderStream(inputStream)
-            val objectFactory = ImplementationFactory.getInstance().getPGPObjectFactory(pgpIn)
+            val objectFactory = OpenPGPImplementation.getInstance().pgpObjectFactory(pgpIn)
 
             var i = 0
             var nextObject: Any? = null
