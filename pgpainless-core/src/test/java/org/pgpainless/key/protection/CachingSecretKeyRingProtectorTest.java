@@ -51,27 +51,29 @@ public class CachingSecretKeyRingProtectorTest {
     }
 
     @Test
-    public void noCallbackReturnsNullForUnknownKeyId() throws PGPException {
-        assertNull(protector.getDecryptor(123L));
+    public void noCallbackReturnsNullForUnknownKeyId() {
+        assertNull(protector.getDecryptor(new KeyIdentifier(123L)));
     }
 
     @Test
-    public void testAddPassphrase() throws PGPException {
+    public void testAddPassphrase() {
+        KeyIdentifier k123 = new KeyIdentifier(123L);
         Passphrase passphrase = Passphrase.fromPassword("HelloWorld");
-        protector.addPassphrase(new KeyIdentifier(123L), passphrase);
-        assertEquals(passphrase, protector.getPassphraseFor(123L));
-        assertNotNull(protector.getDecryptor(123L));
+        protector.addPassphrase(k123, passphrase);
+        assertEquals(passphrase, protector.getPassphraseFor(k123));
+        assertNotNull(protector.getDecryptor(k123));
 
-        assertNull(protector.getPassphraseFor(999L));
+        assertNull(protector.getPassphraseFor(new KeyIdentifier(999L)));
     }
 
     @Test
     public void testForgetPassphrase() {
+        KeyIdentifier k123 = new KeyIdentifier(123L);
         Passphrase passphrase = Passphrase.fromPassword("amnesiac");
-        protector.addPassphrase(123L, passphrase);
-        assertEquals(passphrase, protector.getPassphraseFor(123L));
-        protector.forgetPassphrase(123L);
-        assertNull(protector.getPassphraseFor(123L));
+        protector.addPassphrase(k123, passphrase);
+        assertEquals(passphrase, protector.getPassphraseFor(k123));
+        protector.forgetPassphrase(k123);
+        assertNull(protector.getPassphraseFor(k123));
     }
 
     @Test
@@ -87,11 +89,11 @@ public class CachingSecretKeyRingProtectorTest {
             PGPSecretKey key = it.next();
             assertEquals(passphrase, protector.getPassphraseFor(key));
             assertNotNull(protector.getEncryptor(key.getPublicKey()));
-            assertNotNull(protector.getDecryptor(key.getKeyID()));
+            assertNotNull(protector.getDecryptor(key.getKeyIdentifier()));
         }
 
         long nonMatching = findNonMatchingKeyId(keys);
-        assertNull(protector.getPassphraseFor(nonMatching));
+        assertNull(protector.getPassphraseFor(new KeyIdentifier(nonMatching)));
 
         protector.forgetPassphrase(keys);
         it = keys.getSecretKeys();
@@ -99,7 +101,7 @@ public class CachingSecretKeyRingProtectorTest {
             PGPSecretKey key = it.next();
             assertNull(protector.getPassphraseFor(key));
             assertNull(protector.getEncryptor(key.getPublicKey()));
-            assertNull(protector.getDecryptor(key.getKeyID()));
+            assertNull(protector.getDecryptor(key.getKeyIdentifier()));
         }
     }
 
@@ -123,13 +125,13 @@ public class CachingSecretKeyRingProtectorTest {
         CachingSecretKeyRingProtector withCallback = new CachingSecretKeyRingProtector(dummyCallback);
 
         for (int i = -5; i <= 5; i++) {
-            long x = i * 5;
-            long doubled = x * 2;
+            KeyIdentifier x = new KeyIdentifier(i * 5);
+            KeyIdentifier doubled = new KeyIdentifier(x.getKeyId() * 2);
 
             Passphrase passphrase = withCallback.getPassphraseFor(x);
             assertNotNull(passphrase);
             assertNotNull(passphrase.getChars());
-            assertEquals(doubled, Long.parseLong(new String(passphrase.getChars())));
+            assertEquals(doubled, new KeyIdentifier(Long.parseLong(new String(passphrase.getChars()))));
         }
     }
 

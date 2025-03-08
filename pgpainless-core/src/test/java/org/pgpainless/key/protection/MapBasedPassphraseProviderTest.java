@@ -29,10 +29,10 @@ public class MapBasedPassphraseProviderTest {
         passphraseMap.put(new KeyIdentifier(69696969L), Passphrase.emptyPassphrase());
         MapBasedPassphraseProvider provider = new MapBasedPassphraseProvider(passphraseMap);
 
-        assertEquals(Passphrase.fromPassword("tiger"), provider.getPassphraseFor(1L));
-        assertEquals(Passphrase.fromPassword("snake"), provider.getPassphraseFor(123123123L));
-        assertEquals(Passphrase.emptyPassphrase(), provider.getPassphraseFor(69696969L));
-        assertNull(provider.getPassphraseFor(555L));
+        assertEquals(Passphrase.fromPassword("tiger"), provider.getPassphraseFor(new KeyIdentifier(1L)));
+        assertEquals(Passphrase.fromPassword("snake"), provider.getPassphraseFor(new KeyIdentifier((123123123L))));
+        assertEquals(Passphrase.emptyPassphrase(), provider.getPassphraseFor(new KeyIdentifier(69696969L)));
+        assertNull(provider.getPassphraseFor(new KeyIdentifier(555L)));
 
         PGPSecretKeyRing secretKeys = TestKeys.getCryptieSecretKeyRing();
         passphraseMap = new ConcurrentHashMap<>();
