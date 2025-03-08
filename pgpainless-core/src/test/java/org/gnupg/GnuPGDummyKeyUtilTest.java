@@ -275,7 +275,7 @@ public class GnuPGDummyKeyUtilTest {
                 .divertPrivateKeysToCard(GnuPGDummyKeyUtil.KeyFilter.any());
         Set<SubkeyIdentifier> expected = new HashSet<>();
         for (PGPSecretKey key : secretKeys.getPGPSecretKeyRing()) {
-            expected.add(new SubkeyIdentifier(secretKeys.getPGPSecretKeyRing(), key.getKeyID()));
+            expected.add(new SubkeyIdentifier(secretKeys.getPGPSecretKeyRing(), key.getKeyIdentifier()));
         }
 
         Set<SubkeyIdentifier> hardwareBackedKeys = GnuPGDummyKeyUtil
