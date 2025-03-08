@@ -323,8 +323,7 @@ class CertifyCertificate {
             }
 
             return certificationKey.getSecretKey(certificationPubKey.keyIdentifier)
-                ?: throw MissingSecretKeyException(
-                    fingerprint, certificationPubKey.keyIdentifier.keyId)
+                ?: throw MissingSecretKeyException(fingerprint, certificationPubKey.keyIdentifier)
         }
     }
 }
