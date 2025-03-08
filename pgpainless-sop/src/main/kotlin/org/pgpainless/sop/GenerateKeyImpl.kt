@@ -9,7 +9,7 @@ import java.lang.RuntimeException
 import java.security.InvalidAlgorithmParameterException
 import java.security.NoSuchAlgorithmException
 import org.bouncycastle.openpgp.PGPException
-import org.bouncycastle.openpgp.PGPSecretKeyRing
+import org.bouncycastle.openpgp.api.OpenPGPKey
 import org.pgpainless.PGPainless
 import org.pgpainless.algorithm.KeyFlag
 import org.pgpainless.key.generation.KeyRingBuilder
@@ -50,11 +50,11 @@ class GenerateKeyImpl : GenerateKey {
             return object : Ready() {
                 override fun writeTo(outputStream: OutputStream) {
                     if (armor) {
-                        val armorOut = ArmorUtils.toAsciiArmoredStream(key, outputStream)
-                        key.encode(armorOut)
+                        val armorOut = ArmorUtils.toAsciiArmoredStream(key.pgpKeyRing, outputStream)
+                        key.pgpKeyRing.encode(armorOut)
                         armorOut.close()
                     } else {
-                        key.encode(outputStream)
+                        key.pgpKeyRing.encode(outputStream)
                     }
                 }
             }
@@ -88,7 +88,7 @@ class GenerateKeyImpl : GenerateKey {
         userIds: Set<String>,
         passphrase: Passphrase,
         signingOnly: Boolean
-    ): PGPSecretKeyRing {
+    ): OpenPGPKey {
         val keyBuilder: KeyRingBuilder =
             when (profile) {
                 CURVE25519_PROFILE.name ->

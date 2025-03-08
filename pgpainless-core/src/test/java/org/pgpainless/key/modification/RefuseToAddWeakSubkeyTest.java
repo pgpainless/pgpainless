@@ -7,13 +7,9 @@ package org.pgpainless.key.modification;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 
-import java.io.IOException;
-import java.security.InvalidAlgorithmParameterException;
-import java.security.NoSuchAlgorithmException;
 import java.util.EnumMap;
 import java.util.Map;
 
-import org.bouncycastle.openpgp.PGPException;
 import org.bouncycastle.openpgp.PGPSecretKeyRing;
 import org.junit.jupiter.api.Test;
 import org.pgpainless.PGPainless;
@@ -31,13 +27,13 @@ import org.pgpainless.util.Passphrase;
 public class RefuseToAddWeakSubkeyTest {
 
     @Test
-    public void testEditorRefusesToAddWeakSubkey()
-            throws PGPException, InvalidAlgorithmParameterException, NoSuchAlgorithmException {
+    public void testEditorRefusesToAddWeakSubkey() {
         // ensure default policy is set
         PGPainless.getPolicy().setPublicKeyAlgorithmPolicy(Policy.PublicKeyAlgorithmPolicy.bsi2021PublicKeyAlgorithmPolicy());
 
         PGPSecretKeyRing secretKeys = PGPainless.generateKeyRing()
-                .modernKeyRing("Alice");
+                .modernKeyRing("Alice")
+                .getPGPSecretKeyRing();
         SecretKeyRingEditorInterface editor = PGPainless.modifyKeyRing(secretKeys);
         KeySpec spec = KeySpec.getBuilder(KeyType.RSA(RsaLength._1024), KeyFlag.ENCRYPT_COMMS).build();
 
@@ -46,10 +42,10 @@ public class RefuseToAddWeakSubkeyTest {
     }
 
     @Test
-    public void testEditorAllowsToAddWeakSubkeyIfCompliesToPublicKeyAlgorithmPolicy()
-            throws PGPException, InvalidAlgorithmParameterException, NoSuchAlgorithmException, IOException {
+    public void testEditorAllowsToAddWeakSubkeyIfCompliesToPublicKeyAlgorithmPolicy() {
         PGPSecretKeyRing secretKeys = PGPainless.generateKeyRing()
-                .modernKeyRing("Alice");
+                .modernKeyRing("Alice")
+                .getPGPSecretKeyRing();
 
         // set weak policy
         Map<PublicKeyAlgorithm, Integer> minimalBitStrengths = new EnumMap<>(PublicKeyAlgorithm.class);

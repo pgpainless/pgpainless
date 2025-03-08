@@ -4,12 +4,13 @@
 
 package org.pgpainless.key.protection.passphrase_provider
 
+import org.bouncycastle.bcpg.KeyIdentifier
 import org.pgpainless.util.Passphrase
 
 /** Implementation of the [SecretKeyPassphraseProvider] that holds a single [Passphrase]. */
 class SolitaryPassphraseProvider(val passphrase: Passphrase?) : SecretKeyPassphraseProvider {
 
-    override fun getPassphraseFor(keyId: Long?): Passphrase? = passphrase
+    override fun getPassphraseFor(keyIdentifier: KeyIdentifier): Passphrase? = passphrase
 
-    override fun hasPassphrase(keyId: Long?): Boolean = true
+    override fun hasPassphrase(keyIdentifier: KeyIdentifier): Boolean = true
 }

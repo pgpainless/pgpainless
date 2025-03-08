@@ -10,6 +10,7 @@ import org.bouncycastle.bcpg.SecretKeyPacket;
 import org.bouncycastle.bcpg.SecretSubkeyPacket;
 import org.bouncycastle.openpgp.PGPSecretKey;
 import org.bouncycastle.openpgp.PGPSecretKeyRing;
+import org.bouncycastle.openpgp.api.OpenPGPKey;
 import org.pgpainless.key.SubkeyIdentifier;
 
 import javax.annotation.Nonnull;
@@ -53,11 +54,15 @@ public final class GnuPGDummyKeyUtil {
             int mode = s2K.getProtectionMode();
             // TODO: Is GNU_DUMMY_S2K appropriate?
             if (type == S2K.GNU_DUMMY_S2K && mode == S2K.GNU_PROTECTION_MODE_DIVERT_TO_CARD) {
-                SubkeyIdentifier hardwareBackedKey = new SubkeyIdentifier(secretKeys, secretKey.getKeyID());
+                SubkeyIdentifier hardwareBackedKey = new SubkeyIdentifier(secretKeys, secretKey.getKeyIdentifier());
                 hardwareBackedKeys.add(hardwareBackedKey);
             }
         }
         return hardwareBackedKeys;
+    }
+
+    public static Builder modify(@Nonnull OpenPGPKey key) {
+        return modify(key.getPGPSecretKeyRing());
     }
 
     /**

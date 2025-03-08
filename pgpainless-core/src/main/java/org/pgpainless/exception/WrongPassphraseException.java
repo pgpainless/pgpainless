@@ -4,6 +4,7 @@
 
 package org.pgpainless.exception;
 
+import org.bouncycastle.bcpg.KeyIdentifier;
 import org.bouncycastle.openpgp.PGPException;
 
 public class WrongPassphraseException extends PGPException {
@@ -13,7 +14,11 @@ public class WrongPassphraseException extends PGPException {
     }
 
     public WrongPassphraseException(long keyId, PGPException cause) {
-        this("Wrong passphrase provided for key " + Long.toHexString(keyId), cause);
+        this(new KeyIdentifier(keyId), cause);
+    }
+
+    public WrongPassphraseException(KeyIdentifier keyIdentifier, PGPException cause) {
+        this("Wrong passphrase provided for key " + keyIdentifier, cause);
     }
 
     public WrongPassphraseException(String message, PGPException cause) {

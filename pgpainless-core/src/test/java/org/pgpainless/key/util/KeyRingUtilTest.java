@@ -14,12 +14,13 @@ import org.bouncycastle.openpgp.PGPSignature;
 import org.bouncycastle.openpgp.PGPSignatureGenerator;
 import org.bouncycastle.openpgp.PGPUserAttributeSubpacketVector;
 import org.bouncycastle.openpgp.PGPUserAttributeSubpacketVectorGenerator;
+import org.bouncycastle.openpgp.api.OpenPGPImplementation;
 import org.junit.jupiter.api.Test;
 import org.pgpainless.PGPainless;
 import org.pgpainless.algorithm.HashAlgorithm;
 import org.pgpainless.algorithm.KeyFlag;
+import org.pgpainless.algorithm.OpenPGPKeyVersion;
 import org.pgpainless.algorithm.SignatureType;
-import org.pgpainless.implementation.ImplementationFactory;
 import org.pgpainless.key.generation.KeyRingBuilder;
 import org.pgpainless.key.generation.KeySpec;
 import org.pgpainless.key.generation.type.KeyType;
@@ -28,8 +29,6 @@ import org.pgpainless.key.protection.SecretKeyRingProtector;
 import org.pgpainless.key.protection.UnlockSecretKey;
 import org.pgpainless.util.CollectionUtils;
 
-import java.security.InvalidAlgorithmParameterException;
-import java.security.NoSuchAlgorithmException;
 import java.util.Random;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -40,9 +39,10 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 public class KeyRingUtilTest {
 
     @Test
-    public void testInjectCertification() throws PGPException, InvalidAlgorithmParameterException, NoSuchAlgorithmException {
+    public void testInjectCertification() throws PGPException {
         PGPSecretKeyRing secretKeys = PGPainless.generateKeyRing()
-                .modernKeyRing("Alice");
+                .modernKeyRing("Alice")
+                .getPGPSecretKeyRing();
 
         // test preconditions
         assertFalse(secretKeys.getPublicKey().getUserAttributes().hasNext());
@@ -57,9 +57,9 @@ public class KeyRingUtilTest {
 
         // create sig
         PGPSignatureGenerator sigGen = new PGPSignatureGenerator(
-                ImplementationFactory.getInstance().getPGPContentSignerBuilder(
+                OpenPGPImplementation.getInstance().pgpContentSignerBuilder(
                         secretKeys.getPublicKey().getAlgorithm(), HashAlgorithm.SHA512.getAlgorithmId()
-                ));
+                ), secretKeys.getPublicKey());
         sigGen.init(
                 SignatureType.POSITIVE_CERTIFICATION.getCode(),
                 UnlockSecretKey.unlockSecretKey(secretKeys.getSecretKey(), SecretKeyRingProtector.unprotectedKeys()));
@@ -73,12 +73,14 @@ public class KeyRingUtilTest {
     }
 
     @Test
-    public void testKeysPlusPublicKey() throws PGPException, InvalidAlgorithmParameterException, NoSuchAlgorithmException {
-        PGPSecretKeyRing secretKeys = PGPainless.generateKeyRing().modernKeyRing("Alice");
+    public void testKeysPlusPublicKey() {
+        PGPSecretKeyRing secretKeys = PGPainless.generateKeyRing().modernKeyRing("Alice")
+                .getPGPSecretKeyRing();
         PGPPublicKeyRing publicKeys = PGPainless.extractCertificate(secretKeys);
 
         PGPKeyPair keyPair = KeyRingBuilder.generateKeyPair(KeySpec.getBuilder(
-                KeyType.ECDH(EllipticCurve._P256), KeyFlag.ENCRYPT_COMMS, KeyFlag.ENCRYPT_STORAGE).build());
+                KeyType.ECDH(EllipticCurve._P256), KeyFlag.ENCRYPT_COMMS, KeyFlag.ENCRYPT_STORAGE).build(),
+                OpenPGPKeyVersion.v4);
         PGPPublicKey pubkey = keyPair.getPublicKey();
         assertFalse(pubkey.isMasterKey());
 

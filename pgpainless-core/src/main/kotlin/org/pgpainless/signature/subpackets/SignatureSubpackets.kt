@@ -42,6 +42,7 @@ class SignatureSubpackets :
     var preferredCompressionAlgorithmsSubpacket: PreferredAlgorithms? = null
     var preferredSymmetricKeyAlgorithmsSubpacket: PreferredAlgorithms? = null
     var preferredHashAlgorithmsSubpacket: PreferredAlgorithms? = null
+    var preferredAEADCiphersuites: List<AEADCipherMode>? = null
     val embeddedSignatureSubpackets: List<EmbeddedSignature> = mutableListOf()
     var signerUserIdSubpacket: SignerUserID? = null
     var keyExpirationTimeSubpacket: KeyExpirationTime? = null
@@ -72,7 +73,7 @@ class SignatureSubpackets :
             issuer: PGPPublicKey,
             base: PGPSignatureSubpacketVector
         ): SignatureSubpackets {
-            return createSubpacketsFrom(base).apply { setIssuerFingerprintAndKeyId(issuer) }
+            return createSubpacketsFrom(base).apply { setAppropriateIssuerInfo(issuer) }
         }
 
         @JvmStatic
@@ -82,7 +83,7 @@ class SignatureSubpackets :
 
         @JvmStatic
         fun createHashedSubpackets(issuer: PGPPublicKey): SignatureSubpackets {
-            return createEmptySubpackets().setIssuerFingerprintAndKeyId(issuer)
+            return createEmptySubpackets().setAppropriateIssuerInfo(issuer)
         }
 
         @JvmStatic
@@ -312,6 +313,10 @@ class SignatureSubpackets :
             this.preferredHashAlgorithmsSubpacket = algorithms
         }
 
+    override fun setPreferredAEADCiphersuites(
+        aeadAlgorithms: Set<AEADCipherMode>
+    ): SignatureSubpackets = apply { this.preferredAEADCiphersuites = aeadAlgorithms.toList() }
+
     override fun addRevocationKey(revocationKey: PGPPublicKey): SignatureSubpackets = apply {
         addRevocationKey(true, revocationKey)
     }
@@ -350,6 +355,19 @@ class SignatureSubpackets :
 
     override fun setFeatures(features: Features?): SignatureSubpackets = apply {
         this.featuresSubpacket = features
+    }
+
+    override fun setAppropriateIssuerInfo(key: PGPPublicKey) = apply {
+        setAppropriateIssuerInfo(key, OpenPGPKeyVersion.from(key.version))
+    }
+
+    override fun setAppropriateIssuerInfo(key: PGPPublicKey, version: OpenPGPKeyVersion) = apply {
+        when (version) {
+            OpenPGPKeyVersion.v3 -> setIssuerKeyId(key.keyID)
+            OpenPGPKeyVersion.v4 -> setIssuerFingerprintAndKeyId(key)
+            OpenPGPKeyVersion.librePgp,
+            OpenPGPKeyVersion.v6 -> setIssuerFingerprint(key)
+        }
     }
 
     override fun setIssuerFingerprintAndKeyId(key: PGPPublicKey): SignatureSubpackets = apply {

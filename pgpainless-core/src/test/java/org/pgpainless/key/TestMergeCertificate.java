@@ -4,7 +4,6 @@
 
 package org.pgpainless.key;
 
-import org.bouncycastle.openpgp.PGPException;
 import org.bouncycastle.openpgp.PGPPublicKeyRing;
 import org.bouncycastle.openpgp.PGPSecretKeyRing;
 import org.bouncycastle.openpgp.PGPSignature;
@@ -68,7 +67,7 @@ public class TestMergeCertificate {
             "-----END PGP SIGNATURE-----";
 
     @Test
-    public void testRevocationStateWithDifferentRevocationsMerged() throws IOException, PGPException {
+    public void testRevocationStateWithDifferentRevocationsMerged() throws IOException {
         PGPSecretKeyRing secretKeys = PGPainless.readKeyRing().secretKeyRing(KEY);
         PGPPublicKeyRing certificate = PGPainless.extractCertificate(secretKeys);
 
