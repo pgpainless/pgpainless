@@ -54,7 +54,7 @@ public final class GnuPGDummyKeyUtil {
             int mode = s2K.getProtectionMode();
             // TODO: Is GNU_DUMMY_S2K appropriate?
             if (type == S2K.GNU_DUMMY_S2K && mode == S2K.GNU_PROTECTION_MODE_DIVERT_TO_CARD) {
-                SubkeyIdentifier hardwareBackedKey = new SubkeyIdentifier(secretKeys, secretKey.getKeyID());
+                SubkeyIdentifier hardwareBackedKey = new SubkeyIdentifier(secretKeys, secretKey.getKeyIdentifier());
                 hardwareBackedKeys.add(hardwareBackedKey);
             }
         }

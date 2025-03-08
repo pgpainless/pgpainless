@@ -17,6 +17,7 @@ import java.util.NoSuchElementException;
 import openpgp.DateExtensionsKt;
 import org.bouncycastle.openpgp.PGPException;
 import org.bouncycastle.openpgp.PGPSecretKeyRing;
+import org.bouncycastle.openpgp.api.OpenPGPKey;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.TestTemplate;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -95,7 +96,8 @@ public class AddUserIdTest {
                         "=bk4o\r\n" +
                         "-----END PGP PRIVATE KEY BLOCK-----\r\n";
 
-        PGPSecretKeyRing secretKeys = PGPainless.readKeyRing().secretKeyRing(ARMORED_PRIVATE_KEY);
+        OpenPGPKey key = PGPainless.getInstance().readKey().parseKey(ARMORED_PRIVATE_KEY);
+        PGPSecretKeyRing secretKeys = key.getPGPSecretKeyRing();
         KeyRingInfo info = PGPainless.inspectKeyRing(secretKeys);
         Iterator<String> userIds = info.getValidUserIds().iterator();
         assertEquals("<user@example.com>", userIds.next());
@@ -119,7 +121,7 @@ public class AddUserIdTest {
         PGPSecretKeyRing secretKeys = PGPainless.generateKeyRing()
                 .modernKeyRing("Alice")
                 .getPGPSecretKeyRing();
-        UserId bob = UserId.newBuilder().withName("Bob").noEmail().noComment().build();
+        UserId bob = UserId.builder().withName("Bob").noEmail().noComment().build();
 
         assertNotEquals("Bob", PGPainless.inspectKeyRing(secretKeys).getPrimaryUserId());
 

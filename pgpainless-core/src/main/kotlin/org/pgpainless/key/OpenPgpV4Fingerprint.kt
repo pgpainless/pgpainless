@@ -10,12 +10,18 @@ import org.bouncycastle.bcpg.KeyIdentifier
 import org.bouncycastle.openpgp.PGPKeyRing
 import org.bouncycastle.openpgp.PGPPublicKey
 import org.bouncycastle.openpgp.PGPSecretKey
+import org.bouncycastle.openpgp.api.OpenPGPCertificate
+import org.bouncycastle.openpgp.api.OpenPGPCertificate.OpenPGPComponentKey
 
 class OpenPgpV4Fingerprint : OpenPgpFingerprint {
 
     constructor(fingerprint: String) : super(fingerprint)
 
     constructor(bytes: ByteArray) : super(bytes)
+
+    constructor(key: OpenPGPCertificate) : super(key.fingerprint)
+
+    constructor(key: OpenPGPComponentKey) : super(key.pgpPublicKey)
 
     constructor(key: PGPPublicKey) : super(key)
 
