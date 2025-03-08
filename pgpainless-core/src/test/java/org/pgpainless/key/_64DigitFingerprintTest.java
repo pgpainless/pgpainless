@@ -8,6 +8,7 @@ import org.bouncycastle.util.encoders.Hex;
 import org.junit.jupiter.api.Test;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertInstanceOf;
 import static org.junit.jupiter.api.Assertions.assertNotEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
@@ -19,7 +20,7 @@ public class _64DigitFingerprintTest {
         String prettyPrint = "76543210 ABCDEFAB 01AB23CD 1C0FFEE1  1EEFF0C1 DC32BA10 BAFEDCBA 01234567";
         OpenPgpFingerprint parsed = OpenPgpFingerprint.parse(prettyPrint);
 
-        assertTrue(parsed instanceof _64DigitFingerprint);
+        assertInstanceOf(_64DigitFingerprint.class, parsed);
         assertEquals(prettyPrint, parsed.prettyPrint());
         assertEquals(-1, parsed.getVersion());
     }
@@ -30,7 +31,7 @@ public class _64DigitFingerprintTest {
         byte[] binary = Hex.decode(hex);
 
         OpenPgpFingerprint fingerprint = OpenPgpFingerprint.parseFromBinary(binary);
-        assertTrue(fingerprint instanceof _64DigitFingerprint);
+        assertInstanceOf(_64DigitFingerprint.class, fingerprint);
         assertEquals(hex, fingerprint.toString());
 
         OpenPgpV5Fingerprint v5 = new OpenPgpV5Fingerprint(binary);

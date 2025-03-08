@@ -41,7 +41,7 @@ public class SecretKeyRingProtectorTest {
         SecretKeyRingProtector protector =
                 SecretKeyRingProtector.unlockEachKeyWith(TestKeys.CRYPTIE_PASSPHRASE, secretKeys);
         for (PGPSecretKey secretKey : secretKeys) {
-            PBESecretKeyDecryptor decryptor = protector.getDecryptor(secretKey.getKeyID());
+            PBESecretKeyDecryptor decryptor = protector.getDecryptor(secretKey.getKeyIdentifier());
             assertNotNull(decryptor);
             secretKey.extractPrivateKey(decryptor);
         }
@@ -49,10 +49,10 @@ public class SecretKeyRingProtectorTest {
                 "SecurePassword")
                 .getPGPSecretKeyRing();
         for (PGPSecretKey unrelatedKey : unrelatedKeys) {
-            PBESecretKeyDecryptor decryptor = protector.getDecryptor(unrelatedKey.getKeyID());
+            PBESecretKeyDecryptor decryptor = protector.getDecryptor(unrelatedKey.getKeyIdentifier());
             assertNull(decryptor);
             assertThrows(PGPException.class,
-                    () -> unrelatedKey.extractPrivateKey(protector.getDecryptor(unrelatedKey.getKeyID())));
+                    () -> unrelatedKey.extractPrivateKey(protector.getDecryptor(unrelatedKey.getKeyIdentifier())));
         }
     }
 
@@ -61,8 +61,8 @@ public class SecretKeyRingProtectorTest {
         Random random = new Random();
         SecretKeyRingProtector protector = SecretKeyRingProtector.unprotectedKeys();
         for (int i = 0; i < 10; i++) {
-            Long keyId = random.nextLong();
-            assertNull(protector.getDecryptor(keyId));
+            KeyIdentifier keyIdentifier = new KeyIdentifier(random.nextLong());
+            assertNull(protector.getDecryptor(keyIdentifier));
         }
     }
 
@@ -78,27 +78,29 @@ public class SecretKeyRingProtectorTest {
 
         SecretKeyRingProtector protector =
                 SecretKeyRingProtector.unlockSingleKeyWith(TestKeys.CRYPTIE_PASSPHRASE, secretKey);
-        assertNotNull(protector.getDecryptor(secretKey.getKeyID()));
+        assertNotNull(protector.getDecryptor(secretKey.getKeyIdentifier()));
         assertNotNull(protector.getEncryptor(secretKey.getPublicKey()));
         assertNull(protector.getEncryptor(subKey.getPublicKey()));
-        assertNull(protector.getDecryptor(subKey.getKeyID()));
+        assertNull(protector.getDecryptor(subKey.getKeyIdentifier()));
     }
 
     @Test
     public void testFromPassphraseMap() {
         Map<KeyIdentifier, Passphrase> passphraseMap = new ConcurrentHashMap<>();
-        passphraseMap.put(new KeyIdentifier(1L), Passphrase.emptyPassphrase());
+        KeyIdentifier k1 = new KeyIdentifier(1L);
+        KeyIdentifier k5 = new KeyIdentifier(5L);
+        passphraseMap.put(k1, Passphrase.emptyPassphrase());
         CachingSecretKeyRingProtector protector =
                 (CachingSecretKeyRingProtector) SecretKeyRingProtector.fromPassphraseMap(passphraseMap);
 
-        assertNotNull(protector.getPassphraseFor(1L));
-        assertNull(protector.getPassphraseFor(5L));
+        assertNotNull(protector.getPassphraseFor(k1));
+        assertNull(protector.getPassphraseFor(k5));
 
-        protector.addPassphrase(5L, Passphrase.fromPassword("pa55w0rd"));
-        protector.forgetPassphrase(1L);
+        protector.addPassphrase(k5, Passphrase.fromPassword("pa55w0rd"));
+        protector.forgetPassphrase(k1);
 
-        assertNull(protector.getPassphraseFor(1L));
-        assertNotNull(protector.getPassphraseFor(5L));
+        assertNull(protector.getPassphraseFor(k1));
+        assertNotNull(protector.getPassphraseFor(k5));
     }
 
     @Test
@@ -118,7 +120,7 @@ public class SecretKeyRingProtectorTest {
             }
         });
 
-        assertEquals(Passphrase.emptyPassphrase(), protector.getPassphraseFor(1L));
-        assertEquals(Passphrase.fromPassword("missingP455w0rd"), protector.getPassphraseFor(3L));
+        assertEquals(Passphrase.emptyPassphrase(), protector.getPassphraseFor(new KeyIdentifier(1L)));
+        assertEquals(Passphrase.fromPassword("missingP455w0rd"), protector.getPassphraseFor(new KeyIdentifier(3L)));
     }
 }
