@@ -113,7 +113,9 @@ interface SelfSignatureSubpackets : BaseSignatureSubpackets {
 
     fun setPreferredHashAlgorithms(algorithms: PreferredAlgorithms?): SelfSignatureSubpackets
 
-    fun setPreferredAEADCiphersuites(aeadAlgorithms: Set<AEADCipherMode>): SelfSignatureSubpackets
+    fun setPreferredAEADCiphersuites(
+        aeadAlgorithms: Collection<AEADCipherMode>
+    ): SelfSignatureSubpackets
 
     fun setPreferredAEADCiphersuites(
         algorithms: PreferredAEADCiphersuites.Builder?
