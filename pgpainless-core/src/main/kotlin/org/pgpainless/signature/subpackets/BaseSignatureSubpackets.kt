@@ -78,10 +78,13 @@ interface BaseSignatureSubpackets {
         expirationTime: SignatureExpirationTime?
     ): BaseSignatureSubpackets
 
+    @Deprecated("Usage of subpacket is discouraged")
     fun setSignerUserId(userId: CharSequence): BaseSignatureSubpackets
 
+    @Deprecated("Usage of subpacket is discouraged")
     fun setSignerUserId(isCritical: Boolean, userId: CharSequence): BaseSignatureSubpackets
 
+    @Deprecated("Usage of subpacket is discouraged")
     fun setSignerUserId(signerUserID: SignerUserID?): BaseSignatureSubpackets
 
     fun addNotationData(
