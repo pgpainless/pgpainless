@@ -8,6 +8,7 @@ import java.util.*
 import org.bouncycastle.bcpg.sig.Features
 import org.bouncycastle.bcpg.sig.KeyExpirationTime
 import org.bouncycastle.bcpg.sig.KeyFlags
+import org.bouncycastle.bcpg.sig.PreferredAEADCiphersuites
 import org.bouncycastle.bcpg.sig.PreferredAlgorithms
 import org.bouncycastle.bcpg.sig.PrimaryUserID
 import org.bouncycastle.bcpg.sig.RevocationKey
@@ -114,18 +115,27 @@ interface SelfSignatureSubpackets : BaseSignatureSubpackets {
 
     fun setPreferredAEADCiphersuites(aeadAlgorithms: Set<AEADCipherMode>): SelfSignatureSubpackets
 
+    fun setPreferredAEADCiphersuites(
+        algorithms: PreferredAEADCiphersuites.Builder?
+    ): SelfSignatureSubpackets
+
+    @Deprecated("Use of this subpacket is discouraged.")
     fun addRevocationKey(revocationKey: PGPPublicKey): SelfSignatureSubpackets
 
+    @Deprecated("Use of this subpacket is discouraged.")
     fun addRevocationKey(isCritical: Boolean, revocationKey: PGPPublicKey): SelfSignatureSubpackets
 
+    @Deprecated("Use of this subpacket is discouraged.")
     fun addRevocationKey(
         isCritical: Boolean,
         isSensitive: Boolean,
         revocationKey: PGPPublicKey
     ): SelfSignatureSubpackets
 
+    @Deprecated("Use of this subpacket is discouraged.")
     fun addRevocationKey(revocationKey: RevocationKey): SelfSignatureSubpackets
 
+    @Deprecated("Use of this subpacket is discouraged.")
     fun clearRevocationKeys(): SelfSignatureSubpackets
 
     fun setFeatures(vararg features: Feature): SelfSignatureSubpackets
