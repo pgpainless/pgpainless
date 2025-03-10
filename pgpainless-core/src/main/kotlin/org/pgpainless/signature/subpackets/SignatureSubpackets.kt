@@ -314,7 +314,7 @@ class SignatureSubpackets(
         }
 
     override fun setPreferredAEADCiphersuites(
-        aeadAlgorithms: Set<AEADCipherMode>
+        aeadAlgorithms: Collection<AEADCipherMode>
     ): SignatureSubpackets =
         setPreferredAEADCiphersuites(
             PreferredAEADCiphersuites.builder(false).apply {

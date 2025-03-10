@@ -21,7 +21,7 @@ interface HashAlgorithmNegotiator {
      * @param orderedPrefs hash algorithm preferences
      * @return picked algorithms
      */
-    fun negotiateHashAlgorithm(orderedPrefs: Set<HashAlgorithm>): HashAlgorithm
+    fun negotiateHashAlgorithm(orderedPrefs: Set<HashAlgorithm>?): HashAlgorithm
 
     companion object {
 
@@ -62,9 +62,9 @@ interface HashAlgorithmNegotiator {
         ): HashAlgorithmNegotiator {
             return object : HashAlgorithmNegotiator {
                 override fun negotiateHashAlgorithm(
-                    orderedPrefs: Set<HashAlgorithm>
+                    orderedPrefs: Set<HashAlgorithm>?
                 ): HashAlgorithm {
-                    return orderedPrefs.firstOrNull { hashAlgorithmPolicy.isAcceptable(it) }
+                    return orderedPrefs?.firstOrNull { hashAlgorithmPolicy.isAcceptable(it) }
                         ?: hashAlgorithmPolicy.defaultHashAlgorithm()
                 }
             }

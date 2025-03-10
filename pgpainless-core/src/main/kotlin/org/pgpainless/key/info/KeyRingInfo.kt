@@ -240,7 +240,7 @@ class KeyRingInfo(
             getKeyFlagsOf(keyIdentifier).contains(KeyFlag.CERTIFY_OTHER)
 
     /** [HashAlgorithm] preferences of the primary user-ID or if absent, of the primary key. */
-    val preferredHashAlgorithms: Set<HashAlgorithm>
+    val preferredHashAlgorithms: Set<HashAlgorithm>?
         get() =
             primaryUserId?.let { getPreferredHashAlgorithms(it) }
                 ?: getPreferredHashAlgorithms(keyIdentifier)
@@ -248,19 +248,19 @@ class KeyRingInfo(
     /**
      * [SymmetricKeyAlgorithm] preferences of the primary user-ID or if absent of the primary key.
      */
-    val preferredSymmetricKeyAlgorithms: Set<SymmetricKeyAlgorithm>
+    val preferredSymmetricKeyAlgorithms: Set<SymmetricKeyAlgorithm>?
         get() =
             primaryUserId?.let { getPreferredSymmetricKeyAlgorithms(it) }
                 ?: getPreferredSymmetricKeyAlgorithms(keyIdentifier)
 
     /** [CompressionAlgorithm] preferences of the primary user-ID or if absent, the primary key. */
-    val preferredCompressionAlgorithms: Set<CompressionAlgorithm>
+    val preferredCompressionAlgorithms: Set<CompressionAlgorithm>?
         get() =
             primaryUserId?.let { getPreferredCompressionAlgorithms(it) }
                 ?: getPreferredCompressionAlgorithms(keyIdentifier)
 
     /** [AEADCipherMode] preferences of the primary user-id, or if absent, the primary key. */
-    val preferredAEADCipherSuites: Set<AEADCipherMode>
+    val preferredAEADCipherSuites: Set<AEADCipherMode>?
         get() =
             primaryUserId?.let { getPreferredAEADCipherSuites(it) }
                 ?: getPreferredAEADCipherSuites(keyIdentifier)
@@ -738,12 +738,11 @@ class KeyRingInfo(
      * @param userId user-id
      * @return ordered set of preferred [HashAlgorithms][HashAlgorithm] (descending order)
      */
-    fun getPreferredHashAlgorithms(userId: CharSequence): Set<HashAlgorithm> {
-        return keys
-            .getUserId(userId.toString())
-            ?.getHashAlgorithmPreferences(referenceDate)
+    fun getPreferredHashAlgorithms(userId: CharSequence): Set<HashAlgorithm>? {
+        return (keys.getUserId(userId.toString())
+                ?: throw NoSuchElementException("No user-id '$userId' found on this key."))
+            .getHashAlgorithmPreferences(referenceDate)
             ?.toHashAlgorithms()
-            ?: throw NoSuchElementException("No user-id '$userId' found on this key.")
     }
 
     /**
@@ -752,18 +751,17 @@ class KeyRingInfo(
      * @param keyIdentifier identifier of a [OpenPGPComponentKey]
      * @return ordered set of preferred [HashAlgorithms][HashAlgorithm] (descending order)
      */
-    fun getPreferredHashAlgorithms(keyIdentifier: KeyIdentifier): Set<HashAlgorithm> {
-        return keys
-            .getKey(keyIdentifier)
-            ?.getHashAlgorithmPreferences(referenceDate)
+    fun getPreferredHashAlgorithms(keyIdentifier: KeyIdentifier): Set<HashAlgorithm>? {
+        return (keys.getKey(keyIdentifier)
+                ?: throw NoSuchElementException(
+                    "No subkey with key-id $keyIdentifier found on this key."))
+            .getHashAlgorithmPreferences(referenceDate)
             ?.toHashAlgorithms()
-            ?: throw NoSuchElementException(
-                "No subkey with key-id $keyIdentifier found on this key.")
     }
 
     /** [HashAlgorithm] preferences of the given key. */
     @Deprecated("Pass KeyIdentifier instead.")
-    fun getPreferredHashAlgorithms(keyId: Long): Set<HashAlgorithm> {
+    fun getPreferredHashAlgorithms(keyId: Long): Set<HashAlgorithm>? {
         return getPreferredHashAlgorithms(KeyIdentifier(keyId))
     }
 
@@ -774,12 +772,11 @@ class KeyRingInfo(
      * @return ordered set of preferred [SymmetricKeyAlgorithms][SymmetricKeyAlgorithm] (descending
      *   order)
      */
-    fun getPreferredSymmetricKeyAlgorithms(userId: CharSequence): Set<SymmetricKeyAlgorithm> {
-        return keys
-            .getUserId(userId.toString())
-            ?.getSymmetricCipherPreferences(referenceDate)
+    fun getPreferredSymmetricKeyAlgorithms(userId: CharSequence): Set<SymmetricKeyAlgorithm>? {
+        return (keys.getUserId(userId.toString())
+                ?: throw NoSuchElementException("No user-id '$userId' found on this key."))
+            .getSymmetricCipherPreferences(referenceDate)
             ?.toSymmetricKeyAlgorithms()
-            ?: throw NoSuchElementException("No user-id '$userId' found on this key.")
     }
 
     /**
@@ -792,18 +789,17 @@ class KeyRingInfo(
      */
     fun getPreferredSymmetricKeyAlgorithms(
         keyIdentifier: KeyIdentifier
-    ): Set<SymmetricKeyAlgorithm> {
-        return keys
-            .getKey(keyIdentifier)
-            ?.getSymmetricCipherPreferences(referenceDate)
+    ): Set<SymmetricKeyAlgorithm>? {
+        return (keys.getKey(keyIdentifier)
+                ?: throw NoSuchElementException(
+                    "No subkey with key-id $keyIdentifier found on this key."))
+            .getSymmetricCipherPreferences(referenceDate)
             ?.toSymmetricKeyAlgorithms()
-            ?: throw NoSuchElementException(
-                "No subkey with key-id $keyIdentifier found on this key.")
     }
 
     /** [SymmetricKeyAlgorithm] preferences of the given key. */
     @Deprecated("Pass KeyIdentifier instead.")
-    fun getPreferredSymmetricKeyAlgorithms(keyId: Long): Set<SymmetricKeyAlgorithm> {
+    fun getPreferredSymmetricKeyAlgorithms(keyId: Long): Set<SymmetricKeyAlgorithm>? {
         return getPreferredSymmetricKeyAlgorithms(KeyIdentifier(keyId))
     }
 
@@ -814,12 +810,11 @@ class KeyRingInfo(
      * @return ordered set of preferred [CompressionAlgorithms][CompressionAlgorithm] (descending
      *   order)
      */
-    fun getPreferredCompressionAlgorithms(userId: CharSequence): Set<CompressionAlgorithm> {
-        return keys
-            .getUserId(userId.toString())
-            ?.getCompressionAlgorithmPreferences(referenceDate)
+    fun getPreferredCompressionAlgorithms(userId: CharSequence): Set<CompressionAlgorithm>? {
+        return (keys.getUserId(userId.toString())
+                ?: throw NoSuchElementException("No user-id '$userId' found on this key."))
+            .getCompressionAlgorithmPreferences(referenceDate)
             ?.toCompressionAlgorithms()
-            ?: throw NoSuchElementException("No user-id '$userId' found on this key.")
     }
 
     /**
@@ -830,18 +825,19 @@ class KeyRingInfo(
      * @return ordered set of preferred [CompressionAlgorithms][CompressionAlgorithm] (descending
      *   order)
      */
-    fun getPreferredCompressionAlgorithms(keyIdentifier: KeyIdentifier): Set<CompressionAlgorithm> {
-        return keys
-            .getKey(keyIdentifier)
-            ?.getCompressionAlgorithmPreferences(referenceDate)
+    fun getPreferredCompressionAlgorithms(
+        keyIdentifier: KeyIdentifier
+    ): Set<CompressionAlgorithm>? {
+        return (keys.getKey(keyIdentifier)
+                ?: throw NoSuchElementException(
+                    "No subkey with key-id $keyIdentifier found on this key."))
+            .getCompressionAlgorithmPreferences(referenceDate)
             ?.toCompressionAlgorithms()
-            ?: throw NoSuchElementException(
-                "No subkey with key-id $keyIdentifier found on this key.")
     }
 
     /** [CompressionAlgorithm] preferences of the given key. */
     @Deprecated("Pass in a KeyIdentifier instead.")
-    fun getPreferredCompressionAlgorithms(keyId: Long): Set<CompressionAlgorithm> {
+    fun getPreferredCompressionAlgorithms(keyId: Long): Set<CompressionAlgorithm>? {
         return getPreferredCompressionAlgorithms(KeyIdentifier(keyId))
     }
 
@@ -852,12 +848,11 @@ class KeyRingInfo(
      * @return ordered set of [AEADCipherModes][AEADCipherMode] (descending order, including
      *   implicitly supported AEAD modes)
      */
-    fun getPreferredAEADCipherSuites(userId: CharSequence): Set<AEADCipherMode> {
-        return keys
-            .getUserId(userId.toString())
-            ?.getAEADCipherSuitePreferences(referenceDate)
+    fun getPreferredAEADCipherSuites(userId: CharSequence): Set<AEADCipherMode>? {
+        return (keys.getUserId(userId.toString())
+                ?: throw NoSuchElementException("No user-id '$userId' found on this key."))
+            .getAEADCipherSuitePreferences(referenceDate)
             ?.toAEADCipherModes()
-            ?: throw NoSuchElementException("No user-id '$userId' found on this key.")
     }
 
     /**
@@ -868,17 +863,16 @@ class KeyRingInfo(
      * @return ordered set of [AEADCipherModes][AEADCipherMode] (descending order, including
      *   implicitly supported AEAD modes)
      */
-    fun getPreferredAEADCipherSuites(keyIdentifier: KeyIdentifier): Set<AEADCipherMode> {
-        return keys
-            .getKey(keyIdentifier)
-            ?.getAEADCipherSuitePreferences(referenceDate)
+    fun getPreferredAEADCipherSuites(keyIdentifier: KeyIdentifier): Set<AEADCipherMode>? {
+        return (keys.getKey(keyIdentifier)
+                ?: throw NoSuchElementException(
+                    "No subkey with key-id $keyIdentifier found on this key."))
+            .getAEADCipherSuitePreferences(referenceDate)
             ?.toAEADCipherModes()
-            ?: throw NoSuchElementException(
-                "No subkey with key-id $keyIdentifier found on this key.")
     }
 
     @Deprecated("Pass KeyIdentifier instead.")
-    fun getPreferredAEADCipherSuites(keyId: Long): Set<AEADCipherMode> {
+    fun getPreferredAEADCipherSuites(keyId: Long): Set<AEADCipherMode>? {
         return getPreferredAEADCipherSuites(KeyIdentifier(keyId))
     }
 

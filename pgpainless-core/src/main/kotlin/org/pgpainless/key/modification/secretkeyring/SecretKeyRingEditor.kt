@@ -17,11 +17,12 @@ import org.bouncycastle.openpgp.api.OpenPGPCertificate.OpenPGPSubkey
 import org.bouncycastle.openpgp.api.OpenPGPImplementation
 import org.bouncycastle.openpgp.api.OpenPGPKey
 import org.bouncycastle.openpgp.api.OpenPGPKey.OpenPGPSecretKey
+import org.bouncycastle.openpgp.api.OpenPGPKeyEditor
 import org.bouncycastle.openpgp.api.OpenPGPSignature
+import org.bouncycastle.openpgp.api.SignatureParameters
 import org.pgpainless.PGPainless
 import org.pgpainless.PGPainless.Companion.inspectKeyRing
 import org.pgpainless.algorithm.AlgorithmSuite
-import org.pgpainless.algorithm.Feature
 import org.pgpainless.algorithm.KeyFlag
 import org.pgpainless.algorithm.OpenPGPKeyVersion
 import org.pgpainless.algorithm.SignatureType
@@ -59,48 +60,54 @@ class SecretKeyRingEditor(var key: OpenPGPKey, override val referenceTime: Date 
         callback: SelfSignatureSubpackets.Callback?,
         protector: SecretKeyRingProtector
     ): SecretKeyRingEditorInterface {
-        val sanitizedUserId = sanitizeUserId(userId).toString()
-        val primaryKey = secretKeyRing.secretKey
-
-        val info = inspectKeyRing(secretKeyRing, referenceTime)
+        key = PGPainless.getInstance().toKey(secretKeyRing)
+        val info = inspectKeyRing(key, referenceTime)
         require(!info.isHardRevoked(userId)) {
             "User-ID $userId is hard revoked and cannot be re-certified."
         }
 
-        val (
-            hashAlgorithmPreferences,
-            symmetricKeyAlgorithmPreferences,
-            compressionAlgorithmPreferences) =
-            try {
-                Triple(
-                    info.preferredHashAlgorithms,
-                    info.preferredSymmetricKeyAlgorithms,
-                    info.preferredCompressionAlgorithms)
-            } catch (e: IllegalStateException) { // missing user-id sig
-                val algorithmSuite = AlgorithmSuite.defaultAlgorithmSuite
-                Triple(
-                    algorithmSuite.hashAlgorithms,
-                    algorithmSuite.symmetricKeyAlgorithms,
-                    algorithmSuite.compressionAlgorithms)
-            }
+        val hashAlgorithmPreferences =
+            info.preferredHashAlgorithms ?: AlgorithmSuite.defaultHashAlgorithms
+        val symmetricAlgorithmPreferences =
+            info.preferredSymmetricKeyAlgorithms ?: AlgorithmSuite.defaultSymmetricKeyAlgorithms
+        val compressionAlgorithmPreferences =
+            info.preferredCompressionAlgorithms ?: AlgorithmSuite.defaultCompressionAlgorithms
+        val aeadAlgorithmPreferences =
+            info.preferredAEADCipherSuites ?: AlgorithmSuite.defaultAEADAlgorithmSuites
 
-        val builder =
-            SelfSignatureBuilder(key.primarySecretKey, protector).apply {
-                hashedSubpackets.setSignatureCreationTime(referenceTime)
-                setSignatureType(SignatureType.POSITIVE_CERTIFICATION)
-            }
-        builder.hashedSubpackets.apply {
-            setKeyFlags(info.getKeyFlagsOf(primaryKey.keyID))
-            hashAlgorithmPreferences
-            hashAlgorithmPreferences?.let { setPreferredHashAlgorithms(it) }
-            symmetricKeyAlgorithmPreferences?.let { setPreferredSymmetricKeyAlgorithms(it) }
-            compressionAlgorithmPreferences?.let { setPreferredCompressionAlgorithms(it) }
-            setFeatures(Feature.MODIFICATION_DETECTION)
-        }
-        builder.applyCallback(callback)
-        secretKeyRing =
-            injectCertification(secretKeyRing, sanitizedUserId, builder.build(sanitizedUserId))
-        key = PGPainless.getInstance().toKey(secretKeyRing)
+        key =
+            OpenPGPKeyEditor(key, protector)
+                .addUserId(
+                    sanitizeUserId(userId).toString(),
+                    object : SignatureParameters.Callback {
+                        override fun apply(parameters: SignatureParameters): SignatureParameters {
+                            return parameters
+                                .setSignatureCreationTime(referenceTime)
+                                .setHashedSubpacketsFunction { subpacketGenerator ->
+                                    val subpackets = SignatureSubpackets(subpacketGenerator)
+                                    subpackets.setAppropriateIssuerInfo(secretKeyRing.publicKey)
+
+                                    subpackets.setKeyFlags(info.getKeyFlagsOf(key.keyIdentifier))
+                                    subpackets.setPreferredHashAlgorithms(hashAlgorithmPreferences)
+                                    subpackets.setPreferredSymmetricKeyAlgorithms(
+                                        symmetricAlgorithmPreferences)
+                                    subpackets.setPreferredCompressionAlgorithms(
+                                        compressionAlgorithmPreferences)
+                                    subpackets.setPreferredAEADCiphersuites(
+                                        aeadAlgorithmPreferences)
+
+                                    callback?.modifyHashedSubpackets(subpackets)
+                                    subpacketGenerator
+                                }
+                                .setUnhashedSubpacketsFunction { subpacketGenerator ->
+                                    callback?.modifyUnhashedSubpackets(
+                                        SignatureSubpackets(subpacketGenerator))
+                                    subpacketGenerator
+                                }
+                        }
+                    })
+                .done()
+        secretKeyRing = key.pgpSecretKeyRing
         return this
     }
 

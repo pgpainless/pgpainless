@@ -482,7 +482,7 @@ class SigningOptions {
      * @return selected hash algorithm
      */
     private fun negotiateHashAlgorithm(
-        preferences: Set<HashAlgorithm>,
+        preferences: Set<HashAlgorithm>?,
         policy: Policy
     ): HashAlgorithm {
         return _hashAlgorithmOverride
