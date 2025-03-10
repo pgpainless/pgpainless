@@ -107,9 +107,7 @@ class KeyRingBuilder(
             hashedSubPacketGenerator.setPrimaryUserId()
         }
 
-        val generator = PGPSignatureSubpacketGenerator()
-        SignatureSubpacketsHelper.applyTo(hashedSubPacketGenerator, generator)
-        val hashedSubPackets = generator.generate()
+        val hashedSubPackets = hashedSubPacketGenerator.subpacketsGenerator.generate()
         val ringGenerator =
             if (userIds.isEmpty()) {
                 PGPKeyRingGenerator(
