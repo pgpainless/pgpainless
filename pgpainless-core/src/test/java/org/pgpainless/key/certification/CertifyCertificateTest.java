@@ -10,16 +10,15 @@ import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import java.io.IOException;
-import java.security.InvalidAlgorithmParameterException;
-import java.security.NoSuchAlgorithmException;
 import java.util.List;
 
 import org.bouncycastle.bcpg.sig.TrustSignature;
 import org.bouncycastle.openpgp.PGPException;
 import org.bouncycastle.openpgp.PGPPublicKey;
-import org.bouncycastle.openpgp.PGPPublicKeyRing;
-import org.bouncycastle.openpgp.PGPSecretKeyRing;
 import org.bouncycastle.openpgp.PGPSignature;
+import org.bouncycastle.openpgp.api.OpenPGPCertificate;
+import org.bouncycastle.openpgp.api.OpenPGPKey;
+import org.bouncycastle.openpgp.api.OpenPGPSignature;
 import org.bouncycastle.util.Arrays;
 import org.junit.jupiter.api.Test;
 import org.pgpainless.PGPainless;
@@ -36,13 +35,13 @@ import org.pgpainless.util.DateUtil;
 public class CertifyCertificateTest {
 
     @Test
-    public void testUserIdCertification() throws PGPException, InvalidAlgorithmParameterException, NoSuchAlgorithmException, IOException {
+    public void testUserIdCertification() throws PGPException, IOException {
         SecretKeyRingProtector protector = SecretKeyRingProtector.unprotectedKeys();
-        PGPSecretKeyRing alice = PGPainless.generateKeyRing().modernKeyRing("Alice <alice@pgpainless.org>");
+        OpenPGPKey alice = PGPainless.generateKeyRing().modernKeyRing("Alice <alice@pgpainless.org>");
         String bobUserId = "Bob <bob@pgpainless.org>";
-        PGPSecretKeyRing bob = PGPainless.generateKeyRing().modernKeyRing(bobUserId);
+        OpenPGPKey bob = PGPainless.generateKeyRing().modernKeyRing(bobUserId);
 
-        PGPPublicKeyRing bobCertificate = PGPainless.extractCertificate(bob);
+        OpenPGPCertificate bobCertificate = bob.toCertificate();
 
         CertifyCertificate.CertificationResult result = PGPainless.certify()
                 .userIdOnCertificate(bobUserId, bobCertificate)
@@ -50,33 +49,33 @@ public class CertifyCertificateTest {
                 .build();
 
         assertNotNull(result);
-        PGPSignature signature = result.getCertification();
+        PGPSignature signature = result.getPgpSignature();
         assertNotNull(signature);
         assertEquals(SignatureType.GENERIC_CERTIFICATION, SignatureType.valueOf(signature.getSignatureType()));
-        assertEquals(alice.getPublicKey().getKeyID(), signature.getKeyID());
+        assertEquals(alice.getPrimaryKey().getPGPPublicKey().getKeyID(), signature.getKeyID());
 
         assertTrue(SignatureVerifier.verifyUserIdCertification(
-                bobUserId, signature, alice.getPublicKey(), bob.getPublicKey(), PGPainless.getPolicy(), DateUtil.now()));
+                bobUserId, signature, alice.getPrimaryKey().getPGPPublicKey(), bob.getPrimaryKey().getPGPPublicKey(), PGPainless.getPolicy(), DateUtil.now()));
 
-        PGPPublicKeyRing bobCertified = result.getCertifiedCertificate();
-        PGPPublicKey bobCertifiedKey = bobCertified.getPublicKey();
+        OpenPGPCertificate bobCertified = result.getCertifiedCertificate();
+        PGPPublicKey bobCertifiedKey = bobCertified.getPrimaryKey().getPGPPublicKey();
         // There are 2 sigs now, bobs own and alice'
         assertEquals(2, CollectionUtils.iteratorToList(bobCertifiedKey.getSignaturesForID(bobUserId)).size());
         List<PGPSignature> sigsByAlice = CollectionUtils.iteratorToList(
-                bobCertifiedKey.getSignaturesForKeyID(alice.getPublicKey().getKeyID()));
+                bobCertifiedKey.getSignaturesForKeyID(alice.getPrimaryKey().getPGPPublicKey().getKeyID()));
         assertEquals(1, sigsByAlice.size());
         assertEquals(signature, sigsByAlice.get(0));
 
-        assertFalse(Arrays.areEqual(bobCertificate.getEncoded(), bobCertified.getEncoded()));
+        assertFalse(Arrays.areEqual(bobCertificate.getPGPPublicKeyRing().getEncoded(), bobCertified.getPGPPublicKeyRing().getEncoded()));
     }
 
     @Test
-    public void testKeyDelegation() throws PGPException, InvalidAlgorithmParameterException, NoSuchAlgorithmException, IOException {
+    public void testKeyDelegation() throws PGPException, IOException {
         SecretKeyRingProtector protector = SecretKeyRingProtector.unprotectedKeys();
-        PGPSecretKeyRing alice = PGPainless.generateKeyRing().modernKeyRing("Alice <alice@pgpainless.org>");
-        PGPSecretKeyRing bob = PGPainless.generateKeyRing().modernKeyRing("Bob <bob@pgpainless.org>");
+        OpenPGPKey alice = PGPainless.generateKeyRing().modernKeyRing("Alice <alice@pgpainless.org>");
+        OpenPGPKey bob = PGPainless.generateKeyRing().modernKeyRing("Bob <bob@pgpainless.org>");
 
-        PGPPublicKeyRing bobCertificate = PGPainless.extractCertificate(bob);
+        OpenPGPCertificate bobCertificate = bob.toCertificate();
 
         CertifyCertificate.CertificationResult result = PGPainless.certify()
                 .certificate(bobCertificate, Trustworthiness.fullyTrusted().introducer())
@@ -84,11 +83,12 @@ public class CertifyCertificateTest {
                 .build();
 
         assertNotNull(result);
-        PGPSignature signature = result.getCertification();
+        OpenPGPSignature signature = result.getCertification();
+        PGPSignature pgpSignature = signature.getSignature();
         assertNotNull(signature);
-        assertEquals(SignatureType.DIRECT_KEY, SignatureType.valueOf(signature.getSignatureType()));
-        assertEquals(alice.getPublicKey().getKeyID(), signature.getKeyID());
-        TrustSignature trustSignaturePacket = signature.getHashedSubPackets().getTrust();
+        assertEquals(SignatureType.DIRECT_KEY, SignatureType.valueOf(pgpSignature.getSignatureType()));
+        assertEquals(alice.getPrimaryKey().getPGPPublicKey().getKeyID(), pgpSignature.getKeyID());
+        TrustSignature trustSignaturePacket = pgpSignature.getHashedSubPackets().getTrust();
         assertNotNull(trustSignaturePacket);
         Trustworthiness trustworthiness = new Trustworthiness(trustSignaturePacket.getTrustAmount(), trustSignaturePacket.getDepth());
         assertTrue(trustworthiness.isFullyTrusted());
@@ -96,27 +96,27 @@ public class CertifyCertificateTest {
         assertFalse(trustworthiness.canIntroduce(1));
 
         assertTrue(SignatureVerifier.verifyDirectKeySignature(
-                signature, alice.getPublicKey(), bob.getPublicKey(), PGPainless.getPolicy(), DateUtil.now()));
+                pgpSignature, alice.getPrimaryKey().getPGPPublicKey(), bob.getPrimaryKey().getPGPPublicKey(), PGPainless.getPolicy(), DateUtil.now()));
 
-        PGPPublicKeyRing bobCertified = result.getCertifiedCertificate();
-        PGPPublicKey bobCertifiedKey = bobCertified.getPublicKey();
+        OpenPGPCertificate bobCertified = result.getCertifiedCertificate();
+        PGPPublicKey bobCertifiedKey = bobCertified.getPrimaryKey().getPGPPublicKey();
 
         List<PGPSignature> sigsByAlice = CollectionUtils.iteratorToList(
-                bobCertifiedKey.getSignaturesForKeyID(alice.getPublicKey().getKeyID()));
+                bobCertifiedKey.getSignaturesForKeyID(alice.getPrimaryKey().getPGPPublicKey().getKeyID()));
         assertEquals(1, sigsByAlice.size());
-        assertEquals(signature, sigsByAlice.get(0));
+        assertEquals(signature.getSignature(), sigsByAlice.get(0));
 
-        assertFalse(Arrays.areEqual(bobCertificate.getEncoded(), bobCertified.getEncoded()));
+        assertFalse(Arrays.areEqual(bobCertificate.getPGPPublicKeyRing().getEncoded(), bobCertified.getPGPPublicKeyRing().getEncoded()));
     }
 
     @Test
-    public void testPetNameCertification() throws PGPException, InvalidAlgorithmParameterException, NoSuchAlgorithmException {
-        PGPSecretKeyRing aliceKey = PGPainless.generateKeyRing()
+    public void testPetNameCertification() {
+        OpenPGPKey aliceKey = PGPainless.generateKeyRing()
                 .modernKeyRing("Alice <alice@pgpainless.org>");
-        PGPSecretKeyRing bobKey = PGPainless.generateKeyRing()
+        OpenPGPKey bobKey = PGPainless.generateKeyRing()
                 .modernKeyRing("Bob <bob@pgpainless.org>");
 
-        PGPPublicKeyRing bobCert = PGPainless.extractCertificate(bobKey);
+        OpenPGPCertificate bobCert = bobKey.toCertificate();
         String petName = "Bobby";
 
         CertifyCertificate.CertificationResult result = PGPainless.certify()
@@ -129,23 +129,24 @@ public class CertifyCertificateTest {
                     }
                 });
 
-        PGPSignature certification = result.getCertification();
-        assertEquals(aliceKey.getPublicKey().getKeyID(), certification.getKeyID());
-        assertEquals(CertificationType.GENERIC.asSignatureType().getCode(), certification.getSignatureType());
+        OpenPGPSignature certification = result.getCertification();
+        PGPSignature signature = certification.getSignature();
+        assertEquals(aliceKey.getPrimaryKey().getPGPPublicKey().getKeyID(), signature.getKeyID());
+        assertEquals(CertificationType.GENERIC.asSignatureType().getCode(), signature.getSignatureType());
 
-        PGPPublicKeyRing certWithPetName = result.getCertifiedCertificate();
+        OpenPGPCertificate certWithPetName = result.getCertifiedCertificate();
         KeyRingInfo info = PGPainless.inspectKeyRing(certWithPetName);
         assertTrue(info.getUserIds().contains(petName));
         assertFalse(info.getValidUserIds().contains(petName));
     }
 
     @Test
-    public void testScopedDelegation() throws PGPException, InvalidAlgorithmParameterException, NoSuchAlgorithmException {
-        PGPSecretKeyRing aliceKey = PGPainless.generateKeyRing()
+    public void testScopedDelegation() {
+        OpenPGPKey aliceKey = PGPainless.generateKeyRing()
                 .modernKeyRing("Alice <alice@pgpainless.org>");
-        PGPSecretKeyRing caKey = PGPainless.generateKeyRing()
+        OpenPGPKey caKey = PGPainless.generateKeyRing()
                 .modernKeyRing("CA <ca@example.com>");
-        PGPPublicKeyRing caCert = PGPainless.extractCertificate(caKey);
+        OpenPGPCertificate caCert = caKey.toCertificate();
 
         CertifyCertificate.CertificationResult result = PGPainless.certify()
                 .certificate(caCert, Trustworthiness.fullyTrusted().introducer())
@@ -157,9 +158,10 @@ public class CertifyCertificateTest {
                     }
                 });
 
-        PGPSignature certification = result.getCertification();
-        assertEquals(SignatureType.DIRECT_KEY.getCode(), certification.getSignatureType());
+        OpenPGPSignature certification = result.getCertification();
+        PGPSignature signature = certification.getSignature();
+        assertEquals(SignatureType.DIRECT_KEY.getCode(), signature.getSignatureType());
         assertEquals("^.*<.+@example.com>.*$",
-                certification.getHashedSubPackets().getRegularExpression().getRegex());
+                signature.getHashedSubPackets().getRegularExpression().getRegex());
     }
 }

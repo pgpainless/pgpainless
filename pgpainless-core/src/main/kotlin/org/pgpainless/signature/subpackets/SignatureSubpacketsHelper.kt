@@ -5,7 +5,6 @@
 package org.pgpainless.signature.subpackets
 
 import org.bouncycastle.bcpg.sig.*
-import org.bouncycastle.openpgp.PGPSignatureSubpacketGenerator
 import org.bouncycastle.openpgp.PGPSignatureSubpacketVector
 import org.pgpainless.algorithm.*
 import org.pgpainless.key.util.RevocationAttributes
@@ -116,11 +115,11 @@ class SignatureSubpacketsHelper {
                             }
                         SignatureSubpacket.embeddedSignature ->
                             (subpacket as EmbeddedSignature).let {
-                                subpackets.addEmbeddedSignature(it)
+                                subpackets.addResidualSubpacket(it)
                             }
                         SignatureSubpacket.intendedRecipientFingerprint ->
                             (subpacket as IntendedRecipientFingerprint).let {
-                                subpackets.addIntendedRecipientFingerprint(it)
+                                subpackets.addResidualSubpacket(it)
                             }
                         SignatureSubpacket.policyUrl ->
                             (subpacket as PolicyURI).let { subpackets.setPolicyUrl(it) }
@@ -140,71 +139,13 @@ class SignatureSubpacketsHelper {
             }
 
         @JvmStatic
-        fun applyTo(
-            subpackets: SignatureSubpackets,
-            generator: PGPSignatureSubpacketGenerator
-        ): PGPSignatureSubpacketGenerator {
-            return generator.apply {
-                addSubpacket(subpackets.issuerKeyIdSubpacket)
-                addSubpacket(subpackets.issuerFingerprintSubpacket)
-                addSubpacket(subpackets.signatureCreationTimeSubpacket)
-                addSubpacket(subpackets.signatureExpirationTimeSubpacket)
-                addSubpacket(subpackets.exportableSubpacket)
-                addSubpacket(subpackets.policyURISubpacket)
-                addSubpacket(subpackets.regularExpressionSubpacket)
-                for (notation in subpackets.notationDataSubpackets) {
-                    addSubpacket(notation)
-                }
-                for (recipient in subpackets.intendedRecipientFingerprintSubpackets) {
-                    addSubpacket(recipient)
-                }
-                for (revocationKey in subpackets.revocationKeySubpackets) {
-                    addSubpacket(revocationKey)
-                }
-                addSubpacket(subpackets.signatureTargetSubpacket)
-                addSubpacket(subpackets.featuresSubpacket)
-                addSubpacket(subpackets.keyFlagsSubpacket)
-                addSubpacket(subpackets.trustSubpacket)
-                addSubpacket(subpackets.preferredCompressionAlgorithmsSubpacket)
-                addSubpacket(subpackets.preferredSymmetricKeyAlgorithmsSubpacket)
-                addSubpacket(subpackets.preferredHashAlgorithmsSubpacket)
-                for (embedded in subpackets.embeddedSignatureSubpackets) {
-                    addSubpacket(embedded)
-                }
-                addSubpacket(subpackets.signerUserIdSubpacket)
-                addSubpacket(subpackets.keyExpirationTimeSubpacket)
-                addSubpacket(subpackets.primaryUserIdSubpacket)
-                addSubpacket(subpackets.revocableSubpacket)
-                addSubpacket(subpackets.revocationReasonSubpacket)
-                for (residual in subpackets.residualSubpackets) {
-                    addSubpacket(residual)
-                }
-            }
-        }
-
-        @JvmStatic
-        private fun PGPSignatureSubpacketGenerator.addSubpacket(
-            subpacket: org.bouncycastle.bcpg.SignatureSubpacket?
-        ) {
-            if (subpacket != null) {
-                this.addCustomSubpacket(subpacket)
-            }
-        }
-
-        @JvmStatic
         fun toVector(subpackets: SignatureSubpackets): PGPSignatureSubpacketVector {
-            return PGPSignatureSubpacketGenerator().let {
-                applyTo(subpackets, it)
-                it.generate()
-            }
+            return subpackets.subpacketsGenerator.generate()
         }
 
         @JvmStatic
         fun toVector(subpackets: RevocationSignatureSubpackets): PGPSignatureSubpacketVector {
-            return PGPSignatureSubpacketGenerator().let {
-                applyTo(subpackets as SignatureSubpackets, it)
-                it.generate()
-            }
+            return (subpackets as SignatureSubpackets).subpacketsGenerator.generate()
         }
     }
 }

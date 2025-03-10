@@ -44,7 +44,7 @@ class HardwareSecurity {
     class HardwareDataDecryptorFactory(
         override val subkeyIdentifier: SubkeyIdentifier,
         private val callback: DecryptionCallback,
-    ) : CustomPublicKeyDataDecryptorFactory {
+    ) : BcPublicKeyDataDecryptorFactory(null), CustomPublicKeyDataDecryptorFactory {
 
         // luckily we can instantiate the BcPublicKeyDataDecryptorFactory with null as argument.
         private val factory: PublicKeyDataDecryptorFactory = BcPublicKeyDataDecryptorFactory(null)

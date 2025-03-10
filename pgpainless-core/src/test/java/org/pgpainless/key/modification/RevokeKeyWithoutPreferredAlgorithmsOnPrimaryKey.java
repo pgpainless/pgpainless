@@ -7,7 +7,6 @@ package org.pgpainless.key.modification;
 import java.io.IOException;
 import java.util.Date;
 
-import org.bouncycastle.openpgp.PGPException;
 import org.bouncycastle.openpgp.PGPSecretKeyRing;
 import org.junit.JUtils;
 import org.junit.jupiter.api.TestTemplate;
@@ -99,7 +98,7 @@ public class RevokeKeyWithoutPreferredAlgorithmsOnPrimaryKey {
     @TestTemplate
     @ExtendWith(TestAllImplementations.class)
     public void testChangingExpirationTimeWithKeyWithoutPrefAlgos()
-            throws IOException, PGPException {
+            throws IOException {
         Date expirationDate = DateUtil.now();
         PGPSecretKeyRing secretKeys = PGPainless.readKeyRing().secretKeyRing(KEY);
 

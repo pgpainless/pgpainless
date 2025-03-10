@@ -8,11 +8,8 @@ import static org.junit.jupiter.api.Assertions.assertArrayEquals;
 import static org.junit.jupiter.api.Assertions.assertNotEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 
-import java.security.InvalidAlgorithmParameterException;
-import java.security.NoSuchAlgorithmException;
 import java.util.Date;
 
-import org.bouncycastle.openpgp.PGPException;
 import org.bouncycastle.openpgp.PGPSecretKeyRing;
 import org.bouncycastle.openpgp.PGPSignature;
 import org.bouncycastle.openpgp.PGPSignatureSubpacketVector;
@@ -28,10 +25,10 @@ public class OldSignatureSubpacketsArePreservedOnNewSigTest {
 
     @TestTemplate
     @ExtendWith(TestAllImplementations.class)
-    public void verifyOldSignatureSubpacketsArePreservedOnNewExpirationDateSig()
-            throws InvalidAlgorithmParameterException, NoSuchAlgorithmException, PGPException {
+    public void verifyOldSignatureSubpacketsArePreservedOnNewExpirationDateSig() {
         PGPSecretKeyRing secretKeys = PGPainless.generateKeyRing()
-                .simpleEcKeyRing("Alice <alice@wonderland.lit>");
+                .simpleEcKeyRing("Alice <alice@wonderland.lit>")
+                .getPGPSecretKeyRing();
 
         PGPSignature oldSignature = PGPainless.inspectKeyRing(secretKeys).getLatestUserIdCertification("Alice <alice@wonderland.lit>");
         assertNotNull(oldSignature);

@@ -9,8 +9,7 @@ import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
-import java.security.InvalidAlgorithmParameterException;
-import java.security.NoSuchAlgorithmException;
+import java.util.Date;
 import java.util.NoSuchElementException;
 
 import org.bouncycastle.openpgp.PGPException;
@@ -26,9 +25,10 @@ import org.pgpainless.util.selection.userid.SelectUserId;
 public class RevokeUserIdsTest {
 
     @Test
-    public void revokeWithSelectUserId() throws PGPException, InvalidAlgorithmParameterException, NoSuchAlgorithmException {
+    public void revokeWithSelectUserId() throws PGPException {
         PGPSecretKeyRing secretKeys = PGPainless.generateKeyRing()
-                .modernKeyRing("Alice <alice@pgpainless.org>");
+                .modernKeyRing("Alice <alice@pgpainless.org>")
+                .getPGPSecretKeyRing();
         SecretKeyRingProtector protector = SecretKeyRingProtector.unprotectedKeys();
 
         secretKeys = PGPainless.modifyKeyRing(secretKeys)
@@ -41,7 +41,9 @@ public class RevokeUserIdsTest {
         assertTrue(info.isUserIdValid("Allice <alice@example.org>"));
         assertTrue(info.isUserIdValid("Alice <alice@example.org>"));
 
-        secretKeys = PGPainless.modifyKeyRing(secretKeys)
+        Date n1 = new Date(info.getCreationDate().getTime() + 1000); // 1 sec later
+
+        secretKeys = PGPainless.modifyKeyRing(secretKeys, n1)
                 .revokeUserIds(
                         SelectUserId.containsEmailAddress("alice@example.org"),
                         protector,
@@ -50,16 +52,17 @@ public class RevokeUserIdsTest {
                                 .withoutDescription())
                 .done();
 
-        info = PGPainless.inspectKeyRing(secretKeys);
+        info = PGPainless.inspectKeyRing(secretKeys, n1);
         assertTrue(info.isUserIdValid("Alice <alice@pgpainless.org>"));
         assertFalse(info.isUserIdValid("Allice <alice@example.org>"));
         assertFalse(info.isUserIdValid("Alice <alice@example.org>"));
     }
 
     @Test
-    public void removeUserId() throws PGPException, InvalidAlgorithmParameterException, NoSuchAlgorithmException {
+    public void removeUserId() throws PGPException {
         PGPSecretKeyRing secretKeys = PGPainless.generateKeyRing()
-                .modernKeyRing("Alice <alice@pgpainless.org>");
+                .modernKeyRing("Alice <alice@pgpainless.org>")
+                .getPGPSecretKeyRing();
         SecretKeyRingProtector protector = SecretKeyRingProtector.unprotectedKeys();
 
         secretKeys = PGPainless.modifyKeyRing(secretKeys)
@@ -72,11 +75,13 @@ public class RevokeUserIdsTest {
         assertTrue(info.isUserIdValid("Allice <alice@example.org>"));
         assertTrue(info.isUserIdValid("Alice <alice@example.org>"));
 
-        secretKeys = PGPainless.modifyKeyRing(secretKeys)
+        Date n1 = new Date(info.getCreationDate().getTime() + 1000);
+
+        secretKeys = PGPainless.modifyKeyRing(secretKeys, n1)
                 .removeUserId("Allice <alice@example.org>", protector)
                 .done();
 
-        info = PGPainless.inspectKeyRing(secretKeys);
+        info = PGPainless.inspectKeyRing(secretKeys, n1);
         assertTrue(info.isUserIdValid("Alice <alice@pgpainless.org>"));
         assertFalse(info.isUserIdValid("Allice <alice@example.org>"));
         assertTrue(info.isUserIdValid("Alice <alice@example.org>"));
@@ -89,9 +94,10 @@ public class RevokeUserIdsTest {
     }
 
     @Test
-    public void emptySelectionYieldsNoSuchElementException() throws PGPException, InvalidAlgorithmParameterException, NoSuchAlgorithmException {
+    public void emptySelectionYieldsNoSuchElementException() {
         PGPSecretKeyRing secretKeys = PGPainless.generateKeyRing()
-                .modernKeyRing("Alice <alice@pgpainless.org>");
+                .modernKeyRing("Alice <alice@pgpainless.org>")
+                .getPGPSecretKeyRing();
 
         assertThrows(NoSuchElementException.class, () ->
                 PGPainless.modifyKeyRing(secretKeys).revokeUserIds(

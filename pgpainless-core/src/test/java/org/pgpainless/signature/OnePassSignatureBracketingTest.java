@@ -12,8 +12,6 @@ import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.nio.charset.StandardCharsets;
-import java.security.InvalidAlgorithmParameterException;
-import java.security.NoSuchAlgorithmException;
 
 import org.bouncycastle.openpgp.PGPCompressedData;
 import org.bouncycastle.openpgp.PGPEncryptedData;
@@ -31,6 +29,7 @@ import org.bouncycastle.openpgp.PGPSecretKeyRing;
 import org.bouncycastle.openpgp.PGPSignature;
 import org.bouncycastle.openpgp.PGPSignatureList;
 import org.bouncycastle.openpgp.PGPUtil;
+import org.bouncycastle.openpgp.api.OpenPGPImplementation;
 import org.bouncycastle.openpgp.operator.PublicKeyDataDecryptorFactory;
 import org.bouncycastle.util.io.Streams;
 import org.junit.jupiter.api.TestTemplate;
@@ -44,7 +43,6 @@ import org.pgpainless.encryption_signing.EncryptionOptions;
 import org.pgpainless.encryption_signing.EncryptionStream;
 import org.pgpainless.encryption_signing.ProducerOptions;
 import org.pgpainless.encryption_signing.SigningOptions;
-import org.pgpainless.implementation.ImplementationFactory;
 import org.pgpainless.key.protection.SecretKeyRingProtector;
 import org.pgpainless.key.protection.UnlockSecretKey;
 import org.pgpainless.util.TestAllImplementations;
@@ -54,10 +52,12 @@ public class OnePassSignatureBracketingTest {
     @TestTemplate
     @ExtendWith(TestAllImplementations.class)
     public void onePassSignaturePacketsAndSignaturesAreBracketedTest()
-            throws PGPException, InvalidAlgorithmParameterException, NoSuchAlgorithmException, IOException {
+            throws PGPException, IOException {
 
-        PGPSecretKeyRing key1 = PGPainless.generateKeyRing().modernKeyRing("Alice");
-        PGPSecretKeyRing key2 = PGPainless.generateKeyRing().modernKeyRing("Bob");
+        PGPSecretKeyRing key1 = PGPainless.generateKeyRing().modernKeyRing("Alice")
+                .getPGPSecretKeyRing();
+        PGPSecretKeyRing key2 = PGPainless.generateKeyRing().modernKeyRing("Bob")
+                .getPGPSecretKeyRing();
         PGPPublicKeyRing cert1 = PGPainless.extractCertificate(key1);
 
         ByteArrayOutputStream out = new ByteArrayOutputStream();
@@ -78,7 +78,7 @@ public class OnePassSignatureBracketingTest {
         ByteArrayInputStream ciphertextIn = new ByteArrayInputStream(out.toByteArray());
 
         InputStream inputStream = PGPUtil.getDecoderStream(ciphertextIn);
-        PGPObjectFactory objectFactory = ImplementationFactory.getInstance().getPGPObjectFactory(inputStream);
+        PGPObjectFactory objectFactory = OpenPGPImplementation.getInstance().pgpObjectFactory(inputStream);
 
         PGPOnePassSignatureList onePassSignatures = null;
         PGPSignatureList signatures = null;
@@ -95,9 +95,9 @@ public class OnePassSignatureBracketingTest {
                         PGPPublicKeyEncryptedData publicKeyEncryptedData = (PGPPublicKeyEncryptedData) encryptedData;
                         PGPSecretKey secretKey = key1.getSecretKey(publicKeyEncryptedData.getKeyID());
                         PGPPrivateKey privateKey = UnlockSecretKey.unlockSecretKey(secretKey, SecretKeyRingProtector.unprotectedKeys());
-                        PublicKeyDataDecryptorFactory decryptorFactory = ImplementationFactory.getInstance().getPublicKeyDataDecryptorFactory(privateKey);
+                        PublicKeyDataDecryptorFactory decryptorFactory = OpenPGPImplementation.getInstance().publicKeyDataDecryptorFactory(privateKey);
                         InputStream decryptionStream = publicKeyEncryptedData.getDataStream(decryptorFactory);
-                        objectFactory = ImplementationFactory.getInstance().getPGPObjectFactory(decryptionStream);
+                        objectFactory = OpenPGPImplementation.getInstance().pgpObjectFactory(decryptionStream);
                         continue outerloop;
                     }
                 }
@@ -107,7 +107,7 @@ public class OnePassSignatureBracketingTest {
             } else if (next instanceof PGPCompressedData) {
                 PGPCompressedData compressed = (PGPCompressedData) next;
                 InputStream decompressor = compressed.getDataStream();
-                objectFactory = ImplementationFactory.getInstance().getPGPObjectFactory(decompressor);
+                objectFactory = OpenPGPImplementation.getInstance().pgpObjectFactory(decompressor);
                 continue outerloop;
             } else if (next instanceof PGPLiteralData) {
                 continue outerloop;

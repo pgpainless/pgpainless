@@ -16,8 +16,6 @@ import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.nio.charset.StandardCharsets;
-import java.security.InvalidAlgorithmParameterException;
-import java.security.NoSuchAlgorithmException;
 import java.util.Random;
 
 import org.bouncycastle.openpgp.PGPException;
@@ -216,10 +214,11 @@ public class CleartextSignatureVerificationTest {
 
     @Test
     public void testDecryptionOfVeryLongClearsignedMessage()
-            throws PGPException, InvalidAlgorithmParameterException, NoSuchAlgorithmException, IOException {
+            throws PGPException, IOException {
         String message = randomString(28, 4000);
 
-        PGPSecretKeyRing secretKeys = PGPainless.generateKeyRing().modernKeyRing("Alice");
+        PGPSecretKeyRing secretKeys = PGPainless.generateKeyRing().modernKeyRing("Alice")
+                .getPGPSecretKeyRing();
         ByteArrayOutputStream out = new ByteArrayOutputStream();
         EncryptionStream encryptionStream = PGPainless.encryptAndOrSign()
                 .onOutputStream(out)

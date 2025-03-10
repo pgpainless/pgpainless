@@ -63,11 +63,7 @@ class EncryptionBuilder : EncryptionBuilderInterface {
 
         @JvmStatic
         fun negotiateCompressionAlgorithm(producerOptions: ProducerOptions): CompressionAlgorithm {
-            val compressionAlgorithmOverride = producerOptions.compressionAlgorithmOverride
-            return compressionAlgorithmOverride
-                ?: getPolicy().compressionAlgorithmPolicy.defaultCompressionAlgorithm()
-
-            // TODO: Negotiation
+            return producerOptions.compressionAlgorithmOverride
         }
     }
 }

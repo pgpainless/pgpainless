@@ -4,9 +4,12 @@
 
 package org.pgpainless.key.protection
 
+import org.bouncycastle.bcpg.KeyIdentifier
+import org.bouncycastle.openpgp.PGPPublicKey
+import org.bouncycastle.openpgp.api.OpenPGPImplementation
+import org.bouncycastle.openpgp.api.OpenPGPKey
 import org.bouncycastle.openpgp.operator.PBESecretKeyDecryptor
 import org.bouncycastle.openpgp.operator.PBESecretKeyEncryptor
-import org.pgpainless.implementation.ImplementationFactory
 import org.pgpainless.key.protection.passphrase_provider.SecretKeyPassphraseProvider
 
 /**
@@ -22,23 +25,34 @@ open class BaseSecretKeyRingProtector(
         passphraseProvider: SecretKeyPassphraseProvider
     ) : this(passphraseProvider, KeyRingProtectionSettings.secureDefaultSettings())
 
-    override fun hasPassphraseFor(keyId: Long): Boolean = passphraseProvider.hasPassphrase(keyId)
+    override fun hasPassphraseFor(keyIdentifier: KeyIdentifier): Boolean {
+        return passphraseProvider.hasPassphrase(keyIdentifier)
+    }
 
     override fun getDecryptor(keyId: Long): PBESecretKeyDecryptor? =
-        passphraseProvider.getPassphraseFor(keyId)?.let {
-            if (it.isEmpty) null
-            else ImplementationFactory.getInstance().getPBESecretKeyDecryptor(it)
-        }
+        getDecryptor(KeyIdentifier(keyId))
 
-    override fun getEncryptor(keyId: Long): PBESecretKeyEncryptor? =
-        passphraseProvider.getPassphraseFor(keyId)?.let {
+    override fun getDecryptor(keyIdentifier: KeyIdentifier): PBESecretKeyDecryptor? =
+        passphraseProvider.getPassphraseFor(keyIdentifier)?.let {
             if (it.isEmpty) null
             else
-                ImplementationFactory.getInstance()
-                    .getPBESecretKeyEncryptor(
-                        protectionSettings.encryptionAlgorithm,
-                        protectionSettings.hashAlgorithm,
-                        protectionSettings.s2kCount,
-                        it)
+                OpenPGPImplementation.getInstance()
+                    .pbeSecretKeyDecryptorBuilderProvider()
+                    .provide()
+                    .build(it.getChars())
         }
+
+    override fun getEncryptor(key: PGPPublicKey): PBESecretKeyEncryptor? {
+        return passphraseProvider.getPassphraseFor(key.keyIdentifier)?.let {
+            if (it.isEmpty) null
+            else
+                OpenPGPImplementation.getInstance()
+                    .pbeSecretKeyEncryptorFactory(false)
+                    .build(it.getChars(), key.publicKeyPacket)
+        }
+    }
+
+    override fun getKeyPassword(p0: OpenPGPKey.OpenPGPSecretKey): CharArray? {
+        return passphraseProvider.getPassphraseFor(p0.keyIdentifier)?.getChars()
+    }
 }

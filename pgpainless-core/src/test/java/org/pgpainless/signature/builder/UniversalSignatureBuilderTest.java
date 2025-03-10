@@ -6,15 +6,16 @@ package org.pgpainless.signature.builder;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import java.io.IOException;
 
+import org.bouncycastle.bcpg.KeyIdentifier;
 import org.bouncycastle.bcpg.sig.PrimaryUserID;
 import org.bouncycastle.openpgp.PGPException;
-import org.bouncycastle.openpgp.PGPSecretKey;
-import org.bouncycastle.openpgp.PGPSecretKeyRing;
 import org.bouncycastle.openpgp.PGPSignature;
 import org.bouncycastle.openpgp.PGPSignatureGenerator;
+import org.bouncycastle.openpgp.api.OpenPGPKey;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.pgpainless.PGPainless;
@@ -51,18 +52,18 @@ public class UniversalSignatureBuilderTest {
             "=Dqbd\n" +
             "-----END PGP PRIVATE KEY BLOCK-----";
 
-    private PGPSecretKeyRing secretKeys;
+    private OpenPGPKey secretKeys;
     private final SecretKeyRingProtector protector = SecretKeyRingProtector.unprotectedKeys();
 
     @BeforeEach
     public void parseKey() throws IOException {
-        secretKeys = PGPainless.readKeyRing().secretKeyRing(KEY);
+        secretKeys = PGPainless.getInstance().readKey().parseKey(KEY);
     }
 
     @Test
     public void createPetNameSignature() throws PGPException {
-        PGPSecretKey signingKey = secretKeys.getSecretKey();
-        PGPSignature archetype = signingKey.getPublicKey().getSignatures().next();
+        OpenPGPKey.OpenPGPSecretKey signingKey = secretKeys.getPrimarySecretKey();
+        PGPSignature archetype = signingKey.getPublicKey().getPGPPublicKey().getSignatures().next();
         UniversalSignatureBuilder builder = new UniversalSignatureBuilder(
                 signingKey, protector, archetype);
 
@@ -77,11 +78,11 @@ public class UniversalSignatureBuilderTest {
         PGPSignatureGenerator generator = builder.getSignatureGenerator();
 
         String petName = "mykey";
-        PGPSignature petNameSig = generator.generateCertification(petName, secretKeys.getPublicKey());
+        PGPSignature petNameSig = generator.generateCertification(petName, secretKeys.getPrimarySecretKey().getPublicKey().getPGPPublicKey());
 
         assertEquals(SignatureType.POSITIVE_CERTIFICATION.getCode(), petNameSig.getSignatureType());
         assertEquals(4, petNameSig.getVersion());
-        assertEquals(signingKey.getKeyID(), petNameSig.getKeyID());
+        assertTrue(KeyIdentifier.matches(petNameSig.getKeyIdentifiers(), signingKey.getKeyIdentifier(), true));
         assertEquals(HashAlgorithm.SHA512.getAlgorithmId(), petNameSig.getHashAlgorithm());
         assertEquals(KeyFlag.toBitmask(KeyFlag.CERTIFY_OTHER), petNameSig.getHashedSubPackets().getKeyFlags());
         assertFalse(petNameSig.getHashedSubPackets().isExportable());

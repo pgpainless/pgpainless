@@ -7,9 +7,15 @@ package org.pgpainless.decryption_verification
 import java.io.IOException
 import java.io.InputStream
 import java.util.*
+import org.bouncycastle.bcpg.KeyIdentifier
 import org.bouncycastle.openpgp.*
+import org.bouncycastle.openpgp.api.OpenPGPCertificate
+import org.bouncycastle.openpgp.api.OpenPGPImplementation
+import org.bouncycastle.openpgp.api.OpenPGPKey
+import org.bouncycastle.openpgp.api.OpenPGPKeyMaterialProvider.OpenPGPCertificateProvider
+import org.bouncycastle.openpgp.api.OpenPGPSignature.OpenPGPDocumentSignature
 import org.bouncycastle.openpgp.operator.PublicKeyDataDecryptorFactory
-import org.pgpainless.bouncycastle.extensions.getPublicKeyFor
+import org.pgpainless.PGPainless
 import org.pgpainless.decryption_verification.cleartext_signatures.InMemoryMultiPassStrategy
 import org.pgpainless.decryption_verification.cleartext_signatures.MultiPassStrategy
 import org.pgpainless.key.SubkeyIdentifier
@@ -29,15 +35,16 @@ class ConsumerOptions {
 
     private val certificates = CertificateSource()
     private val detachedSignatures = mutableSetOf<PGPSignature>()
-    private var missingCertificateCallback: MissingPublicKeyCallback? = null
+    private var missingCertificateCallback: OpenPGPCertificateProvider? = null
 
     private var sessionKey: SessionKey? = null
     private val customDecryptorFactories =
         mutableMapOf<SubkeyIdentifier, PublicKeyDataDecryptorFactory>()
-    private val decryptionKeys = mutableMapOf<PGPSecretKeyRing, SecretKeyRingProtector>()
+    private val decryptionKeys = mutableMapOf<OpenPGPKey, SecretKeyRingProtector>()
     private val decryptionPassphrases = mutableSetOf<Passphrase>()
     private var missingKeyPassphraseStrategy = MissingKeyPassphraseStrategy.INTERACTIVE
     private var multiPassStrategy: MultiPassStrategy = InMemoryMultiPassStrategy()
+    private var allowDecryptionWithNonEncryptionKey: Boolean = false
 
     /**
      * Consider signatures on the message made before the given timestamp invalid. Null means no
@@ -65,12 +72,24 @@ class ConsumerOptions {
 
     fun getVerifyNotAfter() = verifyNotAfter
 
+    fun addVerificationCert(verificationCert: OpenPGPCertificate): ConsumerOptions = apply {
+        this.certificates.addCertificate(verificationCert)
+    }
+
+    fun addVerificationCerts(verificationCerts: Collection<OpenPGPCertificate>): ConsumerOptions =
+        apply {
+            for (cert in verificationCerts) {
+                addVerificationCert(cert)
+            }
+        }
+
     /**
      * Add a certificate (public key ring) for signature verification.
      *
      * @param verificationCert certificate for signature verification
      * @return options
      */
+    @Deprecated("Pass OpenPGPCertificate instead.")
     fun addVerificationCert(verificationCert: PGPPublicKeyRing): ConsumerOptions = apply {
         this.certificates.addCertificate(verificationCert)
     }
@@ -81,6 +100,7 @@ class ConsumerOptions {
      * @param verificationCerts certificates for signature verification
      * @return options
      */
+    @Deprecated("Use of methods taking PGPPublicKeyRingCollections is discouraged.")
     fun addVerificationCerts(verificationCerts: PGPPublicKeyRingCollection): ConsumerOptions =
         apply {
             for (cert in verificationCerts) {
@@ -117,6 +137,14 @@ class ConsumerOptions {
         }
     }
 
+    fun addVerificationOfDetachedSignature(signature: OpenPGPDocumentSignature): ConsumerOptions =
+        apply {
+            if (signature.issuerCertificate != null) {
+                addVerificationCert(signature.issuerCertificate)
+            }
+            addVerificationOfDetachedSignature(signature.signature)
+        }
+
     /**
      * Add a detached signature for the signature verification process.
      *
@@ -137,9 +165,10 @@ class ConsumerOptions {
      * @param callback callback
      * @return options
      */
-    fun setMissingCertificateCallback(callback: MissingPublicKeyCallback): ConsumerOptions = apply {
-        this.missingCertificateCallback = callback
-    }
+    fun setMissingCertificateCallback(callback: OpenPGPCertificateProvider): ConsumerOptions =
+        apply {
+            this.missingCertificateCallback = callback
+        }
 
     /**
      * Attempt decryption using a session key.
@@ -155,6 +184,12 @@ class ConsumerOptions {
 
     fun getSessionKey() = sessionKey
 
+    @JvmOverloads
+    fun addDecryptionKey(
+        key: OpenPGPKey,
+        protector: SecretKeyRingProtector = SecretKeyRingProtector.unprotectedKeys()
+    ) = apply { decryptionKeys[key] = protector }
+
     /**
      * Add a key for message decryption. If the key is encrypted, the [SecretKeyRingProtector] is
      * used to decrypt it when needed.
@@ -164,10 +199,12 @@ class ConsumerOptions {
      * @return options
      */
     @JvmOverloads
+    @Deprecated("Pass OpenPGPKey instead.")
     fun addDecryptionKey(
         key: PGPSecretKeyRing,
-        protector: SecretKeyRingProtector = SecretKeyRingProtector.unprotectedKeys()
-    ) = apply { decryptionKeys[key] = protector }
+        protector: SecretKeyRingProtector = SecretKeyRingProtector.unprotectedKeys(),
+        implementation: OpenPGPImplementation = PGPainless.getInstance().implementation
+    ) = addDecryptionKey(OpenPGPKey(key, implementation), protector)
 
     /**
      * Add the keys in the provided key collection for message decryption.
@@ -177,6 +214,7 @@ class ConsumerOptions {
      * @return options
      */
     @JvmOverloads
+    @Deprecated("Pass OpenPGPKey instances instead.")
     fun addDecryptionKeys(
         keys: PGPSecretKeyRingCollection,
         protector: SecretKeyRingProtector = SecretKeyRingProtector.unprotectedKeys()
@@ -185,21 +223,6 @@ class ConsumerOptions {
             addDecryptionKey(key, protector)
         }
     }
-
-    /**
-     * Add a passphrase for message decryption. This passphrase will be used to try to decrypt
-     * messages which were symmetrically encrypted for a passphrase.
-     *
-     * See
-     * [Symmetrically Encrypted Data Packet](https://datatracker.ietf.org/doc/html/rfc4880#section-5.7)
-     *
-     * @param passphrase passphrase
-     * @return options
-     */
-    @Deprecated(
-        "Deprecated in favor of addMessagePassphrase",
-        ReplaceWith("addMessagePassphrase(passphrase)"))
-    fun addDecryptionPassphrase(passphrase: Passphrase) = addMessagePassphrase(passphrase)
 
     /**
      * Add a passphrase for message decryption. This passphrase will be used to try to decrypt
@@ -240,21 +263,21 @@ class ConsumerOptions {
      *
      * @return decryption keys
      */
-    fun getDecryptionKeys() = decryptionKeys.keys.toSet()
+    fun getDecryptionKeys(): Set<OpenPGPKey> = decryptionKeys.keys.toSet()
 
     /**
      * Return the set of available message decryption passphrases.
      *
      * @return decryption passphrases
      */
-    fun getDecryptionPassphrases() = decryptionPassphrases.toSet()
+    fun getDecryptionPassphrases(): Set<Passphrase> = decryptionPassphrases.toSet()
 
     /**
      * Return an object holding available certificates for signature verification.
      *
      * @return certificate source
      */
-    fun getCertificateSource() = certificates
+    fun getCertificateSource(): CertificateSource = certificates
 
     /**
      * Return the callback that gets called when a certificate for signature verification is
@@ -262,7 +285,7 @@ class ConsumerOptions {
      *
      * @return missing public key callback
      */
-    fun getMissingCertificateCallback() = missingCertificateCallback
+    fun getMissingCertificateCallback(): OpenPGPCertificateProvider? = missingCertificateCallback
 
     /**
      * Return the [SecretKeyRingProtector] for the given [PGPSecretKeyRing].
@@ -270,7 +293,7 @@ class ConsumerOptions {
      * @param decryptionKeyRing secret key
      * @return protector for that particular secret key
      */
-    fun getSecretKeyProtector(decryptionKeyRing: PGPSecretKeyRing): SecretKeyRingProtector? {
+    fun getSecretKeyProtector(decryptionKeyRing: OpenPGPKey): SecretKeyRingProtector? {
         return decryptionKeys[decryptionKeyRing]
     }
 
@@ -306,7 +329,15 @@ class ConsumerOptions {
         this.ignoreMDCErrors = ignoreMDCErrors
     }
 
-    fun isIgnoreMDCErrors() = ignoreMDCErrors
+    fun isIgnoreMDCErrors(): Boolean = ignoreMDCErrors
+
+    fun setAllowDecryptionWithMissingKeyFlags(): ConsumerOptions = apply {
+        allowDecryptionWithNonEncryptionKey = true
+    }
+
+    fun getAllowDecryptionWithNonEncryptionKey(): Boolean {
+        return allowDecryptionWithNonEncryptionKey
+    }
 
     /**
      * Force PGPainless to handle the data provided by the [InputStream] as non-OpenPGP data. This
@@ -322,7 +353,7 @@ class ConsumerOptions {
      *
      * @return true if non-OpenPGP data is forced
      */
-    fun isForceNonOpenPgpData() = forceNonOpenPgpData
+    fun isForceNonOpenPgpData(): Boolean = forceNonOpenPgpData
 
     /**
      * Specify the [MissingKeyPassphraseStrategy]. This strategy defines, how missing passphrases
@@ -378,14 +409,28 @@ class ConsumerOptions {
      * available signer certificates.
      */
     class CertificateSource {
-        private val explicitCertificates: MutableSet<PGPPublicKeyRing> = mutableSetOf()
+        private val explicitCertificates: MutableSet<OpenPGPCertificate> = mutableSetOf()
 
         /**
          * Add a certificate as verification cert explicitly.
          *
          * @param certificate certificate
          */
-        fun addCertificate(certificate: PGPPublicKeyRing) {
+        @JvmOverloads
+        @Deprecated("Pass in an OpenPGPCertificate instead.")
+        fun addCertificate(
+            certificate: PGPPublicKeyRing,
+            implementation: OpenPGPImplementation = PGPainless.getInstance().implementation
+        ) {
+            explicitCertificates.add(OpenPGPCertificate(certificate, implementation))
+        }
+
+        /**
+         * Add a certificate as explicitly provided verification cert.
+         *
+         * @param certificate explicit verification cert
+         */
+        fun addCertificate(certificate: OpenPGPCertificate) {
             explicitCertificates.add(certificate)
         }
 
@@ -394,7 +439,7 @@ class ConsumerOptions {
          *
          * @return explicitly set verification certs
          */
-        fun getExplicitCertificates(): Set<PGPPublicKeyRing> {
+        fun getExplicitCertificates(): Set<OpenPGPCertificate> {
             return explicitCertificates.toSet()
         }
 
@@ -406,12 +451,26 @@ class ConsumerOptions {
          * @param keyId key id
          * @return certificate
          */
-        fun getCertificate(keyId: Long): PGPPublicKeyRing? {
-            return explicitCertificates.firstOrNull { it.getPublicKey(keyId) != null }
+        @Deprecated("Pass in a KeyIdentifier instead.")
+        fun getCertificate(keyId: Long): OpenPGPCertificate? {
+            return getCertificate(KeyIdentifier(keyId))
         }
 
-        fun getCertificate(signature: PGPSignature): PGPPublicKeyRing? =
-            explicitCertificates.firstOrNull { it.getPublicKeyFor(signature) != null }
+        /**
+         * Return a certificate which contains a component key for the given [identifier]. This
+         * method first checks all explicitly provided verification certs and if no cert is found it
+         * consults the certificate stores.
+         *
+         * @param identifier key identifier
+         * @return certificate or null if no match is found
+         */
+        fun getCertificate(identifier: KeyIdentifier): OpenPGPCertificate? {
+            return explicitCertificates.firstOrNull { it.getKey(identifier) != null }
+        }
+
+        /** Find a certificate containing the issuer component key for the given [signature]. */
+        fun getCertificate(signature: PGPSignature): OpenPGPCertificate? =
+            explicitCertificates.firstOrNull { it.getSigningKeyFor(signature) != null }
     }
 
     companion object {

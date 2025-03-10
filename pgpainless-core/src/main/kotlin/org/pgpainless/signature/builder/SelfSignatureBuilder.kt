@@ -6,9 +6,9 @@ package org.pgpainless.signature.builder
 
 import java.util.function.Predicate
 import org.bouncycastle.openpgp.PGPException
-import org.bouncycastle.openpgp.PGPSecretKey
 import org.bouncycastle.openpgp.PGPSignature
 import org.bouncycastle.openpgp.PGPUserAttributeSubpacketVector
+import org.bouncycastle.openpgp.api.OpenPGPKey
 import org.pgpainless.algorithm.SignatureType
 import org.pgpainless.key.protection.SecretKeyRingProtector
 import org.pgpainless.signature.subpackets.SelfSignatureSubpackets
@@ -31,20 +31,20 @@ class SelfSignatureBuilder : AbstractSignatureBuilder<SelfSignatureBuilder> {
 
     @Throws(PGPException::class)
     constructor(
-        signingKey: PGPSecretKey,
+        signingKey: OpenPGPKey.OpenPGPSecretKey,
         protector: SecretKeyRingProtector
     ) : super(SignatureType.GENERIC_CERTIFICATION, signingKey, protector)
 
     @Throws(PGPException::class)
     constructor(
         signatureType: SignatureType,
-        signingKey: PGPSecretKey,
+        signingKey: OpenPGPKey.OpenPGPSecretKey,
         protector: SecretKeyRingProtector
     ) : super(signatureType, signingKey, protector)
 
     @Throws(PGPException::class)
     constructor(
-        primaryKey: PGPSecretKey,
+        primaryKey: OpenPGPKey.OpenPGPSecretKey,
         primaryKeyProtector: SecretKeyRingProtector,
         oldCertification: PGPSignature
     ) : super(primaryKey, primaryKeyProtector, oldCertification)
@@ -61,9 +61,11 @@ class SelfSignatureBuilder : AbstractSignatureBuilder<SelfSignatureBuilder> {
 
     @Throws(PGPException::class)
     fun build(userId: CharSequence): PGPSignature =
-        buildAndInitSignatureGenerator().generateCertification(userId.toString(), publicSigningKey)
+        buildAndInitSignatureGenerator()
+            .generateCertification(userId.toString(), signingKey.publicKey.pgpPublicKey)
 
     @Throws(PGPException::class)
     fun build(userAttributes: PGPUserAttributeSubpacketVector): PGPSignature =
-        buildAndInitSignatureGenerator().generateCertification(userAttributes, publicSigningKey)
+        buildAndInitSignatureGenerator()
+            .generateCertification(userAttributes, signingKey.publicKey.pgpPublicKey)
 }
