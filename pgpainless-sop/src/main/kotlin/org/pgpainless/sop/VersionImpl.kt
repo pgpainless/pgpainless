@@ -26,7 +26,7 @@ class VersionImpl : Version {
             String.format(Locale.US, "Bouncy Castle %.2f", BouncyCastleProvider().version)
         val specVersion = String.format("%02d", SOP_VERSION)
         return """${getName()} ${getVersion()}
-https://codeberg.org/PGPainless/pgpainless/src/branch/master/pgpainless-sop
+https://codeberg.org/PGPainless/pgpainless/src/branch/main/pgpainless-sop
 
 Implementation of the Stateless OpenPGP Protocol Version $specVersion
 https://datatracker.ietf.org/doc/html/draft-dkg-openpgp-stateless-cli-$specVersion
