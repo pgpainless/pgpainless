@@ -5,6 +5,16 @@ SPDX-License-Identifier: CC0-1.0
 
 # PGPainless Changelog
 
+## 1.7.3
+- Bump `bcpg-jdk8on` to `1.80`
+- Bump `bcprov-jdk18on` to `1.80`
+- Add dependency on `bcutil-jdk18on` as a workaround
+- Ignore unknown type signatures on certificates
+- Fix typo on signature creation bounds check (thanks @elduffy)
+- Fix superfluous newline added in CRLF encoding (thanks @bjansen)
+- Bump `sop-java` to `1.10.0`
+  - SOP inline-sign: Do not apply compression
+
 ## 1.7.2
 - Fix bug in `KeyRingInfo.lastModified` (thanks to @Jerbell, @sosnovsky for reporting)
 - Bump `sop-java` to `10.0.3`
