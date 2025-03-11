@@ -29,11 +29,17 @@ class HardwareSecurity {
          * @param keyId id of the key
          * @param keyAlgorithm algorithm
          * @param sessionKeyData encrypted session key
+         * @param pkeskVersion version of the Public-Key-Encrypted-Session-Key packet (3 or 6)
          * @return decrypted session key
          * @throws HardwareSecurityException exception
          */
         @Throws(HardwareSecurityException::class)
-        fun decryptSessionKey(keyId: Long, keyAlgorithm: Int, sessionKeyData: ByteArray): ByteArray
+        fun decryptSessionKey(
+            keyId: Long,
+            keyAlgorithm: Int,
+            sessionKeyData: ByteArray,
+            pkeskVersion: Int
+        ): ByteArray
     }
 
     /**
@@ -44,7 +50,7 @@ class HardwareSecurity {
     class HardwareDataDecryptorFactory(
         override val subkeyIdentifier: SubkeyIdentifier,
         private val callback: DecryptionCallback,
-    ) : CustomPublicKeyDataDecryptorFactory {
+    ) : CustomPublicKeyDataDecryptorFactory() {
 
         // luckily we can instantiate the BcPublicKeyDataDecryptorFactory with null as argument.
         private val factory: PublicKeyDataDecryptorFactory = BcPublicKeyDataDecryptorFactory(null)
@@ -73,10 +79,12 @@ class HardwareSecurity {
 
         override fun recoverSessionData(
             keyAlgorithm: Int,
-            secKeyData: Array<out ByteArray>
+            secKeyData: Array<out ByteArray>,
+            pkeskVersion: Int
         ): ByteArray {
             return try {
-                callback.decryptSessionKey(subkeyIdentifier.subkeyId, keyAlgorithm, secKeyData[0])
+                callback.decryptSessionKey(
+                    subkeyIdentifier.subkeyId, keyAlgorithm, secKeyData[0], pkeskVersion)
             } catch (e: HardwareSecurityException) {
                 throw PGPException("Hardware-backed decryption failed.", e)
             }

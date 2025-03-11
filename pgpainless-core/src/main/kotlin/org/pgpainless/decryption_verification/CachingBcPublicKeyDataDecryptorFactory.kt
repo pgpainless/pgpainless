@@ -4,7 +4,11 @@
 
 package org.pgpainless.decryption_verification
 
+import org.bouncycastle.bcpg.AEADEncDataPacket
+import org.bouncycastle.bcpg.SymmetricEncIntegrityPacket
 import org.bouncycastle.openpgp.PGPPrivateKey
+import org.bouncycastle.openpgp.PGPSessionKey
+import org.bouncycastle.openpgp.operator.PGPDataDecryptor
 import org.bouncycastle.openpgp.operator.bc.BcPublicKeyDataDecryptorFactory
 import org.bouncycastle.util.encoders.Base64
 import org.pgpainless.key.SubkeyIdentifier
@@ -21,16 +25,34 @@ import org.pgpainless.key.SubkeyIdentifier
 class CachingBcPublicKeyDataDecryptorFactory(
     privateKey: PGPPrivateKey,
     override val subkeyIdentifier: SubkeyIdentifier
-) : BcPublicKeyDataDecryptorFactory(privateKey), CustomPublicKeyDataDecryptorFactory {
+) : CustomPublicKeyDataDecryptorFactory() {
 
+    private val decryptorFactory: BcPublicKeyDataDecryptorFactory =
+        BcPublicKeyDataDecryptorFactory(privateKey)
     private val cachedSessions: MutableMap<String, ByteArray> = mutableMapOf()
+
+    override fun createDataDecryptor(p0: Boolean, p1: Int, p2: ByteArray?): PGPDataDecryptor {
+        return decryptorFactory.createDataDecryptor(p0, p1, p2)
+    }
+
+    override fun createDataDecryptor(p0: AEADEncDataPacket?, p1: PGPSessionKey?): PGPDataDecryptor {
+        return decryptorFactory.createDataDecryptor(p0, p1)
+    }
+
+    override fun createDataDecryptor(
+        p0: SymmetricEncIntegrityPacket?,
+        p1: PGPSessionKey?
+    ): PGPDataDecryptor {
+        return decryptorFactory.createDataDecryptor(p0, p1)
+    }
 
     override fun recoverSessionData(
         keyAlgorithm: Int,
-        secKeyData: Array<out ByteArray>
+        secKeyData: Array<out ByteArray>,
+        pkeskVersion: Int
     ): ByteArray =
         lookupSessionKeyData(secKeyData)
-            ?: costlyRecoverSessionData(keyAlgorithm, secKeyData).also {
+            ?: costlyRecoverSessionData(keyAlgorithm, secKeyData, pkeskVersion).also {
                 cacheSessionKeyData(secKeyData, it)
             }
 
@@ -39,8 +61,9 @@ class CachingBcPublicKeyDataDecryptorFactory(
 
     private fun costlyRecoverSessionData(
         keyAlgorithm: Int,
-        secKeyData: Array<out ByteArray>
-    ): ByteArray = super.recoverSessionData(keyAlgorithm, secKeyData)
+        secKeyData: Array<out ByteArray>,
+        pkeskVersion: Int
+    ): ByteArray = decryptorFactory.recoverSessionData(keyAlgorithm, secKeyData, pkeskVersion)
 
     private fun cacheSessionKeyData(secKeyData: Array<out ByteArray>, sessionKey: ByteArray) {
         cachedSessions[toKey(secKeyData)] = sessionKey.clone()
