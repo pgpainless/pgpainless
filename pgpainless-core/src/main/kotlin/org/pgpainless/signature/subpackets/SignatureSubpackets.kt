@@ -16,6 +16,7 @@ import org.bouncycastle.openpgp.PGPPublicKey
 import org.bouncycastle.openpgp.PGPSignature
 import org.bouncycastle.openpgp.PGPSignatureSubpacketGenerator
 import org.bouncycastle.openpgp.PGPSignatureSubpacketVector
+import org.bouncycastle.openpgp.api.OpenPGPCertificate.OpenPGPComponentKey
 import org.pgpainless.algorithm.*
 import org.pgpainless.key.util.RevocationAttributes
 
@@ -370,6 +371,10 @@ class SignatureSubpackets(
     override fun setFeatures(features: Features?): SignatureSubpackets = apply {
         subpacketsGenerator.removePacketsOfType(SignatureSubpacketTags.FEATURES)
         features?.let { subpacketsGenerator.setFeature(it.isCritical, it.features) }
+    }
+
+    override fun setAppropriateIssuerInfo(key: OpenPGPComponentKey): SignatureSubpackets = apply {
+        setAppropriateIssuerInfo(key.pgpPublicKey)
     }
 
     override fun setAppropriateIssuerInfo(key: PGPPublicKey) = apply {

@@ -22,12 +22,10 @@ import org.bouncycastle.openpgp.api.OpenPGPSignature
 import org.bouncycastle.openpgp.api.SignatureParameters
 import org.pgpainless.PGPainless
 import org.pgpainless.PGPainless.Companion.inspectKeyRing
-import org.pgpainless.algorithm.AlgorithmSuite
 import org.pgpainless.algorithm.KeyFlag
 import org.pgpainless.algorithm.OpenPGPKeyVersion
 import org.pgpainless.algorithm.SignatureType
 import org.pgpainless.algorithm.negotiation.HashAlgorithmNegotiator
-import org.pgpainless.bouncycastle.extensions.getKeyExpirationDate
 import org.pgpainless.bouncycastle.extensions.publicKeyAlgorithm
 import org.pgpainless.bouncycastle.extensions.requirePublicKey
 import org.pgpainless.key.OpenPgpFingerprint
@@ -66,46 +64,11 @@ class SecretKeyRingEditor(var key: OpenPGPKey, override val referenceTime: Date 
             "User-ID $userId is hard revoked and cannot be re-certified."
         }
 
-        val hashAlgorithmPreferences =
-            info.preferredHashAlgorithms ?: AlgorithmSuite.defaultHashAlgorithms
-        val symmetricAlgorithmPreferences =
-            info.preferredSymmetricKeyAlgorithms ?: AlgorithmSuite.defaultSymmetricKeyAlgorithms
-        val compressionAlgorithmPreferences =
-            info.preferredCompressionAlgorithms ?: AlgorithmSuite.defaultCompressionAlgorithms
-        val aeadAlgorithmPreferences =
-            info.preferredAEADCipherSuites ?: AlgorithmSuite.defaultAEADAlgorithmSuites
-
         key =
             OpenPGPKeyEditor(key, protector)
                 .addUserId(
                     sanitizeUserId(userId).toString(),
-                    object : SignatureParameters.Callback {
-                        override fun apply(parameters: SignatureParameters): SignatureParameters {
-                            return parameters
-                                .setSignatureCreationTime(referenceTime)
-                                .setHashedSubpacketsFunction { subpacketGenerator ->
-                                    val subpackets = SignatureSubpackets(subpacketGenerator)
-                                    subpackets.setAppropriateIssuerInfo(secretKeyRing.publicKey)
-
-                                    subpackets.setKeyFlags(info.getKeyFlagsOf(key.keyIdentifier))
-                                    subpackets.setPreferredHashAlgorithms(hashAlgorithmPreferences)
-                                    subpackets.setPreferredSymmetricKeyAlgorithms(
-                                        symmetricAlgorithmPreferences)
-                                    subpackets.setPreferredCompressionAlgorithms(
-                                        compressionAlgorithmPreferences)
-                                    subpackets.setPreferredAEADCiphersuites(
-                                        aeadAlgorithmPreferences)
-
-                                    callback?.modifyHashedSubpackets(subpackets)
-                                    subpacketGenerator
-                                }
-                                .setUnhashedSubpacketsFunction { subpacketGenerator ->
-                                    callback?.modifyUnhashedSubpackets(
-                                        SignatureSubpackets(subpacketGenerator))
-                                    subpacketGenerator
-                                }
-                        }
-                    })
+                    toSignatureParametersCallback(callback, referenceTime))
                 .done()
         secretKeyRing = key.pgpSecretKeyRing
         return this
@@ -115,71 +78,14 @@ class SecretKeyRingEditor(var key: OpenPGPKey, override val referenceTime: Date 
         userId: CharSequence,
         protector: SecretKeyRingProtector
     ): SecretKeyRingEditorInterface {
-        val uid = sanitizeUserId(userId)
-        val primaryKey = secretKeyRing.publicKey
-        var info = inspectKeyRing(secretKeyRing, referenceTime)
-        val primaryUserId = info.primaryUserId
-        val signature =
-            if (primaryUserId == null) info.latestDirectKeySelfSignature
-            else info.getLatestUserIdCertification(primaryUserId)
-        val previousKeyExpiration = signature?.getKeyExpirationDate(primaryKey.creationTime)
-
-        // Add new primary user-id signature
-        addUserId(
-            uid,
+        return addUserId(
+            userId,
             object : SelfSignatureSubpackets.Callback {
                 override fun modifyHashedSubpackets(hashedSubpackets: SelfSignatureSubpackets) {
-                    hashedSubpackets.apply {
-                        setPrimaryUserId()
-                        if (previousKeyExpiration != null)
-                            setKeyExpirationTime(primaryKey, previousKeyExpiration)
-                        else setKeyExpirationTime(null)
-                    }
+                    hashedSubpackets.setPrimaryUserId()
                 }
             },
             protector)
-
-        // unmark previous primary user-ids to be non-primary
-        info = inspectKeyRing(secretKeyRing, referenceTime)
-        info.validAndExpiredUserIds
-            .filterNot { it == uid }
-            .forEach { otherUserId ->
-                if (info
-                    .getLatestUserIdCertification(otherUserId)!!
-                    .hashedSubPackets
-                    .isPrimaryUserID) {
-                    // We need to unmark this user-id as primary
-                    addUserId(
-                        otherUserId,
-                        object : SelfSignatureSubpackets.Callback {
-                            override fun modifyHashedSubpackets(
-                                hashedSubpackets: SelfSignatureSubpackets
-                            ) {
-                                hashedSubpackets.apply {
-                                    setPrimaryUserId(null)
-                                    setKeyExpirationTime(null) // non-primary
-                                }
-                            }
-                        },
-                        protector)
-                }
-            }
-        return this
-    }
-
-    @Deprecated(
-        "Use of SelectUserId class is deprecated.",
-        replaceWith = ReplaceWith("removeUserId(protector, predicate)"))
-    override fun removeUserId(
-        selector: SelectUserId,
-        protector: SecretKeyRingProtector
-    ): SecretKeyRingEditorInterface {
-        return revokeUserIds(
-            selector,
-            protector,
-            RevocationAttributes.createCertificateRevocation()
-                .withReason(RevocationAttributes.Reason.USER_ID_NO_LONGER_VALID)
-                .withoutDescription())
     }
 
     override fun removeUserId(
@@ -266,11 +172,46 @@ class SecretKeyRingEditor(var key: OpenPGPKey, override val referenceTime: Date 
         callback: SelfSignatureSubpackets.Callback?,
         protector: SecretKeyRingProtector
     ): SecretKeyRingEditorInterface {
-        val version = OpenPGPKeyVersion.from(secretKeyRing.getPublicKey().version)
-        val keyPair = KeyRingBuilder.generateKeyPair(keySpec, OpenPGPKeyVersion.v4, referenceTime)
+        val version = OpenPGPKeyVersion.from(secretKeyRing.publicKey.version)
+        val keyPair = KeyRingBuilder.generateKeyPair(keySpec, version, referenceTime)
         val subkeyProtector =
             PasswordBasedSecretKeyRingProtector.forKeyId(keyPair.keyIdentifier, subkeyPassphrase)
         val keyFlags = KeyFlag.fromBitmask(keySpec.subpackets.keyFlags).toMutableList()
+        keySpec.subpacketGenerator
+        val backSigParameters =
+            if (!keyFlags.contains(KeyFlag.SIGN_DATA)) null
+            else
+                object : SignatureParameters.Callback {
+                    override fun apply(parameters: SignatureParameters): SignatureParameters {
+                        return parameters.setHashedSubpacketsFunction {
+                            it.apply {
+                                SignatureSubpackets(it)
+                                    .setSignatureCreationTime(referenceTime)
+                                    .setAppropriateIssuerInfo(key.primaryKey)
+                            }
+                        }
+                    }
+                }
+
+        key =
+            OpenPGPKeyEditor(key, protector)
+                .addSubkey(
+                    keyPair,
+                    object : SignatureParameters.Callback {
+                        override fun apply(parameters: SignatureParameters): SignatureParameters {
+                            return parameters.setHashedSubpacketsFunction {
+                                it.apply {
+                                    SignatureSubpackets(it)
+                                        .setKeyFlags(keyFlags)
+                                        .setAppropriateIssuerInfo(key.primaryKey)
+                                }
+                            }
+                        }
+                    },
+                    backSigParameters)
+                .changePassphrase(keyPair.keyIdentifier, null, subkeyPassphrase.getChars(), false)
+                .done()
+
         return addSubKey(
             keyPair,
             callback,
@@ -352,29 +293,49 @@ class SecretKeyRingEditor(var key: OpenPGPKey, override val referenceTime: Date 
     override fun revoke(
         protector: SecretKeyRingProtector,
         callback: RevocationSignatureSubpackets.Callback?
-    ): SecretKeyRingEditorInterface {
-        return revokeSubKey(secretKeyRing.secretKey.keyID, protector, callback)
+    ): SecretKeyRingEditorInterface = apply {
+        key =
+            OpenPGPKeyEditor(key, protector)
+                .revokeKey(toSignatureParametersCallback(callback, referenceTime))
+                .done()
     }
 
-    override fun revokeSubKey(
-        subkeyId: Long,
+    override fun revokeSubkey(
+        keyIdentifier: KeyIdentifier,
         protector: SecretKeyRingProtector,
-        revocationAttributes: RevocationAttributes?
-    ): SecretKeyRingEditorInterface {
-        return revokeSubKey(
-            subkeyId, protector, callbackFromRevocationAttributes(revocationAttributes))
+        revocationAttributes: RevocationAttributes
+    ): SecretKeyRingEditor {
+        return revokeSubkey(
+            keyIdentifier,
+            protector,
+            object : RevocationSignatureSubpackets.Callback {
+                override fun modifyHashedSubpackets(
+                    hashedSubpackets: RevocationSignatureSubpackets
+                ) {
+                    hashedSubpackets.setRevocationReason(revocationAttributes)
+                }
+            })
     }
 
-    override fun revokeSubKey(
-        subkeyId: Long,
+    override fun revokeSubkey(
+        keyIdentifier: KeyIdentifier,
         protector: SecretKeyRingProtector,
-        callback: RevocationSignatureSubpackets.Callback?
-    ): SecretKeyRingEditorInterface {
-        val revokeeSubKey = secretKeyRing.requirePublicKey(subkeyId)
-        val subkeyRevocation = generateRevocation(protector, revokeeSubKey, callback)
-        secretKeyRing = injectCertification(secretKeyRing, revokeeSubKey, subkeyRevocation)
-        return this
+        revocationSignatureCallback: RevocationSignatureSubpackets.Callback?
+    ): SecretKeyRingEditor = apply {
+        key =
+            OpenPGPKeyEditor(key, protector)
+                .revokeComponentKey(
+                    key.getKey(keyIdentifier)
+                        ?: throw NoSuchElementException(
+                            "Missing component key $keyIdentifier on key ${key.keyIdentifier}"),
+                    toSignatureParametersCallback(revocationSignatureCallback, referenceTime))
+                .done()
     }
+
+    override fun revokeSubkey(
+        keyIdentifier: KeyIdentifier,
+        protector: SecretKeyRingProtector
+    ): SecretKeyRingEditor = revokeSubkey(keyIdentifier, protector, null)
 
     override fun revokeUserId(
         userId: CharSequence,
@@ -603,7 +564,7 @@ class SecretKeyRingEditor(var key: OpenPGPKey, override val referenceTime: Date 
     private fun sanitizeUserId(userId: CharSequence): CharSequence =
         // TODO: Further research how to sanitize user IDs.
         //  e.g. what about newlines?
-        userId.toString().trim()
+        userId.toString().trim().also { require(it.isNotBlank()) { "User-ID cannot be blank." } }
 
     private fun callbackFromRevocationAttributes(attributes: RevocationAttributes?) =
         object : RevocationSignatureSubpackets.Callback {
@@ -633,17 +594,36 @@ class SecretKeyRingEditor(var key: OpenPGPKey, override val referenceTime: Date 
         protector: SecretKeyRingProtector,
         callback: RevocationSignatureSubpackets.Callback?
     ): SecretKeyRingEditorInterface {
-        RevocationSignatureBuilder(
-                SignatureType.CERTIFICATION_REVOCATION, key.primarySecretKey, protector)
-            .apply {
-                hashedSubpackets.setSignatureCreationTime(referenceTime)
-                applyCallback(callback)
-            }
-            .let {
-                secretKeyRing =
-                    injectCertification(secretKeyRing, userId, it.build(userId.toString()))
-            }
+        val uid = key.getUserId(userId.toString())!!
+        key =
+            OpenPGPKeyEditor(key, protector)
+                .revokeIdentity(uid, toSignatureParametersCallback(callback, referenceTime))
+                .done()
         return this
+    }
+
+    private fun <S : BaseSignatureSubpackets> toSignatureParametersCallback(
+        callback: SignatureSubpacketCallback<S>?,
+        referenceTime: Date
+    ): SignatureParameters.Callback {
+        return object : SignatureParameters.Callback {
+            override fun apply(parameters: SignatureParameters): SignatureParameters {
+                return parameters
+                    .setSignatureCreationTime(referenceTime)
+                    .setHashedSubpacketsFunction {
+                        it.apply {
+                            val subpackets = SignatureSubpackets(it) as S
+                            subpackets.setAppropriateIssuerInfo(key.primaryKey)
+                            callback?.modifyHashedSubpackets(subpackets)
+                        }
+                    }
+                    .setUnhashedSubpacketsFunction {
+                        it.apply {
+                            callback?.modifyUnhashedSubpackets(SignatureSubpackets(it) as S)
+                        }
+                    }
+            }
+        }
     }
 
     private fun getPreviousDirectKeySignature(): PGPSignature? {

@@ -150,7 +150,7 @@ public class RevokeSubKeyTest {
     }
 
     @Test
-    public void inspectSubpacketsOnModifiedRevocationSignature() {
+    public void inspectSubpacketsOnModifiedRevocationSignature() throws PGPException {
         PGPSecretKeyRing secretKeys = PGPainless.generateKeyRing().modernKeyRing("Alice")
                 .getPGPSecretKeyRing();
         SecretKeyRingProtector protector = SecretKeyRingProtector.unprotectedKeys();

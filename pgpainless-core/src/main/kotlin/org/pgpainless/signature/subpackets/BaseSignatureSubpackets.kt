@@ -10,6 +10,7 @@ import java.util.*
 import org.bouncycastle.bcpg.sig.*
 import org.bouncycastle.openpgp.PGPPublicKey
 import org.bouncycastle.openpgp.PGPSignature
+import org.bouncycastle.openpgp.api.OpenPGPCertificate.OpenPGPComponentKey
 import org.pgpainless.algorithm.HashAlgorithm
 import org.pgpainless.algorithm.OpenPGPKeyVersion
 import org.pgpainless.algorithm.PublicKeyAlgorithm
@@ -17,6 +18,8 @@ import org.pgpainless.algorithm.PublicKeyAlgorithm
 interface BaseSignatureSubpackets {
 
     interface Callback : SignatureSubpacketCallback<BaseSignatureSubpackets>
+
+    fun setAppropriateIssuerInfo(key: OpenPGPComponentKey): BaseSignatureSubpackets
 
     fun setAppropriateIssuerInfo(key: PGPPublicKey): BaseSignatureSubpackets
 

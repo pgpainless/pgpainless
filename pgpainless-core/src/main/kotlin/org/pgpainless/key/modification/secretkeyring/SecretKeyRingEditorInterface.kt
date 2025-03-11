@@ -233,6 +233,26 @@ interface SecretKeyRingEditorInterface {
         callback: RevocationSignatureSubpackets.Callback?
     ): SecretKeyRingEditorInterface
 
+    @Throws(PGPException::class)
+    fun revokeSubkey(
+        keyIdentifier: KeyIdentifier,
+        protector: SecretKeyRingProtector,
+        revocationAttributes: RevocationAttributes
+    ): SecretKeyRingEditorInterface
+
+    @Throws(PGPException::class)
+    fun revokeSubkey(
+        keyIdentifier: KeyIdentifier,
+        protector: SecretKeyRingProtector,
+        revocationSignatureCallback: RevocationSignatureSubpackets.Callback?
+    ): SecretKeyRingEditorInterface
+
+    @Throws(PGPException::class)
+    fun revokeSubkey(
+        keyIdentifier: KeyIdentifier,
+        protector: SecretKeyRingProtector
+    ): SecretKeyRingEditorInterface
+
     /**
      * Revoke the subkey binding signature of a subkey. The subkey with the provided fingerprint
      * will be revoked. If no suitable subkey is found, a [NoSuchElementException] will be thrown.
@@ -262,7 +282,9 @@ interface SecretKeyRingEditorInterface {
         protector: SecretKeyRingProtector,
         revocationAttributes: RevocationAttributes? = null
     ): SecretKeyRingEditorInterface =
-        revokeSubKey(fingerprint.keyId, protector, revocationAttributes)
+        if (revocationAttributes != null)
+            revokeSubkey(fingerprint.keyIdentifier, protector, revocationAttributes)
+        else revokeSubkey(fingerprint.keyIdentifier, protector)
 
     /**
      * Revoke the subkey binding signature of a subkey. The subkey with the provided key-id will be
@@ -274,6 +296,7 @@ interface SecretKeyRingEditorInterface {
      * @throws PGPException in case we cannot generate a revocation signature for the subkey
      */
     @Throws(PGPException::class)
+    @Deprecated("Pass in a KeyIdentifier instead.")
     fun revokeSubKey(subkeyId: Long, protector: SecretKeyRingProtector) =
         revokeSubKey(subkeyId, protector, null as RevocationAttributes?)
 
@@ -288,11 +311,15 @@ interface SecretKeyRingEditorInterface {
      * @throws PGPException in case we cannot generate a revocation signature for the subkey
      */
     @Throws(PGPException::class)
+    @Deprecated("Pass in a KeyIdentifier instead.")
     fun revokeSubKey(
         subkeyId: Long,
         protector: SecretKeyRingProtector,
         revocationAttributes: RevocationAttributes? = null
-    ): SecretKeyRingEditorInterface
+    ): SecretKeyRingEditorInterface =
+        if (revocationAttributes != null)
+            revokeSubkey(KeyIdentifier(subkeyId), protector, revocationAttributes)
+        else revokeSubkey(KeyIdentifier(subkeyId), protector)
 
     /**
      * Revoke the subkey binding signature of a subkey. The subkey with the provided key-id will be
@@ -308,11 +335,12 @@ interface SecretKeyRingEditorInterface {
      * @throws PGPException in case we cannot generate a revocation signature for the subkey
      */
     @Throws(PGPException::class)
+    @Deprecated("Pass in a KeyIdentifier instead.")
     fun revokeSubKey(
         subkeyId: Long,
         protector: SecretKeyRingProtector,
         callback: RevocationSignatureSubpackets.Callback?
-    ): SecretKeyRingEditorInterface
+    ): SecretKeyRingEditorInterface = revokeSubkey(KeyIdentifier(subkeyId), protector, callback)
 
     /**
      * Hard-revoke the given userID.
