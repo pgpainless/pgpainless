@@ -72,17 +72,5 @@ https://www.bouncycastle.org/java.html"""
             ?: ""
     }
 
-    private fun getSopJavaVersion(): String? {
-        return try {
-            val resourceIn: InputStream =
-                javaClass.getResourceAsStream("/sop-java-version.properties")
-                    ?: throw IOException("File sop-java-version.properties not found.")
-            val properties = Properties().apply { load(resourceIn) }
-            properties.getProperty("sop-java-version")
-        } catch (e: IOException) {
-            null
-        }
-    }
-
     override fun isSopSpecImplementationIncomplete(): Boolean = false
 }

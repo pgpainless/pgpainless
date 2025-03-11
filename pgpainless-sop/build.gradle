@@ -22,7 +22,7 @@ dependencies {
     testImplementation "ch.qos.logback:logback-classic:$logbackVersion"
 
     // Depend on "shared" sop-java test suite (fixtures are turned into tests by inheritance inside test sources)
-    testImplementation(testFixtures("org.pgpainless:sop-java:$sopJavaVersion"))
+    testImplementation "org.pgpainless:sop-java-testfixtures:$sopJavaVersion"
 
     implementation(project(":pgpainless-core"))
     api "org.pgpainless:sop-java:$sopJavaVersion"
