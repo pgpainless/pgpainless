@@ -37,7 +37,7 @@ class CRLFGeneratorStream(private val crlfOut: OutputStream, encoding: StreamEnc
     }
 
     override fun close() {
-        if (!isBinary && lastB == 'r'.code) {
+        if (!isBinary && lastB == '\r'.code) {
             crlfOut.write('\n'.code)
         }
         crlfOut.close()
