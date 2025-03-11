@@ -13,6 +13,7 @@ import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.OutputStream;
 import java.nio.charset.StandardCharsets;
+import java.util.stream.Stream;
 
 import org.bouncycastle.bcpg.ArmoredOutputStream;
 import org.bouncycastle.bcpg.CompressionAlgorithmTags;
@@ -30,6 +31,9 @@ import org.bouncycastle.openpgp.operator.bc.BcPGPContentSignerBuilder;
 import org.bouncycastle.util.io.Streams;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.Arguments;
+import org.junit.jupiter.params.provider.MethodSource;
 import org.pgpainless.PGPainless;
 import org.pgpainless.algorithm.DocumentSignatureType;
 import org.pgpainless.algorithm.HashAlgorithm;
@@ -288,11 +292,9 @@ public class CanonicalizedDataEncryptionTest {
         }
     }
 
-    @Test
-    public void resultOfDecryptionIsCRLFEncoded() throws PGPException, IOException {
-        String before = "Foo\nBar!\n";
-        String after = "Foo\r\nBar!\r\n";
-
+    @ParameterizedTest
+    @MethodSource("resultOfDecryptionIsCRLFEncodedArguments")
+    public void resultOfDecryptionIsCRLFEncoded(String before, String after) throws PGPException, IOException {
         String encrypted = encryptAndSign(before, DocumentSignatureType.BINARY_DOCUMENT, StreamEncoding.TEXT, true);
 
         ByteArrayInputStream in = new ByteArrayInputStream(encrypted.getBytes(StandardCharsets.UTF_8));
@@ -307,6 +309,16 @@ public class CanonicalizedDataEncryptionTest {
         decryptionStream.close();
 
         assertArrayEquals(after.getBytes(StandardCharsets.UTF_8), decrypted.toByteArray());
+    }
+
+    private static Stream<Arguments> resultOfDecryptionIsCRLFEncodedArguments() {
+        return Stream.of(
+                Arguments.of("foo", "foo"),
+                Arguments.of("rrr", "rrr"),
+                Arguments.of("Foo\nBar!\n", "Foo\r\nBar!\r\n"),
+                Arguments.of("Foo\rBar!\r", "Foo\r\nBar!\r\n"),
+                Arguments.of("Foo\r\nBar!\r\n", "Foo\r\nBar!\r\n")
+        );
     }
 
     @Test
