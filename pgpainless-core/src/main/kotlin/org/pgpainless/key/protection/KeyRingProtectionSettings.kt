@@ -19,7 +19,8 @@ import org.pgpainless.algorithm.SymmetricKeyAlgorithm
 data class KeyRingProtectionSettings(
     val encryptionAlgorithm: SymmetricKeyAlgorithm,
     val hashAlgorithm: HashAlgorithm,
-    val s2kCount: Int
+    val s2kCount: Int,
+    val aead: Boolean
 ) {
 
     /**
@@ -31,7 +32,7 @@ data class KeyRingProtectionSettings(
      */
     constructor(
         encryptionAlgorithm: SymmetricKeyAlgorithm
-    ) : this(encryptionAlgorithm, HashAlgorithm.SHA1, 0x60)
+    ) : this(encryptionAlgorithm, HashAlgorithm.SHA1, 0x60, false)
 
     init {
         require(encryptionAlgorithm != SymmetricKeyAlgorithm.NULL) {
@@ -50,6 +51,12 @@ data class KeyRingProtectionSettings(
          */
         @JvmStatic
         fun secureDefaultSettings() =
-            KeyRingProtectionSettings(SymmetricKeyAlgorithm.AES_256, HashAlgorithm.SHA256, 0x60)
+            KeyRingProtectionSettings(
+                SymmetricKeyAlgorithm.AES_256, HashAlgorithm.SHA256, 0x60, false)
+
+        @JvmStatic
+        fun aead() =
+            KeyRingProtectionSettings(
+                SymmetricKeyAlgorithm.AES_256, HashAlgorithm.SHA256, 0xff, true)
     }
 }
