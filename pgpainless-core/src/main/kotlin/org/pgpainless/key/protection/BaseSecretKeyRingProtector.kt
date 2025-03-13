@@ -55,7 +55,7 @@ open class BaseSecretKeyRingProtector(
         }
     }
 
-    override fun getKeyPassword(p0: OpenPGPKey.OpenPGPSecretKey): CharArray? {
-        return passphraseProvider.getPassphraseFor(p0.keyIdentifier)?.getChars()
+    override fun getKeyPassword(key: OpenPGPKey.OpenPGPSecretKey): CharArray? {
+        return passphraseProvider.getPassphraseFor(key.keyIdentifier)?.getChars()
     }
 }
