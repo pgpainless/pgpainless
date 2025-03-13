@@ -15,6 +15,6 @@ public class InvalidProtectionSettingsTest {
     @Test
     public void unencryptedKeyRingProtectionSettingsThrows() {
         assertThrows(IllegalArgumentException.class, () ->
-                new KeyRingProtectionSettings(SymmetricKeyAlgorithm.NULL, HashAlgorithm.SHA256, 0x60));
+                new KeyRingProtectionSettings(SymmetricKeyAlgorithm.NULL, HashAlgorithm.SHA256, 0x60, false));
     }
 }
