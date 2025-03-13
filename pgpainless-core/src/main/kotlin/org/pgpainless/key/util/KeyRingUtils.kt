@@ -509,7 +509,7 @@ class KeyRingUtils {
 
             return PGPSecretKey.copyWithNewPassword(
                 secretKey,
-                oldProtector.getDecryptor(secretKey.keyID),
+                oldProtector.getDecryptor(secretKey.keyIdentifier),
                 newProtector.getEncryptor(secretKey.publicKey))
         }
 
