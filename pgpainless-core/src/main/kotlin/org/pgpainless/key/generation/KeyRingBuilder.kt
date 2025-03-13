@@ -19,6 +19,7 @@ import org.pgpainless.algorithm.KeyFlag
 import org.pgpainless.algorithm.OpenPGPKeyVersion
 import org.pgpainless.algorithm.SignatureType
 import org.pgpainless.bouncycastle.extensions.unlock
+import org.pgpainless.key.protection.KeyRingProtectionSettings
 import org.pgpainless.policy.Policy
 import org.pgpainless.signature.subpackets.SelfSignatureSubpackets
 import org.pgpainless.signature.subpackets.SignatureSubpackets
@@ -231,10 +232,14 @@ class KeyRingBuilder(
         aead: Boolean
     ): PBESecretKeyEncryptor? {
         check(passphrase.isValid) { "Passphrase was cleared." }
+        val protectionSettings = KeyRingProtectionSettings.secureDefaultSettings()
         return if (passphrase.isEmpty) null
         else
             OpenPGPImplementation.getInstance()
-                .pbeSecretKeyEncryptorFactory(aead)
+                .pbeSecretKeyEncryptorFactory(
+                    aead,
+                    protectionSettings.encryptionAlgorithm.algorithmId,
+                    protectionSettings.s2kCount)
                 .build(passphrase.getChars(), publicKey.publicKeyPacket)
     }
 

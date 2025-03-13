@@ -47,7 +47,10 @@ open class BaseSecretKeyRingProtector(
             if (it.isEmpty) null
             else
                 OpenPGPImplementation.getInstance()
-                    .pbeSecretKeyEncryptorFactory(false)
+                    .pbeSecretKeyEncryptorFactory(
+                        false,
+                        protectionSettings.encryptionAlgorithm.algorithmId,
+                        protectionSettings.s2kCount)
                     .build(it.getChars(), key.publicKeyPacket)
         }
     }
