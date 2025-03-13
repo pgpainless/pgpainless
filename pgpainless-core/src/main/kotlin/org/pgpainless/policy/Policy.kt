@@ -6,6 +6,7 @@ package org.pgpainless.policy
 
 import java.util.*
 import org.pgpainless.algorithm.*
+import org.pgpainless.key.protection.KeyRingProtectionSettings
 import org.pgpainless.util.DateUtil
 import org.pgpainless.util.NotationRegistry
 
@@ -17,6 +18,7 @@ class Policy(
     var symmetricKeyDecryptionAlgorithmPolicy: SymmetricKeyAlgorithmPolicy,
     var compressionAlgorithmPolicy: CompressionAlgorithmPolicy,
     var publicKeyAlgorithmPolicy: PublicKeyAlgorithmPolicy,
+    var keyProtectionSettings: KeyRingProtectionSettings,
     var notationRegistry: NotationRegistry
 ) {
 
@@ -29,6 +31,7 @@ class Policy(
             SymmetricKeyAlgorithmPolicy.symmetricKeyDecryptionPolicy2022(),
             CompressionAlgorithmPolicy.anyCompressionAlgorithmPolicy(),
             PublicKeyAlgorithmPolicy.bsi2021PublicKeyAlgorithmPolicy(),
+            KeyRingProtectionSettings.secureDefaultSettings(),
             NotationRegistry())
 
     var keyGenerationAlgorithmSuite = AlgorithmSuite.defaultAlgorithmSuite

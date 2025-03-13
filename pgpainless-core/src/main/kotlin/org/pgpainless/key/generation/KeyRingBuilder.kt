@@ -19,7 +19,6 @@ import org.pgpainless.algorithm.KeyFlag
 import org.pgpainless.algorithm.OpenPGPKeyVersion
 import org.pgpainless.algorithm.SignatureType
 import org.pgpainless.bouncycastle.extensions.unlock
-import org.pgpainless.key.protection.KeyRingProtectionSettings
 import org.pgpainless.policy.Policy
 import org.pgpainless.signature.subpackets.SelfSignatureSubpackets
 import org.pgpainless.signature.subpackets.SignatureSubpackets
@@ -93,7 +92,7 @@ class KeyRingBuilder(
         requireNotNull(primaryKeySpec) { "Primary Key spec required." }
         val certKey = generateKeyPair(primaryKeySpec!!, version)
 
-        val secretKeyEncryptor = buildSecretKeyEncryptor(certKey.publicKey, false)
+        val secretKeyEncryptor = buildSecretKeyEncryptor(certKey.publicKey)
         val secretKeyDecryptor = buildSecretKeyDecryptor()
 
         passphrase.clear() // Passphrase was used above, so we can get rid of it
@@ -229,15 +228,14 @@ class KeyRingBuilder(
 
     private fun buildSecretKeyEncryptor(
         publicKey: PGPPublicKey,
-        aead: Boolean
     ): PBESecretKeyEncryptor? {
         check(passphrase.isValid) { "Passphrase was cleared." }
-        val protectionSettings = KeyRingProtectionSettings.secureDefaultSettings()
+        val protectionSettings = PGPainless.getPolicy().keyProtectionSettings
         return if (passphrase.isEmpty) null
         else
             OpenPGPImplementation.getInstance()
                 .pbeSecretKeyEncryptorFactory(
-                    aead,
+                    protectionSettings.aead,
                     protectionSettings.encryptionAlgorithm.algorithmId,
                     protectionSettings.s2kCount)
                 .build(passphrase.getChars(), publicKey.publicKeyPacket)
