@@ -118,17 +118,15 @@ class KeyRingBuilder(
                     signer,
                     secretKeyEncryptor)
             } else {
-                userIds.keys.first().let { primaryUserId ->
-                    PGPKeyRingGenerator(
-                        SignatureType.POSITIVE_CERTIFICATION.code,
-                        certKey,
-                        primaryUserId,
-                        keyFingerprintCalculator,
-                        hashedSubPackets,
-                        null,
-                        signer,
-                        secretKeyEncryptor)
-                }
+                PGPKeyRingGenerator(
+                    SignatureType.POSITIVE_CERTIFICATION.code,
+                    certKey,
+                    userIds.keys.first(),
+                    keyFingerprintCalculator,
+                    hashedSubPackets,
+                    null,
+                    signer,
+                    secretKeyEncryptor)
             }
 
         addSubKeys(certKey, ringGenerator)
