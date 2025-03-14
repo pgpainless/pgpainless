@@ -222,9 +222,6 @@ Parts of PGPainless development ([project page](https://nlnet.nl/project/PGPainl
 NGI Assure is made possible with financial support from the [European Commission](https://ec.europa.eu/)'s [Next Generation Internet](https://ngi.eu/) programme, under the aegis of [DG Communications Networks, Content and Technology](https://ec.europa.eu/info/departments/communications-networks-content-and-technology_en).
 [![NGI Assure Logo](https://blog.jabberhead.tk/wp-content/uploads/2022/05/NGIAssure_tag.svg)](https://nlnet.nl/assure/)
 
-Thanks to [YourKit](https://www.yourkit.com/) for providing a free license of the [YourKit Java Profiler](https://www.yourkit.com/java/profiler/) to support PGPainless Development!
-[![YourKit Logo](https://www.yourkit.com/images/yklogo.png)](https://www.yourkit.com/)
-
 Big thank you also to those who decided to support the work by donating!  
 Notably @msfjarvis
 
