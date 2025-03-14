@@ -9,7 +9,6 @@ import java.util.function.Predicate
 import javax.annotation.Nonnull
 import kotlin.NoSuchElementException
 import openpgp.openPgpKeyId
-import org.bouncycastle.bcpg.HashAlgorithmTags
 import org.bouncycastle.bcpg.KeyIdentifier
 import org.bouncycastle.bcpg.sig.KeyExpirationTime
 import org.bouncycastle.openpgp.*
@@ -27,6 +26,7 @@ import org.pgpainless.algorithm.KeyFlag
 import org.pgpainless.algorithm.OpenPGPKeyVersion
 import org.pgpainless.algorithm.SignatureType
 import org.pgpainless.algorithm.negotiation.HashAlgorithmNegotiator
+import org.pgpainless.bouncycastle.extensions.checksumCalculator
 import org.pgpainless.bouncycastle.extensions.getKeyExpirationDate
 import org.pgpainless.bouncycastle.extensions.publicKeyAlgorithm
 import org.pgpainless.bouncycastle.extensions.requirePublicKey
@@ -310,9 +310,7 @@ class SecretKeyRingEditor(var key: OpenPGPKey, override val referenceTime: Date 
             PGPSecretKey(
                 subkey.privateKey,
                 subkey.publicKey,
-                OpenPGPImplementation.getInstance()
-                    .pgpDigestCalculatorProvider()
-                    .get(HashAlgorithmTags.SHA1),
+                OpenPGPImplementation.getInstance().checksumCalculator(),
                 false,
                 subkeyProtector.getEncryptor(subkey.publicKey))
 
