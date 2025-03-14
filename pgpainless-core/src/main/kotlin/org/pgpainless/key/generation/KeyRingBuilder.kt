@@ -6,7 +6,6 @@ package org.pgpainless.key.generation
 
 import java.io.IOException
 import java.util.*
-import org.bouncycastle.bcpg.HashAlgorithmTags
 import org.bouncycastle.openpgp.*
 import org.bouncycastle.openpgp.api.OpenPGPImplementation
 import org.bouncycastle.openpgp.api.OpenPGPKey
@@ -18,6 +17,7 @@ import org.pgpainless.PGPainless
 import org.pgpainless.algorithm.KeyFlag
 import org.pgpainless.algorithm.OpenPGPKeyVersion
 import org.pgpainless.algorithm.SignatureType
+import org.pgpainless.bouncycastle.extensions.checksumCalculator
 import org.pgpainless.bouncycastle.extensions.unlock
 import org.pgpainless.policy.Policy
 import org.pgpainless.signature.subpackets.SelfSignatureSubpackets
@@ -83,10 +83,7 @@ class KeyRingBuilder(
     private fun keyIsCertificationCapable(keySpec: KeySpec) = keySpec.keyType.canCertify
 
     override fun build(): OpenPGPKey {
-        val keyFingerprintCalculator =
-            OpenPGPImplementation.getInstance()
-                .pgpDigestCalculatorProvider()
-                .get(HashAlgorithmTags.SHA1)
+        val checksumCalculator = OpenPGPImplementation.getInstance().checksumCalculator()
 
         // generate primary key
         requireNotNull(primaryKeySpec) { "Primary Key spec required." }
@@ -111,18 +108,13 @@ class KeyRingBuilder(
         val ringGenerator =
             if (userIds.isEmpty()) {
                 PGPKeyRingGenerator(
-                    certKey,
-                    keyFingerprintCalculator,
-                    hashedSubPackets,
-                    null,
-                    signer,
-                    secretKeyEncryptor)
+                    certKey, checksumCalculator, hashedSubPackets, null, signer, secretKeyEncryptor)
             } else {
                 PGPKeyRingGenerator(
                     SignatureType.POSITIVE_CERTIFICATION.code,
                     certKey,
                     userIds.keys.first(),
-                    keyFingerprintCalculator,
+                    checksumCalculator,
                     hashedSubPackets,
                     null,
                     signer,
@@ -165,8 +157,7 @@ class KeyRingBuilder(
 
         // Reassemble secret key ring with modified primary key
         val primarySecretKey =
-            PGPSecretKey(
-                privateKey, primaryPubKey, keyFingerprintCalculator, true, secretKeyEncryptor)
+            PGPSecretKey(privateKey, primaryPubKey, checksumCalculator, true, secretKeyEncryptor)
         val secretKeyList = mutableListOf(primarySecretKey)
         while (secretKeys.hasNext()) {
             secretKeyList.add(secretKeys.next())
