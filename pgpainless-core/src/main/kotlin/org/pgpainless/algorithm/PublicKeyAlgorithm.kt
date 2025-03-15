@@ -7,11 +7,17 @@ package org.pgpainless.algorithm
 import org.bouncycastle.bcpg.PublicKeyUtils
 
 /**
- * Enumeration of public key algorithms as defined in RFC4880.
+ * Enumeration of public key algorithms as defined in RFC4880, RFC9580, Persistent Symmetric Keys.
  *
- * See [RFC4880: Public-Key Algorithms](https://tools.ietf.org/html/rfc4880#section-9.1)
+ * @see [RFC4880: Public-Key Algorithms](https://tools.ietf.org/html/rfc4880#section-9.1)
+ * @see
+ *   [RFC9580: Public-Key Algorithms](https://www.rfc-editor.org/rfc/rfc9580.html#name-public-key-algorithms)
+ * @see
+ *   [Persistent Symmetric Keys in OpenPGP](https://www.ietf.org/archive/id/draft-ietf-openpgp-persistent-symmetric-keys-01.html#name-persistent-symmetric-key-al)
  */
 enum class PublicKeyAlgorithm(val algorithmId: Int) {
+
+    // RFC4880
 
     /** RSA capable of encryption and signatures. */
     RSA_GENERAL(1),
@@ -60,6 +66,8 @@ enum class PublicKeyAlgorithm(val algorithmId: Int) {
     /** Digital Signature Algorithm based on twisted Edwards Curves. */
     EDDSA_LEGACY(22),
 
+    // RFC9580
+
     /** X25519 encryption algorithm. */
     X25519(25),
 
@@ -71,6 +79,8 @@ enum class PublicKeyAlgorithm(val algorithmId: Int) {
 
     /** Ed448 signature algorithm. */
     ED448(28),
+
+    // Persistent Symmetric Keys in OpenPGP
 
     /**
      * AEAD can be used as a persistent key symmetric encryption algorithm for message encryption.
