@@ -8,13 +8,12 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotEquals;
 
 import java.io.IOException;
-import java.security.InvalidAlgorithmParameterException;
-import java.security.NoSuchAlgorithmException;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Iterator;
 import java.util.List;
 
+import org.bouncycastle.bcpg.KeyIdentifier;
 import org.bouncycastle.openpgp.PGPException;
 import org.bouncycastle.openpgp.PGPPublicKey;
 import org.bouncycastle.openpgp.PGPSecretKey;
@@ -39,12 +38,12 @@ public class AddSubKeyTest {
     @TestTemplate
     @ExtendWith(TestAllImplementations.class)
     public void testAddSubKey()
-            throws IOException, PGPException, InvalidAlgorithmParameterException, NoSuchAlgorithmException {
+            throws IOException, PGPException {
         PGPSecretKeyRing secretKeys = TestKeys.getCryptieSecretKeyRing();
 
-        List<Long> keyIdsBefore = new ArrayList<>();
+        List<KeyIdentifier> keyIdentifiersBefore = new ArrayList<>();
         for (Iterator<PGPPublicKey> it = secretKeys.getPublicKeys(); it.hasNext(); ) {
-            keyIdsBefore.add(it.next().getKeyID());
+            keyIdentifiersBefore.add(it.next().getKeyIdentifier());
         }
 
         secretKeys = PGPainless.modifyKeyRing(secretKeys)
@@ -54,21 +53,21 @@ public class AddSubKeyTest {
                         PasswordBasedSecretKeyRingProtector.forKey(secretKeys, Passphrase.fromPassword("password123")))
                 .done();
 
-        List<Long> keyIdsAfter = new ArrayList<>();
+        List<KeyIdentifier> keyIdentifiersAfter = new ArrayList<>();
         for (Iterator<PGPPublicKey> it = secretKeys.getPublicKeys(); it.hasNext(); ) {
-            keyIdsAfter.add(it.next().getKeyID());
+            keyIdentifiersAfter.add(it.next().getKeyIdentifier());
         }
-        assertNotEquals(keyIdsAfter, keyIdsBefore);
+        assertNotEquals(keyIdentifiersAfter, keyIdentifiersBefore);
 
-        keyIdsAfter.removeAll(keyIdsBefore);
-        long subKeyId = keyIdsAfter.get(0);
+        keyIdentifiersAfter.removeAll(keyIdentifiersBefore);
+        KeyIdentifier subKeyIdentifier = keyIdentifiersAfter.get(0);
 
-        PGPSecretKey subKey = secretKeys.getSecretKey(subKeyId);
+        PGPSecretKey subKey = secretKeys.getSecretKey(subKeyIdentifier);
         SecretKeyRingProtector protector = SecretKeyRingProtector.unlockEachKeyWith(
                 Passphrase.fromPassword("subKeyPassphrase"), secretKeys);
         UnlockSecretKey.unlockSecretKey(subKey, protector);
 
         KeyRingInfo info = new KeyRingInfo(secretKeys);
-        assertEquals(Collections.singletonList(KeyFlag.SIGN_DATA), info.getKeyFlagsOf(subKeyId));
+        assertEquals(Collections.singletonList(KeyFlag.SIGN_DATA), info.getKeyFlagsOf(subKeyIdentifier));
     }
 }

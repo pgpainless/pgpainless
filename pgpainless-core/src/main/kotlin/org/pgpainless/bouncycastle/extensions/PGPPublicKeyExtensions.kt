@@ -4,10 +4,10 @@
 
 package org.pgpainless.bouncycastle.extensions
 
-import org.bouncycastle.asn1.gnu.GNUObjectIdentifiers
 import org.bouncycastle.bcpg.ECDHPublicBCPGKey
 import org.bouncycastle.bcpg.ECDSAPublicBCPGKey
 import org.bouncycastle.bcpg.EdDSAPublicBCPGKey
+import org.bouncycastle.internal.asn1.gnu.GNUObjectIdentifiers
 import org.bouncycastle.jcajce.provider.asymmetric.util.ECUtil
 import org.bouncycastle.openpgp.PGPPublicKey
 import org.pgpainless.algorithm.PublicKeyAlgorithm

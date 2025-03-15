@@ -6,7 +6,7 @@ package org.pgpainless.key.collection
 
 import java.io.InputStream
 import org.bouncycastle.openpgp.*
-import org.pgpainless.implementation.ImplementationFactory
+import org.bouncycastle.openpgp.api.OpenPGPImplementation
 import org.pgpainless.util.ArmorUtils
 
 /**
@@ -55,8 +55,8 @@ class PGPKeyRingCollection(
             val certificates = mutableListOf<PGPPublicKeyRing>()
             // Double getDecoderStream because of #96
             val objectFactory =
-                ImplementationFactory.getInstance()
-                    .getPGPObjectFactory(ArmorUtils.getDecoderStream(inputStream))
+                OpenPGPImplementation.getInstance()
+                    .pgpObjectFactory(ArmorUtils.getDecoderStream(inputStream))
 
             for (obj in objectFactory) {
                 if (obj == null) {

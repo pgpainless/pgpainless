@@ -4,6 +4,7 @@
 
 package sop.testsuite.pgpainless.operation;
 
+import org.bouncycastle.bcpg.KeyIdentifier;
 import org.bouncycastle.openpgp.PGPException;
 import org.bouncycastle.openpgp.PGPPublicKey;
 import org.bouncycastle.openpgp.PGPSecretKeyRing;
@@ -22,8 +23,6 @@ import sop.testsuite.operation.ChangeKeyPasswordTest;
 
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
-import java.security.InvalidAlgorithmParameterException;
-import java.security.NoSuchAlgorithmException;
 import java.util.Iterator;
 
 import static org.junit.jupiter.api.Assertions.assertArrayEquals;
@@ -32,16 +31,17 @@ public class PGPainlessChangeKeyPasswordTest extends ChangeKeyPasswordTest {
 
     @ParameterizedTest
     @MethodSource("provideInstances")
-    public void changePasswordOfKeyWithSeparateSubkeyPasswords(SOP sop) throws IOException, PGPException, InvalidAlgorithmParameterException, NoSuchAlgorithmException {
+    public void changePasswordOfKeyWithSeparateSubkeyPasswords(SOP sop) throws IOException, PGPException {
         PGPSecretKeyRing secretKeys = PGPainless.buildKeyRing()
                 .setPrimaryKey(KeySpec.getBuilder(KeyType.EDDSA_LEGACY(EdDSALegacyCurve._Ed25519), KeyFlag.CERTIFY_OTHER))
                 .addSubkey(KeySpec.getBuilder(KeyType.EDDSA_LEGACY(EdDSALegacyCurve._Ed25519), KeyFlag.SIGN_DATA))
                 .addSubkey(KeySpec.getBuilder(KeyType.XDH_LEGACY(XDHLegacySpec._X25519), KeyFlag.ENCRYPT_COMMS, KeyFlag.ENCRYPT_STORAGE))
-                .build();
+                .build()
+                .getPGPSecretKeyRing();
         Iterator<PGPPublicKey> keys = secretKeys.getPublicKeys();
-        long primaryKeyId = keys.next().getKeyID();
-        long signingKeyId = keys.next().getKeyID();
-        long encryptKeyId = keys.next().getKeyID();
+        KeyIdentifier primaryKeyId = keys.next().getKeyIdentifier();
+        KeyIdentifier signingKeyId = keys.next().getKeyIdentifier();
+        KeyIdentifier encryptKeyId = keys.next().getKeyIdentifier();
 
         String p1 = "sw0rdf1sh";
         String p2 = "0r4ng3";

@@ -7,11 +7,12 @@ package org.pgpainless.key.protection.fixes
 import org.bouncycastle.bcpg.SecretKeyPacket
 import org.bouncycastle.openpgp.PGPSecretKey
 import org.bouncycastle.openpgp.PGPSecretKeyRing
-import org.pgpainless.algorithm.HashAlgorithm
+import org.bouncycastle.openpgp.api.OpenPGPImplementation
+import org.pgpainless.bouncycastle.extensions.checksumCalculator
 import org.pgpainless.bouncycastle.extensions.unlock
 import org.pgpainless.exception.WrongPassphraseException
-import org.pgpainless.implementation.ImplementationFactory
 import org.pgpainless.key.protection.SecretKeyRingProtector
+import org.pgpainless.key.protection.fixes.S2KUsageFix.Companion.replaceUsageChecksumWithUsageSha1
 
 /**
  * Repair class to fix keys which use S2K usage of value [SecretKeyPacket.USAGE_CHECKSUM]. The
@@ -47,8 +48,7 @@ class S2KUsageFix {
             protector: SecretKeyRingProtector,
             skipKeysWithMissingPassphrase: Boolean = false
         ): PGPSecretKeyRing {
-            val digestCalculator =
-                ImplementationFactory.getInstance().getPGPDigestCalculator(HashAlgorithm.SHA1)
+            val digestCalculator = OpenPGPImplementation.getInstance().checksumCalculator()
             val keyList = mutableListOf<PGPSecretKey>()
             for (key in keys) {
                 // CHECKSUM is not recommended
@@ -58,7 +58,7 @@ class S2KUsageFix {
                 }
 
                 val keyId = key.keyID
-                val encryptor = protector.getEncryptor(keyId)
+                val encryptor = protector.getEncryptor(key.publicKey)
                 if (encryptor == null) {
                     if (skipKeysWithMissingPassphrase) {
                         keyList.add(key)
@@ -76,7 +76,7 @@ class S2KUsageFix {
                         key.publicKey,
                         digestCalculator,
                         key.isMasterKey,
-                        protector.getEncryptor(keyId))
+                        protector.getEncryptor(key.publicKey))
                 keyList.add(fixedKey)
             }
             return PGPSecretKeyRing(keyList)

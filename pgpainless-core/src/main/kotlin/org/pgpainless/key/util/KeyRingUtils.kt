@@ -7,14 +7,15 @@ package org.pgpainless.key.util
 import java.io.ByteArrayOutputStream
 import kotlin.jvm.Throws
 import openpgp.openPgpKeyId
+import org.bouncycastle.bcpg.KeyIdentifier
 import org.bouncycastle.bcpg.S2K
 import org.bouncycastle.bcpg.SecretKeyPacket
 import org.bouncycastle.openpgp.*
+import org.bouncycastle.openpgp.api.OpenPGPImplementation
 import org.bouncycastle.util.Strings
 import org.pgpainless.bouncycastle.extensions.certificate
 import org.pgpainless.bouncycastle.extensions.requireSecretKey
 import org.pgpainless.exception.MissingPassphraseException
-import org.pgpainless.implementation.ImplementationFactory
 import org.pgpainless.key.protection.SecretKeyRingProtector
 import org.pgpainless.key.protection.fixes.S2KUsageFix
 import org.slf4j.Logger
@@ -435,7 +436,7 @@ class KeyRingUtils {
             }
             secretKeys.extraPublicKeys.forEach { it.encode(out) }
             return PGPSecretKeyRing(
-                out.toByteArray(), ImplementationFactory.getInstance().keyFingerprintCalculator)
+                out.toByteArray(), OpenPGPImplementation.getInstance().keyFingerPrintCalculator())
         }
 
         /**
@@ -449,7 +450,7 @@ class KeyRingUtils {
         fun getStrippedDownPublicKey(bloatedKey: PGPPublicKey): PGPPublicKey {
             return PGPPublicKey(
                 bloatedKey.publicKeyPacket,
-                ImplementationFactory.getInstance().keyFingerprintCalculator)
+                OpenPGPImplementation.getInstance().keyFingerPrintCalculator())
         }
 
         @JvmStatic
@@ -468,7 +469,7 @@ class KeyRingUtils {
         @JvmStatic
         @Throws(MissingPassphraseException::class, PGPException::class)
         fun changePassphrase(
-            keyId: Long?,
+            keyId: KeyIdentifier?,
             secretKeys: PGPSecretKeyRing,
             oldProtector: SecretKeyRingProtector,
             newProtector: SecretKeyRingProtector
@@ -484,7 +485,7 @@ class KeyRingUtils {
                         secretKeys.secretKeys
                             .asSequence()
                             .map {
-                                if (it.keyID == keyId) {
+                                if (it.keyIdentifier.matches(keyId)) {
                                     reencryptPrivateKey(it, oldProtector, newProtector)
                                 } else {
                                     it
@@ -508,8 +509,8 @@ class KeyRingUtils {
 
             return PGPSecretKey.copyWithNewPassword(
                 secretKey,
-                oldProtector.getDecryptor(secretKey.keyID),
-                newProtector.getEncryptor(secretKey.keyID))
+                oldProtector.getDecryptor(secretKey.keyIdentifier),
+                newProtector.getEncryptor(secretKey.publicKey))
         }
 
         @JvmStatic

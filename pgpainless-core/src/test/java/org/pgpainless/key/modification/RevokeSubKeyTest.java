@@ -13,8 +13,6 @@ import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import java.io.IOException;
-import java.security.InvalidAlgorithmParameterException;
-import java.security.NoSuchAlgorithmException;
 import java.util.Iterator;
 
 import org.bouncycastle.bcpg.sig.IssuerFingerprint;
@@ -127,11 +125,12 @@ public class RevokeSubKeyTest {
 
     @Test
     public void inspectSubpacketsOnDefaultRevocationSignature()
-            throws PGPException, InvalidAlgorithmParameterException, NoSuchAlgorithmException {
-        PGPSecretKeyRing secretKeys = PGPainless.generateKeyRing().modernKeyRing("Alice");
+            throws PGPException {
+        PGPSecretKeyRing secretKeys = PGPainless.generateKeyRing().modernKeyRing("Alice")
+                .getPGPSecretKeyRing();
         SecretKeyRingProtector protector = SecretKeyRingProtector.unprotectedKeys();
         PGPPublicKey encryptionSubkey = PGPainless.inspectKeyRing(secretKeys)
-                .getEncryptionSubkeys(EncryptionPurpose.ANY).get(0);
+                .getEncryptionSubkeys(EncryptionPurpose.ANY).get(0).getPGPPublicKey();
 
         secretKeys = PGPainless.modifyKeyRing(secretKeys)
                 .revokeSubKey(encryptionSubkey.getKeyID(), protector)
@@ -151,12 +150,12 @@ public class RevokeSubKeyTest {
     }
 
     @Test
-    public void inspectSubpacketsOnModifiedRevocationSignature()
-            throws PGPException, InvalidAlgorithmParameterException, NoSuchAlgorithmException {
-        PGPSecretKeyRing secretKeys = PGPainless.generateKeyRing().modernKeyRing("Alice");
+    public void inspectSubpacketsOnModifiedRevocationSignature() {
+        PGPSecretKeyRing secretKeys = PGPainless.generateKeyRing().modernKeyRing("Alice")
+                .getPGPSecretKeyRing();
         SecretKeyRingProtector protector = SecretKeyRingProtector.unprotectedKeys();
         PGPPublicKey encryptionSubkey = PGPainless.inspectKeyRing(secretKeys)
-                .getEncryptionSubkeys(EncryptionPurpose.ANY).get(0);
+                .getEncryptionSubkeys(EncryptionPurpose.ANY).get(0).getPGPPublicKey();
 
         secretKeys = PGPainless.modifyKeyRing(secretKeys)
                 .revokeSubKey(encryptionSubkey.getKeyID(), protector, new RevocationSignatureSubpackets.Callback() {

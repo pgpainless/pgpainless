@@ -12,9 +12,8 @@ import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
-import java.security.InvalidAlgorithmParameterException;
-import java.security.NoSuchAlgorithmException;
 
+import org.bouncycastle.bcpg.KeyIdentifier;
 import org.bouncycastle.openpgp.PGPException;
 import org.bouncycastle.openpgp.PGPPublicKeyRing;
 import org.bouncycastle.openpgp.PGPSecretKeyRing;
@@ -42,20 +41,21 @@ import org.pgpainless.key.protection.SecretKeyRingProtector;
 public class GenerateKeyWithoutPrimaryKeyFlagsTest {
 
     @Test
-    public void generateKeyWithoutCertifyKeyFlag_cannotCertifyThirdParties() throws PGPException, InvalidAlgorithmParameterException, NoSuchAlgorithmException, IOException {
+    public void generateKeyWithoutCertifyKeyFlag_cannotCertifyThirdParties() throws PGPException, IOException {
         PGPSecretKeyRing secretKeys = PGPainless.buildKeyRing().setPrimaryKey(KeySpec.getBuilder(KeyType.EDDSA_LEGACY(EdDSALegacyCurve._Ed25519)))
                 .addSubkey(KeySpec.getBuilder(KeyType.EDDSA_LEGACY(EdDSALegacyCurve._Ed25519), KeyFlag.SIGN_DATA))
                 .addSubkey(KeySpec.getBuilder(KeyType.XDH_LEGACY(XDHLegacySpec._X25519), KeyFlag.ENCRYPT_STORAGE, KeyFlag.ENCRYPT_COMMS))
                 .addUserId("Alice")
-                .build();
+                .build()
+                .getPGPSecretKeyRing();
         PGPPublicKeyRing cert = PGPainless.extractCertificate(secretKeys);
 
         KeyRingInfo info = PGPainless.inspectKeyRing(secretKeys);
         assertTrue(info.getValidUserIds().contains("Alice"));
 
-        long primaryKeyId = info.getKeyId();
+        KeyIdentifier primaryKeyIdentifier = info.getKeyIdentifier();
         assertTrue(info.getKeyFlagsOf("Alice").isEmpty());
-        assertTrue(info.getKeyFlagsOf(primaryKeyId).isEmpty());
+        assertTrue(info.getKeyFlagsOf(primaryKeyIdentifier).isEmpty());
         assertFalse(info.isUsableForThirdPartyCertification());
 
         // Key without CERTIFY_OTHER flag cannot be used to certify other keys
