@@ -134,8 +134,12 @@ public class VerifyLegacySignatureTest {
         assertFalse(result.getResult().isEmpty());
 
         // Adjust data signature hash policy to accept new SHA-1 sigs
-        PGPainless.getPolicy().setDataSignatureHashAlgorithmPolicy(
-                Policy.HashAlgorithmPolicy.static2022RevocationSignatureHashAlgorithmPolicy());
+        Policy policy = PGPainless.getPolicy();
+        Policy adjusted = policy.copy()
+                        .withDataSignatureHashAlgorithmPolicy(
+                                Policy.HashAlgorithmPolicy.static2022RevocationSignatureHashAlgorithmPolicy()
+                        ).build();
+        PGPainless.getInstance().setAlgorithmPolicy(adjusted);
 
         // Sig generated in 2024 using SHA1
         String newSig = "-----BEGIN PGP MESSAGE-----\n" +
@@ -160,5 +164,8 @@ public class VerifyLegacySignatureTest {
                 .toByteArrayAndResult();
 
         assertFalse(result.getResult().isEmpty());
+
+        // Reset old policy
+        PGPainless.getInstance().setAlgorithmPolicy(policy);
     }
 }
