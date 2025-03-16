@@ -4,6 +4,7 @@
 
 package org.pgpainless.key.generation;
 
+import org.bouncycastle.bcpg.SecretKeyPacket;
 import org.bouncycastle.bcpg.SignatureSubpacketTags;
 import org.bouncycastle.openpgp.PGPException;
 import org.bouncycastle.openpgp.api.OpenPGPCertificate;
@@ -16,11 +17,14 @@ import org.pgpainless.algorithm.KeyFlag;
 import org.pgpainless.algorithm.OpenPGPKeyVersion;
 import org.pgpainless.algorithm.PublicKeyAlgorithm;
 import org.pgpainless.key.generation.type.rsa.RsaLength;
+import org.pgpainless.key.protection.KeyRingProtectionSettings;
+import org.pgpainless.policy.Policy;
 
 import java.io.IOException;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 public class GenerateV6KeyTest {
@@ -133,7 +137,14 @@ public class GenerateV6KeyTest {
 
     @Test
     public void generateAEADProtectedModernKey()
-            throws IOException {
+            throws IOException, PGPException {
+        Policy oldPolicy = PGPainless.getInstance().getAlgorithmPolicy();
+
+        // Change Policy to use AEAD for secret key protection
+        PGPainless.getInstance().setAlgorithmPolicy(
+                oldPolicy.copy().withKeyProtectionSettings(KeyRingProtectionSettings.aead()).build()
+        );
+
         OpenPGPKey key = PGPainless.getInstance()
                 .generateKey(OpenPGPKeyVersion.v6)
                 .modernKeyRing("Alice <alice@example.com>", "p455w0rd");
@@ -143,7 +154,13 @@ public class GenerateV6KeyTest {
         OpenPGPKey parsed = PGPainless.getInstance().readKey().parseKey(armored);
 
         OpenPGPKey.OpenPGPSecretKey primaryKey = key.getPrimarySecretKey();
+        assertEquals(SecretKeyPacket.USAGE_AEAD, primaryKey.getPGPSecretKey().getS2KUsage());
+
+        OpenPGPKey.OpenPGPPrivateKey privateKey = primaryKey.unlock("p455w0rd".toCharArray());
+        assertNotNull(privateKey);
 
         assertEquals(armored, parsed.toAsciiArmoredString());
+
+        PGPainless.getInstance().setAlgorithmPolicy(oldPolicy);
     }
 }
