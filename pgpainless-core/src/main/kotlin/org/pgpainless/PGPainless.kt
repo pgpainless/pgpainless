@@ -34,7 +34,7 @@ import org.pgpainless.util.ArmorUtils
 
 class PGPainless(
     val implementation: OpenPGPImplementation = OpenPGPImplementation.getInstance(),
-    val algorithmPolicy: Policy = Policy.getInstance()
+    var algorithmPolicy: Policy = Policy.getInstance()
 ) {
 
     private var api: OpenPGPApi
@@ -230,7 +230,11 @@ class PGPainless(
          *
          * @return policy
          */
-        @JvmStatic fun getPolicy() = getInstance().algorithmPolicy
+        @Deprecated(
+            "Use PGPainless.getInstance().getAlgorithmPolicy() instead.",
+            replaceWith = ReplaceWith("getInstance().algorithmPolicy"))
+        @JvmStatic
+        fun getPolicy() = getInstance().algorithmPolicy
 
         /**
          * Create different kinds of signatures on other keys.
