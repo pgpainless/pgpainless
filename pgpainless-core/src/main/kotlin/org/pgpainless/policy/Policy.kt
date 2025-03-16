@@ -11,15 +11,16 @@ import org.pgpainless.util.DateUtil
 import org.pgpainless.util.NotationRegistry
 
 class Policy(
-    var certificationSignatureHashAlgorithmPolicy: HashAlgorithmPolicy,
-    var revocationSignatureHashAlgorithmPolicy: HashAlgorithmPolicy,
-    var dataSignatureHashAlgorithmPolicy: HashAlgorithmPolicy,
-    var symmetricKeyEncryptionAlgorithmPolicy: SymmetricKeyAlgorithmPolicy,
-    var symmetricKeyDecryptionAlgorithmPolicy: SymmetricKeyAlgorithmPolicy,
-    var compressionAlgorithmPolicy: CompressionAlgorithmPolicy,
-    var publicKeyAlgorithmPolicy: PublicKeyAlgorithmPolicy,
-    var keyProtectionSettings: KeyRingProtectionSettings,
-    var notationRegistry: NotationRegistry
+    val certificationSignatureHashAlgorithmPolicy: HashAlgorithmPolicy,
+    val revocationSignatureHashAlgorithmPolicy: HashAlgorithmPolicy,
+    val dataSignatureHashAlgorithmPolicy: HashAlgorithmPolicy,
+    val symmetricKeyEncryptionAlgorithmPolicy: SymmetricKeyAlgorithmPolicy,
+    val symmetricKeyDecryptionAlgorithmPolicy: SymmetricKeyAlgorithmPolicy,
+    val compressionAlgorithmPolicy: CompressionAlgorithmPolicy,
+    val publicKeyAlgorithmPolicy: PublicKeyAlgorithmPolicy,
+    val keyProtectionSettings: KeyRingProtectionSettings,
+    val notationRegistry: NotationRegistry,
+    val keyGenerationAlgorithmSuite: AlgorithmSuite
 ) {
 
     constructor() :
@@ -32,11 +33,13 @@ class Policy(
             CompressionAlgorithmPolicy.anyCompressionAlgorithmPolicy(),
             PublicKeyAlgorithmPolicy.bsi2021PublicKeyAlgorithmPolicy(),
             KeyRingProtectionSettings.secureDefaultSettings(),
-            NotationRegistry())
+            NotationRegistry(),
+            AlgorithmSuite.defaultAlgorithmSuite)
 
-    var keyGenerationAlgorithmSuite = AlgorithmSuite.defaultAlgorithmSuite
     var signerUserIdValidationLevel = SignerUserIdValidationLevel.DISABLED
     var enableKeyParameterValidation = false
+
+    fun copy() = Builder(this)
 
     fun isEnableKeyParameterValidation() = enableKeyParameterValidation
 
@@ -414,5 +417,93 @@ class Policy(
         @JvmStatic
         fun getInstance() =
             INSTANCE ?: synchronized(this) { INSTANCE ?: Policy().also { INSTANCE = it } }
+    }
+
+    class Builder(private val origin: Policy) {
+        private var certificationSignatureHashAlgorithmPolicy: HashAlgorithmPolicy =
+            origin.certificationSignatureHashAlgorithmPolicy
+        private var revocationSignatureHashAlgorithmPolicy: HashAlgorithmPolicy =
+            origin.revocationSignatureHashAlgorithmPolicy
+        private var dataSignatureHashAlgorithmPolicy: HashAlgorithmPolicy =
+            origin.dataSignatureHashAlgorithmPolicy
+        private var symmetricKeyEncryptionAlgorithmPolicy: SymmetricKeyAlgorithmPolicy =
+            origin.symmetricKeyEncryptionAlgorithmPolicy
+        private var symmetricKeyDecryptionAlgorithmPolicy: SymmetricKeyAlgorithmPolicy =
+            origin.symmetricKeyDecryptionAlgorithmPolicy
+        private var compressionAlgorithmPolicy: CompressionAlgorithmPolicy =
+            origin.compressionAlgorithmPolicy
+        private var publicKeyAlgorithmPolicy: PublicKeyAlgorithmPolicy =
+            origin.publicKeyAlgorithmPolicy
+        private var keyProtectionSettings: KeyRingProtectionSettings = origin.keyProtectionSettings
+        private var notationRegistry: NotationRegistry = origin.notationRegistry
+        private var keyGenerationAlgorithmSuite: AlgorithmSuite = origin.keyGenerationAlgorithmSuite
+
+        fun withCertificationSignatureHashAlgorithmPolicy(
+            certificationSignatureHashAlgorithmPolicy: HashAlgorithmPolicy
+        ) = apply {
+            this.certificationSignatureHashAlgorithmPolicy =
+                certificationSignatureHashAlgorithmPolicy
+        }
+
+        fun withRevocationSignatureHashAlgorithmPolicy(
+            revocationSignatureHashAlgorithmPolicy: HashAlgorithmPolicy
+        ) = apply {
+            this.revocationSignatureHashAlgorithmPolicy = revocationSignatureHashAlgorithmPolicy
+        }
+
+        fun withDataSignatureHashAlgorithmPolicy(
+            dataSignatureHashAlgorithmPolicy: HashAlgorithmPolicy
+        ) = apply { this.dataSignatureHashAlgorithmPolicy = dataSignatureHashAlgorithmPolicy }
+
+        fun withSymmetricKeyEncryptionAlgorithmPolicy(
+            symmetricKeyEncryptionAlgorithmPolicy: SymmetricKeyAlgorithmPolicy
+        ) = apply {
+            this.symmetricKeyEncryptionAlgorithmPolicy = symmetricKeyEncryptionAlgorithmPolicy
+        }
+
+        fun withSymmetricKeyDecryptionAlgorithmPolicy(
+            symmetricKeyDecryptionAlgorithmPolicy: SymmetricKeyAlgorithmPolicy
+        ) = apply {
+            this.symmetricKeyDecryptionAlgorithmPolicy = symmetricKeyDecryptionAlgorithmPolicy
+        }
+
+        fun withCompressionAlgorithmPolicy(compressionAlgorithmPolicy: CompressionAlgorithmPolicy) =
+            apply {
+                this.compressionAlgorithmPolicy = compressionAlgorithmPolicy
+            }
+
+        fun withPublicKeyAlgorithmPolicy(publicKeyAlgorithmPolicy: PublicKeyAlgorithmPolicy) =
+            apply {
+                this.publicKeyAlgorithmPolicy = publicKeyAlgorithmPolicy
+            }
+
+        fun withKeyProtectionSettings(keyProtectionSettings: KeyRingProtectionSettings) = apply {
+            this.keyProtectionSettings = keyProtectionSettings
+        }
+
+        fun withNotationRegistry(notationRegistry: NotationRegistry) = apply {
+            this.notationRegistry = notationRegistry
+        }
+
+        fun withKeyGenerationAlgorithmSuite(keyGenerationAlgorithmSuite: AlgorithmSuite) = apply {
+            this.keyGenerationAlgorithmSuite = keyGenerationAlgorithmSuite
+        }
+
+        fun build() =
+            Policy(
+                    certificationSignatureHashAlgorithmPolicy,
+                    revocationSignatureHashAlgorithmPolicy,
+                    dataSignatureHashAlgorithmPolicy,
+                    symmetricKeyEncryptionAlgorithmPolicy,
+                    symmetricKeyDecryptionAlgorithmPolicy,
+                    compressionAlgorithmPolicy,
+                    publicKeyAlgorithmPolicy,
+                    keyProtectionSettings,
+                    notationRegistry,
+                    keyGenerationAlgorithmSuite)
+                .apply {
+                    enableKeyParameterValidation = origin.enableKeyParameterValidation
+                    signerUserIdValidationLevel = origin.signerUserIdValidationLevel
+                }
     }
 }

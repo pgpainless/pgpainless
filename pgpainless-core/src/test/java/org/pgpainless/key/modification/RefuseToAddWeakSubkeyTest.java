@@ -29,7 +29,11 @@ public class RefuseToAddWeakSubkeyTest {
     @Test
     public void testEditorRefusesToAddWeakSubkey() {
         // ensure default policy is set
-        PGPainless.getPolicy().setPublicKeyAlgorithmPolicy(Policy.PublicKeyAlgorithmPolicy.bsi2021PublicKeyAlgorithmPolicy());
+        Policy oldPolicy = PGPainless.getPolicy();
+        Policy adjusted = oldPolicy.copy().withPublicKeyAlgorithmPolicy(
+                Policy.PublicKeyAlgorithmPolicy.bsi2021PublicKeyAlgorithmPolicy()
+        ).build();
+        PGPainless.getInstance().setAlgorithmPolicy(adjusted);
 
         PGPSecretKeyRing secretKeys = PGPainless.generateKeyRing()
                 .modernKeyRing("Alice")
@@ -39,6 +43,7 @@ public class RefuseToAddWeakSubkeyTest {
 
         assertThrows(IllegalArgumentException.class, () ->
                 editor.addSubKey(spec, Passphrase.emptyPassphrase(), SecretKeyRingProtector.unprotectedKeys()));
+        PGPainless.getInstance().setAlgorithmPolicy(oldPolicy);
     }
 
     @Test
@@ -46,6 +51,8 @@ public class RefuseToAddWeakSubkeyTest {
         PGPSecretKeyRing secretKeys = PGPainless.generateKeyRing()
                 .modernKeyRing("Alice")
                 .getPGPSecretKeyRing();
+
+        Policy oldPolicy = PGPainless.getPolicy();
 
         // set weak policy
         Map<PublicKeyAlgorithm, Integer> minimalBitStrengths = new EnumMap<>(PublicKeyAlgorithm.class);
@@ -68,7 +75,9 @@ public class RefuseToAddWeakSubkeyTest {
         minimalBitStrengths.put(PublicKeyAlgorithm.DIFFIE_HELLMAN, 2000);
         // §7.2.2
         minimalBitStrengths.put(PublicKeyAlgorithm.ECDH, 250);
-        PGPainless.getPolicy().setPublicKeyAlgorithmPolicy(new Policy.PublicKeyAlgorithmPolicy(minimalBitStrengths));
+        PGPainless.getInstance().setAlgorithmPolicy(oldPolicy.copy()
+                .withPublicKeyAlgorithmPolicy(new Policy.PublicKeyAlgorithmPolicy(minimalBitStrengths))
+                .build());
 
         SecretKeyRingEditorInterface editor = PGPainless.modifyKeyRing(secretKeys);
         KeySpec spec = KeySpec.getBuilder(KeyType.RSA(RsaLength._1024), KeyFlag.ENCRYPT_COMMS)
@@ -81,6 +90,6 @@ public class RefuseToAddWeakSubkeyTest {
         assertEquals(2, PGPainless.inspectKeyRing(secretKeys).getEncryptionSubkeys(EncryptionPurpose.ANY).size());
 
         // reset default policy
-        PGPainless.getPolicy().setPublicKeyAlgorithmPolicy(Policy.PublicKeyAlgorithmPolicy.bsi2021PublicKeyAlgorithmPolicy());
+        PGPainless.getInstance().setAlgorithmPolicy(oldPolicy);
     }
 }
