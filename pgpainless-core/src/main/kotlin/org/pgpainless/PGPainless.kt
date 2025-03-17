@@ -69,6 +69,13 @@ class PGPainless(
     fun toCertificate(publicKeyRing: PGPPublicKeyRing): OpenPGPCertificate =
         OpenPGPCertificate(publicKeyRing, implementation)
 
+    fun mergeCertificate(
+        originalCopy: OpenPGPCertificate,
+        updatedCopy: OpenPGPCertificate
+    ): OpenPGPCertificate {
+        return OpenPGPCertificate.join(originalCopy, updatedCopy)
+    }
+
     companion object {
 
         @Volatile private var instance: PGPainless? = null
@@ -120,7 +127,7 @@ class PGPainless(
          * @return public key certificate
          */
         @JvmStatic
-        @Deprecated("Use toKey() and then .toCertificate() instead.")
+        @Deprecated("Use .toKey() and then .toCertificate() instead.")
         fun extractCertificate(secretKey: PGPSecretKeyRing) =
             KeyRingUtils.publicKeyRingFrom(secretKey)
 
@@ -134,6 +141,7 @@ class PGPainless(
          * @throws PGPException in case of an error
          */
         @JvmStatic
+        @Deprecated("Use mergeCertificate() instead.")
         fun mergeCertificate(originalCopy: PGPPublicKeyRing, updatedCopy: PGPPublicKeyRing) =
             PGPPublicKeyRing.join(originalCopy, updatedCopy)
 
@@ -229,7 +237,7 @@ class PGPainless(
         @JvmStatic
         @JvmOverloads
         fun inspectKeyRing(key: OpenPGPCertificate, referenceTime: Date = Date()) =
-            KeyRingInfo(key, getPolicy(), referenceTime)
+            KeyRingInfo(key, getInstance().algorithmPolicy, referenceTime)
 
         /**
          * Access, and make changes to PGPainless policy on acceptable/default algorithms etc.
