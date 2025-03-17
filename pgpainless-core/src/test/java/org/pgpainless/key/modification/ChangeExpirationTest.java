@@ -35,7 +35,6 @@ public class ChangeExpirationTest {
     @ExtendWith(TestAllImplementations.class)
     public void setExpirationDateAndThenUnsetIt_OnPrimaryKey()
             throws PGPException, IOException {
-
         PGPSecretKeyRing secretKeys = TestKeys.getEmilSecretKeyRing();
         KeyRingInfo sInfo = PGPainless.inspectKeyRing(secretKeys);
 
