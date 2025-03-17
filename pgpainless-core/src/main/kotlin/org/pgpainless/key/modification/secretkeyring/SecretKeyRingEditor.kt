@@ -39,21 +39,26 @@ import org.pgpainless.key.util.KeyRingUtils
 import org.pgpainless.key.util.KeyRingUtils.Companion.changePassphrase
 import org.pgpainless.key.util.KeyRingUtils.Companion.injectCertification
 import org.pgpainless.key.util.RevocationAttributes
+import org.pgpainless.policy.Policy
 import org.pgpainless.signature.builder.*
 import org.pgpainless.signature.subpackets.*
 import org.pgpainless.util.Passphrase
 import org.pgpainless.util.selection.userid.SelectUserId
 
-class SecretKeyRingEditor(var key: OpenPGPKey, override val referenceTime: Date = Date()) :
-    SecretKeyRingEditorInterface {
+class SecretKeyRingEditor(
+    var key: OpenPGPKey,
+    val policy: Policy = PGPainless.getInstance().algorithmPolicy,
+    override val referenceTime: Date = Date()
+) : SecretKeyRingEditorInterface {
 
     private var secretKeyRing: PGPSecretKeyRing = key.pgpSecretKeyRing
 
     @JvmOverloads
     constructor(
         secretKeyRing: PGPSecretKeyRing,
+        policy: Policy = PGPainless.getInstance().algorithmPolicy,
         referenceTime: Date = Date()
-    ) : this(PGPainless.getInstance().toKey(secretKeyRing), referenceTime)
+    ) : this(PGPainless.getInstance().toKey(secretKeyRing), policy, referenceTime)
 
     override fun addUserId(
         userId: CharSequence,
@@ -293,17 +298,14 @@ class SecretKeyRingEditor(var key: OpenPGPKey, override val referenceTime: Date 
         SignatureSubpacketsUtil.assureKeyCanCarryFlags(subkeyAlgorithm)
 
         val bitStrength = subkey.publicKey.bitStrength
-        require(
-            PGPainless.getPolicy()
-                .publicKeyAlgorithmPolicy
-                .isAcceptable(subkeyAlgorithm, bitStrength)) {
-                "Public key algorithm policy violation: $subkeyAlgorithm with bit strength $bitStrength is not acceptable."
-            }
+        require(policy.publicKeyAlgorithmPolicy.isAcceptable(subkeyAlgorithm, bitStrength)) {
+            "Public key algorithm policy violation: $subkeyAlgorithm with bit strength $bitStrength is not acceptable."
+        }
 
         val primaryKey = secretKeyRing.secretKey
         val info = inspectKeyRing(secretKeyRing, referenceTime)
         val hashAlgorithm =
-            HashAlgorithmNegotiator.negotiateSignatureHashAlgorithm(PGPainless.getPolicy())
+            HashAlgorithmNegotiator.negotiateSignatureHashAlgorithm(policy)
                 .negotiateHashAlgorithm(info.preferredHashAlgorithms)
 
         var secretSubkey =
