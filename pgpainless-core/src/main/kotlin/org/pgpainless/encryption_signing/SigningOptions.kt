@@ -11,13 +11,12 @@ import org.bouncycastle.openpgp.api.OpenPGPImplementation
 import org.bouncycastle.openpgp.api.OpenPGPKey
 import org.bouncycastle.openpgp.api.OpenPGPKey.OpenPGPPrivateKey
 import org.bouncycastle.openpgp.api.OpenPGPKey.OpenPGPSecretKey
-import org.pgpainless.PGPainless.Companion.getPolicy
+import org.pgpainless.PGPainless
 import org.pgpainless.PGPainless.Companion.inspectKeyRing
 import org.pgpainless.algorithm.DocumentSignatureType
 import org.pgpainless.algorithm.HashAlgorithm
 import org.pgpainless.algorithm.PublicKeyAlgorithm.Companion.requireFromId
 import org.pgpainless.algorithm.negotiation.HashAlgorithmNegotiator.Companion.negotiateSignatureHashAlgorithm
-import org.pgpainless.bouncycastle.extensions.toOpenPGPKey
 import org.pgpainless.exception.KeyException
 import org.pgpainless.exception.KeyException.*
 import org.pgpainless.key.OpenPgpFingerprint.Companion.of
@@ -28,7 +27,7 @@ import org.pgpainless.signature.subpackets.BaseSignatureSubpackets.Callback
 import org.pgpainless.signature.subpackets.SignatureSubpackets
 import org.pgpainless.signature.subpackets.SignatureSubpacketsHelper
 
-class SigningOptions {
+class SigningOptions(val api: PGPainless = PGPainless.getInstance()) {
 
     val signingMethods: Map<OpenPGPPrivateKey, SigningMethod> = mutableMapOf()
     private var _hashAlgorithmOverride: HashAlgorithm? = null
@@ -91,7 +90,7 @@ class SigningOptions {
     @Deprecated("Pass an OpenPGPKey instead.")
     @Throws(KeyException::class, PGPException::class)
     fun addSignature(signingKeyProtector: SecretKeyRingProtector, signingKey: PGPSecretKeyRing) =
-        addSignature(signingKeyProtector, signingKey.toOpenPGPKey())
+        addSignature(signingKeyProtector, api.toKey(signingKey))
 
     /**
      * Add inline signatures with all secret key rings in the provided secret key ring collection.
@@ -137,7 +136,7 @@ class SigningOptions {
         signingKeyProtector: SecretKeyRingProtector,
         signingKey: PGPSecretKeyRing,
         signatureType: DocumentSignatureType
-    ) = addInlineSignature(signingKeyProtector, signingKey.toOpenPGPKey(), signatureType)
+    ) = addInlineSignature(signingKeyProtector, api.toKey(signingKey), signatureType)
 
     fun addInlineSignature(
         signingKeyProtector: SecretKeyRingProtector,
@@ -169,7 +168,8 @@ class SigningOptions {
             val hashAlgorithms =
                 if (userId != null) keyRingInfo.getPreferredHashAlgorithms(userId)
                 else keyRingInfo.getPreferredHashAlgorithms(signingPubKey.keyIdentifier)
-            val hashAlgorithm: HashAlgorithm = negotiateHashAlgorithm(hashAlgorithms, getPolicy())
+            val hashAlgorithm: HashAlgorithm =
+                negotiateHashAlgorithm(hashAlgorithms, api.algorithmPolicy)
             addSigningMethod(
                 signingPrivKey, hashAlgorithm, signatureType, false, subpacketsCallback)
         }
@@ -203,11 +203,7 @@ class SigningOptions {
         subpacketsCallback: Callback? = null
     ) =
         addInlineSignature(
-            signingKeyProtector,
-            signingKey.toOpenPGPKey(),
-            userId,
-            signatureType,
-            subpacketsCallback)
+            signingKeyProtector, api.toKey(signingKey), userId, signatureType, subpacketsCallback)
 
     fun addInlineSignature(
         signingKeyProtector: SecretKeyRingProtector,
@@ -228,7 +224,8 @@ class SigningOptions {
 
         val signingPrivKey = unlockSecretKey(signingKey, signingKeyProtector)
         val hashAlgorithms = keyRingInfo.getPreferredHashAlgorithms(signingKey.keyIdentifier)
-        val hashAlgorithm: HashAlgorithm = negotiateHashAlgorithm(hashAlgorithms, getPolicy())
+        val hashAlgorithm: HashAlgorithm =
+            negotiateHashAlgorithm(hashAlgorithms, api.algorithmPolicy)
         addSigningMethod(signingPrivKey, hashAlgorithm, signatureType, false, subpacketsCallback)
     }
 
@@ -257,7 +254,7 @@ class SigningOptions {
         signatureType: DocumentSignatureType = DocumentSignatureType.BINARY_DOCUMENT,
         subpacketsCallback: Callback? = null
     ): SigningOptions {
-        val key = signingKey.toOpenPGPKey()
+        val key = api.toKey(signingKey)
         val subkeyIdentifier = KeyIdentifier(keyId)
         return addInlineSignature(
             signingKeyProtector,
@@ -374,11 +371,7 @@ class SigningOptions {
         subpacketCallback: Callback? = null
     ) =
         addDetachedSignature(
-            signingKeyProtector,
-            signingKey.toOpenPGPKey(),
-            userId,
-            signatureType,
-            subpacketCallback)
+            signingKeyProtector, api.toKey(signingKey), userId, signatureType, subpacketCallback)
 
     fun addDetachedSignature(
         signingKeyProtector: SecretKeyRingProtector,
@@ -392,7 +385,8 @@ class SigningOptions {
         val hashAlgorithms =
             if (userId != null) keyRingInfo.getPreferredHashAlgorithms(userId)
             else keyRingInfo.getPreferredHashAlgorithms(signingKey.keyIdentifier)
-        val hashAlgorithm: HashAlgorithm = negotiateHashAlgorithm(hashAlgorithms, getPolicy())
+        val hashAlgorithm: HashAlgorithm =
+            negotiateHashAlgorithm(hashAlgorithms, api.algorithmPolicy)
         addSigningMethod(signingPrivKey, hashAlgorithm, signatureType, true, subpacketCallback)
     }
 
@@ -422,7 +416,7 @@ class SigningOptions {
         signatureType: DocumentSignatureType = DocumentSignatureType.BINARY_DOCUMENT,
         subpacketsCallback: Callback? = null
     ): SigningOptions {
-        val key = signingKey.toOpenPGPKey()
+        val key = api.toKey(signingKey)
         val signingKeyIdentifier = KeyIdentifier(keyId)
         return addDetachedSignature(
             signingKeyProtector,
@@ -443,7 +437,8 @@ class SigningOptions {
         val signingSecretKey: PGPSecretKey = signingKey.secretKey.pgpSecretKey
         val publicKeyAlgorithm = requireFromId(signingSecretKey.publicKey.algorithm)
         val bitStrength = signingSecretKey.publicKey.bitStrength
-        if (!getPolicy().publicKeyAlgorithmPolicy.isAcceptable(publicKeyAlgorithm, bitStrength)) {
+        if (!api.algorithmPolicy.publicKeyAlgorithmPolicy.isAcceptable(
+            publicKeyAlgorithm, bitStrength)) {
             throw UnacceptableSigningKeyException(
                 PublicKeyAlgorithmPolicyException(
                     signingKey.secretKey, publicKeyAlgorithm, bitStrength))

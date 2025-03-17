@@ -1075,7 +1075,7 @@ class OpenPgpMessageInputStream(
 
         @JvmStatic
         fun create(inputStream: InputStream, options: ConsumerOptions) =
-            create(inputStream, options, PGPainless.getPolicy())
+            create(inputStream, options, PGPainless.getInstance().algorithmPolicy)
 
         @JvmStatic
         fun create(inputStream: InputStream, options: ConsumerOptions, policy: Policy) =
