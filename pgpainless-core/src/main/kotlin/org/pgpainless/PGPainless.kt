@@ -206,8 +206,11 @@ class PGPainless(
          */
         @JvmStatic
         @JvmOverloads
-        fun modifyKeyRing(secretKey: PGPSecretKeyRing, referenceTime: Date = Date()) =
-            SecretKeyRingEditor(secretKey, referenceTime)
+        fun modifyKeyRing(
+            secretKey: PGPSecretKeyRing,
+            referenceTime: Date = Date(),
+            policy: Policy = getInstance().algorithmPolicy
+        ) = SecretKeyRingEditor(secretKey, policy, referenceTime)
 
         /**
          * Quickly access information about a [org.bouncycastle.openpgp.PGPPublicKeyRing] /
