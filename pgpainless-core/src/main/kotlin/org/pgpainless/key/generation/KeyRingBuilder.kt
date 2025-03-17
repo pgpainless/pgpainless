@@ -27,7 +27,8 @@ import org.pgpainless.util.Passphrase
 
 class KeyRingBuilder(
     private val version: OpenPGPKeyVersion,
-    private val implementation: OpenPGPImplementation
+    private val implementation: OpenPGPImplementation,
+    private val policy: Policy = PGPainless.getInstance().algorithmPolicy
 ) : KeyRingBuilderInterface<KeyRingBuilder> {
 
     private var primaryKeySpec: KeySpec? = null
@@ -37,13 +38,13 @@ class KeyRingBuilder(
     private var expirationDate: Date? = Date(System.currentTimeMillis() + (5 * MILLIS_IN_YEAR))
 
     override fun setPrimaryKey(keySpec: KeySpec): KeyRingBuilder = apply {
-        verifyKeySpecCompliesToPolicy(keySpec, PGPainless.getPolicy())
+        verifyKeySpecCompliesToPolicy(keySpec, policy)
         verifyPrimaryKeyCanCertify(keySpec)
         this.primaryKeySpec = keySpec
     }
 
     override fun addSubkey(keySpec: KeySpec): KeyRingBuilder = apply {
-        verifyKeySpecCompliesToPolicy(keySpec, PGPainless.getPolicy())
+        verifyKeySpecCompliesToPolicy(keySpec, policy)
         subKeySpecs.add(keySpec)
     }
 
@@ -83,11 +84,11 @@ class KeyRingBuilder(
     private fun keyIsCertificationCapable(keySpec: KeySpec) = keySpec.keyType.canCertify
 
     override fun build(): OpenPGPKey {
-        val checksumCalculator = OpenPGPImplementation.getInstance().checksumCalculator()
+        val checksumCalculator = implementation.checksumCalculator()
 
         // generate primary key
         requireNotNull(primaryKeySpec) { "Primary Key spec required." }
-        val certKey = generateKeyPair(primaryKeySpec!!, version)
+        val certKey = generateKeyPair(primaryKeySpec!!, version, implementation)
 
         val secretKeyEncryptor = buildSecretKeyEncryptor(certKey.publicKey)
         val secretKeyDecryptor = buildSecretKeyDecryptor()
@@ -168,7 +169,7 @@ class KeyRingBuilder(
 
     private fun addSubKeys(primaryKey: PGPKeyPair, ringGenerator: PGPKeyRingGenerator) {
         for (subKeySpec in subKeySpecs) {
-            val subKey = generateKeyPair(subKeySpec, version)
+            val subKey = generateKeyPair(subKeySpec, version, implementation)
             if (subKeySpec.isInheritedSubPackets) {
                 ringGenerator.addSubKey(subKey)
             } else {
@@ -209,20 +210,19 @@ class KeyRingBuilder(
     }
 
     private fun buildContentSigner(certKey: PGPKeyPair): PGPContentSignerBuilder {
-        val hashAlgorithm =
-            PGPainless.getPolicy().certificationSignatureHashAlgorithmPolicy.defaultHashAlgorithm
-        return OpenPGPImplementation.getInstance()
-            .pgpContentSignerBuilder(certKey.publicKey.algorithm, hashAlgorithm.algorithmId)
+        val hashAlgorithm = policy.certificationSignatureHashAlgorithmPolicy.defaultHashAlgorithm
+        return implementation.pgpContentSignerBuilder(
+            certKey.publicKey.algorithm, hashAlgorithm.algorithmId)
     }
 
     private fun buildSecretKeyEncryptor(
         publicKey: PGPPublicKey,
     ): PBESecretKeyEncryptor? {
         check(passphrase.isValid) { "Passphrase was cleared." }
-        val protectionSettings = PGPainless.getPolicy().keyProtectionSettings
+        val protectionSettings = policy.keyProtectionSettings
         return if (passphrase.isEmpty) null
         else
-            OpenPGPImplementation.getInstance()
+            implementation
                 .pbeSecretKeyEncryptorFactory(
                     protectionSettings.aead,
                     protectionSettings.encryptionAlgorithm.algorithmId,
@@ -234,7 +234,7 @@ class KeyRingBuilder(
         check(passphrase.isValid) { "Passphrase was cleared." }
         return if (passphrase.isEmpty) null
         else
-            OpenPGPImplementation.getInstance()
+            implementation
                 .pbeSecretKeyDecryptorBuilderProvider()
                 .provide()
                 .build(passphrase.getChars())
@@ -248,12 +248,11 @@ class KeyRingBuilder(
         fun generateKeyPair(
             spec: KeySpec,
             version: OpenPGPKeyVersion,
+            implementation: OpenPGPImplementation = PGPainless.getInstance().implementation,
             creationTime: Date = spec.keyCreationDate ?: Date()
         ): PGPKeyPair {
             val gen =
-                OpenPGPImplementation.getInstance()
-                    .pgpKeyPairGeneratorProvider()
-                    .get(version.numeric, creationTime)
+                implementation.pgpKeyPairGeneratorProvider().get(version.numeric, creationTime)
 
             return spec.keyType.generateKeyPair(gen)
         }

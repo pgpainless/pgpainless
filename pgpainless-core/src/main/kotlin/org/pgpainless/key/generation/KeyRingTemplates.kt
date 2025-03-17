@@ -6,6 +6,7 @@ package org.pgpainless.key.generation
 
 import java.util.*
 import org.bouncycastle.openpgp.api.OpenPGPKey
+import org.pgpainless.PGPainless
 import org.pgpainless.PGPainless.Companion.buildKeyRing
 import org.pgpainless.algorithm.KeyFlag
 import org.pgpainless.algorithm.OpenPGPKeyVersion
@@ -14,11 +15,13 @@ import org.pgpainless.key.generation.type.KeyType
 import org.pgpainless.key.generation.type.eddsa_legacy.EdDSALegacyCurve
 import org.pgpainless.key.generation.type.rsa.RsaLength
 import org.pgpainless.key.generation.type.xdh_legacy.XDHLegacySpec
+import org.pgpainless.policy.Policy
 import org.pgpainless.util.Passphrase
 
 class KeyRingTemplates(
     private val version: OpenPGPKeyVersion,
-    private val creationTime: Date = Date()
+    private val creationTime: Date = Date(),
+    private val policy: Policy = PGPainless.getInstance().algorithmPolicy
 ) {
 
     /**
@@ -36,12 +39,17 @@ class KeyRingTemplates(
         length: RsaLength,
         passphrase: Passphrase = Passphrase.emptyPassphrase()
     ): OpenPGPKey =
-        buildKeyRing(version)
+        buildKeyRing(version, policy)
             .apply {
-                setPrimaryKey(getBuilder(KeyType.RSA(length), KeyFlag.CERTIFY_OTHER))
-                addSubkey(getBuilder(KeyType.RSA(length), KeyFlag.SIGN_DATA))
+                setPrimaryKey(
+                    getBuilder(KeyType.RSA(length), KeyFlag.CERTIFY_OTHER)
+                        .setKeyCreationDate(creationTime))
                 addSubkey(
-                    getBuilder(KeyType.RSA(length), KeyFlag.ENCRYPT_COMMS, KeyFlag.ENCRYPT_STORAGE))
+                    getBuilder(KeyType.RSA(length), KeyFlag.SIGN_DATA)
+                        .setKeyCreationDate(creationTime))
+                addSubkey(
+                    getBuilder(KeyType.RSA(length), KeyFlag.ENCRYPT_COMMS, KeyFlag.ENCRYPT_STORAGE)
+                        .setKeyCreationDate(creationTime))
                 setPassphrase(passphrase)
                 if (userId != null) {
                     addUserId(userId)
@@ -87,10 +95,11 @@ class KeyRingTemplates(
             .apply {
                 setPrimaryKey(
                     getBuilder(
-                        KeyType.RSA(length),
-                        KeyFlag.CERTIFY_OTHER,
-                        KeyFlag.SIGN_DATA,
-                        KeyFlag.ENCRYPT_COMMS))
+                            KeyType.RSA(length),
+                            KeyFlag.CERTIFY_OTHER,
+                            KeyFlag.SIGN_DATA,
+                            KeyFlag.ENCRYPT_COMMS)
+                        .setKeyCreationDate(creationTime))
                 setPassphrase(passphrase)
                 if (userId != null) {
                     addUserId(userId.toString())
@@ -138,9 +147,12 @@ class KeyRingTemplates(
             else KeyType.XDH_LEGACY(XDHLegacySpec._X25519)
         return buildKeyRing(version)
             .apply {
-                setPrimaryKey(getBuilder(signingKeyType, KeyFlag.CERTIFY_OTHER, KeyFlag.SIGN_DATA))
+                setPrimaryKey(
+                    getBuilder(signingKeyType, KeyFlag.CERTIFY_OTHER, KeyFlag.SIGN_DATA)
+                        .setKeyCreationDate(creationTime))
                 addSubkey(
-                    getBuilder(encryptionKeyType, KeyFlag.ENCRYPT_STORAGE, KeyFlag.ENCRYPT_COMMS))
+                    getBuilder(encryptionKeyType, KeyFlag.ENCRYPT_STORAGE, KeyFlag.ENCRYPT_COMMS)
+                        .setKeyCreationDate(creationTime))
                 setPassphrase(passphrase)
                 if (userId != null) {
                     addUserId(userId.toString())
@@ -188,10 +200,14 @@ class KeyRingTemplates(
             else KeyType.XDH_LEGACY(XDHLegacySpec._X25519)
         return buildKeyRing(version)
             .apply {
-                setPrimaryKey(getBuilder(signingKeyType, KeyFlag.CERTIFY_OTHER))
+                setPrimaryKey(
+                    getBuilder(signingKeyType, KeyFlag.CERTIFY_OTHER)
+                        .setKeyCreationDate(creationTime))
                 addSubkey(
-                    getBuilder(encryptionKeyType, KeyFlag.ENCRYPT_COMMS, KeyFlag.ENCRYPT_STORAGE))
-                addSubkey(getBuilder(signingKeyType, KeyFlag.SIGN_DATA))
+                    getBuilder(encryptionKeyType, KeyFlag.ENCRYPT_COMMS, KeyFlag.ENCRYPT_STORAGE)
+                        .setKeyCreationDate(creationTime))
+                addSubkey(
+                    getBuilder(signingKeyType, KeyFlag.SIGN_DATA).setKeyCreationDate(creationTime))
                 setPassphrase(passphrase)
                 if (userId != null) {
                     addUserId(userId)

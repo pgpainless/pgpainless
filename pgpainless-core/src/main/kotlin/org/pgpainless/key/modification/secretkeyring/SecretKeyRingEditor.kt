@@ -266,8 +266,8 @@ class SecretKeyRingEditor(var key: OpenPGPKey, override val referenceTime: Date 
         callback: SelfSignatureSubpackets.Callback?,
         protector: SecretKeyRingProtector
     ): SecretKeyRingEditorInterface {
-        val version = OpenPGPKeyVersion.from(secretKeyRing.getPublicKey().version)
-        val keyPair = KeyRingBuilder.generateKeyPair(keySpec, OpenPGPKeyVersion.v4, referenceTime)
+        val version = OpenPGPKeyVersion.from(secretKeyRing.publicKey.version)
+        val keyPair = KeyRingBuilder.generateKeyPair(keySpec, version)
         val subkeyProtector =
             PasswordBasedSecretKeyRingProtector.forKeyId(keyPair.keyIdentifier, subkeyPassphrase)
         val keyFlags = KeyFlag.fromBitmask(keySpec.subpackets.keyFlags).toMutableList()
