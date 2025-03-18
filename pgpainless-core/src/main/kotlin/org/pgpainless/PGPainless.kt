@@ -217,8 +217,8 @@ class PGPainless(
         fun modifyKeyRing(
             secretKey: PGPSecretKeyRing,
             referenceTime: Date = Date(),
-            policy: Policy = getInstance().algorithmPolicy
-        ) = SecretKeyRingEditor(secretKey, policy, referenceTime)
+            api: PGPainless = getInstance()
+        ) = SecretKeyRingEditor(secretKey, api, referenceTime)
 
         /**
          * Quickly access information about a [org.bouncycastle.openpgp.PGPPublicKeyRing] /
@@ -237,7 +237,7 @@ class PGPainless(
         @JvmStatic
         @JvmOverloads
         fun inspectKeyRing(key: OpenPGPCertificate, referenceTime: Date = Date()) =
-            KeyRingInfo(key, getInstance().algorithmPolicy, referenceTime)
+            KeyRingInfo(key, getInstance(), referenceTime)
 
         /**
          * Access, and make changes to PGPainless policy on acceptable/default algorithms etc.
@@ -255,6 +255,6 @@ class PGPainless(
          *
          * @return builder
          */
-        @JvmStatic fun certify() = CertifyCertificate()
+        @JvmStatic fun certify() = CertifyCertificate(getInstance())
     }
 }

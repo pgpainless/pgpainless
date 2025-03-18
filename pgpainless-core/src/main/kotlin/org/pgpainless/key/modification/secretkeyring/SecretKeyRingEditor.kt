@@ -39,7 +39,6 @@ import org.pgpainless.key.util.KeyRingUtils
 import org.pgpainless.key.util.KeyRingUtils.Companion.changePassphrase
 import org.pgpainless.key.util.KeyRingUtils.Companion.injectCertification
 import org.pgpainless.key.util.RevocationAttributes
-import org.pgpainless.policy.Policy
 import org.pgpainless.signature.builder.*
 import org.pgpainless.signature.subpackets.*
 import org.pgpainless.util.Passphrase
@@ -47,7 +46,7 @@ import org.pgpainless.util.selection.userid.SelectUserId
 
 class SecretKeyRingEditor(
     var key: OpenPGPKey,
-    val policy: Policy = PGPainless.getInstance().algorithmPolicy,
+    val api: PGPainless = PGPainless.getInstance(),
     override val referenceTime: Date = Date()
 ) : SecretKeyRingEditorInterface {
 
@@ -56,9 +55,9 @@ class SecretKeyRingEditor(
     @JvmOverloads
     constructor(
         secretKeyRing: PGPSecretKeyRing,
-        policy: Policy = PGPainless.getInstance().algorithmPolicy,
+        api: PGPainless = PGPainless.getInstance(),
         referenceTime: Date = Date()
-    ) : this(PGPainless.getInstance().toKey(secretKeyRing), policy, referenceTime)
+    ) : this(PGPainless.getInstance().toKey(secretKeyRing), api, referenceTime)
 
     override fun addUserId(
         userId: CharSequence,
@@ -298,14 +297,16 @@ class SecretKeyRingEditor(
         SignatureSubpacketsUtil.assureKeyCanCarryFlags(subkeyAlgorithm)
 
         val bitStrength = subkey.publicKey.bitStrength
-        require(policy.publicKeyAlgorithmPolicy.isAcceptable(subkeyAlgorithm, bitStrength)) {
-            "Public key algorithm policy violation: $subkeyAlgorithm with bit strength $bitStrength is not acceptable."
-        }
+        require(
+            api.algorithmPolicy.publicKeyAlgorithmPolicy.isAcceptable(
+                subkeyAlgorithm, bitStrength)) {
+                "Public key algorithm policy violation: $subkeyAlgorithm with bit strength $bitStrength is not acceptable."
+            }
 
         val primaryKey = secretKeyRing.secretKey
         val info = inspectKeyRing(secretKeyRing, referenceTime)
         val hashAlgorithm =
-            HashAlgorithmNegotiator.negotiateSignatureHashAlgorithm(policy)
+            HashAlgorithmNegotiator.negotiateSignatureHashAlgorithm(api.algorithmPolicy)
                 .negotiateHashAlgorithm(info.preferredHashAlgorithms)
 
         var secretSubkey =
@@ -323,13 +324,15 @@ class SecretKeyRingEditor(
                 PGPainless.getInstance().implementation.pbeSecretKeyDecryptorBuilderProvider())
 
         val skBindingBuilder =
-            SubkeyBindingSignatureBuilder(key.primarySecretKey, primaryKeyProtector, hashAlgorithm)
+            SubkeyBindingSignatureBuilder(
+                key.primarySecretKey, primaryKeyProtector, hashAlgorithm, api)
         skBindingBuilder.apply {
             hashedSubpackets.setSignatureCreationTime(referenceTime)
             hashedSubpackets.setKeyFlags(flags)
             if (subkeyAlgorithm.isSigningCapable()) {
                 val pkBindingBuilder =
-                    PrimaryKeyBindingSignatureBuilder(componentKey, subkeyProtector, hashAlgorithm)
+                    PrimaryKeyBindingSignatureBuilder(
+                        componentKey, subkeyProtector, hashAlgorithm, api)
                 pkBindingBuilder.hashedSubpackets.setSignatureCreationTime(referenceTime)
                 hashedSubpackets.addEmbeddedSignature(pkBindingBuilder.build(primaryKey.publicKey))
             }
@@ -624,7 +627,7 @@ class SecretKeyRingEditor(
             if (revokeeSubkey.isMasterKey) SignatureType.KEY_REVOCATION
             else SignatureType.SUBKEY_REVOCATION
 
-        return RevocationSignatureBuilder(signatureType, key.primarySecretKey, protector)
+        return RevocationSignatureBuilder(signatureType, key.primarySecretKey, protector, api)
             .apply { applyCallback(callback) }
             .build(revokeeSubkey)
     }
@@ -635,7 +638,7 @@ class SecretKeyRingEditor(
         callback: RevocationSignatureSubpackets.Callback?
     ): SecretKeyRingEditorInterface {
         RevocationSignatureBuilder(
-                SignatureType.CERTIFICATION_REVOCATION, key.primarySecretKey, protector)
+                SignatureType.CERTIFICATION_REVOCATION, key.primarySecretKey, protector, api)
             .apply {
                 hashedSubpackets.setSignatureCreationTime(referenceTime)
                 applyCallback(callback)
@@ -664,7 +667,7 @@ class SecretKeyRingEditor(
         prevUserIdSig: PGPSignature
     ): PGPSignature {
         val builder =
-            SelfSignatureBuilder(key.primarySecretKey, secretKeyRingProtector, prevUserIdSig)
+            SelfSignatureBuilder(key.primarySecretKey, secretKeyRingProtector, prevUserIdSig, api)
         builder.hashedSubpackets.setSignatureCreationTime(referenceTime)
         builder.applyCallback(
             object : SelfSignatureSubpackets.Callback {
@@ -683,7 +686,8 @@ class SecretKeyRingEditor(
         @Nonnull primaryUserId: String,
         @Nonnull prevUserIdSig: PGPSignature
     ): PGPSignature {
-        return SelfSignatureBuilder(key.primarySecretKey, secretKeyRingProtector, prevUserIdSig)
+        return SelfSignatureBuilder(
+                key.primarySecretKey, secretKeyRingProtector, prevUserIdSig, api)
             .apply {
                 hashedSubpackets.setSignatureCreationTime(referenceTime)
                 applyCallback(
@@ -711,7 +715,7 @@ class SecretKeyRingEditor(
         prevDirectKeySig: PGPSignature
     ): OpenPGPSignature {
         return DirectKeySelfSignatureBuilder(
-                secretKeyRing, secretKeyRingProtector, prevDirectKeySig)
+                secretKeyRing, secretKeyRingProtector, prevDirectKeySig, api)
             .apply {
                 hashedSubpackets.setSignatureCreationTime(referenceTime)
                 applyCallback(
@@ -742,7 +746,7 @@ class SecretKeyRingEditor(
 
         val builder =
             SubkeyBindingSignatureBuilder(
-                key.primarySecretKey, protector, prevSubkeyBindingSignature)
+                key.primarySecretKey, protector, prevSubkeyBindingSignature, api)
         builder.hashedSubpackets.apply {
             // set expiration
             setSignatureCreationTime(referenceTime)
@@ -762,7 +766,7 @@ class SecretKeyRingEditor(
                     clearEmbeddedSignatures()
                     addEmbeddedSignature(
                         PrimaryKeyBindingSignatureBuilder(
-                                key.getSecretKey(subkey.keyIdentifier), protector)
+                                key.getSecretKey(subkey.keyIdentifier), protector, api)
                             .build(primaryKey))
                 }
             }

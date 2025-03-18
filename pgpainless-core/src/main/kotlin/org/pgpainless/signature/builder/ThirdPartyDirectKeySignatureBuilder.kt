@@ -33,15 +33,17 @@ class ThirdPartyDirectKeySignatureBuilder :
     @Throws(PGPException::class)
     constructor(
         signingKey: OpenPGPKey.OpenPGPSecretKey,
-        protector: SecretKeyRingProtector
-    ) : super(SignatureType.DIRECT_KEY, signingKey, protector)
+        protector: SecretKeyRingProtector,
+        api: PGPainless
+    ) : super(SignatureType.DIRECT_KEY, signingKey, protector, api)
 
     @Throws(PGPException::class)
     constructor(
         signingKey: OpenPGPKey.OpenPGPSecretKey,
         protector: SecretKeyRingProtector,
-        archetypeSignature: PGPSignature
-    ) : super(signingKey, protector, archetypeSignature)
+        archetypeSignature: PGPSignature,
+        api: PGPainless
+    ) : super(signingKey, protector, archetypeSignature, api)
 
     val hashedSubpackets: CertificationSubpackets = _hashedSubpackets
     val unhashedSubpackets: CertificationSubpackets = _unhashedSubpackets
@@ -64,7 +66,7 @@ class ThirdPartyDirectKeySignatureBuilder :
     @Throws(PGPException::class)
     @Deprecated("Pass in an OpenPGPCertificate instead.")
     fun build(certificate: PGPPublicKeyRing): PGPSignature =
-        build(PGPainless.getInstance().toCertificate(certificate)).signature
+        build(api.toCertificate(certificate)).signature
 
     @Deprecated("Pass in an OpenPGPComponentKey instead.")
     @Throws(PGPException::class)

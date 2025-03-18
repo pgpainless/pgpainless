@@ -34,12 +34,14 @@ public class ThirdPartyDirectKeySignatureBuilderTest {
 
     @Test
     public void testDirectKeySignatureBuilding() throws PGPException {
+        PGPainless api = PGPainless.getInstance();
         OpenPGPKey secretKeys = PGPainless.generateKeyRing()
                 .modernKeyRing("Alice");
 
         DirectKeySelfSignatureBuilder dsb = new DirectKeySelfSignatureBuilder(
                 secretKeys.getPrimarySecretKey(),
-                SecretKeyRingProtector.unprotectedKeys());
+                SecretKeyRingProtector.unprotectedKeys(),
+                api);
 
         Date now = new Date();
         Date t1 = new Date(now.getTime() + 1000 * 60 * 60);
