@@ -697,7 +697,7 @@ public class OpenPgpMessageInputStreamTest {
             throws IOException {
         ByteArrayInputStream bytesIn = new ByteArrayInputStream(armored.getBytes(StandardCharsets.UTF_8));
         ArmoredInputStream armorIn = ArmoredInputStreamFactory.get(bytesIn);
-        OpenPgpMessageInputStream pgpIn = OpenPgpMessageInputStream.create(armorIn, options);
+        OpenPgpMessageInputStream pgpIn = OpenPgpMessageInputStream.create(armorIn, options, PGPainless.getInstance());
         return pgpIn;
     }
 }

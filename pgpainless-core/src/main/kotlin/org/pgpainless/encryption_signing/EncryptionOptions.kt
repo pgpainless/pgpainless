@@ -8,7 +8,6 @@ import java.util.*
 import org.bouncycastle.openpgp.PGPPublicKeyRing
 import org.bouncycastle.openpgp.api.OpenPGPCertificate
 import org.bouncycastle.openpgp.api.OpenPGPCertificate.OpenPGPComponentKey
-import org.bouncycastle.openpgp.api.OpenPGPImplementation
 import org.bouncycastle.openpgp.operator.PGPKeyEncryptionMethodGenerator
 import org.pgpainless.PGPainless
 import org.pgpainless.PGPainless.Companion.inspectKeyRing
@@ -334,9 +333,9 @@ class EncryptionOptions(
         _encryptionKeys.add(key)
         _encryptionKeyIdentifiers.add(SubkeyIdentifier(key))
         addEncryptionMethod(
-            OpenPGPImplementation.getInstance()
-                .publicKeyKeyEncryptionMethodGenerator(key.pgpPublicKey)
-                .also { it.setUseWildcardRecipient(wildcardRecipient) })
+            api.implementation.publicKeyKeyEncryptionMethodGenerator(key.pgpPublicKey).also {
+                it.setUseWildcardRecipient(wildcardRecipient)
+            })
     }
 
     /**
@@ -359,8 +358,7 @@ class EncryptionOptions(
     fun addMessagePassphrase(passphrase: Passphrase) = apply {
         require(!passphrase.isEmpty) { "Passphrase MUST NOT be empty." }
         addEncryptionMethod(
-            OpenPGPImplementation.getInstance()
-                .pbeKeyEncryptionMethodGenerator(passphrase.getChars()))
+            api.implementation.pbeKeyEncryptionMethodGenerator(passphrase.getChars()))
     }
 
     /**
