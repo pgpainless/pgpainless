@@ -94,7 +94,7 @@ public class WrongSignerUserIdTest {
 
         DecryptionStream decryptionStream = PGPainless.decryptAndOrVerify().onInputStream(
                         new ByteArrayInputStream(messageWithWrongUserId.getBytes(StandardCharsets.UTF_8)))
-                .withOptions(new ConsumerOptions()
+                .withOptions(ConsumerOptions.get()
                         .addDecryptionKey(secretKeys)
                         .addVerificationCert(certificate));
 

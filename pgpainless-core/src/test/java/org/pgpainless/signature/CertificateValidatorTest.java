@@ -1384,7 +1384,7 @@ public class CertificateValidatorTest {
 
         DecryptionStream decryptionStream = PGPainless.decryptAndOrVerify()
                 .onInputStream(new ByteArrayInputStream(DATA.getBytes(StandardCharsets.UTF_8)))
-                .withOptions(new ConsumerOptions()
+                .withOptions(ConsumerOptions.get()
                         .addVerificationCert(PGPainless.readKeyRing().publicKeyRing(CERT))
                         .addVerificationOfDetachedSignatures(new ByteArrayInputStream(SIG.getBytes(StandardCharsets.UTF_8))));
 

@@ -22,10 +22,7 @@ import org.pgpainless.key.info.KeyAccessor
 import org.pgpainless.key.info.KeyRingInfo
 import org.pgpainless.util.Passphrase
 
-class EncryptionOptions(
-    private val purpose: EncryptionPurpose,
-    private val api: PGPainless = PGPainless.getInstance()
-) {
+class EncryptionOptions(private val purpose: EncryptionPurpose, private val api: PGPainless) {
     private val _encryptionMethods: MutableSet<PGPKeyEncryptionMethodGenerator> = mutableSetOf()
     private val _encryptionKeys: MutableSet<OpenPGPComponentKey> = mutableSetOf()
     private val _encryptionKeyIdentifiers: MutableSet<SubkeyIdentifier> = mutableSetOf()
@@ -55,7 +52,7 @@ class EncryptionOptions(
     val encryptionAlgorithmOverride
         get() = _encryptionAlgorithmOverride
 
-    constructor() : this(EncryptionPurpose.ANY)
+    constructor(api: PGPainless) : this(EncryptionPurpose.ANY, api)
 
     /**
      * Set the evaluation date for certificate evaluation.
@@ -426,11 +423,19 @@ class EncryptionOptions(
     }
 
     companion object {
-        @JvmStatic fun get() = EncryptionOptions()
+        @JvmOverloads
+        @JvmStatic
+        fun get(api: PGPainless = PGPainless.getInstance()) = EncryptionOptions(api)
 
-        @JvmStatic fun encryptCommunications() = EncryptionOptions(EncryptionPurpose.COMMUNICATIONS)
+        @JvmOverloads
+        @JvmStatic
+        fun encryptCommunications(api: PGPainless = PGPainless.getInstance()) =
+            EncryptionOptions(EncryptionPurpose.COMMUNICATIONS, api)
 
-        @JvmStatic fun encryptDataAtRest() = EncryptionOptions(EncryptionPurpose.STORAGE)
+        @JvmOverloads
+        @JvmStatic
+        fun encryptDataAtRest(api: PGPainless = PGPainless.getInstance()) =
+            EncryptionOptions(EncryptionPurpose.STORAGE, api)
 
         /**
          * Only encrypt to the first valid encryption capable subkey we stumble upon.

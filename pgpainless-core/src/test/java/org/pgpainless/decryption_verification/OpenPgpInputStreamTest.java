@@ -743,7 +743,7 @@ public class OpenPgpInputStreamTest {
         ByteArrayOutputStream signedOut = new ByteArrayOutputStream();
         EncryptionStream signer = PGPainless.encryptAndOrSign()
                 .onOutputStream(signedOut)
-                .withOptions(ProducerOptions.sign(new SigningOptions()
+                .withOptions(ProducerOptions.sign(SigningOptions.get()
                                 .addSignature(SecretKeyRingProtector.unprotectedKeys(), secretKeys))
                         .setAsciiArmor(false)
                         .overrideCompressionAlgorithm(CompressionAlgorithm.UNCOMPRESSED));

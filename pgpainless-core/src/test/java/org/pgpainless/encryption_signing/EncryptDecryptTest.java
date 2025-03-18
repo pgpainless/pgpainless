@@ -135,7 +135,7 @@ public class EncryptDecryptTest {
                 .onOutputStream(envelope)
                 .withOptions(ProducerOptions.signAndEncrypt(
                         EncryptionOptions.encryptCommunications().addRecipient(recipientPub),
-                        new SigningOptions().addInlineSignature(keyDecryptor, senderSec, DocumentSignatureType.BINARY_DOCUMENT)
+                        SigningOptions.get().addInlineSignature(keyDecryptor, senderSec, DocumentSignatureType.BINARY_DOCUMENT)
                 ));
 
         Streams.pipeAll(new ByteArrayInputStream(secretMessage), encryptor);
@@ -156,7 +156,7 @@ public class EncryptDecryptTest {
         ByteArrayInputStream envelopeIn = new ByteArrayInputStream(encryptedSecretMessage);
         DecryptionStream decryptor = PGPainless.decryptAndOrVerify()
                 .onInputStream(envelopeIn)
-                .withOptions(new ConsumerOptions()
+                .withOptions(ConsumerOptions.get()
                         .addDecryptionKey(recipientSec, keyDecryptor)
                         .addVerificationCert(senderPub)
                 );
@@ -184,7 +184,7 @@ public class EncryptDecryptTest {
         ByteArrayOutputStream dummyOut = new ByteArrayOutputStream();
         EncryptionStream signer = PGPainless.encryptAndOrSign().onOutputStream(dummyOut)
                 .withOptions(ProducerOptions.sign(
-                        new SigningOptions().addDetachedSignature(keyRingProtector, signingKeys, DocumentSignatureType.BINARY_DOCUMENT)
+                        SigningOptions.get().addDetachedSignature(keyRingProtector, signingKeys, DocumentSignatureType.BINARY_DOCUMENT)
                 ));
         Streams.pipeAll(inputStream, signer);
         signer.close();
@@ -205,7 +205,7 @@ public class EncryptDecryptTest {
         inputStream = new ByteArrayInputStream(testMessage.getBytes());
         DecryptionStream verifier = PGPainless.decryptAndOrVerify()
                 .onInputStream(inputStream)
-                .withOptions(new ConsumerOptions()
+                .withOptions(ConsumerOptions.get()
                         .addVerificationOfDetachedSignatures(new ByteArrayInputStream(armorSig.getBytes()))
                         .addVerificationCert(KeyRingUtils.publicKeyRingFrom(signingKeys))
                 );
@@ -237,7 +237,7 @@ public class EncryptDecryptTest {
         inputStream = new ByteArrayInputStream(signOut.toByteArray());
         DecryptionStream verifier = PGPainless.decryptAndOrVerify()
                 .onInputStream(inputStream)
-                .withOptions(new ConsumerOptions()
+                .withOptions(ConsumerOptions.get()
                         .addVerificationCert(KeyRingUtils.publicKeyRingFrom(signingKeys))
                 );
         signOut = new ByteArrayOutputStream();

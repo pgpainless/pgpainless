@@ -299,7 +299,7 @@ public class CanonicalizedDataEncryptionTest {
         ByteArrayInputStream in = new ByteArrayInputStream(encrypted.getBytes(StandardCharsets.UTF_8));
         DecryptionStream decryptionStream = PGPainless.decryptAndOrVerify()
                 .onInputStream(in)
-                .withOptions(new ConsumerOptions()
+                .withOptions(ConsumerOptions.get()
                         .addDecryptionKey(secretKeys, SecretKeyRingProtector.unprotectedKeys())
                         .addVerificationCert(publicKeys));
 
@@ -329,7 +329,7 @@ public class CanonicalizedDataEncryptionTest {
         ByteArrayInputStream in = new ByteArrayInputStream(encrypted.getBytes(StandardCharsets.UTF_8));
         DecryptionStream decryptionStream = PGPainless.decryptAndOrVerify()
                 .onInputStream(in)
-                .withOptions(new ConsumerOptions()
+                .withOptions(ConsumerOptions.get()
                         .addDecryptionKey(secretKeys, SecretKeyRingProtector.unprotectedKeys())
                         .addVerificationCert(publicKeys));
 
@@ -375,7 +375,7 @@ public class CanonicalizedDataEncryptionTest {
         ByteArrayInputStream in = new ByteArrayInputStream(msg.getBytes(StandardCharsets.UTF_8));
         DecryptionStream decryptionStream = PGPainless.decryptAndOrVerify()
                 .onInputStream(in)
-                .withOptions(new ConsumerOptions()
+                .withOptions(ConsumerOptions.get()
                         .addDecryptionKey(secretKeys, SecretKeyRingProtector.unprotectedKeys())
                         .addVerificationCert(publicKeys));
 
@@ -446,7 +446,7 @@ public class CanonicalizedDataEncryptionTest {
         ByteArrayOutputStream decrypted = new ByteArrayOutputStream();
         DecryptionStream decryptionStream = PGPainless.decryptAndOrVerify()
                         .onInputStream(cipherIn)
-                                .withOptions(new ConsumerOptions()
+                                .withOptions(ConsumerOptions.get()
                                         .addVerificationCert(publicKeys));
 
         Streams.pipeAll(decryptionStream, decrypted);

@@ -27,7 +27,7 @@ import org.pgpainless.signature.subpackets.BaseSignatureSubpackets.Callback
 import org.pgpainless.signature.subpackets.SignatureSubpackets
 import org.pgpainless.signature.subpackets.SignatureSubpacketsHelper
 
-class SigningOptions(val api: PGPainless = PGPainless.getInstance()) {
+class SigningOptions(private val api: PGPainless) {
 
     val signingMethods: Map<OpenPGPPrivateKey, SigningMethod> = mutableMapOf()
     private var _hashAlgorithmOverride: HashAlgorithm? = null
@@ -500,7 +500,9 @@ class SigningOptions(val api: PGPainless = PGPainless.getInstance()) {
     }
 
     companion object {
-        @JvmStatic fun get() = SigningOptions()
+        @JvmOverloads
+        @JvmStatic
+        fun get(api: PGPainless = PGPainless.getInstance()) = SigningOptions(api)
     }
 
     /** A method of signing. */

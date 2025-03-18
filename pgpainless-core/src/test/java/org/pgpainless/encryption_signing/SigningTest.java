@@ -69,7 +69,7 @@ public class SigningTest {
                         EncryptionOptions.encryptDataAtRest()
                                 .addRecipients(keys)
                                 .addRecipient(KeyRingUtils.publicKeyRingFrom(cryptieKeys)),
-                        new SigningOptions().addInlineSignature(
+                        SigningOptions.get().addInlineSignature(
                                 SecretKeyRingProtector.unlockSingleKeyWith(TestKeys.CRYPTIE_PASSPHRASE, cryptieSigningKey),
                                         cryptieKeys, TestKeys.CRYPTIE_UID, DocumentSignatureType.CANONICAL_TEXT_DOCUMENT)
                 ).setAsciiArmor(true));
@@ -94,7 +94,7 @@ public class SigningTest {
 
         DecryptionStream decryptionStream = PGPainless.decryptAndOrVerify()
                 .onInputStream(cryptIn)
-                .withOptions(new ConsumerOptions()
+                .withOptions(ConsumerOptions.get()
                         .addDecryptionKeys(secretKeys, SecretKeyRingProtector.unprotectedKeys())
                         .addVerificationCerts(verificationKeys)
                 );
@@ -119,7 +119,7 @@ public class SigningTest {
                 .getPGPSecretKeyRing();
         SecretKeyRingProtector protector = SecretKeyRingProtector.unlockAnyKeyWith(Passphrase.fromPassword("password123"));
 
-        SigningOptions opts = new SigningOptions();
+        SigningOptions opts = SigningOptions.get();
         // "bob" is not a valid user-id
         assertThrows(KeyException.UnboundUserIdException.class,
                 () -> opts.addInlineSignature(protector, secretKeys, "bob",
@@ -141,7 +141,7 @@ public class SigningTest {
 
         final PGPSecretKeyRing fSecretKeys = secretKeys;
 
-        SigningOptions opts = new SigningOptions();
+        SigningOptions opts = SigningOptions.get();
         // "alice" has been revoked
         assertThrows(KeyException.UnboundUserIdException.class,
                 () -> opts.addInlineSignature(protector, fSecretKeys, "alice",
@@ -154,7 +154,7 @@ public class SigningTest {
         PGPSecretKeyRing secretKeys = TestKeys.getEmilSecretKeyRing();
         SecretKeyRingProtector protector = SecretKeyRingProtector.unprotectedKeys();
 
-        SigningOptions options = new SigningOptions();
+        SigningOptions options = SigningOptions.get();
         assertNull(options.getHashAlgorithmOverride());
 
         options.overrideHashAlgorithm(HashAlgorithm.SHA224);
@@ -192,7 +192,7 @@ public class SigningTest {
                 .build()
                 .getPGPSecretKeyRing();
 
-        SigningOptions options = new SigningOptions()
+        SigningOptions options = SigningOptions.get()
                 .addDetachedSignature(SecretKeyRingProtector.unprotectedKeys(), secretKeys,
                         DocumentSignatureType.BINARY_DOCUMENT);
         String data = "Hello, World!\n";
@@ -223,7 +223,7 @@ public class SigningTest {
                 .build()
                 .getPGPSecretKeyRing();
 
-        SigningOptions options = new SigningOptions()
+        SigningOptions options = SigningOptions.get()
                 .addDetachedSignature(SecretKeyRingProtector.unprotectedKeys(), secretKeys,
                         DocumentSignatureType.BINARY_DOCUMENT);
         String data = "Hello, World!\n";
@@ -251,7 +251,7 @@ public class SigningTest {
                 .build()
                 .getPGPSecretKeyRing();
 
-        SigningOptions options = new SigningOptions();
+        SigningOptions options = SigningOptions.get();
         assertThrows(KeyException.UnacceptableSigningKeyException.class, () -> options.addDetachedSignature(
                 SecretKeyRingProtector.unprotectedKeys(), secretKeys, DocumentSignatureType.BINARY_DOCUMENT));
         assertThrows(KeyException.UnacceptableSigningKeyException.class, () -> options.addInlineSignature(
@@ -268,7 +268,7 @@ public class SigningTest {
                 .build()
                 .getPGPSecretKeyRing();
 
-        SigningOptions options = new SigningOptions();
+        SigningOptions options = SigningOptions.get();
         assertThrows(KeyException.UnboundUserIdException.class, () ->
                 options.addDetachedSignature(SecretKeyRingProtector.unprotectedKeys(), secretKeys, "Bob",
                         DocumentSignatureType.BINARY_DOCUMENT));

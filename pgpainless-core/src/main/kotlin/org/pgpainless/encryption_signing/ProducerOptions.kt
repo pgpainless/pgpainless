@@ -13,7 +13,7 @@ import org.pgpainless.algorithm.StreamEncoding
 class ProducerOptions(
     val encryptionOptions: EncryptionOptions?,
     val signingOptions: SigningOptions?,
-    val api: PGPainless = PGPainless.getInstance()
+    val api: PGPainless
 ) {
 
     private var _fileName: String = ""
@@ -249,9 +249,13 @@ class ProducerOptions(
          * @param signingOptions signing options
          * @return builder
          */
+        @JvmOverloads
         @JvmStatic
-        fun signAndEncrypt(encryptionOptions: EncryptionOptions, signingOptions: SigningOptions) =
-            ProducerOptions(encryptionOptions, signingOptions)
+        fun signAndEncrypt(
+            encryptionOptions: EncryptionOptions,
+            signingOptions: SigningOptions,
+            api: PGPainless = PGPainless.getInstance()
+        ): ProducerOptions = ProducerOptions(encryptionOptions, signingOptions, api)
 
         /**
          * Sign some data without encryption.
@@ -259,7 +263,12 @@ class ProducerOptions(
          * @param signingOptions signing options
          * @return builder
          */
-        @JvmStatic fun sign(signingOptions: SigningOptions) = ProducerOptions(null, signingOptions)
+        @JvmOverloads
+        @JvmStatic
+        fun sign(
+            signingOptions: SigningOptions,
+            api: PGPainless = PGPainless.getInstance()
+        ): ProducerOptions = ProducerOptions(null, signingOptions, api)
 
         /**
          * Encrypt some data without signing.
@@ -267,14 +276,21 @@ class ProducerOptions(
          * @param encryptionOptions encryption options
          * @return builder
          */
+        @JvmOverloads
         @JvmStatic
-        fun encrypt(encryptionOptions: EncryptionOptions) = ProducerOptions(encryptionOptions, null)
+        fun encrypt(
+            encryptionOptions: EncryptionOptions,
+            api: PGPainless = PGPainless.getInstance()
+        ): ProducerOptions = ProducerOptions(encryptionOptions, null, api)
 
         /**
          * Only wrap the data in an OpenPGP packet. No encryption or signing will be applied.
          *
          * @return builder
          */
-        @JvmStatic fun noEncryptionNoSigning() = ProducerOptions(null, null)
+        @JvmOverloads
+        @JvmStatic
+        fun noEncryptionNoSigning(api: PGPainless = PGPainless.getInstance()): ProducerOptions =
+            ProducerOptions(null, null, api)
     }
 }

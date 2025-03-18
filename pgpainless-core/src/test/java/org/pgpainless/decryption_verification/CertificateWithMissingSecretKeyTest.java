@@ -136,7 +136,7 @@ public class CertificateWithMissingSecretKeyTest {
         // Test decryption
         ByteArrayInputStream cipherIn = new ByteArrayInputStream(out.toByteArray());
 
-        ConsumerOptions consumerOptions = new ConsumerOptions()
+        ConsumerOptions consumerOptions = ConsumerOptions.get()
                 .addDecryptionKey(missingDecryptionSecKey);
 
         assertThrows(MissingDecryptionMethodException.class, () ->

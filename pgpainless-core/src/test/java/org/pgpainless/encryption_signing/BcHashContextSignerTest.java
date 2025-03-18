@@ -96,7 +96,7 @@ public class BcHashContextSignerTest {
 
         DecryptionStream decryptionStream = PGPainless.decryptAndOrVerify()
                 .onInputStream(messageIn)
-                .withOptions(new ConsumerOptions()
+                .withOptions(ConsumerOptions.get()
                         .addVerificationCert(certificate)
                         .addVerificationOfDetachedSignature(signature));
 
