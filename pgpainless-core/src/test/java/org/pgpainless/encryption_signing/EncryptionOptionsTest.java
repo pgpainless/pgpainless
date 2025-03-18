@@ -66,7 +66,7 @@ public class EncryptionOptionsTest {
 
     @Test
     public void testOverrideEncryptionAlgorithmFailsForNULL() {
-        EncryptionOptions options = new EncryptionOptions();
+        EncryptionOptions options = EncryptionOptions.get();
         assertNull(options.getEncryptionAlgorithmOverride());
 
         assertThrows(IllegalArgumentException.class, () -> options.overrideEncryptionAlgorithm(SymmetricKeyAlgorithm.NULL));
@@ -76,7 +76,7 @@ public class EncryptionOptionsTest {
 
     @Test
     public void testOverrideEncryptionOptions() {
-        EncryptionOptions options = new EncryptionOptions();
+        EncryptionOptions options = EncryptionOptions.get();
         assertNull(options.getEncryptionAlgorithmOverride());
         options.overrideEncryptionAlgorithm(SymmetricKeyAlgorithm.AES_128);
 
@@ -105,7 +105,7 @@ public class EncryptionOptionsTest {
 
     @Test
     public void testAddRecipients_AllKeys() {
-        EncryptionOptions options = new EncryptionOptions();
+        EncryptionOptions options = EncryptionOptions.get();
         options.addRecipient(publicKeys, EncryptionOptions.encryptToAllCapableSubkeys());
 
         Set<OpenPGPCertificate.OpenPGPComponentKey> encryptionKeys = options.getEncryptionKeys();
@@ -117,7 +117,7 @@ public class EncryptionOptionsTest {
 
     @Test
     public void testAddEmptyRecipientsFails() {
-        EncryptionOptions options = new EncryptionOptions();
+        EncryptionOptions options = EncryptionOptions.get();
         assertThrows(IllegalArgumentException.class, () -> options.addRecipients(Collections.emptyList()));
         assertThrows(IllegalArgumentException.class, () -> options.addRecipients(Collections.emptyList(),
                 ArrayList::new));
@@ -125,14 +125,14 @@ public class EncryptionOptionsTest {
 
     @Test
     public void testAddEmptyPassphraseFails() {
-        EncryptionOptions options = new EncryptionOptions();
+        EncryptionOptions options = EncryptionOptions.get();
         assertThrows(IllegalArgumentException.class, () ->
                 options.addMessagePassphrase(Passphrase.emptyPassphrase()));
     }
 
     @Test
     public void testAddRecipient_KeyWithoutEncryptionKeyFails() {
-        EncryptionOptions options = new EncryptionOptions();
+        EncryptionOptions options = EncryptionOptions.get();
         OpenPGPKey secretKeys = PGPainless.buildKeyRing()
                 .setPrimaryKey(KeySpec.getBuilder(KeyType.EDDSA_LEGACY(EdDSALegacyCurve._Ed25519), KeyFlag.CERTIFY_OTHER, KeyFlag.SIGN_DATA))
                 .addUserId("test@pgpainless.org")
@@ -144,7 +144,7 @@ public class EncryptionOptionsTest {
 
     @Test
     public void testEncryptionKeySelectionStrategyEmpty_ThrowsAssertionError() {
-        EncryptionOptions options = new EncryptionOptions();
+        EncryptionOptions options = EncryptionOptions.get();
 
         assertThrows(KeyException.UnacceptableEncryptionKeyException.class,
                 () -> options.addRecipient(publicKeys, new EncryptionOptions.EncryptionKeySelector() {
@@ -173,14 +173,14 @@ public class EncryptionOptionsTest {
         PGPPublicKeyRingCollection collection = new PGPPublicKeyRingCollection(
                 Arrays.asList(publicKeys.getPGPPublicKeyRing(), secondKeyRing));
 
-        EncryptionOptions options = new EncryptionOptions();
+        EncryptionOptions options = EncryptionOptions.get();
         options.addRecipients(collection, EncryptionOptions.encryptToFirstSubkey());
         assertEquals(2, options.getEncryptionKeyIdentifiers().size());
     }
 
     @Test
     public void testAddRecipient_withValidUserId() {
-        EncryptionOptions options = new EncryptionOptions();
+        EncryptionOptions options = EncryptionOptions.get();
         options.addRecipient(publicKeys, "test@pgpainless.org", EncryptionOptions.encryptToFirstSubkey());
 
         assertEquals(1, options.getEncryptionMethods().size());
@@ -188,7 +188,7 @@ public class EncryptionOptionsTest {
 
     @Test
     public void testAddRecipient_withInvalidUserId() {
-        EncryptionOptions options = new EncryptionOptions();
+        EncryptionOptions options = EncryptionOptions.get();
         assertThrows(KeyException.UnboundUserIdException.class, () -> options.addRecipient(publicKeys, "invalid@user.id"));
     }
 }

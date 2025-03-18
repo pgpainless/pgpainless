@@ -154,7 +154,7 @@ public class Encrypt {
                                 EncryptionOptions.encryptCommunications()
                                         .addRecipient(certificateBob)
                                         .addRecipient(certificateAlice),
-                                new SigningOptions()
+                                SigningOptions.get()
                                         .addInlineSignature(protectorAlice, keyAlice, DocumentSignatureType.CANONICAL_TEXT_DOCUMENT)
                         ).setAsciiArmor(true)
                 );
@@ -167,7 +167,7 @@ public class Encrypt {
         // Decrypt and verify signatures
         DecryptionStream decryptor = PGPainless.decryptAndOrVerify()
                 .onInputStream(new ByteArrayInputStream(encryptedMessage.getBytes(StandardCharsets.UTF_8)))
-                .withOptions(new ConsumerOptions()
+                .withOptions(ConsumerOptions.get()
                         .addDecryptionKey(keyBob, protectorBob)
                         .addVerificationCert(certificateAlice)
                 );
@@ -209,7 +209,7 @@ public class Encrypt {
         // Decrypt
         DecryptionStream decryptor = PGPainless.decryptAndOrVerify()
                 .onInputStream(new ByteArrayInputStream(asciiCiphertext.getBytes(StandardCharsets.UTF_8)))
-                .withOptions(new ConsumerOptions().addMessagePassphrase(Passphrase.fromPassword("p4ssphr4s3")));
+                .withOptions(ConsumerOptions.get().addMessagePassphrase(Passphrase.fromPassword("p4ssphr4s3")));
 
         ByteArrayOutputStream plaintext = new ByteArrayOutputStream();
         Streams.pipeAll(decryptor, plaintext);
@@ -273,7 +273,7 @@ public class Encrypt {
         // Decrypt and verify signatures
         DecryptionStream decryptor = PGPainless.decryptAndOrVerify()
                 .onInputStream(new ByteArrayInputStream(encryptedMessage.getBytes(StandardCharsets.UTF_8)))
-                .withOptions(new ConsumerOptions()
+                .withOptions(ConsumerOptions.get()
                         .addDecryptionKey(keyBob, protectorBob)
                         .addVerificationCert(certificateAlice)
                 );

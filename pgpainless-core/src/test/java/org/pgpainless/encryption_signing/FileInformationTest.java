@@ -74,7 +74,7 @@ public class FileInformationTest {
 
         DecryptionStream decryptionStream = PGPainless.decryptAndOrVerify()
                 .onInputStream(cryptIn)
-                .withOptions(new ConsumerOptions()
+                .withOptions(ConsumerOptions.get()
                         .addDecryptionKey(secretKey));
         Streams.pipeAll(decryptionStream, plainOut);
 
@@ -113,7 +113,7 @@ public class FileInformationTest {
 
         DecryptionStream decryptionStream = PGPainless.decryptAndOrVerify()
                 .onInputStream(cryptIn)
-                .withOptions(new ConsumerOptions()
+                .withOptions(ConsumerOptions.get()
                         .addDecryptionKey(secretKey));
         Streams.pipeAll(decryptionStream, plainOut);
 
@@ -155,7 +155,7 @@ public class FileInformationTest {
 
         DecryptionStream decryptionStream = PGPainless.decryptAndOrVerify()
                 .onInputStream(cryptIn)
-                .withOptions(new ConsumerOptions()
+                .withOptions(ConsumerOptions.get()
                         .addDecryptionKey(secretKey));
         Streams.pipeAll(decryptionStream, plainOut);
 
