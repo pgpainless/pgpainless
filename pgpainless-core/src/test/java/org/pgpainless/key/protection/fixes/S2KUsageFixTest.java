@@ -111,7 +111,7 @@ public class S2KUsageFixTest {
         ByteArrayInputStream in = new ByteArrayInputStream(MESSAGE.getBytes(StandardCharsets.UTF_8));
         DecryptionStream decryptionStream = PGPainless.decryptAndOrVerify()
                 .onInputStream(in)
-                .withOptions(new ConsumerOptions()
+                .withOptions(ConsumerOptions.get()
                         .addDecryptionKey(keys, protector));
         ByteArrayOutputStream out = new ByteArrayOutputStream();
         Streams.pipeAll(decryptionStream, out);

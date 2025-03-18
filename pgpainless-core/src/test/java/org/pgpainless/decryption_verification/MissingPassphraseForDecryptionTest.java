@@ -74,7 +74,7 @@ public class MissingPassphraseForDecryptionTest {
                 return true;
             }
         };
-        ConsumerOptions options = new ConsumerOptions()
+        ConsumerOptions options = ConsumerOptions.get()
                 .setMissingKeyPassphraseStrategy(MissingKeyPassphraseStrategy.INTERACTIVE)
                 .addDecryptionKey(secretKeys, SecretKeyRingProtector.defaultSecretKeyRingProtector(callback));
 
@@ -108,7 +108,7 @@ public class MissingPassphraseForDecryptionTest {
             }
         };
 
-        ConsumerOptions options = new ConsumerOptions()
+        ConsumerOptions options = ConsumerOptions.get()
                 .setMissingKeyPassphraseStrategy(MissingKeyPassphraseStrategy.THROW_EXCEPTION)
                 .addDecryptionKey(secretKeys, SecretKeyRingProtector.defaultSecretKeyRingProtector(callback));
 

@@ -144,7 +144,7 @@ public class FixUserIdDoesNotBreakEncryptionCapabilityTest {
         ByteArrayOutputStream out = new ByteArrayOutputStream();
         EncryptionStream encryptionStream = PGPainless.encryptAndOrSign()
                 .onOutputStream(out)
-                .withOptions(ProducerOptions.encrypt(new EncryptionOptions()
+                .withOptions(ProducerOptions.encrypt(EncryptionOptions.get()
                         .addRecipient(cert)));
 
         encryptionStream.write("Hello".getBytes(StandardCharsets.UTF_8));
@@ -157,7 +157,7 @@ public class FixUserIdDoesNotBreakEncryptionCapabilityTest {
         ByteArrayOutputStream plain = new ByteArrayOutputStream();
         DecryptionStream decryptionStream = PGPainless.decryptAndOrVerify()
                 .onInputStream(in)
-                .withOptions(new ConsumerOptions()
+                .withOptions(ConsumerOptions.get()
                         .addDecryptionKey(edited));
 
         Streams.pipeAll(decryptionStream, plain);

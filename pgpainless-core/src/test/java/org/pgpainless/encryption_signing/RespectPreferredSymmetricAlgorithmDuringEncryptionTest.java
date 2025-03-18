@@ -55,7 +55,7 @@ public class RespectPreferredSymmetricAlgorithmDuringEncryptionTest {
         ByteArrayOutputStream out = new ByteArrayOutputStream();
         EncryptionStream encryptionStream = PGPainless.encryptAndOrSign().onOutputStream(out)
                 .withOptions(
-                        ProducerOptions.encrypt(new EncryptionOptions()
+                        ProducerOptions.encrypt(EncryptionOptions.get()
                                 .addRecipient(publicKeys) // no user-id passed
                         ));
 
@@ -67,7 +67,7 @@ public class RespectPreferredSymmetricAlgorithmDuringEncryptionTest {
         out = new ByteArrayOutputStream();
         encryptionStream = PGPainless.encryptAndOrSign().onOutputStream(out)
                 .withOptions(
-                        ProducerOptions.encrypt(new EncryptionOptions()
+                        ProducerOptions.encrypt(EncryptionOptions.get()
                                 .addRecipient(publicKeys, "Bob Babbage <bob@openpgp.example>")
                         ));
 
@@ -79,7 +79,7 @@ public class RespectPreferredSymmetricAlgorithmDuringEncryptionTest {
         out = new ByteArrayOutputStream();
         encryptionStream = PGPainless.encryptAndOrSign().onOutputStream(out)
                 .withOptions(
-                        ProducerOptions.encrypt(new EncryptionOptions()
+                        ProducerOptions.encrypt(EncryptionOptions.get()
                                 .addRecipient(publicKeys, "Bobby128 <bobby@aes128.example>")
                         ));
 
