@@ -190,7 +190,7 @@ class PGPainless(
          *
          * @return builder
          */
-        @JvmStatic fun encryptAndOrSign() = EncryptionBuilder()
+        @JvmStatic fun encryptAndOrSign() = EncryptionBuilder(getInstance())
 
         /**
          * Create a [DecryptionBuilder], which can be used to decrypt and/or verify data using
