@@ -15,13 +15,12 @@ import org.pgpainless.key.generation.type.KeyType
 import org.pgpainless.key.generation.type.eddsa_legacy.EdDSALegacyCurve
 import org.pgpainless.key.generation.type.rsa.RsaLength
 import org.pgpainless.key.generation.type.xdh_legacy.XDHLegacySpec
-import org.pgpainless.policy.Policy
 import org.pgpainless.util.Passphrase
 
 class KeyRingTemplates(
     private val version: OpenPGPKeyVersion,
     private val creationTime: Date = Date(),
-    private val policy: Policy = PGPainless.getInstance().algorithmPolicy
+    private val api: PGPainless = PGPainless.getInstance()
 ) {
 
     /**
@@ -39,7 +38,7 @@ class KeyRingTemplates(
         length: RsaLength,
         passphrase: Passphrase = Passphrase.emptyPassphrase()
     ): OpenPGPKey =
-        buildKeyRing(version, policy)
+        buildKeyRing(version, api)
             .apply {
                 setPrimaryKey(
                     getBuilder(KeyType.RSA(length), KeyFlag.CERTIFY_OTHER)
