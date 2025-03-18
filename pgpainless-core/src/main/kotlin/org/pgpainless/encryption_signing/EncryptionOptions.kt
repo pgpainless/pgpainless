@@ -10,11 +10,12 @@ import org.bouncycastle.openpgp.api.OpenPGPCertificate
 import org.bouncycastle.openpgp.api.OpenPGPCertificate.OpenPGPComponentKey
 import org.bouncycastle.openpgp.api.OpenPGPImplementation
 import org.bouncycastle.openpgp.operator.PGPKeyEncryptionMethodGenerator
+import org.pgpainless.PGPainless
 import org.pgpainless.PGPainless.Companion.inspectKeyRing
 import org.pgpainless.algorithm.EncryptionPurpose
 import org.pgpainless.algorithm.SymmetricKeyAlgorithm
+import org.pgpainless.algorithm.negotiation.SymmetricKeyAlgorithmNegotiator.Companion.byPopularity
 import org.pgpainless.authentication.CertificateAuthority
-import org.pgpainless.bouncycastle.extensions.toOpenPGPCertificate
 import org.pgpainless.encryption_signing.EncryptionOptions.EncryptionKeySelector
 import org.pgpainless.exception.KeyException.*
 import org.pgpainless.key.SubkeyIdentifier
@@ -22,7 +23,10 @@ import org.pgpainless.key.info.KeyAccessor
 import org.pgpainless.key.info.KeyRingInfo
 import org.pgpainless.util.Passphrase
 
-class EncryptionOptions(private val purpose: EncryptionPurpose) {
+class EncryptionOptions(
+    private val purpose: EncryptionPurpose,
+    private val api: PGPainless = PGPainless.getInstance()
+) {
     private val _encryptionMethods: MutableSet<PGPKeyEncryptionMethodGenerator> = mutableSetOf()
     private val _encryptionKeys: MutableSet<OpenPGPComponentKey> = mutableSetOf()
     private val _encryptionKeyIdentifiers: MutableSet<SubkeyIdentifier> = mutableSetOf()
@@ -87,7 +91,7 @@ class EncryptionOptions(private val purpose: EncryptionPurpose) {
             .lookupByUserId(userId, email, evaluationDate, targetAmount)
             .filter { it.isAuthenticated() }
             .forEach {
-                addRecipient(it.certificate.toOpenPGPCertificate()).also { foundAcceptable = true }
+                addRecipient(api.toCertificate(it.certificate)).also { foundAcceptable = true }
             }
         require(foundAcceptable) {
             "Could not identify any trust-worthy certificates for '$userId' and target trust amount $targetAmount."
@@ -225,7 +229,7 @@ class EncryptionOptions(private val purpose: EncryptionPurpose) {
         key: PGPPublicKeyRing,
         userId: CharSequence,
         encryptionKeySelector: EncryptionKeySelector
-    ) = addRecipient(key.toOpenPGPCertificate(), userId, encryptionKeySelector)
+    ) = addRecipient(api.toCertificate(key), userId, encryptionKeySelector)
 
     /**
      * Encrypt the message for the given recipients [OpenPGPCertificate], filtering encryption
@@ -251,7 +255,7 @@ class EncryptionOptions(private val purpose: EncryptionPurpose) {
         replaceWith =
             ReplaceWith("addRecipient(key.toOpenPGPCertificate(), encryptionKeySelector)"))
     fun addRecipient(key: PGPPublicKeyRing, encryptionKeySelector: EncryptionKeySelector) =
-        addRecipient(key.toOpenPGPCertificate(), encryptionKeySelector)
+        addRecipient(api.toCertificate(key), encryptionKeySelector)
 
     /**
      * Encrypt the message for the recipients [OpenPGPCertificate], keeping the recipient anonymous
@@ -282,7 +286,7 @@ class EncryptionOptions(private val purpose: EncryptionPurpose) {
     fun addHiddenRecipient(
         key: PGPPublicKeyRing,
         selector: EncryptionKeySelector = encryptionKeySelector
-    ) = addHiddenRecipient(key.toOpenPGPCertificate(), selector)
+    ) = addHiddenRecipient(api.toCertificate(key), selector)
 
     private fun addAsRecipient(
         cert: OpenPGPCertificate,
@@ -405,6 +409,17 @@ class EncryptionOptions(private val purpose: EncryptionPurpose) {
     }
 
     fun hasEncryptionMethod() = _encryptionMethods.isNotEmpty()
+
+    internal fun negotiateSymmetricEncryptionAlgorithm(): SymmetricKeyAlgorithm {
+        val preferences = keyViews.values.map { it.preferredSymmetricKeyAlgorithms }.toList()
+        val algorithm =
+            byPopularity()
+                .negotiate(
+                    api.algorithmPolicy.symmetricKeyEncryptionAlgorithmPolicy,
+                    encryptionAlgorithmOverride,
+                    preferences)
+        return algorithm
+    }
 
     fun interface EncryptionKeySelector {
         fun selectEncryptionSubkeys(

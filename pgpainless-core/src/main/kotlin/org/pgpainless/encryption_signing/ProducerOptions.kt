@@ -10,10 +10,10 @@ import org.pgpainless.PGPainless
 import org.pgpainless.algorithm.CompressionAlgorithm
 import org.pgpainless.algorithm.StreamEncoding
 
-class ProducerOptions
-private constructor(
+class ProducerOptions(
     val encryptionOptions: EncryptionOptions?,
-    val signingOptions: SigningOptions?
+    val signingOptions: SigningOptions?,
+    val api: PGPainless = PGPainless.getInstance()
 ) {
 
     private var _fileName: String = ""
@@ -25,7 +25,7 @@ private constructor(
     var isDisableAsciiArmorCRC = false
 
     private var _compressionAlgorithmOverride: CompressionAlgorithm =
-        PGPainless.getPolicy().compressionAlgorithmPolicy.defaultCompressionAlgorithm
+        api.algorithmPolicy.compressionAlgorithmPolicy.defaultCompressionAlgorithm
     private var asciiArmor = true
     private var _comment: String? = null
     private var _version: String? = null
@@ -104,6 +104,13 @@ private constructor(
      */
     fun hasVersion() = version != null
 
+    /**
+     * Configure the resulting OpenPGP message to make use of the Cleartext Signature Framework
+     * (CSF). A CSF message MUST be signed using detached signatures only and MUST NOT be encrypted.
+     *
+     * @see
+     *   [RFC9580: OpenPGP - Cleartext Signature Framework](https://www.rfc-editor.org/rfc/rfc9580.html#name-cleartext-signature-framewo)
+     */
     fun setCleartextSigned() = apply {
         require(signingOptions != null) {
             "Signing Options cannot be null if cleartext signing is enabled."
@@ -228,6 +235,10 @@ private constructor(
      */
     fun setHideArmorHeaders(hideArmorHeaders: Boolean) = apply {
         _hideArmorHeaders = hideArmorHeaders
+    }
+
+    internal fun negotiateCompressionAlgorithm(): CompressionAlgorithm {
+        return compressionAlgorithmOverride
     }
 
     companion object {
