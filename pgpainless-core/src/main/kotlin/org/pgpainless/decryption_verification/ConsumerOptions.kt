@@ -10,7 +10,6 @@ import java.util.*
 import org.bouncycastle.bcpg.KeyIdentifier
 import org.bouncycastle.openpgp.*
 import org.bouncycastle.openpgp.api.OpenPGPCertificate
-import org.bouncycastle.openpgp.api.OpenPGPImplementation
 import org.bouncycastle.openpgp.api.OpenPGPKey
 import org.bouncycastle.openpgp.api.OpenPGPKeyMaterialProvider.OpenPGPCertificateProvider
 import org.bouncycastle.openpgp.api.OpenPGPSignature.OpenPGPDocumentSignature
@@ -25,7 +24,7 @@ import org.pgpainless.util.Passphrase
 import org.pgpainless.util.SessionKey
 
 /** Options for decryption and signature verification. */
-class ConsumerOptions {
+class ConsumerOptions(private val api: PGPainless = PGPainless.getInstance()) {
 
     private var ignoreMDCErrors = false
     var isDisableAsciiArmorCRC = false
@@ -33,7 +32,7 @@ class ConsumerOptions {
     private var verifyNotBefore: Date? = null
     private var verifyNotAfter: Date? = Date()
 
-    private val certificates = CertificateSource()
+    private val certificates = CertificateSource(api)
     private val detachedSignatures = mutableSetOf<PGPSignature>()
     private var missingCertificateCallback: OpenPGPCertificateProvider? = null
 
@@ -91,7 +90,7 @@ class ConsumerOptions {
      */
     @Deprecated("Pass OpenPGPCertificate instead.")
     fun addVerificationCert(verificationCert: PGPPublicKeyRing): ConsumerOptions = apply {
-        this.certificates.addCertificate(verificationCert)
+        this.certificates.addCertificate(api.toCertificate(verificationCert))
     }
 
     /**
@@ -104,7 +103,7 @@ class ConsumerOptions {
     fun addVerificationCerts(verificationCerts: PGPPublicKeyRingCollection): ConsumerOptions =
         apply {
             for (cert in verificationCerts) {
-                addVerificationCert(cert)
+                addVerificationCert(api.toCertificate(cert))
             }
         }
 
@@ -195,22 +194,21 @@ class ConsumerOptions {
      * used to decrypt it when needed.
      *
      * @param key key
-     * @param keyRingProtector protector for the secret key
+     * @param protector protector for the secret key
      * @return options
      */
     @JvmOverloads
     @Deprecated("Pass OpenPGPKey instead.")
     fun addDecryptionKey(
         key: PGPSecretKeyRing,
-        protector: SecretKeyRingProtector = SecretKeyRingProtector.unprotectedKeys(),
-        implementation: OpenPGPImplementation = PGPainless.getInstance().implementation
-    ) = addDecryptionKey(OpenPGPKey(key, implementation), protector)
+        protector: SecretKeyRingProtector = SecretKeyRingProtector.unprotectedKeys()
+    ) = addDecryptionKey(api.toKey(key), protector)
 
     /**
      * Add the keys in the provided key collection for message decryption.
      *
      * @param keys key collection
-     * @param keyRingProtector protector for encrypted secret keys
+     * @param protector protector for encrypted secret keys
      * @return options
      */
     @JvmOverloads
@@ -220,7 +218,7 @@ class ConsumerOptions {
         protector: SecretKeyRingProtector = SecretKeyRingProtector.unprotectedKeys()
     ) = apply {
         for (key in keys) {
-            addDecryptionKey(key, protector)
+            addDecryptionKey(api.toKey(key), protector)
         }
     }
 
@@ -408,7 +406,7 @@ class ConsumerOptions {
      * Source for OpenPGP certificates. When verifying signatures on a message, this object holds
      * available signer certificates.
      */
-    class CertificateSource {
+    class CertificateSource(private val api: PGPainless) {
         private val explicitCertificates: MutableSet<OpenPGPCertificate> = mutableSetOf()
 
         /**
@@ -416,13 +414,9 @@ class ConsumerOptions {
          *
          * @param certificate certificate
          */
-        @JvmOverloads
         @Deprecated("Pass in an OpenPGPCertificate instead.")
-        fun addCertificate(
-            certificate: PGPPublicKeyRing,
-            implementation: OpenPGPImplementation = PGPainless.getInstance().implementation
-        ) {
-            explicitCertificates.add(OpenPGPCertificate(certificate, implementation))
+        fun addCertificate(certificate: PGPPublicKeyRing) {
+            explicitCertificates.add(api.toCertificate(certificate))
         }
 
         /**
