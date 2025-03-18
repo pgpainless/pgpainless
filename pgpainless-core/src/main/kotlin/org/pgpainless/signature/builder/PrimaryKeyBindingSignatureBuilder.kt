@@ -9,6 +9,7 @@ import org.bouncycastle.openpgp.PGPException
 import org.bouncycastle.openpgp.PGPPublicKey
 import org.bouncycastle.openpgp.PGPSignature
 import org.bouncycastle.openpgp.api.OpenPGPKey
+import org.pgpainless.PGPainless
 import org.pgpainless.algorithm.HashAlgorithm
 import org.pgpainless.algorithm.SignatureType
 import org.pgpainless.key.protection.SecretKeyRingProtector
@@ -29,21 +30,24 @@ class PrimaryKeyBindingSignatureBuilder :
     @Throws(PGPException::class)
     constructor(
         signingSubkey: OpenPGPKey.OpenPGPSecretKey,
-        subkeyProtector: SecretKeyRingProtector
-    ) : super(SignatureType.PRIMARYKEY_BINDING, signingSubkey, subkeyProtector)
+        subkeyProtector: SecretKeyRingProtector,
+        api: PGPainless
+    ) : super(SignatureType.PRIMARYKEY_BINDING, signingSubkey, subkeyProtector, api)
 
     @Throws(PGPException::class)
     constructor(
         signingSubkey: OpenPGPKey.OpenPGPSecretKey,
         subkeyProtector: SecretKeyRingProtector,
-        hashAlgorithm: HashAlgorithm
+        hashAlgorithm: HashAlgorithm,
+        api: PGPainless
     ) : super(
         SignatureType.PRIMARYKEY_BINDING,
         signingSubkey,
         subkeyProtector,
         hashAlgorithm,
         SignatureSubpackets.createHashedSubpackets(signingSubkey.publicKey.pgpPublicKey),
-        SignatureSubpackets.createEmptySubpackets())
+        SignatureSubpackets.createEmptySubpackets(),
+        api)
 
     val hashedSubpackets: SelfSignatureSubpackets = _hashedSubpackets
     val unhashedSubpackets: SelfSignatureSubpackets = _unhashedSubpackets

@@ -9,7 +9,6 @@ import org.bouncycastle.bcpg.sig.Exportable;
 import org.bouncycastle.openpgp.PGPException;
 import org.bouncycastle.openpgp.PGPSignature;
 import org.bouncycastle.openpgp.api.OpenPGPCertificate;
-import org.bouncycastle.openpgp.api.OpenPGPImplementation;
 import org.bouncycastle.openpgp.api.OpenPGPKey;
 import org.bouncycastle.openpgp.api.OpenPGPSignature;
 import org.junit.jupiter.api.Test;
@@ -30,17 +29,20 @@ public class ThirdPartyCertificationSignatureBuilderTest {
 
     @Test
     public void testInvalidSignatureTypeThrows() {
+        PGPainless api = PGPainless.getInstance();
         OpenPGPKey secretKeys = PGPainless.generateKeyRing()
                 .modernKeyRing("Alice");
         assertThrows(IllegalArgumentException.class, () ->
                 new ThirdPartyCertificationSignatureBuilder(
                         SignatureType.BINARY_DOCUMENT, // invalid type
                         secretKeys.getPrimarySecretKey(),
-                        SecretKeyRingProtector.unprotectedKeys()));
+                        SecretKeyRingProtector.unprotectedKeys(),
+                        api));
     }
 
     @Test
     public void testUserIdCertification() throws PGPException {
+        PGPainless api = PGPainless.getInstance();
         OpenPGPKey secretKeys = PGPainless.generateKeyRing()
                 .modernKeyRing("Alice");
 
@@ -49,7 +51,8 @@ public class ThirdPartyCertificationSignatureBuilderTest {
 
         ThirdPartyCertificationSignatureBuilder signatureBuilder = new ThirdPartyCertificationSignatureBuilder(
                 secretKeys.getPrimarySecretKey(),
-                SecretKeyRingProtector.unprotectedKeys());
+                SecretKeyRingProtector.unprotectedKeys(),
+                api);
 
         signatureBuilder.applyCallback(new CertificationSubpackets.Callback() {
             @Override
@@ -70,7 +73,7 @@ public class ThirdPartyCertificationSignatureBuilderTest {
         assertFalse(exportable.isExportable());
 
         // test sig correctness
-        signature.init(OpenPGPImplementation.getInstance().pgpContentVerifierBuilderProvider(),
+        signature.init(api.getImplementation().pgpContentVerifierBuilderProvider(),
                 secretKeys.getPrimaryKey().getPGPPublicKey());
         assertTrue(signature.verifyCertification("Bob", bobsPublicKeys.getPrimaryKey().getPGPPublicKey()));
     }

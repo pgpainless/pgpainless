@@ -29,24 +29,24 @@ class DirectKeySelfSignatureBuilder : AbstractSignatureBuilder<DirectKeySelfSign
     constructor(
         signingKeyRing: PGPSecretKeyRing,
         protector: SecretKeyRingProtector,
-        archetypeSignature: PGPSignature
-    ) : this(
-        PGPainless.getInstance().toKey(signingKeyRing).primarySecretKey,
-        protector,
-        archetypeSignature)
+        archetypeSignature: PGPSignature,
+        api: PGPainless
+    ) : this(api.toKey(signingKeyRing).primarySecretKey, protector, archetypeSignature, api)
 
     @Throws(PGPException::class)
     constructor(
         signingKey: OpenPGPKey.OpenPGPSecretKey,
         protector: SecretKeyRingProtector,
-        archetypeSignature: PGPSignature
-    ) : super(signingKey, protector, archetypeSignature)
+        archetypeSignature: PGPSignature,
+        api: PGPainless
+    ) : super(signingKey, protector, archetypeSignature, api)
 
     @Throws(PGPException::class)
     constructor(
         signingKey: OpenPGPKey.OpenPGPSecretKey,
-        protector: SecretKeyRingProtector
-    ) : super(SignatureType.DIRECT_KEY, signingKey, protector)
+        protector: SecretKeyRingProtector,
+        api: PGPainless
+    ) : super(SignatureType.DIRECT_KEY, signingKey, protector, api)
 
     val hashedSubpackets: SelfSignatureSubpackets = _hashedSubpackets
     val unhashedSubpackets: SelfSignatureSubpackets = _unhashedSubpackets

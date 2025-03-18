@@ -9,6 +9,7 @@ import org.bouncycastle.openpgp.PGPException
 import org.bouncycastle.openpgp.PGPPublicKey
 import org.bouncycastle.openpgp.PGPSignature
 import org.bouncycastle.openpgp.api.OpenPGPKey
+import org.pgpainless.PGPainless
 import org.pgpainless.algorithm.HashAlgorithm
 import org.pgpainless.algorithm.SignatureType
 import org.pgpainless.key.protection.SecretKeyRingProtector
@@ -27,27 +28,31 @@ class SubkeyBindingSignatureBuilder : AbstractSignatureBuilder<SubkeyBindingSign
     @Throws(PGPException::class)
     constructor(
         signingKey: OpenPGPKey.OpenPGPSecretKey,
-        protector: SecretKeyRingProtector
-    ) : super(SignatureType.SUBKEY_BINDING, signingKey, protector)
+        protector: SecretKeyRingProtector,
+        api: PGPainless
+    ) : super(SignatureType.SUBKEY_BINDING, signingKey, protector, api)
 
     @Throws(PGPException::class)
     constructor(
         signingKey: OpenPGPKey.OpenPGPSecretKey,
         protector: SecretKeyRingProtector,
-        hashAlgorithm: HashAlgorithm
+        hashAlgorithm: HashAlgorithm,
+        api: PGPainless
     ) : super(
         SignatureType.SUBKEY_BINDING,
         signingKey,
         protector,
         hashAlgorithm,
         SignatureSubpackets.createHashedSubpackets(signingKey.publicKey.pgpPublicKey),
-        SignatureSubpackets.createEmptySubpackets())
+        SignatureSubpackets.createEmptySubpackets(),
+        api)
 
     @Throws(PGPException::class)
     constructor(
         signingKey: OpenPGPKey.OpenPGPSecretKey,
         protector: SecretKeyRingProtector,
-        oldSubkeyBinding: PGPSignature
+        oldSubkeyBinding: PGPSignature,
+        api: PGPainless
     ) : super(
         signingKey,
         protector,
@@ -55,7 +60,8 @@ class SubkeyBindingSignatureBuilder : AbstractSignatureBuilder<SubkeyBindingSign
             require(it.signatureType == SignatureType.SUBKEY_BINDING.code) {
                 "Invalid signature type."
             }
-        })
+        },
+        api)
 
     val hashedSubpackets: SelfSignatureSubpackets = _hashedSubpackets
     val unhashedSubpackets: SelfSignatureSubpackets = _unhashedSubpackets
