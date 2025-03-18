@@ -75,12 +75,22 @@ class PGPainless(
         return OpenPGPCertificate.join(originalCopy, updatedCopy)
     }
 
+    /** Generate an encrypted and/or signed OpenPGP message. */
+    fun generateMessage(): EncryptionBuilder = EncryptionBuilder(this)
+
+    /**
+     * Create certification signatures on third-party [OpenPGPCertificates][OpenPGPCertificate].
+     *
+     * @return builder
+     */
+    fun generateCertification(): CertifyCertificate = CertifyCertificate(this)
+
     companion object {
 
         @Volatile private var instance: PGPainless? = null
 
         @JvmStatic
-        fun getInstance() =
+        fun getInstance(): PGPainless =
             instance ?: synchronized(this) { instance ?: PGPainless().also { instance = it } }
 
         @JvmStatic
@@ -89,13 +99,16 @@ class PGPainless(
         }
 
         /**
-         * Generate a fresh OpenPGP key ring from predefined templates.
+         * Generate a fresh [OpenPGPKey] from predefined templates.
          *
          * @return templates
          */
         @JvmStatic
         @JvmOverloads
-        fun generateKeyRing(version: OpenPGPKeyVersion = OpenPGPKeyVersion.v4) =
+        @Deprecated(
+            "Call .generateKey() on an instance of PGPainless instead.",
+            replaceWith = ReplaceWith("generateKey(version)"))
+        fun generateKeyRing(version: OpenPGPKeyVersion = OpenPGPKeyVersion.v4): KeyRingTemplates =
             getInstance().generateKey(version)
 
         /**
@@ -108,7 +121,7 @@ class PGPainless(
         fun buildKeyRing(
             version: OpenPGPKeyVersion = OpenPGPKeyVersion.v4,
             api: PGPainless = getInstance()
-        ) = KeyRingBuilder(version, api)
+        ): KeyRingBuilder = KeyRingBuilder(version, api)
 
         /**
          * Read an existing OpenPGP key ring.
@@ -117,7 +130,7 @@ class PGPainless(
          */
         @Deprecated("Use readKey() instead.", replaceWith = ReplaceWith("readKey()"))
         @JvmStatic
-        fun readKeyRing() = KeyRingReader()
+        fun readKeyRing(): KeyRingReader = KeyRingReader()
 
         /**
          * Extract a public key certificate from a secret key.
@@ -127,7 +140,7 @@ class PGPainless(
          */
         @JvmStatic
         @Deprecated("Use .toKey() and then .toCertificate() instead.")
-        fun extractCertificate(secretKey: PGPSecretKeyRing) =
+        fun extractCertificate(secretKey: PGPSecretKeyRing): PGPPublicKeyRing =
             KeyRingUtils.publicKeyRingFrom(secretKey)
 
         /**
@@ -141,8 +154,10 @@ class PGPainless(
          */
         @JvmStatic
         @Deprecated("Use mergeCertificate() instead.")
-        fun mergeCertificate(originalCopy: PGPPublicKeyRing, updatedCopy: PGPPublicKeyRing) =
-            PGPPublicKeyRing.join(originalCopy, updatedCopy)
+        fun mergeCertificate(
+            originalCopy: PGPPublicKeyRing,
+            updatedCopy: PGPPublicKeyRing
+        ): PGPPublicKeyRing = PGPPublicKeyRing.join(originalCopy, updatedCopy)
 
         /**
          * Wrap a key or certificate in ASCII armor.
@@ -152,7 +167,7 @@ class PGPainless(
          * @throws IOException in case of an error during the armoring process
          */
         @JvmStatic
-        fun asciiArmor(key: PGPKeyRing) =
+        fun asciiArmor(key: PGPKeyRing): String =
             if (key is PGPSecretKeyRing) ArmorUtils.toAsciiArmoredString(key)
             else ArmorUtils.toAsciiArmoredString(key as PGPPublicKeyRing)
 
@@ -181,7 +196,8 @@ class PGPainless(
          * @throws IOException in case of an error during the armoring process
          */
         @JvmStatic
-        fun asciiArmor(signature: PGPSignature) = ArmorUtils.toAsciiArmoredString(signature)
+        @Deprecated("Covert to OpenPGPSignature and call .toAsciiArmoredString() instead.")
+        fun asciiArmor(signature: PGPSignature): String = ArmorUtils.toAsciiArmoredString(signature)
 
         /**
          * Create an [EncryptionBuilder], which can be used to encrypt and/or sign data using
@@ -189,7 +205,11 @@ class PGPainless(
          *
          * @return builder
          */
-        @JvmStatic fun encryptAndOrSign() = EncryptionBuilder(getInstance())
+        @Deprecated(
+            "Call generateMessage() on an instance of PGPainless instead.",
+            replaceWith = ReplaceWith("generateMessage()"))
+        @JvmStatic
+        fun encryptAndOrSign(): EncryptionBuilder = getInstance().generateMessage()
 
         /**
          * Create a [DecryptionBuilder], which can be used to decrypt and/or verify data using
@@ -197,7 +217,7 @@ class PGPainless(
          *
          * @return builder
          */
-        @JvmStatic fun decryptAndOrVerify() = DecryptionBuilder()
+        @JvmStatic fun decryptAndOrVerify(): DecryptionBuilder = DecryptionBuilder()
 
         /**
          * Make changes to a secret key at the given reference time. This method can be used to
@@ -217,7 +237,7 @@ class PGPainless(
             secretKey: PGPSecretKeyRing,
             referenceTime: Date = Date(),
             api: PGPainless = getInstance()
-        ) = SecretKeyRingEditor(secretKey, api, referenceTime)
+        ): SecretKeyRingEditor = SecretKeyRingEditor(secretKey, api, referenceTime)
 
         /**
          * Quickly access information about a [org.bouncycastle.openpgp.PGPPublicKeyRing] /
@@ -230,12 +250,12 @@ class PGPainless(
          */
         @JvmStatic
         @JvmOverloads
-        fun inspectKeyRing(key: PGPKeyRing, referenceTime: Date = Date()) =
+        fun inspectKeyRing(key: PGPKeyRing, referenceTime: Date = Date()): KeyRingInfo =
             KeyRingInfo(key, referenceTime)
 
         @JvmStatic
         @JvmOverloads
-        fun inspectKeyRing(key: OpenPGPCertificate, referenceTime: Date = Date()) =
+        fun inspectKeyRing(key: OpenPGPCertificate, referenceTime: Date = Date()): KeyRingInfo =
             KeyRingInfo(key, getInstance(), referenceTime)
 
         /**
@@ -247,13 +267,17 @@ class PGPainless(
             "Use PGPainless.getInstance().getAlgorithmPolicy() instead.",
             replaceWith = ReplaceWith("getInstance().algorithmPolicy"))
         @JvmStatic
-        fun getPolicy() = getInstance().algorithmPolicy
+        fun getPolicy(): Policy = getInstance().algorithmPolicy
 
         /**
          * Create different kinds of signatures on other keys.
          *
          * @return builder
          */
-        @JvmStatic fun certify() = CertifyCertificate(getInstance())
+        @Deprecated(
+            "Call .generateCertification() on an instance of PGPainless instead.",
+            replaceWith = ReplaceWith("generateCertification()"))
+        @JvmStatic
+        fun certify(): CertifyCertificate = getInstance().generateCertification()
     }
 }
