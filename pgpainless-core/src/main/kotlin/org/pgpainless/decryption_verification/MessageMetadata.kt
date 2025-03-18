@@ -51,7 +51,7 @@ class MessageMetadata(val message: Message) {
 
     fun isEncryptedFor(cert: OpenPGPCertificate): Boolean {
         return encryptionLayers.asSequence().any {
-            it.recipients.any { keyId -> cert.getKey(KeyIdentifier(keyId)) != null }
+            it.recipients.any { identifier -> cert.getKey(identifier) != null }
         }
     }
 
@@ -87,12 +87,15 @@ class MessageMetadata(val message: Message) {
 
     /** List containing all recipient keyIDs. */
     val recipientKeyIds: List<Long>
+        get() = recipientKeyIdentifiers.map { it.keyId }.toList()
+
+    val recipientKeyIdentifiers: List<KeyIdentifier>
         get() =
             encryptionLayers
                 .asSequence()
                 .map { it.recipients.toMutableList() }
-                .reduce { all, keyIds ->
-                    all.addAll(keyIds)
+                .reduce { all, keyIdentifiers ->
+                    all.addAll(keyIdentifiers)
                     all
                 }
                 .toList()
@@ -475,9 +478,11 @@ class MessageMetadata(val message: Message) {
         var sessionKey: SessionKey? = null
 
         /** List of all recipient key ids to which the packet was encrypted for. */
-        val recipients: List<Long> = mutableListOf()
+        val recipients: List<KeyIdentifier> = mutableListOf()
 
-        fun addRecipients(keyIds: List<Long>) = apply { (recipients as MutableList).addAll(keyIds) }
+        fun addRecipients(keyIds: List<KeyIdentifier>) = apply {
+            (recipients as MutableList).addAll(keyIds)
+        }
 
         /**
          * Identifier of the subkey that was used to decrypt the packet (in case of a public key
