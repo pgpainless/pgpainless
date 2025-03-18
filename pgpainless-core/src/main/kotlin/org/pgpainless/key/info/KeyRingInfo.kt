@@ -19,7 +19,6 @@ import org.pgpainless.exception.KeyException.UnboundUserIdException
 import org.pgpainless.key.OpenPgpFingerprint
 import org.pgpainless.key.SubkeyIdentifier
 import org.pgpainless.key.util.KeyRingUtils
-import org.pgpainless.policy.Policy
 import org.pgpainless.signature.subpackets.SignatureSubpacketsUtil
 import org.pgpainless.signature.subpackets.SignatureSubpacketsUtil.Companion.getKeyExpirationTimeAsDate
 import org.pgpainless.util.DateUtil
@@ -27,24 +26,24 @@ import org.slf4j.LoggerFactory
 
 class KeyRingInfo(
     val keys: OpenPGPCertificate,
-    val policy: Policy = PGPainless.getPolicy(),
-    val referenceDate: Date = Date()
+    private val api: PGPainless = PGPainless.getInstance(),
+    private val referenceDate: Date = Date()
 ) {
 
     constructor(
         keys: PGPKeyRing,
-        policy: Policy = PGPainless.getPolicy(),
+        api: PGPainless = PGPainless.getInstance(),
         referenceDate: Date = Date()
     ) : this(
         if (keys is PGPSecretKeyRing) OpenPGPKey(keys) else OpenPGPCertificate(keys),
-        policy,
+        api,
         referenceDate)
 
     @JvmOverloads
     constructor(
         keys: PGPKeyRing,
         referenceDate: Date = Date()
-    ) : this(keys, PGPainless.getPolicy(), referenceDate)
+    ) : this(keys, PGPainless.getInstance(), referenceDate)
 
     /** Primary [OpenPGPCertificate.OpenPGPPrimaryKey]. */
     val primaryKey: OpenPGPCertificate.OpenPGPPrimaryKey = keys.primaryKey

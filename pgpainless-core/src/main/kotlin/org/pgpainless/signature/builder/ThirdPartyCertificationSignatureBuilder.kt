@@ -47,8 +47,9 @@ class ThirdPartyCertificationSignatureBuilder :
     @Throws(PGPException::class)
     constructor(
         signingKey: OpenPGPKey.OpenPGPSecretKey,
-        protector: SecretKeyRingProtector
-    ) : super(SignatureType.GENERIC_CERTIFICATION, signingKey, protector)
+        protector: SecretKeyRingProtector,
+        api: PGPainless
+    ) : super(SignatureType.GENERIC_CERTIFICATION, signingKey, protector, api)
 
     /**
      * Create a new certification signature builder.
@@ -62,8 +63,9 @@ class ThirdPartyCertificationSignatureBuilder :
     constructor(
         signatureType: SignatureType,
         signingKey: OpenPGPKey.OpenPGPSecretKey,
-        protector: SecretKeyRingProtector
-    ) : super(signatureType, signingKey, protector)
+        protector: SecretKeyRingProtector,
+        api: PGPainless
+    ) : super(signatureType, signingKey, protector, api)
 
     /**
      * Create a new certification signature builder.
@@ -77,8 +79,9 @@ class ThirdPartyCertificationSignatureBuilder :
     constructor(
         signingKey: OpenPGPKey.OpenPGPSecretKey,
         protector: SecretKeyRingProtector,
-        archetypeSignature: PGPSignature
-    ) : super(signingKey, protector, archetypeSignature)
+        archetypeSignature: PGPSignature,
+        api: PGPainless
+    ) : super(signingKey, protector, archetypeSignature, api)
 
     val hashedSubpackets: CertificationSubpackets = _hashedSubpackets
     val unhashedSubpackets: CertificationSubpackets = _unhashedSubpackets
@@ -111,7 +114,7 @@ class ThirdPartyCertificationSignatureBuilder :
     @Throws(PGPException::class)
     @Deprecated("Pass in an OpenPGPCertificate instead of a PGPPublicKeyRing.")
     fun build(certificate: PGPPublicKeyRing, userId: CharSequence): PGPSignature =
-        build(PGPainless.getInstance().toCertificate(certificate), userId).signature
+        build(api.toCertificate(certificate), userId).signature
 
     fun build(
         certificate: OpenPGPCertificate,
@@ -137,6 +140,5 @@ class ThirdPartyCertificationSignatureBuilder :
     fun build(
         certificate: PGPPublicKeyRing,
         userAttribute: PGPUserAttributeSubpacketVector
-    ): PGPSignature =
-        build(PGPainless.getInstance().toCertificate(certificate), userAttribute).signature
+    ): PGPSignature = build(api.toCertificate(certificate), userAttribute).signature
 }
