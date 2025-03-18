@@ -106,7 +106,7 @@ public class StupidAlgorithmPreferenceEncryptionTest {
         EncryptionStream encryptionStream = PGPainless.encryptAndOrSign()
                 .onOutputStream(out)
                 .withOptions(ProducerOptions.encrypt(
-                        new EncryptionOptions().addRecipient(certificate)
+                        EncryptionOptions.get().addRecipient(certificate)
                 ));
 
         encryptionStream.write("Hello".getBytes(StandardCharsets.UTF_8));

@@ -24,7 +24,7 @@ import org.pgpainless.util.Passphrase
 import org.pgpainless.util.SessionKey
 
 /** Options for decryption and signature verification. */
-class ConsumerOptions(private val api: PGPainless = PGPainless.getInstance()) {
+class ConsumerOptions(private val api: PGPainless) {
 
     private var ignoreMDCErrors = false
     var isDisableAsciiArmorCRC = false
@@ -468,6 +468,8 @@ class ConsumerOptions(private val api: PGPainless = PGPainless.getInstance()) {
     }
 
     companion object {
-        @JvmStatic fun get() = ConsumerOptions()
+        @JvmOverloads
+        @JvmStatic
+        fun get(api: PGPainless = PGPainless.getInstance()) = ConsumerOptions(api)
     }
 }

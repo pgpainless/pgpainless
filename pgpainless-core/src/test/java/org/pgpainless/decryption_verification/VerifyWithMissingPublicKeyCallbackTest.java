@@ -53,7 +53,7 @@ public class VerifyWithMissingPublicKeyCallbackTest {
                 "is no different than saying you don't care about free speech because you have nothing to say.";
         ByteArrayOutputStream signOut = new ByteArrayOutputStream();
         EncryptionStream signingStream = PGPainless.encryptAndOrSign().onOutputStream(signOut)
-                .withOptions(ProducerOptions.sign(new SigningOptions().addInlineSignature(
+                .withOptions(ProducerOptions.sign(SigningOptions.get().addInlineSignature(
                         SecretKeyRingProtector.unprotectedKeys(),
                         signingSecKeys.getPGPSecretKeyRing(), DocumentSignatureType.CANONICAL_TEXT_DOCUMENT
                 )));
@@ -62,7 +62,7 @@ public class VerifyWithMissingPublicKeyCallbackTest {
 
         DecryptionStream verificationStream = PGPainless.decryptAndOrVerify()
                 .onInputStream(new ByteArrayInputStream(signOut.toByteArray()))
-                .withOptions(new ConsumerOptions()
+                .withOptions(ConsumerOptions.get()
                         .addVerificationCert(unrelatedKeys)
                         .setMissingCertificateCallback(new OpenPGPKeyMaterialProvider.OpenPGPCertificateProvider() {
                             @Override
