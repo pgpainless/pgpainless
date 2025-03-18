@@ -62,10 +62,11 @@ public class UniversalSignatureBuilderTest {
 
     @Test
     public void createPetNameSignature() throws PGPException {
+        PGPainless api = PGPainless.getInstance();
         OpenPGPKey.OpenPGPSecretKey signingKey = secretKeys.getPrimarySecretKey();
         PGPSignature archetype = signingKey.getPublicKey().getPGPPublicKey().getSignatures().next();
         UniversalSignatureBuilder builder = new UniversalSignatureBuilder(
-                signingKey, protector, archetype);
+                signingKey, protector, archetype, api);
 
         builder.applyCallback(new SignatureSubpackets.Callback() {
             @Override

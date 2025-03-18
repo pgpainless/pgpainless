@@ -9,6 +9,7 @@ import org.bouncycastle.openpgp.PGPException
 import org.bouncycastle.openpgp.PGPSignature
 import org.bouncycastle.openpgp.PGPUserAttributeSubpacketVector
 import org.bouncycastle.openpgp.api.OpenPGPKey
+import org.pgpainless.PGPainless
 import org.pgpainless.algorithm.SignatureType
 import org.pgpainless.key.protection.SecretKeyRingProtector
 import org.pgpainless.signature.subpackets.SelfSignatureSubpackets
@@ -32,22 +33,25 @@ class SelfSignatureBuilder : AbstractSignatureBuilder<SelfSignatureBuilder> {
     @Throws(PGPException::class)
     constructor(
         signingKey: OpenPGPKey.OpenPGPSecretKey,
-        protector: SecretKeyRingProtector
-    ) : super(SignatureType.GENERIC_CERTIFICATION, signingKey, protector)
+        protector: SecretKeyRingProtector,
+        api: PGPainless
+    ) : super(SignatureType.GENERIC_CERTIFICATION, signingKey, protector, api)
 
     @Throws(PGPException::class)
     constructor(
         signatureType: SignatureType,
         signingKey: OpenPGPKey.OpenPGPSecretKey,
-        protector: SecretKeyRingProtector
-    ) : super(signatureType, signingKey, protector)
+        protector: SecretKeyRingProtector,
+        api: PGPainless
+    ) : super(signatureType, signingKey, protector, api)
 
     @Throws(PGPException::class)
     constructor(
         primaryKey: OpenPGPKey.OpenPGPSecretKey,
         primaryKeyProtector: SecretKeyRingProtector,
-        oldCertification: PGPSignature
-    ) : super(primaryKey, primaryKeyProtector, oldCertification)
+        oldCertification: PGPSignature,
+        api: PGPainless
+    ) : super(primaryKey, primaryKeyProtector, oldCertification, api)
 
     val hashedSubpackets: SelfSignatureSubpackets = _hashedSubpackets
     val unhashedSubpackets: SelfSignatureSubpackets = _unhashedSubpackets

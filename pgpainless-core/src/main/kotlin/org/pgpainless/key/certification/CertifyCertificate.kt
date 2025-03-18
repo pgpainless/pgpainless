@@ -34,7 +34,7 @@ import org.pgpainless.signature.subpackets.CertificationSubpackets
  * really belongs to the owner of the certificate. A delegation over a key can be used to delegate
  * trust by marking the certificate as a trusted introducer.
  */
-class CertifyCertificate {
+class CertifyCertificate(private val api: PGPainless) {
 
     /**
      * Create a certification over a User-Id. By default, this method will use
@@ -49,7 +49,7 @@ class CertifyCertificate {
         userId: CharSequence,
         certificate: OpenPGPCertificate,
         certificationType: CertificationType = CertificationType.GENERIC
-    ): CertificationOnUserId = CertificationOnUserId(userId, certificate, certificationType)
+    ): CertificationOnUserId = CertificationOnUserId(userId, certificate, certificationType, api)
 
     /**
      * Create a certification over a User-Id. By default, this method will use
@@ -76,7 +76,7 @@ class CertifyCertificate {
         userId: String,
         certificate: PGPPublicKeyRing,
         certificationType: CertificationType
-    ) = CertificationOnUserId(userId, certificate, certificationType)
+    ) = CertificationOnUserId(userId, certificate, certificationType, api)
 
     /**
      * Create a delegation (direct key signature) over a certificate. This can be used to mark a
@@ -88,7 +88,7 @@ class CertifyCertificate {
      */
     @JvmOverloads
     fun certificate(certificate: OpenPGPCertificate, trustworthiness: Trustworthiness? = null) =
-        DelegationOnCertificate(certificate, trustworthiness)
+        DelegationOnCertificate(certificate, trustworthiness, api)
 
     /**
      * Create a delegation (direct key signature) over a certificate. This can be used to mark a
@@ -113,20 +113,22 @@ class CertifyCertificate {
      */
     @Deprecated("Pass in an OpenPGPCertificate instead of PGPPublicKeyRing.")
     fun certificate(certificate: PGPPublicKeyRing, trustworthiness: Trustworthiness?) =
-        DelegationOnCertificate(certificate, trustworthiness)
+        DelegationOnCertificate(certificate, trustworthiness, api)
 
     class CertificationOnUserId(
         val userId: CharSequence,
         val certificate: OpenPGPCertificate,
-        val certificationType: CertificationType
+        val certificationType: CertificationType,
+        private val api: PGPainless
     ) {
 
         @Deprecated("Use primary constructor instead.")
         constructor(
             userId: String,
             certificate: PGPPublicKeyRing,
-            certificationType: CertificationType
-        ) : this(userId, PGPainless.getInstance().toCertificate(certificate), certificationType)
+            certificationType: CertificationType,
+            api: PGPainless
+        ) : this(userId, api.toCertificate(certificate), certificationType, api)
 
         fun withKey(
             key: OpenPGPKey,
@@ -135,7 +137,7 @@ class CertifyCertificate {
             val secretKey = getCertifyingSecretKey(key)
             val sigBuilder =
                 ThirdPartyCertificationSignatureBuilder(
-                    certificationType.asSignatureType(), secretKey, protector)
+                    certificationType.asSignatureType(), secretKey, protector, api)
 
             return CertificationOnUserIdWithSubpackets(certificate, userId, sigBuilder)
         }
@@ -166,8 +168,9 @@ class CertifyCertificate {
         constructor(
             certificate: PGPPublicKeyRing,
             userId: String,
-            sigBuilder: ThirdPartyCertificationSignatureBuilder
-        ) : this(PGPainless.getInstance().toCertificate(certificate), userId, sigBuilder)
+            sigBuilder: ThirdPartyCertificationSignatureBuilder,
+            api: PGPainless
+        ) : this(api.toCertificate(certificate), userId, sigBuilder)
 
         /**
          * Apply the given signature subpackets and build the certification.
@@ -202,21 +205,23 @@ class CertifyCertificate {
 
     class DelegationOnCertificate(
         val certificate: OpenPGPCertificate,
-        val trustworthiness: Trustworthiness?
+        val trustworthiness: Trustworthiness?,
+        private val api: PGPainless
     ) {
 
         @Deprecated("Pass in an OpenPGPCertificate instead of PGPPublicKeyRing.")
         constructor(
             certificate: PGPPublicKeyRing,
-            trustworthiness: Trustworthiness?
-        ) : this(PGPainless.getInstance().toCertificate(certificate), trustworthiness)
+            trustworthiness: Trustworthiness?,
+            api: PGPainless
+        ) : this(api.toCertificate(certificate), trustworthiness, api)
 
         fun withKey(
             key: OpenPGPKey,
             protector: SecretKeyRingProtector
         ): DelegationOnCertificateWithSubpackets {
             val secretKey = getCertifyingSecretKey(key)
-            val sigBuilder = ThirdPartyDirectKeySignatureBuilder(secretKey, protector)
+            val sigBuilder = ThirdPartyDirectKeySignatureBuilder(secretKey, protector, api)
             if (trustworthiness != null) {
                 sigBuilder.hashedSubpackets.setTrust(
                     true, trustworthiness.depth, trustworthiness.amount)

@@ -9,6 +9,7 @@ import org.bouncycastle.openpgp.PGPException
 import org.bouncycastle.openpgp.PGPPublicKey
 import org.bouncycastle.openpgp.PGPSignature
 import org.bouncycastle.openpgp.api.OpenPGPKey
+import org.pgpainless.PGPainless
 import org.pgpainless.algorithm.SignatureType
 import org.pgpainless.key.protection.SecretKeyRingProtector
 import org.pgpainless.signature.subpackets.RevocationSignatureSubpackets
@@ -19,8 +20,11 @@ class RevocationSignatureBuilder
 constructor(
     signatureType: SignatureType,
     signingKey: OpenPGPKey.OpenPGPSecretKey,
-    protector: SecretKeyRingProtector
-) : AbstractSignatureBuilder<RevocationSignatureBuilder>(signatureType, signingKey, protector) {
+    protector: SecretKeyRingProtector,
+    api: PGPainless
+) :
+    AbstractSignatureBuilder<RevocationSignatureBuilder>(
+        signatureType, signingKey, protector, api) {
 
     override val signatureTypePredicate: Predicate<SignatureType>
         get() =
