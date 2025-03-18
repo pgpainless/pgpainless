@@ -271,7 +271,7 @@ class SecretKeyRingEditor(
         protector: SecretKeyRingProtector
     ): SecretKeyRingEditorInterface {
         val version = OpenPGPKeyVersion.from(secretKeyRing.publicKey.version)
-        val keyPair = KeyRingBuilder.generateKeyPair(keySpec, version)
+        val keyPair = KeyRingBuilder.generateKeyPair(keySpec, version, api.implementation)
         val subkeyProtector =
             PasswordBasedSecretKeyRingProtector.forKeyId(keyPair.keyIdentifier, subkeyPassphrase)
         val keyFlags = KeyFlag.fromBitmask(keySpec.subpackets.keyFlags).toMutableList()
