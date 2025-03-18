@@ -48,9 +48,8 @@ class PGPainless(
     @JvmOverloads
     fun generateKey(
         version: OpenPGPKeyVersion = OpenPGPKeyVersion.v4,
-        creationTime: Date = Date(),
-        policy: Policy = algorithmPolicy
-    ): KeyRingTemplates = KeyRingTemplates(version, creationTime, policy)
+        creationTime: Date = Date()
+    ): KeyRingTemplates = KeyRingTemplates(version, creationTime, this)
 
     @JvmOverloads
     fun buildKey(
@@ -108,8 +107,8 @@ class PGPainless(
         @JvmOverloads
         fun buildKeyRing(
             version: OpenPGPKeyVersion = OpenPGPKeyVersion.v4,
-            policy: Policy = getInstance().algorithmPolicy
-        ) = KeyRingBuilder(version, getInstance().implementation, policy)
+            api: PGPainless = getInstance()
+        ) = KeyRingBuilder(version, api)
 
         /**
          * Read an existing OpenPGP key ring.

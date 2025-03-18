@@ -25,11 +25,8 @@ import org.pgpainless.signature.subpackets.SignatureSubpackets
 import org.pgpainless.signature.subpackets.SignatureSubpacketsHelper
 import org.pgpainless.util.Passphrase
 
-class KeyRingBuilder(
-    private val version: OpenPGPKeyVersion,
-    private val implementation: OpenPGPImplementation,
-    private val policy: Policy = PGPainless.getInstance().algorithmPolicy
-) : KeyRingBuilderInterface<KeyRingBuilder> {
+class KeyRingBuilder(private val version: OpenPGPKeyVersion, private val api: PGPainless) :
+    KeyRingBuilderInterface<KeyRingBuilder> {
 
     private var primaryKeySpec: KeySpec? = null
     private val subKeySpecs = mutableListOf<KeySpec>()
@@ -38,13 +35,13 @@ class KeyRingBuilder(
     private var expirationDate: Date? = Date(System.currentTimeMillis() + (5 * MILLIS_IN_YEAR))
 
     override fun setPrimaryKey(keySpec: KeySpec): KeyRingBuilder = apply {
-        verifyKeySpecCompliesToPolicy(keySpec, policy)
+        verifyKeySpecCompliesToPolicy(keySpec, api.algorithmPolicy)
         verifyPrimaryKeyCanCertify(keySpec)
         this.primaryKeySpec = keySpec
     }
 
     override fun addSubkey(keySpec: KeySpec): KeyRingBuilder = apply {
-        verifyKeySpecCompliesToPolicy(keySpec, policy)
+        verifyKeySpecCompliesToPolicy(keySpec, api.algorithmPolicy)
         subKeySpecs.add(keySpec)
     }
 
@@ -84,11 +81,11 @@ class KeyRingBuilder(
     private fun keyIsCertificationCapable(keySpec: KeySpec) = keySpec.keyType.canCertify
 
     override fun build(): OpenPGPKey {
-        val checksumCalculator = implementation.checksumCalculator()
+        val checksumCalculator = api.implementation.checksumCalculator()
 
         // generate primary key
         requireNotNull(primaryKeySpec) { "Primary Key spec required." }
-        val certKey = generateKeyPair(primaryKeySpec!!, version, implementation)
+        val certKey = generateKeyPair(primaryKeySpec!!, version, api.implementation)
 
         val secretKeyEncryptor = buildSecretKeyEncryptor(certKey.publicKey)
         val secretKeyDecryptor = buildSecretKeyDecryptor()
@@ -164,12 +161,12 @@ class KeyRingBuilder(
             secretKeyList.add(secretKeys.next())
         }
         val pgpSecretKeyRing = PGPSecretKeyRing(secretKeyList)
-        return OpenPGPKey(pgpSecretKeyRing, implementation)
+        return OpenPGPKey(pgpSecretKeyRing, api.implementation)
     }
 
     private fun addSubKeys(primaryKey: PGPKeyPair, ringGenerator: PGPKeyRingGenerator) {
         for (subKeySpec in subKeySpecs) {
-            val subKey = generateKeyPair(subKeySpec, version, implementation)
+            val subKey = generateKeyPair(subKeySpec, version, api.implementation)
             if (subKeySpec.isInheritedSubPackets) {
                 ringGenerator.addSubKey(subKey)
             } else {
@@ -210,8 +207,9 @@ class KeyRingBuilder(
     }
 
     private fun buildContentSigner(certKey: PGPKeyPair): PGPContentSignerBuilder {
-        val hashAlgorithm = policy.certificationSignatureHashAlgorithmPolicy.defaultHashAlgorithm
-        return implementation.pgpContentSignerBuilder(
+        val hashAlgorithm =
+            api.algorithmPolicy.certificationSignatureHashAlgorithmPolicy.defaultHashAlgorithm
+        return api.implementation.pgpContentSignerBuilder(
             certKey.publicKey.algorithm, hashAlgorithm.algorithmId)
     }
 
@@ -219,10 +217,10 @@ class KeyRingBuilder(
         publicKey: PGPPublicKey,
     ): PBESecretKeyEncryptor? {
         check(passphrase.isValid) { "Passphrase was cleared." }
-        val protectionSettings = policy.keyProtectionSettings
+        val protectionSettings = api.algorithmPolicy.keyProtectionSettings
         return if (passphrase.isEmpty) null
         else
-            implementation
+            api.implementation
                 .pbeSecretKeyEncryptorFactory(
                     protectionSettings.aead,
                     protectionSettings.encryptionAlgorithm.algorithmId,
@@ -234,7 +232,7 @@ class KeyRingBuilder(
         check(passphrase.isValid) { "Passphrase was cleared." }
         return if (passphrase.isEmpty) null
         else
-            implementation
+            api.implementation
                 .pbeSecretKeyDecryptorBuilderProvider()
                 .provide()
                 .build(passphrase.getChars())
