@@ -26,7 +26,6 @@ import org.bouncycastle.openpgp.PGPPublicKeyEncryptedData
 import org.bouncycastle.openpgp.PGPSessionKey
 import org.bouncycastle.openpgp.PGPSignature
 import org.bouncycastle.openpgp.api.OpenPGPCertificate
-import org.bouncycastle.openpgp.api.OpenPGPImplementation
 import org.bouncycastle.openpgp.api.OpenPGPKey
 import org.bouncycastle.openpgp.api.OpenPGPKey.OpenPGPPrivateKey
 import org.bouncycastle.openpgp.api.OpenPGPKey.OpenPGPSecretKey
@@ -74,10 +73,10 @@ class OpenPgpMessageInputStream(
     inputStream: InputStream,
     private val options: ConsumerOptions,
     private val layerMetadata: Layer,
-    private val policy: Policy
+    private val api: PGPainless
 ) : DecryptionStream() {
 
-    private val signatures: Signatures = Signatures(options)
+    private val signatures: Signatures = Signatures(options, api)
     private var packetInputStream: TeeBCPGInputStream? = null
     private var nestedInputStream: InputStream? = null
     private val syntaxVerifier = PDA()
@@ -131,8 +130,8 @@ class OpenPgpMessageInputStream(
         inputStream: InputStream,
         options: ConsumerOptions,
         metadata: Layer,
-        policy: Policy
-    ) : this(Type.standard, inputStream, options, metadata, policy)
+        api: PGPainless
+    ) : this(Type.standard, inputStream, options, metadata, api)
 
     private fun consumePackets() {
         val pIn = packetInputStream ?: return
@@ -232,7 +231,7 @@ class OpenPgpMessageInputStream(
         LOGGER.debug(
             "Compressed Data Packet (${compressionLayer.algorithm}) at depth ${layerMetadata.depth} encountered.")
         nestedInputStream =
-            OpenPgpMessageInputStream(decompress(compressedData), options, compressionLayer, policy)
+            OpenPgpMessageInputStream(decompress(compressedData), options, compressionLayer, api)
     }
 
     private fun decompress(compressedData: PGPCompressedData): InputStream {
@@ -313,7 +312,8 @@ class OpenPgpMessageInputStream(
             signatures
                 .leaveNesting() // TODO: Only leave nesting if all OPSs of the nesting layer are
             // dealt with
-            signatures.addCorrespondingOnePassSignature(signature, layerMetadata, policy)
+            signatures.addCorrespondingOnePassSignature(
+                signature, layerMetadata, api.algorithmPolicy)
         } else {
             LOGGER.debug(
                 "Prepended Signature Packet by key ${keyId.openPgpKeyId()} at depth ${layerMetadata.depth} encountered.")
@@ -345,7 +345,7 @@ class OpenPgpMessageInputStream(
             esks.pkesks
                 .filter {
                     // find matching PKESK
-                    it.keyID == key.subkeyId
+                    it.keyIdentifier == key.keyIdentifier
                 }
                 .forEach {
                     // attempt decryption
@@ -362,8 +362,7 @@ class OpenPgpMessageInputStream(
             throwIfUnacceptable(sk.algorithm)
 
             val pgpSk = PGPSessionKey(sk.algorithm.algorithmId, sk.key)
-            val decryptorFactory =
-                OpenPGPImplementation.getInstance().sessionKeyDataDecryptorFactory(pgpSk)
+            val decryptorFactory = api.implementation.sessionKeyDataDecryptorFactory(pgpSk)
             val layer = EncryptedData(sk.algorithm, layerMetadata.depth + 1)
             val skEncData = encDataList.extractSessionKeyEncryptedData()
             try {
@@ -372,7 +371,7 @@ class OpenPgpMessageInputStream(
                 val integrityProtected =
                     IntegrityProtectedInputStream(decrypted, skEncData, options)
                 nestedInputStream =
-                    OpenPgpMessageInputStream(integrityProtected, options, layer, policy)
+                    OpenPgpMessageInputStream(integrityProtected, options, layer, api)
                 LOGGER.debug("Successfully decrypted data using provided session key")
                 return true
             } catch (e: PGPException) {
@@ -395,8 +394,7 @@ class OpenPgpMessageInputStream(
                 }
 
                 val decryptorFactory =
-                    OpenPGPImplementation.getInstance()
-                        .pbeDataDecryptorFactory(passphrase.getChars())
+                    api.implementation.pbeDataDecryptorFactory(passphrase.getChars())
                 if (decryptSKESKAndStream(esks, skesk, decryptorFactory)) {
                     return true
                 }
@@ -518,7 +516,7 @@ class OpenPgpMessageInputStream(
         pkesk: PGPPublicKeyEncryptedData
     ): Boolean {
         val decryptorFactory =
-            OpenPGPImplementation.getInstance().publicKeyDataDecryptorFactory(privateKey.privateKey)
+            api.implementation.publicKeyDataDecryptorFactory(privateKey.privateKey)
         return decryptPKESKAndStream(esks, decryptionKeyId, decryptorFactory, pkesk)
     }
 
@@ -545,11 +543,11 @@ class OpenPgpMessageInputStream(
             throwIfUnacceptable(sessionKey.algorithm)
             val encryptedData = EncryptedData(sessionKey.algorithm, layerMetadata.depth + 1)
             encryptedData.sessionKey = sessionKey
-            encryptedData.addRecipients(esks.pkesks.map { it.keyID })
+            encryptedData.addRecipients(esks.pkesks.map { it.keyIdentifier })
             LOGGER.debug("Successfully decrypted data with passphrase")
             val integrityProtected = IntegrityProtectedInputStream(decrypted, skesk, options)
             nestedInputStream =
-                OpenPgpMessageInputStream(integrityProtected, options, encryptedData, policy)
+                OpenPgpMessageInputStream(integrityProtected, options, encryptedData, api)
             return true
         } catch (e: UnacceptableAlgorithmException) {
             throw e
@@ -578,11 +576,11 @@ class OpenPgpMessageInputStream(
                     layerMetadata.depth + 1)
             encryptedData.decryptionKey = decryptionKeyId
             encryptedData.sessionKey = sessionKey
-            encryptedData.addRecipients(esks.pkesks.plus(esks.anonPkesks).map { it.keyID })
+            encryptedData.addRecipients(esks.pkesks.plus(esks.anonPkesks).map { it.keyIdentifier })
             LOGGER.debug("Successfully decrypted data with key $decryptionKeyId")
             val integrityProtected = IntegrityProtectedInputStream(decrypted, pkesk, options)
             nestedInputStream =
-                OpenPgpMessageInputStream(integrityProtected, options, encryptedData, policy)
+                OpenPgpMessageInputStream(integrityProtected, options, encryptedData, api)
             return true
         } catch (e: UnacceptableAlgorithmException) {
             throw e
@@ -620,7 +618,7 @@ class OpenPgpMessageInputStream(
                     throw RuntimeException(e)
                 }
             }
-            signatures.finish(layerMetadata, policy)
+            signatures.finish(layerMetadata, api.algorithmPolicy)
         }
         return r
     }
@@ -647,7 +645,7 @@ class OpenPgpMessageInputStream(
                     throw RuntimeException(e)
                 }
             }
-            signatures.finish(layerMetadata, policy)
+            signatures.finish(layerMetadata, api.algorithmPolicy)
         }
         return r
     }
@@ -693,16 +691,6 @@ class OpenPgpMessageInputStream(
             return MessageMetadata((layerMetadata as Message))
         }
 
-    private fun getDecryptionKey(keyId: Long): OpenPGPKey? =
-        options.getDecryptionKeys().firstOrNull {
-            it.pgpSecretKeyRing
-                .any { k -> k.keyID == keyId }
-                .and(
-                    PGPainless.inspectKeyRing(it).decryptionSubkeys.any { k ->
-                        k.keyIdentifier.keyId == keyId
-                    })
-        }
-
     private fun getDecryptionKey(pkesk: PGPPublicKeyEncryptedData): OpenPGPKey? =
         options.getDecryptionKeys().firstOrNull {
             it.pgpSecretKeyRing.getSecretKeyFor(pkesk) != null &&
@@ -737,7 +725,7 @@ class OpenPgpMessageInputStream(
     }
 
     private fun isAcceptable(algorithm: SymmetricKeyAlgorithm): Boolean =
-        policy.symmetricKeyDecryptionAlgorithmPolicy.isAcceptable(algorithm)
+        api.algorithmPolicy.symmetricKeyDecryptionAlgorithmPolicy.isAcceptable(algorithm)
 
     private fun throwIfUnacceptable(algorithm: SymmetricKeyAlgorithm) {
         if (!isAcceptable(algorithm)) {
@@ -774,7 +762,7 @@ class OpenPgpMessageInputStream(
             get() = skesks.plus(pkesks).plus(anonPkesks)
     }
 
-    private class Signatures(val options: ConsumerOptions) : OutputStream() {
+    private class Signatures(val options: ConsumerOptions, val api: PGPainless) : OutputStream() {
         val detachedSignatures = mutableListOf<OpenPGPDocumentSignature>()
         val prependedSignatures = mutableListOf<OpenPGPDocumentSignature>()
         val onePassSignatures = mutableListOf<OnePassSignatureCheck>()
@@ -1044,27 +1032,21 @@ class OpenPgpMessageInputStream(
             }
         }
 
-        companion object {
-            @JvmStatic
-            private fun initialize(signature: PGPSignature, publicKey: PGPPublicKey) {
-                val verifierProvider =
-                    OpenPGPImplementation.getInstance().pgpContentVerifierBuilderProvider()
-                try {
-                    signature.init(verifierProvider, publicKey)
-                } catch (e: PGPException) {
-                    throw RuntimeException(e)
-                }
+        private fun initialize(signature: PGPSignature, publicKey: PGPPublicKey) {
+            val verifierProvider = api.implementation.pgpContentVerifierBuilderProvider()
+            try {
+                signature.init(verifierProvider, publicKey)
+            } catch (e: PGPException) {
+                throw RuntimeException(e)
             }
+        }
 
-            @JvmStatic
-            private fun initialize(ops: PGPOnePassSignature, publicKey: PGPPublicKey) {
-                val verifierProvider =
-                    OpenPGPImplementation.getInstance().pgpContentVerifierBuilderProvider()
-                try {
-                    ops.init(verifierProvider, publicKey)
-                } catch (e: PGPException) {
-                    throw RuntimeException(e)
-                }
+        private fun initialize(ops: PGPOnePassSignature, publicKey: PGPPublicKey) {
+            val verifierProvider = api.implementation.pgpContentVerifierBuilderProvider()
+            try {
+                ops.init(verifierProvider, publicKey)
+            } catch (e: PGPException) {
+                throw RuntimeException(e)
             }
         }
     }
@@ -1074,32 +1056,27 @@ class OpenPgpMessageInputStream(
         private val LOGGER = LoggerFactory.getLogger(OpenPgpMessageInputStream::class.java)
 
         @JvmStatic
-        fun create(inputStream: InputStream, options: ConsumerOptions) =
-            create(inputStream, options, PGPainless.getInstance().algorithmPolicy)
-
-        @JvmStatic
-        fun create(inputStream: InputStream, options: ConsumerOptions, policy: Policy) =
-            create(inputStream, options, Message(), policy)
+        fun create(inputStream: InputStream, options: ConsumerOptions, api: PGPainless) =
+            create(inputStream, options, Message(), api)
 
         @JvmStatic
         internal fun create(
             inputStream: InputStream,
             options: ConsumerOptions,
             metadata: Layer,
-            policy: Policy
+            api: PGPainless
         ): OpenPgpMessageInputStream {
             val openPgpIn = OpenPgpInputStream(inputStream)
             openPgpIn.reset()
 
             if (openPgpIn.isNonOpenPgp || options.isForceNonOpenPgpData()) {
                 return OpenPgpMessageInputStream(
-                    Type.non_openpgp, openPgpIn, options, metadata, policy)
+                    Type.non_openpgp, openPgpIn, options, metadata, api)
             }
 
             if (openPgpIn.isBinaryOpenPgp) {
                 // Simply consume OpenPGP message
-                return OpenPgpMessageInputStream(
-                    Type.standard, openPgpIn, options, metadata, policy)
+                return OpenPgpMessageInputStream(Type.standard, openPgpIn, options, metadata, api)
             }
 
             return if (openPgpIn.isAsciiArmored) {
@@ -1107,10 +1084,10 @@ class OpenPgpMessageInputStream(
                 if (armorIn.isClearText) {
                     (metadata as Message).setCleartextSigned()
                     OpenPgpMessageInputStream(
-                        Type.cleartext_signed, armorIn, options, metadata, policy)
+                        Type.cleartext_signed, armorIn, options, metadata, api)
                 } else {
                     // Simply consume dearmored OpenPGP message
-                    OpenPgpMessageInputStream(Type.standard, armorIn, options, metadata, policy)
+                    OpenPgpMessageInputStream(Type.standard, armorIn, options, metadata, api)
                 }
             } else {
                 throw AssertionError("Cannot deduce type of data.")

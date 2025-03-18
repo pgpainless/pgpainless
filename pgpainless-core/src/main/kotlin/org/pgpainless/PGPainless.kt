@@ -217,7 +217,7 @@ class PGPainless(
          *
          * @return builder
          */
-        @JvmStatic fun decryptAndOrVerify(): DecryptionBuilder = DecryptionBuilder()
+        @JvmStatic fun decryptAndOrVerify(): DecryptionBuilder = DecryptionBuilder(getInstance())
 
         /**
          * Make changes to a secret key at the given reference time. This method can be used to
