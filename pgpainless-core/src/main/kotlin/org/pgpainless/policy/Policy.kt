@@ -50,7 +50,8 @@ class Policy(
      * regardless of usage date.
      *
      * @param defaultHashAlgorithm default hash algorithm
-     * @param acceptableHashAlgorithmsAndTerminationDates map of acceptable algorithms and their termination dates
+     * @param acceptableHashAlgorithmsAndTerminationDates map of acceptable algorithms and their
+     *   termination dates
      */
     class HashAlgorithmPolicy(
         val defaultHashAlgorithm: HashAlgorithm,
