@@ -52,13 +52,7 @@ class KeyRingUtils {
          */
         @JvmStatic
         fun getPrimarySecretKeyFrom(secretKeys: PGPSecretKeyRing): PGPSecretKey? {
-            return secretKeys.secretKey.let {
-                if (it.isMasterKey) {
-                    it
-                } else {
-                    null
-                }
-            }
+            return if (secretKeys.secretKey.isMasterKey) secretKeys.secretKey else null
         }
 
         /**
@@ -82,13 +76,7 @@ class KeyRingUtils {
          */
         @JvmStatic
         fun getPrimaryPublicKey(keyRing: PGPKeyRing): PGPPublicKey? {
-            return keyRing.publicKey.let {
-                if (it.isMasterKey) {
-                    it
-                } else {
-                    null
-                }
-            }
+            return if (keyRing.publicKey.isMasterKey) keyRing.publicKey else null
         }
 
         /**
@@ -245,7 +233,7 @@ class KeyRingUtils {
                     certificate.publicKeys
                         .asSequence()
                         .map {
-                            if (it.keyID == certifiedKey.keyID) {
+                            if (it.keyIdentifier == certifiedKey.keyIdentifier) {
                                 PGPPublicKey.addCertification(it, certification)
                             } else {
                                 it
@@ -415,18 +403,40 @@ class KeyRingUtils {
          * @throws PGPException in case of a broken key
          */
         @JvmStatic
-        fun stripSecretKey(secretKeys: PGPSecretKeyRing, keyId: Long): PGPSecretKeyRing {
-            require(keyId != secretKeys.publicKey.keyID) {
+        @Deprecated("Pass in a KeyIdentifier instead.")
+        fun stripSecretKey(secretKeys: PGPSecretKeyRing, keyId: Long): PGPSecretKeyRing =
+            stripSecretKey(secretKeys, KeyIdentifier(keyId))
+
+        /**
+         * Remove the secret key of the subkey identified by the given [keyIdentifier] from the key
+         * ring. The public part stays attached to the key ring, so that it can still be used for
+         * encryption / verification of signatures.
+         *
+         * This method is intended to be used to remove secret primary keys from live keys when
+         * those are kept in offline storage.
+         *
+         * @param secretKeys secret key ring
+         * @param keyIdentifier identifier of the secret key to remove
+         * @return secret key ring with removed secret key
+         * @throws IOException in case of an error during serialization / deserialization of the key
+         * @throws PGPException in case of a broken key
+         */
+        @JvmStatic
+        fun stripSecretKey(
+            secretKeys: PGPSecretKeyRing,
+            keyIdentifier: KeyIdentifier
+        ): PGPSecretKeyRing {
+            require(keyIdentifier != secretKeys.publicKey.keyIdentifier) {
                 "Bouncy Castle currently cannot deal with stripped primary secret keys."
             }
-            if (secretKeys.getSecretKey(keyId) == null) {
+            if (secretKeys.getSecretKey(keyIdentifier) == null) {
                 throw NoSuchElementException(
-                    "PGPSecretKeyRing does not contain secret key ${keyId.openPgpKeyId()}.")
+                    "PGPSecretKeyRing does not contain secret key ${keyIdentifier}.")
             }
 
             val out = ByteArrayOutputStream()
             secretKeys.forEach {
-                if (it.keyID == keyId) {
+                if (it.keyIdentifier == keyIdentifier) {
                     // only encode the public key
                     it.publicKey.encode(out)
                 } else {
