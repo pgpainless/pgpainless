@@ -18,6 +18,7 @@ import org.pgpainless.bouncycastle.extensions.isEncrypted
 import org.pgpainless.exception.KeyIntegrityException
 import org.pgpainless.exception.WrongPassphraseException
 import org.pgpainless.key.util.PublicKeyParameterValidationUtil
+import org.pgpainless.policy.Policy
 import org.pgpainless.util.Passphrase
 
 class UnlockSecretKey {
@@ -31,17 +32,19 @@ class UnlockSecretKey {
             protector: SecretKeyRingProtector
         ): PGPPrivateKey {
             return if (secretKey.isEncrypted()) {
-                unlockSecretKey(secretKey, protector.getDecryptor(secretKey.keyID))
+                unlockSecretKey(secretKey, protector.getDecryptor(secretKey.keyIdentifier))
             } else {
                 unlockSecretKey(secretKey, null as PBESecretKeyDecryptor?)
             }
         }
 
         @JvmStatic
+        @JvmOverloads
         @Throws(PGPException::class)
         fun unlockSecretKey(
             secretKey: OpenPGPSecretKey,
-            protector: SecretKeyRingProtector
+            protector: SecretKeyRingProtector,
+            policy: Policy = PGPainless.getInstance().algorithmPolicy
         ): OpenPGPPrivateKey {
             val privateKey =
                 try {
@@ -59,7 +62,7 @@ class UnlockSecretKey {
                 throw PGPException("Cannot decrypt secret key.")
             }
 
-            if (PGPainless.getPolicy().isEnableKeyParameterValidation()) {
+            if (policy.isEnableKeyParameterValidation()) {
                 PublicKeyParameterValidationUtil.verifyPublicKeyParameterIntegrity(
                     privateKey.keyPair.privateKey, privateKey.keyPair.publicKey)
             }
@@ -68,10 +71,12 @@ class UnlockSecretKey {
         }
 
         @JvmStatic
+        @JvmOverloads
         @Throws(PGPException::class)
         fun unlockSecretKey(
             secretKey: PGPSecretKey,
-            decryptor: PBESecretKeyDecryptor?
+            decryptor: PBESecretKeyDecryptor?,
+            policy: Policy = PGPainless.getInstance().algorithmPolicy
         ): PGPPrivateKey {
             val privateKey =
                 try {
@@ -89,7 +94,7 @@ class UnlockSecretKey {
                 throw PGPException("Cannot decrypt secret key.")
             }
 
-            if (PGPainless.getPolicy().isEnableKeyParameterValidation()) {
+            if (policy.isEnableKeyParameterValidation()) {
                 PublicKeyParameterValidationUtil.verifyPublicKeyParameterIntegrity(
                     privateKey, secretKey.publicKey)
             }
