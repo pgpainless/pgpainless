@@ -4,6 +4,7 @@
 
 package org.gnupg;
 
+import org.bouncycastle.bcpg.KeyIdentifier;
 import org.bouncycastle.bcpg.PublicKeyPacket;
 import org.bouncycastle.bcpg.S2K;
 import org.bouncycastle.bcpg.SecretKeyPacket;
@@ -132,7 +133,7 @@ public final class GnuPGDummyKeyUtil {
 
             List<PGPSecretKey> secretKeyList = new ArrayList<>();
             for (PGPSecretKey secretKey : keys) {
-                if (!filter.filter(secretKey.getKeyID())) {
+                if (!filter.filter(secretKey.getKeyIdentifier())) {
                     // No conversion, do not modify subkey
                     secretKeyList.add(secretKey);
                     continue;
@@ -177,10 +178,10 @@ public final class GnuPGDummyKeyUtil {
         /**
          * Return true, if the given key should be selected, false otherwise.
          *
-         * @param keyId id of the key
+         * @param keyIdentifier id of the key
          * @return select
          */
-        boolean filter(long keyId);
+        boolean filter(KeyIdentifier keyIdentifier);
 
         /**
          * Select any key.
@@ -196,9 +197,21 @@ public final class GnuPGDummyKeyUtil {
          *
          * @param onlyKeyId only acceptable key id
          * @return filter
+         * @deprecated use {@link #only(KeyIdentifier)} instead.
          */
+        @Deprecated
         static KeyFilter only(long onlyKeyId) {
-            return keyId -> keyId == onlyKeyId;
+            return only(new KeyIdentifier(onlyKeyId));
+        }
+
+        /**
+         * Select only the given keyIdentifier.
+         *
+         * @param onlyKeyIdentifier only acceptable key identifier
+         * @return filter
+         */
+        static KeyFilter only(KeyIdentifier onlyKeyIdentifier) {
+            return keyIdentifier -> keyIdentifier.matches(onlyKeyIdentifier);
         }
 
         /**
@@ -207,7 +220,7 @@ public final class GnuPGDummyKeyUtil {
          * @param ids set of acceptable keyIds
          * @return filter
          */
-        static KeyFilter selected(Collection<Long> ids) {
+        static KeyFilter selected(Collection<KeyIdentifier> ids) {
             // noinspection Convert2MethodRef
             return keyId -> ids.contains(keyId);
         }
