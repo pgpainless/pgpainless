@@ -37,31 +37,31 @@ public class AddUserIdTest {
     @ExtendWith(TestAllImplementations.class)
     public void addUserIdToExistingKeyRing()
             throws PGPException {
-        PGPSecretKeyRing secretKeys = PGPainless.generateKeyRing()
-                .simpleEcKeyRing("alice@wonderland.lit", "rabb1th0le")
-                .getPGPSecretKeyRing();
+        PGPainless api = PGPainless.getInstance();
+        OpenPGPKey secretKeys = api.generateKey()
+                .simpleEcKeyRing("alice@wonderland.lit", "rabb1th0le");
 
-        KeyRingInfo info = PGPainless.inspectKeyRing(secretKeys);
+        KeyRingInfo info = api.inspect(secretKeys);
         Iterator<String> userIds = info.getValidUserIds().iterator();
         assertEquals("alice@wonderland.lit", userIds.next());
         assertFalse(userIds.hasNext());
 
         SecretKeyRingProtector protector = PasswordBasedSecretKeyRingProtector.forKey(secretKeys, Passphrase.fromPassword("rabb1th0le"));
-        secretKeys = PGPainless.modifyKeyRing(secretKeys)
+        secretKeys = api.modify(secretKeys)
                 .addUserId("cheshirecat@wonderland.lit", protector)
                 .done();
 
-        info = PGPainless.inspectKeyRing(secretKeys);
+        info = api.inspect(secretKeys);
         userIds = info.getValidUserIds().iterator();
         assertEquals("alice@wonderland.lit", userIds.next());
         assertEquals("cheshirecat@wonderland.lit", userIds.next());
         assertFalse(userIds.hasNext());
 
-        secretKeys = PGPainless.modifyKeyRing(secretKeys)
+        secretKeys = api.modify(secretKeys)
                 .revokeUserId("cheshirecat@wonderland.lit", protector)
                 .done();
 
-        info = PGPainless.inspectKeyRing(secretKeys);
+        info = api.inspect(secretKeys);
         userIds = info.getValidUserIds().iterator();
         assertEquals("alice@wonderland.lit", userIds.next());
         assertFalse(userIds.hasNext());
@@ -96,20 +96,21 @@ public class AddUserIdTest {
                         "=bk4o\r\n" +
                         "-----END PGP PRIVATE KEY BLOCK-----\r\n";
 
-        OpenPGPKey key = PGPainless.getInstance().readKey().parseKey(ARMORED_PRIVATE_KEY);
-        PGPSecretKeyRing secretKeys = key.getPGPSecretKeyRing();
-        KeyRingInfo info = PGPainless.inspectKeyRing(secretKeys);
+        PGPainless api = PGPainless.getInstance();
+
+        OpenPGPKey key = api.readKey().parseKey(ARMORED_PRIVATE_KEY);
+        KeyRingInfo info = api.inspect(key);
         Iterator<String> userIds = info.getValidUserIds().iterator();
         assertEquals("<user@example.com>", userIds.next());
         assertFalse(userIds.hasNext());
 
         SecretKeyRingProtector protector = new UnprotectedKeysProtector();
-        secretKeys = PGPainless.modifyKeyRing(secretKeys)
+        key = api.modify(key)
                 .revokeUserId("<user@example.com>", protector)
                 .addUserId("cheshirecat@wonderland.lit", protector)
                 .done();
 
-        info = PGPainless.inspectKeyRing(secretKeys);
+        info = api.inspect(key);
         userIds = info.getValidUserIds().iterator();
         assertEquals("cheshirecat@wonderland.lit", userIds.next());
         assertFalse(userIds.hasNext());
@@ -118,17 +119,17 @@ public class AddUserIdTest {
     @Test
     public void addNewPrimaryUserIdTest() {
         Date now = new Date();
-        PGPSecretKeyRing secretKeys = PGPainless.generateKeyRing()
-                .modernKeyRing("Alice")
-                .getPGPSecretKeyRing();
+        PGPainless api = PGPainless.getInstance();
+        OpenPGPKey secretKeys = api.generateKey()
+                .modernKeyRing("Alice");
         UserId bob = UserId.builder().withName("Bob").noEmail().noComment().build();
 
-        assertNotEquals("Bob", PGPainless.inspectKeyRing(secretKeys).getPrimaryUserId());
+        assertNotEquals("Bob", api.inspect(secretKeys).getPrimaryUserId());
 
-        secretKeys = PGPainless.modifyKeyRing(secretKeys, DateExtensionsKt.plusSeconds(now, 1))
+        secretKeys = api.modify(secretKeys, DateExtensionsKt.plusSeconds(now, 1))
                 .addPrimaryUserId(bob, SecretKeyRingProtector.unprotectedKeys())
                 .done();
 
-        assertEquals("Bob", PGPainless.inspectKeyRing(secretKeys, DateExtensionsKt.plusSeconds(now, 2)).getPrimaryUserId());
+        assertEquals("Bob", api.inspect(secretKeys, DateExtensionsKt.plusSeconds(now, 2)).getPrimaryUserId());
     }
 }

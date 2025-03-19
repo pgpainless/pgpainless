@@ -134,7 +134,7 @@ class CertifyCertificate(private val api: PGPainless) {
             key: OpenPGPKey,
             protector: SecretKeyRingProtector
         ): CertificationOnUserIdWithSubpackets {
-            val secretKey = getCertifyingSecretKey(key)
+            val secretKey = getCertifyingSecretKey(key, api)
             val sigBuilder =
                 ThirdPartyCertificationSignatureBuilder(
                     certificationType.asSignatureType(), secretKey, protector, api)
@@ -220,7 +220,7 @@ class CertifyCertificate(private val api: PGPainless) {
             key: OpenPGPKey,
             protector: SecretKeyRingProtector
         ): DelegationOnCertificateWithSubpackets {
-            val secretKey = getCertifyingSecretKey(key)
+            val secretKey = getCertifyingSecretKey(key, api)
             val sigBuilder = ThirdPartyDirectKeySignatureBuilder(secretKey, protector, api)
             if (trustworthiness != null) {
                 sigBuilder.hashedSubpackets.setTrust(
@@ -306,10 +306,11 @@ class CertifyCertificate(private val api: PGPainless) {
     companion object {
         @JvmStatic
         private fun getCertifyingSecretKey(
-            certificationKey: OpenPGPKey
+            certificationKey: OpenPGPKey,
+            api: PGPainless
         ): OpenPGPKey.OpenPGPSecretKey {
             val now = Date()
-            val info = PGPainless.inspectKeyRing(certificationKey, now)
+            val info = api.inspect(certificationKey, now)
 
             val fingerprint = info.fingerprint
             val certificationPubKey = info.getPublicKey(fingerprint)

@@ -8,7 +8,11 @@ import java.util.function.Predicate
 import org.bouncycastle.openpgp.PGPException
 import org.bouncycastle.openpgp.PGPPublicKey
 import org.bouncycastle.openpgp.PGPSignature
+import org.bouncycastle.openpgp.api.OpenPGPCertificate.OpenPGPComponentKey
+import org.bouncycastle.openpgp.api.OpenPGPCertificate.OpenPGPComponentSignature
+import org.bouncycastle.openpgp.api.OpenPGPCertificate.OpenPGPUserId
 import org.bouncycastle.openpgp.api.OpenPGPKey
+import org.bouncycastle.openpgp.api.OpenPGPSignature
 import org.pgpainless.PGPainless
 import org.pgpainless.algorithm.SignatureType
 import org.pgpainless.key.protection.SecretKeyRingProtector
@@ -59,6 +63,11 @@ constructor(
             }
         }
 
+    fun build(revokeeKey: OpenPGPComponentKey): OpenPGPSignature {
+        return OpenPGPComponentSignature(
+            build(revokeeKey.pgpPublicKey), signingKey.publicKey, revokeeKey)
+    }
+
     @Throws(PGPException::class)
     fun build(revokeeUserId: CharSequence): PGPSignature =
         buildAndInitSignatureGenerator()
@@ -68,6 +77,11 @@ constructor(
                 }
             }
             .generateCertification(revokeeUserId.toString(), signingKey.publicKey.pgpPublicKey)
+
+    fun build(revokeeUserId: OpenPGPUserId): OpenPGPComponentSignature {
+        return OpenPGPComponentSignature(
+            build(revokeeUserId.userId), signingKey.publicKey, revokeeUserId)
+    }
 
     init {
         hashedSubpackets.setRevocable(false)

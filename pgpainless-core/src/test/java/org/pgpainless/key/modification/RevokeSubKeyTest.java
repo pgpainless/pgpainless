@@ -19,8 +19,9 @@ import org.bouncycastle.bcpg.sig.IssuerFingerprint;
 import org.bouncycastle.openpgp.PGPException;
 import org.bouncycastle.openpgp.PGPPublicKey;
 import org.bouncycastle.openpgp.PGPSecretKey;
-import org.bouncycastle.openpgp.PGPSecretKeyRing;
 import org.bouncycastle.openpgp.PGPSignature;
+import org.bouncycastle.openpgp.api.OpenPGPKey;
+import org.bouncycastle.openpgp.api.OpenPGPSignature;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.TestTemplate;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -33,7 +34,6 @@ import org.pgpainless.key.modification.secretkeyring.SecretKeyRingEditorInterfac
 import org.pgpainless.key.protection.PasswordBasedSecretKeyRingProtector;
 import org.pgpainless.key.protection.SecretKeyRingProtector;
 import org.pgpainless.key.util.RevocationAttributes;
-import org.pgpainless.signature.SignatureUtils;
 import org.pgpainless.signature.subpackets.RevocationSignatureSubpackets;
 import org.pgpainless.signature.subpackets.SignatureSubpacketsUtil;
 import org.pgpainless.util.TestAllImplementations;
@@ -43,10 +43,11 @@ public class RevokeSubKeyTest {
 
     @TestTemplate
     @ExtendWith(TestAllImplementations.class)
-    public void revokeSukeyTest() throws IOException, PGPException {
-        PGPSecretKeyRing secretKeys = TestKeys.getCryptieSecretKeyRing();
+    public void revokeSubkeyTest() throws IOException, PGPException {
+        PGPainless api = PGPainless.getInstance();
+        OpenPGPKey secretKeys = TestKeys.getCryptieKey();
 
-        Iterator<PGPSecretKey> keysIterator = secretKeys.iterator();
+        Iterator<PGPSecretKey> keysIterator = secretKeys.getPGPSecretKeyRing().iterator();
         PGPSecretKey primaryKey = keysIterator.next();
         PGPSecretKey subKey = keysIterator.next();
 
@@ -55,10 +56,10 @@ public class RevokeSubKeyTest {
         SecretKeyRingProtector protector = PasswordBasedSecretKeyRingProtector
                 .forKey(secretKeys, Passphrase.fromPassword("password123"));
 
-        secretKeys = PGPainless.modifyKeyRing(secretKeys)
+        secretKeys = api.modify(secretKeys)
                 .revokeSubKey(new OpenPgpV4Fingerprint(subKey), protector)
                 .done();
-        keysIterator = secretKeys.iterator();
+        keysIterator = secretKeys.getPGPSecretKeyRing().iterator();
         primaryKey = keysIterator.next();
         subKey = keysIterator.next();
 
@@ -68,19 +69,20 @@ public class RevokeSubKeyTest {
     @TestTemplate
     @ExtendWith(TestAllImplementations.class)
     public void detachedRevokeSubkeyTest() throws IOException, PGPException {
-        PGPSecretKeyRing secretKeys = TestKeys.getCryptieSecretKeyRing();
+        PGPainless api = PGPainless.getInstance();
+        OpenPGPKey secretKeys = TestKeys.getCryptieKey();
         OpenPgpV4Fingerprint fingerprint = new OpenPgpV4Fingerprint(secretKeys);
         SecretKeyRingProtector protector = PasswordBasedSecretKeyRingProtector.forKey(secretKeys, Passphrase.fromPassword("password123"));
 
-        PGPSignature revocationCertificate = PGPainless.modifyKeyRing(secretKeys)
+        OpenPGPSignature revocationCertificate = api.modify(secretKeys)
                 .createRevocation(fingerprint, protector, RevocationAttributes.createKeyRevocation()
                         .withReason(RevocationAttributes.Reason.KEY_RETIRED)
                         .withDescription("Key no longer used."));
 
-        PGPPublicKey publicKey = secretKeys.getPublicKey();
+        PGPPublicKey publicKey = secretKeys.getPGPSecretKeyRing().getPublicKey();
         assertFalse(publicKey.hasRevocation());
 
-        publicKey = PGPPublicKey.addCertification(publicKey, revocationCertificate);
+        publicKey = PGPPublicKey.addCertification(publicKey, revocationCertificate.getSignature());
 
         assertTrue(publicKey.hasRevocation());
     }
@@ -88,19 +90,20 @@ public class RevokeSubKeyTest {
     @TestTemplate
     @ExtendWith(TestAllImplementations.class)
     public void testRevocationSignatureTypeCorrect() throws IOException, PGPException {
-        PGPSecretKeyRing secretKeys = TestKeys.getCryptieSecretKeyRing();
-        Iterator<PGPPublicKey> keysIterator = secretKeys.getPublicKeys();
+        PGPainless api = PGPainless.getInstance();
+        OpenPGPKey secretKeys = TestKeys.getCryptieKey();
+        Iterator<PGPPublicKey> keysIterator = secretKeys.getPGPKeyRing().getPublicKeys();
         PGPPublicKey primaryKey = keysIterator.next();
         PGPPublicKey subKey = keysIterator.next();
         SecretKeyRingProtector protector = PasswordBasedSecretKeyRingProtector
                 .forKey(secretKeys, Passphrase.fromPassword("password123"));
 
-        SecretKeyRingEditorInterface editor = PGPainless.modifyKeyRing(secretKeys);
-        PGPSignature keyRevocation = editor.createRevocation(primaryKey.getKeyID(), protector, (RevocationAttributes) null);
-        PGPSignature subkeyRevocation = editor.createRevocation(subKey.getKeyID(), protector, (RevocationAttributes) null);
+        SecretKeyRingEditorInterface editor = api.modify(secretKeys);
+        OpenPGPSignature keyRevocation = editor.createRevocation(primaryKey.getKeyIdentifier(), protector, (RevocationAttributes) null);
+        OpenPGPSignature subkeyRevocation = editor.createRevocation(subKey.getKeyIdentifier(), protector, (RevocationAttributes) null);
 
-        assertEquals(SignatureType.KEY_REVOCATION.getCode(), keyRevocation.getSignatureType());
-        assertEquals(SignatureType.SUBKEY_REVOCATION.getCode(), subkeyRevocation.getSignatureType());
+        assertEquals(SignatureType.KEY_REVOCATION.getCode(), keyRevocation.getSignature().getSignatureType());
+        assertEquals(SignatureType.SUBKEY_REVOCATION.getCode(), subkeyRevocation.getSignature().getSignatureType());
     }
 
     @Test
@@ -126,39 +129,39 @@ public class RevokeSubKeyTest {
     @Test
     public void inspectSubpacketsOnDefaultRevocationSignature()
             throws PGPException {
-        PGPSecretKeyRing secretKeys = PGPainless.generateKeyRing().modernKeyRing("Alice")
-                .getPGPSecretKeyRing();
+        PGPainless api = PGPainless.getInstance();
+        OpenPGPKey secretKeys = api.generateKey().modernKeyRing("Alice");
         SecretKeyRingProtector protector = SecretKeyRingProtector.unprotectedKeys();
-        PGPPublicKey encryptionSubkey = PGPainless.inspectKeyRing(secretKeys)
+        PGPPublicKey encryptionSubkey = api.inspect(secretKeys)
                 .getEncryptionSubkeys(EncryptionPurpose.ANY).get(0).getPGPPublicKey();
 
-        secretKeys = PGPainless.modifyKeyRing(secretKeys)
-                .revokeSubKey(encryptionSubkey.getKeyID(), protector)
+        secretKeys = api.modify(secretKeys)
+                .revokeSubKey(encryptionSubkey.getKeyIdentifier(), protector)
                 .done();
 
-        encryptionSubkey = secretKeys.getPublicKey(encryptionSubkey.getKeyID());
+        encryptionSubkey = secretKeys.getPGPSecretKeyRing().getPublicKey(encryptionSubkey.getKeyIdentifier());
         PGPSignature revocation = encryptionSubkey.getSignaturesOfType(SignatureType.SUBKEY_REVOCATION.getCode()).next();
         assertNotNull(revocation);
 
         assertArrayEquals(
-                secretKeys.getPublicKey().getFingerprint(),
+                secretKeys.getPGPSecretKeyRing().getPublicKey().getFingerprint(),
                 revocation.getHashedSubPackets().getIssuerFingerprint().getFingerprint());
-        assertEquals(secretKeys.getPublicKey().getKeyID(),
+        assertEquals(secretKeys.getPGPSecretKeyRing().getPublicKey().getKeyID(),
                 revocation.getHashedSubPackets().getIssuerKeyID());
         assertNull(SignatureSubpacketsUtil.getRevocationReason(revocation));
-        assertTrue(SignatureUtils.isHardRevocation(revocation));
+        assertTrue(revocation.isHardRevocation());
     }
 
     @Test
     public void inspectSubpacketsOnModifiedRevocationSignature() {
-        PGPSecretKeyRing secretKeys = PGPainless.generateKeyRing().modernKeyRing("Alice")
-                .getPGPSecretKeyRing();
+        PGPainless api = PGPainless.getInstance();
+        OpenPGPKey secretKeys = api.generateKey().modernKeyRing("Alice");
         SecretKeyRingProtector protector = SecretKeyRingProtector.unprotectedKeys();
-        PGPPublicKey encryptionSubkey = PGPainless.inspectKeyRing(secretKeys)
+        PGPPublicKey encryptionSubkey = api.inspect(secretKeys)
                 .getEncryptionSubkeys(EncryptionPurpose.ANY).get(0).getPGPPublicKey();
 
-        secretKeys = PGPainless.modifyKeyRing(secretKeys)
-                .revokeSubKey(encryptionSubkey.getKeyID(), protector, new RevocationSignatureSubpackets.Callback() {
+        secretKeys = api.modify(secretKeys)
+                .revokeSubKey(encryptionSubkey.getKeyIdentifier(), protector, new RevocationSignatureSubpackets.Callback() {
                     @Override
                     public void modifyHashedSubpackets(RevocationSignatureSubpackets hashedSubpackets) {
                         hashedSubpackets.setRevocationReason(
@@ -171,14 +174,14 @@ public class RevokeSubKeyTest {
                 })
                 .done();
 
-        encryptionSubkey = secretKeys.getPublicKey(encryptionSubkey.getKeyID());
+        encryptionSubkey = secretKeys.getPGPSecretKeyRing().getPublicKey(encryptionSubkey.getKeyIdentifier());
         PGPSignature revocation = encryptionSubkey.getSignaturesOfType(SignatureType.SUBKEY_REVOCATION.getCode()).next();
         assertNotNull(revocation);
 
         assertNull(revocation.getHashedSubPackets().getIssuerFingerprint());
-        assertEquals(secretKeys.getPublicKey().getKeyID(),
+        assertEquals(secretKeys.getKeyIdentifier().getKeyId(),
                 revocation.getHashedSubPackets().getIssuerKeyID());
         assertNotNull(SignatureSubpacketsUtil.getRevocationReason(revocation));
-        assertFalse(SignatureUtils.isHardRevocation(revocation));
+        assertFalse(revocation.isHardRevocation());
     }
 }

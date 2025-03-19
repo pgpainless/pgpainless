@@ -14,8 +14,11 @@ import org.bouncycastle.openpgp.PGPPublicKeyRingCollection;
 import org.bouncycastle.openpgp.PGPSecretKeyRing;
 import org.bouncycastle.openpgp.PGPSecretKeyRingCollection;
 import org.bouncycastle.openpgp.PGPUtil;
+import org.bouncycastle.openpgp.api.OpenPGPCertificate;
+import org.bouncycastle.openpgp.api.OpenPGPKey;
 import org.bouncycastle.openpgp.operator.KeyFingerPrintCalculator;
 import org.bouncycastle.openpgp.operator.bc.BcKeyFingerprintCalculator;
+import org.pgpainless.PGPainless;
 import org.pgpainless.util.Passphrase;
 
 public class TestKeys {
@@ -265,6 +268,10 @@ public class TestKeys {
             "=1d67\n" +
             "-----END PGP PRIVATE KEY BLOCK-----";
 
+    public static OpenPGPKey getJulietKey() throws PGPException, IOException {
+        return PGPainless.getInstance().toKey(getJulietSecretKeyRing());
+    }
+
     public static PGPSecretKeyRing getJulietSecretKeyRing() throws IOException, PGPException {
         if (julietSecretKeyRing == null) {
             julietSecretKeyRing = new PGPSecretKeyRing(
@@ -279,6 +286,10 @@ public class TestKeys {
                     PGPUtil.getDecoderStream(new ByteArrayInputStream(JULIET_SEC.getBytes())), calc);
         }
         return julietSecretKeyRingCollection;
+    }
+
+    public static OpenPGPCertificate getJulietCertificate() throws IOException {
+        return PGPainless.getInstance().toCertificate(getJulietPublicKeyRing());
     }
 
     public static PGPPublicKeyRing getJulietPublicKeyRing() throws IOException {
@@ -297,6 +308,10 @@ public class TestKeys {
         return julietPublicKeyRingCollection;
     }
 
+    public static OpenPGPKey getRomeoKey() throws PGPException, IOException {
+        return PGPainless.getInstance().toKey(getRomeoSecretKeyRing());
+    }
+
     public static PGPSecretKeyRing getRomeoSecretKeyRing() throws IOException, PGPException {
         if (romeoSecretKeyRing == null) {
             romeoSecretKeyRing = new PGPSecretKeyRing(
@@ -311,6 +326,10 @@ public class TestKeys {
                     PGPUtil.getDecoderStream(new ByteArrayInputStream(ROMEO_SEC.getBytes())), calc);
         }
         return romeoSecretKeyRingCollection;
+    }
+
+    public static OpenPGPCertificate getRomeoCertificate() throws IOException {
+        return PGPainless.getInstance().toCertificate(getRomeoPublicKeyRing());
     }
 
     public static PGPPublicKeyRing getRomeoPublicKeyRing() throws IOException {
@@ -329,6 +348,10 @@ public class TestKeys {
         return romeoPublicKeyRingCollection;
     }
 
+    public static OpenPGPKey getEmilKey() throws PGPException, IOException {
+        return PGPainless.getInstance().toKey(getEmilSecretKeyRing());
+    }
+
     public static PGPSecretKeyRing getEmilSecretKeyRing() throws IOException, PGPException {
         if (emilSecretKeyRing == null) {
             emilSecretKeyRing = new PGPSecretKeyRing(
@@ -343,6 +366,10 @@ public class TestKeys {
                     PGPUtil.getDecoderStream(new ByteArrayInputStream(EMIL_SEC.getBytes())), calc);
         }
         return emilSecretKeyRingCollection;
+    }
+
+    public static OpenPGPCertificate getEmilCertificate() throws IOException {
+        return PGPainless.getInstance().toCertificate(getEmilPublicKeyRing());
     }
 
     public static PGPPublicKeyRing getEmilPublicKeyRing() throws IOException {
@@ -361,6 +388,10 @@ public class TestKeys {
         return emilPublicKeyRingCollection;
     }
 
+    public static OpenPGPKey getCryptieKey() throws PGPException, IOException {
+        return PGPainless.getInstance().toKey(getCryptieSecretKeyRing());
+    }
+
     public static PGPSecretKeyRing getCryptieSecretKeyRing() throws IOException, PGPException {
         if (cryptieSecretKeyRing == null) {
             cryptieSecretKeyRing = new PGPSecretKeyRing(
@@ -375,6 +406,10 @@ public class TestKeys {
                     PGPUtil.getDecoderStream(new ByteArrayInputStream(CRYPTIE_SEC.getBytes())), calc);
         }
         return cryptieSecretKeyRingCollection;
+    }
+
+    public static OpenPGPCertificate getCryptieCertificate() throws IOException {
+        return PGPainless.getInstance().toCertificate(getCryptiePublicKeyRing());
     }
 
     public static PGPPublicKeyRing getCryptiePublicKeyRing() throws IOException {

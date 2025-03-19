@@ -10,7 +10,6 @@ import org.bouncycastle.openpgp.api.OpenPGPCertificate
 import org.bouncycastle.openpgp.api.OpenPGPCertificate.OpenPGPComponentKey
 import org.bouncycastle.openpgp.operator.PGPKeyEncryptionMethodGenerator
 import org.pgpainless.PGPainless
-import org.pgpainless.PGPainless.Companion.inspectKeyRing
 import org.pgpainless.algorithm.EncryptionPurpose
 import org.pgpainless.algorithm.SymmetricKeyAlgorithm
 import org.pgpainless.algorithm.negotiation.SymmetricKeyAlgorithmNegotiator.Companion.byPopularity
@@ -191,7 +190,7 @@ class EncryptionOptions(private val purpose: EncryptionPurpose, private val api:
         userId: CharSequence,
         encryptionKeySelector: EncryptionKeySelector
     ) = apply {
-        val info = inspectKeyRing(cert, evaluationDate)
+        val info = api.inspect(cert, evaluationDate)
         val subkeys =
             encryptionKeySelector.selectEncryptionSubkeys(
                 info.getEncryptionSubkeys(userId, purpose))
@@ -289,7 +288,7 @@ class EncryptionOptions(private val purpose: EncryptionPurpose, private val api:
         selector: EncryptionKeySelector,
         wildcardKeyId: Boolean
     ) = apply {
-        val info = inspectKeyRing(cert, evaluationDate)
+        val info = api.inspect(cert, evaluationDate)
         val primaryKeyExpiration =
             try {
                 info.primaryKeyExpirationDate

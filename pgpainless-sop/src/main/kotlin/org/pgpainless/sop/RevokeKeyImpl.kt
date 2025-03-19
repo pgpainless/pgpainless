@@ -9,10 +9,11 @@ import java.io.InputStream
 import java.io.OutputStream
 import java.lang.RuntimeException
 import org.bouncycastle.openpgp.PGPException
-import org.bouncycastle.openpgp.PGPPublicKeyRing
 import org.bouncycastle.openpgp.PGPPublicKeyRingCollection
+import org.bouncycastle.openpgp.api.OpenPGPCertificate
 import org.pgpainless.PGPainless
 import org.pgpainless.bouncycastle.extensions.openPgpFingerprint
+import org.pgpainless.bouncycastle.extensions.toOpenPGPCertificate
 import org.pgpainless.exception.WrongPassphraseException
 import org.pgpainless.key.util.KeyRingUtils
 import org.pgpainless.key.util.RevocationAttributes
@@ -38,7 +39,7 @@ class RevokeKeyImpl : RevokeKey {
 
         secretKeyRings.forEach { protector.addSecretKey(it) }
 
-        val revocationCertificates = mutableListOf<PGPPublicKeyRing>()
+        val revocationCertificates = mutableListOf<OpenPGPCertificate>()
         secretKeyRings.forEach { secretKeys ->
             val editor = PGPainless.modifyKeyRing(secretKeys)
             try {
@@ -53,7 +54,8 @@ class RevokeKeyImpl : RevokeKey {
                     val certificate = PGPainless.extractCertificate(secretKeys)
                     val revocation = editor.createRevocation(protector, attributes)
                     revocationCertificates.add(
-                        KeyRingUtils.injectCertification(certificate, revocation))
+                        KeyRingUtils.injectCertification(certificate, revocation.signature)
+                            .toOpenPGPCertificate())
                 }
             } catch (e: WrongPassphraseException) {
                 throw SOPGPException.KeyIsProtected(
@@ -67,7 +69,8 @@ class RevokeKeyImpl : RevokeKey {
 
         return object : Ready() {
             override fun writeTo(outputStream: OutputStream) {
-                val collection = PGPPublicKeyRingCollection(revocationCertificates)
+                val collection =
+                    PGPPublicKeyRingCollection(revocationCertificates.map { it.pgpPublicKeyRing })
                 if (armor) {
                     val armorOut = ArmoredOutputStreamFactory.get(outputStream)
                     collection.encode(armorOut)

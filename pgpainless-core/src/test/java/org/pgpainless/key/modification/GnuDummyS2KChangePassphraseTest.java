@@ -10,7 +10,7 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 import java.io.IOException;
 
 import org.bouncycastle.openpgp.PGPException;
-import org.bouncycastle.openpgp.PGPSecretKeyRing;
+import org.bouncycastle.openpgp.api.OpenPGPKey;
 import org.junit.jupiter.api.Test;
 import org.pgpainless.PGPainless;
 import org.pgpainless.util.Passphrase;
@@ -166,17 +166,18 @@ public class GnuDummyS2KChangePassphraseTest {
 
     @Test
     public void testChangePassphraseToNoPassphraseIgnoresGnuDummyS2KKeys() throws PGPException, IOException {
-        PGPSecretKeyRing secretKey = PGPainless.readKeyRing().secretKeyRing(KEY_WITH_GNU_DUMMY_S2K_PRIMARY_KEY);
+        PGPainless api = PGPainless.getInstance();
+        OpenPGPKey secretKey = api.readKey().parseKey(KEY_WITH_GNU_DUMMY_S2K_PRIMARY_KEY);
 
-        assertFalse(PGPainless.inspectKeyRing(secretKey).isFullyDecrypted());
+        assertFalse(api.inspect(secretKey).isFullyDecrypted());
 
-        secretKey = PGPainless.modifyKeyRing(secretKey)
+        secretKey = api.modify(secretKey)
                 .changePassphraseFromOldPassphrase(passphrase)
                 .withSecureDefaultSettings()
                 .toNoPassphrase()
                 .done();
 
-        assertTrue(PGPainless.inspectKeyRing(secretKey).isFullyDecrypted());
+        assertTrue(api.inspect(secretKey).isFullyDecrypted());
     }
 
 }
