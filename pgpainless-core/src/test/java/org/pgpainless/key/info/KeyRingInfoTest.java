@@ -41,6 +41,7 @@ import org.pgpainless.algorithm.KeyFlag;
 import org.pgpainless.algorithm.OpenPGPKeyVersion;
 import org.pgpainless.algorithm.PublicKeyAlgorithm;
 import org.pgpainless.algorithm.SymmetricKeyAlgorithm;
+import org.pgpainless.bouncycastle.extensions.PGPSecretKeyExtensionsKt;
 import org.pgpainless.key.OpenPgpV4Fingerprint;
 import org.pgpainless.key.TestKeys;
 import org.pgpainless.key.generation.KeySpec;
@@ -217,7 +218,7 @@ public class KeyRingInfoTest {
                 "-----END PGP PRIVATE KEY BLOCK-----\n";
 
         OpenPGPKey secretKeys = PGPainless.getInstance().readKey().parseKey(withDummyS2K);
-        assertTrue(new KeyInfo(secretKeys.getPrimarySecretKey().getPGPSecretKey()).hasDummyS2K());
+        assertTrue(PGPSecretKeyExtensionsKt.hasDummyS2K(secretKeys.getPrimarySecretKey().getPGPSecretKey()));
     }
 
     @TestTemplate
