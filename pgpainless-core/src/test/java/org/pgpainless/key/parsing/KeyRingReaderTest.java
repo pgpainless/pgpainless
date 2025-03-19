@@ -21,6 +21,7 @@ import java.util.List;
 import org.bouncycastle.bcpg.ArmoredOutputStream;
 import org.bouncycastle.bcpg.BCPGOutputStream;
 import org.bouncycastle.bcpg.MarkerPacket;
+import org.bouncycastle.bcpg.PacketFormat;
 import org.bouncycastle.openpgp.PGPException;
 import org.bouncycastle.openpgp.PGPKeyRing;
 import org.bouncycastle.openpgp.PGPPublicKeyRing;
@@ -30,6 +31,7 @@ import org.bouncycastle.openpgp.PGPSecretKeyRingCollection;
 import org.bouncycastle.openpgp.PGPSignature;
 import org.bouncycastle.openpgp.PGPUtil;
 import org.bouncycastle.openpgp.api.OpenPGPImplementation;
+import org.bouncycastle.openpgp.api.OpenPGPKey;
 import org.bouncycastle.util.io.Streams;
 import org.junit.jupiter.api.Test;
 import org.opentest4j.TestAbortedException;
@@ -614,9 +616,10 @@ class KeyRingReaderTest {
 
     @Test
     public void testReadKeyRingWithArmoredSecretKey() throws IOException {
-        PGPSecretKeyRing secretKeys = PGPainless.generateKeyRing().modernKeyRing("Alice <alice@pgpainless.org>")
-                .getPGPSecretKeyRing();
-        String armored = PGPainless.asciiArmor(secretKeys);
+        PGPainless api = PGPainless.getInstance();
+        OpenPGPKey secretKeys = api.generateKey().modernKeyRing("Alice <alice@pgpainless.org>");
+        // remove PacketFormat argument once https://github.com/bcgit/bc-java/pull/1993 lands in BC
+        String armored = secretKeys.toAsciiArmoredString(PacketFormat.LEGACY);
 
         PGPKeyRing keyRing = PGPainless.readKeyRing()
                 .keyRing(armored);

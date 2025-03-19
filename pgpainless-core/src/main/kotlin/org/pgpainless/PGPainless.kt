@@ -60,6 +60,16 @@ class PGPainless(
                 implementation, version.numeric, version == OpenPGPKeyVersion.v6, creationTime)
             .setAlgorithmSuite(algorithmPolicy.keyGenerationAlgorithmSuite)
 
+    /**
+     * Inspect an [OpenPGPKey] or [OpenPGPCertificate], gaining convenient access to its properties.
+     *
+     * @param keyOrCertificate [OpenPGPKey] or [OpenPGPCertificate]
+     * @param referenceTime reference time for evaluation
+     * @return [KeyRingInfo] wrapper
+     */
+    fun inspect(keyOrCertificate: OpenPGPCertificate, referenceTime: Date = Date()): KeyRingInfo =
+        KeyRingInfo(keyOrCertificate, this, referenceTime)
+
     fun readKey(): OpenPGPKeyReader = api.readKeyOrCertificate()
 
     fun toKey(secretKeyRing: PGPSecretKeyRing): OpenPGPKey =
@@ -118,6 +128,7 @@ class PGPainless(
          */
         @JvmStatic
         @JvmOverloads
+        @Deprecated("Call buildKey() on an instance of PGPainless instead.")
         fun buildKeyRing(
             version: OpenPGPKeyVersion = OpenPGPKeyVersion.v4,
             api: PGPainless = getInstance()
@@ -128,8 +139,8 @@ class PGPainless(
          *
          * @return builder
          */
-        @Deprecated("Use readKey() instead.", replaceWith = ReplaceWith("readKey()"))
         @JvmStatic
+        @Deprecated("Use readKey() instead.", replaceWith = ReplaceWith("readKey()"))
         fun readKeyRing(): KeyRingReader = KeyRingReader()
 
         /**
@@ -250,11 +261,17 @@ class PGPainless(
          */
         @JvmStatic
         @JvmOverloads
+        @Deprecated(
+            "Use inspect(key) on an instance of PGPainless instead.",
+            replaceWith = ReplaceWith("inspect(key)"))
         fun inspectKeyRing(key: PGPKeyRing, referenceTime: Date = Date()): KeyRingInfo =
             KeyRingInfo(key, referenceTime)
 
         @JvmStatic
         @JvmOverloads
+        @Deprecated(
+            "Use inspect(key) on an instance of PGPainless instead.",
+            replaceWith = ReplaceWith("inspect(key)"))
         fun inspectKeyRing(key: OpenPGPCertificate, referenceTime: Date = Date()): KeyRingInfo =
             KeyRingInfo(key, getInstance(), referenceTime)
 
