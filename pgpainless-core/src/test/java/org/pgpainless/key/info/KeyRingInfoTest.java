@@ -24,9 +24,7 @@ import java.util.Set;
 
 import org.bouncycastle.bcpg.KeyIdentifier;
 import org.bouncycastle.openpgp.PGPException;
-import org.bouncycastle.openpgp.PGPPublicKeyRing;
 import org.bouncycastle.openpgp.PGPSecretKey;
-import org.bouncycastle.openpgp.PGPSecretKeyRing;
 import org.bouncycastle.openpgp.api.OpenPGPCertificate;
 import org.bouncycastle.openpgp.api.OpenPGPKey;
 import org.junit.JUtils;
@@ -50,7 +48,6 @@ import org.pgpainless.key.generation.type.ecc.EllipticCurve;
 import org.pgpainless.key.generation.type.eddsa_legacy.EdDSALegacyCurve;
 import org.pgpainless.key.protection.SecretKeyRingProtector;
 import org.pgpainless.key.protection.UnprotectedKeysProtector;
-import org.pgpainless.key.util.KeyRingUtils;
 import org.pgpainless.key.util.RevocationAttributes;
 import org.pgpainless.key.util.UserId;
 import org.pgpainless.util.DateUtil;
@@ -62,11 +59,12 @@ public class KeyRingInfoTest {
     @TestTemplate
     @ExtendWith(TestAllImplementations.class)
     public void testWithEmilsKeys() throws IOException, PGPException {
+        PGPainless api = PGPainless.getInstance();
 
-        PGPSecretKeyRing secretKeys = TestKeys.getEmilSecretKeyRing();
-        PGPPublicKeyRing publicKeys = TestKeys.getEmilPublicKeyRing();
-        KeyRingInfo sInfo = PGPainless.inspectKeyRing(secretKeys);
-        KeyRingInfo pInfo = PGPainless.inspectKeyRing(publicKeys);
+        OpenPGPKey secretKeys = TestKeys.getEmilKey();
+        OpenPGPCertificate publicKeys = TestKeys.getEmilCertificate();
+        KeyRingInfo sInfo = api.inspect(secretKeys);
+        KeyRingInfo pInfo = api.inspect(publicKeys);
 
         assertEquals(TestKeys.EMIL_KEY_ID, sInfo.getKeyIdentifier().getKeyId());
         assertEquals(TestKeys.EMIL_KEY_ID, pInfo.getKeyIdentifier().getKeyId());
@@ -108,13 +106,13 @@ public class KeyRingInfoTest {
         assertNull(sInfo.getRevocationDate());
         assertNull(pInfo.getRevocationDate());
         Date revocationDate = DateUtil.now();
-        PGPSecretKeyRing revoked = PGPainless.modifyKeyRing(secretKeys).revoke(
+        OpenPGPKey revoked = api.modify(secretKeys).revoke(
                 new UnprotectedKeysProtector(),
                 RevocationAttributes.createKeyRevocation()
                         .withReason(RevocationAttributes.Reason.KEY_RETIRED)
                         .withoutDescription()
         ).done();
-        KeyRingInfo rInfo = PGPainless.inspectKeyRing(revoked);
+        KeyRingInfo rInfo = api.inspect(revoked);
         assertNotNull(rInfo.getRevocationDate());
         assertEquals(revocationDate.getTime(), rInfo.getRevocationDate().getTime(), 5);
         assertEquals(revocationDate.getTime(), rInfo.getLastModified().getTime(), 5);
@@ -125,32 +123,34 @@ public class KeyRingInfoTest {
 
     @Test
     public void testIsFullyDecrypted() throws IOException, PGPException {
-        PGPSecretKeyRing secretKeys = TestKeys.getEmilSecretKeyRing();
-        KeyRingInfo info = PGPainless.inspectKeyRing(secretKeys);
+        PGPainless api = PGPainless.getInstance();
+        OpenPGPKey secretKeys = TestKeys.getEmilKey();
+        KeyRingInfo info = api.inspect(secretKeys);
 
         assertTrue(info.isFullyDecrypted());
 
-        secretKeys = encryptSecretKeys(secretKeys);
-        info = PGPainless.inspectKeyRing(secretKeys);
+        secretKeys = encryptSecretKeys(secretKeys, api);
+        info = api.inspect(secretKeys);
 
         assertFalse(info.isFullyDecrypted());
     }
 
     @Test
     public void testIsFullyEncrypted() throws IOException, PGPException {
-        PGPSecretKeyRing secretKeys = TestKeys.getEmilSecretKeyRing();
-        KeyRingInfo info = PGPainless.inspectKeyRing(secretKeys);
+        PGPainless api = PGPainless.getInstance();
+        OpenPGPKey secretKeys = TestKeys.getEmilKey();
+        KeyRingInfo info = api.inspect(secretKeys);
 
         assertFalse(info.isFullyEncrypted());
 
-        secretKeys = encryptSecretKeys(secretKeys);
-        info = PGPainless.inspectKeyRing(secretKeys);
+        secretKeys = encryptSecretKeys(secretKeys, api);
+        info = api.inspect(secretKeys);
 
         assertTrue(info.isFullyEncrypted());
     }
 
-    private static PGPSecretKeyRing encryptSecretKeys(PGPSecretKeyRing secretKeys) throws PGPException {
-        return PGPainless.modifyKeyRing(secretKeys)
+    private static OpenPGPKey encryptSecretKeys(OpenPGPKey secretKeys, PGPainless api) throws PGPException {
+        return api.modify(secretKeys)
                 .changePassphraseFromOldPassphrase(Passphrase.emptyPassphrase())
                 .withSecureDefaultSettings()
                 .toNewPassphrase(Passphrase.fromPassword("sw0rdf1sh"))
@@ -160,27 +160,29 @@ public class KeyRingInfoTest {
 
     @Test
     public void testGetSecretKey() throws IOException, PGPException {
-        PGPSecretKeyRing secretKeys = TestKeys.getCryptieSecretKeyRing();
-        PGPPublicKeyRing publicKeys = KeyRingUtils.publicKeyRingFrom(secretKeys);
+        PGPainless api = PGPainless.getInstance();
+        OpenPGPKey secretKeys = TestKeys.getCryptieKey();
+        OpenPGPCertificate publicKeys = secretKeys.toCertificate();
 
-        KeyRingInfo info = PGPainless.inspectKeyRing(secretKeys);
+        KeyRingInfo info = api.inspect(secretKeys);
         OpenPGPKey.OpenPGPSecretKey primarySecretKey = info.getSecretKey();
         assertNotNull(primarySecretKey);
-        assertEquals(KeyRingUtils.requirePrimarySecretKeyFrom(secretKeys), primarySecretKey.getPGPSecretKey());
+        assertEquals(secretKeys.getPrimarySecretKey().getPGPSecretKey(), primarySecretKey.getPGPSecretKey());
 
-        info = PGPainless.inspectKeyRing(publicKeys);
+        info = api.inspect(publicKeys);
         assertNull(info.getSecretKey());
     }
 
     @Test
     public void testGetPublicKey() throws IOException, PGPException {
-        PGPSecretKeyRing secretKeys = TestKeys.getCryptieSecretKeyRing();
+        PGPainless api = PGPainless.getInstance();
+        OpenPGPKey secretKeys = TestKeys.getCryptieKey();
 
-        KeyRingInfo info = PGPainless.inspectKeyRing(secretKeys);
-        assertEquals(KeyRingUtils.requirePrimaryPublicKeyFrom(secretKeys), info.getPrimaryKey().getPGPPublicKey());
+        KeyRingInfo info = api.inspect(secretKeys);
+        assertEquals(secretKeys.getPrimaryKey().getPGPPublicKey(), info.getPrimaryKey().getPGPPublicKey());
 
-        assertEquals(KeyRingUtils.requirePrimarySecretKeyFrom(secretKeys),
-                KeyRingUtils.requireSecretKeyFrom(secretKeys, secretKeys.getPublicKey().getKeyID()));
+        assertEquals(secretKeys.getPrimarySecretKey().getPGPSecretKey(),
+                secretKeys.getPGPSecretKeyRing().getSecretKey(secretKeys.getKeyIdentifier()));
     }
 
     @TestTemplate
@@ -224,8 +226,8 @@ public class KeyRingInfoTest {
     @TestTemplate
     @ExtendWith(TestAllImplementations.class)
     public void testGetKeysWithFlagsAndExpiry() {
-
-        PGPSecretKeyRing secretKeys = PGPainless.buildKeyRing()
+        PGPainless api = PGPainless.getInstance();
+        OpenPGPKey secretKeys = PGPainless.buildKeyRing()
                 .setPrimaryKey(KeySpec.getBuilder(
                         KeyType.EDDSA_LEGACY(EdDSALegacyCurve._Ed25519), KeyFlag.CERTIFY_OTHER))
                 .addSubkey(KeySpec.getBuilder(
@@ -234,10 +236,9 @@ public class KeyRingInfoTest {
                 .addSubkey(KeySpec.getBuilder(
                         KeyType.ECDSA(EllipticCurve._BRAINPOOLP384R1), KeyFlag.SIGN_DATA))
                 .addUserId(UserId.builder().withName("Alice").withEmail("alice@pgpainless.org").build())
-                .build()
-                .getPGPSecretKeyRing();
+                .build();
 
-        Iterator<PGPSecretKey> keys = secretKeys.iterator();
+        Iterator<PGPSecretKey> keys = secretKeys.getPGPSecretKeyRing().iterator();
         Date now = DateUtil.now();
 
         Calendar calendar = Calendar.getInstance();
@@ -255,11 +256,11 @@ public class KeyRingInfoTest {
         PGPSecretKey signingKey = keys.next();
 
         SecretKeyRingProtector protector = SecretKeyRingProtector.unprotectedKeys();
-        secretKeys = PGPainless.modifyKeyRing(secretKeys)
+        secretKeys = api.modify(secretKeys)
                 .setExpirationDate(primaryKeyExpiration, protector)
                 .done();
 
-        KeyRingInfo info = new KeyRingInfo(secretKeys);
+        KeyRingInfo info = api.inspect(secretKeys);
 
         List<OpenPGPCertificate.OpenPGPComponentKey> encryptionKeys = info.getKeysWithKeyFlag(KeyFlag.ENCRYPT_STORAGE);
         assertEquals(1, encryptionKeys.size());
@@ -354,9 +355,10 @@ public class KeyRingInfoTest {
                 "crH02GDG8CotAnEHkLTz9GPO80q8mowzBV0EtHsXb4TeAFw5T5Qd0a5I+wk=\n" +
                 "=Vcb3\n" +
                 "-----END PGP ARMORED FILE-----\n";
-        OpenPGPCertificate certificate = PGPainless.getInstance().readKey().parseCertificate(KEY);
+        PGPainless api = PGPainless.getInstance();
+        OpenPGPCertificate certificate = api.readKey().parseCertificate(KEY);
 
-        KeyRingInfo info = PGPainless.inspectKeyRing(certificate, DateUtil.parseUTCDate("2021-10-10 00:00:00 UTC"));
+        KeyRingInfo info = api.inspect(certificate, DateUtil.parseUTCDate("2021-10-10 00:00:00 UTC"));
         // Subkey is hard revoked
         assertFalse(info.isKeyValidlyBound(new KeyIdentifier(5364407983539305061L)));
     }
@@ -434,14 +436,15 @@ public class KeyRingInfoTest {
                 "=7Feh\n" +
                 "-----END PGP ARMORED FILE-----\n";
 
-        OpenPGPCertificate certificate = PGPainless.getInstance().readKey().parseCertificate(KEY);
+        PGPainless api = PGPainless.getInstance();
+        OpenPGPCertificate certificate = api.readKey().parseCertificate(KEY);
         final KeyIdentifier subkeyId = new KeyIdentifier(5364407983539305061L);
 
-        KeyRingInfo inspectDuringRevokedPeriod = PGPainless.inspectKeyRing(certificate, DateUtil.parseUTCDate("2019-01-02 00:00:00 UTC"));
+        KeyRingInfo inspectDuringRevokedPeriod = api.inspect(certificate, DateUtil.parseUTCDate("2019-01-02 00:00:00 UTC"));
         assertFalse(inspectDuringRevokedPeriod.isKeyValidlyBound(subkeyId));
         assertNotNull(inspectDuringRevokedPeriod.getSubkeyRevocationSignature(subkeyId));
 
-        KeyRingInfo inspectAfterRebinding = PGPainless.inspectKeyRing(certificate, DateUtil.parseUTCDate("2020-01-02 00:00:00 UTC"));
+        KeyRingInfo inspectAfterRebinding = api.inspect(certificate, DateUtil.parseUTCDate("2020-01-02 00:00:00 UTC"));
         assertTrue(inspectAfterRebinding.isKeyValidlyBound(subkeyId));
     }
 
@@ -518,9 +521,10 @@ public class KeyRingInfoTest {
                 "=MhJL\n" +
                 "-----END PGP ARMORED FILE-----\n";
 
-        OpenPGPCertificate keys = PGPainless.getInstance().readKey().parseCertificate(KEY);
+        PGPainless api = PGPainless.getInstance();
+        OpenPGPCertificate keys = api.readKey().parseCertificate(KEY);
 
-        KeyRingInfo info = PGPainless.inspectKeyRing(keys);
+        KeyRingInfo info = api.inspect(keys);
         // Primary key is hard revoked
         assertFalse(info.isKeyValidlyBound(keys.getKeyIdentifier()));
         assertFalse(info.isFullyEncrypted());
@@ -528,49 +532,48 @@ public class KeyRingInfoTest {
 
     @Test
     public void getSecretKeyTest() {
-        PGPSecretKeyRing secretKeys = PGPainless.generateKeyRing().modernKeyRing("Alice")
-                .getPGPSecretKeyRing();
-        OpenPGPKey key = new OpenPGPKey(secretKeys);
-        KeyRingInfo info = PGPainless.inspectKeyRing(secretKeys);
+        PGPainless api = PGPainless.getInstance();
+        OpenPGPKey secretKeys = api.generateKey().modernKeyRing("Alice");
+        KeyRingInfo info = api.inspect(secretKeys);
 
         OpenPgpV4Fingerprint primaryKeyFingerprint = new OpenPgpV4Fingerprint(secretKeys);
         OpenPGPKey.OpenPGPSecretKey primaryKey = info.getSecretKey(primaryKeyFingerprint);
         assertNotNull(primaryKey);
-        assertEquals(key.getPrimarySecretKey().getKeyIdentifier(), primaryKey.getKeyIdentifier());
+        assertEquals(secretKeys.getPrimarySecretKey().getKeyIdentifier(), primaryKey.getKeyIdentifier());
     }
 
     @Test
     public void testGetLatestKeyCreationDate() throws PGPException, IOException {
-        PGPSecretKeyRing secretKeys = TestKeys.getEmilSecretKeyRing();
+        OpenPGPKey secretKeys = TestKeys.getEmilKey();
         Date latestCreationDate = DateUtil.parseUTCDate("2020-01-12 18:01:44 UTC");
 
-        KeyRingInfo info = PGPainless.inspectKeyRing(secretKeys);
+        KeyRingInfo info = PGPainless.getInstance().inspect(secretKeys);
         JUtils.assertDateEquals(latestCreationDate, info.getLatestKeyCreationDate());
     }
 
     @Test
     public void testGetExpirationDateForUse_SPLIT() throws PGPException, IOException {
-        PGPSecretKeyRing secretKeys = TestKeys.getEmilSecretKeyRing();
-        KeyRingInfo info = PGPainless.inspectKeyRing(secretKeys);
+        OpenPGPKey secretKeys = TestKeys.getEmilKey();
+        KeyRingInfo info = PGPainless.getInstance().inspect(secretKeys);
         assertThrows(IllegalArgumentException.class, () -> info.getExpirationDateForUse(KeyFlag.SPLIT));
     }
 
     @Test
     public void testGetExpirationDateForUse_SHARED() throws PGPException, IOException {
-        PGPSecretKeyRing secretKeys = TestKeys.getEmilSecretKeyRing();
-        KeyRingInfo info = PGPainless.inspectKeyRing(secretKeys);
+        OpenPGPKey secretKeys = TestKeys.getEmilKey();
+        KeyRingInfo info = PGPainless.getInstance().inspect(secretKeys);
         assertThrows(IllegalArgumentException.class, () -> info.getExpirationDateForUse(KeyFlag.SHARED));
     }
 
     @Test
     public void testGetExpirationDateForUse_NoSuchKey() {
-        PGPSecretKeyRing secretKeys = PGPainless.buildKeyRing()
+        PGPainless api = PGPainless.getInstance();
+        OpenPGPKey secretKeys = PGPainless.buildKeyRing()
                 .addUserId("Alice")
                 .setPrimaryKey(KeySpec.getBuilder(KeyType.EDDSA_LEGACY(EdDSALegacyCurve._Ed25519), KeyFlag.CERTIFY_OTHER))
-                .build()
-                .getPGPSecretKeyRing();
+                .build();
 
-        KeyRingInfo info = PGPainless.inspectKeyRing(secretKeys);
+        KeyRingInfo info = api.inspect(secretKeys);
 
         assertThrows(NoSuchElementException.class, () -> info.getExpirationDateForUse(KeyFlag.ENCRYPT_COMMS));
     }
@@ -600,8 +603,8 @@ public class KeyRingInfoTest {
                 "/+XL+qMMgLHaQ25aA11GVAkC\n" +
                 "=7gbt\n" +
                 "-----END PGP PRIVATE KEY BLOCK-----";
-
-        OpenPGPKey secretKeys = PGPainless.getInstance().readKey().parseKey(KEY);
+        PGPainless api = PGPainless.getInstance();
+        OpenPGPKey secretKeys = api.readKey().parseKey(KEY);
         final KeyIdentifier pkid = new KeyIdentifier(6643807985200014832L);
         final KeyIdentifier skid1 = new KeyIdentifier(-2328413746552029063L);
         final KeyIdentifier skid2 = new KeyIdentifier(-3276877650571760552L);
@@ -611,7 +614,7 @@ public class KeyRingInfoTest {
                 Arrays.asList(CompressionAlgorithm.ZLIB, CompressionAlgorithm.BZIP2, CompressionAlgorithm.ZIP, CompressionAlgorithm.UNCOMPRESSED));
         Set<SymmetricKeyAlgorithm> preferredSymmetricAlgorithms = new LinkedHashSet<>(
                 Arrays.asList(SymmetricKeyAlgorithm.AES_256, SymmetricKeyAlgorithm.AES_192, SymmetricKeyAlgorithm.AES_128));
-        KeyRingInfo info = PGPainless.inspectKeyRing(secretKeys);
+        KeyRingInfo info = api.inspect(secretKeys);
 
         // Bob is an invalid userId
         assertThrows(NoSuchElementException.class, () -> info.getPreferredSymmetricKeyAlgorithms("Bob"));
@@ -694,10 +697,10 @@ public class KeyRingInfoTest {
                 "C9h35EjDuD+1COXUOoW2B8LX6m2yf8cY72K70QgtGemj7UWhXL5u/wARAQAB\n" +
                 "=A3B8\n" +
                 "-----END PGP PUBLIC KEY BLOCK-----\n";
-
-        OpenPGPCertificate certificate = PGPainless.getInstance().readKey().parseCertificate(KEY);
+        PGPainless api = PGPainless.getInstance();
+        OpenPGPCertificate certificate = api.readKey().parseCertificate(KEY);
         OpenPgpV4Fingerprint unboundKey = new OpenPgpV4Fingerprint("D622C916384E0F6D364907E55D918BBD521CCD10");
-        KeyRingInfo info = PGPainless.inspectKeyRing(certificate);
+        KeyRingInfo info = api.inspect(certificate);
 
         assertFalse(info.isKeyValidlyBound(unboundKey.getKeyIdentifier()));
 
@@ -773,9 +776,9 @@ public class KeyRingInfoTest {
                 "qDzPRwEAhdVBeryRUcwjgwHX0xmMFK7vLkdonn8BR2++nXBO2g8=\n" +
                 "=ZRAy\n" +
                 "-----END PGP PRIVATE KEY BLOCK-----\n";
-
-        OpenPGPKey secretKeys = PGPainless.getInstance().readKey().parseKey(KEY);
-        KeyRingInfo info = PGPainless.inspectKeyRing(secretKeys);
+        PGPainless api = PGPainless.getInstance();
+        OpenPGPKey secretKeys = api.readKey().parseKey(KEY);
+        KeyRingInfo info = api.inspect(secretKeys);
 
         List<String> emails = info.getEmailAddresses();
         assertEquals(emails, Arrays.asList("alice@email.tld", "alice@pgpainless.org", "alice@openpgp.org", "alice@rfc4880.spec"));
@@ -805,9 +808,9 @@ public class KeyRingInfoTest {
                 "J5wP\n" +
                 "=nFoO\n" +
                 "-----END PGP PUBLIC KEY BLOCK-----";
-
-        OpenPGPCertificate cert = PGPainless.getInstance().readKey().parseCertificate(CERT);
-        KeyRingInfo info = PGPainless.inspectKeyRing(cert);
+        PGPainless api = PGPainless.getInstance();
+        OpenPGPCertificate cert = api.readKey().parseCertificate(CERT);
+        KeyRingInfo info = api.inspect(cert);
         assertTrue(info.isUsableForEncryption());
     }
 
@@ -833,9 +836,9 @@ public class KeyRingInfoTest {
                 "2XO/hpB2T8VXFfFKwj7U9LGkX+ciLg==\n" +
                 "=etPP\n" +
                 "-----END PGP PUBLIC KEY BLOCK-----";
-
-        OpenPGPCertificate publicKeys = PGPainless.getInstance().readKey().parseCertificate(CERT);
-        KeyRingInfo info = PGPainless.inspectKeyRing(publicKeys);
+        PGPainless api = PGPainless.getInstance();
+        OpenPGPCertificate publicKeys = api.readKey().parseCertificate(CERT);
+        KeyRingInfo info = api.inspect(publicKeys);
 
         assertTrue(info.isUsableForEncryption(EncryptionPurpose.COMMUNICATIONS));
         assertTrue(info.isUsableForEncryption(EncryptionPurpose.ANY));
@@ -870,8 +873,9 @@ public class KeyRingInfoTest {
                 "AQCjeV+3VT+u1movwIYv4XkzB6gB+B2C+DK9nvG5sXZhBg==\n" +
                 "=uqmO\n" +
                 "-----END PGP PUBLIC KEY BLOCK-----";
-        OpenPGPCertificate publicKeys = PGPainless.getInstance().readKey().parseCertificate(CERT);
-        KeyRingInfo info = PGPainless.inspectKeyRing(publicKeys);
+        PGPainless api = PGPainless.getInstance();
+        OpenPGPCertificate publicKeys = api.readKey().parseCertificate(CERT);
+        KeyRingInfo info = api.inspect(publicKeys);
 
         assertFalse(info.isUsableForEncryption());
         assertFalse(info.isUsableForEncryption(EncryptionPurpose.ANY));
