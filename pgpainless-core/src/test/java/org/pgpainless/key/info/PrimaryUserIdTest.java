@@ -7,7 +7,7 @@ package org.pgpainless.key.info;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
 import org.bouncycastle.openpgp.PGPException;
-import org.bouncycastle.openpgp.PGPSecretKeyRing;
+import org.bouncycastle.openpgp.api.OpenPGPKey;
 import org.junit.jupiter.api.Test;
 import org.pgpainless.PGPainless;
 import org.pgpainless.key.protection.SecretKeyRingProtector;
@@ -16,13 +16,13 @@ public class PrimaryUserIdTest {
 
     @Test
     public void testGetPrimaryUserId() throws PGPException {
-        PGPSecretKeyRing secretKeys = PGPainless.generateKeyRing().simpleEcKeyRing("alice@wonderland.lit")
-                .getPGPSecretKeyRing();
-        secretKeys = PGPainless.modifyKeyRing(secretKeys)
+        PGPainless api = PGPainless.getInstance();
+        OpenPGPKey secretKeys = api.generateKey().simpleEcKeyRing("alice@wonderland.lit");
+        secretKeys = api.modify(secretKeys)
                 .addUserId("mad_alice@wonderland.lit", SecretKeyRingProtector.unprotectedKeys())
                 .done();
 
-        KeyRingInfo info = PGPainless.inspectKeyRing(secretKeys);
+        KeyRingInfo info = api.inspect(secretKeys);
         assertEquals("alice@wonderland.lit", info.getPrimaryUserId());
     }
 }

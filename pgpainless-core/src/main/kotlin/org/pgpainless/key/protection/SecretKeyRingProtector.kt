@@ -12,6 +12,7 @@ import org.bouncycastle.openpgp.PGPSecretKey
 import org.bouncycastle.openpgp.PGPSecretKeyRing
 import org.bouncycastle.openpgp.api.KeyPassphraseProvider
 import org.bouncycastle.openpgp.api.OpenPGPCertificate.OpenPGPComponentKey
+import org.bouncycastle.openpgp.api.OpenPGPKey
 import org.bouncycastle.openpgp.operator.PBESecretKeyDecryptor
 import org.bouncycastle.openpgp.operator.PBESecretKeyEncryptor
 import org.pgpainless.key.protection.passphrase_provider.SecretKeyPassphraseProvider
@@ -104,6 +105,10 @@ interface SecretKeyRingProtector : KeyPassphraseProvider {
                 mapOf(),
                 KeyRingProtectionSettings.secureDefaultSettings(),
                 missingPassphraseCallback)
+
+        @JvmStatic
+        fun unlockEachKeyWith(passphrase: Passphrase, keys: OpenPGPKey): SecretKeyRingProtector =
+            fromPassphraseMap(keys.secretKeys.keys.associateWith { passphrase })
 
         /**
          * Use the provided passphrase to lock/unlock all keys in the provided key ring.

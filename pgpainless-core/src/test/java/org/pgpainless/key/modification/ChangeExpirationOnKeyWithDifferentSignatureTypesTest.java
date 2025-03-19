@@ -7,7 +7,7 @@ package org.pgpainless.key.modification;
 import java.io.IOException;
 import java.util.Date;
 
-import org.bouncycastle.openpgp.PGPSecretKeyRing;
+import org.bouncycastle.openpgp.api.OpenPGPKey;
 import org.junit.JUtils;
 import org.junit.jupiter.api.TestTemplate;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -138,7 +138,8 @@ public class ChangeExpirationOnKeyWithDifferentSignatureTypesTest {
     @ExtendWith(TestAllImplementations.class)
     public void setExpirationDate_keyHasSigClass10()
             throws IOException {
-        PGPSecretKeyRing keys = PGPainless.readKeyRing().secretKeyRing(keyWithGenericCertification);
+        PGPainless api = PGPainless.getInstance();
+        OpenPGPKey keys = api.readKey().parseKey(keyWithGenericCertification);
         SecretKeyRingProtector protector = SecretKeyRingProtector.unprotectedKeys();
         executeTestForKeys(keys, protector);
     }
@@ -147,20 +148,23 @@ public class ChangeExpirationOnKeyWithDifferentSignatureTypesTest {
     @ExtendWith(TestAllImplementations.class)
     public void setExpirationDate_keyHasSigClass12()
             throws IOException {
-        PGPSecretKeyRing keys = PGPainless.readKeyRing().secretKeyRing(keyWithCasualCertification);
+        PGPainless api = PGPainless.getInstance();
+        OpenPGPKey keys = api.readKey().parseKey(keyWithCasualCertification);
         SecretKeyRingProtector protector = SecretKeyRingProtector.unprotectedKeys();
         executeTestForKeys(keys, protector);
     }
 
-    private void executeTestForKeys(PGPSecretKeyRing keys, SecretKeyRingProtector protector) {
+    private void executeTestForKeys(OpenPGPKey keys, SecretKeyRingProtector protector) {
+        PGPainless api = PGPainless.getInstance();
+
         Date expirationDate = new Date(System.currentTimeMillis() + 1000 * 60 * 60 * 24 * 14);
         // round date for test stability
         expirationDate = DateUtil.toSecondsPrecision(expirationDate);
 
-        PGPSecretKeyRing modded = PGPainless.modifyKeyRing(keys)
+        OpenPGPKey modded = api.modify(keys)
                 .setExpirationDate(expirationDate, protector)
                 .done();
 
-        JUtils.assertDateEquals(expirationDate, PGPainless.inspectKeyRing(modded).getPrimaryKeyExpirationDate());
+        JUtils.assertDateEquals(expirationDate, api.inspect(modded).getPrimaryKeyExpirationDate());
     }
 }

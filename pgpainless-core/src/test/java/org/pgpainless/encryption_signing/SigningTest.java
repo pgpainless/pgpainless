@@ -23,6 +23,7 @@ import org.bouncycastle.openpgp.PGPSecretKey;
 import org.bouncycastle.openpgp.PGPSecretKeyRing;
 import org.bouncycastle.openpgp.PGPSecretKeyRingCollection;
 import org.bouncycastle.openpgp.PGPSignature;
+import org.bouncycastle.openpgp.api.OpenPGPKey;
 import org.bouncycastle.util.io.Streams;
 import org.junit.jupiter.api.TestTemplate;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -130,16 +131,16 @@ public class SigningTest {
     @ExtendWith(TestAllImplementations.class)
     public void testSignWithRevokedUserIdFails()
             throws PGPException {
-        PGPSecretKeyRing secretKeys = PGPainless.generateKeyRing()
-                .modernKeyRing("alice", "password123")
-                .getPGPSecretKeyRing();
+        PGPainless api = PGPainless.getInstance();
+        OpenPGPKey secretKeys = api.generateKey()
+                .modernKeyRing("alice", "password123");
         SecretKeyRingProtector protector = SecretKeyRingProtector.unlockAnyKeyWith(
                 Passphrase.fromPassword("password123"));
-        secretKeys = PGPainless.modifyKeyRing(secretKeys)
+        secretKeys = api.modify(secretKeys)
                 .revokeUserId("alice", protector)
                 .done();
 
-        final PGPSecretKeyRing fSecretKeys = secretKeys;
+        final OpenPGPKey fSecretKeys = secretKeys;
 
         SigningOptions opts = SigningOptions.get();
         // "alice" has been revoked

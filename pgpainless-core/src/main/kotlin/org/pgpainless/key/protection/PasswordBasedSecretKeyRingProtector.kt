@@ -7,6 +7,7 @@ package org.pgpainless.key.protection
 import org.bouncycastle.bcpg.KeyIdentifier
 import org.bouncycastle.openpgp.PGPKeyRing
 import org.bouncycastle.openpgp.PGPSecretKey
+import org.bouncycastle.openpgp.api.OpenPGPCertificate
 import org.pgpainless.key.protection.passphrase_provider.SecretKeyPassphraseProvider
 import org.pgpainless.util.Passphrase
 
@@ -32,6 +33,25 @@ class PasswordBasedSecretKeyRingProtector : BaseSecretKeyRingProtector {
     ) : super(passphraseProvider, settings)
 
     companion object {
+
+        @JvmStatic
+        fun forKey(
+            cert: OpenPGPCertificate,
+            passphrase: Passphrase
+        ): PasswordBasedSecretKeyRingProtector {
+            return object : SecretKeyPassphraseProvider {
+
+                    override fun getPassphraseFor(keyIdentifier: KeyIdentifier): Passphrase? {
+                        return if (hasPassphrase(keyIdentifier)) passphrase else null
+                    }
+
+                    override fun hasPassphrase(keyIdentifier: KeyIdentifier): Boolean {
+                        return cert.getKey(keyIdentifier) != null
+                    }
+                }
+                .let { PasswordBasedSecretKeyRingProtector(it) }
+        }
+
         @JvmStatic
         fun forKey(
             keyRing: PGPKeyRing,

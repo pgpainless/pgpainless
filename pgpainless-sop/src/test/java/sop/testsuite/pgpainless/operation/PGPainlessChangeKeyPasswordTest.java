@@ -7,7 +7,7 @@ package sop.testsuite.pgpainless.operation;
 import org.bouncycastle.bcpg.KeyIdentifier;
 import org.bouncycastle.openpgp.PGPException;
 import org.bouncycastle.openpgp.PGPPublicKey;
-import org.bouncycastle.openpgp.PGPSecretKeyRing;
+import org.bouncycastle.openpgp.api.OpenPGPKey;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.MethodSource;
 import org.pgpainless.PGPainless;
@@ -32,13 +32,13 @@ public class PGPainlessChangeKeyPasswordTest extends ChangeKeyPasswordTest {
     @ParameterizedTest
     @MethodSource("provideInstances")
     public void changePasswordOfKeyWithSeparateSubkeyPasswords(SOP sop) throws IOException, PGPException {
-        PGPSecretKeyRing secretKeys = PGPainless.buildKeyRing()
+        PGPainless api = PGPainless.getInstance();
+        OpenPGPKey secretKeys = PGPainless.buildKeyRing()
                 .setPrimaryKey(KeySpec.getBuilder(KeyType.EDDSA_LEGACY(EdDSALegacyCurve._Ed25519), KeyFlag.CERTIFY_OTHER))
                 .addSubkey(KeySpec.getBuilder(KeyType.EDDSA_LEGACY(EdDSALegacyCurve._Ed25519), KeyFlag.SIGN_DATA))
                 .addSubkey(KeySpec.getBuilder(KeyType.XDH_LEGACY(XDHLegacySpec._X25519), KeyFlag.ENCRYPT_COMMS, KeyFlag.ENCRYPT_STORAGE))
-                .build()
-                .getPGPSecretKeyRing();
-        Iterator<PGPPublicKey> keys = secretKeys.getPublicKeys();
+                .build();
+        Iterator<PGPPublicKey> keys = secretKeys.getPGPSecretKeyRing().getPublicKeys();
         KeyIdentifier primaryKeyId = keys.next().getKeyIdentifier();
         KeyIdentifier signingKeyId = keys.next().getKeyIdentifier();
         KeyIdentifier encryptKeyId = keys.next().getKeyIdentifier();
@@ -47,7 +47,7 @@ public class PGPainlessChangeKeyPasswordTest extends ChangeKeyPasswordTest {
         String p2 = "0r4ng3";
         String p3 = "dr4g0n";
 
-        secretKeys = PGPainless.modifyKeyRing(secretKeys)
+        secretKeys = api.modify(secretKeys)
                 .changeSubKeyPassphraseFromOldPassphrase(primaryKeyId, Passphrase.emptyPassphrase())
                 .withSecureDefaultSettings()
                 .toNewPassphrase(Passphrase.fromPassword(p1))

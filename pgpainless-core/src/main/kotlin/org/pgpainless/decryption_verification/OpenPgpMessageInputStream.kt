@@ -694,7 +694,7 @@ class OpenPgpMessageInputStream(
     private fun getDecryptionKey(pkesk: PGPPublicKeyEncryptedData): OpenPGPKey? =
         options.getDecryptionKeys().firstOrNull {
             it.pgpSecretKeyRing.getSecretKeyFor(pkesk) != null &&
-                PGPainless.inspectKeyRing(it).decryptionSubkeys.any { subkey ->
+                api.inspect(it).decryptionSubkeys.any { subkey ->
                     pkesk.keyIdentifier.matches(subkey.keyIdentifier)
                 }
         }
@@ -702,7 +702,7 @@ class OpenPgpMessageInputStream(
     private fun getDecryptionKeys(pkesk: PGPPublicKeyEncryptedData): List<OpenPGPKey> =
         options.getDecryptionKeys().filter {
             it.pgpSecretKeyRing.getSecretKeyFor(pkesk) != null &&
-                PGPainless.inspectKeyRing(it).decryptionSubkeys.any { subkey ->
+                api.inspect(it).decryptionSubkeys.any { subkey ->
                     pkesk.keyIdentifier.matches(subkey.keyIdentifier)
                 }
         }
@@ -713,7 +713,7 @@ class OpenPgpMessageInputStream(
         val algorithm = pkesk.algorithm
         val candidates = mutableListOf<OpenPGPSecretKey>()
         options.getDecryptionKeys().forEach {
-            val info = PGPainless.inspectKeyRing(it)
+            val info = api.inspect(it)
             for (key in info.decryptionSubkeys) {
                 if (key.pgpPublicKey.algorithm == algorithm &&
                     info.isSecretKeyAvailable(key.keyIdentifier)) {

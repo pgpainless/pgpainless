@@ -10,9 +10,9 @@ import static org.junit.jupiter.api.Assertions.assertNotNull;
 
 import java.util.Date;
 
-import org.bouncycastle.openpgp.PGPSecretKeyRing;
 import org.bouncycastle.openpgp.PGPSignature;
 import org.bouncycastle.openpgp.PGPSignatureSubpacketVector;
+import org.bouncycastle.openpgp.api.OpenPGPKey;
 import org.junit.jupiter.api.TestTemplate;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.pgpainless.PGPainless;
@@ -26,11 +26,11 @@ public class OldSignatureSubpacketsArePreservedOnNewSigTest {
     @TestTemplate
     @ExtendWith(TestAllImplementations.class)
     public void verifyOldSignatureSubpacketsArePreservedOnNewExpirationDateSig() {
-        PGPSecretKeyRing secretKeys = PGPainless.generateKeyRing()
-                .simpleEcKeyRing("Alice <alice@wonderland.lit>")
-                .getPGPSecretKeyRing();
+        PGPainless api = PGPainless.getInstance();
+        OpenPGPKey secretKeys = api.generateKey()
+                .simpleEcKeyRing("Alice <alice@wonderland.lit>");
 
-        PGPSignature oldSignature = PGPainless.inspectKeyRing(secretKeys).getLatestUserIdCertification("Alice <alice@wonderland.lit>");
+        PGPSignature oldSignature = api.inspect(secretKeys).getLatestUserIdCertification("Alice <alice@wonderland.lit>");
         assertNotNull(oldSignature);
         PGPSignatureSubpacketVector oldPackets = oldSignature.getHashedSubPackets();
 
@@ -40,10 +40,10 @@ public class OldSignatureSubpacketsArePreservedOnNewSigTest {
         Date t1 = new Date(now.getTime() + millisInHour);
         Date expiration = new Date(now.getTime() + 5 * 24 * millisInHour); // in 5 days
 
-        secretKeys = PGPainless.modifyKeyRing(secretKeys, t1)
+        secretKeys = api.modify(secretKeys, t1)
                 .setExpirationDate(expiration, new UnprotectedKeysProtector())
                 .done();
-        PGPSignature newSignature = PGPainless.inspectKeyRing(secretKeys, t1).getLatestUserIdCertification("Alice <alice@wonderland.lit>");
+        PGPSignature newSignature = api.inspect(secretKeys, t1).getLatestUserIdCertification("Alice <alice@wonderland.lit>");
         assertNotNull(newSignature);
         PGPSignatureSubpacketVector newPackets = newSignature.getHashedSubPackets();
 
