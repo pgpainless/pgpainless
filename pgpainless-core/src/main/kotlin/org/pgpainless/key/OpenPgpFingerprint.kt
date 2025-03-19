@@ -64,7 +64,7 @@ abstract class OpenPgpFingerprint : CharSequence, Comparable<OpenPgpFingerprint>
     /**
      * Check, whether the fingerprint consists of 40 valid hexadecimal characters.
      *
-     * @param fp fingerprint to check.
+     * @param fingerprint fingerprint to check.
      * @return true if fingerprint is valid.
      */
     protected abstract fun isValid(fingerprint: String): Boolean
@@ -127,7 +127,7 @@ abstract class OpenPgpFingerprint : CharSequence, Comparable<OpenPgpFingerprint>
          * Return the fingerprint of the primary key of the given key ring. This method
          * automatically matches key versions to fingerprint implementations.
          *
-         * @param ring key ring
+         * @param keys key ring
          * @return fingerprint
          */
         @JvmStatic fun of(keys: PGPKeyRing): OpenPgpFingerprint = of(keys.publicKey)
