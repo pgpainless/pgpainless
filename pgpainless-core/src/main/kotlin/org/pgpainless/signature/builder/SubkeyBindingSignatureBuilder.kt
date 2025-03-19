@@ -8,6 +8,8 @@ import java.util.function.Predicate
 import org.bouncycastle.openpgp.PGPException
 import org.bouncycastle.openpgp.PGPPublicKey
 import org.bouncycastle.openpgp.PGPSignature
+import org.bouncycastle.openpgp.api.OpenPGPCertificate.OpenPGPComponentKey
+import org.bouncycastle.openpgp.api.OpenPGPCertificate.OpenPGPComponentSignature
 import org.bouncycastle.openpgp.api.OpenPGPKey
 import org.pgpainless.PGPainless
 import org.pgpainless.algorithm.HashAlgorithm
@@ -77,4 +79,7 @@ class SubkeyBindingSignatureBuilder : AbstractSignatureBuilder<SubkeyBindingSign
     fun build(subkey: PGPPublicKey): PGPSignature =
         buildAndInitSignatureGenerator()
             .generateCertification(signingKey.publicKey.pgpPublicKey, subkey)
+
+    fun build(subkey: OpenPGPComponentKey): OpenPGPComponentSignature =
+        OpenPGPComponentSignature(build(subkey.pgpPublicKey), signingKey.publicKey, subkey)
 }

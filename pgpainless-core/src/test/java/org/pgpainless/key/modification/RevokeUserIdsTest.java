@@ -13,46 +13,45 @@ import java.util.Date;
 import java.util.NoSuchElementException;
 
 import org.bouncycastle.openpgp.PGPException;
-import org.bouncycastle.openpgp.PGPSecretKeyRing;
 import org.bouncycastle.openpgp.PGPSignature;
+import org.bouncycastle.openpgp.api.OpenPGPKey;
 import org.junit.jupiter.api.Test;
 import org.pgpainless.PGPainless;
 import org.pgpainless.key.info.KeyRingInfo;
 import org.pgpainless.key.protection.SecretKeyRingProtector;
 import org.pgpainless.key.util.RevocationAttributes;
-import org.pgpainless.util.selection.userid.SelectUserId;
 
 public class RevokeUserIdsTest {
 
     @Test
     public void revokeWithSelectUserId() throws PGPException {
-        PGPSecretKeyRing secretKeys = PGPainless.generateKeyRing()
-                .modernKeyRing("Alice <alice@pgpainless.org>")
-                .getPGPSecretKeyRing();
+        PGPainless api = PGPainless.getInstance();
+        OpenPGPKey secretKeys = api.generateKey()
+                .modernKeyRing("Alice <alice@pgpainless.org>");
         SecretKeyRingProtector protector = SecretKeyRingProtector.unprotectedKeys();
 
-        secretKeys = PGPainless.modifyKeyRing(secretKeys)
+        secretKeys = api.modify(secretKeys)
                 .addUserId("Allice <alice@example.org>", protector)
                 .addUserId("Alice <alice@example.org>", protector)
                 .done();
 
-        KeyRingInfo info = PGPainless.inspectKeyRing(secretKeys);
+        KeyRingInfo info = api.inspect(secretKeys);
         assertTrue(info.isUserIdValid("Alice <alice@pgpainless.org>"));
         assertTrue(info.isUserIdValid("Allice <alice@example.org>"));
         assertTrue(info.isUserIdValid("Alice <alice@example.org>"));
 
         Date n1 = new Date(info.getCreationDate().getTime() + 1000); // 1 sec later
 
-        secretKeys = PGPainless.modifyKeyRing(secretKeys, n1)
+        secretKeys = api.modify(secretKeys, n1)
                 .revokeUserIds(
-                        SelectUserId.containsEmailAddress("alice@example.org"),
                         protector,
                         RevocationAttributes.createCertificateRevocation()
                                 .withReason(RevocationAttributes.Reason.USER_ID_NO_LONGER_VALID)
-                                .withoutDescription())
+                                .withoutDescription(),
+                        uid -> uid.contains("alice@example.org"))
                 .done();
 
-        info = PGPainless.inspectKeyRing(secretKeys, n1);
+        info = api.inspect(secretKeys, n1);
         assertTrue(info.isUserIdValid("Alice <alice@pgpainless.org>"));
         assertFalse(info.isUserIdValid("Allice <alice@example.org>"));
         assertFalse(info.isUserIdValid("Alice <alice@example.org>"));
@@ -60,28 +59,28 @@ public class RevokeUserIdsTest {
 
     @Test
     public void removeUserId() throws PGPException {
-        PGPSecretKeyRing secretKeys = PGPainless.generateKeyRing()
-                .modernKeyRing("Alice <alice@pgpainless.org>")
-                .getPGPSecretKeyRing();
+        PGPainless api = PGPainless.getInstance();
+        OpenPGPKey secretKeys = api.generateKey()
+                .modernKeyRing("Alice <alice@pgpainless.org>");
         SecretKeyRingProtector protector = SecretKeyRingProtector.unprotectedKeys();
 
-        secretKeys = PGPainless.modifyKeyRing(secretKeys)
+        secretKeys = api.modify(secretKeys)
                 .addUserId("Allice <alice@example.org>", protector)
                 .addUserId("Alice <alice@example.org>", protector)
                 .done();
 
-        KeyRingInfo info = PGPainless.inspectKeyRing(secretKeys);
+        KeyRingInfo info = api.inspect(secretKeys);
         assertTrue(info.isUserIdValid("Alice <alice@pgpainless.org>"));
         assertTrue(info.isUserIdValid("Allice <alice@example.org>"));
         assertTrue(info.isUserIdValid("Alice <alice@example.org>"));
 
         Date n1 = new Date(info.getCreationDate().getTime() + 1000);
 
-        secretKeys = PGPainless.modifyKeyRing(secretKeys, n1)
+        secretKeys = api.modify(secretKeys, n1)
                 .removeUserId("Allice <alice@example.org>", protector)
                 .done();
 
-        info = PGPainless.inspectKeyRing(secretKeys, n1);
+        info = api.inspect(secretKeys, n1);
         assertTrue(info.isUserIdValid("Alice <alice@pgpainless.org>"));
         assertFalse(info.isUserIdValid("Allice <alice@example.org>"));
         assertTrue(info.isUserIdValid("Alice <alice@example.org>"));
@@ -95,14 +94,14 @@ public class RevokeUserIdsTest {
 
     @Test
     public void emptySelectionYieldsNoSuchElementException() {
-        PGPSecretKeyRing secretKeys = PGPainless.generateKeyRing()
-                .modernKeyRing("Alice <alice@pgpainless.org>")
-                .getPGPSecretKeyRing();
+        PGPainless api = PGPainless.getInstance();
+        OpenPGPKey secretKeys = api.generateKey()
+                .modernKeyRing("Alice <alice@pgpainless.org>");
 
         assertThrows(NoSuchElementException.class, () ->
-                PGPainless.modifyKeyRing(secretKeys).revokeUserIds(
-                        SelectUserId.containsEmailAddress("alice@example.org"),
+                api.modify(secretKeys).revokeUserIds(
                         SecretKeyRingProtector.unprotectedKeys(),
-                        (RevocationAttributes) null));
+                        (RevocationAttributes) null,
+                        uid -> uid.contains("alice@example.org")));
     }
 }

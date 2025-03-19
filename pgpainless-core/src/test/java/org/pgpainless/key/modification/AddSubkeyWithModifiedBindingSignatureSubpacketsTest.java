@@ -14,9 +14,9 @@ import java.util.List;
 
 import org.bouncycastle.bcpg.sig.NotationData;
 import org.bouncycastle.openpgp.PGPKeyPair;
-import org.bouncycastle.openpgp.PGPSecretKeyRing;
 import org.bouncycastle.openpgp.PGPSignature;
 import org.bouncycastle.openpgp.api.OpenPGPCertificate;
+import org.bouncycastle.openpgp.api.OpenPGPKey;
 import org.junit.JUtils;
 import org.junit.jupiter.api.Test;
 import org.pgpainless.PGPainless;
@@ -38,11 +38,11 @@ public class AddSubkeyWithModifiedBindingSignatureSubpacketsTest {
 
     @Test
     public void bindEncryptionSubkeyAndModifyBindingSignatureHashedSubpackets() {
+        PGPainless api = PGPainless.getInstance();
         SecretKeyRingProtector protector = SecretKeyRingProtector.unprotectedKeys();
-        PGPSecretKeyRing secretKeys = PGPainless.generateKeyRing()
-                .modernKeyRing("Alice <alice@pgpainless.org>")
-                .getPGPSecretKeyRing();
-        KeyRingInfo before = PGPainless.inspectKeyRing(secretKeys);
+        OpenPGPKey secretKeys = api.generateKey()
+                .modernKeyRing("Alice <alice@pgpainless.org>");
+        KeyRingInfo before = api.inspect(secretKeys);
         List<OpenPGPCertificate.OpenPGPComponentKey> signingKeysBefore = before.getSigningSubkeys();
 
         PGPKeyPair secretSubkey = KeyRingBuilder.generateKeyPair(
@@ -50,7 +50,7 @@ public class AddSubkeyWithModifiedBindingSignatureSubpacketsTest {
                 OpenPGPKeyVersion.v4);
 
         long secondsUntilExpiration = 1000;
-        secretKeys = PGPainless.modifyKeyRing(secretKeys)
+        secretKeys = api.modify(secretKeys)
                 .addSubKey(secretSubkey, new SelfSignatureSubpackets.Callback() {
                             @Override
                             public void modifyHashedSubpackets(SelfSignatureSubpackets hashedSubpackets) {
@@ -60,7 +60,7 @@ public class AddSubkeyWithModifiedBindingSignatureSubpacketsTest {
                         }, SecretKeyRingProtector.unprotectedKeys(), protector, KeyFlag.SIGN_DATA)
                 .done();
 
-        KeyRingInfo after = PGPainless.inspectKeyRing(secretKeys);
+        KeyRingInfo after = api.inspect(secretKeys);
         List<OpenPGPCertificate.OpenPGPComponentKey> signingKeysAfter = after.getSigningSubkeys();
         signingKeysAfter.removeAll(signingKeysBefore);
         assertFalse(signingKeysAfter.isEmpty());

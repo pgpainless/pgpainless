@@ -34,6 +34,7 @@ import org.bouncycastle.openpgp.PGPSignatureGenerator;
 import org.bouncycastle.openpgp.PGPSignatureSubpacketGenerator;
 import org.bouncycastle.openpgp.api.OpenPGPCertificate;
 import org.bouncycastle.openpgp.api.OpenPGPImplementation;
+import org.bouncycastle.openpgp.api.OpenPGPKey;
 import org.junit.jupiter.api.Test;
 import org.pgpainless.PGPainless;
 import org.pgpainless.algorithm.CompressionAlgorithm;
@@ -43,7 +44,6 @@ import org.pgpainless.algorithm.SignatureType;
 import org.pgpainless.key.TestKeys;
 import org.pgpainless.key.protection.SecretKeyRingProtector;
 import org.pgpainless.key.protection.UnlockSecretKey;
-import org.pgpainless.policy.Policy;
 import org.pgpainless.signature.consumer.SignaturePicker;
 import org.pgpainless.signature.subpackets.SignatureSubpacketsUtil;
 
@@ -51,17 +51,17 @@ public class SignatureSubpacketsUtilTest {
 
     @Test
     public void testGetKeyExpirationTimeAsDate() {
-        PGPSecretKeyRing secretKeys = PGPainless.generateKeyRing()
-                .modernKeyRing("Expire")
-                .getPGPSecretKeyRing();
+        PGPainless api = PGPainless.getInstance();
+        OpenPGPKey secretKeys = api.generateKey()
+                .modernKeyRing("Expire");
         Date expiration = Date.from(new Date().toInstant().plus(365, ChronoUnit.DAYS));
-        secretKeys = PGPainless.modifyKeyRing(secretKeys)
+        secretKeys = api.modify(secretKeys)
                 .setExpirationDate(expiration, SecretKeyRingProtector.unprotectedKeys())
                 .done();
 
         PGPSignature expirationSig = SignaturePicker.pickCurrentUserIdCertificationSignature(
-                secretKeys, "Expire", Policy.getInstance(), new Date());
-        OpenPGPCertificate.OpenPGPComponentKey notTheRightKey = PGPainless.inspectKeyRing(secretKeys).getSigningSubkeys().get(0);
+                secretKeys.getPGPSecretKeyRing(), "Expire", api.getAlgorithmPolicy(), new Date());
+        OpenPGPCertificate.OpenPGPComponentKey notTheRightKey = api.inspect(secretKeys).getSigningSubkeys().get(0);
 
         assertThrows(IllegalArgumentException.class, () ->
                 SignatureSubpacketsUtil.getKeyExpirationTimeAsDate(expirationSig, notTheRightKey.getPGPPublicKey()));
@@ -69,18 +69,19 @@ public class SignatureSubpacketsUtilTest {
 
     @Test
     public void testGetRevocable() throws PGPException, IOException {
-        PGPSecretKeyRing secretKeys = TestKeys.getEmilSecretKeyRing();
-        PGPPrivateKey certKey = UnlockSecretKey.unlockSecretKey(secretKeys.getSecretKey(), SecretKeyRingProtector.unprotectedKeys());
+        OpenPGPKey secretKeys = TestKeys.getEmilKey();
+        PGPPrivateKey certKey = UnlockSecretKey.unlockSecretKey(secretKeys.getPrimarySecretKey().getPGPSecretKey(),
+                SecretKeyRingProtector.unprotectedKeys());
 
         PGPSignatureGenerator generator = getSignatureGenerator(certKey, SignatureType.CASUAL_CERTIFICATION);
-        PGPSignature withoutRevocable = generator.generateCertification(secretKeys.getPublicKey());
+        PGPSignature withoutRevocable = generator.generateCertification(secretKeys.getPrimaryKey().getPGPPublicKey());
         assertNull(SignatureSubpacketsUtil.getRevocable(withoutRevocable));
 
         generator = getSignatureGenerator(certKey, SignatureType.CASUAL_CERTIFICATION);
         PGPSignatureSubpacketGenerator hashed = new PGPSignatureSubpacketGenerator();
         hashed.setRevocable(true, true);
         generator.setHashedSubpackets(hashed.generate());
-        PGPSignature withRevocable = generator.generateCertification(secretKeys.getPublicKey());
+        PGPSignature withRevocable = generator.generateCertification(secretKeys.getPrimaryKey().getPGPPublicKey());
         assertNotNull(SignatureSubpacketsUtil.getRevocable(withRevocable));
     }
 

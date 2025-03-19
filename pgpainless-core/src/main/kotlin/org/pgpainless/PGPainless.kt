@@ -67,8 +67,13 @@ class PGPainless(
      * @param referenceTime reference time for evaluation
      * @return [KeyRingInfo] wrapper
      */
+    @JvmOverloads
     fun inspect(keyOrCertificate: OpenPGPCertificate, referenceTime: Date = Date()): KeyRingInfo =
         KeyRingInfo(keyOrCertificate, this, referenceTime)
+
+    @JvmOverloads
+    fun modify(key: OpenPGPKey, referenceTime: Date = Date()): SecretKeyRingEditor =
+        SecretKeyRingEditor(key, this, referenceTime)
 
     fun readKey(): OpenPGPKeyReader = api.readKeyOrCertificate()
 

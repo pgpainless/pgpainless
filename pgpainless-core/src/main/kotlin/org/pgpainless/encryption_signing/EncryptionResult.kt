@@ -8,6 +8,7 @@ import java.util.*
 import org.bouncycastle.openpgp.PGPLiteralData
 import org.bouncycastle.openpgp.PGPPublicKeyRing
 import org.bouncycastle.openpgp.PGPSignature
+import org.bouncycastle.openpgp.api.OpenPGPCertificate
 import org.pgpainless.algorithm.CompressionAlgorithm
 import org.pgpainless.algorithm.StreamEncoding
 import org.pgpainless.algorithm.SymmetricKeyAlgorithm
@@ -33,6 +34,9 @@ data class EncryptionResult(
      */
     val isForYourEyesOnly: Boolean
         get() = PGPLiteralData.CONSOLE == fileName
+
+    fun isEncryptedFor(certificate: OpenPGPCertificate) =
+        recipients.any { certificate.getKey(it.keyIdentifier) != null }
 
     /**
      * Returns true, if the message was encrypted for at least one subkey of the given certificate.

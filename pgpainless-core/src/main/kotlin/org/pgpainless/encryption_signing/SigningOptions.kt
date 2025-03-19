@@ -12,7 +12,6 @@ import org.bouncycastle.openpgp.api.OpenPGPKey
 import org.bouncycastle.openpgp.api.OpenPGPKey.OpenPGPPrivateKey
 import org.bouncycastle.openpgp.api.OpenPGPKey.OpenPGPSecretKey
 import org.pgpainless.PGPainless
-import org.pgpainless.PGPainless.Companion.inspectKeyRing
 import org.pgpainless.algorithm.DocumentSignatureType
 import org.pgpainless.algorithm.HashAlgorithm
 import org.pgpainless.algorithm.PublicKeyAlgorithm.Companion.requireFromId
@@ -138,6 +137,7 @@ class SigningOptions(private val api: PGPainless) {
         signatureType: DocumentSignatureType
     ) = addInlineSignature(signingKeyProtector, api.toKey(signingKey), signatureType)
 
+    @JvmOverloads
     fun addInlineSignature(
         signingKeyProtector: SecretKeyRingProtector,
         signingKey: OpenPGPKey,
@@ -145,7 +145,7 @@ class SigningOptions(private val api: PGPainless) {
         signatureType: DocumentSignatureType = DocumentSignatureType.BINARY_DOCUMENT,
         subpacketsCallback: Callback? = null
     ) = apply {
-        val keyRingInfo = inspectKeyRing(signingKey, evaluationDate)
+        val keyRingInfo = api.inspect(signingKey, evaluationDate)
         if (userId != null && !keyRingInfo.isUserIdValid(userId)) {
             throw UnboundUserIdException(
                 of(signingKey),
@@ -212,7 +212,7 @@ class SigningOptions(private val api: PGPainless) {
         subpacketsCallback: Callback? = null
     ): SigningOptions = apply {
         val openPGPKey = signingKey.openPGPKey
-        val keyRingInfo = inspectKeyRing(openPGPKey, evaluationDate)
+        val keyRingInfo = api.inspect(openPGPKey, evaluationDate)
         val signingPubKeys = keyRingInfo.signingSubkeys
         if (signingPubKeys.isEmpty()) {
             throw UnacceptableSigningKeyException(openPGPKey)
@@ -319,7 +319,7 @@ class SigningOptions(private val api: PGPainless) {
         signatureType: DocumentSignatureType = DocumentSignatureType.BINARY_DOCUMENT,
         subpacketCallback: Callback? = null
     ): SigningOptions = apply {
-        val keyRingInfo = inspectKeyRing(signingKey, evaluationDate)
+        val keyRingInfo = api.inspect(signingKey, evaluationDate)
         if (userId != null && !keyRingInfo.isUserIdValid(userId)) {
             throw UnboundUserIdException(
                 of(signingKey),
@@ -380,7 +380,7 @@ class SigningOptions(private val api: PGPainless) {
         signatureType: DocumentSignatureType = DocumentSignatureType.BINARY_DOCUMENT,
         subpacketCallback: Callback? = null
     ): SigningOptions = apply {
-        val keyRingInfo = inspectKeyRing(signingKey.openPGPKey, evaluationDate)
+        val keyRingInfo = api.inspect(signingKey.openPGPKey, evaluationDate)
         val signingPrivKey: OpenPGPPrivateKey = signingKey.unlock(signingKeyProtector)
         val hashAlgorithms =
             if (userId != null) keyRingInfo.getPreferredHashAlgorithms(userId)

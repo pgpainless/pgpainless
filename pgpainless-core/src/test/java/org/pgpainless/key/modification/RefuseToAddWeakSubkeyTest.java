@@ -10,7 +10,7 @@ import static org.junit.jupiter.api.Assertions.assertThrows;
 import java.util.EnumMap;
 import java.util.Map;
 
-import org.bouncycastle.openpgp.PGPSecretKeyRing;
+import org.bouncycastle.openpgp.api.OpenPGPKey;
 import org.junit.jupiter.api.Test;
 import org.pgpainless.PGPainless;
 import org.pgpainless.algorithm.EncryptionPurpose;
@@ -28,31 +28,31 @@ public class RefuseToAddWeakSubkeyTest {
 
     @Test
     public void testEditorRefusesToAddWeakSubkey() {
+        PGPainless api = PGPainless.getInstance();
         // ensure default policy is set
-        Policy oldPolicy = PGPainless.getPolicy();
+        Policy oldPolicy = api.getAlgorithmPolicy();
         Policy adjusted = oldPolicy.copy().withPublicKeyAlgorithmPolicy(
                 Policy.PublicKeyAlgorithmPolicy.bsi2021PublicKeyAlgorithmPolicy()
         ).build();
-        PGPainless.getInstance().setAlgorithmPolicy(adjusted);
+        api.setAlgorithmPolicy(adjusted);
 
-        PGPSecretKeyRing secretKeys = PGPainless.generateKeyRing()
-                .modernKeyRing("Alice")
-                .getPGPSecretKeyRing();
-        SecretKeyRingEditorInterface editor = PGPainless.modifyKeyRing(secretKeys);
+        OpenPGPKey secretKeys = api.generateKey()
+                .modernKeyRing("Alice");
+        SecretKeyRingEditorInterface editor = api.modify(secretKeys);
         KeySpec spec = KeySpec.getBuilder(KeyType.RSA(RsaLength._1024), KeyFlag.ENCRYPT_COMMS).build();
 
         assertThrows(IllegalArgumentException.class, () ->
                 editor.addSubKey(spec, Passphrase.emptyPassphrase(), SecretKeyRingProtector.unprotectedKeys()));
-        PGPainless.getInstance().setAlgorithmPolicy(oldPolicy);
+        api.setAlgorithmPolicy(oldPolicy);
     }
 
     @Test
     public void testEditorAllowsToAddWeakSubkeyIfCompliesToPublicKeyAlgorithmPolicy() {
-        PGPSecretKeyRing secretKeys = PGPainless.generateKeyRing()
-                .modernKeyRing("Alice")
-                .getPGPSecretKeyRing();
+        PGPainless api = PGPainless.getInstance();
+        OpenPGPKey secretKeys = api.generateKey()
+                .modernKeyRing("Alice");
 
-        Policy oldPolicy = PGPainless.getPolicy();
+        Policy oldPolicy = api.getAlgorithmPolicy();
 
         // set weak policy
         Map<PublicKeyAlgorithm, Integer> minimalBitStrengths = new EnumMap<>(PublicKeyAlgorithm.class);
@@ -75,11 +75,11 @@ public class RefuseToAddWeakSubkeyTest {
         minimalBitStrengths.put(PublicKeyAlgorithm.DIFFIE_HELLMAN, 2000);
         // §7.2.2
         minimalBitStrengths.put(PublicKeyAlgorithm.ECDH, 250);
-        PGPainless.getInstance().setAlgorithmPolicy(oldPolicy.copy()
+        api.setAlgorithmPolicy(oldPolicy.copy()
                 .withPublicKeyAlgorithmPolicy(new Policy.PublicKeyAlgorithmPolicy(minimalBitStrengths))
                 .build());
 
-        SecretKeyRingEditorInterface editor = PGPainless.modifyKeyRing(secretKeys);
+        SecretKeyRingEditorInterface editor = api.modify(secretKeys);
         KeySpec spec = KeySpec.getBuilder(KeyType.RSA(RsaLength._1024), KeyFlag.ENCRYPT_COMMS)
                 .setKeyCreationDate(editor.getReferenceTime()) // The key gets created after we instantiate the editor.
                 .build();
@@ -87,9 +87,9 @@ public class RefuseToAddWeakSubkeyTest {
         secretKeys = editor.addSubKey(spec, Passphrase.emptyPassphrase(), SecretKeyRingProtector.unprotectedKeys())
                 .done();
 
-        assertEquals(2, PGPainless.inspectKeyRing(secretKeys).getEncryptionSubkeys(EncryptionPurpose.ANY).size());
+        assertEquals(2, api.inspect(secretKeys).getEncryptionSubkeys(EncryptionPurpose.ANY).size());
 
         // reset default policy
-        PGPainless.getInstance().setAlgorithmPolicy(oldPolicy);
+        api.setAlgorithmPolicy(oldPolicy);
     }
 }
