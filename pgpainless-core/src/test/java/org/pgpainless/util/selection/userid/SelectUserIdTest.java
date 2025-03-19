@@ -29,7 +29,7 @@ public class SelectUserIdTest {
                 .getPGPSecretKeyRing();
         secretKeys = PGPainless.modifyKeyRing(secretKeys)
                 .addUserId(
-                        UserId.newBuilder().withName("Alice Liddell").noComment()
+                        UserId.builder().withName("Alice Liddell").noComment()
                                 .withEmail("crazy@the-rabbit.hole").build(),
                         SecretKeyRingProtector.unprotectedKeys())
                 .done();
