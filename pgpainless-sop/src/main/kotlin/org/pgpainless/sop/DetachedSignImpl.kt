@@ -30,9 +30,9 @@ import sop.operation.DetachedSign
 import sop.util.UTF8Util
 
 /** Implementation of the `sign` operation using PGPainless. */
-class DetachedSignImpl : DetachedSign {
+class DetachedSignImpl(private val api: PGPainless) : DetachedSign {
 
-    private val signingOptions = SigningOptions.get()
+    private val signingOptions = SigningOptions.get(api)
     private val protector = MatchMakingSecretKeyRingProtector()
     private val signingKeys = mutableListOf<PGPSecretKeyRing>()
 
@@ -56,10 +56,10 @@ class DetachedSignImpl : DetachedSign {
 
         try {
             val signingStream =
-                PGPainless.encryptAndOrSign()
+                api.generateMessage()
                     .discardOutput()
                     .withOptions(
-                        ProducerOptions.sign(signingOptions)
+                        ProducerOptions.sign(signingOptions, api)
                             .setAsciiArmor(armor)
                             .overrideCompressionAlgorithm(CompressionAlgorithm.UNCOMPRESSED))
 
@@ -94,7 +94,7 @@ class DetachedSignImpl : DetachedSign {
 
     override fun key(key: InputStream): DetachedSign = apply {
         KeyReader.readSecretKeys(key, true).forEach {
-            val info = PGPainless.inspectKeyRing(it)
+            val info = api.inspect(api.toKey(it))
             if (!info.isUsableForSigning) {
                 throw SOPGPException.KeyCannotSign(
                     "Key ${info.fingerprint} does not have valid, signing capable subkeys.")

@@ -13,7 +13,7 @@ import sop.Ready
 import sop.operation.ExtractCert
 
 /** Implementation of the `extract-cert` operation using PGPainless. */
-class ExtractCertImpl : ExtractCert {
+class ExtractCertImpl(private val api: PGPainless) : ExtractCert {
 
     private var armor = true
 

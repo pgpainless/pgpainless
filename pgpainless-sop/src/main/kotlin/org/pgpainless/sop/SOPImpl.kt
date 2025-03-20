@@ -4,6 +4,7 @@
 
 package org.pgpainless.sop
 
+import org.pgpainless.PGPainless
 import sop.SOP
 import sop.SOPV
 import sop.operation.Armor
@@ -22,35 +23,38 @@ import sop.operation.ListProfiles
 import sop.operation.RevokeKey
 import sop.operation.Version
 
-class SOPImpl(private val sopv: SOPV = SOPVImpl()) : SOP {
+class SOPImpl(
+    private val api: PGPainless = PGPainless.getInstance(),
+    private val sopv: SOPV = SOPVImpl(api)
+) : SOP {
 
-    override fun armor(): Armor = ArmorImpl()
+    override fun armor(): Armor = ArmorImpl(api)
 
-    override fun changeKeyPassword(): ChangeKeyPassword = ChangeKeyPasswordImpl()
+    override fun changeKeyPassword(): ChangeKeyPassword = ChangeKeyPasswordImpl(api)
 
-    override fun dearmor(): Dearmor = DearmorImpl()
+    override fun dearmor(): Dearmor = DearmorImpl(api)
 
-    override fun decrypt(): Decrypt = DecryptImpl()
+    override fun decrypt(): Decrypt = DecryptImpl(api)
 
-    override fun detachedSign(): DetachedSign = DetachedSignImpl()
+    override fun detachedSign(): DetachedSign = DetachedSignImpl(api)
 
     override fun detachedVerify(): DetachedVerify = sopv.detachedVerify()
 
-    override fun encrypt(): Encrypt = EncryptImpl()
+    override fun encrypt(): Encrypt = EncryptImpl(api)
 
-    override fun extractCert(): ExtractCert = ExtractCertImpl()
+    override fun extractCert(): ExtractCert = ExtractCertImpl(api)
 
-    override fun generateKey(): GenerateKey = GenerateKeyImpl()
+    override fun generateKey(): GenerateKey = GenerateKeyImpl(api)
 
-    override fun inlineDetach(): InlineDetach = InlineDetachImpl()
+    override fun inlineDetach(): InlineDetach = InlineDetachImpl(api)
 
-    override fun inlineSign(): InlineSign = InlineSignImpl()
+    override fun inlineSign(): InlineSign = InlineSignImpl(api)
 
     override fun inlineVerify(): InlineVerify = sopv.inlineVerify()
 
-    override fun listProfiles(): ListProfiles = ListProfilesImpl()
+    override fun listProfiles(): ListProfiles = ListProfilesImpl(api)
 
-    override fun revokeKey(): RevokeKey = RevokeKeyImpl()
+    override fun revokeKey(): RevokeKey = RevokeKeyImpl(api)
 
     override fun version(): Version = sopv.version()
 }
