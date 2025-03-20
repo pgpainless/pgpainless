@@ -65,24 +65,23 @@ Reading keys from ASCII armored strings or from binary files is easy:
 
 ```java
         String key = "-----BEGIN PGP PRIVATE KEY BLOCK-----\n"...
-        PGPSecretKeyRing secretKey = PGPainless.readKeyRing()
-                .secretKeyRing(key);
+        OpenPGPKey secretKey = PGPainless.getInstance().readKey()
+                .parseKey(key);
 ```
 
 Similarly, keys can quickly be exported::
 
 ```java
-        PGPSecretKeyRing secretKey = ...;
-        String armored = PGPainless.asciiArmor(secretKey);
-        ByteArrayOutputStream binary = new ByteArrayOutputStream();
-        secretKey.encode(binary);
+        OpenPGPKey secretKey = ...;
+        String armored = secretKey.toAsciiArmoredString();
+        byte[] binary = secretKey.getEncoded();
 ```
 
 Extract a public key certificate from a secret key:
 
 ```java
-        PGPSecretKeyRing secretKey = ...;
-        PGPPublicKeyRing certificate = PGPainless.extractCertificate(secretKey);
+        OpenPGPKey secretKey = ...;
+        OpenPGPCertificate certificate = secretKey.toCertificate();
 ```
 
 ### Easily Generate Keys
@@ -90,16 +89,17 @@ PGPainless comes with a simple to use `KeyRingBuilder` class that helps you to q
 There are some predefined key archetypes, but it is possible to fully customize key generation to your needs.
 
 ```java
+        PGPainless api = PGPainless.getInstance();
         // RSA key without additional subkeys
-        PGPSecretKeyRing secretKeys = PGPainless.generateKeyRing()
+        OpenPGPKey secretKeys = api.generateKey()
                 .simpleRsaKeyRing("Juliet <juliet@montague.lit>", RsaLength._4096);
                 
         // EdDSA primary key with EdDSA signing- and XDH encryption subkeys
-        PGPSecretKeyRing secretKeys = PGPainless.generateKeyRing()
+        OpenPGPKey secretKeys = api.generateKey()
                 .modernKeyRing("Romeo <romeo@montague.lit>", "I defy you, stars!");
 
         // Customized key
-        PGPSecretKeyRing keyRing = PGPainless.buildKeyRing()
+        OpenPGPKey keyRing = PGPainless.buildKeyRing()
                 .setPrimaryKey(KeySpec.getBuilder(
                         RSA.withLength(RsaLength._8192),
                         KeyFlag.SIGN_DATA, KeyFlag.CERTIFY_OTHER))
@@ -124,24 +124,26 @@ algorithms accordingly.
 Still it allows you to manually specify which algorithms to use of course.
 
 ```java
-        EncryptionStream encryptionStream = PGPainless.encryptAndOrSign()
+        PGPainless api = PGPainless.getInstance();
+        EncryptionStream encryptionStream = api.generateMessage()
                 .onOutputStream(outputStream)
                 .withOptions(
                         ProducerOptions.signAndEncrypt(
-                                new EncryptionOptions()
+                                EncryptionOptions.get(api)
                                         .addRecipient(aliceKey)
                                         .addRecipient(bobsKey)
                                         // optionally encrypt to a passphrase
                                         .addMessagePassphrase(Passphrase.fromPassword("password123"))
                                         // optionally override symmetric encryption algorithm
                                         .overrideEncryptionAlgorithm(SymmetricKeyAlgorithm.AES_192),
-                                new SigningOptions()
+                                SigningOptions.get(api)
                                         // Sign in-line (using one-pass-signature packet)
                                         .addInlineSignature(secretKeyDecryptor, aliceSecKey, signatureType)
                                         // Sign using a detached signature
                                         .addDetachedSignature(secretKeyDecryptor, aliceSecKey, signatureType)
                                         // optionally override hash algorithm
-                                        .overrideHashAlgorithm(HashAlgorithm.SHA256)
+                                        .overrideHashAlgorithm(HashAlgorithm.SHA256),
+                                api
                         ).setAsciiArmor(true) // Ascii armor or not
                 );
 
@@ -163,7 +165,7 @@ This behaviour can be modified though using the `Policy` class.
 ```java
         DecryptionStream decryptionStream = PGPainless.decryptAndOrVerify()
                 .onInputStream(encryptedInputStream)
-                .withOptions(new ConsumerOptions()
+                .withOptions(ConsumerOptions.get(api)
                         .addDecryptionKey(bobSecKeys, secretKeyProtector)
                         .addVerificationCert(alicePubKeys)
                 );
