@@ -28,9 +28,13 @@ jobs:
         with:
           java-version: '11'
           distribution: 'temurin'
-      - name: Build, Check and Coverage
+      - name: Build and Check
+        uses: gradle/gradle-build-action@67421db6bd0bf253fb4bd25b31ebb98943c375e1
+        with:
+          arguments: check jacocoRootReport
+      - name: Coveralls
         uses: gradle/gradle-build-action@67421db6bd0bf253fb4bd25b31ebb98943c375e1
         env:
           COVERALLS_REPO_TOKEN: ${{ secrets.COVERALLS_REPO_TOKEN }}
         with:
-          arguments: check jacocoRootReport coveralls
+          arguments: coveralls
