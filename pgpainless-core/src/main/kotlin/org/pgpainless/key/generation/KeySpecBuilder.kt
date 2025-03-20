@@ -19,7 +19,7 @@ constructor(
 ) : KeySpecBuilderInterface {
 
     private val hashedSubpackets: SelfSignatureSubpackets = SignatureSubpackets()
-    private val algorithmSuite: AlgorithmSuite = PGPainless.getPolicy().keyGenerationAlgorithmSuite
+    private val algorithmSuite: AlgorithmSuite = PGPainless.getInstance().algorithmPolicy.keyGenerationAlgorithmSuite
     private var preferredCompressionAlgorithms: Set<CompressionAlgorithm>? =
         algorithmSuite.compressionAlgorithms
     private var preferredHashAlgorithms: Set<HashAlgorithm>? = algorithmSuite.hashAlgorithms
