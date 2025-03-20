@@ -17,43 +17,43 @@ public class PolicySetterTest {
 
     @Test
     public void testSetCertificationSignatureHashAlgorithmPolicy_NullFails() {
-        Policy policy = Policy.getInstance();
+        Policy policy = new Policy();
         assertThrows(NullPointerException.class, () -> policy.copy().withCertificationSignatureHashAlgorithmPolicy(null));
     }
 
     @Test
     public void testSetDataSignatureHashAlgorithmPolicy_NullFails() {
-        Policy policy = Policy.getInstance();
+        Policy policy = new Policy();
         assertThrows(NullPointerException.class, () -> policy.copy().withDataSignatureHashAlgorithmPolicy(null));
     }
 
     @Test
     public void testSetRevocationSignatureHashAlgorithmPolicy_NullFails() {
-        Policy policy = Policy.getInstance();
+        Policy policy = new Policy();
         assertThrows(NullPointerException.class, () -> policy.copy().withRevocationSignatureHashAlgorithmPolicy(null));
     }
 
     @Test
     public void testSetSymmetricKeyEncryptionAlgorithmPolicy_NullFails() {
-        Policy policy = Policy.getInstance();
+        Policy policy = new Policy();
         assertThrows(NullPointerException.class, () -> policy.copy().withSymmetricKeyEncryptionAlgorithmPolicy(null));
     }
 
     @Test
     public void testSetSymmetricKeyDecryptionAlgorithmPolicy_NullFails() {
-        Policy policy = Policy.getInstance();
+        Policy policy = new Policy();
         assertThrows(NullPointerException.class, () -> policy.copy().withSymmetricKeyDecryptionAlgorithmPolicy(null));
     }
 
     @Test
     public void testSetCompressionAlgorithmPolicy_NullFails() {
-        Policy policy = Policy.getInstance();
+        Policy policy = new Policy();
         assertThrows(NullPointerException.class, () -> policy.copy().withCompressionAlgorithmPolicy(null));
     }
 
     @Test
     public void testSetPublicKeyAlgorithmPolicy_NullFails() {
-        Policy policy = Policy.getInstance();
+        Policy policy = new Policy();
         assertThrows(NullPointerException.class, () -> policy.copy().withPublicKeyAlgorithmPolicy(null));
     }
 
