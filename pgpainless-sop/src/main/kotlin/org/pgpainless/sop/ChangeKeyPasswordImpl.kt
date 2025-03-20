@@ -9,6 +9,7 @@ import java.io.InputStream
 import java.io.OutputStream
 import org.bouncycastle.openpgp.PGPException
 import org.bouncycastle.openpgp.PGPSecretKeyRingCollection
+import org.pgpainless.PGPainless
 import org.pgpainless.bouncycastle.extensions.openPgpFingerprint
 import org.pgpainless.exception.MissingPassphraseException
 import org.pgpainless.key.protection.SecretKeyRingProtector
@@ -20,7 +21,7 @@ import sop.exception.SOPGPException
 import sop.operation.ChangeKeyPassword
 
 /** Implementation of the `change-key-password` operation using PGPainless. */
-class ChangeKeyPasswordImpl : ChangeKeyPassword {
+class ChangeKeyPasswordImpl(private val api: PGPainless) : ChangeKeyPassword {
 
     private val oldProtector = MatchMakingSecretKeyRingProtector()
     private var newPassphrase = Passphrase.emptyPassphrase()

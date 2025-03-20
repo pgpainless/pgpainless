@@ -86,8 +86,8 @@ class MatchMakingSecretKeyRingProtector : SecretKeyRingProtector {
     override fun getEncryptor(key: PGPPublicKey): PBESecretKeyEncryptor? =
         protector.getEncryptor(key)
 
-    override fun getKeyPassword(p0: OpenPGPKey.OpenPGPSecretKey): CharArray? =
-        protector.getKeyPassword(p0)
+    override fun getKeyPassword(key: OpenPGPKey.OpenPGPSecretKey): CharArray? =
+        protector.getKeyPassword(key)
 
     /** Clear all known passphrases from the protector. */
     fun clear() {

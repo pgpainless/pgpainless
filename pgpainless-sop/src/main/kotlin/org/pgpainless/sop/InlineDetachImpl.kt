@@ -13,8 +13,8 @@ import org.bouncycastle.openpgp.PGPException
 import org.bouncycastle.openpgp.PGPLiteralData
 import org.bouncycastle.openpgp.PGPOnePassSignatureList
 import org.bouncycastle.openpgp.PGPSignatureList
-import org.bouncycastle.openpgp.api.OpenPGPImplementation
 import org.bouncycastle.util.io.Streams
+import org.pgpainless.PGPainless
 import org.pgpainless.decryption_verification.OpenPgpInputStream
 import org.pgpainless.decryption_verification.cleartext_signatures.ClearsignedMessageUtil
 import org.pgpainless.exception.WrongConsumingMethodException
@@ -25,7 +25,7 @@ import sop.exception.SOPGPException
 import sop.operation.InlineDetach
 
 /** Implementation of the `inline-detach` operation using PGPainless. */
-class InlineDetachImpl : InlineDetach {
+class InlineDetachImpl(private val api: PGPainless) : InlineDetach {
 
     private var armor = true
 
@@ -72,7 +72,7 @@ class InlineDetachImpl : InlineDetach {
                     }
 
                     // handle binary OpenPGP data
-                    var objectFactory = OpenPGPImplementation.getInstance().pgpObjectFactory(pgpIn)
+                    var objectFactory = api.implementation.pgpObjectFactory(pgpIn)
                     var next: Any?
 
                     while (objectFactory.nextObject().also { next = it } != null) {
@@ -94,8 +94,8 @@ class InlineDetachImpl : InlineDetach {
                             // Decompress compressed data
                             try {
                                 objectFactory =
-                                    OpenPGPImplementation.getInstance()
-                                        .pgpObjectFactory((next as PGPCompressedData).dataStream)
+                                    api.implementation.pgpObjectFactory(
+                                        (next as PGPCompressedData).dataStream)
                             } catch (e: PGPException) {
                                 throw SOPGPException.BadData(
                                     "Cannot decompress PGPCompressedData", e)
