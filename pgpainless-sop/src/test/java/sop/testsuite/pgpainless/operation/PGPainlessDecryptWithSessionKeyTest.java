@@ -6,6 +6,6 @@ package sop.testsuite.pgpainless.operation;
 
 import sop.testsuite.operation.DecryptWithSessionKeyTest;
 
-public class PGPainlessDecryptWIthSessionKeyTest extends DecryptWithSessionKeyTest {
+public class PGPainlessDecryptWithSessionKeyTest extends DecryptWithSessionKeyTest {
 
 }
