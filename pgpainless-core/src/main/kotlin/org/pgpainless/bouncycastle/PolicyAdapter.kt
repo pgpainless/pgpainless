@@ -10,7 +10,7 @@ import org.bouncycastle.openpgp.api.OpenPGPPolicy.OpenPGPNotationRegistry
 import org.pgpainless.policy.Policy
 
 /** Adapter class that adapts a PGPainless [Policy] object to Bouncy Castles [OpenPGPPolicy]. */
-class PolicyAdapter(val policy: Policy = Policy.getInstance()) : OpenPGPPolicy {
+class PolicyAdapter(val policy: Policy) : OpenPGPPolicy {
 
     /**
      * Determine, whether the hash algorithm of a document signature is acceptable.

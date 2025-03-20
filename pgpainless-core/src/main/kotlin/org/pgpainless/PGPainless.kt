@@ -17,6 +17,7 @@ import org.bouncycastle.openpgp.api.OpenPGPKey
 import org.bouncycastle.openpgp.api.OpenPGPKeyGenerator
 import org.bouncycastle.openpgp.api.OpenPGPKeyReader
 import org.bouncycastle.openpgp.api.bc.BcOpenPGPApi
+import org.bouncycastle.openpgp.api.bc.BcOpenPGPImplementation
 import org.pgpainless.algorithm.OpenPGPKeyVersion
 import org.pgpainless.bouncycastle.PolicyAdapter
 import org.pgpainless.bouncycastle.extensions.setAlgorithmSuite
@@ -34,7 +35,7 @@ import org.pgpainless.util.ArmorUtils
 
 class PGPainless(
     val implementation: OpenPGPImplementation = OpenPGPImplementation.getInstance(),
-    var algorithmPolicy: Policy = Policy.getInstance()
+    var algorithmPolicy: Policy = Policy()
 ) {
 
     private var api: OpenPGPApi
@@ -106,6 +107,8 @@ class PGPainless(
     companion object {
 
         @Volatile private var instance: PGPainless? = null
+
+        @JvmStatic fun newInstance(): PGPainless = PGPainless(BcOpenPGPImplementation(), Policy())
 
         @JvmStatic
         fun getInstance(): PGPainless =
