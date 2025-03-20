@@ -139,7 +139,7 @@ class CertifyCertificate(private val api: PGPainless) {
                 ThirdPartyCertificationSignatureBuilder(
                     certificationType.asSignatureType(), secretKey, protector, api)
 
-            return CertificationOnUserIdWithSubpackets(certificate, userId, sigBuilder)
+            return CertificationOnUserIdWithSubpackets(certificate, userId, sigBuilder, api)
         }
 
         /**
@@ -154,14 +154,14 @@ class CertifyCertificate(private val api: PGPainless) {
         fun withKey(
             certificationKey: PGPSecretKeyRing,
             protector: SecretKeyRingProtector
-        ): CertificationOnUserIdWithSubpackets =
-            withKey(PGPainless.getInstance().toKey(certificationKey), protector)
+        ): CertificationOnUserIdWithSubpackets = withKey(api.toKey(certificationKey), protector)
     }
 
     class CertificationOnUserIdWithSubpackets(
         val certificate: OpenPGPCertificate,
         val userId: CharSequence,
-        val sigBuilder: ThirdPartyCertificationSignatureBuilder
+        val sigBuilder: ThirdPartyCertificationSignatureBuilder,
+        private val api: PGPainless
     ) {
 
         @Deprecated("Pass in an OpenPGPCertificate instead of a PGPPublicKeyRing.")
@@ -170,7 +170,7 @@ class CertifyCertificate(private val api: PGPainless) {
             userId: String,
             sigBuilder: ThirdPartyCertificationSignatureBuilder,
             api: PGPainless
-        ) : this(api.toCertificate(certificate), userId, sigBuilder)
+        ) : this(api.toCertificate(certificate), userId, sigBuilder, api)
 
         /**
          * Apply the given signature subpackets and build the certification.
@@ -195,7 +195,7 @@ class CertifyCertificate(private val api: PGPainless) {
         fun build(): CertificationResult {
             val signature = sigBuilder.build(certificate, userId)
             val certifiedCertificate =
-                OpenPGPCertificate(
+                api.toCertificate(
                     KeyRingUtils.injectCertification(
                         certificate.pgpPublicKeyRing, userId, signature.signature))
 
@@ -226,7 +226,7 @@ class CertifyCertificate(private val api: PGPainless) {
                 sigBuilder.hashedSubpackets.setTrust(
                     true, trustworthiness.depth, trustworthiness.amount)
             }
-            return DelegationOnCertificateWithSubpackets(certificate, sigBuilder)
+            return DelegationOnCertificateWithSubpackets(certificate, sigBuilder, api)
         }
 
         /**
@@ -241,20 +241,21 @@ class CertifyCertificate(private val api: PGPainless) {
         fun withKey(
             certificationKey: PGPSecretKeyRing,
             protector: SecretKeyRingProtector
-        ): DelegationOnCertificateWithSubpackets =
-            withKey(PGPainless.getInstance().toKey(certificationKey), protector)
+        ): DelegationOnCertificateWithSubpackets = withKey(api.toKey(certificationKey), protector)
     }
 
     class DelegationOnCertificateWithSubpackets(
         val certificate: OpenPGPCertificate,
-        val sigBuilder: ThirdPartyDirectKeySignatureBuilder
+        val sigBuilder: ThirdPartyDirectKeySignatureBuilder,
+        private val api: PGPainless
     ) {
 
         @Deprecated("Pass in an OpenPGPCertificate instead of a PGPPublicKeyRing.")
         constructor(
             certificate: PGPPublicKeyRing,
-            sigBuilder: ThirdPartyDirectKeySignatureBuilder
-        ) : this(PGPainless.getInstance().toCertificate(certificate), sigBuilder)
+            sigBuilder: ThirdPartyDirectKeySignatureBuilder,
+            api: PGPainless
+        ) : this(api.toCertificate(certificate), sigBuilder, api)
 
         /**
          * Apply the given signature subpackets and build the delegation signature.
@@ -280,7 +281,7 @@ class CertifyCertificate(private val api: PGPainless) {
             val delegatedKey = certificate.primaryKey
             val delegation = sigBuilder.build(delegatedKey)
             val delegatedCertificate =
-                OpenPGPCertificate(
+                api.toCertificate(
                     KeyRingUtils.injectCertification(
                         certificate.pgpPublicKeyRing,
                         delegatedKey.pgpPublicKey,

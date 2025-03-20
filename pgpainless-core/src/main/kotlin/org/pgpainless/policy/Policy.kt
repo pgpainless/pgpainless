@@ -411,15 +411,6 @@ class Policy(
         DISABLED
     }
 
-    companion object {
-
-        @Volatile private var INSTANCE: Policy? = null
-
-        @JvmStatic
-        fun getInstance() =
-            INSTANCE ?: synchronized(this) { INSTANCE ?: Policy().also { INSTANCE = it } }
-    }
-
     class Builder(private val origin: Policy) {
         private var certificationSignatureHashAlgorithmPolicy: HashAlgorithmPolicy =
             origin.certificationSignatureHashAlgorithmPolicy
