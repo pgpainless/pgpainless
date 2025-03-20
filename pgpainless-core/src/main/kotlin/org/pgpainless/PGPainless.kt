@@ -80,8 +80,8 @@ class PGPainless(
     fun toKey(secretKeyRing: PGPSecretKeyRing): OpenPGPKey =
         OpenPGPKey(secretKeyRing, implementation)
 
-    fun toCertificate(publicKeyRing: PGPPublicKeyRing): OpenPGPCertificate =
-        OpenPGPCertificate(publicKeyRing, implementation)
+    fun toCertificate(keyOrCertificate: PGPKeyRing): OpenPGPCertificate =
+        OpenPGPCertificate(keyOrCertificate, implementation)
 
     fun mergeCertificate(
         originalCopy: OpenPGPCertificate,
