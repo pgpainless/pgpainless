@@ -5,6 +5,9 @@ SPDX-License-Identifier: CC0-1.0
 
 # PGPainless Changelog
 
+## 1.7.4-SNAPSHOT
+- Fix proper Kotlin desugaring for Java 8
+
 ## 1.7.3
 - Bump `bcpg-jdk8on` to `1.80`
 - Bump `bcprov-jdk18on` to `1.80`
