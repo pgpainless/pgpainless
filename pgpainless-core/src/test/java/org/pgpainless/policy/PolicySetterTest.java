@@ -18,43 +18,43 @@ public class PolicySetterTest {
     @Test
     public void testSetCertificationSignatureHashAlgorithmPolicy_NullFails() {
         Policy policy = Policy.getInstance();
-        assertThrows(NullPointerException.class, () -> policy.setCertificationSignatureHashAlgorithmPolicy(null));
+        assertThrows(NullPointerException.class, () -> policy.copy().withCertificationSignatureHashAlgorithmPolicy(null));
     }
 
     @Test
     public void testSetDataSignatureHashAlgorithmPolicy_NullFails() {
         Policy policy = Policy.getInstance();
-        assertThrows(NullPointerException.class, () -> policy.setDataSignatureHashAlgorithmPolicy(null));
+        assertThrows(NullPointerException.class, () -> policy.copy().withDataSignatureHashAlgorithmPolicy(null));
     }
 
     @Test
     public void testSetRevocationSignatureHashAlgorithmPolicy_NullFails() {
         Policy policy = Policy.getInstance();
-        assertThrows(NullPointerException.class, () -> policy.setRevocationSignatureHashAlgorithmPolicy(null));
+        assertThrows(NullPointerException.class, () -> policy.copy().withRevocationSignatureHashAlgorithmPolicy(null));
     }
 
     @Test
     public void testSetSymmetricKeyEncryptionAlgorithmPolicy_NullFails() {
         Policy policy = Policy.getInstance();
-        assertThrows(NullPointerException.class, () -> policy.setSymmetricKeyEncryptionAlgorithmPolicy(null));
+        assertThrows(NullPointerException.class, () -> policy.copy().withSymmetricKeyEncryptionAlgorithmPolicy(null));
     }
 
     @Test
     public void testSetSymmetricKeyDecryptionAlgorithmPolicy_NullFails() {
         Policy policy = Policy.getInstance();
-        assertThrows(NullPointerException.class, () -> policy.setSymmetricKeyDecryptionAlgorithmPolicy(null));
+        assertThrows(NullPointerException.class, () -> policy.copy().withSymmetricKeyDecryptionAlgorithmPolicy(null));
     }
 
     @Test
     public void testSetCompressionAlgorithmPolicy_NullFails() {
         Policy policy = Policy.getInstance();
-        assertThrows(NullPointerException.class, () -> policy.setCompressionAlgorithmPolicy(null));
+        assertThrows(NullPointerException.class, () -> policy.copy().withCompressionAlgorithmPolicy(null));
     }
 
     @Test
     public void testSetPublicKeyAlgorithmPolicy_NullFails() {
         Policy policy = Policy.getInstance();
-        assertThrows(NullPointerException.class, () -> policy.setPublicKeyAlgorithmPolicy(null));
+        assertThrows(NullPointerException.class, () -> policy.copy().withPublicKeyAlgorithmPolicy(null));
     }
 
     @Test
@@ -62,7 +62,7 @@ public class PolicySetterTest {
         Policy policy = new Policy();
         Map<PublicKeyAlgorithm, Integer> acceptableAlgorithms = new HashMap<>();
         acceptableAlgorithms.put(PublicKeyAlgorithm.RSA_GENERAL, 2000);
-        policy.setPublicKeyAlgorithmPolicy(new Policy.PublicKeyAlgorithmPolicy(acceptableAlgorithms));
+        policy = policy.copy().withPublicKeyAlgorithmPolicy(new Policy.PublicKeyAlgorithmPolicy(acceptableAlgorithms)).build();
 
         // Policy does not contain ECDSA
         assertFalse(policy.getPublicKeyAlgorithmPolicy().isAcceptable(PublicKeyAlgorithm.ECDSA, 256));

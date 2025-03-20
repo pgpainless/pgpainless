@@ -7,14 +7,28 @@ package org.pgpainless.signature.builder
 import java.util.function.Predicate
 import org.bouncycastle.openpgp.PGPException
 import org.bouncycastle.openpgp.PGPPublicKey
-import org.bouncycastle.openpgp.PGPSecretKey
 import org.bouncycastle.openpgp.PGPSignature
+import org.bouncycastle.openpgp.api.OpenPGPCertificate.OpenPGPComponentKey
+import org.bouncycastle.openpgp.api.OpenPGPCertificate.OpenPGPComponentSignature
+import org.bouncycastle.openpgp.api.OpenPGPCertificate.OpenPGPUserId
+import org.bouncycastle.openpgp.api.OpenPGPKey
+import org.bouncycastle.openpgp.api.OpenPGPSignature
+import org.pgpainless.PGPainless
 import org.pgpainless.algorithm.SignatureType
 import org.pgpainless.key.protection.SecretKeyRingProtector
 import org.pgpainless.signature.subpackets.RevocationSignatureSubpackets
 
 /** [AbstractSignatureBuilder] subclass devoted to revocation signatures. */
-class RevocationSignatureBuilder : AbstractSignatureBuilder<RevocationSignatureBuilder> {
+class RevocationSignatureBuilder
+@Throws(PGPException::class)
+constructor(
+    signatureType: SignatureType,
+    signingKey: OpenPGPKey.OpenPGPSecretKey,
+    protector: SecretKeyRingProtector,
+    api: PGPainless
+) :
+    AbstractSignatureBuilder<RevocationSignatureBuilder>(
+        signatureType, signingKey, protector, api) {
 
     override val signatureTypePredicate: Predicate<SignatureType>
         get() =
@@ -25,15 +39,6 @@ class RevocationSignatureBuilder : AbstractSignatureBuilder<RevocationSignatureB
                         SignatureType.SUBKEY_REVOCATION,
                         SignatureType.CERTIFICATION_REVOCATION)
             }
-
-    @Throws(PGPException::class)
-    constructor(
-        signatureType: SignatureType,
-        signingKey: PGPSecretKey,
-        protector: SecretKeyRingProtector
-    ) : super(signatureType, signingKey, protector) {
-        hashedSubpackets.setRevocable(false)
-    }
 
     val hashedSubpackets: RevocationSignatureSubpackets = _hashedSubpackets
     val unhashedSubpackets: RevocationSignatureSubpackets = _unhashedSubpackets
@@ -52,11 +57,16 @@ class RevocationSignatureBuilder : AbstractSignatureBuilder<RevocationSignatureB
                 require(revokeeKey.isMasterKey) {
                     "Signature type is KEY_REVOCATION, but provided revokee does not appear to be a primary key."
                 }
-                it.generateCertification(publicSigningKey)
+                it.generateCertification(signingKey.publicKey.pgpPublicKey)
             } else {
-                it.generateCertification(publicSigningKey, revokeeKey)
+                it.generateCertification(signingKey.publicKey.pgpPublicKey, revokeeKey)
             }
         }
+
+    fun build(revokeeKey: OpenPGPComponentKey): OpenPGPSignature {
+        return OpenPGPComponentSignature(
+            build(revokeeKey.pgpPublicKey), signingKey.publicKey, revokeeKey)
+    }
 
     @Throws(PGPException::class)
     fun build(revokeeUserId: CharSequence): PGPSignature =
@@ -66,5 +76,14 @@ class RevocationSignatureBuilder : AbstractSignatureBuilder<RevocationSignatureB
                     "Signature type is != CERTIFICATION_REVOCATION."
                 }
             }
-            .generateCertification(revokeeUserId.toString(), publicSigningKey)
+            .generateCertification(revokeeUserId.toString(), signingKey.publicKey.pgpPublicKey)
+
+    fun build(revokeeUserId: OpenPGPUserId): OpenPGPComponentSignature {
+        return OpenPGPComponentSignature(
+            build(revokeeUserId.userId), signingKey.publicKey, revokeeUserId)
+    }
+
+    init {
+        hashedSubpackets.setRevocable(false)
+    }
 }

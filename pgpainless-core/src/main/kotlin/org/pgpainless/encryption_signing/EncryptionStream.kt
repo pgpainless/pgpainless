@@ -13,12 +13,12 @@ import org.bouncycastle.openpgp.PGPCompressedDataGenerator
 import org.bouncycastle.openpgp.PGPEncryptedDataGenerator
 import org.bouncycastle.openpgp.PGPException
 import org.bouncycastle.openpgp.PGPLiteralDataGenerator
+import org.pgpainless.PGPainless
 import org.pgpainless.algorithm.CompressionAlgorithm
 import org.pgpainless.algorithm.StreamEncoding
 import org.pgpainless.algorithm.SymmetricKeyAlgorithm
-import org.pgpainless.implementation.ImplementationFactory
+import org.pgpainless.key.SubkeyIdentifier
 import org.pgpainless.util.ArmoredOutputStreamFactory
-import org.slf4j.LoggerFactory
 
 // 1 << 8 causes wrong partial body length encoding
 //  1 << 9 fixes this.
@@ -37,6 +37,7 @@ const val BUFFER_SIZE = 1 shl 9
 class EncryptionStream(
     private var outermostStream: OutputStream,
     private val options: ProducerOptions,
+    private val api: PGPainless
 ) : OutputStream() {
 
     private val resultBuilder: EncryptionResult.Builder = EncryptionResult.builder()
@@ -62,12 +63,10 @@ class EncryptionStream(
 
     private fun prepareArmor() {
         if (!options.isAsciiArmor) {
-            LOGGER.debug("Output will be unarmored.")
             return
         }
 
         outermostStream = BufferedOutputStream(outermostStream)
-        LOGGER.debug("Wrap encryption output in ASCII armor.")
         armorOutputStream =
             ArmoredOutputStreamFactory.get(outermostStream, options).also { outermostStream = it }
     }
@@ -83,12 +82,11 @@ class EncryptionStream(
             "If EncryptionOptions are provided, at least one encryption method MUST be provided as well."
         }
 
-        EncryptionBuilder.negotiateSymmetricEncryptionAlgorithm(options.encryptionOptions).let {
+        options.encryptionOptions.negotiateSymmetricEncryptionAlgorithm().let {
             resultBuilder.setEncryptionAlgorithm(it)
-            LOGGER.debug("Encrypt message using symmetric algorithm $it.")
             val encryptedDataGenerator =
                 PGPEncryptedDataGenerator(
-                    ImplementationFactory.getInstance().getPGPDataEncryptorBuilder(it).apply {
+                    api.implementation.pgpDataEncryptorBuilder(it.algorithmId).apply {
                         setWithIntegrityPacket(true)
                     })
             options.encryptionOptions.encryptionMethods.forEach { m ->
@@ -108,12 +106,11 @@ class EncryptionStream(
 
     @Throws(IOException::class)
     private fun prepareCompression() {
-        EncryptionBuilder.negotiateCompressionAlgorithm(options).let {
+        options.negotiateCompressionAlgorithm().let {
             resultBuilder.setCompressionAlgorithm(it)
             compressedDataGenerator = PGPCompressedDataGenerator(it.algorithmId)
             if (it == CompressionAlgorithm.UNCOMPRESSED) return
 
-            LOGGER.debug("Compress using $it.")
             basicCompressionStream =
                 BCPGOutputStream(compressedDataGenerator!!.open(outermostStream)).also { stream ->
                     outermostStream = stream
@@ -250,7 +247,7 @@ class EncryptionStream(
         options.signingOptions.signingMethods.entries.reversed().forEach { (key, method) ->
             method.signatureGenerator.generate().let { sig ->
                 if (method.isDetached) {
-                    resultBuilder.addDetachedSignature(key, sig)
+                    resultBuilder.addDetachedSignature(SubkeyIdentifier(key), sig)
                 }
                 if (!method.isDetached || options.isCleartextSigned) {
                     sig.encode(signatureLayerStream)
@@ -266,8 +263,4 @@ class EncryptionStream(
 
     val isClosed
         get() = closed
-
-    companion object {
-        @JvmStatic private val LOGGER = LoggerFactory.getLogger(EncryptionStream::class.java)
-    }
 }

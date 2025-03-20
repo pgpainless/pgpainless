@@ -6,12 +6,9 @@ package org.pgpainless.key.generation;
 
 import static org.junit.jupiter.api.Assertions.assertThrows;
 
-import java.security.InvalidAlgorithmParameterException;
-import java.security.NoSuchAlgorithmException;
 import java.util.HashMap;
 import java.util.Map;
 
-import org.bouncycastle.openpgp.PGPException;
 import org.junit.jupiter.api.Test;
 import org.pgpainless.PGPainless;
 import org.pgpainless.algorithm.KeyFlag;
@@ -25,9 +22,7 @@ public class GeneratingWeakKeyThrowsTest {
     @Test
     public void refuseToGenerateWeakPrimaryKeyTest() {
         // ensure we have default public key algorithm policy set
-        PGPainless.getPolicy().setPublicKeyAlgorithmPolicy(
-                Policy.PublicKeyAlgorithmPolicy.bsi2021PublicKeyAlgorithmPolicy());
-
+        PGPainless.getInstance().setAlgorithmPolicy(new Policy());
         assertThrows(IllegalArgumentException.class, () ->
                 PGPainless.buildKeyRing()
                         .setPrimaryKey(KeySpec.getBuilder(KeyType.RSA(RsaLength._1024),
@@ -37,8 +32,7 @@ public class GeneratingWeakKeyThrowsTest {
     @Test
     public void refuseToAddWeakSubkeyDuringGenerationTest() {
         // ensure we have default public key algorithm policy set
-        PGPainless.getPolicy().setPublicKeyAlgorithmPolicy(
-                Policy.PublicKeyAlgorithmPolicy.bsi2021PublicKeyAlgorithmPolicy());
+        PGPainless.getInstance().setAlgorithmPolicy(new Policy());
 
         KeyRingBuilder kb = PGPainless.buildKeyRing()
                 .setPrimaryKey(KeySpec.getBuilder(KeyType.RSA(RsaLength._4096),
@@ -50,14 +44,15 @@ public class GeneratingWeakKeyThrowsTest {
     }
 
     @Test
-    public void allowToAddWeakKeysWithWeakPolicy()
-            throws PGPException, InvalidAlgorithmParameterException, NoSuchAlgorithmException {
+    public void allowToAddWeakKeysWithWeakPolicy() {
         // set a weak algorithm policy
         Map<PublicKeyAlgorithm, Integer> bitStrengths = new HashMap<>();
         bitStrengths.put(PublicKeyAlgorithm.RSA_GENERAL, 512);
 
-        PGPainless.getPolicy().setPublicKeyAlgorithmPolicy(
-                new Policy.PublicKeyAlgorithmPolicy(bitStrengths));
+        Policy oldPolicy = PGPainless.getPolicy();
+        PGPainless.getInstance().setAlgorithmPolicy(oldPolicy.copy()
+                .withPublicKeyAlgorithmPolicy(new Policy.PublicKeyAlgorithmPolicy(bitStrengths))
+                .build());
 
         PGPainless.buildKeyRing()
                 .setPrimaryKey(KeySpec.getBuilder(KeyType.RSA(RsaLength._4096),
@@ -68,7 +63,6 @@ public class GeneratingWeakKeyThrowsTest {
                 .build();
 
         // reset public key algorithm policy
-        PGPainless.getPolicy().setPublicKeyAlgorithmPolicy(
-                Policy.PublicKeyAlgorithmPolicy.bsi2021PublicKeyAlgorithmPolicy());
+        PGPainless.getInstance().setAlgorithmPolicy(oldPolicy);
     }
 }

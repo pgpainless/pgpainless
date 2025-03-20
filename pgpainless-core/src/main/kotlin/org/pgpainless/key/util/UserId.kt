@@ -6,15 +6,9 @@ package org.pgpainless.key.util
 
 class UserId internal constructor(name: String?, comment: String?, email: String?) : CharSequence {
 
-    private val _name: String?
-    val comment: String?
-    val email: String?
-
-    init {
-        this._name = name?.trim()
-        this.comment = comment?.trim()
-        this.email = email?.trim()
-    }
+    private val _name: String? = name?.trim()
+    val comment: String? = comment?.trim()
+    val email: String? = email?.trim()
 
     val full: String = buildString {
         if (name?.isNotBlank() == true) {
@@ -169,10 +163,6 @@ class UserId internal constructor(name: String?, comment: String?, email: String
         @JvmStatic
         fun compare(u1: UserId?, u2: UserId?, comparator: Comparator<UserId?>) =
             comparator.compare(u1, u2)
-
-        @JvmStatic
-        @Deprecated("Deprecated in favor of builde() method.", ReplaceWith("builder()"))
-        fun newBuilder() = builder()
 
         @JvmStatic fun builder() = Builder()
     }

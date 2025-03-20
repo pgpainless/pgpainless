@@ -30,7 +30,7 @@ import sop.operation.Encrypt
 import sop.util.UTF8Util
 
 /** Implementation of the `encrypt` operation using PGPainless. */
-class EncryptImpl : Encrypt {
+class EncryptImpl(private val api: PGPainless) : Encrypt {
 
     companion object {
         @JvmField val RFC4880_PROFILE = Profile("rfc4880", "Follow the packet format of rfc4880")
@@ -38,7 +38,7 @@ class EncryptImpl : Encrypt {
         @JvmField val SUPPORTED_PROFILES = listOf(RFC4880_PROFILE)
     }
 
-    private val encryptionOptions = EncryptionOptions.get()
+    private val encryptionOptions = EncryptionOptions.get(api)
     private var signingOptions: SigningOptions? = null
     private val signingKeys = mutableListOf<PGPSecretKeyRing>()
     private val protector = MatchMakingSecretKeyRingProtector()
@@ -58,9 +58,9 @@ class EncryptImpl : Encrypt {
 
         val options =
             if (signingOptions != null) {
-                    ProducerOptions.signAndEncrypt(encryptionOptions, signingOptions!!)
+                    ProducerOptions.signAndEncrypt(encryptionOptions, signingOptions!!, api)
                 } else {
-                    ProducerOptions.encrypt(encryptionOptions)
+                    ProducerOptions.encrypt(encryptionOptions, api)
                 }
                 .setAsciiArmor(armor)
                 .setEncoding(modeToStreamEncoding(mode))
@@ -81,9 +81,7 @@ class EncryptImpl : Encrypt {
             return object : ReadyWithResult<EncryptionResult>() {
                 override fun writeTo(outputStream: OutputStream): EncryptionResult {
                     val encryptionStream =
-                        PGPainless.encryptAndOrSign()
-                            .onOutputStream(outputStream)
-                            .withOptions(options)
+                        api.generateMessage().onOutputStream(outputStream).withOptions(options)
                     Streams.pipeAll(plaintext, encryptionStream)
                     encryptionStream.close()
                     // TODO: Extract and emit session key once BC supports that
@@ -103,7 +101,7 @@ class EncryptImpl : Encrypt {
 
     override fun signWith(key: InputStream): Encrypt = apply {
         if (signingOptions == null) {
-            signingOptions = SigningOptions.get()
+            signingOptions = SigningOptions.get(api)
         }
 
         val signingKey =
@@ -112,7 +110,7 @@ class EncryptImpl : Encrypt {
                     AssertionError(
                         "Exactly one secret key at a time expected. Got zero or multiple instead."))
 
-        val info = PGPainless.inspectKeyRing(signingKey)
+        val info = api.inspect(api.toKey(signingKey))
         if (info.signingSubkeys.isEmpty()) {
             throw SOPGPException.KeyCannotSign("Key ${info.fingerprint} cannot sign.")
         }

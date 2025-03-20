@@ -19,8 +19,6 @@ import org.pgpainless.exception.MissingDecryptionMethodException;
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
-import java.security.InvalidAlgorithmParameterException;
-import java.security.NoSuchAlgorithmException;
 
 import static org.junit.jupiter.api.Assertions.assertThrows;
 
@@ -28,9 +26,10 @@ public class TryDecryptWithUnavailableGnuDummyKeyTest {
 
     @Test
     public void testAttemptToDecryptWithRemovedPrivateKeysThrows()
-            throws PGPException, InvalidAlgorithmParameterException, NoSuchAlgorithmException, IOException {
+            throws PGPException, IOException {
         PGPSecretKeyRing secretKeys = PGPainless.generateKeyRing()
-                .modernKeyRing("Hardy Hardware <hardy@hard.ware>");
+                .modernKeyRing("Hardy Hardware <hardy@hard.ware>")
+                .getPGPSecretKeyRing();
         PGPPublicKeyRing certificate = PGPainless.extractCertificate(secretKeys);
 
         ByteArrayOutputStream ciphertextOut = new ByteArrayOutputStream();

@@ -8,6 +8,7 @@ import java.security.InvalidAlgorithmParameterException;
 import java.security.KeyPair;
 import java.security.KeyPairGenerator;
 import java.security.NoSuchAlgorithmException;
+import java.security.Provider;
 import java.util.Date;
 
 import org.bouncycastle.bcpg.CompressionAlgorithmTags;
@@ -16,6 +17,7 @@ import org.bouncycastle.bcpg.PublicKeyAlgorithmTags;
 import org.bouncycastle.bcpg.SymmetricKeyAlgorithmTags;
 import org.bouncycastle.bcpg.sig.Features;
 import org.bouncycastle.bcpg.sig.KeyFlags;
+import org.bouncycastle.jce.provider.BouncyCastleProvider;
 import org.bouncycastle.jce.spec.ECNamedCurveGenParameterSpec;
 import org.bouncycastle.openpgp.PGPException;
 import org.bouncycastle.openpgp.PGPKeyPair;
@@ -29,22 +31,19 @@ import org.bouncycastle.openpgp.operator.PGPDigestCalculator;
 import org.bouncycastle.openpgp.operator.jcajce.JcaPGPContentSignerBuilder;
 import org.bouncycastle.openpgp.operator.jcajce.JcaPGPDigestCalculatorProviderBuilder;
 import org.bouncycastle.openpgp.operator.jcajce.JcaPGPKeyPair;
-import org.junit.jupiter.api.TestTemplate;
-import org.junit.jupiter.api.extension.ExtendWith;
-import org.pgpainless.provider.ProviderFactory;
-import org.pgpainless.util.TestAllImplementations;
+import org.junit.jupiter.api.Test;
 
 public class BouncycastleExportSubkeys {
 
-    @TestTemplate
-    @ExtendWith(TestAllImplementations.class)
+    @Test
     public void testExportImport() throws NoSuchAlgorithmException, InvalidAlgorithmParameterException, PGPException {
+        Provider provider = new BouncyCastleProvider();
         KeyPairGenerator generator;
         KeyPair pair;
 
         // Generate master key
 
-        generator = KeyPairGenerator.getInstance("ECDSA", ProviderFactory.getProvider());
+        generator = KeyPairGenerator.getInstance("ECDSA", provider);
         generator.initialize(new ECNamedCurveGenParameterSpec("P-256"));
 
         pair = generator.generateKeyPair();
@@ -70,7 +69,7 @@ public class BouncycastleExportSubkeys {
 
         // Generate sub key
 
-        generator = KeyPairGenerator.getInstance("ECDH", ProviderFactory.getProvider());
+        generator = KeyPairGenerator.getInstance("ECDH", provider);
         generator.initialize(new ECNamedCurveGenParameterSpec("P-256"));
 
         pair = generator.generateKeyPair();
@@ -79,13 +78,13 @@ public class BouncycastleExportSubkeys {
         // Assemble key
 
         PGPDigestCalculator calculator = new JcaPGPDigestCalculatorProviderBuilder()
-                .setProvider(ProviderFactory.getProvider())
+                .setProvider(provider)
                 .build()
                 .get(HashAlgorithmTags.SHA1);
 
         PGPContentSignerBuilder signerBuilder = new JcaPGPContentSignerBuilder(
                 pgpMasterKey.getPublicKey().getAlgorithm(), HashAlgorithmTags.SHA512)
-                .setProvider(ProviderFactory.getProvider());
+                .setProvider(provider);
 
         PGPKeyRingGenerator pgpGenerator = new PGPKeyRingGenerator(PGPSignature.POSITIVE_CERTIFICATION,
                 pgpMasterKey, "alice@wonderland.lit", calculator, subPackets.generate(), null,

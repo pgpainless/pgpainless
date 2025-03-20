@@ -13,7 +13,6 @@ import java.io.InputStream;
 import java.nio.charset.StandardCharsets;
 import java.util.Date;
 
-import org.bouncycastle.openpgp.PGPException;
 import org.bouncycastle.openpgp.PGPPublicKeyRing;
 import org.bouncycastle.openpgp.PGPSignature;
 import org.junit.jupiter.api.TestTemplate;
@@ -53,7 +52,7 @@ public class BindingSignatureSubpacketsTest {
 
     @TestTemplate
     @ExtendWith(TestAllImplementations.class)
-    public void baseCase() throws IOException, PGPException {
+    public void baseCase() throws IOException {
 
         String key = "-----BEGIN PGP PUBLIC KEY BLOCK-----\n" +
                 "\n" +
@@ -114,7 +113,7 @@ public class BindingSignatureSubpacketsTest {
 
     @TestTemplate
     @ExtendWith(TestAllImplementations.class)
-    public void subkeyBindingIssuerFpOnly() throws IOException, PGPException {
+    public void subkeyBindingIssuerFpOnly() throws IOException {
 
         String key = "-----BEGIN PGP PUBLIC KEY BLOCK-----\n" +
                 "\n" +
@@ -175,7 +174,7 @@ public class BindingSignatureSubpacketsTest {
 
     @TestTemplate
     @ExtendWith(TestAllImplementations.class)
-    public void subkeyBindingIssuerV6IssuerFp() throws IOException, PGPException {
+    public void subkeyBindingIssuerV6IssuerFp() throws IOException {
 
         String key = "-----BEGIN PGP PUBLIC KEY BLOCK-----\n" +
                 "\n" +
@@ -236,7 +235,7 @@ public class BindingSignatureSubpacketsTest {
 
     @TestTemplate
     @ExtendWith(TestAllImplementations.class)
-    public void subkeyBindingIssuerFakeIssuer() throws IOException, PGPException {
+    public void subkeyBindingIssuerFakeIssuer() throws IOException {
 
         String key = "-----BEGIN PGP PUBLIC KEY BLOCK-----\n" +
                 "\n" +
@@ -297,7 +296,7 @@ public class BindingSignatureSubpacketsTest {
 
     @TestTemplate
     @ExtendWith(TestAllImplementations.class)
-    public void subkeyBindingFakeIssuerIssuer() throws IOException, PGPException {
+    public void subkeyBindingFakeIssuerIssuer() throws IOException {
 
         String key = "-----BEGIN PGP PUBLIC KEY BLOCK-----\n" +
                 "\n" +
@@ -358,7 +357,7 @@ public class BindingSignatureSubpacketsTest {
 
     @TestTemplate
     @ExtendWith(TestAllImplementations.class)
-    public void subkeyBindingFakeIssuer() throws IOException, PGPException {
+    public void subkeyBindingFakeIssuer() throws IOException {
 
         String key = "-----BEGIN PGP PUBLIC KEY BLOCK-----\n" +
                 "\n" +
@@ -419,7 +418,7 @@ public class BindingSignatureSubpacketsTest {
 
     @TestTemplate
     @ExtendWith(TestAllImplementations.class)
-    public void subkeyBindingNoIssuer() throws IOException, PGPException {
+    public void subkeyBindingNoIssuer() throws IOException {
 
         String key = "-----BEGIN PGP PUBLIC KEY BLOCK-----\n" +
                 "\n" +
@@ -479,7 +478,7 @@ public class BindingSignatureSubpacketsTest {
 
     @TestTemplate
     @ExtendWith(TestAllImplementations.class)
-    public void unknownSubpacketHashed() throws IOException, PGPException {
+    public void unknownSubpacketHashed() throws IOException {
 
         String key = "-----BEGIN PGP PUBLIC KEY BLOCK-----\n" +
                 "\n" +
@@ -540,7 +539,7 @@ public class BindingSignatureSubpacketsTest {
 
     @TestTemplate
     @ExtendWith(TestAllImplementations.class)
-    public void subkeyBindingUnknownCriticalSubpacket() throws IOException, PGPException {
+    public void subkeyBindingUnknownCriticalSubpacket() throws IOException {
 
         String key = "-----BEGIN PGP PUBLIC KEY BLOCK-----\n" +
                 "\n" +
@@ -601,7 +600,7 @@ public class BindingSignatureSubpacketsTest {
 
     @TestTemplate
     @ExtendWith(TestAllImplementations.class)
-    public void subkeyBindingUnknownSubpacketUnhashed() throws IOException, PGPException {
+    public void subkeyBindingUnknownSubpacketUnhashed() throws IOException {
 
         String key = "-----BEGIN PGP PUBLIC KEY BLOCK-----\n" +
                 "\n" +
@@ -662,7 +661,7 @@ public class BindingSignatureSubpacketsTest {
 
     @TestTemplate
     @ExtendWith(TestAllImplementations.class)
-    public void subkeyBindingUnknownCriticalSubpacketUnhashed() throws IOException, PGPException {
+    public void subkeyBindingUnknownCriticalSubpacketUnhashed() throws IOException {
 
         String key = "-----BEGIN PGP PUBLIC KEY BLOCK-----\n" +
                 "\n" +
@@ -723,7 +722,7 @@ public class BindingSignatureSubpacketsTest {
 
     @TestTemplate
     @ExtendWith(TestAllImplementations.class)
-    public void subkeyBindingUnknownNotationHashed() throws IOException, PGPException {
+    public void subkeyBindingUnknownNotationHashed() throws IOException {
 
         String key = "-----BEGIN PGP PUBLIC KEY BLOCK-----\n" +
                 "\n" +
@@ -785,7 +784,7 @@ public class BindingSignatureSubpacketsTest {
 
     @TestTemplate
     @ExtendWith(TestAllImplementations.class)
-    public void subkeyBindingCriticalUnknownNotationHashed() throws IOException, PGPException {
+    public void subkeyBindingCriticalUnknownNotationHashed() throws IOException {
 
         String key = "-----BEGIN PGP PUBLIC KEY BLOCK-----\n" +
                 "\n" +
@@ -847,7 +846,7 @@ public class BindingSignatureSubpacketsTest {
 
     @TestTemplate
     @ExtendWith(TestAllImplementations.class)
-    public void subkeyBindingUnknownNotationUnhashed() throws IOException, PGPException {
+    public void subkeyBindingUnknownNotationUnhashed() throws IOException {
 
         String key = "-----BEGIN PGP PUBLIC KEY BLOCK-----\n" +
                 "\n" +
@@ -909,7 +908,7 @@ public class BindingSignatureSubpacketsTest {
 
     @TestTemplate
     @ExtendWith(TestAllImplementations.class)
-    public void subkeyBindingCriticalUnknownNotationUnhashed() throws IOException, PGPException {
+    public void subkeyBindingCriticalUnknownNotationUnhashed() throws IOException {
 
         String key = "-----BEGIN PGP PUBLIC KEY BLOCK-----\n" +
                 "\n" +
@@ -971,7 +970,7 @@ public class BindingSignatureSubpacketsTest {
 
     @TestTemplate
     @ExtendWith(TestAllImplementations.class)
-    public void subkeyBindingBackSigFakeBackSig() throws IOException, PGPException {
+    public void subkeyBindingBackSigFakeBackSig() throws IOException {
 
         String key = "-----BEGIN PGP PUBLIC KEY BLOCK-----\n" +
                 "\n" +
@@ -1043,7 +1042,7 @@ public class BindingSignatureSubpacketsTest {
 
     @TestTemplate
     @ExtendWith(TestAllImplementations.class)
-    public void subkeyBindingFakeBackSigBackSig() throws IOException, PGPException {
+    public void subkeyBindingFakeBackSigBackSig() throws IOException {
 
         String key = "-----BEGIN PGP PUBLIC KEY BLOCK-----\n" +
                 "\n" +
@@ -1115,7 +1114,7 @@ public class BindingSignatureSubpacketsTest {
 
     @TestTemplate
     @ExtendWith(TestAllImplementations.class)
-    public void primaryBindingIssuerFpOnly() throws IOException, PGPException {
+    public void primaryBindingIssuerFpOnly() throws IOException {
 
         String key = "-----BEGIN PGP PUBLIC KEY BLOCK-----\n" +
                 "\n" +
@@ -1176,7 +1175,7 @@ public class BindingSignatureSubpacketsTest {
 
     @TestTemplate
     @ExtendWith(TestAllImplementations.class)
-    public void primaryBindingIssuerV6IssuerFp() throws IOException, PGPException {
+    public void primaryBindingIssuerV6IssuerFp() throws IOException {
 
         String key = "-----BEGIN PGP PUBLIC KEY BLOCK-----\n" +
                 "\n" +
@@ -1237,7 +1236,7 @@ public class BindingSignatureSubpacketsTest {
 
     @TestTemplate
     @ExtendWith(TestAllImplementations.class)
-    public void primaryBindingIssuerFakeIssuer() throws IOException, PGPException {
+    public void primaryBindingIssuerFakeIssuer() throws IOException {
 
         String key = "-----BEGIN PGP PUBLIC KEY BLOCK-----\n" +
                 "\n" +
@@ -1298,7 +1297,7 @@ public class BindingSignatureSubpacketsTest {
 
     @TestTemplate
     @ExtendWith(TestAllImplementations.class)
-    public void primaryBindingFakeIssuerIssuer() throws IOException, PGPException {
+    public void primaryBindingFakeIssuerIssuer() throws IOException {
 
         String key = "-----BEGIN PGP PUBLIC KEY BLOCK-----\n" +
                 "\n" +
@@ -1359,7 +1358,7 @@ public class BindingSignatureSubpacketsTest {
 
     @TestTemplate
     @ExtendWith(TestAllImplementations.class)
-    public void primaryBindingFakeIssuer() throws IOException, PGPException {
+    public void primaryBindingFakeIssuer() throws IOException {
 
         String key = "-----BEGIN PGP PUBLIC KEY BLOCK-----\n" +
                 "\n" +
@@ -1420,7 +1419,7 @@ public class BindingSignatureSubpacketsTest {
 
     @TestTemplate
     @ExtendWith(TestAllImplementations.class)
-    public void primaryBindingNoIssuer() throws IOException, PGPException {
+    public void primaryBindingNoIssuer() throws IOException {
 
         String key = "-----BEGIN PGP PUBLIC KEY BLOCK-----\n" +
                 "\n" +
@@ -1480,7 +1479,7 @@ public class BindingSignatureSubpacketsTest {
 
     @TestTemplate
     @ExtendWith(TestAllImplementations.class)
-    public void primaryBindingUnknownSubpacketHashed() throws IOException, PGPException {
+    public void primaryBindingUnknownSubpacketHashed() throws IOException {
 
         String key = "-----BEGIN PGP PUBLIC KEY BLOCK-----\n" +
                 "\n" +
@@ -1541,7 +1540,7 @@ public class BindingSignatureSubpacketsTest {
 
     @TestTemplate
     @ExtendWith(TestAllImplementations.class)
-    public void primaryBindingCriticalUnknownSubpacketHashed() throws IOException, PGPException {
+    public void primaryBindingCriticalUnknownSubpacketHashed() throws IOException {
 
         String key = "-----BEGIN PGP PUBLIC KEY BLOCK-----\n" +
                 "\n" +
@@ -1602,7 +1601,7 @@ public class BindingSignatureSubpacketsTest {
 
     @TestTemplate
     @ExtendWith(TestAllImplementations.class)
-    public void primaryBindingUnknownSubpacketUnhashed() throws IOException, PGPException {
+    public void primaryBindingUnknownSubpacketUnhashed() throws IOException {
 
         String key = "-----BEGIN PGP PUBLIC KEY BLOCK-----\n" +
                 "\n" +
@@ -1663,7 +1662,7 @@ public class BindingSignatureSubpacketsTest {
 
     @TestTemplate
     @ExtendWith(TestAllImplementations.class)
-    public void primaryBindingCriticalUnknownSubpacketUnhashed() throws IOException, PGPException {
+    public void primaryBindingCriticalUnknownSubpacketUnhashed() throws IOException {
 
         String key = "-----BEGIN PGP PUBLIC KEY BLOCK-----\n" +
                 "\n" +
@@ -1724,7 +1723,7 @@ public class BindingSignatureSubpacketsTest {
 
     @TestTemplate
     @ExtendWith(TestAllImplementations.class)
-    public void primaryBindingUnknownNotationHashed() throws IOException, PGPException {
+    public void primaryBindingUnknownNotationHashed() throws IOException {
 
         String key = "-----BEGIN PGP PUBLIC KEY BLOCK-----\n" +
                 "\n" +
@@ -1786,7 +1785,7 @@ public class BindingSignatureSubpacketsTest {
 
     @TestTemplate
     @ExtendWith(TestAllImplementations.class)
-    public void primaryBindingCriticalUnknownNotationHashed() throws IOException, PGPException {
+    public void primaryBindingCriticalUnknownNotationHashed() throws IOException {
 
         String key = "-----BEGIN PGP PUBLIC KEY BLOCK-----\n" +
                 "\n" +
@@ -1848,7 +1847,7 @@ public class BindingSignatureSubpacketsTest {
 
     @TestTemplate
     @ExtendWith(TestAllImplementations.class)
-    public void primaryBindingUnknownNotationUnhashed() throws IOException, PGPException {
+    public void primaryBindingUnknownNotationUnhashed() throws IOException {
 
         String key = "-----BEGIN PGP PUBLIC KEY BLOCK-----\n" +
                 "\n" +
@@ -1910,7 +1909,7 @@ public class BindingSignatureSubpacketsTest {
 
     @TestTemplate
     @ExtendWith(TestAllImplementations.class)
-    public void primaryBindingCriticalUnknownNotationUnhashed() throws IOException, PGPException {
+    public void primaryBindingCriticalUnknownNotationUnhashed() throws IOException {
 
         String key = "-----BEGIN PGP PUBLIC KEY BLOCK-----\n" +
                 "\n" +
@@ -1970,7 +1969,7 @@ public class BindingSignatureSubpacketsTest {
         expectSignatureValidationSucceeds(key, "Critical unknown notation is acceptable in unhashed area of primary key binding sig.");
     }
 
-    private void expectSignatureValidationSucceeds(String key, String message) throws IOException, PGPException {
+    private void expectSignatureValidationSucceeds(String key, String message) throws IOException {
         PGPPublicKeyRing publicKeys = PGPainless.readKeyRing().publicKeyRing(key);
         PGPSignature signature = SignatureUtils.readSignatures(sig).get(0);
 
@@ -1984,7 +1983,7 @@ public class BindingSignatureSubpacketsTest {
         }
     }
 
-    private void expectSignatureValidationFails(String key, String message) throws IOException, PGPException {
+    private void expectSignatureValidationFails(String key, String message) throws IOException {
         PGPPublicKeyRing publicKeys = PGPainless.readKeyRing().publicKeyRing(key);
         PGPSignature signature = SignatureUtils.readSignatures(sig).get(0);
 

@@ -10,8 +10,6 @@ import static org.junit.jupiter.api.Assertions.assertNotEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 
 import java.io.IOException;
-import java.security.InvalidAlgorithmParameterException;
-import java.security.NoSuchAlgorithmException;
 import java.util.Date;
 import java.util.Iterator;
 import java.util.NoSuchElementException;
@@ -19,6 +17,7 @@ import java.util.NoSuchElementException;
 import openpgp.DateExtensionsKt;
 import org.bouncycastle.openpgp.PGPException;
 import org.bouncycastle.openpgp.PGPSecretKeyRing;
+import org.bouncycastle.openpgp.api.OpenPGPKey;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.TestTemplate;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -37,30 +36,32 @@ public class AddUserIdTest {
     @TestTemplate
     @ExtendWith(TestAllImplementations.class)
     public void addUserIdToExistingKeyRing()
-            throws InvalidAlgorithmParameterException, NoSuchAlgorithmException, PGPException {
-        PGPSecretKeyRing secretKeys = PGPainless.generateKeyRing().simpleEcKeyRing("alice@wonderland.lit", "rabb1th0le");
+            throws PGPException {
+        PGPainless api = PGPainless.getInstance();
+        OpenPGPKey secretKeys = api.generateKey()
+                .simpleEcKeyRing("alice@wonderland.lit", "rabb1th0le");
 
-        KeyRingInfo info = PGPainless.inspectKeyRing(secretKeys);
+        KeyRingInfo info = api.inspect(secretKeys);
         Iterator<String> userIds = info.getValidUserIds().iterator();
         assertEquals("alice@wonderland.lit", userIds.next());
         assertFalse(userIds.hasNext());
 
         SecretKeyRingProtector protector = PasswordBasedSecretKeyRingProtector.forKey(secretKeys, Passphrase.fromPassword("rabb1th0le"));
-        secretKeys = PGPainless.modifyKeyRing(secretKeys)
+        secretKeys = api.modify(secretKeys)
                 .addUserId("cheshirecat@wonderland.lit", protector)
                 .done();
 
-        info = PGPainless.inspectKeyRing(secretKeys);
+        info = api.inspect(secretKeys);
         userIds = info.getValidUserIds().iterator();
         assertEquals("alice@wonderland.lit", userIds.next());
         assertEquals("cheshirecat@wonderland.lit", userIds.next());
         assertFalse(userIds.hasNext());
 
-        secretKeys = PGPainless.modifyKeyRing(secretKeys)
+        secretKeys = api.modify(secretKeys)
                 .revokeUserId("cheshirecat@wonderland.lit", protector)
                 .done();
 
-        info = PGPainless.inspectKeyRing(secretKeys);
+        info = api.inspect(secretKeys);
         userIds = info.getValidUserIds().iterator();
         assertEquals("alice@wonderland.lit", userIds.next());
         assertFalse(userIds.hasNext());
@@ -95,37 +96,40 @@ public class AddUserIdTest {
                         "=bk4o\r\n" +
                         "-----END PGP PRIVATE KEY BLOCK-----\r\n";
 
-        PGPSecretKeyRing secretKeys = PGPainless.readKeyRing().secretKeyRing(ARMORED_PRIVATE_KEY);
-        KeyRingInfo info = PGPainless.inspectKeyRing(secretKeys);
+        PGPainless api = PGPainless.getInstance();
+
+        OpenPGPKey key = api.readKey().parseKey(ARMORED_PRIVATE_KEY);
+        KeyRingInfo info = api.inspect(key);
         Iterator<String> userIds = info.getValidUserIds().iterator();
         assertEquals("<user@example.com>", userIds.next());
         assertFalse(userIds.hasNext());
 
         SecretKeyRingProtector protector = new UnprotectedKeysProtector();
-        secretKeys = PGPainless.modifyKeyRing(secretKeys)
+        key = api.modify(key)
                 .revokeUserId("<user@example.com>", protector)
                 .addUserId("cheshirecat@wonderland.lit", protector)
                 .done();
 
-        info = PGPainless.inspectKeyRing(secretKeys);
+        info = api.inspect(key);
         userIds = info.getValidUserIds().iterator();
         assertEquals("cheshirecat@wonderland.lit", userIds.next());
         assertFalse(userIds.hasNext());
     }
 
     @Test
-    public void addNewPrimaryUserIdTest() throws PGPException, InvalidAlgorithmParameterException, NoSuchAlgorithmException {
+    public void addNewPrimaryUserIdTest() {
         Date now = new Date();
-        PGPSecretKeyRing secretKeys = PGPainless.generateKeyRing()
+        PGPainless api = PGPainless.getInstance();
+        OpenPGPKey secretKeys = api.generateKey()
                 .modernKeyRing("Alice");
-        UserId bob = UserId.newBuilder().withName("Bob").noEmail().noComment().build();
+        UserId bob = UserId.builder().withName("Bob").noEmail().noComment().build();
 
-        assertNotEquals("Bob", PGPainless.inspectKeyRing(secretKeys).getPrimaryUserId());
+        assertNotEquals("Bob", api.inspect(secretKeys).getPrimaryUserId());
 
-        secretKeys = PGPainless.modifyKeyRing(secretKeys, DateExtensionsKt.plusSeconds(now, 1))
+        secretKeys = api.modify(secretKeys, DateExtensionsKt.plusSeconds(now, 1))
                 .addPrimaryUserId(bob, SecretKeyRingProtector.unprotectedKeys())
                 .done();
 
-        assertEquals("Bob", PGPainless.inspectKeyRing(secretKeys, DateExtensionsKt.plusSeconds(now, 2)).getPrimaryUserId());
+        assertEquals("Bob", api.inspect(secretKeys, DateExtensionsKt.plusSeconds(now, 2)).getPrimaryUserId());
     }
 }

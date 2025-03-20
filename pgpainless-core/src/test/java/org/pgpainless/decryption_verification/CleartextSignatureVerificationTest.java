@@ -16,8 +16,6 @@ import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.nio.charset.StandardCharsets;
-import java.security.InvalidAlgorithmParameterException;
-import java.security.NoSuchAlgorithmException;
 import java.util.Random;
 
 import org.bouncycastle.openpgp.PGPException;
@@ -83,7 +81,7 @@ public class CleartextSignatureVerificationTest {
     public void cleartextSignVerification_InMemoryMultiPassStrategy()
             throws IOException, PGPException {
         PGPPublicKeyRing signingKeys = TestKeys.getEmilPublicKeyRing();
-        ConsumerOptions options = new ConsumerOptions()
+        ConsumerOptions options = ConsumerOptions.get()
                 .addVerificationCert(signingKeys);
 
         InMemoryMultiPassStrategy multiPassStrategy = MultiPassStrategy.keepMessageInMemory();
@@ -110,7 +108,7 @@ public class CleartextSignatureVerificationTest {
     public void cleartextSignVerification_FileBasedMultiPassStrategy()
             throws IOException, PGPException {
         PGPPublicKeyRing signingKeys = TestKeys.getEmilPublicKeyRing();
-        ConsumerOptions options = new ConsumerOptions()
+        ConsumerOptions options = ConsumerOptions.get()
                 .addVerificationCert(signingKeys);
 
         File tempDir = TestUtils.createTempDirectory();
@@ -166,7 +164,7 @@ public class CleartextSignatureVerificationTest {
             throws IOException, PGPException {
         PGPSignature signature = SignatureUtils.readSignatures(SIGNATURE).get(0);
 
-        ConsumerOptions options = new ConsumerOptions()
+        ConsumerOptions options = ConsumerOptions.get()
                 .addVerificationCert(TestKeys.getEmilPublicKeyRing())
                 .addVerificationOfDetachedSignature(signature);
 
@@ -203,7 +201,7 @@ public class CleartextSignatureVerificationTest {
         ByteArrayInputStream signedIn = new ByteArrayInputStream(signed.getBytes(StandardCharsets.UTF_8));
         DecryptionStream verificationStream = PGPainless.decryptAndOrVerify()
                 .onInputStream(signedIn)
-                .withOptions(new ConsumerOptions()
+                .withOptions(ConsumerOptions.get()
                         .addVerificationCert(TestKeys.getEmilPublicKeyRing()));
 
         ByteArrayOutputStream msgOut = new ByteArrayOutputStream();
@@ -216,10 +214,11 @@ public class CleartextSignatureVerificationTest {
 
     @Test
     public void testDecryptionOfVeryLongClearsignedMessage()
-            throws PGPException, InvalidAlgorithmParameterException, NoSuchAlgorithmException, IOException {
+            throws PGPException, IOException {
         String message = randomString(28, 4000);
 
-        PGPSecretKeyRing secretKeys = PGPainless.generateKeyRing().modernKeyRing("Alice");
+        PGPSecretKeyRing secretKeys = PGPainless.generateKeyRing().modernKeyRing("Alice")
+                .getPGPSecretKeyRing();
         ByteArrayOutputStream out = new ByteArrayOutputStream();
         EncryptionStream encryptionStream = PGPainless.encryptAndOrSign()
                 .onOutputStream(out)
@@ -237,7 +236,7 @@ public class CleartextSignatureVerificationTest {
         ByteArrayInputStream in = new ByteArrayInputStream(cleartextSigned.getBytes(StandardCharsets.UTF_8));
         DecryptionStream decryptionStream = PGPainless.decryptAndOrVerify()
                 .onInputStream(in)
-                .withOptions(new ConsumerOptions()
+                .withOptions(ConsumerOptions.get()
                         .addVerificationCert(PGPainless.extractCertificate(secretKeys)));
 
         out = new ByteArrayOutputStream();

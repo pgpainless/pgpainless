@@ -18,9 +18,9 @@ import sop.operation.DetachedVerify
 import sop.operation.VerifySignatures
 
 /** Implementation of the `verify` operation using PGPainless. */
-class DetachedVerifyImpl : DetachedVerify {
+class DetachedVerifyImpl(private val api: PGPainless) : DetachedVerify {
 
-    private val options = ConsumerOptions.get().forceNonOpenPgpData()
+    private val options = ConsumerOptions.get(api).forceNonOpenPgpData()
 
     override fun cert(cert: InputStream): DetachedVerify = apply {
         options.addVerificationCerts(KeyReader.readPublicKeys(cert, true))
