@@ -83,11 +83,7 @@ abstract class SelectUserId : Predicate<String>, (String) -> Boolean {
 
         @JvmStatic
         fun validUserId(keyRing: PGPKeyRing) =
-            object : SelectUserId() {
-                private val info = PGPainless.inspectKeyRing(keyRing)
-
-                override fun invoke(userId: String): Boolean = info.isUserIdValid(userId)
-            }
+            validUserId(PGPainless.getInstance().toCertificate(keyRing))
 
         @JvmStatic
         fun and(vararg filters: SelectUserId) =
