@@ -57,7 +57,10 @@ class PGPainless(
         creationTime: Date = Date()
     ): OpenPGPKeyGenerator =
         OpenPGPKeyGenerator(
-                implementation, version.numeric, version == OpenPGPKeyVersion.v6, creationTime)
+                implementation,
+                version.numeric,
+                algorithmPolicy.keyProtectionSettings.aead,
+                creationTime)
             .setAlgorithmSuite(algorithmPolicy.keyGenerationAlgorithmSuite)
 
     /**
