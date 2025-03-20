@@ -6,6 +6,7 @@ package org.pgpainless.bouncycastle.extensions
 
 import java.util.*
 import openpgp.plusSeconds
+import org.bouncycastle.bcpg.KeyIdentifier
 import org.bouncycastle.openpgp.PGPPublicKey
 import org.bouncycastle.openpgp.PGPSignature
 import org.pgpainless.algorithm.HashAlgorithm
@@ -56,23 +57,17 @@ val PGPSignature.issuerKeyId: Long
 
 /** Return true, if the signature was likely issued by a key with the given fingerprint. */
 fun PGPSignature.wasIssuedBy(fingerprint: OpenPgpFingerprint): Boolean =
-    this.fingerprint?.let { it.keyId == fingerprint.keyId } ?: (keyID == fingerprint.keyId)
+    wasIssuedBy(fingerprint.keyIdentifier)
 
 /**
  * Return true, if the signature was likely issued by a key with the given fingerprint.
  *
- * @param fingerprint fingerprint bytes
+ * @param key key
  */
-@Deprecated("Discouraged in favor of method taking an OpenPgpFingerprint.")
-fun PGPSignature.wasIssuedBy(fingerprint: ByteArray): Boolean =
-    try {
-        wasIssuedBy(OpenPgpFingerprint.parseFromBinary(fingerprint))
-    } catch (e: IllegalArgumentException) {
-        // Unknown fingerprint length / format
-        false
-    }
+fun PGPSignature.wasIssuedBy(key: PGPPublicKey): Boolean = wasIssuedBy(key.keyIdentifier)
 
-fun PGPSignature.wasIssuedBy(key: PGPPublicKey): Boolean = wasIssuedBy(OpenPgpFingerprint.of(key))
+fun PGPSignature.wasIssuedBy(keyIdentifier: KeyIdentifier): Boolean =
+    KeyIdentifier.matches(this.keyIdentifiers, keyIdentifier, true)
 
 /** Return true, if this signature is a hard revocation. */
 val PGPSignature.isHardRevocation

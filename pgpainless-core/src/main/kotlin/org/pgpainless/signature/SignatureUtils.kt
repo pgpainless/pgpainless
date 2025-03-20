@@ -219,15 +219,6 @@ class SignatureUtils {
             "Deprecated in favor of PGPSignature extension method",
             ReplaceWith(
                 "signature.wasIssuedBy(fingerprint)", "org.bouncycastle.extensions.wasIssuedBy"))
-        fun wasIssuedBy(fingerprint: ByteArray, signature: PGPSignature): Boolean {
-            return signature.wasIssuedBy(fingerprint)
-        }
-
-        @JvmStatic
-        @Deprecated(
-            "Deprecated in favor of PGPSignature extension method",
-            ReplaceWith(
-                "signature.wasIssuedBy(fingerprint)", "org.bouncycastle.extensions.wasIssuedBy"))
         fun wasIssuedBy(fingerprint: OpenPgpFingerprint, signature: PGPSignature): Boolean {
             return signature.wasIssuedBy(fingerprint)
         }
