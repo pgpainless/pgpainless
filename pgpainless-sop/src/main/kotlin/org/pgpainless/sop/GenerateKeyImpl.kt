@@ -26,7 +26,7 @@ import sop.exception.SOPGPException
 import sop.operation.GenerateKey
 
 /** Implementation of the `generate-key` operation using PGPainless. */
-class GenerateKeyImpl : GenerateKey {
+class GenerateKeyImpl(private val api: PGPainless) : GenerateKey {
 
     companion object {
         @JvmField

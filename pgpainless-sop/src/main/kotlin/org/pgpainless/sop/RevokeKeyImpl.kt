@@ -24,7 +24,7 @@ import sop.exception.SOPGPException
 import sop.operation.RevokeKey
 import sop.util.UTF8Util
 
-class RevokeKeyImpl : RevokeKey {
+class RevokeKeyImpl(private val api: PGPainless) : RevokeKey {
 
     private val protector = MatchMakingSecretKeyRingProtector()
     private var armor = true
@@ -41,21 +41,23 @@ class RevokeKeyImpl : RevokeKey {
 
         val revocationCertificates = mutableListOf<OpenPGPCertificate>()
         secretKeyRings.forEach { secretKeys ->
-            val editor = PGPainless.modifyKeyRing(secretKeys)
+            val openPGPKey = api.toKey(secretKeys)
+            val editor = api.modify(openPGPKey)
             try {
                 val attributes =
                     RevocationAttributes.createKeyRevocation()
                         .withReason(RevocationAttributes.Reason.NO_REASON)
                         .withoutDescription()
-                if (secretKeys.publicKey.version == 6) {
+                if (openPGPKey.primaryKey.version == 6) {
                     revocationCertificates.add(
                         editor.createMinimalRevocationCertificate(protector, attributes))
                 } else {
-                    val certificate = PGPainless.extractCertificate(secretKeys)
+                    val certificate = openPGPKey.toCertificate()
                     val revocation = editor.createRevocation(protector, attributes)
                     revocationCertificates.add(
-                        KeyRingUtils.injectCertification(certificate, revocation.signature)
-                            .toOpenPGPCertificate())
+                        KeyRingUtils.injectCertification(
+                                certificate.pgpKeyRing, revocation.signature)
+                            .toOpenPGPCertificate(api.implementation))
                 }
             } catch (e: WrongPassphraseException) {
                 throw SOPGPException.KeyIsProtected(

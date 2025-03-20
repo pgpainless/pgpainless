@@ -27,9 +27,9 @@ import sop.operation.InlineSign
 import sop.util.UTF8Util
 
 /** Implementation of the `inline-sign` operation using PGPainless. */
-class InlineSignImpl : InlineSign {
+class InlineSignImpl(private val api: PGPainless) : InlineSign {
 
-    private val signingOptions = SigningOptions.get()
+    private val signingOptions = SigningOptions.get(api)
     private val protector = MatchMakingSecretKeyRingProtector()
     private val signingKeys = mutableListOf<PGPSecretKeyRing>()
 
@@ -57,7 +57,7 @@ class InlineSignImpl : InlineSign {
         }
 
         val producerOptions =
-            ProducerOptions.sign(signingOptions).apply {
+            ProducerOptions.sign(signingOptions, api).apply {
                 when (mode) {
                     InlineSignAs.clearsigned -> {
                         setCleartextSigned()
@@ -80,7 +80,7 @@ class InlineSignImpl : InlineSign {
             override fun writeTo(outputStream: OutputStream) {
                 try {
                     val signingStream =
-                        PGPainless.encryptAndOrSign()
+                        api.generateMessage()
                             .onOutputStream(outputStream)
                             .withOptions(producerOptions)
 
@@ -98,7 +98,7 @@ class InlineSignImpl : InlineSign {
 
     override fun key(key: InputStream): InlineSign = apply {
         KeyReader.readSecretKeys(key, true).forEach {
-            val info = PGPainless.inspectKeyRing(it)
+            val info = api.inspect(api.toKey(it))
             if (!info.isUsableForSigning) {
                 throw SOPGPException.KeyCannotSign(
                     "Key ${info.fingerprint} does not have valid, signing capable subkeys.")
