@@ -51,7 +51,7 @@ class CertificateValidator {
         fun validateCertificate(
             signature: PGPSignature,
             signingKeyRing: PGPPublicKeyRing,
-            policy: Policy = PGPainless.getPolicy()
+            policy: Policy = PGPainless.getInstance().algorithmPolicy
         ): Boolean {
             val signingSubkey: PGPPublicKey =
                 signingKeyRing.getPublicKey(signature.issuerKeyId)
