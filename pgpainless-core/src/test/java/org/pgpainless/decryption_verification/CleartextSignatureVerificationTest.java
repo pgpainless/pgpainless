@@ -19,7 +19,6 @@ import java.nio.charset.StandardCharsets;
 import java.util.Random;
 
 import org.bouncycastle.openpgp.PGPException;
-import org.bouncycastle.openpgp.PGPPublicKey;
 import org.bouncycastle.openpgp.PGPPublicKeyRing;
 import org.bouncycastle.openpgp.PGPSecretKeyRing;
 import org.bouncycastle.openpgp.PGPSignature;
@@ -36,9 +35,7 @@ import org.pgpainless.encryption_signing.SigningOptions;
 import org.pgpainless.exception.WrongConsumingMethodException;
 import org.pgpainless.key.TestKeys;
 import org.pgpainless.key.protection.SecretKeyRingProtector;
-import org.pgpainless.signature.consumer.CertificateValidator;
 import org.pgpainless.signature.SignatureUtils;
-import org.pgpainless.signature.consumer.SignatureVerifier;
 import org.pgpainless.util.ArmorUtils;
 import org.pgpainless.util.TestUtils;
 
@@ -134,19 +131,6 @@ public class CleartextSignatureVerificationTest {
         Streams.pipeAll(fileIn, bytes);
         fileIn.close();
         assertArrayEquals(MESSAGE_BODY, bytes.toByteArray());
-    }
-
-    @Test
-    public void verifySignatureDetached()
-            throws IOException, PGPException {
-        PGPPublicKeyRing signingKeys = TestKeys.getEmilPublicKeyRing();
-
-        PGPSignature signature = SignatureUtils.readSignatures(SIGNATURE).get(0);
-        PGPPublicKey signingKey = signingKeys.getPublicKey(signature.getKeyID());
-
-        SignatureVerifier.initializeSignatureAndUpdateWithSignedData(signature, new ByteArrayInputStream(MESSAGE_BODY), signingKey);
-
-        CertificateValidator.validateCertificateAndVerifyInitializedSignature(signature, signingKeys, PGPainless.getPolicy());
     }
 
     public static void main(String[] args) throws IOException {
