@@ -17,6 +17,7 @@ import java.util.Date;
 import org.bouncycastle.openpgp.PGPException;
 import org.bouncycastle.openpgp.PGPPublicKeyRing;
 import org.bouncycastle.openpgp.PGPSignature;
+import org.bouncycastle.openpgp.api.OpenPGPCertificate;
 import org.bouncycastle.util.io.Streams;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.TestTemplate;
@@ -27,7 +28,6 @@ import org.pgpainless.decryption_verification.DecryptionStream;
 import org.pgpainless.decryption_verification.MessageMetadata;
 import org.pgpainless.exception.SignatureValidationException;
 import org.pgpainless.policy.Policy;
-import org.pgpainless.signature.consumer.CertificateValidator;
 import org.pgpainless.util.TestAllImplementations;
 
 public class CertificateValidatorTest {
@@ -170,16 +170,16 @@ public class CertificateValidatorTest {
         Date validationDate = new Date();
         String data = "Hello, World";
 
-        assertThrows(SignatureValidationException.class, () -> CertificateValidator.validateCertificateAndVerifyUninitializedSignature(
+        assertThrows(SignatureValidationException.class, () -> verify(
                 predatesPrimaryKey, getSignedData(data), publicKeys, policy, validationDate),
                 "Signature predates primary key");
-        assertThrows(SignatureValidationException.class, () -> CertificateValidator.validateCertificateAndVerifyUninitializedSignature(
+        assertThrows(SignatureValidationException.class, () -> verify(
                 unboundSubkey, getSignedData(data), publicKeys, policy, validationDate),
                 "Primary key hard revoked");
-        assertThrows(SignatureValidationException.class, () -> CertificateValidator.validateCertificateAndVerifyUninitializedSignature(
+        assertThrows(SignatureValidationException.class, () -> verify(
                 primaryKeyRevoked, getSignedData(data), publicKeys, policy, validationDate),
                 "Primary key hard revoked");
-        assertThrows(SignatureValidationException.class, () -> CertificateValidator.validateCertificateAndVerifyUninitializedSignature(
+        assertThrows(SignatureValidationException.class, () -> verify(
                 primaryKeyRevalidated, getSignedData(data), publicKeys, policy, validationDate),
                 "Primary key hard revoked");
     }
@@ -321,16 +321,16 @@ public class CertificateValidatorTest {
         Date validationDate = new Date();
         String data = "Hello, World";
 
-        assertThrows(SignatureValidationException.class, () -> CertificateValidator.validateCertificateAndVerifyUninitializedSignature(
+        assertThrows(SignatureValidationException.class, () -> verify(
                 predatesPrimaryKey, getSignedData(data), publicKeys, policy, validationDate),
                 "Signature predates primary key");
-        assertThrows(SignatureValidationException.class, () -> CertificateValidator.validateCertificateAndVerifyUninitializedSignature(
+        assertThrows(SignatureValidationException.class, () -> verify(
                 unboundSubkey, getSignedData(data), publicKeys, policy, validationDate),
                 "Signing key unbound + hard revocation");
-        assertThrows(SignatureValidationException.class, () -> CertificateValidator.validateCertificateAndVerifyUninitializedSignature(
+        assertThrows(SignatureValidationException.class, () -> verify(
                 revokedSubkey, getSignedData(data), publicKeys, policy, validationDate),
                 "Primary key is hard revoked");
-        assertThrows(SignatureValidationException.class, () -> CertificateValidator.validateCertificateAndVerifyUninitializedSignature(
+        assertThrows(SignatureValidationException.class, () -> verify(
                 revalidatedSubkey, getSignedData(data), publicKeys, policy, validationDate),
                 "Primary key is hard revoked");
     }
@@ -473,16 +473,16 @@ public class CertificateValidatorTest {
         Date validationDate = new Date();
         String data = "Hello World :)";
 
-        assertThrows(SignatureValidationException.class, () -> CertificateValidator.validateCertificateAndVerifyUninitializedSignature(
+        assertThrows(SignatureValidationException.class, () -> verify(
                 predatesPrimaryKey, getSignedData(data), publicKeys, policy, validationDate),
                 "Signature predates primary key");
-        assertThrows(SignatureValidationException.class, () -> CertificateValidator.validateCertificateAndVerifyUninitializedSignature(
+        assertThrows(SignatureValidationException.class, () -> verify(
                 unboundKey, getSignedData(data), publicKeys, policy, validationDate),
                 "Signing key unbound + hard revocation");
-        assertThrows(SignatureValidationException.class, () -> CertificateValidator.validateCertificateAndVerifyUninitializedSignature(
+        assertThrows(SignatureValidationException.class, () -> verify(
                 afterHardRevocation, getSignedData(data), publicKeys, policy, validationDate),
                 "Hard revocation invalidates key at all times");
-        assertThrows(SignatureValidationException.class, () -> CertificateValidator.validateCertificateAndVerifyUninitializedSignature(
+        assertThrows(SignatureValidationException.class, () -> verify(
                 afterRevalidation, getSignedData(data), publicKeys, policy, validationDate),
                 "Hard revocation invalidates key at all times");
     }
@@ -624,22 +624,22 @@ public class CertificateValidatorTest {
         String data = "Hello, World";
 
         // Sig not valid, as it predates the signing key creation time
-        assertThrows(SignatureValidationException.class, () -> CertificateValidator.validateCertificateAndVerifyUninitializedSignature(
+        assertThrows(SignatureValidationException.class, () -> verify(
                 predatesPrimaryKey, getSignedData(data), publicKeys, policy, predatesPrimaryKey.getCreationTime()),
                 "Signature predates primary key creation date");
 
         // Sig valid
-        assertDoesNotThrow(() -> CertificateValidator.validateCertificateAndVerifyUninitializedSignature(
+        assertDoesNotThrow(() -> verify(
                 keyIsValid, getSignedData(data), publicKeys, policy, keyIsValid.getCreationTime()),
                 "Signature is valid");
 
         // Sig not valid, as the signing key is revoked
-        assertThrows(SignatureValidationException.class, () -> CertificateValidator.validateCertificateAndVerifyUninitializedSignature(
+        assertThrows(SignatureValidationException.class, () -> verify(
                 keyIsRevoked, getSignedData(data), publicKeys, policy, keyIsRevoked.getCreationTime()),
                 "Signing key is revoked at this point");
 
         // Sig valid, as the signing key is revalidated
-        assertDoesNotThrow(() -> CertificateValidator.validateCertificateAndVerifyUninitializedSignature(
+        assertDoesNotThrow(() -> verify(
                 keyIsRevalidated, getSignedData(data), publicKeys, policy, keyIsRevalidated.getCreationTime()),
                 "Signature is valid, as signing key is revalidated");
     }
@@ -782,17 +782,17 @@ public class CertificateValidatorTest {
         String data = "Hello, World";
         Date validationDate = new Date();
 
-        assertThrows(SignatureValidationException.class, () -> CertificateValidator.validateCertificateAndVerifyUninitializedSignature(
+        assertThrows(SignatureValidationException.class, () -> verify(
                 predatesPrimaryKey, getSignedData(data), publicKeys, policy, validationDate),
                 "Signature predates primary key creation date");
-        assertThrows(SignatureValidationException.class, () -> CertificateValidator.validateCertificateAndVerifyUninitializedSignature(
+        assertThrows(SignatureValidationException.class, () -> verify(
                 keyNotBound, getSignedData(data), publicKeys, policy, validationDate),
                 "Signing key is not bound at this point");
-        assertThrows(SignatureValidationException.class, () -> CertificateValidator.validateCertificateAndVerifyUninitializedSignature(
+        assertThrows(SignatureValidationException.class, () -> verify(
                 keyRevoked, getSignedData(data), publicKeys, policy, validationDate),
                 "Signing key is revoked at this point");
         assertDoesNotThrow(() ->
-                        CertificateValidator.validateCertificateAndVerifyUninitializedSignature(
+                        verify(
                                 valid, getSignedData(data), publicKeys, policy, validationDate),
                 "Signing key is revalidated");
     }
@@ -935,17 +935,17 @@ public class CertificateValidatorTest {
         Date validationDate = new Date();
         String data = "Hello, World";
 
-        assertThrows(SignatureValidationException.class, () -> CertificateValidator.validateCertificateAndVerifyUninitializedSignature(
+        assertThrows(SignatureValidationException.class, () -> verify(
                 predatesPrimaryKey, getSignedData(data), publicKeys, policy, validationDate),
                 "Signature predates primary key creation date");
-        assertDoesNotThrow(() -> CertificateValidator.validateCertificateAndVerifyUninitializedSignature(
+        assertDoesNotThrow(() -> verify(
                 valid, getSignedData(data), publicKeys, policy, validationDate),
                 "Signature is valid");
         assertThrows(SignatureValidationException.class, () ->
-                        CertificateValidator.validateCertificateAndVerifyUninitializedSignature(
+                        verify(
                                 revoked, getSignedData(data), publicKeys, policy, validationDate),
                 "Primary key is revoked");
-        assertDoesNotThrow(() -> CertificateValidator.validateCertificateAndVerifyUninitializedSignature(
+        assertDoesNotThrow(() -> verify(
                 revalidated, getSignedData(data), publicKeys, policy, validationDate),
                 "Primary key is re-legitimized");
     }
@@ -1275,45 +1275,64 @@ public class CertificateValidatorTest {
         Date validationDate = new Date();
         String data = "Hello World :)";
 
-        assertThrows(SignatureValidationException.class, () -> CertificateValidator.validateCertificateAndVerifyUninitializedSignature(
+        assertThrows(SignatureValidationException.class, () -> verify(
                 sigAT0, getSignedData(data), keysA, policy, validationDate),
                 "Signature predates key creation time");
-        assertDoesNotThrow(() -> CertificateValidator.validateCertificateAndVerifyUninitializedSignature(
+        assertDoesNotThrow(() -> verify(
                 sigAT1_T2, getSignedData(data), keysA, policy, validationDate),
                 "Key valid");
         assertThrows(SignatureValidationException.class, () ->
-                        CertificateValidator.validateCertificateAndVerifyUninitializedSignature(
+                        verify(
                                 sigAT2_T3, getSignedData(data), keysA, policy, validationDate),
                 "Key is not valid, as subkey binding expired");
-        assertDoesNotThrow(() -> CertificateValidator.validateCertificateAndVerifyUninitializedSignature(
+        assertDoesNotThrow(() -> verify(
                 sigAT3_now, getSignedData(data), keysA, policy, validationDate),
                 "Key is valid again");
 
-        assertThrows(SignatureValidationException.class, () -> CertificateValidator.validateCertificateAndVerifyUninitializedSignature(
+        assertThrows(SignatureValidationException.class, () -> verify(
                 sigBT0, getSignedData(data), keysB, policy, validationDate),
                 "Signature predates key creation time");
-        assertDoesNotThrow(() -> CertificateValidator.validateCertificateAndVerifyUninitializedSignature(
+        assertDoesNotThrow(() -> verify(
                 sigBT1_T2, getSignedData(data), keysB, policy, validationDate),
                 "Key is valid");
-        assertThrows(SignatureValidationException.class, () -> CertificateValidator.validateCertificateAndVerifyUninitializedSignature(
+        assertThrows(SignatureValidationException.class, () -> verify(
                 sigBT2_T3, getSignedData(data), keysB, policy, validationDate),
                 "Primary key is not signing-capable");
-        assertDoesNotThrow(() -> CertificateValidator.validateCertificateAndVerifyUninitializedSignature(
+        assertDoesNotThrow(() -> verify(
                 sigBT3_now, getSignedData(data), keysB, policy, validationDate),
                 "Key is valid again");
 
-        assertThrows(SignatureValidationException.class, () -> CertificateValidator.validateCertificateAndVerifyUninitializedSignature(
+        assertThrows(SignatureValidationException.class, () -> verify(
                 sigCT0, getSignedData(data), keysC, policy, validationDate),
                 "Signature predates key creation time");
-        assertDoesNotThrow(() -> CertificateValidator.validateCertificateAndVerifyUninitializedSignature(
+        assertDoesNotThrow(() -> verify(
                 sigCT1_T2, getSignedData(data), keysC, policy, validationDate),
                 "Key is valid");
-        assertThrows(SignatureValidationException.class, () -> CertificateValidator.validateCertificateAndVerifyUninitializedSignature(
+        assertThrows(SignatureValidationException.class, () -> verify(
                 sigCT2_T3, getSignedData(data), keysC, policy, validationDate),
                 "Key is revoked");
-        assertDoesNotThrow(() -> CertificateValidator.validateCertificateAndVerifyUninitializedSignature(
+        assertDoesNotThrow(() -> verify(
                 sigCT3_now, getSignedData(data), keysC, policy, validationDate),
                 "Key is valid again");
+    }
+
+    private void verify(PGPSignature signature, InputStream dataIn, PGPPublicKeyRing cert, Policy policy, Date validationDate) throws PGPException, IOException {
+        PGPainless api = PGPainless.getInstance();
+        OpenPGPCertificate certificate = api.toCertificate(cert);
+
+        DecryptionStream decryptionStream = PGPainless.decryptAndOrVerify()
+                .onInputStream(dataIn)
+                .withOptions(ConsumerOptions.get(api)
+                        .addVerificationOfDetachedSignature(signature)
+                        .addVerificationCert(certificate));
+
+        Streams.drain(decryptionStream);
+        decryptionStream.close();
+        MessageMetadata metadata = decryptionStream.getMetadata();
+
+        if (metadata.hasRejectedSignatures()) {
+            throw metadata.getRejectedSignatures().get(0).getValidationException();
+        }
     }
 
     private static InputStream getSignedData(String data) {

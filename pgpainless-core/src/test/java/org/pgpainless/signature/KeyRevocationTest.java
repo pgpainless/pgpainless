@@ -8,17 +8,23 @@ import static org.junit.jupiter.api.Assertions.assertThrows;
 
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
+import java.io.InputStream;
 import java.nio.charset.StandardCharsets;
 import java.util.Date;
 
 import org.bouncycastle.openpgp.PGPException;
 import org.bouncycastle.openpgp.PGPPublicKeyRing;
 import org.bouncycastle.openpgp.PGPSignature;
+import org.bouncycastle.openpgp.api.OpenPGPCertificate;
+import org.bouncycastle.util.io.Streams;
 import org.junit.jupiter.api.TestTemplate;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.pgpainless.PGPainless;
+import org.pgpainless.decryption_verification.ConsumerOptions;
+import org.pgpainless.decryption_verification.DecryptionStream;
+import org.pgpainless.decryption_verification.MessageMetadata;
 import org.pgpainless.exception.SignatureValidationException;
-import org.pgpainless.signature.consumer.CertificateValidator;
+import org.pgpainless.policy.Policy;
 import org.pgpainless.util.TestAllImplementations;
 
 public class KeyRevocationTest {
@@ -153,16 +159,16 @@ public class KeyRevocationTest {
         PGPSignature t2t3 = SignatureUtils.readSignatures(sigT2T3).get(0);
         PGPSignature t3now = SignatureUtils.readSignatures(sigT3Now).get(0);
 
-        assertThrows(SignatureValidationException.class, () -> CertificateValidator.validateCertificateAndVerifyUninitializedSignature(t0,
+        assertThrows(SignatureValidationException.class, () -> verify(t0,
                 new ByteArrayInputStream(data.getBytes(StandardCharsets.UTF_8)),
                 publicKeys, PGPainless.getPolicy(), new Date()));
-        assertThrows(SignatureValidationException.class, () -> CertificateValidator.validateCertificateAndVerifyUninitializedSignature(t1t2,
+        assertThrows(SignatureValidationException.class, () -> verify(t1t2,
                 new ByteArrayInputStream(data.getBytes(StandardCharsets.UTF_8)),
                 publicKeys, PGPainless.getPolicy(), new Date()));
-        assertThrows(SignatureValidationException.class, () -> CertificateValidator.validateCertificateAndVerifyUninitializedSignature(t2t3,
+        assertThrows(SignatureValidationException.class, () -> verify(t2t3,
                 new ByteArrayInputStream(data.getBytes(StandardCharsets.UTF_8)),
                 publicKeys, PGPainless.getPolicy(), new Date()));
-        assertThrows(SignatureValidationException.class, () -> CertificateValidator.validateCertificateAndVerifyUninitializedSignature(t3now,
+        assertThrows(SignatureValidationException.class, () -> verify(t3now,
                 new ByteArrayInputStream(data.getBytes(StandardCharsets.UTF_8)),
                 publicKeys, PGPainless.getPolicy(), new Date()));
     }
@@ -255,8 +261,29 @@ public class KeyRevocationTest {
         PGPPublicKeyRing publicKeys = PGPainless.readKeyRing().publicKeyRing(key);
         PGPSignature signature = SignatureUtils.readSignatures(sig).get(0);
 
-        CertificateValidator.validateCertificateAndVerifyUninitializedSignature(signature,
+        verify(signature,
                 new ByteArrayInputStream(data.getBytes(StandardCharsets.UTF_8)),
                 publicKeys, PGPainless.getPolicy(), new Date());
     }
+
+
+    private void verify(PGPSignature signature, InputStream dataIn, PGPPublicKeyRing cert, Policy policy, Date validationDate) throws PGPException, IOException {
+        PGPainless api = PGPainless.getInstance();
+        OpenPGPCertificate certificate = api.toCertificate(cert);
+
+        DecryptionStream decryptionStream = PGPainless.decryptAndOrVerify()
+                .onInputStream(dataIn)
+                .withOptions(ConsumerOptions.get(api)
+                        .addVerificationOfDetachedSignature(signature)
+                        .addVerificationCert(certificate));
+
+        Streams.drain(decryptionStream);
+        decryptionStream.close();
+        MessageMetadata metadata = decryptionStream.getMetadata();
+
+        if (metadata.hasRejectedSignatures()) {
+            throw metadata.getRejectedSignatures().get(0).getValidationException();
+        }
+    }
+
 }
