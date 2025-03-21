@@ -13,6 +13,7 @@ import java.util.zip.InflaterInputStream
 import openpgp.openPgpKeyId
 import org.bouncycastle.bcpg.BCPGInputStream
 import org.bouncycastle.bcpg.CompressionAlgorithmTags
+import org.bouncycastle.bcpg.KeyIdentifier
 import org.bouncycastle.bcpg.UnsupportedPacketVersionException
 import org.bouncycastle.openpgp.PGPCompressedData
 import org.bouncycastle.openpgp.PGPEncryptedData
@@ -30,6 +31,7 @@ import org.bouncycastle.openpgp.api.OpenPGPKey
 import org.bouncycastle.openpgp.api.OpenPGPKey.OpenPGPPrivateKey
 import org.bouncycastle.openpgp.api.OpenPGPKey.OpenPGPSecretKey
 import org.bouncycastle.openpgp.api.OpenPGPSignature.OpenPGPDocumentSignature
+import org.bouncycastle.openpgp.api.exception.MalformedOpenPGPSignatureException
 import org.bouncycastle.openpgp.operator.PBEDataDecryptorFactory
 import org.bouncycastle.openpgp.operator.PublicKeyDataDecryptorFactory
 import org.bouncycastle.util.io.TeeInputStream
@@ -60,8 +62,6 @@ import org.pgpainless.exception.UnacceptableAlgorithmException
 import org.pgpainless.exception.WrongPassphraseException
 import org.pgpainless.key.SubkeyIdentifier
 import org.pgpainless.key.protection.UnlockSecretKey.Companion.unlockSecretKey
-import org.pgpainless.policy.Policy
-import org.pgpainless.signature.consumer.CertificateValidator
 import org.pgpainless.signature.consumer.OnePassSignatureCheck
 import org.pgpainless.signature.consumer.SignatureValidator
 import org.pgpainless.util.ArmoredInputStreamFactory
@@ -312,8 +312,7 @@ class OpenPgpMessageInputStream(
             signatures
                 .leaveNesting() // TODO: Only leave nesting if all OPSs of the nesting layer are
             // dealt with
-            signatures.addCorrespondingOnePassSignature(
-                signature, layerMetadata, api.algorithmPolicy)
+            signatures.addCorrespondingOnePassSignature(signature, layerMetadata)
         } else {
             LOGGER.debug(
                 "Prepended Signature Packet by key ${keyId.openPgpKeyId()} at depth ${layerMetadata.depth} encountered.")
@@ -618,7 +617,7 @@ class OpenPgpMessageInputStream(
                     throw RuntimeException(e)
                 }
             }
-            signatures.finish(layerMetadata, api.algorithmPolicy)
+            signatures.finish(layerMetadata)
         }
         return r
     }
@@ -645,7 +644,7 @@ class OpenPgpMessageInputStream(
                     throw RuntimeException(e)
                 }
             }
-            signatures.finish(layerMetadata, api.algorithmPolicy)
+            signatures.finish(layerMetadata)
         }
         return r
     }
@@ -832,15 +831,11 @@ class OpenPgpMessageInputStream(
             }
         }
 
-        fun addCorrespondingOnePassSignature(
-            signature: PGPSignature,
-            layer: Layer,
-            policy: Policy
-        ) {
+        fun addCorrespondingOnePassSignature(signature: PGPSignature, layer: Layer) {
             var found = false
-            val keyId = signature.issuerKeyId
             for ((i, check) in onePassSignatures.withIndex().reversed()) {
-                if (check.onePassSignature.keyID != keyId) {
+                if (!KeyIdentifier.matches(
+                    signature.keyIdentifiers, check.onePassSignature.keyIdentifier, true)) {
                     continue
                 }
                 found = true
@@ -848,8 +843,11 @@ class OpenPgpMessageInputStream(
                 if (check.signature != null) {
                     continue
                 }
-
                 check.signature = signature
+
+                val documentSignature =
+                    OpenPGPDocumentSignature(
+                        signature, check.verificationKeys.getSigningKeyFor(signature))
                 val verification =
                     SignatureVerification(
                         signature,
@@ -861,11 +859,15 @@ class OpenPgpMessageInputStream(
                     SignatureValidator.signatureWasCreatedInBounds(
                             options.getVerifyNotBefore(), options.getVerifyNotAfter())
                         .verify(signature)
-                    CertificateValidator.validateCertificateAndVerifyOnePassSignature(check, policy)
-                    LOGGER.debug("Acceptable signature by key ${verification.signingKey}")
-                    layer.addVerifiedOnePassSignature(verification)
+                    if (documentSignature.verify(check.onePassSignature) &&
+                        documentSignature.isValid(api.implementation.policy())) {
+                        layer.addVerifiedOnePassSignature(verification)
+                    } else {
+                        throw SignatureValidationException("Incorrect OnePassSignature.")
+                    }
+                } catch (e: MalformedOpenPGPSignatureException) {
+                    throw SignatureValidationException("Malformed OnePassSignature.", e)
                 } catch (e: SignatureValidationException) {
-                    LOGGER.debug("Rejected signature by key ${verification.signingKey}", e)
                     layer.addRejectedOnePassSignature(
                         SignatureVerification.Failure(verification, e))
                 }
@@ -874,7 +876,7 @@ class OpenPgpMessageInputStream(
 
             if (!found) {
                 LOGGER.debug(
-                    "No suitable certificate for verification of signature by key ${keyId.openPgpKeyId()} found.")
+                    "No suitable certificate for verification of signature by key ${signature.issuerKeyId.openPgpKeyId()} found.")
                 inbandSignaturesWithMissingCert.add(
                     SignatureVerification.Failure(
                         signature, null, SignatureValidationException("Missing verification key.")))
@@ -963,7 +965,7 @@ class OpenPgpMessageInputStream(
             }
         }
 
-        fun finish(layer: Layer, policy: Policy) {
+        fun finish(layer: Layer) {
             for (detached in detachedSignatures) {
                 val verification =
                     SignatureVerification(detached.signature, SubkeyIdentifier(detached.issuer))
@@ -971,12 +973,14 @@ class OpenPgpMessageInputStream(
                     SignatureValidator.signatureWasCreatedInBounds(
                             options.getVerifyNotBefore(), options.getVerifyNotAfter())
                         .verify(detached.signature)
-                    CertificateValidator.validateCertificateAndVerifyInitializedSignature(
-                        detached.signature, detached.issuerCertificate.pgpPublicKeyRing, policy)
-                    LOGGER.debug("Acceptable signature by key ${verification.signingKey}")
-                    layer.addVerifiedDetachedSignature(verification)
+                    if (detached.verify() && detached.isValid(api.implementation.policy())) {
+                        layer.addVerifiedDetachedSignature(verification)
+                    } else {
+                        throw SignatureValidationException("Incorrect detached signature.")
+                    }
+                } catch (e: MalformedOpenPGPSignatureException) {
+                    throw SignatureValidationException("Malformed detached signature.", e)
                 } catch (e: SignatureValidationException) {
-                    LOGGER.debug("Rejected signature by key ${verification.signingKey}", e)
                     layer.addRejectedDetachedSignature(
                         SignatureVerification.Failure(verification, e))
                 }
@@ -989,10 +993,13 @@ class OpenPgpMessageInputStream(
                     SignatureValidator.signatureWasCreatedInBounds(
                             options.getVerifyNotBefore(), options.getVerifyNotAfter())
                         .verify(prepended.signature)
-                    CertificateValidator.validateCertificateAndVerifyInitializedSignature(
-                        prepended.signature, prepended.issuerCertificate.pgpPublicKeyRing, policy)
-                    LOGGER.debug("Acceptable signature by key ${verification.signingKey}")
-                    layer.addVerifiedPrependedSignature(verification)
+                    if (prepended.verify() && prepended.isValid(api.implementation.policy())) {
+                        layer.addVerifiedPrependedSignature(verification)
+                    } else {
+                        throw SignatureValidationException("Incorrect prepended signature.")
+                    }
+                } catch (e: MalformedOpenPGPSignatureException) {
+                    throw SignatureValidationException("Malformed prepended signature.", e)
                 } catch (e: SignatureValidationException) {
                     LOGGER.debug("Rejected signature by key ${verification.signingKey}", e)
                     layer.addRejectedPrependedSignature(

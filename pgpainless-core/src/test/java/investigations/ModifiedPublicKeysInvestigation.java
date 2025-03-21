@@ -211,7 +211,6 @@ public class ModifiedPublicKeysInvestigation {
 
     @Test
     public void assertModifiedDSAKeyThrowsKeyIntegrityException() throws IOException {
-        System.out.println(DSA);
         PGPainless api = PGPainless.newInstance();
         Policy policy = api.getAlgorithmPolicy();
         policy.setEnableKeyParameterValidation(true);
