@@ -211,7 +211,7 @@ public class ModifiedPublicKeysInvestigation {
 
     @Test
     public void assertModifiedDSAKeyThrowsKeyIntegrityException() throws IOException {
-        PGPainless api = PGPainless.newInstance();
+        PGPainless api = PGPainless.getInstance();
         Policy policy = api.getAlgorithmPolicy();
         policy.setEnableKeyParameterValidation(true);
 
@@ -226,7 +226,7 @@ public class ModifiedPublicKeysInvestigation {
 
     @Test
     public void assertModifiedElGamalKeyThrowsKeyIntegrityException() throws IOException {
-        PGPainless api = PGPainless.newInstance();
+        PGPainless api = PGPainless.getInstance();
         Policy policy = api.getAlgorithmPolicy();
         policy.setEnableKeyParameterValidation(true);
 
@@ -239,7 +239,7 @@ public class ModifiedPublicKeysInvestigation {
 
     @Test
     public void assertInjectedKeyRingFailsToUnlockPrimaryKey() throws IOException {
-        PGPainless api = PGPainless.newInstance();
+        PGPainless api = PGPainless.getInstance();
         Policy policy = api.getAlgorithmPolicy();
         policy.setEnableKeyParameterValidation(true);
 
@@ -252,7 +252,7 @@ public class ModifiedPublicKeysInvestigation {
 
     @Test
     public void assertCannotUnlockElGamalPrimaryKeyDueToDummyS2K() throws IOException {
-        PGPainless api = PGPainless.newInstance();
+        PGPainless api = PGPainless.getInstance();
 
         SecretKeyRingProtector protector = SecretKeyRingProtector.unlockAnyKeyWith(Passphrase.fromPassword("12345678"));
         OpenPGPKey elgamal = api.readKey().parseKey(ELGAMAL);

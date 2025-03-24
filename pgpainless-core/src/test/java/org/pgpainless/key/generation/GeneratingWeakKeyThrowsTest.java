@@ -21,20 +21,15 @@ public class GeneratingWeakKeyThrowsTest {
 
     @Test
     public void refuseToGenerateWeakPrimaryKeyTest() {
-        // ensure we have default public key algorithm policy set
-        PGPainless.getInstance().setAlgorithmPolicy(new Policy());
         assertThrows(IllegalArgumentException.class, () ->
-                PGPainless.buildKeyRing()
+                PGPainless.getInstance().buildKey()
                         .setPrimaryKey(KeySpec.getBuilder(KeyType.RSA(RsaLength._1024),
                                 KeyFlag.CERTIFY_OTHER, KeyFlag.SIGN_DATA)));
     }
 
     @Test
     public void refuseToAddWeakSubkeyDuringGenerationTest() {
-        // ensure we have default public key algorithm policy set
-        PGPainless.getInstance().setAlgorithmPolicy(new Policy());
-
-        KeyRingBuilder kb = PGPainless.buildKeyRing()
+        KeyRingBuilder kb = PGPainless.getInstance().buildKey()
                 .setPrimaryKey(KeySpec.getBuilder(KeyType.RSA(RsaLength._4096),
                         KeyFlag.CERTIFY_OTHER, KeyFlag.SIGN_DATA));
 
@@ -46,23 +41,19 @@ public class GeneratingWeakKeyThrowsTest {
     @Test
     public void allowToAddWeakKeysWithWeakPolicy() {
         // set a weak algorithm policy
+        PGPainless api = PGPainless.getInstance();
         Map<PublicKeyAlgorithm, Integer> bitStrengths = new HashMap<>();
         bitStrengths.put(PublicKeyAlgorithm.RSA_GENERAL, 512);
 
-        Policy oldPolicy = PGPainless.getPolicy();
-        PGPainless.getInstance().setAlgorithmPolicy(oldPolicy.copy()
-                .withPublicKeyAlgorithmPolicy(new Policy.PublicKeyAlgorithmPolicy(bitStrengths))
-                .build());
+        Policy oldPolicy = api.getAlgorithmPolicy();
+        api = new PGPainless(oldPolicy.copy().withPublicKeyAlgorithmPolicy(new Policy.PublicKeyAlgorithmPolicy(bitStrengths)).build());
 
-        PGPainless.buildKeyRing()
+        api.buildKey()
                 .setPrimaryKey(KeySpec.getBuilder(KeyType.RSA(RsaLength._4096),
                         KeyFlag.CERTIFY_OTHER, KeyFlag.SIGN_DATA))
                 .addSubkey(KeySpec.getBuilder(KeyType.RSA(RsaLength._1024),
                         KeyFlag.ENCRYPT_COMMS))
                 .addUserId("Henry")
                 .build();
-
-        // reset public key algorithm policy
-        PGPainless.getInstance().setAlgorithmPolicy(oldPolicy);
     }
 }

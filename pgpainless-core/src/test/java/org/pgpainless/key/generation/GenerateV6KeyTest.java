@@ -18,7 +18,6 @@ import org.pgpainless.algorithm.OpenPGPKeyVersion;
 import org.pgpainless.algorithm.PublicKeyAlgorithm;
 import org.pgpainless.key.generation.type.rsa.RsaLength;
 import org.pgpainless.key.protection.KeyRingProtectionSettings;
-import org.pgpainless.policy.Policy;
 
 import java.io.IOException;
 
@@ -31,7 +30,8 @@ public class GenerateV6KeyTest {
 
     @Test
     public void generateModernV6Key() {
-        OpenPGPKey key = PGPainless.generateKeyRing(OpenPGPKeyVersion.v6)
+        PGPainless api = PGPainless.getInstance();
+        OpenPGPKey key = api.generateKey(OpenPGPKeyVersion.v6)
                 .modernKeyRing("Alice <alice@example.org>");
         assertEquals(3, key.getKeys().size());
 
@@ -54,7 +54,7 @@ public class GenerateV6KeyTest {
 
     @Test
     public void buildMinimalEd25519V6Key() throws PGPException {
-        OpenPGPKey key = PGPainless.getInstance().buildKey(OpenPGPKeyVersion.v6)
+        OpenPGPKey key = PGPainless.getInstance()._buildKey(OpenPGPKeyVersion.v6)
                 .withPrimaryKey(PGPKeyPairGenerator::generateEd25519KeyPair, new SignatureParameters.Callback() {
                     @Override
                     public SignatureParameters apply(SignatureParameters parameters) {
@@ -87,7 +87,7 @@ public class GenerateV6KeyTest {
     @Test
     public void buildCompositeCurve25519V6Key()
             throws PGPException, IOException {
-        OpenPGPKey key = PGPainless.getInstance().buildKey(OpenPGPKeyVersion.v6)
+        OpenPGPKey key = PGPainless.getInstance()._buildKey(OpenPGPKeyVersion.v6)
                 .withPrimaryKey(PGPKeyPairGenerator::generateEd25519KeyPair)
                 .addSigningSubkey(PGPKeyPairGenerator::generateEd25519KeyPair)
                 .addEncryptionSubkey(PGPKeyPairGenerator::generateX25519KeyPair)
@@ -138,20 +138,19 @@ public class GenerateV6KeyTest {
     @Test
     public void generateAEADProtectedModernKey()
             throws IOException, PGPException {
-        Policy oldPolicy = PGPainless.getInstance().getAlgorithmPolicy();
+        PGPainless api = PGPainless.getInstance();
 
         // Change Policy to use AEAD for secret key protection
-        PGPainless.getInstance().setAlgorithmPolicy(
-                oldPolicy.copy().withKeyProtectionSettings(KeyRingProtectionSettings.aead()).build()
-        );
+        api = new PGPainless(api.getAlgorithmPolicy().copy()
+                .withKeyProtectionSettings(KeyRingProtectionSettings.aead()).build());
 
-        OpenPGPKey key = PGPainless.getInstance()
+        OpenPGPKey key = api
                 .generateKey(OpenPGPKeyVersion.v6)
                 .modernKeyRing("Alice <alice@example.com>", "p455w0rd");
 
         String armored = key.toAsciiArmoredString();
 
-        OpenPGPKey parsed = PGPainless.getInstance().readKey().parseKey(armored);
+        OpenPGPKey parsed = api.readKey().parseKey(armored);
 
         OpenPGPKey.OpenPGPSecretKey primaryKey = key.getPrimarySecretKey();
         assertEquals(SecretKeyPacket.USAGE_AEAD, primaryKey.getPGPSecretKey().getS2KUsage());
@@ -160,7 +159,5 @@ public class GenerateV6KeyTest {
         assertNotNull(privateKey);
 
         assertEquals(armored, parsed.toAsciiArmoredString());
-
-        PGPainless.getInstance().setAlgorithmPolicy(oldPolicy);
     }
 }

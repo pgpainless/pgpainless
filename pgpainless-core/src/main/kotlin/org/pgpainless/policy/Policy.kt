@@ -36,7 +36,6 @@ class Policy(
             NotationRegistry(),
             AlgorithmSuite.defaultAlgorithmSuite)
 
-    var signerUserIdValidationLevel = SignerUserIdValidationLevel.DISABLED
     var enableKeyParameterValidation = false
 
     fun copy() = Builder(this)
@@ -493,9 +492,6 @@ class Policy(
                     keyProtectionSettings,
                     notationRegistry,
                     keyGenerationAlgorithmSuite)
-                .apply {
-                    enableKeyParameterValidation = origin.enableKeyParameterValidation
-                    signerUserIdValidationLevel = origin.signerUserIdValidationLevel
-                }
+                .apply { enableKeyParameterValidation = origin.enableKeyParameterValidation }
     }
 }

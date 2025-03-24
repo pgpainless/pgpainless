@@ -123,7 +123,8 @@ public class VerifyLegacySignatureTest {
                 "=TtKx\n" +
                 "-----END PGP MESSAGE-----";
 
-        SOPImpl sop = new SOPImpl();
+        PGPainless api = PGPainless.getInstance();
+        SOPImpl sop = new SOPImpl(api);
         byte[] cert = sop.extractCert().key(KEY.getBytes(StandardCharsets.UTF_8))
                         .getBytes();
         ByteArrayAndResult<List<Verification>> result = sop.inlineVerify()
@@ -134,12 +135,13 @@ public class VerifyLegacySignatureTest {
         assertFalse(result.getResult().isEmpty());
 
         // Adjust data signature hash policy to accept new SHA-1 sigs
-        Policy policy = PGPainless.getPolicy();
+        Policy policy = api.getAlgorithmPolicy();
         Policy adjusted = policy.copy()
                         .withDataSignatureHashAlgorithmPolicy(
                                 Policy.HashAlgorithmPolicy.static2022RevocationSignatureHashAlgorithmPolicy()
                         ).build();
-        PGPainless.getInstance().setAlgorithmPolicy(adjusted);
+        api = new PGPainless(adjusted);
+        sop = new SOPImpl(api);
 
         // Sig generated in 2024 using SHA1
         String newSig = "-----BEGIN PGP MESSAGE-----\n" +
@@ -164,8 +166,5 @@ public class VerifyLegacySignatureTest {
                 .toByteArrayAndResult();
 
         assertFalse(result.getResult().isEmpty());
-
-        // Reset old policy
-        PGPainless.getInstance().setAlgorithmPolicy(policy);
     }
 }

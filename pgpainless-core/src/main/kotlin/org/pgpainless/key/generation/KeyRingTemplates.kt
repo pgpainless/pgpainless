@@ -7,7 +7,6 @@ package org.pgpainless.key.generation
 import java.util.*
 import org.bouncycastle.openpgp.api.OpenPGPKey
 import org.pgpainless.PGPainless
-import org.pgpainless.PGPainless.Companion.buildKeyRing
 import org.pgpainless.algorithm.KeyFlag
 import org.pgpainless.algorithm.OpenPGPKeyVersion
 import org.pgpainless.key.generation.KeySpec.Companion.getBuilder
@@ -38,7 +37,7 @@ class KeyRingTemplates(
         length: RsaLength,
         passphrase: Passphrase = Passphrase.emptyPassphrase()
     ): OpenPGPKey =
-        buildKeyRing(version, api)
+        api.buildKey(version)
             .apply {
                 setPrimaryKey(
                     getBuilder(KeyType.RSA(length), KeyFlag.CERTIFY_OTHER)
@@ -90,7 +89,7 @@ class KeyRingTemplates(
         length: RsaLength,
         passphrase: Passphrase = Passphrase.emptyPassphrase()
     ): OpenPGPKey =
-        buildKeyRing(version)
+        api.buildKey(version)
             .apply {
                 setPrimaryKey(
                     getBuilder(
@@ -144,7 +143,7 @@ class KeyRingTemplates(
         val encryptionKeyType =
             if (version == OpenPGPKeyVersion.v6) KeyType.X25519()
             else KeyType.XDH_LEGACY(XDHLegacySpec._X25519)
-        return buildKeyRing(version)
+        return api.buildKey(version)
             .apply {
                 setPrimaryKey(
                     getBuilder(signingKeyType, KeyFlag.CERTIFY_OTHER, KeyFlag.SIGN_DATA)
@@ -197,7 +196,7 @@ class KeyRingTemplates(
         val encryptionKeyType =
             if (version == OpenPGPKeyVersion.v6) KeyType.X25519()
             else KeyType.XDH_LEGACY(XDHLegacySpec._X25519)
-        return buildKeyRing(version)
+        return api.buildKey(version)
             .apply {
                 setPrimaryKey(
                     getBuilder(signingKeyType, KeyFlag.CERTIFY_OTHER)
