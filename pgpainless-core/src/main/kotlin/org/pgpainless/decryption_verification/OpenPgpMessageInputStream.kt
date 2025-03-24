@@ -26,6 +26,7 @@ import org.bouncycastle.openpgp.PGPPublicKey
 import org.bouncycastle.openpgp.PGPPublicKeyEncryptedData
 import org.bouncycastle.openpgp.PGPSessionKey
 import org.bouncycastle.openpgp.PGPSignature
+import org.bouncycastle.openpgp.PGPSignatureException
 import org.bouncycastle.openpgp.api.OpenPGPCertificate
 import org.bouncycastle.openpgp.api.OpenPGPKey
 import org.bouncycastle.openpgp.api.OpenPGPKey.OpenPGPPrivateKey
@@ -870,6 +871,10 @@ class OpenPgpMessageInputStream(
                 } catch (e: SignatureValidationException) {
                     layer.addRejectedOnePassSignature(
                         SignatureVerification.Failure(verification, e))
+                } catch (e: PGPSignatureException) {
+                    layer.addRejectedOnePassSignature(
+                        SignatureVerification.Failure(
+                            verification, SignatureValidationException(e.message, e)))
                 }
                 break
             }
@@ -973,10 +978,12 @@ class OpenPgpMessageInputStream(
                     SignatureValidator.signatureWasCreatedInBounds(
                             options.getVerifyNotBefore(), options.getVerifyNotAfter())
                         .verify(detached.signature)
-                    if (detached.verify() && detached.isValid(api.implementation.policy())) {
-                        layer.addVerifiedDetachedSignature(verification)
-                    } else {
+                    if (!detached.verify()) {
                         throw SignatureValidationException("Incorrect detached signature.")
+                    } else if (!detached.isValid(api.implementation.policy())) {
+                        throw SignatureValidationException("Detached signature is not valid.")
+                    } else {
+                        layer.addVerifiedDetachedSignature(verification)
                     }
                 } catch (e: MalformedOpenPGPSignatureException) {
                     throw SignatureValidationException("Malformed detached signature.", e)

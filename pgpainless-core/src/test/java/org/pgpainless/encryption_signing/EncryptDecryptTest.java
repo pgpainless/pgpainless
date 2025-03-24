@@ -23,7 +23,6 @@ import org.bouncycastle.openpgp.PGPPublicKeyRing;
 import org.bouncycastle.openpgp.PGPSecretKeyRing;
 import org.bouncycastle.openpgp.PGPSignature;
 import org.bouncycastle.util.io.Streams;
-import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.TestTemplate;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.pgpainless.PGPainless;
@@ -39,7 +38,6 @@ import org.pgpainless.key.generation.type.rsa.RsaLength;
 import org.pgpainless.key.protection.SecretKeyRingProtector;
 import org.pgpainless.key.protection.UnprotectedKeysProtector;
 import org.pgpainless.key.util.KeyRingUtils;
-import org.pgpainless.policy.Policy;
 import org.pgpainless.util.ArmoredOutputStreamFactory;
 import org.pgpainless.util.TestAllImplementations;
 
@@ -57,18 +55,14 @@ public class EncryptDecryptTest {
                     "Unfold the imagined happiness that both\n" +
                     "Receive in either by this dear encounter.";
 
-    @BeforeEach
-    public void setDefaultPolicy() {
-        PGPainless.getInstance().setAlgorithmPolicy(new Policy());
-    }
-
     @TestTemplate
     @ExtendWith(TestAllImplementations.class)
     public void freshKeysRsaToRsaTest()
             throws PGPException, IOException {
-        PGPSecretKeyRing sender = PGPainless.generateKeyRing().simpleRsaKeyRing("romeo@montague.lit", RsaLength._3072)
+        PGPainless api = PGPainless.getInstance();
+        PGPSecretKeyRing sender = api.generateKey().simpleRsaKeyRing("romeo@montague.lit", RsaLength._3072)
                 .getPGPSecretKeyRing();
-        PGPSecretKeyRing recipient = PGPainless.generateKeyRing().simpleRsaKeyRing("juliet@capulet.lit", RsaLength._3072)
+        PGPSecretKeyRing recipient = api.generateKey().simpleRsaKeyRing("juliet@capulet.lit", RsaLength._3072)
                 .getPGPSecretKeyRing();
 
         encryptDecryptForSecretKeyRings(sender, recipient);
@@ -78,9 +72,10 @@ public class EncryptDecryptTest {
     @ExtendWith(TestAllImplementations.class)
     public void freshKeysEcToEcTest()
             throws IOException, PGPException {
-        PGPSecretKeyRing sender = PGPainless.generateKeyRing().simpleEcKeyRing("romeo@montague.lit")
+        PGPainless api = PGPainless.getInstance();
+        PGPSecretKeyRing sender = api.generateKey().simpleEcKeyRing("romeo@montague.lit")
                 .getPGPSecretKeyRing();
-        PGPSecretKeyRing recipient = PGPainless.generateKeyRing().simpleEcKeyRing("juliet@capulet.lit")
+        PGPSecretKeyRing recipient = api.generateKey().simpleEcKeyRing("juliet@capulet.lit")
                 .getPGPSecretKeyRing();
 
         encryptDecryptForSecretKeyRings(sender, recipient);
@@ -90,9 +85,10 @@ public class EncryptDecryptTest {
     @ExtendWith(TestAllImplementations.class)
     public void freshKeysEcToRsaTest()
             throws PGPException, IOException {
-        PGPSecretKeyRing sender = PGPainless.generateKeyRing().simpleEcKeyRing("romeo@montague.lit")
+        PGPainless api = PGPainless.getInstance();
+        PGPSecretKeyRing sender = api.generateKey().simpleEcKeyRing("romeo@montague.lit")
                 .getPGPSecretKeyRing();
-        PGPSecretKeyRing recipient = PGPainless.generateKeyRing().simpleRsaKeyRing("juliet@capulet.lit", RsaLength._3072)
+        PGPSecretKeyRing recipient = api.generateKey().simpleRsaKeyRing("juliet@capulet.lit", RsaLength._3072)
                 .getPGPSecretKeyRing();
 
         encryptDecryptForSecretKeyRings(sender, recipient);
@@ -102,9 +98,10 @@ public class EncryptDecryptTest {
     @ExtendWith(TestAllImplementations.class)
     public void freshKeysRsaToEcTest()
             throws PGPException, IOException {
-        PGPSecretKeyRing sender = PGPainless.generateKeyRing().simpleRsaKeyRing("romeo@montague.lit", RsaLength._3072)
+        PGPainless api = PGPainless.getInstance();
+        PGPSecretKeyRing sender = api.generateKey().simpleRsaKeyRing("romeo@montague.lit", RsaLength._3072)
                 .getPGPSecretKeyRing();
-        PGPSecretKeyRing recipient = PGPainless.generateKeyRing().simpleEcKeyRing("juliet@capulet.lit")
+        PGPSecretKeyRing recipient = api.generateKey().simpleEcKeyRing("juliet@capulet.lit")
                 .getPGPSecretKeyRing();
 
         encryptDecryptForSecretKeyRings(sender, recipient);
