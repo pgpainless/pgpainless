@@ -14,15 +14,10 @@ import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
-import java.util.Arrays;
 
 import org.bouncycastle.openpgp.PGPException;
-import org.bouncycastle.openpgp.PGPPublicKeyRing;
-import org.bouncycastle.openpgp.PGPPublicKeyRingCollection;
-import org.bouncycastle.openpgp.PGPSecretKey;
-import org.bouncycastle.openpgp.PGPSecretKeyRing;
-import org.bouncycastle.openpgp.PGPSecretKeyRingCollection;
 import org.bouncycastle.openpgp.PGPSignature;
+import org.bouncycastle.openpgp.api.OpenPGPCertificate;
 import org.bouncycastle.openpgp.api.OpenPGPKey;
 import org.bouncycastle.util.io.Streams;
 import org.junit.jupiter.api.TestTemplate;
@@ -42,7 +37,6 @@ import org.pgpainless.key.generation.type.KeyType;
 import org.pgpainless.key.generation.type.eddsa_legacy.EdDSALegacyCurve;
 import org.pgpainless.key.info.KeyRingInfo;
 import org.pgpainless.key.protection.SecretKeyRingProtector;
-import org.pgpainless.key.util.KeyRingUtils;
 import org.pgpainless.util.MultiMap;
 import org.pgpainless.util.Passphrase;
 import org.pgpainless.util.TestAllImplementations;
@@ -53,26 +47,27 @@ public class SigningTest {
     @ExtendWith(TestAllImplementations.class)
     public void testEncryptionAndSignatureVerification()
             throws IOException, PGPException {
+        PGPainless api = PGPainless.getInstance();
 
-        PGPPublicKeyRing julietKeys = TestKeys.getJulietPublicKeyRing();
-        PGPPublicKeyRing romeoKeys = TestKeys.getRomeoPublicKeyRing();
+        OpenPGPCertificate julietCert = TestKeys.getJulietCertificate();
+        OpenPGPCertificate romeoCert = TestKeys.getRomeoCertificate();
 
-        PGPSecretKeyRing cryptieKeys = TestKeys.getCryptieSecretKeyRing();
-        KeyRingInfo cryptieInfo = new KeyRingInfo(cryptieKeys);
-        PGPSecretKey cryptieSigningKey = cryptieKeys.getSecretKey(cryptieInfo.getSigningSubkeys().get(0).getKeyIdentifier());
-
-        PGPPublicKeyRingCollection keys = new PGPPublicKeyRingCollection(Arrays.asList(julietKeys, romeoKeys));
+        OpenPGPKey cryptieKey = TestKeys.getCryptieKey();
+        KeyRingInfo cryptieInfo = api.inspect(cryptieKey);
+        OpenPGPKey.OpenPGPSecretKey cryptieSigningKey = cryptieKey.getSecretKey(cryptieInfo.getSigningSubkeys().get(0).getKeyIdentifier());
 
         ByteArrayOutputStream out = new ByteArrayOutputStream();
-        EncryptionStream encryptionStream = PGPainless.encryptAndOrSign()
+        EncryptionStream encryptionStream = api.generateMessage()
                 .onOutputStream(out)
                 .withOptions(ProducerOptions.signAndEncrypt(
-                        EncryptionOptions.encryptDataAtRest()
-                                .addRecipients(keys)
-                                .addRecipient(KeyRingUtils.publicKeyRingFrom(cryptieKeys)),
-                        SigningOptions.get().addInlineSignature(
+                        EncryptionOptions.encryptDataAtRest(api)
+                                .addRecipient(romeoCert)
+                                .addRecipient(julietCert)
+                                .addRecipient(cryptieKey.toCertificate()),
+                        SigningOptions.get(api).addInlineSignature(
                                 SecretKeyRingProtector.unlockSingleKeyWith(TestKeys.CRYPTIE_PASSPHRASE, cryptieSigningKey),
-                                        cryptieKeys, TestKeys.CRYPTIE_UID, DocumentSignatureType.CANONICAL_TEXT_DOCUMENT)
+                                        cryptieKey, TestKeys.CRYPTIE_UID, DocumentSignatureType.CANONICAL_TEXT_DOCUMENT),
+                        api
                 ).setAsciiArmor(true));
 
         byte[] messageBytes = "This message is signed and encrypted to Romeo and Juliet."
@@ -85,19 +80,16 @@ public class SigningTest {
         byte[] encrypted = out.toByteArray();
         ByteArrayInputStream cryptIn = new ByteArrayInputStream(encrypted);
 
-        PGPSecretKeyRing romeoSecret = TestKeys.getRomeoSecretKeyRing();
-        PGPSecretKeyRing julietSecret = TestKeys.getJulietSecretKeyRing();
-
-        PGPSecretKeyRingCollection secretKeys = new PGPSecretKeyRingCollection(
-                Arrays.asList(romeoSecret, julietSecret));
-        PGPPublicKeyRingCollection verificationKeys = new PGPPublicKeyRingCollection(
-                Arrays.asList(KeyRingUtils.publicKeyRingFrom(cryptieKeys), romeoKeys));
+        OpenPGPKey romeoKey = TestKeys.getRomeoKey();
+        OpenPGPKey julietKey = TestKeys.getJulietKey();
 
         DecryptionStream decryptionStream = PGPainless.decryptAndOrVerify()
                 .onInputStream(cryptIn)
-                .withOptions(ConsumerOptions.get()
-                        .addDecryptionKeys(secretKeys, SecretKeyRingProtector.unprotectedKeys())
-                        .addVerificationCerts(verificationKeys)
+                .withOptions(ConsumerOptions.get(api)
+                        .addDecryptionKey(romeoKey, SecretKeyRingProtector.unprotectedKeys())
+                        .addDecryptionKey(julietKey, SecretKeyRingProtector.unprotectedKeys())
+                        .addVerificationCert(cryptieKey.toCertificate())
+                        .addVerificationCert(romeoCert)
                 );
 
         ByteArrayOutputStream plaintextOut = new ByteArrayOutputStream();
@@ -108,19 +100,19 @@ public class SigningTest {
         MessageMetadata metadata = decryptionStream.getMetadata();
         assertTrue(metadata.isEncrypted());
         assertTrue(metadata.isVerifiedSigned());
-        assertTrue(metadata.isVerifiedSignedBy(KeyRingUtils.publicKeyRingFrom(cryptieKeys)));
-        assertFalse(metadata.isVerifiedSignedBy(julietKeys));
+        assertTrue(metadata.isVerifiedSignedBy(cryptieKey));
+        assertFalse(metadata.isVerifiedSignedBy(julietCert));
     }
 
     @TestTemplate
     @ExtendWith(TestAllImplementations.class)
     public void testSignWithInvalidUserIdFails() {
-        PGPSecretKeyRing secretKeys = PGPainless.generateKeyRing()
-                .modernKeyRing("alice", "password123")
-                .getPGPSecretKeyRing();
+        PGPainless api = PGPainless.getInstance();
+        OpenPGPKey secretKeys = api.generateKey()
+                .modernKeyRing("alice", "password123");
         SecretKeyRingProtector protector = SecretKeyRingProtector.unlockAnyKeyWith(Passphrase.fromPassword("password123"));
 
-        SigningOptions opts = SigningOptions.get();
+        SigningOptions opts = SigningOptions.get(api);
         // "bob" is not a valid user-id
         assertThrows(KeyException.UnboundUserIdException.class,
                 () -> opts.addInlineSignature(protector, secretKeys, "bob",
@@ -152,10 +144,11 @@ public class SigningTest {
     @TestTemplate
     @ExtendWith(TestAllImplementations.class)
     public void signWithHashAlgorithmOverride() throws PGPException, IOException {
-        PGPSecretKeyRing secretKeys = TestKeys.getEmilSecretKeyRing();
+        PGPainless api = PGPainless.getInstance();
+        OpenPGPKey secretKeys = TestKeys.getEmilKey();
         SecretKeyRingProtector protector = SecretKeyRingProtector.unprotectedKeys();
 
-        SigningOptions options = SigningOptions.get();
+        SigningOptions options = SigningOptions.get(api);
         assertNull(options.getHashAlgorithmOverride());
 
         options.overrideHashAlgorithm(HashAlgorithm.SHA224);
@@ -164,9 +157,9 @@ public class SigningTest {
         options.addDetachedSignature(protector, secretKeys, DocumentSignatureType.BINARY_DOCUMENT);
 
         String data = "Hello, World!\n";
-        EncryptionStream signer = PGPainless.encryptAndOrSign()
+        EncryptionStream signer = api.generateMessage()
                 .onOutputStream(new ByteArrayOutputStream())
-                .withOptions(ProducerOptions.sign(options));
+                .withOptions(ProducerOptions.sign(options, api));
 
         Streams.pipeAll(new ByteArrayInputStream(data.getBytes(StandardCharsets.UTF_8)), signer);
         signer.close();
@@ -185,21 +178,21 @@ public class SigningTest {
     @ExtendWith(TestAllImplementations.class)
     public void negotiateHashAlgorithmChoseFallbackIfEmptyPreferences()
             throws PGPException, IOException {
-        PGPSecretKeyRing secretKeys = PGPainless.buildKeyRing()
+        PGPainless api = PGPainless.getInstance();
+        OpenPGPKey secretKeys = api.buildKey()
                 .setPrimaryKey(KeySpec.getBuilder(
                         KeyType.EDDSA_LEGACY(EdDSALegacyCurve._Ed25519), KeyFlag.CERTIFY_OTHER, KeyFlag.SIGN_DATA)
                         .overridePreferredHashAlgorithms())
                 .addUserId("Alice")
-                .build()
-                .getPGPSecretKeyRing();
+                .build();
 
-        SigningOptions options = SigningOptions.get()
+        SigningOptions options = SigningOptions.get(api)
                 .addDetachedSignature(SecretKeyRingProtector.unprotectedKeys(), secretKeys,
                         DocumentSignatureType.BINARY_DOCUMENT);
         String data = "Hello, World!\n";
-        EncryptionStream signer = PGPainless.encryptAndOrSign()
+        EncryptionStream signer = api.generateMessage()
                 .onOutputStream(new ByteArrayOutputStream())
-                .withOptions(ProducerOptions.sign(options));
+                .withOptions(ProducerOptions.sign(options, api));
 
         Streams.pipeAll(new ByteArrayInputStream(data.getBytes(StandardCharsets.UTF_8)), signer);
         signer.close();
@@ -208,7 +201,7 @@ public class SigningTest {
         SubkeyIdentifier signingKey = sigs.keySet().iterator().next();
         PGPSignature signature = sigs.get(signingKey).iterator().next();
 
-        assertEquals(PGPainless.getPolicy().getDataSignatureHashAlgorithmPolicy().defaultHashAlgorithm().getAlgorithmId(),
+        assertEquals(api.getAlgorithmPolicy().getDataSignatureHashAlgorithmPolicy().defaultHashAlgorithm().getAlgorithmId(),
                 signature.getHashAlgorithm());
     }
 
@@ -216,21 +209,21 @@ public class SigningTest {
     @ExtendWith(TestAllImplementations.class)
     public void negotiateHashAlgorithmChoseFallbackIfUnacceptablePreferences()
             throws PGPException, IOException {
-        PGPSecretKeyRing secretKeys = PGPainless.buildKeyRing()
+        PGPainless api = PGPainless.getInstance();
+        OpenPGPKey secretKeys = api.buildKey()
                 .setPrimaryKey(
                         KeySpec.getBuilder(KeyType.EDDSA_LEGACY(EdDSALegacyCurve._Ed25519), KeyFlag.CERTIFY_OTHER, KeyFlag.SIGN_DATA)
                         .overridePreferredHashAlgorithms(HashAlgorithm.MD5))
                 .addUserId("Alice")
-                .build()
-                .getPGPSecretKeyRing();
+                .build();
 
-        SigningOptions options = SigningOptions.get()
+        SigningOptions options = SigningOptions.get(api)
                 .addDetachedSignature(SecretKeyRingProtector.unprotectedKeys(), secretKeys,
                         DocumentSignatureType.BINARY_DOCUMENT);
         String data = "Hello, World!\n";
-        EncryptionStream signer = PGPainless.encryptAndOrSign()
+        EncryptionStream signer = api.generateMessage()
                 .onOutputStream(new ByteArrayOutputStream())
-                .withOptions(ProducerOptions.sign(options));
+                .withOptions(ProducerOptions.sign(options, api));
 
         Streams.pipeAll(new ByteArrayInputStream(data.getBytes(StandardCharsets.UTF_8)), signer);
         signer.close();
@@ -239,20 +232,20 @@ public class SigningTest {
         SubkeyIdentifier signingKey = sigs.keySet().iterator().next();
         PGPSignature signature = sigs.get(signingKey).iterator().next();
 
-        assertEquals(PGPainless.getPolicy().getDataSignatureHashAlgorithmPolicy().defaultHashAlgorithm().getAlgorithmId(),
+        assertEquals(api.getAlgorithmPolicy().getDataSignatureHashAlgorithmPolicy().defaultHashAlgorithm().getAlgorithmId(),
                 signature.getHashAlgorithm());
     }
 
     @TestTemplate
     @ExtendWith(TestAllImplementations.class)
     public void signingWithNonCapableKeyThrowsKeyCannotSignException() {
-        PGPSecretKeyRing secretKeys = PGPainless.buildKeyRing()
+        PGPainless api = PGPainless.getInstance();
+        OpenPGPKey secretKeys = api.buildKey()
                 .setPrimaryKey(KeySpec.getBuilder(KeyType.EDDSA_LEGACY(EdDSALegacyCurve._Ed25519), KeyFlag.CERTIFY_OTHER))
                 .addUserId("Alice")
-                .build()
-                .getPGPSecretKeyRing();
+                .build();
 
-        SigningOptions options = SigningOptions.get();
+        SigningOptions options = SigningOptions.get(api);
         assertThrows(KeyException.UnacceptableSigningKeyException.class, () -> options.addDetachedSignature(
                 SecretKeyRingProtector.unprotectedKeys(), secretKeys, DocumentSignatureType.BINARY_DOCUMENT));
         assertThrows(KeyException.UnacceptableSigningKeyException.class, () -> options.addInlineSignature(
@@ -262,14 +255,14 @@ public class SigningTest {
     @TestTemplate
     @ExtendWith(TestAllImplementations.class)
     public void signWithInvalidUserIdThrowsKeyValidationError() {
-        PGPSecretKeyRing secretKeys = PGPainless.buildKeyRing()
+        PGPainless api = PGPainless.getInstance();
+        OpenPGPKey secretKeys = api.buildKey()
                 .setPrimaryKey(KeySpec.getBuilder(KeyType.EDDSA_LEGACY(EdDSALegacyCurve._Ed25519),
                         KeyFlag.CERTIFY_OTHER, KeyFlag.SIGN_DATA))
                 .addUserId("Alice")
-                .build()
-                .getPGPSecretKeyRing();
+                .build();
 
-        SigningOptions options = SigningOptions.get();
+        SigningOptions options = SigningOptions.get(api);
         assertThrows(KeyException.UnboundUserIdException.class, () ->
                 options.addDetachedSignature(SecretKeyRingProtector.unprotectedKeys(), secretKeys, "Bob",
                         DocumentSignatureType.BINARY_DOCUMENT));

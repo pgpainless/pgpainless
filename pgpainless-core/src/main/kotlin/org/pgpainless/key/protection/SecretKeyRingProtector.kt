@@ -13,6 +13,7 @@ import org.bouncycastle.openpgp.PGPSecretKeyRing
 import org.bouncycastle.openpgp.api.KeyPassphraseProvider
 import org.bouncycastle.openpgp.api.OpenPGPCertificate.OpenPGPComponentKey
 import org.bouncycastle.openpgp.api.OpenPGPKey
+import org.bouncycastle.openpgp.api.OpenPGPKey.OpenPGPSecretKey
 import org.bouncycastle.openpgp.operator.PBESecretKeyDecryptor
 import org.bouncycastle.openpgp.operator.PBESecretKeyEncryptor
 import org.pgpainless.key.protection.passphrase_provider.SecretKeyPassphraseProvider
@@ -152,6 +153,13 @@ interface SecretKeyRingProtector : KeyPassphraseProvider {
         @JvmStatic
         fun unlockSingleKeyWith(passphrase: Passphrase, key: PGPSecretKey): SecretKeyRingProtector =
             PasswordBasedSecretKeyRingProtector.forKey(key, passphrase)
+
+        @JvmStatic
+        fun unlockSingleKeyWith(
+            passphrase: Passphrase,
+            key: OpenPGPSecretKey
+        ): SecretKeyRingProtector =
+            PasswordBasedSecretKeyRingProtector.forKey(key.pgpSecretKey, passphrase)
 
         /**
          * Use the provided passphrase to lock/unlock only the provided (sub-)key. This protector
