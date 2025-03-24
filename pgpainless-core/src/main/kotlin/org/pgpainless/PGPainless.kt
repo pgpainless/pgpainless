@@ -91,8 +91,17 @@ class PGPainless(
     fun toKey(secretKeyRing: PGPSecretKeyRing): OpenPGPKey =
         OpenPGPKey(secretKeyRing, implementation)
 
-    fun toCertificate(keyOrCertificate: PGPKeyRing): OpenPGPCertificate =
-        OpenPGPCertificate(keyOrCertificate, implementation)
+    fun toCertificate(certificate: PGPPublicKeyRing): OpenPGPCertificate =
+        OpenPGPCertificate(certificate, implementation)
+
+    fun toKeyOrCertificate(keyOrCertificate: PGPKeyRing): OpenPGPCertificate =
+        when (keyOrCertificate) {
+            is PGPSecretKeyRing -> toKey(keyOrCertificate)
+            is PGPPublicKeyRing -> toCertificate(keyOrCertificate)
+            else ->
+                throw IllegalArgumentException(
+                    "Unexpected PGPKeyRing subclass: ${keyOrCertificate.javaClass.name}")
+        }
 
     fun mergeCertificate(
         originalCopy: OpenPGPCertificate,
@@ -120,8 +129,8 @@ class PGPainless(
             instance ?: synchronized(this) { instance ?: PGPainless().also { instance = it } }
 
         @JvmStatic
-        fun setInstance(pgpainless: PGPainless) {
-            instance = pgpainless
+        fun setInstance(api: PGPainless) {
+            instance = api
         }
 
         /**
@@ -145,10 +154,8 @@ class PGPainless(
         @JvmStatic
         @JvmOverloads
         @Deprecated("Call buildKey() on an instance of PGPainless instead.")
-        fun buildKeyRing(
-            version: OpenPGPKeyVersion = OpenPGPKeyVersion.v4,
-            api: PGPainless = getInstance()
-        ): KeyRingBuilder = KeyRingBuilder(version, api)
+        fun buildKeyRing(version: OpenPGPKeyVersion = OpenPGPKeyVersion.v4): KeyRingBuilder =
+            getInstance().buildKey(version)
 
         /**
          * Read an existing OpenPGP key ring.
@@ -262,9 +269,8 @@ class PGPainless(
         @JvmOverloads
         fun modifyKeyRing(
             secretKey: PGPSecretKeyRing,
-            referenceTime: Date = Date(),
-            api: PGPainless = getInstance()
-        ): SecretKeyRingEditor = SecretKeyRingEditor(secretKey, api, referenceTime)
+            referenceTime: Date = Date()
+        ): SecretKeyRingEditor = getInstance().modify(getInstance().toKey(secretKey), referenceTime)
 
         /**
          * Quickly access information about a [org.bouncycastle.openpgp.PGPPublicKeyRing] /
@@ -281,7 +287,7 @@ class PGPainless(
             "Use inspect(key) on an instance of PGPainless instead.",
             replaceWith = ReplaceWith("inspect(key)"))
         fun inspectKeyRing(key: PGPKeyRing, referenceTime: Date = Date()): KeyRingInfo =
-            KeyRingInfo(key, referenceTime)
+            getInstance().inspect(getInstance().toKeyOrCertificate(key), referenceTime)
 
         @JvmStatic
         @JvmOverloads
@@ -289,7 +295,7 @@ class PGPainless(
             "Use inspect(key) on an instance of PGPainless instead.",
             replaceWith = ReplaceWith("inspect(key)"))
         fun inspectKeyRing(key: OpenPGPCertificate, referenceTime: Date = Date()): KeyRingInfo =
-            KeyRingInfo(key, getInstance(), referenceTime)
+            getInstance().inspect(key, referenceTime)
 
         /**
          * Access, and make changes to PGPainless policy on acceptable/default algorithms etc.

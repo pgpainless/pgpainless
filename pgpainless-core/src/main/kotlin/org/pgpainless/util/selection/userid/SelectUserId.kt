@@ -83,7 +83,7 @@ abstract class SelectUserId : Predicate<String>, (String) -> Boolean {
 
         @JvmStatic
         fun validUserId(keyRing: PGPKeyRing) =
-            validUserId(PGPainless.getInstance().toCertificate(keyRing))
+            validUserId(PGPainless.getInstance().toKeyOrCertificate(keyRing))
 
         @JvmStatic
         fun and(vararg filters: SelectUserId) =
