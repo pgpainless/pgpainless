@@ -312,6 +312,7 @@ class SigningOptions(private val api: PGPainless) {
         signatureType: DocumentSignatureType
     ) = apply { addDetachedSignature(signingKeyProtector, signingKey, null, signatureType) }
 
+    @JvmOverloads
     fun addDetachedSignature(
         signingKeyProtector: SecretKeyRingProtector,
         signingKey: OpenPGPKey,
