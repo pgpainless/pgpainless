@@ -15,8 +15,8 @@ import java.nio.charset.StandardCharsets;
 
 import org.bouncycastle.bcpg.KeyIdentifier;
 import org.bouncycastle.openpgp.PGPException;
-import org.bouncycastle.openpgp.PGPPublicKeyRing;
-import org.bouncycastle.openpgp.PGPSecretKeyRing;
+import org.bouncycastle.openpgp.api.OpenPGPCertificate;
+import org.bouncycastle.openpgp.api.OpenPGPKey;
 import org.bouncycastle.util.io.Streams;
 import org.junit.jupiter.api.Test;
 import org.pgpainless.PGPainless;
@@ -42,15 +42,15 @@ public class GenerateKeyWithoutPrimaryKeyFlagsTest {
 
     @Test
     public void generateKeyWithoutCertifyKeyFlag_cannotCertifyThirdParties() throws PGPException, IOException {
-        PGPSecretKeyRing secretKeys = PGPainless.buildKeyRing().setPrimaryKey(KeySpec.getBuilder(KeyType.EDDSA_LEGACY(EdDSALegacyCurve._Ed25519)))
+        PGPainless api = PGPainless.getInstance();
+        OpenPGPKey key = api.buildKey().setPrimaryKey(KeySpec.getBuilder(KeyType.EDDSA_LEGACY(EdDSALegacyCurve._Ed25519)))
                 .addSubkey(KeySpec.getBuilder(KeyType.EDDSA_LEGACY(EdDSALegacyCurve._Ed25519), KeyFlag.SIGN_DATA))
                 .addSubkey(KeySpec.getBuilder(KeyType.XDH_LEGACY(XDHLegacySpec._X25519), KeyFlag.ENCRYPT_STORAGE, KeyFlag.ENCRYPT_COMMS))
                 .addUserId("Alice")
-                .build()
-                .getPGPSecretKeyRing();
-        PGPPublicKeyRing cert = PGPainless.extractCertificate(secretKeys);
+                .build();
+        OpenPGPCertificate cert = key.toCertificate();
 
-        KeyRingInfo info = PGPainless.inspectKeyRing(secretKeys);
+        KeyRingInfo info = api.inspect(key);
         assertTrue(info.getValidUserIds().contains("Alice"));
 
         KeyIdentifier primaryKeyIdentifier = info.getKeyIdentifier();
@@ -59,18 +59,18 @@ public class GenerateKeyWithoutPrimaryKeyFlagsTest {
         assertFalse(info.isUsableForThirdPartyCertification());
 
         // Key without CERTIFY_OTHER flag cannot be used to certify other keys
-        PGPPublicKeyRing thirdPartyCert = TestKeys.getCryptiePublicKeyRing();
+        OpenPGPCertificate thirdPartyCert = TestKeys.getCryptieCertificate();
         assertThrows(KeyException.UnacceptableThirdPartyCertificationKeyException.class, () ->
-                PGPainless.certify().certificate(thirdPartyCert)
-                        .withKey(secretKeys, SecretKeyRingProtector.unprotectedKeys()));
+                api.generateCertification().certificate(thirdPartyCert)
+                        .withKey(key, SecretKeyRingProtector.unprotectedKeys()));
 
         // Key without CERTIFY_OTHER flags is usable for encryption and signing
         ByteArrayOutputStream ciphertext = new ByteArrayOutputStream();
-        EncryptionStream encryptionStream = PGPainless.encryptAndOrSign()
+        EncryptionStream encryptionStream = api.generateMessage()
                 .onOutputStream(ciphertext)
                 .withOptions(ProducerOptions.signAndEncrypt(
                         EncryptionOptions.get().addRecipient(cert),
-                        SigningOptions.get().addInlineSignature(SecretKeyRingProtector.unprotectedKeys(), secretKeys, DocumentSignatureType.BINARY_DOCUMENT)
+                        SigningOptions.get().addInlineSignature(SecretKeyRingProtector.unprotectedKeys(), key, DocumentSignatureType.BINARY_DOCUMENT)
                 ));
         encryptionStream.write("Hello, World!\n".getBytes(StandardCharsets.UTF_8));
         encryptionStream.close();
@@ -79,7 +79,7 @@ public class GenerateKeyWithoutPrimaryKeyFlagsTest {
 
         DecryptionStream decryptionStream = PGPainless.decryptAndOrVerify()
                 .onInputStream(new ByteArrayInputStream(ciphertext.toByteArray()))
-                .withOptions(ConsumerOptions.get().addDecryptionKey(secretKeys)
+                .withOptions(ConsumerOptions.get().addDecryptionKey(key)
                         .addVerificationCert(cert));
 
         ByteArrayOutputStream plaintext = new ByteArrayOutputStream();

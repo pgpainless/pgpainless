@@ -34,7 +34,7 @@ public class RefuseToAddWeakSubkeyTest {
         Policy adjusted = oldPolicy.copy().withPublicKeyAlgorithmPolicy(
                 Policy.PublicKeyAlgorithmPolicy.bsi2021PublicKeyAlgorithmPolicy()
         ).build();
-        api.setAlgorithmPolicy(adjusted);
+        api = new PGPainless(adjusted);
 
         OpenPGPKey secretKeys = api.generateKey()
                 .modernKeyRing("Alice");
@@ -43,7 +43,6 @@ public class RefuseToAddWeakSubkeyTest {
 
         assertThrows(IllegalArgumentException.class, () ->
                 editor.addSubKey(spec, Passphrase.emptyPassphrase(), SecretKeyRingProtector.unprotectedKeys()));
-        api.setAlgorithmPolicy(oldPolicy);
     }
 
     @Test
@@ -75,7 +74,7 @@ public class RefuseToAddWeakSubkeyTest {
         minimalBitStrengths.put(PublicKeyAlgorithm.DIFFIE_HELLMAN, 2000);
         // §7.2.2
         minimalBitStrengths.put(PublicKeyAlgorithm.ECDH, 250);
-        api.setAlgorithmPolicy(oldPolicy.copy()
+        api = new PGPainless(oldPolicy.copy()
                 .withPublicKeyAlgorithmPolicy(new Policy.PublicKeyAlgorithmPolicy(minimalBitStrengths))
                 .build());
 
@@ -88,8 +87,5 @@ public class RefuseToAddWeakSubkeyTest {
                 .done();
 
         assertEquals(2, api.inspect(secretKeys).getEncryptionSubkeys(EncryptionPurpose.ANY).size());
-
-        // reset default policy
-        api.setAlgorithmPolicy(oldPolicy);
     }
 }

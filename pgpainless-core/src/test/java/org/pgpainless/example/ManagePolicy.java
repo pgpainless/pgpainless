@@ -10,8 +10,6 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 import java.util.Arrays;
 import java.util.HashMap;
 
-import org.junit.jupiter.api.AfterEach;
-import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.pgpainless.PGPainless;
 import org.pgpainless.algorithm.HashAlgorithm;
@@ -37,16 +35,6 @@ import org.pgpainless.util.NotationRegistry;
 public class ManagePolicy {
 
     /**
-     * Reset PGPainless' policy class to default values.
-     */
-    @BeforeEach
-    @AfterEach
-    public void resetPolicy() {
-        // Policy for hash algorithms in non-revocation signatures
-        PGPainless.getInstance().setAlgorithmPolicy(new Policy());
-    }
-
-    /**
      * {@link HashAlgorithm Hash Algorithms} may get outdated with time. {@link HashAlgorithm#SHA1} is a prominent
      * example for an algorithm that is nowadays considered unsafe to use and which shall be avoided.
      * <p>
@@ -62,8 +50,9 @@ public class ManagePolicy {
      */
     @Test
     public void setCustomSignatureHashPolicy() {
+        PGPainless api = PGPainless.getInstance();
         // Get PGPainless' policy
-        Policy oldPolicy = PGPainless.getInstance().getAlgorithmPolicy();
+        Policy oldPolicy = api.getAlgorithmPolicy();
 
         Policy.HashAlgorithmPolicy sigHashAlgoPolicy = oldPolicy.getDataSignatureHashAlgorithmPolicy();
         assertTrue(sigHashAlgoPolicy.isAcceptable(HashAlgorithm.SHA512));
@@ -77,17 +66,12 @@ public class ManagePolicy {
                 // List of acceptable hash algorithms
                 Arrays.asList(HashAlgorithm.SHA512, HashAlgorithm.SHA384, HashAlgorithm.SHA256, HashAlgorithm.SHA224, HashAlgorithm.SHA1));
         // Set the hash algo policy as policy for non-revocation signatures
-        PGPainless.getInstance().setAlgorithmPolicy(
-                oldPolicy.copy().withDataSignatureHashAlgorithmPolicy(customPolicy).build()
-        );
+        api = new PGPainless(oldPolicy.copy().withDataSignatureHashAlgorithmPolicy(customPolicy).build());
 
-        sigHashAlgoPolicy = PGPainless.getInstance().getAlgorithmPolicy().getDataSignatureHashAlgorithmPolicy();
+        sigHashAlgoPolicy = api.getAlgorithmPolicy().getDataSignatureHashAlgorithmPolicy();
         assertTrue(sigHashAlgoPolicy.isAcceptable(HashAlgorithm.SHA512));
         // SHA-1 is now acceptable as well
         assertTrue(sigHashAlgoPolicy.isAcceptable(HashAlgorithm.SHA1));
-
-        // reset old policy
-        PGPainless.getInstance().setAlgorithmPolicy(oldPolicy);
     }
 
     /**
@@ -100,7 +84,8 @@ public class ManagePolicy {
      */
     @Test
     public void setCustomPublicKeyAlgorithmPolicy() {
-        Policy oldPolicy = PGPainless.getInstance().getAlgorithmPolicy();
+        PGPainless api = PGPainless.getInstance();
+        Policy oldPolicy = api.getAlgorithmPolicy();
         Policy.PublicKeyAlgorithmPolicy pkAlgorithmPolicy = oldPolicy.getPublicKeyAlgorithmPolicy();
         assertTrue(pkAlgorithmPolicy.isAcceptable(PublicKeyAlgorithm.RSA_GENERAL, 4096));
         assertTrue(pkAlgorithmPolicy.isAcceptable(PublicKeyAlgorithm.RSA_GENERAL, 2048));
@@ -115,17 +100,15 @@ public class ManagePolicy {
                     put(PublicKeyAlgorithm.RSA_GENERAL, 3000);
                 }}
         );
-        PGPainless.getInstance().setAlgorithmPolicy(oldPolicy.copy().withPublicKeyAlgorithmPolicy(customPolicy).build());
 
-        pkAlgorithmPolicy = PGPainless.getInstance().getAlgorithmPolicy().getPublicKeyAlgorithmPolicy();
+        api = new PGPainless(oldPolicy.copy().withPublicKeyAlgorithmPolicy(customPolicy).build());
+
+        pkAlgorithmPolicy = api.getAlgorithmPolicy().getPublicKeyAlgorithmPolicy();
         assertTrue(pkAlgorithmPolicy.isAcceptable(PublicKeyAlgorithm.RSA_GENERAL, 4096));
         // RSA 2048 is no longer acceptable
         assertFalse(pkAlgorithmPolicy.isAcceptable(PublicKeyAlgorithm.RSA_GENERAL, 2048));
         // ECDSA is no longer acceptable, since it is no longer included in the policy at all
         assertFalse(pkAlgorithmPolicy.isAcceptable(PublicKeyAlgorithm.ECDSA, 256));
-
-        // Reset policy
-        PGPainless.getInstance().setAlgorithmPolicy(oldPolicy);
     }
 
     /**

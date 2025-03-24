@@ -6,7 +6,6 @@ package org.pgpainless.policy;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
-import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import java.util.Arrays;
@@ -204,10 +203,5 @@ public class PolicyTest {
     @Test
     public void testUnknownPublicKeyAlgorithmIsNotAcceptable() {
         assertFalse(policy.getPublicKeyAlgorithmPolicy().isAcceptable(-1, 4096));
-    }
-
-    @Test
-    public void setNullSignerUserIdValidationLevelThrows() {
-        assertThrows(NullPointerException.class, () -> policy.setSignerUserIdValidationLevel(null));
     }
 }

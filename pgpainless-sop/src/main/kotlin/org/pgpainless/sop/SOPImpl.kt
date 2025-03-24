@@ -28,6 +28,8 @@ class SOPImpl(
     private val sopv: SOPV = SOPVImpl(api)
 ) : SOP {
 
+    constructor(api: PGPainless) : this(api, SOPVImpl(api))
+
     override fun armor(): Armor = ArmorImpl(api)
 
     override fun changeKeyPassword(): ChangeKeyPassword = ChangeKeyPasswordImpl(api)
