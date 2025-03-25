@@ -5,7 +5,7 @@ SPDX-License-Identifier: CC0-1.0
 
 # PGPainless Changelog
 
-## 1.7.5-SNAPSHOT
+## 1.7.5
 - Actually attempt to fix Kotlin desugaring.
 - Bump javaSourceCompatibility and javaTargetCompatibility to 11
 - Bump gradle-wrapper to 8.8
