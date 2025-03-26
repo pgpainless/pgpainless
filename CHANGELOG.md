@@ -5,6 +5,9 @@ SPDX-License-Identifier: CC0-1.0
 
 # PGPainless Changelog
 
+## 1.7.5-SNAPSHOT
+- Fix `RevocationSignatureBuilder` properly calculating third-party signatures of type `KeyRevocation` (delegation revocations)
+
 ## 1.7.5
 - Actually attempt to fix Kotlin desugaring.
 - Bump javaSourceCompatibility and javaTargetCompatibility to 11
