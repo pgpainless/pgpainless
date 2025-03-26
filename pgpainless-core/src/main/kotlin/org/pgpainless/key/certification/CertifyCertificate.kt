@@ -15,6 +15,7 @@ import org.bouncycastle.openpgp.api.OpenPGPSignature
 import org.pgpainless.PGPainless
 import org.pgpainless.algorithm.CertificationType
 import org.pgpainless.algorithm.KeyFlag
+import org.pgpainless.algorithm.SignatureType
 import org.pgpainless.algorithm.Trustworthiness
 import org.pgpainless.exception.KeyException
 import org.pgpainless.exception.KeyException.ExpiredKeyException
@@ -22,9 +23,11 @@ import org.pgpainless.exception.KeyException.MissingSecretKeyException
 import org.pgpainless.exception.KeyException.RevokedKeyException
 import org.pgpainless.key.protection.SecretKeyRingProtector
 import org.pgpainless.key.util.KeyRingUtils
+import org.pgpainless.signature.builder.RevocationSignatureBuilder
 import org.pgpainless.signature.builder.ThirdPartyCertificationSignatureBuilder
 import org.pgpainless.signature.builder.ThirdPartyDirectKeySignatureBuilder
 import org.pgpainless.signature.subpackets.CertificationSubpackets
+import org.pgpainless.signature.subpackets.RevocationSignatureSubpackets
 
 /**
  * API for creating certifications and delegations (Signatures) on keys. This API can be used to
@@ -79,6 +82,16 @@ class CertifyCertificate(private val api: PGPainless) {
     ) = CertificationOnUserId(userId, certificate, certificationType, api)
 
     /**
+     * Create a certification revocation signature for the given [userId] on the given
+     * [certificate].
+     *
+     * @param userId userid to revoke
+     * @param certificate certificate carrying the userid
+     */
+    fun revokeUserIdOnCertificate(userId: CharSequence, certificate: OpenPGPCertificate) =
+        RevocationOnUserId(userId, certificate, api)
+
+    /**
      * Create a delegation (direct key signature) over a certificate. This can be used to mark a
      * certificate as a trusted introducer (see [certificate] method with [Trustworthiness]
      * argument).
@@ -114,6 +127,14 @@ class CertifyCertificate(private val api: PGPainless) {
     @Deprecated("Pass in an OpenPGPCertificate instead of PGPPublicKeyRing.")
     fun certificate(certificate: PGPPublicKeyRing, trustworthiness: Trustworthiness?) =
         DelegationOnCertificate(certificate, trustworthiness, api)
+
+    /**
+     * Create a key revocation signature, revoking a delegation over the given [certificate].
+     *
+     * @param certificate certificate to revoke the delegation to
+     */
+    fun revokeCertificate(certificate: OpenPGPCertificate): RevocationOnCertificate =
+        RevocationOnCertificate(certificate, api)
 
     class CertificationOnUserId(
         private val userId: CharSequence,
@@ -194,6 +215,63 @@ class CertifyCertificate(private val api: PGPainless) {
          */
         fun build(): CertificationResult {
             val signature = sigBuilder.build(certificate, userId)
+            val certifiedCertificate =
+                api.toCertificate(
+                    KeyRingUtils.injectCertification(
+                        certificate.pgpPublicKeyRing, userId, signature.signature))
+
+            return CertificationResult(certifiedCertificate, signature)
+        }
+    }
+
+    class RevocationOnUserId(
+        private val userId: CharSequence,
+        private val certificate: OpenPGPCertificate,
+        private val api: PGPainless
+    ) {
+
+        fun withKey(
+            key: OpenPGPKey,
+            protector: SecretKeyRingProtector
+        ): RevocationOnUserIdWithSubpackets {
+            val secretKey = getCertifyingSecretKey(key, api)
+            val sigBuilder =
+                RevocationSignatureBuilder(
+                    SignatureType.CERTIFICATION_REVOCATION, secretKey, protector, api)
+
+            return RevocationOnUserIdWithSubpackets(certificate, userId, sigBuilder, api)
+        }
+    }
+
+    class RevocationOnUserIdWithSubpackets(
+        private val certificate: OpenPGPCertificate,
+        private val userId: CharSequence,
+        private val sigBuilder: RevocationSignatureBuilder,
+        private val api: PGPainless
+    ) {
+
+        /**
+         * Apply the given signature subpackets and build the revocation signature.
+         *
+         * @param subpacketCallback callback to modify the revocation signatures subpackets
+         * @return result
+         * @throws PGPException in case of an OpenPGP related error
+         */
+        fun buildWithSubpackets(
+            subpacketCallback: RevocationSignatureSubpackets.Callback
+        ): CertificationResult {
+            sigBuilder.applyCallback(subpacketCallback)
+            return build()
+        }
+
+        /**
+         * Build the revocation signature.
+         *
+         * @return result
+         * @throws PGPException in case of an OpenPGP related error
+         */
+        fun build(): CertificationResult {
+            val signature = sigBuilder.build(certificate.primaryKey, userId)
             val certifiedCertificate =
                 api.toCertificate(
                     KeyRingUtils.injectCertification(
@@ -287,6 +365,61 @@ class CertifyCertificate(private val api: PGPainless) {
                         delegatedKey.pgpPublicKey,
                         delegation.signature))
             return CertificationResult(delegatedCertificate, delegation)
+        }
+    }
+
+    class RevocationOnCertificate(
+        private val certificate: OpenPGPCertificate,
+        private val api: PGPainless
+    ) {
+
+        fun withKey(
+            key: OpenPGPKey,
+            protector: SecretKeyRingProtector
+        ): RevocationOnCertificateWithSubpackets {
+            val secretKey = getCertifyingSecretKey(key, api)
+            val sigBuilder =
+                RevocationSignatureBuilder(SignatureType.KEY_REVOCATION, secretKey, protector, api)
+            return RevocationOnCertificateWithSubpackets(certificate, sigBuilder, api)
+        }
+    }
+
+    class RevocationOnCertificateWithSubpackets(
+        private val certificate: OpenPGPCertificate,
+        private val sigBuilder: RevocationSignatureBuilder,
+        private val api: PGPainless
+    ) {
+
+        /**
+         * Apply the given signature subpackets and build the delegation revocation signature.
+         *
+         * @param subpacketsCallback callback to modify the revocations subpackets
+         * @return result
+         * @throws PGPException in case of an OpenPGP related error
+         */
+        fun buildWithSubpackets(
+            subpacketsCallback: RevocationSignatureSubpackets.Callback
+        ): CertificationResult {
+            sigBuilder.applyCallback(subpacketsCallback)
+            return build()
+        }
+
+        /**
+         * Build the delegation revocation signature.
+         *
+         * @return result
+         * @throws PGPException in case of an OpenPGP related error
+         */
+        fun build(): CertificationResult {
+            val revokedKey = certificate.primaryKey
+            val revocation = sigBuilder.build(revokedKey)
+            val revokedCertificate =
+                api.toCertificate(
+                    KeyRingUtils.injectCertification(
+                        certificate.pgpPublicKeyRing,
+                        revokedKey.pgpPublicKey,
+                        revocation.signature))
+            return CertificationResult(revokedCertificate, revocation)
         }
     }
 
