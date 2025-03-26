@@ -83,6 +83,21 @@ constructor(
             build(revokeeUserId.userId), signingKey.publicKey, revokeeUserId)
     }
 
+    fun build(
+        revokeeKey: OpenPGPComponentKey,
+        revokeeUserId: CharSequence
+    ): OpenPGPComponentSignature =
+        OpenPGPComponentSignature(
+            buildAndInitSignatureGenerator()
+                .also {
+                    require(_signatureType == SignatureType.CERTIFICATION_REVOCATION) {
+                        "Signature type is != CERTIFICATION_REVOCATION."
+                    }
+                }
+                .generateCertification(revokeeUserId.toString(), revokeeKey.pgpPublicKey),
+            signingKey.publicKey,
+            revokeeKey.certificate.getUserId(revokeeUserId.toString()))
+
     init {
         hashedSubpackets.setRevocable(false)
     }
