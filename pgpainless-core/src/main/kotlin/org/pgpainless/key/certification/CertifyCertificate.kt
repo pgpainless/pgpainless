@@ -116,9 +116,9 @@ class CertifyCertificate(private val api: PGPainless) {
         DelegationOnCertificate(certificate, trustworthiness, api)
 
     class CertificationOnUserId(
-        val userId: CharSequence,
-        val certificate: OpenPGPCertificate,
-        val certificationType: CertificationType,
+        private val userId: CharSequence,
+        private val certificate: OpenPGPCertificate,
+        private val certificationType: CertificationType,
         private val api: PGPainless
     ) {
 
@@ -158,9 +158,9 @@ class CertifyCertificate(private val api: PGPainless) {
     }
 
     class CertificationOnUserIdWithSubpackets(
-        val certificate: OpenPGPCertificate,
-        val userId: CharSequence,
-        val sigBuilder: ThirdPartyCertificationSignatureBuilder,
+        private val certificate: OpenPGPCertificate,
+        private val userId: CharSequence,
+        private val sigBuilder: ThirdPartyCertificationSignatureBuilder,
         private val api: PGPainless
     ) {
 
@@ -204,8 +204,8 @@ class CertifyCertificate(private val api: PGPainless) {
     }
 
     class DelegationOnCertificate(
-        val certificate: OpenPGPCertificate,
-        val trustworthiness: Trustworthiness?,
+        private val certificate: OpenPGPCertificate,
+        private val trustworthiness: Trustworthiness?,
         private val api: PGPainless
     ) {
 
@@ -245,8 +245,8 @@ class CertifyCertificate(private val api: PGPainless) {
     }
 
     class DelegationOnCertificateWithSubpackets(
-        val certificate: OpenPGPCertificate,
-        val sigBuilder: ThirdPartyDirectKeySignatureBuilder,
+        private val certificate: OpenPGPCertificate,
+        private val sigBuilder: ThirdPartyDirectKeySignatureBuilder,
         private val api: PGPainless
     ) {
 
