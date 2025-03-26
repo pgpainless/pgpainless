@@ -5,6 +5,7 @@
 package org.pgpainless.key.certification;
 
 import org.bouncycastle.openpgp.PGPException;
+import org.bouncycastle.openpgp.PGPSignatureException;
 import org.bouncycastle.openpgp.api.OpenPGPCertificate;
 import org.bouncycastle.openpgp.api.OpenPGPKey;
 import org.junit.jupiter.api.Test;
@@ -19,7 +20,7 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 public class CertifyV6CertificateTest {
 
     @Test
-    public void testCertifyV6CertWithV6Key() throws PGPException {
+    public void testCertifyV6UIDWithV6Key() throws PGPException {
         PGPainless api = PGPainless.getInstance();
 
         OpenPGPKey aliceKey = api.generateKey(OpenPGPKeyVersion.v6)
@@ -31,7 +32,7 @@ public class CertifyV6CertificateTest {
 
         // Create a certification on Bobs certificate
         OpenPGPCertificate bobCertified = api.generateCertification()
-                .userIdOnCertificate("Bob <bob@pgpainless.org>", bobCert)
+                .certifyUserId("Bob <bob@pgpainless.org>", bobCert)
                 .withKey(aliceKey, SecretKeyRingProtector.unprotectedKeys())
                 .build().getCertifiedCertificate();
 
@@ -41,7 +42,6 @@ public class CertifyV6CertificateTest {
                         .getCertificationBy(aliceKey.toCertificate());
         assertNotNull(signatureChain);
         assertTrue(signatureChain.isValid());
-
 
 
         // Revoke Alice' key and...
@@ -64,7 +64,7 @@ public class CertifyV6CertificateTest {
 
         // Instead, revoke the certification itself and...
         bobCertified = api.generateCertification()
-                .revokeUserIdOnCertificate("Bob <bob@pgpainless.org>", bobCertified)
+                .revokeCertifiedUserId("Bob <bob@pgpainless.org>", bobCertified)
                 .withKey(aliceKey, SecretKeyRingProtector.unprotectedKeys())
                 .build().getCertifiedCertificate();
 
@@ -74,5 +74,37 @@ public class CertifyV6CertificateTest {
                         .getRevocationBy(aliceKey.toCertificate());
         assertNotNull(brokenChain);
         assertTrue(brokenChain.isValid());
+    }
+
+    @Test
+    public void testCertifyV6CertificateWithV6Key() throws PGPSignatureException {
+        PGPainless api = PGPainless.getInstance();
+
+        OpenPGPKey aliceKey = api.generateKey(OpenPGPKeyVersion.v6)
+                .modernKeyRing("Alice <alice@pgpainless.org>");
+        OpenPGPKey bobKey = api.generateKey(OpenPGPKeyVersion.v6)
+                .modernKeyRing("Bob <bob@pgpainless.org>");
+        OpenPGPCertificate bobCert = bobKey.toCertificate();
+
+        // Alice delegates trust to Bob
+        OpenPGPCertificate bobDelegated = api.generateCertification()
+                .delegateTrust(bobCert)
+                .withKey(aliceKey, SecretKeyRingProtector.unprotectedKeys())
+                .build().getCertifiedCertificate();
+
+        // Check that Bob is actually delegated to by Alice
+        OpenPGPCertificate.OpenPGPSignatureChain delegation = bobDelegated.getDelegationBy(aliceKey.toCertificate());
+        assertNotNull(delegation);
+        assertTrue(delegation.isValid());
+
+        // Alice revokes the delegation
+        OpenPGPCertificate bobRevoked = api.generateCertification()
+                .revokeDelegatedTrust(bobDelegated)
+                .withKey(aliceKey, SecretKeyRingProtector.unprotectedKeys())
+                .build().getCertifiedCertificate();
+
+        OpenPGPCertificate.OpenPGPSignatureChain revocation = bobRevoked.getRevocationBy(aliceKey.toCertificate());
+        assertNotNull(revocation);
+        assertTrue(revocation.isValid());
     }
 }

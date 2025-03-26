@@ -48,7 +48,7 @@ class CertifyCertificate(private val api: PGPainless) {
      * @return API
      */
     @JvmOverloads
-    fun userIdOnCertificate(
+    fun certifyUserId(
         userId: CharSequence,
         certificate: OpenPGPCertificate,
         certificationType: CertificationType = CertificationType.GENERIC
@@ -62,7 +62,8 @@ class CertifyCertificate(private val api: PGPainless) {
      * @param certificate certificate
      * @return API
      */
-    @Deprecated("Pass in an OpenPGPCertificate instead of PGPPublicKeyRing.")
+    @Deprecated(
+        "Pass in an OpenPGPCertificate instead.", replaceWith = ReplaceWith("certifyUserId"))
     fun userIdOnCertificate(userId: String, certificate: PGPPublicKeyRing): CertificationOnUserId =
         userIdOnCertificate(userId, certificate, CertificationType.GENERIC)
 
@@ -88,7 +89,7 @@ class CertifyCertificate(private val api: PGPainless) {
      * @param userId userid to revoke
      * @param certificate certificate carrying the userid
      */
-    fun revokeUserIdOnCertificate(userId: CharSequence, certificate: OpenPGPCertificate) =
+    fun revokeCertifiedUserId(userId: CharSequence, certificate: OpenPGPCertificate) =
         RevocationOnUserId(userId, certificate, api)
 
     /**
@@ -100,7 +101,7 @@ class CertifyCertificate(private val api: PGPainless) {
      * @return API
      */
     @JvmOverloads
-    fun certificate(certificate: OpenPGPCertificate, trustworthiness: Trustworthiness? = null) =
+    fun delegateTrust(certificate: OpenPGPCertificate, trustworthiness: Trustworthiness? = null) =
         DelegationOnCertificate(certificate, trustworthiness, api)
 
     /**
@@ -133,7 +134,7 @@ class CertifyCertificate(private val api: PGPainless) {
      *
      * @param certificate certificate to revoke the delegation to
      */
-    fun revokeCertificate(certificate: OpenPGPCertificate): RevocationOnCertificate =
+    fun revokeDelegatedTrust(certificate: OpenPGPCertificate): RevocationOnCertificate =
         RevocationOnCertificate(certificate, api)
 
     class CertificationOnUserId(

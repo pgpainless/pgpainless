@@ -61,7 +61,7 @@ public class GenerateKeyWithoutPrimaryKeyFlagsTest {
         // Key without CERTIFY_OTHER flag cannot be used to certify other keys
         OpenPGPCertificate thirdPartyCert = TestKeys.getCryptieCertificate();
         assertThrows(KeyException.UnacceptableThirdPartyCertificationKeyException.class, () ->
-                api.generateCertification().certificate(thirdPartyCert)
+                api.generateCertification().delegateTrust(thirdPartyCert)
                         .withKey(key, SecretKeyRingProtector.unprotectedKeys()));
 
         // Key without CERTIFY_OTHER flags is usable for encryption and signing
