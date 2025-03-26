@@ -57,7 +57,7 @@ constructor(
                 require(revokeeKey.isMasterKey) {
                     "Signature type is KEY_REVOCATION, but provided revokee does not appear to be a primary key."
                 }
-                it.generateCertification(signingKey.publicKey.pgpPublicKey)
+                it.generateCertification(revokeeKey)
             } else {
                 it.generateCertification(signingKey.publicKey.pgpPublicKey, revokeeKey)
             }
