@@ -47,7 +47,7 @@ public class CertifyCertificateTest {
         OpenPGPCertificate bobCertificate = bob.toCertificate();
 
         CertifyCertificate.CertificationResult result = api.generateCertification()
-                .userIdOnCertificate(bobUserId, bobCertificate)
+                .certifyUserId(bobUserId, bobCertificate)
                 .withKey(alice, protector)
                 .build();
 
@@ -82,7 +82,7 @@ public class CertifyCertificateTest {
         OpenPGPCertificate bobCertificate = bob.toCertificate();
 
         CertifyCertificate.CertificationResult result = api.generateCertification()
-                .certificate(bobCertificate, Trustworthiness.fullyTrusted().introducer())
+                .delegateTrust(bobCertificate, Trustworthiness.fullyTrusted().introducer())
                 .withKey(alice, protector)
                 .build();
 
@@ -125,7 +125,7 @@ public class CertifyCertificateTest {
         String petName = "Bobby";
 
         CertifyCertificate.CertificationResult result = api.generateCertification()
-                .userIdOnCertificate(petName, bobCert)
+                .certifyUserId(petName, bobCert)
                 .withKey(aliceKey, SecretKeyRingProtector.unprotectedKeys())
                 .buildWithSubpackets(new CertificationSubpackets.Callback() {
                     @Override
@@ -155,7 +155,7 @@ public class CertifyCertificateTest {
         OpenPGPCertificate caCert = caKey.toCertificate();
 
         CertifyCertificate.CertificationResult result = api.generateCertification()
-                .certificate(caCert, Trustworthiness.fullyTrusted().introducer())
+                .delegateTrust(caCert, Trustworthiness.fullyTrusted().introducer())
                 .withKey(aliceKey, SecretKeyRingProtector.unprotectedKeys())
                 .buildWithSubpackets(new CertificationSubpackets.Callback() {
                     @Override
