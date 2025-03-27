@@ -137,7 +137,7 @@ class KeyRingInfo(
 
     /** Newest primary-key revocation self-signature. */
     val revocationSelfSignature: PGPSignature? =
-        primaryKey.getLatestKeyRevocationSignature(referenceDate)?.signature
+        primaryKey.getLatestKeyRevocationSelfSignature(referenceDate)?.signature
 
     /** Public-key encryption-algorithm of the primary key. */
     val algorithm: PublicKeyAlgorithm =
