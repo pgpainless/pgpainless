@@ -21,6 +21,7 @@ dependencies {
 
     // Bouncy Castle
     api "org.bouncycastle:bcprov-jdk18on:$bouncyCastleVersion"
+    api "org.bouncycastle:bcutil-jdk18on:$bouncyPgVersion"
     api "org.bouncycastle:bcpg-jdk18on:$bouncyPgVersion"
     // api(files("../libs/bcpg-jdk18on-1.70.jar"))
 

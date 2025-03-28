@@ -369,10 +369,14 @@ public class OpenPgpMessageInputStream extends DecryptionStream {
 
     private void processOnePassSignature() throws PGPException, IOException {
         syntaxVerifier.next(InputSymbol.OnePassSignature);
-        PGPOnePassSignature onePassSignature = packetInputStream.readOnePassSignature();
-        LOGGER.debug("One-Pass-Signature Packet by key " + KeyIdUtil.formatKeyId(onePassSignature.getKeyID()) +
-                " at depth " + metadata.depth + " encountered");
-        signatures.addOnePassSignature(onePassSignature);
+        try {
+            PGPOnePassSignature onePassSignature = packetInputStream.readOnePassSignature();
+            LOGGER.debug("One-Pass-Signature Packet by key " + KeyIdUtil.formatKeyId(onePassSignature.getKeyID()) +
+                    " at depth " + metadata.depth + " encountered");
+            signatures.addOnePassSignature(onePassSignature);
+        } catch (UnsupportedPacketVersionException e) {
+            LOGGER.debug("Ignoring One-Pass-Signature Packet of unsupported version.", e);
+        }
     }
 
     private void processSignature() throws PGPException, IOException {

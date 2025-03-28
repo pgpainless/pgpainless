@@ -4,6 +4,7 @@
 
 package org.pgpainless.decryption_verification;
 
+import org.bouncycastle.openpgp.operator.AbstractPublicKeyDataDecryptorFactory;
 import org.bouncycastle.openpgp.operator.PublicKeyDataDecryptorFactory;
 import org.pgpainless.key.SubkeyIdentifier;
 
@@ -14,7 +15,7 @@ import org.pgpainless.key.SubkeyIdentifier;
  * TPMs.
  * @see ConsumerOptions#addCustomDecryptorFactory(CustomPublicKeyDataDecryptorFactory)
  */
-public interface CustomPublicKeyDataDecryptorFactory extends PublicKeyDataDecryptorFactory {
+public abstract class CustomPublicKeyDataDecryptorFactory extends AbstractPublicKeyDataDecryptorFactory {
 
     /**
      * Return the {@link SubkeyIdentifier} for which this particular {@link CustomPublicKeyDataDecryptorFactory}
@@ -22,6 +23,6 @@ public interface CustomPublicKeyDataDecryptorFactory extends PublicKeyDataDecryp
      *
      * @return subkey identifier
      */
-    SubkeyIdentifier getSubkeyIdentifier();
+    abstract SubkeyIdentifier getSubkeyIdentifier();
 
 }

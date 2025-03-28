@@ -4,8 +4,12 @@
 
 package org.pgpainless.decryption_verification;
 
+import org.bouncycastle.bcpg.AEADEncDataPacket;
+import org.bouncycastle.bcpg.SymmetricEncIntegrityPacket;
 import org.bouncycastle.openpgp.PGPException;
 import org.bouncycastle.openpgp.PGPPrivateKey;
+import org.bouncycastle.openpgp.PGPSessionKey;
+import org.bouncycastle.openpgp.operator.PGPDataDecryptor;
 import org.bouncycastle.openpgp.operator.PublicKeyDataDecryptorFactory;
 import org.bouncycastle.openpgp.operator.bc.BcPublicKeyDataDecryptorFactory;
 import org.bouncycastle.util.encoders.Base64;
@@ -27,25 +31,25 @@ import java.util.Map;
  * The result of that is then placed in the cache and returned.
  */
 public class CachingBcPublicKeyDataDecryptorFactory
-        extends BcPublicKeyDataDecryptorFactory
-        implements CustomPublicKeyDataDecryptorFactory {
+        extends CustomPublicKeyDataDecryptorFactory {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(CachingBcPublicKeyDataDecryptorFactory.class);
 
+    private final BcPublicKeyDataDecryptorFactory decryptorFactory;
     private final Map<String, byte[]> cachedSessionKeys = new HashMap<>();
     private final SubkeyIdentifier decryptionKey;
 
     public CachingBcPublicKeyDataDecryptorFactory(PGPPrivateKey privateKey, SubkeyIdentifier decryptionKey) {
-        super(privateKey);
+        this.decryptorFactory = new BcPublicKeyDataDecryptorFactory(privateKey);
         this.decryptionKey = decryptionKey;
     }
 
     @Override
-    public byte[] recoverSessionData(int keyAlgorithm, byte[][] secKeyData) throws PGPException {
+    public byte[] recoverSessionData(int keyAlgorithm, byte[][] secKeyData, int pkeskVersion) throws PGPException {
         byte[] sessionKey = lookupSessionKeyData(secKeyData);
         if (sessionKey == null) {
             LOGGER.debug("Cache miss for encrypted session key " + Hex.toHexString(secKeyData[0]));
-            sessionKey = costlyRecoverSessionData(keyAlgorithm, secKeyData);
+            sessionKey = costlyRecoverSessionData(keyAlgorithm, secKeyData, pkeskVersion);
             cacheSessionKeyData(secKeyData, sessionKey);
         } else {
             LOGGER.debug("Cache hit for encrypted session key " + Hex.toHexString(secKeyData[0]));
@@ -53,8 +57,8 @@ public class CachingBcPublicKeyDataDecryptorFactory
         return sessionKey;
     }
 
-    public byte[] costlyRecoverSessionData(int keyAlgorithm, byte[][] secKeyData) throws PGPException {
-        return super.recoverSessionData(keyAlgorithm, secKeyData);
+    public byte[] costlyRecoverSessionData(int keyAlgorithm, byte[][] secKeyData, int pkeskVersion) throws PGPException {
+        return decryptorFactory.recoverSessionData(keyAlgorithm, secKeyData, pkeskVersion);
     }
 
     private byte[] lookupSessionKeyData(byte[][] secKeyData) {
@@ -90,5 +94,20 @@ public class CachingBcPublicKeyDataDecryptorFactory
     @Override
     public SubkeyIdentifier getSubkeyIdentifier() {
         return decryptionKey;
+    }
+
+    @Override
+    public PGPDataDecryptor createDataDecryptor(boolean b, int i, byte[] bytes) throws PGPException {
+        return decryptorFactory.createDataDecryptor(b, i, bytes);
+    }
+
+    @Override
+    public PGPDataDecryptor createDataDecryptor(AEADEncDataPacket aeadEncDataPacket, PGPSessionKey pgpSessionKey) throws PGPException {
+        return decryptorFactory.createDataDecryptor(aeadEncDataPacket, pgpSessionKey);
+    }
+
+    @Override
+    public PGPDataDecryptor createDataDecryptor(SymmetricEncIntegrityPacket symmetricEncIntegrityPacket, PGPSessionKey pgpSessionKey) throws PGPException {
+        return decryptorFactory.createDataDecryptor(symmetricEncIntegrityPacket, pgpSessionKey);
     }
 }

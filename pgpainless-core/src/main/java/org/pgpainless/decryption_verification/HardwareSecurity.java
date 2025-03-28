@@ -29,11 +29,12 @@ public class HardwareSecurity {
          * @param keyId id of the key
          * @param keyAlgorithm algorithm
          * @param sessionKeyData encrypted session key
+         * @param pkeskVersion Public-Key Encrypted Session-Key Packet version
          *
          * @return decrypted session key
          * @throws HardwareSecurityException exception
          */
-        byte[] decryptSessionKey(long keyId, int keyAlgorithm, byte[] sessionKeyData)
+        byte[] decryptSessionKey(long keyId, int keyAlgorithm, byte[] sessionKeyData, int pkeskVersion)
                 throws HardwareSecurityException;
 
     }
@@ -43,7 +44,7 @@ public class HardwareSecurity {
      * to a {@link DecryptionCallback}.
      * Users can provide such a callback to delegate decryption of messages to hardware security SDKs.
      */
-    public static class HardwareDataDecryptorFactory implements CustomPublicKeyDataDecryptorFactory {
+    public static class HardwareDataDecryptorFactory extends CustomPublicKeyDataDecryptorFactory {
 
         private final DecryptionCallback callback;
         // luckily we can instantiate the BcPublicKeyDataDecryptorFactory with null as argument.
@@ -63,11 +64,11 @@ public class HardwareSecurity {
         }
 
         @Override
-        public byte[] recoverSessionData(int keyAlgorithm, byte[][] secKeyData)
+        public byte[] recoverSessionData(int keyAlgorithm, byte[][] secKeyData, int pkeskVersion)
                 throws PGPException {
             try {
                 // delegate decryption to the callback
-                return callback.decryptSessionKey(subkey.getSubkeyId(), keyAlgorithm, secKeyData[0]);
+                return callback.decryptSessionKey(subkey.getSubkeyId(), keyAlgorithm, secKeyData[0], pkeskVersion);
             } catch (HardwareSecurityException e) {
                 throw new PGPException("Hardware-backed decryption failed.", e);
             }

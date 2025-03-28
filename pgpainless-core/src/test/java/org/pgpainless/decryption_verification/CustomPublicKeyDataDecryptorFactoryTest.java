@@ -55,14 +55,14 @@ public class CustomPublicKeyDataDecryptorFactoryTest {
 
         HardwareSecurity.DecryptionCallback hardwareDecryptionCallback = new HardwareSecurity.DecryptionCallback() {
             @Override
-            public byte[] decryptSessionKey(long keyId, int keyAlgorithm, byte[] sessionKeyData)
+            public byte[] decryptSessionKey(long keyId, int keyAlgorithm, byte[] sessionKeyData, int pkeskVersion)
                     throws HardwareSecurity.HardwareSecurityException {
                 // Emulate hardware decryption.
                 try {
                     PGPSecretKey decryptionKey = secretKey.getSecretKey(encryptionKey.getKeyID());
                     PGPPrivateKey privateKey = UnlockSecretKey.unlockSecretKey(decryptionKey, Passphrase.emptyPassphrase());
                     PublicKeyDataDecryptorFactory internal = new BcPublicKeyDataDecryptorFactory(privateKey);
-                    return internal.recoverSessionData(keyAlgorithm, new byte[][] {sessionKeyData});
+                    return internal.recoverSessionData(keyAlgorithm, new byte[][] {sessionKeyData}, pkeskVersion);
                 } catch (PGPException e) {
                     throw new HardwareSecurity.HardwareSecurityException();
                 }
