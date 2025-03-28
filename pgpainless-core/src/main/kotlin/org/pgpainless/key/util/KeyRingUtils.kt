@@ -39,7 +39,7 @@ class KeyRingUtils {
             "Deprecated in favor of PGPSecretKeyRing extension function.",
             ReplaceWith("secretKeys.requireSecretKey(keyId)"))
         fun requirePrimarySecretKeyFrom(secretKeys: PGPSecretKeyRing): PGPSecretKey {
-            return secretKeys.requireSecretKey(secretKeys.publicKey.keyID)
+            return secretKeys.requireSecretKey(secretKeys.publicKey.keyIdentifier)
         }
 
         /**
