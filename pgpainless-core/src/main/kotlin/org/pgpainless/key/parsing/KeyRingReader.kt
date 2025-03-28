@@ -11,7 +11,6 @@ import kotlin.jvm.Throws
 import org.bouncycastle.openpgp.*
 import org.bouncycastle.openpgp.api.OpenPGPImplementation
 import org.bouncycastle.util.io.Streams
-import org.pgpainless.PGPainless
 import org.pgpainless.key.collection.PGPKeyRingCollection
 import org.pgpainless.util.ArmorUtils
 
@@ -229,7 +228,7 @@ class KeyRingReader {
                         continue
                     }
                     if (next is PGPSecretKeyRing) {
-                        certificates.add(PGPainless.extractCertificate(next))
+                        certificates.add(next.toCertificate())
                         continue
                     }
                     if (next is PGPPublicKeyRingCollection) {
