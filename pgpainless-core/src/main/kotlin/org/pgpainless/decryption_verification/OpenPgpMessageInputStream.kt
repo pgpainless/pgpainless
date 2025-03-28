@@ -743,10 +743,10 @@ class OpenPgpMessageInputStream(
                 if (esk is PGPPBEEncryptedData) {
                     skesks.add(esk)
                 } else if (esk is PGPPublicKeyEncryptedData) {
-                    if (esk.keyID != 0L) {
-                        pkesks.add(esk)
-                    } else {
+                    if (esk.keyIdentifier.isWildcard) {
                         anonPkesks.add(esk)
+                    } else {
+                        pkesks.add(esk)
                     }
                 } else {
                     throw IllegalArgumentException("Unknown ESK class type ${esk.javaClass}")
@@ -830,7 +830,7 @@ class OpenPgpMessageInputStream(
 
         fun addCorrespondingOnePassSignature(signature: PGPSignature, layer: Layer) {
             var found = false
-            for ((i, check) in onePassSignatures.withIndex().reversed()) {
+            for (check in onePassSignatures.reversed()) {
                 if (!KeyIdentifier.matches(
                     signature.keyIdentifiers, check.onePassSignature.keyIdentifier, true)) {
                     continue
