@@ -5,6 +5,11 @@ SPDX-License-Identifier: CC0-1.0
 
 # PGPainless Changelog
 
+## 1.6.9-SNAPSHOT
+- Bump BC to `1.80`
+  - introduce dependency on `bcutil-jdk18on`
+  - remove support for generating elliptic curve keys over curve `secp256k1`
+
 ## 1.6.8
 - Bump `sop-java` to `7.0.2`
 - SOP `change-key-password`: Fix reading password from indirect parameter instead of erroneously passing filename (fixes #453)
