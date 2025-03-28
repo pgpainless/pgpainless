@@ -28,7 +28,6 @@ import org.pgpainless.key.generation.KeyRingTemplates
 import org.pgpainless.key.info.KeyRingInfo
 import org.pgpainless.key.modification.secretkeyring.SecretKeyRingEditor
 import org.pgpainless.key.parsing.KeyRingReader
-import org.pgpainless.key.util.KeyRingUtils
 import org.pgpainless.policy.Policy
 import org.pgpainless.util.ArmorUtils
 
@@ -175,7 +174,7 @@ class PGPainless(
         @JvmStatic
         @Deprecated("Use .toKey() and then .toCertificate() instead.")
         fun extractCertificate(secretKey: PGPSecretKeyRing): PGPPublicKeyRing =
-            KeyRingUtils.publicKeyRingFrom(secretKey)
+            secretKey.toCertificate()
 
         /**
          * Merge two copies of the same certificate (e.g. an old copy, and one retrieved from a key
