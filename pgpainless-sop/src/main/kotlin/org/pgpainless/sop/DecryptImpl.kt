@@ -92,11 +92,11 @@ class DecryptImpl(private val api: PGPainless) : Decrypt {
     }
 
     override fun verifyWithCert(cert: InputStream): Decrypt = apply {
-        KeyReader.readPublicKeys(cert, true).let { consumerOptions.addVerificationCerts(it) }
+        consumerOptions.addVerificationCerts(KeyReader(api).readPublicKeys(cert, true))
     }
 
     override fun withKey(key: InputStream): Decrypt = apply {
-        KeyReader.readSecretKeys(key, true).forEach {
+        KeyReader(api).readSecretKeys(key, true).forEach {
             protector.addSecretKey(it)
             consumerOptions.addDecryptionKey(it, protector)
         }

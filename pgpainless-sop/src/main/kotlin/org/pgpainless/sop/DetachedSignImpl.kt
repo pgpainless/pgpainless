@@ -7,14 +7,13 @@ package org.pgpainless.sop
 import java.io.InputStream
 import java.io.OutputStream
 import org.bouncycastle.openpgp.PGPException
-import org.bouncycastle.openpgp.PGPSecretKeyRing
 import org.bouncycastle.openpgp.PGPSignature
+import org.bouncycastle.openpgp.api.OpenPGPKey
 import org.bouncycastle.util.io.Streams
 import org.pgpainless.PGPainless
 import org.pgpainless.algorithm.CompressionAlgorithm
 import org.pgpainless.algorithm.DocumentSignatureType
 import org.pgpainless.algorithm.HashAlgorithm
-import org.pgpainless.bouncycastle.extensions.openPgpFingerprint
 import org.pgpainless.encryption_signing.ProducerOptions
 import org.pgpainless.encryption_signing.SigningOptions
 import org.pgpainless.exception.KeyException.MissingSecretKeyException
@@ -34,7 +33,7 @@ class DetachedSignImpl(private val api: PGPainless) : DetachedSign {
 
     private val signingOptions = SigningOptions.get(api)
     private val protector = MatchMakingSecretKeyRingProtector()
-    private val signingKeys = mutableListOf<PGPSecretKeyRing>()
+    private val signingKeys = mutableListOf<OpenPGPKey>()
 
     private var armor = true
     private var mode = SignAs.binary
@@ -44,13 +43,13 @@ class DetachedSignImpl(private val api: PGPainless) : DetachedSign {
             try {
                 signingOptions.addDetachedSignature(protector, it, modeToSigType(mode))
             } catch (e: UnacceptableSigningKeyException) {
-                throw SOPGPException.KeyCannotSign("Key ${it.openPgpFingerprint} cannot sign.", e)
+                throw SOPGPException.KeyCannotSign("Key ${it.keyIdentifier} cannot sign.", e)
             } catch (e: MissingSecretKeyException) {
                 throw SOPGPException.KeyCannotSign(
-                    "Key ${it.openPgpFingerprint} cannot sign. Missing secret key.", e)
+                    "Key ${it.keyIdentifier} cannot sign. Missing secret key.", e)
             } catch (e: PGPException) {
                 throw SOPGPException.KeyIsProtected(
-                    "Key ${it.openPgpFingerprint} cannot be unlocked.", e)
+                    "Key ${it.keyIdentifier} cannot be unlocked.", e)
             }
         }
 
@@ -93,8 +92,8 @@ class DetachedSignImpl(private val api: PGPainless) : DetachedSign {
     }
 
     override fun key(key: InputStream): DetachedSign = apply {
-        KeyReader.readSecretKeys(key, true).forEach {
-            val info = api.inspect(api.toKey(it))
+        KeyReader(api).readSecretKeys(key, true).forEach {
+            val info = api.inspect(it)
             if (!info.isUsableForSigning) {
                 throw SOPGPException.KeyCannotSign(
                     "Key ${info.fingerprint} does not have valid, signing capable subkeys.")
