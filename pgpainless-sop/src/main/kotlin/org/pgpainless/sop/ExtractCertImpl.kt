@@ -18,8 +18,7 @@ class ExtractCertImpl(private val api: PGPainless) : ExtractCert {
     private var armor = true
 
     override fun key(keyInputStream: InputStream): Ready {
-        val certs =
-            KeyReader.readSecretKeys(keyInputStream, true).map { PGPainless.extractCertificate(it) }
+        val certs = KeyReader(api).readSecretKeys(keyInputStream, true).map { it.toCertificate() }
 
         return object : Ready() {
             override fun writeTo(outputStream: OutputStream) {
@@ -27,17 +26,18 @@ class ExtractCertImpl(private val api: PGPainless) : ExtractCert {
                     if (certs.size == 1) {
                         val cert = certs[0]
                         // This way we have a nice armor header with fingerprint and user-ids
-                        val armorOut = ArmorUtils.toAsciiArmoredStream(cert, outputStream)
-                        cert.encode(armorOut)
+                        val armorOut =
+                            ArmorUtils.toAsciiArmoredStream(cert.pgpKeyRing, outputStream)
+                        armorOut.write(cert.encoded)
                         armorOut.close()
                     } else {
                         // for multiple certs, add no info headers to the ASCII armor
                         val armorOut = ArmoredOutputStreamFactory.get(outputStream)
-                        certs.forEach { it.encode(armorOut) }
+                        certs.forEach { armorOut.write(it.encoded) }
                         armorOut.close()
                     }
                 } else {
-                    certs.forEach { it.encode(outputStream) }
+                    certs.forEach { outputStream.write(it.encoded) }
                 }
             }
         }

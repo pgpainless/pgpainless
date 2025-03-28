@@ -8,13 +8,12 @@ import java.io.InputStream
 import java.io.OutputStream
 import java.lang.RuntimeException
 import org.bouncycastle.openpgp.PGPException
-import org.bouncycastle.openpgp.PGPSecretKeyRing
+import org.bouncycastle.openpgp.api.OpenPGPKey
 import org.bouncycastle.util.io.Streams
 import org.pgpainless.PGPainless
 import org.pgpainless.algorithm.CompressionAlgorithm
 import org.pgpainless.algorithm.DocumentSignatureType
 import org.pgpainless.algorithm.StreamEncoding
-import org.pgpainless.bouncycastle.extensions.openPgpFingerprint
 import org.pgpainless.encryption_signing.ProducerOptions
 import org.pgpainless.encryption_signing.SigningOptions
 import org.pgpainless.exception.KeyException.MissingSecretKeyException
@@ -31,7 +30,7 @@ class InlineSignImpl(private val api: PGPainless) : InlineSign {
 
     private val signingOptions = SigningOptions.get(api)
     private val protector = MatchMakingSecretKeyRingProtector()
-    private val signingKeys = mutableListOf<PGPSecretKeyRing>()
+    private val signingKeys = mutableListOf<OpenPGPKey>()
 
     private var armor = true
     private var mode = InlineSignAs.binary
@@ -45,14 +44,14 @@ class InlineSignImpl(private val api: PGPainless) : InlineSign {
                     signingOptions.addInlineSignature(protector, key, modeToSigType(mode))
                 }
             } catch (e: UnacceptableSigningKeyException) {
-                throw SOPGPException.KeyCannotSign("Key ${key.openPgpFingerprint} cannot sign.", e)
+                throw SOPGPException.KeyCannotSign("Key ${key.keyIdentifier} cannot sign.", e)
             } catch (e: MissingSecretKeyException) {
                 throw SOPGPException.KeyCannotSign(
-                    "Key ${key.openPgpFingerprint} does not have the secret signing key component available.",
+                    "Key ${key.keyIdentifier} does not have the secret signing key component available.",
                     e)
             } catch (e: PGPException) {
                 throw SOPGPException.KeyIsProtected(
-                    "Key ${key.openPgpFingerprint} cannot be unlocked.", e)
+                    "Key ${key.keyIdentifier} cannot be unlocked.", e)
             }
         }
 
@@ -97,11 +96,11 @@ class InlineSignImpl(private val api: PGPainless) : InlineSign {
     }
 
     override fun key(key: InputStream): InlineSign = apply {
-        KeyReader.readSecretKeys(key, true).forEach {
-            val info = api.inspect(api.toKey(it))
+        KeyReader(api).readSecretKeys(key, true).forEach {
+            val info = api.inspect(it)
             if (!info.isUsableForSigning) {
                 throw SOPGPException.KeyCannotSign(
-                    "Key ${info.fingerprint} does not have valid, signing capable subkeys.")
+                    "Key ${info.keyIdentifier} does not have valid, signing capable subkeys.")
             }
             protector.addSecretKey(it)
             signingKeys.add(it)

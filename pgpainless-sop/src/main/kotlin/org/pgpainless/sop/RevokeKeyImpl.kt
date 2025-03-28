@@ -12,7 +12,6 @@ import org.bouncycastle.openpgp.PGPException
 import org.bouncycastle.openpgp.PGPPublicKeyRingCollection
 import org.bouncycastle.openpgp.api.OpenPGPCertificate
 import org.pgpainless.PGPainless
-import org.pgpainless.bouncycastle.extensions.openPgpFingerprint
 import org.pgpainless.bouncycastle.extensions.toOpenPGPCertificate
 import org.pgpainless.exception.WrongPassphraseException
 import org.pgpainless.key.util.KeyRingUtils
@@ -30,29 +29,28 @@ class RevokeKeyImpl(private val api: PGPainless) : RevokeKey {
     private var armor = true
 
     override fun keys(keys: InputStream): Ready {
-        val secretKeyRings =
+        val secretKeys =
             try {
-                KeyReader.readSecretKeys(keys, true)
+                KeyReader(api).readSecretKeys(keys, true)
             } catch (e: IOException) {
                 throw SOPGPException.BadData("Cannot decode secret keys.", e)
             }
 
-        secretKeyRings.forEach { protector.addSecretKey(it) }
+        secretKeys.forEach { protector.addSecretKey(it) }
 
         val revocationCertificates = mutableListOf<OpenPGPCertificate>()
-        secretKeyRings.forEach { secretKeys ->
-            val openPGPKey = api.toKey(secretKeys)
-            val editor = api.modify(openPGPKey)
+        secretKeys.forEach {
+            val editor = api.modify(it)
             try {
                 val attributes =
                     RevocationAttributes.createKeyRevocation()
                         .withReason(RevocationAttributes.Reason.NO_REASON)
                         .withoutDescription()
-                if (openPGPKey.primaryKey.version == 6) {
+                if (it.primaryKey.version == 6) {
                     revocationCertificates.add(
                         editor.createMinimalRevocationCertificate(protector, attributes))
                 } else {
-                    val certificate = openPGPKey.toCertificate()
+                    val certificate = it.toCertificate()
                     val revocation = editor.createRevocation(protector, attributes)
                     revocationCertificates.add(
                         KeyRingUtils.injectCertification(
@@ -61,11 +59,10 @@ class RevokeKeyImpl(private val api: PGPainless) : RevokeKey {
                 }
             } catch (e: WrongPassphraseException) {
                 throw SOPGPException.KeyIsProtected(
-                    "Missing or wrong passphrase for key ${secretKeys.openPgpFingerprint}", e)
+                    "Missing or wrong passphrase for key ${it.keyIdentifier}", e)
             } catch (e: PGPException) {
                 throw RuntimeException(
-                    "Cannot generate revocation certificate for key ${secretKeys.openPgpFingerprint}",
-                    e)
+                    "Cannot generate revocation certificate for key ${it.keyIdentifier}", e)
             }
         }
 
