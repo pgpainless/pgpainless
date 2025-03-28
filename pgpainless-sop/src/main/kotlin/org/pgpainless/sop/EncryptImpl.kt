@@ -8,12 +8,11 @@ import java.io.IOException
 import java.io.InputStream
 import java.io.OutputStream
 import org.bouncycastle.openpgp.PGPException
-import org.bouncycastle.openpgp.PGPSecretKeyRing
+import org.bouncycastle.openpgp.api.OpenPGPKey
 import org.bouncycastle.util.io.Streams
 import org.pgpainless.PGPainless
 import org.pgpainless.algorithm.DocumentSignatureType
 import org.pgpainless.algorithm.StreamEncoding
-import org.pgpainless.bouncycastle.extensions.openPgpFingerprint
 import org.pgpainless.encryption_signing.EncryptionOptions
 import org.pgpainless.encryption_signing.ProducerOptions
 import org.pgpainless.encryption_signing.SigningOptions
@@ -40,7 +39,7 @@ class EncryptImpl(private val api: PGPainless) : Encrypt {
 
     private val encryptionOptions = EncryptionOptions.get(api)
     private var signingOptions: SigningOptions? = null
-    private val signingKeys = mutableListOf<PGPSecretKeyRing>()
+    private val signingKeys = mutableListOf<OpenPGPKey>()
     private val protector = MatchMakingSecretKeyRingProtector()
 
     private var profile = RFC4880_PROFILE.name
@@ -69,9 +68,9 @@ class EncryptImpl(private val api: PGPainless) : Encrypt {
             try {
                 signingOptions!!.addInlineSignature(protector, it, modeToSignatureType(mode))
             } catch (e: UnacceptableSigningKeyException) {
-                throw SOPGPException.KeyCannotSign("Key ${it.openPgpFingerprint} cannot sign", e)
+                throw SOPGPException.KeyCannotSign("Key ${it.keyIdentifier} cannot sign", e)
             } catch (e: WrongPassphraseException) {
-                throw SOPGPException.KeyIsProtected("Cannot unlock key ${it.openPgpFingerprint}", e)
+                throw SOPGPException.KeyIsProtected("Cannot unlock key ${it.keyIdentifier}", e)
             } catch (e: PGPException) {
                 throw SOPGPException.BadData(e)
             }
@@ -105,14 +104,14 @@ class EncryptImpl(private val api: PGPainless) : Encrypt {
         }
 
         val signingKey =
-            KeyReader.readSecretKeys(key, true).singleOrNull()
+            KeyReader(api).readSecretKeys(key, true).singleOrNull()
                 ?: throw SOPGPException.BadData(
                     AssertionError(
                         "Exactly one secret key at a time expected. Got zero or multiple instead."))
 
-        val info = api.inspect(api.toKey(signingKey))
+        val info = api.inspect(signingKey)
         if (info.signingSubkeys.isEmpty()) {
-            throw SOPGPException.KeyCannotSign("Key ${info.fingerprint} cannot sign.")
+            throw SOPGPException.KeyCannotSign("Key ${info.keyIdentifier} cannot sign.")
         }
 
         protector.addSecretKey(signingKey)
@@ -121,7 +120,7 @@ class EncryptImpl(private val api: PGPainless) : Encrypt {
 
     override fun withCert(cert: InputStream): Encrypt = apply {
         try {
-            encryptionOptions.addRecipients(KeyReader.readPublicKeys(cert, true))
+            KeyReader(api).readPublicKeys(cert, true).forEach { encryptionOptions.addRecipient(it) }
         } catch (e: UnacceptableEncryptionKeyException) {
             throw SOPGPException.CertCannotEncrypt(e.message ?: "Cert cannot encrypt", e)
         } catch (e: IOException) {

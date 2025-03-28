@@ -39,7 +39,7 @@ class MatchMakingSecretKeyRingProtector : SecretKeyRingProtector {
 
         keys.forEach { key ->
             for (subkey in key) {
-                if (protector.hasPassphrase(subkey.keyID)) {
+                if (protector.hasPassphrase(subkey.keyIdentifier)) {
                     continue
                 }
 
@@ -49,6 +49,8 @@ class MatchMakingSecretKeyRingProtector : SecretKeyRingProtector {
             }
         }
     }
+
+    fun addSecretKey(key: OpenPGPKey) = addSecretKey(key.pgpSecretKeyRing)
 
     fun addSecretKey(key: PGPSecretKeyRing) = apply {
         if (!keys.add(key)) {

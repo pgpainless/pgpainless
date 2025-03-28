@@ -10,7 +10,6 @@ import java.io.OutputStream
 import org.bouncycastle.openpgp.PGPException
 import org.bouncycastle.openpgp.PGPSecretKeyRingCollection
 import org.pgpainless.PGPainless
-import org.pgpainless.bouncycastle.extensions.openPgpFingerprint
 import org.pgpainless.exception.MissingPassphraseException
 import org.pgpainless.key.protection.SecretKeyRingProtector
 import org.pgpainless.key.util.KeyRingUtils
@@ -29,30 +28,30 @@ class ChangeKeyPasswordImpl(private val api: PGPainless) : ChangeKeyPassword {
 
     override fun keys(keys: InputStream): Ready {
         val newProtector = SecretKeyRingProtector.unlockAnyKeyWith(newPassphrase)
-        val secretKeysCollection =
+        val secretKeys =
             try {
-                KeyReader.readSecretKeys(keys, true)
+                KeyReader(api).readSecretKeys(keys, true)
             } catch (e: IOException) {
                 throw SOPGPException.BadData(e)
             }
 
         val updatedSecretKeys =
-            secretKeysCollection
-                .map { secretKeys ->
-                    oldProtector.addSecretKey(secretKeys)
+            secretKeys
+                .map {
+                    oldProtector.addSecretKey(it)
                     try {
                         return@map KeyRingUtils.changePassphrase(
-                            null, secretKeys, oldProtector, newProtector)
+                            null, it.pgpSecretKeyRing, oldProtector, newProtector)
                     } catch (e: MissingPassphraseException) {
                         throw SOPGPException.KeyIsProtected(
-                            "Cannot unlock key ${secretKeys.openPgpFingerprint}", e)
+                            "Cannot unlock key ${it.keyIdentifier}", e)
                     } catch (e: PGPException) {
                         if (e.message?.contains("Exception decrypting key") == true) {
                             throw SOPGPException.KeyIsProtected(
-                                "Cannot unlock key ${secretKeys.openPgpFingerprint}", e)
+                                "Cannot unlock key ${it.keyIdentifier}", e)
                         }
                         throw RuntimeException(
-                            "Cannot change passphrase of key ${secretKeys.openPgpFingerprint}", e)
+                            "Cannot change passphrase of key ${it.keyIdentifier}", e)
                     }
                 }
                 .let { PGPSecretKeyRingCollection(it) }
