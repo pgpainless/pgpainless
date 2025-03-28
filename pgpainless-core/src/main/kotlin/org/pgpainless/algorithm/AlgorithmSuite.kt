@@ -5,14 +5,18 @@
 package org.pgpainless.algorithm
 
 class AlgorithmSuite(
-    symmetricKeyAlgorithms: List<SymmetricKeyAlgorithm>,
-    hashAlgorithms: List<HashAlgorithm>,
-    compressionAlgorithms: List<CompressionAlgorithm>
+    symmetricKeyAlgorithms: List<SymmetricKeyAlgorithm>?,
+    hashAlgorithms: List<HashAlgorithm>?,
+    compressionAlgorithms: List<CompressionAlgorithm>?,
+    aeadAlgorithms: List<AEADCipherMode>?,
+    features: List<Feature>
 ) {
 
-    val symmetricKeyAlgorithms: Set<SymmetricKeyAlgorithm> = symmetricKeyAlgorithms.toSet()
-    val hashAlgorithms: Set<HashAlgorithm> = hashAlgorithms.toSet()
-    val compressionAlgorithms: Set<CompressionAlgorithm> = compressionAlgorithms.toSet()
+    val symmetricKeyAlgorithms: Set<SymmetricKeyAlgorithm>? = symmetricKeyAlgorithms?.toSet()
+    val hashAlgorithms: Set<HashAlgorithm>? = hashAlgorithms?.toSet()
+    val compressionAlgorithms: Set<CompressionAlgorithm>? = compressionAlgorithms?.toSet()
+    val aeadAlgorithms: Set<AEADCipherMode>? = aeadAlgorithms?.toSet()
+    val features: Set<Feature> = features.toSet()
 
     companion object {
 
@@ -40,8 +44,25 @@ class AlgorithmSuite(
                 CompressionAlgorithm.UNCOMPRESSED)
 
         @JvmStatic
+        val defaultAEADAlgorithmSuites =
+            listOf(
+                AEADCipherMode(AEADAlgorithm.EAX, SymmetricKeyAlgorithm.AES_256),
+                AEADCipherMode(AEADAlgorithm.OCB, SymmetricKeyAlgorithm.AES_256),
+                AEADCipherMode(AEADAlgorithm.GCM, SymmetricKeyAlgorithm.AES_256),
+                AEADCipherMode(AEADAlgorithm.EAX, SymmetricKeyAlgorithm.AES_192),
+                AEADCipherMode(AEADAlgorithm.EAX, SymmetricKeyAlgorithm.AES_192))
+
+        @JvmStatic
+        val defaultFeatures =
+            listOf(Feature.MODIFICATION_DETECTION, Feature.MODIFICATION_DETECTION_2)
+
+        @JvmStatic
         val defaultAlgorithmSuite =
             AlgorithmSuite(
-                defaultSymmetricKeyAlgorithms, defaultHashAlgorithms, defaultCompressionAlgorithms)
+                defaultSymmetricKeyAlgorithms,
+                defaultHashAlgorithms,
+                defaultCompressionAlgorithms,
+                defaultAEADAlgorithmSuites,
+                defaultFeatures)
     }
 }

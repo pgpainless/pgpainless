@@ -144,7 +144,7 @@ public class IgnoreMarkerPacketsTest {
         InputStream messageIn = new ByteArrayInputStream(data.getBytes(StandardCharsets.UTF_8));
         DecryptionStream decryptionStream = PGPainless.decryptAndOrVerify()
                 .onInputStream(messageIn)
-                .withOptions(new ConsumerOptions()
+                .withOptions(ConsumerOptions.get()
                         .addVerificationCert(publicKeys)
                         .addVerificationOfDetachedSignature(signature)
                 );
@@ -193,7 +193,7 @@ public class IgnoreMarkerPacketsTest {
         InputStream messageIn = new ByteArrayInputStream(msg.getBytes(StandardCharsets.UTF_8));
         DecryptionStream decryptionStream = PGPainless.decryptAndOrVerify()
                 .onInputStream(messageIn)
-                .withOptions(new ConsumerOptions()
+                .withOptions(ConsumerOptions.get()
                         .addDecryptionKey(secretKeys)
                         .addVerificationCert(publicKeys)
                 );

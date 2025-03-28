@@ -76,7 +76,7 @@ public class SignatureWasPossiblyMadeByKeyTest {
     }
 
     @Test
-    public void issuer() throws PGPException, IOException {
+    public void issuer() throws PGPException {
         String sigWithIssuer = "-----BEGIN PGP SIGNATURE-----\n" +
                 "\n" +
                 "wsE7BAABCABlBYJgyf21RxQAAAAAAB4AIHNhbHRAbm90YXRpb25zLnNlcXVvaWEt\n" +
@@ -96,7 +96,7 @@ public class SignatureWasPossiblyMadeByKeyTest {
     }
 
     @Test
-    public void hashedIssuer() throws PGPException, IOException {
+    public void hashedIssuer() throws PGPException {
         String sigWithHashedIssuer = "-----BEGIN PGP SIGNATURE-----\n" +
                 "\n" +
                 "wsE7BAABCABvBYJgyf21CRD7/MgqAV5zMEcUAAAAAAAeACBzYWx0QG5vdGF0aW9u\n" +
@@ -116,7 +116,7 @@ public class SignatureWasPossiblyMadeByKeyTest {
     }
 
     @Test
-    public void noIssuerNoFingerprint() throws PGPException, IOException {
+    public void noIssuerNoFingerprint() throws PGPException {
         String sigWithNoIssuerNoFingerprint = "-----BEGIN PGP SIGNATURE-----\n" +
                 "\n" +
                 "wsEaBAABCABOBYJgyf21RxQAAAAAAB4AIHNhbHRAbm90YXRpb25zLnNlcXVvaWEt\n" +
@@ -137,7 +137,7 @@ public class SignatureWasPossiblyMadeByKeyTest {
     }
 
     @Test
-    public void noIssuerUnhashedFingerprint() throws PGPException, IOException {
+    public void noIssuerUnhashedFingerprint() throws PGPException {
         String sigWithNoIssuerUnhashedFingerprint = "-----BEGIN PGP SIGNATURE-----\n" +
                 "\n" +
                 "wsExBAABCABOBYJgyf21RxQAAAAAAB4AIHNhbHRAbm90YXRpb25zLnNlcXVvaWEt\n" +
@@ -158,7 +158,7 @@ public class SignatureWasPossiblyMadeByKeyTest {
     }
 
     @Test
-    public void issuerMismatch() throws PGPException, IOException {
+    public void issuerMismatch() {
         String sig = "-----BEGIN PGP SIGNATURE-----\n" +
                 "\n" +
                 "wsE7BAABCABlBYJgyf21RxQAAAAAAB4AIHNhbHRAbm90YXRpb25zLnNlcXVvaWEt\n" +
@@ -178,7 +178,7 @@ public class SignatureWasPossiblyMadeByKeyTest {
     }
 
     @Test
-    public void noIssuer_fingerprintMismatch() throws PGPException, IOException {
+    public void noIssuer_fingerprintMismatch() {
         String sigWithNoIssuerAndWrongFingerprint = "-----BEGIN PGP SIGNATURE-----\n" +
                 "\n" +
                 "wsExBAABCABlBYJgyf21RxQAAAAAAB4AIHNhbHRAbm90YXRpb25zLnNlcXVvaWEt\n" +
@@ -198,7 +198,7 @@ public class SignatureWasPossiblyMadeByKeyTest {
         assertWasNotPossiblyMadeByKey(NOSIGKEY, get(sigWithNoIssuerAndWrongFingerprint));
     }
 
-    private PGPSignature get(String encoded) throws PGPException, IOException {
+    private PGPSignature get(String encoded) {
         return SignatureUtils.readSignatures(encoded).get(0);
     }
 

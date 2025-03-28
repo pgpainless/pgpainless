@@ -6,7 +6,6 @@ package org.pgpainless.policy;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
-import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import java.util.Arrays;
@@ -28,23 +27,12 @@ public class PolicyTest {
 
     @BeforeAll
     public static void setup() {
-        policy = new Policy();
-        policy.setCompressionAlgorithmPolicy(new Policy.CompressionAlgorithmPolicy(CompressionAlgorithm.UNCOMPRESSED,
-                Arrays.asList(CompressionAlgorithm.ZIP, CompressionAlgorithm.ZLIB, CompressionAlgorithm.UNCOMPRESSED)));
-
-        policy.setSymmetricKeyEncryptionAlgorithmPolicy(new Policy.SymmetricKeyAlgorithmPolicy(SymmetricKeyAlgorithm.AES_256,
-                Arrays.asList(SymmetricKeyAlgorithm.AES_256, SymmetricKeyAlgorithm.AES_192, SymmetricKeyAlgorithm.AES_128)));
-
-        policy.setSymmetricKeyDecryptionAlgorithmPolicy(new Policy.SymmetricKeyAlgorithmPolicy(SymmetricKeyAlgorithm.AES_256,
-                Arrays.asList(SymmetricKeyAlgorithm.AES_256, SymmetricKeyAlgorithm.AES_192, SymmetricKeyAlgorithm.AES_128, SymmetricKeyAlgorithm.BLOWFISH)));
-
         Map<HashAlgorithm, Date> sigHashAlgoMap = new HashMap<>();
         sigHashAlgoMap.put(HashAlgorithm.SHA512, null);
         sigHashAlgoMap.put(HashAlgorithm.SHA384, null);
         sigHashAlgoMap.put(HashAlgorithm.SHA256, null);
         sigHashAlgoMap.put(HashAlgorithm.SHA224, null);
         sigHashAlgoMap.put(HashAlgorithm.SHA1, DateUtil.parseUTCDate("2013-02-01 00:00:00 UTC"));
-        policy.setCertificationSignatureHashAlgorithmPolicy(new Policy.HashAlgorithmPolicy(HashAlgorithm.SHA512, sigHashAlgoMap));
 
         Map<HashAlgorithm, Date> revHashAlgoMap = new HashMap<>();
         revHashAlgoMap.put(HashAlgorithm.SHA512, null);
@@ -53,10 +41,26 @@ public class PolicyTest {
         revHashAlgoMap.put(HashAlgorithm.SHA224, null);
         revHashAlgoMap.put(HashAlgorithm.SHA1, DateUtil.parseUTCDate("2013-02-01 00:00:00 UTC"));
         revHashAlgoMap.put(HashAlgorithm.RIPEMD160, DateUtil.parseUTCDate("2013-02-01 00:00:00 UTC"));
-        policy.setRevocationSignatureHashAlgorithmPolicy(new Policy.HashAlgorithmPolicy(HashAlgorithm.SHA512,
-                revHashAlgoMap));
 
-        policy.setPublicKeyAlgorithmPolicy(Policy.PublicKeyAlgorithmPolicy.bsi2021PublicKeyAlgorithmPolicy());
+        policy = new Policy().copy()
+
+                .withCompressionAlgorithmPolicy(new Policy.CompressionAlgorithmPolicy(CompressionAlgorithm.UNCOMPRESSED,
+                        Arrays.asList(CompressionAlgorithm.ZIP, CompressionAlgorithm.ZLIB, CompressionAlgorithm.UNCOMPRESSED)))
+
+                .withSymmetricKeyEncryptionAlgorithmPolicy(new Policy.SymmetricKeyAlgorithmPolicy(SymmetricKeyAlgorithm.AES_256,
+                        Arrays.asList(SymmetricKeyAlgorithm.AES_256, SymmetricKeyAlgorithm.AES_192, SymmetricKeyAlgorithm.AES_128)))
+
+                .withSymmetricKeyDecryptionAlgorithmPolicy(new Policy.SymmetricKeyAlgorithmPolicy(SymmetricKeyAlgorithm.AES_256,
+                        Arrays.asList(SymmetricKeyAlgorithm.AES_256, SymmetricKeyAlgorithm.AES_192, SymmetricKeyAlgorithm.AES_128, SymmetricKeyAlgorithm.BLOWFISH)))
+
+                .withCertificationSignatureHashAlgorithmPolicy(new Policy.HashAlgorithmPolicy(HashAlgorithm.SHA512, sigHashAlgoMap))
+
+                .withRevocationSignatureHashAlgorithmPolicy(new Policy.HashAlgorithmPolicy(HashAlgorithm.SHA512,
+                        revHashAlgoMap))
+
+                .withPublicKeyAlgorithmPolicy(Policy.PublicKeyAlgorithmPolicy.bsi2021PublicKeyAlgorithmPolicy())
+
+                .build();
     }
 
     @Test
@@ -199,10 +203,5 @@ public class PolicyTest {
     @Test
     public void testUnknownPublicKeyAlgorithmIsNotAcceptable() {
         assertFalse(policy.getPublicKeyAlgorithmPolicy().isAcceptable(-1, 4096));
-    }
-
-    @Test
-    public void setNullSignerUserIdValidationLevelThrows() {
-        assertThrows(NullPointerException.class, () -> policy.setSignerUserIdValidationLevel(null));
     }
 }

@@ -6,18 +6,21 @@ package org.pgpainless.policy
 
 import java.util.*
 import org.pgpainless.algorithm.*
+import org.pgpainless.key.protection.KeyRingProtectionSettings
 import org.pgpainless.util.DateUtil
 import org.pgpainless.util.NotationRegistry
 
 class Policy(
-    var certificationSignatureHashAlgorithmPolicy: HashAlgorithmPolicy,
-    var revocationSignatureHashAlgorithmPolicy: HashAlgorithmPolicy,
-    var dataSignatureHashAlgorithmPolicy: HashAlgorithmPolicy,
-    var symmetricKeyEncryptionAlgorithmPolicy: SymmetricKeyAlgorithmPolicy,
-    var symmetricKeyDecryptionAlgorithmPolicy: SymmetricKeyAlgorithmPolicy,
-    var compressionAlgorithmPolicy: CompressionAlgorithmPolicy,
-    var publicKeyAlgorithmPolicy: PublicKeyAlgorithmPolicy,
-    var notationRegistry: NotationRegistry
+    val certificationSignatureHashAlgorithmPolicy: HashAlgorithmPolicy,
+    val revocationSignatureHashAlgorithmPolicy: HashAlgorithmPolicy,
+    val dataSignatureHashAlgorithmPolicy: HashAlgorithmPolicy,
+    val symmetricKeyEncryptionAlgorithmPolicy: SymmetricKeyAlgorithmPolicy,
+    val symmetricKeyDecryptionAlgorithmPolicy: SymmetricKeyAlgorithmPolicy,
+    val compressionAlgorithmPolicy: CompressionAlgorithmPolicy,
+    val publicKeyAlgorithmPolicy: PublicKeyAlgorithmPolicy,
+    val keyProtectionSettings: KeyRingProtectionSettings,
+    val notationRegistry: NotationRegistry,
+    val keyGenerationAlgorithmSuite: AlgorithmSuite
 ) {
 
     constructor() :
@@ -29,11 +32,13 @@ class Policy(
             SymmetricKeyAlgorithmPolicy.symmetricKeyDecryptionPolicy2022(),
             CompressionAlgorithmPolicy.anyCompressionAlgorithmPolicy(),
             PublicKeyAlgorithmPolicy.bsi2021PublicKeyAlgorithmPolicy(),
-            NotationRegistry())
+            KeyRingProtectionSettings.secureDefaultSettings(),
+            NotationRegistry(),
+            AlgorithmSuite.defaultAlgorithmSuite)
 
-    var keyGenerationAlgorithmSuite = AlgorithmSuite.defaultAlgorithmSuite
-    var signerUserIdValidationLevel = SignerUserIdValidationLevel.DISABLED
     var enableKeyParameterValidation = false
+
+    fun copy() = Builder(this)
 
     fun isEnableKeyParameterValidation() = enableKeyParameterValidation
 
@@ -44,7 +49,8 @@ class Policy(
      * regardless of usage date.
      *
      * @param defaultHashAlgorithm default hash algorithm
-     * @param algorithmTerminationDates map of acceptable algorithms and their termination dates
+     * @param acceptableHashAlgorithmsAndTerminationDates map of acceptable algorithms and their
+     *   termination dates
      */
     class HashAlgorithmPolicy(
         val defaultHashAlgorithm: HashAlgorithm,
@@ -305,7 +311,7 @@ class Policy(
             @JvmStatic
             fun anyCompressionAlgorithmPolicy() =
                 CompressionAlgorithmPolicy(
-                    CompressionAlgorithm.ZIP,
+                    CompressionAlgorithm.UNCOMPRESSED,
                     listOf(
                         CompressionAlgorithm.UNCOMPRESSED,
                         CompressionAlgorithm.ZIP,
@@ -379,6 +385,11 @@ class Policy(
                         put(PublicKeyAlgorithm.DIFFIE_HELLMAN, 2000)
                         // §7.2.2
                         put(PublicKeyAlgorithm.ECDH, 250)
+                        // Fixed lengths
+                        put(PublicKeyAlgorithm.X25519, 256)
+                        put(PublicKeyAlgorithm.ED25519, 256)
+                        put(PublicKeyAlgorithm.X448, 448)
+                        put(PublicKeyAlgorithm.ED448, 456)
                     })
         }
     }
@@ -399,12 +410,88 @@ class Policy(
         DISABLED
     }
 
-    companion object {
+    class Builder(private val origin: Policy) {
+        private var certificationSignatureHashAlgorithmPolicy: HashAlgorithmPolicy =
+            origin.certificationSignatureHashAlgorithmPolicy
+        private var revocationSignatureHashAlgorithmPolicy: HashAlgorithmPolicy =
+            origin.revocationSignatureHashAlgorithmPolicy
+        private var dataSignatureHashAlgorithmPolicy: HashAlgorithmPolicy =
+            origin.dataSignatureHashAlgorithmPolicy
+        private var symmetricKeyEncryptionAlgorithmPolicy: SymmetricKeyAlgorithmPolicy =
+            origin.symmetricKeyEncryptionAlgorithmPolicy
+        private var symmetricKeyDecryptionAlgorithmPolicy: SymmetricKeyAlgorithmPolicy =
+            origin.symmetricKeyDecryptionAlgorithmPolicy
+        private var compressionAlgorithmPolicy: CompressionAlgorithmPolicy =
+            origin.compressionAlgorithmPolicy
+        private var publicKeyAlgorithmPolicy: PublicKeyAlgorithmPolicy =
+            origin.publicKeyAlgorithmPolicy
+        private var keyProtectionSettings: KeyRingProtectionSettings = origin.keyProtectionSettings
+        private var notationRegistry: NotationRegistry = origin.notationRegistry
+        private var keyGenerationAlgorithmSuite: AlgorithmSuite = origin.keyGenerationAlgorithmSuite
 
-        @Volatile private var INSTANCE: Policy? = null
+        fun withCertificationSignatureHashAlgorithmPolicy(
+            certificationSignatureHashAlgorithmPolicy: HashAlgorithmPolicy
+        ) = apply {
+            this.certificationSignatureHashAlgorithmPolicy =
+                certificationSignatureHashAlgorithmPolicy
+        }
 
-        @JvmStatic
-        fun getInstance() =
-            INSTANCE ?: synchronized(this) { INSTANCE ?: Policy().also { INSTANCE = it } }
+        fun withRevocationSignatureHashAlgorithmPolicy(
+            revocationSignatureHashAlgorithmPolicy: HashAlgorithmPolicy
+        ) = apply {
+            this.revocationSignatureHashAlgorithmPolicy = revocationSignatureHashAlgorithmPolicy
+        }
+
+        fun withDataSignatureHashAlgorithmPolicy(
+            dataSignatureHashAlgorithmPolicy: HashAlgorithmPolicy
+        ) = apply { this.dataSignatureHashAlgorithmPolicy = dataSignatureHashAlgorithmPolicy }
+
+        fun withSymmetricKeyEncryptionAlgorithmPolicy(
+            symmetricKeyEncryptionAlgorithmPolicy: SymmetricKeyAlgorithmPolicy
+        ) = apply {
+            this.symmetricKeyEncryptionAlgorithmPolicy = symmetricKeyEncryptionAlgorithmPolicy
+        }
+
+        fun withSymmetricKeyDecryptionAlgorithmPolicy(
+            symmetricKeyDecryptionAlgorithmPolicy: SymmetricKeyAlgorithmPolicy
+        ) = apply {
+            this.symmetricKeyDecryptionAlgorithmPolicy = symmetricKeyDecryptionAlgorithmPolicy
+        }
+
+        fun withCompressionAlgorithmPolicy(compressionAlgorithmPolicy: CompressionAlgorithmPolicy) =
+            apply {
+                this.compressionAlgorithmPolicy = compressionAlgorithmPolicy
+            }
+
+        fun withPublicKeyAlgorithmPolicy(publicKeyAlgorithmPolicy: PublicKeyAlgorithmPolicy) =
+            apply {
+                this.publicKeyAlgorithmPolicy = publicKeyAlgorithmPolicy
+            }
+
+        fun withKeyProtectionSettings(keyProtectionSettings: KeyRingProtectionSettings) = apply {
+            this.keyProtectionSettings = keyProtectionSettings
+        }
+
+        fun withNotationRegistry(notationRegistry: NotationRegistry) = apply {
+            this.notationRegistry = notationRegistry
+        }
+
+        fun withKeyGenerationAlgorithmSuite(keyGenerationAlgorithmSuite: AlgorithmSuite) = apply {
+            this.keyGenerationAlgorithmSuite = keyGenerationAlgorithmSuite
+        }
+
+        fun build() =
+            Policy(
+                    certificationSignatureHashAlgorithmPolicy,
+                    revocationSignatureHashAlgorithmPolicy,
+                    dataSignatureHashAlgorithmPolicy,
+                    symmetricKeyEncryptionAlgorithmPolicy,
+                    symmetricKeyDecryptionAlgorithmPolicy,
+                    compressionAlgorithmPolicy,
+                    publicKeyAlgorithmPolicy,
+                    keyProtectionSettings,
+                    notationRegistry,
+                    keyGenerationAlgorithmSuite)
+                .apply { enableKeyParameterValidation = origin.enableKeyParameterValidation }
     }
 }

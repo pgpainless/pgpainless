@@ -57,7 +57,7 @@ public class VerifyDetachedSignatureTest {
         DecryptionStream verifier = PGPainless.decryptAndOrVerify()
                 .onInputStream(new ByteArrayInputStream(signedContent.getBytes(StandardCharsets.UTF_8)))
                 .withOptions(
-                        new ConsumerOptions()
+                        ConsumerOptions.get()
                                 .addVerificationOfDetachedSignatures(new ByteArrayInputStream(signature.getBytes(StandardCharsets.UTF_8)))
                                 .addVerificationCerts(PGPainless.readKeyRing().keyRingCollection(pubkey, true).getPgpPublicKeyRingCollection())
                                 .setMultiPassStrategy(new InMemoryMultiPassStrategy())
@@ -132,7 +132,7 @@ public class VerifyDetachedSignatureTest {
         DecryptionStream verifier = PGPainless.decryptAndOrVerify()
                 .onInputStream(new ByteArrayInputStream(signedContent.getBytes(StandardCharsets.UTF_8)))
                 .withOptions(
-                        new ConsumerOptions()
+                        ConsumerOptions.get()
                                 .addVerificationOfDetachedSignatures(new ByteArrayInputStream(signature.getBytes(StandardCharsets.UTF_8)))
                                 .addVerificationCerts(PGPainless.readKeyRing().keyRingCollection(pubkey, true).getPgpPublicKeyRingCollection())
                                 .setMultiPassStrategy(new InMemoryMultiPassStrategy())

@@ -7,6 +7,7 @@ package org.pgpainless.encryption_signing;
 import static org.junit.jupiter.api.Assertions.assertArrayEquals;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
@@ -14,8 +15,6 @@ import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.nio.charset.Charset;
-import java.security.InvalidAlgorithmParameterException;
-import java.security.NoSuchAlgorithmException;
 import java.util.Set;
 
 import org.bouncycastle.bcpg.ArmoredOutputStream;
@@ -24,12 +23,10 @@ import org.bouncycastle.openpgp.PGPPublicKeyRing;
 import org.bouncycastle.openpgp.PGPSecretKeyRing;
 import org.bouncycastle.openpgp.PGPSignature;
 import org.bouncycastle.util.io.Streams;
-import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.TestTemplate;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.pgpainless.PGPainless;
 import org.pgpainless.algorithm.DocumentSignatureType;
-import org.pgpainless.algorithm.KeyFlag;
 import org.pgpainless.algorithm.SymmetricKeyAlgorithm;
 import org.pgpainless.decryption_verification.ConsumerOptions;
 import org.pgpainless.decryption_verification.DecryptionStream;
@@ -37,15 +34,10 @@ import org.pgpainless.decryption_verification.MessageMetadata;
 import org.pgpainless.exception.KeyException;
 import org.pgpainless.key.SubkeyIdentifier;
 import org.pgpainless.key.TestKeys;
-import org.pgpainless.key.generation.KeySpec;
-import org.pgpainless.key.generation.type.KeyType;
-import org.pgpainless.key.generation.type.elgamal.ElGamal;
-import org.pgpainless.key.generation.type.elgamal.ElGamalLength;
 import org.pgpainless.key.generation.type.rsa.RsaLength;
 import org.pgpainless.key.protection.SecretKeyRingProtector;
 import org.pgpainless.key.protection.UnprotectedKeysProtector;
 import org.pgpainless.key.util.KeyRingUtils;
-import org.pgpainless.policy.Policy;
 import org.pgpainless.util.ArmoredOutputStreamFactory;
 import org.pgpainless.util.TestAllImplementations;
 
@@ -63,37 +55,15 @@ public class EncryptDecryptTest {
                     "Unfold the imagined happiness that both\n" +
                     "Receive in either by this dear encounter.";
 
-    @BeforeEach
-    public void setDefaultPolicy() {
-        PGPainless.getPolicy().setSymmetricKeyEncryptionAlgorithmPolicy(
-                Policy.SymmetricKeyAlgorithmPolicy.symmetricKeyEncryptionPolicy2022());
-        PGPainless.getPolicy().setSymmetricKeyDecryptionAlgorithmPolicy(
-                Policy.SymmetricKeyAlgorithmPolicy.symmetricKeyDecryptionPolicy2022());
-    }
-
-    @TestTemplate
-    @ExtendWith(TestAllImplementations.class)
-    public void freshKeysRsaToElGamalTest()
-            throws PGPException, NoSuchAlgorithmException, InvalidAlgorithmParameterException, IOException {
-        PGPSecretKeyRing sender = PGPainless.generateKeyRing().simpleRsaKeyRing("romeo@montague.lit", RsaLength._3072);
-        PGPSecretKeyRing recipient = PGPainless.buildKeyRing()
-                .setPrimaryKey(KeySpec.getBuilder(
-                        KeyType.RSA(RsaLength._4096),
-                        KeyFlag.SIGN_DATA, KeyFlag.CERTIFY_OTHER))
-                .addSubkey(KeySpec.getBuilder(
-                        ElGamal.withLength(ElGamalLength._3072),
-                        KeyFlag.ENCRYPT_STORAGE, KeyFlag.ENCRYPT_COMMS))
-                .addUserId("juliet@capulet.lit").build();
-
-        encryptDecryptForSecretKeyRings(sender, recipient);
-    }
-
     @TestTemplate
     @ExtendWith(TestAllImplementations.class)
     public void freshKeysRsaToRsaTest()
-            throws PGPException, NoSuchAlgorithmException, InvalidAlgorithmParameterException, IOException {
-        PGPSecretKeyRing sender = PGPainless.generateKeyRing().simpleRsaKeyRing("romeo@montague.lit", RsaLength._3072);
-        PGPSecretKeyRing recipient = PGPainless.generateKeyRing().simpleRsaKeyRing("juliet@capulet.lit", RsaLength._3072);
+            throws PGPException, IOException {
+        PGPainless api = PGPainless.getInstance();
+        PGPSecretKeyRing sender = api.generateKey().simpleRsaKeyRing("romeo@montague.lit", RsaLength._3072)
+                .getPGPSecretKeyRing();
+        PGPSecretKeyRing recipient = api.generateKey().simpleRsaKeyRing("juliet@capulet.lit", RsaLength._3072)
+                .getPGPSecretKeyRing();
 
         encryptDecryptForSecretKeyRings(sender, recipient);
     }
@@ -101,9 +71,12 @@ public class EncryptDecryptTest {
     @TestTemplate
     @ExtendWith(TestAllImplementations.class)
     public void freshKeysEcToEcTest()
-            throws IOException, PGPException, NoSuchAlgorithmException, InvalidAlgorithmParameterException {
-        PGPSecretKeyRing sender = PGPainless.generateKeyRing().simpleEcKeyRing("romeo@montague.lit");
-        PGPSecretKeyRing recipient = PGPainless.generateKeyRing().simpleEcKeyRing("juliet@capulet.lit");
+            throws IOException, PGPException {
+        PGPainless api = PGPainless.getInstance();
+        PGPSecretKeyRing sender = api.generateKey().simpleEcKeyRing("romeo@montague.lit")
+                .getPGPSecretKeyRing();
+        PGPSecretKeyRing recipient = api.generateKey().simpleEcKeyRing("juliet@capulet.lit")
+                .getPGPSecretKeyRing();
 
         encryptDecryptForSecretKeyRings(sender, recipient);
     }
@@ -111,9 +84,12 @@ public class EncryptDecryptTest {
     @TestTemplate
     @ExtendWith(TestAllImplementations.class)
     public void freshKeysEcToRsaTest()
-            throws PGPException, NoSuchAlgorithmException, InvalidAlgorithmParameterException, IOException {
-        PGPSecretKeyRing sender = PGPainless.generateKeyRing().simpleEcKeyRing("romeo@montague.lit");
-        PGPSecretKeyRing recipient = PGPainless.generateKeyRing().simpleRsaKeyRing("juliet@capulet.lit", RsaLength._3072);
+            throws PGPException, IOException {
+        PGPainless api = PGPainless.getInstance();
+        PGPSecretKeyRing sender = api.generateKey().simpleEcKeyRing("romeo@montague.lit")
+                .getPGPSecretKeyRing();
+        PGPSecretKeyRing recipient = api.generateKey().simpleRsaKeyRing("juliet@capulet.lit", RsaLength._3072)
+                .getPGPSecretKeyRing();
 
         encryptDecryptForSecretKeyRings(sender, recipient);
     }
@@ -121,9 +97,12 @@ public class EncryptDecryptTest {
     @TestTemplate
     @ExtendWith(TestAllImplementations.class)
     public void freshKeysRsaToEcTest()
-            throws PGPException, NoSuchAlgorithmException, InvalidAlgorithmParameterException, IOException {
-        PGPSecretKeyRing sender = PGPainless.generateKeyRing().simpleRsaKeyRing("romeo@montague.lit", RsaLength._3072);
-        PGPSecretKeyRing recipient = PGPainless.generateKeyRing().simpleEcKeyRing("juliet@capulet.lit");
+            throws PGPException, IOException {
+        PGPainless api = PGPainless.getInstance();
+        PGPSecretKeyRing sender = api.generateKey().simpleRsaKeyRing("romeo@montague.lit", RsaLength._3072)
+                .getPGPSecretKeyRing();
+        PGPSecretKeyRing recipient = api.generateKey().simpleEcKeyRing("juliet@capulet.lit")
+                .getPGPSecretKeyRing();
 
         encryptDecryptForSecretKeyRings(sender, recipient);
     }
@@ -153,7 +132,7 @@ public class EncryptDecryptTest {
                 .onOutputStream(envelope)
                 .withOptions(ProducerOptions.signAndEncrypt(
                         EncryptionOptions.encryptCommunications().addRecipient(recipientPub),
-                        new SigningOptions().addInlineSignature(keyDecryptor, senderSec, DocumentSignatureType.BINARY_DOCUMENT)
+                        SigningOptions.get().addInlineSignature(keyDecryptor, senderSec, DocumentSignatureType.BINARY_DOCUMENT)
                 ));
 
         Streams.pipeAll(new ByteArrayInputStream(secretMessage), encryptor);
@@ -164,7 +143,7 @@ public class EncryptDecryptTest {
 
         assertFalse(encryptionResult.getRecipients().isEmpty());
         for (SubkeyIdentifier encryptionKey : encryptionResult.getRecipients()) {
-            assertTrue(KeyRingUtils.keyRingContainsKeyWithId(recipientPub, encryptionKey.getKeyId()));
+            assertNotNull(recipientPub.getPublicKey(encryptionKey.getKeyIdentifier()));
         }
 
         assertEquals(SymmetricKeyAlgorithm.AES_256, encryptionResult.getEncryptionAlgorithm());
@@ -174,7 +153,7 @@ public class EncryptDecryptTest {
         ByteArrayInputStream envelopeIn = new ByteArrayInputStream(encryptedSecretMessage);
         DecryptionStream decryptor = PGPainless.decryptAndOrVerify()
                 .onInputStream(envelopeIn)
-                .withOptions(new ConsumerOptions()
+                .withOptions(ConsumerOptions.get()
                         .addDecryptionKey(recipientSec, keyDecryptor)
                         .addVerificationCert(senderPub)
                 );
@@ -202,7 +181,7 @@ public class EncryptDecryptTest {
         ByteArrayOutputStream dummyOut = new ByteArrayOutputStream();
         EncryptionStream signer = PGPainless.encryptAndOrSign().onOutputStream(dummyOut)
                 .withOptions(ProducerOptions.sign(
-                        new SigningOptions().addDetachedSignature(keyRingProtector, signingKeys, DocumentSignatureType.BINARY_DOCUMENT)
+                        SigningOptions.get().addDetachedSignature(keyRingProtector, signingKeys, DocumentSignatureType.BINARY_DOCUMENT)
                 ));
         Streams.pipeAll(inputStream, signer);
         signer.close();
@@ -223,7 +202,7 @@ public class EncryptDecryptTest {
         inputStream = new ByteArrayInputStream(testMessage.getBytes());
         DecryptionStream verifier = PGPainless.decryptAndOrVerify()
                 .onInputStream(inputStream)
-                .withOptions(new ConsumerOptions()
+                .withOptions(ConsumerOptions.get()
                         .addVerificationOfDetachedSignatures(new ByteArrayInputStream(armorSig.getBytes()))
                         .addVerificationCert(KeyRingUtils.publicKeyRingFrom(signingKeys))
                 );
@@ -255,7 +234,7 @@ public class EncryptDecryptTest {
         inputStream = new ByteArrayInputStream(signOut.toByteArray());
         DecryptionStream verifier = PGPainless.decryptAndOrVerify()
                 .onInputStream(inputStream)
-                .withOptions(new ConsumerOptions()
+                .withOptions(ConsumerOptions.get()
                         .addVerificationCert(KeyRingUtils.publicKeyRingFrom(signingKeys))
                 );
         signOut = new ByteArrayOutputStream();

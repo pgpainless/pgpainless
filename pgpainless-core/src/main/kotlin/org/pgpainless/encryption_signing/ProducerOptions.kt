@@ -10,10 +10,10 @@ import org.pgpainless.PGPainless
 import org.pgpainless.algorithm.CompressionAlgorithm
 import org.pgpainless.algorithm.StreamEncoding
 
-class ProducerOptions
-private constructor(
+class ProducerOptions(
     val encryptionOptions: EncryptionOptions?,
-    val signingOptions: SigningOptions?
+    val signingOptions: SigningOptions?,
+    val api: PGPainless
 ) {
 
     private var _fileName: String = ""
@@ -25,7 +25,7 @@ private constructor(
     var isDisableAsciiArmorCRC = false
 
     private var _compressionAlgorithmOverride: CompressionAlgorithm =
-        PGPainless.getPolicy().compressionAlgorithmPolicy.defaultCompressionAlgorithm
+        api.algorithmPolicy.compressionAlgorithmPolicy.defaultCompressionAlgorithm
     private var asciiArmor = true
     private var _comment: String? = null
     private var _version: String? = null
@@ -104,6 +104,13 @@ private constructor(
      */
     fun hasVersion() = version != null
 
+    /**
+     * Configure the resulting OpenPGP message to make use of the Cleartext Signature Framework
+     * (CSF). A CSF message MUST be signed using detached signatures only and MUST NOT be encrypted.
+     *
+     * @see
+     *   [RFC9580: OpenPGP - Cleartext Signature Framework](https://www.rfc-editor.org/rfc/rfc9580.html#name-cleartext-signature-framewo)
+     */
     fun setCleartextSigned() = apply {
         require(signingOptions != null) {
             "Signing Options cannot be null if cleartext signing is enabled."
@@ -230,6 +237,10 @@ private constructor(
         _hideArmorHeaders = hideArmorHeaders
     }
 
+    internal fun negotiateCompressionAlgorithm(): CompressionAlgorithm {
+        return compressionAlgorithmOverride
+    }
+
     companion object {
         /**
          * Sign and encrypt some data.
@@ -238,9 +249,13 @@ private constructor(
          * @param signingOptions signing options
          * @return builder
          */
+        @JvmOverloads
         @JvmStatic
-        fun signAndEncrypt(encryptionOptions: EncryptionOptions, signingOptions: SigningOptions) =
-            ProducerOptions(encryptionOptions, signingOptions)
+        fun signAndEncrypt(
+            encryptionOptions: EncryptionOptions,
+            signingOptions: SigningOptions,
+            api: PGPainless = PGPainless.getInstance()
+        ): ProducerOptions = ProducerOptions(encryptionOptions, signingOptions, api)
 
         /**
          * Sign some data without encryption.
@@ -248,7 +263,12 @@ private constructor(
          * @param signingOptions signing options
          * @return builder
          */
-        @JvmStatic fun sign(signingOptions: SigningOptions) = ProducerOptions(null, signingOptions)
+        @JvmOverloads
+        @JvmStatic
+        fun sign(
+            signingOptions: SigningOptions,
+            api: PGPainless = PGPainless.getInstance()
+        ): ProducerOptions = ProducerOptions(null, signingOptions, api)
 
         /**
          * Encrypt some data without signing.
@@ -256,14 +276,21 @@ private constructor(
          * @param encryptionOptions encryption options
          * @return builder
          */
+        @JvmOverloads
         @JvmStatic
-        fun encrypt(encryptionOptions: EncryptionOptions) = ProducerOptions(encryptionOptions, null)
+        fun encrypt(
+            encryptionOptions: EncryptionOptions,
+            api: PGPainless = PGPainless.getInstance()
+        ): ProducerOptions = ProducerOptions(encryptionOptions, null, api)
 
         /**
          * Only wrap the data in an OpenPGP packet. No encryption or signing will be applied.
          *
          * @return builder
          */
-        @JvmStatic fun noEncryptionNoSigning() = ProducerOptions(null, null)
+        @JvmOverloads
+        @JvmStatic
+        fun noEncryptionNoSigning(api: PGPainless = PGPainless.getInstance()): ProducerOptions =
+            ProducerOptions(null, null, api)
     }
 }

@@ -10,9 +10,9 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import java.io.IOException;
 
+import org.bouncycastle.bcpg.KeyIdentifier;
 import org.bouncycastle.openpgp.PGPException;
 import org.junit.jupiter.api.Test;
-import org.pgpainless.key.util.KeyIdUtil;
 
 public class MessageInspectorTest {
 
@@ -26,14 +26,15 @@ public class MessageInspectorTest {
                 "Z1/i3TYsmy8B0mMKkNYtpMk=\n" +
                 "=IICf\n" +
                 "-----END PGP MESSAGE-----\n";
+        MessageInspector inspector = new MessageInspector();
 
-        MessageInspector.EncryptionInfo info = MessageInspector.determineEncryptionInfoForMessage(message);
+        MessageInspector.EncryptionInfo info = inspector.determineEncryptionInfoForMessage(message);
 
         assertFalse(info.isPassphraseEncrypted());
         assertFalse(info.isSignedOnly());
         assertTrue(info.isEncrypted());
         assertEquals(1, info.getKeyIds().size());
-        assertEquals(KeyIdUtil.fromLongKeyId("4766F6B9D5F21EB6"), (long) info.getKeyIds().get(0));
+        assertEquals(new KeyIdentifier("4766F6B9D5F21EB6"), info.getKeyIdentifiers().get(0));
     }
 
     @Test
@@ -51,15 +52,16 @@ public class MessageInspectorTest {
                 "nxVuXey3iyihCFAfD8ZK1Rnh\n" +
                 "=z6e0\n" +
                 "-----END PGP MESSAGE-----";
+        MessageInspector inspector = new MessageInspector();
 
-        MessageInspector.EncryptionInfo info = MessageInspector.determineEncryptionInfoForMessage(message);
+        MessageInspector.EncryptionInfo info = inspector.determineEncryptionInfoForMessage(message);
 
         assertTrue(info.isEncrypted());
         assertTrue(info.isPassphraseEncrypted());
         assertEquals(2, info.getKeyIds().size());
         assertFalse(info.isSignedOnly());
-        assertTrue(info.getKeyIds().contains(KeyIdUtil.fromLongKeyId("4C6E8F99F6E47184")));
-        assertTrue(info.getKeyIds().contains(KeyIdUtil.fromLongKeyId("1839079A640B2FAC")));
+        assertTrue(info.getKeyIdentifiers().contains(new KeyIdentifier("4C6E8F99F6E47184")));
+        assertTrue(info.getKeyIdentifiers().contains(new KeyIdentifier("1839079A640B2FAC")));
     }
 
     @Test
@@ -73,8 +75,8 @@ public class MessageInspectorTest {
                 "Dvxwv8UPAA==\n" +
                 "=nt5n\n" +
                 "-----END PGP MESSAGE-----";
-
-        MessageInspector.EncryptionInfo info = MessageInspector.determineEncryptionInfoForMessage(message);
+        MessageInspector inspector = new MessageInspector();
+        MessageInspector.EncryptionInfo info = inspector.determineEncryptionInfoForMessage(message);
 
         assertTrue(info.isSignedOnly());
 
@@ -97,7 +99,8 @@ public class MessageInspectorTest {
                 "KK0Ymg5GrsBTEGFm4jb1p+V85PPhsIioX3np/N3fkIfxFguTGZza33/GHy61+DTy\n" +
                 "=SZU6\n" +
                 "-----END PGP MESSAGE-----";
-        MessageInspector.EncryptionInfo info = MessageInspector.determineEncryptionInfoForMessage(message);
+        MessageInspector inspector = new MessageInspector();
+        MessageInspector.EncryptionInfo info = inspector.determineEncryptionInfoForMessage(message);
 
         // Message is encrypted, so we cannot determine if it is signed or not.
         // It is not signed only
@@ -117,8 +120,8 @@ public class MessageInspectorTest {
                 "yyl0CF9DT05TT0xFYXlXgUp1c3Qgc29tZSB1bmVuY3J5cHRlZCBkYXRhLg==\n" +
                 "=jVNT\n" +
                 "-----END PGP MESSAGE-----";
-
-        MessageInspector.EncryptionInfo info = MessageInspector.determineEncryptionInfoForMessage(message);
+        MessageInspector inspector = new MessageInspector();
+        MessageInspector.EncryptionInfo info = inspector.determineEncryptionInfoForMessage(message);
         assertFalse(info.isEncrypted());
         assertFalse(info.isSignedOnly());
         assertFalse(info.isPassphraseEncrypted());
@@ -136,7 +139,8 @@ public class MessageInspectorTest {
                 "=jw3E\n" +
                 "-----END PGP MESSAGE-----";
 
-        MessageInspector.EncryptionInfo info = MessageInspector.determineEncryptionInfoForMessage(message);
+        MessageInspector inspector = new MessageInspector();
+        MessageInspector.EncryptionInfo info = inspector.determineEncryptionInfoForMessage(message);
         assertFalse(info.isEncrypted());
         assertFalse(info.isSignedOnly());
         assertFalse(info.isPassphraseEncrypted());
