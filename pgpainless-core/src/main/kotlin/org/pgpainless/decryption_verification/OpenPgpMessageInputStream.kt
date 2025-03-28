@@ -178,7 +178,7 @@ class OpenPgpMessageInputStream(
                 }
                 OpenPgpPacket.PADDING -> {
                     LOGGER.debug("Skipping Padding Packet")
-                    pIn.readPacket()
+                    pIn.readPadding()
                 }
                 OpenPgpPacket.SK,
                 OpenPgpPacket.PK,
@@ -188,10 +188,6 @@ class OpenPgpMessageInputStream(
                 OpenPgpPacket.UID,
                 OpenPgpPacket.UATTR ->
                     throw MalformedOpenPgpMessageException("Illegal Packet in Stream: $packet")
-                OpenPgpPacket.PADDING -> {
-                    LOGGER.debug("Padding packet")
-                    pIn.readPadding()
-                }
                 OpenPgpPacket.EXP_1,
                 OpenPgpPacket.EXP_2,
                 OpenPgpPacket.EXP_3,
