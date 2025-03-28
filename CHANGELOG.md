@@ -5,7 +5,7 @@ SPDX-License-Identifier: CC0-1.0
 
 # PGPainless Changelog
 
-## 1.6.9-SNAPSHOT
+## 1.6.9
 - Bump BC to `1.80`
   - introduce dependency on `bcutil-jdk18on`
   - remove support for generating elliptic curve keys over curve `secp256k1`
