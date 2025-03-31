@@ -41,6 +41,7 @@ import org.pgpainless.algorithm.CompressionAlgorithm
 import org.pgpainless.algorithm.OpenPgpPacket
 import org.pgpainless.algorithm.StreamEncoding
 import org.pgpainless.algorithm.SymmetricKeyAlgorithm
+import org.pgpainless.bouncycastle.extensions.assertCreatedInBounds
 import org.pgpainless.bouncycastle.extensions.getSecretKeyFor
 import org.pgpainless.bouncycastle.extensions.getSigningKeyFor
 import org.pgpainless.bouncycastle.extensions.issuerKeyId
@@ -64,7 +65,6 @@ import org.pgpainless.exception.WrongPassphraseException
 import org.pgpainless.key.SubkeyIdentifier
 import org.pgpainless.key.protection.UnlockSecretKey.Companion.unlockSecretKey
 import org.pgpainless.signature.consumer.OnePassSignatureCheck
-import org.pgpainless.signature.consumer.SignatureValidator
 import org.pgpainless.util.ArmoredInputStreamFactory
 import org.pgpainless.util.SessionKey
 import org.slf4j.LoggerFactory
@@ -853,9 +853,8 @@ class OpenPgpMessageInputStream(
                             check.onePassSignature.keyIdentifier))
 
                 try {
-                    SignatureValidator.signatureWasCreatedInBounds(
-                            options.getVerifyNotBefore(), options.getVerifyNotAfter())
-                        .verify(signature)
+                    signature.assertCreatedInBounds(
+                        options.getVerifyNotBefore(), options.getVerifyNotAfter())
                     if (documentSignature.verify(check.onePassSignature) &&
                         documentSignature.isValid(api.implementation.policy())) {
                         layer.addVerifiedOnePassSignature(verification)
@@ -971,9 +970,8 @@ class OpenPgpMessageInputStream(
                 val verification =
                     SignatureVerification(detached.signature, SubkeyIdentifier(detached.issuer))
                 try {
-                    SignatureValidator.signatureWasCreatedInBounds(
-                            options.getVerifyNotBefore(), options.getVerifyNotAfter())
-                        .verify(detached.signature)
+                    detached.signature.assertCreatedInBounds(
+                        options.getVerifyNotBefore(), options.getVerifyNotAfter())
                     if (!detached.verify()) {
                         throw SignatureValidationException("Incorrect detached signature.")
                     } else if (!detached.isValid(api.implementation.policy())) {
@@ -993,9 +991,8 @@ class OpenPgpMessageInputStream(
                 val verification =
                     SignatureVerification(prepended.signature, SubkeyIdentifier(prepended.issuer))
                 try {
-                    SignatureValidator.signatureWasCreatedInBounds(
-                            options.getVerifyNotBefore(), options.getVerifyNotAfter())
-                        .verify(prepended.signature)
+                    prepended.signature.assertCreatedInBounds(
+                        options.getVerifyNotBefore(), options.getVerifyNotAfter())
                     if (prepended.verify() && prepended.isValid(api.implementation.policy())) {
                         layer.addVerifiedPrependedSignature(verification)
                     } else {
