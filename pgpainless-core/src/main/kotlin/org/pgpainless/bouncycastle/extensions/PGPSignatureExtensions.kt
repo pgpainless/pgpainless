@@ -5,6 +5,7 @@
 package org.pgpainless.bouncycastle.extensions
 
 import java.util.*
+import openpgp.formatUTC
 import openpgp.plusSeconds
 import org.bouncycastle.bcpg.KeyIdentifier
 import org.bouncycastle.openpgp.PGPPublicKey
@@ -13,6 +14,7 @@ import org.pgpainless.algorithm.HashAlgorithm
 import org.pgpainless.algorithm.PublicKeyAlgorithm
 import org.pgpainless.algorithm.RevocationState
 import org.pgpainless.algorithm.SignatureType
+import org.pgpainless.exception.SignatureValidationException
 import org.pgpainless.key.OpenPgpFingerprint
 import org.pgpainless.key.util.RevocationAttributes.Reason
 import org.pgpainless.signature.subpackets.SignatureSubpacketsUtil
@@ -84,6 +86,21 @@ val PGPSignature.isHardRevocation
             }
             else -> false // Not a revocation
         }
+
+fun PGPSignature.assertCreatedInBounds(notBefore: Date?, notAfter: Date?) {
+    if (notBefore != null && creationTime < notBefore) {
+        throw SignatureValidationException(
+            "Signature was made before the earliest allowed signature creation time." +
+                " Created: ${creationTime.formatUTC()}," +
+                " earliest allowed: ${notBefore.formatUTC()}")
+    }
+    if (notAfter != null && creationTime > notAfter) {
+        throw SignatureValidationException(
+            "Signature was made after the latest allowed signature creation time." +
+                " Created: ${creationTime.formatUTC()}," +
+                " latest allowed: ${notAfter.formatUTC()}")
+    }
+}
 
 fun PGPSignature?.toRevocationState() =
     if (this == null) RevocationState.notRevoked()
