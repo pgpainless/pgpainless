@@ -27,10 +27,8 @@ import org.pgpainless.algorithm.SignatureType;
 import org.pgpainless.algorithm.Trustworthiness;
 import org.pgpainless.key.info.KeyRingInfo;
 import org.pgpainless.key.protection.SecretKeyRingProtector;
-import org.pgpainless.signature.consumer.SignatureVerifier;
 import org.pgpainless.signature.subpackets.CertificationSubpackets;
 import org.pgpainless.util.CollectionUtils;
-import org.pgpainless.util.DateUtil;
 
 import javax.annotation.Nonnull;
 
@@ -57,8 +55,7 @@ public class CertifyCertificateTest {
         assertEquals(SignatureType.GENERIC_CERTIFICATION, SignatureType.requireFromCode(signature.getSignatureType()));
         assertEquals(alice.getPrimaryKey().getPGPPublicKey().getKeyID(), signature.getKeyID());
 
-        assertTrue(SignatureVerifier.verifyUserIdCertification(
-                bobUserId, signature, alice.getPrimaryKey().getPGPPublicKey(), bob.getPrimaryKey().getPGPPublicKey(), api.getAlgorithmPolicy(), DateUtil.now()));
+        assertTrue(result.getCertifiedCertificate().getUserId("Bob <bob@pgpainless.org>").getCertificationBy(alice).isValid());
 
         OpenPGPCertificate bobCertified = result.getCertifiedCertificate();
         PGPPublicKey bobCertifiedKey = bobCertified.getPrimaryKey().getPGPPublicKey();
@@ -99,8 +96,7 @@ public class CertifyCertificateTest {
         assertTrue(trustworthiness.isIntroducer());
         assertFalse(trustworthiness.canIntroduce(1));
 
-        assertTrue(SignatureVerifier.verifyDirectKeySignature(
-                pgpSignature, alice.getPrimaryKey().getPGPPublicKey(), bob.getPrimaryKey().getPGPPublicKey(), api.getAlgorithmPolicy(), DateUtil.now()));
+        assertTrue(result.getCertifiedCertificate().getDelegationBy(alice).isValid());
 
         OpenPGPCertificate bobCertified = result.getCertifiedCertificate();
         PGPPublicKey bobCertifiedKey = bobCertified.getPrimaryKey().getPGPPublicKey();

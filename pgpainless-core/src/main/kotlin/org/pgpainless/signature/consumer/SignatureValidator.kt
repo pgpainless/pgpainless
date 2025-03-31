@@ -4,7 +4,6 @@
 
 package org.pgpainless.signature.consumer
 
-import java.lang.Exception
 import java.util.Date
 import openpgp.formatUTC
 import openpgp.openPgpKeyId
@@ -13,7 +12,6 @@ import org.bouncycastle.openpgp.PGPPublicKey
 import org.bouncycastle.openpgp.PGPSignature
 import org.bouncycastle.openpgp.PGPUserAttributeSubpacketVector
 import org.bouncycastle.openpgp.api.OpenPGPImplementation
-import org.pgpainless.algorithm.KeyFlag
 import org.pgpainless.algorithm.SignatureSubpacket
 import org.pgpainless.algorithm.SignatureType
 import org.pgpainless.bouncycastle.extensions.fingerprint
@@ -71,76 +69,6 @@ abstract class SignatureValidator {
                 }
 
                 // No issuer information found, so we cannot rule out that we did not create the sig
-            }
-        }
-
-        /**
-         * Verify that a subkey binding signature - if the subkey is signing-capable - contains a
-         * valid primary key binding signature.
-         *
-         * @param primaryKey primary key
-         * @param subkey subkey
-         * @param policy policy
-         * @param referenceDate reference date for signature verification
-         * @return validator
-         */
-        @JvmStatic
-        fun hasValidPrimaryKeyBindingSignatureIfRequired(
-            primaryKey: PGPPublicKey,
-            subkey: PGPPublicKey,
-            policy: Policy,
-            referenceTime: Date
-        ): SignatureValidator {
-            return object : SignatureValidator() {
-                override fun verify(signature: PGPSignature) {
-                    if (!signature.publicKeyAlgorithm.isSigningCapable()) {
-                        // subkey is not signing capable -> No need to process embedded signatures
-                        return
-                    }
-
-                    // Make sure we have key flags
-                    SignatureSubpacketsUtil.getKeyFlags(signature)?.let {
-                        if (!KeyFlag.hasKeyFlag(it.flags, KeyFlag.SIGN_DATA) &&
-                            !KeyFlag.hasKeyFlag(it.flags, KeyFlag.CERTIFY_OTHER)) {
-                            return
-                        }
-                    }
-                        ?: return
-
-                    try {
-                        val embeddedSignatures =
-                            SignatureSubpacketsUtil.getEmbeddedSignature(signature)
-                        if (embeddedSignatures.isEmpty) {
-                            throw SignatureValidationException(
-                                "Missing primary key binding" +
-                                    " signature on signing capable subkey ${subkey.keyID.openPgpKeyId()}",
-                                mapOf())
-                        }
-
-                        val rejectedEmbeddedSignatures = mutableMapOf<PGPSignature, Exception>()
-                        if (!embeddedSignatures.any { embedded ->
-                            if (embedded.isOfType(SignatureType.PRIMARYKEY_BINDING)) {
-                                try {
-                                    signatureStructureIsAcceptable(subkey, policy).verify(embedded)
-                                    signatureIsEffective(referenceTime).verify(embedded)
-                                    correctPrimaryKeyBindingSignature(primaryKey, subkey)
-                                        .verify(embedded)
-                                    return@any true
-                                } catch (e: SignatureValidationException) {
-                                    rejectedEmbeddedSignatures[embedded] = e
-                                }
-                            }
-                            false
-                        }) {
-                            throw SignatureValidationException(
-                                "Missing primary key binding signature on signing capable subkey ${subkey.keyID.openPgpKeyId()}",
-                                rejectedEmbeddedSignatures)
-                        }
-                    } catch (e: PGPException) {
-                        throw SignatureValidationException(
-                            "Cannot process list of embedded signatures.", e)
-                    }
-                }
             }
         }
 
@@ -461,77 +389,6 @@ abstract class SignatureValidator {
                         .none()) {
                         throw SignatureValidationException(
                             "Signing subkey does not have a subkey binding signature.")
-                    }
-                }
-            }
-        }
-
-        /**
-         * Verify that a subkey binding signature is correct.
-         *
-         * @param primaryKey primary key
-         * @param subkey subkey
-         * @return validator
-         */
-        @JvmStatic
-        fun correctSubkeyBindingSignature(
-            primaryKey: PGPPublicKey,
-            subkey: PGPPublicKey
-        ): SignatureValidator {
-            return object : SignatureValidator() {
-                override fun verify(signature: PGPSignature) {
-                    if (primaryKey.keyID == subkey.keyID) {
-                        throw SignatureValidationException("Primary key cannot be its own subkey.")
-                    }
-                    try {
-                        signature.init(
-                            OpenPGPImplementation.getInstance().pgpContentVerifierBuilderProvider(),
-                            primaryKey)
-                        if (!signature.verifyCertification(primaryKey, subkey)) {
-                            throw SignatureValidationException("Signature is not correct.")
-                        }
-                    } catch (e: PGPException) {
-                        throw SignatureValidationException(
-                            "Cannot verify subkey binding signature correctness", e)
-                    } catch (e: ClassCastException) {
-                        throw SignatureValidationException(
-                            "Cannot verify subkey binding signature correctness", e)
-                    }
-                }
-            }
-        }
-
-        /**
-         * Verify that a primary key binding signature is correct.
-         *
-         * @param primaryKey primary key
-         * @param subkey subkey
-         * @return validator
-         */
-        @JvmStatic
-        fun correctPrimaryKeyBindingSignature(
-            primaryKey: PGPPublicKey,
-            subkey: PGPPublicKey
-        ): SignatureValidator {
-            return object : SignatureValidator() {
-                override fun verify(signature: PGPSignature) {
-                    if (primaryKey.keyID == subkey.keyID) {
-                        throw SignatureValidationException("Primary key cannot be its own subkey.")
-                    }
-                    try {
-                        signature.init(
-                            OpenPGPImplementation.getInstance().pgpContentVerifierBuilderProvider(),
-                            subkey)
-                        if (!signature.verifyCertification(primaryKey, subkey)) {
-                            throw SignatureValidationException(
-                                "Primary Key Binding Signature is not correct.")
-                        }
-                    } catch (e: PGPException) {
-                        throw SignatureValidationException(
-                            "Cannot verify primary key binding signature correctness", e)
-                    } catch (e: ClassCastException) {
-                        throw SignatureValidationException(
-                            "Cannot verify primary key binding signature correctness", e)
                     }
                 }
             }
