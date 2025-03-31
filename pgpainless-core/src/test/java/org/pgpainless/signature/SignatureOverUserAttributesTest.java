@@ -4,18 +4,12 @@
 
 package org.pgpainless.signature;
 
-import static org.junit.jupiter.api.Assertions.assertThrows;
-
 import java.io.IOException;
 import java.util.Date;
+import java.util.List;
 
 import org.bouncycastle.bcpg.attr.ImageAttribute;
-import org.bouncycastle.openpgp.PGPException;
-import org.bouncycastle.openpgp.PGPPublicKey;
-import org.bouncycastle.openpgp.PGPSignature;
-import org.bouncycastle.openpgp.PGPSignatureGenerator;
-import org.bouncycastle.openpgp.PGPUserAttributeSubpacketVector;
-import org.bouncycastle.openpgp.PGPUserAttributeSubpacketVectorGenerator;
+import org.bouncycastle.openpgp.*;
 import org.bouncycastle.openpgp.api.OpenPGPCertificate;
 import org.bouncycastle.openpgp.api.OpenPGPImplementation;
 import org.bouncycastle.openpgp.api.OpenPGPKey;
@@ -23,11 +17,11 @@ import org.junit.jupiter.api.Test;
 import org.pgpainless.PGPainless;
 import org.pgpainless.algorithm.HashAlgorithm;
 import org.pgpainless.algorithm.SignatureType;
-import org.pgpainless.exception.SignatureValidationException;
 import org.pgpainless.key.TestKeys;
 import org.pgpainless.key.protection.SecretKeyRingProtector;
 import org.pgpainless.key.protection.UnlockSecretKey;
-import org.pgpainless.signature.consumer.SignatureVerifier;
+
+import static org.junit.jupiter.api.Assertions.*;
 
 public class SignatureOverUserAttributesTest {
 
@@ -53,6 +47,7 @@ public class SignatureOverUserAttributesTest {
     public void createAndVerifyUserAttributeCertification() throws PGPException, IOException {
         PGPainless api = PGPainless.getInstance();
         OpenPGPKey secretKeys = TestKeys.getEmilKey();
+
         OpenPGPKey.OpenPGPSecretKey secretKey = secretKeys.getPrimarySecretKey();
         OpenPGPCertificate.OpenPGPComponentKey publicKey = secretKey.getPublicKey();
         OpenPGPKey.OpenPGPPrivateKey privateKey = UnlockSecretKey.unlockSecretKey(secretKey, SecretKeyRingProtector.unprotectedKeys());
@@ -65,9 +60,12 @@ public class SignatureOverUserAttributesTest {
 
         PGPSignature signature = generator.generateCertification(attribute, publicKey.getPGPPublicKey());
         PGPPublicKey pgpPublicKey = PGPPublicKey.addCertification(publicKey.getPGPPublicKey(), attribute, signature);
-        SignatureVerifier.verifyUserAttributesCertification(attribute, signature, pgpPublicKey, api.getAlgorithmPolicy(), new Date());
+        pgpPublicKey = PGPPublicKey.addCertification(pgpPublicKey, invalidAttribute, signature);
+        OpenPGPCertificate withUserAttribute = api.toCertificate(PGPPublicKeyRing.insertPublicKey(secretKeys.getPGPPublicKeyRing(), pgpPublicKey));
+        List<OpenPGPCertificate.OpenPGPIdentityComponent> identities = withUserAttribute.getIdentities();
 
-        assertThrows(SignatureValidationException.class, () -> SignatureVerifier.verifyUserAttributesCertification(invalidAttribute, signature, pgpPublicKey, api.getAlgorithmPolicy(), new Date()));
+        assertTrue(identities.get(1).isBound());    // valid
+        assertFalse(identities.get(2).isBound());   // invalid
     }
 
     @Test
@@ -86,9 +84,11 @@ public class SignatureOverUserAttributesTest {
 
         PGPSignature signature = generator.generateCertification(attribute, publicKey.getPGPPublicKey());
         PGPPublicKey pgpPublicKey = PGPPublicKey.addCertification(publicKey.getPGPPublicKey(), attribute, signature);
-        SignatureVerifier.verifyUserAttributesRevocation(attribute, signature, pgpPublicKey, api.getAlgorithmPolicy(), new Date());
-        assertThrows(SignatureValidationException.class, () ->
-                SignatureVerifier.verifyUserAttributesCertification(
-                        invalidAttribute, signature, pgpPublicKey, api.getAlgorithmPolicy(), new Date()));
+        OpenPGPCertificate withRevocation = api.toCertificate(PGPPublicKeyRing.insertPublicKey(secretKeys.getPGPPublicKeyRing(), pgpPublicKey));
+        List<OpenPGPCertificate.OpenPGPIdentityComponent> identities = withRevocation.getIdentities();
+        OpenPGPCertificate.OpenPGPComponentSignature revocation = identities.get(1).getRevocation(new Date());
+        revocation.verify(api.getImplementation());
+        assertTrue(revocation.isRevocation());
+        assertTrue(revocation.isTestedCorrect());
     }
 }
