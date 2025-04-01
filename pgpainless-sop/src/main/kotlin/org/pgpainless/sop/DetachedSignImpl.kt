@@ -58,7 +58,7 @@ class DetachedSignImpl(private val api: PGPainless) : DetachedSign {
                 api.generateMessage()
                     .discardOutput()
                     .withOptions(
-                        ProducerOptions.sign(signingOptions, api)
+                        ProducerOptions.sign(signingOptions)
                             .setAsciiArmor(armor)
                             .overrideCompressionAlgorithm(CompressionAlgorithm.UNCOMPRESSED))
 

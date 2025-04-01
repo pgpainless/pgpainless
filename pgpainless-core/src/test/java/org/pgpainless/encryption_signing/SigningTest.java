@@ -66,8 +66,7 @@ public class SigningTest {
                                 .addRecipient(cryptieKey.toCertificate()),
                         SigningOptions.get(api).addInlineSignature(
                                 SecretKeyRingProtector.unlockSingleKeyWith(TestKeys.CRYPTIE_PASSPHRASE, cryptieSigningKey),
-                                        cryptieKey, TestKeys.CRYPTIE_UID, DocumentSignatureType.CANONICAL_TEXT_DOCUMENT),
-                        api
+                                        cryptieKey, TestKeys.CRYPTIE_UID, DocumentSignatureType.CANONICAL_TEXT_DOCUMENT)
                 ).setAsciiArmor(true));
 
         byte[] messageBytes = "This message is signed and encrypted to Romeo and Juliet."
@@ -159,7 +158,7 @@ public class SigningTest {
         String data = "Hello, World!\n";
         EncryptionStream signer = api.generateMessage()
                 .onOutputStream(new ByteArrayOutputStream())
-                .withOptions(ProducerOptions.sign(options, api));
+                .withOptions(ProducerOptions.sign(options));
 
         Streams.pipeAll(new ByteArrayInputStream(data.getBytes(StandardCharsets.UTF_8)), signer);
         signer.close();
@@ -192,7 +191,7 @@ public class SigningTest {
         String data = "Hello, World!\n";
         EncryptionStream signer = api.generateMessage()
                 .onOutputStream(new ByteArrayOutputStream())
-                .withOptions(ProducerOptions.sign(options, api));
+                .withOptions(ProducerOptions.sign(options));
 
         Streams.pipeAll(new ByteArrayInputStream(data.getBytes(StandardCharsets.UTF_8)), signer);
         signer.close();
@@ -223,7 +222,7 @@ public class SigningTest {
         String data = "Hello, World!\n";
         EncryptionStream signer = api.generateMessage()
                 .onOutputStream(new ByteArrayOutputStream())
-                .withOptions(ProducerOptions.sign(options, api));
+                .withOptions(ProducerOptions.sign(options));
 
         Streams.pipeAll(new ByteArrayInputStream(data.getBytes(StandardCharsets.UTF_8)), signer);
         signer.close();
