@@ -17,9 +17,7 @@ import java.util.concurrent.ConcurrentHashMap;
 
 import org.bouncycastle.bcpg.KeyIdentifier;
 import org.bouncycastle.openpgp.PGPException;
-import org.bouncycastle.openpgp.PGPSecretKey;
-import org.bouncycastle.openpgp.PGPSecretKeyRing;
-import org.bouncycastle.openpgp.operator.PBESecretKeyDecryptor;
+import org.bouncycastle.openpgp.api.OpenPGPKey;
 import org.jetbrains.annotations.NotNull;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.TestTemplate;
@@ -37,22 +35,18 @@ public class SecretKeyRingProtectorTest {
     public void testUnlockAllKeysWithSamePassword()
             throws IOException, PGPException {
 
-        PGPSecretKeyRing secretKeys = TestKeys.getCryptieSecretKeyRing();
+        OpenPGPKey key = TestKeys.getCryptieKey();
         SecretKeyRingProtector protector =
-                SecretKeyRingProtector.unlockEachKeyWith(TestKeys.CRYPTIE_PASSPHRASE, secretKeys);
-        for (PGPSecretKey secretKey : secretKeys) {
-            PBESecretKeyDecryptor decryptor = protector.getDecryptor(secretKey.getKeyIdentifier());
-            assertNotNull(decryptor);
-            secretKey.extractPrivateKey(decryptor);
+                SecretKeyRingProtector.unlockEachKeyWith(TestKeys.CRYPTIE_PASSPHRASE, key);
+        for (OpenPGPKey.OpenPGPSecretKey secretKey : key.getSecretKeys().values()) {
+            assertNotNull(secretKey.unlock(protector));
         }
-        PGPSecretKeyRing unrelatedKeys = PGPainless.generateKeyRing().simpleEcKeyRing("unrelated",
-                "SecurePassword")
-                .getPGPSecretKeyRing();
-        for (PGPSecretKey unrelatedKey : unrelatedKeys) {
-            PBESecretKeyDecryptor decryptor = protector.getDecryptor(unrelatedKey.getKeyIdentifier());
-            assertNull(decryptor);
-            assertThrows(PGPException.class,
-                    () -> unrelatedKey.extractPrivateKey(protector.getDecryptor(unrelatedKey.getKeyIdentifier())));
+
+        OpenPGPKey unrelatedKey = PGPainless.getInstance().generateKey()
+                .simpleEcKeyRing("unrelated",
+                "SecurePassword");
+        for (OpenPGPKey.OpenPGPSecretKey k : unrelatedKey.getSecretKeys().values()) {
+            assertThrows(PGPException.class, () -> k.unlock(protector));
         }
     }
 
@@ -70,16 +64,15 @@ public class SecretKeyRingProtectorTest {
     @ExtendWith(TestAllImplementations.class)
     public void testUnlockSingleKeyWithPassphrase()
             throws IOException, PGPException {
-
-        PGPSecretKeyRing secretKeys = TestKeys.getCryptieSecretKeyRing();
-        Iterator<PGPSecretKey> iterator = secretKeys.iterator();
-        PGPSecretKey secretKey = iterator.next();
-        PGPSecretKey subKey = iterator.next();
+        OpenPGPKey secretKeys = TestKeys.getCryptieKey();
+        Iterator<OpenPGPKey.OpenPGPSecretKey> iterator = secretKeys.getSecretKeys().values().iterator();
+        OpenPGPKey.OpenPGPSecretKey key = iterator.next();
+        OpenPGPKey.OpenPGPSecretKey subKey = iterator.next();
 
         SecretKeyRingProtector protector =
-                SecretKeyRingProtector.unlockSingleKeyWith(TestKeys.CRYPTIE_PASSPHRASE, secretKey);
-        assertNotNull(protector.getDecryptor(secretKey.getKeyIdentifier()));
-        assertNotNull(protector.getEncryptor(secretKey.getPublicKey()));
+                SecretKeyRingProtector.unlockSingleKeyWith(TestKeys.CRYPTIE_PASSPHRASE, key);
+        assertNotNull(protector.getDecryptor(key.getKeyIdentifier()));
+        assertNotNull(protector.getEncryptor(key.getPublicKey()));
         assertNull(protector.getEncryptor(subKey.getPublicKey()));
         assertNull(protector.getDecryptor(subKey.getKeyIdentifier()));
     }
