@@ -7,6 +7,7 @@ package org.pgpainless.example;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
+import java.io.IOException;
 import java.util.Date;
 
 import org.bouncycastle.openpgp.api.OpenPGPCertificate;
@@ -31,7 +32,7 @@ import org.pgpainless.util.Passphrase;
 
 /**
  * This class demonstrates how to use PGPainless to generate secret keys.
- * In general the starting point for generating secret keys using PGPainless is {@link PGPainless#generateKeyRing()}.
+ * In general the starting point for generating secret keys using PGPainless is {@link PGPainless#generateKey()}.
  * The result ({@link org.pgpainless.key.generation.KeyRingBuilder}) provides some factory methods for key archetypes
  * such as {@link org.pgpainless.key.generation.KeyRingTemplates#modernKeyRing(CharSequence, String)} or
  * {@link org.pgpainless.key.generation.KeyRingTemplates#simpleRsaKeyRing(CharSequence, RsaLength)}.
@@ -52,22 +53,23 @@ public class GenerateKeys {
      * This is the recommended way to generate OpenPGP keys with PGPainless.
      */
     @Test
-    public void generateModernEcKey() {
+    public void generateModernEcKey() throws IOException {
+        PGPainless api = PGPainless.getInstance();
         // Define a primary user-id
         String userId = "gbaker@pgpainless.org";
         // Set a password to protect the secret key
         String password = "ra1nb0w";
         // Generate the OpenPGP key
-        OpenPGPKey secretKey = PGPainless.generateKeyRing()
+        OpenPGPKey key = api.generateKey()
                 .modernKeyRing(userId, password);
 
         // Extract public key
-        OpenPGPCertificate publicKey = secretKey.toCertificate();
+        OpenPGPCertificate certificate = key.toCertificate();
         // Encode the public key to an ASCII armored string ready for sharing
-        String asciiArmoredPublicKey = PGPainless.asciiArmor(publicKey);
+        String asciiArmoredPublicKey = certificate.toAsciiArmoredString();
         assertTrue(asciiArmoredPublicKey.startsWith("-----BEGIN PGP PUBLIC KEY BLOCK-----"));
 
-        KeyRingInfo keyInfo = PGPainless.inspectKeyRing(secretKey);
+        KeyRingInfo keyInfo = api.inspect(key);
         assertEquals(3, keyInfo.getSecretKeys().size());
         assertEquals(userId, keyInfo.getPrimaryUserId());
         assertEquals(PublicKeyAlgorithm.EDDSA_LEGACY.getAlgorithmId(),
@@ -86,15 +88,16 @@ public class GenerateKeys {
      */
     @Test
     public void generateSimpleRSAKey() {
+        PGPainless api = PGPainless.getInstance();
         // Define a primary user-id
         String userId = "mpage@pgpainless.org";
         // Set a password to protect the secret key
         String password = "b1angl3s";
         // Generate the OpenPGP key
-        OpenPGPKey secretKey = PGPainless.generateKeyRing()
+        OpenPGPKey secretKey = api.generateKey()
                 .simpleRsaKeyRing(userId, RsaLength._4096, password);
 
-        KeyRingInfo keyInfo = PGPainless.inspectKeyRing(secretKey);
+        KeyRingInfo keyInfo = api.inspect(secretKey);
         assertEquals(1, keyInfo.getSecretKeys().size());
         assertEquals(userId, keyInfo.getPrimaryUserId());
         assertEquals(PublicKeyAlgorithm.RSA_GENERAL.getAlgorithmId(), keyInfo.getAlgorithm().getAlgorithmId());
@@ -109,16 +112,17 @@ public class GenerateKeys {
      */
     @Test
     public void generateSimpleECKey() {
+        PGPainless api = PGPainless.getInstance();
         // Define a primary user-id
         String userId = "mhelms@pgpainless.org";
         // Set a password to protect the secret key
         String password = "tr4ns";
         // Generate the OpenPGP key
-        OpenPGPKey secretKey = PGPainless.generateKeyRing()
+        OpenPGPKey secretKey = api.generateKey()
                 .simpleEcKeyRing(userId, password);
 
 
-        KeyRingInfo keyInfo = PGPainless.inspectKeyRing(secretKey);
+        KeyRingInfo keyInfo = api.inspect(secretKey);
         assertEquals(2, keyInfo.getSecretKeys().size());
         assertEquals(userId, keyInfo.getPrimaryUserId());
     }
@@ -160,6 +164,7 @@ public class GenerateKeys {
      */
     @Test
     public void generateCustomOpenPGPKey() {
+        PGPainless api = PGPainless.getInstance();
         // Instead of providing a string, we can assemble a user-id by using the user-id builder.
         // The example below corresponds to "Morgan Carpenter (Pride!) <mcarpenter@pgpainless.org>"
         UserId userId = UserId.builder()
@@ -172,7 +177,7 @@ public class GenerateKeys {
         // It is recommended to use the Passphrase class, as it can be used to safely invalidate passwords from memory
         Passphrase passphrase = Passphrase.fromPassword("1nters3x");
 
-        OpenPGPKey secretKey = PGPainless.buildKeyRing()
+        OpenPGPKey secretKey = api.buildKey()
                 .setPrimaryKey(KeySpec.getBuilder(KeyType.EDDSA_LEGACY(EdDSALegacyCurve._Ed25519),
                         // The primary key MUST carry the CERTIFY_OTHER flag, but CAN carry additional flags
                         KeyFlag.CERTIFY_OTHER))
@@ -205,7 +210,7 @@ public class GenerateKeys {
                 .build();
 
 
-        KeyRingInfo keyInfo = PGPainless.inspectKeyRing(secretKey);
+        KeyRingInfo keyInfo = api.inspect(secretKey);
         assertEquals(3, keyInfo.getSecretKeys().size());
         assertEquals("Morgan Carpenter (Pride!) <mcarpenter@pgpainless.org>", keyInfo.getPrimaryUserId());
         assertTrue(keyInfo.isUserIdValid(additionalUserId));
