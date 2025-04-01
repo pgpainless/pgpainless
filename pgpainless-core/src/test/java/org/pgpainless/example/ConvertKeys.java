@@ -20,17 +20,17 @@ public class ConvertKeys {
      */
     @Test
     public void secretKeyToCertificate() {
+        PGPainless api = PGPainless.getInstance();
         String userId = "alice@wonderland.lit";
-        OpenPGPKey secretKey = PGPainless.generateKeyRing()
+        OpenPGPKey secretKey = api.generateKey()
                 .modernKeyRing(userId);
 
         // Extract certificate (public key) from secret key
         OpenPGPCertificate certificate = secretKey.toCertificate();
 
-
-        KeyRingInfo secretKeyInfo = PGPainless.inspectKeyRing(secretKey);
+        KeyRingInfo secretKeyInfo = api.inspect(secretKey);
         assertTrue(secretKeyInfo.isSecretKey());
-        KeyRingInfo certificateInfo = PGPainless.inspectKeyRing(certificate);
+        KeyRingInfo certificateInfo = api.inspect(certificate);
         assertFalse(certificateInfo.isSecretKey());
     }
 }
