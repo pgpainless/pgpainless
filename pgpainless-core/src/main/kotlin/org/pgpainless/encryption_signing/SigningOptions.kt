@@ -48,6 +48,9 @@ class SigningOptions(private val api: PGPainless) {
         _hashAlgorithmOverride = hashAlgorithmOverride
     }
 
+    /**
+     * Evaluation date for signing keys.
+     */
     val evaluationDate: Date
         get() = _evaluationDate
 
@@ -88,6 +91,7 @@ class SigningOptions(private val api: PGPainless) {
      */
     @Deprecated("Pass an OpenPGPKey instead.")
     @Throws(KeyException::class, PGPException::class)
+    // TODO: Remove in 2.1
     fun addSignature(signingKeyProtector: SecretKeyRingProtector, signingKey: PGPSecretKeyRing) =
         addSignature(signingKeyProtector, api.toKey(signingKey))
 
@@ -104,6 +108,7 @@ class SigningOptions(private val api: PGPainless) {
      */
     @Throws(KeyException::class, PGPException::class)
     @Deprecated("Repeatedly call addInlineSignature(), passing an OpenPGPKey instead.")
+    // TODO: Remove in 2.1
     fun addInlineSignatures(
         signingKeyProtector: SecretKeyRingProtector,
         signingKeys: Iterable<PGPSecretKeyRing>,
@@ -112,6 +117,17 @@ class SigningOptions(private val api: PGPainless) {
         signingKeys.forEach { addInlineSignature(signingKeyProtector, it, null, signatureType) }
     }
 
+    /**
+     * Add inline signatures with the provided [signingKey].
+     *
+     * @param signingKeyProtector decryptor to unlock the signing secret keys
+     * @param signingKey OpenPGP key
+     * @param signatureType type of signature (binary, canonical text)
+     * @return this
+     * @throws KeyException if something is wrong with any of the keys
+     * @throws PGPException if any of the keys cannot be unlocked or a signing method cannot be
+     *   created
+     */
     fun addInlineSignature(
         signingKeyProtector: SecretKeyRingProtector,
         signingKey: OpenPGPKey,
@@ -131,12 +147,30 @@ class SigningOptions(private val api: PGPainless) {
      */
     @Throws(KeyException::class, PGPException::class)
     @Deprecated("Pass an OpenPGPKey instead.")
+    // TODO: Remove in 2.1
     fun addInlineSignature(
         signingKeyProtector: SecretKeyRingProtector,
         signingKey: PGPSecretKeyRing,
         signatureType: DocumentSignatureType
     ) = addInlineSignature(signingKeyProtector, api.toKey(signingKey), signatureType)
 
+    /**
+     * Add an inline-signature. Inline signatures are being embedded into the message itself and can
+     * be processed in one pass, thanks to the use of one-pass-signature packets.
+     *
+     * <p>
+     * This method uses the passed in user-id to select user-specific hash algorithms.
+     *
+     * @param signingKeyProtector decryptor to unlock the signing secret key
+     * @param signingKey signing key
+     * @param userId user-id of the signer
+     * @param signatureType signature type (binary, canonical text)
+     * @param subpacketsCallback callback to modify the hashed and unhashed subpackets of the
+     *   signature
+     * @return this
+     * @throws KeyException if the key is invalid
+     * @throws PGPException if the key cannot be unlocked or the signing method cannot be created
+     */
     @JvmOverloads
     fun addInlineSignature(
         signingKeyProtector: SecretKeyRingProtector,
@@ -195,6 +229,7 @@ class SigningOptions(private val api: PGPainless) {
     @Deprecated("Pass an OpenPGPKey instead.")
     @Throws(KeyException::class, PGPException::class)
     @JvmOverloads
+    // TODO: Remove in 2.1
     fun addInlineSignature(
         signingKeyProtector: SecretKeyRingProtector,
         signingKey: PGPSecretKeyRing,
@@ -205,6 +240,17 @@ class SigningOptions(private val api: PGPainless) {
         addInlineSignature(
             signingKeyProtector, api.toKey(signingKey), userId, signatureType, subpacketsCallback)
 
+    /**
+     * Create an inline signature using the given signing component key (e.g. a specific subkey).
+     *
+     * @param signingKeyProtector decryptor to unlock the secret key
+     * @param signingKey signing component key
+     * @param signatureType signature type
+     * @param subpacketsCallback callback to modify the signatures subpackets
+     * @return builder
+     * @throws PGPException if the secret key cannot be unlocked or if no signing method can be
+     *   created.
+     */
     fun addInlineSignature(
         signingKeyProtector: SecretKeyRingProtector,
         signingKey: OpenPGPSecretKey,
@@ -247,6 +293,8 @@ class SigningOptions(private val api: PGPainless) {
      */
     @Throws(KeyException::class, PGPException::class)
     @JvmOverloads
+    @Deprecated("Pass in an OpenPGPSecretKey instead.")
+    // TODO: Remove in 2.1
     fun addInlineSignature(
         signingKeyProtector: SecretKeyRingProtector,
         signingKey: PGPSecretKeyRing,
@@ -277,6 +325,7 @@ class SigningOptions(private val api: PGPainless) {
      */
     @Throws(KeyException::class, PGPException::class)
     @Deprecated("Repeatedly call addDetachedSignature(), passing an OpenPGPKey instead.")
+    // TODO: Remove in 2.1
     fun addDetachedSignatures(
         signingKeyProtector: SecretKeyRingProtector,
         signingKeys: Iterable<PGPSecretKeyRing>,
@@ -306,12 +355,31 @@ class SigningOptions(private val api: PGPainless) {
      */
     @Deprecated("Pass an OpenPGPKey instead.")
     @Throws(KeyException::class, PGPException::class)
+    // TODO: Remove in 2.1
     fun addDetachedSignature(
         signingKeyProtector: SecretKeyRingProtector,
         signingKey: PGPSecretKeyRing,
         signatureType: DocumentSignatureType
     ) = apply { addDetachedSignature(signingKeyProtector, signingKey, null, signatureType) }
 
+    /**
+     * Create a detached signature. Detached signatures are not being added into the PGP message
+     * itself. Instead, they can be distributed separately to the message. Detached signatures are
+     * useful if the data that is being signed shall not be modified (e.g. when signing a file).
+     *
+     * <p>
+     * This method uses the passed in user-id to select user-specific hash algorithms.
+     *
+     * @param signingKeyProtector decryptor to unlock the secret signing key
+     * @param signingKey signing key
+     * @param userId user-id
+     * @param signatureType type of data that is signed (binary, canonical text)
+     * @param subpacketCallback callback to modify hashed and unhashed subpackets of the signature
+     * @return this
+     * @throws KeyException if something is wrong with the key
+     * @throws PGPException if the key cannot be validated or unlocked, or if no signature method
+     *   can be created
+     */
     @JvmOverloads
     fun addDetachedSignature(
         signingKeyProtector: SecretKeyRingProtector,
@@ -364,6 +432,7 @@ class SigningOptions(private val api: PGPainless) {
     @Deprecated("Pass an OpenPGPKey instead.")
     @JvmOverloads
     @Throws(KeyException::class, PGPException::class)
+    // TODO: Remove in 2.1
     fun addDetachedSignature(
         signingKeyProtector: SecretKeyRingProtector,
         signingKey: PGPSecretKeyRing,
@@ -374,6 +443,21 @@ class SigningOptions(private val api: PGPainless) {
         addDetachedSignature(
             signingKeyProtector, api.toKey(signingKey), userId, signatureType, subpacketCallback)
 
+    /**
+     * Create a detached signature. Detached signatures are not being added into the PGP message
+     * itself. Instead, they can be distributed separately to the message. Detached signatures are
+     * useful if the data that is being signed shall not be modified (e.g. when signing a file).
+     * This method creates a signature using the provided [signingKey], taking into consideration
+     * the preferences found on the binding signature of the given [userId].
+     *
+     * @param signingKeyProtector protector to unlock the signing key
+     * @param signingKey OpenPGP key for signing
+     * @param userId user-id to determine algorithm preferences
+     * @param signatureType document signature type
+     * @param subpacketCallback callback to change the subpackets of the signature
+     *
+     * @return this
+     */
     fun addDetachedSignature(
         signingKeyProtector: SecretKeyRingProtector,
         signingKey: OpenPGPSecretKey,
@@ -410,6 +494,7 @@ class SigningOptions(private val api: PGPainless) {
     @Throws(KeyException::class, PGPException::class)
     @JvmOverloads
     @Deprecated("Pass an OpenPGPSecretKey instead.")
+    // TODO: Remove in 2.1
     fun addDetachedSignature(
         signingKeyProtector: SecretKeyRingProtector,
         signingKey: PGPSecretKeyRing,
