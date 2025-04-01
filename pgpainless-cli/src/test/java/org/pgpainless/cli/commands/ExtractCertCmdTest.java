@@ -12,8 +12,8 @@ import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.IOException;
 
-import org.bouncycastle.openpgp.PGPPublicKeyRing;
-import org.bouncycastle.openpgp.PGPSecretKeyRing;
+import org.bouncycastle.openpgp.api.OpenPGPCertificate;
+import org.bouncycastle.openpgp.api.OpenPGPKey;
 import org.junit.jupiter.api.Test;
 import org.pgpainless.PGPainless;
 import org.pgpainless.key.info.KeyRingInfo;
@@ -22,6 +22,8 @@ import sop.exception.SOPGPException;
 
 public class ExtractCertCmdTest extends CLITest {
 
+    private final PGPainless api = PGPainless.getInstance();
+
     public ExtractCertCmdTest() {
         super(LoggerFactory.getLogger(ExtractCertCmdTest.class));
     }
@@ -29,18 +31,17 @@ public class ExtractCertCmdTest extends CLITest {
     @Test
     public void testExtractCert()
             throws IOException {
-        PGPSecretKeyRing secretKeys = PGPainless.generateKeyRing()
-                .simpleEcKeyRing("Juliet Capulet <juliet@capulet.lit>")
-                .getPGPSecretKeyRing();
+        OpenPGPKey key = api.generateKey()
+                .simpleEcKeyRing("Juliet Capulet <juliet@capulet.lit>");
 
-        pipeBytesToStdin(secretKeys.getEncoded());
+        pipeBytesToStdin(key.getEncoded());
         ByteArrayOutputStream out = pipeStdoutToStream();
         assertSuccess(executeCommand("extract-cert", "--armor"));
 
         assertTrue(out.toString().startsWith("-----BEGIN PGP PUBLIC KEY BLOCK-----\n"));
 
-        PGPPublicKeyRing publicKeys = PGPainless.readKeyRing().publicKeyRing(out.toByteArray());
-        KeyRingInfo info = PGPainless.inspectKeyRing(publicKeys);
+        OpenPGPCertificate certificate = api.readKey().parseCertificate(out.toByteArray());
+        KeyRingInfo info = api.inspect(certificate);
         assertFalse(info.isSecretKey());
         assertTrue(info.isUserIdValid("Juliet Capulet <juliet@capulet.lit>"));
     }
