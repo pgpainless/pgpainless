@@ -32,12 +32,13 @@ import org.pgpainless.util.ArmorUtils;
 
 public class Sign {
 
-    private static OpenPGPKey secretKey;
+    private static OpenPGPKey key;
     private static SecretKeyRingProtector protector;
+    private static final PGPainless api = PGPainless.getInstance();
 
     @BeforeAll
     public static void prepare() {
-        secretKey = PGPainless.generateKeyRing()
+        key = api.generateKey()
                 .modernKeyRing("Emilia Example <emilia@example.org>");
         protector = SecretKeyRingProtector.unprotectedKeys(); // no password
     }
@@ -51,10 +52,10 @@ public class Sign {
         String message = "\"Derivative Works\" shall mean any work, whether in Source or Object form, that is based on (or derived from) the Work and for which the editorial revisions, annotations, elaborations, or other modifications represent, as a whole, an original work of authorship. For the purposes of this License, Derivative Works shall not include works that remain separable from, or merely link (or bind by name) to the interfaces of, the Work and Derivative Works thereof.";
         InputStream messageIn = new ByteArrayInputStream(message.getBytes(StandardCharsets.UTF_8));
         ByteArrayOutputStream signedOut = new ByteArrayOutputStream();
-        EncryptionStream signingStream = PGPainless.encryptAndOrSign()
+        EncryptionStream signingStream = api.generateMessage()
                 .onOutputStream(signedOut)
-                .withOptions(ProducerOptions.sign(SigningOptions.get()
-                                .addSignature(protector, secretKey))
+                .withOptions(ProducerOptions.sign(SigningOptions.get(api)
+                                .addSignature(protector, key))
                 );
 
         Streams.pipeAll(messageIn, signingStream);
@@ -84,7 +85,7 @@ public class Sign {
         EncryptionStream signingStream = PGPainless.encryptAndOrSign()
                 .onOutputStream(ignoreMe)
                 .withOptions(ProducerOptions.sign(SigningOptions.get()
-                        .addDetachedSignature(protector, secretKey, DocumentSignatureType.CANONICAL_TEXT_DOCUMENT))
+                        .addDetachedSignature(protector, key, DocumentSignatureType.CANONICAL_TEXT_DOCUMENT))
                         .setAsciiArmor(false)
                 );
 
@@ -93,7 +94,7 @@ public class Sign {
 
         EncryptionResult result = signingStream.getResult();
 
-        OpenPGPCertificate.OpenPGPComponentKey signingKey = PGPainless.inspectKeyRing(secretKey).getSigningSubkeys().get(0);
+        OpenPGPCertificate.OpenPGPComponentKey signingKey = PGPainless.inspectKeyRing(key).getSigningSubkeys().get(0);
         PGPSignature signature = result.getDetachedSignatures().get(new SubkeyIdentifier(signingKey)).iterator().next();
         String detachedSignature = ArmorUtils.toAsciiArmoredString(signature.getEncoded());
 
@@ -128,7 +129,7 @@ public class Sign {
         EncryptionStream signingStream = PGPainless.encryptAndOrSign()
                 .onOutputStream(signedOut)
                 .withOptions(ProducerOptions.sign(SigningOptions.get()
-                                .addDetachedSignature(protector, secretKey, DocumentSignatureType.CANONICAL_TEXT_DOCUMENT)) // Human-readable text document
+                                .addDetachedSignature(protector, key, DocumentSignatureType.CANONICAL_TEXT_DOCUMENT)) // Human-readable text document
                         .setCleartextSigned() // <- Explicitly use Cleartext Signature Framework!!!
                 );
 

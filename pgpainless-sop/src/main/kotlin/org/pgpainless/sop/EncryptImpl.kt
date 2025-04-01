@@ -57,9 +57,9 @@ class EncryptImpl(private val api: PGPainless) : Encrypt {
 
         val options =
             if (signingOptions != null) {
-                    ProducerOptions.signAndEncrypt(encryptionOptions, signingOptions!!, api)
+                    ProducerOptions.signAndEncrypt(encryptionOptions, signingOptions!!)
                 } else {
-                    ProducerOptions.encrypt(encryptionOptions, api)
+                    ProducerOptions.encrypt(encryptionOptions)
                 }
                 .setAsciiArmor(armor)
                 .setEncoding(modeToStreamEncoding(mode))

@@ -106,7 +106,7 @@ class EncryptionStream(
 
     @Throws(IOException::class)
     private fun prepareCompression() {
-        options.negotiateCompressionAlgorithm().let {
+        options.negotiateCompressionAlgorithm(api.algorithmPolicy).let {
             resultBuilder.setCompressionAlgorithm(it)
             compressedDataGenerator = PGPCompressedDataGenerator(it.algorithmId)
             if (it == CompressionAlgorithm.UNCOMPRESSED) return

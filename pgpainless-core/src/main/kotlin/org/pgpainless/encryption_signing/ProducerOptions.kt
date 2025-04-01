@@ -6,14 +6,13 @@ package org.pgpainless.encryption_signing
 
 import java.util.*
 import org.bouncycastle.openpgp.PGPLiteralData
-import org.pgpainless.PGPainless
 import org.pgpainless.algorithm.CompressionAlgorithm
 import org.pgpainless.algorithm.StreamEncoding
+import org.pgpainless.policy.Policy
 
 class ProducerOptions(
     val encryptionOptions: EncryptionOptions?,
-    val signingOptions: SigningOptions?,
-    val api: PGPainless
+    val signingOptions: SigningOptions?
 ) {
 
     private var _fileName: String = ""
@@ -24,8 +23,8 @@ class ProducerOptions(
     private var _hideArmorHeaders = false
     var isDisableAsciiArmorCRC = false
 
-    private var _compressionAlgorithmOverride: CompressionAlgorithm =
-        api.algorithmPolicy.compressionAlgorithmPolicy.defaultCompressionAlgorithm
+    private var _compressionAlgorithmOverride: CompressionAlgorithm? = null
+
     private var asciiArmor = true
     private var _comment: String? = null
     private var _version: String? = null
@@ -219,7 +218,7 @@ class ProducerOptions(
         _compressionAlgorithmOverride = compressionAlgorithm
     }
 
-    val compressionAlgorithmOverride: CompressionAlgorithm
+    val compressionAlgorithmOverride: CompressionAlgorithm?
         get() = _compressionAlgorithmOverride
 
     val isHideArmorHeaders: Boolean
@@ -237,8 +236,9 @@ class ProducerOptions(
         _hideArmorHeaders = hideArmorHeaders
     }
 
-    internal fun negotiateCompressionAlgorithm(): CompressionAlgorithm {
+    internal fun negotiateCompressionAlgorithm(policy: Policy): CompressionAlgorithm {
         return compressionAlgorithmOverride
+            ?: policy.compressionAlgorithmPolicy.defaultCompressionAlgorithm
     }
 
     companion object {
@@ -249,13 +249,11 @@ class ProducerOptions(
          * @param signingOptions signing options
          * @return builder
          */
-        @JvmOverloads
         @JvmStatic
         fun signAndEncrypt(
             encryptionOptions: EncryptionOptions,
-            signingOptions: SigningOptions,
-            api: PGPainless = PGPainless.getInstance()
-        ): ProducerOptions = ProducerOptions(encryptionOptions, signingOptions, api)
+            signingOptions: SigningOptions
+        ): ProducerOptions = ProducerOptions(encryptionOptions, signingOptions)
 
         /**
          * Sign some data without encryption.
@@ -263,12 +261,9 @@ class ProducerOptions(
          * @param signingOptions signing options
          * @return builder
          */
-        @JvmOverloads
         @JvmStatic
-        fun sign(
-            signingOptions: SigningOptions,
-            api: PGPainless = PGPainless.getInstance()
-        ): ProducerOptions = ProducerOptions(null, signingOptions, api)
+        fun sign(signingOptions: SigningOptions): ProducerOptions =
+            ProducerOptions(null, signingOptions)
 
         /**
          * Encrypt some data without signing.
@@ -276,21 +271,15 @@ class ProducerOptions(
          * @param encryptionOptions encryption options
          * @return builder
          */
-        @JvmOverloads
         @JvmStatic
-        fun encrypt(
-            encryptionOptions: EncryptionOptions,
-            api: PGPainless = PGPainless.getInstance()
-        ): ProducerOptions = ProducerOptions(encryptionOptions, null, api)
+        fun encrypt(encryptionOptions: EncryptionOptions): ProducerOptions =
+            ProducerOptions(encryptionOptions, null)
 
         /**
          * Only wrap the data in an OpenPGP packet. No encryption or signing will be applied.
          *
          * @return builder
          */
-        @JvmOverloads
-        @JvmStatic
-        fun noEncryptionNoSigning(api: PGPainless = PGPainless.getInstance()): ProducerOptions =
-            ProducerOptions(null, null, api)
+        @JvmStatic fun noEncryptionNoSigning(): ProducerOptions = ProducerOptions(null, null)
     }
 }
