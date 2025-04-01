@@ -56,7 +56,7 @@ class InlineSignImpl(private val api: PGPainless) : InlineSign {
         }
 
         val producerOptions =
-            ProducerOptions.sign(signingOptions, api).apply {
+            ProducerOptions.sign(signingOptions).apply {
                 when (mode) {
                     InlineSignAs.clearsigned -> {
                         setCleartextSigned()

@@ -107,8 +107,7 @@ public class StupidAlgorithmPreferenceEncryptionTest {
         EncryptionStream encryptionStream = api.generateMessage()
                 .onOutputStream(out)
                 .withOptions(ProducerOptions.encrypt(
-                        EncryptionOptions.get(api).addRecipient(certificate),
-                        api
+                        EncryptionOptions.get(api).addRecipient(certificate)
                 ));
 
         encryptionStream.write("Hello".getBytes(StandardCharsets.UTF_8));
