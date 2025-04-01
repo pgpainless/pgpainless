@@ -92,7 +92,7 @@ class GenerateKeyImpl(private val api: PGPainless) : GenerateKey {
         val keyBuilder: KeyRingBuilder =
             when (profile) {
                 CURVE25519_PROFILE.name ->
-                    PGPainless.buildKeyRing()
+                    api.buildKey()
                         .setPrimaryKey(
                             KeySpec.getBuilder(
                                 KeyType.EDDSA_LEGACY(EdDSALegacyCurve._Ed25519),
@@ -110,7 +110,7 @@ class GenerateKeyImpl(private val api: PGPainless) : GenerateKey {
                             }
                         }
                 RSA4096_PROFILE.name -> {
-                    PGPainless.buildKeyRing()
+                    api.buildKey()
                         .setPrimaryKey(
                             KeySpec.getBuilder(KeyType.RSA(RsaLength._4096), KeyFlag.CERTIFY_OTHER))
                         .addSubkey(
