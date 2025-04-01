@@ -5,8 +5,8 @@
 package org.pgpainless.key.generation;
 
 import org.bouncycastle.openpgp.PGPException;
-import org.bouncycastle.openpgp.PGPPublicKeyRing;
-import org.bouncycastle.openpgp.PGPSecretKeyRing;
+import org.bouncycastle.openpgp.api.OpenPGPCertificate;
+import org.bouncycastle.openpgp.api.OpenPGPKey;
 import org.bouncycastle.util.io.Streams;
 import org.junit.JUtils;
 import org.junit.jupiter.api.Test;
@@ -42,17 +42,17 @@ public class GenerateKeyWithoutUserIdTest {
 
     @Test
     public void generateKeyWithoutUserId() throws PGPException, IOException {
+        PGPainless api = PGPainless.getInstance();
         Date now = new Date();
         Date expirationDate = TestTimeFrameProvider.defaultExpirationForCreationDate(now);
-        PGPSecretKeyRing secretKey = PGPainless.buildKeyRing()
+        OpenPGPKey secretKey = api.buildKey()
                 .setPrimaryKey(KeySpec.getBuilder(KeyType.EDDSA_LEGACY(EdDSALegacyCurve._Ed25519), KeyFlag.CERTIFY_OTHER).setKeyCreationDate(now))
                 .addSubkey(KeySpec.getBuilder(KeyType.EDDSA_LEGACY(EdDSALegacyCurve._Ed25519), KeyFlag.SIGN_DATA).setKeyCreationDate(now))
                 .addSubkey(KeySpec.getBuilder(KeyType.XDH_LEGACY(XDHLegacySpec._X25519), KeyFlag.ENCRYPT_COMMS, KeyFlag.ENCRYPT_STORAGE).setKeyCreationDate(now))
                 .setExpirationDate(expirationDate)
-                .build()
-                .getPGPSecretKeyRing();
+                .build();
 
-        KeyRingInfo info = PGPainless.inspectKeyRing(secretKey);
+        KeyRingInfo info = api.inspect(secretKey);
         assertNull(info.getPrimaryUserId());
         assertTrue(info.getUserIds().isEmpty());
         JUtils.assertDateEquals(expirationDate, info.getPrimaryKeyExpirationDate());
@@ -60,9 +60,9 @@ public class GenerateKeyWithoutUserIdTest {
         InputStream plaintextIn = new ByteArrayInputStream("Hello, World!\n".getBytes());
         ByteArrayOutputStream ciphertextOut = new ByteArrayOutputStream();
         SecretKeyRingProtector protector = SecretKeyRingProtector.unprotectedKeys();
-        PGPPublicKeyRing certificate = PGPainless.extractCertificate(secretKey);
+        OpenPGPCertificate certificate = secretKey.toCertificate();
 
-        EncryptionStream encryptionStream = PGPainless.encryptAndOrSign()
+        EncryptionStream encryptionStream = api.generateMessage()
                 .onOutputStream(ciphertextOut)
                 .withOptions(ProducerOptions.signAndEncrypt(
                         EncryptionOptions.get()
