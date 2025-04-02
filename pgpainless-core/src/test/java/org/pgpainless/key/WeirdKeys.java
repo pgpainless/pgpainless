@@ -13,17 +13,17 @@ import java.util.Collections;
 
 import org.bouncycastle.bcpg.HashAlgorithmTags;
 import org.bouncycastle.openpgp.PGPException;
-import org.bouncycastle.openpgp.PGPPrivateKey;
 import org.bouncycastle.openpgp.PGPPublicKey;
 import org.bouncycastle.openpgp.PGPPublicKeyRing;
-import org.bouncycastle.openpgp.PGPSecretKey;
-import org.bouncycastle.openpgp.PGPSecretKeyRing;
 import org.bouncycastle.openpgp.PGPSignature;
 import org.bouncycastle.openpgp.PGPSignatureGenerator;
+import org.bouncycastle.openpgp.api.OpenPGPCertificate;
 import org.bouncycastle.openpgp.api.OpenPGPImplementation;
+import org.bouncycastle.openpgp.api.OpenPGPKey;
 import org.bouncycastle.util.Strings;
 import org.junit.jupiter.api.Test;
 import org.pgpainless.PGPainless;
+import org.pgpainless.algorithm.OpenPGPKeyVersion;
 import org.pgpainless.algorithm.SignatureType;
 import org.pgpainless.key.info.KeyRingInfo;
 import org.pgpainless.key.protection.UnlockSecretKey;
@@ -67,8 +67,8 @@ public class WeirdKeys {
             "=BlPm\n" +
             "-----END PGP PRIVATE KEY BLOCK-----\n";
 
-    public static PGPSecretKeyRing getTwoCryptSubkeysKey() throws IOException {
-        return PGPainless.readKeyRing().secretKeyRing(TWO_CRYPT_SUBKEYS);
+    public static OpenPGPKey getTwoCryptSubkeysKey() throws IOException {
+        return PGPainless.getInstance().readKey().parseKey(TWO_CRYPT_SUBKEYS);
     }
 
     /**
@@ -96,18 +96,18 @@ public class WeirdKeys {
             "=h6sT\n" +
             "-----END PGP PRIVATE KEY BLOCK-----\n";
 
-    public static PGPSecretKeyRing getArchiveCommsSubkeysKey() throws IOException {
-        return PGPainless.readKeyRing().secretKeyRing(ARCHIVE_COMMS_SUBKEYS);
+    public static OpenPGPKey getArchiveCommsSubkeysKey() throws IOException {
+        return PGPainless.getInstance().readKey().parseKey(ARCHIVE_COMMS_SUBKEYS);
     }
 
     @Test
     public void generateCertAndTestWithNonUTF8UserId()
             throws PGPException, IOException {
-        PGPSecretKeyRing nakedKey = PGPainless.generateKeyRing().modernKeyRing(null)
-                .getPGPSecretKeyRing();
-        PGPPublicKey pubKey = nakedKey.getPublicKey();
-        PGPSecretKey secKey = nakedKey.getSecretKey();
-        PGPPrivateKey privKey = UnlockSecretKey.unlockSecretKey(secKey, Passphrase.emptyPassphrase());
+        OpenPGPKey nakedKey = PGPainless.getInstance()
+                .generateKey(OpenPGPKeyVersion.v4)  // v4, since we manually craft the binding sig later on
+                .modernKeyRing(null);
+        OpenPGPKey.OpenPGPSecretKey primaryKey = nakedKey.getPrimarySecretKey();
+        OpenPGPKey.OpenPGPPrivateKey privateKey = UnlockSecretKey.unlockSecretKey(primaryKey, Passphrase.emptyPassphrase());
 
         // Non-UTF8 User-ID
         ByteArrayOutputStream bOut = new ByteArrayOutputStream();
@@ -122,15 +122,15 @@ public class WeirdKeys {
 
         PGPSignatureGenerator sigGen = new PGPSignatureGenerator(
                 OpenPGPImplementation.getInstance().pgpContentSignerBuilder(
-                        pubKey.getAlgorithm(),
+                        primaryKey.getAlgorithm(),
                         HashAlgorithmTags.SHA512),
-                pubKey);
-        sigGen.init(SignatureType.GENERIC_CERTIFICATION.getCode(), privKey);
+                primaryKey.getPGPPublicKey());
+        sigGen.init(SignatureType.GENERIC_CERTIFICATION.getCode(), privateKey.getKeyPair().getPrivateKey());
 
         // We have to manually generate the signature over the user-ID
         // updateWithKey()
-        byte[] keyBytes = pubKey.getPublicKeyPacket().getEncodedContents();
-        sigGen.update((byte) 0x99);
+        byte[] keyBytes = primaryKey.getPGPPublicKey().getPublicKeyPacket().getEncodedContents();
+        sigGen.update((byte) 0x99); // 0x99 means v4 key
         sigGen.update((byte) (keyBytes.length >> 8));
         sigGen.update((byte) (keyBytes.length));
         sigGen.update(keyBytes);
@@ -144,12 +144,13 @@ public class WeirdKeys {
         sigGen.update(idBytes);
 
         PGPSignature signature = sigGen.generate();
-        pubKey = PGPPublicKey.addCertification(pubKey, idBytes, signature);
+        PGPPublicKey pubKey = PGPPublicKey.addCertification(primaryKey.getPGPPublicKey(), idBytes, signature);
 
-        PGPPublicKeyRing cert = new PGPPublicKeyRing(Collections.singletonList(pubKey));
+        PGPPublicKeyRing pubRing = new PGPPublicKeyRing(Collections.singletonList(pubKey));
+        OpenPGPCertificate cert = PGPainless.getInstance().toCertificate(pubRing);
 
         // This might fail
-        KeyRingInfo info = PGPainless.inspectKeyRing(cert);
+        KeyRingInfo info = PGPainless.getInstance().inspect(cert);
         assertTrue(info.getUserIds().isEmpty()); // Malformed ID is ignored
     }
 }

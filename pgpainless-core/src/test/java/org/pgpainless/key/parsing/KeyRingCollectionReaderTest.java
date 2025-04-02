@@ -23,10 +23,13 @@ public class KeyRingCollectionReaderTest {
 
     @Test
     public void writeAndParseKeyRingCollections() throws IOException {
+        PGPainless api = PGPainless.getInstance();
         // secret keys
-        PGPSecretKeyRing alice = PGPainless.generateKeyRing().modernKeyRing("Alice <alice@pgpainless.org>")
+        PGPSecretKeyRing alice = api.generateKey()
+                .modernKeyRing("Alice <alice@pgpainless.org>")
                 .getPGPSecretKeyRing();
-        PGPSecretKeyRing bob = PGPainless.generateKeyRing().modernKeyRing("Bob <bob@pgpainless.org>")
+        PGPSecretKeyRing bob = api.generateKey()
+                .modernKeyRing("Bob <bob@pgpainless.org>")
                 .getPGPSecretKeyRing();
 
         PGPSecretKeyRingCollection collection = KeyRingUtils.keyRingsToKeyRingCollection(alice, bob);
@@ -36,8 +39,8 @@ public class KeyRingCollectionReaderTest {
         assertEquals(collection.size(), parsed.size());
 
         // public keys
-        PGPPublicKeyRing pAlice = KeyRingUtils.publicKeyRingFrom(alice);
-        PGPPublicKeyRing pBob = KeyRingUtils.publicKeyRingFrom(bob);
+        PGPPublicKeyRing pAlice = alice.toCertificate();
+        PGPPublicKeyRing pBob = bob.toCertificate();
 
         PGPPublicKeyRingCollection pCollection = KeyRingUtils.keyRingsToKeyRingCollection(pAlice, pBob);
         ascii = ArmorUtils.toAsciiArmoredString(pCollection);

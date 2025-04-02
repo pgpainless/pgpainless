@@ -4,6 +4,7 @@
 
 package org.pgpainless.encryption_signing
 
+import java.security.MessageDigest
 import org.bouncycastle.openpgp.PGPException
 import org.bouncycastle.openpgp.PGPSignatureGenerator
 import org.bouncycastle.openpgp.api.OpenPGPKey
@@ -12,7 +13,6 @@ import org.pgpainless.PGPainless
 import org.pgpainless.algorithm.SignatureType
 import org.pgpainless.key.protection.SecretKeyRingProtector
 import org.pgpainless.key.protection.UnlockSecretKey
-import java.security.MessageDigest
 
 class BcHashContextSigner {
 
@@ -29,7 +29,8 @@ class BcHashContextSigner {
                 .mapNotNull { info.getSecretKey(it.keyIdentifier) }
                 .firstOrNull()
                 ?.let {
-                    signHashContext(hashContext, signatureType, UnlockSecretKey.unlockSecretKey(it, protector))
+                    signHashContext(
+                        hashContext, signatureType, UnlockSecretKey.unlockSecretKey(it, protector))
                 }
                 ?: throw PGPException("Key does not contain suitable signing subkey.")
         }
@@ -49,8 +50,7 @@ class BcHashContextSigner {
             privateKey: OpenPGPKey.OpenPGPPrivateKey
         ): OpenPGPDocumentSignature {
             return PGPSignatureGenerator(
-                BcPGPHashContextContentSignerBuilder(hashContext),
-                privateKey.keyPair.publicKey)
+                    BcPGPHashContextContentSignerBuilder(hashContext), privateKey.keyPair.publicKey)
                 .apply { init(signatureType.code, privateKey.keyPair.privateKey) }
                 .generate()
                 .let { OpenPGPDocumentSignature(it, privateKey.publicKey) }
