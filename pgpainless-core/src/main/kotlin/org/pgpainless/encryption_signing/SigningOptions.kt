@@ -48,9 +48,7 @@ class SigningOptions(private val api: PGPainless) {
         _hashAlgorithmOverride = hashAlgorithmOverride
     }
 
-    /**
-     * Evaluation date for signing keys.
-     */
+    /** Evaluation date for signing keys. */
     val evaluationDate: Date
         get() = _evaluationDate
 
@@ -455,7 +453,6 @@ class SigningOptions(private val api: PGPainless) {
      * @param userId user-id to determine algorithm preferences
      * @param signatureType document signature type
      * @param subpacketCallback callback to change the subpackets of the signature
-     *
      * @return this
      */
     fun addDetachedSignature(
