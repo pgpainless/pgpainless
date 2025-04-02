@@ -16,9 +16,9 @@ import java.security.NoSuchAlgorithmException;
 
 import org.bouncycastle.jce.provider.BouncyCastleProvider;
 import org.bouncycastle.openpgp.PGPException;
-import org.bouncycastle.openpgp.PGPSignature;
 import org.bouncycastle.openpgp.api.OpenPGPCertificate;
 import org.bouncycastle.openpgp.api.OpenPGPKey;
+import org.bouncycastle.openpgp.api.OpenPGPSignature;
 import org.bouncycastle.util.io.Streams;
 import org.junit.jupiter.api.Test;
 import org.pgpainless.PGPainless;
@@ -66,13 +66,15 @@ public class BcHashContextSignerTest {
 
     @Test
     public void signContextWithRSAKeys() throws PGPException, NoSuchAlgorithmException, IOException {
-        OpenPGPKey secretKeys = PGPainless.generateKeyRing().simpleRsaKeyRing("Sigfried", RsaLength._3072);
+        OpenPGPKey secretKeys = PGPainless.getInstance().generateKey()
+                .simpleRsaKeyRing("Sigfried", RsaLength._3072);
         signWithKeys(secretKeys);
     }
 
     @Test
     public void signContextWithEcKeys() throws PGPException, NoSuchAlgorithmException, IOException {
-        OpenPGPKey secretKeys = PGPainless.generateKeyRing().simpleEcKeyRing("Sigfried");
+        OpenPGPKey secretKeys = PGPainless.getInstance().generateKey()
+                .simpleEcKeyRing("Sigfried");
         signWithKeys(secretKeys);
     }
 
@@ -91,8 +93,8 @@ public class BcHashContextSignerTest {
         byte[] messageBytes = message.getBytes(StandardCharsets.UTF_8);
         ByteArrayInputStream messageIn = new ByteArrayInputStream(messageBytes);
 
-        PGPSignature signature = signMessage(messageBytes, hashAlgorithm, secretKeys);
-        assertEquals(hashAlgorithm.getAlgorithmId(), signature.getHashAlgorithm());
+        OpenPGPSignature.OpenPGPDocumentSignature signature = signMessage(messageBytes, hashAlgorithm, secretKeys);
+        assertEquals(hashAlgorithm.getAlgorithmId(), signature.getSignature().getHashAlgorithm());
 
         DecryptionStream decryptionStream = PGPainless.decryptAndOrVerify()
                 .onInputStream(messageIn)
@@ -108,13 +110,13 @@ public class BcHashContextSignerTest {
         assertTrue(metadata.isVerifiedSigned());
     }
 
-    private PGPSignature signMessage(byte[] message, HashAlgorithm hashAlgorithm, OpenPGPKey secretKeys)
+    private OpenPGPSignature.OpenPGPDocumentSignature signMessage(byte[] message, HashAlgorithm hashAlgorithm, OpenPGPKey secretKeys)
             throws NoSuchAlgorithmException {
         // Prepare the hash context
         // This would be done by the caller application
         MessageDigest messageDigest = MessageDigest.getInstance(hashAlgorithm.getAlgorithmName(), new BouncyCastleProvider());
         messageDigest.update(message);
 
-        return BcHashContextSigner.signHashContext(messageDigest, SignatureType.BINARY_DOCUMENT, secretKeys.getPGPSecretKeyRing(), SecretKeyRingProtector.unprotectedKeys());
+        return BcHashContextSigner.signHashContext(messageDigest, SignatureType.BINARY_DOCUMENT, secretKeys, SecretKeyRingProtector.unprotectedKeys());
     }
 }
