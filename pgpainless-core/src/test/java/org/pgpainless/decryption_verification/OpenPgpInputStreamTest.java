@@ -19,7 +19,7 @@ import org.bouncycastle.bcpg.ArmoredInputStream;
 import org.bouncycastle.bcpg.CompressionAlgorithmTags;
 import org.bouncycastle.openpgp.PGPCompressedDataGenerator;
 import org.bouncycastle.openpgp.PGPException;
-import org.bouncycastle.openpgp.PGPSecretKeyRing;
+import org.bouncycastle.openpgp.api.OpenPGPKey;
 import org.bouncycastle.util.io.Streams;
 import org.junit.jupiter.api.Test;
 import org.pgpainless.PGPainless;
@@ -735,15 +735,15 @@ public class OpenPgpInputStreamTest {
 
     @Test
     public void testSignedMessageConsumption() throws PGPException, IOException {
+        PGPainless api = PGPainless.getInstance();
         ByteArrayInputStream plaintext = new ByteArrayInputStream("Hello, World!\n".getBytes(StandardCharsets.UTF_8));
-        PGPSecretKeyRing secretKeys = PGPainless.generateKeyRing()
-                .modernKeyRing("Sigmund <sigmund@exmplample.com>")
-                .getPGPSecretKeyRing();
+        OpenPGPKey secretKeys = api.generateKey()
+                .modernKeyRing("Sigmund <sigmund@exmplample.com>");
 
         ByteArrayOutputStream signedOut = new ByteArrayOutputStream();
-        EncryptionStream signer = PGPainless.encryptAndOrSign()
+        EncryptionStream signer = api.generateMessage()
                 .onOutputStream(signedOut)
-                .withOptions(ProducerOptions.sign(SigningOptions.get()
+                .withOptions(ProducerOptions.sign(SigningOptions.get(api)
                                 .addSignature(SecretKeyRingProtector.unprotectedKeys(), secretKeys))
                         .setAsciiArmor(false)
                         .overrideCompressionAlgorithm(CompressionAlgorithm.UNCOMPRESSED));
