@@ -7,6 +7,8 @@ package org.pgpainless.key.protection
 import org.bouncycastle.bcpg.KeyIdentifier
 import org.bouncycastle.openpgp.PGPKeyRing
 import org.bouncycastle.openpgp.PGPPublicKey
+import org.bouncycastle.openpgp.api.OpenPGPCertificate
+import org.bouncycastle.openpgp.api.OpenPGPCertificate.OpenPGPComponentKey
 import org.bouncycastle.openpgp.api.OpenPGPKey
 import org.bouncycastle.openpgp.operator.PBESecretKeyDecryptor
 import org.bouncycastle.openpgp.operator.PBESecretKeyEncryptor
@@ -133,6 +135,12 @@ class CachingSecretKeyRingProtector : SecretKeyRingProtector, SecretKeyPassphras
     fun addPassphrase(key: PGPPublicKey, passphrase: Passphrase) =
         addPassphrase(key.keyIdentifier, passphrase)
 
+    fun addPassphrase(cert: OpenPGPCertificate, passphrase: Passphrase) =
+        addPassphrase(cert.pgpKeyRing, passphrase)
+
+    fun addPassphrase(key: OpenPGPComponentKey, passphrase: Passphrase) =
+        addPassphrase(key.keyIdentifier, passphrase)
+
     /**
      * Remember the given passphrase for the key with the given fingerprint.
      *
@@ -160,6 +168,8 @@ class CachingSecretKeyRingProtector : SecretKeyRingProtector, SecretKeyPassphras
     fun forgetPassphrase(keyRing: PGPKeyRing) = apply {
         keyRing.publicKeys.forEach { forgetPassphrase(it) }
     }
+
+    fun forgetPassphrase(cert: OpenPGPCertificate) = forgetPassphrase(cert.pgpPublicKeyRing)
 
     /**
      * Forget the passphrase of the given public key.
