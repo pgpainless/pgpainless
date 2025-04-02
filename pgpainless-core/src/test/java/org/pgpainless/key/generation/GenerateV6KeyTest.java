@@ -13,9 +13,11 @@ import org.bouncycastle.openpgp.api.SignatureParameters;
 import org.bouncycastle.openpgp.operator.PGPKeyPairGenerator;
 import org.junit.jupiter.api.Test;
 import org.pgpainless.PGPainless;
+import org.pgpainless.algorithm.Feature;
 import org.pgpainless.algorithm.KeyFlag;
 import org.pgpainless.algorithm.OpenPGPKeyVersion;
 import org.pgpainless.algorithm.PublicKeyAlgorithm;
+import org.pgpainless.key.generation.type.KeyType;
 import org.pgpainless.key.generation.type.rsa.RsaLength;
 import org.pgpainless.key.protection.KeyRingProtectionSettings;
 
@@ -159,5 +161,18 @@ public class GenerateV6KeyTest {
         assertNotNull(privateKey);
 
         assertEquals(armored, parsed.toAsciiArmoredString());
+    }
+
+    @Test
+    public void generateKeyOverrideFeatures() {
+        PGPainless api = PGPainless.getInstance();
+
+        OpenPGPKey key = api.buildKey(OpenPGPKeyVersion.v6)
+                .setPrimaryKey(KeySpec.getBuilder(KeyType.Ed25519(), KeyFlag.CERTIFY_OTHER)
+                        .overrideFeatures(Feature.MODIFICATION_DETECTION, Feature.MODIFICATION_DETECTION_2))
+                .build();
+
+        assertTrue(key.getPrimaryKey().getFeatures().supportsModificationDetection());
+        assertTrue(key.getPrimaryKey().getFeatures().supportsSEIPDv2());
     }
 }
