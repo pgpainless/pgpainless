@@ -113,7 +113,10 @@ class UnlockSecretKey {
         }
 
         @JvmStatic
-        fun unlockSecretKey(secretKey: OpenPGPSecretKey, passphrase: Passphrase): OpenPGPPrivateKey =
+        fun unlockSecretKey(
+            secretKey: OpenPGPSecretKey,
+            passphrase: Passphrase
+        ): OpenPGPPrivateKey =
             unlockSecretKey(secretKey, SecretKeyRingProtector.unlockAnyKeyWith(passphrase))
     }
 }

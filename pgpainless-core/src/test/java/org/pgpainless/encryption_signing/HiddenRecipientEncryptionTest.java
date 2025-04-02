@@ -13,8 +13,8 @@ import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 
 import org.bouncycastle.openpgp.PGPException;
-import org.bouncycastle.openpgp.PGPPublicKeyRing;
-import org.bouncycastle.openpgp.PGPSecretKeyRing;
+import org.bouncycastle.openpgp.api.OpenPGPCertificate;
+import org.bouncycastle.openpgp.api.OpenPGPKey;
 import org.bouncycastle.util.io.Streams;
 import org.junit.jupiter.api.Test;
 import org.pgpainless.PGPainless;
@@ -30,18 +30,18 @@ public class HiddenRecipientEncryptionTest {
 
     @Test
     public void testAnonymousRecipientRoundtrip() throws PGPException, IOException {
-        PGPSecretKeyRing secretKeys = PGPainless.generateKeyRing()
-                .modernKeyRing("Alice <alice@pgpainless.org>")
-                .getPGPSecretKeyRing();
-        PGPPublicKeyRing certificate = PGPainless.extractCertificate(secretKeys);
+        PGPainless api = PGPainless.getInstance();
+        OpenPGPKey secretKeys = api.generateKey()
+                .modernKeyRing("Alice <alice@pgpainless.org>");
+        OpenPGPCertificate certificate = secretKeys.toCertificate();
 
         String msg = "Hello, World!\n";
 
         ByteArrayOutputStream ciphertextOut = new ByteArrayOutputStream();
-        EncryptionStream encryptionStream = PGPainless.encryptAndOrSign()
+        EncryptionStream encryptionStream = api.generateMessage()
                 .onOutputStream(ciphertextOut)
                 .withOptions(ProducerOptions.encrypt(
-                        EncryptionOptions.get()
+                        EncryptionOptions.get(api)
                                 .addHiddenRecipient(certificate)
                 ));
         encryptionStream.write(msg.getBytes(StandardCharsets.UTF_8));
@@ -65,6 +65,8 @@ public class HiddenRecipientEncryptionTest {
 
         assertEquals(msg, plaintextOut.toString());
         assertTrue(metadata.getRecipientKeyIds().contains(0L));
+        assertEquals(1, metadata.getRecipientKeyIdentifiers().size());
+        assertTrue(metadata.getRecipientKeyIdentifiers().get(0).isWildcard());
         assertEquals(actualEncryptionKey, metadata.getDecryptionKey());
     }
 }
