@@ -58,6 +58,10 @@ interface SecretKeyRingProtector : KeyPassphraseProvider {
     @Throws(PGPException::class)
     fun getDecryptor(keyId: Long): PBESecretKeyDecryptor? = getDecryptor(KeyIdentifier(keyId))
 
+    @Throws(PGPException::class)
+    fun getDecryptor(key: OpenPGPSecretKey): PBESecretKeyDecryptor? =
+        getDecryptor(key.keyIdentifier)
+
     /**
      * Return a decryptor for the key with the given [keyIdentifier]. This method returns null if
      * the key is unprotected.
