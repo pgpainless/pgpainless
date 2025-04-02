@@ -6,10 +6,14 @@ package org.pgpainless.key.protection.passphrase_provider
 
 import org.bouncycastle.bcpg.KeyIdentifier
 import org.bouncycastle.openpgp.PGPSecretKey
+import org.bouncycastle.openpgp.api.OpenPGPCertificate.OpenPGPComponentKey
 import org.pgpainless.util.Passphrase
 
 /** Interface to allow the user to provide a [Passphrase] for an encrypted OpenPGP secret key. */
 interface SecretKeyPassphraseProvider {
+
+    fun getPassphraseFor(key: OpenPGPComponentKey): Passphrase? =
+        getPassphraseFor(key.keyIdentifier)
 
     /**
      * Return a passphrase for the given secret key. If no record is found, return null. Note: In
