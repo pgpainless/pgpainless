@@ -17,8 +17,9 @@ import java.nio.charset.StandardCharsets;
 
 import org.bouncycastle.bcpg.KeyIdentifier;
 import org.bouncycastle.openpgp.PGPException;
-import org.bouncycastle.openpgp.PGPPublicKeyRing;
 import org.bouncycastle.openpgp.PGPSecretKeyRing;
+import org.bouncycastle.openpgp.api.OpenPGPCertificate;
+import org.bouncycastle.openpgp.api.OpenPGPKey;
 import org.bouncycastle.util.io.Streams;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
@@ -62,45 +63,46 @@ public class CertificateWithMissingSecretKeyTest {
             "=eTh7\n" +
             "-----END PGP PRIVATE KEY BLOCK-----";
 
-    private static final long signingSubkeyId = -7647663290973502178L;
-    private static PGPSecretKeyRing missingSigningSecKey;
+    private static final KeyIdentifier signingSubkeyId = new KeyIdentifier(-7647663290973502178L);
+    private static OpenPGPKey missingSigningSecKey;
 
     private static KeyIdentifier encryptionSubkeyId;
-    private static PGPSecretKeyRing missingDecryptionSecKey;
+    private static OpenPGPKey missingDecryptionSecKey;
 
     private static final SecretKeyRingProtector protector = SecretKeyRingProtector.unprotectedKeys();
 
 
     @BeforeAll
     public static void prepare() throws IOException {
+        PGPainless api = PGPainless.getInstance();
         // missing signing sec key we read from bytes
-        missingSigningSecKey = PGPainless.readKeyRing().secretKeyRing(MISSING_SIGNING_SECKEY);
+        missingSigningSecKey = api.readKey().parseKey(MISSING_SIGNING_SECKEY);
 
         // missing encryption sec key we generate on the fly
-        PGPSecretKeyRing secretKeys = PGPainless.generateKeyRing()
-                .modernKeyRing("Missing Decryption Key <missing@decryption.key>")
-                .getPGPSecretKeyRing();
-        encryptionSubkeyId = PGPainless.inspectKeyRing(secretKeys)
+        OpenPGPKey secretKeys = api.generateKey()
+                .modernKeyRing("Missing Decryption Key <missing@decryption.key>");
+        encryptionSubkeyId = api.inspect(secretKeys)
                 .getEncryptionSubkeys(EncryptionPurpose.ANY).get(0).getKeyIdentifier();
         // remove the encryption/decryption secret key
-        missingDecryptionSecKey = KeyRingUtils.stripSecretKey(secretKeys, encryptionSubkeyId.getKeyId());
+        PGPSecretKeyRing withSecretKeyStripped = KeyRingUtils.stripSecretKey(secretKeys.getPGPSecretKeyRing(), encryptionSubkeyId);
+        missingDecryptionSecKey = api.toKey(withSecretKeyStripped);
     }
 
     @Test
     public void assureMissingSigningSecKeyOnlyContainSigningPubKey() {
-        assertNotNull(missingSigningSecKey.getPublicKey(signingSubkeyId));
+        assertNotNull(missingSigningSecKey.getKey(signingSubkeyId));
         assertNull(missingSigningSecKey.getSecretKey(signingSubkeyId));
 
-        KeyRingInfo info = PGPainless.inspectKeyRing(missingSigningSecKey);
+        KeyRingInfo info = PGPainless.getInstance().inspect(missingSigningSecKey);
         assertFalse(info.getSigningSubkeys().isEmpty()); // This method only tests for pub keys.
     }
 
     @Test
     public void assureMissingDecryptionSecKeyOnlyContainsEncryptionPubKey() {
-        assertNotNull(missingDecryptionSecKey.getPublicKey(encryptionSubkeyId));
+        assertNotNull(missingDecryptionSecKey.getKey(encryptionSubkeyId));
         assertNull(missingDecryptionSecKey.getSecretKey(encryptionSubkeyId));
 
-        KeyRingInfo info = PGPainless.inspectKeyRing(missingDecryptionSecKey);
+        KeyRingInfo info = PGPainless.getInstance().inspect(missingDecryptionSecKey);
         assertFalse(info.getEncryptionSubkeys(EncryptionPurpose.ANY).isEmpty()); // pub key is still there
     }
 
@@ -119,12 +121,14 @@ public class CertificateWithMissingSecretKeyTest {
         ByteArrayInputStream in = new ByteArrayInputStream("Hello, World!\n".getBytes(StandardCharsets.UTF_8));
         ByteArrayOutputStream out = new ByteArrayOutputStream();
 
-        PGPPublicKeyRing certificate = PGPainless.extractCertificate(missingDecryptionSecKey);
+        PGPainless api = PGPainless.getInstance();
+
+        OpenPGPCertificate certificate = missingDecryptionSecKey.toCertificate();
         ProducerOptions producerOptions = ProducerOptions.encrypt(
-                EncryptionOptions.encryptCommunications()
+                EncryptionOptions.encryptCommunications(api)
                         .addRecipient(certificate));  // we can still encrypt, since the pub key is still there
 
-        EncryptionStream encryptionStream = PGPainless.encryptAndOrSign()
+        EncryptionStream encryptionStream = api.generateMessage()
                 .onOutputStream(out)
                 .withOptions(producerOptions);
 
@@ -136,7 +140,7 @@ public class CertificateWithMissingSecretKeyTest {
         // Test decryption
         ByteArrayInputStream cipherIn = new ByteArrayInputStream(out.toByteArray());
 
-        ConsumerOptions consumerOptions = ConsumerOptions.get()
+        ConsumerOptions consumerOptions = ConsumerOptions.get(api)
                 .addDecryptionKey(missingDecryptionSecKey);
 
         assertThrows(MissingDecryptionMethodException.class, () ->
