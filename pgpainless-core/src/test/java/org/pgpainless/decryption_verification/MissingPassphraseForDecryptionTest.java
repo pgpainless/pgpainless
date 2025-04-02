@@ -18,9 +18,8 @@ import java.util.List;
 
 import org.bouncycastle.bcpg.KeyIdentifier;
 import org.bouncycastle.openpgp.PGPException;
-import org.bouncycastle.openpgp.PGPPublicKeyRing;
-import org.bouncycastle.openpgp.PGPSecretKeyRing;
 import org.bouncycastle.openpgp.api.OpenPGPCertificate;
+import org.bouncycastle.openpgp.api.OpenPGPKey;
 import org.bouncycastle.util.io.Streams;
 import org.jetbrains.annotations.NotNull;
 import org.junit.jupiter.api.BeforeEach;
@@ -40,18 +39,18 @@ import org.pgpainless.util.Passphrase;
 public class MissingPassphraseForDecryptionTest {
 
     private final String passphrase = "dragon123";
-    private PGPSecretKeyRing secretKeys;
+    private OpenPGPKey secretKeys;
     private byte[] message;
+    private final PGPainless api = PGPainless.getInstance();
 
     @BeforeEach
     public void setup() throws PGPException, IOException {
-        secretKeys = PGPainless.generateKeyRing().modernKeyRing("Test", passphrase)
-                .getPGPSecretKeyRing();
-        PGPPublicKeyRing certificate = PGPainless.extractCertificate(secretKeys);
+        secretKeys = api.generateKey().modernKeyRing("Test", passphrase);
+        OpenPGPCertificate certificate = secretKeys.toCertificate();
         ByteArrayOutputStream out = new ByteArrayOutputStream();
-        EncryptionStream encryptionStream = PGPainless.encryptAndOrSign()
+        EncryptionStream encryptionStream = api.generateMessage()
                 .onOutputStream(out)
-                .withOptions(ProducerOptions.encrypt(EncryptionOptions.encryptCommunications()
+                .withOptions(ProducerOptions.encrypt(EncryptionOptions.encryptCommunications(api)
                         .addRecipient(certificate)));
 
         Streams.pipeAll(new ByteArrayInputStream("Hey, what's up?".getBytes(StandardCharsets.UTF_8)), encryptionStream);
@@ -74,7 +73,7 @@ public class MissingPassphraseForDecryptionTest {
                 return true;
             }
         };
-        ConsumerOptions options = ConsumerOptions.get()
+        ConsumerOptions options = ConsumerOptions.get(api)
                 .setMissingKeyPassphraseStrategy(MissingKeyPassphraseStrategy.INTERACTIVE)
                 .addDecryptionKey(secretKeys, SecretKeyRingProtector.defaultSecretKeyRingProtector(callback));
 
@@ -91,7 +90,7 @@ public class MissingPassphraseForDecryptionTest {
 
     @Test
     public void throwExceptionStrategy() throws PGPException, IOException {
-        KeyRingInfo info = PGPainless.inspectKeyRing(secretKeys);
+        KeyRingInfo info = api.inspect(secretKeys);
         List<OpenPGPCertificate.OpenPGPComponentKey> encryptionKeys =
                 info.getEncryptionSubkeys(EncryptionPurpose.ANY);
 
@@ -108,7 +107,7 @@ public class MissingPassphraseForDecryptionTest {
             }
         };
 
-        ConsumerOptions options = ConsumerOptions.get()
+        ConsumerOptions options = ConsumerOptions.get(api)
                 .setMissingKeyPassphraseStrategy(MissingKeyPassphraseStrategy.THROW_EXCEPTION)
                 .addDecryptionKey(secretKeys, SecretKeyRingProtector.defaultSecretKeyRingProtector(callback));
 
@@ -121,7 +120,7 @@ public class MissingPassphraseForDecryptionTest {
             assertFalse(e.getKeyIds().isEmpty());
             assertEquals(encryptionKeys.size(), e.getKeyIds().size());
             for (OpenPGPCertificate.OpenPGPComponentKey encryptionKey : encryptionKeys) {
-                assertTrue(e.getKeyIds().contains(new SubkeyIdentifier(secretKeys, encryptionKey.getKeyIdentifier())));
+                assertTrue(e.getKeyIds().contains(new SubkeyIdentifier(encryptionKey)));
             }
         }
     }

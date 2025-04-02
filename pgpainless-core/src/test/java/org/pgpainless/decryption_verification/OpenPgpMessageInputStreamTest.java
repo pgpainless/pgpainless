@@ -26,9 +26,9 @@ import org.bouncycastle.openpgp.PGPCompressedDataGenerator;
 import org.bouncycastle.openpgp.PGPException;
 import org.bouncycastle.openpgp.PGPLiteralData;
 import org.bouncycastle.openpgp.PGPLiteralDataGenerator;
-import org.bouncycastle.openpgp.PGPPublicKeyRing;
-import org.bouncycastle.openpgp.PGPSecretKeyRing;
 import org.bouncycastle.openpgp.PGPSignature;
+import org.bouncycastle.openpgp.api.OpenPGPCertificate;
+import org.bouncycastle.openpgp.api.OpenPGPKey;
 import org.bouncycastle.util.io.Streams;
 import org.junit.JUtils;
 import org.junit.jupiter.api.Named;
@@ -162,6 +162,8 @@ public class OpenPgpMessageInputStreamTest {
             "=tkTV\n" +
             "-----END PGP MESSAGE-----";
 
+    private static final PGPainless api = PGPainless.getInstance();
+
     public static void main(String[] args) throws Exception {
         // genLIT();
         // genLIT_LIT();
@@ -237,21 +239,22 @@ public class OpenPgpMessageInputStreamTest {
         armorOut.close();
     }
 
-    public static void genKey() {
-        PGPainless.asciiArmor(
-                PGPainless.generateKeyRing().modernKeyRing("Alice <alice@pgpainless.org>")
-                        .getPGPSecretKeyRing(),
-                System.out);
+    public static void genKey() throws IOException {
+        OpenPGPKey key = api.generateKey()
+                .modernKeyRing("Alice <alice@pgpainless.org>");
+        // CHECKSTYLE:OFF
+        System.out.println(key.toAsciiArmoredString());
+        // CHECKSTYLE:ON
     }
 
     public static void genSIG_COMP_LIT() throws PGPException, IOException {
-        PGPSecretKeyRing secretKeys = PGPainless.readKeyRing().secretKeyRing(KEY);
+        OpenPGPKey secretKeys = api.readKey().parseKey(KEY);
         ByteArrayOutputStream msgOut = new ByteArrayOutputStream();
-        EncryptionStream signer = PGPainless.encryptAndOrSign()
+        EncryptionStream signer = api.generateMessage()
                 .onOutputStream(msgOut)
                 .withOptions(
                         ProducerOptions.sign(
-                                SigningOptions.get()
+                                SigningOptions.get(api)
                                         .addDetachedSignature(SecretKeyRingProtector.unprotectedKeys(), secretKeys)
                         ).setAsciiArmor(false)
                 );
@@ -277,9 +280,9 @@ public class OpenPgpMessageInputStreamTest {
     }
 
     public static void genSENC_LIT() throws PGPException, IOException {
-        EncryptionStream enc = PGPainless.encryptAndOrSign()
+        EncryptionStream enc = api.generateMessage()
                 .onOutputStream(System.out)
-                .withOptions(ProducerOptions.encrypt(EncryptionOptions.get()
+                .withOptions(ProducerOptions.encrypt(EncryptionOptions.get(api)
                                 .addMessagePassphrase(Passphrase.fromPassword(PASSPHRASE)))
                         .overrideCompressionAlgorithm(CompressionAlgorithm.UNCOMPRESSED));
         enc.write(PLAINTEXT.getBytes(StandardCharsets.UTF_8));
@@ -287,11 +290,11 @@ public class OpenPgpMessageInputStreamTest {
     }
 
     public static void genPENC_COMP_LIT() throws IOException, PGPException {
-        PGPSecretKeyRing secretKeys = PGPainless.readKeyRing().secretKeyRing(KEY);
-        PGPPublicKeyRing cert = PGPainless.extractCertificate(secretKeys);
-        EncryptionStream enc = PGPainless.encryptAndOrSign()
+        OpenPGPKey secretKeys = api.readKey().parseKey(KEY);
+        OpenPGPCertificate cert = secretKeys.toCertificate();
+        EncryptionStream enc = api.generateMessage()
                 .onOutputStream(System.out)
-                .withOptions(ProducerOptions.encrypt(EncryptionOptions.get()
+                .withOptions(ProducerOptions.encrypt(EncryptionOptions.get(api)
                                 .addRecipient(cert))
                         .overrideCompressionAlgorithm(CompressionAlgorithm.ZLIB));
 
@@ -300,11 +303,11 @@ public class OpenPgpMessageInputStreamTest {
     }
 
     public static void genOPS_LIT_SIG() throws PGPException, IOException {
-        PGPSecretKeyRing secretKeys = PGPainless.readKeyRing().secretKeyRing(KEY);
+        OpenPGPKey secretKeys = api.readKey().parseKey(KEY);
 
-        EncryptionStream enc = PGPainless.encryptAndOrSign()
+        EncryptionStream enc = api.generateMessage()
                 .onOutputStream(System.out)
-                .withOptions(ProducerOptions.sign(SigningOptions.get()
+                .withOptions(ProducerOptions.sign(SigningOptions.get(api)
                         .addSignature(SecretKeyRingProtector.unprotectedKeys(), secretKeys))
                         .overrideCompressionAlgorithm(CompressionAlgorithm.UNCOMPRESSED));
         Streams.pipeAll(new ByteArrayInputStream(PLAINTEXT.getBytes(StandardCharsets.UTF_8)), enc);
@@ -398,8 +401,8 @@ public class OpenPgpMessageInputStreamTest {
     @MethodSource("provideMessageProcessors")
     void testProcessSIG_COMP_LIT(Processor processor)
             throws PGPException, IOException {
-        PGPPublicKeyRing cert = PGPainless.extractCertificate(
-                PGPainless.readKeyRing().secretKeyRing(KEY));
+        OpenPGPKey key = api.readKey().parseKey(KEY);
+        OpenPGPCertificate cert = key.toCertificate();
 
         Result result = processor.process(SIG_COMP_LIT, ConsumerOptions.get()
                 .addVerificationCert(cert));
@@ -431,8 +434,8 @@ public class OpenPgpMessageInputStreamTest {
     @MethodSource("provideMessageProcessors")
     void testProcessPENC_COMP_LIT(Processor processor)
             throws IOException, PGPException {
-        PGPSecretKeyRing secretKeys = PGPainless.readKeyRing().secretKeyRing(KEY);
-        Result result = processor.process(PENC_COMP_LIT, ConsumerOptions.get()
+        OpenPGPKey secretKeys = api.readKey().parseKey(KEY);
+        Result result = processor.process(PENC_COMP_LIT, ConsumerOptions.get(api)
                 .addDecryptionKey(secretKeys));
         String plain = result.plaintext;
         assertEquals(PLAINTEXT, plain);
@@ -447,7 +450,8 @@ public class OpenPgpMessageInputStreamTest {
     @MethodSource("provideMessageProcessors")
     void testProcessOPS_LIT_SIG(Processor processor)
             throws IOException, PGPException {
-        PGPPublicKeyRing cert = PGPainless.extractCertificate(PGPainless.readKeyRing().secretKeyRing(KEY));
+        OpenPGPKey key = api.readKey().parseKey(KEY);
+        OpenPGPCertificate cert = key.toCertificate();
         Result result = processor.process(OPS_LIT_SIG, ConsumerOptions.get()
                 .addVerificationCert(cert));
         String plain = result.plaintext;
@@ -581,10 +585,10 @@ public class OpenPgpMessageInputStreamTest {
                 "s7O7MH2b1YkDPsTDuLoDjBzDRoA+2vi034km9Qdcs3w8+vrydw4=\n" +
                 "=mdYs\n" +
                 "-----END PGP MESSAGE-----\n";
-        PGPSecretKeyRing secretKeys = PGPainless.readKeyRing().secretKeyRing(BOB_KEY);
-        PGPPublicKeyRing certificate = PGPainless.extractCertificate(secretKeys);
+        OpenPGPKey secretKeys = api.readKey().parseKey(BOB_KEY);
+        OpenPGPCertificate certificate = secretKeys.toCertificate();
 
-        Result result = processor.process(MSG, ConsumerOptions.get()
+        Result result = processor.process(MSG, ConsumerOptions.get(api)
                 .addVerificationCert(certificate)
                 .addDecryptionKey(secretKeys));
         String plain = result.plaintext;
@@ -646,10 +650,10 @@ public class OpenPgpMessageInputStreamTest {
                 "x12WVuyITVU3fCfHp6/0A6wPtJezCvoodqPlw/3fd5eSVYzb5C3v564uhz4=\n" +
                 "=JP9T\n" +
                 "-----END PGP MESSAGE-----";
-        PGPSecretKeyRing secretKeys = PGPainless.readKeyRing().secretKeyRing(BOB_KEY);
-        PGPPublicKeyRing certificate = PGPainless.extractCertificate(secretKeys);
+        OpenPGPKey secretKeys = api.readKey().parseKey(BOB_KEY);
+        OpenPGPCertificate certificate = secretKeys.toCertificate();
 
-        Result result = processor.process(MSG, ConsumerOptions.get()
+        Result result = processor.process(MSG, ConsumerOptions.get(api)
                 .addVerificationCert(certificate)
                 .addDecryptionKey(secretKeys));
         String plain = result.plaintext;
