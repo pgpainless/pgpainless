@@ -4,16 +4,15 @@
 
 package org.pgpainless.encryption_signing
 
-import java.security.MessageDigest
 import org.bouncycastle.openpgp.PGPException
-import org.bouncycastle.openpgp.PGPPrivateKey
-import org.bouncycastle.openpgp.PGPSecretKeyRing
-import org.bouncycastle.openpgp.PGPSignature
 import org.bouncycastle.openpgp.PGPSignatureGenerator
+import org.bouncycastle.openpgp.api.OpenPGPKey
+import org.bouncycastle.openpgp.api.OpenPGPSignature.OpenPGPDocumentSignature
 import org.pgpainless.PGPainless
 import org.pgpainless.algorithm.SignatureType
-import org.pgpainless.bouncycastle.extensions.unlock
 import org.pgpainless.key.protection.SecretKeyRingProtector
+import org.pgpainless.key.protection.UnlockSecretKey
+import java.security.MessageDigest
 
 class BcHashContextSigner {
 
@@ -22,15 +21,15 @@ class BcHashContextSigner {
         fun signHashContext(
             hashContext: MessageDigest,
             signatureType: SignatureType,
-            secretKey: PGPSecretKeyRing,
+            secretKey: OpenPGPKey,
             protector: SecretKeyRingProtector
-        ): PGPSignature {
-            val info = PGPainless.inspectKeyRing(secretKey)
+        ): OpenPGPDocumentSignature {
+            val info = PGPainless.getInstance().inspect(secretKey)
             return info.signingSubkeys
                 .mapNotNull { info.getSecretKey(it.keyIdentifier) }
                 .firstOrNull()
                 ?.let {
-                    signHashContext(hashContext, signatureType, it.pgpSecretKey.unlock(protector))
+                    signHashContext(hashContext, signatureType, UnlockSecretKey.unlockSecretKey(it, protector))
                 }
                 ?: throw PGPException("Key does not contain suitable signing subkey.")
         }
@@ -47,11 +46,14 @@ class BcHashContextSigner {
         internal fun signHashContext(
             hashContext: MessageDigest,
             signatureType: SignatureType,
-            privateKey: PGPPrivateKey
-        ): PGPSignature {
-            return PGPSignatureGenerator(BcPGPHashContextContentSignerBuilder(hashContext))
-                .apply { init(signatureType.code, privateKey) }
+            privateKey: OpenPGPKey.OpenPGPPrivateKey
+        ): OpenPGPDocumentSignature {
+            return PGPSignatureGenerator(
+                BcPGPHashContextContentSignerBuilder(hashContext),
+                privateKey.keyPair.publicKey)
+                .apply { init(signatureType.code, privateKey.keyPair.privateKey) }
                 .generate()
+                .let { OpenPGPDocumentSignature(it, privateKey.publicKey) }
         }
     }
 }
