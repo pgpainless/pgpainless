@@ -15,10 +15,10 @@ import java.util.Random;
 
 import org.bouncycastle.bcpg.KeyIdentifier;
 import org.bouncycastle.openpgp.PGPException;
-import org.bouncycastle.openpgp.PGPKeyRing;
-import org.bouncycastle.openpgp.PGPPublicKey;
 import org.bouncycastle.openpgp.PGPSecretKey;
 import org.bouncycastle.openpgp.PGPSecretKeyRing;
+import org.bouncycastle.openpgp.api.OpenPGPCertificate;
+import org.bouncycastle.openpgp.api.OpenPGPKey;
 import org.jetbrains.annotations.NotNull;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -78,40 +78,39 @@ public class CachingSecretKeyRingProtectorTest {
 
     @Test
     public void testAddPassphraseForKeyRing() throws PGPException {
-        PGPSecretKeyRing keys = PGPainless.generateKeyRing()
-                .modernKeyRing("test@test.test", "Passphrase123")
-                .getPGPSecretKeyRing();
+        OpenPGPKey keys = PGPainless.getInstance().generateKey()
+                .modernKeyRing("test@test.test", "Passphrase123");
         Passphrase passphrase = Passphrase.fromPassword("Passphrase123");
 
         protector.addPassphrase(keys, passphrase);
-        Iterator<PGPSecretKey> it = keys.getSecretKeys();
+        Iterator<OpenPGPKey.OpenPGPSecretKey> it = keys.getSecretKeys().values().iterator();
         while (it.hasNext()) {
-            PGPSecretKey key = it.next();
+            OpenPGPKey.OpenPGPSecretKey key = it.next();
             assertEquals(passphrase, protector.getPassphraseFor(key));
-            assertNotNull(protector.getEncryptor(key.getPublicKey()));
-            assertNotNull(protector.getDecryptor(key.getKeyIdentifier()));
+            assertNotNull(protector.getEncryptor(key));
+            assertNotNull(protector.getDecryptor(key));
         }
 
         long nonMatching = findNonMatchingKeyId(keys);
         assertNull(protector.getPassphraseFor(new KeyIdentifier(nonMatching)));
 
         protector.forgetPassphrase(keys);
-        it = keys.getSecretKeys();
+        it = keys.getSecretKeys().values().iterator();
         while (it.hasNext()) {
-            PGPSecretKey key = it.next();
+            OpenPGPKey.OpenPGPSecretKey key = it.next();
             assertNull(protector.getPassphraseFor(key));
             assertNull(protector.getEncryptor(key.getPublicKey()));
             assertNull(protector.getDecryptor(key.getKeyIdentifier()));
         }
     }
 
-    private static long findNonMatchingKeyId(PGPKeyRing keyRing) {
+    private static long findNonMatchingKeyId(OpenPGPCertificate cert) {
         Random random = new Random();
         long nonMatchingKeyId = 123L;
         outerloop: while (true) {
-            Iterator<PGPPublicKey> pubKeys = keyRing.getPublicKeys();
+            Iterator<OpenPGPCertificate.OpenPGPComponentKey> pubKeys = cert.getKeys().iterator();
             while (pubKeys.hasNext()) {
-                if (pubKeys.next().getKeyID() == nonMatchingKeyId) {
+                if (pubKeys.next().getKeyIdentifier().getKeyId() == nonMatchingKeyId) {
                     nonMatchingKeyId = random.nextLong();
                     continue outerloop;
                 }

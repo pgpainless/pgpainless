@@ -16,7 +16,6 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Set;
 
-import org.bouncycastle.openpgp.PGPPublicKeyRing;
 import org.bouncycastle.openpgp.PGPPublicKeyRingCollection;
 import org.bouncycastle.openpgp.api.OpenPGPCertificate;
 import org.bouncycastle.openpgp.api.OpenPGPKey;
@@ -31,7 +30,6 @@ import org.pgpainless.key.generation.KeySpec;
 import org.pgpainless.key.generation.type.KeyType;
 import org.pgpainless.key.generation.type.eddsa_legacy.EdDSALegacyCurve;
 import org.pgpainless.key.generation.type.xdh_legacy.XDHLegacySpec;
-import org.pgpainless.key.util.KeyRingUtils;
 import org.pgpainless.util.Passphrase;
 
 import javax.annotation.Nonnull;
@@ -43,10 +41,11 @@ public class EncryptionOptionsTest {
     private static OpenPGPCertificate.OpenPGPComponentKey primaryKey;
     private static OpenPGPCertificate.OpenPGPComponentKey encryptComms;
     private static OpenPGPCertificate.OpenPGPComponentKey encryptStorage;
+    private static final PGPainless api = PGPainless.getInstance();
 
     @BeforeAll
     public static void generateKey() {
-        secretKeys = PGPainless.buildKeyRing()
+        secretKeys = api.buildKey()
                 .setPrimaryKey(KeySpec.getBuilder(KeyType.EDDSA_LEGACY(EdDSALegacyCurve._Ed25519), KeyFlag.CERTIFY_OTHER)
                         .build())
                 .addSubkey(KeySpec.getBuilder(KeyType.XDH_LEGACY(XDHLegacySpec._X25519), KeyFlag.ENCRYPT_COMMS)
@@ -66,7 +65,7 @@ public class EncryptionOptionsTest {
 
     @Test
     public void testOverrideEncryptionAlgorithmFailsForNULL() {
-        EncryptionOptions options = EncryptionOptions.get();
+        EncryptionOptions options = EncryptionOptions.get(api);
         assertNull(options.getEncryptionAlgorithmOverride());
 
         assertThrows(IllegalArgumentException.class, () -> options.overrideEncryptionAlgorithm(SymmetricKeyAlgorithm.NULL));
@@ -76,7 +75,7 @@ public class EncryptionOptionsTest {
 
     @Test
     public void testOverrideEncryptionOptions() {
-        EncryptionOptions options = EncryptionOptions.get();
+        EncryptionOptions options = EncryptionOptions.get(api);
         assertNull(options.getEncryptionAlgorithmOverride());
         options.overrideEncryptionAlgorithm(SymmetricKeyAlgorithm.AES_128);
 
@@ -85,7 +84,7 @@ public class EncryptionOptionsTest {
 
     @Test
     public void testAddRecipients_EncryptCommunications() {
-        EncryptionOptions options = EncryptionOptions.encryptCommunications();
+        EncryptionOptions options = EncryptionOptions.encryptCommunications(api);
         options.addRecipient(publicKeys);
 
         Set<OpenPGPCertificate.OpenPGPComponentKey> encryptionKeys = options.getEncryptionKeys();
@@ -95,7 +94,7 @@ public class EncryptionOptionsTest {
 
     @Test
     public void testAddRecipients_EncryptDataAtRest() {
-        EncryptionOptions options = EncryptionOptions.encryptDataAtRest();
+        EncryptionOptions options = EncryptionOptions.encryptDataAtRest(api);
         options.addRecipient(publicKeys);
 
         Set<OpenPGPCertificate.OpenPGPComponentKey> encryptionKeys = options.getEncryptionKeys();
@@ -105,7 +104,7 @@ public class EncryptionOptionsTest {
 
     @Test
     public void testAddRecipients_AllKeys() {
-        EncryptionOptions options = EncryptionOptions.get();
+        EncryptionOptions options = EncryptionOptions.get(api);
         options.addRecipient(publicKeys, EncryptionOptions.encryptToAllCapableSubkeys());
 
         Set<OpenPGPCertificate.OpenPGPComponentKey> encryptionKeys = options.getEncryptionKeys();
@@ -115,9 +114,10 @@ public class EncryptionOptionsTest {
         assertTrue(encryptionKeys.contains(encryptStorage));
     }
 
+    @SuppressWarnings("deprecation")
     @Test
     public void testAddEmptyRecipientsFails() {
-        EncryptionOptions options = EncryptionOptions.get();
+        EncryptionOptions options = EncryptionOptions.get(api);
         assertThrows(IllegalArgumentException.class, () -> options.addRecipients(Collections.emptyList()));
         assertThrows(IllegalArgumentException.class, () -> options.addRecipients(Collections.emptyList(),
                 ArrayList::new));
@@ -125,7 +125,7 @@ public class EncryptionOptionsTest {
 
     @Test
     public void testAddEmptyPassphraseFails() {
-        EncryptionOptions options = EncryptionOptions.get();
+        EncryptionOptions options = EncryptionOptions.get(api);
         assertThrows(IllegalArgumentException.class, () ->
                 options.addMessagePassphrase(Passphrase.emptyPassphrase()));
     }
@@ -133,7 +133,7 @@ public class EncryptionOptionsTest {
     @Test
     public void testAddRecipient_KeyWithoutEncryptionKeyFails() {
         EncryptionOptions options = EncryptionOptions.get();
-        OpenPGPKey secretKeys = PGPainless.buildKeyRing()
+        OpenPGPKey secretKeys = api.buildKey()
                 .setPrimaryKey(KeySpec.getBuilder(KeyType.EDDSA_LEGACY(EdDSALegacyCurve._Ed25519), KeyFlag.CERTIFY_OTHER, KeyFlag.SIGN_DATA))
                 .addUserId("test@pgpainless.org")
                 .build();
@@ -144,7 +144,7 @@ public class EncryptionOptionsTest {
 
     @Test
     public void testEncryptionKeySelectionStrategyEmpty_ThrowsAssertionError() {
-        EncryptionOptions options = EncryptionOptions.get();
+        EncryptionOptions options = EncryptionOptions.get(api);
 
         assertThrows(KeyException.UnacceptableEncryptionKeyException.class,
                 () -> options.addRecipient(publicKeys, new EncryptionOptions.EncryptionKeySelector() {
@@ -157,6 +157,7 @@ public class EncryptionOptionsTest {
 
         assertThrows(KeyException.UnacceptableEncryptionKeyException.class,
                 () -> options.addRecipient(publicKeys, "test@pgpainless.org", new EncryptionOptions.EncryptionKeySelector() {
+                    @NotNull
                     @Override
                     public List<OpenPGPCertificate.OpenPGPComponentKey> selectEncryptionSubkeys(@Nonnull List<? extends OpenPGPCertificate.OpenPGPComponentKey> encryptionCapableKeys) {
                         return Collections.emptyList();
@@ -166,21 +167,21 @@ public class EncryptionOptionsTest {
 
     @Test
     public void testAddRecipients_PGPPublicKeyRingCollection() {
-        PGPPublicKeyRing secondKeyRing = KeyRingUtils.publicKeyRingFrom(
-                PGPainless.generateKeyRing().modernKeyRing("other@pgpainless.org")
-                        .getPGPSecretKeyRing());
+        OpenPGPKey secondKey = api.generateKey().modernKeyRing("Other <other@pgpainless.org>");
+        OpenPGPCertificate secondCert = secondKey.toCertificate();
 
         PGPPublicKeyRingCollection collection = new PGPPublicKeyRingCollection(
-                Arrays.asList(publicKeys.getPGPPublicKeyRing(), secondKeyRing));
+                Arrays.asList(publicKeys.getPGPPublicKeyRing(), secondCert.getPGPPublicKeyRing()));
 
         EncryptionOptions options = EncryptionOptions.get();
+        // noinspection deprecation
         options.addRecipients(collection, EncryptionOptions.encryptToFirstSubkey());
         assertEquals(2, options.getEncryptionKeyIdentifiers().size());
     }
 
     @Test
     public void testAddRecipient_withValidUserId() {
-        EncryptionOptions options = EncryptionOptions.get();
+        EncryptionOptions options = EncryptionOptions.get(api);
         options.addRecipient(publicKeys, "test@pgpainless.org", EncryptionOptions.encryptToFirstSubkey());
 
         assertEquals(1, options.getEncryptionMethods().size());
@@ -188,7 +189,7 @@ public class EncryptionOptionsTest {
 
     @Test
     public void testAddRecipient_withInvalidUserId() {
-        EncryptionOptions options = EncryptionOptions.get();
+        EncryptionOptions options = EncryptionOptions.get(api);
         assertThrows(KeyException.UnboundUserIdException.class, () -> options.addRecipient(publicKeys, "invalid@user.id"));
     }
 }
