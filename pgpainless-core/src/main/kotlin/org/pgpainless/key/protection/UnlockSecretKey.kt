@@ -10,12 +10,15 @@ import openpgp.openPgpKeyId
 import org.bouncycastle.openpgp.PGPException
 import org.bouncycastle.openpgp.PGPPrivateKey
 import org.bouncycastle.openpgp.PGPSecretKey
+import org.bouncycastle.openpgp.api.OpenPGPKey.OpenPGPPrivateKey
+import org.bouncycastle.openpgp.api.OpenPGPKey.OpenPGPSecretKey
 import org.bouncycastle.openpgp.operator.PBESecretKeyDecryptor
 import org.pgpainless.PGPainless
 import org.pgpainless.bouncycastle.extensions.isEncrypted
 import org.pgpainless.exception.KeyIntegrityException
 import org.pgpainless.exception.WrongPassphraseException
 import org.pgpainless.key.util.PublicKeyParameterValidationUtil
+import org.pgpainless.policy.Policy
 import org.pgpainless.util.Passphrase
 
 class UnlockSecretKey {
@@ -29,17 +32,51 @@ class UnlockSecretKey {
             protector: SecretKeyRingProtector
         ): PGPPrivateKey {
             return if (secretKey.isEncrypted()) {
-                unlockSecretKey(secretKey, protector.getDecryptor(secretKey.keyID))
+                unlockSecretKey(secretKey, protector.getDecryptor(secretKey.keyIdentifier))
             } else {
                 unlockSecretKey(secretKey, null as PBESecretKeyDecryptor?)
             }
         }
 
         @JvmStatic
+        @JvmOverloads
+        @Throws(PGPException::class)
+        fun unlockSecretKey(
+            secretKey: OpenPGPSecretKey,
+            protector: SecretKeyRingProtector,
+            policy: Policy = PGPainless.getInstance().algorithmPolicy
+        ): OpenPGPPrivateKey {
+            val privateKey =
+                try {
+                    secretKey.unlock(protector)
+                } catch (e: PGPException) {
+                    throw WrongPassphraseException(secretKey.keyIdentifier, e)
+                }
+
+            if (privateKey == null) {
+                if (secretKey.pgpSecretKey.s2K.type in 100..110) {
+                    throw PGPException(
+                        "Cannot decrypt secret key ${secretKey.keyIdentifier}: \n" +
+                            "Unsupported private S2K type ${secretKey.pgpSecretKey.s2K.type}")
+                }
+                throw PGPException("Cannot decrypt secret key.")
+            }
+
+            if (policy.isEnableKeyParameterValidation()) {
+                PublicKeyParameterValidationUtil.verifyPublicKeyParameterIntegrity(
+                    privateKey.keyPair.privateKey, privateKey.keyPair.publicKey)
+            }
+
+            return privateKey
+        }
+
+        @JvmStatic
+        @JvmOverloads
         @Throws(PGPException::class)
         fun unlockSecretKey(
             secretKey: PGPSecretKey,
-            decryptor: PBESecretKeyDecryptor?
+            decryptor: PBESecretKeyDecryptor?,
+            policy: Policy = PGPainless.getInstance().algorithmPolicy
         ): PGPPrivateKey {
             val privateKey =
                 try {
@@ -57,7 +94,7 @@ class UnlockSecretKey {
                 throw PGPException("Cannot decrypt secret key.")
             }
 
-            if (PGPainless.getPolicy().isEnableKeyParameterValidation()) {
+            if (policy.isEnableKeyParameterValidation()) {
                 PublicKeyParameterValidationUtil.verifyPublicKeyParameterIntegrity(
                     privateKey, secretKey.publicKey)
             }
@@ -74,5 +111,12 @@ class UnlockSecretKey {
                     secretKey, SecretKeyRingProtector.unlockSingleKeyWith(passphrase, secretKey))
             }
         }
+
+        @JvmStatic
+        fun unlockSecretKey(
+            secretKey: OpenPGPSecretKey,
+            passphrase: Passphrase
+        ): OpenPGPPrivateKey =
+            unlockSecretKey(secretKey, SecretKeyRingProtector.unlockAnyKeyWith(passphrase))
     }
 }

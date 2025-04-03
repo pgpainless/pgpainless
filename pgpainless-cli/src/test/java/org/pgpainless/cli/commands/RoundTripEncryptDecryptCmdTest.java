@@ -11,13 +11,9 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.IOException;
-import java.security.InvalidAlgorithmParameterException;
-import java.security.NoSuchAlgorithmException;
 
-import org.bouncycastle.openpgp.PGPException;
-import org.bouncycastle.openpgp.PGPPublicKeyRing;
-import org.bouncycastle.openpgp.PGPSecretKeyRing;
-import org.junit.jupiter.api.Disabled;
+import org.bouncycastle.openpgp.api.OpenPGPCertificate;
+import org.bouncycastle.openpgp.api.OpenPGPKey;
 import org.junit.jupiter.api.Test;
 import org.pgpainless.PGPainless;
 import org.pgpainless.algorithm.KeyFlag;
@@ -138,7 +134,7 @@ public class RoundTripEncryptDecryptCmdTest extends CLITest {
     }
 
     @Test
-    @Disabled("Disabled, since we now read certificates from secret keys")
+    // @Disabled("Disabled, since we now read certificates from secret keys")
     public void testEncryptingForKeyFails() throws IOException {
         File notACert = writeFile("key.asc", KEY);
 
@@ -298,14 +294,14 @@ public class RoundTripEncryptDecryptCmdTest extends CLITest {
     }
 
     @Test
-    public void testEncryptWithIncapableCert() throws PGPException,
-            InvalidAlgorithmParameterException, NoSuchAlgorithmException, IOException {
-        PGPSecretKeyRing secretKeys = PGPainless.buildKeyRing()
+    public void testEncryptWithIncapableCert() throws IOException {
+        PGPainless api = PGPainless.getInstance();
+        OpenPGPKey key = api.buildKey()
                 .addUserId("No Crypt <no@crypt.key>")
                 .setPrimaryKey(KeySpec.getBuilder(KeyType.EDDSA_LEGACY(EdDSALegacyCurve._Ed25519),
                         KeyFlag.CERTIFY_OTHER, KeyFlag.SIGN_DATA))
                 .build();
-        PGPPublicKeyRing cert = PGPainless.extractCertificate(secretKeys);
+        OpenPGPCertificate cert = key.toCertificate();
         File certFile = writeFile("cert.pgp", cert.getEncoded());
 
         pipeStringToStdin("Hello, World!\n");
@@ -318,15 +314,16 @@ public class RoundTripEncryptDecryptCmdTest extends CLITest {
 
     @Test
     public void testSignWithIncapableKey()
-            throws IOException, PGPException, InvalidAlgorithmParameterException, NoSuchAlgorithmException {
-        PGPSecretKeyRing secretKeys = PGPainless.buildKeyRing()
+            throws IOException {
+        PGPainless api = PGPainless.getInstance();
+        OpenPGPKey key = api.buildKey()
                 .addUserId("Cannot Sign <cannot@sign.key>")
                 .setPrimaryKey(KeySpec.getBuilder(KeyType.EDDSA_LEGACY(EdDSALegacyCurve._Ed25519), KeyFlag.CERTIFY_OTHER))
                 .addSubkey(KeySpec.getBuilder(
                         KeyType.XDH_LEGACY(XDHLegacySpec._X25519), KeyFlag.ENCRYPT_COMMS, KeyFlag.ENCRYPT_STORAGE))
                 .build();
-        File keyFile = writeFile("key.pgp", secretKeys.getEncoded());
-        File certFile = writeFile("cert.pgp", PGPainless.extractCertificate(secretKeys).getEncoded());
+        File keyFile = writeFile("key.pgp", key.getEncoded());
+        File certFile = writeFile("cert.pgp", key.toCertificate().getEncoded());
 
         pipeStringToStdin("Hello, World!\n");
         ByteArrayOutputStream out = pipeStdoutToStream();

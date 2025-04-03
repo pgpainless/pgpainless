@@ -25,9 +25,9 @@ import sop.operation.Decrypt
 import sop.util.UTF8Util
 
 /** Implementation of the `decrypt` operation using PGPainless. */
-class DecryptImpl : Decrypt {
+class DecryptImpl(private val api: PGPainless) : Decrypt {
 
-    private val consumerOptions = ConsumerOptions.get()
+    private val consumerOptions = ConsumerOptions.get(api)
     private val protector = MatchMakingSecretKeyRingProtector()
 
     override fun ciphertext(ciphertext: InputStream): ReadyWithResult<DecryptionResult> {
@@ -92,11 +92,11 @@ class DecryptImpl : Decrypt {
     }
 
     override fun verifyWithCert(cert: InputStream): Decrypt = apply {
-        KeyReader.readPublicKeys(cert, true).let { consumerOptions.addVerificationCerts(it) }
+        consumerOptions.addVerificationCerts(KeyReader(api).readPublicKeys(cert, true))
     }
 
     override fun withKey(key: InputStream): Decrypt = apply {
-        KeyReader.readSecretKeys(key, true).forEach {
+        KeyReader(api).readSecretKeys(key, true).forEach {
             protector.addSecretKey(it)
             consumerOptions.addDecryptionKey(it, protector)
         }

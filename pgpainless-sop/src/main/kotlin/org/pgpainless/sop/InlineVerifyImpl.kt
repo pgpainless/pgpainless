@@ -19,12 +19,12 @@ import sop.exception.SOPGPException
 import sop.operation.InlineVerify
 
 /** Implementation of the `inline-verify` operation using PGPainless. */
-class InlineVerifyImpl : InlineVerify {
+class InlineVerifyImpl(private val api: PGPainless) : InlineVerify {
 
-    private val options = ConsumerOptions.get()
+    private val options = ConsumerOptions.get(api)
 
     override fun cert(cert: InputStream): InlineVerify = apply {
-        options.addVerificationCerts(KeyReader.readPublicKeys(cert, true))
+        options.addVerificationCerts(KeyReader(api).readPublicKeys(cert, true))
     }
 
     override fun data(data: InputStream): ReadyWithResult<List<Verification>> {

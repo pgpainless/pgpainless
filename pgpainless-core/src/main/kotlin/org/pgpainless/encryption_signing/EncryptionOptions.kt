@@ -5,24 +5,25 @@
 package org.pgpainless.encryption_signing
 
 import java.util.*
-import org.bouncycastle.openpgp.PGPPublicKey
 import org.bouncycastle.openpgp.PGPPublicKeyRing
+import org.bouncycastle.openpgp.api.OpenPGPCertificate
+import org.bouncycastle.openpgp.api.OpenPGPCertificate.OpenPGPComponentKey
 import org.bouncycastle.openpgp.operator.PGPKeyEncryptionMethodGenerator
+import org.pgpainless.PGPainless
 import org.pgpainless.algorithm.EncryptionPurpose
 import org.pgpainless.algorithm.SymmetricKeyAlgorithm
+import org.pgpainless.algorithm.negotiation.SymmetricKeyAlgorithmNegotiator.Companion.byPopularity
 import org.pgpainless.authentication.CertificateAuthority
 import org.pgpainless.encryption_signing.EncryptionOptions.EncryptionKeySelector
-import org.pgpainless.exception.KeyException
 import org.pgpainless.exception.KeyException.*
-import org.pgpainless.implementation.ImplementationFactory
-import org.pgpainless.key.OpenPgpFingerprint
 import org.pgpainless.key.SubkeyIdentifier
 import org.pgpainless.key.info.KeyAccessor
 import org.pgpainless.key.info.KeyRingInfo
 import org.pgpainless.util.Passphrase
 
-class EncryptionOptions(private val purpose: EncryptionPurpose) {
+class EncryptionOptions(private val purpose: EncryptionPurpose, private val api: PGPainless) {
     private val _encryptionMethods: MutableSet<PGPKeyEncryptionMethodGenerator> = mutableSetOf()
+    private val _encryptionKeys: MutableSet<OpenPGPComponentKey> = mutableSetOf()
     private val _encryptionKeyIdentifiers: MutableSet<SubkeyIdentifier> = mutableSetOf()
     private val _keyRingInfo: MutableMap<SubkeyIdentifier, KeyRingInfo> = mutableMapOf()
     private val _keyViews: MutableMap<SubkeyIdentifier, KeyAccessor> = mutableMapOf()
@@ -38,6 +39,9 @@ class EncryptionOptions(private val purpose: EncryptionPurpose) {
     val encryptionKeyIdentifiers
         get() = _encryptionKeyIdentifiers.toSet()
 
+    val encryptionKeys
+        get() = _encryptionKeys.toSet()
+
     val keyRingInfo
         get() = _keyRingInfo.toMap()
 
@@ -47,13 +51,13 @@ class EncryptionOptions(private val purpose: EncryptionPurpose) {
     val encryptionAlgorithmOverride
         get() = _encryptionAlgorithmOverride
 
-    constructor() : this(EncryptionPurpose.ANY)
+    constructor(api: PGPainless) : this(EncryptionPurpose.ANY, api)
 
     /**
-     * Factory method to create an [EncryptionOptions] object which will encrypt for keys which
-     * carry the flag [org.pgpainless.algorithm.KeyFlag.ENCRYPT_COMMS].
+     * Set the evaluation date for certificate evaluation.
      *
-     * @return encryption options
+     * @param evaluationDate reference time
+     * @return this
      */
     fun setEvaluationDate(evaluationDate: Date) = apply { this.evaluationDate = evaluationDate }
 
@@ -81,7 +85,9 @@ class EncryptionOptions(private val purpose: EncryptionPurpose) {
         authority
             .lookupByUserId(userId, email, evaluationDate, targetAmount)
             .filter { it.isAuthenticated() }
-            .forEach { addRecipient(it.certificate).also { foundAcceptable = true } }
+            .forEach {
+                addRecipient(api.toCertificate(it.certificate)).also { foundAcceptable = true }
+            }
         require(foundAcceptable) {
             "Could not identify any trust-worthy certificates for '$userId' and target trust amount $targetAmount."
         }
@@ -89,11 +95,14 @@ class EncryptionOptions(private val purpose: EncryptionPurpose) {
 
     /**
      * Add all key rings in the provided [Iterable] (e.g.
-     * [org.bouncycastle.openpgp.PGPPublicKeyRingCollection]) as recipients.
+     * [org.bouncycastle.openpgp.PGPPublicKeyRingCollection]) as recipients. Note: This method is
+     * deprecated. Instead, repeatedly call [addRecipient], passing in individual
+     * [OpenPGPCertificate] instances.
      *
      * @param keys keys
      * @return this
      */
+    @Deprecated("Repeatedly pass OpenPGPCertificate instances instead.")
     fun addRecipients(keys: Iterable<PGPPublicKeyRing>) = apply {
         keys.toList().let {
             require(it.isNotEmpty()) { "Set of recipient keys cannot be empty." }
@@ -104,12 +113,15 @@ class EncryptionOptions(private val purpose: EncryptionPurpose) {
     /**
      * Add all key rings in the provided [Iterable] (e.g.
      * [org.bouncycastle.openpgp.PGPPublicKeyRingCollection]) as recipients. Per key ring, the
-     * selector is applied to select one or more encryption subkeys.
+     * selector is applied to select one or more encryption subkeys. Note: This method is
+     * deprecated. Instead, repeatedly call [addRecipient], passing in individual
+     * [OpenPGPCertificate] instances.
      *
      * @param keys keys
      * @param selector encryption key selector
      * @return this
      */
+    @Deprecated("Repeatedly pass OpenPGPCertificate instances instead.")
     fun addRecipients(keys: Iterable<PGPPublicKeyRing>, selector: EncryptionKeySelector) = apply {
         keys.toList().let {
             require(it.isNotEmpty()) { "Set of recipient keys cannot be empty." }
@@ -118,70 +130,174 @@ class EncryptionOptions(private val purpose: EncryptionPurpose) {
     }
 
     /**
+     * Encrypt the message to the recipients [OpenPGPCertificate].
+     *
+     * @param cert recipient certificate
+     * @return this
+     */
+    fun addRecipient(cert: OpenPGPCertificate) = addRecipient(cert, encryptionKeySelector)
+
+    /**
      * Add a recipient by providing a key.
      *
      * @param key key ring
      * @return this
      */
+    @Deprecated(
+        "Pass in OpenPGPCertificate instead.",
+        replaceWith =
+            ReplaceWith("addRecipient(key.toOpenPGPCertificate(), encryptionKeySelector)"))
     fun addRecipient(key: PGPPublicKeyRing) = addRecipient(key, encryptionKeySelector)
 
     /**
+     * Encrypt the message for the given recipients [OpenPGPCertificate], sourcing algorithm
+     * preferences by inspecting the binding signature on the passed [userId].
+     *
+     * @param cert recipient certificate
+     * @param userId recipient user-id
+     * @return this
+     */
+    fun addRecipient(cert: OpenPGPCertificate, userId: CharSequence) =
+        addRecipient(cert, userId, encryptionKeySelector)
+
+    /**
      * Add a recipient by providing a key and recipient user-id. The user-id is used to determine
-     * the recipients preferences (algorithms etc.).
+     * the recipients preferences (algorithms etc.). Note: This method is deprecated. Replace the
+     * [PGPPublicKeyRing] instance with an [OpenPGPCertificate].
      *
      * @param key key ring
      * @param userId user id
      * @return this
      */
+    @Deprecated(
+        "Pass in OpenPGPCertificate instead.",
+        replaceWith = ReplaceWith("addRecipient(key.toOpenPGPCertificate(), userId)"))
     fun addRecipient(key: PGPPublicKeyRing, userId: CharSequence) =
         addRecipient(key, userId, encryptionKeySelector)
 
+    /**
+     * Encrypt the message for the given recipients [OpenPGPCertificate], sourcing algorithm
+     * preferences by inspecting the binding signature on the given [userId] and filtering the
+     * recipient subkeys through the given [EncryptionKeySelector].
+     *
+     * @param cert recipient certificate
+     * @param userId user-id for sourcing algorithm preferences
+     * @param encryptionKeySelector decides which subkeys to encrypt for
+     * @return this
+     */
     fun addRecipient(
-        key: PGPPublicKeyRing,
+        cert: OpenPGPCertificate,
         userId: CharSequence,
         encryptionKeySelector: EncryptionKeySelector
     ) = apply {
-        val info = KeyRingInfo(key, evaluationDate)
+        val info = api.inspect(cert, evaluationDate)
         val subkeys =
             encryptionKeySelector.selectEncryptionSubkeys(
                 info.getEncryptionSubkeys(userId, purpose))
         if (subkeys.isEmpty()) {
-            throw KeyException.UnacceptableEncryptionKeyException(OpenPgpFingerprint.of(key))
+            throw UnacceptableEncryptionKeyException(cert)
         }
 
         for (subkey in subkeys) {
-            val keyId = SubkeyIdentifier(key, subkey.keyID)
+            val keyId = SubkeyIdentifier(subkey)
             _keyRingInfo[keyId] = info
             _keyViews[keyId] = KeyAccessor.ViaUserId(info, keyId, userId.toString())
-            addRecipientKey(key, subkey, false)
+            addRecipientKey(subkey, false)
         }
     }
 
-    fun addRecipient(key: PGPPublicKeyRing, encryptionKeySelector: EncryptionKeySelector) = apply {
-        addAsRecipient(key, encryptionKeySelector, false)
-    }
+    /**
+     * Encrypt the message for the given recipients public key, sourcing algorithm preferences by
+     * inspecting the binding signature on the given [userId] and filtering the recipient subkeys
+     * through the given [EncryptionKeySelector].
+     *
+     * @param key recipient public key
+     * @param userId user-id for sourcing algorithm preferences
+     * @param encryptionKeySelector decides which subkeys to encrypt for
+     * @return this
+     */
+    @Deprecated(
+        "Pass in OpenPGPCertificate instead.",
+        replaceWith =
+            ReplaceWith("addRecipient(key.toOpenPGPCertificate(), userId, encryptionKeySelector)"))
+    fun addRecipient(
+        key: PGPPublicKeyRing,
+        userId: CharSequence,
+        encryptionKeySelector: EncryptionKeySelector
+    ) = addRecipient(api.toCertificate(key), userId, encryptionKeySelector)
 
+    /**
+     * Encrypt the message for the given recipients [OpenPGPCertificate], filtering encryption
+     * subkeys through the given [EncryptionKeySelector].
+     *
+     * @param cert recipient certificate
+     * @param encryptionKeySelector decides, which subkeys to encrypt for
+     * @return this
+     */
+    fun addRecipient(cert: OpenPGPCertificate, encryptionKeySelector: EncryptionKeySelector) =
+        addAsRecipient(cert, encryptionKeySelector, false)
+
+    /**
+     * Encrypt the message for the given recipients public key, filtering encryption subkeys through
+     * the given [EncryptionKeySelector].
+     *
+     * @param key recipient public key
+     * @param encryptionKeySelector decides, which subkeys to encrypt for
+     * @return this
+     */
+    @Deprecated(
+        "Pass in OpenPGPCertificate instead.",
+        replaceWith =
+            ReplaceWith("addRecipient(key.toOpenPGPCertificate(), encryptionKeySelector)"))
+    fun addRecipient(key: PGPPublicKeyRing, encryptionKeySelector: EncryptionKeySelector) =
+        addRecipient(api.toCertificate(key), encryptionKeySelector)
+
+    /**
+     * Encrypt the message for the recipients [OpenPGPCertificate], keeping the recipient anonymous
+     * by setting a wildcard key-id / fingerprint.
+     *
+     * @param cert recipient certificate
+     * @param selector decides, which subkeys to encrypt for
+     * @return this
+     */
     @JvmOverloads
+    fun addHiddenRecipient(
+        cert: OpenPGPCertificate,
+        selector: EncryptionKeySelector = encryptionKeySelector
+    ) = addAsRecipient(cert, selector, true)
+
+    /**
+     * Encrypt the message for the recipients public key, keeping the recipient anonymous by setting
+     * a wildcard key-id / fingerprint.
+     *
+     * @param key recipient public key
+     * @param selector decides, which subkeys to encrypt for
+     * @return this
+     */
+    @JvmOverloads
+    @Deprecated(
+        "Pass in an OpenPGPCertificate instead.",
+        replaceWith = ReplaceWith("addHiddenRecipient(key.toOpenPGPCertificate(), selector)"))
     fun addHiddenRecipient(
         key: PGPPublicKeyRing,
         selector: EncryptionKeySelector = encryptionKeySelector
-    ) = apply { addAsRecipient(key, selector, true) }
+    ) = addHiddenRecipient(api.toCertificate(key), selector)
 
     private fun addAsRecipient(
-        key: PGPPublicKeyRing,
+        cert: OpenPGPCertificate,
         selector: EncryptionKeySelector,
         wildcardKeyId: Boolean
     ) = apply {
-        val info = KeyRingInfo(key, evaluationDate)
+        val info = api.inspect(cert, evaluationDate)
         val primaryKeyExpiration =
             try {
                 info.primaryKeyExpirationDate
             } catch (e: NoSuchElementException) {
-                throw UnacceptableSelfSignatureException(OpenPgpFingerprint.of(key))
+                throw UnacceptableSelfSignatureException(cert)
             }
 
         if (primaryKeyExpiration != null && primaryKeyExpiration < evaluationDate) {
-            throw ExpiredKeyException(OpenPgpFingerprint.of(key), primaryKeyExpiration)
+            throw ExpiredKeyException(cert, primaryKeyExpiration)
         }
 
         var encryptionSubkeys = selector.selectEncryptionSubkeys(info.getEncryptionSubkeys(purpose))
@@ -193,31 +309,28 @@ class EncryptionOptions(private val purpose: EncryptionPurpose) {
         if (encryptionSubkeys.isEmpty() && allowEncryptionWithMissingKeyFlags) {
             encryptionSubkeys =
                 info.validSubkeys
-                    .filter { it.isEncryptionKey }
-                    .filter { info.getKeyFlagsOf(it.keyID).isEmpty() }
+                    .filter { it.pgpPublicKey.isEncryptionKey }
+                    .filter { info.getKeyFlagsOf(it.keyIdentifier).isEmpty() }
         }
 
         if (encryptionSubkeys.isEmpty()) {
-            throw UnacceptableEncryptionKeyException(OpenPgpFingerprint.of(key))
+            throw UnacceptableEncryptionKeyException(cert)
         }
 
         for (subkey in encryptionSubkeys) {
-            val keyId = SubkeyIdentifier(key, subkey.keyID)
+            val keyId = SubkeyIdentifier(subkey)
             _keyRingInfo[keyId] = info
             _keyViews[keyId] = KeyAccessor.ViaKeyId(info, keyId)
-            addRecipientKey(key, subkey, wildcardKeyId)
+            addRecipientKey(subkey, wildcardKeyId)
         }
     }
 
-    private fun addRecipientKey(
-        certificate: PGPPublicKeyRing,
-        key: PGPPublicKey,
-        wildcardKeyId: Boolean
-    ) {
-        _encryptionKeyIdentifiers.add(SubkeyIdentifier(certificate, key.keyID))
+    private fun addRecipientKey(key: OpenPGPComponentKey, wildcardRecipient: Boolean) {
+        _encryptionKeys.add(key)
+        _encryptionKeyIdentifiers.add(SubkeyIdentifier(key))
         addEncryptionMethod(
-            ImplementationFactory.getInstance().getPublicKeyKeyEncryptionMethodGenerator(key).also {
-                it.setUseWildcardKeyID(wildcardKeyId)
+            api.implementation.publicKeyKeyEncryptionMethodGenerator(key.pgpPublicKey).also {
+                it.setUseWildcardRecipient(wildcardRecipient)
             })
     }
 
@@ -241,7 +354,7 @@ class EncryptionOptions(private val purpose: EncryptionPurpose) {
     fun addMessagePassphrase(passphrase: Passphrase) = apply {
         require(!passphrase.isEmpty) { "Passphrase MUST NOT be empty." }
         addEncryptionMethod(
-            ImplementationFactory.getInstance().getPBEKeyEncryptionMethodGenerator(passphrase))
+            api.implementation.pbeKeyEncryptionMethodGenerator(passphrase.getChars()))
     }
 
     /**
@@ -291,16 +404,37 @@ class EncryptionOptions(private val purpose: EncryptionPurpose) {
 
     fun hasEncryptionMethod() = _encryptionMethods.isNotEmpty()
 
+    internal fun negotiateSymmetricEncryptionAlgorithm(): SymmetricKeyAlgorithm {
+        val preferences = keyViews.values.map { it.preferredSymmetricKeyAlgorithms }.toList()
+        val algorithm =
+            byPopularity()
+                .negotiate(
+                    api.algorithmPolicy.symmetricKeyEncryptionAlgorithmPolicy,
+                    encryptionAlgorithmOverride,
+                    preferences)
+        return algorithm
+    }
+
     fun interface EncryptionKeySelector {
-        fun selectEncryptionSubkeys(encryptionCapableKeys: List<PGPPublicKey>): List<PGPPublicKey>
+        fun selectEncryptionSubkeys(
+            encryptionCapableKeys: List<OpenPGPComponentKey>
+        ): List<OpenPGPComponentKey>
     }
 
     companion object {
-        @JvmStatic fun get() = EncryptionOptions()
+        @JvmOverloads
+        @JvmStatic
+        fun get(api: PGPainless = PGPainless.getInstance()) = EncryptionOptions(api)
 
-        @JvmStatic fun encryptCommunications() = EncryptionOptions(EncryptionPurpose.COMMUNICATIONS)
+        @JvmOverloads
+        @JvmStatic
+        fun encryptCommunications(api: PGPainless = PGPainless.getInstance()) =
+            EncryptionOptions(EncryptionPurpose.COMMUNICATIONS, api)
 
-        @JvmStatic fun encryptDataAtRest() = EncryptionOptions(EncryptionPurpose.STORAGE)
+        @JvmOverloads
+        @JvmStatic
+        fun encryptDataAtRest(api: PGPainless = PGPainless.getInstance()) =
+            EncryptionOptions(EncryptionPurpose.STORAGE, api)
 
         /**
          * Only encrypt to the first valid encryption capable subkey we stumble upon.

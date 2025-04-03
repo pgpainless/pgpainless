@@ -8,11 +8,12 @@ import java.io.IOException
 import java.io.InputStream
 import java.util.*
 import org.bouncycastle.jce.provider.BouncyCastleProvider
+import org.pgpainless.PGPainless
 import sop.SOP
 import sop.operation.Version
 
 /** Implementation of the `version` operation using PGPainless. */
-class VersionImpl : Version {
+class VersionImpl(private val api: PGPainless) : Version {
 
     companion object {
         const val SOP_VERSION = 10

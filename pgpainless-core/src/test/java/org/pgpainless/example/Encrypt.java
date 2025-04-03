@@ -13,8 +13,9 @@ import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 
 import org.bouncycastle.openpgp.PGPException;
-import org.bouncycastle.openpgp.PGPPublicKeyRing;
-import org.bouncycastle.openpgp.PGPSecretKeyRing;
+import org.bouncycastle.openpgp.api.OpenPGPCertificate;
+import org.bouncycastle.openpgp.api.OpenPGPKey;
+import org.bouncycastle.openpgp.api.OpenPGPKeyReader;
 import org.bouncycastle.util.io.Streams;
 import org.junit.jupiter.api.Test;
 import org.pgpainless.PGPainless;
@@ -133,12 +134,13 @@ public class Encrypt {
     @Test
     public void encryptAndSignMessage() throws PGPException, IOException {
         // Prepare keys
-        PGPSecretKeyRing keyAlice = PGPainless.readKeyRing().secretKeyRing(ALICE_KEY);
-        PGPPublicKeyRing certificateAlice = PGPainless.readKeyRing().publicKeyRing(ALICE_CERT);
+        OpenPGPKeyReader reader = PGPainless.getInstance().readKey();
+        OpenPGPKey keyAlice = reader.parseKey(ALICE_KEY);
+        OpenPGPCertificate certificateAlice = reader.parseCertificate(ALICE_CERT);
         SecretKeyRingProtector protectorAlice = SecretKeyRingProtector.unprotectedKeys();
 
-        PGPSecretKeyRing keyBob = PGPainless.readKeyRing().secretKeyRing(BOB_KEY);
-        PGPPublicKeyRing certificateBob = PGPainless.readKeyRing().publicKeyRing(BOB_CERT);
+        OpenPGPKey keyBob = reader.parseKey(BOB_KEY);
+        OpenPGPCertificate certificateBob = reader.parseCertificate(BOB_CERT);
         SecretKeyRingProtector protectorBob = SecretKeyRingProtector.unprotectedKeys();
 
         // plaintext message to encrypt
@@ -152,7 +154,7 @@ public class Encrypt {
                                 EncryptionOptions.encryptCommunications()
                                         .addRecipient(certificateBob)
                                         .addRecipient(certificateAlice),
-                                new SigningOptions()
+                                SigningOptions.get()
                                         .addInlineSignature(protectorAlice, keyAlice, DocumentSignatureType.CANONICAL_TEXT_DOCUMENT)
                         ).setAsciiArmor(true)
                 );
@@ -165,7 +167,7 @@ public class Encrypt {
         // Decrypt and verify signatures
         DecryptionStream decryptor = PGPainless.decryptAndOrVerify()
                 .onInputStream(new ByteArrayInputStream(encryptedMessage.getBytes(StandardCharsets.UTF_8)))
-                .withOptions(new ConsumerOptions()
+                .withOptions(ConsumerOptions.get()
                         .addDecryptionKey(keyBob, protectorBob)
                         .addVerificationCert(certificateAlice)
                 );
@@ -207,7 +209,7 @@ public class Encrypt {
         // Decrypt
         DecryptionStream decryptor = PGPainless.decryptAndOrVerify()
                 .onInputStream(new ByteArrayInputStream(asciiCiphertext.getBytes(StandardCharsets.UTF_8)))
-                .withOptions(new ConsumerOptions().addMessagePassphrase(Passphrase.fromPassword("p4ssphr4s3")));
+                .withOptions(ConsumerOptions.get().addMessagePassphrase(Passphrase.fromPassword("p4ssphr4s3")));
 
         ByteArrayOutputStream plaintext = new ByteArrayOutputStream();
         Streams.pipeAll(decryptor, plaintext);
@@ -227,10 +229,11 @@ public class Encrypt {
     @Test
     public void encryptWithCommentHeader() throws PGPException, IOException {
         // Prepare keys
-        PGPPublicKeyRing certificateAlice = PGPainless.readKeyRing().publicKeyRing(ALICE_CERT);
+        OpenPGPKeyReader reader = PGPainless.getInstance().readKey();
+        OpenPGPCertificate certificateAlice = reader.parseCertificate(ALICE_CERT);
 
-        PGPSecretKeyRing keyBob = PGPainless.readKeyRing().secretKeyRing(BOB_KEY);
-        PGPPublicKeyRing certificateBob = PGPainless.readKeyRing().publicKeyRing(BOB_CERT);
+        OpenPGPKey keyBob = reader.parseKey(BOB_KEY);
+        OpenPGPCertificate certificateBob = reader.parseCertificate(BOB_CERT);
         SecretKeyRingProtector protectorBob = SecretKeyRingProtector.unprotectedKeys();
 
         // plaintext message to encrypt
@@ -270,7 +273,7 @@ public class Encrypt {
         // Decrypt and verify signatures
         DecryptionStream decryptor = PGPainless.decryptAndOrVerify()
                 .onInputStream(new ByteArrayInputStream(encryptedMessage.getBytes(StandardCharsets.UTF_8)))
-                .withOptions(new ConsumerOptions()
+                .withOptions(ConsumerOptions.get()
                         .addDecryptionKey(keyBob, protectorBob)
                         .addVerificationCert(certificateAlice)
                 );

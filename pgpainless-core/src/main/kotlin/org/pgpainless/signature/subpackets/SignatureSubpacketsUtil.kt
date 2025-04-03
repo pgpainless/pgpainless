@@ -270,6 +270,15 @@ class SignatureSubpacketsUtil {
                 ?: setOf()
 
         @JvmStatic
+        fun parsePreferredAEADCipherSuites(signature: PGPSignature): Set<AEADCipherMode> =
+            getPreferredAeadAlgorithms(signature)
+                ?.algorithms
+                ?.asSequence()
+                ?.map { AEADCipherMode(it) }
+                ?.toSet()
+                ?: setOf()
+
+        @JvmStatic
         fun getPreferredAeadAlgorithms(signature: PGPSignature): PreferredAEADCiphersuites? =
             hashed(signature, SignatureSubpacket.preferredAEADAlgorithms)
 

@@ -5,13 +5,16 @@
 package org.pgpainless.bouncycastle.extensions
 
 import java.util.*
+import openpgp.formatUTC
 import openpgp.plusSeconds
+import org.bouncycastle.bcpg.KeyIdentifier
 import org.bouncycastle.openpgp.PGPPublicKey
 import org.bouncycastle.openpgp.PGPSignature
 import org.pgpainless.algorithm.HashAlgorithm
 import org.pgpainless.algorithm.PublicKeyAlgorithm
 import org.pgpainless.algorithm.RevocationState
 import org.pgpainless.algorithm.SignatureType
+import org.pgpainless.exception.SignatureValidationException
 import org.pgpainless.key.OpenPgpFingerprint
 import org.pgpainless.key.util.RevocationAttributes.Reason
 import org.pgpainless.signature.subpackets.SignatureSubpacketsUtil
@@ -56,23 +59,17 @@ val PGPSignature.issuerKeyId: Long
 
 /** Return true, if the signature was likely issued by a key with the given fingerprint. */
 fun PGPSignature.wasIssuedBy(fingerprint: OpenPgpFingerprint): Boolean =
-    this.fingerprint?.let { it.keyId == fingerprint.keyId } ?: (keyID == fingerprint.keyId)
+    wasIssuedBy(fingerprint.keyIdentifier)
 
 /**
  * Return true, if the signature was likely issued by a key with the given fingerprint.
  *
- * @param fingerprint fingerprint bytes
+ * @param key key
  */
-@Deprecated("Discouraged in favor of method taking an OpenPgpFingerprint.")
-fun PGPSignature.wasIssuedBy(fingerprint: ByteArray): Boolean =
-    try {
-        wasIssuedBy(OpenPgpFingerprint.parseFromBinary(fingerprint))
-    } catch (e: IllegalArgumentException) {
-        // Unknown fingerprint length / format
-        false
-    }
+fun PGPSignature.wasIssuedBy(key: PGPPublicKey): Boolean = wasIssuedBy(key.keyIdentifier)
 
-fun PGPSignature.wasIssuedBy(key: PGPPublicKey): Boolean = wasIssuedBy(OpenPgpFingerprint.of(key))
+fun PGPSignature.wasIssuedBy(keyIdentifier: KeyIdentifier): Boolean =
+    KeyIdentifier.matches(this.keyIdentifiers, keyIdentifier, true)
 
 /** Return true, if this signature is a hard revocation. */
 val PGPSignature.isHardRevocation
@@ -89,6 +86,21 @@ val PGPSignature.isHardRevocation
             }
             else -> false // Not a revocation
         }
+
+fun PGPSignature.assertCreatedInBounds(notBefore: Date?, notAfter: Date?) {
+    if (notBefore != null && creationTime < notBefore) {
+        throw SignatureValidationException(
+            "Signature was made before the earliest allowed signature creation time." +
+                " Created: ${creationTime.formatUTC()}," +
+                " earliest allowed: ${notBefore.formatUTC()}")
+    }
+    if (notAfter != null && creationTime > notAfter) {
+        throw SignatureValidationException(
+            "Signature was made after the latest allowed signature creation time." +
+                " Created: ${creationTime.formatUTC()}," +
+                " latest allowed: ${notAfter.formatUTC()}")
+    }
+}
 
 fun PGPSignature?.toRevocationState() =
     if (this == null) RevocationState.notRevoked()

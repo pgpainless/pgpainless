@@ -4,6 +4,11 @@
 
 plugins {
     id 'application'
+    id 'org.graalvm.buildtools.native' version '0.10.6'
+}
+
+graalvmNative {
+    toolchainDetection = true
 }
 
 dependencies {
@@ -16,7 +21,8 @@ dependencies {
     // implementation "ch.qos.logback:logback-core:1.2.6"
     // We want logback logging in tests and in the app
     testImplementation "ch.qos.logback:logback-classic:$logbackVersion"
-    implementation "ch.qos.logback:logback-classic:$logbackVersion"
+    // implementation "ch.qos.logback:logback-classic:$logbackVersion"
+    implementation "org.slf4j:slf4j-nop:$slf4jVersion"
 
     implementation(project(":pgpainless-sop"))
     implementation "org.pgpainless:sop-java-picocli:$sopJavaVersion"

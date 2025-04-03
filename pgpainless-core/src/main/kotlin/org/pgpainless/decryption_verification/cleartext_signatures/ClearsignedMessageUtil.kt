@@ -8,9 +8,9 @@ import java.io.*
 import kotlin.jvm.Throws
 import org.bouncycastle.bcpg.ArmoredInputStream
 import org.bouncycastle.openpgp.PGPSignatureList
+import org.bouncycastle.openpgp.api.OpenPGPImplementation
 import org.bouncycastle.util.Strings
 import org.pgpainless.exception.WrongConsumingMethodException
-import org.pgpainless.implementation.ImplementationFactory
 import org.pgpainless.util.ArmoredInputStreamFactory
 
 /**
@@ -72,7 +72,7 @@ class ClearsignedMessageUtil {
                 }
             }
 
-            val objectFactory = ImplementationFactory.getInstance().getPGPObjectFactory(input)
+            val objectFactory = OpenPGPImplementation.getInstance().pgpObjectFactory(input)
             val next = objectFactory.nextObject() ?: PGPSignatureList(arrayOf())
             return next as PGPSignatureList
         }

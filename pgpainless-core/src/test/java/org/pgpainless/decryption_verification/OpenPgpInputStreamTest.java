@@ -13,15 +13,13 @@ import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.OutputStream;
 import java.nio.charset.StandardCharsets;
-import java.security.InvalidAlgorithmParameterException;
-import java.security.NoSuchAlgorithmException;
 import java.util.Random;
 
 import org.bouncycastle.bcpg.ArmoredInputStream;
 import org.bouncycastle.bcpg.CompressionAlgorithmTags;
 import org.bouncycastle.openpgp.PGPCompressedDataGenerator;
 import org.bouncycastle.openpgp.PGPException;
-import org.bouncycastle.openpgp.PGPSecretKeyRing;
+import org.bouncycastle.openpgp.api.OpenPGPKey;
 import org.bouncycastle.util.io.Streams;
 import org.junit.jupiter.api.Test;
 import org.pgpainless.PGPainless;
@@ -736,15 +734,16 @@ public class OpenPgpInputStreamTest {
     }
 
     @Test
-    public void testSignedMessageConsumption() throws PGPException, InvalidAlgorithmParameterException, NoSuchAlgorithmException, IOException {
+    public void testSignedMessageConsumption() throws PGPException, IOException {
+        PGPainless api = PGPainless.getInstance();
         ByteArrayInputStream plaintext = new ByteArrayInputStream("Hello, World!\n".getBytes(StandardCharsets.UTF_8));
-        PGPSecretKeyRing secretKeys = PGPainless.generateKeyRing()
+        OpenPGPKey secretKeys = api.generateKey()
                 .modernKeyRing("Sigmund <sigmund@exmplample.com>");
 
         ByteArrayOutputStream signedOut = new ByteArrayOutputStream();
-        EncryptionStream signer = PGPainless.encryptAndOrSign()
+        EncryptionStream signer = api.generateMessage()
                 .onOutputStream(signedOut)
-                .withOptions(ProducerOptions.sign(new SigningOptions()
+                .withOptions(ProducerOptions.sign(SigningOptions.get(api)
                                 .addSignature(SecretKeyRingProtector.unprotectedKeys(), secretKeys))
                         .setAsciiArmor(false)
                         .overrideCompressionAlgorithm(CompressionAlgorithm.UNCOMPRESSED));
