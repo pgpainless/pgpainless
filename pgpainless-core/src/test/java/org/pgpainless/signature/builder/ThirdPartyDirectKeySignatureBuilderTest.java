@@ -35,7 +35,7 @@ public class ThirdPartyDirectKeySignatureBuilderTest {
     @Test
     public void testDirectKeySignatureBuilding() throws PGPException {
         PGPainless api = PGPainless.getInstance();
-        OpenPGPKey secretKeys = PGPainless.generateKeyRing()
+        OpenPGPKey secretKeys = api.generateKey()
                 .modernKeyRing("Alice");
 
         DirectKeySelfSignatureBuilder dsb = new DirectKeySelfSignatureBuilder(
@@ -70,7 +70,7 @@ public class ThirdPartyDirectKeySignatureBuilderTest {
         assertNotNull(signature);
         assertEquals(directKeySig.getSignature(), signature);
 
-        assertEquals(SignatureType.DIRECT_KEY, SignatureType.valueOf(signature.getSignatureType()));
+        assertEquals(SignatureType.DIRECT_KEY, SignatureType.requireFromCode(signature.getSignatureType()));
         assertEquals(Collections.singletonList(KeyFlag.CERTIFY_OTHER), SignatureSubpacketsUtil.parseKeyFlags(signature));
         assertEquals(Collections.singleton(HashAlgorithm.SHA512), SignatureSubpacketsUtil.parsePreferredHashAlgorithms(signature));
         assertEquals(Collections.singleton(CompressionAlgorithm.ZIP), SignatureSubpacketsUtil.parsePreferredCompressionAlgorithms(signature));

@@ -20,7 +20,8 @@ public class UnlockSecretKeyTest {
 
     @Test
     public void testUnlockSecretKey() throws PGPException {
-        PGPSecretKeyRing secretKeyRing = PGPainless.generateKeyRing()
+        PGPainless api = PGPainless.getInstance();
+        PGPSecretKeyRing secretKeyRing = api.generateKey()
                 .simpleEcKeyRing("alice@wonderland.lit", "heureka!")
                 .getPGPSecretKeyRing();
         PGPSecretKey secretKey = secretKeyRing.getSecretKey();
