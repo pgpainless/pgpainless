@@ -14,9 +14,9 @@ import java.io.InputStream;
 import java.nio.charset.StandardCharsets;
 
 import org.bouncycastle.openpgp.PGPException;
-import org.bouncycastle.openpgp.PGPSignature;
 import org.bouncycastle.openpgp.api.OpenPGPCertificate;
 import org.bouncycastle.openpgp.api.OpenPGPKey;
+import org.bouncycastle.openpgp.api.OpenPGPSignature;
 import org.bouncycastle.util.io.Streams;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
@@ -26,7 +26,6 @@ import org.pgpainless.encryption_signing.EncryptionResult;
 import org.pgpainless.encryption_signing.EncryptionStream;
 import org.pgpainless.encryption_signing.ProducerOptions;
 import org.pgpainless.encryption_signing.SigningOptions;
-import org.pgpainless.key.SubkeyIdentifier;
 import org.pgpainless.key.protection.SecretKeyRingProtector;
 import org.pgpainless.util.ArmorUtils;
 
@@ -70,7 +69,7 @@ public class Sign {
     /**
      * Demonstration of how to create a detached signature for a message.
      * A detached signature can be distributed alongside the message/file itself.
-     *
+     * <p>
      * The message/file doesn't need to be altered for detached signature creation.
      */
     @Test
@@ -82,9 +81,9 @@ public class Sign {
         // After signing, you want to distribute the original value of 'message' along with the 'detachedSignature'
         // from below.
         ByteArrayOutputStream ignoreMe = new ByteArrayOutputStream();
-        EncryptionStream signingStream = PGPainless.encryptAndOrSign()
+        EncryptionStream signingStream = api.generateMessage()
                 .onOutputStream(ignoreMe)
-                .withOptions(ProducerOptions.sign(SigningOptions.get()
+                .withOptions(ProducerOptions.sign(SigningOptions.get(api)
                         .addDetachedSignature(protector, key, DocumentSignatureType.CANONICAL_TEXT_DOCUMENT))
                         .setAsciiArmor(false)
                 );
@@ -94,9 +93,9 @@ public class Sign {
 
         EncryptionResult result = signingStream.getResult();
 
-        OpenPGPCertificate.OpenPGPComponentKey signingKey = PGPainless.inspectKeyRing(key).getSigningSubkeys().get(0);
-        PGPSignature signature = result.getDetachedSignatures().get(new SubkeyIdentifier(signingKey)).iterator().next();
-        String detachedSignature = ArmorUtils.toAsciiArmoredString(signature.getEncoded());
+        OpenPGPCertificate.OpenPGPComponentKey signingKey = api.inspect(key).getSigningSubkeys().get(0);
+        OpenPGPSignature.OpenPGPDocumentSignature signature = result.getDetachedDocumentSignatures().getSignaturesBy(signingKey).get(0);
+        String detachedSignature = ArmorUtils.toAsciiArmoredString(signature.getSignature().getEncoded());
 
         assertTrue(detachedSignature.startsWith("-----BEGIN PGP SIGNATURE-----"));
 
@@ -126,9 +125,9 @@ public class Sign {
                 "limitations under the License.";
         InputStream messageIn = new ByteArrayInputStream(message.getBytes(StandardCharsets.UTF_8));
         ByteArrayOutputStream signedOut = new ByteArrayOutputStream();
-        EncryptionStream signingStream = PGPainless.encryptAndOrSign()
+        EncryptionStream signingStream = api.generateMessage()
                 .onOutputStream(signedOut)
-                .withOptions(ProducerOptions.sign(SigningOptions.get()
+                .withOptions(ProducerOptions.sign(SigningOptions.get(api)
                                 .addDetachedSignature(protector, key, DocumentSignatureType.CANONICAL_TEXT_DOCUMENT)) // Human-readable text document
                         .setCleartextSigned() // <- Explicitly use Cleartext Signature Framework!!!
                 );

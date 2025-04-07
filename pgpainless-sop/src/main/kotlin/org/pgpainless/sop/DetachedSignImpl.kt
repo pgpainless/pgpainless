@@ -73,16 +73,16 @@ class DetachedSignImpl(private val api: PGPainless) : DetachedSign {
                     // forget passphrases
                     protector.clear()
 
-                    val signatures = result.detachedSignatures.map { it.value }.flatten()
+                    val signatures = result.detachedDocumentSignatures
                     val out =
                         if (armor) ArmoredOutputStreamFactory.get(outputStream) else outputStream
 
-                    signatures.forEach { it.encode(out) }
+                    signatures.forEach { it.signature.encode(out) }
                     out.close()
                     outputStream.close()
 
                     return SigningResult.builder()
-                        .setMicAlg(micAlgFromSignatures(signatures))
+                        .setMicAlg(micAlgFromSignatures(signatures.map { it.signature }))
                         .build()
                 }
             }
