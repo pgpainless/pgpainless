@@ -13,11 +13,11 @@ import org.bouncycastle.openpgp.PGPCompressedDataGenerator
 import org.bouncycastle.openpgp.PGPEncryptedDataGenerator
 import org.bouncycastle.openpgp.PGPException
 import org.bouncycastle.openpgp.PGPLiteralDataGenerator
+import org.bouncycastle.openpgp.api.OpenPGPSignature.OpenPGPDocumentSignature
 import org.pgpainless.PGPainless
 import org.pgpainless.algorithm.CompressionAlgorithm
 import org.pgpainless.algorithm.StreamEncoding
 import org.pgpainless.algorithm.SymmetricKeyAlgorithm
-import org.pgpainless.key.SubkeyIdentifier
 import org.pgpainless.util.ArmoredOutputStreamFactory
 
 // 1 << 8 causes wrong partial body length encoding
@@ -246,8 +246,9 @@ class EncryptionStream(
 
         options.signingOptions.signingMethods.entries.reversed().forEach { (key, method) ->
             method.signatureGenerator.generate().let { sig ->
+                val documentSignature = OpenPGPDocumentSignature(sig, key.publicKey)
                 if (method.isDetached) {
-                    resultBuilder.addDetachedSignature(SubkeyIdentifier(key), sig)
+                    resultBuilder.addDetachedSignature(documentSignature)
                 }
                 if (!method.isDetached || options.isCleartextSigned) {
                     sig.encode(signatureLayerStream)
