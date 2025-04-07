@@ -8,6 +8,8 @@ import java.util.*
 import org.bouncycastle.openpgp.PGPLiteralData
 import org.bouncycastle.openpgp.PGPPublicKeyRing
 import org.bouncycastle.openpgp.PGPSignature
+import org.bouncycastle.openpgp.api.OpenPGPCertificate
+import org.bouncycastle.openpgp.api.OpenPGPSignature.OpenPGPDocumentSignature
 import org.pgpainless.algorithm.CompressionAlgorithm
 import org.pgpainless.algorithm.StreamEncoding
 import org.pgpainless.algorithm.SymmetricKeyAlgorithm
@@ -18,12 +20,24 @@ import org.pgpainless.util.MultiMap
 data class EncryptionResult(
     val encryptionAlgorithm: SymmetricKeyAlgorithm,
     val compressionAlgorithm: CompressionAlgorithm,
-    val detachedSignatures: MultiMap<SubkeyIdentifier, PGPSignature>,
+    val detachedDocumentSignatures: OpenPGPSignatureSet<OpenPGPDocumentSignature>,
     val recipients: Set<SubkeyIdentifier>,
     val fileName: String,
     val modificationDate: Date,
     val fileEncoding: StreamEncoding
 ) {
+
+    @Deprecated(
+        "Use detachedSignatures instead", replaceWith = ReplaceWith("detachedDocumentSignatures"))
+    // TODO: Remove in 2.1
+    val detachedSignatures: MultiMap<SubkeyIdentifier, PGPSignature>
+        get() {
+            val map = MultiMap<SubkeyIdentifier, PGPSignature>()
+            detachedDocumentSignatures.signatures
+                .map { SubkeyIdentifier(it.issuer) to it.signature }
+                .forEach { map.put(it.first, it.second) }
+            return map
+        }
 
     /**
      * Return true, if the message is marked as for-your-eyes-only. This is typically done by
@@ -33,6 +47,9 @@ data class EncryptionResult(
      */
     val isForYourEyesOnly: Boolean
         get() = PGPLiteralData.CONSOLE == fileName
+
+    fun isEncryptedFor(certificate: OpenPGPCertificate) =
+        recipients.any { certificate.getKey(it.keyIdentifier) != null }
 
     /**
      * Returns true, if the message was encrypted for at least one subkey of the given certificate.
@@ -55,7 +72,7 @@ data class EncryptionResult(
         var _encryptionAlgorithm: SymmetricKeyAlgorithm? = null
         var _compressionAlgorithm: CompressionAlgorithm? = null
 
-        val detachedSignatures: MultiMap<SubkeyIdentifier, PGPSignature> = MultiMap()
+        val detachedSignatures: MutableList<OpenPGPDocumentSignature> = mutableListOf()
         val recipients: Set<SubkeyIdentifier> = mutableSetOf()
         private var _fileName = ""
         private var _modificationDate = Date(0)
@@ -81,10 +98,9 @@ data class EncryptionResult(
             (recipients as MutableSet).add(recipient)
         }
 
-        fun addDetachedSignature(
-            signingSubkeyIdentifier: SubkeyIdentifier,
-            detachedSignature: PGPSignature
-        ) = apply { detachedSignatures.put(signingSubkeyIdentifier, detachedSignature) }
+        fun addDetachedSignature(signature: OpenPGPDocumentSignature): Builder = apply {
+            detachedSignatures.add(signature)
+        }
 
         fun build(): EncryptionResult {
             checkNotNull(_encryptionAlgorithm) { "Encryption algorithm not set." }
@@ -93,7 +109,7 @@ data class EncryptionResult(
             return EncryptionResult(
                 _encryptionAlgorithm!!,
                 _compressionAlgorithm!!,
-                detachedSignatures,
+                OpenPGPSignatureSet(detachedSignatures),
                 recipients,
                 _fileName,
                 _modificationDate,

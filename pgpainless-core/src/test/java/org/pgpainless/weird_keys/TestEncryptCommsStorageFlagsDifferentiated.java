@@ -6,10 +6,6 @@ package org.pgpainless.weird_keys;
 
 import static org.junit.jupiter.api.Assertions.assertThrows;
 
-import java.security.InvalidAlgorithmParameterException;
-import java.security.NoSuchAlgorithmException;
-
-import org.bouncycastle.openpgp.PGPException;
 import org.bouncycastle.openpgp.PGPPublicKeyRing;
 import org.bouncycastle.openpgp.PGPSecretKeyRing;
 import org.junit.jupiter.api.Test;
@@ -25,8 +21,7 @@ import org.pgpainless.key.util.KeyRingUtils;
 public class TestEncryptCommsStorageFlagsDifferentiated {
 
     @Test
-    public void testThatEncryptionDifferentiatesBetweenPurposeKeyFlags()
-            throws InvalidAlgorithmParameterException, NoSuchAlgorithmException, PGPException {
+    public void testThatEncryptionDifferentiatesBetweenPurposeKeyFlags() {
         PGPSecretKeyRing secretKeys = PGPainless.buildKeyRing()
                 .setPrimaryKey(KeySpec.getBuilder(
                         KeyType.RSA(RsaLength._3072),
@@ -35,7 +30,8 @@ public class TestEncryptCommsStorageFlagsDifferentiated {
                                 KeyFlag.ENCRYPT_STORAGE // no ENCRYPT_COMMS
                         ))
                 .addUserId("cannot@encrypt.comms")
-                .build();
+                .build()
+                .getPGPSecretKeyRing();
 
         PGPPublicKeyRing publicKeys = KeyRingUtils.publicKeyRingFrom(secretKeys);
 

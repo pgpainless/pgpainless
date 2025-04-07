@@ -19,7 +19,7 @@ public class UserIdTest {
     public void testFormatOnlyName() {
         assertEquals(
                 "Juliet Capulet",
-                UserId.newBuilder().withName("Juliet Capulet")
+                UserId.builder().withName("Juliet Capulet")
                         .build().toString());
     }
 
@@ -27,7 +27,7 @@ public class UserIdTest {
     public void testFormatNameAndComment() {
         assertEquals(
                 "Juliet Capulet (from the play)",
-                UserId.newBuilder().withName("Juliet Capulet")
+                UserId.builder().withName("Juliet Capulet")
                         .withComment("from the play")
                         .noEmail().build().toString());
     }
@@ -35,7 +35,7 @@ public class UserIdTest {
     @Test
     public void testFormatNameCommentAndMail() {
         assertEquals("Juliet Capulet (from the play) <juliet@capulet.lit>",
-                UserId.newBuilder().withName("Juliet Capulet")
+                UserId.builder().withName("Juliet Capulet")
                         .withComment("from the play")
                         .withEmail("juliet@capulet.lit")
                         .build()
@@ -45,7 +45,7 @@ public class UserIdTest {
     @Test
     public void testFormatNameAndEmail() {
         assertEquals("Juliet Capulet <juliet@capulet.lit>",
-                UserId.newBuilder().withName("Juliet Capulet")
+                UserId.builder().withName("Juliet Capulet")
                         .noComment()
                         .withEmail("juliet@capulet.lit")
                         .build()
@@ -60,7 +60,7 @@ public class UserIdTest {
 
     @Test
     void testBuilderWithName() {
-        final UserId userId = UserId.newBuilder().withName("John Smith").build();
+        final UserId userId = UserId.builder().withName("John Smith").build();
         assertEquals("John Smith", userId.getName());
         assertNull(userId.getComment());
         assertNull(userId.getEmail());
@@ -68,7 +68,7 @@ public class UserIdTest {
 
     @Test
     void testBuilderWithComment() {
-        final UserId userId = UserId.newBuilder().withComment("Sales Dept.").build();
+        final UserId userId = UserId.builder().withComment("Sales Dept.").build();
         assertNull(userId.getName());
         assertEquals("Sales Dept.", userId.getComment());
         assertNull(userId.getEmail());
@@ -76,7 +76,7 @@ public class UserIdTest {
 
     @Test
     void testBuilderWithEmail() {
-        final UserId userId = UserId.newBuilder().withEmail("john.smith@example.com").build();
+        final UserId userId = UserId.builder().withEmail("john.smith@example.com").build();
         assertNull(userId.getName());
         assertNull(userId.getComment());
         assertEquals("john.smith@example.com", userId.getEmail());
@@ -84,7 +84,7 @@ public class UserIdTest {
 
     @Test
     void testBuilderWithAll() {
-        final UserId userId = UserId.newBuilder().withEmail("john.smith@example.com")
+        final UserId userId = UserId.builder().withEmail("john.smith@example.com")
                 .withName("John Smith")
                 .withEmail("john.smith@example.com")
                 .withComment("Sales Dept.").build();
@@ -95,7 +95,7 @@ public class UserIdTest {
 
     @Test
     void testBuilderNoName() {
-        final UserId.Builder builder = UserId.newBuilder()
+        final UserId.Builder builder = UserId.builder()
                 .withEmail("john.smith@example.com")
                 .withName("John Smith")
                 .withComment("Sales Dept.").build().toBuilder();
@@ -107,7 +107,7 @@ public class UserIdTest {
 
     @Test
     void testBuilderNoComment() {
-        final UserId.Builder builder = UserId.newBuilder()
+        final UserId.Builder builder = UserId.builder()
                 .withEmail("john.smith@example.com")
                 .withName("John Smith")
                 .withComment("Sales Dept.").build().toBuilder();
@@ -119,7 +119,7 @@ public class UserIdTest {
 
     @Test
     void testBuilderNoEmail() {
-        final UserId.Builder builder = UserId.newBuilder()
+        final UserId.Builder builder = UserId.builder()
                 .withEmail("john.smith@example.com")
                 .withName("John Smith")
                 .withComment("Sales Dept.").build().toBuilder();
@@ -143,7 +143,7 @@ public class UserIdTest {
 
     @Test
     void testEmptyNameAndEmptyCommentAndValidEmailFormatting() {
-        final UserId userId = UserId.newBuilder()
+        final UserId userId = UserId.builder()
                 .withComment("")
                 .withName("")
                 .withEmail("john.smith@example.com")
@@ -157,8 +157,8 @@ public class UserIdTest {
         final String comment = "Sales Dept.";
         final String email = "john.smith@example.com";
         final String upperEmail = email.toUpperCase();
-        final UserId userId1 = UserId.newBuilder().withComment(comment).withName(name).withEmail(email).build();
-        final UserId userId2 = UserId.newBuilder().withComment(comment).withName(name).withEmail(upperEmail).build();
+        final UserId userId1 = UserId.builder().withComment(comment).withName(name).withEmail(email).build();
+        final UserId userId2 = UserId.builder().withComment(comment).withName(name).withEmail(upperEmail).build();
         assertEquals(userId1, userId2);
     }
 
@@ -168,8 +168,8 @@ public class UserIdTest {
         final String name2 = "Don Duck";
         final String comment = "Sales Dept.";
         final String email = "john.smith@example.com";
-        final UserId userId1 = UserId.newBuilder().withComment(comment).withName(name1).withEmail(email).build();
-        final UserId userId2 = UserId.newBuilder().withComment(comment).withName(name2).withEmail(email).build();
+        final UserId userId1 = UserId.builder().withComment(comment).withName(name1).withEmail(email).build();
+        final UserId userId2 = UserId.builder().withComment(comment).withName(name2).withEmail(email).build();
         assertNotEquals(userId1, userId2);
     }
 
@@ -179,8 +179,8 @@ public class UserIdTest {
         final String comment1 = "Sales Dept.";
         final String comment2 = "Legal Dept.";
         final String email = "john.smith@example.com";
-        final UserId userId1 = UserId.newBuilder().withComment(comment1).withName(name).withEmail(email).build();
-        final UserId userId2 = UserId.newBuilder().withComment(comment2).withName(name).withEmail(email).build();
+        final UserId userId1 = UserId.builder().withComment(comment1).withName(name).withEmail(email).build();
+        final UserId userId2 = UserId.builder().withComment(comment2).withName(name).withEmail(email).build();
         assertNotEquals(userId1, userId2);
     }
 
@@ -220,8 +220,8 @@ public class UserIdTest {
         UserId id2 = UserId.onlyEmail("alice@gnupg.org");
         UserId id3 = UserId.nameAndEmail("Alice", "alice@pgpainless.org");
         UserId id3_ = UserId.nameAndEmail("Alice", "alice@pgpainless.org");
-        UserId id4 = UserId.newBuilder().withName("Alice").build();
-        UserId id5 = UserId.newBuilder().withName("Alice").withComment("Work Mail").withEmail("alice@pgpainless.org").build();
+        UserId id4 = UserId.builder().withName("Alice").build();
+        UserId id5 = UserId.builder().withName("Alice").withComment("Work Mail").withEmail("alice@pgpainless.org").build();
 
         assertEquals(id3.hashCode(), id3_.hashCode());
         assertNotEquals(id2.hashCode(), id3.hashCode());
@@ -250,8 +250,8 @@ public class UserIdTest {
         UserId id1 = UserId.nameAndEmail("Alice", "alice@pgpainless.org");
         UserId id2 = UserId.nameAndEmail("alice", "alice@pgpainless.org");
         UserId id3 = UserId.nameAndEmail("Alice", "Alice@Pgpainless.Org");
-        UserId id4 = UserId.newBuilder().withName("Alice").withComment("Work Email").withEmail("Alice@Pgpainless.Org").build();
-        UserId id5 = UserId.newBuilder().withName("alice").withComment("work email").withEmail("alice@pgpainless.org").build();
+        UserId id4 = UserId.builder().withName("Alice").withComment("Work Email").withEmail("Alice@Pgpainless.Org").build();
+        UserId id5 = UserId.builder().withName("alice").withComment("work email").withEmail("alice@pgpainless.org").build();
         UserId id6 = UserId.nameAndEmail("Bob", "bob@pgpainless.org");
 
         Comparator<UserId> c = new UserId.DefaultIgnoreCaseComparator();

@@ -5,6 +5,7 @@
 package org.pgpainless.decryption_verification
 
 import org.bouncycastle.openpgp.PGPSignature
+import org.bouncycastle.openpgp.api.OpenPGPSignature.OpenPGPDocumentSignature
 import org.pgpainless.decryption_verification.SignatureVerification.Failure
 import org.pgpainless.exception.SignatureValidationException
 import org.pgpainless.key.SubkeyIdentifier
@@ -20,7 +21,10 @@ import org.pgpainless.signature.SignatureUtils
  * @param signingKey [SubkeyIdentifier] of the (sub-) key that is used for signature verification.
  *   Note, that this might be null, e.g. in case of a [Failure] due to missing verification key.
  */
-data class SignatureVerification(val signature: PGPSignature, val signingKey: SubkeyIdentifier) {
+data class SignatureVerification(val documentSignature: OpenPGPDocumentSignature) {
+
+    val signature: PGPSignature = documentSignature.signature
+    val signingKey: SubkeyIdentifier = SubkeyIdentifier(documentSignature.issuer)
 
     override fun toString(): String {
         return "Signature: ${SignatureUtils.getSignatureDigestPrefix(signature)};" +
@@ -36,15 +40,16 @@ data class SignatureVerification(val signature: PGPSignature, val signingKey: Su
      * @param validationException exception that caused the verification to fail
      */
     data class Failure(
-        val signature: PGPSignature,
-        val signingKey: SubkeyIdentifier?,
+        val documentSignature: OpenPGPDocumentSignature,
         val validationException: SignatureValidationException
     ) {
+        val signature: PGPSignature = documentSignature.signature
+        val signingKey: SubkeyIdentifier? = documentSignature.issuer?.let { SubkeyIdentifier(it) }
 
         constructor(
             verification: SignatureVerification,
             validationException: SignatureValidationException
-        ) : this(verification.signature, verification.signingKey, validationException)
+        ) : this(verification.documentSignature, validationException)
 
         override fun toString(): String {
             return "Signature: ${SignatureUtils.getSignatureDigestPrefix(signature)}; Key: ${signingKey?.toString() ?: "null"}; Failure: ${validationException.message}"

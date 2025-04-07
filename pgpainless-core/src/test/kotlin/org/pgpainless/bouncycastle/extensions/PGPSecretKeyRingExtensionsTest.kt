@@ -22,28 +22,37 @@ class PGPSecretKeyRingExtensionsTest {
     @Test
     fun testHasPgpSecretKeyRing() {
         val key = TestKeys.getEmilSecretKeyRing()
-        assertTrue(key.hasSecretKey(TestKeys.EMIL_KEY_ID))
+        assertTrue(key.hasSecretKey(TestKeys.EMIL_FINGERPRINT.keyIdentifier))
+        assertTrue(key.hasSecretKey(TestKeys.EMIL_FINGERPRINT.keyId))
         assertTrue(key.hasSecretKey(TestKeys.EMIL_FINGERPRINT))
 
-        assertFalse(key.hasSecretKey(TestKeys.ROMEO_KEY_ID))
+        assertFalse(key.hasSecretKey(TestKeys.ROMEO_FINGERPRINT.keyIdentifier))
+        assertFalse(key.hasSecretKey(TestKeys.ROMEO_FINGERPRINT.keyId))
         assertFalse(key.hasSecretKey(TestKeys.ROMEO_FINGERPRINT))
     }
 
     @Test
     fun testRequireSecretKey() {
         val key = TestKeys.getEmilSecretKeyRing()
-        assertNotNull(key.requireSecretKey(TestKeys.EMIL_KEY_ID))
+        assertNotNull(key.requireSecretKey(TestKeys.EMIL_FINGERPRINT.keyIdentifier))
+        assertNotNull(key.requireSecretKey(TestKeys.EMIL_FINGERPRINT.keyId))
         assertNotNull(key.requireSecretKey(TestKeys.EMIL_FINGERPRINT))
 
-        assertThrows<NoSuchElementException> { key.requireSecretKey(TestKeys.ROMEO_KEY_ID) }
+        assertThrows<NoSuchElementException> {
+            key.requireSecretKey(TestKeys.ROMEO_FINGERPRINT.keyIdentifier)
+        }
+        assertThrows<NoSuchElementException> {
+            key.requireSecretKey(TestKeys.ROMEO_FINGERPRINT.keyId)
+        }
         assertThrows<NoSuchElementException> { key.requireSecretKey(TestKeys.ROMEO_FINGERPRINT) }
     }
 
     @Test
     fun testGetSecretKeyForSignature() {
-        val key = TestKeys.getEmilSecretKeyRing()
+        val key = TestKeys.getEmilKey()
         val signer =
-            PGPainless.encryptAndOrSign()
+            PGPainless.getInstance()
+                .generateMessage()
                 .onOutputStream(ByteArrayOutputStream())
                 .withOptions(
                     ProducerOptions.sign(

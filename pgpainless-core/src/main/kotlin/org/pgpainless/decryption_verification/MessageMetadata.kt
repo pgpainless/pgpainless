@@ -6,8 +6,10 @@ package org.pgpainless.decryption_verification
 
 import java.util.*
 import javax.annotation.Nonnull
+import org.bouncycastle.bcpg.KeyIdentifier
 import org.bouncycastle.openpgp.PGPKeyRing
 import org.bouncycastle.openpgp.PGPLiteralData
+import org.bouncycastle.openpgp.api.OpenPGPCertificate
 import org.pgpainless.algorithm.CompressionAlgorithm
 import org.pgpainless.algorithm.StreamEncoding
 import org.pgpainless.algorithm.SymmetricKeyAlgorithm
@@ -47,9 +49,15 @@ class MessageMetadata(val message: Message) {
             if (encryptionAlgorithm == null) false
             else encryptionAlgorithm != SymmetricKeyAlgorithm.NULL
 
-    fun isEncryptedFor(keys: PGPKeyRing): Boolean {
+    fun isEncryptedFor(cert: OpenPGPCertificate): Boolean {
         return encryptionLayers.asSequence().any {
-            it.recipients.any { keyId -> keys.getPublicKey(keyId) != null }
+            it.recipients.any { identifier -> cert.getKey(identifier) != null }
+        }
+    }
+
+    fun isEncryptedFor(cert: PGPKeyRing): Boolean {
+        return encryptionLayers.asSequence().any {
+            it.recipients.any { keyId -> cert.getPublicKey(keyId) != null }
         }
     }
 
@@ -79,12 +87,15 @@ class MessageMetadata(val message: Message) {
 
     /** List containing all recipient keyIDs. */
     val recipientKeyIds: List<Long>
+        get() = recipientKeyIdentifiers.map { it.keyId }.toList()
+
+    val recipientKeyIdentifiers: List<KeyIdentifier>
         get() =
             encryptionLayers
                 .asSequence()
                 .map { it.recipients.toMutableList() }
-                .reduce { all, keyIds ->
-                    all.addAll(keyIds)
+                .reduce { all, keyIdentifiers ->
+                    all.addAll(keyIdentifiers)
                     all
                 }
                 .toList()
@@ -269,6 +280,9 @@ class MessageMetadata(val message: Message) {
 
     fun isVerifiedSignedBy(keys: PGPKeyRing) =
         verifiedSignatures.any { keys.matches(it.signingKey) }
+
+    fun isVerifiedSignedBy(cert: OpenPGPCertificate) =
+        verifiedSignatures.any { cert.pgpKeyRing.matches(it.signingKey) }
 
     fun isVerifiedDetachedSignedBy(fingerprint: OpenPgpFingerprint) =
         verifiedDetachedSignatures.any { it.signingKey.matches(fingerprint) }
@@ -464,9 +478,11 @@ class MessageMetadata(val message: Message) {
         var sessionKey: SessionKey? = null
 
         /** List of all recipient key ids to which the packet was encrypted for. */
-        val recipients: List<Long> = mutableListOf()
+        val recipients: List<KeyIdentifier> = mutableListOf()
 
-        fun addRecipients(keyIds: List<Long>) = apply { (recipients as MutableList).addAll(keyIds) }
+        fun addRecipients(keyIds: List<KeyIdentifier>) = apply {
+            (recipients as MutableList).addAll(keyIds)
+        }
 
         /**
          * Identifier of the subkey that was used to decrypt the packet (in case of a public key

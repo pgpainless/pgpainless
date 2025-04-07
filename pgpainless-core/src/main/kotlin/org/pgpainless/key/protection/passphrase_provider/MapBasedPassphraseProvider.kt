@@ -4,6 +4,7 @@
 
 package org.pgpainless.key.protection.passphrase_provider
 
+import org.bouncycastle.bcpg.KeyIdentifier
 import org.pgpainless.util.Passphrase
 
 /**
@@ -14,9 +15,11 @@ import org.pgpainless.util.Passphrase
  *
  * TODO: Make this null-safe and throw an exception instead?
  */
-class MapBasedPassphraseProvider(val map: Map<Long?, Passphrase>) : SecretKeyPassphraseProvider {
+class MapBasedPassphraseProvider(val map: Map<KeyIdentifier?, Passphrase>) :
+    SecretKeyPassphraseProvider {
 
-    override fun getPassphraseFor(keyId: Long?): Passphrase? = map[keyId]
+    override fun getPassphraseFor(keyIdentifier: KeyIdentifier): Passphrase? = map[keyIdentifier]
 
-    override fun hasPassphrase(keyId: Long?): Boolean = map.containsKey(keyId)
+    override fun hasPassphrase(keyIdentifier: KeyIdentifier): Boolean =
+        map.containsKey(keyIdentifier)
 }

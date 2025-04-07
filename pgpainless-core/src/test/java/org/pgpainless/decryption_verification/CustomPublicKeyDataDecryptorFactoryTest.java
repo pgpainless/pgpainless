@@ -5,11 +5,8 @@
 package org.pgpainless.decryption_verification;
 
 import org.bouncycastle.openpgp.PGPException;
-import org.bouncycastle.openpgp.PGPPrivateKey;
-import org.bouncycastle.openpgp.PGPPublicKey;
-import org.bouncycastle.openpgp.PGPPublicKeyRing;
-import org.bouncycastle.openpgp.PGPSecretKey;
-import org.bouncycastle.openpgp.PGPSecretKeyRing;
+import org.bouncycastle.openpgp.api.OpenPGPCertificate;
+import org.bouncycastle.openpgp.api.OpenPGPKey;
 import org.bouncycastle.openpgp.operator.PublicKeyDataDecryptorFactory;
 import org.bouncycastle.openpgp.operator.bc.BcPublicKeyDataDecryptorFactory;
 import org.bouncycastle.util.io.Streams;
@@ -28,8 +25,6 @@ import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
-import java.security.InvalidAlgorithmParameterException;
-import java.security.NoSuchAlgorithmException;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
@@ -37,18 +32,20 @@ public class CustomPublicKeyDataDecryptorFactoryTest {
 
     @Test
     public void testDecryptionWithEmulatedHardwareDecryptionCallback()
-            throws PGPException, IOException, InvalidAlgorithmParameterException, NoSuchAlgorithmException {
-        PGPSecretKeyRing secretKey = PGPainless.generateKeyRing().modernKeyRing("Alice");
-        PGPPublicKeyRing cert = PGPainless.extractCertificate(secretKey);
-        KeyRingInfo info = PGPainless.inspectKeyRing(secretKey);
-        PGPPublicKey encryptionKey = info.getEncryptionSubkeys(EncryptionPurpose.ANY).get(0);
+            throws PGPException, IOException {
+        PGPainless api = PGPainless.getInstance();
+        OpenPGPKey secretKey = api.generateKey().modernKeyRing("Alice");
+        OpenPGPCertificate cert = secretKey.toCertificate();
+        KeyRingInfo info = api.inspect(secretKey);
+        OpenPGPCertificate.OpenPGPComponentKey encryptionKey =
+                info.getEncryptionSubkeys(EncryptionPurpose.ANY).get(0);
 
         // Encrypt a test message
         String plaintext = "Hello, World!\n";
         ByteArrayOutputStream ciphertextOut = new ByteArrayOutputStream();
-        EncryptionStream encryptionStream = PGPainless.encryptAndOrSign()
+        EncryptionStream encryptionStream = api.generateMessage()
                 .onOutputStream(ciphertextOut)
-                .withOptions(ProducerOptions.encrypt(EncryptionOptions.get()
+                .withOptions(ProducerOptions.encrypt(EncryptionOptions.get(api)
                         .addRecipient(cert)));
         encryptionStream.write(plaintext.getBytes(StandardCharsets.UTF_8));
         encryptionStream.close();
@@ -59,9 +56,9 @@ public class CustomPublicKeyDataDecryptorFactoryTest {
                     throws HardwareSecurity.HardwareSecurityException {
                 // Emulate hardware decryption.
                 try {
-                    PGPSecretKey decryptionKey = secretKey.getSecretKey(encryptionKey.getKeyID());
-                    PGPPrivateKey privateKey = UnlockSecretKey.unlockSecretKey(decryptionKey, Passphrase.emptyPassphrase());
-                    PublicKeyDataDecryptorFactory internal = new BcPublicKeyDataDecryptorFactory(privateKey);
+                    OpenPGPKey.OpenPGPSecretKey decryptionKey = secretKey.getSecretKey(encryptionKey.getKeyIdentifier());
+                    OpenPGPKey.OpenPGPPrivateKey privateKey = UnlockSecretKey.unlockSecretKey(decryptionKey, Passphrase.emptyPassphrase());
+                    PublicKeyDataDecryptorFactory internal = new BcPublicKeyDataDecryptorFactory(privateKey.getKeyPair().getPrivateKey());
                     return internal.recoverSessionData(keyAlgorithm, new byte[][] {sessionKeyData}, pkeskVersion);
                 } catch (PGPException e) {
                     throw new HardwareSecurity.HardwareSecurityException();
@@ -75,7 +72,7 @@ public class CustomPublicKeyDataDecryptorFactoryTest {
                 .withOptions(ConsumerOptions.get()
                         .addCustomDecryptorFactory(
                                 new HardwareSecurity.HardwareDataDecryptorFactory(
-                                        new SubkeyIdentifier(cert, encryptionKey.getKeyID()),
+                                        new SubkeyIdentifier(encryptionKey),
                                         hardwareDecryptionCallback)));
 
         ByteArrayOutputStream decryptedOut = new ByteArrayOutputStream();

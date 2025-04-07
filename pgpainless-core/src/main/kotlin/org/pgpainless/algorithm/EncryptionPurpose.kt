@@ -4,11 +4,13 @@
 
 package org.pgpainless.algorithm
 
-enum class EncryptionPurpose {
+import org.bouncycastle.bcpg.sig.KeyFlags
+
+enum class EncryptionPurpose(val code: Int) {
     /** The stream will encrypt communication that goes over the wire. E.g. EMail, Chat... */
-    COMMUNICATIONS,
+    COMMUNICATIONS(KeyFlags.ENCRYPT_COMMS),
     /** The stream will encrypt data at rest. E.g. Encrypted backup... */
-    STORAGE,
+    STORAGE(KeyFlags.ENCRYPT_STORAGE),
     /** The stream will use keys with either flags to encrypt the data. */
-    ANY
+    ANY(KeyFlags.ENCRYPT_COMMS or KeyFlags.ENCRYPT_STORAGE)
 }

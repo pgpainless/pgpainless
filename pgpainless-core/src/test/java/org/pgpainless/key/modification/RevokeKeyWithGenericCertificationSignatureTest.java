@@ -7,13 +7,14 @@ package org.pgpainless.key.modification;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
-import java.util.Arrays;
+import java.util.Collections;
 
 import org.bouncycastle.bcpg.ArmoredOutputStream;
 import org.bouncycastle.openpgp.PGPException;
 import org.bouncycastle.openpgp.PGPPublicKey;
 import org.bouncycastle.openpgp.PGPSecretKey;
 import org.bouncycastle.openpgp.PGPSecretKeyRing;
+import org.bouncycastle.openpgp.api.OpenPGPKey;
 import org.junit.jupiter.api.TestTemplate;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.pgpainless.PGPainless;
@@ -24,7 +25,7 @@ import org.pgpainless.util.TestAllImplementations;
 /**
  * Test that makes sure that PGPainless can deal with keys that carry a key
  * signature of type 0x10 (generic certification).
- *
+ * <p>
  * Originally PGPainless would only handle keys with key signature type
  * 0x13 (positive certification) and would otherwise crash when negotiating
  * algorithms, esp. when revoking a key.
@@ -70,23 +71,26 @@ public class RevokeKeyWithGenericCertificationSignatureTest {
     }
 
     private KeyPair revokeKey(String priv) throws IOException, PGPException {
-        byte[] armoredBytes = priv.getBytes(StandardCharsets.UTF_8);
-        PGPSecretKeyRing r = PGPainless.readKeyRing()
-                .secretKeyRing(armoredBytes);
-        PGPSecretKey secretKey = r.getSecretKey();
+        PGPainless api = PGPainless.getInstance();
+        OpenPGPKey key = api.readKey().parseKey(priv);
+        OpenPGPKey onlyPrimaryKey = api.toKey(
+                new PGPSecretKeyRing(
+                        Collections.singletonList(key.getPrimarySecretKey().getPGPSecretKey())
+                )
+        );
         // this is not ideal, but still valid usage
-        PGPSecretKeyRing secretKeyRing =
-                PGPainless.modifyKeyRing(new PGPSecretKeyRing(Arrays.asList(secretKey)))
+        OpenPGPKey revokedPrimaryKey =
+                api.modify(onlyPrimaryKey)
                         .revoke(new UnprotectedKeysProtector()).done();
 
-        PGPPublicKey pkr = secretKeyRing.getPublicKeys().next();
+        PGPPublicKey pkr = revokedPrimaryKey.getPGPSecretKeyRing().getPublicKeys().next();
         ByteArrayOutputStream pubOutBytes = new ByteArrayOutputStream();
         try (ArmoredOutputStream pubOut = ArmoredOutputStreamFactory.get(pubOutBytes)) {
             pkr.encode(pubOut);
         }
         pubOutBytes.close();
 
-        PGPSecretKey skr = secretKeyRing.getSecretKeys().next();
+        PGPSecretKey skr = revokedPrimaryKey.getPGPSecretKeyRing().getSecretKeys().next();
         ByteArrayOutputStream secOutBytes = new ByteArrayOutputStream();
         try (ArmoredOutputStream privOut = ArmoredOutputStreamFactory.get(secOutBytes)) {
             skr.encode(privOut);

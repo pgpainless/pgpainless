@@ -10,12 +10,13 @@ import java.io.InputStream
 import java.io.OutputStream
 import org.bouncycastle.openpgp.PGPUtil
 import org.bouncycastle.util.io.Streams
+import org.pgpainless.PGPainless
 import sop.Ready
 import sop.exception.SOPGPException
 import sop.operation.Dearmor
 
 /** Implementation of the `dearmor` operation using PGPainless. */
-class DearmorImpl : Dearmor {
+class DearmorImpl(private val api: PGPainless) : Dearmor {
 
     override fun data(data: InputStream): Ready {
         val decoder =
