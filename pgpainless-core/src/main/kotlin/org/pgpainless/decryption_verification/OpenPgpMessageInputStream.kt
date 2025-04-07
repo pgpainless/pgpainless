@@ -779,34 +779,37 @@ class OpenPgpMessageInputStream(
         fun addDetachedSignature(signature: PGPSignature) {
             val check = initializeSignature(signature)
             val keyId = signature.issuerKeyId
-            if (check != null) {
+            if (check.issuer != null) {
                 detachedSignatures.add(check)
             } else {
                 LOGGER.debug(
                     "No suitable certificate for verification of signature by key ${keyId.openPgpKeyId()} found.")
                 detachedSignaturesWithMissingCert.add(
                     SignatureVerification.Failure(
-                        signature, null, SignatureValidationException("Missing verification key.")))
+                        check, SignatureValidationException("Missing verification key.")))
             }
         }
 
         fun addPrependedSignature(signature: PGPSignature) {
             val check = initializeSignature(signature)
             val keyId = signature.issuerKeyId
-            if (check != null) {
+            if (check.issuer != null) {
                 prependedSignatures.add(check)
             } else {
                 LOGGER.debug(
                     "No suitable certificate for verification of signature by key ${keyId.openPgpKeyId()} found.")
                 prependedSignaturesWithMissingCert.add(
                     SignatureVerification.Failure(
-                        signature, null, SignatureValidationException("Missing verification key")))
+                        check, SignatureValidationException("Missing verification key")))
             }
         }
 
-        fun initializeSignature(signature: PGPSignature): OpenPGPDocumentSignature? {
-            val certificate = findCertificate(signature) ?: return null
-            val publicKey = certificate.getSigningKeyFor(signature) ?: return null
+        fun initializeSignature(signature: PGPSignature): OpenPGPDocumentSignature {
+            val certificate =
+                findCertificate(signature) ?: return OpenPGPDocumentSignature(signature, null)
+            val publicKey =
+                certificate.getSigningKeyFor(signature)
+                    ?: return OpenPGPDocumentSignature(signature, null)
             initialize(signature, publicKey.pgpPublicKey)
             return OpenPGPDocumentSignature(signature, publicKey)
         }
@@ -845,12 +848,7 @@ class OpenPgpMessageInputStream(
                 val documentSignature =
                     OpenPGPDocumentSignature(
                         signature, check.verificationKeys.getSigningKeyFor(signature))
-                val verification =
-                    SignatureVerification(
-                        signature,
-                        SubkeyIdentifier(
-                            check.verificationKeys.pgpPublicKeyRing,
-                            check.onePassSignature.keyIdentifier))
+                val verification = SignatureVerification(documentSignature)
 
                 try {
                     signature.assertCreatedInBounds(
@@ -879,7 +877,8 @@ class OpenPgpMessageInputStream(
                     "No suitable certificate for verification of signature by key ${signature.issuerKeyId.openPgpKeyId()} found.")
                 inbandSignaturesWithMissingCert.add(
                     SignatureVerification.Failure(
-                        signature, null, SignatureValidationException("Missing verification key.")))
+                        OpenPGPDocumentSignature(signature, null),
+                        SignatureValidationException("Missing verification key.")))
             }
         }
 
@@ -967,8 +966,7 @@ class OpenPgpMessageInputStream(
 
         fun finish(layer: Layer) {
             for (detached in detachedSignatures) {
-                val verification =
-                    SignatureVerification(detached.signature, SubkeyIdentifier(detached.issuer))
+                val verification = SignatureVerification(detached)
                 try {
                     detached.signature.assertCreatedInBounds(
                         options.getVerifyNotBefore(), options.getVerifyNotAfter())
@@ -988,8 +986,7 @@ class OpenPgpMessageInputStream(
             }
 
             for (prepended in prependedSignatures) {
-                val verification =
-                    SignatureVerification(prepended.signature, SubkeyIdentifier(prepended.issuer))
+                val verification = SignatureVerification(prepended)
                 try {
                     prepended.signature.assertCreatedInBounds(
                         options.getVerifyNotBefore(), options.getVerifyNotAfter())

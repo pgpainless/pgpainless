@@ -152,7 +152,9 @@ class PGPainless(
          */
         @JvmStatic
         @JvmOverloads
-        @Deprecated("Call buildKey() on an instance of PGPainless instead.")
+        @Deprecated(
+            "Call buildKey() on an instance of PGPainless instead.",
+            replaceWith = ReplaceWith("buildKey(version)"))
         fun buildKeyRing(version: OpenPGPKeyVersion = OpenPGPKeyVersion.v4): KeyRingBuilder =
             getInstance().buildKey(version)
 
@@ -186,7 +188,8 @@ class PGPainless(
          * @throws PGPException in case of an error
          */
         @JvmStatic
-        @Deprecated("Use mergeCertificate() instead.")
+        @Deprecated(
+            "Use mergeCertificate() instead.", replaceWith = ReplaceWith("mergeCertificate()"))
         fun mergeCertificate(
             originalCopy: PGPPublicKeyRing,
             updatedCopy: PGPPublicKeyRing
