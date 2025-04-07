@@ -24,6 +24,7 @@ public class ReadKeys {
      */
     @Test
     public void readCertificate() throws IOException {
+        PGPainless api = PGPainless.getInstance();
         String certificate = "" +
                 "-----BEGIN PGP PUBLIC KEY BLOCK-----\n" +
                 "Comment: Alice's OpenPGP certificate\n" +
@@ -40,9 +41,9 @@ public class ReadKeys {
                 "=iIGO\n" +
                 "-----END PGP PUBLIC KEY BLOCK-----";
 
-        OpenPGPCertificate publicKey = PGPainless.getInstance().readKey().parseCertificate(certificate);
+        OpenPGPCertificate publicKey = api.readKey().parseCertificate(certificate);
 
-        KeyRingInfo keyInfo = PGPainless.inspectKeyRing(publicKey);
+        KeyRingInfo keyInfo = api.inspect(publicKey);
         OpenPgpFingerprint fingerprint = new OpenPgpV4Fingerprint("EB85 BB5F A33A 75E1 5E94  4E63 F231 550C 4F47 E38E");
         assertEquals(fingerprint, keyInfo.getFingerprint());
         assertEquals("Alice Lovelace <alice@openpgp.example>", keyInfo.getPrimaryUserId());
@@ -53,6 +54,7 @@ public class ReadKeys {
      */
     @Test
     public void readSecretKey() throws IOException {
+        PGPainless api = PGPainless.getInstance();
         String key = "\n" +
                 "-----BEGIN PGP PRIVATE KEY BLOCK-----\n" +
                 "Comment: Alice's OpenPGP Transferable Secret Key\n" +
@@ -71,9 +73,9 @@ public class ReadKeys {
                 "=n8OM\n" +
                 "-----END PGP PRIVATE KEY BLOCK-----";
 
-        OpenPGPKey secretKey = PGPainless.getInstance().readKey().parseKey(key);
+        OpenPGPKey secretKey = api.readKey().parseKey(key);
 
-        KeyRingInfo keyInfo = PGPainless.inspectKeyRing(secretKey);
+        KeyRingInfo keyInfo = api.inspect(secretKey);
         OpenPgpFingerprint fingerprint = new OpenPgpV4Fingerprint("EB85 BB5F A33A 75E1 5E94  4E63 F231 550C 4F47 E38E");
         assertEquals(fingerprint, keyInfo.getFingerprint());
         assertEquals("Alice Lovelace <alice@openpgp.example>", keyInfo.getPrimaryUserId());
@@ -87,6 +89,7 @@ public class ReadKeys {
      */
     @Test
     public void readKeyRingCollection() throws IOException {
+        PGPainless api = PGPainless.getInstance();
         String certificateCollection = "-----BEGIN PGP PUBLIC KEY BLOCK-----\n" +
                 "Comment: Alice's OpenPGP certificate\n" +
                 "\n" +
@@ -145,7 +148,7 @@ public class ReadKeys {
                 "=NXei\n" +
                 "-----END PGP PUBLIC KEY BLOCK-----";
 
-        List<OpenPGPCertificate> collection = PGPainless.getInstance().readKey().parseKeysOrCertificates(certificateCollection);
+        List<OpenPGPCertificate> collection = api.readKey().parseKeysOrCertificates(certificateCollection);
         assertEquals(2, collection.size());
     }
 }
