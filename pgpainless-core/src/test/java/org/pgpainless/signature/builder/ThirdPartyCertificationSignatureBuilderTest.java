@@ -30,7 +30,7 @@ public class ThirdPartyCertificationSignatureBuilderTest {
     @Test
     public void testInvalidSignatureTypeThrows() {
         PGPainless api = PGPainless.getInstance();
-        OpenPGPKey secretKeys = PGPainless.generateKeyRing()
+        OpenPGPKey secretKeys = api.generateKey()
                 .modernKeyRing("Alice");
         assertThrows(IllegalArgumentException.class, () ->
                 new ThirdPartyCertificationSignatureBuilder(
@@ -43,10 +43,10 @@ public class ThirdPartyCertificationSignatureBuilderTest {
     @Test
     public void testUserIdCertification() throws PGPException {
         PGPainless api = PGPainless.getInstance();
-        OpenPGPKey secretKeys = PGPainless.generateKeyRing()
+        OpenPGPKey secretKeys = api.generateKey()
                 .modernKeyRing("Alice");
 
-        OpenPGPCertificate bobsPublicKeys = PGPainless.generateKeyRing().modernKeyRing("Bob")
+        OpenPGPCertificate bobsPublicKeys = api.generateKey().modernKeyRing("Bob")
                 .toCertificate();
 
         ThirdPartyCertificationSignatureBuilder signatureBuilder = new ThirdPartyCertificationSignatureBuilder(
@@ -63,7 +63,7 @@ public class ThirdPartyCertificationSignatureBuilderTest {
 
         OpenPGPSignature certification = signatureBuilder.build(bobsPublicKeys, "Bob");
         PGPSignature signature = certification.getSignature();
-        assertEquals(SignatureType.GENERIC_CERTIFICATION, SignatureType.valueOf(signature.getSignatureType()));
+        assertEquals(SignatureType.GENERIC_CERTIFICATION, SignatureType.requireFromCode(signature.getSignatureType()));
         assertTrue(KeyIdentifier.matches(signature.getKeyIdentifiers(), secretKeys.getKeyIdentifier(), true));
         assertArrayEquals(
                 secretKeys.getPrimaryKey().getPGPPublicKey().getFingerprint(),

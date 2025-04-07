@@ -8,13 +8,12 @@ import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertNull;
 
 import java.io.IOException;
-import java.util.Iterator;
 import javax.annotation.Nullable;
 
 import org.bouncycastle.bcpg.KeyIdentifier;
 import org.bouncycastle.openpgp.PGPException;
-import org.bouncycastle.openpgp.PGPPublicKey;
-import org.bouncycastle.openpgp.PGPSecretKeyRing;
+import org.bouncycastle.openpgp.api.OpenPGPCertificate;
+import org.bouncycastle.openpgp.api.OpenPGPKey;
 import org.jetbrains.annotations.NotNull;
 import org.junit.jupiter.api.Test;
 import org.pgpainless.PGPainless;
@@ -60,13 +59,14 @@ public class PassphraseProtectedKeyTest {
 
     @Test
     public void testReturnsNonNullDecryptorForSubkeys() throws PGPException {
-        PGPSecretKeyRing secretKeys = PGPainless.generateKeyRing().modernKeyRing("alice", "passphrase")
-                .getPGPSecretKeyRing();
-        SecretKeyRingProtector protector = PasswordBasedSecretKeyRingProtector.forKey(secretKeys, Passphrase.fromPassword("passphrase"));
-        for (Iterator<PGPPublicKey> it = secretKeys.getPublicKeys(); it.hasNext(); ) {
-            PGPPublicKey subkey = it.next();
+        PGPainless api = PGPainless.getInstance();
+        OpenPGPKey key = api.generateKey()
+                .modernKeyRing("alice <alice@example.org>", "passphrase");
+        SecretKeyRingProtector protector = PasswordBasedSecretKeyRingProtector.forKey(key, Passphrase.fromPassword("passphrase"));
+        for (OpenPGPCertificate.OpenPGPComponentKey subkey : key.getPublicKeys().values()) {
             assertNotNull(protector.getEncryptor(subkey));
-            assertNotNull(protector.getDecryptor(subkey.getKeyID()));
+            assertNotNull(protector.getDecryptor(subkey.getKeyIdentifier()));
+            assertNotNull(protector.getDecryptor(subkey.getKeyIdentifier().getKeyId()));
         }
     }
 }

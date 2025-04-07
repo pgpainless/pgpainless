@@ -14,7 +14,8 @@ import org.bouncycastle.openpgp.PGPSignature;
 import org.bouncycastle.openpgp.PGPSignatureGenerator;
 import org.bouncycastle.openpgp.PGPUserAttributeSubpacketVector;
 import org.bouncycastle.openpgp.PGPUserAttributeSubpacketVectorGenerator;
-import org.bouncycastle.openpgp.api.OpenPGPImplementation;
+import org.bouncycastle.openpgp.api.OpenPGPCertificate;
+import org.bouncycastle.openpgp.api.OpenPGPKey;
 import org.junit.jupiter.api.Test;
 import org.pgpainless.PGPainless;
 import org.pgpainless.algorithm.HashAlgorithm;
@@ -40,13 +41,12 @@ public class KeyRingUtilTest {
 
     @Test
     public void testInjectCertification() throws PGPException {
-        PGPSecretKeyRing secretKeys = PGPainless.generateKeyRing()
-                .modernKeyRing("Alice")
-                .getPGPSecretKeyRing();
+        PGPainless api = PGPainless.getInstance();
+        OpenPGPKey key = api.generateKey().modernKeyRing("Alice");
 
         // test preconditions
-        assertFalse(secretKeys.getPublicKey().getUserAttributes().hasNext());
-        int sigCount = CollectionUtils.iteratorToList(secretKeys.getPublicKey().getSignatures()).size();
+        assertFalse(key.getPrimaryKey().getPGPPublicKey().getUserAttributes().hasNext());
+        int sigCount = CollectionUtils.iteratorToList(key.getPrimaryKey().getPGPPublicKey().getSignatures()).size();
 
         // Create "image"
         byte[] image = new byte[512];
@@ -57,15 +57,15 @@ public class KeyRingUtilTest {
 
         // create sig
         PGPSignatureGenerator sigGen = new PGPSignatureGenerator(
-                OpenPGPImplementation.getInstance().pgpContentSignerBuilder(
-                        secretKeys.getPublicKey().getAlgorithm(), HashAlgorithm.SHA512.getAlgorithmId()
-                ), secretKeys.getPublicKey());
+                api.getImplementation().pgpContentSignerBuilder(
+                        key.getPrimaryKey().getPGPPublicKey().getAlgorithm(), HashAlgorithm.SHA512.getAlgorithmId()
+                ), key.getPrimaryKey().getPGPPublicKey());
         sigGen.init(
                 SignatureType.POSITIVE_CERTIFICATION.getCode(),
-                UnlockSecretKey.unlockSecretKey(secretKeys.getSecretKey(), SecretKeyRingProtector.unprotectedKeys()));
-        PGPSignature signature = sigGen.generateCertification(userAttr, secretKeys.getPublicKey());
+                UnlockSecretKey.unlockSecretKey(key.getPrimarySecretKey().getPGPSecretKey(), SecretKeyRingProtector.unprotectedKeys()));
+        PGPSignature signature = sigGen.generateCertification(userAttr, key.getPrimaryKey().getPGPPublicKey());
         // inject sig
-        secretKeys = KeyRingUtils.injectCertification(secretKeys, userAttr, signature);
+        PGPSecretKeyRing secretKeys = KeyRingUtils.injectCertification(key.getPGPSecretKeyRing(), userAttr, signature);
 
         assertTrue(secretKeys.getPublicKey().getUserAttributes().hasNext());
         assertEquals(userAttr, secretKeys.getPublicKey().getUserAttributes().next());
@@ -74,9 +74,9 @@ public class KeyRingUtilTest {
 
     @Test
     public void testKeysPlusPublicKey() {
-        PGPSecretKeyRing secretKeys = PGPainless.generateKeyRing().modernKeyRing("Alice")
-                .getPGPSecretKeyRing();
-        PGPPublicKeyRing publicKeys = PGPainless.extractCertificate(secretKeys);
+        PGPainless api = PGPainless.getInstance();
+        OpenPGPKey key = api.generateKey().modernKeyRing("Alice");
+        OpenPGPCertificate certificate = key.toCertificate();
 
         PGPKeyPair keyPair = KeyRingBuilder.generateKeyPair(KeySpec.getBuilder(
                 KeyType.ECDH(EllipticCurve._P256), KeyFlag.ENCRYPT_COMMS, KeyFlag.ENCRYPT_STORAGE).build(),
@@ -84,10 +84,10 @@ public class KeyRingUtilTest {
         PGPPublicKey pubkey = keyPair.getPublicKey();
         assertFalse(pubkey.isMasterKey());
 
-        PGPSecretKeyRing secretKeysPlus = KeyRingUtils.keysPlusPublicKey(secretKeys, pubkey);
+        PGPSecretKeyRing secretKeysPlus = KeyRingUtils.keysPlusPublicKey(key.getPGPSecretKeyRing(), pubkey);
         assertNotNull(secretKeysPlus.getPublicKey(pubkey.getKeyID()));
 
-        PGPPublicKeyRing publicKeysPlus = KeyRingUtils.keysPlusPublicKey(publicKeys, pubkey);
+        PGPPublicKeyRing publicKeysPlus = KeyRingUtils.keysPlusPublicKey(certificate.getPGPPublicKeyRing(), pubkey);
         assertNotNull(publicKeysPlus.getPublicKey(pubkey.getKeyID()));
     }
 }
