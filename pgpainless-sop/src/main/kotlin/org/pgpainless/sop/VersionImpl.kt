@@ -16,7 +16,7 @@ import sop.operation.Version
 class VersionImpl(private val api: PGPainless) : Version {
 
     companion object {
-        const val SOP_VERSION = 10
+        const val SOP_VERSION = 11
         const val SOPV_VERSION = "1.0"
     }
 
@@ -24,7 +24,7 @@ class VersionImpl(private val api: PGPainless) : Version {
 
     override fun getExtendedVersion(): String {
         val bcVersion =
-            String.format(Locale.US, "Bouncy Castle %.2f", BouncyCastleProvider().version)
+            String.format(Locale.US, "Bouncy Castle %.2f", BouncyCastleProvider().versionStr.toDouble())
         val specVersion = String.format("%02d", SOP_VERSION)
         return """${getName()} ${getVersion()}
 https://codeberg.org/PGPainless/pgpainless/src/branch/main/pgpainless-sop
