@@ -14,5 +14,6 @@ allprojects {
         mockitoVersion = '4.5.1'
         slf4jVersion = '1.7.36'
         sopJavaVersion = '10.1.1'
+        sopJavaVersion = '11.0.0-SNAPSHOT'
     }
 }
