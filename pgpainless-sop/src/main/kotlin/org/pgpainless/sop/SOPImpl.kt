@@ -36,7 +36,7 @@ class SOPImpl(
 
     override fun armor(): Armor = ArmorImpl(api)
 
-    override fun certifyUserId(): CertifyUserId? = null
+    override fun certifyUserId(): CertifyUserId = CertifyUserIdImpl(api)
 
     override fun changeKeyPassword(): ChangeKeyPassword = ChangeKeyPasswordImpl(api)
 
