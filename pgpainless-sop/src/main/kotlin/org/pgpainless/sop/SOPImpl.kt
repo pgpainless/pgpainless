@@ -8,6 +8,7 @@ import org.pgpainless.PGPainless
 import sop.SOP
 import sop.SOPV
 import sop.operation.Armor
+import sop.operation.CertifyUserId
 import sop.operation.ChangeKeyPassword
 import sop.operation.Dearmor
 import sop.operation.Decrypt
@@ -20,7 +21,10 @@ import sop.operation.InlineDetach
 import sop.operation.InlineSign
 import sop.operation.InlineVerify
 import sop.operation.ListProfiles
+import sop.operation.MergeCerts
 import sop.operation.RevokeKey
+import sop.operation.UpdateKey
+import sop.operation.ValidateUserId
 import sop.operation.Version
 
 class SOPImpl(
@@ -32,6 +36,8 @@ class SOPImpl(
 
     override fun armor(): Armor = ArmorImpl(api)
 
+    override fun certifyUserId(): CertifyUserId? = null
+
     override fun changeKeyPassword(): ChangeKeyPassword = ChangeKeyPasswordImpl(api)
 
     override fun dearmor(): Dearmor = DearmorImpl(api)
@@ -40,7 +46,7 @@ class SOPImpl(
 
     override fun detachedSign(): DetachedSign = DetachedSignImpl(api)
 
-    override fun detachedVerify(): DetachedVerify = sopv.detachedVerify()
+    override fun detachedVerify(): DetachedVerify = sopv.detachedVerify()!!
 
     override fun encrypt(): Encrypt = EncryptImpl(api)
 
@@ -52,11 +58,17 @@ class SOPImpl(
 
     override fun inlineSign(): InlineSign = InlineSignImpl(api)
 
-    override fun inlineVerify(): InlineVerify = sopv.inlineVerify()
+    override fun inlineVerify(): InlineVerify = sopv.inlineVerify()!!
 
     override fun listProfiles(): ListProfiles = ListProfilesImpl(api)
 
+    override fun mergeCerts(): MergeCerts? = null
+
     override fun revokeKey(): RevokeKey = RevokeKeyImpl(api)
 
-    override fun version(): Version = sopv.version()
+    override fun updateKey(): UpdateKey? = null
+
+    override fun validateUserId(): ValidateUserId? = null
+
+    override fun version(): Version = sopv.version()!!
 }
