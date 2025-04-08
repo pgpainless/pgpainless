@@ -4,6 +4,7 @@
 
 package org.pgpainless.decryption_verification;
 
+import org.bouncycastle.bcpg.KeyIdentifier;
 import org.bouncycastle.openpgp.PGPException;
 import org.bouncycastle.openpgp.api.OpenPGPCertificate;
 import org.bouncycastle.openpgp.api.OpenPGPKey;
@@ -52,11 +53,11 @@ public class CustomPublicKeyDataDecryptorFactoryTest {
 
         HardwareSecurity.DecryptionCallback hardwareDecryptionCallback = new HardwareSecurity.DecryptionCallback() {
             @Override
-            public byte[] decryptSessionKey(long keyId, int keyAlgorithm, byte[] sessionKeyData, int pkeskVersion)
+            public byte[] decryptSessionKey(KeyIdentifier keyIdentifier, int keyAlgorithm, byte[] sessionKeyData, int pkeskVersion)
                     throws HardwareSecurity.HardwareSecurityException {
                 // Emulate hardware decryption.
                 try {
-                    OpenPGPKey.OpenPGPSecretKey decryptionKey = secretKey.getSecretKey(encryptionKey.getKeyIdentifier());
+                    OpenPGPKey.OpenPGPSecretKey decryptionKey = secretKey.getSecretKey(keyIdentifier);
                     OpenPGPKey.OpenPGPPrivateKey privateKey = UnlockSecretKey.unlockSecretKey(decryptionKey, Passphrase.emptyPassphrase());
                     PublicKeyDataDecryptorFactory internal = new BcPublicKeyDataDecryptorFactory(privateKey.getKeyPair().getPrivateKey());
                     return internal.recoverSessionData(keyAlgorithm, new byte[][] {sessionKeyData}, pkeskVersion);
