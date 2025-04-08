@@ -31,7 +31,7 @@ class Policy(
             SymmetricKeyAlgorithmPolicy.symmetricKeyEncryptionPolicy2022(),
             SymmetricKeyAlgorithmPolicy.symmetricKeyDecryptionPolicy2022(),
             CompressionAlgorithmPolicy.anyCompressionAlgorithmPolicy(),
-            PublicKeyAlgorithmPolicy.bsi2021PublicKeyAlgorithmPolicy(),
+            PublicKeyAlgorithmPolicy.rfc9580PublicKeyAlgorithmPolicy(),
             KeyRingProtectionSettings.secureDefaultSettings(),
             NotationRegistry(),
             AlgorithmSuite.defaultAlgorithmSuite)
@@ -334,8 +334,7 @@ class Policy(
         companion object {
 
             /**
-             * Return PGPainless' default public key algorithm policy. This policy is based upon
-             * recommendations made by the German Federal Office for Information Security (BSI).
+             * Return PGPainless' default public key algorithm policy.
              *
              * @return default algorithm policy
              * @deprecated not expressive - might be removed in a future release
@@ -343,8 +342,8 @@ class Policy(
             @JvmStatic
             @Deprecated(
                 "not expressive - might be removed in a future release",
-                ReplaceWith("bsi2021PublicKeyAlgorithmPolicy()"))
-            fun defaultPublicKeyAlgorithmPolicy() = bsi2021PublicKeyAlgorithmPolicy()
+                ReplaceWith("rfc9580PublicKeyAlgorithmPolicy()"))
+            fun defaultPublicKeyAlgorithmPolicy() = rfc9580PublicKeyAlgorithmPolicy()
 
             /**
              * This policy is based upon recommendations made by the German Federal Office for
@@ -386,6 +385,24 @@ class Policy(
                         // §7.2.2
                         put(PublicKeyAlgorithm.ECDH, 250)
                         // Fixed lengths
+                        put(PublicKeyAlgorithm.X25519, 256)
+                        put(PublicKeyAlgorithm.ED25519, 256)
+                        put(PublicKeyAlgorithm.X448, 448)
+                        put(PublicKeyAlgorithm.ED448, 456)
+                    })
+
+            /** Public Key Algorithm Policy based upon recommendations from RFC9580. */
+            fun rfc9580PublicKeyAlgorithmPolicy(): PublicKeyAlgorithmPolicy =
+                PublicKeyAlgorithmPolicy(
+                    buildMap {
+                        // https://www.rfc-editor.org/rfc/rfc9580.html#section-12.4
+                        put(PublicKeyAlgorithm.RSA_GENERAL, 2000)
+                        // https://www.rfc-editor.org/rfc/rfc9580.html#name-ecc-curves-for-openpgp
+                        put(PublicKeyAlgorithm.EDDSA_LEGACY, 250)
+                        // https://www.rfc-editor.org/rfc/rfc9580.html#name-ecc-curves-for-openpgp
+                        put(PublicKeyAlgorithm.ECDH, 250)
+                        put(PublicKeyAlgorithm.ECDSA, 250)
+                        // https://www.rfc-editor.org/rfc/rfc9580.html#name-eddsa
                         put(PublicKeyAlgorithm.X25519, 256)
                         put(PublicKeyAlgorithm.ED25519, 256)
                         put(PublicKeyAlgorithm.X448, 448)
