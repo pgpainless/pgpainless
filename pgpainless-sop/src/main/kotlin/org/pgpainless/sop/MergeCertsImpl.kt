@@ -24,8 +24,10 @@ class MergeCertsImpl(private val api: PGPainless) : MergeCerts {
     override fun baseCertificates(certs: InputStream): Ready {
         return object : Ready() {
             override fun writeTo(outputStream: OutputStream) {
-                val certList = api.readKey().parseCertificates(certs)
-                for (cert in certList) {
+                val baseCertsList = api.readKey().parseCertificates(certs)
+
+                // Index and merge base certs
+                for (cert in baseCertsList) {
                     if (!baseCerts.contains(cert.keyIdentifier)) {
                         baseCerts[cert.keyIdentifier] = cert
                     } else {
@@ -34,8 +36,10 @@ class MergeCertsImpl(private val api: PGPainless) : MergeCerts {
                     }
                 }
 
+                // Merge updates with base certs
                 for (update in updateCerts) {
                     if (baseCerts[update.keyIdentifier] == null) {
+                        // skip updates with missing base certs
                         continue
                     }
 
@@ -49,6 +53,7 @@ class MergeCertsImpl(private val api: PGPainless) : MergeCerts {
                     outputStream
                 }
 
+                // emit merged and updated base certs
                 for (merged in baseCerts.values) {
                     out.write(merged.getEncoded(PacketFormat.CURRENT))
                 }
