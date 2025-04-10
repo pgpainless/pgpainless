@@ -9,11 +9,10 @@ import java.io.OutputStream
 import org.bouncycastle.bcpg.PacketFormat
 import org.bouncycastle.openpgp.api.OpenPGPKey
 import org.pgpainless.PGPainless
-import org.pgpainless.exception.KeyException.UnboundUserIdException
-import org.pgpainless.key.OpenPgpFingerprint
 import org.pgpainless.util.ArmoredOutputStreamFactory
 import org.pgpainless.util.Passphrase
 import sop.Ready
+import sop.exception.SOPGPException
 import sop.operation.CertifyUserId
 
 class CertifyUserIdImpl(private val api: PGPainless) : CertifyUserId {
@@ -39,10 +38,7 @@ class CertifyUserIdImpl(private val api: PGPainless) : CertifyUserId {
                             // Check for non-bound user-ids
                             userIds
                                 .find { cert.getUserId(it)?.isBound != true }
-                                ?.let {
-                                    throw UnboundUserIdException(
-                                        OpenPgpFingerprint.Companion.of(cert), it, null, null)
-                                }
+                                ?.let { throw SOPGPException.CertUserIdNoMatch(cert.fingerprint) }
                         }
                     }
                     .forEach { cert ->
