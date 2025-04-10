@@ -62,7 +62,7 @@ class SOPImpl(
 
     override fun listProfiles(): ListProfiles = ListProfilesImpl(api)
 
-    override fun mergeCerts(): MergeCerts? = null
+    override fun mergeCerts(): MergeCerts = MergeCertsImpl(api)
 
     override fun revokeKey(): RevokeKey = RevokeKeyImpl(api)
 
