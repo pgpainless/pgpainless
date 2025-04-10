@@ -66,7 +66,7 @@ class SOPImpl(
 
     override fun revokeKey(): RevokeKey = RevokeKeyImpl(api)
 
-    override fun updateKey(): UpdateKey? = null
+    override fun updateKey(): UpdateKey = UpdateKeyImpl(api)
 
     override fun validateUserId(): ValidateUserId = ValidateUserIdImpl(api)
 
