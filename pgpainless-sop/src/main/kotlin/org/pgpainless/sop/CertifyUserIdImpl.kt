@@ -9,6 +9,7 @@ import java.io.OutputStream
 import org.bouncycastle.bcpg.PacketFormat
 import org.bouncycastle.openpgp.api.OpenPGPKey
 import org.pgpainless.PGPainless
+import org.pgpainless.exception.KeyException
 import org.pgpainless.util.ArmoredOutputStreamFactory
 import org.pgpainless.util.Passphrase
 import sop.Ready
@@ -45,12 +46,16 @@ class CertifyUserIdImpl(private val api: PGPainless) : CertifyUserId {
                         var certificate = cert
                         keys.forEach { key ->
                             userIds.forEach { userId ->
-                                certificate =
-                                    api.generateCertification()
-                                        .certifyUserId(userId, certificate)
-                                        .withKey(key, protector)
-                                        .build()
-                                        .certifiedCertificate
+                                try {
+                                    certificate =
+                                        api.generateCertification()
+                                            .certifyUserId(userId, certificate)
+                                            .withKey(key, protector)
+                                            .build()
+                                            .certifiedCertificate
+                                } catch (e: KeyException) {
+                                    throw SOPGPException.KeyCannotCertify(e)
+                                }
                             }
                         }
 
