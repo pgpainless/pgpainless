@@ -5,8 +5,10 @@ SPDX-License-Identifier: CC0-1.0
 
 # PGPainless Changelog
 
-## 1.7.5-SNAPSHOT
+## 1.7.6
 - Fix `RevocationSignatureBuilder` properly calculating third-party signatures of type `KeyRevocation` (delegation revocations)
+- Enable support for native images
+- Re-enable shadow plugin and build fat-jar
 
 ## 1.7.5
 - Actually attempt to fix Kotlin desugaring.
