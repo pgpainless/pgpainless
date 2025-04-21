@@ -94,6 +94,12 @@ SPDX-FileCopyrightText = "2022 Paul Schaub <info@pgpainless.org>, 2017 Steve Smi
 SPDX-License-Identifier = "CC-BY-SA-3.0"
 
 [[annotations]]
+path = "pgpainless-cli/src/main/resources/META-INF/native-image/**"
+precedence = "aggregate"
+SPDX-FileCopyrightText = "2025 Paul Schaub <info@pgpainless.org>"
+SPDX-License-Identifier = "Apache-2.0"
+
+[[annotations]]
 path = "pgpainless-cli/rewriteManPages.sh"
 precedence = "aggregate"
 SPDX-FileCopyrightText = "2022 Paul Schaub <info@pgpainless.org>"
