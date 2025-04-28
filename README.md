@@ -217,10 +217,10 @@ which contains the bug you are fixing. That way we can update older revisions of
 Please follow the [code of conduct](CODE_OF_CONDUCT.md) if you want to be part of the project.
 
 ## Acknowledgements
-Development on PGPainless is generously sponsored by [FlowCrypt.com](https://flowcrypt.com). Thank you very very very much!
+In the past, development on PGPainless has been generously sponsored by [FlowCrypt.com](https://flowcrypt.com). Thank you very very very much!
 [![FlowCrypt Logo](https://blog.jabberhead.tk/wp-content/uploads/2022/05/flowcrypt-logo.svg)](https://flowcrypt.com)
 
-Parts of PGPainless development ([project page](https://nlnet.nl/project/PGPainless/)) will be funded by [NGI Assure](https://nlnet.nl/assure/) through [NLNet](https://nlnet.nl).  
+Parts of PGPainless development ([project page](https://nlnet.nl/project/PGPainless/)) has been funded by [NGI Assure](https://nlnet.nl/assure/) through [NLNet](https://nlnet.nl).  
 NGI Assure is made possible with financial support from the [European Commission](https://ec.europa.eu/)'s [Next Generation Internet](https://ngi.eu/) programme, under the aegis of [DG Communications Networks, Content and Technology](https://ec.europa.eu/info/departments/communications-networks-content-and-technology_en).
 [![NGI Assure Logo](https://blog.jabberhead.tk/wp-content/uploads/2022/05/NGIAssure_tag.svg)](https://nlnet.nl/assure/)
 
