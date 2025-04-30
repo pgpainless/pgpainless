@@ -9,6 +9,7 @@ import javax.annotation.Nonnull
 import org.bouncycastle.bcpg.KeyIdentifier
 import org.bouncycastle.openpgp.PGPKeyRing
 import org.bouncycastle.openpgp.PGPLiteralData
+import org.bouncycastle.openpgp.api.MessageEncryptionMechanism
 import org.bouncycastle.openpgp.api.OpenPGPCertificate
 import org.pgpainless.algorithm.CompressionAlgorithm
 import org.pgpainless.algorithm.StreamEncoding
@@ -32,8 +33,14 @@ class MessageMetadata(val message: Message) {
      * The [SymmetricKeyAlgorithm] of the outermost encrypted data packet, or null if message is
      * unencrypted.
      */
+    @Deprecated("Deprecated in favor of encryptionMechanism",
+        replaceWith = ReplaceWith("encryptionMechanism")
+    )
     val encryptionAlgorithm: SymmetricKeyAlgorithm?
         get() = encryptionAlgorithms.let { if (it.hasNext()) it.next() else null }
+
+    val encryptionMechanism: MessageEncryptionMechanism?
+        get() = encryptionMechanisms.let { if (it.hasNext()) it.next() else null }
 
     /**
      * [Iterator] of each [SymmetricKeyAlgorithm] encountered in the message. The first item
@@ -41,13 +48,19 @@ class MessageMetadata(val message: Message) {
      * item that of the next nested encrypted data packet and so on. The iterator might also be
      * empty, in case of an unencrypted message.
      */
+    @Deprecated("Deprecated in favor of encryptionMechanisms",
+        replaceWith = ReplaceWith("encryptionMechanisms")
+    )
     val encryptionAlgorithms: Iterator<SymmetricKeyAlgorithm>
         get() = encryptionLayers.asSequence().map { it.algorithm }.iterator()
 
+    val encryptionMechanisms: Iterator<MessageEncryptionMechanism>
+        get() = encryptionLayers.asSequence().map { it.mechanism }.iterator()
+
     val isEncrypted: Boolean
         get() =
-            if (encryptionAlgorithm == null) false
-            else encryptionAlgorithm != SymmetricKeyAlgorithm.NULL
+            if (encryptionMechanism == null) false
+            else encryptionMechanism!!.symmetricKeyAlgorithm != SymmetricKeyAlgorithm.NULL.algorithmId
 
     fun isEncryptedFor(cert: OpenPGPCertificate): Boolean {
         return encryptionLayers.asSequence().any {
@@ -472,13 +485,17 @@ class MessageMetadata(val message: Message) {
      * @param algorithm symmetric key algorithm used to encrypt the packet.
      * @param depth nesting depth at which this packet was encountered.
      */
-    class EncryptedData(val algorithm: SymmetricKeyAlgorithm, depth: Int) : Layer(depth), Nested {
+    class EncryptedData(val mechanism: MessageEncryptionMechanism, depth: Int) :
+        Layer(depth), Nested {
 
         /** [SessionKey] used to decrypt the packet. */
         var sessionKey: SessionKey? = null
 
         /** List of all recipient key ids to which the packet was encrypted for. */
         val recipients: List<KeyIdentifier> = mutableListOf()
+
+        val algorithm: SymmetricKeyAlgorithm =
+            SymmetricKeyAlgorithm.requireFromId(mechanism.symmetricKeyAlgorithm)
 
         fun addRecipients(keyIds: List<KeyIdentifier>) = apply {
             (recipients as MutableList).addAll(keyIds)
