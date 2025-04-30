@@ -11,9 +11,11 @@ import java.io.OutputStream
 import java.util.zip.Inflater
 import java.util.zip.InflaterInputStream
 import openpgp.openPgpKeyId
+import org.bouncycastle.bcpg.AEADEncDataPacket
 import org.bouncycastle.bcpg.BCPGInputStream
 import org.bouncycastle.bcpg.CompressionAlgorithmTags
 import org.bouncycastle.bcpg.KeyIdentifier
+import org.bouncycastle.bcpg.SymmetricEncIntegrityPacket
 import org.bouncycastle.bcpg.UnsupportedPacketVersionException
 import org.bouncycastle.openpgp.PGPCompressedData
 import org.bouncycastle.openpgp.PGPEncryptedData
@@ -27,6 +29,8 @@ import org.bouncycastle.openpgp.PGPPublicKeyEncryptedData
 import org.bouncycastle.openpgp.PGPSessionKey
 import org.bouncycastle.openpgp.PGPSignature
 import org.bouncycastle.openpgp.PGPSignatureException
+import org.bouncycastle.openpgp.api.EncryptedDataPacketType
+import org.bouncycastle.openpgp.api.MessageEncryptionMechanism
 import org.bouncycastle.openpgp.api.OpenPGPCertificate
 import org.bouncycastle.openpgp.api.OpenPGPKey
 import org.bouncycastle.openpgp.api.OpenPGPKey.OpenPGPPrivateKey
@@ -318,20 +322,38 @@ class OpenPgpMessageInputStream(
     }
 
     private fun processEncryptedData(): Boolean {
-        LOGGER.debug(
-            "Symmetrically Encrypted Data Packet at depth ${layerMetadata.depth} encountered.")
+        // TODO: Replace by dedicated encryption packet type input symbols
         syntaxVerifier.next(InputSymbol.ENCRYPTED_DATA)
+
         val encDataList = packetInputStream!!.readEncryptedDataList()
-        if (!encDataList.isIntegrityProtected && !encDataList.get(0).isAEAD) {
-            LOGGER.warn("Symmetrically Encrypted Data Packet is not integrity-protected.")
-            if (!options.isIgnoreMDCErrors()) {
-                throw MessageNotIntegrityProtectedException()
+        val esks = ESKsAndData(encDataList)
+
+        when (EncryptedDataPacketType.of(encDataList)!!) {
+            EncryptedDataPacketType.SEIPDv2 ->
+                LOGGER.debug(
+                    "Symmetrically Encrypted Integrity Protected Data Packet version 2 at depth " +
+                        "${layerMetadata.depth} encountered.")
+            EncryptedDataPacketType.SEIPDv1 ->
+                LOGGER.debug(
+                    "Symmetrically Encrypted Integrity Protected Data Packet version 1 at depth " +
+                        "${layerMetadata.depth} encountered.")
+            EncryptedDataPacketType.LIBREPGP_OED ->
+                LOGGER.debug(
+                    "LibrePGP OCB-Encrypted Data Packet at depth " +
+                        "${layerMetadata.depth} encountered.")
+            EncryptedDataPacketType.SED -> {
+                LOGGER.debug(
+                    "(Deprecated) Symmetrically Encrypted Data Packet at depth " +
+                        "${layerMetadata.depth} encountered.")
+                LOGGER.warn("Symmetrically Encrypted Data Packet is not integrity-protected.")
+                if (!options.isIgnoreMDCErrors()) {
+                    throw MessageNotIntegrityProtectedException()
+                }
             }
         }
 
-        val esks = SortedESKs(encDataList)
         LOGGER.debug(
-            "Symmetrically Encrypted Integrity-Protected Data has ${esks.skesks.size} SKESK(s) and" +
+            "Encrypted Data has ${esks.skesks.size} SKESK(s) and" +
                 " ${esks.pkesks.size + esks.anonPkesks.size} PKESK(s) from which ${esks.anonPkesks.size} PKESK(s)" +
                 " have an anonymous recipient.")
 
@@ -359,7 +381,7 @@ class OpenPgpMessageInputStream(
 
             val pgpSk = PGPSessionKey(sk.algorithm.algorithmId, sk.key)
             val decryptorFactory = api.implementation.sessionKeyDataDecryptorFactory(pgpSk)
-            val layer = EncryptedData(sk.algorithm, layerMetadata.depth + 1)
+            val layer = esks.toEncryptedData(sk, layerMetadata.depth + 1)
             val skEncData = encDataList.extractSessionKeyEncryptedData()
             try {
                 val decrypted = skEncData.getDataStream(decryptorFactory)
@@ -506,7 +528,7 @@ class OpenPgpMessageInputStream(
     }
 
     private fun decryptWithPrivateKey(
-        esks: SortedESKs,
+        esks: ESKsAndData,
         privateKey: PGPKeyPair,
         decryptionKeyId: SubkeyIdentifier,
         pkesk: PGPPublicKeyEncryptedData
@@ -529,7 +551,7 @@ class OpenPgpMessageInputStream(
     }
 
     private fun decryptSKESKAndStream(
-        esks: SortedESKs,
+        esks: ESKsAndData,
         skesk: PGPPBEEncryptedData,
         decryptorFactory: PBEDataDecryptorFactory
     ): Boolean {
@@ -537,7 +559,7 @@ class OpenPgpMessageInputStream(
             val decrypted = skesk.getDataStream(decryptorFactory)
             val sessionKey = SessionKey(skesk.getSessionKey(decryptorFactory))
             throwIfUnacceptable(sessionKey.algorithm)
-            val encryptedData = EncryptedData(sessionKey.algorithm, layerMetadata.depth + 1)
+            val encryptedData = esks.toEncryptedData(sessionKey, layerMetadata.depth + 1)
             encryptedData.sessionKey = sessionKey
             encryptedData.addRecipients(esks.pkesks.map { it.keyIdentifier })
             LOGGER.debug("Successfully decrypted data with passphrase")
@@ -555,7 +577,7 @@ class OpenPgpMessageInputStream(
     }
 
     private fun decryptPKESKAndStream(
-        esks: SortedESKs,
+        esks: ESKsAndData,
         decryptionKeyId: SubkeyIdentifier,
         decryptorFactory: PublicKeyDataDecryptorFactory,
         pkesk: PGPPublicKeyEncryptedData
@@ -565,11 +587,7 @@ class OpenPgpMessageInputStream(
             val sessionKey = SessionKey(pkesk.getSessionKey(decryptorFactory))
             throwIfUnacceptable(sessionKey.algorithm)
 
-            val encryptedData =
-                EncryptedData(
-                    SymmetricKeyAlgorithm.requireFromId(
-                        pkesk.getSymmetricAlgorithm(decryptorFactory)),
-                    layerMetadata.depth + 1)
+            val encryptedData = esks.toEncryptedData(sessionKey, layerMetadata.depth)
             encryptedData.decryptionKey = decryptionKeyId
             encryptedData.sessionKey = sessionKey
             encryptedData.addRecipients(esks.pkesks.plus(esks.anonPkesks).map { it.keyIdentifier })
@@ -730,7 +748,32 @@ class OpenPgpMessageInputStream(
         }
     }
 
-    private class SortedESKs(esks: PGPEncryptedDataList) {
+    private class ESKsAndData(private val esks: PGPEncryptedDataList) {
+        fun toEncryptedData(sk: SessionKey, depth: Int): EncryptedData {
+            return when (EncryptedDataPacketType.of(esks)!!) {
+                EncryptedDataPacketType.SED ->
+                    EncryptedData(
+                        MessageEncryptionMechanism.legacyEncryptedNonIntegrityProtected(
+                            sk.algorithm.algorithmId),
+                        depth)
+                EncryptedDataPacketType.SEIPDv1 ->
+                    EncryptedData(
+                        MessageEncryptionMechanism.integrityProtected(sk.algorithm.algorithmId),
+                        depth)
+                EncryptedDataPacketType.SEIPDv2 -> {
+                    val seipd2 = esks.encryptedData as SymmetricEncIntegrityPacket
+                    EncryptedData(
+                        MessageEncryptionMechanism.aead(
+                            seipd2.cipherAlgorithm, seipd2.aeadAlgorithm),
+                        depth)
+                }
+                EncryptedDataPacketType.LIBREPGP_OED -> {
+                    val oed = esks.encryptedData as AEADEncDataPacket
+                    EncryptedData(MessageEncryptionMechanism.librePgp(oed.algorithm.toInt()), depth)
+                }
+            }.also { it.sessionKey = sk }
+        }
+
         val skesks: List<PGPPBEEncryptedData>
         val pkesks: List<PGPPublicKeyEncryptedData>
         val anonPkesks: List<PGPPublicKeyEncryptedData>
@@ -739,6 +782,7 @@ class OpenPgpMessageInputStream(
             skesks = mutableListOf()
             pkesks = mutableListOf()
             anonPkesks = mutableListOf()
+
             for (esk in esks) {
                 if (esk is PGPPBEEncryptedData) {
                     skesks.add(esk)
