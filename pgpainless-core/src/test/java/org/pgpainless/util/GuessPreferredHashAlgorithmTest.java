@@ -12,10 +12,10 @@ import org.bouncycastle.openpgp.PGPPublicKey;
 import org.bouncycastle.openpgp.PGPSecretKeyRing;
 import org.junit.jupiter.api.Test;
 import org.pgpainless.PGPainless;
-import org.pgpainless.algorithm.CompressionAlgorithm;
+import org.pgpainless.algorithm.AlgorithmSuite;
 import org.pgpainless.algorithm.HashAlgorithm;
 import org.pgpainless.algorithm.KeyFlag;
-import org.pgpainless.algorithm.SymmetricKeyAlgorithm;
+import org.pgpainless.algorithm.OpenPGPKeyVersion;
 import org.pgpainless.key.generation.KeySpec;
 import org.pgpainless.key.generation.type.KeyType;
 import org.pgpainless.key.generation.type.eddsa_legacy.EdDSALegacyCurve;
@@ -25,12 +25,11 @@ public class GuessPreferredHashAlgorithmTest {
 
     @Test
     public void guessPreferredHashAlgorithmsAssumesHashAlgoUsedBySelfSig() {
-        PGPSecretKeyRing secretKeys = PGPainless.buildKeyRing()
+        PGPainless api = PGPainless.getInstance();
+        PGPSecretKeyRing secretKeys = api.buildKey(OpenPGPKeyVersion.v4)
+                .withPreferences(AlgorithmSuite.emptyBuilder().build())
                 .setPrimaryKey(KeySpec.getBuilder(KeyType.EDDSA_LEGACY(EdDSALegacyCurve._Ed25519),
-                                KeyFlag.CERTIFY_OTHER, KeyFlag.SIGN_DATA)
-                        .overridePreferredHashAlgorithms(new HashAlgorithm[] {})
-                        .overridePreferredSymmetricKeyAlgorithms(new SymmetricKeyAlgorithm[] {})
-                        .overridePreferredCompressionAlgorithms(new CompressionAlgorithm[] {}))
+                                KeyFlag.CERTIFY_OTHER, KeyFlag.SIGN_DATA))
                 .addUserId("test@test.test")
                 .build()
                 .getPGPSecretKeyRing();

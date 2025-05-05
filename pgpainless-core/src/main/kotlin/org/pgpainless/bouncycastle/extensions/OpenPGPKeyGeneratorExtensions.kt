@@ -32,10 +32,10 @@ fun OpenPGPKeyGenerator.setAlgorithmSuite(algorithms: AlgorithmSuite): OpenPGPKe
 
 fun OpenPGPKeyGenerator.setDefaultFeatures(
     critical: Boolean = true,
-    features: Set<Feature>
+    features: Set<Feature>?
 ): OpenPGPKeyGenerator {
     this.setDefaultFeatures {
-        val b = Feature.toBitmask(*features.toTypedArray())
+        val b = features?.let { f -> Feature.toBitmask(*f.toTypedArray()) } ?: 0
         it.apply { setFeature(critical, b) }
     }
     return this

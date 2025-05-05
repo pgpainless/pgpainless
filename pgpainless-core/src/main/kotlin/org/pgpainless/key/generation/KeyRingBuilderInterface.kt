@@ -9,9 +9,12 @@ import java.security.NoSuchAlgorithmException
 import java.util.*
 import org.bouncycastle.openpgp.PGPException
 import org.bouncycastle.openpgp.api.OpenPGPKey
+import org.pgpainless.algorithm.AlgorithmSuite
 import org.pgpainless.util.Passphrase
 
 interface KeyRingBuilderInterface<B : KeyRingBuilderInterface<B>> {
+
+    fun withPreferences(preferences: AlgorithmSuite): B
 
     fun setPrimaryKey(keySpec: KeySpec): B
 

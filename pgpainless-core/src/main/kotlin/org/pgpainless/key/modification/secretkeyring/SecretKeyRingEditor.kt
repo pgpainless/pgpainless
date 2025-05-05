@@ -250,8 +250,22 @@ class SecretKeyRingEditor(
         val callback =
             object : SelfSignatureSubpackets.Callback {
                 override fun modifyHashedSubpackets(hashedSubpackets: SelfSignatureSubpackets) {
-                    SignatureSubpacketsHelper.applyFrom(
-                        keySpec.subpackets, hashedSubpackets as SignatureSubpackets)
+                    hashedSubpackets.apply {
+                        setKeyFlags(keySpec.keyFlags)
+                        keySpec.preferredHashAlgorithmsOverride?.let {
+                            setPreferredHashAlgorithms(it)
+                        }
+                        keySpec.preferredCompressionAlgorithmsOverride?.let {
+                            setPreferredCompressionAlgorithms(it)
+                        }
+                        keySpec.preferredSymmetricAlgorithmsOverride?.let {
+                            setPreferredSymmetricKeyAlgorithms(it)
+                        }
+                        keySpec.preferredAEADAlgorithmsOverride?.let {
+                            setPreferredAEADCiphersuites(it)
+                        }
+                        keySpec.featuresOverride?.let { setFeatures(*it.toTypedArray()) }
+                    }
                     hashedSubpackets.setSignatureCreationTime(referenceTime)
                 }
             }
@@ -268,7 +282,7 @@ class SecretKeyRingEditor(
         val keyPair = KeyRingBuilder.generateKeyPair(keySpec, version, api.implementation)
         val subkeyProtector =
             PasswordBasedSecretKeyRingProtector.forKeyId(keyPair.keyIdentifier, subkeyPassphrase)
-        val keyFlags = KeyFlag.fromBitmask(keySpec.subpackets.keyFlags).toMutableList()
+        val keyFlags = keySpec.keyFlags.toMutableList()
         return addSubKey(
             keyPair,
             callback,

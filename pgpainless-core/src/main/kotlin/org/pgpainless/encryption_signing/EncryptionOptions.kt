@@ -24,7 +24,6 @@ import org.pgpainless.util.Passphrase
 class EncryptionOptions(private val purpose: EncryptionPurpose, private val api: PGPainless) {
     private val _encryptionMethods: MutableSet<PGPKeyEncryptionMethodGenerator> = mutableSetOf()
     private val _encryptionKeys: MutableSet<OpenPGPComponentKey> = mutableSetOf()
-    private val _encryptionKeyIdentifiers: MutableSet<SubkeyIdentifier> = mutableSetOf()
     private val _keyRingInfo: MutableMap<SubkeyIdentifier, KeyRingInfo> = mutableMapOf()
     private val _keyViews: MutableMap<SubkeyIdentifier, KeyAccessor> = mutableMapOf()
     private val encryptionKeySelector: EncryptionKeySelector = encryptToAllCapableSubkeys()
@@ -37,7 +36,7 @@ class EncryptionOptions(private val purpose: EncryptionPurpose, private val api:
         get() = _encryptionMethods.toSet()
 
     val encryptionKeyIdentifiers
-        get() = _encryptionKeyIdentifiers.toSet()
+        get() = _encryptionKeys.map { SubkeyIdentifier(it) }
 
     val encryptionKeys
         get() = _encryptionKeys.toSet()
@@ -201,7 +200,7 @@ class EncryptionOptions(private val purpose: EncryptionPurpose, private val api:
         for (subkey in subkeys) {
             val keyId = SubkeyIdentifier(subkey)
             _keyRingInfo[keyId] = info
-            _keyViews[keyId] = KeyAccessor.ViaUserId(info, keyId, userId.toString())
+            _keyViews[keyId] = KeyAccessor.ViaUserId(subkey, cert.getUserId(userId.toString()))
             addRecipientKey(subkey, false)
         }
     }
@@ -320,14 +319,13 @@ class EncryptionOptions(private val purpose: EncryptionPurpose, private val api:
         for (subkey in encryptionSubkeys) {
             val keyId = SubkeyIdentifier(subkey)
             _keyRingInfo[keyId] = info
-            _keyViews[keyId] = KeyAccessor.ViaKeyId(info, keyId)
+            _keyViews[keyId] = KeyAccessor.ViaKeyIdentifier(subkey)
             addRecipientKey(subkey, wildcardKeyId)
         }
     }
 
     private fun addRecipientKey(key: OpenPGPComponentKey, wildcardRecipient: Boolean) {
         _encryptionKeys.add(key)
-        _encryptionKeyIdentifiers.add(SubkeyIdentifier(key))
         addEncryptionMethod(
             api.implementation.publicKeyKeyEncryptionMethodGenerator(key.pgpPublicKey).also {
                 it.setUseWildcardRecipient(wildcardRecipient)
