@@ -4,6 +4,7 @@
 
 package org.pgpainless.decryption_verification;
 
+import static org.bouncycastle.bcpg.PacketTags.AEAD_ENC_DATA;
 import static org.bouncycastle.bcpg.PacketTags.COMPRESSED_DATA;
 import static org.bouncycastle.bcpg.PacketTags.EXPERIMENTAL_1;
 import static org.bouncycastle.bcpg.PacketTags.EXPERIMENTAL_2;
@@ -13,6 +14,7 @@ import static org.bouncycastle.bcpg.PacketTags.LITERAL_DATA;
 import static org.bouncycastle.bcpg.PacketTags.MARKER;
 import static org.bouncycastle.bcpg.PacketTags.MOD_DETECTION_CODE;
 import static org.bouncycastle.bcpg.PacketTags.ONE_PASS_SIGNATURE;
+import static org.bouncycastle.bcpg.PacketTags.PADDING;
 import static org.bouncycastle.bcpg.PacketTags.PUBLIC_KEY;
 import static org.bouncycastle.bcpg.PacketTags.PUBLIC_KEY_ENC_SESSION;
 import static org.bouncycastle.bcpg.PacketTags.PUBLIC_SUBKEY;
@@ -32,18 +34,32 @@ import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.nio.charset.Charset;
-import java.util.NoSuchElementException;
 
+import org.bouncycastle.bcpg.AEADEncDataPacket;
 import org.bouncycastle.bcpg.BCPGInputStream;
+import org.bouncycastle.bcpg.CompressedDataPacket;
+import org.bouncycastle.bcpg.LiteralDataPacket;
+import org.bouncycastle.bcpg.MarkerPacket;
+import org.bouncycastle.bcpg.OnePassSignaturePacket;
+import org.bouncycastle.bcpg.Packet;
+import org.bouncycastle.bcpg.PacketFormat;
+import org.bouncycastle.bcpg.PublicKeyEncSessionPacket;
+import org.bouncycastle.bcpg.PublicKeyPacket;
+import org.bouncycastle.bcpg.SecretKeyPacket;
+import org.bouncycastle.bcpg.SignaturePacket;
+import org.bouncycastle.bcpg.SymmetricEncIntegrityPacket;
+import org.bouncycastle.bcpg.SymmetricKeyEncSessionPacket;
+import org.bouncycastle.bcpg.UnsupportedPacketVersionException;
 import org.bouncycastle.openpgp.PGPCompressedData;
 import org.bouncycastle.openpgp.PGPEncryptedData;
 import org.bouncycastle.openpgp.PGPLiteralData;
 import org.bouncycastle.openpgp.PGPOnePassSignature;
+import org.bouncycastle.util.Arrays;
+import org.pgpainless.algorithm.AEADAlgorithm;
 import org.pgpainless.algorithm.CompressionAlgorithm;
 import org.pgpainless.algorithm.HashAlgorithm;
 import org.pgpainless.algorithm.PublicKeyAlgorithm;
 import org.pgpainless.algorithm.SignatureType;
-import org.pgpainless.algorithm.StreamEncoding;
 import org.pgpainless.algorithm.SymmetricKeyAlgorithm;
 
 /**
@@ -101,7 +117,7 @@ public class OpenPgpInputStream extends BufferedInputStream {
      * This method is still brittle.
      * Basically we try to parse OpenPGP packets from the buffer.
      * If we run into exceptions, then we know that the data is non-OpenPGP'ish.
-     *
+     * <p>
      * This breaks down though if we read plausible garbage where the data accidentally makes sense,
      * or valid, yet incomplete packets (remember, we are still only working on a portion of the data).
      */
@@ -112,270 +128,156 @@ public class OpenPgpInputStream extends BufferedInputStream {
         }
 
         ByteArrayInputStream bufferIn = new ByteArrayInputStream(buffer, 0, bufferLen);
-        nonExhaustiveParseAndCheckPlausibility(bufferIn);
+        BCPGInputStream pIn = new BCPGInputStream(bufferIn);
+        try {
+            nonExhaustiveParseAndCheckPlausibility(pIn);
+        } catch (IOException | UnsupportedPacketVersionException | NegativeArraySizeException e) {
+            return;
+        }
     }
 
-    private void nonExhaustiveParseAndCheckPlausibility(ByteArrayInputStream bufferIn) throws IOException {
-        // Read the packet header
-        int hdr = bufferIn.read();
-        if (hdr < 0 || (hdr & 0x80) == 0) {
-            return;
-        }
-
-        boolean newPacket = (hdr & 0x40) != 0;
-        int        tag = 0;
-        int        bodyLen = 0;
-        boolean    partial = false;
-
-        // Determine the packet length
-        if (newPacket) {
-            tag = hdr & 0x3f;
-
-            int    l = bufferIn.read();
-            if (l < 192) {
-                bodyLen = l;
-            } else if (l <= 223) {
-                int b = bufferIn.read();
-                bodyLen = ((l - 192) << 8) + (b) + 192;
-            } else if (l == 255) {
-                bodyLen = (bufferIn.read() << 24) | (bufferIn.read() << 16) |  (bufferIn.read() << 8)  | bufferIn.read();
-            } else {
-                partial = true;
-                bodyLen = 1 << (l & 0x1f);
-            }
-        } else {
-            int lengthType = hdr & 0x3;
-            tag = (hdr & 0x3f) >> 2;
-            switch (lengthType) {
-                case 0:
-                    bodyLen = bufferIn.read();
-                    break;
-                case 1:
-                    bodyLen = (bufferIn.read() << 8) | bufferIn.read();
-                    break;
-                case 2:
-                    bodyLen = (bufferIn.read() << 24) | (bufferIn.read() << 16) | (bufferIn.read() << 8) | bufferIn.read();
-                    break;
-                case 3:
-                    partial = true;
-                    break;
-                default:
-                    return;
-            }
-        }
-
-        // Negative body length -> garbage
-        if (bodyLen < 0) {
-            return;
-        }
-
-        // Try to unexhaustively parse the first packet bit by bit and check for plausibility
-        BCPGInputStream bcpgIn = new BCPGInputStream(bufferIn);
-        switch (tag) {
-            case RESERVED:
-                // How to handle this? Probably discard as garbage...
-                return;
-
+    private void nonExhaustiveParseAndCheckPlausibility(BCPGInputStream packetIn)
+            throws IOException {
+        Packet packet = packetIn.readPacket();
+        System.out.println(packet.getPacketTag());
+        switch (packet.getPacketTag()) {
             case PUBLIC_KEY_ENC_SESSION:
-                int pkeskVersion = bcpgIn.read();
-                if (pkeskVersion <= 0 || pkeskVersion > 6) {
+                PublicKeyEncSessionPacket pkesk = (PublicKeyEncSessionPacket) packet;
+                if (PublicKeyAlgorithm.fromId(pkesk.getAlgorithm()) == null) {
                     return;
-                }
-
-                if (pkeskVersion == 3) {
-                    // Skip Key-ID
-                    for (int i = 0; i < 8; i++) {
-                        bcpgIn.read();
-                    }
-
-                    int pkeskAlg = bcpgIn.read();
-                    if (PublicKeyAlgorithm.fromId(pkeskAlg) == null) {
-                        return;
-                    }
-
-                    containsOpenPgpPackets = true;
-                    isLikelyOpenPgpMessage = true;
-                } else if (pkeskVersion == 6) {
-                    int len = bcpgIn.read();
-                    if (len != 0) {
-                        int ver = bcpgIn.read();
-                        if (ver == 4) {
-                            for (int i = 0; i < 20; i++) {
-                                bcpgIn.read();
-                            }
-                        } else {
-                            for (int i = 0; i < 32; i++) {
-                                bcpgIn.read();
-                            }
-                        }
-                        int pkeskAlg = bcpgIn.read();
-                        if (PublicKeyAlgorithm.fromId(pkeskAlg) == null) {
-                            return;
-                        }
-                    }
-                    containsOpenPgpPackets = true;
-                    isLikelyOpenPgpMessage = true;
                 }
                 break;
 
             case SIGNATURE:
-                int sigVersion = bcpgIn.read();
-                int sigType;
-                if (sigVersion == 2 || sigVersion == 3) {
-                    int l = bcpgIn.read();
-                    sigType = bcpgIn.read();
-                } else if (sigVersion == 4 || sigVersion == 5) {
-                    sigType = bcpgIn.read();
-                } else {
+                SignaturePacket sig = (SignaturePacket) packet;
+                if (SignatureType.fromCode(sig.getSignatureType()) == null) {
                     return;
                 }
-
-                try {
-                    SignatureType.requireFromCode(sigType);
-                } catch (NoSuchElementException e) {
+                if (PublicKeyAlgorithm.fromId(sig.getKeyAlgorithm()) == null) {
                     return;
                 }
-
-                containsOpenPgpPackets = true;
-                break;
-
-            case SYMMETRIC_KEY_ENC_SESSION:
-                int skeskVersion = bcpgIn.read();
-                if (skeskVersion == 4) {
-                    int skeskAlg = bcpgIn.read();
-                    if (SymmetricKeyAlgorithm.fromId(skeskAlg) == null) {
-                        return;
-                    }
-                    // TODO: Parse S2K?
-                } else {
+                if (HashAlgorithm.fromId(sig.getHashAlgorithm()) == null) {
                     return;
                 }
-                containsOpenPgpPackets = true;
-                isLikelyOpenPgpMessage = true;
                 break;
 
             case ONE_PASS_SIGNATURE:
-                int opsVersion = bcpgIn.read();
-                if (opsVersion == 3) {
-                    int opsSigType = bcpgIn.read();
-                    try {
-                        SignatureType.requireFromCode(opsSigType);
-                    } catch (NoSuchElementException e) {
-                        return;
-                    }
-                    int opsHashAlg = bcpgIn.read();
-                    if (HashAlgorithm.fromId(opsHashAlg) == null) {
-                        return;
-                    }
-                    int opsKeyAlg = bcpgIn.read();
-                    if (PublicKeyAlgorithm.fromId(opsKeyAlg) == null) {
-                        return;
-                    }
-                } else {
+                OnePassSignaturePacket ops = (OnePassSignaturePacket) packet;
+                if (SignatureType.fromCode(ops.getSignatureType()) == null) {
                     return;
                 }
+                if (PublicKeyAlgorithm.fromId(ops.getKeyAlgorithm()) == null) {
+                    return;
+                }
+                if (HashAlgorithm.fromId(ops.getHashAlgorithm()) == null) {
+                    return;
+                }
+                break;
 
-                containsOpenPgpPackets = true;
-                isLikelyOpenPgpMessage = true;
+            case SYMMETRIC_KEY_ENC_SESSION:
+                SymmetricKeyEncSessionPacket skesk = (SymmetricKeyEncSessionPacket) packet;
+                if (SymmetricKeyAlgorithm.fromId(skesk.getEncAlgorithm()) == null) {
+                    return;
+                }
                 break;
 
             case SECRET_KEY:
+                SecretKeyPacket secKey = (SecretKeyPacket) packet;
+                PublicKeyPacket sPubKey = secKey.getPublicKeyPacket();
+                if (PublicKeyAlgorithm.fromId(sPubKey.getAlgorithm()) == null) {
+                    return;
+                }
+                if (sPubKey.getVersion() < 3 && sPubKey.getVersion() > 6) {
+                    return;
+                }
+                break;
+
             case PUBLIC_KEY:
-            case SECRET_SUBKEY:
-            case PUBLIC_SUBKEY:
-                int keyVersion = bcpgIn.read();
-                for (int i = 0; i < 4; i++) {
-                    // Creation time
-                    bcpgIn.read();
-                }
-                if (keyVersion == 3) {
-                    long validDays = (in.read() << 8) | in.read();
-                    if (validDays < 0) {
-                        return;
-                    }
-                } else if (keyVersion == 4) {
-
-                } else if (keyVersion == 5) {
-
-                } else {
+                PublicKeyPacket pubKey = (PublicKeyPacket) packet;
+                if (PublicKeyAlgorithm.fromId(pubKey.getAlgorithm()) == null) {
                     return;
                 }
-                int keyAlg = bcpgIn.read();
-                if (PublicKeyAlgorithm.fromId(keyAlg) == null) {
+                if (pubKey.getVersion() < 3 && pubKey.getVersion() > 6) {
                     return;
                 }
-
-                containsOpenPgpPackets = true;
                 break;
 
             case COMPRESSED_DATA:
-                int compAlg = bcpgIn.read();
-                if (CompressionAlgorithm.fromId(compAlg) == null) {
+                CompressedDataPacket comp = (CompressedDataPacket) packet;
+                if (CompressionAlgorithm.fromId(comp.getAlgorithm()) == null) {
                     return;
                 }
-
-                containsOpenPgpPackets = true;
-                isLikelyOpenPgpMessage = true;
                 break;
 
             case SYMMETRIC_KEY_ENC:
-                // No data to compare :(
-                containsOpenPgpPackets = true;
-                // While this is a valid OpenPGP message, enabling the line below would lead to too many false positives
-                // isLikelyOpenPgpMessage = true;
+                // Not much we can check here
                 break;
 
             case MARKER:
-                byte[] marker = new byte[3];
-                bcpgIn.readFully(marker);
-                if (marker[0] != 0x50 || marker[1] != 0x47 || marker[2] != 0x50) {
+                MarkerPacket m = (MarkerPacket) packet;
+                if (!Arrays.areEqual(
+                        m.getEncoded(PacketFormat.CURRENT),
+                        new byte[] {(byte) 0xca, 0x03, 0x50, 0x47, 0x50})) {
                     return;
                 }
-
-                containsOpenPgpPackets = true;
                 break;
 
             case LITERAL_DATA:
-                int format = bcpgIn.read();
-                if (StreamEncoding.fromCode(format) == null) {
+                LiteralDataPacket lit = (LiteralDataPacket) packet;
+                if (lit.getFormat() != 'b' &&
+                        lit.getFormat() != 'u' &&
+                        lit.getFormat() != 't' &&
+                        lit.getFormat() != 'l' &&
+                        lit.getFormat() != '1' &&
+                        lit.getFormat() != 'm') {
                     return;
                 }
-
-                containsOpenPgpPackets = true;
-                isLikelyOpenPgpMessage = true;
-                break;
-
-            case TRUST:
-            case USER_ID:
-            case USER_ATTRIBUTE:
-                // Not much to compare
-                containsOpenPgpPackets = true;
                 break;
 
             case SYM_ENC_INTEGRITY_PRO:
-                int seipVersion = bcpgIn.read();
-                if (seipVersion != 1) {
+                SymmetricEncIntegrityPacket seipd = (SymmetricEncIntegrityPacket) packet;
+                if (seipd.getVersion() == SymmetricEncIntegrityPacket.VERSION_1) {
+                    break; // not much to check here
+                }
+                if (seipd.getVersion() != SymmetricEncIntegrityPacket.VERSION_2) {
+                    if (SymmetricKeyAlgorithm.fromId(seipd.getCipherAlgorithm()) == null) {
+                        return;
+                    }
+                    if (AEADAlgorithm.fromId(seipd.getAeadAlgorithm()) == null) {
+                        return;
+                    }
+                }
+                break;
+
+            case AEAD_ENC_DATA:
+                AEADEncDataPacket oed = (AEADEncDataPacket) packet;
+                if (SymmetricKeyAlgorithm.fromId(oed.getAlgorithm()) == null) {
                     return;
                 }
-                isLikelyOpenPgpMessage = true;
-                containsOpenPgpPackets = true;
                 break;
 
-            case MOD_DETECTION_CODE:
-                byte[] digest = new byte[20];
-                bcpgIn.readFully(digest);
-
+            case RESERVED:          // this Packet Type ID MUST NOT be used
+            case PUBLIC_SUBKEY:     // Never found at the start of a stream
+            case SECRET_SUBKEY:     // Never found at the start of a stream
+            case TRUST:             // Never found at the start of a stream
+            case MOD_DETECTION_CODE: // At the end of SED data - Never found at the start of a stream
+            case USER_ID:           // Never found at the start of a stream
+            case USER_ATTRIBUTE:    // Never found at the start of a stream
+            case PADDING:           // At the end of messages (optionally padded message) or certificates
+            case EXPERIMENTAL_1:    // experimental
+            case EXPERIMENTAL_2:    // experimental
+            case EXPERIMENTAL_3:    // experimental
+            case EXPERIMENTAL_4:    // experimental
                 containsOpenPgpPackets = true;
-                break;
-
-            case EXPERIMENTAL_1:
-            case EXPERIMENTAL_2:
-            case EXPERIMENTAL_3:
-            case EXPERIMENTAL_4:
+                isLikelyOpenPgpMessage = false;
                 return;
             default:
-                containsOpenPgpPackets = false;
-                break;
+                return;
+        }
+
+        containsOpenPgpPackets = true;
+        if (packet.getPacketTag() != SYMMETRIC_KEY_ENC) {
+            isLikelyOpenPgpMessage = true;
         }
     }
 
@@ -412,7 +314,7 @@ public class OpenPgpInputStream extends BufferedInputStream {
      * Return true, if the data is possibly binary OpenPGP.
      * The criterion for this are less strict than for {@link #isLikelyOpenPgpMessage()},
      * as it also accepts other OpenPGP packets at the beginning of the data stream.
-     *
+     * <p>
      * Use with caution.
      *
      * @return true if data appears to be binary OpenPGP data

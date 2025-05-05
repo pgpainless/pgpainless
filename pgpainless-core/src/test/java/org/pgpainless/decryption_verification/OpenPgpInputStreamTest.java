@@ -20,6 +20,7 @@ import org.bouncycastle.bcpg.CompressionAlgorithmTags;
 import org.bouncycastle.openpgp.PGPCompressedDataGenerator;
 import org.bouncycastle.openpgp.PGPException;
 import org.bouncycastle.openpgp.api.OpenPGPKey;
+import org.bouncycastle.util.encoders.Hex;
 import org.bouncycastle.util.io.Streams;
 import org.junit.jupiter.api.Test;
 import org.pgpainless.PGPainless;
@@ -41,7 +42,8 @@ public class OpenPgpInputStreamTest {
 
         OpenPgpInputStream openPgpInputStream = new OpenPgpInputStream(randomIn);
         assertFalse(openPgpInputStream.isAsciiArmored());
-        assertFalse(openPgpInputStream.isLikelyOpenPgpMessage());
+        assertFalse(openPgpInputStream.isLikelyOpenPgpMessage(),
+                Hex.toHexString(randomBytes, 0, 150));
 
         ByteArrayOutputStream out = new ByteArrayOutputStream();
         Streams.pipeAll(openPgpInputStream, out);
