@@ -5,21 +5,24 @@
 package org.pgpainless.key.generation
 
 import java.util.*
-import org.bouncycastle.openpgp.PGPSignatureSubpacketVector
+import org.pgpainless.algorithm.AEADCipherMode
+import org.pgpainless.algorithm.CompressionAlgorithm
+import org.pgpainless.algorithm.Feature
+import org.pgpainless.algorithm.HashAlgorithm
 import org.pgpainless.algorithm.KeyFlag
+import org.pgpainless.algorithm.SymmetricKeyAlgorithm
 import org.pgpainless.key.generation.type.KeyType
-import org.pgpainless.signature.subpackets.SignatureSubpackets
-import org.pgpainless.signature.subpackets.SignatureSubpacketsHelper
 
 data class KeySpec(
     val keyType: KeyType,
-    val subpacketGenerator: SignatureSubpackets,
-    val isInheritedSubPackets: Boolean,
+    val keyFlags: List<KeyFlag>,
+    val preferredCompressionAlgorithmsOverride: Set<CompressionAlgorithm>?,
+    val preferredHashAlgorithmsOverride: Set<HashAlgorithm>?,
+    val preferredSymmetricAlgorithmsOverride: Set<SymmetricKeyAlgorithm>?,
+    val preferredAEADAlgorithmsOverride: Set<AEADCipherMode>?,
+    val featuresOverride: Set<Feature>?,
     val keyCreationDate: Date?
 ) {
-
-    val subpackets: PGPSignatureSubpacketVector
-        get() = SignatureSubpacketsHelper.toVector(subpacketGenerator)
 
     companion object {
         @JvmStatic

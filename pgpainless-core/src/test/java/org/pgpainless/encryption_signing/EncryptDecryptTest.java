@@ -30,6 +30,7 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.pgpainless.PGPainless;
 import org.pgpainless.algorithm.AEADAlgorithm;
 import org.pgpainless.algorithm.AEADCipherMode;
+import org.pgpainless.algorithm.AlgorithmSuite;
 import org.pgpainless.algorithm.DocumentSignatureType;
 import org.pgpainless.algorithm.Feature;
 import org.pgpainless.algorithm.KeyFlag;
@@ -323,9 +324,11 @@ public class EncryptDecryptTest {
     public void testEncryptToOnlyV4CertWithOnlySEIPD1Feature() throws PGPException, IOException {
         PGPainless api = PGPainless.getInstance();
         OpenPGPKey v4Key = api.buildKey(OpenPGPKeyVersion.v4)
-                .setPrimaryKey(KeySpec.getBuilder(KeyType.EDDSA_LEGACY(EdDSALegacyCurve._Ed25519), KeyFlag.CERTIFY_OTHER, KeyFlag.SIGN_DATA)
-                        .overridePreferredSymmetricKeyAlgorithms(SymmetricKeyAlgorithm.AES_192)
-                        .overrideFeatures(Feature.MODIFICATION_DETECTION)) // the key only supports SEIPD1
+                .withPreferences(AlgorithmSuite.emptyBuilder()
+                        .overrideSymmetricKeyAlgorithms(SymmetricKeyAlgorithm.AES_192)
+                        .overrideFeatures(Feature.MODIFICATION_DETECTION)
+                        .build())
+                .setPrimaryKey(KeySpec.getBuilder(KeyType.EDDSA_LEGACY(EdDSALegacyCurve._Ed25519), KeyFlag.CERTIFY_OTHER, KeyFlag.SIGN_DATA))
                 .addSubkey(KeySpec.getBuilder(KeyType.XDH_LEGACY(XDHLegacySpec._X25519), KeyFlag.ENCRYPT_COMMS, KeyFlag.ENCRYPT_STORAGE))
                 .build();
 
@@ -358,9 +361,11 @@ public class EncryptDecryptTest {
     public void testEncryptToOnlyV6CertWithOnlySEIPD2Features() throws IOException, PGPException {
         PGPainless api = PGPainless.getInstance();
         OpenPGPKey v6Key = api.buildKey(OpenPGPKeyVersion.v6)
-                .setPrimaryKey(KeySpec.getBuilder(KeyType.Ed25519(), KeyFlag.CERTIFY_OTHER, KeyFlag.SIGN_DATA)
-                        .overridePreferredAEADAlgorithms(new AEADCipherMode(AEADAlgorithm.OCB, SymmetricKeyAlgorithm.AES_128))
-                        .overrideFeatures(Feature.MODIFICATION_DETECTION_2)) // the key only supports SEIPD2
+                .withPreferences(AlgorithmSuite.emptyBuilder()
+                        .overrideFeatures(Feature.MODIFICATION_DETECTION_2)
+                        .overrideAeadAlgorithms(new AEADCipherMode(AEADAlgorithm.OCB, SymmetricKeyAlgorithm.AES_192))
+                        .build())
+                .setPrimaryKey(KeySpec.getBuilder(KeyType.Ed25519(), KeyFlag.CERTIFY_OTHER, KeyFlag.SIGN_DATA))
                 .addSubkey(KeySpec.getBuilder(KeyType.X25519(), KeyFlag.ENCRYPT_COMMS, KeyFlag.ENCRYPT_STORAGE))
                 .build();
 

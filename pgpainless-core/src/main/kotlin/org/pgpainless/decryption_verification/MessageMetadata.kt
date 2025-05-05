@@ -33,9 +33,9 @@ class MessageMetadata(val message: Message) {
      * The [SymmetricKeyAlgorithm] of the outermost encrypted data packet, or null if message is
      * unencrypted.
      */
-    @Deprecated("Deprecated in favor of encryptionMechanism",
-        replaceWith = ReplaceWith("encryptionMechanism")
-    )
+    @Deprecated(
+        "Deprecated in favor of encryptionMechanism",
+        replaceWith = ReplaceWith("encryptionMechanism"))
     val encryptionAlgorithm: SymmetricKeyAlgorithm?
         get() = encryptionAlgorithms.let { if (it.hasNext()) it.next() else null }
 
@@ -48,9 +48,9 @@ class MessageMetadata(val message: Message) {
      * item that of the next nested encrypted data packet and so on. The iterator might also be
      * empty, in case of an unencrypted message.
      */
-    @Deprecated("Deprecated in favor of encryptionMechanisms",
-        replaceWith = ReplaceWith("encryptionMechanisms")
-    )
+    @Deprecated(
+        "Deprecated in favor of encryptionMechanisms",
+        replaceWith = ReplaceWith("encryptionMechanisms"))
     val encryptionAlgorithms: Iterator<SymmetricKeyAlgorithm>
         get() = encryptionLayers.asSequence().map { it.algorithm }.iterator()
 
@@ -60,7 +60,9 @@ class MessageMetadata(val message: Message) {
     val isEncrypted: Boolean
         get() =
             if (encryptionMechanism == null) false
-            else encryptionMechanism!!.symmetricKeyAlgorithm != SymmetricKeyAlgorithm.NULL.algorithmId
+            else
+                encryptionMechanism!!.symmetricKeyAlgorithm !=
+                    SymmetricKeyAlgorithm.NULL.algorithmId
 
     fun isEncryptedFor(cert: OpenPGPCertificate): Boolean {
         return encryptionLayers.asSequence().any {

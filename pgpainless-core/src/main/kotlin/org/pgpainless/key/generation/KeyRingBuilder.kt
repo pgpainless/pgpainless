@@ -14,6 +14,7 @@ import org.bouncycastle.openpgp.operator.PBESecretKeyEncryptor
 import org.bouncycastle.openpgp.operator.PGPContentSignerBuilder
 import org.bouncycastle.util.Strings
 import org.pgpainless.PGPainless
+import org.pgpainless.algorithm.AlgorithmSuite
 import org.pgpainless.algorithm.KeyFlag
 import org.pgpainless.algorithm.OpenPGPKeyVersion
 import org.pgpainless.algorithm.SignatureType
@@ -33,6 +34,11 @@ class KeyRingBuilder(private val version: OpenPGPKeyVersion, private val api: PG
     private val userIds = mutableMapOf<String, SelfSignatureSubpackets.Callback?>()
     private var passphrase = Passphrase.emptyPassphrase()
     private var expirationDate: Date? = Date(System.currentTimeMillis() + (5 * MILLIS_IN_YEAR))
+    private var algorithmSuite: AlgorithmSuite = api.algorithmPolicy.keyGenerationAlgorithmSuite
+
+    override fun withPreferences(preferences: AlgorithmSuite): KeyRingBuilder = apply {
+        algorithmSuite = preferences
+    }
 
     override fun setPrimaryKey(keySpec: KeySpec): KeyRingBuilder = apply {
         verifyKeySpecCompliesToPolicy(keySpec, api.algorithmPolicy)
@@ -95,14 +101,32 @@ class KeyRingBuilder(private val version: OpenPGPKeyVersion, private val api: PG
         val signer = buildContentSigner(certKey)
         val signatureGenerator = PGPSignatureGenerator(signer, certKey.publicKey)
 
-        val hashedSubPacketGenerator = primaryKeySpec!!.subpacketGenerator
-        hashedSubPacketGenerator.setAppropriateIssuerInfo(certKey.publicKey, version)
-        expirationDate?.let { hashedSubPacketGenerator.setKeyExpirationTime(certKey.publicKey, it) }
+        val hashedSignatureSubpackets: SignatureSubpackets =
+            SignatureSubpackets.createHashedSubpackets(certKey.publicKey).apply {
+                setKeyFlags(primaryKeySpec!!.keyFlags)
+                (primaryKeySpec!!.preferredHashAlgorithmsOverride ?: algorithmSuite.hashAlgorithms)
+                    ?.let { setPreferredHashAlgorithms(it) }
+                (primaryKeySpec!!.preferredCompressionAlgorithmsOverride
+                        ?: algorithmSuite.compressionAlgorithms)
+                    ?.let { setPreferredCompressionAlgorithms(it) }
+                (primaryKeySpec!!.preferredSymmetricAlgorithmsOverride
+                        ?: algorithmSuite.symmetricKeyAlgorithms)
+                    ?.let { setPreferredSymmetricKeyAlgorithms(it) }
+                (primaryKeySpec!!.preferredAEADAlgorithmsOverride ?: algorithmSuite.aeadAlgorithms)
+                    ?.let { setPreferredAEADCiphersuites(it) }
+                (primaryKeySpec!!.featuresOverride ?: algorithmSuite.features)?.let {
+                    setFeatures(*it.toTypedArray())
+                }
+            }
+
+        expirationDate?.let {
+            hashedSignatureSubpackets.setKeyExpirationTime(certKey.publicKey, it)
+        }
         if (userIds.isNotEmpty()) {
-            hashedSubPacketGenerator.setPrimaryUserId()
+            hashedSignatureSubpackets.setPrimaryUserId()
         }
 
-        val hashedSubPackets = hashedSubPacketGenerator.subpacketsGenerator.generate()
+        val hashedSubPackets = hashedSignatureSubpackets.subpacketsGenerator.generate()
         val ringGenerator =
             if (userIds.isEmpty()) {
                 PGPKeyRingGenerator(
@@ -138,7 +162,7 @@ class KeyRingBuilder(private val version: OpenPGPKeyVersion, private val api: PG
             val callback = additionalUserId.value
             val subpackets =
                 if (callback == null) {
-                    hashedSubPacketGenerator.also { it.setPrimaryUserId(null) }
+                    hashedSignatureSubpackets.also { it.setPrimaryUserId(null) }
                 } else {
                     SignatureSubpackets.createHashedSubpackets(primaryPubKey).also {
                         callback.modifyHashedSubpackets(it)
@@ -167,21 +191,34 @@ class KeyRingBuilder(private val version: OpenPGPKeyVersion, private val api: PG
     private fun addSubKeys(primaryKey: PGPKeyPair, ringGenerator: PGPKeyRingGenerator) {
         for (subKeySpec in subKeySpecs) {
             val subKey = generateKeyPair(subKeySpec, version, api.implementation)
-            if (subKeySpec.isInheritedSubPackets) {
-                ringGenerator.addSubKey(subKey)
-            } else {
-                var hashedSubpackets = subKeySpec.subpackets
-                try {
-                    hashedSubpackets =
-                        addPrimaryKeyBindingSignatureIfNecessary(
-                            primaryKey, subKey, hashedSubpackets)
-                } catch (e: IOException) {
-                    throw PGPException(
-                        "Exception while adding primary key binding signature to signing subkey.",
-                        e)
+            var hashedSignatureSubpackets: SignatureSubpackets =
+                SignatureSubpackets.createHashedSubpackets(subKey.publicKey).apply {
+                    setKeyFlags(subKeySpec.keyFlags)
+                    subKeySpec.preferredHashAlgorithmsOverride?.let {
+                        setPreferredHashAlgorithms(it)
+                    }
+                    subKeySpec.preferredCompressionAlgorithmsOverride?.let {
+                        setPreferredCompressionAlgorithms(it)
+                    }
+                    subKeySpec.preferredSymmetricAlgorithmsOverride?.let {
+                        setPreferredSymmetricKeyAlgorithms(it)
+                    }
+                    subKeySpec.preferredAEADAlgorithmsOverride?.let {
+                        setPreferredAEADCiphersuites(it)
+                    }
+                    subKeySpec.featuresOverride?.let { setFeatures(*it.toTypedArray()) }
                 }
-                ringGenerator.addSubKey(subKey, hashedSubpackets, null)
+
+            var hashedSubpackets: PGPSignatureSubpacketVector =
+                hashedSignatureSubpackets.subpacketsGenerator.generate()
+            try {
+                hashedSubpackets =
+                    addPrimaryKeyBindingSignatureIfNecessary(primaryKey, subKey, hashedSubpackets)
+            } catch (e: IOException) {
+                throw PGPException(
+                    "Exception while adding primary key binding signature to signing subkey.", e)
             }
+            ringGenerator.addSubKey(subKey, hashedSubpackets, null)
         }
     }
 
