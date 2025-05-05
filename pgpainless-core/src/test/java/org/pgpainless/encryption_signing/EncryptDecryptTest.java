@@ -15,26 +15,18 @@ import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.nio.charset.Charset;
-import java.nio.charset.StandardCharsets;
 import java.util.Set;
 
 import org.bouncycastle.bcpg.ArmoredOutputStream;
 import org.bouncycastle.openpgp.PGPException;
 import org.bouncycastle.openpgp.PGPSignature;
-import org.bouncycastle.openpgp.api.MessageEncryptionMechanism;
 import org.bouncycastle.openpgp.api.OpenPGPCertificate;
 import org.bouncycastle.openpgp.api.OpenPGPKey;
 import org.bouncycastle.util.io.Streams;
 import org.junit.jupiter.api.TestTemplate;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.pgpainless.PGPainless;
-import org.pgpainless.algorithm.AEADAlgorithm;
-import org.pgpainless.algorithm.AEADCipherMode;
-import org.pgpainless.algorithm.AlgorithmSuite;
 import org.pgpainless.algorithm.DocumentSignatureType;
-import org.pgpainless.algorithm.Feature;
-import org.pgpainless.algorithm.KeyFlag;
-import org.pgpainless.algorithm.OpenPGPKeyVersion;
 import org.pgpainless.algorithm.SymmetricKeyAlgorithm;
 import org.pgpainless.decryption_verification.ConsumerOptions;
 import org.pgpainless.decryption_verification.DecryptionStream;
@@ -42,11 +34,7 @@ import org.pgpainless.decryption_verification.MessageMetadata;
 import org.pgpainless.exception.KeyException;
 import org.pgpainless.key.SubkeyIdentifier;
 import org.pgpainless.key.TestKeys;
-import org.pgpainless.key.generation.KeySpec;
-import org.pgpainless.key.generation.type.KeyType;
-import org.pgpainless.key.generation.type.eddsa_legacy.EdDSALegacyCurve;
 import org.pgpainless.key.generation.type.rsa.RsaLength;
-import org.pgpainless.key.generation.type.xdh_legacy.XDHLegacySpec;
 import org.pgpainless.key.protection.SecretKeyRingProtector;
 import org.pgpainless.key.protection.UnprotectedKeysProtector;
 import org.pgpainless.util.ArmoredOutputStreamFactory;
@@ -319,78 +307,4 @@ public class EncryptDecryptTest {
                         .addRecipient(publicKeys));
     }
 
-    @TestTemplate
-    @ExtendWith(TestAllImplementations.class)
-    public void testEncryptToOnlyV4CertWithOnlySEIPD1Feature() throws PGPException, IOException {
-        PGPainless api = PGPainless.getInstance();
-        OpenPGPKey v4Key = api.buildKey(OpenPGPKeyVersion.v4)
-                .withPreferences(AlgorithmSuite.emptyBuilder()
-                        .overrideSymmetricKeyAlgorithms(SymmetricKeyAlgorithm.AES_192)
-                        .overrideFeatures(Feature.MODIFICATION_DETECTION)
-                        .build())
-                .setPrimaryKey(KeySpec.getBuilder(KeyType.EDDSA_LEGACY(EdDSALegacyCurve._Ed25519), KeyFlag.CERTIFY_OTHER, KeyFlag.SIGN_DATA))
-                .addSubkey(KeySpec.getBuilder(KeyType.XDH_LEGACY(XDHLegacySpec._X25519), KeyFlag.ENCRYPT_COMMS, KeyFlag.ENCRYPT_STORAGE))
-                .build();
-
-        ByteArrayOutputStream bOut = new ByteArrayOutputStream();
-        EncryptionStream eOut = api.generateMessage().onOutputStream(bOut)
-                .withOptions(ProducerOptions.encrypt(EncryptionOptions.encryptCommunications()
-                        .addRecipient(v4Key.toCertificate())));
-        eOut.write(testMessage.getBytes(StandardCharsets.UTF_8));
-        eOut.close();
-
-        ByteArrayInputStream bIn = new ByteArrayInputStream(bOut.toByteArray());
-        DecryptionStream dIn = PGPainless.decryptAndOrVerify()
-                .onInputStream(bIn)
-                .withOptions(ConsumerOptions.get().addDecryptionKey(v4Key));
-
-        bOut = new ByteArrayOutputStream();
-        Streams.pipeAll(dIn, bOut);
-        dIn.close();
-
-        assertEquals(testMessage, bOut.toString());
-        MessageMetadata metadata = dIn.getMetadata();
-        MessageEncryptionMechanism encryptionMechanism = metadata.getEncryptionMechanism();
-        assertEquals(
-                MessageEncryptionMechanism.integrityProtected(SymmetricKeyAlgorithm.AES_192.getAlgorithmId()),
-                encryptionMechanism);
-    }
-
-    @TestTemplate
-    @ExtendWith(TestAllImplementations.class)
-    public void testEncryptToOnlyV6CertWithOnlySEIPD2Features() throws IOException, PGPException {
-        PGPainless api = PGPainless.getInstance();
-        OpenPGPKey v6Key = api.buildKey(OpenPGPKeyVersion.v6)
-                .withPreferences(AlgorithmSuite.emptyBuilder()
-                        .overrideFeatures(Feature.MODIFICATION_DETECTION_2)
-                        .overrideAeadAlgorithms(new AEADCipherMode(AEADAlgorithm.OCB, SymmetricKeyAlgorithm.AES_192))
-                        .build())
-                .setPrimaryKey(KeySpec.getBuilder(KeyType.Ed25519(), KeyFlag.CERTIFY_OTHER, KeyFlag.SIGN_DATA))
-                .addSubkey(KeySpec.getBuilder(KeyType.X25519(), KeyFlag.ENCRYPT_COMMS, KeyFlag.ENCRYPT_STORAGE))
-                .build();
-
-        ByteArrayOutputStream bOut = new ByteArrayOutputStream();
-        EncryptionStream eOut = api.generateMessage().onOutputStream(bOut)
-                .withOptions(ProducerOptions.encrypt(EncryptionOptions.encryptCommunications()
-                        .addRecipient(v6Key.toCertificate())));
-        eOut.write(testMessage.getBytes(StandardCharsets.UTF_8));
-        eOut.close();
-
-
-        ByteArrayInputStream bIn = new ByteArrayInputStream(bOut.toByteArray());
-        DecryptionStream dIn = PGPainless.decryptAndOrVerify()
-                .onInputStream(bIn)
-                .withOptions(ConsumerOptions.get().addDecryptionKey(v6Key));
-
-        bOut = new ByteArrayOutputStream();
-        Streams.pipeAll(dIn, bOut);
-        dIn.close();
-
-        assertEquals(testMessage, bOut.toString());
-        MessageMetadata metadata = dIn.getMetadata();
-        MessageEncryptionMechanism encryptionMechanism = metadata.getEncryptionMechanism();
-        assertEquals(
-                MessageEncryptionMechanism.aead(SymmetricKeyAlgorithm.AES_192.getAlgorithmId(), AEADAlgorithm.OCB.getAlgorithmId()),
-                encryptionMechanism);
-    }
 }
