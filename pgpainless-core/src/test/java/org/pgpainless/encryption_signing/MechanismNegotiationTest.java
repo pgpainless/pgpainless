@@ -146,7 +146,7 @@ public class MechanismNegotiationTest {
         private final OpenPGPKeyVersion version;
         private final AlgorithmSuite preferences;
 
-        public KeySpecification(OpenPGPKeyVersion version,
+        KeySpecification(OpenPGPKeyVersion version,
                                 AlgorithmSuite preferences) {
             this.version = version;
             this.preferences = preferences;
