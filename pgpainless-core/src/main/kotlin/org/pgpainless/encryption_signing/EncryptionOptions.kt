@@ -6,11 +6,15 @@ package org.pgpainless.encryption_signing
 
 import java.util.*
 import org.bouncycastle.openpgp.PGPPublicKeyRing
+import org.bouncycastle.openpgp.api.MessageEncryptionMechanism
 import org.bouncycastle.openpgp.api.OpenPGPCertificate
 import org.bouncycastle.openpgp.api.OpenPGPCertificate.OpenPGPComponentKey
 import org.bouncycastle.openpgp.operator.PGPKeyEncryptionMethodGenerator
 import org.pgpainless.PGPainless
+import org.pgpainless.algorithm.AEADAlgorithm
+import org.pgpainless.algorithm.AEADCipherMode
 import org.pgpainless.algorithm.EncryptionPurpose
+import org.pgpainless.algorithm.Feature
 import org.pgpainless.algorithm.SymmetricKeyAlgorithm
 import org.pgpainless.algorithm.negotiation.SymmetricKeyAlgorithmNegotiator.Companion.byPopularity
 import org.pgpainless.authentication.CertificateAuthority
@@ -23,32 +27,34 @@ import org.pgpainless.util.Passphrase
 
 class EncryptionOptions(private val purpose: EncryptionPurpose, private val api: PGPainless) {
     private val _encryptionMethods: MutableSet<PGPKeyEncryptionMethodGenerator> = mutableSetOf()
-    private val _encryptionKeys: MutableSet<OpenPGPComponentKey> = mutableSetOf()
+    private val keysAndAccessors: MutableMap<OpenPGPComponentKey, KeyAccessor> = mutableMapOf()
     private val _keyRingInfo: MutableMap<SubkeyIdentifier, KeyRingInfo> = mutableMapOf()
-    private val _keyViews: MutableMap<SubkeyIdentifier, KeyAccessor> = mutableMapOf()
     private val encryptionKeySelector: EncryptionKeySelector = encryptToAllCapableSubkeys()
 
     private var allowEncryptionWithMissingKeyFlags = false
     private var evaluationDate = Date()
-    private var _encryptionAlgorithmOverride: SymmetricKeyAlgorithm? = null
+    private var _encryptionMechanismOverride: MessageEncryptionMechanism? = null
 
     val encryptionMethods
         get() = _encryptionMethods.toSet()
 
     val encryptionKeyIdentifiers
-        get() = _encryptionKeys.map { SubkeyIdentifier(it) }
+        get() = keysAndAccessors.keys.map { SubkeyIdentifier(it) }
 
     val encryptionKeys
-        get() = _encryptionKeys.toSet()
+        get() = keysAndAccessors.keys.toSet()
 
-    val keyRingInfo
-        get() = _keyRingInfo.toMap()
-
-    val keyViews
-        get() = _keyViews.toMap()
-
+    @Deprecated(
+        "Deprecated in favor of encryptionMechanismOverride",
+        replaceWith = ReplaceWith("encryptionMechanismOverride"))
     val encryptionAlgorithmOverride
-        get() = _encryptionAlgorithmOverride
+        get() =
+            _encryptionMechanismOverride?.let {
+                SymmetricKeyAlgorithm.requireFromId(it.symmetricKeyAlgorithm)
+            }
+
+    val encryptionMechanismOverride
+        get() = _encryptionMechanismOverride
 
     constructor(api: PGPainless) : this(EncryptionPurpose.ANY, api)
 
@@ -200,8 +206,8 @@ class EncryptionOptions(private val purpose: EncryptionPurpose, private val api:
         for (subkey in subkeys) {
             val keyId = SubkeyIdentifier(subkey)
             _keyRingInfo[keyId] = info
-            _keyViews[keyId] = KeyAccessor.ViaUserId(subkey, cert.getUserId(userId.toString()))
-            addRecipientKey(subkey, false)
+            val accessor = KeyAccessor.ViaUserId(subkey, cert.getUserId(userId.toString()))
+            addRecipientKey(subkey, accessor, false)
         }
     }
 
@@ -319,13 +325,17 @@ class EncryptionOptions(private val purpose: EncryptionPurpose, private val api:
         for (subkey in encryptionSubkeys) {
             val keyId = SubkeyIdentifier(subkey)
             _keyRingInfo[keyId] = info
-            _keyViews[keyId] = KeyAccessor.ViaKeyIdentifier(subkey)
-            addRecipientKey(subkey, wildcardKeyId)
+            val accessor = KeyAccessor.ViaKeyIdentifier(subkey)
+            addRecipientKey(subkey, accessor, wildcardKeyId)
         }
     }
 
-    private fun addRecipientKey(key: OpenPGPComponentKey, wildcardRecipient: Boolean) {
-        _encryptionKeys.add(key)
+    private fun addRecipientKey(
+        key: OpenPGPComponentKey,
+        accessor: KeyAccessor,
+        wildcardRecipient: Boolean
+    ) {
+        keysAndAccessors[key] = accessor
         addEncryptionMethod(
             api.implementation.publicKeyKeyEncryptionMethodGenerator(key.pgpPublicKey).also {
                 it.setUseWildcardRecipient(wildcardRecipient)
@@ -381,11 +391,21 @@ class EncryptionOptions(private val purpose: EncryptionPurpose, private val api:
      * @param encryptionAlgorithm encryption algorithm override
      * @return this
      */
+    @Deprecated(
+        "Deprecated in favor of overrideEncryptionMechanism",
+        replaceWith =
+            ReplaceWith(
+                "overrideEncryptionMechanism(MessageEncryptionMechanism.integrityProtected(encryptionAlgorithm.algorithmId))"))
     fun overrideEncryptionAlgorithm(encryptionAlgorithm: SymmetricKeyAlgorithm) = apply {
         require(encryptionAlgorithm != SymmetricKeyAlgorithm.NULL) {
             "Encryption algorithm override cannot be NULL."
         }
-        _encryptionAlgorithmOverride = encryptionAlgorithm
+        overrideEncryptionMechanism(
+            MessageEncryptionMechanism.integrityProtected(encryptionAlgorithm.algorithmId))
+    }
+
+    fun overrideEncryptionMechanism(encryptionMechanism: MessageEncryptionMechanism) = apply {
+        _encryptionMechanismOverride = encryptionMechanism
     }
 
     /**
@@ -403,7 +423,8 @@ class EncryptionOptions(private val purpose: EncryptionPurpose, private val api:
     fun hasEncryptionMethod() = _encryptionMethods.isNotEmpty()
 
     internal fun negotiateSymmetricEncryptionAlgorithm(): SymmetricKeyAlgorithm {
-        val preferences = keyViews.values.map { it.preferredSymmetricKeyAlgorithms }.toList()
+        val preferences =
+            keysAndAccessors.values.map { it.preferredSymmetricKeyAlgorithms }.toList()
         val algorithm =
             byPopularity()
                 .negotiate(
@@ -411,6 +432,28 @@ class EncryptionOptions(private val purpose: EncryptionPurpose, private val api:
                     encryptionAlgorithmOverride,
                     preferences)
         return algorithm
+    }
+
+    internal fun negotiateEncryptionMechanism(): MessageEncryptionMechanism {
+        val features = keysAndAccessors.values.map { it.features }.toList()
+
+        if (features.all { it.contains(Feature.MODIFICATION_DETECTION_2) }) {
+            val aeadPrefs = keysAndAccessors.values.map { it.preferredAEADCipherSuites }.toList()
+            val counted = mutableMapOf<AEADCipherMode, Int>()
+            for (pref in aeadPrefs) {
+                for (mode in pref) {
+                    counted[mode] = counted.getOrDefault(mode, 0) + 1
+                }
+            }
+            val max: AEADCipherMode =
+                counted.maxByOrNull { it.value }?.key
+                    ?: AEADCipherMode(AEADAlgorithm.OCB, SymmetricKeyAlgorithm.AES_128)
+            return MessageEncryptionMechanism.aead(
+                max.ciphermode.algorithmId, max.aeadAlgorithm.algorithmId)
+        } else {
+            return MessageEncryptionMechanism.integrityProtected(
+                negotiateSymmetricEncryptionAlgorithm().algorithmId)
+        }
     }
 
     fun interface EncryptionKeySelector {

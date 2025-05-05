@@ -13,11 +13,12 @@ import org.bouncycastle.openpgp.PGPCompressedDataGenerator
 import org.bouncycastle.openpgp.PGPEncryptedDataGenerator
 import org.bouncycastle.openpgp.PGPException
 import org.bouncycastle.openpgp.PGPLiteralDataGenerator
+import org.bouncycastle.openpgp.api.MessageEncryptionMechanism
 import org.bouncycastle.openpgp.api.OpenPGPSignature.OpenPGPDocumentSignature
 import org.pgpainless.PGPainless
 import org.pgpainless.algorithm.CompressionAlgorithm
 import org.pgpainless.algorithm.StreamEncoding
-import org.pgpainless.algorithm.SymmetricKeyAlgorithm
+import org.pgpainless.bouncycastle.extensions.pgpDataEncryptorBuilder
 import org.pgpainless.util.ArmoredOutputStreamFactory
 
 // 1 << 8 causes wrong partial body length encoding
@@ -74,34 +75,29 @@ class EncryptionStream(
     @Throws(IOException::class, PGPException::class)
     private fun prepareEncryption() {
         if (options.encryptionOptions == null) {
-            // No encryption options -> no encryption
-            resultBuilder.setEncryptionAlgorithm(SymmetricKeyAlgorithm.NULL)
             return
         }
         require(options.encryptionOptions.encryptionMethods.isNotEmpty()) {
             "If EncryptionOptions are provided, at least one encryption method MUST be provided as well."
         }
 
-        options.encryptionOptions.negotiateSymmetricEncryptionAlgorithm().let {
-            resultBuilder.setEncryptionAlgorithm(it)
-            val encryptedDataGenerator =
-                PGPEncryptedDataGenerator(
-                    api.implementation.pgpDataEncryptorBuilder(it.algorithmId).apply {
-                        setWithIntegrityPacket(true)
-                    })
-            options.encryptionOptions.encryptionMethods.forEach { m ->
-                encryptedDataGenerator.addMethod(m)
-            }
-            options.encryptionOptions.encryptionKeyIdentifiers.forEach { r ->
-                resultBuilder.addRecipient(r)
-            }
+        val mechanism: MessageEncryptionMechanism =
+            options.encryptionOptions.negotiateEncryptionMechanism()
+        resultBuilder.setEncryptionMechanism(mechanism)
+        val encryptedDataGenerator =
+            PGPEncryptedDataGenerator(api.implementation.pgpDataEncryptorBuilder(mechanism))
 
-            publicKeyEncryptedStream =
-                encryptedDataGenerator.open(outermostStream, ByteArray(BUFFER_SIZE)).also { stream
-                    ->
-                    outermostStream = stream
-                }
+        options.encryptionOptions.encryptionMethods.forEach { m ->
+            encryptedDataGenerator.addMethod(m)
         }
+        options.encryptionOptions.encryptionKeyIdentifiers.forEach { r ->
+            resultBuilder.addRecipient(r)
+        }
+
+        publicKeyEncryptedStream =
+            encryptedDataGenerator.open(outermostStream, ByteArray(BUFFER_SIZE)).also { stream ->
+                outermostStream = stream
+            }
     }
 
     @Throws(IOException::class)
