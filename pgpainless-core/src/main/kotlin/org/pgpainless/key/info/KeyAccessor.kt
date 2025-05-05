@@ -4,6 +4,7 @@
 
 package org.pgpainless.key.info
 
+import org.bouncycastle.bcpg.sig.PreferredAEADCiphersuites.Combination
 import java.util.*
 import org.bouncycastle.openpgp.api.OpenPGPCertificate.OpenPGPCertificateComponent
 import org.bouncycastle.openpgp.api.OpenPGPCertificate.OpenPGPComponentKey
@@ -40,7 +41,10 @@ abstract class KeyAccessor(
 
     val preferredAEADCipherSuites: Set<AEADCipherMode>
         get() =
-            component.getAEADCipherSuitePreferences(referenceTime)?.toAEADCipherModes() ?: setOf()
+            component.getAEADCipherSuitePreferences(referenceTime)
+                ?.rawAlgorithms
+                ?.map { AEADCipherMode(it) }
+                ?.toSet() ?: setOf()
 
     val features: Set<Feature>
         get() =

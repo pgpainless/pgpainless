@@ -376,6 +376,7 @@ public class EncryptDecryptTest {
         eOut.write(testMessage.getBytes(StandardCharsets.UTF_8));
         eOut.close();
 
+
         ByteArrayInputStream bIn = new ByteArrayInputStream(bOut.toByteArray());
         DecryptionStream dIn = PGPainless.decryptAndOrVerify()
                 .onInputStream(bIn)
@@ -389,7 +390,7 @@ public class EncryptDecryptTest {
         MessageMetadata metadata = dIn.getMetadata();
         MessageEncryptionMechanism encryptionMechanism = metadata.getEncryptionMechanism();
         assertEquals(
-                MessageEncryptionMechanism.aead(SymmetricKeyAlgorithm.AES_128.getAlgorithmId(), AEADAlgorithm.OCB.getAlgorithmId()),
+                MessageEncryptionMechanism.aead(SymmetricKeyAlgorithm.AES_192.getAlgorithmId(), AEADAlgorithm.OCB.getAlgorithmId()),
                 encryptionMechanism);
     }
 }

@@ -8,6 +8,7 @@ import java.util.*
 import org.bouncycastle.openpgp.PGPLiteralData
 import org.bouncycastle.openpgp.PGPPublicKeyRing
 import org.bouncycastle.openpgp.PGPSignature
+import org.bouncycastle.openpgp.api.MessageEncryptionMechanism
 import org.bouncycastle.openpgp.api.OpenPGPCertificate
 import org.bouncycastle.openpgp.api.OpenPGPSignature.OpenPGPDocumentSignature
 import org.pgpainless.algorithm.CompressionAlgorithm
@@ -18,7 +19,7 @@ import org.pgpainless.key.SubkeyIdentifier
 import org.pgpainless.util.MultiMap
 
 data class EncryptionResult(
-    val encryptionAlgorithm: SymmetricKeyAlgorithm,
+    val encryptionMechanism: MessageEncryptionMechanism,
     val compressionAlgorithm: CompressionAlgorithm,
     val detachedDocumentSignatures: OpenPGPSignatureSet<OpenPGPDocumentSignature>,
     val recipients: Set<SubkeyIdentifier>,
@@ -26,6 +27,11 @@ data class EncryptionResult(
     val modificationDate: Date,
     val fileEncoding: StreamEncoding
 ) {
+
+    @Deprecated(
+        "Use encryptionMechanism instead.", replaceWith = ReplaceWith("encryptionMechanism"))
+    val encryptionAlgorithm: SymmetricKeyAlgorithm?
+        get() = SymmetricKeyAlgorithm.fromId(encryptionMechanism.symmetricKeyAlgorithm)
 
     @Deprecated(
         "Use detachedSignatures instead", replaceWith = ReplaceWith("detachedDocumentSignatures"))
@@ -69,7 +75,8 @@ data class EncryptionResult(
     }
 
     class Builder {
-        var _encryptionAlgorithm: SymmetricKeyAlgorithm? = null
+        var _encryptionMechanism: MessageEncryptionMechanism =
+            MessageEncryptionMechanism.unencrypted()
         var _compressionAlgorithm: CompressionAlgorithm? = null
 
         val detachedSignatures: MutableList<OpenPGPDocumentSignature> = mutableListOf()
@@ -78,8 +85,8 @@ data class EncryptionResult(
         private var _modificationDate = Date(0)
         private var _encoding = StreamEncoding.BINARY
 
-        fun setEncryptionAlgorithm(encryptionAlgorithm: SymmetricKeyAlgorithm) = apply {
-            _encryptionAlgorithm = encryptionAlgorithm
+        fun setEncryptionMechanism(mechanism: MessageEncryptionMechanism): Builder = apply {
+            _encryptionMechanism = mechanism
         }
 
         fun setCompressionAlgorithm(compressionAlgorithm: CompressionAlgorithm) = apply {
@@ -103,11 +110,10 @@ data class EncryptionResult(
         }
 
         fun build(): EncryptionResult {
-            checkNotNull(_encryptionAlgorithm) { "Encryption algorithm not set." }
             checkNotNull(_compressionAlgorithm) { "Compression algorithm not set." }
 
             return EncryptionResult(
-                _encryptionAlgorithm!!,
+                _encryptionMechanism,
                 _compressionAlgorithm!!,
                 OpenPGPSignatureSet(detachedSignatures),
                 recipients,
