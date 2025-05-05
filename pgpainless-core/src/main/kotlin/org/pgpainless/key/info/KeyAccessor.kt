@@ -4,7 +4,6 @@
 
 package org.pgpainless.key.info
 
-import org.bouncycastle.bcpg.sig.PreferredAEADCiphersuites.Combination
 import java.util.*
 import org.bouncycastle.openpgp.api.OpenPGPCertificate.OpenPGPCertificateComponent
 import org.bouncycastle.openpgp.api.OpenPGPCertificate.OpenPGPComponentKey
@@ -14,7 +13,6 @@ import org.pgpainless.algorithm.CompressionAlgorithm
 import org.pgpainless.algorithm.Feature
 import org.pgpainless.algorithm.HashAlgorithm
 import org.pgpainless.algorithm.SymmetricKeyAlgorithm
-import org.pgpainless.bouncycastle.extensions.toAEADCipherModes
 import org.pgpainless.bouncycastle.extensions.toCompressionAlgorithms
 import org.pgpainless.bouncycastle.extensions.toHashAlgorithms
 import org.pgpainless.bouncycastle.extensions.toSymmetricKeyAlgorithms
@@ -41,10 +39,12 @@ abstract class KeyAccessor(
 
     val preferredAEADCipherSuites: Set<AEADCipherMode>
         get() =
-            component.getAEADCipherSuitePreferences(referenceTime)
+            component
+                .getAEADCipherSuitePreferences(referenceTime)
                 ?.rawAlgorithms
                 ?.map { AEADCipherMode(it) }
-                ?.toSet() ?: setOf()
+                ?.toSet()
+                ?: setOf()
 
     val features: Set<Feature>
         get() =
