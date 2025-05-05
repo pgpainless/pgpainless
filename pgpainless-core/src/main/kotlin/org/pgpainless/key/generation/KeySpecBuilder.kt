@@ -5,11 +5,8 @@
 package org.pgpainless.key.generation
 
 import java.util.*
-import org.pgpainless.PGPainless
 import org.pgpainless.algorithm.*
 import org.pgpainless.key.generation.type.KeyType
-import org.pgpainless.signature.subpackets.SelfSignatureSubpackets
-import org.pgpainless.signature.subpackets.SignatureSubpackets
 import org.pgpainless.signature.subpackets.SignatureSubpacketsUtil
 
 class KeySpecBuilder(
@@ -17,16 +14,11 @@ class KeySpecBuilder(
     private val keyFlags: List<KeyFlag>,
 ) : KeySpecBuilderInterface {
 
-    private val hashedSubpackets: SelfSignatureSubpackets = SignatureSubpackets()
-    private val algorithmSuite: AlgorithmSuite =
-        PGPainless.getInstance().algorithmPolicy.keyGenerationAlgorithmSuite
-    private var preferredCompressionAlgorithms: Set<CompressionAlgorithm>? =
-        algorithmSuite.compressionAlgorithms
-    private var preferredHashAlgorithms: Set<HashAlgorithm>? = algorithmSuite.hashAlgorithms
-    private var preferredSymmetricAlgorithms: Set<SymmetricKeyAlgorithm>? =
-        algorithmSuite.symmetricKeyAlgorithms
-    private var preferredAEADAlgorithms: Set<AEADCipherMode>? = algorithmSuite.aeadAlgorithms
-    private var features: Set<Feature>? = algorithmSuite.features
+    private var preferredCompressionAlgorithms: Set<CompressionAlgorithm>? = null
+    private var preferredHashAlgorithms: Set<HashAlgorithm>? = null
+    private var preferredSymmetricAlgorithms: Set<SymmetricKeyAlgorithm>? = null
+    private var preferredAEADAlgorithms: Set<AEADCipherMode>? = null
+    private var features: Set<Feature>? = null
     private var keyCreationDate: Date? = null
 
     constructor(type: KeyType, vararg keyFlags: KeyFlag) : this(type, listOf(*keyFlags))
@@ -70,15 +62,14 @@ class KeySpecBuilder(
     }
 
     override fun build(): KeySpec {
-        return hashedSubpackets
-            .apply {
-                setKeyFlags(keyFlags)
-                preferredCompressionAlgorithms?.let { setPreferredCompressionAlgorithms(it) }
-                preferredHashAlgorithms?.let { setPreferredHashAlgorithms(it) }
-                preferredSymmetricAlgorithms?.let { setPreferredSymmetricKeyAlgorithms(it) }
-                preferredAEADAlgorithms?.let { setPreferredAEADCiphersuites(it) }
-                features?.let { setFeatures(*it.toTypedArray()) }
-            }
-            .let { KeySpec(type, hashedSubpackets as SignatureSubpackets, false, keyCreationDate) }
+        return KeySpec(
+            type,
+            keyFlags,
+            preferredCompressionAlgorithms,
+            preferredHashAlgorithms,
+            preferredSymmetricAlgorithms,
+            preferredAEADAlgorithms,
+            features,
+            keyCreationDate)
     }
 }
