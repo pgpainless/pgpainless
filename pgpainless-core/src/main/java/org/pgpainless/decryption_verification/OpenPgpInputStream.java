@@ -178,22 +178,44 @@ public class OpenPgpInputStream extends BufferedInputStream {
 
             case PUBLIC_KEY_ENC_SESSION:
                 int pkeskVersion = bcpgIn.read();
-                if (pkeskVersion <= 0 || pkeskVersion > 5) {
+                if (pkeskVersion <= 0 || pkeskVersion > 6) {
                     return;
                 }
 
-                // Skip Key-ID
-                for (int i = 0; i < 8; i++) {
-                    bcpgIn.read();
-                }
+                if (pkeskVersion == 3) {
+                    // Skip Key-ID
+                    for (int i = 0; i < 8; i++) {
+                        bcpgIn.read();
+                    }
 
-                int pkeskAlg = bcpgIn.read();
-                if (PublicKeyAlgorithm.fromId(pkeskAlg) == null) {
-                    return;
-                }
+                    int pkeskAlg = bcpgIn.read();
+                    if (PublicKeyAlgorithm.fromId(pkeskAlg) == null) {
+                        return;
+                    }
 
-                containsOpenPgpPackets = true;
-                isLikelyOpenPgpMessage = true;
+                    containsOpenPgpPackets = true;
+                    isLikelyOpenPgpMessage = true;
+                } else if (pkeskVersion == 6) {
+                    int len = bcpgIn.read();
+                    if (len != 0) {
+                        int ver = bcpgIn.read();
+                        if (ver == 4) {
+                            for (int i = 0; i < 20; i++) {
+                                bcpgIn.read();
+                            }
+                        } else {
+                            for (int i = 0; i < 32; i++) {
+                                bcpgIn.read();
+                            }
+                        }
+                        int pkeskAlg = bcpgIn.read();
+                        if (PublicKeyAlgorithm.fromId(pkeskAlg) == null) {
+                            return;
+                        }
+                    }
+                    containsOpenPgpPackets = true;
+                    isLikelyOpenPgpMessage = true;
+                }
                 break;
 
             case SIGNATURE:
