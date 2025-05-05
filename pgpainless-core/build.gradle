@@ -27,6 +27,9 @@ dependencies {
 
     // @Nullable, @Nonnull annotations
     implementation "com.google.code.findbugs:jsr305:3.0.2"
+
+    // HSRE regex for tests
+    testImplementation project(":hsregex")
 }
 
 // https://docs.gradle.org/current/userguide/java_library_plugin.html#sec:java_library_modular_auto
