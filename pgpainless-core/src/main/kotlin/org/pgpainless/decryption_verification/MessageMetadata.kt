@@ -39,6 +39,10 @@ class MessageMetadata(val message: Message) {
     val encryptionAlgorithm: SymmetricKeyAlgorithm?
         get() = encryptionAlgorithms.let { if (it.hasNext()) it.next() else null }
 
+    /**
+     * The [MessageEncryptionMechanism] of the outermost encrypted data packet, or null if the
+     * message is unencrypted.
+     */
     val encryptionMechanism: MessageEncryptionMechanism?
         get() = encryptionMechanisms.let { if (it.hasNext()) it.next() else null }
 
@@ -54,9 +58,16 @@ class MessageMetadata(val message: Message) {
     val encryptionAlgorithms: Iterator<SymmetricKeyAlgorithm>
         get() = encryptionLayers.asSequence().map { it.algorithm }.iterator()
 
+    /**
+     * [Iterator] of each [MessageEncryptionMechanism] encountered in the message. The first item
+     * returned by the iterator is the encryption mechanism of the outermost encrypted data packet,
+     * the next item that of the next nested encrypted data packet and so on. The iterator might
+     * also be empty in case of an unencrypted message.
+     */
     val encryptionMechanisms: Iterator<MessageEncryptionMechanism>
         get() = encryptionLayers.asSequence().map { it.mechanism }.iterator()
 
+    /** Return true, if the message is encrypted, false otherwise. */
     val isEncrypted: Boolean
         get() =
             if (encryptionMechanism == null) false
@@ -64,12 +75,14 @@ class MessageMetadata(val message: Message) {
                 encryptionMechanism!!.symmetricKeyAlgorithm !=
                     SymmetricKeyAlgorithm.NULL.algorithmId
 
+    /** Return true, if the message was encrypted for the given [OpenPGPCertificate]. */
     fun isEncryptedFor(cert: OpenPGPCertificate): Boolean {
         return encryptionLayers.asSequence().any {
             it.recipients.any { identifier -> cert.getKey(identifier) != null }
         }
     }
 
+    /** Return true, if the message was encrypted for the given [PGPKeyRing]. */
     fun isEncryptedFor(cert: PGPKeyRing): Boolean {
         return encryptionLayers.asSequence().any {
             it.recipients.any { keyId -> cert.getPublicKey(keyId) != null }
@@ -101,9 +114,13 @@ class MessageMetadata(val message: Message) {
         get() = encryptionLayers.asSequence().mapNotNull { it.decryptionKey }.firstOrNull()
 
     /** List containing all recipient keyIDs. */
+    @Deprecated(
+        "Use of key-ids is discouraged in favor of KeyIdentifiers",
+        replaceWith = ReplaceWith("recipientKeyIdentifiers"))
     val recipientKeyIds: List<Long>
         get() = recipientKeyIdentifiers.map { it.keyId }.toList()
 
+    /** List containing all recipient [KeyIdentifiers][KeyIdentifier]. */
     val recipientKeyIdentifiers: List<KeyIdentifier>
         get() =
             encryptionLayers
@@ -115,6 +132,7 @@ class MessageMetadata(val message: Message) {
                 }
                 .toList()
 
+    /** [Iterator] of all [EncryptedData] layers of the message. */
     val encryptionLayers: Iterator<EncryptedData>
         get() =
             object : LayerIterator<EncryptedData>(message) {
@@ -144,6 +162,7 @@ class MessageMetadata(val message: Message) {
     val compressionAlgorithms: Iterator<CompressionAlgorithm>
         get() = compressionLayers.asSequence().map { it.algorithm }.iterator()
 
+    /** [Iterator] of all [CompressedData] layers of the message. */
     val compressionLayers: Iterator<CompressedData>
         get() =
             object : LayerIterator<CompressedData>(message) {
