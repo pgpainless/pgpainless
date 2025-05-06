@@ -4,7 +4,6 @@
 
 package org.pgpainless.algorithm.negotiation
 
-import java.lang.IllegalArgumentException
 import org.pgpainless.algorithm.SymmetricKeyAlgorithm
 import org.pgpainless.policy.Policy
 
@@ -36,9 +35,8 @@ interface SymmetricKeyAlgorithmNegotiator {
                     override: SymmetricKeyAlgorithm?,
                     keyPreferences: List<Set<SymmetricKeyAlgorithm>>
                 ): SymmetricKeyAlgorithm {
-                    if (override == SymmetricKeyAlgorithm.NULL) {
-                        throw IllegalArgumentException(
-                            "Algorithm override cannot be NULL (plaintext).")
+                    require (override != SymmetricKeyAlgorithm.NULL) {
+                        "Algorithm override cannot be NULL (plaintext)."
                     }
 
                     if (override != null) {
