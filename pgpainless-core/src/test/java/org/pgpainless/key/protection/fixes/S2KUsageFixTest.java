@@ -111,7 +111,7 @@ public class S2KUsageFixTest {
     private void testCanStillDecrypt(OpenPGPKey keys, SecretKeyRingProtector protector)
             throws PGPException, IOException {
         ByteArrayInputStream in = new ByteArrayInputStream(MESSAGE.getBytes(StandardCharsets.UTF_8));
-        DecryptionStream decryptionStream = PGPainless.decryptAndOrVerify()
+        DecryptionStream decryptionStream = PGPainless.getInstance().processMessage()
                 .onInputStream(in)
                 .withOptions(ConsumerOptions.get()
                         .addDecryptionKey(keys, protector));

@@ -113,6 +113,12 @@ class PGPainless(
     fun generateMessage(): EncryptionBuilder = EncryptionBuilder(this)
 
     /**
+     * Process an OpenPGP message. This method attempts decryption of encrypted messages and
+     * performs signature verification.
+     */
+    fun processMessage(): DecryptionBuilder = DecryptionBuilder(this)
+
+    /**
      * Create certification signatures on third-party [OpenPGPCertificates][OpenPGPCertificate].
      *
      * @return builder
@@ -253,7 +259,11 @@ class PGPainless(
          *
          * @return builder
          */
-        @JvmStatic fun decryptAndOrVerify(): DecryptionBuilder = DecryptionBuilder(getInstance())
+        @Deprecated(
+            "Call processMessage() on an instance of PGPainless instead.",
+            replaceWith = ReplaceWith("processMessage()"))
+        @JvmStatic
+        fun decryptAndOrVerify(): DecryptionBuilder = getInstance().processMessage()
 
         /**
          * Make changes to a secret key at the given reference time. This method can be used to

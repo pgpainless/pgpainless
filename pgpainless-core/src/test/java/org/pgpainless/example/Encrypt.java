@@ -166,7 +166,7 @@ public class Encrypt {
         String encryptedMessage = ciphertext.toString();
 
         // Decrypt and verify signatures
-        DecryptionStream decryptor = PGPainless.decryptAndOrVerify()
+        DecryptionStream decryptor = api.processMessage()
                 .onInputStream(new ByteArrayInputStream(encryptedMessage.getBytes(StandardCharsets.UTF_8)))
                 .withOptions(ConsumerOptions.get(api)
                         .addDecryptionKey(keyBob, protectorBob)
@@ -209,7 +209,7 @@ public class Encrypt {
         String asciiCiphertext = ciphertext.toString();
 
         // Decrypt
-        DecryptionStream decryptor = PGPainless.decryptAndOrVerify()
+        DecryptionStream decryptor = api.processMessage()
                 .onInputStream(new ByteArrayInputStream(asciiCiphertext.getBytes(StandardCharsets.UTF_8)))
                 .withOptions(ConsumerOptions.get(api).addMessagePassphrase(Passphrase.fromPassword("p4ssphr4s3")));
 
@@ -274,7 +274,7 @@ public class Encrypt {
         // also test, that decryption still works...
 
         // Decrypt and verify signatures
-        DecryptionStream decryptor = PGPainless.decryptAndOrVerify()
+        DecryptionStream decryptor = api.processMessage()
                 .onInputStream(new ByteArrayInputStream(encryptedMessage.getBytes(StandardCharsets.UTF_8)))
                 .withOptions(ConsumerOptions.get(api)
                         .addDecryptionKey(keyBob, protectorBob)

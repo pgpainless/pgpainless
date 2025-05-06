@@ -83,7 +83,7 @@ public class CleartextSignatureVerificationTest {
 
         InMemoryMultiPassStrategy multiPassStrategy = MultiPassStrategy.keepMessageInMemory();
         options.setMultiPassStrategy(multiPassStrategy);
-        DecryptionStream decryptionStream = PGPainless.decryptAndOrVerify()
+        DecryptionStream decryptionStream = api.processMessage()
                 .onInputStream(new ByteArrayInputStream(MESSAGE_SIGNED))
                 .withOptions(options);
 
@@ -112,7 +112,7 @@ public class CleartextSignatureVerificationTest {
         File file = new File(tempDir, "file");
         MultiPassStrategy multiPassStrategy = MultiPassStrategy.writeMessageToFile(file);
         options.setMultiPassStrategy(multiPassStrategy);
-        DecryptionStream decryptionStream = PGPainless.decryptAndOrVerify()
+        DecryptionStream decryptionStream = api.processMessage()
                 .onInputStream(new ByteArrayInputStream(MESSAGE_SIGNED))
                 .withOptions(options);
 
@@ -152,7 +152,7 @@ public class CleartextSignatureVerificationTest {
                 .addVerificationCert(TestKeys.getEmilCertificate())
                 .addVerificationOfDetachedSignature(signature);
 
-        DecryptionStream decryptionStream = PGPainless.decryptAndOrVerify()
+        DecryptionStream decryptionStream = api.processMessage()
                 .onInputStream(new ByteArrayInputStream(MESSAGE_BODY))
                 .withOptions(options);
 
@@ -183,7 +183,7 @@ public class CleartextSignatureVerificationTest {
         String signed = signedOut.toString();
 
         ByteArrayInputStream signedIn = new ByteArrayInputStream(signed.getBytes(StandardCharsets.UTF_8));
-        DecryptionStream verificationStream = PGPainless.decryptAndOrVerify()
+        DecryptionStream verificationStream = api.processMessage()
                 .onInputStream(signedIn)
                 .withOptions(ConsumerOptions.get(api)
                         .addVerificationCert(TestKeys.getEmilCertificate()));
@@ -217,7 +217,7 @@ public class CleartextSignatureVerificationTest {
         String cleartextSigned = out.toString();
 
         ByteArrayInputStream in = new ByteArrayInputStream(cleartextSigned.getBytes(StandardCharsets.UTF_8));
-        DecryptionStream decryptionStream = PGPainless.decryptAndOrVerify()
+        DecryptionStream decryptionStream = api.processMessage()
                 .onInputStream(in)
                 .withOptions(ConsumerOptions.get()
                         .addVerificationCert(secretKeys.toCertificate()));

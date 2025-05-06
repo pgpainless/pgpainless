@@ -160,7 +160,7 @@ public class FixUserIdDoesNotBreakEncryptionCapabilityTest {
 
         ByteArrayInputStream in = new ByteArrayInputStream(out.toByteArray());
         ByteArrayOutputStream plain = new ByteArrayOutputStream();
-        DecryptionStream decryptionStream = PGPainless.decryptAndOrVerify()
+        DecryptionStream decryptionStream = api.processMessage()
                 .onInputStream(in)
                 .withOptions(ConsumerOptions.get()
                         .addDecryptionKey(edited));

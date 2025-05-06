@@ -49,7 +49,8 @@ public class MultiSigningSubkeyTest {
 
     @BeforeAll
     public static void generateKey() {
-        signingKey = PGPainless.buildKeyRing()
+        PGPainless api = PGPainless.getInstance();
+        signingKey = api.buildKey()
                 .setPrimaryKey(KeySpec.getBuilder(KeyType.EDDSA_LEGACY(EdDSALegacyCurve._Ed25519), KeyFlag.CERTIFY_OTHER, KeyFlag.SIGN_DATA))
                 .addSubkey(KeySpec.getBuilder(KeyType.EDDSA_LEGACY(EdDSALegacyCurve._Ed25519), KeyFlag.SIGN_DATA))
                 .addSubkey(KeySpec.getBuilder(KeyType.RSA(RsaLength._3072), KeyFlag.SIGN_DATA))
@@ -69,7 +70,7 @@ public class MultiSigningSubkeyTest {
     public void detachedSignWithAllSubkeys() throws PGPException, IOException {
         ByteArrayInputStream dataIn = new ByteArrayInputStream("Hello, World!\n".getBytes(StandardCharsets.UTF_8));
         ByteArrayOutputStream out = new ByteArrayOutputStream();
-        EncryptionStream signingStream = PGPainless.encryptAndOrSign()
+        EncryptionStream signingStream = PGPainless.getInstance().generateMessage()
                 .onOutputStream(out)
                 .withOptions(ProducerOptions.sign(SigningOptions.get().addDetachedSignature(protector, signingKey, DocumentSignatureType.BINARY_DOCUMENT)));
         Streams.pipeAll(dataIn, signingStream);
@@ -85,7 +86,7 @@ public class MultiSigningSubkeyTest {
     public void detachedSignWithSingleSubkey() throws PGPException, IOException {
         ByteArrayInputStream dataIn = new ByteArrayInputStream("Hello, World!\n".getBytes(StandardCharsets.UTF_8));
         ByteArrayOutputStream out = new ByteArrayOutputStream();
-        EncryptionStream signingStream = PGPainless.encryptAndOrSign()
+        EncryptionStream signingStream = PGPainless.getInstance().generateMessage()
                 .onOutputStream(out)
                 .withOptions(ProducerOptions.sign(SigningOptions.get().addDetachedSignature(protector, signingKey, signingKey1.getKeyId())));
         Streams.pipeAll(dataIn, signingStream);
@@ -98,16 +99,17 @@ public class MultiSigningSubkeyTest {
 
     @Test
     public void inlineSignWithAllSubkeys() throws PGPException, IOException {
+        PGPainless api = PGPainless.getInstance();
         ByteArrayInputStream dataIn = new ByteArrayInputStream("Hello, World!\n".getBytes(StandardCharsets.UTF_8));
         ByteArrayOutputStream out = new ByteArrayOutputStream();
-        EncryptionStream signingStream = PGPainless.encryptAndOrSign()
+        EncryptionStream signingStream = api.generateMessage()
                 .onOutputStream(out)
                 .withOptions(ProducerOptions.sign(SigningOptions.get().addInlineSignature(protector, signingKey, DocumentSignatureType.BINARY_DOCUMENT)));
         Streams.pipeAll(dataIn, signingStream);
         signingStream.close();
 
         ByteArrayInputStream signedIn = new ByteArrayInputStream(out.toByteArray());
-        DecryptionStream verificationStream = PGPainless.decryptAndOrVerify().onInputStream(signedIn)
+        DecryptionStream verificationStream = api.processMessage().onInputStream(signedIn)
                 .withOptions(ConsumerOptions.get().addVerificationCert(signingCert));
         Streams.drain(verificationStream);
         verificationStream.close();
@@ -122,16 +124,17 @@ public class MultiSigningSubkeyTest {
 
     @Test
     public void inlineSignWithSingleSubkey() throws PGPException, IOException {
+        PGPainless api = PGPainless.getInstance();
         ByteArrayInputStream dataIn = new ByteArrayInputStream("Hello, World!\n".getBytes(StandardCharsets.UTF_8));
         ByteArrayOutputStream out = new ByteArrayOutputStream();
-        EncryptionStream signingStream = PGPainless.encryptAndOrSign()
+        EncryptionStream signingStream = api.generateMessage()
                 .onOutputStream(out)
                 .withOptions(ProducerOptions.sign(SigningOptions.get().addInlineSignature(protector, signingKey, signingKey1.getKeyId())));
         Streams.pipeAll(dataIn, signingStream);
         signingStream.close();
 
         ByteArrayInputStream signedIn = new ByteArrayInputStream(out.toByteArray());
-        DecryptionStream verificationStream = PGPainless.decryptAndOrVerify().onInputStream(signedIn)
+        DecryptionStream verificationStream = api.processMessage().onInputStream(signedIn)
                 .withOptions(ConsumerOptions.get().addVerificationCert(signingCert));
         Streams.drain(verificationStream);
         verificationStream.close();

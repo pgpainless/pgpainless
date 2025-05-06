@@ -52,7 +52,7 @@ public class VerifyWithMissingPublicKeyCallbackTest {
         String msg = "Arguing that you don't care about the right to privacy because you have nothing to hide" +
                 "is no different than saying you don't care about free speech because you have nothing to say.";
         ByteArrayOutputStream signOut = new ByteArrayOutputStream();
-        EncryptionStream signingStream = PGPainless.encryptAndOrSign().onOutputStream(signOut)
+        EncryptionStream signingStream = api.generateMessage().onOutputStream(signOut)
                 .withOptions(ProducerOptions.sign(SigningOptions.get().addInlineSignature(
                         SecretKeyRingProtector.unprotectedKeys(),
                         signingSecKeys.getPGPSecretKeyRing(), DocumentSignatureType.CANONICAL_TEXT_DOCUMENT
@@ -60,7 +60,7 @@ public class VerifyWithMissingPublicKeyCallbackTest {
         Streams.pipeAll(new ByteArrayInputStream(msg.getBytes(StandardCharsets.UTF_8)), signingStream);
         signingStream.close();
 
-        DecryptionStream verificationStream = PGPainless.decryptAndOrVerify()
+        DecryptionStream verificationStream = api.processMessage()
                 .onInputStream(new ByteArrayInputStream(signOut.toByteArray()))
                 .withOptions(ConsumerOptions.get()
                         .addVerificationCert(unrelatedKeys)

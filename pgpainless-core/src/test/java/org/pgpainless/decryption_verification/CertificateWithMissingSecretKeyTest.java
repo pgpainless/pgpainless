@@ -144,7 +144,7 @@ public class CertificateWithMissingSecretKeyTest {
                 .addDecryptionKey(missingDecryptionSecKey);
 
         assertThrows(MissingDecryptionMethodException.class, () ->
-                PGPainless.decryptAndOrVerify()
+                api.processMessage()
                         .onInputStream(cipherIn)
                         .withOptions(consumerOptions)); // <- cannot find decryption key
     }

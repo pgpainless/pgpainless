@@ -131,7 +131,7 @@ public class DecryptHiddenRecipientMessageTest {
         ConsumerOptions options = ConsumerOptions.get()
                 .addDecryptionKey(secretKeys);
 
-        DecryptionStream decryptionStream = PGPainless.decryptAndOrVerify()
+        DecryptionStream decryptionStream = PGPainless.getInstance().processMessage()
                 .onInputStream(messageIn)
                 .withOptions(options);
 

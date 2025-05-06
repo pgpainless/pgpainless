@@ -52,7 +52,7 @@ public class HiddenRecipientEncryptionTest {
         byte[] ciphertext = ciphertextOut.toByteArray();
 
         ByteArrayInputStream ciphertextIn = new ByteArrayInputStream(ciphertext);
-        DecryptionStream decryptionStream = PGPainless.decryptAndOrVerify()
+        DecryptionStream decryptionStream = api.processMessage()
                 .onInputStream(ciphertextIn)
                 .withOptions(ConsumerOptions.get()
                         .addDecryptionKey(secretKeys));

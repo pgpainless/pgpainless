@@ -542,7 +542,7 @@ public class AsciiArmorCRCTests {
 
         OpenPGPKey key = PGPainless.getInstance().readKey().parseKey(ASCII_KEY);
         assertThrows(IOException.class, () -> {
-            DecryptionStream decryptionStream = PGPainless.decryptAndOrVerify()
+            DecryptionStream decryptionStream = PGPainless.getInstance().processMessage()
                     .onInputStream(new ByteArrayInputStream(message.getBytes(StandardCharsets.UTF_8)))
                     .withOptions(ConsumerOptions.get().addDecryptionKey(
                             key, SecretKeyRingProtector.unlockAnyKeyWith(passphrase)

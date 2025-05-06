@@ -392,7 +392,7 @@ public class UnsupportedPacketVersionsTest {
     public void decryptAndCompare(String msg, String plain) throws IOException, PGPException {
         // noinspection CharsetObjectCanBeUsed
         ByteArrayInputStream inputStream = new ByteArrayInputStream(msg.getBytes(Charset.forName("UTF8")));
-        DecryptionStream decryptionStream = PGPainless.decryptAndOrVerify()
+        DecryptionStream decryptionStream = PGPainless.getInstance().processMessage()
                 .onInputStream(inputStream)
                 .withOptions(ConsumerOptions.get()
                         .addDecryptionKey(key)

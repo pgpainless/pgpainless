@@ -96,7 +96,7 @@ public class BcHashContextSignerTest {
         OpenPGPSignature.OpenPGPDocumentSignature signature = signMessage(messageBytes, hashAlgorithm, secretKeys);
         assertEquals(hashAlgorithm.getAlgorithmId(), signature.getSignature().getHashAlgorithm());
 
-        DecryptionStream decryptionStream = PGPainless.decryptAndOrVerify()
+        DecryptionStream decryptionStream = PGPainless.getInstance().processMessage()
                 .onInputStream(messageIn)
                 .withOptions(ConsumerOptions.get()
                         .addVerificationCert(certificate)

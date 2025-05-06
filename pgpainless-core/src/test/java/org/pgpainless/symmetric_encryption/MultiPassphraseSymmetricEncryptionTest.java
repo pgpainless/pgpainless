@@ -31,7 +31,7 @@ public class MultiPassphraseSymmetricEncryptionTest {
                 "the decryptor finds the session key encrypted for the right passphrase.";
         ByteArrayInputStream plaintextIn = new ByteArrayInputStream(message.getBytes(StandardCharsets.UTF_8));
         ByteArrayOutputStream ciphertextOut = new ByteArrayOutputStream();
-        EncryptionStream encryptor = PGPainless.encryptAndOrSign()
+        EncryptionStream encryptor = PGPainless.getInstance().generateMessage()
                 .onOutputStream(ciphertextOut)
                 .withOptions(ProducerOptions.encrypt(
                         EncryptionOptions.encryptCommunications()
@@ -46,7 +46,7 @@ public class MultiPassphraseSymmetricEncryptionTest {
 
         // decrypting the p1 package with p2 first will not work. Test if it is handled correctly.
         for (Passphrase passphrase : new Passphrase[] {Passphrase.fromPassword("p2"), Passphrase.fromPassword("p1")}) {
-            DecryptionStream decryptor = PGPainless.decryptAndOrVerify()
+            DecryptionStream decryptor = PGPainless.getInstance().processMessage()
                     .onInputStream(new ByteArrayInputStream(ciphertext))
                     .withOptions(ConsumerOptions.get()
                     .addMessagePassphrase(passphrase));

@@ -135,7 +135,7 @@ public class PostponeDecryptionUsingKeyWithMissingPassphraseTest {
         });
         SecretKeyRingProtector protector2 = SecretKeyRingProtector.unlockEachKeyWith(p2, k2);
 
-        DecryptionStream decryptionStream = PGPainless.decryptAndOrVerify()
+        DecryptionStream decryptionStream = PGPainless.getInstance().processMessage()
                 .onInputStream(new ByteArrayInputStream(ENCRYPTED_FOR_K1_K2.getBytes(StandardCharsets.UTF_8)))
                 .withOptions(ConsumerOptions.get()
                         .addDecryptionKey(k1, protector1)
@@ -164,7 +164,7 @@ public class PostponeDecryptionUsingKeyWithMissingPassphraseTest {
             }
         });
 
-        DecryptionStream decryptionStream = PGPainless.decryptAndOrVerify()
+        DecryptionStream decryptionStream = PGPainless.getInstance().processMessage()
                 .onInputStream(new ByteArrayInputStream(ENCRYPTED_FOR_K1_K2.getBytes(StandardCharsets.UTF_8)))
                 .withOptions(ConsumerOptions.get()
                         .addDecryptionKey(k1, protector1)
@@ -193,7 +193,7 @@ public class PostponeDecryptionUsingKeyWithMissingPassphraseTest {
         };
         SecretKeyRingProtector protector = new CachingSecretKeyRingProtector(provider);
 
-        DecryptionStream decryptionStream = PGPainless.decryptAndOrVerify()
+        DecryptionStream decryptionStream = PGPainless.getInstance().processMessage()
                 .onInputStream(new ByteArrayInputStream(ENCRYPTED_FOR_K2_PASS_K1.getBytes(StandardCharsets.UTF_8)))
                 .withOptions(ConsumerOptions.get()
                         .addMessagePassphrase(PASSPHRASE)
