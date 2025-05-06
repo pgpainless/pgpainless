@@ -139,7 +139,6 @@ public class OpenPgpInputStream extends BufferedInputStream {
     private void nonExhaustiveParseAndCheckPlausibility(BCPGInputStream packetIn)
             throws IOException {
         Packet packet = packetIn.readPacket();
-        System.out.println(packet.getPacketTag());
         switch (packet.getPacketTag()) {
             case PUBLIC_KEY_ENC_SESSION:
                 PublicKeyEncSessionPacket pkesk = (PublicKeyEncSessionPacket) packet;
