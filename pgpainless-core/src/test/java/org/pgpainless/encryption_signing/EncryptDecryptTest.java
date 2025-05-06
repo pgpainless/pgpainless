@@ -15,18 +15,25 @@ import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.nio.charset.Charset;
+import java.nio.charset.StandardCharsets;
 import java.util.Set;
 
 import org.bouncycastle.bcpg.ArmoredOutputStream;
 import org.bouncycastle.openpgp.PGPException;
 import org.bouncycastle.openpgp.PGPSignature;
+import org.bouncycastle.openpgp.api.MessageEncryptionMechanism;
 import org.bouncycastle.openpgp.api.OpenPGPCertificate;
 import org.bouncycastle.openpgp.api.OpenPGPKey;
 import org.bouncycastle.util.io.Streams;
 import org.junit.jupiter.api.TestTemplate;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.pgpainless.PGPainless;
+import org.pgpainless.algorithm.AEADAlgorithm;
+import org.pgpainless.algorithm.AlgorithmSuite;
 import org.pgpainless.algorithm.DocumentSignatureType;
+import org.pgpainless.algorithm.Feature;
+import org.pgpainless.algorithm.KeyFlag;
+import org.pgpainless.algorithm.OpenPGPKeyVersion;
 import org.pgpainless.algorithm.SymmetricKeyAlgorithm;
 import org.pgpainless.decryption_verification.ConsumerOptions;
 import org.pgpainless.decryption_verification.DecryptionStream;
@@ -34,10 +41,15 @@ import org.pgpainless.decryption_verification.MessageMetadata;
 import org.pgpainless.exception.KeyException;
 import org.pgpainless.key.SubkeyIdentifier;
 import org.pgpainless.key.TestKeys;
+import org.pgpainless.key.generation.KeySpec;
+import org.pgpainless.key.generation.type.KeyType;
+import org.pgpainless.key.generation.type.eddsa_legacy.EdDSALegacyCurve;
 import org.pgpainless.key.generation.type.rsa.RsaLength;
+import org.pgpainless.key.generation.type.xdh_legacy.XDHLegacySpec;
 import org.pgpainless.key.protection.SecretKeyRingProtector;
 import org.pgpainless.key.protection.UnprotectedKeysProtector;
 import org.pgpainless.util.ArmoredOutputStreamFactory;
+import org.pgpainless.util.Passphrase;
 import org.pgpainless.util.TestAllImplementations;
 
 public class EncryptDecryptTest {
@@ -305,6 +317,85 @@ public class EncryptDecryptTest {
         assertThrows(KeyException.UnacceptableEncryptionKeyException.class, () ->
                 EncryptionOptions.encryptCommunications(api)
                         .addRecipient(publicKeys));
+    }
+
+    @TestTemplate
+    @ExtendWith(TestAllImplementations.class)
+    public void testAsymmetricEncryptionWithMechanismOverride() throws PGPException, IOException {
+        PGPainless api = PGPainless.getInstance();
+
+        OpenPGPKey keyWithoutSEIPD2Feature = api.buildKey(OpenPGPKeyVersion.v4)
+                .withPreferences(AlgorithmSuite.emptyBuilder()
+                        .overrideFeatures(Feature.MODIFICATION_DETECTION)
+                        .overrideSymmetricKeyAlgorithms(SymmetricKeyAlgorithm.AES_128)
+                        .build())
+                .setPrimaryKey(KeySpec.getBuilder(KeyType.EDDSA_LEGACY(EdDSALegacyCurve._Ed25519), KeyFlag.SIGN_DATA, KeyFlag.CERTIFY_OTHER))
+                .addSubkey(KeySpec.getBuilder(KeyType.XDH_LEGACY(XDHLegacySpec._X25519), KeyFlag.ENCRYPT_STORAGE, KeyFlag.ENCRYPT_COMMS))
+                .build();
+
+        ByteArrayOutputStream bOut = new ByteArrayOutputStream();
+        EncryptionStream eOut = api.generateMessage()
+                .onOutputStream(bOut)
+                .withOptions(ProducerOptions.encrypt(
+                        EncryptionOptions.encryptCommunications()
+                                .overrideEncryptionMechanism(MessageEncryptionMechanism.aead(SymmetricKeyAlgorithm.AES_192.getAlgorithmId(), AEADAlgorithm.OCB.getAlgorithmId()))
+                                .addRecipient(keyWithoutSEIPD2Feature.toCertificate())));
+
+        eOut.write(testMessage.getBytes(StandardCharsets.UTF_8));
+        eOut.close();
+        EncryptionResult result = eOut.getResult();
+        assertEquals(MessageEncryptionMechanism.aead(
+                        SymmetricKeyAlgorithm.AES_192.getAlgorithmId(), AEADAlgorithm.OCB.getAlgorithmId()),
+                result.getEncryptionMechanism());
+
+        ByteArrayInputStream bIn = new ByteArrayInputStream(bOut.toByteArray());
+        DecryptionStream decIn = PGPainless.decryptAndOrVerify()
+                .onInputStream(bIn)
+                .withOptions(ConsumerOptions.get()
+                        .addDecryptionKey(keyWithoutSEIPD2Feature));
+        Streams.drain(decIn);
+        decIn.close();
+
+        MessageMetadata metadata = decIn.getMetadata();
+        assertEquals(MessageEncryptionMechanism.aead(SymmetricKeyAlgorithm.AES_192.getAlgorithmId(), AEADAlgorithm.OCB.getAlgorithmId()),
+                metadata.getEncryptionMechanism());
+    }
+
+    @TestTemplate
+    @ExtendWith(TestAllImplementations.class)
+    public void testSymmetricEncryptionWithMechanismOverride() throws PGPException, IOException {
+        PGPainless api = PGPainless.getInstance();
+
+        ByteArrayOutputStream bOut = new ByteArrayOutputStream();
+        EncryptionStream eOut = api.generateMessage().onOutputStream(bOut)
+                .withOptions(
+                        ProducerOptions.encrypt(EncryptionOptions.encryptCommunications()
+                                .overrideEncryptionMechanism(
+                                        MessageEncryptionMechanism.aead(
+                                                SymmetricKeyAlgorithm.AES_192.getAlgorithmId(),
+                                                AEADAlgorithm.OCB.getAlgorithmId()
+                                        ))
+                                .addMessagePassphrase(Passphrase.fromPassword("sw0rdf1sh"))
+                        ));
+
+        eOut.write(testMessage.getBytes(StandardCharsets.UTF_8));
+        eOut.close();
+        EncryptionResult result = eOut.getResult();
+
+        assertEquals(MessageEncryptionMechanism.aead(
+                SymmetricKeyAlgorithm.AES_192.getAlgorithmId(), AEADAlgorithm.OCB.getAlgorithmId()),
+                result.getEncryptionMechanism());
+
+        ByteArrayInputStream bIn = new ByteArrayInputStream(bOut.toByteArray());
+        DecryptionStream decIn = PGPainless.decryptAndOrVerify()
+                .onInputStream(bIn)
+                .withOptions(ConsumerOptions.get()
+                        .addMessagePassphrase(Passphrase.fromPassword("sw0rdf1sh")));
+        Streams.drain(decIn);
+        decIn.close();
+        MessageMetadata metadata = decIn.getMetadata();
+        assertEquals(MessageEncryptionMechanism.aead(SymmetricKeyAlgorithm.AES_192.getAlgorithmId(), AEADAlgorithm.OCB.getAlgorithmId()),
+                metadata.getEncryptionMechanism());
     }
 
 }
