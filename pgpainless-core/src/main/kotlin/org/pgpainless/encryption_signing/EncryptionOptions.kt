@@ -435,6 +435,10 @@ class EncryptionOptions(private val purpose: EncryptionPurpose, private val api:
     }
 
     internal fun negotiateEncryptionMechanism(): MessageEncryptionMechanism {
+        if (encryptionMechanismOverride != null) {
+            return encryptionMechanismOverride!!
+        }
+
         val features = keysAndAccessors.values.map { it.features }.toList()
 
         if (features.all { it.contains(Feature.MODIFICATION_DETECTION_2) }) {
