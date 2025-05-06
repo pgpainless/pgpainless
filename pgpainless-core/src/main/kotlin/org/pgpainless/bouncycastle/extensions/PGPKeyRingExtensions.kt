@@ -10,6 +10,7 @@ import org.bouncycastle.openpgp.PGPOnePassSignature
 import org.bouncycastle.openpgp.PGPPublicKey
 import org.bouncycastle.openpgp.PGPSignature
 import org.bouncycastle.openpgp.api.OpenPGPCertificate
+import org.bouncycastle.openpgp.api.OpenPGPCertificate.OpenPGPComponentKey
 import org.bouncycastle.openpgp.api.OpenPGPImplementation
 import org.pgpainless.PGPainless
 import org.pgpainless.key.OpenPgpFingerprint
@@ -19,6 +20,9 @@ import org.pgpainless.key.SubkeyIdentifier
 fun PGPKeyRing.matches(subkeyIdentifier: SubkeyIdentifier): Boolean =
     this.publicKey.keyIdentifier.matches(subkeyIdentifier.certificateIdentifier) &&
         this.getPublicKey(subkeyIdentifier.componentKeyIdentifier) != null
+
+fun PGPKeyRing.matches(componentKey: OpenPGPComponentKey): Boolean =
+    this.matches(SubkeyIdentifier(componentKey))
 
 /**
  * Return true, if the [PGPKeyRing] contains a public key with the given [keyIdentifier].
