@@ -76,7 +76,7 @@ public class CachingBcPublicKeyDataDecryptorFactoryTest {
                 privateKey, decryptionKey);
 
         ByteArrayInputStream ciphertextIn = new ByteArrayInputStream(MSG.getBytes());
-        DecryptionStream decryptionStream = PGPainless.decryptAndOrVerify()
+        DecryptionStream decryptionStream = PGPainless.getInstance().processMessage()
                 .onInputStream(ciphertextIn)
                 .withOptions(ConsumerOptions.get()
                         .addCustomDecryptorFactory(cachingFactory));
@@ -87,7 +87,7 @@ public class CachingBcPublicKeyDataDecryptorFactoryTest {
         assertEquals("Hello, World!\n", out.toString());
 
         ciphertextIn = new ByteArrayInputStream(MSG.getBytes());
-        decryptionStream = PGPainless.decryptAndOrVerify()
+        decryptionStream = PGPainless.getInstance().processMessage()
                 .onInputStream(ciphertextIn)
                 .withOptions(ConsumerOptions.get()
                         .addCustomDecryptorFactory(cachingFactory));

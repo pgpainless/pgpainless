@@ -73,7 +73,7 @@ public class FileInformationTest {
         ByteArrayInputStream cryptIn = new ByteArrayInputStream(dataOut.toByteArray());
         ByteArrayOutputStream plainOut = new ByteArrayOutputStream();
 
-        DecryptionStream decryptionStream = PGPainless.decryptAndOrVerify()
+        DecryptionStream decryptionStream = api.processMessage()
                 .onInputStream(cryptIn)
                 .withOptions(ConsumerOptions.get()
                         .addDecryptionKey(secretKey));
@@ -112,7 +112,7 @@ public class FileInformationTest {
         ByteArrayInputStream cryptIn = new ByteArrayInputStream(dataOut.toByteArray());
         ByteArrayOutputStream plainOut = new ByteArrayOutputStream();
 
-        DecryptionStream decryptionStream = PGPainless.decryptAndOrVerify()
+        DecryptionStream decryptionStream = api.processMessage()
                 .onInputStream(cryptIn)
                 .withOptions(ConsumerOptions.get()
                         .addDecryptionKey(secretKey));
@@ -156,7 +156,7 @@ public class FileInformationTest {
         ByteArrayInputStream cryptIn = new ByteArrayInputStream(dataOut.toByteArray());
         ByteArrayOutputStream plainOut = new ByteArrayOutputStream();
 
-        DecryptionStream decryptionStream = PGPainless.decryptAndOrVerify()
+        DecryptionStream decryptionStream = api.processMessage()
                 .onInputStream(cryptIn)
                 .withOptions(ConsumerOptions.get()
                         .addDecryptionKey(secretKey));

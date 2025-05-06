@@ -185,7 +185,7 @@ public class WeakRSAKeyTest {
 
         ByteArrayInputStream ciphertextIn = new ByteArrayInputStream(encryptOut.toByteArray());
         ByteArrayOutputStream plaintextOut = new ByteArrayOutputStream();
-        DecryptionStream decryptionStream = PGPainless.decryptAndOrVerify()
+        DecryptionStream decryptionStream = api.processMessage()
                 .onInputStream(ciphertextIn)
                 .withOptions(ConsumerOptions.get()
                         .addDecryptionKey(secretKeys));

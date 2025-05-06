@@ -54,7 +54,7 @@ public class VerifyDetachedSignatureTest {
                 "-----END PGP PUBLIC KEY BLOCK-----\n";
 
 
-        DecryptionStream verifier = PGPainless.decryptAndOrVerify()
+        DecryptionStream verifier = PGPainless.getInstance().processMessage()
                 .onInputStream(new ByteArrayInputStream(signedContent.getBytes(StandardCharsets.UTF_8)))
                 .withOptions(
                         ConsumerOptions.get()
@@ -129,7 +129,7 @@ public class VerifyDetachedSignatureTest {
                 "=pXF6\n" +
                 "-----END PGP PUBLIC KEY BLOCK-----\n";
 
-        DecryptionStream verifier = PGPainless.decryptAndOrVerify()
+        DecryptionStream verifier = PGPainless.getInstance().processMessage()
                 .onInputStream(new ByteArrayInputStream(signedContent.getBytes(StandardCharsets.UTF_8)))
                 .withOptions(
                         ConsumerOptions.get()

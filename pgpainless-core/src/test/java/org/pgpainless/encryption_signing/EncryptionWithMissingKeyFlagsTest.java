@@ -164,7 +164,7 @@ public class EncryptionWithMissingKeyFlagsTest {
 
         // Prepare encryption
         ByteArrayOutputStream out = new ByteArrayOutputStream();
-        EncryptionStream encOut = PGPainless.encryptAndOrSign()
+        EncryptionStream encOut = PGPainless.getInstance().generateMessage()
                 .onOutputStream(out)
                 .withOptions(ProducerOptions.encrypt(EncryptionOptions.get()
                         .setEvaluationDate(evaluationDate)
@@ -177,7 +177,7 @@ public class EncryptionWithMissingKeyFlagsTest {
 
         // Prepare decryption
         ByteArrayInputStream in = new ByteArrayInputStream(out.toByteArray());
-        DecryptionStream decryptionStream = PGPainless.decryptAndOrVerify()
+        DecryptionStream decryptionStream = PGPainless.getInstance().processMessage()
                 .onInputStream(in)
                 .withOptions(ConsumerOptions.get()
                         .setAllowDecryptionWithMissingKeyFlags()

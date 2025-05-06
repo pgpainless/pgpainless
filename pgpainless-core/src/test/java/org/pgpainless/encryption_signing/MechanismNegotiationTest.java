@@ -128,7 +128,7 @@ public class MechanismNegotiationTest {
         eOut.close();
 
         ByteArrayInputStream bIn = new ByteArrayInputStream(bOut.toByteArray());
-        DecryptionStream dIn = PGPainless.decryptAndOrVerify()
+        DecryptionStream dIn = api.processMessage()
                 .onInputStream(bIn)
                 .withOptions(ConsumerOptions.get().addDecryptionKey(keyList.get(0)));
 

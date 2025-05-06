@@ -159,7 +159,7 @@ public class DecryptOrVerify {
         ByteArrayInputStream ciphertextIn = new ByteArrayInputStream(ENCRYPTED.getBytes(StandardCharsets.UTF_8));
 
         // The decryption stream is an input stream from which we read the decrypted data
-        DecryptionStream decryptionStream = PGPainless.decryptAndOrVerify()
+        DecryptionStream decryptionStream = PGPainless.getInstance().processMessage()
                 .onInputStream(ciphertextIn)
                 .withOptions(consumerOptions);
 
@@ -189,7 +189,7 @@ public class DecryptOrVerify {
         ByteArrayOutputStream plaintextOut = new ByteArrayOutputStream();
         ByteArrayInputStream ciphertextIn = new ByteArrayInputStream(ENCRYPTED_AND_SIGNED.getBytes(StandardCharsets.UTF_8));
 
-        DecryptionStream decryptionStream = PGPainless.decryptAndOrVerify()
+        DecryptionStream decryptionStream = PGPainless.getInstance().processMessage()
                 .onInputStream(ciphertextIn)
                 .withOptions(consumerOptions);
 
@@ -219,7 +219,7 @@ public class DecryptOrVerify {
             ByteArrayOutputStream out = new ByteArrayOutputStream();
             ByteArrayInputStream in = new ByteArrayInputStream(signed.getBytes(StandardCharsets.UTF_8));
 
-            DecryptionStream verificationStream = PGPainless.decryptAndOrVerify()
+            DecryptionStream verificationStream = PGPainless.getInstance().processMessage()
                     .onInputStream(in)
                     .withOptions(options);
 
@@ -270,7 +270,7 @@ public class DecryptOrVerify {
             ByteArrayInputStream signedIn = new ByteArrayInputStream(signedMessage);
 
             // and pass it to the decryption stream
-            DecryptionStream verificationStream = PGPainless.decryptAndOrVerify()
+            DecryptionStream verificationStream = api.processMessage()
                     .onInputStream(signedIn)
                     .withOptions(ConsumerOptions.get(api).addVerificationCert(certificate));
 

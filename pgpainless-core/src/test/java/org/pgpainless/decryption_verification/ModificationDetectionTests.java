@@ -215,7 +215,7 @@ public class ModificationDetectionTests {
         PGPSecretKeyRingCollection secretKeyRings = getDecryptionKey();
 
         InputStream in = new ByteArrayInputStream(MESSAGE_MISSING_MDC.getBytes(StandardCharsets.UTF_8));
-        DecryptionStream decryptionStream = PGPainless.decryptAndOrVerify()
+        DecryptionStream decryptionStream = PGPainless.getInstance().processMessage()
                 .onInputStream(in)
                 .withOptions(ConsumerOptions.get()
                         .addDecryptionKeys(secretKeyRings, SecretKeyRingProtector.unprotectedKeys())
@@ -232,7 +232,7 @@ public class ModificationDetectionTests {
     @ExtendWith(TestAllImplementations.class)
     public void testTamperedCiphertextThrows() throws IOException, PGPException {
         ByteArrayInputStream in = new ByteArrayInputStream(MESSAGE_TAMPERED_CIPHERTEXT.getBytes(StandardCharsets.UTF_8));
-        DecryptionStream decryptionStream = PGPainless.decryptAndOrVerify()
+        DecryptionStream decryptionStream = PGPainless.getInstance().processMessage()
                 .onInputStream(in)
                 .withOptions(ConsumerOptions.get()
                         .addDecryptionKeys(getDecryptionKey(), SecretKeyRingProtector.unprotectedKeys())
@@ -249,7 +249,7 @@ public class ModificationDetectionTests {
     @ExtendWith(TestAllImplementations.class)
     public void testIgnoreTamperedCiphertext() throws IOException, PGPException {
         ByteArrayInputStream in = new ByteArrayInputStream(MESSAGE_TAMPERED_CIPHERTEXT.getBytes(StandardCharsets.UTF_8));
-        DecryptionStream decryptionStream = PGPainless.decryptAndOrVerify()
+        DecryptionStream decryptionStream = PGPainless.getInstance().processMessage()
                 .onInputStream(in)
                 .withOptions(ConsumerOptions.get()
                         .addDecryptionKeys(getDecryptionKey(), SecretKeyRingProtector.unprotectedKeys())
@@ -265,7 +265,7 @@ public class ModificationDetectionTests {
     @ExtendWith(TestAllImplementations.class)
     public void testTamperedMDCThrowsByDefault() throws IOException, PGPException {
         ByteArrayInputStream in = new ByteArrayInputStream(MESSAGE_TAMPERED_MDC.getBytes(StandardCharsets.UTF_8));
-        DecryptionStream decryptionStream = PGPainless.decryptAndOrVerify()
+        DecryptionStream decryptionStream = PGPainless.getInstance().processMessage()
                 .onInputStream(in)
                 .withOptions(ConsumerOptions.get()
                         .addDecryptionKeys(getDecryptionKey(), SecretKeyRingProtector.unprotectedKeys())
@@ -282,7 +282,7 @@ public class ModificationDetectionTests {
     @ExtendWith(TestAllImplementations.class)
     public void testIgnoreTamperedMDC() throws IOException, PGPException {
         ByteArrayInputStream in = new ByteArrayInputStream(MESSAGE_TAMPERED_MDC.getBytes(StandardCharsets.UTF_8));
-        DecryptionStream decryptionStream = PGPainless.decryptAndOrVerify()
+        DecryptionStream decryptionStream = PGPainless.getInstance().processMessage()
                 .onInputStream(in)
                 .withOptions(ConsumerOptions.get()
                         .addDecryptionKeys(getDecryptionKey(), SecretKeyRingProtector.unprotectedKeys())
@@ -297,7 +297,7 @@ public class ModificationDetectionTests {
     @ExtendWith(TestAllImplementations.class)
     public void testTruncatedMDCThrows() throws IOException, PGPException {
         ByteArrayInputStream in = new ByteArrayInputStream(MESSAGE_TRUNCATED_MDC.getBytes(StandardCharsets.UTF_8));
-        DecryptionStream decryptionStream = PGPainless.decryptAndOrVerify()
+        DecryptionStream decryptionStream = PGPainless.getInstance().processMessage()
                 .onInputStream(in)
                 .withOptions(ConsumerOptions.get()
                         .addDecryptionKeys(getDecryptionKey(), SecretKeyRingProtector.unprotectedKeys())
@@ -311,7 +311,7 @@ public class ModificationDetectionTests {
     @ExtendWith(TestAllImplementations.class)
     public void testMDCWithBadCTBThrows() throws IOException, PGPException {
         ByteArrayInputStream in = new ByteArrayInputStream(MESSAGE_MDC_WITH_BAD_CTB.getBytes(StandardCharsets.UTF_8));
-        DecryptionStream decryptionStream = PGPainless.decryptAndOrVerify()
+        DecryptionStream decryptionStream = PGPainless.getInstance().processMessage()
                 .onInputStream(in)
                 .withOptions(ConsumerOptions.get()
                         .addDecryptionKeys(getDecryptionKey(), SecretKeyRingProtector.unprotectedKeys())
@@ -328,7 +328,7 @@ public class ModificationDetectionTests {
     @ExtendWith(TestAllImplementations.class)
     public void testIgnoreMDCWithBadCTB() throws IOException, PGPException {
         ByteArrayInputStream in = new ByteArrayInputStream(MESSAGE_MDC_WITH_BAD_CTB.getBytes(StandardCharsets.UTF_8));
-        DecryptionStream decryptionStream = PGPainless.decryptAndOrVerify()
+        DecryptionStream decryptionStream = PGPainless.getInstance().processMessage()
                 .onInputStream(in)
                 .withOptions(ConsumerOptions.get()
                         .addDecryptionKeys(getDecryptionKey(), SecretKeyRingProtector.unprotectedKeys())
@@ -344,7 +344,7 @@ public class ModificationDetectionTests {
     @ExtendWith(TestAllImplementations.class)
     public void testMDCWithBadLengthThrows() throws IOException, PGPException {
         ByteArrayInputStream in = new ByteArrayInputStream(MESSAGE_MDC_WITH_BAD_LENGTH.getBytes(StandardCharsets.UTF_8));
-        DecryptionStream decryptionStream = PGPainless.decryptAndOrVerify()
+        DecryptionStream decryptionStream = PGPainless.getInstance().processMessage()
                 .onInputStream(in)
                 .withOptions(ConsumerOptions.get()
                         .addDecryptionKeys(getDecryptionKey(), SecretKeyRingProtector.unprotectedKeys())
@@ -361,7 +361,7 @@ public class ModificationDetectionTests {
     @ExtendWith(TestAllImplementations.class)
     public void testIgnoreMDCWithBadLength() throws IOException, PGPException {
         ByteArrayInputStream in = new ByteArrayInputStream(MESSAGE_MDC_WITH_BAD_LENGTH.getBytes(StandardCharsets.UTF_8));
-        DecryptionStream decryptionStream = PGPainless.decryptAndOrVerify()
+        DecryptionStream decryptionStream = PGPainless.getInstance().processMessage()
                 .onInputStream(in)
                 .withOptions(ConsumerOptions.get()
                         .addDecryptionKeys(getDecryptionKey(), SecretKeyRingProtector.unprotectedKeys())
@@ -532,13 +532,13 @@ public class ModificationDetectionTests {
                 "-----END PGP MESSAGE-----\n" +
                 "\n";
 
-        assertThrows(MessageNotIntegrityProtectedException.class, () -> PGPainless.decryptAndOrVerify()
+        assertThrows(MessageNotIntegrityProtectedException.class, () -> PGPainless.getInstance().processMessage()
                 .onInputStream(new ByteArrayInputStream(ciphertext.getBytes(StandardCharsets.UTF_8)))
                 .withOptions(ConsumerOptions.get().addDecryptionKey(secretKeyRing,
                         SecretKeyRingProtector.unlockAnyKeyWith(passphrase)))
         );
 
-        DecryptionStream decryptionStream = PGPainless.decryptAndOrVerify()
+        DecryptionStream decryptionStream = PGPainless.getInstance().processMessage()
                 .onInputStream(new ByteArrayInputStream(ciphertext.getBytes(StandardCharsets.UTF_8)))
                 .withOptions(ConsumerOptions.get().addDecryptionKey(secretKeyRing,
                         SecretKeyRingProtector.unlockAnyKeyWith(passphrase))

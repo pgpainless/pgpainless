@@ -269,7 +269,7 @@ public class KeyRevocationTest {
 
     private void verify(PGPSignature signature, InputStream dataIn, OpenPGPCertificate certificate, PGPainless api)
             throws PGPException, IOException {
-        DecryptionStream decryptionStream = PGPainless.decryptAndOrVerify()
+        DecryptionStream decryptionStream = api.processMessage()
                 .onInputStream(dataIn)
                 .withOptions(ConsumerOptions.get(api)
                         .addVerificationOfDetachedSignature(signature)

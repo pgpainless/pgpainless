@@ -32,7 +32,7 @@ class InlineVerifyImpl(private val api: PGPainless) : InlineVerify {
             override fun writeTo(outputStream: OutputStream): List<Verification> {
                 try {
                     val verificationStream =
-                        PGPainless.decryptAndOrVerify().onInputStream(data).withOptions(options)
+                        api.processMessage().onInputStream(data).withOptions(options)
 
                     Streams.pipeAll(verificationStream, outputStream)
                     verificationStream.close()

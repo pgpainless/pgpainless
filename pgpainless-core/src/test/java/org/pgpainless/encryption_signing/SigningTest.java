@@ -82,7 +82,7 @@ public class SigningTest {
         OpenPGPKey romeoKey = TestKeys.getRomeoKey();
         OpenPGPKey julietKey = TestKeys.getJulietKey();
 
-        DecryptionStream decryptionStream = PGPainless.decryptAndOrVerify()
+        DecryptionStream decryptionStream = api.processMessage()
                 .onInputStream(cryptIn)
                 .withOptions(ConsumerOptions.get(api)
                         .addDecryptionKey(romeoKey, SecretKeyRingProtector.unprotectedKeys())

@@ -144,7 +144,7 @@ public class RecursionDepthTest {
 
 
         assertThrows(MalformedOpenPgpMessageException.class, () -> {
-            DecryptionStream decryptionStream = PGPainless.decryptAndOrVerify()
+            DecryptionStream decryptionStream = PGPainless.getInstance().processMessage()
                     .onInputStream(new ByteArrayInputStream(msg.getBytes(StandardCharsets.UTF_8)))
                     .withOptions(ConsumerOptions.get().addDecryptionKey(secretKey));
 

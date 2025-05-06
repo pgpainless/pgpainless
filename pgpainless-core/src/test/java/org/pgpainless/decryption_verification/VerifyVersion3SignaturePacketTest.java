@@ -39,7 +39,7 @@ class VerifyVersion3SignaturePacketTest {
                 .addVerificationCert(TestKeys.getEmilPublicKeyRing())
                 .addVerificationOfDetachedSignatures(new ByteArrayInputStream(version3Signature.getEncoded()));
 
-        DecryptionStream verifier = PGPainless.decryptAndOrVerify()
+        DecryptionStream verifier = PGPainless.getInstance().processMessage()
                 .onInputStream(new ByteArrayInputStream(DATA))
                 .withOptions(options);
 
