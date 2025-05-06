@@ -78,7 +78,7 @@ public class GenerateKeyWithoutUserIdTest {
 
         ByteArrayInputStream ciphertextIn = new ByteArrayInputStream(ciphertextOut.toByteArray());
         ByteArrayOutputStream plaintextOut = new ByteArrayOutputStream();
-        DecryptionStream decryptionStream = PGPainless.decryptAndOrVerify()
+        DecryptionStream decryptionStream = api.processMessage()
                 .onInputStream(ciphertextIn)
                 .withOptions(ConsumerOptions.get()
                         .addDecryptionKey(secretKey)

@@ -1305,7 +1305,7 @@ public class CertificateValidatorTest {
         PGPainless api = PGPainless.getInstance();
         OpenPGPCertificate certificate = api.toCertificate(cert);
 
-        DecryptionStream decryptionStream = PGPainless.decryptAndOrVerify()
+        DecryptionStream decryptionStream = api.processMessage()
                 .onInputStream(dataIn)
                 .withOptions(ConsumerOptions.get(api)
                         .addVerificationOfDetachedSignature(signature)
@@ -1385,11 +1385,12 @@ public class CertificateValidatorTest {
                 "=NXei\n" +
                 "-----END PGP PUBLIC KEY BLOCK-----\n";
         String DATA = "Hello World :)";
+        PGPainless api = PGPainless.getInstance();
 
-        DecryptionStream decryptionStream = PGPainless.decryptAndOrVerify()
+        DecryptionStream decryptionStream = api.processMessage()
                 .onInputStream(new ByteArrayInputStream(DATA.getBytes(StandardCharsets.UTF_8)))
                 .withOptions(ConsumerOptions.get()
-                        .addVerificationCert(PGPainless.readKeyRing().publicKeyRing(CERT))
+                        .addVerificationCert(api.readKey().parseCertificate(CERT))
                         .addVerificationOfDetachedSignatures(new ByteArrayInputStream(SIG.getBytes(StandardCharsets.UTF_8))));
 
         Streams.drain(decryptionStream);

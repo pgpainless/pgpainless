@@ -56,7 +56,7 @@ public class DecryptAndVerifyMessageTest {
                 .addDecryptionKey(juliet)
                 .addVerificationCert(KeyRingUtils.publicKeyRingFrom(juliet));
 
-        DecryptionStream decryptor = PGPainless.decryptAndOrVerify()
+        DecryptionStream decryptor = PGPainless.getInstance().processMessage()
                 .onInputStream(new ByteArrayInputStream(encryptedMessage.getBytes()))
                 .withOptions(options);
 
@@ -91,7 +91,7 @@ public class DecryptAndVerifyMessageTest {
                 .addDecryptionKey(juliet)
                 .addVerificationCert(KeyRingUtils.publicKeyRingFrom(juliet));
 
-        try (DecryptionStream decryptor = PGPainless.decryptAndOrVerify()
+        try (DecryptionStream decryptor = PGPainless.getInstance().processMessage()
                 .onInputStream(new ByteArrayInputStream(encryptedMessage.getBytes()))
                 .withOptions(options);
              ByteArrayOutputStream toPlain = new ByteArrayOutputStream()) {
@@ -109,7 +109,7 @@ public class DecryptAndVerifyMessageTest {
                 .addDecryptionKey(juliet)
                 .addVerificationCert(KeyRingUtils.publicKeyRingFrom(juliet));
 
-        DecryptionStream decryptor = PGPainless.decryptAndOrVerify()
+        DecryptionStream decryptor = PGPainless.getInstance().processMessage()
                 .onInputStream(new ByteArrayInputStream(encryptedMessage.getBytes()))
                 .withOptions(options);
 
@@ -150,7 +150,7 @@ public class DecryptAndVerifyMessageTest {
                 "-----END PGP MESSAGE-----";
         ByteArrayInputStream ciphertextIn = new ByteArrayInputStream(ciphertext.getBytes());
         assertThrows(MissingDecryptionMethodException.class,
-                () -> PGPainless.decryptAndOrVerify()
+                () -> PGPainless.getInstance().processMessage()
                         .onInputStream(ciphertextIn)
                         .withOptions(ConsumerOptions.get()
                                 .addMessagePassphrase(Passphrase.fromPassword("sw0rdf1sh"))));

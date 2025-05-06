@@ -297,7 +297,7 @@ public class CanonicalizedDataEncryptionTest {
         String encrypted = encryptAndSign(before, DocumentSignatureType.BINARY_DOCUMENT, StreamEncoding.TEXT, true);
 
         ByteArrayInputStream in = new ByteArrayInputStream(encrypted.getBytes(StandardCharsets.UTF_8));
-        DecryptionStream decryptionStream = PGPainless.decryptAndOrVerify()
+        DecryptionStream decryptionStream = PGPainless.getInstance().processMessage()
                 .onInputStream(in)
                 .withOptions(ConsumerOptions.get()
                         .addDecryptionKey(secretKeys, SecretKeyRingProtector.unprotectedKeys())
@@ -327,7 +327,7 @@ public class CanonicalizedDataEncryptionTest {
         String encrypted = encryptAndSign(beforeAndAfter, DocumentSignatureType.BINARY_DOCUMENT, StreamEncoding.TEXT, false);
 
         ByteArrayInputStream in = new ByteArrayInputStream(encrypted.getBytes(StandardCharsets.UTF_8));
-        DecryptionStream decryptionStream = PGPainless.decryptAndOrVerify()
+        DecryptionStream decryptionStream = PGPainless.getInstance().processMessage()
                 .onInputStream(in)
                 .withOptions(ConsumerOptions.get()
                         .addDecryptionKey(secretKeys, SecretKeyRingProtector.unprotectedKeys())
@@ -359,7 +359,7 @@ public class CanonicalizedDataEncryptionTest {
             options.applyCRLFEncoding();
         }
 
-        EncryptionStream encryptionStream = PGPainless.encryptAndOrSign()
+        EncryptionStream encryptionStream = PGPainless.getInstance().generateMessage()
                 .onOutputStream(out)
                 .withOptions(options);
 
@@ -373,7 +373,7 @@ public class CanonicalizedDataEncryptionTest {
 
     private MessageMetadata decryptAndVerify(String msg) throws PGPException, IOException {
         ByteArrayInputStream in = new ByteArrayInputStream(msg.getBytes(StandardCharsets.UTF_8));
-        DecryptionStream decryptionStream = PGPainless.decryptAndOrVerify()
+        DecryptionStream decryptionStream = PGPainless.getInstance().processMessage()
                 .onInputStream(in)
                 .withOptions(ConsumerOptions.get()
                         .addDecryptionKey(secretKeys, SecretKeyRingProtector.unprotectedKeys())
@@ -444,7 +444,7 @@ public class CanonicalizedDataEncryptionTest {
 
         ByteArrayInputStream cipherIn = new ByteArrayInputStream(ciphertext.getBytes(StandardCharsets.UTF_8));
         ByteArrayOutputStream decrypted = new ByteArrayOutputStream();
-        DecryptionStream decryptionStream = PGPainless.decryptAndOrVerify()
+        DecryptionStream decryptionStream = PGPainless.getInstance().processMessage()
                         .onInputStream(cipherIn)
                                 .withOptions(ConsumerOptions.get()
                                         .addVerificationCert(publicKeys));

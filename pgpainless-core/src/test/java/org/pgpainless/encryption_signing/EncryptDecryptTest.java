@@ -157,7 +157,7 @@ public class EncryptDecryptTest {
         // Juliet trieth to comprehend Romeos words
 
         ByteArrayInputStream envelopeIn = new ByteArrayInputStream(encryptedSecretMessage);
-        DecryptionStream decryptor = PGPainless.decryptAndOrVerify()
+        DecryptionStream decryptor = api.processMessage()
                 .onInputStream(envelopeIn)
                 .withOptions(ConsumerOptions.get(api)
                         .addDecryptionKey(recipientSec, keyDecryptor)
@@ -208,7 +208,7 @@ public class EncryptDecryptTest {
         // CHECKSTYLE:ON
 
         inputStream = new ByteArrayInputStream(testMessage.getBytes());
-        DecryptionStream verifier = PGPainless.decryptAndOrVerify()
+        DecryptionStream verifier = api.processMessage()
                 .onInputStream(inputStream)
                 .withOptions(ConsumerOptions.get(api)
                         .addVerificationOfDetachedSignatures(new ByteArrayInputStream(armorSig.getBytes()))
@@ -241,7 +241,7 @@ public class EncryptDecryptTest {
         signer.close();
 
         inputStream = new ByteArrayInputStream(signOut.toByteArray());
-        DecryptionStream verifier = PGPainless.decryptAndOrVerify()
+        DecryptionStream verifier = api.processMessage()
                 .onInputStream(inputStream)
                 .withOptions(ConsumerOptions.get(api)
                         .addVerificationCert(signingKeys.toCertificate())
@@ -349,7 +349,7 @@ public class EncryptDecryptTest {
                 result.getEncryptionMechanism());
 
         ByteArrayInputStream bIn = new ByteArrayInputStream(bOut.toByteArray());
-        DecryptionStream decIn = PGPainless.decryptAndOrVerify()
+        DecryptionStream decIn = api.processMessage()
                 .onInputStream(bIn)
                 .withOptions(ConsumerOptions.get()
                         .addDecryptionKey(keyWithoutSEIPD2Feature));
@@ -387,7 +387,7 @@ public class EncryptDecryptTest {
                 result.getEncryptionMechanism());
 
         ByteArrayInputStream bIn = new ByteArrayInputStream(bOut.toByteArray());
-        DecryptionStream decIn = PGPainless.decryptAndOrVerify()
+        DecryptionStream decIn = api.processMessage()
                 .onInputStream(bIn)
                 .withOptions(ConsumerOptions.get()
                         .addMessagePassphrase(Passphrase.fromPassword("sw0rdf1sh")));

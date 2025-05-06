@@ -39,9 +39,7 @@ class DecryptImpl(private val api: PGPainless) : Decrypt {
 
         val decryptionStream =
             try {
-                PGPainless.decryptAndOrVerify()
-                    .onInputStream(ciphertext)
-                    .withOptions(consumerOptions)
+                api.processMessage().onInputStream(ciphertext).withOptions(consumerOptions)
             } catch (e: MissingDecryptionMethodException) {
                 throw SOPGPException.CannotDecrypt(
                     "No usable decryption key or password provided.", e)

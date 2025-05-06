@@ -35,7 +35,7 @@ interface SymmetricKeyAlgorithmNegotiator {
                     override: SymmetricKeyAlgorithm?,
                     keyPreferences: List<Set<SymmetricKeyAlgorithm>>
                 ): SymmetricKeyAlgorithm {
-                    require (override != SymmetricKeyAlgorithm.NULL) {
+                    require(override != SymmetricKeyAlgorithm.NULL) {
                         "Algorithm override cannot be NULL (plaintext)."
                     }
 

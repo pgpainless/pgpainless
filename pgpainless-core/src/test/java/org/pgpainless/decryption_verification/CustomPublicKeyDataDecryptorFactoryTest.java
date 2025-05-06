@@ -68,7 +68,7 @@ public class CustomPublicKeyDataDecryptorFactoryTest {
         };
 
         // Decrypt
-        DecryptionStream decryptionStream = PGPainless.decryptAndOrVerify()
+        DecryptionStream decryptionStream = api.processMessage()
                 .onInputStream(new ByteArrayInputStream(ciphertextOut.toByteArray()))
                 .withOptions(ConsumerOptions.get()
                         .addCustomDecryptorFactory(

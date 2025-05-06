@@ -46,7 +46,7 @@ public class TryDecryptWithUnavailableGnuDummyKeyTest {
                     .removePrivateKeys(GnuPGDummyKeyUtil.KeyFilter.any()));
 
         ByteArrayInputStream ciphertextIn = new ByteArrayInputStream(ciphertextOut.toByteArray());
-        assertThrows(MissingDecryptionMethodException.class, () -> PGPainless.decryptAndOrVerify()
+        assertThrows(MissingDecryptionMethodException.class, () -> api.processMessage()
                 .onInputStream(ciphertextIn)
                 .withOptions(ConsumerOptions.get(api).addDecryptionKey(removedKeys)));
     }

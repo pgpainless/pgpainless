@@ -1970,7 +1970,7 @@ public class BindingSignatureSubpacketsTest {
         PGPainless api = PGPainless.getInstance();
         OpenPGPCertificate certificate = api.readKey().parseCertificate(key);
 
-        DecryptionStream decryptionStream = PGPainless.decryptAndOrVerify().onInputStream(getSignedData(data))
+        DecryptionStream decryptionStream = api.processMessage().onInputStream(getSignedData(data))
                 .withOptions(ConsumerOptions.get(api)
                         .addVerificationCert(certificate)
                         .addVerificationOfDetachedSignatures(SignatureUtils.readSignatures(sig)));
@@ -1990,7 +1990,7 @@ public class BindingSignatureSubpacketsTest {
         PGPainless api = PGPainless.getInstance();
         OpenPGPCertificate certificate = api.readKey().parseCertificate(key);
 
-        DecryptionStream decryptionStream = PGPainless.decryptAndOrVerify().onInputStream(getSignedData(data))
+        DecryptionStream decryptionStream = api.processMessage().onInputStream(getSignedData(data))
                 .withOptions(ConsumerOptions.get(api)
                         .addVerificationCert(certificate)
                         .addVerificationOfDetachedSignatures(SignatureUtils.readSignatures(sig)));

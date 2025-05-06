@@ -77,7 +77,7 @@ public class MissingPassphraseForDecryptionTest {
                 .setMissingKeyPassphraseStrategy(MissingKeyPassphraseStrategy.INTERACTIVE)
                 .addDecryptionKey(secretKeys, SecretKeyRingProtector.defaultSecretKeyRingProtector(callback));
 
-        DecryptionStream decryptionStream = PGPainless.decryptAndOrVerify()
+        DecryptionStream decryptionStream = api.processMessage()
                 .onInputStream(new ByteArrayInputStream(message))
                 .withOptions(options);
 
@@ -112,7 +112,7 @@ public class MissingPassphraseForDecryptionTest {
                 .addDecryptionKey(secretKeys, SecretKeyRingProtector.defaultSecretKeyRingProtector(callback));
 
         try {
-            PGPainless.decryptAndOrVerify()
+            api.processMessage()
                     .onInputStream(new ByteArrayInputStream(message))
                     .withOptions(options);
             fail("Expected exception!");

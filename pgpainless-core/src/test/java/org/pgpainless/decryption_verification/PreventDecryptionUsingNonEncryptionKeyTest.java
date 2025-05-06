@@ -177,7 +177,7 @@ public class PreventDecryptionUsingNonEncryptionKeyTest {
         PGPSecretKeyRing secretKeys = PGPainless.readKeyRing().secretKeyRing(ENCRYPTION_CAPABLE_KEY);
 
         ByteArrayInputStream msgIn = new ByteArrayInputStream(MSG.getBytes(StandardCharsets.UTF_8));
-        DecryptionStream decryptionStream = PGPainless.decryptAndOrVerify()
+        DecryptionStream decryptionStream = PGPainless.getInstance().processMessage()
                 .onInputStream(msgIn)
                 .withOptions(ConsumerOptions.get().addDecryptionKey(secretKeys));
 
@@ -193,7 +193,7 @@ public class PreventDecryptionUsingNonEncryptionKeyTest {
         PGPSecretKeyRing secretKeys = PGPainless.readKeyRing().secretKeyRing(ENCRYPTION_INCAPABLE_KEY);
 
         ByteArrayInputStream msgIn = new ByteArrayInputStream(MSG.getBytes(StandardCharsets.UTF_8));
-        DecryptionStream decryptionStream = PGPainless.decryptAndOrVerify()
+        DecryptionStream decryptionStream = PGPainless.getInstance().processMessage()
                 .onInputStream(msgIn)
                 .withOptions(ConsumerOptions.get()
                         .setAllowDecryptionWithMissingKeyFlags()
@@ -213,7 +213,7 @@ public class PreventDecryptionUsingNonEncryptionKeyTest {
         ByteArrayInputStream msgIn = new ByteArrayInputStream(MSG.getBytes(StandardCharsets.UTF_8));
 
         assertThrows(MissingDecryptionMethodException.class, () ->
-                PGPainless.decryptAndOrVerify()
+                PGPainless.getInstance().processMessage()
                         .onInputStream(msgIn)
                         .withOptions(ConsumerOptions.get().addDecryptionKey(secretKeys)));
     }
@@ -224,7 +224,7 @@ public class PreventDecryptionUsingNonEncryptionKeyTest {
 
         ByteArrayInputStream msgIn = new ByteArrayInputStream(MSG.getBytes(StandardCharsets.UTF_8));
 
-        DecryptionStream decryptionStream = PGPainless.decryptAndOrVerify()
+        DecryptionStream decryptionStream = PGPainless.getInstance().processMessage()
                 .onInputStream(msgIn)
                 .withOptions(ConsumerOptions.get()
                         .setAllowDecryptionWithMissingKeyFlags()

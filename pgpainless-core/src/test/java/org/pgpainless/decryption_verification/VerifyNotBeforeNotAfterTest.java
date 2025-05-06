@@ -64,7 +64,7 @@ public class VerifyNotBeforeNotAfterTest {
     public void noConstraintsVerifyInlineSig() throws PGPException, IOException {
         ConsumerOptions options = ConsumerOptions.get()
                 .addVerificationCert(certificate);
-        DecryptionStream verifier = PGPainless.decryptAndOrVerify()
+        DecryptionStream verifier = PGPainless.getInstance().processMessage()
                 .onInputStream(new ByteArrayInputStream(inlineSigned))
                 .withOptions(options);
 
@@ -77,7 +77,7 @@ public class VerifyNotBeforeNotAfterTest {
         ConsumerOptions options = ConsumerOptions.get()
                 .addVerificationCert(certificate)
                 .addVerificationOfDetachedSignatures(new ByteArrayInputStream(detachedSignature));
-        DecryptionStream verifier = PGPainless.decryptAndOrVerify()
+        DecryptionStream verifier = PGPainless.getInstance().processMessage()
                 .onInputStream(new ByteArrayInputStream(data))
                 .withOptions(options);
 
@@ -90,7 +90,7 @@ public class VerifyNotBeforeNotAfterTest {
         ConsumerOptions options = ConsumerOptions.get()
                 .verifyNotBefore(T1)
                 .addVerificationCert(certificate);
-        DecryptionStream verifier = PGPainless.decryptAndOrVerify()
+        DecryptionStream verifier = PGPainless.getInstance().processMessage()
                 .onInputStream(new ByteArrayInputStream(inlineSigned))
                 .withOptions(options);
         MessageMetadata metadata = processSignedData(verifier);
@@ -103,7 +103,7 @@ public class VerifyNotBeforeNotAfterTest {
                 .verifyNotBefore(T1)
                 .addVerificationCert(certificate)
                 .addVerificationOfDetachedSignatures(new ByteArrayInputStream(detachedSignature));
-        DecryptionStream verifier = PGPainless.decryptAndOrVerify()
+        DecryptionStream verifier = PGPainless.getInstance().processMessage()
                 .onInputStream(new ByteArrayInputStream(data))
                 .withOptions(options);
         MessageMetadata metadata = processSignedData(verifier);
@@ -115,7 +115,7 @@ public class VerifyNotBeforeNotAfterTest {
         ConsumerOptions options = ConsumerOptions.get()
                 .verifyNotBefore(T2)
                 .addVerificationCert(certificate);
-        DecryptionStream verifier = PGPainless.decryptAndOrVerify()
+        DecryptionStream verifier = PGPainless.getInstance().processMessage()
                 .onInputStream(new ByteArrayInputStream(inlineSigned))
                 .withOptions(options);
         MessageMetadata metadata = processSignedData(verifier);
@@ -128,7 +128,7 @@ public class VerifyNotBeforeNotAfterTest {
                 .verifyNotBefore(T2)
                 .addVerificationCert(certificate)
                 .addVerificationOfDetachedSignatures(new ByteArrayInputStream(detachedSignature));
-        DecryptionStream verifier = PGPainless.decryptAndOrVerify()
+        DecryptionStream verifier = PGPainless.getInstance().processMessage()
                 .onInputStream(new ByteArrayInputStream(data))
                 .withOptions(options);
         MessageMetadata metadata = processSignedData(verifier);
@@ -140,7 +140,7 @@ public class VerifyNotBeforeNotAfterTest {
         ConsumerOptions options = ConsumerOptions.get()
                 .verifyNotAfter(T1)
                 .addVerificationCert(certificate);
-        DecryptionStream verifier = PGPainless.decryptAndOrVerify()
+        DecryptionStream verifier = PGPainless.getInstance().processMessage()
                 .onInputStream(new ByteArrayInputStream(inlineSigned))
                 .withOptions(options);
         MessageMetadata metadata = processSignedData(verifier);
@@ -153,7 +153,7 @@ public class VerifyNotBeforeNotAfterTest {
                 .verifyNotAfter(T1)
                 .addVerificationCert(certificate)
                 .addVerificationOfDetachedSignatures(new ByteArrayInputStream(detachedSignature));
-        DecryptionStream verifier = PGPainless.decryptAndOrVerify()
+        DecryptionStream verifier = PGPainless.getInstance().processMessage()
                 .onInputStream(new ByteArrayInputStream(data))
                 .withOptions(options);
         MessageMetadata metadata = processSignedData(verifier);
@@ -165,7 +165,7 @@ public class VerifyNotBeforeNotAfterTest {
         ConsumerOptions options = ConsumerOptions.get()
                 .verifyNotAfter(T0)
                 .addVerificationCert(certificate);
-        DecryptionStream verifier = PGPainless.decryptAndOrVerify()
+        DecryptionStream verifier = PGPainless.getInstance().processMessage()
                 .onInputStream(new ByteArrayInputStream(inlineSigned))
                 .withOptions(options);
         MessageMetadata metadata = processSignedData(verifier);
@@ -178,7 +178,7 @@ public class VerifyNotBeforeNotAfterTest {
                 .verifyNotAfter(T0)
                 .addVerificationCert(certificate)
                 .addVerificationOfDetachedSignatures(new ByteArrayInputStream(detachedSignature));
-        DecryptionStream verifier = PGPainless.decryptAndOrVerify()
+        DecryptionStream verifier = PGPainless.getInstance().processMessage()
                 .onInputStream(new ByteArrayInputStream(data))
                 .withOptions(options);
         MessageMetadata metadata = processSignedData(verifier);

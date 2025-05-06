@@ -77,7 +77,7 @@ public class GenerateKeyWithoutPrimaryKeyFlagsTest {
         EncryptionResult result = encryptionStream.getResult();
         assertTrue(result.isEncryptedFor(cert));
 
-        DecryptionStream decryptionStream = PGPainless.decryptAndOrVerify()
+        DecryptionStream decryptionStream = api.processMessage()
                 .onInputStream(new ByteArrayInputStream(ciphertext.toByteArray()))
                 .withOptions(ConsumerOptions.get().addDecryptionKey(key)
                         .addVerificationCert(cert));

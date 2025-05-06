@@ -187,7 +187,7 @@ public class InvestigateMultiSEIPMessageHandlingTest {
                 .addVerificationCert(ring2)
                         .addDecryptionKey(ring1);
 
-        DecryptionStream decryptionStream = PGPainless.decryptAndOrVerify()
+        DecryptionStream decryptionStream = api.processMessage()
                 .onInputStream(new ByteArrayInputStream(MESSAGE.getBytes(StandardCharsets.UTF_8)))
                 .withOptions(options);
 
