@@ -599,7 +599,7 @@ class KeyRingReaderTest {
     public void testReadKeyRingWithArmoredPublicKey() throws IOException {
         OpenPGPKey secretKeys = api.generateKey().modernKeyRing("Alice <alice@pgpainless.org>");
         OpenPGPCertificate publicKeys = secretKeys.toCertificate();
-        String armored = PGPainless.asciiArmor(publicKeys);
+        String armored = api.toAsciiArmor(publicKeys);
 
         PGPKeyRing keyRing = PGPainless.readKeyRing()
                 .keyRing(armored);

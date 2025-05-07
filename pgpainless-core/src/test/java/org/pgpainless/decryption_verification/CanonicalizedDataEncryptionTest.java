@@ -113,10 +113,11 @@ public class CanonicalizedDataEncryptionTest {
 
     @BeforeAll
     public static void readKeys() throws IOException {
-        secretKeys = PGPainless.getInstance().readKey().parseKey(KEY);
+        PGPainless api = PGPainless.getInstance();
+        secretKeys = api.readKey().parseKey(KEY);
         publicKeys = secretKeys.toCertificate();
         // CHECKSTYLE:OFF
-        System.out.println(PGPainless.asciiArmor(secretKeys));
+        System.out.println(api.toAsciiArmor(secretKeys));
         // CHECKSTYLE:ON
     }
 

@@ -7,7 +7,6 @@ package org.pgpainless.sop
 import java.io.InputStream
 import java.io.OutputStream
 import org.pgpainless.PGPainless
-import org.pgpainless.util.ArmorUtils
 import org.pgpainless.util.ArmoredOutputStreamFactory
 import sop.Ready
 import sop.operation.ExtractCert
@@ -26,10 +25,8 @@ class ExtractCertImpl(private val api: PGPainless) : ExtractCert {
                     if (certs.size == 1) {
                         val cert = certs[0]
                         // This way we have a nice armor header with fingerprint and user-ids
-                        val armorOut =
-                            ArmorUtils.toAsciiArmoredStream(cert.pgpKeyRing, outputStream)
-                        armorOut.write(cert.encoded)
-                        armorOut.close()
+                        val armored = cert.toAsciiArmoredString()
+                        outputStream.write(armored.toByteArray())
                     } else {
                         // for multiple certs, add no info headers to the ASCII armor
                         val armorOut = ArmoredOutputStreamFactory.get(outputStream)
