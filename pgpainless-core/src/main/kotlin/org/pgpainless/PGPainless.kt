@@ -31,6 +31,17 @@ import org.pgpainless.key.parsing.KeyRingReader
 import org.pgpainless.policy.Policy
 import org.pgpainless.util.ArmorUtils
 
+/**
+ * Main entry point to the PGPainless OpenPGP API. Historically, this class was used through static
+ * factory methods only, and configuration was done using the Singleton pattern. However, now it is
+ * recommended to instantiate the API and apply configuration on a per-instance manner. The benefit
+ * of this being that you can have multiple differently configured instances at the same time.
+ *
+ * @param implementation OpenPGP Implementation - either BCs lightweight
+ *   [org.bouncycastle.openpgp.api.bc.BcOpenPGPImplementation] or JCAs
+ *   [org.bouncycastle.openpgp.api.jcajce.JcaOpenPGPImplementation].
+ * @param algorithmPolicy policy, deciding acceptable algorithms
+ */
 class PGPainless(
     val implementation: OpenPGPImplementation = OpenPGPImplementation.getInstance(),
     val algorithmPolicy: Policy = Policy()
@@ -48,16 +59,36 @@ class PGPainless(
         api = BcOpenPGPApi(implementation)
     }
 
+    /**
+     * Generate a new [OpenPGPKey] from predefined templates.
+     *
+     * @param version [OpenPGPKeyVersion], defaults to [OpenPGPKeyVersion.v4]
+     * @param creationTime of the key, defaults to now
+     * @return [KeyRingTemplates] api
+     */
     @JvmOverloads
     fun generateKey(
         version: OpenPGPKeyVersion = OpenPGPKeyVersion.v4,
         creationTime: Date = Date()
     ): KeyRingTemplates = KeyRingTemplates(version, creationTime, this)
 
+    /**
+     * Build a fresh, custom [OpenPGPKey] using PGPainless' API.
+     *
+     * @param version [OpenPGPKeyVersion], defaults to [OpenPGPKeyVersion.v4]
+     * @return [KeyRingBuilder] api
+     */
     @JvmOverloads
     fun buildKey(version: OpenPGPKeyVersion = OpenPGPKeyVersion.v4): KeyRingBuilder =
         KeyRingBuilder(version, this)
 
+    /**
+     * Build a fresh, custom [OpenPGPKey] using BCs new API.
+     *
+     * @param version [OpenPGPKeyVersion], defaults to [OpenPGPKeyVersion.v4]
+     * @param creationTime creation time of the key, defaults to now
+     * @return [OpenPGPKeyGenerator] api
+     */
     @JvmOverloads
     fun _buildKey(
         version: OpenPGPKeyVersion = OpenPGPKeyVersion.v4,
@@ -81,18 +112,52 @@ class PGPainless(
     fun inspect(keyOrCertificate: OpenPGPCertificate, referenceTime: Date = Date()): KeyRingInfo =
         KeyRingInfo(keyOrCertificate, this, referenceTime)
 
+    /**
+     * Modify an [OpenPGPKey], adding new components and signatures. This API can be used to add new
+     * subkeys, user-ids or user-attributes to the key, extend or alter its expiration time, revoke
+     * individual components of the entire certificate, etc.
+     *
+     * @param key key to modify
+     * @param referenceTime timestamp for modifications
+     * @return [SecretKeyRingEditor] api
+     */
     @JvmOverloads
     fun modify(key: OpenPGPKey, referenceTime: Date = Date()): SecretKeyRingEditor =
         SecretKeyRingEditor(key, this, referenceTime)
 
+    /**
+     * Parse [OpenPGPKey]/[OpenPGPCertificate] material from binary or ASCII armored encoding.
+     *
+     * @return [OpenPGPKeyReader] api
+     */
     fun readKey(): OpenPGPKeyReader = api.readKeyOrCertificate()
 
+    /**
+     * Convert a [PGPSecretKeyRing] into an [OpenPGPKey].
+     *
+     * @param secretKeyRing mid-level API [PGPSecretKeyRing] object
+     * @return high-level API [OpenPGPKey] object
+     */
     fun toKey(secretKeyRing: PGPSecretKeyRing): OpenPGPKey =
         OpenPGPKey(secretKeyRing, implementation)
 
+    /**
+     * Convert a [PGPPublicKeyRing] into an [OpenPGPCertificate].
+     *
+     * @param certificate mid-level API [PGPSecretKeyRing] object
+     * @return high-level API [OpenPGPCertificate] object
+     */
     fun toCertificate(certificate: PGPPublicKeyRing): OpenPGPCertificate =
         OpenPGPCertificate(certificate, implementation)
 
+    /**
+     * Depending on the type, convert either a [PGPSecretKeyRing] into an [OpenPGPKey] or a
+     * [PGPPublicKeyRing] into an [OpenPGPCertificate].
+     *
+     * @param keyOrCertificate [PGPKeyRing], either [PGPSecretKeyRing] or [PGPPublicKeyRing]
+     * @return depending on the type of [keyOrCertificate], either an [OpenPGPKey] or
+     *   [OpenPGPCertificate]
+     */
     fun toKeyOrCertificate(keyOrCertificate: PGPKeyRing): OpenPGPCertificate =
         when (keyOrCertificate) {
             is PGPSecretKeyRing -> toKey(keyOrCertificate)
@@ -102,6 +167,15 @@ class PGPainless(
                     "Unexpected PGPKeyRing subclass: ${keyOrCertificate.javaClass.name}")
         }
 
+    /**
+     * Merge two copies of an [OpenPGPCertificate] into a single copy. This method can be used to
+     * import new third-party signatures into a certificate.
+     *
+     * @param originalCopy local copy of the certificate
+     * @param updatedCopy copy of the same certificate, potentially carrying new signatures and
+     *   components
+     * @return merged [OpenPGPCertificate]
+     */
     fun mergeCertificate(
         originalCopy: OpenPGPCertificate,
         updatedCopy: OpenPGPCertificate
@@ -109,19 +183,25 @@ class PGPainless(
         return OpenPGPCertificate.join(originalCopy, updatedCopy)
     }
 
-    /** Generate an encrypted and/or signed OpenPGP message. */
+    /**
+     * Generate an encrypted and/or signed OpenPGP message.
+     *
+     * @return [EncryptionBuilder] api
+     */
     fun generateMessage(): EncryptionBuilder = EncryptionBuilder(this)
 
     /**
      * Process an OpenPGP message. This method attempts decryption of encrypted messages and
      * performs signature verification.
+     *
+     * @return [DecryptionBuilder] api
      */
     fun processMessage(): DecryptionBuilder = DecryptionBuilder(this)
 
     /**
      * Create certification signatures on third-party [OpenPGPCertificates][OpenPGPCertificate].
      *
-     * @return builder
+     * @return [CertifyCertificate] api
      */
     fun generateCertification(): CertifyCertificate = CertifyCertificate(this)
 
@@ -289,7 +369,7 @@ class PGPainless(
          * [PGPSecretKeyRing]. This method can be used to determine expiration dates, key flags and
          * other information about a key at a specific time.
          *
-         * @param keyRing key ring
+         * @param key key ring
          * @param referenceTime date of inspection
          * @return access object
          */
