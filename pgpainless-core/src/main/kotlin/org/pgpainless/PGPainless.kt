@@ -4,8 +4,12 @@
 
 package org.pgpainless
 
+import java.io.ByteArrayOutputStream
 import java.io.OutputStream
 import java.util.*
+import org.bouncycastle.bcpg.ArmoredOutputStream
+import org.bouncycastle.bcpg.BCPGOutputStream
+import org.bouncycastle.bcpg.PacketFormat
 import org.bouncycastle.openpgp.PGPKeyRing
 import org.bouncycastle.openpgp.PGPPublicKeyRing
 import org.bouncycastle.openpgp.PGPSecretKeyRing
@@ -16,6 +20,7 @@ import org.bouncycastle.openpgp.api.OpenPGPImplementation
 import org.bouncycastle.openpgp.api.OpenPGPKey
 import org.bouncycastle.openpgp.api.OpenPGPKeyGenerator
 import org.bouncycastle.openpgp.api.OpenPGPKeyReader
+import org.bouncycastle.openpgp.api.OpenPGPSignature
 import org.bouncycastle.openpgp.api.bc.BcOpenPGPApi
 import org.pgpainless.algorithm.OpenPGPKeyVersion
 import org.pgpainless.bouncycastle.PolicyAdapter
@@ -57,6 +62,46 @@ class PGPainless(
         implementation.setPolicy(
             PolicyAdapter(algorithmPolicy)) // adapt PGPainless' Policy to BCs OpenPGPPolicy
         api = BcOpenPGPApi(implementation)
+    }
+
+    @JvmOverloads
+    fun toAsciiArmor(
+        certOrKey: OpenPGPCertificate,
+        packetFormat: PacketFormat = PacketFormat.ROUNDTRIP
+    ): String {
+        val armorBuilder = ArmoredOutputStream.builder().clearHeaders()
+        ArmorUtils.keyToHeader(certOrKey.primaryKey.pgpPublicKey)
+            .getOrDefault(ArmorUtils.HEADER_COMMENT, setOf())
+            .forEach { armorBuilder.addComment(it) }
+        return certOrKey.toAsciiArmoredString(packetFormat, armorBuilder)
+    }
+
+    @JvmOverloads
+    fun toAsciiArmor(
+        signature: OpenPGPSignature,
+        packetFormat: PacketFormat = PacketFormat.ROUNDTRIP
+    ): String {
+        val armorBuilder = ArmoredOutputStream.builder().clearHeaders()
+        armorBuilder.addComment(signature.keyIdentifier.toPrettyPrint())
+        return signature.toAsciiArmoredString(packetFormat, armorBuilder)
+    }
+
+    @JvmOverloads
+    fun toAsciiArmor(
+        signature: PGPSignature,
+        packetFormat: PacketFormat = PacketFormat.ROUNDTRIP
+    ): String {
+        val armorBuilder = ArmoredOutputStream.builder().clearHeaders()
+        OpenPGPSignature.getMostExpressiveIdentifier(signature.keyIdentifiers)?.let {
+            armorBuilder.addComment(it.toPrettyPrint())
+        }
+        val bOut = ByteArrayOutputStream()
+        val aOut = armorBuilder.build(bOut)
+        val pOut = BCPGOutputStream(aOut, packetFormat)
+        signature.encode(pOut)
+        pOut.close()
+        aOut.close()
+        return bOut.toString()
     }
 
     /**
@@ -290,10 +335,13 @@ class PGPainless(
          */
         @JvmStatic
         fun asciiArmor(key: PGPKeyRing): String =
-            if (key is PGPSecretKeyRing) ArmorUtils.toAsciiArmoredString(key)
-            else ArmorUtils.toAsciiArmoredString(key as PGPPublicKeyRing)
+            getInstance().toAsciiArmor(getInstance().toKeyOrCertificate(key))
 
-        @JvmStatic fun asciiArmor(cert: OpenPGPCertificate) = asciiArmor(cert.pgpKeyRing)
+        @JvmStatic
+        @Deprecated(
+            "Call getInstance().toAsciiArmor(cert) instead.",
+            replaceWith = ReplaceWith("getInstance().toAsciiArmor(cert)"))
+        fun asciiArmor(cert: OpenPGPCertificate): String = getInstance().toAsciiArmor(cert)
 
         /**
          * Wrap a key of certificate in ASCII armor and write the result into the given
@@ -318,8 +366,10 @@ class PGPainless(
          * @throws IOException in case of an error during the armoring process
          */
         @JvmStatic
-        @Deprecated("Covert to OpenPGPSignature and call .toAsciiArmoredString() instead.")
-        fun asciiArmor(signature: PGPSignature): String = ArmorUtils.toAsciiArmoredString(signature)
+        @Deprecated(
+            "Call toAsciiArmor(signature) on an instance of PGPainless instead.",
+            replaceWith = ReplaceWith("getInstance().toAsciiArmor(signature)"))
+        fun asciiArmor(signature: PGPSignature): String = getInstance().toAsciiArmor(signature)
 
         /**
          * Create an [EncryptionBuilder], which can be used to encrypt and/or sign data using

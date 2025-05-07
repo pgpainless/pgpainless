@@ -18,7 +18,6 @@ import org.pgpainless.key.generation.type.KeyType
 import org.pgpainless.key.generation.type.eddsa_legacy.EdDSALegacyCurve
 import org.pgpainless.key.generation.type.rsa.RsaLength
 import org.pgpainless.key.generation.type.xdh_legacy.XDHLegacySpec
-import org.pgpainless.util.ArmorUtils
 import org.pgpainless.util.Passphrase
 import sop.Profile
 import sop.Ready
@@ -50,9 +49,8 @@ class GenerateKeyImpl(private val api: PGPainless) : GenerateKey {
             return object : Ready() {
                 override fun writeTo(outputStream: OutputStream) {
                     if (armor) {
-                        val armorOut = ArmorUtils.toAsciiArmoredStream(key.pgpKeyRing, outputStream)
-                        key.pgpKeyRing.encode(armorOut)
-                        armorOut.close()
+                        val armored = key.toAsciiArmoredString()
+                        outputStream.write(armored.toByteArray())
                     } else {
                         key.pgpKeyRing.encode(outputStream)
                     }

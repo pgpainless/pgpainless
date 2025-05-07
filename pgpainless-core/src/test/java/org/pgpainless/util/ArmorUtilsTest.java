@@ -132,7 +132,7 @@ public class ArmorUtilsTest {
     @Test
     public void signatureToAsciiArmoredString() {
         String SIG = "-----BEGIN PGP SIGNATURE-----\n" +
-                "Version: PGPainless\n" +
+                "Comment: 4F66 5C4D C2C4 660B C642  5E41 5736 E693 1ACF 370C\n" +
                 "\n" +
                 "iHUEARMKAB0WIQRPZlxNwsRmC8ZCXkFXNuaTGs83DAUCYJ/x5gAKCRBXNuaTGs83\n" +
                 "DFRwAP9/4wMvV3WcX59Clo7mkRce6iwW3VBdiN+yMu3tjmHB2wD/RfE28Q1v4+eo\n" +

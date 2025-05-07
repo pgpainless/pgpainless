@@ -229,7 +229,7 @@ class ArmorUtils {
          * @return header map
          */
         @JvmStatic
-        private fun keyToHeader(publicKey: PGPPublicKey): Map<String, Set<String>> {
+        fun keyToHeader(publicKey: PGPPublicKey): Map<String, Set<String>> {
             val headerMap = mutableMapOf<String, MutableSet<String>>()
             val userIds = KeyRingUtils.getUserIdsIgnoringInvalidUTF8(publicKey)
             val first: String? = userIds.firstOrNull()
