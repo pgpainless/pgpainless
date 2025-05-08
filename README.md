@@ -99,7 +99,7 @@ There are some predefined key archetypes, but it is possible to fully customize 
                 .modernKeyRing("Romeo <romeo@montague.lit>", "I defy you, stars!");
 
         // Customized key
-        OpenPGPKey keyRing = PGPainless.buildKeyRing()
+        OpenPGPKey keyRing = api.buildKey()
                 .setPrimaryKey(KeySpec.getBuilder(
                         RSA.withLength(RsaLength._8192),
                         KeyFlag.SIGN_DATA, KeyFlag.CERTIFY_OTHER))
@@ -163,7 +163,7 @@ Furthermore, PGPainless will reject signatures made using weak algorithms like S
 This behaviour can be modified though using the `Policy` class.
 
 ```java
-        DecryptionStream decryptionStream = PGPainless.decryptAndOrVerify()
+        DecryptionStream decryptionStream = PGPainless.getInstance().processMessage()
                 .onInputStream(encryptedInputStream)
                 .withOptions(ConsumerOptions.get(api)
                         .addDecryptionKey(bobSecKeys, secretKeyProtector)
