@@ -6,16 +6,12 @@ package org.pgpainless.decryption_verification
 
 import org.bouncycastle.openpgp.PGPSignature
 import org.bouncycastle.openpgp.api.OpenPGPSignature.OpenPGPDocumentSignature
-import org.pgpainless.decryption_verification.SignatureVerification.Failure
 import org.pgpainless.exception.SignatureValidationException
 import org.pgpainless.key.SubkeyIdentifier
 import org.pgpainless.signature.SignatureUtils
 
 /**
- * Tuple of a signature and an identifier of its corresponding verification key. Semantic meaning of
- * the signature verification (success, failure) is merely given by context. E.g.
- * [MessageMetadata.verifiedSignatures] contains verified verifications, while the class [Failure]
- * contains failed verifications.
+ * An evaluated document signature.
  *
  * @param documentSignature OpenPGPDocumentSignature object
  */
