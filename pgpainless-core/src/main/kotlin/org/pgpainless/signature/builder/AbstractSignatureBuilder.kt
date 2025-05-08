@@ -6,7 +6,6 @@ package org.pgpainless.signature.builder
 
 import java.util.function.Predicate
 import org.bouncycastle.openpgp.PGPException
-import org.bouncycastle.openpgp.PGPPublicKey
 import org.bouncycastle.openpgp.PGPSignature
 import org.bouncycastle.openpgp.PGPSignatureGenerator
 import org.bouncycastle.openpgp.api.OpenPGPCertificate.OpenPGPComponentKey
@@ -14,10 +13,9 @@ import org.bouncycastle.openpgp.api.OpenPGPKey
 import org.pgpainless.PGPainless
 import org.pgpainless.algorithm.HashAlgorithm
 import org.pgpainless.algorithm.SignatureType
-import org.pgpainless.algorithm.negotiation.HashAlgorithmNegotiator
+import org.pgpainless.bouncycastle.extensions.toHashAlgorithms
 import org.pgpainless.key.protection.SecretKeyRingProtector
 import org.pgpainless.key.protection.UnlockSecretKey
-import org.pgpainless.key.util.OpenPgpKeyAttributeUtil
 import org.pgpainless.signature.subpackets.SignatureSubpackets
 import org.pgpainless.signature.subpackets.SignatureSubpacketsHelper
 
@@ -127,20 +125,11 @@ abstract class AbstractSignatureBuilder<B : AbstractSignatureBuilder<B>>(
 
     companion object {
 
-        /**
-         * Negotiate a [HashAlgorithm] to be used when creating the signature.
-         *
-         * @param publicKey signing public key
-         * @return hash algorithm
-         */
-        @JvmStatic
-        fun negotiateHashAlgorithm(publicKey: PGPPublicKey, api: PGPainless): HashAlgorithm =
-            HashAlgorithmNegotiator.negotiateSignatureHashAlgorithm(api.algorithmPolicy)
-                .negotiateHashAlgorithm(
-                    OpenPgpKeyAttributeUtil.getOrGuessPreferredHashAlgorithms(publicKey))
-
         @JvmStatic
         fun negotiateHashAlgorithm(key: OpenPGPComponentKey, api: PGPainless): HashAlgorithm =
-            negotiateHashAlgorithm(key.pgpPublicKey, api)
+            key.hashAlgorithmPreferences?.toHashAlgorithms()?.first {
+                api.algorithmPolicy.dataSignatureHashAlgorithmPolicy.isAcceptable(it)
+            }
+                ?: api.algorithmPolicy.dataSignatureHashAlgorithmPolicy.defaultHashAlgorithm
     }
 }
