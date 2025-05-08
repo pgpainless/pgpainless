@@ -326,7 +326,7 @@ public class OpenPgpInputStream extends BufferedInputStream {
      * Returns true, if the underlying data is very likely (more than 99,9%) an OpenPGP message.
      * OpenPGP Message means here that it starts with either an {@link PGPEncryptedData},
      * {@link PGPCompressedData}, {@link PGPOnePassSignature} or {@link PGPLiteralData} packet.
-     * The plausability of these data packets is checked as far as possible.
+     * The plausibility of these data packets is checked as far as possible.
      *
      * @return true if likely OpenPGP message
      */
