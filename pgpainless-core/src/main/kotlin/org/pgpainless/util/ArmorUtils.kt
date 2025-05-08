@@ -21,7 +21,7 @@ import org.bouncycastle.openpgp.PGPSignature
 import org.bouncycastle.openpgp.PGPUtil
 import org.bouncycastle.util.io.Streams
 import org.pgpainless.algorithm.HashAlgorithm
-import org.pgpainless.decryption_verification.OpenPgpInputStream
+import org.pgpainless.decryption_verification.OpenPGPAnimalSnifferInputStream
 import org.pgpainless.key.OpenPgpFingerprint
 import org.pgpainless.key.util.KeyRingUtils
 
@@ -422,7 +422,7 @@ class ArmorUtils {
         @JvmStatic
         @Throws(IOException::class)
         fun getDecoderStream(inputStream: InputStream): InputStream =
-            OpenPgpInputStream(inputStream).let {
+            OpenPGPAnimalSnifferInputStream(inputStream).let {
                 if (it.isAsciiArmored) {
                     PGPUtil.getDecoderStream(ArmoredInputStreamFactory.get(it))
                 } else {

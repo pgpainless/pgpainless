@@ -15,7 +15,7 @@ import org.bouncycastle.openpgp.PGPOnePassSignatureList
 import org.bouncycastle.openpgp.PGPSignatureList
 import org.bouncycastle.util.io.Streams
 import org.pgpainless.PGPainless
-import org.pgpainless.decryption_verification.OpenPgpInputStream
+import org.pgpainless.decryption_verification.OpenPGPAnimalSnifferInputStream
 import org.pgpainless.decryption_verification.cleartext_signatures.ClearsignedMessageUtil
 import org.pgpainless.exception.WrongConsumingMethodException
 import org.pgpainless.util.ArmoredOutputStreamFactory
@@ -35,7 +35,7 @@ class InlineDetachImpl(private val api: PGPainless) : InlineDetach {
             private val sigOut = ByteArrayOutputStream()
 
             override fun writeTo(outputStream: OutputStream): Signatures {
-                var pgpIn = OpenPgpInputStream(messageInputStream)
+                var pgpIn = OpenPGPAnimalSnifferInputStream(messageInputStream)
                 if (pgpIn.isNonOpenPgp) {
                     throw SOPGPException.BadData("Data appears to be non-OpenPGP.")
                 }
@@ -61,7 +61,7 @@ class InlineDetachImpl(private val api: PGPainless) : InlineDetach {
                     }
 
                     // else just dearmor
-                    pgpIn = OpenPgpInputStream(armorIn)
+                    pgpIn = OpenPGPAnimalSnifferInputStream(armorIn)
                 }
 
                 // If data was not using cleartext signature framework

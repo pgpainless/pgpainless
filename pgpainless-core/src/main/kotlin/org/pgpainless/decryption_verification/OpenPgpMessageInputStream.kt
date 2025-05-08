@@ -1114,7 +1114,7 @@ class OpenPgpMessageInputStream(
             metadata: Layer,
             api: PGPainless
         ): OpenPgpMessageInputStream {
-            val openPgpIn = OpenPgpInputStream(inputStream)
+            val openPgpIn = OpenPGPAnimalSnifferInputStream(inputStream)
             openPgpIn.reset()
 
             if (openPgpIn.isNonOpenPgp || options.isForceNonOpenPgpData()) {
