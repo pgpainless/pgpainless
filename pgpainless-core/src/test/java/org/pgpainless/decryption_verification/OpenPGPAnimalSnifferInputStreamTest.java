@@ -30,7 +30,7 @@ import org.pgpainless.encryption_signing.ProducerOptions;
 import org.pgpainless.encryption_signing.SigningOptions;
 import org.pgpainless.key.protection.SecretKeyRingProtector;
 
-public class OpenPgpInputStreamTest {
+public class OpenPGPAnimalSnifferInputStreamTest {
 
     private static final Random RANDOM = new Random();
 
@@ -40,7 +40,7 @@ public class OpenPgpInputStreamTest {
         RANDOM.nextBytes(randomBytes);
         ByteArrayInputStream randomIn = new ByteArrayInputStream(randomBytes);
 
-        OpenPgpInputStream openPgpInputStream = new OpenPgpInputStream(randomIn);
+        OpenPGPAnimalSnifferInputStream openPgpInputStream = new OpenPGPAnimalSnifferInputStream(randomIn);
         assertFalse(openPgpInputStream.isAsciiArmored());
         assertFalse(openPgpInputStream.isLikelyOpenPgpMessage(),
                 Hex.toHexString(randomBytes, 0, 150));
@@ -56,7 +56,7 @@ public class OpenPgpInputStreamTest {
     public void largeCompressedDataIsBinaryOpenPgp() throws IOException {
         // Since we are compressing RANDOM data, the output will likely be roughly the same size
         // So we very likely will end up with data larger than the MAX_BUFFER_SIZE
-        byte[] randomBytes = new byte[OpenPgpInputStream.MAX_BUFFER_SIZE * 10];
+        byte[] randomBytes = new byte[OpenPGPAnimalSnifferInputStream.MAX_BUFFER_SIZE * 10];
         RANDOM.nextBytes(randomBytes);
 
         ByteArrayOutputStream compressedDataPacket = new ByteArrayOutputStream();
@@ -65,7 +65,7 @@ public class OpenPgpInputStreamTest {
         compressor.write(randomBytes);
         compressor.close();
 
-        OpenPgpInputStream inputStream = new OpenPgpInputStream(new ByteArrayInputStream(compressedDataPacket.toByteArray()));
+        OpenPGPAnimalSnifferInputStream inputStream = new OpenPGPAnimalSnifferInputStream(new ByteArrayInputStream(compressedDataPacket.toByteArray()));
         assertFalse(inputStream.isAsciiArmored());
         assertFalse(inputStream.isNonOpenPgp());
         assertTrue(inputStream.isBinaryOpenPgp());
@@ -90,7 +90,7 @@ public class OpenPgpInputStreamTest {
                 "-----END PGP MESSAGE-----";
 
         ByteArrayInputStream asciiIn = new ByteArrayInputStream(asciiArmoredMessage.getBytes(StandardCharsets.UTF_8));
-        OpenPgpInputStream openPgpInputStream = new OpenPgpInputStream(asciiIn);
+        OpenPGPAnimalSnifferInputStream openPgpInputStream = new OpenPGPAnimalSnifferInputStream(asciiIn);
 
         assertTrue(openPgpInputStream.isAsciiArmored());
         assertFalse(openPgpInputStream.isNonOpenPgp());
@@ -663,9 +663,9 @@ public class OpenPgpInputStreamTest {
     @Test
     public void longAsciiArmoredMessageIsAsciiArmored() throws IOException {
         byte[] asciiArmoredBytes = longAsciiArmoredMessage.getBytes(StandardCharsets.UTF_8);
-        assertTrue(asciiArmoredBytes.length > OpenPgpInputStream.MAX_BUFFER_SIZE);
+        assertTrue(asciiArmoredBytes.length > OpenPGPAnimalSnifferInputStream.MAX_BUFFER_SIZE);
         ByteArrayInputStream asciiIn = new ByteArrayInputStream(asciiArmoredBytes);
-        OpenPgpInputStream openPgpInputStream = new OpenPgpInputStream(asciiIn);
+        OpenPGPAnimalSnifferInputStream openPgpInputStream = new OpenPGPAnimalSnifferInputStream(asciiIn);
 
         assertTrue(openPgpInputStream.isAsciiArmored());
         assertFalse(openPgpInputStream.isNonOpenPgp());
@@ -694,7 +694,7 @@ public class OpenPgpInputStreamTest {
 
         byte[] binaryBytes = binaryOut.toByteArray();
         ByteArrayInputStream binaryIn = new ByteArrayInputStream(binaryBytes);
-        OpenPgpInputStream openPgpInputStream = new OpenPgpInputStream(binaryIn);
+        OpenPGPAnimalSnifferInputStream openPgpInputStream = new OpenPGPAnimalSnifferInputStream(binaryIn);
 
         assertTrue(openPgpInputStream.isBinaryOpenPgp());
         assertFalse(openPgpInputStream.isAsciiArmored());
@@ -714,7 +714,7 @@ public class OpenPgpInputStreamTest {
 
         byte[] binaryBytes = binaryOut.toByteArray();
         ByteArrayInputStream binaryIn = new ByteArrayInputStream(binaryBytes);
-        OpenPgpInputStream openPgpInputStream = new OpenPgpInputStream(binaryIn);
+        OpenPGPAnimalSnifferInputStream openPgpInputStream = new OpenPGPAnimalSnifferInputStream(binaryIn);
 
         assertTrue(openPgpInputStream.isBinaryOpenPgp());
         assertFalse(openPgpInputStream.isAsciiArmored());
@@ -728,7 +728,7 @@ public class OpenPgpInputStreamTest {
     @Test
     public void emptyStreamTest() throws IOException {
         ByteArrayInputStream in = new ByteArrayInputStream(new byte[0]);
-        OpenPgpInputStream openPgpInputStream = new OpenPgpInputStream(in);
+        OpenPGPAnimalSnifferInputStream openPgpInputStream = new OpenPGPAnimalSnifferInputStream(in);
 
         assertFalse(openPgpInputStream.isBinaryOpenPgp());
         assertFalse(openPgpInputStream.isAsciiArmored());
@@ -755,7 +755,7 @@ public class OpenPgpInputStreamTest {
 
         byte[] binary = signedOut.toByteArray();
 
-        OpenPgpInputStream openPgpIn = new OpenPgpInputStream(new ByteArrayInputStream(binary));
+        OpenPGPAnimalSnifferInputStream openPgpIn = new OpenPGPAnimalSnifferInputStream(new ByteArrayInputStream(binary));
         assertFalse(openPgpIn.isAsciiArmored());
         assertTrue(openPgpIn.isLikelyOpenPgpMessage());
     }

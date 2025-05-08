@@ -10,7 +10,7 @@ import java.io.OutputStream
 import kotlin.jvm.Throws
 import org.bouncycastle.util.io.Streams
 import org.pgpainless.PGPainless
-import org.pgpainless.decryption_verification.OpenPgpInputStream
+import org.pgpainless.decryption_verification.OpenPGPAnimalSnifferInputStream
 import org.pgpainless.util.ArmoredOutputStreamFactory
 import sop.Ready
 import sop.exception.SOPGPException
@@ -27,7 +27,7 @@ class ArmorImpl(private val api: PGPainless) : Armor {
                 val bufferedOutputStream = BufferedOutputStream(outputStream)
 
                 // Determine the nature of the given data
-                val openPgpIn = OpenPgpInputStream(data)
+                val openPgpIn = OpenPGPAnimalSnifferInputStream(data)
                 openPgpIn.reset()
 
                 if (openPgpIn.isAsciiArmored) {
