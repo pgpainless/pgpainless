@@ -4,6 +4,8 @@
 
 package org.pgpainless.algorithm
 
+import org.bouncycastle.openpgp.api.MessageEncryptionMechanism
+
 enum class AEADAlgorithm(val algorithmId: Int, val ivLength: Int, val tagLength: Int) {
 
     /**
@@ -26,6 +28,9 @@ enum class AEADAlgorithm(val algorithmId: Int, val ivLength: Int, val tagLength:
      */
     GCM(3, 12, 16),
     ;
+
+    fun toMechanism(ciphermode: SymmetricKeyAlgorithm): MessageEncryptionMechanism =
+        MessageEncryptionMechanism.aead(ciphermode.algorithmId, this.algorithmId)
 
     companion object {
         @JvmStatic
