@@ -21,7 +21,6 @@ import java.util.Set;
 import org.bouncycastle.bcpg.ArmoredOutputStream;
 import org.bouncycastle.openpgp.PGPException;
 import org.bouncycastle.openpgp.PGPSignature;
-import org.bouncycastle.openpgp.api.MessageEncryptionMechanism;
 import org.bouncycastle.openpgp.api.OpenPGPCertificate;
 import org.bouncycastle.openpgp.api.OpenPGPKey;
 import org.bouncycastle.util.io.Streams;
@@ -338,14 +337,13 @@ public class EncryptDecryptTest {
                 .onOutputStream(bOut)
                 .withOptions(ProducerOptions.encrypt(
                         EncryptionOptions.encryptCommunications()
-                                .overrideEncryptionMechanism(MessageEncryptionMechanism.aead(SymmetricKeyAlgorithm.AES_192.getAlgorithmId(), AEADAlgorithm.OCB.getAlgorithmId()))
+                                .overrideEncryptionMechanism(AEADAlgorithm.OCB.toMechanism(SymmetricKeyAlgorithm.AES_192))
                                 .addRecipient(keyWithoutSEIPD2Feature.toCertificate())));
 
         eOut.write(testMessage.getBytes(StandardCharsets.UTF_8));
         eOut.close();
         EncryptionResult result = eOut.getResult();
-        assertEquals(MessageEncryptionMechanism.aead(
-                        SymmetricKeyAlgorithm.AES_192.getAlgorithmId(), AEADAlgorithm.OCB.getAlgorithmId()),
+        assertEquals(AEADAlgorithm.OCB.toMechanism(SymmetricKeyAlgorithm.AES_192),
                 result.getEncryptionMechanism());
 
         ByteArrayInputStream bIn = new ByteArrayInputStream(bOut.toByteArray());
@@ -357,7 +355,7 @@ public class EncryptDecryptTest {
         decIn.close();
 
         MessageMetadata metadata = decIn.getMetadata();
-        assertEquals(MessageEncryptionMechanism.aead(SymmetricKeyAlgorithm.AES_192.getAlgorithmId(), AEADAlgorithm.OCB.getAlgorithmId()),
+        assertEquals(AEADAlgorithm.OCB.toMechanism(SymmetricKeyAlgorithm.AES_192),
                 metadata.getEncryptionMechanism());
     }
 
@@ -371,10 +369,7 @@ public class EncryptDecryptTest {
                 .withOptions(
                         ProducerOptions.encrypt(EncryptionOptions.encryptCommunications()
                                 .overrideEncryptionMechanism(
-                                        MessageEncryptionMechanism.aead(
-                                                SymmetricKeyAlgorithm.AES_192.getAlgorithmId(),
-                                                AEADAlgorithm.OCB.getAlgorithmId()
-                                        ))
+                                        AEADAlgorithm.OCB.toMechanism(SymmetricKeyAlgorithm.AES_192))
                                 .addMessagePassphrase(Passphrase.fromPassword("sw0rdf1sh"))
                         ));
 
@@ -382,8 +377,7 @@ public class EncryptDecryptTest {
         eOut.close();
         EncryptionResult result = eOut.getResult();
 
-        assertEquals(MessageEncryptionMechanism.aead(
-                SymmetricKeyAlgorithm.AES_192.getAlgorithmId(), AEADAlgorithm.OCB.getAlgorithmId()),
+        assertEquals(AEADAlgorithm.OCB.toMechanism(SymmetricKeyAlgorithm.AES_192),
                 result.getEncryptionMechanism());
 
         ByteArrayInputStream bIn = new ByteArrayInputStream(bOut.toByteArray());
@@ -394,7 +388,7 @@ public class EncryptDecryptTest {
         Streams.drain(decIn);
         decIn.close();
         MessageMetadata metadata = decIn.getMetadata();
-        assertEquals(MessageEncryptionMechanism.aead(SymmetricKeyAlgorithm.AES_192.getAlgorithmId(), AEADAlgorithm.OCB.getAlgorithmId()),
+        assertEquals(AEADAlgorithm.OCB.toMechanism(SymmetricKeyAlgorithm.AES_192),
                 metadata.getEncryptionMechanism());
     }
 
