@@ -24,7 +24,7 @@ PGPainless aims to make using OpenPGP in Java projects as simple as possible.
 It does so by introducing an intuitive Builder structure, which allows easy 
 setup of encryption/decryption operations, as well as straight forward key generation.
 
-PGPainless is based around the Bouncy Castle java library and can be used on Android down to API level 10.
+PGPainless is based around the Bouncy Castle java library and can be used on Android.
 It can be configured to either use the Java Cryptographic Engine (JCE), or Bouncy Castles lightweight reimplementation.
 
 While signature verification in Bouncy Castle is limited to signature correctness, PGPainless goes much further.
@@ -32,7 +32,7 @@ It also checks if signing subkeys are properly bound to their primary key, if ke
 if keys are allowed to create signatures in the first place.
 
 These rigorous checks make PGPainless stand out from other Java-based OpenPGP libraries and are the reason why
-PGPainless currently [*scores first place* on Sequoia-PGPs Interoperability Test-Suite](https://tests.sequoia-pgp.org).
+PGPainless currently scores above average on Sequoia-PGPs [Interoperability Test-Suite](https://tests.sequoia-pgp.org).
 
 > At FlowCrypt we are using PGPainless in our Kotlin code bases on Android and on server side.
 > The ergonomics of legacy PGP tooling on Java is not very good, and PGPainless improves it greatly.
