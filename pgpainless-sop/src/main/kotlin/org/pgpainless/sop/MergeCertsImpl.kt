@@ -7,7 +7,6 @@ package org.pgpainless.sop
 import java.io.InputStream
 import java.io.OutputStream
 import org.bouncycastle.bcpg.KeyIdentifier
-import org.bouncycastle.bcpg.PacketFormat
 import org.bouncycastle.openpgp.api.OpenPGPCertificate
 import org.pgpainless.PGPainless
 import org.pgpainless.util.ArmoredOutputStreamFactory
@@ -56,7 +55,7 @@ class MergeCertsImpl(private val api: PGPainless) : MergeCerts {
 
                 // emit merged and updated base certs
                 for (merged in baseCerts.values) {
-                    out.write(merged.getEncoded(PacketFormat.CURRENT))
+                    out.write(merged.getEncoded())
                 }
 
                 if (armor) {
