@@ -5,17 +5,25 @@
 package org.pgpainless.bouncycastle.extensions
 
 import org.bouncycastle.openpgp.PGPPublicKeyEncryptedData
-import org.bouncycastle.openpgp.PGPSignature
 import org.bouncycastle.openpgp.api.OpenPGPKey
 import org.bouncycastle.openpgp.api.OpenPGPKey.OpenPGPPrivateKey
 import org.bouncycastle.openpgp.api.OpenPGPKey.OpenPGPSecretKey
 import org.pgpainless.util.Passphrase
 
+/**
+ * Return the [OpenPGPSecretKey] that can be used to decrypt the given [PGPPublicKeyEncryptedData].
+ *
+ * @param pkesk public-key encrypted session-key packet
+ * @return secret key or null if no matching secret key was found
+ */
 fun OpenPGPKey.getSecretKeyFor(pkesk: PGPPublicKeyEncryptedData): OpenPGPSecretKey? =
     this.getSecretKey(pkesk.keyIdentifier)
 
-fun OpenPGPKey.getSecretKeyFor(signature: PGPSignature): OpenPGPSecretKey? =
-    this.getSecretKey(signature.fingerprint!!.keyIdentifier)
-
-fun OpenPGPKey.OpenPGPSecretKey.unlock(passphrase: Passphrase): OpenPGPPrivateKey =
+/**
+ * Unlock the [OpenPGPSecretKey], returning the unlocked [OpenPGPPrivateKey].
+ *
+ * @param passphrase passphrase to unlock the key
+ * @return unlocked [OpenPGPPrivateKey]
+ */
+fun OpenPGPSecretKey.unlock(passphrase: Passphrase): OpenPGPPrivateKey =
     this.unlock(passphrase.getChars())

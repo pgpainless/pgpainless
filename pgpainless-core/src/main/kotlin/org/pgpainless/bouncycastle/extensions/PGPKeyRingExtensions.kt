@@ -16,11 +16,22 @@ import org.pgpainless.PGPainless
 import org.pgpainless.key.OpenPgpFingerprint
 import org.pgpainless.key.SubkeyIdentifier
 
-/** Return true, if this [PGPKeyRing] contains the subkey identified by the [SubkeyIdentifier]. */
+/**
+ * Return true, if this [PGPKeyRing] contains the subkey identified by the [SubkeyIdentifier].
+ *
+ * @param subkeyIdentifier subkey identifier
+ * @return true if the [PGPKeyRing] contains the [SubkeyIdentifier]
+ */
 fun PGPKeyRing.matches(subkeyIdentifier: SubkeyIdentifier): Boolean =
     this.publicKey.keyIdentifier.matches(subkeyIdentifier.certificateIdentifier) &&
         this.getPublicKey(subkeyIdentifier.componentKeyIdentifier) != null
 
+/**
+ * Return true, if this [PGPKeyRing] contains the given [componentKey].
+ *
+ * @param componentKey component key
+ * @return true if the [PGPKeyRing] contains the [componentKey]
+ */
 fun PGPKeyRing.matches(componentKey: OpenPGPComponentKey): Boolean =
     this.matches(SubkeyIdentifier(componentKey))
 
@@ -60,13 +71,37 @@ fun PGPKeyRing.hasPublicKey(fingerprint: OpenPgpFingerprint): Boolean =
 fun PGPKeyRing.getPublicKey(fingerprint: OpenPgpFingerprint): PGPPublicKey? =
     this.getPublicKey(fingerprint.keyIdentifier)
 
+/**
+ * Return the [PGPPublicKey] with the given [keyIdentifier], or throw a [NoSuchElementException] if
+ * no matching public key was found.
+ *
+ * @param keyIdentifier key identifier
+ * @return public key
+ * @throws NoSuchElementException if no matching public key was found
+ */
 fun PGPKeyRing.requirePublicKey(keyIdentifier: KeyIdentifier): PGPPublicKey =
     getPublicKey(keyIdentifier)
         ?: throw NoSuchElementException("OpenPGP key does not contain key with id $keyIdentifier.")
 
+/**
+ * Return the [PGPPublicKey] with the given key-id, or throw a [NoSuchElementException] if no
+ * matching public key was found.
+ *
+ * @param keyId key id
+ * @return public key
+ * @throws NoSuchElementException if no matching public key was found
+ */
 @Deprecated("Pass in a KeyIdentifier instead.")
 fun PGPKeyRing.requirePublicKey(keyId: Long): PGPPublicKey = requirePublicKey(KeyIdentifier(keyId))
 
+/**
+ * Return the [PGPPublicKey] with the given [fingerprint], or throw a [NoSuchElementException] if no
+ * matching public key was found.
+ *
+ * @param fingerprint key fingerprint
+ * @return public key
+ * @throws NoSuchElementException if no matching public key was found
+ */
 fun PGPKeyRing.requirePublicKey(fingerprint: OpenPgpFingerprint): PGPPublicKey =
     requirePublicKey(fingerprint.keyIdentifier)
 
@@ -90,9 +125,21 @@ val PGPKeyRing.openPgpFingerprint: OpenPgpFingerprint
 /** Return this OpenPGP key as an ASCII armored String. */
 fun PGPKeyRing.toAsciiArmor(): String = PGPainless.asciiArmor(this)
 
+/**
+ * Convert the given [PGPKeyRing] into an [OpenPGPCertificate].
+ *
+ * @return certificate
+ */
 @Deprecated("Use toOpenPGPCertificate(implementation) instead.")
 fun PGPKeyRing.toOpenPGPCertificate(): OpenPGPCertificate =
     toOpenPGPCertificate(PGPainless.getInstance().implementation)
 
+/**
+ * Convert the given [PGPKeyRing] into an [OpenPGPCertificate] using the given
+ * [OpenPGPImplementation].
+ *
+ * @param implementation OpenPGP implementation
+ * @return certificate
+ */
 fun PGPKeyRing.toOpenPGPCertificate(implementation: OpenPGPImplementation): OpenPGPCertificate =
     OpenPGPCertificate(this, implementation)
