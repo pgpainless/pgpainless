@@ -90,9 +90,7 @@ class EncryptionOptions(private val purpose: EncryptionPurpose, private val api:
         authority
             .lookupByUserId(userId, email, evaluationDate, targetAmount)
             .filter { it.isAuthenticated() }
-            .forEach {
-                addRecipient(api.toCertificate(it.certificate)).also { foundAcceptable = true }
-            }
+            .forEach { addRecipient(it.certificate).also { foundAcceptable = true } }
         require(foundAcceptable) {
             "Could not identify any trust-worthy certificates for '$userId' and target trust amount $targetAmount."
         }

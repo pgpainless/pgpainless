@@ -5,6 +5,7 @@
 package org.pgpainless.authentication
 
 import java.util.*
+import org.bouncycastle.bcpg.KeyIdentifier
 import org.pgpainless.key.OpenPgpFingerprint
 
 /**
@@ -36,7 +37,30 @@ interface CertificateAuthority {
         email: Boolean,
         referenceTime: Date,
         targetAmount: Int
-    ): CertificateAuthenticity
+    ): CertificateAuthenticity? =
+        authenticateBinding(fingerprint.keyIdentifier, userId, email, referenceTime, targetAmount)
+
+    /**
+     * Determine the authenticity of the binding between the given cert identifier and the userId.
+     * In other words, determine, how much evidence can be gathered, that the certificate with the
+     * given fingerprint really belongs to the user with the given userId.
+     *
+     * @param certIdentifier identifier of the certificate
+     * @param userId userId
+     * @param email if true, the userId will be treated as an email address and all user-IDs
+     *   containing the email address will be matched.
+     * @param referenceTime reference time at which the binding shall be evaluated
+     * @param targetAmount target trust amount (120 = fully authenticated, 240 = doubly
+     *   authenticated, 60 = partially authenticated...)
+     * @return information about the authenticity of the binding
+     */
+    fun authenticateBinding(
+        certIdentifier: KeyIdentifier,
+        userId: CharSequence,
+        email: Boolean,
+        referenceTime: Date,
+        targetAmount: Int
+    ): CertificateAuthenticity?
 
     /**
      * Lookup certificates, which carry a trustworthy binding to the given userId.
@@ -50,7 +74,7 @@ interface CertificateAuthority {
      * @return list of identified bindings
      */
     fun lookupByUserId(
-        userId: String,
+        userId: CharSequence,
         email: Boolean,
         referenceTime: Date,
         targetAmount: Int
@@ -68,6 +92,23 @@ interface CertificateAuthority {
      */
     fun identifyByFingerprint(
         fingerprint: OpenPgpFingerprint,
+        referenceTime: Date,
+        targetAmount: Int
+    ): List<CertificateAuthenticity> =
+        identifyByFingerprint(fingerprint.keyIdentifier, referenceTime, targetAmount)
+
+    /**
+     * Identify trustworthy bindings for a certificate. The result is a list of authenticatable
+     * userIds on the certificate.
+     *
+     * @param certIdentifier identifier of the certificate
+     * @param referenceTime reference time for trust calculations
+     * @param targetAmount target trust amount (120 = fully authenticated, 240 = doubly
+     *   authenticated, 60 = partially authenticated...)
+     * @return list of identified bindings
+     */
+    fun identifyByFingerprint(
+        certIdentifier: KeyIdentifier,
         referenceTime: Date,
         targetAmount: Int
     ): List<CertificateAuthenticity>
