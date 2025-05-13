@@ -57,17 +57,29 @@ val PGPSignature.issuerKeyId: Long
             }
         }
 
-/** Return true, if the signature was likely issued by a key with the given fingerprint. */
+/**
+ * Return true, if the signature was likely issued by a key with the given fingerprint.
+ *
+ * @param fingerprint fingerprint of the key
+ * @return true if signature was likely issued by the key
+ */
 fun PGPSignature.wasIssuedBy(fingerprint: OpenPgpFingerprint): Boolean =
     wasIssuedBy(fingerprint.keyIdentifier)
 
 /**
- * Return true, if the signature was likely issued by a key with the given fingerprint.
+ * Return true, if the signature was likely issued by the given key.
  *
  * @param key key
+ * @return true if signature was likely issued by the key
  */
 fun PGPSignature.wasIssuedBy(key: PGPPublicKey): Boolean = wasIssuedBy(key.keyIdentifier)
 
+/**
+ * Return true, if the signature was likely issued by a key with the given identifier.
+ *
+ * @param keyIdentifier key identifier
+ * @return true if signature was likely issued by the key
+ */
 fun PGPSignature.wasIssuedBy(keyIdentifier: KeyIdentifier): Boolean =
     KeyIdentifier.matches(this.keyIdentifiers, keyIdentifier, true)
 
@@ -87,6 +99,13 @@ val PGPSignature.isHardRevocation
             else -> false // Not a revocation
         }
 
+/**
+ * Assert that the signatures creation time falls into the period between [notBefore] and
+ * [notAfter].
+ *
+ * @param notBefore lower bound. If null, do not check the lower bound
+ * @param notAfter upper bound. If null, do not check the upper bound
+ */
 fun PGPSignature.assertCreatedInBounds(notBefore: Date?, notAfter: Date?) {
     if (notBefore != null && creationTime < notBefore) {
         throw SignatureValidationException(
@@ -102,19 +121,35 @@ fun PGPSignature.assertCreatedInBounds(notBefore: Date?, notAfter: Date?) {
     }
 }
 
+/**
+ * Deduce a [RevocationState] from the signature. Non-revocation signatures result in
+ * [RevocationState.notRevoked]. Hard revocations result in [RevocationState.hardRevoked], while
+ * soft revocations return [RevocationState.softRevoked]
+ *
+ * @return revocation state
+ */
 fun PGPSignature?.toRevocationState() =
     if (this == null) RevocationState.notRevoked()
     else if (isHardRevocation) RevocationState.hardRevoked()
     else RevocationState.softRevoked(creationTime)
 
+/** The signatures issuer fingerprint as [OpenPgpFingerprint]. */
 val PGPSignature.fingerprint: OpenPgpFingerprint?
     get() = SignatureSubpacketsUtil.getIssuerFingerprintAsOpenPgpFingerprint(this)
 
+/** The signatures [PublicKeyAlgorithm]. */
 val PGPSignature.publicKeyAlgorithm: PublicKeyAlgorithm
     get() = PublicKeyAlgorithm.requireFromId(keyAlgorithm)
 
+/** The signatures [HashAlgorithm]. */
 val PGPSignature.signatureHashAlgorithm: HashAlgorithm
     get() = HashAlgorithm.requireFromId(hashAlgorithm)
 
+/**
+ * Return true if the signature has the given [SignatureType].
+ *
+ * @param type signature type
+ * @return true if the signature type matches the signatures type
+ */
 fun PGPSignature.isOfType(type: SignatureType): Boolean =
     SignatureType.fromCode(signatureType) == type

@@ -11,10 +11,20 @@ import org.bouncycastle.openpgp.api.OpenPGPImplementation
 import org.bouncycastle.openpgp.operator.PGPDataEncryptorBuilder
 import org.bouncycastle.openpgp.operator.PGPDigestCalculator
 
+/**
+ * Return a [PGPDigestCalculator] that is based on [HashAlgorithmTags.SHA1], used for key checksum
+ * calculations.
+ */
 fun OpenPGPImplementation.checksumCalculator(): PGPDigestCalculator {
     return pgpDigestCalculatorProvider().get(HashAlgorithmTags.SHA1)
 }
 
+/**
+ * Return a [PGPDataEncryptorBuilder] for the given [MessageEncryptionMechanism].
+ *
+ * @param mechanism
+ * @return data encryptor builder
+ */
 fun OpenPGPImplementation.pgpDataEncryptorBuilder(
     mechanism: MessageEncryptionMechanism
 ): PGPDataEncryptorBuilder {
@@ -32,7 +42,5 @@ fun OpenPGPImplementation.pgpDataEncryptorBuilder(
                 it.setUseV5AEAD()
             }
         }
-
-        return it
     }
 }

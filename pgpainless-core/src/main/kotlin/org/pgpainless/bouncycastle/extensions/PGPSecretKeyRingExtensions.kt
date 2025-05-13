@@ -98,12 +98,30 @@ fun PGPSecretKeyRing.getSecretKeyFor(signature: PGPSignature): PGPSecretKey? =
 fun PGPSecretKeyRing.getSecretKeyFor(onePassSignature: PGPOnePassSignature): PGPSecretKey? =
     this.getSecretKey(onePassSignature.keyIdentifier)
 
+/**
+ * Return the [PGPSecretKey] that can be used to decrypt the given [PGPPublicKeyEncryptedData]
+ * packet.
+ *
+ * @param pkesk public-key encrypted session-key packet
+ * @return secret-key or null if no matching secret key was found
+ */
 fun PGPSecretKeyRing.getSecretKeyFor(pkesk: PGPPublicKeyEncryptedData): PGPSecretKey? =
     this.getSecretKey(pkesk.keyIdentifier)
 
+/**
+ * Convert the [PGPSecretKeyRing] into an [OpenPGPKey].
+ *
+ * @return key
+ */
 @Deprecated("Use toOpenPGPKey(implementation) instead.")
 fun PGPSecretKeyRing.toOpenPGPKey(): OpenPGPKey =
     toOpenPGPKey(PGPainless.getInstance().implementation)
 
+/**
+ * Convert the [PGPSecretKeyRing] into an [OpenPGPKey] using the given [OpenPGPImplementation].
+ *
+ * @param implementation openpgp implementation
+ * @return key
+ */
 fun PGPSecretKeyRing.toOpenPGPKey(implementation: OpenPGPImplementation): OpenPGPKey =
     OpenPGPKey(this, implementation)

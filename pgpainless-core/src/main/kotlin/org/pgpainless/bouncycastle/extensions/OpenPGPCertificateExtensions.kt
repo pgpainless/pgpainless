@@ -9,6 +9,11 @@ import org.bouncycastle.openpgp.api.OpenPGPCertificate
 import org.bouncycastle.openpgp.api.OpenPGPCertificate.OpenPGPComponentKey
 import org.pgpainless.algorithm.OpenPGPKeyVersion
 
+/**
+ * Return the [OpenPGPComponentKey] that issued the given [PGPOnePassSignature].
+ *
+ * @param ops one pass signature
+ */
 fun OpenPGPCertificate.getSigningKeyFor(ops: PGPOnePassSignature): OpenPGPComponentKey? =
     this.getKey(ops.keyIdentifier)
 
