@@ -295,7 +295,8 @@ class MessageMetadata(val message: Message) {
                     email,
                     it.signature.creationTime,
                     targetAmount)
-                .authenticated
+                ?.authenticated
+                ?: false
         }
     }
 
