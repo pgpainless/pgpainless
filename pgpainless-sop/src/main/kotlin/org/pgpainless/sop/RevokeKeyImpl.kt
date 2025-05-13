@@ -7,9 +7,7 @@ package org.pgpainless.sop
 import java.io.IOException
 import java.io.InputStream
 import java.io.OutputStream
-import java.lang.RuntimeException
 import org.bouncycastle.openpgp.PGPException
-import org.bouncycastle.openpgp.PGPPublicKeyRingCollection
 import org.bouncycastle.openpgp.api.OpenPGPCertificate
 import org.pgpainless.PGPainless
 import org.pgpainless.bouncycastle.extensions.toOpenPGPCertificate
@@ -68,14 +66,16 @@ class RevokeKeyImpl(private val api: PGPainless) : RevokeKey {
 
         return object : Ready() {
             override fun writeTo(outputStream: OutputStream) {
-                val collection =
-                    PGPPublicKeyRingCollection(revocationCertificates.map { it.pgpPublicKeyRing })
                 if (armor) {
                     val armorOut = ArmoredOutputStreamFactory.get(outputStream)
-                    collection.encode(armorOut)
+                    for (cert in revocationCertificates) {
+                        armorOut.write(cert.getEncoded())
+                    }
                     armorOut.close()
                 } else {
-                    collection.encode(outputStream)
+                    for (cert in revocationCertificates) {
+                        outputStream.write(cert.getEncoded())
+                    }
                 }
             }
         }

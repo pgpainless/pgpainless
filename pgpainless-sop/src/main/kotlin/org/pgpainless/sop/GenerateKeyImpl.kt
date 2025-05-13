@@ -8,6 +8,7 @@ import java.io.OutputStream
 import java.lang.RuntimeException
 import java.security.InvalidAlgorithmParameterException
 import java.security.NoSuchAlgorithmException
+import org.bouncycastle.bcpg.PacketFormat
 import org.bouncycastle.openpgp.PGPException
 import org.bouncycastle.openpgp.api.OpenPGPKey
 import org.pgpainless.PGPainless
@@ -49,10 +50,10 @@ class GenerateKeyImpl(private val api: PGPainless) : GenerateKey {
             return object : Ready() {
                 override fun writeTo(outputStream: OutputStream) {
                     if (armor) {
-                        val armored = key.toAsciiArmoredString()
+                        val armored = key.toAsciiArmoredString(PacketFormat.CURRENT)
                         outputStream.write(armored.toByteArray())
                     } else {
-                        key.pgpKeyRing.encode(outputStream)
+                        outputStream.write(key.getEncoded(PacketFormat.CURRENT))
                     }
                 }
             }
