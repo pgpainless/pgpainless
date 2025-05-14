@@ -25,7 +25,7 @@ import org.junit.jupiter.api.extension.TestTemplateInvocationContextProvider;
  * Example test annotation:
  * {@code
  *     @TestTemplate
- *     @ExtendWith(ImplementationFactoryTestInvocationContextProvider.class)
+ *     @ExtendWith(TestAllImplementations.class)
  *     public void testAllImplementationFactories() {
  *         ...
  *     }
