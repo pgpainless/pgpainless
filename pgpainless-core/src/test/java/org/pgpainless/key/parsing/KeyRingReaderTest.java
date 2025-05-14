@@ -611,8 +611,7 @@ class KeyRingReaderTest {
     @Test
     public void testReadKeyRingWithArmoredSecretKey() throws IOException {
         OpenPGPKey secretKeys = api.generateKey().modernKeyRing("Alice <alice@pgpainless.org>");
-        // remove PacketFormat argument once https://github.com/bcgit/bc-java/pull/1993 lands in BC
-        String armored = secretKeys.toAsciiArmoredString(PacketFormat.LEGACY);
+        String armored = secretKeys.toAsciiArmoredString();
 
         PGPKeyRing keyRing = PGPainless.readKeyRing()
                 .keyRing(armored);
