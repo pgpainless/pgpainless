@@ -8,12 +8,11 @@ import java.io.IOException
 import java.io.InputStream
 import java.io.OutputStream
 import org.bouncycastle.openpgp.PGPException
-import org.bouncycastle.openpgp.PGPSecretKeyRingCollection
 import org.pgpainless.PGPainless
 import org.pgpainless.exception.MissingPassphraseException
 import org.pgpainless.key.protection.SecretKeyRingProtector
 import org.pgpainless.key.util.KeyRingUtils
-import org.pgpainless.util.ArmoredOutputStreamFactory
+import org.pgpainless.util.OpenPGPCertificateUtil
 import org.pgpainless.util.Passphrase
 import sop.Ready
 import sop.exception.SOPGPException
@@ -54,16 +53,14 @@ class ChangeKeyPasswordImpl(private val api: PGPainless) : ChangeKeyPassword {
                             "Cannot change passphrase of key ${it.keyIdentifier}", e)
                     }
                 }
-                .let { PGPSecretKeyRingCollection(it) }
+                .map { api.toKey(it) }
 
         return object : Ready() {
             override fun writeTo(outputStream: OutputStream) {
                 if (armor) {
-                    ArmoredOutputStreamFactory.get(outputStream).use {
-                        updatedSecretKeys.encode(it)
-                    }
+                    OpenPGPCertificateUtil.armor(updatedSecretKeys, outputStream)
                 } else {
-                    updatedSecretKeys.encode(outputStream)
+                    OpenPGPCertificateUtil.encode(updatedSecretKeys, outputStream)
                 }
             }
         }
