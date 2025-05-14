@@ -13,6 +13,8 @@ import org.bouncycastle.openpgp.PGPException
 import org.bouncycastle.openpgp.api.OpenPGPKey
 import org.pgpainless.PGPainless
 import org.pgpainless.algorithm.KeyFlag
+import org.pgpainless.bouncycastle.extensions.asciiArmor
+import org.pgpainless.bouncycastle.extensions.encode
 import org.pgpainless.key.generation.KeyRingBuilder
 import org.pgpainless.key.generation.KeySpec
 import org.pgpainless.key.generation.type.KeyType
@@ -50,10 +52,9 @@ class GenerateKeyImpl(private val api: PGPainless) : GenerateKey {
             return object : Ready() {
                 override fun writeTo(outputStream: OutputStream) {
                     if (armor) {
-                        val armored = key.toAsciiArmoredString(PacketFormat.CURRENT)
-                        outputStream.write(armored.toByteArray())
+                        key.asciiArmor(outputStream, PacketFormat.CURRENT)
                     } else {
-                        outputStream.write(key.getEncoded(PacketFormat.CURRENT))
+                        key.encode(outputStream, PacketFormat.CURRENT)
                     }
                 }
             }

@@ -7,12 +7,10 @@ package org.pgpainless.sop
 import java.io.InputStream
 import java.io.OutputStream
 import org.bouncycastle.bcpg.KeyIdentifier
-import org.bouncycastle.bcpg.PacketFormat
 import org.bouncycastle.openpgp.PGPSecretKeyRing
 import org.bouncycastle.openpgp.api.OpenPGPCertificate
-import org.bouncycastle.openpgp.api.OpenPGPKey
 import org.pgpainless.PGPainless
-import org.pgpainless.util.ArmoredOutputStreamFactory
+import org.pgpainless.util.OpenPGPCertificateUtil
 import org.pgpainless.util.Passphrase
 import sop.Ready
 import sop.operation.UpdateKey
@@ -29,33 +27,25 @@ class UpdateKeyImpl(private val api: PGPainless) : UpdateKey {
     override fun key(key: InputStream): Ready {
         return object : Ready() {
             override fun writeTo(outputStream: OutputStream) {
-                val out =
-                    if (armor) {
-                        ArmoredOutputStreamFactory.get(outputStream)
-                    } else {
-                        outputStream
-                    }
-
-                val keyList = api.readKey().parseKeys(key)
-                for (k in keyList) {
-                    val updatedKey: OpenPGPKey =
-                        if (mergeCerts[k.keyIdentifier] == null) {
-                            k
+                val keyList =
+                    api.readKey().parseKeys(key).map {
+                        if (mergeCerts[it.keyIdentifier] == null) {
+                            it
                         } else {
                             val updatedCert: OpenPGPCertificate =
                                 api.mergeCertificate(
-                                    k.toCertificate(), mergeCerts[k.keyIdentifier]!!)
+                                    it.toCertificate(), mergeCerts[it.keyIdentifier]!!)
                             api.toKey(
                                 PGPSecretKeyRing.replacePublicKeys(
-                                    k.pgpSecretKeyRing, updatedCert.pgpPublicKeyRing))
+                                    it.pgpSecretKeyRing, updatedCert.pgpPublicKeyRing))
                         }
-                    out.write(updatedKey.getEncoded(PacketFormat.CURRENT))
-                }
+                    }
 
                 if (armor) {
-                    out.close()
+                    OpenPGPCertificateUtil.armor(keyList, outputStream)
+                } else {
+                    OpenPGPCertificateUtil.encode(keyList, outputStream)
                 }
-                outputStream.close()
             }
         }
     }
