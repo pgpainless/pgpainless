@@ -14,7 +14,7 @@ import org.pgpainless.bouncycastle.extensions.toOpenPGPCertificate
 import org.pgpainless.exception.WrongPassphraseException
 import org.pgpainless.key.util.KeyRingUtils
 import org.pgpainless.key.util.RevocationAttributes
-import org.pgpainless.util.ArmoredOutputStreamFactory
+import org.pgpainless.util.OpenPGPCertificateUtil
 import org.pgpainless.util.Passphrase
 import sop.Ready
 import sop.exception.SOPGPException
@@ -67,15 +67,9 @@ class RevokeKeyImpl(private val api: PGPainless) : RevokeKey {
         return object : Ready() {
             override fun writeTo(outputStream: OutputStream) {
                 if (armor) {
-                    val armorOut = ArmoredOutputStreamFactory.get(outputStream)
-                    for (cert in revocationCertificates) {
-                        armorOut.write(cert.getEncoded())
-                    }
-                    armorOut.close()
+                    OpenPGPCertificateUtil.armor(revocationCertificates, outputStream)
                 } else {
-                    for (cert in revocationCertificates) {
-                        outputStream.write(cert.getEncoded())
-                    }
+                    OpenPGPCertificateUtil.encode(revocationCertificates, outputStream)
                 }
             }
         }

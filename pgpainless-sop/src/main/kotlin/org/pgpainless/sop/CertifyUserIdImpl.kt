@@ -6,11 +6,10 @@ package org.pgpainless.sop
 
 import java.io.InputStream
 import java.io.OutputStream
-import org.bouncycastle.bcpg.PacketFormat
 import org.bouncycastle.openpgp.api.OpenPGPKey
 import org.pgpainless.PGPainless
 import org.pgpainless.exception.KeyException
-import org.pgpainless.util.ArmoredOutputStreamFactory
+import org.pgpainless.util.OpenPGPCertificateUtil
 import org.pgpainless.util.Passphrase
 import sop.Ready
 import sop.exception.SOPGPException
@@ -27,45 +26,43 @@ class CertifyUserIdImpl(private val api: PGPainless) : CertifyUserId {
     override fun certs(certs: InputStream): Ready {
         return object : Ready() {
             override fun writeTo(outputStream: OutputStream) {
-                val out =
-                    if (armor) {
-                        ArmoredOutputStreamFactory.get(outputStream)
-                    } else outputStream
 
-                api.readKey()
-                    .parseCertificates(certs)
-                    .onEach { cert ->
-                        if (requireSelfSig) {
-                            // Check for non-bound user-ids
-                            userIds
-                                .find { cert.getUserId(it)?.isBound != true }
-                                ?.let { throw SOPGPException.CertUserIdNoMatch(cert.fingerprint) }
-                        }
-                    }
-                    .forEach { cert ->
-                        var certificate = cert
-                        keys.forEach { key ->
-                            userIds.forEach { userId ->
-                                try {
-                                    certificate =
-                                        api.generateCertification()
-                                            .certifyUserId(userId, certificate)
-                                            .withKey(key, protector)
-                                            .build()
-                                            .certifiedCertificate
-                                } catch (e: KeyException) {
-                                    throw SOPGPException.KeyCannotCertify(e)
-                                }
+                val certificates =
+                    api.readKey()
+                        .parseCertificates(certs)
+                        .onEach { cert ->
+                            if (requireSelfSig) {
+                                // Check for non-bound user-ids
+                                userIds
+                                    .find { cert.getUserId(it)?.isBound != true }
+                                    ?.let {
+                                        throw SOPGPException.CertUserIdNoMatch(cert.fingerprint)
+                                    }
                             }
                         }
+                        .map { cert ->
+                            var certificate = cert
+                            keys.forEach { key ->
+                                userIds.forEach { userId ->
+                                    try {
+                                        certificate =
+                                            api.generateCertification()
+                                                .certifyUserId(userId, certificate)
+                                                .withKey(key, protector)
+                                                .build()
+                                                .certifiedCertificate
+                                    } catch (e: KeyException) {
+                                        throw SOPGPException.KeyCannotCertify(e)
+                                    }
+                                }
+                            }
+                            certificate
+                        }
 
-                        out.write(certificate.getEncoded(PacketFormat.CURRENT))
-                    }
-
-                out.close()
                 if (armor) {
-                    // armored output stream does not close inner stream
-                    outputStream.close()
+                    OpenPGPCertificateUtil.armor(certificates, outputStream)
+                } else {
+                    OpenPGPCertificateUtil.encode(certificates, outputStream)
                 }
             }
         }

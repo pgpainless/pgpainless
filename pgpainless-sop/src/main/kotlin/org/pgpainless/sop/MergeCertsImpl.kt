@@ -9,7 +9,7 @@ import java.io.OutputStream
 import org.bouncycastle.bcpg.KeyIdentifier
 import org.bouncycastle.openpgp.api.OpenPGPCertificate
 import org.pgpainless.PGPainless
-import org.pgpainless.util.ArmoredOutputStreamFactory
+import org.pgpainless.util.OpenPGPCertificateUtil
 import sop.Ready
 import sop.operation.MergeCerts
 
@@ -46,22 +46,11 @@ class MergeCertsImpl(private val api: PGPainless) : MergeCerts {
                     baseCerts[update.keyIdentifier] = api.mergeCertificate(baseCert, update)
                 }
 
-                val out =
-                    if (armor) {
-                        ArmoredOutputStreamFactory.get(outputStream)
-                    } else {
-                        outputStream
-                    }
-
-                // emit merged and updated base certs
-                for (merged in baseCerts.values) {
-                    out.write(merged.getEncoded())
-                }
-
                 if (armor) {
-                    out.close()
+                    OpenPGPCertificateUtil.armor(baseCerts.values, outputStream)
+                } else {
+                    OpenPGPCertificateUtil.encode(baseCerts.values, outputStream)
                 }
-                outputStream.close()
             }
         }
     }
