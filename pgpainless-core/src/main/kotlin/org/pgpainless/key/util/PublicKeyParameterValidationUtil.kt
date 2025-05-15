@@ -24,7 +24,7 @@ import org.pgpainless.exception.KeyIntegrityException
  * modified public key in combination with the unmodified secret key material can then lead to the
  * extraction of secret key parameters via weakly crafted messages.
  *
- * @see <a href="https://www.kopenpgp.com/">Key Overwriting (KO) Attacks against OpenPGP</a>
+ * @see [Key Overwriting (KO) Attacks against OpenPGP](https://www.kopenpgp.com/)
  */
 class PublicKeyParameterValidationUtil {
 
@@ -153,13 +153,13 @@ class PublicKeyParameterValidationUtil {
         /**
          * Validate ElGamal public key parameters.
          *
-         * Original implementation by the openpgpjs authors: <a
-         * href="https://github.com/openpgpjs/openpgpjs/blob/main/src/crypto/public_key/elgamal.js#L76-L143>OpenPGP.js
-         * source</a>
+         * Original implementation by the openpgpjs authors:
          *
          * @param secretKey secret key
          * @param publicKey public key
          * @return true if supposedly valid, false if invalid
+         * @see
+         *   [OpenPGP.js source](https://github.com/openpgpjs/openpgpjs/blob/main/src/crypto/public_key/elgamal.js#L76-L143)
          */
         @JvmStatic
         @Throws(KeyIntegrityException::class)

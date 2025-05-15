@@ -25,8 +25,7 @@ enum class PublicKeyAlgorithm(val algorithmId: Int) {
     /**
      * RSA with usage encryption.
      *
-     * @deprecated see <a href="https://tools.ietf.org/html/rfc4880#section-13.5">Deprecation
-     *   notice</a>
+     * @deprecated see [Deprecation notice](https://tools.ietf.org/html/rfc4880#section-13.5)
      */
     @Deprecated("RSA_ENCRYPT is deprecated in favor of RSA_GENERAL", ReplaceWith("RSA_GENERAL"))
     RSA_ENCRYPT(2),
@@ -34,8 +33,7 @@ enum class PublicKeyAlgorithm(val algorithmId: Int) {
     /**
      * RSA with usage of creating signatures.
      *
-     * @deprecated see <a href="https://tools.ietf.org/html/rfc4880#section-13.5">Deprecation
-     *   notice</a>
+     * @deprecated see [Deprecation notice](https://tools.ietf.org/html/rfc4880#section-13.5)
      */
     @Deprecated("RSA_SIGN is deprecated in favor of RSA_GENERAL", ReplaceWith("RSA_GENERAL"))
     RSA_SIGN(3),
@@ -55,8 +53,7 @@ enum class PublicKeyAlgorithm(val algorithmId: Int) {
     /**
      * ElGamal General.
      *
-     * @deprecated see <a href="https://tools.ietf.org/html/rfc4880#section-13.8">Deprecation
-     *   notice</a>
+     * @deprecated see [Deprecation notice](https://tools.ietf.org/html/rfc4880#section-13.8)
      */
     @Deprecated("ElGamal is deprecated") ELGAMAL_GENERAL(20),
 

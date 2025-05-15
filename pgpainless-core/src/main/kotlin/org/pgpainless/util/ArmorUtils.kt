@@ -283,8 +283,8 @@ class ArmorUtils {
          *
          * @param armor armored output stream
          * @param hashAlgorithm hash algorithm
-         * @see <a href="https://datatracker.ietf.org/doc/html/rfc4880#section-6.2"> RFC 4880 -
-         *   OpenPGP Message Format §6.2. Forming ASCII Armor</a>
+         * @see
+         *   [RFC 4880 - OpenPGP Message Format §6.2. Forming ASCII Armor](https://datatracker.ietf.org/doc/html/rfc4880#section-6.2)
          */
         @JvmStatic
         @Deprecated(
@@ -298,8 +298,8 @@ class ArmorUtils {
          *
          * @param armor armored output stream
          * @param comment free-text comment
-         * @see <a href="https://datatracker.ietf.org/doc/html/rfc4880#section-6.2"> RFC 4880 -
-         *   OpenPGP Message Format §6.2. Forming ASCII Armor</a>
+         * @see
+         *   [RFC 4880 - OpenPGP Message Format §6.2. Forming ASCII Armor](https://datatracker.ietf.org/doc/html/rfc4880#section-6.2)
          */
         @JvmStatic
         @Deprecated(
@@ -313,8 +313,8 @@ class ArmorUtils {
          *
          * @param armor armored output stream
          * @param messageId message id
-         * @see <a href="https://datatracker.ietf.org/doc/html/rfc4880#section-6.2"> RFC 4880 -
-         *   OpenPGP Message Format §6.2. Forming ASCII Armor</a>
+         * @see
+         *   [RFC 4880 - OpenPGP Message Format §6.2. Forming ASCII Armor](https://datatracker.ietf.org/doc/html/rfc4880#section-6.2)
          */
         @JvmStatic
         @Deprecated(

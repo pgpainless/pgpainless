@@ -180,8 +180,8 @@ class ProducerOptions(
      *
      * @param encoding encoding
      * @return this
-     * @see <a href="https://datatracker.ietf.org/doc/html/rfc4880#section-5.9">RFC4880 §5.9.
-     *   Literal Data Packet</a>
+     * @see
+     *   [RFC4880 §5.9. Literal Data Packet](https://datatracker.ietf.org/doc/html/rfc4880#section-5.9)
      * @deprecated options other than the default value of [StreamEncoding.BINARY] are discouraged.
      */
     @Deprecated("Options other than BINARY are discouraged.")

@@ -19,11 +19,9 @@ import org.pgpainless.key.protection.fixes.S2KUsageFix.Companion.replaceUsageChe
  * method [replaceUsageChecksumWithUsageSha1] ensures that such keys are encrypted using S2K usage
  * [SecretKeyPacket.USAGE_SHA1] instead.
  *
- * @see <a href="https://github.com/pgpainless/pgpainless/issues/176">Related PGPainless Bug
- *   Report</a>
- * @see <a href="https://github.com/pgpainless/pgpainless/issues/178">Related PGPainless Feature
- *   Request</a>
- * @see <a href="https://github.com/bcgit/bc-java/issues/1020">Related upstream BC bug report</a>
+ * @see [Related PGPainless Bug Report](https://github.com/pgpainless/pgpainless/issues/176)
+ * @see [Related PGPainless Feature Request](https://github.com/pgpainless/pgpainless/issues/178)
+ * @see [Related upstream BC bug report](https://github.com/bcgit/bc-java/issues/1020)
  */
 class S2KUsageFix {
 
@@ -39,7 +37,6 @@ class S2KUsageFix {
          * @param skipKeysWithMissingPassphrase if set to true, missing subkey passphrases will
          *   cause the subkey to stay unaffected.
          * @return fixed key ring
-         * @throws PGPException in case of a PGP error.
          */
         @JvmStatic
         @JvmOverloads

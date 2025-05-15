@@ -32,8 +32,8 @@ abstract class OpenPgpFingerprint : CharSequence, Comparable<OpenPgpFingerprint>
      * fingerprint, but we don't care, since V3 is deprecated.
      *
      * @return key id
-     * @see <a href="https://tools.ietf.org/html/rfc4880#section-12.2"> RFC-4880 §12.2: Key IDs and
-     *   Fingerprints</a>
+     * @see
+     *   [RFC-4880 §12.2: Key IDs and Fingerprints](https://tools.ietf.org/html/rfc4880#section-12.2)
      */
     abstract val keyId: Long
 

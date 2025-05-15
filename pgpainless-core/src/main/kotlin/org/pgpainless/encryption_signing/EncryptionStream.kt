@@ -30,10 +30,10 @@ const val BUFFER_SIZE = 1 shl 9
  * OutputStream that produces an OpenPGP message. The message can be encrypted, signed, or both,
  * depending on its configuration.
  *
- * This class is based upon Jens Neuhalfen's Bouncy-GPG PGPEncryptingStream.
+ * This class was originally based upon Jens Neuhalfen's Bouncy-GPG PGPEncryptingStream.
  *
- * @see <a
- *   href="https://github.com/neuhalje/bouncy-gpg/blob/master/src/main/java/name/neuhalfen/projects/crypto/bouncycastle/openpgp/encrypting/PGPEncryptingStream.java">Source</a>
+ * @see
+ *   [PGPEncryptingStream](https://github.com/neuhalje/bouncy-gpg/blob/master/src/main/java/name/neuhalfen/projects/crypto/bouncycastle/openpgp/encrypting/PGPEncryptingStream.java)
  */
 class EncryptionStream(
     private var outermostStream: OutputStream,

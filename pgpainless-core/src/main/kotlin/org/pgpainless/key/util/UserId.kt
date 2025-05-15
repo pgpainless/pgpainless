@@ -136,8 +136,8 @@ class UserId internal constructor(name: String?, comment: String?, email: String
          *
          * @param string user-id
          * @return parsed UserId object
-         * @see <a href="https://www.rfc-editor.org/rfc/rfc5322#page-16">RFC5322 §3.4. Address
-         *   Specification</a>
+         * @see
+         *   [RFC5322 §3.4. Address Specification](https://www.rfc-editor.org/rfc/rfc5322#page-16)
          */
         @JvmStatic
         fun parse(string: String): UserId {
