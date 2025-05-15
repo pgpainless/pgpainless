@@ -14,7 +14,7 @@ import org.pgpainless.algorithm.SymmetricKeyAlgorithm
  * @param encryptionAlgorithm encryption algorithm
  * @param hashAlgorithm hash algorithm
  * @param s2kCount encoded (!) s2k iteration count
- * @see <a href="https://www.rfc-editor.org/rfc/rfc4880#section-3.7.1.3">Encoding Formula</a>
+ * @see [Encoding Formula](https://www.rfc-editor.org/rfc/rfc4880#section-3.7.1.3)
  */
 data class KeyRingProtectionSettings(
     val encryptionAlgorithm: SymmetricKeyAlgorithm,

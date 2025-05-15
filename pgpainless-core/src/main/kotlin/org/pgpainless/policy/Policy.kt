@@ -354,12 +354,10 @@ class Policy(
              * problems to have a strength of at least 2000 bits.
              *
              * @return default algorithm policy
-             * @see <a
-             *   href="https://www.bsi.bund.de/SharedDocs/Downloads/EN/BSI/Publications/TechGuidelines/TG02102/BSI-TR-02102-1.pdf">BSI -
-             *   Technical Guideline - Cryptographic Mechanisms: Recommendations and Key Lengths
-             *   (2021-01)</a>
-             * @see <a href="https://www.keylength.com/">BlueKrypt | Cryptographic Key Length
-             *   Recommendation</a>
+             * @see
+             *   [BSI - Technical Guideline - Cryptographic Mechanisms: Recommendations and Key Lengths (2021-01)](https://www.bsi.bund.de/SharedDocs/Downloads/EN/BSI/Publications/TechGuidelines/TG02102/BSI-TR-02102-1.pdf)
+             * @see
+             *   [BlueKrypt | Cryptographic Key Length Recommendation](https://www.keylength.com/)
              */
             @JvmStatic
             fun bsi2021PublicKeyAlgorithmPolicy() =
