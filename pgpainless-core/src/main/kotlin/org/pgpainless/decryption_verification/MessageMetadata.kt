@@ -337,8 +337,7 @@ class MessageMetadata(val message: Message) {
      * decrypted file under its original filename, but since this field is not necessarily part of
      * the signed data of a message, usage of this field is discouraged.
      *
-     * @see <a href="https://www.rfc-editor.org/rfc/rfc4880#section-5.9">RFC4880 §5.9. Literal Data
-     *   Packet</a>
+     * @see [RFC4880 §5.9. Literal Data Packet](https://www.rfc-editor.org/rfc/rfc4880#section-5.9)
      */
     val filename: String? = findLiteralData()?.fileName
 
@@ -355,8 +354,7 @@ class MessageMetadata(val message: Message) {
      * the modification date of a decrypted file, but since this field is not necessarily part of
      * the signed data, its use is discouraged.
      *
-     * @see <a href="https://www.rfc-editor.org/rfc/rfc4880#section-5.9">RFC4880 §5.9. Literal Data
-     *   Packet</a>
+     * @see [RFC4880 §5.9. Literal Data Packet](https://www.rfc-editor.org/rfc/rfc4880#section-5.9)
      */
     val modificationDate: Date? = findLiteralData()?.modificationDate
 
@@ -365,8 +363,7 @@ class MessageMetadata(val message: Message) {
      * binary data, ...) the data has. Since this field is not necessarily part of the signed data
      * of a message, its usage is discouraged.
      *
-     * @see <a href="https://www.rfc-editor.org/rfc/rfc4880#section-5.9">RFC4880 §5.9. Literal Data
-     *   Packet</a>
+     * @see [RFC4880 §5.9. Literal Data Packet](https://www.rfc-editor.org/rfc/rfc4880#section-5.9)
      */
     val literalDataEncoding: StreamEncoding? = findLiteralData()?.format
 
@@ -459,8 +456,8 @@ class MessageMetadata(val message: Message) {
      * Outermost OpenPGP Message structure.
      *
      * @param cleartextSigned whether the message is using the Cleartext Signature Framework
-     * @see <a href="https://www.rfc-editor.org/rfc/rfc4880#section-7">RFC4880 §7. Cleartext
-     *   Signature Framework</a>
+     * @see
+     *   [RFC4880 §7. Cleartext Signature Framework](https://www.rfc-editor.org/rfc/rfc4880#section-7)
      */
     class Message(var cleartextSigned: Boolean = false) : Layer(0) {
         fun setCleartextSigned() = apply { cleartextSigned = true }
@@ -499,7 +496,7 @@ class MessageMetadata(val message: Message) {
     /**
      * Encrypted Data.
      *
-     * @param algorithm symmetric key algorithm used to encrypt the packet.
+     * @param mechanism mechanism used to encrypt the packet.
      * @param depth nesting depth at which this packet was encountered.
      */
     class EncryptedData(val mechanism: MessageEncryptionMechanism, depth: Int) :
