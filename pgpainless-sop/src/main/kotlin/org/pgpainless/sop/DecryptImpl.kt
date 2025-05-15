@@ -69,13 +69,10 @@ class DecryptImpl(private val api: PGPainless) : Decrypt {
                 val verificationList =
                     metadata.verifiedInlineSignatures.map { VerificationHelper.mapVerification(it) }
 
-                var sessionKey: SessionKey? = null
-                if (metadata.sessionKey != null) {
-                    sessionKey =
-                        SessionKey(
-                            metadata.sessionKey!!.algorithm.algorithmId.toByte(),
-                            metadata.sessionKey!!.key)
-                }
+                val sessionKey: SessionKey? =
+                    metadata.sessionKey?.let {
+                        SessionKey(it.algorithm.algorithmId.toByte(), it.key)
+                    }
                 return DecryptionResult(sessionKey, verificationList)
             }
         }
