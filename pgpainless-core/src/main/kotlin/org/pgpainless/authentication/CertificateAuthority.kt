@@ -12,8 +12,8 @@ import org.pgpainless.key.OpenPgpFingerprint
  * Interface for a CA that can authenticate trust-worthy certificates. Such a CA might be a fixed
  * list of trustworthy certificates, or a dynamic implementation like the Web-of-Trust.
  *
- * @see <a href="https://github.com/pgpainless/pgpainless-wot">PGPainless-WOT</a>
- * @see <a href="https://sequoia-pgp.gitlab.io/sequoia-wot/">OpenPGP Web of Trust</a>
+ * @see [PGPainless-WOT](https://github.com/pgpainless/pgpainless-wot)
+ * @see [OpenPGP Web of Trust](https://sequoia-pgp.gitlab.io/sequoia-wot/)
  */
 interface CertificateAuthority {
 
