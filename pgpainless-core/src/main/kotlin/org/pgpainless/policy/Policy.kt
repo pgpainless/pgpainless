@@ -37,10 +37,10 @@ class Policy(
             AlgorithmSuite.defaultAlgorithmSuite)
 
     /**
-     * Decide, whether to sanitize public key parameters when unlocking OpenPGP secret keys.
-     * OpenPGP v4 keys are susceptible to a class of attacks, where an attacker with access
-     * to the locked key material (e.g. a cloud email provider) might manipulate unprotected
-     * public key parameters of the key, leading to potential secret key leakage.
+     * Decide, whether to sanitize public key parameters when unlocking OpenPGP secret keys. OpenPGP
+     * v4 keys are susceptible to a class of attacks, where an attacker with access to the locked
+     * key material (e.g. a cloud email provider) might manipulate unprotected public key parameters
+     * of the key, leading to potential secret key leakage.
      *
      * @see [Key Overwriting (KO) Attacks against OpenPGP](https://www.kopenpgp.com/)
      */
