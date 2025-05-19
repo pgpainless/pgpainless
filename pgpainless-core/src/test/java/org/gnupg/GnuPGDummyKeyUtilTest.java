@@ -9,10 +9,12 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import java.io.IOException;
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashSet;
 import java.util.Set;
 
+import org.bouncycastle.bcpg.KeyIdentifier;
 import org.bouncycastle.bcpg.S2K;
 import org.bouncycastle.bcpg.SecretKeyPacket;
 import org.bouncycastle.openpgp.PGPSecretKey;
@@ -228,6 +230,20 @@ public class GnuPGDummyKeyUtilTest {
 
         PGPSecretKeyRing onCard = GnuPGDummyKeyUtil.modify(secretKeys)
                 .divertPrivateKeysToCard(GnuPGDummyKeyUtil.KeyFilter.only(signatureKeyId), cardSerial);
+
+        assertArrayEquals(expected.getPGPSecretKeyRing().getEncoded(), onCard.getEncoded());
+    }
+
+    @Test
+    public void testMoveSelectedKeyToCard() throws IOException {
+        OpenPGPKeyReader reader = PGPainless.getInstance().readKey();
+        OpenPGPKey secretKeys = reader.parseKey(FULL_KEY);
+        OpenPGPKey expected = reader.parseKey(SIGNATURE_KEY_ON_CARD);
+
+        PGPSecretKeyRing onCard = GnuPGDummyKeyUtil.modify(secretKeys)
+                .divertPrivateKeysToCard(GnuPGDummyKeyUtil.KeyFilter.selected(
+                        Arrays.asList(new KeyIdentifier(signatureKeyId)))
+                        , cardSerial);
 
         assertArrayEquals(expected.getPGPSecretKeyRing().getEncoded(), onCard.getEncoded());
     }
