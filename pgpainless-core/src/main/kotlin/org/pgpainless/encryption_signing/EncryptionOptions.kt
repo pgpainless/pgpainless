@@ -404,8 +404,8 @@ class EncryptionOptions(private val purpose: EncryptionPurpose, private val api:
 
     fun overrideEncryptionMechanism(encryptionMechanism: MessageEncryptionMechanism) = apply {
         require(
-            api.algorithmPolicy.symmetricKeyEncryptionAlgorithmPolicy.isAcceptable(
-                encryptionMechanism.symmetricKeyAlgorithm)) {
+            api.algorithmPolicy.messageEncryptionAlgorithmPolicy.isAcceptable(
+                encryptionMechanism)) {
                 "Provided symmetric encryption algorithm is not acceptable."
             }
         _encryptionMechanismOverride = encryptionMechanism
@@ -431,7 +431,7 @@ class EncryptionOptions(private val purpose: EncryptionPurpose, private val api:
         val algorithm =
             byPopularity()
                 .negotiate(
-                    api.algorithmPolicy.symmetricKeyEncryptionAlgorithmPolicy,
+                    api.algorithmPolicy.messageEncryptionAlgorithmPolicy.symmetricAlgorithmPolicy,
                     encryptionAlgorithmOverride,
                     preferences)
         return algorithm
