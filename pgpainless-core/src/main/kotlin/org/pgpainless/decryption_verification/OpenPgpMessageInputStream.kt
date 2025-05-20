@@ -739,7 +739,8 @@ class OpenPgpMessageInputStream(
     }
 
     private fun isAcceptable(algorithm: SymmetricKeyAlgorithm): Boolean =
-        api.algorithmPolicy.symmetricKeyDecryptionAlgorithmPolicy.isAcceptable(algorithm)
+        api.algorithmPolicy.messageDecryptionAlgorithmPolicy.symmetricAlgorithmPolicy.isAcceptable(
+            algorithm)
 
     private fun throwIfUnacceptable(algorithm: SymmetricKeyAlgorithm) {
         if (!isAcceptable(algorithm)) {
