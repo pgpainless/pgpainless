@@ -92,7 +92,8 @@ class PolicyAdapter(val policy: Policy) : OpenPGPPolicy {
      * @return boolean indicating, whether the encryption algorithm is acceptable
      */
     override fun isAcceptableSymmetricKeyAlgorithm(algorithmId: Int): Boolean {
-        return policy.symmetricKeyEncryptionAlgorithmPolicy.isAcceptable(algorithmId)
+        return policy.messageEncryptionAlgorithmPolicy.symmetricAlgorithmPolicy.isAcceptable(
+            algorithmId)
     }
     /**
      * Return the default symmetric encryption algorithm. This algorithm is used as fallback to
@@ -101,7 +102,9 @@ class PolicyAdapter(val policy: Policy) : OpenPGPPolicy {
      * @return default symmetric encryption algorithm
      */
     override fun getDefaultSymmetricKeyAlgorithm(): Int {
-        return policy.symmetricKeyEncryptionAlgorithmPolicy.defaultSymmetricKeyAlgorithm.algorithmId
+        return policy.messageEncryptionAlgorithmPolicy.symmetricAlgorithmPolicy
+            .defaultSymmetricKeyAlgorithm
+            .algorithmId
     }
 
     /**

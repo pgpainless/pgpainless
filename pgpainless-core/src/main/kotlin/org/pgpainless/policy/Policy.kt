@@ -5,23 +5,77 @@
 package org.pgpainless.policy
 
 import java.util.*
+import org.bouncycastle.openpgp.api.EncryptedDataPacketType
+import org.bouncycastle.openpgp.api.MessageEncryptionMechanism
 import org.pgpainless.algorithm.*
 import org.pgpainless.key.protection.KeyRingProtectionSettings
 import org.pgpainless.util.DateUtil
 import org.pgpainless.util.NotationRegistry
 
-class Policy(
-    val certificationSignatureHashAlgorithmPolicy: HashAlgorithmPolicy,
-    val revocationSignatureHashAlgorithmPolicy: HashAlgorithmPolicy,
-    val dataSignatureHashAlgorithmPolicy: HashAlgorithmPolicy,
-    val symmetricKeyEncryptionAlgorithmPolicy: SymmetricKeyAlgorithmPolicy,
-    val symmetricKeyDecryptionAlgorithmPolicy: SymmetricKeyAlgorithmPolicy,
-    val compressionAlgorithmPolicy: CompressionAlgorithmPolicy,
-    val publicKeyAlgorithmPolicy: PublicKeyAlgorithmPolicy,
-    val keyProtectionSettings: KeyRingProtectionSettings,
-    val notationRegistry: NotationRegistry,
+class Policy {
+
+    val certificationSignatureHashAlgorithmPolicy: HashAlgorithmPolicy
+    val revocationSignatureHashAlgorithmPolicy: HashAlgorithmPolicy
+    val dataSignatureHashAlgorithmPolicy: HashAlgorithmPolicy
+    val messageEncryptionAlgorithmPolicy: MessageEncryptionMechanismPolicy
+    val messageDecryptionAlgorithmPolicy: MessageEncryptionMechanismPolicy
+    val compressionAlgorithmPolicy: CompressionAlgorithmPolicy
+    val publicKeyAlgorithmPolicy: PublicKeyAlgorithmPolicy
+    val keyProtectionSettings: KeyRingProtectionSettings
+    val notationRegistry: NotationRegistry
     val keyGenerationAlgorithmSuite: AlgorithmSuite
-) {
+
+    constructor(
+        certificationSignatureHashAlgorithmPolicy: HashAlgorithmPolicy,
+        revocationSignatureHashAlgorithmPolicy: HashAlgorithmPolicy,
+        dataSignatureHashAlgorithmPolicy: HashAlgorithmPolicy,
+        messageEncryptionMechanismPolicy: MessageEncryptionMechanismPolicy,
+        messageDecryptionMechanismPolicy: MessageEncryptionMechanismPolicy,
+        compressionAlgorithmPolicy: CompressionAlgorithmPolicy,
+        publicKeyAlgorithmPolicy: PublicKeyAlgorithmPolicy,
+        keyProtectionSettings: KeyRingProtectionSettings,
+        notationRegistry: NotationRegistry,
+        keyGenerationAlgorithmSuite: AlgorithmSuite
+    ) {
+        this.certificationSignatureHashAlgorithmPolicy = certificationSignatureHashAlgorithmPolicy
+        this.revocationSignatureHashAlgorithmPolicy = revocationSignatureHashAlgorithmPolicy
+        this.dataSignatureHashAlgorithmPolicy = dataSignatureHashAlgorithmPolicy
+        this.messageEncryptionAlgorithmPolicy = messageEncryptionMechanismPolicy
+        this.messageDecryptionAlgorithmPolicy = messageDecryptionMechanismPolicy
+        this.compressionAlgorithmPolicy = compressionAlgorithmPolicy
+        this.publicKeyAlgorithmPolicy = publicKeyAlgorithmPolicy
+        this.keyProtectionSettings = keyProtectionSettings
+        this.notationRegistry = notationRegistry
+        this.keyGenerationAlgorithmSuite = keyGenerationAlgorithmSuite
+    }
+
+    constructor(
+        certificationSignatureHashAlgorithmPolicy: HashAlgorithmPolicy,
+        revocationSignatureHashAlgorithmPolicy: HashAlgorithmPolicy,
+        dataSignatureHashAlgorithmPolicy: HashAlgorithmPolicy,
+        symmetricKeyEncryptionAlgorithmPolicy: SymmetricKeyAlgorithmPolicy,
+        symmetricKeyDecryptionAlgorithmPolicy: SymmetricKeyAlgorithmPolicy,
+        compressionAlgorithmPolicy: CompressionAlgorithmPolicy,
+        publicKeyAlgorithmPolicy: PublicKeyAlgorithmPolicy,
+        keyProtectionSettings: KeyRingProtectionSettings,
+        notationRegistry: NotationRegistry,
+        keyGenerationAlgorithmSuite: AlgorithmSuite
+    ) {
+        this.certificationSignatureHashAlgorithmPolicy = certificationSignatureHashAlgorithmPolicy
+        this.revocationSignatureHashAlgorithmPolicy = revocationSignatureHashAlgorithmPolicy
+        this.dataSignatureHashAlgorithmPolicy = dataSignatureHashAlgorithmPolicy
+        this.messageEncryptionAlgorithmPolicy =
+            MessageEncryptionMechanismPolicy.rfc4880Plus9580PlusLibrePGP(
+                symmetricKeyEncryptionAlgorithmPolicy)
+        this.messageDecryptionAlgorithmPolicy =
+            MessageEncryptionMechanismPolicy.rfc4880Plus9580PlusLibrePGP(
+                symmetricKeyDecryptionAlgorithmPolicy)
+        this.compressionAlgorithmPolicy = compressionAlgorithmPolicy
+        this.publicKeyAlgorithmPolicy = publicKeyAlgorithmPolicy
+        this.keyProtectionSettings = keyProtectionSettings
+        this.notationRegistry = notationRegistry
+        this.keyGenerationAlgorithmSuite = keyGenerationAlgorithmSuite
+    }
 
     constructor() :
         this(
@@ -35,6 +89,14 @@ class Policy(
             KeyRingProtectionSettings.secureDefaultSettings(),
             NotationRegistry(),
             AlgorithmSuite.defaultAlgorithmSuite)
+
+    @Deprecated("Deprecated in favor of messageEncryptionAlgorithmPolicy")
+    val symmetricKeyEncryptionAlgorithmPolicy
+        get() = messageEncryptionAlgorithmPolicy.symmetricAlgorithmPolicy
+
+    @Deprecated("Deprecated in favor of messageDecryptionAlgorithmPolicy")
+    val symmetricKeyDecryptionAlgorithmPolicy
+        get() = messageDecryptionAlgorithmPolicy.symmetricAlgorithmPolicy
 
     /**
      * Decide, whether to sanitize public key parameters when unlocking OpenPGP secret keys. OpenPGP
@@ -186,6 +248,138 @@ class Policy(
                         HashAlgorithm.SHA224,
                         HashAlgorithm.SHA1,
                         HashAlgorithm.RIPEMD160))
+        }
+    }
+
+    abstract class MessageEncryptionMechanismPolicy(
+        val symmetricAlgorithmPolicy: SymmetricKeyAlgorithmPolicy,
+        val asymmetricFallbackMechanism: MessageEncryptionMechanism,
+        val symmetricFallbackMechanism: MessageEncryptionMechanism = asymmetricFallbackMechanism
+    ) {
+        abstract fun isAcceptable(encryptionMechanism: MessageEncryptionMechanism): Boolean
+
+        companion object {
+
+            @JvmStatic
+            fun rfc4880(
+                symAlgPolicy: SymmetricKeyAlgorithmPolicy
+            ): MessageEncryptionMechanismPolicy {
+                return object :
+                    MessageEncryptionMechanismPolicy(
+                        symAlgPolicy,
+                        MessageEncryptionMechanism.integrityProtected(
+                            symAlgPolicy.defaultSymmetricKeyAlgorithm.algorithmId)) {
+                    override fun isAcceptable(
+                        encryptionMechanism: MessageEncryptionMechanism
+                    ): Boolean {
+                        return encryptionMechanism.mode == EncryptedDataPacketType.SEIPDv1 &&
+                            symAlgPolicy.isAcceptable(encryptionMechanism.symmetricKeyAlgorithm)
+                    }
+                }
+            }
+
+            @JvmStatic
+            fun rfc9580(
+                symAlgPolicy: SymmetricKeyAlgorithmPolicy
+            ): MessageEncryptionMechanismPolicy {
+                return object :
+                    MessageEncryptionMechanismPolicy(
+                        symAlgPolicy,
+                        MessageEncryptionMechanism.aead(
+                            symAlgPolicy.defaultSymmetricKeyAlgorithm.algorithmId,
+                            AEADAlgorithm.OCB.algorithmId)) {
+                    val acceptableAEADAlgorithms =
+                        listOf(AEADAlgorithm.OCB, AEADAlgorithm.GCM, AEADAlgorithm.EAX).map {
+                            it.algorithmId
+                        }
+
+                    override fun isAcceptable(
+                        encryptionMechanism: MessageEncryptionMechanism
+                    ): Boolean {
+                        return when (encryptionMechanism.mode) {
+                            EncryptedDataPacketType.SEIPDv1 ->
+                                symAlgPolicy.isAcceptable(encryptionMechanism.symmetricKeyAlgorithm)
+                            EncryptedDataPacketType.SEIPDv2 ->
+                                symAlgPolicy.isAcceptable(
+                                    encryptionMechanism.symmetricKeyAlgorithm) &&
+                                    acceptableAEADAlgorithms.contains(
+                                        encryptionMechanism.aeadAlgorithm)
+                            else -> false
+                        }
+                    }
+                }
+            }
+
+            @JvmStatic
+            fun librePgp(
+                symAlgPolicy: SymmetricKeyAlgorithmPolicy
+            ): MessageEncryptionMechanismPolicy {
+                return object :
+                    MessageEncryptionMechanismPolicy(
+                        symAlgPolicy,
+                        MessageEncryptionMechanism.integrityProtected(
+                            symAlgPolicy.defaultSymmetricKeyAlgorithm.algorithmId)) {
+                    val acceptableAEADAlgorithms = listOf(AEADAlgorithm.OCB).map { it.algorithmId }
+
+                    override fun isAcceptable(
+                        encryptionMechanism: MessageEncryptionMechanism
+                    ): Boolean {
+                        return when (encryptionMechanism.mode) {
+                            EncryptedDataPacketType.SEIPDv1 ->
+                                symAlgPolicy.isAcceptable(encryptionMechanism.symmetricKeyAlgorithm)
+                            EncryptedDataPacketType.LIBREPGP_OED ->
+                                symAlgPolicy.isAcceptable(
+                                    encryptionMechanism.symmetricKeyAlgorithm) &&
+                                    acceptableAEADAlgorithms.contains(
+                                        encryptionMechanism.aeadAlgorithm)
+                            else -> false
+                        }
+                    }
+                }
+            }
+
+            @JvmStatic
+            fun rfc4880Plus9580(
+                symAlgPolicy: SymmetricKeyAlgorithmPolicy
+            ): MessageEncryptionMechanismPolicy {
+                val rfc4880 = rfc4880(symAlgPolicy)
+                val rfc9580 = rfc9580(symAlgPolicy)
+                return object :
+                    MessageEncryptionMechanismPolicy(
+                        symAlgPolicy,
+                        rfc4880.asymmetricFallbackMechanism,
+                        rfc4880.symmetricFallbackMechanism) {
+                    override fun isAcceptable(
+                        encryptionMechanism: MessageEncryptionMechanism
+                    ): Boolean {
+                        return rfc9580.isAcceptable(encryptionMechanism) ||
+                            rfc4880.isAcceptable(encryptionMechanism)
+                    }
+                }
+            }
+
+            @JvmStatic
+            fun rfc4880Plus9580PlusLibrePGP(
+                symAlgPolicy: SymmetricKeyAlgorithmPolicy
+            ): MessageEncryptionMechanismPolicy {
+                return object :
+                    MessageEncryptionMechanismPolicy(
+                        symAlgPolicy,
+                        MessageEncryptionMechanism.integrityProtected(
+                            symAlgPolicy.defaultSymmetricKeyAlgorithm.algorithmId)) {
+                    override fun isAcceptable(
+                        encryptionMechanism: MessageEncryptionMechanism
+                    ): Boolean {
+                        val rfc4480 = rfc4880(symAlgPolicy)
+                        val rfc9580 = rfc9580(symAlgPolicy)
+                        val librePgp = librePgp(symAlgPolicy)
+
+                        return rfc4480.isAcceptable(encryptionMechanism) ||
+                            rfc9580.isAcceptable(encryptionMechanism) ||
+                            librePgp.isAcceptable(encryptionMechanism)
+                    }
+                }
+            }
         }
     }
 
@@ -440,10 +634,10 @@ class Policy(
             origin.revocationSignatureHashAlgorithmPolicy
         private var dataSignatureHashAlgorithmPolicy: HashAlgorithmPolicy =
             origin.dataSignatureHashAlgorithmPolicy
-        private var symmetricKeyEncryptionAlgorithmPolicy: SymmetricKeyAlgorithmPolicy =
-            origin.symmetricKeyEncryptionAlgorithmPolicy
-        private var symmetricKeyDecryptionAlgorithmPolicy: SymmetricKeyAlgorithmPolicy =
-            origin.symmetricKeyDecryptionAlgorithmPolicy
+        private var messageEncryptionMechanismPolicy: MessageEncryptionMechanismPolicy =
+            origin.messageEncryptionAlgorithmPolicy
+        private var messageDecryptionMechanismPolicy: MessageEncryptionMechanismPolicy =
+            origin.messageDecryptionAlgorithmPolicy
         private var compressionAlgorithmPolicy: CompressionAlgorithmPolicy =
             origin.compressionAlgorithmPolicy
         private var publicKeyAlgorithmPolicy: PublicKeyAlgorithmPolicy =
@@ -469,17 +663,31 @@ class Policy(
             dataSignatureHashAlgorithmPolicy: HashAlgorithmPolicy
         ) = apply { this.dataSignatureHashAlgorithmPolicy = dataSignatureHashAlgorithmPolicy }
 
+        @Deprecated(
+            "Usage of SymmetricKeyAlgorithmPolicy is deprecated in favor of MessageEncryptionMechanismPolicy.")
         fun withSymmetricKeyEncryptionAlgorithmPolicy(
             symmetricKeyEncryptionAlgorithmPolicy: SymmetricKeyAlgorithmPolicy
-        ) = apply {
-            this.symmetricKeyEncryptionAlgorithmPolicy = symmetricKeyEncryptionAlgorithmPolicy
-        }
+        ) =
+            withMessageEncryptionAlgorithmPolicy(
+                MessageEncryptionMechanismPolicy.rfc4880Plus9580PlusLibrePGP(
+                    symmetricKeyEncryptionAlgorithmPolicy))
 
+        @Deprecated(
+            "Usage of SymmetricKeyAlgorithmPolicy is deprecated in favor of MessageEncryptionMechanismPolicy.")
         fun withSymmetricKeyDecryptionAlgorithmPolicy(
             symmetricKeyDecryptionAlgorithmPolicy: SymmetricKeyAlgorithmPolicy
-        ) = apply {
-            this.symmetricKeyDecryptionAlgorithmPolicy = symmetricKeyDecryptionAlgorithmPolicy
-        }
+        ) =
+            withMessageDecryptionAlgorithmPolicy(
+                MessageEncryptionMechanismPolicy.rfc4880Plus9580PlusLibrePGP(
+                    symmetricKeyDecryptionAlgorithmPolicy))
+
+        fun withMessageEncryptionAlgorithmPolicy(
+            encryptionMechanismPolicy: MessageEncryptionMechanismPolicy
+        ) = apply { messageEncryptionMechanismPolicy = encryptionMechanismPolicy }
+
+        fun withMessageDecryptionAlgorithmPolicy(
+            decryptionMechanismPolicy: MessageEncryptionMechanismPolicy
+        ) = apply { messageDecryptionMechanismPolicy = decryptionMechanismPolicy }
 
         fun withCompressionAlgorithmPolicy(compressionAlgorithmPolicy: CompressionAlgorithmPolicy) =
             apply {
@@ -508,8 +716,8 @@ class Policy(
                     certificationSignatureHashAlgorithmPolicy,
                     revocationSignatureHashAlgorithmPolicy,
                     dataSignatureHashAlgorithmPolicy,
-                    symmetricKeyEncryptionAlgorithmPolicy,
-                    symmetricKeyDecryptionAlgorithmPolicy,
+                    messageEncryptionMechanismPolicy,
+                    messageDecryptionMechanismPolicy,
                     compressionAlgorithmPolicy,
                     publicKeyAlgorithmPolicy,
                     keyProtectionSettings,
