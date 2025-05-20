@@ -615,22 +615,6 @@ class Policy {
         }
     }
 
-    enum class SignerUserIdValidationLevel {
-        /**
-         * PGPainless will verify [org.bouncycastle.bcpg.sig.SignerUserID] subpackets in signatures
-         * strictly. This means, that signatures with Signer's User-ID subpackets containing a value
-         * that does not match the signer key's user-id exactly, will be rejected. E.g. Signer's
-         * user-id "alice@pgpainless.org", User-ID: "Alice &lt;alice@pgpainless.org&gt;" does not
-         * match exactly and is therefore rejected.
-         */
-        STRICT,
-
-        /**
-         * PGPainless will ignore [org.bouncycastle.bcpg.sig.SignerUserID] subpackets on signature.
-         */
-        DISABLED
-    }
-
     class Builder(private val origin: Policy) {
         private var certificationSignatureHashAlgorithmPolicy: HashAlgorithmPolicy =
             origin.certificationSignatureHashAlgorithmPolicy
