@@ -49,6 +49,7 @@ class Policy {
         this.keyGenerationAlgorithmSuite = keyGenerationAlgorithmSuite
     }
 
+    @Deprecated("Constructors receiving SymmetricKeyAlgorithmPolicy objects are deprecated in favor of ones receiving MessageEncryptionMechanismPolicy objects.")
     constructor(
         certificationSignatureHashAlgorithmPolicy: HashAlgorithmPolicy,
         revocationSignatureHashAlgorithmPolicy: HashAlgorithmPolicy,
@@ -77,6 +78,7 @@ class Policy {
         this.keyGenerationAlgorithmSuite = keyGenerationAlgorithmSuite
     }
 
+    @Deprecated("Constructors receiving SymmetricKeyAlgorithmPolicy objects are deprecated in favor of ones receiving MessageEncryptionMechanismPolicy objects.")
     constructor() :
         this(
             HashAlgorithmPolicy.smartCertificationSignatureHashAlgorithmPolicy(),
@@ -91,10 +93,12 @@ class Policy {
             AlgorithmSuite.defaultAlgorithmSuite)
 
     @Deprecated("Deprecated in favor of messageEncryptionAlgorithmPolicy")
+    // TODO: Remove in 2.1
     val symmetricKeyEncryptionAlgorithmPolicy
         get() = messageEncryptionAlgorithmPolicy.symmetricAlgorithmPolicy
 
     @Deprecated("Deprecated in favor of messageDecryptionAlgorithmPolicy")
+    // TODO: Remove in 2.1
     val symmetricKeyDecryptionAlgorithmPolicy
         get() = messageDecryptionAlgorithmPolicy.symmetricAlgorithmPolicy
 
@@ -665,6 +669,7 @@ class Policy {
 
         @Deprecated(
             "Usage of SymmetricKeyAlgorithmPolicy is deprecated in favor of MessageEncryptionMechanismPolicy.")
+        // TODO: Remove in 2.1
         fun withSymmetricKeyEncryptionAlgorithmPolicy(
             symmetricKeyEncryptionAlgorithmPolicy: SymmetricKeyAlgorithmPolicy
         ) =
@@ -674,6 +679,7 @@ class Policy {
 
         @Deprecated(
             "Usage of SymmetricKeyAlgorithmPolicy is deprecated in favor of MessageEncryptionMechanismPolicy.")
+        // TODO: Remove in 2.1
         fun withSymmetricKeyDecryptionAlgorithmPolicy(
             symmetricKeyDecryptionAlgorithmPolicy: SymmetricKeyAlgorithmPolicy
         ) =

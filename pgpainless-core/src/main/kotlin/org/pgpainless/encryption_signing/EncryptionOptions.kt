@@ -47,6 +47,7 @@ class EncryptionOptions(private val purpose: EncryptionPurpose, private val api:
     @Deprecated(
         "Deprecated in favor of encryptionMechanismOverride",
         replaceWith = ReplaceWith("encryptionMechanismOverride"))
+    // TODO: Remove in 2.1
     val encryptionAlgorithmOverride
         get() =
             _encryptionMechanismOverride?.let {
@@ -394,6 +395,7 @@ class EncryptionOptions(private val purpose: EncryptionPurpose, private val api:
         replaceWith =
             ReplaceWith(
                 "overrideEncryptionMechanism(MessageEncryptionMechanism.integrityProtected(encryptionAlgorithm.algorithmId))"))
+    // TODO: Remove in 2.1
     fun overrideEncryptionAlgorithm(encryptionAlgorithm: SymmetricKeyAlgorithm) = apply {
         require(encryptionAlgorithm != SymmetricKeyAlgorithm.NULL) {
             "Encryption algorithm override cannot be NULL."
