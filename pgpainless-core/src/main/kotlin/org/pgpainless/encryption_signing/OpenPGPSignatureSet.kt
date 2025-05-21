@@ -14,7 +14,7 @@ class OpenPGPSignatureSet<S : OpenPGPSignature>(val signatures: List<S>) : Itera
 
     fun getSignaturesBy(componentKey: OpenPGPCertificate.OpenPGPComponentKey): List<S> =
         signatures.filter { sig ->
-            sig.signature.keyIdentifiers.any { componentKey.keyIdentifier.matches(it) }
+            sig.signature.keyIdentifiers.any { componentKey.keyIdentifier.matchesExplicit(it) }
         }
 
     override fun iterator(): Iterator<S> {

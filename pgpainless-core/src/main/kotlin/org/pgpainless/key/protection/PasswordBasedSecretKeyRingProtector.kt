@@ -85,7 +85,7 @@ class PasswordBasedSecretKeyRingProtector : BaseSecretKeyRingProtector {
                     }
 
                     override fun hasPassphrase(keyIdentifier: KeyIdentifier): Boolean {
-                        return keyIdentifier.matches(singleKeyIdentifier)
+                        return keyIdentifier.matchesExplicit(singleKeyIdentifier)
                     }
                 }
                 .let { PasswordBasedSecretKeyRingProtector(it) }

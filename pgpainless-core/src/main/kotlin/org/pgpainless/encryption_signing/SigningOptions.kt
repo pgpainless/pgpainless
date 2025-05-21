@@ -262,7 +262,7 @@ class SigningOptions(private val api: PGPainless) {
             throw UnacceptableSigningKeyException(openPGPKey)
         }
 
-        if (!signingPubKeys.any { it.keyIdentifier.matches(signingKey.keyIdentifier) }) {
+        if (!signingPubKeys.any { it.keyIdentifier.matchesExplicit(signingKey.keyIdentifier) }) {
             throw MissingSecretKeyException(signingKey)
         }
 

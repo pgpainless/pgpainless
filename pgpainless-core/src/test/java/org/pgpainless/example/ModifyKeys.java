@@ -178,7 +178,7 @@ public class ModifyKeys {
         List<OpenPGPCertificate.OpenPGPComponentKey> encryptionSubkeys = info.getEncryptionSubkeys(EncryptionPurpose.COMMUNICATIONS);
         assertEquals(2, encryptionSubkeys.size());
         OpenPGPCertificate.OpenPGPComponentKey addedKey = encryptionSubkeys.stream()
-                .filter(it -> !it.getKeyIdentifier().matches(encryptionSubkeyId)).findFirst()
+                .filter(it -> !it.getKeyIdentifier().matchesExplicit(encryptionSubkeyId)).findFirst()
                 .get();
         UnlockSecretKey.unlockSecretKey(secretKey.getSecretKey(addedKey.getKeyIdentifier()).getPGPSecretKey(), subkeyPassphrase);
     }

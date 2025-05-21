@@ -190,7 +190,9 @@ class GnuPGDummyKeyUtil private constructor() {
              * @return filter
              */
             @JvmStatic
-            fun only(onlyKeyIdentifier: KeyIdentifier) = KeyFilter { it.matches(onlyKeyIdentifier) }
+            fun only(onlyKeyIdentifier: KeyIdentifier) = KeyFilter {
+                it.matchesExplicit(onlyKeyIdentifier)
+            }
 
             /**
              * Select all keyIds which are contained in the given set of ids.

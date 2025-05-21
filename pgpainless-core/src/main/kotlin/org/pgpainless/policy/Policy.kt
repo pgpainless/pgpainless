@@ -49,7 +49,8 @@ class Policy {
         this.keyGenerationAlgorithmSuite = keyGenerationAlgorithmSuite
     }
 
-    @Deprecated("Constructors receiving SymmetricKeyAlgorithmPolicy objects are deprecated in favor of ones receiving MessageEncryptionMechanismPolicy objects.")
+    @Deprecated(
+        "Constructors receiving SymmetricKeyAlgorithmPolicy objects are deprecated in favor of ones receiving MessageEncryptionMechanismPolicy objects.")
     constructor(
         certificationSignatureHashAlgorithmPolicy: HashAlgorithmPolicy,
         revocationSignatureHashAlgorithmPolicy: HashAlgorithmPolicy,
@@ -78,7 +79,8 @@ class Policy {
         this.keyGenerationAlgorithmSuite = keyGenerationAlgorithmSuite
     }
 
-    @Deprecated("Constructors receiving SymmetricKeyAlgorithmPolicy objects are deprecated in favor of ones receiving MessageEncryptionMechanismPolicy objects.")
+    @Deprecated(
+        "Constructors receiving SymmetricKeyAlgorithmPolicy objects are deprecated in favor of ones receiving MessageEncryptionMechanismPolicy objects.")
     constructor() :
         this(
             HashAlgorithmPolicy.smartCertificationSignatureHashAlgorithmPolicy(),
