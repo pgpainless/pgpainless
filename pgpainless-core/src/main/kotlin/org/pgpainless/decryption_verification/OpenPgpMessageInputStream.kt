@@ -709,7 +709,7 @@ class OpenPgpMessageInputStream(
         options.getDecryptionKeys().firstOrNull {
             it.pgpSecretKeyRing.getSecretKeyFor(pkesk) != null &&
                 api.inspect(it).decryptionSubkeys.any { subkey ->
-                    pkesk.keyIdentifier.matches(subkey.keyIdentifier)
+                    pkesk.keyIdentifier.matchesExplicit(subkey.keyIdentifier)
                 }
         }
 
@@ -717,7 +717,7 @@ class OpenPgpMessageInputStream(
         options.getDecryptionKeys().filter {
             it.pgpSecretKeyRing.getSecretKeyFor(pkesk) != null &&
                 api.inspect(it).decryptionSubkeys.any { subkey ->
-                    pkesk.keyIdentifier.matches(subkey.keyIdentifier)
+                    pkesk.keyIdentifier.matchesExplicit(subkey.keyIdentifier)
                 }
         }
 

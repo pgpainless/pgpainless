@@ -167,7 +167,7 @@ class KeyRingInfo(
         keys.keys
             .asSequence()
             .filter {
-                if (!it.keyIdentifier.matches(keyIdentifier)) {
+                if (!it.keyIdentifier.matchesExplicit(keyIdentifier)) {
                     if (it.getLatestSelfSignature(referenceDate) == null) {
                         LOGGER.debug("Subkey ${it.keyIdentifier} has no binding signature.")
                         return@filter false
@@ -281,7 +281,7 @@ class KeyRingInfo(
      * @return expiration date
      */
     fun getSubkeyExpirationDate(keyIdentifier: KeyIdentifier): Date? {
-        if (primaryKey.keyIdentifier.matches(keyIdentifier)) return primaryKeyExpirationDate
+        if (primaryKey.keyIdentifier.matchesExplicit(keyIdentifier)) return primaryKeyExpirationDate
         val subkey =
             getPublicKey(keyIdentifier)
                 ?: throw NoSuchElementException("No subkey with key-ID ${keyIdentifier} found.")
@@ -522,7 +522,7 @@ class KeyRingInfo(
      * @return list of key flags
      */
     fun getKeyFlagsOf(keyIdentifier: KeyIdentifier): List<KeyFlag> =
-        if (primaryKey.keyIdentifier.matches(keyIdentifier)) {
+        if (primaryKey.keyIdentifier.matchesExplicit(keyIdentifier)) {
             latestDirectKeySelfSignature?.let { sig ->
                 SignatureSubpacketsUtil.parseKeyFlags(sig)?.let { flags ->
                     return flags
@@ -655,7 +655,7 @@ class KeyRingInfo(
      *   key of the key.
      */
     fun getPublicKey(identifier: SubkeyIdentifier): OpenPGPComponentKey? {
-        require(primaryKey.keyIdentifier.matches(identifier.keyIdentifier)) {
+        require(primaryKey.keyIdentifier.matchesExplicit(identifier.keyIdentifier)) {
             "Mismatching primary key ID."
         }
         return getPublicKey(identifier.componentKeyIdentifier)
@@ -669,7 +669,7 @@ class KeyRingInfo(
      *   key of the key.
      */
     fun getSecretKey(identifier: SubkeyIdentifier): OpenPGPComponentKey? {
-        require(primaryKey.keyIdentifier.matches(identifier.keyIdentifier)) {
+        require(primaryKey.keyIdentifier.matchesExplicit(identifier.keyIdentifier)) {
             "Mismatching primary key ID."
         }
         return getSecretKey(identifier.componentKeyIdentifier)
