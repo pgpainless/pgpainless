@@ -495,7 +495,7 @@ class KeyRingUtils {
                         secretKeys.secretKeys
                             .asSequence()
                             .map {
-                                if (it.keyIdentifier.matches(keyId)) {
+                                if (it.keyIdentifier.matchesExplicit(keyId)) {
                                     reencryptPrivateKey(it, oldProtector, newProtector)
                                 } else {
                                     it

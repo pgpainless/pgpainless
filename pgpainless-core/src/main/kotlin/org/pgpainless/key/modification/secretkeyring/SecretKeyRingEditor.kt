@@ -522,7 +522,7 @@ class SecretKeyRingEditor(
         var secretKeyRing = key.pgpSecretKeyRing
 
         // is primary key
-        if (keyId.matches(key.keyIdentifier)) {
+        if (keyId.matchesExplicit(key.keyIdentifier)) {
             return setExpirationDate(expiration, protector)
         }
 

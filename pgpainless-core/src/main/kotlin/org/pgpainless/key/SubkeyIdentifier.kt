@@ -127,7 +127,7 @@ class SubkeyIdentifier(
     @Deprecated("Use of key-ids is discouraged.") val primaryKeyId = certificateIdentifier.keyId
 
     /** True, if the component key is the primary key. */
-    val isPrimaryKey = certificateIdentifier.matches(componentKeyIdentifier)
+    val isPrimaryKey = certificateIdentifier.matchesExplicit(componentKeyIdentifier)
 
     /**
      * Return true, if the provided [fingerprint] matches either the [certificateFingerprint] or

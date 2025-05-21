@@ -23,7 +23,7 @@ import org.pgpainless.key.SubkeyIdentifier
  * @return true if the [PGPKeyRing] contains the [SubkeyIdentifier]
  */
 fun PGPKeyRing.matches(subkeyIdentifier: SubkeyIdentifier): Boolean =
-    this.publicKey.keyIdentifier.matches(subkeyIdentifier.certificateIdentifier) &&
+    this.publicKey.keyIdentifier.matchesExplicit(subkeyIdentifier.certificateIdentifier) &&
         this.getPublicKey(subkeyIdentifier.componentKeyIdentifier) != null
 
 /**
