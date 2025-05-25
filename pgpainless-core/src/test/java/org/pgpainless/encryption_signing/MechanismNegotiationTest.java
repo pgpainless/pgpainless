@@ -79,11 +79,15 @@ public class MechanismNegotiationTest {
                         .build()));
     }
 
+
+    /**
+     * Here, we fall back to SEIPD1(AES128), as that is the policy fallback mechanism.
+     */
     @TestTemplate
     @ExtendWith(TestAllImplementations.class)
     public void testEncryptToV6SEIPD1CertAndV6SEIPD2Cert() throws IOException, PGPException {
         testEncryptDecryptAndCheckExpectations(
-                MessageEncryptionMechanism.integrityProtected(SymmetricKeyAlgorithm.AES_192.getAlgorithmId()),
+                MessageEncryptionMechanism.integrityProtected(SymmetricKeyAlgorithm.AES_128.getAlgorithmId()),
 
                 new KeySpecification(OpenPGPKeyVersion.v6, AlgorithmSuite.emptyBuilder()
                         .overrideAeadAlgorithms(new AEADCipherMode(AEADAlgorithm.OCB, SymmetricKeyAlgorithm.AES_256))
