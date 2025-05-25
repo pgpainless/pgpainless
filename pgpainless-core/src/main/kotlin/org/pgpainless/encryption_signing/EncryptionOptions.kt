@@ -11,15 +11,15 @@ import org.bouncycastle.openpgp.api.OpenPGPCertificate
 import org.bouncycastle.openpgp.api.OpenPGPCertificate.OpenPGPComponentKey
 import org.bouncycastle.openpgp.operator.PGPKeyEncryptionMethodGenerator
 import org.pgpainless.PGPainless
-import org.pgpainless.algorithm.AEADAlgorithm
-import org.pgpainless.algorithm.AEADCipherMode
 import org.pgpainless.algorithm.EncryptionPurpose
-import org.pgpainless.algorithm.Feature
 import org.pgpainless.algorithm.SymmetricKeyAlgorithm
+import org.pgpainless.algorithm.negotiation.EncryptionMechanismNegotiator
 import org.pgpainless.algorithm.negotiation.SymmetricKeyAlgorithmNegotiator.Companion.byPopularity
 import org.pgpainless.authentication.CertificateAuthority
 import org.pgpainless.encryption_signing.EncryptionOptions.EncryptionKeySelector
-import org.pgpainless.exception.KeyException.*
+import org.pgpainless.exception.KeyException.ExpiredKeyException
+import org.pgpainless.exception.KeyException.UnacceptableEncryptionKeyException
+import org.pgpainless.exception.KeyException.UnacceptableSelfSignatureException
 import org.pgpainless.key.SubkeyIdentifier
 import org.pgpainless.key.info.KeyAccessor
 import org.pgpainless.key.info.KeyRingInfo
@@ -427,42 +427,26 @@ class EncryptionOptions(private val purpose: EncryptionPurpose, private val api:
 
     fun hasEncryptionMethod() = _encryptionMethods.isNotEmpty()
 
-    internal fun negotiateSymmetricEncryptionAlgorithm(): SymmetricKeyAlgorithm {
-        val preferences =
-            keysAndAccessors.values.map { it.preferredSymmetricKeyAlgorithms }.toList()
-        val algorithm =
-            byPopularity()
-                .negotiate(
-                    api.algorithmPolicy.messageEncryptionAlgorithmPolicy.symmetricAlgorithmPolicy,
-                    encryptionAlgorithmOverride,
-                    preferences)
-        return algorithm
-    }
-
     internal fun negotiateEncryptionMechanism(): MessageEncryptionMechanism {
         if (encryptionMechanismOverride != null) {
             return encryptionMechanismOverride!!
         }
 
         val features = keysAndAccessors.values.map { it.features }.toList()
+        val aeadAlgorithms = keysAndAccessors.values.map { it.preferredAEADCipherSuites }.toList()
+        val symmetricKeyAlgorithms =
+            keysAndAccessors.values.map { it.preferredSymmetricKeyAlgorithms }.toList()
 
-        if (features.all { it.contains(Feature.MODIFICATION_DETECTION_2) }) {
-            val aeadPrefs = keysAndAccessors.values.map { it.preferredAEADCipherSuites }.toList()
-            val counted = mutableMapOf<AEADCipherMode, Int>()
-            for (pref in aeadPrefs) {
-                for (mode in pref) {
-                    counted[mode] = counted.getOrDefault(mode, 0) + 1
-                }
-            }
-            val max: AEADCipherMode =
-                counted.maxByOrNull { it.value }?.key
-                    ?: AEADCipherMode(AEADAlgorithm.OCB, SymmetricKeyAlgorithm.AES_128)
-            return MessageEncryptionMechanism.aead(
-                max.ciphermode.algorithmId, max.aeadAlgorithm.algorithmId)
-        } else {
-            return MessageEncryptionMechanism.integrityProtected(
-                negotiateSymmetricEncryptionAlgorithm().algorithmId)
-        }
+        val mechanism =
+            EncryptionMechanismNegotiator.modificationDetectionOrBetter(byPopularity())
+                .negotiate(
+                    api.algorithmPolicy,
+                    encryptionMechanismOverride,
+                    features,
+                    aeadAlgorithms,
+                    symmetricKeyAlgorithms)
+
+        return mechanism
     }
 
     fun interface EncryptionKeySelector {
