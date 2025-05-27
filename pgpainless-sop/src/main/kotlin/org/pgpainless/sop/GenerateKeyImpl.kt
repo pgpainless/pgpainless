@@ -13,6 +13,7 @@ import org.bouncycastle.openpgp.PGPException
 import org.bouncycastle.openpgp.api.OpenPGPKey
 import org.pgpainless.PGPainless
 import org.pgpainless.algorithm.KeyFlag
+import org.pgpainless.algorithm.OpenPGPKeyVersion
 import org.pgpainless.bouncycastle.extensions.asciiArmor
 import org.pgpainless.bouncycastle.extensions.encode
 import org.pgpainless.key.generation.KeyRingBuilder
@@ -36,8 +37,14 @@ class GenerateKeyImpl(private val api: PGPainless) : GenerateKey {
             Profile(
                 "draft-koch-eddsa-for-openpgp-00", "Generate EdDSA / ECDH keys using Curve25519")
         @JvmField val RSA4096_PROFILE = Profile("rfc4880", "Generate 4096-bit RSA keys")
+        @JvmField val RFC9580_PROFILE = Profile("rfc9580", "Generate OpenPGP v6 keys")
 
-        @JvmField val SUPPORTED_PROFILES = listOf(CURVE25519_PROFILE, RSA4096_PROFILE)
+        @JvmField
+        val SUPPORTED_PROFILES =
+            listOf(
+                CURVE25519_PROFILE.withAliases("default", "compatibility"),
+                RSA4096_PROFILE,
+                RFC9580_PROFILE.withAliases("performance", "security"))
     }
 
     private val userIds = mutableSetOf<String>()
@@ -71,7 +78,7 @@ class GenerateKeyImpl(private val api: PGPainless) : GenerateKey {
 
     override fun profile(profile: String): GenerateKey = apply {
         this.profile =
-            SUPPORTED_PROFILES.find { it.name == profile }?.name
+            SUPPORTED_PROFILES.find { it.name == profile || it.aliases.contains(profile) }?.name
                 ?: throw SOPGPException.UnsupportedProfile("generate-key", profile)
     }
 
@@ -92,7 +99,7 @@ class GenerateKeyImpl(private val api: PGPainless) : GenerateKey {
         val keyBuilder: KeyRingBuilder =
             when (profile) {
                 CURVE25519_PROFILE.name ->
-                    api.buildKey()
+                    api.buildKey(OpenPGPKeyVersion.v4)
                         .setPrimaryKey(
                             KeySpec.getBuilder(
                                 KeyType.EDDSA_LEGACY(EdDSALegacyCurve._Ed25519),
@@ -110,7 +117,7 @@ class GenerateKeyImpl(private val api: PGPainless) : GenerateKey {
                             }
                         }
                 RSA4096_PROFILE.name -> {
-                    api.buildKey()
+                    api.buildKey(OpenPGPKeyVersion.v4)
                         .setPrimaryKey(
                             KeySpec.getBuilder(KeyType.RSA(RsaLength._4096), KeyFlag.CERTIFY_OTHER))
                         .addSubkey(
@@ -120,6 +127,20 @@ class GenerateKeyImpl(private val api: PGPainless) : GenerateKey {
                                 addSubkey(
                                     KeySpec.getBuilder(
                                         KeyType.RSA(RsaLength._4096),
+                                        KeyFlag.ENCRYPT_COMMS,
+                                        KeyFlag.ENCRYPT_STORAGE))
+                            }
+                        }
+                }
+                RFC9580_PROFILE.name -> {
+                    api.buildKey(OpenPGPKeyVersion.v6)
+                        .setPrimaryKey(KeySpec.getBuilder(KeyType.Ed25519(), KeyFlag.CERTIFY_OTHER))
+                        .addSubkey(KeySpec.getBuilder(KeyType.Ed25519(), KeyFlag.SIGN_DATA))
+                        .apply {
+                            if (!signingOnly) {
+                                addSubkey(
+                                    KeySpec.getBuilder(
+                                        KeyType.X25519(),
                                         KeyFlag.ENCRYPT_COMMS,
                                         KeyFlag.ENCRYPT_STORAGE))
                             }
