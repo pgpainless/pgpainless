@@ -21,6 +21,8 @@ import org.pgpainless.key.generation.KeySpec;
 import org.pgpainless.key.generation.type.KeyType;
 import org.pgpainless.key.generation.type.eddsa_legacy.EdDSALegacyCurve;
 import org.pgpainless.key.generation.type.xdh_legacy.XDHLegacySpec;
+import org.pgpainless.sop.EncryptImpl;
+import org.pgpainless.sop.GenerateKeyImpl;
 import org.slf4j.LoggerFactory;
 import sop.exception.SOPGPException;
 
@@ -647,7 +649,7 @@ public class RoundTripEncryptDecryptCmdTest extends CLITest {
         // Generate key
         File passwordFile = writeFile("password", "sw0rdf1sh");
         File keyFile = pipeStdoutToFile("key.asc");
-        assertSuccess(executeCommand("generate-key", "--profile=rfc4880", "--with-key-password", passwordFile.getAbsolutePath(), "Alice <alice@example.org>"));
+        assertSuccess(executeCommand("generate-key", "--profile=" + GenerateKeyImpl.RFC4880_RSA4096_PROFILE.getName(), "--with-key-password", passwordFile.getAbsolutePath(), "Alice <alice@example.org>"));
 
         File certFile = pipeStdoutToFile("cert.asc");
         pipeFileToStdin(keyFile);
@@ -659,7 +661,7 @@ public class RoundTripEncryptDecryptCmdTest extends CLITest {
         // Encrypt
         File ciphertextFile = pipeStdoutToFile("msg.asc");
         pipeFileToStdin(plaintextFile);
-        assertSuccess(executeCommand("encrypt", "--profile=rfc4880", certFile.getAbsolutePath()));
+        assertSuccess(executeCommand("encrypt", "--profile=" + EncryptImpl.RFC4880_PROFILE.getName(), certFile.getAbsolutePath()));
 
         ByteArrayOutputStream decrypted = pipeStdoutToStream();
         pipeFileToStdin(ciphertextFile);
