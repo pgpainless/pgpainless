@@ -19,6 +19,7 @@ import org.pgpainless.bouncycastle.extensions.encode
 import org.pgpainless.key.generation.KeyRingBuilder
 import org.pgpainless.key.generation.KeySpec
 import org.pgpainless.key.generation.type.KeyType
+import org.pgpainless.key.generation.type.ecc.EllipticCurve
 import org.pgpainless.key.generation.type.eddsa_legacy.EdDSALegacyCurve
 import org.pgpainless.key.generation.type.rsa.RsaLength
 import org.pgpainless.key.generation.type.xdh_legacy.XDHLegacySpec
@@ -34,17 +35,24 @@ class GenerateKeyImpl(private val api: PGPainless) : GenerateKey {
     companion object {
         @JvmField
         val CURVE25519_PROFILE =
-            Profile(
-                "draft-koch-eddsa-for-openpgp-00", "Generate EdDSA / ECDH keys using Curve25519")
-        @JvmField val RSA4096_PROFILE = Profile("rfc4880", "Generate 4096-bit RSA keys")
-        @JvmField val RFC9580_PROFILE = Profile("rfc9580", "Generate OpenPGP v6 keys")
+            Profile("draft-koch-eddsa-for-openpgp-00", "OpenPGP v4 keys over Curve25519")
+        @JvmField
+        val RFC4880_RSA4096_PROFILE = Profile("rfc4880-rsa4096", "OpenPGP v4 keys with RSA 4096")
+        @JvmField val RFC6637_NIST_P256_PROFILE = Profile("rfc6637-nist-p256")
+        @JvmField val RFC6637_NIST_P384_PROFILE = Profile("rfc6637-nist-p384")
+        @JvmField val RFC6637_NIST_P521_PROFILE = Profile("rfc6637-nist-p521")
+        @JvmField
+        val RFC9580_CURVE25519_PROFILE =
+            Profile("rfc9580-curve25519", "OpenPGP v6 keys over Curve25519")
+        @JvmField
+        val RFC9580_CURVE448_PROFILE = Profile("rfc9580-curve448", "OpenPGP v6 keys over Curve448")
 
         @JvmField
         val SUPPORTED_PROFILES =
             listOf(
                 CURVE25519_PROFILE.withAliases("default", "compatibility"),
-                RSA4096_PROFILE,
-                RFC9580_PROFILE.withAliases("performance", "security"))
+                RFC4880_RSA4096_PROFILE,
+                RFC9580_CURVE25519_PROFILE.withAliases("performance", "security"))
     }
 
     private val userIds = mutableSetOf<String>()
@@ -116,7 +124,7 @@ class GenerateKeyImpl(private val api: PGPainless) : GenerateKey {
                                         KeyFlag.ENCRYPT_STORAGE))
                             }
                         }
-                RSA4096_PROFILE.name -> {
+                RFC4880_RSA4096_PROFILE.name -> {
                     api.buildKey(OpenPGPKeyVersion.v4)
                         .setPrimaryKey(
                             KeySpec.getBuilder(KeyType.RSA(RsaLength._4096), KeyFlag.CERTIFY_OTHER))
@@ -132,7 +140,61 @@ class GenerateKeyImpl(private val api: PGPainless) : GenerateKey {
                             }
                         }
                 }
-                RFC9580_PROFILE.name -> {
+                RFC6637_NIST_P256_PROFILE.name -> {
+                    api.buildKey(OpenPGPKeyVersion.v4)
+                        .setPrimaryKey(
+                            KeySpec.getBuilder(
+                                KeyType.ECDSA(EllipticCurve._P256), KeyFlag.CERTIFY_OTHER))
+                        .addSubkey(
+                            KeySpec.getBuilder(
+                                KeyType.ECDSA(EllipticCurve._P256), KeyFlag.SIGN_DATA))
+                        .apply {
+                            if (!signingOnly) {
+                                addSubkey(
+                                    KeySpec.getBuilder(
+                                        KeyType.ECDH(EllipticCurve._P256),
+                                        KeyFlag.ENCRYPT_COMMS,
+                                        KeyFlag.ENCRYPT_STORAGE))
+                            }
+                        }
+                }
+                RFC6637_NIST_P384_PROFILE.name -> {
+                    api.buildKey(OpenPGPKeyVersion.v4)
+                        .setPrimaryKey(
+                            KeySpec.getBuilder(
+                                KeyType.ECDSA(EllipticCurve._P384), KeyFlag.CERTIFY_OTHER))
+                        .addSubkey(
+                            KeySpec.getBuilder(
+                                KeyType.ECDSA(EllipticCurve._P384), KeyFlag.SIGN_DATA))
+                        .apply {
+                            if (!signingOnly) {
+                                addSubkey(
+                                    KeySpec.getBuilder(
+                                        KeyType.ECDH(EllipticCurve._P384),
+                                        KeyFlag.ENCRYPT_COMMS,
+                                        KeyFlag.ENCRYPT_STORAGE))
+                            }
+                        }
+                }
+                RFC6637_NIST_P521_PROFILE.name -> {
+                    api.buildKey(OpenPGPKeyVersion.v4)
+                        .setPrimaryKey(
+                            KeySpec.getBuilder(
+                                KeyType.ECDSA(EllipticCurve._P521), KeyFlag.CERTIFY_OTHER))
+                        .addSubkey(
+                            KeySpec.getBuilder(
+                                KeyType.ECDSA(EllipticCurve._P521), KeyFlag.SIGN_DATA))
+                        .apply {
+                            if (!signingOnly) {
+                                addSubkey(
+                                    KeySpec.getBuilder(
+                                        KeyType.ECDH(EllipticCurve._P521),
+                                        KeyFlag.ENCRYPT_COMMS,
+                                        KeyFlag.ENCRYPT_STORAGE))
+                            }
+                        }
+                }
+                RFC9580_CURVE25519_PROFILE.name -> {
                     api.buildKey(OpenPGPKeyVersion.v6)
                         .setPrimaryKey(KeySpec.getBuilder(KeyType.Ed25519(), KeyFlag.CERTIFY_OTHER))
                         .addSubkey(KeySpec.getBuilder(KeyType.Ed25519(), KeyFlag.SIGN_DATA))
@@ -141,6 +203,20 @@ class GenerateKeyImpl(private val api: PGPainless) : GenerateKey {
                                 addSubkey(
                                     KeySpec.getBuilder(
                                         KeyType.X25519(),
+                                        KeyFlag.ENCRYPT_COMMS,
+                                        KeyFlag.ENCRYPT_STORAGE))
+                            }
+                        }
+                }
+                RFC9580_CURVE448_PROFILE.name -> {
+                    api.buildKey(OpenPGPKeyVersion.v6)
+                        .setPrimaryKey(KeySpec.getBuilder(KeyType.Ed448(), KeyFlag.CERTIFY_OTHER))
+                        .addSubkey(KeySpec.getBuilder(KeyType.Ed448(), KeyFlag.SIGN_DATA))
+                        .apply {
+                            if (!signingOnly) {
+                                addSubkey(
+                                    KeySpec.getBuilder(
+                                        KeyType.X448(),
                                         KeyFlag.ENCRYPT_COMMS,
                                         KeyFlag.ENCRYPT_STORAGE))
                             }
