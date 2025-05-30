@@ -8,11 +8,14 @@ import java.io.IOException
 import java.io.InputStream
 import java.io.OutputStream
 import org.bouncycastle.openpgp.PGPException
+import org.bouncycastle.openpgp.api.MessageEncryptionMechanism
 import org.bouncycastle.openpgp.api.OpenPGPKey
 import org.bouncycastle.util.io.Streams
 import org.pgpainless.PGPainless
+import org.pgpainless.algorithm.AEADAlgorithm
 import org.pgpainless.algorithm.DocumentSignatureType
 import org.pgpainless.algorithm.StreamEncoding
+import org.pgpainless.algorithm.SymmetricKeyAlgorithm
 import org.pgpainless.encryption_signing.EncryptionOptions
 import org.pgpainless.encryption_signing.ProducerOptions
 import org.pgpainless.encryption_signing.SigningOptions
@@ -33,8 +36,13 @@ class EncryptImpl(private val api: PGPainless) : Encrypt {
 
     companion object {
         @JvmField val RFC4880_PROFILE = Profile("rfc4880", "Follow the packet format of rfc4880")
+        @JvmField val RFC9580_PROFILE = Profile("rfc9580", "Follow the packet format of rfc9580")
 
-        @JvmField val SUPPORTED_PROFILES = listOf(RFC4880_PROFILE)
+        @JvmField
+        val SUPPORTED_PROFILES =
+            listOf(
+                RFC4880_PROFILE.withAliases("default", "compatibility"),
+                RFC9580_PROFILE.withAliases("security", "performance"))
     }
 
     private val encryptionOptions = EncryptionOptions.get(api)
@@ -53,6 +61,12 @@ class EncryptImpl(private val api: PGPainless) : Encrypt {
     override fun plaintext(plaintext: InputStream): ReadyWithResult<EncryptionResult> {
         if (!encryptionOptions.hasEncryptionMethod()) {
             throw SOPGPException.MissingArg("Missing encryption method.")
+        }
+
+        if (profile == RFC9580_PROFILE.name) {
+            encryptionOptions.overrideEncryptionMechanism(
+                MessageEncryptionMechanism.aead(
+                    SymmetricKeyAlgorithm.AES_128.algorithmId, AEADAlgorithm.OCB.algorithmId))
         }
 
         val options =
@@ -94,7 +108,8 @@ class EncryptImpl(private val api: PGPainless) : Encrypt {
 
     override fun profile(profileName: String): Encrypt = apply {
         profile =
-            SUPPORTED_PROFILES.find { it.name == profileName }?.name
+            SUPPORTED_PROFILES.find { it.name == profileName || it.aliases.contains(profileName) }
+                ?.name
                 ?: throw SOPGPException.UnsupportedProfile("encrypt", profileName)
     }
 
