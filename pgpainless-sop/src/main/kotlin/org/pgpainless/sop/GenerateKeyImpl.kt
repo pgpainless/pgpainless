@@ -52,7 +52,11 @@ class GenerateKeyImpl(private val api: PGPainless) : GenerateKey {
             listOf(
                 CURVE25519_PROFILE.withAliases("default", "compatibility"),
                 RFC4880_RSA4096_PROFILE,
-                RFC9580_CURVE25519_PROFILE.withAliases("performance", "security"))
+                RFC6637_NIST_P256_PROFILE,
+                RFC6637_NIST_P384_PROFILE,
+                RFC6637_NIST_P521_PROFILE,
+                RFC9580_CURVE25519_PROFILE.withAliases("performance", "security"),
+                RFC9580_CURVE448_PROFILE)
     }
 
     private val userIds = mutableSetOf<String>()
