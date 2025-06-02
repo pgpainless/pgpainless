@@ -8,6 +8,7 @@ import java.io.InputStream
 import java.util.*
 import org.bouncycastle.openpgp.api.OpenPGPCertificate
 import org.pgpainless.PGPainless
+import sop.exception.SOPGPException
 import sop.operation.ValidateUserId
 
 class ValidateUserIdImpl(private val api: PGPainless) : ValidateUserId {
@@ -28,7 +29,9 @@ class ValidateUserIdImpl(private val api: PGPainless) : ValidateUserId {
         return api.readKey().parseCertificates(certs).all { cert ->
             authorities.all { authority ->
                 cert.getUserId(userId)?.getCertificationBy(authority, validateAt)?.isValid == true
-            }
+            } ||
+                throw SOPGPException.CertUserIdNoMatch(
+                    "${cert.keyIdentifier} does not carry valid user-id '$userId'")
         }
     }
 
