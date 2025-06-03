@@ -9,6 +9,7 @@ import org.bouncycastle.openpgp.PGPPublicKeyRing
 import org.bouncycastle.openpgp.api.MessageEncryptionMechanism
 import org.bouncycastle.openpgp.api.OpenPGPCertificate
 import org.bouncycastle.openpgp.api.OpenPGPCertificate.OpenPGPComponentKey
+import org.bouncycastle.openpgp.operator.PBEKeyEncryptionMethodGenerator
 import org.bouncycastle.openpgp.operator.PGPKeyEncryptionMethodGenerator
 import org.pgpainless.PGPainless
 import org.pgpainless.algorithm.EncryptionPurpose
@@ -426,6 +427,9 @@ class EncryptionOptions(private val purpose: EncryptionPurpose, private val api:
     }
 
     fun hasEncryptionMethod() = _encryptionMethods.isNotEmpty()
+
+    fun usesOnlyPasswordBasedEncryption() =
+        _encryptionMethods.all { it is PBEKeyEncryptionMethodGenerator }
 
     internal fun negotiateEncryptionMechanism(): MessageEncryptionMechanism {
         if (encryptionMechanismOverride != null) {
