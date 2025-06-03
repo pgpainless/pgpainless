@@ -63,7 +63,8 @@ class EncryptImpl(private val api: PGPainless) : Encrypt {
             throw SOPGPException.MissingArg("Missing encryption method.")
         }
 
-        if (profile == RFC9580_PROFILE.name) {
+        if (encryptionOptions.usesOnlyPasswordBasedEncryption() &&
+            profile == RFC9580_PROFILE.name) {
             encryptionOptions.overrideEncryptionMechanism(
                 MessageEncryptionMechanism.aead(
                     SymmetricKeyAlgorithm.AES_128.algorithmId, AEADAlgorithm.OCB.algorithmId))
