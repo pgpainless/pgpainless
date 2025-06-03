@@ -67,6 +67,15 @@ fun interface EncryptionMechanismNegotiator {
                         return MessageEncryptionMechanism.aead(
                             bestSupportedMode.ciphermode.algorithmId,
                             bestSupportedMode.aeadAlgorithm.algorithmId)
+                    } else if (features.all { it.contains(Feature.LIBREPGP_OCB_ENCRYPTED_DATA) }) {
+                        return MessageEncryptionMechanism.librePgp(
+                            symmetricKeyAlgorithmNegotiator
+                                .negotiate(
+                                    policy.messageEncryptionAlgorithmPolicy
+                                        .symmetricAlgorithmPolicy,
+                                    null,
+                                    symmetricAlgorithmPreferences)
+                                .algorithmId)
                     }
                     // If all support SEIPD1, negotiate SEIPD1 using symmetricKeyAlgorithmNegotiator
                     else if (features.all { it.contains(Feature.MODIFICATION_DETECTION) }) {
