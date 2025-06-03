@@ -27,6 +27,9 @@ import org.pgpainless.key.info.KeyRingInfo
 import org.pgpainless.util.Passphrase
 
 class EncryptionOptions(private val purpose: EncryptionPurpose, private val api: PGPainless) {
+
+    var encryptionMechanismNegotiator: EncryptionMechanismNegotiator =
+        EncryptionMechanismNegotiator.modificationDetectionOrBetter(byPopularity())
     private val _encryptionMethods: MutableSet<PGPKeyEncryptionMethodGenerator> = mutableSetOf()
     private val keysAndAccessors: MutableMap<OpenPGPComponentKey, KeyAccessor> = mutableMapOf()
     private val _keyRingInfo: MutableMap<SubkeyIdentifier, KeyRingInfo> = mutableMapOf()
@@ -442,13 +445,12 @@ class EncryptionOptions(private val purpose: EncryptionPurpose, private val api:
             keysAndAccessors.values.map { it.preferredSymmetricKeyAlgorithms }.toList()
 
         val mechanism =
-            EncryptionMechanismNegotiator.modificationDetectionOrBetter(byPopularity())
-                .negotiate(
-                    api.algorithmPolicy,
-                    encryptionMechanismOverride,
-                    features,
-                    aeadAlgorithms,
-                    symmetricKeyAlgorithms)
+            encryptionMechanismNegotiator.negotiate(
+                api.algorithmPolicy,
+                encryptionMechanismOverride,
+                features,
+                aeadAlgorithms,
+                symmetricKeyAlgorithms)
 
         return mechanism
     }

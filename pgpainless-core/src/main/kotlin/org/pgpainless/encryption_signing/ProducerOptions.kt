@@ -8,13 +8,15 @@ import java.util.*
 import org.bouncycastle.openpgp.PGPLiteralData
 import org.pgpainless.algorithm.CompressionAlgorithm
 import org.pgpainless.algorithm.StreamEncoding
+import org.pgpainless.algorithm.negotiation.CompressionAlgorithmNegotiator
 import org.pgpainless.policy.Policy
 
 class ProducerOptions(
     val encryptionOptions: EncryptionOptions?,
     val signingOptions: SigningOptions?
 ) {
-
+    var compressionAlgorithmNegotiator: CompressionAlgorithmNegotiator =
+        CompressionAlgorithmNegotiator.staticNegotiation()
     private var _fileName: String = ""
     private var _modificationDate: Date = PGPLiteralData.NOW
     private var encodingField: StreamEncoding = StreamEncoding.BINARY
@@ -237,8 +239,8 @@ class ProducerOptions(
     }
 
     internal fun negotiateCompressionAlgorithm(policy: Policy): CompressionAlgorithm {
-        return compressionAlgorithmOverride
-            ?: policy.compressionAlgorithmPolicy.defaultCompressionAlgorithm
+        return compressionAlgorithmNegotiator.negotiate(
+            policy, compressionAlgorithmOverride, setOf())
     }
 
     companion object {
