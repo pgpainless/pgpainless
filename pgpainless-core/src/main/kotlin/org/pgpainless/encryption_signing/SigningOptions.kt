@@ -15,6 +15,7 @@ import org.pgpainless.PGPainless
 import org.pgpainless.algorithm.DocumentSignatureType
 import org.pgpainless.algorithm.HashAlgorithm
 import org.pgpainless.algorithm.PublicKeyAlgorithm.Companion.requireFromId
+import org.pgpainless.algorithm.negotiation.HashAlgorithmNegotiator
 import org.pgpainless.algorithm.negotiation.HashAlgorithmNegotiator.Companion.negotiateSignatureHashAlgorithm
 import org.pgpainless.exception.KeyException
 import org.pgpainless.exception.KeyException.*
@@ -27,7 +28,8 @@ import org.pgpainless.signature.subpackets.SignatureSubpackets
 import org.pgpainless.signature.subpackets.SignatureSubpacketsHelper
 
 class SigningOptions(private val api: PGPainless) {
-
+    var hashAlgorithmNegotiator: HashAlgorithmNegotiator =
+        negotiateSignatureHashAlgorithm(api.algorithmPolicy)
     val signingMethods: Map<OpenPGPPrivateKey, SigningMethod> = mutableMapOf()
     private var _hashAlgorithmOverride: HashAlgorithm? = null
     private var _evaluationDate: Date = Date()
@@ -200,8 +202,7 @@ class SigningOptions(private val api: PGPainless) {
             val hashAlgorithms =
                 if (userId != null) keyRingInfo.getPreferredHashAlgorithms(userId)
                 else keyRingInfo.getPreferredHashAlgorithms(signingPubKey.keyIdentifier)
-            val hashAlgorithm: HashAlgorithm =
-                negotiateHashAlgorithm(hashAlgorithms, api.algorithmPolicy)
+            val hashAlgorithm: HashAlgorithm = negotiateHashAlgorithm(hashAlgorithms)
             addSigningMethod(
                 signingPrivKey, hashAlgorithm, signatureType, false, subpacketsCallback)
         }
@@ -268,8 +269,7 @@ class SigningOptions(private val api: PGPainless) {
 
         val signingPrivKey = unlockSecretKey(signingKey, signingKeyProtector)
         val hashAlgorithms = keyRingInfo.getPreferredHashAlgorithms(signingKey.keyIdentifier)
-        val hashAlgorithm: HashAlgorithm =
-            negotiateHashAlgorithm(hashAlgorithms, api.algorithmPolicy)
+        val hashAlgorithm: HashAlgorithm = negotiateHashAlgorithm(hashAlgorithms)
         addSigningMethod(signingPrivKey, hashAlgorithm, signatureType, false, subpacketsCallback)
     }
 
@@ -467,8 +467,7 @@ class SigningOptions(private val api: PGPainless) {
         val hashAlgorithms =
             if (userId != null) keyRingInfo.getPreferredHashAlgorithms(userId)
             else keyRingInfo.getPreferredHashAlgorithms(signingKey.keyIdentifier)
-        val hashAlgorithm: HashAlgorithm =
-            negotiateHashAlgorithm(hashAlgorithms, api.algorithmPolicy)
+        val hashAlgorithm: HashAlgorithm = negotiateHashAlgorithm(hashAlgorithms)
         addSigningMethod(signingPrivKey, hashAlgorithm, signatureType, true, subpacketCallback)
     }
 
@@ -559,12 +558,8 @@ class SigningOptions(private val api: PGPainless) {
      * @param policy policy
      * @return selected hash algorithm
      */
-    private fun negotiateHashAlgorithm(
-        preferences: Set<HashAlgorithm>?,
-        policy: Policy
-    ): HashAlgorithm {
-        return _hashAlgorithmOverride
-            ?: negotiateSignatureHashAlgorithm(policy).negotiateHashAlgorithm(preferences)
+    private fun negotiateHashAlgorithm(preferences: Set<HashAlgorithm>?): HashAlgorithm {
+        return _hashAlgorithmOverride ?: hashAlgorithmNegotiator.negotiateHashAlgorithm(preferences)
     }
 
     @Throws(PGPException::class)
