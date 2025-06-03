@@ -2,7 +2,7 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
-package org.pgpainless.algorithm;
+package org.pgpainless.algorithm.negotiation;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
@@ -15,7 +15,7 @@ import java.util.List;
 import java.util.Set;
 
 import org.junit.jupiter.api.Test;
-import org.pgpainless.algorithm.negotiation.SymmetricKeyAlgorithmNegotiator;
+import org.pgpainless.algorithm.SymmetricKeyAlgorithm;
 import org.pgpainless.policy.Policy;
 
 public class SymmetricKeyAlgorithmNegotiatorTest {
