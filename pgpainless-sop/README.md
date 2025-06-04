@@ -67,7 +67,7 @@ byte[] encrypted = sop.encrypt()
 
 // Decrypt a message
 ByteArrayAndResult<DecryptionResult> messageAndVerifications = sop.decrypt()
-        .verifyWith(cert)
+        .verifyWithCert(cert)
         .withKey(key)
         .ciphertext(encrypted)
         .toByteArrayAndResult();
