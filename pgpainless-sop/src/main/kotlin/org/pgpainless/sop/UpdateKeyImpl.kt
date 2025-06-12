@@ -1,15 +1,17 @@
 // SPDX-FileCopyrightText: 2025 Paul Schaub <info@pgpainless.org>
 //
-// SPDX-License-Identifier: CC0-1.0
+// SPDX-License-Identifier: Apache-2.0
 
 package org.pgpainless.sop
 
 import java.io.InputStream
 import java.io.OutputStream
+import java.util.*
 import org.bouncycastle.bcpg.KeyIdentifier
 import org.bouncycastle.openpgp.PGPSecretKeyRing
 import org.bouncycastle.openpgp.api.OpenPGPCertificate
 import org.pgpainless.PGPainless
+import org.pgpainless.key.modification.secretkeyring.OpenPGPKeyUpdater
 import org.pgpainless.util.OpenPGPCertificateUtil
 import org.pgpainless.util.Passphrase
 import sop.Ready
@@ -27,8 +29,9 @@ class UpdateKeyImpl(private val api: PGPainless) : UpdateKey {
     override fun key(key: InputStream): Ready {
         return object : Ready() {
             override fun writeTo(outputStream: OutputStream) {
-                val keyList =
+                var keyList =
                     api.readKey().parseKeys(key).map {
+                        // Merge keys
                         if (mergeCerts[it.keyIdentifier] == null) {
                             it
                         } else {
@@ -39,6 +42,15 @@ class UpdateKeyImpl(private val api: PGPainless) : UpdateKey {
                                 PGPSecretKeyRing.replacePublicKeys(
                                     it.pgpSecretKeyRing, updatedCert.pgpPublicKeyRing))
                         }
+                    }
+
+                // Update keys
+                keyList =
+                    keyList.map {
+                        OpenPGPKeyUpdater(it, protector, api)
+                            .replaceRejectedAlgorithmPreferencesAndFeatures(addCapabilities)
+                            .replaceWeakSubkeys(true, signingOnly)
+                            .finish()
                     }
 
                 if (armor) {
