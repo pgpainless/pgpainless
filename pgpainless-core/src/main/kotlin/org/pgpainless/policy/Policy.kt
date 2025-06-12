@@ -21,6 +21,7 @@ class Policy {
     val messageDecryptionAlgorithmPolicy: MessageEncryptionMechanismPolicy
     val compressionAlgorithmPolicy: CompressionAlgorithmPolicy
     val publicKeyAlgorithmPolicy: PublicKeyAlgorithmPolicy
+    val featurePolicy: FeaturePolicy = FeaturePolicy.defaultFeaturePolicy()
     val keyProtectionSettings: KeyRingProtectionSettings
     val notationRegistry: NotationRegistry
     val keyGenerationAlgorithmSuite: AlgorithmSuite
@@ -716,5 +717,66 @@ class Policy {
                     notationRegistry,
                     keyGenerationAlgorithmSuite)
                 .apply { enableKeyParameterValidation = origin.enableKeyParameterValidation }
+    }
+
+    abstract class FeaturePolicy {
+        fun isAcceptable(feature: Byte): Boolean =
+            Feature.fromId(feature)?.let { isAcceptable(it) } ?: false
+
+        abstract fun isAcceptable(feature: Feature): Boolean
+
+        companion object {
+            @JvmStatic
+            fun defaultFeaturePolicy(): FeaturePolicy {
+                return whiteList(
+                    listOf(Feature.MODIFICATION_DETECTION, Feature.MODIFICATION_DETECTION_2))
+            }
+
+            @JvmStatic
+            fun whiteList(whitelistedFeatures: List<Feature>): FeaturePolicy {
+                return object : FeaturePolicy() {
+                    override fun isAcceptable(feature: Feature): Boolean {
+                        return whitelistedFeatures.contains(feature)
+                    }
+                }
+            }
+        }
+    }
+
+    companion object {
+        fun wildcardPolicy(): Policy =
+            Policy(
+                HashAlgorithmPolicy(HashAlgorithm.SHA512, HashAlgorithm.entries),
+                HashAlgorithmPolicy(HashAlgorithm.SHA512, HashAlgorithm.entries),
+                HashAlgorithmPolicy(HashAlgorithm.SHA512, HashAlgorithm.entries),
+                object :
+                    MessageEncryptionMechanismPolicy(
+                        SymmetricKeyAlgorithmPolicy(
+                            SymmetricKeyAlgorithm.AES_256, SymmetricKeyAlgorithm.entries),
+                        MessageEncryptionMechanism.integrityProtected(
+                            SymmetricKeyAlgorithm.AES_256.algorithmId)) {
+                    override fun isAcceptable(
+                        encryptionMechanism: MessageEncryptionMechanism
+                    ): Boolean {
+                        return true
+                    }
+                },
+                object :
+                    MessageEncryptionMechanismPolicy(
+                        SymmetricKeyAlgorithmPolicy(
+                            SymmetricKeyAlgorithm.AES_256, SymmetricKeyAlgorithm.entries),
+                        MessageEncryptionMechanism.integrityProtected(
+                            SymmetricKeyAlgorithm.AES_256.algorithmId)) {
+                    override fun isAcceptable(
+                        encryptionMechanism: MessageEncryptionMechanism
+                    ): Boolean {
+                        return true
+                    }
+                },
+                CompressionAlgorithmPolicy.anyCompressionAlgorithmPolicy(),
+                PublicKeyAlgorithmPolicy(PublicKeyAlgorithm.entries.associateWith { 0 }.toMap()),
+                KeyRingProtectionSettings.secureDefaultSettings(),
+                NotationRegistry(setOf()),
+                AlgorithmSuite.defaultAlgorithmSuite)
     }
 }
