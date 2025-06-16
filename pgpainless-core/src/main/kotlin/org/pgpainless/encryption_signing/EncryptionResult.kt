@@ -17,9 +17,11 @@ import org.pgpainless.algorithm.SymmetricKeyAlgorithm
 import org.pgpainless.bouncycastle.extensions.matches
 import org.pgpainless.key.SubkeyIdentifier
 import org.pgpainless.util.MultiMap
+import org.pgpainless.util.SessionKey
 
 data class EncryptionResult(
     val encryptionMechanism: MessageEncryptionMechanism,
+    val sessionKey: SessionKey?,
     val compressionAlgorithm: CompressionAlgorithm,
     val detachedDocumentSignatures: OpenPGPSignatureSet<OpenPGPDocumentSignature>,
     val recipients: Set<SubkeyIdentifier>,
@@ -84,6 +86,7 @@ data class EncryptionResult(
         private var _fileName = ""
         private var _modificationDate = Date(0)
         private var _encoding = StreamEncoding.BINARY
+        private var _sessionKey: SessionKey? = null
 
         fun setEncryptionMechanism(mechanism: MessageEncryptionMechanism): Builder = apply {
             _encryptionMechanism = mechanism
@@ -105,6 +108,8 @@ data class EncryptionResult(
             (recipients as MutableSet).add(recipient)
         }
 
+        fun setSessionKey(sessionKey: SessionKey) = apply { _sessionKey = sessionKey }
+
         fun addDetachedSignature(signature: OpenPGPDocumentSignature): Builder = apply {
             detachedSignatures.add(signature)
         }
@@ -114,6 +119,7 @@ data class EncryptionResult(
 
             return EncryptionResult(
                 _encryptionMechanism,
+                _sessionKey,
                 _compressionAlgorithm!!,
                 OpenPGPSignatureSet(detachedSignatures),
                 recipients,

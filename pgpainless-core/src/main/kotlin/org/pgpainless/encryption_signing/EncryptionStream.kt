@@ -20,6 +20,7 @@ import org.pgpainless.algorithm.CompressionAlgorithm
 import org.pgpainless.algorithm.StreamEncoding
 import org.pgpainless.bouncycastle.extensions.pgpDataEncryptorBuilder
 import org.pgpainless.util.ArmoredOutputStreamFactory
+import org.pgpainless.util.SessionKey
 
 // 1 << 8 causes wrong partial body length encoding
 //  1 << 9 fixes this.
@@ -92,6 +93,11 @@ class EncryptionStream(
         }
         options.encryptionOptions.encryptionKeyIdentifiers.forEach { r ->
             resultBuilder.addRecipient(r)
+        }
+        encryptedDataGenerator.setSessionKeyExtractionCallback { pgpSessionKey ->
+            if (pgpSessionKey != null) {
+                resultBuilder.setSessionKey(SessionKey(pgpSessionKey))
+            }
         }
 
         publicKeyEncryptedStream =
