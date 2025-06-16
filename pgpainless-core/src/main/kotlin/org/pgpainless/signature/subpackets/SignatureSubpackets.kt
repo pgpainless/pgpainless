@@ -281,9 +281,15 @@ class SignatureSubpackets(
 
     override fun setPreferredAEADCiphersuites(
         algorithms: PreferredAEADCiphersuites.Builder?
-    ): SignatureSubpackets = apply {
+    ): SignatureSubpackets = setPreferredAEADCiphersuites(algorithms?.build())
+
+    override fun setPreferredAEADCiphersuites(
+        preferredAEADCiphersuites: PreferredAEADCiphersuites?
+    ) = apply {
         subpacketsGenerator.removePacketsOfType(SignatureSubpacketTags.PREFERRED_AEAD_ALGORITHMS)
-        algorithms?.let { subpacketsGenerator.setPreferredAEADCiphersuites(algorithms) }
+        preferredAEADCiphersuites?.let {
+            subpacketsGenerator.setPreferredAEADCiphersuites(it.isCritical, it.rawAlgorithms)
+        }
     }
 
     override fun addRevocationKey(revocationKey: PGPPublicKey): SignatureSubpackets = apply {

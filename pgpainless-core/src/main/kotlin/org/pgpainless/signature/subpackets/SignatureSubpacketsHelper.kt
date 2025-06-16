@@ -61,6 +61,11 @@ class SignatureSubpacketsHelper {
                                     PreferredAlgorithms(
                                         it.type, it.isCritical, it.isLongLength, it.data))
                             }
+                        SignatureSubpacket.preferredAEADAlgorithms ->
+                            (subpacket as PreferredAEADCiphersuites).let {
+                                subpackets.setPreferredAEADCiphersuites(
+                                    PreferredAEADCiphersuites(it.isCritical, it.rawAlgorithms))
+                            }
                         SignatureSubpacket.revocationKey ->
                             (subpacket as RevocationKey).let {
                                 subpackets.addRevocationKey(
@@ -130,7 +135,6 @@ class SignatureSubpacketsHelper {
                         SignatureSubpacket.keyServerPreferences,
                         SignatureSubpacket.preferredKeyServers,
                         SignatureSubpacket.placeholder,
-                        SignatureSubpacket.preferredAEADAlgorithms,
                         SignatureSubpacket.attestedCertification ->
                             subpackets.addResidualSubpacket(subpacket)
                         else -> subpackets.addResidualSubpacket(subpacket)
