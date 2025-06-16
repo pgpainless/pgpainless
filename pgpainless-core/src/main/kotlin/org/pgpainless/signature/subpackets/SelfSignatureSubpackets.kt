@@ -121,6 +121,10 @@ interface SelfSignatureSubpackets : BaseSignatureSubpackets {
         algorithms: PreferredAEADCiphersuites.Builder?
     ): SelfSignatureSubpackets
 
+    fun setPreferredAEADCiphersuites(
+        preferredAEADCiphersuites: PreferredAEADCiphersuites?
+    ): SelfSignatureSubpackets
+
     @Deprecated("Use of this subpacket is discouraged.")
     fun addRevocationKey(revocationKey: PGPPublicKey): SelfSignatureSubpackets
 
