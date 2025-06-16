@@ -534,4 +534,8 @@ public class SignatureSubpacketsTest {
         PreferredAlgorithms aeadAlgorithms = (PreferredAlgorithms) vector.getSubpacket(SignatureSubpacketTags.PREFERRED_AEAD_ALGORITHMS);
         assertArrayEquals(aead.getPreferences(), aeadAlgorithms.getPreferences());
     }
+
+    public static SignatureSubpacket[] toArray(SignatureSubpackets subpackets) {
+        return subpackets.getSubpacketsGenerator().generate().toArray();
+    }
 }
