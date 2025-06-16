@@ -26,6 +26,7 @@ import org.pgpainless.util.Passphrase
 import sop.EncryptionResult
 import sop.Profile
 import sop.ReadyWithResult
+import sop.SessionKey
 import sop.enums.EncryptAs
 import sop.exception.SOPGPException
 import sop.operation.Encrypt
@@ -98,8 +99,10 @@ class EncryptImpl(private val api: PGPainless) : Encrypt {
                         api.generateMessage().onOutputStream(outputStream).withOptions(options)
                     Streams.pipeAll(plaintext, encryptionStream)
                     encryptionStream.close()
-                    // TODO: Extract and emit session key once BC supports that
-                    return EncryptionResult(null)
+                    return EncryptionResult(
+                        encryptionStream.result.sessionKey?.let {
+                            SessionKey(it.algorithm.algorithmId.toByte(), it.key)
+                        })
                 }
             }
         } catch (e: PGPException) {
