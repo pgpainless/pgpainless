@@ -5,6 +5,10 @@ SPDX-License-Identifier: CC0-1.0
 
 # PGPainless Changelog
 
+## 1.7.7-SNAPSHOT
+- Bump `bcpg-jdk8on` to `1.81`
+- Bump `bcprov-jdk18on` to `1.81`
+
 ## 1.7.6
 - Fix `RevocationSignatureBuilder` properly calculating third-party signatures of type `KeyRevocation` (delegation revocations)
 - Enable support for native images
