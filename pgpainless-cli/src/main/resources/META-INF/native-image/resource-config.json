@@ -40,8 +40,6 @@
     "pattern":"\\Qsop-java-version.properties\\E"
   }, {
     "pattern":"java.base:\\Qsun/text/resources/LineBreakIteratorData\\E"
-  }, {
-    "pattern":"java.base:\\Qsun/text/resources/nfkc.icu\\E"
   }]},
   "bundles":[{
     "name":"msg_armor",
