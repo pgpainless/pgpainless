@@ -121,7 +121,7 @@ class OpenPGPKeyUpdater(
             compAlgs != newCompAlgs ||
             aeadAlgs != newAeadAlgs) {
             keyEditor.addDirectKeySignature(
-                SignatureParameters.Callback.modifyHashedSubpackets { sigGen ->
+                SignatureParameters.Callback.Util.modifyHashedSubpackets { sigGen ->
                     sigGen.apply {
                         setKeyFlags(key.primaryKey.keyFlags?.flags ?: 0)
                         setFeature(true, newFeatures)
@@ -157,7 +157,7 @@ class OpenPGPKeyUpdater(
     fun replaceWeakEncryptionSubkeys(
         revokeWeakKeys: Boolean,
         keyPairGeneratorCallback: KeyPairGeneratorCallback =
-            KeyPairGeneratorCallback.encryptionKey()
+            KeyPairGeneratorCallback.Util.encryptionKey()
     ) {
         val weakEncryptionKeys =
             key.getEncryptionKeys(referenceTime).filterNot {
@@ -179,7 +179,8 @@ class OpenPGPKeyUpdater(
     fun replaceWeakSigningSubkeys(
         revokeWeakKeys: Boolean,
         keyPairGenerator: PGPKeyPairGenerator = provideKeyPairGenerator(),
-        keyPairGeneratorCallback: KeyPairGeneratorCallback = KeyPairGeneratorCallback.signingKey()
+        keyPairGeneratorCallback: KeyPairGeneratorCallback =
+            KeyPairGeneratorCallback.Util.signingKey()
     ) {
         val weakSigningKeys =
             key.getSigningKeys(referenceTime).filterNot {
