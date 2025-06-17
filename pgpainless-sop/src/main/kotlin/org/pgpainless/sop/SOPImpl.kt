@@ -68,7 +68,7 @@ class SOPImpl(
 
     override fun updateKey(): UpdateKey = UpdateKeyImpl(api)
 
-    override fun validateUserId(): ValidateUserId = ValidateUserIdImpl(api)
+    override fun validateUserId(): ValidateUserId = sopv.validateUserId()!!
 
     override fun version(): Version = sopv.version()!!
 }

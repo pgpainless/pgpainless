@@ -9,6 +9,7 @@ import org.pgpainless.util.ArmoredOutputStreamFactory
 import sop.SOPV
 import sop.operation.DetachedVerify
 import sop.operation.InlineVerify
+import sop.operation.ValidateUserId
 import sop.operation.Version
 
 class SOPVImpl(private val api: PGPainless) : SOPV {
@@ -22,4 +23,6 @@ class SOPVImpl(private val api: PGPainless) : SOPV {
     override fun inlineVerify(): InlineVerify = InlineVerifyImpl(api)
 
     override fun version(): Version = VersionImpl(api)
+
+    override fun validateUserId(): ValidateUserId = ValidateUserIdImpl(api)
 }
