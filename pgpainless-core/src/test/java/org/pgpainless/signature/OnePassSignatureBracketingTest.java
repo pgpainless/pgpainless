@@ -6,14 +6,13 @@ package org.pgpainless.signature;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.nio.charset.StandardCharsets;
-import java.security.InvalidAlgorithmParameterException;
-import java.security.NoSuchAlgorithmException;
 
 import org.bouncycastle.openpgp.PGPCompressedData;
 import org.bouncycastle.openpgp.PGPEncryptedData;
@@ -23,14 +22,12 @@ import org.bouncycastle.openpgp.PGPLiteralData;
 import org.bouncycastle.openpgp.PGPObjectFactory;
 import org.bouncycastle.openpgp.PGPOnePassSignature;
 import org.bouncycastle.openpgp.PGPOnePassSignatureList;
-import org.bouncycastle.openpgp.PGPPrivateKey;
 import org.bouncycastle.openpgp.PGPPublicKeyEncryptedData;
-import org.bouncycastle.openpgp.PGPPublicKeyRing;
-import org.bouncycastle.openpgp.PGPSecretKey;
-import org.bouncycastle.openpgp.PGPSecretKeyRing;
 import org.bouncycastle.openpgp.PGPSignature;
 import org.bouncycastle.openpgp.PGPSignatureList;
 import org.bouncycastle.openpgp.PGPUtil;
+import org.bouncycastle.openpgp.api.OpenPGPCertificate;
+import org.bouncycastle.openpgp.api.OpenPGPKey;
 import org.bouncycastle.openpgp.operator.PublicKeyDataDecryptorFactory;
 import org.bouncycastle.util.io.Streams;
 import org.junit.jupiter.api.TestTemplate;
@@ -44,7 +41,6 @@ import org.pgpainless.encryption_signing.EncryptionOptions;
 import org.pgpainless.encryption_signing.EncryptionStream;
 import org.pgpainless.encryption_signing.ProducerOptions;
 import org.pgpainless.encryption_signing.SigningOptions;
-import org.pgpainless.implementation.ImplementationFactory;
 import org.pgpainless.key.protection.SecretKeyRingProtector;
 import org.pgpainless.key.protection.UnlockSecretKey;
 import org.pgpainless.util.TestAllImplementations;
@@ -54,19 +50,20 @@ public class OnePassSignatureBracketingTest {
     @TestTemplate
     @ExtendWith(TestAllImplementations.class)
     public void onePassSignaturePacketsAndSignaturesAreBracketedTest()
-            throws PGPException, InvalidAlgorithmParameterException, NoSuchAlgorithmException, IOException {
+            throws PGPException, IOException {
+        PGPainless api = PGPainless.getInstance();
 
-        PGPSecretKeyRing key1 = PGPainless.generateKeyRing().modernKeyRing("Alice");
-        PGPSecretKeyRing key2 = PGPainless.generateKeyRing().modernKeyRing("Bob");
-        PGPPublicKeyRing cert1 = PGPainless.extractCertificate(key1);
+        OpenPGPKey key1 = api.generateKey().modernKeyRing("Alice");
+        OpenPGPKey key2 = api.generateKey().modernKeyRing("Bob");
+        OpenPGPCertificate cert1 = key1.toCertificate();
 
         ByteArrayOutputStream out = new ByteArrayOutputStream();
-        EncryptionStream encryptionStream = PGPainless.encryptAndOrSign()
+        EncryptionStream encryptionStream = api.generateMessage()
                 .onOutputStream(out)
                 .withOptions(ProducerOptions.signAndEncrypt(
-                        EncryptionOptions.encryptCommunications()
+                        EncryptionOptions.encryptCommunications(api)
                                 .addRecipient(cert1),
-                        SigningOptions.get()
+                        SigningOptions.get(api)
                                 .addInlineSignature(SecretKeyRingProtector.unprotectedKeys(), key1, DocumentSignatureType.BINARY_DOCUMENT)
                                 .addInlineSignature(SecretKeyRingProtector.unprotectedKeys(), key2, DocumentSignatureType.BINARY_DOCUMENT)
                 ).setAsciiArmor(true));
@@ -78,7 +75,7 @@ public class OnePassSignatureBracketingTest {
         ByteArrayInputStream ciphertextIn = new ByteArrayInputStream(out.toByteArray());
 
         InputStream inputStream = PGPUtil.getDecoderStream(ciphertextIn);
-        PGPObjectFactory objectFactory = ImplementationFactory.getInstance().getPGPObjectFactory(inputStream);
+        PGPObjectFactory objectFactory = api.getImplementation().pgpObjectFactory(inputStream);
 
         PGPOnePassSignatureList onePassSignatures = null;
         PGPSignatureList signatures = null;
@@ -93,11 +90,12 @@ public class OnePassSignatureBracketingTest {
                 for (PGPEncryptedData encryptedData : encryptedDataList) {
                     if (encryptedData instanceof PGPPublicKeyEncryptedData) {
                         PGPPublicKeyEncryptedData publicKeyEncryptedData = (PGPPublicKeyEncryptedData) encryptedData;
-                        PGPSecretKey secretKey = key1.getSecretKey(publicKeyEncryptedData.getKeyID());
-                        PGPPrivateKey privateKey = UnlockSecretKey.unlockSecretKey(secretKey, SecretKeyRingProtector.unprotectedKeys());
-                        PublicKeyDataDecryptorFactory decryptorFactory = ImplementationFactory.getInstance().getPublicKeyDataDecryptorFactory(privateKey);
+                        OpenPGPKey.OpenPGPSecretKey secretKey = key1.getSecretKey(publicKeyEncryptedData.getKeyIdentifier());
+                        OpenPGPKey.OpenPGPPrivateKey privateKey = UnlockSecretKey.unlockSecretKey(secretKey, SecretKeyRingProtector.unprotectedKeys());
+                        PublicKeyDataDecryptorFactory decryptorFactory = api.getImplementation()
+                                .publicKeyDataDecryptorFactory(privateKey.getKeyPair().getPrivateKey());
                         InputStream decryptionStream = publicKeyEncryptedData.getDataStream(decryptorFactory);
-                        objectFactory = ImplementationFactory.getInstance().getPGPObjectFactory(decryptionStream);
+                        objectFactory = api.getImplementation().pgpObjectFactory(decryptionStream);
                         continue outerloop;
                     }
                 }
@@ -107,7 +105,7 @@ public class OnePassSignatureBracketingTest {
             } else if (next instanceof PGPCompressedData) {
                 PGPCompressedData compressed = (PGPCompressedData) next;
                 InputStream decompressor = compressed.getDataStream();
-                objectFactory = ImplementationFactory.getInstance().getPGPObjectFactory(decompressor);
+                objectFactory = api.getImplementation().pgpObjectFactory(decompressor);
                 continue outerloop;
             } else if (next instanceof PGPLiteralData) {
                 continue outerloop;
@@ -131,6 +129,7 @@ public class OnePassSignatureBracketingTest {
             //  eg. (OPS1, OPS2, LiteralData, Sig2, Sig1)
             PGPOnePassSignature onePassSignature = onePassSignatures.get(i);
             PGPSignature signature = signatures.get(signatures.size() - 1 - i);
+            assertTrue(signature.hasKeyIdentifier(onePassSignature.getKeyIdentifier()));
             assertEquals(onePassSignature.getKeyID(), signature.getKeyID());
             byte[] encoded = onePassSignature.getEncoded();
 

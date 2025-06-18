@@ -68,15 +68,15 @@ public class CachingBcPublicKeyDataDecryptorFactoryTest {
         SecretKeyRingProtector protector = SecretKeyRingProtector.unprotectedKeys();
         KeyRingInfo info = PGPainless.inspectKeyRing(secretKeys);
         SubkeyIdentifier decryptionKey = new SubkeyIdentifier(secretKeys,
-                info.getEncryptionSubkeys(EncryptionPurpose.ANY).get(0).getKeyID());
+                info.getEncryptionSubkeys(EncryptionPurpose.ANY).get(0).getKeyIdentifier());
 
-        PGPSecretKey secretKey = secretKeys.getSecretKey(decryptionKey.getSubkeyId());
+        PGPSecretKey secretKey = secretKeys.getSecretKey(decryptionKey.getKeyIdentifier());
         PGPPrivateKey privateKey = UnlockSecretKey.unlockSecretKey(secretKey, protector);
         CachingBcPublicKeyDataDecryptorFactory cachingFactory = new CachingBcPublicKeyDataDecryptorFactory(
                 privateKey, decryptionKey);
 
         ByteArrayInputStream ciphertextIn = new ByteArrayInputStream(MSG.getBytes());
-        DecryptionStream decryptionStream = PGPainless.decryptAndOrVerify()
+        DecryptionStream decryptionStream = PGPainless.getInstance().processMessage()
                 .onInputStream(ciphertextIn)
                 .withOptions(ConsumerOptions.get()
                         .addCustomDecryptorFactory(cachingFactory));
@@ -87,7 +87,7 @@ public class CachingBcPublicKeyDataDecryptorFactoryTest {
         assertEquals("Hello, World!\n", out.toString());
 
         ciphertextIn = new ByteArrayInputStream(MSG.getBytes());
-        decryptionStream = PGPainless.decryptAndOrVerify()
+        decryptionStream = PGPainless.getInstance().processMessage()
                 .onInputStream(ciphertextIn)
                 .withOptions(ConsumerOptions.get()
                         .addCustomDecryptorFactory(cachingFactory));

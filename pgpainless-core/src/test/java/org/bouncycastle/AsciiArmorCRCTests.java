@@ -15,9 +15,8 @@ import java.nio.charset.StandardCharsets;
 import java.util.List;
 
 import org.bouncycastle.bcpg.ArmoredInputStream;
-import org.bouncycastle.openpgp.PGPException;
-import org.bouncycastle.openpgp.PGPSecretKeyRing;
 import org.bouncycastle.openpgp.PGPSignature;
+import org.bouncycastle.openpgp.api.OpenPGPKey;
 import org.bouncycastle.util.io.Streams;
 import org.junit.jupiter.api.Test;
 import org.pgpainless.PGPainless;
@@ -182,7 +181,7 @@ public class AsciiArmorCRCTests {
                 "=AAAA\n" +
                 "-----END PGP PRIVATE KEY BLOCK-----";
 
-        assertThrows(IOException.class, () -> PGPainless.readKeyRing().secretKeyRing(KEY));
+        assertThrows(IOException.class, () -> PGPainless.getInstance().readKey().parseKeysOrCertificates(KEY));
     }
 
     @Test
@@ -230,7 +229,7 @@ public class AsciiArmorCRCTests {
                 "=AAAA\n" +
                 "-----END PGP PUBLIC KEY BLOCK-----";
 
-        assertThrows(IOException.class, () -> PGPainless.readKeyRing().publicKeyRing(CERT));
+        assertThrows(IOException.class, () -> PGPainless.getInstance().readKey().parseCertificate(CERT));
     }
 
     @Test
@@ -270,7 +269,7 @@ public class AsciiArmorCRCTests {
             "-----END PGP SIGNATURE-----";
 
     @Test
-    public void assertMissingCRCSumInSignatureArmorIsOkay() throws PGPException, IOException {
+    public void assertMissingCRCSumInSignatureArmorIsOkay() {
         List<PGPSignature> signatureList = SignatureUtils.readSignatures(ARMORED_SIGNATURE_WITH_MISSING_CRC_SUM);
         assertEquals(1, signatureList.size());
     }
@@ -365,7 +364,7 @@ public class AsciiArmorCRCTests {
                 "xqAY9Bwizt4FWgXuLm1a4+So4V9j1TRCXd12Uc2l2RNmgDE=\n" +
                 "-----END PGP PRIVATE KEY BLOCK-----";
 
-        PGPSecretKeyRing key = PGPainless.readKeyRing().secretKeyRing(KEY);
+        OpenPGPKey key = PGPainless.getInstance().readKey().parseKey(KEY);
         assertNotNull(key);
         assertEquals(new OpenPgpV4Fingerprint("D1A66E1A23B182C9980F788CFBFCC82A015E7330"), new OpenPgpV4Fingerprint(key));
     }
@@ -541,11 +540,11 @@ public class AsciiArmorCRCTests {
                 "=FdCC\n" +
                 "-----END PGP MESSAGE-----\n";
 
-        PGPSecretKeyRing key = PGPainless.readKeyRing().secretKeyRing(ASCII_KEY);
+        OpenPGPKey key = PGPainless.getInstance().readKey().parseKey(ASCII_KEY);
         assertThrows(IOException.class, () -> {
-            DecryptionStream decryptionStream = PGPainless.decryptAndOrVerify()
+            DecryptionStream decryptionStream = PGPainless.getInstance().processMessage()
                     .onInputStream(new ByteArrayInputStream(message.getBytes(StandardCharsets.UTF_8)))
-                    .withOptions(new ConsumerOptions().addDecryptionKey(
+                    .withOptions(ConsumerOptions.get().addDecryptionKey(
                             key, SecretKeyRingProtector.unlockAnyKeyWith(passphrase)
                     ));
 

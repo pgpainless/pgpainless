@@ -6,78 +6,83 @@ package org.pgpainless.signature.builder
 
 import java.util.function.Predicate
 import org.bouncycastle.openpgp.PGPException
-import org.bouncycastle.openpgp.PGPPrivateKey
-import org.bouncycastle.openpgp.PGPPublicKey
-import org.bouncycastle.openpgp.PGPSecretKey
 import org.bouncycastle.openpgp.PGPSignature
 import org.bouncycastle.openpgp.PGPSignatureGenerator
+import org.bouncycastle.openpgp.api.OpenPGPCertificate.OpenPGPComponentKey
+import org.bouncycastle.openpgp.api.OpenPGPKey
 import org.pgpainless.PGPainless
 import org.pgpainless.algorithm.HashAlgorithm
 import org.pgpainless.algorithm.SignatureType
-import org.pgpainless.algorithm.negotiation.HashAlgorithmNegotiator
-import org.pgpainless.implementation.ImplementationFactory
+import org.pgpainless.bouncycastle.extensions.toHashAlgorithms
 import org.pgpainless.key.protection.SecretKeyRingProtector
 import org.pgpainless.key.protection.UnlockSecretKey
-import org.pgpainless.key.util.OpenPgpKeyAttributeUtil
 import org.pgpainless.signature.subpackets.SignatureSubpackets
 import org.pgpainless.signature.subpackets.SignatureSubpacketsHelper
 
 abstract class AbstractSignatureBuilder<B : AbstractSignatureBuilder<B>>(
-    protected val privateSigningKey: PGPPrivateKey,
-    protected val publicSigningKey: PGPPublicKey,
+    protected val signingKey: OpenPGPKey.OpenPGPPrivateKey,
     protected var _hashAlgorithm: HashAlgorithm,
     protected var _signatureType: SignatureType,
     protected val _hashedSubpackets: SignatureSubpackets,
-    protected val _unhashedSubpackets: SignatureSubpackets
+    protected val _unhashedSubpackets: SignatureSubpackets,
+    protected val api: PGPainless
 ) {
 
     protected abstract val signatureTypePredicate: Predicate<SignatureType>
 
     init {
-        require(signatureTypePredicate.test(_signatureType)) { "Invalid signature type." }
+        require(signatureTypePredicate.test(_signatureType)) {
+            "Invalid signature type: $_signatureType"
+        }
     }
 
     @Throws(PGPException::class)
     protected constructor(
         signatureType: SignatureType,
-        signingKey: PGPSecretKey,
+        signingKey: OpenPGPKey.OpenPGPSecretKey,
         protector: SecretKeyRingProtector,
         hashAlgorithm: HashAlgorithm,
         hashedSubpackets: SignatureSubpackets,
-        unhashedSubpackets: SignatureSubpackets
+        unhashedSubpackets: SignatureSubpackets,
+        api: PGPainless
     ) : this(
         UnlockSecretKey.unlockSecretKey(signingKey, protector),
-        signingKey.publicKey,
         hashAlgorithm,
         signatureType,
         hashedSubpackets,
-        unhashedSubpackets)
+        unhashedSubpackets,
+        api)
 
     @Throws(PGPException::class)
     constructor(
         signatureType: SignatureType,
-        signingKey: PGPSecretKey,
-        protector: SecretKeyRingProtector
+        signingKey: OpenPGPKey.OpenPGPSecretKey,
+        protector: SecretKeyRingProtector,
+        api: PGPainless
     ) : this(
         signatureType,
         signingKey,
         protector,
-        negotiateHashAlgorithm(signingKey.publicKey),
-        SignatureSubpackets.createHashedSubpackets(signingKey.publicKey),
-        SignatureSubpackets.createEmptySubpackets())
+        negotiateHashAlgorithm(signingKey, api),
+        SignatureSubpackets.createHashedSubpackets(signingKey.pgpSecretKey.publicKey),
+        SignatureSubpackets.createEmptySubpackets(),
+        api)
 
     @Throws(PGPException::class)
     constructor(
-        signingKey: PGPSecretKey,
+        signingKey: OpenPGPKey.OpenPGPSecretKey,
         protector: SecretKeyRingProtector,
-        archetypeSignature: PGPSignature
+        archetypeSignature: PGPSignature,
+        api: PGPainless
     ) : this(
         SignatureType.requireFromCode(archetypeSignature.signatureType),
         signingKey,
         protector,
-        negotiateHashAlgorithm(signingKey.publicKey),
-        SignatureSubpackets.refreshHashedSubpackets(signingKey.publicKey, archetypeSignature),
-        SignatureSubpackets.refreshUnhashedSubpackets(archetypeSignature))
+        negotiateHashAlgorithm(signingKey, api),
+        SignatureSubpackets.refreshHashedSubpackets(
+            signingKey.publicKey.pgpPublicKey, archetypeSignature),
+        SignatureSubpackets.refreshUnhashedSubpackets(archetypeSignature),
+        api)
 
     val hashAlgorithm = _hashAlgorithm
 
@@ -109,27 +114,22 @@ abstract class AbstractSignatureBuilder<B : AbstractSignatureBuilder<B>>(
     @Throws(PGPException::class)
     protected fun buildAndInitSignatureGenerator(): PGPSignatureGenerator =
         PGPSignatureGenerator(
-                ImplementationFactory.getInstance()
-                    .getPGPContentSignerBuilder(
-                        publicSigningKey.algorithm, hashAlgorithm.algorithmId))
+                api.implementation.pgpContentSignerBuilder(
+                    signingKey.keyPair.publicKey.algorithm, hashAlgorithm.algorithmId),
+                signingKey.keyPair.publicKey)
             .apply {
                 setUnhashedSubpackets(SignatureSubpacketsHelper.toVector(_unhashedSubpackets))
                 setHashedSubpackets(SignatureSubpacketsHelper.toVector(_hashedSubpackets))
-                init(_signatureType.code, privateSigningKey)
+                init(_signatureType.code, signingKey.keyPair.privateKey)
             }
 
     companion object {
 
-        /**
-         * Negotiate a [HashAlgorithm] to be used when creating the signature.
-         *
-         * @param publicKey signing public key
-         * @return hash algorithm
-         */
         @JvmStatic
-        fun negotiateHashAlgorithm(publicKey: PGPPublicKey): HashAlgorithm =
-            HashAlgorithmNegotiator.negotiateSignatureHashAlgorithm(PGPainless.getPolicy())
-                .negotiateHashAlgorithm(
-                    OpenPgpKeyAttributeUtil.getOrGuessPreferredHashAlgorithms(publicKey))
+        fun negotiateHashAlgorithm(key: OpenPGPComponentKey, api: PGPainless): HashAlgorithm =
+            key.hashAlgorithmPreferences?.toHashAlgorithms()?.first {
+                api.algorithmPolicy.dataSignatureHashAlgorithmPolicy.isAcceptable(it)
+            }
+                ?: api.algorithmPolicy.dataSignatureHashAlgorithmPolicy.defaultHashAlgorithm
     }
 }

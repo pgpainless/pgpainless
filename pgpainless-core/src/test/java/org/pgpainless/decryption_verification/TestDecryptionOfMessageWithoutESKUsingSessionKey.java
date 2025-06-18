@@ -44,7 +44,7 @@ public class TestDecryptionOfMessageWithoutESKUsingSessionKey {
     @Test
     public void decryptMessageWithSKESK() throws PGPException, IOException {
         ByteArrayInputStream in = new ByteArrayInputStream(encryptedMessageWithSKESK.getBytes(StandardCharsets.UTF_8));
-        DecryptionStream decryptionStream = PGPainless.decryptAndOrVerify()
+        DecryptionStream decryptionStream = PGPainless.getInstance().processMessage()
                 .onInputStream(in)
                 .withOptions(ConsumerOptions.get()
                         .setSessionKey(sessionKey));
@@ -57,7 +57,7 @@ public class TestDecryptionOfMessageWithoutESKUsingSessionKey {
     @Test
     public void decryptMessageWithoutSKESK() throws PGPException, IOException {
         ByteArrayInputStream in = new ByteArrayInputStream(encryptedMessageWithoutESK.getBytes(StandardCharsets.UTF_8));
-        DecryptionStream decryptionStream = PGPainless.decryptAndOrVerify()
+        DecryptionStream decryptionStream = PGPainless.getInstance().processMessage()
                 .onInputStream(in)
                 .withOptions(ConsumerOptions.get()
                         .setSessionKey(sessionKey));

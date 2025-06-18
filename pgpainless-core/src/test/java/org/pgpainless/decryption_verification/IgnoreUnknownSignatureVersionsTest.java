@@ -176,8 +176,8 @@ public class IgnoreUnknownSignatureVersionsTest {
     }
 
     private MessageMetadata verifySignature(PGPPublicKeyRing cert, String BASE_CASE) throws PGPException, IOException {
-        DecryptionStream decryptionStream = PGPainless.decryptAndOrVerify().onInputStream(new ByteArrayInputStream(message.getBytes(StandardCharsets.UTF_8)))
-                .withOptions(new ConsumerOptions()
+        DecryptionStream decryptionStream = PGPainless.getInstance().processMessage().onInputStream(new ByteArrayInputStream(message.getBytes(StandardCharsets.UTF_8)))
+                .withOptions(ConsumerOptions.get()
                         .addVerificationCert(cert)
                         .addVerificationOfDetachedSignatures(new ByteArrayInputStream(BASE_CASE.getBytes(StandardCharsets.UTF_8))));
 

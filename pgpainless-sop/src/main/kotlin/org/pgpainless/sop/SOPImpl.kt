@@ -4,9 +4,11 @@
 
 package org.pgpainless.sop
 
+import org.pgpainless.PGPainless
 import sop.SOP
 import sop.SOPV
 import sop.operation.Armor
+import sop.operation.CertifyUserId
 import sop.operation.ChangeKeyPassword
 import sop.operation.Dearmor
 import sop.operation.Decrypt
@@ -19,38 +21,54 @@ import sop.operation.InlineDetach
 import sop.operation.InlineSign
 import sop.operation.InlineVerify
 import sop.operation.ListProfiles
+import sop.operation.MergeCerts
 import sop.operation.RevokeKey
+import sop.operation.UpdateKey
+import sop.operation.ValidateUserId
 import sop.operation.Version
 
-class SOPImpl(private val sopv: SOPV = SOPVImpl()) : SOP {
+class SOPImpl(
+    private val api: PGPainless = PGPainless.getInstance(),
+    private val sopv: SOPV = SOPVImpl(api)
+) : SOP {
 
-    override fun armor(): Armor = ArmorImpl()
+    constructor(api: PGPainless) : this(api, SOPVImpl(api))
 
-    override fun changeKeyPassword(): ChangeKeyPassword = ChangeKeyPasswordImpl()
+    override fun armor(): Armor = ArmorImpl(api)
 
-    override fun dearmor(): Dearmor = DearmorImpl()
+    override fun certifyUserId(): CertifyUserId = CertifyUserIdImpl(api)
 
-    override fun decrypt(): Decrypt = DecryptImpl()
+    override fun changeKeyPassword(): ChangeKeyPassword = ChangeKeyPasswordImpl(api)
 
-    override fun detachedSign(): DetachedSign = DetachedSignImpl()
+    override fun dearmor(): Dearmor = DearmorImpl(api)
 
-    override fun detachedVerify(): DetachedVerify = sopv.detachedVerify()
+    override fun decrypt(): Decrypt = DecryptImpl(api)
 
-    override fun encrypt(): Encrypt = EncryptImpl()
+    override fun detachedSign(): DetachedSign = DetachedSignImpl(api)
 
-    override fun extractCert(): ExtractCert = ExtractCertImpl()
+    override fun detachedVerify(): DetachedVerify = sopv.detachedVerify()!!
 
-    override fun generateKey(): GenerateKey = GenerateKeyImpl()
+    override fun encrypt(): Encrypt = EncryptImpl(api)
 
-    override fun inlineDetach(): InlineDetach = InlineDetachImpl()
+    override fun extractCert(): ExtractCert = ExtractCertImpl(api)
 
-    override fun inlineSign(): InlineSign = InlineSignImpl()
+    override fun generateKey(): GenerateKey = GenerateKeyImpl(api)
 
-    override fun inlineVerify(): InlineVerify = sopv.inlineVerify()
+    override fun inlineDetach(): InlineDetach = InlineDetachImpl(api)
 
-    override fun listProfiles(): ListProfiles = ListProfilesImpl()
+    override fun inlineSign(): InlineSign = InlineSignImpl(api)
 
-    override fun revokeKey(): RevokeKey = RevokeKeyImpl()
+    override fun inlineVerify(): InlineVerify = sopv.inlineVerify()!!
 
-    override fun version(): Version = sopv.version()
+    override fun listProfiles(): ListProfiles = ListProfilesImpl(api)
+
+    override fun mergeCerts(): MergeCerts = MergeCertsImpl(api)
+
+    override fun revokeKey(): RevokeKey = RevokeKeyImpl(api)
+
+    override fun updateKey(): UpdateKey = UpdateKeyImpl(api)
+
+    override fun validateUserId(): ValidateUserId = sopv.validateUserId()!!
+
+    override fun version(): Version = sopv.version()!!
 }

@@ -7,14 +7,14 @@ package org.pgpainless.key.protection;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertNull;
 
-import java.security.InvalidAlgorithmParameterException;
-import java.security.NoSuchAlgorithmException;
-import java.util.Iterator;
+import java.io.IOException;
 import javax.annotation.Nullable;
 
+import org.bouncycastle.bcpg.KeyIdentifier;
 import org.bouncycastle.openpgp.PGPException;
-import org.bouncycastle.openpgp.PGPPublicKey;
-import org.bouncycastle.openpgp.PGPSecretKeyRing;
+import org.bouncycastle.openpgp.api.OpenPGPCertificate;
+import org.bouncycastle.openpgp.api.OpenPGPKey;
+import org.jetbrains.annotations.NotNull;
 import org.junit.jupiter.api.Test;
 import org.pgpainless.PGPainless;
 import org.pgpainless.key.TestKeys;
@@ -31,8 +31,8 @@ public class PassphraseProtectedKeyTest {
             new SecretKeyPassphraseProvider() {
                 @Nullable
                 @Override
-                public Passphrase getPassphraseFor(Long keyId) {
-                    if (keyId == TestKeys.CRYPTIE_KEY_ID) {
+                public Passphrase getPassphraseFor(@NotNull KeyIdentifier keyIdentifier) {
+                    if (keyIdentifier.getKeyId() == TestKeys.CRYPTIE_KEY_ID) {
                         return new Passphrase(TestKeys.CRYPTIE_PASSWORD.toCharArray());
                     } else {
                         return null;
@@ -40,31 +40,33 @@ public class PassphraseProtectedKeyTest {
                 }
 
                 @Override
-                public boolean hasPassphrase(Long keyId) {
-                    return keyId == TestKeys.CRYPTIE_KEY_ID;
+                public boolean hasPassphrase(@NotNull KeyIdentifier keyIdentifier) {
+                    return keyIdentifier.getKeyId() == TestKeys.CRYPTIE_KEY_ID;
                 }
             });
 
     @Test
-    public void testReturnsNonNullDecryptorEncryptorForPassword() throws PGPException {
-        assertNotNull(protector.getEncryptor(TestKeys.CRYPTIE_KEY_ID));
+    public void testReturnsNonNullDecryptorEncryptorForPassword() throws IOException {
+        assertNotNull(protector.getEncryptor(TestKeys.getCryptiePublicKeyRing().getPublicKey(TestKeys.CRYPTIE_KEY_ID)));
         assertNotNull(protector.getDecryptor(TestKeys.CRYPTIE_KEY_ID));
     }
 
     @Test
-    public void testReturnsNullDecryptorEncryptorForNoPassword() throws PGPException {
-        assertNull(protector.getEncryptor(TestKeys.JULIET_KEY_ID));
+    public void testReturnsNullDecryptorEncryptorForNoPassword() throws IOException {
+        assertNull(protector.getEncryptor(TestKeys.getJulietPublicKeyRing().getPublicKey(TestKeys.JULIET_KEY_ID)));
         assertNull(protector.getDecryptor(TestKeys.JULIET_KEY_ID));
     }
 
     @Test
-    public void testReturnsNonNullDecryptorForSubkeys() throws InvalidAlgorithmParameterException, NoSuchAlgorithmException, PGPException {
-        PGPSecretKeyRing secretKeys = PGPainless.generateKeyRing().modernKeyRing("alice", "passphrase");
-        SecretKeyRingProtector protector = PasswordBasedSecretKeyRingProtector.forKey(secretKeys, Passphrase.fromPassword("passphrase"));
-        for (Iterator<PGPPublicKey> it = secretKeys.getPublicKeys(); it.hasNext(); ) {
-            PGPPublicKey subkey = it.next();
-            assertNotNull(protector.getEncryptor(subkey.getKeyID()));
-            assertNotNull(protector.getDecryptor(subkey.getKeyID()));
+    public void testReturnsNonNullDecryptorForSubkeys() throws PGPException {
+        PGPainless api = PGPainless.getInstance();
+        OpenPGPKey key = api.generateKey()
+                .modernKeyRing("alice <alice@example.org>", "passphrase");
+        SecretKeyRingProtector protector = PasswordBasedSecretKeyRingProtector.forKey(key, Passphrase.fromPassword("passphrase"));
+        for (OpenPGPCertificate.OpenPGPComponentKey subkey : key.getPublicKeys().values()) {
+            assertNotNull(protector.getEncryptor(subkey));
+            assertNotNull(protector.getDecryptor(subkey.getKeyIdentifier()));
+            assertNotNull(protector.getDecryptor(subkey.getKeyIdentifier().getKeyId()));
         }
     }
 }

@@ -8,11 +8,8 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
-import java.security.InvalidAlgorithmParameterException;
-import java.security.NoSuchAlgorithmException;
 import java.util.Iterator;
 
-import org.bouncycastle.openpgp.PGPException;
 import org.bouncycastle.openpgp.PGPPublicKey;
 import org.bouncycastle.openpgp.PGPPublicKeyRing;
 import org.bouncycastle.openpgp.PGPPublicKeyRingCollection;
@@ -34,15 +31,15 @@ public class BCUtilTest {
     private static final Logger LOGGER = LoggerFactory.getLogger(BCUtilTest.class);
 
     @Test
-    public void keyRingToCollectionTest()
-            throws PGPException, NoSuchAlgorithmException, InvalidAlgorithmParameterException {
+    public void keyRingToCollectionTest() {
         PGPSecretKeyRing sec = PGPainless.buildKeyRing()
                 .setPrimaryKey(KeySpec.getBuilder(
                         KeyType.RSA(RsaLength._3072),
                         KeyFlag.CERTIFY_OTHER, KeyFlag.SIGN_DATA))
                 .addSubkey(KeySpec.getBuilder(KeyType.RSA(RsaLength._3072), KeyFlag.ENCRYPT_COMMS))
                 .addUserId("donald@duck.tails")
-                .build();
+                .build()
+                .getPGPSecretKeyRing();
 
         PGPPublicKeyRing pub = KeyRingUtils.publicKeyRingFrom(sec);
 

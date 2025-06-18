@@ -12,13 +12,11 @@ import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.nio.charset.StandardCharsets;
-import java.security.InvalidAlgorithmParameterException;
-import java.security.NoSuchAlgorithmException;
 
 import org.bouncycastle.openpgp.PGPException;
-import org.bouncycastle.openpgp.PGPPublicKey;
-import org.bouncycastle.openpgp.PGPSecretKeyRing;
-import org.bouncycastle.openpgp.PGPSignature;
+import org.bouncycastle.openpgp.api.OpenPGPCertificate;
+import org.bouncycastle.openpgp.api.OpenPGPKey;
+import org.bouncycastle.openpgp.api.OpenPGPSignature;
 import org.bouncycastle.util.io.Streams;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
@@ -28,18 +26,19 @@ import org.pgpainless.encryption_signing.EncryptionResult;
 import org.pgpainless.encryption_signing.EncryptionStream;
 import org.pgpainless.encryption_signing.ProducerOptions;
 import org.pgpainless.encryption_signing.SigningOptions;
-import org.pgpainless.key.SubkeyIdentifier;
 import org.pgpainless.key.protection.SecretKeyRingProtector;
 import org.pgpainless.util.ArmorUtils;
 
 public class Sign {
 
-    private static PGPSecretKeyRing secretKey;
+    private static OpenPGPKey key;
     private static SecretKeyRingProtector protector;
+    private static final PGPainless api = PGPainless.getInstance();
 
     @BeforeAll
-    public static void prepare() throws PGPException, InvalidAlgorithmParameterException, NoSuchAlgorithmException {
-        secretKey = PGPainless.generateKeyRing().modernKeyRing("Emilia Example <emilia@example.org>");
+    public static void prepare() {
+        key = api.generateKey()
+                .modernKeyRing("Emilia Example <emilia@example.org>");
         protector = SecretKeyRingProtector.unprotectedKeys(); // no password
     }
 
@@ -52,10 +51,10 @@ public class Sign {
         String message = "\"Derivative Works\" shall mean any work, whether in Source or Object form, that is based on (or derived from) the Work and for which the editorial revisions, annotations, elaborations, or other modifications represent, as a whole, an original work of authorship. For the purposes of this License, Derivative Works shall not include works that remain separable from, or merely link (or bind by name) to the interfaces of, the Work and Derivative Works thereof.";
         InputStream messageIn = new ByteArrayInputStream(message.getBytes(StandardCharsets.UTF_8));
         ByteArrayOutputStream signedOut = new ByteArrayOutputStream();
-        EncryptionStream signingStream = PGPainless.encryptAndOrSign()
+        EncryptionStream signingStream = api.generateMessage()
                 .onOutputStream(signedOut)
-                .withOptions(ProducerOptions.sign(SigningOptions.get()
-                                .addSignature(protector, secretKey))
+                .withOptions(ProducerOptions.sign(SigningOptions.get(api)
+                                .addSignature(protector, key))
                 );
 
         Streams.pipeAll(messageIn, signingStream);
@@ -70,7 +69,7 @@ public class Sign {
     /**
      * Demonstration of how to create a detached signature for a message.
      * A detached signature can be distributed alongside the message/file itself.
-     *
+     * <p>
      * The message/file doesn't need to be altered for detached signature creation.
      */
     @Test
@@ -82,10 +81,10 @@ public class Sign {
         // After signing, you want to distribute the original value of 'message' along with the 'detachedSignature'
         // from below.
         ByteArrayOutputStream ignoreMe = new ByteArrayOutputStream();
-        EncryptionStream signingStream = PGPainless.encryptAndOrSign()
+        EncryptionStream signingStream = api.generateMessage()
                 .onOutputStream(ignoreMe)
-                .withOptions(ProducerOptions.sign(SigningOptions.get()
-                        .addDetachedSignature(protector, secretKey, DocumentSignatureType.CANONICAL_TEXT_DOCUMENT))
+                .withOptions(ProducerOptions.sign(SigningOptions.get(api)
+                        .addDetachedSignature(protector, key, DocumentSignatureType.CANONICAL_TEXT_DOCUMENT))
                         .setAsciiArmor(false)
                 );
 
@@ -94,9 +93,9 @@ public class Sign {
 
         EncryptionResult result = signingStream.getResult();
 
-        PGPPublicKey signingKey = PGPainless.inspectKeyRing(secretKey).getSigningSubkeys().get(0);
-        PGPSignature signature = result.getDetachedSignatures().get(new SubkeyIdentifier(secretKey, signingKey.getKeyID())).iterator().next();
-        String detachedSignature = ArmorUtils.toAsciiArmoredString(signature.getEncoded());
+        OpenPGPCertificate.OpenPGPComponentKey signingKey = api.inspect(key).getSigningSubkeys().get(0);
+        OpenPGPSignature.OpenPGPDocumentSignature signature = result.getDetachedDocumentSignatures().getSignaturesBy(signingKey).get(0);
+        String detachedSignature = ArmorUtils.toAsciiArmoredString(signature.getSignature().getEncoded());
 
         assertTrue(detachedSignature.startsWith("-----BEGIN PGP SIGNATURE-----"));
 
@@ -126,10 +125,10 @@ public class Sign {
                 "limitations under the License.";
         InputStream messageIn = new ByteArrayInputStream(message.getBytes(StandardCharsets.UTF_8));
         ByteArrayOutputStream signedOut = new ByteArrayOutputStream();
-        EncryptionStream signingStream = PGPainless.encryptAndOrSign()
+        EncryptionStream signingStream = api.generateMessage()
                 .onOutputStream(signedOut)
-                .withOptions(ProducerOptions.sign(SigningOptions.get()
-                                .addDetachedSignature(protector, secretKey, DocumentSignatureType.CANONICAL_TEXT_DOCUMENT)) // Human-readable text document
+                .withOptions(ProducerOptions.sign(SigningOptions.get(api)
+                                .addDetachedSignature(protector, key, DocumentSignatureType.CANONICAL_TEXT_DOCUMENT)) // Human-readable text document
                         .setCleartextSigned() // <- Explicitly use Cleartext Signature Framework!!!
                 );
 

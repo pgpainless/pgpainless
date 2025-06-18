@@ -17,10 +17,7 @@ class KeyIdUtil {
          * @param longKeyId 16-digit hexadecimal string
          * @return key-id converted to [Long].
          */
-        @JvmStatic
-        @Deprecated(
-            "Superseded by Long extension method.", ReplaceWith("Long.fromHexKeyId(longKeyId)"))
-        fun fromLongKeyId(longKeyId: String) = Long.fromOpenPgpKeyId(longKeyId)
+        @JvmStatic fun fromLongKeyId(longKeyId: String) = Long.fromOpenPgpKeyId(longKeyId)
 
         /**
          * Format a long key-ID as upper-case hex string.

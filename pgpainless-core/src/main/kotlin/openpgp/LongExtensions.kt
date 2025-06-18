@@ -9,7 +9,7 @@ fun Long.openPgpKeyId(): String {
     return String.format("%016X", this).uppercase()
 }
 
-/** Parse a Long form a 16 digit hex encoded OpenPgp key-ID. */
+/** Parse a Long from a 16 digit hex encoded OpenPgp key-ID. */
 fun Long.Companion.fromOpenPgpKeyId(hexKeyId: String): Long {
     require("^[0-9A-Fa-f]{16}$".toRegex().matches(hexKeyId)) {
         "Provided long key-id does not match expected format. " +
