@@ -31,13 +31,11 @@ DhxJVTgA/1WaFrKdP3AgL0Ffdooc5XXbjQsj0uHo6FZSHRI4pchMAQCyJnKQ3RvW
     @Test
     @Disabled("Disabled since BC 1.77 chokes on the test key")
     fun testExtractCertificate() {
-        val key = PGPainless.readKeyRing().secretKeyRing(KEY)!!
-        val cert = PGPainless.extractCertificate(key)
+        val key = PGPainless.getInstance().readKey().parseKey(KEY)!!
+        val cert = key.toCertificate()
 
         assertNotNull(cert)
         // Each secret key got its public key component extracted
-        assertEquals(
-            key.secretKeys.asSequence().map { it.keyID }.toSet(),
-            cert.publicKeys.asSequence().map { it.keyID }.toSet())
+        assertEquals(key.secretKeys.keys.toSet(), cert.publicKeys.keys.toSet())
     }
 }

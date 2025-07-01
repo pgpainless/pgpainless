@@ -7,8 +7,11 @@ package org.pgpainless.signature.builder
 import java.util.function.Predicate
 import org.bouncycastle.openpgp.PGPException
 import org.bouncycastle.openpgp.PGPPublicKey
-import org.bouncycastle.openpgp.PGPSecretKey
 import org.bouncycastle.openpgp.PGPSignature
+import org.bouncycastle.openpgp.api.OpenPGPCertificate.OpenPGPComponentKey
+import org.bouncycastle.openpgp.api.OpenPGPCertificate.OpenPGPComponentSignature
+import org.bouncycastle.openpgp.api.OpenPGPKey
+import org.pgpainless.PGPainless
 import org.pgpainless.algorithm.HashAlgorithm
 import org.pgpainless.algorithm.SignatureType
 import org.pgpainless.key.protection.SecretKeyRingProtector
@@ -26,28 +29,32 @@ class SubkeyBindingSignatureBuilder : AbstractSignatureBuilder<SubkeyBindingSign
 
     @Throws(PGPException::class)
     constructor(
-        signingKey: PGPSecretKey,
-        protector: SecretKeyRingProtector
-    ) : super(SignatureType.SUBKEY_BINDING, signingKey, protector)
+        signingKey: OpenPGPKey.OpenPGPSecretKey,
+        protector: SecretKeyRingProtector,
+        api: PGPainless
+    ) : super(SignatureType.SUBKEY_BINDING, signingKey, protector, api)
 
     @Throws(PGPException::class)
     constructor(
-        signingKey: PGPSecretKey,
+        signingKey: OpenPGPKey.OpenPGPSecretKey,
         protector: SecretKeyRingProtector,
-        hashAlgorithm: HashAlgorithm
+        hashAlgorithm: HashAlgorithm,
+        api: PGPainless
     ) : super(
         SignatureType.SUBKEY_BINDING,
         signingKey,
         protector,
         hashAlgorithm,
-        SignatureSubpackets.createHashedSubpackets(signingKey.publicKey),
-        SignatureSubpackets.createEmptySubpackets())
+        SignatureSubpackets.createHashedSubpackets(signingKey.publicKey.pgpPublicKey),
+        SignatureSubpackets.createEmptySubpackets(),
+        api)
 
     @Throws(PGPException::class)
     constructor(
-        signingKey: PGPSecretKey,
+        signingKey: OpenPGPKey.OpenPGPSecretKey,
         protector: SecretKeyRingProtector,
-        oldSubkeyBinding: PGPSignature
+        oldSubkeyBinding: PGPSignature,
+        api: PGPainless
     ) : super(
         signingKey,
         protector,
@@ -55,7 +62,8 @@ class SubkeyBindingSignatureBuilder : AbstractSignatureBuilder<SubkeyBindingSign
             require(it.signatureType == SignatureType.SUBKEY_BINDING.code) {
                 "Invalid signature type."
             }
-        })
+        },
+        api)
 
     val hashedSubpackets: SelfSignatureSubpackets = _hashedSubpackets
     val unhashedSubpackets: SelfSignatureSubpackets = _unhashedSubpackets
@@ -69,5 +77,9 @@ class SubkeyBindingSignatureBuilder : AbstractSignatureBuilder<SubkeyBindingSign
 
     @Throws(PGPException::class)
     fun build(subkey: PGPPublicKey): PGPSignature =
-        buildAndInitSignatureGenerator().generateCertification(publicSigningKey, subkey)
+        buildAndInitSignatureGenerator()
+            .generateCertification(signingKey.publicKey.pgpPublicKey, subkey)
+
+    fun build(subkey: OpenPGPComponentKey): OpenPGPComponentSignature =
+        OpenPGPComponentSignature(build(subkey.pgpPublicKey), signingKey.publicKey, subkey)
 }

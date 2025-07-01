@@ -11,13 +11,12 @@ import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
-import java.security.InvalidAlgorithmParameterException;
-import java.security.NoSuchAlgorithmException;
 
 import org.bouncycastle.bcpg.SecretKeyPacket;
 import org.bouncycastle.openpgp.PGPException;
 import org.bouncycastle.openpgp.PGPSecretKey;
 import org.bouncycastle.openpgp.PGPSecretKeyRing;
+import org.bouncycastle.openpgp.api.OpenPGPKey;
 import org.bouncycastle.util.io.Streams;
 import org.junit.jupiter.api.Test;
 import org.pgpainless.PGPainless;
@@ -68,27 +67,28 @@ public class S2KUsageFixTest {
 
     @Test
     public void verifyOutFixInChangePassphraseWorks()
-            throws PGPException, InvalidAlgorithmParameterException, NoSuchAlgorithmException {
-        PGPSecretKeyRing before = PGPainless.generateKeyRing().modernKeyRing("Alice", "before");
-        for (PGPSecretKey key : before) {
+            throws PGPException {
+        PGPainless api = PGPainless.getInstance();
+        OpenPGPKey before = api.generateKey().modernKeyRing("Alice", "before");
+        for (PGPSecretKey key : before.getPGPSecretKeyRing()) {
             assertEquals(SecretKeyPacket.USAGE_SHA1, key.getS2KUsage());
         }
 
-        PGPSecretKeyRing unprotected = PGPainless.modifyKeyRing(before)
+        OpenPGPKey unprotected = api.modify(before)
                 .changePassphraseFromOldPassphrase(Passphrase.fromPassword("before"))
                 .withSecureDefaultSettings()
                 .toNoPassphrase()
                 .done();
-        for (PGPSecretKey key : unprotected) {
+        for (PGPSecretKey key : unprotected.getPGPSecretKeyRing()) {
             assertEquals(SecretKeyPacket.USAGE_NONE, key.getS2KUsage());
         }
 
-        PGPSecretKeyRing after = PGPainless.modifyKeyRing(unprotected)
+        OpenPGPKey after = api.modify(unprotected)
                 .changePassphraseFromOldPassphrase(Passphrase.emptyPassphrase())
                 .withSecureDefaultSettings()
                 .toNewPassphrase(Passphrase.fromPassword("after"))
                 .done();
-        for (PGPSecretKey key : after) {
+        for (PGPSecretKey key : after.getPGPSecretKeyRing()) {
             assertEquals(SecretKeyPacket.USAGE_SHA1, key.getS2KUsage());
         }
     }
@@ -96,23 +96,24 @@ public class S2KUsageFixTest {
     @Test
     public void testFixS2KUsageFrom_USAGE_CHECKSUM_to_USAGE_SHA1()
             throws IOException, PGPException {
-        PGPSecretKeyRing keys = PGPainless.readKeyRing().secretKeyRing(KEY_WITH_USAGE_CHECKSUM);
+        PGPainless api = PGPainless.getInstance();
+        OpenPGPKey keys = api.readKey().parseKey(KEY_WITH_USAGE_CHECKSUM);
         SecretKeyRingProtector protector = SecretKeyRingProtector.unlockAnyKeyWith(Passphrase.fromPassword("after"));
 
-        PGPSecretKeyRing fixed = S2KUsageFix.replaceUsageChecksumWithUsageSha1(keys, protector);
+        PGPSecretKeyRing fixed = S2KUsageFix.replaceUsageChecksumWithUsageSha1(keys.getPGPSecretKeyRing(), protector);
         for (PGPSecretKey key : fixed) {
             assertEquals(SecretKeyPacket.USAGE_SHA1, key.getS2KUsage());
         }
 
-        testCanStillDecrypt(keys, protector);
+        testCanStillDecrypt(api.toKey(fixed), protector);
     }
 
-    private void testCanStillDecrypt(PGPSecretKeyRing keys, SecretKeyRingProtector protector)
+    private void testCanStillDecrypt(OpenPGPKey keys, SecretKeyRingProtector protector)
             throws PGPException, IOException {
         ByteArrayInputStream in = new ByteArrayInputStream(MESSAGE.getBytes(StandardCharsets.UTF_8));
-        DecryptionStream decryptionStream = PGPainless.decryptAndOrVerify()
+        DecryptionStream decryptionStream = PGPainless.getInstance().processMessage()
                 .onInputStream(in)
-                .withOptions(new ConsumerOptions()
+                .withOptions(ConsumerOptions.get()
                         .addDecryptionKey(keys, protector));
         ByteArrayOutputStream out = new ByteArrayOutputStream();
         Streams.pipeAll(decryptionStream, out);

@@ -4,24 +4,23 @@
 
 package org.pgpainless.signature;
 
-import static org.junit.jupiter.api.Assertions.assertThrows;
-import static org.junit.jupiter.api.Assertions.fail;
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.nio.charset.StandardCharsets;
-import java.util.Date;
 
 import org.bouncycastle.openpgp.PGPException;
-import org.bouncycastle.openpgp.PGPPublicKeyRing;
-import org.bouncycastle.openpgp.PGPSignature;
+import org.bouncycastle.openpgp.api.OpenPGPCertificate;
+import org.bouncycastle.util.io.Streams;
 import org.junit.jupiter.api.TestTemplate;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.pgpainless.PGPainless;
-import org.pgpainless.exception.SignatureValidationException;
-import org.pgpainless.policy.Policy;
-import org.pgpainless.signature.consumer.CertificateValidator;
+import org.pgpainless.decryption_verification.ConsumerOptions;
+import org.pgpainless.decryption_verification.DecryptionStream;
+import org.pgpainless.decryption_verification.MessageMetadata;
 import org.pgpainless.util.TestAllImplementations;
 
 /**
@@ -47,9 +46,6 @@ public class BindingSignatureSubpacketsTest {
             "=bVN/\n" +
             "-----END PGP SIGNATURE-----\n";
     private static final String data = "Hello World :)";
-
-    private Date validationDate = new Date();
-    private Policy policy = PGPainless.getPolicy();
 
     @TestTemplate
     @ExtendWith(TestAllImplementations.class)
@@ -1971,26 +1967,37 @@ public class BindingSignatureSubpacketsTest {
     }
 
     private void expectSignatureValidationSucceeds(String key, String message) throws IOException, PGPException {
-        PGPPublicKeyRing publicKeys = PGPainless.readKeyRing().publicKeyRing(key);
-        PGPSignature signature = SignatureUtils.readSignatures(sig).get(0);
+        PGPainless api = PGPainless.getInstance();
+        OpenPGPCertificate certificate = api.readKey().parseCertificate(key);
 
-        try {
-            CertificateValidator.validateCertificateAndVerifyUninitializedSignature(signature, getSignedData(data), publicKeys, policy, validationDate);
-        } catch (SignatureValidationException e) {
-            // CHECKSTYLE:OFF
-            e.printStackTrace();
-            // CHECKSTYLE:ON
-            fail(message + ": " + e.getMessage());
+        DecryptionStream decryptionStream = api.processMessage().onInputStream(getSignedData(data))
+                .withOptions(ConsumerOptions.get(api)
+                        .addVerificationCert(certificate)
+                        .addVerificationOfDetachedSignatures(SignatureUtils.readSignatures(sig)));
+
+        Streams.drain(decryptionStream);
+        decryptionStream.close();
+        MessageMetadata metadata = decryptionStream.getMetadata();
+
+        if (!metadata.getRejectedSignatures().isEmpty()) {
+            throw metadata.getRejectedSignatures().get(0).getValidationException();
         }
+        assertTrue(decryptionStream.getMetadata().isVerifiedSignedBy(certificate),
+                message);
     }
 
     private void expectSignatureValidationFails(String key, String message) throws IOException, PGPException {
-        PGPPublicKeyRing publicKeys = PGPainless.readKeyRing().publicKeyRing(key);
-        PGPSignature signature = SignatureUtils.readSignatures(sig).get(0);
+        PGPainless api = PGPainless.getInstance();
+        OpenPGPCertificate certificate = api.readKey().parseCertificate(key);
 
-        assertThrows(SignatureValidationException.class, () ->
-                        CertificateValidator.validateCertificateAndVerifyUninitializedSignature(
-                                signature, getSignedData(data), publicKeys, policy, validationDate),
+        DecryptionStream decryptionStream = api.processMessage().onInputStream(getSignedData(data))
+                .withOptions(ConsumerOptions.get(api)
+                        .addVerificationCert(certificate)
+                        .addVerificationOfDetachedSignatures(SignatureUtils.readSignatures(sig)));
+
+        Streams.drain(decryptionStream);
+        decryptionStream.close();
+        assertFalse(decryptionStream.getMetadata().isVerifiedSignedBy(certificate),
                 message);
     }
 

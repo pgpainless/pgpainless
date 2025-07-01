@@ -12,6 +12,7 @@ import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 
+import org.bouncycastle.bcpg.KeyIdentifier;
 import org.bouncycastle.openpgp.PGPException;
 import org.bouncycastle.openpgp.PGPSecretKeyRing;
 import org.bouncycastle.util.io.Streams;
@@ -22,6 +23,8 @@ import org.pgpainless.key.protection.CachingSecretKeyRingProtector;
 import org.pgpainless.key.protection.SecretKeyRingProtector;
 import org.pgpainless.key.protection.passphrase_provider.SecretKeyPassphraseProvider;
 import org.pgpainless.util.Passphrase;
+
+import javax.annotation.Nonnull;
 
 public class PostponeDecryptionUsingKeyWithMissingPassphraseTest {
 
@@ -120,21 +123,21 @@ public class PostponeDecryptionUsingKeyWithMissingPassphraseTest {
     public void missingPassphraseFirst() throws PGPException, IOException {
         SecretKeyRingProtector protector1 = new CachingSecretKeyRingProtector(new SecretKeyPassphraseProvider() {
             @Override
-            public Passphrase getPassphraseFor(Long keyId) {
+            public Passphrase getPassphraseFor(@Nonnull KeyIdentifier keyIdentifier) {
                 fail("Although the first PKESK is for k1, we should have skipped it and tried k2 first, which has passphrase available.");
                 return null;
             }
 
             @Override
-            public boolean hasPassphrase(Long keyId) {
+            public boolean hasPassphrase(@Nonnull KeyIdentifier keyIdentifier) {
                 return false;
             }
         });
         SecretKeyRingProtector protector2 = SecretKeyRingProtector.unlockEachKeyWith(p2, k2);
 
-        DecryptionStream decryptionStream = PGPainless.decryptAndOrVerify()
+        DecryptionStream decryptionStream = PGPainless.getInstance().processMessage()
                 .onInputStream(new ByteArrayInputStream(ENCRYPTED_FOR_K1_K2.getBytes(StandardCharsets.UTF_8)))
-                .withOptions(new ConsumerOptions()
+                .withOptions(ConsumerOptions.get()
                         .addDecryptionKey(k1, protector1)
                         .addDecryptionKey(k2, protector2));
 
@@ -150,20 +153,20 @@ public class PostponeDecryptionUsingKeyWithMissingPassphraseTest {
         SecretKeyRingProtector protector1 = SecretKeyRingProtector.unlockEachKeyWith(p1, k1);
         SecretKeyRingProtector protector2 = new CachingSecretKeyRingProtector(new SecretKeyPassphraseProvider() {
             @Override
-            public Passphrase getPassphraseFor(Long keyId) {
+            public Passphrase getPassphraseFor(@Nonnull KeyIdentifier keyIdentifier) {
                 fail("This callback should not get called, since the first PKESK is for k1, which has a passphrase available.");
                 return null;
             }
 
             @Override
-            public boolean hasPassphrase(Long keyId) {
+            public boolean hasPassphrase(@Nonnull KeyIdentifier keyIdentifier) {
                 return false;
             }
         });
 
-        DecryptionStream decryptionStream = PGPainless.decryptAndOrVerify()
+        DecryptionStream decryptionStream = PGPainless.getInstance().processMessage()
                 .onInputStream(new ByteArrayInputStream(ENCRYPTED_FOR_K1_K2.getBytes(StandardCharsets.UTF_8)))
-                .withOptions(new ConsumerOptions()
+                .withOptions(ConsumerOptions.get()
                         .addDecryptionKey(k1, protector1)
                         .addDecryptionKey(k2, protector2));
 
@@ -178,21 +181,21 @@ public class PostponeDecryptionUsingKeyWithMissingPassphraseTest {
     public void messagePassphraseFirst() throws PGPException, IOException {
         SecretKeyPassphraseProvider provider = new SecretKeyPassphraseProvider() {
             @Override
-            public Passphrase getPassphraseFor(Long keyId) {
+            public Passphrase getPassphraseFor(@Nonnull KeyIdentifier keyIdentifier) {
                 fail("Since we provide a decryption passphrase, we should not try to decrypt any key.");
                 return null;
             }
 
             @Override
-            public boolean hasPassphrase(Long keyId) {
+            public boolean hasPassphrase(@Nonnull KeyIdentifier keyIdentifier) {
                 return false;
             }
         };
         SecretKeyRingProtector protector = new CachingSecretKeyRingProtector(provider);
 
-        DecryptionStream decryptionStream = PGPainless.decryptAndOrVerify()
+        DecryptionStream decryptionStream = PGPainless.getInstance().processMessage()
                 .onInputStream(new ByteArrayInputStream(ENCRYPTED_FOR_K2_PASS_K1.getBytes(StandardCharsets.UTF_8)))
-                .withOptions(new ConsumerOptions()
+                .withOptions(ConsumerOptions.get()
                         .addMessagePassphrase(PASSPHRASE)
                         .addDecryptionKey(k1, protector)
                         .addDecryptionKey(k2, protector));

@@ -52,11 +52,11 @@ public class DecryptAndVerifyMessageTest {
     public void decryptMessageAndVerifySignatureTest() throws Exception {
         String encryptedMessage = TestKeys.MSG_SIGN_CRYPT_JULIET_JULIET;
 
-        ConsumerOptions options = new ConsumerOptions()
+        ConsumerOptions options = ConsumerOptions.get()
                 .addDecryptionKey(juliet)
                 .addVerificationCert(KeyRingUtils.publicKeyRingFrom(juliet));
 
-        DecryptionStream decryptor = PGPainless.decryptAndOrVerify()
+        DecryptionStream decryptor = PGPainless.getInstance().processMessage()
                 .onInputStream(new ByteArrayInputStream(encryptedMessage.getBytes()))
                 .withOptions(options);
 
@@ -87,11 +87,11 @@ public class DecryptAndVerifyMessageTest {
     public void decryptMessageAndReadBeyondEndTest() throws Exception {
         final String encryptedMessage = TestKeys.MSG_SIGN_CRYPT_JULIET_JULIET;
 
-        final ConsumerOptions options = new ConsumerOptions()
+        final ConsumerOptions options = ConsumerOptions.get()
                 .addDecryptionKey(juliet)
                 .addVerificationCert(KeyRingUtils.publicKeyRingFrom(juliet));
 
-        try (DecryptionStream decryptor = PGPainless.decryptAndOrVerify()
+        try (DecryptionStream decryptor = PGPainless.getInstance().processMessage()
                 .onInputStream(new ByteArrayInputStream(encryptedMessage.getBytes()))
                 .withOptions(options);
              ByteArrayOutputStream toPlain = new ByteArrayOutputStream()) {
@@ -105,11 +105,11 @@ public class DecryptAndVerifyMessageTest {
     public void decryptMessageAndVerifySignatureByteByByteTest() throws Exception {
         String encryptedMessage = TestKeys.MSG_SIGN_CRYPT_JULIET_JULIET;
 
-        ConsumerOptions options = new ConsumerOptions()
+        ConsumerOptions options = ConsumerOptions.get()
                 .addDecryptionKey(juliet)
                 .addVerificationCert(KeyRingUtils.publicKeyRingFrom(juliet));
 
-        DecryptionStream decryptor = PGPainless.decryptAndOrVerify()
+        DecryptionStream decryptor = PGPainless.getInstance().processMessage()
                 .onInputStream(new ByteArrayInputStream(encryptedMessage.getBytes()))
                 .withOptions(options);
 
@@ -150,7 +150,7 @@ public class DecryptAndVerifyMessageTest {
                 "-----END PGP MESSAGE-----";
         ByteArrayInputStream ciphertextIn = new ByteArrayInputStream(ciphertext.getBytes());
         assertThrows(MissingDecryptionMethodException.class,
-                () -> PGPainless.decryptAndOrVerify()
+                () -> PGPainless.getInstance().processMessage()
                         .onInputStream(ciphertextIn)
                         .withOptions(ConsumerOptions.get()
                                 .addMessagePassphrase(Passphrase.fromPassword("sw0rdf1sh"))));

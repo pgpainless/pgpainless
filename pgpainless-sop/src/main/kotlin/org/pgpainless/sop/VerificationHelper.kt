@@ -24,8 +24,8 @@ class VerificationHelper {
         fun mapVerification(sigVerification: SignatureVerification): Verification =
             Verification(
                 sigVerification.signature.creationTime,
-                sigVerification.signingKey.subkeyFingerprint.toString(),
-                sigVerification.signingKey.primaryKeyFingerprint.toString(),
+                sigVerification.signingKey.componentKeyFingerprint.toString(),
+                sigVerification.signingKey.certificateFingerprint.toString(),
                 getMode(sigVerification.signature),
                 null)
 

@@ -10,8 +10,6 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 import java.util.Arrays;
 import java.util.HashMap;
 
-import org.junit.jupiter.api.AfterEach;
-import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.pgpainless.PGPainless;
 import org.pgpainless.algorithm.HashAlgorithm;
@@ -25,68 +23,38 @@ import org.pgpainless.util.NotationRegistry;
  * can be rejected.
  * Note, that PGPainless distinguishes between hash algorithms used in revocation and non-revocation signatures,
  * and has different policies for those.
- *
+ * <p>
  * Furthermore, PGPainless has policies for symmetric encryption algorithms (both for encrypting and decrypting),
  * for public key algorithms and key lengths, as well as compression algorithms.
- *
+ * <p>
  * The following examples show how these policies can be modified.
- *
- * PGPainless' policy is being accessed by calling {@link PGPainless#getPolicy()}.
+ * <p>
+ * PGPainless' policy is being accessed by calling {@link PGPainless#getAlgorithmPolicy()}.
  * Custom sub-policies can be set by calling the setter methods of {@link Policy}.
  */
 public class ManagePolicy {
 
     /**
-     * Reset PGPainless' policy class to default values.
-     */
-    @BeforeEach
-    @AfterEach
-    public void resetPolicy() {
-        // Policy for hash algorithms in non-revocation signatures
-        PGPainless.getPolicy().setCertificationSignatureHashAlgorithmPolicy(
-                Policy.HashAlgorithmPolicy.static2022SignatureHashAlgorithmPolicy());
-        // Policy for hash algorithms in data signatures
-        PGPainless.getPolicy().setDataSignatureHashAlgorithmPolicy(
-                Policy.HashAlgorithmPolicy.static2022SignatureHashAlgorithmPolicy());
-        // Policy for hash algorithms in revocation signatures
-        PGPainless.getPolicy().setRevocationSignatureHashAlgorithmPolicy(
-                Policy.HashAlgorithmPolicy.static2022RevocationSignatureHashAlgorithmPolicy());
-        // Policy for public key algorithms and bit lengths
-        PGPainless.getPolicy().setPublicKeyAlgorithmPolicy(
-                Policy.PublicKeyAlgorithmPolicy.bsi2021PublicKeyAlgorithmPolicy());
-        // Policy for acceptable symmetric encryption algorithms when decrypting messages
-        PGPainless.getPolicy().setSymmetricKeyDecryptionAlgorithmPolicy(
-                Policy.SymmetricKeyAlgorithmPolicy.symmetricKeyDecryptionPolicy2022());
-        // Policy for acceptable symmetric encryption algorithms when encrypting messages
-        PGPainless.getPolicy().setSymmetricKeyEncryptionAlgorithmPolicy(
-                Policy.SymmetricKeyAlgorithmPolicy.symmetricKeyEncryptionPolicy2022());
-        // Policy for acceptable compression algorithms
-        PGPainless.getPolicy().setCompressionAlgorithmPolicy(
-                Policy.CompressionAlgorithmPolicy.anyCompressionAlgorithmPolicy());
-        // Known notations
-        PGPainless.getPolicy().getNotationRegistry().clear();
-    }
-
-    /**
      * {@link HashAlgorithm Hash Algorithms} may get outdated with time. {@link HashAlgorithm#SHA1} is a prominent
      * example for an algorithm that is nowadays considered unsafe to use and which shall be avoided.
-     *
+     * <p>
      * PGPainless comes with a {@link Policy} class that defines which algorithms are trustworthy and acceptable.
      * It also allows the user to specify a custom policy tailored to their needs.
-     *
+     * <p>
      * Per default, PGPainless will reject non-revocation signatures that use SHA-1 as hash algorithm.
      * To inspect PGPainless' default signature hash algorithm policy, see
      * {@link Policy.HashAlgorithmPolicy#static2022SignatureHashAlgorithmPolicy()}.
-     *
+     * <p>
      * Since it may be a valid use-case to accept signatures made using SHA-1 as part of a less strict policy,
      * this example demonstrates how to set a custom signature hash algorithm policy.
      */
     @Test
     public void setCustomSignatureHashPolicy() {
-        // Get PGPainless' policy singleton
-        Policy policy = PGPainless.getPolicy();
+        PGPainless api = PGPainless.getInstance();
+        // Get PGPainless' policy
+        Policy oldPolicy = api.getAlgorithmPolicy();
 
-        Policy.HashAlgorithmPolicy sigHashAlgoPolicy = policy.getDataSignatureHashAlgorithmPolicy();
+        Policy.HashAlgorithmPolicy sigHashAlgoPolicy = oldPolicy.getDataSignatureHashAlgorithmPolicy();
         assertTrue(sigHashAlgoPolicy.isAcceptable(HashAlgorithm.SHA512));
         // Per default, non-revocation signatures using SHA-1 are rejected
         assertFalse(sigHashAlgoPolicy.isAcceptable(HashAlgorithm.SHA1));
@@ -98,9 +66,9 @@ public class ManagePolicy {
                 // List of acceptable hash algorithms
                 Arrays.asList(HashAlgorithm.SHA512, HashAlgorithm.SHA384, HashAlgorithm.SHA256, HashAlgorithm.SHA224, HashAlgorithm.SHA1));
         // Set the hash algo policy as policy for non-revocation signatures
-        policy.setDataSignatureHashAlgorithmPolicy(customPolicy);
+        api = new PGPainless(oldPolicy.copy().withDataSignatureHashAlgorithmPolicy(customPolicy).build());
 
-        sigHashAlgoPolicy = policy.getDataSignatureHashAlgorithmPolicy();
+        sigHashAlgoPolicy = api.getAlgorithmPolicy().getDataSignatureHashAlgorithmPolicy();
         assertTrue(sigHashAlgoPolicy.isAcceptable(HashAlgorithm.SHA512));
         // SHA-1 is now acceptable as well
         assertTrue(sigHashAlgoPolicy.isAcceptable(HashAlgorithm.SHA1));
@@ -111,13 +79,14 @@ public class ManagePolicy {
      * Per default, PGPainless will reject signatures made by keys of unacceptable algorithm or length.
      * See {@link Policy.PublicKeyAlgorithmPolicy#bsi2021PublicKeyAlgorithmPolicy()}
      * to inspect PGPainless' defaults.
-     *
+     * <p>
      * This example demonstrates how to set a custom public key algorithm policy.
      */
     @Test
     public void setCustomPublicKeyAlgorithmPolicy() {
-        Policy policy = PGPainless.getPolicy();
-        Policy.PublicKeyAlgorithmPolicy pkAlgorithmPolicy = policy.getPublicKeyAlgorithmPolicy();
+        PGPainless api = PGPainless.getInstance();
+        Policy oldPolicy = api.getAlgorithmPolicy();
+        Policy.PublicKeyAlgorithmPolicy pkAlgorithmPolicy = oldPolicy.getPublicKeyAlgorithmPolicy();
         assertTrue(pkAlgorithmPolicy.isAcceptable(PublicKeyAlgorithm.RSA_GENERAL, 4096));
         assertTrue(pkAlgorithmPolicy.isAcceptable(PublicKeyAlgorithm.RSA_GENERAL, 2048));
         assertFalse(pkAlgorithmPolicy.isAcceptable(PublicKeyAlgorithm.RSA_GENERAL, 1024));
@@ -131,9 +100,10 @@ public class ManagePolicy {
                     put(PublicKeyAlgorithm.RSA_GENERAL, 3000);
                 }}
         );
-        policy.setPublicKeyAlgorithmPolicy(customPolicy);
 
-        pkAlgorithmPolicy = policy.getPublicKeyAlgorithmPolicy();
+        api = new PGPainless(oldPolicy.copy().withPublicKeyAlgorithmPolicy(customPolicy).build());
+
+        pkAlgorithmPolicy = api.getAlgorithmPolicy().getPublicKeyAlgorithmPolicy();
         assertTrue(pkAlgorithmPolicy.isAcceptable(PublicKeyAlgorithm.RSA_GENERAL, 4096));
         // RSA 2048 is no longer acceptable
         assertFalse(pkAlgorithmPolicy.isAcceptable(PublicKeyAlgorithm.RSA_GENERAL, 2048));
@@ -144,14 +114,14 @@ public class ManagePolicy {
     /**
      * OpenPGP requires implementations to reject signatures which contain critical notation data subpackets
      * which are not known to the implementation.
-     *
+     * <p>
      * PGPainless allows the user to define which notations should be considered known notations.
      * The following example demonstrates how to mark the notation value 'unknown@pgpainless.org' as known,
      * such that signatures containing a critical notation with that name are no longer being invalidated because of it.
      */
     @Test
     public void manageKnownNotations() {
-        Policy policy = PGPainless.getPolicy();
+        Policy policy = PGPainless.getInstance().getAlgorithmPolicy();
         NotationRegistry notationRegistry = policy.getNotationRegistry();
         assertFalse(notationRegistry.isKnownNotation("unknown@pgpainless.org"));
 

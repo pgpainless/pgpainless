@@ -6,7 +6,22 @@ package org.pgpainless.signature.subpackets
 
 interface CertificationSubpackets : BaseSignatureSubpackets {
 
-    interface Callback : SignatureSubpacketCallback<CertificationSubpackets>
+    interface Callback : SignatureSubpacketCallback<CertificationSubpackets> {
+        fun then(nextCallback: SignatureSubpacketCallback<CertificationSubpackets>): Callback {
+            val currCallback = this
+            return object : Callback {
+                override fun modifyHashedSubpackets(hashedSubpackets: CertificationSubpackets) {
+                    currCallback.modifyHashedSubpackets(hashedSubpackets)
+                    nextCallback.modifyHashedSubpackets(hashedSubpackets)
+                }
+
+                override fun modifyUnhashedSubpackets(unhashedSubpackets: CertificationSubpackets) {
+                    currCallback.modifyUnhashedSubpackets(unhashedSubpackets)
+                    nextCallback.modifyUnhashedSubpackets(unhashedSubpackets)
+                }
+            }
+        }
+    }
 
     companion object {
 

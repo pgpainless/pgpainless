@@ -8,17 +8,20 @@ import static org.junit.jupiter.api.Assertions.assertThrows;
 
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
+import java.io.InputStream;
 import java.nio.charset.StandardCharsets;
-import java.util.Date;
 
 import org.bouncycastle.openpgp.PGPException;
-import org.bouncycastle.openpgp.PGPPublicKeyRing;
 import org.bouncycastle.openpgp.PGPSignature;
+import org.bouncycastle.openpgp.api.OpenPGPCertificate;
+import org.bouncycastle.util.io.Streams;
 import org.junit.jupiter.api.TestTemplate;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.pgpainless.PGPainless;
+import org.pgpainless.decryption_verification.ConsumerOptions;
+import org.pgpainless.decryption_verification.DecryptionStream;
+import org.pgpainless.decryption_verification.MessageMetadata;
 import org.pgpainless.exception.SignatureValidationException;
-import org.pgpainless.signature.consumer.CertificateValidator;
 import org.pgpainless.util.TestAllImplementations;
 
 public class KeyRevocationTest {
@@ -27,7 +30,7 @@ public class KeyRevocationTest {
 
     @TestTemplate
     @ExtendWith(TestAllImplementations.class)
-    public void subkeySignsPrimaryKeyRevokedNoReason() throws IOException, PGPException {
+    public void subkeySignsPrimaryKeyRevokedNoReason() throws IOException {
 
         String key = "-----BEGIN PGP ARMORED FILE-----\n" +
                 "Comment: ASCII Armor added by openpgp-interoperability-test-suite\n" +
@@ -146,25 +149,26 @@ public class KeyRevocationTest {
                 "u5SfXaTsbMeVQJNdjCNsHq2bOXPGLw==\n" +
                 "=2BW4\n" +
                 "-----END PGP ARMORED FILE-----\n";
+        PGPainless api = PGPainless.getInstance();
 
-        PGPPublicKeyRing publicKeys = PGPainless.readKeyRing().publicKeyRing(key);
+        OpenPGPCertificate publicKeys = api.readKey().parseCertificate(key);
         PGPSignature t0 = SignatureUtils.readSignatures(sigT0).get(0);
         PGPSignature t1t2 = SignatureUtils.readSignatures(sigT1T2).get(0);
         PGPSignature t2t3 = SignatureUtils.readSignatures(sigT2T3).get(0);
         PGPSignature t3now = SignatureUtils.readSignatures(sigT3Now).get(0);
 
-        assertThrows(SignatureValidationException.class, () -> CertificateValidator.validateCertificateAndVerifyUninitializedSignature(t0,
+        assertThrows(SignatureValidationException.class, () -> verify(t0,
                 new ByteArrayInputStream(data.getBytes(StandardCharsets.UTF_8)),
-                publicKeys, PGPainless.getPolicy(), new Date()));
-        assertThrows(SignatureValidationException.class, () -> CertificateValidator.validateCertificateAndVerifyUninitializedSignature(t1t2,
+                publicKeys, api));
+        assertThrows(SignatureValidationException.class, () -> verify(t1t2,
                 new ByteArrayInputStream(data.getBytes(StandardCharsets.UTF_8)),
-                publicKeys, PGPainless.getPolicy(), new Date()));
-        assertThrows(SignatureValidationException.class, () -> CertificateValidator.validateCertificateAndVerifyUninitializedSignature(t2t3,
+                publicKeys, api));
+        assertThrows(SignatureValidationException.class, () -> verify(t2t3,
                 new ByteArrayInputStream(data.getBytes(StandardCharsets.UTF_8)),
-                publicKeys, PGPainless.getPolicy(), new Date()));
-        assertThrows(SignatureValidationException.class, () -> CertificateValidator.validateCertificateAndVerifyUninitializedSignature(t3now,
+                publicKeys, api));
+        assertThrows(SignatureValidationException.class, () -> verify(t3now,
                 new ByteArrayInputStream(data.getBytes(StandardCharsets.UTF_8)),
-                publicKeys, PGPainless.getPolicy(), new Date()));
+                publicKeys, api));
     }
 
     /**
@@ -252,11 +256,32 @@ public class KeyRevocationTest {
                 "=MOaJ\n" +
                 "-----END PGP ARMORED FILE-----\n";
 
-        PGPPublicKeyRing publicKeys = PGPainless.readKeyRing().publicKeyRing(key);
+        PGPainless api = PGPainless.getInstance();
+
+        OpenPGPCertificate publicKeys = api.readKey().parseCertificate(key);
         PGPSignature signature = SignatureUtils.readSignatures(sig).get(0);
 
-        CertificateValidator.validateCertificateAndVerifyUninitializedSignature(signature,
+        verify(signature,
                 new ByteArrayInputStream(data.getBytes(StandardCharsets.UTF_8)),
-                publicKeys, PGPainless.getPolicy(), new Date());
+                publicKeys, api);
     }
+
+
+    private void verify(PGPSignature signature, InputStream dataIn, OpenPGPCertificate certificate, PGPainless api)
+            throws PGPException, IOException {
+        DecryptionStream decryptionStream = api.processMessage()
+                .onInputStream(dataIn)
+                .withOptions(ConsumerOptions.get(api)
+                        .addVerificationOfDetachedSignature(signature)
+                        .addVerificationCert(certificate));
+
+        Streams.drain(decryptionStream);
+        decryptionStream.close();
+        MessageMetadata metadata = decryptionStream.getMetadata();
+
+        if (metadata.hasRejectedSignatures()) {
+            throw metadata.getRejectedSignatures().get(0).getValidationException();
+        }
+    }
+
 }

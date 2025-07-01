@@ -7,9 +7,6 @@ package org.pgpainless.key.protection;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 
-import java.security.InvalidAlgorithmParameterException;
-import java.security.NoSuchAlgorithmException;
-
 import org.bouncycastle.openpgp.PGPException;
 import org.bouncycastle.openpgp.PGPPrivateKey;
 import org.bouncycastle.openpgp.PGPSecretKey;
@@ -22,9 +19,11 @@ import org.pgpainless.util.Passphrase;
 public class UnlockSecretKeyTest {
 
     @Test
-    public void testUnlockSecretKey() throws PGPException, InvalidAlgorithmParameterException, NoSuchAlgorithmException {
-        PGPSecretKeyRing secretKeyRing = PGPainless.generateKeyRing()
-                .simpleEcKeyRing("alice@wonderland.lit", "heureka!");
+    public void testUnlockSecretKey() throws PGPException {
+        PGPainless api = PGPainless.getInstance();
+        PGPSecretKeyRing secretKeyRing = api.generateKey()
+                .simpleEcKeyRing("alice@wonderland.lit", "heureka!")
+                .getPGPSecretKeyRing();
         PGPSecretKey secretKey = secretKeyRing.getSecretKey();
 
         SecretKeyRingProtector correctPassphrase = SecretKeyRingProtector

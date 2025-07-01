@@ -5,6 +5,8 @@
 package org.pgpainless.sop;
 
 import static org.junit.jupiter.api.Assertions.assertArrayEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
@@ -22,11 +24,17 @@ import org.bouncycastle.openpgp.PGPObjectFactory;
 import org.bouncycastle.openpgp.PGPSecretKeyRing;
 import org.bouncycastle.openpgp.PGPSignature;
 import org.bouncycastle.openpgp.PGPSignatureList;
+import org.bouncycastle.openpgp.api.OpenPGPImplementation;
+import org.bouncycastle.openpgp.api.OpenPGPKey;
 import org.bouncycastle.util.io.Streams;
 import org.junit.jupiter.api.Test;
 import org.pgpainless.PGPainless;
-import org.pgpainless.implementation.ImplementationFactory;
+import org.pgpainless.algorithm.CompressionAlgorithm;
+import org.pgpainless.encryption_signing.EncryptionStream;
+import org.pgpainless.encryption_signing.ProducerOptions;
+import org.pgpainless.encryption_signing.SigningOptions;
 import org.pgpainless.key.OpenPgpV4Fingerprint;
+import org.pgpainless.key.protection.SecretKeyRingProtector;
 import sop.ByteArrayAndResult;
 import sop.SOP;
 import sop.Signatures;
@@ -153,13 +161,13 @@ public class InlineDetachTest {
 
         ByteArrayOutputStream literalDataAndSignatures = new ByteArrayOutputStream();
         ArmoredInputStream armorIn = new ArmoredInputStream(new ByteArrayInputStream(inlineSigned));
-        PGPObjectFactory objectFactory = ImplementationFactory.getInstance().getPGPObjectFactory(armorIn);
+        PGPObjectFactory objectFactory = OpenPGPImplementation.getInstance().pgpObjectFactory(armorIn);
         Object next;
         while ((next = objectFactory.nextObject()) != null) {
             if (next instanceof PGPCompressedData) {
                 PGPCompressedData compressedData = (PGPCompressedData) next;
                 try {
-                    objectFactory = ImplementationFactory.getInstance().getPGPObjectFactory(compressedData.getDataStream());
+                    objectFactory = OpenPGPImplementation.getInstance().pgpObjectFactory(compressedData.getDataStream());
                 } catch (PGPException e) {
                     throw new SOPGPException.BadData("Cannot decompress compressed data", e);
                 }
@@ -200,5 +208,63 @@ public class InlineDetachTest {
                 .hasMode(SignatureMode.binary);
 
         assertArrayEquals(data, message);
+    }
+
+    @Test
+    public void detachSignaturesFromCompressedMessage() throws PGPException, IOException {
+        PGPainless api = PGPainless.getInstance();
+        OpenPGPKey key = api.generateKey()
+                .modernKeyRing("Alice <alice@pgpainless.org>");
+        byte[] cert = key.toCertificate().getEncoded();
+
+        ByteArrayOutputStream bOut = new ByteArrayOutputStream();
+        EncryptionStream eOut = api.generateMessage()
+                .onOutputStream(bOut)
+                .withOptions(ProducerOptions.sign(
+                        SigningOptions.get().addInlineSignature(SecretKeyRingProtector.unprotectedKeys(), key)
+                ).overrideCompressionAlgorithm(CompressionAlgorithm.ZIP));
+        eOut.write("Hello, World!\n".getBytes(StandardCharsets.UTF_8));
+        eOut.close();
+
+        ByteArrayAndResult<Signatures> result = sop.inlineDetach()
+                .message(bOut.toByteArray())
+                .toByteArrayAndResult();
+
+        byte[] message = result.getBytes();
+        byte[] signatures = result.getResult().getBytes();
+
+        List<Verification> verifications = sop.detachedVerify()
+                .cert(cert)
+                .signatures(signatures)
+                .data(message);
+
+        assertFalse(verifications.isEmpty());
+    }
+
+    @Test
+    public void detachMissingSignaturesFails() throws PGPException, IOException {
+        PGPainless api = PGPainless.getInstance();
+
+        ByteArrayOutputStream bOut = new ByteArrayOutputStream();
+        EncryptionStream eOut = api.generateMessage()
+                .onOutputStream(bOut)
+                .withOptions(ProducerOptions.noEncryptionNoSigning()
+                        .overrideCompressionAlgorithm(CompressionAlgorithm.ZIP));
+
+        eOut.write("Hello, World!\n".getBytes(StandardCharsets.UTF_8));
+        eOut.close();
+
+        assertThrows(SOPGPException.BadData.class, () ->
+                sop.inlineDetach()
+                        .message(bOut.toByteArray())
+                        .toByteArrayAndResult());
+    }
+
+    @Test
+    public void detachBadDataFails() {
+        byte[] bytes = "Hello, World\n".getBytes(StandardCharsets.UTF_8);
+        assertThrows(SOPGPException.BadData.class, () ->
+                sop.inlineDetach().message(bytes)
+                        .toByteArrayAndResult());
     }
 }

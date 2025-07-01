@@ -11,11 +11,27 @@ import org.bouncycastle.bcpg.sig.*
 import org.bouncycastle.openpgp.PGPPublicKey
 import org.bouncycastle.openpgp.PGPSignature
 import org.pgpainless.algorithm.HashAlgorithm
+import org.pgpainless.algorithm.OpenPGPKeyVersion
 import org.pgpainless.algorithm.PublicKeyAlgorithm
 
 interface BaseSignatureSubpackets {
 
     interface Callback : SignatureSubpacketCallback<BaseSignatureSubpackets>
+
+    fun setAppropriateIssuerInfo(key: PGPPublicKey): BaseSignatureSubpackets
+
+    /**
+     * Depending on the given [version], use the appropriate means of setting issuer information. V6
+     * signatures for example MUST NOT contain an [IssuerKeyID] packet.
+     *
+     * @param key issuer key
+     * @param version signature version
+     * @return this
+     */
+    fun setAppropriateIssuerInfo(
+        key: PGPPublicKey,
+        version: OpenPGPKeyVersion
+    ): BaseSignatureSubpackets
 
     /**
      * Add both an [IssuerKeyID] and [IssuerFingerprint] subpacket pointing to the given key.
@@ -62,10 +78,13 @@ interface BaseSignatureSubpackets {
         expirationTime: SignatureExpirationTime?
     ): BaseSignatureSubpackets
 
+    @Deprecated("Usage of subpacket is discouraged")
     fun setSignerUserId(userId: CharSequence): BaseSignatureSubpackets
 
+    @Deprecated("Usage of subpacket is discouraged")
     fun setSignerUserId(isCritical: Boolean, userId: CharSequence): BaseSignatureSubpackets
 
+    @Deprecated("Usage of subpacket is discouraged")
     fun setSignerUserId(signerUserID: SignerUserID?): BaseSignatureSubpackets
 
     fun addNotationData(
@@ -156,52 +175,4 @@ interface BaseSignatureSubpackets {
     fun addEmbeddedSignature(embeddedSignature: EmbeddedSignature): BaseSignatureSubpackets
 
     fun clearEmbeddedSignatures(): BaseSignatureSubpackets
-
-    companion object {
-
-        /** Factory method for a [Callback] that does nothing. */
-        @JvmStatic fun nop() = object : Callback {}
-
-        /**
-         * Factory function with receiver, which returns a [Callback] that modifies the hashed
-         * subpacket area of a [BaseSignatureSubpackets] object.
-         *
-         * Can be called like this:
-         * ```
-         * val callback = BaseSignatureSubpackets.applyHashed {
-         *     setCreationTime(date)
-         *     ...
-         * }
-         * ```
-         */
-        @JvmStatic
-        fun applyHashed(function: BaseSignatureSubpackets.() -> Unit): Callback {
-            return object : Callback {
-                override fun modifyHashedSubpackets(hashedSubpackets: BaseSignatureSubpackets) {
-                    function(hashedSubpackets)
-                }
-            }
-        }
-
-        /**
-         * Factory function with receiver, which returns a [Callback] that modifies the unhashed
-         * subpacket area of a [BaseSignatureSubpackets] object.
-         *
-         * Can be called like this:
-         * ```
-         * val callback = BaseSignatureSubpackets.applyUnhashed {
-         *     setCreationTime(date)
-         *     ...
-         * }
-         * ```
-         */
-        @JvmStatic
-        fun applyUnhashed(function: BaseSignatureSubpackets.() -> Unit): Callback {
-            return object : Callback {
-                override fun modifyUnhashedSubpackets(unhashedSubpackets: BaseSignatureSubpackets) {
-                    function(unhashedSubpackets)
-                }
-            }
-        }
-    }
 }

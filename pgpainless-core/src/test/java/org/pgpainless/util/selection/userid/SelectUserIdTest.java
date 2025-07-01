@@ -14,7 +14,7 @@ import java.util.List;
 import java.util.stream.Collectors;
 
 import org.bouncycastle.openpgp.PGPException;
-import org.bouncycastle.openpgp.PGPSecretKeyRing;
+import org.bouncycastle.openpgp.api.OpenPGPKey;
 import org.junit.jupiter.api.Test;
 import org.pgpainless.PGPainless;
 import org.pgpainless.key.protection.SecretKeyRingProtector;
@@ -24,16 +24,17 @@ public class SelectUserIdTest {
 
     @Test
     public void testSelectUserIds() throws PGPException {
-        PGPSecretKeyRing secretKeys = PGPainless.generateKeyRing()
+        PGPainless api = PGPainless.getInstance();
+        OpenPGPKey secretKeys = api.generateKey()
                 .simpleEcKeyRing("<alice@wonderland.lit>");
-        secretKeys = PGPainless.modifyKeyRing(secretKeys)
+        secretKeys = api.modify(secretKeys)
                 .addUserId(
-                        UserId.newBuilder().withName("Alice Liddell").noComment()
+                        UserId.builder().withName("Alice Liddell").noComment()
                                 .withEmail("crazy@the-rabbit.hole").build(),
                         SecretKeyRingProtector.unprotectedKeys())
                 .done();
 
-        List<String> userIds = PGPainless.inspectKeyRing(secretKeys).getValidUserIds();
+        List<String> userIds = api.inspect(secretKeys).getValidUserIds();
         List<String> validEmail = userIds.stream().filter(SelectUserId.and(
                 SelectUserId.validUserId(secretKeys),
                 SelectUserId.containsEmailAddress("alice@wonderland.lit")
@@ -53,13 +54,14 @@ public class SelectUserIdTest {
 
     @Test
     public void testContainsSubstring() throws PGPException {
-        PGPSecretKeyRing secretKeys = PGPainless.generateKeyRing().simpleEcKeyRing("wine drinker");
-        secretKeys = PGPainless.modifyKeyRing(secretKeys)
+        PGPainless api = PGPainless.getInstance();
+        OpenPGPKey secretKeys = api.generateKey().simpleEcKeyRing("wine drinker");
+        secretKeys = api.modify(secretKeys)
                 .addUserId("this is not a quine", SecretKeyRingProtector.unprotectedKeys())
                 .addUserId("this is not a crime", SecretKeyRingProtector.unprotectedKeys())
                 .done();
 
-        List<String> userIds = PGPainless.inspectKeyRing(secretKeys).getValidUserIds();
+        List<String> userIds = api.inspect(secretKeys).getValidUserIds();
 
         List<String> containSubstring = userIds.stream().filter(SelectUserId.containsSubstring("ine")).collect(Collectors.toList());
         assertEquals(Arrays.asList("wine drinker", "this is not a quine"), containSubstring);
@@ -67,8 +69,9 @@ public class SelectUserIdTest {
 
     @Test
     public void testContainsEmailAddress() {
-        PGPSecretKeyRing secretKeys = PGPainless.generateKeyRing().simpleEcKeyRing("Alice <alice@wonderland.lit>");
-        List<String> userIds = PGPainless.inspectKeyRing(secretKeys).getValidUserIds();
+        PGPainless api = PGPainless.getInstance();
+        OpenPGPKey secretKeys = api.generateKey().simpleEcKeyRing("Alice <alice@wonderland.lit>");
+        List<String> userIds = api.inspect(secretKeys).getValidUserIds();
 
         assertEquals("Alice <alice@wonderland.lit>", userIds.stream().filter(
                 SelectUserId.containsEmailAddress("alice@wonderland.lit")).findFirst().get());
@@ -80,14 +83,15 @@ public class SelectUserIdTest {
 
     @Test
     public void testAndOrNot() throws PGPException {
-        PGPSecretKeyRing secretKeys = PGPainless.generateKeyRing().simpleEcKeyRing("Alice <alice@wonderland.lit>");
-        secretKeys = PGPainless.modifyKeyRing(secretKeys)
+        PGPainless api = PGPainless.getInstance();
+        OpenPGPKey secretKeys = api.generateKey().simpleEcKeyRing("Alice <alice@wonderland.lit>");
+        secretKeys = api.modify(secretKeys)
                 .addUserId("Alice <another@email.address>", SecretKeyRingProtector.unprotectedKeys())
                 .addUserId("<crazy@the-rabbit.hole>", SecretKeyRingProtector.unprotectedKeys())
                 .addUserId("Crazy Girl <alice@wonderland.lit>", SecretKeyRingProtector.unprotectedKeys())
                 .done();
 
-        List<String> userIds = PGPainless.inspectKeyRing(secretKeys).getValidUserIds();
+        List<String> userIds = api.inspect(secretKeys).getValidUserIds();
 
         List<String> or = userIds.stream().filter(SelectUserId.or(
                 SelectUserId.containsEmailAddress("alice@wonderland.lit"),
@@ -106,11 +110,12 @@ public class SelectUserIdTest {
 
     @Test
     public void testFirstMatch() throws PGPException {
-        PGPSecretKeyRing secretKeys = PGPainless.generateKeyRing().simpleEcKeyRing("First UserID");
-        secretKeys = PGPainless.modifyKeyRing(secretKeys)
+        PGPainless api = PGPainless.getInstance();
+        OpenPGPKey secretKeys = api.generateKey().simpleEcKeyRing("First UserID");
+        secretKeys = api.modify(secretKeys)
                 .addUserId("Second UserID", SecretKeyRingProtector.unprotectedKeys())
                 .done();
-        List<String> userIds = PGPainless.inspectKeyRing(secretKeys).getValidUserIds();
+        List<String> userIds = api.inspect(secretKeys).getValidUserIds();
         assertEquals("First UserID", userIds.stream().filter(SelectUserId.validUserId(secretKeys)).findFirst().get());
         assertEquals("Second UserID", userIds.stream().filter(SelectUserId.containsSubstring("Second")).findFirst().get());
     }

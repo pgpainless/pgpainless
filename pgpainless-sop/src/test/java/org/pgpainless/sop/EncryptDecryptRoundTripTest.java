@@ -568,7 +568,7 @@ public class EncryptDecryptRoundTripTest {
     public void encryptWithSupportedProfileTest() throws IOException {
 
         byte[] key = sop.generateKey()
-                .profile("rfc4880")
+                .profile(GenerateKeyImpl.RFC4880_RSA4096_PROFILE.getName())
                 .userId("Alice <alice@pgpainless.org>")
                 .generate()
                 .getBytes();
@@ -578,7 +578,7 @@ public class EncryptDecryptRoundTripTest {
                 .getBytes();
 
         byte[] encrypted = sop.encrypt()
-                .profile("rfc4880")
+                .profile(EncryptImpl.RFC4880_PROFILE.getName())
                 .withCert(cert)
                 .plaintext(message)
                 .toByteArrayAndResult()

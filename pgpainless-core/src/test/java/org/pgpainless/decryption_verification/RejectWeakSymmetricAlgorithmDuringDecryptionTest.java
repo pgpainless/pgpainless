@@ -138,9 +138,9 @@ public class RejectWeakSymmetricAlgorithmDuringDecryptionTest {
         InputStream messageIn = new ByteArrayInputStream(message.getBytes(StandardCharsets.UTF_8));
 
         assertThrows(UnacceptableAlgorithmException.class, () ->
-                PGPainless.decryptAndOrVerify()
+                PGPainless.getInstance().processMessage()
                         .onInputStream(messageIn)
-                        .withOptions(new ConsumerOptions().addDecryptionKey(secretKeys))
+                        .withOptions(ConsumerOptions.get().addDecryptionKey(secretKeys))
         );
     }
 
@@ -166,9 +166,9 @@ public class RejectWeakSymmetricAlgorithmDuringDecryptionTest {
         InputStream messageIn = new ByteArrayInputStream(message.getBytes(StandardCharsets.UTF_8));
 
         assertThrows(UnacceptableAlgorithmException.class, () ->
-                PGPainless.decryptAndOrVerify()
+                PGPainless.getInstance().processMessage()
                         .onInputStream(messageIn)
-                        .withOptions(new ConsumerOptions().addDecryptionKey(secretKeys))
+                        .withOptions(ConsumerOptions.get().addDecryptionKey(secretKeys))
         );
     }
 
@@ -193,8 +193,8 @@ public class RejectWeakSymmetricAlgorithmDuringDecryptionTest {
 
         InputStream messageIn = new ByteArrayInputStream(message.getBytes(StandardCharsets.UTF_8));
         assertThrows(UnacceptableAlgorithmException.class, () ->
-                PGPainless.decryptAndOrVerify().onInputStream(messageIn)
-                        .withOptions(new ConsumerOptions().addDecryptionKey(secretKeys))
+                PGPainless.getInstance().processMessage().onInputStream(messageIn)
+                        .withOptions(ConsumerOptions.get().addDecryptionKey(secretKeys))
         );
     }
 
@@ -218,8 +218,8 @@ public class RejectWeakSymmetricAlgorithmDuringDecryptionTest {
                 "-----END PGP ARMORED FILE-----\n";
         InputStream messageIn = new ByteArrayInputStream(message.getBytes(StandardCharsets.UTF_8));
 
-        PGPainless.decryptAndOrVerify().onInputStream(messageIn)
-                .withOptions(new ConsumerOptions().addDecryptionKey(secretKeys));
+        PGPainless.getInstance().processMessage().onInputStream(messageIn)
+                .withOptions(ConsumerOptions.get().addDecryptionKey(secretKeys));
     }
 
 }

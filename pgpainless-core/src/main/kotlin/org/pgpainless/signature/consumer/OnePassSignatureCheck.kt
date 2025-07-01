@@ -5,30 +5,20 @@
 package org.pgpainless.signature.consumer
 
 import org.bouncycastle.openpgp.PGPOnePassSignature
-import org.bouncycastle.openpgp.PGPPublicKeyRing
 import org.bouncycastle.openpgp.PGPSignature
-import org.pgpainless.key.SubkeyIdentifier
+import org.bouncycastle.openpgp.api.OpenPGPCertificate
 
 /**
- * Tuple-class that bundles together a [PGPOnePassSignature] object, a [PGPPublicKeyRing] destined
- * to verify the signature, the [PGPSignature] itself and a record of whether the signature was
- * verified.
+ * Tuple-class that bundles together a [PGPOnePassSignature] object, an [OpenPGPCertificate]
+ * destined to verify the signature.
  *
  * @param onePassSignature the one-pass-signature packet
  * @param verificationKeys certificate containing the signing subkey
- * @param signature the signature packet
  */
 data class OnePassSignatureCheck(
     val onePassSignature: PGPOnePassSignature,
-    val verificationKeys: PGPPublicKeyRing,
-    var signature: PGPSignature? = null
+    val verificationKeys: OpenPGPCertificate
 ) {
 
-    /**
-     * Return an identifier for the signing key.
-     *
-     * @return signing key fingerprint
-     */
-    val signingKey: SubkeyIdentifier
-        get() = SubkeyIdentifier(verificationKeys, onePassSignature.keyID)
+    var signature: PGPSignature? = null
 }

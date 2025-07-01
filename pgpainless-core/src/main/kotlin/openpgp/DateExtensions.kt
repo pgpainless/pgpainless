@@ -14,7 +14,6 @@ import java.util.*
  * Since '0' is a special date value in the OpenPGP specification (e.g. '0' means no expiration for
  * expiration dates), this method will return 'null' if seconds is 0.
  *
- * @param date date
  * @param seconds number of seconds to be added
  * @return date plus seconds or null if seconds is '0'
  */
@@ -25,9 +24,19 @@ fun Date.plusSeconds(seconds: Long): Date? {
     return if (seconds == 0L) null else Date(this.time + 1000 * seconds)
 }
 
+/** This date in seconds since epoch. */
 val Date.asSeconds: Long
     get() = time / 1000
 
+/**
+ * Return the number of seconds that would need to be added to this date in order to reach the later
+ * date. Note: This method requires the [later] date to be indeed greater or equal to this date,
+ * otherwise an [IllegalArgumentException] is thrown.
+ *
+ * @param later later date
+ * @return difference between this and [later] in seconds
+ * @throws IllegalArgumentException if later is not greater or equal to this date
+ */
 fun Date.secondsTill(later: Date): Long {
     require(this <= later) { "Timestamp MUST be before the later timestamp." }
     return later.asSeconds - this.asSeconds

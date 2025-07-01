@@ -26,6 +26,7 @@ import org.bouncycastle.openpgp.PGPPublicKeyRing;
 import org.bouncycastle.openpgp.PGPSecretKeyRing;
 import org.bouncycastle.openpgp.PGPSignature;
 import org.bouncycastle.openpgp.PGPUtil;
+import org.bouncycastle.openpgp.api.OpenPGPImplementation;
 import org.bouncycastle.util.io.Streams;
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.Assertions;
@@ -35,7 +36,6 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.pgpainless.PGPainless;
 import org.pgpainless.algorithm.HashAlgorithm;
 import org.pgpainless.algorithm.KeyFlag;
-import org.pgpainless.implementation.ImplementationFactory;
 import org.pgpainless.key.TestKeys;
 import org.pgpainless.key.generation.KeySpec;
 import org.pgpainless.key.generation.type.ecc.EllipticCurve;
@@ -130,9 +130,9 @@ public class ArmorUtilsTest {
     }
 
     @Test
-    public void signatureToAsciiArmoredString() throws PGPException, IOException {
+    public void signatureToAsciiArmoredString() {
         String SIG = "-----BEGIN PGP SIGNATURE-----\n" +
-                "Version: PGPainless\n" +
+                "Comment: 4F66 5C4D C2C4 660B C642  5E41 5736 E693 1ACF 370C\n" +
                 "\n" +
                 "iHUEARMKAB0WIQRPZlxNwsRmC8ZCXkFXNuaTGs83DAUCYJ/x5gAKCRBXNuaTGs83\n" +
                 "DFRwAP9/4wMvV3WcX59Clo7mkRce6iwW3VBdiN+yMu3tjmHB2wD/RfE28Q1v4+eo\n" +
@@ -183,7 +183,8 @@ public class ArmorUtilsTest {
                 .addUserId("Juliet <juliet@montague.lit>")
                 .addUserId("xmpp:juliet@capulet.lit")
                 .setPassphrase(Passphrase.fromPassword("test"))
-                .build();
+                .build()
+                .getPGPSecretKeyRing();
         PGPPublicKey publicKey = secretKeyRing.getPublicKey();
         PGPPublicKeyRing publicKeyRing = PGPainless.readKeyRing().publicKeyRing(publicKey.getEncoded());
         String armored = PGPainless.asciiArmor(publicKeyRing);
@@ -199,7 +200,8 @@ public class ArmorUtilsTest {
                 .addUserId("xmpp:juliet@capulet.lit")
                 .addUserId("Juliet Montague <j@montague.lit>")
                 .setPassphrase(Passphrase.fromPassword("test"))
-                .build();
+                .build()
+                .getPGPSecretKeyRing();
         PGPPublicKey publicKey = secretKeyRing.getPublicKey();
         PGPPublicKeyRing publicKeyRing = PGPainless.readKeyRing().publicKeyRing(publicKey.getEncoded());
         String armored = PGPainless.asciiArmor(publicKeyRing);
@@ -214,7 +216,8 @@ public class ArmorUtilsTest {
                 .setPrimaryKey(KeySpec.getBuilder(ECDSA.fromCurve(EllipticCurve._P256), KeyFlag.SIGN_DATA, KeyFlag.CERTIFY_OTHER))
                 .addUserId("Juliet <juliet@montague.lit>")
                 .setPassphrase(Passphrase.fromPassword("test"))
-                .build();
+                .build()
+                .getPGPSecretKeyRing();
         PGPPublicKey publicKey = secretKeyRing.getPublicKey();
         PGPPublicKeyRing publicKeyRing = PGPainless.readKeyRing().publicKeyRing(publicKey.getEncoded());
         String armored = PGPainless.asciiArmor(publicKeyRing);
@@ -254,9 +257,9 @@ public class ArmorUtilsTest {
                 "-----END PGP MESSAGE-----";
         InputStream inputStream = PGPUtil.getDecoderStream(new ByteArrayInputStream(armored.getBytes(StandardCharsets.UTF_8)));
 
-        PGPObjectFactory factory = ImplementationFactory.getInstance().getPGPObjectFactory(inputStream);
+        PGPObjectFactory factory = OpenPGPImplementation.getInstance().pgpObjectFactory(inputStream);
         PGPCompressedData compressed = (PGPCompressedData) factory.nextObject();
-        factory = ImplementationFactory.getInstance().getPGPObjectFactory(compressed.getDataStream());
+        factory = OpenPGPImplementation.getInstance().pgpObjectFactory(compressed.getDataStream());
         PGPLiteralData literal = (PGPLiteralData) factory.nextObject();
         ByteArrayOutputStream out = new ByteArrayOutputStream();
         assertEquals("_CONSOLE", literal.getFileName());
