@@ -81,7 +81,7 @@ public class OpenPgpInputStream extends BufferedInputStream {
         this(in, true);
     }
 
-    private void inspectBuffer() throws IOException {
+    public void inspectBuffer() throws IOException {
         if (checkForAsciiArmor()) {
             return;
         }
