@@ -33,3 +33,5 @@ pgpainless-core/.settings/
 push_html.sh
 
 node_modules
+
+pgpainless-sop/.cifuzz-corpus/*
