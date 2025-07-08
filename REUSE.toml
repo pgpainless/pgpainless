@@ -112,6 +112,12 @@ SPDX-FileCopyrightText = "2022 Paul Schaub <info@pgpainless.org>"
 SPDX-License-Identifier = "Apache-2.0"
 
 [[annotations]]
+path = "pgpainless-sop/src/test/resources/org/pgpainless/sop/fuzzing/**"
+precedence = "aggregate"
+SPDX-FileCopyrightText = "2025 Paul Schaub <info@pgpainless.org>"
+SPDX-License-Identifier = "CC0-1.0"
+
+[[annotations]]
 path = ".github/ISSUE_TEMPLATE/**"
 precedence = "aggregate"
 SPDX-FileCopyrightText = "2024 Paul Schaub <info@pgpainless.org>"
