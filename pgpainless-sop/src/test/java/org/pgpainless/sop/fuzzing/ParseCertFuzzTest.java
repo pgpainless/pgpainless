@@ -1,3 +1,7 @@
+// SPDX-FileCopyrightText: 2025 Paul Schaub <vanitasvitae@fsfe.org>
+//
+// SPDX-License-Identifier: Apache-2.0
+
 package org.pgpainless.sop.fuzzing;
 
 import com.code_intelligence.jazzer.api.FuzzedDataProvider;

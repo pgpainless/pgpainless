@@ -8,6 +8,7 @@ import java.io.IOException
 import java.io.InputStream
 import java.util.*
 import openpgp.plusSeconds
+import org.bouncycastle.bcpg.UnsupportedPacketVersionException
 import org.bouncycastle.bcpg.sig.KeyExpirationTime
 import org.bouncycastle.openpgp.*
 import org.bouncycastle.openpgp.api.OpenPGPImplementation
@@ -151,37 +152,46 @@ class SignatureUtils {
          */
         @JvmStatic
         fun readSignatures(inputStream: InputStream, maxIterations: Int): List<PGPSignature> {
-            val signatures = mutableListOf<PGPSignature>()
-            val pgpIn = ArmorUtils.getDecoderStream(inputStream)
-            val objectFactory = OpenPGPImplementation.getInstance().pgpObjectFactory(pgpIn)
+            try {
+                val signatures = mutableListOf<PGPSignature>()
+                val pgpIn = ArmorUtils.getDecoderStream(inputStream)
+                val objectFactory = OpenPGPImplementation.getInstance().pgpObjectFactory(pgpIn)
 
-            var i = 0
-            var nextObject: Any? = null
-            while (i++ < maxIterations &&
-                objectFactory.nextObject().also { nextObject = it } != null) {
-                // Since signatures are indistinguishable from randomness, there is no point in
-                // having them compressed,
-                //  except for an attacker who is trying to exploit flaws in the decompression
-                // algorithm.
-                //  Therefore, we ignore compressed data packets without attempting decompression.
-                if (nextObject is PGPCompressedData) {
-                    // getInputStream() does not do decompression, contrary to getDataStream().
-                    Streams.drain(
-                        (nextObject as PGPCompressedData)
-                            .inputStream) // Skip packet without decompressing
+                var i = 0
+                var nextObject: Any? = null
+                while (i++ < maxIterations &&
+                    objectFactory.nextObject().also { nextObject = it } != null) {
+                    // Since signatures are indistinguishable from randomness, there is no point in
+                    // having them compressed,
+                    //  except for an attacker who is trying to exploit flaws in the decompression
+                    // algorithm.
+                    //  Therefore, we ignore compressed data packets without attempting decompression.
+                    if (nextObject is PGPCompressedData) {
+                        // getInputStream() does not do decompression, contrary to getDataStream().
+                        Streams.drain(
+                            (nextObject as PGPCompressedData)
+                                .inputStream
+                        ) // Skip packet without decompressing
+                    }
+
+                    if (nextObject is PGPSignatureList) {
+                        signatures.addAll(nextObject as PGPSignatureList)
+                    }
+
+                    if (nextObject is PGPSignature) {
+                        signatures.add(nextObject as PGPSignature)
+                    }
                 }
 
-                if (nextObject is PGPSignatureList) {
-                    signatures.addAll(nextObject as PGPSignatureList)
-                }
-
-                if (nextObject is PGPSignature) {
-                    signatures.add(nextObject as PGPSignature)
-                }
+                pgpIn.close()
+                return signatures.toList()
+            } catch (e: UnsupportedPacketVersionException) {
+                throw PGPException("Unsupported packet version encountered.", e)
+            } catch (e: ClassCastException) {
+                throw PGPException("Unexpected packet encountered.", e)
+            } catch (e: IllegalArgumentException) {
+                throw PGPException("Malformed packet encountered.", e)
             }
-
-            pgpIn.close()
-            return signatures.toList()
         }
 
         /**
