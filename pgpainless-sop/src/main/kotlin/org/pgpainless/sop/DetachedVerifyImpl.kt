@@ -29,8 +29,11 @@ class DetachedVerifyImpl : DetachedVerify {
     override fun data(data: InputStream): List<Verification> {
         try {
             val verificationStream =
-                PGPainless.decryptAndOrVerify().onInputStream(data).withOptions(options)
-
+                try {
+                    PGPainless.decryptAndOrVerify().onInputStream(data).withOptions(options)
+                } catch (e: RuntimeException) {
+                    throw SOPGPException.BadData(e)
+                }
             Streams.drain(verificationStream)
             verificationStream.close()
 
