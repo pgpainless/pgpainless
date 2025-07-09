@@ -4,6 +4,7 @@
 
 package org.pgpainless.sop
 
+import org.bouncycastle.bcpg.UnsupportedPacketVersionException
 import java.io.IOException
 import java.io.InputStream
 import java.io.OutputStream
@@ -15,12 +16,15 @@ import org.pgpainless.algorithm.SymmetricKeyAlgorithm
 import org.pgpainless.decryption_verification.ConsumerOptions
 import org.pgpainless.exception.MalformedOpenPgpMessageException
 import org.pgpainless.exception.MissingDecryptionMethodException
+import org.pgpainless.exception.ModificationDetectionException
 import org.pgpainless.exception.WrongPassphraseException
 import sop.DecryptionResult
 import sop.ReadyWithResult
 import sop.SessionKey
 import sop.exception.SOPGPException
 import sop.operation.Decrypt
+import java.util.zip.ZipException
+import kotlin.NoSuchElementException
 
 /** Implementation of the `decrypt` operation using PGPainless. */
 class DecryptImpl(private val api: PGPainless) : Decrypt {
@@ -49,15 +53,32 @@ class DecryptImpl(private val api: PGPainless) : Decrypt {
                 throw SOPGPException.BadData(e)
             } catch (e: IOException) {
                 throw SOPGPException.BadData(e)
-            } finally {
+            } catch (e: UnsupportedPacketVersionException) {
+                throw SOPGPException.BadData(e)
+            } catch (e: ModificationDetectionException) {
+                throw SOPGPException.BadData(e)
+            }
+            finally {
                 // Forget passphrases after decryption
                 protector.clear()
             }
 
         return object : ReadyWithResult<DecryptionResult>() {
             override fun writeTo(outputStream: OutputStream): DecryptionResult {
-                Streams.pipeAll(decryptionStream, outputStream)
-                decryptionStream.close()
+                try {
+                    Streams.pipeAll(decryptionStream, outputStream)
+                    decryptionStream.close()
+                } catch (e: MalformedOpenPgpMessageException) {
+                    throw SOPGPException.BadData(e)
+                } catch (e: ModificationDetectionException) {
+                    throw SOPGPException.BadData(e)
+                } catch (e: ZipException) {
+                    throw SOPGPException.BadData(e)
+                } catch (e: IOException) {
+                    throw SOPGPException.BadData(e)
+                } catch (e: NoSuchElementException) {
+                    throw SOPGPException.BadData(e)
+                }
 
                 val metadata = decryptionStream.metadata
                 if (!metadata.isEncrypted) {

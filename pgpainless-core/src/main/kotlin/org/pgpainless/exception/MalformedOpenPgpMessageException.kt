@@ -15,7 +15,7 @@ import org.pgpainless.decryption_verification.syntax_check.State
  * @see [RFC4880 §11.3. OpenPGP Messages](https://www.rfc-editor.org/rfc/rfc4880#section-11.3)
  */
 class MalformedOpenPgpMessageException : RuntimeException {
-    constructor(message: String) : super(message)
+    constructor(message: String?) : super(message)
 
     constructor(message: String, e: MalformedOpenPgpMessageException) : super(message, e)
 
