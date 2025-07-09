@@ -145,7 +145,12 @@ class OpenPgpMessageInputStream(
 
         // Comsume packets, potentially stepping into nested layers
         layer@ while (run {
-            packet = pIn.nextPacketTag()
+            packet =
+                try {
+                    pIn.nextPacketTag()
+                } catch (e: NoSuchElementException) {
+                    throw MalformedOpenPgpMessageException(e)
+                }
             packet
         } != null) {
 
@@ -208,12 +213,24 @@ class OpenPgpMessageInputStream(
         syntaxVerifier.next(InputSymbol.LITERAL_DATA)
         val literalData = packetInputStream!!.readLiteralData()
 
+        val streamEncoding =
+            try {
+                StreamEncoding.requireFromCode(literalData.format)
+            } catch (e: NoSuchElementException) {
+                throw PGPException(
+                    "Invalid stream encoding format encountered: ${literalData.format}; ${e.message}")
+            }
+
+        val fileName =
+            try {
+                literalData.fileName
+            } catch (e: IllegalArgumentException) {
+                // Non UTF8
+                throw PGPException("Cannot decode literal data filename: ${e.message}")
+            }
+
         // Extract Metadata
-        layerMetadata.child =
-            LiteralData(
-                literalData.fileName,
-                literalData.modificationTime,
-                StreamEncoding.requireFromCode(literalData.format))
+        layerMetadata.child = LiteralData(fileName, literalData.modificationTime, streamEncoding)
 
         nestedInputStream = literalData.inputStream
     }
@@ -223,11 +240,15 @@ class OpenPgpMessageInputStream(
         signatures.enterNesting()
         val compressedData = packetInputStream!!.readCompressedData()
 
+        val compAlg =
+            try {
+                CompressionAlgorithm.requireFromId(compressedData.algorithm)
+            } catch (e: NoSuchElementException) {
+                throw PGPException(e.message)
+            }
+
         // Extract Metadata
-        val compressionLayer =
-            CompressedData(
-                CompressionAlgorithm.requireFromId(compressedData.algorithm),
-                layerMetadata.depth + 1)
+        val compressionLayer = CompressedData(compAlg, layerMetadata.depth + 1)
 
         LOGGER.debug(
             "Compressed Data Packet (${compressionLayer.algorithm}) at depth ${layerMetadata.depth} encountered.")
@@ -326,31 +347,18 @@ class OpenPgpMessageInputStream(
         syntaxVerifier.next(InputSymbol.ENCRYPTED_DATA)
 
         val encDataList = packetInputStream!!.readEncryptedDataList()
-        val esks = ESKsAndData(encDataList)
-
-        when (EncryptedDataPacketType.of(encDataList)!!) {
-            EncryptedDataPacketType.SEIPDv2 ->
-                LOGGER.debug(
-                    "Symmetrically Encrypted Integrity Protected Data Packet version 2 at depth " +
-                        "${layerMetadata.depth} encountered.")
-            EncryptedDataPacketType.SEIPDv1 ->
-                LOGGER.debug(
-                    "Symmetrically Encrypted Integrity Protected Data Packet version 1 at depth " +
-                        "${layerMetadata.depth} encountered.")
-            EncryptedDataPacketType.LIBREPGP_OED ->
-                LOGGER.debug(
-                    "LibrePGP OCB-Encrypted Data Packet at depth " +
-                        "${layerMetadata.depth} encountered.")
-            EncryptedDataPacketType.SED -> {
-                LOGGER.debug(
-                    "(Deprecated) Symmetrically Encrypted Data Packet at depth " +
-                        "${layerMetadata.depth} encountered.")
-                LOGGER.warn("Symmetrically Encrypted Data Packet is not integrity-protected.")
-                if (!options.isIgnoreMDCErrors()) {
-                    throw MessageNotIntegrityProtectedException()
-                }
+        if (encDataList.isEmpty) {
+            LOGGER.debug("Missing encrypted session key packet.")
+            return false
+        }
+        if (!encDataList.isIntegrityProtected && !encDataList.get(0).isAEAD) {
+            LOGGER.warn("Symmetrically Encrypted Data Packet is not integrity-protected.")
+            if (!options.isIgnoreMDCErrors()) {
+                throw MessageNotIntegrityProtectedException()
             }
         }
+
+        val esks = ESKsAndData(encDataList)
 
         LOGGER.debug(
             "Encrypted Data has ${esks.skesks.size} SKESK(s) and" +
@@ -583,7 +591,14 @@ class OpenPgpMessageInputStream(
         pkesk: PGPPublicKeyEncryptedData
     ): Boolean {
         try {
-            val decrypted = pkesk.getDataStream(decryptorFactory)
+            val decrypted =
+                try {
+                    pkesk.getDataStream(decryptorFactory)
+                } catch (e: ClassCastException) {
+                    throw PGPException(e.message)
+                } catch (e: IllegalArgumentException) {
+                    throw PGPException(e.message)
+                }
             val sessionKey = SessionKey(pkesk.getSessionKey(decryptorFactory))
             throwIfUnacceptable(sessionKey.algorithm)
 
