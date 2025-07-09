@@ -17,6 +17,7 @@ import org.bouncycastle.openpgp.PGPOnePassSignature
 import org.bouncycastle.openpgp.PGPPadding
 import org.bouncycastle.openpgp.PGPSignature
 import org.pgpainless.algorithm.OpenPgpPacket
+import org.pgpainless.exception.MalformedOpenPgpMessageException
 
 /**
  * Since we need to update signatures with data from the underlying stream, this class is used to
@@ -61,7 +62,12 @@ class TeeBCPGInputStream(inputStream: BCPGInputStream, outputStream: OutputStrea
 
     fun readEncryptedDataList(): PGPEncryptedDataList {
         delayedTee.squeeze()
-        return PGPEncryptedDataList(packetInputStream)
+        return try {
+            PGPEncryptedDataList(packetInputStream)
+        } catch (e: IllegalArgumentException) {
+            // Mismatched SKESK / SEIPD version
+            throw MalformedOpenPgpMessageException(e.message)
+        }
     }
 
     fun readOnePassSignature(): PGPOnePassSignature {
