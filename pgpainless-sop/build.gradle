@@ -19,7 +19,7 @@ dependencies {
     testRuntimeOnly "org.junit.jupiter:junit-jupiter-engine:$junitVersion"
 
     // Jazzer for Fuzzing
-    testImplementation "com.code-intelligence:jazzer-junit:0.24.0"
+    testImplementation "com.code-intelligence:jazzer-junit:$jazzerVersion"
 
     // Logging
     testImplementation "ch.qos.logback:logback-classic:$logbackVersion"
