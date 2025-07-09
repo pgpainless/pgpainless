@@ -6,7 +6,6 @@ package org.pgpainless.sop.fuzzing;
 
 import com.code_intelligence.jazzer.api.FuzzedDataProvider;
 import com.code_intelligence.jazzer.junit.FuzzTest;
-import org.junit.jupiter.api.Test;
 import org.pgpainless.sop.SOPImpl;
 import sop.SOP;
 import sop.Verification;
@@ -271,7 +270,7 @@ public class SignatureFuzzTest {
             "-----END PGP PUBLIC KEY BLOCK-----\n";
 
     @FuzzTest(
-            maxDuration = "60s"
+            //maxDuration = "60s"
     )
     public void verifyFuzzedSig(FuzzedDataProvider provider) throws IOException {
         byte[] sig = provider.consumeBytes(1024);
