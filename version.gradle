@@ -9,6 +9,7 @@ allprojects {
         javaSourceCompatibility = 11
         bouncyCastleVersion = '1.82'
         bouncyPgVersion = bouncyCastleVersion
+        jazzerVersion = '0.24.0'
         junitVersion = '5.8.2'
         logbackVersion = '1.5.19'
         mockitoVersion = '4.5.1'
