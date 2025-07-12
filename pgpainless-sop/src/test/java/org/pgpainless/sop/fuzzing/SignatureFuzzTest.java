@@ -270,7 +270,7 @@ public class SignatureFuzzTest {
             "-----END PGP PUBLIC KEY BLOCK-----\n";
 
     @FuzzTest(
-            //maxDuration = "60s"
+            maxDuration = "60s"
     )
     public void verifyFuzzedSig(FuzzedDataProvider provider) throws IOException {
         byte[] sig = provider.consumeBytes(1024);

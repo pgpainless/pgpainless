@@ -18,7 +18,9 @@ public class AsciiArmorFuzzTest {
 
     private final SOP sop = new SOPImpl();
 
-    @FuzzTest()
+    @FuzzTest(
+            maxDuration = "60s"
+    )
     public void armorAndDearmorData(FuzzedDataProvider data) throws IOException {
         byte[] bytes = data.consumeBytes(1024);
 
