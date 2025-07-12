@@ -1,3 +1,7 @@
+// SPDX-FileCopyrightText: 2025 Paul Schaub <vanitasvitae@fsfe.org>
+//
+// SPDX-License-Identifier: Apache-2.0
+
 package org.pgpainless.sop.fuzzing;
 
 import com.code_intelligence.jazzer.api.FuzzedDataProvider;
@@ -67,7 +71,9 @@ public class EncryptedMessageFuzzingTest {
         return keys;
     }
 
-    @FuzzTest
+    @FuzzTest(
+            maxDuration = "60s"
+    )
     public void decryptFuzzedMessage(FuzzedDataProvider provider) {
         byte[] ciphertext = provider.consumeBytes(8192);
         if (ciphertext.length == 0) {
