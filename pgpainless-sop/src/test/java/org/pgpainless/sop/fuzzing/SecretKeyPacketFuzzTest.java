@@ -20,7 +20,7 @@ public class SecretKeyPacketFuzzTest {
     @FuzzTest(maxDuration = "30m")
     public void parseSecretKeyPacket(FuzzedDataProvider provider)
     {
-        byte[] encoding = provider.consumeBytes(8192);
+        byte[] encoding = provider.consumeRemainingAsBytes();
         if (encoding.length == 0) {
             return;
         }

@@ -20,7 +20,7 @@ public class PublicKeyPacketFuzzTest {
     @FuzzTest(maxDuration = "30m")
     public void parsePublicKeyPacket(FuzzedDataProvider provider)
     {
-        byte[] encoding = provider.consumeBytes(8192);
+        byte[] encoding = provider.consumeRemainingAsBytes();
         if (encoding.length == 0) {
             return;
         }
