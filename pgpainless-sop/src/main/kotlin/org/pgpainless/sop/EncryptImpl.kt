@@ -152,7 +152,7 @@ class EncryptImpl(private val api: PGPainless) : Encrypt {
     }
 
     override fun withPassword(password: String): Encrypt = apply {
-        encryptionOptions.addMessagePassphrase(Passphrase.fromPassword(password))
+        encryptionOptions.addMessagePassphrase(Passphrase.fromPassword(password).withTrimmedWhitespace())
     }
 
     private fun modeToStreamEncoding(mode: EncryptAs): StreamEncoding {

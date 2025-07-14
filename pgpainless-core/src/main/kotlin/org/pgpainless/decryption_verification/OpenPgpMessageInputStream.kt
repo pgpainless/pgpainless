@@ -347,11 +347,10 @@ class OpenPgpMessageInputStream(
         syntaxVerifier.next(InputSymbol.ENCRYPTED_DATA)
 
         val encDataList = packetInputStream!!.readEncryptedDataList()
-        if (encDataList.isEmpty) {
-            LOGGER.debug("Missing encrypted session key packet.")
-            return false
-        }
-        if (!encDataList.isIntegrityProtected && !encDataList.get(0).isAEAD) {
+        if (!encDataList.isIntegrityProtected &&
+            !encDataList.isEmpty &&
+            !encDataList.get(0).isAEAD) {
+
             LOGGER.warn("Symmetrically Encrypted Data Packet is not integrity-protected.")
             if (!options.isIgnoreMDCErrors()) {
                 throw MessageNotIntegrityProtectedException()
