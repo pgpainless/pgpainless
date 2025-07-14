@@ -273,7 +273,7 @@ public class SignatureFuzzTest {
             maxDuration = "60s"
     )
     public void verifyFuzzedSig(FuzzedDataProvider provider) throws IOException {
-        byte[] sig = provider.consumeBytes(1024);
+        byte[] sig = provider.consumeRemainingAsBytes();
         if (sig.length == 0) {
             return;
         }

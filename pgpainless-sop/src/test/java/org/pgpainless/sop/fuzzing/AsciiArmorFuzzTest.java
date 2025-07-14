@@ -22,7 +22,7 @@ public class AsciiArmorFuzzTest {
             maxDuration = "60s"
     )
     public void armorAndDearmorData(FuzzedDataProvider data) throws IOException {
-        byte[] bytes = data.consumeBytes(1024);
+        byte[] bytes = data.consumeRemainingAsBytes();
 
         byte[] armored = sop.armor().data(bytes).getBytes();
         if (Arrays.areEqual(bytes, armored)) {

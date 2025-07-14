@@ -22,7 +22,7 @@ public class ParseCertFuzzTest {
 
     @FuzzTest(maxDuration = "30s")
     public void parseOpenPGPCert(FuzzedDataProvider data) throws IOException {
-        byte[] certEncoding = data.consumeBytes(8192);
+        byte[] certEncoding = data.consumeRemainingAsBytes();
         if (certEncoding.length == 0) {
             return;
         }
