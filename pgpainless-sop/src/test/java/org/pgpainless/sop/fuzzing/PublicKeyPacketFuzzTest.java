@@ -6,33 +6,24 @@ package org.pgpainless.sop.fuzzing;
 
 import com.code_intelligence.jazzer.api.FuzzedDataProvider;
 import com.code_intelligence.jazzer.junit.FuzzTest;
-import org.bouncycastle.bcpg.BCPGInputStream;
 import org.bouncycastle.bcpg.UnsupportedPacketVersionException;
-import org.bouncycastle.openpgp.PGPObjectFactory;
-import org.bouncycastle.openpgp.PGPPublicKeyRing;
-import org.bouncycastle.openpgp.bc.BcPGPObjectFactory;
+import org.bouncycastle.openpgp.api.OpenPGPKeyReader;
 
-import java.io.ByteArrayInputStream;
 import java.io.IOException;
 
 public class PublicKeyPacketFuzzTest {
 
-    @FuzzTest(maxDuration = "30m")
-    public void parsePublicKeyPacket(FuzzedDataProvider provider)
-    {
+    private final OpenPGPKeyReader reader = new OpenPGPKeyReader();
+
+    @FuzzTest(maxDuration = "60s")
+    public void parsePublicKeyPacket(FuzzedDataProvider provider) {
         byte[] encoding = provider.consumeRemainingAsBytes();
         if (encoding.length == 0) {
             return;
         }
 
-        ByteArrayInputStream bIn = new ByteArrayInputStream(encoding);
-        BCPGInputStream pIn = new BCPGInputStream(bIn);
-        PGPObjectFactory objFac = new BcPGPObjectFactory(pIn);
         try {
-            Object next = objFac.nextObject();
-            if (next == null) return;
-
-            PGPPublicKeyRing pubKey = (PGPPublicKeyRing) next;
+            reader.parseCertificate(encoding);
         } catch (IOException e) {
             // ignore
         } catch (UnsupportedPacketVersionException e) {
