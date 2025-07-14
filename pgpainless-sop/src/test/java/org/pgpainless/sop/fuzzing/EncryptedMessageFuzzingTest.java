@@ -10,6 +10,7 @@ import org.bouncycastle.util.encoders.Hex;
 import org.bouncycastle.util.io.Streams;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
+import org.pgpainless.exception.MissingDecryptionMethodException;
 import org.pgpainless.exception.ModificationDetectionException;
 import org.pgpainless.sop.SOPImpl;
 import sop.SOP;
@@ -75,7 +76,7 @@ public class EncryptedMessageFuzzingTest {
             maxDuration = "60s"
     )
     public void decryptFuzzedMessage(FuzzedDataProvider provider) {
-        byte[] ciphertext = provider.consumeBytes(8192);
+        byte[] ciphertext = provider.consumeRemainingAsBytes();
         if (ciphertext.length == 0) {
             return;
         }
