@@ -247,7 +247,8 @@ class ArmorUtils {
                 .add(OpenPgpFingerprint.of(publicKey).prettyPrint())
             // Primary / First User ID
             (primary ?: first)?.let {
-                headerMap.getOrPut(HEADER_COMMENT) { mutableSetOf() }.add(it)
+                headerMap.getOrPut(HEADER_COMMENT) { mutableSetOf() }
+                    .add(it.replace("\n", "\\n").replace("\r", "\\r"))
             }
             // X-1 further identities
             when (userIds.size) {

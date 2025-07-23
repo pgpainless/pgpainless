@@ -569,9 +569,10 @@ class SecretKeyRingEditor(
     }
 
     private fun sanitizeUserId(userId: CharSequence): CharSequence =
-        // TODO: Further research how to sanitize user IDs.
-        //  e.g. what about newlines?
-        userId.toString().trim()
+        // I'm not sure, what kind of sanitization is needed.
+        // Newlines are allowed, they just need to be escaped when emitted in an ASCII armor header
+        // Trailing/Leading whitespace is also fine.
+        userId.toString()
 
     private fun callbackFromRevocationAttributes(attributes: RevocationAttributes?) =
         object : RevocationSignatureSubpackets.Callback {

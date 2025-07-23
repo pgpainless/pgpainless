@@ -45,7 +45,7 @@ class KeyRingBuilder : KeyRingBuilderInterface<KeyRingBuilder> {
     }
 
     override fun addUserId(userId: CharSequence): KeyRingBuilder = apply {
-        userIds[userId.toString().trim()] = null
+        userIds[userId.toString()] = null
     }
 
     override fun addUserId(userId: ByteArray): KeyRingBuilder =
