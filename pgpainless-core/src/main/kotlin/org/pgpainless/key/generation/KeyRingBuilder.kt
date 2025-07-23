@@ -52,7 +52,7 @@ class KeyRingBuilder(private val version: OpenPGPKeyVersion, private val api: PG
     }
 
     override fun addUserId(userId: CharSequence): KeyRingBuilder = apply {
-        userIds[userId.toString().trim()] = null
+        userIds[userId.toString()] = null
     }
 
     override fun addUserId(userId: ByteArray): KeyRingBuilder =

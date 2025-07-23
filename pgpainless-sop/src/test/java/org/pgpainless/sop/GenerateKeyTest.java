@@ -100,4 +100,14 @@ public class GenerateKeyTest {
         assertThrows(SOPGPException.UnsupportedProfile.class, () ->
                 sop.generateKey().profile("invalid"));
     }
+
+    @Test
+    public void generateKeyWithNewlinesInUserId() throws IOException {
+        byte[] keyBytes = sop.generateKey()
+                .userId("Foo\n\nBar")
+                .generate()
+                .getBytes();
+
+        assertTrue(new String(keyBytes).contains("Foo\\n\\nBar"));
+    }
 }
