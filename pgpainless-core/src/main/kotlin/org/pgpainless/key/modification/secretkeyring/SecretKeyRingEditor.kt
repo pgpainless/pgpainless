@@ -532,7 +532,7 @@ class SecretKeyRingEditor(
         val prevBinding =
             api.inspect(key).getCurrentSubkeyBindingSignature(keyId)
                 ?: throw NoSuchElementException(
-                    "Previous subkey binding signaure for $keyId MUST NOT be null.")
+                    "Previous subkey binding signature for $keyId MUST NOT be null.")
         val bindingSig = reissueSubkeyBindingSignature(subkey, expiration, protector, prevBinding)
         secretKeyRing =
             injectCertification(secretKeyRing, subkey.pgpPublicKey, bindingSig.signature)
