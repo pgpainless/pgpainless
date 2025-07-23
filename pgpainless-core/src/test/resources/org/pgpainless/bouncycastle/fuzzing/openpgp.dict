@@ -1,0 +1,34 @@
+#
+# AFL Dictionary for OpenPGP (RFC9580)
+# ------------------------------------------
+#
+# Created by Paul Schaub <info@pgpainless.org>
+
+#
+# Packet Type IDs
+#
+RESERVED="\x00"
+PKESK="\x01"
+SIG="\x02"
+SKESK="\0x03"
+OPS="\x04"
+SECKEY="\x05"
+PUBKEY="\x06"
+SECSUBKEY="\x07"
+COMP="\x08"
+SED="\x09"
+MARKER="\x0A"
+LIT="\x0B"
+TRUST="\x0C"
+UID="\x0D"
+PUBSUBKEY="\x0E"
+UAT="\x11"
+SEIPD="\x12"
+MOD="\x13"
+RES20="\x14"
+PADDING="\x15"
+
+#
+# Entire Packets
+#
+MARKER_PACKET="\xCA\x03\x50\x47\x50"
