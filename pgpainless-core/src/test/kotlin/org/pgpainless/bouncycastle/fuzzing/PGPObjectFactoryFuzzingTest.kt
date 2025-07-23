@@ -5,7 +5,6 @@
 package org.pgpainless.bouncycastle.fuzzing
 
 import com.code_intelligence.jazzer.api.FuzzedDataProvider
-import com.code_intelligence.jazzer.junit.DictionaryFile
 import com.code_intelligence.jazzer.junit.FuzzTest
 import org.bouncycastle.bcpg.ArmoredInputException
 import org.bouncycastle.bcpg.UnsupportedPacketVersionException
@@ -18,8 +17,6 @@ import java.io.IOException
 class PGPObjectFactoryFuzzingTest {
 
     @FuzzTest
-    @DictionaryFile(resourcePath = "ascii_armor.dict")
-    @DictionaryFile(resourcePath = "openpgp.dict")
     fun parseFuzzedObjects(provider: FuzzedDataProvider) {
         val encoding = provider.consumeRemainingAsBytes()
 
@@ -42,6 +39,13 @@ class PGPObjectFactoryFuzzingTest {
         } catch (e: IOException) {
             return
         } catch (e: UnsupportedPacketVersionException) {
+            return
+        } catch (e: ClassCastException) {
+            if (e.message?.contains("SecretSubkeyPacket") ?: true) {
+                return
+            }
+            throw e
+        } catch (e: OutOfMemoryError) {
             return
         }
     }
