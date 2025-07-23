@@ -11,14 +11,9 @@ import org.bouncycastle.util.Arrays
  *
  * @param chars may be null for empty passwords.
  */
-class Passphrase(chars: CharArray?) {
+class Passphrase(private val chars: CharArray?) {
     private val lock = Any()
     private var valid = true
-    private val chars: CharArray?
-
-    init {
-        this.chars = trimWhitespace(chars)
-    }
 
     /**
      * Return a copy of the underlying char array. A return value of null represents an empty
@@ -66,6 +61,13 @@ class Passphrase(chars: CharArray?) {
     }
 
     override fun hashCode(): Int = getChars()?.let { String(it) }.hashCode()
+
+    /**
+     * Return a copy of this [Passphrase], but with whitespace characters trimmed off.
+     *
+     * @return copy with trimmed whitespace
+     */
+    fun withTrimmedWhitespace(): Passphrase = Passphrase(trimWhitespace(chars))
 
     companion object {
 
