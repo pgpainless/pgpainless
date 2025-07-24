@@ -292,15 +292,18 @@ class SignatureSubpackets(
         }
     }
 
+    @Deprecated("Use of this subpacket is discouraged.")
     override fun addRevocationKey(revocationKey: PGPPublicKey): SignatureSubpackets = apply {
         addRevocationKey(true, revocationKey)
     }
 
+    @Deprecated("Use of this subpacket is discouraged.")
     override fun addRevocationKey(
         isCritical: Boolean,
         revocationKey: PGPPublicKey
     ): SignatureSubpackets = apply { addRevocationKey(isCritical, false, revocationKey) }
 
+    @Deprecated("Use of this subpacket is discouraged.")
     override fun addRevocationKey(
         isCritical: Boolean,
         isSensitive: Boolean,
@@ -311,10 +314,12 @@ class SignatureSubpackets(
             RevocationKey(isCritical, clazz, revocationKey.algorithm, revocationKey.fingerprint))
     }
 
+    @Deprecated("Use of this subpacket is discouraged.")
     override fun addRevocationKey(revocationKey: RevocationKey): SignatureSubpackets = apply {
         subpacketsGenerator.addCustomSubpacket(revocationKey)
     }
 
+    @Deprecated("Use of this subpacket is discouraged.")
     override fun clearRevocationKeys(): SignatureSubpackets = apply {
         subpacketsGenerator.removePacketsOfType(SignatureSubpacketTags.REVOCATION_KEY)
     }
@@ -450,15 +455,18 @@ class SignatureSubpackets(
         }
     }
 
+    @Deprecated("Usage of subpacket is discouraged")
     override fun setSignerUserId(userId: CharSequence): SignatureSubpackets = apply {
         setSignerUserId(false, userId)
     }
 
+    @Deprecated("Usage of subpacket is discouraged")
     override fun setSignerUserId(isCritical: Boolean, userId: CharSequence): SignatureSubpackets =
         apply {
             setSignerUserId(SignerUserID(isCritical, userId.toString()))
         }
 
+    @Deprecated("Usage of subpacket is discouraged")
     override fun setSignerUserId(signerUserID: SignerUserID?): SignatureSubpackets = apply {
         subpacketsGenerator.removePacketsOfType(SignatureSubpacketTags.SIGNER_USER_ID)
         signerUserID?.let { subpacketsGenerator.setSignerUserID(it.isCritical, it.rawID) }
