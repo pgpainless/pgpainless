@@ -102,6 +102,7 @@ class HardwareSecurity {
             return factory.createDataDecryptor(seipd, sessionKey)
         }
 
+        @Deprecated("Deprecated in Java")
         override fun recoverSessionData(
             keyAlgorithm: Int,
             secKeyData: Array<out ByteArray>,
