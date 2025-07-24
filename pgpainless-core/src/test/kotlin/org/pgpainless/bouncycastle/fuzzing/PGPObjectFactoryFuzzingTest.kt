@@ -41,7 +41,7 @@ class PGPObjectFactoryFuzzingTest {
         } catch (e: UnsupportedPacketVersionException) {
             return
         } catch (e: ClassCastException) {
-            if (e.message?.contains("SecretSubkeyPacket") ?: true) {
+            if (e.message?.contains("SecretSubkeyPacket") != false) {
                 return
             }
             throw e
