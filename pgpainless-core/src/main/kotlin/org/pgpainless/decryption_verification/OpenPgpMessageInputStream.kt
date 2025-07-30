@@ -350,7 +350,6 @@ class OpenPgpMessageInputStream(
         if (!encDataList.isIntegrityProtected &&
             !encDataList.isEmpty &&
             !encDataList.get(0).isAEAD) {
-
             LOGGER.warn("Symmetrically Encrypted Data Packet is not integrity-protected.")
             if (!options.isIgnoreMDCErrors()) {
                 throw MessageNotIntegrityProtectedException()

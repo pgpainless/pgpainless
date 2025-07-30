@@ -28,7 +28,6 @@ class ArmorImpl(private val api: PGPainless) : Armor {
                 val bufferedOutputStream = BufferedOutputStream(outputStream)
 
                 // Determine the nature of the given data
-
                 val openPgpIn =
                     OpenPGPAnimalSnifferInputStream(data, false).apply {
                         try {
