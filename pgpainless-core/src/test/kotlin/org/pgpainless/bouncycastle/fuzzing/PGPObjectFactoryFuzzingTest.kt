@@ -6,13 +6,13 @@ package org.pgpainless.bouncycastle.fuzzing
 
 import com.code_intelligence.jazzer.api.FuzzedDataProvider
 import com.code_intelligence.jazzer.junit.FuzzTest
+import java.io.EOFException
+import java.io.IOException
 import org.bouncycastle.bcpg.ArmoredInputException
 import org.bouncycastle.bcpg.UnsupportedPacketVersionException
 import org.bouncycastle.openpgp.PGPException
 import org.bouncycastle.openpgp.PGPUtil
 import org.bouncycastle.openpgp.bc.BcPGPObjectFactory
-import java.io.EOFException
-import java.io.IOException
 
 class PGPObjectFactoryFuzzingTest {
 
