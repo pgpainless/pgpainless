@@ -14,7 +14,7 @@ import java.io.IOException;
 
 import static org.junit.jupiter.api.Assertions.assertArrayEquals;
 
-public class AsciiArmorFuzzTest {
+public class ArmorFuzzTest {
 
     private final SOP sop = new SOPImpl();
 
