@@ -145,11 +145,12 @@ class OpenPgpMessageInputStream(
 
         // Comsume packets, potentially stepping into nested layers
         layer@ while (run {
-            packet = try {
-                pIn.nextPacketTag()
-            } catch (e: NoSuchElementException) {
-                throw MalformedOpenPgpMessageException(e.message)
-            }
+            packet =
+                try {
+                    pIn.nextPacketTag()
+                } catch (e: NoSuchElementException) {
+                    throw MalformedOpenPgpMessageException(e.message)
+                }
             packet
         } != null) {
 
@@ -212,25 +213,24 @@ class OpenPgpMessageInputStream(
         syntaxVerifier.next(InputSymbol.LITERAL_DATA)
         val literalData = packetInputStream!!.readLiteralData()
 
-        val streamEncoding = try {
-            StreamEncoding.requireFromCode(literalData.format)
-        } catch (e: NoSuchElementException) {
-            throw PGPException("Invalid stream encoding format encountered: ${literalData.format}; ${e.message}")
-        }
+        val streamEncoding =
+            try {
+                StreamEncoding.requireFromCode(literalData.format)
+            } catch (e: NoSuchElementException) {
+                throw PGPException(
+                    "Invalid stream encoding format encountered: ${literalData.format}; ${e.message}")
+            }
 
-        val fileName = try {
-            literalData.fileName
-        } catch (e: IllegalArgumentException) {
-            // Non UTF8
-            throw PGPException("Cannot decode literal data filename: ${e.message}")
-        }
+        val fileName =
+            try {
+                literalData.fileName
+            } catch (e: IllegalArgumentException) {
+                // Non UTF8
+                throw PGPException("Cannot decode literal data filename: ${e.message}")
+            }
 
         // Extract Metadata
-        layerMetadata.child =
-            LiteralData(
-                fileName,
-                literalData.modificationTime,
-                streamEncoding)
+        layerMetadata.child = LiteralData(fileName, literalData.modificationTime, streamEncoding)
 
         nestedInputStream = literalData.inputStream
     }
@@ -240,17 +240,15 @@ class OpenPgpMessageInputStream(
         signatures.enterNesting()
         val compressedData = packetInputStream!!.readCompressedData()
 
-        val compAlg = try {
-            CompressionAlgorithm.requireFromId(compressedData.algorithm)
-        } catch (e: NoSuchElementException) {
-            throw PGPException(e.message)
-        }
+        val compAlg =
+            try {
+                CompressionAlgorithm.requireFromId(compressedData.algorithm)
+            } catch (e: NoSuchElementException) {
+                throw PGPException(e.message)
+            }
 
         // Extract Metadata
-        val compressionLayer =
-            CompressedData(
-                compAlg,
-                layerMetadata.depth + 1)
+        val compressionLayer = CompressedData(compAlg, layerMetadata.depth + 1)
 
         LOGGER.debug(
             "Compressed Data Packet (${compressionLayer.algorithm}) at depth ${layerMetadata.depth} encountered.")
@@ -356,7 +354,10 @@ class OpenPgpMessageInputStream(
         }
 
 
-        if (!encDataList.isIntegrityProtected && !encDataList.isEmpty && !encDataList.get(0).isAEAD) {
+
+        if (!encDataList.isIntegrityProtected &&
+            !encDataList.isEmpty &&
+            !encDataList.get(0).isAEAD) {
             LOGGER.warn("Symmetrically Encrypted Data Packet is not integrity-protected.")
             if (!options.isIgnoreMDCErrors()) {
                 throw MessageNotIntegrityProtectedException()
@@ -619,13 +620,14 @@ class OpenPgpMessageInputStream(
         pkesk: PGPPublicKeyEncryptedData
     ): Boolean {
         try {
-            val decrypted = try {
-                pkesk.getDataStream(decryptorFactory)
-            } catch (e: ClassCastException) {
-                throw PGPException(e.message)
-            } catch (e: IllegalArgumentException) {
-                throw PGPException(e.message)
-            }
+            val decrypted =
+                try {
+                    pkesk.getDataStream(decryptorFactory)
+                } catch (e: ClassCastException) {
+                    throw PGPException(e.message)
+                } catch (e: IllegalArgumentException) {
+                    throw PGPException(e.message)
+                }
             val sessionKey = SessionKey(pkesk.getSessionKey(decryptorFactory))
             throwIfUnacceptable(sessionKey.algorithm)
 

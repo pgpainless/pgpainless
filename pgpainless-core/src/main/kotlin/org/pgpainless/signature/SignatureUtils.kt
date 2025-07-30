@@ -165,13 +165,13 @@ class SignatureUtils {
                     // having them compressed,
                     //  except for an attacker who is trying to exploit flaws in the decompression
                     // algorithm.
-                    //  Therefore, we ignore compressed data packets without attempting decompression.
+                    //  Therefore, we ignore compressed data packets without attempting
+                    // decompression.
                     if (nextObject is PGPCompressedData) {
                         // getInputStream() does not do decompression, contrary to getDataStream().
                         Streams.drain(
                             (nextObject as PGPCompressedData)
-                                .inputStream
-                        ) // Skip packet without decompressing
+                                .inputStream) // Skip packet without decompressing
                     }
 
                     if (nextObject is PGPSignatureList) {

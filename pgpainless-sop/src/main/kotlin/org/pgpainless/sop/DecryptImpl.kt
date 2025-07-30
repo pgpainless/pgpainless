@@ -4,11 +4,13 @@
 
 package org.pgpainless.sop
 
-import org.bouncycastle.bcpg.UnsupportedPacketVersionException
 import java.io.IOException
 import java.io.InputStream
 import java.io.OutputStream
 import java.util.*
+import java.util.zip.ZipException
+import kotlin.NoSuchElementException
+import org.bouncycastle.bcpg.UnsupportedPacketVersionException
 import org.bouncycastle.openpgp.PGPException
 import org.bouncycastle.util.io.Streams
 import org.pgpainless.PGPainless
@@ -23,8 +25,6 @@ import sop.ReadyWithResult
 import sop.SessionKey
 import sop.exception.SOPGPException
 import sop.operation.Decrypt
-import java.util.zip.ZipException
-import kotlin.NoSuchElementException
 
 /** Implementation of the `decrypt` operation using PGPainless. */
 class DecryptImpl(private val api: PGPainless) : Decrypt {
@@ -57,8 +57,7 @@ class DecryptImpl(private val api: PGPainless) : Decrypt {
                 throw SOPGPException.BadData(e)
             } catch (e: ModificationDetectionException) {
                 throw SOPGPException.BadData(e)
-            }
-            finally {
+            } finally {
                 // Forget passphrases after decryption
                 protector.clear()
             }

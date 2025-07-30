@@ -5,6 +5,7 @@
 package org.pgpainless.sop
 
 import java.io.BufferedOutputStream
+import java.io.IOException
 import java.io.InputStream
 import java.io.OutputStream
 import kotlin.jvm.Throws
@@ -15,7 +16,6 @@ import org.pgpainless.util.ArmoredOutputStreamFactory
 import sop.Ready
 import sop.exception.SOPGPException
 import sop.operation.Armor
-import java.io.IOException
 
 /** Implementation of the `armor` operation using PGPainless. */
 class ArmorImpl(private val api: PGPainless) : Armor {
@@ -28,13 +28,13 @@ class ArmorImpl(private val api: PGPainless) : Armor {
                 val bufferedOutputStream = BufferedOutputStream(outputStream)
 
                 // Determine the nature of the given data
+
                 val openPgpIn = OpenPGPAnimalSnifferInputStream(data).apply {
                     try {
                         inspectBuffer()
                     } catch (e: IOException) {
                         // ignore
                     }
-                    reset()
                 }
 
                 if (openPgpIn.isAsciiArmored) {
