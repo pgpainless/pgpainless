@@ -6,12 +6,8 @@ package org.pgpainless.sop.fuzzing;
 
 import com.code_intelligence.jazzer.api.FuzzedDataProvider;
 import com.code_intelligence.jazzer.junit.FuzzTest;
-import org.bouncycastle.util.encoders.Hex;
 import org.bouncycastle.util.io.Streams;
 import org.junit.jupiter.api.BeforeAll;
-import org.junit.jupiter.api.Test;
-import org.pgpainless.exception.MissingDecryptionMethodException;
-import org.pgpainless.exception.ModificationDetectionException;
 import org.pgpainless.sop.SOPImpl;
 import sop.SOP;
 import sop.exception.SOPGPException;
@@ -21,22 +17,14 @@ import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
-import java.net.URI;
-import java.net.URISyntaxException;
 import java.nio.charset.StandardCharsets;
-import java.nio.file.Files;
-import java.nio.file.Path;
-import java.nio.file.Paths;
 import java.util.ArrayList;
-import java.util.Iterator;
 import java.util.List;
-import java.util.NoSuchElementException;
-import java.util.stream.Stream;
 
 import static org.junit.jupiter.api.Assertions.assertArrayEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 
-public class EncryptedMessageFuzzingTest {
+public class EncryptFuzzTest {
 
     private final SOP sop = new SOPImpl();
     private final String password = "sw0rdf1sh";
@@ -53,7 +41,7 @@ public class EncryptedMessageFuzzingTest {
         List<byte[]> keys = new ArrayList<>();
 
         String dir = "/org/pgpainless/sop/fuzzing/testKeys";
-        InputStream in = EncryptedMessageFuzzingTest.class.getResourceAsStream(dir);
+        InputStream in = EncryptFuzzTest.class.getResourceAsStream(dir);
         BufferedReader reader = new BufferedReader(new InputStreamReader(in));
 
         String file;
@@ -62,7 +50,7 @@ public class EncryptedMessageFuzzingTest {
                 continue;
             }
 
-            try(InputStream fIn = EncryptedMessageFuzzingTest.class.getResourceAsStream(dir + "/" + file)) {
+            try(InputStream fIn = EncryptFuzzTest.class.getResourceAsStream(dir + "/" + file)) {
                 byte[] b = Streams.readAll(fIn);
                 keys.add(b);
             }

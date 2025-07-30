@@ -15,7 +15,7 @@ import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.util.List;
 
-public class SignatureFuzzTest {
+public class VerifyFuzzTest {
 
     private final SOP sop = new SOPImpl();
     private final byte[] data = "Hello, World!\n".getBytes(StandardCharsets.UTF_8);
