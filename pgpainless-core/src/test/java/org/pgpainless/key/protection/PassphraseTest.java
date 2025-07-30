@@ -34,19 +34,19 @@ public class PassphraseTest {
 
     @Test
     public void testTrimming() {
-        Passphrase leadingSpace = Passphrase.fromPassword(" space");
+        Passphrase leadingSpace = Passphrase.fromPassword(" space").withTrimmedWhitespace();
         assertArrayEquals("space".toCharArray(), leadingSpace.getChars());
         assertFalse(leadingSpace.isEmpty());
 
-        Passphrase trailingSpace = Passphrase.fromPassword("space ");
+        Passphrase trailingSpace = Passphrase.fromPassword("space ").withTrimmedWhitespace();
         assertArrayEquals("space".toCharArray(), trailingSpace.getChars());
         assertFalse(trailingSpace.isEmpty());
 
-        Passphrase leadingTrailingWhitespace = new Passphrase("\t Such whitespace, much wow\n ".toCharArray());
+        Passphrase leadingTrailingWhitespace = new Passphrase("\t Such whitespace, much wow\n ".toCharArray()).withTrimmedWhitespace();
         assertArrayEquals("Such whitespace, much wow".toCharArray(), leadingTrailingWhitespace.getChars());
         assertFalse(leadingTrailingWhitespace.isEmpty());
 
-        Passphrase fromEmptyChars = new Passphrase("     ".toCharArray());
+        Passphrase fromEmptyChars = new Passphrase("     ".toCharArray()).withTrimmedWhitespace();
         assertNull(fromEmptyChars.getChars());
         assertTrue(fromEmptyChars.isEmpty());
     }
@@ -54,7 +54,7 @@ public class PassphraseTest {
     @ParameterizedTest
     @ValueSource(strings = {"", " ", "  ", "\t", "\t\t"})
     public void testEmptyPassphrases(String empty) {
-        Passphrase passphrase = Passphrase.fromPassword(empty);
+        Passphrase passphrase = Passphrase.fromPassword(empty).withTrimmedWhitespace();
         assertTrue(passphrase.isEmpty());
 
         assertEquals(Passphrase.emptyPassphrase(), passphrase);
