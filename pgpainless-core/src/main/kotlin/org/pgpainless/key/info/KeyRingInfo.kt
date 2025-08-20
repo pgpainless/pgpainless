@@ -35,7 +35,8 @@ class KeyRingInfo(
         api: PGPainless = PGPainless.getInstance(),
         referenceDate: Date = Date()
     ) : this(
-        if (keys is PGPSecretKeyRing) OpenPGPKey(keys) else OpenPGPCertificate(keys),
+        if (keys is PGPSecretKeyRing) OpenPGPKey(keys, api.implementation)
+        else OpenPGPCertificate(keys, api.implementation),
         api,
         referenceDate)
 

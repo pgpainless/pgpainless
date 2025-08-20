@@ -38,6 +38,11 @@ abstract class KeyException : RuntimeException {
         ) {
 
         constructor(cert: OpenPGPCertificate, expirationDate: Date) : this(of(cert), expirationDate)
+
+        constructor(
+            componentKey: OpenPGPComponentKey,
+            expirationDate: Date
+        ) : this(of(componentKey), expirationDate)
     }
 
     class RevokedKeyException : KeyException {
