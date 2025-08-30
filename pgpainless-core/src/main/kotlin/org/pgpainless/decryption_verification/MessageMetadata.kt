@@ -6,8 +6,11 @@ package org.pgpainless.decryption_verification
 
 import java.util.*
 import javax.annotation.Nonnull
+import org.bouncycastle.bcpg.KeyIdentifier
 import org.bouncycastle.openpgp.PGPKeyRing
 import org.bouncycastle.openpgp.PGPLiteralData
+import org.bouncycastle.openpgp.api.MessageEncryptionMechanism
+import org.bouncycastle.openpgp.api.OpenPGPCertificate
 import org.pgpainless.algorithm.CompressionAlgorithm
 import org.pgpainless.algorithm.StreamEncoding
 import org.pgpainless.algorithm.SymmetricKeyAlgorithm
@@ -21,17 +24,26 @@ import org.pgpainless.util.SessionKey
 /** View for extracting metadata about a [Message]. */
 class MessageMetadata(val message: Message) {
 
-    // ################################################################################################################
-    // ###                                              Encryption
-    //                ###
-    // ################################################################################################################
+    // ##########################################################################################################
+    //                                              Encryption
+    // ##########################################################################################################
 
     /**
      * The [SymmetricKeyAlgorithm] of the outermost encrypted data packet, or null if message is
      * unencrypted.
      */
+    @Deprecated(
+        "Deprecated in favor of encryptionMechanism",
+        replaceWith = ReplaceWith("encryptionMechanism"))
     val encryptionAlgorithm: SymmetricKeyAlgorithm?
         get() = encryptionAlgorithms.let { if (it.hasNext()) it.next() else null }
+
+    /**
+     * The [MessageEncryptionMechanism] of the outermost encrypted data packet, or null if the
+     * message is unencrypted.
+     */
+    val encryptionMechanism: MessageEncryptionMechanism?
+        get() = encryptionMechanisms.let { if (it.hasNext()) it.next() else null }
 
     /**
      * [Iterator] of each [SymmetricKeyAlgorithm] encountered in the message. The first item
@@ -39,17 +51,40 @@ class MessageMetadata(val message: Message) {
      * item that of the next nested encrypted data packet and so on. The iterator might also be
      * empty, in case of an unencrypted message.
      */
+    @Deprecated(
+        "Deprecated in favor of encryptionMechanisms",
+        replaceWith = ReplaceWith("encryptionMechanisms"))
     val encryptionAlgorithms: Iterator<SymmetricKeyAlgorithm>
         get() = encryptionLayers.asSequence().map { it.algorithm }.iterator()
 
+    /**
+     * [Iterator] of each [MessageEncryptionMechanism] encountered in the message. The first item
+     * returned by the iterator is the encryption mechanism of the outermost encrypted data packet,
+     * the next item that of the next nested encrypted data packet and so on. The iterator might
+     * also be empty in case of an unencrypted message.
+     */
+    val encryptionMechanisms: Iterator<MessageEncryptionMechanism>
+        get() = encryptionLayers.asSequence().map { it.mechanism }.iterator()
+
+    /** Return true, if the message is encrypted, false otherwise. */
     val isEncrypted: Boolean
         get() =
-            if (encryptionAlgorithm == null) false
-            else encryptionAlgorithm != SymmetricKeyAlgorithm.NULL
+            if (encryptionMechanism == null) false
+            else
+                encryptionMechanism!!.symmetricKeyAlgorithm !=
+                    SymmetricKeyAlgorithm.NULL.algorithmId
 
-    fun isEncryptedFor(keys: PGPKeyRing): Boolean {
+    /** Return true, if the message was encrypted for the given [OpenPGPCertificate]. */
+    fun isEncryptedFor(cert: OpenPGPCertificate): Boolean {
         return encryptionLayers.asSequence().any {
-            it.recipients.any { keyId -> keys.getPublicKey(keyId) != null }
+            it.recipients.any { identifier -> cert.getKey(identifier) != null }
+        }
+    }
+
+    /** Return true, if the message was encrypted for the given [PGPKeyRing]. */
+    fun isEncryptedFor(cert: PGPKeyRing): Boolean {
+        return encryptionLayers.asSequence().any {
+            it.recipients.any { keyId -> cert.getPublicKey(keyId) != null }
         }
     }
 
@@ -78,17 +113,25 @@ class MessageMetadata(val message: Message) {
         get() = encryptionLayers.asSequence().mapNotNull { it.decryptionKey }.firstOrNull()
 
     /** List containing all recipient keyIDs. */
+    @Deprecated(
+        "Use of key-ids is discouraged in favor of KeyIdentifiers",
+        replaceWith = ReplaceWith("recipientKeyIdentifiers"))
     val recipientKeyIds: List<Long>
+        get() = recipientKeyIdentifiers.map { it.keyId }.toList()
+
+    /** List containing all recipient [KeyIdentifiers][KeyIdentifier]. */
+    val recipientKeyIdentifiers: List<KeyIdentifier>
         get() =
             encryptionLayers
                 .asSequence()
                 .map { it.recipients.toMutableList() }
-                .reduce { all, keyIds ->
-                    all.addAll(keyIds)
+                .reduce { all, keyIdentifiers ->
+                    all.addAll(keyIdentifiers)
                     all
                 }
                 .toList()
 
+    /** [Iterator] of all [EncryptedData] layers of the message. */
     val encryptionLayers: Iterator<EncryptedData>
         get() =
             object : LayerIterator<EncryptedData>(message) {
@@ -97,10 +140,9 @@ class MessageMetadata(val message: Message) {
                 override fun getProperty(last: Layer) = last as EncryptedData
             }
 
-    // ################################################################################################################
-    // ###                                             Compression
-    //                ###
-    // ################################################################################################################
+    // ##########################################################################################################
+    //                                             Compression
+    // ##########################################################################################################
 
     /**
      * [CompressionAlgorithm] of the outermost compressed data packet, or null, if the message does
@@ -118,6 +160,7 @@ class MessageMetadata(val message: Message) {
     val compressionAlgorithms: Iterator<CompressionAlgorithm>
         get() = compressionLayers.asSequence().map { it.algorithm }.iterator()
 
+    /** [Iterator] of all [CompressedData] layers of the message. */
     val compressionLayers: Iterator<CompressedData>
         get() =
             object : LayerIterator<CompressedData>(message) {
@@ -126,10 +169,9 @@ class MessageMetadata(val message: Message) {
                 override fun getProperty(last: Layer) = last as CompressedData
             }
 
-    // ################################################################################################################
-    // ###                                              Signatures
-    //                ###
-    // ################################################################################################################
+    // ##########################################################################################################
+    //                                              Signatures
+    // ##########################################################################################################
 
     val isUsingCleartextSignatureFramework: Boolean
         get() = message.cleartextSigned
@@ -253,7 +295,8 @@ class MessageMetadata(val message: Message) {
                     email,
                     it.signature.creationTime,
                     targetAmount)
-                .authenticated
+                ?.authenticated
+                ?: false
         }
     }
 
@@ -270,6 +313,9 @@ class MessageMetadata(val message: Message) {
     fun isVerifiedSignedBy(keys: PGPKeyRing) =
         verifiedSignatures.any { keys.matches(it.signingKey) }
 
+    fun isVerifiedSignedBy(cert: OpenPGPCertificate) =
+        verifiedSignatures.any { cert.pgpKeyRing.matches(it.signingKey) }
+
     fun isVerifiedDetachedSignedBy(fingerprint: OpenPgpFingerprint) =
         verifiedDetachedSignatures.any { it.signingKey.matches(fingerprint) }
 
@@ -282,18 +328,16 @@ class MessageMetadata(val message: Message) {
     fun isVerifiedInlineSignedBy(keys: PGPKeyRing) =
         verifiedInlineSignatures.any { keys.matches(it.signingKey) }
 
-    // ################################################################################################################
-    // ###                                             Literal Data
-    //                ###
-    // ################################################################################################################
+    // ##########################################################################################################
+    //                                             Literal Data
+    // ##########################################################################################################
 
     /**
      * Value of the literal data packet's filename field. This value can be used to store a
      * decrypted file under its original filename, but since this field is not necessarily part of
      * the signed data of a message, usage of this field is discouraged.
      *
-     * @see <a href="https://www.rfc-editor.org/rfc/rfc4880#section-5.9">RFC4880 §5.9. Literal Data
-     *   Packet</a>
+     * @see [RFC4880 §5.9. Literal Data Packet](https://www.rfc-editor.org/rfc/rfc4880#section-5.9)
      */
     val filename: String? = findLiteralData()?.fileName
 
@@ -310,8 +354,7 @@ class MessageMetadata(val message: Message) {
      * the modification date of a decrypted file, but since this field is not necessarily part of
      * the signed data, its use is discouraged.
      *
-     * @see <a href="https://www.rfc-editor.org/rfc/rfc4880#section-5.9">RFC4880 §5.9. Literal Data
-     *   Packet</a>
+     * @see [RFC4880 §5.9. Literal Data Packet](https://www.rfc-editor.org/rfc/rfc4880#section-5.9)
      */
     val modificationDate: Date? = findLiteralData()?.modificationDate
 
@@ -320,8 +363,7 @@ class MessageMetadata(val message: Message) {
      * binary data, ...) the data has. Since this field is not necessarily part of the signed data
      * of a message, its usage is discouraged.
      *
-     * @see <a href="https://www.rfc-editor.org/rfc/rfc4880#section-5.9">RFC4880 §5.9. Literal Data
-     *   Packet</a>
+     * @see [RFC4880 §5.9. Literal Data Packet](https://www.rfc-editor.org/rfc/rfc4880#section-5.9)
      */
     val literalDataEncoding: StreamEncoding? = findLiteralData()?.format
 
@@ -349,10 +391,9 @@ class MessageMetadata(val message: Message) {
         return nested as LiteralData
     }
 
-    // ################################################################################################################
-    // ###                                          Message Structure
-    //                ###
-    // ################################################################################################################
+    // ##########################################################################################################
+    //                                          Message Structure
+    // ##########################################################################################################
 
     interface Packet
 
@@ -415,8 +456,8 @@ class MessageMetadata(val message: Message) {
      * Outermost OpenPGP Message structure.
      *
      * @param cleartextSigned whether the message is using the Cleartext Signature Framework
-     * @see <a href="https://www.rfc-editor.org/rfc/rfc4880#section-7">RFC4880 §7. Cleartext
-     *   Signature Framework</a>
+     * @see
+     *   [RFC4880 §7. Cleartext Signature Framework](https://www.rfc-editor.org/rfc/rfc4880#section-7)
      */
     class Message(var cleartextSigned: Boolean = false) : Layer(0) {
         fun setCleartextSigned() = apply { cleartextSigned = true }
@@ -455,18 +496,24 @@ class MessageMetadata(val message: Message) {
     /**
      * Encrypted Data.
      *
-     * @param algorithm symmetric key algorithm used to encrypt the packet.
+     * @param mechanism mechanism used to encrypt the packet.
      * @param depth nesting depth at which this packet was encountered.
      */
-    class EncryptedData(val algorithm: SymmetricKeyAlgorithm, depth: Int) : Layer(depth), Nested {
+    class EncryptedData(val mechanism: MessageEncryptionMechanism, depth: Int) :
+        Layer(depth), Nested {
 
         /** [SessionKey] used to decrypt the packet. */
         var sessionKey: SessionKey? = null
 
         /** List of all recipient key ids to which the packet was encrypted for. */
-        val recipients: List<Long> = mutableListOf()
+        val recipients: List<KeyIdentifier> = mutableListOf()
 
-        fun addRecipients(keyIds: List<Long>) = apply { (recipients as MutableList).addAll(keyIds) }
+        val algorithm: SymmetricKeyAlgorithm =
+            SymmetricKeyAlgorithm.requireFromId(mechanism.symmetricKeyAlgorithm)
+
+        fun addRecipients(keyIds: List<KeyIdentifier>) = apply {
+            (recipients as MutableList).addAll(keyIds)
+        }
 
         /**
          * Identifier of the subkey that was used to decrypt the packet (in case of a public key

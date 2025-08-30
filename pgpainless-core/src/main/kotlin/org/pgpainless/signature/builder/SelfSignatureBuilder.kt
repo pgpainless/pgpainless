@@ -6,9 +6,10 @@ package org.pgpainless.signature.builder
 
 import java.util.function.Predicate
 import org.bouncycastle.openpgp.PGPException
-import org.bouncycastle.openpgp.PGPSecretKey
 import org.bouncycastle.openpgp.PGPSignature
 import org.bouncycastle.openpgp.PGPUserAttributeSubpacketVector
+import org.bouncycastle.openpgp.api.OpenPGPKey
+import org.pgpainless.PGPainless
 import org.pgpainless.algorithm.SignatureType
 import org.pgpainless.key.protection.SecretKeyRingProtector
 import org.pgpainless.signature.subpackets.SelfSignatureSubpackets
@@ -31,23 +32,26 @@ class SelfSignatureBuilder : AbstractSignatureBuilder<SelfSignatureBuilder> {
 
     @Throws(PGPException::class)
     constructor(
-        signingKey: PGPSecretKey,
-        protector: SecretKeyRingProtector
-    ) : super(SignatureType.GENERIC_CERTIFICATION, signingKey, protector)
+        signingKey: OpenPGPKey.OpenPGPSecretKey,
+        protector: SecretKeyRingProtector,
+        api: PGPainless
+    ) : super(SignatureType.GENERIC_CERTIFICATION, signingKey, protector, api)
 
     @Throws(PGPException::class)
     constructor(
         signatureType: SignatureType,
-        signingKey: PGPSecretKey,
-        protector: SecretKeyRingProtector
-    ) : super(signatureType, signingKey, protector)
+        signingKey: OpenPGPKey.OpenPGPSecretKey,
+        protector: SecretKeyRingProtector,
+        api: PGPainless
+    ) : super(signatureType, signingKey, protector, api)
 
     @Throws(PGPException::class)
     constructor(
-        primaryKey: PGPSecretKey,
+        primaryKey: OpenPGPKey.OpenPGPSecretKey,
         primaryKeyProtector: SecretKeyRingProtector,
-        oldCertification: PGPSignature
-    ) : super(primaryKey, primaryKeyProtector, oldCertification)
+        oldCertification: PGPSignature,
+        api: PGPainless
+    ) : super(primaryKey, primaryKeyProtector, oldCertification, api)
 
     val hashedSubpackets: SelfSignatureSubpackets = _hashedSubpackets
     val unhashedSubpackets: SelfSignatureSubpackets = _unhashedSubpackets
@@ -61,9 +65,11 @@ class SelfSignatureBuilder : AbstractSignatureBuilder<SelfSignatureBuilder> {
 
     @Throws(PGPException::class)
     fun build(userId: CharSequence): PGPSignature =
-        buildAndInitSignatureGenerator().generateCertification(userId.toString(), publicSigningKey)
+        buildAndInitSignatureGenerator()
+            .generateCertification(userId.toString(), signingKey.publicKey.pgpPublicKey)
 
     @Throws(PGPException::class)
     fun build(userAttributes: PGPUserAttributeSubpacketVector): PGPSignature =
-        buildAndInitSignatureGenerator().generateCertification(userAttributes, publicSigningKey)
+        buildAndInitSignatureGenerator()
+            .generateCertification(userAttributes, signingKey.publicKey.pgpPublicKey)
 }

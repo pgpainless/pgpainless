@@ -15,8 +15,9 @@ import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 
 import org.bouncycastle.openpgp.PGPException;
-import org.bouncycastle.openpgp.PGPPublicKeyRing;
-import org.bouncycastle.openpgp.PGPSecretKeyRing;
+import org.bouncycastle.openpgp.api.OpenPGPCertificate;
+import org.bouncycastle.openpgp.api.OpenPGPKey;
+import org.bouncycastle.openpgp.api.OpenPGPKeyReader;
 import org.bouncycastle.util.io.Streams;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
@@ -65,7 +66,7 @@ public class DecryptOrVerify {
     /**
      * Protector to unlock the secret key.
      * Since the key is not protected, it is enough to use an unprotectedKeys implementation.
-     *
+     * <p>
      * For more info on how to use the {@link SecretKeyRingProtector}, see {@link UnlockSecretKeys}.
      */
     private static final SecretKeyRingProtector keyProtector = SecretKeyRingProtector.unprotectedKeys();
@@ -134,33 +135,31 @@ public class DecryptOrVerify {
             "=9PiO\n" +
             "-----END PGP MESSAGE-----";
 
-    private static PGPSecretKeyRing secretKey;
-    private static PGPPublicKeyRing certificate;
+    private static OpenPGPKey secretKey;
+    private static OpenPGPCertificate certificate;
 
     @BeforeAll
     public static void prepare() throws IOException {
+        OpenPGPKeyReader reader = PGPainless.getInstance().readKey();
         // read the secret key
-        secretKey = PGPainless.readKeyRing().secretKeyRing(KEY);
+        secretKey = reader.parseKey(KEY);
         // certificate is the public part of the key
-        certificate = PGPainless.extractCertificate(secretKey);
+        certificate = secretKey.toCertificate();
     }
 
     /**
      * This example demonstrates how to decrypt an encrypted message using a secret key.
-     *
-     * @throws PGPException
-     * @throws IOException
      */
     @Test
     public void decryptMessage() throws PGPException, IOException {
-        ConsumerOptions consumerOptions = new ConsumerOptions()
+        ConsumerOptions consumerOptions = ConsumerOptions.get()
                 .addDecryptionKey(secretKey, keyProtector); // add the decryption key ring
 
         ByteArrayOutputStream plaintextOut = new ByteArrayOutputStream();
         ByteArrayInputStream ciphertextIn = new ByteArrayInputStream(ENCRYPTED.getBytes(StandardCharsets.UTF_8));
 
         // The decryption stream is an input stream from which we read the decrypted data
-        DecryptionStream decryptionStream = PGPainless.decryptAndOrVerify()
+        DecryptionStream decryptionStream = PGPainless.getInstance().processMessage()
                 .onInputStream(ciphertextIn)
                 .withOptions(consumerOptions);
 
@@ -180,20 +179,17 @@ public class DecryptOrVerify {
     /**
      * In this example, an encrypted and signed message is processed.
      * The message gets decrypted using the secret key and the signatures are verified using the certificate.
-     *
-     * @throws PGPException
-     * @throws IOException
      */
     @Test
     public void decryptMessageAndVerifySignatures() throws PGPException, IOException {
-        ConsumerOptions consumerOptions = new ConsumerOptions()
+        ConsumerOptions consumerOptions = ConsumerOptions.get()
                 .addDecryptionKey(secretKey, keyProtector) // provide the secret key of the recipient for decryption
                 .addVerificationCert(certificate); // provide the signers public key for signature verification
 
         ByteArrayOutputStream plaintextOut = new ByteArrayOutputStream();
         ByteArrayInputStream ciphertextIn = new ByteArrayInputStream(ENCRYPTED_AND_SIGNED.getBytes(StandardCharsets.UTF_8));
 
-        DecryptionStream decryptionStream = PGPainless.decryptAndOrVerify()
+        DecryptionStream decryptionStream = PGPainless.getInstance().processMessage()
                 .onInputStream(ciphertextIn)
                 .withOptions(consumerOptions);
 
@@ -213,19 +209,17 @@ public class DecryptOrVerify {
     /**
      * In this example, signed messages are verified.
      * The example shows that verification of inband signed, and cleartext signed messages works the same.
-     * @throws PGPException
-     * @throws IOException
      */
     @Test
     public void verifySignatures() throws PGPException, IOException {
-        ConsumerOptions options = new ConsumerOptions()
+        ConsumerOptions options = ConsumerOptions.get()
                 .addVerificationCert(certificate); // provide the signers certificate for verification of signatures
 
         for (String signed : new String[] {INBAND_SIGNED, CLEARTEXT_SIGNED}) {
             ByteArrayOutputStream out = new ByteArrayOutputStream();
             ByteArrayInputStream in = new ByteArrayInputStream(signed.getBytes(StandardCharsets.UTF_8));
 
-            DecryptionStream verificationStream = PGPainless.decryptAndOrVerify()
+            DecryptionStream verificationStream = PGPainless.getInstance().processMessage()
                     .onInputStream(in)
                     .withOptions(options);
 
@@ -243,11 +237,10 @@ public class DecryptOrVerify {
 
     /**
      * This example shows how to create - and verify - cleartext signed messages.
-     * @throws PGPException
-     * @throws IOException
      */
     @Test
     public void createAndVerifyCleartextSignedMessage() throws PGPException, IOException {
+        PGPainless api = PGPainless.getInstance();
         // In this example we sign and verify a number of different messages one after the other
         for (String msg : new String[] {"Hello World!", "- Hello - World -", "Hello, World!\n", "Hello\nWorld!"}) {
             // we need to read the plaintext message from somewhere
@@ -255,14 +248,14 @@ public class DecryptOrVerify {
             // and write the signed message to an output stream
             ByteArrayOutputStream out = new ByteArrayOutputStream();
 
-            SigningOptions signingOptions = SigningOptions.get();
+            SigningOptions signingOptions = SigningOptions.get(api);
             // for cleartext signed messages, we need to add a detached signature...
             signingOptions.addDetachedSignature(keyProtector, secretKey, DocumentSignatureType.CANONICAL_TEXT_DOCUMENT);
             ProducerOptions producerOptions = ProducerOptions.sign(signingOptions)
                     .setCleartextSigned(); // and declare that the message will be cleartext signed
 
             // Create the signing stream
-            EncryptionStream signingStream = PGPainless.encryptAndOrSign()
+            EncryptionStream signingStream = api.generateMessage()
                     .onOutputStream(out) // on the output stream
                     .withOptions(producerOptions); // with the options
 
@@ -277,9 +270,9 @@ public class DecryptOrVerify {
             ByteArrayInputStream signedIn = new ByteArrayInputStream(signedMessage);
 
             // and pass it to the decryption stream
-            DecryptionStream verificationStream = PGPainless.decryptAndOrVerify()
+            DecryptionStream verificationStream = api.processMessage()
                     .onInputStream(signedIn)
-                    .withOptions(new ConsumerOptions().addVerificationCert(certificate));
+                    .withOptions(ConsumerOptions.get(api).addVerificationCert(certificate));
 
             // plain will receive the plaintext message
             ByteArrayOutputStream plain = new ByteArrayOutputStream();

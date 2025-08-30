@@ -9,6 +9,8 @@ import static org.junit.jupiter.api.Assertions.assertArrayEquals;
 import java.io.IOException;
 
 import org.junit.jupiter.api.Test;
+import org.pgpainless.PGPainless;
+import org.pgpainless.policy.Policy;
 import sop.ByteArrayAndResult;
 import sop.DecryptionResult;
 import sop.EncryptionResult;
@@ -275,6 +277,17 @@ public class CarolKeySignEncryptRoundtripTest {
 
     @Test
     public void regressionTest() throws IOException {
+        // PGPainless default API is strict
+        PGPainless strictAPI = PGPainless.getInstance();
+        PGPainless relaxedAPI = new PGPainless(
+                strictAPI.getImplementation(),
+                // BSI policy allows DSA
+                strictAPI.getAlgorithmPolicy().copy()
+                        .withPublicKeyAlgorithmPolicy(Policy.PublicKeyAlgorithmPolicy.bsi2021PublicKeyAlgorithmPolicy())
+                        .build()
+        );
+        PGPainless.setInstance(relaxedAPI);
+
         SOPImpl sop = new SOPImpl();
         byte[] msg = "Hello, World!\n".getBytes();
         ReadyWithResult<EncryptionResult> encryption = sop.encrypt()
@@ -294,5 +307,7 @@ public class CarolKeySignEncryptRoundtripTest {
         VerificationListAssert.assertThatVerificationList(decryption.getResult().getVerifications())
                 .hasSingleItem()
                 .issuedBy("71FFDA004409E5DDB0C3E8F19BA789DC76D6849A", "71FFDA004409E5DDB0C3E8F19BA789DC76D6849A");
+
+        PGPainless.setInstance(strictAPI);
     }
 }

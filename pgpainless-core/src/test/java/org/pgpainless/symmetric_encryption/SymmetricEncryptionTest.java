@@ -63,9 +63,9 @@ public class SymmetricEncryptionTest {
         byte[] ciphertext = ciphertextOut.toByteArray();
 
         // Test symmetric decryption
-        DecryptionStream decryptor = PGPainless.decryptAndOrVerify()
+        DecryptionStream decryptor = PGPainless.getInstance().processMessage()
                 .onInputStream(new ByteArrayInputStream(ciphertext))
-                .withOptions(new ConsumerOptions()
+                .withOptions(ConsumerOptions.get()
                         .addMessagePassphrase(encryptionPassphrase));
 
         ByteArrayOutputStream decrypted = new ByteArrayOutputStream();
@@ -80,9 +80,9 @@ public class SymmetricEncryptionTest {
         SecretKeyRingProtector protector = new PasswordBasedSecretKeyRingProtector(
                 KeyRingProtectionSettings.secureDefaultSettings(),
                 new SolitaryPassphraseProvider(Passphrase.fromPassword(TestKeys.CRYPTIE_PASSWORD)));
-        decryptor = PGPainless.decryptAndOrVerify()
+        decryptor = PGPainless.getInstance().processMessage()
                 .onInputStream(new ByteArrayInputStream(ciphertext))
-                .withOptions(new ConsumerOptions()
+                .withOptions(ConsumerOptions.get()
                         .addDecryptionKeys(decryptionKeys, protector));
 
         decrypted = new ByteArrayOutputStream();
@@ -100,7 +100,7 @@ public class SymmetricEncryptionTest {
         new Random().nextBytes(bytes);
 
         ByteArrayOutputStream ciphertextOut = new ByteArrayOutputStream();
-        EncryptionStream encryptor = PGPainless.encryptAndOrSign().onOutputStream(ciphertextOut)
+        EncryptionStream encryptor = PGPainless.getInstance().generateMessage().onOutputStream(ciphertextOut)
                 .withOptions(ProducerOptions.encrypt(
                         EncryptionOptions.encryptCommunications()
                                 .addMessagePassphrase(Passphrase.fromPassword("mellon"))));
@@ -108,9 +108,9 @@ public class SymmetricEncryptionTest {
         Streams.pipeAll(new ByteArrayInputStream(bytes), encryptor);
         encryptor.close();
 
-        assertThrows(MissingDecryptionMethodException.class, () -> PGPainless.decryptAndOrVerify()
+        assertThrows(MissingDecryptionMethodException.class, () -> PGPainless.getInstance().processMessage()
                 .onInputStream(new ByteArrayInputStream(ciphertextOut.toByteArray()))
-                .withOptions(new ConsumerOptions()
+                .withOptions(ConsumerOptions.get()
                         .setMissingKeyPassphraseStrategy(MissingKeyPassphraseStrategy.THROW_EXCEPTION)
                         .addMessagePassphrase(Passphrase.fromPassword("meldir"))));
     }

@@ -5,8 +5,13 @@
 package org.pgpainless.key.info
 
 import java.util.*
-import openpgp.openPgpKeyId
+import kotlin.NoSuchElementException
+import org.bouncycastle.bcpg.KeyIdentifier
 import org.bouncycastle.openpgp.*
+import org.bouncycastle.openpgp.api.OpenPGPCertificate
+import org.bouncycastle.openpgp.api.OpenPGPCertificate.OpenPGPComponentKey
+import org.bouncycastle.openpgp.api.OpenPGPKey
+import org.bouncycastle.openpgp.api.OpenPGPKey.OpenPGPSecretKey
 import org.pgpainless.PGPainless
 import org.pgpainless.algorithm.*
 import org.pgpainless.bouncycastle.extensions.*
@@ -14,44 +19,65 @@ import org.pgpainless.exception.KeyException.UnboundUserIdException
 import org.pgpainless.key.OpenPgpFingerprint
 import org.pgpainless.key.SubkeyIdentifier
 import org.pgpainless.key.util.KeyRingUtils
-import org.pgpainless.policy.Policy
-import org.pgpainless.signature.consumer.SignaturePicker
 import org.pgpainless.signature.subpackets.SignatureSubpacketsUtil
 import org.pgpainless.signature.subpackets.SignatureSubpacketsUtil.Companion.getKeyExpirationTimeAsDate
 import org.pgpainless.util.DateUtil
 import org.slf4j.LoggerFactory
 
 class KeyRingInfo(
-    val keys: PGPKeyRing,
-    val policy: Policy = PGPainless.getPolicy(),
-    val referenceDate: Date = Date()
+    val keys: OpenPGPCertificate,
+    private val api: PGPainless = PGPainless.getInstance(),
+    private val referenceDate: Date = Date()
 ) {
+
+    constructor(
+        keys: PGPKeyRing,
+        api: PGPainless = PGPainless.getInstance(),
+        referenceDate: Date = Date()
+    ) : this(
+        if (keys is PGPSecretKeyRing) OpenPGPKey(keys, api.implementation)
+        else OpenPGPCertificate(keys, api.implementation),
+        api,
+        referenceDate)
 
     @JvmOverloads
     constructor(
         keys: PGPKeyRing,
         referenceDate: Date = Date()
-    ) : this(keys, PGPainless.getPolicy(), referenceDate)
+    ) : this(keys, PGPainless.getInstance(), referenceDate)
 
-    private val signatures: Signatures = Signatures(keys, referenceDate, policy)
+    /** Primary [OpenPGPCertificate.OpenPGPPrimaryKey]. */
+    val primaryKey: OpenPGPCertificate.OpenPGPPrimaryKey = keys.primaryKey
 
-    /** Primary [PGPPublicKey]. */
-    val publicKey: PGPPublicKey = KeyRingUtils.requirePrimaryPublicKeyFrom(keys)
+    /** Primary [OpenPGPCertificate.OpenPGPPrimaryKey]. */
+    @Deprecated("Use primaryKey instead.", replaceWith = ReplaceWith("primaryKey"))
+    val publicKey: OpenPGPCertificate.OpenPGPPrimaryKey = primaryKey
 
     /** Primary key ID. */
-    val keyId: Long = publicKey.keyID
+    val keyIdentifier: KeyIdentifier = primaryKey.keyIdentifier
+
+    @Deprecated(
+        "Use of raw key-ids is deprecated in favor of key-identifiers",
+        replaceWith = ReplaceWith("keyIdentifier"))
+    val keyId: Long = keyIdentifier.keyId
 
     /** Primary key fingerprint. */
-    val fingerprint: OpenPgpFingerprint = OpenPgpFingerprint.of(keys)
+    val fingerprint: OpenPgpFingerprint = OpenPgpFingerprint.of(primaryKey.pgpPublicKey)
 
     /** All User-IDs (valid, expired, revoked). */
-    val userIds: List<String> = KeyRingUtils.getUserIdsIgnoringInvalidUTF8(publicKey)
+    val userIds: List<String> = KeyRingUtils.getUserIdsIgnoringInvalidUTF8(primaryKey.pgpPublicKey)
 
     /** Primary User-ID. */
-    val primaryUserId = findPrimaryUserId()
+    val primaryUserId: String? = keys.getPrimaryUserId(referenceDate)?.userId
 
     /** Revocation State. */
-    val revocationState = signatures.primaryKeyRevocation.toRevocationState()
+    val revocationState: RevocationState =
+        primaryKey.getLatestSelfSignature(referenceDate)?.let {
+            if (!it.isRevocation) RevocationState.notRevoked()
+            else if (it.isHardRevocation) RevocationState.hardRevoked()
+            else RevocationState.softRevoked(it.creationTime)
+        }
+            ?: RevocationState.notRevoked()
     /**
      * Return the date on which the primary key was revoked, or null if it has not yet been revoked.
      *
@@ -61,47 +87,38 @@ class KeyRingInfo(
         if (revocationState.isSoftRevocation()) revocationState.date else null
 
     /**
-     * Primary [PGPSecretKey] of this key ring or null if the key ring is not a [PGPSecretKeyRing].
+     * Primary [OpenPGPSecretKey] of this key ring or null if the key ring is not a [OpenPGPKey].
      */
-    val secretKey: PGPSecretKey? =
-        when (keys) {
-            is PGPSecretKeyRing -> keys.secretKey!!
-            else -> null
-        }
+    val secretKey: OpenPGPSecretKey? =
+        if (keys.isSecretKey) {
+            (keys as OpenPGPKey).primarySecretKey
+        } else null
 
     /** OpenPGP key version. */
-    val version: Int = publicKey.version
+    val version: OpenPGPKeyVersion = keys.getKeyVersion()
 
     /**
-     * Return all [PGPPublicKeys][PGPPublicKey] of this key ring. The first key in the list being
-     * the primary key. Note that the list is unmodifiable.
+     * Return all [public component keys][OpenPGPComponentKey] of this key ring. The first key in
+     * the list being the primary key. Note that the list is unmodifiable.
      *
      * @return list of public keys
      */
-    val publicKeys: List<PGPPublicKey> = keys.publicKeys.asSequence().toList()
+    val publicKeys: List<OpenPGPComponentKey> = keys.keys
 
-    /** All secret keys. If the key ring is a [PGPPublicKeyRing], then return an empty list. */
-    val secretKeys: List<PGPSecretKey> =
-        when (keys) {
-            is PGPSecretKeyRing -> keys.secretKeys.asSequence().toList()
-            else -> listOf()
-        }
+    /** All secret keys. If the key ring is not an [OpenPGPKey], then return an empty list. */
+    val secretKeys: List<OpenPGPSecretKey> =
+        if (keys.isSecretKey) {
+            (keys as OpenPGPKey).secretKeys.values.toList()
+        } else listOf()
 
-    /** List of valid public subkeys. */
-    val validSubkeys: List<PGPPublicKey> =
-        keys.publicKeys.asSequence().filter { isKeyValidlyBound(it.keyID) }.toList()
+    /** List of valid public component keys. */
+    val validSubkeys: List<OpenPGPComponentKey> = keys.getValidKeys(referenceDate)
 
     /** List of valid user-IDs. */
-    val validUserIds: List<String> = userIds.filter { isUserIdBound(it) }
+    val validUserIds: List<String> = keys.getValidUserIds(referenceDate).map { it.userId }
 
     /** List of valid and expired user-IDs. */
-    val validAndExpiredUserIds: List<String> =
-        userIds.filter {
-            val certification = signatures.userIdCertifications[it] ?: return@filter false
-            val revocation = signatures.userIdRevocations[it] ?: return@filter true
-            return@filter !revocation.isHardRevocation &&
-                certification.creationTime > revocation.creationTime
-        }
+    val validAndExpiredUserIds: List<String> = userIds
 
     /** List of email addresses that can be extracted from the user-IDs. */
     val emailAddresses: List<String> =
@@ -116,44 +133,49 @@ class KeyRingInfo(
         }
 
     /** Newest direct-key self-signature on the primary key. */
-    val latestDirectKeySelfSignature: PGPSignature? = signatures.primaryKeySelfSignature
+    val latestDirectKeySelfSignature: PGPSignature? =
+        primaryKey.getLatestDirectKeySelfSignature(referenceDate)?.signature
 
     /** Newest primary-key revocation self-signature. */
-    val revocationSelfSignature: PGPSignature? = signatures.primaryKeyRevocation
+    val revocationSelfSignature: PGPSignature? =
+        primaryKey.getLatestKeyRevocationSelfSignature(referenceDate)?.signature
 
     /** Public-key encryption-algorithm of the primary key. */
-    val algorithm: PublicKeyAlgorithm = PublicKeyAlgorithm.requireFromId(publicKey.algorithm)
+    val algorithm: PublicKeyAlgorithm =
+        PublicKeyAlgorithm.requireFromId(primaryKey.pgpPublicKey.algorithm)
 
     /** Creation date of the primary key. */
-    val creationDate: Date = publicKey.creationTime!!
+    val creationDate: Date = primaryKey.creationTime!!
 
     /** Latest date at which the key was modified (either by adding a subkey or self-signature). */
-    val lastModified: Date = getMostRecentSignature()?.creationTime ?: getLatestKeyCreationDate()
+    val lastModified: Date = keys.lastModificationDate
 
-    /** True, if the underlying keyring is a [PGPSecretKeyRing]. */
-    val isSecretKey: Boolean = keys is PGPSecretKeyRing
+    /** True, if the underlying key is a [OpenPGPKey]. */
+    val isSecretKey: Boolean = keys.isSecretKey
 
     /** True, if there are no encrypted secret keys. */
     val isFullyDecrypted: Boolean =
-        !isSecretKey || secretKeys.all { it.hasDummyS2K() || it.isDecrypted() }
+        !isSecretKey ||
+            secretKeys.all { it.pgpSecretKey.hasDummyS2K() || it.pgpSecretKey.isDecrypted() }
 
     /** True, if there are only encrypted secret keys. */
     val isFullyEncrypted: Boolean =
-        isSecretKey && secretKeys.none { !it.hasDummyS2K() && it.isDecrypted() }
+        isSecretKey &&
+            secretKeys.none { !it.pgpSecretKey.hasDummyS2K() && it.pgpSecretKey.isDecrypted() }
 
     /** List of public keys, whose secret key counterparts can be used to decrypt messages. */
-    val decryptionSubkeys: List<PGPPublicKey> =
-        keys.publicKeys
+    val decryptionSubkeys: List<OpenPGPComponentKey> =
+        keys.keys
             .asSequence()
             .filter {
-                if (it.keyID != keyId) {
-                    if (signatures.subkeyBindings[it.keyID] == null) {
-                        LOGGER.debug("Subkey ${it.keyID.openPgpKeyId()} has no binding signature.")
+                if (!it.keyIdentifier.matchesExplicit(keyIdentifier)) {
+                    if (it.getLatestSelfSignature(referenceDate) == null) {
+                        LOGGER.debug("Subkey ${it.keyIdentifier} has no binding signature.")
                         return@filter false
                     }
                 }
-                if (!it.isEncryptionKey) {
-                    LOGGER.debug("(Sub-?)Key ${it.keyID.openPgpKeyId()} is not encryption-capable.")
+                if (!it.pgpPublicKey.isEncryptionKey) {
+                    LOGGER.debug("(Sub-?)Key ${it.keyIdentifier} is not encryption-capable.")
                     return@filter false
                 }
                 return@filter true
@@ -164,12 +186,16 @@ class KeyRingInfo(
     val primaryKeyExpirationDate: Date?
         get() {
             val directKeyExpirationDate: Date? =
-                latestDirectKeySelfSignature?.let { getKeyExpirationTimeAsDate(it, publicKey) }
+                latestDirectKeySelfSignature?.let {
+                    getKeyExpirationTimeAsDate(it, primaryKey.pgpPublicKey)
+                }
             val possiblyExpiredPrimaryUserId = getPossiblyExpiredPrimaryUserId()
             val primaryUserIdCertification =
                 possiblyExpiredPrimaryUserId?.let { getLatestUserIdCertification(it) }
             val userIdExpirationDate: Date? =
-                primaryUserIdCertification?.let { getKeyExpirationTimeAsDate(it, publicKey) }
+                primaryUserIdCertification?.let {
+                    getKeyExpirationTimeAsDate(it, primaryKey.pgpPublicKey)
+                }
 
             if (latestDirectKeySelfSignature == null && primaryUserIdCertification == null) {
                 throw NoSuchElementException(
@@ -186,11 +212,11 @@ class KeyRingInfo(
         }
 
     /** List of all subkeys that can be used to sign a message. */
-    val signingSubkeys: List<PGPPublicKey> =
-        validSubkeys.filter { getKeyFlagsOf(it.keyID).contains(KeyFlag.SIGN_DATA) }
+    val signingSubkeys: List<OpenPGPComponentKey> = keys.getSigningKeys(referenceDate)
 
     /** Whether the key is usable for encryption. */
-    val isUsableForEncryption: Boolean = isUsableForEncryption(EncryptionPurpose.ANY)
+    val isUsableForEncryption: Boolean =
+        keys.getComponentKeysWithFlag(referenceDate, EncryptionPurpose.ANY.code).isNotEmpty()
 
     /**
      * Whether the key is capable of signing messages. This field is also true, if the key contains
@@ -199,31 +225,45 @@ class KeyRingInfo(
      *
      * To check for keys that are actually usable to sign messages, use [isUsableForSigning].
      */
-    val isSigningCapable: Boolean = isKeyValidlyBound(keyId) && signingSubkeys.isNotEmpty()
+    val isSigningCapable: Boolean = isKeyValidlyBound(keyIdentifier) && signingSubkeys.isNotEmpty()
 
     /** Whether the key is actually usable to sign messages. */
     val isUsableForSigning: Boolean =
-        isSigningCapable && signingSubkeys.any { isSecretKeyAvailable(it.keyID) }
+        isSigningCapable && signingSubkeys.any { isSecretKeyAvailable(it.keyIdentifier) }
+
+    /**
+     * True, if the [OpenPGPCertificate] can be used to certify other
+     * [OpenPGPCertificates][OpenPGPCertificate].
+     */
+    val isUsableForThirdPartyCertification: Boolean =
+        isKeyValidlyBound(keyIdentifier) &&
+            getKeyFlagsOf(keyIdentifier).contains(KeyFlag.CERTIFY_OTHER)
 
     /** [HashAlgorithm] preferences of the primary user-ID or if absent, of the primary key. */
-    val preferredHashAlgorithms: Set<HashAlgorithm>
+    val preferredHashAlgorithms: Set<HashAlgorithm>?
         get() =
             primaryUserId?.let { getPreferredHashAlgorithms(it) }
-                ?: getPreferredHashAlgorithms(keyId)
+                ?: getPreferredHashAlgorithms(keyIdentifier)
 
     /**
      * [SymmetricKeyAlgorithm] preferences of the primary user-ID or if absent of the primary key.
      */
-    val preferredSymmetricKeyAlgorithms: Set<SymmetricKeyAlgorithm>
+    val preferredSymmetricKeyAlgorithms: Set<SymmetricKeyAlgorithm>?
         get() =
             primaryUserId?.let { getPreferredSymmetricKeyAlgorithms(it) }
-                ?: getPreferredSymmetricKeyAlgorithms(keyId)
+                ?: getPreferredSymmetricKeyAlgorithms(keyIdentifier)
 
     /** [CompressionAlgorithm] preferences of the primary user-ID or if absent, the primary key. */
-    val preferredCompressionAlgorithms: Set<CompressionAlgorithm>
+    val preferredCompressionAlgorithms: Set<CompressionAlgorithm>?
         get() =
             primaryUserId?.let { getPreferredCompressionAlgorithms(it) }
-                ?: getPreferredCompressionAlgorithms(keyId)
+                ?: getPreferredCompressionAlgorithms(keyIdentifier)
+
+    /** [AEADCipherMode] preferences of the primary user-id, or if absent, the primary key. */
+    val preferredAEADCipherSuites: Set<AEADCipherMode>?
+        get() =
+            primaryUserId?.let { getPreferredAEADCipherSuites(it) }
+                ?: getPreferredAEADCipherSuites(keyIdentifier)
 
     /**
      * Return the expiration date of the subkey with the provided fingerprint.
@@ -232,7 +272,24 @@ class KeyRingInfo(
      * @return expiration date or null
      */
     fun getSubkeyExpirationDate(fingerprint: OpenPgpFingerprint): Date? {
-        return getSubkeyExpirationDate(fingerprint.keyId)
+        return getSubkeyExpirationDate(fingerprint.keyIdentifier)
+    }
+
+    /**
+     * Return the expiration date of the [OpenPGPComponentKey] with the provided [keyIdentifier].
+     *
+     * @param keyIdentifier subkey KeyIdentifier
+     * @return expiration date
+     */
+    fun getSubkeyExpirationDate(keyIdentifier: KeyIdentifier): Date? {
+        if (primaryKey.keyIdentifier.matchesExplicit(keyIdentifier)) return primaryKeyExpirationDate
+        val subkey =
+            getPublicKey(keyIdentifier)
+                ?: throw NoSuchElementException("No subkey with key-ID ${keyIdentifier} found.")
+        val bindingSig =
+            getCurrentSubkeyBindingSignature(keyIdentifier)
+                ?: throw AssertionError("Subkey has no valid binding signature.")
+        return bindingSig.getKeyExpirationDate(subkey.creationTime)
     }
 
     /**
@@ -241,16 +298,9 @@ class KeyRingInfo(
      * @param keyId subkey keyId
      * @return expiration date
      */
+    @Deprecated("Pass in a KeyIdentifer instead.")
     fun getSubkeyExpirationDate(keyId: Long): Date? {
-        if (publicKey.keyID == keyId) return primaryKeyExpirationDate
-        val subkey =
-            getPublicKey(keyId)
-                ?: throw NoSuchElementException(
-                    "No subkey with key-ID ${keyId.openPgpKeyId()} found.")
-        val bindingSig =
-            getCurrentSubkeyBindingSignature(keyId)
-                ?: throw AssertionError("Subkey has no valid binding signature.")
-        return bindingSig.getKeyExpirationDate(subkey.creationTime)
+        return getSubkeyExpirationDate(KeyIdentifier(keyId))
     }
 
     /**
@@ -265,7 +315,7 @@ class KeyRingInfo(
         }
 
         val primaryKeyExpiration = primaryKeyExpirationDate
-        val keysWithFlag: List<PGPPublicKey> = getKeysWithKeyFlag(use)
+        val keysWithFlag: List<OpenPGPComponentKey> = getKeysWithKeyFlag(use)
         if (keysWithFlag.isEmpty())
             throw NoSuchElementException("No key with the required key flag found.")
 
@@ -273,7 +323,9 @@ class KeyRingInfo(
         val latestSubkeyExpiration =
             keysWithFlag
                 .map { key ->
-                    getSubkeyExpirationDate(key.keyID).also { if (it == null) nonExpiring = true }
+                    getSubkeyExpirationDate(key.keyIdentifier).also {
+                        if (it == null) nonExpiring = true
+                    }
                 }
                 .filterNotNull()
                 .maxByOrNull { it }
@@ -290,7 +342,11 @@ class KeyRingInfo(
      * @return true, if the given user-ID is hard-revoked.
      */
     fun isHardRevoked(userId: CharSequence): Boolean {
-        return signatures.userIdRevocations[userId]?.isHardRevocation ?: false
+        return keys
+            .getUserId(userId.toString())
+            ?.getLatestSelfSignature(referenceDate)
+            ?.isHardRevocation
+            ?: false
     }
 
     /**
@@ -299,8 +355,8 @@ class KeyRingInfo(
      * @param flag flag
      * @return keys with flag
      */
-    fun getKeysWithKeyFlag(flag: KeyFlag): List<PGPPublicKey> =
-        publicKeys.filter { getKeyFlagsOf(it.keyID).contains(flag) }
+    fun getKeysWithKeyFlag(flag: KeyFlag): List<OpenPGPComponentKey> =
+        publicKeys.filter { getKeyFlagsOf(it.keyIdentifier).contains(flag) }
 
     /**
      * Return a list of all subkeys which can be used to encrypt a message for the given user-ID.
@@ -310,10 +366,10 @@ class KeyRingInfo(
     fun getEncryptionSubkeys(
         userId: CharSequence?,
         purpose: EncryptionPurpose
-    ): List<PGPPublicKey> {
+    ): List<OpenPGPComponentKey> {
         if (userId != null && !isUserIdValid(userId)) {
             throw UnboundUserIdException(
-                OpenPgpFingerprint.of(keys),
+                OpenPgpFingerprint.of(primaryKey.pgpPublicKey),
                 userId.toString(),
                 getLatestUserIdCertification(userId),
                 getUserIdRevocation(userId))
@@ -326,7 +382,7 @@ class KeyRingInfo(
      *
      * @return subkeys which can be used for encryption
      */
-    fun getEncryptionSubkeys(purpose: EncryptionPurpose): List<PGPPublicKey> {
+    fun getEncryptionSubkeys(purpose: EncryptionPurpose): List<OpenPGPComponentKey> {
         primaryKeyExpirationDate?.let {
             if (it < referenceDate) {
                 LOGGER.debug(
@@ -335,29 +391,29 @@ class KeyRingInfo(
             }
         }
 
-        return keys.publicKeys
+        return keys.keys
             .asSequence()
             .filter {
-                if (!isKeyValidlyBound(it.keyID)) {
-                    LOGGER.debug("(Sub?)-Key ${it.keyID.openPgpKeyId()} is not validly bound.")
+                if (!isKeyValidlyBound(it.keyIdentifier)) {
+                    LOGGER.debug("(Sub?)-Key ${it.keyIdentifier} is not validly bound.")
                     return@filter false
                 }
 
-                getSubkeyExpirationDate(it.keyID)?.let { exp ->
+                getSubkeyExpirationDate(it.keyIdentifier)?.let { exp ->
                     if (exp < referenceDate) {
                         LOGGER.debug(
-                            "(Sub?)-Key ${it.keyID.openPgpKeyId()} is expired on ${DateUtil.formatUTCDate(exp)}.")
+                            "(Sub?)-Key ${it.keyIdentifier} is expired on ${DateUtil.formatUTCDate(exp)}.")
                         return@filter false
                     }
                 }
 
-                if (!it.isEncryptionKey) {
+                if (!it.pgpPublicKey.isEncryptionKey) {
                     LOGGER.debug(
-                        "(Sub?)-Key ${it.keyID.openPgpKeyId()} algorithm is not capable of encryption.")
+                        "(Sub?)-Key ${it.keyIdentifier} algorithm is not capable of encryption.")
                     return@filter false
                 }
 
-                val keyFlags = getKeyFlagsOf(it.keyID)
+                val keyFlags = getKeyFlagsOf(it.keyIdentifier)
                 when (purpose) {
                     EncryptionPurpose.COMMUNICATIONS ->
                         return@filter keyFlags.contains(KeyFlag.ENCRYPT_COMMS)
@@ -378,7 +434,7 @@ class KeyRingInfo(
      *   encryption-purpose.
      */
     fun isUsableForEncryption(purpose: EncryptionPurpose): Boolean {
-        return isKeyValidlyBound(keyId) && getEncryptionSubkeys(purpose).isNotEmpty()
+        return isKeyValidlyBound(keyIdentifier) && getEncryptionSubkeys(purpose).isNotEmpty()
     }
 
     /**
@@ -396,20 +452,14 @@ class KeyRingInfo(
 
     /** Return the most-recently created self-signature on the key. */
     private fun getMostRecentSignature(): PGPSignature? =
-        setOfNotNull(latestDirectKeySelfSignature, revocationSelfSignature)
-            .asSequence()
-            .plus(signatures.userIdCertifications.values)
-            .plus(signatures.userIdRevocations.values)
-            .plus(signatures.subkeyBindings.values)
-            .plus(signatures.subkeyRevocations.values)
-            .maxByOrNull { it.creationTime }
+        keys.components.map { it.latestSelfSignature }.maxByOrNull { it.creationTime }?.signature
     /**
      * Return the creation time of the latest added subkey.
      *
      * @return latest key creation time
      */
     fun getLatestKeyCreationDate(): Date =
-        validSubkeys.maxByOrNull { creationDate }?.creationTime
+        keys.getValidKeys(referenceDate).maxByOrNull { it.creationTime }?.creationTime
             ?: throw AssertionError("Apparently there is no validly bound key in this key ring.")
 
     /**
@@ -418,7 +468,7 @@ class KeyRingInfo(
      * @return latest self-certification for the given user-ID.
      */
     fun getLatestUserIdCertification(userId: CharSequence): PGPSignature? =
-        signatures.userIdCertifications[userId]
+        keys.getUserId(userId.toString())?.getCertification(referenceDate)?.signature
 
     /**
      * Return the latest revocation self-signature for the given user-ID
@@ -426,32 +476,54 @@ class KeyRingInfo(
      * @return latest user-ID revocation for the given user-ID
      */
     fun getUserIdRevocation(userId: CharSequence): PGPSignature? =
-        signatures.userIdRevocations[userId]
+        keys.getUserId(userId.toString())?.getRevocation(referenceDate)?.signature
+
+    /**
+     * Return the current binding signature for the subkey with the given [keyIdentifier].
+     *
+     * @param keyIdentifier subkey identifier
+     * @return current subkey binding signature
+     */
+    fun getCurrentSubkeyBindingSignature(keyIdentifier: KeyIdentifier): PGPSignature? =
+        keys.getKey(keyIdentifier)?.getCertification(referenceDate)?.signature
 
     /**
      * Return the current binding signature for the subkey with the given key-ID.
      *
+     * @param keyId key-ID
      * @return current subkey binding signature
      */
+    @Deprecated("Pass in a KeyIdentifier instead.")
     fun getCurrentSubkeyBindingSignature(keyId: Long): PGPSignature? =
-        signatures.subkeyBindings[keyId]
+        getCurrentSubkeyBindingSignature(KeyIdentifier(keyId))
+
+    /**
+     * Return the current revocation signature for the subkey with the given [keyIdentifier].
+     *
+     * @param keyIdentifier subkey identifier
+     * @return current subkey revocation signature
+     */
+    fun getSubkeyRevocationSignature(keyIdentifier: KeyIdentifier): PGPSignature? =
+        keys.getKey(keyIdentifier)?.getRevocation(referenceDate)?.signature
 
     /**
      * Return the current revocation signature for the subkey with the given key-ID.
      *
      * @return current subkey revocation signature
      */
+    @Deprecated("Pass in a KeyIdentifier instead.")
     fun getSubkeyRevocationSignature(keyId: Long): PGPSignature? =
-        signatures.subkeyRevocations[keyId]
+        getSubkeyRevocationSignature(KeyIdentifier(keyId))
 
     /**
-     * Return a list of [KeyFlags][KeyFlag] that apply to the subkey with the provided key id.
+     * Return a list of [KeyFlags][KeyFlag] that apply to the subkey with the provided
+     * [keyIdentifier].
      *
-     * @param keyId key-id
+     * @param keyIdentifier keyIdentifier
      * @return list of key flags
      */
-    fun getKeyFlagsOf(keyId: Long): List<KeyFlag> =
-        if (keyId == publicKey.keyID) {
+    fun getKeyFlagsOf(keyIdentifier: KeyIdentifier): List<KeyFlag> =
+        if (primaryKey.keyIdentifier.matchesExplicit(keyIdentifier)) {
             latestDirectKeySelfSignature?.let { sig ->
                 SignatureSubpacketsUtil.parseKeyFlags(sig)?.let { flags ->
                     return flags
@@ -466,13 +538,22 @@ class KeyRingInfo(
             }
             listOf()
         } else {
-            getCurrentSubkeyBindingSignature(keyId)?.let {
+            getCurrentSubkeyBindingSignature(keyIdentifier)?.let {
                 SignatureSubpacketsUtil.parseKeyFlags(it)?.let { flags ->
                     return flags
                 }
             }
             listOf()
         }
+
+    /**
+     * Return a list of [KeyFlags][KeyFlag] that apply to the subkey with the provided key id.
+     *
+     * @param keyId key-id
+     * @return list of key flags
+     */
+    @Deprecated("Pass in a KeyIdentifier instead.")
+    fun getKeyFlagsOf(keyId: Long): List<KeyFlag> = getKeyFlagsOf(KeyIdentifier(keyId))
 
     /**
      * Return a list of [KeyFlags][KeyFlag] that apply to the given user-id.
@@ -492,12 +573,34 @@ class KeyRingInfo(
         }
 
     /**
+     * Return the [OpenPGPComponentKey] with the given [keyIdentifier] from this
+     * [OpenPGPCertificate] or [OpenPGPKey].
+     *
+     * @param keyIdentifier keyIdentifier
+     * @return public component key or null
+     */
+    fun getPublicKey(keyIdentifier: KeyIdentifier): OpenPGPComponentKey? =
+        keys.getKey(keyIdentifier)
+
+    /**
      * Return the public key with the given key id from the provided key ring.
      *
      * @param keyId key id
      * @return public key or null
      */
-    fun getPublicKey(keyId: Long): PGPPublicKey? = keys.getPublicKey(keyId)
+    @Deprecated("Pass in a KeyIdentifier instead.")
+    fun getPublicKey(keyId: Long): OpenPGPComponentKey? = getPublicKey(KeyIdentifier(keyId))
+
+    /**
+     * Return the [OpenPGPSecretKey] component with the given [keyIdentifier].
+     *
+     * @param keyIdentifier keyIdentifier
+     * @return secret key or null
+     */
+    fun getSecretKey(keyIdentifier: KeyIdentifier): OpenPGPSecretKey? =
+        if (keys.isSecretKey) {
+            (keys as OpenPGPKey).getSecretKey(keyIdentifier)
+        } else null
 
     /**
      * Return the secret key with the given key id.
@@ -505,24 +608,26 @@ class KeyRingInfo(
      * @param keyId key id
      * @return secret key or null
      */
-    fun getSecretKey(keyId: Long): PGPSecretKey? =
-        when (keys) {
-            is PGPSecretKeyRing -> keys.getSecretKey(keyId)
-            else -> null
-        }
+    @Deprecated("Pass in a KeyIdentifier instead.")
+    fun getSecretKey(keyId: Long): OpenPGPSecretKey? = getSecretKey(KeyIdentifier(keyId))
 
     /**
-     * Return true, if the secret-key with the given key-ID is available (i.e. not moved to a
-     * smart-card).
+     * Return true, if the secret-key with the given [keyIdentifier] is available (i.e. part of the
+     * certificate AND not moved to a smart-card).
      *
      * @return availability of the secret key
      */
-    fun isSecretKeyAvailable(keyId: Long): Boolean {
-        return getSecretKey(keyId)?.let {
-            return if (it.s2K == null) true // Unencrypted key
-            else it.s2K.type !in 100..110 // Secret key on smart-card
+    fun isSecretKeyAvailable(keyIdentifier: KeyIdentifier): Boolean {
+        return getSecretKey(keyIdentifier)?.let {
+            return if (it.pgpSecretKey.s2K == null) true // Unencrypted key
+            else it.pgpSecretKey.s2K.type !in 100..110 // Secret key on smart-card
         }
             ?: false // Missing secret key
+    }
+
+    @Deprecated("Pass in a KeyIdentifier instead.")
+    fun isSecretKeyAvailable(keyId: Long): Boolean {
+        return isSecretKeyAvailable(KeyIdentifier(keyId))
     }
 
     /**
@@ -531,8 +636,8 @@ class KeyRingInfo(
      * @param fingerprint fingerprint
      * @return public key or null
      */
-    fun getPublicKey(fingerprint: OpenPgpFingerprint): PGPPublicKey? =
-        keys.getPublicKey(fingerprint.keyId)
+    fun getPublicKey(fingerprint: OpenPgpFingerprint): OpenPGPComponentKey? =
+        keys.getKey(fingerprint.keyIdentifier)
 
     /**
      * Return the secret key with the given fingerprint.
@@ -540,11 +645,8 @@ class KeyRingInfo(
      * @param fingerprint fingerprint
      * @return secret key or null
      */
-    fun getSecretKey(fingerprint: OpenPgpFingerprint): PGPSecretKey? =
-        when (keys) {
-            is PGPSecretKeyRing -> keys.getSecretKey(fingerprint.keyId)
-            else -> null
-        }
+    fun getSecretKey(fingerprint: OpenPgpFingerprint): OpenPGPSecretKey? =
+        getSecretKey(fingerprint.keyIdentifier)
 
     /**
      * Return the public key matching the given [SubkeyIdentifier].
@@ -553,9 +655,11 @@ class KeyRingInfo(
      * @throws IllegalArgumentException if the identifier's primary key does not match the primary
      *   key of the key.
      */
-    fun getPublicKey(identifier: SubkeyIdentifier): PGPPublicKey? {
-        require(identifier.primaryKeyId == publicKey.keyID) { "Mismatching primary key ID." }
-        return getPublicKey(identifier.subkeyId)
+    fun getPublicKey(identifier: SubkeyIdentifier): OpenPGPComponentKey? {
+        require(primaryKey.keyIdentifier.matchesExplicit(identifier.keyIdentifier)) {
+            "Mismatching primary key ID."
+        }
+        return getPublicKey(identifier.componentKeyIdentifier)
     }
 
     /**
@@ -565,16 +669,23 @@ class KeyRingInfo(
      * @throws IllegalArgumentException if the identifier's primary key does not match the primary
      *   key of the key.
      */
-    fun getSecretKey(identifier: SubkeyIdentifier): PGPSecretKey? =
-        when (keys) {
-            is PGPSecretKeyRing -> {
-                require(identifier.primaryKeyId == publicKey.keyID) {
-                    "Mismatching primary key ID."
-                }
-                keys.getSecretKey(identifier.subkeyId)
-            }
-            else -> null
+    fun getSecretKey(identifier: SubkeyIdentifier): OpenPGPComponentKey? {
+        require(primaryKey.keyIdentifier.matchesExplicit(identifier.keyIdentifier)) {
+            "Mismatching primary key ID."
         }
+        return getSecretKey(identifier.componentKeyIdentifier)
+    }
+
+    /**
+     * Return true if the [OpenPGPComponentKey] with the given [keyIdentifier] is bound to the
+     * [OpenPGPCertificate] properly.
+     *
+     * @param keyIdentifier identifier of the component key
+     * @return true if key is bound validly
+     */
+    fun isKeyValidlyBound(keyIdentifier: KeyIdentifier): Boolean {
+        return keys.getKey(keyIdentifier)?.isBoundAt(referenceDate) ?: false
+    }
 
     /**
      * Return true if the public key with the given key id is bound to the key ring properly.
@@ -582,141 +693,187 @@ class KeyRingInfo(
      * @param keyId key id
      * @return true if key is bound validly
      */
-    fun isKeyValidlyBound(keyId: Long): Boolean {
-        val publicKey = keys.getPublicKey(keyId) ?: return false
-
-        // Primary key -> Check Primary Key Revocation
-        if (publicKey.keyID == this.publicKey.keyID) {
-            return if (signatures.primaryKeyRevocation != null &&
-                signatures.primaryKeyRevocation.isHardRevocation) {
-                false
-            } else signatures.primaryKeyRevocation == null
-        }
-
-        // Else Subkey -> Check Subkey Revocation
-        val binding = signatures.subkeyBindings[keyId]
-        val revocation = signatures.subkeyRevocations[keyId]
-
-        // No valid binding
-        if (binding == null || binding.isExpired(referenceDate)) {
-            return false
-        }
-
-        // Revocation
-        return if (revocation != null) {
-            if (revocation.isHardRevocation) {
-                // Subkey is hard revoked
-                false
-            } else {
-                // Key is soft-revoked, not yet re-bound
-                (revocation.isExpired(referenceDate) ||
-                    !revocation.creationTime.after(binding.creationTime))
-            }
-        } else true
-    }
+    @Deprecated("Pass in a KeyIdentifier instead.")
+    fun isKeyValidlyBound(keyId: Long): Boolean = isKeyValidlyBound(KeyIdentifier(keyId))
 
     /**
      * Return the current primary user-id of the key ring.
      *
      * <p>
-     * Note: If no user-id is marked as primary key using a [PrimaryUserID] packet, this method
-     * returns the first user-id on the key, otherwise null.
+     * Note: If no user-id is marked as primary key using a
+     * [org.bouncycastle.bcpg.sig.PrimaryUserID] packet, this method returns the first user-id on
+     * the key, otherwise null.
      *
      * @return primary user-id or null
      */
     private fun findPrimaryUserId(): String? {
-        if (userIds.isEmpty()) {
-            return null
-        }
-
-        return signatures.userIdCertifications
-            .filter { (_, certification) -> certification.hashedSubPackets.isPrimaryUserID }
-            .entries
-            .maxByOrNull { (_, certification) -> certification.creationTime }
-            ?.key
-            ?: signatures.userIdCertifications.keys.firstOrNull()
+        return keys.primaryKey.getExplicitOrImplicitPrimaryUserId(referenceDate)?.userId
     }
 
-    /** Return true, if the primary user-ID, as well as the given user-ID are valid and bound. */
-    fun isUserIdValid(userId: CharSequence) =
-        if (primaryUserId == null) {
-            false
-        } else {
-            isUserIdBound(primaryUserId) &&
-                (if (userId == primaryUserId) true else isUserIdBound(userId))
-        }
+    /**
+     * Return true, if the primary user-ID, as well as the given user-ID are valid and bound.
+     *
+     * @param userId user-id
+     * @return true if the primary user-ID and the given user-ID are valid.
+     */
+    fun isUserIdValid(userId: CharSequence): Boolean {
+        var valid = isUserIdBound(userId)
+        if (primaryUserId != null) valid = valid && isUserIdBound(primaryUserId)
+        valid = valid && isKeyValidlyBound(primaryKey.keyIdentifier)
+        return valid
+    }
 
-    /** Return true, if the given user-ID is validly bound. */
-    fun isUserIdBound(userId: CharSequence) =
-        signatures.userIdCertifications[userId]?.let { sig ->
-            if (sig.isExpired(referenceDate)) {
-                // certification expired
-                return false
-            }
-            if (sig.hashedSubPackets.isPrimaryUserID) {
-                getKeyExpirationTimeAsDate(sig, publicKey)?.let { expirationDate ->
-                    // key expired?
-                    if (expirationDate < referenceDate) return false
-                }
-            }
-            signatures.userIdRevocations[userId]?.let { rev ->
-                if (rev.isHardRevocation) {
-                    return false // hard revoked -> invalid
-                }
-                sig.creationTime > rev.creationTime // re-certification after soft revocation?
-            }
-                ?: true // certification, but no revocation
-        }
-            ?: false // no certification
+    /**
+     * Return true, if the given user-ID is validly bound.
+     *
+     * @param userId user-id
+     * @return true if the user-id is validly bound to the [OpenPGPCertificate]
+     */
+    fun isUserIdBound(userId: CharSequence): Boolean =
+        keys.getUserId(userId.toString())?.isBoundAt(referenceDate) ?: false
 
-    /** [HashAlgorithm] preferences of the given user-ID. */
-    fun getPreferredHashAlgorithms(userId: CharSequence): Set<HashAlgorithm> {
-        return getKeyAccessor(userId, keyId).preferredHashAlgorithms
+    /**
+     * Return the [HashAlgorithm] preferences of the given [userId].
+     *
+     * @param userId user-id
+     * @return ordered set of preferred [HashAlgorithms][HashAlgorithm] (descending order)
+     */
+    fun getPreferredHashAlgorithms(userId: CharSequence): Set<HashAlgorithm>? {
+        return (keys.getUserId(userId.toString())
+                ?: throw NoSuchElementException("No user-id '$userId' found on this key."))
+            .getHashAlgorithmPreferences(referenceDate)
+            ?.toHashAlgorithms()
+    }
+
+    /**
+     * Return the [HashAlgorithm] preferences of the component key with the given [KeyIdentifier].
+     *
+     * @param keyIdentifier identifier of a [OpenPGPComponentKey]
+     * @return ordered set of preferred [HashAlgorithms][HashAlgorithm] (descending order)
+     */
+    fun getPreferredHashAlgorithms(keyIdentifier: KeyIdentifier): Set<HashAlgorithm>? {
+        return (keys.getKey(keyIdentifier)
+                ?: throw NoSuchElementException(
+                    "No subkey with key-id $keyIdentifier found on this key."))
+            .getHashAlgorithmPreferences(referenceDate)
+            ?.toHashAlgorithms()
     }
 
     /** [HashAlgorithm] preferences of the given key. */
-    fun getPreferredHashAlgorithms(keyId: Long): Set<HashAlgorithm> {
-        return KeyAccessor.SubKey(this, SubkeyIdentifier(keys, keyId)).preferredHashAlgorithms
+    @Deprecated("Pass KeyIdentifier instead.")
+    fun getPreferredHashAlgorithms(keyId: Long): Set<HashAlgorithm>? {
+        return getPreferredHashAlgorithms(KeyIdentifier(keyId))
     }
 
-    /** [SymmetricKeyAlgorithm] preferences of the given user-ID. */
-    fun getPreferredSymmetricKeyAlgorithms(userId: CharSequence): Set<SymmetricKeyAlgorithm> {
-        return getKeyAccessor(userId, keyId).preferredSymmetricKeyAlgorithms
+    /**
+     * Return the [SymmetricKeyAlgorithm] preferences of the given [userId].
+     *
+     * @param userId user-id
+     * @return ordered set of preferred [SymmetricKeyAlgorithms][SymmetricKeyAlgorithm] (descending
+     *   order)
+     */
+    fun getPreferredSymmetricKeyAlgorithms(userId: CharSequence): Set<SymmetricKeyAlgorithm>? {
+        return (keys.getUserId(userId.toString())
+                ?: throw NoSuchElementException("No user-id '$userId' found on this key."))
+            .getSymmetricCipherPreferences(referenceDate)
+            ?.toSymmetricKeyAlgorithms()
+    }
+
+    /**
+     * Return the [SymmetricKeyAlgorithm] preferences of the [OpenPGPComponentKey] with the given
+     * [keyIdentifier].
+     *
+     * @param keyIdentifier identifier of the [OpenPGPComponentKey]
+     * @return ordered set of preferred [SymmetricKeyAlgorithms][SymmetricKeyAlgorithm] (descending
+     *   order)
+     */
+    fun getPreferredSymmetricKeyAlgorithms(
+        keyIdentifier: KeyIdentifier
+    ): Set<SymmetricKeyAlgorithm>? {
+        return (keys.getKey(keyIdentifier)
+                ?: throw NoSuchElementException(
+                    "No subkey with key-id $keyIdentifier found on this key."))
+            .getSymmetricCipherPreferences(referenceDate)
+            ?.toSymmetricKeyAlgorithms()
     }
 
     /** [SymmetricKeyAlgorithm] preferences of the given key. */
-    fun getPreferredSymmetricKeyAlgorithms(keyId: Long): Set<SymmetricKeyAlgorithm> {
-        return KeyAccessor.SubKey(this, SubkeyIdentifier(keys, keyId))
-            .preferredSymmetricKeyAlgorithms
+    @Deprecated("Pass KeyIdentifier instead.")
+    fun getPreferredSymmetricKeyAlgorithms(keyId: Long): Set<SymmetricKeyAlgorithm>? {
+        return getPreferredSymmetricKeyAlgorithms(KeyIdentifier(keyId))
     }
 
-    /** [CompressionAlgorithm] preferences of the given user-ID. */
-    fun getPreferredCompressionAlgorithms(userId: CharSequence): Set<CompressionAlgorithm> {
-        return getKeyAccessor(userId, keyId).preferredCompressionAlgorithms
+    /**
+     * Return the [CompressionAlgorithm] preferences of the given [userId].
+     *
+     * @param userId user-id
+     * @return ordered set of preferred [CompressionAlgorithms][CompressionAlgorithm] (descending
+     *   order)
+     */
+    fun getPreferredCompressionAlgorithms(userId: CharSequence): Set<CompressionAlgorithm>? {
+        return (keys.getUserId(userId.toString())
+                ?: throw NoSuchElementException("No user-id '$userId' found on this key."))
+            .getCompressionAlgorithmPreferences(referenceDate)
+            ?.toCompressionAlgorithms()
+    }
+
+    /**
+     * Return the [CompressionAlgorithm] preferences of the [OpenPGPComponentKey] with the given
+     * [keyIdentifier].
+     *
+     * @param keyIdentifier identifier of the [OpenPGPComponentKey]
+     * @return ordered set of preferred [CompressionAlgorithms][CompressionAlgorithm] (descending
+     *   order)
+     */
+    fun getPreferredCompressionAlgorithms(
+        keyIdentifier: KeyIdentifier
+    ): Set<CompressionAlgorithm>? {
+        return (keys.getKey(keyIdentifier)
+                ?: throw NoSuchElementException(
+                    "No subkey with key-id $keyIdentifier found on this key."))
+            .getCompressionAlgorithmPreferences(referenceDate)
+            ?.toCompressionAlgorithms()
     }
 
     /** [CompressionAlgorithm] preferences of the given key. */
-    fun getPreferredCompressionAlgorithms(keyId: Long): Set<CompressionAlgorithm> {
-        return KeyAccessor.SubKey(this, SubkeyIdentifier(keys, keyId))
-            .preferredCompressionAlgorithms
+    @Deprecated("Pass in a KeyIdentifier instead.")
+    fun getPreferredCompressionAlgorithms(keyId: Long): Set<CompressionAlgorithm>? {
+        return getPreferredCompressionAlgorithms(KeyIdentifier(keyId))
     }
 
-    val isUsableForThirdPartyCertification: Boolean =
-        isKeyValidlyBound(keyId) && getKeyFlagsOf(keyId).contains(KeyFlag.CERTIFY_OTHER)
+    /**
+     * Return the [AEADCipherMode] preferences of the given [userId].
+     *
+     * @param userId user-ID
+     * @return ordered set of [AEADCipherModes][AEADCipherMode] (descending order, including
+     *   implicitly supported AEAD modes)
+     */
+    fun getPreferredAEADCipherSuites(userId: CharSequence): Set<AEADCipherMode>? {
+        return (keys.getUserId(userId.toString())
+                ?: throw NoSuchElementException("No user-id '$userId' found on this key."))
+            .getAEADCipherSuitePreferences(referenceDate)
+            ?.toAEADCipherModes()
+    }
 
-    private fun getKeyAccessor(userId: CharSequence?, keyId: Long): KeyAccessor {
-        if (getPublicKey(keyId) == null) {
-            throw NoSuchElementException(
-                "No subkey with key-id ${keyId.openPgpKeyId()} found on this key.")
-        }
-        if (userId != null && !userIds.contains(userId)) {
-            throw NoSuchElementException("No user-id '$userId' found on this key.")
-        }
-        return if (userId != null) {
-            KeyAccessor.ViaUserId(this, SubkeyIdentifier(keys, keyId), userId)
-        } else {
-            KeyAccessor.ViaKeyId(this, SubkeyIdentifier(keys, keyId))
-        }
+    /**
+     * Return the [AEADCipherMode] preferences of the [OpenPGPComponentKey] with the given
+     * [keyIdentifier].
+     *
+     * @param keyIdentifier component key identifier
+     * @return ordered set of [AEADCipherModes][AEADCipherMode] (descending order, including
+     *   implicitly supported AEAD modes)
+     */
+    fun getPreferredAEADCipherSuites(keyIdentifier: KeyIdentifier): Set<AEADCipherMode>? {
+        return (keys.getKey(keyIdentifier)
+                ?: throw NoSuchElementException(
+                    "No subkey with key-id $keyIdentifier found on this key."))
+            .getAEADCipherSuitePreferences(referenceDate)
+            ?.toAEADCipherModes()
+    }
+
+    @Deprecated("Pass KeyIdentifier instead.")
+    fun getPreferredAEADCipherSuites(keyId: Long): Set<AEADCipherMode>? {
+        return getPreferredAEADCipherSuites(KeyIdentifier(keyId))
     }
 
     companion object {
@@ -732,35 +889,5 @@ class KeyRingInfo(
             "^([a-zA-Z0-9_!#$%&'*+/=?`{|}~^.-]+@[a-zA-Z0-9.-]+)$".toPattern()
 
         @JvmStatic private val LOGGER = LoggerFactory.getLogger(KeyRingInfo::class.java)
-    }
-
-    private class Signatures(val keys: PGPKeyRing, val referenceDate: Date, val policy: Policy) {
-        val primaryKeyRevocation: PGPSignature? =
-            SignaturePicker.pickCurrentRevocationSelfSignature(keys, policy, referenceDate)
-        val primaryKeySelfSignature: PGPSignature? =
-            SignaturePicker.pickLatestDirectKeySignature(keys, policy, referenceDate)
-        val userIdRevocations = mutableMapOf<String, PGPSignature>()
-        val userIdCertifications = mutableMapOf<String, PGPSignature>()
-        val subkeyRevocations = mutableMapOf<Long, PGPSignature>()
-        val subkeyBindings = mutableMapOf<Long, PGPSignature>()
-
-        init {
-            KeyRingUtils.getUserIdsIgnoringInvalidUTF8(keys.publicKey).forEach { userId ->
-                SignaturePicker.pickCurrentUserIdRevocationSignature(
-                        keys, userId, policy, referenceDate)
-                    ?.let { userIdRevocations[userId] = it }
-                SignaturePicker.pickLatestUserIdCertificationSignature(
-                        keys, userId, policy, referenceDate)
-                    ?.let { userIdCertifications[userId] = it }
-            }
-            keys.publicKeys.asSequence().drop(1).forEach { subkey ->
-                SignaturePicker.pickCurrentSubkeyBindingRevocationSignature(
-                        keys, subkey, policy, referenceDate)
-                    ?.let { subkeyRevocations[subkey.keyID] = it }
-                SignaturePicker.pickLatestSubkeyBindingSignature(
-                        keys, subkey, policy, referenceDate)
-                    ?.let { subkeyBindings[subkey.keyID] = it }
-            }
-        }
     }
 }

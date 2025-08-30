@@ -46,6 +46,7 @@ class CachingBcPublicKeyDataDecryptorFactory(
         return decryptorFactory.createDataDecryptor(p0, p1)
     }
 
+    @Deprecated("Deprecated in Java")
     override fun recoverSessionData(
         keyAlgorithm: Int,
         secKeyData: Array<out ByteArray>,

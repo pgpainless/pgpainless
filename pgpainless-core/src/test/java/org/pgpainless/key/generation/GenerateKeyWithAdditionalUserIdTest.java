@@ -7,12 +7,9 @@ package org.pgpainless.key.generation;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 
-import java.security.InvalidAlgorithmParameterException;
-import java.security.NoSuchAlgorithmException;
 import java.util.Date;
 import java.util.Iterator;
 
-import org.bouncycastle.openpgp.PGPException;
 import org.bouncycastle.openpgp.PGPPublicKeyRing;
 import org.bouncycastle.openpgp.PGPSecretKeyRing;
 import org.junit.JUtils;
@@ -32,7 +29,7 @@ public class GenerateKeyWithAdditionalUserIdTest {
 
     @TestTemplate
     @ExtendWith(TestAllImplementations.class)
-    public void test() throws InvalidAlgorithmParameterException, NoSuchAlgorithmException, PGPException {
+    public void test() {
         Date now = DateUtil.now();
         Date expiration = TestTimeFrameProvider.defaultExpirationForCreationDate(now);
         PGPSecretKeyRing secretKeys = PGPainless.buildKeyRing()
@@ -43,9 +40,10 @@ public class GenerateKeyWithAdditionalUserIdTest {
                 .addUserId(UserId.onlyEmail("primary@user.id"))
                 .addUserId(UserId.onlyEmail("additional@user.id"))
                 .addUserId(UserId.onlyEmail("additional2@user.id"))
-                .addUserId("\ttrimThis@user.id     ")
+                .addUserId("\twithWhitespace@user.id     ")
                 .setExpirationDate(expiration)
-                .build();
+                .build()
+                .getPGPSecretKeyRing();
         PGPPublicKeyRing publicKeys = KeyRingUtils.publicKeyRingFrom(secretKeys);
 
         JUtils.assertDateEquals(expiration, PGPainless.inspectKeyRing(publicKeys).getPrimaryKeyExpirationDate());
@@ -54,7 +52,7 @@ public class GenerateKeyWithAdditionalUserIdTest {
         assertEquals("<primary@user.id>", userIds.next());
         assertEquals("<additional@user.id>", userIds.next());
         assertEquals("<additional2@user.id>", userIds.next());
-        assertEquals("trimThis@user.id", userIds.next());
+        assertEquals("\twithWhitespace@user.id     ", userIds.next());
         assertFalse(userIds.hasNext());
     }
 }

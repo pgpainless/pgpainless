@@ -7,12 +7,8 @@ package org.pgpainless.example;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
-import java.security.InvalidAlgorithmParameterException;
-import java.security.NoSuchAlgorithmException;
-
-import org.bouncycastle.openpgp.PGPException;
-import org.bouncycastle.openpgp.PGPPublicKeyRing;
-import org.bouncycastle.openpgp.PGPSecretKeyRing;
+import org.bouncycastle.openpgp.api.OpenPGPCertificate;
+import org.bouncycastle.openpgp.api.OpenPGPKey;
 import org.junit.jupiter.api.Test;
 import org.pgpainless.PGPainless;
 import org.pgpainless.key.info.KeyRingInfo;
@@ -23,17 +19,18 @@ public class ConvertKeys {
      * This example demonstrates how to extract a public key certificate from a secret key.
      */
     @Test
-    public void secretKeyToCertificate() throws PGPException, InvalidAlgorithmParameterException, NoSuchAlgorithmException {
+    public void secretKeyToCertificate() {
+        PGPainless api = PGPainless.getInstance();
         String userId = "alice@wonderland.lit";
-        PGPSecretKeyRing secretKey = PGPainless.generateKeyRing()
+        OpenPGPKey secretKey = api.generateKey()
                 .modernKeyRing(userId);
+
         // Extract certificate (public key) from secret key
-        PGPPublicKeyRing certificate = PGPainless.extractCertificate(secretKey);
+        OpenPGPCertificate certificate = secretKey.toCertificate();
 
-
-        KeyRingInfo secretKeyInfo = PGPainless.inspectKeyRing(secretKey);
+        KeyRingInfo secretKeyInfo = api.inspect(secretKey);
         assertTrue(secretKeyInfo.isSecretKey());
-        KeyRingInfo certificateInfo = PGPainless.inspectKeyRing(certificate);
+        KeyRingInfo certificateInfo = api.inspect(certificate);
         assertFalse(certificateInfo.isSecretKey());
     }
 }

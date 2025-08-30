@@ -21,7 +21,7 @@ import org.bouncycastle.openpgp.PGPSignature
 import org.bouncycastle.openpgp.PGPUtil
 import org.bouncycastle.util.io.Streams
 import org.pgpainless.algorithm.HashAlgorithm
-import org.pgpainless.decryption_verification.OpenPgpInputStream
+import org.pgpainless.decryption_verification.OpenPGPAnimalSnifferInputStream
 import org.pgpainless.key.OpenPgpFingerprint
 import org.pgpainless.key.util.KeyRingUtils
 
@@ -229,7 +229,7 @@ class ArmorUtils {
          * @return header map
          */
         @JvmStatic
-        private fun keyToHeader(publicKey: PGPPublicKey): Map<String, Set<String>> {
+        fun keyToHeader(publicKey: PGPPublicKey): Map<String, Set<String>> {
             val headerMap = mutableMapOf<String, MutableSet<String>>()
             val userIds = KeyRingUtils.getUserIdsIgnoringInvalidUTF8(publicKey)
             val first: String? = userIds.firstOrNull()
@@ -284,8 +284,8 @@ class ArmorUtils {
          *
          * @param armor armored output stream
          * @param hashAlgorithm hash algorithm
-         * @see <a href="https://datatracker.ietf.org/doc/html/rfc4880#section-6.2"> RFC 4880 -
-         *   OpenPGP Message Format §6.2. Forming ASCII Armor</a>
+         * @see
+         *   [RFC 4880 - OpenPGP Message Format §6.2. Forming ASCII Armor](https://datatracker.ietf.org/doc/html/rfc4880#section-6.2)
          */
         @JvmStatic
         @Deprecated(
@@ -299,8 +299,8 @@ class ArmorUtils {
          *
          * @param armor armored output stream
          * @param comment free-text comment
-         * @see <a href="https://datatracker.ietf.org/doc/html/rfc4880#section-6.2"> RFC 4880 -
-         *   OpenPGP Message Format §6.2. Forming ASCII Armor</a>
+         * @see
+         *   [RFC 4880 - OpenPGP Message Format §6.2. Forming ASCII Armor](https://datatracker.ietf.org/doc/html/rfc4880#section-6.2)
          */
         @JvmStatic
         @Deprecated(
@@ -314,8 +314,8 @@ class ArmorUtils {
          *
          * @param armor armored output stream
          * @param messageId message id
-         * @see <a href="https://datatracker.ietf.org/doc/html/rfc4880#section-6.2"> RFC 4880 -
-         *   OpenPGP Message Format §6.2. Forming ASCII Armor</a>
+         * @see
+         *   [RFC 4880 - OpenPGP Message Format §6.2. Forming ASCII Armor](https://datatracker.ietf.org/doc/html/rfc4880#section-6.2)
          */
         @JvmStatic
         @Deprecated(
@@ -423,7 +423,7 @@ class ArmorUtils {
         @JvmStatic
         @Throws(IOException::class)
         fun getDecoderStream(inputStream: InputStream): InputStream =
-            OpenPgpInputStream(inputStream).let {
+            OpenPGPAnimalSnifferInputStream(inputStream).let {
                 if (it.isAsciiArmored) {
                     PGPUtil.getDecoderStream(ArmoredInputStreamFactory.get(it))
                 } else {

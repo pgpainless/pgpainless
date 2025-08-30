@@ -39,6 +39,7 @@ import org.bouncycastle.openpgp.PGPSignature;
 import org.bouncycastle.openpgp.PGPSignatureGenerator;
 import org.bouncycastle.openpgp.PGPSignatureSubpacketGenerator;
 import org.bouncycastle.openpgp.PGPSignatureSubpacketVector;
+import org.bouncycastle.openpgp.api.OpenPGPImplementation;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -49,7 +50,6 @@ import org.pgpainless.algorithm.KeyFlag;
 import org.pgpainless.algorithm.PublicKeyAlgorithm;
 import org.pgpainless.algorithm.SignatureType;
 import org.pgpainless.algorithm.SymmetricKeyAlgorithm;
-import org.pgpainless.implementation.ImplementationFactory;
 import org.pgpainless.key.OpenPgpFingerprint;
 import org.pgpainless.key.TestKeys;
 import org.pgpainless.key.protection.UnlockSecretKey;
@@ -414,8 +414,9 @@ public class SignatureSubpacketsTest {
         Iterator<PGPSecretKey> secretKeyIterator = secretKeys.iterator();
         PGPSecretKey primaryKey = secretKeyIterator.next();
         PGPSignatureGenerator generator = new PGPSignatureGenerator(
-                ImplementationFactory.getInstance().getPGPContentSignerBuilder(primaryKey.getPublicKey().getAlgorithm(), HashAlgorithm.SHA512.getAlgorithmId())
-        );
+                OpenPGPImplementation.getInstance().pgpContentSignerBuilder(
+                        primaryKey.getPublicKey().getAlgorithm(), HashAlgorithm.SHA512.getAlgorithmId()),
+                primaryKey.getPublicKey());
 
         PGPPrivateKey privateKey = UnlockSecretKey.unlockSecretKey(primaryKey, (Passphrase) null);
         generator.init(SignatureType.DIRECT_KEY.getCode(), privateKey);
@@ -532,5 +533,9 @@ public class SignatureSubpacketsTest {
         assertArrayEquals(publicKeys.getPublicKey().getFingerprint(), vector.getIntendedRecipientFingerprint().getFingerprint());
         PreferredAlgorithms aeadAlgorithms = (PreferredAlgorithms) vector.getSubpacket(SignatureSubpacketTags.PREFERRED_AEAD_ALGORITHMS);
         assertArrayEquals(aead.getPreferences(), aeadAlgorithms.getPreferences());
+    }
+
+    public static SignatureSubpacket[] toArray(SignatureSubpackets subpackets) {
+        return subpackets.getSubpacketsGenerator().generate().toArray();
     }
 }

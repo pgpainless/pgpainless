@@ -16,18 +16,16 @@ import org.pgpainless.decryption_verification.ConsumerOptions
 import org.pgpainless.exception.MalformedOpenPgpMessageException
 import org.pgpainless.exception.MissingDecryptionMethodException
 import org.pgpainless.exception.WrongPassphraseException
-import org.pgpainless.util.Passphrase
 import sop.DecryptionResult
 import sop.ReadyWithResult
 import sop.SessionKey
 import sop.exception.SOPGPException
 import sop.operation.Decrypt
-import sop.util.UTF8Util
 
 /** Implementation of the `decrypt` operation using PGPainless. */
-class DecryptImpl : Decrypt {
+class DecryptImpl(private val api: PGPainless) : Decrypt {
 
-    private val consumerOptions = ConsumerOptions.get()
+    private val consumerOptions = ConsumerOptions.get(api)
     private val protector = MatchMakingSecretKeyRingProtector()
 
     override fun ciphertext(ciphertext: InputStream): ReadyWithResult<DecryptionResult> {
@@ -39,9 +37,7 @@ class DecryptImpl : Decrypt {
 
         val decryptionStream =
             try {
-                PGPainless.decryptAndOrVerify()
-                    .onInputStream(ciphertext)
-                    .withOptions(consumerOptions)
+                api.processMessage().onInputStream(ciphertext).withOptions(consumerOptions)
             } catch (e: MissingDecryptionMethodException) {
                 throw SOPGPException.CannotDecrypt(
                     "No usable decryption key or password provided.", e)
@@ -71,13 +67,10 @@ class DecryptImpl : Decrypt {
                 val verificationList =
                     metadata.verifiedInlineSignatures.map { VerificationHelper.mapVerification(it) }
 
-                var sessionKey: SessionKey? = null
-                if (metadata.sessionKey != null) {
-                    sessionKey =
-                        SessionKey(
-                            metadata.sessionKey!!.algorithm.algorithmId.toByte(),
-                            metadata.sessionKey!!.key)
-                }
+                val sessionKey: SessionKey? =
+                    metadata.sessionKey?.let {
+                        SessionKey(it.algorithm.algorithmId.toByte(), it.key)
+                    }
                 return DecryptionResult(sessionKey, verificationList)
             }
         }
@@ -92,27 +85,22 @@ class DecryptImpl : Decrypt {
     }
 
     override fun verifyWithCert(cert: InputStream): Decrypt = apply {
-        KeyReader.readPublicKeys(cert, true).let { consumerOptions.addVerificationCerts(it) }
+        consumerOptions.addVerificationCerts(KeyReader(api).readPublicKeys(cert, true))
     }
 
     override fun withKey(key: InputStream): Decrypt = apply {
-        KeyReader.readSecretKeys(key, true).forEach {
+        KeyReader(api).readSecretKeys(key, true).forEach {
             protector.addSecretKey(it)
             consumerOptions.addDecryptionKey(it, protector)
         }
     }
 
     override fun withKeyPassword(password: ByteArray): Decrypt = apply {
-        protector.addPassphrase(Passphrase.fromPassword(String(password, UTF8Util.UTF8)))
+        PasswordHelper.addPassphrasePlusRemoveWhitespace(password, protector)
     }
 
     override fun withPassword(password: String): Decrypt = apply {
-        consumerOptions.addMessagePassphrase(Passphrase.fromPassword(password))
-        password.trimEnd().let {
-            if (it != password) {
-                consumerOptions.addMessagePassphrase(Passphrase.fromPassword(it))
-            }
-        }
+        PasswordHelper.addMessagePassphrasePlusRemoveWhitespace(password, consumerOptions)
     }
 
     override fun withSessionKey(sessionKey: SessionKey): Decrypt = apply {

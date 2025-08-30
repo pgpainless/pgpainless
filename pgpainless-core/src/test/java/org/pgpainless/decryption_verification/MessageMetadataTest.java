@@ -4,6 +4,7 @@
 
 package org.pgpainless.decryption_verification;
 
+import org.bouncycastle.openpgp.api.MessageEncryptionMechanism;
 import org.junit.JUtils;
 import org.junit.jupiter.api.Test;
 import org.pgpainless.algorithm.CompressionAlgorithm;
@@ -29,8 +30,8 @@ public class MessageMetadataTest {
         MessageMetadata.Message message = new MessageMetadata.Message();
 
         MessageMetadata.CompressedData compressedData = new MessageMetadata.CompressedData(CompressionAlgorithm.ZIP, message.getDepth() + 1);
-        MessageMetadata.EncryptedData encryptedData = new MessageMetadata.EncryptedData(SymmetricKeyAlgorithm.AES_128, compressedData.getDepth() + 1);
-        MessageMetadata.EncryptedData encryptedData1 = new MessageMetadata.EncryptedData(SymmetricKeyAlgorithm.AES_256, encryptedData.getDepth() + 1);
+        MessageMetadata.EncryptedData encryptedData = new MessageMetadata.EncryptedData(MessageEncryptionMechanism.integrityProtected(SymmetricKeyAlgorithm.AES_128.getAlgorithmId()), compressedData.getDepth() + 1);
+        MessageMetadata.EncryptedData encryptedData1 = new MessageMetadata.EncryptedData(MessageEncryptionMechanism.integrityProtected(SymmetricKeyAlgorithm.AES_256.getAlgorithmId()), encryptedData.getDepth() + 1);
         MessageMetadata.LiteralData literalData = new MessageMetadata.LiteralData();
 
         message.setChild(compressedData);

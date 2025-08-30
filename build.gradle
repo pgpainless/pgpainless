@@ -18,7 +18,7 @@ buildscript {
 }
 
 plugins {
-    id 'org.jetbrains.kotlin.jvm' version "1.8.10"
+    id 'org.jetbrains.kotlin.jvm' version "1.9.21"
     id 'com.diffplug.spotless' version '6.22.0' apply false
 }
 
@@ -37,7 +37,6 @@ allprojects {
     // without this we would generate an empty pgpainless.jar for the project root
     // https://stackoverflow.com/a/25445035
     jar {
-        reproducibleFileOrder = true
         onlyIf { !sourceSets.main.allSource.files.isEmpty() }
     }
 

@@ -6,6 +6,7 @@ package org.pgpainless.decryption_verification
 
 import kotlin.jvm.Throws
 import org.bouncycastle.bcpg.AEADEncDataPacket
+import org.bouncycastle.bcpg.KeyIdentifier
 import org.bouncycastle.bcpg.SymmetricEncIntegrityPacket
 import org.bouncycastle.openpgp.PGPException
 import org.bouncycastle.openpgp.PGPSessionKey
@@ -33,9 +34,33 @@ class HardwareSecurity {
          * @return decrypted session key
          * @throws HardwareSecurityException exception
          */
+        @Deprecated("Pass in a KeyIdentifier instead of a Long keyId.")
         @Throws(HardwareSecurityException::class)
         fun decryptSessionKey(
             keyId: Long,
+            keyAlgorithm: Int,
+            sessionKeyData: ByteArray,
+            pkeskVersion: Int
+        ): ByteArray =
+            decryptSessionKey(KeyIdentifier(keyId), keyAlgorithm, sessionKeyData, pkeskVersion)
+
+        /**
+         * Delegate decryption of a Public-Key-Encrypted-Session-Key (PKESK) to an external API for
+         * dealing with hardware security modules such as smartcards or TPMs.
+         *
+         * If decryption fails for some reason, a subclass of the [HardwareSecurityException] is
+         * thrown.
+         *
+         * @param keyIdentifier identifier of the encryption component key
+         * @param keyAlgorithm algorithm
+         * @param sessionKeyData encrypted session key
+         * @param pkeskVersion version of the Public-Key-Encrypted-Session-Key packet (3 or 6)
+         * @return decrypted session key
+         * @throws HardwareSecurityException exception
+         */
+        @Throws(HardwareSecurityException::class)
+        fun decryptSessionKey(
+            keyIdentifier: KeyIdentifier,
             keyAlgorithm: Int,
             sessionKeyData: ByteArray,
             pkeskVersion: Int
@@ -77,6 +102,7 @@ class HardwareSecurity {
             return factory.createDataDecryptor(seipd, sessionKey)
         }
 
+        @Deprecated("Deprecated in Java")
         override fun recoverSessionData(
             keyAlgorithm: Int,
             secKeyData: Array<out ByteArray>,
@@ -84,7 +110,7 @@ class HardwareSecurity {
         ): ByteArray {
             return try {
                 callback.decryptSessionKey(
-                    subkeyIdentifier.subkeyId, keyAlgorithm, secKeyData[0], pkeskVersion)
+                    subkeyIdentifier.keyIdentifier, keyAlgorithm, secKeyData[0], pkeskVersion)
             } catch (e: HardwareSecurityException) {
                 throw PGPException("Hardware-backed decryption failed.", e)
             }

@@ -9,8 +9,6 @@ import java.io.InputStream
 import org.bouncycastle.openpgp.PGPEncryptedData
 import org.bouncycastle.openpgp.PGPException
 import org.pgpainless.exception.ModificationDetectionException
-import org.slf4j.Logger
-import org.slf4j.LoggerFactory
 
 class IntegrityProtectedInputStream(
     private val inputStream: InputStream,
@@ -30,15 +28,9 @@ class IntegrityProtectedInputStream(
         if (encryptedData.isIntegrityProtected && !options.isIgnoreMDCErrors()) {
             try {
                 if (!encryptedData.verify()) throw ModificationDetectionException()
-                LOGGER.debug("Integrity Protection check passed.")
             } catch (e: PGPException) {
                 throw IOException("Data appears to not be integrity protected.", e)
             }
         }
-    }
-
-    companion object {
-        @JvmStatic
-        val LOGGER: Logger = LoggerFactory.getLogger(IntegrityProtectedInputStream::class.java)
     }
 }
