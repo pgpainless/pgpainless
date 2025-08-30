@@ -16,13 +16,11 @@ import org.pgpainless.decryption_verification.ConsumerOptions
 import org.pgpainless.exception.MalformedOpenPgpMessageException
 import org.pgpainless.exception.MissingDecryptionMethodException
 import org.pgpainless.exception.WrongPassphraseException
-import org.pgpainless.util.Passphrase
 import sop.DecryptionResult
 import sop.ReadyWithResult
 import sop.SessionKey
 import sop.exception.SOPGPException
 import sop.operation.Decrypt
-import sop.util.UTF8Util
 
 /** Implementation of the `decrypt` operation using PGPainless. */
 class DecryptImpl : Decrypt {
@@ -103,16 +101,11 @@ class DecryptImpl : Decrypt {
     }
 
     override fun withKeyPassword(password: ByteArray): Decrypt = apply {
-        protector.addPassphrase(Passphrase.fromPassword(String(password, UTF8Util.UTF8)))
+        PasswordHelper.addPassphrasePlusRemoveWhitespace(password, protector)
     }
 
     override fun withPassword(password: String): Decrypt = apply {
-        consumerOptions.addMessagePassphrase(Passphrase.fromPassword(password))
-        password.trimEnd().let {
-            if (it != password) {
-                consumerOptions.addMessagePassphrase(Passphrase.fromPassword(it))
-            }
-        }
+        PasswordHelper.addMessagePassphrasePlusRemoveWhitespace(password, consumerOptions)
     }
 
     override fun withSessionKey(sessionKey: SessionKey): Decrypt = apply {

@@ -76,6 +76,6 @@ class ChangeKeyPasswordImpl : ChangeKeyPassword {
     override fun noArmor(): ChangeKeyPassword = apply { armor = false }
 
     override fun oldKeyPassphrase(oldPassphrase: String): ChangeKeyPassword = apply {
-        oldProtector.addPassphrase(Passphrase.fromPassword(oldPassphrase))
+        PasswordHelper.addPassphrasePlusRemoveWhitespace(oldPassphrase, oldProtector)
     }
 }

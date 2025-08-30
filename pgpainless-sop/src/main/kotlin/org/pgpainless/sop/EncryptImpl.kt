@@ -27,7 +27,6 @@ import sop.ReadyWithResult
 import sop.enums.EncryptAs
 import sop.exception.SOPGPException
 import sop.operation.Encrypt
-import sop.util.UTF8Util
 
 /** Implementation of the `encrypt` operation using PGPainless. */
 class EncryptImpl : Encrypt {
@@ -132,11 +131,12 @@ class EncryptImpl : Encrypt {
     }
 
     override fun withKeyPassword(password: ByteArray): Encrypt = apply {
-        protector.addPassphrase(Passphrase.fromPassword(String(password, UTF8Util.UTF8)))
+        PasswordHelper.addPassphrasePlusRemoveWhitespace(password, protector)
     }
 
     override fun withPassword(password: String): Encrypt = apply {
-        encryptionOptions.addMessagePassphrase(Passphrase.fromPassword(password))
+        encryptionOptions.addMessagePassphrase(
+            Passphrase.fromPassword(password).withTrimmedWhitespace())
     }
 
     private fun modeToStreamEncoding(mode: EncryptAs): StreamEncoding {

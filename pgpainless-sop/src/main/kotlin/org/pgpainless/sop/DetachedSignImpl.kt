@@ -20,14 +20,12 @@ import org.pgpainless.encryption_signing.SigningOptions
 import org.pgpainless.exception.KeyException.MissingSecretKeyException
 import org.pgpainless.exception.KeyException.UnacceptableSigningKeyException
 import org.pgpainless.util.ArmoredOutputStreamFactory
-import org.pgpainless.util.Passphrase
 import sop.MicAlg
 import sop.ReadyWithResult
 import sop.SigningResult
 import sop.enums.SignAs
 import sop.exception.SOPGPException
 import sop.operation.DetachedSign
-import sop.util.UTF8Util
 
 /** Implementation of the `sign` operation using PGPainless. */
 class DetachedSignImpl : DetachedSign {
@@ -109,7 +107,7 @@ class DetachedSignImpl : DetachedSign {
     override fun noArmor(): DetachedSign = apply { armor = false }
 
     override fun withKeyPassword(password: ByteArray): DetachedSign = apply {
-        protector.addPassphrase(Passphrase.fromPassword(String(password, UTF8Util.UTF8)))
+        PasswordHelper.addPassphrasePlusRemoveWhitespace(password, protector)
     }
 
     private fun modeToSigType(mode: SignAs): DocumentSignatureType {

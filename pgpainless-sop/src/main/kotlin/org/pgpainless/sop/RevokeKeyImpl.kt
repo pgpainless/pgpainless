@@ -17,11 +17,9 @@ import org.pgpainless.exception.WrongPassphraseException
 import org.pgpainless.key.util.KeyRingUtils
 import org.pgpainless.key.util.RevocationAttributes
 import org.pgpainless.util.ArmoredOutputStreamFactory
-import org.pgpainless.util.Passphrase
 import sop.Ready
 import sop.exception.SOPGPException
 import sop.operation.RevokeKey
-import sop.util.UTF8Util
 
 class RevokeKeyImpl : RevokeKey {
 
@@ -82,14 +80,6 @@ class RevokeKeyImpl : RevokeKey {
     override fun noArmor(): RevokeKey = apply { armor = false }
 
     override fun withKeyPassword(password: ByteArray): RevokeKey = apply {
-        val string =
-            try {
-                UTF8Util.decodeUTF8(password)
-            } catch (e: CharacterCodingException) {
-                // TODO: Add cause
-                throw SOPGPException.PasswordNotHumanReadable(
-                    "Cannot UTF8-decode password: ${e.stackTraceToString()}")
-            }
-        protector.addPassphrase(Passphrase.fromPassword(string))
+        PasswordHelper.addPassphrasePlusRemoveWhitespace(password, protector)
     }
 }
