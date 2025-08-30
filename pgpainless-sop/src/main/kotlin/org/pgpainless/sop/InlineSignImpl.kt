@@ -18,12 +18,10 @@ import org.pgpainless.encryption_signing.ProducerOptions
 import org.pgpainless.encryption_signing.SigningOptions
 import org.pgpainless.exception.KeyException.MissingSecretKeyException
 import org.pgpainless.exception.KeyException.UnacceptableSigningKeyException
-import org.pgpainless.util.Passphrase
 import sop.Ready
 import sop.enums.InlineSignAs
 import sop.exception.SOPGPException
 import sop.operation.InlineSign
-import sop.util.UTF8Util
 
 /** Implementation of the `inline-sign` operation using PGPainless. */
 class InlineSignImpl(private val api: PGPainless) : InlineSign {
@@ -112,7 +110,7 @@ class InlineSignImpl(private val api: PGPainless) : InlineSign {
     override fun noArmor(): InlineSign = apply { armor = false }
 
     override fun withKeyPassword(password: ByteArray): InlineSign = apply {
-        protector.addPassphrase(Passphrase.fromPassword(String(password, UTF8Util.UTF8)))
+        PasswordHelper.addPassphrasePlusRemoveWhitespace(password, protector)
     }
 
     private fun modeToSigType(mode: InlineSignAs): DocumentSignatureType {

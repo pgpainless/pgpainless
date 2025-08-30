@@ -10,7 +10,6 @@ import org.bouncycastle.openpgp.api.OpenPGPKey
 import org.pgpainless.PGPainless
 import org.pgpainless.exception.KeyException
 import org.pgpainless.util.OpenPGPCertificateUtil
-import org.pgpainless.util.Passphrase
 import sop.Ready
 import sop.exception.SOPGPException
 import sop.operation.CertifyUserId
@@ -79,6 +78,6 @@ class CertifyUserIdImpl(private val api: PGPainless) : CertifyUserId {
     override fun userId(userId: String): CertifyUserId = apply { this.userIds.add(userId) }
 
     override fun withKeyPassword(password: ByteArray): CertifyUserId = apply {
-        protector.addPassphrase(Passphrase.fromPassword(String(password)))
+        PasswordHelper.addPassphrasePlusRemoveWhitespace(password, protector)
     }
 }

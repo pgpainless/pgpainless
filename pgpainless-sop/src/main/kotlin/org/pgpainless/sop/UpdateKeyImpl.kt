@@ -13,7 +13,6 @@ import org.bouncycastle.openpgp.api.OpenPGPCertificate
 import org.pgpainless.PGPainless
 import org.pgpainless.key.modification.secretkeyring.OpenPGPKeyUpdater
 import org.pgpainless.util.OpenPGPCertificateUtil
-import org.pgpainless.util.Passphrase
 import sop.Ready
 import sop.operation.UpdateKey
 
@@ -81,6 +80,6 @@ class UpdateKeyImpl(private val api: PGPainless) : UpdateKey {
     override fun signingOnly(): UpdateKey = apply { signingOnly = true }
 
     override fun withKeyPassword(password: ByteArray): UpdateKey = apply {
-        protector.addPassphrase(Passphrase.fromPassword(String(password)))
+        PasswordHelper.addPassphrasePlusRemoveWhitespace(password, protector)
     }
 }

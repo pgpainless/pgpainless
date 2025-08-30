@@ -99,7 +99,7 @@ class GenerateKeyImpl(private val api: PGPainless) : GenerateKey {
     override fun userId(userId: String): GenerateKey = apply { userIds.add(userId) }
 
     override fun withKeyPassword(password: String): GenerateKey = apply {
-        this.passphrase = Passphrase.fromPassword(password)
+        this.passphrase = Passphrase.fromPassword(password).withTrimmedWhitespace()
     }
 
     private fun generateKeyWithProfile(
