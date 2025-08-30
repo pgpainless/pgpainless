@@ -43,7 +43,7 @@ public class GenerateKeyWithAdditionalUserIdTest {
                 .addUserId(UserId.onlyEmail("primary@user.id"))
                 .addUserId(UserId.onlyEmail("additional@user.id"))
                 .addUserId(UserId.onlyEmail("additional2@user.id"))
-                .addUserId("\ttrimThis@user.id     ")
+                .addUserId("\twithWhitespace@user.id     ")
                 .setExpirationDate(expiration)
                 .build();
         PGPPublicKeyRing publicKeys = KeyRingUtils.publicKeyRingFrom(secretKeys);
@@ -54,7 +54,7 @@ public class GenerateKeyWithAdditionalUserIdTest {
         assertEquals("<primary@user.id>", userIds.next());
         assertEquals("<additional@user.id>", userIds.next());
         assertEquals("<additional2@user.id>", userIds.next());
-        assertEquals("trimThis@user.id", userIds.next());
+        assertEquals("\twithWhitespace@user.id     ", userIds.next());
         assertFalse(userIds.hasNext());
     }
 }
