@@ -38,7 +38,7 @@ class ConsumerOptions(private val api: PGPainless) {
 
     private var sessionKey: SessionKey? = null
     private val customDecryptorFactories =
-        mutableMapOf<SubkeyIdentifier, PublicKeyDataDecryptorFactory>()
+        mutableMapOf<KeyIdentifier, PublicKeyDataDecryptorFactory>()
     private val decryptionKeys = mutableMapOf<OpenPGPKey, SecretKeyRingProtector>()
     private val decryptionPassphrases = mutableSetOf<Passphrase>()
     private var missingKeyPassphraseStrategy = MissingKeyPassphraseStrategy.INTERACTIVE
@@ -245,7 +245,7 @@ class ConsumerOptions(private val api: PGPainless) {
      * @return options
      */
     fun addCustomDecryptorFactory(factory: CustomPublicKeyDataDecryptorFactory) = apply {
-        customDecryptorFactories[factory.subkeyIdentifier] = factory
+        customDecryptorFactories[factory.keyIdentifier] = factory
     }
 
     /**
