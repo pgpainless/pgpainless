@@ -72,8 +72,8 @@ class HardwareSecurity {
      * session keys to a [DecryptionCallback]. Users can provide such a callback to delegate
      * decryption of messages to hardware security SDKs.
      */
-    class HardwareDataDecryptorFactory(
-        override val subkeyIdentifier: SubkeyIdentifier,
+    open class HardwareDataDecryptorFactory(
+        override val keyIdentifier: KeyIdentifier,
         private val callback: DecryptionCallback,
     ) : CustomPublicKeyDataDecryptorFactory() {
 
@@ -110,7 +110,7 @@ class HardwareSecurity {
         ): ByteArray {
             return try {
                 callback.decryptSessionKey(
-                    subkeyIdentifier.keyIdentifier, keyAlgorithm, secKeyData[0], pkeskVersion)
+                    keyIdentifier, keyAlgorithm, secKeyData[0], pkeskVersion)
             } catch (e: HardwareSecurityException) {
                 throw PGPException("Hardware-backed decryption failed.", e)
             }

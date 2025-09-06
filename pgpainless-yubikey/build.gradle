@@ -1,0 +1,35 @@
+// SPDX-FileCopyrightText: 2025 Paul Schaub <vanitasvitae@fsfe.org>
+//
+// SPDX-License-Identifier: Apache-2.0
+plugins {
+    id 'java-library'
+}
+
+group 'org.pgpainless'
+
+repositories {
+    mavenCentral()
+    mavenLocal()
+}
+
+dependencies {
+    testImplementation "org.junit.jupiter:junit-jupiter-api:$junitVersion"
+    testImplementation "org.junit.jupiter:junit-jupiter-params:$junitVersion"
+    testRuntimeOnly "org.junit.jupiter:junit-jupiter-engine:$junitVersion"
+
+    // Logging
+    testImplementation "ch.qos.logback:logback-classic:$logbackVersion"
+
+    implementation(project(":pgpainless-core"))
+
+    api "com.yubico.yubikit:openpgp:$yubikitVersion"
+
+    implementation "com.google.code.findbugs:jsr305:3.0.2"
+}
+
+// https://docs.gradle.org/current/userguide/java_library_plugin.html#sec:java_library_modular_auto
+tasks.named('jar') {
+    manifest {
+        attributes('Automatic-Module-Name': 'org.pgpainless.yubikey')
+    }
+}
