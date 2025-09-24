@@ -7,12 +7,12 @@ allprojects {
         shortVersion = '2.0.0'
         isSnapshot = true
         javaSourceCompatibility = 11
-        bouncyCastleVersion = '1.82-SNAPSHOT'
+        bouncyCastleVersion = '1.82'
         bouncyPgVersion = bouncyCastleVersion
         junitVersion = '5.8.2'
         logbackVersion = '1.5.13'
         mockitoVersion = '4.5.1'
         slf4jVersion = '1.7.36'
-        sopJavaVersion = '14.0.1-SNAPSHOT'
+        sopJavaVersion = '14.0.0'
     }
 }
