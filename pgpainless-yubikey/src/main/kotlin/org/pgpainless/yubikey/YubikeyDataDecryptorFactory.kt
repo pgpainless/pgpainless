@@ -4,13 +4,15 @@
 
 package org.pgpainless.yubikey
 
+import com.yubico.yubikit.core.keys.PublicKeyValues
 import com.yubico.yubikit.core.smartcard.SmartCardConnection
-import com.yubico.yubikit.openpgp.KeyRef
 import com.yubico.yubikit.openpgp.OpenPgpSession
 import org.bouncycastle.bcpg.ECDHPublicBCPGKey
 import org.bouncycastle.bcpg.KeyIdentifier
 import org.bouncycastle.bcpg.PublicKeyAlgorithmTags
+import org.bouncycastle.bcpg.PublicKeyPacket
 import org.bouncycastle.crypto.params.KeyParameter
+import org.bouncycastle.jce.provider.BouncyCastleProvider
 import org.bouncycastle.openpgp.PGPPublicKey
 import org.bouncycastle.openpgp.operator.PGPPad
 import org.bouncycastle.openpgp.operator.RFC6637Utils
@@ -18,26 +20,30 @@ import org.bouncycastle.openpgp.operator.bc.BcKeyFingerprintCalculator
 import org.bouncycastle.openpgp.operator.bc.BcPGPDigestCalculatorProvider
 import org.bouncycastle.openpgp.operator.bc.BcPublicKeyDataDecryptorFactory
 import org.bouncycastle.openpgp.operator.bc.RFC6637KDFCalculator
+import org.bouncycastle.openpgp.operator.jcajce.JcaPGPKeyConverter
 import org.pgpainless.decryption_verification.HardwareSecurity
+import org.pgpainless.key.OpenPgpV4Fingerprint
+import org.pgpainless.key.SubkeyIdentifier
+import java.util.*
 
 class YubikeyDataDecryptorFactory(
     callback: HardwareSecurity.DecryptionCallback,
-    keyIdentifier: KeyIdentifier,
-) : HardwareSecurity.HardwareDataDecryptorFactory(keyIdentifier, callback) {
+    subkeyIdentifier: SubkeyIdentifier,
+) : HardwareSecurity.HardwareDataDecryptorFactory(subkeyIdentifier, callback) {
 
     companion object {
+        val ADMIN_PIN: CharArray = "12345678".toCharArray()
+        val USER_PIN: CharArray = "123456".toCharArray()
+
+
         @JvmStatic
         fun createDecryptorFromConnection(
             smartCardConnection: SmartCardConnection,
             pubkey: PGPPublicKey
         ): HardwareSecurity.HardwareDataDecryptorFactory {
             val openpgpSession = OpenPgpSession(smartCardConnection)
-            val fingerprintBytes = openpgpSession.getData(KeyRef.DEC.fingerprint)
-            val decKeyIdentifier = KeyIdentifier(fingerprintBytes)
-
-            if (!decKeyIdentifier.matches(pubkey.keyIdentifier)) {
-                throw IllegalArgumentException("Fingerprint mismatch.")
-            }
+            // openpgpSession.verifyAdminPin(ADMIN_PIN)
+            val decKeyIdentifier: SubkeyIdentifier = SubkeyIdentifier(OpenPgpV4Fingerprint(pubkey))
 
             val isRSAKey = pubkey.algorithm == PublicKeyAlgorithmTags.RSA_GENERAL
                 || pubkey.algorithm == PublicKeyAlgorithmTags.RSA_SIGN
@@ -51,7 +57,8 @@ class YubikeyDataDecryptorFactory(
                     pkeskVersion: Int
                 ): ByteArray {
                     // TODO: Move user pin verification somewhere else
-                    openpgpSession.verifyUserPin("asdasd".toCharArray(), true)
+                    openpgpSession.verifyAdminPin(ADMIN_PIN)
+                    openpgpSession.verifyUserPin(USER_PIN, true)
 
                     if(isRSAKey) {
                         // easy
@@ -76,7 +83,26 @@ class YubikeyDataDecryptorFactory(
                         System.arraycopy(sessionKeyData, 2 + pLen + 1, keyEnc, 0, keyLen)
 
                         // perform ECDH key agreement via the Yubikey
-                        val secret = openpgpSession.decrypt(pEnc)
+                        val x9Params =
+                            org.bouncycastle.asn1.x9.ECNamedCurveTable.getByOIDLazy(ecPubKey.curveOID)
+                        val publicPoint = x9Params.curve.decodePoint(pEnc)
+                        val peerKey = JcaPGPKeyConverter().setProvider(BouncyCastleProvider())
+                            .getPublicKey(
+                                PGPPublicKey(
+                                    PublicKeyPacket(
+                                        pubkey.version, PublicKeyAlgorithmTags.ECDH, Date(),
+                                        ECDHPublicBCPGKey(
+                                            ecPubKey.curveOID,
+                                            publicPoint,
+                                            ecPubKey.hashAlgorithm.toInt(),
+                                            ecPubKey.symmetricKeyAlgorithm.toInt(),
+                                        ),
+                                    ),
+                                    BcKeyFingerprintCalculator(),
+                                ),
+                            )
+
+                        val secret = openpgpSession.decrypt(PublicKeyValues.fromPublicKey(peerKey))
 
                         // Use the shared key to decrypt the session key
                         val hashAlgorithm: Int = ecPubKey.hashAlgorithm.toInt()
@@ -107,5 +133,4 @@ class YubikeyDataDecryptorFactory(
             return YubikeyDataDecryptorFactory(callback, decKeyIdentifier)
         }
     }
-
 }

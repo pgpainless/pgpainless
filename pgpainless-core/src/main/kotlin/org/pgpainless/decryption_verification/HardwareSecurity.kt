@@ -73,7 +73,7 @@ class HardwareSecurity {
      * decryption of messages to hardware security SDKs.
      */
     open class HardwareDataDecryptorFactory(
-        override val keyIdentifier: KeyIdentifier,
+        override val subkeyIdentifier: SubkeyIdentifier,
         private val callback: DecryptionCallback,
     ) : CustomPublicKeyDataDecryptorFactory() {
 
@@ -110,7 +110,7 @@ class HardwareSecurity {
         ): ByteArray {
             return try {
                 callback.decryptSessionKey(
-                    keyIdentifier, keyAlgorithm, secKeyData[0], pkeskVersion)
+                    subkeyIdentifier.keyIdentifier, keyAlgorithm, secKeyData[0], pkeskVersion)
             } catch (e: HardwareSecurityException) {
                 throw PGPException("Hardware-backed decryption failed.", e)
             }

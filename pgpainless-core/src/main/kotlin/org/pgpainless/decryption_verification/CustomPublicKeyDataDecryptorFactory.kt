@@ -4,9 +4,9 @@
 
 package org.pgpainless.decryption_verification
 
-import org.bouncycastle.bcpg.KeyIdentifier
 import org.bouncycastle.openpgp.operator.AbstractPublicKeyDataDecryptorFactory
 import org.bouncycastle.openpgp.operator.PublicKeyDataDecryptorFactory
+import org.pgpainless.key.SubkeyIdentifier
 
 /**
  * Custom [PublicKeyDataDecryptorFactory] which can enable customized implementations of message
@@ -23,5 +23,5 @@ abstract class CustomPublicKeyDataDecryptorFactory : AbstractPublicKeyDataDecryp
      *
      * @return subkey identifier
      */
-    abstract val keyIdentifier: KeyIdentifier
+    abstract val subkeyIdentifier: SubkeyIdentifier
 }

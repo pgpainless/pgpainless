@@ -21,8 +21,11 @@ dependencies {
     testImplementation "ch.qos.logback:logback-classic:$logbackVersion"
 
     implementation(project(":pgpainless-core"))
+    // api "org.bouncycastle:bcpkix-jdk18on:$bouncyCastleVersion"
 
     api "com.yubico.yubikit:openpgp:$yubikitVersion"
+    api "com.yubico.yubikit:desktop:$yubikitVersion"
+    // api "com.yubico.yubikit:piv:$yubikitVersion"
 
     implementation "com.google.code.findbugs:jsr305:3.0.2"
 }
