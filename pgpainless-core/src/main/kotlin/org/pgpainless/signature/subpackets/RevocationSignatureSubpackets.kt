@@ -6,10 +6,32 @@ package org.pgpainless.signature.subpackets
 
 import org.bouncycastle.bcpg.sig.RevocationReason
 import org.pgpainless.key.util.RevocationAttributes
+import org.pgpainless.signature.subpackets.SelfSignatureSubpackets.Callback
 
 interface RevocationSignatureSubpackets : BaseSignatureSubpackets {
 
-    interface Callback : SignatureSubpacketCallback<RevocationSignatureSubpackets>
+    interface Callback : SignatureSubpacketCallback<RevocationSignatureSubpackets> {
+        fun then(
+            nextCallback: SignatureSubpacketCallback<RevocationSignatureSubpackets>
+        ): Callback {
+            val currCallback = this
+            return object : Callback {
+                override fun modifyHashedSubpackets(
+                    hashedSubpackets: RevocationSignatureSubpackets
+                ) {
+                    currCallback.modifyHashedSubpackets(hashedSubpackets)
+                    nextCallback.modifyHashedSubpackets(hashedSubpackets)
+                }
+
+                override fun modifyUnhashedSubpackets(
+                    unhashedSubpackets: RevocationSignatureSubpackets
+                ) {
+                    currCallback.modifyUnhashedSubpackets(unhashedSubpackets)
+                    nextCallback.modifyUnhashedSubpackets(unhashedSubpackets)
+                }
+            }
+        }
+    }
 
     fun setRevocationReason(
         revocationAttributes: RevocationAttributes

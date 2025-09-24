@@ -14,15 +14,14 @@ import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
-import java.security.InvalidAlgorithmParameterException;
-import java.security.NoSuchAlgorithmException;
 import java.util.List;
 
+import org.bouncycastle.bcpg.KeyIdentifier;
 import org.bouncycastle.openpgp.PGPException;
-import org.bouncycastle.openpgp.PGPPublicKey;
-import org.bouncycastle.openpgp.PGPPublicKeyRing;
-import org.bouncycastle.openpgp.PGPSecretKeyRing;
+import org.bouncycastle.openpgp.api.OpenPGPCertificate;
+import org.bouncycastle.openpgp.api.OpenPGPKey;
 import org.bouncycastle.util.io.Streams;
+import org.jetbrains.annotations.NotNull;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.pgpainless.PGPainless;
@@ -40,17 +39,18 @@ import org.pgpainless.util.Passphrase;
 public class MissingPassphraseForDecryptionTest {
 
     private final String passphrase = "dragon123";
-    private PGPSecretKeyRing secretKeys;
+    private OpenPGPKey secretKeys;
     private byte[] message;
+    private final PGPainless api = PGPainless.getInstance();
 
     @BeforeEach
-    public void setup() throws PGPException, InvalidAlgorithmParameterException, NoSuchAlgorithmException, IOException {
-        secretKeys = PGPainless.generateKeyRing().modernKeyRing("Test", passphrase);
-        PGPPublicKeyRing certificate = PGPainless.extractCertificate(secretKeys);
+    public void setup() throws PGPException, IOException {
+        secretKeys = api.generateKey().modernKeyRing("Test", passphrase);
+        OpenPGPCertificate certificate = secretKeys.toCertificate();
         ByteArrayOutputStream out = new ByteArrayOutputStream();
-        EncryptionStream encryptionStream = PGPainless.encryptAndOrSign()
+        EncryptionStream encryptionStream = api.generateMessage()
                 .onOutputStream(out)
-                .withOptions(ProducerOptions.encrypt(EncryptionOptions.encryptCommunications()
+                .withOptions(ProducerOptions.encrypt(EncryptionOptions.encryptCommunications(api)
                         .addRecipient(certificate)));
 
         Streams.pipeAll(new ByteArrayInputStream("Hey, what's up?".getBytes(StandardCharsets.UTF_8)), encryptionStream);
@@ -63,21 +63,21 @@ public class MissingPassphraseForDecryptionTest {
         // interactive callback
         SecretKeyPassphraseProvider callback = new SecretKeyPassphraseProvider() {
             @Override
-            public Passphrase getPassphraseFor(Long keyId) {
+            public Passphrase getPassphraseFor(@NotNull KeyIdentifier keyIdentifier) {
                 // is called in interactive mode
                 return Passphrase.fromPassword(passphrase);
             }
 
             @Override
-            public boolean hasPassphrase(Long keyId) {
+            public boolean hasPassphrase(@NotNull KeyIdentifier keyIdentifier) {
                 return true;
             }
         };
-        ConsumerOptions options = new ConsumerOptions()
+        ConsumerOptions options = ConsumerOptions.get(api)
                 .setMissingKeyPassphraseStrategy(MissingKeyPassphraseStrategy.INTERACTIVE)
                 .addDecryptionKey(secretKeys, SecretKeyRingProtector.defaultSecretKeyRingProtector(callback));
 
-        DecryptionStream decryptionStream = PGPainless.decryptAndOrVerify()
+        DecryptionStream decryptionStream = api.processMessage()
                 .onInputStream(new ByteArrayInputStream(message))
                 .withOptions(options);
 
@@ -90,36 +90,37 @@ public class MissingPassphraseForDecryptionTest {
 
     @Test
     public void throwExceptionStrategy() throws PGPException, IOException {
-        KeyRingInfo info = PGPainless.inspectKeyRing(secretKeys);
-        List<PGPPublicKey> encryptionKeys = info.getEncryptionSubkeys(EncryptionPurpose.ANY);
+        KeyRingInfo info = api.inspect(secretKeys);
+        List<OpenPGPCertificate.OpenPGPComponentKey> encryptionKeys =
+                info.getEncryptionSubkeys(EncryptionPurpose.ANY);
 
         SecretKeyPassphraseProvider callback = new SecretKeyPassphraseProvider() {
             @Override
-            public Passphrase getPassphraseFor(Long keyId) {
+            public Passphrase getPassphraseFor(@NotNull KeyIdentifier keyIdentifier) {
                 fail("MUST NOT get called in non-interactive mode.");
                 return null;
             }
 
             @Override
-            public boolean hasPassphrase(Long keyId) {
+            public boolean hasPassphrase(@NotNull KeyIdentifier keyIdentifier) {
                 return true;
             }
         };
 
-        ConsumerOptions options = new ConsumerOptions()
+        ConsumerOptions options = ConsumerOptions.get(api)
                 .setMissingKeyPassphraseStrategy(MissingKeyPassphraseStrategy.THROW_EXCEPTION)
                 .addDecryptionKey(secretKeys, SecretKeyRingProtector.defaultSecretKeyRingProtector(callback));
 
         try {
-            PGPainless.decryptAndOrVerify()
+            api.processMessage()
                     .onInputStream(new ByteArrayInputStream(message))
                     .withOptions(options);
             fail("Expected exception!");
         } catch (MissingPassphraseException e) {
             assertFalse(e.getKeyIds().isEmpty());
             assertEquals(encryptionKeys.size(), e.getKeyIds().size());
-            for (PGPPublicKey encryptionKey : encryptionKeys) {
-                assertTrue(e.getKeyIds().contains(new SubkeyIdentifier(secretKeys, encryptionKey.getKeyID())));
+            for (OpenPGPCertificate.OpenPGPComponentKey encryptionKey : encryptionKeys) {
+                assertTrue(e.getKeyIds().contains(new SubkeyIdentifier(encryptionKey)));
             }
         }
     }

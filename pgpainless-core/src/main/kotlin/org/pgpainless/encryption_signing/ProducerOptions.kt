@@ -6,16 +6,17 @@ package org.pgpainless.encryption_signing
 
 import java.util.*
 import org.bouncycastle.openpgp.PGPLiteralData
-import org.pgpainless.PGPainless
 import org.pgpainless.algorithm.CompressionAlgorithm
 import org.pgpainless.algorithm.StreamEncoding
+import org.pgpainless.algorithm.negotiation.CompressionAlgorithmNegotiator
+import org.pgpainless.policy.Policy
 
-class ProducerOptions
-private constructor(
+class ProducerOptions(
     val encryptionOptions: EncryptionOptions?,
     val signingOptions: SigningOptions?
 ) {
-
+    var compressionAlgorithmNegotiator: CompressionAlgorithmNegotiator =
+        CompressionAlgorithmNegotiator.staticNegotiation()
     private var _fileName: String = ""
     private var _modificationDate: Date = PGPLiteralData.NOW
     private var encodingField: StreamEncoding = StreamEncoding.BINARY
@@ -24,8 +25,8 @@ private constructor(
     private var _hideArmorHeaders = false
     var isDisableAsciiArmorCRC = false
 
-    private var _compressionAlgorithmOverride: CompressionAlgorithm =
-        PGPainless.getPolicy().compressionAlgorithmPolicy.defaultCompressionAlgorithm
+    private var _compressionAlgorithmOverride: CompressionAlgorithm? = null
+
     private var asciiArmor = true
     private var _comment: String? = null
     private var _version: String? = null
@@ -104,6 +105,13 @@ private constructor(
      */
     fun hasVersion() = version != null
 
+    /**
+     * Configure the resulting OpenPGP message to make use of the Cleartext Signature Framework
+     * (CSF). A CSF message MUST be signed using detached signatures only and MUST NOT be encrypted.
+     *
+     * @see
+     *   [RFC9580: OpenPGP - Cleartext Signature Framework](https://www.rfc-editor.org/rfc/rfc9580.html#name-cleartext-signature-framewo)
+     */
     fun setCleartextSigned() = apply {
         require(signingOptions != null) {
             "Signing Options cannot be null if cleartext signing is enabled."
@@ -174,8 +182,8 @@ private constructor(
      *
      * @param encoding encoding
      * @return this
-     * @see <a href="https://datatracker.ietf.org/doc/html/rfc4880#section-5.9">RFC4880 §5.9.
-     *   Literal Data Packet</a>
+     * @see
+     *   [RFC4880 §5.9. Literal Data Packet](https://datatracker.ietf.org/doc/html/rfc4880#section-5.9)
      * @deprecated options other than the default value of [StreamEncoding.BINARY] are discouraged.
      */
     @Deprecated("Options other than BINARY are discouraged.")
@@ -212,7 +220,7 @@ private constructor(
         _compressionAlgorithmOverride = compressionAlgorithm
     }
 
-    val compressionAlgorithmOverride: CompressionAlgorithm
+    val compressionAlgorithmOverride: CompressionAlgorithm?
         get() = _compressionAlgorithmOverride
 
     val isHideArmorHeaders: Boolean
@@ -230,6 +238,11 @@ private constructor(
         _hideArmorHeaders = hideArmorHeaders
     }
 
+    internal fun negotiateCompressionAlgorithm(policy: Policy): CompressionAlgorithm {
+        return compressionAlgorithmNegotiator.negotiate(
+            policy, compressionAlgorithmOverride, setOf())
+    }
+
     companion object {
         /**
          * Sign and encrypt some data.
@@ -239,8 +252,10 @@ private constructor(
          * @return builder
          */
         @JvmStatic
-        fun signAndEncrypt(encryptionOptions: EncryptionOptions, signingOptions: SigningOptions) =
-            ProducerOptions(encryptionOptions, signingOptions)
+        fun signAndEncrypt(
+            encryptionOptions: EncryptionOptions,
+            signingOptions: SigningOptions
+        ): ProducerOptions = ProducerOptions(encryptionOptions, signingOptions)
 
         /**
          * Sign some data without encryption.
@@ -248,7 +263,9 @@ private constructor(
          * @param signingOptions signing options
          * @return builder
          */
-        @JvmStatic fun sign(signingOptions: SigningOptions) = ProducerOptions(null, signingOptions)
+        @JvmStatic
+        fun sign(signingOptions: SigningOptions): ProducerOptions =
+            ProducerOptions(null, signingOptions)
 
         /**
          * Encrypt some data without signing.
@@ -257,13 +274,14 @@ private constructor(
          * @return builder
          */
         @JvmStatic
-        fun encrypt(encryptionOptions: EncryptionOptions) = ProducerOptions(encryptionOptions, null)
+        fun encrypt(encryptionOptions: EncryptionOptions): ProducerOptions =
+            ProducerOptions(encryptionOptions, null)
 
         /**
          * Only wrap the data in an OpenPGP packet. No encryption or signing will be applied.
          *
          * @return builder
          */
-        @JvmStatic fun noEncryptionNoSigning() = ProducerOptions(null, null)
+        @JvmStatic fun noEncryptionNoSigning(): ProducerOptions = ProducerOptions(null, null)
     }
 }

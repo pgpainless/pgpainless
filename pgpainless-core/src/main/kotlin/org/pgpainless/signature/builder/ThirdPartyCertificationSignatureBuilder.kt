@@ -7,9 +7,13 @@ package org.pgpainless.signature.builder
 import java.util.function.Predicate
 import org.bouncycastle.openpgp.PGPException
 import org.bouncycastle.openpgp.PGPPublicKeyRing
-import org.bouncycastle.openpgp.PGPSecretKey
 import org.bouncycastle.openpgp.PGPSignature
 import org.bouncycastle.openpgp.PGPUserAttributeSubpacketVector
+import org.bouncycastle.openpgp.api.OpenPGPCertificate
+import org.bouncycastle.openpgp.api.OpenPGPCertificate.OpenPGPComponentSignature
+import org.bouncycastle.openpgp.api.OpenPGPKey
+import org.bouncycastle.openpgp.api.OpenPGPSignature
+import org.pgpainless.PGPainless
 import org.pgpainless.algorithm.SignatureType
 import org.pgpainless.key.protection.SecretKeyRingProtector
 import org.pgpainless.signature.subpackets.CertificationSubpackets
@@ -42,9 +46,10 @@ class ThirdPartyCertificationSignatureBuilder :
      */
     @Throws(PGPException::class)
     constructor(
-        signingKey: PGPSecretKey,
-        protector: SecretKeyRingProtector
-    ) : super(SignatureType.GENERIC_CERTIFICATION, signingKey, protector)
+        signingKey: OpenPGPKey.OpenPGPSecretKey,
+        protector: SecretKeyRingProtector,
+        api: PGPainless
+    ) : super(SignatureType.GENERIC_CERTIFICATION, signingKey, protector, api)
 
     /**
      * Create a new certification signature builder.
@@ -57,9 +62,10 @@ class ThirdPartyCertificationSignatureBuilder :
     @Throws(PGPException::class)
     constructor(
         signatureType: SignatureType,
-        signingKey: PGPSecretKey,
-        protector: SecretKeyRingProtector
-    ) : super(signatureType, signingKey, protector)
+        signingKey: OpenPGPKey.OpenPGPSecretKey,
+        protector: SecretKeyRingProtector,
+        api: PGPainless
+    ) : super(signatureType, signingKey, protector, api)
 
     /**
      * Create a new certification signature builder.
@@ -71,10 +77,11 @@ class ThirdPartyCertificationSignatureBuilder :
      */
     @Throws(PGPException::class)
     constructor(
-        signingKey: PGPSecretKey,
+        signingKey: OpenPGPKey.OpenPGPSecretKey,
         protector: SecretKeyRingProtector,
-        archetypeSignature: PGPSignature
-    ) : super(signingKey, protector, archetypeSignature)
+        archetypeSignature: PGPSignature,
+        api: PGPainless
+    ) : super(signingKey, protector, archetypeSignature, api)
 
     val hashedSubpackets: CertificationSubpackets = _hashedSubpackets
     val unhashedSubpackets: CertificationSubpackets = _unhashedSubpackets
@@ -86,6 +93,16 @@ class ThirdPartyCertificationSignatureBuilder :
         }
     }
 
+    fun build(certificate: OpenPGPCertificate, userId: CharSequence): OpenPGPSignature =
+        buildAndInitSignatureGenerator()
+            .generateCertification(userId.toString(), certificate.primaryKey.pgpPublicKey)
+            .let {
+                OpenPGPComponentSignature(
+                    it,
+                    signingKey.publicKey,
+                    OpenPGPCertificate.OpenPGPUserId(userId.toString(), certificate.primaryKey))
+            }
+
     /**
      * Create a certification signature for the given user-id and the given third-party certificate.
      *
@@ -95,9 +112,19 @@ class ThirdPartyCertificationSignatureBuilder :
      * @throws PGPException if the signature generator cannot be initialized
      */
     @Throws(PGPException::class)
+    @Deprecated("Pass in an OpenPGPCertificate instead of a PGPPublicKeyRing.")
     fun build(certificate: PGPPublicKeyRing, userId: CharSequence): PGPSignature =
-        buildAndInitSignatureGenerator()
-            .generateCertification(userId.toString(), certificate.publicKey)
+        build(api.toCertificate(certificate), userId).signature
+
+    fun build(
+        certificate: OpenPGPCertificate,
+        userAttribute: PGPUserAttributeSubpacketVector
+    ): OpenPGPSignature =
+        OpenPGPComponentSignature(
+            buildAndInitSignatureGenerator()
+                .generateCertification(userAttribute, certificate.primaryKey.pgpPublicKey),
+            signingKey.publicKey,
+            OpenPGPCertificate.OpenPGPUserAttribute(userAttribute, certificate.primaryKey))
 
     /**
      * Create a certification signature for the given user attribute and the given third-party
@@ -109,9 +136,9 @@ class ThirdPartyCertificationSignatureBuilder :
      * @throws PGPException if the signature generator cannot be initialized
      */
     @Throws(PGPException::class)
+    @Deprecated("Pass in an OpenPGPCertificate instead of a PGPPublicKeyRing.")
     fun build(
         certificate: PGPPublicKeyRing,
         userAttribute: PGPUserAttributeSubpacketVector
-    ): PGPSignature =
-        buildAndInitSignatureGenerator().generateCertification(userAttribute, certificate.publicKey)
+    ): PGPSignature = build(api.toCertificate(certificate), userAttribute).signature
 }

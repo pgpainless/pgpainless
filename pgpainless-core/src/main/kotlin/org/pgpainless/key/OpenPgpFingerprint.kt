@@ -5,9 +5,13 @@
 package org.pgpainless.key
 
 import java.nio.charset.Charset
+import org.bouncycastle.bcpg.KeyIdentifier
 import org.bouncycastle.openpgp.PGPKeyRing
 import org.bouncycastle.openpgp.PGPPublicKey
 import org.bouncycastle.openpgp.PGPSecretKey
+import org.bouncycastle.openpgp.api.OpenPGPCertificate
+import org.bouncycastle.openpgp.api.OpenPGPCertificate.OpenPGPComponentKey
+import org.bouncycastle.openpgp.api.OpenPGPKey.OpenPGPPrivateKey
 import org.bouncycastle.util.encoders.Hex
 
 /** Abstract super class of different version OpenPGP fingerprints. */
@@ -28,8 +32,8 @@ abstract class OpenPgpFingerprint : CharSequence, Comparable<OpenPgpFingerprint>
      * fingerprint, but we don't care, since V3 is deprecated.
      *
      * @return key id
-     * @see <a href="https://tools.ietf.org/html/rfc4880#section-12.2"> RFC-4880 §12.2: Key IDs and
-     *   Fingerprints</a>
+     * @see
+     *   [RFC-4880 §12.2: Key IDs and Fingerprints](https://tools.ietf.org/html/rfc4880#section-12.2)
      */
     abstract val keyId: Long
 
@@ -55,10 +59,12 @@ abstract class OpenPgpFingerprint : CharSequence, Comparable<OpenPgpFingerprint>
 
     constructor(keys: PGPKeyRing) : this(keys.publicKey)
 
+    abstract val keyIdentifier: KeyIdentifier
+
     /**
      * Check, whether the fingerprint consists of 40 valid hexadecimal characters.
      *
-     * @param fp fingerprint to check.
+     * @param fingerprint fingerprint to check.
      * @return true if fingerprint is valid.
      */
     protected abstract fun isValid(fingerprint: String): Boolean
@@ -121,10 +127,18 @@ abstract class OpenPgpFingerprint : CharSequence, Comparable<OpenPgpFingerprint>
          * Return the fingerprint of the primary key of the given key ring. This method
          * automatically matches key versions to fingerprint implementations.
          *
-         * @param ring key ring
+         * @param keys key ring
          * @return fingerprint
          */
         @JvmStatic fun of(keys: PGPKeyRing): OpenPgpFingerprint = of(keys.publicKey)
+
+        /** Return the [OpenPgpFingerprint] of the primary key of the given [OpenPGPCertificate]. */
+        @JvmStatic fun of(cert: OpenPGPCertificate): OpenPgpFingerprint = of(cert.pgpPublicKeyRing)
+
+        /** Return the [OpenPgpFingerprint] of the given [OpenPGPComponentKey]. */
+        @JvmStatic fun of(key: OpenPGPComponentKey): OpenPgpFingerprint = of(key.pgpPublicKey)
+
+        @JvmStatic fun of(key: OpenPGPPrivateKey): OpenPgpFingerprint = of(key.secretKey)
 
         /**
          * Try to parse an [OpenPgpFingerprint] from the given fingerprint string. If the trimmed

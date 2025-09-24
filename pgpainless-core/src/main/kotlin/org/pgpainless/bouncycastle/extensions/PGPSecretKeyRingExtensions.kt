@@ -4,8 +4,16 @@
 
 package org.pgpainless.bouncycastle.extensions
 
-import openpgp.openPgpKeyId
-import org.bouncycastle.openpgp.*
+import org.bouncycastle.bcpg.KeyIdentifier
+import org.bouncycastle.openpgp.PGPOnePassSignature
+import org.bouncycastle.openpgp.PGPPublicKeyEncryptedData
+import org.bouncycastle.openpgp.PGPPublicKeyRing
+import org.bouncycastle.openpgp.PGPSecretKey
+import org.bouncycastle.openpgp.PGPSecretKeyRing
+import org.bouncycastle.openpgp.PGPSignature
+import org.bouncycastle.openpgp.api.OpenPGPImplementation
+import org.bouncycastle.openpgp.api.OpenPGPKey
+import org.pgpainless.PGPainless
 import org.pgpainless.key.OpenPgpFingerprint
 
 /** OpenPGP certificate containing the public keys of this OpenPGP key. */
@@ -18,7 +26,17 @@ val PGPSecretKeyRing.certificate: PGPPublicKeyRing
  * @param keyId keyId of the secret key
  * @return true, if the [PGPSecretKeyRing] has a matching [PGPSecretKey], false otherwise
  */
-fun PGPSecretKeyRing.hasSecretKey(keyId: Long): Boolean = this.getSecretKey(keyId) != null
+@Deprecated("Pass in a KeyIdentifier instead.")
+fun PGPSecretKeyRing.hasSecretKey(keyId: Long): Boolean = hasSecretKey(KeyIdentifier(keyId))
+
+/**
+ * Return true, if the [PGPSecretKeyRing] contains a [PGPSecretKey] with the given [keyIdentifier].
+ *
+ * @param keyIdentifier identifier of the secret key
+ * @return true, if the [PGPSecretKeyRing] has a matching [PGPSecretKey], false otherwise
+ */
+fun PGPSecretKeyRing.hasSecretKey(keyIdentifier: KeyIdentifier): Boolean =
+    this.getSecretKey(keyIdentifier) != null
 
 /**
  * Return true, if the [PGPSecretKeyRing] contains a [PGPSecretKey] with the given fingerprint.
@@ -27,7 +45,7 @@ fun PGPSecretKeyRing.hasSecretKey(keyId: Long): Boolean = this.getSecretKey(keyI
  * @return true, if the [PGPSecretKeyRing] has a matching [PGPSecretKey], false otherwise
  */
 fun PGPSecretKeyRing.hasSecretKey(fingerprint: OpenPgpFingerprint): Boolean =
-    this.getSecretKey(fingerprint) != null
+    hasSecretKey(fingerprint.keyIdentifier)
 
 /**
  * Return the [PGPSecretKey] with the given [OpenPgpFingerprint].
@@ -36,7 +54,7 @@ fun PGPSecretKeyRing.hasSecretKey(fingerprint: OpenPgpFingerprint): Boolean =
  * @return the secret key or null
  */
 fun PGPSecretKeyRing.getSecretKey(fingerprint: OpenPgpFingerprint): PGPSecretKey? =
-    this.getSecretKey(fingerprint.bytes)
+    this.getSecretKey(fingerprint.keyIdentifier)
 
 /**
  * Return the [PGPSecretKey] with the given key-ID.
@@ -44,10 +62,20 @@ fun PGPSecretKeyRing.getSecretKey(fingerprint: OpenPgpFingerprint): PGPSecretKey
  * @throws NoSuchElementException if the OpenPGP key doesn't contain a secret key with the given
  *   key-ID
  */
+@Deprecated("Pass in a KeyIdentifier instead.")
 fun PGPSecretKeyRing.requireSecretKey(keyId: Long): PGPSecretKey =
-    getSecretKey(keyId)
+    requireSecretKey(KeyIdentifier(keyId))
+
+/**
+ * Return the [PGPSecretKey] with the given [keyIdentifier].
+ *
+ * @throws NoSuchElementException if the OpenPGP key doesn't contain a secret key with the given
+ *   keyIdentifier
+ */
+fun PGPSecretKeyRing.requireSecretKey(keyIdentifier: KeyIdentifier): PGPSecretKey =
+    getSecretKey(keyIdentifier)
         ?: throw NoSuchElementException(
-            "OpenPGP key does not contain key with id ${keyId.openPgpKeyId()}.")
+            "OpenPGP key does not contain key with id ${keyIdentifier}.")
 
 /**
  * Return the [PGPSecretKey] with the given fingerprint.
@@ -56,9 +84,7 @@ fun PGPSecretKeyRing.requireSecretKey(keyId: Long): PGPSecretKey =
  *   fingerprint
  */
 fun PGPSecretKeyRing.requireSecretKey(fingerprint: OpenPgpFingerprint): PGPSecretKey =
-    getSecretKey(fingerprint)
-        ?: throw NoSuchElementException(
-            "OpenPGP key does not contain key with fingerprint $fingerprint.")
+    requireSecretKey(fingerprint.keyIdentifier)
 
 /**
  * Return the [PGPSecretKey] that matches the [OpenPgpFingerprint] of the given [PGPSignature]. If
@@ -70,10 +96,32 @@ fun PGPSecretKeyRing.getSecretKeyFor(signature: PGPSignature): PGPSecretKey? =
 
 /** Return the [PGPSecretKey] that matches the key-ID of the given [PGPOnePassSignature] packet. */
 fun PGPSecretKeyRing.getSecretKeyFor(onePassSignature: PGPOnePassSignature): PGPSecretKey? =
-    this.getSecretKey(onePassSignature.keyID)
+    this.getSecretKey(onePassSignature.keyIdentifier)
 
+/**
+ * Return the [PGPSecretKey] that can be used to decrypt the given [PGPPublicKeyEncryptedData]
+ * packet.
+ *
+ * @param pkesk public-key encrypted session-key packet
+ * @return secret-key or null if no matching secret key was found
+ */
 fun PGPSecretKeyRing.getSecretKeyFor(pkesk: PGPPublicKeyEncryptedData): PGPSecretKey? =
-    when (pkesk.version) {
-        3 -> this.getSecretKey(pkesk.keyID)
-        else -> throw NotImplementedError("Version 6 PKESKs are not yet supported.")
-    }
+    this.getSecretKey(pkesk.keyIdentifier)
+
+/**
+ * Convert the [PGPSecretKeyRing] into an [OpenPGPKey].
+ *
+ * @return key
+ */
+@Deprecated("Use toOpenPGPKey(implementation) instead.")
+fun PGPSecretKeyRing.toOpenPGPKey(): OpenPGPKey =
+    toOpenPGPKey(PGPainless.getInstance().implementation)
+
+/**
+ * Convert the [PGPSecretKeyRing] into an [OpenPGPKey] using the given [OpenPGPImplementation].
+ *
+ * @param implementation openpgp implementation
+ * @return key
+ */
+fun PGPSecretKeyRing.toOpenPGPKey(implementation: OpenPGPImplementation): OpenPGPKey =
+    OpenPGPKey(this, implementation)

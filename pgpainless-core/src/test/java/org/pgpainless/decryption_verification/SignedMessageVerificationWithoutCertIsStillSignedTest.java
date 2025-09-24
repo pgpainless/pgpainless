@@ -30,8 +30,8 @@ public class SignedMessageVerificationWithoutCertIsStillSignedTest {
 
     @Test
     public void verifyMissingVerificationCertOptionStillResultsInMessageIsSigned() throws IOException, PGPException {
-        ConsumerOptions withoutVerificationCert = new ConsumerOptions();
-        DecryptionStream verificationStream = PGPainless.decryptAndOrVerify()
+        ConsumerOptions withoutVerificationCert = ConsumerOptions.get();
+        DecryptionStream verificationStream = PGPainless.getInstance().processMessage()
                 .onInputStream(new ByteArrayInputStream(message.getBytes(StandardCharsets.UTF_8)))
                 .withOptions(withoutVerificationCert);
 

@@ -14,7 +14,7 @@ import java.util.Calendar;
 import java.util.Date;
 
 import org.bouncycastle.openpgp.PGPException;
-import org.bouncycastle.openpgp.PGPSecretKeyRing;
+import org.bouncycastle.openpgp.api.OpenPGPKey;
 import org.junit.JUtils;
 import org.junit.jupiter.api.TestTemplate;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -35,28 +35,28 @@ public class ChangeExpirationTest {
     @ExtendWith(TestAllImplementations.class)
     public void setExpirationDateAndThenUnsetIt_OnPrimaryKey()
             throws PGPException, IOException {
-
-        PGPSecretKeyRing secretKeys = TestKeys.getEmilSecretKeyRing();
-        KeyRingInfo sInfo = PGPainless.inspectKeyRing(secretKeys);
+        PGPainless api = PGPainless.getInstance();
+        OpenPGPKey secretKeys = TestKeys.getEmilKey();
+        KeyRingInfo sInfo = api.inspect(secretKeys);
 
         assertNull(sInfo.getPrimaryKeyExpirationDate());
         assertNull(sInfo.getSubkeyExpirationDate(subKeyFingerprint));
 
         Date now = new Date();
         Date date = DateUtil.parseUTCDate("2020-11-27 16:10:32 UTC");
-        secretKeys = PGPainless.modifyKeyRing(secretKeys)
+        secretKeys = api.modify(secretKeys)
                 .setExpirationDate(date, new UnprotectedKeysProtector()).done();
-        sInfo = PGPainless.inspectKeyRing(secretKeys);
+        sInfo = api.inspect(secretKeys);
         assertNotNull(sInfo.getPrimaryKeyExpirationDate());
         assertEquals(date.getTime(), sInfo.getPrimaryKeyExpirationDate().getTime());
         // subkey unchanged
         assertNull(sInfo.getSubkeyExpirationDate(subKeyFingerprint));
 
         Date t1 = new Date(now.getTime() + 1000 * 60 * 60);
-        secretKeys = PGPainless.modifyKeyRing(secretKeys, t1)
+        secretKeys = api.modify(secretKeys, t1)
                 .setExpirationDate(null, new UnprotectedKeysProtector()).done();
 
-        sInfo = PGPainless.inspectKeyRing(secretKeys, t1);
+        sInfo = api.inspect(secretKeys, t1);
         assertNull(sInfo.getPrimaryKeyExpirationDate());
         assertNull(sInfo.getSubkeyExpirationDate(subKeyFingerprint));
     }
@@ -65,9 +65,9 @@ public class ChangeExpirationTest {
     @ExtendWith(TestAllImplementations.class)
     public void setExpirationDateAndThenUnsetIt_OnSubkey()
             throws PGPException, IOException {
-
-        PGPSecretKeyRing secretKeys = TestKeys.getEmilSecretKeyRing();
-        KeyRingInfo sInfo = PGPainless.inspectKeyRing(secretKeys);
+        PGPainless api = PGPainless.getInstance();
+        OpenPGPKey secretKeys = TestKeys.getEmilKey();
+        KeyRingInfo sInfo = api.inspect(secretKeys);
 
         assertNull(sInfo.getPrimaryKeyExpirationDate());
 
@@ -77,42 +77,43 @@ public class ChangeExpirationTest {
         calendar.add(Calendar.DATE, 5);
         Date expiration = calendar.getTime(); // in 5 days
 
-        secretKeys = PGPainless.modifyKeyRing(secretKeys)
+        secretKeys = api.modify(secretKeys)
                 .setExpirationDate(expiration, new UnprotectedKeysProtector()).done();
-        sInfo = PGPainless.inspectKeyRing(secretKeys);
+        sInfo = api.inspect(secretKeys);
         assertNotNull(sInfo.getPrimaryKeyExpirationDate());
         JUtils.assertDateEquals(expiration, sInfo.getPrimaryKeyExpirationDate());
 
         Date t1 = new Date(now.getTime() + 1000 * 60 * 60);
-        secretKeys = PGPainless.modifyKeyRing(secretKeys, t1)
+        secretKeys = api.modify(secretKeys, t1)
                 .setExpirationDate(null, new UnprotectedKeysProtector()).done();
 
-        sInfo = PGPainless.inspectKeyRing(secretKeys, t1);
+        sInfo = api.inspect(secretKeys, t1);
         assertNull(sInfo.getPrimaryKeyExpirationDate());
     }
 
     @TestTemplate
     @ExtendWith(TestAllImplementations.class)
     public void testExtremeExpirationDates() throws PGPException, IOException {
-        PGPSecretKeyRing secretKeys = TestKeys.getEmilSecretKeyRing();
+        PGPainless api = PGPainless.getInstance();
+        OpenPGPKey secretKeys = TestKeys.getEmilKey();
         SecretKeyRingProtector protector = SecretKeyRingProtector.unprotectedKeys();
 
         // seconds from 2021 to 2199 will overflow 32bit integers
         Date farAwayExpiration = DateUtil.parseUTCDate("2199-01-01 00:00:00 UTC");
 
-        final PGPSecretKeyRing finalKeys = secretKeys;
+        final OpenPGPKey finalKeys = secretKeys;
         assertThrows(IllegalArgumentException.class, () ->
-                PGPainless.modifyKeyRing(finalKeys)
+                api.modify(finalKeys)
                         .setExpirationDate(farAwayExpiration, protector)
                         .done());
 
         Date notSoFarAwayExpiration = DateUtil.parseUTCDate("2100-01-01 00:00:00 UTC");
 
-        secretKeys = PGPainless.modifyKeyRing(secretKeys)
+        secretKeys = api.modify(secretKeys)
                 .setExpirationDate(notSoFarAwayExpiration, protector)
                 .done();
 
-        Date actualExpiration = PGPainless.inspectKeyRing(secretKeys)
+        Date actualExpiration = api.inspect(secretKeys)
                 .getPrimaryKeyExpirationDate();
         JUtils.assertDateEquals(notSoFarAwayExpiration, actualExpiration);
     }

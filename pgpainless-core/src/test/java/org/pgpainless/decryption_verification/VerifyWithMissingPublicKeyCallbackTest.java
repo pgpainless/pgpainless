@@ -12,58 +12,62 @@ import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
-import java.security.InvalidAlgorithmParameterException;
-import java.security.NoSuchAlgorithmException;
 
+import org.bouncycastle.bcpg.KeyIdentifier;
 import org.bouncycastle.openpgp.PGPException;
-import org.bouncycastle.openpgp.PGPPublicKey;
 import org.bouncycastle.openpgp.PGPPublicKeyRing;
-import org.bouncycastle.openpgp.PGPSecretKeyRing;
+import org.bouncycastle.openpgp.api.OpenPGPCertificate;
+import org.bouncycastle.openpgp.api.OpenPGPKey;
+import org.bouncycastle.openpgp.api.OpenPGPKeyMaterialProvider;
 import org.bouncycastle.util.io.Streams;
 import org.junit.jupiter.api.Test;
 import org.pgpainless.PGPainless;
 import org.pgpainless.algorithm.DocumentSignatureType;
+import org.pgpainless.algorithm.OpenPGPKeyVersion;
 import org.pgpainless.encryption_signing.EncryptionStream;
 import org.pgpainless.encryption_signing.ProducerOptions;
 import org.pgpainless.encryption_signing.SigningOptions;
 import org.pgpainless.key.TestKeys;
-import org.pgpainless.key.info.KeyRingInfo;
 import org.pgpainless.key.protection.SecretKeyRingProtector;
-import org.pgpainless.key.util.KeyRingUtils;
+
+import javax.annotation.Nonnull;
 
 /**
- * Test functionality of the {@link MissingPublicKeyCallback} which is called when during signature verification,
- * a signature is encountered which was made by a key that was not provided in
- * {@link ConsumerOptions#addVerificationCert(PGPPublicKeyRing)}.
+ * Test functionality of the {@link org.bouncycastle.openpgp.api.OpenPGPKeyMaterialProvider.OpenPGPCertificateProvider}
+ * which is called when during signature verification, a signature is encountered which was made by a key that was
+ * not provided in {@link ConsumerOptions#addVerificationCert(PGPPublicKeyRing)}.
  */
 public class VerifyWithMissingPublicKeyCallbackTest {
 
     @Test
-    public void testMissingPublicKeyCallback() throws PGPException, InvalidAlgorithmParameterException, NoSuchAlgorithmException, IOException {
-        PGPSecretKeyRing signingSecKeys = PGPainless.generateKeyRing().modernKeyRing("alice");
-        PGPPublicKey signingKey = new KeyRingInfo(signingSecKeys).getSigningSubkeys().get(0);
-        PGPPublicKeyRing signingPubKeys = KeyRingUtils.publicKeyRingFrom(signingSecKeys);
+    public void testMissingPublicKeyCallback() throws PGPException, IOException {
+        PGPainless api = PGPainless.getInstance();
+
+        OpenPGPKey signingSecKeys = api.generateKey(OpenPGPKeyVersion.v4).modernKeyRing("alice");
+        OpenPGPCertificate.OpenPGPComponentKey signingKey =
+                signingSecKeys.getSigningKeys().get(0);
+        OpenPGPCertificate signingPubKeys = signingSecKeys.toCertificate();
         PGPPublicKeyRing unrelatedKeys = TestKeys.getJulietPublicKeyRing();
 
         String msg = "Arguing that you don't care about the right to privacy because you have nothing to hide" +
                 "is no different than saying you don't care about free speech because you have nothing to say.";
         ByteArrayOutputStream signOut = new ByteArrayOutputStream();
-        EncryptionStream signingStream = PGPainless.encryptAndOrSign().onOutputStream(signOut)
-                .withOptions(ProducerOptions.sign(new SigningOptions().addInlineSignature(
+        EncryptionStream signingStream = api.generateMessage().onOutputStream(signOut)
+                .withOptions(ProducerOptions.sign(SigningOptions.get().addInlineSignature(
                         SecretKeyRingProtector.unprotectedKeys(),
-                        signingSecKeys, DocumentSignatureType.CANONICAL_TEXT_DOCUMENT
+                        signingSecKeys.getPGPSecretKeyRing(), DocumentSignatureType.CANONICAL_TEXT_DOCUMENT
                 )));
         Streams.pipeAll(new ByteArrayInputStream(msg.getBytes(StandardCharsets.UTF_8)), signingStream);
         signingStream.close();
 
-        DecryptionStream verificationStream = PGPainless.decryptAndOrVerify()
+        DecryptionStream verificationStream = api.processMessage()
                 .onInputStream(new ByteArrayInputStream(signOut.toByteArray()))
-                .withOptions(new ConsumerOptions()
+                .withOptions(ConsumerOptions.get()
                         .addVerificationCert(unrelatedKeys)
-                        .setMissingCertificateCallback(new MissingPublicKeyCallback() {
+                        .setMissingCertificateCallback(new OpenPGPKeyMaterialProvider.OpenPGPCertificateProvider() {
                             @Override
-                            public PGPPublicKeyRing onMissingPublicKeyEncountered(long keyId) {
-                                assertEquals(signingKey.getKeyID(), keyId, "Signing key-ID mismatch.");
+                            public OpenPGPCertificate provide(@Nonnull KeyIdentifier keyIdentifier) {
+                                assertEquals(signingKey.getKeyIdentifier(), keyIdentifier, "Signing key-ID mismatch.");
                                 return signingPubKeys;
                             }
                         }));

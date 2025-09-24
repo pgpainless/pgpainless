@@ -9,14 +9,18 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import java.io.IOException;
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashSet;
 import java.util.Set;
 
+import org.bouncycastle.bcpg.KeyIdentifier;
 import org.bouncycastle.bcpg.S2K;
 import org.bouncycastle.bcpg.SecretKeyPacket;
 import org.bouncycastle.openpgp.PGPSecretKey;
 import org.bouncycastle.openpgp.PGPSecretKeyRing;
+import org.bouncycastle.openpgp.api.OpenPGPKey;
+import org.bouncycastle.openpgp.api.OpenPGPKeyReader;
 import org.junit.jupiter.api.Test;
 import org.pgpainless.PGPainless;
 import org.pgpainless.key.SubkeyIdentifier;
@@ -178,8 +182,9 @@ public class GnuPGDummyKeyUtilTest {
 
     @Test
     public void testMoveAllKeysToCard() throws IOException {
-        PGPSecretKeyRing secretKeys = PGPainless.readKeyRing().secretKeyRing(FULL_KEY);
-        PGPSecretKeyRing expected = PGPainless.readKeyRing().secretKeyRing(ALL_KEYS_ON_CARD);
+        OpenPGPKeyReader reader = PGPainless.getInstance().readKey();
+        OpenPGPKey secretKeys = reader.parseKey(FULL_KEY);
+        OpenPGPKey expected = reader.parseKey(ALL_KEYS_ON_CARD);
 
         PGPSecretKeyRing onCard = GnuPGDummyKeyUtil.modify(secretKeys)
                 .divertPrivateKeysToCard(GnuPGDummyKeyUtil.KeyFilter.any(), cardSerial);
@@ -190,46 +195,64 @@ public class GnuPGDummyKeyUtilTest {
             assertEquals(S2K.GNU_PROTECTION_MODE_DIVERT_TO_CARD, s2K.getProtectionMode());
         }
 
-        assertArrayEquals(expected.getEncoded(), onCard.getEncoded());
+        assertArrayEquals(expected.getPGPSecretKeyRing().getEncoded(), onCard.getEncoded());
     }
 
     @Test
     public void testMovePrimaryKeyToCard() throws IOException {
-        PGPSecretKeyRing secretKeys = PGPainless.readKeyRing().secretKeyRing(FULL_KEY);
-        PGPSecretKeyRing expected = PGPainless.readKeyRing().secretKeyRing(PRIMARY_KEY_ON_CARD);
+        OpenPGPKeyReader reader = PGPainless.getInstance().readKey();
+        OpenPGPKey secretKeys = reader.parseKey(FULL_KEY);
+        OpenPGPKey expected = reader.parseKey(PRIMARY_KEY_ON_CARD);
 
         PGPSecretKeyRing onCard = GnuPGDummyKeyUtil.modify(secretKeys)
                 .divertPrivateKeysToCard(GnuPGDummyKeyUtil.KeyFilter.only(primaryKeyId), cardSerial);
 
-        assertArrayEquals(expected.getEncoded(), onCard.getEncoded());
+        assertArrayEquals(expected.getPGPSecretKeyRing().getEncoded(), onCard.getEncoded());
     }
 
     @Test
     public void testMoveEncryptionKeyToCard() throws IOException {
-        PGPSecretKeyRing secretKeys = PGPainless.readKeyRing().secretKeyRing(FULL_KEY);
-        PGPSecretKeyRing expected = PGPainless.readKeyRing().secretKeyRing(ENCRYPTION_KEY_ON_CARD);
+        OpenPGPKeyReader reader = PGPainless.getInstance().readKey();
+        OpenPGPKey secretKeys = reader.parseKey(FULL_KEY);
+        OpenPGPKey expected = reader.parseKey(ENCRYPTION_KEY_ON_CARD);
 
         PGPSecretKeyRing onCard = GnuPGDummyKeyUtil.modify(secretKeys)
                 .divertPrivateKeysToCard(GnuPGDummyKeyUtil.KeyFilter.only(encryptionKeyId), cardSerial);
 
-        assertArrayEquals(expected.getEncoded(), onCard.getEncoded());
+        assertArrayEquals(expected.getPGPSecretKeyRing().getEncoded(), onCard.getEncoded());
     }
 
     @Test
     public void testMoveSigningKeyToCard() throws IOException {
-        PGPSecretKeyRing secretKeys = PGPainless.readKeyRing().secretKeyRing(FULL_KEY);
-        PGPSecretKeyRing expected = PGPainless.readKeyRing().secretKeyRing(SIGNATURE_KEY_ON_CARD);
+        OpenPGPKeyReader reader = PGPainless.getInstance().readKey();
+        OpenPGPKey secretKeys = reader.parseKey(FULL_KEY);
+        OpenPGPKey expected = reader.parseKey(SIGNATURE_KEY_ON_CARD);
 
         PGPSecretKeyRing onCard = GnuPGDummyKeyUtil.modify(secretKeys)
                 .divertPrivateKeysToCard(GnuPGDummyKeyUtil.KeyFilter.only(signatureKeyId), cardSerial);
 
-        assertArrayEquals(expected.getEncoded(), onCard.getEncoded());
+        assertArrayEquals(expected.getPGPSecretKeyRing().getEncoded(), onCard.getEncoded());
+    }
+
+    @Test
+    public void testMoveSelectedKeyToCard() throws IOException {
+        OpenPGPKeyReader reader = PGPainless.getInstance().readKey();
+        OpenPGPKey secretKeys = reader.parseKey(FULL_KEY);
+        OpenPGPKey expected = reader.parseKey(SIGNATURE_KEY_ON_CARD);
+
+        PGPSecretKeyRing onCard = GnuPGDummyKeyUtil.modify(secretKeys)
+                .divertPrivateKeysToCard(GnuPGDummyKeyUtil.KeyFilter.selected(
+                        Arrays.asList(new KeyIdentifier(signatureKeyId)))
+                        , cardSerial);
+
+        assertArrayEquals(expected.getPGPSecretKeyRing().getEncoded(), onCard.getEncoded());
     }
 
     @Test
     public void testRemoveAllKeys() throws IOException {
-        PGPSecretKeyRing secretKeys = PGPainless.readKeyRing().secretKeyRing(FULL_KEY);
-        PGPSecretKeyRing expected = PGPainless.readKeyRing().secretKeyRing(ALL_KEYS_REMOVED);
+        OpenPGPKeyReader reader = PGPainless.getInstance().readKey();
+        OpenPGPKey secretKeys = reader.parseKey(FULL_KEY);
+        OpenPGPKey expected = reader.parseKey(ALL_KEYS_REMOVED);
 
         PGPSecretKeyRing removedSecretKeys = GnuPGDummyKeyUtil.modify(secretKeys)
                 .removePrivateKeys(GnuPGDummyKeyUtil.KeyFilter.any());
@@ -240,33 +263,35 @@ public class GnuPGDummyKeyUtilTest {
             assertEquals(GnuPGDummyExtension.NO_PRIVATE_KEY.getId(), s2k.getProtectionMode());
         }
 
-        assertArrayEquals(expected.getEncoded(), removedSecretKeys.getEncoded());
+        assertArrayEquals(expected.getPGPSecretKeyRing().getEncoded(), removedSecretKeys.getEncoded());
     }
 
     @Test
     public void testGetSingleIdOfHardwareBackedKey() throws IOException {
-        PGPSecretKeyRing secretKeys = PGPainless.readKeyRing().secretKeyRing(FULL_KEY);
-        assertTrue(GnuPGDummyKeyUtil.getIdsOfKeysWithGnuPGS2KDivertedToCard(secretKeys).isEmpty());
+        OpenPGPKeyReader reader = PGPainless.getInstance().readKey();
+        OpenPGPKey secretKeys = reader.parseKey(FULL_KEY);
+        assertTrue(GnuPGDummyKeyUtil.getIdsOfKeysWithGnuPGS2KDivertedToCard(secretKeys.getPGPSecretKeyRing()).isEmpty());
 
         PGPSecretKeyRing withHardwareBackedEncryptionKey = GnuPGDummyKeyUtil.modify(secretKeys)
                 .divertPrivateKeysToCard(GnuPGDummyKeyUtil.KeyFilter.only(encryptionKeyId));
 
         Set<SubkeyIdentifier> hardwareBackedKeys = GnuPGDummyKeyUtil
                 .getIdsOfKeysWithGnuPGS2KDivertedToCard(withHardwareBackedEncryptionKey);
-        assertEquals(Collections.singleton(new SubkeyIdentifier(secretKeys, encryptionKeyId)), hardwareBackedKeys);
+        assertEquals(Collections.singleton(new SubkeyIdentifier(secretKeys.getPGPSecretKeyRing(), encryptionKeyId)), hardwareBackedKeys);
     }
 
 
     @Test
     public void testGetIdsOfFullyHardwareBackedKey() throws IOException {
-        PGPSecretKeyRing secretKeys = PGPainless.readKeyRing().secretKeyRing(FULL_KEY);
-        assertTrue(GnuPGDummyKeyUtil.getIdsOfKeysWithGnuPGS2KDivertedToCard(secretKeys).isEmpty());
+        OpenPGPKeyReader reader = PGPainless.getInstance().readKey();
+        OpenPGPKey secretKeys = reader.parseKey(FULL_KEY);
+        assertTrue(GnuPGDummyKeyUtil.getIdsOfKeysWithGnuPGS2KDivertedToCard(secretKeys.getPGPSecretKeyRing()).isEmpty());
 
         PGPSecretKeyRing withHardwareBackedEncryptionKey = GnuPGDummyKeyUtil.modify(secretKeys)
                 .divertPrivateKeysToCard(GnuPGDummyKeyUtil.KeyFilter.any());
         Set<SubkeyIdentifier> expected = new HashSet<>();
-        for (PGPSecretKey key : secretKeys) {
-            expected.add(new SubkeyIdentifier(secretKeys, key.getKeyID()));
+        for (PGPSecretKey key : secretKeys.getPGPSecretKeyRing()) {
+            expected.add(new SubkeyIdentifier(secretKeys.getPGPSecretKeyRing(), key.getKeyIdentifier()));
         }
 
         Set<SubkeyIdentifier> hardwareBackedKeys = GnuPGDummyKeyUtil

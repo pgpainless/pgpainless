@@ -4,25 +4,22 @@
 
 package org.bouncycastle;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
-import java.security.InvalidAlgorithmParameterException;
-import java.security.NoSuchAlgorithmException;
 import java.util.Iterator;
 import java.util.List;
 
-import org.bouncycastle.openpgp.PGPException;
 import org.bouncycastle.openpgp.PGPPublicKey;
-import org.bouncycastle.openpgp.PGPPublicKeyRing;
-import org.bouncycastle.openpgp.PGPSecretKeyRing;
+import org.bouncycastle.openpgp.api.OpenPGPCertificate;
+import org.bouncycastle.openpgp.api.OpenPGPKey;
 import org.junit.jupiter.api.Test;
 import org.pgpainless.PGPainless;
-import org.pgpainless.key.util.KeyRingUtils;
 import org.pgpainless.util.CollectionUtils;
 
 public class PGPPublicKeyRingTest {
+
+    private final PGPainless api = PGPainless.getInstance();
 
     /**
      * Learning test to see if BC also makes userids available on subkeys.
@@ -31,29 +28,25 @@ public class PGPPublicKeyRingTest {
      * @see <a href="https://security.stackexchange.com/questions/92635/is-it-possible-to-assign-different-uids-to-subkeys-for-the-purpose-of-having-mul>Stackexchange link</a>
      */
     @Test
-    public void subkeysDoNotHaveUserIDsTest() throws InvalidAlgorithmParameterException, NoSuchAlgorithmException, PGPException {
-        PGPSecretKeyRing secretKeys = PGPainless.generateKeyRing().simpleEcKeyRing("primary@user.id");
-        PGPPublicKeyRing publicKeys = KeyRingUtils.publicKeyRingFrom(secretKeys);
-        PGPPublicKey primaryKey = publicKeys.getPublicKey();
-        for (PGPPublicKey subkey : publicKeys) {
-            Iterator<String> userIds = subkey.getUserIDs();
-            if (primaryKey == subkey) {
-                assertEquals("primary@user.id", userIds.next());
-            }
+    public void subkeysDoNotHaveUserIDsTest() {
+        OpenPGPKey key = api.generateKey().simpleEcKeyRing("primary@user.id");
+        OpenPGPCertificate certificate = key.toCertificate();
+        for (OpenPGPCertificate.OpenPGPComponentKey subkey : certificate.getSubkeys().values()) {
+            Iterator<String> userIds = subkey.getPGPPublicKey().getUserIDs();
             assertFalse(userIds.hasNext());
         }
     }
 
     @Test
-    public void removeUserIdTest() throws PGPException, InvalidAlgorithmParameterException, NoSuchAlgorithmException {
+    public void removeUserIdTest() {
         String userId = "alice@wonderland.lit";
-        PGPSecretKeyRing secretKeyRing = PGPainless.generateKeyRing().simpleEcKeyRing(userId);
-        PGPPublicKeyRing publicKeys = KeyRingUtils.publicKeyRingFrom(secretKeyRing);
+        OpenPGPKey key = api.generateKey().simpleEcKeyRing(userId);
+        OpenPGPCertificate certificate = key.toCertificate();
+        PGPPublicKey publicKey = certificate.getPrimaryKey().getPGPPublicKey();
 
-        List<String> userIds = CollectionUtils.iteratorToList(publicKeys.getPublicKey().getUserIDs());
+        List<String> userIds = CollectionUtils.iteratorToList(publicKey.getUserIDs());
         assertTrue(userIds.contains(userId));
 
-        PGPPublicKey publicKey = publicKeys.getPublicKey();
         publicKey = PGPPublicKey.removeCertification(publicKey, userId);
 
         userIds = CollectionUtils.iteratorToList(publicKey.getUserIDs());

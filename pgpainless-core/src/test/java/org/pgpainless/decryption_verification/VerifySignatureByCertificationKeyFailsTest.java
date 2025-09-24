@@ -213,7 +213,7 @@ public class VerifySignatureByCertificationKeyFailsTest {
     public void testSignatureByNonSigningPrimaryKeyIsRejected() throws Exception {
         PGPSecretKeyRing key = PGPainless.readKeyRing().secretKeyRing(KEY);
 
-        DecryptionStream verifier = PGPainless.decryptAndOrVerify()
+        DecryptionStream verifier = PGPainless.getInstance().processMessage()
                 .onInputStream(new ByteArrayInputStream(DATA))
                 .withOptions(ConsumerOptions.get()
                         .addVerificationCert(PGPainless.extractCertificate(key))

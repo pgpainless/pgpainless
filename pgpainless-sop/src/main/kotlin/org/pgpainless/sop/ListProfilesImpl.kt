@@ -4,12 +4,13 @@
 
 package org.pgpainless.sop
 
+import org.pgpainless.PGPainless
 import sop.Profile
 import sop.exception.SOPGPException
 import sop.operation.ListProfiles
 
 /** Implementation of the `list-profiles` operation using PGPainless. */
-class ListProfilesImpl : ListProfiles {
+class ListProfilesImpl(private val api: PGPainless) : ListProfiles {
 
     override fun subcommand(command: String): List<Profile> =
         when (command) {

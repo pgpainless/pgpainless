@@ -9,9 +9,8 @@ import java.io.InputStream
 import java.nio.charset.Charset
 import kotlin.jvm.Throws
 import org.bouncycastle.openpgp.*
+import org.bouncycastle.openpgp.api.OpenPGPImplementation
 import org.bouncycastle.util.io.Streams
-import org.pgpainless.PGPainless
-import org.pgpainless.implementation.ImplementationFactory
 import org.pgpainless.key.collection.PGPKeyRingCollection
 import org.pgpainless.util.ArmorUtils
 
@@ -130,8 +129,8 @@ class KeyRingReader {
             maxIterations: Int = MAX_ITERATIONS
         ): PGPKeyRing? {
             val objectFactory =
-                ImplementationFactory.getInstance()
-                    .getPGPObjectFactory(ArmorUtils.getDecoderStream(inputStream))
+                OpenPGPImplementation.getInstance()
+                    .pgpObjectFactory(ArmorUtils.getDecoderStream(inputStream))
 
             try {
                 for ((i, next) in objectFactory.withIndex()) {
@@ -172,8 +171,8 @@ class KeyRingReader {
             maxIterations: Int = MAX_ITERATIONS
         ): PGPPublicKeyRing? {
             val objectFactory =
-                ImplementationFactory.getInstance()
-                    .getPGPObjectFactory(ArmorUtils.getDecoderStream(inputStream))
+                OpenPGPImplementation.getInstance()
+                    .pgpObjectFactory(ArmorUtils.getDecoderStream(inputStream))
 
             try {
                 for ((i, next) in objectFactory.withIndex()) {
@@ -213,8 +212,8 @@ class KeyRingReader {
             maxIterations: Int = MAX_ITERATIONS
         ): PGPPublicKeyRingCollection {
             val objectFactory =
-                ImplementationFactory.getInstance()
-                    .getPGPObjectFactory(ArmorUtils.getDecoderStream(inputStream))
+                OpenPGPImplementation.getInstance()
+                    .pgpObjectFactory(ArmorUtils.getDecoderStream(inputStream))
             val certificates = mutableListOf<PGPPublicKeyRing>()
             try {
                 for ((i, next) in objectFactory.withIndex()) {
@@ -229,7 +228,7 @@ class KeyRingReader {
                         continue
                     }
                     if (next is PGPSecretKeyRing) {
-                        certificates.add(PGPainless.extractCertificate(next))
+                        certificates.add(next.toCertificate())
                         continue
                     }
                     if (next is PGPPublicKeyRingCollection) {
@@ -260,8 +259,7 @@ class KeyRingReader {
             maxIterations: Int = MAX_ITERATIONS
         ): PGPSecretKeyRing? {
             val decoderStream = ArmorUtils.getDecoderStream(inputStream)
-            val objectFactory =
-                ImplementationFactory.getInstance().getPGPObjectFactory(decoderStream)
+            val objectFactory = OpenPGPImplementation.getInstance().pgpObjectFactory(decoderStream)
 
             try {
                 for ((i, next) in objectFactory.withIndex()) {
@@ -300,8 +298,8 @@ class KeyRingReader {
             maxIterations: Int = MAX_ITERATIONS
         ): PGPSecretKeyRingCollection {
             val objectFactory =
-                ImplementationFactory.getInstance()
-                    .getPGPObjectFactory(ArmorUtils.getDecoderStream(inputStream))
+                OpenPGPImplementation.getInstance()
+                    .pgpObjectFactory(ArmorUtils.getDecoderStream(inputStream))
 
             val secretKeys = mutableListOf<PGPSecretKeyRing>()
             try {

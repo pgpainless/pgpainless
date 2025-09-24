@@ -122,9 +122,9 @@ public class OnePassSignatureVerificationWithPartialLengthLiteralDataRegressionT
 
         ByteArrayInputStream in = new ByteArrayInputStream(dearmored.toByteArray());
 
-        DecryptionStream decryptionStream = PGPainless.decryptAndOrVerify()
+        DecryptionStream decryptionStream = PGPainless.getInstance().processMessage()
                 .onInputStream(in)
-                .withOptions(new ConsumerOptions()
+                .withOptions(ConsumerOptions.get()
                         .addVerificationCert(cert)
                         .addDecryptionKey(secretKeys));
 

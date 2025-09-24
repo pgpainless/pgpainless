@@ -12,18 +12,16 @@ import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 
 import org.bouncycastle.openpgp.PGPException;
-import org.bouncycastle.openpgp.PGPPublicKeyRing;
-import org.bouncycastle.openpgp.PGPSecretKeyRing;
+import org.bouncycastle.openpgp.api.OpenPGPCertificate;
+import org.bouncycastle.openpgp.api.OpenPGPKey;
 import org.bouncycastle.util.io.Streams;
 import org.junit.jupiter.api.Test;
 import org.pgpainless.PGPainless;
-import org.pgpainless.algorithm.EncryptionPurpose;
 import org.pgpainless.encryption_signing.EncryptionOptions;
 import org.pgpainless.encryption_signing.EncryptionResult;
 import org.pgpainless.encryption_signing.EncryptionStream;
 import org.pgpainless.encryption_signing.ProducerOptions;
 import org.pgpainless.key.WeirdKeys;
-import org.pgpainless.key.util.KeyRingUtils;
 
 public class TestTwoSubkeysEncryption {
 
@@ -36,8 +34,8 @@ public class TestTwoSubkeysEncryption {
     /**
      * {@link WeirdKeys#TWO_CRYPT_SUBKEYS} is a key that has two subkeys which both carry the key flags
      * {@link org.pgpainless.algorithm.KeyFlag#ENCRYPT_COMMS} and {@link org.pgpainless.algorithm.KeyFlag#ENCRYPT_STORAGE}.
-     *
-     * This test verifies that {@link EncryptionOptions#addRecipient(PGPPublicKeyRing, EncryptionOptions.EncryptionKeySelector)}
+     * <p>
+     * This test verifies that {@link EncryptionOptions#addRecipient(OpenPGPCertificate, EncryptionOptions.EncryptionKeySelector)}
      * works properly, if {@link EncryptionOptions#encryptToAllCapableSubkeys()} is provided as argument.
      *
      * @throws IOException not expected
@@ -45,13 +43,13 @@ public class TestTwoSubkeysEncryption {
      */
     @Test
     public void testEncryptsToBothSubkeys() throws IOException, PGPException {
-        PGPSecretKeyRing twoSuitableSubkeysKeyRing = WeirdKeys.getTwoCryptSubkeysKey();
-        PGPPublicKeyRing publicKeys = KeyRingUtils.publicKeyRingFrom(twoSuitableSubkeysKeyRing);
+        OpenPGPKey twoSuitableSubkeysKeyRing = WeirdKeys.getTwoCryptSubkeysKey();
+        OpenPGPCertificate publicKeys = twoSuitableSubkeysKeyRing.toCertificate();
         ByteArrayOutputStream out = new ByteArrayOutputStream();
-        EncryptionStream encryptionStream = PGPainless.encryptAndOrSign()
+        EncryptionStream encryptionStream = PGPainless.getInstance().generateMessage()
                 .onOutputStream(out)
                 .withOptions(
-                        ProducerOptions.encrypt(new EncryptionOptions(EncryptionPurpose.ANY)
+                        ProducerOptions.encrypt(EncryptionOptions.get()
                                 .addRecipient(publicKeys, EncryptionOptions.encryptToAllCapableSubkeys())
                         )
                         .setAsciiArmor(false)

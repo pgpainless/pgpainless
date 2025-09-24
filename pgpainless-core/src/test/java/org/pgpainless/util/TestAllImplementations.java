@@ -9,23 +9,23 @@ import java.util.Collections;
 import java.util.List;
 import java.util.stream.Stream;
 
+import org.bouncycastle.openpgp.api.OpenPGPImplementation;
+import org.bouncycastle.openpgp.api.bc.BcOpenPGPImplementation;
+import org.bouncycastle.openpgp.api.jcajce.JcaOpenPGPImplementation;
 import org.junit.jupiter.api.extension.BeforeTestExecutionCallback;
 import org.junit.jupiter.api.extension.Extension;
 import org.junit.jupiter.api.extension.ExtensionContext;
 import org.junit.jupiter.api.extension.TestTemplateInvocationContext;
 import org.junit.jupiter.api.extension.TestTemplateInvocationContextProvider;
-import org.pgpainless.implementation.BcImplementationFactory;
-import org.pgpainless.implementation.ImplementationFactory;
-import org.pgpainless.implementation.JceImplementationFactory;
 
 /**
- * InvocationContextProvider that sets different {@link ImplementationFactory} implementations before running annotated
- * tests.
+ * InvocationContextProvider that sets different {@link org.bouncycastle.openpgp.api.OpenPGPImplementation}
+ * before running annotated tests.
  *
  * Example test annotation:
  * {@code
  *     @TestTemplate
- *     @ExtendWith(ImplementationFactoryTestInvocationContextProvider.class)
+ *     @ExtendWith(TestAllImplementations.class)
  *     public void testAllImplementationFactories() {
  *         ...
  *     }
@@ -35,9 +35,9 @@ import org.pgpainless.implementation.JceImplementationFactory;
  */
 public class TestAllImplementations implements TestTemplateInvocationContextProvider {
 
-    private static final List<ImplementationFactory> IMPLEMENTATIONS = Arrays.asList(
-            new BcImplementationFactory(),
-            new JceImplementationFactory()
+    private static final List<OpenPGPImplementation> IMPLEMENTATIONS = Arrays.asList(
+            new BcOpenPGPImplementation(),
+            new JcaOpenPGPImplementation()
     );
 
     @Override
@@ -49,16 +49,16 @@ public class TestAllImplementations implements TestTemplateInvocationContextProv
     public Stream<TestTemplateInvocationContext> provideTestTemplateInvocationContexts(ExtensionContext context) {
 
         return IMPLEMENTATIONS.stream()
-                .map(implementationFactory -> new TestTemplateInvocationContext() {
+                .map(implementation -> new TestTemplateInvocationContext() {
                     @Override
                     public String getDisplayName(int invocationIndex) {
-                        return context.getDisplayName() + " with " + implementationFactory.getClass().getSimpleName();
+                        return context.getDisplayName() + " with " + implementation.getClass().getSimpleName();
                     }
 
                     @Override
                     public List<Extension> getAdditionalExtensions() {
                         return Collections.singletonList(
-                                (BeforeTestExecutionCallback) ctx -> ImplementationFactory.setFactoryImplementation(implementationFactory)
+                                (BeforeTestExecutionCallback) ctx -> OpenPGPImplementation.setInstance(implementation)
                         );
                     }
                 });

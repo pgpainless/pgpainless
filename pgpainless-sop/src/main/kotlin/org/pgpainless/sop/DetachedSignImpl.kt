@@ -7,34 +7,31 @@ package org.pgpainless.sop
 import java.io.InputStream
 import java.io.OutputStream
 import org.bouncycastle.openpgp.PGPException
-import org.bouncycastle.openpgp.PGPSecretKeyRing
 import org.bouncycastle.openpgp.PGPSignature
+import org.bouncycastle.openpgp.api.OpenPGPKey
 import org.bouncycastle.util.io.Streams
 import org.pgpainless.PGPainless
 import org.pgpainless.algorithm.CompressionAlgorithm
 import org.pgpainless.algorithm.DocumentSignatureType
 import org.pgpainless.algorithm.HashAlgorithm
-import org.pgpainless.bouncycastle.extensions.openPgpFingerprint
 import org.pgpainless.encryption_signing.ProducerOptions
 import org.pgpainless.encryption_signing.SigningOptions
 import org.pgpainless.exception.KeyException.MissingSecretKeyException
 import org.pgpainless.exception.KeyException.UnacceptableSigningKeyException
 import org.pgpainless.util.ArmoredOutputStreamFactory
-import org.pgpainless.util.Passphrase
 import sop.MicAlg
 import sop.ReadyWithResult
 import sop.SigningResult
 import sop.enums.SignAs
 import sop.exception.SOPGPException
 import sop.operation.DetachedSign
-import sop.util.UTF8Util
 
 /** Implementation of the `sign` operation using PGPainless. */
-class DetachedSignImpl : DetachedSign {
+class DetachedSignImpl(private val api: PGPainless) : DetachedSign {
 
-    private val signingOptions = SigningOptions.get()
+    private val signingOptions = SigningOptions.get(api)
     private val protector = MatchMakingSecretKeyRingProtector()
-    private val signingKeys = mutableListOf<PGPSecretKeyRing>()
+    private val signingKeys = mutableListOf<OpenPGPKey>()
 
     private var armor = true
     private var mode = SignAs.binary
@@ -44,19 +41,19 @@ class DetachedSignImpl : DetachedSign {
             try {
                 signingOptions.addDetachedSignature(protector, it, modeToSigType(mode))
             } catch (e: UnacceptableSigningKeyException) {
-                throw SOPGPException.KeyCannotSign("Key ${it.openPgpFingerprint} cannot sign.", e)
+                throw SOPGPException.KeyCannotSign("Key ${it.keyIdentifier} cannot sign.", e)
             } catch (e: MissingSecretKeyException) {
                 throw SOPGPException.KeyCannotSign(
-                    "Key ${it.openPgpFingerprint} cannot sign. Missing secret key.", e)
+                    "Key ${it.keyIdentifier} cannot sign. Missing secret key.", e)
             } catch (e: PGPException) {
                 throw SOPGPException.KeyIsProtected(
-                    "Key ${it.openPgpFingerprint} cannot be unlocked.", e)
+                    "Key ${it.keyIdentifier} cannot be unlocked.", e)
             }
         }
 
         try {
             val signingStream =
-                PGPainless.encryptAndOrSign()
+                api.generateMessage()
                     .discardOutput()
                     .withOptions(
                         ProducerOptions.sign(signingOptions)
@@ -74,16 +71,16 @@ class DetachedSignImpl : DetachedSign {
                     // forget passphrases
                     protector.clear()
 
-                    val signatures = result.detachedSignatures.map { it.value }.flatten()
+                    val signatures = result.detachedDocumentSignatures
                     val out =
                         if (armor) ArmoredOutputStreamFactory.get(outputStream) else outputStream
 
-                    signatures.forEach { it.encode(out) }
+                    signatures.forEach { it.signature.encode(out) }
                     out.close()
                     outputStream.close()
 
                     return SigningResult.builder()
-                        .setMicAlg(micAlgFromSignatures(signatures))
+                        .setMicAlg(micAlgFromSignatures(signatures.map { it.signature }))
                         .build()
                 }
             }
@@ -93,8 +90,8 @@ class DetachedSignImpl : DetachedSign {
     }
 
     override fun key(key: InputStream): DetachedSign = apply {
-        KeyReader.readSecretKeys(key, true).forEach {
-            val info = PGPainless.inspectKeyRing(it)
+        KeyReader(api).readSecretKeys(key, true).forEach {
+            val info = api.inspect(it)
             if (!info.isUsableForSigning) {
                 throw SOPGPException.KeyCannotSign(
                     "Key ${info.fingerprint} does not have valid, signing capable subkeys.")
@@ -109,7 +106,7 @@ class DetachedSignImpl : DetachedSign {
     override fun noArmor(): DetachedSign = apply { armor = false }
 
     override fun withKeyPassword(password: ByteArray): DetachedSign = apply {
-        protector.addPassphrase(Passphrase.fromPassword(String(password, UTF8Util.UTF8)))
+        PasswordHelper.addPassphrasePlusRemoveWhitespace(password, protector)
     }
 
     private fun modeToSigType(mode: SignAs): DocumentSignatureType {

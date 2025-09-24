@@ -8,20 +8,27 @@ import java.util.*
 import java.util.function.Predicate
 import javax.annotation.Nonnull
 import kotlin.NoSuchElementException
-import openpgp.openPgpKeyId
+import org.bouncycastle.bcpg.KeyIdentifier
 import org.bouncycastle.bcpg.sig.KeyExpirationTime
 import org.bouncycastle.openpgp.*
+import org.bouncycastle.openpgp.api.OpenPGPCertificate
+import org.bouncycastle.openpgp.api.OpenPGPCertificate.OpenPGPComponentKey
+import org.bouncycastle.openpgp.api.OpenPGPCertificate.OpenPGPSubkey
+import org.bouncycastle.openpgp.api.OpenPGPImplementation
+import org.bouncycastle.openpgp.api.OpenPGPKey
+import org.bouncycastle.openpgp.api.OpenPGPKey.OpenPGPSecretKey
+import org.bouncycastle.openpgp.api.OpenPGPKeyEditor
+import org.bouncycastle.openpgp.api.OpenPGPSignature
+import org.bouncycastle.openpgp.api.SignatureParameters
 import org.pgpainless.PGPainless
-import org.pgpainless.PGPainless.Companion.inspectKeyRing
 import org.pgpainless.algorithm.AlgorithmSuite
-import org.pgpainless.algorithm.Feature
 import org.pgpainless.algorithm.KeyFlag
+import org.pgpainless.algorithm.OpenPGPKeyVersion
 import org.pgpainless.algorithm.SignatureType
 import org.pgpainless.algorithm.negotiation.HashAlgorithmNegotiator
+import org.pgpainless.bouncycastle.extensions.checksumCalculator
 import org.pgpainless.bouncycastle.extensions.getKeyExpirationDate
 import org.pgpainless.bouncycastle.extensions.publicKeyAlgorithm
-import org.pgpainless.bouncycastle.extensions.requirePublicKey
-import org.pgpainless.implementation.ImplementationFactory
 import org.pgpainless.key.OpenPgpFingerprint
 import org.pgpainless.key.generation.KeyRingBuilder
 import org.pgpainless.key.generation.KeySpec
@@ -37,55 +44,69 @@ import org.pgpainless.util.Passphrase
 import org.pgpainless.util.selection.userid.SelectUserId
 
 class SecretKeyRingEditor(
-    var secretKeyRing: PGPSecretKeyRing,
+    var key: OpenPGPKey,
+    val api: PGPainless = PGPainless.getInstance(),
     override val referenceTime: Date = Date()
 ) : SecretKeyRingEditorInterface {
+
+    @JvmOverloads
+    constructor(
+        secretKeyRing: PGPSecretKeyRing,
+        api: PGPainless = PGPainless.getInstance(),
+        referenceTime: Date = Date()
+    ) : this(PGPainless.getInstance().toKey(secretKeyRing), api, referenceTime)
 
     override fun addUserId(
         userId: CharSequence,
         callback: SelfSignatureSubpackets.Callback?,
         protector: SecretKeyRingProtector
     ): SecretKeyRingEditorInterface {
-        val sanitizedUserId = sanitizeUserId(userId).toString()
-        val primaryKey = secretKeyRing.secretKey
-
-        val info = inspectKeyRing(secretKeyRing, referenceTime)
+        val info = api.inspect(key, referenceTime)
         require(!info.isHardRevoked(userId)) {
             "User-ID $userId is hard revoked and cannot be re-certified."
         }
 
-        val (
-            hashAlgorithmPreferences,
-            symmetricKeyAlgorithmPreferences,
-            compressionAlgorithmPreferences) =
-            try {
-                Triple(
-                    info.preferredHashAlgorithms,
-                    info.preferredSymmetricKeyAlgorithms,
-                    info.preferredCompressionAlgorithms)
-            } catch (e: IllegalStateException) { // missing user-id sig
-                val algorithmSuite = AlgorithmSuite.defaultAlgorithmSuite
-                Triple(
-                    algorithmSuite.hashAlgorithms,
-                    algorithmSuite.symmetricKeyAlgorithms,
-                    algorithmSuite.compressionAlgorithms)
-            }
+        val hashAlgorithmPreferences =
+            info.preferredHashAlgorithms ?: AlgorithmSuite.defaultHashAlgorithms
+        val symmetricAlgorithmPreferences =
+            info.preferredSymmetricKeyAlgorithms ?: AlgorithmSuite.defaultSymmetricKeyAlgorithms
+        val compressionAlgorithmPreferences =
+            info.preferredCompressionAlgorithms ?: AlgorithmSuite.defaultCompressionAlgorithms
+        val aeadAlgorithmPreferences =
+            info.preferredAEADCipherSuites ?: AlgorithmSuite.defaultAEADAlgorithmSuites
 
-        val builder =
-            SelfSignatureBuilder(primaryKey, protector).apply {
-                hashedSubpackets.setSignatureCreationTime(referenceTime)
-                setSignatureType(SignatureType.POSITIVE_CERTIFICATION)
-            }
-        builder.hashedSubpackets.apply {
-            setKeyFlags(info.getKeyFlagsOf(primaryKey.keyID))
-            setPreferredHashAlgorithms(hashAlgorithmPreferences)
-            setPreferredSymmetricKeyAlgorithms(symmetricKeyAlgorithmPreferences)
-            setPreferredCompressionAlgorithms(compressionAlgorithmPreferences)
-            setFeatures(Feature.MODIFICATION_DETECTION)
-        }
-        builder.applyCallback(callback)
-        secretKeyRing =
-            injectCertification(secretKeyRing, sanitizedUserId, builder.build(sanitizedUserId))
+        key =
+            OpenPGPKeyEditor(key, protector)
+                .addUserId(
+                    sanitizeUserId(userId).toString(),
+                    object : SignatureParameters.Callback {
+                        override fun apply(parameters: SignatureParameters): SignatureParameters {
+                            return parameters
+                                .setSignatureCreationTime(referenceTime)
+                                .setHashedSubpacketsFunction { subpacketGenerator ->
+                                    val subpackets = SignatureSubpackets(subpacketGenerator)
+                                    subpackets.setAppropriateIssuerInfo(key.primaryKey.pgpPublicKey)
+
+                                    subpackets.setKeyFlags(info.getKeyFlagsOf(key.keyIdentifier))
+                                    subpackets.setPreferredHashAlgorithms(hashAlgorithmPreferences)
+                                    subpackets.setPreferredSymmetricKeyAlgorithms(
+                                        symmetricAlgorithmPreferences)
+                                    subpackets.setPreferredCompressionAlgorithms(
+                                        compressionAlgorithmPreferences)
+                                    subpackets.setPreferredAEADCiphersuites(
+                                        aeadAlgorithmPreferences)
+
+                                    callback?.modifyHashedSubpackets(subpackets)
+                                    subpacketGenerator
+                                }
+                                .setUnhashedSubpacketsFunction { subpacketGenerator ->
+                                    callback?.modifyUnhashedSubpackets(
+                                        SignatureSubpackets(subpacketGenerator))
+                                    subpacketGenerator
+                                }
+                        }
+                    })
+                .done()
         return this
     }
 
@@ -94,8 +115,8 @@ class SecretKeyRingEditor(
         protector: SecretKeyRingProtector
     ): SecretKeyRingEditorInterface {
         val uid = sanitizeUserId(userId)
-        val primaryKey = secretKeyRing.publicKey
-        var info = inspectKeyRing(secretKeyRing, referenceTime)
+        val primaryKey = key.primaryKey.pgpPublicKey
+        var info = api.inspect(key, referenceTime)
         val primaryUserId = info.primaryUserId
         val signature =
             if (primaryUserId == null) info.latestDirectKeySelfSignature
@@ -118,7 +139,7 @@ class SecretKeyRingEditor(
             protector)
 
         // unmark previous primary user-ids to be non-primary
-        info = inspectKeyRing(secretKeyRing, referenceTime)
+        info = api.inspect(key, referenceTime)
         info.validAndExpiredUserIds
             .filterNot { it == uid }
             .forEach { otherUserId ->
@@ -189,7 +210,7 @@ class SecretKeyRingEditor(
         require(oldUID.isNotBlank()) { "Old user-ID cannot be empty." }
         require(newUID.isNotBlank()) { "New user-ID cannot be empty." }
 
-        val info = inspectKeyRing(secretKeyRing, referenceTime)
+        val info = api.inspect(key, referenceTime)
         if (!info.isUserIdValid(oldUID)) {
             throw NoSuchElementException(
                 "Key does not carry user-ID '$oldUID', or it is not valid.")
@@ -218,7 +239,6 @@ class SecretKeyRingEditor(
                 }
             },
             protector)
-
         return revokeUserId(oldUID, protector)
     }
 
@@ -230,8 +250,22 @@ class SecretKeyRingEditor(
         val callback =
             object : SelfSignatureSubpackets.Callback {
                 override fun modifyHashedSubpackets(hashedSubpackets: SelfSignatureSubpackets) {
-                    SignatureSubpacketsHelper.applyFrom(
-                        keySpec.subpackets, hashedSubpackets as SignatureSubpackets)
+                    hashedSubpackets.apply {
+                        setKeyFlags(keySpec.keyFlags)
+                        keySpec.preferredHashAlgorithmsOverride?.let {
+                            setPreferredHashAlgorithms(it)
+                        }
+                        keySpec.preferredCompressionAlgorithmsOverride?.let {
+                            setPreferredCompressionAlgorithms(it)
+                        }
+                        keySpec.preferredSymmetricAlgorithmsOverride?.let {
+                            setPreferredSymmetricKeyAlgorithms(it)
+                        }
+                        keySpec.preferredAEADAlgorithmsOverride?.let {
+                            setPreferredAEADCiphersuites(it)
+                        }
+                        keySpec.featuresOverride?.let { setFeatures(*it.toTypedArray()) }
+                    }
                     hashedSubpackets.setSignatureCreationTime(referenceTime)
                 }
             }
@@ -244,10 +278,11 @@ class SecretKeyRingEditor(
         callback: SelfSignatureSubpackets.Callback?,
         protector: SecretKeyRingProtector
     ): SecretKeyRingEditorInterface {
-        val keyPair = KeyRingBuilder.generateKeyPair(keySpec, referenceTime)
+        val version = OpenPGPKeyVersion.from(key.primarySecretKey.version)
+        val keyPair = KeyRingBuilder.generateKeyPair(keySpec, version, api.implementation)
         val subkeyProtector =
-            PasswordBasedSecretKeyRingProtector.forKeyId(keyPair.keyID, subkeyPassphrase)
-        val keyFlags = KeyFlag.fromBitmask(keySpec.subpackets.keyFlags).toMutableList()
+            PasswordBasedSecretKeyRingProtector.forKeyId(keyPair.keyIdentifier, subkeyPassphrase)
+        val keyFlags = keySpec.keyFlags.toMutableList()
         return addSubKey(
             keyPair,
             callback,
@@ -271,33 +306,41 @@ class SecretKeyRingEditor(
 
         val bitStrength = subkey.publicKey.bitStrength
         require(
-            PGPainless.getPolicy()
-                .publicKeyAlgorithmPolicy
-                .isAcceptable(subkeyAlgorithm, bitStrength)) {
+            api.algorithmPolicy.publicKeyAlgorithmPolicy.isAcceptable(
+                subkeyAlgorithm, bitStrength)) {
                 "Public key algorithm policy violation: $subkeyAlgorithm with bit strength $bitStrength is not acceptable."
             }
 
-        val primaryKey = secretKeyRing.secretKey
-        val info = inspectKeyRing(secretKeyRing, referenceTime)
+        val primaryKey = key.primarySecretKey.pgpSecretKey
+        val info = api.inspect(key, referenceTime)
         val hashAlgorithm =
-            HashAlgorithmNegotiator.negotiateSignatureHashAlgorithm(PGPainless.getPolicy())
+            HashAlgorithmNegotiator.negotiateSignatureHashAlgorithm(api.algorithmPolicy)
                 .negotiateHashAlgorithm(info.preferredHashAlgorithms)
 
         var secretSubkey =
             PGPSecretKey(
                 subkey.privateKey,
                 subkey.publicKey,
-                ImplementationFactory.getInstance().v4FingerprintCalculator,
+                OpenPGPImplementation.getInstance().checksumCalculator(),
                 false,
-                subkeyProtector.getEncryptor(subkey.keyID))
+                subkeyProtector.getEncryptor(subkey.publicKey))
+
+        val componentKey =
+            OpenPGPSecretKey(
+                OpenPGPSubkey(subkey.publicKey, key),
+                secretSubkey,
+                PGPainless.getInstance().implementation.pbeSecretKeyDecryptorBuilderProvider())
+
         val skBindingBuilder =
-            SubkeyBindingSignatureBuilder(primaryKey, primaryKeyProtector, hashAlgorithm)
+            SubkeyBindingSignatureBuilder(
+                key.primarySecretKey, primaryKeyProtector, hashAlgorithm, api)
         skBindingBuilder.apply {
             hashedSubpackets.setSignatureCreationTime(referenceTime)
             hashedSubpackets.setKeyFlags(flags)
             if (subkeyAlgorithm.isSigningCapable()) {
                 val pkBindingBuilder =
-                    PrimaryKeyBindingSignatureBuilder(secretSubkey, subkeyProtector, hashAlgorithm)
+                    PrimaryKeyBindingSignatureBuilder(
+                        componentKey, subkeyProtector, hashAlgorithm, api)
                 pkBindingBuilder.hashedSubpackets.setSignatureCreationTime(referenceTime)
                 hashedSubpackets.addEmbeddedSignature(pkBindingBuilder.build(primaryKey.publicKey))
             }
@@ -306,7 +349,8 @@ class SecretKeyRingEditor(
         secretSubkey =
             KeyRingUtils.secretKeyPlusSignature(
                 secretSubkey, skBindingBuilder.build(secretSubkey.publicKey))
-        secretKeyRing = KeyRingUtils.keysPlusSecretKey(secretKeyRing, secretSubkey)
+        val secretKeyRing = KeyRingUtils.keysPlusSecretKey(key.pgpSecretKeyRing, secretSubkey)
+        key = api.toKey(secretKeyRing)
         return this
     }
 
@@ -321,26 +365,33 @@ class SecretKeyRingEditor(
         protector: SecretKeyRingProtector,
         callback: RevocationSignatureSubpackets.Callback?
     ): SecretKeyRingEditorInterface {
-        return revokeSubKey(secretKeyRing.secretKey.keyID, protector, callback)
+        return revokeSubKey(key.keyIdentifier, protector, callback)
     }
 
     override fun revokeSubKey(
-        subkeyId: Long,
+        subkeyIdentifier: KeyIdentifier,
         protector: SecretKeyRingProtector,
         revocationAttributes: RevocationAttributes?
     ): SecretKeyRingEditorInterface {
         return revokeSubKey(
-            subkeyId, protector, callbackFromRevocationAttributes(revocationAttributes))
+            subkeyIdentifier, protector, callbackFromRevocationAttributes(revocationAttributes))
     }
 
     override fun revokeSubKey(
-        subkeyId: Long,
+        subkeyIdentifier: KeyIdentifier,
         protector: SecretKeyRingProtector,
         callback: RevocationSignatureSubpackets.Callback?
     ): SecretKeyRingEditorInterface {
-        val revokeeSubKey = secretKeyRing.requirePublicKey(subkeyId)
+        var secretKeyRing = key.pgpSecretKeyRing
+        val revokeeSubKey =
+            key.getKey(subkeyIdentifier)
+                ?: throw NoSuchElementException(
+                    "Certificate ${key.keyIdentifier} does not contain subkey $subkeyIdentifier")
         val subkeyRevocation = generateRevocation(protector, revokeeSubKey, callback)
-        secretKeyRing = injectCertification(secretKeyRing, revokeeSubKey, subkeyRevocation)
+        secretKeyRing =
+            injectCertification(
+                secretKeyRing, revokeeSubKey.pgpPublicKey, subkeyRevocation.signature)
+        key = api.toKey(secretKeyRing)
         return this
     }
 
@@ -416,6 +467,7 @@ class SecretKeyRingEditor(
         expiration: Date?,
         protector: SecretKeyRingProtector
     ): SecretKeyRingEditorInterface {
+        var secretKeyRing = key.pgpSecretKeyRing
         require(secretKeyRing.secretKey.isMasterKey) {
             "OpenPGP key does not appear to contain a primary secret key."
         }
@@ -427,11 +479,12 @@ class SecretKeyRingEditor(
                 injectCertification(
                     secretKeyRing,
                     secretKeyRing.publicKey,
-                    reissueDirectKeySignature(expiration, protector, prevDirectKeySig))
+                    reissueDirectKeySignature(expiration, protector, prevDirectKeySig).signature)
         }
 
-        val primaryUserId =
-            inspectKeyRing(secretKeyRing, referenceTime).getPossiblyExpiredPrimaryUserId()
+        val info = api.inspect(key, referenceTime)
+
+        val primaryUserId = info.getPossiblyExpiredPrimaryUserId()
         if (primaryUserId != null) {
             val prevUserIdSig = getPreviousUserIdSignatures(primaryUserId)
             val userIdSig =
@@ -439,7 +492,6 @@ class SecretKeyRingEditor(
             secretKeyRing = injectCertification(secretKeyRing, primaryUserId, userIdSig)
         }
 
-        val info = inspectKeyRing(secretKeyRing, referenceTime)
         for (userId in info.validUserIds) {
             if (userId == primaryUserId) {
                 continue
@@ -458,35 +510,40 @@ class SecretKeyRingEditor(
             }
         }
 
+        key = api.toKey(secretKeyRing)
         return this
     }
 
     override fun setExpirationDateOfSubkey(
         expiration: Date?,
-        keyId: Long,
+        keyId: KeyIdentifier,
         protector: SecretKeyRingProtector
     ): SecretKeyRingEditorInterface = apply {
+        var secretKeyRing = key.pgpSecretKeyRing
+
         // is primary key
-        if (keyId == secretKeyRing.publicKey.keyID) {
+        if (keyId.matchesExplicit(key.keyIdentifier)) {
             return setExpirationDate(expiration, protector)
         }
 
         // is subkey
         val subkey =
-            secretKeyRing.getPublicKey(keyId)
-                ?: throw NoSuchElementException("No subkey with ID ${keyId.openPgpKeyId()} found.")
+            key.getKey(keyId) ?: throw NoSuchElementException("No subkey with ID $keyId found.")
         val prevBinding =
-            inspectKeyRing(secretKeyRing).getCurrentSubkeyBindingSignature(keyId)
+            api.inspect(key).getCurrentSubkeyBindingSignature(keyId)
                 ?: throw NoSuchElementException(
-                    "Previous subkey binding signature for ${keyId.openPgpKeyId()} MUST NOT be null.")
+                    "Previous subkey binding signature for $keyId MUST NOT be null.")
         val bindingSig = reissueSubkeyBindingSignature(subkey, expiration, protector, prevBinding)
-        secretKeyRing = injectCertification(secretKeyRing, subkey, bindingSig)
+        secretKeyRing =
+            injectCertification(secretKeyRing, subkey.pgpPublicKey, bindingSig.signature)
+
+        key = api.toKey(secretKeyRing)
     }
 
     override fun createMinimalRevocationCertificate(
         protector: SecretKeyRingProtector,
         revocationAttributes: RevocationAttributes?
-    ): PGPPublicKeyRing {
+    ): OpenPGPCertificate {
         // Check reason
         if (revocationAttributes != null) {
             require(RevocationAttributes.Reason.isKeyRevocation(revocationAttributes.reason)) {
@@ -495,49 +552,47 @@ class SecretKeyRingEditor(
         }
 
         val revocation = createRevocation(protector, revocationAttributes)
-        var primaryKey = secretKeyRing.secretKey.publicKey
+        var primaryKey = key.primaryKey.pgpPublicKey
         primaryKey = KeyRingUtils.getStrippedDownPublicKey(primaryKey)
-        primaryKey = PGPPublicKey.addCertification(primaryKey, revocation)
-        return PGPPublicKeyRing(listOf(primaryKey))
+        primaryKey = PGPPublicKey.addCertification(primaryKey, revocation.signature)
+        return api.toCertificate(PGPPublicKeyRing(listOf(primaryKey)))
     }
 
     override fun createRevocation(
         protector: SecretKeyRingProtector,
         revocationAttributes: RevocationAttributes?
-    ): PGPSignature {
+    ): OpenPGPSignature {
         return generateRevocation(
-            protector,
-            secretKeyRing.publicKey,
-            callbackFromRevocationAttributes(revocationAttributes))
+            protector, key.primaryKey, callbackFromRevocationAttributes(revocationAttributes))
     }
 
     override fun createRevocation(
-        subkeyId: Long,
+        subkeyIdentifier: KeyIdentifier,
         protector: SecretKeyRingProtector,
         revocationAttributes: RevocationAttributes?
-    ): PGPSignature {
+    ): OpenPGPSignature {
         return generateRevocation(
             protector,
-            secretKeyRing.requirePublicKey(subkeyId),
+            key.getKey(subkeyIdentifier),
             callbackFromRevocationAttributes(revocationAttributes))
     }
 
     override fun createRevocation(
-        subkeyId: Long,
+        subkeyIdentifier: KeyIdentifier,
         protector: SecretKeyRingProtector,
         callback: RevocationSignatureSubpackets.Callback?
-    ): PGPSignature {
-        return generateRevocation(protector, secretKeyRing.requirePublicKey(subkeyId), callback)
+    ): OpenPGPSignature {
+        return generateRevocation(protector, key.getKey(subkeyIdentifier), callback)
     }
 
     override fun createRevocation(
         subkeyFingerprint: OpenPgpFingerprint,
         protector: SecretKeyRingProtector,
         revocationAttributes: RevocationAttributes?
-    ): PGPSignature {
+    ): OpenPGPSignature {
         return generateRevocation(
             protector,
-            secretKeyRing.requirePublicKey(subkeyFingerprint),
+            key.getKey(subkeyFingerprint.keyIdentifier),
             callbackFromRevocationAttributes(revocationAttributes))
     }
 
@@ -553,19 +608,19 @@ class SecretKeyRingEditor(
     }
 
     override fun changeSubKeyPassphraseFromOldPassphrase(
-        keyId: Long,
+        keyIdentifier: KeyIdentifier,
         oldPassphrase: Passphrase,
         oldProtectionSettings: KeyRingProtectionSettings
     ): SecretKeyRingEditorInterface.WithKeyRingEncryptionSettings {
         return WithKeyRingEncryptionSettingsImpl(
             this,
-            keyId,
+            keyIdentifier,
             CachingSecretKeyRingProtector(
-                mapOf(keyId to oldPassphrase), oldProtectionSettings, null))
+                mapOf(keyIdentifier to oldPassphrase), oldProtectionSettings, null))
     }
 
-    override fun done(): PGPSecretKeyRing {
-        return secretKeyRing
+    override fun done(): OpenPGPKey {
+        return key
     }
 
     private fun sanitizeUserId(userId: CharSequence): CharSequence =
@@ -585,15 +640,14 @@ class SecretKeyRingEditor(
 
     private fun generateRevocation(
         protector: SecretKeyRingProtector,
-        revokeeSubkey: PGPPublicKey,
+        revokeeSubkey: OpenPGPComponentKey,
         callback: RevocationSignatureSubpackets.Callback?
-    ): PGPSignature {
-        val primaryKey = secretKeyRing.secretKey
+    ): OpenPGPSignature {
         val signatureType =
-            if (revokeeSubkey.isMasterKey) SignatureType.KEY_REVOCATION
+            if (revokeeSubkey.isPrimaryKey) SignatureType.KEY_REVOCATION
             else SignatureType.SUBKEY_REVOCATION
 
-        return RevocationSignatureBuilder(signatureType, primaryKey, protector)
+        return RevocationSignatureBuilder(signatureType, key.primarySecretKey, protector, api)
             .apply { applyCallback(callback) }
             .build(revokeeSubkey)
     }
@@ -604,25 +658,26 @@ class SecretKeyRingEditor(
         callback: RevocationSignatureSubpackets.Callback?
     ): SecretKeyRingEditorInterface {
         RevocationSignatureBuilder(
-                SignatureType.CERTIFICATION_REVOCATION, secretKeyRing.secretKey, protector)
+                SignatureType.CERTIFICATION_REVOCATION, key.primarySecretKey, protector, api)
             .apply {
                 hashedSubpackets.setSignatureCreationTime(referenceTime)
                 applyCallback(callback)
             }
             .let {
-                secretKeyRing =
-                    injectCertification(secretKeyRing, userId, it.build(userId.toString()))
+                val secretKeyRing =
+                    injectCertification(key.pgpSecretKeyRing, userId, it.build(userId.toString()))
+                key = api.toKey(secretKeyRing)
             }
         return this
     }
 
     private fun getPreviousDirectKeySignature(): PGPSignature? {
-        val info = inspectKeyRing(secretKeyRing, referenceTime)
+        val info = api.inspect(key, referenceTime)
         return info.latestDirectKeySelfSignature
     }
 
     private fun getPreviousUserIdSignatures(userId: String): PGPSignature? {
-        val info = inspectKeyRing(secretKeyRing, referenceTime)
+        val info = api.inspect(key, referenceTime)
         return info.getLatestUserIdCertification(userId)
     }
 
@@ -633,7 +688,7 @@ class SecretKeyRingEditor(
         prevUserIdSig: PGPSignature
     ): PGPSignature {
         val builder =
-            SelfSignatureBuilder(secretKeyRing.secretKey, secretKeyRingProtector, prevUserIdSig)
+            SelfSignatureBuilder(key.primarySecretKey, secretKeyRingProtector, prevUserIdSig, api)
         builder.hashedSubpackets.setSignatureCreationTime(referenceTime)
         builder.applyCallback(
             object : SelfSignatureSubpackets.Callback {
@@ -652,7 +707,8 @@ class SecretKeyRingEditor(
         @Nonnull primaryUserId: String,
         @Nonnull prevUserIdSig: PGPSignature
     ): PGPSignature {
-        return SelfSignatureBuilder(secretKeyRing.secretKey, secretKeyRingProtector, prevUserIdSig)
+        return SelfSignatureBuilder(
+                key.primarySecretKey, secretKeyRingProtector, prevUserIdSig, api)
             .apply {
                 hashedSubpackets.setSignatureCreationTime(referenceTime)
                 applyCallback(
@@ -662,7 +718,7 @@ class SecretKeyRingEditor(
                         ) {
                             if (expiration != null) {
                                 hashedSubpackets.setKeyExpirationTime(
-                                    true, secretKeyRing.publicKey.creationTime, expiration)
+                                    true, key.primaryKey.creationTime, expiration)
                             } else {
                                 hashedSubpackets.setKeyExpirationTime(KeyExpirationTime(true, 0))
                             }
@@ -678,9 +734,10 @@ class SecretKeyRingEditor(
         expiration: Date?,
         secretKeyRingProtector: SecretKeyRingProtector,
         prevDirectKeySig: PGPSignature
-    ): PGPSignature {
+    ): OpenPGPSignature {
+        val secretKeyRing = key.pgpSecretKeyRing
         return DirectKeySelfSignatureBuilder(
-                secretKeyRing.secretKey, secretKeyRingProtector, prevDirectKeySig)
+                secretKeyRing, secretKeyRingProtector, prevDirectKeySig, api)
             .apply {
                 hashedSubpackets.setSignatureCreationTime(referenceTime)
                 applyCallback(
@@ -701,21 +758,21 @@ class SecretKeyRingEditor(
     }
 
     private fun reissueSubkeyBindingSignature(
-        subkey: PGPPublicKey,
+        subkey: OpenPGPComponentKey,
         expiration: Date?,
         protector: SecretKeyRingProtector,
         prevSubkeyBindingSignature: PGPSignature
-    ): PGPSignature {
-        val primaryKey = secretKeyRing.publicKey
-        val secretPrimaryKey = secretKeyRing.secretKey
-        val secretSubkey: PGPSecretKey? = secretKeyRing.getSecretKey(subkey.keyID)
+    ): OpenPGPSignature {
+        val primaryKey = key.primaryKey
+        val secretSubkey: OpenPGPSecretKey? = key.getSecretKey(subkey)
 
         val builder =
-            SubkeyBindingSignatureBuilder(secretPrimaryKey, protector, prevSubkeyBindingSignature)
+            SubkeyBindingSignatureBuilder(
+                key.primarySecretKey, protector, prevSubkeyBindingSignature, api)
         builder.hashedSubpackets.apply {
             // set expiration
             setSignatureCreationTime(referenceTime)
-            setKeyExpirationTime(subkey, expiration)
+            setKeyExpirationTime(subkey.pgpPublicKey, expiration)
             setSignatureExpirationTime(null) // avoid copying sig exp time
 
             // signing-capable subkeys need embedded primary key binding sig
@@ -724,14 +781,16 @@ class SecretKeyRingEditor(
                     if (secretSubkey == null) {
                         throw NoSuchElementException(
                             "Secret key does not contain secret-key" +
-                                " component for subkey ${subkey.keyID.openPgpKeyId()}")
+                                " component for subkey ${subkey.keyIdentifier}")
                     }
 
                     // create new embedded back-sig
                     clearEmbeddedSignatures()
                     addEmbeddedSignature(
-                        PrimaryKeyBindingSignatureBuilder(secretSubkey, protector)
-                            .build(primaryKey))
+                        PrimaryKeyBindingSignatureBuilder(
+                                key.getSecretKey(subkey.keyIdentifier), protector, api)
+                            .build(primaryKey)
+                            .signature)
                 }
             }
         }
@@ -740,11 +799,11 @@ class SecretKeyRingEditor(
     }
 
     private fun selectUserIds(predicate: Predicate<String>): List<String> =
-        inspectKeyRing(secretKeyRing).validUserIds.filter { predicate.test(it) }
+        key.validUserIds.map { it.userId }.filter { predicate.test(it) }.toList()
 
     private class WithKeyRingEncryptionSettingsImpl(
         private val editor: SecretKeyRingEditor,
-        private val keyId: Long?,
+        private val keyId: KeyIdentifier?,
         private val oldProtector: SecretKeyRingProtector
     ) : SecretKeyRingEditorInterface.WithKeyRingEncryptionSettings {
 
@@ -761,7 +820,7 @@ class SecretKeyRingEditor(
 
     private class WithPassphraseImpl(
         private val editor: SecretKeyRingEditor,
-        private val keyId: Long?,
+        private val keyId: KeyIdentifier?,
         private val oldProtector: SecretKeyRingProtector,
         private val newProtectionSettings: KeyRingProtectionSettings
     ) : SecretKeyRingEditorInterface.WithPassphrase {
@@ -770,15 +829,17 @@ class SecretKeyRingEditor(
             val protector =
                 PasswordBasedSecretKeyRingProtector(
                     newProtectionSettings, SolitaryPassphraseProvider(passphrase))
-            val secretKeys = changePassphrase(keyId, editor.secretKeyRing, oldProtector, protector)
-            editor.secretKeyRing = secretKeys
+            val secretKeys =
+                changePassphrase(keyId, editor.key.pgpSecretKeyRing, oldProtector, protector)
+            editor.key = editor.api.toKey(secretKeys)
             return editor
         }
 
         override fun toNoPassphrase(): SecretKeyRingEditorInterface {
             val protector = UnprotectedKeysProtector()
-            val secretKeys = changePassphrase(keyId, editor.secretKeyRing, oldProtector, protector)
-            editor.secretKeyRing = secretKeys
+            val secretKeys =
+                changePassphrase(keyId, editor.key.pgpSecretKeyRing, oldProtector, protector)
+            editor.key = editor.api.toKey(secretKeys)
             return editor
         }
     }

@@ -24,6 +24,7 @@ class PGPPublicKeyExtensionsTest {
                 PGPainless.buildKeyRing()
                     .setPrimaryKey(KeySpec.getBuilder(KeyType.ECDSA(curve)))
                     .build()
+                    .pgpSecretKeyRing
                     .publicKey
 
             assertEquals(curve.curveName, key.getCurveName())
@@ -37,6 +38,7 @@ class PGPPublicKeyExtensionsTest {
                 PGPainless.buildKeyRing()
                     .setPrimaryKey(KeySpec.getBuilder(KeyType.EDDSA_LEGACY(curve)))
                     .build()
+                    .pgpSecretKeyRing
                     .publicKey
 
             assertEquals(curve.curveName, key.getCurveName())

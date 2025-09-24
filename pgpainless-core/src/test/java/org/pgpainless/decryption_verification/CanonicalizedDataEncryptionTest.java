@@ -22,11 +22,10 @@ import org.bouncycastle.openpgp.PGPException;
 import org.bouncycastle.openpgp.PGPLiteralData;
 import org.bouncycastle.openpgp.PGPLiteralDataGenerator;
 import org.bouncycastle.openpgp.PGPOnePassSignature;
-import org.bouncycastle.openpgp.PGPPrivateKey;
-import org.bouncycastle.openpgp.PGPPublicKeyRing;
-import org.bouncycastle.openpgp.PGPSecretKeyRing;
 import org.bouncycastle.openpgp.PGPSignature;
 import org.bouncycastle.openpgp.PGPSignatureGenerator;
+import org.bouncycastle.openpgp.api.OpenPGPCertificate;
+import org.bouncycastle.openpgp.api.OpenPGPKey;
 import org.bouncycastle.openpgp.operator.bc.BcPGPContentSignerBuilder;
 import org.bouncycastle.util.io.Streams;
 import org.junit.jupiter.api.BeforeAll;
@@ -109,15 +108,16 @@ public class CanonicalizedDataEncryptionTest {
 
     String message = "Hello, World!\n";
 
-    private static PGPSecretKeyRing secretKeys;
-    private static PGPPublicKeyRing publicKeys;
+    private static OpenPGPKey secretKeys;
+    private static OpenPGPCertificate publicKeys;
 
     @BeforeAll
     public static void readKeys() throws IOException {
-        secretKeys = PGPainless.readKeyRing().secretKeyRing(KEY);
-        publicKeys = PGPainless.extractCertificate(secretKeys);
+        PGPainless api = PGPainless.getInstance();
+        secretKeys = api.readKey().parseKey(KEY);
+        publicKeys = secretKeys.toCertificate();
         // CHECKSTYLE:OFF
-        System.out.println(PGPainless.asciiArmor(secretKeys));
+        System.out.println(api.toAsciiArmor(secretKeys));
         // CHECKSTYLE:ON
     }
 
@@ -298,9 +298,9 @@ public class CanonicalizedDataEncryptionTest {
         String encrypted = encryptAndSign(before, DocumentSignatureType.BINARY_DOCUMENT, StreamEncoding.TEXT, true);
 
         ByteArrayInputStream in = new ByteArrayInputStream(encrypted.getBytes(StandardCharsets.UTF_8));
-        DecryptionStream decryptionStream = PGPainless.decryptAndOrVerify()
+        DecryptionStream decryptionStream = PGPainless.getInstance().processMessage()
                 .onInputStream(in)
-                .withOptions(new ConsumerOptions()
+                .withOptions(ConsumerOptions.get()
                         .addDecryptionKey(secretKeys, SecretKeyRingProtector.unprotectedKeys())
                         .addVerificationCert(publicKeys));
 
@@ -328,9 +328,9 @@ public class CanonicalizedDataEncryptionTest {
         String encrypted = encryptAndSign(beforeAndAfter, DocumentSignatureType.BINARY_DOCUMENT, StreamEncoding.TEXT, false);
 
         ByteArrayInputStream in = new ByteArrayInputStream(encrypted.getBytes(StandardCharsets.UTF_8));
-        DecryptionStream decryptionStream = PGPainless.decryptAndOrVerify()
+        DecryptionStream decryptionStream = PGPainless.getInstance().processMessage()
                 .onInputStream(in)
-                .withOptions(new ConsumerOptions()
+                .withOptions(ConsumerOptions.get()
                         .addDecryptionKey(secretKeys, SecretKeyRingProtector.unprotectedKeys())
                         .addVerificationCert(publicKeys));
 
@@ -360,7 +360,7 @@ public class CanonicalizedDataEncryptionTest {
             options.applyCRLFEncoding();
         }
 
-        EncryptionStream encryptionStream = PGPainless.encryptAndOrSign()
+        EncryptionStream encryptionStream = PGPainless.getInstance().generateMessage()
                 .onOutputStream(out)
                 .withOptions(options);
 
@@ -374,9 +374,9 @@ public class CanonicalizedDataEncryptionTest {
 
     private MessageMetadata decryptAndVerify(String msg) throws PGPException, IOException {
         ByteArrayInputStream in = new ByteArrayInputStream(msg.getBytes(StandardCharsets.UTF_8));
-        DecryptionStream decryptionStream = PGPainless.decryptAndOrVerify()
+        DecryptionStream decryptionStream = PGPainless.getInstance().processMessage()
                 .onInputStream(in)
-                .withOptions(new ConsumerOptions()
+                .withOptions(ConsumerOptions.get()
                         .addDecryptionKey(secretKeys, SecretKeyRingProtector.unprotectedKeys())
                         .addVerificationCert(publicKeys));
 
@@ -397,7 +397,7 @@ public class CanonicalizedDataEncryptionTest {
 
     public void manualSignAndVerify(DocumentSignatureType sigType, StreamEncoding streamEncoding)
             throws IOException, PGPException {
-        PGPPrivateKey privateKey = UnlockSecretKey.unlockSecretKey(secretKeys.getSecretKey(), SecretKeyRingProtector.unprotectedKeys());
+        OpenPGPKey.OpenPGPPrivateKey privateKey = UnlockSecretKey.unlockSecretKey(secretKeys.getPrimarySecretKey(), SecretKeyRingProtector.unprotectedKeys());
         ByteArrayOutputStream out = new ByteArrayOutputStream();
         ArmoredOutputStream armorOut = new ArmoredOutputStream(out);
 
@@ -406,9 +406,10 @@ public class CanonicalizedDataEncryptionTest {
 
         PGPSignatureGenerator signer = new PGPSignatureGenerator(
                 new BcPGPContentSignerBuilder(
-                        secretKeys.getPublicKey().getAlgorithm(),
-                        HashAlgorithm.SHA256.getAlgorithmId()));
-        signer.init(sigType.getSignatureType().getCode(), privateKey);
+                        secretKeys.getPrimaryKey().getPGPPublicKey().getAlgorithm(),
+                        HashAlgorithm.SHA256.getAlgorithmId()),
+                secretKeys.getPrimaryKey().getPGPPublicKey());
+        signer.init(sigType.getSignatureType().getCode(), privateKey.getKeyPair().getPrivateKey());
 
         PGPOnePassSignature ops = signer.generateOnePassVersion(false);
         ops.encode(compressedOut);
@@ -444,9 +445,9 @@ public class CanonicalizedDataEncryptionTest {
 
         ByteArrayInputStream cipherIn = new ByteArrayInputStream(ciphertext.getBytes(StandardCharsets.UTF_8));
         ByteArrayOutputStream decrypted = new ByteArrayOutputStream();
-        DecryptionStream decryptionStream = PGPainless.decryptAndOrVerify()
+        DecryptionStream decryptionStream = PGPainless.getInstance().processMessage()
                         .onInputStream(cipherIn)
-                                .withOptions(new ConsumerOptions()
+                                .withOptions(ConsumerOptions.get()
                                         .addVerificationCert(publicKeys));
 
         Streams.pipeAll(decryptionStream, decrypted);

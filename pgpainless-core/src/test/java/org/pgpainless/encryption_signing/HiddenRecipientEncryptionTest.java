@@ -11,12 +11,10 @@ import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
-import java.security.InvalidAlgorithmParameterException;
-import java.security.NoSuchAlgorithmException;
 
 import org.bouncycastle.openpgp.PGPException;
-import org.bouncycastle.openpgp.PGPPublicKeyRing;
-import org.bouncycastle.openpgp.PGPSecretKeyRing;
+import org.bouncycastle.openpgp.api.OpenPGPCertificate;
+import org.bouncycastle.openpgp.api.OpenPGPKey;
 import org.bouncycastle.util.io.Streams;
 import org.junit.jupiter.api.Test;
 import org.pgpainless.PGPainless;
@@ -31,18 +29,19 @@ import org.pgpainless.key.SubkeyIdentifier;
 public class HiddenRecipientEncryptionTest {
 
     @Test
-    public void testAnonymousRecipientRoundtrip() throws PGPException, InvalidAlgorithmParameterException, NoSuchAlgorithmException, IOException {
-        PGPSecretKeyRing secretKeys = PGPainless.generateKeyRing()
+    public void testAnonymousRecipientRoundtrip() throws PGPException, IOException {
+        PGPainless api = PGPainless.getInstance();
+        OpenPGPKey secretKeys = api.generateKey()
                 .modernKeyRing("Alice <alice@pgpainless.org>");
-        PGPPublicKeyRing certificate = PGPainless.extractCertificate(secretKeys);
+        OpenPGPCertificate certificate = secretKeys.toCertificate();
 
         String msg = "Hello, World!\n";
 
         ByteArrayOutputStream ciphertextOut = new ByteArrayOutputStream();
-        EncryptionStream encryptionStream = PGPainless.encryptAndOrSign()
+        EncryptionStream encryptionStream = api.generateMessage()
                 .onOutputStream(ciphertextOut)
                 .withOptions(ProducerOptions.encrypt(
-                        EncryptionOptions.get()
+                        EncryptionOptions.get(api)
                                 .addHiddenRecipient(certificate)
                 ));
         encryptionStream.write(msg.getBytes(StandardCharsets.UTF_8));
@@ -53,7 +52,7 @@ public class HiddenRecipientEncryptionTest {
         byte[] ciphertext = ciphertextOut.toByteArray();
 
         ByteArrayInputStream ciphertextIn = new ByteArrayInputStream(ciphertext);
-        DecryptionStream decryptionStream = PGPainless.decryptAndOrVerify()
+        DecryptionStream decryptionStream = api.processMessage()
                 .onInputStream(ciphertextIn)
                 .withOptions(ConsumerOptions.get()
                         .addDecryptionKey(secretKeys));
@@ -66,6 +65,8 @@ public class HiddenRecipientEncryptionTest {
 
         assertEquals(msg, plaintextOut.toString());
         assertTrue(metadata.getRecipientKeyIds().contains(0L));
+        assertEquals(1, metadata.getRecipientKeyIdentifiers().size());
+        assertTrue(metadata.getRecipientKeyIdentifiers().get(0).isWildcard());
         assertEquals(actualEncryptionKey, metadata.getDecryptionKey());
     }
 }

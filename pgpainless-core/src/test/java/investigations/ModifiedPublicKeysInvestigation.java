@@ -8,19 +8,17 @@ import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 
 import java.io.IOException;
-import java.security.InvalidAlgorithmParameterException;
-import java.security.NoSuchAlgorithmException;
 
+import org.bouncycastle.bcpg.KeyIdentifier;
 import org.bouncycastle.openpgp.PGPException;
-import org.bouncycastle.openpgp.PGPSecretKey;
-import org.bouncycastle.openpgp.PGPSecretKeyRing;
+import org.bouncycastle.openpgp.api.OpenPGPKey;
 import org.junit.jupiter.api.Test;
 import org.pgpainless.PGPainless;
 import org.pgpainless.exception.KeyIntegrityException;
 import org.pgpainless.key.generation.type.rsa.RsaLength;
 import org.pgpainless.key.protection.SecretKeyRingProtector;
 import org.pgpainless.key.protection.UnlockSecretKey;
-import org.pgpainless.key.util.KeyIdUtil;
+import org.pgpainless.policy.Policy;
 import org.pgpainless.util.Passphrase;
 
 public class ModifiedPublicKeysInvestigation {
@@ -77,6 +75,8 @@ public class ModifiedPublicKeysInvestigation {
             "RuvLdJPtAP9VND4sdnrXUXoUn6OgUmKoV0KKcTUPEnMqQ8QgfVDEJA==\n" +
             "=p9kX\n" +
             "-----END PGP PRIVATE KEY BLOCK-----";
+    private static final KeyIdentifier dsaKID1 = new KeyIdentifier("0FE102C159C818EF2D7D9F7EB1BD1F049EC87F3D");
+    private static final KeyIdentifier dsaKID2 = new KeyIdentifier("AB30CFBA5A2ED4848B096123F5FFDF6D71DD5789");
 
     private static final String ELGAMAL = "-----BEGIN PGP PRIVATE KEY BLOCK-----\n" +
             "Version: OpenPGP.js VERSION\n" +
@@ -129,6 +129,8 @@ public class ModifiedPublicKeysInvestigation {
             "TsMBqN9H5d+2XQ==\n" +
             "=lI+G\n" +
             "-----END PGP PRIVATE KEY BLOCK-----\n";
+    private static final KeyIdentifier elgamalKID1 = new KeyIdentifier("9B0F5D6800DEA53499F455C75F04ACF44FD822B1");
+    private static final KeyIdentifier elgamalKID2 = new KeyIdentifier("AB30CFBA5A2ED4848B096123F5FFDF6D71DD5789");
 
     // created with exploit code by cure53.de
     private static final String INJECTED_KEY = "-----BEGIN PGP PRIVATE KEY BLOCK-----\n" +
@@ -209,79 +211,90 @@ public class ModifiedPublicKeysInvestigation {
 
     @Test
     public void assertModifiedDSAKeyThrowsKeyIntegrityException() throws IOException {
-        SecretKeyRingProtector protector = SecretKeyRingProtector.unlockAnyKeyWith(Passphrase.fromPassword("12345678"));
-        PGPSecretKeyRing dsa = PGPainless.readKeyRing().secretKeyRing(DSA);
+        PGPainless api = PGPainless.getInstance();
+        Policy policy = api.getAlgorithmPolicy();
+        policy.setEnableKeyParameterValidation(true);
 
-        PGPainless.getPolicy().setEnableKeyParameterValidation(true);
+        SecretKeyRingProtector protector = SecretKeyRingProtector.unlockAnyKeyWith(Passphrase.fromPassword("12345678"));
+        OpenPGPKey dsa = api.readKey().parseKey(DSA);
+
         assertThrows(KeyIntegrityException.class, () ->
-                UnlockSecretKey.unlockSecretKey(dsa.getSecretKey(KeyIdUtil.fromLongKeyId("b1bd1f049ec87f3d")), protector));
+                UnlockSecretKey.unlockSecretKey(dsa.getSecretKey(dsaKID1), protector, policy));
         assertThrows(KeyIntegrityException.class, () ->
-                UnlockSecretKey.unlockSecretKey(dsa.getSecretKey(KeyIdUtil.fromLongKeyId("f5ffdf6d71dd5789")), protector));
-        PGPainless.getPolicy().setEnableKeyParameterValidation(false);
+                UnlockSecretKey.unlockSecretKey(dsa.getSecretKey(dsaKID2), protector, policy));
     }
 
     @Test
     public void assertModifiedElGamalKeyThrowsKeyIntegrityException() throws IOException {
-        SecretKeyRingProtector protector = SecretKeyRingProtector.unlockAnyKeyWith(Passphrase.fromPassword("12345678"));
-        PGPSecretKeyRing elgamal = PGPainless.readKeyRing().secretKeyRing(ELGAMAL);
+        PGPainless api = PGPainless.getInstance();
+        Policy policy = api.getAlgorithmPolicy();
+        policy.setEnableKeyParameterValidation(true);
 
-        PGPainless.getPolicy().setEnableKeyParameterValidation(true);
+        SecretKeyRingProtector protector = SecretKeyRingProtector.unlockAnyKeyWith(Passphrase.fromPassword("12345678"));
+        OpenPGPKey elgamal = api.readKey().parseKey(ELGAMAL);
+
         assertThrows(KeyIntegrityException.class, () ->
-                UnlockSecretKey.unlockSecretKey(elgamal.getSecretKey(KeyIdUtil.fromLongKeyId("f5ffdf6d71dd5789")), protector));
-        PGPainless.getPolicy().setEnableKeyParameterValidation(false);
+                UnlockSecretKey.unlockSecretKey(elgamal.getSecretKey(elgamalKID2), protector, policy));
     }
 
     @Test
     public void assertInjectedKeyRingFailsToUnlockPrimaryKey() throws IOException {
-        PGPSecretKeyRing secretKeys = PGPainless.readKeyRing().secretKeyRing(INJECTED_KEY);
+        PGPainless api = PGPainless.getInstance();
+        Policy policy = api.getAlgorithmPolicy();
+        policy.setEnableKeyParameterValidation(true);
+
+        OpenPGPKey secretKeys = api.readKey().parseKey(INJECTED_KEY);
         SecretKeyRingProtector protector = SecretKeyRingProtector.unlockAnyKeyWith(Passphrase.fromPassword("pass"));
 
-        PGPainless.getPolicy().setEnableKeyParameterValidation(true);
         assertThrows(KeyIntegrityException.class, () ->
-                UnlockSecretKey.unlockSecretKey(secretKeys.getSecretKey(), protector));
-        PGPainless.getPolicy().setEnableKeyParameterValidation(false);
+                UnlockSecretKey.unlockSecretKey(secretKeys.getPrimarySecretKey(), protector, policy));
     }
 
     @Test
     public void assertCannotUnlockElGamalPrimaryKeyDueToDummyS2K() throws IOException {
+        PGPainless api = PGPainless.getInstance();
+
         SecretKeyRingProtector protector = SecretKeyRingProtector.unlockAnyKeyWith(Passphrase.fromPassword("12345678"));
-        PGPSecretKeyRing elgamal = PGPainless.readKeyRing().secretKeyRing(ELGAMAL);
+        OpenPGPKey elgamal = api.readKey().parseKey(ELGAMAL);
 
         assertThrows(PGPException.class, () ->
-                UnlockSecretKey.unlockSecretKey(elgamal.getSecretKey(KeyIdUtil.fromLongKeyId("5f04acf44fd822b1")), protector));
+                UnlockSecretKey.unlockSecretKey(elgamal.getSecretKey(elgamalKID1), protector));
     }
 
     @Test
-    public void assertUnmodifiedRSAKeyDoesNotThrow() throws PGPException, InvalidAlgorithmParameterException, NoSuchAlgorithmException {
-        PGPSecretKeyRing secretKeys = PGPainless.generateKeyRing()
+    public void assertUnmodifiedRSAKeyDoesNotThrow() {
+        PGPainless api = PGPainless.getInstance();
+        OpenPGPKey secretKeys = api.generateKey()
                 .simpleRsaKeyRing("Unmodified", RsaLength._4096, "987654321");
         SecretKeyRingProtector protector = SecretKeyRingProtector.unlockAnyKeyWith(Passphrase.fromPassword("987654321"));
 
-        for (PGPSecretKey secretKey : secretKeys) {
+        for (OpenPGPKey.OpenPGPSecretKey secretKey : secretKeys.getSecretKeys().values()) {
             assertDoesNotThrow(() ->
                     UnlockSecretKey.unlockSecretKey(secretKey, protector));
         }
     }
 
     @Test
-    public void assertUnmodifiedECKeyDoesNotThrow() throws PGPException, InvalidAlgorithmParameterException, NoSuchAlgorithmException {
-        PGPSecretKeyRing secretKeys = PGPainless.generateKeyRing()
+    public void assertUnmodifiedECKeyDoesNotThrow() {
+        PGPainless api = PGPainless.getInstance();
+        OpenPGPKey secretKeys = api.generateKey()
                 .simpleEcKeyRing("Unmodified", "987654321");
         SecretKeyRingProtector protector = SecretKeyRingProtector.unlockAnyKeyWith(Passphrase.fromPassword("987654321"));
 
-        for (PGPSecretKey secretKey : secretKeys) {
+        for (OpenPGPKey.OpenPGPSecretKey secretKey : secretKeys.getSecretKeys().values()) {
             assertDoesNotThrow(() ->
                     UnlockSecretKey.unlockSecretKey(secretKey, protector));
         }
     }
 
     @Test
-    public void assertUnmodifiedModernKeyDoesNotThrow() throws PGPException, InvalidAlgorithmParameterException, NoSuchAlgorithmException {
-        PGPSecretKeyRing secretKeys = PGPainless.generateKeyRing()
+    public void assertUnmodifiedModernKeyDoesNotThrow() {
+        PGPainless api = PGPainless.getInstance();
+        OpenPGPKey secretKeys = api.generateKey()
                 .modernKeyRing("Unmodified", "987654321");
         SecretKeyRingProtector protector = SecretKeyRingProtector.unlockAnyKeyWith(Passphrase.fromPassword("987654321"));
 
-        for (PGPSecretKey secretKey : secretKeys) {
+        for (OpenPGPKey.OpenPGPSecretKey secretKey : secretKeys.getSecretKeys().values()) {
             assertDoesNotThrow(() ->
                     UnlockSecretKey.unlockSecretKey(secretKey, protector));
         }

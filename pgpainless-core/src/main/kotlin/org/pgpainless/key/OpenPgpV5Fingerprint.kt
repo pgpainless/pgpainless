@@ -4,6 +4,8 @@
 
 package org.pgpainless.key
 
+import org.bouncycastle.bcpg.FingerprintUtil
+import org.bouncycastle.bcpg.KeyIdentifier
 import org.bouncycastle.openpgp.PGPKeyRing
 import org.bouncycastle.openpgp.PGPPublicKey
 import org.bouncycastle.openpgp.PGPSecretKey
@@ -21,7 +23,11 @@ class OpenPgpV5Fingerprint : _64DigitFingerprint {
 
     constructor(bytes: ByteArray) : super(bytes)
 
+    override val keyId: Long = FingerprintUtil.keyIdFromLibrePgpFingerprint(bytes)
+
     override fun getVersion(): Int {
         return 5
     }
+
+    override val keyIdentifier: KeyIdentifier = KeyIdentifier(bytes)
 }

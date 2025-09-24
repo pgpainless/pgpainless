@@ -5,28 +5,32 @@
 package org.pgpainless.encryption_signing
 
 import java.util.*
+import org.bouncycastle.bcpg.KeyIdentifier
 import org.bouncycastle.openpgp.*
-import org.pgpainless.PGPainless.Companion.getPolicy
-import org.pgpainless.PGPainless.Companion.inspectKeyRing
+import org.bouncycastle.openpgp.api.OpenPGPImplementation
+import org.bouncycastle.openpgp.api.OpenPGPKey
+import org.bouncycastle.openpgp.api.OpenPGPKey.OpenPGPPrivateKey
+import org.bouncycastle.openpgp.api.OpenPGPKey.OpenPGPSecretKey
+import org.pgpainless.PGPainless
 import org.pgpainless.algorithm.DocumentSignatureType
 import org.pgpainless.algorithm.HashAlgorithm
 import org.pgpainless.algorithm.PublicKeyAlgorithm.Companion.requireFromId
+import org.pgpainless.algorithm.negotiation.HashAlgorithmNegotiator
 import org.pgpainless.algorithm.negotiation.HashAlgorithmNegotiator.Companion.negotiateSignatureHashAlgorithm
-import org.pgpainless.bouncycastle.extensions.unlock
 import org.pgpainless.exception.KeyException
 import org.pgpainless.exception.KeyException.*
-import org.pgpainless.implementation.ImplementationFactory
 import org.pgpainless.key.OpenPgpFingerprint.Companion.of
-import org.pgpainless.key.SubkeyIdentifier
 import org.pgpainless.key.protection.SecretKeyRingProtector
+import org.pgpainless.key.protection.UnlockSecretKey.Companion.unlockSecretKey
 import org.pgpainless.policy.Policy
 import org.pgpainless.signature.subpackets.BaseSignatureSubpackets.Callback
 import org.pgpainless.signature.subpackets.SignatureSubpackets
 import org.pgpainless.signature.subpackets.SignatureSubpacketsHelper
 
-class SigningOptions {
-
-    val signingMethods: Map<SubkeyIdentifier, SigningMethod> = mutableMapOf()
+class SigningOptions(private val api: PGPainless) {
+    var hashAlgorithmNegotiator: HashAlgorithmNegotiator =
+        negotiateSignatureHashAlgorithm(api.algorithmPolicy)
+    val signingMethods: Map<OpenPGPPrivateKey, SigningMethod> = mutableMapOf()
     private var _hashAlgorithmOverride: HashAlgorithm? = null
     private var _evaluationDate: Date = Date()
 
@@ -46,6 +50,7 @@ class SigningOptions {
         _hashAlgorithmOverride = hashAlgorithmOverride
     }
 
+    /** Evaluation date for signing keys. */
     val evaluationDate: Date
         get() = _evaluationDate
 
@@ -61,17 +66,34 @@ class SigningOptions {
      * Sign the message using an inline signature made by the provided signing key.
      *
      * @param signingKeyProtector protector to unlock the signing key
-     * @param signingKey key ring containing the signing key
+     * @param signingKey OpenPGPKey containing the signing (sub-)key.
      * @return this
      * @throws KeyException if something is wrong with the key
      * @throws PGPException if the key cannot be unlocked or a signing method cannot be created
      */
     @Throws(KeyException::class, PGPException::class)
+    fun addSignature(
+        signingKeyProtector: SecretKeyRingProtector,
+        signingKey: OpenPGPKey
+    ): SigningOptions = apply {
+        addInlineSignature(
+            signingKeyProtector, signingKey, null, DocumentSignatureType.BINARY_DOCUMENT)
+    }
+
+    /**
+     * Sign the message using an inline signature made by the provided signing key.
+     *
+     * @param signingKeyProtector protector to unlock the signing key
+     * @param signingKey key ring containing the signing key
+     * @return this
+     * @throws KeyException if something is wrong with the key
+     * @throws PGPException if the key cannot be unlocked or a signing method cannot be created
+     */
+    @Deprecated("Pass an OpenPGPKey instead.")
+    @Throws(KeyException::class, PGPException::class)
+    // TODO: Remove in 2.1
     fun addSignature(signingKeyProtector: SecretKeyRingProtector, signingKey: PGPSecretKeyRing) =
-        apply {
-            addInlineSignature(
-                signingKeyProtector, signingKey, null, DocumentSignatureType.BINARY_DOCUMENT)
-        }
+        addSignature(signingKeyProtector, api.toKey(signingKey))
 
     /**
      * Add inline signatures with all secret key rings in the provided secret key ring collection.
@@ -85,6 +107,8 @@ class SigningOptions {
      *   created
      */
     @Throws(KeyException::class, PGPException::class)
+    @Deprecated("Repeatedly call addInlineSignature(), passing an OpenPGPKey instead.")
+    // TODO: Remove in 2.1
     fun addInlineSignatures(
         signingKeyProtector: SecretKeyRingProtector,
         signingKeys: Iterable<PGPSecretKeyRing>,
@@ -92,6 +116,23 @@ class SigningOptions {
     ) = apply {
         signingKeys.forEach { addInlineSignature(signingKeyProtector, it, null, signatureType) }
     }
+
+    /**
+     * Add inline signatures with the provided [signingKey].
+     *
+     * @param signingKeyProtector decryptor to unlock the signing secret keys
+     * @param signingKey OpenPGP key
+     * @param signatureType type of signature (binary, canonical text)
+     * @return this
+     * @throws KeyException if something is wrong with any of the keys
+     * @throws PGPException if any of the keys cannot be unlocked or a signing method cannot be
+     *   created
+     */
+    fun addInlineSignature(
+        signingKeyProtector: SecretKeyRingProtector,
+        signingKey: OpenPGPKey,
+        signatureType: DocumentSignatureType = DocumentSignatureType.BINARY_DOCUMENT
+    ): SigningOptions = addInlineSignature(signingKeyProtector, signingKey, null, signatureType)
 
     /**
      * Add an inline-signature. Inline signatures are being embedded into the message itself and can
@@ -105,11 +146,13 @@ class SigningOptions {
      * @throws PGPException if the key cannot be unlocked or the signing method cannot be created
      */
     @Throws(KeyException::class, PGPException::class)
+    @Deprecated("Pass an OpenPGPKey instead.")
+    // TODO: Remove in 2.1
     fun addInlineSignature(
         signingKeyProtector: SecretKeyRingProtector,
         signingKey: PGPSecretKeyRing,
         signatureType: DocumentSignatureType
-    ) = apply { addInlineSignature(signingKeyProtector, signingKey, null, signatureType) }
+    ) = addInlineSignature(signingKeyProtector, api.toKey(signingKey), signatureType)
 
     /**
      * Add an inline-signature. Inline signatures are being embedded into the message itself and can
@@ -128,16 +171,15 @@ class SigningOptions {
      * @throws KeyException if the key is invalid
      * @throws PGPException if the key cannot be unlocked or the signing method cannot be created
      */
-    @Throws(KeyException::class, PGPException::class)
     @JvmOverloads
     fun addInlineSignature(
         signingKeyProtector: SecretKeyRingProtector,
-        signingKey: PGPSecretKeyRing,
+        signingKey: OpenPGPKey,
         userId: CharSequence? = null,
         signatureType: DocumentSignatureType = DocumentSignatureType.BINARY_DOCUMENT,
         subpacketsCallback: Callback? = null
     ) = apply {
-        val keyRingInfo = inspectKeyRing(signingKey, evaluationDate)
+        val keyRingInfo = api.inspect(signingKey, evaluationDate)
         if (userId != null && !keyRingInfo.isUserIdValid(userId)) {
             throw UnboundUserIdException(
                 of(signingKey),
@@ -148,21 +190,87 @@ class SigningOptions {
 
         val signingPubKeys = keyRingInfo.signingSubkeys
         if (signingPubKeys.isEmpty()) {
-            throw UnacceptableSigningKeyException(of(signingKey))
+            throw UnacceptableSigningKeyException(signingKey)
         }
 
         for (signingPubKey in signingPubKeys) {
-            val signingSecKey: PGPSecretKey =
-                signingKey.getSecretKey(signingPubKey.keyID)
-                    ?: throw MissingSecretKeyException(of(signingKey), signingPubKey.keyID)
-            val signingSubkey: PGPPrivateKey = signingSecKey.unlock(signingKeyProtector)
+            val signingSecKey: OpenPGPSecretKey =
+                signingKey.getSecretKey(signingPubKey)
+                    ?: throw MissingSecretKeyException(signingPubKey)
+            val signingPrivKey: OpenPGPPrivateKey =
+                unlockSecretKey(signingSecKey, signingKeyProtector)
             val hashAlgorithms =
                 if (userId != null) keyRingInfo.getPreferredHashAlgorithms(userId)
-                else keyRingInfo.getPreferredHashAlgorithms(signingPubKey.keyID)
-            val hashAlgorithm: HashAlgorithm = negotiateHashAlgorithm(hashAlgorithms, getPolicy())
+                else keyRingInfo.getPreferredHashAlgorithms(signingPubKey.keyIdentifier)
+            val hashAlgorithm: HashAlgorithm = negotiateHashAlgorithm(hashAlgorithms)
             addSigningMethod(
-                signingKey, signingSubkey, hashAlgorithm, signatureType, false, subpacketsCallback)
+                signingPrivKey, hashAlgorithm, signatureType, false, subpacketsCallback)
         }
+    }
+
+    /**
+     * Add an inline-signature. Inline signatures are being embedded into the message itself and can
+     * be processed in one pass, thanks to the use of one-pass-signature packets.
+     *
+     * <p>
+     * This method uses the passed in user-id to select user-specific hash algorithms.
+     *
+     * @param signingKeyProtector decryptor to unlock the signing secret key
+     * @param signingKey signing key
+     * @param userId user-id of the signer
+     * @param signatureType signature type (binary, canonical text)
+     * @param subpacketsCallback callback to modify the hashed and unhashed subpackets of the
+     *   signature
+     * @return this
+     * @throws KeyException if the key is invalid
+     * @throws PGPException if the key cannot be unlocked or the signing method cannot be created
+     */
+    @Deprecated("Pass an OpenPGPKey instead.")
+    @Throws(KeyException::class, PGPException::class)
+    @JvmOverloads
+    // TODO: Remove in 2.1
+    fun addInlineSignature(
+        signingKeyProtector: SecretKeyRingProtector,
+        signingKey: PGPSecretKeyRing,
+        userId: CharSequence? = null,
+        signatureType: DocumentSignatureType = DocumentSignatureType.BINARY_DOCUMENT,
+        subpacketsCallback: Callback? = null
+    ) =
+        addInlineSignature(
+            signingKeyProtector, api.toKey(signingKey), userId, signatureType, subpacketsCallback)
+
+    /**
+     * Create an inline signature using the given signing component key (e.g. a specific subkey).
+     *
+     * @param signingKeyProtector decryptor to unlock the secret key
+     * @param signingKey signing component key
+     * @param signatureType signature type
+     * @param subpacketsCallback callback to modify the signatures subpackets
+     * @return builder
+     * @throws PGPException if the secret key cannot be unlocked or if no signing method can be
+     *   created.
+     */
+    fun addInlineSignature(
+        signingKeyProtector: SecretKeyRingProtector,
+        signingKey: OpenPGPSecretKey,
+        signatureType: DocumentSignatureType = DocumentSignatureType.BINARY_DOCUMENT,
+        subpacketsCallback: Callback? = null
+    ): SigningOptions = apply {
+        val openPGPKey = signingKey.openPGPKey
+        val keyRingInfo = api.inspect(openPGPKey, evaluationDate)
+        val signingPubKeys = keyRingInfo.signingSubkeys
+        if (signingPubKeys.isEmpty()) {
+            throw UnacceptableSigningKeyException(openPGPKey)
+        }
+
+        if (!signingPubKeys.any { it.keyIdentifier.matchesExplicit(signingKey.keyIdentifier) }) {
+            throw MissingSecretKeyException(signingKey)
+        }
+
+        val signingPrivKey = unlockSecretKey(signingKey, signingKeyProtector)
+        val hashAlgorithms = keyRingInfo.getPreferredHashAlgorithms(signingKey.keyIdentifier)
+        val hashAlgorithm: HashAlgorithm = negotiateHashAlgorithm(hashAlgorithms)
+        addSigningMethod(signingPrivKey, hashAlgorithm, signatureType, false, subpacketsCallback)
     }
 
     /**
@@ -183,35 +291,23 @@ class SigningOptions {
      */
     @Throws(KeyException::class, PGPException::class)
     @JvmOverloads
+    @Deprecated("Pass in an OpenPGPSecretKey instead.")
+    // TODO: Remove in 2.1
     fun addInlineSignature(
         signingKeyProtector: SecretKeyRingProtector,
         signingKey: PGPSecretKeyRing,
         keyId: Long,
         signatureType: DocumentSignatureType = DocumentSignatureType.BINARY_DOCUMENT,
         subpacketsCallback: Callback? = null
-    ) = apply {
-        val keyRingInfo = inspectKeyRing(signingKey, evaluationDate)
-        val signingPubKeys = keyRingInfo.signingSubkeys
-        if (signingPubKeys.isEmpty()) {
-            throw UnacceptableSigningKeyException(of(signingKey))
-        }
-
-        for (signingPubKey in signingPubKeys) {
-            if (signingPubKey.keyID != keyId) {
-                continue
-            }
-
-            val signingSecKey =
-                signingKey.getSecretKey(signingPubKey.keyID)
-                    ?: throw MissingSecretKeyException(of(signingKey), signingPubKey.keyID)
-            val signingSubkey = signingSecKey.unlock(signingKeyProtector)
-            val hashAlgorithms = keyRingInfo.getPreferredHashAlgorithms(signingPubKey.keyID)
-            val hashAlgorithm: HashAlgorithm = negotiateHashAlgorithm(hashAlgorithms, getPolicy())
-            addSigningMethod(
-                signingKey, signingSubkey, hashAlgorithm, signatureType, false, subpacketsCallback)
-            return this
-        }
-        throw MissingSecretKeyException(of(signingKey), keyId)
+    ): SigningOptions {
+        val key = api.toKey(signingKey)
+        val subkeyIdentifier = KeyIdentifier(keyId)
+        return addInlineSignature(
+            signingKeyProtector,
+            key.getSecretKey(subkeyIdentifier)
+                ?: throw MissingSecretKeyException(of(signingKey), subkeyIdentifier),
+            signatureType,
+            subpacketsCallback)
     }
 
     /**
@@ -226,6 +322,8 @@ class SigningOptions {
      *   method cannot be created
      */
     @Throws(KeyException::class, PGPException::class)
+    @Deprecated("Repeatedly call addDetachedSignature(), passing an OpenPGPKey instead.")
+    // TODO: Remove in 2.1
     fun addDetachedSignatures(
         signingKeyProtector: SecretKeyRingProtector,
         signingKeys: Iterable<PGPSecretKeyRing>,
@@ -233,6 +331,12 @@ class SigningOptions {
     ) = apply {
         signingKeys.forEach { addDetachedSignature(signingKeyProtector, it, null, signatureType) }
     }
+
+    fun addDetachedSignature(
+        signingKeyProtector: SecretKeyRingProtector,
+        signingKey: OpenPGPKey,
+        signatureType: DocumentSignatureType = DocumentSignatureType.BINARY_DOCUMENT
+    ): SigningOptions = addDetachedSignature(signingKeyProtector, signingKey, null, signatureType)
 
     /**
      * Create a detached signature. Detached signatures are not being added into the PGP message
@@ -247,7 +351,9 @@ class SigningOptions {
      * @throws PGPException if the key cannot be validated or unlocked, or if no signature method
      *   can be created
      */
+    @Deprecated("Pass an OpenPGPKey instead.")
     @Throws(KeyException::class, PGPException::class)
+    // TODO: Remove in 2.1
     fun addDetachedSignature(
         signingKeyProtector: SecretKeyRingProtector,
         signingKey: PGPSecretKeyRing,
@@ -273,15 +379,14 @@ class SigningOptions {
      *   can be created
      */
     @JvmOverloads
-    @Throws(KeyException::class, PGPException::class)
     fun addDetachedSignature(
         signingKeyProtector: SecretKeyRingProtector,
-        signingKey: PGPSecretKeyRing,
-        userId: String? = null,
+        signingKey: OpenPGPKey,
+        userId: CharSequence? = null,
         signatureType: DocumentSignatureType = DocumentSignatureType.BINARY_DOCUMENT,
         subpacketCallback: Callback? = null
-    ) = apply {
-        val keyRingInfo = inspectKeyRing(signingKey, evaluationDate)
+    ): SigningOptions = apply {
+        val keyRingInfo = api.inspect(signingKey, evaluationDate)
         if (userId != null && !keyRingInfo.isUserIdValid(userId)) {
             throw UnboundUserIdException(
                 of(signingKey),
@@ -292,21 +397,78 @@ class SigningOptions {
 
         val signingPubKeys = keyRingInfo.signingSubkeys
         if (signingPubKeys.isEmpty()) {
-            throw UnacceptableSigningKeyException(of(signingKey))
+            throw UnacceptableSigningKeyException(signingKey)
         }
 
         for (signingPubKey in signingPubKeys) {
-            val signingSecKey: PGPSecretKey =
-                signingKey.getSecretKey(signingPubKey.keyID)
-                    ?: throw MissingSecretKeyException(of(signingKey), signingPubKey.keyID)
-            val signingSubkey: PGPPrivateKey = signingSecKey.unlock(signingKeyProtector)
-            val hashAlgorithms =
-                if (userId != null) keyRingInfo.getPreferredHashAlgorithms(userId)
-                else keyRingInfo.getPreferredHashAlgorithms(signingPubKey.keyID)
-            val hashAlgorithm: HashAlgorithm = negotiateHashAlgorithm(hashAlgorithms, getPolicy())
-            addSigningMethod(
-                signingKey, signingSubkey, hashAlgorithm, signatureType, true, subpacketCallback)
+            val signingSecKey: OpenPGPSecretKey =
+                signingKey.getSecretKey(signingPubKey.keyIdentifier)
+                    ?: throw MissingSecretKeyException(signingPubKey)
+            addDetachedSignature(
+                signingKeyProtector, signingSecKey, userId, signatureType, subpacketCallback)
         }
+    }
+
+    /**
+     * Create a detached signature. Detached signatures are not being added into the PGP message
+     * itself. Instead, they can be distributed separately to the message. Detached signatures are
+     * useful if the data that is being signed shall not be modified (e.g. when signing a file).
+     *
+     * <p>
+     * This method uses the passed in user-id to select user-specific hash algorithms.
+     *
+     * @param signingKeyProtector decryptor to unlock the secret signing key
+     * @param signingKey signing key
+     * @param userId user-id
+     * @param signatureType type of data that is signed (binary, canonical text)
+     * @param subpacketCallback callback to modify hashed and unhashed subpackets of the signature
+     * @return this
+     * @throws KeyException if something is wrong with the key
+     * @throws PGPException if the key cannot be validated or unlocked, or if no signature method
+     *   can be created
+     */
+    @Deprecated("Pass an OpenPGPKey instead.")
+    @JvmOverloads
+    @Throws(KeyException::class, PGPException::class)
+    // TODO: Remove in 2.1
+    fun addDetachedSignature(
+        signingKeyProtector: SecretKeyRingProtector,
+        signingKey: PGPSecretKeyRing,
+        userId: String? = null,
+        signatureType: DocumentSignatureType = DocumentSignatureType.BINARY_DOCUMENT,
+        subpacketCallback: Callback? = null
+    ) =
+        addDetachedSignature(
+            signingKeyProtector, api.toKey(signingKey), userId, signatureType, subpacketCallback)
+
+    /**
+     * Create a detached signature. Detached signatures are not being added into the PGP message
+     * itself. Instead, they can be distributed separately to the message. Detached signatures are
+     * useful if the data that is being signed shall not be modified (e.g. when signing a file).
+     * This method creates a signature using the provided [signingKey], taking into consideration
+     * the preferences found on the binding signature of the given [userId].
+     *
+     * @param signingKeyProtector protector to unlock the signing key
+     * @param signingKey OpenPGP key for signing
+     * @param userId user-id to determine algorithm preferences
+     * @param signatureType document signature type
+     * @param subpacketCallback callback to change the subpackets of the signature
+     * @return this
+     */
+    fun addDetachedSignature(
+        signingKeyProtector: SecretKeyRingProtector,
+        signingKey: OpenPGPSecretKey,
+        userId: CharSequence? = null,
+        signatureType: DocumentSignatureType = DocumentSignatureType.BINARY_DOCUMENT,
+        subpacketCallback: Callback? = null
+    ): SigningOptions = apply {
+        val keyRingInfo = api.inspect(signingKey.openPGPKey, evaluationDate)
+        val signingPrivKey: OpenPGPPrivateKey = signingKey.unlock(signingKeyProtector)
+        val hashAlgorithms =
+            if (userId != null) keyRingInfo.getPreferredHashAlgorithms(userId)
+            else keyRingInfo.getPreferredHashAlgorithms(signingKey.keyIdentifier)
+        val hashAlgorithm: HashAlgorithm = negotiateHashAlgorithm(hashAlgorithms)
+        addSigningMethod(signingPrivKey, hashAlgorithm, signatureType, true, subpacketCallback)
     }
 
     /**
@@ -327,63 +489,45 @@ class SigningOptions {
      */
     @Throws(KeyException::class, PGPException::class)
     @JvmOverloads
+    @Deprecated("Pass an OpenPGPSecretKey instead.")
+    // TODO: Remove in 2.1
     fun addDetachedSignature(
         signingKeyProtector: SecretKeyRingProtector,
         signingKey: PGPSecretKeyRing,
         keyId: Long,
         signatureType: DocumentSignatureType = DocumentSignatureType.BINARY_DOCUMENT,
         subpacketsCallback: Callback? = null
-    ) = apply {
-        val keyRingInfo = inspectKeyRing(signingKey, evaluationDate)
-
-        val signingPubKeys = keyRingInfo.signingSubkeys
-        if (signingPubKeys.isEmpty()) {
-            throw UnacceptableSigningKeyException(of(signingKey))
-        }
-
-        for (signingPubKey in signingPubKeys) {
-            if (signingPubKey.keyID == keyId) {
-                val signingSecKey: PGPSecretKey =
-                    signingKey.getSecretKey(signingPubKey.keyID)
-                        ?: throw MissingSecretKeyException(of(signingKey), signingPubKey.keyID)
-                val signingSubkey: PGPPrivateKey = signingSecKey.unlock(signingKeyProtector)
-                val hashAlgorithms = keyRingInfo.getPreferredHashAlgorithms(signingPubKey.keyID)
-                val hashAlgorithm: HashAlgorithm =
-                    negotiateHashAlgorithm(hashAlgorithms, getPolicy())
-                addSigningMethod(
-                    signingKey,
-                    signingSubkey,
-                    hashAlgorithm,
-                    signatureType,
-                    true,
-                    subpacketsCallback)
-                return this
-            }
-        }
-
-        throw MissingSecretKeyException(of(signingKey), keyId)
+    ): SigningOptions {
+        val key = api.toKey(signingKey)
+        val signingKeyIdentifier = KeyIdentifier(keyId)
+        return addDetachedSignature(
+            signingKeyProtector,
+            key.getSecretKey(signingKeyIdentifier)
+                ?: throw MissingSecretKeyException(of(key), signingKeyIdentifier),
+            null,
+            signatureType,
+            subpacketsCallback)
     }
 
     private fun addSigningMethod(
-        signingKey: PGPSecretKeyRing,
-        signingSubkey: PGPPrivateKey,
+        signingKey: OpenPGPPrivateKey,
         hashAlgorithm: HashAlgorithm,
         signatureType: DocumentSignatureType,
         detached: Boolean,
         subpacketCallback: Callback? = null
     ) {
-        val signingKeyIdentifier = SubkeyIdentifier(signingKey, signingSubkey.keyID)
-        val signingSecretKey: PGPSecretKey = signingKey.getSecretKey(signingSubkey.keyID)
+        val signingSecretKey: PGPSecretKey = signingKey.secretKey.pgpSecretKey
         val publicKeyAlgorithm = requireFromId(signingSecretKey.publicKey.algorithm)
         val bitStrength = signingSecretKey.publicKey.bitStrength
-        if (!getPolicy().publicKeyAlgorithmPolicy.isAcceptable(publicKeyAlgorithm, bitStrength)) {
+        if (!api.algorithmPolicy.publicKeyAlgorithmPolicy.isAcceptable(
+            publicKeyAlgorithm, bitStrength)) {
             throw UnacceptableSigningKeyException(
                 PublicKeyAlgorithmPolicyException(
-                    of(signingKey), signingSecretKey.keyID, publicKeyAlgorithm, bitStrength))
+                    signingKey.secretKey, publicKeyAlgorithm, bitStrength))
         }
 
         val generator: PGPSignatureGenerator =
-            createSignatureGenerator(signingSubkey, hashAlgorithm, signatureType)
+            createSignatureGenerator(signingKey.keyPair, hashAlgorithm, signatureType)
 
         // Subpackets
         val hashedSubpackets =
@@ -399,7 +543,7 @@ class SigningOptions {
         val signingMethod =
             if (detached) SigningMethod.detachedSignature(generator, hashAlgorithm)
             else SigningMethod.inlineSignature(generator, hashAlgorithm)
-        (signingMethods as MutableMap)[signingKeyIdentifier] = signingMethod
+        (signingMethods as MutableMap)[signingKey] = signingMethod
     }
 
     /**
@@ -414,32 +558,29 @@ class SigningOptions {
      * @param policy policy
      * @return selected hash algorithm
      */
-    private fun negotiateHashAlgorithm(
-        preferences: Set<HashAlgorithm>,
-        policy: Policy
-    ): HashAlgorithm {
-        return _hashAlgorithmOverride
-            ?: negotiateSignatureHashAlgorithm(policy).negotiateHashAlgorithm(preferences)
+    private fun negotiateHashAlgorithm(preferences: Set<HashAlgorithm>?): HashAlgorithm {
+        return _hashAlgorithmOverride ?: hashAlgorithmNegotiator.negotiateHashAlgorithm(preferences)
     }
 
     @Throws(PGPException::class)
     private fun createSignatureGenerator(
-        privateKey: PGPPrivateKey,
+        signingKey: PGPKeyPair,
         hashAlgorithm: HashAlgorithm,
         signatureType: DocumentSignatureType
     ): PGPSignatureGenerator {
-        return ImplementationFactory.getInstance()
-            .getPGPContentSignerBuilder(
-                privateKey.publicKeyPacket.algorithm, hashAlgorithm.algorithmId)
+        return OpenPGPImplementation.getInstance()
+            .pgpContentSignerBuilder(signingKey.publicKey.algorithm, hashAlgorithm.algorithmId)
             .let { csb ->
-                PGPSignatureGenerator(csb).also {
-                    it.init(signatureType.signatureType.code, privateKey)
+                PGPSignatureGenerator(csb, signingKey.publicKey).also {
+                    it.init(signatureType.signatureType.code, signingKey.privateKey)
                 }
             }
     }
 
     companion object {
-        @JvmStatic fun get() = SigningOptions()
+        @JvmOverloads
+        @JvmStatic
+        fun get(api: PGPainless = PGPainless.getInstance()) = SigningOptions(api)
     }
 
     /** A method of signing. */

@@ -4,86 +4,71 @@
 
 package org.pgpainless.key.info
 
-import org.bouncycastle.openpgp.PGPSignature
+import java.util.*
+import org.bouncycastle.openpgp.api.OpenPGPCertificate.OpenPGPCertificateComponent
+import org.bouncycastle.openpgp.api.OpenPGPCertificate.OpenPGPComponentKey
+import org.bouncycastle.openpgp.api.OpenPGPCertificate.OpenPGPIdentityComponent
+import org.pgpainless.algorithm.AEADCipherMode
 import org.pgpainless.algorithm.CompressionAlgorithm
+import org.pgpainless.algorithm.Feature
 import org.pgpainless.algorithm.HashAlgorithm
 import org.pgpainless.algorithm.SymmetricKeyAlgorithm
-import org.pgpainless.key.SubkeyIdentifier
-import org.pgpainless.signature.subpackets.SignatureSubpacketsUtil
+import org.pgpainless.bouncycastle.extensions.toCompressionAlgorithms
+import org.pgpainless.bouncycastle.extensions.toHashAlgorithms
+import org.pgpainless.bouncycastle.extensions.toSymmetricKeyAlgorithms
 
-abstract class KeyAccessor(protected val info: KeyRingInfo, protected val key: SubkeyIdentifier) {
+abstract class KeyAccessor(
+    protected val key: OpenPGPComponentKey,
+    private val referenceTime: Date
+) {
 
-    /**
-     * Depending on the way we address the key (key-id or user-id), return the respective
-     * [PGPSignature] which contains the algorithm preferences we are going to use.
-     *
-     * <p>
-     * If we address a key via its user-id, we want to rely on the algorithm preferences in the
-     * user-id certification, while we would instead rely on those in the direct-key signature if
-     * we'd address the key by key-id.
-     *
-     * @return signature
-     */
-    abstract val signatureWithPreferences: PGPSignature
+    abstract val component: OpenPGPCertificateComponent
 
-    /** Preferred symmetric key encryption algorithms. */
     val preferredSymmetricKeyAlgorithms: Set<SymmetricKeyAlgorithm>
         get() =
-            SignatureSubpacketsUtil.parsePreferredSymmetricKeyAlgorithms(signatureWithPreferences)
+            component.getSymmetricCipherPreferences(referenceTime)?.toSymmetricKeyAlgorithms()
+                ?: setOf()
 
-    /** Preferred hash algorithms. */
     val preferredHashAlgorithms: Set<HashAlgorithm>
-        get() = SignatureSubpacketsUtil.parsePreferredHashAlgorithms(signatureWithPreferences)
+        get() = component.getHashAlgorithmPreferences(referenceTime)?.toHashAlgorithms() ?: setOf()
 
-    /** Preferred compression algorithms. */
     val preferredCompressionAlgorithms: Set<CompressionAlgorithm>
         get() =
-            SignatureSubpacketsUtil.parsePreferredCompressionAlgorithms(signatureWithPreferences)
+            component.getCompressionAlgorithmPreferences(referenceTime)?.toCompressionAlgorithms()
+                ?: setOf()
+
+    val preferredAEADCipherSuites: Set<AEADCipherMode>
+        get() =
+            component
+                .getAEADCipherSuitePreferences(referenceTime)
+                ?.rawAlgorithms
+                ?.map { AEADCipherMode(it) }
+                ?.toSet()
+                ?: setOf()
+
+    val features: Set<Feature>
+        get() =
+            Feature.fromBitmask(component.getFeatures(referenceTime)?.features?.toInt() ?: 0)
+                .toSet()
 
     /**
      * Address the key via a user-id (e.g. `Alice <alice@wonderland.lit>`). In this case we are
      * sourcing preferred algorithms from the user-id certification first.
      */
-    class ViaUserId(info: KeyRingInfo, key: SubkeyIdentifier, private val userId: CharSequence) :
-        KeyAccessor(info, key) {
-        override val signatureWithPreferences: PGPSignature
-            get() =
-                checkNotNull(info.getLatestUserIdCertification(userId.toString())) {
-                    "No valid user-id certification signature found for '$userId'."
-                }
+    class ViaUserId(
+        key: OpenPGPComponentKey,
+        userId: OpenPGPIdentityComponent,
+        referenceTime: Date = Date()
+    ) : KeyAccessor(key, referenceTime) {
+        override val component: OpenPGPCertificateComponent = userId
     }
 
     /**
      * Address the key via key-id. In this case we are sourcing preferred algorithms from the keys
      * direct-key signature first.
      */
-    class ViaKeyId(info: KeyRingInfo, key: SubkeyIdentifier) : KeyAccessor(info, key) {
-        override val signatureWithPreferences: PGPSignature
-            get() {
-                // If the key is located by Key ID, the algorithm of the primary User ID of the key
-                // provides the
-                // preferred symmetric algorithm.
-                info.primaryUserId?.let { userId ->
-                    info.getLatestUserIdCertification(userId).let { if (it != null) return it }
-                }
-
-                return info.getCurrentSubkeyBindingSignature(key.subkeyId)
-                    ?: throw NoSuchElementException(
-                        "Key does not carry acceptable self-signature signature.")
-            }
-    }
-
-    class SubKey(info: KeyRingInfo, key: SubkeyIdentifier) : KeyAccessor(info, key) {
-        override val signatureWithPreferences: PGPSignature
-            get() =
-                checkNotNull(
-                    if (key.isPrimaryKey) {
-                        info.latestDirectKeySelfSignature
-                            ?: info.primaryUserId?.let { info.getLatestUserIdCertification(it) }
-                    } else {
-                        info.getCurrentSubkeyBindingSignature(key.subkeyId)
-                    }) {
-                        "No valid signature found."
-                    }
+    class ViaKeyIdentifier(key: OpenPGPComponentKey, referenceTime: Date = Date()) :
+        KeyAccessor(key, referenceTime) {
+        override val component: OpenPGPCertificateComponent = key
     }
 }

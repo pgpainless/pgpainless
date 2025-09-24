@@ -8,22 +8,24 @@ import java.io.IOException
 import java.io.InputStream
 import java.util.*
 import org.bouncycastle.jce.provider.BouncyCastleProvider
+import org.pgpainless.PGPainless
 import sop.SOP
 import sop.operation.Version
 
 /** Implementation of the `version` operation using PGPainless. */
-class VersionImpl : Version {
+class VersionImpl(private val api: PGPainless) : Version {
 
     companion object {
-        const val SOP_VERSION = 10
-        const val SOPV_VERSION = "1.0"
+        const val SOP_VERSION = 14
+        const val SOPV_VERSION = "1.2"
     }
 
     override fun getBackendVersion(): String = "PGPainless ${getVersion()}"
 
     override fun getExtendedVersion(): String {
         val bcVersion =
-            String.format(Locale.US, "Bouncy Castle %.2f", BouncyCastleProvider().version)
+            String.format(
+                Locale.US, "Bouncy Castle %.2f", BouncyCastleProvider().versionStr.toDouble())
         val specVersion = String.format("%02d", SOP_VERSION)
         return """${getName()} ${getVersion()}
 https://codeberg.org/PGPainless/pgpainless/src/branch/main/pgpainless-sop

@@ -10,47 +10,24 @@ import java.util.*
 import kotlin.experimental.or
 import openpgp.secondsTill
 import openpgp.toSecondsPrecision
-import org.bouncycastle.bcpg.SignatureSubpacket
 import org.bouncycastle.bcpg.SignatureSubpacketTags
 import org.bouncycastle.bcpg.sig.*
 import org.bouncycastle.openpgp.PGPPublicKey
 import org.bouncycastle.openpgp.PGPSignature
+import org.bouncycastle.openpgp.PGPSignatureSubpacketGenerator
 import org.bouncycastle.openpgp.PGPSignatureSubpacketVector
 import org.pgpainless.algorithm.*
 import org.pgpainless.key.util.RevocationAttributes
 
-class SignatureSubpackets :
+class SignatureSubpackets(
+    val subpacketsGenerator: PGPSignatureSubpacketGenerator = PGPSignatureSubpacketGenerator()
+) :
     BaseSignatureSubpackets,
     SelfSignatureSubpackets,
     CertificationSubpackets,
     RevocationSignatureSubpackets {
 
     interface Callback : SignatureSubpacketCallback<SignatureSubpackets>
-
-    var signatureCreationTimeSubpacket: SignatureCreationTime? = null
-    var signatureExpirationTimeSubpacket: SignatureExpirationTime? = null
-    var issuerKeyIdSubpacket: IssuerKeyID? = null
-    var issuerFingerprintSubpacket: IssuerFingerprint? = null
-    val notationDataSubpackets: List<NotationData> = mutableListOf()
-    val intendedRecipientFingerprintSubpackets: List<IntendedRecipientFingerprint> = mutableListOf()
-    val revocationKeySubpackets: List<RevocationKey> = mutableListOf()
-    var exportableSubpacket: Exportable? = null
-    var signatureTargetSubpacket: SignatureTarget? = null
-    var featuresSubpacket: Features? = null
-    var keyFlagsSubpacket: KeyFlags? = null
-    var trustSubpacket: TrustSignature? = null
-    var preferredCompressionAlgorithmsSubpacket: PreferredAlgorithms? = null
-    var preferredSymmetricKeyAlgorithmsSubpacket: PreferredAlgorithms? = null
-    var preferredHashAlgorithmsSubpacket: PreferredAlgorithms? = null
-    val embeddedSignatureSubpackets: List<EmbeddedSignature> = mutableListOf()
-    var signerUserIdSubpacket: SignerUserID? = null
-    var keyExpirationTimeSubpacket: KeyExpirationTime? = null
-    var policyURISubpacket: PolicyURI? = null
-    var primaryUserIdSubpacket: PrimaryUserID? = null
-    var regularExpressionSubpacket: RegularExpression? = null
-    var revocableSubpacket: Revocable? = null
-    var revocationReasonSubpacket: RevocationReason? = null
-    val residualSubpackets: List<SignatureSubpacket> = mutableListOf()
 
     companion object {
 
@@ -72,67 +49,26 @@ class SignatureSubpackets :
             issuer: PGPPublicKey,
             base: PGPSignatureSubpacketVector
         ): SignatureSubpackets {
-            return createSubpacketsFrom(base).apply { setIssuerFingerprintAndKeyId(issuer) }
+            return createSubpacketsFrom(base).apply { setAppropriateIssuerInfo(issuer) }
         }
 
         @JvmStatic
         fun createSubpacketsFrom(base: PGPSignatureSubpacketVector): SignatureSubpackets {
-            return SignatureSubpacketsHelper.applyFrom(base, SignatureSubpackets())
+            return SignatureSubpackets(PGPSignatureSubpacketGenerator(base)).apply {
+                subpacketsGenerator.removePacketsOfType(SignatureSubpacketTags.ISSUER_KEY_ID)
+                subpacketsGenerator.removePacketsOfType(SignatureSubpacketTags.ISSUER_FINGERPRINT)
+                subpacketsGenerator.removePacketsOfType(SignatureSubpacketTags.CREATION_TIME)
+            }
         }
 
         @JvmStatic
         fun createHashedSubpackets(issuer: PGPPublicKey): SignatureSubpackets {
-            return createEmptySubpackets().setIssuerFingerprintAndKeyId(issuer)
+            return createEmptySubpackets().setAppropriateIssuerInfo(issuer)
         }
 
         @JvmStatic
         fun createEmptySubpackets(): SignatureSubpackets {
-            return SignatureSubpackets()
-        }
-
-        /** Factory method for a [Callback] that does nothing. */
-        @JvmStatic fun nop() = object : Callback {}
-
-        /**
-         * Factory function with receiver, which returns a [Callback] that modifies the hashed
-         * subpacket area of a [SignatureSubpackets] object.
-         *
-         * Can be called like this:
-         * ```
-         * val callback = SignatureSubpackets.applyHashed {
-         *     setCreationTime(date)
-         *     ...
-         * }
-         * ```
-         */
-        @JvmStatic
-        fun applyHashed(function: SignatureSubpackets.() -> Unit): Callback {
-            return object : Callback {
-                override fun modifyHashedSubpackets(hashedSubpackets: SignatureSubpackets) {
-                    function(hashedSubpackets)
-                }
-            }
-        }
-
-        /**
-         * Factory function with receiver, which returns a [Callback] that modifies the unhashed
-         * subpacket area of a [SignatureSubpackets] object.
-         *
-         * Can be called like this:
-         * ```
-         * val callback = SignatureSubpackets.applyUnhashed {
-         *     setCreationTime(date)
-         *     ...
-         * }
-         * ```
-         */
-        @JvmStatic
-        fun applyUnhashed(function: SignatureSubpackets.() -> Unit): Callback {
-            return object : Callback {
-                override fun modifyUnhashedSubpackets(unhashedSubpackets: SignatureSubpackets) {
-                    function(unhashedSubpackets)
-                }
-            }
+            return SignatureSubpackets(PGPSignatureSubpacketGenerator())
         }
     }
 
@@ -157,7 +93,11 @@ class SignatureSubpackets :
     }
 
     override fun setRevocationReason(reason: RevocationReason?): SignatureSubpackets = apply {
-        this.revocationReasonSubpacket = reason
+        reason?.let {
+            subpacketsGenerator.removePacketsOfType(SignatureSubpacketTags.REVOCATION_REASON)
+            subpacketsGenerator.setRevocationReason(
+                it.isCritical, it.revocationReason, it.revocationDescription)
+        }
     }
 
     override fun setKeyFlags(vararg keyflags: KeyFlag): SignatureSubpackets = apply {
@@ -174,7 +114,8 @@ class SignatureSubpackets :
         }
 
     override fun setKeyFlags(keyFlags: KeyFlags?): SignatureSubpackets = apply {
-        this.keyFlagsSubpacket = keyFlags
+        subpacketsGenerator.removePacketsOfType(SignatureSubpacketTags.KEY_FLAGS)
+        keyFlags?.let { subpacketsGenerator.setKeyFlags(it.isCritical, it.flags) }
     }
 
     override fun setPrimaryUserId(): SignatureSubpackets = apply { setPrimaryUserId(true) }
@@ -184,7 +125,10 @@ class SignatureSubpackets :
     }
 
     override fun setPrimaryUserId(primaryUserID: PrimaryUserID?): SignatureSubpackets = apply {
-        this.primaryUserIdSubpacket = primaryUserID
+        subpacketsGenerator.removePacketsOfType(SignatureSubpacketTags.PRIMARY_USER_ID)
+        primaryUserID?.let {
+            subpacketsGenerator.setPrimaryUserID(it.isCritical, it.isPrimaryUserID)
+        }
     }
 
     override fun setKeyExpirationTime(
@@ -221,7 +165,10 @@ class SignatureSubpackets :
 
     override fun setKeyExpirationTime(keyExpirationTime: KeyExpirationTime?): SignatureSubpackets =
         apply {
-            this.keyExpirationTimeSubpacket = keyExpirationTime
+            subpacketsGenerator.removePacketsOfType(SignatureSubpacketTags.KEY_EXPIRE_TIME)
+            keyExpirationTime?.let {
+                subpacketsGenerator.setKeyExpirationTime(it.isCritical, it.time)
+            }
         }
 
     override fun setPreferredCompressionAlgorithms(
@@ -250,7 +197,10 @@ class SignatureSubpackets :
             algorithms == null || algorithms.type == SignatureSubpacketTags.PREFERRED_COMP_ALGS) {
                 "Invalid preferred compression algorithms type."
             }
-        this.preferredCompressionAlgorithmsSubpacket = algorithms
+        subpacketsGenerator.removePacketsOfType(SignatureSubpacketTags.PREFERRED_COMP_ALGS)
+        algorithms?.let {
+            subpacketsGenerator.setPreferredCompressionAlgorithms(it.isCritical, it.preferences)
+        }
     }
 
     override fun setPreferredSymmetricKeyAlgorithms(
@@ -279,7 +229,10 @@ class SignatureSubpackets :
             algorithms == null || algorithms.type == SignatureSubpacketTags.PREFERRED_SYM_ALGS) {
                 "Invalid preferred symmetric algorithms type."
             }
-        this.preferredSymmetricKeyAlgorithmsSubpacket = algorithms
+        subpacketsGenerator.removePacketsOfType(SignatureSubpacketTags.PREFERRED_SYM_ALGS)
+        algorithms?.let {
+            subpacketsGenerator.setPreferredSymmetricAlgorithms(it.isCritical, it.preferences)
+        }
     }
 
     override fun setPreferredHashAlgorithms(vararg algorithms: HashAlgorithm): SignatureSubpackets =
@@ -309,34 +262,66 @@ class SignatureSubpackets :
                     algorithms.type == SignatureSubpacketTags.PREFERRED_HASH_ALGS) {
                     "Invalid preferred hash algorithms type."
                 }
-            this.preferredHashAlgorithmsSubpacket = algorithms
+            subpacketsGenerator.removePacketsOfType(SignatureSubpacketTags.PREFERRED_HASH_ALGS)
+            algorithms?.let {
+                subpacketsGenerator.setPreferredHashAlgorithms(it.isCritical, it.preferences)
+            }
         }
 
+    override fun setPreferredAEADCiphersuites(
+        aeadAlgorithms: Collection<AEADCipherMode>
+    ): SignatureSubpackets =
+        setPreferredAEADCiphersuites(
+            PreferredAEADCiphersuites.builder(false).apply {
+                for (algorithm in aeadAlgorithms) {
+                    addCombination(
+                        algorithm.ciphermode.algorithmId, algorithm.aeadAlgorithm.algorithmId)
+                }
+            })
+
+    override fun setPreferredAEADCiphersuites(
+        algorithms: PreferredAEADCiphersuites.Builder?
+    ): SignatureSubpackets = setPreferredAEADCiphersuites(algorithms?.build())
+
+    override fun setPreferredAEADCiphersuites(
+        preferredAEADCiphersuites: PreferredAEADCiphersuites?
+    ) = apply {
+        subpacketsGenerator.removePacketsOfType(SignatureSubpacketTags.PREFERRED_AEAD_ALGORITHMS)
+        preferredAEADCiphersuites?.let {
+            subpacketsGenerator.setPreferredAEADCiphersuites(it.isCritical, it.rawAlgorithms)
+        }
+    }
+
+    @Deprecated("Use of this subpacket is discouraged.")
     override fun addRevocationKey(revocationKey: PGPPublicKey): SignatureSubpackets = apply {
         addRevocationKey(true, revocationKey)
     }
 
+    @Deprecated("Use of this subpacket is discouraged.")
     override fun addRevocationKey(
         isCritical: Boolean,
         revocationKey: PGPPublicKey
     ): SignatureSubpackets = apply { addRevocationKey(isCritical, false, revocationKey) }
 
+    @Deprecated("Use of this subpacket is discouraged.")
     override fun addRevocationKey(
         isCritical: Boolean,
         isSensitive: Boolean,
         revocationKey: PGPPublicKey
     ): SignatureSubpackets = apply {
-        val clazz = 0x80.toByte() or if (isSensitive) 0x40.toByte() else 0x00.toByte()
+        val clazz = if (isSensitive) 0x80.toByte() or 0x40.toByte() else 0x80.toByte()
         addRevocationKey(
             RevocationKey(isCritical, clazz, revocationKey.algorithm, revocationKey.fingerprint))
     }
 
+    @Deprecated("Use of this subpacket is discouraged.")
     override fun addRevocationKey(revocationKey: RevocationKey): SignatureSubpackets = apply {
-        (this.revocationKeySubpackets as MutableList).add(revocationKey)
+        subpacketsGenerator.addCustomSubpacket(revocationKey)
     }
 
+    @Deprecated("Use of this subpacket is discouraged.")
     override fun clearRevocationKeys(): SignatureSubpackets = apply {
-        (this.revocationKeySubpackets as MutableList).clear()
+        subpacketsGenerator.removePacketsOfType(SignatureSubpacketTags.REVOCATION_KEY)
     }
 
     override fun setFeatures(vararg features: Feature): SignatureSubpackets = apply {
@@ -349,7 +334,21 @@ class SignatureSubpackets :
         }
 
     override fun setFeatures(features: Features?): SignatureSubpackets = apply {
-        this.featuresSubpacket = features
+        subpacketsGenerator.removePacketsOfType(SignatureSubpacketTags.FEATURES)
+        features?.let { subpacketsGenerator.setFeature(it.isCritical, it.features) }
+    }
+
+    override fun setAppropriateIssuerInfo(key: PGPPublicKey) = apply {
+        setAppropriateIssuerInfo(key, OpenPGPKeyVersion.from(key.version))
+    }
+
+    override fun setAppropriateIssuerInfo(key: PGPPublicKey, version: OpenPGPKeyVersion) = apply {
+        when (version) {
+            OpenPGPKeyVersion.v3 -> setIssuerKeyId(key.keyID)
+            OpenPGPKeyVersion.v4 -> setIssuerFingerprintAndKeyId(key)
+            OpenPGPKeyVersion.librePgp,
+            OpenPGPKeyVersion.v6 -> setIssuerFingerprint(key)
+        }
     }
 
     override fun setIssuerFingerprintAndKeyId(key: PGPPublicKey): SignatureSubpackets = apply {
@@ -366,23 +365,22 @@ class SignatureSubpackets :
     }
 
     override fun setIssuerKeyId(issuerKeyID: IssuerKeyID?): SignatureSubpackets = apply {
-        this.issuerKeyIdSubpacket = issuerKeyID
+        subpacketsGenerator.removePacketsOfType(SignatureSubpacketTags.ISSUER_KEY_ID)
+        issuerKeyID?.let { subpacketsGenerator.setIssuerKeyID(it.isCritical, it.keyID) }
     }
 
     override fun setIssuerFingerprint(
         isCritical: Boolean,
         issuer: PGPPublicKey
-    ): SignatureSubpackets = apply {
-        setIssuerFingerprint(IssuerFingerprint(isCritical, issuer.version, issuer.fingerprint))
-    }
+    ): SignatureSubpackets = apply { subpacketsGenerator.setIssuerFingerprint(isCritical, issuer) }
 
-    override fun setIssuerFingerprint(issuer: PGPPublicKey): SignatureSubpackets = apply {
-        setIssuerFingerprint(false, issuer)
-    }
+    override fun setIssuerFingerprint(issuer: PGPPublicKey): SignatureSubpackets =
+        setIssuerFingerprint(true, issuer)
 
     override fun setIssuerFingerprint(fingerprint: IssuerFingerprint?): SignatureSubpackets =
         apply {
-            this.issuerFingerprintSubpacket = fingerprint
+            subpacketsGenerator.removePacketsOfType(SignatureSubpacketTags.ISSUER_FINGERPRINT)
+            fingerprint?.let { subpacketsGenerator.addCustomSubpacket(it) }
         }
 
     override fun setSignatureCreationTime(creationTime: Date): SignatureSubpackets = apply {
@@ -398,7 +396,10 @@ class SignatureSubpackets :
 
     override fun setSignatureCreationTime(
         creationTime: SignatureCreationTime?
-    ): SignatureSubpackets = apply { this.signatureCreationTimeSubpacket = creationTime }
+    ): SignatureSubpackets = apply {
+        subpacketsGenerator.removePacketsOfType(SignatureSubpacketTags.CREATION_TIME)
+        creationTime?.let { subpacketsGenerator.setSignatureCreationTime(it.isCritical, it.time) }
+    }
 
     override fun setSignatureExpirationTime(
         creationTime: Date,
@@ -447,19 +448,28 @@ class SignatureSubpackets :
 
     override fun setSignatureExpirationTime(
         expirationTime: SignatureExpirationTime?
-    ): SignatureSubpackets = apply { this.signatureExpirationTimeSubpacket = expirationTime }
+    ): SignatureSubpackets = apply {
+        subpacketsGenerator.removePacketsOfType(SignatureSubpacketTags.EXPIRE_TIME)
+        expirationTime?.let {
+            subpacketsGenerator.setSignatureExpirationTime(it.isCritical, it.time)
+        }
+    }
 
+    @Deprecated("Usage of subpacket is discouraged")
     override fun setSignerUserId(userId: CharSequence): SignatureSubpackets = apply {
         setSignerUserId(false, userId)
     }
 
+    @Deprecated("Usage of subpacket is discouraged")
     override fun setSignerUserId(isCritical: Boolean, userId: CharSequence): SignatureSubpackets =
         apply {
             setSignerUserId(SignerUserID(isCritical, userId.toString()))
         }
 
+    @Deprecated("Usage of subpacket is discouraged")
     override fun setSignerUserId(signerUserID: SignerUserID?): SignatureSubpackets = apply {
-        this.signerUserIdSubpacket = signerUserID
+        subpacketsGenerator.removePacketsOfType(SignatureSubpacketTags.SIGNER_USER_ID)
+        signerUserID?.let { subpacketsGenerator.setSignerUserID(it.isCritical, it.rawID) }
     }
 
     override fun addNotationData(
@@ -480,11 +490,15 @@ class SignatureSubpackets :
     }
 
     override fun addNotationData(notationData: NotationData): SignatureSubpackets = apply {
-        (this.notationDataSubpackets as MutableList).add(notationData)
+        subpacketsGenerator.addNotationData(
+            notationData.isCritical,
+            notationData.isHumanReadable,
+            notationData.notationName,
+            notationData.notationValue)
     }
 
     override fun clearNotationData(): SignatureSubpackets = apply {
-        (this.notationDataSubpackets as MutableList).clear()
+        subpacketsGenerator.removePacketsOfType(SignatureSubpacketTags.NOTATION_DATA)
     }
 
     override fun addIntendedRecipientFingerprint(recipientKey: PGPPublicKey): SignatureSubpackets =
@@ -496,19 +510,16 @@ class SignatureSubpackets :
         isCritical: Boolean,
         recipientKey: PGPPublicKey
     ): SignatureSubpackets = apply {
-        addIntendedRecipientFingerprint(
-            IntendedRecipientFingerprint(
-                isCritical, recipientKey.version, recipientKey.fingerprint))
+        subpacketsGenerator.addIntendedRecipientFingerprint(isCritical, recipientKey)
     }
 
     override fun addIntendedRecipientFingerprint(
         intendedRecipient: IntendedRecipientFingerprint
-    ): SignatureSubpackets = apply {
-        (this.intendedRecipientFingerprintSubpackets as MutableList).add(intendedRecipient)
-    }
+    ): SignatureSubpackets = apply { subpacketsGenerator.addCustomSubpacket(intendedRecipient) }
 
     override fun clearIntendedRecipientFingerprints(): SignatureSubpackets = apply {
-        (this.intendedRecipientFingerprintSubpackets as MutableList).clear()
+        subpacketsGenerator.removePacketsOfType(
+            SignatureSubpacketTags.INTENDED_RECIPIENT_FINGERPRINT)
     }
 
     override fun setExportable(): SignatureSubpackets = apply { setExportable(true) }
@@ -523,7 +534,8 @@ class SignatureSubpackets :
         }
 
     override fun setExportable(exportable: Exportable?): SignatureSubpackets = apply {
-        this.exportableSubpacket = exportable
+        subpacketsGenerator.removePacketsOfType(SignatureSubpacketTags.EXPORTABLE)
+        exportable?.let { subpacketsGenerator.setExportable(it.isCritical, it.isExportable) }
     }
 
     override fun setPolicyUrl(policyUrl: URL): SignatureSubpackets = apply {
@@ -535,7 +547,7 @@ class SignatureSubpackets :
     }
 
     override fun setPolicyUrl(policyUrl: PolicyURI?): SignatureSubpackets = apply {
-        this.policyURISubpacket = policyURISubpacket
+        policyUrl?.let { subpacketsGenerator.addPolicyURI(it.isCritical, it.uri) }
     }
 
     override fun setRegularExpression(regex: CharSequence): SignatureSubpackets = apply {
@@ -550,7 +562,7 @@ class SignatureSubpackets :
     }
 
     override fun setRegularExpression(regex: RegularExpression?): SignatureSubpackets = apply {
-        this.regularExpressionSubpacket = regex
+        regex?.let { subpacketsGenerator.addRegularExpression(it.isCritical, it.regex) }
     }
 
     override fun setRevocable(): SignatureSubpackets = apply { setRevocable(true) }
@@ -565,7 +577,8 @@ class SignatureSubpackets :
         }
 
     override fun setRevocable(revocable: Revocable?): SignatureSubpackets = apply {
-        this.revocableSubpacket = revocable
+        subpacketsGenerator.removePacketsOfType(SignatureSubpacketTags.REVOCABLE)
+        revocable?.let { subpacketsGenerator.setRevocable(it.isCritical, it.isRevocable) }
     }
 
     override fun setSignatureTarget(
@@ -589,7 +602,11 @@ class SignatureSubpackets :
 
     override fun setSignatureTarget(signatureTarget: SignatureTarget?): SignatureSubpackets =
         apply {
-            this.signatureTargetSubpacket = signatureTarget
+            subpacketsGenerator.removePacketsOfType(SignatureSubpacketTags.SIGNATURE_TARGET)
+            signatureTarget?.let {
+                subpacketsGenerator.setSignatureTarget(
+                    it.isCritical, it.publicKeyAlgorithm, it.hashAlgorithm, it.hashData)
+            }
         }
 
     override fun setTrust(depth: Int, amount: Int): SignatureSubpackets = apply {
@@ -602,7 +619,8 @@ class SignatureSubpackets :
         }
 
     override fun setTrust(trust: TrustSignature?): SignatureSubpackets = apply {
-        this.trustSubpacket = trust
+        subpacketsGenerator.removePacketsOfType(SignatureSubpacketTags.TRUST_SIG)
+        trust?.let { subpacketsGenerator.setTrust(it.isCritical, it.depth, it.trustAmount) }
     }
 
     override fun addEmbeddedSignature(signature: PGPSignature): SignatureSubpackets = apply {
@@ -613,27 +631,19 @@ class SignatureSubpackets :
         isCritical: Boolean,
         signature: PGPSignature
     ): SignatureSubpackets = apply {
-        val sig = signature.encoded
-        val data =
-            if (sig.size - 1 > 256) {
-                ByteArray(sig.size - 3)
-            } else {
-                ByteArray(sig.size - 2)
-            }
-        System.arraycopy(sig, sig.size - data.size, data, 0, data.size)
-        addEmbeddedSignature(EmbeddedSignature(isCritical, false, data))
+        subpacketsGenerator.addEmbeddedSignature(isCritical, signature)
     }
 
     override fun addEmbeddedSignature(embeddedSignature: EmbeddedSignature): SignatureSubpackets =
         apply {
-            (this.embeddedSignatureSubpackets as MutableList).add(embeddedSignature)
+            subpacketsGenerator.addCustomSubpacket(embeddedSignature)
         }
 
     override fun clearEmbeddedSignatures(): SignatureSubpackets = apply {
-        (this.embeddedSignatureSubpackets as MutableList).clear()
+        subpacketsGenerator.removePacketsOfType(SignatureSubpacketTags.EMBEDDED_SIGNATURE)
     }
 
     fun addResidualSubpacket(
         subpacket: org.bouncycastle.bcpg.SignatureSubpacket
-    ): SignatureSubpackets = apply { (residualSubpackets as MutableList).add(subpacket) }
+    ): SignatureSubpackets = apply { subpacketsGenerator.addCustomSubpacket(subpacket) }
 }

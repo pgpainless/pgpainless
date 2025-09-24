@@ -4,9 +4,11 @@
 
 package org.pgpainless.key.generation
 
-import org.bouncycastle.openpgp.PGPSecretKeyRing
-import org.pgpainless.PGPainless.Companion.buildKeyRing
+import java.util.*
+import org.bouncycastle.openpgp.api.OpenPGPKey
+import org.pgpainless.PGPainless
 import org.pgpainless.algorithm.KeyFlag
+import org.pgpainless.algorithm.OpenPGPKeyVersion
 import org.pgpainless.key.generation.KeySpec.Companion.getBuilder
 import org.pgpainless.key.generation.type.KeyType
 import org.pgpainless.key.generation.type.eddsa_legacy.EdDSALegacyCurve
@@ -14,7 +16,11 @@ import org.pgpainless.key.generation.type.rsa.RsaLength
 import org.pgpainless.key.generation.type.xdh_legacy.XDHLegacySpec
 import org.pgpainless.util.Passphrase
 
-class KeyRingTemplates {
+class KeyRingTemplates(
+    private val version: OpenPGPKeyVersion,
+    private val creationTime: Date = Date(),
+    private val api: PGPainless = PGPainless.getInstance()
+) {
 
     /**
      * Generate an RSA OpenPGP key consisting of an RSA primary key used for certification, a
@@ -23,20 +29,25 @@ class KeyRingTemplates {
      * @param userId userId or null
      * @param length length of the RSA keys
      * @param passphrase passphrase to encrypt the key with. Can be empty for an unencrytped key.
-     * @return key
+     * @return [OpenPGPKey]
      */
     @JvmOverloads
     fun rsaKeyRing(
         userId: CharSequence?,
         length: RsaLength,
         passphrase: Passphrase = Passphrase.emptyPassphrase()
-    ): PGPSecretKeyRing =
-        buildKeyRing()
+    ): OpenPGPKey =
+        api.buildKey(version)
             .apply {
-                setPrimaryKey(getBuilder(KeyType.RSA(length), KeyFlag.CERTIFY_OTHER))
-                addSubkey(getBuilder(KeyType.RSA(length), KeyFlag.SIGN_DATA))
+                setPrimaryKey(
+                    getBuilder(KeyType.RSA(length), KeyFlag.CERTIFY_OTHER)
+                        .setKeyCreationDate(creationTime))
                 addSubkey(
-                    getBuilder(KeyType.RSA(length), KeyFlag.ENCRYPT_COMMS, KeyFlag.ENCRYPT_STORAGE))
+                    getBuilder(KeyType.RSA(length), KeyFlag.SIGN_DATA)
+                        .setKeyCreationDate(creationTime))
+                addSubkey(
+                    getBuilder(KeyType.RSA(length), KeyFlag.ENCRYPT_COMMS, KeyFlag.ENCRYPT_STORAGE)
+                        .setKeyCreationDate(creationTime))
                 setPassphrase(passphrase)
                 if (userId != null) {
                     addUserId(userId)
@@ -52,9 +63,9 @@ class KeyRingTemplates {
      * @param length length of the RSA keys
      * @param password passphrase to encrypt the key with. Can be null or blank for unencrypted
      *   keys.
-     * @return key
+     * @return [OpenPGPKey]
      */
-    fun rsaKeyRing(userId: CharSequence?, length: RsaLength, password: String?): PGPSecretKeyRing =
+    fun rsaKeyRing(userId: CharSequence?, length: RsaLength, password: String?): OpenPGPKey =
         password.let {
             if (it.isNullOrBlank()) {
                 rsaKeyRing(userId, length, Passphrase.emptyPassphrase())
@@ -69,23 +80,24 @@ class KeyRingTemplates {
      *
      * @param userId user id.
      * @param length length in bits.
-     * @param password Password of the key. Can be empty for unencrypted keys.
-     * @return [PGPSecretKeyRing] containing the KeyPair.
+     * @param passphrase Password of the key. Can be empty for unencrypted keys.
+     * @return [OpenPGPKey]
      */
     @JvmOverloads
     fun simpleRsaKeyRing(
         userId: CharSequence?,
         length: RsaLength,
         passphrase: Passphrase = Passphrase.emptyPassphrase()
-    ): PGPSecretKeyRing =
-        buildKeyRing()
+    ): OpenPGPKey =
+        api.buildKey(version)
             .apply {
                 setPrimaryKey(
                     getBuilder(
-                        KeyType.RSA(length),
-                        KeyFlag.CERTIFY_OTHER,
-                        KeyFlag.SIGN_DATA,
-                        KeyFlag.ENCRYPT_COMMS))
+                            KeyType.RSA(length),
+                            KeyFlag.CERTIFY_OTHER,
+                            KeyFlag.SIGN_DATA,
+                            KeyFlag.ENCRYPT_COMMS)
+                        .setKeyCreationDate(creationTime))
                 setPassphrase(passphrase)
                 if (userId != null) {
                     addUserId(userId.toString())
@@ -100,7 +112,7 @@ class KeyRingTemplates {
      * @param userId user id.
      * @param length length in bits.
      * @param password Password of the key. Can be null or blank for unencrypted keys.
-     * @return [PGPSecretKeyRing] containing the KeyPair.
+     * @return [OpenPGPKey]
      */
     fun simpleRsaKeyRing(userId: CharSequence?, length: RsaLength, password: String?) =
         password.let {
@@ -118,31 +130,34 @@ class KeyRingTemplates {
      *
      * @param userId user-id
      * @param passphrase Password of the private key. Can be empty for an unencrypted key.
-     * @return [PGPSecretKeyRing] containing the key pairs.
+     * @return [OpenPGPKey]
      */
     @JvmOverloads
     fun simpleEcKeyRing(
         userId: CharSequence?,
         passphrase: Passphrase = Passphrase.emptyPassphrase()
-    ): PGPSecretKeyRing =
-        buildKeyRing()
+    ): OpenPGPKey {
+        val signingKeyType =
+            if (version == OpenPGPKeyVersion.v6) KeyType.Ed25519()
+            else KeyType.EDDSA_LEGACY(EdDSALegacyCurve._Ed25519)
+        val encryptionKeyType =
+            if (version == OpenPGPKeyVersion.v6) KeyType.X25519()
+            else KeyType.XDH_LEGACY(XDHLegacySpec._X25519)
+        return api.buildKey(version)
             .apply {
                 setPrimaryKey(
-                    getBuilder(
-                        KeyType.EDDSA_LEGACY(EdDSALegacyCurve._Ed25519),
-                        KeyFlag.CERTIFY_OTHER,
-                        KeyFlag.SIGN_DATA))
+                    getBuilder(signingKeyType, KeyFlag.CERTIFY_OTHER, KeyFlag.SIGN_DATA)
+                        .setKeyCreationDate(creationTime))
                 addSubkey(
-                    getBuilder(
-                        KeyType.XDH_LEGACY(XDHLegacySpec._X25519),
-                        KeyFlag.ENCRYPT_STORAGE,
-                        KeyFlag.ENCRYPT_COMMS))
+                    getBuilder(encryptionKeyType, KeyFlag.ENCRYPT_STORAGE, KeyFlag.ENCRYPT_COMMS)
+                        .setKeyCreationDate(creationTime))
                 setPassphrase(passphrase)
                 if (userId != null) {
                     addUserId(userId.toString())
                 }
             }
             .build()
+    }
 
     /**
      * Creates a key ring consisting of an ed25519 EdDSA primary key and a X25519 XDH subkey. The
@@ -150,10 +165,10 @@ class KeyRingTemplates {
      * used for encryption and decryption of messages.
      *
      * @param userId user-id
-     * @param passphrase Password of the private key. Can be null or blank for an unencrypted key.
-     * @return [PGPSecretKeyRing] containing the key pairs.
+     * @param password Password of the private key. Can be null or blank for an unencrypted key.
+     * @return [OpenPGPKey]
      */
-    fun simpleEcKeyRing(userId: CharSequence?, password: String?): PGPSecretKeyRing =
+    fun simpleEcKeyRing(userId: CharSequence?, password: String?): OpenPGPKey =
         password.let {
             if (it.isNullOrBlank()) {
                 simpleEcKeyRing(userId, Passphrase.emptyPassphrase())
@@ -168,31 +183,36 @@ class KeyRingTemplates {
      *
      * @param userId primary user id
      * @param passphrase passphrase for the private key. Can be empty for an unencrypted key.
-     * @return key ring
+     * @return [OpenPGPKey]
      */
     @JvmOverloads
     fun modernKeyRing(
         userId: CharSequence?,
         passphrase: Passphrase = Passphrase.emptyPassphrase()
-    ): PGPSecretKeyRing =
-        buildKeyRing()
+    ): OpenPGPKey {
+        val signingKeyType =
+            if (version == OpenPGPKeyVersion.v6) KeyType.Ed25519()
+            else KeyType.EDDSA_LEGACY(EdDSALegacyCurve._Ed25519)
+        val encryptionKeyType =
+            if (version == OpenPGPKeyVersion.v6) KeyType.X25519()
+            else KeyType.XDH_LEGACY(XDHLegacySpec._X25519)
+        return api.buildKey(version)
             .apply {
                 setPrimaryKey(
-                    getBuilder(
-                        KeyType.EDDSA_LEGACY(EdDSALegacyCurve._Ed25519), KeyFlag.CERTIFY_OTHER))
+                    getBuilder(signingKeyType, KeyFlag.CERTIFY_OTHER)
+                        .setKeyCreationDate(creationTime))
                 addSubkey(
-                    getBuilder(
-                        KeyType.XDH_LEGACY(XDHLegacySpec._X25519),
-                        KeyFlag.ENCRYPT_COMMS,
-                        KeyFlag.ENCRYPT_STORAGE))
+                    getBuilder(encryptionKeyType, KeyFlag.ENCRYPT_COMMS, KeyFlag.ENCRYPT_STORAGE)
+                        .setKeyCreationDate(creationTime))
                 addSubkey(
-                    getBuilder(KeyType.EDDSA_LEGACY(EdDSALegacyCurve._Ed25519), KeyFlag.SIGN_DATA))
+                    getBuilder(signingKeyType, KeyFlag.SIGN_DATA).setKeyCreationDate(creationTime))
                 setPassphrase(passphrase)
                 if (userId != null) {
                     addUserId(userId)
                 }
             }
             .build()
+    }
 
     /**
      * Generate a modern PGP key ring consisting of an ed25519 EdDSA primary key which is used to
@@ -200,9 +220,9 @@ class KeyRingTemplates {
      *
      * @param userId primary user id
      * @param password passphrase for the private key. Can be null or blank for an unencrypted key.
-     * @return key ring
+     * @return [OpenPGPKey]
      */
-    fun modernKeyRing(userId: CharSequence?, password: String?): PGPSecretKeyRing =
+    fun modernKeyRing(userId: CharSequence?, password: String?): OpenPGPKey =
         password.let {
             if (it.isNullOrBlank()) {
                 modernKeyRing(userId, Passphrase.emptyPassphrase())

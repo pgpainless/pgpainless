@@ -13,14 +13,12 @@ import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
-import java.security.InvalidAlgorithmParameterException;
-import java.security.NoSuchAlgorithmException;
 import java.util.Date;
 
 import org.bouncycastle.openpgp.PGPException;
 import org.bouncycastle.openpgp.PGPLiteralData;
-import org.bouncycastle.openpgp.PGPPublicKeyRing;
-import org.bouncycastle.openpgp.PGPSecretKeyRing;
+import org.bouncycastle.openpgp.api.OpenPGPCertificate;
+import org.bouncycastle.openpgp.api.OpenPGPKey;
 import org.bouncycastle.util.io.Streams;
 import org.junit.JUtils;
 import org.junit.jupiter.api.BeforeAll;
@@ -34,13 +32,14 @@ import org.pgpainless.decryption_verification.MessageMetadata;
 public class FileInformationTest {
 
     private static final String data = "Hello, World!\n";
-    private static PGPSecretKeyRing secretKey;
-    private static PGPPublicKeyRing certificate;
+    private static OpenPGPKey secretKey;
+    private static OpenPGPCertificate certificate;
+    private static final PGPainless api = PGPainless.getInstance();
 
     @BeforeAll
-    public static void generateKey() throws PGPException, InvalidAlgorithmParameterException, NoSuchAlgorithmException {
-        secretKey = PGPainless.generateKeyRing().modernKeyRing("alice@wonderland.lit");
-        certificate = PGPainless.extractCertificate(secretKey);
+    public static void generateKey() {
+        secretKey = api.generateKey().modernKeyRing("alice@wonderland.lit");
+        certificate = secretKey.toCertificate();
     }
 
     @Test
@@ -51,11 +50,12 @@ public class FileInformationTest {
 
         ByteArrayInputStream dataIn = new ByteArrayInputStream(data.getBytes(StandardCharsets.UTF_8));
         ByteArrayOutputStream dataOut = new ByteArrayOutputStream();
-        EncryptionStream encryptionStream = PGPainless.encryptAndOrSign()
+        // noinspection deprecation
+        EncryptionStream encryptionStream = api.generateMessage()
                 .onOutputStream(dataOut)
                 .withOptions(ProducerOptions.encrypt(
                         EncryptionOptions
-                                .encryptCommunications()
+                                .encryptCommunications(api)
                                 .addRecipient(certificate))
                         .setFileName(fileName)
                         .setModificationDate(modificationDate)
@@ -73,9 +73,9 @@ public class FileInformationTest {
         ByteArrayInputStream cryptIn = new ByteArrayInputStream(dataOut.toByteArray());
         ByteArrayOutputStream plainOut = new ByteArrayOutputStream();
 
-        DecryptionStream decryptionStream = PGPainless.decryptAndOrVerify()
+        DecryptionStream decryptionStream = api.processMessage()
                 .onInputStream(cryptIn)
-                .withOptions(new ConsumerOptions()
+                .withOptions(ConsumerOptions.get()
                         .addDecryptionKey(secretKey));
         Streams.pipeAll(decryptionStream, plainOut);
 
@@ -92,11 +92,11 @@ public class FileInformationTest {
     public void testDefaults() throws PGPException, IOException {
         ByteArrayInputStream dataIn = new ByteArrayInputStream(data.getBytes(StandardCharsets.UTF_8));
         ByteArrayOutputStream dataOut = new ByteArrayOutputStream();
-        EncryptionStream encryptionStream = PGPainless.encryptAndOrSign()
+        EncryptionStream encryptionStream = api.generateMessage()
                 .onOutputStream(dataOut)
                 .withOptions(ProducerOptions.encrypt(
                         EncryptionOptions
-                                .encryptCommunications()
+                                .encryptCommunications(api)
                                 .addRecipient(certificate))
                 );
 
@@ -112,9 +112,9 @@ public class FileInformationTest {
         ByteArrayInputStream cryptIn = new ByteArrayInputStream(dataOut.toByteArray());
         ByteArrayOutputStream plainOut = new ByteArrayOutputStream();
 
-        DecryptionStream decryptionStream = PGPainless.decryptAndOrVerify()
+        DecryptionStream decryptionStream = api.processMessage()
                 .onInputStream(cryptIn)
-                .withOptions(new ConsumerOptions()
+                .withOptions(ConsumerOptions.get()
                         .addDecryptionKey(secretKey));
         Streams.pipeAll(decryptionStream, plainOut);
 
@@ -126,6 +126,7 @@ public class FileInformationTest {
         JUtils.assertDateEquals(PGPLiteralData.NOW, decResult.getModificationDate());
         assertNotNull(decResult.getLiteralDataEncoding());
         assertEquals(PGPLiteralData.BINARY, decResult.getLiteralDataEncoding().getCode());
+        // noinspection deprecation
         assertFalse(decResult.isForYourEyesOnly());
     }
 
@@ -133,11 +134,12 @@ public class FileInformationTest {
     public void testForYourEyesOnly() throws PGPException, IOException {
         ByteArrayInputStream dataIn = new ByteArrayInputStream(data.getBytes(StandardCharsets.UTF_8));
         ByteArrayOutputStream dataOut = new ByteArrayOutputStream();
-        EncryptionStream encryptionStream = PGPainless.encryptAndOrSign()
+        // noinspection deprecation
+        EncryptionStream encryptionStream = api.generateMessage()
                 .onOutputStream(dataOut)
                 .withOptions(ProducerOptions.encrypt(
                         EncryptionOptions
-                                .encryptCommunications()
+                                .encryptCommunications(api)
                                 .addRecipient(certificate))
                         .setForYourEyesOnly()
                 );
@@ -154,9 +156,9 @@ public class FileInformationTest {
         ByteArrayInputStream cryptIn = new ByteArrayInputStream(dataOut.toByteArray());
         ByteArrayOutputStream plainOut = new ByteArrayOutputStream();
 
-        DecryptionStream decryptionStream = PGPainless.decryptAndOrVerify()
+        DecryptionStream decryptionStream = api.processMessage()
                 .onInputStream(cryptIn)
-                .withOptions(new ConsumerOptions()
+                .withOptions(ConsumerOptions.get()
                         .addDecryptionKey(secretKey));
         Streams.pipeAll(decryptionStream, plainOut);
 
@@ -168,6 +170,7 @@ public class FileInformationTest {
         JUtils.assertDateEquals(PGPLiteralData.NOW, decResult.getModificationDate());
         assertNotNull(decResult.getLiteralDataEncoding());
         assertEquals(PGPLiteralData.BINARY, decResult.getLiteralDataEncoding().getCode());
+        // noinspection deprecation
         assertTrue(decResult.isForYourEyesOnly());
     }
 }

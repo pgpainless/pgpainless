@@ -7,14 +7,10 @@ package org.pgpainless.key.modification;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 
-import java.io.IOException;
-import java.security.InvalidAlgorithmParameterException;
-import java.security.NoSuchAlgorithmException;
 import java.util.EnumMap;
 import java.util.Map;
 
-import org.bouncycastle.openpgp.PGPException;
-import org.bouncycastle.openpgp.PGPSecretKeyRing;
+import org.bouncycastle.openpgp.api.OpenPGPKey;
 import org.junit.jupiter.api.Test;
 import org.pgpainless.PGPainless;
 import org.pgpainless.algorithm.EncryptionPurpose;
@@ -31,14 +27,18 @@ import org.pgpainless.util.Passphrase;
 public class RefuseToAddWeakSubkeyTest {
 
     @Test
-    public void testEditorRefusesToAddWeakSubkey()
-            throws PGPException, InvalidAlgorithmParameterException, NoSuchAlgorithmException {
+    public void testEditorRefusesToAddWeakSubkey() {
+        PGPainless api = PGPainless.getInstance();
         // ensure default policy is set
-        PGPainless.getPolicy().setPublicKeyAlgorithmPolicy(Policy.PublicKeyAlgorithmPolicy.bsi2021PublicKeyAlgorithmPolicy());
+        Policy oldPolicy = api.getAlgorithmPolicy();
+        Policy adjusted = oldPolicy.copy().withPublicKeyAlgorithmPolicy(
+                Policy.PublicKeyAlgorithmPolicy.bsi2021PublicKeyAlgorithmPolicy()
+        ).build();
+        api = new PGPainless(adjusted);
 
-        PGPSecretKeyRing secretKeys = PGPainless.generateKeyRing()
+        OpenPGPKey secretKeys = api.generateKey()
                 .modernKeyRing("Alice");
-        SecretKeyRingEditorInterface editor = PGPainless.modifyKeyRing(secretKeys);
+        SecretKeyRingEditorInterface editor = api.modify(secretKeys);
         KeySpec spec = KeySpec.getBuilder(KeyType.RSA(RsaLength._1024), KeyFlag.ENCRYPT_COMMS).build();
 
         assertThrows(IllegalArgumentException.class, () ->
@@ -46,10 +46,12 @@ public class RefuseToAddWeakSubkeyTest {
     }
 
     @Test
-    public void testEditorAllowsToAddWeakSubkeyIfCompliesToPublicKeyAlgorithmPolicy()
-            throws PGPException, InvalidAlgorithmParameterException, NoSuchAlgorithmException, IOException {
-        PGPSecretKeyRing secretKeys = PGPainless.generateKeyRing()
+    public void testEditorAllowsToAddWeakSubkeyIfCompliesToPublicKeyAlgorithmPolicy() {
+        PGPainless api = PGPainless.getInstance();
+        OpenPGPKey secretKeys = api.generateKey()
                 .modernKeyRing("Alice");
+
+        Policy oldPolicy = api.getAlgorithmPolicy();
 
         // set weak policy
         Map<PublicKeyAlgorithm, Integer> minimalBitStrengths = new EnumMap<>(PublicKeyAlgorithm.class);
@@ -72,9 +74,11 @@ public class RefuseToAddWeakSubkeyTest {
         minimalBitStrengths.put(PublicKeyAlgorithm.DIFFIE_HELLMAN, 2000);
         // §7.2.2
         minimalBitStrengths.put(PublicKeyAlgorithm.ECDH, 250);
-        PGPainless.getPolicy().setPublicKeyAlgorithmPolicy(new Policy.PublicKeyAlgorithmPolicy(minimalBitStrengths));
+        api = new PGPainless(oldPolicy.copy()
+                .withPublicKeyAlgorithmPolicy(new Policy.PublicKeyAlgorithmPolicy(minimalBitStrengths))
+                .build());
 
-        SecretKeyRingEditorInterface editor = PGPainless.modifyKeyRing(secretKeys);
+        SecretKeyRingEditorInterface editor = api.modify(secretKeys);
         KeySpec spec = KeySpec.getBuilder(KeyType.RSA(RsaLength._1024), KeyFlag.ENCRYPT_COMMS)
                 .setKeyCreationDate(editor.getReferenceTime()) // The key gets created after we instantiate the editor.
                 .build();
@@ -82,9 +86,6 @@ public class RefuseToAddWeakSubkeyTest {
         secretKeys = editor.addSubKey(spec, Passphrase.emptyPassphrase(), SecretKeyRingProtector.unprotectedKeys())
                 .done();
 
-        assertEquals(2, PGPainless.inspectKeyRing(secretKeys).getEncryptionSubkeys(EncryptionPurpose.ANY).size());
-
-        // reset default policy
-        PGPainless.getPolicy().setPublicKeyAlgorithmPolicy(Policy.PublicKeyAlgorithmPolicy.bsi2021PublicKeyAlgorithmPolicy());
+        assertEquals(2, api.inspect(secretKeys).getEncryptionSubkeys(EncryptionPurpose.ANY).size());
     }
 }

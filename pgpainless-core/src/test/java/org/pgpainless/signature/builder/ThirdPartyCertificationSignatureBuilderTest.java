@@ -4,21 +4,19 @@
 
 package org.pgpainless.signature.builder;
 
+import org.bouncycastle.bcpg.KeyIdentifier;
 import org.bouncycastle.bcpg.sig.Exportable;
 import org.bouncycastle.openpgp.PGPException;
-import org.bouncycastle.openpgp.PGPPublicKeyRing;
-import org.bouncycastle.openpgp.PGPSecretKeyRing;
 import org.bouncycastle.openpgp.PGPSignature;
+import org.bouncycastle.openpgp.api.OpenPGPCertificate;
+import org.bouncycastle.openpgp.api.OpenPGPKey;
+import org.bouncycastle.openpgp.api.OpenPGPSignature;
 import org.junit.jupiter.api.Test;
 import org.pgpainless.PGPainless;
 import org.pgpainless.algorithm.SignatureType;
-import org.pgpainless.implementation.ImplementationFactory;
 import org.pgpainless.key.protection.SecretKeyRingProtector;
 import org.pgpainless.signature.subpackets.CertificationSubpackets;
 import org.pgpainless.signature.subpackets.SignatureSubpacketsUtil;
-
-import java.security.InvalidAlgorithmParameterException;
-import java.security.NoSuchAlgorithmException;
 
 import static org.junit.jupiter.api.Assertions.assertArrayEquals;
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -30,27 +28,31 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 public class ThirdPartyCertificationSignatureBuilderTest {
 
     @Test
-    public void testInvalidSignatureTypeThrows() throws PGPException, InvalidAlgorithmParameterException, NoSuchAlgorithmException {
-        PGPSecretKeyRing secretKeys = PGPainless.generateKeyRing()
+    public void testInvalidSignatureTypeThrows() {
+        PGPainless api = PGPainless.getInstance();
+        OpenPGPKey secretKeys = api.generateKey()
                 .modernKeyRing("Alice");
         assertThrows(IllegalArgumentException.class, () ->
                 new ThirdPartyCertificationSignatureBuilder(
                         SignatureType.BINARY_DOCUMENT, // invalid type
-                        secretKeys.getSecretKey(),
-                        SecretKeyRingProtector.unprotectedKeys()));
+                        secretKeys.getPrimarySecretKey(),
+                        SecretKeyRingProtector.unprotectedKeys(),
+                        api));
     }
 
     @Test
-    public void testUserIdCertification() throws PGPException, InvalidAlgorithmParameterException, NoSuchAlgorithmException {
-        PGPSecretKeyRing secretKeys = PGPainless.generateKeyRing()
+    public void testUserIdCertification() throws PGPException {
+        PGPainless api = PGPainless.getInstance();
+        OpenPGPKey secretKeys = api.generateKey()
                 .modernKeyRing("Alice");
 
-        PGPPublicKeyRing bobsPublicKeys = PGPainless.extractCertificate(
-                PGPainless.generateKeyRing().modernKeyRing("Bob"));
+        OpenPGPCertificate bobsPublicKeys = api.generateKey().modernKeyRing("Bob")
+                .toCertificate();
 
         ThirdPartyCertificationSignatureBuilder signatureBuilder = new ThirdPartyCertificationSignatureBuilder(
-                secretKeys.getSecretKey(),
-                SecretKeyRingProtector.unprotectedKeys());
+                secretKeys.getPrimarySecretKey(),
+                SecretKeyRingProtector.unprotectedKeys(),
+                api);
 
         signatureBuilder.applyCallback(new CertificationSubpackets.Callback() {
             @Override
@@ -59,16 +61,20 @@ public class ThirdPartyCertificationSignatureBuilderTest {
             }
         });
 
-        PGPSignature certification = signatureBuilder.build(bobsPublicKeys, "Bob");
-        assertEquals(SignatureType.GENERIC_CERTIFICATION, SignatureType.valueOf(certification.getSignatureType()));
-        assertEquals(secretKeys.getPublicKey().getKeyID(), certification.getKeyID());
-        assertArrayEquals(secretKeys.getPublicKey().getFingerprint(), certification.getHashedSubPackets().getIssuerFingerprint().getFingerprint());
-        Exportable exportable = SignatureSubpacketsUtil.getExportableCertification(certification);
+        OpenPGPSignature certification = signatureBuilder.build(bobsPublicKeys, "Bob");
+        PGPSignature signature = certification.getSignature();
+        assertEquals(SignatureType.GENERIC_CERTIFICATION, SignatureType.requireFromCode(signature.getSignatureType()));
+        assertTrue(KeyIdentifier.matches(signature.getKeyIdentifiers(), secretKeys.getKeyIdentifier(), true));
+        assertArrayEquals(
+                secretKeys.getPrimaryKey().getPGPPublicKey().getFingerprint(),
+                signature.getHashedSubPackets().getIssuerFingerprint().getFingerprint());
+        Exportable exportable = SignatureSubpacketsUtil.getExportableCertification(signature);
         assertNotNull(exportable);
         assertFalse(exportable.isExportable());
 
         // test sig correctness
-        certification.init(ImplementationFactory.getInstance().getPgpContentVerifierBuilderProvider(), secretKeys.getPublicKey());
-        assertTrue(certification.verifyCertification("Bob", bobsPublicKeys.getPublicKey()));
+        signature.init(api.getImplementation().pgpContentVerifierBuilderProvider(),
+                secretKeys.getPrimaryKey().getPGPPublicKey());
+        assertTrue(signature.verifyCertification("Bob", bobsPublicKeys.getPrimaryKey().getPGPPublicKey()));
     }
 }

@@ -6,6 +6,7 @@ package org.pgpainless.util.selection.userid
 
 import java.util.function.Predicate
 import org.bouncycastle.openpgp.PGPKeyRing
+import org.bouncycastle.openpgp.api.OpenPGPCertificate
 import org.pgpainless.PGPainless
 
 abstract class SelectUserId : Predicate<String>, (String) -> Boolean {
@@ -73,12 +74,16 @@ abstract class SelectUserId : Predicate<String>, (String) -> Boolean {
         fun byEmail(email: CharSequence) = or(exactMatch(email), containsEmailAddress(email))
 
         @JvmStatic
-        fun validUserId(keyRing: PGPKeyRing) =
+        fun validUserId(key: OpenPGPCertificate) =
             object : SelectUserId() {
-                private val info = PGPainless.inspectKeyRing(keyRing)
+                private val info = PGPainless.getInstance().inspect(key)
 
                 override fun invoke(userId: String): Boolean = info.isUserIdValid(userId)
             }
+
+        @JvmStatic
+        fun validUserId(keyRing: PGPKeyRing) =
+            validUserId(PGPainless.getInstance().toKeyOrCertificate(keyRing))
 
         @JvmStatic
         fun and(vararg filters: SelectUserId) =

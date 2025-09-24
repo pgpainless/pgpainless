@@ -4,9 +4,14 @@
 
 package org.pgpainless.key.generation.type
 
-import java.security.spec.AlgorithmParameterSpec
+import org.bouncycastle.openpgp.PGPKeyPair
+import org.bouncycastle.openpgp.operator.PGPKeyPairGenerator
 import org.pgpainless.algorithm.PublicKeyAlgorithm
+import org.pgpainless.key.generation.type.ecc.Ed25519
+import org.pgpainless.key.generation.type.ecc.Ed448
 import org.pgpainless.key.generation.type.ecc.EllipticCurve
+import org.pgpainless.key.generation.type.ecc.X25519
+import org.pgpainless.key.generation.type.ecc.X448
 import org.pgpainless.key.generation.type.ecc.ecdh.ECDH
 import org.pgpainless.key.generation.type.ecc.ecdsa.ECDSA
 import org.pgpainless.key.generation.type.eddsa_legacy.EdDSALegacy
@@ -39,13 +44,6 @@ interface KeyType {
      * @return strength of the key in bits
      */
     val bitStrength: Int
-
-    /**
-     * Return an implementation of [AlgorithmParameterSpec] that can be used to generate the key.
-     *
-     * @return algorithm parameter spec
-     */
-    val algorithmSpec: AlgorithmParameterSpec
 
     /**
      * Return true if the key that is generated from this type is able to carry the SIGN_DATA key
@@ -92,6 +90,8 @@ interface KeyType {
     val canEncryptStorage: Boolean
         @JvmName("canEncryptStorage") get() = algorithm.encryptionCapable
 
+    fun generateKeyPair(generator: PGPKeyPairGenerator): PGPKeyPair
+
     companion object {
         @JvmStatic fun RSA(length: RsaLength): RSA = RSA.withLength(length)
 
@@ -103,5 +103,13 @@ interface KeyType {
         fun EDDSA_LEGACY(curve: EdDSALegacyCurve): EdDSALegacy = EdDSALegacy.fromCurve(curve)
 
         @JvmStatic fun XDH_LEGACY(curve: XDHLegacySpec): XDHLegacy = XDHLegacy.fromSpec(curve)
+
+        @JvmStatic fun X25519(): X25519 = org.pgpainless.key.generation.type.ecc.X25519()
+
+        @JvmStatic fun X448(): X448 = org.pgpainless.key.generation.type.ecc.X448()
+
+        @JvmStatic fun Ed25519(): Ed25519 = org.pgpainless.key.generation.type.ecc.Ed25519()
+
+        @JvmStatic fun Ed448(): Ed448 = org.pgpainless.key.generation.type.ecc.Ed448()
     }
 }

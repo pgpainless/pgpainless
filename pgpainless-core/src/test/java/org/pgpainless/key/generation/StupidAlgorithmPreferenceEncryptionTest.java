@@ -5,8 +5,8 @@
 package org.pgpainless.key.generation;
 
 import org.bouncycastle.openpgp.PGPException;
-import org.bouncycastle.openpgp.PGPPublicKeyRing;
-import org.bouncycastle.openpgp.PGPSecretKeyRing;
+import org.bouncycastle.openpgp.api.OpenPGPCertificate;
+import org.bouncycastle.openpgp.api.OpenPGPKey;
 import org.junit.jupiter.api.Test;
 import org.pgpainless.PGPainless;
 import org.pgpainless.algorithm.KeyFlag;
@@ -99,14 +99,15 @@ public class StupidAlgorithmPreferenceEncryptionTest {
 
     @Test
     public void testEncryptionIsNotUnencrypted() throws PGPException, IOException {
-        PGPSecretKeyRing stupidKey = PGPainless.readKeyRing().secretKeyRing(STUPID_KEY);
-        PGPPublicKeyRing certificate = PGPainless.extractCertificate(stupidKey);
+        PGPainless api = PGPainless.getInstance();
+        OpenPGPKey stupidKey = api.readKey().parseKey(STUPID_KEY);
+        OpenPGPCertificate certificate = stupidKey.toCertificate();
 
         ByteArrayOutputStream out = new ByteArrayOutputStream();
-        EncryptionStream encryptionStream = PGPainless.encryptAndOrSign()
+        EncryptionStream encryptionStream = api.generateMessage()
                 .onOutputStream(out)
                 .withOptions(ProducerOptions.encrypt(
-                        new EncryptionOptions().addRecipient(certificate)
+                        EncryptionOptions.get(api).addRecipient(certificate)
                 ));
 
         encryptionStream.write("Hello".getBytes(StandardCharsets.UTF_8));
@@ -114,7 +115,7 @@ public class StupidAlgorithmPreferenceEncryptionTest {
 
         EncryptionResult metadata = encryptionStream.getResult();
         assertTrue(metadata.isEncryptedFor(certificate));
-        assertEquals(PGPainless.getPolicy().getSymmetricKeyEncryptionAlgorithmPolicy().getDefaultSymmetricKeyAlgorithm(),
+        assertEquals(api.getAlgorithmPolicy().getSymmetricKeyEncryptionAlgorithmPolicy().getDefaultSymmetricKeyAlgorithm(),
                 metadata.getEncryptionAlgorithm());
     }
 }
