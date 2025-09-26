@@ -30,11 +30,16 @@
 pgpainless\-cli\-inline\-verify \- Verify an inline\-signed message
 .SH "SYNOPSIS"
 .sp
-\fBpgpainless\-cli inline\-verify\fP [\fB\-\-stacktrace\fP] [\fB\-\-not\-after\fP=\fIDATE\fP] [\fB\-\-not\-before\fP=\fIDATE\fP]
+\fBpgpainless\-cli inline\-verify\fP [\fB\-\-debug\fP] [\fB\-\-not\-after\fP=\fIDATE\fP] [\fB\-\-not\-before\fP=\fIDATE\fP]
 [\fB\-\-verifications\-out\fP=\fIVERIFICATIONS\fP] [\fICERT\fP...]
 .SH "DESCRIPTION"
 
 .SH "OPTIONS"
+.sp
+\fB\-\-debug, \-\-stacktrace\fP
+.RS 4
+Print stacktrace
+.RE
 .sp
 \fB\-\-not\-after\fP=\fIDATE\fP
 .RS 4
@@ -54,11 +59,6 @@ ISO\-8601 formatted UTC date (e.g. \(aq2020\-11\-23T16:35Z)
 Reject signatures with a creation date not in range.
 .sp
 Defaults to beginning of time ("\-").
-.RE
-.sp
-\fB\-\-stacktrace\fP
-.RS 4
-Print stacktrace
 .RE
 .sp
 \fB\-\-verifications\-out\fP=\fIVERIFICATIONS\fP

@@ -1,0 +1,76 @@
+'\" t
+.\"     Title: pgpainless-cli-certify-userid
+.\"    Author: [see the "AUTHOR(S)" section]
+.\" Generator: Asciidoctor 2.0.10
+.\"    Manual: PGPainless-CLI Manual
+.\"    Source: 
+.\"  Language: English
+.\"
+.TH "PGPAINLESS\-CLI\-CERTIFY\-USERID" "1" "" "" "PGPainless\-CLI Manual"
+.ie \n(.g .ds Aq \(aq
+.el       .ds Aq '
+.ss \n[.ss] 0
+.nh
+.ad l
+.de URL
+\fI\\$2\fP <\\$1>\\$3
+..
+.als MTO URL
+.if \n[.g] \{\
+.  mso www.tmac
+.  am URL
+.    ad l
+.  .
+.  am MTO
+.    ad l
+.  .
+.  LINKSTYLE blue R < >
+.\}
+.SH "NAME"
+pgpainless\-cli\-certify\-userid \- Certify OpenPGP Certificate User IDs
+.SH "SYNOPSIS"
+.sp
+\fBpgpainless\-cli certify\-userid\fP [\fB\-\-debug\fP] [\fB\-\-[no\-]armor\fP] [\fB\-\-no\-require\-self\-sig\fP]
+[\fB\-\-with\-key\-password\fP=\fIPASSWORD\fP]... \fB\-\-userid\fP=\fIUSERID\fP...
+[\fB\-\-userid\fP=\fIUSERID\fP...]... [\fB\-\-\fP] \fIKEYS\fP...
+.SH "DESCRIPTION"
+
+.SH "OPTIONS"
+.sp
+\fB\-\-debug, \-\-stacktrace\fP
+.RS 4
+Print stacktrace
+.RE
+.sp
+\fB\-\-[no\-]armor\fP
+.RS 4
+ASCII armor the output
+.RE
+.sp
+\fB\-\-no\-require\-self\-sig\fP
+.RS 4
+Certify the UserID regardless of whether self\-certifications are present
+.RE
+.sp
+\fB\-\-userid\fP=\fIUSERID\fP...
+.RS 4
+Identities that shall be certified
+.RE
+.sp
+\fB\-\-with\-key\-password\fP=\fIPASSWORD\fP
+.RS 4
+Passphrase to unlock the secret key(s).
+.sp
+Is an INDIRECT data type (e.g. file, environment variable, file descriptor...).
+.RE
+.sp
+\fB\-\-\fP
+.RS 4
+This option can be used to separate command\-line options from the list of positional parameters.
+.RE
+.SH "ARGUMENTS"
+.sp
+\fIKEYS\fP...
+.RS 4
+Private keys
+.RE

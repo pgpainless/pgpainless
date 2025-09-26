@@ -30,7 +30,7 @@
 pgpainless\-cli\-version \- Display version information about the tool
 .SH "SYNOPSIS"
 .sp
-\fBpgpainless\-cli version\fP [\fB\-\-stacktrace\fP] [\fB\-\-extended\fP | \fB\-\-backend\fP | \fB\-\-pgpainless\-cli\-spec\fP | \fB\-\-sopv\fP]
+\fBpgpainless\-cli version\fP [\fB\-\-debug\fP] [\fB\-\-extended\fP | \fB\-\-backend\fP | \fB\-\-pgpainless\-cli\-spec\fP | \fB\-\-sopv\fP]
 .SH "DESCRIPTION"
 
 .SH "OPTIONS"
@@ -38,6 +38,11 @@ pgpainless\-cli\-version \- Display version information about the tool
 \fB\-\-backend\fP
 .RS 4
 Print information about the cryptographic backend
+.RE
+.sp
+\fB\-\-debug, \-\-stacktrace\fP
+.RS 4
+Print stacktrace
 .RE
 .sp
 \fB\-\-extended\fP
@@ -50,7 +55,7 @@ Print an extended version string
 Print the latest revision of the SOP specification targeted by the implementation
 .RE
 .sp
-\fB\-\-sopv\fP, \fB\-\-stacktrace\fP
+\fB\-\-sopv\fP
 .RS 4
-Print stacktrace
+Print the SOPV API version
 .RE

@@ -1,0 +1,63 @@
+'\" t
+.\"     Title: pgpainless-cli-validate-userid
+.\"    Author: [see the "AUTHOR(S)" section]
+.\" Generator: Asciidoctor 2.0.10
+.\"    Manual: PGPainless-CLI Manual
+.\"    Source: 
+.\"  Language: English
+.\"
+.TH "PGPAINLESS\-CLI\-VALIDATE\-USERID" "1" "" "" "PGPainless\-CLI Manual"
+.ie \n(.g .ds Aq \(aq
+.el       .ds Aq '
+.ss \n[.ss] 0
+.nh
+.ad l
+.de URL
+\fI\\$2\fP <\\$1>\\$3
+..
+.als MTO URL
+.if \n[.g] \{\
+.  mso www.tmac
+.  am URL
+.    ad l
+.  .
+.  am MTO
+.    ad l
+.  .
+.  LINKSTYLE blue R < >
+.\}
+.SH "NAME"
+pgpainless\-cli\-validate\-userid \- Validate a UserID in an OpenPGP certificate
+.SH "SYNOPSIS"
+.sp
+\fBpgpainless\-cli validate\-userid\fP [\fB\-\-addr\-spec\-only\fP] [\fB\-\-debug\fP] [\fB\-\-validate\-at\fP=\fI<validateAt>\fP]
+[\fB\-\-\fP] \fIUSERID\fP \fICERTS\fP...
+.SH "DESCRIPTION"
+
+.SH "OPTIONS"
+.sp
+\fB\-\-addr\-spec\-only\fP
+.RS 4
+Treat the USERID as an email address, match only against the email address part of each correctly bound UserID
+.RE
+.sp
+\fB\-\-debug, \-\-stacktrace\fP
+.RS 4
+Print stacktrace
+.RE
+.sp
+\fB\-\-validate\-at\fP=\fI<validateAt>\fP, \fB\-\-\fP
+.RS 4
+This option can be used to separate command\-line options from the list of positional parameters.
+.RE
+.SH "ARGUMENTS"
+.sp
+\fIUSERID\fP
+.RS 4
+UserID
+.RE
+.sp
+\fICERTS\fP...
+.RS 4
+Authority OpenPGP certificates
+.RE

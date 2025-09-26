@@ -30,10 +30,15 @@
 pgpainless\-cli\-inline\-detach \- Split signatures from a clearsigned message
 .SH "SYNOPSIS"
 .sp
-\fBpgpainless\-cli inline\-detach\fP [\fB\-\-[no\-]armor\fP] [\fB\-\-stacktrace\fP] [\fB\-\-signatures\-out\fP=\fISIGNATURES\fP]
+\fBpgpainless\-cli inline\-detach\fP [\fB\-\-debug\fP] [\fB\-\-[no\-]armor\fP] [\fB\-\-signatures\-out\fP=\fISIGNATURES\fP]
 .SH "DESCRIPTION"
 
 .SH "OPTIONS"
+.sp
+\fB\-\-debug, \-\-stacktrace\fP
+.RS 4
+Print stacktrace
+.RE
 .sp
 \fB\-\-[no\-]armor\fP
 .RS 4
@@ -43,9 +48,4 @@ ASCII armor the output
 \fB\-\-signatures\-out\fP=\fISIGNATURES\fP
 .RS 4
 Destination to which a detached signatures block will be written
-.RE
-.sp
-\fB\-\-stacktrace\fP
-.RS 4
-Print stacktrace
 .RE

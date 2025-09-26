@@ -30,8 +30,8 @@
 pgpainless\-cli\-sign \- Create a detached message signature
 .SH "SYNOPSIS"
 .sp
-\fBpgpainless\-cli sign\fP [\fB\-\-[no\-]armor\fP] [\fB\-\-stacktrace\fP] [\fB\-\-as\fP=\fI{binary|text}\fP]
-[\fB\-\-micalg\-out\fP=\fIMICALG\fP] [\fB\-\-with\-key\-password\fP=\fIPASSWORD\fP]... [\fIKEYS\fP...]
+\fBpgpainless\-cli sign\fP [\fB\-\-debug\fP] [\fB\-\-[no\-]armor\fP] [\fB\-\-as\fP=\fI{binary|text}\fP] [\fB\-\-micalg\-out\fP=\fIMICALG\fP]
+[\fB\-\-with\-key\-password\fP=\fIPASSWORD\fP]... [\fIKEYS\fP...]
 .SH "DESCRIPTION"
 
 .SH "OPTIONS"
@@ -45,6 +45,11 @@ Defaults to \(aqbinary\(aq.
 If \(aq\-\-as=text\(aq and the input data is not valid UTF\-8, sign fails with return code 53.
 .RE
 .sp
+\fB\-\-debug, \-\-stacktrace\fP
+.RS 4
+Print stacktrace
+.RE
+.sp
 \fB\-\-micalg\-out\fP=\fIMICALG\fP
 .RS 4
 Emits the digest algorithm used to the specified file in a way that can be used to populate the micalg parameter for the PGP/MIME Content\-Type (RFC3156).
@@ -53,11 +58,6 @@ Emits the digest algorithm used to the specified file in a way that can be used 
 \fB\-\-[no\-]armor\fP
 .RS 4
 ASCII armor the output
-.RE
-.sp
-\fB\-\-stacktrace\fP
-.RS 4
-Print stacktrace
 .RE
 .sp
 \fB\-\-with\-key\-password\fP=\fIPASSWORD\fP

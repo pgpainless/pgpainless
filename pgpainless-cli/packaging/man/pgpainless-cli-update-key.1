@@ -1,0 +1,72 @@
+'\" t
+.\"     Title: pgpainless-cli-update-key
+.\"    Author: [see the "AUTHOR(S)" section]
+.\" Generator: Asciidoctor 2.0.10
+.\"    Manual: PGPainless-CLI Manual
+.\"    Source: 
+.\"  Language: English
+.\"
+.TH "PGPAINLESS\-CLI\-UPDATE\-KEY" "1" "" "" "PGPainless\-CLI Manual"
+.ie \n(.g .ds Aq \(aq
+.el       .ds Aq '
+.ss \n[.ss] 0
+.nh
+.ad l
+.de URL
+\fI\\$2\fP <\\$1>\\$3
+..
+.als MTO URL
+.if \n[.g] \{\
+.  mso www.tmac
+.  am URL
+.    ad l
+.  .
+.  am MTO
+.    ad l
+.  .
+.  LINKSTYLE blue R < >
+.\}
+.SH "NAME"
+pgpainless\-cli\-update\-key \- Keep a secret key up\-to\-date
+.SH "SYNOPSIS"
+.sp
+\fBpgpainless\-cli update\-key\fP [\fB\-\-debug\fP] [\fB\-\-no\-added\-capabilities\fP] [\fB\-\-[no\-]armor\fP]
+[\fB\-\-signing\-only\fP] [\fB\-\-merge\-certs\fP=\fICERTS\fP]...
+[\fB\-\-with\-key\-password\fP=\fIPASSWORD\fP]...
+.SH "DESCRIPTION"
+
+.SH "OPTIONS"
+.sp
+\fB\-\-debug, \-\-stacktrace\fP
+.RS 4
+Print stacktrace
+.RE
+.sp
+\fB\-\-merge\-certs\fP=\fICERTS\fP
+.RS 4
+Merge additional elements found in the corresponding CERTS objects into the updated secret keys
+.sp
+This can be used, for example, to absorb a third\-party certification into the Transferable Secret Key
+.RE
+.sp
+\fB\-\-no\-added\-capabilities\fP
+.RS 4
+Do not add feature support for new mechanisms, which the key did not previously support
+.RE
+.sp
+\fB\-\-[no\-]armor\fP
+.RS 4
+ASCII armor the output
+.RE
+.sp
+\fB\-\-signing\-only\fP
+.RS 4
+TODO: Document
+.RE
+.sp
+\fB\-\-with\-key\-password\fP=\fIPASSWORD\fP
+.RS 4
+Passphrase to unlock the secret key(s).
+.sp
+Is an INDIRECT data type (e.g. file, environment variable, file descriptor...).
+.RE

@@ -1,12 +1,12 @@
 '\" t
-.\"     Title: pgpainless-cli-revoke-key
+.\"     Title: pgpainless-cli-merge-certs
 .\"    Author: [see the "AUTHOR(S)" section]
 .\" Generator: Asciidoctor 2.0.10
 .\"    Manual: PGPainless-CLI Manual
 .\"    Source: 
 .\"  Language: English
 .\"
-.TH "PGPAINLESS\-CLI\-REVOKE\-KEY" "1" "" "" "PGPainless\-CLI Manual"
+.TH "PGPAINLESS\-CLI\-MERGE\-CERTS" "1" "" "" "PGPainless\-CLI Manual"
 .ie \n(.g .ds Aq \(aq
 .el       .ds Aq '
 .ss \n[.ss] 0
@@ -27,13 +27,13 @@
 .  LINKSTYLE blue R < >
 .\}
 .SH "NAME"
-pgpainless\-cli\-revoke\-key \- Generate revocation certificates
+pgpainless\-cli\-merge\-certs \- Merge OpenPGP certificates from standard input with related elements from CERTS and emit the result to standard output
 .SH "SYNOPSIS"
 .sp
-\fBpgpainless\-cli revoke\-key\fP [\fB\-\-debug\fP] [\fB\-\-[no\-]armor\fP] [\fB\-\-with\-key\-password\fP[=\fIPASSWORD\fP...]]...
+\fBpgpainless\-cli merge\-certs\fP [\fB\-\-debug\fP] [\fB\-\-[no\-]armor\fP] [\fICERTS\fP...]
 .SH "DESCRIPTION"
 .sp
-Emit revocation certificates for secret keys from STDIN to STDOUT.
+Only certificates that were part of standard input will be emitted to standard output
 .SH "OPTIONS"
 .sp
 \fB\-\-debug, \-\-stacktrace\fP
@@ -45,10 +45,9 @@ Print stacktrace
 .RS 4
 ASCII armor the output
 .RE
+.SH "ARGUMENTS"
 .sp
-\fB\-\-with\-key\-password\fP[=\fIPASSWORD\fP...]
+[\fICERTS\fP...]
 .RS 4
-Passphrase to unlock the secret key(s).
-.sp
-Is an INDIRECT data type (e.g. file, environment variable, file descriptor...).
+OpenPGP certificates from which updates shall be merged into the base certificates from standard input
 .RE

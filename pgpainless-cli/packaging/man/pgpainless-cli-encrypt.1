@@ -30,10 +30,10 @@
 pgpainless\-cli\-encrypt \- Encrypt a message from standard input
 .SH "SYNOPSIS"
 .sp
-\fBpgpainless\-cli encrypt\fP [\fB\-\-[no\-]armor\fP] [\fB\-\-stacktrace\fP] [\fB\-\-as\fP=\fI{binary|text}\fP]
-[\fB\-\-profile\fP=\fIPROFILE\fP] [\fB\-\-session\-key\-out\fP=\fISESSIONKEY\fP]
-[\fB\-\-sign\-with\fP=\fIKEY\fP]... [\fB\-\-with\-key\-password\fP=\fIPASSWORD\fP]...
-[\fB\-\-with\-password\fP=\fIPASSWORD\fP]... [\fICERTS\fP...]
+\fBpgpainless\-cli encrypt\fP [\fB\-\-debug\fP] [\fB\-\-[no\-]armor\fP] [\fB\-\-as\fP=\fI{binary|text}\fP] [\fB\-\-profile\fP=\fIPROFILE\fP]
+[\fB\-\-session\-key\-out\fP=\fISESSIONKEY\fP] [\fB\-\-sign\-with\fP=\fIKEY\fP]...
+[\fB\-\-with\-key\-password\fP=\fIPASSWORD\fP]... [\fB\-\-with\-password\fP=\fIPASSWORD\fP]...
+[\fICERTS\fP...]
 .SH "DESCRIPTION"
 
 .SH "OPTIONS"
@@ -41,6 +41,11 @@ pgpainless\-cli\-encrypt \- Encrypt a message from standard input
 \fB\-\-as\fP=\fI{binary|text}\fP
 .RS 4
 Type of the input data. Defaults to \(aqbinary\(aq
+.RE
+.sp
+\fB\-\-debug, \-\-stacktrace\fP
+.RS 4
+Print stacktrace
 .RE
 .sp
 \fB\-\-[no\-]armor\fP
@@ -56,11 +61,6 @@ Profile identifier to switch between profiles
 \fB\-\-session\-key\-out\fP=\fISESSIONKEY\fP, \fB\-\-sign\-with\fP=\fIKEY\fP
 .RS 4
 Sign the output with a private key
-.RE
-.sp
-\fB\-\-stacktrace\fP
-.RS 4
-Print stacktrace
 .RE
 .sp
 \fB\-\-with\-key\-password\fP=\fIPASSWORD\fP

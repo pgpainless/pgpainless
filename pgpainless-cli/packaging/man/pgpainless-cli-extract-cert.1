@@ -30,18 +30,18 @@
 pgpainless\-cli\-extract\-cert \- Extract a public key certificate from a secret key
 .SH "SYNOPSIS"
 .sp
-\fBpgpainless\-cli extract\-cert\fP [\fB\-\-[no\-]armor\fP] [\fB\-\-stacktrace\fP]
+\fBpgpainless\-cli extract\-cert\fP [\fB\-\-debug\fP] [\fB\-\-[no\-]armor\fP]
 .SH "DESCRIPTION"
 .sp
 Read a secret key from STDIN and emit the public key certificate to STDOUT.
 .SH "OPTIONS"
 .sp
+\fB\-\-debug, \-\-stacktrace\fP
+.RS 4
+Print stacktrace
+.RE
+.sp
 \fB\-\-[no\-]armor\fP
 .RS 4
 ASCII armor the output
-.RE
-.sp
-\fB\-\-stacktrace\fP
-.RS 4
-Print stacktrace
 .RE

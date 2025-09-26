@@ -30,12 +30,12 @@
 pgpainless\-cli \- Stateless OpenPGP Protocol
 .SH "SYNOPSIS"
 .sp
-\fBpgpainless\-cli\fP [\fB\-\-stacktrace\fP] [COMMAND]
+\fBpgpainless\-cli\fP [\fB\-\-debug\fP] [COMMAND]
 .SH "DESCRIPTION"
 
 .SH "OPTIONS"
 .sp
-\fB\-\-stacktrace\fP
+\fB\-\-debug, \-\-stacktrace\fP
 .RS 4
 Print stacktrace
 .RE
@@ -69,6 +69,26 @@ Generate revocation certificates
 \fBextract\-cert\fP
 .RS 4
 Extract a public key certificate from a secret key
+.RE
+.sp
+\fBupdate\-key\fP
+.RS 4
+Keep a secret key up\-to\-date
+.RE
+.sp
+\fBmerge\-certs\fP
+.RS 4
+Merge OpenPGP certificates from standard input with related elements from CERTS and emit the result to standard output
+.RE
+.sp
+\fBcertify\-userid\fP
+.RS 4
+Certify OpenPGP Certificate User IDs
+.RE
+.sp
+\fBvalidate\-userid\fP
+.RS 4
+Validate a UserID in an OpenPGP certificate
 .RE
 .sp
 \fBsign\fP
@@ -230,4 +250,24 @@ Options were supplied that are incompatible with each other
 \fB89\fP
 .RS 4
 The requested profile is unsupported, or the indicated subcommand does not accept profiles
+.RE
+.sp
+\fB97\fP
+.RS 4
+The implementation supports some form of hardware\-backed secret keys, but could not identify the hardware device
+.RE
+.sp
+\fB101\fP
+.RS 4
+The implementation tried to use a hardware\-backed secret key, but the cryptographic hardware refused the operation for some reason other than a bad PIN or password
+.RE
+.sp
+\fB103\fP
+.RS 4
+The primary key of a KEYS object is too weak or revoked
+.RE
+.sp
+\fB107\fP
+.RS 4
+The CERTS object has no matching User ID
 .RE
