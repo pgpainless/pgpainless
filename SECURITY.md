@@ -14,12 +14,10 @@ currently being supported with security updates.
 
 | Version | Supported          | Note       |
 |---------|--------------------|------------|
+| 2.0.X   | :white_check_mark: | LTS branch |
 | 1.7.X   | :white_check_mark: |            |
 | 1.6.X   | :white_check_mark: | LTS branch |
-| 1.5.X   | :white_check_mark: |            |
-| 1.4.X   | :white_check_mark: |            |
-| 1.3.X   | :white_check_mark: | LTS branch |
-| < 1.3.X | :x:                |            |
+| < 1.5.X | :x:                |            |
 
 ## Reporting a Vulnerability
 
