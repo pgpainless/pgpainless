@@ -10,6 +10,11 @@ plugins {
 
 graalvmNative {
     toolchainDetection = true
+
+    binaries.main {
+        buildArgs.add('-H:DefaultLocale=en')
+        buildArgs.add('-H:IncludeLocales=de,en')
+    }
 }
 
 dependencies {
