@@ -5,9 +5,24 @@ SPDX-License-Identifier: CC0-1.0
 
 # PGPainless Changelog
 
-## 1.7.7-SNAPSHOT
-- Bump `bcpg-jdk8on` to `1.81`
-- Bump `bcprov-jdk18on` to `1.81`
+## 2.0.0
+- Add support for OpenPGP v6
+- `PGPainless` is no longer intended for singleton use
+  - See the [migration guide](docs/source/pgpainless-core/migration_2.0.md) for more details
+- Internally make use of BCs new high-level API
+- Bump `sop-java` to `14.0.1`
+  - Implement new `sop update-key` command to refresh old keys to a usable state
+  - Implement new `sop merge-certs` command to merge certificate copies
+  - Implement new `sop certify-userid` command to certify third-party certificates
+  - Implement new `sop validate-userid` command to validate userids on keys
+  - `sop generate-key`: Add profile `rfc9580-curve25519` for generating v6 keys over curve25519
+  - `sop generate-key`: Add profile `rfc9580-curve448` for generating v6 keys over curve448
+  - `sop encrypt`: Add profile `rfc9580` for v6-style symmetric message encryption
+
+## 1.7.7
+- Bump bcpg-jdk8on to 1.82
+- Bump bcprov-jdk18on to 1.82
+- Fix handling of passphrases and user-ids containing leading/trailing whitespace
 
 ## 1.7.6
 - Fix `RevocationSignatureBuilder` properly calculating third-party signatures of type `KeyRevocation` (delegation revocations)
