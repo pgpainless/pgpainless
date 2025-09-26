@@ -15,7 +15,6 @@ import java.io.IOException;
 import org.bouncycastle.openpgp.PGPException;
 import org.bouncycastle.openpgp.PGPSecretKey;
 import org.bouncycastle.openpgp.PGPSecretKeyRing;
-import org.bouncycastle.openpgp.api.OpenPGPKey;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.pgpainless.PGPainless;
@@ -108,8 +107,7 @@ public class GenerateKeyTest {
                 .userId("Foo\n\nBar")
                 .generate()
                 .getBytes();
-
-        OpenPGPKey key = PGPainless.getInstance().readKey().parseKey(keyBytes);
-        assertTrue(key.getValidUserIds().get(0).getUserId().equals("Foo\n\nBar"));
+        PGPSecretKeyRing key = PGPainless.readKeyRing().secretKeyRing(keyBytes);
+        assertTrue(PGPainless.inspectKeyRing(key).getValidUserIds().get(0).equals("Foo\n\nBar"));
     }
 }
