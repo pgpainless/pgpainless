@@ -40,9 +40,14 @@
     "pattern":"\\Qsop-java-version.properties\\E"
   }, {
     "pattern":"java.base:\\Qsun/text/resources/LineBreakIteratorData\\E"
+  }, {
+    "pattern":"java.base:\\Qsun/text/resources/nfkc.icu\\E"
   }]},
   "bundles":[{
     "name":"msg_armor",
+    "locales":["de", "und"]
+  }, {
+    "name":"msg_certify-userid",
     "locales":["de", "und"]
   }, {
     "name":"msg_change-key-password",
@@ -81,10 +86,19 @@
     "name":"msg_list-profiles",
     "locales":["de", "und"]
   }, {
+    "name":"msg_merge-certs",
+    "locales":["de", "und"]
+  }, {
     "name":"msg_revoke-key",
     "locales":["de", "und"]
   }, {
     "name":"msg_sop",
+    "locales":["de", "und"]
+  }, {
+    "name":"msg_update-key",
+    "locales":["de", "und"]
+  }, {
+    "name":"msg_validate-userid",
     "locales":["de", "und"]
   }, {
     "name":"msg_version",

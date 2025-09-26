@@ -1,6 +1,15 @@
 [
 {
+  "name":"[B"
+},
+{
   "name":"[Ljava.lang.Object;"
+},
+{
+  "name":"[Ljava.lang.String;"
+},
+{
+  "name":"[Lsun.security.pkcs.SignerInfo;"
 },
 {
   "name":"ch.qos.logback.classic.encoder.PatternLayoutEncoder",
@@ -62,6 +71,9 @@
   "name":"java.lang.RuntimePermission"
 },
 {
+  "name":"java.lang.String"
+},
+{
   "name":"java.lang.System",
   "methods":[{"name":"console","parameterTypes":[] }]
 },
@@ -90,6 +102,9 @@
   "methods":[{"name":"get","parameterTypes":["java.lang.String","java.lang.String[]"] }]
 },
 {
+  "name":"java.security.AlgorithmParametersSpi"
+},
+{
   "name":"java.security.AllPermission"
 },
 {
@@ -103,6 +118,21 @@
 },
 {
   "name":"java.security.cert.PKIXRevocationChecker"
+},
+{
+  "name":"java.security.interfaces.DSAPrivateKey"
+},
+{
+  "name":"java.security.interfaces.DSAPublicKey"
+},
+{
+  "name":"java.security.interfaces.RSAPrivateKey"
+},
+{
+  "name":"java.security.interfaces.RSAPublicKey"
+},
+{
+  "name":"java.security.spec.DSAParameterSpec"
 },
 {
   "name":"java.sql.Connection"
@@ -179,6 +209,9 @@
   "methods":[{"name":"parse","parameterTypes":["java.lang.CharSequence"] }]
 },
 {
+  "name":"java.util.Date"
+},
+{
   "name":"java.util.HashSet"
 },
 {
@@ -211,6 +244,11 @@
 },
 {
   "name":"java.util.concurrent.locks.ReentrantLock$Sync"
+},
+{
+  "name":"javax.security.auth.x500.X500Principal",
+  "fields":[{"name":"thisX500Name"}],
+  "methods":[{"name":"<init>","parameterTypes":["sun.security.x509.X500Name"] }]
 },
 {
   "name":"javax.smartcardio.CardPermission"
@@ -313,18 +351,6 @@
 },
 {
   "name":"org.bouncycastle.jcajce.provider.asymmetric.X509$Mappings",
-  "methods":[{"name":"<init>","parameterTypes":[] }]
-},
-{
-  "name":"org.bouncycastle.jcajce.provider.asymmetric.edec.KeyPairGeneratorSpi$EdDSA",
-  "methods":[{"name":"<init>","parameterTypes":[] }]
-},
-{
-  "name":"org.bouncycastle.jcajce.provider.asymmetric.edec.KeyPairGeneratorSpi$XDH",
-  "methods":[{"name":"<init>","parameterTypes":[] }]
-},
-{
-  "name":"org.bouncycastle.jcajce.provider.asymmetric.rsa.KeyPairGeneratorSpi",
   "methods":[{"name":"<init>","parameterTypes":[] }]
 },
 {
@@ -707,7 +733,7 @@
   "queryAllDeclaredMethods":true,
   "queryAllPublicMethods":true,
   "queryAllDeclaredConstructors":true,
-  "methods":[{"name":"<init>","parameterTypes":[] }, {"name":"decryptGarbageFails","parameterTypes":[] }, {"name":"decryptMalformedMessageYieldsBadData","parameterTypes":[] }, {"name":"decryptMessageWithSessionKey","parameterTypes":[] }, {"name":"decryptMessageWithWrongKeyFails","parameterTypes":[] }, {"name":"decryptWithPasswordWithPendingWhitespaceWorks","parameterTypes":[] }, {"name":"decryptWithWhitespacePasswordWorks","parameterTypes":[] }, {"name":"decrypt_verifyWithGarbageCertFails","parameterTypes":[] }, {"name":"decrypt_withGarbageKeyFails","parameterTypes":[] }, {"name":"encryptAndDecryptAMessage","parameterTypes":[] }, {"name":"encryptAndDecryptMessageWithPassphrase","parameterTypes":[] }, {"name":"encryptWithGarbageCertFails","parameterTypes":[] }, {"name":"encryptWithPasswordADecryptWithPasswordBFails","parameterTypes":[] }, {"name":"encryptWithProtectedKey_wrongPassphraseFails","parameterTypes":[] }, {"name":"encryptWithTrailingWhitespaceDecryptWithoutWorks","parameterTypes":[] }, {"name":"encrypt_signWithGarbageKeyFails","parameterTypes":[] }, {"name":"testDecryptVerifyOut_withoutVerifyWithFails","parameterTypes":[] }, {"name":"testDecryptWithSessionKeyVerifyWithYieldsExpectedVerifications","parameterTypes":[] }, {"name":"testDecryptWithoutDecryptionOptionFails","parameterTypes":[] }, {"name":"testEncryptDecryptRoundTripWithPasswordProtectedKey","parameterTypes":[] }, {"name":"testEncryptDecryptWithFreshRSAKey","parameterTypes":[] }, {"name":"testEncryptWithIncapableCert","parameterTypes":[] }, {"name":"testEncrypt_SignWithCertFails","parameterTypes":[] }, {"name":"testMissingArgumentsIfNoArgsSupplied","parameterTypes":[] }, {"name":"testSessionKeyOutWritesSessionKeyOut","parameterTypes":[] }, {"name":"testSignWithIncapableKey","parameterTypes":[] }, {"name":"testVerificationsOutAlreadyExistFails","parameterTypes":[] }]
+  "methods":[{"name":"<init>","parameterTypes":[] }, {"name":"decryptGarbageFails","parameterTypes":[] }, {"name":"decryptMalformedMessageYieldsBadData","parameterTypes":[] }, {"name":"decryptMessageWithSessionKey","parameterTypes":[] }, {"name":"decryptMessageWithWrongKeyFails","parameterTypes":[] }, {"name":"decryptWithPasswordWithPendingWhitespaceWorks","parameterTypes":[] }, {"name":"decryptWithWhitespacePasswordWorks","parameterTypes":[] }, {"name":"decrypt_verifyWithGarbageCertFails","parameterTypes":[] }, {"name":"decrypt_withGarbageKeyFails","parameterTypes":[] }, {"name":"encryptAndDecryptAMessage","parameterTypes":[] }, {"name":"encryptAndDecryptMessageWithPassphrase","parameterTypes":[] }, {"name":"encryptWithGarbageCertFails","parameterTypes":[] }, {"name":"encryptWithPasswordADecryptWithPasswordBFails","parameterTypes":[] }, {"name":"encryptWithProtectedKey_wrongPassphraseFails","parameterTypes":[] }, {"name":"encryptWithTrailingWhitespaceDecryptWithoutWorks","parameterTypes":[] }, {"name":"encrypt_signWithGarbageKeyFails","parameterTypes":[] }, {"name":"testDecryptVerifyOut_withoutVerifyWithFails","parameterTypes":[] }, {"name":"testDecryptWithSessionKeyVerifyWithYieldsExpectedVerifications","parameterTypes":[] }, {"name":"testDecryptWithoutDecryptionOptionFails","parameterTypes":[] }, {"name":"testEncryptDecryptRoundTripWithPasswordProtectedKey","parameterTypes":[] }, {"name":"testEncryptDecryptWithFreshRSAKey","parameterTypes":[] }, {"name":"testEncryptWithIncapableCert","parameterTypes":[] }, {"name":"testEncrypt_SignWithCertFails","parameterTypes":[] }, {"name":"testEncryptingForKeyFails","parameterTypes":[] }, {"name":"testMissingArgumentsIfNoArgsSupplied","parameterTypes":[] }, {"name":"testSessionKeyOutWritesSessionKeyOut","parameterTypes":[] }, {"name":"testSignWithIncapableKey","parameterTypes":[] }, {"name":"testVerificationsOutAlreadyExistFails","parameterTypes":[] }]
 },
 {
   "name":"org.pgpainless.cli.commands.RoundTripInlineSignInlineVerifyCmdTest",
@@ -768,7 +794,8 @@
 {
   "name":"picocli.CommandLine$HelpCommand",
   "allDeclaredFields":true,
-  "queryAllDeclaredMethods":true
+  "queryAllDeclaredMethods":true,
+  "methods":[{"name":"<init>","parameterTypes":[] }]
 },
 {
   "name":"sop.cli.picocli.SopCLI",
@@ -793,9 +820,16 @@
   "methods":[{"name":"<init>","parameterTypes":[] }]
 },
 {
+  "name":"sop.cli.picocli.commands.CertifyUserIdCmd",
+  "allDeclaredFields":true,
+  "queryAllDeclaredMethods":true,
+  "methods":[{"name":"<init>","parameterTypes":[] }]
+},
+{
   "name":"sop.cli.picocli.commands.ChangeKeyPasswordCmd",
   "allDeclaredFields":true,
-  "queryAllDeclaredMethods":true
+  "queryAllDeclaredMethods":true,
+  "methods":[{"name":"<init>","parameterTypes":[] }]
 },
 {
   "name":"sop.cli.picocli.commands.DearmorCmd",
@@ -852,12 +886,31 @@
   "methods":[{"name":"<init>","parameterTypes":[] }]
 },
 {
+  "name":"sop.cli.picocli.commands.MergeCertsCmd",
+  "allDeclaredFields":true,
+  "queryAllDeclaredMethods":true,
+  "methods":[{"name":"<init>","parameterTypes":[] }]
+},
+{
   "name":"sop.cli.picocli.commands.RevokeKeyCmd",
   "allDeclaredFields":true,
-  "queryAllDeclaredMethods":true
+  "queryAllDeclaredMethods":true,
+  "methods":[{"name":"<init>","parameterTypes":[] }]
 },
 {
   "name":"sop.cli.picocli.commands.SignCmd",
+  "allDeclaredFields":true,
+  "queryAllDeclaredMethods":true,
+  "methods":[{"name":"<init>","parameterTypes":[] }]
+},
+{
+  "name":"sop.cli.picocli.commands.UpdateKeyCmd",
+  "allDeclaredFields":true,
+  "queryAllDeclaredMethods":true,
+  "methods":[{"name":"<init>","parameterTypes":[] }]
+},
+{
+  "name":"sop.cli.picocli.commands.ValidateUserIdCmd",
   "allDeclaredFields":true,
   "queryAllDeclaredMethods":true,
   "methods":[{"name":"<init>","parameterTypes":[] }]
@@ -881,11 +934,77 @@
   "methods":[{"name":"<init>","parameterTypes":[] }]
 },
 {
+  "name":"sun.security.provider.DSA$SHA256withDSA",
+  "methods":[{"name":"<init>","parameterTypes":[] }]
+},
+{
+  "name":"sun.security.provider.DSAKeyFactory",
+  "methods":[{"name":"<init>","parameterTypes":[] }]
+},
+{
+  "name":"sun.security.provider.DSAParameters",
+  "methods":[{"name":"<init>","parameterTypes":[] }]
+},
+{
   "name":"sun.security.provider.NativePRNG",
   "methods":[{"name":"<init>","parameterTypes":[] }, {"name":"<init>","parameterTypes":["java.security.SecureRandomParameters"] }]
 },
 {
   "name":"sun.security.provider.SHA",
   "methods":[{"name":"<init>","parameterTypes":[] }]
+},
+{
+  "name":"sun.security.provider.SHA2$SHA256",
+  "methods":[{"name":"<init>","parameterTypes":[] }]
+},
+{
+  "name":"sun.security.provider.X509Factory",
+  "methods":[{"name":"<init>","parameterTypes":[] }]
+},
+{
+  "name":"sun.security.rsa.RSAKeyFactory$Legacy",
+  "methods":[{"name":"<init>","parameterTypes":[] }]
+},
+{
+  "name":"sun.security.rsa.RSASignature$SHA256withRSA",
+  "methods":[{"name":"<init>","parameterTypes":[] }]
+},
+{
+  "name":"sun.security.util.ObjectIdentifier"
+},
+{
+  "name":"sun.security.x509.AuthorityInfoAccessExtension",
+  "methods":[{"name":"<init>","parameterTypes":["java.lang.Boolean","java.lang.Object"] }]
+},
+{
+  "name":"sun.security.x509.AuthorityKeyIdentifierExtension",
+  "methods":[{"name":"<init>","parameterTypes":["java.lang.Boolean","java.lang.Object"] }]
+},
+{
+  "name":"sun.security.x509.BasicConstraintsExtension",
+  "methods":[{"name":"<init>","parameterTypes":["java.lang.Boolean","java.lang.Object"] }]
+},
+{
+  "name":"sun.security.x509.CRLDistributionPointsExtension",
+  "methods":[{"name":"<init>","parameterTypes":["java.lang.Boolean","java.lang.Object"] }]
+},
+{
+  "name":"sun.security.x509.CertificateExtensions"
+},
+{
+  "name":"sun.security.x509.CertificatePoliciesExtension",
+  "methods":[{"name":"<init>","parameterTypes":["java.lang.Boolean","java.lang.Object"] }]
+},
+{
+  "name":"sun.security.x509.ExtendedKeyUsageExtension",
+  "methods":[{"name":"<init>","parameterTypes":["java.lang.Boolean","java.lang.Object"] }]
+},
+{
+  "name":"sun.security.x509.KeyUsageExtension",
+  "methods":[{"name":"<init>","parameterTypes":["java.lang.Boolean","java.lang.Object"] }]
+},
+{
+  "name":"sun.security.x509.SubjectKeyIdentifierExtension",
+  "methods":[{"name":"<init>","parameterTypes":["java.lang.Boolean","java.lang.Object"] }]
 }
 ]
