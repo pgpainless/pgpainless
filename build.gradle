@@ -88,8 +88,7 @@ allprojects {
         isReleaseVersion = !isSnapshot
         signingRequired = !(isSnapshot || isContinuousIntegrationEnvironment)
         sonatypeCredentialsAvailable = project.hasProperty('sonatypeUsername') && project.hasProperty('sonatypePassword')
-        sonatypeSnapshotUrl = 'https://oss.sonatype.org/content/repositories/snapshots'
-        sonatypeStagingUrl = 'https://oss.sonatype.org/service/local/staging/deploy/maven2'
+        sonatypeStagingUrl = 'https://ossrh-staging-api.central.sonatype.com/service/local/staging/deploy/maven2/'
     }
 
     if (isSnapshot) {
@@ -184,7 +183,7 @@ subprojects {
         repositories {
             if (sonatypeCredentialsAvailable) {
                 maven {
-                    url isSnapshot ? sonatypeSnapshotUrl : sonatypeStagingUrl
+                    url sonatypeStagingUrl
                     credentials {
                         username = sonatypeUsername
                         password = sonatypePassword
