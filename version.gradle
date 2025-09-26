@@ -13,6 +13,6 @@ allprojects {
         logbackVersion = '1.5.13'
         mockitoVersion = '4.5.1'
         slf4jVersion = '1.7.36'
-        sopJavaVersion = '14.0.0'
+        sopJavaVersion = '14.0.1'
     }
 }
