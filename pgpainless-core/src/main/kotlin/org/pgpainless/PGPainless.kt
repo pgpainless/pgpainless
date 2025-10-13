@@ -22,7 +22,12 @@ import org.bouncycastle.openpgp.api.OpenPGPKeyGenerator
 import org.bouncycastle.openpgp.api.OpenPGPKeyReader
 import org.bouncycastle.openpgp.api.OpenPGPSignature
 import org.bouncycastle.openpgp.api.bc.BcOpenPGPApi
+import org.pgpainless.algorithm.AlgorithmSuite
+import org.pgpainless.algorithm.CompressionAlgorithm
+import org.pgpainless.algorithm.Feature
+import org.pgpainless.algorithm.HashAlgorithm
 import org.pgpainless.algorithm.OpenPGPKeyVersion
+import org.pgpainless.algorithm.SymmetricKeyAlgorithm
 import org.pgpainless.bouncycastle.PolicyAdapter
 import org.pgpainless.bouncycastle.extensions.setAlgorithmSuite
 import org.pgpainless.decryption_verification.DecryptionBuilder
@@ -116,36 +121,36 @@ class PGPainless(
     /**
      * Generate a new [OpenPGPKey] from predefined templates.
      *
-     * @param version [OpenPGPKeyVersion], defaults to [OpenPGPKeyVersion.v4]
+     * @param version [OpenPGPKeyVersion]
      * @param creationTime of the key, defaults to now
      * @return [KeyRingTemplates] api
      */
     @JvmOverloads
     fun generateKey(
-        version: OpenPGPKeyVersion = OpenPGPKeyVersion.v4,
+        version: OpenPGPKeyVersion = algorithmPolicy.keyGenerationAlgorithmSuite.keyVersion,
         creationTime: Date = Date()
     ): KeyRingTemplates = KeyRingTemplates(version, creationTime, this)
 
     /**
      * Build a fresh, custom [OpenPGPKey] using PGPainless' API.
      *
-     * @param version [OpenPGPKeyVersion], defaults to [OpenPGPKeyVersion.v4]
+     * @param version [OpenPGPKeyVersion]
      * @return [KeyRingBuilder] api
      */
     @JvmOverloads
-    fun buildKey(version: OpenPGPKeyVersion = OpenPGPKeyVersion.v4): KeyRingBuilder =
+    fun buildKey(version: OpenPGPKeyVersion = algorithmPolicy.keyGenerationAlgorithmSuite.keyVersion): KeyRingBuilder =
         KeyRingBuilder(version, this)
 
     /**
      * Build a fresh, custom [OpenPGPKey] using BCs new API.
      *
-     * @param version [OpenPGPKeyVersion], defaults to [OpenPGPKeyVersion.v4]
+     * @param version [OpenPGPKeyVersion]
      * @param creationTime creation time of the key, defaults to now
      * @return [OpenPGPKeyGenerator] api
      */
     @JvmOverloads
     fun _buildKey(
-        version: OpenPGPKeyVersion = OpenPGPKeyVersion.v4,
+        version: OpenPGPKeyVersion = algorithmPolicy.keyGenerationAlgorithmSuite.keyVersion,
         creationTime: Date = Date()
     ): OpenPGPKeyGenerator =
         OpenPGPKeyGenerator(
@@ -265,16 +270,36 @@ class PGPainless(
 
         @JvmStatic
         fun getInstance(): PGPainless =
-            instance ?: synchronized(this) { instance ?: PGPainless().also { instance = it } }
+            instance ?: synchronized(this) { instance ?: createInstance().also { instance = it } }
 
         @JvmStatic
         fun setInstance(api: PGPainless) {
             instance = api
         }
 
+        @JvmStatic
+        fun createInstance() = PGPainless()
+
+        @JvmStatic
+        @JvmOverloads
+        fun createLegacyInstance(implementation: OpenPGPImplementation = OpenPGPImplementation.getInstance()) = PGPainless(
+            implementation,
+            Policy().copy()
+                .withKeyGenerationAlgorithmSuite(AlgorithmSuite.emptyBuilder()
+                    .overrideFeatures(Feature.MODIFICATION_DETECTION)
+                    .overrideAeadAlgorithms(null)
+                    .overrideHashAlgorithms(HashAlgorithm.SHA512, HashAlgorithm.SHA384, HashAlgorithm.SHA256, HashAlgorithm.SHA224)
+                    .overrideSymmetricKeyAlgorithms(SymmetricKeyAlgorithm.AES_256, SymmetricKeyAlgorithm.AES_192, SymmetricKeyAlgorithm.AES_128)
+                    .overrideCompressionAlgorithms(CompressionAlgorithm.ZLIB, CompressionAlgorithm.BZIP2, CompressionAlgorithm.ZIP, CompressionAlgorithm.UNCOMPRESSED)
+                    .overrideKeyVersion(OpenPGPKeyVersion.v4)
+                    .build())
+                .build()
+        )
+
         /**
          * Generate a fresh [OpenPGPKey] from predefined templates.
          *
+         * @param version [OpenPGPKeyVersion], defaults to [OpenPGPKeyVersion.v4]
          * @return templates
          */
         @JvmStatic
@@ -288,6 +313,7 @@ class PGPainless(
         /**
          * Build a custom OpenPGP key ring.
          *
+         * @param version [OpenPGPKeyVersion], defaults to [OpenPGPKeyVersion.v4]
          * @return builder
          */
         @JvmStatic

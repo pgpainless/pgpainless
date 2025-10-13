@@ -10,7 +10,8 @@ private constructor(
     val hashAlgorithms: Set<HashAlgorithm>?,
     val compressionAlgorithms: Set<CompressionAlgorithm>?,
     val aeadAlgorithms: Set<AEADCipherMode>?,
-    val features: Set<Feature>?
+    val features: Set<Feature>?,
+    val keyVersion: OpenPGPKeyVersion = OpenPGPKeyVersion.v4
 ) {
 
     constructor(
@@ -35,6 +36,7 @@ private constructor(
         private var compressionAlgorithms: Set<CompressionAlgorithm>? = suite?.compressionAlgorithms
         private var aeadAlgorithms: Set<AEADCipherMode>? = suite?.aeadAlgorithms
         private var features: Set<Feature>? = suite?.features
+        private var keyVersion: OpenPGPKeyVersion = OpenPGPKeyVersion.v4
 
         fun overrideSymmetricKeyAlgorithms(
             vararg symmetricKeyAlgorithms: SymmetricKeyAlgorithm
@@ -72,13 +74,18 @@ private constructor(
             this.features = features?.toSet()
         }
 
+        fun overrideKeyVersion(version: OpenPGPKeyVersion): Builder = apply {
+            this.keyVersion = version
+        }
+
         fun build(): AlgorithmSuite {
             return AlgorithmSuite(
                 symmetricKeyAlgorithms,
                 hashAlgorithms,
                 compressionAlgorithms,
                 aeadAlgorithms,
-                features)
+                features,
+                keyVersion)
         }
     }
 
