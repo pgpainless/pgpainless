@@ -12,9 +12,11 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import java.io.IOException;
 
+import org.bouncycastle.bcpg.KeyIdentifier;
 import org.bouncycastle.openpgp.PGPException;
 import org.bouncycastle.openpgp.PGPSecretKey;
 import org.bouncycastle.openpgp.PGPSecretKeyRing;
+import org.bouncycastle.openpgp.PGPSignature;
 import org.bouncycastle.openpgp.api.OpenPGPKey;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -43,6 +45,17 @@ public class GenerateKeyTest {
 
         PGPSecretKeyRing secretKeys = PGPainless.readKeyRing()
                 .secretKeyRing(bytes);
+
+        for (PGPSecretKey subkey : secretKeys) {
+            if (subkey.isMasterKey()) {
+                continue;
+            }
+            PGPSignature binding = subkey.getPublicKey().getKeySignatures().next();
+            for (KeyIdentifier issuer : binding.getKeyIdentifiers()) {
+                assertTrue(issuer.matchesExplicit(secretKeys.getPublicKey().getKeyIdentifier()),
+                        "Subkey signature MUST be issued by primary key.");
+            }
+        }
 
         assertTrue(PGPainless.inspectKeyRing(secretKeys)
                 .isUserIdValid("Alice <alice@pgpainless.org>"));
