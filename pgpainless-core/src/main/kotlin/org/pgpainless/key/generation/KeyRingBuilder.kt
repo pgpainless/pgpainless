@@ -192,7 +192,7 @@ class KeyRingBuilder(private val version: OpenPGPKeyVersion, private val api: PG
         for (subKeySpec in subKeySpecs) {
             val subKey = generateKeyPair(subKeySpec, version, api.implementation)
             val hashedSignatureSubpackets: SignatureSubpackets =
-                SignatureSubpackets.createHashedSubpackets(subKey.publicKey).apply {
+                SignatureSubpackets.createHashedSubpackets(primaryKey.publicKey).apply {
                     setKeyFlags(subKeySpec.keyFlags)
                     subKeySpec.preferredHashAlgorithmsOverride?.let {
                         setPreferredHashAlgorithms(it)
