@@ -5,7 +5,7 @@ SPDX-License-Identifier: CC0-1.0
 
 # PGPainless Changelog
 
-## 2.0.1-SNAPSHOT
+## 2.0.1
 - Fix subkey signatures on generate keys (#486, thanks to @agrahn for reporting)
 
 ## 2.0.0

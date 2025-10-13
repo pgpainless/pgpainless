@@ -23,7 +23,7 @@ To start using pgpainless-sop in your code, include the following lines in your 
 ...
 dependencies {
     ...
-    implementation "org.pgpainless:pgpainless-sop:2.0.0"
+    implementation "org.pgpainless:pgpainless-sop:2.0.1"
     ...
 }
 
@@ -34,7 +34,7 @@ dependencies {
     <dependency>
         <groupId>org.pgpainless</groupId>
         <artifactId>pgpainless-sop</artifactId>
-        <version>2.0.0</version>
+        <version>2.0.1</version>
     </dependency>
     ...
 </dependencies>
