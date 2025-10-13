@@ -5,6 +5,9 @@ SPDX-License-Identifier: CC0-1.0
 
 # PGPainless Changelog
 
+## 2.0.1-SNAPSHOT
+- Fix subkey signatures on generate keys (#486, thanks to @agrahn for reporting)
+
 ## 2.0.0
 - Add support for OpenPGP v6
 - `PGPainless` is no longer intended for singleton use
