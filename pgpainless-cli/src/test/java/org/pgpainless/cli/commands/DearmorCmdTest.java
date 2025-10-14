@@ -11,8 +11,8 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 
-import org.bouncycastle.openpgp.PGPPublicKeyRing;
-import org.bouncycastle.openpgp.PGPSecretKeyRing;
+import org.bouncycastle.openpgp.api.OpenPGPCertificate;
+import org.bouncycastle.openpgp.api.OpenPGPKey;
 import org.junit.jupiter.api.Test;
 import org.pgpainless.PGPainless;
 import org.slf4j.LoggerFactory;
@@ -51,7 +51,8 @@ public class DearmorCmdTest extends CLITest {
 
     @Test
     public void dearmorSecretKey() throws IOException {
-        PGPSecretKeyRing secretKey = PGPainless.readKeyRing().secretKeyRing(key);
+        PGPainless api = PGPainless.getInstance();
+        OpenPGPKey secretKey = api.readKey().parseKey(key);
 
         pipeStringToStdin(key);
         ByteArrayOutputStream dearmored = pipeStdoutToStream();
@@ -74,9 +75,10 @@ public class DearmorCmdTest extends CLITest {
 
     @Test
     public void dearmorCertificate() throws IOException {
-        PGPSecretKeyRing secretKey = PGPainless.readKeyRing().secretKeyRing(key);
-        PGPPublicKeyRing certificate = PGPainless.extractCertificate(secretKey);
-        String armoredCert = PGPainless.asciiArmor(certificate);
+        PGPainless api = PGPainless.getInstance();
+        OpenPGPKey secretKey = api.readKey().parseKey(key);
+        OpenPGPCertificate certificate = secretKey.toCertificate();
+        String armoredCert = certificate.toAsciiArmoredString();
 
         pipeStringToStdin(armoredCert);
         ByteArrayOutputStream out = pipeStdoutToStream();

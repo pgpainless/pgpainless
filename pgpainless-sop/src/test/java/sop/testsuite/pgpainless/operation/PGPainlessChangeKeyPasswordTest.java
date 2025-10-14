@@ -33,7 +33,7 @@ public class PGPainlessChangeKeyPasswordTest extends ChangeKeyPasswordTest {
     @MethodSource("provideInstances")
     public void changePasswordOfKeyWithSeparateSubkeyPasswords(SOP sop) throws IOException, PGPException {
         PGPainless api = PGPainless.getInstance();
-        OpenPGPKey secretKeys = PGPainless.buildKeyRing()
+        OpenPGPKey secretKeys = api.buildKey()
                 .setPrimaryKey(KeySpec.getBuilder(KeyType.EDDSA_LEGACY(EdDSALegacyCurve._Ed25519), KeyFlag.CERTIFY_OTHER))
                 .addSubkey(KeySpec.getBuilder(KeyType.EDDSA_LEGACY(EdDSALegacyCurve._Ed25519), KeyFlag.SIGN_DATA))
                 .addSubkey(KeySpec.getBuilder(KeyType.XDH_LEGACY(XDHLegacySpec._X25519), KeyFlag.ENCRYPT_COMMS, KeyFlag.ENCRYPT_STORAGE))

@@ -14,8 +14,8 @@ import java.io.IOException;
 import java.text.ParseException;
 import java.util.Date;
 
-import org.bouncycastle.openpgp.PGPPublicKeyRing;
-import org.bouncycastle.openpgp.PGPSecretKeyRing;
+import org.bouncycastle.openpgp.api.OpenPGPCertificate;
+import org.bouncycastle.openpgp.api.OpenPGPKey;
 import org.junit.jupiter.api.Test;
 import org.pgpainless.PGPainless;
 import org.pgpainless.algorithm.KeyFlag;
@@ -24,7 +24,6 @@ import org.pgpainless.key.generation.KeySpec;
 import org.pgpainless.key.generation.type.KeyType;
 import org.pgpainless.key.generation.type.eddsa_legacy.EdDSALegacyCurve;
 import org.pgpainless.key.generation.type.xdh_legacy.XDHLegacySpec;
-import org.pgpainless.key.info.KeyRingInfo;
 import org.slf4j.LoggerFactory;
 import sop.exception.SOPGPException;
 import sop.util.UTCUtil;
@@ -197,12 +196,12 @@ public class RoundTripSignVerifyCmdTest extends CLITest {
     @Test
     public void testSignWithIncapableKey()
             throws IOException {
-        PGPSecretKeyRing secretKeys = PGPainless.buildKeyRing()
+        PGPainless api = PGPainless.getInstance();
+        OpenPGPKey secretKeys = api.buildKey()
                 .addUserId("Cannot Sign <cannot@sign.key>")
                 .setPrimaryKey(KeySpec.getBuilder(KeyType.EDDSA_LEGACY(EdDSALegacyCurve._Ed25519), KeyFlag.CERTIFY_OTHER))
                 .addSubkey(KeySpec.getBuilder(KeyType.XDH_LEGACY(XDHLegacySpec._X25519), KeyFlag.ENCRYPT_COMMS, KeyFlag.ENCRYPT_STORAGE))
-                .build()
-                .getPGPSecretKeyRing();
+                .build();
         File keyFile = writeFile("key.pgp", secretKeys.getEncoded());
 
         pipeStringToStdin("Hello, World!\n");
@@ -216,6 +215,7 @@ public class RoundTripSignVerifyCmdTest extends CLITest {
     @Test
     public void testSignatureCreationAndVerification()
             throws IOException {
+        PGPainless api = PGPainless.getInstance();
         // Create key and cert
         File aliceKeyFile = pipeStdoutToFile("alice.key");
         assertSuccess(executeCommand("generate-key", "Alice <alice@pgpainless.org>"));
@@ -242,15 +242,13 @@ public class RoundTripSignVerifyCmdTest extends CLITest {
         assertSuccess(executeCommand("verify", sigFile.getAbsolutePath(), aliceCertFile.getAbsolutePath()));
 
         // Test verification output
-
-        PGPPublicKeyRing cert = PGPainless.readKeyRing().publicKeyRing(readBytesFromFile(aliceCertFile));
-        KeyRingInfo info = PGPainless.inspectKeyRing(cert);
+        OpenPGPCertificate cert = api.readKey().parseCertificate(readBytesFromFile(aliceCertFile));
 
         // [date] [signing-key-fp] [primary-key-fp] signed by [key.pub]
         String verification = verificationsOut.toString();
         String[] split = verification.split(" ");
         OpenPgpV4Fingerprint primaryKeyFingerprint = new OpenPgpV4Fingerprint(cert);
-        OpenPgpV4Fingerprint signingKeyFingerprint = new OpenPgpV4Fingerprint(info.getSigningSubkeys().get(0).getPGPPublicKey());
+        OpenPgpV4Fingerprint signingKeyFingerprint = new OpenPgpV4Fingerprint(cert.getSigningKeys().get(0).getPGPPublicKey());
         assertEquals(signingKeyFingerprint.toString(), split[1].trim(), verification);
         assertEquals(primaryKeyFingerprint.toString(), split[2].trim());
 

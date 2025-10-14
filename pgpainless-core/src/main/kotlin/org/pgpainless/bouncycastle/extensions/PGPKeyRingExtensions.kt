@@ -12,7 +12,6 @@ import org.bouncycastle.openpgp.PGPSignature
 import org.bouncycastle.openpgp.api.OpenPGPCertificate
 import org.bouncycastle.openpgp.api.OpenPGPCertificate.OpenPGPComponentKey
 import org.bouncycastle.openpgp.api.OpenPGPImplementation
-import org.pgpainless.PGPainless
 import org.pgpainless.key.OpenPgpFingerprint
 import org.pgpainless.key.SubkeyIdentifier
 
@@ -121,18 +120,6 @@ fun PGPKeyRing.getPublicKeyFor(onePassSignature: PGPOnePassSignature): PGPPublic
 /** Return the [OpenPgpFingerprint] of this OpenPGP key. */
 val PGPKeyRing.openPgpFingerprint: OpenPgpFingerprint
     get() = OpenPgpFingerprint.of(this)
-
-/** Return this OpenPGP key as an ASCII armored String. */
-fun PGPKeyRing.toAsciiArmor(): String = PGPainless.asciiArmor(this)
-
-/**
- * Convert the given [PGPKeyRing] into an [OpenPGPCertificate].
- *
- * @return certificate
- */
-@Deprecated("Use toOpenPGPCertificate(implementation) instead.")
-fun PGPKeyRing.toOpenPGPCertificate(): OpenPGPCertificate =
-    toOpenPGPCertificate(PGPainless.getInstance().implementation)
 
 /**
  * Convert the given [PGPKeyRing] into an [OpenPGPCertificate] using the given

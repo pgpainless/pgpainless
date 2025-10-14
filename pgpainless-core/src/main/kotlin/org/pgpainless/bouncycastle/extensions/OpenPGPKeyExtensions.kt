@@ -27,3 +27,11 @@ fun OpenPGPKey.getSecretKeyFor(pkesk: PGPPublicKeyEncryptedData): OpenPGPSecretK
  */
 fun OpenPGPSecretKey.unlock(passphrase: Passphrase): OpenPGPPrivateKey =
     this.unlock(passphrase.getChars())
+
+fun OpenPGPKey.isFullyDecrypted(): Boolean {
+    return secretKeys.values.none { it.isLocked }
+}
+
+fun OpenPGPKey.isFullyEncrypted(): Boolean {
+    return secretKeys.values.all { it.isLocked }
+}

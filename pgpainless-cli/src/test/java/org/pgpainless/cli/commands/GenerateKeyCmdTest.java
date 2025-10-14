@@ -11,17 +11,13 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.IOException;
-import java.util.Arrays;
-import java.util.Collections;
 
 import org.bouncycastle.openpgp.PGPException;
-import org.bouncycastle.openpgp.PGPSecretKeyRing;
+import org.bouncycastle.openpgp.api.OpenPGPKey;
 import org.bouncycastle.util.encoders.Hex;
 import org.junit.jupiter.api.Test;
 import org.pgpainless.PGPainless;
-import org.pgpainless.key.info.KeyRingInfo;
-import org.pgpainless.key.protection.UnlockSecretKey;
-import org.pgpainless.util.Passphrase;
+import org.pgpainless.bouncycastle.extensions.OpenPGPKeyExtensionsKt;
 import org.slf4j.LoggerFactory;
 import sop.exception.SOPGPException;
 
@@ -33,15 +29,16 @@ public class GenerateKeyCmdTest extends CLITest {
 
     @Test
     public void testGenerateKey() throws IOException {
+        PGPainless api = PGPainless.getInstance();
+
         File keyFile = pipeStdoutToFile("key.asc");
         assertSuccess(executeCommand("generate-key", "Alice <alice@pgpainless.org>"));
 
         String key = readStringFromFile(keyFile);
         assertTrue(key.startsWith("-----BEGIN PGP PRIVATE KEY BLOCK-----\n"));
-        PGPSecretKeyRing secretKeys = PGPainless.readKeyRing().secretKeyRing(key);
-        KeyRingInfo info = PGPainless.inspectKeyRing(secretKeys);
-        assertTrue(info.isFullyDecrypted());
-        assertEquals(Collections.singletonList("Alice <alice@pgpainless.org>"), info.getUserIds());
+        OpenPGPKey secretKeys = api.readKey().parseKey(key);
+        assertTrue(OpenPGPKeyExtensionsKt.isFullyDecrypted(secretKeys));
+        assertNotNull(secretKeys.getUserId("Alice <alice@pgpainless.org>"));
     }
 
     @Test
@@ -57,20 +54,23 @@ public class GenerateKeyCmdTest extends CLITest {
 
     @Test
     public void testGenerateKeyWithMultipleUserIds() throws IOException {
+        PGPainless api = PGPainless.getInstance();
         ByteArrayOutputStream out = pipeStdoutToStream();
         assertSuccess(executeCommand("generate-key",
                 "Alice <alice@pgpainless.org>", "Alice <alice@openpgp.org>"));
 
         String key = out.toString();
         assertTrue(key.startsWith("-----BEGIN PGP PRIVATE KEY BLOCK-----\n"));
-        PGPSecretKeyRing secretKeys = PGPainless.readKeyRing().secretKeyRing(key);
-        KeyRingInfo info = PGPainless.inspectKeyRing(secretKeys);
-        assertTrue(info.isFullyDecrypted());
-        assertEquals(Arrays.asList("Alice <alice@pgpainless.org>", "Alice <alice@openpgp.org>"), info.getUserIds());
+        OpenPGPKey secretKeys = api.readKey().parseKey(key);
+        assertTrue(OpenPGPKeyExtensionsKt.isFullyDecrypted(secretKeys));
+        assertEquals(2, secretKeys.getValidUserIds().size());
+        assertNotNull(secretKeys.getUserId("Alice <alice@pgpainless.org>"));
+        assertNotNull(secretKeys.getUserId("Alice <alice@openpgp.org>"));
     }
 
     @Test
     public void testPasswordProtectedKey() throws IOException, PGPException {
+        PGPainless api = PGPainless.getInstance();
         File passwordFile = writeFile("password", "sw0rdf1sh");
         passwordFile.deleteOnExit();
         ByteArrayOutputStream out = pipeStdoutToStream();
@@ -79,12 +79,9 @@ public class GenerateKeyCmdTest extends CLITest {
 
         String key = out.toString();
         assertTrue(key.startsWith("-----BEGIN PGP PRIVATE KEY BLOCK-----\n"));
-        PGPSecretKeyRing secretKeys = PGPainless.readKeyRing().secretKeyRing(key);
-        KeyRingInfo info = PGPainless.inspectKeyRing(secretKeys);
-        assertTrue(info.isFullyEncrypted());
-
-        assertNotNull(UnlockSecretKey
-                .unlockSecretKey(secretKeys.getSecretKey(), Passphrase.fromPassword("sw0rdf1sh")));
+        OpenPGPKey secretKeys = api.readKey().parseKey(key);
+        assertTrue(OpenPGPKeyExtensionsKt.isFullyEncrypted(secretKeys));
+        assertNotNull(secretKeys.getPrimarySecretKey().unlock("sw0rdf1sh".toCharArray()));
     }
 
     @Test

@@ -4,7 +4,7 @@
 
 package org.pgpainless.sop;
 
-import org.bouncycastle.openpgp.PGPSecretKeyRing;
+import org.bouncycastle.openpgp.api.OpenPGPKey;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 import org.pgpainless.PGPainless;
@@ -13,7 +13,6 @@ import org.pgpainless.key.generation.KeySpec;
 import org.pgpainless.key.generation.type.KeyType;
 import org.pgpainless.key.generation.type.ecc.EllipticCurve;
 import org.pgpainless.key.generation.type.eddsa_legacy.EdDSALegacyCurve;
-import org.pgpainless.util.ArmorUtils;
 import sop.SOP;
 import sop.exception.SOPGPException;
 
@@ -33,22 +32,21 @@ public class IncapableKeysTest {
 
     @BeforeAll
     public static void generateKeys() throws IOException {
-        PGPSecretKeyRing key = PGPainless.buildKeyRing()
+        PGPainless api = PGPainless.getInstance();
+        OpenPGPKey key = api.buildKey()
                 .addSubkey(KeySpec.getBuilder(KeyType.ECDH(EllipticCurve._P256), KeyFlag.ENCRYPT_COMMS, KeyFlag.ENCRYPT_STORAGE))
                 .setPrimaryKey(KeySpec.getBuilder(KeyType.EDDSA_LEGACY(EdDSALegacyCurve._Ed25519), KeyFlag.CERTIFY_OTHER))
                 .addUserId("Non Signing <non@signing.key>")
-                .build()
-                .getPGPSecretKeyRing();
-        nonSigningKey = ArmorUtils.toAsciiArmoredString(key).getBytes(StandardCharsets.UTF_8);
+                .build();
+        nonSigningKey = key.toAsciiArmoredString().getBytes(StandardCharsets.UTF_8);
         nonSigningCert = sop.extractCert().key(nonSigningKey).getBytes();
 
-        key = PGPainless.buildKeyRing()
+        key = api.buildKey()
                 .addSubkey(KeySpec.getBuilder(KeyType.EDDSA_LEGACY(EdDSALegacyCurve._Ed25519), KeyFlag.SIGN_DATA))
                 .setPrimaryKey(KeySpec.getBuilder(KeyType.EDDSA_LEGACY(EdDSALegacyCurve._Ed25519), KeyFlag.CERTIFY_OTHER))
                 .addUserId("Non Encryption <non@encryption.key>")
-                .build()
-                .getPGPSecretKeyRing();
-        nonEncryptionKey = ArmorUtils.toAsciiArmoredString(key).getBytes(StandardCharsets.UTF_8);
+                .build();
+        nonEncryptionKey = key.toAsciiArmoredString().getBytes(StandardCharsets.UTF_8);
         nonEncryptionCert = sop.extractCert().key(nonEncryptionKey).getBytes();
     }
 

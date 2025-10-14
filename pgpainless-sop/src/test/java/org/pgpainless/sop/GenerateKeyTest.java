@@ -14,14 +14,13 @@ import java.io.IOException;
 
 import org.bouncycastle.bcpg.KeyIdentifier;
 import org.bouncycastle.openpgp.PGPException;
-import org.bouncycastle.openpgp.PGPSecretKey;
-import org.bouncycastle.openpgp.PGPSecretKeyRing;
+import org.bouncycastle.openpgp.PGPPublicKey;
 import org.bouncycastle.openpgp.PGPSignature;
+import org.bouncycastle.openpgp.api.OpenPGPCertificate;
 import org.bouncycastle.openpgp.api.OpenPGPKey;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.pgpainless.PGPainless;
-import org.pgpainless.key.info.KeyRingInfo;
 import org.pgpainless.key.protection.UnlockSecretKey;
 import org.pgpainless.util.Passphrase;
 import sop.SOP;
@@ -38,44 +37,43 @@ public class GenerateKeyTest {
 
     @Test
     public void generateKey() throws IOException {
+        PGPainless api = PGPainless.getInstance();
         byte[] bytes = sop.generateKey()
                 .userId("Alice <alice@pgpainless.org>")
                 .generate()
                 .getBytes();
 
-        PGPSecretKeyRing secretKeys = PGPainless.readKeyRing()
-                .secretKeyRing(bytes);
+        OpenPGPKey secretKeys = api.readKey().parseKey(bytes);
 
-        for (PGPSecretKey subkey : secretKeys) {
-            if (subkey.isMasterKey()) {
+        for (OpenPGPCertificate.OpenPGPComponentKey subkey : secretKeys.getValidKeys()) {
+            PGPPublicKey pubKey = subkey.getPGPPublicKey();
+            if (subkey.isPrimaryKey()) {
                 continue;
             }
-            PGPSignature binding = subkey.getPublicKey().getKeySignatures().next();
+            PGPSignature binding = pubKey.getKeySignatures().next();
             for (KeyIdentifier issuer : binding.getKeyIdentifiers()) {
-                assertTrue(issuer.matchesExplicit(secretKeys.getPublicKey().getKeyIdentifier()),
+                assertTrue(issuer.matchesExplicit(secretKeys.getKeyIdentifier()),
                         "Subkey signature MUST be issued by primary key.");
             }
         }
 
-        assertTrue(PGPainless.inspectKeyRing(secretKeys)
-                .isUserIdValid("Alice <alice@pgpainless.org>"));
+        assertTrue(secretKeys.getUserId("Alice <alice@pgpainless.org>").isBound());
     }
 
     @Test
     public void generateKeyWithMultipleUserIds() throws IOException {
+        PGPainless api = PGPainless.getInstance();
         byte[] bytes = sop.generateKey()
                 .userId("Alice <alice@pgpainless.org>")
                 .userId("Al <al@example.org>")
                 .generate()
                 .getBytes();
 
-        PGPSecretKeyRing secretKeys = PGPainless.readKeyRing()
-                .secretKeyRing(bytes);
+        OpenPGPKey secretKeys = api.readKey().parseKey(bytes);
 
-        KeyRingInfo info = PGPainless.inspectKeyRing(secretKeys);
-        assertEquals("Alice <alice@pgpainless.org>", info.getPrimaryUserId());
-        assertTrue(info.isUserIdValid("Alice <alice@pgpainless.org>"));
-        assertTrue(info.isUserIdValid("Al <al@example.org>"));
+        assertEquals("Alice <alice@pgpainless.org>", secretKeys.getPrimaryUserId().getUserId());
+        assertTrue(secretKeys.getUserId("Alice <alice@pgpainless.org>").isBound());
+        assertTrue(secretKeys.getUserId("Al <al@example.org>").isBound());
     }
 
     @Test
@@ -91,6 +89,7 @@ public class GenerateKeyTest {
 
     @Test
     public void protectedMultiUserIdKey() throws IOException, PGPException {
+        PGPainless api = PGPainless.getInstance();
         byte[] bytes = sop.generateKey()
                 .userId("Alice")
                 .userId("Bob")
@@ -98,13 +97,12 @@ public class GenerateKeyTest {
                 .generate()
                 .getBytes();
 
-        PGPSecretKeyRing secretKey = PGPainless.readKeyRing().secretKeyRing(bytes);
-        KeyRingInfo info = PGPainless.inspectKeyRing(secretKey);
+        OpenPGPKey secretKey = api.readKey().parseKey(bytes);
 
-        assertTrue(info.getUserIds().contains("Alice"));
-        assertTrue(info.getUserIds().contains("Bob"));
+        assertNotNull(secretKey.getUserId("Alice"));
+        assertNotNull(secretKey.getUserId("Bob"));
 
-        for (PGPSecretKey key : secretKey) {
+        for (OpenPGPKey.OpenPGPSecretKey key : secretKey.getSecretKeys().values()) {
             assertNotNull(UnlockSecretKey.unlockSecretKey(key, Passphrase.fromPassword("sw0rdf1sh")));
         }
     }

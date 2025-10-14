@@ -10,13 +10,10 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import java.io.IOException;
 
-import org.bouncycastle.openpgp.PGPKeyRing;
-import org.bouncycastle.openpgp.PGPPublicKeyRing;
-import org.bouncycastle.openpgp.PGPSecretKeyRing;
+import org.bouncycastle.openpgp.api.OpenPGPCertificate;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.MethodSource;
 import org.pgpainless.PGPainless;
-import org.pgpainless.key.info.KeyRingInfo;
 import sop.SOP;
 import sop.testsuite.operation.RevokeKeyTest;
 
@@ -36,11 +33,9 @@ public class PGPainlessRevokeKeyTest extends RevokeKeyTest {
         }
         byte[] revokedKey = sop.revokeKey().keys(key).getBytes();
 
-        PGPKeyRing certificate = PGPainless.readKeyRing().keyRing(revokedKey);
-        assertFalse(certificate instanceof PGPSecretKeyRing);
-        assertTrue(certificate instanceof PGPPublicKeyRing);
-
-        KeyRingInfo info = PGPainless.inspectKeyRing(certificate);
-        assertTrue(info.getRevocationState().isHardRevocation());
+        PGPainless api = PGPainless.getInstance();
+        OpenPGPCertificate certificate = api.readKey().parseCertificateOrKey(revokedKey);
+        assertFalse(certificate.isSecretKey());
+        assertTrue(certificate.getRevocation().isHardRevocation());
     }
 }

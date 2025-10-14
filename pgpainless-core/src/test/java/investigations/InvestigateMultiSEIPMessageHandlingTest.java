@@ -22,6 +22,7 @@ import org.bouncycastle.openpgp.PGPPublicKey;
 import org.bouncycastle.openpgp.PGPSecretKey;
 import org.bouncycastle.openpgp.PGPSecretKeyRing;
 import org.bouncycastle.openpgp.PGPSignatureGenerator;
+import org.bouncycastle.openpgp.api.OpenPGPCertificate;
 import org.bouncycastle.openpgp.api.OpenPGPImplementation;
 import org.bouncycastle.openpgp.api.OpenPGPKey;
 import org.bouncycastle.openpgp.operator.PGPDataEncryptorBuilder;
@@ -119,9 +120,9 @@ public class InvestigateMultiSEIPMessageHandlingTest {
 
     @Test
     public void generateTestMessage() throws PGPException, IOException {
-        PGPSecretKeyRing ring1 = PGPainless.readKeyRing().secretKeyRing(KEY1);
-        KeyRingInfo info1 = PGPainless.inspectKeyRing(ring1);
-        PGPPublicKey cryptKey1 = info1.getEncryptionSubkeys(EncryptionPurpose.ANY).get(0).getPGPPublicKey();
+        PGPainless api = PGPainless.getInstance();
+        OpenPGPKey ring1 = api.readKey().parseKey(KEY1);
+        OpenPGPCertificate.OpenPGPComponentKey cryptKey1 = ring1.getEncryptionKeys().get(0);
         PGPSecretKey signKey1 = ring1.getSecretKey(info1.getSigningSubkeys().get(0).getKeyIdentifier());
         PGPSecretKeyRing ring2 = PGPainless.readKeyRing().secretKeyRing(KEY2);
         KeyRingInfo info2 = PGPainless.inspectKeyRing(ring2);

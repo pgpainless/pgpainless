@@ -59,12 +59,13 @@ public class InlineDetachTest {
      */
     @Test
     public void detachCleartextSignedMessage() throws IOException {
+        PGPainless api = PGPainless.getInstance();
         byte[] key = sop.generateKey()
                 .userId("Alice <alice@pgpainless.org>")
                 .generate()
                 .getBytes();
         byte[] cert = sop.extractCert().key(key).getBytes();
-        PGPSecretKeyRing secretKey = PGPainless.readKeyRing().secretKeyRing(key);
+        OpenPGPKey secretKey = api.readKey().parseKey(key);
 
         // Create a cleartext signed message
         byte[] data = "Hello, World\n".getBytes(StandardCharsets.UTF_8);

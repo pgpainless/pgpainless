@@ -11,8 +11,8 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 
-import org.bouncycastle.openpgp.PGPPublicKeyRing;
-import org.bouncycastle.openpgp.PGPSecretKeyRing;
+import org.bouncycastle.openpgp.api.OpenPGPCertificate;
+import org.bouncycastle.openpgp.api.OpenPGPKey;
 import org.junit.jupiter.api.Test;
 import org.pgpainless.PGPainless;
 import org.slf4j.LoggerFactory;
@@ -50,28 +50,30 @@ public class ArmorCmdTest extends CLITest {
 
     @Test
     public void armorSecretKey() throws IOException {
-        PGPSecretKeyRing secretKeys = PGPainless.readKeyRing().secretKeyRing(key);
+        PGPainless api = PGPainless.getInstance();
+        OpenPGPKey secretKeys = api.readKey().parseKey(key);
         byte[] binary = secretKeys.getEncoded();
 
         pipeBytesToStdin(binary);
         ByteArrayOutputStream armorOut = pipeStdoutToStream();
         assertSuccess(executeCommand("armor"));
 
-        PGPSecretKeyRing armored = PGPainless.readKeyRing().secretKeyRing(armorOut.toString());
+        OpenPGPKey armored = api.readKey().parseKey(armorOut.toString());
         assertArrayEquals(secretKeys.getEncoded(), armored.getEncoded());
     }
 
     @Test
     public void armorPublicKey() throws IOException {
-        PGPSecretKeyRing secretKey = PGPainless.readKeyRing().secretKeyRing(key);
-        PGPPublicKeyRing publicKey = PGPainless.extractCertificate(secretKey);
+        PGPainless api = PGPainless.getInstance();
+        OpenPGPKey secretKey = api.readKey().parseKey(key);
+        OpenPGPCertificate publicKey = secretKey.toCertificate();
         byte[] bytes = publicKey.getEncoded();
 
         pipeBytesToStdin(bytes);
         ByteArrayOutputStream armorOut = pipeStdoutToStream();
         assertSuccess(executeCommand("armor"));
 
-        PGPPublicKeyRing armored = PGPainless.readKeyRing().publicKeyRing(armorOut.toString());
+        OpenPGPCertificate armored = api.readKey().parseCertificate(armorOut.toString());
         assertArrayEquals(publicKey.getEncoded(), armored.getEncoded());
     }
 

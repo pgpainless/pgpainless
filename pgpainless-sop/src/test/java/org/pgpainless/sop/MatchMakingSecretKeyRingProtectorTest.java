@@ -11,7 +11,7 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 import java.io.IOException;
 
 import org.bouncycastle.openpgp.PGPException;
-import org.bouncycastle.openpgp.PGPSecretKeyRing;
+import org.bouncycastle.openpgp.api.OpenPGPKey;
 import org.junit.jupiter.api.Test;
 import org.pgpainless.PGPainless;
 import org.pgpainless.util.Passphrase;
@@ -71,38 +71,39 @@ public class MatchMakingSecretKeyRingProtectorTest {
 
     @Test
     public void addSamePasswordTwice() throws IOException {
-        PGPSecretKeyRing key = PGPainless.readKeyRing().secretKeyRing(PROTECTED_KEY);
+        OpenPGPKey key = PGPainless.getInstance().readKey().parseKey(PROTECTED_KEY);
         MatchMakingSecretKeyRingProtector protector = new MatchMakingSecretKeyRingProtector();
         protector.addPassphrase(Passphrase.fromPassword(PASSWORD));
         protector.addPassphrase(Passphrase.fromPassword(PASSWORD));
         protector.addSecretKey(key);
 
-        assertTrue(protector.hasPassphraseFor(key.getPublicKey().getKeyID()));
+        assertTrue(protector.hasPassphraseFor(key.getKeyIdentifier()));
     }
 
     @Test
     public void addKeyTwiceAndEmptyPasswordTest() throws IOException {
-        PGPSecretKeyRing unprotectedKey = PGPainless.readKeyRing().secretKeyRing(UNPROTECTED_KEY);
+        OpenPGPKey unprotectedKey = PGPainless.getInstance().readKey().parseKey(UNPROTECTED_KEY);
         MatchMakingSecretKeyRingProtector protector = new MatchMakingSecretKeyRingProtector();
         protector.addSecretKey(unprotectedKey);
         protector.addPassphrase(Passphrase.emptyPassphrase());
         protector.addSecretKey(unprotectedKey);
-        assertTrue(protector.hasPassphraseFor(unprotectedKey.getPublicKey().getKeyID()));
+        assertTrue(protector.hasPassphraseFor(unprotectedKey.getKeyIdentifier()));
     }
 
     @Test
     public void getEncryptorTest() throws IOException, PGPException {
-        PGPSecretKeyRing unprotectedKey = PGPainless.readKeyRing().secretKeyRing(UNPROTECTED_KEY);
+        PGPainless api = PGPainless.getInstance();
+        OpenPGPKey unprotectedKey = api.readKey().parseKey(UNPROTECTED_KEY);
         MatchMakingSecretKeyRingProtector protector = new MatchMakingSecretKeyRingProtector();
         protector.addSecretKey(unprotectedKey);
-        assertTrue(protector.hasPassphraseFor(unprotectedKey.getPublicKey().getKeyID()));
-        assertNull(protector.getEncryptor(unprotectedKey.getPublicKey()));
-        assertNull(protector.getDecryptor(unprotectedKey.getPublicKey().getKeyID()));
+        assertTrue(protector.hasPassphraseFor(unprotectedKey.getKeyIdentifier()));
+        assertNull(protector.getEncryptor(unprotectedKey.getPrimaryKey()));
+        assertNull(protector.getDecryptor(unprotectedKey.getPrimaryKey().getKeyIdentifier()));
 
-        PGPSecretKeyRing protectedKey = PGPainless.readKeyRing().secretKeyRing(PROTECTED_KEY);
+        OpenPGPKey protectedKey = api.readKey().parseKey(PROTECTED_KEY);
         protector.addSecretKey(protectedKey);
         protector.addPassphrase(Passphrase.fromPassword(PASSWORD));
-        assertNotNull(protector.getEncryptor(protectedKey.getPublicKey()));
-        assertNotNull(protector.getDecryptor(protectedKey.getPublicKey().getKeyID()));
+        assertNotNull(protector.getEncryptor(protectedKey.getPrimaryKey()));
+        assertNotNull(protector.getDecryptor(protectedKey.getPrimaryKey().getKeyIdentifier()));
     }
 }
