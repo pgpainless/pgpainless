@@ -103,6 +103,7 @@ class KeyRingBuilder(private val version: OpenPGPKeyVersion, private val api: PG
 
         val hashedSignatureSubpackets: SignatureSubpackets =
             SignatureSubpackets.createHashedSubpackets(certKey.publicKey).apply {
+                primaryKeySpec!!.keyCreationDate?.let { setSignatureCreationTime(it) }
                 setKeyFlags(primaryKeySpec!!.keyFlags)
                 (primaryKeySpec!!.preferredHashAlgorithmsOverride ?: algorithmSuite.hashAlgorithms)
                     ?.let { setPreferredHashAlgorithms(it) }
@@ -191,8 +192,10 @@ class KeyRingBuilder(private val version: OpenPGPKeyVersion, private val api: PG
     private fun addSubKeys(primaryKey: PGPKeyPair, ringGenerator: PGPKeyRingGenerator) {
         for (subKeySpec in subKeySpecs) {
             val subKey = generateKeyPair(subKeySpec, version, api.implementation)
+            val creationTime = subKeySpec.keyCreationDate ?: Date()
             val hashedSignatureSubpackets: SignatureSubpackets =
                 SignatureSubpackets.createHashedSubpackets(primaryKey.publicKey).apply {
+                    setSignatureCreationTime(creationTime)
                     setKeyFlags(subKeySpec.keyFlags)
                     subKeySpec.preferredHashAlgorithmsOverride?.let {
                         setPreferredHashAlgorithms(it)
@@ -213,7 +216,8 @@ class KeyRingBuilder(private val version: OpenPGPKeyVersion, private val api: PG
                 hashedSignatureSubpackets.subpacketsGenerator.generate()
             try {
                 hashedSubpackets =
-                    addPrimaryKeyBindingSignatureIfNecessary(primaryKey, subKey, hashedSubpackets)
+                    addPrimaryKeyBindingSignatureIfNecessary(
+                        primaryKey, subKey, hashedSubpackets, creationTime)
             } catch (e: IOException) {
                 throw PGPException(
                     "Exception while adding primary key binding signature to signing subkey.", e)
@@ -225,7 +229,8 @@ class KeyRingBuilder(private val version: OpenPGPKeyVersion, private val api: PG
     private fun addPrimaryKeyBindingSignatureIfNecessary(
         primaryKey: PGPKeyPair,
         subKey: PGPKeyPair,
-        hashedSubpackets: PGPSignatureSubpacketVector
+        hashedSubpackets: PGPSignatureSubpacketVector,
+        bindingTime: Date
     ): PGPSignatureSubpacketVector {
         val keyFlagMask = hashedSubpackets.keyFlags
         if (!KeyFlag.hasKeyFlag(keyFlagMask, KeyFlag.SIGN_DATA) &&
@@ -236,6 +241,13 @@ class KeyRingBuilder(private val version: OpenPGPKeyVersion, private val api: PG
         val bindingSignatureGenerator =
             PGPSignatureGenerator(buildContentSigner(subKey), subKey.publicKey)
         bindingSignatureGenerator.init(SignatureType.PRIMARYKEY_BINDING.code, subKey.privateKey)
+        bindingSignatureGenerator.setHashedSubpackets(
+            PGPSignatureSubpacketGenerator()
+                .apply {
+                    setSignatureCreationTime(bindingTime)
+                    setIssuerFingerprint(false, subKey.publicKey)
+                }
+                .generate())
         val primaryKeyBindingSig =
             bindingSignatureGenerator.generateCertification(primaryKey.publicKey, subKey.publicKey)
         val subpacketGenerator = PGPSignatureSubpacketGenerator(hashedSubpackets)
