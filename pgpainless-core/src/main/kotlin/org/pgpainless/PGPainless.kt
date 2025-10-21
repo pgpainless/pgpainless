@@ -78,6 +78,15 @@ class PGPainless(
 
     @JvmOverloads
     fun toAsciiArmor(
+        certsOrKeys: Collection<OpenPGPCertificate>,
+        packetFormat: PacketFormat = PacketFormat.ROUNDTRIP
+    ): String {
+        return certsOrKeys.joinToString(
+            separator = "\n", transform = { it.toAsciiArmoredString(packetFormat) })
+    }
+
+    @JvmOverloads
+    fun toAsciiArmor(
         signature: OpenPGPSignature,
         packetFormat: PacketFormat = PacketFormat.ROUNDTRIP
     ): String {
