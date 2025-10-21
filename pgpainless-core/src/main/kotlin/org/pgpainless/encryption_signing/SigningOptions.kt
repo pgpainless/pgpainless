@@ -250,6 +250,7 @@ class SigningOptions(private val api: PGPainless) {
      * @throws PGPException if the secret key cannot be unlocked or if no signing method can be
      *   created.
      */
+    @JvmOverloads
     fun addInlineSignature(
         signingKeyProtector: SecretKeyRingProtector,
         signingKey: OpenPGPSecretKey,
@@ -455,6 +456,7 @@ class SigningOptions(private val api: PGPainless) {
      * @param subpacketCallback callback to change the subpackets of the signature
      * @return this
      */
+    @JvmOverloads
     fun addDetachedSignature(
         signingKeyProtector: SecretKeyRingProtector,
         signingKey: OpenPGPSecretKey,
