@@ -5,6 +5,7 @@
 package org.pgpainless.bouncycastle.extensions
 
 import org.bouncycastle.openpgp.PGPPublicKeyEncryptedData
+import org.bouncycastle.openpgp.api.OpenPGPCertificate.OpenPGPComponentKey
 import org.bouncycastle.openpgp.api.OpenPGPKey
 import org.bouncycastle.openpgp.api.OpenPGPKey.OpenPGPPrivateKey
 import org.bouncycastle.openpgp.api.OpenPGPKey.OpenPGPSecretKey
@@ -18,6 +19,13 @@ import org.pgpainless.util.Passphrase
  */
 fun OpenPGPKey.getSecretKeyFor(pkesk: PGPPublicKeyEncryptedData): OpenPGPSecretKey? =
     this.getSecretKey(pkesk.keyIdentifier)
+
+fun OpenPGPComponentKey.getSecretKey(): OpenPGPSecretKey? =
+    if (this.certificate is OpenPGPKey) {
+        (this.certificate as OpenPGPKey).getSecretKey(this)
+    } else {
+        null
+    }
 
 /**
  * Unlock the [OpenPGPSecretKey], returning the unlocked [OpenPGPPrivateKey].
