@@ -6,11 +6,13 @@ package org.pgpainless.policy;
 
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.junit.jupiter.api.Assumptions.assumeTrue;
 
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
+import java.util.Date;
 
 import org.bouncycastle.openpgp.PGPException;
 import org.bouncycastle.openpgp.api.OpenPGPCertificate;
@@ -157,6 +159,7 @@ public class WeakRSAKeyTest {
     public void cannotSignWithWeakKey() throws IOException {
         PGPainless api = PGPainless.getInstance();
         OpenPGPKey secretKeys = api.readKey().parseKey(WEAK_RSA_KEY);
+        assumeTrue(secretKeys.getExpirationTime().after(new Date()));
         SecretKeyRingProtector protector = SecretKeyRingProtector.unprotectedKeys();
 
         SigningOptions signingOptions = SigningOptions.get();
