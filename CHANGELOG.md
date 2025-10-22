@@ -5,6 +5,14 @@ SPDX-License-Identifier: CC0-1.0
 
 # PGPainless Changelog
 
+## 2.0.2-SNAPSHOT
+- Add `PGPainless.asciiArmor(Collection<OpenPGPCertificate>, PacketFormat)`
+- `SigningOptions`: Add missing `@JvmOverloads` annotations to `addInlineSignature()` and `addDetachedSignature()`
+- `OpenPGPComponentKey`: Add extension method `getSecretKey()`
+- `OpenPGPKey`: Add extension methods `isFullyDecrypted()`, `isFullyEncrypted()`
+- `KeyRingBuilder`: Properly respect custom key creation time on subkeys and signatures
+- `WeakRSAKeyTest`: Disable test if test vector key is expired at testing time
+
 ## 2.0.1
 - Fix subkey signatures on generate keys (#486, thanks to @agrahn for reporting)
 
