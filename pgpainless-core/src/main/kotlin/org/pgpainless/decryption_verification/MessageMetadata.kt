@@ -322,11 +322,17 @@ class MessageMetadata(val message: Message) {
     fun isVerifiedDetachedSignedBy(keys: PGPKeyRing) =
         verifiedDetachedSignatures.any { keys.matches(it.signingKey) }
 
+    fun isVerifiedDetachedSignedBy(cert: OpenPGPCertificate) =
+        verifiedDetachedSignatures.any { cert.pgpKeyRing.matches(it.signingKey) }
+
     fun isVerifiedInlineSignedBy(fingerprint: OpenPgpFingerprint) =
         verifiedInlineSignatures.any { it.signingKey.matches(fingerprint) }
 
     fun isVerifiedInlineSignedBy(keys: PGPKeyRing) =
         verifiedInlineSignatures.any { keys.matches(it.signingKey) }
+
+    fun isVerifiedInlineSignedBy(cert: OpenPGPCertificate) =
+        verifiedInlineSignatures.any { cert.pgpKeyRing.matches(it.signingKey) }
 
     // ##########################################################################################################
     //                                             Literal Data
