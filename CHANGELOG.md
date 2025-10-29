@@ -12,6 +12,11 @@ SPDX-License-Identifier: CC0-1.0
 - `OpenPGPKey`: Add extension methods `isFullyDecrypted()`, `isFullyEncrypted()`
 - `KeyRingBuilder`: Properly respect custom key creation time on subkeys and signatures
 - `WeakRSAKeyTest`: Disable test if test vector key is expired at testing time
+- `MessageMetadata`: Add missing methods
+  - `isVerifiedInlineSignedBy(OpenPGPCertificate)`
+  - `isVerifiedDetachedSignedBy(OpenPGPCertificate)`
+- Bump `sop-java` to `14.0.3`
+- Fix exception when changing subkey passphrase on key with stripped primary key (thanks @agrahn for reporting)
 
 ## 2.0.1
 - Fix subkey signatures on generate keys (#486, thanks to @agrahn for reporting)
