@@ -65,6 +65,12 @@ class S2KUsageFix {
                         "Missing passphrase for key with ID " + java.lang.Long.toHexString(keyId))
                 }
 
+                // skip stripped secret keys
+                if (key.isPrivateKeyEmpty) {
+                    keyList.add(key)
+                    continue
+                }
+
                 val privateKey = key.unlock(protector)
                 // This constructor makes use of USAGE_SHA1 by default
                 val fixedKey =
