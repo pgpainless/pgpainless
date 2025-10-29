@@ -5,7 +5,7 @@ SPDX-License-Identifier: CC0-1.0
 
 # PGPainless Changelog
 
-## 2.0.2-SNAPSHOT
+## 2.0.2
 - Add `PGPainless.asciiArmor(Collection<OpenPGPCertificate>, PacketFormat)`
 - `SigningOptions`: Add missing `@JvmOverloads` annotations to `addInlineSignature()` and `addDetachedSignature()`
 - `OpenPGPComponentKey`: Add extension method `getSecretKey()`
@@ -16,6 +16,7 @@ SPDX-License-Identifier: CC0-1.0
   - `isVerifiedInlineSignedBy(OpenPGPCertificate)`
   - `isVerifiedDetachedSignedBy(OpenPGPCertificate)`
 - Bump `sop-java` to `14.0.3`
+- Bump `logback-core` to `1.5.19`
 - Fix exception when changing subkey passphrase on key with stripped primary key (thanks @agrahn for reporting)
 
 ## 2.0.1
