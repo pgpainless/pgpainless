@@ -29,13 +29,14 @@ class ArmorImpl(private val api: PGPainless) : Armor {
 
                 // Determine the nature of the given data
 
-                val openPgpIn = OpenPGPAnimalSnifferInputStream(data).apply {
-                    try {
-                        inspectBuffer()
-                    } catch (e: IOException) {
-                        // ignore
+                val openPgpIn =
+                    OpenPGPAnimalSnifferInputStream(data).apply {
+                        try {
+                            inspectBuffer()
+                        } catch (e: IOException) {
+                            // ignore
+                        }
                     }
-                }
 
                 if (openPgpIn.isAsciiArmored) {
                     // armoring already-armored data is an idempotent operation

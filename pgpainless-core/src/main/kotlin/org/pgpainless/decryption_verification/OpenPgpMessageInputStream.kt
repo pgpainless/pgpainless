@@ -347,13 +347,12 @@ class OpenPgpMessageInputStream(
         syntaxVerifier.next(InputSymbol.ENCRYPTED_DATA)
 
         val encDataList = packetInputStream!!.readEncryptedDataList()
+        /*
         if (encDataList.isEmpty) {
-            LOGGER.debug(
-                "Missing encrypted session key packet.")
+            LOGGER.debug("Missing encrypted session key packet.")
             return false
         }
-
-
+         */
 
         if (!encDataList.isIntegrityProtected &&
             !encDataList.isEmpty &&
