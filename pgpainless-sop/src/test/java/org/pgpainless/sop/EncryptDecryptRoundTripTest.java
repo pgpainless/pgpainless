@@ -25,7 +25,6 @@ import org.pgpainless.PGPainless;
 import org.pgpainless.decryption_verification.ConsumerOptions;
 import org.pgpainless.decryption_verification.DecryptionStream;
 import org.pgpainless.decryption_verification.MessageMetadata;
-import org.pgpainless.encryption_signing.EncryptionStream;
 import org.pgpainless.util.Passphrase;
 import sop.ByteArrayAndResult;
 import sop.DecryptionResult;
