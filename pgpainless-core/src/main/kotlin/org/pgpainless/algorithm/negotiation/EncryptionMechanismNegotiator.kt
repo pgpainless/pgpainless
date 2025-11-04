@@ -41,6 +41,10 @@ fun interface EncryptionMechanismNegotiator {
                         return override
                     }
 
+                    if (features.isEmpty()) {
+                        return policy.messageEncryptionAlgorithmPolicy.symmetricFallbackMechanism
+                    }
+
                     // If all support SEIPD2, use SEIPD2
                     if (features.all { it.contains(Feature.MODIFICATION_DETECTION_2) }) {
                         // Find best supported algorithm combination

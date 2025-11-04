@@ -9,14 +9,24 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
+import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.nio.charset.Charset;
 import java.nio.charset.StandardCharsets;
 
+import org.bouncycastle.bcpg.SymmetricKeyAlgorithmTags;
+import org.bouncycastle.openpgp.PGPException;
+import org.bouncycastle.openpgp.api.MessageEncryptionMechanism;
 import org.bouncycastle.util.io.Streams;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
+import org.pgpainless.PGPainless;
+import org.pgpainless.decryption_verification.ConsumerOptions;
+import org.pgpainless.decryption_verification.DecryptionStream;
+import org.pgpainless.decryption_verification.MessageMetadata;
+import org.pgpainless.encryption_signing.EncryptionStream;
+import org.pgpainless.util.Passphrase;
 import sop.ByteArrayAndResult;
 import sop.DecryptionResult;
 import sop.SOP;
@@ -116,7 +126,7 @@ public class EncryptDecryptRoundTripTest {
     }
 
     @Test
-    public void basicRoundTripWithPassword() throws IOException {
+    public void basicRoundTripWithPassword() throws IOException, PGPException {
         byte[] encrypted = sop.encrypt()
                 .withPassword("passphr4s3")
                 .plaintext(message)
@@ -134,6 +144,26 @@ public class EncryptDecryptRoundTripTest {
         DecryptionResult result = bytesAndResult.getResult();
         VerificationListAssert.assertThatVerificationList(result.getVerifications())
                 .isEmpty();
+    }
+
+    @Test
+    public void verifySymmetricMessageEncryptionUsesSEIPDv1WithAES128() throws IOException, PGPException {
+        byte[] encrypted = sop.encrypt()
+                .withPassword("passphr4s3")
+                .plaintext(message)
+                .toByteArrayAndResult()
+                .getBytes();
+
+        // Verify encryption mechanism
+        DecryptionStream decIn = PGPainless.getInstance().processMessage()
+                .onInputStream(new ByteArrayInputStream(encrypted))
+                .withOptions(ConsumerOptions.get().addMessagePassphrase(Passphrase.fromPassword("passphr4s3")));
+        Streams.drain(decIn);
+        decIn.close();
+        MessageMetadata metadata = decIn.getMetadata();
+        assertEquals(
+                MessageEncryptionMechanism.integrityProtected(SymmetricKeyAlgorithmTags.AES_128),
+                metadata.getEncryptionMechanism());
     }
 
     @Test
