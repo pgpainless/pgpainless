@@ -5,6 +5,10 @@ SPDX-License-Identifier: CC0-1.0
 
 # PGPainless Changelog
 
+## 2.0.3-SNAPSHOT
+- `sop encrypt`: For symmetric-key encryption; default to rfc4880 packet format
+- `sop list-profiles encrypt`: Add profile descriptions
+
 ## 2.0.2
 - Add `PGPainless.asciiArmor(Collection<OpenPGPCertificate>, PacketFormat)`
 - `SigningOptions`: Add missing `@JvmOverloads` annotations to `addInlineSignature()` and `addDetachedSignature()`
