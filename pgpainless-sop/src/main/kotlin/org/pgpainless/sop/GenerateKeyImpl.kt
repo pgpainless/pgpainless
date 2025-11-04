@@ -35,12 +35,18 @@ class GenerateKeyImpl(private val api: PGPainless) : GenerateKey {
     companion object {
         @JvmField
         val CURVE25519_PROFILE =
-            Profile("draft-koch-eddsa-for-openpgp-00", "OpenPGP v4 keys over Curve25519")
+            Profile("draft-koch-eddsa-for-openpgp-00", "OpenPGP v4 keys over legacy Curve25519")
         @JvmField
         val RFC4880_RSA4096_PROFILE = Profile("rfc4880-rsa4096", "OpenPGP v4 keys with RSA 4096")
-        @JvmField val RFC6637_NIST_P256_PROFILE = Profile("rfc6637-nist-p256")
-        @JvmField val RFC6637_NIST_P384_PROFILE = Profile("rfc6637-nist-p384")
-        @JvmField val RFC6637_NIST_P521_PROFILE = Profile("rfc6637-nist-p521")
+        @JvmField
+        val RFC6637_NIST_P256_PROFILE =
+            Profile("rfc6637-nist-p256", "OpenPGP v4 keys over ECC curve NIST-p256")
+        @JvmField
+        val RFC6637_NIST_P384_PROFILE =
+            Profile("rfc6637-nist-p384", "OpenPGP v4 keys over ECC curve NIST-p384")
+        @JvmField
+        val RFC6637_NIST_P521_PROFILE =
+            Profile("rfc6637-nist-p521", "OpenPGP v4 keys over ECC curve NIST-p521")
         @JvmField
         val RFC9580_CURVE25519_PROFILE =
             Profile("rfc9580-curve25519", "OpenPGP v6 keys over Curve25519")
