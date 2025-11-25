@@ -5,15 +5,20 @@ import com.yubico.yubikit.core.smartcard.SmartCardConnection
 import com.yubico.yubikit.desktop.CompositeDevice
 import com.yubico.yubikit.desktop.YubiKitManager
 import com.yubico.yubikit.openpgp.OpenPgpSession
+import org.bouncycastle.jce.ECNamedCurveTable
 import org.bouncycastle.jce.provider.BouncyCastleProvider
+import org.bouncycastle.openpgp.PGPUtil
 import org.bouncycastle.openpgp.api.bc.BcOpenPGPImplementation
 import org.bouncycastle.openpgp.operator.jcajce.JcaPGPKeyConverter
 import org.gnupg.GnuPGDummyKeyUtil
 import org.junit.jupiter.api.Assertions.assertEquals
+import org.junit.jupiter.api.Assertions.assertNotNull
+import org.junit.jupiter.api.Assertions.assertTrue
 import org.junit.jupiter.api.Test
 import org.pgpainless.PGPainless
 import org.pgpainless.algorithm.KeyFlag
 import org.pgpainless.algorithm.OpenPGPKeyVersion
+import org.pgpainless.bouncycastle.extensions.getCurveName
 import org.pgpainless.bouncycastle.extensions.toOpenPGPKey
 import org.pgpainless.decryption_verification.ConsumerOptions
 import org.pgpainless.encryption_signing.EncryptionOptions
@@ -119,6 +124,7 @@ class YubikeyTest {
 
     @Test
     fun test() {
+        println(CERT)
         val api = PGPainless(BcOpenPGPImplementation())
         val key = api.readKey().parseKey(KEY)
 
@@ -170,5 +176,47 @@ class YubikeyTest {
             decIn.close()
             assertEquals("Hello, World!\n", String(msg))
         }
+    }
+
+    val pubKeyAscii = // "modernKeyRing"
+        """  
+    -----BEGIN PGP PUBLIC KEY BLOCK-----
+    Comment: C68A 9140 9A00 3C55 5D8A  62A5 D3ED 03F9 FF75 68D4
+    Comment: john doe <j.doe@example.com>
+    
+    mDMEaR7iehYJKwYBBAHaRw8BAQdA5XMRsc8HUXiJkjtOSCj86v+OeemU41U08Lmi
+    2PQ3Tnm0HGpvaG4gZG9lIDxqLmRvZUBleGFtcGxlLmNvbT7CnwQTFgoAUQkQ0+0D
+    +f91aNQWoQTGipFAmgA8VV2KYqXT7QP5/3Vo1AWCaR7iegKbAQUVCgkICwUWAgMB
+    AAQLCQgHCScJAQkCCQMIAQKeCQWJCWYBgAKZAQAAFecBALy6FxELczpihvkVJPa2
+    iaV7zDcfFBvX4KyTr506hxufAP4ixT59d/QRMWmuRN6QRkRcgduLaw2l/Hs/zBuV
+    tQjHDsKfBBMWCgBRApsBBRUKCQgLBRYCAwEABAsJCAcJJwkBCQIJAwgBAp4JCRDT
+    7QP5/3Vo1BahBMaKkUCaADxVXYpipdPtA/n/dWjUBYJpHuJ7BYkAAAAAApkBAAAK
+    SQD9FpbJAinkmaeHluaKmiCp0HggoGF8aji9rDqSvUDtnWsA/i5I1eZ0rPvxZc6z
+    pIbfRHdbdgOTmTZEOOz82GQVmsMLuDgEaR7iehIKKwYBBAGXVQEFAQEHQHc9W+J1
+    IPl7nekdLrx5SLdvYnNNocULlqqLoDgN3fV4AwEIB8J4BBgWCgAqCRDT7QP5/3Vo
+    1BahBMaKkUCaADxVXYpipdPtA/n/dWjUBYJpHuJ6ApsMAACh/AEA1r+JB8uhMX7N
+    l4B3QOF9zLmUXhihRvE0tyY3cCCwUrYA/2yqF1mA8dHsDuDnWEUYxgX+ZpYBXr+P
+    j9ZKl/HoNeIOuDMEaR7iehYJKwYBBAHaRw8BAQdAQPTWzF21MpuSRjclxeAS+lZH
+    ulTwm/HsOaVpur8vSZ/CwC8EGBYKAKEJENPtA/n/dWjUFqEExoqRQJoAPFVdimKl
+    0+0D+f91aNQFgmke4noCmwJ2IAQZFgoAHQWCaR7iehYhBMqKZfP+EDi1iRE58a14
+    HgK5jFyDAAoJEK14HgK5jFyDoRUA/0GmLpBUVFSEdbSh+o7tz6xncAIjkm20LWIy
+    PF81ilR9AP0a/MVoE9ivY7HK9uu79cc2Y5IratjiXRpamYqODQutAQAA848A/Ro1
+    SfAfFAmMDfcbuKvpQEK/d4T3455End3ohd5TXb7VAP9/wMxzLJ1K5mE6LTQ5Hw4b
+    m9XtYRYVHugI27XFacaFAg==
+    =3yy3
+    -----END PGP PUBLIC KEY BLOCK-----
+    """.trimIndent()
+
+    @Test
+    fun getx9ParamsTest() {
+        val certificate = org.bouncycastle.openpgp.api.OpenPGPKeyReader().parseCertificate(pubKeyAscii.toByteArray())
+        val pubKey = certificate.getEncryptionKeys().first().getPGPPublicKey()
+
+        assertTrue(pubKey.isEncryptionKey())
+
+        val ecPubKey = pubKey.getPublicKeyPacket().getKey() as org.bouncycastle.bcpg.ECDHPublicBCPGKey
+        val params = ECNamedCurveTable.getParameterSpec(pubKey.getCurveName())
+
+        assertNotNull(params) // fails
     }
 }

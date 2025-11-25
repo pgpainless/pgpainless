@@ -12,6 +12,7 @@ import org.bouncycastle.bcpg.KeyIdentifier
 import org.bouncycastle.bcpg.PublicKeyAlgorithmTags
 import org.bouncycastle.bcpg.PublicKeyPacket
 import org.bouncycastle.crypto.params.KeyParameter
+import org.bouncycastle.jce.ECNamedCurveTable
 import org.bouncycastle.jce.provider.BouncyCastleProvider
 import org.bouncycastle.openpgp.PGPPublicKey
 import org.bouncycastle.openpgp.operator.PGPPad
@@ -21,9 +22,11 @@ import org.bouncycastle.openpgp.operator.bc.BcPGPDigestCalculatorProvider
 import org.bouncycastle.openpgp.operator.bc.BcPublicKeyDataDecryptorFactory
 import org.bouncycastle.openpgp.operator.bc.RFC6637KDFCalculator
 import org.bouncycastle.openpgp.operator.jcajce.JcaPGPKeyConverter
+import org.pgpainless.bouncycastle.extensions.getCurveName
 import org.pgpainless.decryption_verification.HardwareSecurity
 import org.pgpainless.key.OpenPgpV4Fingerprint
 import org.pgpainless.key.SubkeyIdentifier
+import org.slf4j.LoggerFactory
 import java.util.*
 
 class YubikeyDataDecryptorFactory(
@@ -32,6 +35,10 @@ class YubikeyDataDecryptorFactory(
 ) : HardwareSecurity.HardwareDataDecryptorFactory(subkeyIdentifier, callback) {
 
     companion object {
+
+        @JvmStatic
+        val LOGGER = LoggerFactory.getLogger(YubikeyDataDecryptorFactory::class.java)
+
         val ADMIN_PIN: CharArray = "12345678".toCharArray()
         val USER_PIN: CharArray = "123456".toCharArray()
 
@@ -42,8 +49,7 @@ class YubikeyDataDecryptorFactory(
             pubkey: PGPPublicKey
         ): HardwareSecurity.HardwareDataDecryptorFactory {
             val openpgpSession = OpenPgpSession(smartCardConnection)
-            // openpgpSession.verifyAdminPin(ADMIN_PIN)
-            val decKeyIdentifier: SubkeyIdentifier = SubkeyIdentifier(OpenPgpV4Fingerprint(pubkey))
+            val decKeyIdentifier = SubkeyIdentifier(OpenPgpV4Fingerprint(pubkey))
 
             val isRSAKey = pubkey.algorithm == PublicKeyAlgorithmTags.RSA_GENERAL
                 || pubkey.algorithm == PublicKeyAlgorithmTags.RSA_SIGN
@@ -60,13 +66,18 @@ class YubikeyDataDecryptorFactory(
                     openpgpSession.verifyAdminPin(ADMIN_PIN)
                     openpgpSession.verifyUserPin(USER_PIN, true)
 
+                    LOGGER.debug("Attempt decryption with key {}", keyIdentifier)
+
                     if(isRSAKey) {
                         // easy
+                        LOGGER.debug("Key is RSA key of length {}", pubkey.bitStrength)
                         val decryptedSessionKey = openpgpSession.decrypt(sessionKeyData)
                         return decryptedSessionKey
                     } else {
                         // meh...
+                        val curveName = pubkey.getCurveName()
                         val ecPubKey: ECDHPublicBCPGKey = pubkey.publicKeyPacket.key as ECDHPublicBCPGKey
+                        LOGGER.debug("Key is ECDH key over curve $curveName")
                         // split session data into peer key and encrypted session key
 
                         // peer key
@@ -83,9 +94,8 @@ class YubikeyDataDecryptorFactory(
                         System.arraycopy(sessionKeyData, 2 + pLen + 1, keyEnc, 0, keyLen)
 
                         // perform ECDH key agreement via the Yubikey
-                        val x9Params =
-                            org.bouncycastle.asn1.x9.ECNamedCurveTable.getByOIDLazy(ecPubKey.curveOID)
-                        val publicPoint = x9Params.curve.decodePoint(pEnc)
+                        val params = ECNamedCurveTable.getParameterSpec(curveName)
+                        val publicPoint = params.curve.decodePoint(pEnc)
                         val peerKey = JcaPGPKeyConverter().setProvider(BouncyCastleProvider())
                             .getPublicKey(
                                 PGPPublicKey(
