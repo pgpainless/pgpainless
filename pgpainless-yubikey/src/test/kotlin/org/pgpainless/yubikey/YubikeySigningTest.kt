@@ -5,31 +5,24 @@ import com.yubico.yubikit.core.smartcard.SmartCardConnection
 import com.yubico.yubikit.desktop.CompositeDevice
 import com.yubico.yubikit.desktop.YubiKitManager
 import com.yubico.yubikit.openpgp.OpenPgpSession
-import org.bouncycastle.jce.ECNamedCurveTable
 import org.bouncycastle.jce.provider.BouncyCastleProvider
-import org.bouncycastle.openpgp.PGPUtil
 import org.bouncycastle.openpgp.api.bc.BcOpenPGPImplementation
+import org.bouncycastle.openpgp.operator.PGPContentSignerBuilderProvider
 import org.bouncycastle.openpgp.operator.jcajce.JcaPGPKeyConverter
 import org.gnupg.GnuPGDummyKeyUtil
-import org.junit.jupiter.api.Assertions.assertEquals
-import org.junit.jupiter.api.Assertions.assertNotNull
 import org.junit.jupiter.api.Assertions.assertTrue
 import org.junit.jupiter.api.Test
 import org.pgpainless.PGPainless
-import org.pgpainless.algorithm.KeyFlag
-import org.pgpainless.algorithm.OpenPGPKeyVersion
-import org.pgpainless.bouncycastle.extensions.getCurveName
+import org.pgpainless.algorithm.HashAlgorithm
 import org.pgpainless.bouncycastle.extensions.toOpenPGPKey
 import org.pgpainless.decryption_verification.ConsumerOptions
-import org.pgpainless.encryption_signing.EncryptionOptions
 import org.pgpainless.encryption_signing.ProducerOptions
 import org.pgpainless.encryption_signing.SigningOptions
-import org.pgpainless.key.generation.KeySpec
-import org.pgpainless.key.generation.type.KeyType
-import org.pgpainless.key.generation.type.ecc.EllipticCurve
-import org.pgpainless.key.protection.SecretKeyRingProtector
+import org.pgpainless.signature.PGPContentSignerBuilderProviderFactory
+import java.io.ByteArrayInputStream
+import java.io.ByteArrayOutputStream
 
-class YubikeyTest {
+class YubikeySigningTest {
 
     val USER_PIN: CharArray = "123456".toCharArray()
     val ADMIN_PIN: CharArray = "12345678".toCharArray()
@@ -105,41 +98,23 @@ class YubikeyTest {
         "=Oq+Y\n" +
         "-----END PGP PUBLIC KEY BLOCK-----"
 
-    private val MSG = "-----BEGIN PGP MESSAGE-----\n" +
-        "Version: PGPainless\n" +
-        "\n" +
-        "wcAQBhUEAh6XCjDVDdDeIypK3dKuQkQmRdESBCMEAV9Lm/I5jEe9t8Mdd7Pmk7S0\n" +
-        "3q308GnSq640CbhgORysK4+dnRYMzZFphil7dDsKWe2X7RMz7TDiPQhaoro6z0JP\n" +
-        "AZMx5eFiL0irdC9qV+0LvSnGJ8CyW3K15mKUomX82unAhquEhLtuPBufAN4bf2ia\n" +
-        "EiM85oz2U8CZ2Un48QLldDoHMKOdeAqX1xqFeBrD+ObgNsNfCLoYg4SM/EOUc06x\n" +
-        "U78DC23EfOI428Nfvzq1GiqVhtLAYgIJAQMNZthd/Qa2vPy8EaMLXn/NV35v4PzO\n" +
-        "39OYkdHRTO6g6OTI4Qf6fpXWoC8GdHIMOHGPMh2hKCXIXPEV0bncfnrUIXk9+miX\n" +
-        "7pFaM7kn/YGO48QUtY5ZxJdJAcjZA+vHBws8eDKC5Ajl5VYZrX187MQ+x/JID642\n" +
-        "QNsxUocyYwvRZenRQCuUV0vee08iLia/olzVjYQvsPYg6F/wa0KZRat2WMi/ofy9\n" +
-        "8C0tMUo31K4v2/z9T58DAR0P8AmLH/+196ijRbJ61U8HdiqYYPz7pevKdRB3N/0b\n" +
-        "dKkwF/chL+a/fSaxfAtJF2Zua4iW1OyrsbgIyXADUoS12K056A24yYE6dbMGVdhS\n" +
-        "+kQi5FkaOBCe1HVuETfNZ9XYV1312Dlj\n" +
-        "=XVu4\n" +
-        "-----END PGP MESSAGE-----"
-
     @Test
-    fun test() {
-        println(CERT)
+    fun signMessageWithYubikey() {
         val api = PGPainless(BcOpenPGPImplementation())
         val key = api.readKey().parseKey(KEY)
 
-        val decKey = key.secretKeys[key.encryptionKeys[0].keyIdentifier]!!
-        val msgIn = MSG.byteInputStream()
+        val signingKey = key.secretKeys[key.signingKeys[0].keyIdentifier]!!
 
-        val privKey = decKey.pgpSecretKey.extractPrivateKey(null)
+        val privKey = signingKey.pgpSecretKey.extractPrivateKey(null)
         val k = JcaPGPKeyConverter().setProvider(BouncyCastleProvider()).getPrivateKey(privKey)
         val sn = 15472425
         val movedToCard = GnuPGDummyKeyUtil.modify(key)
-            .divertPrivateKeysToCard(GnuPGDummyKeyUtil.KeyFilter { it.matchesExplicit(decKey.keyIdentifier) }, byteArrayOf(
+            .divertPrivateKeysToCard(
+                GnuPGDummyKeyUtil.KeyFilter { it.matchesExplicit(signingKey.keyIdentifier) }, byteArrayOf(
                 (sn shr 24).toByte(), (sn shr(16)).toByte(), (sn shr(8)).toByte(), sn.toByte()
             )).toOpenPGPKey(api.implementation)
-        println(key.toCertificate().toAsciiArmoredString())
-        println(MSG)
+        println(movedToCard.toAsciiArmoredString())
+
         val manager = YubiKitManager()
         val device = manager.listAllDevices().entries.find { it.key is CompositeDevice }?.key
             ?: throw IllegalStateException("No Yubikey attached.")
@@ -153,70 +128,45 @@ class YubikeyTest {
             openpgp.verifyAdminPin(ADMIN_PIN)
 
             openpgp.putKey(
-                com.yubico.yubikit.openpgp.KeyRef.DEC,
+                com.yubico.yubikit.openpgp.KeyRef.SIG,
                 PrivateKeyValues.fromPrivateKey(k)
             )
-            val fp = decKey.pgpPublicKey.fingerprint
-            openpgp.setFingerprint(com.yubico.yubikit.openpgp.KeyRef.DEC, fp)
+            val fp = signingKey.pgpPublicKey.fingerprint
+            openpgp.setFingerprint(com.yubico.yubikit.openpgp.KeyRef.SIG, fp)
             openpgp.setGenerationTime(
-                com.yubico.yubikit.openpgp.KeyRef.DEC,
-                (decKey.pgpPublicKey.publicKeyPacket.time.time / 1000).toInt()
+                com.yubico.yubikit.openpgp.KeyRef.SIG,
+                (signingKey.pgpPublicKey.publicKeyPacket.time.time / 1000).toInt()
             )
         }
+
+        val msgOut = ByteArrayOutputStream()
         device.openConnection(SmartCardConnection::class.java).use {
-            val decFac = YubikeyDataDecryptorFactory.createDecryptorFromConnection(it, decKey.pgpPublicKey)
-            val decIn = api.processMessage()
-                .onInputStream(msgIn)
-                .withOptions(
-                    ConsumerOptions.get(api)
-                        //.addDecryptionKey(api.readKey().parseKey(KEY))
-                        .addCustomDecryptorFactory(decFac)
-                )
-            val msg = decIn.readAllBytes()
-            decIn.close()
-            assertEquals("Hello, World!\n", String(msg))
+            val connection = it
+            val factory = object : PGPContentSignerBuilderProviderFactory {
+                override fun create(hashAlgorithm: HashAlgorithm): PGPContentSignerBuilderProvider {
+                    return YubikeyPGPContentSignerBuilderProvider(hashAlgorithm, connection)
+                }
+            }
+
+            val sigOut = api
+                .generateMessage()
+                .onOutputStream(msgOut)
+                .withOptions(ProducerOptions.sign(SigningOptions.get()
+                    .addInlineSignature(movedToCard.signingKeys[0], factory, HashAlgorithm.SHA512)))
+
+            sigOut.write("Hello, World!".toByteArray())
+            sigOut.close()
+            println(msgOut)
         }
-    }
 
-    val pubKeyAscii = // "modernKeyRing"
-        """  
-    -----BEGIN PGP PUBLIC KEY BLOCK-----
-    Comment: C68A 9140 9A00 3C55 5D8A  62A5 D3ED 03F9 FF75 68D4
-    Comment: john doe <j.doe@example.com>
-    
-    mDMEaR7iehYJKwYBBAHaRw8BAQdA5XMRsc8HUXiJkjtOSCj86v+OeemU41U08Lmi
-    2PQ3Tnm0HGpvaG4gZG9lIDxqLmRvZUBleGFtcGxlLmNvbT7CnwQTFgoAUQkQ0+0D
-    +f91aNQWoQTGipFAmgA8VV2KYqXT7QP5/3Vo1AWCaR7iegKbAQUVCgkICwUWAgMB
-    AAQLCQgHCScJAQkCCQMIAQKeCQWJCWYBgAKZAQAAFecBALy6FxELczpihvkVJPa2
-    iaV7zDcfFBvX4KyTr506hxufAP4ixT59d/QRMWmuRN6QRkRcgduLaw2l/Hs/zBuV
-    tQjHDsKfBBMWCgBRApsBBRUKCQgLBRYCAwEABAsJCAcJJwkBCQIJAwgBAp4JCRDT
-    7QP5/3Vo1BahBMaKkUCaADxVXYpipdPtA/n/dWjUBYJpHuJ7BYkAAAAAApkBAAAK
-    SQD9FpbJAinkmaeHluaKmiCp0HggoGF8aji9rDqSvUDtnWsA/i5I1eZ0rPvxZc6z
-    pIbfRHdbdgOTmTZEOOz82GQVmsMLuDgEaR7iehIKKwYBBAGXVQEFAQEHQHc9W+J1
-    IPl7nekdLrx5SLdvYnNNocULlqqLoDgN3fV4AwEIB8J4BBgWCgAqCRDT7QP5/3Vo
-    1BahBMaKkUCaADxVXYpipdPtA/n/dWjUBYJpHuJ6ApsMAACh/AEA1r+JB8uhMX7N
-    l4B3QOF9zLmUXhihRvE0tyY3cCCwUrYA/2yqF1mA8dHsDuDnWEUYxgX+ZpYBXr+P
-    j9ZKl/HoNeIOuDMEaR7iehYJKwYBBAHaRw8BAQdAQPTWzF21MpuSRjclxeAS+lZH
-    ulTwm/HsOaVpur8vSZ/CwC8EGBYKAKEJENPtA/n/dWjUFqEExoqRQJoAPFVdimKl
-    0+0D+f91aNQFgmke4noCmwJ2IAQZFgoAHQWCaR7iehYhBMqKZfP+EDi1iRE58a14
-    HgK5jFyDAAoJEK14HgK5jFyDoRUA/0GmLpBUVFSEdbSh+o7tz6xncAIjkm20LWIy
-    PF81ilR9AP0a/MVoE9ivY7HK9uu79cc2Y5IratjiXRpamYqODQutAQAA848A/Ro1
-    SfAfFAmMDfcbuKvpQEK/d4T3455End3ohd5TXb7VAP9/wMxzLJ1K5mE6LTQ5Hw4b
-    m9XtYRYVHugI27XFacaFAg==
-    =3yy3
-    -----END PGP PUBLIC KEY BLOCK-----
-    """.trimIndent()
-
-    @Test
-    fun getx9ParamsTest() {
-        val certificate = org.bouncycastle.openpgp.api.OpenPGPKeyReader().parseCertificate(pubKeyAscii.toByteArray())
-        val pubKey = certificate.getEncryptionKeys().first().getPGPPublicKey()
-
-        assertTrue(pubKey.isEncryptionKey())
-
-        val ecPubKey = pubKey.getPublicKeyPacket().getKey() as org.bouncycastle.bcpg.ECDHPublicBCPGKey
-        val params = ECNamedCurveTable.getParameterSpec(pubKey.getCurveName())
-
-        assertNotNull(params) // fails
+        api.processMessage()
+            .onInputStream(ByteArrayInputStream(msgOut.toByteArray()))
+            .withOptions(ConsumerOptions.get()
+                .addVerificationCert(key.toCertificate())
+            ).use {
+                it.readAllBytes()
+                it.close()
+                assertTrue(it.metadata.isVerifiedSigned())
+            }
     }
 }

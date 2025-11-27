@@ -69,6 +69,10 @@ class BcPGPHashContextContentSignerBuilder(private val messageDigest: MessageDig
         }
     }
 
+    override fun build(signatureType: Int): PGPContentSigner {
+        throw PGPException("Not yet implemented.")
+    }
+
     companion object {
         @JvmStatic
         private fun requireFromName(digestName: String): HashAlgorithm {
