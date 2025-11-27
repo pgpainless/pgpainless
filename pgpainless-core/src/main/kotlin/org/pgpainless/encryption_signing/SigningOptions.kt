@@ -7,6 +7,7 @@ package org.pgpainless.encryption_signing
 import java.util.*
 import org.bouncycastle.bcpg.KeyIdentifier
 import org.bouncycastle.openpgp.*
+import org.bouncycastle.openpgp.api.OpenPGPCertificate.OpenPGPComponentKey
 import org.bouncycastle.openpgp.api.OpenPGPImplementation
 import org.bouncycastle.openpgp.api.OpenPGPKey
 import org.bouncycastle.openpgp.api.OpenPGPKey.OpenPGPPrivateKey
@@ -30,7 +31,7 @@ import org.pgpainless.signature.subpackets.SignatureSubpacketsHelper
 class SigningOptions(private val api: PGPainless) {
     var hashAlgorithmNegotiator: HashAlgorithmNegotiator =
         negotiateSignatureHashAlgorithm(api.algorithmPolicy)
-    val signingMethods: Map<OpenPGPPrivateKey, SigningMethod> = mutableMapOf()
+    val signingMethods: Map<OpenPGPComponentKey, SigningMethod> = mutableMapOf()
     private var _hashAlgorithmOverride: HashAlgorithm? = null
     private var _evaluationDate: Date = Date()
 
@@ -525,7 +526,7 @@ class SigningOptions(private val api: PGPainless) {
             publicKeyAlgorithm, bitStrength)) {
             throw UnacceptableSigningKeyException(
                 PublicKeyAlgorithmPolicyException(
-                    signingKey.secretKey, publicKeyAlgorithm, bitStrength))
+                    signingKey, publicKeyAlgorithm, bitStrength))
         }
 
         val generator: PGPSignatureGenerator =

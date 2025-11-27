@@ -248,7 +248,7 @@ class EncryptionStream(
 
         options.signingOptions.signingMethods.entries.reversed().forEach { (key, method) ->
             method.signatureGenerator.generate().let { sig ->
-                val documentSignature = OpenPGPDocumentSignature(sig, key.publicKey)
+                val documentSignature = OpenPGPDocumentSignature(sig, key)
                 if (method.isDetached) {
                     resultBuilder.addDetachedSignature(documentSignature)
                 }
