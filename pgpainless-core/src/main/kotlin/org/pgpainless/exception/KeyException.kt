@@ -209,4 +209,8 @@ $algorithm of size $bitSize is not acceptable.""",
             }
         }
     }
+
+    class GeneralKeyException(message: String,
+                              fingerprint: OpenPgpFingerprint
+    ) : KeyException(message, fingerprint)
 }

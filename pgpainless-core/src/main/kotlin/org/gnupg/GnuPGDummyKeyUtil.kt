@@ -56,6 +56,12 @@ class GnuPGDummyKeyUtil private constructor() {
          * @return builder
          */
         @JvmStatic fun modify(secretKeys: PGPSecretKeyRing) = Builder(secretKeys)
+
+        @JvmStatic fun serialToBytes(sn: Int) = byteArrayOf(
+            (sn shr 24).toByte(),
+            (sn shr(16)).toByte(),
+            (sn shr(8)).toByte(),
+            sn.toByte())
     }
 
     class Builder(private val keys: PGPSecretKeyRing) {

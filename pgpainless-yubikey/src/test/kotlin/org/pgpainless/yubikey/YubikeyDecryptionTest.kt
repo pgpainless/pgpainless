@@ -1,18 +1,12 @@
 package org.pgpainless.yubikey
 
-import com.yubico.yubikit.core.keys.PrivateKeyValues
 import com.yubico.yubikit.core.smartcard.SmartCardConnection
-import com.yubico.yubikit.desktop.CompositeDevice
-import com.yubico.yubikit.desktop.YubiKitManager
-import com.yubico.yubikit.openpgp.OpenPgpSession
-import org.bouncycastle.jce.provider.BouncyCastleProvider
+import com.yubico.yubikit.openpgp.KeyRef
 import org.bouncycastle.openpgp.api.bc.BcOpenPGPImplementation
-import org.bouncycastle.openpgp.operator.jcajce.JcaPGPKeyConverter
-import org.gnupg.GnuPGDummyKeyUtil
 import org.junit.jupiter.api.Assertions.assertEquals
+import org.junit.jupiter.api.Assumptions.assumeTrue
 import org.junit.jupiter.api.Test
 import org.pgpainless.PGPainless
-import org.pgpainless.bouncycastle.extensions.toOpenPGPKey
 import org.pgpainless.decryption_verification.ConsumerOptions
 
 class YubikeyDecryptionTest {
@@ -111,43 +105,22 @@ class YubikeyDecryptionTest {
     @Test
     fun decryptMessageUsingYubikey() {
         val api = PGPainless(BcOpenPGPImplementation())
+        api.hardwareTokenBackends.add(YubikeyHardwareTokenBackend())
         val key = api.readKey().parseKey(KEY)
+
+        val helper = YubikeyHelper(api)
+        val devices = helper.listDevices()
+        assumeTrue(devices.isNotEmpty())
+        val yubikey = devices.first()
 
         val decKey = key.secretKeys[key.encryptionKeys[0].keyIdentifier]!!
         val msgIn = MSG.byteInputStream()
 
-        val privKey = decKey.pgpSecretKey.extractPrivateKey(null)
-        val k = JcaPGPKeyConverter().setProvider(BouncyCastleProvider()).getPrivateKey(privKey)
-        val sn = 15472425
-        val movedToCard = GnuPGDummyKeyUtil.modify(key)
-            .divertPrivateKeysToCard(GnuPGDummyKeyUtil.KeyFilter { it.matchesExplicit(decKey.keyIdentifier) }, byteArrayOf(
-                (sn shr 24).toByte(), (sn shr(16)).toByte(), (sn shr(8)).toByte(), sn.toByte()
-            )).toOpenPGPKey(api.implementation)
-        println(MSG)
-        val manager = YubiKitManager()
-        val device = manager.listAllDevices().entries.find { it.key is CompositeDevice }?.key
-            ?: throw IllegalStateException("No Yubikey attached.")
-
         // Write key
-        device.openConnection(SmartCardConnection::class.java).use {
-            val connection = it
-            val openpgp = OpenPgpSession(connection as SmartCardConnection)
-            openpgp.reset()
+        val divertToCard = yubikey.storeKeyInSlot(decKey.unlock(), KeyRef.DEC, ADMIN_PIN)
 
-            openpgp.verifyAdminPin(ADMIN_PIN)
-
-            openpgp.putKey(
-                com.yubico.yubikit.openpgp.KeyRef.DEC,
-                PrivateKeyValues.fromPrivateKey(k)
-            )
-            val fp = decKey.pgpPublicKey.fingerprint
-            openpgp.setFingerprint(com.yubico.yubikit.openpgp.KeyRef.DEC, fp)
-            openpgp.setGenerationTime(
-                com.yubico.yubikit.openpgp.KeyRef.DEC,
-                (decKey.pgpPublicKey.publicKeyPacket.time.time / 1000).toInt()
-            )
-        }
-        device.openConnection(SmartCardConnection::class.java).use {
+        // Decrypt
+        yubikey.device.openConnection(SmartCardConnection::class.java).use {
             val decFac = YubikeyDataDecryptorFactory.createDecryptorFromConnection(it, decKey.pgpPublicKey)
             val decIn = api.processMessage()
                 .onInputStream(msgIn)

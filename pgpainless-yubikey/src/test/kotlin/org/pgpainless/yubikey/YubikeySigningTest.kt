@@ -1,20 +1,15 @@
 package org.pgpainless.yubikey
 
-import com.yubico.yubikit.core.keys.PrivateKeyValues
 import com.yubico.yubikit.core.smartcard.SmartCardConnection
-import com.yubico.yubikit.desktop.CompositeDevice
-import com.yubico.yubikit.desktop.YubiKitManager
+import com.yubico.yubikit.openpgp.KeyRef
 import com.yubico.yubikit.openpgp.OpenPgpSession
-import org.bouncycastle.jce.provider.BouncyCastleProvider
 import org.bouncycastle.openpgp.api.bc.BcOpenPGPImplementation
 import org.bouncycastle.openpgp.operator.PGPContentSignerBuilderProvider
-import org.bouncycastle.openpgp.operator.jcajce.JcaPGPKeyConverter
-import org.gnupg.GnuPGDummyKeyUtil
 import org.junit.jupiter.api.Assertions.assertTrue
+import org.junit.jupiter.api.Assumptions.assumeTrue
 import org.junit.jupiter.api.Test
 import org.pgpainless.PGPainless
 import org.pgpainless.algorithm.HashAlgorithm
-import org.pgpainless.bouncycastle.extensions.toOpenPGPKey
 import org.pgpainless.decryption_verification.ConsumerOptions
 import org.pgpainless.encryption_signing.ProducerOptions
 import org.pgpainless.encryption_signing.SigningOptions
@@ -101,43 +96,19 @@ class YubikeySigningTest {
     @Test
     fun signMessageWithYubikey() {
         val api = PGPainless(BcOpenPGPImplementation())
+        val helper = YubikeyHelper(api)
+
+        val devices = helper.listDevices()
+        assumeTrue(devices.isNotEmpty())
+
+        val yubikey = devices.first()
+        val device = yubikey.device
         val key = api.readKey().parseKey(KEY)
 
         val signingKey = key.secretKeys[key.signingKeys[0].keyIdentifier]!!
 
-        val privKey = signingKey.pgpSecretKey.extractPrivateKey(null)
-        val k = JcaPGPKeyConverter().setProvider(BouncyCastleProvider()).getPrivateKey(privKey)
-        val sn = 15472425
-        val movedToCard = GnuPGDummyKeyUtil.modify(key)
-            .divertPrivateKeysToCard(
-                GnuPGDummyKeyUtil.KeyFilter { it.matchesExplicit(signingKey.keyIdentifier) }, byteArrayOf(
-                (sn shr 24).toByte(), (sn shr(16)).toByte(), (sn shr(8)).toByte(), sn.toByte()
-            )).toOpenPGPKey(api.implementation)
-        println(movedToCard.toAsciiArmoredString())
-
-        val manager = YubiKitManager()
-        val device = manager.listAllDevices().entries.find { it.key is CompositeDevice }?.key
-            ?: throw IllegalStateException("No Yubikey attached.")
-
-        // Write key
-        device.openConnection(SmartCardConnection::class.java).use {
-            val connection = it
-            val openpgp = OpenPgpSession(connection as SmartCardConnection)
-            openpgp.reset()
-
-            openpgp.verifyAdminPin(ADMIN_PIN)
-
-            openpgp.putKey(
-                com.yubico.yubikit.openpgp.KeyRef.SIG,
-                PrivateKeyValues.fromPrivateKey(k)
-            )
-            val fp = signingKey.pgpPublicKey.fingerprint
-            openpgp.setFingerprint(com.yubico.yubikit.openpgp.KeyRef.SIG, fp)
-            openpgp.setGenerationTime(
-                com.yubico.yubikit.openpgp.KeyRef.SIG,
-                (signingKey.pgpPublicKey.publicKeyPacket.time.time / 1000).toInt()
-            )
-        }
+        val signingKeyOnCard = helper.moveKeyToCard(signingKey.unlock(), yubikey, ADMIN_PIN)
+        println(signingKeyOnCard.toAsciiArmoredString())
 
         val msgOut = ByteArrayOutputStream()
         device.openConnection(SmartCardConnection::class.java).use {
@@ -152,7 +123,7 @@ class YubikeySigningTest {
                 .generateMessage()
                 .onOutputStream(msgOut)
                 .withOptions(ProducerOptions.sign(SigningOptions.get()
-                    .addInlineSignature(movedToCard.signingKeys[0], factory, HashAlgorithm.SHA512)))
+                    .addInlineSignature(signingKeyOnCard.signingKeys[0], factory, HashAlgorithm.SHA512)))
 
             sigOut.write("Hello, World!".toByteArray())
             sigOut.close()
@@ -162,7 +133,7 @@ class YubikeySigningTest {
         api.processMessage()
             .onInputStream(ByteArrayInputStream(msgOut.toByteArray()))
             .withOptions(ConsumerOptions.get()
-                .addVerificationCert(key.toCertificate())
+                .addVerificationCert(signingKeyOnCard.toCertificate())
             ).use {
                 it.readAllBytes()
                 it.close()

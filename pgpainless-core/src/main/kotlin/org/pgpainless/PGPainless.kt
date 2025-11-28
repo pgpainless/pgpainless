@@ -27,6 +27,7 @@ import org.pgpainless.bouncycastle.PolicyAdapter
 import org.pgpainless.bouncycastle.extensions.setAlgorithmSuite
 import org.pgpainless.decryption_verification.DecryptionBuilder
 import org.pgpainless.encryption_signing.EncryptionBuilder
+import org.pgpainless.hardware.HardwareTokenBackend
 import org.pgpainless.key.certification.CertifyCertificate
 import org.pgpainless.key.generation.KeyRingBuilder
 import org.pgpainless.key.generation.KeyRingTemplates
@@ -51,6 +52,8 @@ class PGPainless(
     val implementation: OpenPGPImplementation = OpenPGPImplementation.getInstance(),
     val algorithmPolicy: Policy = Policy()
 ) {
+
+    val hardwareTokenBackends = mutableListOf<HardwareTokenBackend>()
 
     constructor(
         algorithmPolicy: Policy
