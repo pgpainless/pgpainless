@@ -32,39 +32,27 @@ class YubikeyKeyGenerator(private val api: PGPainless) {
                           adminPin: CharArray,
                           keyVersion: OpenPGPKeyVersion = OpenPGPKeyVersion.v4,
                           creationTime: Date = Date()): OpenPGPKey {
-        val primaryKey: PGPSecretKey = yubikey.device.openConnection(SmartCardConnection::class.java).use {
+        yubikey.device.openConnection(SmartCardConnection::class.java).use {
             val session = OpenPgpSession(it)
             session.verifyAdminPin(adminPin)
 
-            val pkVal = session.generateEcKey(KeyRef.ATT, OpenPgpCurve.SECP521R1)
-            val pubKey = toPGPPublicKey(pkVal, keyVersion, creationTime, PublicKeyAlgorithm.ECDSA)
+            var pkVal = session.generateEcKey(KeyRef.ATT, OpenPgpCurve.SECP521R1)
+            var pubKey = toPGPPublicKey(pkVal, keyVersion, creationTime, PublicKeyAlgorithm.ECDSA)
 
-            toStubbedSecretKey(pubKey, yubikey.info)
+            val primarykey = toExternalSecretKey(pubKey, yubikey.info)
+
+            pkVal = session.generateEcKey(KeyRef.SIG, OpenPgpCurve.SECP521R1)
+            pubKey = toPGPPublicKey(pkVal, keyVersion, creationTime,PublicKeyAlgorithm.ECDSA)
+
+            val signingKey = toSecretSubKey(toExternalSecretKey(pubKey, yubikey.info), yubikey.info)
+
+            pkVal = session.generateEcKey(KeyRef.DEC, OpenPgpCurve.SECP521R1)
+            pubKey = toPGPPublicKey(pkVal, keyVersion, creationTime, PublicKeyAlgorithm.ECDH)
+
+            val encryptionKey = toSecretSubKey(toExternalSecretKey(pubKey, yubikey.info), yubikey.info)
+
+            return OpenPGPKey(PGPSecretKeyRing(listOf(primarykey, signingKey, encryptionKey)))
         }
-
-        val signingKey: PGPSecretKey = yubikey.device.openConnection(SmartCardConnection::class.java).use {
-            val session = OpenPgpSession(it)
-            session.verifyAdminPin(adminPin)
-
-            val pkVal = session.generateEcKey(KeyRef.SIG, OpenPgpCurve.SECP521R1)
-            val pubKey = toPGPPublicKey(pkVal, keyVersion, creationTime,PublicKeyAlgorithm.ECDSA)
-
-            toSecretSubKey(toStubbedSecretKey(pubKey, yubikey.info), yubikey.info)
-        }
-
-        val encryptionKey: PGPSecretKey = yubikey.device.openConnection(SmartCardConnection::class.java).use {
-            val session = OpenPgpSession(it)
-            session.verifyAdminPin(adminPin)
-
-            val pkVal = session.generateEcKey(KeyRef.DEC, OpenPgpCurve.X25519)
-            val pubKey = toPGPPublicKey(pkVal, keyVersion, creationTime,
-                if (keyVersion == OpenPGPKeyVersion.v6) PublicKeyAlgorithm.X25519
-                else PublicKeyAlgorithm.ECDH)
-
-            toSecretSubKey(toStubbedSecretKey(pubKey, yubikey.info), yubikey.info)
-        }
-
-        return OpenPGPKey(PGPSecretKeyRing(listOf(primaryKey, signingKey, encryptionKey)))
     }
 
     private fun toPGPPublicKey(pkVal: PublicKeyValues,
@@ -79,7 +67,21 @@ class YubikeyKeyGenerator(private val api: PGPainless) {
             creationTime.toSecondsPrecision())
     }
 
-    private fun toStubbedSecretKey(pubKey: PGPPublicKey, deviceInfo: DeviceInfo): PGPSecretKey {
+    private fun toExternalSecretKey(pubkey: PGPPublicKey, deviceInfo: DeviceInfo): PGPSecretKey {
+        return PGPSecretKey(
+            SecretKeyPacket(
+                pubkey.publicKeyPacket,
+                0,
+                0xfc,
+                null,
+                null,
+                GnuPGDummyKeyUtil.serialToBytes(deviceInfo.serialNumber!!)
+            ),
+            pubkey
+        )
+    }
+
+    private fun toGnuStubbedSecretKey(pubKey: PGPPublicKey, deviceInfo: DeviceInfo): PGPSecretKey {
         return PGPSecretKey(
             SecretKeyPacket(
                 pubKey.publicKeyPacket,
@@ -108,8 +110,8 @@ class YubikeyKeyGenerator(private val api: PGPainless) {
             SecretSubkeyPacket(
                 pubSubKey.publicKeyPacket,
                 0,
-                SecretKeyPacket.USAGE_SHA1,
-                S2K.gnuDummyS2K(S2K.GNUDummyParams.divertToCard()),
+                0xfc,
+                null,
                 null,
                 GnuPGDummyKeyUtil.serialToBytes(deviceInfo.serialNumber!!)),
             pubSubKey

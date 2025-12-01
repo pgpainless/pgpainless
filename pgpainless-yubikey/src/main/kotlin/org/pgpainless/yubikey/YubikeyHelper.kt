@@ -29,7 +29,7 @@ class YubikeyHelper(private val api: PGPainless = PGPainless.getInstance()) {
         }
     }
 
-    fun moveKeyToCard(componentKey: OpenPGPPrivateKey,
+    fun moveToYubikey(componentKey: OpenPGPPrivateKey,
                       yubikey: Yubikey,
                       adminPin: CharArray,
                       keyRef: KeyRef = keyRefForKey(componentKey.publicKey)

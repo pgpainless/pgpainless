@@ -1,14 +1,9 @@
 package org.pgpainless.yubikey
 
 import com.yubico.yubikit.core.smartcard.SmartCardConnection
-import com.yubico.yubikit.openpgp.KeyRef
-import com.yubico.yubikit.openpgp.OpenPgpSession
-import org.bouncycastle.openpgp.api.bc.BcOpenPGPImplementation
 import org.bouncycastle.openpgp.operator.PGPContentSignerBuilderProvider
 import org.junit.jupiter.api.Assertions.assertTrue
-import org.junit.jupiter.api.Assumptions.assumeTrue
 import org.junit.jupiter.api.Test
-import org.pgpainless.PGPainless
 import org.pgpainless.algorithm.HashAlgorithm
 import org.pgpainless.decryption_verification.ConsumerOptions
 import org.pgpainless.encryption_signing.ProducerOptions
@@ -17,10 +12,7 @@ import org.pgpainless.signature.PGPContentSignerBuilderProviderFactory
 import java.io.ByteArrayInputStream
 import java.io.ByteArrayOutputStream
 
-class YubikeySigningTest {
-
-    val USER_PIN: CharArray = "123456".toCharArray()
-    val ADMIN_PIN: CharArray = "12345678".toCharArray()
+class YubikeySigningTest : YubikeyTest() {
 
     private val KEY = "-----BEGIN PGP PRIVATE KEY BLOCK-----\n" +
         "Comment: BB2A C3E1 E595 CD05 CFA5  CFE6 EB2E 570D 9EE2 2891\n" +
@@ -59,56 +51,16 @@ class YubikeySigningTest {
         "1POPHzF3cMIReYhZfiJUEBV19suL\n" +
         "=dA6G\n" +
         "-----END PGP PRIVATE KEY BLOCK-----"
-    private val CERT = "-----BEGIN PGP PUBLIC KEY BLOCK-----\n" +
-        "Comment: BB2A C3E1 E595 CD05 CFA5  CFE6 EB2E 570D 9EE2 2891\n" +
-        "Comment: Alice <alice@pgpainless.org>\n" +
-        "\n" +
-        "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\n" +
-        "iw==\n" +
-        "=Oq+Y\n" +
-        "-----END PGP PUBLIC KEY BLOCK-----"
 
     @Test
     fun signMessageWithYubikey() {
-        val api = PGPainless(BcOpenPGPImplementation())
-        val helper = YubikeyHelper(api)
-
-        val devices = helper.listDevices()
-        assumeTrue(devices.isNotEmpty())
-
-        val yubikey = devices.first()
         val device = yubikey.device
         val key = api.readKey().parseKey(KEY)
 
         val signingKey = key.secretKeys[key.signingKeys[0].keyIdentifier]!!
 
-        val signingKeyOnCard = helper.moveKeyToCard(signingKey.unlock(), yubikey, ADMIN_PIN)
-        println(signingKeyOnCard.toAsciiArmoredString())
+        val hardwareBasedSigningKey = helper.moveToYubikey(signingKey.unlock(), yubikey, adminPin)
+        println(hardwareBasedSigningKey.toAsciiArmoredString())
 
         val msgOut = ByteArrayOutputStream()
         device.openConnection(SmartCardConnection::class.java).use {
@@ -123,7 +75,7 @@ class YubikeySigningTest {
                 .generateMessage()
                 .onOutputStream(msgOut)
                 .withOptions(ProducerOptions.sign(SigningOptions.get()
-                    .addInlineSignature(signingKeyOnCard.signingKeys[0], factory, HashAlgorithm.SHA512)))
+                    .addInlineSignature(hardwareBasedSigningKey.signingKeys[0], factory, HashAlgorithm.SHA512)))
 
             sigOut.write("Hello, World!".toByteArray())
             sigOut.close()
@@ -133,7 +85,7 @@ class YubikeySigningTest {
         api.processMessage()
             .onInputStream(ByteArrayInputStream(msgOut.toByteArray()))
             .withOptions(ConsumerOptions.get()
-                .addVerificationCert(signingKeyOnCard.toCertificate())
+                .addVerificationCert(hardwareBasedSigningKey.toCertificate())
             ).use {
                 it.readAllBytes()
                 it.close()

@@ -38,6 +38,7 @@ import org.bouncycastle.openpgp.api.OpenPGPKey.OpenPGPSecretKey
 import org.bouncycastle.openpgp.api.OpenPGPSignature.OpenPGPDocumentSignature
 import org.bouncycastle.openpgp.api.exception.MalformedOpenPGPSignatureException
 import org.bouncycastle.openpgp.operator.PBEDataDecryptorFactory
+import org.bouncycastle.openpgp.operator.PGPDataDecryptorFactory
 import org.bouncycastle.openpgp.operator.PublicKeyDataDecryptorFactory
 import org.bouncycastle.util.io.TeeInputStream
 import org.pgpainless.PGPainless
@@ -66,7 +67,9 @@ import org.pgpainless.exception.MissingPassphraseException
 import org.pgpainless.exception.SignatureValidationException
 import org.pgpainless.exception.UnacceptableAlgorithmException
 import org.pgpainless.exception.WrongPassphraseException
+import org.pgpainless.hardware.HardwareTokenBackend
 import org.pgpainless.key.SubkeyIdentifier
+import org.pgpainless.key.protection.SecretKeyRingProtector
 import org.pgpainless.key.protection.UnlockSecretKey.Companion.unlockSecretKey
 import org.pgpainless.signature.consumer.OnePassSignatureCheck
 import org.pgpainless.util.ArmoredInputStreamFactory
@@ -434,9 +437,6 @@ class OpenPgpMessageInputStream(
                         "Message is encrypted for ${secretKey.keyIdentifier}, but the key is not encryption capable.")
                     continue
                 }
-                if (hasUnsupportedS2KSpecifier(secretKey)) {
-                    continue
-                }
 
                 LOGGER.debug("Attempt decryption using secret key ${decryptionKeys.keyIdentifier}")
                 val protector = options.getSecretKeyProtector(decryptionKeys) ?: continue
@@ -446,6 +446,28 @@ class OpenPgpMessageInputStream(
                     postponedDueToMissingPassphrase.add(secretKey to pkesk)
                     continue
                 }
+
+                if (secretKey.hasExternalSecretKey()) {
+                    LOGGER.debug("Decryption key ${secretKey.keyIdentifier} is located on an external device, e.g. a smartcard.")
+                    for (hardwareTokenBackend in options.hardwareTokenBackends) {
+                        LOGGER.debug("Attempt decryption with ${hardwareTokenBackend.getBackendName()} backend.")
+                        if (decryptWithHardwareKey(
+                                hardwareTokenBackend,
+                                esks,
+                                secretKey,
+                                protector,
+                                SubkeyIdentifier(secretKey.openPGPKey.pgpSecretKeyRing, secretKey.keyIdentifier),
+                                pkesk)) {
+                            return true
+                        }
+                    }
+                }
+                /*
+                if (hasUnsupportedS2KSpecifier(secretKey)) {
+                    continue
+                }
+
+                 */
 
                 val privateKey =
                     try {
@@ -524,6 +546,25 @@ class OpenPgpMessageInputStream(
 
         // We did not yet succeed in decrypting any session key :/
         LOGGER.debug("Failed to decrypt encrypted data packet.")
+        return false
+    }
+
+    private fun decryptWithHardwareKey(
+        hardwareTokenBackend: HardwareTokenBackend,
+        esks: ESKsAndData,
+        secretKey: OpenPGPSecretKey,
+        protector: SecretKeyRingProtector,
+        subkeyIdentifier: SubkeyIdentifier,
+        pkesk: PGPPublicKeyEncryptedData
+    ): Boolean {
+        val decryptors = hardwareTokenBackend.provideDecryptorsFor(secretKey, protector, pkesk)
+        while (decryptors.hasNext()) {
+            val decryptor = decryptors.next()
+            val success = decryptPKESKAndStream(esks, subkeyIdentifier, decryptor, pkesk)
+            if (success) {
+                return true
+            }
+        }
         return false
     }
 

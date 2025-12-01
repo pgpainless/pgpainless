@@ -2,18 +2,15 @@ package org.pgpainless.yubikey
 
 import com.yubico.yubikit.core.smartcard.SmartCardConnection
 import com.yubico.yubikit.openpgp.KeyRef
-import org.bouncycastle.openpgp.api.bc.BcOpenPGPImplementation
 import org.junit.jupiter.api.Assertions.assertEquals
-import org.junit.jupiter.api.Assumptions.assumeTrue
 import org.junit.jupiter.api.Test
-import org.pgpainless.PGPainless
 import org.pgpainless.decryption_verification.ConsumerOptions
+import org.pgpainless.key.protection.SecretKeyRingProtector
+import org.pgpainless.util.Passphrase
 
-class YubikeyDecryptionTest {
+class YubikeyDecryptionTest : YubikeyTest() {
 
-    val USER_PIN: CharArray = "123456".toCharArray()
-    val ADMIN_PIN: CharArray = "12345678".toCharArray()
-
+    // Complete software key
     private val KEY = "-----BEGIN PGP PRIVATE KEY BLOCK-----\n" +
         "Comment: BB2A C3E1 E595 CD05 CFA5  CFE6 EB2E 570D 9EE2 2891\n" +
         "Comment: Alice <alice@pgpainless.org>\n" +
@@ -51,6 +48,8 @@ class YubikeyDecryptionTest {
         "1POPHzF3cMIReYhZfiJUEBV19suL\n" +
         "=dA6G\n" +
         "-----END PGP PRIVATE KEY BLOCK-----"
+
+    // Software certificate
     private val CERT = "-----BEGIN PGP PUBLIC KEY BLOCK-----\n" +
         "Comment: BB2A C3E1 E595 CD05 CFA5  CFE6 EB2E 570D 9EE2 2891\n" +
         "Comment: Alice <alice@pgpainless.org>\n" +
@@ -103,35 +102,43 @@ class YubikeyDecryptionTest {
         "-----END PGP MESSAGE-----"
 
     @Test
-    fun decryptMessageUsingYubikey() {
-        val api = PGPainless(BcOpenPGPImplementation())
-        api.hardwareTokenBackends.add(YubikeyHardwareTokenBackend())
+    fun decryptMessageWithYubikey() {
         val key = api.readKey().parseKey(KEY)
-
-        val helper = YubikeyHelper(api)
-        val devices = helper.listDevices()
-        assumeTrue(devices.isNotEmpty())
-        val yubikey = devices.first()
 
         val decKey = key.secretKeys[key.encryptionKeys[0].keyIdentifier]!!
         val msgIn = MSG.byteInputStream()
 
-        // Write key
-        val divertToCard = yubikey.storeKeyInSlot(decKey.unlock(), KeyRef.DEC, ADMIN_PIN)
+        // Write key to card
+        val hardwareBasedKey = helper.moveToYubikey(decKey.unlock(), yubikey, adminPin, KeyRef.DEC)
 
         // Decrypt
+
+        // TODO: Make hardware decryption transparent as shown below!
+
+        val decIn = api.processMessage()
+            .onInputStream(msgIn)
+            .withOptions(ConsumerOptions.get(api)
+                .addHardwareTokenBackend(YubikeyHardwareTokenBackend())
+                .addDecryptionKey(hardwareBasedKey,
+                    SecretKeyRingProtector.unlockAnyKeyWith(Passphrase.fromPassword(String(userPin)))))
+        val msg = decIn.readAllBytes()
+        decIn.close()
+        assertEquals("Hello, World!\n", String(msg))
+        /*
+
         yubikey.device.openConnection(SmartCardConnection::class.java).use {
             val decFac = YubikeyDataDecryptorFactory.createDecryptorFromConnection(it, decKey.pgpPublicKey)
             val decIn = api.processMessage()
                 .onInputStream(msgIn)
                 .withOptions(
                     ConsumerOptions.get(api)
-                        //.addDecryptionKey(api.readKey().parseKey(KEY))
                         .addCustomDecryptorFactory(decFac)
                 )
             val msg = decIn.readAllBytes()
             decIn.close()
             assertEquals("Hello, World!\n", String(msg))
         }
+
+         */
     }
 }

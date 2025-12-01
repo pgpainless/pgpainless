@@ -12,6 +12,7 @@ import org.bouncycastle.openpgp.operator.jcajce.JcaPGPKeyConverter
 import org.gnupg.GnuPGDummyKeyUtil
 
 data class Yubikey(val info: DeviceInfo, val device: YubiKeyDevice) {
+
     fun storeKeyInSlot(key: OpenPGPPrivateKey, keyRef: KeyRef, adminPin: CharArray) {
         device.openConnection(SmartCardConnection::class.java).use {
             // Extract private key
@@ -31,5 +32,7 @@ data class Yubikey(val info: DeviceInfo, val device: YubiKeyDevice) {
         }
     }
 
-    val encodedSerial = GnuPGDummyKeyUtil.serialToBytes(info.serialNumber!!)
+    val serialNumber: Int = info.serialNumber!!
+
+    val encodedSerialNumber = GnuPGDummyKeyUtil.serialToBytes(serialNumber)
 }

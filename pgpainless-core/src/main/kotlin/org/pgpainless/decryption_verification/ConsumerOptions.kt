@@ -17,6 +17,7 @@ import org.bouncycastle.openpgp.operator.PublicKeyDataDecryptorFactory
 import org.pgpainless.PGPainless
 import org.pgpainless.decryption_verification.cleartext_signatures.InMemoryMultiPassStrategy
 import org.pgpainless.decryption_verification.cleartext_signatures.MultiPassStrategy
+import org.pgpainless.hardware.HardwareTokenBackend
 import org.pgpainless.key.SubkeyIdentifier
 import org.pgpainless.key.protection.SecretKeyRingProtector
 import org.pgpainless.signature.SignatureUtils
@@ -44,6 +45,7 @@ class ConsumerOptions(private val api: PGPainless) {
     private var missingKeyPassphraseStrategy = MissingKeyPassphraseStrategy.INTERACTIVE
     private var multiPassStrategy: MultiPassStrategy = InMemoryMultiPassStrategy()
     private var allowDecryptionWithNonEncryptionKey: Boolean = false
+    val hardwareTokenBackends: List<HardwareTokenBackend> = mutableListOf()
 
     /**
      * Consider signatures on the message made before the given timestamp invalid. Null means no
@@ -234,6 +236,10 @@ class ConsumerOptions(private val api: PGPainless) {
      */
     fun addMessagePassphrase(passphrase: Passphrase) = apply {
         decryptionPassphrases.add(passphrase)
+    }
+
+    fun addHardwareTokenBackend(backend: HardwareTokenBackend) = apply {
+        (hardwareTokenBackends as MutableList).add(backend)
     }
 
     /**
