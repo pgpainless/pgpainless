@@ -7,6 +7,7 @@ package org.pgpainless.yubikey
 import com.yubico.yubikit.openpgp.KeyRef
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Test
+import org.pgpainless.PGPainless
 import org.pgpainless.decryption_verification.ConsumerOptions
 import org.pgpainless.key.protection.SecretKeyRingProtector
 import org.pgpainless.util.Passphrase
@@ -106,6 +107,9 @@ class YubikeyDecryptionTest : YubikeyTest() {
             "+kQi5FkaOBCe1HVuETfNZ9XYV1312Dlj\n" +
             "=XVu4\n" +
             "-----END PGP MESSAGE-----"
+
+    override val api: PGPainless
+        get() = PGPainless()
 
     @Test
     fun decryptMessageWithYubikey() {

@@ -39,6 +39,7 @@ import org.bouncycastle.openpgp.api.OpenPGPSignature.OpenPGPDocumentSignature
 import org.bouncycastle.openpgp.api.exception.MalformedOpenPGPSignatureException
 import org.bouncycastle.openpgp.operator.PBEDataDecryptorFactory
 import org.bouncycastle.openpgp.operator.PublicKeyDataDecryptorFactory
+import org.bouncycastle.util.encoders.Hex
 import org.bouncycastle.util.io.TeeInputStream
 import org.pgpainless.PGPainless
 import org.pgpainless.algorithm.CompressionAlgorithm
@@ -446,9 +447,13 @@ class OpenPgpMessageInputStream(
                     continue
                 }
 
+                if (hasUnsupportedS2KSpecifier(secretKey)) {
+                    continue
+                }
+
                 if (secretKey.hasExternalSecretKey()) {
                     LOGGER.debug(
-                        "Decryption key ${secretKey.keyIdentifier} is located on an external device, e.g. a smartcard.")
+                        "Decryption key ${secretKey.keyIdentifier} is located on an external device, e.g. a smartcard (0x${Hex.toHexString(secretKey.cardSerial)})")
                     for (hardwareTokenBackend in options.hardwareTokenBackends) {
                         LOGGER.debug(
                             "Attempt decryption with ${hardwareTokenBackend.getBackendName()} backend.")
@@ -463,27 +468,21 @@ class OpenPgpMessageInputStream(
                             return true
                         }
                     }
-                }
-                /*
-                if (hasUnsupportedS2KSpecifier(secretKey)) {
-                    continue
-                }
-
-                 */
-
-                val privateKey =
-                    try {
-                        unlockSecretKey(secretKey, protector)
-                    } catch (e: PGPException) {
-                        throw WrongPassphraseException(secretKey.keyIdentifier, e)
+                } else {
+                    val privateKey =
+                        try {
+                            unlockSecretKey(secretKey, protector)
+                        } catch (e: PGPException) {
+                            throw WrongPassphraseException(secretKey.keyIdentifier, e)
+                        }
+                    if (decryptWithPrivateKey(
+                        esks,
+                        privateKey.keyPair,
+                        SubkeyIdentifier(
+                            secretKey.openPGPKey.pgpSecretKeyRing, secretKey.keyIdentifier),
+                        pkesk)) {
+                        return true
                     }
-                if (decryptWithPrivateKey(
-                    esks,
-                    privateKey.keyPair,
-                    SubkeyIdentifier(
-                        secretKey.openPGPKey.pgpSecretKeyRing, secretKey.keyIdentifier),
-                    pkesk)) {
-                    return true
                 }
             }
         }
@@ -584,7 +583,8 @@ class OpenPgpMessageInputStream(
     private fun hasUnsupportedS2KSpecifier(secretKey: OpenPGPSecretKey): Boolean {
         val s2k = secretKey.pgpSecretKey.s2K
         if (s2k != null) {
-            if (s2k.type in 100..110) {
+            // 101 is GNU_DUMMY_S2K, which we kind of support
+            if (s2k.type in 100..110 && s2k.type != 101) {
                 LOGGER.debug(
                     "Skipping PKESK because key ${secretKey.keyIdentifier} has unsupported private S2K specifier ${s2k.type}")
                 return true

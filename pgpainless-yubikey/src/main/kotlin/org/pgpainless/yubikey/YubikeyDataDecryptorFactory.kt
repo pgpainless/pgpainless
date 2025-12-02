@@ -38,7 +38,6 @@ class YubikeyDataDecryptorFactory(
 
         @JvmStatic val LOGGER = LoggerFactory.getLogger(YubikeyDataDecryptorFactory::class.java)
 
-        val ADMIN_PIN: CharArray = "12345678".toCharArray()
         val USER_PIN: CharArray = "123456".toCharArray()
 
         @JvmStatic
