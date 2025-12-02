@@ -1,9 +1,13 @@
+// SPDX-FileCopyrightText: 2025 Paul Schaub <vanitasvitae@fsfe.org>
+//
+// SPDX-License-Identifier: Apache-2.0
+
 package org.pgpainless.yubikey
 
+import java.util.Properties
 import org.bouncycastle.openpgp.api.bc.BcOpenPGPImplementation
 import org.opentest4j.TestAbortedException
 import org.pgpainless.PGPainless
-import java.util.Properties
 
 abstract class YubikeyTest() {
 
@@ -21,17 +25,20 @@ abstract class YubikeyTest() {
         }
     }
 
-    open val api: PGPainless = PGPainless(BcOpenPGPImplementation()).apply {
-        hardwareTokenBackends.add(YubikeyHardwareTokenBackend())
-    }
+    open val api: PGPainless =
+        PGPainless(BcOpenPGPImplementation()).apply {
+            hardwareTokenBackends.add(YubikeyHardwareTokenBackend())
+        }
 
     open val helper: YubikeyHelper = YubikeyHelper(api)
 
-    val yubikey: Yubikey = YubikeyHelper().listDevices().find { it.serialNumber == allowedSerialNumber }
-        ?: throw TestAbortedException("No allowed device found.")
+    val yubikey: Yubikey =
+        YubikeyHelper().listDevices().find { it.serialNumber == allowedSerialNumber }
+            ?: throw TestAbortedException("No allowed device found.")
 
     private fun getProperty(properties: Properties, key: String): String {
         return properties.getProperty(key)
-            ?: throw TestAbortedException("Could not find property $key in pgpainless-yubikey/src/test/resources/yubikey.properties")
+            ?: throw TestAbortedException(
+                "Could not find property $key in pgpainless-yubikey/src/test/resources/yubikey.properties")
     }
 }

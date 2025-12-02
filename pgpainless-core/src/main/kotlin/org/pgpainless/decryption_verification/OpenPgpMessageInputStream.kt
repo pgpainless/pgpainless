@@ -38,7 +38,6 @@ import org.bouncycastle.openpgp.api.OpenPGPKey.OpenPGPSecretKey
 import org.bouncycastle.openpgp.api.OpenPGPSignature.OpenPGPDocumentSignature
 import org.bouncycastle.openpgp.api.exception.MalformedOpenPGPSignatureException
 import org.bouncycastle.openpgp.operator.PBEDataDecryptorFactory
-import org.bouncycastle.openpgp.operator.PGPDataDecryptorFactory
 import org.bouncycastle.openpgp.operator.PublicKeyDataDecryptorFactory
 import org.bouncycastle.util.io.TeeInputStream
 import org.pgpainless.PGPainless
@@ -448,16 +447,19 @@ class OpenPgpMessageInputStream(
                 }
 
                 if (secretKey.hasExternalSecretKey()) {
-                    LOGGER.debug("Decryption key ${secretKey.keyIdentifier} is located on an external device, e.g. a smartcard.")
+                    LOGGER.debug(
+                        "Decryption key ${secretKey.keyIdentifier} is located on an external device, e.g. a smartcard.")
                     for (hardwareTokenBackend in options.hardwareTokenBackends) {
-                        LOGGER.debug("Attempt decryption with ${hardwareTokenBackend.getBackendName()} backend.")
+                        LOGGER.debug(
+                            "Attempt decryption with ${hardwareTokenBackend.getBackendName()} backend.")
                         if (decryptWithHardwareKey(
-                                hardwareTokenBackend,
-                                esks,
-                                secretKey,
-                                protector,
-                                SubkeyIdentifier(secretKey.openPGPKey.pgpSecretKeyRing, secretKey.keyIdentifier),
-                                pkesk)) {
+                            hardwareTokenBackend,
+                            esks,
+                            secretKey,
+                            protector,
+                            SubkeyIdentifier(
+                                secretKey.openPGPKey.pgpSecretKeyRing, secretKey.keyIdentifier),
+                            pkesk)) {
                             return true
                         }
                     }
@@ -624,16 +626,22 @@ class OpenPgpMessageInputStream(
         pkesk: PGPPublicKeyEncryptedData
     ): Boolean {
         try {
-            val decrypted = pkesk.getDataStream(decryptorFactory)
             val sessionKey = SessionKey(pkesk.getSessionKey(decryptorFactory))
             throwIfUnacceptable(sessionKey.algorithm)
+
+            val pgpSessionKey = PGPSessionKey(sessionKey.algorithm.algorithmId, sessionKey.key)
+            val sessionKeyEncData = esks.esks.extractSessionKeyEncryptedData()
+            val decrypted =
+                sessionKeyEncData.getDataStream(
+                    api.implementation.sessionKeyDataDecryptorFactory(pgpSessionKey))
 
             val encryptedData = esks.toEncryptedData(sessionKey, layerMetadata.depth)
             encryptedData.decryptionKey = decryptionKeyId
             encryptedData.sessionKey = sessionKey
             encryptedData.addRecipients(esks.pkesks.plus(esks.anonPkesks).map { it.keyIdentifier })
             LOGGER.debug("Successfully decrypted data with key $decryptionKeyId")
-            val integrityProtected = IntegrityProtectedInputStream(decrypted, pkesk, options)
+            val integrityProtected =
+                IntegrityProtectedInputStream(decrypted, sessionKeyEncData, options)
             nestedInputStream =
                 OpenPgpMessageInputStream(integrityProtected, options, encryptedData, api)
             return true
@@ -790,7 +798,7 @@ class OpenPgpMessageInputStream(
         }
     }
 
-    private class ESKsAndData(private val esks: PGPEncryptedDataList) {
+    private class ESKsAndData(val esks: PGPEncryptedDataList) {
         fun toEncryptedData(sk: SessionKey, depth: Int): EncryptedData {
             return when (EncryptedDataPacketType.of(esks)!!) {
                 EncryptedDataPacketType.SED ->

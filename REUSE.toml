@@ -112,6 +112,13 @@ SPDX-FileCopyrightText = "2022 Paul Schaub <info@pgpainless.org>"
 SPDX-License-Identifier = "Apache-2.0"
 
 [[annotations]]
+path = "pgpainless-yubikey/src/test/resources/**"
+precedence = "aggregate"
+SPDX-FileCopyrightText = "2025 Paul Schaub <info@pgpainless.org>"
+SPDX-License-Identifier = "Apache-2.0"
+
+
+[[annotations]]
 path = ".github/ISSUE_TEMPLATE/**"
 precedence = "aggregate"
 SPDX-FileCopyrightText = "2024 Paul Schaub <info@pgpainless.org>"

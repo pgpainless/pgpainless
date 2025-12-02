@@ -1,3 +1,7 @@
+// SPDX-FileCopyrightText: 2025 Paul Schaub <vanitasvitae@fsfe.org>
+//
+// SPDX-License-Identifier: Apache-2.0
+
 package org.pgpainless.yubikey
 
 import com.yubico.yubikit.core.YubiKeyDevice
@@ -16,8 +20,10 @@ data class Yubikey(val info: DeviceInfo, val device: YubiKeyDevice) {
     fun storeKeyInSlot(key: OpenPGPPrivateKey, keyRef: KeyRef, adminPin: CharArray) {
         device.openConnection(SmartCardConnection::class.java).use {
             // Extract private key
-            val privateKey = JcaPGPKeyConverter().setProvider(BouncyCastleProvider())
-            .getPrivateKey(key.keyPair.privateKey)
+            val privateKey =
+                JcaPGPKeyConverter()
+                    .setProvider(BouncyCastleProvider())
+                    .getPrivateKey(key.keyPair.privateKey)
 
             val session = OpenPgpSession(it as SmartCardConnection)
 

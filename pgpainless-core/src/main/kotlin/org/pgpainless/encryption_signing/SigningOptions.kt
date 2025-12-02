@@ -313,18 +313,20 @@ class SigningOptions(private val api: PGPainless) {
             subpacketsCallback)
     }
 
-    fun addInlineSignature(hardwareBackedKey: OpenPGPComponentKey,
-                               hardwareContentSignerBuilderProviderFactory: PGPContentSignerBuilderProviderFactory,
-                               hashAlgorithm: HashAlgorithm,
-                               signatureType: DocumentSignatureType = DocumentSignatureType.BINARY_DOCUMENT,
-                               subpacketsCallback: Callback? = null
-    ) = addHardwareSigningMethod(
-        hardwareBackedKey,
-        hardwareContentSignerBuilderProviderFactory,
-        hashAlgorithm,
-        signatureType,
-        false,
-        subpacketsCallback)
+    fun addInlineSignature(
+        hardwareBackedKey: OpenPGPComponentKey,
+        hardwareContentSignerBuilderProviderFactory: PGPContentSignerBuilderProviderFactory,
+        hashAlgorithm: HashAlgorithm,
+        signatureType: DocumentSignatureType = DocumentSignatureType.BINARY_DOCUMENT,
+        subpacketsCallback: Callback? = null
+    ) =
+        addHardwareSigningMethod(
+            hardwareBackedKey,
+            hardwareContentSignerBuilderProviderFactory,
+            hashAlgorithm,
+            signatureType,
+            false,
+            subpacketsCallback)
 
     /**
      * Add detached signatures with all key rings from the provided secret key ring collection.
@@ -532,7 +534,14 @@ class SigningOptions(private val api: PGPainless) {
         hashAlgorithm: HashAlgorithm,
         signatureType: DocumentSignatureType = DocumentSignatureType.BINARY_DOCUMENT,
         subpacketsCallback: Callback? = null
-    ) = addHardwareSigningMethod(hardwareBackedKey, hardwareContentSignerBuilderProviderFactory, hashAlgorithm, signatureType, true, subpacketsCallback)
+    ) =
+        addHardwareSigningMethod(
+            hardwareBackedKey,
+            hardwareContentSignerBuilderProviderFactory,
+            hashAlgorithm,
+            signatureType,
+            true,
+            subpacketsCallback)
 
     private fun addHardwareSigningMethod(
         hardwareBackedKey: OpenPGPComponentKey,
@@ -540,15 +549,15 @@ class SigningOptions(private val api: PGPainless) {
         hashAlgorithm: HashAlgorithm,
         signatureType: DocumentSignatureType = DocumentSignatureType.BINARY_DOCUMENT,
         detached: Boolean,
-        subpacketsCallback: Callback? = null) = apply {
+        subpacketsCallback: Callback? = null
+    ) = apply {
         rejectWeakKeys(hardwareBackedKey)
         val pubkey = hardwareBackedKey.pgpPublicKey
-        val pgpContentSignerBuilder = hardwareContentSignerBuilderProviderFactory.create(hashAlgorithm)
-            .get(pubkey)
+        val pgpContentSignerBuilder =
+            hardwareContentSignerBuilderProviderFactory.create(hashAlgorithm).get(pubkey)
 
-        val generator = PGPSignatureGenerator(
-            pgpContentSignerBuilder, pubkey)
-            .apply {
+        val generator =
+            PGPSignatureGenerator(pgpContentSignerBuilder, pubkey).apply {
                 init(signatureType.signatureType.code, pubkey)
             }
 
@@ -582,17 +591,19 @@ class SigningOptions(private val api: PGPainless) {
         val publicKeyAlgorithm = requireFromId(signingKey.pgpPublicKey.algorithm)
         val bitStrength = signingKey.pgpPublicKey.bitStrength
         if (!api.algorithmPolicy.publicKeyAlgorithmPolicy.isAcceptable(
-                publicKeyAlgorithm, bitStrength)) {
+            publicKeyAlgorithm, bitStrength)) {
             throw UnacceptableSigningKeyException(
-                PublicKeyAlgorithmPolicyException(
-                    signingKey, publicKeyAlgorithm, bitStrength))
+                PublicKeyAlgorithmPolicyException(signingKey, publicKeyAlgorithm, bitStrength))
         }
     }
 
-    private fun prepareSignatureGenerator(generator: PGPSignatureGenerator, signingKey: PGPPublicKey, subpacketCallback: Callback?) {
+    private fun prepareSignatureGenerator(
+        generator: PGPSignatureGenerator,
+        signingKey: PGPPublicKey,
+        subpacketCallback: Callback?
+    ) {
         // Subpackets
-        val hashedSubpackets =
-            SignatureSubpackets.createHashedSubpackets(signingKey)
+        val hashedSubpackets = SignatureSubpackets.createHashedSubpackets(signingKey)
         val unhashedSubpackets = SignatureSubpackets.createEmptySubpackets()
         if (subpacketCallback != null) {
             subpacketCallback.modifyHashedSubpackets(hashedSubpackets)

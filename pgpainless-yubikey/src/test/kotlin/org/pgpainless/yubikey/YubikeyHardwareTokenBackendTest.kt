@@ -1,11 +1,13 @@
+// SPDX-FileCopyrightText: 2025 Paul Schaub <vanitasvitae@fsfe.org>
+//
+// SPDX-License-Identifier: Apache-2.0
+
 package org.pgpainless.yubikey
 
 import org.gnupg.GnuPGDummyKeyUtil
-import org.junit.jupiter.api.Assertions.assertNotNull
 import org.junit.jupiter.api.Assertions.assertTrue
 import org.junit.jupiter.api.Assumptions.assumeTrue
 import org.junit.jupiter.api.Test
-import java.util.Arrays
 
 class YubikeyHardwareTokenBackendTest : YubikeyTest() {
 
@@ -14,13 +16,8 @@ class YubikeyHardwareTokenBackendTest : YubikeyTest() {
     @Test
     fun testListDeviceSerials() {
         val serials = backend.listDeviceSerials()
-        assertTrue(serials.any {
-            it.contentEquals(
-                GnuPGDummyKeyUtil.serialToBytes(
-                    allowedSerialNumber
-                )
-            )
-        })
+        assertTrue(
+            serials.any { it.contentEquals(GnuPGDummyKeyUtil.serialToBytes(allowedSerialNumber)) })
     }
 
     @Test

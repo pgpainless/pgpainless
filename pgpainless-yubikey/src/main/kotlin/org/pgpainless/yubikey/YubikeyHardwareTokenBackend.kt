@@ -1,3 +1,7 @@
+// SPDX-FileCopyrightText: 2025 Paul Schaub <vanitasvitae@fsfe.org>
+//
+// SPDX-License-Identifier: Apache-2.0
+
 package org.pgpainless.yubikey
 
 import com.yubico.yubikit.core.smartcard.SmartCardConnection
@@ -21,39 +25,44 @@ class YubikeyHardwareTokenBackend : HardwareTokenBackend {
         protector: SecretKeyRingProtector,
         pkesk: PGPPublicKeyEncryptedData
     ): Iterator<PublicKeyDataDecryptorFactory> {
-        val devices = YubikeyHelper().listDevices()
-        return devices.map { yubikey ->
-            yubikey.device.openConnection(SmartCardConnection::class.java).use {
-                val decFac = YubikeyDataDecryptorFactory.createDecryptorFromConnection(
-                    it,
-                    secKey.pgpPublicKey
-                )
-                decFac as PublicKeyDataDecryptorFactory
+        return object : Iterator<PublicKeyDataDecryptorFactory> {
+            val devices = YubikeyHelper().listDevices().iterator()
+
+            override fun hasNext(): Boolean {
+                return devices.hasNext()
             }
-        }.iterator()
+
+            override fun next(): PublicKeyDataDecryptorFactory {
+                return devices.next().device.openConnection(SmartCardConnection::class.java).let {
+                    val decFac =
+                        YubikeyDataDecryptorFactory.createDecryptorFromConnection(
+                            it, secKey.pgpPublicKey)
+                    decFac as PublicKeyDataDecryptorFactory
+                }
+            }
+        }
     }
 
     override fun listDeviceSerials(): List<ByteArray> {
-        return YubikeyHelper().listDevices()
-            .mapNotNull { yk -> yk.info.serialNumber?.let { GnuPGDummyKeyUtil.serialToBytes(it) } }
+        return YubikeyHelper().listDevices().mapNotNull { yk ->
+            yk.info.serialNumber?.let { GnuPGDummyKeyUtil.serialToBytes(it) }
+        }
     }
 
     override fun listKeyFingerprints(): Map<ByteArray, List<ByteArray>> {
-        return YubikeyHelper().listDevices()
-            .associate { yk ->
-                yk.encodedSerialNumber to yk.device.openConnection(SmartCardConnection::class.java).use {
+        return YubikeyHelper().listDevices().associate { yk ->
+            yk.encodedSerialNumber to
+                yk.device.openConnection(SmartCardConnection::class.java).use {
                     val session = OpenPgpSession(it)
-                    //session.getData(KeyRef.DEC.fingerprint)
+                    // session.getData(KeyRef.DEC.fingerprint)
                     session.getData(KeyRef.SIG.fingerprint)
-
 
                     listOfNotNull(
                         session.getData(KeyRef.ATT.fingerprint),
                         session.getData(KeyRef.SIG.fingerprint),
                         session.getData(KeyRef.DEC.fingerprint),
-                        session.getData(KeyRef.AUT.fingerprint)
-                    )
+                        session.getData(KeyRef.AUT.fingerprint))
                 }
-            }
+        }
     }
 }

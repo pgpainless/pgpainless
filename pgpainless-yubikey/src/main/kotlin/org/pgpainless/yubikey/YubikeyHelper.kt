@@ -1,3 +1,7 @@
+// SPDX-FileCopyrightText: 2025 Paul Schaub <vanitasvitae@fsfe.org>
+//
+// SPDX-License-Identifier: Apache-2.0
+
 package org.pgpainless.yubikey
 
 import com.yubico.yubikit.core.smartcard.SmartCardConnection
@@ -17,11 +21,11 @@ import org.pgpainless.key.OpenPgpFingerprint
 
 class YubikeyHelper(private val api: PGPainless = PGPainless.getInstance()) {
 
-    fun listDevices(
-        manager: YubiKitManager = YubiKitManager()
-    ): List<Yubikey> = manager.listAllDevices()
-        .filter { it.key is CompositeDevice }
-        .map { Yubikey(it.value, it.key) }
+    fun listDevices(manager: YubiKitManager = YubiKitManager()): List<Yubikey> =
+        manager
+            .listAllDevices()
+            .filter { it.key is CompositeDevice }
+            .map { Yubikey(it.value, it.key) }
 
     fun factoryReset(yubikey: Yubikey) {
         yubikey.device.openConnection(SmartCardConnection::class.java).use {
@@ -29,10 +33,11 @@ class YubikeyHelper(private val api: PGPainless = PGPainless.getInstance()) {
         }
     }
 
-    fun moveToYubikey(componentKey: OpenPGPPrivateKey,
-                      yubikey: Yubikey,
-                      adminPin: CharArray,
-                      keyRef: KeyRef = keyRefForKey(componentKey.publicKey)
+    fun moveToYubikey(
+        componentKey: OpenPGPPrivateKey,
+        yubikey: Yubikey,
+        adminPin: CharArray,
+        keyRef: KeyRef = keyRefForKey(componentKey.publicKey)
     ): OpenPGPKey {
         // Move private key to hardware token
         yubikey.storeKeyInSlot(componentKey, keyRef, adminPin)
@@ -54,8 +59,9 @@ class YubikeyHelper(private val api: PGPainless = PGPainless.getInstance()) {
             key.isSigningKey -> KeyRef.SIG
             key.isEncryptionKey -> KeyRef.DEC
             key.isCertificationKey -> KeyRef.ATT
-            else -> throw KeyException.GeneralKeyException(
-                "Cannot determine usage for the key.", OpenPgpFingerprint.of(key))
+            else ->
+                throw KeyException.GeneralKeyException(
+                    "Cannot determine usage for the key.", OpenPgpFingerprint.of(key))
         }
     }
 }
