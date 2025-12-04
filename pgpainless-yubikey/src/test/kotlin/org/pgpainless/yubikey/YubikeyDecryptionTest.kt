@@ -122,9 +122,6 @@ class YubikeyDecryptionTest : YubikeyTest() {
         val hardwareBasedKey = helper.moveToYubikey(decKey.unlock(), yubikey, adminPin, KeyRef.DEC)
 
         // Decrypt
-
-        // TODO: Make hardware decryption transparent as shown below!
-
         val decIn =
             api.processMessage()
                 .onInputStream(msgIn)
@@ -138,21 +135,5 @@ class YubikeyDecryptionTest : YubikeyTest() {
         val msg = decIn.readAllBytes()
         decIn.close()
         assertEquals("Hello, World!\n", String(msg))
-        /*
-
-        yubikey.device.openConnection(SmartCardConnection::class.java).use {
-            val decFac = YubikeyDataDecryptorFactory.createDecryptorFromConnection(it, decKey.pgpPublicKey)
-            val decIn = api.processMessage()
-                .onInputStream(msgIn)
-                .withOptions(
-                    ConsumerOptions.get(api)
-                        .addCustomDecryptorFactory(decFac)
-                )
-            val msg = decIn.readAllBytes()
-            decIn.close()
-            assertEquals("Hello, World!\n", String(msg))
-        }
-
-         */
     }
 }

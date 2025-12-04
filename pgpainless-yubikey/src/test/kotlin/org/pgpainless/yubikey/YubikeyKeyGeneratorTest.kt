@@ -18,6 +18,8 @@ class YubikeyKeyGeneratorTest : YubikeyTest() {
         val key = keyGen.generateModernKey(yubikey, adminPin, OpenPGPKeyVersion.v4, Date())
 
         println(key.toAsciiArmoredString())
+        // TODO: More thorough checking once key generation is implemented with binding signatures,
+        //  userids and other metadata
         for (subkey in key.secretKeys) {
             assertTrue(subkey.value.hasExternalSecretKey())
         }
