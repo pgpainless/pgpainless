@@ -14,6 +14,6 @@ allprojects {
         mockitoVersion = '4.5.1'
         slf4jVersion = '1.7.36'
         sopJavaVersion = '14.0.3'
-        yubikitVersion = '2.9.0'
+        yubikitVersion = '3.0.0'
     }
 }

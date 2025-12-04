@@ -44,16 +44,22 @@ class YubikeyKeyGenerator(private val api: PGPainless) {
 
             var pkVal = session.generateEcKey(KeyRef.ATT, OpenPgpCurve.SECP521R1)
             var pubKey = toPGPPublicKey(pkVal, keyVersion, creationTime, PublicKeyAlgorithm.ECDSA)
+            session.writeFingerprint(pubKey, KeyRef.ATT)
+            session.writeGenerationTime(pubKey, KeyRef.ATT)
 
             val primarykey = toExternalSecretKey(pubKey, yubikey.info)
 
             pkVal = session.generateEcKey(KeyRef.SIG, OpenPgpCurve.SECP521R1)
             pubKey = toPGPPublicKey(pkVal, keyVersion, creationTime, PublicKeyAlgorithm.ECDSA)
+            session.writeFingerprint(pubKey, KeyRef.SIG)
+            session.writeGenerationTime(pubKey, KeyRef.SIG)
 
             val signingKey = toSecretSubKey(toExternalSecretKey(pubKey, yubikey.info), yubikey.info)
 
             pkVal = session.generateEcKey(KeyRef.DEC, OpenPgpCurve.SECP521R1)
             pubKey = toPGPPublicKey(pkVal, keyVersion, creationTime, PublicKeyAlgorithm.ECDH)
+            session.writeFingerprint(pubKey, KeyRef.DEC)
+            session.writeGenerationTime(pubKey, KeyRef.DEC)
 
             val encryptionKey =
                 toSecretSubKey(toExternalSecretKey(pubKey, yubikey.info), yubikey.info)

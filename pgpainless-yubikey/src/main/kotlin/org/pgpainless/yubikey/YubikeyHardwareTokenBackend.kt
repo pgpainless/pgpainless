@@ -55,13 +55,13 @@ class YubikeyHardwareTokenBackend : HardwareTokenBackend {
                 yk.device.openConnection(SmartCardConnection::class.java).use {
                     val session = OpenPgpSession(it)
                     // session.getData(KeyRef.DEC.fingerprint)
-                    session.getData(KeyRef.SIG.fingerprint)
+                    val ddo = session.applicationRelatedData.discretionary
 
                     listOfNotNull(
-                        session.getData(KeyRef.ATT.fingerprint),
-                        session.getData(KeyRef.SIG.fingerprint),
-                        session.getData(KeyRef.DEC.fingerprint),
-                        session.getData(KeyRef.AUT.fingerprint))
+                        ddo.getFingerprint(KeyRef.ATT),
+                        ddo.getFingerprint(KeyRef.SIG),
+                        ddo.getFingerprint(KeyRef.DEC),
+                        ddo.getFingerprint(KeyRef.AUT))
                 }
         }
     }

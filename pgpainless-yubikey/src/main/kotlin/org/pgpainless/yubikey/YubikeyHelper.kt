@@ -22,10 +22,14 @@ import org.pgpainless.key.OpenPgpFingerprint
 class YubikeyHelper(private val api: PGPainless = PGPainless.getInstance()) {
 
     fun listDevices(manager: YubiKitManager = YubiKitManager()): List<Yubikey> =
-        manager
-            .listAllDevices()
-            .filter { it.key is CompositeDevice }
-            .map { Yubikey(it.value, it.key) }
+        try {
+            manager
+                .listAllDevices()
+                .filter { it.key is CompositeDevice }
+                .map { Yubikey(it.value, it.key) }
+        } catch (e: RuntimeException) {
+            emptyList()
+        }
 
     fun factoryReset(yubikey: Yubikey) {
         yubikey.device.openConnection(SmartCardConnection::class.java).use {

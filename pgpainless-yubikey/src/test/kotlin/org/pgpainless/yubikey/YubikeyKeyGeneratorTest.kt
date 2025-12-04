@@ -14,14 +14,19 @@ class YubikeyKeyGeneratorTest : YubikeyTest() {
 
     @Test
     fun generateKey() {
+        val backend = YubikeyHardwareTokenBackend()
         val keyGen = YubikeyKeyGenerator(PGPainless.getInstance())
         val key = keyGen.generateModernKey(yubikey, adminPin, OpenPGPKeyVersion.v4, Date())
 
         println(key.toAsciiArmoredString())
         // TODO: More thorough checking once key generation is implemented with binding signatures,
         //  userids and other metadata
+        val fingerprints = backend.listKeyFingerprints().entries.first().value
         for (subkey in key.secretKeys) {
             assertTrue(subkey.value.hasExternalSecretKey())
+            assertTrue {
+                fingerprints.any { it.contentEquals(subkey.value.pgpPublicKey.fingerprint) }
+            }
         }
     }
 }
