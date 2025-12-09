@@ -4,11 +4,9 @@
 
 package org.pgpainless.yubikey
 
-import com.yubico.yubikit.core.smartcard.SmartCardConnection
 import com.yubico.yubikit.desktop.CompositeDevice
 import com.yubico.yubikit.desktop.YubiKitManager
 import com.yubico.yubikit.openpgp.KeyRef
-import com.yubico.yubikit.openpgp.OpenPgpSession
 import org.bouncycastle.openpgp.api.OpenPGPCertificate.OpenPGPComponentKey
 import org.bouncycastle.openpgp.api.OpenPGPKey
 import org.bouncycastle.openpgp.api.OpenPGPKey.OpenPGPPrivateKey
@@ -28,20 +26,15 @@ class YubikeyHelper(private val api: PGPainless = PGPainless.getInstance()) {
                 .filter { it.key is CompositeDevice }
                 .map { Yubikey(it.value, it.key) }
         } catch (e: RuntimeException) {
+            // If there are no tokens, yubikit throws a RuntimeException :/
             emptyList()
         }
-
-    fun factoryReset(yubikey: Yubikey) {
-        yubikey.device.openConnection(SmartCardConnection::class.java).use {
-            OpenPgpSession(it).reset()
-        }
-    }
 
     fun moveToYubikey(
         componentKey: OpenPGPPrivateKey,
         yubikey: Yubikey,
         adminPin: CharArray,
-        keyRef: KeyRef = keyRefForKey(componentKey.publicKey)
+        keyRef: KeyRef = guessKeyRefForKey(componentKey.publicKey)
     ): OpenPGPKey {
         // Move private key to hardware token
         yubikey.storeKeyInSlot(componentKey, keyRef, adminPin)
@@ -58,7 +51,7 @@ class YubikeyHelper(private val api: PGPainless = PGPainless.getInstance()) {
             .toOpenPGPKey(api.implementation)
     }
 
-    private fun keyRefForKey(key: OpenPGPComponentKey): KeyRef {
+    private fun guessKeyRefForKey(key: OpenPGPComponentKey): KeyRef {
         return when {
             key.isSigningKey -> KeyRef.SIG
             key.isEncryptionKey -> KeyRef.DEC

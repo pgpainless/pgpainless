@@ -51,18 +51,16 @@ class YubikeyHardwareTokenBackend : HardwareTokenBackend {
 
     override fun listKeyFingerprints(): Map<ByteArray, List<ByteArray>> {
         return YubikeyHelper().listDevices().associate { yk ->
-            yk.encodedSerialNumber to
-                yk.device.openConnection(SmartCardConnection::class.java).use {
-                    val session = OpenPgpSession(it)
-                    // session.getData(KeyRef.DEC.fingerprint)
-                    val ddo = session.applicationRelatedData.discretionary
+            yk.encodedSerialNumber to yk.openSession().use {
+                // session.getData(KeyRef.DEC.fingerprint)
+                val ddo = it.applicationRelatedData.discretionary
 
-                    listOfNotNull(
-                        ddo.getFingerprint(KeyRef.ATT),
-                        ddo.getFingerprint(KeyRef.SIG),
-                        ddo.getFingerprint(KeyRef.DEC),
-                        ddo.getFingerprint(KeyRef.AUT))
-                }
+                listOfNotNull(
+                    ddo.getFingerprint(KeyRef.ATT),
+                    ddo.getFingerprint(KeyRef.SIG),
+                    ddo.getFingerprint(KeyRef.DEC),
+                    ddo.getFingerprint(KeyRef.AUT))
+            }
         }
     }
 }

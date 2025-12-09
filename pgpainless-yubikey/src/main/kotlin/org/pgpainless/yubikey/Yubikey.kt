@@ -10,20 +10,55 @@ import com.yubico.yubikit.management.DeviceInfo
 import com.yubico.yubikit.openpgp.KeyRef
 import com.yubico.yubikit.openpgp.OpenPgpSession
 import org.bouncycastle.openpgp.api.OpenPGPKey.OpenPGPPrivateKey
+import org.bouncycastle.openpgp.hardware.HardwareKey
+import org.bouncycastle.openpgp.hardware.HardwareToken
 import org.gnupg.GnuPGDummyKeyUtil
 
-data class Yubikey(val info: DeviceInfo, val device: YubiKeyDevice) {
+data class Yubikey(val info: DeviceInfo, val device: YubiKeyDevice) : HardwareToken {
+
+    override val keys: Map<ByteArray, HardwareKey<KeyRef>>
+        get() = getFingerprints().values
+            .filterNotNull()
+            .associateWith { HardwareKey(it, keyRefForFingerprint(it)!!) }
+
+    fun openSession(): OpenPgpSession {
+        return OpenPgpSession(device.openConnection(SmartCardConnection::class.java))
+    }
+
+    fun factoryReset() {
+        openSession().use {
+            it.reset()
+        }
+    }
 
     fun storeKeyInSlot(key: OpenPGPPrivateKey, keyRef: KeyRef, adminPin: CharArray) {
-        device.openConnection(SmartCardConnection::class.java).use {
-            val session = OpenPgpSession(it as SmartCardConnection)
-
+        openSession().use {
             // Storing keys requires admin pin
-            session.verifyAdminPin(adminPin)
+            it.verifyAdminPin(adminPin)
 
-            session.writePrivateKey(key, keyRef)
-            session.writeFingerprint(key.publicKey, keyRef)
-            session.writeGenerationTime(key.publicKey, keyRef)
+            it.writePrivateKey(key, keyRef)
+            it.writeFingerprint(key.publicKey, keyRef)
+            it.writeGenerationTime(key.publicKey, keyRef)
+        }
+    }
+
+    fun keyRefForFingerprint(fingerprint: ByteArray): KeyRef? {
+        return getFingerprints().entries
+            .find { it.value?.contentEquals(fingerprint) ?: false }
+            ?.key
+    }
+
+    fun getFingerprints(): Map<KeyRef, ByteArray?> {
+        return openSession().use {
+            // session.getData(KeyRef.DEC.fingerprint)
+            val ddo = it.applicationRelatedData.discretionary
+
+            buildMap {
+                put(KeyRef.ATT, ddo.getFingerprint(KeyRef.ATT))
+                put(KeyRef.SIG, ddo.getFingerprint(KeyRef.SIG))
+                put(KeyRef.DEC, ddo.getFingerprint(KeyRef.DEC))
+                put(KeyRef.AUT, ddo.getFingerprint(KeyRef.AUT))
+            }
         }
     }
 
