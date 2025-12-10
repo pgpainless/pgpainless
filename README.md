@@ -45,6 +45,19 @@ PGPainless currently scores above average on Sequoia-PGPs [Interoperability Test
 >
 > -Mario @ Cure53.de
 
+### AI-free!
+
+PGPainless was, is and will continue to be developed without the help of generative AI.
+Training large language models (LLMs) consumes huge amounts of energy, contributing to pollution of our planet
+through the large scale exploitation of fossile fuels.
+Further, AI data centers are large consumers of water, which - due to the ongoing climate crisis - is becoming a
+scarce resource in many places.
+
+The author is convinced, that the risk that generative artificial intelligence poses on society is greater than its
+benefits and therefore refrains from using it.
+
+PGPainless is made by humans for humans <3.
+
 ## Get Started
 
 The very easiest way to start using OpenPGP on Java/Kotlin based systems is to use an implementation of [sop-java](https://github.com/pgpainless/sop-java).
