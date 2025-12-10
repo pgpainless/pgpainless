@@ -231,15 +231,15 @@ Please follow the [code of conduct](CODE_OF_CONDUCT.md) if you want to be part o
 
 ## Acknowledgements
 In the past, development on PGPainless has been generously sponsored by [FlowCrypt.com](https://flowcrypt.com). Thank you very very very much!
-[![FlowCrypt Logo](https://blog.jabberhead.tk/wp-content/uploads/2022/05/flowcrypt-logo.svg)](https://flowcrypt.com)
+[![FlowCrypt Logo](https://warmwasserwerfer.de/wp-content/uploads/2022/05/flowcrypt-logo.svg)](https://flowcrypt.com)
 
 Parts of PGPainless development ([project page](https://nlnet.nl/project/PGPainless/)) has been funded by [NGI Assure](https://nlnet.nl/assure/) through [NLNet](https://nlnet.nl).  
 NGI Assure is made possible with financial support from the [European Commission](https://ec.europa.eu/)'s [Next Generation Internet](https://ngi.eu/) programme, under the aegis of [DG Communications Networks, Content and Technology](https://ec.europa.eu/info/departments/communications-networks-content-and-technology_en).
-[![NGI Assure Logo](https://blog.jabberhead.tk/wp-content/uploads/2022/05/NGIAssure_tag.svg)](https://nlnet.nl/assure/)
+[![NGI Assure Logo](https://warmwasserwerfer.de/wp-content/uploads/2022/05/NGIAssure_tag.svg)](https://nlnet.nl/assure/)
 
 Support for [RFC9580](https://www.rfc-editor.org/rfc/rfc9580.html) ("OpenPGP v6") [was developed](https://warmwasserwerfer.de/2025/08/28/towards-openpgp-v6-in-pgpainless/) with funding from the [SovereignTechAgency](https://www.sovereign.tech/) through their
 [SovereignTechFund](https://www.sovereign.tech/programs/fund) program. 
-[![SovereignTechFund Logo](https://www.sovereign.tech/programs/fund)](https://warmwasserwerfer.de/wp-content/uploads/2025/08/ST-Fund-Logo-Default-Black-CMYK-2048x652.png)
+[![SovereignTechFund Logo](https://warmwasserwerfer.de/wp-content/uploads/2025/08/ST-Fund-Logo-Default-Black-CMYK-2048x652.png)](https://www.sovereign.tech/programs/fund)
 
 In 2025, PGPainless was part of and received financial support from the [Github Secure Open Source Fund](https://github.blog/open-source/maintainers/securing-the-supply-chain-at-scale-starting-with-71-important-open-source-projects/) program.
 
