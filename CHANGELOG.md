@@ -8,6 +8,8 @@ SPDX-License-Identifier: CC0-1.0
 ## 2.0.3-SNAPSHOT
 - `sop encrypt`: For symmetric-key encryption; default to rfc4880 packet format
 - `sop list-profiles encrypt`: Add profile descriptions
+- Fix issue, where third-party certification is considered during encryption (#495)
+- Treat literal data packets with non-standard format octets as binary (#496)
 
 ## 2.0.2
 - Add `PGPainless.asciiArmor(Collection<OpenPGPCertificate>, PacketFormat)`
