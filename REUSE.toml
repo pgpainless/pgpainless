@@ -116,3 +116,9 @@ path = ".github/ISSUE_TEMPLATE/**"
 precedence = "aggregate"
 SPDX-FileCopyrightText = "2024 Paul Schaub <info@pgpainless.org>"
 SPDX-License-Identifier = "CC0-1.0"
+
+[[annotations]]
+path = "THREAT_MODEL.md"
+precedence = "aggregate"
+SPDX-FileCopyrightText = "2025 Paul Schaub <info@pgpainless.org>"
+SPDX-License-Identifier = "CC0-1.0"
