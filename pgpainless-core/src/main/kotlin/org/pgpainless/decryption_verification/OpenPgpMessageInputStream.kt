@@ -213,7 +213,7 @@ class OpenPgpMessageInputStream(
             LiteralData(
                 literalData.fileName,
                 literalData.modificationTime,
-                StreamEncoding.requireFromCode(literalData.format))
+                StreamEncoding.fromCode(literalData.format) ?: StreamEncoding.BINARY)
 
         nestedInputStream = literalData.inputStream
     }
