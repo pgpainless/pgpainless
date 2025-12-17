@@ -469,7 +469,7 @@ class KeyRingInfo(
      */
     fun getLatestUserIdCertification(userId: CharSequence): PGPSignature? =
         // workaround for https://github.com/pgpainless/pgpainless/issues/495
-        // TODO: Change back once fixed in BC
+        // TODO: Change back once fixed in BC: https://github.com/bcgit/bc-java/pull/2217
         // keys.getUserId(userId.toString())?.getCertification(referenceDate)?.signature
         keys
             .getUserId(userId.toString())
