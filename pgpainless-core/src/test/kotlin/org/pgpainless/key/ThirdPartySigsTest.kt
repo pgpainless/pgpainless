@@ -9,7 +9,8 @@ import org.pgpainless.PGPainless
 
 class ThirdPartySigsTest {
 
-    val KEY_WITH_3RDPARTY_CERTIFICATION = """
+    val KEY_WITH_3RDPARTY_CERTIFICATION =
+        """
         -----BEGIN PGP PUBLIC KEY BLOCK-----
         Comment: 2933 CBF1 9C19 5FEC C3D8  F6BB 7875 DF0D 34D8 0659
         Comment: Alice
@@ -31,7 +32,8 @@ class ThirdPartySigsTest {
         fOXKC8sGfUZASw5bPNFMcWfT/nFrzmuvi01DD+pfUo9a8GoRAZ6qSQ0=
         =oG2x
         -----END PGP PUBLIC KEY BLOCK-----
-    """.trimIndent()
+    """
+            .trimIndent()
 
     @Test
     fun test() {
