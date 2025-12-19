@@ -7,7 +7,7 @@ package org.pgpainless.hardware
 import org.bouncycastle.openpgp.PGPPublicKeyEncryptedData
 import org.bouncycastle.openpgp.api.OpenPGPKey
 import org.bouncycastle.openpgp.operator.PublicKeyDataDecryptorFactory
-import org.pgpainless.key.protection.SecretKeyRingProtector
+import org.pgpainless.key.protection.passphrase_provider.SecretKeyPassphraseProvider
 
 interface HardwareTokenBackend {
 
@@ -15,9 +15,11 @@ interface HardwareTokenBackend {
 
     fun provideDecryptorsFor(
         secKey: OpenPGPKey.OpenPGPSecretKey,
-        protector: SecretKeyRingProtector,
+        passphraseProvider: SecretKeyPassphraseProvider,
         pkesk: PGPPublicKeyEncryptedData
     ): Iterator<PublicKeyDataDecryptorFactory>
+
+    fun listKeys(): Map<ByteArray, HardwareToken>
 
     fun listDeviceSerials(): List<ByteArray>
 

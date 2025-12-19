@@ -8,10 +8,11 @@ import org.gnupg.GnuPGDummyKeyUtil
 import org.junit.jupiter.api.Assertions.assertTrue
 import org.junit.jupiter.api.Assumptions.assumeTrue
 import org.junit.jupiter.api.Test
+import org.pgpainless.yubikey.desktop.DesktopYubikeyDeviceManager
 
 class YubikeyHardwareTokenBackendTest : YubikeyTest() {
 
-    val backend = YubikeyHardwareTokenBackend()
+    val backend = YubikeyHardwareTokenBackend(DesktopYubikeyDeviceManager())
 
     @Test
     fun testListDeviceSerials() {

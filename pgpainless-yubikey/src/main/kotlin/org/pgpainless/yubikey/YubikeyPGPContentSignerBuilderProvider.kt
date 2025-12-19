@@ -14,11 +14,16 @@ import org.bouncycastle.openpgp.operator.PGPContentSigner
 import org.bouncycastle.openpgp.operator.PGPContentSignerBuilder
 import org.bouncycastle.openpgp.operator.PGPContentSignerBuilderProvider
 import org.pgpainless.algorithm.HashAlgorithm
-import org.pgpainless.yubikey.YubikeyDataDecryptorFactory.Companion.USER_PIN
+import org.pgpainless.key.protection.passphrase_provider.SecretKeyPassphraseProvider
 
+/**
+ * [PGPContentSignerBuilderProvider] that can be used with software- and hardware-based OpenPGP
+ * keys.
+ */
 class YubikeyPGPContentSignerBuilderProvider(
     val hashAlgorithm: HashAlgorithm,
     private val smartcardConnection: SmartCardConnection,
+    private val userPinCallback: SecretKeyPassphraseProvider,
     private val implementation: OpenPGPImplementation = OpenPGPImplementation.getInstance()
 ) : PGPContentSignerBuilderProvider(hashAlgorithm.algorithmId) {
 
@@ -41,8 +46,8 @@ class YubikeyPGPContentSignerBuilderProvider(
                     implementation.pgpDigestCalculatorProvider().get(hashAlgorithmId)
                 val openPgpSession = OpenPgpSession(smartcardConnection)
 
-                // TODO: Move pin authorization somewhere else
-                openPgpSession.verifyUserPin(USER_PIN, false)
+                val userPin = userPinCallback.getPassphraseFor(publicSigningKey.keyIdentifier)
+                userPin?.getChars()?.let { openPgpSession.verifyUserPin(it, false) }
 
                 // Return custom PGPContentSigner utilizing Yubikit for signing operations
                 return object : PGPContentSigner {

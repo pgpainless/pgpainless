@@ -75,7 +75,8 @@ class YubikeySigningTest : YubikeyTest() {
                     override fun create(
                         hashAlgorithm: HashAlgorithm
                     ): PGPContentSignerBuilderProvider {
-                        return YubikeyPGPContentSignerBuilderProvider(hashAlgorithm, connection)
+                        return YubikeyPGPContentSignerBuilderProvider(
+                            hashAlgorithm, connection, userPinCallback)
                     }
                 }
 

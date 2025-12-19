@@ -11,6 +11,7 @@ import org.pgpainless.PGPainless
 import org.pgpainless.decryption_verification.ConsumerOptions
 import org.pgpainless.key.protection.SecretKeyRingProtector
 import org.pgpainless.util.Passphrase
+import org.pgpainless.yubikey.desktop.DesktopYubikeyDeviceManager
 
 class YubikeyDecryptionTest : YubikeyTest() {
 
@@ -127,7 +128,8 @@ class YubikeyDecryptionTest : YubikeyTest() {
                 .onInputStream(msgIn)
                 .withOptions(
                     ConsumerOptions.get(api)
-                        .addHardwareTokenBackend(YubikeyHardwareTokenBackend())
+                        .addHardwareTokenBackend(
+                            YubikeyHardwareTokenBackend(DesktopYubikeyDeviceManager()))
                         .addDecryptionKey(
                             hardwareBasedKey,
                             SecretKeyRingProtector.unlockAnyKeyWith(

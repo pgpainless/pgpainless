@@ -4,8 +4,6 @@
 
 package org.pgpainless.yubikey
 
-import com.yubico.yubikit.desktop.CompositeDevice
-import com.yubico.yubikit.desktop.YubiKitManager
 import com.yubico.yubikit.openpgp.KeyRef
 import org.bouncycastle.openpgp.api.OpenPGPCertificate.OpenPGPComponentKey
 import org.bouncycastle.openpgp.api.OpenPGPKey
@@ -18,17 +16,6 @@ import org.pgpainless.exception.KeyException
 import org.pgpainless.key.OpenPgpFingerprint
 
 class YubikeyHelper(private val api: PGPainless = PGPainless.getInstance()) {
-
-    fun listDevices(manager: YubiKitManager = YubiKitManager()): List<Yubikey> =
-        try {
-            manager
-                .listAllDevices()
-                .filter { it.key is CompositeDevice }
-                .map { Yubikey(it.value, it.key) }
-        } catch (e: RuntimeException) {
-            // If there are no tokens, yubikit throws a RuntimeException :/
-            emptyList()
-        }
 
     fun moveToYubikey(
         componentKey: OpenPGPPrivateKey,

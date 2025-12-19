@@ -9,14 +9,15 @@ import org.junit.jupiter.api.Assertions.assertTrue
 import org.junit.jupiter.api.Test
 import org.pgpainless.PGPainless
 import org.pgpainless.algorithm.OpenPGPKeyVersion
+import org.pgpainless.yubikey.desktop.DesktopYubikeyDeviceManager
 
 class YubikeyKeyGeneratorTest : YubikeyTest() {
 
     @Test
     fun generateKey() {
-        val backend = YubikeyHardwareTokenBackend()
+        val backend = YubikeyHardwareTokenBackend(DesktopYubikeyDeviceManager())
         val keyGen = YubikeyKeyGenerator(PGPainless.getInstance())
-        val key = keyGen.generateModernKey(yubikey, adminPin, OpenPGPKeyVersion.v4, Date())
+        val key = keyGen.generateModernKey(yubikey, adminPinCallback, OpenPGPKeyVersion.v4, Date())
 
         println(key.toAsciiArmoredString())
         // TODO: More thorough checking once key generation is implemented with binding signatures,

@@ -27,6 +27,7 @@ import org.gnupg.GnuPGDummyKeyUtil
 import org.pgpainless.PGPainless
 import org.pgpainless.algorithm.OpenPGPKeyVersion
 import org.pgpainless.algorithm.PublicKeyAlgorithm
+import org.pgpainless.hardware.AdminPinCallback
 
 class YubikeyKeyGenerator(private val api: PGPainless) {
 
@@ -34,13 +35,15 @@ class YubikeyKeyGenerator(private val api: PGPainless) {
 
     fun generateModernKey(
         yubikey: Yubikey,
-        adminPin: CharArray,
+        adminPinCallback: AdminPinCallback,
         keyVersion: OpenPGPKeyVersion = OpenPGPKeyVersion.v4,
         creationTime: Date = Date()
     ): OpenPGPKey {
         yubikey.device.openConnection(SmartCardConnection::class.java).use {
             val session = OpenPgpSession(it)
-            session.verifyAdminPin(adminPin)
+            adminPinCallback.provideAdminPin(yubikey.serialNumber)?.let { pin ->
+                session.verifyAdminPin(pin)
+            }
 
             var pkVal = session.generateEcKey(KeyRef.ATT, OpenPgpCurve.SECP521R1)
             var pubKey = toPGPPublicKey(pkVal, keyVersion, creationTime, PublicKeyAlgorithm.ECDSA)

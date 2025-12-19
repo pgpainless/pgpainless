@@ -27,6 +27,7 @@ import org.pgpainless.bouncycastle.extensions.getCurveName
 import org.pgpainless.decryption_verification.HardwareSecurity
 import org.pgpainless.key.OpenPgpV4Fingerprint
 import org.pgpainless.key.SubkeyIdentifier
+import org.pgpainless.key.protection.passphrase_provider.SecretKeyPassphraseProvider
 import org.slf4j.LoggerFactory
 
 class YubikeyDataDecryptorFactory(
@@ -38,12 +39,11 @@ class YubikeyDataDecryptorFactory(
 
         @JvmStatic val LOGGER = LoggerFactory.getLogger(YubikeyDataDecryptorFactory::class.java)
 
-        val USER_PIN: CharArray = "123456".toCharArray()
-
         @JvmStatic
         fun createDecryptorFromConnection(
             smartCardConnection: SmartCardConnection,
-            pubkey: PGPPublicKey
+            pubkey: PGPPublicKey,
+            userPinCallback: SecretKeyPassphraseProvider
         ): HardwareSecurity.HardwareDataDecryptorFactory {
             val openpgpSession = OpenPgpSession(smartCardConnection)
             val decKeyIdentifier = SubkeyIdentifier(OpenPgpV4Fingerprint(pubkey))
@@ -61,8 +61,10 @@ class YubikeyDataDecryptorFactory(
                         sessionKeyData: ByteArray,
                         pkeskVersion: Int
                     ): ByteArray {
-                        // TODO: Move user pin verification somewhere else
-                        openpgpSession.verifyUserPin(USER_PIN, true)
+
+                        userPinCallback.getPassphraseFor(keyIdentifier)?.getChars()?.let {
+                            openpgpSession.verifyUserPin(it, true)
+                        }
 
                         LOGGER.debug("Attempt decryption with key {}", keyIdentifier)
 

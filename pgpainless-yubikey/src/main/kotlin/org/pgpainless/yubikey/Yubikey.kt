@@ -10,25 +10,16 @@ import com.yubico.yubikit.management.DeviceInfo
 import com.yubico.yubikit.openpgp.KeyRef
 import com.yubico.yubikit.openpgp.OpenPgpSession
 import org.bouncycastle.openpgp.api.OpenPGPKey.OpenPGPPrivateKey
-import org.bouncycastle.openpgp.hardware.HardwareKey
-import org.bouncycastle.openpgp.hardware.HardwareToken
 import org.gnupg.GnuPGDummyKeyUtil
 
-data class Yubikey(val info: DeviceInfo, val device: YubiKeyDevice) : HardwareToken {
-
-    override val keys: Map<ByteArray, HardwareKey<KeyRef>>
-        get() = getFingerprints().values
-            .filterNotNull()
-            .associateWith { HardwareKey(it, keyRefForFingerprint(it)!!) }
+data class Yubikey(val info: DeviceInfo, val device: YubiKeyDevice) {
 
     fun openSession(): OpenPgpSession {
         return OpenPgpSession(device.openConnection(SmartCardConnection::class.java))
     }
 
     fun factoryReset() {
-        openSession().use {
-            it.reset()
-        }
+        openSession().use { it.reset() }
     }
 
     fun storeKeyInSlot(key: OpenPGPPrivateKey, keyRef: KeyRef, adminPin: CharArray) {
@@ -43,9 +34,7 @@ data class Yubikey(val info: DeviceInfo, val device: YubiKeyDevice) : HardwareTo
     }
 
     fun keyRefForFingerprint(fingerprint: ByteArray): KeyRef? {
-        return getFingerprints().entries
-            .find { it.value?.contentEquals(fingerprint) ?: false }
-            ?.key
+        return getFingerprints().entries.find { it.value?.contentEquals(fingerprint) ?: false }?.key
     }
 
     fun getFingerprints(): Map<KeyRef, ByteArray?> {

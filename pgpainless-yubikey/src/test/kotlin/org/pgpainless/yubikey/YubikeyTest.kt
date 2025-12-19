@@ -8,9 +8,14 @@ import java.util.Properties
 import org.bouncycastle.openpgp.api.bc.BcOpenPGPImplementation
 import org.opentest4j.TestAbortedException
 import org.pgpainless.PGPainless
+import org.pgpainless.hardware.AdminPinCallback
+import org.pgpainless.key.protection.passphrase_provider.SolitaryPassphraseProvider
+import org.pgpainless.util.Passphrase
+import org.pgpainless.yubikey.desktop.DesktopYubikeyDeviceManager
 
 abstract class YubikeyTest() {
 
+    val deviceManager: YubikeyDeviceManager = DesktopYubikeyDeviceManager()
     val adminPin: CharArray
     val userPin: CharArray
     val allowedSerialNumber: Int
@@ -27,13 +32,13 @@ abstract class YubikeyTest() {
 
     open val api: PGPainless =
         PGPainless(BcOpenPGPImplementation()).apply {
-            hardwareTokenBackends.add(YubikeyHardwareTokenBackend())
+            hardwareTokenBackends.add(YubikeyHardwareTokenBackend(DesktopYubikeyDeviceManager()))
         }
 
     open val helper: YubikeyHelper = YubikeyHelper(api)
 
     val yubikey: Yubikey =
-        YubikeyHelper().listDevices().find { it.serialNumber == allowedSerialNumber }
+        deviceManager.listDevices().find { it.serialNumber == allowedSerialNumber }
             ?: throw TestAbortedException("No allowed device found.")
 
     private fun getProperty(properties: Properties, key: String): String {
@@ -41,4 +46,11 @@ abstract class YubikeyTest() {
             ?: throw TestAbortedException(
                 "Could not find property $key in pgpainless-yubikey/src/test/resources/yubikey.properties")
     }
+
+    val userPinCallback = SolitaryPassphraseProvider(Passphrase(userPin))
+
+    val adminPinCallback: AdminPinCallback =
+        object : AdminPinCallback {
+            override fun provideAdminPin(deviceSerialNumber: Int): CharArray = adminPin
+        }
 }

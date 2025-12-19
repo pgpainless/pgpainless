@@ -7,5 +7,6 @@ rootProject.name = 'PGPainless'
 include 'pgpainless-core',
         'pgpainless-sop',
         'pgpainless-cli',
-        'pgpainless-yubikey'
+        'pgpainless-yubikey',
+        'pgpainless-yubikey-desktop'
 

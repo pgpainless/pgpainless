@@ -71,8 +71,10 @@ import org.pgpainless.hardware.HardwareTokenBackend
 import org.pgpainless.key.SubkeyIdentifier
 import org.pgpainless.key.protection.SecretKeyRingProtector
 import org.pgpainless.key.protection.UnlockSecretKey.Companion.unlockSecretKey
+import org.pgpainless.key.protection.passphrase_provider.SolitaryPassphraseProvider
 import org.pgpainless.signature.consumer.OnePassSignatureCheck
 import org.pgpainless.util.ArmoredInputStreamFactory
+import org.pgpainless.util.Passphrase
 import org.pgpainless.util.SessionKey
 import org.slf4j.LoggerFactory
 
@@ -558,7 +560,11 @@ class OpenPgpMessageInputStream(
         subkeyIdentifier: SubkeyIdentifier,
         pkesk: PGPPublicKeyEncryptedData
     ): Boolean {
-        val decryptors = hardwareTokenBackend.provideDecryptorsFor(secretKey, protector, pkesk)
+        val decryptors =
+            hardwareTokenBackend.provideDecryptorsFor(
+                secretKey,
+                SolitaryPassphraseProvider(Passphrase(protector.getKeyPassword(secretKey))),
+                pkesk)
         while (decryptors.hasNext()) {
             val decryptor = decryptors.next()
             val success = decryptPKESKAndStream(esks, subkeyIdentifier, decryptor, pkesk)

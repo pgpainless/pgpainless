@@ -6,15 +6,17 @@ package org.pgpainless.yubikey
 
 import com.yubico.yubikit.core.smartcard.SmartCardConnection
 import com.yubico.yubikit.openpgp.KeyRef
-import com.yubico.yubikit.openpgp.OpenPgpSession
 import org.bouncycastle.openpgp.PGPPublicKeyEncryptedData
 import org.bouncycastle.openpgp.api.OpenPGPKey
 import org.bouncycastle.openpgp.operator.PublicKeyDataDecryptorFactory
 import org.gnupg.GnuPGDummyKeyUtil
+import org.pgpainless.hardware.HardwareKey
+import org.pgpainless.hardware.HardwareToken
 import org.pgpainless.hardware.HardwareTokenBackend
-import org.pgpainless.key.protection.SecretKeyRingProtector
+import org.pgpainless.key.protection.passphrase_provider.SecretKeyPassphraseProvider
 
-class YubikeyHardwareTokenBackend : HardwareTokenBackend {
+class YubikeyHardwareTokenBackend(private val deviceManager: YubikeyDeviceManager) :
+    HardwareTokenBackend {
 
     override fun getBackendName(): String {
         return "PGPainless-Yubikey"
@@ -22,11 +24,11 @@ class YubikeyHardwareTokenBackend : HardwareTokenBackend {
 
     override fun provideDecryptorsFor(
         secKey: OpenPGPKey.OpenPGPSecretKey,
-        protector: SecretKeyRingProtector,
+        passphraseProvider: SecretKeyPassphraseProvider,
         pkesk: PGPPublicKeyEncryptedData
     ): Iterator<PublicKeyDataDecryptorFactory> {
         return object : Iterator<PublicKeyDataDecryptorFactory> {
-            val devices = YubikeyHelper().listDevices().iterator()
+            val devices = deviceManager.listDevices().iterator()
 
             override fun hasNext(): Boolean {
                 return devices.hasNext()
@@ -36,31 +38,36 @@ class YubikeyHardwareTokenBackend : HardwareTokenBackend {
                 return devices.next().device.openConnection(SmartCardConnection::class.java).let {
                     val decFac =
                         YubikeyDataDecryptorFactory.createDecryptorFromConnection(
-                            it, secKey.pgpPublicKey)
+                            it, secKey.pgpPublicKey, passphraseProvider)
                     decFac as PublicKeyDataDecryptorFactory
                 }
             }
         }
     }
 
+    override fun listKeys(): Map<ByteArray, HardwareToken> {
+        return deviceManager.listDevices().associate { device ->
+            device.encodedSerialNumber to
+                device.openSession().use { session ->
+                    // Retrieve fingerprints of keys on the device
+                    val ddo = session.applicationRelatedData.discretionary
+                    HardwareToken(
+                        listOf(KeyRef.ATT, KeyRef.SIG, KeyRef.DEC, KeyRef.AUT)
+                            .associateWith { keyRef -> ddo.getFingerprint(keyRef) }
+                            .filter { it.value != null } // filter out empty fingerprints
+                            .map { it.value!! to HardwareKey(it.value!!, it.key) }
+                            .toMap())
+                }
+        }
+    }
+
     override fun listDeviceSerials(): List<ByteArray> {
-        return YubikeyHelper().listDevices().mapNotNull { yk ->
+        return deviceManager.listDevices().mapNotNull { yk ->
             yk.info.serialNumber?.let { GnuPGDummyKeyUtil.serialToBytes(it) }
         }
     }
 
     override fun listKeyFingerprints(): Map<ByteArray, List<ByteArray>> {
-        return YubikeyHelper().listDevices().associate { yk ->
-            yk.encodedSerialNumber to yk.openSession().use {
-                // session.getData(KeyRef.DEC.fingerprint)
-                val ddo = it.applicationRelatedData.discretionary
-
-                listOfNotNull(
-                    ddo.getFingerprint(KeyRef.ATT),
-                    ddo.getFingerprint(KeyRef.SIG),
-                    ddo.getFingerprint(KeyRef.DEC),
-                    ddo.getFingerprint(KeyRef.AUT))
-            }
-        }
+        return listKeys().map { e -> e.key to e.value.keys.keys.toList() }.toMap()
     }
 }
