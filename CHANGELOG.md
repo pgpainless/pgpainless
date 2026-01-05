@@ -6,6 +6,8 @@ SPDX-License-Identifier: CC0-1.0
 # PGPainless Changelog
 
 ## 2.0.3-SNAPSHOT
+- Bump `bcpg-jdk8on` to `1.83`
+- Bump `bcprov-jdk18on` to `1.83`
 - `sop encrypt`: For symmetric-key encryption; default to rfc4880 packet format
 - `sop list-profiles encrypt`: Add profile descriptions
 - Fix issue, where third-party certification is considered during encryption (#495)
