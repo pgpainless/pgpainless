@@ -5,7 +5,6 @@
 package org.pgpainless.key.generation;
 
 import org.bouncycastle.bcpg.SecretKeyPacket;
-import org.bouncycastle.bcpg.SignatureSubpacketTags;
 import org.bouncycastle.openpgp.PGPException;
 import org.bouncycastle.openpgp.api.OpenPGPCertificate;
 import org.bouncycastle.openpgp.api.OpenPGPKey;
@@ -61,8 +60,6 @@ public class GenerateV6KeyTest {
                     @Override
                     public SignatureParameters apply(SignatureParameters parameters) {
                         return parameters.setHashedSubpacketsFunction(pgpSignatureSubpacketGenerator -> {
-                            // TODO: Remove once https://github.com/bcgit/bc-java/pull/2013 lands
-                            pgpSignatureSubpacketGenerator.removePacketsOfType(SignatureSubpacketTags.KEY_FLAGS);
                             pgpSignatureSubpacketGenerator.setKeyFlags(KeyFlag.SIGN_DATA.getFlag());
                             return pgpSignatureSubpacketGenerator;
                         });
