@@ -5,6 +5,7 @@
 package org.pgpainless.yubikey
 
 import com.yubico.yubikit.core.keys.PrivateKeyValues
+import com.yubico.yubikit.management.DeviceInfo
 import com.yubico.yubikit.openpgp.KeyRef
 import com.yubico.yubikit.openpgp.OpenPgpSession
 import org.bouncycastle.jce.provider.BouncyCastleProvider
@@ -13,6 +14,7 @@ import org.bouncycastle.openpgp.PGPPublicKey
 import org.bouncycastle.openpgp.api.OpenPGPCertificate
 import org.bouncycastle.openpgp.api.OpenPGPKey.OpenPGPPrivateKey
 import org.bouncycastle.openpgp.operator.jcajce.JcaPGPKeyConverter
+import org.gnupg.GnuPGDummyKeyUtil
 
 /**
  * Writes the private key bytes of an [OpenPGPPrivateKey] to the slot identified by the provided
@@ -64,4 +66,8 @@ internal fun OpenPgpSession.writeGenerationTime(
 internal fun OpenPgpSession.writeGenerationTime(key: PGPPublicKey, keyRef: KeyRef) {
     val time = (key.publicKeyPacket.time.time / 1000).toInt()
     setGenerationTime(keyRef, time)
+}
+
+internal fun DeviceInfo.encodedSerial(): ByteArray {
+    return GnuPGDummyKeyUtil.serialToBytes(serialNumber!!)
 }

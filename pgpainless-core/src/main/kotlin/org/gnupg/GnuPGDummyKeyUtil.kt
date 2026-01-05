@@ -9,10 +9,10 @@ import org.bouncycastle.bcpg.KeyIdentifier
 import org.bouncycastle.bcpg.S2K
 import org.bouncycastle.bcpg.SecretKeyPacket
 import org.bouncycastle.bcpg.SecretSubkeyPacket
+import org.bouncycastle.openpgp.PGPPublicKey
 import org.bouncycastle.openpgp.PGPSecretKey
 import org.bouncycastle.openpgp.PGPSecretKeyRing
 import org.bouncycastle.openpgp.api.OpenPGPKey
-import org.gnupg.GnuPGDummyKeyUtil.KeyFilter
 import org.pgpainless.key.SubkeyIdentifier
 
 /**
@@ -61,6 +61,18 @@ class GnuPGDummyKeyUtil private constructor() {
         fun serialToBytes(sn: Int) =
             byteArrayOf(
                 (sn shr 24).toByte(), (sn shr (16)).toByte(), (sn shr (8)).toByte(), sn.toByte())
+
+        fun toGnuStubbedSecretKey(pubKey: PGPPublicKey, serialNumber: Int): PGPSecretKey {
+            return PGPSecretKey(
+                SecretKeyPacket(
+                    pubKey.publicKeyPacket,
+                    0,
+                    SecretKeyPacket.USAGE_SHA1,
+                    S2K.gnuDummyS2K(S2K.GNUDummyParams.divertToCard()),
+                    null,
+                    serialToBytes(serialNumber)),
+                pubKey)
+        }
     }
 
     class Builder(private val keys: PGPSecretKeyRing) {

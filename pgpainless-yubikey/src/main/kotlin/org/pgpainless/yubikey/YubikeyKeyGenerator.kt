@@ -10,10 +10,8 @@ import com.yubico.yubikit.management.DeviceInfo
 import com.yubico.yubikit.openpgp.KeyRef
 import com.yubico.yubikit.openpgp.OpenPgpCurve
 import com.yubico.yubikit.openpgp.OpenPgpSession
-import java.util.*
 import openpgp.toSecondsPrecision
 import org.bouncycastle.bcpg.PublicSubkeyPacket
-import org.bouncycastle.bcpg.S2K
 import org.bouncycastle.bcpg.SecretKeyPacket
 import org.bouncycastle.bcpg.SecretSubkeyPacket
 import org.bouncycastle.jce.provider.BouncyCastleProvider
@@ -23,11 +21,11 @@ import org.bouncycastle.openpgp.PGPSecretKeyRing
 import org.bouncycastle.openpgp.api.OpenPGPKey
 import org.bouncycastle.openpgp.operator.KeyFingerPrintCalculator
 import org.bouncycastle.openpgp.operator.jcajce.JcaPGPKeyConverter
-import org.gnupg.GnuPGDummyKeyUtil
 import org.pgpainless.PGPainless
 import org.pgpainless.algorithm.OpenPGPKeyVersion
 import org.pgpainless.algorithm.PublicKeyAlgorithm
 import org.pgpainless.hardware.AdminPinCallback
+import java.util.*
 
 class YubikeyKeyGenerator(private val api: PGPainless) {
 
@@ -40,6 +38,7 @@ class YubikeyKeyGenerator(private val api: PGPainless) {
         creationTime: Date = Date()
     ): OpenPGPKey {
         yubikey.device.openConnection(SmartCardConnection::class.java).use {
+
             val session = OpenPgpSession(it)
             adminPinCallback.provideAdminPin(yubikey.serialNumber)?.let { pin ->
                 session.verifyAdminPin(pin)
@@ -50,14 +49,16 @@ class YubikeyKeyGenerator(private val api: PGPainless) {
             session.writeFingerprint(pubKey, KeyRef.ATT)
             session.writeGenerationTime(pubKey, KeyRef.ATT)
 
-            val primarykey = toExternalSecretKey(pubKey, yubikey.info)
+            val primarykey = pubKey.toExternalSecretKey(yubikey.info)
 
             pkVal = session.generateEcKey(KeyRef.SIG, OpenPgpCurve.SECP521R1)
             pubKey = toPGPPublicKey(pkVal, keyVersion, creationTime, PublicKeyAlgorithm.ECDSA)
             session.writeFingerprint(pubKey, KeyRef.SIG)
             session.writeGenerationTime(pubKey, KeyRef.SIG)
 
-            val signingKey = toSecretSubKey(toExternalSecretKey(pubKey, yubikey.info), yubikey.info)
+            val signingKey =
+                pubKey.toExternalSecretSubkey(
+                    yubikey.info, api.implementation.keyFingerPrintCalculator())
 
             pkVal = session.generateEcKey(KeyRef.DEC, OpenPgpCurve.SECP521R1)
             pubKey = toPGPPublicKey(pkVal, keyVersion, creationTime, PublicKeyAlgorithm.ECDH)
@@ -65,7 +66,8 @@ class YubikeyKeyGenerator(private val api: PGPainless) {
             session.writeGenerationTime(pubKey, KeyRef.DEC)
 
             val encryptionKey =
-                toSecretSubKey(toExternalSecretKey(pubKey, yubikey.info), yubikey.info)
+                pubKey.toExternalSecretSubkey(
+                    yubikey.info, api.implementation.keyFingerPrintCalculator())
 
             return OpenPGPKey(PGPSecretKeyRing(listOf(primarykey, signingKey, encryptionKey)))
         }
@@ -84,53 +86,46 @@ class YubikeyKeyGenerator(private val api: PGPainless) {
             pkVal.toPublicKey(),
             creationTime.toSecondsPrecision())
     }
+}
 
-    private fun toExternalSecretKey(pubkey: PGPPublicKey, deviceInfo: DeviceInfo): PGPSecretKey {
-        return PGPSecretKey(
-            SecretKeyPacket(
-                pubkey.publicKeyPacket,
-                0,
-                0xfc,
-                null,
-                null,
-                GnuPGDummyKeyUtil.serialToBytes(deviceInfo.serialNumber!!)),
-            pubkey)
-    }
+private fun PGPSecretKey.toSubkey(
+    deviceInfo: DeviceInfo,
+    fingerPrintCalculator: KeyFingerPrintCalculator
+): PGPSecretKey {
+    val pubSubKey =
+        PGPPublicKey(
+            PublicSubkeyPacket(
+                publicKey.version,
+                publicKey.algorithm,
+                publicKey.creationTime,
+                publicKey.publicKeyPacket.key),
+            fingerPrintCalculator)
+    return PGPSecretKey(
+        SecretSubkeyPacket(
+            pubSubKey.publicKeyPacket,
+            0,
+            SecretKeyPacket.USAGE_EXTERNAL,
+            null,
+            null,
+            deviceInfo.encodedSerial()),
+        pubSubKey)
+}
 
-    private fun toGnuStubbedSecretKey(pubKey: PGPPublicKey, deviceInfo: DeviceInfo): PGPSecretKey {
-        return PGPSecretKey(
-            SecretKeyPacket(
-                pubKey.publicKeyPacket,
-                0,
-                SecretKeyPacket.USAGE_SHA1,
-                S2K.gnuDummyS2K(S2K.GNUDummyParams.divertToCard()),
-                null,
-                GnuPGDummyKeyUtil.serialToBytes(deviceInfo.serialNumber!!)),
-            pubKey)
-    }
+private fun PGPPublicKey.toExternalSecretKey(deviceInfo: DeviceInfo): PGPSecretKey {
+    return PGPSecretKey(
+        SecretKeyPacket(
+            publicKeyPacket,
+            0,
+            SecretKeyPacket.USAGE_EXTERNAL,
+            null,
+            null,
+            deviceInfo.encodedSerial()),
+        this)
+}
 
-    private fun toSecretSubKey(
-        key: PGPSecretKey,
-        deviceInfo: DeviceInfo,
-        fingerPrintCalculator: KeyFingerPrintCalculator =
-            api.implementation.keyFingerPrintCalculator()
-    ): PGPSecretKey {
-        val pubSubKey =
-            PGPPublicKey(
-                PublicSubkeyPacket(
-                    key.publicKey.version,
-                    key.publicKey.algorithm,
-                    key.publicKey.creationTime,
-                    key.publicKey.publicKeyPacket.key),
-                fingerPrintCalculator)
-        return PGPSecretKey(
-            SecretSubkeyPacket(
-                pubSubKey.publicKeyPacket,
-                0,
-                0xfc,
-                null,
-                null,
-                GnuPGDummyKeyUtil.serialToBytes(deviceInfo.serialNumber!!)),
-            pubSubKey)
-    }
+private fun PGPPublicKey.toExternalSecretSubkey(
+    deviceInfo: DeviceInfo,
+    fingerPrintCalculator: KeyFingerPrintCalculator
+): PGPSecretKey {
+    return toExternalSecretKey(deviceInfo).toSubkey(deviceInfo, fingerPrintCalculator)
 }
