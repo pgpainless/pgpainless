@@ -44,12 +44,10 @@ import org.pgpainless.key.OpenPgpV4Fingerprint;
 import org.pgpainless.key.TestKeys;
 import org.pgpainless.key.generation.KeySpec;
 import org.pgpainless.key.generation.type.KeyType;
-import org.pgpainless.key.generation.type.ecc.EllipticCurve;
 import org.pgpainless.key.generation.type.eddsa_legacy.EdDSALegacyCurve;
 import org.pgpainless.key.protection.SecretKeyRingProtector;
 import org.pgpainless.key.protection.UnprotectedKeysProtector;
 import org.pgpainless.key.util.RevocationAttributes;
-import org.pgpainless.key.util.UserId;
 import org.pgpainless.util.DateUtil;
 import org.pgpainless.util.Passphrase;
 import org.pgpainless.util.TestAllImplementations;
@@ -225,17 +223,14 @@ public class KeyRingInfoTest {
 
     @TestTemplate
     @ExtendWith(TestAllImplementations.class)
-    public void testGetKeysWithFlagsAndExpiry() {
+    public void testGetKeysWithFlagsAndExpiry() throws PGPException {
+        Date oneHourAgo = new Date(new Date().getTime() - 1000 * 60 * 60);
         PGPainless api = PGPainless.getInstance();
-        OpenPGPKey secretKeys = PGPainless.buildKeyRing()
-                .setPrimaryKey(KeySpec.getBuilder(
-                        KeyType.EDDSA_LEGACY(EdDSALegacyCurve._Ed25519), KeyFlag.CERTIFY_OTHER))
-                .addSubkey(KeySpec.getBuilder(
-                        KeyType.ECDH(EllipticCurve._BRAINPOOLP384R1),
-                        KeyFlag.ENCRYPT_STORAGE))
-                .addSubkey(KeySpec.getBuilder(
-                        KeyType.ECDSA(EllipticCurve._BRAINPOOLP384R1), KeyFlag.SIGN_DATA))
-                .addUserId(UserId.builder().withName("Alice").withEmail("alice@pgpainless.org").build())
+        OpenPGPKey secretKeys = api._buildKey(OpenPGPKeyVersion.v4, oneHourAgo)
+                .withPrimaryKey()
+                .addEncryptionSubkey()
+                .addSigningSubkey()
+                .addUserId("Alice <alice@pgpainless.org>")
                 .build();
 
         Iterator<PGPSecretKey> keys = secretKeys.getPGPSecretKeyRing().iterator();

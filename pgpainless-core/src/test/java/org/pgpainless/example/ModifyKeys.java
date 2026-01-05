@@ -22,6 +22,7 @@ import org.junit.jupiter.api.Test;
 import org.pgpainless.PGPainless;
 import org.pgpainless.algorithm.EncryptionPurpose;
 import org.pgpainless.algorithm.KeyFlag;
+import org.pgpainless.algorithm.OpenPGPKeyVersion;
 import org.pgpainless.exception.WrongPassphraseException;
 import org.pgpainless.key.generation.KeySpec;
 import org.pgpainless.key.generation.type.KeyType;
@@ -47,8 +48,9 @@ public class ModifyKeys {
 
     @BeforeEach
     public void generateKey() {
+        Date referenceTime = new Date(new Date().getTime() - 1000 * 60 * 60);
         PGPainless api = PGPainless.getInstance();
-        secretKey = api.generateKey()
+        secretKey = api.generateKey(OpenPGPKeyVersion.v4, referenceTime)
                 .modernKeyRing(userId, originalPassphrase);
 
         KeyRingInfo info = api.inspect(secretKey);
