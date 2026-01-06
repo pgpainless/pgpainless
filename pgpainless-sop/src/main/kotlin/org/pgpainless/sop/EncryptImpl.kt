@@ -7,6 +7,7 @@ package org.pgpainless.sop
 import java.io.IOException
 import java.io.InputStream
 import java.io.OutputStream
+import java.util.Date
 import org.bouncycastle.openpgp.PGPException
 import org.bouncycastle.openpgp.api.MessageEncryptionMechanism
 import org.bouncycastle.openpgp.api.OpenPGPKey
@@ -14,6 +15,7 @@ import org.bouncycastle.util.io.Streams
 import org.pgpainless.PGPainless
 import org.pgpainless.algorithm.AEADAlgorithm
 import org.pgpainless.algorithm.DocumentSignatureType
+import org.pgpainless.algorithm.KeyFlag
 import org.pgpainless.algorithm.StreamEncoding
 import org.pgpainless.algorithm.SymmetricKeyAlgorithm
 import org.pgpainless.encryption_signing.EncryptionOptions
@@ -28,6 +30,7 @@ import sop.Profile
 import sop.ReadyWithResult
 import sop.SessionKey
 import sop.enums.EncryptAs
+import sop.enums.EncryptFor
 import sop.exception.SOPGPException
 import sop.operation.Encrypt
 
@@ -52,7 +55,10 @@ class EncryptImpl(private val api: PGPainless) : Encrypt {
 
     private var profile = RFC4880_PROFILE.name
     private var mode = EncryptAs.binary
+    private var purpose: EncryptFor = EncryptFor.any
     private var armor = true
+
+    override fun encryptFor(purpose: EncryptFor): Encrypt = apply { this.purpose = purpose }
 
     override fun mode(mode: EncryptAs): Encrypt = apply { this.mode = mode }
 
@@ -138,7 +144,9 @@ class EncryptImpl(private val api: PGPainless) : Encrypt {
 
     override fun withCert(cert: InputStream): Encrypt = apply {
         try {
-            KeyReader(api).readPublicKeys(cert, true).forEach { encryptionOptions.addRecipient(it) }
+            KeyReader(api).readPublicKeys(cert, true).forEach {
+                encryptionOptions.addRecipient(it, keySelectorForPurpose(purpose))
+            }
         } catch (e: UnacceptableEncryptionKeyException) {
             throw SOPGPException.CertCannotEncrypt(e.message ?: "Cert cannot encrypt", e)
         } catch (e: IOException) {
@@ -168,4 +176,17 @@ class EncryptImpl(private val api: PGPainless) : Encrypt {
             EncryptAs.text -> DocumentSignatureType.CANONICAL_TEXT_DOCUMENT
         }
     }
+
+    private fun keySelectorForPurpose(
+        purpose: EncryptFor
+    ): EncryptionOptions.EncryptionKeySelector =
+        EncryptionOptions.EncryptionKeySelector { encryptionCapableKeys ->
+            encryptionCapableKeys.filter {
+                when (purpose) {
+                    EncryptFor.storage -> it.hasKeyFlags(Date(), KeyFlag.ENCRYPT_STORAGE.flag)
+                    EncryptFor.communications -> it.hasKeyFlags(Date(), KeyFlag.ENCRYPT_COMMS.flag)
+                    else -> true
+                }
+            }
+        }
 }
