@@ -21,6 +21,7 @@ class UpdateKeyImpl(private val api: PGPainless) : UpdateKey {
     private var armor = true
     private var addCapabilities = true
     private var signingOnly = false
+    private var revokeDeprecatedKeys = false
     private val protector: MatchMakingSecretKeyRingProtector = MatchMakingSecretKeyRingProtector()
 
     private val mergeCerts: MutableMap<KeyIdentifier, OpenPGPCertificate> = mutableMapOf()
@@ -48,7 +49,7 @@ class UpdateKeyImpl(private val api: PGPainless) : UpdateKey {
                     keyList.map {
                         OpenPGPKeyUpdater(it, protector, api)
                             .replaceRejectedAlgorithmPreferencesAndFeatures(addCapabilities)
-                            .replaceWeakSubkeys(true, signingOnly)
+                            .replaceWeakSubkeys(revokeDeprecatedKeys, signingOnly)
                             .finish()
                     }
 
@@ -76,6 +77,10 @@ class UpdateKeyImpl(private val api: PGPainless) : UpdateKey {
     override fun noAddedCapabilities(): UpdateKey = apply { addCapabilities = false }
 
     override fun noArmor(): UpdateKey = apply { armor = false }
+
+    override fun revokeDeprecatedKeys(): UpdateKey = apply {
+        revokeDeprecatedKeys = true
+    }
 
     override fun signingOnly(): UpdateKey = apply { signingOnly = true }
 
