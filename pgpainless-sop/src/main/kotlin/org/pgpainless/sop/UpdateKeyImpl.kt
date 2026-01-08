@@ -78,9 +78,7 @@ class UpdateKeyImpl(private val api: PGPainless) : UpdateKey {
 
     override fun noArmor(): UpdateKey = apply { armor = false }
 
-    override fun revokeDeprecatedKeys(): UpdateKey = apply {
-        revokeDeprecatedKeys = true
-    }
+    override fun revokeDeprecatedKeys(): UpdateKey = apply { revokeDeprecatedKeys = true }
 
     override fun signingOnly(): UpdateKey = apply { signingOnly = true }
 
