@@ -159,13 +159,14 @@ class OpenPGPKeyUpdater(
         keyPairGeneratorCallback: KeyPairGeneratorCallback =
             KeyPairGeneratorCallback.Util.encryptionKey()
     ) {
+        val encryptionKeys = key.getEncryptionKeys(referenceTime)
         val weakEncryptionKeys =
             key.getEncryptionKeys(referenceTime).filterNot {
                 policy.publicKeyAlgorithmPolicy.isAcceptable(
                     it.algorithm, it.pgpPublicKey.bitStrength)
             }
 
-        if (weakEncryptionKeys.isNotEmpty()) {
+        if (weakEncryptionKeys.isNotEmpty() || encryptionKeys.isEmpty()) {
             keyEditor.addEncryptionSubkey(keyPairGeneratorCallback)
         }
 
