@@ -12,6 +12,7 @@ import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import java.io.IOException;
+import java.util.Date;
 
 import org.bouncycastle.openpgp.PGPException;
 import org.bouncycastle.openpgp.PGPPublicKey;
@@ -21,6 +22,7 @@ import org.bouncycastle.openpgp.api.OpenPGPKey;
 import org.bouncycastle.openpgp.api.OpenPGPSignature;
 import org.junit.jupiter.api.Test;
 import org.pgpainless.PGPainless;
+import org.pgpainless.algorithm.OpenPGPKeyVersion;
 import org.pgpainless.key.TestKeys;
 import org.pgpainless.key.protection.SecretKeyRingProtector;
 import org.pgpainless.key.util.KeyRingUtils;
@@ -78,9 +80,13 @@ public class RevocationCertificateTest {
     @Test
     public void createMinimalRevocationCertificateForFreshKeyTest() {
         PGPainless api = PGPainless.getInstance();
-        OpenPGPKey secretKeys = api.generateKey().modernKeyRing("Alice <alice@example.org>");
 
-        OpenPGPCertificate minimalRevocationCert = api.modify(secretKeys).createMinimalRevocationCertificate(
+        Date t0 = new Date(new Date().getTime() - 1000);
+        OpenPGPKey secretKeys = api.generateKey(OpenPGPKeyVersion.v4, t0)
+                .modernKeyRing("Alice <alice@example.org>");
+
+        Date t1 = new Date();
+        OpenPGPCertificate minimalRevocationCert = api.modify(secretKeys, t1).createMinimalRevocationCertificate(
                 SecretKeyRingProtector.unprotectedKeys(),
                 RevocationAttributes.createKeyRevocation().withReason(RevocationAttributes.Reason.KEY_RETIRED).withoutDescription());
 
@@ -92,10 +98,10 @@ public class RevocationCertificateTest {
         assertFalse(key.getUserAttributes().hasNext());
         assertNull(key.getTrustData());
 
+        Date t2 = new Date(new Date().getTime() + 1000);
         OpenPGPCertificate originalCert = secretKeys.toCertificate();
         OpenPGPCertificate mergedCert = api.mergeCertificate(originalCert, minimalRevocationCert);
-
-        assertTrue(api.inspect(mergedCert).getRevocationState().isSoftRevocation());
+        assertTrue(api.inspect(mergedCert, t2).getRevocationState().isSoftRevocation());
     }
 
     @Test
