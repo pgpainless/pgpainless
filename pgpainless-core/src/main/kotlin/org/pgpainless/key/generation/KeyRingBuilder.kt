@@ -129,46 +129,40 @@ class KeyRingBuilder(private val version: OpenPGPKeyVersion, private val api: PG
 
         val hashedSubPackets = hashedSignatureSubpackets.subpacketsGenerator.generate()
         val ringGenerator =
-            if (userIds.isEmpty()) {
-                PGPKeyRingGenerator(
-                    certKey, checksumCalculator, hashedSubPackets, null, signer, secretKeyEncryptor)
-            } else {
-                PGPKeyRingGenerator(
-                    SignatureType.POSITIVE_CERTIFICATION.code,
-                    certKey,
-                    userIds.keys.first(),
-                    checksumCalculator,
-                    hashedSubPackets,
-                    null,
-                    signer,
-                    secretKeyEncryptor)
-            }
+            PGPKeyRingGenerator(
+                certKey, checksumCalculator, hashedSubPackets, null, signer, secretKeyEncryptor)
 
         addSubKeys(certKey, ringGenerator)
 
-        // Generate secret key ring with only primary userId
+        // Generate secret key ring
         val secretKeyRing = ringGenerator.generateSecretKeyRing()
         val secretKeys = secretKeyRing.secretKeys
 
-        // Attempt to add additional user-ids to the primary public key
+        // Add user-ids to the primary public key
         var primaryPubKey = secretKeys.next().publicKey
         val privateKey = secretKeyRing.secretKey.unlock(secretKeyDecryptor)
         val userIdIterator = userIds.entries.iterator()
-        if (userIdIterator.hasNext()) {
-            userIdIterator.next() // Skip primary userId
-        }
+        var primaryUserId = true
         while (userIdIterator.hasNext()) {
-            val additionalUserId = userIdIterator.next()
-            val userIdString = additionalUserId.key
-            val callback = additionalUserId.value
+            val userId = userIdIterator.next()
+            val userIdString = userId.key
+            val callback = userId.value
             val subpackets =
                 if (callback == null) {
-                    hashedSignatureSubpackets.also { it.setPrimaryUserId(null) }
+                    hashedSignatureSubpackets
                 } else {
                     SignatureSubpackets.createHashedSubpackets(primaryPubKey).also {
                         callback.modifyHashedSubpackets(it)
                     }
                 }
+
+            if (primaryUserId) {
+                subpackets.apply { setPrimaryUserId() }
+                primaryUserId = false
+            } else {
+                subpackets.apply { setPrimaryUserId(null) }
+            }
+
             signatureGenerator.init(SignatureType.POSITIVE_CERTIFICATION.code, privateKey)
             signatureGenerator.setHashedSubpackets(SignatureSubpacketsHelper.toVector(subpackets))
             val additionalUserIdSignature =
