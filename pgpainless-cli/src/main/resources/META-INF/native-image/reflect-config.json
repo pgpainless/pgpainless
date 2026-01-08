@@ -57,18 +57,12 @@
   "name":"groovy.lang.Closure"
 },
 {
-  "name":"java.io.FilePermission"
-},
-{
   "name":"java.lang.Enum"
 },
 {
   "name":"java.lang.Object",
   "allDeclaredFields":true,
   "queryAllDeclaredMethods":true
-},
-{
-  "name":"java.lang.RuntimePermission"
 },
 {
   "name":"java.lang.String"
@@ -79,16 +73,6 @@
 },
 {
   "name":"java.lang.invoke.MethodHandle"
-},
-{
-  "name":"java.net.NetPermission"
-},
-{
-  "name":"java.net.SocketPermission"
-},
-{
-  "name":"java.net.URLPermission",
-  "methods":[{"name":"<init>","parameterTypes":["java.lang.String","java.lang.String"] }]
 },
 {
   "name":"java.nio.channels.SelectionKey",
@@ -105,16 +89,10 @@
   "name":"java.security.AlgorithmParametersSpi"
 },
 {
-  "name":"java.security.AllPermission"
-},
-{
   "name":"java.security.MessageDigestSpi"
 },
 {
   "name":"java.security.SecureRandomParameters"
-},
-{
-  "name":"java.security.SecurityPermission"
 },
 {
   "name":"java.security.cert.PKIXRevocationChecker"
@@ -218,9 +196,6 @@
   "name":"java.util.LinkedHashSet"
 },
 {
-  "name":"java.util.PropertyPermission"
-},
-{
   "name":"java.util.concurrent.ArrayBlockingQueue"
 },
 {
@@ -249,9 +224,6 @@
   "name":"javax.security.auth.x500.X500Principal",
   "fields":[{"name":"thisX500Name"}],
   "methods":[{"name":"<init>","parameterTypes":["sun.security.x509.X500Name"] }]
-},
-{
-  "name":"javax.smartcardio.CardPermission"
 },
 {
   "name":"org.bouncycastle.jcajce.provider.asymmetric.COMPOSITE$Mappings",
@@ -454,6 +426,15 @@
   "methods":[{"name":"<init>","parameterTypes":[] }]
 },
 {
+  "name":"org.bouncycastle.jcajce.provider.kdf.HKDF$Mappings"
+},
+{
+  "name":"org.bouncycastle.jcajce.provider.kdf.PBEPBKDF2$Mappings"
+},
+{
+  "name":"org.bouncycastle.jcajce.provider.kdf.SCRYPT$Mappings"
+},
+{
   "name":"org.bouncycastle.jcajce.provider.keystore.BC$Mappings",
   "methods":[{"name":"<init>","parameterTypes":[] }]
 },
@@ -531,6 +512,10 @@
 },
 {
   "name":"org.bouncycastle.jcajce.provider.symmetric.HC256$Mappings",
+  "methods":[{"name":"<init>","parameterTypes":[] }]
+},
+{
+  "name":"org.bouncycastle.jcajce.provider.symmetric.HKDF$Mappings",
   "methods":[{"name":"<init>","parameterTypes":[] }]
 },
 {
