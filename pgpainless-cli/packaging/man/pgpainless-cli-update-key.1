@@ -31,8 +31,8 @@ pgpainless\-cli\-update\-key \- Keep a secret key up\-to\-date
 .SH "SYNOPSIS"
 .sp
 \fBpgpainless\-cli update\-key\fP [\fB\-\-debug\fP] [\fB\-\-no\-added\-capabilities\fP] [\fB\-\-[no\-]armor\fP]
-[\fB\-\-signing\-only\fP] [\fB\-\-merge\-certs\fP=\fICERTS\fP]...
-[\fB\-\-with\-key\-password\fP=\fIPASSWORD\fP]...
+[\fB\-\-revoke\-deprecated\-keys\fP] [\fB\-\-signing\-only\fP]
+[\fB\-\-merge\-certs\fP=\fICERTS\fP]... [\fB\-\-with\-key\-password\fP=\fIPASSWORD\fP]...
 .SH "DESCRIPTION"
 
 .SH "OPTIONS"
@@ -59,7 +59,7 @@ Do not add feature support for new mechanisms, which the key did not previously 
 ASCII armor the output
 .RE
 .sp
-\fB\-\-signing\-only\fP
+\fB\-\-revoke\-deprecated\-keys\fP, \fB\-\-signing\-only\fP
 .RS 4
 TODO: Document
 .RE

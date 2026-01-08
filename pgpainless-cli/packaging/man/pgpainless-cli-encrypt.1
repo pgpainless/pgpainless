@@ -30,7 +30,8 @@
 pgpainless\-cli\-encrypt \- Encrypt a message from standard input
 .SH "SYNOPSIS"
 .sp
-\fBpgpainless\-cli encrypt\fP [\fB\-\-debug\fP] [\fB\-\-[no\-]armor\fP] [\fB\-\-as\fP=\fI{binary|text}\fP] [\fB\-\-profile\fP=\fIPROFILE\fP]
+\fBpgpainless\-cli encrypt\fP [\fB\-\-debug\fP] [\fB\-\-[no\-]armor\fP] [\fB\-\-as\fP=\fI{binary|text}\fP] [\fB\-\-for\fP=
+\fI{storage|communications|any}\fP] [\fB\-\-profile\fP=\fIPROFILE\fP]
 [\fB\-\-session\-key\-out\fP=\fISESSIONKEY\fP] [\fB\-\-sign\-with\fP=\fIKEY\fP]...
 [\fB\-\-with\-key\-password\fP=\fIPASSWORD\fP]... [\fB\-\-with\-password\fP=\fIPASSWORD\fP]...
 [\fICERTS\fP...]
@@ -48,7 +49,7 @@ Type of the input data. Defaults to \(aqbinary\(aq
 Print stacktrace
 .RE
 .sp
-\fB\-\-[no\-]armor\fP
+\fB\-\-for\fP=\fI{storage|communications|any}\fP, \fB\-\-[no\-]armor\fP
 .RS 4
 ASCII armor the output
 .RE
