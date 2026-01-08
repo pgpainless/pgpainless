@@ -16,7 +16,7 @@ import sop.operation.Version
 class VersionImpl(private val api: PGPainless) : Version {
 
     companion object {
-        const val SOP_VERSION = 14
+        const val SOP_VERSION = 15
         const val SOPV_VERSION = "1.2"
     }
 
